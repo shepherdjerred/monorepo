@@ -35,7 +35,8 @@ public final class EncounterDirector {
     var extra = players - 1;
     var boss = round % 5 == 0 ? boss(round, open) : "";
     var event = event(round, open);
-    var count = Math.min(160, count(round, !boss.isEmpty()) + extra * 3);
+    var original = originalCount(round, players);
+    var count = boss.isEmpty() ? (original * 3 + 1) / 2 : original;
     var specials =
         round < 6
             ? 0
@@ -43,15 +44,21 @@ public final class EncounterDirector {
     return new Encounter(
         event,
         count,
-        health(round),
-        damage(round),
+        health(round) * .65,
+        damage(round) * .60,
         roster(event, round),
         boss,
-        Math.min(32, cap(round, !boss.isEmpty()) + extra * 2),
-        1,
-        round <= 3 ? 3 : round <= 7 ? 2 : 1,
+        boss.isEmpty()
+            ? Math.min(48, 9 + 3 * (round - 1) + extra * 2)
+            : Math.min(32, cap(round, true) + extra * 2),
+        boss.isEmpty() ? 3 : 1,
+        boss.isEmpty() ? 1 : round <= 7 ? 2 : 1,
         specials,
         rangedLimit(round, players));
+  }
+
+  public static int originalCount(int round, int players) {
+    return Math.min(160, count(round, round % 5 == 0) + (players - 1) * 3);
   }
 
   private static int count(int round, boolean boss) {
@@ -113,7 +120,8 @@ public final class EncounterDirector {
   public static double bossHealth(int round, int players) {
     if (round < 5 || round % 5 != 0 || players < 1 || players > 4)
       throw new IllegalArgumentException("Invalid boss");
-    return Math.min(1000, (100 + 20.0 * round) * (100 + (players - 1) * 65) / 100);
+    return Math.min(1000, (100 + 20.0 * round) * (100 + (players - 1) * 65) / 100)
+        * (round == 5 ? .85 : 1);
   }
 
   public static boolean ranged(String id) {

@@ -20,9 +20,16 @@ describe("live guard config", () => {
     expect(guard.protectedRegions).toEqual(DEFAULT_PROTECTED_REGIONS);
     expect(guard.protectedRegions[0]?.box).toMatchObject({
       world: "world",
-      min: { x: 1712, z: 2128 },
+      min: { x: 1710, z: 2128 },
       max: { x: 1871, z: 2287 },
     });
+    expect(guard.worlds).toContain("settlement");
+    expect(guard.worlds).toContain("rustworks");
+    for (const world of ["settlement", "rustworks"])
+      expect(
+        guard.protectedRegions.find((region) => region.box.world === world)
+          ?.box,
+      ).toMatchObject({ min: { y: -64 }, max: { y: 319 } });
   });
 
   it("reads protected regions as JSON from the environment", async () => {

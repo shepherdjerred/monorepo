@@ -303,7 +303,7 @@ final class SurvivalBoss {
     var mode = player.getGameMode();
     striking = true;
     try {
-      player.damage(amount, entity);
+      player.damage(amount * (round == 5 ? .85 : 1), entity);
     } finally {
       striking = false;
     }

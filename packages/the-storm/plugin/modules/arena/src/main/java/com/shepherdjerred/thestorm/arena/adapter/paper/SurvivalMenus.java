@@ -15,7 +15,18 @@ import org.jspecify.annotations.Nullable;
 
 /** Server-owned station menus; icon stacks are never transferable into a player's inventory. */
 final class SurvivalMenus {
-  private record Choice(String label, Material icon, Runnable buy) {}
+  record Swap(
+      BlockPos station,
+      List<ItemStack> bundle,
+      java.util.function.BooleanSupplier claimable,
+      Runnable claimed,
+      int lockerSlot) {}
+
+  private record Choice(String label, Material icon, Runnable buy, String description) {
+    Choice(String label, Material icon, Runnable buy) {
+      this(label, icon, buy, "");
+    }
+  }
 
   private enum Tab {
     WEAPONS,
@@ -29,7 +40,8 @@ final class SurvivalMenus {
     LOCKER,
     NODE,
     BOON,
-    AUGMENT
+    AUGMENT,
+    SWAP
   }
 
   private static final class Menu implements InventoryHolder {
@@ -69,6 +81,10 @@ final class SurvivalMenus {
           case NODE -> runner.map().resource(menu.station).isPresent();
           case BOON, AUGMENT -> runner.map().machine(menu.station).isPresent();
           case CRAFT, BANK, LOCKER -> runner.map().station(menu.station).isPresent();
+          case SWAP ->
+              runner.map().station(menu.station).isPresent()
+                  || runner.map().content().boxSites().stream()
+                      .anyMatch(site -> site.block().equals(menu.station));
         };
   }
 
@@ -119,7 +135,7 @@ final class SurvivalMenus {
     if (tab == Tab.WEAPONS) {
       choices.add(
           new Choice(
-              "Repair held weapon · 2 iron + 2 emeralds",
+              "Repair held weapon or shield · 2 iron + 2 emeralds",
               Material.ANVIL,
               () -> new SurvivalEquipment(runner).repair(player, false)));
       choices.add(
@@ -162,7 +178,7 @@ final class SurvivalMenus {
     for (var i = 0; i < choices.size(); i++) {
       var choice = choices.get(i);
       var icon = ItemStack.of(choice.icon());
-      icon.editMeta(meta -> meta.displayName(Component.text(choice.label())));
+      describe(icon, choice);
       inventory.setItem(choiceSlot(menu, i), icon);
     }
     var separator = ItemStack.of(Material.GRAY_STAINED_GLASS_PANE);
@@ -177,6 +193,15 @@ final class SurvivalMenus {
             });
     if (selected != null) selected.editMeta(meta -> meta.setEnchantmentGlintOverride(true));
     player.openInventory(inventory);
+  }
+
+  private static void describe(ItemStack icon, Choice choice) {
+    icon.editMeta(
+        meta -> {
+          meta.displayName(Component.text(choice.label()));
+          if (!choice.description().isEmpty())
+            meta.lore(List.of(Component.text(choice.description())));
+        });
   }
 
   private static Tab tab(Material material) {
@@ -257,7 +282,12 @@ final class SurvivalMenus {
     for (var i = 0; i < choices.size(); i++) {
       var choice = choices.get(i);
       var icon = ItemStack.of(choice.icon());
-      icon.editMeta(meta -> meta.displayName(Component.text(choice.label())));
+      icon.editMeta(
+          meta -> {
+            meta.displayName(Component.text(choice.label()));
+            if (!choice.description().isEmpty())
+              meta.lore(List.of(Component.text(choice.description())));
+          });
       inventory.setItem(i, icon);
     }
   }
@@ -309,8 +339,7 @@ final class SurvivalMenus {
     if (!valid(player, inventory)) return;
     var menu = (Menu) java.util.Objects.requireNonNull(inventory.getHolder());
     if (menu.page == Page.LOCKER) {
-      if (!runner.items().withdraw(player, slot))
-        Texts.error(player, "Make room in your inventory first.");
+      withdrawLocker(player, menu, slot);
     } else {
       for (var index = 0; index < menu.choices.size(); index++) {
         if (choiceSlot(menu, index) == slot) {
@@ -323,6 +352,58 @@ final class SurvivalMenus {
         && player.getOpenInventory().getTopInventory().equals(inventory))
       bank(player, runner.map().station(menu.station).orElseThrow(), menu.page);
     if (menu.page == Page.NODE) resource(player, runner.map().resource(menu.station).orElseThrow());
+  }
+
+  private void withdrawLocker(Player player, Menu menu, int slot) {
+    var item =
+        slot >= 0 && slot < 54 ? runner.items().bank().contents(player.getUniqueId())[slot] : null;
+    if (item != null && !runner.items().weaponsFit(player, List.of(item))) {
+      weaponSwap(
+          player,
+          new Swap(
+              menu.station,
+              List.of(item),
+              () -> true,
+              () -> bank(player, runner.map().station(menu.station).orElseThrow(), Page.LOCKER),
+              slot));
+      return;
+    }
+    if (!runner.items().withdraw(player, slot))
+      Texts.error(player, "Make room in your inventory first.");
+  }
+
+  void weaponSwap(Player player, Swap swap) {
+    var choices = new ArrayList<Choice>();
+    for (var slot = 0; slot < player.getInventory().getSize(); slot++) {
+      var item = player.getInventory().getItem(slot);
+      if (item == null || !runner.items().weapon(item)) continue;
+      var identity = runner.items().identity(item);
+      var selected = slot;
+      choices.add(
+          new Choice(
+              "Store " + SurvivalItems.name(item.getType()) + " and swap",
+              item.getType(),
+              () -> {
+                if (!swap.claimable().getAsBoolean()) {
+                  player.closeInventory();
+                  return;
+                }
+                if (runner
+                    .items()
+                    .swap(
+                        player,
+                        new SurvivalItems.Exchange(
+                            selected, identity, swap.bundle(), swap.lockerSlot()))) {
+                  player.closeInventory();
+                  swap.claimed().run();
+                } else Texts.error(player, "Make room in your locker, or choose another weapon.");
+              },
+              "Carry four weapons; the replaced weapon keeps its upgrades in your private locker."));
+    }
+    simple(
+        player,
+        new Menu(player.getUniqueId(), swap.station(), choices, Page.SWAP),
+        "Choose a weapon to swap");
   }
 
   private boolean valid(Player player, Inventory inventory) {
@@ -362,7 +443,8 @@ final class SurvivalMenus {
           new Choice(
               "Equip " + boon.title() + " · " + price,
               Material.AMETHYST_SHARD,
-              () -> runner.actions().equip(player, boon, java.util.Optional.empty())));
+              () -> runner.actions().equip(player, boon, java.util.Optional.empty()),
+              boon.description()));
     else
       for (var old : com.shepherdjerred.thestorm.arena.domain.survival.SurvivalPerk.values())
         if (loadout.has(old))
@@ -370,7 +452,8 @@ final class SurvivalMenus {
               new Choice(
                   "Replace " + old.title() + " · " + price,
                   Material.AMETHYST_SHARD,
-                  () -> runner.actions().equip(player, boon, java.util.Optional.of(old))));
+                  () -> runner.actions().equip(player, boon, java.util.Optional.of(old)),
+                  boon.description()));
     simple(
         player,
         new Menu(player.getUniqueId(), machine.block(), choices, Page.BOON),

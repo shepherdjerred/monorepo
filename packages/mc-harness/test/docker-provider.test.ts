@@ -53,6 +53,9 @@ describe("docker sandbox argv", () => {
     expect(args).toContain(
       "/tmp/storm-staging/plugins/TheStorm/config.yml:/plugins/TheStorm/config.yml:ro",
     );
+    expect(args).toContain(
+      "/tmp/storm-staging/plugins/TheStormFixtures.jar:/plugins/TheStormFixtures.jar:ro",
+    );
     expect(args).not.toContain("/tmp/storm-staging/plugins:/plugins:ro");
   });
 

@@ -44,8 +44,32 @@ export const DEFAULT_PROTECTED_REGIONS: readonly ProtectedRegion[] = [
     name: "zombies settlement",
     box: {
       world: "world",
-      min: { x: 1712, y: -64, z: 2128 },
+      min: { x: 1710, y: -64, z: 2128 },
       max: { x: 1871, y: 319, z: 2287 },
+    },
+  },
+  {
+    name: "Rustworks source site",
+    box: {
+      world: "world",
+      min: { x: 1918, y: -64, z: 2112 },
+      max: { x: 2111, y: 319, z: 2311 },
+    },
+  },
+  {
+    name: "Settlement arena",
+    box: {
+      world: "settlement",
+      min: { x: -82, y: -64, z: -80 },
+      max: { x: 79, y: 319, z: 79 },
+    },
+  },
+  {
+    name: "Rustworks arena",
+    box: {
+      world: "rustworks",
+      min: { x: -98, y: -64, z: -100 },
+      max: { x: 95, y: 319, z: 99 },
     },
   },
 ];
@@ -74,7 +98,7 @@ export const MC_DAEMON_CONFIG_DEFINITION = {
   mcLiveWorlds: {
     schema: WorldListSchema,
     sources: ["env", "file", "default"],
-    default: ["world", "wilds", "peaks"],
+    default: ["world", "wilds", "peaks", "settlement", "rustworks"],
   },
   /** Live block writes larger than this need a recent Velero backup. */
   mcLiveMaxRegionVolume: {

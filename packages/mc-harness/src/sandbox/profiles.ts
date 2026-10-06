@@ -53,8 +53,8 @@ export type ResolvedProfile = {
   plugins: readonly PluginPin[];
   /** Repository outputs and config staged into /plugins, in order. */
   staged: readonly StagedEntry[];
-  /** Mount staged paths individually when the image already owns /plugins. */
-  stagedPluginMount?: "tree" | "files";
+  /** Baked images retain their /plugins tree and mount only added fixture files. */
+  pluginMount: "directory" | "files";
   /**
    * Seed /data with the pinned Paper jar and a throttle-free bukkit.yml. Off
    * for the published storm image: it bakes its own Paper and config, and its
@@ -71,6 +71,19 @@ export type ResolvedProfile = {
 /** Whether a profile stages anything into /plugins (else the image's own plugins stand). */
 export function stagesPlugins(profile: ResolvedProfile): boolean {
   return profile.plugins.length > 0 || profile.staged.length > 0;
+}
+
+/** Relative paths mounted from staging; the empty path mounts the complete plugin directory. */
+export function pluginMountTargets(profile: ResolvedProfile): string[] {
+  if (!stagesPlugins(profile)) return [];
+  if (profile.pluginMount === "directory") return [""];
+  if (
+    profile.plugins.length > 0 ||
+    profile.staged.some((entry) => entry.kind === "repo-dir")
+  ) {
+    throw new Error("File plugin mounts require individually staged files");
+  }
+  return profile.staged.map((entry) => entry.target);
 }
 
 type Secrets = { bridgeToken: string; rconPassword: string };
@@ -120,6 +133,7 @@ function paperProfile(
     env: serverEnv(world, secrets),
     plugins: [worldEdit, citizens],
     staged: [bridgeJar],
+    pluginMount: "directory",
     seedData: true,
     ports: [GAME_PORT, RCON_PORT, BRIDGE_PORT],
     defaultProvider: "docker",
@@ -130,7 +144,8 @@ function paperProfile(
 /**
  * The `storm-dev` profile: the `paper` profile plus the locally built
  * TheStorm.jar with its required plugins and repository-owned config, the
- * modules in STORM_DEV_MODULES, and the mechanics E2E plugin (the production
+ * fixtures that prepare the protected arena worlds, modules in STORM_DEV_MODULES,
+ * and the mechanics E2E plugin (the production
  * mechanics module plus its bridge and super-push fixtures at x 400-415).
  * Mirrors the-storm's six-module E2E suite without the storm-brain agent.
  */
@@ -148,6 +163,12 @@ function stormDevProfile(
         kind: "repo-file",
         source: STORM_PATHS.jar,
         target: "TheStorm.jar",
+        build: STORM_BUILD_COMMAND,
+      },
+      {
+        kind: "repo-file",
+        source: STORM_PATHS.fixturesJar,
+        target: "TheStormFixtures.jar",
         build: STORM_BUILD_COMMAND,
       },
       {
@@ -178,6 +199,7 @@ function stormDevProfile(
         target: path.join("TheStormMechanicsE2E", "mechanics.yml"),
       },
     ],
+    pluginMount: "directory",
     seedData: true,
     ports: [GAME_PORT, RCON_PORT, BRIDGE_PORT],
     defaultProvider: "docker",
@@ -219,7 +241,7 @@ function stormImageProfile(image: string) {
       ...bridgeAndRconEnv(secrets),
     },
     plugins: [],
-    stagedPluginMount: "files",
+    pluginMount: "files",
     staged: [
       {
         kind: "storm-config",
@@ -227,6 +249,12 @@ function stormImageProfile(image: string) {
         target: path.join("TheStorm", "config.yml"),
         modules: imageConfig.enabledModules,
         moduleKeys: imageConfig.moduleKeys,
+      },
+      {
+        kind: "repo-file",
+        source: STORM_PATHS.fixturesJar,
+        target: "TheStormFixtures.jar",
+        build: STORM_BUILD_COMMAND,
       },
     ],
     seedData: false,

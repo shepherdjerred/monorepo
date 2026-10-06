@@ -12,13 +12,16 @@ public final class RustworksBlueprint {
   private static final int X = 1960;
   private static final int Z = 2144;
   private final SurvivalContent content;
+  private final SurvivalPlacement placement;
+  private Map<BlockPos, String> placed = Map.of();
   private final Map<BlockPos, String> blocks = new LinkedHashMap<>();
   private final Map<BlockPos, String> districts = new HashMap<>();
 
   public RustworksBlueprint(SurvivalContent content) {
     if (!content.arena().id().equals("rustworks"))
       throw new IllegalArgumentException("Rustworks needs its authored map content");
-    this.content = content;
+    placement = SurvivalPlacement.authored(content);
+    this.content = placement.content(content);
   }
 
   /** One-block rises are distributed across 32-block slopes instead of isolated tall platforms. */
@@ -27,8 +30,11 @@ public final class RustworksBlueprint {
   }
 
   public Map<BlockPos, String> blocks() {
-    if (blocks.isEmpty()) build();
-    return java.util.Collections.unmodifiableMap(blocks);
+    if (placed.isEmpty()) {
+      build();
+      placed = placement.restore(blocks);
+    }
+    return placed;
   }
 
   private void build() {

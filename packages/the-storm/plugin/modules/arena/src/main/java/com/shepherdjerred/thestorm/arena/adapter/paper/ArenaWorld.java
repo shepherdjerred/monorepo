@@ -52,6 +52,14 @@ final class ArenaWorld {
   private final Parts parts;
   private final List<LivingEntity> mobs = new ArrayList<>();
   private final Map<UUID, MobArchetype> brains = new HashMap<>();
+  private final Map<UUID, CubePursuitGoal> cubeGoals = new HashMap<>();
+
+  OptionalDouble cubeProgress(LivingEntity enemy) {
+    cubeGoals.keySet().removeIf(id -> world.getEntity(id) == null);
+    var goal = cubeGoals.get(enemy.getUniqueId());
+    return goal == null ? OptionalDouble.empty() : OptionalDouble.of(goal.progress());
+  }
+
   private final Map<UUID, List<Wolf>> wolves = new HashMap<>();
   private @Nullable BossFight boss;
   private boolean prepared;
@@ -368,11 +376,9 @@ final class ArenaWorld {
     var archetype = parts.table().mob(mob);
     for (var entity : spawned) {
       if (entity instanceof org.bukkit.entity.AbstractCubeMob cube) {
-        parts
-            .context()
-            .server()
-            .getMobGoals()
-            .addGoal(cube, 0, new CubePursuitGoal(cube, parts.context().time()));
+        var goal = new CubePursuitGoal(cube, parts.context().time());
+        cubeGoals.put(cube.getUniqueId(), goal);
+        parts.context().server().getMobGoals().addGoal(cube, 0, goal);
       }
       pursuitRange(entity);
       if (archetype.behavior() != Behavior.VANILLA) {
@@ -480,11 +486,14 @@ final class ArenaWorld {
     if (!target.equals(hunter.getTarget())) {
       hunter.setTarget(target);
     }
+    // The cube hop goal reads native paths but owns movement; a second navigator fights its hops.
+    if (hunter instanceof org.bukkit.entity.AbstractCubeMob) return;
     // A target alone does not start navigation for every native goal, especially at range.
     // Let close-range ranged combat keep its native strafing and attack behavior.
     var navigator = hunter.getVehicle() instanceof Mob mount ? mount : hunter;
     if (distance > 16 || (distance > 4 && !navigator.getPathfinder().hasPath())) {
-      navigator.getPathfinder().moveTo(target, 1.0);
+      // Cross-map routes include long stair runs; close combat retains native movement.
+      navigator.getPathfinder().moveTo(target, distance > 16 ? 1.2 : 1.0);
     }
   }
 
@@ -568,6 +577,7 @@ final class ArenaWorld {
     mobs.forEach(Entity::remove);
     mobs.clear();
     brains.clear();
+    cubeGoals.clear();
     wolves.values().forEach(pack -> pack.forEach(Entity::remove));
     wolves.clear();
     for (var entity : world.getEntities()) {

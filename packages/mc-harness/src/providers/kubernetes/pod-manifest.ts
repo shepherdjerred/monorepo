@@ -7,7 +7,7 @@
  * pinned by digest.
  */
 import type { ResolvedProfile } from "#sandbox/profiles.ts";
-import { stagesPlugins } from "#sandbox/profiles.ts";
+import { pluginMountTargets, stagesPlugins } from "#sandbox/profiles.ts";
 
 export const MANAGED_BY_LABEL = "app.kubernetes.io/managed-by";
 export const MANAGED_BY_VALUE = "mc-harness";
@@ -129,9 +129,8 @@ export function activeDeadlineSeconds(ttlSeconds: number): number {
  * Builds the pod. Profiles that stage plugins or /data seed files get a
  * `stage` init container that waits for STAGING_READY (the provider copies the
  * staging tree in with `kubectl cp`, then touches it) and seeds /data; the
- * server mounts the staged plugins read-only at /plugins. The published storm
- * image stages only its owned module-config overlay and uses its baked files
- * for every plugin and other configuration file.
+ * server mounts staged plugins read-only. Published images mount individual fixture
+ * files so their baked /plugins content remains visible.
  */
 export function buildSandboxPod(options: SandboxPodOptions): SandboxPod {
   const { profile } = options;
@@ -168,23 +167,12 @@ export function buildSandboxPod(options: SandboxPodOptions): SandboxPod {
     volumeMounts: [
       { name: "data", mountPath: "/data" },
       { name: "tmp", mountPath: "/tmp" },
-      ...(stagesPlugins(profile)
-        ? profile.stagedPluginMount === "files"
-          ? profile.staged.map((entry) => ({
-              name: "staging",
-              mountPath: `/plugins/${entry.target}`,
-              subPath: `plugins/${entry.target}`,
-              readOnly: true,
-            }))
-          : [
-              {
-                name: "staging",
-                mountPath: "/plugins",
-                subPath: "plugins",
-                readOnly: true,
-              },
-            ]
-        : []),
+      ...pluginMountTargets(profile).map((target) => ({
+        name: "staging",
+        mountPath: target === "" ? "/plugins" : `/plugins/${target}`,
+        subPath: target === "" ? "plugins" : `plugins/${target}`,
+        readOnly: true,
+      })),
     ],
   };
   const stage: Container = {

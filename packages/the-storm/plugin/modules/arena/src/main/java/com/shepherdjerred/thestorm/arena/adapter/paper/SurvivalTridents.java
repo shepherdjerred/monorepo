@@ -36,6 +36,7 @@ final class SurvivalTridents {
             item.clone(),
             runner.context().time().instant().plusMillis(150)));
     runner.items().reserveSlot(player.getUniqueId(), slot);
+    runner.items().reserveWeapon(player.getUniqueId(), identity);
   }
 
   private boolean same(ItemStack item, UUID identity) {
@@ -116,6 +117,7 @@ final class SurvivalTridents {
     flights.remove(id);
     pending.remove(id);
     runner.items().releaseSlot(flight.owner(), flight.slot());
+    runner.items().releaseWeapon(flight.owner(), flight.identity());
   }
 
   void leave(UUID owner) {
@@ -123,6 +125,7 @@ final class SurvivalTridents {
       var flight = java.util.Objects.requireNonNull(flights.get(id));
       if (!flight.owner().equals(owner)) continue;
       runner.items().releaseSlot(owner, flight.slot());
+      runner.items().releaseWeapon(owner, flight.identity());
       var entity = runner.context().server().getEntity(id);
       if (entity != null) entity.remove();
       flights.remove(id);

@@ -82,7 +82,7 @@ annotations; records whose pod disappeared are dropped.
 
 `storm-prod` and `storm-candidate` boot `ghcr.io/shepherdjerred/the-storm-server`
 at the version catalog's `/prod` and candidate pins with fixture credentials.
-The image bakes Paper, every plugin, and owned config; the harness stages only
+The image bakes Paper, every plugin, and owned config; the harness stages
 a config overlay that enables the companion module and its local dependencies,
 while disabling RWF, which requires the provisioned `rwf` world and production
 recording salt. Docker and Kubernetes mount the overlay at the config file path,
@@ -92,10 +92,16 @@ bootstrap (`FLIPT_URL=http://127.0.0.1:9`, `FLIPT_ENVIRONMENT=beta`), so
 companions fail closed and do not spawn or act in the disposable world. The
 image must bake MCBridge; earlier images never answer the bridge health check.
 
+The locally built `TheStormFixtures.jar` also prepares the named worlds and
+geometry a fresh volume requires. Both providers mount it as a single file,
+preserving the image's baked plugin tree. Build it with
+`bunx turbo run build --filter=@shepherdjerred/the-storm` before starting either profile.
+
 The `storm-dev` profile adds the locally built `TheStorm.jar` (build it with
 `bunx turbo run build --filter=@shepherdjerred/the-storm`), the plugins
 its `paper-plugin.yml` requires (LuckPerms, CoreProtect, Multiverse; Citizens
-is already staged), the repository-owned TheStorm and Citizens config with
+is already staged), `TheStormFixtures.jar` to prepare the protected arena worlds,
+the repository-owned TheStorm and Citizens config with
 only the economy, mail, chat, tracks, towns and tickets modules on (agent,
 discord and world need external services), and `TheStormMechanicsE2E.jar`, which runs the production
 mechanics module and builds its bridge and super-push fixtures at x 400-415.

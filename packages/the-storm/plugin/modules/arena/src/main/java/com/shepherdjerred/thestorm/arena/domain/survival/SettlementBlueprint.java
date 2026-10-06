@@ -1,7 +1,6 @@
 package com.shepherdjerred.thestorm.arena.domain.survival;
 
 import static com.shepherdjerred.thestorm.arena.domain.survival.SettlementBlocks.at;
-import static java.util.Collections.unmodifiableMap;
 
 import com.shepherdjerred.thestorm.arena.domain.geometry.BlockPos;
 import java.util.LinkedHashMap;
@@ -11,12 +10,14 @@ import java.util.Map;
 public final class SettlementBlueprint {
   public static final int BLOCK_BUDGET = 2_100_000;
   private final SurvivalContent content;
+  private final SurvivalPlacement placement;
   private Map<BlockPos, String> blocks = Map.of();
 
   public SettlementBlueprint(SurvivalContent content) {
     if (!content.arena().id().equals("settlement"))
       throw new IllegalArgumentException("Settlement needs its authored map content");
-    this.content = content;
+    placement = SurvivalPlacement.authored(content);
+    this.content = placement.content(content);
   }
 
   public synchronized Map<BlockPos, String> blocks() {
@@ -38,7 +39,7 @@ public final class SettlementBlueprint {
       built.put(new BlockPos(exit.x(), exit.y() + 1, exit.z()), "AIR");
       if (built.size() > BLOCK_BUDGET)
         throw new IllegalArgumentException("Settlement exceeds its reviewed block budget");
-      blocks = unmodifiableMap(built);
+      blocks = placement.restore(built);
     }
     return blocks;
   }

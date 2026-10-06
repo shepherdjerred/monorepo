@@ -272,6 +272,7 @@ final class SurvivalListener implements Listener {
 
   private static void interactPlayer(SurvivalRunner runner, PlayerInteractEvent event) {
     var player = event.getPlayer();
+    if (!runner.world().world().equals(player.getWorld())) return;
     if (runner.downed(player.getUniqueId())) {
       event.setCancelled(true);
       return;
@@ -532,6 +533,27 @@ final class SurvivalListener implements Listener {
       of(event.getPlayer())
           .filter(r -> r.tridents().pickup(event.getPlayer(), trident))
           .ifPresent(_ -> event.setCancelled(true));
+  }
+
+  @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+  void pickupItem(org.bukkit.event.entity.EntityPickupItemEvent event) {
+    if (event.getEntity() instanceof Player player)
+      of(player)
+          .filter(
+              r -> !r.items().weaponsFit(player, java.util.List.of(event.getItem().getItemStack())))
+          .ifPresent(
+              _ -> {
+                event.setCancelled(true);
+                Texts.info(
+                    player, "Carry up to four weapons. Store one in your bank locker first.");
+              });
+  }
+
+  @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+  void durability(org.bukkit.event.player.PlayerItemDamageEvent event) {
+    of(event.getPlayer())
+        .filter(r -> r.items().equipment(event.getItem()))
+        .ifPresent(_ -> event.setDamage(Math.multiplyExact(event.getDamage(), 3)));
   }
 
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

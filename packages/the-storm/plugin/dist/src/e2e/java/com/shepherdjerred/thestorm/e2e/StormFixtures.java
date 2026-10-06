@@ -41,6 +41,9 @@ public final class StormFixtures extends JavaPlugin {
     if (enabled(modules, "world", prepared)) {
       worldFixtures();
     }
+    if (enabled(modules, "towns", prepared)) {
+      protectedWorlds();
+    }
     if (enabled(modules, "essentials", prepared)) {
       world.setSpawnLocation(0, 65, 0);
       stand(section(yaml("essentials.yml"), "spawn"));
@@ -183,11 +186,17 @@ public final class StormFixtures extends JavaPlugin {
 
   private void prepareSurvival(
       com.shepherdjerred.thestorm.arena.domain.survival.SurvivalContent survival) {
+    var arenaWorld = voidWorld(survival.arena().world());
+    arenaWorld.setSpawnLocation(
+        (int) Math.floor(survival.arena().lobby().x()),
+        (int) survival.arena().lobby().y(),
+        (int) Math.floor(survival.arena().lobby().z()));
+    arenaWorld.setDifficulty(org.bukkit.Difficulty.NORMAL);
     com.shepherdjerred.thestorm.arena.domain.survival.SurvivalBlueprint.blocks(survival)
         .forEach(
             (pos, material) -> {
-              world.getChunkAt(pos.x() >> 4, pos.z() >> 4).setForceLoaded(true);
-              world
+              arenaWorld.getChunkAt(pos.x() >> 4, pos.z() >> 4).setForceLoaded(true);
+              arenaWorld
                   .getBlockAt(pos.x(), pos.y(), pos.z())
                   .setBlockData(
                       material.startsWith("minecraft:")
@@ -195,6 +204,29 @@ public final class StormFixtures extends JavaPlugin {
                           : Material.valueOf(material).createBlockData(),
                       false);
             });
+  }
+
+  /** Region protection needs its named worlds even when the arena module is disabled. */
+  private void protectedWorlds() {
+    var towns =
+        com.shepherdjerred.thestorm.core.config.ConfigFiles.load(
+            content.toPath().resolve("towns.yml"),
+            com.shepherdjerred.thestorm.towns.domain.TownsConfig.class);
+    towns.regions().stream()
+        .flatMap(region -> region.areas().all().stream())
+        .map(com.shepherdjerred.thestorm.towns.domain.region.Area::world)
+        .distinct()
+        .filter(name -> getServer().getWorld(name) == null)
+        .forEach(this::voidWorld);
+  }
+
+  private World voidWorld(String name) {
+    return Objects.requireNonNull(
+        new WorldCreator(name)
+            .type(WorldType.FLAT)
+            .generatorSettings(VOID_PRESET)
+            .generateStructures(false)
+            .createWorld());
   }
 
   private void shardFixtures() {

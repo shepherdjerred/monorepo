@@ -15,6 +15,7 @@ import {
   GAME_PORT,
   RCON_PORT,
   resolveProfile,
+  pluginMountTargets,
   type ResolvedProfile,
 } from "#sandbox/profiles.ts";
 import type { Progress, SandboxProvider } from "#sandbox/provider.ts";
@@ -54,6 +55,7 @@ export function dockerCreateArgs(options: {
   owner: string;
   keep: boolean;
 }): string[] {
+  const pluginsDir = options.pluginsDir;
   return [
     "create",
     "--name",
@@ -72,17 +74,13 @@ export function dockerCreateArgs(options: {
       "-p",
       `127.0.0.1::${port.toString()}`,
     ]),
-    // An image that bakes its own /plugins (the storm image) keeps them. A
-    // file overlay masks only the selected config file; mounting the staging
-    // directory over /plugins would hide every baked plugin.
-    ...(options.pluginsDir === null
+    // An image that bakes its own /plugins (the storm image) keeps them.
+    ...(pluginsDir === null
       ? []
-      : options.profile.stagedPluginMount === "files"
-        ? options.profile.staged.flatMap((entry) => [
-            "-v",
-            `${path.join(options.pluginsDir ?? "", entry.target)}:/plugins/${entry.target}:ro`,
-          ])
-        : ["-v", `${options.pluginsDir}:/plugins:ro`]),
+      : pluginMountTargets(options.profile).flatMap((target) => [
+          "-v",
+          `${path.join(pluginsDir, target)}:${path.posix.join("/plugins", target)}:ro`,
+        ])),
     ...(options.profile.seedData ? warmMountArgs(options.cacheDir) : []),
     ...envArgs(options.profile.env),
     options.profile.image,

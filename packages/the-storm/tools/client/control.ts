@@ -8,6 +8,7 @@ import { waitFor } from "./protocol.ts";
 export const ViewpointsSchema = z.record(
   z.string(),
   z.strictObject({
+    world: z.string().regex(/^[a-z][a-z0-9-]*$/u),
     position: z.tuple([z.number(), z.number(), z.number()]),
     yaw: z.number(),
     pitch: z.number(),
@@ -170,7 +171,7 @@ async function act(
   if (view === undefined) throw new Error(`Unknown viewpoint: ${name}`);
   const [x, y, zz] = view.position;
   await options.rcon.command(
-    `tp StormPreview ${x.toString()} ${y.toString()} ${zz.toString()} ${view.yaw.toString()} ${view.pitch.toString()}`,
+    `execute in ${view.world} run tp StormPreview ${x.toString()} ${y.toString()} ${zz.toString()} ${view.yaw.toString()} ${view.pitch.toString()}`,
   );
   return view;
 }

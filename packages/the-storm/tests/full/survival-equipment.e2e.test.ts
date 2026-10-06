@@ -2,7 +2,7 @@ import { expect } from "vitest";
 import type { Bot } from "mineflayer";
 import { Vec3 } from "vec3";
 import { z } from "zod";
-import { test } from "#e2e/fixtures.ts";
+import { test } from "#e2e/arena-fixtures.ts";
 import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
 import type { RconClient } from "#e2e/harness/rcon.ts";
 import {
@@ -64,6 +64,88 @@ async function upgradeMessage(bot: Bot, rcon: RconClient) {
   }
 }
 
+test("station repair keeps an off-hand shield and its metadata in the same slot", async ({
+  bot,
+  rcon,
+}) => {
+  await start(bot, rcon, 15);
+  try {
+    bot.setQuickBarSlot(0);
+    await bot.waitForTicks(2);
+    const data = await rcon.command(
+      `data get entity ${bot.username} SelectedItem.components."minecraft:custom_data".PublicBukkitValues."thestorm:survival_run"`,
+    );
+    const run = z.guid().parse(/[a-f0-9-]{36}/u.exec(data)?.[0]);
+    const supplied = await rcon.command(
+      `item replace entity ${bot.username} weapon.offhand with minecraft:shield[minecraft:damage=85,minecraft:enchantments={unbreaking:3},minecraft:custom_data={PublicBukkitValues:{"thestorm:arena_item":1b,"thestorm:survival_run":"${run}","thestorm:survival_upgrade":0,"thestorm:survival_rarity":"COMMON","thestorm:survival_equipment_id":"1b91bfc2-2697-4c35-b393-715273491bad"},"thestorm-test":"offhand-repair"}]`,
+    );
+    expect(supplied).toContain("Replaced");
+    await runSupply(bot, rcon, "iron_ingot", 2);
+    await runSupply(bot, rcon, "emerald", 2);
+    await bot.waitForTicks(3);
+    const supplies = (name: string) =>
+      bot.inventory
+        .items()
+        .filter((item) => item.name === name)
+        .reduce((sum, item) => sum + item.count, 0);
+    const iron = supplies("iron_ingot");
+    const emeralds = supplies("emerald");
+    const main = await rcon.command(
+      `data get entity ${bot.username} SelectedItem`,
+    );
+    const shieldMetadata = await rcon.command(
+      `data get entity ${bot.username} equipment.offhand.components."minecraft:custom_data"`,
+    );
+    const enchantments = await rcon.command(
+      `data get entity ${bot.username} equipment.offhand.components."minecraft:enchantments"`,
+    );
+    expect(
+      await rcon.command(
+        `data get entity ${bot.username} equipment.offhand.components."minecraft:damage"`,
+      ),
+    ).toMatch(/: 85$/u);
+    await click(bot, rcon, new Vec3(-27, 73, 52));
+    try {
+      await waitUntil("repair menu", () => bot.currentWindow !== null);
+    } catch (error) {
+      throw new Error(
+        `Repair at ${bot.entity.position.toString()}, selected ${String(bot.heldItem?.name)}, main ${main}: ${String(error)}`,
+        { cause: error },
+      );
+    }
+    await bot.clickWindow(45, 0, 0);
+    await close(bot);
+    expect(
+      await rcon.command(
+        `execute if items entity ${bot.username} weapon.offhand minecraft:shield[minecraft:damage=0] run data get entity ${bot.username} equipment.offhand.id`,
+      ),
+    ).toContain("minecraft:shield");
+    expect(
+      await rcon.command(`data get entity ${bot.username} SelectedItem`),
+    ).toBe(main);
+    expect(
+      await rcon.command(
+        `data get entity ${bot.username} equipment.offhand.components."minecraft:custom_data"`,
+      ),
+    ).toBe(shieldMetadata);
+    expect(
+      await rcon.command(
+        `data get entity ${bot.username} equipment.offhand.components."minecraft:enchantments"`,
+      ),
+    ).toBe(enchantments);
+    await waitUntil(
+      "single repair payment",
+      () =>
+        supplies("iron_ingot") === iron - 2 &&
+        supplies("emerald") === emeralds - 2,
+    );
+    expect(supplies("iron_ingot")).toBe(iron - 2);
+    expect(supplies("emerald")).toBe(emeralds - 2);
+  } finally {
+    await stop(rcon);
+  }
+});
+
 test("all fourteen signatures carry the correct rarity and equipment identity", async ({
   bot,
   rcon,
@@ -86,6 +168,10 @@ test("all fourteen signatures carry the correct rarity and equipment identity", 
       "ECHOHEART",
       "FAULTLINE",
     ]) {
+      // Each identity is an independent fixture; clear the previous equipment
+      // so this metadata test does not ask production to bypass the carry limit.
+      await rcon.command(`clear ${bot.username}`);
+      await bot.waitForTicks(2);
       const occupied = new Set(bot.inventory.items().map((item) => item.slot));
       await rcon.command(
         `storm-fixture-survival legendary ${bot.username} ${id}`,
@@ -141,7 +227,7 @@ test("enchanting and Runeforge preserve independent rarity, armor and shield sig
       `data get entity ${bot.username} SelectedItem.components."minecraft:custom_data"`,
     );
     expect(initial).toContain("COMMON");
-    await click(bot, rcon, new Vec3(1765, 73, 2260));
+    await click(bot, rcon, new Vec3(-27, 73, 52));
     await waitUntil("enchanting menu", () => bot.currentWindow !== null);
     await bot.clickWindow(46, 0, 0);
     await bot.waitForTicks(3);
@@ -181,7 +267,7 @@ test("enchanting and Runeforge preserve independent rarity, armor and shield sig
     await bot.equip(chest, "torso");
     await bot.equip(shield, "off-hand");
     await travelToRuneforge(bot, rcon);
-    await click(bot, rcon, new Vec3(1727, 73, 2209));
+    await click(bot, rcon, new Vec3(-65, 73, 1));
     await waitUntil("equipment selection", () => bot.currentWindow !== null);
     for (const slot of [0, 1, 3]) {
       const previous = bot.currentWindow?.id;
@@ -238,16 +324,16 @@ test("vertical shrines play local music and require an explicit third-boon repla
   try {
     expect(
       await rcon.command(
-        "execute if block 1850 89 2210 minecraft:waxed_copper_block",
+        "execute if block 58 89 2 minecraft:waxed_copper_block",
       ),
     ).toBe("Test passed");
     expect(
-      await rcon.command("execute if block 1850 90 2210 minecraft:lodestone"),
+      await rcon.command("execute if block 58 90 2 minecraft:lodestone"),
     ).toBe("Test passed");
-    await click(bot, rcon, new Vec3(1850, 90, 2210));
+    await click(bot, rcon, new Vec3(58, 90, 2));
     for (const [x, height, positionZ, name] of [
-      [1764, 90, 2189, "Stoneward"],
-      [1813, 90, 2231, "Galestride"],
+      [-28, 90, -19, "Stoneward"],
+      [21, 90, 23, "Galestride"],
     ] as const) {
       await click(bot, rcon, new Vec3(x, height, positionZ));
       await waitUntil("boon menu", () => bot.currentWindow !== null);
@@ -265,7 +351,7 @@ test("vertical shrines play local music and require an explicit third-boon repla
         cause: error,
       });
     }
-    await click(bot, rcon, new Vec3(1798, 106, 2163));
+    await click(bot, rcon, new Vec3(6, 106, -45));
     await waitUntil(
       "replacement choices",
       () => bot.currentWindow?.slots[1]?.name === "amethyst_shard",
@@ -281,7 +367,7 @@ test("vertical shrines play local music and require an explicit third-boon repla
         .filter((item) => item.name === "emerald")
         .reduce((sum, item) => sum + item.count, 0),
     ).toBe(before);
-    await click(bot, rcon, new Vec3(1798, 106, 2163));
+    await click(bot, rcon, new Vec3(6, 106, -45));
     await waitUntil(
       "replacement menu reopened",
       () => bot.currentWindow !== null,
@@ -305,7 +391,7 @@ test("vertical shrines play local music and require an explicit third-boon repla
         .filter((item) => item.name === "emerald")
         .reduce((sum, item) => sum + item.count, 0),
     ).toBe(before - 32);
-    await click(bot, rcon, new Vec3(1764, 90, 2189));
+    await click(bot, rcon, new Vec3(-28, 90, -19));
     await waitUntil(
       "owned boon menu reopened",
       () => bot.currentWindow !== null,
@@ -320,7 +406,7 @@ test("vertical shrines play local music and require an explicit third-boon repla
         .filter((item) => item.name === "emerald")
         .reduce((sum, item) => sum + item.count, 0),
     ).toBe(before - 32);
-    await rcon.command(`tp ${bot.username} 1844.5 105 2177.5`);
+    await rcon.command(`tp ${bot.username} 52.5 105 -30.5`);
     await waitUntil(
       "record stopped outside shrine radius",
       () => stopped.length > 0,

@@ -145,9 +145,9 @@ final class SettlementRulesTest {
     assertThat(SettlementTerrain.elevation(1790, 2261)).isEqualTo(72);
     assertThat(SettlementTerrain.elevation(1803, 2210)).isEqualTo(88);
     assertThat(SettlementTerrain.elevation(1795, 2154)).isEqualTo(104);
-    assertThat(blueprint.get(new BlockPos(1788, 141, 2188))).isEqualTo("IRON_BARS");
-    assertThat(blueprint.get(new BlockPos(1803, 108, 2236))).isEqualTo("STONE_BRICKS");
-    assertThat(blueprint.get(new BlockPos(1803, 110, 2236))).isEqualTo("STONE_BRICKS");
+    assertThat(blueprint.get(new BlockPos(-4, 141, -20))).isEqualTo("IRON_BARS");
+    assertThat(blueprint.get(new BlockPos(11, 108, 28))).isEqualTo("STONE_BRICKS");
+    assertThat(blueprint.get(new BlockPos(11, 110, 28))).isEqualTo("STONE_BRICKS");
   }
 
   @Test
@@ -209,9 +209,9 @@ final class SettlementRulesTest {
             .isTrue();
       }
     }
-    assertThat(reachable).contains(new BlockPos(1804, 89, 2214));
-    assertThat(reachable).contains(new BlockPos(1800, 77, 2212));
-    assertThat(reachable).contains(new BlockPos(1787, 101, 2204));
+    assertThat(reachable).contains(new BlockPos(12, 89, 6));
+    assertThat(reachable).contains(new BlockPos(8, 77, 4));
+    assertThat(reachable).contains(new BlockPos(-5, 101, -4));
     assertThat(content.boxSites())
         .allSatisfy(
             site ->

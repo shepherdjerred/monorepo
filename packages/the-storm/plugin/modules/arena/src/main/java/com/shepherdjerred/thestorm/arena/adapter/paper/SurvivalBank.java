@@ -43,6 +43,15 @@ final class SurvivalBank {
     return item == null ? null : item.clone();
   }
 
+  boolean exchange(UUID player, int slot, ItemStack expected, ItemStack replacement) {
+    var next = copy(locker(player));
+    if (slot < 0 || slot >= next.length || !expected.equals(next[slot])) return false;
+    next[slot] = null;
+    if (!insert(next, java.util.List.of(replacement))) return false;
+    lockers.put(player, next);
+    return true;
+  }
+
   void leave(UUID player) {
     lockers.remove(player);
   }

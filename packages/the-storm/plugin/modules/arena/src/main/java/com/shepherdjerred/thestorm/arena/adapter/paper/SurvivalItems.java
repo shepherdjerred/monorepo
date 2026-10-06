@@ -27,6 +27,30 @@ final class SurvivalItems {
   private final Map<Long, Payment> reserved = new java.util.HashMap<>();
   private long serial;
   private final Map<UUID, Map<Integer, Integer>> returnSlots = new java.util.HashMap<>();
+  private final Map<UUID, java.util.Set<UUID>> flyingWeapons = new java.util.HashMap<>();
+
+  void reserveWeapon(UUID player, UUID identity) {
+    flyingWeapons.computeIfAbsent(player, _ -> new java.util.HashSet<>()).add(identity);
+  }
+
+  void releaseWeapon(UUID player, UUID identity) {
+    var identities = flyingWeapons.get(player);
+    if (identities == null || !identities.remove(identity))
+      throw new IllegalStateException("Missing weapon reservation");
+    if (identities.isEmpty()) flyingWeapons.remove(player);
+  }
+
+  boolean weaponsFit(Player player, java.util.List<ItemStack> bundle) {
+    var identities =
+        new java.util.HashSet<>(
+            flyingWeapons.getOrDefault(player.getUniqueId(), java.util.Set.of()));
+    for (var item : java.util.Objects.requireNonNull(player.getInventory().getContents()))
+      if (item != null && weapon(item)) identities.add(identity(item));
+    var cursor = player.getItemOnCursor();
+    if (weapon(cursor)) identities.add(identity(cursor));
+    for (var item : bundle) if (weapon(item)) identities.add(identity(item));
+    return identities.size() <= 4;
+  }
 
   void reserveSlot(UUID player, int slot) {
     returnSlots
@@ -187,6 +211,8 @@ final class SurvivalItems {
 
   boolean supply(ItemStack item) {
     return owns(item)
+        && !(item.getItemMeta() instanceof org.bukkit.inventory.meta.PotionMeta)
+        && !equipment(item)
         && item.isSimilar(stack(item.getType(), 1))
         && (item.getType() == Material.EMERALD
             || item.getType() == Material.ARROW
@@ -241,6 +267,37 @@ final class SurvivalItems {
     return true;
   }
 
+  record Exchange(int slot, UUID expected, java.util.List<ItemStack> bundle, int lockerSlot) {}
+
+  boolean swap(Player player, Exchange exchange) {
+    var slot = exchange.slot();
+    var expected = exchange.expected();
+    var bundle = exchange.bundle();
+    var lockerSlot = exchange.lockerSlot();
+    var inventory = player.getInventory();
+    var old = inventory.getItem(slot);
+    if (old == null
+        || !weapon(old)
+        || !identity(old).equals(expected)
+        || !availableSlot(player.getUniqueId(), slot)) return false;
+    inventory.setItem(slot, null);
+    if (!inventoryFits(player, bundle)) {
+      inventory.setItem(slot, old);
+      return false;
+    }
+    var stored =
+        lockerSlot < 0
+            ? bank.store(player.getUniqueId(), java.util.List.of(old))
+            : bank.exchange(player.getUniqueId(), lockerSlot, bundle.getFirst(), old);
+    if (!stored) {
+      inventory.setItem(slot, old);
+      return false;
+    }
+    if (!deliverInventory(player, bundle))
+      throw new IllegalStateException("Weapon swap lost capacity");
+    return true;
+  }
+
   void ability(Player player) {
     var compass = stack(Material.COMPASS, 1);
     keys.gear(compass, "survival_ability");
@@ -266,14 +323,16 @@ final class SurvivalItems {
   }
 
   boolean inventoryFits(Player player, java.util.List<ItemStack> bundle) {
-    return SurvivalBank.insert(
-        SurvivalBank.copy(
-            java.util.Objects.requireNonNull(player.getInventory().getStorageContents())),
-        bundle,
-        slot -> availableSlot(player.getUniqueId(), slot));
+    return weaponsFit(player, bundle)
+        && SurvivalBank.insert(
+            SurvivalBank.copy(
+                java.util.Objects.requireNonNull(player.getInventory().getStorageContents())),
+            bundle,
+            slot -> availableSlot(player.getUniqueId(), slot));
   }
 
   boolean deliverInventory(Player player, java.util.List<ItemStack> bundle) {
+    if (!weaponsFit(player, bundle)) return false;
     var storage =
         SurvivalBank.copy(
             java.util.Objects.requireNonNull(player.getInventory().getStorageContents()));

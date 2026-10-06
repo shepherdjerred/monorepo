@@ -531,6 +531,8 @@ wear out between checkpoints. Full caches and inventories keep their contents;
 supplies that do not fit are not dropped into the world.
 
 Hostiles acquire fighters across the arena and explicitly start navigation.
+Cross-map path requests beyond sixteen blocks use a 1.2 movement multiplier;
+close-range native combat goals still control attacking and strafing.
 Stalled mobs retry after five seconds; after twenty seconds without progress,
 they return to a floor entrance. Mobs already in combat keep their native attack
 behavior. Boss waves require a clear and cannot time out into the next wave.
@@ -548,7 +550,9 @@ damage scaling still apply. Food and healing consumables remain available.
 The Colosseum retains its finite 72-wave game. Settlement is a separate,
 endless, one-to-four-player crafting survival game. Its fourteen connected
 districts form a coastal fortress town on three terraces at Y72, Y88, and Y104,
-inside the original 160 × 160 protected footprint. Broad rising streets connect
+inside a 160 × 160 protected footprint in its own void world, `settlement`.
+The region is X−80–79, Y62–142, Z−80–79; its lobby is at −65.5,73,−67.5.
+Broad rising streets connect
 the harbor and market to a central cathedral, then the upper barracks and ramparts.
 The cathedral is an early eight-emerald unlock, with a large nave, walkable galleries,
 stained glass, and a separately gated crypt. Three banks serve the three levels.
@@ -621,20 +625,26 @@ countdown, and resupply phases show the relevant next action or time. Crossing
 bounds returns the player to the nearest accessible collision-free, hazard-free
 anchor, avoiding enemies and marked casts when possible, without healing.
 
-The first three rounds introduce the horde gradually. A solo opening has six
-adult, unarmed zombies with eight HP and one HP native attack damage, arriving one every
-three seconds with at most three alive. Rounds two and three add husks and
-increase the count, health (10/12 HP), attack damage (1.5/2 HP), and concurrent limit. Baby zombies and
+The first three rounds introduce the horde gradually. A solo opening has nine
+adult, unarmed zombies with 5.2 HP and 0.6 HP native attack damage, arriving in
+batches of up to three per second with at most nine alive. Rounds two and three
+add husks, with 12/15 enemies, 6.5/7.8 HP, and 0.9/1.2 HP attack damage. Baby zombies and
 special enemy types arrive from round six onward. Opening zombies cannot summon
 Hard-difficulty reinforcements beyond the planned wave.
 Every starting class receives a wooden sword and full leather armor set; returning after a
 bleedout retains the weaker chestplate-only kit and class tools. Round four has
-12 enemies with six active solo; round five has four supports, at most two active,
-and the first boss. Rounds six and seven have 16 and 18 enemies with caps seven
-and eight. Each extra player adds three enemies and two active slots. Special
+18 enemies with 18 active solo; round five keeps four supports, at most two active,
+and the first boss. Rounds six and seven have 24 and 27 enemies with matching solo caps.
+Ordinary counts are 1.5× the original party budget, rounded upward. Active pressure is
+`min(48, 9 + 3 × (round − 1) + 2 × extra players)`, bounded by 64 physical entities
+including mounts and companions. Ordinary health and damage are 65% and 60% of
+their original values. Boss phase adds keep their original full bounties.
+Cumulative ordinary-wave kill rewards preserve the original round income
+for each eligible contributor; boss and round-clear rewards retain their amounts. Special
 mobs spend 10–25% of the wave budget; ranged mobs begin at round six, have a
 wind-up, at least three seconds between shots and limited concurrent slots.
-Early ranged hits are capped at four raw HP and cannot inflict poison or slowness.
+Early ranged hits are capped at 2.4 raw HP and cannot inflict poison or slowness.
+When one or two logical enemies remain, counting queued units, living enemies glow.
 
 Standing survivors recover half a heart every five seconds after eight seconds
 without damage, up to one-third of their current maximum health. Passive
@@ -650,8 +660,9 @@ channel particles, imminent warnings, marked ground, impact bursts, and accepted
 cues distinguish each stage. Secondary spell effects require accepted damage. Locked
 cast origin, target, height and terrain checks govern both markings and hits.
 Boss health is `(100 + 20 × round) × (1 + 0.65 × extra players)`, capped at 1,000;
-round five therefore has 200/330/460/590 HP for one through four players, with
-six/eight/ten-HP spells before armor across its three phases. Party size increases health and support
+round five applies a 15% health reduction: 170/280.5/391/501.5 HP for one through four players.
+Its basic and spell damage is reduced by 15%; later bosses retain their original scaling.
+Party size increases health and support
 pressure without multiplying damage per hit. Later bosses add enemies once
 at phase thresholds through the normal spawn budget.
 Each boss rotates three attacks, including directional lanes, rings with safe
@@ -682,6 +693,9 @@ Depleted and unpowered fixtures have subdued cues; boss markings have a separate
 A look-at prompt identifies the current interaction. Powered shrines play their native
 music disc quietly in the RECORDS category: Relic, Otherside, Pigstep, or Creator Music Box.
 Only the nearest shrine plays within twelve blocks; leaving, downing or losing power stops it.
+Blocked route prompts name the prerequisite districts. Shrine prompts and purchase
+menu lore describe the boon before payment. Advanced tips and fixture glints appear
+when the relevant district and power are available; the handbook stays accessible.
 
 Fourteen gathering nodes cover twelve materials: wood, stone, wheat, iron, flint,
 redstone, bone, glowstone, copper, string, nether wart, and blaze powder. Wood
@@ -693,7 +707,8 @@ The starting district and two later workshops have bank terminals. Materials and
 emeralds use a shared run-local ledger; exact gear stacks use a private 54-slot locker.
 Station crafting, machines, boons, and route purchases spend carried supplies first,
 then shared supplies. The complete price is checked before any withdrawal. Reserved
-box payments track their sources and refund at most once. Full-inventory material
+box payments track their sources and settle at most once. Bulk deposit transfers
+only recognized fungible supplies; potions and equipment stay carried. Full-inventory material
 rewards go to the shared bank; equipment bundles go to the private locker. A full
 locker and inventory refuse equipment delivery without charging. Crafted armor
 equips automatically and preserves the previous piece in the private locker.
@@ -706,7 +721,12 @@ Curated recipes provide all four armor slots at leather, chainmail, iron, and di
 tiers, plus axes, spears, bows, crossbows, tridents, and a mace. Food includes bread,
 baked potatoes, stew, steak, and healing apples. Typed potion outputs provide healing,
 regeneration, speed, strength, and fire resistance. Station menus also repair a held
-weapon or equipped armor and offer compatible held-weapon enchantments. Recipes use
+weapon, shield, or equipped armor and offer compatible held-weapon enchantments.
+Actual durability loss is tripled after native Unbreaking checks; cancelled damage
+stays cancelled. Survivors carry at most four combat weapons, including thrown tridents;
+shields, armor, ammunition, potions and the ability compass do not count.
+Extra crafted gear goes to the private locker. Locker withdrawals and box claims offer
+an explicit weapon swap, preserving the replaced weapon's metadata. Recipes use
 at most three material kinds plus emeralds; their outputs use the same tagged item
 and payment paths as box rewards.
 
@@ -735,7 +755,9 @@ Weapons, armor and shields use the same system. Consumable supplies do not have 
 The powered runic cache costs sixteen emeralds: Common 25%, Uncommon 30%, Epic 25%,
 Legendary 16%, Mythic 4%. Rarity controls enchantment strength; Legendary and Mythic rewards
 have signatures. Cache animation lasts three seconds and reserves the exact revealed item
-for its buyer for fifteen seconds. Unclaimed purchases refund their original payment sources.
+for its buyer for fifteen seconds. The revealed item lowers into the box as its
+claim countdown expires. Normal expiry or buyer abandonment spends the roll cost;
+technical run shutdown refunds outstanding reservations. Swaps do not extend the deadline.
 Full-inventory equipment rewards use the private locker; full inventory and locker refuse
 delivery without losing the purchase. After six claims the cache moves to another authored
 site. Follow the magenta beacon to market, wharf, church, foundry, barracks or bluff.
@@ -790,7 +812,8 @@ an eight-second healing grove. Redstone Surge chains the next three attacks. Res
 halves remaining class recharge and empowers the next ability within fifteen seconds.
 Copper Pulse deals bounded local damage and staggers ordinary enemies. Mason's Echo gradually
 restores nearby barricades and charges nearby traps. Drops are introduced within eight blocks;
-a first encounter waits two seconds before collection.
+a first encounter waits two seconds before collection. Item and label flash every
+250 ms during the final five seconds; collection remains available during flashing.
 
 First-encounter tips use a validated dependency DAG covering gathering, crafting, enchanting,
 banking, route unlocks, defenses, power, boons, the cache, rarity, travel, augmentation, classes,
@@ -845,12 +868,14 @@ Both maps use the existing survival admission flag. Startup checks every enabled
 map before opening arena admissions: install the authored world geometry before
 enabling a new map in production.
 
-Rustworks occupies x=1920–2111, z=2112–2311, y=68–103; its exit pad is x=1918,
-z=2132, y=72–74. Provisioning targets use the map ID: `/rustworks preview`,
+Rustworks occupies its own void world, `rustworks`, at X−96–95, Z−100–99, Y68–103;
+its lobby is at −78.5,73,−79.5 and exit pad at X−98, Z−80, Y72–74.
+Provisioning targets use the map ID: `/rustworks preview`,
 `/rustworks apply <token>`, and `/rustworks restore <token>`. Disable Rustworks
 in its own configuration before provisioning. Previews retain the same wilderness,
 block-budget, backup, and ownership checks as Settlement; do not enable it until
-the map has been installed and verified. Its region does not overlap Settlement.
+the map has been installed and verified. World identity isolates the maps even where
+their coordinates overlap. Leaving restores the player's saved world and position.
 
 Arena startup loads its configured region chunks asynchronously before checking
 loot chest blocks or clearing remnants of an interrupted game. Admission stays

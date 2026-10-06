@@ -4,7 +4,7 @@ import { Vec3 } from "vec3";
 import { z } from "zod";
 import type { Bot } from "mineflayer";
 import type { RconClient } from "#e2e/harness/rcon.ts";
-import { test } from "#e2e/fixtures.ts";
+import { test } from "#e2e/arena-fixtures.ts";
 import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
 
 const Bank = z
@@ -109,8 +109,103 @@ async function supplies(bot: Bot, rcon: RconClient, run: string) {
   }
 }
 
+describe("inventory safeguards on native Paper", () => {
+  test("bulk deposit leaves a crafted healing potion and all its components intact", async ({
+    bot,
+    rcon,
+  }) => {
+    await join(bot, rcon, true, 15);
+    try {
+      await start(bot, rcon, 15);
+      const run = await runTag(bot, rcon);
+      await rcon.command(
+        `give ${bot.username} minecraft:wheat[minecraft:custom_data={${tags(run)}}] 4`,
+      );
+      await clickAt(bot, rcon, new Vec3(-31, 89, -20));
+      await bot.clickWindow(21, 0, 0);
+      await waitUntil("crafted healing potion", () =>
+        bot.inventory.items().some((item) => item.name === "potion"),
+      );
+      await close(bot);
+      const components = () =>
+        rcon.command(
+          `data get entity ${bot.username} Inventory[{id:"minecraft:potion"}].components`,
+        );
+      const before = await components();
+      expect(before).toContain("minecraft:healing");
+      await clickAt(bot, rcon, new Vec3(-23, 73, 49));
+      await bot.clickWindow(0, 0, 0);
+      await close(bot);
+      expect(
+        bot.inventory.items().filter((item) => item.name === "potion"),
+      ).toHaveLength(1);
+      expect(await components()).toBe(before);
+    } finally {
+      await rcon.command("arena stop settlement");
+      await rcon.command("difficulty peaceful");
+    }
+  });
+
+  test("a fifth weapon stays in the locker and an explicit swap preserves the four-weapon limit", async ({
+    bot,
+    rcon,
+  }) => {
+    await join(bot, rcon, true, 15);
+    try {
+      await start(bot, rcon, 15);
+      for (const signature of [
+        "STORMCALLER",
+        "GRAVITON",
+        "WHIRLWIND",
+        "RIFTBLADE",
+      ])
+        await rcon.command(
+          `storm-fixture-survival legendary ${bot.username} ${signature}`,
+        );
+      const weapons = () =>
+        bot.inventory
+          .items()
+          .filter((item) =>
+            [
+              "iron_sword",
+              "bow",
+              "blaze_rod",
+              "iron_axe",
+              "diamond_sword",
+            ].includes(item.name),
+          );
+      await waitUntil("four carried weapons", () => weapons().length === 4);
+      expect(await inspect(bot, rcon)).toMatchObject({ locker: 1 });
+      expect(weapons().some((item) => item.name === "diamond_sword")).toBe(
+        false,
+      );
+      await clickAt(bot, rcon, new Vec3(-23, 73, 49));
+      await bot.clickWindow(1, 0, 0);
+      await waitUntil(
+        "fifth weapon in locker",
+        () => bot.currentWindow?.slots[0]?.name === "diamond_sword",
+      );
+      await bot.clickWindow(0, 0, 0);
+      await waitUntil("explicit swap choices", () =>
+        JSON.stringify(bot.currentWindow?.title).includes(
+          "Choose a weapon to swap",
+        ),
+      );
+      await bot.clickWindow(0, 0, 0);
+      await waitUntil("fifth weapon swapped", () =>
+        weapons().some((item) => item.name === "diamond_sword"),
+      );
+      expect(weapons()).toHaveLength(4);
+      expect(await inspect(bot, rcon)).toMatchObject({ locker: 1 });
+    } finally {
+      await rcon.command("arena stop settlement");
+      await rcon.command("difficulty peaceful");
+    }
+  });
+});
+
 describe("run bank on native Paper", () => {
-  test("an expired box roll refunds its carried and banked emeralds exactly once", async ({
+  test("an expired box roll spends carried and banked emeralds exactly once", async ({
     bot,
     rcon,
   }) => {
@@ -122,40 +217,40 @@ describe("run bank on native Paper", () => {
       await rcon.command(
         `give ${bot.username} minecraft:emerald[minecraft:custom_data={${tags(run)}}] 12`,
       );
-      await clickAt(bot, rcon, new Vec3(1769, 73, 2257));
+      await clickAt(bot, rcon, new Vec3(-23, 73, 49));
       await bot.clickWindow(0, 0, 0);
       await close(bot);
       expect(await inspect(bot, rcon)).toMatchObject({ emeralds: 12 });
       await rcon.command(
         `give ${bot.username} minecraft:emerald[minecraft:custom_data={${tags(run)}}] 4`,
       );
-      await rcon.command(`tp ${bot.username} 1790.5 73 2272.5`);
-      const box = new Vec3(1790, 73, 2270);
+      await rcon.command(`tp ${bot.username} -1.5 73 64.5`);
+      const box = new Vec3(-2, 73, 62);
       await waitUntil(
         "active box loaded",
         () =>
-          bot.entity.position.distanceTo(new Vec3(1790.5, 73, 2272.5)) < 0.6 &&
+          bot.entity.position.distanceTo(new Vec3(-1.5, 73, 64.5)) < 0.6 &&
           bot.blockAt(box) !== null,
       );
       const fixture = bot.blockAt(box);
       if (fixture === null) throw new Error("Runic cache is missing");
       const rolling = waitForMessage(bot, /Runic cache rolling/u);
-      const refunded = waitForMessage(bot, /Unclaimed box.*refunded/u, 25_000);
+      const expired = waitForMessage(bot, /Unclaimed box expired/u, 25_000);
       await bot.activateBlock(fixture);
       await rolling;
       expect(await inspect(bot, rcon)).toMatchObject({ emeralds: 0 });
-      await refunded;
+      await expired;
       await bot.waitForTicks(2);
-      expect(await inspect(bot, rcon)).toMatchObject({ emeralds: 12 });
+      expect(await inspect(bot, rcon)).toMatchObject({ emeralds: 0 });
       const carried = () =>
         bot.inventory
           .items()
           .filter((item) => item.name === "emerald")
           .reduce((sum, item) => sum + item.count, 0);
-      expect(carried()).toBe(4);
+      expect(carried()).toBe(0);
       await bot.waitForTicks(25);
-      expect(await inspect(bot, rcon)).toMatchObject({ emeralds: 12 });
-      expect(carried()).toBe(4);
+      expect(await inspect(bot, rcon)).toMatchObject({ emeralds: 0 });
+      expect(carried()).toBe(0);
     } finally {
       await rcon.command("arena stop settlement");
       await rcon.command("difficulty peaceful");
@@ -185,7 +280,7 @@ describe("run bank on native Paper", () => {
       ]) {
         await rcon.command(`clear ${secondBot.username} minecraft:${material}`);
       }
-      await clickAt(bot, rcon, new Vec3(1769, 73, 2257));
+      await clickAt(bot, rcon, new Vec3(-23, 73, 49));
       const deposited = waitForMessage(bot, /Deposited 40 supplies/u);
       await bot.clickWindow(0, 0, 0);
       await deposited;
@@ -197,14 +292,14 @@ describe("run bank on native Paper", () => {
         stone: 4,
         locker: 0,
       });
-      await clickAt(secondBot, rcon, new Vec3(1765, 73, 2260));
+      await clickAt(secondBot, rcon, new Vec3(-27, 73, 52));
       await secondBot.clickWindow(18, 0, 0);
       await waitUntil("weapon crafted using team materials", () =>
         secondBot.inventory.items().some((i) => i.name === "stone_sword"),
       );
       expect(await inspect(bot, rcon)).toMatchObject({ wood: 6, stone: 0 });
       await close(secondBot);
-      await clickAt(secondBot, rcon, new Vec3(1856, 89, 2209));
+      await clickAt(secondBot, rcon, new Vec3(64, 89, 1));
       const oldWindow = secondBot.currentWindow?.id;
       await secondBot.clickWindow(1, 0, 0);
       await waitUntil(
@@ -256,7 +351,7 @@ describe("run bank on native Paper", () => {
           `data get entity ${bot.username} Inventory[{id:"minecraft:diamond_sword"}].components`,
         );
       const before = await components();
-      await clickAt(bot, rcon, new Vec3(1769, 73, 2257));
+      await clickAt(bot, rcon, new Vec3(-23, 73, 49));
       const weapon = bot.inventory
         .items()
         .find((i) => i.name === "diamond_sword");

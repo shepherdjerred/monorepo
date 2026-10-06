@@ -23,6 +23,7 @@ export async function stageWorld(
   const copy = path.join(stagingDir, "world");
   await cp(source, copy, { recursive: true });
   await writableWorld(copy);
-  // Warm-cache containers already have /data/world; copy contents rather than nesting world/world.
-  await docker(["cp", `${copy}/.`, `${containerId}:/data/world`]);
+  // Paper 26.2 stores named dimensions within this shared save. Docker creates
+  // or merges the root directory while the container is stopped.
+  await docker(["cp", copy, `${containerId}:/data/`]);
 }

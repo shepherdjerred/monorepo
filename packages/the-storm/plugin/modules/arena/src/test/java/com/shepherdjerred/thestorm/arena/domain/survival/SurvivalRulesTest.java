@@ -93,32 +93,33 @@ final class SurvivalRulesTest {
   @Test
   void openingRoundsBuildPressureWithoutSwarmingAnUnequippedSoloPlayer() {
     var first = EncounterDirector.plan(1, 1, Set.of("gatehouse", "market"));
-    assertThat(first.count()).isEqualTo(6);
-    assertThat(first.concurrentLimit()).isEqualTo(3);
-    assertThat(first.spawnBatch()).isEqualTo(1);
-    assertThat(first.spawnIntervalSeconds()).isEqualTo(3);
+    assertThat(first.count()).isEqualTo(9);
+    assertThat(first.concurrentLimit()).isEqualTo(9);
+    assertThat(first.spawnBatch()).isEqualTo(3);
+    assertThat(first.spawnIntervalSeconds()).isEqualTo(1);
     assertThat(first.roster()).containsExactly("zombie");
-    assertThat(first.health()).isCloseTo(0.6, org.assertj.core.data.Offset.offset(0.001));
-    assertThat(first.damage()).isEqualTo(0.5);
+    assertThat(first.health()).isCloseTo(0.39, org.assertj.core.data.Offset.offset(0.001));
+    assertThat(first.damage()).isEqualTo(0.3);
     for (var round = 2; round <= 3; round++) {
       var next = EncounterDirector.plan(round, 1, Set.of("gatehouse", "market"));
-      assertThat(next.count()).isEqualTo(4 + round * 2);
-      assertThat(next.concurrentLimit()).isLessThanOrEqualTo(5);
+      assertThat(next.count()).isEqualTo(round == 2 ? 12 : 15);
+      assertThat(next.concurrentLimit()).isEqualTo(round == 2 ? 12 : 15);
       assertThat(next.roster()).containsExactly("zombie", "husk");
       assertThat(next.health()).isLessThan(1);
       assertThat(next.damage()).isLessThan(1);
     }
     var coop = EncounterDirector.plan(1, 4, Set.of("gatehouse", "market"));
-    assertThat(coop.count()).isEqualTo(15);
-    assertThat(coop.concurrentLimit()).isEqualTo(9);
-    assertThat(coop.spawnBatch()).isEqualTo(1);
+    assertThat(coop.count()).isEqualTo(23);
+    assertThat(coop.concurrentLimit()).isEqualTo(15);
+    assertThat(coop.spawnBatch()).isEqualTo(3);
   }
 
   @Test
   void endlesslyScaledEncountersRemainBoundedAndRespectLockedDistricts() {
     for (var round = 1; round <= 500; round++) {
       var encounter = EncounterDirector.plan(round, 4, Set.of("gatehouse", "market"));
-      assertThat(encounter.count()).isBetween(1, 160);
+      assertThat(encounter.count()).isBetween(1, 240);
+      assertThat(encounter.concurrentLimit()).isLessThanOrEqualTo(48);
       assertThat(encounter.damage()).isLessThanOrEqualTo(3);
       assertThat(encounter.event()).isNotEqualTo(EncounterDirector.Event.PALE_INCURSION);
       assertThat(encounter.boss()).isNotIn("heartwood", "warden");

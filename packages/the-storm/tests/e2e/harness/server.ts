@@ -81,7 +81,7 @@ export type StartServerOptions = {
   survivalConfig?: string;
   /** Optional local world copy for terrain acceptance; copied into the disposable server. */
   worldDir?: string;
-  /** Save the stopped disposable world's files for local inspection or map provisioning. */
+  /** Save the stopped world save, including its named dimensions, for inspection or provisioning. */
   exportWorldDir?: string;
   /** Contents of plugins/TheStorm/config.yml. */
   stormConfig: string;

@@ -34,7 +34,7 @@ type Position = z.infer<typeof Position>;
 async function interact(bot: Bot, rcon: RconClient, at: Position) {
   const beside = new Vec3(at.x + 0.5, at.y, at.z + 1.5);
   await rcon.command(
-    `tp ${bot.username} ${beside.x.toString()} ${beside.y.toString()} ${beside.z.toString()}`,
+    `execute in rustworks run tp ${bot.username} ${beside.x.toString()} ${beside.y.toString()} ${beside.z.toString()}`,
   );
   await waitUntil(
     "Rustworks fixture approach",
@@ -58,6 +58,7 @@ async function enter(
   const entered = waitForMessage(bot, /Survival: Fighter/u);
   bot.chat(`/arena join ${map}${practice ? " 4" : ""}`);
   await entered;
+  await rcon.command(`execute in ${map} run difficulty normal`);
   const round = waitForMessage(bot, practice ? /Round 4:/u : /Round 1:/u);
   await rcon.command(`arena start ${map}`);
   await round;
@@ -131,7 +132,7 @@ test(
       );
       expect(
         await rcon.command(
-          `execute positioned 1758.5 73 2271.5 if entity @a[name=${secondBot.username},distance=..8]`,
+          `execute in settlement positioned -33.5 73 63.5 if entity @a[name=${secondBot.username},distance=..8]`,
         ),
       ).toContain("Test passed");
     } finally {
@@ -171,13 +172,13 @@ test(
           if (gate === undefined) throw new Error(`Missing gate: ${zone.id}`);
           expect(
             await rcon.command(
-              `execute if block ${gate.x.toString()} ${gate.y.toString()} ${gate.z.toString()} minecraft:air`,
+              `execute in rustworks run execute if block ${gate.x.toString()} ${gate.y.toString()} ${gate.z.toString()} minecraft:air`,
             ),
           ).toBe("Test passed");
         }
         expect(
           await rcon.command(
-            `execute if block ${sign.x.toString()} ${sign.y.toString()} ${sign.z.toString()} minecraft:air`,
+            `execute in rustworks run execute if block ${sign.x.toString()} ${sign.y.toString()} ${sign.z.toString()} minecraft:air`,
           ),
         ).toBe("Test passed");
       }

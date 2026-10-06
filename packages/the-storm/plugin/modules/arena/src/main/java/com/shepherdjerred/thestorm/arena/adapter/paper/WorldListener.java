@@ -128,6 +128,7 @@ final class WorldListener implements Listener {
     for (var runner : arenas.all()) {
       var boss = runner.world().boss();
       if (boss.isPresent()
+          && runner.world().contains(event.getBlock().getLocation())
           && boss.orElseThrow().isHeart(pos)
           && runner.isFighter(event.getPlayer().getUniqueId())) {
         event.setCancelled(true);

@@ -25,6 +25,8 @@ final class ZombiesDrops {
   private Instant nextDrop = Instant.MIN;
   private Instant expires = Instant.MIN;
   private Instant nextField = Instant.MIN;
+  private Instant nextFlash = Instant.MIN;
+  private boolean visible = true;
   private @Nullable SurvivalDrop kind;
   private @Nullable ItemDisplay display;
   private @Nullable TextDisplay label;
@@ -59,6 +61,8 @@ final class ZombiesDrops {
     label.setPersistent(false);
     runner.tag(label);
     expires = now.plusSeconds(20);
+    nextFlash = expires.minusSeconds(5);
+    visible = true;
     nextDrop = now.plusSeconds(30);
   }
 
@@ -76,38 +80,59 @@ final class ZombiesDrops {
       return;
     }
     var drop = java.util.Objects.requireNonNull(kind);
+    flash(pickup, drop, now);
     for (var player : runner.fighters()) {
-      if (Places.at(player).distanceSquared(pickup.getLocation()) > 64) continue;
-      if (!approached.containsKey(player.getUniqueId())) {
-        approached.put(player.getUniqueId(), now);
-        runner
-            .tips()
-            .encounter(
-                player,
-                new com.shepherdjerred.thestorm.arena.domain.survival.TutorialKey(
-                    com.shepherdjerred.thestorm.arena.domain.survival.TutorialKey.Topic.DROP,
-                    drop.name()));
-      }
-      var familiar =
-          runner
-              .tips()
-              .seen(
-                  player,
-                  new com.shepherdjerred.thestorm.arena.domain.survival.TutorialKey(
-                      com.shepherdjerred.thestorm.arena.domain.survival.TutorialKey.Topic.DROP,
-                      drop.name()));
-      if (Places.at(player).distanceSquared(pickup.getLocation()) <= 4
-          && (familiar
-              || !now.isBefore(
-                  java.util.Objects.requireNonNull(approached.get(player.getUniqueId()))
-                      .plusSeconds(2)))) {
+      if (approach(player, pickup, drop, now)) {
         collect(player, drop, pickup.getLocation(), now);
         clear();
         return;
       }
     }
-    if (pickup.getTicksLived() % 5 == 0)
+    if (visible && pickup.getTicksLived() % 5 == 0)
       pickup.getWorld().spawnParticle(Particle.END_ROD, pickup.getLocation(), 4, .4, .3, .4, .01);
+  }
+
+  private void flash(ItemDisplay pickup, SurvivalDrop drop, Instant now) {
+    if (!now.isBefore(nextFlash)) {
+      nextFlash = now.plusMillis(250);
+      visible = !visible;
+      pickup.setItemStack(
+          visible
+              ? runner.items().stack(SurvivalItems.material(drop.material()), 1)
+              : org.bukkit.inventory.ItemStack.empty());
+      java.util.Objects.requireNonNull(label)
+          .text(
+              visible
+                  ? Component.text(drop.title() + "\n" + drop.description())
+                  : Component.empty());
+    }
+  }
+
+  private boolean approach(Player player, ItemDisplay pickup, SurvivalDrop drop, Instant now) {
+    if (Places.at(player).distanceSquared(pickup.getLocation()) > 64) return false;
+    if (!approached.containsKey(player.getUniqueId())) {
+      approached.put(player.getUniqueId(), now);
+      runner
+          .tips()
+          .encounter(
+              player,
+              new com.shepherdjerred.thestorm.arena.domain.survival.TutorialKey(
+                  com.shepherdjerred.thestorm.arena.domain.survival.TutorialKey.Topic.DROP,
+                  drop.name()));
+    }
+    var familiar =
+        runner
+            .tips()
+            .seen(
+                player,
+                new com.shepherdjerred.thestorm.arena.domain.survival.TutorialKey(
+                    com.shepherdjerred.thestorm.arena.domain.survival.TutorialKey.Topic.DROP,
+                    drop.name()));
+    return Places.at(player).distanceSquared(pickup.getLocation()) <= 4
+        && (familiar
+            || !now.isBefore(
+                java.util.Objects.requireNonNull(approached.get(player.getUniqueId()))
+                    .plusSeconds(2)));
   }
 
   private void collect(Player player, SurvivalDrop drop, Location at, Instant now) {

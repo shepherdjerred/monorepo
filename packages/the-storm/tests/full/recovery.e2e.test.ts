@@ -1,5 +1,5 @@
 import { describe, expect } from "vitest";
-import { test } from "#e2e/fixtures.ts";
+import { test } from "#e2e/arena-fixtures.ts";
 import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
 
 describe("minor survival recovery on real Paper", () => {
@@ -21,14 +21,14 @@ describe("minor survival recovery on real Paper", () => {
     // survival containment returns fighters outside it to a ground-level route.
     // This platform and game rule exist only on the disposable test server.
     await rcon.command("gamerule natural_health_regeneration false");
-    await rcon.command("fill 1750 100 2244 1758 100 2252 stone");
+    await rcon.command("fill -42 100 36 -34 100 44 stone");
     await rcon.command("difficulty normal");
     try {
       const round = waitForMessage(bot, /Round 1:/u);
       await rcon.command("arena start settlement");
       await round;
       for (const player of [bot, secondBot]) {
-        await rcon.command(`tp ${player.username} 1754.5 101 2248.5`);
+        await rcon.command(`tp ${player.username} -37.5 101 40.5`);
       }
       await waitUntil(
         "isolated recovery platform",
@@ -79,7 +79,7 @@ describe("minor survival recovery on real Paper", () => {
     } finally {
       await rcon.command("arena stop settlement");
       await rcon.command("gamerule natural_health_regeneration true");
-      await rcon.command("fill 1750 100 2244 1758 100 2252 air");
+      await rcon.command("fill -42 100 36 -34 100 44 air");
       await rcon.command("difficulty peaceful");
     }
     await waitUntil("health restored after leaving", () => bot.health === 20);

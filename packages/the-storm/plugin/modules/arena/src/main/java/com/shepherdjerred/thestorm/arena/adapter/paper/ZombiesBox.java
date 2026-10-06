@@ -83,8 +83,10 @@ final class ZombiesBox {
     var payment = runner.items().reserve(player, Map.of("EMERALD", 16));
     if (payment.isEmpty()) return true;
     payments.put(player.getUniqueId(), payment.orElseThrow());
-    if (!box.start(player.getUniqueId(), reward(), runner.context().time().instant()))
+    if (!box.start(player.getUniqueId(), reward(), runner.context().time().instant())) {
+      refund(player.getUniqueId());
       throw new IllegalStateException("Charged a busy runic cache");
+    }
     rewardBundle = bundle(box.roll().orElseThrow().reward());
     revealed = false;
     frame = 0;
@@ -174,11 +176,34 @@ final class ZombiesBox {
       tick();
       return;
     }
+    if (!runner.items().weaponsFit(player, rewardBundle)) {
+      runner
+          .menus()
+          .weaponSwap(
+              player,
+              new SurvivalMenus.Swap(
+                  site().block(),
+                  rewardBundle,
+                  () ->
+                      box.roll()
+                          .filter(current -> current.equals(roll))
+                          .filter(
+                              current ->
+                                  runner.context().time().instant().isBefore(current.expires()))
+                          .isPresent(),
+                  () -> finishClaim(player, roll),
+                  -1));
+      return;
+    }
     if (!runner.items().deliver(player, rewardBundle)) {
       Texts.error(player, "Make room, then claim before the reveal expires.");
       return;
     }
-    if (!box.claim(player.getUniqueId(), now))
+    finishClaim(player, roll);
+  }
+
+  private void finishClaim(Player player, MysteryBox.Roll roll) {
+    if (!box.claim(player.getUniqueId(), runner.context().time().instant()))
       throw new IllegalStateException("Delivered an unclaimable box reward");
     runner.items().commit(java.util.Objects.requireNonNull(payments.remove(player.getUniqueId())));
     clearDisplay();
@@ -200,7 +225,15 @@ final class ZombiesBox {
   }
 
   String landmark() {
-    if (revealed) return "Cache reward · " + rewardName(box.roll().orElseThrow().reward());
+    if (revealed) {
+      var roll = box.roll().orElseThrow();
+      var seconds =
+          Math.max(
+              0,
+              (Duration.between(runner.context().time().instant(), roll.expires()).toMillis() + 999)
+                  / 1000);
+      return "Cache reward · " + rewardName(roll.reward()) + " · " + seconds + "s to claim";
+    }
     return "Runic cache · 16 emeralds";
   }
 
@@ -229,6 +262,13 @@ final class ZombiesBox {
     var now = runner.context().time().instant();
     if (!now.isBefore(roll.orElseThrow().reveal())) {
       item.setItemStack(rewardBundle.getFirst());
+      var remaining =
+          Math.clamp(
+              Duration.between(now, roll.orElseThrow().expires()).toMillis() / 15000.0, 0, 1);
+      var at =
+          Places.location(runner.world().world(), site().block().center())
+              .add(0, -.2 + remaining * 2.1, 0);
+      item.teleport(at);
       if (!revealed) {
         revealed = true;
         var buyer = runner.context().server().getPlayer(roll.orElseThrow().owner());
@@ -263,7 +303,12 @@ final class ZombiesBox {
     box.expire(runner.context().time().instant())
         .ifPresent(
             roll -> {
-              refund(roll.owner());
+              runner
+                  .items()
+                  .commit(java.util.Objects.requireNonNull(payments.remove(roll.owner())));
+              var player = runner.context().server().getPlayer(roll.owner());
+              if (player != null)
+                Texts.info(player, "Unclaimed box expired. The roll cost is spent.");
               clearDisplay();
             });
   }
@@ -312,7 +357,7 @@ final class ZombiesBox {
     box.cancel(id)
         .ifPresent(
             roll -> {
-              refund(id);
+              runner.items().commit(java.util.Objects.requireNonNull(payments.remove(id)));
               clearDisplay();
             });
   }

@@ -161,15 +161,34 @@ final class SurvivalTips {
 
   private void fixtureContexts(Player player) {
     for (var zone : runner.map().content().zones())
-      for (var sign : zone.purchaseSigns())
-        if (near(player, sign)) encounter(player, TutorialKey.of(Topic.ROUTES));
+      if (zone.purchaseSigns().stream().anyMatch(sign -> near(player, sign)))
+        encounter(player, TutorialKey.of(Topic.ROUTES));
     for (var machine : runner.map().content().machines())
-      if (near(player, machine.block())) machine(player, machine.type());
+      if (near(player, machine.block()) && machineAvailable(machine))
+        machine(player, machine.type());
     for (var site : runner.map().content().boxSites())
-      if (site.id().equals(runner.machines().box().active()) && near(player, site.block()))
-        encounter(player, TutorialKey.of(Topic.BOX));
-    if (near(player, runner.map().content().planeWorkbench()))
+      if (site.id().equals(runner.machines().box().active())
+          && near(player, site.block())
+          && accessible(site.block())
+          && runner.machines().powered()) encounter(player, TutorialKey.of(Topic.BOX));
+    if (near(player, runner.map().content().planeWorkbench())
+        && accessible(runner.map().content().planeWorkbench()))
       encounter(player, TutorialKey.of(Topic.PLANE));
+  }
+
+  private boolean machineAvailable(SurvivalContent.Machine machine) {
+    return accessible(machine.block())
+        && (runner.machines().powered()
+            || machine.type() == SurvivalContent.MachineType.POWER
+            || machine.type() == SurvivalContent.MachineType.FOOD);
+  }
+
+  private boolean accessible(com.shepherdjerred.thestorm.arena.domain.geometry.BlockPos block) {
+    return runner
+        .map()
+        .zone(Places.location(runner.world().world(), block.center()))
+        .filter(zone -> runner.map().state().accessible(zone.id()))
+        .isPresent();
   }
 
   private void combatContexts(Player player) {

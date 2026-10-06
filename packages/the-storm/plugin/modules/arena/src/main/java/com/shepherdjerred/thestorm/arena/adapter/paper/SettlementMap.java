@@ -46,6 +46,7 @@ final class SettlementMap {
   }
 
   Optional<SurvivalContent.Zone> zone(Location at) {
+    if (!world.world().equals(at.getWorld())) return Optional.empty();
     return content.zones().stream().filter(z -> z.contains(Places.point(at))).findFirst();
   }
 
@@ -54,7 +55,8 @@ final class SettlementMap {
   }
 
   boolean offshore(Location at) {
-    return content.expedition().area().contains(Places.point(at));
+    return world.world().equals(at.getWorld())
+        && content.expedition().area().contains(Places.point(at));
   }
 
   boolean combat(Location at) {

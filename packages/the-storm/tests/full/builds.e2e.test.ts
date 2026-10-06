@@ -3,7 +3,7 @@ import { Vec3 } from "vec3";
 import type { Bot } from "mineflayer";
 import type { RconClient } from "#e2e/harness/rcon.ts";
 import { z } from "zod";
-import { test } from "#e2e/fixtures.ts";
+import { test } from "#e2e/arena-fixtures.ts";
 import {
   connectBot,
   disconnectBot,
@@ -36,7 +36,7 @@ async function start(bot: Bot, rcon: RconClient, round: number) {
 }
 
 async function clickBox(bot: Bot) {
-  const block = bot.blockAt(new Vec3(1790, 73, 2270));
+  const block = bot.blockAt(new Vec3(-2, 73, 62));
   if (block === null) throw new Error("Market box missing");
   await bot.activateBlock(block);
 }
@@ -80,8 +80,8 @@ describe("run class builds on real Paper", () => {
           await rcon.command(
             `effect give ${secondBot.username} minecraft:resistance infinite 255 true`,
           );
-          await rcon.command(`tp ${bot.username} 1758.5 73 2271.5`);
-          await rcon.command(`tp ${secondBot.username} 1760.5 73 2271.5`);
+          await rcon.command(`tp ${bot.username} -33.5 73 63.5`);
+          await rcon.command(`tp ${secondBot.username} -31.5 73 63.5`);
           await menu(bot, "/survival upgrades");
           await bot.clickWindow(index, 0, 0);
           await waitUntil(
@@ -128,7 +128,7 @@ describe("run class builds on real Paper", () => {
           if (path === "RESCUER") {
             expect(
               await rcon.command(
-                `execute positioned 1758.5 73 2271.5 if entity @a[name=${bot.username},distance=..3]`,
+                `execute positioned -33.5 73 63.5 if entity @a[name=${bot.username},distance=..3]`,
               ),
             ).toBe("Test passed. Count: 1");
           }
@@ -158,7 +158,7 @@ describe("run class builds on real Paper", () => {
 });
 
 describe("animated runic cache on real Paper", () => {
-  test("rolls reserve the buyer, reveal after three seconds, relocate after six claims and refund expiry", async ({
+  test("rolls reserve the buyer, reveal after three seconds, relocate after six claims and spend expiry", async ({
     bot,
     secondBot,
     rcon,
@@ -171,11 +171,11 @@ describe("animated runic cache on real Paper", () => {
       await rcon.command(
         `effect give ${secondBot.username} minecraft:resistance infinite 255 true`,
       );
-      await rcon.command(`tp ${bot.username} 1790.5 73 2272.5`);
-      await rcon.command(`tp ${secondBot.username} 1792.5 73 2272.5`);
+      await rcon.command(`tp ${bot.username} -1.5 73 64.5`);
+      await rcon.command(`tp ${secondBot.username} 0.5 73 64.5`);
       await waitUntil(
         "market box tracking",
-        () => bot.blockAt(new Vec3(1790, 73, 2270)) !== null,
+        () => bot.blockAt(new Vec3(-2, 73, 62)) !== null,
       );
       const data = await rcon.command(
         `data get entity ${bot.username} Inventory[{Slot:0b}].components."minecraft:custom_data".PublicBukkitValues."thestorm:survival_run"`,
@@ -184,8 +184,12 @@ describe("animated runic cache on real Paper", () => {
       await rcon.command(
         `give ${bot.username} minecraft:emerald[minecraft:custom_data={PublicBukkitValues:{"thestorm:arena_item":1b,"thestorm:survival_run":"${run}"}}] 128`,
       );
-      const count = async () =>
-        await rcon.command(`clear ${bot.username} minecraft:emerald 0`);
+      const count = async () => {
+        const result = await rcon.command(
+          `clear ${bot.username} minecraft:emerald 0`,
+        );
+        return Number(/Found (\d+)/u.exec(result)?.[1] ?? 0);
+      };
       const before = await count();
       const rolling = waitForMessage(bot, /Runic cache rolling/u);
       await clickBox(bot);
@@ -201,16 +205,26 @@ describe("animated runic cache on real Paper", () => {
           'execute if entity @e[type=minecraft:item_display,nbt={BukkitValues:{"thestorm:arena_entity":"settlement"}}]',
         ),
       ).toBe("Test passed. Count: 1");
-      const refund = waitForMessage(bot, /16 emeralds refunded/u, 25_000);
-      await refund;
-      expect(await count()).toBe(before);
+      const expired = waitForMessage(bot, /Unclaimed box expired/u, 25_000);
+      await expired;
+      expect(await count()).toBe(before - 16);
       for (let claim = 0; claim < 6; claim++) {
         const nextRoll = waitForMessage(bot, /Runic cache rolling/u);
         await clickBox(bot);
         await nextRoll;
         await Bun.sleep(3100);
-        const reward = waitForMessage(bot, /Runic cache reward:/u);
+        let claimed = false;
+        const reward = (async () => {
+          const lines = await waitForMessage(bot, /Runic cache reward:/u);
+          claimed = true;
+          return lines;
+        })();
         await clickBox(bot);
+        await waitUntil(
+          "reward or explicit swap",
+          () => claimed || bot.currentWindow !== null,
+        );
+        if (bot.currentWindow !== null) await bot.clickWindow(0, 0, 0);
         await reward;
       }
       expect(
@@ -219,7 +233,7 @@ describe("animated runic cache on real Paper", () => {
         ),
       ).not.toContain("box=market");
       expect(
-        await rcon.command("execute if block 1790 79 2270 minecraft:air"),
+        await rcon.command("execute if block -2 79 62 minecraft:air"),
       ).toBe("Test passed");
       expect(
         await rcon.command(
@@ -267,11 +281,11 @@ describe("vertical settlement pursuit and party scaling on real Paper", () => {
               await rcon.command(
                 `effect give ${player.username} minecraft:resistance infinite 255 true`,
               );
-              await rcon.command(`tp ${player.username} 1844.5 105 2177.5`);
+              await rcon.command(`tp ${player.username} 52.5 105 -30.5`);
             }
             await waitUntil(
               "upper terrace arrival",
-              () => bot.entity.position.y > 104 && bot.entity.position.z > 2176,
+              () => bot.entity.position.y > 104 && bot.entity.position.z > -32,
             );
             const upperHorde = () =>
               Object.values(bot.entities).filter(
@@ -290,10 +304,10 @@ describe("vertical settlement pursuit and party scaling on real Paper", () => {
               upperHorde().map((entity) => z.guid().parse(entity.uuid)),
             );
             for (const player of [bot, ...teammates])
-              await rcon.command(`tp ${player.username} 1819.5 73 2273.5`);
+              await rcon.command(`tp ${player.username} 27.5 73 65.5`);
             await waitUntil(
               "lower wharf arrival",
-              () => bot.entity.position.y < 74 && bot.entity.position.x > 1818,
+              () => bot.entity.position.y < 74 && bot.entity.position.x > 26,
             );
             // The expanded map has two stair legs between its three terraces.
             await waitUntil(
@@ -362,9 +376,9 @@ async function upgradeLegendary(
   await bot.equip(weapon, "hand");
   await waitUntil(
     "forge loaded",
-    () => bot.blockAt(new Vec3(1727, 73, 2209)) !== null,
+    () => bot.blockAt(new Vec3(-65, 73, 1)) !== null,
   );
-  const forge = bot.blockAt(new Vec3(1727, 73, 2209));
+  const forge = bot.blockAt(new Vec3(-65, 73, 1));
   if (forge === null) throw new Error("Forge missing");
   const upgraded = upgradeMessage(bot, rcon);
   await bot.activateBlock(forge);
@@ -401,7 +415,7 @@ async function legendaryEffects(bot: Bot, rcon: RconClient) {
     if (weapon === undefined)
       throw new Error("Legendary projectile weapon missing");
     await bot.equip(weapon, "hand");
-    await bot.lookAt(new Vec3(1811.5, 106.3, 2167.5));
+    await bot.lookAt(new Vec3(19.5, 106.3, -40.5));
     bot.activateItem();
     await bot.waitForTicks(28);
     bot.deactivateItem();
@@ -437,7 +451,7 @@ describe("legendary gear and local feedback on real Paper", () => {
     try {
       await start(bot, rcon, 15);
       await travelToRuneforge(bot, rcon);
-      await rcon.command(`tp ${bot.username} 1727.5 73 2211.5`);
+      await rcon.command(`tp ${bot.username} -64.5 73 3.5`);
       for (const [id, material] of [
         ["STORMCALLER", "bow"],
         ["FROSTBITE", "crossbow"],
@@ -450,13 +464,13 @@ describe("legendary gear and local feedback on real Paper", () => {
         .find((item) => item.name === "blaze_rod");
       if (rod === undefined) throw new Error("Graviton missing");
       await bot.equip(rod, "hand");
-      await rcon.command(`tp ${bot.username} 1727.5 73 2224.5`);
-      const returnStation = bot.blockAt(new Vec3(1727, 73, 2225));
+      await rcon.command(`tp ${bot.username} -64.5 73 16.5`);
+      const returnStation = bot.blockAt(new Vec3(-65, 73, 17));
       if (returnStation === null) throw new Error("Return station missing");
       const returned = waitForMessage(bot, /Back at the fortress/u, 15_000);
       await bot.activateBlock(returnStation);
       await returned;
-      await rcon.command(`tp ${bot.username} 1815.5 105 2167.5`);
+      await rcon.command(`tp ${bot.username} 23.5 105 -40.5`);
       expect(
         await rcon.command(
           `storm-fixture-survival targets ${bot.username} none`,
@@ -466,12 +480,12 @@ describe("legendary gear and local feedback on real Paper", () => {
         Object.values(bot.entities).some(
           (entity) =>
             entity.name === "zombie" &&
-            entity.position.distanceTo(new Vec3(1811.5, 105, 2167.5)) < 1,
+            entity.position.distanceTo(new Vec3(19.5, 105, -40.5)) < 1,
         ),
       );
       await legendaryEffects(bot, rcon);
       await bot.equip(rod, "hand");
-      await bot.lookAt(new Vec3(1811.5, 104.5, 2167.5));
+      await bot.lookAt(new Vec3(19.5, 104.5, -40.5));
       const before = bot.inventory
         .items()
         .filter((item) => item.name === "redstone")

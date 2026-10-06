@@ -68,7 +68,7 @@ final class TownsConfigTest {
 
     assertThat(config.regions())
         .extracting(com.shepherdjerred.thestorm.towns.domain.region.AdminRegion::id)
-        .containsExactly("spawn", "arena", "settlement");
+        .containsExactly("spawn", "arena", "settlement", "rustworks");
     assertThat(config.claims().worlds()).containsExactly("world");
     assertThat(config.claims().defaultFlags()).containsExactly(ClaimFlag.PVP);
   }
