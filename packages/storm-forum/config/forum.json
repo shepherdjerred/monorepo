@@ -108,7 +108,7 @@
       "kind": "style",
       "path": "vendor/flexile-storm-light.zip",
       "mode": "light",
-      "sha256": "83492b4b01354ead6b4fc71dc64a32bac74d5cf5a66023e86e9af1e95b1a14e2"
+      "sha256": "cae93ad3c9f6a3125f55945707debd30cb766afbe595b42afe6a37d62bda6dc7"
     },
     {
       "key": "flexile-dark",
@@ -116,25 +116,7 @@
       "kind": "style",
       "path": "vendor/flexile-storm-dark.zip",
       "mode": "dark",
-      "sha256": "aa5eab93bf1b5af31a9657c91695046d9b41c163d0615ed0e461bd67a12599af"
-    },
-    {
-      "key": "xon-library",
-      "version": ">=1.21.1",
-      "kind": "addon",
-      "path": "src/addons/SV/StandardLib/addon.json"
-    },
-    {
-      "key": "ratings",
-      "version": "2.9.5",
-      "kind": "addon",
-      "path": "src/addons/SV/ContentRatings/addon.json"
-    },
-    {
-      "key": "media-sites",
-      "version": "2.19.3",
-      "kind": "addon",
-      "path": "src/addons/s9e/MediaSites/addon.json"
+      "sha256": "e77c1909a5f0955643b9d7ab7513a5899b60bd29e36f919dd8b62ebf667875c6"
     }
   ]
 }

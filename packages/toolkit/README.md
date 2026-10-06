@@ -430,10 +430,13 @@ manager integration. For Bugsink and Discord, a missing credential error names
 the exact workstation-secret enrollment command. Never paste tokens into chat,
 CLI arguments, or the toolkit config file; the config stores locators only.
 
-`ci` uses the separate Woodpecker lookup described above: an existing
-`WOODPECKER_TOKEN`, then the default connection's 1Password item through the
-current `op` authentication. It does not bootstrap the service account through
-the credential broker. GitHub access uses `GH_TOKEN` or `gh auth token`.
+`ci` uses the registered `WOODPECKER_TOKEN` credential for the default
+connection, unless `WOODPECKER_TOKEN` is supplied in the environment. The
+credential broker can bootstrap its 1Password service account from
+`OP_SERVICE_ACCOUNT_TOKEN` or the enrolled macOS Keychain credential. Custom
+Woodpecker URLs or repository IDs require an explicit token. CI help and
+argument validation run before credentials are resolved. GitHub access uses
+`GH_TOKEN` or `gh auth token`.
 Commands such as `gh`, `temporal`, and `tailscale` retain native authentication;
 S3 workflows retain the AWS credential chain.
 

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { capture } from "#lib/ci/process.ts";
+import { resolveCredentials } from "#lib/credentials.ts";
 
 export const WOODPECKER_URL = "https://woodpecker.sjer.red";
 
@@ -72,19 +72,8 @@ export async function loadWoodpeckerConfig(): Promise<WoodpeckerConfig> {
   if (base !== WOODPECKER_URL || repo !== "1") {
     throw new Error("Custom Woodpecker connections require WOODPECKER_TOKEN");
   }
-  const credential = await capture([
-    "op",
-    "item",
-    "get",
-    "Woodpecker Server",
-    "--vault",
-    "Homelab (Kubernetes)",
-    "--fields",
-    "label=WOODPECKER_API_TOKEN",
-    "--reveal",
-  ]);
-  const token = credential.trim();
-  return woodpeckerConfigFromEnv({ ...Bun.env, WOODPECKER_TOKEN: token });
+  await resolveCredentials(["WOODPECKER_TOKEN"]);
+  return woodpeckerConfigFromEnv();
 }
 
 export class WoodpeckerHttpError extends Error {

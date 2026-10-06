@@ -8,10 +8,10 @@ Reviewed public historical discussions retain original names and dates, with new
 
 The public runtime image contains PHP, Bun, the Storm add-on, community-owned
 artwork, and the authored Flexile adaptation source. It contains no XenForo
-distribution, generated native style exports, or commercial add-on code.
-`config/forum.json` is the dependency and topology contract. A release bundle
-contains a fresh licensed XenForo `upload/` tree, add-on distributions extracted
-into their native paths, and the two vendor style archives under `vendor/`.
+distribution, generated native style exports, or vendor add-on code.
+`config/forum.json` is the dependency and topology contract. A private release
+bundle contains a fresh licensed XenForo `upload/` tree and the two Flexile style
+archives under `vendor/`; no third-party add-ons are required for launch.
 
 The parent styles are Flexile adaptations for XenForo 2, authored in
 `themes/flexile/`. The builder combines those tracked customizations with the
