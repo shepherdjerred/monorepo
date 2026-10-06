@@ -769,14 +769,20 @@ class RestorationControlTest(unittest.TestCase):
         self.assertEqual(journal.string("phase"), "LEASED_OFFLINE")
         self.assertEqual(journal["admissionProbes"], "UPDATE_SCALE_AND_DELETE_DENIED")
         self.assertEqual(journal["serviceAdmissionProbes"], "ALL_FOUR_UPDATE_AND_DELETE_DENIED")
-        self.assertEqual(self.probes.call_count, 11)
+        self.assertEqual(self.probes.call_count, 12)
         self.assertIn("--dry-run=server", self.probes.call_args_list[0].args[0])
         self.assertIn("statefulset/" + control.SERVER, self.probes.call_args_list[1].args[0])
         self.assertEqual(self.probes.call_args_list[2].args[0][:3], ["delete", "statefulset", control.SERVER])
         self.assertIn("--dry-run=server", self.probes.call_args_list[2].args[0])
+        private_pod = self.probes.call_args_list[3]
+        self.assertEqual(private_pod.args[0][:3], ["patch", "statefulset", control.SERVER])
+        self.assertIn("--dry-run=server", private_pod.args[0])
+        self.assertIn("VALIDATING", private_pod.args[0][-1])
+        self.assertIn("closed", private_pod.args[0][-1])
+        self.assertEqual(private_pod.args[1], "Restoration pod templates must omit the closed public route label")
         for index, name in enumerate(control.SERVICES):
-            update = self.probes.call_args_list[3 + index * 2].args[0]
-            delete = self.probes.call_args_list[4 + index * 2].args[0]
+            update = self.probes.call_args_list[4 + index * 2].args[0]
+            delete = self.probes.call_args_list[5 + index * 2].args[0]
             self.assertEqual(update[:3], ["patch", "service", name])
             self.assertEqual(delete[:3], ["delete", "service", name])
             self.assertIn("--dry-run=server", update)

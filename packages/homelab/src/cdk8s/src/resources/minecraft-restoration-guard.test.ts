@@ -57,7 +57,7 @@ describe("world restoration maintenance guard", () => {
           (resource) => resource.kind === "ValidatingAdmissionPolicy",
         )?.spec,
       );
-    expect(policy.validations).toHaveLength(5);
+    expect(policy.validations).toHaveLength(6);
     expect(policy.validations[0]?.expression).toContain(
       "oldObject.metadata.annotations",
     );
@@ -78,6 +78,9 @@ describe("world restoration maintenance guard", () => {
       RESTORE_IMAGE_ANNOTATION,
     );
     expect(policy.validations[4]?.expression).toContain(
+      `!('${RESTORE_ACCESS_SELECTOR}' in object.spec.template.metadata.labels)`,
+    );
+    expect(policy.validations[5]?.expression).toContain(
       "oldObject.spec.replicas == 0",
     );
     expect(
@@ -114,6 +117,9 @@ describe("world restoration maintenance guard", () => {
     expect(validations[0]?.expression).toContain("object.spec.replicas == 0");
     expect(validations[0]?.expression).toContain(
       "params.spec.template.spec.containers[0].image",
+    );
+    expect(validations[1]?.expression).toContain(
+      `!('${RESTORE_ACCESS_SELECTOR}' in params.spec.template.metadata.labels)`,
     );
     expect(
       resources.filter(

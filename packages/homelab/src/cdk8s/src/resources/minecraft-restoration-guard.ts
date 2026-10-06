@@ -49,6 +49,12 @@ export function createMinecraftRestorationGuard(chart: Chart): void {
           reason: "Forbidden",
         },
         {
+          expression: `!(${leased}) || !has(object.spec.template.metadata.labels) || !('${RESTORE_ACCESS_SELECTOR}' in object.spec.template.metadata.labels)`,
+          message:
+            "Restoration pod templates must omit the closed public route label",
+          reason: "Forbidden",
+        },
+        {
           expression: `!(${leased}) || (has(oldObject.metadata.annotations) && '${RESTORE_LEASE_ANNOTATION}' in oldObject.metadata.annotations) || (oldObject.spec.replicas == 0 && object.spec.replicas == 0)`,
           message:
             "Acquire a world restoration lease only after stopping the server",
@@ -87,6 +93,12 @@ export function createMinecraftRestorationGuard(chart: Chart): void {
           expression: `!(${parentLeased}) || object.spec.replicas == 0 || ('${RESTORE_PHASE_ANNOTATION}' in ${parentAnnotations} && ${parentAnnotations}['${RESTORE_PHASE_ANNOTATION}'] == 'VALIDATING' && '${RESTORE_IMAGE_ANNOTATION}' in ${parentAnnotations} && object.spec.replicas == 1 && params.spec.template.spec.containers.size() == 1 && params.spec.template.spec.containers[0].image == ${parentAnnotations}['${RESTORE_IMAGE_ANNOTATION}'])`,
           message:
             "World restoration blocks scale requests except for its pinned private acceptance image",
+          reason: "Forbidden",
+        },
+        {
+          expression: `!(${parentLeased}) || !has(params.spec.template.metadata.labels) || !('${RESTORE_ACCESS_SELECTOR}' in params.spec.template.metadata.labels)`,
+          message:
+            "Restoration pod templates must omit the closed public route label",
           reason: "Forbidden",
         },
         {

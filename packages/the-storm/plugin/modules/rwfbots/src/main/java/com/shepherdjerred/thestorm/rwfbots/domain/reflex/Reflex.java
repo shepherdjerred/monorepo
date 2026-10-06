@@ -69,7 +69,7 @@ public final class Reflex {
   static final int FINAL_STRAIGHT = 3;
 
   /** How hard crowding teammates bend a walking bot's heading. */
-  static final double SEPARATION_WEIGHT = 1.3;
+  static final double SEPARATION_WEIGHT = 1.2;
 
   /** A bot waits for a moving teammate with a lower id this close ahead of it. */
   static final double YIELD = 2.2;
@@ -296,11 +296,8 @@ public final class Reflex {
       }
       var yaw = Facing.looking(self.eye(), aimPoint).yaw();
       var desired = new Facing(yaw, pitch.getAsDouble());
-      // Keep approaching the claimed slot or cover while drawing, at walking
-      // speed. Route steering must not turn the bow away from its target.
-      var previousAim = state.aim();
-      walk(Optional.of(false));
-      state = state.withAim(AimController.aim(previousAim, desired, levers(), random));
+      state = state.withAim(AimController.aim(state.aim(), desired, levers(), random));
+      standApart();
       if (!state.isDrawing()) {
         commands.add(new BodyCommand.SelectSlot(context.loadout().bowSlot()));
         commands.add(new BodyCommand.StartUse());

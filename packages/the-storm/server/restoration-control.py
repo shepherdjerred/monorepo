@@ -445,6 +445,29 @@ def acquire(path: Path, journal: JsonObject) -> None:
         ["delete", "statefulset", SERVER, "--dry-run=server", "--wait=false"],
         "Release the restoration lease before deleting its StatefulSet",
     )
+    assert_denied(
+        [
+            "patch",
+            "statefulset",
+            SERVER,
+            "--dry-run=server",
+            "--type=json",
+            "-p",
+            json.dumps(
+                [
+                    {"op": "add", "path": "/spec/template/metadata/labels/" + pointer(ACCESS), "value": "closed"},
+                    {"op": "replace", "path": "/metadata/annotations/" + pointer(PHASE), "value": "VALIDATING"},
+                    {
+                        "op": "replace",
+                        "path": "/spec/template/spec/containers/0/image",
+                        "value": journal.string("candidateImage"),
+                    },
+                    {"op": "replace", "path": "/spec/replicas", "value": 1},
+                ]
+            ),
+        ],
+        "Restoration pod templates must omit the closed public route label",
+    )
     for name in SERVICES:
         assert_denied(
             [

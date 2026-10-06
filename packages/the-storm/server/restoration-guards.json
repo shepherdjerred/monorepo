@@ -44,6 +44,11 @@
           "reason": "Forbidden"
         },
         {
+          "expression": "!(has(object.metadata.annotations) && 'sjer.red/world-restore-lease' in object.metadata.annotations) || !has(object.spec.template.metadata.labels) || !('sjer.red/world-restore-access' in object.spec.template.metadata.labels)",
+          "message": "Restoration pod templates must omit the closed public route label",
+          "reason": "Forbidden"
+        },
+        {
           "expression": "!(has(object.metadata.annotations) && 'sjer.red/world-restore-lease' in object.metadata.annotations) || (has(oldObject.metadata.annotations) && 'sjer.red/world-restore-lease' in oldObject.metadata.annotations) || (oldObject.spec.replicas == 0 && object.spec.replicas == 0)",
           "message": "Acquire a world restoration lease only after stopping the server",
           "reason": "Forbidden"
@@ -90,6 +95,11 @@
         {
           "expression": "!(has(params.metadata.annotations) && 'sjer.red/world-restore-lease' in params.metadata.annotations) || object.spec.replicas == 0 || ('sjer.red/world-restore-phase' in params.metadata.annotations && params.metadata.annotations['sjer.red/world-restore-phase'] == 'VALIDATING' && 'sjer.red/world-restore-image' in params.metadata.annotations && object.spec.replicas == 1 && params.spec.template.spec.containers.size() == 1 && params.spec.template.spec.containers[0].image == params.metadata.annotations['sjer.red/world-restore-image'])",
           "message": "World restoration blocks scale requests except for its pinned private acceptance image",
+          "reason": "Forbidden"
+        },
+        {
+          "expression": "!(has(params.metadata.annotations) && 'sjer.red/world-restore-lease' in params.metadata.annotations) || !has(params.spec.template.metadata.labels) || !('sjer.red/world-restore-access' in params.spec.template.metadata.labels)",
+          "message": "Restoration pod templates must omit the closed public route label",
           "reason": "Forbidden"
         },
         {
