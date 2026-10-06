@@ -17,6 +17,7 @@ import com.shepherdjerred.thestorm.core.protection.HarmTarget;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
+import com.shepherdjerred.thestorm.core.world.ChunkTickets;
 import com.shepherdjerred.thestorm.essentials.app.StarterSupplies;
 import io.papermc.paper.command.brigadier.BasicCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -71,6 +72,7 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
     database = store;
     store.migrate("companions", CompanionsPaper.class.getClassLoader());
     var services = new Services();
+    services.provide(ChunkTickets.class, new ChunkTickets(this));
     services.provide(GlobalChat.class, new TestChat());
     services.provide(
         StarterSupplies.class,
