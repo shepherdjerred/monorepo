@@ -518,6 +518,13 @@ describe("legendary gear and local feedback on real Paper", () => {
             entity.position.distanceTo(new Vec3(19.5, 105, -40.5)) < 1,
         ),
       );
+      for (const target of [0, 1, 2]) {
+        expect(
+          await rcon.command(
+            `data get entity @e[type=minecraft:zombie,name="Legendary target ${target.toString()}",limit=1] IsBaby`,
+          ),
+        ).toMatch(/: 0b$/u);
+      }
       await legendaryEffects(bot, rcon);
       await bot.equip(rod, "hand");
       await bot.lookAt(new Vec3(19.5, 104.5, -40.5));

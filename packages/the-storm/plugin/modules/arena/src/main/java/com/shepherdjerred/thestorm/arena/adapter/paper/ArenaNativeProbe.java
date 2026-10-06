@@ -5,6 +5,7 @@ import java.time.InstantSource;
 import org.bukkit.Location;
 import org.bukkit.entity.AbstractCubeMob;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Zombie;
 import org.bukkit.plugin.Plugin;
 
 /** Native acceptance bridge: drives the production factory and goal without reflection. */
@@ -152,6 +153,11 @@ public final class ArenaNativeProbe {
               .orElseThrow()
               .getFirst();
       runner.combat().probeTarget(target);
+      if (!(target instanceof Zombie zombie))
+        throw new IllegalStateException("A native legendary target must be a zombie");
+      // Paper randomizes zombie age at spawn. This fixture aims at adult chest
+      // height, so a baby target would turn a valid native shot into a miss.
+      zombie.setAdult();
       target.setAI(false);
       target.customName(net.kyori.adventure.text.Component.text("Legendary target " + index));
       target.setCustomNameVisible(true);
