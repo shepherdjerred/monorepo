@@ -44,6 +44,12 @@ owning source and cannot establish the source revision of live state. It
 reports that gap and still requires consumer probes before revocation.
 Neither command writes, imports, applies, archives or deletes anything.
 
+The offline `check:1password` gate checks application targets against the
+committed vault snapshot. It requires the label, field ID and section ID to
+identify the same physical field, including whether the field is top-level.
+Refresh the snapshot after changing those selectors. The snapshot stores only
+hashed metadata and field emptiness, never credential values or fingerprints.
+
 The vault audit shares synthesis and field transforms with the structural
 checker, scans tracked references including CI and dotfiles, and optionally
 inspects live workload bindings. It excludes empty values and identifiers

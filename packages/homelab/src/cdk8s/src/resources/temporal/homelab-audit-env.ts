@@ -32,9 +32,7 @@ export function homelabAuditEnv(
     GRAFANA_URL: EnvValue.fromValue(
       "http://prometheus-grafana.prometheus.svc.cluster.local",
     ),
-    ARGOCD_SERVER: EnvValue.fromValue(
-      "argocd-server.argocd.svc.cluster.local:80",
-    ),
+    ARGOCD_SERVER: EnvValue.fromValue("argocd.sjer.red"),
     WOODPECKER_REPO_ID: EnvValue.fromValue("1"),
     BUGSINK_TOKEN: EnvValue.fromSecretValue({
       secret: bugsinkSecret,

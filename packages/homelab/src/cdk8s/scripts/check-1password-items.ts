@@ -36,7 +36,10 @@ import {
   type Snapshot,
   type SnapshotItem,
 } from "./onepassword-lib.ts";
-import { applicationTargets } from "homelab/scripts/tofu/application-secrets.ts";
+import {
+  applicationTargets,
+  type CredentialTarget,
+} from "homelab/scripts/tofu/application-secrets.ts";
 
 const ITEM_PATH_RE = /^vaults\/([^/]+)\/items\/(.+)$/;
 /**
@@ -299,7 +302,7 @@ function validateFields(
 
 type DesiredStateTarget = {
   platform: PlatformStack | "application-secrets";
-  target: OnePasswordTarget;
+  target: OnePasswordTarget & Partial<CredentialTarget>;
 };
 
 export async function collectDesiredStateTargets(): Promise<
@@ -319,8 +322,30 @@ export async function collectDesiredStateTargets(): Promise<
   return targets;
 }
 
+/** Match all physical selectors against one field in the hashed snapshot. */
+function matchingPhysicalFields(
+  entry: SnapshotItem,
+  target: DesiredStateTarget["target"],
+  labelHash: string,
+): number {
+  const sectionHash =
+    target.vault_section_id === undefined
+      ? null
+      : hash(target.vault_section_id);
+  const fieldIdHash =
+    target.vault_field_id === undefined
+      ? undefined
+      : hash(target.vault_field_id);
+  return entry.fieldSelectors.filter(
+    (field) =>
+      field.label === labelHash &&
+      field.section === sectionHash &&
+      (fieldIdHash === undefined || field.id === fieldIdHash),
+  ).length;
+}
+
 /** Verify desired-state rotation units against the same hashed vault snapshot. */
-function validateDesiredStateTargets(
+export function validateDesiredStateTargets(
   targets: readonly DesiredStateTarget[],
   byHash: Map<string, SnapshotItem>,
   errors: string[],
@@ -336,13 +361,26 @@ function validateDesiredStateTargets(
       );
       continue;
     }
+    if (target.vault_field === undefined) continue;
+    const labelHash = hash(target.vault_field);
+    // Platform providers publish operator keys; application adoption selects
+    // physical fields and must match the handoff reader's exact selectors.
     if (
-      target.vault_field !== undefined &&
-      !entry.fields.includes(hash(target.vault_field))
+      platform !== "application-secrets" &&
+      target.vault_field_id === undefined &&
+      target.vault_section_id === undefined
     ) {
+      if (!entry.fields.includes(labelHash))
+        errors.push(
+          `1Password handoff field "${target.vault_field}" not found on item "${target.vault_item_id}" in ${platform} desired state. ` +
+            `If it was just added or renamed, refresh the snapshot.`,
+        );
+      continue;
+    }
+    if (matchingPhysicalFields(entry, target, labelHash) !== 1) {
       errors.push(
-        `1Password handoff field "${target.vault_field}" not found on item "${target.vault_item_id}" in ${platform} desired state. ` +
-          `If it was just added or renamed, refresh the snapshot.`,
+        `1Password handoff selectors for field "${target.vault_field}" do not identify exactly one field on item "${target.vault_item_id}" in ${platform} desired state. ` +
+          `Check the field ID and section ID, then refresh the snapshot if they changed.`,
       );
     }
   }

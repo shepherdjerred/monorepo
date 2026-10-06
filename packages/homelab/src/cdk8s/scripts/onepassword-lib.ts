@@ -102,6 +102,14 @@ export const SnapshotItemSchema = z.object({
    * source — the operator skips these, so a required secretKeyRef to one fails at deploy.
    */
   blankFields: z.array(z.string()),
+  /** Hashed selectors grouped by physical field; no credential values. */
+  fieldSelectors: z.array(
+    z.object({
+      label: z.string(),
+      id: z.string(),
+      section: z.string().nullable(),
+    }),
+  ),
 });
 export type SnapshotItem = z.infer<typeof SnapshotItemSchema>;
 
@@ -146,6 +154,19 @@ export const OpItemSchema = z.object({
   files: z.array(OpFileSchema).optional(),
 });
 export type OpItem = z.infer<typeof OpItemSchema>;
+
+/** Preserve exact field identity for adoption checks without storing values. */
+export function snapshotFieldSelectors(
+  item: OpItem,
+): SnapshotItem["fieldSelectors"] {
+  return (item.fields ?? [])
+    .map((field) => ({
+      label: hash(field.label ?? field.id),
+      id: hash(field.id),
+      section: field.section === undefined ? null : hash(field.section.id),
+    }))
+    .toSorted((left, right) => left.id.localeCompare(right.id));
+}
 
 export const OpItemListSchema = z.array(
   z.object({ id: z.string(), title: z.string() }),

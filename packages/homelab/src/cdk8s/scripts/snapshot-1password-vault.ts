@@ -5,7 +5,7 @@
  *
  * This is the ONLY piece that talks to 1Password. Run it whenever vault items or fields
  * change. It writes ONLY sha256 hashes of item ids, item titles, and the operator-emitted
- * secret keys — never any field values — so the committed file leaks no vault contents.
+ * secret keys and physical field selectors — never any field values.
  *
  * Transport (auto-detected):
  *   - 1Password Connect HTTP API, if OP_CONNECT_TOKEN and OP_CONNECT_URL are set
@@ -22,6 +22,7 @@
 import {
   hash,
   operatorSecretKeys,
+  snapshotFieldSelectors,
   OpItemListSchema,
   OpItemSchema,
   SNAPSHOT_PATH,
@@ -161,6 +162,7 @@ function buildSnapshot(items: OpItem[]): Snapshot {
         title: hash(item.title),
         fields: [...keys.all].map((key) => hash(key)).toSorted(),
         blankFields: [...keys.blank].map((key) => hash(key)).toSorted(),
+        fieldSelectors: snapshotFieldSelectors(item),
       };
     })
     .toSorted((a, b) => a.ref.localeCompare(b.ref));

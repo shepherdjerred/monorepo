@@ -3,9 +3,127 @@ import { describe, expect, test } from "vitest";
 import {
   collectConsumption,
   snapshotStalenessWarning,
+  validateDesiredStateTargets,
 } from "./check-1password-items.ts";
+import {
+  hash,
+  snapshotFieldSelectors,
+  type OpItem,
+  type SnapshotItem,
+} from "./onepassword-lib.ts";
 
 const NOW = new Date("2026-08-16T00:00:00Z");
+
+describe("desired-state handoff selectors", () => {
+  const item: OpItem = {
+    id: "fixture-item",
+    title: "Fixture",
+    fields: [
+      { id: "top-level", label: "TOKEN", value: "synthetic-token" },
+      {
+        id: "section-field",
+        label: "TOKEN",
+        section: { id: "section" },
+        value: "synthetic-section-token",
+      },
+      { id: "other-field", label: "OTHER", value: "synthetic-other-token" },
+    ],
+  };
+  const snapshot: SnapshotItem = {
+    ref: hash(item.id),
+    title: hash(item.title),
+    fields: [hash("TOKEN"), hash("OTHER")],
+    blankFields: [],
+    fieldSelectors: snapshotFieldSelectors(item),
+  };
+  const byHash = new Map([[snapshot.ref, snapshot]]);
+  const target = {
+    vault_item_id: item.id,
+    vault_field: "TOKEN",
+    vault_field_id: "section-field",
+    vault_section_id: "section",
+  };
+
+  test("accepts selectors belonging to one physical field", () => {
+    const errors: string[] = [];
+    expect(
+      validateDesiredStateTargets(
+        [{ platform: "application-secrets", target }],
+        byHash,
+        errors,
+      ),
+    ).toBe(1);
+    expect(errors).toEqual([]);
+  });
+
+  test.each([
+    { ...target, vault_field_id: "misspelled-field" },
+    { ...target, vault_section_id: "wrong-section" },
+    { ...target, vault_section_id: undefined },
+    { ...target, vault_field_id: "top-level" },
+    {
+      ...target,
+      vault_field_id: "other-field",
+      vault_section_id: undefined,
+    },
+  ])("rejects mismatched physical selectors: %j", (invalidTarget) => {
+    const errors: string[] = [];
+    validateDesiredStateTargets(
+      [{ platform: "application-secrets", target: invalidTarget }],
+      byHash,
+      errors,
+    );
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toContain("do not identify exactly one field");
+  });
+
+  test("supports a unique application label without a field ID", () => {
+    const errors: string[] = [];
+    validateDesiredStateTargets(
+      [
+        {
+          platform: "application-secrets",
+          target: { vault_item_id: item.id, vault_field: "TOKEN" },
+        },
+      ],
+      byHash,
+      errors,
+    );
+    expect(errors).toEqual([]);
+  });
+
+  test("rejects an ambiguous label without a field ID", () => {
+    const duplicate = snapshotFieldSelectors({
+      ...item,
+      fields: [...(item.fields ?? []), { id: "duplicate", label: "TOKEN" }],
+    });
+    const errors: string[] = [];
+    validateDesiredStateTargets(
+      [
+        {
+          platform: "application-secrets",
+          target: { vault_item_id: item.id, vault_field: "TOKEN" },
+        },
+      ],
+      new Map([[snapshot.ref, { ...snapshot, fieldSelectors: duplicate }]]),
+      errors,
+    );
+    expect(errors).toHaveLength(1);
+  });
+
+  test("snapshot selectors are independent of credential values", () => {
+    expect(
+      snapshotFieldSelectors({
+        ...item,
+        fields: item.fields?.map((field) => ({
+          ...field,
+          value: "rotated-fixture",
+        })),
+      }),
+    ).toEqual(snapshot.fieldSelectors);
+    expect(JSON.stringify(snapshot.fieldSelectors)).not.toContain("synthetic");
+  });
+});
 
 describe("collectConsumption", () => {
   test("includes a nested Helm-managed Minecraft RCON secret", () => {
