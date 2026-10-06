@@ -68,7 +68,9 @@ describe("disposable Paper 26.2 server", () => {
     );
 
     const reply = waitForTranslation(bot, "commands.time.query.timeline");
-    bot.chat("/time query day");
+    // /time is the permission-gated staff command; use Bukkit's namespaced
+    // vanilla command when this test checks vanilla translation output.
+    bot.chat("/minecraft:time query day");
     const [, ticks] = TimelineArgsSchema.parse(await reply);
     const fromBot = Number(ticks);
 
@@ -174,14 +176,24 @@ describe("26.x features through ViaBackwards", () => {
       }
     });
 
+    const summonReplies = [];
     for (const type of [...summoned, "sulfur_cube"]) {
-      await rcon.command(`summon minecraft:${type} ${at}`);
+      summonReplies.push(
+        await rcon.command(`minecraft:summon minecraft:${type} ${at}`),
+      );
     }
     const seen = () =>
       new Set(Object.values(bot.entities).map((entity) => entity.name));
-    await waitUntil("summoned entities", () =>
-      summoned.every((name) => seen().has(name)),
-    );
+    try {
+      await waitUntil("summoned entities", () =>
+        summoned.every((name) => seen().has(name)),
+      );
+    } catch (error) {
+      throw new Error(
+        `${String(error)}; client has ${[...seen()].join(", ")}; RCON replied ${summonReplies.join(" | ")}`,
+        { cause: error },
+      );
+    }
     // sulfur_cube is new in 26.2; ViaBackwards maps it to a slime for 26.1 clients.
     await waitUntil("sulfur cube as slime", () => seen().has("slime"));
 
