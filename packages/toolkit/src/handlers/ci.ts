@@ -2,6 +2,10 @@ import { parseArgs } from "node:util";
 import { z } from "zod";
 import { ciCommand } from "#commands/ci.ts";
 import { parseTimeout } from "#lib/ci/arguments.ts";
+import {
+  requiredCredentialsFor,
+  resolveCredentials,
+} from "#lib/credentials.ts";
 
 function validateOptions(
   action: string,
@@ -89,14 +93,16 @@ starting another status poll. Red main: report and await instructions.
         .parse(values.head);
     if (positionals[0] !== undefined)
       z.coerce.number().int().positive().parse(positionals[0]);
-    await ciCommand(action, positionals[0], {
+    const options = {
       json: values.json,
       head: values.head?.toLowerCase(),
       timeoutMs:
         values.timeout === undefined ? undefined : parseTimeout(values.timeout),
       until: z.enum(["first-failure", "settled"]).parse(values.until),
       main: values.main,
-    });
+    };
+    await resolveCredentials(requiredCredentialsFor("ci", action));
+    await ciCommand(action, positionals[0], options);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (json)

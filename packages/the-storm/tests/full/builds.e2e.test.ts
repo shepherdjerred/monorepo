@@ -340,6 +340,11 @@ describe("vertical settlement pursuit and party scaling on real Paper", () => {
               pursuitLegMs,
             );
             expect(bot.health).toBeGreaterThan(0);
+          } catch (error) {
+            const pursuit = await rcon.command(
+              `storm-fixture-survival pursuit ${bot.username} none`,
+            );
+            throw new Error(`${String(error)}; ${pursuit}`, { cause: error });
           } finally {
             await rcon.command("arena stop settlement");
             await rcon.command("difficulty peaceful");
