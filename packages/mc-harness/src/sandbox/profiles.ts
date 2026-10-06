@@ -81,9 +81,7 @@ export function pluginMountTargets(profile: ResolvedProfile): string[] {
     profile.plugins.length > 0 ||
     profile.staged.some((entry) => entry.kind === "repo-dir")
   ) {
-    throw new Error(
-      "File plugin mounts require individually staged files",
-    );
+    throw new Error("File plugin mounts require individually staged files");
   }
   return profile.staged.map((entry) => entry.target);
 }

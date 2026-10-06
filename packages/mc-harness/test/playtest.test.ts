@@ -11,7 +11,11 @@ import { loadScenario, scenarioMeta } from "#playtest/scenario.ts";
 import { stormServerImages } from "#src/pins.ts";
 import { resolveProfile } from "#sandbox/profiles.ts";
 import { requireStagedSources, stageEntries } from "#sandbox/staging.ts";
-import { stormImageConfig, stormModuleConfig } from "#sandbox/storm.ts";
+import {
+  STORM_PATHS,
+  stormImageConfig,
+  stormModuleConfig,
+} from "#sandbox/storm.ts";
 
 let dir: string;
 beforeAll(async () => {

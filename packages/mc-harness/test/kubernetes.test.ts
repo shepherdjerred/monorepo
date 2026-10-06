@@ -259,7 +259,7 @@ describe("profiles", () => {
       CFG_PROXY_PROTOCOL: "false",
       MC_BRIDGE_TOKEN: secrets.bridgeToken,
       DISCORD_BOT_TOKEN: "invalid-storm-fixture-token",
-      RWF_RECORDING_SALT: "storm-sandbox-recording-salt",
+      RWF_RECORDING_SALT: "mc-harness-storm-fixture-recording-salt",
     });
   });
 });
