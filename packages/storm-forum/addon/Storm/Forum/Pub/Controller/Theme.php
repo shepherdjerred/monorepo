@@ -17,7 +17,10 @@ final class Theme extends \XF\Pub\Controller\AbstractController
         if (!$origin) { return; }
         $host = parse_url($this->options()->boardUrl, PHP_URL_HOST);
         $allowed = ['https://docs.ts-mc.net', rtrim($this->options()->boardUrl, '/')];
-        if (in_array($host, ['localhost','127.0.0.1'], true)) { $allowed[] = 'http://127.0.0.1:18797'; }
+        if (in_array($host, ['localhost','127.0.0.1'], true)) {
+            $allowed[] = 'http://127.0.0.1:18797';
+            $allowed[] = 'http://localhost:18797';
+        }
         if (!in_array($origin, $allowed, true)) { throw $this->exception($this->noPermission()); }
         $this->app()->response()->setHeaders(['Access-Control-Allow-Origin'=>$origin, 'Access-Control-Allow-Credentials'=>'true', 'Vary'=>'Origin']);
     }

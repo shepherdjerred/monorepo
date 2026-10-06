@@ -1,22 +1,44 @@
 ---
 import { themeCatalog, resolveTheme } from "@shepherdjerred/storm-theme";
+import { forumActive } from "../forum-release.ts";
+const localPreferences = !forumActive;
 const data = JSON.stringify({
   catalog: themeCatalog,
   current: resolveTheme("auto", true, new Date()),
 });
 ---
 
-<script is:inline define:vars={{ stormInitial: data }}>
+<script
+  is:inline
+  define:vars={{ stormInitial: data, stormLocalPreferences: localPreferences }}
+>
   const initial = JSON.parse(stormInitial);
-  const saved = document.cookie
-    .split("; ")
-    .find((part) => part.startsWith("storm_preferences="));
+  const cookie = (name) =>
+    document.cookie
+      .split("; ")
+      .find((part) => part.startsWith(name + "="))
+      ?.slice(name.length + 1);
+  const legacy = cookie("storm_preferences");
+  const localName = "storm_local_preferences";
+  let saved = cookie(stormLocalPreferences ? localName : "storm_preferences");
+  if (stormLocalPreferences && !saved && legacy) {
+    document.cookie =
+      localName +
+      "=" +
+      legacy +
+      "; Path=/; Max-Age=31536000; SameSite=Lax" +
+      (location.protocol === "https:" ? "; Secure" : "");
+    saved = legacy;
+  }
+  if (legacy) {
+    document.cookie =
+      "storm_preferences=; Path=/; Max-Age=0; SameSite=Lax" +
+      (location.protocol === "https:" ? "; Secure" : "");
+  }
   let prefs = { appearance: "system", theme: "auto" };
   if (saved) {
     try {
-      const value = JSON.parse(
-        decodeURIComponent(saved.slice("storm_preferences=".length)),
-      );
+      const value = JSON.parse(decodeURIComponent(saved));
       if (
         value.version === 1 &&
         ["system", "light", "dark"].includes(value.appearance)

@@ -7,6 +7,7 @@ import { renderCard } from "@shepherdjerred/storm-theme/render";
 
 export default defineConfig({
   devToolbar: { enabled: false },
+  server: { host: "127.0.0.1", port: 18797, strictPort: true },
   build: {
     format: "directory",
   },

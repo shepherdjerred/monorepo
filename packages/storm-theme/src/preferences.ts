@@ -17,12 +17,16 @@ export const defaultPreferences: StormPreferences = {
   effects: true,
 };
 export const preferenceCookie = "storm_preferences";
-export function readPreferences(cookie: string): StormPreferences | undefined {
+export const localPreferenceCookie = "storm_local_preferences";
+export function readPreferences(
+  cookie: string,
+  name = preferenceCookie,
+): StormPreferences | undefined {
   const encoded = cookie
     .split(";")
     .map((part) => part.trim())
-    .find((part) => part.startsWith(`${preferenceCookie}=`))
-    ?.slice(preferenceCookie.length + 1);
+    .find((part) => part.startsWith(`${name}=`))
+    ?.slice(name.length + 1);
   if (encoded === undefined) return undefined;
   try {
     return PreferencesSchema.parse(JSON.parse(decodeURIComponent(encoded)));
