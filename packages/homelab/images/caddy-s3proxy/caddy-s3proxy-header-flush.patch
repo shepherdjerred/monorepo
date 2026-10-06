@@ -2,6 +2,14 @@ diff --git a/s3proxy.go b/s3proxy.go
 index 7407b42..81a638c 100644
 --- a/s3proxy.go
 +++ b/s3proxy.go
+@@ -336,0 +337,7 @@
++	// Preserve the authoritative object (or range) length before flushing.
++	// io.Copy does not infer this for streamed bodies; Cloudflare needs it
++	// to serve byte ranges for large archive downloads.
++	if obj.ContentLength != nil {
++		w.Header().Set("Content-Length", strconv.FormatInt(*obj.ContentLength, 10))
++	}
++
 @@ -340,5 +340,9 @@
 -	if obj.ContentRange != nil && *obj.ContentRange != "" {
 -		w.WriteHeader(http.StatusPartialContent)
@@ -17,3 +25,6 @@ index 7407b42..81a638c 100644
 +	}
 +
 +	var err error
+@@ -349,2 +361,0 @@
+-		// io.Copy will set Content-Length
+-		w.Header().Del("Content-Length")

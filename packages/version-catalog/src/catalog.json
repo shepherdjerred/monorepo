@@ -3,6 +3,16 @@
   "schemaVersion": 1,
   "entries": [
     {
+      "name": "unmined/unmined-cli",
+      "category": "upstream",
+      "artifactType": "package",
+      "management": { "managed": false },
+      "value": "0.20.10",
+      "notes": [
+        "Storm archive's bounded 2D preview renderer. Apple Silicon CLI artifact is checksum-pinned in the archive catalogue; never redistribute the tool binary."
+      ]
+    },
+    {
       "name": "stashapp/stash",
       "category": "upstream",
       "artifactType": "image",

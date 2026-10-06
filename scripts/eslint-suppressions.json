@@ -64,11 +64,6 @@
       "count": 1
     }
   },
-  "release/deploy-site.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "release/publish-npm.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1

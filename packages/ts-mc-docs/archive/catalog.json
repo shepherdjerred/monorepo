@@ -1,0 +1,131 @@
+{
+  "release": "2026-10-04-v1",
+  "worlds": [
+    {
+      "id": "main-map2-2016-01-10",
+      "file": "TheStorm_survival-main_map2_snapshot-2016-01-10.zip",
+      "root": "home/files/servers/survival/world",
+      "title": "Main Map 2",
+      "date": "2016-01-10",
+      "minecraft": "1.8-era (use 1.8.9)",
+      "credit": "The Storm community",
+      "description": "The later survival main world."
+    },
+    {
+      "id": "main-map1-2015-07-09",
+      "file": "TheStorm_survival-main_map1_snapshot-2015-07-09.zip",
+      "root": "home/files/servers/survival/world",
+      "title": "Main Map 1",
+      "date": "2015-07-09",
+      "minecraft": "1.8-era (use 1.8.9)",
+      "credit": "The Storm community",
+      "description": "The original first survival main-world snapshot."
+    },
+    {
+      "id": "main-map1-upgraded-2023-06-18",
+      "file": "TheStorm_survival-main_map1_1.14.4-upgrade_snapshot-2023-06-18.zip",
+      "root": "world",
+      "title": "Main Map 1 — upgraded copy",
+      "date": "2023-06-18",
+      "minecraft": "1.14.4",
+      "credit": "The Storm community",
+      "description": "A later copy of Main Map 1 saved in Minecraft 1.14.4; not the 2022–23 revival world."
+    },
+    {
+      "id": "skylands-map2-2016-01-10",
+      "file": "TheStorm_survival-skylands_map2_snapshot-2016-01-10.zip",
+      "root": "home/files/servers/survival/world_skylands",
+      "title": "Skylands Map 2",
+      "date": "2016-01-10",
+      "minecraft": "1.8-era (use 1.8.9)",
+      "credit": "The Storm community",
+      "description": "The later Skylands survival world."
+    },
+    {
+      "id": "skylands-map1-2015-07-09",
+      "file": "TheStorm_survival-skylands_map1_snapshot-2015-07-09.zip",
+      "root": "home/files/servers/survival/world_skylands",
+      "title": "Skylands Map 1",
+      "date": "2015-07-09",
+      "minecraft": "1.8-era (use 1.8.9)",
+      "credit": "The Storm community",
+      "description": "The original Skylands snapshot."
+    },
+    {
+      "id": "creative-2016-01-10",
+      "file": "TheStorm_creative_snapshot-2016-01-10.zip",
+      "root": "home/files/servers/creative/world",
+      "title": "Creative",
+      "date": "2016-01-10",
+      "minecraft": "1.8-era (use 1.8.9)",
+      "credit": "The Storm community",
+      "description": "The creative server's plot world."
+    },
+    {
+      "id": "asterism-2016-02",
+      "file": "SM_Town_Asterism.zip",
+      "root": "SM Town Asterism",
+      "title": "Asterism",
+      "date": "2016-02",
+      "minecraft": "1.8-era (use 1.8.9)",
+      "credit": "WinterSolstice8 / BlueAsterismSolstice",
+      "description": "A recovered town export from the survival world."
+    },
+    {
+      "id": "kargeth-2012-09-11",
+      "file": "third-party_Kargeth_by_Madnes64_creative.zip",
+      "root": "Kargeth by Madnes64 creative",
+      "title": "Kargeth — original third-party world",
+      "date": "2012-09-11",
+      "minecraft": "2012 Anvil format (use 1.3.2)",
+      "credit": "Madnes64; additional settlements by TheCreeperWorld, Flashy, Seppel1097, Killxzone, Tijn1117 and Mattykingsam",
+      "description": "The original city used for The Storm's 2014 harbour spawn, without The Storm's later modifications."
+    },
+    {
+      "id": "new-world-test-2022-11-20",
+      "file": "New World (2022-11-20 test world).zip",
+      "root": "New World",
+      "title": "New World — revival seed test",
+      "date": "2022-11-20",
+      "minecraft": "1.19.2",
+      "credit": "The Storm",
+      "description": "A brief single-player test used to choose the revival seed; not a server snapshot."
+    }
+  ],
+  "schematics": [
+    {
+      "file": "bluevalkyrieplotbuildbywintersolstice89204390.schematic",
+      "title": "Blue Valkyrie"
+    },
+    {
+      "file": "spiderqueen9223084.schematic",
+      "title": "Spider Queen"
+    },
+    {
+      "file": "leviathan9245431.schematic",
+      "title": "Leviathan"
+    },
+    {
+      "file": "lunareclipse9297068.schematic",
+      "title": "Mech: Lunar Eclipse"
+    },
+    {
+      "file": "hotsprings9346877.schematic",
+      "title": "Hot Springs"
+    },
+    {
+      "file": "mothernature9424556.schematic",
+      "title": "Mother Nature"
+    },
+    {
+      "file": "blankcanvas9496011.schematic",
+      "title": "Blank Canvas"
+    },
+    {
+      "file": "mistwalker9760777.schematic",
+      "title": "Mist Walker"
+    }
+  ],
+  "rendererUrl": "https://unmined.net/download/unmined-cli-macos-arm64-dev/?tmstv=1789994805",
+  "rendererSha256": "439102b8c6bef97d09393643876fab84ed65b911a1bdd9f2ba05a8fa513e933a"
+}

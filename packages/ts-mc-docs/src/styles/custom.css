@@ -10,3 +10,37 @@
   --sl-color-accent: #007a74;
   --sl-color-accent-high: #06302e;
 }
+
+.archive-previews {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-block: 1rem;
+}
+
+.archive-previews figure {
+  margin: 0;
+  min-width: 0;
+}
+
+.archive-previews img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 20rem;
+  object-fit: contain;
+  background: var(--sl-color-gray-6);
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 0.35rem;
+}
+
+.archive-previews figcaption {
+  margin-block-start: 0.5rem;
+  font-size: 0.875rem;
+}
+
+@media (max-width: 40rem) {
+  .archive-previews {
+    grid-template-columns: 1fr;
+  }
+}
