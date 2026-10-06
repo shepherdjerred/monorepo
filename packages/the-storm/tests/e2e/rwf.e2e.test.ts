@@ -1215,7 +1215,7 @@ describe("Repairing the Search and Destroy map", () => {
       try {
         const before = pastes(await serverLogs(server));
         bot.chat("/rwf admin repair");
-        await log.until(/Verifying training-yard\.\.\./u);
+        await log.until(/Verifying training-yard and the lobby\.\.\./u);
         await log.until(intact, 30_000);
         expect(pastes(await serverLogs(server))).toBe(before);
 
