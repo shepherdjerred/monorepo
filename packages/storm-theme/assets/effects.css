@@ -31,34 +31,13 @@
   border-left: 1px solid #ffffff70;
   transform: rotate(-28deg);
 }
-.stormEffectsToggle {
-  position: fixed;
-  bottom: max(12px, env(safe-area-inset-bottom));
-  left: 12px;
-  z-index: 70;
-  border: 1px solid var(--storm-border-color-heavy);
-  border-radius: 5px;
-  padding: 8px 12px;
-  background: var(--storm-content-bg);
-  color: var(--storm-text-color);
-  font: inherit;
-  cursor: pointer;
-}
-.stormEffectsToggle[hidden] {
-  display: none;
-}
-.stormEffectsToggle:focus-visible {
-  outline: 2px solid var(--storm-focus-color);
-  outline-offset: 3px;
-}
 @keyframes storm-fall {
   to {
     transform: translate3d(40px, calc(100dvh + 6rem), 0) rotate(160deg);
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .stormEffects,
-  .stormEffectsToggle {
+  .stormEffects {
     display: none;
   }
 }

@@ -1,6 +1,11 @@
 import { cp, mkdir } from "node:fs/promises";
 import { z } from "zod";
-import { HistorySchema, historicalDate, restoreMessage } from "#src/history.ts";
+import { format } from "prettier";
+import {
+  LegacyHistorySchema,
+  historicalDate,
+  restoreMessage,
+} from "#src/history.ts";
 import restorations from "#config/history-restorations.json";
 
 const source = Bun.argv[2];
@@ -182,7 +187,7 @@ for (const item of news) {
     ],
   });
 }
-const history = HistorySchema.parse({
+const history = LegacyHistorySchema.parse({
   version: 1,
   threads: threads.sort((a, b) => a.originalId - b.originalId),
   omitted,
@@ -207,7 +212,7 @@ for (const file of usedImages) {
 }
 await Bun.write(
   new URL("config/history.json", root),
-  JSON.stringify(history, null, 2) + "\n",
+  await format(JSON.stringify(history), { parser: "json" }),
 );
 process.stdout.write(
   `Prepared ${String(history.threads.length)} public threads, ${String(history.threads.reduce((n, t) => n + t.posts.length, 0))} posts, ${String(usedImages.size)} referenced images; ${String(omitted.length)} omitted.\n`,

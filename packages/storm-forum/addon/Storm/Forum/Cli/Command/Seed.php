@@ -18,7 +18,18 @@ final class Seed extends \XF\Cli\Command\AbstractCommand
         \XF::asVisitor($author, function () use ($app, $map, $seeds, &$published) {
             foreach ($seeds as $seed) {
                 if (isset($published[$seed['key']])) {
-                    if (!$app->em()->find('XF:Thread', $published[$seed['key']])) { throw new \RuntimeException('Managed editorial thread missing'); }
+                    $thread = $app->em()->find('XF:Thread', $published[$seed['key']], ['FirstPost']);
+                    if (!$thread) { throw new \RuntimeException('Managed editorial thread missing'); }
+                    if (isset($seed['previousMessageHash'])) {
+                        $app->db()->beginTransaction();
+                        try {
+                            $message = $app->db()->fetchOne('SELECT message FROM xf_post WHERE post_id = ? FOR UPDATE', $thread->first_post_id);
+                            if (hash('sha256', $message) === $seed['previousMessageHash']) {
+                                $thread->FirstPost->message = $seed['message']; $thread->FirstPost->save();
+                            }
+                            $app->db()->commit();
+                        } catch (\Throwable $error) { $app->db()->rollback(); throw $error; }
+                    }
                     continue; // Preserve staff edits and the original publication date.
                 }
                 $forum = $app->em()->find('XF:Forum', $map['node:' . $seed['node']]);

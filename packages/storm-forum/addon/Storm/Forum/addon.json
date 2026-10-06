@@ -1,8 +1,8 @@
 {
   "title": "The Storm Forum",
   "description": "The Storm's community portal and runtime credential integration.",
-  "version_id": 3000070,
-  "version_string": "3.0.0",
+  "version_id": 4000070,
+  "version_string": "4.0.0",
   "dev": "The Storm",
   "require": { "XF": [2031370, "XenForo 2.3.13+"] },
   "icon": "fa-cloud"

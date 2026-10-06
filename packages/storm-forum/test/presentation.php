@@ -10,6 +10,17 @@ $guest = $app->repository('XF:User')->getGuestUser();
 $staff = $app->em()->find('XF:User', 1);
 $request = $app->request();
 $controller = $app->controller(Storm\Forum\Pub\Controller\Theme::class, $request);
+$viewer = XF::asVisitor($guest, fn() => $controller->actionViewer());
+$check($viewer->getParam('data')['viewer'] === null, 'Guest viewer endpoint exposed an account');
+$viewer = XF::asVisitor($staff, fn() => $controller->actionViewer());
+$data = $viewer->getParam('data');
+$check($data['viewer']['id'] === $staff->user_id && $data['viewer']['username'] === $staff->username, 'Viewer endpoint lost native identity');
+$check($data['viewer']['alerts'] === $staff->alerts_unviewed && $data['viewer']['conversations'] === $staff->conversations_unread, 'Viewer unread counts differ from native state');
+$check(!isset($data['viewer']['email']) && count($data['viewer']) === 6, 'Viewer endpoint exposed unnecessary account data');
+foreach ($data['links'] as $route=>$url) {
+    $params = $route === 'logout' ? ['t'=>$app['csrf.token']] : [];
+    $check($url === $app->router('public')->buildLink('canonical:' . $route, null, $params), 'Viewer bypassed native account routes or logout CSRF protection');
+}
 $request->set('forum', $nodes['node:reports']);
 $request->set('theme', 'halloween');
 $reply = XF::asVisitor($staff, fn() => $controller->actionCard());

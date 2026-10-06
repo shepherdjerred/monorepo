@@ -27,12 +27,14 @@ System appearance follows the device; explicit choices remain native preferences
 Keeping these changes in the [owned style service](https://github.com/shepherdjerred/monorepo/blob/f79b0cdaf5e1ec8e08ecd71fecc1e390f3493ddf/packages/storm-forum/addon/Storm/Forum/Service/OwnedStyles.php)
 allows parent updates without manually recreating community changes.
 
-## History does not recreate accounts
+## Historical profiles preserve attribution
 
-Reviewed public discussions retain original author names and timestamps as guest
-posts, with new replies enabled. Import checkpoints preserve later edits and
-replies during repeat releases. Former accounts are not recreated, because that
-would assign an identity its author never claimed. The
+Reviewed public discussions retain original author names and timestamps, with
+new replies enabled. Native profiles group posts by original member ID and retain
+recovered avatars and attachments. These profiles have no email, password, staff
+privileges, or claiming flow. Import checkpoints preserve later edits and replies
+during repeat releases. A reviewed revision explicitly migrates unchanged messages
+while reporting staff-edited content. The
 [runtime boundary](https://github.com/shepherdjerred/monorepo/blob/f79b0cdaf5e1ec8e08ecd71fecc1e390f3493ddf/packages/storm-forum/README.md)
 separates historical attribution from current account ownership.
 

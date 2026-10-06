@@ -21,6 +21,10 @@
     "winter": {
       "desktop": "scenery/winter.jpg",
       "mobile": "scenery/winter-mobile.jpg"
+    },
+    "halloween": {
+      "desktop": "scenery/halloween.jpg",
+      "mobile": "scenery/halloween-mobile.jpg"
     }
   },
   "themes": [
@@ -317,7 +321,7 @@
     {
       "id": "halloween",
       "name": "Halloween",
-      "scenery": "autumn",
+      "scenery": "halloween",
       "decoration": "decorations/halloween.svg",
       "window": [1001, 1031],
       "palettes": {

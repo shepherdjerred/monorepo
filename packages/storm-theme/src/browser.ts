@@ -7,6 +7,7 @@ import {
   type StormPreferences,
 } from "./preferences.ts";
 import { applySurface, renderEffects, syncControls } from "./surface.ts";
+import { startViewer } from "./viewer.ts";
 
 const StateSchema = z.object({ themeId: ThemeIdSchema, revision: z.string() });
 const ResponseSchema = z.object({
@@ -27,6 +28,7 @@ export async function startStormTheme(root: HTMLElement): Promise<void> {
   const api = new URL(apiValue, location.href),
     assetBase = new URL(baseValue, location.href);
   const docs = root.dataset["stormSurface"] === "docs";
+  if (docs) startViewer(root, api);
   const media = matchMedia("(prefers-color-scheme: dark)"),
     reduced = matchMedia("(prefers-reduced-motion: reduce)");
   let preferences = readPreferences(document.cookie) ?? {
@@ -38,11 +40,6 @@ export async function startStormTheme(root: HTMLElement): Promise<void> {
   layer.className = "stormEffects";
   layer.setAttribute("aria-hidden", "true");
   document.body.prepend(layer);
-  const pause = document.createElement("button");
-  pause.type = "button";
-  pause.className = "stormEffectsToggle";
-  pause.textContent = "Pause holiday effects";
-  document.body.append(pause);
   const status = root.querySelector<HTMLElement>("[data-storm-status]");
 
   function apply() {
@@ -58,7 +55,7 @@ export async function startStormTheme(root: HTMLElement): Promise<void> {
     document.documentElement.dataset["stormAppearance"] =
       preferences.appearance;
     applySurface(theme, mode, docs, assetBase);
-    renderEffects(layer, pause, theme, {
+    renderEffects(layer, theme, {
       enabled: preferences.effects,
       reduced: reduced.matches,
     });
@@ -146,12 +143,6 @@ export async function startStormTheme(root: HTMLElement): Promise<void> {
         void run(() => submit(form));
       });
     });
-  pause.addEventListener("click", () => {
-    const next = { ...preferences, effects: false };
-    layer.replaceChildren();
-    pause.hidden = true;
-    void run(() => save(next));
-  });
   media.addEventListener("change", () => {
     if (preferences.appearance === "system") apply();
   });

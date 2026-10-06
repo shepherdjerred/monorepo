@@ -60,13 +60,19 @@ content. Existing editorial text remains editable by staff and is preserved on
 releases. Private support is readable by its author and staff. The portal and
 recent-thread widget query only public forums.
 
-`storm:history` imports the reviewed `config/history.json` corpus as guest posts
-without recreating accounts. Its transactional ID map makes repeat releases
-preserve edits and new replies. Provenance and reconstruction decisions remain
-internal to the corpus. `scripts/prepare-history.ts` reads an explicit archive
-directory without modifying it and copies only referenced public images.
+`storm:history` imports the reviewed `config/history.json` corpus with native
+profile-only identities keyed by original member ID, original post names and
+dates, recovered avatars, formatting, and native attachments. Profiles have
+empty email addresses, native NoPassword authentication, and no restored staff
+privileges or account-claim flow. Transactional checkpoints preserve IDs, edits,
+and new replies. A reviewed corpus revision requires `storm:history --migrate`;
+edited messages are retained and reported. `scripts/enrich-history.ts` reads an
+explicit archive directory without modifying it; optional `--public-archives`
+recovery copies verified public images into this package.
 
-The theme API shares native preferences with player docs. Public social cards
+The theme API shares native preferences and a credentialed, no-store viewer
+summary with player docs. Account, alerts, conversations, login, and logout use
+native forum routes; the response excludes email and message content. Public social cards
 use the effective calendar theme, check guest visibility, and cache by content
 and renderer/artwork revision. Personal appearance choices do not change cards.
 

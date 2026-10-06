@@ -6,7 +6,7 @@ final class ThemeCatalog
     public static function load(bool $validateAssets = false): array
     {
         $catalog = json_decode(file_get_contents('/opt/storm-theme/catalog.json'), true, 512, JSON_THROW_ON_ERROR);
-        if ($catalog['version'] !== 3 || $catalog['timeZone'] !== 'America/Los_Angeles' || !$catalog['themes']) {
+        if ($catalog['version'] !== 4 || $catalog['timeZone'] !== 'America/Los_Angeles' || !$catalog['themes']) {
             throw new \RuntimeException('Invalid Storm theme catalog');
         }
         $ids = [];
@@ -43,6 +43,7 @@ final class ThemeCatalog
                     if (!is_string($color) || !preg_match('/^#[a-f0-9]{6}$/iD', $color)) { throw new \RuntimeException('Invalid Storm theme color'); }
                 }
                 $asset($theme['logos'][$mode]);
+                $asset($theme['contentLogos'][$mode]);
             }
             if (!in_array($theme['effect'], [null,'confetti','hearts','petals','sparks','leaves','snow'], true)
                 || ($theme['effect'] !== null && $theme['window'] === null)) { throw new \RuntimeException('Invalid Storm holiday effect'); }

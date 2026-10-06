@@ -74,7 +74,7 @@ function validateWindow(
 }
 export const ThemeCatalogSchema = z
   .object({
-    version: z.literal(3),
+    version: z.literal(4),
     timeZone: z.literal("America/Los_Angeles"),
     scenery: z.record(
       z.string(),
@@ -99,6 +99,9 @@ export const ThemeCatalogSchema = z
               ])
               .nullable(),
             logos: z.object({ light: AssetSchema, dark: AssetSchema }).strict(),
+            contentLogos: z
+              .object({ light: AssetSchema, dark: AssetSchema })
+              .strict(),
             window: z.tuple([z.number().int(), z.number().int()]).nullable(),
             palettes: z
               .object({ light: PaletteSchema, dark: PaletteSchema })

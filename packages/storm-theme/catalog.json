@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "timeZone": "America/Los_Angeles",
   "scenery": {
     "classic": {
@@ -21,6 +21,10 @@
     "winter": {
       "desktop": "scenery/winter.jpg",
       "mobile": "scenery/winter-mobile.jpg"
+    },
+    "halloween": {
+      "desktop": "scenery/halloween.jpg",
+      "mobile": "scenery/halloween-mobile.jpg"
     }
   },
   "themes": [
@@ -126,6 +130,10 @@
       "logos": {
         "light": "logos/normal-light.svg",
         "dark": "logos/normal-dark.svg"
+      },
+      "contentLogos": {
+        "light": "logos/normal-content-light.svg",
+        "dark": "logos/normal-content-dark.svg"
       }
     },
     {
@@ -230,6 +238,10 @@
       "logos": {
         "light": "logos/spring-light.svg",
         "dark": "logos/spring-dark.svg"
+      },
+      "contentLogos": {
+        "light": "logos/spring-content-light.svg",
+        "dark": "logos/spring-content-dark.svg"
       }
     },
     {
@@ -334,6 +346,10 @@
       "logos": {
         "light": "logos/summer-light.svg",
         "dark": "logos/summer-dark.svg"
+      },
+      "contentLogos": {
+        "light": "logos/summer-content-light.svg",
+        "dark": "logos/summer-content-dark.svg"
       }
     },
     {
@@ -438,6 +454,10 @@
       "logos": {
         "light": "logos/autumn-light.svg",
         "dark": "logos/autumn-dark.svg"
+      },
+      "contentLogos": {
+        "light": "logos/autumn-content-light.svg",
+        "dark": "logos/autumn-content-dark.svg"
       }
     },
     {
@@ -542,6 +562,10 @@
       "logos": {
         "light": "logos/winter-light.svg",
         "dark": "logos/winter-dark.svg"
+      },
+      "contentLogos": {
+        "light": "logos/winter-content-light.svg",
+        "dark": "logos/winter-content-dark.svg"
       }
     },
     {
@@ -646,6 +670,10 @@
       "logos": {
         "light": "logos/newyear-light.svg",
         "dark": "logos/newyear-dark.svg"
+      },
+      "contentLogos": {
+        "light": "logos/newyear-content-light.svg",
+        "dark": "logos/newyear-content-dark.svg"
       }
     },
     {
@@ -750,6 +778,10 @@
       "logos": {
         "light": "logos/valentines-light.svg",
         "dark": "logos/valentines-dark.svg"
+      },
+      "contentLogos": {
+        "light": "logos/valentines-content-light.svg",
+        "dark": "logos/valentines-content-dark.svg"
       }
     },
     {
@@ -854,6 +886,10 @@
       "logos": {
         "light": "logos/easter-light.svg",
         "dark": "logos/easter-dark.svg"
+      },
+      "contentLogos": {
+        "light": "logos/easter-content-light.svg",
+        "dark": "logos/easter-content-dark.svg"
       }
     },
     {
@@ -958,6 +994,10 @@
       "logos": {
         "light": "logos/midsummer-light.svg",
         "dark": "logos/midsummer-dark.svg"
+      },
+      "contentLogos": {
+        "light": "logos/midsummer-content-light.svg",
+        "dark": "logos/midsummer-content-dark.svg"
       }
     },
     {
@@ -1062,12 +1102,16 @@
       "logos": {
         "light": "logos/harvest-light.svg",
         "dark": "logos/harvest-dark.svg"
+      },
+      "contentLogos": {
+        "light": "logos/harvest-content-light.svg",
+        "dark": "logos/harvest-content-dark.svg"
       }
     },
     {
       "id": "halloween",
       "name": "Halloween",
-      "scenery": "autumn",
+      "scenery": "halloween",
       "decoration": "decorations/halloween.svg",
       "window": [1001, 1031],
       "palettes": {
@@ -1166,6 +1210,10 @@
       "logos": {
         "light": "logos/halloween-light.svg",
         "dark": "logos/halloween-dark.svg"
+      },
+      "contentLogos": {
+        "light": "logos/halloween-content-light.svg",
+        "dark": "logos/halloween-content-dark.svg"
       }
     },
     {
@@ -1270,6 +1318,10 @@
       "logos": {
         "light": "logos/thanksgiving-light.svg",
         "dark": "logos/thanksgiving-dark.svg"
+      },
+      "contentLogos": {
+        "light": "logos/thanksgiving-content-light.svg",
+        "dark": "logos/thanksgiving-content-dark.svg"
       }
     },
     {
@@ -1374,6 +1426,10 @@
       "logos": {
         "light": "logos/christmas-light.svg",
         "dark": "logos/christmas-dark.svg"
+      },
+      "contentLogos": {
+        "light": "logos/christmas-content-light.svg",
+        "dark": "logos/christmas-content-dark.svg"
       }
     }
   ]

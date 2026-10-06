@@ -101,6 +101,16 @@ for (const theme of seed.themes) {
         .replaceAll("#00D0C6", palette.logoColor)
         .replaceAll("#303030", readable(base.accent, "#ffffff")),
     );
+    await output(
+      `assets/logos/${theme.id}-content-${mode}.svg`,
+      logo
+        .replaceAll("#00D0C6", readable(base.accent, "#ffffff"))
+        .replaceAll("#303030", readable(base.accent, "#ffffff"))
+        .replace(
+          ".st1{fill:#FFFFFF;}",
+          `.st1{fill:#FFFFFF;stroke:${readable(base.accent, contentBg, 3)};stroke-width:7;stroke-linejoin:round;}`,
+        ),
+    );
   }
   themes.push({
     ...theme,
@@ -110,11 +120,15 @@ for (const theme of seed.themes) {
       light: `logos/${theme.id}-light.svg`,
       dark: `logos/${theme.id}-dark.svg`,
     },
+    contentLogos: {
+      light: `logos/${theme.id}-content-light.svg`,
+      dark: `logos/${theme.id}-content-dark.svg`,
+    },
   });
 }
 // Keep short calendar tuples in the repository formatter's canonical form.
 const catalog = JSON.stringify(
-  { ...seed, version: 3, themes },
+  { ...seed, version: 4, themes },
   null,
   2,
 ).replaceAll(/"window": \[\n\s+(\d+),\n\s+(\d+)\n\s+\]/g, '"window": [$1, $2]');
@@ -124,5 +138,5 @@ await output(
   await Bun.file(new URL("src/styles.css", root)).text(),
 );
 process.stdout.write(
-  `${check ? "Verified" : "Generated"} ${String(themes.length)} shared themes and ${String(themes.length * 2)} logos.\n`,
+  `${check ? "Verified" : "Generated"} ${String(themes.length)} shared themes and ${String(themes.length * 4)} logos.\n`,
 );

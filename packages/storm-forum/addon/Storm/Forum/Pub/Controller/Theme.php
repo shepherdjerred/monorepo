@@ -43,6 +43,22 @@ final class Theme extends \XF\Pub\Controller\AbstractController
         return $this->json(['preferences'=>$preferences, 'csrf'=>$this->app()['csrf.token']]);
     }
 
+    public function actionViewer(): \XF\Mvc\Reply\View
+    {
+        $this->cors();
+        $user = \XF::visitor();
+        $links = [];
+        foreach (['login','account','account/alerts','conversations','logout'] as $route) {
+            $links[$route] = $this->buildLink('canonical:' . $route, null, $route === 'logout' ? ['t'=>$this->app()['csrf.token']] : []);
+        }
+        return $this->json(['viewer'=>$user->user_id ? [
+            'id'=>$user->user_id, 'username'=>$user->username,
+            'avatar'=>$user->getAvatarUrl('s', 'custom', true) ?: null,
+            'profile'=>$this->buildLink('canonical:members', $user),
+            'alerts'=>$user->alerts_unviewed, 'conversations'=>$user->conversations_unread,
+        ] : null, 'links'=>$links]);
+    }
+
     public function actionCard(): \XF\Mvc\Reply\AbstractReply
     {
         // Always check as a guest, even if the requester has a signed-in session.
@@ -68,7 +84,7 @@ final class Theme extends \XF\Pub\Controller\AbstractController
                 return ['title'=>$forum->title, 'section'=>'The Storm community', 'description'=>'Read the latest discussions and share your next adventure.'];
             }
             if (!\XF::visitor()->hasPermission('general', 'view')) { return null; }
-            return ['title'=>'Welcome to The Storm', 'section'=>'Minecraft community', 'description'=>'A place to build, explore, and catch up. Join: ts-mc.net'];
+            return ['title'=>'Welcome to The Storm', 'section'=>'Minecraft Java + Bedrock', 'description'=>'A place to build, explore, and catch up. Server IP: ts-mc.net'];
         });
         if (!$card) { return $this->notFound(); }
         $theme = $this->filter('theme', 'str');
@@ -86,7 +102,7 @@ final class Theme extends \XF\Pub\Controller\AbstractController
         $catalog = \Storm\Forum\Service\ThemeCatalog::load();
         $selected = \Storm\Forum\Service\ThemeCatalog::theme($theme);
         $inputs = ['/opt/storm-theme/catalog.json', '/opt/storm-theme/src/render.ts', '/opt/storm-theme/src/render-cli.ts',
-            '/opt/storm-theme/assets/' . $selected['logos']['dark'],
+            '/opt/storm-theme/assets/' . $selected['contentLogos']['dark'],
             '/opt/storm-theme/assets/' . $catalog['scenery'][$selected['scenery']]['desktop']];
         $revision = '';
         foreach ($inputs as $input) {

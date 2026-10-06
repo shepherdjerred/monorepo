@@ -8,7 +8,7 @@ const HistoricalPostSchema = z
     message: z.string().min(1).max(100_000),
   })
   .strict();
-export const HistorySchema = z
+export const LegacyHistorySchema = z
   .object({
     version: z.literal(1),
     threads: z.array(
@@ -48,6 +48,97 @@ export const HistorySchema = z
             message: "Duplicate historical post",
           });
         posts.add(post.key);
+      }
+    }
+  });
+
+const UserSchema = z
+  .object({
+    originalId: z.number().int().positive(),
+    username: z.string().min(1).max(50),
+    aliases: z.array(z.string().min(1)),
+    slugs: z.array(z.string().min(1)),
+    captured: z.string().regex(/^\d{14}$/),
+    avatar: z
+      .string()
+      .regex(/^avatar-\d+\.(jpg|png)$/)
+      .nullable(),
+  })
+  .strict();
+export const HistorySchema = z
+  .object({
+    ...LegacyHistorySchema.shape,
+    version: z.literal(2),
+    users: z.array(UserSchema),
+    attachments: z.array(
+      z
+        .object({
+          originalId: z.number().int().positive(),
+          url: z.url(),
+          filename: z.string().min(1),
+          file: z.string().regex(/^attachment-\d+\.(jpg|png|gif)$/),
+          sha256: z.string().regex(/^[a-f0-9]{64}$/),
+        })
+        .strict(),
+    ),
+    unavailable: z.array(
+      z.object({ url: z.url(), reason: z.string().min(1) }).strict(),
+    ),
+    threads: z.array(
+      LegacyHistorySchema.shape.threads.element.extend({
+        posts: z
+          .array(
+            HistoricalPostSchema.extend({
+              originalUserId: z.number().int().positive(),
+              originalPostId: z.number().int().positive().nullable(),
+              previousMessageHash: z.string().regex(/^[a-f0-9]{64}$/),
+              attachments: z.array(z.number().int().positive()),
+            }),
+          )
+          .min(1),
+      }),
+    ),
+  })
+  .strict()
+  .superRefine((history, ctx) => {
+    const threadIds = new Set(history.threads.map((t) => t.originalId)),
+      postIds = history.threads.flatMap((t) => t.posts.map((p) => p.key));
+    if (
+      threadIds.size !== history.threads.length ||
+      new Set(postIds).size !== postIds.length
+    )
+      ctx.addIssue({
+        code: "custom",
+        message: "Duplicate historical thread or post",
+      });
+    const users = new Set(history.users.map((u) => u.originalId)),
+      attachments = new Set(history.attachments.map((a) => a.originalId));
+    if (
+      users.size !== history.users.length ||
+      attachments.size !== history.attachments.length
+    )
+      ctx.addIssue({
+        code: "custom",
+        message: "Duplicate historical identity or attachment",
+      });
+    for (const thread of history.threads) {
+      const originalPosts = thread.posts.flatMap((post) =>
+        post.originalPostId === null ? [] : [post.originalPostId],
+      );
+      if (new Set(originalPosts).size !== originalPosts.length)
+        ctx.addIssue({
+          code: "custom",
+          message: "Duplicate original post within a historical thread",
+        });
+      for (const post of thread.posts) {
+        if (
+          !users.has(post.originalUserId) ||
+          post.attachments.some((id) => !attachments.has(id))
+        )
+          ctx.addIssue({
+            code: "custom",
+            message: "Historical post has an unresolved identity or attachment",
+          });
       }
     }
   });

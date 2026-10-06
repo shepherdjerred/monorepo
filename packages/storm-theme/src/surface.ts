@@ -32,7 +32,7 @@ export function applySurface(
   for (const img of document.querySelectorAll<HTMLImageElement>(
     ".stormWelcome img",
   ))
-    img.src = new URL(theme.logos[mode], base).href;
+    img.src = new URL(theme.contentLogos[mode], base).href;
 }
 
 function applyDocs(theme: Theme, mode: "light" | "dark", base: URL) {
@@ -69,14 +69,12 @@ function applyDocs(theme: Theme, mode: "light" | "dark", base: URL) {
 
 export function renderEffects(
   layer: HTMLElement,
-  pause: HTMLButtonElement,
   theme: Theme,
   settings: { enabled: boolean; reduced: boolean },
 ): void {
   layer.replaceChildren();
   const animated =
     settings.enabled && !settings.reduced && theme.effect !== null;
-  pause.hidden = !animated;
   if (!animated || theme.effect === null) return;
   const count = matchMedia("(max-width: 800px)").matches ? 12 : 28;
   for (let index = 0; index < count; index++) {

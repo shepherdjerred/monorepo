@@ -1,0 +1,14 @@
+[
+  {
+    "key": "42:124",
+    "author": "RiotShielder",
+    "date": 1412662080,
+    "message": "Today I've updated the LiveMap to have a greater visual quality.\n\nFirstly, it now renders using the server texture pack; PureBD craft. It also renders in a much higher resolution, and allows you to zoom further in. Other various improvements have been added as well.\n\nThe Main World and Spawn have double the resolution of the Nether and End. The Main World and Spawn also show day and night.\n\nSpawn 3D\n\n[IMG]/data/storm-history/t42_imgur-CKXYyef.png[/IMG]\n\nSpawn 3D, max zoom\n\n[IMG]/data/storm-history/t42_imgur-5nCqSE3.png[/IMG]\n\nSpawn Flat\n\n[IMG]/data/storm-history/t42_imgur-N5Go0iN.png[/IMG]\n\nSpawn Flat, max zoom\n\n[IMG]/data/storm-history/t42_imgur-Fwbsqqw.png[/IMG]"
+  },
+  {
+    "key": "42:125",
+    "author": "Smaland47",
+    "date": 1412700600,
+    "message": "default pack option pls\n\nNot needed but I'd like it.\n\nAlso. This new version lags me almost nothing unlike the previous version, so thanks for that!"
+  }
+]

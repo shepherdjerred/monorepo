@@ -34,11 +34,11 @@
   ]]></template>
   <template type="public" title="storm_portal" version_id="1000070" version_string="1.0.0"><![CDATA[
 <xf:title>The Storm</xf:title>
-<xf:description>A Minecraft community, brought back together.</xf:description>
+<xf:h1 hidden="true" />
 <xf:css src="storm_forum.less" />
 <section class="stormWelcome">
   <img src="{{ base_url('styles/storm/logo.svg') }}" alt="The Storm" width="270" height="83" />
-  <div><h1>Welcome to The Storm</h1><p>A place to build, explore, and catch up.</p>
+  <div><h1>Welcome to The Storm</h1><p>A place to build, explore, and catch up.</p><p>Minecraft Java + Bedrock · Server IP: <strong>ts-mc.net</strong></p>
     <a class="button button--primary" href="{{ link('forums') }}">Visit the forums</a>
     <a class="button" href="https://docs.ts-mc.net">Getting started</a>
   </div>
@@ -52,7 +52,7 @@
 </xf:foreach>
 <xf:sidebar>
   <div class="block"><div class="block-container"><h3 class="block-header">Minecraft</h3><div class="block-body block-row">
-    <p><strong>Join: ts-mc.net</strong></p>
+    <p><strong>Server IP: ts-mc.net</strong></p><p>Minecraft Java + Bedrock</p><p>Bedrock port: <strong>30004</strong></p>
     <xf:if is="$status && $status.state == 'online'"><p>Online · {$status.online} / {$status.maximum} players</p>
     <xf:elseif is="$status && $status.state == 'sleeping'" /><p>Sleeping · join to wake the server.</p>
     <xf:elseif is="$status && $status.state == 'starting'" /><p>Starting · check again shortly.</p>

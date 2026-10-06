@@ -1,0 +1,18 @@
+<a href="#storm-theme-root" class="stormMobileAppearance">
+  Appearance
+</a>
+<script>
+  for (const link of document.querySelectorAll(".stormMobileAppearance")) {
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const sidebar = document.getElementById("starlight__sidebar");
+      if (sidebar instanceof HTMLElement) sidebar.hidePopover();
+      const picker = document.querySelector(".stormThemeControl");
+      if (!(picker instanceof HTMLDetailsElement))
+        throw new Error("Missing Storm appearance picker");
+      picker.open = true;
+      picker.querySelector("summary")?.focus();
+    });
+  }
+</script>

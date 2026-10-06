@@ -23,7 +23,7 @@ foreach (['light', 'dark'] as $mode) {
     $dark = $mode === 'dark';
     $title = 'Flexile · The Storm · ' . ucfirst($mode);
     $style = $app->finder('XF:Style')->where('title', $title)->fetchOne() ?: $app->em()->create('XF:Style');
-    $style->bulkSet(['title'=>$title,'description'=>'Private Flexile adaptation for The Storm, version 3.0.0.','parent_id'=>1,'user_selectable'=>false,'enable_variations'=>true]);
+    $style->bulkSet(['title'=>$title,'description'=>'Private Flexile adaptation for The Storm, version 4.0.0.','parent_id'=>1,'user_selectable'=>false,'enable_variations'=>true]);
     $style->save();
     // Native exports omit inherited values. Clear previous snapshots so fresh and repeat builds agree.
     foreach ($app->finder('XF:StyleProperty')->where('style_id', $style->style_id)->fetch() as $property) {
@@ -34,7 +34,7 @@ foreach (['light', 'dark'] as $mode) {
     $group->save();
     $custom = [
         'flexile_show_header_content'=>['Show header content','boolean',1],
-        'flexile_header_content'=>['Header content (HTML)','string','<p>A place to build, explore, and catch up.<br /><strong>Join: ts-mc.net</strong></p>'],
+        'flexile_header_content'=>['Header content (HTML)','string','<p>A place to build, explore, and catch up.<br /><strong>Server IP: ts-mc.net</strong><br />Minecraft Java + Bedrock</p>'],
         'flexile_primaryBorderColor'=>['Primary border color','color','@xf-borderColor'],
         'flexile_header_content_style'=>['Header content box','css',['background-color'=>'fade(#000, 13%)','border-top-width'=>'1px','border-top-color'=>'fade(#fff, 20%)','border-radius'=>'6px','padding'=>'12px']],
     ];
@@ -142,7 +142,7 @@ foreach (['light', 'dark'] as $mode) {
     $updateTemplate($style, 'PAGE_CONTAINER', $page, 'XF');
     $export = $app->service('XF:Style\Export', $style);
     $document = $export->exportToXml();
-    $document->documentElement->setAttribute('storm_flexile_version','3.0.0');
+    $document->documentElement->setAttribute('storm_flexile_version','4.0.0');
     $document->documentElement->setAttribute('storm_flexile_mode',$mode);
     $zip = new ZipArchive();
     $file = $destination . '/flexile-storm-' . $mode . '.zip';

@@ -4,9 +4,10 @@ import { themeCatalog, resolveTheme } from "@shepherdjerred/storm-theme";
 const id = resolveTheme("auto", true, new Date());
 const theme = themeCatalog.themes.find((theme) => theme.id === id);
 if (!theme) throw new Error("Missing Storm theme");
-const api = import.meta.env.DEV
-  ? "http://127.0.0.1:18796/storm-theme/"
-  : "https://ts-mc.net/storm-theme/";
+const forum = import.meta.env.DEV
+  ? "http://127.0.0.1:18796"
+  : "https://ts-mc.net";
+const api = `${forum}/storm-theme/`;
 ---
 
 <div
@@ -16,8 +17,8 @@ const api = import.meta.env.DEV
   data-storm-base="/storm/"
   data-storm-api={api}
 >
-  <div class="stormDocsTop">
-    <a href="https://ts-mc.net" aria-label="The Storm community">
+  <div class="stormDocsTop stormDocsInner">
+    <a href={forum} aria-label="The Storm community">
       <img
         class="stormDocsLogo"
         data-storm-logo
@@ -27,44 +28,130 @@ const api = import.meta.env.DEV
         alt="The Storm"
       />
     </a>
-    <Search />
-    <details class="stormThemeControl">
-      <summary>Appearance</summary>
-      <form data-storm-preferences>
-        <label>
-          Appearance
-          <select name="storm_mode">
-            <option value="system">System</option>
-            <option value="light">Light</option>
-            <option value="dark">Dark</option>
-          </select>
-        </label>
-        <label>
-          Theme
-          <select name="storm_theme">
-            <option value="auto">Follow calendar</option>
-            {themeCatalog.themes.map((theme) => (
-              <option value={theme.id}>{theme.name}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          <input type="checkbox" name="storm_effects" checked /> Holiday effects
-        </label>
-        <p>Effects respect reduced motion.</p>
-        <button type="submit">Save appearance</button>
-        <p role="status" data-storm-status></p>
-      </form>
-    </details>
+    <div class="stormDocsServer">
+      <p>
+        <span class="stormDocsTagline">
+          A place to build, explore, and catch up.
+        </span>
+        <br />
+        <strong>Server IP: ts-mc.net</strong>
+        <br />
+        Minecraft Java + Bedrock
+      </p>
+    </div>
   </div>
-  <nav class="stormDocsNav" aria-label="The Storm">
-    <a href="https://ts-mc.net">Community</a>
-    <a href="https://ts-mc.net/forums/">Forums</a>
-    <a href="/">Docs</a>
-    <a href="https://bluemap.ts-mc.net">LiveMap</a>
-  </nav>
+  <div class="stormDocsNavigation">
+    <div class="stormDocsNavInner stormDocsInner">
+      <nav class="stormDocsNav" aria-label="The Storm">
+        <a href={forum}>Home</a>
+        <a href="https://bluemap.ts-mc.net">LiveMap</a>
+        <a href="/" aria-current="page">
+          Docs
+        </a>
+        <details>
+          <summary>Forums</summary>
+          <div class="stormNavMenu">
+            <a href={`${forum}/forums/`}>Forum list</a>
+            <a href={`${forum}/whats-new/posts/`}>New posts</a>
+          </div>
+        </details>
+        <details class="stormDocsSecondary">
+          <summary>What's new</summary>
+          <div class="stormNavMenu">
+            <a href={`${forum}/whats-new/`}>What's new</a>
+            <a href={`${forum}/whats-new/posts/`}>New posts</a>
+          </div>
+        </details>
+        <details class="stormDocsSecondary">
+          <summary>Members</summary>
+          <div class="stormNavMenu">
+            <a href={`${forum}/members/`}>Members</a>
+            <a href={`${forum}/online/`}>Current visitors</a>
+          </div>
+        </details>
+        <details class="stormDocsMore">
+          <summary>More</summary>
+          <div class="stormNavMenu">
+            <a href={`${forum}/whats-new/`}>What's new</a>
+            <a href={`${forum}/members/`}>Members</a>
+            <a href={`${forum}/online/`}>Current visitors</a>
+          </div>
+        </details>
+      </nav>
+      <div class="stormDocsActions">
+        <div data-storm-account>
+          <a href={`${forum}/login/`}>Log in</a>
+        </div>
+        <Search />
+        <details class="stormThemeControl">
+          <summary>Appearance</summary>
+          <form data-storm-preferences>
+            <label>
+              Appearance
+              <select name="storm_mode">
+                <option value="system">System</option>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select>
+            </label>
+            <label>
+              Theme
+              <select name="storm_theme">
+                <option value="auto">Follow calendar</option>
+                {themeCatalog.themes.map((theme) => (
+                  <option value={theme.id}>{theme.name}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <input type="checkbox" name="storm_effects" checked /> Holiday
+              effects
+            </label>
+            <p>Effects respect reduced motion.</p>
+            <button type="submit">Save appearance</button>
+            <p role="status" data-storm-status></p>
+          </form>
+        </details>
+      </div>
+    </div>
+  </div>
+  <div class="stormDocsSubNav" aria-hidden="true"></div>
   <div class="stormDocsGarland" aria-hidden="true"></div>
 </div>
 <script>
   import "@shepherdjerred/storm-theme/browser";
+  const header = document.getElementById("storm-theme-root");
+  if (!header) throw new Error("Missing Storm header");
+  new ResizeObserver(() => {
+    document.documentElement.style.setProperty(
+      "--sl-nav-height",
+      `${header.getBoundingClientRect().height}px`,
+    );
+    const actions = header.querySelector(".stormDocsActions");
+    if (actions)
+      document.documentElement.style.setProperty(
+        "--storm-mobile-menu-top",
+        `${actions.getBoundingClientRect().top}px`,
+      );
+  }).observe(header);
+  header.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    const menu = target.closest("details");
+    if (menu instanceof HTMLDetailsElement) {
+      menu.open = false;
+      menu.querySelector("summary")?.focus();
+    }
+  });
+  document.addEventListener("click", (event) => {
+    for (const menu of header.querySelectorAll("details[open]")) {
+      if (
+        menu instanceof HTMLDetailsElement &&
+        event.target instanceof Node &&
+        !menu.contains(event.target)
+      )
+        menu.open = false;
+    }
+  });
 </script>

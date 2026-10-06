@@ -110,7 +110,7 @@ const tsMcDocsCsp = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://j.sjer.red",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
+  "img-src 'self' https://ts-mc.net data: blob:",
   "font-src 'self' data:",
   "connect-src 'self' https://j.sjer.red https://ts-mc.net",
   "worker-src 'self' blob:",
