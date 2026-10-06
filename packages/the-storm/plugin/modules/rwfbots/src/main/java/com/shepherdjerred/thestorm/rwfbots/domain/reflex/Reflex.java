@@ -454,8 +454,8 @@ public final class Reflex {
     }
 
     /**
-     * A horizontal push away from teammates closer than the supplied spacing, stronger the closer
-     * they are, so a team does not bunch up in a doorway or a brawl.
+     * A horizontal push away from teammates at their closest approach during the reaction window,
+     * stronger the closer they are, so a team does not bunch up in a doorway or a brawl.
      */
     private Vec3 apart(double spacing, int aheadTicks) {
       var push = Vec3.ZERO;
@@ -465,10 +465,16 @@ public final class Reflex {
         }
         var away = self.pos().minus(other.pos()).horizontal();
         var distance = away.length();
-        var projected = away.plus(self.vel().minus(other.vel()).horizontal().scale(aheadTicks));
-        var closest = Math.min(distance, projected.length());
+        var relative = self.vel().minus(other.vel()).horizontal();
+        var closestTick =
+            relative.isZero()
+                ? 0
+                : Math.clamp(-away.dot(relative) / relative.lengthSquared(), 0, aheadTicks);
+        var separation = away.plus(relative.scale(closestTick));
+        var closest = separation.length();
         if (closest < spacing && distance > 1.0e-3) {
-          push = push.plus(away.normalized().scale((spacing - closest) / spacing));
+          var direction = separation.isZero() ? away : separation;
+          push = push.plus(direction.normalized().scale((spacing - closest) / spacing));
         }
       }
       return push;

@@ -227,6 +227,24 @@ final class ReflexTest {
     assertThat(converging.waypoint().x()).isGreaterThan(self.pos().x());
   }
 
+  @Test
+  void walkersAvoidTeammatesCrossingBetweenDistantPredictionEndpoints() {
+    var self = combatant(1, RED, new Vec3(5.5, 1, 5.5));
+    var ally = combatant(2, RED, self.pos().plus(0, 0, 3.25)).withVel(new Vec3(0, 0, -7));
+    var move = walkingMove(self, ally);
+    assertThat(move.waypoint().z()).isLessThan(self.pos().z());
+    assertThat(move.waypoint().x()).isGreaterThan(self.pos().x());
+  }
+
+  @Test
+  void walkersIgnoreConvergenceOutsideTheirReactionWindowAndRecedingTeammates() {
+    var self = combatant(1, RED, new Vec3(5.5, 1, 5.5));
+    var distant = combatant(2, RED, self.pos().plus(0, 0, 100)).withVel(new Vec3(0, 0, -0.2));
+    var receding = combatant(2, RED, self.pos().plus(0, 0, 3.25)).withVel(new Vec3(0, 0, 0.2));
+    assertThat(walkingMove(self, distant).waypoint().z()).isEqualTo(self.pos().z());
+    assertThat(walkingMove(self, receding).waypoint().z()).isEqualTo(self.pos().z());
+  }
+
   private static BodyCommand.MoveToward walkingMove(CombatantView self, CombatantView ally) {
     var path =
         java.util.stream.IntStream.rangeClosed(1, 5)
