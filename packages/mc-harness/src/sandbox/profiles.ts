@@ -208,8 +208,8 @@ function stormImageProfile(image: string) {
       DISCORD_CHANNEL_ID: "1",
       // Pseudonymization only in disposable sandboxes; never used in production.
       RWF_RECORDING_SALT: "mc-harness-storm-fixture-recording-salt",
-      // Inert Flipt bootstrap (as boot-check.sh): companions refuse to enable
-      // without it, which stops the server; flags then resolve as unreachable.
+      // Keep companion gameplay suspended while the disposable server boots;
+      // the unreachable Flipt endpoint makes rollout evaluation fail closed.
       FLIPT_URL: "http://127.0.0.1:9",
       FLIPT_ENVIRONMENT: "beta",
       ...bridgeAndRconEnv(secrets),

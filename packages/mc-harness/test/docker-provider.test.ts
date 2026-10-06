@@ -35,6 +35,27 @@ describe("docker sandbox argv", () => {
     expect(args.at(-1)).toMatch(/^itzg\/minecraft-server:.+@sha256:/u);
   });
 
+  it("mounts storm image overlays as individual files in Docker", () => {
+    const profile = resolveProfile(
+      { profile: "storm-candidate", world: "flat" },
+      secrets,
+    );
+    const args = dockerCreateArgs({
+      id: "sbx-def456",
+      profileName: "storm-candidate",
+      profile,
+      pluginsDir: "/tmp/storm-staging",
+      cacheDir: "/tmp/cache",
+      expiresAt: "2026-10-04T00:00:00.000Z",
+      owner: "me@host",
+      keep: false,
+    });
+    expect(args).toContain(
+      "/tmp/storm-staging/plugins/TheStorm/config.yml:/plugins/TheStorm/config.yml:ro",
+    );
+    expect(args).not.toContain("/tmp/storm-staging:/plugins:ro");
+  });
+
   it("parses docker ps rows", () => {
     const rows = parseSandboxRows(
       "abc123def456\tsbx-abc123\t2026-10-04T00:00:00.000Z\tfalse\trunning\n" +
