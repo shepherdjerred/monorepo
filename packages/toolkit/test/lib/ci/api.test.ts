@@ -2,9 +2,9 @@ import { afterEach, expect, test, vi } from "vitest";
 import { GitHubClient } from "#lib/ci/github.ts";
 import {
   getWoodpeckerPipelineForCommit,
+  getPipeline,
   woodpeckerConfigFromEnv,
   loadWoodpeckerConfig,
-  getPipeline,
   WoodpeckerPipelineSchema,
 } from "#lib/woodpecker/ci.ts";
 import { logExcerpt, pipelineDiagnostics } from "#lib/ci/diagnostics.ts";
@@ -43,6 +43,25 @@ test("Woodpecker accepts its nullable error list and rejects other malformed val
       WoodpeckerPipelineSchema.parse({ ...summary, errors }),
     ).toThrow();
   }
+});
+
+test("a newly queued pipeline can have null errors without being ready", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () =>
+      json({
+        number: 7,
+        commit: CI_HEAD,
+        status: "pending",
+        errors: null,
+        workflows: [{ name: "verify", state: "pending" }],
+      }),
+    ),
+  );
+  const pipeline = await getPipeline(7, config);
+  expect(pipeline.errors).toBeNull();
+  expect(pipeline.status).toBe("pending");
+  expect(pipeline.workflows[0]?.state).toBe("pending");
 });
 
 test("Woodpecker paginates and verifies PR identity, ignoring same-SHA push builds", async () => {
