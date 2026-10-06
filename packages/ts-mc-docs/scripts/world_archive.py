@@ -638,7 +638,10 @@ def verify(state_path: Path) -> None:
     state: Publication = json.loads(state_path.read_text(encoding="utf-8"))
     for entry in [*state["worlds"].values(), *state["schematics"].values()]:
         verify_url(entry["download"].removeprefix(f"{ORIGIN}/"), entry["bytes"])
-    print("Public downloads support HTTP 200 and exact byte ranges.")
+    for world in state["worlds"].values():
+        for preview in world["previews"]:
+            verify_url(preview["url"].removeprefix(f"{ORIGIN}/"))
+    print("Public downloads support HTTP 200 and exact byte ranges; all previews are available.")
 
 
 def main() -> None:

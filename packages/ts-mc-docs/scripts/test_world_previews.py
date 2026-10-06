@@ -8,9 +8,19 @@ import unittest
 import zipfile
 from argparse import Namespace
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import call, patch
 
-from world_archive import Catalog, extract_preview, load_catalog, run, upload_download, verify_checkpoint
+from world_archive import (
+    ORIGIN,
+    PACKAGE,
+    Catalog,
+    extract_preview,
+    load_catalog,
+    run,
+    upload_download,
+    verify,
+    verify_checkpoint,
+)
 from world_previews import level_metadata, png_dimensions, preview_areas
 
 
@@ -113,6 +123,31 @@ class PreviewTests(unittest.TestCase):
             self.assertIn(f"{world['id']}: spawn (12, -8)", printed.call_args_list[0].args[0])
             aws.assert_not_called()
             self.assertFalse(scratch.exists())
+
+    def test_acceptance_checks_every_preview_and_fails_for_a_missing_image(self):
+        state_path = PACKAGE / "archive/published.json"
+        state = json.loads(state_path.read_text())
+        previews = [image for world in state["worlds"].values() for image in world["previews"]]
+        expected = [
+            call(entry["download"].removeprefix(f"{ORIGIN}/"), entry["bytes"])
+            for entry in [*state["worlds"].values(), *state["schematics"].values()]
+        ] + [call(image["url"].removeprefix(f"{ORIGIN}/")) for image in previews]
+        with patch("world_archive.verify_url") as probe, patch("builtins.print"):
+            verify(state_path)
+        self.assertEqual(probe.call_args_list, expected)
+
+        missing = previews[0]["url"].removeprefix(f"{ORIGIN}/")
+
+        def check(key, size=None):
+            if key == missing:
+                raise RuntimeError("Missing preview")
+
+        with (
+            patch("world_archive.verify_url", side_effect=check),
+            patch("builtins.print"),
+            self.assertRaisesRegex(RuntimeError, "Missing preview"),
+        ):
+            verify(state_path)
 
     def test_failed_preview_keeps_download_checkpoint_and_retry_does_not_reupload_zip(self):
         with tempfile.TemporaryDirectory() as temporary:

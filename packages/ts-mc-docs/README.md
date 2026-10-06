@@ -105,8 +105,8 @@ download keeps those original bytes.
 Previews are ordinary PNG files and require no viewer or live server.
 Publication never deletes remote objects. The normal docs deploy excludes
 `world-archive/*` from its deleting sync; retain that protection when changing
-the deployment helper. `verify` separately checks public availability and byte
-ranges through the serving stack.
+the deployment helper. `verify` separately checks every public download and
+preview, including exact byte ranges for downloads through the serving stack.
 
 To preserve a browsable gallery independently of later docs deployments, build
 a static snapshot with Astro's base path set to the release prefix. Replace
