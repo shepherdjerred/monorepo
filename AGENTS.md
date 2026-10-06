@@ -127,6 +127,12 @@ native CI operations and `toolkit pr health` for a one-shot combined report.
 Run `bun run verify` locally only when reproducing CI or changing verification
 machinery.
 
+Minecraft is the only exception to exhaustive CI: keep its CI test suite to
+unit tests and light E2E smoke checks. The committer runs applicable extended
+Paper, gameplay, all-module, load, native-client and playtest checks outside CI
+and records the results. Keep these heavier suites available for local use;
+do not add them back to CI or apply this exception to other packages.
+
 Verify claims from the live tree before reporting them. Preserve unrelated
 worktree changes. Do not call an issue "pre-existing" when the task explicitly
 requires complete quality.

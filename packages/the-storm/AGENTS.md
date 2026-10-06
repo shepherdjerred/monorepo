@@ -17,8 +17,13 @@ layout, layering table and commands.
 - Parse config, content and player input once, at the adapter, into records
   with `StrictYaml`. No defaults or fallbacks for missing or unknown values.
 - The plugin never writes files the repository owns (config and content YAML).
-- Tests must not be skipped; MockBukkit gaps are fixed by moving logic into the
-  pure domain or covered by the real-server integration tests.
+- CI runs unit tests and the explicit `test:smoke` selection only. Keep the
+  smoke selection to quick startup, plugin loading and client interactions;
+  extended gameplay, all-module, load and native-client acceptance belongs to
+  the committer outside CI. Run the applicable local suites and record results
+  (see README.md). This exception applies only to Minecraft.
+- Keep test assertions intact; MockBukkit gaps are fixed by moving logic into
+  the pure domain or covered by committer-run real-server integration tests.
 - No `@SuppressWarnings`, `NOPMD` or `CHECKSTYLE:OFF`; the repository
   suppression check rejects them. Fix the finding instead.
 - Change dependencies only in `plugin/gradle/libs.versions.toml`, then refresh

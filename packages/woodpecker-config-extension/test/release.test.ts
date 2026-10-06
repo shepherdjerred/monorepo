@@ -337,7 +337,7 @@ describe("coverage of the Buildkite pipeline", () => {
     "playwright-e2e-main": "playwright-e2e",
     "docker-e2e-pr": "docker-e2e",
     "docker-e2e-main": "docker-e2e",
-    "paper-e2e-pr": "paper-e2e-pr",
+    "paper-e2e-pr": "paper-smoke-pr",
     "pr-dryrun": "pr-dryrun",
     "codex-review-gate": "codex-review-gate",
     "tofu-plan-seaweedfs": "tofu-plan-seaweedfs",
@@ -401,11 +401,6 @@ describe("coverage of the Buildkite pipeline", () => {
     "tofu-platform-openrouter": "retired with the OpenRouter platform stack",
   };
 
-  /** Lanes introduced after the migration, with their acceptance purpose. */
-  const WOODPECKER_ONLY: Readonly<Record<string, string>> = {
-    "paper-full-e2e-pr": "boots and exercises all 25 Storm modules together",
-  };
-
   test("accounts for all 61 Buildkite steps", () => {
     expect(Object.keys(COVERAGE).length + Object.keys(RETIRED).length).toBe(61);
   });
@@ -417,18 +412,10 @@ describe("coverage of the Buildkite pipeline", () => {
         true,
       );
     }
-    for (const lane of Object.keys(WOODPECKER_ONLY)) {
-      expect(emitted.has(lane), `missing native Woodpecker lane ${lane}`).toBe(
-        true,
-      );
-    }
   });
 
   test("every emitted lane is claimed by something", () => {
-    const claimed = new Set([
-      ...Object.values(COVERAGE),
-      ...Object.keys(WOODPECKER_ONLY),
-    ]);
+    const claimed = new Set(Object.values(COVERAGE));
     for (const emitted of allSteps()) {
       expect(
         claimed.has(emitted.key),

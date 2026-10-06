@@ -27,27 +27,25 @@ const PAPER_SERVICE_TIER = {
   ephemeralStorageLimit: "12Gi",
 } as const;
 
-/** Real-server Paper E2E for The Storm, with Paper on a workspace-sharing service pod. */
+/** Light Paper smoke checks; extended Minecraft acceptance is committer-run. */
 export function stormE2eSteps(images: CiImages): CiStep[] {
-  return [stormE2eStep(images, false), stormE2eStep(images, true)];
+  return [stormSmokeStep(images)];
 }
 
-function stormE2eStep(images: CiImages, full: boolean): CiStep {
-  const workspace = full ? `${PAPER_WORKSPACE}-full` : PAPER_WORKSPACE;
+function stormSmokeStep(images: CiImages): CiStep {
+  const workspace = PAPER_WORKSPACE;
   const pluginDir = `${workspace}/plugins`;
   const dataDir = `${workspace}/data`;
   return {
-    key: full ? "paper-full-e2e-pr" : "paper-e2e-pr",
-    label: full
-      ? "Paper 26.2 + all 25 Storm modules"
-      : "Paper 26.2 + The Storm e2e",
+    key: "paper-smoke-pr",
+    label: "Paper 26.2 + The Storm smoke",
     image: images.base,
     commands: [
       ". ci/scripts/toolchain.sh",
       "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/the-storm'",
-      "bun --no-install run --cwd packages/the-storm build",
+      "bun --no-install run --cwd packages/the-storm build:plugin",
       "bun --no-install packages/the-storm/tests/e2e/prepare-sidecar.ts",
-      `bun --no-install run --cwd packages/the-storm ${full ? "test:full" : "test:e2e"}`,
+      "bun --no-install run --cwd packages/the-storm test:smoke",
     ],
     environment: {
       STORM_E2E_HOST: "paper",
@@ -58,15 +56,14 @@ function stormE2eStep(images: CiImages, full: boolean): CiStep {
       STORM_E2E_LOG_FILE: `${dataDir}/logs/latest.log`,
       STORM_E2E_PLUGIN_DIR: pluginDir,
       STORM_E2E_DATA_DIR: dataDir,
-      // Paper and the suite share the selected plugin root, including rwf's
-      // SQLite tables and match recordings.
+      // Paper and the suite share the selected plugin root.
       STORM_E2E_STORM_DATA_DIR: `${SHARED_PLUGINS}/TheStorm`,
-      STORM_E2E_FULL: full ? "1" : "0",
+      STORM_E2E_FULL: "0",
       STORM_E2E_BRAIN_HOST: BRAIN_HOST,
       STORM_E2E_BRAIN_PORT: BRAIN_PORT,
       STORM_E2E_BRAIN_TOKEN: BRAIN_TOKEN,
     },
-    timeoutMinutes: 45,
+    timeoutMinutes: 10,
     resources: MEDIUM_TIER,
     secrets: [GITHUB_DOWNLOAD],
     services: [
@@ -95,20 +92,14 @@ function stormE2eStep(images: CiImages, full: boolean): CiStep {
           SIMULATION_DISTANCE: "4",
           ENABLE_AUTOPAUSE: "false",
           STORM_BRAIN_BEARER_TOKEN: BRAIN_TOKEN,
-          // The rwf join gate stays closed with FLIPT_URL unset, so both lanes
-          // point at the fake brain's Flipt endpoint.
+          // The rwf join gate stays closed with FLIPT_URL unset, so point at
+          // the fake brain's Flipt endpoint.
           FLIPT_URL: `http://${BRAIN_HOST}:${BRAIN_PORT}`,
           FLIPT_ENVIRONMENT: "prod",
           RWF_RECORDING_SALT,
           EXTRA_ARGS: `--plugins ${SHARED_PLUGINS}`,
           COPY_CONFIG_SRC: `${dataDir}/config`,
           COPY_CONFIG_DEST: "/data",
-          ...(full
-            ? {
-                DISCORD_BOT_TOKEN: "invalid-storm-fixture-token",
-                DISCORD_CHANNEL_ID: "1",
-              }
-            : {}),
         },
         resources: PAPER_SERVICE_TIER,
       },

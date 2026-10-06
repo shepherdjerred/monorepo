@@ -1044,15 +1044,15 @@
       "excludedSuites": [
         {
           "path": "tests/e2e",
-          "reason": "Real-server E2E runs through test:e2e in the dedicated paper-e2e-pr Woodpecker lane, with Paper as a service and Mineflayer clients. The full reporting task does not start the game server."
+          "reason": "The paper-smoke-pr Woodpecker lane runs only plugin.e2e.test.ts and server.e2e.test.ts through test:smoke. The committer runs applicable extended gameplay checks locally through test:e2e. The reporting task does not start Paper."
         },
         {
           "path": "tests/full",
-          "reason": "All 25 modules run through test:full in the dedicated paper-full-e2e-pr Woodpecker lane with disposable world fixtures. The reporting task does not start Paper."
+          "reason": "The committer runs applicable all-module acceptance checks locally through test:full with disposable world fixtures. This extended Minecraft suite does not run in CI."
         },
         {
           "path": "tests/load",
-          "reason": "The 20/50/100-bot rwf load profile runs manually through test:load on a 4-CPU, 8G-heap Paper container; it measures tick time rather than asserting per-change behaviour, so no CI lane runs it."
+          "reason": "The committer runs the 20/50/100-bot rwf load profile locally through test:load on a 4-CPU, 8G-heap Paper container when applicable; it measures tick time and does not run in CI."
         }
       ]
     }

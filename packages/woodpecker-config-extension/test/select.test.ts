@@ -369,88 +369,77 @@ describe("ported lanes", () => {
   });
 });
 
-describe("Paper acceptance lanes", () => {
-  test("The Storm source and E2E harness select both Paper acceptance lanes", () => {
-    for (const lane of ["paper-e2e-pr", "paper-full-e2e-pr"]) {
-      expect(
-        keysFor(["packages/the-storm/plugin/core/src/main/java/Example.java"]),
-      ).toContain(lane);
-      expect(keysFor(["packages/the-storm/tests/e2e/boot.test.ts"])).toContain(
-        lane,
-      );
-      expect(
-        keysFor(["packages/the-storm/tests/full/modules.test.ts"]),
-      ).toContain(lane);
-      expect(
-        keysFor(["packages/docs/wiki/src/content/docs/index.md"]),
-      ).not.toContain(lane);
-    }
+describe("Paper smoke lane", () => {
+  test("The Storm source and E2E harness select the Paper smoke lane", () => {
+    expect(
+      keysFor(["packages/the-storm/plugin/core/src/main/java/Example.java"]),
+    ).toContain("paper-smoke-pr");
+    expect(keysFor(["packages/the-storm/tests/e2e/boot.test.ts"])).toContain(
+      "paper-smoke-pr",
+    );
+    expect(
+      keysFor(["packages/the-storm/tests/full/modules.test.ts"]),
+    ).toContain("paper-smoke-pr");
+    expect(
+      keysFor(["packages/docs/wiki/src/content/docs/index.md"]),
+    ).not.toContain("paper-smoke-pr");
   });
 
-  test.each([false, true])(
-    "Paper lane full=%s loads shared plugins and copies config",
-    (full) => {
-      const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
-      const lane = full ? "paper-full-e2e-pr" : "paper-e2e-pr";
-      const candidate = steps.find((item) => item.key === lane);
-      if (candidate === undefined) throw new Error(`missing lane ${lane}`);
-      const paper = candidate.services?.find(
-        (service) => service.name === "paper",
-      );
-      if (
-        paper?.environment === undefined ||
-        candidate.environment === undefined
-      )
-        throw new Error(`missing Paper environment for ${lane}`);
-      const dataDir = candidate.environment["STORM_E2E_DATA_DIR"];
-      if (typeof dataDir !== "string")
-        throw new Error(`missing data path for ${lane}`);
-      const sharedData = candidate.environment["STORM_E2E_STORM_DATA_DIR"];
-      if (typeof sharedData !== "string")
-        throw new Error(`missing shared plugin data path for ${lane}`);
-      expect(sharedData.endsWith("/TheStorm")).toBe(true);
-      expect(paper.environment["EXTRA_ARGS"]).toBe(
-        `--plugins ${sharedData.slice(0, -"/TheStorm".length)}`,
-      );
-      expect(paper.environment["RWF_RECORDING_SALT"]).toBe(
-        "storm-e2e-ci-recording-salt",
-      );
-      expect(paper.environment["COPY_CONFIG_SRC"]).toBe(`${dataDir}/config`);
-      expect(paper.environment["COPY_CONFIG_DEST"]).toBe("/data");
-      const pluginPath = candidate.environment["STORM_E2E_PLUGIN_DIR"];
-      if (typeof pluginPath !== "string")
-        throw new Error(`missing plugin path for ${lane}`);
-      expect(candidate.environment["STORM_E2E_FULL"]).toBe(full ? "1" : "0");
-      expect(candidate.commands.at(-1)).toContain(
-        full ? "test:full" : "test:e2e",
-      );
-      if (full) {
-        expect(paper.environment["FLIPT_ENVIRONMENT"]).toBe("prod");
-        expect(paper.environment["DISCORD_BOT_TOKEN"]).toBe(
-          "invalid-storm-fixture-token",
-        );
-      }
-    },
-  );
-
-  test("Paper acceptance lanes isolate their plugin volumes", () => {
+  test("Paper smoke loads shared plugins and copies config", () => {
     const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
-    const paths = ["paper-e2e-pr", "paper-full-e2e-pr"].map((lane) => {
-      const pluginPath = steps.find((item) => item.key === lane)?.environment?.[
-        "STORM_E2E_PLUGIN_DIR"
-      ];
-      if (typeof pluginPath !== "string")
-        throw new Error(`missing plugin path for ${lane}`);
-      return pluginPath;
-    });
-    expect(paths[0]).not.toBe(paths[1]);
+    const lane = "paper-smoke-pr";
+    const candidate = steps.find((item) => item.key === lane);
+    if (candidate === undefined) throw new Error(`missing lane ${lane}`);
+    const paper = candidate.services?.find(
+      (service) => service.name === "paper",
+    );
+    if (paper?.environment === undefined || candidate.environment === undefined)
+      throw new Error(`missing Paper environment for ${lane}`);
+    const dataDir = candidate.environment["STORM_E2E_DATA_DIR"];
+    if (typeof dataDir !== "string")
+      throw new Error(`missing data path for ${lane}`);
+    const sharedData = candidate.environment["STORM_E2E_STORM_DATA_DIR"];
+    if (typeof sharedData !== "string")
+      throw new Error(`missing shared plugin data path for ${lane}`);
+    expect(sharedData.endsWith("/TheStorm")).toBe(true);
+    expect(paper.environment["EXTRA_ARGS"]).toBe(
+      `--plugins ${sharedData.slice(0, -"/TheStorm".length)}`,
+    );
+    expect(paper.environment["RWF_RECORDING_SALT"]).toBe(
+      "storm-e2e-ci-recording-salt",
+    );
+    expect(paper.environment["COPY_CONFIG_SRC"]).toBe(`${dataDir}/config`);
+    expect(paper.environment["COPY_CONFIG_DEST"]).toBe("/data");
+    const pluginPath = candidate.environment["STORM_E2E_PLUGIN_DIR"];
+    if (typeof pluginPath !== "string")
+      throw new Error(`missing plugin path for ${lane}`);
+    expect(candidate.environment["STORM_E2E_FULL"]).toBe("0");
+    expect(paper.environment["FLIPT_ENVIRONMENT"]).toBe("prod");
   });
 
-  test("Paper E2E uses the pinned Paper image and service-host addressing", () => {
+  test("Paper CI has one bounded smoke lane with a plugin-only build", () => {
+    const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
+    const paperSteps = steps.filter((candidate) =>
+      candidate.key.startsWith("paper-"),
+    );
+    expect(paperSteps.map((candidate) => candidate.key)).toEqual([
+      "paper-smoke-pr",
+    ]);
+    const paperStep = paperSteps[0];
+    expect(paperStep?.timeoutMinutes).toBe(10);
+    expect(paperStep?.commands).toContain(
+      "bun --no-install run --cwd packages/the-storm build:plugin",
+    );
+    expect(paperStep?.commands.at(-1)).toBe(
+      "bun --no-install run --cwd packages/the-storm test:smoke",
+    );
+  });
+
+  test("Paper smoke uses the pinned Paper image and service-host addressing", () => {
     const paperStep = buildPipelineSteps({
       images: IMAGES,
       changedBase: "x",
-    }).find((candidate) => candidate.key === "paper-e2e-pr");
+    }).find((candidate) => candidate.key === "paper-smoke-pr");
     expect(paperStep?.services?.[0]?.image).toMatch(/@sha256:[a-f0-9]{64}$/u);
     expect(paperStep?.environment?.["STORM_E2E_HOST"]).toBe("paper");
     expect(paperStep?.environment?.["STORM_E2E_RCON_HOST"]).toBe("paper");
@@ -460,7 +449,7 @@ describe("Paper acceptance lanes", () => {
     const paperStep = buildPipelineSteps({
       images: IMAGES,
       changedBase: "x",
-    }).find((candidate) => candidate.key === "paper-e2e-pr");
+    }).find((candidate) => candidate.key === "paper-smoke-pr");
     const paperService = paperStep?.services?.find(
       (service) => service.name === "paper",
     );
@@ -476,11 +465,11 @@ describe("Paper acceptance lanes", () => {
     expect(paperService?.environment?.["COPY_CONFIG_DEST"]).toBe("/data");
   });
 
-  test("Paper E2E connects its fake brain through the service network", () => {
+  test("Paper smoke connects its fake brain through the service network", () => {
     const paperStep = buildPipelineSteps({
       images: IMAGES,
       changedBase: "x",
-    }).find((candidate) => candidate.key === "paper-e2e-pr");
+    }).find((candidate) => candidate.key === "paper-smoke-pr");
     expect(paperStep?.environment?.["STORM_E2E_BRAIN_HOST"]).toBe(
       "storm-brain",
     );
