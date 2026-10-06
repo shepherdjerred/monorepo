@@ -22,6 +22,27 @@ async function stop(rcon: RconClient) {
   await rcon.command("difficulty peaceful");
 }
 
+const WindCastSchema = z.object({
+  shape: z.literal("WIND_LANES"),
+  origin: z.tuple([z.number(), z.number(), z.number()]),
+  aim: z.tuple([z.number(), z.number(), z.number()]),
+});
+
+async function removeArmor(rcon: RconClient, username: string): Promise<void> {
+  for (const slot of ["head", "chest", "legs", "feet", "offhand"])
+    await rcon.command(
+      `item replace entity ${username} ${slot === "offhand" ? "weapon.offhand" : `armor.${slot}`} with minecraft:air`,
+    );
+}
+
+async function currentWindCast(rcon: RconClient, username: string) {
+  return WindCastSchema.parse(
+    JSON.parse(
+      await rcon.command(`storm-fixture-survival cast ${username} none`),
+    ),
+  );
+}
+
 describe("Settlement iteration on native Paper", () => {
   test("shop divider protects icons while inventory rearrangement remains available", async ({
     bot,
@@ -183,36 +204,37 @@ describe("Settlement iteration on native Paper", () => {
             (entity) => entity.name === "breeze",
           ),
         );
+        const casting = waitForMessage(
+          bot,
+          /Breeze Sovereign casts Wind lanes/u,
+          15_000,
+        );
         await rcon.command(`tp ${boss} 1787.5 73 2261.5`);
         await rcon.command(`data merge entity ${boss} {NoAI:1b}`);
-        for (const slot of ["head", "chest", "legs", "feet", "offhand"])
-          await rcon.command(
-            `item replace entity ${bot.username} ${slot === "offhand" ? "weapon.offhand" : `armor.${slot}`} with minecraft:air`,
-          );
-        await waitForMessage(bot, /Breeze Sovereign casts Wind lanes/u, 15_000);
+        await removeArmor(rcon, bot.username);
+        await casting;
         await rcon.command(
           'execute as @e[type=minecraft:zombie,nbt={BukkitValues:{"thestorm:arena_entity":"settlement"}}] run data merge entity @s {NoAI:1b}',
         );
-        const cast = z
-          .object({
-            shape: z.literal("WIND_LANES"),
-            origin: z.tuple([z.number(), z.number(), z.number()]),
-            aim: z.tuple([z.number(), z.number(), z.number()]),
-          })
-          .parse(
-            JSON.parse(
-              await rcon.command(
-                `storm-fixture-survival cast ${bot.username} none`,
-              ),
-            ),
-          );
+        const cast = await currentWindCast(rcon, bot.username);
         await stand(bot, rcon, new Vec3(...cast.aim));
-        if (dodge)
+        if (dodge) {
+          const dx = cast.aim[0] - cast.origin[0];
+          const dz = cast.aim[2] - cast.origin[2];
+          const length = Math.hypot(dx, dz);
+          if (length < 0.01) throw new Error("Wind lane has no direction");
+          // Wind lanes occupy offsets 0 and ±6 from the aim line; step beyond
+          // the outer lane along its perpendicular, independent of cast angle.
           await stand(
             bot,
             rcon,
-            new Vec3(cast.aim[0], cast.aim[1], cast.aim[2] + 3),
+            new Vec3(
+              cast.aim[0] + (dz / length) * 9,
+              cast.aim[1],
+              cast.aim[2] - (dx / length) * 9,
+            ),
           );
+        }
         const before = bot.health;
         await waitForMessage(bot, /recovery: attack now/u, 6000);
         await Bun.sleep(150);

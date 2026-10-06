@@ -30,6 +30,13 @@ describe("minor survival recovery on real Paper", () => {
       }
       await rcon.command(`damage ${bot.username} 15 minecraft:generic`);
       await waitUntil("injured survivor", () => bot.health === 5);
+      // Keep the live round's mobs from resetting passive recovery while the
+      // test observes its one-third ceiling.
+      for (const player of [bot, secondBot]) {
+        await rcon.command(
+          `effect give ${player.username} minecraft:resistance infinite 255 true`,
+        );
+      }
       await Bun.sleep(4000);
       expect(bot.health).toBe(5);
       await waitUntil(
