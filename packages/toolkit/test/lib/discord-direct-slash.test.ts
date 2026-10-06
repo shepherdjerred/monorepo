@@ -38,7 +38,9 @@ class FakeGateway implements DirectSlashGateway {
     return "user-1";
   }
 
-  async invoke(): Promise<IpcMessage> {
+  async invoke(_params?: {
+    onMessageUpdate: (message: IpcMessage) => void;
+  }): Promise<IpcMessage> {
     this.invoked = true;
     if (this.#onMessage === null) {
       throw new Error("Fake gateway was invoked before connection");
@@ -85,6 +87,31 @@ describe("invokeSlashDirect", () => {
     });
     expect(gateway.invoked).toBe(true);
     expect(gateway.closed).toBe(true);
+  });
+
+  test("waits for a deferred reply to be edited", async () => {
+    const gateway = new FakeGateway();
+    const deferred = message({
+      id: "private-reply",
+      content: "",
+      embeds: [],
+    });
+    const final = message({
+      id: "private-reply",
+      content: "the actual answer",
+    });
+    // The fake invokes the update callback after returning the deferred reply.
+    gateway.invoke = async (params) => {
+      gateway.invoked = true;
+      setTimeout(() => params?.onMessageUpdate(final), 0);
+      return deferred;
+    };
+    await expect(
+      invokeSlashDirect(
+        { ...parameters, waitForPublicResponse: false },
+        gateway,
+      ),
+    ).resolves.toMatchObject({ reply: final });
   });
 
   test("returns a structured timeout and closes the gateway", async () => {

@@ -101,6 +101,7 @@ export const SlashRequestSchema = z.object({
   botId: z.string(),
   command: z.string(),
   args: z.array(z.string()),
+  timeoutSeconds: z.number().int().min(1).max(600).default(30),
 });
 export const SlashResponseSchema = z.object({
   invoked: z.boolean(),
