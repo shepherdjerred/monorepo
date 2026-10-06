@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 
@@ -16,20 +17,25 @@ final class SurvivalEquipment {
   }
 
   void repair(Player player, boolean armor) {
-    var armorContents = java.util.Objects.requireNonNull(player.getInventory().getArmorContents());
+    var inventory = player.getInventory();
     var candidates =
         armor
-            ? java.util.Arrays.stream(armorContents).filter(java.util.Objects::nonNull).toList()
-            : List.of(player.getInventory().getItemInMainHand());
+            ? List.of(
+                EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)
+            : List.of(EquipmentSlot.HAND, EquipmentSlot.OFF_HAND);
     var damaged =
         candidates.stream()
-            .filter(runner.items()::owns)
             .filter(
-                item ->
-                    armor
-                        || runner.items().weapon(item)
-                        || item.getType() == org.bukkit.Material.SHIELD)
-            .filter(item -> item.getItemMeta() instanceof Damageable meta && meta.getDamage() > 0)
+                slot -> {
+                  var item = inventory.getItem(slot);
+                  return item != null
+                      && runner.items().owns(item)
+                      && (armor
+                          || runner.items().weapon(item)
+                          || item.getType() == org.bukkit.Material.SHIELD)
+                      && item.getItemMeta() instanceof Damageable meta
+                      && meta.getDamage() > 0;
+                })
             .toList();
     if (damaged.isEmpty()) {
       Texts.info(player, "Nothing needs repairing.");
@@ -37,9 +43,12 @@ final class SurvivalEquipment {
     }
     var cost = armor ? 4 : 2;
     if (!runner.items().spend(player, Map.of("IRON_INGOT", cost, "EMERALD", cost))) return;
-    damaged.forEach(item -> item.editMeta(meta -> ((Damageable) meta).setDamage(0)));
-    if (armor) player.getInventory().setArmorContents(armorContents);
-    else player.getInventory().setItemInMainHand(damaged.getFirst());
+    damaged.forEach(
+        slot -> {
+          var item = java.util.Objects.requireNonNull(inventory.getItem(slot));
+          item.editMeta(meta -> ((Damageable) meta).setDamage(0));
+          inventory.setItem(slot, item);
+        });
     runner.feedback().play(player, SurvivalFeedback.Cue.CRAFT);
     runner.hud().hint(player, "Equipment repaired", 2);
   }

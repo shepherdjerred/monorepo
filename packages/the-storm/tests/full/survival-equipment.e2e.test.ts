@@ -64,6 +64,88 @@ async function upgradeMessage(bot: Bot, rcon: RconClient) {
   }
 }
 
+test("station repair keeps an off-hand shield and its metadata in the same slot", async ({
+  bot,
+  rcon,
+}) => {
+  await start(bot, rcon, 15);
+  try {
+    bot.setQuickBarSlot(0);
+    await bot.waitForTicks(2);
+    const data = await rcon.command(
+      `data get entity ${bot.username} SelectedItem.components."minecraft:custom_data".PublicBukkitValues."thestorm:survival_run"`,
+    );
+    const run = z.guid().parse(/[a-f0-9-]{36}/u.exec(data)?.[0]);
+    const supplied = await rcon.command(
+      `item replace entity ${bot.username} weapon.offhand with minecraft:shield[minecraft:damage=85,minecraft:enchantments={unbreaking:3},minecraft:custom_data={PublicBukkitValues:{"thestorm:arena_item":1b,"thestorm:survival_run":"${run}","thestorm:survival_upgrade":0,"thestorm:survival_rarity":"COMMON","thestorm:survival_equipment_id":"1b91bfc2-2697-4c35-b393-715273491bad"},"thestorm-test":"offhand-repair"}]`,
+    );
+    expect(supplied).toContain("Replaced");
+    await runSupply(bot, rcon, "iron_ingot", 2);
+    await runSupply(bot, rcon, "emerald", 2);
+    await bot.waitForTicks(3);
+    const supplies = (name: string) =>
+      bot.inventory
+        .items()
+        .filter((item) => item.name === name)
+        .reduce((sum, item) => sum + item.count, 0);
+    const iron = supplies("iron_ingot");
+    const emeralds = supplies("emerald");
+    const main = await rcon.command(
+      `data get entity ${bot.username} SelectedItem`,
+    );
+    const shieldMetadata = await rcon.command(
+      `data get entity ${bot.username} equipment.offhand.components."minecraft:custom_data"`,
+    );
+    const enchantments = await rcon.command(
+      `data get entity ${bot.username} equipment.offhand.components."minecraft:enchantments"`,
+    );
+    expect(
+      await rcon.command(
+        `data get entity ${bot.username} equipment.offhand.components."minecraft:damage"`,
+      ),
+    ).toMatch(/: 85$/u);
+    await click(bot, rcon, new Vec3(-27, 73, 52));
+    try {
+      await waitUntil("repair menu", () => bot.currentWindow !== null);
+    } catch (error) {
+      throw new Error(
+        `Repair at ${bot.entity.position.toString()}, selected ${String(bot.heldItem?.name)}, main ${main}: ${String(error)}`,
+        { cause: error },
+      );
+    }
+    await bot.clickWindow(45, 0, 0);
+    await close(bot);
+    expect(
+      await rcon.command(
+        `execute if items entity ${bot.username} weapon.offhand minecraft:shield[minecraft:damage=0] run data get entity ${bot.username} equipment.offhand.id`,
+      ),
+    ).toContain("minecraft:shield");
+    expect(
+      await rcon.command(`data get entity ${bot.username} SelectedItem`),
+    ).toBe(main);
+    expect(
+      await rcon.command(
+        `data get entity ${bot.username} equipment.offhand.components."minecraft:custom_data"`,
+      ),
+    ).toBe(shieldMetadata);
+    expect(
+      await rcon.command(
+        `data get entity ${bot.username} equipment.offhand.components."minecraft:enchantments"`,
+      ),
+    ).toBe(enchantments);
+    await waitUntil(
+      "single repair payment",
+      () =>
+        supplies("iron_ingot") === iron - 2 &&
+        supplies("emerald") === emeralds - 2,
+    );
+    expect(supplies("iron_ingot")).toBe(iron - 2);
+    expect(supplies("emerald")).toBe(emeralds - 2);
+  } finally {
+    await stop(rcon);
+  }
+});
+
 test("all fourteen signatures carry the correct rarity and equipment identity", async ({
   bot,
   rcon,
