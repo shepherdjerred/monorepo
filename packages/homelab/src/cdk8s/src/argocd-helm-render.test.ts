@@ -20,6 +20,7 @@ import path from "node:path";
  * - Our values use keys removed/renamed in a chart upgrade
  * - Template rendering failures with our specific config
  * - Incompatible value types
+ * - Missing Minecraft volumes referenced by sidecars or init containers
  *
  * CI-only: This test requires network access (~40s) and is skipped in
  * pre-commit hooks. Run explicitly with:
@@ -91,6 +92,33 @@ const PostgresOperatorConfigurationSchema = z.object({
       logical_backup_successful_jobs_history_limit: z.literal(3),
       logical_backup_failed_jobs_history_limit: z.literal(3),
       logical_backup_ttl_seconds_after_finished: z.literal(86_400),
+    }),
+  }),
+});
+
+const MountedContainerSchema = z.object({
+  name: z.string(),
+  volumeMounts: z.array(z.object({ name: z.string() })).optional(),
+});
+
+const MinecraftStatefulSetSchema = z.object({
+  kind: z.literal("StatefulSet"),
+  metadata: z.object({ name: z.literal("minecraft-sjerred") }),
+  spec: z.object({
+    template: z.object({
+      spec: z.object({
+        containers: z.array(MountedContainerSchema),
+        initContainers: z.array(MountedContainerSchema).optional(),
+        volumes: z.array(
+          z.object({
+            name: z.string(),
+            configMap: z.object({ name: z.string() }).optional(),
+            persistentVolumeClaim: z
+              .object({ claimName: z.string() })
+              .optional(),
+          }),
+        ),
+      }),
     }),
   }),
 });
@@ -426,6 +454,59 @@ describeFn("ArgoCD Helm Render - External Charts", () => {
         }),
       }),
     );
+  });
+
+  it("renders the Minecraft proxy volume and resolves every container mount", () => {
+    const outcome = outcomes.find(
+      ({ chart }) => chart.appName === "minecraft-sjerred",
+    );
+    if (!outcome) {
+      throw new Error("Minecraft sjerred chart was not discovered");
+    }
+    expect(outcome.result.exitCode, outcome.result.stderr).toBe(0);
+    const workload = parseAllDocuments(outcome.result.stdout)
+      .map((document) =>
+        MinecraftStatefulSetSchema.safeParse(document.toJSON()),
+      )
+      .find((result) => result.success);
+    if (!workload?.success) {
+      throw new Error("Minecraft chart did not render its StatefulSet");
+    }
+    const pod = workload.data.spec.template.spec;
+    expect(pod.containers).toEqual(
+      expect.arrayContaining([
+        {
+          name: "proxy-header-adapter",
+          volumeMounts: [{ name: "proxy-config" }],
+        },
+      ]),
+    );
+    expect(pod.volumes).toEqual(
+      expect.arrayContaining([
+        {
+          name: "proxy-config",
+          configMap: { name: "minecraft-sjerred-proxy" },
+        },
+        {
+          name: "datadir",
+          persistentVolumeClaim: {
+            claimName: "minecraft-sjerred-rlcraft-data",
+          },
+        },
+      ]),
+    );
+    const volumeNames = new Set(pod.volumes.map((volume) => volume.name));
+    for (const container of [
+      ...pod.containers,
+      ...(pod.initContainers ?? []),
+    ]) {
+      for (const mount of container.volumeMounts ?? []) {
+        expect(
+          volumeNames.has(mount.name),
+          `${container.name} mounts undeclared volume ${mount.name}`,
+        ).toBe(true);
+      }
+    }
   });
 });
 

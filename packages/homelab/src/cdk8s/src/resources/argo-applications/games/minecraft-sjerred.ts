@@ -206,7 +206,15 @@ export function createMinecraftSjerredApp(chart: Chart) {
       getDiscordIntegrationConfigMapManifest(NAMESPACE),
     ],
     extraVolumes: [
-      { name: "proxy-config", configMap: { name: "minecraft-sjerred-proxy" } },
+      {
+        volumes: [
+          {
+            name: "proxy-config",
+            configMap: { name: "minecraft-sjerred-proxy" },
+          },
+        ],
+        volumeMounts: [],
+      },
       ...getDynmapExtraVolumes(NAMESPACE),
       ...getDiscordIntegrationExtraVolumes(NAMESPACE),
     ],
