@@ -23,7 +23,7 @@ async function stop(rcon: RconClient) {
   await rcon.command("difficulty peaceful");
 }
 
-const WindCastSchema = z.object({
+const WindLanesSchema = z.object({
   shape: z.literal("WIND_LANES"),
   origin: z.tuple([z.number(), z.number(), z.number()]),
   aim: z.tuple([z.number(), z.number(), z.number()]),
@@ -33,41 +33,33 @@ const BossPresenceSchema = z
   .enum(["Test passed. Count: 1", "Test failed"])
   .transform((result) => result === "Test passed. Count: 1");
 
-async function removeArmor(rcon: RconClient, username: string): Promise<void> {
-  for (const slot of ["head", "chest", "legs", "feet", "offhand"])
-    await rcon.command(
-      `item replace entity ${username} ${slot === "offhand" ? "weapon.offhand" : `armor.${slot}`} with minecraft:air`,
-    );
+/** Stand in the gap between lanes, perpendicular to the cast's locked direction. */
+function dodgeWindLanes(cast: z.infer<typeof WindLanesSchema>): Vec3 {
+  const dx = cast.aim[0] - cast.origin[0];
+  const dz = cast.aim[2] - cast.origin[2];
+  const length = Math.hypot(dx, dz);
+  // BossMechanics uses positive X when origin and aim coincide.
+  const ux = length < 0.01 ? 1 : dx / length;
+  const uz = length < 0.01 ? 0 : dz / length;
+  return new Vec3(cast.aim[0] - 3 * uz, cast.aim[1], cast.aim[2] + 3 * ux);
 }
 
-async function currentWindCast(rcon: RconClient, username: string) {
-  return WindCastSchema.parse(
-    JSON.parse(
-      await rcon.command(`storm-fixture-survival cast ${username} none`),
-    ),
-  );
-}
-
-async function prepareWindCast(bot: Bot, rcon: RconClient): Promise<void> {
+async function prepareBoss(bot: Bot, rcon: RconClient, bossAt: Vec3) {
+  await practice(bot, rcon, 5);
+  await rcon.command(`storm-fixture-survival hungry ${bot.username} none`);
+  await rcon.command(`storm-fixture-survival terrain ${bot.username} none`);
+  await stand(bot, rcon, new Vec3(23.5, 105, -40.5));
   const boss =
     '@e[type=minecraft:breeze,nbt={BukkitValues:{"thestorm:arena_entity":"settlement"}},limit=1]';
-  // Spawn points can be outside this client's tracking range. Prove the
-  // native spawn before bringing the boss into the test's cast position.
   await eventually(
-    "boss spawned on the server",
+    "native boss spawned",
     async () =>
       BossPresenceSchema.parse(await rcon.command(`execute if entity ${boss}`)),
     10_000,
   );
-  const casting = (async () => {
-    try {
-      await waitForMessage(bot, /Breeze Sovereign casts Wind lanes/u, 15_000);
-      return { ok: true } as const;
-    } catch (error: unknown) {
-      return { ok: false, error } as const;
-    }
-  })();
-  await rcon.command(`minecraft:tp ${boss} 19.5 105 -40.5`);
+  await rcon.command(
+    `minecraft:tp ${boss} ${bossAt.x.toString()} ${bossAt.y.toString()} ${bossAt.z.toString()}`,
+  );
   await rcon.command(`data merge entity ${boss} {NoAI:1b}`);
   // Escorts must not obscure the damage caused by the locked boss cast.
   await rcon.command(
@@ -76,9 +68,10 @@ async function prepareWindCast(bot: Bot, rcon: RconClient): Promise<void> {
   await waitUntil("boss tracked by the client", () =>
     Object.values(bot.entities).some((entity) => entity.name === "breeze"),
   );
-  await removeArmor(rcon, bot.username);
-  const announced = await casting;
-  if (!announced.ok) throw announced.error;
+  for (const slot of ["head", "chest", "legs", "feet", "offhand"])
+    await rcon.command(
+      `item replace entity ${bot.username} ${slot === "offhand" ? "weapon.offhand" : `armor.${slot}`} with minecraft:air`,
+    );
 }
 
 describe("Settlement iteration on native Paper", () => {
@@ -237,39 +230,29 @@ describe("Settlement iteration on native Paper", () => {
       };
       bot.on("messagestr", observe);
       try {
-        await practice(bot, rcon, 5);
-        await rcon.command(
-          `storm-fixture-survival hungry ${bot.username} none`,
-        );
-        await rcon.command(
-          `storm-fixture-survival terrain ${bot.username} none`,
-        );
-        await stand(bot, rcon, new Vec3(23.5, 105, -40.5));
-        await prepareWindCast(bot, rcon);
+        const bossAt = dodge
+          ? new Vec3(23.5, 105, -44.5)
+          : new Vec3(19.5, 105, -40.5);
+        // Subscribe before starting the round: setup can overlap the first cast.
+        await Promise.all([
+          waitForMessage(bot, /Breeze Sovereign casts Wind lanes/u, 15_000),
+          prepareBoss(bot, rcon, bossAt),
+        ]);
         // Round five drafts zombies and husks; isolate both escort types from
         // the cast assertion without changing the boss's scripted damage.
         await rcon.command(
           'execute as @e[type=!minecraft:breeze,nbt={BukkitValues:{"thestorm:arena_entity":"settlement"}}] run data merge entity @s {NoAI:1b}',
         );
-        const cast = await currentWindCast(rcon, bot.username);
-        await stand(bot, rcon, new Vec3(...cast.aim));
-        if (dodge) {
-          const dx = cast.aim[0] - cast.origin[0];
-          const dz = cast.aim[2] - cast.origin[2];
-          const length = Math.hypot(dx, dz);
-          if (length < 0.01) throw new Error("Wind lane has no direction");
-          // Wind lanes occupy offsets 0 and ±6 from the aim line; step beyond
-          // the outer lane along its perpendicular, independent of cast angle.
-          await stand(
-            bot,
-            rcon,
-            new Vec3(
-              cast.aim[0] + (dz / length) * 9,
-              cast.aim[1],
-              cast.aim[2] - (dx / length) * 9,
+        const cast = WindLanesSchema.parse(
+          JSON.parse(
+            await rcon.command(
+              `storm-fixture-survival cast ${bot.username} none`,
             ),
-          );
-        }
+          ),
+        );
+        expect(new Vec3(...cast.origin).distanceTo(bossAt)).toBeLessThan(0.01);
+        await stand(bot, rcon, new Vec3(...cast.aim));
+        if (dodge) await stand(bot, rcon, dodgeWindLanes(cast));
         const before = bot.health;
         await waitForMessage(bot, /recovery: attack now/u, 6000);
         await Bun.sleep(150);
