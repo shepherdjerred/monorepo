@@ -211,6 +211,23 @@ final class ReflexTest {
   void walkingLeavesAResponseMarginBeyondTheMeleeSpacingBand() {
     var self = combatant(1, RED, new Vec3(5.5, 1, 5.5));
     var ally = combatant(2, RED, new Vec3(5.5, 1, 8.25));
+    var move = walkingMove(self, ally);
+    assertThat(move.waypoint().x()).isGreaterThan(self.pos().x());
+    assertThat(move.waypoint().z()).isLessThan(self.pos().z());
+  }
+
+  @Test
+  void walkersAnticipateConvergingTeammatesBeforeTheyCrossTheSpacingBand() {
+    var self = combatant(1, RED, new Vec3(5.5, 1, 5.5));
+    var ally = combatant(2, RED, self.pos().plus(0, 0, 3.25));
+    var stationary = walkingMove(self, ally);
+    var converging = walkingMove(self, ally.withVel(new Vec3(0, 0, -0.2)));
+    assertThat(stationary.waypoint().z()).isEqualTo(self.pos().z());
+    assertThat(converging.waypoint().z()).isLessThan(self.pos().z());
+    assertThat(converging.waypoint().x()).isGreaterThan(self.pos().x());
+  }
+
+  private static BodyCommand.MoveToward walkingMove(CombatantView self, CombatantView ally) {
     var path =
         java.util.stream.IntStream.rangeClosed(1, 5)
             .mapToObj(step -> new Waypoint(self.pos().plus(step * 2, 0, 0), Hop.WALK))
@@ -235,14 +252,11 @@ final class ReflexTest {
                 self, world(1, List.of(self, ally), List.of()), decision, Optional.empty(), 0),
             context(levers(1)),
             new SplittableRandom(4));
-    var move =
-        step.commands().stream()
-            .filter(BodyCommand.MoveToward.class::isInstance)
-            .map(BodyCommand.MoveToward.class::cast)
-            .findFirst()
-            .orElseThrow();
-    assertThat(move.waypoint().x()).isGreaterThan(self.pos().x());
-    assertThat(move.waypoint().z()).isLessThan(self.pos().z());
+    return step.commands().stream()
+        .filter(BodyCommand.MoveToward.class::isInstance)
+        .map(BodyCommand.MoveToward.class::cast)
+        .findFirst()
+        .orElseThrow();
   }
 
   @Test

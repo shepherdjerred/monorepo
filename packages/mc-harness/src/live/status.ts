@@ -86,13 +86,23 @@ export function parseLiveStatus(
   };
 }
 
+/** Restoration leases block both bridge operations and direct file reads. */
+export function restorationRefusal(
+  status: Pick<LiveClusterStatus, "worldRestoreLease">,
+): string | null {
+  return status.worldRestoreLease === null
+    ? null
+    : `world restoration holds minecraft-tsmc (request ${status.worldRestoreLease}); use its private acceptance procedure`;
+}
+
 /**
  * Why live calls are refused right now, or null. Waking a sleeping server is
  * deliberately out of scope: ask the user to join it (mc-router wakes it).
  */
 export function liveRefusal(status: LiveClusterStatus): string | null {
-  if (status.worldRestoreLease !== null) {
-    return `world restoration holds minecraft-tsmc (request ${status.worldRestoreLease}); use its private acceptance procedure`;
+  const restoration = restorationRefusal(status);
+  if (restoration !== null) {
+    return restoration;
   }
   if (status.miningResetLock !== null) {
     return `the mining reset holds minecraft-tsmc (lock ${status.miningResetLock}); wait for it to finish — see the "Recover The Storm mining reset" how-to`;
