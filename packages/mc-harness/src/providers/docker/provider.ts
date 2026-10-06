@@ -80,7 +80,7 @@ export function dockerCreateArgs(options: {
       : options.profile.stagedPluginMount === "files"
         ? options.profile.staged.flatMap((entry) => [
             "-v",
-            `${path.join(options.pluginsDir ?? "", "plugins", entry.target)}:/plugins/${entry.target}:ro`,
+            `${path.join(options.pluginsDir ?? "", entry.target)}:/plugins/${entry.target}:ro`,
           ])
         : ["-v", `${options.pluginsDir}:/plugins:ro`]),
     ...(options.profile.seedData ? warmMountArgs(options.cacheDir) : []),

@@ -15,8 +15,8 @@ import { basePaperEnv } from "#sandbox/paper-env.ts";
 import {
   STORM_BUILD_COMMAND,
   STORM_DEV_MODULES,
-  STORM_IMAGE_MODULES,
   STORM_PATHS,
+  stormImageConfig,
 } from "#sandbox/storm.ts";
 
 export const GAME_PORT = 25_565;
@@ -42,6 +42,8 @@ export type StagedEntry =
       source: string;
       target: string;
       modules: readonly string[];
+      /** Module keys baked into the exact selected image digest. */
+      moduleKeys?: readonly string[];
     };
 
 export type ResolvedProfile = {
@@ -193,6 +195,7 @@ function stormDevProfile(
  * defaults to the cluster.
  */
 function stormImageProfile(image: string) {
+  const imageConfig = stormImageConfig(image);
   return (
     _world: SandboxCreateRequest["world"],
     secrets: Secrets,
@@ -221,7 +224,8 @@ function stormImageProfile(image: string) {
         kind: "storm-config",
         source: path.join(STORM_PATHS.ownedConfigDir, "config.yml"),
         target: path.join("TheStorm", "config.yml"),
-        modules: STORM_IMAGE_MODULES,
+        modules: imageConfig.enabledModules,
+        moduleKeys: imageConfig.moduleKeys,
       },
     ],
     seedData: false,

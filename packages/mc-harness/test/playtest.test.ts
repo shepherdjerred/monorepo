@@ -8,9 +8,10 @@ import { playtestExitCode, RunIdSchema } from "#protocol/playtest.ts";
 import { blockMatches, eventMatches } from "#playtest/context.ts";
 import { missingRequirements } from "#playtest/run.ts";
 import { loadScenario, scenarioMeta } from "#playtest/scenario.ts";
+import { stormServerImages } from "#src/pins.ts";
 import { resolveProfile } from "#sandbox/profiles.ts";
 import { requireStagedSources, stageEntries } from "#sandbox/staging.ts";
-import { stormModuleConfig } from "#sandbox/storm.ts";
+import { stormImageConfig, stormModuleConfig } from "#sandbox/storm.ts";
 
 let dir: string;
 beforeAll(async () => {
@@ -126,6 +127,33 @@ describe("run ids and exit codes", () => {
     expect(playtestExitCode(["passed", "failed"])).toBe(1);
     expect(playtestExitCode(["failed", "timedOut"])).toBe(2);
     expect(playtestExitCode(["errored"])).toBe(2);
+  });
+});
+
+describe("published Storm image profiles", () => {
+  it("uses the module schema snapshot pinned to the image digest", () => {
+    const config = stormImageConfig(stormServerImages.prod);
+    expect(config.moduleKeys).toContain("rwfbots");
+    expect(config.enabledModules).toContain("companions");
+    expect(config.enabledModules).not.toContain("rwf");
+
+    const profile = resolveProfile(
+      { profile: "storm-prod", world: "flat" },
+      { bridgeToken: "token", rconPassword: "password" },
+    );
+    expect(profile.staged[0]).toMatchObject({
+      kind: "storm-config",
+      modules: config.enabledModules,
+      moduleKeys: config.moduleKeys,
+    });
+  });
+
+  it("requires a schema snapshot for each published image digest", () => {
+    expect(() =>
+      stormImageConfig(
+        "ghcr.io/shepherdjerred/the-storm-server:test@sha256:" + "0".repeat(64),
+      ),
+    ).toThrow(/No Storm module config snapshot/u);
   });
 });
 
