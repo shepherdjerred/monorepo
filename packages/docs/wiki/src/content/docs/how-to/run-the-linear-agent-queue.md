@@ -15,11 +15,15 @@ monorepo. Grant these repository permissions:
 | Permission      | Access     |
 | --------------- | ---------- |
 | Metadata        | Read       |
+| Administration  | Read       |
 | Contents        | Read/write |
 | Pull requests   | Read/write |
 | Issues          | Read/write |
 | Checks          | Read       |
 | Commit statuses | Read       |
+
+Approve permission updates on the App installation after changing these settings.
+Administration read access lets PR health inspect branch protection before merging.
 
 Store its App ID, installation ID, and generated private key in 1Password. Do
 not copy them into the repository or the runner configuration.

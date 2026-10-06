@@ -12,6 +12,7 @@ import { runCommand } from "#src/runtime/process.ts";
 import { requireSuccess } from "#src/runtime/process.ts";
 import { StateStore } from "#src/runtime/state-store.ts";
 import { checkConnections } from "#src/integrations/preflight.ts";
+import { checkGitHubAccess } from "#src/integrations/github-access.ts";
 import { formatTaskStatus } from "#src/reconcile-autonomy.ts";
 
 const HELP = `Run Justin locally with source reloads.
@@ -57,6 +58,8 @@ async function main(): Promise<void> {
   }
   log("Checking native OpenAI model access and Woodpecker repository access");
   await checkConnections(initialConfig, runCommand);
+  log("Checking GitHub App repository and branch protection access");
+  await checkGitHubAccess({ config: initialConfig, paths, run: runCommand });
   const sourcePackage = path.resolve(import.meta.dirname, "..");
   log("Building the trusted host Toolkit from this checkout");
   requireSuccess(

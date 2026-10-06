@@ -42,7 +42,8 @@ bun run dev
 ```
 
 `dev` first checks native OpenAI model access through the shared LLM runtime and
-that the configured Woodpecker repository ID matches `repository.slug`.
+that the configured Woodpecker repository ID matches `repository.slug`. It also
+checks GitHub App repository and branch protection access using the bot identity.
 Credential failures stop startup before a task is claimed. `doctor` performs
 the same checks, and each coding turn checks OpenAI again before installing or
 building container dependencies.
