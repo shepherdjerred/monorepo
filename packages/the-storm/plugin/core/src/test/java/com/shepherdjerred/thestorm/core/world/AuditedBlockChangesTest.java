@@ -65,6 +65,51 @@ final class AuditedBlockChangesTest {
   }
 
   @Test
+  void naturalBreakingIsAuditedBeforeTheNativeBreakAndPreservesItsResult() {
+    var records = new ArrayList<AuditedBlockChanges.Change>();
+    var natural =
+        new org.mockbukkit.mockbukkit.block.BlockMock(Material.STONE, block.getLocation()) {
+          @Override
+          public boolean breakNaturally() {
+            assertThat(getType()).isEqualTo(Material.STONE);
+            assertThat(records)
+                .singleElement()
+                .satisfies(
+                    change -> {
+                      assertThat(change.before().getMaterial()).isEqualTo(Material.STONE);
+                      assertThat(change.after().getMaterial()).isEqualTo(Material.AIR);
+                      assertThat(change.actor()).isEqualTo("#storm-mechanics-crush");
+                    });
+            setType(Material.AIR);
+            return true;
+          }
+        };
+    assertThat(
+            new AuditedBlockChanges(records::add).breakNaturally("#storm-mechanics-crush", natural))
+        .isTrue();
+    assertThat(natural.getType()).isEqualTo(Material.AIR);
+  }
+
+  @Test
+  void aRefusedNaturalBreakAuditLeavesTheBlockAndDropsUntouched() {
+    var natural =
+        new org.mockbukkit.mockbukkit.block.BlockMock(Material.STONE, block.getLocation()) {
+          @Override
+          public boolean breakNaturally() {
+            throw new AssertionError("A refused removal reached Paper's break operation");
+          }
+        };
+    var changes =
+        new AuditedBlockChanges(
+            change -> {
+              throw new IllegalStateException("audit queue unavailable");
+            });
+    assertThatThrownBy(() -> changes.breakNaturally("#storm-mechanics-crush", natural))
+        .hasMessage("audit queue unavailable");
+    assertThat(natural.getType()).isEqualTo(Material.STONE);
+  }
+
+  @Test
   void aLaterAuditRefusalLeavesEveryBlockInTheBatchUnchanged() {
     block.setType(Material.STONE);
     var second = block.getRelative(1, 0, 0);

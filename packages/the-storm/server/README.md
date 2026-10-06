@@ -394,7 +394,10 @@ record `VERIFIED` for startup, historical spawn, the town directory, proven plot
 editors, heritage protection, grazing and growth, each of the three arenas,
 CoreProtect lookup and rollback, retained identities, historical player data,
 maps and private admission. The evidence also carries `requestId`,
-`candidateImage`, `candidateJarSha256` and `podUid`. Synthetic evidence is not
+`candidateImage`, `candidateJarSha256`, `podUid`, `containerId` and `restartCount`.
+Acceptance is invalidated if the pod or container changes, and a new private
+startup clears earlier acceptance. Release requires the exact accepted incarnation's
+recorded graceful stop. Synthetic evidence is not
 accepted. `private-stop` gracefully saves and stops this candidate without
 opening routes. `release` requires that unchanged acceptance evidence and a
 stopped lease, clears the owned maintenance annotations and restores the captured

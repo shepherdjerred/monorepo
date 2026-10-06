@@ -57,7 +57,26 @@ public final class MechanicsE2EPlugin extends JavaPlugin implements Listener {
     this.database = database;
     var services = new Services();
     services.provide(Protection.class, new OpenProtection());
-    services.provide(BlockChanges.class, new AuditedBlockChanges(change -> {}));
+    services.provide(
+        BlockChanges.class,
+        new AuditedBlockChanges(
+            change -> {
+              if (change.actor().equals("#storm-mechanics-crush")) {
+                if (!change
+                    .location()
+                    .getBlock()
+                    .getBlockData()
+                    .getAsString()
+                    .equals(change.before().getAsString())) {
+                  throw new IllegalStateException("Crush audit occurred after its world mutation");
+                }
+                getComponentLogger()
+                    .info(
+                        "Audited crush before natural break: {} -> {}",
+                        change.before().getAsString(),
+                        change.after().getAsString());
+              }
+            }));
     services.provide(SealedWorlds.class, new SealedWorlds());
     var context =
         new ModuleContext(
@@ -78,6 +97,7 @@ public final class MechanicsE2EPlugin extends JavaPlugin implements Listener {
     }
     prepareBridge(world);
     prepareSuperPush(world);
+    prepareCrush(world);
     getServer().getPluginManager().registerEvents(this, this);
     getComponentLogger().info("Enabled real-Paper mechanics E2E harness");
   }
@@ -135,6 +155,17 @@ public final class MechanicsE2EPlugin extends JavaPlugin implements Listener {
     set(world.getBlockAt(PISTON_X + 6, PISTON_Y, PISTON_Z), "minecraft:air");
     set(world.getBlockAt(PISTON_X + 7, PISTON_Y, PISTON_Z), "minecraft:air");
     set(world.getBlockAt(PISTON_X + 8, PISTON_Y, PISTON_Z), "minecraft:air");
+  }
+
+  private void prepareCrush(World world) {
+    for (int x = 423; x <= 427; x++) {
+      for (int z = -1; z <= 1; z++) {
+        set(world.getBlockAt(x, PISTON_Y - 2, z), "minecraft:stone");
+      }
+    }
+    set(world.getBlockAt(424, PISTON_Y, 0), "minecraft:piston[facing=east]");
+    configureSign(world.getBlockAt(424, PISTON_Y, -1), "north", "[Crush]");
+    set(world.getBlockAt(425, PISTON_Y, 0), "minecraft:oak_planks");
   }
 
   private void bindSpan(Block block, String anchor, String partner, boolean keeper) {

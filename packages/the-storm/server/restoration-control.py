@@ -1270,6 +1270,8 @@ def private_start(path: Path, journal: JsonObject) -> None:
         raise ValueError("Private startup requires verified installation and writer cleanup")
     if annotations(server).get(PHASE) == "OFFLINE":
         require_offline(journal)
+        for key in ("acceptance", "stoppingIncarnation", "stoppedIncarnation"):
+            journal.pop(key, None)
         journal["privateStartup"] = "STARTING"
         save(path, journal)
         patch(
@@ -1296,8 +1298,30 @@ def private_start(path: Path, journal: JsonObject) -> None:
     ):
         raise ValueError("Private startup is not running the exact pinned candidate")
     assert_closed(journal)
+    if "acceptance" in journal:
+        current = run(["-n", NAMESPACE, "get", "pod", SERVER + "-0", "--ignore-not-found", "-o", "json"]).strip()
+        invalidate_changed_incarnation(journal, pod_incarnation(JsonObject.parse(current)) if current else {})
     journal["privateStartup"] = "VALIDATING"
     save(path, journal)
+
+
+def pod_incarnation(pod: JsonObject) -> JsonObject:
+    statuses = pod.object("status", {}).objects("containerStatuses", [])
+    status = statuses[0] if len(statuses) == 1 else JsonObject()
+    return JsonObject(
+        {
+            "podUid": pod.object("metadata").string("uid"),
+            "containerId": status.get("containerID"),
+            "restartCount": status.get("restartCount"),
+        }
+    )
+
+
+def invalidate_changed_incarnation(journal: JsonObject, incarnation: Mapping[str, object]) -> None:
+    if "acceptance" in journal:
+        acceptance = journal.object("acceptance")
+        if any(acceptance.get(key) != incarnation.get(key) for key in ("podUid", "containerId", "restartCount")):
+            acceptance["status"] = "INVALIDATED"
 
 
 def private_stop(path: Path, journal: JsonObject) -> None:
@@ -1306,9 +1330,21 @@ def private_stop(path: Path, journal: JsonObject) -> None:
     assert_owner(server, journal)
     if annotations(server).get(IMAGE) != journal.string("candidateImage"):
         raise ValueError("Private server image pin changed")
+    current = run(["-n", NAMESPACE, "get", "pod", SERVER + "-0", "--ignore-not-found", "-o", "json"]).strip()
+    if journal.get("privateStartup") != "STOPPED":
+        if current:
+            journal["stoppingIncarnation"] = pod_incarnation(JsonObject.parse(current))
+        incarnation = journal.object("stoppingIncarnation", {})
+        invalidate_changed_incarnation(journal, incarnation)
+        save(path, journal)
     if server.object("spec").integer("replicas") != 0:
         patch("statefulset", SERVER, server, [{"op": "replace", "path": "/spec/replicas", "value": 0}])
-    if run(["-n", NAMESPACE, "get", "pod", SERVER + "-0", "--ignore-not-found", "-o", "json"]).strip():
+    remaining = run(["-n", NAMESPACE, "get", "pod", SERVER + "-0", "--ignore-not-found", "-o", "json"]).strip()
+    if remaining:
+        incarnation = pod_incarnation(JsonObject.parse(remaining))
+        invalidate_changed_incarnation(journal, incarnation)
+        journal["stoppingIncarnation"] = incarnation
+        save(path, journal)
         run(["-n", NAMESPACE, "wait", "--for=delete", "pod/" + SERVER + "-0", "--timeout=180s"], 190)
     server = read("statefulset", SERVER)
     assert_owner(server, journal)
@@ -1321,6 +1357,8 @@ def private_stop(path: Path, journal: JsonObject) -> None:
         [{"op": "replace", "path": "/metadata/annotations/" + pointer(PHASE), "value": "OFFLINE"}],
     )
     require_offline(journal)
+    if journal.get("privateStartup") != "STOPPED":
+        journal["stoppedIncarnation"] = journal.pop("stoppingIncarnation", {})
     journal["privateStartup"] = "STOPPED"
     save(path, journal)
 
@@ -1368,6 +1406,8 @@ def accept(path: Path, journal: JsonObject, evidence_path: Path) -> None:
         or containers[0].get("image") != journal.string("candidateImage")
         or len(statuses) != 1
         or statuses[0].get("ready") is not True
+        or evidence.get("containerId") != statuses[0].string("containerID")
+        or evidence.get("restartCount") != statuses[0].integer("restartCount")
         or not statuses[0].string("imageID").endswith(journal.string("candidateImage").split("@", 1)[1])
         or not any(
             owner.get("controller") is True and owner.get("uid") == journal.string("serverUid")
@@ -1377,7 +1417,7 @@ def accept(path: Path, journal: JsonObject, evidence_path: Path) -> None:
         raise ValueError("Private acceptance does not verify this live candidate and every required behavior")
     journal["acceptance"] = {
         "status": "VERIFIED",
-        "podUid": evidence.string("podUid"),
+        **pod_incarnation(pod),
         "path": str(evidence_path.resolve()),
         "sha256": restoration_files.digest(evidence_path),
     }
@@ -1425,6 +1465,9 @@ def release(path: Path, journal: JsonObject) -> None:
         server.object("spec").integer("replicas") != 0 or server.object("status", {}).get("replicas", 0) != 0
     ):
         raise ValueError("Release requires a gracefully stopped accepted candidate")
+    stopped = journal.object("stoppedIncarnation", {})
+    if any(acceptance.get(key) != stopped.get(key) for key in ("podUid", "containerId", "restartCount")):
+        raise ValueError("Release requires acceptance of the exact stopped pod and container incarnation")
     assert_gitops_image(journal)
     if journal.get("phase") == "LEASED_OFFLINE":
         require_offline(journal)

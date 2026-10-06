@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.core.world;
 
 import java.util.List;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 
@@ -11,6 +12,12 @@ public interface BlockChanges {
 
   default void set(String actor, Block block, BlockData replacement, boolean physics) {
     prepare(actor, List.of(new Update(block, replacement, physics))).apply();
+  }
+
+  /** Audit a removal before delegating drops and break effects to Paper's natural break. */
+  default boolean breakNaturally(String actor, Block block) {
+    prepare(actor, List.of(new Update(block, Material.AIR.createBlockData(), false)));
+    return block.breakNaturally();
   }
 
   /** One final state per block, captured independently of mutable caller data. */

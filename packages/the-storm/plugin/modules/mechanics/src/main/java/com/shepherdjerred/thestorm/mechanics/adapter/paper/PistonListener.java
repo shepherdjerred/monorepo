@@ -124,7 +124,7 @@ final class PistonListener implements Listener {
         || !kit.guard().check(owner, ProtectedAction.AUTOMATIC_BREAK, grid, pos).isAllowed()) {
       return false;
     }
-    head.breakNaturally();
+    kit.changes().breakNaturally("#storm-mechanics-crush", head);
     return true;
   }
 

@@ -120,7 +120,8 @@ class Cluster:
         if command[:2] == ["exec", control.SERVER + "-0"]:
             return f"There are {self.players} of a max of 20 players online:"
         if command[:2] == ["get", "pod"]:
-            return ""
+            pod = self.objects.get(("pod", command[2]))
+            return json.dumps(pod) if pod is not None and self.server.object("spec").integer("replicas") == 1 else ""
         if command[:2] == ["get", "pvc"]:
             return json.dumps({"items": [{"metadata": {"name": control.CLAIM, "uid": "claim-uid"}}]})
         if command[:2] == ["get", "pods"]:
@@ -167,8 +168,13 @@ class RestorationControlTest(unittest.TestCase):
         self.path = Path(temporary.name) / "maintenance.json"
         self.cluster = Cluster()
         self.addCleanup(patch.stopall)
-        patch.object(control, "read", side_effect=self.cluster.read).start()
-        patch.object(control, "run", side_effect=self.cluster.run).start()
+        patch.object(
+            control, "read",
+            side_effect=lambda kind, name, namespace=control.NAMESPACE: self.cluster.read(kind, name, namespace),
+        ).start()
+        patch.object(
+            control, "run", side_effect=lambda arguments, timeout=30: self.cluster.run(arguments, timeout),
+        ).start()
         self.guard_probe = control.assert_denied
         self.probes = patch.object(control, "assert_denied").start()
 
@@ -184,7 +190,12 @@ class RestorationControlTest(unittest.TestCase):
             {
                 "metadata": {"uid": "accepted-pod", "ownerReferences": [{"uid": "server-uid", "controller": True}]},
                 "spec": {"containers": [{"name": control.SERVER, "image": IMAGE}]},
-                "status": {"containerStatuses": [{"ready": True, "imageID": "docker-pullable://" + IMAGE}]},
+                "status": {
+                    "containerStatuses": [{
+                        "ready": True, "imageID": "docker-pullable://" + IMAGE,
+                        "containerID": "containerd://accepted-instance", "restartCount": 0,
+                    }],
+                },
             }
         )
         return journal
@@ -198,6 +209,8 @@ class RestorationControlTest(unittest.TestCase):
                     "candidateImage": IMAGE,
                     "candidateJarSha256": "b" * 64,
                     "podUid": "accepted-pod",
+                    "containerId": "containerd://accepted-instance",
+                    "restartCount": 0,
                     "checks": dict.fromkeys(control.ACCEPTANCE_CHECKS, "VERIFIED"),
                 }
             )
@@ -226,7 +239,9 @@ class RestorationControlTest(unittest.TestCase):
         control.private_start(self.path, journal)
         pod = self.cluster.objects["pod", control.SERVER + "-0"]
         original = copy.deepcopy(pod)
-        for change in ("image", "digest", "owner", "ready", "podUid", "missing", "synthetic"):
+        for change in (
+            "image", "digest", "owner", "ready", "podUid", "containerId", "restartCount", "missing", "synthetic",
+        ):
             with self.subTest(change=change):
                 evidence = self.acceptance_evidence()
                 data = JsonObject.parse(evidence.read_bytes())
@@ -240,6 +255,10 @@ class RestorationControlTest(unittest.TestCase):
                     pod.object("status").objects("containerStatuses")[0]["ready"] = False
                 elif change == "podUid":
                     data["podUid"] = "different-pod"
+                elif change == "containerId":
+                    data["containerId"] = "containerd://previous-instance"
+                elif change == "restartCount":
+                    data["restartCount"] = 1
                 elif change == "missing":
                     del data.object("checks")["coreProtectRollback"]
                 else:
@@ -252,6 +271,74 @@ class RestorationControlTest(unittest.TestCase):
         control.accept(self.path, journal, self.acceptance_evidence())
         self.assertEqual(journal.object("acceptance")["status"], "VERIFIED")
         control.assert_closed(journal)
+
+    def test_replacement_pod_and_restarted_container_invalidate_acceptance_when_stopped(self):
+        for change in ("podUid", "containerID", "restartCount"):
+            with self.subTest(change=change):
+                journal = self.installation_fixture()
+                control.private_start(self.path, journal)
+                control.accept(self.path, journal, self.acceptance_evidence())
+                pod = self.cluster.objects["pod", control.SERVER + "-0"]
+                if change == "podUid":
+                    pod.object("metadata")["uid"] = "replacement-pod"
+                else:
+                    pod.object("status").objects("containerStatuses")[0][change] = (
+                        1 if change == "restartCount" else "containerd://replacement-instance"
+                    )
+                control.private_stop(self.path, journal)
+                self.assertEqual(journal.object("acceptance")["status"], "INVALIDATED")
+                with self.assertRaisesRegex(ValueError, "unchanged, verified"):
+                    control.release(self.path, journal)
+                control.require_offline(journal)
+                self.path.unlink()
+                self.cluster = Cluster()
+
+    def test_a_new_private_start_discards_the_previous_acceptance_and_stop_receipt(self):
+        journal = self.installation_fixture()
+        control.private_start(self.path, journal)
+        control.accept(self.path, journal, self.acceptance_evidence())
+        control.private_stop(self.path, journal)
+        control.private_stop(self.path, journal)
+        self.assertEqual(journal.object("stoppedIncarnation").string("podUid"), "accepted-pod")
+        control.private_start(self.path, journal)
+        self.assertNotIn("acceptance", journal)
+        self.assertNotIn("stoppedIncarnation", journal)
+        with self.assertRaises(ValueError):
+            control.release(self.path, journal)
+
+    def test_a_replacement_observed_after_scaling_down_also_invalidates_acceptance(self):
+        journal = self.installation_fixture()
+        control.private_start(self.path, journal)
+        control.accept(self.path, journal, self.acceptance_evidence())
+        original_run = self.cluster.run
+
+        def replace_while_stopping(arguments: list[str], timeout: float = 30) -> str:
+            if arguments[2:4] == ["get", "pod"] and self.cluster.server.object("spec").integer("replicas") == 0:
+                return json.dumps(self.cluster.objects["pod", control.SERVER + "-0"])
+            if arguments[2] == "wait":
+                return "deleted"
+            result = original_run(arguments, timeout)
+            if arguments[2:5] == ["patch", "statefulset", control.SERVER]:
+                self.cluster.objects["pod", control.SERVER + "-0"].object("metadata")["uid"] = "replacement-pod"
+            return result
+
+        with patch.object(control, "run", side_effect=replace_while_stopping):
+            control.private_stop(self.path, journal)
+        self.assertEqual(journal.object("acceptance")["status"], "INVALIDATED")
+        self.assertEqual(journal.object("stoppedIncarnation").string("podUid"), "replacement-pod")
+        with self.assertRaisesRegex(ValueError, "unchanged, verified"):
+            control.release(self.path, journal)
+
+    def test_release_refuses_a_stop_receipt_for_a_different_incarnation(self):
+        journal = self.installation_fixture()
+        control.private_start(self.path, journal)
+        control.accept(self.path, journal, self.acceptance_evidence())
+        control.private_stop(self.path, journal)
+        journal.object("stoppedIncarnation")["containerId"] = "containerd://replacement-instance"
+        before = len(self.cluster.mutations)
+        with self.assertRaisesRegex(ValueError, "exact stopped pod"):
+            control.release(self.path, journal)
+        self.assertEqual(len(self.cluster.mutations), before)
 
     def test_release_requires_acceptance_and_stopped_lease_then_restores_java_last_and_resumes(self):
         journal = self.installation_fixture()
