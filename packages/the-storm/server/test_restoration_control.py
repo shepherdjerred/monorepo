@@ -40,9 +40,14 @@ class Cluster:
             )
         self.objects["statefulset", control.SERVER] = JsonObject(
             {
-                "metadata": {"uid": "server-uid", "resourceVersion": "1", "annotations": {}},
+                "metadata": {"uid": "server-uid", "resourceVersion": "1", "generation": 1, "annotations": {}},
                 "spec": {"replicas": 1, "template": {"spec": {"containers": [{"image": IMAGE}]}}},
-                "status": {"replicas": 1},
+                "status": {
+                    "replicas": 1,
+                    "observedGeneration": 1,
+                    "currentRevision": "accepted-revision",
+                    "updateRevision": "accepted-revision",
+                },
             }
         )
         source = {
@@ -198,7 +203,11 @@ class RestorationControlTest(unittest.TestCase):
         journal["writerRemoved"] = True
         self.cluster.objects["pod", control.SERVER + "-0"] = JsonObject(
             {
-                "metadata": {"uid": "accepted-pod", "ownerReferences": [{"uid": "server-uid", "controller": True}]},
+                "metadata": {
+                    "uid": "accepted-pod",
+                    "labels": {"controller-revision-hash": "accepted-revision"},
+                    "ownerReferences": [{"uid": "server-uid", "controller": True}],
+                },
                 "spec": {"containers": [{"name": control.SERVER, "image": IMAGE}]},
                 "status": {
                     "containerStatuses": [
@@ -453,6 +462,86 @@ class RestorationControlTest(unittest.TestCase):
                 control.require_offline(journal)
                 self.path.unlink()
                 self.cluster = Cluster()
+
+    def test_acceptance_refuses_a_pod_from_an_old_or_unobserved_template(self):
+        journal = self.installation_fixture()
+        control.private_start(self.path, journal)
+        for change in ("podRevision", "currentRevision", "observedGeneration"):
+            with self.subTest(change=change):
+                status = self.cluster.server.object("status")
+                labels = self.cluster.objects["pod", control.SERVER + "-0"].object("metadata").object("labels")
+                if change == "podRevision":
+                    labels["controller-revision-hash"] = "old-revision"
+                elif change == "currentRevision":
+                    status["currentRevision"] = "old-revision"
+                else:
+                    status["observedGeneration"] = 0
+                with self.assertRaisesRegex(ValueError, "every required behavior"):
+                    control.accept(self.path, journal, self.acceptance_evidence())
+                self.assertNotIn("acceptance", journal)
+                labels["controller-revision-hash"] = "accepted-revision"
+                status["currentRevision"] = "accepted-revision"
+                status["observedGeneration"] = 1
+
+    def test_release_refuses_same_image_template_drift_after_the_accepted_stop(self):
+        for change in ("claim", "command", "args", "environment", "label"):
+            with self.subTest(change=change):
+                journal = self.installation_fixture()
+                control.private_start(self.path, journal)
+                control.accept(self.path, journal, self.acceptance_evidence())
+                control.private_stop(self.path, journal)
+                template = self.cluster.server.object("spec").object("template")
+                container = template.object("spec").objects("containers")[0]
+                if change == "claim":
+                    template.object("spec")["volumes"] = [
+                        {"name": "data", "persistentVolumeClaim": {"claimName": "different-claim"}}
+                    ]
+                elif change == "command":
+                    container["command"] = ["different-entrypoint"]
+                elif change == "args":
+                    container["args"] = ["different-arguments"]
+                elif change == "environment":
+                    container["env"] = [{"name": "VERSION", "value": "different-version"}]
+                else:
+                    template["metadata"] = {"labels": {"different": "label"}}
+                before = len(self.cluster.mutations)
+                control.assert_gitops_image(journal)
+                with self.assertRaisesRegex(ValueError, "exact accepted pod template"):
+                    control.release(self.path, journal)
+                self.assertEqual(len(self.cluster.mutations), before)
+                control.assert_closed(journal)
+                self.assertEqual(control.annotations(self.cluster.server)[control.LEASE], REQUEST)
+                self.path.unlink()
+                self.cluster = Cluster()
+
+    def test_release_checks_fresh_template_immediately_before_clearing_the_lease(self):
+        journal = self.installation_fixture()
+        control.private_start(self.path, journal)
+        control.accept(self.path, journal, self.acceptance_evidence())
+        control.private_stop(self.path, journal)
+        original_read = self.cluster.read
+        reads = 0
+
+        def drift_after_incarnation_check(
+            kind: str, name: str, namespace: str = control.NAMESPACE
+        ) -> JsonObject:
+            nonlocal reads
+            if kind == "statefulset":
+                reads += 1
+                if reads == 2:
+                    self.cluster.server.object("spec").object("template").object("spec").objects("containers")[0][
+                        "command"
+                    ] = ["different-entrypoint"]
+            return original_read(kind, name, namespace)
+
+        before = len(self.cluster.mutations)
+        with (
+            patch.object(control, "read", side_effect=drift_after_incarnation_check),
+            self.assertRaisesRegex(ValueError, "exact accepted pod template"),
+        ):
+            control.release(self.path, journal)
+        self.assertEqual(len(self.cluster.mutations), before)
+        control.assert_closed(journal)
 
     def test_a_new_private_start_discards_the_previous_acceptance_and_stop_receipt(self):
         journal = self.installation_fixture()

@@ -178,6 +178,57 @@ final class GravesPaperTest {
   }
 
   @Test
+  void protectedBoundaryDeathRetainsBelongingsDespiteAdjacentWildernessRoom() {
+    harness.land.noBuilding = location -> location.getBlockX() <= 0;
+    harness.land.preserved = location -> location.getBlockX() <= 0;
+    var alice = aliceWithKit();
+    alice.setLevel(12);
+    assertThat(harness.world.getBlockAt(1, 5, 0).getType()).isEqualTo(Material.AIR);
+    var event =
+        new PlayerDeathEvent(
+            alice,
+            DamageSource.builder(DamageType.GENERIC).build(),
+            new ArrayList<>(List.of(new ItemStack(Material.DIAMOND_SWORD))),
+            12,
+            net.kyori.adventure.text.Component.empty(),
+            true);
+    harness.server.getPluginManager().callEvent(event);
+    harness.server.getScheduler().performTicks(5);
+
+    assertThat(harness.graves.all()).isEmpty();
+    assertThat(harness.world.getBlockAt(1, 5, 0).getType()).isEqualTo(Material.AIR);
+    assertThat(event.getKeepInventory()).isTrue();
+    assertThat(event.getKeepLevel()).isTrue();
+    assertThat(event.getDroppedExp()).isZero();
+    assertThat(event.getDrops()).isEmpty();
+    assertThat(alice.getInventory().getItem(0)).isEqualTo(new ItemStack(Material.DIAMOND_SWORD));
+    assertThat(alice.getLevel()).isEqualTo(12);
+  }
+
+  @Test
+  void protectedDeathWithNoItemsStillRetainsExperience() {
+    harness.land.noBuilding = location -> location.getBlockX() <= 0;
+    harness.land.preserved = location -> location.getBlockX() <= 0;
+    var alice = harness.playerAt("Alice", 0, 0);
+    alice.setLevel(12);
+    var event =
+        new PlayerDeathEvent(
+            alice,
+            DamageSource.builder(DamageType.GENERIC).build(),
+            new ArrayList<>(),
+            12,
+            net.kyori.adventure.text.Component.empty(),
+            true);
+    harness.server.getPluginManager().callEvent(event);
+
+    assertThat(harness.graves.all()).isEmpty();
+    assertThat(event.getKeepInventory()).isTrue();
+    assertThat(event.getKeepLevel()).isTrue();
+    assertThat(event.getDroppedExp()).isZero();
+    assertThat(alice.getLevel()).isEqualTo(12);
+  }
+
+  @Test
   void aDeathInASealedWorldLeavesNoGraveAndKeepsVanillaDrops() {
     var spy = spyOnDrops();
     harness.sealed.seal("arena");

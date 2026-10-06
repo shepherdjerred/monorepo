@@ -56,6 +56,10 @@ final class GraveDeaths {
     if (event.getKeepInventory() || parts.sealed().isSealed(player.getWorld())) {
       return;
     }
+    if (parts.protection().isPreserved(Blocks.at(player))) {
+      retain(event);
+      return;
+    }
     // Paper never lists nulls here, but some servers and test doubles do.
     var buried =
         event.getDrops().stream()
@@ -84,12 +88,7 @@ final class GraveDeaths {
           .protection()
           .check(player.getUniqueId(), ProtectedAction.AUTOMATIC_BUILD, Blocks.at(player))
           .isAllowed()) {
-        event.setKeepInventory(true);
-        event.setKeepLevel(true);
-        event.setDroppedExp(0);
-        event.getDrops().clear();
-        Say.info(
-            player, Say.GRAVES, "This land is protected; your items and experience stay with you.");
+        retain(event);
         return;
       }
       Say.error(player, Say.GRAVES, "There was no room for a grave, so your items dropped.");
@@ -115,6 +114,17 @@ final class GraveDeaths {
     // The inventory is emptied once this event returns. SQLite must not commit
     // the grave until player.dat holds the empty inventory and this handoff.
     runtime.scheduler().runOnMainThread(() -> persistThenCreate(player, contents));
+  }
+
+  private static void retain(PlayerDeathEvent event) {
+    event.setKeepInventory(true);
+    event.setKeepLevel(true);
+    event.setDroppedExp(0);
+    event.getDrops().clear();
+    Say.info(
+        event.getEntity(),
+        Say.GRAVES,
+        "This land is protected; your items and experience stay with you.");
   }
 
   /** Replays a death whose player-data handoff survived a restart or failed database write. */

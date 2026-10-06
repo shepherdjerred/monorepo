@@ -1466,6 +1466,8 @@ def accept(path: Path, journal: JsonObject, evidence_path: Path) -> None:
     evidence = JsonObject.parse(evidence_path.read_bytes())
     containers = pod.object("spec").objects("containers")
     statuses = pod.object("status").objects("containerStatuses")
+    server_status = server.object("status")
+    revision = server_status.string("updateRevision")
     if (
         annotations(server).get(PHASE) != "VALIDATING"
         or server_image(server) != journal.string("candidateImage")
@@ -1473,6 +1475,9 @@ def accept(path: Path, journal: JsonObject, evidence_path: Path) -> None:
         or evidence.get("candidateImage") != journal.string("candidateImage")
         or evidence.get("candidateJarSha256") != journal.object("installation").string("candidateJarSha256")
         or evidence.get("podUid") != pod.object("metadata").string("uid")
+        or server_status.get("observedGeneration") != server.object("metadata").integer("generation")
+        or server_status.get("currentRevision") != revision
+        or pod.object("metadata").strings("labels", {}).get("controller-revision-hash") != revision
         or evidence.get("testOnly")
         or set(evidence.object("checks")) != set(ACCEPTANCE_CHECKS)
         or any(evidence.object("checks").get(key) != "VERIFIED" for key in ACCEPTANCE_CHECKS)
@@ -1494,6 +1499,8 @@ def accept(path: Path, journal: JsonObject, evidence_path: Path) -> None:
         **pod_incarnation(pod),
         "path": str(evidence_path.resolve()),
         "sha256": restoration_files.digest(evidence_path),
+        "podTemplate": server.object("spec").object("template"),
+        "controllerRevision": revision,
     }
     save(path, journal)
 
@@ -1540,7 +1547,7 @@ def release(path: Path, journal: JsonObject) -> None:
     stopped = journal.object("stoppedIncarnation", {})
     if any(acceptance.get(key) != stopped.get(key) for key in ("podUid", "containerId", "restartCount")):
         raise ValueError("Release requires acceptance of the exact stopped pod and container incarnation")
-    reopen(path, journal, journal.string("candidateImage"))
+    reopen(path, journal, journal.string("candidateImage"), acceptance.object("podTemplate"))
 
 
 def verify_rollback(path: Path, journal: JsonObject) -> None:
@@ -1660,10 +1667,14 @@ def release_rollback(path: Path, journal: JsonObject) -> None:
     reopen(path, journal, journal.string("rollbackImage"))
 
 
-def reopen(path: Path, journal: JsonObject, expected_image: str) -> None:
+def reopen(
+    path: Path, journal: JsonObject, expected_image: str, accepted_template: JsonObject | None = None
+) -> None:
     """Restore captured routes for an accepted candidate or byte-verified whole-volume rollback."""
     server = read("statefulset", SERVER)
     assert_owner(server, journal, allow_unheld=True)
+    if accepted_template is not None and server.object("spec").object("template") != accepted_template:
+        raise ValueError("Release requires the exact accepted pod template")
     if server_image(server) != expected_image:
         raise ValueError("Release requires the accepted candidate image or recorded rollback image")
     if annotations(server).get(LEASE) is not None and (

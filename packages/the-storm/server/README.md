@@ -404,7 +404,12 @@ CoreProtect lookup and rollback, retained identities, historical player data,
 maps and private admission. The evidence also carries `requestId`,
 `candidateImage`, `candidateJarSha256`, `podUid`, `containerId` and `restartCount`.
 Acceptance is invalidated if the pod or container changes, and a new private
-startup clears earlier acceptance. Release requires the exact accepted incarnation's
+startup clears earlier acceptance. Acceptance requires the pod's controller
+revision to match the StatefulSet's observed template. The receipt retains that
+complete pod template; reopening checks it again immediately before clearing
+the lease, refusing same-image changes to storage, commands, environment or
+template metadata after validation or shutdown.
+Release requires the exact accepted incarnation's
 recorded graceful stop. Synthetic evidence is not
 accepted. `private-stop` gracefully saves and stops this candidate without
 opening routes. `release` requires that unchanged acceptance evidence and a
