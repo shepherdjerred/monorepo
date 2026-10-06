@@ -11,7 +11,7 @@ export function createMinecraftProxyTrust(
   proxyPort: number,
 ) {
   return new KubeNetworkPolicy(chart, `${namespace}-proxy-trust`, {
-    metadata: { name: "minecraft-proxy-trust", namespace },
+    metadata: { name: `${namespace}-proxy-trust`, namespace },
     spec: {
       podSelector: {},
       policyTypes: ["Ingress"],
