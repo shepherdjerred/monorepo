@@ -93,6 +93,9 @@ describe("Essentials expansion", () => {
     let response = waitForMessage(bot, /Jail set/);
     bot.chat("/setjail expansioncell");
     await response;
+    response = waitForMessage(bot, /Specify a jail when jailing a player/);
+    bot.chat(`/togglejail ${secondBot.username}`);
+    await response;
     await rcon.command("fill 98 68 98 102 68 102 minecraft:stone");
     await rcon.command(`tp ${secondBot.username} 100.5 69 100.5`);
     await waitUntil(
@@ -108,6 +111,11 @@ describe("Essentials expansion", () => {
     );
     response = waitForMessage(secondBot, /unavailable while jailed/);
     secondBot.chat("/spawn");
+    await response;
+    response = waitForMessage(secondBot, /unavailable while jailed/);
+    secondBot.chat(
+      "/mail claim 00000000-0000-0000-0000-000000000000 materials",
+    );
     await response;
     response = waitForMessage(bot, /a jailed message/);
     secondBot.chat(`/msg ${bot.username} a jailed message`);

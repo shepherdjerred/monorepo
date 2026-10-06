@@ -37,7 +37,9 @@ final class ChatServiceTest {
   void lettersRespectIgnoresMutesPreferencesAndUnicodeLength() {
     service.load().join();
     var text = "😀".repeat(2000);
-    var attempt = new MessagingPolicy.Attempt(ALICE, "Alice", false, false, BOB, text, 2000);
+    var attempt =
+        new MessagingPolicy.Attempt(
+            ALICE, "Alice", false, false, BOB, text, new MessagingPolicy.LetterPolicy(2000, true));
     assertThat(service.letter(attempt).isOk()).isTrue();
     // The repeat window begins when the application accepts the letter, before async persistence.
     assertThat(service.letter(attempt).isOk()).isFalse();
@@ -46,7 +48,13 @@ final class ChatServiceTest {
             service
                 .letter(
                     new MessagingPolicy.Attempt(
-                        ALICE, "Alice", true, true, BOB, "staff letter", 2000))
+                        ALICE,
+                        "Alice",
+                        true,
+                        true,
+                        BOB,
+                        "staff letter",
+                        new MessagingPolicy.LetterPolicy(2000, true)))
                 .isOk())
         .isFalse();
     service.unignore(BOB, ALICE);
@@ -55,7 +63,13 @@ final class ChatServiceTest {
             service
                 .letter(
                     new MessagingPolicy.Attempt(
-                        ALICE, "Alice", false, false, BOB, "different letter", 2000))
+                        ALICE,
+                        "Alice",
+                        false,
+                        false,
+                        BOB,
+                        "different letter",
+                        new MessagingPolicy.LetterPolicy(2000, true)))
                 .isOk())
         .isFalse();
     service.unmute(ALICE);
@@ -73,7 +87,14 @@ final class ChatServiceTest {
     service.storedIdentities(
         id -> com.shepherdjerred.thestorm.chat.domain.Identity.fresh().toggleMessages());
     var attempt =
-        new MessagingPolicy.Attempt(ALICE, "Alice", false, false, BOB, "mail", 2000, false);
+        new MessagingPolicy.Attempt(
+            ALICE,
+            "Alice",
+            false,
+            false,
+            BOB,
+            "mail",
+            new MessagingPolicy.LetterPolicy(2000, false));
 
     assertThat(service.letter(attempt).isOk()).isTrue();
   }

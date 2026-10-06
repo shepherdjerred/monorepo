@@ -240,11 +240,21 @@ public final class CompanionsPaper implements Listener, AutoCloseable {
     if (world == null) throw new IllegalStateException("saved companion world is not loaded");
     var x = (int) Math.floor(state.position().x()) >> 4;
     var z = (int) Math.floor(state.position().z()) >> 4;
-    context.services().require(ChunkTickets.class).hold(world, x, z);
-    heldChunks.put(hydration.identity().id(), new HeldChunk(world, x, z));
     return world
         .getChunkAtAsync(x, z, true)
-        .thenAcceptAsync(chunk -> installBody(hydration), context.scheduler().mainThread());
+        .thenAcceptAsync(
+            chunk -> {
+              if (!active()) return;
+              context.services().require(ChunkTickets.class).hold(world, x, z);
+              heldChunks.put(hydration.identity().id(), new HeldChunk(world, x, z));
+              installBody(hydration);
+            },
+            context.scheduler().mainThread())
+        .whenCompleteAsync(
+            (ignored, failure) -> {
+              if (failure != null) releaseChunk(hydration.identity().id());
+            },
+            context.scheduler().mainThread());
   }
 
   private void releaseChunk(String id) {

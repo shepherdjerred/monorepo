@@ -1,5 +1,7 @@
 package com.shepherdjerred.thestorm.essentials.adapter.paper;
 
+import static java.util.Objects.requireNonNull;
+
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.essentials.app.StaffState;
 import com.shepherdjerred.thestorm.essentials.domain.place.DurationText;
@@ -36,7 +38,6 @@ final class StaffJails implements Listener {
           "whisper",
           "w",
           "r",
-          "mail",
           "help",
           "rules",
           "ticket",
@@ -112,7 +113,11 @@ final class StaffJails implements Listener {
           var player = tools.player(request.actor(), request.word(0));
           request.others(player);
           if (active(player.getUniqueId()).isPresent()) release(request);
-          else jail(request);
+          else {
+            if (request.words().length < 2)
+              throw new IllegalArgumentException("Specify a jail when jailing a player.");
+            jail(request);
+          }
         });
   }
 
@@ -235,8 +240,7 @@ final class StaffJails implements Listener {
     active(event.getPlayer().getUniqueId())
         .ifPresent(
             jail -> {
-              if (!inside(jail, java.util.Objects.requireNonNull(event.getTo())))
-                event.setCancelled(true);
+              if (!inside(jail, requireNonNull(event.getTo()))) event.setCancelled(true);
             });
   }
 
@@ -258,13 +262,15 @@ final class StaffJails implements Listener {
 
   @EventHandler(ignoreCancelled = true)
   void command(PlayerCommandPreprocessEvent event) {
-    if (jailed(event.getPlayer())
-        && !ALLOWED.contains(
-            event
-                .getMessage()
-                .substring(1)
-                .split("\\s+", 2)[0]
-                .toLowerCase(java.util.Locale.ROOT))) {
+    var words = event.getMessage().substring(1).split("\\s+", 3);
+    var command = words[0].toLowerCase(java.util.Locale.ROOT);
+    var allowed = ALLOWED.contains(command);
+    if ("mail".equals(command))
+      allowed =
+          words.length == 1
+              || java.util.Set.of("send", "read", "reply", "delete")
+                  .contains(words[1].toLowerCase(java.util.Locale.ROOT));
+    if (jailed(event.getPlayer()) && !allowed) {
       event.setCancelled(true);
       event.getPlayer().sendMessage(Component.text("That command is unavailable while jailed."));
     }

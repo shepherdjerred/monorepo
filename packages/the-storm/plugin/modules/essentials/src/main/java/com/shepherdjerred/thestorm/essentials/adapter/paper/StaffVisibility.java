@@ -130,7 +130,8 @@ final class StaffVisibility implements Listener {
   }
 
   private void refreshFlag(Player player) {
-    if (!PlayerVisibility.hidden(player)) return;
+    if (!PlayerVisibility.hidden(player) || PlayerVisibility.joinAnnouncementPending(player))
+      return;
     var _ =
         tools
             .context
@@ -164,7 +165,7 @@ final class StaffVisibility implements Listener {
               .orElseGet(() -> PlayerVisibility.hidden(player));
       var joinMessage = event.joinMessage();
       event.joinMessage(null);
-      PlayerVisibility.deferJoinAnnouncement(player.getUniqueId());
+      var announcementToken = PlayerVisibility.deferJoinAnnouncement(player.getUniqueId());
       set(player, hidden);
       var _ =
           tools
@@ -177,7 +178,8 @@ final class StaffVisibility implements Listener {
               .whenCompleteAsync(
                   (enabled, failure) -> {
                     if (!player.isOnline()) {
-                      PlayerVisibility.resolveJoinAnnouncement(player.getUniqueId());
+                      PlayerVisibility.resolveJoinAnnouncement(
+                          player.getUniqueId(), announcementToken);
                       return;
                     }
                     var shouldHide =
@@ -186,7 +188,8 @@ final class StaffVisibility implements Listener {
                             && hidden
                             && player.hasPermission("thestorm.essentials.vanish");
                     set(player, shouldHide);
-                    if (!PlayerVisibility.resolveJoinAnnouncement(player.getUniqueId())) return;
+                    if (!PlayerVisibility.resolveJoinAnnouncement(
+                        player.getUniqueId(), announcementToken)) return;
                     if (!shouldHide && joinMessage != null)
                       tools
                           .context
@@ -210,7 +213,8 @@ final class StaffVisibility implements Listener {
   void quit(PlayerQuitEvent event) {
     var player = event.getPlayer();
     if (!Humans.isHuman(player) || !tools.state.ready()) return;
-    if (PlayerVisibility.hidden(player)) event.quitMessage(null);
+    if (PlayerVisibility.hidden(player) || PlayerVisibility.joinAnnouncementPending(player))
+      event.quitMessage(null);
     var entry =
         tools.state.entry(
             "session",

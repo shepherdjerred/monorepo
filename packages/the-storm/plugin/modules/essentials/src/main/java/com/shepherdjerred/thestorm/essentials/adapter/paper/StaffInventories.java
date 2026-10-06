@@ -22,6 +22,14 @@ import org.jspecify.annotations.Nullable;
 final class StaffInventories implements Listener {
   record View(UUID target, Inventory source, Inventory display, boolean edit, String command) {}
 
+  private record Edit(
+      Player actor,
+      UUID actorId,
+      View view,
+      int slot,
+      @Nullable ItemStack cursor,
+      @Nullable ItemStack previous) {}
+
   private final StaffCommands tools;
   private final Map<UUID, View> views = new HashMap<>();
   private final java.util.Set<UUID> busy = new java.util.HashSet<>();
@@ -74,6 +82,7 @@ final class StaffInventories implements Listener {
     if (!busy.add(id)) return;
     var cursor = copy(actor.getItemOnCursor());
     var previous = copy(view.source().getItem(slot));
+    var edit = new Edit(actor, id, view, slot, cursor, previous);
     var audit =
         new com.shepherdjerred.thestorm.essentials.app.StaffStore.Audit(
             id.toString(),
@@ -95,29 +104,46 @@ final class StaffInventories implements Listener {
             .whenCompleteAsync(
                 (enabled, failure) -> {
                   busy.remove(id);
-                  if (failure != null) {
-                    tools.context.logger().error("Inventory audit failed", failure);
-                    return;
-                  }
-                  var target = tools.context.plugin().getServer().getPlayer(view.target());
-                  if (!actor.isOnline()
-                      || !Boolean.TRUE.equals(enabled)
-                      || !tools.available(actor, view.command())
-                      || target == null
-                      || !StaffCommands.Request.allowsOthers(actor, view.command(), target)
-                      || !Objects.equals(views.get(id), view)
-                      || !actor.hasPermission("thestorm.essentials." + view.command() + ".edit"))
-                    return;
-                  if (!Objects.equals(cursor, actor.getItemOnCursor())
-                      || !Objects.equals(previous, view.source().getItem(slot))) {
-                    refresh(view.source(), view.display());
-                    return;
-                  }
-                  view.source().setItem(slot, cursor);
-                  actor.setItemOnCursor(previous);
-                  refresh(view.source(), view.display());
+                  finishEdit(edit, enabled, failure);
                 },
                 tools.context.scheduler().mainThread());
+  }
+
+  private void finishEdit(Edit edit, @Nullable Boolean enabled, @Nullable Throwable failure) {
+    if (failure != null) {
+      tools.context.logger().error("Inventory audit failed", failure);
+      return;
+    }
+    if (!edit.actor().isOnline()) return;
+    var target = tools.context.plugin().getServer().getPlayer(edit.view().target());
+    if (target != null
+        && !Objects.equals(liveInventory(target, edit.view().command()), edit.view().source())) {
+      views.remove(edit.actorId(), edit.view());
+      edit.actor().closeInventory();
+      return;
+    }
+    if (!authorized(edit, target, enabled)) return;
+    if (!Objects.equals(edit.cursor(), edit.actor().getItemOnCursor())
+        || !Objects.equals(edit.previous(), edit.view().source().getItem(edit.slot()))) {
+      refresh(edit.view().source(), edit.view().display());
+      return;
+    }
+    edit.view().source().setItem(edit.slot(), edit.cursor());
+    edit.actor().setItemOnCursor(edit.previous());
+    refresh(edit.view().source(), edit.view().display());
+  }
+
+  private Inventory liveInventory(Player target, String command) {
+    return "invsee".equals(command) ? target.getInventory() : target.getEnderChest();
+  }
+
+  private boolean authorized(Edit edit, @Nullable Player target, @Nullable Boolean enabled) {
+    return Boolean.TRUE.equals(enabled)
+        && tools.available(edit.actor(), edit.view().command())
+        && target != null
+        && StaffCommands.Request.allowsOthers(edit.actor(), edit.view().command(), target)
+        && Objects.equals(views.get(edit.actorId()), edit.view())
+        && edit.actor().hasPermission("thestorm.essentials." + edit.view().command() + ".edit");
   }
 
   private static @Nullable ItemStack copy(@Nullable ItemStack item) {

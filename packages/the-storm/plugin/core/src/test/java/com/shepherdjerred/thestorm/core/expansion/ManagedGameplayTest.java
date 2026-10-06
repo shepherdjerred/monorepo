@@ -29,5 +29,6 @@ final class ManagedGameplayTest {
     now.set(Instant.EPOCH.plus(Duration.ofSeconds(31)));
 
     assertThat(gameplay.cachedEnabled(ManagedGameplay.IP, actor)).isEmpty();
+    assertThat(gameplay.lastKnownEnabled(ManagedGameplay.IP, actor)).contains(true);
   }
 }

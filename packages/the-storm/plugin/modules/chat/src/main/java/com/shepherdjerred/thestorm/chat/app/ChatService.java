@@ -105,9 +105,10 @@ public final class ChatService {
     if (!ready) return Result.err("Chat state is loading.");
     if (attempt.sender().equals(attempt.recipient()))
       return Result.err("You cannot mail yourself.");
-    if (attempt.text().codePointCount(0, attempt.text().length()) > attempt.maxLength())
-      return Result.err("Your letter is longer than " + attempt.maxLength() + " characters.");
-    if ((attempt.recipientIdentityEnabled()
+    if (attempt.text().codePointCount(0, attempt.text().length()) > attempt.policy().maxLength())
+      return Result.err(
+          "Your letter is longer than " + attempt.policy().maxLength() + " characters.");
+    if ((attempt.policy().recipientIdentityEnabled()
             && !storedIdentities.apply(attempt.recipient()).messages())
         || profile(attempt.recipient()).ignores(attempt.sender()))
       return Result.err("That player cannot receive this letter.");

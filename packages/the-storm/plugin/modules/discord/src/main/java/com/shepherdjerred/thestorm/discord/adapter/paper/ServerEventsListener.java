@@ -51,7 +51,9 @@ public final class ServerEventsListener implements Listener {
   @EventHandler(priority = EventPriority.MONITOR)
   public void onQuit(PlayerQuitEvent event) {
     if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
-    if (sealed.isSealed(event.getPlayer().getWorld())
+    if (com.shepherdjerred.thestorm.core.players.PlayerVisibility.joinAnnouncementPending(
+            event.getPlayer())
+        || sealed.isSealed(event.getPlayer().getWorld())
         || com.shepherdjerred.thestorm.core.players.PlayerVisibility.hidden(event.getPlayer())) {
       return;
     }

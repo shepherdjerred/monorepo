@@ -180,8 +180,8 @@ public final class LetterCommands {
                     actor.hasPermission("thestorm.chat.bypass"),
                     recipient,
                     text,
-                    limits.maxLength(),
-                    recipientIdentityEnabled));
+                    new MessagingPolicy.LetterPolicy(
+                        limits.maxLength(), recipientIdentityEnabled)));
     switch (policy) {
       case Result.Err<String, String>(var error) -> actor.sendMessage(Component.text(error));
       case Result.Ok<String, String>(var accepted) -> {

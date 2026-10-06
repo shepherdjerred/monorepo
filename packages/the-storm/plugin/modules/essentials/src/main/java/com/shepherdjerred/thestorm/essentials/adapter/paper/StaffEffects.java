@@ -25,7 +25,7 @@ final class StaffEffects {
       tools.add(
           name,
           request -> {
-            var location = target(request);
+            var location = target(request).add(0, 1, 0);
             tools.build(request, location);
             request.say(
                 "Tree generated: "

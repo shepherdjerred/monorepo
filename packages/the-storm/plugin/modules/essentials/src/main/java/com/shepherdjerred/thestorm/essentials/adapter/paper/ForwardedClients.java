@@ -71,8 +71,11 @@ final class ForwardedClients implements Listener {
     var actor = event.getUniqueId();
     var cached = flags.cachedEnabled(ManagedGameplay.IP, actor);
     flags.enabled(ManagedGameplay.IP, actor).exceptionally(_ -> flags.ipEnforcementDefault());
-    var enforce = cached.or(() -> flags.cachedEnabled(ManagedGameplay.IP, actor));
-    if (!enforce.orElseGet(flags::ipEnforcementDefault)) return;
+    var enforce =
+        cached
+            .or(() -> flags.lastKnownEnabled(ManagedGameplay.IP, actor))
+            .or(() -> Optional.of(flags.ipEnforcementDefault()));
+    if (!enforce.orElseThrow()) return;
     if (!ready.get()) {
       deny(event, "Staff state is still loading. Please retry shortly.");
       return;

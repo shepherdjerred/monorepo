@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.essentials.adapter.paper;
 
+import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.params.ParameterizedTest;
@@ -9,7 +10,11 @@ import org.junit.jupiter.params.provider.ValueSource;
 final class ForwardedClientsTest {
   private org.bukkit.event.player.AsyncPlayerPreLoginEvent login(String peer, String forwarded)
       throws Exception {
-    var id = java.util.UUID.randomUUID();
+    return login(randomUUID(), peer, forwarded);
+  }
+
+  private org.bukkit.event.player.AsyncPlayerPreLoginEvent login(
+      java.util.UUID id, String peer, String forwarded) throws Exception {
     return new org.bukkit.event.player.AsyncPlayerPreLoginEvent(
         "Alice",
         java.net.InetAddress.getByName(forwarded),
@@ -88,7 +93,7 @@ final class ForwardedClientsTest {
   }
 
   @org.junit.jupiter.api.Test
-  void disabledIpEnforcementDoesNotWaitForRolloutOrStaffState() throws Exception {
+  void unresolvedDisabledIpEnforcementDoesNotWaitForRolloutOrStaffState() throws Exception {
     var pending = new java.util.concurrent.CompletableFuture<Boolean>();
     var gameplay =
         new com.shepherdjerred.thestorm.core.expansion.ManagedGameplay(
@@ -101,6 +106,8 @@ final class ForwardedClientsTest {
     assertThat(event.getLoginResult())
         .isEqualTo(org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result.ALLOWED);
     assertThat(pending.isDone()).isFalse();
+
+    pending.complete(false);
   }
 
   @org.junit.jupiter.api.Test
@@ -146,24 +153,24 @@ final class ForwardedClientsTest {
   @ParameterizedTest
   @ValueSource(
       strings = {
-        "127.0.0.1",
         "10.1.2.3",
-        "192.168.1.1",
-        "169.254.1.1",
         "100.64.1.1",
+        "127.0.0.1",
+        "169.254.1.1",
+        "192.168.1.1",
         "224.0.0.1",
+        "999.1.1.1",
+        "example.com",
         "::1",
         "fc00::1",
-        "fe80::1",
-        "example.com",
-        "999.1.1.1"
+        "fe80::1"
       })
   void refusesUnverifiedSharedAndInvalidAddresses(String input) {
     assertThat(ForwardedClients.publicAddress(input)).isEmpty();
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"8.8.8.8", "2606:4700:4700::1111"})
+  @ValueSource(strings = {"2606:4700:4700::1111", "8.8.8.8"})
   void canonicalizesPublicLiterals(String input) {
     assertThat(ForwardedClients.publicAddress(input)).isPresent();
   }

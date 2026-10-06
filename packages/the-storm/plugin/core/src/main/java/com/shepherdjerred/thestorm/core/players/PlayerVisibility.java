@@ -10,8 +10,10 @@ public final class PlayerVisibility {
   private static final NamespacedKey KEY = new NamespacedKey("thestorm", "vanished");
   private static final java.util.Set<java.util.UUID> HIDDEN =
       java.util.concurrent.ConcurrentHashMap.newKeySet();
-  private static final java.util.Set<java.util.UUID> PENDING_JOIN_ANNOUNCEMENTS =
-      java.util.concurrent.ConcurrentHashMap.newKeySet();
+  private static final java.util.concurrent.ConcurrentMap<java.util.UUID, Long>
+      PENDING_JOIN_ANNOUNCEMENTS = new java.util.concurrent.ConcurrentHashMap<>();
+  private static final java.util.concurrent.atomic.AtomicLong JOIN_ANNOUNCEMENT_SEQUENCE =
+      new java.util.concurrent.atomic.AtomicLong();
   private static volatile boolean restored;
 
   private PlayerVisibility() {}
@@ -39,16 +41,18 @@ public final class PlayerVisibility {
     return HIDDEN.contains(player);
   }
 
-  public static void deferJoinAnnouncement(java.util.UUID player) {
-    PENDING_JOIN_ANNOUNCEMENTS.add(player);
+  public static long deferJoinAnnouncement(java.util.UUID player) {
+    var token = JOIN_ANNOUNCEMENT_SEQUENCE.incrementAndGet();
+    PENDING_JOIN_ANNOUNCEMENTS.put(player, token);
+    return token;
   }
 
   public static boolean joinAnnouncementPending(Player player) {
-    return PENDING_JOIN_ANNOUNCEMENTS.contains(player.getUniqueId());
+    return PENDING_JOIN_ANNOUNCEMENTS.containsKey(player.getUniqueId());
   }
 
-  public static boolean resolveJoinAnnouncement(java.util.UUID player) {
-    return PENDING_JOIN_ANNOUNCEMENTS.remove(player);
+  public static boolean resolveJoinAnnouncement(java.util.UUID player, long token) {
+    return PENDING_JOIN_ANNOUNCEMENTS.remove(player, token);
   }
 
   /** Whether persisted hidden-player state has been restored from the staff store. */

@@ -1,5 +1,7 @@
 package com.shepherdjerred.thestorm.essentials.adapter.paper;
 
+import static java.util.Objects.requireNonNull;
+
 import java.util.Locale;
 import net.kyori.adventure.text.Component;
 import org.bukkit.GameMode;
@@ -43,7 +45,7 @@ final class StaffAdministration {
         "heal [player]",
         request -> {
           var player = target(request, 0);
-          var health = java.util.Objects.requireNonNull(player.getAttribute(Attribute.MAX_HEALTH));
+          var health = requireNonNull(player.getAttribute(Attribute.MAX_HEALTH));
           player.setHealth(health.getValue());
           player.setFireTicks(0);
           request.say("Healed " + player.getName() + ".");
@@ -157,7 +159,7 @@ final class StaffAdministration {
 
   private void diagnostics() {
     tools.add(
-        "ping [player]", request -> request.say("Ping: " + request.target(0).getPing() + " ms"));
+        "ping [player]", request -> request.say("Ping: " + target(request, 0).getPing() + " ms"));
     tools.add(
         "list",
         request ->
@@ -186,7 +188,7 @@ final class StaffAdministration {
                   + java.util.Arrays.toString(tools.context.plugin().getServer().getTPS()));
         });
     tools.add(
-        "getpos [player]", request -> request.say(Positions.of(request.target(0)).describe()));
+        "getpos [player]", request -> request.say(Positions.of(target(request, 0)).describe()));
     tools.add(
         "compass",
         request ->
@@ -202,12 +204,14 @@ final class StaffAdministration {
                     + request.self().getWorld().getMinHeight()));
     tools.add(
         "playtime [player]",
-        request ->
-            request.say(
-                request.target(0).getName()
-                    + ": "
-                    + request.target(0).getStatistic(Statistic.PLAY_ONE_MINUTE) / 20
-                    + " seconds"));
+        request -> {
+          var player = target(request, 0);
+          request.say(
+              player.getName()
+                  + ": "
+                  + player.getStatistic(Statistic.PLAY_ONE_MINUTE) / 20
+                  + " seconds");
+        });
     tools.add(
         "essentials status",
         request -> {

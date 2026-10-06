@@ -110,7 +110,12 @@ public final class ManagedGameplay implements AutoCloseable {
         .thenApply(
             enabled -> {
               var now = time.instant();
-              evaluations.entrySet().removeIf(entry -> !now.isBefore(entry.getValue().expires()));
+              evaluations
+                  .entrySet()
+                  .removeIf(
+                      entry ->
+                          !IP.equals(entry.getKey().key())
+                              && !now.isBefore(entry.getValue().expires()));
               evaluations.put(
                   new EvaluationKey(key, actor),
                   new CachedEvaluation(enabled, now.plus(CACHE_TTL)));
@@ -126,10 +131,16 @@ public final class ManagedGameplay implements AutoCloseable {
     var cached = evaluations.get(evaluation);
     if (cached == null) return Optional.empty();
     if (!time.instant().isBefore(cached.expires())) {
-      evaluations.remove(evaluation, cached);
+      if (!IP.equals(key)) evaluations.remove(evaluation, cached);
       return Optional.empty();
     }
     return Optional.of(cached.enabled());
+  }
+
+  /** Last completed result, including an expired IP-enforcement decision while it refreshes. */
+  public Optional<Boolean> lastKnownEnabled(String key, UUID actor) {
+    var cached = evaluations.get(new EvaluationKey(key, actor));
+    return cached == null ? Optional.empty() : Optional.of(cached.enabled());
   }
 
   /** The registered environment default used if the IP-enforcement flag cannot be read. */

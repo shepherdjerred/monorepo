@@ -5,6 +5,8 @@ import java.util.UUID;
 
 /** The common communication boundary used by letters as well as private chat. */
 public interface MessagingPolicy {
+  record LetterPolicy(int maxLength, boolean recipientIdentityEnabled) {}
+
   record Attempt(
       UUID sender,
       String realName,
@@ -12,19 +14,7 @@ public interface MessagingPolicy {
       boolean bypass,
       UUID recipient,
       String text,
-      int maxLength,
-      boolean recipientIdentityEnabled) {
-    public Attempt(
-        UUID sender,
-        String realName,
-        boolean staff,
-        boolean bypass,
-        UUID recipient,
-        String text,
-        int maxLength) {
-      this(sender, realName, staff, bypass, recipient, text, maxLength, true);
-    }
-  }
+      LetterPolicy policy) {}
 
   Result<String, String> letter(Attempt attempt);
 

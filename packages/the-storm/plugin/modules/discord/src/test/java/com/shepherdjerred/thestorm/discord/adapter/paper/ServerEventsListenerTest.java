@@ -97,16 +97,28 @@ final class ServerEventsListenerTest {
   @Test
   void defersJoinRelayUntilStaffVisibilityResolution() {
     var player = server.addPlayer("HiddenOnReconnect");
-    PlayerVisibility.deferJoinAnnouncement(player.getUniqueId());
+    var token = PlayerVisibility.deferJoinAnnouncement(player.getUniqueId());
 
     listener.onJoin(new PlayerJoinEvent(player, Component.empty()));
     assertThat(posts).isEmpty();
 
-    PlayerVisibility.resolveJoinAnnouncement(player.getUniqueId());
+    PlayerVisibility.resolveJoinAnnouncement(player.getUniqueId(), token);
     listener.onJoinAnnouncementResolved(new PlayerJoinAnnouncementEvent(player, false));
     assertThat(posts).isEmpty();
     listener.onJoinAnnouncementResolved(new PlayerJoinAnnouncementEvent(player, true));
     assertThat(posts).containsExactly("**HiddenOnReconnect** joined the server");
+  }
+
+  @Test
+  void doesNotRelayQuitWhenJoinVisibilityIsStillPending() {
+    var player = server.addPlayer("PendingVisibility");
+    var token = PlayerVisibility.deferJoinAnnouncement(player.getUniqueId());
+
+    listener.onQuit(
+        new PlayerQuitEvent(player, Component.empty(), PlayerQuitEvent.QuitReason.DISCONNECTED));
+
+    assertThat(posts).isEmpty();
+    PlayerVisibility.resolveJoinAnnouncement(player.getUniqueId(), token);
   }
 
   private static PlayerDeathEvent death(PlayerMock player, String message) {
