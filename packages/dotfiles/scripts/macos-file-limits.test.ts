@@ -63,6 +63,19 @@ type Scenario = {
   uid?: string;
 };
 
+async function writeFixtures(
+  directory: string,
+  fixtures: Readonly<Record<string, string>>,
+) {
+  await Promise.all(
+    Object.entries(fixtures).map(async ([name, contents]) => {
+      const destination = path.join(directory, name);
+      await Bun.write(destination, contents);
+      await chmod(destination, 0o700);
+    }),
+  );
+}
+
 async function runHelper(scenario: Scenario = {}) {
   const directory = await mkdtemp(path.join(tmpdir(), "maxfiles-test-"));
   temporaryDirectories.push(directory);
@@ -76,13 +89,7 @@ async function runHelper(scenario: Scenario = {}) {
     uname: "#!/bin/bash\nprintf 'Darwin\\n'\n",
     id: `#!/bin/bash\nprintf '%s\\n' '${scenario.uid ?? "0"}'\n`,
   };
-  await Promise.all(
-    Object.entries(fixtures).map(async ([name, contents]) => {
-      const destination = path.join(directory, name);
-      await Bun.write(destination, contents);
-      await chmod(destination, 0o700);
-    }),
-  );
+  await writeFixtures(directory, fixtures);
 
   // The test copy redirects every OS command; production uses fixed system paths.
   let source = await Bun.file(helperSource).text();
@@ -293,13 +300,7 @@ fi
       path.resolve(path.dirname(helperSource), "com.jerred.maxfiles.plist"),
     ).text(),
   };
-  await Promise.all(
-    Object.entries(fixtures).map(async ([name, contents]) => {
-      const destination = path.join(directory, name);
-      await Bun.write(destination, contents);
-      await chmod(destination, 0o700);
-    }),
-  );
+  await writeFixtures(directory, fixtures);
 
   // All privileged actions are redirected to fixtures inside this temporary directory.
   let source = await Bun.file(installerSource).text();
