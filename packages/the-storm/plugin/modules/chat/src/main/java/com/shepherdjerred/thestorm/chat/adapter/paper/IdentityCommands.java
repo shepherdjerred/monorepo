@@ -97,7 +97,7 @@ public final class IdentityCommands implements Listener {
   }
 
   private void realName(Player sender, String name) {
-    var id = identities.named(name);
+    var id = identities.activelyNamed(name);
     if (id.isEmpty()) {
       sender.sendMessage(Component.text("No visible player has that nickname."));
       return;

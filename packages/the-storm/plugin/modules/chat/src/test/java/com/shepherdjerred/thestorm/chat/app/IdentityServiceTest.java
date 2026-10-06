@@ -31,11 +31,15 @@ final class IdentityServiceTest {
       service.change(first, identity -> identity.named(Optional.of("Thunder")), audit).join();
       service.change(first, Identity::toggleMessages, audit).join();
       assertThat(service.effective(first)).isEqualTo(Identity.fresh());
+      assertThat(service.activelyNamed("Thunder")).isEmpty();
       service.displaying(first, true);
       assertThat(service.effective(first).nickname()).contains("Thunder");
+      assertThat(service.activelyNamed("thunder")).contains(first);
       assertThat(service.effective(first).messages()).isFalse();
       service.displaying(first, false);
       assertThat(service.effective(first)).isEqualTo(Identity.fresh());
+      assertThat(service.named("Thunder")).contains(first);
+      assertThat(service.activelyNamed("Thunder")).isEmpty();
       assertThatThrownBy(
               () ->
                   service

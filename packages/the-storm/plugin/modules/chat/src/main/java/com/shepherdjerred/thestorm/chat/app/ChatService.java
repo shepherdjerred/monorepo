@@ -53,6 +53,8 @@ public final class ChatService {
   private volatile boolean ready;
   private java.util.function.Function<UUID, com.shepherdjerred.thestorm.chat.domain.Identity>
       identities = player -> com.shepherdjerred.thestorm.chat.domain.Identity.fresh();
+  private java.util.function.Function<UUID, com.shepherdjerred.thestorm.chat.domain.Identity>
+      storedIdentities = player -> com.shepherdjerred.thestorm.chat.domain.Identity.fresh();
 
   public ChatService(
       ChatConfig config, ChatStore store, InstantSource time, ChatExtensions extensions) {
@@ -92,13 +94,21 @@ public final class ChatService {
     identities = provider;
   }
 
+  /** Stored preferences are used for offline mail recipients after their rollout is checked. */
+  public void storedIdentities(
+      java.util.function.Function<UUID, com.shepherdjerred.thestorm.chat.domain.Identity>
+          provider) {
+    storedIdentities = provider;
+  }
+
   public Result<String, String> letter(MessagingPolicy.Attempt attempt) {
     if (!ready) return Result.err("Chat state is loading.");
     if (attempt.sender().equals(attempt.recipient()))
       return Result.err("You cannot mail yourself.");
     if (attempt.text().codePointCount(0, attempt.text().length()) > attempt.maxLength())
       return Result.err("Your letter is longer than " + attempt.maxLength() + " characters.");
-    if (!identities.apply(attempt.recipient()).messages()
+    if ((attempt.recipientIdentityEnabled()
+            && !storedIdentities.apply(attempt.recipient()).messages())
         || profile(attempt.recipient()).ignores(attempt.sender()))
       return Result.err("That player cannot receive this letter.");
     var sender =

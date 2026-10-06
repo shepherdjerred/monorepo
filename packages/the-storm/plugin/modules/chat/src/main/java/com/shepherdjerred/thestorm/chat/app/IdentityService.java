@@ -60,6 +60,15 @@ public final class IdentityService {
         .findFirst();
   }
 
+  /** Looks up only nicknames currently enabled for display; stored names remain reserved. */
+  public Optional<UUID> activelyNamed(String nickname) {
+    return identities.entrySet().stream()
+        .filter(row -> displaying.contains(row.getKey()))
+        .filter(row -> row.getValue().nickname().filter(nickname::equalsIgnoreCase).isPresent())
+        .map(Map.Entry::getKey)
+        .findFirst();
+  }
+
   public CompletableFuture<Identity> change(
       UUID player, UnaryOperator<Identity> action, IdentityStore.Audit audit) {
     if (!ready)

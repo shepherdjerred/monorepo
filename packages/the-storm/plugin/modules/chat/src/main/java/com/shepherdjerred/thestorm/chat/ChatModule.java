@@ -47,6 +47,7 @@ public final class ChatModule implements StormModule {
         new com.shepherdjerred.thestorm.chat.app.IdentityService(
             new com.shepherdjerred.thestorm.chat.adapter.db.JooqIdentityStore(context.database()));
     service.identities(identities::effective);
+    service.storedIdentities(identities::identity);
     context
         .services()
         .provide(com.shepherdjerred.thestorm.chat.app.IdentityService.class, identities);

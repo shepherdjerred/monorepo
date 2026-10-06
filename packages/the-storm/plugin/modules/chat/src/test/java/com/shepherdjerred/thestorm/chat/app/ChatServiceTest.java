@@ -59,12 +59,23 @@ final class ChatServiceTest {
                 .isOk())
         .isFalse();
     service.unmute(ALICE);
-    service.identities(
+    service.storedIdentities(
         id ->
             id.equals(BOB)
                 ? com.shepherdjerred.thestorm.chat.domain.Identity.fresh().toggleMessages()
                 : com.shepherdjerred.thestorm.chat.domain.Identity.fresh());
     assertThat(service.letter(attempt).isOk()).isFalse();
+  }
+
+  @Test
+  void offlineMailPreferenceIsAppliedOnlyWhenIdentityRolloutIsEnabled() {
+    service.load().join();
+    service.storedIdentities(
+        id -> com.shepherdjerred.thestorm.chat.domain.Identity.fresh().toggleMessages());
+    var attempt =
+        new MessagingPolicy.Attempt(ALICE, "Alice", false, false, BOB, "mail", 2000, false);
+
+    assertThat(service.letter(attempt).isOk()).isTrue();
   }
 
   private OutgoingLine sent(Result<OutgoingLine, List<ChatDenial>> result) {

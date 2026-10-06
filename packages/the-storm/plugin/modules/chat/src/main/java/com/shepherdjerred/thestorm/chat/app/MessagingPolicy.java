@@ -12,7 +12,19 @@ public interface MessagingPolicy {
       boolean bypass,
       UUID recipient,
       String text,
-      int maxLength) {}
+      int maxLength,
+      boolean recipientIdentityEnabled) {
+    public Attempt(
+        UUID sender,
+        String realName,
+        boolean staff,
+        boolean bypass,
+        UUID recipient,
+        String text,
+        int maxLength) {
+      this(sender, realName, staff, bypass, recipient, text, maxLength, true);
+    }
+  }
 
   Result<String, String> letter(Attempt attempt);
 

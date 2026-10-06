@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.World;
+import org.bukkit.plugin.Plugin;
 import org.junit.jupiter.api.Test;
 
 final class ChunkTicketsTest {

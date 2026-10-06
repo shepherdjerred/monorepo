@@ -161,7 +161,26 @@ final class StaffVisibility implements Listener {
               .find("session", player.getUniqueId().toString(), StaffState.Session.class)
               .map(StaffState.Session::vanished)
               .orElseGet(() -> PlayerVisibility.hidden(player));
-      set(player, hidden && player.hasPermission("thestorm.essentials.vanish"));
+      set(player, false);
+      var _ =
+          tools
+              .context
+              .services()
+              .require(com.shepherdjerred.thestorm.core.expansion.ManagedGameplay.class)
+              .enabled(
+                  com.shepherdjerred.thestorm.core.expansion.ManagedGameplay.STAFF,
+                  player.getUniqueId())
+              .whenCompleteAsync(
+                  (enabled, failure) -> {
+                    if (player.isOnline())
+                      set(
+                          player,
+                          failure == null
+                              && Boolean.TRUE.equals(enabled)
+                              && hidden
+                              && player.hasPermission("thestorm.essentials.vanish"));
+                  },
+                  tools.context.scheduler().mainThread());
     }
     if (PlayerVisibility.hidden(player)) event.joinMessage(null);
     sweep();

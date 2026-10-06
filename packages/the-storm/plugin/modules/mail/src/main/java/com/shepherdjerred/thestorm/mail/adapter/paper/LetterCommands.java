@@ -151,6 +151,16 @@ public final class LetterCommands {
   }
 
   private void send(Player actor, UUID recipient, String text) {
+    complete(
+        actor,
+        context
+            .services()
+            .require(ManagedGameplay.class)
+            .enabled(ManagedGameplay.IDENTITY, recipient),
+        identityEnabled -> send(actor, recipient, text, identityEnabled));
+  }
+
+  private void send(Player actor, UUID recipient, String text, boolean recipientIdentityEnabled) {
     var policy =
         context
             .services()
@@ -163,7 +173,8 @@ public final class LetterCommands {
                     actor.hasPermission("thestorm.chat.bypass"),
                     recipient,
                     text,
-                    limits.maxLength()));
+                    limits.maxLength(),
+                    recipientIdentityEnabled));
     switch (policy) {
       case Result.Err<String, String>(var error) -> actor.sendMessage(Component.text(error));
       case Result.Ok<String, String>(var accepted) -> {
