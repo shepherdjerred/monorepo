@@ -222,6 +222,129 @@ class RestorationControlTest(unittest.TestCase):
         )
         return evidence
 
+    def rollback_fixture(self) -> tuple[JsonObject, JsonObject]:
+        self.path.unlink(missing_ok=True)
+        self.cluster.server.object("spec").object("template").object("spec").objects("containers")[0]["image"] = (
+            "ghcr.io/shepherdjerred/the-storm-server:original@sha256:" + "c" * 64
+        )
+        journal = self.installation_fixture()
+        journal["readersRemoved"] = True
+        journal["backup"] = {"uid": "backup-uid"}
+        proof = self.path.parent / "whole-proof.json"
+        control.save(proof, {
+            "schemaVersion": 1, "status": "VERIFIED", "requestId": REQUEST,
+            "backupUid": "backup-uid", "sourceVolumeUid": "volume-uid",
+            "restoredVolumeUid": "restored-volume-uid",
+            "files": {"world/level.dat": "d" * 64, "plugins/TheStorm/the-storm.db": "e" * 64},
+        })
+        journal["restore"] = {
+            "byteVerification": "VERIFIED", "proofPath": str(proof),
+            "proofSha256": control.restoration_files.digest(proof), "volumeUid": "restored-volume-uid",
+        }
+        transaction = JsonObject({
+            "requestId": REQUEST, "phase": "WHOLE_VOLUME_RESTORED",
+            "wholeRollback": {"phase": "RESTORED"},
+            "original": {"world/level.dat": "d" * 64, "plugins/TheStorm/the-storm.db": "e" * 64},
+        })
+        return journal, transaction
+
+    def verify_rollback_fixture(self, journal: JsonObject, transaction: JsonObject, changed: bool = False) -> None:
+        reader = control.reader_manifest(journal, control.NAMESPACE)
+        reader.object("metadata")["uid"] = "rollback-reader"
+        self.cluster.objects["pod", reader.object("metadata").string("name")] = reader
+        original_run = control.run
+
+        def run(arguments: list[str], timeout: float = 30) -> str:
+            if "wait" in arguments:
+                return "Ready"
+            if "cat" in arguments:
+                return json.dumps(transaction)
+            return original_run(arguments, timeout)
+
+        with (
+            patch.object(control, "require_restore"),
+            patch.object(control, "ensure_resource", return_value=reader),
+            patch.object(control, "run", side_effect=run),
+            patch.object(
+                control, "remote_fingerprint", return_value={} if changed else transaction.strings("original"),
+            ),
+        ):
+            control.verify_rollback(self.path, journal)
+
+    def declare_image(self, image: str) -> None:
+        application = self.cluster.objects["application", control.SERVER]
+        source = application.object("spec").object("source")
+        helm = source.object("helm")
+        helm.object("valuesObject").object("image")["tag"] = image.split(":", 1)[1]
+        helm.objects("parameters")[0]["value"] = image.split(":", 1)[1]
+        application.object("status").object("sync").object("comparedTo")["source"] = copy.deepcopy(source)
+
+    def test_verified_whole_rollback_releases_without_candidate_acceptance_and_restores_java_last(self):
+        journal, transaction = self.rollback_fixture()
+        self.verify_rollback_fixture(journal, transaction)
+        self.assertNotIn("acceptance", journal)
+        self.assertEqual(control.server_image(self.cluster.server), journal.string("rollbackImage"))
+        journal["readersRemoved"] = True
+        self.declare_image(journal.string("rollbackImage"))
+        before = len(self.cluster.mutations)
+        control.release_rollback(self.path, journal)
+        self.assertEqual(self.cluster.mutations[before:], [
+            ("statefulset", control.SERVER),
+            *[("service", name) for name in (*control.SERVICES[1:], control.SERVICES[0])],
+        ])
+        self.assertEqual(journal.string("phase"), "REOPENED")
+        before = len(self.cluster.mutations)
+        self.cluster.server.object("spec")["replicas"] = 1
+        self.cluster.server.object("status")["replicas"] = 1
+        control.release_rollback(self.path, journal)
+        self.assertEqual(len(self.cluster.mutations), before)
+
+    def test_rollback_verification_refuses_partial_or_changed_volume_and_foreign_request(self):
+        for change in ("partial", "foreign", "changed"):
+            with self.subTest(change=change):
+                self.cluster = Cluster()
+                journal, transaction = self.rollback_fixture()
+                if change == "partial":
+                    transaction.object("wholeRollback")["phase"] = "COMMITTING"
+                elif change == "foreign":
+                    transaction["requestId"] = "another-request"
+                before = len(self.cluster.mutations)
+                with self.assertRaisesRegex(ValueError, "Committed whole-volume rollback"):
+                    self.verify_rollback_fixture(journal, transaction, changed=change == "changed")
+                self.assertNotIn("rollbackVerification", journal)
+                self.assertEqual(len(self.cluster.mutations), before)
+                control.require_offline(journal, readers=True)
+
+    def test_rollback_release_refuses_helpers_changed_proof_and_candidate_gitops_image(self):
+        journal, transaction = self.rollback_fixture()
+        self.verify_rollback_fixture(journal, transaction)
+        before = len(self.cluster.mutations)
+        with self.assertRaisesRegex(ValueError, "helper cleanup"):
+            control.release_rollback(self.path, journal)
+        journal["readersRemoved"] = True
+        with self.assertRaisesRegex(ValueError, "reconciled GitOps"):
+            control.release_rollback(self.path, journal)
+        self.assertEqual(len(self.cluster.mutations), before)
+        self.declare_image(journal.string("rollbackImage"))
+        Path(journal.object("restore").string("proofPath")).write_text("changed")
+        with self.assertRaisesRegex(ValueError, "Whole-volume proof changed"):
+            control.release_rollback(self.path, journal)
+        self.assertEqual(len(self.cluster.mutations), before)
+
+    def test_verified_rollback_refuses_candidate_restart_and_changed_receipt(self):
+        journal, transaction = self.rollback_fixture()
+        journal["acceptance"] = {"status": "VERIFIED"}
+        self.verify_rollback_fixture(journal, transaction)
+        self.assertNotIn("acceptance", journal)
+        before = len(self.cluster.mutations)
+        with self.assertRaisesRegex(ValueError, "installation was rolled back"):
+            control.private_start(self.path, journal)
+        journal["readersRemoved"] = True
+        Path(journal.object("rollbackVerification").string("path")).write_text("changed")
+        with self.assertRaisesRegex(ValueError, "unchanged byte verification"):
+            control.release_rollback(self.path, journal)
+        self.assertEqual(len(self.cluster.mutations), before)
+
     def test_private_start_requires_installation_and_keeps_every_public_route_closed(self):
         journal = self.installation_fixture()
         journal["writerRemoved"] = False

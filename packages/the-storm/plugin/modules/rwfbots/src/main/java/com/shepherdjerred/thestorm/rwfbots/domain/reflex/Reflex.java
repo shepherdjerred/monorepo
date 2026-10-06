@@ -69,7 +69,7 @@ public final class Reflex {
   static final int FINAL_STRAIGHT = 3;
 
   /** How hard crowding teammates bend a walking bot's heading. */
-  static final double SEPARATION_WEIGHT = 0.8;
+  static final double SEPARATION_WEIGHT = 1.2;
 
   /** A bot waits for a moving teammate with a lower id this close ahead of it. */
   static final double YIELD = 2.2;

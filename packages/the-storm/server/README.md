@@ -419,6 +419,16 @@ request-owned writer can stage that complete restored data tree with
 `restoration_files.commit_whole_rollback`; the source must be the recorded
 independent volume and match its whole-volume hash proof. Pair the restored
 volume with the recorded rollback image while the server is still stopped.
+Run `verify-rollback` after removing the writer. It checks the completed rollback
+transaction and every current volume file against the original independent
+backup proof, excluding only the retained restoration workspace, then selects
+the recorded immutable rollback image. Remove its read-only helpers with
+`remove-readers`. Restore that original image through GitOps if the candidate
+was already promoted, then use `release-rollback` to restore the captured routes
+with Java wake last. The controller requires unchanged verification, removed
+helpers, a stopped owned volume and the reconciled original image at both Helm
+precedence levels. Recovery release resumes after an interrupted route reopening.
+Creating another writer invalidates both candidate and rollback acceptance.
 Do not restart an old image against the activation database or restore only
 the overworld after other plugins have run.
 

@@ -766,7 +766,7 @@ def tar_fingerprint(stream: IO[bytes]) -> dict[str, str]:
     return result
 
 
-def remote_fingerprint(journal: JsonObject, namespace: str) -> dict[str, str]:
+def remote_fingerprint(journal: JsonObject, namespace: str, exclude_workspace: bool = False) -> dict[str, str]:
     name = reader_manifest(journal, namespace).object("metadata").string("name")
     assert_reader(read("pod", name, namespace), journal, namespace)
     with subprocess.Popen(
@@ -783,6 +783,7 @@ def remote_fingerprint(journal: JsonObject, namespace: str) -> dict[str, str]:
             "reader",
             "--",
             "tar",
+            *(["--exclude=./" + restoration_files.WORKSPACE] if exclude_workspace else []),
             "-C",
             "/data",
             "-cf",
@@ -1093,6 +1094,9 @@ def remove_readers(path: Path, journal: JsonObject) -> None:
 
 
 def create_writer(path: Path, journal: JsonObject) -> JsonObject:
+    for key in ("acceptance", "stoppingIncarnation", "stoppedIncarnation", "rollbackVerification"):
+        journal.pop(key, None)
+    save(path, journal)
     name = writer_manifest(journal).object("metadata").string("name")
     existing = run(["-n", NAMESPACE, "get", "pod", name, "--ignore-not-found", "-o", "json"]).strip()
     if existing and journal.get("writerUid") is None and journal.get("writerCreationPending") is True:
@@ -1280,6 +1284,11 @@ def remove_writer(path: Path, journal: JsonObject) -> None:
 
 
 def private_start(path: Path, journal: JsonObject) -> None:
+    if (
+        journal.get("privateStartup") == "ROLLED_BACK"
+        or journal.object("wholeVolumeRecovery", {}).get("phase") == "WHOLE_VOLUME_RESTORED"
+    ):
+        raise ValueError("Candidate installation was rolled back; release the verified original volume")
     assert_closed(journal)
     server = read("statefulset", SERVER)
     assert_owner(server, journal)
@@ -1287,7 +1296,7 @@ def private_start(path: Path, journal: JsonObject) -> None:
         raise ValueError("Private startup requires verified installation and writer cleanup")
     if annotations(server).get(PHASE) == "OFFLINE":
         require_offline(journal)
-        for key in ("acceptance", "stoppingIncarnation", "stoppedIncarnation"):
+        for key in ("acceptance", "stoppingIncarnation", "stoppedIncarnation", "rollbackVerification"):
             journal.pop(key, None)
         journal["privateStartup"] = "STARTING"
         save(path, journal)
@@ -1441,7 +1450,7 @@ def accept(path: Path, journal: JsonObject, evidence_path: Path) -> None:
     save(path, journal)
 
 
-def assert_gitops_image(journal: JsonObject) -> None:
+def assert_gitops_image(journal: JsonObject, expected_image: str | None = None) -> None:
     """The reconciled Application must declare this image at both Helm precedence levels."""
     application = read("application", SERVER, "argocd")
     spec = application.object("spec")
@@ -1452,7 +1461,7 @@ def assert_gitops_image(journal: JsonObject) -> None:
     image_parameters = [item for item in helm.objects("parameters") if item.string("name").startswith("image.")]
     sync = application.object("status").object("sync")
     if (
-        declared != journal.string("candidateImage")
+        declared != (expected_image if expected_image is not None else journal.string("candidateImage"))
         or image_parameters != [{"name": "image.tag", "value": image.string("tag")}]
         or set(helm) != {"parameters", "valuesObject"}
         or "sources" in spec
@@ -1476,8 +1485,6 @@ def release(path: Path, journal: JsonObject) -> None:
         raise ValueError("Reopening requires unchanged, verified private acceptance")
     server = read("statefulset", SERVER)
     assert_owner(server, journal, allow_unheld=True)
-    if server_image(server) != journal.string("candidateImage"):
-        raise ValueError("Release requires the accepted candidate image")
     if annotations(server).get(LEASE) is not None and (
         server.object("spec").integer("replicas") != 0 or server.object("status", {}).get("replicas", 0) != 0
     ):
@@ -1485,7 +1492,114 @@ def release(path: Path, journal: JsonObject) -> None:
     stopped = journal.object("stoppedIncarnation", {})
     if any(acceptance.get(key) != stopped.get(key) for key in ("podUid", "containerId", "restartCount")):
         raise ValueError("Release requires acceptance of the exact stopped pod and container incarnation")
-    assert_gitops_image(journal)
+    reopen(path, journal, journal.string("candidateImage"))
+
+
+def verify_rollback(path: Path, journal: JsonObject) -> None:
+    """Verify the committed original volume before selecting its recorded image; keep admission closed."""
+    require_offline(journal, readers=True)
+    require_restore(journal)
+    if journal.get("writerRemoved") is not True:
+        raise ValueError("Rollback verification requires writer cleanup")
+    restored = journal.object("restore")
+    if restored.get("byteVerification") != "VERIFIED":
+        raise ValueError("Rollback requires the verified independent whole-volume proof")
+    proof = backup_contract.whole_proof(Path(restored.string("proofPath")), restored.string("proofSha256"))
+    if any(proof.get(key) != value for key, value in {
+        "requestId": journal.string("requestId"),
+        "backupUid": journal.object("backup").string("uid"),
+        "sourceVolumeUid": journal.string("volumeUid"),
+        "restoredVolumeUid": restored.string("volumeUid"),
+    }.items()):
+        raise ValueError("Rollback proof identifies different storage or request")
+    name = reader_manifest(journal, NAMESPACE).object("metadata").string("name")
+    existing = run(["-n", NAMESPACE, "get", "pod", name, "--ignore-not-found", "-o", "json"]).strip()
+    if not existing and journal.get("readersRemoved") is True:
+        journal.strings("readers", {}).pop(NAMESPACE, None)
+    journal["readersRemoved"] = False
+    journal["privateStartup"] = "ROLLED_BACK"
+    for key in ("acceptance", "stoppingIncarnation", "stoppedIncarnation", "rollbackVerification"):
+        journal.pop(key, None)
+    save(path, journal)
+    pod = ensure_resource(reader_manifest(journal, NAMESPACE))
+    assert_reader(pod, journal, NAMESPACE)
+    journal.strings("readers", {})[NAMESPACE] = pod.object("metadata").string("uid")
+    save(path, journal)
+    run(["-n", NAMESPACE, "wait", "--for=condition=Ready", "pod/" + name, "--timeout=45s"], 50)
+    require_offline(journal, readers=True)
+    encoded = run([
+        "-n", NAMESPACE, "exec", name, "-c", "reader", "--", "cat",
+        "/data/" + restoration_files.WORKSPACE + "/" + journal.string("requestId") + "/journal.json",
+    ])
+    transaction = JsonObject.parse(encoded)
+    if (
+        transaction.get("requestId") != journal.string("requestId")
+        or transaction.get("phase") != "WHOLE_VOLUME_RESTORED"
+        or transaction.object("wholeRollback").get("phase") != "RESTORED"
+        or transaction.strings("original") != proof.strings("files")
+        or remote_fingerprint(journal, NAMESPACE, exclude_workspace=True) != proof.strings("files")
+    ):
+        raise ValueError("Committed whole-volume rollback does not match its original byte proof")
+    require_offline(journal, readers=True)
+    require_restore(journal)
+    rollback_image = journal.string("rollbackImage")
+    if not re.fullmatch(
+        r"ghcr\.io/shepherdjerred/the-storm-server:[A-Za-z0-9._-]+@sha256:[a-f0-9]{64}", rollback_image,
+    ):
+        raise ValueError("Rollback requires its recorded immutable image")
+    server = read("statefulset", SERVER)
+    if server_image(server) != rollback_image:
+        patch("statefulset", SERVER, server, [
+            {"op": "replace", "path": "/spec/template/spec/containers/0/image", "value": rollback_image},
+        ])
+    receipt = path.with_name(path.name + ".rollback-verification.json")
+    verification = {
+        "status": "VERIFIED", "requestId": journal.string("requestId"),
+        "rollbackImage": rollback_image, "volumeUid": journal.string("volumeUid"),
+        "backupUid": journal.object("backup").string("uid"),
+        "backupProofSha256": restored.string("proofSha256"),
+        "transactionSha256": hashlib.sha256(encoded.encode("utf-8")).hexdigest(),
+    }
+    save(receipt, verification)
+    journal["rollbackVerification"] = {
+        **verification, "path": str(receipt.resolve()), "sha256": restoration_files.digest(receipt),
+    }
+    journal["privateStartup"] = "ROLLED_BACK"
+    save(path, journal)
+
+
+def release_rollback(path: Path, journal: JsonObject) -> None:
+    """Reopen the verified original volume with its recorded image and reconciled GitOps declaration."""
+    verification = journal.object("rollbackVerification")
+    if (
+        verification.get("status") != "VERIFIED"
+        or verification.get("requestId") != journal.string("requestId")
+        or verification.get("rollbackImage") != journal.string("rollbackImage")
+        or verification.get("volumeUid") != journal.string("volumeUid")
+        or verification.get("backupUid") != journal.object("backup").string("uid")
+        or verification.get("backupProofSha256") != journal.object("restore").string("proofSha256")
+        or journal.get("readersRemoved") is not True
+        or journal.get("writerRemoved") is not True
+        or restoration_files.digest(Path(verification.string("path"))) != verification.string("sha256")
+    ):
+        raise ValueError("Rollback release requires unchanged byte verification and helper cleanup")
+    backup_contract.whole_proof(
+        Path(journal.object("restore").string("proofPath")), verification.string("backupProofSha256"),
+    )
+    reopen(path, journal, journal.string("rollbackImage"))
+
+
+def reopen(path: Path, journal: JsonObject, expected_image: str) -> None:
+    """Restore captured routes for an accepted candidate or byte-verified whole-volume rollback."""
+    server = read("statefulset", SERVER)
+    assert_owner(server, journal, allow_unheld=True)
+    if server_image(server) != expected_image:
+        raise ValueError("Release requires the accepted candidate image or recorded rollback image")
+    if annotations(server).get(LEASE) is not None and (
+        server.object("spec").integer("replicas") != 0 or server.object("status", {}).get("replicas", 0) != 0
+    ):
+        raise ValueError("Release requires a gracefully stopped accepted candidate or rollback")
+    assert_gitops_image(journal, expected_image)
     if journal.get("phase") == "LEASED_OFFLINE":
         require_offline(journal)
         journal["phase"] = "RELEASING"
@@ -1552,6 +1666,8 @@ def main() -> None:
             "private-stop",
             "accept",
             "release",
+            "verify-rollback",
+            "release-rollback",
         ),
     )
     parser.add_argument("--journal", required=True, type=Path)
@@ -1602,6 +1718,10 @@ def main() -> None:
             accept(arguments.journal, journal, arguments.evidence)
         elif arguments.operation == "release":
             release(arguments.journal, journal)
+        elif arguments.operation == "verify-rollback":
+            verify_rollback(arguments.journal, journal)
+        elif arguments.operation == "release-rollback":
+            release_rollback(arguments.journal, journal)
         print(
             json.dumps(
                 {
