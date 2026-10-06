@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Minecraft build library: the 26.2 block registry, block grids, Sponge schematics, the build DSL, lint, and the offline renderer.",
   "exports": {
+    "./components/*": "./components/*",
     "./*": "./src/*"
   },
   "imports": {

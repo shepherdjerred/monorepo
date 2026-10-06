@@ -1,7 +1,8 @@
 # Landscape: terrain, water, paths, trees
 
 Terrain makes or breaks a map. Generate heights with `ctx.noise` (see
-maps.md), then shape and dress them with these rules.
+maps.md) and let the `terrain` and `rocks` components (references/
+components.md) apply most of these rules; shape and dress the rest by hand.
 
 ## Terrain shape
 

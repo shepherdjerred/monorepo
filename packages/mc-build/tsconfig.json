@@ -9,6 +9,7 @@
     "test/**/*",
     "scripts/**/*",
     "library/**/*",
+    "components/**/*",
     "eslint.config.ts"
   ],
   "exclude": ["node_modules", "dist"]

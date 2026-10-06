@@ -1,0 +1,12 @@
+{
+  "name": "terrain",
+  "description": "Map terrain over ctx.noise: a heightfield, slope-aware surfacing (rock on steep drops, soil ≥2 thick, shores, snow), a downhill river carver with mud/clay banks, and jittered paths with nibbled edges and slab steps.",
+  "tags": ["terrain", "landscape", "river", "path", "map"],
+  "exports": [
+    "heightfield({ x, z, w, d, height(x, z) }) → Heightfield { at, set, steepness, water, bank, occupied }",
+    "carveRiver(ctx, field, { points, width, depth?, widen?, meander? }) — call before surface",
+    "surface(ctx, field, { style?: temperate|alpine|desert, bottom?, sea?, soil?, snowAbove? })",
+    "path(ctx, field, { points, width?, style?: rural|town|rough, wander? }) → { cells } — call after surface",
+    "trace(points) → cells along a polyline; key(x, z) → occupied-set key"
+  ]
+}

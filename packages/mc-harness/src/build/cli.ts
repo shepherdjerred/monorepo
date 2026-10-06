@@ -34,12 +34,7 @@ import {
 import type { Env } from "./helpers.ts";
 import type * as JudgeModule from "./judge.ts";
 import { importBuild } from "./import-build.ts";
-import {
-  libraryList,
-  libraryShow,
-  libraryUse,
-  type LibraryRow,
-} from "./library.ts";
+import { componentCommand, libraryCommand } from "./catalog-cli.ts";
 import { DaemonClient } from "./daemon-client.ts";
 import { Journal } from "./journal.ts";
 
@@ -93,6 +88,10 @@ toolkit mc build — WorldEdit-first build workflow (op log + canvas + promote)
   status <dir>
   library ls|search [--tag t]… [--text s] | show <slug> | use <slug> <dir> [--force]
                                         Curated programs to start from (mc-build library/)
+  component ls|search [--tag t]… [--text s] | show <name> | render <name>
+                                        Shared helpers build.ts can import (mc-build components/)
+  component propose <dir> <file> --name n --description d [--tag t]…
+                                        Copy a build-local helper into components/ for review
   judge <a> <b> [--model id]            Pairwise vision judge of two renders (PNG or build dir), order-swapped
 
 Live tsmc: promote/undo with --target live also need --reason "<why>" (journaled), and
@@ -121,6 +120,7 @@ const OPTIONS = {
   model: { type: "string" },
   tag: { type: "string", multiple: true },
   text: { type: "string" },
+  description: { type: "string" },
   force: { type: "boolean", default: false },
   at: { type: "string" },
   rotate: { type: "string" },
@@ -135,6 +135,7 @@ const FIRST_POSITIONAL: Record<string, string> = {
   undo: "<applyId>",
   judge: "<a>",
   library: "<ls|search|show|use>",
+  component: "<ls|search|show|render|propose>",
 };
 const PaletteNameSchema = z.enum(PALETTE_NAMES);
 
@@ -174,15 +175,6 @@ type Handler = (
   values: Values,
   rest: string[],
 ) => Promise<number>;
-
-function libraryTable(rows: LibraryRow[]): string {
-  return rows
-    .map(
-      (r) =>
-        `${r.slug.padEnd(18)} ${r.style.padEnd(9)} ${`${r.footprint.w.toString()}×${r.footprint.d.toString()}×${r.footprint.h.toString()}`.padEnd(9)} ${r.title} — ${r.tags.join(", ")}`,
-    )
-    .join("\n");
-}
 
 const HANDLERS: Record<string, Handler> = {
   init: async (_env, dir, values) => {
@@ -361,45 +353,15 @@ const HANDLERS: Record<string, Handler> = {
     );
     return 0;
   },
-  library: async (_env, sub, values, rest) => {
-    if (sub === "ls" || sub === "search") {
-      const rows = await libraryList({
-        tags: values.tag ?? [],
-        ...(values.text === undefined ? {} : { text: values.text }),
-      });
-      print(
-        values.json,
-        rows,
-        rows.length === 0 ? "no matching library entries" : libraryTable(rows),
-      );
-      return 0;
-    }
-    if (sub === "show") {
-      const entry = await libraryShow(required(rest[0], "<slug>"));
-      print(
-        values.json,
-        entry,
-        `${libraryTable([entry])}\n\n${entry.notes}\n\nprogram: ${entry.program}\n\n${entry.source}`,
-      );
-      return 0;
-    }
-    if (sub === "use") {
-      const result = await libraryUse(
-        required(rest[0], "<slug>"),
-        required(rest[1], "<dir>"),
-        {
-          force: values.force,
-        },
-      );
-      print(
-        values.json,
-        result,
-        `copied library/${result.slug} → ${result.program}; adapt it, then toolkit mc build compile`,
-      );
-      return 0;
-    }
-    throw new Error(`unknown library command "${sub}"\n${BUILD_USAGE}`);
-  },
+  library: async (_env, sub, values, rest) =>
+    libraryCommand({ print, required, usage: BUILD_USAGE }, sub, values, rest),
+  component: async (_env, sub, values, rest) =>
+    componentCommand(
+      { print, required, usage: BUILD_USAGE },
+      sub,
+      values,
+      rest,
+    ),
   judge: async (_env, a, values, rest) => {
     const { DEFAULT_JUDGE_MODEL, judgeRenders, RUBRIC_DIMENSIONS } =
       await loadJudge();

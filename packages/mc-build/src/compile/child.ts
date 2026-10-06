@@ -4,6 +4,7 @@
  * resulting grid as JSON. argv: <job.json>
  */
 import path from "node:path";
+import { plugin } from "bun";
 import { z } from "zod";
 import { readSchematic } from "#src/core/schem.ts";
 import { SiteInfoSchema } from "#src/core/site.ts";
@@ -15,11 +16,30 @@ import {
 import type { Site } from "#src/dsl/types.ts";
 import { loadRegistry } from "#src/registry/registry.ts";
 import { CompileJobSchema, CompileResultSchema } from "./job.ts";
+import { COMPONENT_PREFIX, COMPONENTS_DIR } from "./scan.ts";
 
 const ProgramModuleSchema = z.object({
   default: z.custom<BuildProgram>((value) => typeof value === "function", {
     message: "must `export default` a build program function ((ctx) => { … })",
   }),
+});
+
+// Programs may live outside the workspace (e.g. a build dir under ~/.toolkit),
+// where package resolution cannot find mc-build; map component specifiers to
+// the components library directly. runner.ts scanned every imported file.
+plugin({
+  name: "mc-build-components",
+  setup(build) {
+    build.onResolve(
+      { filter: /^@shepherdjerred\/mc-build\/components\// },
+      (args) => ({
+        path: path.join(
+          COMPONENTS_DIR,
+          args.path.slice(COMPONENT_PREFIX.length),
+        ),
+      }),
+    );
+  },
 });
 
 const jobPath = Bun.argv[2];

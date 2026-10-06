@@ -47,7 +47,10 @@ render and getting a go-ahead when the target is a server people play on.
      (blocks, gradients, proven palettes) and references/landscape.md
      (terrain, water, paths, `craft.tree`) before designing.
      Start from the closest curated program: `library search --tag <t>`,
-     then `library use <slug> <dir>`.
+     then `library use <slug> <dir>`. Before writing helpers, check
+     `toolkit mc build component ls` and import shared components
+     (`terrain`, `rocks`, `house`, `ramparts`, …) — see
+     references/components.md.
    - **Import** an existing design: `toolkit mc build import <dir> <file>
 [--at x,y,z]` takes `.litematic` or `.schem`; an OBJ mesh (statues,
      organic shapes, image→3D output) also needs `--height <blocks>` and
@@ -107,8 +110,11 @@ district close-ups with `toolkit mc build render <dir> <x1,y1,z1> <x2,y2,z2>`.
 - Never hand-place block-by-block when a WorldEdit op or DSL primitive fits.
 - Keep every edit inside the captured site box; the canvas resets only that box.
 - Prefer persistent leaves (`oak_leaves[persistent=true]`) in decoration.
-- Program files are pure: `import type` only, no `Math.random`, `Date`,
-  `process` or `fetch` (compile rejects them); use `ctx.rng()`.
+- Program files are pure: runtime imports only from components and `.ts`
+  helpers inside the build dir; no `Math.random`, `Date`, `process` or
+  `fetch` (compile rejects them); use `ctx.rng()` / `ctx.noise()`.
+- A helper you wrote that others would reuse: `toolkit mc build component
+propose <dir> <file> --name n --description d` and report it.
 - Console commands at unloaded positions fail; `toolkit mc cmd -- forceload
 add <x> <z>` first, or use WorldEdit ops (which load chunks).
 - Clean up: `toolkit mc sandbox down <canvas>` when the build is promoted.
