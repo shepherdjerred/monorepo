@@ -60,7 +60,7 @@ public final class Reflex {
   private static final double ALLY_SPACING = 0.9;
 
   /** Teammates closer than this push each other apart while fighting. */
-  static final double SEPARATION = 2.5;
+  static final double SEPARATION = 3.0;
 
   /** Moving formations leave another half block for teammates closing the gap. */
   static final double WALK_SEPARATION = 3.0;
@@ -85,7 +85,6 @@ public final class Reflex {
   private static final double CLICK_GAP_LOG_MEAN = 0.1;
   private static final double CLICK_GAP_LOG_SIGMA = 0.25;
   private static final double FUSE_SLIP_SCALE = 6;
-  private static final double JUMP_CRIT_CHANCE = 0.15;
   private static final int JUMP_COOLDOWN = 10;
   private static final long CROUCH_BURST_TICKS = 30;
   private static final long CROUCH_TAP_TICKS = 3;
@@ -338,7 +337,13 @@ public final class Reflex {
       if (self.heldSlot() != context.loadout().swordSlot()) {
         commands.add(new BodyCommand.SelectSlot(context.loadout().swordSlot()));
       }
-      var lead = target.vel().scale(levers().reactionTicks() * levers().predictionQuality());
+      // The oldest of N buffered facings is N-1 ticks old. Compensate relative motion:
+      // ignoring the attacker's motion makes a strafing bot aim behind its moving target.
+      var lead =
+          target
+              .vel()
+              .minus(self.vel())
+              .scale((levers().reactionTicks() - 1) * levers().predictionQuality());
       var aimPoint = target.pos().plus(lead).plus(0, 1.3, 0);
       state =
           state.withAim(
@@ -350,10 +355,14 @@ public final class Reflex {
     }
 
     private void click(CombatantView target, double distance) {
-      if (now < state.nextClickAt() || distance > REACH + 1.5) {
+      if (now < state.nextClickAt()) {
         return;
       }
       var landed = hitTest(context.grid(), self, state.aim().look(), target);
+      // Save the next swing for contact rather than spending its cooldown during pursuit.
+      if (!landed && distance > REACH + 0.3) {
+        return;
+      }
       commands.add(landed ? new BodyCommand.Attack(target.id()) : new BodyCommand.Swing());
       var wTap = state.wTapUntil();
       if (landed && random.nextDouble() < levers().technique()) {
@@ -375,15 +384,14 @@ public final class Reflex {
       var side = new Vec3(-radial.z(), 0, radial.x()).scale(state.strafeDir());
       var apart = apart(SEPARATION, 0);
       var closing = closing(distance, apart);
-      var move = side.plus(radial.scale(closing)).plus(apart.scale(2.5));
+      // Outside contact range, pursue rather than spending most acceleration circling.
+      var strafeWeight = distance > REACH + 0.5 ? 0.25 : 1.0;
+      var move = side.scale(strafeWeight).plus(radial.scale(closing)).plus(apart.scale(2.5));
       var point = self.pos().plus(move.isZero() ? radial : move.normalized());
       var sprint = now >= state.wTapUntil() && closing > 0;
       commands.add(new BodyCommand.MoveToward(point, sprint));
-      var critWindow = distance >= 2.5 && distance <= 3.5 && self.onGround();
-      if (critWindow && random.nextDouble() < levers().technique() * JUMP_CRIT_CHANCE) {
-        commands.add(new BodyCommand.Jump());
-        state = state.withLastJump(now);
-      }
+      // RWF's melee rules have no airborne critical-hit bonus. Stay grounded for control;
+      // navigation still jumps over terrain, and external combat actions can request a jump.
     }
 
     /** Keeps a threatened archer moving while its aim remains on the opponent. */

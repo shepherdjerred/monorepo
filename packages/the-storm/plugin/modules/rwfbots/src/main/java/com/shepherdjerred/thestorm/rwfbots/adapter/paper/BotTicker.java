@@ -46,6 +46,7 @@ public final class BotTicker {
   private final Supplier<long[]> tickTimes;
   private final LongSupplier nanoClock;
   private final LobbyTicker lobby;
+  private final com.shepherdjerred.thestorm.rwf.app.ObservationSource observations;
   private boolean inLobby;
   private final ThinkStats staleness = new ThinkStats();
   private final ThinkStats sections = new ThinkStats();
@@ -73,7 +74,8 @@ public final class BotTicker {
       MatchView view,
       Supplier<long[]> tickTimes,
       LongSupplier nanoClock,
-      LobbyTicker lobby) {}
+      LobbyTicker lobby,
+      com.shepherdjerred.thestorm.rwf.app.ObservationSource observations) {}
 
   public BotTicker(Parts parts) {
     this.roster = parts.roster();
@@ -85,6 +87,7 @@ public final class BotTicker {
     this.tickTimes = parts.tickTimes();
     this.nanoClock = parts.nanoClock();
     this.lobby = parts.lobby();
+    this.observations = parts.observations();
   }
 
   /** The ticks run so far; the snapshot clock. */
@@ -172,7 +175,7 @@ public final class BotTicker {
     if (self.isEmpty() || !self.orElseThrow().alive()) {
       return;
     }
-    if (thinned(bot, profile, snapshot)) {
+    if (!roster.harness().active(frame.match().matchId()) && thinned(bot, profile, snapshot)) {
       return;
     }
     var epoch = loop.epoch(profile.id());
@@ -191,15 +194,31 @@ public final class BotTicker {
         ReflexInput.of(self.orElseThrow(), snapshot, decision, percept).withGapples(gapples(bot));
     var match = frame.match();
     input = freshTarget(input, match.nav().grid());
+    input = roster.harness().input(match.matchId(), input, match.nav());
     var context =
         new ReflexContext(
             match.nav().grid(),
             profile.levers(),
             bot.loadout(),
-            ReflexContext.Habits.of(profile.archetype(), profile.quirks()));
+            roster.harness().active(match.matchId())
+                ? ReflexContext.Habits.NONE
+                : ReflexContext.Habits.of(profile.archetype(), profile.quirks()));
     var step = Reflex.tick(bot.reflex(), input, context, bot.random());
     bot.reflex(step.state());
-    driver.apply(bot, step.commands(), match.ids(), tick);
+    var commands =
+        roster
+            .harness()
+            .commands(
+                new com.shepherdjerred.thestorm.rwfbots.app.CombatHarness.Frame(
+                    match.matchId(),
+                    bot.uuid(),
+                    epoch,
+                    input,
+                    step,
+                    roster.harness().active(match.matchId())
+                        ? observations.capture(bot.uuid())
+                        : java.util.Optional.empty()));
+    driver.apply(bot, commands, match.ids(), tick);
   }
 
   /** Refreshes a previously visible target only while the current sight line remains clear. */

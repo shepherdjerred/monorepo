@@ -134,7 +134,10 @@ public final class MatchBridge implements Consumer<MatchNotification> {
         .bot(uuid)
         .ifPresent(
             bot -> {
-              var kit = parts.lobby().arrived(bot, after);
+              var kit =
+                  parts.roster().harness().active(after.matchId())
+                      ? "trooper"
+                      : parts.lobby().arrived(bot, after);
               parts
                   .actions()
                   .pickKit(uuid, kit)
@@ -266,7 +269,12 @@ public final class MatchBridge implements Consumer<MatchNotification> {
     if (nav.isEmpty()) {
       throw new IllegalStateException("bots were drafted for " + mapId + " without a nav artifact");
     }
-    var seed = MatchSession.seedOf(after.matchId());
+    var seed =
+        parts
+            .roster()
+            .harness()
+            .seed(after.matchId())
+            .orElseGet(() -> MatchSession.seedOf(after.matchId()));
     var ids = new IdMap();
     var capture = new SnapshotCapture(ids, parts.roster()::anyEntity, parts.stimuli());
     parts
@@ -309,7 +317,8 @@ public final class MatchBridge implements Consumer<MatchNotification> {
     parts.loop().endMatch();
     parts.roster().session(null);
     parts.traces().ifPresent(traces -> logFailure(traces.end(), "close the trace file"));
-    if (after.phase() == MatchState.Phase.ENDED) {
+    if (after.phase() == MatchState.Phase.ENDED
+        && !parts.roster().harness().active(after.matchId())) {
       settle(after);
     }
   }

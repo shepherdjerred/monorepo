@@ -167,6 +167,12 @@ public final class RwfBotsPaper {
     var driver =
         new BodyDriver(
             new BodyDriver.Parts(app.bodies(), actions, app.world(), stimuli, bridge::rewound));
+    var observations =
+        new LearningObservations(
+            roster,
+            view,
+            module.plugin().getServer(),
+            com.shepherdjerred.thestorm.rwfbots.adapter.content.LearningContract.load());
     var ticker =
         new BotTicker(
             new BotTicker.Parts(
@@ -178,7 +184,8 @@ public final class RwfBotsPaper {
                 view,
                 app.tickTimes(),
                 System::nanoTime,
-                lobby));
+                lobby,
+                observations));
     module.plugin().getServer().getPluginManager().registerEvents(stimuli, module.plugin());
     bridge.subscribe(events);
     var command =
@@ -220,13 +227,8 @@ public final class RwfBotsPaper {
                 .getPluginManager()
                 .registerEvents(listener, module.plugin()));
     services.provide(BotRoster.class, BotRoster.of(roster));
-    services.provide(
-        com.shepherdjerred.thestorm.rwf.app.ObservationSource.class,
-        new LearningObservations(
-            roster,
-            view,
-            module.plugin().getServer(),
-            com.shepherdjerred.thestorm.rwfbots.adapter.content.LearningContract.load()));
+    services.provide(com.shepherdjerred.thestorm.rwfbots.app.CombatHarness.class, roster.harness());
+    services.provide(com.shepherdjerred.thestorm.rwf.app.ObservationSource.class, observations);
     return new RwfBotsPaper(
         new Parts(module, roster, loop, bridge, stimuli, clock, command, traces, chat, heard));
   }

@@ -61,6 +61,100 @@ final class ReflexTest {
         0);
   }
 
+  @Test
+  void aMovingAttackerTracksATargetWithTheSameLateralVelocity() {
+    var motion = new Vec3(0, 0, 0.3);
+    var self =
+        combatant(1, RED, new Vec3(5.5, 1, 5.5))
+            .withFacing(new Facing(-90, 0))
+            .withVel(motion)
+            .withHands(1, false);
+    var target = combatant(2, BLUE, new Vec3(8, 1, 5.5)).withVel(motion);
+    var state = ReflexState.initial(self.facing());
+    var random = new SplittableRandom(7);
+    var hits = 0;
+    for (var tick = 1; tick <= 30; tick++) {
+      var snapshot = world(tick, List.of(self, target), List.of());
+      var step =
+          Reflex.tick(
+              state,
+              new ReflexInput(self, snapshot, fight(self, target, 1), Optional.of(target), 3),
+              context(levers(1)),
+              random);
+      hits += (int) step.commands().stream().filter(BodyCommand.Attack.class::isInstance).count();
+      state = step.state();
+      self = self.withPos(self.pos().plus(motion)).withFacing(state.aim().look());
+      target = target.withPos(target.pos().plus(motion));
+    }
+    assertThat(hits).isGreaterThanOrEqualTo(5);
+  }
+
+  @Test
+  void pursuitSpendsMostMovementClosingOnATargetOutsideContactRange() {
+    var self = combatant(1, RED, new Vec3(5.5, 1, 5.5));
+    var target = combatant(2, BLUE, new Vec3(13.5, 1, 5.5));
+    var snapshot = world(1, List.of(self, target), List.of());
+    var step =
+        Reflex.tick(
+            ReflexState.initial(self.facing()),
+            new ReflexInput(self, snapshot, fight(self, target, 1), Optional.of(target), 3),
+            context(levers(1)),
+            new SplittableRandom(7));
+    var move =
+        step.commands().stream()
+            .filter(BodyCommand.MoveToward.class::isInstance)
+            .map(BodyCommand.MoveToward.class::cast)
+            .findFirst()
+            .orElseThrow();
+    assertThat(move.waypoint().minus(self.pos()).normalized().dot(new Vec3(1, 0, 0)))
+        .isGreaterThan(.9);
+    assertThat(move.sprint()).isTrue();
+  }
+
+  @Test
+  void pursuitDoesNotSpendASwingCooldownBeforeSwordContact() {
+    var self = combatant(1, RED, new Vec3(5.5, 1, 5.5)).withFacing(new Facing(-90, 0));
+    var target = combatant(2, BLUE, new Vec3(9.8, 1, 5.5));
+    var random = new SplittableRandom(7);
+    var first =
+        Reflex.tick(
+            ReflexState.initial(self.facing()),
+            new ReflexInput(
+                self,
+                world(1, List.of(self, target), List.of()),
+                fight(self, target, 1),
+                Optional.of(target),
+                3),
+            context(levers(1)),
+            random);
+    assertThat(first.commands())
+        .noneMatch(
+            command ->
+                command instanceof BodyCommand.Swing || command instanceof BodyCommand.Attack);
+    target = target.withPos(new Vec3(8, 1, 5.5));
+    var contact =
+        Reflex.tick(
+            first.state(),
+            new ReflexInput(
+                self,
+                world(2, List.of(self, target), List.of()),
+                fight(self, target, 1),
+                Optional.of(target),
+                3),
+            context(levers(1)),
+            random);
+    assertThat(contact.commands()).anyMatch(BodyCommand.Attack.class::isInstance);
+  }
+
+  @Test
+  void meleeStaysGroundedBecauseRwfDoesNotRewardAirborneHits() {
+    for (var seed = 1; seed <= 5; seed++) {
+      var commands = melee(levers(1), 200, seed).stream().flatMap(List::stream).toList();
+      assertThat(commands).noneMatch(BodyCommand.Jump.class::isInstance);
+      assertThat(commands).anyMatch(BodyCommand.Attack.class::isInstance);
+    }
+  }
+
   /** Runs {@code ticks} of melee against a target standing two and a half blocks east. */
   private static List<List<BodyCommand>> melee(Levers levers, int ticks, long seed) {
     var random = new SplittableRandom(seed);

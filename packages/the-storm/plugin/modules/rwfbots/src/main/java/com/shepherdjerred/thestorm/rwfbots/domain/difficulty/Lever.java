@@ -20,7 +20,7 @@ public enum Lever {
   AWARENESS_RADIUS(24, 64, false, 1.0),
   /** How promptly and reliably sightings reach teammates, 0..1. */
   COORDINATION(0, 1, false, 1.0),
-  /** W-taps, jump crits, strafing and clean fuse work, 0..1. */
+  /** W-taps, strafing and clean fuse work, 0..1. */
   TECHNIQUE(0, 1, false, 1.2),
   /** Willingness to take fights, 0..1. */
   AGGRESSION(0, 1, false, 1.0);
