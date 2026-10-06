@@ -54,14 +54,14 @@ final class TeleportFlowArrivalTest {
     var runtime =
         new PaperRuntime(
             harness.server, new PaperScheduler(plugin), harness.clock, plugin.getComponentLogger());
-    var price = new TeleportPrice(25, Duration.ZERO);
+    var price = new TeleportPrice(25, Duration.ZERO, 1);
     var pricing =
         new TeleportPricing(
-            new TeleportPrices(price, price, price, price, price),
-            0.5,
-            0.5,
-            Duration.ofMinutes(10),
-            4);
+            new TeleportPrices(price, price, price, price, price, price),
+            Duration.ofHours(1),
+            4,
+            32,
+            Duration.ofDays(7));
     var payments =
         new TeleportPayments(
             new TeleportPricer(pricing),

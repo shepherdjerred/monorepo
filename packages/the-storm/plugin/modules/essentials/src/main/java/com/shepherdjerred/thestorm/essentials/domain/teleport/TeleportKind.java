@@ -8,7 +8,8 @@ public enum TeleportKind {
   HOME,
   TPA,
   BACK,
-  WARP;
+  WARP,
+  RTP;
 
   /** The lowercase id used in storage and ledger reasons, for example {@code home}. */
   public String id() {

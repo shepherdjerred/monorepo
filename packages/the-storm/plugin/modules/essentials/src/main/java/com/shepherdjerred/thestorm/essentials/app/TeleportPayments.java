@@ -11,10 +11,13 @@ import com.shepherdjerred.thestorm.economy.app.Receipt;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.essentials.app.store.TeleportAttemptStore;
 import com.shepherdjerred.thestorm.essentials.app.store.TeleportUsageStore;
+import com.shepherdjerred.thestorm.essentials.app.store.TeleportUsageStore.Confirmation;
 import com.shepherdjerred.thestorm.essentials.domain.teleport.Exemptions;
 import com.shepherdjerred.thestorm.essentials.domain.teleport.Quote;
 import com.shepherdjerred.thestorm.essentials.domain.teleport.TeleportKind;
 import com.shepherdjerred.thestorm.essentials.domain.teleport.TeleportPricer;
+import com.shepherdjerred.thestorm.essentials.domain.teleport.TeleportPricing;
+import com.shepherdjerred.thestorm.essentials.domain.teleport.TeleportUsage;
 import java.time.InstantSource;
 import java.util.Optional;
 import java.util.UUID;
@@ -48,7 +51,7 @@ public final class TeleportPayments {
   public record Stores(TeleportUsageStore usage, TeleportAttemptStore attempts) {}
 
   /** The quote and its durable attempt, if payment was needed. */
-  public record Charge(Quote quote, Optional<TeleportAttempt> attempt) {}
+  public record Charge(UUID id, Quote quote, Optional<TeleportAttempt> attempt) {}
 
   public TeleportPayments(
       TeleportPricer pricer, Stores stores, Wallets wallets, InstantSource time) {
@@ -71,7 +74,7 @@ public final class TeleportPayments {
     return loaded.thenCompose(
         ready ->
             usage
-                .find(payer, kind)
+                .find(payer, time.instant().minus(pricer.pricing().window()))
                 .thenApply(
                     found ->
                         pricer
@@ -95,13 +98,29 @@ public final class TeleportPayments {
   /** The player arrived: records usage before clearing the recovery obligation. */
   public CompletableFuture<Void> confirm(UUID payer, Charge charged) {
     var quote = charged.quote();
-    return usage
-        .save(payer, quote.kind(), quote.next())
-        .thenCompose(
-            done ->
-                charged.attempt().isPresent()
-                    ? attempts.delete(charged.attempt().orElseThrow().id())
-                    : completedFuture(null));
+    var now = time.instant();
+    return usage.confirm(
+        new Confirmation(
+            payer,
+            charged.id(),
+            quote.kind(),
+            quote.next().deliveredAt(now),
+            now.minus(pricer.pricing().window().multipliedBy(2))));
+  }
+
+  public TeleportPricing pricing() {
+    return pricer.pricing();
+  }
+
+  public CompletableFuture<TeleportUsage> history(UUID player) {
+    return loaded
+        .thenCompose(ready -> usage.find(player, time.instant().minus(pricer.pricing().window())))
+        .thenApply(found -> found.orElse(TeleportUsage.EMPTY));
+  }
+
+  public Quote preview(
+      TeleportKind kind, TeleportUsage history, Exemptions exemptions, java.time.Instant now) {
+    return pricer.preview(kind, history, exemptions, now);
   }
 
   /** The teleport could not happen after {@link #charge}: returns crystals once. */
@@ -113,7 +132,7 @@ public final class TeleportPayments {
 
   private CompletableFuture<Result<Charge, TeleportRefusal>> take(UUID payer, Quote quote) {
     if (quote.cost() == 0) {
-      return completedFuture(Result.ok(new Charge(quote, Optional.empty())));
+      return completedFuture(Result.ok(new Charge(UUID.randomUUID(), quote, Optional.empty())));
     }
     var attempt = new TeleportAttempt(UUID.randomUUID(), payer, quote.kind(), quote.cost());
     return attempts
@@ -133,7 +152,8 @@ public final class TeleportPayments {
                             switch (transfer) {
                               case Result.Ok<Receipt, EconomyError> _ ->
                                   completedFuture(
-                                      Result.ok(new Charge(quote, Optional.of(attempt))));
+                                      Result.ok(
+                                          new Charge(attempt.id(), quote, Optional.of(attempt))));
                               case Result.Err<Receipt, EconomyError>(var error) ->
                                   attempts
                                       .delete(attempt.id())

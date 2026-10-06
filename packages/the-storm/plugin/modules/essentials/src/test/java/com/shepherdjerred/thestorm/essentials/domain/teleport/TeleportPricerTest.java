@@ -5,163 +5,179 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.shepherdjerred.thestorm.core.result.Result;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 final class TeleportPricerTest {
-
   static final Instant T0 = Instant.parse("2026-09-25T12:00:00Z");
-  static final Duration DECAY_EVERY = Duration.ofMinutes(10);
+  static final Duration WINDOW = Duration.ofHours(1);
 
   static TeleportPricing pricing() {
-    var price = new TeleportPrice(25, Duration.ofSeconds(60));
+    var normal = new TeleportPrice(25, Duration.ofMinutes(1), 1);
     return new TeleportPricing(
         new TeleportPrices(
-            new TeleportPrice(10, Duration.ofSeconds(30)), price, price, price, price),
-        0.5,
-        0.5,
-        DECAY_EVERY,
-        4.0);
+            new TeleportPrice(10, Duration.ofSeconds(30), .5), normal,
+            new TeleportPrice(25, Duration.ofMinutes(1), 2), normal,
+            new TeleportPrice(15, Duration.ofSeconds(30), .5), normal),
+        WINDOW,
+        4,
+        32,
+        Duration.ofDays(7));
   }
 
   final TeleportPricer pricer = new TeleportPricer(pricing());
 
-  static Optional<TeleportUsage> used(double multiplier, Instant at) {
-    return Optional.of(new TeleportUsage(Multiplier.of(multiplier), at, at));
+  static TeleportUsage homes(int count, Instant at) {
+    return new TeleportUsage(
+        IntStream.range(0, count).mapToObj(i -> new TeleportUse(at, 2)).toList(), T0);
   }
 
-  Quote quote(Optional<TeleportUsage> usage, Instant now) {
-    return switch (pricer.quote(TeleportKind.HOME, usage, Exemptions.NONE, now)) {
-      case Result.Ok<Quote, OnCooldown>(var quote) -> quote;
-      case Result.Err<Quote, OnCooldown>(var error) -> throw new AssertionError(error);
-    };
+  Quote quote(TeleportKind kind, TeleportUsage usage, Instant now) {
+    return pricer
+        .quote(kind, Optional.of(usage), Exemptions.NONE, now)
+        .fold(
+            value -> value,
+            error -> {
+              throw new AssertionError(error);
+            });
   }
 
-  @Test
-  void firstUseCostsTheBasePrice() {
-    var quote = quote(Optional.empty(), T0);
-
-    assertThat(quote.cost()).isEqualTo(25);
-    assertThat(quote.multiplier()).isEqualTo(Multiplier.ONE);
-    assertThat(quote.next())
-        .isEqualTo(new TeleportUsage(Multiplier.of(1.5), T0, T0.plusSeconds(60)));
-  }
-
-  @Test
-  void eachKindHasItsOwnBasePrice() {
-    var spawn = pricer.quote(TeleportKind.SPAWN, Optional.empty(), Exemptions.NONE, T0);
-
-    assertThat(spawn.map(Quote::cost)).isEqualTo(Result.ok(10L));
-    assertThat(spawn.map(q -> q.next().cooldownUntil())).isEqualTo(Result.ok(T0.plusSeconds(30)));
-  }
-
-  @Test
-  void repeatedUseGrowsCostAndCooldownUntilTheCap() {
-    var usage = Optional.<TeleportUsage>empty();
-    var now = T0;
-    var costs = new long[8];
-    for (var i = 0; i < costs.length; i++) {
-      var quote = quote(usage, now);
-      costs[i] = quote.cost();
-      usage = Optional.of(quote.next());
-      now = quote.next().cooldownUntil();
-    }
-
-    // x1, x1.5, x2, x2.5, x3, x3.5, x4, then capped at x4.
-    assertThat(costs).containsExactly(25, 38, 50, 63, 75, 88, 100, 100);
-    assertThat(usage.orElseThrow().multiplier()).isEqualTo(Multiplier.of(4));
-  }
-
-  @Test
-  void cooldownScalesWithTheMultiplier() {
-    var quote = quote(used(2.5, T0.minus(Duration.ofMinutes(5))), T0);
-
-    assertThat(quote.multiplier()).isEqualTo(Multiplier.of(2.5));
-    assertThat(quote.next().cooldownUntil()).isEqualTo(T0.plusSeconds(150));
-  }
-
-  @ParameterizedTest(name = "{0} after the last use, x3 decays to x{1}")
+  @ParameterizedTest
   @CsvSource({
-    "PT0S, 3.0",
-    "PT9M59.999S, 3.0",
-    "PT10M, 2.5",
-    "PT19M59.999S, 2.5",
-    "PT20M, 2.0",
-    "PT39M59.999S, 1.5",
-    "PT40M, 1.0",
-    "PT50M, 1.0",
-    "P365D, 1.0"
+    "0,1,25,60",
+    "1,1,25,60",
+    "2,1,25,60",
+    "3,1,25,60",
+    "4,2,50,120",
+    "5,4,100,240",
+    "6,8,200,480",
+    "7,16,400,960",
+    "8,32,800,1920",
+    "40,32,800,1920"
   })
-  void multiplierDecaysOneStepPerWholePeriod(Duration elapsed, double expected) {
-    var multiplier = pricer.currentMultiplier(used(3, T0), T0.plus(elapsed));
-
-    assertThat(multiplier).isEqualTo(Multiplier.of(expected));
+  void fourNormalTripsAreForgivingThenBothPriceAndCooldownDouble(
+      int previous, double multiplier, long cost, long seconds) {
+    var quoted = quote(TeleportKind.HOME, homes(previous, T0.minusSeconds(1)), T0);
+    assertThat(quoted.multiplier()).isEqualTo(Multiplier.of(multiplier));
+    assertThat(quoted.cost()).isEqualTo(cost);
+    assertThat(quoted.cooldown()).isEqualTo(Duration.ofSeconds(seconds));
+    assertThat(quoted.next().trips()).hasSize(previous + 1);
   }
 
   @Test
-  void aNeverUsedKindIsAtOne() {
-    assertThat(pricer.currentMultiplier(Optional.empty(), T0)).isEqualTo(Multiplier.ONE);
+  void playerToPlayerTravelUsesTwiceTheAllowance() {
+    var history =
+        new TeleportUsage(
+            List.of(
+                new TeleportUse(T0.minusSeconds(120), 4), new TeleportUse(T0.minusSeconds(60), 4)),
+            T0);
+    var third = quote(TeleportKind.TPA, history, T0);
+    assertThat(third.cost()).isEqualTo(100);
+    assertThat(third.multiplier()).isEqualTo(Multiplier.of(4));
+    assertThat(third.cooldown()).isEqualTo(Duration.ofMinutes(4));
+  }
+
+  @ParameterizedTest
+  @CsvSource({"7,1", "8,2", "9,2", "10,4"})
+  void halfPointTripsCrossTheAllowanceWithoutFractionalEscalation(int previous, double expected) {
+    var trips = IntStream.range(0, previous).mapToObj(i -> new TeleportUse(T0, 1)).toList();
+    var quoted = quote(TeleportKind.SPAWN, new TeleportUsage(trips, T0), T0);
+    assertThat(quoted.multiplier()).isEqualTo(Multiplier.of(expected));
   }
 
   @Test
-  void aClockThatWentBackwardsDoesNotDecay() {
-    assertThat(pricer.currentMultiplier(used(3, T0), T0.minusSeconds(60)))
-        .isEqualTo(Multiplier.of(3));
+  void mixedCategoriesShareTheSamePressure() {
+    var history =
+        new TeleportUsage(
+            List.of(
+                new TeleportUse(T0, 1), new TeleportUse(T0, 1),
+                new TeleportUse(T0, 2), new TeleportUse(T0, 2)),
+            T0);
+    assertThat(quote(TeleportKind.TPA, history, T0).cost()).isEqualTo(50);
+    assertThat(quote(TeleportKind.RTP, history, T0).cost()).isEqualTo(25);
+  }
+
+  @ParameterizedTest
+  @CsvSource({"PT59M59.999S,2", "PT1H,1", "PT1H1S,1", "P365D,1"})
+  void tripsExpireExactlyAtTheWindowBoundary(Duration elapsed, double expected) {
+    var history = homes(4, T0);
+    var quoted = quote(TeleportKind.RTP, history, T0.plus(elapsed));
+    assertThat(quoted.multiplier()).isEqualTo(Multiplier.of(expected));
   }
 
   @Test
-  void decayAppliesBeforeGrowth() {
-    var quote = quote(used(3, T0), T0.plus(Duration.ofMinutes(20)));
-
-    assertThat(quote.multiplier()).isEqualTo(Multiplier.of(2));
-    assertThat(quote.cost()).isEqualTo(50);
-    assertThat(quote.next().multiplier()).isEqualTo(Multiplier.of(2.5));
+  void tripsExpireIndividuallyRatherThanAtAnHourlyReset() {
+    var history =
+        new TeleportUsage(
+            List.of(
+                new TeleportUse(T0.minusSeconds(3600), 4),
+                new TeleportUse(T0.minusSeconds(3599), 4)),
+            T0);
+    var quoted = quote(TeleportKind.TPA, history, T0);
+    assertThat(quoted.previousPoints()).isEqualTo(2);
+    assertThat(quoted.cost()).isEqualTo(25);
   }
 
   @Test
-  void refusesDuringTheCooldownAndAllowsExactlyAtItsEnd() {
-    var usage = Optional.of(new TeleportUsage(Multiplier.of(1.5), T0, T0.plusSeconds(60)));
-
-    var early = pricer.quote(TeleportKind.HOME, usage, Exemptions.NONE, T0.plusMillis(59_999));
-    var onTime = pricer.quote(TeleportKind.HOME, usage, Exemptions.NONE, T0.plusSeconds(60));
-
-    assertThat(early)
-        .isEqualTo(Result.err(new OnCooldown(TeleportKind.HOME, Duration.ofMillis(1))));
-    assertThat(onTime.isOk()).isTrue();
+  void cooldownAppliesToEveryCategoryAndAllowsExactlyAtItsEnd() {
+    var history = new TeleportUsage(List.of(new TeleportUse(T0, 2)), T0.plusSeconds(60));
+    for (var kind : TeleportKind.values()) {
+      assertThat(pricer.quote(kind, Optional.of(history), Exemptions.NONE, T0.plusMillis(59999)))
+          .isEqualTo(Result.err(new OnCooldown(kind, Duration.ofMillis(1))));
+      assertThat(
+              pricer.quote(kind, Optional.of(history), Exemptions.NONE, T0.plusSeconds(60)).isOk())
+          .isTrue();
+    }
   }
 
   @Test
-  void freeExemptionCostsNothingButStillGrowsTheMultiplier() {
-    var quote =
-        pricer.quote(
-            TeleportKind.HOME, used(2, T0), new Exemptions(true, false), T0.plusSeconds(1));
-
-    assertThat(quote.map(Quote::cost)).isEqualTo(Result.ok(0L));
-    assertThat(quote.map(q -> q.next().multiplier())).isEqualTo(Result.ok(Multiplier.of(2.5)));
+  void freeTripsKeepTheirEscalatingCooldownAndWeight() {
+    var result =
+        pricer.quote(TeleportKind.RTP, Optional.of(homes(4, T0)), new Exemptions(true, false), T0);
+    var quoted =
+        result.fold(
+            value -> value,
+            error -> {
+              throw new AssertionError(error);
+            });
+    assertThat(quoted.cost()).isZero();
+    assertThat(quoted.cooldown()).isEqualTo(Duration.ofMinutes(2));
+    assertThat(quoted.next().trips()).hasSize(5);
   }
 
   @Test
-  void cooldownExemptionIgnoresAndSetsNoCooldown() {
-    var usage = Optional.of(new TeleportUsage(Multiplier.ONE, T0, T0.plusSeconds(60)));
-
-    var quote = pricer.quote(TeleportKind.HOME, usage, new Exemptions(false, true), T0);
-
-    assertThat(quote.map(q -> q.next().cooldownUntil())).isEqualTo(Result.ok(T0));
-    assertThat(quote.map(Quote::cost)).isEqualTo(Result.ok(25L));
+  void cooldownExemptionStillRecordsUsage() {
+    var history = new TeleportUsage(homes(4, T0).trips(), T0.plusSeconds(60));
+    var quoted =
+        pricer
+            .quote(TeleportKind.HOME, Optional.of(history), new Exemptions(false, true), T0)
+            .fold(
+                value -> value,
+                error -> {
+                  throw new AssertionError(error);
+                });
+    assertThat(quoted.cost()).isEqualTo(50);
+    assertThat(quoted.cooldown()).isZero();
+    assertThat(quoted.next().trips()).hasSize(5);
   }
 
   @Test
-  void aFreeKindStaysFree() {
-    var free = new TeleportPrice(0, Duration.ZERO);
-    var pricing =
-        new TeleportPricing(
-            new TeleportPrices(free, free, free, free, free), 0.5, 0.5, DECAY_EVERY, 4.0);
+  void clockMovingBackDoesNotEraseRecentUsage() {
+    var quoted =
+        pricer.preview(TeleportKind.HOME, homes(4, T0), Exemptions.NONE, T0.minusSeconds(1));
+    assertThat(quoted.cost()).isEqualTo(50);
+  }
 
-    var quote =
-        new TeleportPricer(pricing).quote(TeleportKind.WARP, used(4, T0), Exemptions.NONE, T0);
-
-    assertThat(quote.map(Quote::cost)).isEqualTo(Result.ok(0L));
+  @Test
+  void cooldownAndWindowStartOnArrivalRatherThanQuotation() {
+    var quoted = quote(TeleportKind.HOME, TeleportUsage.EMPTY, T0);
+    var delivered = quoted.next().deliveredAt(T0.plusSeconds(20));
+    assertThat(delivered.trips().getLast().at()).isEqualTo(T0.plusSeconds(20));
+    assertThat(delivered.cooldownUntil()).isEqualTo(T0.plusSeconds(80));
+    assertThat(TeleportUsage.EMPTY.trips()).isEmpty();
   }
 }

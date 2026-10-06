@@ -11,6 +11,7 @@ import com.shepherdjerred.thestorm.essentials.app.GuardRegistry;
 import com.shepherdjerred.thestorm.essentials.app.TeleportPayments;
 import com.shepherdjerred.thestorm.essentials.app.TeleportPayments.Charge;
 import com.shepherdjerred.thestorm.essentials.app.TeleportRefusal;
+import com.shepherdjerred.thestorm.essentials.app.TeleportTravel;
 import com.shepherdjerred.thestorm.essentials.domain.back.BackEntry;
 import com.shepherdjerred.thestorm.essentials.domain.place.DurationText;
 import com.shepherdjerred.thestorm.essentials.domain.place.Position;
@@ -19,6 +20,8 @@ import com.shepherdjerred.thestorm.essentials.domain.teleport.Quote;
 import com.shepherdjerred.thestorm.essentials.domain.teleport.TeleportKind;
 import com.shepherdjerred.thestorm.essentials.domain.teleport.Warmup;
 import java.time.Duration;
+import java.time.Instant;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,9 +29,12 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Runs a paid teleport on the main thread: guards, quote, warmup, guards again, a safe landing
@@ -39,7 +45,7 @@ import org.bukkit.entity.Player;
  * known to be safe, and returned if the teleport still does not happen. The usage (price multiplier
  * and cooldown) is recorded only once the player has arrived.
  */
-final class TeleportFlow {
+final class TeleportFlow implements TeleportTravel {
 
   private static final String FAILED = "Something went wrong with that teleport. Try again.";
 
@@ -49,6 +55,11 @@ final class TeleportFlow {
   private final Arrival arrival;
   private final Map<UUID, Pending> warmingUp = new HashMap<>();
   private final Map<UUID, Ticket> busy = new HashMap<>();
+  private final Map<UUID, Landing> landings = new HashMap<>();
+  private final Map<UUID, Quote> displayed = new HashMap<>();
+  private final java.util.Set<UUID> bookkeepingFailed = new java.util.HashSet<>();
+  private @Nullable Function<UUID, CompletableFuture<Instant>> rtpFirstSeen;
+  private CompletableFuture<Void> legacyRecovery = CompletableFuture.completedFuture(null);
 
   TeleportFlow(PaperRuntime runtime, Services services, Duration warmup) {
     this(runtime, services, warmup, Player::teleportAsync);
@@ -83,7 +94,173 @@ final class TeleportFlow {
       BackRecorder back,
       SealedWorlds sealed) {}
 
-  private record Pending(Ticket ticket, Exemptions exemptions, Position start, Cancellable task) {}
+  private record Pending(Ticket ticket, Position start, Cancellable task) {}
+
+  private record Check(Exemptions exemptions, Result<Quote, TeleportRefusal> quote) {}
+
+  @Override
+  public void configureRtp(
+      Function<UUID, CompletableFuture<Instant>> firstSeen, CompletableFuture<Void> recovered) {
+    if (rtpFirstSeen != null) {
+      throw new IllegalStateException("RTP policy was already installed");
+    }
+    rtpFirstSeen = firstSeen;
+    legacyRecovery = recovered;
+  }
+
+  @Override
+  public Policy policy() {
+    var rules = services.payments().pricing();
+    return new Policy(rules.rtpFreeFor(), rules.window(), rules.allowance());
+  }
+
+  @Override
+  public void randomTeleport(
+      Player player,
+      String description,
+      Supplier<CompletableFuture<Result<Landing, Component>>> preparation) {
+    travel(player, TeleportKind.RTP, description, preparation);
+  }
+
+  @Override
+  public CompletableFuture<Status> status(Player player) {
+    var permissions = exemptions(player);
+    var firstSeen = rtpFirstSeen;
+    var seen =
+        firstSeen == null
+            ? CompletableFuture.completedFuture(Instant.EPOCH)
+            : legacyRecovery.thenCompose(ready -> firstSeen.apply(player.getUniqueId()));
+    return seen.thenCombine(
+        services.payments().history(player.getUniqueId()),
+        (rtpSeen, history) -> {
+          var rules = services.payments().pricing();
+          var freeUntil = firstSeen == null ? Instant.EPOCH : rtpSeen.plus(rules.rtpFreeFor());
+          var now = runtime.time().instant();
+          var quotes = new EnumMap<TeleportKind, Quote>(TeleportKind.class);
+          for (var kind : TeleportKind.values()) {
+            var free = permissions.free() || (kind == TeleportKind.RTP && now.isBefore(freeUntil));
+            quotes.put(
+                kind,
+                services
+                    .payments()
+                    .preview(
+                        kind, history, new Exemptions(free, permissions.ignoresCooldown()), now));
+          }
+          return new Status(rules, history, quotes, now, freeUntil);
+        });
+  }
+
+  private CompletableFuture<Exemptions> exemptionsFor(Player player, TeleportKind kind) {
+    var permissions = exemptions(player);
+    if (kind != TeleportKind.RTP) {
+      return legacyRecovery.thenApply(ready -> permissions);
+    }
+    var firstSeen = java.util.Objects.requireNonNull(rtpFirstSeen, "RTP policy is required");
+    return legacyRecovery
+        .thenCompose(ready -> firstSeen.apply(player.getUniqueId()))
+        .thenApply(
+            seen ->
+                new Exemptions(
+                    permissions.free()
+                        || runtime
+                            .time()
+                            .instant()
+                            .isBefore(seen.plus(services.payments().pricing().rtpFreeFor())),
+                    permissions.ignoresCooldown()));
+  }
+
+  private CompletableFuture<Check> check(Player payer, TeleportKind kind) {
+    return exemptionsFor(payer, kind)
+        .thenCompose(
+            exemptions ->
+                services
+                    .payments()
+                    .quote(payer.getUniqueId(), kind, exemptions)
+                    .thenApply(quote -> new Check(exemptions, quote)));
+  }
+
+  @Override
+  public void travel(
+      Player player,
+      TeleportKind kind,
+      String description,
+      Supplier<CompletableFuture<Result<Landing, Component>>> preparation) {
+    var ticket =
+        Ticket.self(player, kind, Destination.fixed(Positions.current(player), description));
+    if (isBusy(player.getUniqueId())) {
+      Say.error(player, Say.TELEPORT, "A teleport is already under way.");
+      return;
+    }
+    if (services.sealed().isSealed(player.getWorld())) {
+      Say.error(player, Say.TELEPORT, "You can't teleport out of this world.");
+      return;
+    }
+    var guard = services.guards().check(player.getUniqueId(), Positions.current(player));
+    if (guard.isPresent()) {
+      player.sendMessage(HouseStyle.error(Say.TELEPORT, guard.orElseThrow()));
+      return;
+    }
+    lock(ticket);
+    next(
+        check(player, kind),
+        ticket,
+        "quoting a teleport",
+        checked -> {
+          if (!active(ticket) || !bothOnline(ticket)) {
+            release(ticket);
+            return;
+          }
+          switch (checked.quote()) {
+            case Result.Err<Quote, TeleportRefusal>(var refusal) -> {
+              release(ticket);
+              tellRefusal(ticket, refusal);
+            }
+            case Result.Ok<Quote, TeleportRefusal>(var quote) ->
+                prepare(ticket, quote, preparation);
+          }
+        });
+  }
+
+  private void prepare(
+      Ticket ticket,
+      Quote quote,
+      Supplier<CompletableFuture<Result<Landing, Component>>> preparation) {
+    next(
+        preparation.get(),
+        ticket,
+        "preparing a teleport destination",
+        result -> {
+          switch (result) {
+            case Result.Err<Landing, Component>(var reason) -> {
+              release(ticket);
+              ticket.payer().sendMessage(HouseStyle.error(Say.TELEPORT, reason));
+            }
+            case Result.Ok<Landing, Component>(var landing) -> {
+              if (!active(ticket) || !bothOnline(ticket)) {
+                landing.release().run();
+                release(ticket);
+                return;
+              }
+              var prepared =
+                  Ticket.self(
+                      ticket.mover(),
+                      ticket.kind(),
+                      Destination.fixed(landing.location(), ticket.destination().describe()));
+              lock(prepared);
+              landings.put(prepared.mover().getUniqueId(), landing);
+              if (refused(prepared, landing.location())) {
+                release(prepared);
+                return;
+              }
+              beginWarmup(prepared, quote);
+            }
+          }
+        });
+  }
+
+  private boolean active(Ticket ticket) {
+    return java.util.Objects.equals(busy.get(ticket.mover().getUniqueId()), ticket);
+  }
 
   /** Starts {@code ticket}: checks guards and cooldown, then begins the warmup. */
   void start(Ticket ticket) {
@@ -105,17 +282,16 @@ final class TeleportFlow {
       return;
     }
     lock(ticket);
-    var exemptions = exemptions(payer);
     next(
-        services.payments().quote(payer.getUniqueId(), ticket.kind(), exemptions),
+        check(payer, ticket.kind()),
         ticket,
         "quoting a teleport",
-        quoted -> afterQuote(ticket, exemptions, quoted));
+        checked -> afterQuote(ticket, checked.quote()));
   }
 
   /** Whether {@code player} is moving or paying in a teleport that has not finished. */
   boolean isBusy(UUID player) {
-    return busy.containsKey(player);
+    return busy.containsKey(player) || bookkeepingFailed.contains(player);
   }
 
   /** Cancels a warmup because {@code player} moved (or was carried) off its starting block. */
@@ -148,12 +324,14 @@ final class TeleportFlow {
   void cancelAll() {
     warmingUp.values().forEach(pending -> pending.task().cancel());
     warmingUp.clear();
+    landings.values().forEach(landing -> landing.release().run());
+    landings.clear();
+    displayed.clear();
     busy.clear();
   }
 
-  private void afterQuote(
-      Ticket ticket, Exemptions exemptions, Result<Quote, TeleportRefusal> quoted) {
-    if (!bothOnline(ticket)) {
+  private void afterQuote(Ticket ticket, Result<Quote, TeleportRefusal> quoted) {
+    if (!active(ticket) || !bothOnline(ticket)) {
       release(ticket);
       return;
     }
@@ -162,16 +340,32 @@ final class TeleportFlow {
         release(ticket);
         tellRefusal(ticket, refusal);
       }
-      case Result.Ok<Quote, TeleportRefusal>(var quote) -> beginWarmup(ticket, exemptions, quote);
+      case Result.Ok<Quote, TeleportRefusal>(var quote) -> beginWarmup(ticket, quote);
     }
   }
 
-  private void beginWarmup(Ticket ticket, Exemptions exemptions, Quote quote) {
+  private void beginWarmup(Ticket ticket, Quote quote) {
+    displayed.put(ticket.mover().getUniqueId(), quote);
     var price =
-        quote.cost() == 0 ? "free" : quote.cost() + " crystals (" + quote.multiplier() + ")";
-    Say.info(ticket.payer(), Say.TELEPORT, "This teleport costs " + price + ".");
+        (quote.cost() == 0 ? "free" : quote.cost() + " crystals") + " (" + quote.multiplier() + ")";
+    ticket
+        .payer()
+        .sendMessage(
+            HouseStyle.info(
+                Say.TELEPORT,
+                Component.text(
+                        "This teleport costs "
+                            + price
+                            + "; shared cooldown "
+                            + DurationText.format(quote.cooldown())
+                            + ". Recent usage: "
+                            + quote.previousPoints()
+                            + "/"
+                            + services.payments().pricing().allowance()
+                            + " points. ")
+                    .append(TeleportInfoCommands.help(ticket.kind()))));
     if (warmup.isZero()) {
-      land(ticket, exemptions);
+      land(ticket);
       return;
     }
     var mover = ticket.mover();
@@ -192,15 +386,15 @@ final class TeleportFlow {
                 () -> {
                   var pending = warmingUp.remove(id);
                   if (pending != null) {
-                    guarded(pending.ticket(), () -> land(pending.ticket(), pending.exemptions()));
+                    guarded(pending.ticket(), () -> land(pending.ticket()));
                   }
                 });
-    warmingUp.put(id, new Pending(ticket, exemptions, Positions.of(mover), task));
+    warmingUp.put(id, new Pending(ticket, Positions.of(mover), task));
   }
 
   /** The warmup is over: re-checks guards, finds a safe spot, then charges. */
-  private void land(Ticket ticket, Exemptions exemptions) {
-    if (!bothOnline(ticket)) {
+  private void land(Ticket ticket) {
+    if (!active(ticket) || !bothOnline(ticket)) {
       release(ticket);
       return;
     }
@@ -216,17 +410,21 @@ final class TeleportFlow {
       return;
     }
     if (SafeLocations.isLoaded(target)) {
-      chargeFor(ticket, exemptions, target);
+      chargeFor(ticket, target);
       return;
     }
     next(
         target.getWorld().getChunkAtAsync(target),
         ticket,
         "loading the destination",
-        chunk -> chargeFor(ticket, exemptions, target));
+        chunk -> chargeFor(ticket, target));
   }
 
-  private void chargeFor(Ticket ticket, Exemptions exemptions, Location target) {
+  private void chargeFor(Ticket ticket, Location target) {
+    if (!active(ticket) || !bothOnline(ticket)) {
+      release(ticket);
+      return;
+    }
     var safe = SafeLocations.nearestSafe(target);
     if (safe.isEmpty()) {
       release(ticket);
@@ -238,11 +436,45 @@ final class TeleportFlow {
               + ".");
       return;
     }
+    if (refused(ticket, safe.orElseThrow())) {
+      release(ticket);
+      return;
+    }
     next(
-        services.payments().charge(ticket.payer().getUniqueId(), ticket.kind(), exemptions),
+        check(ticket.payer(), ticket.kind()),
         ticket,
-        "charging a teleport",
-        charged -> afterCharge(ticket, charged, safe.orElseThrow()));
+        "checking the final teleport price",
+        checked -> {
+          switch (checked.quote()) {
+            case Result.Err<Quote, TeleportRefusal>(var refusal) -> {
+              release(ticket);
+              tellRefusal(ticket, refusal);
+            }
+            case Result.Ok<Quote, TeleportRefusal>(var finalQuote) -> {
+              if (!active(ticket) || !bothOnline(ticket)) {
+                release(ticket);
+                return;
+              }
+              var shown =
+                  java.util.Objects.requireNonNull(displayed.get(ticket.mover().getUniqueId()));
+              if (finalQuote.cost() > shown.cost()) {
+                release(ticket);
+                Say.error(
+                    ticket.payer(),
+                    Say.TELEPORT,
+                    "Your price changed. Run the command again for a new quote. /tpinfo");
+              } else {
+                next(
+                    services
+                        .payments()
+                        .charge(ticket.payer().getUniqueId(), ticket.kind(), checked.exemptions()),
+                    ticket,
+                    "charging a teleport",
+                    charged -> afterCharge(ticket, charged, safe.orElseThrow()));
+              }
+            }
+          }
+        });
   }
 
   private void afterCharge(Ticket ticket, Result<Charge, TeleportRefusal> charged, Location safe) {
@@ -258,8 +490,12 @@ final class TeleportFlow {
   }
 
   private void teleport(Ticket ticket, Charge payment, Location safe) {
-    if (!bothOnline(ticket)) {
+    if (!active(ticket) || !bothOnline(ticket)) {
       refundAndRelease(ticket, payment, "a player left");
+      return;
+    }
+    if (refused(ticket, safe)) {
+      refundAndRelease(ticket, payment, "travel protection changed");
       return;
     }
     var mover = ticket.mover();
@@ -294,6 +530,7 @@ final class TeleportFlow {
                 }
               },
               failure -> {
+                bookkeepingFailed.add(ticket.payer().getUniqueId());
                 release(ticket, true);
                 if (ticket.payer().isOnline()) {
                   Say.error(
@@ -403,7 +640,7 @@ final class TeleportFlow {
    */
   private static boolean playerChosen(TeleportKind kind) {
     return switch (kind) {
-      case HOME, TPA, BACK -> true;
+      case HOME, TPA, BACK, RTP -> true;
       case SPAWN, WARP -> false;
     };
   }
@@ -412,13 +649,15 @@ final class TeleportFlow {
     var message =
         switch (refusal) {
           case TeleportRefusal.Cooldown(var cooldown) ->
-              "You can use /"
-                  + cooldown.kind().id()
-                  + " again in "
+              "All travel commands share this cooldown. You can teleport again in "
                   + DurationText.format(cooldown.remaining())
-                  + ".";
+                  + ". /tpinfo shows usage and recovery.";
           case TeleportRefusal.CannotAfford(var balance, var required) ->
-              "This teleport costs " + required + " crystals; you have " + balance + ".";
+              "This teleport costs "
+                  + required
+                  + " crystals; you have "
+                  + balance
+                  + ". Frequent trips increase prices. /tpinfo shows recovery.";
         };
     Say.error(ticket.payer(), Say.TELEPORT, message);
   }
@@ -436,6 +675,17 @@ final class TeleportFlow {
     var owned = busy.remove(ticket.mover().getUniqueId(), ticket);
     busy.remove(ticket.payer().getUniqueId(), ticket);
     if (owned) {
+      displayed.remove(ticket.mover().getUniqueId());
+      var landing = landings.remove(ticket.mover().getUniqueId());
+      if (landing != null) {
+        try {
+          if (arrived) {
+            landing.arrived().run();
+          }
+        } finally {
+          landing.release().run();
+        }
+      }
       notifyAcceptor(ticket, arrived);
     }
   }

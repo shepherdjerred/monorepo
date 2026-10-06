@@ -12,20 +12,17 @@ final class JoinListener implements Listener {
   private final QolStore store;
   private final ArrivalDialog dialog;
   private final ModuleContext context;
-  private final RtpFlow flow;
 
-  JoinListener(QolStore store, ArrivalDialog dialog, ModuleContext context, RtpFlow flow) {
+  JoinListener(QolStore store, ArrivalDialog dialog, ModuleContext context) {
     this.store = store;
     this.dialog = dialog;
     this.context = context;
-    this.flow = flow;
   }
 
   @EventHandler
   public void onJoin(PlayerJoinEvent event) {
     if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
     var player = event.getPlayer();
-    flow.recoverPending();
     var _ =
         store
             .ensure(player.getUniqueId(), context.time().instant())

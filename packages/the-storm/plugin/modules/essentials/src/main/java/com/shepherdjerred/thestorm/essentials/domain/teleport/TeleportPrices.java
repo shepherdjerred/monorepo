@@ -14,7 +14,8 @@ public record TeleportPrices(
     TeleportPrice home,
     TeleportPrice tpa,
     TeleportPrice back,
-    TeleportPrice warp) {
+    TeleportPrice warp,
+    TeleportPrice rtp) {
 
   /** The base price of {@code kind}. */
   public TeleportPrice of(TeleportKind kind) {
@@ -24,6 +25,7 @@ public record TeleportPrices(
       case TPA -> tpa;
       case BACK -> back;
       case WARP -> warp;
+      case RTP -> rtp;
     };
   }
 }

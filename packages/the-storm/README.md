@@ -737,6 +737,36 @@ until the player frees inventory space.
 
 ## Conventions
 
+## Command travel
+
+`/spawn`, `/home`, `/back`, `/warp`, `/tpa`, `/tpahere`, and `/rtp` share
+one player-wide cooldown and an allowance of four weighted points over the
+last hour. Spawn and warp consume half a point, home/back/RTP one point, and
+player-to-player travel two points. Include the proposed trip when quoting:
+each point beyond the allowance doubles both price and cooldown, up to x32;
+half a point beyond the allowance starts x2. Each successful trip stops counting
+exactly one hour after arrival. Offline time also expires usage.
+
+`/tpinfo [category]` shows configured rules, current quotes, shared cooldown,
+and the next usage expiration. The requester pays and accumulates usage for
+both TPA directions. Unanswered requests, cancelled warmups, failed searches,
+and failed delivery consume no allowance. Free RTP during the first seven
+days still consumes points and receives the same escalating cooldown.
+Elytra, happy ghasts, and ordinary routes are the intended regular transport.
+
+Essentials publishes `TeleportTravel`: one reservation, warmup, guard,
+payment, refund, and delivery-confirmation flow. QoL supplies RTP's destination
+search and existing first-seen timestamp. The landing chunk remains held
+through delivery. Successful trips and the shared cooldown live in Essentials;
+confirmation clears the charge obligation in the same database transaction.
+The shared policy is typed in `essentials.yml`; `rtp.yml` owns only search and
+landing settings, including a 15-second search throttle for failed attempts.
+
+Migration preserves each player's longest existing Essentials cooldown and
+starts the rolling history empty once: the old aggregates cannot reconstruct
+individual completed trips. Pending charges remain recoverable. Legacy RTP
+refunds keep their original ledger keys and finish before shared travel opens.
+
 ## AI staff
 
 The `tickets` and `agent` modules provide ticket tracking and proactive chat
@@ -751,17 +781,11 @@ receipt for an identical retry, and rejects reuse of the key with different
 transfer details. `receiptFor` lets a caller reconcile an uncertain result.
 Ordinary unkeyed transfers keep their existing behavior.
 
-Paid random teleports save an attempt in the QoL database before their keyed
-charge. The attempt remains until the teleport succeeds or a keyed refund is
-committed. Module startup and player joins reconcile unfinished attempts against
-the economy ledger. If a process stops after teleport delivery but before the
-attempt is cleared, recovery may refund a delivered teleport; it never drops a
-known charge without either delivery or compensation.
-The cooldown is recorded before loading destination chunks, so a cancelled
-warmup, failed search, or refused charge cannot repeat costly scans immediately.
-The selected landing chunk has a reference-counted plugin ticket through the
-warmup, charge, and teleport so the final move does not reload it on the main
-thread.
+Legacy QoL RTP obligations are reconciled with their original keyed ledger
+contract before shared travel is available. New RTP charges use Essentials'
+attempt store. The search throttle is recorded before loading destination
+chunks, so cancelled warmups, failed searches, and refused charges cannot
+repeat costly scans immediately. It is separate from successful-travel usage.
 
 Paid Essentials teleports use the same keyed ledger contract. Essentials writes
 an attempt before charging and clears it after arrival and usage persistence or

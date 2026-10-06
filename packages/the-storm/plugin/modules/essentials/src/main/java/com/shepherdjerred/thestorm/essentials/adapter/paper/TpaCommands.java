@@ -78,6 +78,14 @@ final class TpaCommands {
       String name, TpaRequest.Direction direction) {
     return literal(name)
         .requires(Cmd.permission(EssentialsPermissions.TPA))
+        .executes(
+            context ->
+                Cmd.asPlayer(
+                    context,
+                    player ->
+                        player.sendMessage(
+                            Component.text("Use /" + name + " <player>.")
+                                .append(TeleportInfoCommands.help(TeleportKind.TPA)))))
         .then(
             argument(PLAYER, word())
                 .suggests(Cmd.onlinePlayers(runtime.server()))
