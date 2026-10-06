@@ -54,6 +54,12 @@ outside CI. Run the suites relevant to the change locally and record the
 commands and results in the PR's verification evidence. This policy is a
 Minecraft-only exception; other packages retain their normal CI gates.
 
+World-scoped RCON fixtures use namespaced vanilla commands such as
+`minecraft:tp`. The unqualified `tp` command shares the plugin's administrative
+command surface and can lose the selected dimension through console dispatch.
+Wait for client chunks before moving newly connected bots or asserting entity
+tracking; the Mineflayer spawn event precedes chunk delivery.
+
 From the repository root, build the plugin and run the desired server suite
 with Docker available:
 

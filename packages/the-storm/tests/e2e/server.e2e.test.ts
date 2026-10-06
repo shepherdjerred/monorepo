@@ -105,6 +105,13 @@ describe("multi-player flows", () => {
     secondBot,
     rcon,
   }) => {
+    // Spawn precedes chunk delivery. Let Paper finish tracking both clients
+    // before moving them out of their initial chunks.
+    await waitUntil("both spawn chunks", () =>
+      [bot, secondBot].every(
+        (player) => player.blockAt(player.entity.position.floored()) !== null,
+      ),
+    );
     await rcon.command(`tp ${bot.username} 400.5 -60 0.5`);
     await rcon.command(`tp ${secondBot.username} 404.5 -60 0.5`);
     await waitUntil(
@@ -112,6 +119,11 @@ describe("multi-player flows", () => {
       () =>
         bot.entity.position.distanceTo(new Vec3(400.5, -60, 0.5)) < 0.1 &&
         secondBot.entity.position.distanceTo(new Vec3(404.5, -60, 0.5)) < 0.1,
+    );
+    await waitUntil("both destination chunks", () =>
+      [bot, secondBot].every(
+        (player) => player.blockAt(player.entity.position.floored()) !== null,
+      ),
     );
     await waitUntil(
       "bots see each other",
