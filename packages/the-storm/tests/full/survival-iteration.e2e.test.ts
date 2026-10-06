@@ -169,6 +169,9 @@ describe("Settlement iteration on native Paper", () => {
       await rcon.command(
         `data modify entity ${selector} Health set value 1.0f`,
       );
+      // Native zombie spawning can produce a baby whose hitbox is below this
+      // fixed throw aim. Use an adult for the slot-return and reward fixture.
+      await rcon.command(`data merge entity ${selector} {IsBaby:0b}`);
       await waitUntil("trident target", () =>
         Object.values(bot.entities).some(
           (entity) =>

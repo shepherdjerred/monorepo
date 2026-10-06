@@ -44,6 +44,12 @@ owning source and cannot establish the source revision of live state. It
 reports that gap and still requires consumer probes before revocation.
 Neither command writes, imports, applies, archives or deletes anything.
 
+Platform handoffs from OpenAI and Cloudflare can declare only a field label.
+The verifier accepts a sectioned field only when that label identifies exactly
+one physical field in the item. Duplicate labels remain unresolved even when
+their values match. Application targets declare field IDs and use exact section
+matching; they never fall back to a label after a physical selector mismatch.
+
 The offline `check:1password` gate checks application targets against the
 committed vault snapshot. It requires the label, field ID and section ID to
 identify the same physical field, including whether the field is top-level.

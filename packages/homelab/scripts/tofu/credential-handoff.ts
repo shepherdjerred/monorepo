@@ -22,10 +22,16 @@ export function targetValue(
 ): string | undefined {
   const item = resolveAuditItem(items, target.vault_item_id);
   if (item === undefined) return undefined;
+  // Platform providers publish label-only handoff targets. Resolve those only
+  // when the label is unique across the item, including sectioned fields.
+  // Physical selectors remain exact, including an omitted top-level section.
+  const labelOnly =
+    target.vault_section_id === undefined &&
+    target.vault_field_id === undefined;
   const fields = (item.fields ?? []).filter(
     (field) =>
       target.vault_field === (field.label ?? field.id) &&
-      field.section?.id === target.vault_section_id &&
+      (labelOnly || field.section?.id === target.vault_section_id) &&
       (target.vault_field_id === undefined ||
         field.id === target.vault_field_id),
   );

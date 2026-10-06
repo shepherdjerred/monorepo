@@ -71,6 +71,68 @@ describe("generated Cloudflare handoffs", () => {
   });
 });
 
+describe("label-only platform handoffs", () => {
+  const platformTarget = {
+    vault_item_id: "openai",
+    vault_field: "OPENAI_API_KEY",
+  };
+  const sectioned = {
+    id: "key",
+    label: "OPENAI_API_KEY",
+    section: { id: "credentials" },
+    value: "fixture-platform-key",
+  };
+
+  test("a unique sectioned OpenAI field verifies without leaking its value", () => {
+    const report = verifyHandoffs(
+      {
+        voice: {
+          api_key: sectioned.value,
+          onepassword_targets: [platformTarget],
+        },
+      },
+      [platformTarget],
+      [{ id: "openai", title: "openai", fields: [sectioned] }],
+    );
+    expect(report[0]?.status).toBe("matches");
+    expect(JSON.stringify(report)).not.toContain(sectioned.value);
+  });
+
+  test("duplicate labels across sections are unresolved even for equal values", () => {
+    const duplicate = { ...sectioned, id: "other", section: { id: "other" } };
+    const report = verifyHandoffs(
+      {
+        voice: {
+          api_key: sectioned.value,
+          onepassword_targets: [platformTarget],
+        },
+      },
+      [platformTarget],
+      [{ id: "openai", title: "openai", fields: [sectioned, duplicate] }],
+    );
+    expect(report[0]?.status).toBe("unresolved");
+    expect(JSON.stringify(report)).not.toContain(sectioned.value);
+  });
+
+  test("a top-level field shadowing a sectioned label is unresolved", () => {
+    expect(
+      targetValue(
+        [
+          {
+            id: "openai",
+            title: "openai",
+            fields: [
+              sectioned,
+              { id: "top", label: sectioned.label, value: sectioned.value },
+            ],
+          },
+        ],
+        platformTarget,
+      ),
+    ).toBeUndefined();
+  });
+});
+
 describe("credential preparation", () => {
   test("failed private subprocess output stays out of errors", async () => {
     await expect(
@@ -120,7 +182,9 @@ describe("credential preparation", () => {
     ).toBeUndefined();
     expect(jsonCredential(value, "/a~2b")).toBeUndefined();
   });
+});
 
+describe("physical selector adoption", () => {
   test("section fields require exact selectors and long ASCII adoption preserves values", () => {
     const postal = {
       vault_item_id: "postal",
@@ -147,11 +211,15 @@ describe("credential preparation", () => {
       targetValue(source, {
         vault_item_id: "postal",
         vault_field: "RAILS_SECRET_KEY",
+        vault_field_id: "field",
       }),
     ).toBeUndefined();
     expect(targetValue(source, postal) === value).toBe(true);
     expect(
       targetValue(source, { ...postal, vault_field_id: "other" }),
+    ).toBeUndefined();
+    expect(
+      targetValue(source, { ...postal, vault_section_id: "other" }),
     ).toBeUndefined();
     const scout = previewAdoption([
       {
