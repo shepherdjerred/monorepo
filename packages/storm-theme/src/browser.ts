@@ -4,6 +4,7 @@ import {
   defaultPreferences,
   PreferencesSchema,
   readPreferences,
+  preferenceCookie,
   type StormPreferences,
 } from "./preferences.ts";
 import { applySurface, renderEffects, syncControls } from "./surface.ts";
@@ -16,19 +17,25 @@ const ResponseSchema = z.object({
 });
 
 export async function startStormTheme(root: HTMLElement): Promise<void> {
+  const sync = z
+    .enum(["forum", "local"])
+    .parse(root.dataset["stormSync"] ?? "forum");
+  const docs = root.dataset["stormSurface"] === "docs";
   const apiValue = root.dataset["stormApi"],
     baseValue = root.dataset["stormBase"];
   if (
-    apiValue === undefined ||
-    apiValue === "" ||
     baseValue === undefined ||
-    baseValue === ""
+    baseValue === "" ||
+    (sync === "local" && !docs) ||
+    (sync === "forum" && (apiValue === undefined || apiValue === ""))
   )
     throw new Error("Storm theme bootstrap is incomplete");
-  const api = new URL(apiValue, location.href),
+  const api =
+      sync === "forum"
+        ? new URL(z.string().min(1).parse(apiValue), location.href)
+        : undefined,
     assetBase = new URL(baseValue, location.href);
-  const docs = root.dataset["stormSurface"] === "docs";
-  if (docs) startViewer(root, api);
+  if (docs && api) startViewer(root, api);
   const media = matchMedia("(prefers-color-scheme: dark)"),
     reduced = matchMedia("(prefers-reduced-motion: reduce)");
   let preferences = readPreferences(document.cookie) ?? {
@@ -68,6 +75,11 @@ export async function startStormTheme(root: HTMLElement): Promise<void> {
     return response.json();
   }
   async function refresh() {
+    if (!api) {
+      publicTheme = resolveTheme("auto", true, new Date());
+      apply();
+      return;
+    }
     const endpoint = new URL(api.href.replace(/\/?$/, "/") + "preferences");
     const [state, saved] = await Promise.all([
       request(api).then((value) => StateSchema.parse(value)),
@@ -80,6 +92,13 @@ export async function startStormTheme(root: HTMLElement): Promise<void> {
     if (status) status.textContent = "";
   }
   async function save(next: StormPreferences) {
+    if (!api) {
+      document.cookie = `${preferenceCookie}=${encodeURIComponent(JSON.stringify(next))}; Path=/; Max-Age=31536000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
+      preferences = next;
+      apply();
+      if (status) status.textContent = "Saved.";
+      return;
+    }
     if (!csrf) await refresh();
     const body = new URLSearchParams({
       storm_mode: next.appearance,

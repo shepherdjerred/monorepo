@@ -1,7 +1,11 @@
 ---
+import { productionForumActive } from "../forum-release.ts";
 const { head } = Astro.locals.starlightRoute;
 const path = Astro.url.pathname;
-const image = `https://ts-mc.net/storm-theme/card?surface=docs&path=${encodeURIComponent(path)}`;
+if (!Astro.site) throw new Error("Missing docs site URL");
+const image = productionForumActive
+  ? `https://ts-mc.net/storm-theme/card?surface=docs&path=${encodeURIComponent(path)}`
+  : new URL("/storm-card.png", Astro.site).href;
 ---
 
 {head

@@ -1,13 +1,11 @@
 ---
 import Search from "@astrojs/starlight/components/Search.astro";
 import { themeCatalog, resolveTheme } from "@shepherdjerred/storm-theme";
+import { forumActive, forumUrl as forum } from "../forum-release.ts";
 const id = resolveTheme("auto", true, new Date());
 const theme = themeCatalog.themes.find((theme) => theme.id === id);
 if (!theme) throw new Error("Missing Storm theme");
-const forum = import.meta.env.DEV
-  ? "http://127.0.0.1:18796"
-  : "https://ts-mc.net";
-const api = `${forum}/storm-theme/`;
+const api = forumActive ? `${forum}/storm-theme/` : undefined;
 ---
 
 <div
@@ -16,6 +14,7 @@ const api = `${forum}/storm-theme/`;
   data-storm-surface="docs"
   data-storm-base="/storm/"
   data-storm-api={api}
+  data-storm-sync={forumActive ? "forum" : "local"}
 >
   <div class="stormDocsTop stormDocsInner">
     <a href={forum} aria-label="The Storm community">
@@ -48,40 +47,46 @@ const api = `${forum}/storm-theme/`;
         <a href="/" aria-current="page">
           Docs
         </a>
-        <details>
-          <summary>Forums</summary>
-          <div class="stormNavMenu">
-            <a href={`${forum}/forums/`}>Forum list</a>
-            <a href={`${forum}/whats-new/posts/`}>New posts</a>
-          </div>
-        </details>
-        <details class="stormDocsSecondary">
-          <summary>What's new</summary>
-          <div class="stormNavMenu">
-            <a href={`${forum}/whats-new/`}>What's new</a>
-            <a href={`${forum}/whats-new/posts/`}>New posts</a>
-          </div>
-        </details>
-        <details class="stormDocsSecondary">
-          <summary>Members</summary>
-          <div class="stormNavMenu">
-            <a href={`${forum}/members/`}>Members</a>
-            <a href={`${forum}/online/`}>Current visitors</a>
-          </div>
-        </details>
-        <details class="stormDocsMore">
-          <summary>More</summary>
-          <div class="stormNavMenu">
-            <a href={`${forum}/whats-new/`}>What's new</a>
-            <a href={`${forum}/members/`}>Members</a>
-            <a href={`${forum}/online/`}>Current visitors</a>
-          </div>
-        </details>
+        {forumActive && (
+          <>
+            <details>
+              <summary>Forums</summary>
+              <div class="stormNavMenu">
+                <a href={`${forum}/forums/`}>Forum list</a>
+                <a href={`${forum}/whats-new/posts/`}>New posts</a>
+              </div>
+            </details>
+            <details class="stormDocsSecondary">
+              <summary>What's new</summary>
+              <div class="stormNavMenu">
+                <a href={`${forum}/whats-new/`}>What's new</a>
+                <a href={`${forum}/whats-new/posts/`}>New posts</a>
+              </div>
+            </details>
+            <details class="stormDocsSecondary">
+              <summary>Members</summary>
+              <div class="stormNavMenu">
+                <a href={`${forum}/members/`}>Members</a>
+                <a href={`${forum}/online/`}>Current visitors</a>
+              </div>
+            </details>
+            <details class="stormDocsMore">
+              <summary>More</summary>
+              <div class="stormNavMenu">
+                <a href={`${forum}/whats-new/`}>What's new</a>
+                <a href={`${forum}/members/`}>Members</a>
+                <a href={`${forum}/online/`}>Current visitors</a>
+              </div>
+            </details>
+          </>
+        )}
       </nav>
       <div class="stormDocsActions">
-        <div data-storm-account>
-          <a href={`${forum}/login/`}>Log in</a>
-        </div>
+        {forumActive && (
+          <div data-storm-account>
+            <a href={`${forum}/login/`}>Log in</a>
+          </div>
+        )}
         <Search />
         <details class="stormThemeControl">
           <summary>Appearance</summary>
