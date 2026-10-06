@@ -68,7 +68,9 @@ describe("disposable Paper 26.2 server", () => {
     );
 
     const reply = waitForTranslation(bot, "commands.time.query.timeline");
-    bot.chat("/time query day");
+    // /time is the permission-gated staff command; use Bukkit's namespaced
+    // vanilla command when this test checks vanilla translation output.
+    bot.chat("/minecraft:time query day");
     const [, ticks] = TimelineArgsSchema.parse(await reply);
     const fromBot = Number(ticks);
 
@@ -165,23 +167,37 @@ describe("26.x features through ViaBackwards", () => {
     bot,
     rcon,
   }) => {
-    const { x, y, z: posZ } = bot.entity.position;
-    const at = `${(x + 2).toString()} ${y.toString()} ${posZ.toString()}`;
     const dialogs: unknown[] = [];
+    const entityPackets: string[] = [];
     bot._client.on("packet", (data: unknown, meta: { name: string }) => {
       if (meta.name === "show_dialog") {
         dialogs.push(data);
       }
+      if (meta.name.includes("entity")) {
+        entityPackets.push(meta.name);
+      }
     });
 
+    const summonReplies = [];
     for (const type of [...summoned, "sulfur_cube"]) {
-      await rcon.command(`summon minecraft:${type} ${at}`);
+      summonReplies.push(
+        await rcon.command(
+          `execute at ${bot.username} run minecraft:summon minecraft:${type} ~ ~ ~`,
+        ),
+      );
     }
     const seen = () =>
       new Set(Object.values(bot.entities).map((entity) => entity.name));
-    await waitUntil("summoned entities", () =>
-      summoned.every((name) => seen().has(name)),
-    );
+    try {
+      await waitUntil("summoned entities", () =>
+        summoned.every((name) => seen().has(name)),
+      );
+    } catch (error) {
+      throw new Error(
+        `${String(error)}; client has ${[...seen()].join(", ")}; entity packets ${JSON.stringify(entityPackets)}; RCON replied ${summonReplies.join(" | ")}`,
+        { cause: error },
+      );
+    }
     // sulfur_cube is new in 26.2; ViaBackwards maps it to a slime for 26.1 clients.
     await waitUntil("sulfur cube as slime", () => seen().has("slime"));
 

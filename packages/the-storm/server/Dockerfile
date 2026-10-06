@@ -69,6 +69,7 @@ COPY --chmod=0755 server/storm-entrypoint.sh /usr/local/bin/storm-entrypoint
 # The towns module owns locks. Every stale top-level jar is retired.
 ENV TYPE=PAPER \
   VERSION=26.2 \
+  CFG_PROXY_PROTOCOL=false \
   PAPER_CUSTOM_JAR=/opt/paper/paper-26.2-129.jar \
   JVM_DD_OPTS=bundlerRepoDir:/opt/paper \
   PAPER_CONFIG_DEFAULTS_REPO=/opt/paper-defaults \

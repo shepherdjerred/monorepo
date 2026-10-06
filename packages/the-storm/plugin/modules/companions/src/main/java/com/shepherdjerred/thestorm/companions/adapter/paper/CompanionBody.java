@@ -57,6 +57,7 @@ final class CompanionBody {
     npc.data().setPersistent(NPC.Metadata.PICKUP_ITEMS, false);
     npc.data().setPersistent(NPC.Metadata.DROPS_ITEMS, true);
     npc.data().setPersistent(NPC.Metadata.RESPAWN_DELAY, -1);
+    npc.data().setPersistent(NPC.Metadata.KEEP_CHUNK_LOADED, true);
     npc.data().setPersistent(NPC.Metadata.DISABLE_DEFAULT_STUCK_ACTION, true);
     npc.getNavigator()
         .getDefaultParameters()

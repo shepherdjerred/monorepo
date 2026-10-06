@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.discord.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.players.PlayerJoinAnnouncementEvent;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.discord.app.DiscordRelay;
 import org.bukkit.event.EventHandler;
@@ -30,16 +31,30 @@ public final class ServerEventsListener implements Listener {
   @EventHandler(priority = EventPriority.MONITOR)
   public void onJoin(PlayerJoinEvent event) {
     if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
-    if (sealed.isSealed(event.getPlayer().getWorld())) {
+    if (com.shepherdjerred.thestorm.core.players.PlayerVisibility.joinAnnouncementPending(
+            event.getPlayer())
+        || sealed.isSealed(event.getPlayer().getWorld())
+        || com.shepherdjerred.thestorm.core.players.PlayerVisibility.hidden(event.getPlayer())) {
       return;
     }
     relay.onJoin(event.getPlayer().getName());
   }
 
   @EventHandler(priority = EventPriority.MONITOR)
+  public void onJoinAnnouncementResolved(PlayerJoinAnnouncementEvent event) {
+    if (!event.visible()
+        || sealed.isSealed(event.player().getWorld())
+        || com.shepherdjerred.thestorm.core.players.PlayerVisibility.hidden(event.player())) return;
+    relay.onJoin(event.player().getName());
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR)
   public void onQuit(PlayerQuitEvent event) {
     if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getPlayer())) return;
-    if (sealed.isSealed(event.getPlayer().getWorld())) {
+    if (com.shepherdjerred.thestorm.core.players.PlayerVisibility.joinAnnouncementPending(
+            event.getPlayer())
+        || sealed.isSealed(event.getPlayer().getWorld())
+        || com.shepherdjerred.thestorm.core.players.PlayerVisibility.hidden(event.getPlayer())) {
       return;
     }
     relay.onLeave(event.getPlayer().getName());
@@ -50,7 +65,8 @@ public final class ServerEventsListener implements Listener {
   public void onDeath(PlayerDeathEvent event) {
     if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(event.getEntity())) return;
     var message = event.deathMessage();
-    if (sealed.isSealed(event.getPlayer().getWorld())) {
+    if (sealed.isSealed(event.getPlayer().getWorld())
+        || com.shepherdjerred.thestorm.core.players.PlayerVisibility.hidden(event.getPlayer())) {
       return;
     }
     if (message != null && event.getShowDeathMessages()) {
@@ -60,7 +76,8 @@ public final class ServerEventsListener implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR)
   public void onAdvancement(PlayerAdvancementDoneEvent event) {
-    if (sealed.isSealed(event.getPlayer().getWorld())) {
+    if (sealed.isSealed(event.getPlayer().getWorld())
+        || com.shepherdjerred.thestorm.core.players.PlayerVisibility.hidden(event.getPlayer())) {
       return;
     }
     var advancement = event.getAdvancement();

@@ -63,6 +63,16 @@ public final class EssentialsModule implements StormModule {
     var moderation = ModerationService.load(new JooqModerationLogStore(database), context.time());
     context.services().provide(ModerationService.class, moderation);
     var players = PlayerDirectory.load(new JooqPlayerStore(database));
+    var staff =
+        new com.shepherdjerred.thestorm.essentials.app.StaffState(
+            new com.shepherdjerred.thestorm.essentials.adapter.db.JooqStaffStore(database));
+    context.services().provide(com.shepherdjerred.thestorm.essentials.app.StaffState.class, staff);
+    context
+        .services()
+        .provide(
+            com.shepherdjerred.thestorm.essentials.app.RuntimeDestinations.class,
+            new com.shepherdjerred.thestorm.essentials.app.RuntimeDestinations(
+                staff, config.spawn()));
     var warps = WarpDirectory.load(new JooqWarpStore(database));
     logLoad(context, moderation.loaded(), "the moderation log");
     logLoad(context, players.loaded(), "known players");

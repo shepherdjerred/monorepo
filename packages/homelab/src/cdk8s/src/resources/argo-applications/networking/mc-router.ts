@@ -16,7 +16,9 @@ export function createMcRouterApp(chart: Chart) {
   });
 
   const mcRouterValues: HelmValuesForChart<"mc-router"> = {
+    image: { tag: versions["itzg/mc-router"], pullPolicy: "IfNotPresent" },
     services: {
+      extraServiceSpec: { externalTrafficPolicy: "Local" },
       minecraft: {
         type: "NodePort",
         port: 25_565,
@@ -24,6 +26,7 @@ export function createMcRouterApp(chart: Chart) {
       },
     },
     minecraftRouter: {
+      useProxyProtocol: true,
       // Enable auto-scale up: wake servers when players connect
       autoScale: {
         up: {

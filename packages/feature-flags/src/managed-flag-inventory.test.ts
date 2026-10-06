@@ -367,6 +367,10 @@ describe("The Storm companion pilot rollout", () => {
 
   test.each([
     ["the-storm-companions-enabled", "the-storm"],
+    ["the-storm-staff-tools-enabled", "the-storm"],
+    ["the-storm-identity-enabled", "the-storm"],
+    ["the-storm-letters-enabled", "the-storm"],
+    ["the-storm-ip-enforcement-enabled", "the-storm"],
     ["storm-brain-conversation-enabled", "storm"],
   ])(
     "enables %s in beta while keeping production and fallback off",

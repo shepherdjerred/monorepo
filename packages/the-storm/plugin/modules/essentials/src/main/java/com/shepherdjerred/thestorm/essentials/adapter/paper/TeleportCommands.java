@@ -40,6 +40,7 @@ final class TeleportCommands {
   private final TeleportFlow flow;
   private final Places places;
   private final EssentialsConfig config;
+  private final com.shepherdjerred.thestorm.essentials.app.RuntimeDestinations destinations;
 
   /**
    * Where players can go.
@@ -54,7 +55,8 @@ final class TeleportCommands {
       WarpDirectory warps,
       BackStore back,
       Protection protection,
-      SealedWorlds sealed) {}
+      SealedWorlds sealed,
+      com.shepherdjerred.thestorm.essentials.app.RuntimeDestinations destinations) {}
 
   TeleportCommands(
       PaperRuntime runtime, TeleportFlow flow, Places places, EssentialsConfig config) {
@@ -62,6 +64,7 @@ final class TeleportCommands {
     this.flow = flow;
     this.places = places;
     this.config = config;
+    this.destinations = places.destinations();
   }
 
   void register(Commands commands) {
@@ -180,7 +183,7 @@ final class TeleportCommands {
         "Set a warp where you stand");
     commands.register(
         literal("delwarp")
-            .requires(Cmd.permission(EssentialsPermissions.SET_WARP))
+            .requires(Cmd.permission(EssentialsPermissions.DEL_WARP))
             .then(
                 argument("name", word())
                     .suggests(Cmd.suggest(this::warpNames))
@@ -198,7 +201,7 @@ final class TeleportCommands {
   }
 
   private void spawn(Player player) {
-    go(player, TeleportKind.SPAWN, config.spawn(), "spawn");
+    go(player, TeleportKind.SPAWN, destinations.spawn(), "spawn");
   }
 
   private void home(Player player, Optional<PlaceName> requested) {

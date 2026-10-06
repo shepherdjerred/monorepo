@@ -245,6 +245,7 @@ describe("profiles", () => {
     expect(profile.plugins).toEqual([]);
     expect(profile.env).toMatchObject({
       ONLINE_MODE: "FALSE",
+      CFG_PROXY_PROTOCOL: "false",
       MC_BRIDGE_TOKEN: secrets.bridgeToken,
       DISCORD_BOT_TOKEN: "invalid-storm-fixture-token",
     });

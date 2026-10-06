@@ -51,6 +51,8 @@ export const VersionMapSchema = z
     chartmuseum: z.string(),
     minecraft: z.string(),
     "mc-router": z.string(),
+    "itzg/mc-router": z.string(),
+    haproxy: z.string(),
     "jorenn92/maintainerr": z.string(),
     loki: z.string(),
     promtail: z.string(),

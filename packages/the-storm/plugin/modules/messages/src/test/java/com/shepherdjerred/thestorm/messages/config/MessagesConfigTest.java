@@ -42,7 +42,7 @@ final class MessagesConfigTest {
     assertThat(config.announcements().tips().messages()).hasSizeGreaterThanOrEqualTo(15);
     assertThat(config.motd()).isNotEmpty();
     assertThat(config.commands().blocklist().blocksMessage("/bukkit:plugins")).isTrue();
-    assertThat(config.commands().blocklist().blocksMessage("/help")).isTrue();
+    assertThat(config.commands().blocklist().blocksMessage("/help")).isFalse();
   }
 
   @Test

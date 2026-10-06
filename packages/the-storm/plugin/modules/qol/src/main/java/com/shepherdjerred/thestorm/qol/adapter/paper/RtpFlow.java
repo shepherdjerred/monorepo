@@ -152,6 +152,16 @@ final class RtpFlow {
 
   private RtpSearch.Request request(World world, Optional<String> biome) {
     var spawn = world.getSpawnLocation();
+    context
+        .services()
+        .find(com.shepherdjerred.thestorm.essentials.app.RuntimeDestinations.class)
+        .flatMap(destinations -> destinations.random(world.getName()))
+        .ifPresent(
+            origin -> {
+              spawn.setX(origin.x());
+              spawn.setY(origin.y());
+              spawn.setZ(origin.z());
+            });
     var border = world.getWorldBorder();
     var center = border.getCenter();
     var claims = land.chunks(world.getName());

@@ -141,6 +141,7 @@ async function profileFixtures(
           "chat",
           "tracks",
           "towns",
+          "essentials",
           "tickets",
           "agent",
           "rwf",

@@ -150,11 +150,18 @@ async function inRwf(rcon: RconClient, command: string): Promise<string> {
 }
 
 async function teleport(rcon: RconClient, bot: Bot, to: Vec3): Promise<void> {
-  await inRwf(rcon, `tp ${bot.username} ${coords(to)}`);
-  await waitUntil(
-    `${bot.username} arrives at ${coords(to)}`,
-    () => bot.entity.position.distanceTo(to) < 0.5,
-  );
+  const reply = await inRwf(rcon, `minecraft:tp ${bot.username} ${coords(to)}`);
+  try {
+    await waitUntil(
+      `${bot.username} arrives at ${coords(to)}`,
+      () => bot.entity.position.distanceTo(to) < 0.5,
+    );
+  } catch (error) {
+    throw new Error(
+      `${String(error)}; RCON replied ${reply}; player is at ${coords(bot.entity.position)}`,
+      { cause: error },
+    );
+  }
 }
 
 function numberAfter(pattern: RegExp, what: string) {
@@ -336,7 +343,8 @@ function inView(bot: Bot, other: Bot): Bot["entity"] | undefined {
 function expectRestored(bot: Bot, home: Vec3): void {
   expect(count(bot, "diamond")).toBe(3);
   expect(count(bot, "blaze_powder")).toBe(0);
-  expect(count(bot, "iron_sword")).toBe(0);
+  // First-join supplies now include one iron sword; the RWF kit is removed.
+  expect(count(bot, "iron_sword")).toBe(1);
   expect(armor(bot)).toEqual([undefined, undefined, undefined, undefined]);
   expect(bot.entity.position.distanceTo(home)).toBeLessThan(1);
 }
@@ -1230,8 +1238,20 @@ describe("Repairing the Search and Destroy map", () => {
         expect(
           await inRwf(rcon, `execute if block ${floor} minecraft:air`),
         ).toContain("Test failed");
-        await inRwf(rcon, `setblock ${bomb} minecraft:air`);
-        await inRwf(rcon, `setblock ${floor} minecraft:diamond_block`);
+        await inRwf(rcon, `minecraft:setblock ${bomb} minecraft:air`);
+        await inRwf(
+          rcon,
+          `minecraft:setblock ${floor} minecraft:diamond_block`,
+        );
+        expect(
+          await inRwf(rcon, `execute if block ${bomb} minecraft:air`),
+        ).toContain("Test passed");
+        expect(
+          await inRwf(
+            rcon,
+            `execute if block ${floor} minecraft:diamond_block`,
+          ),
+        ).toContain("Test passed");
 
         bot.chat("/rwf admin repair");
         await eventually(
@@ -1240,7 +1260,6 @@ describe("Repairing the Search and Destroy map", () => {
             log.all(intact).length === 2 && log.all(lobbyIntact).length === 2,
           30_000,
         );
-        expect(pastes(await serverLogs(server))).toBe(before + 1);
         expect(
           await inRwf(rcon, `execute if block ${bomb} minecraft:tnt`),
         ).toContain("Test passed");
@@ -1250,6 +1269,8 @@ describe("Repairing the Search and Destroy map", () => {
             `execute if block ${floor} minecraft:diamond_block`,
           ),
         ).toContain("Test failed");
+        const logs = await serverLogs(server);
+        expect(pastes(logs)).toBe(before + 1);
         expect(
           await inRwf(rcon, `execute if block ${floor} minecraft:air`),
         ).toContain("Test failed");
@@ -1395,7 +1416,7 @@ async function cappedMatch(
   await Bun.sleep(Math.max(0, 62_000 - (Date.now() - begun)));
   for (const [index, { bot: player }] of humans.entries()) {
     if (teams[index] !== winners) {
-      await rcon.command(`kill ${player.username}`);
+      await rcon.command(`minecraft:kill ${player.username}`);
     }
   }
   await announcer.log.until(new RegExp(`${winners} Team wins!`, "u"), 15_000);

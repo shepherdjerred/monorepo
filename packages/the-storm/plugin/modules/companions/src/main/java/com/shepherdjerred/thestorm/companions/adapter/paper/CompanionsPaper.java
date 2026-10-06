@@ -16,6 +16,7 @@ import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.players.Humans;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.schedule.Cancellable;
+import com.shepherdjerred.thestorm.core.world.ChunkTickets;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import java.time.Duration;
@@ -33,6 +34,7 @@ import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.event.CitizensEnableEvent;
 import net.citizensnpcs.api.npc.NPC;
 import net.kyori.adventure.text.Component;
+import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -63,6 +65,10 @@ public final class CompanionsPaper implements Listener, AutoCloseable {
   private final Availability availability;
   private final NativeRecipes recipes = new NativeRecipes();
   private final Map<String, CompanionActor> actors = new HashMap<>();
+
+  private record HeldChunk(World world, int x, int z) {}
+
+  private final Map<String, HeldChunk> heldChunks = new HashMap<>();
   private final Set<String> changing = new HashSet<>();
   private final Set<String> paused = new HashSet<>();
   private final Cancellable simulation;
@@ -164,6 +170,7 @@ public final class CompanionsPaper implements Listener, AutoCloseable {
       if (actor.died() && !actor.busy()) {
         if (actor.npc().isSpawned()) actor.npc().despawn();
         actors.remove(actor.id());
+        releaseChunk(actor.id());
       }
     }
     if (!active()) {
@@ -189,7 +196,10 @@ public final class CompanionsPaper implements Listener, AutoCloseable {
             .whenCompleteAsync(
                 (ignored, error) -> {
                   changing.remove(identity.id());
-                  if (error != null) failure(identity.id(), error);
+                  if (error != null) {
+                    releaseChunk(identity.id());
+                    failure(identity.id(), error);
+                  }
                 },
                 context.scheduler().mainThread());
   }
@@ -228,16 +238,36 @@ public final class CompanionsPaper implements Listener, AutoCloseable {
     var state = hydration.state();
     var world = context.plugin().getServer().getWorld(state.position().world());
     if (world == null) throw new IllegalStateException("saved companion world is not loaded");
+    var x = (int) Math.floor(state.position().x()) >> 4;
+    var z = (int) Math.floor(state.position().z()) >> 4;
     return world
-        .getChunkAtAsync(
-            (int) Math.floor(state.position().x()) >> 4,
-            (int) Math.floor(state.position().z()) >> 4,
-            true)
-        .thenAcceptAsync(chunk -> installBody(hydration), context.scheduler().mainThread());
+        .getChunkAtAsync(x, z, true)
+        .thenAcceptAsync(
+            chunk -> {
+              if (!active()) return;
+              context.services().require(ChunkTickets.class).hold(world, x, z);
+              heldChunks.put(hydration.identity().id(), new HeldChunk(world, x, z));
+              installBody(hydration);
+            },
+            context.scheduler().mainThread())
+        .whenCompleteAsync(
+            (ignored, failure) -> {
+              if (failure != null) releaseChunk(hydration.identity().id());
+            },
+            context.scheduler().mainThread());
+  }
+
+  private void releaseChunk(String id) {
+    var held = heldChunks.remove(id);
+    if (held != null)
+      context.services().require(ChunkTickets.class).release(held.world(), held.x(), held.z());
   }
 
   private void installBody(Hydration hydration) {
-    if (!active()) return;
+    if (!active()) {
+      releaseChunk(hydration.identity().id());
+      return;
+    }
     CompanionBody.restore(hydration.npc(), hydration.state(), context.plugin().getServer());
     var parts =
         new CompanionActor.Parts(context, config, store, audit, protection, recipes, this::active);
@@ -252,12 +282,14 @@ public final class CompanionsPaper implements Listener, AutoCloseable {
     if (actor.paused()) {
       actor.npc().despawn();
       actors.remove(actor.id());
+      releaseChunk(actor.id());
       paused.add(actor.id());
       changing.remove(actor.id());
       return;
     }
     if (!actor.npc().isSpawned()) {
       actors.remove(actor.id());
+      releaseChunk(actor.id());
       changing.remove(actor.id());
       return;
     }
@@ -270,6 +302,7 @@ public final class CompanionsPaper implements Listener, AutoCloseable {
             .whenCompleteAsync(
                 (ignored, error) -> {
                   actors.remove(actor.id());
+                  releaseChunk(actor.id());
                   changing.remove(actor.id());
                   if (error != null) failure(actor.id(), error);
                 },
@@ -327,6 +360,7 @@ public final class CompanionsPaper implements Listener, AutoCloseable {
       var before = actor.snapshot(event.getEntity());
       paused.add(actor.id());
       actors.remove(actor.id());
+      releaseChunk(actor.id());
       // A death crossed the world boundary. Persist an unresolved journal rather than respawning
       // the pre-death inventory and duplicating the native drops after an interrupted shutdown.
       var _ =
@@ -518,6 +552,7 @@ public final class CompanionsPaper implements Listener, AutoCloseable {
         actor.npc().despawn();
       }
     }
+    for (var id : java.util.List.copyOf(heldChunks.keySet())) releaseChunk(id);
     gate.close();
     conversation.close();
     audit.close();

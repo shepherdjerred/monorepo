@@ -30,16 +30,19 @@ public final class EssentialsPaper {
   private final List<Cancellable> tasks;
   private final TeleportFlow flow;
   private final EssentialsPermissions permissions;
+  private final StaffPaper staff;
 
   private EssentialsPaper(
       List<Listener> listeners,
       List<Cancellable> tasks,
       TeleportFlow flow,
-      EssentialsPermissions permissions) {
+      EssentialsPermissions permissions,
+      StaffPaper staff) {
     this.listeners = List.copyOf(listeners);
     this.tasks = List.copyOf(tasks);
     this.flow = flow;
     this.permissions = permissions;
+    this.staff = staff;
   }
 
   /**
@@ -94,7 +97,7 @@ public final class EssentialsPaper {
             app.stores().kitClaims(),
             new KitDeliveries(runtime, app.stores().kitClaims(), kitItems, context.plugin()));
     var permissions = new EssentialsPermissions(server.getPluginManager());
-    permissions.register(config.kits().kits().keySet(), config.kits().starter());
+    permissions.register();
 
     var teleports = config.teleports();
     var back =
@@ -109,6 +112,12 @@ public final class EssentialsPaper {
         .services()
         .provide(com.shepherdjerred.thestorm.essentials.app.TeleportTravel.class, flow);
     var tpa = new TpaDesk(context.time(), teleports.tpaRules());
+    var staff =
+        new StaffPaper(
+            context,
+            context.services().require(com.shepherdjerred.thestorm.essentials.app.StaffState.class),
+            app,
+            tpa);
     var safe = new SafeTracker();
 
     var teleportCommands =
@@ -120,12 +129,23 @@ public final class EssentialsPaper {
                 app.warps(),
                 app.stores().back(),
                 app.protection(),
-                app.sealed()),
+                app.sealed(),
+                context
+                    .services()
+                    .require(com.shepherdjerred.thestorm.essentials.app.RuntimeDestinations.class)),
             config);
-    var tpaCommands = new TpaCommands(runtime, flow, tpa, teleports.tpaTimeout());
+    var tpaCommands =
+        new TpaCommands(
+            runtime,
+            flow,
+            tpa,
+            new TpaCommands.Rollout(
+                teleports.tpaTimeout(),
+                context
+                    .services()
+                    .require(com.shepherdjerred.thestorm.core.expansion.ManagedGameplay.class)));
     var teleportInfo = new TeleportInfoCommands(runtime, flow);
-    var playerCommands =
-        new PlayerCommands(runtime, kits, KitItems.readable(config.rules()), app.afk());
+    var playerCommands = new PlayerCommands(runtime, KitItems.readable(config.rules()), app.afk());
     var moderationCommands = new ModerationCommands(runtime, app.moderation(), app.players());
     context
         .lifecycle()
@@ -138,6 +158,7 @@ public final class EssentialsPaper {
               teleportInfo.register(commands);
               playerCommands.register(commands);
               moderationCommands.register(commands);
+              staff.register(commands);
             });
 
     var afkListener = new AfkListener(runtime, app.afk(), playerCommands);
@@ -145,13 +166,26 @@ public final class EssentialsPaper {
         List.of(
             spawnPreparation,
             new TeleportListener(
-                runtime, flow, new TeleportListener.Places(back, safe, config.spawn())),
+                runtime,
+                flow,
+                new TeleportListener.Places(
+                    back,
+                    safe,
+                    context
+                        .services()
+                        .require(
+                            com.shepherdjerred.thestorm.essentials.app.RuntimeDestinations.class))),
             new BanListener(runtime, app.moderation()),
             new SessionListener(
                 runtime,
                 app.players(),
                 new SessionListener.Presence(app.afk(), tpa, flow, safe),
-                new SessionListener.Arrival(config.spawn(), kits)),
+                new SessionListener.Arrival(
+                    context
+                        .services()
+                        .require(
+                            com.shepherdjerred.thestorm.essentials.app.RuntimeDestinations.class),
+                    kits)),
             afkListener);
     listeners.forEach(
         listener -> server.getPluginManager().registerEvents(listener, context.plugin()));
@@ -160,7 +194,7 @@ public final class EssentialsPaper {
         List.of(
             scheduler.repeatOnMainThread(SWEEP_EVERY, SWEEP_EVERY, afkListener::sweep),
             scheduler.repeatOnMainThread(SWEEP_EVERY, SWEEP_EVERY, tpaCommands::expire));
-    return new EssentialsPaper(listeners, tasks, flow, permissions);
+    return new EssentialsPaper(listeners, tasks, flow, permissions, staff);
   }
 
   /** Stops everything started here except commands, which Paper keeps until shutdown. */
@@ -169,5 +203,6 @@ public final class EssentialsPaper {
     flow.cancelAll();
     listeners.forEach(HandlerList::unregisterAll);
     permissions.unregister();
+    staff.stop();
   }
 }

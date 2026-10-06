@@ -92,4 +92,22 @@ public final class JooqHomeStore implements HomeStore {
             row.getYaw().floatValue(),
             row.getPitch().floatValue()));
   }
+
+  @Override
+  public CompletableFuture<Boolean> rename(UUID player, PlaceName from, PlaceName to) {
+    return database.write(
+        sql -> {
+          var owner = ESSENTIALS_HOMES.PLAYER.eq(player.toString());
+          if (sql.fetchExists(
+              sql.selectFrom(ESSENTIALS_HOMES)
+                  .where(owner)
+                  .and(ESSENTIALS_HOMES.NAME.eq(to.value())))) return false;
+          return sql.update(ESSENTIALS_HOMES)
+                  .set(ESSENTIALS_HOMES.NAME, to.value())
+                  .where(owner)
+                  .and(ESSENTIALS_HOMES.NAME.eq(from.value()))
+                  .execute()
+              == 1;
+        });
+  }
 }

@@ -1,0 +1,13 @@
+{
+  "file": "/data/config/paper-global.yml",
+  "ops": [
+    {
+      "$put": {
+        "path": "$.proxies",
+        "key": "proxy-protocol",
+        "value": "${CFG_PROXY_PROTOCOL}",
+        "value-type": "bool"
+      }
+    }
+  ]
+}

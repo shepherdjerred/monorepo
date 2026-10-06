@@ -28,15 +28,17 @@ public final class MailCommands implements Listener {
       new NamespacedKey("thestorm", "mail_delivery_receipt");
   private final ModuleContext context;
   private final Mail mail;
+  private final LetterCommands letters;
   private final Set<UUID> busy = new HashSet<>();
 
-  public MailCommands(ModuleContext context, Mail mail) {
+  public MailCommands(ModuleContext context, Mail mail, LetterCommands letters) {
     this.context = context;
     this.mail = mail;
+    this.letters = letters;
   }
 
   public void register(Commands commands) {
-    commands.register(
+    var root =
         Commands.literal("mail")
             .requires(source -> source.getSender() instanceof Player)
             .executes(command -> list((Player) command.getSource().getSender()))
@@ -51,12 +53,13 @@ public final class MailCommands implements Listener {
                                             claim(
                                                 (Player) command.getSource().getSender(),
                                                 getString(command, "id"),
-                                                getString(command, "option"))))))
-            .build(),
-        "Read and collect your non-expiring mail");
+                                                getString(command, "option"))))));
+    letters.decorate(root);
+    commands.register(root.build(), "Read and collect your non-expiring mail");
   }
 
   private int list(Player player) {
+    letters.list(player);
     var _ =
         mail.list(player.getUniqueId())
             .whenCompleteAsync(
@@ -66,10 +69,11 @@ public final class MailCommands implements Listener {
                     return;
                   }
                   if (messages.isEmpty()) {
-                    player.sendMessage(Component.text("Your mailbox is empty."));
+                    player.sendMessage(Component.text("You have no reward deliveries."));
                   }
                   for (var message : messages) {
-                    player.sendMessage(Component.text(message.title() + " — " + message.id()));
+                    player.sendMessage(
+                        Component.text("[Reward] " + message.title() + " — " + message.id()));
                     var options =
                         message.selected().isEmpty()
                             ? String.join("|", message.options())
@@ -204,6 +208,8 @@ public final class MailCommands implements Listener {
   @EventHandler
   public void onJoin(PlayerJoinEvent event) {
     var player = event.getPlayer();
+    if (!com.shepherdjerred.thestorm.core.players.Humans.isHuman(player)) return;
+    letters.unread(player);
     if (!busy.add(player.getUniqueId())) {
       return;
     }

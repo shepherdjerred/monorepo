@@ -4,7 +4,7 @@ import java.time.Duration;
 import java.util.List;
 
 /**
- * A named set of items players claim with {@code /kit}.
+ * A named set of supplies used by automatic deliveries.
  *
  * @param items the item stacks
  * @param books written books handed out with the items

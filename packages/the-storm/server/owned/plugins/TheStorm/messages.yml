@@ -269,6 +269,6 @@ commands:
   # Labels refused for players without the bypass permission. Namespaced
   # forms such as /bukkit:plugins are blocked too, and those players' command
   # lists show no namespaced commands at all.
-  blocked: [pl, plugins, ver, version, about, icanhasbukkit, help, "?"]
+  blocked: [pl, plugins, ver, version, about, icanhasbukkit, "?"]
   staffBypassPermission: thestorm.messages.bypass-blocklist
   blockedMessage: "You don't have permission to do that!"

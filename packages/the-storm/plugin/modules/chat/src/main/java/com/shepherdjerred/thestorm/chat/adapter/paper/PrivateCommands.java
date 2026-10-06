@@ -92,6 +92,10 @@ public final class PrivateCommands {
   }
 
   private int send(Player sender, Player recipient, String message) {
+    if (!com.shepherdjerred.thestorm.core.players.PlayerVisibility.visibleTo(sender, recipient)) {
+      sender.sendMessage(Feedback.error("That player is not online."));
+      return Command.SINGLE_SUCCESS;
+    }
     var to = new Correspondent(recipient.getUniqueId(), recipient.getName());
     switch (service.preparePrivate(Speakers.of(sender), to, message)) {
       case Result.Ok<PrivateLine, List<ChatDenial>>(var line) -> {

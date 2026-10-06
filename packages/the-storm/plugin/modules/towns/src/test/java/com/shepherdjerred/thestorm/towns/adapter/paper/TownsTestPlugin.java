@@ -2,6 +2,8 @@ package com.shepherdjerred.thestorm.towns.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
+import com.shepherdjerred.thestorm.core.expansion.ExpansionSettings;
+import com.shepherdjerred.thestorm.core.expansion.ManagedGameplay;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.Services;
 import com.shepherdjerred.thestorm.core.players.KnownPlayer;
@@ -105,6 +107,10 @@ public class TownsTestPlugin extends JavaPlugin {
         });
     services.provide(PlayerDirectory.class, new Directory());
     services.provide(SealedWorlds.class, sealed);
+    services.provide(ExpansionSettings.class, new ExpansionSettings(2000, 10, 100, 64, 32, 16, 30));
+    services.provide(
+        ManagedGameplay.class,
+        new ManagedGameplay((key, actor) -> CompletableFuture.completedFuture(false), () -> {}));
     var context =
         new ModuleContext(
             this,

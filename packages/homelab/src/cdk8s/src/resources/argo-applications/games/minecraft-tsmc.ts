@@ -1,4 +1,5 @@
 import type { Chart } from "cdk8s";
+import { createMinecraftProxyTrust } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/proxy-trust.ts";
 import { Size } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
@@ -41,6 +42,7 @@ export const THE_STORM_PAPER_VERSION = "26.2";
  * URLs, config ConfigMaps or copy init containers here.
  */
 export function createMinecraftTsmcApp(chart: Chart) {
+  createMinecraftProxyTrust(chart, NAMESPACE, 25_565);
   // The Storm bridge credentials. Required fields (UPPERCASE_SNAKE labels, matching
   // the env-var refs below): DISCORD_BOT_TOKEN, DISCORD_CHANNEL_ID.
   new OnePasswordItem(chart, "minecraft-tsmc-discord-1p", {
@@ -164,6 +166,7 @@ export function createMinecraftTsmcApp(chart: Chart) {
             type: "NodePort",
             port: 19_132,
             nodePort: 30_004,
+            externalTrafficPolicy: "Local",
           },
           protocol: "UDP",
           containerPort: 19_132,
@@ -199,6 +202,7 @@ export function createMinecraftTsmcApp(chart: Chart) {
     extraEnv: {
       FLIPT_URL: "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
       FLIPT_ENVIRONMENT: "prod",
+      CFG_PROXY_PROTOCOL: "true",
       // Kicks idle players after 60 minutes (server.properties
       // player-idle-timeout, formerly set by the synced server.properties).
       PLAYER_IDLE_TIMEOUT: "60",
@@ -237,6 +241,10 @@ export function createMinecraftTsmcApp(chart: Chart) {
         },
       },
     },
+    // Paper expects HAProxy's PROXY header when connecting. mc-health normally
+    // speaks raw Minecraft, so its probes must use the PROXY-aware mode too.
+    livenessProbe: { command: ["mc-health", "--use-proxy"] },
+    readinessProbe: { command: ["mc-health", "--use-proxy"] },
   };
 
   // DNS records are now managed by mc-router

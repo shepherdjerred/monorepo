@@ -44,8 +44,8 @@ final class Modules {
     return List.of(
         new EconomyModule(),
         new MessagesModule(),
-        new MailModule(),
         new ChatModule(),
+        new MailModule(),
         new TracksModule(),
         new TownsModule(),
         new DiscordModule(),

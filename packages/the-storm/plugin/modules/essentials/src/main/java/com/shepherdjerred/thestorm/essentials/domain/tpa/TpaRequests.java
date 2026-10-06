@@ -99,6 +99,14 @@ public final class TpaRequests {
     return Result.ok(new Taken(sent, request));
   }
 
+  /** Staff group requests bypass only the sending interval; consent and conflicts still apply. */
+  public Result<Taken, TpaError> sendStaff(
+      UUID requester, UUID target, TpaRequest.Direction direction, Instant now) {
+    return new TpaRequests(new Rules(rules.timeout(), Duration.ZERO), state)
+        .send(requester, target, direction, now)
+        .map(sent -> new Taken(new TpaRequests(rules, sent.remaining().state), sent.request()));
+  }
+
   /** The live request {@code selector} names for {@code target}, without removing it. */
   public Result<TpaRequest, TpaError> peek(UUID target, TpaSelector selector, Instant now) {
     var live = pendingFor(target, now);

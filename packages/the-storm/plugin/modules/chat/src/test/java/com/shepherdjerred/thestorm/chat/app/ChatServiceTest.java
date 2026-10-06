@@ -33,6 +33,81 @@ final class ChatServiceTest {
   private final ChatExtensions extensions = new ChatExtensions();
   private final ChatService service = new ChatService(CONFIG, store, clock, extensions);
 
+  @Test
+  void lettersRespectIgnoresMutesPreferencesAndUnicodeLength() {
+    service.load().join();
+    var text = "😀".repeat(2000);
+    var attempt =
+        new MessagingPolicy.Attempt(
+            ALICE, "Alice", false, false, BOB, text, new MessagingPolicy.LetterPolicy(2000, true));
+    assertThat(service.letter(attempt).isOk()).isTrue();
+    // The repeat window begins when the application accepts the letter, before async persistence.
+    assertThat(service.letter(attempt).isOk()).isFalse();
+    service.ignore(BOB, new ChatProfile.IgnoreTarget(ALICE, "Alice", false));
+    assertThat(
+            service
+                .letter(
+                    new MessagingPolicy.Attempt(
+                        ALICE,
+                        "Alice",
+                        true,
+                        true,
+                        BOB,
+                        "staff letter",
+                        new MessagingPolicy.LetterPolicy(2000, true)))
+                .isOk())
+        .isFalse();
+    service.unignore(BOB, ALICE);
+    service.mute(ALICE, Duration.ofMinutes(5), "spam", "Carol");
+    assertThat(
+            service
+                .letter(
+                    new MessagingPolicy.Attempt(
+                        ALICE,
+                        "Alice",
+                        false,
+                        false,
+                        BOB,
+                        "different letter",
+                        new MessagingPolicy.LetterPolicy(2000, true)))
+                .isOk())
+        .isFalse();
+    service.unmute(ALICE);
+    service.storedIdentities(
+        id ->
+            id.equals(BOB)
+                ? com.shepherdjerred.thestorm.chat.domain.Identity.fresh().toggleMessages()
+                : com.shepherdjerred.thestorm.chat.domain.Identity.fresh());
+    assertThat(service.letter(attempt).isOk()).isFalse();
+  }
+
+  @Test
+  void offlineMailPreferenceIsAppliedOnlyWhenIdentityRolloutIsEnabled() {
+    service.load().join();
+    service.storedIdentities(
+        id -> com.shepherdjerred.thestorm.chat.domain.Identity.fresh().toggleMessages());
+    var attempt =
+        new MessagingPolicy.Attempt(
+            ALICE,
+            "Alice",
+            false,
+            false,
+            BOB,
+            "mail",
+            new MessagingPolicy.LetterPolicy(2000, false));
+
+    assertThat(service.letter(attempt).isOk()).isTrue();
+  }
+
+  @Test
+  void socialSpyPreferenceIsIndependentOfIdentityDisplayRollout() {
+    service.identities(id -> com.shepherdjerred.thestorm.chat.domain.Identity.fresh());
+    service.storedIdentities(
+        id -> com.shepherdjerred.thestorm.chat.domain.Identity.fresh().toggleSpy());
+
+    assertThat(service.socialSpy(ALICE)).isTrue();
+  }
+
   private OutgoingLine sent(Result<OutgoingLine, List<ChatDenial>> result) {
     return switch (result) {
       case Result.Ok<OutgoingLine, List<ChatDenial>>(var line) -> line;

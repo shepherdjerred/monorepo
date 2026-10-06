@@ -1,0 +1,8 @@
+# Runtime limits are repository-owned. New capabilities have managed Flipt gates.
+letterLength: 2000
+letterIntervalSeconds: 10
+inboxLimit: 100
+entityLimit: 64
+effectRadius: 32
+jailRadius: 16
+confirmationSeconds: 30

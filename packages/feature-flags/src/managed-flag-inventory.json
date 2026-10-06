@@ -1795,6 +1795,54 @@
       "thresholdRollouts": []
     },
     {
+      "key": "the-storm-staff-tools-enabled",
+      "owner": "the-storm",
+      "namespace": "the-storm",
+      "source": "the-storm-essentials",
+      "purpose": "Enable permission-controlled staff tools after beta acceptance.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "the-storm-identity-enabled",
+      "owner": "the-storm",
+      "namespace": "the-storm",
+      "source": "the-storm-chat",
+      "purpose": "Enable safe nicknames and private message preferences.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "the-storm-letters-enabled",
+      "owner": "the-storm",
+      "namespace": "the-storm",
+      "source": "the-storm-mail",
+      "purpose": "Enable durable text letters alongside reward deliveries.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "the-storm-ip-enforcement-enabled",
+      "owner": "the-storm",
+      "namespace": "the-storm",
+      "source": "the-storm-essentials",
+      "purpose": "Enable verified public client IP bans after routing acceptance.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "the-storm-companions-enabled",
       "owner": "the-storm",
       "namespace": "the-storm",
@@ -2199,6 +2247,38 @@
         },
         {
           "key": "temporal-agent-chat-photon-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-staff-tools-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-identity-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-letters-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-ip-enforcement-enabled",
           "type": "boolean",
           "default": true,
           "rollouts": [],
