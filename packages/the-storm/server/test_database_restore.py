@@ -124,6 +124,71 @@ class DatabaseRestoreTest(unittest.TestCase):
         self.assertNotEqual(restore.row_digest(("ab", "c")), restore.row_digest(("a", "bc")))
         self.assertNotEqual(restore.row_digest((None,)), restore.row_digest((b"",)))
 
+    def test_private_version_upgrade_preserves_existing_identity_rows(self):
+        policy = dict(self.policy, retainTables=["core_player", "chat_ignore", "mail_letters"])
+        before = restore.identity_manifest(self.original, policy)
+        with closing(sqlite3.connect(self.original)) as connection:
+            connection.execute("CREATE TABLE mail_letters(id TEXT PRIMARY KEY, text TEXT)")
+        after = restore.verify_identity_upgrade(before, self.original, policy)
+        self.assertEqual(after["core_player"], before["core_player"])
+        self.assertEqual(after["chat_ignore"], before["chat_ignore"])
+        self.assertEqual(after["mail_letters"][0], 0)
+        with closing(sqlite3.connect(self.original)) as connection:
+            connection.execute("UPDATE core_player SET name='changed' WHERE id='alice'")
+            connection.commit()
+        with self.assertRaisesRegex(ValueError, "changed retained"):
+            restore.verify_identity_upgrade(before, self.original, policy)
+
+    def test_private_version_upgrade_refuses_invented_or_missing_identity_tables(self):
+        policy = dict(self.policy, retainTables=["core_player", "chat_ignore", "mail_letters"])
+        before = restore.identity_manifest(self.original, policy)
+        with self.assertRaisesRegex(ValueError, "omitted"):
+            restore.verify_identity_upgrade(before, self.original, policy)
+        with closing(sqlite3.connect(self.original)) as connection:
+            connection.execute("CREATE TABLE mail_letters(id TEXT PRIMARY KEY, text TEXT)")
+            connection.execute("INSERT INTO mail_letters VALUES ('invented','not from a player')")
+            connection.commit()
+        with self.assertRaisesRegex(ValueError, "invented"):
+            restore.verify_identity_upgrade(before, self.original, policy)
+
+    def test_world_bound_staff_state_is_refused_before_any_retained_rows_are_copied(self):
+        policy = dict(self.policy, retainTables=["core_player", "chat_ignore", "essentials_staff_state"])
+        for file in (self.original, self.candidate):
+            with closing(sqlite3.connect(file)) as connection:
+                connection.execute("CREATE TABLE essentials_staff_state(kind TEXT, id TEXT, value TEXT)")
+        with closing(sqlite3.connect(self.original)) as connection:
+            connection.execute("INSERT INTO essentials_staff_state VALUES ('spawn','global','modern coordinates')")
+            connection.commit()
+        with self.assertRaisesRegex(ValueError, "explicit position migration"):
+            restore.retain_identity(self.original, self.candidate, policy)
+        with closing(sqlite3.connect(self.candidate)) as connection:
+            self.assertEqual(connection.execute("SELECT * FROM core_player").fetchall(), [])
+        with closing(sqlite3.connect(self.original)) as connection:
+            connection.execute("UPDATE essentials_staff_state SET kind='ip-ban'")
+            connection.commit()
+        receipt = restore.retain_identity(self.original, self.candidate, policy)
+        self.assertEqual(receipt["retained"]["essentials_staff_state"]["rows"], 1)
+
+    def test_reviewed_policy_covers_every_current_candidate_migration_table(self):
+        policy = restore.reviewed_policy(Path(__file__).with_name("restoration-policy.json"))
+        plugin = Path(__file__).parents[1] / "plugin"
+        migrations: dict[str, list[Path]] = {}
+        for file in plugin.glob("**/src/main/resources/db/migration/*/V*.sql"):
+            migrations.setdefault(file.parent.name, []).append(file)
+        self.assertEqual(set(migrations), set(policy["migrationModules"]))
+        with closing(sqlite3.connect(":memory:")) as connection:
+            for module in policy["migrationModules"]:
+                for file in sorted(migrations[module], key=lambda path: int(path.name.split("__")[0][1:])):
+                    connection.executescript(file.read_text(encoding="utf-8"))
+            self.assertEqual(
+                restore.tables(connection, "main"), set(policy["retainTables"]) | set(policy["resetTables"])
+            )
+        self.assertIn("mail_letters", policy["retainTables"])
+        self.assertIn("essentials_staff_audit", policy["retainTables"])
+        self.assertIn("essentials_teleport_state", policy["resetTables"])
+        self.assertIn("essentials_teleport_uses", policy["resetTables"])
+        self.assertNotIn("essentials_teleport_usage", policy["resetTables"])
+
     def test_policy_has_no_overlap_duplicates_or_unknown_fields(self):
         file = self.root / "policy.json"
         file.write_text(json.dumps(self.policy), encoding="utf-8")

@@ -87,6 +87,34 @@ def table_digest(connection: sqlite3.Connection, schema: str, table: str) -> tup
     return len(rows), hashlib.sha256(b"".join(rows)).hexdigest()
 
 
+def identity_manifest(database: Path, policy: RetentionPolicy) -> dict[str, tuple[int, str]]:
+    """Seal existing retained rows before migrating a private source copy."""
+    if database.is_symlink() or not database.is_file():
+        raise ValueError("Identity manifest requires a regular database")
+    wal = database.with_name(database.name + "-wal")
+    if wal.is_symlink() or (wal.exists() and (not wal.is_file() or wal.stat().st_size)):
+        raise ValueError("Identity manifest requires a fully checkpointed WAL")
+    with closing(sqlite3.connect(database.resolve().as_uri() + "?mode=ro&immutable=1", uri=True)) as connection:
+        if connection.execute("PRAGMA integrity_check").fetchone() != ("ok",):
+            raise ValueError("Identity source failed integrity_check")
+        if list(connection.execute("PRAGMA foreign_key_check")):
+            raise ValueError("Identity source failed foreign_key_check")
+        present = tables(connection, "main")
+        return {table: table_digest(connection, "main", table) for table in policy["retainTables"] if table in present}
+
+
+def verify_identity_upgrade(
+    before: dict[str, tuple[int, str]], upgraded: Path, policy: RetentionPolicy
+) -> dict[str, tuple[int, str]]:
+    """Migrations must preserve existing identities exactly and create empty new identity tables."""
+    after = identity_manifest(upgraded, policy)
+    if set(after) != set(policy["retainTables"]) or any(after.get(table) != value for table, value in before.items()):
+        raise ValueError("Candidate migration changed retained identity rows or omitted a reviewed table")
+    if any(value[0] for table, value in after.items() if table not in before):
+        raise ValueError("Candidate migration invented new retained identity rows")
+    return after
+
+
 def retain_identity(original: Path, candidate: Path, policy: RetentionPolicy) -> dict[str, object]:
     """Copy only reviewed identity/moderation rows; original must be a stopped, verified copy."""
     for file in (original, candidate):
@@ -117,6 +145,16 @@ def retain_identity(original: Path, candidate: Path, policy: RetentionPolicy) ->
             for table in data:
                 if connection.execute(f'SELECT COUNT(*) FROM main."{table}"').fetchone()[0]:
                     raise ValueError("Identity retention requires a fresh empty candidate database")
+            # Staff state mixes IP bans with positions, jails and logout snapshots.
+            # Never carry modern coordinates or a spawn override into the historical
+            # world without an explicit, separately verified position migration.
+            if (
+                "essentials_staff_state" in data
+                and connection.execute(
+                    "SELECT COUNT(*) FROM original.essentials_staff_state WHERE kind <> 'ip-ban'"
+                ).fetchone()[0]
+            ):
+                raise ValueError("World-bound staff state requires an explicit position migration before restoration")
             connection.execute("PRAGMA defer_foreign_keys=ON")
             for table in policy["retainTables"]:
                 source = columns(connection, "original", table)

@@ -7,6 +7,7 @@ import tarfile
 import tempfile
 import unittest
 from collections.abc import Mapping
+from contextlib import redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
 
@@ -119,6 +120,11 @@ class Cluster:
             raise RuntimeError("resourceVersion test failed")
         for operation in operations[1:]:
             keys = [key.replace("~1", "/").replace("~0", "~") for key in operation.string("path").split("/")[1:]]
+            if keys == ["spec", "template", "spec", "containers", "0", "image"]:
+                resource.object("spec").object("template").object("spec").objects("containers")[0]["image"] = operation[
+                    "value"
+                ]
+                continue
             parent = resource
             for key in keys[:-1]:
                 parent = parent.object(key)
@@ -149,11 +155,241 @@ class RestorationControlTest(unittest.TestCase):
     def initialize(self) -> JsonObject:
         return control.initialize(self.path, REQUEST, IMAGE)
 
+    def installation_fixture(self) -> JsonObject:
+        journal = self.initialize()
+        control.acquire(self.path, journal)
+        journal["installation"] = {"phase": "INSTALLED", "candidateJarSha256": "b" * 64}
+        journal["writerRemoved"] = True
+        self.cluster.objects["pod", control.SERVER + "-0"] = JsonObject(
+            {
+                "metadata": {"uid": "accepted-pod", "ownerReferences": [{"uid": "server-uid", "controller": True}]},
+                "spec": {"containers": [{"name": control.SERVER, "image": IMAGE}]},
+                "status": {"containerStatuses": [{"ready": True, "imageID": "docker-pullable://" + IMAGE}]},
+            }
+        )
+        return journal
+
+    def acceptance_evidence(self) -> Path:
+        evidence = self.path.parent / "acceptance.json"
+        evidence.write_text(
+            json.dumps(
+                {
+                    "requestId": REQUEST,
+                    "candidateImage": IMAGE,
+                    "candidateJarSha256": "b" * 64,
+                    "podUid": "accepted-pod",
+                    "checks": dict.fromkeys(control.ACCEPTANCE_CHECKS, "VERIFIED"),
+                }
+            )
+        )
+        return evidence
+
+    def test_private_start_requires_installation_and_keeps_every_public_route_closed(self):
+        journal = self.installation_fixture()
+        journal["writerRemoved"] = False
+        before = len(self.cluster.mutations)
+        with self.assertRaisesRegex(ValueError, "writer cleanup"):
+            control.private_start(self.path, journal)
+        self.assertEqual(len(self.cluster.mutations), before)
+        journal["writerRemoved"] = True
+        control.private_start(self.path, journal)
+        control.assert_closed(journal)
+        self.assertEqual(self.cluster.server.object("spec").integer("replicas"), 1)
+        self.assertEqual(control.annotations(self.cluster.server)[control.PHASE], "VALIDATING")
+        self.assertEqual(control.server_image(self.cluster.server), IMAGE)
+        before = len(self.cluster.mutations)
+        control.private_start(self.path, journal)
+        self.assertEqual(len(self.cluster.mutations), before)
+
+    def test_acceptance_refuses_wrong_pod_image_owner_readiness_missing_check_and_synthetic_evidence(self):
+        journal = self.installation_fixture()
+        control.private_start(self.path, journal)
+        pod = self.cluster.objects["pod", control.SERVER + "-0"]
+        original = copy.deepcopy(pod)
+        for change in ("image", "digest", "owner", "ready", "podUid", "missing", "synthetic"):
+            with self.subTest(change=change):
+                evidence = self.acceptance_evidence()
+                data = JsonObject.parse(evidence.read_bytes())
+                if change == "image":
+                    pod.object("spec").objects("containers")[0]["image"] = "different-image"
+                elif change == "digest":
+                    pod.object("status").objects("containerStatuses")[0]["imageID"] = "sha256:" + "c" * 64
+                elif change == "owner":
+                    pod.object("metadata").objects("ownerReferences")[0]["uid"] = "replacement"
+                elif change == "ready":
+                    pod.object("status").objects("containerStatuses")[0]["ready"] = False
+                elif change == "podUid":
+                    data["podUid"] = "different-pod"
+                elif change == "missing":
+                    del data.object("checks")["coreProtectRollback"]
+                else:
+                    data["testOnly"] = True
+                evidence.write_text(json.dumps(data))
+                with self.assertRaisesRegex(ValueError, "every required behavior"):
+                    control.accept(self.path, journal, evidence)
+                pod.clear()
+                pod.update(copy.deepcopy(original))
+        control.accept(self.path, journal, self.acceptance_evidence())
+        self.assertEqual(journal.object("acceptance")["status"], "VERIFIED")
+        control.assert_closed(journal)
+
+    def test_release_requires_acceptance_and_stopped_lease_then_restores_java_last_and_resumes(self):
+        journal = self.installation_fixture()
+        control.private_start(self.path, journal)
+        control.accept(self.path, journal, self.acceptance_evidence())
+        with self.assertRaisesRegex(ValueError, "gracefully stopped"):
+            control.release(self.path, journal)
+        control.private_stop(self.path, journal)
+        control.require_offline(journal)
+        before = len(self.cluster.mutations)
+        control.release(self.path, journal)
+        self.assertEqual(journal["phase"], "REOPENED")
+        self.assertNotIn(control.LEASE, control.annotations(self.cluster.server))
+        self.assertEqual(
+            self.cluster.mutations[before + 1 :],
+            [("service", name) for name in (*control.SERVICES[1:], control.SERVICES[0])],
+        )
+        for name in control.SERVICES:
+            service = self.cluster.objects["service", name]
+            self.assertEqual(service.object("spec").strings("selector"), {"app": control.SERVER})
+            self.assertEqual(control.annotations(service), {"tracking": "keep"})
+        before = len(self.cluster.mutations)
+        self.cluster.server.object("spec")["replicas"] = 1
+        self.cluster.server.object("status")["replicas"] = 1
+        control.release(self.path, journal)
+        self.assertEqual(len(self.cluster.mutations), before)
+
+    def test_changed_acceptance_evidence_cannot_release_the_lease(self):
+        journal = self.installation_fixture()
+        control.private_start(self.path, journal)
+        evidence = self.acceptance_evidence()
+        control.accept(self.path, journal, evidence)
+        control.private_stop(self.path, journal)
+        evidence.write_text("changed")
+        with self.assertRaisesRegex(ValueError, "unchanged, verified"):
+            control.release(self.path, journal)
+        control.require_offline(journal)
+
+    def test_uncertain_writer_creation_adopts_only_the_recorded_pending_exact_helper(self):
+        journal = self.initialize()
+        journal["writerCreationPending"] = True
+        pod = control.writer_manifest(journal)
+        pod.object("metadata")["uid"] = "pending-writer"
+        with (
+            patch.object(control, "run", side_effect=[json.dumps(pod), "Ready"]),
+            patch.object(control, "require_offline") as stopped,
+            patch.object(control, "ensure_resource", return_value=pod),
+        ):
+            control.create_writer(self.path, journal)
+        self.assertEqual(journal["writerUid"], "pending-writer")
+        self.assertIs(journal["writerCreationPending"], False)
+        self.assertEqual(stopped.call_args_list[0].kwargs, {"writer": True})
+        self.assertEqual(stopped.call_args_list[-1].kwargs, {"writer": True})
+
+    def test_uncertain_writer_creation_refuses_an_injected_command_before_volume_access(self):
+        journal = self.initialize()
+        journal["writerCreationPending"] = True
+        pod = control.writer_manifest(journal)
+        pod.object("metadata")["uid"] = "injected-writer"
+        pod.object("spec").objects("containers")[0]["command"] = ["start-paper"]
+        with (
+            patch.object(control, "run", return_value=json.dumps(pod)),
+            patch.object(control, "ensure_resource") as creating,
+            self.assertRaisesRegex(ValueError, "credential-free"),
+        ):
+            control.create_writer(self.path, journal)
+        creating.assert_not_called()
+        self.assertNotIn("writerUid", journal)
+
+    def test_removed_writer_can_be_recreated_for_whole_volume_recovery_with_a_new_recorded_uid(self):
+        journal = self.initialize()
+        journal["writerUid"] = "removed-writer"
+        journal["writerRemoved"] = True
+        pod = control.writer_manifest(journal)
+        pod.object("metadata")["uid"] = "recovery-writer"
+        with (
+            patch.object(control, "run", side_effect=["", "Ready"]),
+            patch.object(control, "require_offline"),
+            patch.object(control, "ensure_resource", return_value=pod),
+        ):
+            control.create_writer(self.path, journal)
+        self.assertEqual(journal["previousWriterUid"], "removed-writer")
+        self.assertEqual(journal["writerUid"], "recovery-writer")
+        self.assertIs(journal["writerRemoved"], False)
+
+    def test_preflight_cli_reports_pending_backup_without_requiring_backup_fields_or_mutating_cluster(self):
+        output = io.StringIO()
+        with (
+            patch(
+                "sys.argv",
+                [
+                    "restoration-control",
+                    "preflight",
+                    "--journal",
+                    str(self.path),
+                    "--request",
+                    REQUEST,
+                    "--image",
+                    IMAGE,
+                ],
+            ),
+            redirect_stdout(output),
+        ):
+            control.main()
+        result = JsonObject.parse(output.getvalue())
+        self.assertEqual(result["phase"], "PREPARED")
+        self.assertEqual(result["backup"], {})
+        self.assertEqual(result["restore"], {})
+        self.assertEqual(self.cluster.mutations, [])
+
     def test_preflight_is_read_only_and_records_the_exact_targets(self):
         journal = self.initialize()
         self.assertEqual(self.cluster.mutations, [])
         self.assertEqual(journal.string("claimUid"), "claim-uid")
         self.assertEqual(set(journal.object("services")), set(control.SERVICES))
+
+    def test_writer_template_preserves_metadata_without_starting_paper_or_receiving_credentials(self):
+        journal = self.initialize()
+        pod = control.writer_manifest(journal)
+        pod.object("metadata")["uid"] = "writer-uid"
+        journal["writerUid"] = "writer-uid"
+        control.assert_writer(pod, journal)
+        spec = pod.object("spec")
+        container = spec.objects("containers")[0]
+        self.assertEqual(container["image"], IMAGE)
+        self.assertEqual(container["command"], ["sleep", "infinity"])
+        self.assertIs(spec["automountServiceAccountToken"], False)
+        self.assertNotIn("env", container)
+        self.assertNotIn("envFrom", container)
+        self.assertEqual(
+            container.object("securityContext").object("capabilities")["add"], ["CHOWN", "DAC_OVERRIDE", "FOWNER"]
+        )
+        self.assertEqual(self.cluster.mutations, [])
+
+    def test_writer_refuses_replacement_credentials_extra_container_and_privileged_access(self):
+        journal = self.initialize()
+        journal["writerUid"] = "writer-uid"
+        for change in ("uid", "credentials", "container", "capabilities", "privileged", "lifecycle", "hostPID"):
+            with self.subTest(change=change):
+                pod = control.writer_manifest(journal)
+                pod.object("metadata")["uid"] = "writer-uid"
+                container = pod.object("spec").objects("containers")[0]
+                if change == "uid":
+                    pod.object("metadata")["uid"] = "replacement-uid"
+                elif change == "credentials":
+                    container["envFrom"] = [{"secretRef": {"name": "unexpected"}}]
+                elif change == "container":
+                    pod.object("spec").objects("containers").append(JsonObject({"name": "extra"}))
+                elif change == "privileged":
+                    container.object("securityContext")["privileged"] = True
+                elif change == "lifecycle":
+                    container["lifecycle"] = {"postStart": {"exec": {"command": ["unexpected"]}}}
+                elif change == "hostPID":
+                    pod.object("spec")["hostPID"] = True
+                else:
+                    container.object("securityContext").object("capabilities")["add"] = ["SYS_ADMIN"]
+                with self.assertRaisesRegex(ValueError, "exact credential-free"):
+                    control.assert_writer(pod, journal)
         self.assertEqual(self.path.stat().st_mode & 0o777, 0o600)
 
     def test_closes_all_routes_before_stopping_and_leasing_then_resumes_without_writes(self):

@@ -37,14 +37,14 @@ public final class RestorationDatabase {
   }
 
   public static void main(String[] args) throws Exception {
-    if (args.length < 4) throw new IllegalArgumentException("Expected schema|towns, candidate jar, database, policy|heritage, optional import instant");
+    if (args.length < 4) throw new IllegalArgumentException("Expected schema|upgrade-copy|towns, candidate jar, database, policy|heritage, optional import instant");
     var jar = Path.of(args[1]).toRealPath();
     var database = Path.of(args[2]).toAbsolutePath().normalize();
     var config = Path.of(args[3]).toRealPath();
     switch (args[0]) {
-      case "schema" -> {
+      case "schema", "upgrade-copy" -> {
         if (args.length != 4) throw new IllegalArgumentException("Schema creation takes exactly four arguments");
-        schema(jar, database, parse(config, Policy.class));
+        schema(jar, database, parse(config, Policy.class), args[0].equals("upgrade-copy"));
       }
       case "towns" -> {
         if (args.length != 5) throw new IllegalArgumentException("Town import requires its recorded import instant");
@@ -62,8 +62,10 @@ public final class RestorationDatabase {
     };
   }
 
-  private static void schema(Path jar, Path output, Policy policy) throws IOException {
-    if (Files.exists(output) || Files.isSymbolicLink(output)) throw new IllegalArgumentException("Database output already exists");
+  private static void schema(Path jar, Path output, Policy policy, boolean upgrade) throws IOException {
+    if (Files.isSymbolicLink(output) || (upgrade ? !Files.isRegularFile(output) : Files.exists(output))) {
+      throw new IllegalArgumentException("Expected a fresh schema path or an independent existing upgrade copy");
+    }
     var modules = new HashSet<String>();
     try (var archive = new JarFile(jar.toFile())) {
       archive.stream().filter(entry -> entry.getName().matches("db/migration/[a-z_]+/V.+\\.sql"))

@@ -34,7 +34,10 @@ final class TownsModuleTest {
 
   @BeforeEach
   void start() throws Exception {
-    MockBukkit.mock().addSimpleWorld("world");
+    var server = MockBukkit.mock();
+    server.addSimpleWorld("world");
+    server.addSimpleWorld("settlement");
+    server.addSimpleWorld("rustworks");
     plugin = MockBukkit.createMockPlugin();
     database = StormDatabase.open(directory.resolve("t.db"));
     Files.writeString(directory.resolve("parcels.yml"), "parcels: []\n");

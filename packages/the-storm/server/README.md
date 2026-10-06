@@ -281,10 +281,52 @@ main-world generator, safe spawn and continued map allocation are verified again
 This produces private installation inputs; it does not write production data.
 
 `restoration-policy.json` is the reviewed identity retention contract.
+`prepare-database` first version-migrates an independent private source copy
+through the exact candidate's Flyway migrations. The verified backup is immutable.
+Existing retained identities must remain byte-equivalent at the SQLite value
+level, and newly introduced identity tables must start empty. Changed migration
+checksums fail validation; the tool never repairs migration history.
 `database-restore.py` requires a fully checkpointed source database and compares
-retained rows using type-preserving hashes. Gameplay tables and migration
-histories start fresh. Historical owner imports use the domain's stable town IDs
-and their recorded import time; archive dates do not imply founding dates.
+retained rows using type-preserving hashes. Identity preferences, staff audit
+records and personal letters are retained. World-bound staff state, including
+spawn overrides, jail coordinates and logout positions, requires an explicit
+position migration before import; IP bans can be retained without moving
+coordinates. Gameplay tables, teleport usage and migration histories start fresh.
+The retention policy must cover every table produced by the current candidate;
+unknown tables abort preparation. Historical owner imports use the domain's
+stable town IDs and their recorded import time; archive dates do not imply
+founding dates.
+
+`restoration_files.py` provides filesystem primitives for stopped-volume
+installation. It has no production CLI. Staging verifies the entire stopped
+volume against the sealed original manifest and copies only the native world
+and prepared database onto that volume. Complete file readback precedes any
+replacement. Journaled renames retain the original world, database and sidecars,
+SQLite CoreProtect database and BlueMap cache in a request-owned archive; the
+CoreProtect configuration and other bootstrap files stay in place. An
+interrupted rename resumes only if both original and staged contents still
+match their manifests. Save locks remain held during the transaction. A completed
+installation still requires private startup and acceptance. After any startup,
+rollback must restore the independently verified whole volume with its paired
+rollback image; the archived installation targets alone cannot restore other
+plugins' runtime changes. `stage_whole_rollback` prepares every file from that
+independent volume and retains its ownership and permission metadata; inability
+to preserve access aborts preparation. `commit_whole_rollback` retains the failed
+activation's complete root contents and installs the original volume through
+resumable renames. Unexpected writes or changed backup bytes abort the operation.
+Its completion still requires the controller to select the recorded rollback
+image before restarting. These primitives do not acquire a lease, start a pod,
+release maintenance or open a route.
+
+The controller's dormant writer template uses the exact candidate image and
+mounts only the recorded data claim and bounded scratch directories. It receives
+no server credentials or ServiceAccount token and starts no Paper process.
+Restoring the volume's UID 0 and UID 1000 files requires filesystem ownership
+capabilities; the template grants only `CHOWN`, `DAC_OVERRIDE` and `FOWNER`, with
+privilege escalation disabled and a read-only container root. The controller
+rejects replaced helper identities, injected credentials, extra containers,
+lifecycle commands, host namespaces and broader privileges. Source-volume
+readers must be removed before its writer can be accepted.
 
 `restoration-control.py preflight --journal <private-receipt> --request <uuid>
 --image <immutable-image>` checks the reconciled Kubernetes admission guards and
@@ -325,6 +367,50 @@ identity import verify this complete selection again before using it.
 `remove-readers` deletes only those recorded helpers with
 UID and resource-version preconditions. These operations leave the independently
 restored rollback volume in place and do not activate or reopen Storm.
+
+`plan-install --staging <private-historical-preparation> --candidate <exact-jar>`
+uses the same controller journal to verify installation inputs without writing
+the volume. The historical, activation, identity and export receipts must belong
+to this request and identify the same independently restored storage. Generic
+local-copy receipts, synthetic acceptance receipts and changed conversion or
+retention tools are refused. Every retained arena file must match the actual
+production backup's exported hash. The plan pins the candidate plugin, published
+image and full installation manifest; it does not grant private acceptance or
+reopen admission.
+
+`install` takes the same `--staging` and `--candidate` arguments. It revalidates
+the plan, creates the bounded request-owned writer, and checks the gameplay jar
+inside the published image before uploading anything. Only world files, the
+prepared identity database and operator code enter its scratch directory. The
+writer verifies the complete upload and runs the stopped filesystem transaction.
+`remove-writer` deletes that exact helper using its recorded UID and resource
+version. `private-start` selects the pinned candidate and starts one replica
+under the admission guard's `VALIDATING` phase; all public routes remain closed.
+Use a local port forward for private acceptance and retain the observed evidence.
+
+`accept --evidence <private-json>` records acceptance only for the running pod's
+exact UID, published image digest and candidate plugin. Its `checks` object must
+record `VERIFIED` for startup, historical spawn, the town directory, proven plot
+editors, heritage protection, grazing and growth, each of the three arenas,
+CoreProtect lookup and rollback, retained identities, historical player data,
+maps and private admission. The evidence also carries `requestId`,
+`candidateImage`, `candidateJarSha256` and `podUid`. Synthetic evidence is not
+accepted. `private-stop` gracefully saves and stops this candidate without
+opening routes. `release` requires that unchanged acceptance evidence and a
+stopped lease, clears the owned maintenance annotations and restores the captured
+Service selectors. The Java wake route opens last. Interrupted release resumes
+from the same journal, including a successful wake before its final response.
+The normal GitOps image pin must match the accepted candidate before release.
+
+If private startup fails, keep admission closed and use `private-stop` before
+whole-volume recovery. The independently restored PVC remains available. A
+request-owned writer can stage that complete restored data tree with
+`restoration_files.stage_whole_rollback` and commit it with
+`restoration_files.commit_whole_rollback`; the source must be the recorded
+independent volume and match its whole-volume hash proof. Pair the restored
+volume with the recorded rollback image while the server is still stopped.
+Do not restart an old image against the activation database or restore only
+the overworld after other plugins have run.
 
 The restoration journal and native conversion sources are operator inputs,
 separate from the production gameplay jar. Activation requires an independently

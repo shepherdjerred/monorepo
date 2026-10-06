@@ -796,8 +796,23 @@ def prepare_database(
         save_json(staging / JOURNAL, receipt)
         try:
             database = root / "the-storm.db"
+            original_database = modern_data / "plugins/TheStorm/the-storm.db"
+            before_identity = database_restore.identity_manifest(original_database, reviewed)
+            upgraded_source = root / "upgraded-source.db"
+            shutil.copy2(original_database, upgraded_source)
+            os.chmod(upgraded_source, 0o600)
             command = ["java", "--class-path", classpath, str(tool)]
             with (root / "migration.log").open("x", encoding="utf-8") as log:
+                upgraded = subprocess.run(
+                    [*command, "upgrade-copy", str(candidate), str(upgraded_source), str(policy)],
+                    cwd=root,
+                    stdout=log,
+                    stderr=subprocess.STDOUT,
+                    timeout=120,
+                )
+                if upgraded.returncode != 0:
+                    raise ValueError("Private source version migration failed; the verified backup remains unchanged")
+                database_restore.verify_identity_upgrade(before_identity, upgraded_source, reviewed)
                 migrated = subprocess.run(
                     [*command, "schema", str(candidate), str(database), str(policy)],
                     cwd=root,
@@ -807,9 +822,7 @@ def prepare_database(
                 )
                 if migrated.returncode != 0:
                     raise ValueError("Candidate schema migration failed; inspect the private log")
-                proof = database_restore.retain_identity(
-                    modern_data / "plugins/TheStorm/the-storm.db", database, reviewed
-                )
+                proof = database_restore.retain_identity(upgraded_source, database, reviewed)
                 imported = subprocess.run(
                     [*command, "towns", str(candidate), str(database), str(catalog), imported_at],
                     cwd=root,
@@ -847,6 +860,9 @@ def prepare_database(
                 historicalClaims=0,
                 importedAt=imported_at,
                 databaseSha256=digest(database),
+                originalDatabaseSha256=digest(original_database),
+                upgradedSourceSha256=digest(upgraded_source),
+                sourceVersionMigration="VERIFIED_PRIVATE_COPY",
                 inputs=inputs,
             )
             save_json(root / "receipt.json", proof)

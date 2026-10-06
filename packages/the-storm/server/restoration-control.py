@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Hold Storm offline and verify its independent rollback restore. Never installs world data."""
+"""Restore Storm with closed admission, one verified rollback volume, and private acceptance."""
 
 import argparse
 import fcntl
 import hashlib
 import importlib.util
+import io
 import json
 import os
 import re
@@ -19,6 +20,8 @@ from contextlib import contextmanager
 from pathlib import Path, PurePosixPath
 from typing import IO
 
+import restoration_activation
+import restoration_files
 from restoration_json import JsonObject
 
 CONTEXT = "admin@torvalds"
@@ -419,7 +422,9 @@ def acquire(path: Path, journal: JsonObject) -> None:
     save(path, journal)
 
 
-def require_offline(journal: JsonObject, readers: bool = False) -> None:
+def require_offline(journal: JsonObject, readers: bool = False, writer: bool = False) -> None:
+    if readers and writer:
+        raise ValueError("Remove source-volume readers before allowing the installation writer")
     assert_closed(journal)
     server = read("statefulset", SERVER)
     assert_owner(server, journal)
@@ -446,6 +451,9 @@ def require_offline(journal: JsonObject, readers: bool = False) -> None:
             volume.object("persistentVolumeClaim", {}).get("claimName") == CLAIM
             for volume in pod.object("spec").objects("volumes", [])
         ):
+            if writer:
+                assert_writer(pod, journal)
+                continue
             if not readers:
                 raise ValueError("A pod still mounts the stopped source volume")
             assert_reader(pod, journal, NAMESPACE)
@@ -614,6 +622,24 @@ def reader_manifest(journal: JsonObject, namespace: str) -> JsonObject:
     )
 
 
+def unsafe_helper(pod: JsonObject, expected: JsonObject, write: bool = False) -> bool:
+    spec = pod.object("spec")
+    if any(spec.get(key) for key in ("hostNetwork", "hostPID", "hostIPC", "shareProcessNamespace")):
+        return True
+    defaulted = {"imagePullPolicy", "terminationMessagePath", "terminationMessagePolicy"}
+    declared = set(expected.object("spec").objects("containers")[0])
+    for container in spec.objects("containers"):
+        security = container.object("securityContext", {})
+        if (
+            set(container) - declared - defaulted
+            or security.get("privileged")
+            or security.get("procMount", "Default") != "Default"
+            or (not write and security.object("capabilities", {}).get("add"))
+        ):
+            return True
+    return False
+
+
 def assert_reader(pod: JsonObject, journal: JsonObject, namespace: str) -> None:
     expected = reader_manifest(journal, namespace)
     recorded = journal.strings("readers", {}).get(namespace)
@@ -624,12 +650,64 @@ def assert_reader(pod: JsonObject, journal: JsonObject, namespace: str) -> None:
         or not includes(pod.object("spec"), expected.object("spec"))
         or pod.object("spec").get("initContainers")
         or pod.object("spec").get("ephemeralContainers")
+        or unsafe_helper(pod, expected)
         or any(
             container.get("env") or container.get("envFrom") for container in pod.object("spec").objects("containers")
         )
         or (recorded is not None and recorded != pod.object("metadata").string("uid"))
     ):
         raise ValueError("Volume reader is not the exact request-owned read-only pod")
+
+
+def writer_manifest(journal: JsonObject) -> JsonObject:
+    """A dormant, request-owned maintenance helper; never starts Paper or receives runtime credentials."""
+    manifest = reader_manifest(journal, NAMESPACE)
+    manifest.object("metadata")["name"] = "storm-install-writer-" + journal.string("requestId")
+    spec = manifest.object("spec")
+    container = spec.objects("containers")[0]
+    container["name"] = "writer"
+    container["image"] = journal.string("candidateImage")
+    # The verified volume contains both UID 1000 and UID 0 files. Metadata
+    # restoration requires these limited filesystem capabilities. The helper
+    # carries no ServiceAccount token, environment credentials or server process.
+    container.object("securityContext").update(
+        runAsUser=0,
+        runAsGroup=2000,
+        capabilities={"drop": ["ALL"], "add": ["CHOWN", "DAC_OVERRIDE", "FOWNER"]},
+    )
+    container["resources"] = {
+        "requests": {"cpu": "100m", "memory": "128Mi", "ephemeral-storage": "32Gi"},
+        "limits": {"cpu": "2", "memory": "512Mi", "ephemeral-storage": "40Gi"},
+    }
+    container["volumeMounts"] = [
+        {"name": "data", "mountPath": "/data", "readOnly": False},
+        {"name": "scratch", "mountPath": "/scratch"},
+        {"name": "temporary", "mountPath": "/tmp"},
+    ]
+    spec["volumes"] = [
+        {"name": "data", "persistentVolumeClaim": {"claimName": CLAIM}},
+        {"name": "scratch", "emptyDir": {"sizeLimit": "32Gi"}},
+        {"name": "temporary", "emptyDir": {"sizeLimit": "64Mi"}},
+    ]
+    return manifest
+
+
+def assert_writer(pod: JsonObject, journal: JsonObject) -> None:
+    expected = writer_manifest(journal)
+    if (
+        pod.object("metadata").get("name") != expected.object("metadata").string("name")
+        or pod.object("metadata").get("namespace") != NAMESPACE
+        or pod.object("metadata").strings("labels", {}).get(LEASE) != journal.string("requestId")
+        or not includes(pod.object("spec"), expected.object("spec"))
+        or pod.object("spec").get("initContainers")
+        or pod.object("spec").get("ephemeralContainers")
+        or unsafe_helper(pod, expected, write=True)
+        or any(
+            container.get("env") or container.get("envFrom") for container in pod.object("spec").objects("containers")
+        )
+        or journal.get("writerUid") != pod.object("metadata").string("uid")
+    ):
+        raise ValueError("Installation writer differs from the exact credential-free request-owned helper")
 
 
 def tar_fingerprint(stream: IO[bytes]) -> dict[str, str]:
@@ -989,6 +1067,377 @@ def remove_readers(path: Path, journal: JsonObject) -> None:
     save(path, journal)
 
 
+def create_writer(path: Path, journal: JsonObject) -> JsonObject:
+    name = writer_manifest(journal).object("metadata").string("name")
+    existing = run(["-n", NAMESPACE, "get", "pod", name, "--ignore-not-found", "-o", "json"]).strip()
+    if existing and journal.get("writerUid") is None and journal.get("writerCreationPending") is True:
+        pod = JsonObject.parse(existing)
+        proposed = JsonObject({**journal, "writerUid": pod.object("metadata").string("uid")})
+        assert_writer(pod, proposed)
+        journal["writerUid"] = proposed.string("writerUid")
+        save(path, journal)
+    require_offline(journal, writer=bool(journal.get("writerUid")))
+    if journal.get("writerRemoved") is True:
+        if existing:
+            raise ValueError("A removed writer name is occupied; inspect its identity before recreation")
+        journal["previousWriterUid"] = journal.pop("writerUid")
+        journal["writerRemoved"] = False
+    journal["writerCreationPending"] = True
+    save(path, journal)
+    pod = ensure_resource(writer_manifest(journal))
+    identity = pod.object("metadata").string("uid")
+    if journal.get("writerUid") not in (None, identity):
+        raise ValueError("Installation writer was replaced")
+    journal["writerUid"] = identity
+    journal["writerRemoved"] = False
+    journal["writerCreationPending"] = False
+    save(path, journal)
+    assert_writer(pod, journal)
+    run(
+        [
+            "-n",
+            NAMESPACE,
+            "wait",
+            "--for=condition=Ready",
+            "pod/" + pod.object("metadata").string("name"),
+            "--timeout=45s",
+        ],
+        50,
+    )
+    require_offline(journal, writer=True)
+    return pod
+
+
+def upload_installation(journal: JsonObject, plan: JsonObject) -> None:
+    """Stream only approved world/identity files and operator code into bounded scratch storage."""
+    name = writer_manifest(journal).object("metadata").string("name")
+    expected = restoration_files.installation_manifest(plan.strings("installationFiles"))
+    layout = Path(plan.string("layout"))
+    owned = Path(__file__).resolve().parent
+    process = subprocess.Popen(
+        [
+            "kubectl",
+            "--context",
+            CONTEXT,
+            "-n",
+            NAMESPACE,
+            "exec",
+            "-i",
+            name,
+            "-c",
+            "writer",
+            "--",
+            "tar",
+            "-xf",
+            "-",
+            "-C",
+            "/scratch",
+        ],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
+    )
+    try:
+        if process.stdin is None:
+            raise RuntimeError("Installation upload stream is unavailable")
+        with tarfile.open(fileobj=process.stdin, mode="w|") as archive:
+            for relative, checksum in expected.items():
+                source = layout / relative
+                if source.is_symlink() or not source.is_file() or restoration_files.digest(source) != checksum:
+                    raise ValueError("Prepared installation changed before upload")
+                archive.add(source, arcname="payload/" + relative, recursive=False)
+            for script in ("restoration_install.py", "restoration_files.py", "restoration_json.py"):
+                source = owned / script
+                if source.is_symlink() or not source.is_file():
+                    raise ValueError("Operator installation code must be regular files")
+                archive.add(source, arcname="operator/" + script, recursive=False)
+            encoded = json.dumps(plan).encode("utf-8")
+            entry = tarfile.TarInfo("plan.json")
+            entry.mode = 0o600
+            entry.size = len(encoded)
+            archive.addfile(entry, io.BytesIO(encoded))
+        process.stdin.close()
+        process.stdin = None
+        _, errors = process.communicate(timeout=90)
+        if process.returncode:
+            raise RuntimeError("Private installation upload failed: " + errors.decode("utf-8", errors="replace"))
+    except BaseException:
+        process.kill()
+        process.wait()
+        raise
+
+
+def install(path: Path, journal: JsonObject, staging: Path, candidate: Path) -> None:
+    require_offline(journal, writer=bool(journal.get("writerUid")))
+    require_restore(journal)
+    plan = restoration_activation.plan(staging, journal, candidate)
+    if journal.get("installationPlan") is not None and journal.object("installationPlan") != plan:
+        raise ValueError("Installation inputs changed after the plan was recorded")
+    journal["installationPlan"] = plan
+    save(path, journal)
+    create_writer(path, journal)
+    name = writer_manifest(journal).object("metadata").string("name")
+    published = run(["-n", NAMESPACE, "exec", name, "-c", "writer", "--", "sha256sum", "/plugins/TheStorm.jar"])
+    if published.split()[:1] != [plan.string("candidateJarSha256")]:
+        raise ValueError("Published candidate image contains a different gameplay plugin")
+    upload_installation(journal, plan)
+    require_offline(journal, writer=True)
+    result = JsonObject.parse(
+        run(
+            [
+                "-n",
+                NAMESPACE,
+                "exec",
+                name,
+                "-c",
+                "writer",
+                "--",
+                "python3",
+                "/scratch/operator/restoration_install.py",
+                "--plan",
+                "/scratch/plan.json",
+            ],
+            1800,
+        )
+    )
+    if (
+        result.get("phase") != "INSTALLED"
+        or any(
+            result.get(key) != plan.get(key)
+            for key in ("requestId", "candidateImage", "candidateJarSha256", "backupUid")
+        )
+        or result.get("coreProtectEpoch") != journal.string("requestId")
+    ):
+        raise ValueError("Stopped-volume installation returned mismatched evidence")
+    require_offline(journal, writer=True)
+    journal["installation"] = result
+    save(path, journal)
+
+
+def remove_writer(path: Path, journal: JsonObject) -> None:
+    require_offline(journal, writer=True)
+    name = writer_manifest(journal).object("metadata").string("name")
+    existing = run(["-n", NAMESPACE, "get", "pod", name, "--ignore-not-found", "-o", "json"]).strip()
+    if existing:
+        pod = JsonObject.parse(existing)
+        assert_writer(pod, journal)
+        completed = subprocess.run(
+            [
+                "kubectl",
+                "--context",
+                CONTEXT,
+                "delete",
+                "--raw",
+                f"/api/v1/namespaces/{NAMESPACE}/pods/{name}",
+                "-f",
+                "-",
+            ],
+            input=json.dumps(
+                {
+                    "apiVersion": "v1",
+                    "kind": "DeleteOptions",
+                    "preconditions": {
+                        "uid": pod.object("metadata").string("uid"),
+                        "resourceVersion": pod.object("metadata").string("resourceVersion"),
+                    },
+                }
+            ),
+            text=True,
+            capture_output=True,
+            timeout=30,
+        )
+        if completed.returncode:
+            raise RuntimeError("Owned writer deletion failed; admission remains closed")
+        run(["-n", NAMESPACE, "wait", "--for=delete", "pod/" + name, "--timeout=45s"], 50)
+    require_offline(journal)
+    journal["writerRemoved"] = True
+    save(path, journal)
+
+
+def private_start(path: Path, journal: JsonObject) -> None:
+    assert_closed(journal)
+    server = read("statefulset", SERVER)
+    assert_owner(server, journal)
+    if journal.object("installation").get("phase") != "INSTALLED" or journal.get("writerRemoved") is not True:
+        raise ValueError("Private startup requires verified installation and writer cleanup")
+    if annotations(server).get(PHASE) == "OFFLINE":
+        require_offline(journal)
+        journal["privateStartup"] = "STARTING"
+        save(path, journal)
+        patch(
+            "statefulset",
+            SERVER,
+            server,
+            [
+                {"op": "replace", "path": "/metadata/annotations/" + pointer(PHASE), "value": "VALIDATING"},
+                {
+                    "op": "replace",
+                    "path": "/spec/template/spec/containers/0/image",
+                    "value": journal.string("candidateImage"),
+                },
+                {"op": "replace", "path": "/spec/replicas", "value": 1},
+            ],
+        )
+    server = read("statefulset", SERVER)
+    assert_owner(server, journal)
+    if (
+        annotations(server).get(PHASE) != "VALIDATING"
+        or annotations(server).get(IMAGE) != journal.string("candidateImage")
+        or server_image(server) != journal.string("candidateImage")
+        or server.object("spec").integer("replicas") != 1
+    ):
+        raise ValueError("Private startup is not running the exact pinned candidate")
+    assert_closed(journal)
+    journal["privateStartup"] = "VALIDATING"
+    save(path, journal)
+
+
+def private_stop(path: Path, journal: JsonObject) -> None:
+    assert_closed(journal)
+    server = read("statefulset", SERVER)
+    assert_owner(server, journal)
+    if annotations(server).get(IMAGE) != journal.string("candidateImage"):
+        raise ValueError("Private server image pin changed")
+    if server.object("spec").integer("replicas") != 0:
+        patch("statefulset", SERVER, server, [{"op": "replace", "path": "/spec/replicas", "value": 0}])
+    if run(["-n", NAMESPACE, "get", "pod", SERVER + "-0", "--ignore-not-found", "-o", "json"]).strip():
+        run(["-n", NAMESPACE, "wait", "--for=delete", "pod/" + SERVER + "-0", "--timeout=180s"], 190)
+    server = read("statefulset", SERVER)
+    assert_owner(server, journal)
+    if server.object("status", {}).get("replicas", 0) != 0:
+        raise ValueError("Private server has not finished its graceful shutdown")
+    patch(
+        "statefulset",
+        SERVER,
+        server,
+        [{"op": "replace", "path": "/metadata/annotations/" + pointer(PHASE), "value": "OFFLINE"}],
+    )
+    require_offline(journal)
+    journal["privateStartup"] = "STOPPED"
+    save(path, journal)
+
+
+ACCEPTANCE_CHECKS = (
+    "startup",
+    "historicalSpawn",
+    "townDirectory",
+    "provenPlotEditors",
+    "heritageProtection",
+    "grazingAndGrowth",
+    "settlement",
+    "rustworks",
+    "rwf",
+    "coreProtectLookup",
+    "coreProtectRollback",
+    "identities",
+    "historicalPlayerData",
+    "maps",
+    "privateAdmission",
+)
+
+
+def accept(path: Path, journal: JsonObject, evidence_path: Path) -> None:
+    assert_closed(journal)
+    server = read("statefulset", SERVER)
+    assert_owner(server, journal)
+    pod = read("pod", SERVER + "-0")
+    if evidence_path.is_symlink() or not evidence_path.is_file():
+        raise ValueError("Private acceptance evidence must be a regular file")
+    evidence = JsonObject.parse(evidence_path.read_bytes())
+    containers = pod.object("spec").objects("containers")
+    statuses = pod.object("status").objects("containerStatuses")
+    if (
+        annotations(server).get(PHASE) != "VALIDATING"
+        or server_image(server) != journal.string("candidateImage")
+        or evidence.get("requestId") != journal.string("requestId")
+        or evidence.get("candidateImage") != journal.string("candidateImage")
+        or evidence.get("candidateJarSha256") != journal.object("installation").string("candidateJarSha256")
+        or evidence.get("podUid") != pod.object("metadata").string("uid")
+        or evidence.get("testOnly")
+        or set(evidence.object("checks")) != set(ACCEPTANCE_CHECKS)
+        or any(evidence.object("checks").get(key) != "VERIFIED" for key in ACCEPTANCE_CHECKS)
+        or len(containers) != 1
+        or containers[0].get("image") != journal.string("candidateImage")
+        or len(statuses) != 1
+        or statuses[0].get("ready") is not True
+        or not statuses[0].string("imageID").endswith(journal.string("candidateImage").split("@", 1)[1])
+        or not any(
+            owner.get("controller") is True and owner.get("uid") == journal.string("serverUid")
+            for owner in pod.object("metadata").objects("ownerReferences")
+        )
+    ):
+        raise ValueError("Private acceptance does not verify this live candidate and every required behavior")
+    journal["acceptance"] = {
+        "status": "VERIFIED",
+        "podUid": evidence.string("podUid"),
+        "path": str(evidence_path.resolve()),
+        "sha256": restoration_files.digest(evidence_path),
+    }
+    save(path, journal)
+
+
+def release(path: Path, journal: JsonObject) -> None:
+    """Release the stopped lease, then restore only this request's recorded route selectors."""
+    acceptance = journal.object("acceptance")
+    if acceptance.get("status") != "VERIFIED" or restoration_files.digest(
+        Path(acceptance.string("path"))
+    ) != acceptance.string("sha256"):
+        raise ValueError("Reopening requires unchanged, verified private acceptance")
+    server = read("statefulset", SERVER)
+    assert_owner(server, journal, allow_unheld=True)
+    if server_image(server) != journal.string("candidateImage"):
+        raise ValueError("Release requires the accepted candidate image")
+    if annotations(server).get(LEASE) is not None and (
+        server.object("spec").integer("replicas") != 0 or server.object("status", {}).get("replicas", 0) != 0
+    ):
+        raise ValueError("Release requires a gracefully stopped accepted candidate")
+    if journal.get("phase") == "LEASED_OFFLINE":
+        require_offline(journal)
+        journal["phase"] = "RELEASING"
+        save(path, journal)
+    if journal.get("phase") not in ("RELEASING", "REOPENED"):
+        raise ValueError("Unexpected release phase")
+    if annotations(server).get(LEASE) is not None:
+        if annotations(server).get(PHASE) != "OFFLINE":
+            raise ValueError("Release cannot clear a running validation lease")
+        updated = {key: value for key, value in annotations(server).items() if key not in (LEASE, PHASE, IMAGE)}
+        patch("statefulset", SERVER, server, [{"op": "replace", "path": "/metadata/annotations", "value": updated}])
+    # Java is the only route that wakes the server; expose it after the others.
+    for name in (*SERVICES[1:], SERVICES[0]):
+        service = read("service", name)
+        expected = journal.object("services").object(name)
+        held = annotations(service).get(LEASE)
+        if service.object("metadata").string("uid") != expected.string("uid") or held not in (
+            None,
+            journal.string("requestId"),
+        ):
+            raise ValueError("Route identity changed during reopening")
+        if held is None:
+            if service.object("spec").strings("selector") != expected.strings("selector") or (
+                name == SERVER and WAKE in annotations(service)
+            ):
+                raise ValueError("Released route differs from its original selector")
+            continue
+        if service.object("spec").strings("selector") != {**expected.strings("selector"), ACCESS: "closed"}:
+            raise ValueError("Owned route selector changed before reopening")
+        updated = {
+            key: value
+            for key, value in annotations(service).items()
+            if key != LEASE and not (name == SERVER and key == WAKE)
+        }
+        patch(
+            "service",
+            name,
+            service,
+            [
+                {"op": "replace", "path": "/spec/selector", "value": expected.strings("selector")},
+                {"op": "replace", "path": "/metadata/annotations", "value": updated},
+            ],
+        )
+    journal["phase"] = "REOPENED"
+    save(path, journal)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -1001,6 +1450,13 @@ def main() -> None:
             "verify-backup",
             "export-backup",
             "remove-readers",
+            "plan-install",
+            "install",
+            "remove-writer",
+            "private-start",
+            "private-stop",
+            "accept",
+            "release",
         ),
     )
     parser.add_argument("--journal", required=True, type=Path)
@@ -1008,9 +1464,18 @@ def main() -> None:
     parser.add_argument("--image", required=True)
     parser.add_argument("--export-dir", type=Path)
     parser.add_argument("--export-proof", type=Path)
+    parser.add_argument("--staging", type=Path)
+    parser.add_argument("--candidate", type=Path)
+    parser.add_argument("--evidence", type=Path)
     arguments = parser.parse_args()
     if arguments.operation == "export-backup" and (arguments.export_dir is None or arguments.export_proof is None):
         parser.error("export-backup requires --export-dir and --export-proof")
+    if arguments.operation in ("plan-install", "install") and (
+        arguments.staging is None or arguments.candidate is None
+    ):
+        parser.error("Installation requires --staging and --candidate")
+    if arguments.operation == "accept" and arguments.evidence is None:
+        parser.error("accept requires --evidence")
     with journal_lock(arguments.journal):
         journal = initialize(arguments.journal, arguments.request, arguments.image)
         if arguments.operation == "acquire":
@@ -1025,13 +1490,30 @@ def main() -> None:
             export_backup(arguments.journal, journal, arguments.export_dir, arguments.export_proof)
         elif arguments.operation == "remove-readers":
             remove_readers(arguments.journal, journal)
+        elif arguments.operation == "plan-install":
+            require_offline(journal)
+            require_restore(journal)
+            journal["installationPlan"] = restoration_activation.plan(arguments.staging, journal, arguments.candidate)
+            save(arguments.journal, journal)
+        elif arguments.operation == "install":
+            install(arguments.journal, journal, arguments.staging, arguments.candidate)
+        elif arguments.operation == "remove-writer":
+            remove_writer(arguments.journal, journal)
+        elif arguments.operation == "private-start":
+            private_start(arguments.journal, journal)
+        elif arguments.operation == "private-stop":
+            private_stop(arguments.journal, journal)
+        elif arguments.operation == "accept":
+            accept(arguments.journal, journal, arguments.evidence)
+        elif arguments.operation == "release":
+            release(arguments.journal, journal)
         print(
             json.dumps(
                 {
                     "requestId": journal.string("requestId"),
                     "phase": journal.string("phase"),
-                    "backup": journal.object("backup"),
-                    "restore": journal.object("restore"),
+                    "backup": journal.object("backup", {}),
+                    "restore": journal.object("restore", {}),
                 }
             )
         )
