@@ -357,7 +357,10 @@ The recorded claim, PV and native CSI volume handle must all identify distinct
 storage. Both commands report pending controller work and can be repeated.
 Controller warnings remain recorded for operator review. A completed restore
 keeps byte verification pending. `verify-backup` creates two request-owned,
-read-only volume readers using the recorded immutable rollback image. It streams
+read-only volume readers using the recorded immutable rollback image. Readers
+use UID 1000 and GID 2000 to read the existing server-owned private files and
+group-owned directories, while dropping every capability. They do not change
+volume ownership or permissions. Verification streams
 the whole volumes through SHA-256 without extracting or saving file contents,
 rejects linked or non-regular files, and compares every file except transient
 world session locks. The original server remains stopped and all routes stay

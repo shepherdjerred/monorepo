@@ -1346,7 +1346,7 @@ class RestorationControlTest(unittest.TestCase):
         with patch.object(control, "remote_fingerprint", return_value={"file": "checksum"}):
             control.verify_backup(self.path, journal)
         original = copy.deepcopy(pods[control.NAMESPACE])
-        for change in ("uid", "container", "volume", "environment", "init", "ephemeral"):
+        for change in ("uid", "container", "volume", "environment", "init", "ephemeral", "user", "group"):
             with self.subTest(change=change):
                 pod = copy.deepcopy(original)
                 if change == "uid":
@@ -1357,10 +1357,29 @@ class RestorationControlTest(unittest.TestCase):
                     pod.object("spec").objects("volumes")[0].object("persistentVolumeClaim")["readOnly"] = False
                 elif change == "environment":
                     pod.object("spec").objects("containers")[0]["envFrom"] = [{"secretRef": {"name": "unreviewed"}}]
+                elif change in ("user", "group"):
+                    pod.object("spec").objects("containers")[0].object("securityContext")[
+                        "runAsUser" if change == "user" else "runAsGroup"
+                    ] = 0
                 else:
                     pod.object("spec")["initContainers" if change == "init" else "ephemeralContainers"] = [{}]
                 with self.assertRaisesRegex(ValueError, "read-only pod"):
                     control.assert_reader(pod, journal, control.NAMESPACE)
+
+    def test_readers_use_server_file_ownership_without_capabilities_or_writable_mounts(self):
+        journal, _ = self.reader_fixture()
+        for namespace in (control.NAMESPACE, control.RESTORED_NAMESPACE):
+            reader = control.reader_manifest(journal, namespace)
+            container = reader.object("spec").objects("containers")[0]
+            security = container.object("securityContext")
+            self.assertEqual(security.get("runAsUser"), 1000)
+            self.assertEqual(security.get("runAsGroup"), 2000)
+            self.assertEqual(security.object("capabilities"), {"drop": ["ALL"]})
+            self.assertIs(security.get("readOnlyRootFilesystem"), True)
+            self.assertIs(container.objects("volumeMounts")[0].get("readOnly"), True)
+        writer = control.writer_manifest(journal).object("spec").objects("containers")[0]
+        self.assertEqual(writer.object("securityContext").get("runAsUser"), 0)
+        self.assertEqual(writer.object("securityContext").get("runAsGroup"), 2000)
 
     def test_reader_cleanup_deletes_only_recorded_uid_and_version_and_can_resume(self):
         journal, pods = self.reader_fixture()

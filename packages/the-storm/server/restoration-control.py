@@ -673,6 +673,8 @@ def reader_manifest(journal: JsonObject, namespace: str) -> JsonObject:
                         "image": journal.string("rollbackImage"),
                         "command": ["sleep", "infinity"],
                         "securityContext": {
+                            "runAsUser": 1000,
+                            "runAsGroup": 2000,
                             "readOnlyRootFilesystem": True,
                             "allowPrivilegeEscalation": False,
                             "capabilities": {"drop": ["ALL"]},
