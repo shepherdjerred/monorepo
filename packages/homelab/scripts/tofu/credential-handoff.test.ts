@@ -39,6 +39,24 @@ const items = [
 ];
 
 describe("generated Cloudflare handoffs", () => {
+  test("omitted managed follows the declared OpenTofu true default", () => {
+    const generated = { vault_item_id: "generated", vault_field: "API_TOKEN" };
+    const desired = {
+      cloudflare_api_tokens: {
+        generated,
+        existing: {
+          managed: false,
+          vault_item_id: "existing",
+          vault_field: "API_TOKEN",
+        },
+      },
+    };
+    expect(handoffDesiredState(desired, "cloudflare-tokens")).toEqual({
+      cloudflare_api_tokens: { generated: { managed: true, ...generated } },
+    });
+    expect(desired.cloudflare_api_tokens.generated).toEqual(generated);
+  });
+
   test("generated Cloudflare handoffs do not require unmanaged token targets", () => {
     const generated = { vault_item_id: "generated", vault_field: "API_TOKEN" };
     const existing = { vault_item_id: "existing", vault_field: "API_TOKEN" };

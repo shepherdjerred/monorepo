@@ -291,7 +291,8 @@ export function handoffDesiredState(desired: unknown, stack: string): unknown {
     .looseObject({
       cloudflare_api_tokens: z.record(
         z.string(),
-        z.looseObject({ managed: z.boolean() }),
+        // Match cloudflare-tokens/variables.tf: omitted managed means true.
+        z.looseObject({ managed: z.boolean().default(true) }),
       ),
     })
     .parse(desired);
