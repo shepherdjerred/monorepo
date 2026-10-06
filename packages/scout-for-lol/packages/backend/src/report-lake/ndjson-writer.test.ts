@@ -167,7 +167,8 @@ function failingSink(
 function recordingSink(chunks: string[]): NdjsonSink {
   return {
     write: (data) => {
-      if (typeof data !== "string") throw new Error("expected a JSON string");
+      if (typeof data !== "string")
+        throw new TypeError("expected a JSON string");
       chunks.push(data);
       return Buffer.byteLength(data);
     },
