@@ -389,7 +389,9 @@ body {
   .p-header-logo img {
     max-height: none;
   }
-  .p-header-logo { max-width: 90%; }
+  .p-header-logo {
+    max-width: 90%;
+  }
   .p-body-inner {
     padding-top: 15px;
   }
@@ -403,5 +405,18 @@ body {
     border-radius: 4px;
   }
 }
- .stormSkipLink { position: fixed; top: 8px; left: 8px; z-index: 1000; padding: 12px; background: @xf-contentBg; color: @xf-linkColor; border: 2px solid @xf-borderColorHeavy; border-radius: 4px; transform: translateY(-200%); }
- .stormSkipLink:focus { transform: none; }
+.stormSkipLink {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 1000;
+  padding: 12px;
+  background: @xf-contentBg;
+  color: @xf-linkColor;
+  border: 2px solid @xf-borderColorHeavy;
+  border-radius: 4px;
+  transform: translateY(-200%);
+}
+.stormSkipLink:focus {
+  transform: none;
+}

@@ -71,7 +71,7 @@ running the Minecraft client. Sandbox gameplay scenarios use
 `toolkit mc playtest run packages/the-storm/playtests/` against `storm-dev`;
 follow the repository's `minecraft-harness` skill for sandbox ownership and
 cleanup. These checks are also committer-run.
-## Essentials command surface
+
 ## Essentials command surface
 
 The Storm implements the selected EssentialsX-style surface inside its own

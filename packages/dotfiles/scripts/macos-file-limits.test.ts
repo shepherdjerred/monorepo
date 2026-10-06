@@ -276,7 +276,7 @@ else
 fi
 `;
 
-async function runInstaller(exitCode = "0") {
+async function runInstaller(exitCode = "0", validationExitCode = "0") {
   const directory = await mkdtemp(
     path.join(tmpdir(), "maxfiles-installer-test-"),
   );
@@ -285,6 +285,12 @@ async function runInstaller(exitCode = "0") {
     calls: "",
     launchctl: mockInstallerLaunchctl,
     install: mockInstall,
+    plutil: String.raw`#!/bin/bash
+set -eu
+[[ $# -eq 2 && "$1" == -lint && -f "$2" ]]
+printf 'plutil %s\n' "$*" >> "$MAXFILES_TEST_DIR/calls"
+exit "$MAXFILES_TEST_PLUTIL_EXIT_CODE"
+`,
     stat: String.raw`#!/bin/bash
 if [[ "$3" == *.plist ]]; then
     printf '0:0:644\n'
@@ -308,6 +314,7 @@ fi
     "/bin/launchctl": "launchctl",
     "/usr/bin/install": "install",
     "/usr/bin/stat": "stat",
+    "/usr/bin/plutil": "plutil",
     "/usr/bin/uname": "uname",
     "/usr/bin/id": "id",
     "/bin/sleep": "sleep",
@@ -323,6 +330,7 @@ fi
       ...Bun.env,
       MAXFILES_TEST_DIR: directory,
       MAXFILES_TEST_MODE: exitCode,
+      MAXFILES_TEST_PLUTIL_EXIT_CODE: validationExitCode,
     },
     stdout: "pipe",
     stderr: "pipe",
@@ -339,6 +347,15 @@ test("waits for the boot helper's first exit before reporting installation succe
   const result = await runInstaller();
   expect(result.exitCode).toBe(0);
   expect(result.stdout).toContain("Installed and loaded: launchd soft=8192");
+  expect(result.calls).toContain("plutil -lint ");
+});
+
+test("stops before loading the boot helper when plist validation fails", async () => {
+  const result = await runInstaller("0", "1");
+  expect(result.exitCode).toBe(1);
+  expect(result.calls).toContain("plutil -lint ");
+  expect(result.calls).not.toContain("bootstrap");
+  expect(result.stdout).not.toContain("Installed and loaded");
 });
 
 test.each(["1", "78: EX_CONFIG"])(
