@@ -197,7 +197,7 @@ describe("profiles and staging", () => {
         FLIPT_ENVIRONMENT: "beta",
         RWF_RECORDING_SALT: "mc-harness-storm-fixture-recording-salt",
       });
-      expect(image.staged).toHaveLength(1);
+      expect(image.staged).toHaveLength(2);
       const imageConfig = image.staged[0];
       expect(imageConfig?.kind).toBe("storm-config");
       if (imageConfig?.kind === "storm-config") {
@@ -206,6 +206,11 @@ describe("profiles and staging", () => {
         expect(imageConfig.modules).not.toContain("rwf");
         expect(imageConfig.modules).not.toContain("rwfbots");
       }
+      expect(image.staged[1]).toMatchObject({
+        kind: "repo-file",
+        source: STORM_PATHS.fixturesJar,
+        target: "TheStormFixtures.jar",
+      });
     },
   );
 

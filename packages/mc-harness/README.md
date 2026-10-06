@@ -82,7 +82,7 @@ annotations; records whose pod disappeared are dropped.
 
 `storm-prod` and `storm-candidate` boot `ghcr.io/shepherdjerred/the-storm-server`
 at the version catalog's `/prod` and candidate pins with fixture credentials.
-The image bakes Paper, every plugin, and owned config; the harness stages only
+The image bakes Paper, every plugin, and owned config; the harness stages
 a config overlay that enables the companion module and its local dependencies,
 while disabling RWF, which requires the provisioned `rwf` world and production
 recording salt. Docker and Kubernetes mount the overlay at the config file path,
@@ -91,6 +91,11 @@ salt and does not copy production world or plugin data. Both profiles set an unr
 bootstrap (`FLIPT_URL=http://127.0.0.1:9`, `FLIPT_ENVIRONMENT=beta`), so
 companions fail closed and do not spawn or act in the disposable world. The
 image must bake MCBridge; earlier images never answer the bridge health check.
+
+The locally built `TheStormFixtures.jar` also prepares the named worlds and
+geometry a fresh volume requires. Both providers mount it as a single file,
+preserving the image's baked plugin tree. Build it with
+`bunx turbo run build --filter=@shepherdjerred/the-storm` before starting either profile.
 
 The `storm-dev` profile adds the locally built `TheStorm.jar` (build it with
 `bunx turbo run build --filter=@shepherdjerred/the-storm`), the plugins

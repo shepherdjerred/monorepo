@@ -11,6 +11,14 @@ export const STORM_BUILD_COMMAND =
 
 export const STORM_PATHS = {
   jar: path.join(STORM, "plugin", "dist", "build", "libs", "TheStorm.jar"),
+  fixturesJar: path.join(
+    STORM,
+    "plugin",
+    "dist",
+    "build",
+    "libs",
+    "TheStormFixtures.jar",
+  ),
   mechanicsE2eJar: path.join(
     STORM,
     "plugin",

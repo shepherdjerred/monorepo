@@ -209,11 +209,22 @@ describe("sandbox pod manifest (mc-sandbox admission policy)", () => {
     expect(storm.initContainers).toHaveLength(1);
     expect(
       storm.containers[0]?.volumeMounts.map((mount) => mount.mountPath),
-    ).toEqual(["/data", "/tmp", "/plugins/TheStorm/config.yml"]);
+    ).toEqual([
+      "/data",
+      "/tmp",
+      "/plugins/TheStorm/config.yml",
+      "/plugins/TheStormFixtures.jar",
+    ]);
     expect(storm.containers[0]?.volumeMounts).toContainEqual({
       name: "staging",
       mountPath: "/plugins/TheStorm/config.yml",
       subPath: "plugins/TheStorm/config.yml",
+      readOnly: true,
+    });
+    expect(storm.containers[0]?.volumeMounts).toContainEqual({
+      name: "staging",
+      mountPath: "/plugins/TheStormFixtures.jar",
+      subPath: "plugins/TheStormFixtures.jar",
       readOnly: true,
     });
     expect(storm.containers[0]?.image).toMatch(
@@ -236,7 +247,7 @@ describe("profiles", () => {
     ).toBe("kubernetes");
   });
 
-  it("boots the storm image with fixture credentials and no seeding", () => {
+  it("boots the storm image with fixture credentials and world bootstrap", () => {
     const profile = resolveProfile(
       { profile: "storm-prod", world: "flat" },
       secrets,
@@ -248,6 +259,7 @@ describe("profiles", () => {
       CFG_PROXY_PROTOCOL: "false",
       MC_BRIDGE_TOKEN: secrets.bridgeToken,
       DISCORD_BOT_TOKEN: "invalid-storm-fixture-token",
+      RWF_RECORDING_SALT: "storm-sandbox-recording-salt",
     });
   });
 });
