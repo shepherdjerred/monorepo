@@ -430,6 +430,17 @@
       ]
     },
     {
+      "package": "@shepherdjerred/ts-mc-docs",
+      "directory": "packages/ts-mc-docs",
+      "steps": [
+        {
+          "runner": "command",
+          "name": "world-archive",
+          "command": ["bun", "run", "test"]
+        }
+      ]
+    },
+    {
       "package": "@shepherdjerred/mc-build",
       "directory": "packages/mc-build",
       "steps": [
@@ -1085,11 +1096,6 @@
     {
       "package": "@shepherdjerred/ts-mc",
       "directory": "packages/ts-mc",
-      "reason": "Static Astro site; no test files exist."
-    },
-    {
-      "package": "@shepherdjerred/ts-mc-docs",
-      "directory": "packages/ts-mc-docs",
       "reason": "Static Astro site; no test files exist."
     }
   ],
