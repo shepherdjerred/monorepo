@@ -34,7 +34,7 @@ type Position = z.infer<typeof Position>;
 async function interact(bot: Bot, rcon: RconClient, at: Position) {
   const beside = new Vec3(at.x + 0.5, at.y, at.z + 1.5);
   await rcon.command(
-    `execute in rustworks run tp ${bot.username} ${beside.x.toString()} ${beside.y.toString()} ${beside.z.toString()}`,
+    `execute in rustworks run minecraft:tp ${bot.username} ${beside.x.toString()} ${beside.y.toString()} ${beside.z.toString()}`,
   );
   await waitUntil(
     "Rustworks fixture approach",

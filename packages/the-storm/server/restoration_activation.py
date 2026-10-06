@@ -26,7 +26,7 @@ def plan(staging: Path, control: JsonObject, candidate: Path) -> JsonObject:
     export = control.object("export")
     if (
         control.get("phase") != "LEASED_OFFLINE"
-        or control.get("admissionProbes") != "UPDATE_AND_SCALE_DENIED"
+        or control.get("admissionProbes") != "UPDATE_SCALE_AND_DELETE_DENIED"
         or restore.get("phase") != "Completed"
         or restore.get("byteVerification") != "VERIFIED"
         or export.get("phase") != "VERIFIED"

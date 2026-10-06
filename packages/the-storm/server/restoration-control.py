@@ -35,7 +35,11 @@ ACCESS = "sjer.red/world-restore-access"
 WAKE = "mc-router.itzg.me/autoScaleUp"
 MINING = "sjer.red/mining-reset-lock"
 SERVICES = (SERVER, SERVER + "-bedrock", SERVER + "-bluemap", SERVER + "-rcon")
-POLICIES = ("minecraft-tsmc-world-restoration.sjer.red", "minecraft-tsmc-world-restoration-scale.sjer.red")
+POLICIES = (
+    ("minecraft-tsmc-world-restoration.sjer.red", "statefulsets", "UPDATE"),
+    ("minecraft-tsmc-world-restoration-scale.sjer.red", "statefulsets/scale", "UPDATE"),
+    ("minecraft-tsmc-world-restoration-delete.sjer.red", "statefulsets", "DELETE"),
+)
 RESTORED_NAMESPACE = "minecraft-tsmc-restore"
 
 backup_spec = importlib.util.spec_from_file_location(
@@ -172,7 +176,7 @@ def volume_source(volume: JsonObject) -> dict[str, str]:
 
 
 def assert_guards() -> None:
-    for name, resource in zip(POLICIES, ("statefulsets", "statefulsets/scale"), strict=True):
+    for name, resource, operation in POLICIES:
         policy = read("validatingadmissionpolicy", name, "")
         binding = read("validatingadmissionpolicybinding", name, "")
         spec = policy.object("spec")
@@ -185,7 +189,7 @@ def assert_guards() -> None:
             or binding.object("spec").get("policyName") != name
             or binding.object("spec").get("validationActions") != ["Deny"]
             or not any(
-                resource in rule.string_list("resources") and "UPDATE" in rule.string_list("operations")
+                resource in rule.string_list("resources") and operation in rule.string_list("operations")
                 for rule in spec.object("matchConstraints").objects("resourceRules")
             )
         ):
@@ -220,7 +224,7 @@ def assert_denied(arguments: list[str], message: str) -> None:
         timeout=30,
     )
     if completed.returncode == 0 or message not in completed.stderr:
-        raise ValueError("Restoration guard did not reject its live dry-run scale-up probe")
+        raise ValueError("Restoration guard did not reject its live dry-run maintenance probe")
 
 
 def assert_owner(server: JsonObject, journal: JsonObject, allow_unheld: bool = False) -> None:
@@ -418,7 +422,11 @@ def acquire(path: Path, journal: JsonObject) -> None:
         ["scale", "statefulset/" + SERVER, "--replicas=1", "--dry-run=server"],
         "World restoration blocks scale requests",
     )
-    journal["admissionProbes"] = "UPDATE_AND_SCALE_DENIED"
+    assert_denied(
+        ["delete", "statefulset", SERVER, "--dry-run=server", "--wait=false"],
+        "Release the restoration lease before deleting its StatefulSet",
+    )
+    journal["admissionProbes"] = "UPDATE_SCALE_AND_DELETE_DENIED"
     save(path, journal)
 
 
@@ -432,7 +440,7 @@ def require_offline(journal: JsonObject, readers: bool = False, writer: bool = F
     volume = read("pv", journal.string("volumeName"), "")
     if (
         journal.string("phase") != "LEASED_OFFLINE"
-        or journal.get("admissionProbes") != "UPDATE_AND_SCALE_DENIED"
+        or journal.get("admissionProbes") != "UPDATE_SCALE_AND_DELETE_DENIED"
         or server.object("spec").integer("replicas") != 0
         or server.object("status", {}).get("replicas", 0) != 0
         or annotations(server).get(PHASE) != "OFFLINE"
@@ -1376,6 +1384,32 @@ def accept(path: Path, journal: JsonObject, evidence_path: Path) -> None:
     save(path, journal)
 
 
+def assert_gitops_image(journal: JsonObject) -> None:
+    """The reconciled Application must declare this image at both Helm precedence levels."""
+    application = read("application", SERVER, "argocd")
+    spec = application.object("spec")
+    source = spec.object("source")
+    helm = source.object("helm")
+    image = helm.object("valuesObject").object("image")
+    declared = image.string("repository") + ":" + image.string("tag")
+    image_parameters = [item for item in helm.objects("parameters") if item.string("name").startswith("image.")]
+    sync = application.object("status").object("sync")
+    if (
+        declared != journal.string("candidateImage")
+        or image_parameters != [{"name": "image.tag", "value": image.string("tag")}]
+        or set(helm) != {"parameters", "valuesObject"}
+        or "sources" in spec
+        or source.get("chart") != "minecraft"
+        or source.get("repoURL") != "https://itzg.github.io/minecraft-server-charts/"
+        or spec.object("destination").get("namespace") != NAMESPACE
+        or sync.get("status") != "Synced"
+        or sync.object("comparedTo").get("source") != source
+        or sync.object("comparedTo").get("destination") != spec.object("destination")
+        or "operation" in application
+    ):
+        raise ValueError("Release requires the reconciled GitOps Application to declare the accepted candidate image")
+
+
 def release(path: Path, journal: JsonObject) -> None:
     """Release the stopped lease, then restore only this request's recorded route selectors."""
     acceptance = journal.object("acceptance")
@@ -1391,6 +1425,7 @@ def release(path: Path, journal: JsonObject) -> None:
         server.object("spec").integer("replicas") != 0 or server.object("status", {}).get("replicas", 0) != 0
     ):
         raise ValueError("Release requires a gracefully stopped accepted candidate")
+    assert_gitops_image(journal)
     if journal.get("phase") == "LEASED_OFFLINE":
         require_offline(journal)
         journal["phase"] = "RELEASING"

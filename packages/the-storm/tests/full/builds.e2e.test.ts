@@ -80,8 +80,10 @@ describe("run class builds on real Paper", () => {
           await rcon.command(
             `effect give ${secondBot.username} minecraft:resistance infinite 255 true`,
           );
-          await rcon.command(`tp ${bot.username} -33.5 73 63.5`);
-          await rcon.command(`tp ${secondBot.username} -31.5 73 63.5`);
+          await rcon.command(`minecraft:tp ${bot.username} -33.5 73 63.5`);
+          await rcon.command(
+            `minecraft:tp ${secondBot.username} -31.5 73 63.5`,
+          );
           await menu(bot, "/survival upgrades");
           await bot.clickWindow(index, 0, 0);
           await waitUntil(
@@ -171,8 +173,8 @@ describe("animated runic cache on real Paper", () => {
       await rcon.command(
         `effect give ${secondBot.username} minecraft:resistance infinite 255 true`,
       );
-      await rcon.command(`tp ${bot.username} -1.5 73 64.5`);
-      await rcon.command(`tp ${secondBot.username} 0.5 73 64.5`);
+      await rcon.command(`minecraft:tp ${bot.username} -1.5 73 64.5`);
+      await rcon.command(`minecraft:tp ${secondBot.username} 0.5 73 64.5`);
       await waitUntil(
         "market box tracking",
         () => bot.blockAt(new Vec3(-2, 73, 62)) !== null,
@@ -281,7 +283,9 @@ describe("vertical settlement pursuit and party scaling on real Paper", () => {
               await rcon.command(
                 `effect give ${player.username} minecraft:resistance infinite 255 true`,
               );
-              await rcon.command(`tp ${player.username} 52.5 105 -30.5`);
+              await rcon.command(
+                `minecraft:tp ${player.username} 52.5 105 -30.5`,
+              );
             }
             await waitUntil(
               "upper terrace arrival",
@@ -304,7 +308,9 @@ describe("vertical settlement pursuit and party scaling on real Paper", () => {
               upperHorde().map((entity) => z.guid().parse(entity.uuid)),
             );
             for (const player of [bot, ...teammates])
-              await rcon.command(`tp ${player.username} 27.5 73 65.5`);
+              await rcon.command(
+                `minecraft:tp ${player.username} 27.5 73 65.5`,
+              );
             await waitUntil(
               "lower wharf arrival",
               () => bot.entity.position.y < 74 && bot.entity.position.x > 26,
@@ -451,7 +457,7 @@ describe("legendary gear and local feedback on real Paper", () => {
     try {
       await start(bot, rcon, 15);
       await travelToRuneforge(bot, rcon);
-      await rcon.command(`tp ${bot.username} -64.5 73 3.5`);
+      await rcon.command(`minecraft:tp ${bot.username} -64.5 73 3.5`);
       for (const [id, material] of [
         ["STORMCALLER", "bow"],
         ["FROSTBITE", "crossbow"],
@@ -464,13 +470,13 @@ describe("legendary gear and local feedback on real Paper", () => {
         .find((item) => item.name === "blaze_rod");
       if (rod === undefined) throw new Error("Graviton missing");
       await bot.equip(rod, "hand");
-      await rcon.command(`tp ${bot.username} -64.5 73 16.5`);
+      await rcon.command(`minecraft:tp ${bot.username} -64.5 73 16.5`);
       const returnStation = bot.blockAt(new Vec3(-65, 73, 17));
       if (returnStation === null) throw new Error("Return station missing");
       const returned = waitForMessage(bot, /Back at the fortress/u, 15_000);
       await bot.activateBlock(returnStation);
       await returned;
-      await rcon.command(`tp ${bot.username} 23.5 105 -40.5`);
+      await rcon.command(`minecraft:tp ${bot.username} 23.5 105 -40.5`);
       expect(
         await rcon.command(
           `storm-fixture-survival targets ${bot.username} none`,

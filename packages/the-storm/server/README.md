@@ -400,7 +400,11 @@ opening routes. `release` requires that unchanged acceptance evidence and a
 stopped lease, clears the owned maintenance annotations and restores the captured
 Service selectors. The Java wake route opens last. Interrupted release resumes
 from the same journal, including a successful wake before its final response.
-The normal GitOps image pin must match the accepted candidate before release.
+The reconciled ArgoCD Application must declare the accepted candidate in both
+Helm image settings before release. The controller checks that declaration and
+refuses stale comparisons, pending operations and conflicting image overrides.
+Admission also refuses deletion of a leased StatefulSet; acquisition proves
+that denial with a server dry run alongside the update and scale probes.
 
 If private startup fails, keep admission closed and use `private-stop` before
 whole-volume recovery. The independently restored PVC remains available. A

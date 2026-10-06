@@ -115,4 +115,36 @@ export function createMinecraftRestorationGuard(chart: Chart): void {
       },
     },
   });
+
+  // DELETE has no object. Preserve the parent lease from oldObject so an
+  // Argo replacement cannot create an unleased server against an owned PVC.
+  const deletePolicyName = "minecraft-tsmc-world-restoration-delete.sjer.red";
+  new ApiObject(chart, "minecraft-tsmc-restoration-delete-policy", {
+    apiVersion: "admissionregistration.k8s.io/v1",
+    kind: "ValidatingAdmissionPolicy",
+    metadata: {
+      name: deletePolicyName,
+      annotations: { "argocd.argoproj.io/sync-wave": "-30" },
+    },
+    spec: {
+      ...minecraftMaintenanceMatch("statefulsets", "DELETE"),
+      validations: [
+        {
+          expression: `!(${priorLeased})`,
+          message:
+            "Release the restoration lease before deleting its StatefulSet",
+          reason: "Forbidden",
+        },
+      ],
+    },
+  });
+  new ApiObject(chart, "minecraft-tsmc-restoration-delete-binding", {
+    apiVersion: "admissionregistration.k8s.io/v1",
+    kind: "ValidatingAdmissionPolicyBinding",
+    metadata: {
+      name: deletePolicyName,
+      annotations: { "argocd.argoproj.io/sync-wave": "-29" },
+    },
+    spec: { policyName: deletePolicyName, validationActions: ["Deny"] },
+  });
 }

@@ -28,7 +28,7 @@ describe("minor survival recovery on real Paper", () => {
       await rcon.command("arena start settlement");
       await round;
       for (const player of [bot, secondBot]) {
-        await rcon.command(`tp ${player.username} -37.5 101 40.5`);
+        await rcon.command(`minecraft:tp ${player.username} -37.5 101 40.5`);
       }
       await waitUntil(
         "isolated recovery platform",

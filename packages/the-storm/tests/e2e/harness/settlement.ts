@@ -39,7 +39,7 @@ export async function travelToRuneforge(
   rcon: RconClient,
 ): Promise<void> {
   await rcon.command(
-    `execute in settlement run tp ${bot.username} 61.5 105 -49.5`,
+    `execute in settlement run minecraft:tp ${bot.username} 61.5 105 -49.5`,
   );
   await waitUntil(
     "airstrip loaded",

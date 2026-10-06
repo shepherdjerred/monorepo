@@ -1,6 +1,7 @@
 /** Shared admission matching for Storm's exclusive data-volume maintenance. */
 export function minecraftMaintenanceMatch(
   resource: "statefulsets" | "statefulsets/scale",
+  operation: "UPDATE" | "DELETE" = "UPDATE",
 ) {
   return {
     failurePolicy: "Fail",
@@ -10,7 +11,7 @@ export function minecraftMaintenanceMatch(
         {
           apiGroups: ["apps"],
           apiVersions: ["v1"],
-          operations: ["UPDATE"],
+          operations: [operation],
           resources: [resource],
           scope: "Namespaced",
         },
@@ -20,7 +21,7 @@ export function minecraftMaintenanceMatch(
       {
         name: "the-storm-server",
         expression:
-          resource === "statefulsets"
+          resource === "statefulsets" && operation === "UPDATE"
             ? "object.metadata.namespace == 'minecraft-tsmc' && object.metadata.name == 'minecraft-tsmc'"
             : "request.namespace == 'minecraft-tsmc' && request.name == 'minecraft-tsmc'",
       },

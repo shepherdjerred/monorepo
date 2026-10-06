@@ -20,7 +20,7 @@ describe("world restoration maintenance guard", () => {
     const resources = parseAllDocuments(app.synthYaml()).map((document) =>
       Resource.parse(document.toJS()),
     );
-    expect(resources).toHaveLength(4);
+    expect(resources).toHaveLength(6);
     const policy = z
       .object({
         failurePolicy: z.literal("Fail"),
@@ -102,6 +102,34 @@ describe("world restoration maintenance guard", () => {
         namespace: "minecraft-tsmc",
         parameterNotFoundAction: "Deny",
       },
+    });
+  });
+
+  test("denies deletion of the leased parent without dereferencing the absent new object", () => {
+    const app = new App();
+    createMinecraftRestorationGuard(new Chart(app, "apps"));
+    const policies = parseAllDocuments(app.synthYaml())
+      .map((document) => Resource.parse(document.toJS()))
+      .filter((resource) => resource.kind === "ValidatingAdmissionPolicy");
+    expect(policies[2]?.spec).toMatchObject({
+      failurePolicy: "Fail",
+      matchConstraints: {
+        resourceRules: [
+          { resources: ["statefulsets"], operations: ["DELETE"] },
+        ],
+      },
+      matchConditions: [
+        {
+          expression:
+            "request.namespace == 'minecraft-tsmc' && request.name == 'minecraft-tsmc'",
+        },
+      ],
+      validations: [
+        {
+          expression: `!(has(oldObject.metadata.annotations) && '${RESTORE_LEASE_ANNOTATION}' in oldObject.metadata.annotations)`,
+          reason: "Forbidden",
+        },
+      ],
     });
   });
 

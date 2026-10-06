@@ -30,14 +30,14 @@ class Cluster:
         self.extra_writer = False
         self.late_join = False
         self.stale_patch = False
-        for name, resource in zip(control.POLICIES, ("statefulsets", "statefulsets/scale"), strict=True):
+        for name, resource, operation in control.POLICIES:
             self.objects["validatingadmissionpolicy", name] = JsonObject(
                 {
                     "metadata": {"generation": 1},
                     "status": {"observedGeneration": 1, "typeChecking": {}},
                     "spec": {
                         "failurePolicy": "Fail",
-                        "matchConstraints": {"resourceRules": [{"resources": [resource], "operations": ["UPDATE"]}]},
+                        "matchConstraints": {"resourceRules": [{"resources": [resource], "operations": [operation]}]},
                     },
                 }
             )
@@ -65,6 +65,26 @@ class Cluster:
                 "metadata": {"uid": "server-uid", "resourceVersion": "1", "annotations": {}},
                 "spec": {"replicas": 1, "template": {"spec": {"containers": [{"image": IMAGE}]}}},
                 "status": {"replicas": 1},
+            }
+        )
+        source = {
+            "chart": "minecraft",
+            "repoURL": "https://itzg.github.io/minecraft-server-charts/",
+            "helm": {
+                "parameters": [{"name": "image.tag", "value": IMAGE.split(":", 1)[1]}],
+                "valuesObject": {"image": {"repository": IMAGE.split(":", 1)[0], "tag": IMAGE.split(":", 1)[1]}},
+            },
+        }
+        destination = {"namespace": control.NAMESPACE, "server": "https://kubernetes.default.svc"}
+        self.objects["application", control.SERVER] = JsonObject(
+            {
+                "spec": {"source": source, "destination": destination},
+                "status": {
+                    "sync": {
+                        "status": "Synced",
+                        "comparedTo": {"source": copy.deepcopy(source), "destination": copy.deepcopy(destination)},
+                    }
+                },
             }
         )
         self.objects["pvc", control.CLAIM] = JsonObject(
@@ -270,6 +290,35 @@ class RestorationControlTest(unittest.TestCase):
             control.release(self.path, journal)
         control.require_offline(journal)
 
+    def test_release_refuses_old_overridden_or_unreconciled_gitops_images_before_any_mutation(self):
+        journal = self.installation_fixture()
+        control.private_start(self.path, journal)
+        control.accept(self.path, journal, self.acceptance_evidence())
+        control.private_stop(self.path, journal)
+        original = copy.deepcopy(self.cluster.objects["application", control.SERVER])
+        for change in ("old", "parameter", "extra", "comparison", "sync", "operation"):
+            with self.subTest(change=change):
+                application = copy.deepcopy(original)
+                self.cluster.objects["application", control.SERVER] = application
+                helm = application.object("spec").object("source").object("helm")
+                if change == "old":
+                    helm.object("valuesObject").object("image")["tag"] = "rollback"
+                elif change == "parameter":
+                    helm.objects("parameters")[0]["value"] = "rollback"
+                elif change == "extra":
+                    helm["values"] = "image: {tag: rollback}"
+                elif change == "comparison":
+                    application.object("status").object("sync").object("comparedTo")["source"] = {}
+                elif change == "sync":
+                    application.object("status").object("sync")["status"] = "OutOfSync"
+                else:
+                    application["operation"] = {"sync": {}}
+                before = len(self.cluster.mutations)
+                with self.assertRaisesRegex(ValueError, "reconciled GitOps"):
+                    control.release(self.path, journal)
+                self.assertEqual(len(self.cluster.mutations), before)
+                control.require_offline(journal)
+
     def test_uncertain_writer_creation_adopts_only_the_recorded_pending_exact_helper(self):
         journal = self.initialize()
         journal["writerCreationPending"] = True
@@ -397,10 +446,12 @@ class RestorationControlTest(unittest.TestCase):
         control.acquire(self.path, journal)
         self.assertEqual(self.cluster.mutations[:4], [("service", name) for name in control.SERVICES])
         self.assertEqual(journal.string("phase"), "LEASED_OFFLINE")
-        self.assertEqual(journal["admissionProbes"], "UPDATE_AND_SCALE_DENIED")
-        self.assertEqual(self.probes.call_count, 2)
+        self.assertEqual(journal["admissionProbes"], "UPDATE_SCALE_AND_DELETE_DENIED")
+        self.assertEqual(self.probes.call_count, 3)
         self.assertIn("--dry-run=server", self.probes.call_args_list[0].args[0])
         self.assertIn("statefulset/" + control.SERVER, self.probes.call_args_list[1].args[0])
+        self.assertEqual(self.probes.call_args_list[2].args[0][:3], ["delete", "statefulset", control.SERVER])
+        self.assertIn("--dry-run=server", self.probes.call_args_list[2].args[0])
         self.assertEqual(self.cluster.server.object("spec").integer("replicas"), 0)
         self.assertEqual(control.annotations(self.cluster.server)[control.LEASE], REQUEST)
         self.assertEqual(control.annotations(self.cluster.server)[control.IMAGE], IMAGE)
@@ -451,13 +502,13 @@ class RestorationControlTest(unittest.TestCase):
         for change in ("generation", "warnings", "param"):
             with self.subTest(change=change):
                 self.cluster = Cluster()
-                policy = self.cluster.objects["validatingadmissionpolicy", control.POLICIES[0]]
+                policy = self.cluster.objects["validatingadmissionpolicy", control.POLICIES[0][0]]
                 if change == "generation":
                     policy.object("status")["observedGeneration"] = 0
                 elif change == "warnings":
                     policy.object("status").object("typeChecking")["expressionWarnings"] = [{"warning": "invalid"}]
                 else:
-                    self.cluster.objects["validatingadmissionpolicybinding", control.POLICIES[1]].object("spec")[
+                    self.cluster.objects["validatingadmissionpolicybinding", control.POLICIES[1][0]].object("spec")[
                         "paramRef"
                     ] = {}
                 with (
@@ -492,7 +543,7 @@ class RestorationControlTest(unittest.TestCase):
                 patch.object(
                     control.subprocess, "run", return_value=control.subprocess.CompletedProcess([], code, "", error)
                 ),
-                self.assertRaisesRegex(ValueError, "dry-run scale-up probe"),
+                self.assertRaisesRegex(ValueError, "dry-run maintenance probe"),
             ):
                 self.guard_probe(["scale"], "World restoration")
         with patch.object(

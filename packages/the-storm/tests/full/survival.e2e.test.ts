@@ -24,7 +24,7 @@ describe("settlement opening on real Paper", () => {
         await rcon.command("arena start settlement");
         await round;
         // Use the open market route also exercised by the pursuit test.
-        await rcon.command(`tp ${bot.username} -8.5 73 58.5`);
+        await rcon.command(`minecraft:tp ${bot.username} -8.5 73 58.5`);
         await Bun.sleep(8000);
         const enemies =
           '@e[type=minecraft:zombie,nbt={BukkitValues:{"thestorm:arena_entity":"settlement"}}]';
@@ -115,7 +115,7 @@ describe("settlement survival on real Paper", () => {
 
     async function travel(x: number, z: number) {
       await rcon.command(
-        `tp ${bot.username} ${x.toString()} 73 ${z.toString()}`,
+        `minecraft:tp ${bot.username} ${x.toString()} 73 ${z.toString()}`,
       );
       await waitUntil(
         "settlement travel",
@@ -203,7 +203,7 @@ describe("settlement survival on real Paper", () => {
     const round = waitForMessage(bot, /Round 1:/u);
     await rcon.command("arena start settlement");
     await round;
-    await rcon.command(`tp ${bot.username} -8.5 73 58.5`);
+    await rcon.command(`minecraft:tp ${bot.username} -8.5 73 58.5`);
     await waitUntil(
       "horde becomes visible",
       () =>
@@ -253,8 +253,8 @@ describe("cooperative survival and bosses on real Paper", () => {
     const round = waitForMessage(bot, /Round 1:/u);
     await rcon.command("arena start settlement");
     await round;
-    await rcon.command(`tp ${bot.username} -8.5 73 58.5`);
-    await rcon.command(`tp ${secondBot.username} -6.5 73 58.5`);
+    await rcon.command(`minecraft:tp ${bot.username} -8.5 73 58.5`);
+    await rcon.command(`minecraft:tp ${secondBot.username} -6.5 73 58.5`);
     const downed = waitForMessage(bot, /Downed!/u);
     await rcon.command(`damage ${bot.username} 100 minecraft:generic`);
     await downed;
@@ -344,7 +344,7 @@ describe("cooperative survival and bosses on real Paper", () => {
         );
         expect(cast.join("\n")).toContain("marked ground");
         await rcon.command(
-          `execute at @e[type=minecraft:breeze,nbt={BukkitValues:{"thestorm:arena_entity":"settlement"}},limit=1] run tp ${bot.username} ~ ~ ~4`,
+          `execute at @e[type=minecraft:breeze,nbt={BukkitValues:{"thestorm:arena_entity":"settlement"}},limit=1] run minecraft:tp ${bot.username} ~ ~ ~4`,
         );
         await waitUntil("boss enters client tracking range", () =>
           Object.values(bot.entities).some((e) => e.name === "breeze"),

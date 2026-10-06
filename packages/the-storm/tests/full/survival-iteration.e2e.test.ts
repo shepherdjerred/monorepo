@@ -10,7 +10,7 @@ import { startSettlementRound as practice } from "#e2e/harness/settlement.ts";
 
 async function stand(bot: Bot, rcon: RconClient, at: Vec3) {
   await rcon.command(
-    `tp ${bot.username} ${at.x.toString()} ${at.y.toString()} ${at.z.toString()}`,
+    `minecraft:tp ${bot.username} ${at.x.toString()} ${at.y.toString()} ${at.z.toString()}`,
   );
   await waitUntil(
     "test position",
@@ -67,7 +67,7 @@ async function prepareWindCast(bot: Bot, rcon: RconClient): Promise<void> {
       return { ok: false, error } as const;
     }
   })();
-  await rcon.command(`tp ${boss} 19.5 105 -40.5`);
+  await rcon.command(`minecraft:tp ${boss} 19.5 105 -40.5`);
   await rcon.command(`data merge entity ${boss} {NoAI:1b}`);
   // Escorts must not obscure the damage caused by the locked boss cast.
   await rcon.command(

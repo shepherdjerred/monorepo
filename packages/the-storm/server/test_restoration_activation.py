@@ -59,7 +59,7 @@ class RestorationActivationTest(unittest.TestCase):
         self.control = JsonObject(
             {
                 "phase": "LEASED_OFFLINE",
-                "admissionProbes": "UPDATE_AND_SCALE_DENIED",
+                "admissionProbes": "UPDATE_SCALE_AND_DELETE_DENIED",
                 "requestId": REQUEST,
                 "candidateImage": IMAGE,
                 "backup": {"uid": "backup-uid"},

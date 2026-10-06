@@ -164,10 +164,10 @@ describe("PVC backup policy", () => {
     expect(operatorManagedPvcCount).toBeGreaterThan(0);
     expect(admissionKinds.get("MutatingAdmissionPolicy")).toBe(3);
     expect(admissionKinds.get("MutatingAdmissionPolicyBinding")).toBe(3);
-    // Includes PVC backup, ArgoCD, CI pod, mining reset, both restoration
-    // update/scale paths, and mc-harness sandbox pod guards.
-    expect(admissionKinds.get("ValidatingAdmissionPolicy")).toBe(7);
-    expect(admissionKinds.get("ValidatingAdmissionPolicyBinding")).toBe(7);
+    // Includes PVC backup, ArgoCD, CI pod, mining reset, restoration
+    // update/scale/delete paths, and mc-harness sandbox pod guards.
+    expect(admissionKinds.get("ValidatingAdmissionPolicy")).toBe(8);
+    expect(admissionKinds.get("ValidatingAdmissionPolicyBinding")).toBe(8);
   }, 20_000);
 
   it("syncs admission policy updates before PVC changes", () => {
