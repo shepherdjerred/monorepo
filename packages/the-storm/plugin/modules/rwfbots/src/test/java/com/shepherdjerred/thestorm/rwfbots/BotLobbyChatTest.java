@@ -98,6 +98,7 @@ final class BotLobbyChatTest {
     harness.ticks(25 * 20);
     heard(alice);
     alice.chat("hi everyone");
+    harness.server.getScheduler().waitAsyncEventsFinished();
     harness.ticks(40);
 
     var replies = heard(alice);
