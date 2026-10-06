@@ -17,12 +17,26 @@ const ClaimMetadataSchema = z.object({
   annotations: z.record(z.string(), z.string()),
 });
 
+const ApplicationHelmValuesSchema = z.object({
+  source: z.object({
+    helm: z.object({ valuesObject: z.record(z.string(), z.unknown()) }),
+  }),
+});
+
 function resources() {
   const app = new App();
   createSeaweedfsApp(new Chart(app, "seaweedfs-capacity"));
   return parseAllDocuments(app.synthYaml()).map((document) =>
     ResourceSchema.parse(document.toJSON()),
   );
+}
+
+function applicationValuesObject(synthesized = resources()) {
+  const application = synthesized.find(
+    (resource) => resource.kind === "Application",
+  );
+  return ApplicationHelmValuesSchema.parse(application?.spec).source.helm
+    .valuesObject;
 }
 
 describe("SeaweedFS data-preserving capacity migration", () => {
@@ -77,16 +91,7 @@ describe("SeaweedFS data-preserving capacity migration", () => {
   });
 
   test("leaves immutable templates and replacement intent unchanged until expansion is verified", () => {
-    const application = resources().find(
-      (resource) => resource.kind === "Application",
-    );
-    const { valuesObject } = z
-      .object({
-        source: z.object({
-          helm: z.object({ valuesObject: z.record(z.string(), z.unknown()) }),
-        }),
-      })
-      .parse(application?.spec).source.helm;
+    const valuesObject = applicationValuesObject();
     expect(valuesObject).toMatchObject({
       filer: { data: { size: "1Gi" } },
       volume: { dataDirs: [{ size: "512Gi" }], idx: { size: "50Gi" } },
@@ -94,5 +99,67 @@ describe("SeaweedFS data-preserving capacity migration", () => {
     });
     expect(valuesObject["filer"]).not.toHaveProperty("annotations");
     expect(valuesObject["volume"]).not.toHaveProperty("annotations");
+  });
+});
+
+describe("SeaweedFS Filer exposure boundary", () => {
+  test("routes the tailnet UI through Basic auth while retaining internal Filer protocols", () => {
+    const synthesized = resources();
+    const authItem = synthesized.find(
+      (resource) =>
+        resource.kind === "OnePasswordItem" &&
+        resource.metadata.name === "seaweedfs-filer-auth",
+    );
+    expect(JSON.stringify(authItem?.spec)).toContain(
+      "zkvjvzfvj3zzhxq5pumebqdoiu",
+    );
+
+    const service = synthesized.find(
+      (resource) =>
+        resource.kind === "Service" &&
+        resource.metadata.name === "seaweedfs-filer-ui",
+    );
+    expect(service?.spec).toMatchObject({
+      ports: [{ port: 8888, targetPort: 8889 }],
+    });
+
+    const networkPolicy = synthesized.find(
+      (resource) =>
+        resource.kind === "NetworkPolicy" &&
+        resource.metadata.name === "seaweedfs-filer-netpol",
+    );
+    const serializedPolicy = JSON.stringify(networkPolicy?.spec);
+    expect(serializedPolicy).toContain("seaweedfs");
+    expect(serializedPolicy).toContain("tailscale");
+    expect(serializedPolicy).toContain("prometheus");
+    expect(serializedPolicy).toContain("8889");
+    expect(serializedPolicy).not.toContain('"port":8888');
+
+    const valuesObject = applicationValuesObject(synthesized);
+    const filer = z
+      .object({
+        sidecars: z.array(
+          z
+            .object({
+              name: z.string(),
+              env: z.array(z.object({ name: z.string() }).loose()),
+            })
+            .loose(),
+        ),
+        extraVolumes: z.string(),
+      })
+      .loose()
+      .parse(valuesObject["filer"]);
+    expect(filer.sidecars).toHaveLength(1);
+    expect(filer.sidecars[0]?.name).toBe("authenticated-gateway");
+    expect(filer.sidecars[0]?.env.map((entry) => entry.name)).toEqual([
+      "CADDY_CONFIG",
+      "SEAWEEDFS_FILER_BASIC_HASH",
+    ]);
+    expect(JSON.stringify(filer.sidecars[0])).toContain("basic_auth");
+    expect(JSON.stringify(filer.sidecars[0])).toContain(
+      "reverse_proxy 127.0.0.1:8888",
+    );
+    expect(filer.extraVolumes).toContain("filer-gateway-tmp");
   });
 });

@@ -27,6 +27,9 @@ describe("Woodpecker v3.18.1 configuration request", () => {
       branch: "main",
       author: "shepherdjerred",
       sender: "shepherdjerred",
+      number: 519,
+      reviewed: 0,
+      reviewed_by: "",
       forge_url: "https://github.com/shepherdjerred/monorepo/pull/3121",
       changed_files: ["packages/woodpecker-config-extension/src/app.ts"],
     });

@@ -53,8 +53,8 @@ export function playwrightSteps(
         "bun --no-install ci/scripts/selection/run-playwright.ts",
         // The suites build these bundles to test them; the deploy lane then
         // ships exactly what was tested instead of rebuilding.
-        "if [ -d packages/sjer.red/dist ]; then bun --no-install scripts/ci/ci-artifact.ts put sjer-red-dist packages/sjer.red/dist; fi",
-        "if [ -d packages/docs/wiki/dist ]; then bun --no-install scripts/ci/ci-artifact.ts put wiki-dist packages/docs/wiki/dist; fi",
+        "if [ -d packages/sjer.red/dist ]; then bun --no-install scripts/ci/ci-artifact.ts put sjer-red-dist; fi",
+        "if [ -d packages/docs/wiki/dist ]; then bun --no-install scripts/ci/ci-artifact.ts put wiki-dist; fi",
       ],
       dependsOn: ["verify"],
       timeoutMinutes: 30,

@@ -27,7 +27,7 @@ import type { Pipeline } from "#src/schemas.ts";
  * `CI Bot <ci@sjer.red>` but sent by the app's bot user, and it is the sender
  * that is authenticated. App bots carry the `[bot]` suffix in this form.
  */
-export const TRUSTED_ACTORS: readonly string[] = [
+export const OWNER_CONTROLLED_ACTORS: readonly string[] = [
   "shepherdjerred",
   // The owner's agent account: coding-agent sessions push branches and open
   // pull requests as this user, so their changes build like his own.
@@ -37,12 +37,23 @@ export const TRUSTED_ACTORS: readonly string[] = [
   "long-summer-intern[bot]",
   // The local Linear queue publishes its owner-requested work under this App.
   "justin-principal-engineer[bot]",
+];
+
+/** Hosted systems whose proposed code must not receive credentials by default. */
+export const HOSTED_AUTOMATION_ACTORS: readonly string[] = [
   // Mend-hosted Renovate. Dependency pull requests must still build.
   "renovate[bot]",
 ];
 
+export const TRUSTED_ACTORS: readonly string[] = [
+  ...OWNER_CONTROLLED_ACTORS,
+  ...HOSTED_AUTOMATION_ACTORS,
+];
+
+export type ActorClass = "owner-controlled" | "hosted-automation";
+
 export type AuthorizationResult =
-  | { readonly allowed: true }
+  | { readonly allowed: true; readonly actorClass: ActorClass }
   | { readonly allowed: false; readonly reason: string };
 
 /**
@@ -81,7 +92,16 @@ export function authorizePipeline(pipeline: Pipeline): AuthorizationResult {
   if (!trusted.has(pipeline.author)) {
     return { allowed: false, reason: "pipeline author is not a trusted actor" };
   }
-  return pipeline.sender === "" || trusted.has(pipeline.sender)
-    ? { allowed: true }
-    : { allowed: false, reason: "pipeline sender is not a trusted actor" };
+  if (pipeline.sender !== "" && !trusted.has(pipeline.sender)) {
+    return { allowed: false, reason: "pipeline sender is not a trusted actor" };
+  }
+
+  return {
+    allowed: true,
+    actorClass:
+      HOSTED_AUTOMATION_ACTORS.includes(pipeline.author) ||
+      HOSTED_AUTOMATION_ACTORS.includes(pipeline.sender)
+        ? "hosted-automation"
+        : "owner-controlled",
+  };
 }

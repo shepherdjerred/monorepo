@@ -89,7 +89,17 @@ export const CREDENTIAL_REGISTRY: Record<string, CredentialSpec> = {
       ref: "op://v64ocnykdqju4ui6j6pua56xw4/covttsojandjk7fx62a3dbk7em/WOODPECKER_API_TOKEN",
     },
   },
+  TEMPORAL_API_KEY: {
+    description: "Temporal external API key",
+    source: {
+      kind: "op",
+      ref: "op://v64ocnykdqju4ui6j6pua56xw4/2x4fpii5zq4jbw3l2p2qkvjtiy/api-token",
+    },
+  },
 };
+
+export const TEMPORAL_IN_CLUSTER_ADDRESS =
+  "temporal-temporal-server-service:7233";
 
 /** Desktop-auth refs used only to spell the Keychain enrollment command. */
 const KEYCHAIN_ENROLL_REFS: Record<string, string> = {
@@ -370,13 +380,43 @@ export async function resolveCredentials(
   }
 }
 
+function flagValue(args: readonly string[], flag: string): string | undefined {
+  const boundary = args.indexOf("--");
+  const candidates = boundary === -1 ? args : args.slice(0, boundary);
+  let value: string | undefined;
+  for (const [index, argument] of candidates.entries()) {
+    if (argument === flag) value = candidates[index + 1];
+    if (argument.startsWith(`${flag}=`)) {
+      value = argument.slice(flag.length + 1);
+    }
+  }
+  return value;
+}
+
 export function requiredCredentialsFor(
   command: string,
   _subcommand: string | undefined,
+  environment: Readonly<Record<string, string | undefined>> = Bun.env,
+  args: readonly string[] = [],
 ): readonly string[] {
   switch (command) {
     case "woodpecker":
       return ["WOODPECKER_TOKEN"];
+    case "temporal": {
+      const address =
+        flagValue(args, "--address") ?? environment["TEMPORAL_ADDRESS"];
+      if (
+        address !== TEMPORAL_IN_CLUSTER_ADDRESS &&
+        flagValue(args, "--tls") === "false"
+      ) {
+        throw new Error(
+          "toolkit: refusing to resolve TEMPORAL_API_KEY with --tls=false",
+        );
+      }
+      return address === TEMPORAL_IN_CLUSTER_ADDRESS
+        ? []
+        : ["TEMPORAL_API_KEY"];
+    }
     case "linear":
       return ["LINEAR_API_KEY"];
     case "posthog":

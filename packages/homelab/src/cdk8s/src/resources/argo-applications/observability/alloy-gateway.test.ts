@@ -81,7 +81,10 @@ describe("Alloy gateway tailnet metrics receiver", () => {
     expect(exporter).toContain("prometheus.remote_write.cluster.receiver");
 
     expect(block('prometheus.remote_write "cluster"')).toContain(
-      'url = "http://prometheus-operated.prometheus:9090/api/v1/write"',
+      'url = "http://prometheus-kube-prometheus-prometheus.prometheus:9090/api/v1/write"',
+    );
+    expect(block('prometheus.remote_write "cluster"')).toContain(
+      'credentials = sys.env("PROMETHEUS_WRITE_TOKEN")',
     );
   });
 

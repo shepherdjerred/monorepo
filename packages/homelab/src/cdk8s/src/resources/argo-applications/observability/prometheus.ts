@@ -28,6 +28,11 @@ import {
   ALERTMANAGER_POSTAL_SMTP_TLS,
   createAlertmanagerPostalSmtpCa,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/mail/postal-smtp.ts";
+import {
+  ALERTMANAGER_GATEWAY_PORT,
+  createMonitoringAuthGateways,
+  PROMETHEUS_GATEWAY_PORT,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/monitoring-auth-gateways.ts";
 
 function createPrometheusIngresses(chart: Chart): void {
   createIngress(chart, "alertmanager-ingress", {
@@ -36,6 +41,7 @@ function createPrometheusIngresses(chart: Chart): void {
     port: 9093,
     hosts: ["alertmanager"],
     proxyClass: "medium",
+    probePath: "/-/healthy",
   });
 
   createIngress(chart, "prometheus-ingress", {
@@ -43,6 +49,7 @@ function createPrometheusIngresses(chart: Chart): void {
     service: "prometheus-kube-prometheus-prometheus",
     port: 9090,
     hosts: ["prometheus"],
+    probePath: "/-/healthy",
   });
 }
 
@@ -167,6 +174,8 @@ export async function createPrometheusApp(chart: Chart) {
     },
   );
 
+  const monitoringAuthGateways = createMonitoringAuthGateways(chart);
+
   createPrometheusMonitoring(chart);
   await createSmartctlMonitoring(chart);
   await createNvmeMetricsMonitoring(chart);
@@ -257,7 +266,9 @@ export async function createPrometheusApp(chart: Chart) {
       },
     },
     alertmanager: {
+      service: { targetPort: ALERTMANAGER_GATEWAY_PORT },
       alertmanagerSpec: {
+        listenLocal: true,
         externalUrl: "https://alertmanager.tailnet-1a49.ts.net",
         // Alertmanager's active-alert state is in-memory only (the PVC persists
         // just nflog/silences), so when it dies mid-outage, resolve events for
@@ -306,6 +317,8 @@ export async function createPrometheusApp(chart: Chart) {
           alertmanagerPostalSmtp.name,
           ALERTMANAGER_POSTAL_SMTP_CA_SECRET,
         ],
+        volumes: [{ name: "auth-gateway-tmp", emptyDir: {} }],
+        containers: [monitoringAuthGateways.alertmanagerContainer],
         logLevel: "debug",
       },
       config: {
@@ -473,7 +486,9 @@ export async function createPrometheusApp(chart: Chart) {
       },
     },
     prometheus: {
+      service: { targetPort: PROMETHEUS_GATEWAY_PORT },
       prometheusSpec: {
+        listenLocal: true,
         externalUrl: "https://prometheus.tailnet-1a49.ts.net",
         retention: "365d", // Keep data for 1 year
         retentionSize: "200GB", // Safety limit - keep headroom below PVC usage alerts
@@ -510,6 +525,8 @@ export async function createPrometheusApp(chart: Chart) {
           },
         },
         secrets: [prometheusSecrets.name],
+        volumes: [{ name: "auth-gateway-tmp", emptyDir: {} }],
+        containers: [monitoringAuthGateways.prometheusContainer],
         additionalScrapeConfigs: [
           {
             job_name: "hass",

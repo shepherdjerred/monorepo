@@ -12,7 +12,7 @@
  */
 const IMAGE = "tasknotes-server:dev";
 const CONTAINER = `smoke-tasknotes-server-${String(process.pid)}`;
-const READY_LOG = "TaskNotes server listening on port";
+const READY_LOG = "TaskNotes server listening on 127.0.0.1:3000";
 const TIMEOUT_MS = 30_000;
 
 async function sh(cmd: string[]): Promise<{ code: number; stdout: string }> {

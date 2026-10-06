@@ -19,6 +19,10 @@ import { createTemporalAgentWorkerNetworkPolicy } from "@shepherdjerred/homelab/
 import { TEMPORAL_AGENT_POD_SECURITY_ENFORCEMENT } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/agent-worker.ts";
 import { createTemporalWorkerNetworkPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/worker-network-policies.ts";
 import { SCOUT_STAGES } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
+import {
+  createTemporalExternalAuthSecret,
+  TEMPORAL_EXTERNAL_GATEWAY_PORT,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/external-auth.ts";
 
 // Every Temporal-namespace workload egresses to cluster DNS the same way;
 // shared here so it is declared once instead of drifting per-policy.
@@ -137,8 +141,15 @@ export function createTemporalChart(app: App) {
   createTemporalPostgreSQLDatabase(chart);
   createTemporalSchemaMigrationJob(chart);
   const dynamicConfigMap = createTemporalDynamicConfig(chart);
-  const server = createTemporalServerDeployment(chart, { dynamicConfigMap });
-  createTemporalUiDeployment(chart, { serverService: server.service });
+  const externalAuthSecret = createTemporalExternalAuthSecret(chart);
+  const server = createTemporalServerDeployment(chart, {
+    dynamicConfigMap,
+    externalAuthSecret,
+  });
+  createTemporalUiDeployment(chart, {
+    serverService: server.service,
+    externalAuthSecret,
+  });
   createTemporalNamespaceInitJob(chart, { serverService: server.service });
 
   createTemporalWorkerDeployment(chart, {
@@ -156,7 +167,7 @@ export function createTemporalChart(app: App) {
       policyTypes: ["Ingress", "Egress"],
       ingress: [
         {
-          // Allow gRPC from Tailscale (external clients/workers)
+          // Tailscale reaches only the bearer-authenticated gRPC gateway.
           from: [
             {
               namespaceSelector: {
@@ -166,7 +177,12 @@ export function createTemporalChart(app: App) {
               },
             },
           ],
-          ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+          ports: [
+            {
+              port: IntOrString.fromNumber(TEMPORAL_EXTERNAL_GATEWAY_PORT),
+              protocol: "TCP",
+            },
+          ],
         },
         {
           // Allow gRPC from Temporal UI within namespace
@@ -177,7 +193,12 @@ export function createTemporalChart(app: App) {
               },
             },
           ],
-          ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+          ports: [
+            {
+              port: IntOrString.fromNumber(7233),
+              protocol: "TCP",
+            },
+          ],
         },
         {
           // Allow gRPC from namespace init job
@@ -289,7 +310,9 @@ export function createTemporalChart(app: App) {
         },
         {
           // Allow blackbox-exporter's in-cluster health probe (gRPC port,
-          // separate from the metrics-scraping rule above)
+          // separate from the metrics-scraping rule above). The probe follows
+          // the Tailscale-facing Service and therefore reaches the
+          // authenticated gateway's target port.
           from: [
             {
               namespaceSelector: {
@@ -299,7 +322,12 @@ export function createTemporalChart(app: App) {
               },
             },
           ],
-          ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+          ports: [
+            {
+              port: IntOrString.fromNumber(TEMPORAL_EXTERNAL_GATEWAY_PORT),
+              protocol: "TCP",
+            },
+          ],
         },
       ],
       egress: [

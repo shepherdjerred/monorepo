@@ -123,7 +123,10 @@ export function wrapCommands(step: CiStep): string[] {
   const timeout = step.backend === "local" ? MACOS_TIMEOUT : "timeout";
   const shell = step.shell ?? "bash";
   const shellOptions = shell === "bash" ? "-euo pipefail" : "-eu";
-  const attemptScript = `${timeout} ${seconds.toString()}s ${shell} ${shellOptions} -c ${shellQuote(body)}`;
+  // Some build tools keep children alive after timeout sends SIGTERM. Escalate
+  // after a short cleanup window so one wedged process tree cannot occupy a CI
+  // runner until the workflow-wide timeout.
+  const attemptScript = `${timeout} -k 30s ${seconds.toString()}s ${shell} ${shellOptions} -c ${shellQuote(body)}`;
 
   if (step.retries === undefined || step.retries <= 1) {
     return [attemptScript];

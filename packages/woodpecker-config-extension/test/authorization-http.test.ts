@@ -1,6 +1,7 @@
 import { createHash, generateKeyPairSync } from "node:crypto";
 import { createSigner, httpbis } from "http-message-signatures";
 import { describe, expect, test, vi } from "vitest";
+import { z } from "zod";
 import { createApp } from "#src/app.ts";
 import fixture from "./fixtures/woodpecker-v3.18.1-config-request.json" with { type: "json" };
 import { TEST_IMAGES } from "./identity.ts";
@@ -13,8 +14,11 @@ const catalog = JSON.stringify({
     value: reference.slice(name.length + 1),
   })),
 });
+const ConfigResponseSchema = z.object({
+  configs: z.array(z.object({ name: z.string(), data: z.string() })),
+});
 
-function harness() {
+function harness(hostedAutomationApproved = false) {
   const imageFetcher = vi.fn((file: string) =>
     Promise.resolve(
       file.endsWith("catalog.json") ? catalog : `sha256:${"a".repeat(64)}`,
@@ -27,6 +31,7 @@ function harness() {
     changedBase: base,
     verifyBase: base,
     imageReleaseBase: base,
+    hostedAutomationApproved: () => Promise.resolve(hostedAutomationApproved),
   });
   return { app, imageFetcher, base };
 }
@@ -106,5 +111,44 @@ describe("signed Justin pipeline authorization", () => {
     const response = await app.request(unsigned);
     expect(response.status).toBe(401);
     expect(imageFetcher).not.toHaveBeenCalled();
+  });
+});
+
+describe("hosted Renovate pipeline authorization", () => {
+  const renovate = {
+    author: "renovate[bot]",
+    sender: "renovate[bot]",
+    changed_files: ["package.json", "bun.lock"],
+  };
+
+  test("emits only credentialless verification before exact-head approval", async () => {
+    const { app, base } = harness(false);
+    const response = await app.request(await request(renovate));
+    expect(response.status).toBe(200);
+    const result = ConfigResponseSchema.parse(await response.json());
+    expect(result.configs.map((config) => config.name).sort()).toEqual([
+      ".woodpecker/semgrep.yaml",
+      ".woodpecker/trivy.yaml",
+      ".woodpecker/verify.yaml",
+    ]);
+    const emitted = result.configs.map((config) => config.data).join("\n");
+    expect(emitted).not.toContain("secrets:");
+    expect(emitted).not.toContain("TURBO_TOKEN");
+    expect(emitted).not.toContain("ci-complete");
+    expect(base).not.toHaveBeenCalled();
+  });
+
+  test("emits the normal reviewed PR graph after exact-head approval", async () => {
+    const { app, base } = harness(true);
+    const response = await app.request(await request(renovate));
+    expect(response.status).toBe(200);
+    const result = ConfigResponseSchema.parse(await response.json());
+    expect(result.configs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: ".woodpecker/verify.yaml" }),
+        expect.objectContaining({ name: ".woodpecker/ci-complete.yaml" }),
+      ]),
+    );
+    expect(base).toHaveBeenCalled();
   });
 });

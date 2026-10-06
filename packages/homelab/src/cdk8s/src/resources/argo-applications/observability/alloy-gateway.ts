@@ -175,7 +175,11 @@ otelcol.exporter.prometheus "tailnet" {
 
 prometheus.remote_write "cluster" {
   endpoint {
-    url = "http://prometheus-operated.prometheus:9090/api/v1/write"
+    url = "http://prometheus-kube-prometheus-prometheus.prometheus:9090/api/v1/write"
+    authorization {
+      type        = "Bearer"
+      credentials = sys.env("PROMETHEUS_WRITE_TOKEN")
+    }
   }
 }`;
 
@@ -297,6 +301,15 @@ export function createAlloyGatewayApp(chart: Chart) {
       itemPath: vaultItemPath("phoenix-ingest"),
     },
   });
+  new OnePasswordItem(chart, "alloy-gateway-monitoring-auth-1p", {
+    metadata: {
+      name: "monitoring-api-auth",
+      namespace: "alloy-gateway",
+    },
+    spec: {
+      itemPath: vaultItemPath("gnx5xq5rrsdlncvajjc4i577gm"),
+    },
+  });
 
   // Only the metrics port is published on the tailnet; the trace receiver on
   // 4318 stays cluster-internal. The OTLP receiver answers 404/405 on "/",
@@ -353,6 +366,15 @@ export function createAlloyGatewayApp(chart: Chart) {
             secretKeyRef: {
               name: "phoenix-ingest",
               key: "PHOENIX_API_KEY",
+            },
+          },
+        },
+        {
+          name: "PROMETHEUS_WRITE_TOKEN",
+          valueFrom: {
+            secretKeyRef: {
+              name: "monitoring-api-auth",
+              key: "prometheus-write-token",
             },
           },
         },

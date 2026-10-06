@@ -247,7 +247,7 @@ const commands: Record<
       "pid=$!",
       "trap 'if kill -0 $pid; then kill $pid; if wait $pid; then :; else cleanup_status=$?; [ $cleanup_status -eq 143 ] || exit $cleanup_status; fi; fi' EXIT",
       "for _ in $(seq 1 30); do",
-      "  if grep -Fq 'TaskNotes server listening on port' /tmp/tasknotes-smoke.log; then exit 0; fi",
+      "  if grep -Fq 'TaskNotes server listening on 127.0.0.1:18789' /tmp/tasknotes-smoke.log; then exit 0; fi",
       "  if ! kill -0 $pid; then cat /tmp/tasknotes-smoke.log; exit 1; fi",
       "  sleep 1",
       "done",

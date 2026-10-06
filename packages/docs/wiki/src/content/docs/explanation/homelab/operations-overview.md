@@ -167,3 +167,4 @@ itself.
 - Dashboard, digest, and API: `packages/alert-dashboard/`.
 - Mac export: `packages/toolkit/src/lib/history/`.
 - Alloy receiver: `packages/homelab/src/cdk8s/src/resources/argo-applications/observability/alloy-gateway.ts`.
+- Operator authentication: [Homelab control-plane access](/reference/homelab-control-plane-access/).

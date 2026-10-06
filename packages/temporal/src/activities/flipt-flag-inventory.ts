@@ -5,6 +5,7 @@ import { applyRetiredManagedFlags } from "@shepherdjerred/feature-flags/flipt-re
 import {
   compareManagedFlagInventory,
   fetchFliptSnapshot,
+  type FliptFetcher,
 } from "@shepherdjerred/feature-flags/managed-flag-drift.ts";
 import {
   managedFlagInventory,
@@ -34,19 +35,41 @@ function requiredEnvironment(name: string): string {
 
 export type FliptFlagInventoryActivities = typeof fliptFlagInventoryActivities;
 
+export function createAuthenticatedFliptFetcher(
+  token: string,
+  upstream: FliptFetcher = fetch,
+): FliptFetcher {
+  return (input, init) => {
+    const headers = new Headers(
+      input instanceof Request ? input.headers : undefined,
+    );
+    new Headers(init?.headers).forEach((value, name) => {
+      headers.set(name, value);
+    });
+    headers.set("Authorization", `Bearer ${token}`);
+    return upstream(input, { ...init, headers });
+  };
+}
+
 export const fliptFlagInventoryActivities = {
   async checkFliptFlagInventory(): Promise<FliptFlagInventoryResult[]> {
     const url = requiredEnvironment("FLIPT_URL");
+    const fetcher = createAuthenticatedFliptFetcher(
+      requiredEnvironment("FLIPT_OPERATOR_TOKEN"),
+    );
     const observedAt = new Date().toISOString();
-    const retired = await applyRetiredManagedFlags({ url });
+    const retired = await applyRetiredManagedFlags({ url, fetcher });
     const retiredByPair = new Map(
       retired.map((result) => [
         `${result.environment}/${result.namespace}`,
         result.retiredFlags,
       ]),
     );
-    const created = await applyMissingManagedFlags({ url });
-    const migratedFlags = await applyScoutBetaDurableOwnership({ url });
+    const created = await applyMissingManagedFlags({ url, fetcher });
+    const migratedFlags = await applyScoutBetaDurableOwnership({
+      url,
+      fetcher,
+    });
     const createdByPair = new Map(
       created.map((result) => [
         `${result.environment}/${result.namespace}`,
@@ -65,6 +88,7 @@ export const fliptFlagInventoryActivities = {
             url,
             namespace,
             environment: environment.key,
+            fetcher,
           });
           const drift = compareManagedFlagInventory(snapshot, expectedFlags);
           const applied = createdByPair.get(`${environment.key}/${namespace}`);

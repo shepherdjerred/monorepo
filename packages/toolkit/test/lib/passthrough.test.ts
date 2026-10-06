@@ -109,9 +109,20 @@ describe("passthrough registry", () => {
       ],
     ).toBeUndefined();
     expect(argocdFlag?.env["ARGOCD_SERVER"]).toBeUndefined();
+    expect(temporalEnv?.executable).toBe("temporal");
     expect(temporalEnv?.args).toEqual(["workflow"]);
     expect(linearEnv?.args).toEqual(["issue", "list"]);
     expect(argocdEnv?.env["ARGOCD_SERVER"]).toBe("other.example");
+  });
+
+  test("uses the direct Temporal CLI without a profile for the in-cluster frontend", () => {
+    const result = buildPassthroughInvocation(
+      "temporal",
+      ["operator", "cluster", "health"],
+      { TEMPORAL_ADDRESS: "temporal-temporal-server-service:7233" },
+    );
+    expect(result?.executable).toBe("temporal");
+    expect(result?.args).toEqual(["operator", "cluster", "health"]);
   });
 
   test("does not treat tokens after -- as default overrides", () => {

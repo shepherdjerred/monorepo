@@ -6,6 +6,7 @@ import {
   lastCommitWithSuccessfulWorkflows,
   lastSuccessfulCommit,
 } from "#src/woodpecker-api.ts";
+import { hasExactHeadApproval } from "#src/github-approval.ts";
 
 function requireEnv(name: string): string {
   const value = Bun.env[name];
@@ -21,6 +22,7 @@ function requireEnv(name: string): string {
 const serverUrl = requireEnv("WOODPECKER_URL");
 const repoSlug = requireEnv("CI_REPO_SLUG");
 const apiToken = requireEnv("WOODPECKER_API_TOKEN");
+const approvalReadToken = requireEnv("GITHUB_APPROVAL_READ_TOKEN");
 const port = Number(Bun.env["PORT"] ?? "3000");
 
 /**
@@ -60,6 +62,12 @@ const app = createApp({
       ["images", "version-commit-back"],
       { baseUrl: serverUrl, token: apiToken },
     ),
+  hostedAutomationApproved: (pipeline) =>
+    hasExactHeadApproval(pipeline, {
+      repo: repoSlug,
+      token: approvalReadToken,
+      reviewer: "shepherdjerred",
+    }),
 });
 
 export default { port, fetch: app.fetch };

@@ -115,7 +115,9 @@ describe("Flipt chart", () => {
     expect(names).toContain("Namespace/flipt");
     expect(names).toContain("Deployment/flipt");
     expect(names).toContain("ConfigMap/flipt-flipt-config");
+    expect(names).toContain("ConfigMap/flipt-flipt-gateway-config");
     expect(names).toContain("ConfigMap/flipt-flipt-seed");
+    expect(names).toContain("OnePasswordItem/flipt-auth");
     expect(names).toContain("PersistentVolumeClaim/flipt-data");
     expect(names).toContain("Service/flipt-flipt-service");
     expect(names).toContain("NetworkPolicy/flipt-ingress-netpol");
@@ -175,6 +177,47 @@ describe("Flipt chart", () => {
     // Both default to true and would fail continuously against DNS-only egress.
     expect(yaml).toContain("check_for_updates: false");
     expect(yaml).toContain("telemetry_enabled: false");
+  });
+
+  it("authenticates management while preserving evaluation clients", () => {
+    const manifests = synthesize();
+    const config = ConfigMapSchema.parse(
+      findManifest(manifests, "ConfigMap", "flipt-flipt-config"),
+    );
+    const yaml = config.data["config.yml"] ?? "";
+    expect(yaml).toContain("host: 127.0.0.1");
+    expect(yaml).toContain("required: true");
+    expect(yaml).toMatch(/exclude:\n {4}evaluation: true/);
+    expect(yaml).toContain('credential: "${secret:file:operator-token}"');
+    expect(yaml).toContain("base_path: /etc/flipt/secrets");
+
+    const gateway = ConfigMapSchema.parse(
+      findManifest(manifests, "ConfigMap", "flipt-flipt-gateway-config"),
+    ).data["Caddyfile"];
+    expect(gateway).toContain("path /api/v2/*");
+    expect(gateway).toContain(
+      'header Authorization "Bearer {$FLIPT_OPERATOR_TOKEN}"',
+    );
+    expect(gateway).toContain("handle /internal/v1/evaluation/*");
+    expect(gateway).toContain("basic_auth");
+    expect(gateway).toContain(
+      'header_up Authorization "Bearer {$FLIPT_OPERATOR_TOKEN}"',
+    );
+
+    const deployment = DeploymentSchema.parse(
+      findManifest(manifests, "Deployment", "flipt"),
+    );
+    expect(
+      deployment.spec.template.spec.containers.map(({ name }) => name),
+    ).toEqual(["flipt", "authenticated-gateway"]);
+    const serialized = JSON.stringify(deployment);
+    expect(serialized).toContain(
+      '"secretKeyRef":{"key":"basic-hash","name":"flipt-auth"}',
+    );
+    expect(serialized).toContain(
+      '"secretKeyRef":{"key":"operator-token","name":"flipt-auth"}',
+    );
+    expect(serialized).not.toContain("basic-password");
   });
 
   it("restarts when the complete Flipt configuration changes", () => {

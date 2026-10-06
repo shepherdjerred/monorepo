@@ -21,6 +21,7 @@ const MANAGED_VARS = [
   "DISCORD_BOT_TOKEN",
   "BUGSINK_TOKEN",
   "WOODPECKER_TOKEN",
+  "TEMPORAL_API_KEY",
   "OP_SERVICE_ACCOUNT_TOKEN",
 ] as const;
 
@@ -296,6 +297,18 @@ describe("credential resolver backends", () => {
     });
   });
 
+  test("temporal resolves its external API key from the service account", () => {
+    expect(CREDENTIAL_REGISTRY["TEMPORAL_API_KEY"]).toEqual({
+      description: "Temporal external API key",
+      source: {
+        kind: "op",
+        ref: "op://v64ocnykdqju4ui6j6pua56xw4/2x4fpii5zq4jbw3l2p2qkvjtiy/api-token",
+      },
+    });
+  });
+});
+
+describe("command credential mapping", () => {
   test("requiredCredentialsFor maps commands to their vars", () => {
     expect(requiredCredentialsFor("woodpecker", undefined)).toEqual([
       "WOODPECKER_TOKEN",
@@ -323,8 +336,80 @@ describe("credential resolver backends", () => {
     expect(requiredCredentialsFor("posthog", "x")).toEqual([
       "POSTHOG_CLI_API_KEY",
     ]);
+    expect(requiredCredentialsFor("temporal", "workflow", {})).toEqual([
+      "TEMPORAL_API_KEY",
+    ]);
+    expect(
+      requiredCredentialsFor("temporal", "workflow", {
+        TEMPORAL_ADDRESS: "temporal-temporal-server-service:7233",
+      }),
+    ).toEqual([]);
+    expect(
+      requiredCredentialsFor(
+        "temporal",
+        "workflow",
+        { TEMPORAL_ADDRESS: "temporal-temporal-server-service:7233" },
+        ["workflow", "list", "--address", "temporal.tailnet-1a49.ts.net:443"],
+      ),
+    ).toEqual(["TEMPORAL_API_KEY"]);
+    expect(
+      requiredCredentialsFor(
+        "temporal",
+        "workflow",
+        { TEMPORAL_ADDRESS: "temporal.tailnet-1a49.ts.net:443" },
+        ["--address=temporal-temporal-server-service:7233", "workflow", "list"],
+      ),
+    ).toEqual([]);
+    expect(
+      requiredCredentialsFor(
+        "temporal",
+        "workflow",
+        { TEMPORAL_ADDRESS: "temporal-temporal-server-service:7233" },
+        [
+          "--address=temporal-temporal-server-service:7233",
+          "--address=external.example:443",
+          "workflow",
+          "list",
+        ],
+      ),
+    ).toEqual(["TEMPORAL_API_KEY"]);
+    expect(
+      requiredCredentialsFor(
+        "temporal",
+        "workflow",
+        { TEMPORAL_ADDRESS: "temporal-temporal-server-service:7233" },
+        ["workflow", "list", "--", "--address", "external.example:443"],
+      ),
+    ).toEqual([]);
     for (const command of ["gh", "ops", "history", "nope"]) {
       expect(requiredCredentialsFor(command, undefined)).toEqual([]);
     }
+  });
+
+  test("rejects plaintext transport before resolving an external Temporal API key", () => {
+    expect(() =>
+      requiredCredentialsFor(
+        "temporal",
+        "workflow",
+        { TEMPORAL_ADDRESS: "external.example:443" },
+        ["workflow", "list", "--tls=false"],
+      ),
+    ).toThrow("toolkit: refusing to resolve TEMPORAL_API_KEY with --tls=false");
+    expect(
+      requiredCredentialsFor(
+        "temporal",
+        "workflow",
+        { TEMPORAL_ADDRESS: "temporal-temporal-server-service:7233" },
+        ["workflow", "list", "--tls=false"],
+      ),
+    ).toEqual([]);
+    expect(
+      requiredCredentialsFor(
+        "temporal",
+        "workflow",
+        { TEMPORAL_ADDRESS: "external.example:443" },
+        ["workflow", "execute", "--", "--tls=false"],
+      ),
+    ).toEqual(["TEMPORAL_API_KEY"]);
   });
 });

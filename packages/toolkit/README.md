@@ -402,15 +402,19 @@ resolution. Their arguments, native output, and exit status are preserved.
 Other invocations still resolve credentials, including `argocd version` and
 commands carrying metadata flags as arguments or after `--`.
 
-| Commands                                                                                    | Registered backend        |
-| ------------------------------------------------------------------------------------------- | ------------------------- |
-| `woodpecker`, `pr`, `linear`, `posthog`, `cf`, `argocd`, `grafana`, `prom`, `loki`, `tempo` | 1Password service account |
-| `bugsink`, `discord`                                                                        | macOS Keychain            |
+| Commands                                                                                                | Registered backend        |
+| ------------------------------------------------------------------------------------------------------- | ------------------------- |
+| `woodpecker`, `pr`, `linear`, `posthog`, `cf`, `argocd`, `grafana`, `prom`, `loki`, `tempo`, `temporal` | 1Password service account |
+| `bugsink`, `discord`                                                                                    | macOS Keychain            |
 
 The registry in `src/lib/credentials.ts` owns the variable names and secret
 locators. Backend failures are errors; a missing Keychain secret does not
 automatically fall through to 1Password. A config override selects a different
 backend explicitly. Toolkit logs credential names and backends, never values.
+The native Temporal CLI performs authentication, while toolkit supplies its
+`TEMPORAL_API_KEY` for external addresses. Toolkit skips that credential lookup
+when the effective address is the exact in-cluster service; an explicit
+`--address` takes precedence over `TEMPORAL_ADDRESS` for this decision.
 
 For the 1Password backend, `OP_SERVICE_ACCOUNT_TOKEN` wins. Otherwise, on
 macOS, toolkit reads the enrolled service account from Keychain and invokes

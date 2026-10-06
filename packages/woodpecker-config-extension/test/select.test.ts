@@ -2,7 +2,10 @@ import { describe, expect, test } from "vitest";
 import { parse } from "yaml";
 import { selectSteps } from "#src/pipeline/select.ts";
 import { emitWorkflow, shellQuote, wrapCommands } from "#src/pipeline/emit.ts";
-import { buildPipelineSteps } from "#src/pipeline/steps.ts";
+import {
+  buildPipelineSteps,
+  credentiallessHostedAutomationSteps,
+} from "#src/pipeline/steps.ts";
 import { BUN_CACHE, BUN_CACHE_CONTROL } from "#src/pipeline/cache.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
 import { LIGHT_TIER } from "#src/pipeline/tiers.ts";
@@ -203,9 +206,22 @@ describe("selection", () => {
 });
 
 describe("emission", () => {
+  test("allows exhaustive verify to complete from a cold cache", () => {
+    const trusted = buildPipelineSteps({
+      images: IMAGES,
+      changedBase: "x",
+    }).find((candidate) => candidate.key === "verify");
+    const credentialless = credentiallessHostedAutomationSteps(IMAGES).find(
+      (candidate) => candidate.key === "verify",
+    );
+
+    expect(trusted?.timeoutMinutes).toBe(60);
+    expect(credentialless?.timeoutMinutes).toBe(60);
+  });
+
   test("bounds each attempt with a timeout", () => {
     const [command] = wrapCommands(step("a", { timeoutMinutes: 3 }));
-    expect(command).toContain("timeout 180s");
+    expect(command).toContain("timeout -k 30s 180s");
   });
 
   test("retries wrap the timeout, not the other way round", () => {
@@ -214,7 +230,7 @@ describe("emission", () => {
     );
     expect(command).toContain("seq 1 3");
     // Each attempt gets its own budget; a hung attempt cannot eat the rest.
-    expect(command).toContain("timeout 120s");
+    expect(command).toContain("timeout -k 30s 120s");
   });
 
   /** macOS ships no `timeout`; the host's is Homebrew coreutils' `gtimeout`. */
@@ -222,7 +238,7 @@ describe("emission", () => {
     const [command] = wrapCommands(
       step("a", { timeoutMinutes: 3, backend: "local" }),
     );
-    expect(command).toMatch(/^\/opt\/homebrew\/bin\/gtimeout 180s /u);
+    expect(command).toMatch(/^\/opt\/homebrew\/bin\/gtimeout -k 30s 180s /u);
   });
 
   test("quotes commands so embedded quotes survive", () => {

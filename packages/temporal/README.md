@@ -129,7 +129,10 @@ replays retained IDs listed in `TEMPORAL_REPLAY_WORKFLOW_IDS` against the
 candidate bundle, and runs an exact-version canary before opening a 10% ramp.
 Set `TEMPORAL_ADDRESS` to an
 operator-reachable endpoint; native calls use the existing `toolkit temporal`
-passthrough. The first ramp also requires `--stable-build-id <sha>` so an empty
+passthrough. Toolkit resolves the external API token through its credential
+broker and passes it only through the Temporal process environment. In-cluster
+calls to the namespace-local frontend skip that credential lookup. The first ramp also requires
+`--stable-build-id <sha>` so an empty
 deployment has a rollback target. `advance` checks candidate and stable poller
 history, Prometheus rule-evaluation health, and candidate Build ID Workflow
 failure counters across each ramp window. Alerts from other workers remain

@@ -100,11 +100,7 @@ export function prGateSteps(images: CiImages): CiStep[] {
           "packages/scout-for-lol/**",
         ],
       },
-      secrets: [
-        GITHUB_DOWNLOAD,
-        ...STATE_BACKEND,
-        grant("ci-argocd-credentials", "ARGOCD_AUTH_TOKEN"),
-      ],
+      secrets: [GITHUB_DOWNLOAD, ...STATE_BACKEND],
     },
     {
       key: "codex-review-gate",

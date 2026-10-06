@@ -43,8 +43,11 @@ import {
  * auto-install, which would silently resolve versions the lockfile does not
  * pin.
  */
-function verifyCommands(): string[] {
-  return [
+function verifyCommands(options: {
+  readonly remoteCache: boolean;
+  readonly publishHandoff: boolean;
+}): string[] {
+  const commands = [
     ". ci/scripts/toolchain.sh",
     "ci/scripts/bun-install.sh --frozen-lockfile",
     // Woodpecker's shallow clone omits the default branch history. Fetch it
@@ -73,13 +76,20 @@ function verifyCommands(): string[] {
     "fi",
     // CI is the cross-machine cache producer and consumer; developer shells
     // stay local-only to avoid large transfers over weak links.
-    'export TURBO_CACHE="local:rw,remote:rw"',
+    options.remoteCache
+      ? 'export TURBO_CACHE="local:rw,remote:rw"'
+      : 'export TURBO_CACHE="local:rw"',
     "bun --no-install run verify -- --filter='!sjer.red' --filter='!@shepherdjerred/resume' --output-logs=errors-only --summarize",
     "bun --no-install packages/homelab/src/cdk8s/scripts/generate-caddyfile.ts caddyfile.generated",
     // The image lane smoke-tests Caddy against this. It travels as a JSON
     // string because each Woodpecker workflow gets its own workspace.
-    "jq -Rs . < caddyfile.generated | bun --no-install scripts/ci/write-ci-handoff.ts caddyfile",
   ];
+  if (options.publishHandoff) {
+    commands.push(
+      "jq -Rs . < caddyfile.generated | bun --no-install scripts/ci/write-ci-handoff.ts caddyfile",
+    );
+  }
+  return commands;
 }
 
 export type PipelineInputs = {
@@ -117,13 +127,17 @@ export function buildPipelineSteps({
       key: "verify",
       label: "verify",
       image: images.base,
-      commands: verifyCommands(),
+      commands: verifyCommands({ remoteCache: true, publishHandoff: true }),
       environment: {
         ...sharedEnvironment,
         ...TURBO_REMOTE_CACHE_ENVIRONMENT,
         CI_CHANGED_BASE: verifyBase ?? changedBase ?? "",
       },
-      timeoutMinutes: 30,
+      // A first run in a new trust domain must rebuild every cache entry rather
+      // than accepting unsigned output from the former shared cache. Keep the
+      // exhaustive gate viable when that cold rebuild takes longer than the
+      // normal warm-cache path.
+      timeoutMinutes: 60,
       resources: TURBO_VERIFY_TIER,
       secrets: [
         {
@@ -166,4 +180,27 @@ export function buildPipelineSteps({
       ...step.environment,
     },
   }));
+}
+
+/**
+ * Useful CI for hosted dependency automation before an owner approves the
+ * exact head. It deliberately has no secret grants, shared writable volumes,
+ * service daemons, artifact handoff, or remote cache.
+ */
+export function credentiallessHostedAutomationSteps(
+  images: CiImages,
+): CiStep[] {
+  const verify: CiStep = {
+    key: "verify",
+    label: "verify (credentialless)",
+    image: images.base,
+    commands: verifyCommands({ remoteCache: false, publishHandoff: false }),
+    environment: { CI_CHANGED_BASE: "" },
+    // Hosted automation deliberately has no remote cache credentials, so this
+    // is always the cold-cache form of the exhaustive verify gate.
+    timeoutMinutes: 60,
+    resources: TURBO_VERIFY_TIER,
+    events: ["pull_request"],
+  };
+  return [verify, ...scannerSteps(images, { isolated: true })];
 }

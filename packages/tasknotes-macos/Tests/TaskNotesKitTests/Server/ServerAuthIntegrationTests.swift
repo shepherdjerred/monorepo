@@ -27,9 +27,8 @@ import Testing
 /// server being genuinely closed, and a typo in an environment-variable name
 /// would silently make it open and every assertion here vacuous.
 ///
-/// Every pre-existing integration test runs with `AUTH_TOKEN=""`, so before
-/// this file nothing in the package had ever sent a credential to a server that
-/// would look at it.
+/// The ordinary integration harness also uses authentication. These cases pin
+/// the credential so they can exercise missing and incorrect tokens.
 @Suite("Against a gated server", .serialized)
 struct ServerAuthIntegrationTests {
     private static let token = "a-token-the-server-will-check"
@@ -123,7 +122,7 @@ struct ServerAuthIntegrationTests {
         defer { gated.stop() }
         #expect(gated.authToken == Self.token)
 
-        let open = try TaskNotesServerProcess()
+        let open = try TaskNotesServerProcess(authToken: "")
         defer { open.stop() }
         #expect(open.authToken.isEmpty)
     }
