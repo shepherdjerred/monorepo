@@ -8,6 +8,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.BodyCommand;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Option;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Stance;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Waypoint;
 import java.util.ArrayList;
@@ -293,7 +294,7 @@ public final class Reflex {
       var yaw = Facing.looking(self.eye(), aimPoint).yaw();
       var desired = new Facing(yaw, pitch.getAsDouble());
       state = state.withAim(AimController.aim(state.aim(), desired, levers(), random));
-      commands.add(new BodyCommand.Stop());
+      standApart();
       if (!state.isDrawing()) {
         commands.add(new BodyCommand.SelectSlot(context.loadout().bowSlot()));
         commands.add(new BodyCommand.StartUse());
@@ -379,7 +380,11 @@ public final class Reflex {
         state = state.withPath(index, input.decision().snapshotTick());
       }
       if (index >= waypoints.size()) {
-        commands.add(new BodyCommand.Stop());
+        if (input.decision().option() == Option.HOLD_ANGLE) {
+          commands.add(new BodyCommand.Stop());
+        } else {
+          standApart();
+        }
         hold();
         return;
       }
@@ -462,6 +467,15 @@ public final class Reflex {
         }
       }
       return push;
+    }
+
+    /** Holding a slot or drawing a bow still leaves room for crowding teammates. */
+    private void standApart() {
+      var push = apart();
+      commands.add(
+          push.isZero()
+              ? new BodyCommand.Stop()
+              : new BodyCommand.MoveToward(self.pos().plus(push.normalized()), false));
     }
 
     /**

@@ -331,7 +331,7 @@ describe("cooperative survival and bosses on real Paper", () => {
             if (Date.now() > deadline)
               throw new Error(`Round ${round.toString()} did not clear`);
             await rcon.command(
-              "kill @e[type=!minecraft:player,x=-80,y=62,z=-80,dx=159,dy=80,dz=159]",
+              "minecraft:kill @e[type=!minecraft:player,x=-80,y=62,z=-80,dx=159,dy=80,dz=159]",
             );
             await Bun.sleep(1000);
           }

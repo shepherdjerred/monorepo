@@ -206,6 +206,48 @@ final class ReflexTest {
   }
 
   @Test
+  void holdingAndDrawingLeaveRoomForTeammatesAndStopWhenUncrowded() {
+    var self = combatant(1, RED, new Vec3(5.5, 1, 5.5));
+    var ally = combatant(2, RED, new Vec3(7.5, 1, 5.5));
+    var enemy = combatant(3, BLUE, new Vec3(25.5, 1, 5.5));
+    var holding =
+        new Decision(
+            self.id(),
+            Option.HOLD_SLOT,
+            Optional.empty(),
+            List.of(),
+            Stance.CAUTIOUS,
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            "hold-slot:hold",
+            1,
+            0);
+    var context = new ReflexContext(NAV.grid(), levers(1), Loadout.standard(Kit.LONGBOW));
+    for (var target : List.of(Optional.<CombatantView>empty(), Optional.of(enemy))) {
+      var step =
+          Reflex.tick(
+              ReflexState.initial(self.facing()),
+              new ReflexInput(
+                  self, world(1, List.of(self, ally, enemy), List.of()), holding, target, 0),
+              context,
+              new SplittableRandom(4));
+      assertThat(step.commands())
+          .contains(new BodyCommand.MoveToward(new Vec3(4.5, 1, 5.5), false));
+      assertThat(step.commands()).doesNotContain(new BodyCommand.Stop());
+      if (target.isPresent()) assertThat(step.commands()).contains(new BodyCommand.StartUse());
+    }
+    var uncrowded =
+        Reflex.tick(
+            ReflexState.initial(self.facing()),
+            new ReflexInput(
+                self, world(1, List.of(self, enemy), List.of()), holding, Optional.empty(), 0),
+            context,
+            new SplittableRandom(4));
+    assertThat(uncrowded.commands()).contains(new BodyCommand.Stop());
+  }
+
+  @Test
   void anEnemyInReachInterruptsEating() {
     var random = new SplittableRandom(4);
     var self = combatant(1, RED, new Vec3(5.5, 1, 5.5)).withHealth(6, 0);
