@@ -8,6 +8,7 @@ import {
   type Client as UserClient,
   Message as UserMessage,
 } from "discord.js-selfbot-v13";
+import { createUserMessageUpdateWatcher } from "#lib/discord/deferred-reply.ts";
 import {
   ReadRequestSchema,
   SendRequestSchema,
@@ -279,13 +280,30 @@ async function handleSlash(
 ): Promise<unknown> {
   const request = SlashRequestSchema.parse(body);
   const channel = await requireUserChannel(ctx, request.channelId);
-  const result = await channel.sendSlash(
-    request.botId,
-    request.command,
-    ...request.args,
-  );
-  const reply = result instanceof UserMessage ? mapUserMessage(result) : null;
-  return { invoked: true, reply };
+  const user = ctx.user;
+  if (user === null) {
+    throw new DaemonError(
+      "This command needs a userbot identity (DISCORD_USER_TOKEN)",
+    );
+  }
+  const watcher = createUserMessageUpdateWatcher(user, mapUserMessage);
+  try {
+    const result = await channel.sendSlash(
+      request.botId,
+      request.command,
+      ...request.args,
+    );
+    const reply = result instanceof UserMessage ? mapUserMessage(result) : null;
+    if (reply === null || reply.content.length > 0 || reply.embeds.length > 0) {
+      return { invoked: true, reply };
+    }
+    return {
+      invoked: true,
+      reply: await watcher.waitFor(reply, request.timeoutSeconds * 1000),
+    };
+  } finally {
+    watcher.close();
+  }
 }
 
 async function handleVoiceJoin(
