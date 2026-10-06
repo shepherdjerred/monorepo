@@ -85,8 +85,9 @@ at the version catalog's `/prod` and candidate pins with fixture credentials.
 The image bakes Paper, every plugin, and owned config; the harness stages only
 a config overlay that enables the companion module and its local dependencies,
 while disabling RWF, which requires the provisioned `rwf` world and production
-recording salt. The overlay uses a clearly fake RWF salt and does not copy
-production world or plugin data. Both profiles set an unreachable Flipt
+recording salt. Docker and Kubernetes mount the overlay at the config file path,
+leaving the image's baked plugins visible. The overlay uses a clearly fake RWF
+salt and does not copy production world or plugin data. Both profiles set an unreachable Flipt
 bootstrap (`FLIPT_URL=http://127.0.0.1:9`, `FLIPT_ENVIRONMENT=beta`), so
 companions fail closed and do not spawn or act in the disposable world. The
 image must bake MCBridge; earlier images never answer the bridge health check.
