@@ -21,6 +21,7 @@ final class History extends \XF\Cli\Command\AbstractCommand
         $nodes = $app->registry()->get('stormForumMap');
         $read = static fn(string $key) => (new \XF\DataRegistry($db))->get($key) ?: [];
         $map = $read('stormForumHistory'); $users = $read('stormForumHistoricalUsers');
+        self::assertMappedPostsRetained($history, $map);
         $assets = array_column($history['attachments'], null, 'originalId');
         $identities = array_column($history['users'], null, 'originalId');
         foreach ($identities as $id=>$item) {
@@ -64,6 +65,7 @@ final class History extends \XF\Cli\Command\AbstractCommand
         if (!$db->fetchOne('SELECT GET_LOCK(?, 0)', 'storm-history-import')) { throw new \RuntimeException('Another history import is running'); }
         try {
             $map = $read('stormForumHistory'); $users = $read('stormForumHistoricalUsers');
+            self::assertMappedPostsRetained($history, $map);
             foreach ($identities as $id=>$item) {
                 if (isset($users[$id])) { continue; }
                 $db->beginTransaction();
@@ -177,6 +179,16 @@ final class History extends \XF\Cli\Command\AbstractCommand
         $conflicts = array_sum(array_map(static fn($item) => count($item['conflicts'] ?? []), $map));
         $output->writeln('Historical profiles, discussions, and media restored; ' . $conflicts . ' edited messages preserved.');
         return 0;
+    }
+
+    private static function assertMappedPostsRetained(array $history, array $map): void
+    {
+        $threads = array_column($history['threads'], null, 'originalId');
+        foreach ($map as $id=>$entry) {
+            if (!isset($threads[$id]) || array_diff(array_keys($entry['posts']), array_column($threads[$id]['posts'], 'key'))) {
+                throw new \RuntimeException('Corpus revision removes mapped historical posts; use native moderation without dropping import mappings.');
+            }
+        }
     }
 
     private static function hash(array $record): string { return hash('sha256', json_encode($record, JSON_THROW_ON_ERROR)); }

@@ -66,7 +66,9 @@ dates, recovered avatars, formatting, and native attachments. Profiles have
 empty email addresses, native NoPassword authentication, and no restored staff
 privileges or account-claim flow. Transactional checkpoints preserve IDs, edits,
 and new replies. A reviewed corpus revision requires `storm:history --migrate`;
-edited messages are retained and reported. `scripts/enrich-history.ts` reads an
+edited messages are retained and reported. Revisions cannot omit mapped posts or
+discussions; use native moderation to hide or correct existing content.
+`scripts/enrich-history.ts` reads an
 explicit archive directory without modifying it; optional `--public-archives`
 recovery copies verified public images into this package.
 

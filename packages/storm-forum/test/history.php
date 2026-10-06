@@ -102,6 +102,26 @@ try {
         $creator->setMessage('Local reply acceptance.'); $creator->setIsAutomated();
         return $creator->save();
     });
+    // A later reply remains native; an omitted previously mapped post/thread must reject the revision.
+    $omittedPost = $map;
+    $omittedPost[42]['posts']['t42:p99999999'] = $reply->post_id;
+    $omittedPost[42]['messageHashes']['t42:p99999999'] = hash('sha256', $reply->message);
+    $omittedPost[42]['hash'] = str_repeat('0', 64);
+    $omittedThread = $map; $omittedThread[max(array_keys($map)) + 1] = $map[42];
+    $nativeBefore = $app->db()->fetchAll('SELECT post_id, user_id, username, post_date, message, message_state FROM xf_post WHERE thread_id = ? ORDER BY post_id', $thread->thread_id);
+    foreach ([$omittedPost, $omittedThread] as $revisionMap) {
+        try {
+            $app->registry()->set('stormForumHistory', $revisionMap);
+            foreach ([['--migrate'=>true], ['--migrate'=>true, '--dry-run'=>true]] as $options) {
+                $rejected = false;
+                try { $run($options); } catch (RuntimeException $error) { $rejected = str_contains($error->getMessage(), 'removes mapped historical posts'); }
+                $check($rejected, 'A corpus revision dropping an imported post or discussion was accepted');
+                $check((new XF\DataRegistry($app->db()))->get('stormForumHistory') === $revisionMap, 'Rejected revision changed the import checkpoint');
+                $check($nativeBefore === $app->db()->fetchAll('SELECT post_id, user_id, username, post_date, message, message_state FROM xf_post WHERE thread_id = ? ORDER BY post_id', $thread->thread_id), 'Rejected revision changed imported content, staff edits, or a later reply');
+                $check($afterUsers == $app->db()->fetchOne('SELECT COUNT(*) FROM xf_user'), 'Rejected revision changed historical profiles');
+            }
+        } finally { $app->registry()->set('stormForumHistory', $map); }
+    }
     $run();
     $check($app->db()->fetchOne('SELECT COUNT(*) FROM xf_post') == $before + 1, 'Repeat import duplicated posts or removed a new reply');
     $check($app->db()->fetchOne('SELECT message FROM xf_post WHERE post_id = ?', $thread->first_post_id) === $original . "\nLocal staff edit acceptance.", 'Repeat import overwrote a staff edit');
@@ -109,4 +129,4 @@ try {
     if ($reply) { $reply->delete(); }
     $post = $app->em()->find('XF:Post', $thread->first_post_id); $post->message = $original; $post->save();
 }
-echo "73 public profile-only identities, 17 avatars, native attachments, original names/dates, 120 public discussions, 1,148 posts, v1 migration, explicit revision guard, replies, repeat import, and later edits passed.\n";
+echo "73 public profile-only identities, 17 avatars, native attachments, original names/dates, 120 public discussions, 1,148 posts, v1 migration, explicit revision/removal guards, replies, repeat import, and later edits passed.\n";
