@@ -65,6 +65,13 @@ catalog. ArgoCD must reconcile that new pin before Woodpecker generates
 pipelines with changed extension code. The original bootstrap image is not a
 substitute for this release path.
 
+When a graph change retires a failing lane, the deployed image can still select
+that lane for the PR carrying its replacement. Changes under this package are
+also inputs to every workflow, so an extension-only PR cannot escape the old
+graph. Follow the
+[configuration-extension bootstrap procedure](../docs/wiki/src/content/docs/how-to/cut-a-homelab-release.md#bootstrap-a-configuration-extension-graph-change)
+to promote the replacement graph through the repository-owned release path.
+
 ## Static-site delivery
 
 The sites lane builds selected packages through the repository deploy catalog
