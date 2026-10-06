@@ -5,6 +5,7 @@
   "type": "module",
   "imports": {
     "#src/*": "./src/*",
+    "#scripts/*": "./scripts/*",
     "#config/*": "./config/*"
   },
   "exports": {

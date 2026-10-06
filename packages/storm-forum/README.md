@@ -85,7 +85,7 @@ and renderer/artwork revision. Personal appearance choices do not change cards.
 
 Product behavior uses typed configuration and the managed `storm` feature flag
 namespace. Registration defaults closed. The season flag accepts `auto` or a
-catalog ID; the calendar flag defaults off and targets beta by stage. Automatic
+catalog ID; registration and calendar flags target the production stage. Automatic
 selection uses long festival windows and seasonal gaps in America/Los_Angeles.
 The existing minute-by-minute Temporal housekeeping activity reparents followers
 only when the effective theme changes. A named operator override also controls
@@ -95,6 +95,14 @@ manifest owns native XenForo settings and the direct Minecraft service address.
 The status activity reads only the exact Minecraft StatefulSet and pings its
 backend, preserving server hibernation. Public caches contain counts, never
 player names.
+
+Production prerequisites can be prepared with
+`scripts/onepassword/with-service-account.sh bun packages/storm-forum/scripts/prepare-production.ts <fresh-upload> <style-exports> <private-output-directory> --apply`.
+It verifies and uploads the private bundle, provisions the dedicated runtime item
+and scoped storage identities, and emits only release pins and public mail DNS
+records. Credentials travel through process pipes and memory. Reload the S3
+gateway after its mounted identity configuration updates, then commit the
+production release entry using the image digest published by CI.
 
 The dedicated stage-specific 1Password item supplies these required fields:
 
