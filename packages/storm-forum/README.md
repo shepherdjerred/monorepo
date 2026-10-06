@@ -169,7 +169,9 @@ The optional preview
 binds only localhost. Ctrl-C removes its exact containers and network.
 `scripts/local-backup-test.ts` takes that harness's explicit application container
 name and exercises a real database/files round trip through an isolated S3 API
-fixture. This proves the payload and restore implementation; SeaweedFS/R2 and
+fixture. It runs backup and restore with the current `storm-forum:dev` image,
+sharing the preview's licensed application and data volumes for the backup.
+Rebuild that image after dependency changes. This proves the payload and restore implementation; SeaweedFS/R2 and
 Postal delivery still require deployment acceptance.
 
 Homelab charts and ArgoCD applications consume the validated release inventory at

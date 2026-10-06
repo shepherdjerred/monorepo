@@ -113,6 +113,14 @@ export const HistorySchema = z
       });
     const users = new Set(history.users.map((u) => u.originalId)),
       attachments = new Set(history.attachments.map((a) => a.originalId));
+    const ownedAttachments = history.threads.flatMap((thread) =>
+      thread.posts.flatMap((post) => post.attachments),
+    );
+    if (new Set(ownedAttachments).size !== ownedAttachments.length)
+      ctx.addIssue({
+        code: "custom",
+        message: "Duplicate historical attachment ownership",
+      });
     if (
       users.size !== history.users.length ||
       attachments.size !== history.attachments.length

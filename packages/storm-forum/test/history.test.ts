@@ -65,6 +65,26 @@ describe("reviewed history corpus", () => {
     expect(originalUrl("javascript:alert(1)")).toBeUndefined();
     expect(originalUrl("https://user:password@example.test/")).toBeUndefined();
   });
+  it("rejects attachment IDs claimed twice by one post or by another post", () => {
+    const history = HistorySchema.parse(corpus);
+    const posts = history.threads.flatMap((thread) => thread.posts);
+    const owner = posts.find((post) => post.attachments.length > 0);
+    const id = owner?.attachments[0];
+    const other = posts.find((post) => post.key !== owner?.key);
+    if (owner === undefined || other === undefined || id === undefined)
+      throw new Error("Missing attachment ownership fixture");
+    for (const target of [owner, other]) {
+      const revision = structuredClone(history);
+      const post = revision.threads
+        .flatMap((thread) => thread.posts)
+        .find((candidate) => candidate.key === target.key);
+      if (post === undefined) throw new Error("Missing revision post");
+      post.attachments.push(id);
+      expect(() => HistorySchema.parse(revision)).toThrow(
+        "Duplicate historical attachment ownership",
+      );
+    }
+  });
   it("converts Mountain board dates across daylight saving without changing exact ISO timestamps", () => {
     expect(historicalDate(null, "Apr 6, 2014 at 10:42 PM")).toBe(
       Date.parse("2014-04-07T04:42:00Z") / 1000,

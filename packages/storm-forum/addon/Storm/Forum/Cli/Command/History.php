@@ -18,6 +18,7 @@ final class History extends \XF\Cli\Command\AbstractCommand
         $app = \XF::app(); $db = $app->db();
         $history = json_decode(file_get_contents('/opt/storm-forum/config/history.json'), true, 512, JSON_THROW_ON_ERROR);
         if ($history['version'] !== 2) { throw new \RuntimeException('Unknown history corpus version'); }
+        self::assertUniqueAttachmentOwnership($history);
         $nodes = $app->registry()->get('stormForumMap');
         $read = static fn(string $key) => (new \XF\DataRegistry($db))->get($key) ?: [];
         $map = $read('stormForumHistory'); $users = $read('stormForumHistoricalUsers');
@@ -221,6 +222,19 @@ final class History extends \XF\Cli\Command\AbstractCommand
     private static function profileHash(array $identity): string
     {
         return self::hash(['identity'=>$identity, 'avatarSha256'=>$identity['avatar'] === null ? null : hash_file('sha256', '/opt/storm-forum/assets/history/' . $identity['avatar'])]);
+    }
+
+    private static function assertUniqueAttachmentOwnership(array $history): void
+    {
+        $owners = [];
+        foreach ($history['threads'] as $thread) {
+            foreach ($thread['posts'] as $post) {
+                foreach ($post['attachments'] as $id) {
+                    if (isset($owners[$id])) { throw new \RuntimeException('Duplicate historical attachment ownership'); }
+                    $owners[$id] = $post['key'];
+                }
+            }
+        }
     }
 
     private static function assertMappedMetadataUnchanged(array $history, array $map, array $users): void

@@ -6,7 +6,7 @@ $app = XF::setupApp('XF\Cli\App');
 $app->start();
 if ($app->options()->boardUrl !== 'https://storm-forum-beta.tailnet-1a49.ts.net' || $app->options()->registrationSetup['enabled']) { throw new RuntimeException('Recovery did not normalize beta URL and close registration'); }
 $styles = $app->registry()->get('stormForumStyles');
-if (!is_array($styles) || $app->options()->defaultStyleId != $styles['light:normal']) { throw new RuntimeException('Recovery did not select the configured normal style'); }
+if (!is_array($styles) || $app->options()->defaultStyleId != $styles['system:normal']) { throw new RuntimeException('Recovery did not select the configured normal System style'); }
 $map = $app->registry()->get('stormForumMap');
 if (count(array_filter(array_keys($map), fn($key) => str_starts_with($key, 'node:'))) !== 13) { throw new RuntimeException('Restored forum tree differs'); }
 foreach (['data' => "storm-owned-attachment\n", 'internal_data' => "storm-private-attachment\n"] as $directory => $expected) {

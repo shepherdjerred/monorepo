@@ -1,4 +1,5 @@
 <?php
+require __DIR__ . '/fixtures/history-source.php';
 require '/app/forum/src/XF.php';
 XF::start('/app/forum');
 set_exception_handler(static function (Throwable $error): void { fwrite(STDERR, (string)$error . "\n"); exit(1); });
@@ -77,6 +78,24 @@ $asset = $corpus['attachments'][0];
 $owner = null; $assetPost = null;
 foreach ($map as $id=>$entry) { foreach ($entry['attachments'] ?? [] as $key=>$attachments) { if (isset($attachments[$asset['originalId']])) { $owner = $id; $assetPost = $key; break 2; } } }
 $check($owner !== null && $assetPost !== null, 'Recovered media revision fixture has no native owner');
+$duplicate = $corpus;
+foreach ($duplicate['threads'] as $threadIndex=>$discussion) {
+    foreach ($discussion['posts'] as $postIndex=>$post) {
+        if ($post['key'] !== $assetPost) { $duplicate['threads'][$threadIndex]['posts'][$postIndex]['attachments'][] = $asset['originalId']; break 2; }
+    }
+}
+try {
+    $GLOBALS['stormFixtureHistory'] = $duplicate;
+    $nativeUsers = $app->db()->fetchOne('SELECT COUNT(*) FROM xf_user');
+    $nativeMedia = $app->db()->fetchAll('SELECT attachment_id, data_id, content_type, content_id FROM xf_attachment ORDER BY attachment_id');
+    foreach ([['--migrate'=>true], ['--migrate'=>true, '--dry-run'=>true]] as $options) {
+        $rejected = false;
+        try { $run($options); } catch (RuntimeException $error) { $rejected = str_contains($error->getMessage(), 'Duplicate historical attachment ownership'); }
+        $check($rejected, 'Duplicate attachment ownership was not rejected by native command preflight');
+        $check($nativeMedia === $app->db()->fetchAll('SELECT attachment_id, data_id, content_type, content_id FROM xf_attachment ORDER BY attachment_id') && $nativeUsers == $app->db()->fetchOne('SELECT COUNT(*) FROM xf_user'), 'Duplicate ownership preflight persisted profiles or media');
+        $check((new XF\DataRegistry($app->db()))->get('stormForumHistory') === $map && (new XF\DataRegistry($app->db()))->get('stormForumHistoricalUsers') === $identities, 'Duplicate ownership preflight advanced a registry checkpoint');
+    }
+} finally { unset($GLOBALS['stormFixtureHistory']); }
 $revisions = [];
 foreach (['username'=>'PreviousCanonicalName', 'aliases'=>['PreviousAlias'], 'slugs'=>['previous-slug'], 'avatar'=>null] as $field=>$value) {
     $prior = $identity; $prior[$field] = $value;
