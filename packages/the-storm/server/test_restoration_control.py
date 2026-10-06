@@ -30,36 +30,12 @@ class Cluster:
         self.extra_writer = False
         self.late_join = False
         self.stale_patch = False
-        for name, resource, operation in control.POLICIES:
-            self.objects["validatingadmissionpolicy", name] = JsonObject(
-                {
-                    "metadata": {"generation": 1},
-                    "status": {"observedGeneration": 1, "typeChecking": {}},
-                    "spec": {
-                        "failurePolicy": "Fail",
-                        "matchConstraints": {"resourceRules": [{"resources": [resource], "operations": [operation]}]},
-                    },
-                }
-            )
-            self.objects["validatingadmissionpolicybinding", name] = JsonObject(
-                {
-                    "spec": {
-                        "policyName": name,
-                        "validationActions": ["Deny"],
-                        **(
-                            {
-                                "paramRef": {
-                                    "name": control.SERVER,
-                                    "namespace": control.NAMESPACE,
-                                    "parameterNotFoundAction": "Deny",
-                                }
-                            }
-                            if resource.endswith("/scale")
-                            else {}
-                        ),
-                    }
-                }
-            )
+        for resource in json.loads(Path(__file__).with_name("restoration-guards.json").read_text()):
+            self.objects[resource["kind"].lower(), resource["name"]] = JsonObject({
+                "metadata": {"generation": 1},
+                "status": {"observedGeneration": 1, "typeChecking": {}},
+                "spec": resource["spec"],
+            })
         self.objects["statefulset", control.SERVER] = JsonObject(
             {
                 "metadata": {"uid": "server-uid", "resourceVersion": "1", "annotations": {}},
@@ -180,6 +156,35 @@ class RestorationControlTest(unittest.TestCase):
 
     def initialize(self) -> JsonObject:
         return control.initialize(self.path, REQUEST, IMAGE)
+
+    def test_guards_reject_changed_expressions_conditions_and_binding_scope_before_mutation(self):
+        for field, value in (
+            ("validations", [{"expression": "true"}]),
+            ("matchConditions", [{"name": "the-storm-server", "expression": "false"}]),
+        ):
+            with self.subTest(field=field):
+                self.cluster = Cluster()
+                policy = self.cluster.objects["validatingadmissionpolicy", control.POLICIES[0][0]]
+                policy.object("spec")[field] = value
+                with self.assertRaisesRegex(ValueError, "reviewed contract"):
+                    self.initialize()
+                self.assertEqual(self.cluster.mutations, [])
+        self.cluster = Cluster()
+        binding = self.cluster.objects["validatingadmissionpolicybinding", control.POLICIES[0][0]]
+        binding.object("spec")["matchResources"] = {"namespaceSelector": {"matchLabels": {"omit": "storm"}}}
+        with self.assertRaisesRegex(ValueError, "reviewed contract"):
+            self.initialize()
+        self.assertEqual(self.cluster.mutations, [])
+
+    def test_guards_accept_only_harmless_empty_selector_defaults(self):
+        for (kind, _), resource in self.cluster.objects.items():
+            if kind == "validatingadmissionpolicy":
+                resource.object("spec").object("matchConstraints")["namespaceSelector"] = {}
+                resource.object("spec").object("matchConstraints")["objectSelector"] = {}
+            elif kind == "validatingadmissionpolicybinding":
+                resource.object("spec")["matchResources"] = {"namespaceSelector": {}, "objectSelector": {}}
+        self.initialize()
+        self.assertEqual(self.cluster.mutations, [])
 
     def installation_fixture(self) -> JsonObject:
         journal = self.initialize()

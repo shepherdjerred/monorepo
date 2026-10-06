@@ -331,6 +331,9 @@ readers must be removed before its writer can be accepted.
 `restoration-control.py preflight --journal <private-receipt> --request <uuid>
 --image <immutable-image>` checks the reconciled Kubernetes admission guards and
 records the exact server, claim, volume and Service identities.
+The complete policy and binding specifications must match `restoration-guards.json`,
+whose consistency with the infrastructure source is checked by the homelab suite.
+Only Kubernetes' harmless empty selector defaults are normalized.
 Its `acquire` operation verifies an empty server, closes all four Service routes,
 disables router wake, stops Paper through its normal grace period, and acquires
 the request-owned offline lease. Updates use resource-version comparisons.

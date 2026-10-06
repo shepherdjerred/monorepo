@@ -14,6 +14,30 @@ import { createMinecraftTsmcApp } from "./argo-applications/games/minecraft-tsmc
 const Resource = z.object({ kind: z.string(), spec: z.unknown().optional() });
 
 describe("world restoration maintenance guard", () => {
+  test("matches the complete contract checked by the restoration operator", async () => {
+    const app = new App();
+    createMinecraftRestorationGuard(new Chart(app, "apps"));
+    const resource = z.object({
+      kind: z.string(),
+      metadata: z.object({ name: z.string() }),
+      spec: z.unknown(),
+    });
+    const actual = parseAllDocuments(app.synthYaml()).map((document) => {
+      const parsed = resource.parse(document.toJS());
+      return {
+        kind: parsed.kind,
+        name: parsed.metadata.name,
+        spec: parsed.spec,
+      };
+    });
+    const expected = await Bun.file(
+      new URL(
+        "../../../../../the-storm/server/restoration-guards.json",
+        import.meta.url,
+      ),
+    ).json();
+    expect(actual).toEqual(expected);
+  });
   test("requires an exclusive stopped lease and restricts private acceptance to the pinned image", () => {
     const app = new App();
     createMinecraftRestorationGuard(new Chart(app, "apps"));

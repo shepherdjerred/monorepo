@@ -176,6 +176,23 @@ def volume_source(volume: JsonObject) -> dict[str, str]:
 
 
 def assert_guards() -> None:
+    expected = json.loads(Path(__file__).with_name("restoration-guards.json").read_text(encoding="utf-8"))
+    for resource in expected:
+        live = read(resource["kind"].lower(), resource["name"], "")
+        actual = dict(live.object("spec"))
+        # Kubernetes defaults empty selectors; they select everything and add no restriction.
+        for field in ("matchConstraints", "matchResources"):
+            if field in actual:
+                constraints = dict(JsonObject.require(actual[field]))
+                for selector in ("namespaceSelector", "objectSelector"):
+                    if constraints.get(selector) == {}:
+                        constraints.pop(selector)
+                if constraints:
+                    actual[field] = constraints
+                else:
+                    actual.pop(field)
+        if actual != resource["spec"]:
+            raise ValueError("Restoration admission guard definition differs from the reviewed contract")
     for name, resource, operation in POLICIES:
         policy = read("validatingadmissionpolicy", name, "")
         binding = read("validatingadmissionpolicybinding", name, "")

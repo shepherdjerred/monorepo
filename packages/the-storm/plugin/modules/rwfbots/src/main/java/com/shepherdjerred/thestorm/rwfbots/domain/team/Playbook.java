@@ -85,6 +85,9 @@ public final class Playbook {
   /** Anchors stand at most this far from the bomb they hold. */
   static final double ANCHOR_MAX = 14;
 
+  /** Guard the approaches with room to fan out, instead of hugging the bomb's base. */
+  static final double ANCHOR_MIN = 10;
+
   /** How far along its lane a pair with no sighting to chase sweeps. */
   static final double SWEEP_PROGRESS = 0.6;
 
@@ -481,7 +484,7 @@ public final class Playbook {
         var feet = graph.feet(point.node());
         var offset = feet.minus(guard).horizontal();
         var distance = offset.length();
-        if (distance < setup.guardClear()
+        if (distance < Math.max(setup.guardClear(), ANCHOR_MIN)
             || distance > ANCHOR_MAX
             || nearestPlaced(feet) < SPACING
             || onWayOut(point.node(), feet)) {
@@ -529,7 +532,7 @@ public final class Playbook {
     }
 
     private Vec3 ring(Vec3 guard, Vec3 facing, int index) {
-      var radius = Math.max(setup.guardClear() + 1, 6);
+      var radius = Math.max(setup.guardClear() + 1, ANCHOR_MIN);
       var angle =
           Math.atan2(facing.z(), facing.x()) + (index % 2 == 0 ? 1 : -1) * (index + 1) * 0.6;
       return guard.plus(new Vec3(Math.cos(angle), 0, Math.sin(angle)).scale(radius));

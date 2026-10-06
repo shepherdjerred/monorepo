@@ -126,6 +126,23 @@ final class PlaybookTest {
   }
 
   @Test
+  void turtleAnchorsScreenTheApproachesOutsideTheBombsBase() {
+    var plan = deal(Strategy.TURTLE, reds(8), 0).plan();
+    var guard =
+        bombs().stream().filter(bomb -> bomb.id().equals(RED_BOMB)).findFirst().orElseThrow();
+    var anchors = plan.slots().stream().filter(slot -> slot.kind() == SlotKind.ANCHOR).toList();
+    assertThat(anchors).hasSize(3);
+    for (var anchor : anchors) {
+      assertThat(anchor.pos().horizontalDistance(guard.pos()))
+          .isGreaterThanOrEqualTo(Playbook.ANCHOR_MIN);
+    }
+    var width =
+        anchors.stream().mapToDouble(slot -> slot.pos().z()).max().orElseThrow()
+            - anchors.stream().mapToDouble(slot -> slot.pos().z()).min().orElseThrow();
+    assertThat(width).isGreaterThanOrEqualTo(16);
+  }
+
+  @Test
   void escortsFormAWedgeBehindThePlanterNotAStack() {
     var plan = deal(Strategy.RUSH, reds(3), 0).plan();
     var escorts = plan.slots().stream().filter(slot -> slot.kind() == SlotKind.ESCORT).toList();
