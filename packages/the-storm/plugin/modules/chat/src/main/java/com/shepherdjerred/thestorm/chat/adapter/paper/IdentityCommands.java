@@ -55,6 +55,7 @@ public final class IdentityCommands implements Listener {
             .requires(
                 source ->
                     identities.ready()
+                        && PlayerVisibility.restored()
                         && source.getSender() instanceof Player
                         && source.getSender().hasPermission("thestorm.essentials.nick"))
             .then(
@@ -79,6 +80,7 @@ public final class IdentityCommands implements Listener {
             .requires(
                 source ->
                     identities.ready()
+                        && PlayerVisibility.restored()
                         && source.getSender() instanceof Player
                         && source.getSender().hasPermission("thestorm.essentials.realname"))
             .then(

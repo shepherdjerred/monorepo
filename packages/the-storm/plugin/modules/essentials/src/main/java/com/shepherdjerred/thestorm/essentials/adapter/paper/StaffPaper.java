@@ -69,6 +69,7 @@ final class StaffPaper {
                             .find("session", id, StaffState.Session.class)
                             .orElseThrow()
                             .vanished());
+                  PlayerVisibility.markRestored();
                   context
                       .plugin()
                       .getServer()

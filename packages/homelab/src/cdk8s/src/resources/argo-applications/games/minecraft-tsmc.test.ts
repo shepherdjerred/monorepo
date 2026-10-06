@@ -81,6 +81,7 @@ describe("minecraft-tsmc runs The Storm's image", () => {
     const extraEnv = z
       .record(z.string(), z.unknown())
       .parse(values["extraEnv"]);
+    expect(extraEnv["CFG_PROXY_PROTOCOL"]).toBe("true");
     expect(extraEnv["STORM_BRAIN_BEARER_TOKEN"]).toEqual({
       valueFrom: {
         secretKeyRef: {

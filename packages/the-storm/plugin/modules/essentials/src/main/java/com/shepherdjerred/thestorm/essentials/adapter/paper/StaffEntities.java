@@ -28,6 +28,7 @@ final class StaffEntities implements Listener {
   }
 
   void register() {
+    tools.permission("sudo.exempt");
     tools.add(
         "give <material> [amount] [player]",
         request -> {
@@ -60,6 +61,9 @@ final class StaffEntities implements Listener {
         "sudo <player> <command>",
         request -> {
           var target = tools.player(request.actor(), request.word(0));
+          request.others(target);
+          if (target.isOp() || target.hasPermission("thestorm.essentials.sudo.exempt"))
+            throw new IllegalArgumentException("That player is exempt from sudo.");
           request.word(1);
           var command = request.input().trim().split("\\s+", 2)[1];
           if (command.startsWith("/")) command = command.substring(1);
@@ -67,6 +71,15 @@ final class StaffEntities implements Listener {
           request.say("Command executed with the target player's permissions.");
         });
     playerTools();
+  }
+
+  @EventHandler
+  void quit(org.bukkit.event.player.PlayerQuitEvent event) {
+    var id = event.getPlayer().getUniqueId();
+    pending.remove(id);
+    disabled.remove(id);
+    unlimited.remove(id);
+    commands.remove(id);
   }
 
   private void playerTools() {
@@ -163,21 +176,38 @@ final class StaffEntities implements Listener {
   private void authorize(Player player, Use use) {
     var id = player.getUniqueId();
     var permission = use.command() == null ? "unlimited" : "powertool";
-    tools.complete(
-        player,
-        tools
-            .context
-            .services()
-            .require(com.shepherdjerred.thestorm.core.expansion.ManagedGameplay.class)
-            .enabled(com.shepherdjerred.thestorm.core.expansion.ManagedGameplay.STAFF, id)
-            .handle((enabled, error) -> error == null && Boolean.TRUE.equals(enabled)),
-        enabled -> {
-          if (!enabled || !tools.available(player, permission)) {
-            pending.remove(id);
-            return;
-          }
-          use(player, use);
-        });
+    try {
+      var authorization =
+          tools
+              .context
+              .services()
+              .require(com.shepherdjerred.thestorm.core.expansion.ManagedGameplay.class)
+              .enabled(com.shepherdjerred.thestorm.core.expansion.ManagedGameplay.STAFF, id)
+              .handle((enabled, error) -> error == null && Boolean.TRUE.equals(enabled));
+      var _ =
+          authorization.whenComplete(
+              (enabled, error) -> {
+                if (error != null || !player.isOnline()) pending.remove(id);
+              });
+      tools.complete(
+          player,
+          authorization,
+          enabled -> {
+            try {
+              if (!enabled || !tools.available(player, permission)) {
+                pending.remove(id);
+                return;
+              }
+              use(player, use);
+            } catch (RuntimeException failure) {
+              pending.remove(id);
+              throw failure;
+            }
+          });
+    } catch (RuntimeException failure) {
+      pending.remove(id);
+      throw failure;
+    }
   }
 
   private record Use(

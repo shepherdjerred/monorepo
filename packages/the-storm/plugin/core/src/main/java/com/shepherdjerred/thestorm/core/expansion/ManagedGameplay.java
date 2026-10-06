@@ -19,11 +19,20 @@ public final class ManagedGameplay implements AutoCloseable {
   public static final String IP = "the-storm-ip-enforcement-enabled";
   private final BiFunction<String, UUID, CompletableFuture<Boolean>> reader;
   private final Runnable stop;
+  private final boolean ipEnforcementDefault;
 
   public ManagedGameplay(
       BiFunction<String, UUID, CompletableFuture<Boolean>> reader, Runnable stop) {
+    this(reader, stop, true);
+  }
+
+  public ManagedGameplay(
+      BiFunction<String, UUID, CompletableFuture<Boolean>> reader,
+      Runnable stop,
+      boolean ipEnforcementDefault) {
     this.reader = reader;
     this.stop = stop;
+    this.ipEnforcementDefault = ipEnforcementDefault;
   }
 
   public static ManagedGameplay remote(String url, String environment) {
@@ -70,11 +79,17 @@ public final class ManagedGameplay implements AutoCloseable {
                     return value.booleanValue();
                   });
         },
-        client::shutdownNow);
+        client::shutdownNow,
+        "beta".equals(environment));
   }
 
   public CompletableFuture<Boolean> enabled(String key, UUID actor) {
     return reader.apply(key, actor);
+  }
+
+  /** The registered environment default used if the IP-enforcement flag cannot be read. */
+  public boolean ipEnforcementDefault() {
+    return ipEnforcementDefault;
   }
 
   @Override

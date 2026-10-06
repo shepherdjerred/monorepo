@@ -16,10 +16,12 @@ public final class RuntimeDestinations {
   }
 
   public Position spawn() {
+    if (!state.ready()) return seed;
     return state.find("spawn", "default", Position.class).orElse(seed);
   }
 
   public Optional<Origin> random(String world) {
+    if (!state.ready()) return Optional.empty();
     return state
         .find("rtp", world, Position.class)
         .map(position -> new Origin(position.x(), position.y(), position.z()));

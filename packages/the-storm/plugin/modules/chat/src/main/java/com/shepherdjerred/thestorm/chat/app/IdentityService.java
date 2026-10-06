@@ -50,7 +50,7 @@ public final class IdentityService {
 
   public Identity effective(UUID player) {
     var stored = identity(player);
-    return displaying.contains(player) ? stored : stored.named(Optional.empty());
+    return displaying.contains(player) ? stored : Identity.fresh();
   }
 
   public Optional<UUID> named(String nickname) {

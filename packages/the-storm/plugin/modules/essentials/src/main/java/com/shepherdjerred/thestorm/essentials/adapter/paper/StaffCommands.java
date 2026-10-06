@@ -41,6 +41,7 @@ final class StaffCommands {
           "kickall",
           "remove",
           "kill",
+          "sudo",
           "nuke",
           "antioch",
           "break",
@@ -51,6 +52,19 @@ final class StaffCommands {
           "lightning",
           "fireball",
           "firework",
+          "beezooka",
+          "kittycannon");
+  private static final Set<String> POSITION_CONFIRMATIONS =
+      Set.of(
+          "break",
+          "bigtree",
+          "tree",
+          "ice",
+          "lightning",
+          "fireball",
+          "firework",
+          "antioch",
+          "nuke",
           "beezooka",
           "kittycannon");
 
@@ -269,7 +283,7 @@ final class StaffCommands {
         request.actor() instanceof Player player ? player.getUniqueId().toString() : "console",
         request.command(),
         CONFIRMED.contains(request.command())
-            ? String.join(",", snapshot(request))
+            ? request.input() + " targets=" + String.join(",", snapshot(request))
             : request.input().isBlank() ? "self" : request.input(),
         context.time().instant());
   }
@@ -288,10 +302,13 @@ final class StaffCommands {
         .getOnlinePlayers()
         .forEach(player -> targets.add(player.getUniqueId().toString()));
     if (request.actor() instanceof Player player) {
-      targets.add("origin:" + Positions.of(player).describe());
-      var block =
-          player.getTargetBlockExact(settings.effectRadius(), org.bukkit.FluidCollisionMode.ALWAYS);
-      if (block != null) targets.add("block:" + Positions.of(block.getLocation()).describe());
+      if (POSITION_CONFIRMATIONS.contains(request.command())) {
+        targets.add("origin:" + exactPosition(Positions.current(player)));
+        var block =
+            player.getTargetBlockExact(
+                settings.effectRadius(), org.bukkit.FluidCollisionMode.ALWAYS);
+        if (block != null) targets.add("block:" + exactPosition(block.getLocation()));
+      }
       if (Set.of("remove", "kill").contains(request.command()))
         player
             .getNearbyEntities(
@@ -299,6 +316,20 @@ final class StaffCommands {
             .forEach(entity -> targets.add(entity.getUniqueId().toString()));
     }
     return targets.stream().sorted().toList();
+  }
+
+  private static String exactPosition(Location location) {
+    return location.getWorld().getUID()
+        + ":"
+        + location.getX()
+        + ","
+        + location.getY()
+        + ","
+        + location.getZ()
+        + ","
+        + location.getYaw()
+        + ","
+        + location.getPitch();
   }
 
   Player player(CommandSender actor, String name) {
@@ -322,6 +353,11 @@ final class StaffCommands {
   }
 
   void teleport(Request request, Player mover, Location location, boolean override) {
+    if (!Double.isFinite(location.getX())
+        || !Double.isFinite(location.getY())
+        || !Double.isFinite(location.getZ())
+        || !location.getWorld().getWorldBorder().isInside(location))
+      throw new IllegalArgumentException("Destination is outside the world border.");
     if (location.getY() < location.getWorld().getMinHeight()
         || location.getY() >= location.getWorld().getMaxHeight())
       throw new IllegalArgumentException("Destination is outside the world's height range.");

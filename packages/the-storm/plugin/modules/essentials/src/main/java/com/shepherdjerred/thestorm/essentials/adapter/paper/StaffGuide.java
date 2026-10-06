@@ -48,7 +48,9 @@ final class StaffGuide {
         sender,
         flags
             .enabled(ManagedGameplay.IDENTITY, actor)
-            .thenCombine(flags.enabled(ManagedGameplay.STAFF, actor), Flags::new),
+            .exceptionally(_ -> false)
+            .thenCombine(
+                flags.enabled(ManagedGameplay.STAFF, actor).exceptionally(_ -> false), Flags::new),
         enabled -> {
           var guide = guide(sender, enabled.identity(), enabled.staff());
           if (!requested.isEmpty()) {

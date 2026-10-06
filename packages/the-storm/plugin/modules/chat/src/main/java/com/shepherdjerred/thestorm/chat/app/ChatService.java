@@ -112,15 +112,26 @@ public final class ChatService {
                     config.filter().repeatCooldown())),
             config.filter().maxCapsWords());
     var now = time.instant();
-    var checked =
-        rules.validate(
-            new ChatAttempt(sender, attempt.text(), now),
-            new ChatFacts(mutes.get(sender.id()), recent.get(sender.id())));
-    return switch (checked) {
-      case Result.Ok<AcceptedMessage, List<ChatDenial>>(var accepted) -> Result.ok(accepted.text());
-      case Result.Err<AcceptedMessage, List<ChatDenial>>(var denials) ->
-          Result.err(letterDenial(denials.getFirst()));
-    };
+    var outcome = new AtomicReference<Result<String, String>>();
+    recent.compute(
+        sender.id(),
+        (id, previous) -> {
+          var checked =
+              rules.validate(
+                  new ChatAttempt(sender, attempt.text(), now),
+                  new ChatFacts(mutes.get(id), previous));
+          return switch (checked) {
+            case Result.Ok<AcceptedMessage, List<ChatDenial>>(var accepted) -> {
+              outcome.set(Result.ok(accepted.text()));
+              yield RecentMessage.of(accepted.text(), now);
+            }
+            case Result.Err<AcceptedMessage, List<ChatDenial>>(var denials) -> {
+              outcome.set(Result.err(letterDenial(denials.getFirst())));
+              yield previous;
+            }
+          };
+        });
+    return outcome.get();
   }
 
   /** {@code player}'s preferences. */

@@ -202,6 +202,7 @@ export function createMinecraftTsmcApp(chart: Chart) {
     extraEnv: {
       FLIPT_URL: "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
       FLIPT_ENVIRONMENT: "prod",
+      CFG_PROXY_PROTOCOL: "true",
       // Kicks idle players after 60 minutes (server.properties
       // player-idle-timeout, formerly set by the synced server.properties).
       PLAYER_IDLE_TIMEOUT: "60",

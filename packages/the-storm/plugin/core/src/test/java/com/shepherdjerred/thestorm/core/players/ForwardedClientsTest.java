@@ -58,6 +58,35 @@ final class ForwardedClientsTest {
         .isEqualTo(org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result.ALLOWED);
   }
 
+  @org.junit.jupiter.api.Test
+  void rolloutOutageUsesTheEnvironmentDefault() throws Exception {
+    var failed =
+        new com.shepherdjerred.thestorm.core.expansion.ManagedGameplay(
+            (key, actor) ->
+                java.util.concurrent.CompletableFuture.failedFuture(
+                    new IllegalStateException("Flipt unavailable")),
+            () -> {},
+            false);
+    var production = new ForwardedClients(failed, () -> true, ip -> java.util.Optional.empty());
+    var login = login("127.0.0.1", "127.0.0.1");
+    production.login(login);
+    assertThat(login.getLoginResult())
+        .isEqualTo(org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result.ALLOWED);
+
+    var beta =
+        new com.shepherdjerred.thestorm.core.expansion.ManagedGameplay(
+            (key, actor) ->
+                java.util.concurrent.CompletableFuture.failedFuture(
+                    new IllegalStateException("Flipt unavailable")),
+            () -> {},
+            true);
+    var betaClients = new ForwardedClients(beta, () -> true, ip -> java.util.Optional.empty());
+    var betaLogin = login("127.0.0.1", "127.0.0.1");
+    betaClients.login(betaLogin);
+    assertThat(betaLogin.getLoginResult())
+        .isEqualTo(org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result.KICK_OTHER);
+  }
+
   @ParameterizedTest
   @ValueSource(
       strings = {

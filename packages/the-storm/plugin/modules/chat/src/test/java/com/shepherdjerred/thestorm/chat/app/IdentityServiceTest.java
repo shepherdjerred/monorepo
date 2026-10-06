@@ -30,6 +30,12 @@ final class IdentityServiceTest {
       service.load().join();
       service.change(first, identity -> identity.named(Optional.of("Thunder")), audit).join();
       service.change(first, Identity::toggleMessages, audit).join();
+      assertThat(service.effective(first)).isEqualTo(Identity.fresh());
+      service.displaying(first, true);
+      assertThat(service.effective(first).nickname()).contains("Thunder");
+      assertThat(service.effective(first).messages()).isFalse();
+      service.displaying(first, false);
+      assertThat(service.effective(first)).isEqualTo(Identity.fresh());
       assertThatThrownBy(
               () ->
                   service

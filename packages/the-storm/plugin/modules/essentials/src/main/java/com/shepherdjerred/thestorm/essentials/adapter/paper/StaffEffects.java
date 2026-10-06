@@ -37,8 +37,12 @@ final class StaffEffects {
                             "tree".equals(name) ? TreeType.TREE : TreeType.BIG_TREE,
                             (java.util.function.Predicate<org.bukkit.block.BlockState>)
                                 state -> {
-                                  tools.build(request, state.getLocation());
-                                  return true;
+                                  try {
+                                    tools.build(request, state.getLocation());
+                                    return true;
+                                  } catch (IllegalArgumentException denied) {
+                                    return false;
+                                  }
                                 }));
           });
     tools.add(

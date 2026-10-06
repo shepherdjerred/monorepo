@@ -85,6 +85,7 @@ public final class ForwardedClients implements Listener {
       }
       ban.apply(address).ifPresent(reason -> deny(event, reason));
     } catch (java.util.concurrent.CompletionException failure) {
+      if (!flags.ipEnforcementDefault()) return;
       deny(event, "Login checks are unavailable. Please retry shortly.");
     }
   }

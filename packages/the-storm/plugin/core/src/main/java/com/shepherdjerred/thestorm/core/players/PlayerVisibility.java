@@ -10,6 +10,7 @@ public final class PlayerVisibility {
   private static final NamespacedKey KEY = new NamespacedKey("thestorm", "vanished");
   private static final java.util.Set<java.util.UUID> HIDDEN =
       java.util.concurrent.ConcurrentHashMap.newKeySet();
+  private static volatile boolean restored;
 
   private PlayerVisibility() {}
 
@@ -34,5 +35,14 @@ public final class PlayerVisibility {
 
   public static boolean hidden(java.util.UUID player) {
     return HIDDEN.contains(player);
+  }
+
+  /** Whether persisted hidden-player state has been restored from the staff store. */
+  public static boolean restored() {
+    return restored;
+  }
+
+  public static void markRestored() {
+    restored = true;
   }
 }

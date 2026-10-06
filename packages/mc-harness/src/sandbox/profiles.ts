@@ -206,6 +206,7 @@ function stormImageProfile(image: string) {
       ONLINE_MODE: "FALSE",
       MEMORY: "3G",
       SPAWN_PROTECTION: "0",
+      CFG_PROXY_PROTOCOL: "false",
       STORM_BRAIN_BEARER_TOKEN: "storm-sandbox-brain-token",
       DISCORD_BOT_TOKEN: "invalid-storm-fixture-token",
       DISCORD_CHANNEL_ID: "1",

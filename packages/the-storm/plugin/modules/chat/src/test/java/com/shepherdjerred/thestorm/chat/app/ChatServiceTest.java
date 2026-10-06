@@ -39,7 +39,7 @@ final class ChatServiceTest {
     var text = "😀".repeat(2000);
     var attempt = new MessagingPolicy.Attempt(ALICE, "Alice", false, false, BOB, text, 2000);
     assertThat(service.letter(attempt).isOk()).isTrue();
-    service.letterDelivered(ALICE, text);
+    // The repeat window begins when the application accepts the letter, before async persistence.
     assertThat(service.letter(attempt).isOk()).isFalse();
     service.ignore(BOB, new ChatProfile.IgnoreTarget(ALICE, "Alice", false));
     assertThat(
