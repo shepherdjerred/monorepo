@@ -1371,6 +1371,39 @@ and `pilotAcceptanceChecked: false`; frozen combat gates and blind human
 comparisons are separate acceptance work. It does not enable learned control
 in ordinary matches.
 
+Frozen strength evaluation runs every sealed pilot actor against the same
+native runtime and frozen authored/basic opponents:
+
+```bash
+bun run bots:evaluate --pilot .cache/rwf-pilot/trooper --device cpu --output .cache/rwf-evaluation/trooper
+bun run bots:evaluate --diagnostic --checkpoint .cache/rwf-ppo/diagnostic/learning/final --device cpu --output .cache/rwf-evaluation/diagnostic
+```
+
+`tools/learning/evaluation.json` fixes 200 games per opponent for each of the
+three seeds, paired red/blue at 100 fresh environment seeds. Each actor needs
+120 wins against authored and 160 against basic; draws and 60-second timeouts
+count as non-wins. Checkpoint hashes, original dataset hashes and native runtime
+must match the sealed pilot. Evaluation freezes its own tooling and verifies
+those inputs before and after each actor. Evaluation seeds cannot overlap that
+actor's training games. There are no optimizer steps or outcome-dependent
+retries. A fsynced claim prevents automatic repetition of an interrupted or
+failed pilot evaluation. Investigate such a run before any recovery.
+
+Unlike PPO collection, the evaluator keeps a duel's result when ticks are
+missed. It resets memory at observation gaps, records rejected actions and
+authored fallback counts, and fails the run on an interrupted duel instead of
+selecting a replacement. `games.jsonl` is flushed and fsynced after each result;
+native recordings are exported beside each seed's report. Each evaluation
+worker has an eight-hour hard window including startup; diagnostics have five
+minutes and only two games per opponent (`--matches 4` allows four). Diagnostic
+results cannot pass the gates. A completed failed real strength gate exits 1
+after cleanup and report export. Passing strength leaves the model unaccepted:
+blind preference, Java inference parity and production-shape load verification
+are separate requirements. No evaluation command enables ordinary learned play.
+Console-transport results include authored fallbacks, so inspect their counts
+when assessing the controller; they do not establish sustained Java inference
+or its two-tick delivery gate.
+
 Payouts go through an outbox in `rwf_match_player` and the economy's keyed
 transfers (`rwf:<matchId>:<uuid>`), so a crash between the match ending and
 the transfer pays exactly once on the next enable. Bots are never paid.
