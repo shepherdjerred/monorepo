@@ -308,6 +308,7 @@ def initialize(path: Path, request: str, image: str) -> JsonObject:
             "volumeSource": volume_source(volume),
             "services": services,
             "phase": "PREPARED",
+            "productionWriteAuthorized": False,
         }
     )
     save(path, journal)
@@ -1154,6 +1155,7 @@ def create_writer(path: Path, journal: JsonObject) -> JsonObject:
     # A writer can run either installation or whole-volume recovery. Revoke
     # the old installation before granting write access, even if the writer
     # exits without reporting which transaction it completed.
+    journal["productionWriteAuthorized"] = True
     if "installation" in journal:
         journal.object("installation")["phase"] = "WRITE_PENDING"
     for key in ("acceptance", "stoppingIncarnation", "stoppedIncarnation", "rollbackVerification"):
@@ -1844,6 +1846,71 @@ def release_rollback(path: Path, journal: JsonObject) -> None:
     reopen(path, journal, journal.string("rollbackImage"), journal.object("rollbackTemplate"))
 
 
+def abort(path: Path, journal: JsonObject) -> None:
+    """Reopen the untouched original volume only before any production write authorization."""
+    if journal.get("productionWriteAuthorized") is not False or any(
+        key in journal
+        for key in (
+            "writerUid", "previousWriterUid", "installation", "wholeVolumeRecovery", "privateStartup",
+            "acceptance", "stoppingIncarnation", "stoppedIncarnation", "rollbackVerification",
+        )
+    ) or journal.get("writerCreationPending"):
+        raise ValueError("Abort requires no production writer authorization, installation or candidate startup")
+    claim = read("pvc", CLAIM)
+    volume = read("pv", journal.string("volumeName"), "")
+    if (
+        (
+            claim.object("metadata").get("uid"),
+            claim.object("status").get("phase"),
+            claim.object("spec").get("volumeName"),
+        )
+        != (journal.string("claimUid"), "Bound", journal.string("volumeName"))
+        or volume.object("metadata").get("uid") != journal.string("volumeUid")
+        or volume_source(volume) != journal.strings("volumeSource")
+    ):
+        raise ValueError("Abort requires the recorded original volume and claim")
+    expected = JsonObject({
+        "status": "NO_PRODUCTION_WRITE_AUTHORIZATION", "requestId": journal.string("requestId"),
+        "serverUid": journal.string("serverUid"), "volumeUid": journal.string("volumeUid"),
+        "rollbackImage": journal.string("rollbackImage"),
+        "templateSha256": hashlib.sha256(
+            json.dumps(journal.object("rollbackTemplate"), sort_keys=True).encode("utf-8")
+        ).hexdigest(),
+    })
+    receipt = path.with_name(path.name + ".pre-install-abort.json")
+    if journal.string("phase") == "LEASED_OFFLINE":
+        require_offline(journal, readers=True)
+        assert_rollback_template(read("statefulset", SERVER), journal)
+        assert_gitops_image(journal, journal.string("rollbackImage"))
+        # Even terminated, unrecorded source-volume pods make prior write access uncertain.
+        pods = JsonObject.parse(run(["-n", NAMESPACE, "get", "pods", "-o", "json"])).objects("items")
+        for pod in pods:
+            if any(
+                entry.object("persistentVolumeClaim", {}).get("claimName") == CLAIM
+                for entry in pod.object("spec").objects("volumes", [])
+            ):
+                assert_reader(pod, journal, NAMESPACE)
+        remove_readers(path, journal)
+        require_offline(journal)
+        save(receipt, expected)
+        journal["preInstallAbort"] = {"path": str(receipt.resolve()), "sha256": restoration_files.digest(receipt)}
+        save(path, journal)
+    elif journal.string("phase") not in ("RELEASING", "REOPENED"):
+        raise ValueError("Abort requires stopped pre-install maintenance or its recorded reopening")
+    evidence = journal.object("preInstallAbort")
+    proof_path = Path(evidence.string("path"))
+    if (
+        proof_path != receipt.resolve()
+        or proof_path.is_symlink()
+        or not proof_path.is_file()
+        or restoration_files.digest(proof_path) != evidence.string("sha256")
+        or JsonObject.parse(proof_path.read_bytes()) != expected
+        or journal.get("readersRemoved") is not True
+    ):
+        raise ValueError("Abort reopening requires unchanged original-volume evidence and reader cleanup")
+    reopen(path, journal, journal.string("rollbackImage"), journal.object("rollbackTemplate"))
+
+
 def reopen(
     path: Path, journal: JsonObject, expected_image: str, accepted_template: JsonObject
 ) -> None:
@@ -1925,6 +1992,7 @@ def main() -> None:
             "private-stop",
             "accept",
             "release",
+            "abort",
             "whole-rollback",
             "verify-rollback",
             "release-rollback",
@@ -1978,6 +2046,8 @@ def main() -> None:
             accept(arguments.journal, journal, arguments.evidence)
         elif arguments.operation == "release":
             release(arguments.journal, journal)
+        elif arguments.operation == "abort":
+            abort(arguments.journal, journal)
         elif arguments.operation == "whole-rollback":
             whole_rollback(arguments.journal, journal)
         elif arguments.operation == "verify-rollback":
