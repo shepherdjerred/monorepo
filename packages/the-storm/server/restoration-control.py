@@ -763,7 +763,8 @@ def writer_manifest(journal: JsonObject) -> JsonObject:
         "limits": {"cpu": "2", "memory": "512Mi", "ephemeral-storage": "40Gi"},
     }
     container["volumeMounts"] = [
-        {"name": "data", "mountPath": "/data", "readOnly": False},
+        # Kubernetes omits false volumeMount.readOnly values in pod readbacks.
+        {"name": "data", "mountPath": "/data"},
         {"name": "scratch", "mountPath": "/scratch"},
         {"name": "temporary", "mountPath": "/tmp"},
     ]
@@ -785,6 +786,15 @@ def assert_writer(pod: JsonObject, journal: JsonObject) -> None:
         or pod.object("spec").get("initContainers")
         or pod.object("spec").get("ephemeralContainers")
         or unsafe_helper(pod, expected, write=True)
+        or any(
+            mount.get("readOnly", False) is not False
+            for container in pod.object("spec").objects("containers")
+            for mount in container.objects("volumeMounts")
+        )
+        or any(
+            volume.object("persistentVolumeClaim", {}).get("readOnly", False) is not False
+            for volume in pod.object("spec").objects("volumes")
+        )
         or any(
             container.get("env") or container.get("envFrom") for container in pod.object("spec").objects("containers")
         )
