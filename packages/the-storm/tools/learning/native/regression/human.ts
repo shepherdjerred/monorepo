@@ -6,7 +6,7 @@ import { z } from "zod";
 import type { Bot } from "mineflayer";
 import type { RegressionClient } from "#learning/native/regression-client.ts";
 import { captureRegression } from "./capture.ts";
-import { humanCombat } from "./human-gate.ts";
+import { humanCombat, humanRecording } from "./human-gate.ts";
 import { joinTrooper } from "./player.ts";
 import { digestFile, jsonText, seal } from "#learning/preference/ledger.ts";
 
@@ -42,27 +42,10 @@ async function verify() {
   if (originals.length !== 1 || originals[0] === undefined)
     throw new Error("Original human recording missing or duplicated");
   const recording = path.join(output, "recordings", originals[0]);
-  const rows = gunzipSync(await Bun.file(recording).arrayBuffer())
-    .toString("utf8")
-    .trim()
-    .split("\n");
-  const header = rows[0]?.split("\t");
-  const humanRoster = rows.filter(
-    (row) => row.startsWith("R\t") && row.split("\t")[4] === "false",
+  humanRecording(
+    gunzipSync(await Bun.file(recording).arrayBuffer()).toString("utf8"),
+    measured.match,
   );
-  const controls = rows.filter((row) => row.startsWith("N\t"));
-  if (
-    header?.[0] !== "H" ||
-    header[1] !== "3" ||
-    header[2] !== measured.match ||
-    rows.filter((row) => row.startsWith("X\t")).length !== 1 ||
-    humanRoster.length !== 1 ||
-    controls.length === 0 ||
-    controls.some((row) => row.split("\t")[11] !== "MISSING")
-  )
-    throw new Error(
-      "Original human-case recording lacks its terminal or automated-client provenance",
-    );
   await seal(
     path.join(output, "verification.json"),
     jsonText({

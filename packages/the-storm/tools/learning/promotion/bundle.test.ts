@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { prepareBundle } from "./bundle.ts";
-import { RegressionEvidence } from "./contract.ts";
+import { Suite } from "#learning/native/evidence/wire.ts";
 import { hashFile } from "./archive.ts";
 import { collectionFixture } from "./test-support/collection-fixture.ts";
 import { PilotLedger } from "#learning/pilot-ledger.ts";
@@ -32,6 +32,22 @@ it("assembles portable original evidence while leaving the manifest unaccepted",
   const request = await collectionFixture(directory);
   const original = await readFile(path.join(request.model, "manifest.json"));
   const proof = await prepareBundle(request);
+  const suite = Suite.parse(await readJson(request.regressions));
+  expect(
+    await readJson(
+      path.join(
+        request.output,
+        `evidence/${proof.regressions.evidence_sha256}.blob`,
+      ),
+    ),
+  ).toEqual(suite.measured);
+  expect(
+    proof.files.some((file) => file.sha256 === suite.measured_sha256),
+  ).toBe(true);
+  const originalSuiteDigest = await hashFile(request.regressions);
+  expect(proof.files.some((file) => file.sha256 === originalSuiteDigest)).toBe(
+    true,
+  );
   expect(proof.preference.learned_votes).toBe(15);
   expect(proof.pilot.seeds.map((seed) => seed.seed)).toEqual([11, 12, 13]);
   expect(proof.load.phases.map((phase) => phase.bots)).toEqual([20, 50, 100]);
@@ -103,16 +119,17 @@ it("rejects changed original frozen weights before archiving evidence", async ()
 
 it("rejects a regression receipt with skipped required checks", async () => {
   const request = await collectionFixture(directory);
-  const evidence = RegressionEvidence.parse(
-    await readJson(request.regressions),
-  );
-  const first = evidence.cases[0];
+  const evidence = Suite.parse(await readJson(request.regressions));
+  const first = evidence.measured.cases[0];
   if (first === undefined) throw new Error("required regression case missing");
   await writeFile(
     request.regressions,
     jsonText({
       ...evidence,
-      cases: [{ ...first, skipped: 1 }, ...evidence.cases.slice(1)],
+      measured: {
+        ...evidence.measured,
+        cases: [{ ...first, skipped: 1 }, ...evidence.measured.cases.slice(1)],
+      },
     }),
   );
   await expect(prepareBundle(request)).rejects.toThrow();

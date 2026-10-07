@@ -6,7 +6,11 @@ import { PreferenceLedger, sha } from "#learning/preference/ledger.ts";
 import { Digest } from "#learning/preference/gate.ts";
 import { strengthResult } from "#learning/evaluation-gate.ts";
 import type { Snapshot } from "./archive.ts";
-import { Proof, RegressionEvidence, contract } from "./contract.ts";
+import { Proof } from "./contract.ts";
+import {
+  originalSuite,
+  measurementsFile,
+} from "#learning/native/evidence/verify.ts";
 import { root } from "#learning/sandbox.ts";
 
 export type Request = {
@@ -176,30 +180,24 @@ export async function collectPreference(
 export async function collectRegressions(
   snapshot: Snapshot,
   request: Request,
-  candidate: { actor_sha256: string; native_sha256: string },
+  candidate: {
+    actor_sha256: string;
+    native_sha256: string;
+    source_manifest_sha256: string;
+  },
 ) {
-  const evidence = RegressionEvidence.parse(
-    await snapshot.json(request.regressions),
+  const evidence = await originalSuite(
+    snapshot,
+    request.regressions,
+    candidate,
   );
-  if (
-    evidence.actor_sha256 !== candidate.actor_sha256 ||
-    evidence.native_sha256 !== candidate.native_sha256
-  )
-    throw new Error(
-      "regression evidence differs from original actor or native runtime",
-    );
-  if (
-    JSON.stringify(evidence.cases.map((test) => test.name)) !==
-    JSON.stringify(contract.regressionCases)
-  )
-    throw new Error("regression evidence differs from required fixed cases");
   return Proof.shape.regressions.parse({
     actor_sha256: evidence.actor_sha256,
     native_sha256: evidence.native_sha256,
     cases: evidence.cases,
     native_floors: evidence.native_floors,
     simulation_floors: evidence.simulation_floors,
-    evidence_sha256: await snapshot.add(request.regressions),
+    evidence_sha256: await snapshot.add(measurementsFile(request.regressions)),
   });
 }
 
