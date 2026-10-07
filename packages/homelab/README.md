@@ -65,6 +65,11 @@ listener must avoid Temporal's frontend, history, matching, worker, membership,
 and HTTP ports. The synthesized chart tests check that separation and the
 gateway's Service, network policy, and probe wiring.
 
+Built chart tests validate repo-declared container port names against the API
+server's 15-character and syntax limits. This includes sidecars in external
+Helm values and operator overrides, whose port names are not checked by their
+parent Application or custom-resource schemas.
+
 Deploys are driven by the generated Woodpecker pipeline. The
 [CI pipeline guide](../docs/wiki/src/content/docs/explanation/ci-pipeline-shape.md)
 explains its change selection and release ordering:

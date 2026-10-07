@@ -342,9 +342,7 @@ export function createSeaweedfsApp(chart: Chart) {
           args: [
             'printf "%s" "$CADDY_CONFIG" > /tmp/Caddyfile && exec caddy run --config /tmp/Caddyfile --adapter caddyfile',
           ],
-          ports: [
-            { name: "authenticated-ui", containerPort: FILER_GATEWAY_PORT },
-          ],
+          ports: [{ name: "auth-ui", containerPort: FILER_GATEWAY_PORT }],
           env: [
             { name: "CADDY_CONFIG", value: FILER_GATEWAY_CONFIG },
             {
