@@ -1492,6 +1492,25 @@ exclusive receipt binds the actor, export manifest, checkpoint, weights,
 observation contract and sample file by SHA-256. It leaves the model unaccepted;
 strength, blind preference, native load and regression gates are still required.
 
+Accepted Java loading requires an additional `promotion_sha256` field and its
+matching `promotion.json`. The versioned `rwf-actor-promotion.json` resource fixes
+the gate thresholds and proof field inventory. `source-manifest.json` retains
+the original unaccepted export bytes; the accepted manifest may change only its
+acceptance label and add the promotion fingerprint. All evidence is portable:
+each catalogue entry has the relative name `evidence/<sha256>.blob`. Loading
+checks every checksum, requires every referenced artifact, and rejects symlinks,
+unknown proof fields and missing evidence before opening a native session.
+
+The runtime checks all three original eight-hour seed budgets, the first sealed
+candidate, 200 matches against each opponent, the sealed twenty-pair human
+ballot, the exact Java parity receipt, the 20/50/100-body load windows, and the
+required regression inventory and advancement floors. It recounts strength
+outcomes and blind votes and rebuilds load coverage, timing and delivery from
+the original command stream. Evidence remains unaccepted until assembled into
+a complete bundle. These checks protect artifact integrity and enforce the
+fixed gates; genuine human recordings and votes must come from the recording
+and review workflows above.
+
 The native
 diagnostic runs both sides against authored and basic opponents with no Python
 action transport. It freezes artifact and runtime hashes, retains every result,

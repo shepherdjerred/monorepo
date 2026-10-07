@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.rwfbots.adapter.inference;
 
 import com.shepherdjerred.thestorm.rwfbots.adapter.content.LearningContract;
+import com.shepherdjerred.thestorm.rwfbots.adapter.inference.promotion.PromotionBundle;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -47,6 +48,7 @@ public final class ActorManifest {
     try {
       var manifest = JSON.readTree(Files.readString(directory.resolve("manifest.json")));
       validate(manifest, acceptance);
+      if (acceptance == Acceptance.ACCEPTED) PromotionBundle.validate(directory, manifest);
       var model = Files.readAllBytes(directory.resolve("actor.onnx"));
       if (!sha256(model).equals(manifest.path("onnx_sha256").asString()))
         throw new IllegalArgumentException("ONNX artifact hash mismatch");
@@ -57,7 +59,9 @@ public final class ActorManifest {
   }
 
   public static void validate(JsonNode manifest, Acceptance acceptance) {
-    if (!manifest.isObject() || !Set.copyOf(manifest.propertyNames()).equals(FIELDS))
+    var fields = new java.util.HashSet<>(FIELDS);
+    if (acceptance == Acceptance.ACCEPTED) fields.add("promotion_sha256");
+    if (!manifest.isObject() || !Set.copyOf(manifest.propertyNames()).equals(fields))
       throw new IllegalArgumentException("unknown or missing actor manifest fields");
     expect(manifest, "schema", 1);
     expect(manifest, "kind", "rwf-trooper-ppo");
@@ -85,7 +89,12 @@ public final class ActorManifest {
     validateParity(manifest.path("parity"));
     if (!manifest.path("training").isObject())
       throw new IllegalArgumentException("missing actor training provenance");
-    if (acceptance == Acceptance.ACCEPTED) validateAcceptedTraining(manifest.path("training"));
+    if (acceptance == Acceptance.ACCEPTED) {
+      if (!manifest.path("promotion_sha256").isString()
+          || !manifest.path("promotion_sha256").asString().matches("[a-f0-9]{64}"))
+        throw new IllegalArgumentException("accepted actor lacks a promotion bundle fingerprint");
+      validateAcceptedTraining(manifest.path("training"));
+    }
   }
 
   private static void validateAcceptedTraining(JsonNode training) {

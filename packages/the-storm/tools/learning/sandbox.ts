@@ -59,6 +59,10 @@ export async function frozenManifest() {
     ),
     path.join(
       root,
+      "plugin/modules/rwfbots/src/main/resources/rwf-actor-promotion.json",
+    ),
+    path.join(
+      root,
       "plugin/modules/rwfbots/src/main/resources/rwf-inference-load.json",
     ),
     ...sources.map((file) => path.join(learning, file)),
