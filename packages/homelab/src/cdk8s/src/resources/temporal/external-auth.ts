@@ -4,7 +4,8 @@ import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 
 export const TEMPORAL_EXTERNAL_AUTH_SECRET = "temporal-external-auth";
-export const TEMPORAL_EXTERNAL_GATEWAY_PORT = 7234;
+// The server also runs history on 7234 in this Pod's shared network namespace.
+export const TEMPORAL_EXTERNAL_GATEWAY_PORT = 17_233;
 export const TEMPORAL_UI_UPSTREAM_PORT = 8081;
 
 export const TEMPORAL_GRPC_GATEWAY_CONFIG = `{

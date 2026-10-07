@@ -59,6 +59,12 @@ the existing sync timeout. Prometheus health requires current-generation
 `Available` and `Reconciled` conditions; failed reconciliation still fails the
 sync. ArgoCD's configuration reconciles before the monitoring application wave.
 
+Temporal's external gRPC Service keeps port 7233 and forwards to its authenticated
+gateway on port 17233. The gateway shares the server's Pod network, so its
+listener must avoid Temporal's frontend, history, matching, worker, membership,
+and HTTP ports. The synthesized chart tests check that separation and the
+gateway's Service, network policy, and probe wiring.
+
 Deploys are driven by the generated Woodpecker pipeline. The
 [CI pipeline guide](../docs/wiki/src/content/docs/explanation/ci-pipeline-shape.md)
 explains its change selection and release ordering:
