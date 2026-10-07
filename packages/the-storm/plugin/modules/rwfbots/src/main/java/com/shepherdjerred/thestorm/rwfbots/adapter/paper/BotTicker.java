@@ -227,6 +227,7 @@ public final class BotTicker {
             bot.uuid(),
             epoch,
             input,
+            input.target().map(target -> match.ids().uuid(target.id()).orElseThrow()),
             step,
             roster.harness().active(match.matchId())
                     || (learning.active(match.matchId())

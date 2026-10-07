@@ -1697,6 +1697,25 @@ scope and supplies no seven-case regression pass or promotion input. Acceptance
 requires the full regression inventory, native combat checks and simulation
 floors above; this command does not train, accept a model or enable rollout.
 
+To verify Java-controlled sword damage against a player entering through
+`/rwf join`, use a separate fresh diagnostic directory:
+
+```bash
+bun run bots:verify-human-combat --model .cache/rwf-java-parity/exact-candidate/onnx --output .cache/rwf-regression-capture/human-combat
+```
+
+The automated network player joins normally. The fixture picks Trooper kits
+through the lobby API during a five-second countdown and offers the player to a
+living enemy at 1.75 blocks. It retains native game mode, immunity, health and
+contact probes. A pass requires actual health loss from an applied Java sword
+command targeting that exact player in the same native tick. It keeps the player
+connected through the original match ending, drains inference and replays the
+whole journal. The version-2 journal includes target UUIDs and player probes;
+older journals fail its contract check. The original schema-3 recording must
+contain one player and incomplete (`MISSING`) control provenance from this
+automated client, so it cannot supply human demonstrations. This command covers
+the player-damage diagnostic only and produces no accepted model or rollout.
+
 The producer verifies the sealed pilot and human ballot, recounts the original
 strength outcomes, recomputes the full raw load stream, and replays the original
 parity samples against the frozen Python weights and exact CPU ONNX export.

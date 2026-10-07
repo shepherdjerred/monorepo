@@ -36,7 +36,7 @@ export async function frozenManifest() {
       readdir(learning),
       readdir(path.join(learning, "preference")),
       readdir(path.join(learning, "promotion")),
-      readdir(path.join(learning, "native")),
+      readdir(path.join(learning, "native"), { recursive: true }),
       readdir(path.join(content, "rwfbots/personalities")),
     ]);
   const sources = [
@@ -50,6 +50,9 @@ export async function frozenManifest() {
   const files = [
     stormJar,
     fixturesJar,
+    ...["bot.ts", "rcon.ts", "pins.ts", "rwf-trails.ts"].map((file) =>
+      path.join(root, "tests/e2e/harness", file),
+    ),
     path.join(root, "scripts/bots/learning/dataset.py"),
     path.join(root, "scripts/bots/learning/preference_recording.py"),
     path.join(content, "rwf.yml"),
@@ -121,7 +124,7 @@ export async function frozenManifest() {
 export async function openPaperDuels(
   output: string,
   learningModelDir?: string,
-  profile: "duel" | "load" | "regression" = "duel",
+  profile: "duel" | "load" | "regression" | "regression-player" = "duel",
 ) {
   const token = randomBytes(24).toString("hex");
   const brain = startFakeBrain(token);
@@ -137,7 +140,7 @@ export async function openPaperDuels(
       async () => {
         if (
           server !== undefined &&
-          (observerStarted || profile === "regression")
+          (observerStarted || profile.startsWith("regression"))
         )
           await Bun.write(
             path.join(output, "server.log"),
@@ -175,10 +178,10 @@ export async function openPaperDuels(
       ),
       rwf: {
         ...rwfTestSettings,
-        countdown: "PT1S",
+        countdown: profile === "regression-player" ? "PT5S" : "PT1S",
         endLinger: "PT1S",
-        targetCombatants: profile === "regression" ? 8 : 2,
-        maxCombatants: profile === "regression" ? 16 : 2,
+        targetCombatants: profile.startsWith("regression") ? 8 : 2,
+        maxCombatants: profile.startsWith("regression") ? 16 : 2,
       },
       exportRecordingsDir: path.join(output, "recordings"),
       sweep: {
@@ -243,6 +246,7 @@ export async function openPaperDuels(
     const address = `127.0.0.1:${server.info.gamePort.toString()}`;
     return {
       console: rcon,
+      playerAddress: { host: server.info.host, port: server.info.gamePort },
       duels: new DuelClient(rcon),
       inference: new InferenceClient(rcon),
       load: new InferenceLoadClient(rcon),

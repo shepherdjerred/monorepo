@@ -3,6 +3,8 @@ package com.shepherdjerred.thestorm.e2e;
 import com.destroystokyo.paper.event.server.ServerTickEndEvent;
 import com.destroystokyo.paper.event.server.ServerTickStartEvent;
 import com.shepherdjerred.thestorm.TheStormPlugin;
+import com.shepherdjerred.thestorm.rwf.app.BotActions;
+import com.shepherdjerred.thestorm.rwf.app.CombatantActions;
 import com.shepherdjerred.thestorm.rwf.app.MatchEvents;
 import com.shepherdjerred.thestorm.rwf.app.MatchNotification;
 import com.shepherdjerred.thestorm.rwf.app.MatchView;
@@ -56,9 +58,14 @@ final class RegressionFixtures implements BasicCommand, CombatHarness.Controller
               "Action", Action.class,
               "Tick", Tick.class,
               "Damage", Damage.class,
+              "PlayerProbe", RegressionPlayers.PlayerProbe.class,
               "Transition", Transition.class,
               "Fighter", Fighter.class));
   private final JavaPlugin plugin;
+  private final RegressionPlayers players;
+  private Optional<UUID> subject = Optional.empty();
+  private boolean prepared;
+  private boolean preparing;
   private Optional<CompletableFuture<BatchedInference>> loading = Optional.empty();
   private Optional<BatchedInference> inference = Optional.empty();
   private Optional<MatchEvents.Subscription> subscription = Optional.empty();
@@ -70,6 +77,7 @@ final class RegressionFixtures implements BasicCommand, CombatHarness.Controller
   private final List<Action> actions = new ArrayList<>();
   private final List<Tick> ticks = new ArrayList<>();
   private final List<Damage> damage = new ArrayList<>();
+  private final List<RegressionPlayers.PlayerProbe> probes = new ArrayList<>();
   private final List<Transition> transitions = new ArrayList<>();
   private final IdentityHashMap<EntityDamageByEntityEvent, Double> healthBefore =
       new IdentityHashMap<>();
@@ -93,6 +101,7 @@ final class RegressionFixtures implements BasicCommand, CombatHarness.Controller
       int heldSlot,
       boolean usingItem,
       @Nullable Integer targetId,
+      @Nullable UUID targetBody,
       double x,
       double y,
       double z,
@@ -137,6 +146,7 @@ final class RegressionFixtures implements BasicCommand, CombatHarness.Controller
 
   RegressionFixtures(JavaPlugin plugin) {
     this.plugin = plugin;
+    players = new RegressionPlayers(plugin);
   }
 
   void register() {
@@ -176,6 +186,7 @@ final class RegressionFixtures implements BasicCommand, CombatHarness.Controller
       actions.clear();
       ticks.clear();
       damage.clear();
+      probes.clear();
       transitions.clear();
     } catch (IllegalArgumentException | IllegalStateException failure) {
       source
@@ -193,10 +204,30 @@ final class RegressionFixtures implements BasicCommand, CombatHarness.Controller
       // Sampling drains the original journal only after it has been encoded successfully.
     } else if (args.length == 3 && args[0].equals("arm")) {
       arm(args[1], Integer.parseInt(args[2]));
+    } else if (args.length == 2 && args[0].equals("player")) {
+      if (!caseName.equals("human-combat") || !result.equals("armed") || subject.isPresent())
+        throw new IllegalStateException(
+            "register one player before the original human case starts");
+      var id = UUID.fromString(args[1]);
+      players.requireOnlinePlayer(id);
+      subject = Optional.of(id);
+    } else if (args.length == 1 && args[0].equals("offer")) {
+      if (!caseName.equals("human-combat") || !result.equals("live"))
+        throw new IllegalStateException("offer requires the original live human case");
+      probes.add(players.offer(current(), subject.orElseThrow(), next()));
+    } else if (args.length == 1 && args[0].equals("prepare")) {
+      if (!caseName.equals("human-combat")
+          || prepared
+          || subject.isEmpty()
+          || current().phase() != MatchState.Phase.COUNTDOWN)
+        throw new IllegalStateException("prepare one human Trooper case during countdown");
+      prepared = true;
+      prepareTroopers(current());
     } else if (args.length == 1 && args[0].equals("release")) {
       release();
     } else {
-      throw new IllegalArgumentException("load, sample, arm <case> <bot-slots>, release");
+      throw new IllegalArgumentException(
+          "load, sample, arm <case> <bot-slots>, player <uuid>, prepare, offer, release");
     }
   }
 
@@ -218,6 +249,7 @@ final class RegressionFixtures implements BasicCommand, CombatHarness.Controller
     state.put("actions", List.copyOf(actions));
     state.put("ticks", List.copyOf(ticks));
     state.put("damage", List.copyOf(damage));
+    state.put("probes", List.copyOf(probes));
     state.put("transitions", List.copyOf(transitions));
     state.put("inference", inference.map(BatchedInference::metrics).orElse(null));
     PROTOCOL.validate(state);
@@ -235,7 +267,11 @@ final class RegressionFixtures implements BasicCommand, CombatHarness.Controller
         || !lobby.combatants().isEmpty()
         || !lobby.mapId().orElseThrow().equals("training-yard"))
       throw new IllegalStateException("need an empty training-yard lobby");
-    if (!actions.isEmpty() || !ticks.isEmpty() || !damage.isEmpty() || !transitions.isEmpty())
+    if (!actions.isEmpty()
+        || !ticks.isEmpty()
+        || !damage.isEmpty()
+        || !probes.isEmpty()
+        || !transitions.isEmpty())
       throw new IllegalStateException("previous journal must be drained before arming");
     storm().service(CombatHarness.class).attachAuthored(slots, this);
     model.reset(
@@ -244,6 +280,8 @@ final class RegressionFixtures implements BasicCommand, CombatHarness.Controller
     caseName = name;
     sequence = 0;
     requests.clear();
+    subject = Optional.empty();
+    prepared = false;
     match = Optional.of(lobby.matchId());
     members.clear();
     usedCases.add(name);
@@ -265,7 +303,7 @@ final class RegressionFixtures implements BasicCommand, CombatHarness.Controller
   }
 
   private long next() {
-    if (actions.size() + ticks.size() + damage.size() + transitions.size()
+    if (actions.size() + ticks.size() + damage.size() + probes.size() + transitions.size()
         >= PROTOCOL.maximumRows())
       throw new IllegalStateException("regression journal was not drained before its bound");
     return ++sequence;
@@ -294,10 +332,33 @@ final class RegressionFixtures implements BasicCommand, CombatHarness.Controller
                             f.kit().orElse(""),
                             f.alive()))
                 .toList()));
+    if (prepared && state.phase() == MatchState.Phase.COUNTDOWN) prepareTroopers(state);
     if (state.phase() == MatchState.Phase.LIVE) result = "live";
     else if (state.phase() == MatchState.Phase.ENDED) result = "ended";
     else if (state.phase() == MatchState.Phase.RESETTING && result.equals("live"))
       result = "stopped";
+  }
+
+  private void prepareTroopers(MatchState state) {
+    if (preparing) return;
+    preparing = true;
+    try {
+      var actions =
+          BotActions.over(
+              storm().service(CombatantActions.class), storm().service(MatchView.class));
+      for (var fighter : state.combatants()) {
+        if (fighter.kit().filter("trooper"::equals).isEmpty())
+          actions
+              .pickKit(fighter.uuid(), "trooper")
+              .ifPresent(
+                  refusal -> {
+                    throw new IllegalStateException(
+                        "native Trooper preparation refused: " + refusal);
+                  });
+      }
+    } finally {
+      preparing = false;
+    }
   }
 
   @EventHandler
@@ -436,6 +497,7 @@ final class RegressionFixtures implements BasicCommand, CombatHarness.Controller
             self.heldSlot(),
             self.usingItem(),
             frame.input().target().map(target -> target.id().value()).orElse(null),
+            frame.targetBody().orElse(null),
             self.pos().x(),
             self.pos().y(),
             self.pos().z(),

@@ -4,6 +4,7 @@ import {
   regressionJournal,
   type RegressionCommand,
 } from "./regression-gate.ts";
+import { humanCombat } from "./regression/human-gate.ts";
 
 const match = "11111111-1111-4111-8111-111111111111";
 const body = "22222222-2222-4222-8222-222222222222";
@@ -29,8 +30,8 @@ const empty = {
 /** Synthetic boundary fixtures only; none are native or model acceptance evidence. */
 function journal(): RegressionCommand[] {
   const sample = RegressionSample.parse({
-    protocol: 1,
-    contract: "rwf-regression-capture-v1",
+    protocol: 2,
+    contract: "rwf-regression-capture-v2",
     ready: true,
     caseName,
     match,
@@ -40,6 +41,7 @@ function journal(): RegressionCommand[] {
     actions: [],
     ticks: [],
     damage: [],
+    probes: [],
     transitions: [],
     inference: empty,
   });
@@ -55,6 +57,7 @@ function journal(): RegressionCommand[] {
     heldSlot: 1,
     usingItem: false,
     targetId: 2,
+    targetBody: opponent,
     x: 2,
     y: 65,
     z: 3,
@@ -198,7 +201,141 @@ function selected(rows: RegressionCommand[]) {
   return { action, ticket };
 }
 
+function humanJournal() {
+  const rows = journal();
+  for (const row of rows) {
+    if (row.state.caseName !== "") row.state.caseName = "human-combat";
+    if (row.command.startsWith("arm ")) row.command = "arm human-combat 7";
+  }
+  const state = terminal(rows);
+  for (const row of state.transitions) {
+    for (const fighter of row.fighters) {
+      fighter.kit = "trooper";
+      if (fighter.body === opponent) {
+        fighter.bot = false;
+        fighter.personality = "";
+      }
+    }
+    row.fighters.push(
+      ...Array.from({ length: 6 }, (_, index) => ({
+        body: `44444444-4444-4444-8444-${index.toString().padStart(12, "0")}`,
+        bot: true,
+        personality: `boundary-${index.toString()}`,
+        team: "red" as const,
+        kit: "trooper" as const,
+        alive: true,
+      })),
+    );
+  }
+  const first = state.actions[0];
+  const second = state.actions[1];
+  const firstTick = state.ticks[0];
+  const secondTick = state.ticks[1];
+  const ending = state.transitions[1];
+  const damage = state.damage[0];
+  if (
+    first === undefined ||
+    second === undefined ||
+    firstTick === undefined ||
+    secondTick === undefined ||
+    ending === undefined ||
+    damage === undefined
+  )
+    throw new Error("synthetic human case missing rows");
+  first.sequence = 3;
+  firstTick.sequence = 4;
+  second.sequence = 5;
+  damage.sequence = 6;
+  ending.sequence = 7;
+  secondTick.sequence = 8;
+  state.sequence = 8;
+  state.probes = [
+    {
+      sequence: 2,
+      serverTick: 100,
+      match,
+      player: opponent,
+      bot: body,
+      gameMode: "SURVIVAL",
+      invulnerable: false,
+      playerAlive: true,
+      botAlive: true,
+      botKit: "trooper",
+      health: 20,
+      absorption: 0,
+      playerX: 2,
+      playerY: 65,
+      playerZ: 4.75,
+      botX: 2,
+      botY: 65,
+      botZ: 3,
+      botYaw: 0,
+    },
+  ];
+  return rows;
+}
+
 describe("original native regression journal", () => {
+  it("requires the current target/probe wire instead of silently accepting old capture rows", () => {
+    const rows = journal();
+    expect(() =>
+      RegressionSample.parse({
+        ...rows[0]?.state,
+        protocol: 1,
+        contract: "rwf-regression-capture-v1",
+      }),
+    ).toThrow();
+    const { action } = selected(rows);
+    action.targetBody = "55555555-5555-4555-8555-555555555555";
+    expect(() => regressionJournal(rows, caseName)).toThrow(/target body/u);
+  });
+
+  it("binds actual player damage to an original applied Java attack and vulnerable contact", () => {
+    const result = humanCombat(
+      regressionJournal(humanJournal(), "human-combat"),
+    );
+    expect(result).toEqual({
+      player: opponent,
+      contactProbes: 1,
+      appliedPlayerAttacks: 1,
+      confirmedPlayerHits: 1,
+      actualPlayerDamage: 2,
+    });
+  });
+
+  it.each([
+    "spectator",
+    "invulnerable",
+    "foreign",
+    "distance",
+    "target",
+    "victim",
+    "clock",
+    "unapplied",
+  ])("rejects player combat with %s evidence", (edit) => {
+    const rows = humanJournal();
+    const state = terminal(rows);
+    const probe = state.probes[0];
+    const damage = state.damage[0];
+    if (probe === undefined || damage === undefined)
+      throw new Error("synthetic human proof missing");
+    if (edit === "spectator") probe.gameMode = "SPECTATOR";
+    if (edit === "invulnerable") probe.invulnerable = true;
+    if (edit === "foreign") probe.player = body;
+    if (edit === "distance") probe.playerZ = 7;
+    if (edit === "target") selected(rows).action.targetBody = body;
+    if (edit === "victim") damage.victim = body;
+    if (edit === "clock") damage.serverTick = 100;
+    if (edit === "unapplied") {
+      const { action } = selected(rows);
+      action.decision = "unavailable";
+      action.ticket = null;
+      action.commands = [...action.authored];
+    }
+    expect(() =>
+      humanCombat(regressionJournal(rows, "human-combat")),
+    ).toThrow();
+  });
   it("recounts selections, cancelled native damage and terminal interrupted batches", () => {
     const measured = regressionJournal(journal(), caseName);
     expect(measured.counts).toEqual({
@@ -233,7 +370,10 @@ describe("original native regression journal", () => {
       const rows = journal();
       const { action } = selected(rows);
       if (edit === "kit") action.kit = "LONGBOW";
-      else action.targetId = null;
+      else {
+        action.targetId = null;
+        action.targetBody = null;
+      }
       expect(() => regressionJournal(rows, caseName)).toThrow(
         /roster|eligibility/u,
       );

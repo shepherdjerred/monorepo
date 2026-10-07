@@ -121,6 +121,7 @@ export function regressionJournal(raw: unknown, expectedCase: string) {
     actions: stream.actions,
     ticks: stream.ticks,
     damage: stream.damage,
+    probes: stream.probes,
     transitions: stream.transitions,
     counts,
     batchRows,

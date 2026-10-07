@@ -33,6 +33,7 @@ export const RegressionAction = z.strictObject({
   heldSlot: Count.max(8),
   usingItem: z.boolean(),
   targetId: Count.nullable(),
+  targetBody: z.uuid().nullable(),
   x: Scalar,
   y: Scalar,
   z: Scalar,
@@ -63,6 +64,27 @@ export const RegressionDamage = z.strictObject({
   velocityY: Scalar,
   velocityZ: Scalar,
 });
+export const RegressionPlayerProbe = z.strictObject({
+  sequence: Count.positive(),
+  serverTick: Count,
+  match: z.uuid(),
+  player: z.uuid(),
+  bot: z.uuid(),
+  gameMode: z.enum(["SURVIVAL", "ADVENTURE", "CREATIVE", "SPECTATOR"]),
+  invulnerable: z.boolean(),
+  playerAlive: z.boolean(),
+  botAlive: z.boolean(),
+  botKit: z.enum(["trooper", "longbow", "shortbow", "rewind"]),
+  health: Scalar.min(0).max(20),
+  absorption: Scalar.min(0),
+  playerX: Scalar,
+  playerY: Scalar,
+  playerZ: Scalar,
+  botX: Scalar,
+  botY: Scalar,
+  botZ: Scalar,
+  botYaw: Scalar,
+});
 const Fighter = z.strictObject({
   body: z.uuid(),
   bot: z.boolean(),
@@ -92,6 +114,7 @@ export const RegressionSample = z.strictObject({
   actions: z.array(RegressionAction).max(wire.maximumRows),
   ticks: z.array(RegressionTick).max(wire.maximumRows),
   damage: z.array(RegressionDamage).max(wire.maximumRows),
+  probes: z.array(RegressionPlayerProbe).max(wire.maximumRows),
   transitions: z.array(RegressionTransition).max(wire.maximumRows),
   inference: InferenceMetrics.shape.inference.nullable(),
 });
@@ -102,6 +125,7 @@ const schemas = {
   Action: RegressionAction,
   Tick: RegressionTick,
   Damage: RegressionDamage,
+  PlayerProbe: RegressionPlayerProbe,
   Transition: RegressionTransition,
   Fighter,
   Ticket,
@@ -109,8 +133,8 @@ const schemas = {
   Inference: InferenceMetrics.shape.inference,
 };
 if (
-  wire.version !== 1 ||
-  wire.contract !== "rwf-regression-capture-v1" ||
+  wire.version !== 2 ||
+  wire.contract !== "rwf-regression-capture-v2" ||
   wire.maximumRows !== 5000 ||
   wire.maximumActionAge !== 2 ||
   JSON.stringify(Object.keys(RegressionSample.shape)) !==

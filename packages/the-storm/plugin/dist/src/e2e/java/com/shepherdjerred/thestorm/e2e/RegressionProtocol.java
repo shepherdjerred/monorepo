@@ -33,8 +33,8 @@ record RegressionProtocol(
     try (var stream = CombatHarness.class.getResourceAsStream("/rwf-regression-capture.json")) {
       if (stream == null) throw new IllegalStateException("regression capture contract missing");
       var protocol = json.readValue(stream, RegressionProtocol.class);
-      if (protocol.version() != 1
-          || !protocol.contract().equals("rwf-regression-capture-v1")
+      if (protocol.version() != 2
+          || !protocol.contract().equals("rwf-regression-capture-v2")
           || protocol.maximumRows() != 5000
           || protocol.maximumActionAge() != 2)
         throw new IllegalStateException("regression capture contract incompatible");
