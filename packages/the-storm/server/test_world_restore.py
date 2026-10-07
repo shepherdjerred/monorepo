@@ -246,6 +246,107 @@ class RestoreTest(unittest.TestCase):
             with self.subTest(name=name, checksum=checksum), self.assertRaises(ValueError):
                 restore.backup_contract.selected_files({**files, name: checksum})
 
+    def failed_arena_fixture(self):
+        staging, modern = self.root / "stage", self.root / "modern"
+        source = staging / "heritage-preserved-layout/world"
+        source.mkdir(parents=True)
+        (source / "level.dat").write_bytes(b"historical fixture")
+        restore.save_json(staging / "heritage-preserved-layout-files.json", restore.fingerprint(source))
+        shutil.copytree(source, staging / "arena-preserved-layout/world")
+        (staging / "arena-transplant.log").write_text("failed before writes\n")
+        (modern / "world").mkdir(parents=True)
+        (modern / "plugins/TheStorm").mkdir(parents=True)
+        (modern / "world/level.dat").write_bytes(b"modern fixture")
+        (modern / "plugins/TheStorm/the-storm.db").write_bytes(b"identity fixture")
+        proof, candidate = self.root / "backup.json", self.root / "candidate.jar"
+        candidate.write_bytes(b"candidate")
+        hashes = restore.fingerprint(modern)
+        whole = self.root / "whole.json"
+        identities = {
+            "requestId": "fixture",
+            "backupUid": "backup",
+            "sourceVolumeUid": "source",
+            "restoredVolumeUid": "restored",
+        }
+        restore.save_json(whole, {"schemaVersion": 1, "status": "VERIFIED", **identities, "files": hashes})
+        restore.save_json(
+            proof,
+            {
+                "schemaVersion": 2,
+                "status": "VERIFIED_EXPORT",
+                **identities,
+                "files": hashes,
+                "wholeVolumeProofPath": str(whole),
+                "wholeVolumeProofSha256": restore.digest(whole),
+            },
+        )
+        assert restore.__file__ is not None
+        catalog = Path(restore.__file__).parent / "owned/plugins/TheStorm/heritage.yml"
+        restore.save_json(
+            staging / restore.JOURNAL,
+            {
+                "phase": "ARENA_TRANSPLANT_FAILED",
+                "archiveSha256": restore.ARCHIVE_SHA256,
+                "arenaTransplantInputs": {p.name: restore.digest(p) for p in (candidate, proof, catalog)},
+            },
+        )
+        return staging, candidate, modern, proof
+
+    def test_restart_arenas_archives_untouched_failed_output_and_preserves_inputs(self):
+        staging, candidate, modern, proof = self.failed_arena_fixture()
+        source = staging / "heritage-preserved-layout/world"
+        historical, current = restore.fingerprint(source), restore.fingerprint(modern)
+        original = (staging / restore.JOURNAL).read_bytes()
+        restore.restart_arenas(staging, candidate, modern, proof)
+        receipt = json.loads((staging / restore.JOURNAL).read_text())
+        self.assertEqual(receipt["phase"], "NATIVE_HERITAGE_PRESERVED")
+        self.assertNotIn("arenaTransplantInputs", receipt)
+        archive = staging / receipt["arenaTransplantRestarts"][0]["archive"]
+        self.assertEqual((archive / "failed-journal.json").read_bytes(), original)
+        self.assertEqual(
+            restore.digest(archive / "failed-journal.json"), receipt["arenaTransplantRestarts"][0]["journalSha256"]
+        )
+        self.assertEqual((archive / "transplant.log").read_text(), "failed before writes\n")
+        self.assertEqual(restore.fingerprint(archive / "world"), historical)
+        self.assertEqual(restore.fingerprint(source), historical)
+        self.assertEqual(restore.fingerprint(modern), current)
+        self.assertFalse((staging / "arena-preserved-layout").exists())
+        self.assertFalse((staging / "arena-transplant.log").exists())
+        with self.assertRaisesRegex(ValueError, "failed private"):
+            restore.restart_arenas(staging, candidate, modern, proof)
+
+    def test_restart_arenas_refuses_partially_written_output(self):
+        staging, candidate, modern, proof = self.failed_arena_fixture()
+        target = staging / "arena-preserved-layout/world/level.dat"
+        target.write_bytes(b"partial write")
+        original = (staging / restore.JOURNAL).read_bytes()
+        with self.assertRaisesRegex(ValueError, "partially written"):
+            restore.restart_arenas(staging, candidate, modern, proof)
+        self.assertEqual((staging / restore.JOURNAL).read_bytes(), original)
+        self.assertEqual(target.read_bytes(), b"partial write")
+        self.assertFalse(list(staging.glob("arena-transplant-failed-*")))
+
+    def test_restart_arenas_refuses_changed_candidate_and_backup(self):
+        staging, candidate, modern, proof = self.failed_arena_fixture()
+        candidate.write_bytes(b"different candidate")
+        with self.assertRaisesRegex(ValueError, "candidate, catalog or backup proof"):
+            restore.restart_arenas(staging, candidate, modern, proof)
+        candidate.write_bytes(b"candidate")
+        (modern / "world/level.dat").write_bytes(b"changed backup")
+        with self.assertRaisesRegex(ValueError, "changed after verification"):
+            restore.restart_arenas(staging, candidate, modern, proof)
+        self.assertTrue((staging / "arena-preserved-layout").is_dir())
+
+    def test_restart_arenas_refuses_linked_output(self):
+        staging, candidate, modern, proof = self.failed_arena_fixture()
+        failed = staging / "arena-preserved-layout"
+        renamed = staging / "linked-target"
+        failed.rename(renamed)
+        failed.symlink_to(renamed)
+        with self.assertRaisesRegex(ValueError, "regular checkpoint"):
+            restore.restart_arenas(staging, candidate, modern, proof)
+        self.assertTrue(failed.is_symlink())
+
     def activation_fixture(self):
         staging, modern = self.root / "stage", self.root / "modern"
         source = staging / "arena-preserved-layout/world"
