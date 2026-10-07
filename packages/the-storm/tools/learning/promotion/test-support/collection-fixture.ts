@@ -12,14 +12,11 @@ import {
 } from "#learning/preference/ledger.ts";
 import { AnswerKey } from "#learning/preference/gate.ts";
 import { root } from "#learning/sandbox.ts";
-import { contract } from "#learning/promotion/contract.ts";
-import {
-  nativeFingerprint,
-  type Request,
-} from "#learning/promotion/collect.ts";
+import type { Request } from "#learning/promotion/collect.ts";
 import { loadProtocol } from "#learning/load-gate.ts";
 import { recomputeLoadEvidence } from "#learning/promotion/load-evidence.ts";
 import { loadFixture } from "./load-fixture.ts";
+import { regressionFixture } from "./regression-fixture.ts";
 
 /** Text artifacts and synthetic counters only. Preparing these can never constitute a real pilot. */
 export async function collectionFixture(directory: string, votes = 15) {
@@ -324,38 +321,13 @@ export async function collectionFixture(directory: string, votes = 15) {
       ...recomputeLoadEvidence(load.measurements, load.log()),
     }),
   );
-  await writeFile(
-    request.regressions,
-    jsonText({
-      schema: 1,
-      kind: "rwf-actor-regressions",
-      acceptance: "unaccepted",
-      actor_sha256: actorSha,
-      native_sha256: nativeFingerprint(native),
-      cases: contract.regressionCases.map((name) => ({
-        name,
-        checks: 1,
-        failures: 0,
-        skipped: 0,
-      })),
-      native_floors: {
-        bots: 16,
-        minimum_spacing: 2.5,
-        minimum_width_at_8: 16,
-        minimum_width_at_contact: 16,
-        minimum_forward: 0.25,
-        maximum_winding: 2.5,
-      },
-      simulation_floors: {
-        strategy_pairs: 16,
-        contacts: 16,
-        minimum_width: 15,
-        median_width: 24,
-        mean_forward: 0.45,
-        maximum_winding: 2.5,
-      },
-    }),
+  const regressions = await regressionFixture(
+    path.join(directory, "regression-originals"),
+    native,
+    actorSha,
+    bindings.actor_manifest_sha256,
   );
+  request.regressions = regressions.file;
   return request;
 }
 

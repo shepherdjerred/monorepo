@@ -2,6 +2,28 @@ import type { regressionJournal } from "#learning/native/regression-gate.ts";
 
 type Journal = ReturnType<typeof regressionJournal>;
 
+/** The diagnostic client must remain explicitly outside genuine demonstration data. */
+export function humanRecording(recording: string, match: string) {
+  const rows = recording.trim().split("\n");
+  const header = rows[0]?.split("\t");
+  const humans = rows.filter(
+    (row) => row.startsWith("R\t") && row.split("\t")[4] === "false",
+  );
+  const controls = rows.filter((row) => row.startsWith("N\t"));
+  if (
+    header?.[0] !== "H" ||
+    header[1] !== "3" ||
+    header[2] !== match ||
+    rows.filter((row) => row.startsWith("X\t")).length !== 1 ||
+    humans.length !== 1 ||
+    controls.length === 0 ||
+    controls.some((row) => row.split("\t")[11] !== "MISSING")
+  )
+    throw new Error(
+      "Original human-case recording lacks its terminal or automated-client provenance",
+    );
+}
+
 /** Requires an original learned sword command to cause native damage to the joined player. */
 export function humanCombat(journal: Journal) {
   const first = journal.transitions.find((row) => row.phase === "LIVE");

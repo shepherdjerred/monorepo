@@ -49,6 +49,7 @@
     "bots:verify-healing-lifecycle": "bun tools/learning/native/regression/healing.ts",
     "bots:verify-native-melee": "bun tools/learning/native/regression/melee.ts",
     "bots:verify-simulation-floors": "bun tools/learning/native/simulation/index.ts",
+    "bots:collect-regressions": "bun tools/learning/native/evidence/index.ts",
     "bots:collect-preference": "bun tools/learning/native/collector.ts",
     "bots:promote": "bun tools/learning/promotion/index.ts",
     "test:preference-media": "bun --no-install --bun vitest run tests/media --config ../../vitest.config.ts",

@@ -1652,11 +1652,27 @@ and review workflows above.
 bun run bots:promote --pilot .cache/rwf-pilot/trooper --evaluation .cache/rwf-evaluation/trooper --model .cache/rwf-pilot/trooper/seed-0/onnx --review .cache/rwf-preference/review --parity .cache/rwf-java-parity/exact-candidate --receipt .cache/rwf-java-parity/exact-candidate/java-receipt.json --load .cache/rwf-java-load/trooper --regressions .cache/rwf-regressions/trooper/regressions.json --output .cache/rwf-accepted/trooper
 ```
 
-The regression input must satisfy `RegressionEvidence` in
-`tools/learning/promotion/contract.ts`, bind the same actor and native runtime,
-and contain every required case with no failures or skipped checks. Its measured
-advancement floors must pass the neutral promotion contract. Unit fixtures and
-diagnostic pilots cannot establish acceptance.
+Collect the required regression inventory into one fresh directory:
+
+```bash
+bun run bots:collect-regressions --model .cache/rwf-pilot/trooper/seed-0/onnx --output .cache/rwf-regressions/trooper
+```
+
+This runs all seven fixed cases sequentially on the same frozen actor, native,
+renderer and Java simulation inputs. Each native case owns a disposable Paper
+server and original recording. The collector retains failed attempts and stops
+at the first failure; it never retries or borrows a successful case from another
+attempt. The output stays unaccepted and leaves learned control disabled.
+
+`--regressions` must name the collector's original `regressions.json` suite.
+Promotion replays every original native command, recording and simulation tick,
+checks abort settlement against the saved SQLite database, checks healing against
+authored personality content, and reapplies the unchanged advancement floors.
+It verifies receipt and runtime hashes and archives the original evidence. The
+separate `measured-regressions.json` contains independently derived aggregates in
+the existing neutral Java promotion format; aggregate-only input cannot pass.
+The suite supplies one check per complete case with no failures or skipped cases.
+Unit fixtures and diagnostic pilots cannot establish model acceptance.
 
 Disposable regression fixtures can bind a controller with
 `CombatHarness.attachAuthored(botSlots, controller)`. This binds the next exact
