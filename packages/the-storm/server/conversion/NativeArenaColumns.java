@@ -220,7 +220,7 @@ public final class NativeArenaColumns {
       if (covered == size * size) values.set(index, source.get(index));
       else if (covered > 0 && !values.get(index).equals(source.get(index))) {
         boundaries.add(new BiomeBoundary(chunk.x() * 16 + x, sectionY * 16 + ((index >> 4) & 3) * 4,
-            chunk.z() * 16 + z, covered, values.get(index).toString(), source.get(index).toString()));
+            chunk.z() * 16 + z, covered, values.get(index).asString().orElseThrow(), source.get(index).asString().orElseThrow()));
       }
     }
     return NativePalettes.encode(values, bits);
@@ -308,8 +308,8 @@ public final class NativeArenaColumns {
     }
     if (boundaries.size() != 4 || boundaries.stream().anyMatch(cell -> cell.x() != -4 || cell.z() != -4
         || cell.coveredColumns() != 1 || cell.y() < -64 || cell.y() > -52
-        || !cell.historical().equals(originalBiomes.getFirst().toString())
-        || !cell.modern().equals(modernBiomes.getFirst().toString()))) {
+        || !cell.historical().equals("minecraft:plains")
+        || !cell.modern().equals("minecraft:desert"))) {
       throw new IllegalStateException("Biome boundary receipt failed");
     }
     for (var count : List.of(1, 2, 17, 33, 257, 513, 4096)) {
