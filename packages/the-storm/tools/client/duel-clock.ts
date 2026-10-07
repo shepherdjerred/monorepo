@@ -14,7 +14,7 @@ const Expected = z.strictObject({
   mode: z.enum(wire.modes),
   opponent: z.enum(wire.opponents),
 });
-const Marker = z.strictObject({
+export const DuelClockMarker = z.strictObject({
   match: z
     .uuid()
     .refine((value) => value !== "00000000-0000-0000-0000-000000000000"),
@@ -30,15 +30,18 @@ const Marker = z.strictObject({
   elapsed: z.number().int().min(-1).max(wire.maximumElapsed),
   result: z.enum(wire.results),
 });
-const Entry = z.strictObject({ marker: Marker, receivedElapsedNanos: integer });
-type Marker = z.infer<typeof Marker>;
-const Receipt = z.strictObject({
+const Entry = z.strictObject({
+  marker: DuelClockMarker,
+  receivedElapsedNanos: integer,
+});
+type Marker = z.infer<typeof DuelClockMarker>;
+export const DuelClockReceipt = z.strictObject({
   schema: z.literal(1),
   kind: z.literal("rwf-native-duel-clock"),
   acceptance: z.literal("unaccepted"),
   source: z.literal("paper-custom-payload"),
   expected: Expected,
-  complete: z.literal(true),
+  complete: z.boolean(),
   error: z.literal(""),
   entries: z
     .array(Entry)
@@ -77,29 +80,43 @@ if (
   JSON.stringify(wire.modes) !== JSON.stringify(["authored", "external"]) ||
   JSON.stringify(wire.markers) !==
     JSON.stringify(["begin", "tick", "terminal"]) ||
-  JSON.stringify(wire.packet) !== JSON.stringify(Object.keys(Marker.shape)) ||
+  JSON.stringify(wire.packet) !==
+    JSON.stringify(Object.keys(DuelClockMarker.shape)) ||
   JSON.stringify(wire.expected) !==
     JSON.stringify(Object.keys(Expected.shape)) ||
   JSON.stringify(wire.entry) !== JSON.stringify(Object.keys(Entry.shape)) ||
-  JSON.stringify(wire.receipt) !== JSON.stringify(Object.keys(Receipt.shape)) ||
+  JSON.stringify(wire.receipt) !==
+    JSON.stringify(Object.keys(DuelClockReceipt.shape)) ||
   JSON.stringify(wire.status) !==
     JSON.stringify(Object.keys(DuelClockStatus.shape))
 )
   throw new Error("Unsupported native duel clock contract");
 
 /** Revalidate original receiver evidence without inferring server timing from console polling. */
-export function validateDuelClock(raw: unknown): z.infer<typeof Receipt> {
-  const receipt = Receipt.parse(raw);
+export function validateDuelClock(
+  raw: unknown,
+): z.infer<typeof DuelClockReceipt> {
+  const receipt = validateDuelPrefix(raw);
+  if (!receipt.complete || receipt.entries.at(-1)?.marker.marker !== "terminal")
+    throw new Error("Native duel clock lacks its terminal marker");
+  return receipt;
+}
+
+/** A clip may finish at native tick 599 while the full duel continues in its separate journal. */
+export function validateDuelPrefix(
+  raw: unknown,
+): z.infer<typeof DuelClockReceipt> {
+  const receipt = DuelClockReceipt.parse(raw);
   const first = receipt.entries[0]?.marker;
   const last = receipt.entries.at(-1)?.marker;
   if (
+    last === undefined ||
     first?.marker !== "begin" ||
     first.sequence !== 0 ||
     first.tick !== -1 ||
     first.elapsed !== -1 ||
     first.result !== "waiting" ||
-    last?.marker !== "terminal" ||
-    ["waiting", "live"].includes(last.result)
+    receipt.complete !== (last.marker === "terminal")
   )
     throw new Error("Native duel clock lacks its begin or terminal marker");
   let lastTime = -1;
@@ -120,7 +137,12 @@ export function validateDuelClock(raw: unknown): z.infer<typeof Receipt> {
     lastTime = receivedElapsedNanos;
     lastWorldTick = marker.worldTick;
     if (index === 0) return;
-    if (index === receipt.entries.length - 1) {
+    if (marker.marker === "terminal") {
+      if (
+        index !== receipt.entries.length - 1 ||
+        ["waiting", "live"].includes(marker.result)
+      )
+        throw new Error("Native terminal marker was not last");
       validateTerminal(marker, previous);
       return;
     }

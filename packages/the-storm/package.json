@@ -7,6 +7,7 @@
     "./server/owned/plugins/TheStorm/plot-reconcile.json": "./server/owned/plugins/TheStorm/plot-reconcile.json"
   },
   "imports": {
+    "#client-duel-video-wire": "./client/src/main/resources/storm-duel-video.json",
     "#client-duel-clock-wire": "./client/src/main/resources/storm-duel-clock.json",
     "#client-video-wire": "./client/src/main/resources/storm-video.json",
     "#e2e/*": "./tests/e2e/*",

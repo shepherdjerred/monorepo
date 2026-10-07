@@ -36,4 +36,15 @@ class FrameClockTest {
     assertThatThrownBy(() -> new FrameClock(1801)).isInstanceOf(IllegalArgumentException.class);
     assertThat(new FrameClock(1800).complete()).isFalse();
   }
+
+  @Test
+  void NativeAnchorCannotShiftToALaterFirstRenderedFrame() {
+    var clock = new FrameClock(900);
+    clock.anchor(100);
+    assertThat(clock.sample(99)).isFalse();
+    assertThatThrownBy(() -> clock.sample(100 + FrameClock.SECOND / FrameClock.FPS))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("missed frame 0");
+    assertThatThrownBy(() -> clock.anchor(200)).isInstanceOf(IllegalStateException.class);
+  }
 }

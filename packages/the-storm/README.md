@@ -1450,8 +1450,40 @@ off the client thread. Missing ticks, stale match identities, reversed clocks
 or an invalid observer invalidate the journal. A lost observer does not stop
 the bots. Verification retains native outcomes, cancellation and invalidation
 receipts plus a live screenshot in the session artifact directory. Clock
-receipts remain unaccepted evidence; they do not yet bind a rendered clip to
-the first 600 live ticks or implement the terminal frame hold.
+receipts remain unaccepted evidence. The framebuffer recorder binds pixels to
+the clock with `video-duel-arm`. Its arguments are `name`, `fov`, `seed`, `side`,
+`mode` and `opponent`; the native window always contains 900 frames. Wait for
+`video-ready` before arming, then for `video-status` to report `READY` before
+starting the server duel. The first live payload anchors frame zero;
+`video-start` is refused for native captures. Readiness includes the client
+overlay and render rate, since entering a world can leave an overlay active
+after the position and screen status have updated.
+
+```bash
+bun run client preview --rwf-duel --verify-duel-video
+```
+
+Schema-2 `rwf-rendered-duel-frames` receipts retain the original camera, frame
+timestamps, pixel hashes, received native clock and each frame's current
+marker and source-image index. Every live slot uses a separate framebuffer
+readback. After an early native terminal event, one original terminal render
+is copied for subsequent slots, with identical hashes and explicit source
+indices. Missing slots, interrupted duels, stale markers, late first frames
+and windows that fail to reach native tick 599 fail validation. A full window
+may finish before the match; its clock prefix does not prove a terminal
+outcome. The separate complete duel journal retains that outcome.
+
+`video-encode` verifies both receipt versions, original PNG hashes and the
+encoded 1280x720, 30-fps, silent stream without overwriting evidence. The
+recorder uses a private lossless PNG writer with fast Deflate compression;
+channel order, alpha and rows are preserved, and the eight-image backlog limit
+still fails on overload. It does not change Minecraft's global encoder settings.
+The native video check first runs a separate unrecorded warm-up duel to initialize Paper
+combat code and client entity rendering, then records one authored/basic duel.
+It retains the warm-up identity, the recorded match's separate clock and
+an early terminal hold in a 30-second clip. Its output remains diagnostic,
+unaccepted footage; it does not establish candidate strength or human
+preference, train a policy, or enable learned play.
 
 The strict `CaptureSet` schema in `tools/learning/preference/gate.ts` defines
 `captures.json`: candidate/runtime digests, zero retries, the shared camera and

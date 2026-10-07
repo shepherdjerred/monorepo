@@ -1,6 +1,7 @@
 import { request, waitFor, type Session } from "./protocol.ts";
 import { viewpoint } from "./viewpoint.ts";
-import { encodeVideo, validateFrames, VideoStatus } from "./video.ts";
+import { encodeVideo } from "./video.ts";
+import { validateFrames, VideoStatus } from "./video-frames.ts";
 
 async function state(session: Session) {
   const result = VideoStatus.parse(await request(session, "video-status"));

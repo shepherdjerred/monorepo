@@ -28,7 +28,7 @@ final class ClientActions {
     this.session = session;
     captures = new Captures(session.artifacts());
     videos = new VideoCapture(session.artifacts());
-    duels = new DuelCapture(session.artifacts());
+    duels = new DuelCapture(session.artifacts(), videos::marker);
   }
 
   CompletableFuture<Object> submit(Minecraft client, UUID peer, Protocol.Request request) {
@@ -75,14 +75,18 @@ final class ClientActions {
 
   private CompletableFuture<Object> video(Minecraft client, Protocol.Request request) {
     var args = request.arguments();
-    if (request.action().equals("video-arm")) {
+    if (request.action().equals("video-arm") || request.action().equals("video-duel-arm")) {
       requireWorld(client);
       if (inputs.active()) throw new IllegalStateException("Release inputs before recording");
-      return videos.arm(client, args);
+      return videos.arm(client, args, request.action().equals("video-duel-arm"));
     }
     Protocol.keys(args, Set.of());
     var result =
         switch (request.action()) {
+          case "video-ready" -> {
+            requireWorld(client);
+            yield VideoCapture.cameraReady(client);
+          }
           case "video-status" -> videos.status();
           case "video-cancel" -> {
             videos.cancel(client);

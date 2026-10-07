@@ -6,6 +6,7 @@ final class FrameClock {
   static final long SECOND = 1_000_000_000L;
   private final int total;
   private long started;
+  private boolean anchored;
   private int frames;
 
   FrameClock(int total) {
@@ -25,9 +26,15 @@ final class FrameClock {
     return frames == total;
   }
 
+  void anchor(long now) {
+    if (anchored) throw new IllegalStateException("Rendered clock is already anchored");
+    started = now;
+    anchored = true;
+  }
+
   boolean sample(long now) {
     if (complete()) return false;
-    if (frames == 0) started = now;
+    if (!anchored) anchor(now);
     var elapsed = elapsed(now);
     var due = frames * SECOND / FPS;
     if (elapsed < due) return false;

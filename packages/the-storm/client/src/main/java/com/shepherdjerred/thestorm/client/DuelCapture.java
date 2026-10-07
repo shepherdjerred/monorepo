@@ -56,14 +56,16 @@ final class DuelCapture implements AutoCloseable {
   private boolean sealed;
   private @Nullable CompletableFuture<Object> sealing;
 
-  DuelCapture(Path artifacts) {
+  DuelCapture(Path artifacts, java.util.function.BiConsumer<DuelMarker, Long> observer) {
     this.artifacts = artifacts;
     PayloadTypeRegistry.clientboundPlay().register(Packet.TYPE, Packet.CODEC);
     ClientPlayNetworking.registerGlobalReceiver(
         Packet.TYPE,
         (payload, context) -> {
+          var now = System.nanoTime();
           var current = timeline;
-          if (current != null && !sealed) current.accept(payload.marker(), System.nanoTime());
+          if (current != null && !sealed) current.accept(payload.marker(), now);
+          observer.accept(payload.marker(), now);
         });
   }
 

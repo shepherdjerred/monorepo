@@ -15,7 +15,9 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import org.jspecify.annotations.Nullable;
 
 /** One ordered, bounded disk writer. GPU images always have an explicit owner and close path. */
 final class VideoFrames {
@@ -34,11 +36,25 @@ final class VideoFrames {
       String error,
       List<Written> frames) {}
 
+  record DuelReceipt(
+      int schema,
+      String kind,
+      String acceptance,
+      String source,
+      int fps,
+      int requestedFrames,
+      boolean complete,
+      String error,
+      List<Written> frames,
+      DuelWindow.Receipt duel) {}
+
   private final Path directory;
   private final ExecutorService io;
   private final Semaphore pending = new Semaphore(8);
   private final AtomicReference<String> failure = new AtomicReference<>("");
   private final List<Written> written = new ArrayList<>();
+  private final CompletableFuture<Written> terminal = new CompletableFuture<>();
+  private final List<CompletableFuture<?>> holds = new ArrayList<>();
 
   VideoFrames(Path directory, ExecutorService io) {
     this.directory = directory;
@@ -69,30 +85,73 @@ final class VideoFrames {
     pending.release();
   }
 
-  void write(NativeImage image, Frame frame) {
+  void write(NativeImage image, Frame frame, boolean terminalFrame) {
     try {
-      io.execute(() -> persist(image, frame));
+      io.execute(() -> persist(image, frame, terminalFrame));
     } catch (RuntimeException e) {
       image.close();
+      if (terminalFrame) terminal.completeExceptionally(e);
       reject(e.toString());
     }
   }
 
-  private void persist(NativeImage image, Frame frame) {
+  private void persist(NativeImage image, Frame frame, boolean terminalFrame) {
     try (image) {
       if (image.getWidth() != 1280 || image.getHeight() != 720) {
         throw new IllegalStateException("Capture requires actual 1280x720 render pixels");
       }
-      var name = String.format(java.util.Locale.ROOT, "%06d.png", frame.index());
+      var name = name(frame.index());
       var destination = directory.resolve(name);
-      Files.createFile(destination);
-      image.writeToFile(destination);
-      written.add(new Written(frame, name, sha256(destination)));
+      FramePng.write(destination, image.getWidth(), image.getHeight(), image.getPixels());
+      var saved = new Written(frame, name, sha256(destination));
+      written.add(saved);
+      if (terminalFrame && !terminal.complete(saved))
+        throw new IllegalStateException("Terminal image was captured twice");
     } catch (IOException | RuntimeException e) {
       failure.compareAndSet("", e.toString());
+      if (terminalFrame) terminal.completeExceptionally(e);
     } finally {
       pending.release();
     }
+  }
+
+  void hold(Frame frame, int sourceFrame) {
+    var executed = new AtomicBoolean();
+    var future =
+        terminal
+            .handleAsync(
+                (source, error) -> {
+                  executed.set(true);
+                  try {
+                    if (error != null)
+                      throw new IllegalStateException("Terminal render was not persisted", error);
+                    var saved = java.util.Objects.requireNonNull(source);
+                    if (saved.frame().index() != sourceFrame || sourceFrame >= frame.index())
+                      throw new IllegalStateException("Terminal image identity changed");
+                    var name = name(frame.index());
+                    var destination = directory.resolve(name);
+                    Files.copy(directory.resolve(saved.file()), destination);
+                    var hash = sha256(destination);
+                    if (!hash.equals(saved.sha256()))
+                      throw new IllegalStateException("Terminal pixels changed during hold");
+                    written.add(new Written(frame, name, hash));
+                  } catch (IOException | RuntimeException e) {
+                    failure.compareAndSet("", e.toString());
+                  } finally {
+                    pending.release();
+                  }
+                  return null;
+                },
+                io)
+            .whenComplete(
+                (_, error) -> {
+                  if (error != null && !executed.get()) reject(error.toString());
+                });
+    holds.add(future);
+  }
+
+  private static String name(int index) {
+    return String.format(java.util.Locale.ROOT, "%06d.png", index);
   }
 
   boolean drained() {
@@ -103,25 +162,45 @@ final class VideoFrames {
     return failure.get();
   }
 
-  CompletableFuture<Path> finish(int total, String error) {
+  CompletableFuture<Path> finish(int total, String error, DuelWindow.@Nullable Receipt duel) {
     return CompletableFuture.supplyAsync(
         () -> {
           var receipt = directory.resolve("frames.json");
+          requireHoldsQuiescent();
           if (error.isEmpty() && written.size() != total) {
             throw new IllegalStateException(
                 "Frame inventory is incomplete without a failure reason");
           }
-          var result =
-              new Receipt(
-                  1,
-                  "rwf-rendered-frames",
-                  "unaccepted",
-                  "minecraft-framebuffer",
-                  FrameClock.FPS,
-                  total,
-                  error.isEmpty(),
-                  error,
-                  List.copyOf(written));
+          var inventory =
+              written.stream()
+                  .sorted(java.util.Comparator.comparingInt(entry -> entry.frame().index()))
+                  .toList();
+          Object result;
+          if (duel == null)
+            result =
+                new Receipt(
+                    1,
+                    "rwf-rendered-frames",
+                    "unaccepted",
+                    "minecraft-framebuffer",
+                    FrameClock.FPS,
+                    total,
+                    error.isEmpty(),
+                    error,
+                    inventory);
+          else
+            result =
+                new DuelReceipt(
+                    2,
+                    "rwf-rendered-duel-frames",
+                    "unaccepted",
+                    "minecraft-framebuffer",
+                    FrameClock.FPS,
+                    total,
+                    error.isEmpty(),
+                    error,
+                    inventory,
+                    duel);
           try {
             Files.writeString(
                 receipt,
@@ -134,6 +213,15 @@ final class VideoFrames {
           return receipt;
         },
         io);
+  }
+
+  private void requireHoldsQuiescent() {
+    for (var hold : holds) {
+      if (!hold.isDone()) throw new IllegalStateException("Terminal writer did not quiesce");
+      if (!hold.isCompletedExceptionally()) hold.getNow(null);
+      else if (failure.get().isEmpty())
+        throw new IllegalStateException("Terminal writer failed without a reason");
+    }
   }
 
   private static String sha256(Path file) throws IOException {
