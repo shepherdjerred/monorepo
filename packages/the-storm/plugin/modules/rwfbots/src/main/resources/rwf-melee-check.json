@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "contract": "rwf-native-melee-check-v1",
+  "trials": ["blocked", "clear"],
+  "world": "rwf",
+  "reach": 3.0,
+  "attacker": [3.5, 65.0, 3.5, 270.0, 0.0],
+  "victim": [5.25, 65.0, 3.5, 90.0, 0.0],
+  "wall": [
+    [4, 65, 3],
+    [4, 66, 3]
+  ],
+  "fields": [
+    "protocol",
+    "contract",
+    "match",
+    "phase",
+    "world",
+    "serverTick",
+    "trial",
+    "attackerBefore",
+    "victimBefore",
+    "attackerAfter",
+    "victimAfter",
+    "reachable",
+    "visible",
+    "wallBefore",
+    "wallDuring",
+    "wallAfter",
+    "refusal"
+  ],
+  "bodyFields": [
+    "body",
+    "x",
+    "y",
+    "z",
+    "yaw",
+    "pitch",
+    "health",
+    "absorption",
+    "velocityX",
+    "velocityY",
+    "velocityZ",
+    "heldSlot",
+    "weapon",
+    "knockbackLevel",
+    "sprinting",
+    "gameMode",
+    "invulnerable"
+  ]
+}
