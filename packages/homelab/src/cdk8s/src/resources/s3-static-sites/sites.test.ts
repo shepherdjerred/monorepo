@@ -1,4 +1,6 @@
 import { describe, expect, test } from "vitest";
+import { parseAllDocuments } from "yaml";
+import { z } from "zod";
 
 import { generateCaddyfile } from "@shepherdjerred/homelab/cdk8s/src/misc/s3-static-site.ts";
 import { staticSites } from "./sites.ts";
@@ -160,6 +162,64 @@ describe("human wiki static site", () => {
 });
 
 describe("Storm docs integration", () => {
+  test("hands the apex route to the forum and retains static docs without DNS ownership", async () => {
+    const ResourceSchema = z
+      .object({
+        kind: z.string(),
+        metadata: z
+          .object({ name: z.string(), namespace: z.string().optional() })
+          .loose(),
+      })
+      .loose();
+    const BindingSchema = ResourceSchema.extend({
+      kind: z.literal("TunnelBinding"),
+      subjects: z.array(
+        z.object({ spec: z.object({ fqdn: z.string() }).loose() }).loose(),
+      ),
+      tunnelRef: z.object({ disableDNSUpdates: z.boolean() }).loose(),
+    });
+    const manifests = await Promise.all(
+      ["s3-static-sites", "storm-forum"].map(async (name) => {
+        const yaml = await Bun.file(
+          new URL(`../../../dist/${name}.k8s.yaml`, import.meta.url),
+        ).text();
+        return parseAllDocuments(yaml).map((document) =>
+          ResourceSchema.parse(document.toJSON()),
+        );
+      }),
+    );
+    const staticResources = manifests[0];
+    if (!staticResources) throw new Error("Static-site manifests missing");
+    expect(
+      staticResources.map((resource) => resource.metadata.name),
+    ).not.toContain("static-site-ts-mc-net");
+    expect(
+      staticResources.map((resource) => resource.metadata.name),
+    ).not.toContain("s3-static-sites-tunnel-ts-mc-net");
+    const bindings = manifests
+      .flat()
+      .filter((resource) => resource.kind === "TunnelBinding")
+      .map((resource) => BindingSchema.parse(resource));
+    const apexOwners = bindings.filter((binding) =>
+      binding.subjects.some((subject) => subject.spec.fqdn === "ts-mc.net"),
+    );
+    expect(apexOwners.map((binding) => binding.metadata.namespace)).toEqual([
+      "storm-forum",
+    ]);
+    expect(
+      bindings.some(
+        (binding) =>
+          binding.metadata.namespace === "s3-static-sites" &&
+          binding.subjects.some(
+            (subject) => subject.spec.fqdn === "docs.ts-mc.net",
+          ),
+      ),
+    ).toBe(true);
+    expect(
+      bindings.every((binding) => binding.tunnelRef.disableDNSUpdates),
+    ).toBe(true);
+  });
+
   test("allows the credentialed apex preference API without widening other connections", () => {
     const docs = staticSites.find(
       ({ hostname }) => hostname === "docs.ts-mc.net",

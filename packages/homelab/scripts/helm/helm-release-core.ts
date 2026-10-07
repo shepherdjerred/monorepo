@@ -44,10 +44,14 @@ const REPOSITORY_CHART_URLS = new Set([
 // ClusterRole and ClusterRoleBinding are stateless retired resources; leaving
 // them live keeps trmnl-dashboard OutOfSync and failed the build 17262 release
 // health wait.
+// s3-static-sites retires hostname bindings and probes when ownership moves to
+// an application such as the forum. Its bindings disable DNS updates; static
+// buckets and DNS records are owned outside this chart.
 const PRUNED_RELEASE_CHARTS = new Set([
   "birmel",
   "freshrss",
   "media",
+  "s3-static-sites",
   "scout-beta",
   "scout-prod",
   "service-probes",
