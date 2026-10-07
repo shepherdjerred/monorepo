@@ -653,6 +653,96 @@ def verified_backup(data: Path, proof: Path) -> dict[str, str]:
     return expected
 
 
+def restart_arenas(staging: Path, candidate: Path, modern_data: Path, backup_proof: Path) -> None:
+    """Archive an untouched failed private copy after rechecking both immutable inputs."""
+    for path in (staging, candidate, modern_data, backup_proof):
+        if path.is_symlink():
+            raise ValueError("Arena restart inputs cannot be symlinks")
+    staging, candidate, modern_data, backup_proof = (
+        path.resolve(strict=True) for path in (staging, candidate, modern_data, backup_proof)
+    )
+    if staging.is_relative_to(modern_data) or modern_data.is_relative_to(staging):
+        raise ValueError("Arena restart requires independent input trees")
+    receipt = json.loads((staging / JOURNAL).read_text(encoding="utf-8"))
+    if (
+        receipt["phase"] not in ("ARENA_TRANSPLANT_FAILED", "ARENA_TRANSPLANT_RESTARTING")
+        or receipt["archiveSha256"] != ARCHIVE_SHA256
+    ):
+        raise ValueError("Arena restart requires a failed private transplant checkpoint")
+    catalog = Path(__file__).resolve().parent / "owned/plugins/TheStorm/heritage.yml"
+    if any(
+        receipt["arenaTransplantInputs"].get(path.name) != digest(path) for path in (catalog, candidate, backup_proof)
+    ):
+        raise ValueError("Arena restart candidate, catalog or backup proof changed")
+    source = staging / "heritage-preserved-layout"
+    failed = staging / "arena-preserved-layout"
+    log = staging / "arena-transplant.log"
+    if source.is_symlink() or failed.is_symlink() or log.is_symlink():
+        raise ValueError("Arena restart requires regular checkpoint paths")
+    if receipt["phase"] == "ARENA_TRANSPLANT_FAILED":
+        if not log.is_file():
+            raise ValueError("Arena restart requires its failed log")
+        restart = {
+            "archive": "arena-transplant-failed-" + str(uuid.uuid4()),
+            "failedJournal": dict(receipt),
+            "logSha256": digest(log),
+        }
+    else:
+        restart = receipt["arenaRestart"]
+        original = {key: value for key, value in receipt.items() if key != "arenaRestart"}
+        original["phase"] = "ARENA_TRANSPLANT_FAILED"
+        if restart["failedJournal"] != original:
+            raise ValueError("Arena restart original failure journal changed")
+    name = restart["archive"]
+    prefix = "arena-transplant-failed-"
+    if not isinstance(name, str) or not name.startswith(prefix) or name != prefix + str(uuid.UUID(name[len(prefix) :])):
+        raise ValueError("Arena restart archive name is not a scoped UUID")
+    archive = staging / name
+    archived_log = archive / "transplant.log"
+    if (
+        archive.is_symlink()
+        or archived_log.is_symlink()
+        or (archive.exists() and not archive.is_dir())
+        or failed.is_dir() == archive.is_dir()
+    ):
+        raise ValueError("Arena restart requires exactly one original or archived output")
+    output = failed if failed.is_dir() else archive
+    if (
+        log.is_file() == archived_log.is_file()
+        or digest(log if log.is_file() else archived_log) != restart["logSha256"]
+    ):
+        raise ValueError("Arena restart log changed or has an ambiguous location")
+    expected = json.loads((staging / "heritage-preserved-layout-files.json").read_text(encoding="utf-8"))
+    with ExitStack() as locks:
+        for root in (source, output, modern_data):
+            stopped_locks(root, locks)
+        verified_backup(modern_data, backup_proof)
+        if fingerprint(source / "world") != expected or fingerprint(output / "world") != expected:
+            raise ValueError("Arena restart refuses changed historical input or partially written output")
+        if receipt["phase"] == "ARENA_TRANSPLANT_FAILED":
+            receipt.update(phase="ARENA_TRANSPLANT_RESTARTING", arenaRestart=restart)
+            save_json(staging / JOURNAL, receipt)
+        if output == failed:
+            failed.rename(archive)
+        if log.is_file():
+            log.rename(archived_log)
+        failure_receipt = archive / "failed-journal.json"
+        if failure_receipt.is_symlink():
+            raise ValueError("Archived failure receipt cannot be linked")
+        if failure_receipt.exists():
+            if json.loads(failure_receipt.read_text(encoding="utf-8")) != restart["failedJournal"]:
+                raise ValueError("Archived failure receipt changed")
+        else:
+            save_json(failure_receipt, restart["failedJournal"])
+        receipt.setdefault("arenaTransplantRestarts", []).append(
+            {"archive": archive.name, "journalSha256": digest(failure_receipt)}
+        )
+        receipt.pop("arenaTransplantInputs")
+        receipt.pop("arenaRestart")
+        receipt["phase"] = "NATIVE_HERITAGE_PRESERVED"
+        save_json(staging / JOURNAL, receipt)
+
+
 def transplant_arenas(
     staging: Path, paper: Path, bootstrap: Path, candidate: Path, modern_data: Path, backup_proof: Path
 ) -> None:
@@ -729,6 +819,8 @@ def transplant_arenas(
                 or result["chunks"] != 258
                 or result["terrainGeneration"] is not False
                 or result["worldTicks"] != 0
+                or result.get("biomeBoundary", {}).get("policy") != "KEEP_HISTORICAL_PARTIAL_CELLS"
+                or not isinstance(result["biomeBoundary"].get("cells"), list)
             ):
                 raise ValueError("Arena transplant did not verify the reviewed footprint")
             if (
@@ -1399,6 +1491,9 @@ def main() -> None:
     arenas = commands.add_parser("transplant-arenas")
     for name in ("staging", "paper", "bootstrap", "candidate", "modern-data", "backup-proof"):
         arenas.add_argument("--" + name, required=True, type=Path)
+    retry_arenas = commands.add_parser("restart-arenas")
+    for name in ("staging", "candidate", "modern-data", "backup-proof"):
+        retry_arenas.add_argument("--" + name, required=True, type=Path)
     database = commands.add_parser("prepare-database")
     for name in ("staging", "paper", "bootstrap", "candidate", "modern-data", "backup-proof"):
         database.add_argument("--" + name, required=True, type=Path)
@@ -1451,6 +1546,8 @@ def execute(arguments: argparse.Namespace) -> None:
             arguments.modern_data,
             arguments.backup_proof,
         )
+    elif arguments.command == "restart-arenas":
+        restart_arenas(arguments.staging, arguments.candidate, arguments.modern_data, arguments.backup_proof)
     elif arguments.command == "prepare-database":
         prepare_database(
             arguments.staging,

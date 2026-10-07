@@ -236,21 +236,22 @@ its phase and verification receipts before the next operation can proceed.
 Failed copies remain available for inspection. The source archive and successful
 input checkpoints remain immutable.
 
-| Operation                   | Required checkpoint                                                | Result                                                                                           |
-| --------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
-| `prepare`                   | Approved archive SHA-256                                           | Validated archive paths, complete chunk inventory, source file hashes                            |
-| `convert-legacy`            | Prepared private copy                                              | Guarded Paper 1.21.7 conversion and clean shutdown                                               |
-| `convert-companions`        | Legacy terrain converted                                           | Individually converted vanilla players, statistics and maps                                      |
-| `convert-native-chunks`     | Legacy companion checkpoint                                        | Native 26.2 terrain, embedded entities and block entities                                        |
-| `convert-native-companions` | Native terrain checkpoint                                          | Native item codecs, safe player positions, verified beds and map allocation counter              |
-| `convert-native-auxiliary`  | Native companion checkpoint                                        | Native entity and POI stores                                                                     |
-| `rehearse-native-layout`    | All native archive data converted                                  | Frozen Paper 26.2 startup, native dimension layout and metadata verification                     |
-| `preserve-heritage`         | Verified native layout                                             | Saved protected terrain with underground upgrade disabled                                        |
-| `transplant-arenas`         | Heritage preservation and independently verified modern backup     | Current Settlement and Rustworks columns merged into a separate historical world copy            |
-| `prepare-database`          | Verified arena merge and the same modern backup and candidate jar  | Fresh candidate Flyway histories, retained identity/moderation rows and proven historical owners |
-| `prepare-activation`        | Verified arena and identity checkpoints and the same modern backup | Independent assembled world retaining native RWF, Settlement and Rustworks dimensions            |
-| `verify-copy`               | Two independent stopped data trees                                 | Complete file hash comparison; symlinks and shared hard links are rejected                       |
-| `database-inventory`        | Existing database                                                  | Integrity check, table schemas and row counts without private row contents                       |
+| Operation                   | Required checkpoint                                                                 | Result                                                                                           |
+| --------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `prepare`                   | Approved archive SHA-256                                                            | Validated archive paths, complete chunk inventory, source file hashes                            |
+| `convert-legacy`            | Prepared private copy                                                               | Guarded Paper 1.21.7 conversion and clean shutdown                                               |
+| `convert-companions`        | Legacy terrain converted                                                            | Individually converted vanilla players, statistics and maps                                      |
+| `convert-native-chunks`     | Legacy companion checkpoint                                                         | Native 26.2 terrain, embedded entities and block entities                                        |
+| `convert-native-companions` | Native terrain checkpoint                                                           | Native item codecs, safe player positions, verified beds and map allocation counter              |
+| `convert-native-auxiliary`  | Native companion checkpoint                                                         | Native entity and POI stores                                                                     |
+| `rehearse-native-layout`    | All native archive data converted                                                   | Frozen Paper 26.2 startup, native dimension layout and metadata verification                     |
+| `preserve-heritage`         | Verified native layout                                                              | Saved protected terrain with underground upgrade disabled                                        |
+| `transplant-arenas`         | Heritage preservation and independently verified modern backup                      | Current Settlement and Rustworks columns merged into a separate historical world copy            |
+| `restart-arenas`            | Failed transplant whose private output still matches its immutable historical input | Failed copy and log archived; both inputs reverified before another attempt                      |
+| `prepare-database`          | Verified arena merge and the same modern backup and candidate jar                   | Fresh candidate Flyway histories, retained identity/moderation rows and proven historical owners |
+| `prepare-activation`        | Verified arena and identity checkpoints and the same modern backup                  | Independent assembled world retaining native RWF, Settlement and Rustworks dimensions            |
+| `verify-copy`               | Two independent stopped data trees                                                  | Complete file hash comparison; symlinks and shared hard links are rejected                       |
+| `database-inventory`        | Existing database                                                                   | Integrity check, table schemas and row counts without private row contents                       |
 
 Converters use the exact pinned Paper bootstrap and verify every library hash.
 The conversion guard freezes ticking before world initialization. Whole-world
@@ -261,9 +262,21 @@ unchanged. Unprotected chunks retain Minecraft's supported underground upgrade.
 
 Arena merging replaces full-height columns in the catalog's reviewed footprints.
 It preserves surrounding blocks, auxiliary records and historical companion data.
-Partial biome cells must agree, and referenced modern map IDs require a reviewed
-map merge before transplantation can succeed. The tool refuses unexplained
+Biome cells cover 4×4 columns. Complete cells take the modern arena biome;
+partial cells keep the historical biome so surrounding historical columns remain
+unchanged. Every differing partial cell is recorded in `biomeBoundary` in the
+transplant receipt. Arena blocks still use the exact approved columns.
+Referenced modern map IDs require a reviewed map merge before transplantation
+can succeed. The tool refuses unexplained
 chunk-wide persistent data in partial chunks.
+
+Keep the exported backup in a separate directory outside the historical staging
+tree. If a transplant fails before writing its private output, `restart-arenas`
+rechecks the catalog, candidate, backup proof and both trees, then archives the
+failed copy and log. It refuses an output that differs from the historical input;
+it cannot reset or authorize a production installation. A recorded
+`ARENA_TRANSPLANT_RESTARTING` checkpoint resumes the same archive after an
+interruption, revalidating the inputs, output and log before continuing.
 
 Activation preparation preserves the historical overworld and transplanted
 columns, then copies the three retained arena dimensions byte for byte. Modern
