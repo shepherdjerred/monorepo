@@ -50,7 +50,7 @@ export const THE_STORM_PAPER_VERSION = "26.2";
 export function createMinecraftTsmcApp(chart: Chart) {
   createMinecraftProxyTrust(chart, NAMESPACE, 25_565);
   // The Storm bridge credentials. Required fields (UPPERCASE_SNAKE labels, matching
-  // the env-var refs below): DISCORD_BOT_TOKEN, DISCORD_CHANNEL_ID.
+  // the env-var ref below): DISCORD_BOT_TOKEN. Channel routing lives in Git.
   new OnePasswordItem(chart, "minecraft-tsmc-discord-1p", {
     spec: {
       itemPath:
@@ -241,11 +241,7 @@ export function createMinecraftTsmcApp(chart: Chart) {
           secretKeyRef: { name: SECRET_NAME, key: "DISCORD_BOT_TOKEN" },
         },
       },
-      DISCORD_CHANNEL_ID: {
-        valueFrom: {
-          secretKeyRef: { name: SECRET_NAME, key: "DISCORD_CHANNEL_ID" },
-        },
-      },
+      DISCORD_CHANNEL_ID: "1043751242649829439",
     },
     // Paper expects HAProxy's PROXY header when connecting. mc-health normally
     // speaks raw Minecraft, so its probes must use the PROXY-aware mode too.

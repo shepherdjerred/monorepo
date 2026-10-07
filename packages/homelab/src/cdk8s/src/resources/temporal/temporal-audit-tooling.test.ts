@@ -169,7 +169,7 @@ function envNames(deployment: SynthesizedDeployment): Set<string> {
 }
 
 describe("temporal homelab audit tooling configuration", () => {
-  it("injects Woodpecker and Bugsink configuration", async () => {
+  it("injects Woodpecker, Bugsink and trusted ArgoCD configuration", async () => {
     const yaml = await synthesizeApp();
 
     expect(yaml).toContain("name: BUGSINK_URL");
@@ -178,6 +178,8 @@ describe("temporal homelab audit tooling configuration", () => {
     expect(yaml).toContain("name: WOODPECKER_REPO_ID");
     expect(yaml).toContain("name: WOODPECKER_URL");
     expect(yaml).toContain("value: https://woodpecker.sjer.red");
+    expect(yaml).toContain("name: ARGOCD_SERVER");
+    expect(yaml).toContain("value: argocd.sjer.red");
     // Homelab-audit S3 archiving is unused; HOMELAB_AUDIT_ARCHIVE_* env vars are
     // intentionally not wired (no dead optional secret).
     expect(yaml).not.toContain("name: HOMELAB_AUDIT_ARCHIVE_BUCKET");
@@ -514,12 +516,15 @@ describe("Temporal domain worker isolation", () => {
       "AWS_ACCESS_KEY_ID",
       "AWS_SECRET_ACCESS_KEY",
       "POSTAL_API_KEY",
-      "RECIPIENT_EMAIL",
-      "SENDER_EMAIL",
     ]) {
       expect(reportsEnv).toContain(required);
       expect(gatewayEnv).not.toContain(required);
       expect(homeEnv).not.toContain(required);
+    }
+    for (const routing of ["RECIPIENT_EMAIL", "SENDER_EMAIL"]) {
+      expect(reportsEnv).not.toContain(routing);
+      expect(gatewayEnv).not.toContain(routing);
+      expect(homeEnv).not.toContain(routing);
     }
   });
 });

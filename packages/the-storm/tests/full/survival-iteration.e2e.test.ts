@@ -166,8 +166,9 @@ describe("Settlement iteration on native Paper", () => {
         );
       const selector =
         '@e[type=minecraft:zombie,name="Legendary target 1",limit=1]';
+      // Keep the native target's hitbox aligned with this fixed throw aim.
       await rcon.command(
-        `data modify entity ${selector} Health set value 1.0f`,
+        `data merge entity ${selector} {Health:1.0f,IsBaby:0b}`,
       );
       await waitUntil("trident target", () =>
         Object.values(bot.entities).some(

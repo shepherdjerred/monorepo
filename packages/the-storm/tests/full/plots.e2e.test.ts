@@ -104,7 +104,7 @@ describe("protected shop recovery", () => {
     await rcon.command(
       `lp user ${bot.username} permission set thestorm.track.shopkeeper.1 true`,
     );
-    await rcon.command(`tp ${bot.username} 65.5 69 -181.5`);
+    await rcon.command(`minecraft:tp ${bot.username} 65.5 69 -181.5`);
     await waitUntil(
       "source chunk received",
       () => bot.blockAt(new Vec3(65, 69, -183))?.name === "chest",
@@ -117,7 +117,7 @@ describe("protected shop recovery", () => {
     await rcon.command(
       `lp user ${bot.username} permission unset thestorm.towns.bypass`,
     );
-    await rcon.command(`tp ${bot.username} 65.5 69 -185.5`);
+    await rcon.command(`minecraft:tp ${bot.username} 65.5 69 -185.5`);
     await waitUntil(
       "owner leaves the shop volume",
       () => bot.entity.position.distanceTo(new Vec3(65.5, 69, -185.5)) < 0.3,
@@ -177,7 +177,7 @@ describe("protected shop recovery", () => {
     await rcon.command("forceload add 296 296 315 315");
     await rcon.command("fill 296 119 296 315 119 315 stone");
     await rcon.command("fill 300 120 300 311 147 311 air");
-    await rcon.command(`tp ${bot.username} 300.5 120 298.5`);
+    await rcon.command(`minecraft:tp ${bot.username} 300.5 120 298.5`);
     await waitUntil(
       "placement arrival",
       () => bot.entity.position.distanceTo(new Vec3(300.5, 120, 298.5)) < 0.3,
@@ -208,7 +208,7 @@ describe("protected shop recovery", () => {
     expect(await rcon.command(`plotfixture check ${bot.username}`)).toContain(
       "PLOT_FIXTURE CHECKED",
     );
-    await rcon.command(`tp ${secondBot.username} 301.5 120 304.5`);
+    await rcon.command(`minecraft:tp ${secondBot.username} 301.5 120 304.5`);
     await waitUntil(
       "customer sees recovered shop",
       () =>

@@ -615,12 +615,7 @@ describe("Burst-memory sharing policy", () => {
             },
             {
               name: "CFG_DISCORD_CHANNEL_ID",
-              valueFrom: {
-                secretKeyRef: {
-                  name: "minecraft-sjerred-discord",
-                  key: "DISCORD_CHANNEL_ID",
-                },
-              },
+              value: "1337631455085334650",
             },
           ],
         }),

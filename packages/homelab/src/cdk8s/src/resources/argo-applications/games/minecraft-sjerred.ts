@@ -55,7 +55,7 @@ export function createMinecraftSjerredApp(chart: Chart) {
   new OnePasswordItem(chart, "minecraft-sjerred-discord-1p", {
     spec: {
       itemPath:
-        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/q37vet77dfggoqbvu4bqle3gje",
+        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/yqp25gif2grm5gkg6l44e6vmxy",
     },
     metadata: {
       name: DISCORD_SECRET_NAME,
@@ -249,7 +249,10 @@ export function createMinecraftSjerredApp(chart: Chart) {
     ],
     initContainers: [
       getDynmapConfigInitContainer(),
-      getDiscordIntegrationConfigInitContainer(DISCORD_SECRET_NAME),
+      getDiscordIntegrationConfigInitContainer(
+        DISCORD_SECRET_NAME,
+        "1337631455085334650",
+      ),
     ],
   };
 

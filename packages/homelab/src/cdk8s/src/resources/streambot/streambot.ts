@@ -170,7 +170,8 @@ export function createStreambotDeployment(
         // member-userbot per (guild, voice channel); guild/channel are now dynamic (the issuer's VC),
         // so GUILD_ID/VIDEO_CHANNEL_ID/COMMAND_CHANNEL_ID are no longer needed.
         USER_TOKENS: fromSecret("USER_TOKENS"),
-        ADMIN_IDS: fromSecret("ADMIN_IDS"),
+        // This grants bot administration and stays under Git review.
+        ADMIN_IDS: EnvValue.fromValue("160509172704739328"),
         // Peer userbot Discord user IDs (Pokébot + Glitter Kart) so the alone-channel
         // detector excludes them from the "real viewers" count and leaves once the
         // last human exits. Sourced from the canonical map in resources/userbot-ids.ts.

@@ -230,7 +230,7 @@ describe("credential resolver backends", () => {
           "op",
           "read",
           // eslint-disable-next-line no-secrets/no-secrets -- op:// vault/item locator, not a secret value
-          "op://yx6je6mgj2oiss6z5bm42h3cxy/nfviaka4ibphb2aodeoeow46zq/ARGOCD_AUTH_TOKEN",
+          "op://v64ocnykdqju4ui6j6pua56xw4/yikdwue26c7gdbk5ftbvaclkli/ARGOCD_AUTH_TOKEN",
         ]);
         return { exit: 0, stdout: "test-argocd-secret\n", stderr: "" };
       }, calls);

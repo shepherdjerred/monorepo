@@ -76,6 +76,10 @@ toolkit ci load                        # Queue, Kueue admission, CPU/memory/disk
 toolkit pr review list 3447 --json      # Human and provider feedback with full bodies
 ```
 
+CI commands resolve `WOODPECKER_TOKEN` through the registered credential broker,
+as the native Woodpecker command does. An explicit token retains precedence;
+custom server URLs or repository IDs require an explicit token.
+
 `wait` pins the initial PR head (or asserts `--head <full SHA>`), subscribes to
 Woodpecker events before reading status, and refreshes GitHub metadata every
 30 seconds. It returns as soon as a blocking check fails, merge conflicts
@@ -122,9 +126,10 @@ Secrets and terminal control sequences are removed before truncation.
 and 143. The command does not merge or mutate the PR.
 
 GitHub credentials come from `GH_TOKEN` or `gh auth token`.
-The default Woodpecker connection reads the `WOODPECKER_API_TOKEN` field of
-the `Woodpecker Server` item in the `Homelab (Kubernetes)` 1Password vault,
-unless `WOODPECKER_TOKEN` is supplied. Custom `WOODPECKER_URL` or
+The default Woodpecker connection resolves `WOODPECKER_TOKEN` through the
+registered credential broker, preserving environment and credential-locator
+config overrides. The broker uses `OP_SERVICE_ACCOUNT_TOKEN` or the enrolled
+macOS Keychain credential for 1Password authentication. Custom `WOODPECKER_URL` or
 `WOODPECKER_REPO_ID` connections require an explicit token. Load telemetry
 uses the configured `kubectl` context and `gcx --context homelab`.
 

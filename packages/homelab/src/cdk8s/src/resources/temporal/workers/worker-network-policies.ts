@@ -87,8 +87,51 @@ function createTemporalWorkersFliptEgressPolicy(chart: Chart): void {
   });
 }
 
+function createTemporalWorkersSeaweedfsEgressPolicy(chart: Chart): void {
+  new KubeNetworkPolicy(chart, "temporal-workers-seaweedfs-netpol", {
+    metadata: { name: "temporal-workers-seaweedfs-netpol" },
+    spec: {
+      podSelector: {
+        matchExpressions: [
+          {
+            key: "component",
+            operator: "In",
+            values: [
+              "reports-worker",
+              "repo-worker",
+              "scout-worker",
+              "glitter-corpus-worker",
+            ],
+          },
+        ],
+      },
+      policyTypes: ["Egress"],
+      egress: [
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "seaweedfs" },
+              },
+              podSelector: {
+                matchLabels: {
+                  "app.kubernetes.io/name": "seaweedfs",
+                  "app.kubernetes.io/instance": "seaweedfs",
+                  "app.kubernetes.io/component": "s3",
+                },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(8333), protocol: "TCP" }],
+        },
+      ],
+    },
+  });
+}
+
 export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
   createTemporalWorkersFliptEgressPolicy(chart);
+  createTemporalWorkersSeaweedfsEgressPolicy(chart);
 
   new KubeNetworkPolicy(chart, "temporal-central-workflows-netpol", {
     metadata: { name: "temporal-central-workflows-netpol" },
@@ -249,6 +292,23 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
         { ports: [{ port: IntOrString.fromNumber(6443), protocol: "TCP" }] },
         { ports: [{ port: IntOrString.fromNumber(9090), protocol: "TCP" }] },
         { ports: [{ port: IntOrString.fromNumber(7341), protocol: "TCP" }] },
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+              },
+              podSelector: {
+                matchLabels: {
+                  "app.kubernetes.io/name": "grafana",
+                  "app.kubernetes.io/instance": "prometheus",
+                },
+              },
+            },
+          ],
+          // The HTTP service targets Grafana's named backend port (3000).
+          ports: [{ port: IntOrString.fromString("grafana"), protocol: "TCP" }],
+        },
         {
           to: [
             {

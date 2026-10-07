@@ -10,6 +10,137 @@ function resources() {
   return synthesizeTemporalResources(".test-synth-temporal-backup-worker");
 }
 
+describe("Temporal internal service boundary", () => {
+  test("keeps the home worker on TLS through its permitted HTTPS egress", () => {
+    const synthesized = resources();
+    const { container } = findTemporalWorkerContainer(
+      synthesized,
+      "temporal-temporal-home-worker",
+    );
+    const endpoint = container.env.find(
+      (variable) => variable.name === "HA_URL",
+    );
+    expect(endpoint?.value).toBe("https://homeassistant.tailnet-1a49.ts.net");
+    expect(endpoint?.valueFrom).toBeUndefined();
+    expect(
+      findTemporalResource(
+        synthesized,
+        "NetworkPolicy",
+        "temporal-home-worker-netpol",
+      ).spec,
+    ).toMatchObject({
+      podSelector: { matchLabels: { component: "home-worker" } },
+      egress: expect.arrayContaining([
+        { ports: [{ port: 443, protocol: "TCP" }] },
+      ]),
+    });
+  });
+
+  test("permits cluster S3 only for its four additional consuming roles", () => {
+    const synthesized = resources();
+    const components = [
+      "reports-worker",
+      "repo-worker",
+      "scout-worker",
+      "glitter-corpus-worker",
+    ];
+    for (const component of components) {
+      const { container } = findTemporalWorkerContainer(
+        synthesized,
+        `temporal-temporal-${component}`,
+      );
+      const endpointKey =
+        component === "glitter-corpus-worker"
+          ? "GLITTER_CORPUS_S3_ENDPOINT"
+          : "S3_ENDPOINT";
+      expect(
+        container.env.find((variable) => variable.name === endpointKey)?.value,
+      ).toMatch(/:8333$/u);
+    }
+    const policy = findTemporalResource(
+      synthesized,
+      "NetworkPolicy",
+      "temporal-workers-seaweedfs-netpol",
+    );
+    expect(policy.spec).toEqual({
+      podSelector: {
+        matchExpressions: [
+          { key: "component", operator: "In", values: components },
+        ],
+      },
+      policyTypes: ["Egress"],
+      egress: [
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "seaweedfs" },
+              },
+              podSelector: {
+                matchLabels: {
+                  "app.kubernetes.io/name": "seaweedfs",
+                  "app.kubernetes.io/instance": "seaweedfs",
+                  "app.kubernetes.io/component": "s3",
+                },
+              },
+            },
+          ],
+          ports: [{ port: 8333, protocol: "TCP" }],
+        },
+      ],
+    });
+  });
+
+  test("permits the audit worker to reach only Grafana's named HTTP backend", () => {
+    const policy = findTemporalResource(
+      resources(),
+      "NetworkPolicy",
+      "temporal-infra-api-netpol",
+    );
+    const spec = z
+      .object({
+        podSelector: z.object({
+          matchLabels: z.record(z.string(), z.string()),
+        }),
+        egress: z.array(
+          z.object({
+            to: z.array(z.unknown()).optional(),
+            ports: z.array(
+              z.object({
+                port: z.union([z.string(), z.number()]),
+                protocol: z.string(),
+              }),
+            ),
+          }),
+        ),
+      })
+      .parse(policy.spec);
+    expect(spec.podSelector.matchLabels).toEqual({ component: "infra-worker" });
+    expect(
+      spec.egress.filter((rule) =>
+        rule.ports.some((port) => port.port === "grafana"),
+      ),
+    ).toEqual([
+      {
+        to: [
+          {
+            namespaceSelector: {
+              matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+            },
+            podSelector: {
+              matchLabels: {
+                "app.kubernetes.io/name": "grafana",
+                "app.kubernetes.io/instance": "prometheus",
+              },
+            },
+          },
+        ],
+        ports: [{ port: "grafana", protocol: "TCP" }],
+      },
+    ]);
+  });
+});
+
 describe("Temporal SeaweedFS backup boundary", () => {
   test("uses one dedicated secret and no Kubernetes token", () => {
     const synthesized = resources();

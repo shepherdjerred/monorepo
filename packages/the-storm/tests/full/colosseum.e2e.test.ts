@@ -81,7 +81,7 @@ describe("Colosseum chest access on real Paper", () => {
         if (x === undefined || y === undefined || z === undefined)
           throw new Error("Invalid chest fixture");
         await rcon.command(
-          `tp ${bot.username} ${(x + 0.5).toString()} ${(y + 1).toString()} ${(z + 1.5).toString()}`,
+          `minecraft:tp ${bot.username} ${(x + 0.5).toString()} ${(y + 1).toString()} ${(z + 1.5).toString()}`,
         );
         const position = new Vec3(x, y, z);
         await waitUntil(
@@ -123,9 +123,9 @@ describe("Colosseum on real Paper", () => {
     rcon,
   }) => {
     await withKnightWave(bot, rcon, async () => {
-      await rcon.command(`tp ${bot.username} 200.5 42 2.5`);
+      await rcon.command(`minecraft:tp ${bot.username} 200.5 42 2.5`);
       await rcon.command(
-        "tp @e[type=minecraft:zombie,x=164,y=30,z=-60,dx=126,dy=70,dz=124] 250.5 42 2.5",
+        "minecraft:tp @e[type=minecraft:zombie,x=164,y=30,z=-60,dx=126,dy=70,dz=124] 250.5 42 2.5",
       );
       await waitUntil(
         "three distant zombies",

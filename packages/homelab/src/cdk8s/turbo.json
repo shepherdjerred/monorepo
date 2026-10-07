@@ -12,6 +12,10 @@
         // change to them must invalidate this task like a change to the
         // checker itself.
         "scripts/onepassword-lib.ts",
+        "$TURBO_ROOT$/packages/homelab/scripts/tofu/application-secrets.ts",
+        "$TURBO_ROOT$/packages/homelab/src/tofu/application-secrets/desired-state.json",
+        "$TURBO_ROOT$/packages/homelab/scripts/platform-desired-state.ts",
+        "$TURBO_ROOT$/packages/homelab/src/tofu/*/desired-state.json",
         "onepassword-vault-snapshot.json"
       ]
     },

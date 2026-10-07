@@ -15,7 +15,9 @@ import { opsSnapshotEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temp
 
 function s3Env(secret: ISecret): Record<string, EnvValue> {
   return {
-    S3_ENDPOINT: EnvValue.fromSecretValue({ secret, key: "S3_ENDPOINT" }),
+    S3_ENDPOINT: EnvValue.fromValue(
+      "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
+    ),
     S3_REGION: EnvValue.fromValue("us-east-1"),
     AWS_REGION: EnvValue.fromValue("us-east-1"),
     AWS_DEFAULT_REGION: EnvValue.fromValue("us-east-1"),
@@ -178,19 +180,13 @@ export function createTemporalOperationsWorkers(
         secret: props.secret,
         key: "OPENAI_API_KEY",
       }),
-      S3_BUCKET_NAME: EnvValue.fromSecretValue({
-        secret: props.secret,
-        key: "S3_BUCKET_NAME",
-      }),
+      S3_BUCKET_NAME: EnvValue.fromValue("better-skill-capped"),
       S3_KEY: EnvValue.fromValue("data/manifest.json"),
       WOODPECKER_TOKEN: EnvValue.fromSecretValue({
         secret: props.secret,
         key: "WOODPECKER_TOKEN",
       }),
-      WOODPECKER_REPO_ID: EnvValue.fromSecretValue({
-        secret: props.secret,
-        key: "WOODPECKER_REPO_ID",
-      }),
+      WOODPECKER_REPO_ID: EnvValue.fromValue("1"),
       // HTTP origin, not the agent gRPC endpoint WOODPECKER_SERVER names.
       WOODPECKER_URL: EnvValue.fromValue("https://woodpecker.sjer.red"),
       ALERTMANAGER_URL: EnvValue.fromValue(
@@ -284,10 +280,9 @@ export function createTemporalOperationsWorkers(
         secret: props.backupSecret,
         key: "SEAWEEDFS_BACKUP_SOURCE_SECRET_ACCESS_KEY",
       }),
-      R2_BACKUP_ENDPOINT: EnvValue.fromSecretValue({
-        secret: props.backupSecret,
-        key: "R2_BACKUP_ENDPOINT",
-      }),
+      R2_BACKUP_ENDPOINT: EnvValue.fromValue(
+        "https://48948ed6cd40d73e34d27f0cc10e595f.r2.cloudflarestorage.com",
+      ),
       R2_BACKUP_ACCESS_KEY_ID: EnvValue.fromSecretValue({
         secret: props.backupSecret,
         key: "R2_BACKUP_ACCESS_KEY_ID",

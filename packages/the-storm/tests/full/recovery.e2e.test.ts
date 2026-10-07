@@ -32,7 +32,8 @@ describe("minor survival recovery on real Paper", () => {
       }
       await waitUntil(
         "isolated recovery platform",
-        () => bot.entity.position.y === 101,
+        () =>
+          bot.entity.position.y === 101 && secondBot.entity.position.y === 101,
       );
       await rcon.command(`damage ${bot.username} 15 minecraft:generic`);
       await waitUntil("injured survivor", () => bot.health === 5);

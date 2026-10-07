@@ -363,7 +363,7 @@ export async function deliverReport(
   }
   return deliverReportWithDependencies(report, {
     backend: deliveryBackend(store),
-    addresses: resolvePostalAddresses(),
+    addresses: await resolvePostalAddresses(),
     send: (input) => sendPostalEmail(input),
     now: () => new Date().toISOString(),
     // Per-attempt, so a retry never mistakes a previous attempt's lease for its

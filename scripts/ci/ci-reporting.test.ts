@@ -776,6 +776,8 @@ describe("CI reporting manifest", () => {
           "scripts/argocd/argocd-child-sync-timeout.test.ts",
           "scripts/argocd/argocd-release-result.test.ts",
           "scripts/tofu/tofu-stack.test.ts",
+          "scripts/tofu/credential-handoff.test.ts",
+          "scripts/tofu/application-secrets.integration.test.ts",
         ],
       },
     ]);

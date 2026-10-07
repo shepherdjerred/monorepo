@@ -150,10 +150,6 @@ export function createAlertDashboardDeployment(chart: Chart) {
         POSTAL_HOST: EnvValue.fromValue(
           "http://postal-postal-web-service.postal.svc.cluster.local:5000",
         ),
-        EMAIL_ENABLED: EnvValue.fromSecretValue({
-          secret,
-          key: "EMAIL_ENABLED",
-        }),
         ALERT_DASHBOARD_WEBHOOK_TOKEN: EnvValue.fromSecretValue({
           secret,
           key: "WEBHOOK_TOKEN",
@@ -173,12 +169,7 @@ export function createAlertDashboardDeployment(chart: Chart) {
           secret,
           key: "POSTAL_API_KEY",
         }),
-        POSTAL_FROM: EnvValue.fromSecretValue({ secret, key: "POSTAL_FROM" }),
-        POSTAL_HOST_HEADER: EnvValue.fromSecretValue({
-          secret,
-          key: "POSTAL_HOST_HEADER",
-        }),
-        POSTAL_TO: EnvValue.fromSecretValue({ secret, key: "POSTAL_TO" }),
+        POSTAL_HOST_HEADER: EnvValue.fromValue("postal.tailnet-1a49.ts.net"),
         OTEL_EXPORTER_OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
         OTEL_SERVICE_NAME: EnvValue.fromValue("alert-dashboard"),
         TELEMETRY_ENABLED: EnvValue.fromValue("true"),

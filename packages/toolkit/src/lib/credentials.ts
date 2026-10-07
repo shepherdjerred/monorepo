@@ -21,6 +21,8 @@ export type CredentialSpec = {
   readonly source: CredentialSource;
 };
 
+const PRIVATE_VAULT_REF = "op://63lcesgoblzbpkdr4koye66rei";
+
 export const CREDENTIAL_REGISTRY: Record<string, CredentialSpec> = {
   GRAFANA_API_KEY: {
     description: "Grafana API key",
@@ -34,15 +36,14 @@ export const CREDENTIAL_REGISTRY: Record<string, CredentialSpec> = {
     source: {
       kind: "op",
       // eslint-disable-next-line no-secrets/no-secrets -- op:// vault/item locator, not a secret value
-      ref: "op://v64ocnykdqju4ui6j6pua56xw4/iixelnobjabehkgxhl3ekacdy4/LINEAR_API_KEY",
+      ref: "op://v64ocnykdqju4ui6j6pua56xw4/iixelnobjabehkgxhl3ekacdy4/Section_2asirbjrrxc5apqr4s7qqfm4f4/puqwftbxah4ys746ahp6jjrxpq",
     },
   },
   POSTHOG_CLI_API_KEY: {
     description: "PostHog CLI API key",
     source: {
       kind: "op",
-      // eslint-disable-next-line no-secrets/no-secrets -- op:// vault/item locator, not a secret value
-      ref: "op://v64ocnykdqju4ui6j6pua56xw4/yh3xvqemmr4ic2up5zluo2rkcq/POSTHOG_API_KEY",
+      ref: "op://v64ocnykdqju4ui6j6pua56xw4/yh3xvqemmr4ic2up5zluo2rkcq/m7vvkd6ymu6pqk32zm7kqfynve",
     },
   },
   CF_API_TOKEN: {
@@ -57,7 +58,7 @@ export const CREDENTIAL_REGISTRY: Record<string, CredentialSpec> = {
     source: {
       kind: "op",
       // eslint-disable-next-line no-secrets/no-secrets -- op:// vault/item locator, not a secret value
-      ref: "op://yx6je6mgj2oiss6z5bm42h3cxy/nfviaka4ibphb2aodeoeow46zq/ARGOCD_AUTH_TOKEN",
+      ref: "op://v64ocnykdqju4ui6j6pua56xw4/yikdwue26c7gdbk5ftbvaclkli/ARGOCD_AUTH_TOKEN",
     },
   },
   DISCORD_USER_TOKEN: {
@@ -103,12 +104,11 @@ export const TEMPORAL_IN_CLUSTER_ADDRESS =
 
 /** Desktop-auth refs used only to spell the Keychain enrollment command. */
 const KEYCHAIN_ENROLL_REFS: Record<string, string> = {
-  "monorepo-workstation-discord-user-token":
-    "op://Personal/sskm6skq3mwnyqnhrmqwji6dne/TOKEN",
-  "monorepo-workstation-discord-bot-token":
-    "op://Personal/ytv272dyktkeipt347f2yf5kue/BOT_TOKEN",
+  "monorepo-workstation-discord-user-token": `${PRIVATE_VAULT_REF}/sskm6skq3mwnyqnhrmqwji6dne/TOKEN`,
+  "monorepo-workstation-discord-bot-token": `${PRIVATE_VAULT_REF}/ytv272dyktkeipt347f2yf5kue/BOT_TOKEN`,
   "monorepo-workstation-bugsink-token":
-    "op://63lcesgoblzbpkdr4koye66rei/76xqbj2znu6lkspwxhljuae554/credential",
+    // eslint-disable-next-line no-secrets/no-secrets -- op:// vault/item locator, not a secret value
+    "op://v64ocnykdqju4ui6j6pua56xw4/jeuqmwh3r4nwu2ivo4pa3gr7om/BUGSINK_TOKEN",
 };
 
 const SERVICE_ACCOUNT_KEYCHAIN_SERVICE =

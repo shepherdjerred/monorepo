@@ -16,6 +16,24 @@ import type { DigestGatePort } from "#application/ports";
 const TARGETING_KEY = "alert-dashboard";
 
 const DEFINITION = {
+  alertEmailEnabled: {
+    schema: z.boolean(),
+    sources: ["flag", "default"],
+    default: false,
+    names: { flag: "alert-dashboard-email-enabled" },
+  },
+  alertEmailFrom: {
+    schema: z.email(),
+    sources: ["flag", "default"],
+    default: "alerts@sjer.red",
+    names: { flag: "alert-dashboard-email-from" },
+  },
+  alertEmailTo: {
+    schema: z.email(),
+    sources: ["flag", "default"],
+    default: "dependencies@sjer.red",
+    names: { flag: "alert-dashboard-email-to" },
+  },
   opsDigestEmailEnabled: {
     schema: z.boolean(),
     sources: ["flag", "default"],
@@ -30,7 +48,12 @@ function createResolver() {
     sources: {
       flag: createFlagConfigSource({
         targetingKey: TARGETING_KEY,
-        kinds: { opsDigestEmailEnabled: "boolean" },
+        kinds: {
+          opsDigestEmailEnabled: "boolean",
+          alertEmailEnabled: "boolean",
+          alertEmailFrom: "string",
+          alertEmailTo: "string",
+        },
       }),
     },
     hooks: {
@@ -47,6 +70,21 @@ function createResolver() {
       },
     },
   });
+}
+
+/** Incident mail is constructed at startup; changes require a restart. */
+export async function alertEmailConfig() {
+  const resolver = createResolver();
+  const [enabled, from, to] = await Promise.all([
+    resolver.value("alertEmailEnabled"),
+    resolver.value("alertEmailFrom"),
+    resolver.value("alertEmailTo"),
+  ]);
+  return {
+    EMAIL_ENABLED: String(enabled),
+    POSTAL_FROM: from,
+    POSTAL_TO: to,
+  };
 }
 
 export type FlagMetricSink = {

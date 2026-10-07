@@ -263,7 +263,12 @@ export const STARLIGHT_KARMA_BOT_VARIANT_FLAG_KEYS = [
 export type StarlightKarmaBotVariantFlagKey =
   (typeof STARLIGHT_KARMA_BOT_VARIANT_FLAG_KEYS)[number];
 
-export const TRMNL_DASHBOARD_FLAG_KEYS = ["pet-dashboard-enabled"] as const;
+export const TRMNL_DASHBOARD_FLAG_KEYS = [
+  "trmnl-ha-presence-entities",
+  "trmnl-ha-security-entities",
+  "trmnl-ha-climate-entities",
+  "pet-dashboard-enabled",
+] as const;
 
 export type TrmnlDashboardFlagKey = (typeof TRMNL_DASHBOARD_FLAG_KEYS)[number];
 
@@ -274,12 +279,18 @@ export const TRMNL_DASHBOARD_BOOLEAN_FLAG_KEYS = [
 export type TrmnlDashboardBooleanFlagKey =
   (typeof TRMNL_DASHBOARD_BOOLEAN_FLAG_KEYS)[number];
 
-export const TRMNL_DASHBOARD_VARIANT_FLAG_KEYS = [] as const;
+export const TRMNL_DASHBOARD_VARIANT_FLAG_KEYS = [
+  "trmnl-ha-presence-entities",
+  "trmnl-ha-security-entities",
+  "trmnl-ha-climate-entities",
+] as const;
 
 export type TrmnlDashboardVariantFlagKey =
   (typeof TRMNL_DASHBOARD_VARIANT_FLAG_KEYS)[number];
 
 export const TEMPORAL_FLAG_KEYS = [
+  "temporal-email-recipient",
+  "temporal-email-sender",
   "temporal-agent-chat-discord-claude-default-model",
   "temporal-agent-chat-discord-codex-default-model",
   "temporal-agent-chat-imessage-claude-model",
@@ -303,6 +314,8 @@ export type TemporalBooleanFlagKey =
   (typeof TEMPORAL_BOOLEAN_FLAG_KEYS)[number];
 
 export const TEMPORAL_VARIANT_FLAG_KEYS = [
+  "temporal-email-recipient",
+  "temporal-email-sender",
   "temporal-agent-chat-discord-claude-default-model",
   "temporal-agent-chat-discord-codex-default-model",
   "temporal-agent-chat-imessage-claude-model",
@@ -314,18 +327,27 @@ export const TEMPORAL_VARIANT_FLAG_KEYS = [
 export type TemporalVariantFlagKey =
   (typeof TEMPORAL_VARIANT_FLAG_KEYS)[number];
 
-export const ALERT_DASHBOARD_FLAG_KEYS = ["ops-digest-email-enabled"] as const;
+export const ALERT_DASHBOARD_FLAG_KEYS = [
+  "alert-dashboard-email-enabled",
+  "alert-dashboard-email-from",
+  "alert-dashboard-email-to",
+  "ops-digest-email-enabled",
+] as const;
 
 export type AlertDashboardFlagKey = (typeof ALERT_DASHBOARD_FLAG_KEYS)[number];
 
 export const ALERT_DASHBOARD_BOOLEAN_FLAG_KEYS = [
+  "alert-dashboard-email-enabled",
   "ops-digest-email-enabled",
 ] as const;
 
 export type AlertDashboardBooleanFlagKey =
   (typeof ALERT_DASHBOARD_BOOLEAN_FLAG_KEYS)[number];
 
-export const ALERT_DASHBOARD_VARIANT_FLAG_KEYS = [] as const;
+export const ALERT_DASHBOARD_VARIANT_FLAG_KEYS = [
+  "alert-dashboard-email-from",
+  "alert-dashboard-email-to",
+] as const;
 
 export type AlertDashboardVariantFlagKey =
   (typeof ALERT_DASHBOARD_VARIANT_FLAG_KEYS)[number];

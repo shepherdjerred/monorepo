@@ -175,6 +175,7 @@ const PLAN_STACKS = [
  * serialization group, so they live with the release chain.
  */
 const PLATFORM_STACKS = [
+  "application-secrets",
   "openai",
   "anthropic",
   "discord",

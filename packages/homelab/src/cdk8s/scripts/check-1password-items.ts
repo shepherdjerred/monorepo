@@ -29,12 +29,17 @@ import {
 } from "@shepherdjerred/homelab/scripts/platform-desired-state.ts";
 import {
   hash,
+  OnePasswordManifestSchema as ManifestSchema,
   SnapshotSchema,
   SNAPSHOT_PATH,
   VAULT_ID,
   type Snapshot,
   type SnapshotItem,
 } from "./onepassword-lib.ts";
+import {
+  applicationTargets,
+  type CredentialTarget,
+} from "homelab/scripts/tofu/application-secrets.ts";
 
 const ITEM_PATH_RE = /^vaults\/([^/]+)\/items\/(.+)$/;
 /**
@@ -72,21 +77,6 @@ const HelmRconSchema = z.object({
   withGeneratedPassword: z.boolean().optional(),
   existingSecret: z.string().min(1),
   secretKey: z.string().min(1),
-});
-const ManifestSchema = z.object({
-  apiVersion: z.string().optional(),
-  kind: z.string().optional(),
-  metadata: z
-    .object({ name: z.string().optional(), namespace: z.string().optional() })
-    .optional(),
-  spec: z
-    .object({
-      itemPath: z.string().optional(),
-      // ArgoCD Application: the workload (and its consumed secrets) lives in the
-      // destination namespace, not the Application's own metadata.namespace.
-      destination: z.object({ namespace: z.string().optional() }).optional(),
-    })
-    .optional(),
 });
 
 function nsKey(namespace: string | undefined): string {
@@ -146,7 +136,7 @@ export function collectConsumption(
   for (const value of Object.values(object)) collectConsumption(value, into);
 }
 
-async function synthManifests(): Promise<unknown[]> {
+export async function synthManifests(): Promise<unknown[]> {
   const app = new App();
   await setupCharts(app);
   const manifests: unknown[] = [];
@@ -198,7 +188,7 @@ async function loadSnapshot(): Promise<Snapshot> {
   return parsed.data;
 }
 
-function collectReferences(manifests: unknown[]): {
+export function collectReferences(manifests: unknown[]): {
   opItems: OpItemRef[];
   consumption: Consumption;
 } {
@@ -311,11 +301,11 @@ function validateFields(
 }
 
 type DesiredStateTarget = {
-  platform: PlatformStack;
-  target: OnePasswordTarget;
+  platform: PlatformStack | "application-secrets";
+  target: OnePasswordTarget & Partial<CredentialTarget>;
 };
 
-async function collectDesiredStateTargets(): Promise<
+export async function collectDesiredStateTargets(): Promise<
   readonly DesiredStateTarget[]
 > {
   const targets: DesiredStateTarget[] = [];
@@ -327,11 +317,38 @@ async function collectDesiredStateTargets(): Promise<
       targets.push({ platform, target });
     }
   }
+  for (const target of applicationTargets)
+    targets.push({ platform: "application-secrets", target });
   return targets;
 }
 
+/** Match all physical selectors against one field in the hashed snapshot. */
+function matchingPhysicalFields(
+  entry: SnapshotItem,
+  target: DesiredStateTarget["target"],
+  labelHash: string,
+): number {
+  const labelOnly =
+    target.vault_section_id === undefined &&
+    target.vault_field_id === undefined;
+  const sectionHash =
+    target.vault_section_id === undefined
+      ? null
+      : hash(target.vault_section_id);
+  const fieldIdHash =
+    target.vault_field_id === undefined
+      ? undefined
+      : hash(target.vault_field_id);
+  return entry.fieldSelectors.filter(
+    (field) =>
+      field.label === labelHash &&
+      (labelOnly || field.section === sectionHash) &&
+      (fieldIdHash === undefined || field.id === fieldIdHash),
+  ).length;
+}
+
 /** Verify desired-state rotation units against the same hashed vault snapshot. */
-function validateDesiredStateTargets(
+export function validateDesiredStateTargets(
   targets: readonly DesiredStateTarget[],
   byHash: Map<string, SnapshotItem>,
   errors: string[],
@@ -347,13 +364,26 @@ function validateDesiredStateTargets(
       );
       continue;
     }
+    if (target.vault_field === undefined) continue;
+    const labelHash = hash(target.vault_field);
+    // Platform providers publish operator keys; application adoption selects
+    // physical fields and must match the handoff reader's exact selectors.
     if (
-      target.vault_field !== undefined &&
-      !entry.fields.includes(hash(target.vault_field))
+      platform !== "application-secrets" &&
+      target.vault_field_id === undefined &&
+      target.vault_section_id === undefined
     ) {
+      if (!entry.fields.includes(labelHash))
+        errors.push(
+          `1Password handoff field "${target.vault_field}" not found on item "${target.vault_item_id}" in ${platform} desired state. ` +
+            `If it was just added or renamed, refresh the snapshot.`,
+        );
+      continue;
+    }
+    if (matchingPhysicalFields(entry, target, labelHash) !== 1) {
       errors.push(
-        `1Password handoff field "${target.vault_field}" not found on item "${target.vault_item_id}" in ${platform} desired state. ` +
-          `If it was just added or renamed, refresh the snapshot.`,
+        `1Password handoff selectors for field "${target.vault_field}" do not identify exactly one field on item "${target.vault_item_id}" in ${platform} desired state. ` +
+          `Check the field ID and section ID, then refresh the snapshot if they changed.`,
       );
     }
   }
