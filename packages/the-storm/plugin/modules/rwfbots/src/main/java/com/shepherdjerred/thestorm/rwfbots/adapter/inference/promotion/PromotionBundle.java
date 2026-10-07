@@ -1,16 +1,114 @@
 package com.shepherdjerred.thestorm.rwfbots.adapter.inference.promotion;
 
 import com.shepherdjerred.thestorm.rwfbots.adapter.inference.ActorManifest;
+import com.shepherdjerred.thestorm.rwfbots.adapter.inference.ActorParity;
+import com.shepherdjerred.thestorm.rwfbots.adapter.inference.ActorParityEvidence;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.ObjectNode;
 
-/** Read-only accepted loading boundary, called before any native model session is allocated. */
+/** Accepted loading validation and offline sealing, with bundle checks before native allocation. */
 public final class PromotionBundle {
   private PromotionBundle() {}
+
+  public record Sealed(
+      int schema,
+      String kind,
+      String acceptance,
+      String actor_sha256,
+      String source_manifest_sha256,
+      String manifest_sha256,
+      String promotion_sha256,
+      ActorParity.Result java_parity,
+      boolean learned_control_enabled) {}
+
+  /** Offline producer boundary: no accepted manifest exists until every gate and replay passes. */
+  public static Sealed seal(Path directory, Path sourceDirectory) {
+    try {
+      if (Files.exists(directory.resolve("manifest.json")))
+        throw new IllegalArgumentException("promotion manifest already exists");
+      var sourceBytes =
+          Files.readAllBytes(PromotionFiles.regular(directory, "source-manifest.json"));
+      var proofBytes = Files.readAllBytes(PromotionFiles.regular(directory, "promotion.json"));
+      var proof = PromotionContract.JSON.readValue(proofBytes, PromotionProof.class);
+      var manifest = (ObjectNode) PromotionContract.JSON.readTree(sourceBytes);
+      var proofHash = ActorManifest.sha256(proofBytes);
+      manifest.put("acceptance", "accepted").put("promotion_sha256", proofHash);
+      ActorManifest.validate(manifest, ActorManifest.Acceptance.ACCEPTED);
+      validate(directory, manifest);
+      sourceFiles(directory, sourceDirectory, proof);
+      var samples =
+          PromotionFiles.regular(
+              directory, "evidence/" + proof.parity().samples_sha256() + ".blob");
+      var receipt =
+          PromotionFiles.regular(
+              directory, "evidence/" + proof.parity().receipt_sha256() + ".blob");
+      var replay = ActorParityEvidence.verify(sourceDirectory, samples, receipt);
+      sourceFiles(directory, sourceDirectory, proof);
+      validate(directory, manifest);
+      var bytes =
+          (PromotionContract.JSON.writeValueAsString(manifest) + "\n")
+              .getBytes(StandardCharsets.UTF_8);
+      write(directory.resolve("manifest.json"), bytes);
+      return new Sealed(
+          1,
+          "rwf-actor-promotion-result",
+          "accepted",
+          proof.actor_sha256(),
+          proof.source_manifest_sha256(),
+          ActorManifest.sha256(bytes),
+          proofHash,
+          replay,
+          false);
+    } catch (IOException failure) {
+      throw new UncheckedIOException(failure);
+    }
+  }
+
+  private static void sourceFiles(Path directory, Path sourceDirectory, PromotionProof proof)
+      throws IOException {
+    PromotionGates.require(
+        PromotionFiles.hash(PromotionFiles.regular(directory, "actor.onnx"))
+            .equals(proof.actor_sha256()),
+        "bundled actor checksum");
+    PromotionGates.require(
+        PromotionFiles.hash(PromotionFiles.regular(sourceDirectory, "actor.onnx"))
+                .equals(proof.actor_sha256())
+            && PromotionFiles.hash(PromotionFiles.regular(sourceDirectory, "manifest.json"))
+                .equals(proof.source_manifest_sha256()),
+        "original actor changed during sealing");
+  }
+
+  private static void write(Path target, byte[] bytes) throws IOException {
+    try (var output =
+        FileChannel.open(target, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)) {
+      var buffer = ByteBuffer.wrap(bytes);
+      while (buffer.hasRemaining()) output.write(buffer);
+      output.force(true);
+    }
+  }
+
+  public static void main(String[] args) {
+    if (args.length != 2)
+      throw new IllegalArgumentException(
+          "ActorPromotion <bundle directory> <original unaccepted export>");
+    var directory = Path.of(args[0]);
+    var result = seal(directory, Path.of(args[1]));
+    var text = PromotionContract.JSON.writeValueAsString(result) + "\n";
+    try {
+      write(directory.resolve("promotion-result.json"), text.getBytes(StandardCharsets.UTF_8));
+    } catch (IOException failure) {
+      throw new UncheckedIOException(failure);
+    }
+    System.out.print(text);
+  }
 
   public static void validate(Path directory, JsonNode manifest) {
     try {

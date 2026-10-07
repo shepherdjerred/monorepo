@@ -11,6 +11,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.List;
 import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.MapperFeature;
 import tools.jackson.databind.json.JsonMapper;
 
 /** Portable receipt for an exact artifact replay. It does not accept a model. */
@@ -20,6 +21,8 @@ public final class ActorParityEvidence {
           .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
           .enable(DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES)
           .enable(DeserializationFeature.FAIL_ON_NULL_CREATOR_PROPERTIES)
+          .disable(DeserializationFeature.ACCEPT_FLOAT_AS_INT)
+          .disable(MapperFeature.ALLOW_COERCION_OF_SCALARS)
           .build();
   static final Contract CONTRACT = contract();
 
@@ -96,6 +99,40 @@ public final class ActorParityEvidence {
     } catch (IOException failure) {
       throw new UncheckedIOException(failure);
     }
+  }
+
+  /** Replays a sealed receipt without replacing it or emitting another acceptance claim. */
+  public static ActorParity.Result verify(Path directory, Path samples, Path receiptFile) {
+    try {
+      var original = Files.readAllBytes(receiptFile);
+      var receipt = JSON.readValue(original, Receipt.class);
+      var before = binding(directory, samples);
+      validateReceipt(receipt, before);
+      var replay = ActorParity.verify(directory, samples);
+      if (!before.equals(binding(directory, samples))
+          || !Arrays.equals(original, Files.readAllBytes(receiptFile)))
+        throw new IllegalArgumentException("sealed parity evidence changed during replay");
+      return replay;
+    } catch (IOException failure) {
+      throw new UncheckedIOException(failure);
+    }
+  }
+
+  private static void validateReceipt(Receipt receipt, Binding binding) {
+    if (receipt.schema() != CONTRACT.receiptSchema()
+        || !receipt.kind().equals(CONTRACT.kind())
+        || !receipt.acceptance().equals("unaccepted")
+        || !receipt.backend().equals("onnxruntime-java-cpu")
+        || !receipt.parity_contract_sha256().equals(ActorManifest.sha256(contractBytes()))
+        || !receipt.artifacts().equals(binding)
+        || receipt.rtol() != CONTRACT.rtol()
+        || receipt.atol() != CONTRACT.atol()
+        || !receipt.replay().batches().equals(CONTRACT.batches())
+        || receipt.replay().steps() != CONTRACT.steps()
+        || !Double.isFinite(receipt.replay().maximumAbsoluteError())
+        || receipt.replay().maximumAbsoluteError() < 0)
+      throw new IllegalArgumentException(
+          "sealed parity receipt differs from exact artifact contract");
   }
 
   private static byte[] contractBytes() {

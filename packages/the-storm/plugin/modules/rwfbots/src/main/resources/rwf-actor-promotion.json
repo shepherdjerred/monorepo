@@ -42,6 +42,107 @@
     "forward": 0.45,
     "winding": 2.5
   },
+  "recordFields": {
+    "File": ["file", "sha256"],
+    "Pilot": [
+      "ledger_sha256",
+      "inputs_sha256",
+      "strength_claim_sha256",
+      "strength_plan_sha256",
+      "seeds"
+    ],
+    "Seed": [
+      "seed",
+      "started_ms",
+      "deadline_ms",
+      "completed_ms",
+      "claim_sha256",
+      "result_sha256",
+      "checkpoint_manifest_sha256",
+      "weights_sha256",
+      "matches_per_opponent",
+      "authored_wins",
+      "basic_wins",
+      "strength_sha256"
+    ],
+    "Preference": [
+      "candidate_seed",
+      "pairs",
+      "learned_votes",
+      "authored_votes",
+      "ties",
+      "source",
+      "claim_sha256",
+      "plan_sha256",
+      "review_sha256",
+      "key_sha256",
+      "ballot_sha256",
+      "result_sha256"
+    ],
+    "Parity": [
+      "receipt_sha256",
+      "samples_sha256",
+      "batches",
+      "steps",
+      "rtol",
+      "atol"
+    ],
+    "Load": [
+      "inputs_sha256",
+      "phases_sha256",
+      "log_sha256",
+      "result_sha256",
+      "cpus",
+      "heap",
+      "memory_limit_bytes",
+      "baseline_ticks",
+      "baseline_p95",
+      "phases"
+    ],
+    "Population": [
+      "bots",
+      "ticks",
+      "live_ticks",
+      "full_roster_ticks",
+      "submitted",
+      "skipped",
+      "rejected",
+      "deadline_met",
+      "deadline_missed",
+      "maximum_batch",
+      "p95",
+      "live_p95",
+      "full_roster_p95",
+      "applied",
+      "damage",
+      "damage_events"
+    ],
+    "Regressions": [
+      "evidence_sha256",
+      "actor_sha256",
+      "native_sha256",
+      "cases",
+      "native_floors",
+      "simulation_floors"
+    ],
+    "Case": ["name", "checks", "failures", "skipped"],
+    "NativeFloors": [
+      "bots",
+      "minimum_spacing",
+      "minimum_width_at_8",
+      "minimum_width_at_contact",
+      "minimum_forward",
+      "maximum_winding"
+    ],
+    "SimulationFloors": [
+      "strategy_pairs",
+      "contacts",
+      "minimum_width",
+      "median_width",
+      "mean_forward",
+      "maximum_winding"
+    ]
+  },
   "proofFields": [
     "schema",
     "kind",
