@@ -11,6 +11,31 @@ function resources() {
 }
 
 describe("Temporal internal service boundary", () => {
+  test("keeps the home worker on TLS through its permitted HTTPS egress", () => {
+    const synthesized = resources();
+    const { container } = findTemporalWorkerContainer(
+      synthesized,
+      "temporal-temporal-home-worker",
+    );
+    const endpoint = container.env.find(
+      (variable) => variable.name === "HA_URL",
+    );
+    expect(endpoint?.value).toBe("https://homeassistant.tailnet-1a49.ts.net");
+    expect(endpoint?.valueFrom).toBeUndefined();
+    expect(
+      findTemporalResource(
+        synthesized,
+        "NetworkPolicy",
+        "temporal-home-worker-netpol",
+      ).spec,
+    ).toMatchObject({
+      podSelector: { matchLabels: { component: "home-worker" } },
+      egress: expect.arrayContaining([
+        { ports: [{ port: 443, protocol: "TCP" }] },
+      ]),
+    });
+  });
+
   test("permits cluster S3 only for its four additional consuming roles", () => {
     const synthesized = resources();
     const components = [

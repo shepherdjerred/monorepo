@@ -64,9 +64,7 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
           secret,
           key: "TRMNL_API_KEY",
         }),
-        HA_URL: EnvValue.fromValue(
-          "http://home-homeassistant-service.home.svc.cluster.local:8123",
-        ),
+        HA_URL: EnvValue.fromValue("https://homeassistant.tailnet-1a49.ts.net"),
         HA_TOKEN: EnvValue.fromSecretValue({
           secret,
           key: "HA_TOKEN",

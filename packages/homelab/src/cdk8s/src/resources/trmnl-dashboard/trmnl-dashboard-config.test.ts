@@ -10,6 +10,17 @@ async function synthesizeApp(): Promise<string> {
 }
 
 describe("trmnl-dashboard configuration", () => {
+  it("sends Home Assistant bearer credentials over the existing TLS route", () => {
+    const app = new App({ outdir: ".test-synth-trmnl-dashboard-tls" });
+    createTrmnlDashboardChart(app);
+    const yaml = app.synthYaml();
+
+    expect(yaml).toContain("name: HA_URL");
+    expect(yaml).toContain("value: https://homeassistant.tailnet-1a49.ts.net");
+    expect(yaml).not.toContain("http://home-homeassistant-service");
+    expect(yaml).toContain("key: HA_TOKEN");
+  });
+
   it("renders the homelab screen from the ops dashboard service", () => {
     const app = new App({ outdir: ".test-synth-trmnl-dashboard" });
     createTrmnlDashboardChart(app);
