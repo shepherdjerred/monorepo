@@ -18,8 +18,6 @@ const AGENT_CREDENTIAL_ENVIRONMENT = [
   "OPENAI_API_KEY",
 ];
 const OUTPUT_TAIL_LIMIT = 16_384;
-const REFINER_RESULT_START = "<!-- release-refiner-result -->";
-const REFINER_RESULT_END = "<!-- /release-refiner-result -->";
 
 const ReleaseRefinerResultSchema = z.discriminatedUnion("status", [
   z
@@ -45,6 +43,11 @@ const ReleaseRefinerResultSchema = z.discriminatedUnion("status", [
     .strict(),
   z.object({ status: z.literal("no-open-release-pr") }).strict(),
 ]);
+// Structured Outputs requires an object at the root, so keep the status union
+// under result. The same Zod contract validates the final SDK response.
+const ReleaseRefinerOutputSchema = z
+  .object({ result: z.union(ReleaseRefinerResultSchema.options) })
+  .strict();
 const ReleasePrSchema = z
   .object({
     number: z.number().int().positive(),
@@ -100,22 +103,10 @@ export type ReleaseAgentRunner = (
 function parseReleaseRefinerResult(
   output: string,
 ): z.infer<typeof ReleaseRefinerResultSchema> | null {
-  let envelope: string | null = null;
-  let offset = 0;
-  for (;;) {
-    const start = output.indexOf(REFINER_RESULT_START, offset);
-    if (start === -1) break;
-    const contentStart = start + REFINER_RESULT_START.length;
-    const end = output.indexOf(REFINER_RESULT_END, contentStart);
-    if (end === -1) return null;
-    envelope = output.slice(contentStart, end).trim();
-    offset = end + REFINER_RESULT_END.length;
-  }
-  if (envelope === null) return null;
   try {
-    const raw: unknown = JSON.parse(envelope);
-    const parsed = ReleaseRefinerResultSchema.safeParse(raw);
-    return parsed.success ? parsed.data : null;
+    const raw: unknown = JSON.parse(output);
+    const parsed = ReleaseRefinerOutputSchema.safeParse(raw);
+    return parsed.success ? parsed.data.result : null;
   } catch {
     return null;
   }
@@ -238,7 +229,9 @@ async function runCodexSdk(
     webSearchMode: "disabled",
     workingDirectory: input.root,
   });
-  const result = await thread.run(input.prompt);
+  const result = await thread.run(input.prompt, {
+    outputSchema: z.toJSONSchema(ReleaseRefinerOutputSchema),
+  });
   console.log(
     `Codex release refiner completed (model=${codexConfig.catalogModelId}, ${String(result.usage?.input_tokens ?? 0)} input tokens, ${String(result.usage?.output_tokens ?? 0)} output tokens).`,
   );

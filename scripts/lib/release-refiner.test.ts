@@ -1,4 +1,5 @@
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
+import { Thread } from "@openai/codex-sdk";
 
 import {
   refinerSdkEnv,
@@ -10,9 +11,17 @@ import {
 import type { RunResult } from "./run.ts";
 
 const refinedCommitSha = "0123456789abcdef0123456789abcdef01234567";
-const refinedEnvelope = `<!-- release-refiner-result -->\n{"status":"refined","prNumber":1720,"packagesRefined":["webring"],"commitSha":"${refinedCommitSha}"}\n<!-- /release-refiner-result -->`;
-const noOpenReleasePrEnvelope =
-  '<!-- release-refiner-result -->{"status":"no-open-release-pr"}<!-- /release-refiner-result -->';
+const refinedEnvelope = JSON.stringify({
+  result: {
+    status: "refined",
+    prNumber: 1720,
+    packagesRefined: ["webring"],
+    commitSha: refinedCommitSha,
+  },
+});
+const noOpenReleasePrEnvelope = '{"result":{"status":"no-open-release-pr"}}';
+
+afterEach(() => vi.restoreAllMocks());
 const pendingReleasePrList: RunResult = {
   stdout: JSON.stringify([{ number: 1720 }]),
   stderr: "",
@@ -117,6 +126,39 @@ function harness(options: HarnessInput = {}): {
 }
 
 describe("release refiner provider selection", () => {
+  test("constrains the native Codex response and still verifies GitHub", async () => {
+    const run = vi.spyOn(Thread.prototype, "run").mockResolvedValue({
+      items: [],
+      finalResponse: refinedEnvelope,
+      usage: null,
+    });
+    const testHarness = harness({ commandResults: [releasePr, refinerCommit] });
+    delete testHarness.input.runCodex;
+
+    expect(await runReleaseRefiner(testHarness.input)).toBe("codex");
+    expect(run).toHaveBeenCalledWith(testHarness.input.prompt, {
+      outputSchema: expect.objectContaining({
+        type: "object",
+        additionalProperties: false,
+        required: ["result"],
+        properties: {
+          result: {
+            anyOf: expect.arrayContaining([
+              expect.objectContaining({
+                additionalProperties: false,
+                properties: expect.objectContaining({
+                  commitSha: { type: "string", pattern: "^[0-9a-f]{40}$" },
+                  packagesRefined: expect.objectContaining({ minItems: 1 }),
+                }),
+              }),
+            ]),
+          },
+        },
+      }),
+    });
+    expect(testHarness.calls).toHaveLength(3);
+  });
+
   test("skips inference when release-please produced no pending PR", async () => {
     const testHarness = harness({ preflight: noOpenReleasePrList });
 
@@ -171,6 +213,45 @@ describe("release refiner failure handling", () => {
       "Codex release refiner exited 0 without a valid success envelope",
     );
   });
+
+  test.each([
+    {
+      name: "pipeline 6151's truncated SHA",
+      commitSha: "be50cf9780aed0c2c058c6f46f5f935dbd9396d",
+      packagesRefined: ["webring"],
+    },
+    {
+      name: "empty package set",
+      commitSha: refinedCommitSha,
+      packagesRefined: [],
+    },
+    {
+      name: "duplicate packages",
+      commitSha: refinedCommitSha,
+      packagesRefined: ["webring", "webring"],
+    },
+  ])(
+    "rejects $name before accepting remote work",
+    async ({ commitSha, packagesRefined }) => {
+      const testHarness = harness({
+        agentOutcome: {
+          kind: "completed",
+          output: JSON.stringify({
+            result: {
+              status: "refined",
+              prNumber: 1720,
+              commitSha,
+              packagesRefined,
+            },
+          }),
+        },
+      });
+      await expect(runReleaseRefiner(testHarness.input)).rejects.toThrow(
+        "without a valid success envelope",
+      );
+      expect(testHarness.calls).toHaveLength(1);
+    },
+  );
 });
 
 describe("release refiner remote verification", () => {

@@ -252,6 +252,18 @@ The scope is on the bucket rather than a prefix because the same bucket also
 holds `ci-artifact`'s `artifacts/` trees, and a prefix grant would break those
 while the handoff half kept working.
 
+## Release refinement verifies the agent's result
+
+The [release refiner](https://github.com/shepherdjerred/monorepo/blob/main/scripts/lib/release-refiner.ts)
+constrains Codex's final response with a JSON schema derived from its validation
+contract. This prevents formatting errors, such as truncated commit SHAs, from
+turning completed edits into an unreadable success report.
+
+Schema compliance alone cannot prove that an edit happened. The runner separately
+checks GitHub's pending release PR, exact head, commit author, changed CHANGELOGs,
+and package sections in the PR body. Missing or inconsistent evidence fails the
+release lane.
+
 ## Release refinement has its own authentication boundary
 
 The main-only release refiner can use a ChatGPT subscription for Codex without

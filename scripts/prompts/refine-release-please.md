@@ -20,7 +20,7 @@ A human will review and merge — you do **not** merge.
 gh pr list --repo shepherdjerred/monorepo --base main --label "autorelease: pending" --state open --json number,headRefName,body --limit 1
 ```
 
-If no PR is returned, exit 0 with `<!-- release-refiner-result -->{"status":"no-open-release-pr"}<!-- /release-refiner-result -->`. There is nothing to refine until release-please creates one.
+If no PR is returned, return `{"result":{"status":"no-open-release-pr"}}`. There is nothing to refine until release-please creates one.
 
 Capture `number` (PR number), `headRefName` (release branch — typically `release-please--branches--main`), and `body` (current PR body).
 
@@ -55,13 +55,11 @@ refined this PR. Confirm it is still current: for every CHANGELOG that commit
 touched, the topmost section's version must equal that package's version in
 `.release-please-manifest.json`.
 
-When it is still current, emit the envelope citing that **existing** commit and
+When it is still current, return the structured result citing that **existing** commit and
 exit 0 — do not rewrite, do not commit, do not touch the PR body:
 
-```text
-<!-- release-refiner-result -->
-{"status":"refined","prNumber":<N>,"packagesRefined":[<packages whose CHANGELOGs that commit touched>],"commitSha":"<full 40-char sha of HEAD>"}
-<!-- /release-refiner-result -->
+```json
+{"result":{"status":"refined","prNumber":<N>,"packagesRefined":[<packages whose CHANGELOGs that commit touched>],"commitSha":"<full 40-char sha of HEAD>"}}
 ```
 
 `packagesRefined` must name exactly the packages whose CHANGELOGs that commit
@@ -235,12 +233,14 @@ gh pr edit <pr-number> --repo shepherdjerred/monorepo --body-file /tmp/pr-body.m
 
 Only include `<details>` blocks for packages that were actually bumped.
 
-### 9. Emit the result envelope and exit 0
+### 9. Return the structured result
 
-```text
-<!-- release-refiner-result -->
-{"status":"refined","prNumber":<N>,"packagesRefined":["astro-opengraph-images","webring","helm-types","home-assistant"],"commitSha":"<full-sha>"}
-<!-- /release-refiner-result -->
+Read the full commit SHA from `git rev-parse HEAD` after pushing; do not abbreviate
+or reconstruct it. Return only JSON matching the SDK-provided output schema,
+without Markdown fences, HTML markers, or a prose summary:
+
+```json
+{"result":{"status":"refined","prNumber":<N>,"packagesRefined":["astro-opengraph-images","webring","helm-types","home-assistant"],"commitSha":"<full 40-char sha>"}}
 ```
 
 The only successful result statuses are `"refined"` (with at least one unique
