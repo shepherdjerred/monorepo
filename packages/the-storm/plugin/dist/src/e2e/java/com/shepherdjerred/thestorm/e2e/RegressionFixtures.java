@@ -205,18 +205,18 @@ final class RegressionFixtures implements BasicCommand, CombatHarness.Controller
     } else if (args.length == 3 && args[0].equals("arm")) {
       arm(args[1], Integer.parseInt(args[2]));
     } else if (args.length == 2 && args[0].equals("player")) {
-      if (!caseName.equals("human-combat") || !result.equals("armed") || subject.isPresent())
+      if (!playerCase() || !result.equals("armed") || subject.isPresent())
         throw new IllegalStateException(
             "register one player before the original human case starts");
       var id = UUID.fromString(args[1]);
       players.requireOnlinePlayer(id);
       subject = Optional.of(id);
     } else if (args.length == 1 && args[0].equals("offer")) {
-      if (!caseName.equals("human-combat") || !result.equals("live"))
+      if (!playerCase() || !result.equals("live"))
         throw new IllegalStateException("offer requires the original live human case");
       probes.add(players.offer(current(), subject.orElseThrow(), next()));
     } else if (args.length == 1 && args[0].equals("prepare")) {
-      if (!caseName.equals("human-combat")
+      if (!playerCase()
           || prepared
           || subject.isEmpty()
           || current().phase() != MatchState.Phase.COUNTDOWN)
@@ -229,6 +229,10 @@ final class RegressionFixtures implements BasicCommand, CombatHarness.Controller
       throw new IllegalArgumentException(
           "load, sample, arm <case> <bot-slots>, player <uuid>, prepare, offer, release");
     }
+  }
+
+  private boolean playerCase() {
+    return List.of("human-combat", "last-human-abort").contains(caseName);
   }
 
   private Map<String, Object> sample() {
