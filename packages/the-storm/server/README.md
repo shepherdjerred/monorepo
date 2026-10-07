@@ -427,6 +427,16 @@ refuses stale comparisons, pending operations and conflicting image overrides.
 Admission also refuses deletion of a leased StatefulSet; acquisition proves
 that denial with a server dry run alongside the update and scale probes.
 
+If backup or independent verification fails before any production writer has
+been authorized, `abort` can reopen the untouched original server. It requires
+the recorded claim, volume, original image, complete pod template and reconciled
+GitOps declaration. It refuses unknown source-volume pods, removes only recorded
+read-only helpers, and records unchanged abort evidence before releasing the
+lease and restoring the captured routes with Java wake last. Interrupted route
+reopening can resume. Writer authorization is recorded before any attempt to
+create a writer and is never cleared; after that point, use verified whole-volume
+recovery instead of aborting.
+
 If private startup fails, keep admission closed and use `private-stop` before
 whole-volume recovery. The independently restored PVC remains available. A
 `whole-rollback` controller operation recreates only the recorded restore reader

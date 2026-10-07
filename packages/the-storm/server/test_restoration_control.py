@@ -584,6 +584,219 @@ class RestorationControlTest(unittest.TestCase):
         helm.objects("parameters")[0]["value"] = image.split(":", 1)[1]
         application.object("status").object("sync").object("comparedTo")["source"] = copy.deepcopy(source)
 
+    def test_failed_backup_can_abort_without_a_restore_or_candidate_acceptance(self):
+        for status in (
+            {"phase": "Failed"}, {"phase": "PartiallyFailed"}, {"phase": "FailedValidation"},
+            {"phase": "Completed", "errors": 1},
+        ):
+            with self.subTest(status=status):
+                self.path.unlink(missing_ok=True)
+                self.cluster = Cluster()
+                journal, _ = self.backup_fixture()
+                original = copy.deepcopy(self.cluster.server.object("spec").object("template"))
+                resource = control.backup(self.path, journal)
+                resource["status"] = status
+                with self.assertRaisesRegex(ValueError, "Rollback backup failed"):
+                    control.backup(self.path, journal)
+                before = len(self.cluster.mutations)
+                with patch.object(control, "create_writer") as writer:
+                    control.abort(self.path, journal)
+                writer.assert_not_called()
+                self.assertNotIn("restore", journal)
+                self.assertNotIn("acceptance", journal)
+                self.assertIs(journal.get("productionWriteAuthorized"), False)
+                self.assertEqual(self.cluster.server.object("spec").object("template"), original)
+                self.assertEqual(journal.string("phase"), "REOPENED")
+                self.assertEqual(
+                    self.cluster.mutations[before:],
+                    [("statefulset", control.SERVER),
+                     *[("service", name) for name in (*control.SERVICES[1:], control.SERVICES[0])]],
+                )
+
+    def test_abort_resumes_interrupted_routes_after_clearing_the_lease_and_is_idempotent_after_wake(self):
+        journal = self.initialize()
+        control.acquire(self.path, journal)
+        original_patch = control.patch
+        interrupted = False
+
+        def patch_route(kind: str, name: str, resource: JsonObject, operations: list[dict[str, object]]):
+            nonlocal interrupted
+            if kind == "service" and name == control.SERVICES[2] and not interrupted:
+                interrupted = True
+                raise RuntimeError("route patch interrupted")
+            return original_patch(kind, name, resource, operations)
+
+        with (
+            patch.object(control, "patch", side_effect=patch_route),
+            self.assertRaisesRegex(RuntimeError, "interrupted"),
+        ):
+            control.abort(self.path, journal)
+        self.assertEqual(journal.string("phase"), "RELEASING")
+        self.assertNotIn(control.LEASE, control.annotations(self.cluster.server))
+        self.assertIn(control.LEASE, control.annotations(self.cluster.objects["service", control.SERVER]))
+        control.abort(self.path, journal)
+        self.assertEqual(journal.string("phase"), "REOPENED")
+        self.cluster.server.object("spec")["replicas"] = 1
+        self.cluster.server.object("status")["replicas"] = 1
+        before = len(self.cluster.mutations)
+        control.abort(self.path, journal)
+        self.assertEqual(len(self.cluster.mutations), before)
+
+    def test_abort_refuses_any_previous_production_write_or_start_authorization(self):
+        journal = self.initialize()
+        control.acquire(self.path, journal)
+        for key, value in (
+            ("productionWriteAuthorized", None), ("productionWriteAuthorized", True),
+            ("writerUid", "writer"), ("previousWriterUid", "old-writer"),
+            ("writerCreationPending", True), ("installation", {"phase": "WRITE_PENDING"}),
+            ("wholeVolumeRecovery", {}), ("privateStartup", "STOPPED"), ("acceptance", {}),
+            ("stoppingIncarnation", {}), ("stoppedIncarnation", {}), ("rollbackVerification", {}),
+        ):
+            with self.subTest(key=key, value=value):
+                changed = copy.deepcopy(journal)
+                if value is None:
+                    changed.pop(key)
+                else:
+                    changed[key] = value
+                before = len(self.cluster.mutations)
+                with self.assertRaisesRegex(ValueError, "no production writer authorization"):
+                    control.abort(self.path, changed)
+                self.assertEqual(len(self.cluster.mutations), before)
+                control.assert_closed(journal)
+
+    def test_writer_attempt_persists_abort_disqualification_before_any_cluster_access(self):
+        journal = self.initialize()
+
+        def fail_before_create(arguments: list[str], timeout: float = 30):
+            recorded = JsonObject.parse(self.path.read_bytes())
+            self.assertIs(recorded.get("productionWriteAuthorized"), True)
+            raise RuntimeError("writer lookup failed")
+
+        with (
+            patch.object(control, "run", side_effect=fail_before_create),
+            self.assertRaisesRegex(RuntimeError, "lookup failed"),
+        ):
+            control.create_writer(self.path, journal)
+        with self.assertRaisesRegex(ValueError, "no production writer authorization"):
+            control.abort(self.path, journal)
+
+    def test_abort_refuses_changed_original_volume_template_image_lease_and_gitops(self):
+        journal = self.initialize()
+        control.acquire(self.path, journal)
+        original = copy.deepcopy(self.cluster.objects)
+        for change in ("claim", "bound", "volume", "handle", "template", "image", "lease", "gitops"):
+            with self.subTest(change=change):
+                self.cluster.objects = copy.deepcopy(original)
+                if change == "claim":
+                    self.cluster.objects["pvc", control.CLAIM].object("metadata")["uid"] = "changed"
+                elif change == "bound":
+                    self.cluster.objects["pvc", control.CLAIM].object("status")["phase"] = "Pending"
+                elif change == "volume":
+                    self.cluster.objects["pv", "data-volume"].object("metadata")["uid"] = "changed"
+                elif change == "handle":
+                    self.cluster.objects["pv", "data-volume"].object("spec").object("csi")["volumeHandle"] = "changed"
+                elif change == "template":
+                    self.cluster.server.object("spec").object("template")["metadata"] = {"labels": {"changed": "yes"}}
+                elif change == "image":
+                    self.cluster.server.object("spec").object("template").object("spec").objects("containers")[0][
+                        "image"
+                    ] = IMAGE.replace("fixture", "changed")
+                elif change == "lease":
+                    self.cluster.server.object("metadata").strings("annotations")[control.LEASE] = "foreign"
+                else:
+                    self.declare_image(IMAGE.replace("fixture", "changed"))
+                before = len(self.cluster.mutations)
+                with self.assertRaises(ValueError):
+                    control.abort(self.path, journal)
+                self.assertEqual(len(self.cluster.mutations), before)
+                self.assertNotIn("preInstallAbort", journal)
+
+    def test_abort_refuses_unknown_terminated_source_volume_pods(self):
+        journal = self.initialize()
+        control.acquire(self.path, journal)
+        for phase in ("Succeeded", "Failed"):
+            with self.subTest(phase=phase):
+                pod = {
+                    "metadata": {"name": "unrecorded-writer", "uid": "unknown"},
+                    "spec": {"volumes": [{"persistentVolumeClaim": {"claimName": control.CLAIM}}]},
+                    "status": {"phase": phase},
+                }
+                with patch.object(control, "run", return_value=json.dumps({"items": [pod]})):
+                    control.require_offline(journal, readers=True)
+                    before = len(self.cluster.mutations)
+                    with self.assertRaises(ValueError):
+                        control.abort(self.path, journal)
+                self.assertEqual(len(self.cluster.mutations), before)
+                self.assertNotIn("preInstallAbort", journal)
+
+    def test_abort_removes_only_owned_readers_before_reopening_without_a_verified_backup(self):
+        journal, pods = self.reader_fixture()
+        for namespace in (control.NAMESPACE, control.RESTORED_NAMESPACE):
+            reader = control.ensure_resource(control.reader_manifest(journal, namespace))
+            journal.object("readers", {})[namespace] = reader.object("metadata").string("uid")
+        self.assertEqual(journal.object("restore").get("byteVerification"), "PENDING")
+        calls = []
+
+        def delete(arguments: list[str], **kwargs: object):
+            namespace = arguments[5].split("/")[4]
+            encoded = kwargs["input"]
+            if not isinstance(encoded, str):
+                raise AssertionError("Expected a JSON deletion body")
+            body = JsonObject.parse(encoded)
+            self.assertEqual(
+                body.object("preconditions"),
+                {"uid": pods[namespace].object("metadata").string("uid"), "resourceVersion": "1"},
+            )
+            self.assertIn(control.LEASE, control.annotations(self.cluster.server))
+            calls.append(namespace)
+            del pods[namespace]
+            return control.subprocess.CompletedProcess(arguments, 0, "", "")
+
+        with patch.object(control.subprocess, "run", side_effect=delete):
+            control.abort(self.path, journal)
+        self.assertEqual(calls, [control.NAMESPACE, control.RESTORED_NAMESPACE])
+        self.assertIs(journal.get("readersRemoved"), True)
+        self.assertEqual(journal.string("phase"), "REOPENED")
+
+    def test_abort_refuses_replaced_reader_before_any_cleanup_or_release(self):
+        journal, pods = self.reader_fixture()
+        reader = control.ensure_resource(control.reader_manifest(journal, control.NAMESPACE))
+        journal["readers"] = {control.NAMESPACE: reader.object("metadata").string("uid")}
+        pods[control.NAMESPACE].object("metadata")["uid"] = "changed"
+        before = len(self.cluster.mutations)
+        with patch.object(control.subprocess, "run") as deletion, self.assertRaises(ValueError):
+            control.abort(self.path, journal)
+        deletion.assert_not_called()
+        self.assertEqual(len(self.cluster.mutations), before)
+
+    def test_abort_reopening_refuses_changed_evidence(self):
+        journal = self.initialize()
+        control.acquire(self.path, journal)
+        with (
+            patch.object(control, "reopen", side_effect=RuntimeError("interrupted")),
+            self.assertRaisesRegex(RuntimeError, "interrupted"),
+        ):
+            control.abort(self.path, journal)
+        journal["phase"] = "RELEASING"
+        evidence = Path(journal.object("preInstallAbort").string("path"))
+        evidence.write_text("{}")
+        before = len(self.cluster.mutations)
+        with self.assertRaisesRegex(ValueError, "unchanged original-volume evidence"):
+            control.abort(self.path, journal)
+        self.assertEqual(len(self.cluster.mutations), before)
+
+    def test_abort_is_available_through_the_guarded_controller_cli(self):
+        journal = self.initialize()
+        with (
+            patch("sys.argv", ["restoration-control", "abort", "--journal", str(self.path),
+                               "--request", REQUEST, "--image", IMAGE]),
+            patch.object(control, "initialize", return_value=journal),
+            patch.object(control, "abort") as aborting,
+            redirect_stdout(io.StringIO()),
+        ):
+            control.main()
+        aborting.assert_called_once_with(self.path, journal)
+
     def test_verified_whole_rollback_releases_without_candidate_acceptance_and_restores_java_last(self):
         journal, transaction = self.rollback_fixture()
         self.verify_rollback_fixture(journal, transaction)
