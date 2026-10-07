@@ -333,6 +333,40 @@ final class RwfBotsFlowTest {
   }
 
   @Test
+  void aBotKilledByAnEarlierOrderCannotActFromTheOldSnapshot() {
+    var harness = start();
+    var alice = harness.server.addPlayer("Alice");
+    var bots = lobby(alice, 4);
+    goLive(alice, bots);
+    harness.ticks(30);
+    harness.bodies.orders();
+    var victimBody = harness.paper().roster().live().getLast();
+    var victim =
+        bots.stream().filter(bot -> bot.uuid().equals(victimBody.uuid())).findFirst().orElseThrow();
+    harness.bodies.afterNextOrder(
+        () -> {
+          harness.match.kill(victim.uuid());
+          harness.match.fire(
+              new MatchEvent.Died(
+                  victim,
+                  Optional.of(new CombatantId.Human(alice.getUniqueId())),
+                  AttackType.MELEE,
+                  FakeMatch.T0),
+              List.of(new MatchEffect.Spectate(victim, harness.match.map().spectatorPoint())));
+        });
+    harness.tick();
+
+    assertThat(harness.paper().loop().inMatch()).isTrue();
+    assertThat(victimBody.tally().deaths()).isEqualTo(1);
+    var orders = harness.bodies.orders();
+    assertThat(orders).isNotEmpty().noneMatch(order -> ordersBy(order, victimBody.name()));
+    assertThat(
+            harness.paper().roster().live().stream()
+                .filter(bot -> orders.stream().anyMatch(order -> ordersBy(order, bot.name()))))
+        .hasSize(3);
+  }
+
+  @Test
   void aFinishedMatchRatesThePersonalitiesWritesTracesAndAnswersTheDebugCommand() {
     var harness = start();
     var alice = harness.server.addPlayer("Alice");

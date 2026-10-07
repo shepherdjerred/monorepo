@@ -70,6 +70,7 @@ public final class StormFixtures extends JavaPlugin {
     new PlotFixtures(this).register();
     new DuelFixtures(this).register();
     new InferenceLoadFixtures(this).register();
+    new RegressionFixtures(this).register();
   }
 
   /** Whether {@code module} is switched on; a config that omits it is a staging bug. */
