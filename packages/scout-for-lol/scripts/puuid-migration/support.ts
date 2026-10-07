@@ -78,6 +78,20 @@ export const EXCLUDED_TABLES = new Set([
 ]);
 
 /**
+ * Durable business keys, not player-reference columns. These may embed the
+ * PUUID used when the work was minted, but Temporal histories retain that exact
+ * key. Changing it would detach accepted runs from their persisted work/start
+ * records. Payload identity fields remain discoverable and are rewritten.
+ */
+export const PRESERVED_WORK_ID_COLUMNS: readonly {
+  table: string;
+  column: string;
+}[] = [
+  { table: "ScoutTemporalWork", column: "id" },
+  { table: "ScoutWorkflowStart", column: "requestedWorkflowId" },
+];
+
+/**
  * Columns that hold PUUIDs but are not named for them, so name-based discovery
  * cannot find them. Every one of these was found by the completeness audit in
  * `collect` rather than by reading the schema — the PUUIDs are nested inside
@@ -99,14 +113,18 @@ export const EXTRA_JSON_COLUMNS: readonly {
   { table: "BucksMatchPool", column: "roster" },
   { table: "BucksParlayDefinition", column: "subjects" },
   { table: "ChallengeRunRevision", column: "selectedAccountsJson" },
+  { table: "ChampionMasterySnapshot", column: "entriesJson" },
   { table: "ConfirmationIntent", column: "payload" },
   { table: "DuelGame", column: "evidenceJson" },
   { table: "ExploreMessage", column: "preview" },
   { table: "ExploreMessage", column: "trace" },
   { table: "HallRecordCell", column: "holdersJson" },
   { table: "HallRecordCell", column: "evidenceJson" },
+  { table: "MatchNotificationIntent", column: "payload" },
+  { table: "MatchSettlementAnnouncement", column: "payload" },
   { table: "ScoutInteractiveRun", column: "trace" },
   { table: "ScoutTemporalWork", column: "payload" },
+  { table: "ScoutWorkflowStart", column: "inputPayload" },
 ];
 
 type TrackedSource = {

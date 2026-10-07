@@ -156,6 +156,85 @@ test("collect records every identity on an unmigrated database", async () => {
   await db.close();
 });
 
+test("apply rewrites current durable JSON and mastery entries while preserving work keys", async () => {
+  const db = await seed({
+    accounts: [OLD_A],
+    map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
+  });
+  const stableWorkId = `champion-mastery:${NEW_A}:123`;
+  const stableWorkflowId = `scout-detached-work:${stableWorkId}`;
+  const payload = JSON.stringify({
+    kind: "test",
+    version: 1,
+    data: { puuid: OLD_A },
+  });
+  await db.exec(
+    `CREATE TABLE "ChampionMasterySnapshot" ("puuid" TEXT PRIMARY KEY, "entriesJson" TEXT)`,
+  );
+  await db.exec(
+    `CREATE TABLE "ScoutWorkflowStart" ("requestId" TEXT PRIMARY KEY, "requestedWorkflowId" TEXT, "inputPayload" TEXT)`,
+  );
+  await db.exec(
+    `CREATE TABLE "MatchNotificationIntent" ("intentKey" TEXT PRIMARY KEY, "payload" TEXT)`,
+  );
+  await db.exec(
+    `CREATE TABLE "MatchSettlementAnnouncement" ("riotMatchId" TEXT, "family" TEXT, "itemKey" TEXT, "payload" TEXT, PRIMARY KEY ("riotMatchId", "family", "itemKey"))`,
+  );
+  await db.exec(
+    `INSERT INTO "ChampionMasterySnapshot" VALUES (${db.param(1)}, ${db.param(2)})`,
+    [OLD_A, JSON.stringify([{ puuid: OLD_A }])],
+  );
+  await db.exec(
+    `INSERT INTO "ScoutTemporalWork" VALUES (${db.param(1)}, ${db.param(2)}, 'completed', 123)`,
+    [stableWorkId, payload],
+  );
+  await db.exec(
+    `INSERT INTO "ScoutWorkflowStart" VALUES ('request', ${db.param(1)}, ${db.param(2)})`,
+    [stableWorkflowId, payload],
+  );
+  await db.exec(
+    `INSERT INTO "MatchNotificationIntent" VALUES ('intent', ${db.param(1)})`,
+    [payload],
+  );
+  await db.exec(
+    `INSERT INTO "MatchSettlementAnnouncement" VALUES ('match', 'earnings', 'item', ${db.param(1)})`,
+    [payload],
+  );
+  const { auditForUnregistered, discoverColumns } =
+    await import("./discovery.ts");
+  await auditForUnregistered(db, await discoverColumns(db));
+  const { apply } = await import("./phases.ts");
+  const { verify } = await import("./verify.ts");
+  await apply(db, false);
+  await verify(db);
+  await apply(db, false);
+  await verify(db);
+  expect(
+    await db.query(
+      `SELECT "puuid", "entriesJson" FROM "ChampionMasterySnapshot"`,
+    ),
+  ).toEqual([
+    { puuid: NEW_A, entriesJson: JSON.stringify([{ puuid: NEW_A }]) },
+  ]);
+  expect(await db.query(`SELECT "id" FROM "ScoutTemporalWork"`)).toEqual([
+    { id: stableWorkId },
+  ]);
+  expect(
+    await db.query(`SELECT "requestedWorkflowId" FROM "ScoutWorkflowStart"`),
+  ).toEqual([{ requestedWorkflowId: stableWorkflowId }]);
+  for (const [table, column] of [
+    ["ScoutTemporalWork", "payload"],
+    ["ScoutWorkflowStart", "inputPayload"],
+    ["MatchNotificationIntent", "payload"],
+    ["MatchSettlementAnnouncement", "payload"],
+  ] as const) {
+    expect(await db.query(`SELECT "${column}" AS v FROM "${table}"`)).toEqual([
+      { v: payload.replace(OLD_A, NEW_A) },
+    ]);
+  }
+  await db.close();
+});
+
 test("collect records nothing new when a rewrite was interrupted partway", async () => {
   // Account already rewritten, history not — the state a resumed apply sees.
   const db = await seed({

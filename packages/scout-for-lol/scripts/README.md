@@ -22,6 +22,20 @@ detail below; the rest of the directory is indexed here.
 `*.test.ts` files are the tests for these scripts (`bun run test ./scripts` from
 the Scout package root).
 
+## PUUID migration column contracts
+
+`puuid-migration/support.ts` registers identity-bearing JSON columns that
+cannot be found by their names, including champion-mastery entries, notification
+and settlement payloads, and workflow-start input envelopes. Discovery and the
+completeness audit must agree; an unregistered data column still fails the audit.
+
+`ScoutTemporalWork.id` and `ScoutWorkflowStart.requestedWorkflowId` are preserved
+durable business keys, not player references. They can embed the identity used
+when work was created, but accepted Temporal executions retain those exact keys.
+Do not rename them during a retrofit. Actual PUUID values inside their payloads
+are rewritten normally. Inspect open executions and pending work separately
+before asserting that raw-archive recovery is quiescent.
+
 ## Selective Test Running
 
 `find-dependent-tests.ts` and `run-relevant-tests.ts` run only the tests
