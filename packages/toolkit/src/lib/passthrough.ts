@@ -236,6 +236,11 @@ export function buildPassthroughInvocation(
       : entry.args;
   });
   const env = { ...environment };
+  // ArgoCD prints this environment default in native help. Client-only
+  // metadata must not inherit a token even when the caller already has one.
+  if (command === "argocd" && isCredentialFreePassthrough(command, args)) {
+    delete env["ARGOCD_AUTH_TOKEN"];
+  }
   for (const entry of spec.defaultEnvironment ?? []) {
     const overriddenByFlag =
       entry.overrideFlags !== undefined && hasFlag(args, entry.overrideFlags);

@@ -223,6 +223,49 @@ async function runToolkit(
 }
 
 describe("passthrough subprocess", () => {
+  test.each([["--help"], ["-h"], ["--version"], ["version", "--client"]])(
+    "does not forward an ArgoCD token to metadata command %s",
+    async (...args) => {
+      const directory = await fakePath();
+      await writeExecutable(
+        directory,
+        "argocd",
+        `#!/bin/sh
+if [ -n "\${ARGOCD_AUTH_TOKEN:-}" ]; then
+  printf 'credential:present\\n'
+else
+  printf 'credential:absent\\n'
+fi
+`,
+      );
+
+      const result = await runToolkit(directory, ["argocd", ...args], "", {
+        extraEnv: { ARGOCD_AUTH_TOKEN: "metadata-test-token" },
+      });
+      expect(result.code).toBe(0);
+      expect(result.stdout).toBe("credential:absent\n");
+    },
+  );
+
+  test("preserves the ArgoCD token for server commands", async () => {
+    const directory = await fakePath();
+    await writeExecutable(
+      directory,
+      "argocd",
+      `#!/bin/sh
+if [ -n "\${ARGOCD_AUTH_TOKEN:-}" ]; then
+  printf 'credential:present\\n'
+fi
+`,
+    );
+
+    const result = await runToolkit(directory, ["argocd", "app", "list"], "", {
+      extraEnv: { ARGOCD_AUTH_TOKEN: "metadata-test-token" },
+    });
+    expect(result.code).toBe(0);
+    expect(result.stdout).toBe("credential:present\n");
+  });
+
   test("inherits streams and environment, preserves args, and mirrors exit code", async () => {
     const directory = await fakePath();
     await writeExecutable(
