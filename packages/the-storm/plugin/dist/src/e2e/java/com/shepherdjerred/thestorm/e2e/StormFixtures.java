@@ -69,6 +69,7 @@ public final class StormFixtures extends JavaPlugin {
     getLogger().info("Prepared synthetic fixtures for Storm modules " + prepared);
     new PlotFixtures(this).register();
     new DuelFixtures(this).register();
+    new InferenceLoadFixtures(this).register();
   }
 
   /** Whether {@code module} is switched on; a config that omits it is a staging bug. */

@@ -5,7 +5,8 @@
   "imports": {
     "#e2e/*": "./tests/e2e/*",
     "#learning/*": "./tools/learning/*",
-    "#learning-wire": "./plugin/modules/rwfbots/src/main/resources/rwf-duel.json"
+    "#learning-wire": "./plugin/modules/rwfbots/src/main/resources/rwf-duel.json",
+    "#learning-load-wire": "./plugin/modules/rwfbots/src/main/resources/rwf-inference-load.json"
   },
   "description": "Turbo shim over the Gradle build of The Storm's Paper plugin (plugin/) — scripts wrap Gradle so the workspace joins the task graph (caching + affected). Same pattern as the Go and Rust shims. tests/e2e is the TypeScript real-server harness.",
   "scripts": {

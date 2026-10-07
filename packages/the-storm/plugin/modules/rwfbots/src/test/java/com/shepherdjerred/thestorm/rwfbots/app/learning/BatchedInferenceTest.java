@@ -146,6 +146,8 @@ final class BatchedInferenceTest {
     assertThat(owner.metrics().stale()).isEqualTo(1);
     assertThat(owner.metrics().expired()).isEqualTo(1);
     assertThat(owner.metrics().contextDrops()).isZero();
+    assertThat(owner.metrics().deadlineMissed()).isEqualTo(1);
+    assertThat(owner.metrics().deadlineMet()).isZero();
     pool.run();
     assertThat(actor.inputs.get(1).hidden().values()).containsOnly(0f);
     owner.close();
@@ -190,7 +192,26 @@ final class BatchedInferenceTest {
     assertThat(owner.metrics().stale()).isEqualTo(1);
     assertThat(owner.metrics().contextDrops()).isEqualTo(1);
     assertThat(owner.metrics().expired()).isZero();
+    assertThat(owner.metrics().deadlineMet()).isEqualTo(1);
+    assertThat(owner.metrics().deadlineMissed()).isZero();
     pool.run();
+    owner.close();
+    pool.run();
+  }
+
+  @Test
+  void retiringAContextCannotHideItsMissedDeadline() {
+    var pool = new ManualPool();
+    var actor = new Actor(pool);
+    var owner = owner(actor, pool);
+    owner.tick(10, List.of(request(1, 10)));
+    owner.tick(11, List.of());
+    pool.run();
+    owner.tick(13, List.of());
+    assertThat(owner.metrics().contextDrops()).isEqualTo(1);
+    assertThat(owner.metrics().expired()).isZero();
+    assertThat(owner.metrics().deadlineMissed()).isEqualTo(1);
+    assertThat(owner.metrics().deadlineMet()).isZero();
     owner.close();
     pool.run();
   }

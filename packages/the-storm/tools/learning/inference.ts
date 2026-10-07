@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { RconClient } from "#e2e/harness/rcon.ts";
+import wire from "#learning-load-wire";
 
 const count = z.number().int().nonnegative();
 export const InferenceMetrics = z
@@ -12,11 +13,14 @@ export const InferenceMetrics = z
         stale: count,
         expired: count,
         contextDrops: count,
+        deadlineMet: count,
+        deadlineMissed: count,
         resets: count,
         rejected: count,
         hits: count,
         misses: count,
         maximumNanos: count,
+        maximumBatch: count.max(100),
       })
       .strict(),
     delivery: z
@@ -24,6 +28,13 @@ export const InferenceMetrics = z
       .strict(),
   })
   .strict();
+const fields = Object.keys(InferenceMetrics.shape.inference.shape);
+if (
+  fields.length !== wire.inferenceFields.length ||
+  new Set(wire.inferenceFields).size !== wire.inferenceFields.length ||
+  wire.inferenceFields.some((field) => !fields.includes(field))
+)
+  throw new Error("inference metrics differ from wire contract");
 const State = z
   .object({ state: z.enum(["empty", "loading", "ready"]) })
   .strict();

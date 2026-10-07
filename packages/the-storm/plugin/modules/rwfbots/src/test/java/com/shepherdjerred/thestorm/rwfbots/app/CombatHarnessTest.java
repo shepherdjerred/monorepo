@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.rwfbots.app;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.Fixtures;
@@ -50,6 +51,31 @@ final class CombatHarnessTest {
     harness.attach(43, new Passthrough());
     assertThat(harness.draft(second, 2, catalog)).isPresent();
     assertThat(harness.seed(second)).hasValue(43);
+  }
+
+  @Test
+  void loadAttachmentRequiresItsExactRosterAndLeavesSuccessorsUntouched() {
+    var harness = new CombatHarness();
+    var catalog =
+        new PersonalityCatalog(
+            java.util.stream.IntStream.range(0, 100)
+                .mapToObj(
+                    index ->
+                        Fixtures.personality("body-" + index, "Body" + index + "x" + index, .5))
+                .toList());
+    for (var size : List.of(20, 50, 100)) {
+      harness.attach(42, size, new Passthrough());
+      var match = new UUID(0, size);
+      assertThatIllegalArgumentException().isThrownBy(() -> harness.draft(match, 2, catalog));
+      assertThat(harness.draft(match, size, catalog).orElseThrow()).hasSize(size);
+      assertThat(harness.draft(new UUID(1, size), size, catalog)).isEmpty();
+      harness.detach();
+    }
+    assertThatIllegalArgumentException()
+        .isThrownBy(() -> harness.attach(1, 101, new Passthrough()));
+    harness.attach(1, new Passthrough());
+    assertThatIllegalArgumentException()
+        .isThrownBy(() -> harness.draft(new UUID(0, 1), 20, catalog));
   }
 
   private static final class Passthrough implements CombatHarness.Controller {

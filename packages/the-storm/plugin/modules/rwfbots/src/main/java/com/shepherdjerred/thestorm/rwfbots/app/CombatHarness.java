@@ -43,10 +43,19 @@ public final class CombatHarness {
   private Optional<Controller> controller = Optional.empty();
   private Optional<UUID> match = Optional.empty();
   private long seed;
+  private int combatants;
 
   public void attach(long experimentSeed, Controller experiment) {
+    attach(experimentSeed, 2, experiment);
+  }
+
+  /** Explicit roster size for disposable native inference load experiments. */
+  public void attach(long experimentSeed, int experimentCombatants, Controller experiment) {
     if (controller.isPresent()) throw new IllegalStateException("experiment already attached");
+    if (experimentCombatants < 2 || experimentCombatants > 100)
+      throw new IllegalArgumentException("combat experiment needs 2..100 bots");
     seed = experimentSeed;
+    combatants = experimentCombatants;
     controller = Optional.of(experiment);
     match = Optional.empty();
   }
@@ -59,11 +68,15 @@ public final class CombatHarness {
   public Optional<List<Director.Drafted>> draft(
       UUID matchId, int slots, PersonalityCatalog catalog) {
     if (controller.isEmpty() || match.isPresent()) return Optional.empty();
-    if (slots != 2) throw new IllegalArgumentException("combat experiment needs exactly two bots");
+    if (slots != combatants)
+      throw new IllegalArgumentException("combat experiment roster size differs");
     var identities =
-        catalog.active().stream().sorted(Comparator.comparing(p -> p.id())).limit(2).toList();
-    if (identities.size() != 2)
-      throw new IllegalStateException("combat experiment needs two identities");
+        catalog.active().stream()
+            .sorted(Comparator.comparing(p -> p.id()))
+            .limit(combatants)
+            .toList();
+    if (identities.size() != combatants)
+      throw new IllegalStateException("combat experiment lacks identities");
     match = Optional.of(matchId);
     return Optional.of(
         identities.stream()

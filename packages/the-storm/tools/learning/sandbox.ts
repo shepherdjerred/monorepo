@@ -13,6 +13,9 @@ import {
 } from "#e2e/harness/rwf-settings.ts";
 import { DuelClient } from "./duels.ts";
 import { InferenceClient } from "./inference.ts";
+import { InferenceLoadClient } from "./load-client.ts";
+import { gameplayFixtures } from "#e2e/gameplay-fixtures.ts";
+import { docker } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 
 export const root = path.resolve(import.meta.dirname, "../..");
 const content = path.join(root, "server/owned/plugins/TheStorm");
@@ -42,6 +45,10 @@ export async function frozenManifest() {
       "plugin/modules/rwfbots/src/main/resources/rwf-combat-v1.tsv",
     ),
     path.join(root, "plugin/modules/rwfbots/src/main/resources/rwf-duel.json"),
+    path.join(
+      root,
+      "plugin/modules/rwfbots/src/main/resources/rwf-inference-load.json",
+    ),
     ...sources.map((file) => path.join(learning, file)),
   ];
   const hashes = await Promise.all(
@@ -76,6 +83,7 @@ export async function frozenManifest() {
 export async function openPaperDuels(
   output: string,
   learningModelDir?: string,
+  profile: "duel" | "load" = "duel",
 ) {
   const token = randomBytes(24).toString("hex");
   const brain = startFakeBrain(token);
@@ -117,14 +125,53 @@ export async function openPaperDuels(
         redriveBackoffMinutes: 0,
         slaAfterMinutes: 10_080,
       },
-      agent: { mode: "shadow", reviewSamplePercent: 100 },
+      agent: {
+        mode: profile === "load" ? "active" : "shadow",
+        reviewSamplePercent: 100,
+      },
       brain: { baseUrl: brainUrl, token },
       env: {
         FLIPT_URL: brainUrl,
         FLIPT_ENVIRONMENT: "prod",
         RWF_RECORDING_SALT: rwfRecordingSalt,
+        ...(profile === "load"
+          ? {
+              // Same locally rejected placeholders as the full E2E suite.
+              DISCORD_BOT_TOKEN: "invalid-storm-fixture-token",
+              DISCORD_CHANNEL_ID: "1",
+            }
+          : {}),
       },
+      ...(profile === "load"
+        ? {
+            ...(await gameplayFixtures(root, "load")),
+            resources: { cpus: 4, heap: "8G", memoryLimit: "10g" },
+          }
+        : {}),
     });
+    if (profile === "load") {
+      if (server.info.kind !== "container")
+        throw new Error("load profile requires Docker resource limits");
+      const limits = await docker([
+        "inspect",
+        "--format",
+        "{{.HostConfig.NanoCpus}} {{.HostConfig.Memory}}",
+        server.info.containerId,
+      ]);
+      const heap = await docker([
+        "inspect",
+        "--format",
+        '{{range .Config.Env}}{{if eq . "MEMORY=8G"}}{{.}}{{end}}{{end}}',
+        server.info.containerId,
+      ]);
+      if (
+        limits.stdout.trim() !== "4000000000 10737418240" ||
+        heap.stdout.trim() !== "MEMORY=8G"
+      )
+        throw new Error(
+          "native inference load resources differ from the frozen plan",
+        );
+    }
     rcon = await RconClient.connect({
       host: server.info.host,
       port: server.info.rconPort,
@@ -133,6 +180,7 @@ export async function openPaperDuels(
     return {
       duels: new DuelClient(rcon),
       inference: new InferenceClient(rcon),
+      load: new InferenceLoadClient(rcon),
       stop,
     };
   } catch (error) {
