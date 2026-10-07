@@ -1511,6 +1511,35 @@ a complete bundle. These checks protect artifact integrity and enforce the
 fixed gates; genuine human recordings and votes must come from the recording
 and review workflows above.
 
+`bots:promote` assembles the original passing evidence into a new local bundle:
+
+```bash
+bun run bots:promote --pilot .cache/rwf-pilot/trooper --evaluation .cache/rwf-evaluation/trooper --model .cache/rwf-pilot/trooper/seed-0/onnx --review .cache/rwf-preference/review --parity .cache/rwf-java-parity/exact-candidate --receipt .cache/rwf-java-parity/exact-candidate/java-receipt.json --load .cache/rwf-java-load/trooper --regressions .cache/rwf-regressions/trooper/regressions.json --output .cache/rwf-accepted/trooper
+```
+
+The regression input must satisfy `RegressionEvidence` in
+`tools/learning/promotion/contract.ts`, bind the same actor and native runtime,
+and contain every required case with no failures or skipped checks. Its measured
+advancement floors must pass the neutral promotion contract. Unit fixtures and
+diagnostic pilots cannot establish acceptance.
+
+The producer verifies the sealed pilot and human ballot, recounts the original
+strength outcomes, recomputes the full raw load stream, and replays the original
+parity samples against the frozen Python weights and exact CPU ONNX export.
+Java then checks the portable bundle and repeats the original JNI receipt before
+exclusively writing the accepted `manifest.json` and `promotion-result.json`.
+`source-manifest.json` retains the unaccepted export; `collection.json` records
+the original paths and hashes. Evidence blobs are streamed and deduplicated by
+checksum. Source changes, missing evidence, failed gates and existing output
+directories fail explicitly. A failed assembly can leave a draft for inspection;
+use a new output directory after correcting the cause.
+
+This command only assembles local artifacts. It keeps learned control disabled
+and does not publish, deploy, train, collect new votes or extend a pilot budget.
+For a read-only numerical recheck of existing sealed samples, use
+`promotion.parity --verify-samples <samples.json>` with the original
+`--checkpoint` and `--actor` directories instead of `--output`.
+
 The native
 diagnostic runs both sides against authored and basic opponents with no Python
 action transport. It freezes artifact and runtime hashes, retains every result,

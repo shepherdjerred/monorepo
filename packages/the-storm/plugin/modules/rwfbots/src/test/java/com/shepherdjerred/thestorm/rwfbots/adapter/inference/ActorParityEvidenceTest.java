@@ -43,12 +43,49 @@ final class ActorParityEvidenceTest {
         .isEqualTo(
             ActorManifest.sha256(Files.readAllBytes(fixture().resolve("onnx/manifest.json"))));
     var before = Files.readAllBytes(output);
+    var replay =
+        ActorParityEvidence.verify(
+            fixture().resolve("onnx"), fixture().resolve("samples.json"), output);
+    assertThat(replay.batches()).containsExactly(1, 3, 20, 100);
+    assertThat(replay.steps()).isEqualTo(16);
+    assertThat(Files.readAllBytes(output)).isEqualTo(before);
     assertThatThrownBy(
             () ->
                 ActorParityEvidence.write(
                     fixture().resolve("onnx"), fixture().resolve("samples.json"), output))
         .isInstanceOf(java.io.UncheckedIOException.class);
     assertThat(Files.readAllBytes(output)).isEqualTo(before);
+  }
+
+  @Test
+  void revalidationRejectsAlteredSealedReceiptMetadata(@TempDir Path out) throws Exception {
+    var file = out.resolve("receipt.json");
+    ActorParityEvidence.write(fixture().resolve("onnx"), fixture().resolve("samples.json"), file);
+    var original = Files.readString(file);
+    var changed = (ObjectNode) ActorParityEvidence.JSON.readTree(original);
+    changed.put("atol", 1e-4);
+    Files.writeString(file, ActorParityEvidence.JSON.writeValueAsString(changed));
+    assertThatIllegalArgumentException()
+        .isThrownBy(
+            () ->
+                ActorParityEvidence.verify(
+                    fixture().resolve("onnx"), fixture().resolve("samples.json"), file));
+    changed = (ObjectNode) ActorParityEvidence.JSON.readTree(original);
+    ((ObjectNode) changed.path("artifacts")).put("weights_sha256", "a".repeat(64));
+    Files.writeString(file, ActorParityEvidence.JSON.writeValueAsString(changed));
+    assertThatIllegalArgumentException()
+        .isThrownBy(
+            () ->
+                ActorParityEvidence.verify(
+                    fixture().resolve("onnx"), fixture().resolve("samples.json"), file));
+    changed = (ObjectNode) ActorParityEvidence.JSON.readTree(original);
+    changed.put("schema", "1");
+    Files.writeString(file, ActorParityEvidence.JSON.writeValueAsString(changed));
+    assertThatThrownBy(
+            () ->
+                ActorParityEvidence.verify(
+                    fixture().resolve("onnx"), fixture().resolve("samples.json"), file))
+        .isInstanceOf(RuntimeException.class);
   }
 
   @Test

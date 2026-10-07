@@ -4,14 +4,26 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 from pathlib import Path
 
 import numpy as np
 import onnx
 import onnxruntime as ort
 import torch
+from numpy.typing import NDArray
 
-from policy import FEATURES, RESOURCE, Policy, digest, load_checkpoint, mapping
+from policy import (
+    FEATURES,
+    HIDDEN,
+    RESOURCE,
+    Policy,
+    array,
+    digest,
+    integer,
+    load_checkpoint,
+    mapping,
+)
 
 CONTRACT = mapping(json.loads(RESOURCE.with_name("rwf-actor-parity.json").read_text("utf-8")))
 if CONTRACT != {
@@ -158,13 +170,86 @@ def prepare(checkpoint: Path, actor: Path, output: Path) -> None:
     )
 
 
+def tensor(value: object, rows: int, columns: int) -> NDArray[np.float32]:
+    parsed = array(value)
+    if len(parsed) != rows:
+        raise ValueError("archived parity batch size mismatch")
+    values: list[list[float]] = []
+    for raw in parsed:
+        row = array(raw)
+        if len(row) != columns:
+            raise ValueError("archived parity tensor shape mismatch")
+        numbers: list[float] = []
+        for item in row:
+            if isinstance(item, bool) or not isinstance(item, (int, float)):
+                raise ValueError("archived parity tensor must contain numbers")
+            number = float(item)
+            if not math.isfinite(number):
+                raise ValueError("archived parity tensor must be finite")
+            numbers.append(number)
+        values.append(numbers)
+    result = np.asarray(values, dtype=np.float32)
+    if not np.isfinite(result).all():
+        raise ValueError("archived parity tensor is outside float32 range")
+    return result
+
+
+def archived_case(raw: object, expected: object) -> None:
+    case, reference = mapping(raw), mapping(expected)
+    if set(case) != {"rows", "steps"} or case["rows"] != reference["rows"]:
+        raise ValueError("archived parity case differs from fixed batches")
+    rows = integer(case["rows"], 1, 100)
+    steps, reference_steps = array(case["steps"]), array(reference["steps"])
+    if len(steps) != 16:
+        raise ValueError("archived parity recurrent steps are incomplete")
+    for raw_step, reference_step in zip(steps, reference_steps, strict=True):
+        step, target = mapping(raw_step), mapping(reference_step)
+        if set(step) != set(target):
+            raise ValueError("unknown or missing archived parity tensors")
+        for name, columns in (
+            ("observation", len(FEATURES)),
+            ("logits", 17),
+            ("hidden", HIDDEN),
+            ("cell", HIDDEN),
+        ):
+            left, right = tensor(step[name], rows, columns), tensor(target[name], rows, columns)
+            if name == "observation":
+                np.testing.assert_array_equal(left, right)
+            else:
+                np.testing.assert_allclose(left, right, rtol=1e-4, atol=1e-5)
+
+
+def verify(checkpoint: Path, actor: Path, archived: Path) -> dict[str, object]:
+    """Recheck the original sample file against actual weights/ORT without rewriting it."""
+    before = digest(archived)
+    raw = mapping(json.loads(archived.read_text("utf-8")))
+    expected = samples(checkpoint, actor)
+    if set(raw) != set(expected) or any(
+        raw[key] != value for key, value in expected.items() if key != "cases"
+    ):
+        raise ValueError("archived parity bindings differ from the exact checkpoint and export")
+    cases, reference = array(raw["cases"]), array(expected["cases"])
+    if len(cases) != len(reference):
+        raise ValueError("archived parity batch cases are incomplete")
+    for case, target in zip(cases, reference, strict=True):
+        archived_case(case, target)
+    if digest(archived) != before:
+        raise ValueError("archived parity samples changed during verification")
+    return {"samples_sha256": before}
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--checkpoint", type=Path, required=True)
     parser.add_argument("--actor", type=Path, required=True)
-    parser.add_argument("--output", type=Path, required=True)
+    action = parser.add_mutually_exclusive_group(required=True)
+    action.add_argument("--output", type=Path)
+    action.add_argument("--verify-samples", type=Path)
     args = parser.parse_args()
-    prepare(args.checkpoint, args.actor, args.output)
+    if args.verify_samples is not None:
+        print(json.dumps(verify(args.checkpoint, args.actor, args.verify_samples)))
+    else:
+        prepare(args.checkpoint, args.actor, args.output)
 
 
 if __name__ == "__main__":

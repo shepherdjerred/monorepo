@@ -13,8 +13,8 @@ import onnx
 import torch
 
 from export import export
-from policy import Policy, digest, mapping, write_checkpoint
-from promotion.parity import prepare
+from policy import Policy, array, digest, mapping, write_checkpoint
+from promotion.parity import prepare, verify
 
 
 class ParityTest(unittest.TestCase):
@@ -48,6 +48,11 @@ class ParityTest(unittest.TestCase):
                 samples["checkpoint_manifest_sha256"], digest(self.checkpoint / "manifest.json")
             )
             self.assertEqual(samples["schema"], 2)
+            sample_file = output / "samples.json"
+            original = sample_file.read_bytes()
+            result = verify(self.checkpoint, self.actor, sample_file)
+            self.assertEqual(result, {"samples_sha256": digest(sample_file)})
+            self.assertEqual(sample_file.read_bytes(), original)
             with self.assertRaises(FileExistsError):
                 prepare(self.checkpoint, self.actor, output)
 
@@ -100,6 +105,26 @@ class ParityTest(unittest.TestCase):
             (actor / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "exact unaccepted PPO checkpoint"):
                 prepare(self.checkpoint, actor, root / "evidence")
+
+    def test_changed_archived_outputs_schedule_and_fields_are_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "evidence"
+            prepare(self.checkpoint, self.actor, root)
+            file = root / "samples.json"
+            original = file.read_text("utf-8")
+            for field, value in (("logits", 1000), ("observation", 0), ("hidden", "invalid")):
+                raw = mapping(json.loads(original))
+                cases = array(raw["cases"])
+                case = mapping(cases[0])
+                steps = array(case["steps"])
+                step = mapping(steps[0])
+                rows = array(step[field])
+                row = array(rows[0])
+                row[0] = value
+                file.write_text(json.dumps(raw), encoding="utf-8")
+                with self.assertRaises((ValueError, AssertionError)):
+                    verify(self.checkpoint, self.actor, file)
+            file.write_text(original, encoding="utf-8")
 
 
 if __name__ == "__main__":

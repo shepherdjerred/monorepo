@@ -80,3 +80,12 @@ tasks.register<JavaExec>("actorParity") {
     receipt.orNull?.let { args(it) }
   }
 }
+
+// Exclusive offline promotion; never enables ordinary-match inference or publishes the artifact.
+tasks.register<JavaExec>("actorPromotion") {
+  classpath = sourceSets.main.get().runtimeClasspath
+  mainClass.set("com.shepherdjerred.thestorm.rwfbots.adapter.inference.promotion.PromotionBundle")
+  val directory = providers.gradleProperty("actorPromotionDirectory")
+  val source = providers.gradleProperty("actorPromotionSource")
+  doFirst { args(directory.get(), source.get()) }
+}

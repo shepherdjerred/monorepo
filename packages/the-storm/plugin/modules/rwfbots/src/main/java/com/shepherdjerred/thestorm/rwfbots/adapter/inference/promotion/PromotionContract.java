@@ -55,6 +55,7 @@ public final class PromotionContract {
       List<String> regressionCases,
       Floors nativeFloors,
       SimFloors simulationFloors,
+      java.util.Map<String, List<String>> recordFields,
       List<String> proofFields) {}
 
   private static byte[] bytes() {
@@ -92,7 +93,25 @@ public final class PromotionContract {
       throw new IllegalStateException("unsupported actor promotion contract");
     validateQuality(result);
     validateLoad(result);
+    validateRecords(result);
     return result;
+  }
+
+  private static void validateRecords(Values contract) {
+    var records =
+        Arrays.stream(PromotionProof.class.getDeclaredClasses()).filter(Class::isRecord).toList();
+    var names = java.util.Set.copyOf(records.stream().map(Class::getSimpleName).toList());
+    if (!contract.recordFields().keySet().equals(names))
+      throw new IllegalStateException("unsupported actor promotion record inventory");
+    for (var record : records) {
+      var fields =
+          Arrays.stream(record.getRecordComponents())
+              .map(java.lang.reflect.RecordComponent::getName)
+              .toList();
+      if (!fields.equals(contract.recordFields().get(record.getSimpleName())))
+        throw new IllegalStateException(
+            "unsupported actor promotion fields: " + record.getSimpleName());
+    }
   }
 
   private static void validateQuality(Values result) {
