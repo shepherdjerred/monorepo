@@ -22,6 +22,7 @@ import {
   type Session,
 } from "./protocol.ts";
 import { smoke, tour } from "./scripts.ts";
+import { verifyDuelClock } from "./verify-duel-clock.ts";
 
 const packageRoot = path.resolve(import.meta.dirname, "../..");
 
@@ -50,9 +51,14 @@ export async function preview(options: {
   vanilla: boolean;
   verify: boolean;
   rwfDuel: boolean;
+  verifyDuelClock: boolean;
 }): Promise<void> {
   if (options.vanilla && options.rwfDuel)
     throw new Error("--rwf-duel requires Storm modules");
+  if (options.verifyDuelClock && (!options.rwfDuel || options.verify))
+    throw new Error(
+      "--verify-duel-clock requires --rwf-duel and its own verification run",
+    );
   await build(path.join(packageRoot, "client"), ["assemble"]);
   await build(
     path.join(packageRoot, "plugin"),
@@ -116,6 +122,7 @@ async function run(
     vanilla: boolean;
     verify: boolean;
     rwfDuel: boolean;
+    verifyDuelClock: boolean;
   },
   runState: Run,
 ): Promise<void> {
@@ -235,6 +242,10 @@ async function run(
   if (options.verify) {
     await smoke(session);
     if (!options.vanilla) await tour(session);
+    runState.finish();
+  }
+  if (options.verifyDuelClock) {
+    await verifyDuelClock(session, rcon);
     runState.finish();
   }
   await runState.stopped;

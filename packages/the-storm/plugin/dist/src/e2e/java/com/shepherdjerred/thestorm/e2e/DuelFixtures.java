@@ -48,6 +48,7 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
   private static final JsonMapper JSON = JsonMapper.builder().build();
   private static final DuelProtocol PROTOCOL = DuelProtocol.load();
   private final JavaPlugin plugin;
+  private final CaptureMarkers capture;
   private Optional<MatchEvents.Subscription> subscription = Optional.empty();
   private Optional<UUID> match = Optional.empty();
   private Optional<UUID> candidate = Optional.empty();
@@ -75,6 +76,7 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
 
   DuelFixtures(JavaPlugin plugin) {
     this.plugin = plugin;
+    capture = new CaptureMarkers(plugin);
   }
 
   void register() {
@@ -84,6 +86,7 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
             LifecycleEvents.COMMANDS, event -> event.registrar().register("rwflearn", this));
     plugin.getServer().getPluginManager().registerEvents(this, plugin);
     new InferenceFixtures(plugin, this).register();
+    capture.register();
   }
 
   void inference(com.shepherdjerred.thestorm.rwfbots.app.learning.BatchedInference model) {
@@ -165,6 +168,7 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
         || !current.combatants().isEmpty()
         || !current.mapId().orElseThrow().equals("training-yard"))
       throw new IllegalStateException("need an empty training-yard lobby");
+    capture.requireReady(nextSeed);
     cancel();
     side = args[2];
     mode = args[3];
@@ -188,6 +192,7 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
                 .service(MatchEvents.class)
                 .subscribe(notification -> changed(MatchState.of(notification.after()))));
     match = Optional.of(current.matchId());
+    capture.begin(current.matchId(), seed, side, mode, opponent);
     var refusal = storm().service(ShowcaseControl.class).start(2);
     if (refusal.isPresent()) {
       cancel();
@@ -201,9 +206,11 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
       spawnDuel(current);
     } else if (current.phase() == MatchState.Phase.ENDED && result.equals("live")) {
       result = current.winner().map(w -> w.equals(side) ? "win" : "loss").orElse("draw");
+      capture.terminal(result);
       clearActions();
     } else if (current.phase() == MatchState.Phase.RESETTING && result.equals("live")) {
       result = "stopped";
+      capture.terminal(result);
       clearActions();
     }
   }
@@ -243,6 +250,7 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
   }
 
   private void cancel() {
+    capture.terminal("cancelled");
     subscription.ifPresent(MatchEvents.Subscription::close);
     subscription = Optional.empty();
     match.ifPresent(id -> storm().service(ShowcaseControl.class).stop(id));
@@ -316,6 +324,7 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
 
   @Override
   public void captureTick(long tick) {
+    if (result.equals("live")) capture.tick(tick);
     inferenceRequests.clear();
     sampleTick = tick;
     sampledDealt = dealt;
@@ -334,6 +343,7 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
     if (started == 0) started = frame.input().snapshot().tick();
     if (frame.input().snapshot().tick() - started >= 1200) {
       result = "timeout";
+      capture.terminal(result);
       storm().service(ShowcaseControl.class).stop(frame.matchId());
       return List.of();
     }

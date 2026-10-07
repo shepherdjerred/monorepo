@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "imports": {
+    "#client-duel-clock-wire": "./client/src/main/resources/storm-duel-clock.json",
     "#client-video-wire": "./client/src/main/resources/storm-video.json",
     "#e2e/*": "./tests/e2e/*",
     "#learning/*": "./tools/learning/*",

@@ -38,6 +38,8 @@ tasks.assemble { dependsOn(tasks.shadowJar) }
 // Disposable world fixtures for the full-module real-Paper suite. This jar is
 // separate from TheStorm.jar and is never copied into the production image.
 val e2e = sourceSets.create("e2e") {
+  // One pure-JDK codec is compiled into both local tools. It never enters TheStorm.jar.
+  java.srcDir(rootProject.file("../client/src/main/java/com/shepherdjerred/thestorm/client/wire"))
   compileClasspath += configurations.compileClasspath.get() + sourceSets.main.get().output
   runtimeClasspath += output + compileClasspath
 }

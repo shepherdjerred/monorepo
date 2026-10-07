@@ -1429,6 +1429,30 @@ endings. Wait for the lobby between matches and keep every native recording.
 Capture automation and validation of the depicted camera are separate from
 these review commands; the clip producer supplies that provenance.
 
+The native timing bridge is exercised independently of training or voting:
+
+```bash
+bun run client preview --rwf-duel --verify-duel-clock
+```
+
+The disposable fixture's console-only `rwfcapture observe <uuid>` admits a
+connected native spectator outside the duel roster. `rwflearn` sends a begin
+marker, one marker before bot actions each live tick, and a terminal marker
+even when combat ends midway through a tick. The shared pure Java codec lives
+in the client's `wire` package and is compiled into the fixture jar; it is
+absent from `TheStorm.jar`. `storm-duel-clock.json` fixes its byte layout,
+enums, bounds, receipt fields and golden packet.
+
+The session actions `duel-arm`, `duel-status`, `duel-seal` and `duel-cancel`
+retain a bounded clock journal. Arm with `name`, `seed`, `side`, `mode` and
+`opponent` before starting the duel. Sealing writes an exclusive JSON receipt
+off the client thread. Missing ticks, stale match identities, reversed clocks
+or an invalid observer invalidate the journal. A lost observer does not stop
+the bots. Verification retains native outcomes, cancellation and invalidation
+receipts plus a live screenshot in the session artifact directory. Clock
+receipts remain unaccepted evidence; they do not yet bind a rendered clip to
+the first 600 live ticks or implement the terminal frame hold.
+
 The strict `CaptureSet` schema in `tools/learning/preference/gate.ts` defines
 `captures.json`: candidate/runtime digests, zero retries, the shared camera and
 twenty ordered pairs. Each pair's `learned` and `authored` entries have video and
