@@ -1732,6 +1732,24 @@ recording, and a private SQLite snapshot. Requerying that database must show a
 STOPPED player with no credits owed or paid. This diagnostic supplies no human
 demonstrations, complete regression acceptance or rollout.
 
+To challenge a real spectator client in a normal sixteen-bot showcase:
+
+```bash
+bun run bots:verify-spectator-immunity --model .cache/rwf-java-parity/exact-candidate/onnx --output .cache/rwf-regression-capture/spectator-immunity
+```
+
+The automated client uses `/rwf spectate` and is placed next to a living Trooper.
+Three native player-attack damage requests must leave its full health unchanged.
+A positive control against an opposing fighter must lose health through the same
+native damage path, with the exact original damage event inside the command's
+journal checkpoints. Minecraft's damage command can report invulnerability even
+when Red Warfare cancels vanilla damage and applies its own damage; the verifier
+therefore requires measured health and events. It retains raw console responses,
+checks that bots never target the watcher, and verifies native spectator mode
+and full health through the original normal match ending. The original recording
+must contain only the sixteen bots and no human inputs. This diagnostic neither
+supplies demonstrations nor establishes the complete regression acceptance gate.
+
 The producer verifies the sealed pilot and human ballot, recounts the original
 strength outcomes, recomputes the full raw load stream, and replays the original
 parity samples against the frozen Python weights and exact CPU ONNX export.

@@ -43,6 +43,7 @@
     "bots:verify-regression-capture": "bun tools/learning/native/regression-diagnostic.ts",
     "bots:verify-human-combat": "bun tools/learning/native/regression/human.ts",
     "bots:verify-last-human-abort": "bun tools/learning/native/regression/abort.ts",
+    "bots:verify-spectator-immunity": "bun tools/learning/native/regression/watcher.ts",
     "bots:collect-preference": "bun tools/learning/native/collector.ts",
     "bots:promote": "bun tools/learning/promotion/index.ts",
     "test:preference-media": "bun --no-install --bun vitest run tests/media --config ../../vitest.config.ts",
