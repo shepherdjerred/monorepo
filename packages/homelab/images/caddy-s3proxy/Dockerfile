@@ -50,8 +50,7 @@ SHELL ["/bin/ash", "-o", "pipefail", "-c"]
 RUN test -z "$(getcap /usr/bin/caddy)"
 USER 1000:1000
 RUN caddy version && caddy list-modules | grep -F "http.handlers.s3proxy"
-USER 0:0
-RUN --mount=type=secret,id=caddyfile \
+RUN --mount=type=secret,id=caddyfile,uid=1000,gid=1000 \
   caddy adapt --config /run/secrets/caddyfile --adapter caddyfile >/dev/null
 
 FROM runtime AS image
