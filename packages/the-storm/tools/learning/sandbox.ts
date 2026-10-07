@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { readdir } from "node:fs/promises";
+import { mkdir, readdir } from "node:fs/promises";
 import path from "node:path";
 import { stormModuleConfig } from "@shepherdjerred/mc-harness/sandbox/storm.ts";
 import { paper, serverImage } from "@shepherdjerred/mc-harness/pins.ts";
@@ -259,6 +259,23 @@ export async function openPaperDuels(
         if (!profile.startsWith("regression"))
           throw new Error("Database evidence requires a regression owner");
         return copyStormDatabase(nativeServer.info, directory);
+      },
+      async exportRegressionNpcSave(directory: string) {
+        if (
+          !profile.startsWith("regression") ||
+          nativeServer.info.kind !== "container"
+        )
+          throw new Error(
+            "NPC save evidence requires an owned Docker regression server",
+          );
+        await mkdir(directory, { recursive: true, mode: 0o700 });
+        const file = path.join(directory, "citizens-saves.yml");
+        await docker([
+          "cp",
+          `${nativeServer.info.containerId}:/data/plugins/Citizens/saves.yml`,
+          file,
+        ]);
+        return file;
       },
       duels: new DuelClient(rcon),
       inference: new InferenceClient(rcon),

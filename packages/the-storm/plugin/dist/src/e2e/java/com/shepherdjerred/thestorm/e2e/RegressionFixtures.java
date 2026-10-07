@@ -8,6 +8,7 @@ import com.shepherdjerred.thestorm.rwf.app.CombatantActions;
 import com.shepherdjerred.thestorm.rwf.app.MatchEvents;
 import com.shepherdjerred.thestorm.rwf.app.MatchNotification;
 import com.shepherdjerred.thestorm.rwf.app.MatchView;
+import com.shepherdjerred.thestorm.rwf.app.ShowcaseControl;
 import com.shepherdjerred.thestorm.rwf.app.view.MatchState;
 import com.shepherdjerred.thestorm.rwfbots.adapter.inference.promotion.PromotionContract;
 import com.shepherdjerred.thestorm.rwfbots.app.CombatHarness;
@@ -197,38 +198,84 @@ final class RegressionFixtures implements BasicCommand, CombatHarness.Controller
   }
 
   private void command(String[] args) {
-    if (args.length == 1 && args[0].equals("load")) {
-      if (loading.isPresent()) throw new IllegalStateException("load once per server");
-      loading = Optional.of(storm().service(DiagnosticInference.class).load());
-    } else if (args.length == 1 && args[0].equals("sample")) {
-      // Sampling drains the original journal only after it has been encoded successfully.
-    } else if (args.length == 3 && args[0].equals("arm")) {
-      arm(args[1], Integer.parseInt(args[2]));
-    } else if (args.length == 2 && args[0].equals("player")) {
-      if (!playerCase() || !result.equals("armed") || subject.isPresent())
-        throw new IllegalStateException(
-            "register one player before the original human case starts");
-      var id = UUID.fromString(args[1]);
-      players.requireOnlinePlayer(id);
-      subject = Optional.of(id);
-    } else if (args.length == 1 && args[0].equals("offer")) {
-      if (!playerCase() || !result.equals("live"))
-        throw new IllegalStateException("offer requires the original live human case");
-      probes.add(players.offer(current(), subject.orElseThrow(), next()));
-    } else if (args.length == 1 && args[0].equals("prepare")) {
-      if (!playerCase()
-          || prepared
-          || subject.isEmpty()
-          || current().phase() != MatchState.Phase.COUNTDOWN)
-        throw new IllegalStateException("prepare one human Trooper case during countdown");
-      prepared = true;
-      prepareTroopers(current());
-    } else if (args.length == 1 && args[0].equals("release")) {
-      release();
-    } else {
-      throw new IllegalArgumentException(
-          "load, sample, arm <case> <bot-slots>, player <uuid>, prepare, offer, release");
+    if (args.length == 0) throw new IllegalArgumentException("regression command missing");
+    switch (args[0]) {
+      case "load" -> {
+        requireLength(args, 1);
+        load();
+      }
+      case "sample" -> requireLength(args, 1);
+      case "arm" -> {
+        requireLength(args, 3);
+        arm(args[1], Integer.parseInt(args[2]));
+      }
+      case "player" -> {
+        requireLength(args, 2);
+        registerPlayer(UUID.fromString(args[1]));
+      }
+      case "offer" -> {
+        requireLength(args, 1);
+        offerPlayer();
+      }
+      case "prepare" -> {
+        requireLength(args, 1);
+        preparePlayer();
+      }
+      case "release" -> {
+        requireLength(args, 1);
+        release();
+      }
+      case "finish" -> {
+        requireLength(args, 1);
+        finish();
+      }
+      default -> throw new IllegalArgumentException("unknown regression command: " + args[0]);
     }
+  }
+
+  private static void requireLength(String[] args, int count) {
+    if (args.length != count)
+      throw new IllegalArgumentException("regression command arity differs");
+  }
+
+  private void load() {
+    if (loading.isPresent()) throw new IllegalStateException("load once per server");
+    loading = Optional.of(storm().service(DiagnosticInference.class).load());
+  }
+
+  private void registerPlayer(UUID id) {
+    if (!playerCase() || !result.equals("armed") || subject.isPresent())
+      throw new IllegalStateException("register one player before the original human case starts");
+    players.requireOnlinePlayer(id);
+    subject = Optional.of(id);
+  }
+
+  private void offerPlayer() {
+    if (!playerCase() || !result.equals("live"))
+      throw new IllegalStateException("offer requires the original live human case");
+    probes.add(players.offer(current(), subject.orElseThrow(), next()));
+  }
+
+  private void preparePlayer() {
+    if (!playerCase()
+        || prepared
+        || subject.isEmpty()
+        || current().phase() != MatchState.Phase.COUNTDOWN)
+      throw new IllegalStateException("prepare one human Trooper case during countdown");
+    prepared = true;
+    prepareTroopers(current());
+  }
+
+  private void finish() {
+    if (!caseName.equals("healing-and-lifecycle") || !result.equals("live"))
+      throw new IllegalStateException("finish requires the original live healing showcase");
+    storm()
+        .service(ShowcaseControl.class)
+        .stop(match.orElseThrow())
+        .ifPresent(
+            refusal -> {
+              throw new IllegalStateException("native healing finish refused: " + refusal);
+            });
   }
 
   private boolean playerCase() {
