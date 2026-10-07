@@ -1716,6 +1716,22 @@ contain one player and incomplete (`MISSING`) control provenance from this
 automated client, so it cannot supply human demonstrations. This command covers
 the player-damage diagnostic only and produces no accepted model or rollout.
 
+To verify the last joined player disconnecting, use another fresh directory:
+
+```bash
+bun run bots:verify-last-human-abort --model .cache/rwf-java-parity/exact-candidate/onnx --output .cache/rwf-regression-capture/last-human-abort
+```
+
+The automated player starts the same ordinary eight-Trooper match and disconnects
+after Java controls have been applied. Original transitions must show the last
+player leaving and a winnerless Stop within 120 native ticks; the original log
+must confirm the configured five-second grace period. Native entity queries are bracketed by journal
+checkpoints: all eight bodies must exist before disconnect and be absent after
+the lobby returns. The output retains the original server log, complete stopped
+recording, and a private SQLite snapshot. Requerying that database must show a
+STOPPED player with no credits owed or paid. This diagnostic supplies no human
+demonstrations, complete regression acceptance or rollout.
+
 The producer verifies the sealed pilot and human ballot, recounts the original
 strength outcomes, recomputes the full raw load stream, and replays the original
 parity samples against the frozen Python weights and exact CPU ONNX export.

@@ -5,6 +5,7 @@ import {
   type RegressionCommand,
 } from "./regression-gate.ts";
 import { humanCombat } from "./regression/human-gate.ts";
+import { lastHumanAbort } from "./regression/abort-gate.ts";
 
 const match = "11111111-1111-4111-8111-111111111111";
 const body = "22222222-2222-4222-8222-222222222222";
@@ -274,6 +275,228 @@ function humanJournal() {
   ];
   return rows;
 }
+
+function abortJournal() {
+  const rows = humanJournal();
+  const state = terminal(rows);
+  for (const entry of rows) {
+    if (entry.state.caseName !== "") entry.state.caseName = "last-human-abort";
+    if (entry.command.startsWith("arm "))
+      entry.command = "arm last-human-abort 7";
+  }
+  const first = state.transitions[0];
+  const left = state.transitions[1];
+  const tick = state.ticks[1];
+  if (
+    first === undefined ||
+    left === undefined ||
+    tick === undefined ||
+    state.inference === null
+  )
+    throw new Error("synthetic abort case missing");
+  left.event = "Disconnect";
+  left.phase = "LIVE";
+  left.winner = "";
+  left.fighters = left.fighters.filter((row) => row.bot);
+  tick.batchRows = 1;
+  const stopped = {
+    ...structuredClone(left),
+    sequence: 9,
+    serverTick: 102,
+    event: "Stop",
+    phase: "RESETTING" as const,
+    fighters: [],
+  };
+  const lastTick = {
+    ...tick,
+    sequence: 10,
+    serverTick: 102,
+    botTick: 12,
+    live: false,
+    batchRows: 0,
+  };
+  const metrics = {
+    ...state.inference,
+    submitted: 2,
+    timely: 2,
+    deadlineMet: 2,
+  };
+  const live: RegressionCommand = {
+    command: "sample",
+    state: {
+      ...state,
+      result: "live",
+      phase: "LIVE",
+      sequence: 4,
+      actions: state.actions.slice(0, 1),
+      ticks: state.ticks.slice(0, 1),
+      transitions: [first],
+      damage: [],
+      inference: { ...metrics, submitted: 1, timely: 1, deadlineMet: 1 },
+    },
+  };
+  const disconnect: RegressionCommand = {
+    command: "sample",
+    state: {
+      ...state,
+      result: "live",
+      phase: "LIVE",
+      actions: state.actions.slice(1),
+      ticks: [tick],
+      transitions: [left],
+      probes: [],
+      inference: metrics,
+    },
+  };
+  const released: RegressionCommand = {
+    command: "release",
+    state: {
+      ...state,
+      result: "released",
+      phase: "LOBBY",
+      sequence: 10,
+      actions: [],
+      ticks: [lastTick],
+      transitions: [stopped],
+      damage: [],
+      probes: [],
+      inference: metrics,
+    },
+  };
+  rows.splice(2, 1, live, disconnect, released);
+  const ids = [
+    opponent,
+    ...first.fighters
+      .filter((row) => row.bot)
+      .map((row) => row.body)
+      .sort(),
+  ];
+  const boundary = {
+    schema: 1,
+    match,
+    player: opponent,
+    live: {
+      startSequence: 4,
+      endSequence: 4,
+      phase: "LIVE",
+      probes: ids.map((id) => ({
+        command: `execute if entity ${id}`,
+        response: "Test passed. Count: 1",
+      })),
+    },
+    departed: {
+      startSequence: 10,
+      endSequence: 10,
+      phase: "LOBBY",
+      probes: ids.map((id) => ({
+        command: `execute if entity ${id}`,
+        response: "Test failed",
+      })),
+    },
+    debug: "no bots in the match",
+  };
+  const settlement = {
+    matches: [
+      {
+        id: match,
+        winner: null,
+        humans: 1,
+        bots: 7,
+        recording_file: `rwf/recordings/${match}.rwfrec.gz`,
+        recording_bytes: 120,
+        dropped_frames: 0,
+      },
+    ],
+    players: [
+      {
+        player: opponent,
+        result: "STOPPED",
+        credits_owed: 0,
+        payout_status: "NONE",
+        credits_paid: 0,
+      },
+    ],
+  };
+  const log = `rwf match ${match} has had no humans for PT5S; stopping\nrwf match ${match} stopped by Stop`;
+  const recording = [
+    `H\t3\t${match}`,
+    ...first.fighters.map(
+      (row) => `R\t${row.body}\t${row.team}\t${row.kit}\t${row.bot.toString()}`,
+    ),
+    `N\t0\tx\t0\t0\t0\tfalse\tfalse\t1\t0\t0\tMISSING`,
+    `X\t12\t-\tSTOPPED`,
+  ].join("\n");
+  return { rows, boundary, settlement, log, recording };
+}
+
+describe("original last-human disconnect", () => {
+  it("recounts last-human abort from the original disconnect, native entities and persisted zero-credit result", () => {
+    const { rows, boundary, settlement, log, recording } = abortJournal();
+    expect(
+      lastHumanAbort({ commands: rows, boundary, settlement, log, recording })
+        .abort,
+    ).toEqual({
+      player: opponent,
+      botsDespawned: 7,
+      ticksToStop: 1,
+      result: "STOPPED",
+      creditsOwed: 0,
+      creditsPaid: 0,
+    });
+  });
+
+  it.each([
+    "disconnect",
+    "stop",
+    "body",
+    "count",
+    "probe",
+    "checkpoint",
+    "grace",
+    "player",
+    "credit",
+    "winner",
+    "recording",
+    "input",
+  ])("rejects last-human abort with altered %s evidence", (edit) => {
+    const value = abortJournal();
+    const { rows, boundary, settlement } = value;
+    const left = rows[3]?.state.transitions[0];
+    const stop = rows[4]?.state.transitions[0];
+    const probe = boundary.departed.probes[0];
+    const player = settlement.players[0];
+    if (
+      left === undefined ||
+      stop === undefined ||
+      probe === undefined ||
+      player === undefined
+    )
+      throw new Error("synthetic abort mutation missing");
+    if (edit === "disconnect") left.event = "Leave";
+    if (edit === "stop") stop.event = "Tick";
+    if (edit === "body") probe.response = "Test passed. Count: 1";
+    if (edit === "count") probe.response = "Test passed. Count: 2";
+    if (edit === "probe") probe.command = `execute if entity ${match}`;
+    if (edit === "checkpoint") boundary.departed.startSequence = 4;
+    if (edit === "grace") value.log = value.log.replace("PT5S", "PT1S");
+    if (edit === "player") player.player = body;
+    if (edit === "credit") player.credits_owed = 3;
+    if (edit === "winner") stop.winner = "red";
+    if (edit === "recording")
+      value.recording = value.recording.replace("STOPPED", "ELIMINATION");
+    if (edit === "input")
+      value.recording = value.recording.replace("MISSING", "HUMAN");
+    expect(() =>
+      lastHumanAbort({
+        commands: rows,
+        boundary,
+        settlement,
+        log: value.log,
+        recording: value.recording,
+      }),
+    ).toThrow();
+  });
+});
 
 describe("original native regression journal", () => {
   it("requires the current target/probe wire instead of silently accepting old capture rows", () => {

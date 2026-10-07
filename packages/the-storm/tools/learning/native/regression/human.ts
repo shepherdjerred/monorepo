@@ -7,7 +7,7 @@ import type { Bot } from "mineflayer";
 import type { RegressionClient } from "#learning/native/regression-client.ts";
 import { captureRegression } from "./capture.ts";
 import { humanCombat } from "./human-gate.ts";
-import { connectBot, disconnectBot } from "#e2e/harness/bot.ts";
+import { joinTrooper } from "./player.ts";
 import { digestFile, jsonText, seal } from "#learning/preference/ledger.ts";
 
 const args = parseArgs({
@@ -26,49 +26,10 @@ async function verify() {
       bots: 7,
       profile: "regression-player",
     },
-    async ({ paper, fixture, cleanup, save }) => {
+    async (capture) => {
       ownership.created = true;
-      const player = await connectBot({
-        ...paper.playerAddress,
-        username: "RwfRegression",
-      });
-      cleanup.push(async () => disconnectBot(player));
-      const messages: string[] = [];
-      player.on("messagestr", (message: string) => {
-        messages.push(message);
-      });
-      cleanup.push(async () => {
-        await save("player-transcript.json", {
-          source: "automated-regression-client",
-          messages,
-        });
-      });
-      await fixture.command(`player ${z.uuid().parse(player.player.uuid)}`);
-      player.chat("/rwf join");
-      let state = await fixture.command("sample");
-      const startDeadline = Date.now() + 30_000;
-      while (state.phase !== "COUNTDOWN") {
-        if (Date.now() >= startDeadline || state.phase === "LIVE")
-          throw new Error("Original player countdown missing");
-        await Bun.sleep(100);
-        state = await fixture.command("sample");
-      }
-      await fixture.command("prepare");
-      while (state.phase !== "LIVE") {
-        if (Date.now() >= startDeadline)
-          throw new Error("Original player case did not start");
-        await Bun.sleep(100);
-        state = await fixture.command("sample");
-      }
-      await save("player.json", {
-        schema: 1,
-        source: "automated-regression-client",
-        player: z.uuid().parse(player.player.uuid),
-        command: "/rwf join",
-        preparedKits: "trooper",
-        humanDemonstration: false,
-      });
-      await offerUntilHit(fixture, player);
+      const { player } = await joinTrooper(capture);
+      await offerUntilHit(capture.fixture, player);
     },
   );
   const combat = humanCombat(measured);

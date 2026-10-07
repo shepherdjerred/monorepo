@@ -15,6 +15,7 @@ import { DuelClient } from "./duels.ts";
 import { InferenceClient } from "./inference.ts";
 import { InferenceLoadClient } from "./load-client.ts";
 import { gameplayFixtures } from "#e2e/gameplay-fixtures.ts";
+import { copyStormDatabase } from "#e2e/harness/storm-data.ts";
 import {
   docker,
   serverLogs,
@@ -50,9 +51,15 @@ export async function frozenManifest() {
   const files = [
     stormJar,
     fixturesJar,
-    ...["bot.ts", "rcon.ts", "pins.ts", "rwf-trails.ts"].map((file) =>
-      path.join(root, "tests/e2e/harness", file),
-    ),
+    ...[
+      "bot.ts",
+      "rcon.ts",
+      "pins.ts",
+      "rwf-trails.ts",
+      "storm-data.ts",
+      "rcon-output.ts",
+      "rwf-settings.ts",
+    ].map((file) => path.join(root, "tests/e2e/harness", file)),
     path.join(root, "scripts/bots/learning/dataset.py"),
     path.join(root, "scripts/bots/learning/preference_recording.py"),
     path.join(content, "rwf.yml"),
@@ -243,10 +250,16 @@ export async function openPaperDuels(
       password: server.info.rconPassword,
     });
     const observerConsole = rcon;
+    const nativeServer = server;
     const address = `127.0.0.1:${server.info.gamePort.toString()}`;
     return {
       console: rcon,
       playerAddress: { host: server.info.host, port: server.info.gamePort },
+      async exportRegressionDatabase(directory: string) {
+        if (!profile.startsWith("regression"))
+          throw new Error("Database evidence requires a regression owner");
+        return copyStormDatabase(nativeServer.info, directory);
+      },
       duels: new DuelClient(rcon),
       inference: new InferenceClient(rcon),
       load: new InferenceLoadClient(rcon),
