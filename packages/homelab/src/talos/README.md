@@ -81,7 +81,7 @@ See the original investigation for the full investigation and why hung-task-pani
 
 - `cluster.etcd.extraArgs.listen-metrics-urls: http://0.0.0.0:2381` - Dedicated plaintext metrics listener (`/metrics` and `/health` only — no client API is exposed on this port). Port 2381 is the kube-prometheus-stack default; the chart values pin the scrape target to torvalds via `kubeEtcd.endpoints` (`PROD_NODE_INTERNAL_IP` in `src/cdk8s/src/misc/nodes.ts`).
 
-**Configured, activation pending reboot**: the full torvalds machine configuration was reconciled without reboot on 2026-08-29. Talos's live `EtcdConfig` and `EtcdSpec` both report `listen-metrics-urls: http://0.0.0.0:2381`, but the protected etcd service does not restart for this change and its running process retains the old arguments until the node reboots. Port 2381 therefore remains closed and Prometheus correctly reports `up{job="kube-etcd"} == 0`. Activate and verify this listener during the next planned torvalds reboot; do not reboot solely for metrics, and do not mark the dashboard verified before the target is up.
+**Active and verified**: torvalds serves the dedicated metrics listener on port 2381, its `/health` endpoint succeeds, and Prometheus reports `up{job="kube-etcd"} == 1`. The protected etcd service does not restart when this argument changes; configuration changes take effect at the next planned node reboot. Verify the running listener and scrape target after that reboot, and do not mark the dashboard verified from configuration alone. Rollout evidence belongs in the upgrade PR.
 
 ### Other Patches
 
