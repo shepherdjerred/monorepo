@@ -58,7 +58,7 @@
       "owner": "storm",
       "namespace": "storm",
       "source": "storm-forum",
-      "purpose": "Open forum registration after private acceptance checks.",
+      "purpose": "Enable registration on The Storm production forum.",
       "type": "boolean",
       "default": false,
       "rollouts": [],
@@ -82,7 +82,7 @@
       "owner": "storm",
       "namespace": "storm",
       "source": "storm-forum",
-      "purpose": "Enable Pacific-time seasonal forum appearance in beta before production rollout.",
+      "purpose": "Enable Pacific-time seasonal appearance on The Storm production forum.",
       "type": "boolean",
       "default": false,
       "rollouts": [
@@ -2338,6 +2338,52 @@
     {
       "key": "prod",
       "overrides": [
+        {
+          "key": "storm-forum-registration-enabled",
+          "type": "boolean",
+          "default": false,
+          "rollouts": [
+            {
+              "segmentKey": "storm-forum-prod",
+              "segmentOperator": "OR_SEGMENT_OPERATOR",
+              "matchType": "ALL_SEGMENT_MATCH_TYPE",
+              "constraints": [
+                {
+                  "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+                  "property": "stage",
+                  "operator": "eq",
+                  "value": "prod"
+                }
+              ],
+              "result": true
+            }
+          ],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "storm-forum-calendar-enabled",
+          "type": "boolean",
+          "default": false,
+          "rollouts": [
+            {
+              "segmentKey": "storm-forum-prod",
+              "segmentOperator": "OR_SEGMENT_OPERATOR",
+              "matchType": "ALL_SEGMENT_MATCH_TYPE",
+              "constraints": [
+                {
+                  "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+                  "property": "stage",
+                  "operator": "eq",
+                  "value": "prod"
+                }
+              ],
+              "result": true
+            }
+          ],
+          "rules": [],
+          "thresholdRollouts": []
+        },
         {
           "key": "ai_reports_enabled",
           "type": "boolean",

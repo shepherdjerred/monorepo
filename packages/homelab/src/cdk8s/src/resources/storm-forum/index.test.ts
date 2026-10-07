@@ -1,7 +1,8 @@
-import { App, Testing } from "cdk8s";
+import { App, Chart, Testing } from "cdk8s";
 import { describe, expect, it } from "vitest";
 import { createStormForumChart } from "./index.ts";
 import { resetProbeRegistry } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/probe-registry.ts";
+import { createServiceProbesChart } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/service-probes-chart.ts";
 
 const fixture = {
   stage: "beta" as const,
@@ -14,6 +15,30 @@ const fixture = {
 };
 
 describe("forum isolation and release resources", () => {
+  it.each(["beta", "prod"] as const)(
+    "renders distinct public and admin health probes for %s",
+    (stage) => {
+      resetProbeRegistry();
+      const app = new App();
+      createStormForumChart(app, { ...fixture, stage });
+      createServiceProbesChart(app);
+      const probes = Testing.synth(
+        Chart.of(app.node.findChild("service-probes")),
+      );
+      const namespace = stage === "prod" ? "storm-forum" : "storm-forum-beta";
+      const targets = JSON.stringify(probes);
+      expect(targets).toContain(
+        `http://storm-forum.${namespace}.svc.cluster.local:8080/readyz`,
+      );
+      expect(targets).toContain(
+        `storm-forum-admin.${namespace}.svc.cluster.local:8081`,
+      );
+      expect(probes).toHaveLength(stage === "prod" ? 3 : 2);
+      expect(new Set(probes.map((probe) => probe.metadata.name)).size).toBe(
+        probes.length,
+      );
+    },
+  );
   it("serves the production community on the apex with no forum subdomain", () => {
     resetProbeRegistry();
     const rendered = Testing.synth(

@@ -6,6 +6,8 @@ regexTarget = "secret"
 regexes = [
   # PostHog phc_ project tokens are public browser ingestion identifiers.
   '''^phc_[A-Za-z0-9]+$''',
+  # Public 1Password item reference for the Storm production release.
+  '''^xdstbl5gobpao35rjprlp3hzgi$''',
 ]
 paths = [
   '''packages/dotfiles/Library/Application Support/pinchtab/config\.json''',
