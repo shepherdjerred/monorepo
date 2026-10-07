@@ -31,12 +31,14 @@ const fixturesJar = path.join(
 
 export async function frozenManifest() {
   const learning = path.join(root, "tools/learning");
-  const [listing, preference, promotion, native] = await Promise.all([
-    readdir(learning),
-    readdir(path.join(learning, "preference")),
-    readdir(path.join(learning, "promotion")),
-    readdir(path.join(learning, "native")),
-  ]);
+  const [listing, preference, promotion, native, personalities] =
+    await Promise.all([
+      readdir(learning),
+      readdir(path.join(learning, "preference")),
+      readdir(path.join(learning, "promotion")),
+      readdir(path.join(learning, "native")),
+      readdir(path.join(content, "rwfbots/personalities")),
+    ]);
   const sources = [
     ...listing,
     ...preference.map((file) => `preference/${file}`),
@@ -48,8 +50,14 @@ export async function frozenManifest() {
   const files = [
     stormJar,
     fixturesJar,
+    path.join(root, "scripts/bots/learning/dataset.py"),
+    path.join(root, "scripts/bots/learning/preference_recording.py"),
     path.join(content, "rwf.yml"),
     path.join(content, "rwfbots.yml"),
+    ...personalities
+      .filter((file) => file.endsWith(".yml"))
+      .sort()
+      .map((file) => path.join(content, "rwfbots/personalities", file)),
     path.join(content, "rwf/kits.yml"),
     path.join(content, "rwf/maps/training-yard/map.yml"),
     path.join(content, "rwf/maps/training-yard/blocks.schem"),

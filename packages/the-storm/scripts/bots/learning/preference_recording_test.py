@@ -22,7 +22,11 @@ class PreferenceRecordingTest(unittest.TestCase):
             with gzip.open(file, "wt", encoding="utf-8") as stream:
                 stream.write(text)
             self.assertEqual(inspect(file)["winner"], "RED")
+            self.assertEqual(inspect(file, -42)["winner"], "RED")
+            with self.assertRaisesRegex(ValueError, "domain seed"):
+                inspect(file, 42)
             for altered in (
+                text.replace("\t-42\t", "\t9223372036854775808\t"),
                 text.replace("training-yard", "other-map"),
                 text.replace("trooper\ttrue", "trooper\tfalse"),
                 text.replace("X\t3\tRED\tLAST_TEAM_STANDING\n", ""),

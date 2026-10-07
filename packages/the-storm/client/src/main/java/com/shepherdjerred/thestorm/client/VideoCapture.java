@@ -280,13 +280,15 @@ final class VideoCapture implements AutoCloseable {
     }
     DuelWindow.Binding binding;
     try {
-      binding = duel.bind(frame.index(), now);
+      binding = duel.bind(frame.index(), now, frame.worldTick());
     } catch (RuntimeException failure) {
       current.writer.reject(failure.toString());
       throw failure;
     }
-    if (binding.sourceFrame() < frame.index()) current.writer.hold(frame, binding.sourceFrame());
-    else requestFrame(client, current, frame, binding.marker().marker().equals("terminal"));
+    var paperFrame = binding.paperFrame(frame);
+    if (binding.sourceFrame() < frame.index())
+      current.writer.hold(paperFrame, binding.sourceFrame());
+    else requestFrame(client, current, paperFrame, binding.marker().marker().equals("terminal"));
   }
 
   private static void settle(Minecraft client, Run current) {

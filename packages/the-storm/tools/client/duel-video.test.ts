@@ -41,7 +41,7 @@ function fixture(ending = 20) {
       frame: {
         index,
         elapsedNanos: Math.floor((index * 1_000_000_000) / 30),
-        worldTick: 100 + Math.floor((index * 20) / 30),
+        worldTick: 100 + Math.floor((source * 20) / 30),
         camera: {
           position: [31.5, 74.62, 22.5],
           yaw: 180,
@@ -65,10 +65,11 @@ function fixture(ending = 20) {
         ? marker("terminal", ending, "loss")
         : marker("tick", elapsed, "live"),
       sourceFrame: terminal ? terminalFrame : frame.index,
+      clientWorldTick: 100 + elapsed,
     };
   });
   return {
-    schema: 2,
+    schema: 3,
     kind: "rwf-rendered-duel-frames",
     acceptance: "unaccepted",
     source: "minecraft-framebuffer",
@@ -102,6 +103,20 @@ test("holds only the original terminal render after a native loss", () => {
   const parsed = validateDuelFrames(fixture());
   expect(parsed.duel.terminalFrame).toBe(30);
   expect(parsed.duel.bindings[899]?.sourceFrame).toBe(30);
+});
+
+test("retains client clock corrections while requiring exact authoritative Paper frame clocks", () => {
+  const raw = fixture();
+  const previous = raw.duel.bindings[3];
+  const next = raw.duel.bindings[4];
+  const frame = raw.frames[4];
+  if (previous === undefined || next === undefined || frame === undefined)
+    throw new Error("Missing fixture frame");
+  previous.clientWorldTick = 1220;
+  next.clientWorldTick = 1219;
+  expect(validateDuelFrames(raw).duel.bindings[4]?.clientWorldTick).toBe(1219);
+  frame.frame.worldTick++;
+  expect(() => validateDuelFrames(raw)).toThrow("world clock differs");
 });
 
 test("a full first-600-tick clip does not prove a full match terminal outcome", () => {

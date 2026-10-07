@@ -40,6 +40,11 @@ public final class RwfPaper {
       }
 
       @Override
+      public Optional<String> startSeeded(java.util.UUID lobbyId, int combatants, long seed) {
+        return runner.startSeededShowcase(lobbyId, combatants, seed);
+      }
+
+      @Override
       public Optional<String> stop(java.util.UUID matchId) {
         return runner.stopShowcase(matchId);
       }

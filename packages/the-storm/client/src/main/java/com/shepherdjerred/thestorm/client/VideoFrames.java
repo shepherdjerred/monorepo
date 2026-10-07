@@ -191,7 +191,7 @@ final class VideoFrames {
           else
             result =
                 new DuelReceipt(
-                    2,
+                    3,
                     "rwf-rendered-duel-frames",
                     "unaccepted",
                     "minecraft-framebuffer",

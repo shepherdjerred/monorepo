@@ -7,5 +7,8 @@ import java.util.UUID;
 public interface ShowcaseControl {
   Optional<String> start(int combatants);
 
+  /** Starts the exact empty lobby with a fixed domain seed; occupied lobbies are refused. */
+  Optional<String> startSeeded(UUID lobbyId, int combatants, long seed);
+
   Optional<String> stop(UUID matchId);
 }

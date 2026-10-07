@@ -1426,6 +1426,8 @@ one fixed spectator camera, FOV and resolution, with HUD and nameplates hidden.
 Capture the first 600 live ticks at 1280x720, 30 fps; hold the terminal frame if
 the duel ends early so every clip remains 30 seconds. Retain losses and early
 endings. Wait for the lobby between matches and keep every native recording.
+Preparation checks each original recording's domain seed against its scheduled
+controller seed, so mismatched lighting and team seeds cannot enter the review.
 Capture automation and validation of the depicted camera are separate from
 these review commands; the clip producer supplies that provenance.
 
@@ -1438,13 +1440,26 @@ bun run bots:java-video --model .cache/rwf-pilot/trooper/seed-0/onnx --output .c
 This command stages and warms that exact unaccepted export, attaches one native
 client to the same disposable Paper instance, and runs a separate warm-up duel
 before recording one Java-controlled and one authored match against the basic
-opponent at a common controller seed. Every match runs once. Losses and early terminal
+opponent at a common controller and domain seed. The guarded seeded showcase port
+requires the exact empty lobby, preserves its identity and map, and settles the
+seeded world time before countdown. This also fixes team tie-breaks for the stable
+bot join order. Wall-clock timing and asynchronous inference can still change the
+combat trajectory. Every match runs once. Losses and early terminal
 frames remain in the evidence. `inputs.json` hashes the actor, model manifest,
 native environment, renderer sources, compiled client classes, resources and
 client artifact before capture; the command checks those inputs again afterward.
+Each schema-3 native frame uses the latest received Paper marker for its world
+tick and retains the sampled client game clock separately as `clientWorldTick`.
+Client clock corrections therefore remain visible without being mistaken for
+a reversed authoritative duel clock. Frame clocks must exactly equal their
+received markers; native monotonicity, missing-tick, pixel and camera gates remain.
+Older schema-2 native receipts are rejected by the current encoder.
 Each clip retains its frame receipt, separate full-match clock, original terminal
 state and Java delivery metrics. After graceful shutdown, it validates and hashes
-the original complete schema-3 bot-only Trooper recordings. Observer cleanup runs
+the original complete schema-3 bot-only Trooper recordings, including checking
+that each header's domain seed equals its requested controller seed. The native
+fingerprint includes the shipped personality YAML as well as map and kit inputs.
+Observer cleanup runs
 before Paper stops and exports recordings, including when capture fails.
 
 `verification.json` is model-specific diagnostic evidence. It does not establish
@@ -1486,7 +1501,7 @@ after the position and screen status have updated.
 bun run client preview --rwf-duel --verify-duel-video
 ```
 
-Schema-2 `rwf-rendered-duel-frames` receipts retain the original camera, frame
+Schema-3 `rwf-rendered-duel-frames` receipts retain the original camera, frame
 timestamps, pixel hashes, received native clock and each frame's current
 marker and source-image index. Every live slot uses a separate framebuffer
 readback. After an early native terminal event, one original terminal render

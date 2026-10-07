@@ -11,11 +11,14 @@ from pathlib import Path
 from dataset import read
 
 
-def inspect(path: Path) -> dict[str, object]:
+def inspect(path: Path, expected_seed: int | None = None) -> dict[str, object]:
     with gzip.open(path, "rt", encoding="utf-8") as stream:
         header = stream.readline().rstrip("\n").split("\t")
         stream.seek(0)
         recording = read(stream)
+    seed = int(header[5])
+    if not -(2**63) <= seed < 2**63 or (expected_seed is not None and seed != expected_seed):
+        raise ValueError("native recording domain seed differs from the requested duel seed")
     if (
         header[3] != "training-yard"
         or re.fullmatch("[a-f0-9]{64}", header[4]) is None
@@ -36,8 +39,11 @@ def inspect(path: Path) -> dict[str, object]:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("recordings", nargs="+", type=Path)
+    parser.add_argument("--expected-seed", type=int)
     args = parser.parse_args()
-    print(json.dumps([inspect(path) for path in args.recordings], allow_nan=False))
+    if args.expected_seed is not None and len(args.recordings) != 1:
+        parser.error("--expected-seed requires exactly one original recording")
+    print(json.dumps([inspect(path, args.expected_seed) for path in args.recordings], allow_nan=False))
 
 
 if __name__ == "__main__":

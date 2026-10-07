@@ -193,7 +193,7 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
                 .subscribe(notification -> changed(MatchState.of(notification.after()))));
     match = Optional.of(current.matchId());
     capture.begin(current.matchId(), seed, side, mode, opponent);
-    var refusal = storm().service(ShowcaseControl.class).start(2);
+    var refusal = storm().service(ShowcaseControl.class).startSeeded(current.matchId(), 2, seed);
     if (refusal.isPresent()) {
       cancel();
       throw new IllegalStateException(refusal.orElseThrow());
