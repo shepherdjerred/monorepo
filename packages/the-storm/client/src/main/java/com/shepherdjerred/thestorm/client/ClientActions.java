@@ -19,12 +19,14 @@ final class ClientActions {
   private final Session session;
   private final InputLease inputs = new InputLease();
   private final Captures captures;
+  private final VideoCapture videos;
   private final RecordedControls recording = new RecordedControls();
   private int automationTicks;
 
   ClientActions(Session session) {
     this.session = session;
     captures = new Captures(session.artifacts());
+    videos = new VideoCapture(session.artifacts());
   }
 
   CompletableFuture<Object> submit(Minecraft client, UUID peer, Protocol.Request request) {
@@ -48,7 +50,9 @@ final class ClientActions {
       release(client);
       return CompletableFuture.completedFuture("Inputs released");
     }
+    if (request.action().startsWith("video-")) return video(client, request);
     requireWorld(client);
+    if (videos.active()) throw new IllegalStateException("Rendered capture owns the camera");
     if (request.action().equals("capture")) return captures.capture(client, args);
     if (request.action().equals("input")) return input(client, peer, args);
     automationTicks = 2;
@@ -66,8 +70,34 @@ final class ClientActions {
     return CompletableFuture.completedFuture(result);
   }
 
+  private CompletableFuture<Object> video(Minecraft client, Protocol.Request request) {
+    var args = request.arguments();
+    if (request.action().equals("video-arm")) {
+      requireWorld(client);
+      if (inputs.active()) throw new IllegalStateException("Release inputs before recording");
+      return videos.arm(client, args);
+    }
+    Protocol.keys(args, Set.of());
+    var result =
+        switch (request.action()) {
+          case "video-status" -> videos.status();
+          case "video-cancel" -> {
+            videos.cancel(client);
+            yield videos.status();
+          }
+          case "video-start" -> {
+            requireWorld(client);
+            yield videos.start();
+          }
+          default ->
+              throw new IllegalArgumentException("Unknown video action: " + request.action());
+        };
+    return CompletableFuture.completedFuture(result);
+  }
+
   void tick(Minecraft client) {
-    recording.tick(client, inputs.active() || automationTicks > 0);
+    recording.tick(client, inputs.active() || automationTicks > 0 || videos.active());
+    videos.tick(client);
     automationTicks = Math.max(0, automationTicks - 1);
     if (!inputs.active()) return;
     if (client.player == null || client.player.isDeadOrDying() || client.gui.screen() != null) {
@@ -85,9 +115,20 @@ final class ClientActions {
   }
 
   void release(Minecraft client) {
+    videos.cancel(client);
     if (!inputs.active()) return;
     inputs.release();
     apply(client);
+  }
+
+  void startCaptures() {
+    RenderCapture.install(videos);
+  }
+
+  void closeCaptures(Minecraft client) {
+    videos.cancel(client);
+    RenderCapture.remove(videos);
+    videos.close();
   }
 
   private void requireWorld(Minecraft client) {
