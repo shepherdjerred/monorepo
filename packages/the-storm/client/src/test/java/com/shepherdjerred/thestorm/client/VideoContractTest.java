@@ -66,4 +66,30 @@ class VideoContractTest {
         .map(java.lang.reflect.RecordComponent::getName)
         .toList();
   }
+
+  @Test
+  void NativeWindowRecordsAgreeWithTheNeutralContract() throws IOException {
+    try (var source =
+        java.util.Objects.requireNonNull(
+            getClass().getResourceAsStream("/storm-duel-video.json"))) {
+      var spec = Protocol.JSON.readTree(source);
+      assertThat(spec.required("version").intValue()).isEqualTo(2);
+      assertThat(spec.required("kind").stringValue()).isEqualTo("rwf-rendered-duel-frames");
+      assertThat(spec.required("liveTicks").intValue()).isEqualTo(DuelWindow.LIVE_TICKS);
+      assertThat(spec.required("frames").intValue()).isEqualTo(DuelWindow.FRAMES);
+      assertThat(spec.required("window").stringValue()).isEqualTo(DuelWindow.WINDOW);
+      for (var pair :
+          java.util.Map.of(
+                  "receipt",
+                  VideoFrames.DuelReceipt.class,
+                  "duel",
+                  DuelWindow.Receipt.class,
+                  "binding",
+                  DuelWindow.Binding.class)
+              .entrySet())
+        assertThat(
+                Protocol.JSON.<tools.jackson.databind.JsonNode>valueToTree(names(pair.getValue())))
+            .isEqualTo(spec.required(pair.getKey()));
+    }
+  }
 }

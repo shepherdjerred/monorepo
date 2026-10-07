@@ -23,6 +23,7 @@ import {
 } from "./protocol.ts";
 import { smoke, tour } from "./scripts.ts";
 import { verifyDuelClock } from "./verify-duel-clock.ts";
+import { verifyDuelVideo } from "./verify-duel-video.ts";
 
 const packageRoot = path.resolve(import.meta.dirname, "../..");
 
@@ -46,19 +47,33 @@ async function build(directory: string, tasks: string[]): Promise<void> {
   if ((await child.exited) !== 0) throw new Error(`Build failed: ${directory}`);
 }
 
-export async function preview(options: {
+type PreviewOptions = {
   world?: string;
   vanilla: boolean;
   verify: boolean;
   rwfDuel: boolean;
   verifyDuelClock: boolean;
-}): Promise<void> {
+  verifyDuelVideo: boolean;
+};
+
+function validateOptions(options: PreviewOptions): void {
   if (options.vanilla && options.rwfDuel)
     throw new Error("--rwf-duel requires Storm modules");
   if (options.verifyDuelClock && (!options.rwfDuel || options.verify))
     throw new Error(
       "--verify-duel-clock requires --rwf-duel and its own verification run",
     );
+  if (
+    options.verifyDuelVideo &&
+    (!options.rwfDuel || options.verify || options.verifyDuelClock)
+  )
+    throw new Error(
+      "--verify-duel-video requires --rwf-duel and its own verification run",
+    );
+}
+
+export async function preview(options: PreviewOptions): Promise<void> {
+  validateOptions(options);
   await build(path.join(packageRoot, "client"), ["assemble"]);
   await build(
     path.join(packageRoot, "plugin"),
@@ -123,6 +138,7 @@ async function run(
     verify: boolean;
     rwfDuel: boolean;
     verifyDuelClock: boolean;
+    verifyDuelVideo: boolean;
   },
   runState: Run,
 ): Promise<void> {
@@ -246,6 +262,10 @@ async function run(
   }
   if (options.verifyDuelClock) {
     await verifyDuelClock(session, rcon);
+    runState.finish();
+  }
+  if (options.verifyDuelVideo) {
+    await verifyDuelVideo(session, rcon);
     runState.finish();
   }
   await runState.stopped;

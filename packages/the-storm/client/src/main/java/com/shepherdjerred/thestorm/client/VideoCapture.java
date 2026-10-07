@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.client;
 
+import com.shepherdjerred.thestorm.client.wire.DuelMarker;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
@@ -55,6 +56,7 @@ final class VideoCapture implements AutoCloseable {
     final VideoFrames writer;
     final int total;
     final int fov;
+    final @Nullable DuelWindow duel;
     String state = "STARTING";
     String error = "";
     @Nullable Vec3 position;
@@ -65,14 +67,32 @@ final class VideoCapture implements AutoCloseable {
     @Nullable Camera camera;
     @Nullable CompletableFuture<Path> receipt;
 
-    Run(Path artifacts, ExecutorService io, JsonNode args) {
-      Protocol.keys(args, Set.of("name", "frames", "fov"));
+    Run(Path artifacts, ExecutorService io, JsonNode args, boolean nativeDuel) {
+      Protocol.keys(
+          args,
+          nativeDuel
+              ? Set.of("name", "fov", "seed", "side", "mode", "opponent")
+              : Set.of("name", "frames", "fov"));
       name = Protocol.text(args, "name", 80);
       if (!name.matches("[a-zA-Z0-9_-]+")) throw new IllegalArgumentException("Invalid clip name");
-      total = Protocol.integer(args, "frames", 1, 1800);
+      total = nativeDuel ? DuelWindow.FRAMES : Protocol.integer(args, "frames", 1, 1800);
       fov = Protocol.integer(args, "fov", 30, 110);
       clock = new FrameClock(total);
       writer = new VideoFrames(artifacts.resolve(name), io);
+      duel = nativeDuel ? window(args) : null;
+    }
+
+    private static DuelWindow window(JsonNode args) {
+      var seed = args.required("seed");
+      if (!seed.isIntegralNumber() || !seed.canConvertToLong())
+        throw new IllegalArgumentException("Invalid duel seed");
+      return new DuelWindow(
+          new DuelTimeline.Expected(
+              seed.longValue(),
+              Protocol.text(args, "side", 10),
+              Protocol.text(args, "mode", 10),
+              Protocol.text(args, "opponent", 30)),
+          System.nanoTime());
     }
   }
 
@@ -97,7 +117,22 @@ final class VideoCapture implements AutoCloseable {
     return current != null && !Set.of("COMPLETE", "FAILED").contains(current.state);
   }
 
+  static boolean cameraReady(Minecraft client) {
+    return client.player != null
+        && client.level != null
+        && client.player.isSpectator()
+        && client.gui.screen() == null
+        && client.gui.overlay() == null
+        && !client.getWindow().isFullscreen()
+        && !client.getWindow().isMinimized()
+        && client.getFps() >= FrameClock.FPS;
+  }
+
   CompletableFuture<Object> arm(Minecraft client, JsonNode args) {
+    return arm(client, args, false);
+  }
+
+  CompletableFuture<Object> arm(Minecraft client, JsonNode args, boolean nativeDuel) {
     if (active()) throw new IllegalStateException("A rendered capture is already active");
     if (client.getWindow().isFullscreen() || client.getWindow().isMinimized()) {
       throw new IllegalStateException("Recording requires a visible windowed preview");
@@ -108,7 +143,7 @@ final class VideoCapture implements AutoCloseable {
     var player = java.util.Objects.requireNonNull(client.player);
     if (!player.isSpectator())
       throw new IllegalStateException("Recording requires a spectator camera");
-    var current = new Run(artifacts, io, args);
+    var current = new Run(artifacts, io, args, nativeDuel);
     run = current;
     return current
         .writer
@@ -140,8 +175,26 @@ final class VideoCapture implements AutoCloseable {
     if (!current.state.equals("READY")) {
       throw new IllegalStateException("Rendered camera is not ready");
     }
+    if (current.duel != null)
+      throw new IllegalStateException("Native duel packets own the capture start");
     current.state = "CAPTURING";
     return status();
+  }
+
+  void marker(DuelMarker marker, long now) {
+    var current = run;
+    if (current == null || current.duel == null || !active() || current.state.equals("DRAINING"))
+      return;
+    try {
+      if (!Set.of("READY", "CAPTURING").contains(current.state))
+        throw new IllegalStateException("Native duel began before the rendered camera was ready");
+      if (current.duel.accept(marker, now)) {
+        current.clock.anchor(now);
+        current.state = "CAPTURING";
+      }
+    } catch (RuntimeException failure) {
+      fail(current, failure.toString());
+    }
   }
 
   private void configure(Minecraft client, Run current) {
@@ -209,11 +262,31 @@ final class VideoCapture implements AutoCloseable {
               java.util.Objects.requireNonNull(client.level).getGameTime(),
               Camera.read(client));
       current.writer.reserve();
-      requestFrame(client, current, frame);
-      if (current.clock.complete()) current.state = "DRAINING";
+      capture(client, current, frame, now);
+      if (current.clock.complete()) {
+        if (current.duel != null) current.duel.complete();
+        current.state = "DRAINING";
+      }
     } catch (RuntimeException e) {
       fail(current, e.toString());
     }
+  }
+
+  private static void capture(Minecraft client, Run current, VideoFrames.Frame frame, long now) {
+    var duel = current.duel;
+    if (duel == null) {
+      requestFrame(client, current, frame, false);
+      return;
+    }
+    DuelWindow.Binding binding;
+    try {
+      binding = duel.bind(frame.index(), now);
+    } catch (RuntimeException failure) {
+      current.writer.reject(failure.toString());
+      throw failure;
+    }
+    if (binding.sourceFrame() < frame.index()) current.writer.hold(frame, binding.sourceFrame());
+    else requestFrame(client, current, frame, binding.marker().marker().equals("terminal"));
   }
 
   private static void settle(Minecraft client, Run current) {
@@ -231,10 +304,12 @@ final class VideoCapture implements AutoCloseable {
     }
   }
 
-  private static void requestFrame(Minecraft client, Run current, VideoFrames.Frame frame) {
+  private static void requestFrame(
+      Minecraft client, Run current, VideoFrames.Frame frame, boolean terminal) {
     try {
       Screenshot.takeScreenshot(
-          client.gameRenderer.mainRenderTarget(), image -> current.writer.write(image, frame));
+          client.gameRenderer.mainRenderTarget(),
+          image -> current.writer.write(image, frame, terminal));
     } catch (RuntimeException e) {
       current.writer.reject(e.toString());
       throw e;
@@ -305,7 +380,9 @@ final class VideoCapture implements AutoCloseable {
     if (!current.writer.drained()) return;
     var receipt = current.receipt;
     if (receipt == null) {
-      current.receipt = current.writer.finish(current.total, current.error);
+      current.receipt =
+          current.writer.finish(
+              current.total, current.error, current.duel == null ? null : current.duel.receipt());
       restore(client, current);
     } else if (receipt.isDone()) {
       try {

@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "kind": "rwf-rendered-duel-frames",
+  "liveTicks": 600,
+  "frames": 900,
+  "window": "first-600-live-ticks-hold-terminal-frame",
+  "receipt": [
+    "schema",
+    "kind",
+    "acceptance",
+    "source",
+    "fps",
+    "requestedFrames",
+    "complete",
+    "error",
+    "frames",
+    "duel"
+  ],
+  "duel": [
+    "window",
+    "liveTicks",
+    "frames",
+    "startedElapsedNanos",
+    "terminalFrame",
+    "clock",
+    "bindings"
+  ],
+  "binding": ["index", "markerReceivedNanos", "marker", "sourceFrame"]
+}

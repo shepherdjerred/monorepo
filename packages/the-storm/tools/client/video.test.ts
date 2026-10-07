@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { validateFrames } from "./video.ts";
+import { validateFrames } from "./video-frames.ts";
 
 function receipt() {
   return {

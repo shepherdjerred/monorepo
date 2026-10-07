@@ -18,6 +18,7 @@ const parsed = parseArgs({
     verify: { type: "boolean", default: false },
     "rwf-duel": { type: "boolean", default: false },
     "verify-duel-clock": { type: "boolean", default: false },
+    "verify-duel-video": { type: "boolean", default: false },
     help: { type: "boolean", default: false },
   },
 });
@@ -26,7 +27,7 @@ async function main(): Promise<void> {
   const action = parsed.positionals[0];
   if (action === undefined || parsed.values.help) {
     process.stdout.write(
-      "client preview [--world <directory>] [--vanilla] [--verify] [--rwf-duel] [--verify-duel-clock]\nclient video-encode --args '{\"receipt\":\"/path/to/frames.json\"}'\nclient <status|look|input|attack|use|hotbar|inventory|close|click|command|capture|video-arm|video-start|video-status|video-cancel|duel-arm|duel-status|duel-seal|duel-cancel|release|viewpoint|tour|smoke|stop> --session <session.json> [--args '<JSON object>']\n",
+      "client preview [--world <directory>] [--vanilla] [--verify] [--rwf-duel] [--verify-duel-clock|--verify-duel-video]\nclient video-encode --args '{\"receipt\":\"/path/to/frames.json\"}'\nclient <status|look|input|attack|use|hotbar|inventory|close|click|command|capture|video-ready|video-arm|video-duel-arm|video-start|video-status|video-cancel|duel-arm|duel-status|duel-seal|duel-cancel|release|viewpoint|tour|smoke|stop> --session <session.json> [--args '<JSON object>']\n",
     );
     return;
   }
@@ -36,6 +37,7 @@ async function main(): Promise<void> {
       verify: parsed.values.verify,
       rwfDuel: parsed.values["rwf-duel"],
       verifyDuelClock: parsed.values["verify-duel-clock"],
+      verifyDuelVideo: parsed.values["verify-duel-video"],
       ...(parsed.values.world === undefined
         ? {}
         : { world: parsed.values.world }),
