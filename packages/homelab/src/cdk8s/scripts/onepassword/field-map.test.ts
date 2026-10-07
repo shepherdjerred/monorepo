@@ -205,6 +205,49 @@ describe("canonical vault field mapping", () => {
 });
 
 describe("canonical selector ambiguity", () => {
+  test("an explicit top-level target rejects a field moved into a section", () => {
+    const mapping = buildFieldMapping(items, [
+      {
+        item: "service-id",
+        field: "API KEY",
+        fieldId: "key-id",
+        source: "top-level-target",
+      },
+      {
+        item: "service-id",
+        field: "API KEY",
+        fieldId: "section-key",
+        source: "moved-target",
+      },
+      {
+        item: "service-id",
+        field: "API KEY",
+        fieldId: "section-key",
+        sectionId: "add more",
+        source: "section-target",
+      },
+      {
+        item: "service-id",
+        field: "section-key",
+        access: "onepassword",
+        source: "cli-selector",
+      },
+    ]);
+    expect(mapping.reference_mappings.map((entry) => entry.status)).toEqual([
+      "resolved",
+      "missing-or-ambiguous-field",
+      "resolved",
+      "resolved",
+    ]);
+    expect(mapping.reference_mappings[1]?.candidates).toEqual([]);
+    expect(mapping.summary.unresolved_references).toBe(1);
+    expect(mapping.fields[3]?.consumers.map((entry) => entry.source)).toEqual([
+      "section-target",
+      "cli-selector",
+    ]);
+    expect(JSON.stringify(mapping)).not.toContain(privateValue);
+  });
+
   test("a field ID shadowed by another label cannot claim a canonical reference", () => {
     const mapping = buildFieldMapping(
       [

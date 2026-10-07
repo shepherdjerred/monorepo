@@ -125,7 +125,7 @@ function fieldMatches(field: Field, reference: AuditReference): boolean {
   if (reference.fieldId !== undefined && field.id !== reference.fieldId)
     return false;
   if (
-    reference.sectionId !== undefined &&
+    (reference.fieldId !== undefined || reference.sectionId !== undefined) &&
     field.section?.id !== reference.sectionId
   )
     return false;
