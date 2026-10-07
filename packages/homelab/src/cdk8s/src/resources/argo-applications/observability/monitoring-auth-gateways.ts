@@ -135,7 +135,10 @@ function gatewayContainer(props: GatewayContainerProps) {
 export function createMonitoringAuthGateways(chart: Chart) {
   const auth = new OnePasswordItem(chart, "monitoring-api-auth-onepassword", {
     spec: { itemPath: vaultItemPath("gnx5xq5rrsdlncvajjc4i577gm") },
-    metadata: { name: "monitoring-api-auth", namespace: "prometheus" },
+    metadata: {
+      name: "prometheus-monitoring-api-auth",
+      namespace: "prometheus",
+    },
   });
   const prometheusConfig = new ConfigMap(
     chart,

@@ -16,10 +16,14 @@ const MAX_TRACE_BYTES = 50_000_000;
  * Deployed in SingleBinary mode suitable for homelab scale.
  */
 export function createTempoApp(chart: Chart) {
-  new OnePasswordItem(chart, "tempo-monitoring-auth-onepassword", {
-    metadata: { name: "monitoring-api-auth", namespace: "tempo" },
-    spec: { itemPath: vaultItemPath("gnx5xq5rrsdlncvajjc4i577gm") },
-  });
+  const monitoringAuth = new OnePasswordItem(
+    chart,
+    "tempo-monitoring-auth-onepassword",
+    {
+      metadata: { name: "tempo-monitoring-api-auth", namespace: "tempo" },
+      spec: { itemPath: vaultItemPath("gnx5xq5rrsdlncvajjc4i577gm") },
+    },
+  );
 
   // Tempo values - SingleBinary mode with OTLP receiver enabled
   const tempoValues: HelmValuesForChart<"tempo"> = {
@@ -168,7 +172,7 @@ metrics_generator:
     extraVolumes: [
       {
         name: "monitoring-api-auth",
-        secret: { secretName: "monitoring-api-auth" },
+        secret: { secretName: monitoringAuth.name },
       },
     ],
   };

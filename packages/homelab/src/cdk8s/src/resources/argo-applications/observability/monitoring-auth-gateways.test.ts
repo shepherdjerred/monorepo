@@ -33,7 +33,7 @@ describe("monitoring mutation authentication", () => {
     const item = resources().find(
       (resource) => resource.kind === "OnePasswordItem",
     );
-    expect(item?.metadata.name).toBe("monitoring-api-auth");
+    expect(item?.metadata.name).toBe("prometheus-monitoring-api-auth");
     expect(JSON.stringify(item?.["spec"])).toContain(
       "gnx5xq5rrsdlncvajjc4i577gm",
     );

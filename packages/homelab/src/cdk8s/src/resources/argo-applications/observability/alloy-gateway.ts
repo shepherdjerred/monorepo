@@ -301,15 +301,19 @@ export function createAlloyGatewayApp(chart: Chart) {
       itemPath: vaultItemPath("phoenix-ingest"),
     },
   });
-  new OnePasswordItem(chart, "alloy-gateway-monitoring-auth-1p", {
-    metadata: {
-      name: "monitoring-api-auth",
-      namespace: "alloy-gateway",
+  const monitoringAuth = new OnePasswordItem(
+    chart,
+    "alloy-gateway-monitoring-auth-1p",
+    {
+      metadata: {
+        name: "alloy-gateway-monitoring-api-auth",
+        namespace: "alloy-gateway",
+      },
+      spec: {
+        itemPath: vaultItemPath("gnx5xq5rrsdlncvajjc4i577gm"),
+      },
     },
-    spec: {
-      itemPath: vaultItemPath("gnx5xq5rrsdlncvajjc4i577gm"),
-    },
-  });
+  );
 
   // Only the metrics port is published on the tailnet; the trace receiver on
   // 4318 stays cluster-internal. The OTLP receiver answers 404/405 on "/",
@@ -373,7 +377,7 @@ export function createAlloyGatewayApp(chart: Chart) {
           name: "PROMETHEUS_WRITE_TOKEN",
           valueFrom: {
             secretKeyRef: {
-              name: "monitoring-api-auth",
+              name: monitoringAuth.name,
               key: "prometheus-write-token",
             },
           },
