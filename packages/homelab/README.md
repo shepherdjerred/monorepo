@@ -59,6 +59,12 @@ the existing sync timeout. Prometheus health requires current-generation
 `Available` and `Reconciled` conditions; failed reconciliation still fails the
 sync. ArgoCD's configuration reconciles before the monitoring application wave.
 
+Flipt's upstream also listens only on loopback, at port 8081. Both containers'
+HTTP health probes use the gateway's Pod-addressable port 8080, which forwards
+`/health` to that private upstream. Kubelet cannot reach a loopback listener
+through the Pod IP; probe timing limits and the management authentication
+boundary remain unchanged.
+
 Temporal's external gRPC Service keeps port 7233 and forwards to its authenticated
 gateway on port 17233. The gateway shares the server's Pod network, so its
 listener must avoid Temporal's frontend, history, matching, worker, membership,

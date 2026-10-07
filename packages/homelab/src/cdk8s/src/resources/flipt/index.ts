@@ -388,17 +388,19 @@ export function createFliptDeployment(chart: Chart) {
       },
       securityContext: FLIPT_SECURITY_CONTEXT,
       startup: Probe.fromHttpGet("/health", {
-        port: FLIPT_UPSTREAM_PORT,
+        // Kubelet connects to the Pod IP; the private upstream only accepts
+        // loopback. The gateway forwards this health route to that upstream.
+        port: FLIPT_PORT,
         periodSeconds: Duration.seconds(5),
         failureThreshold: 18,
       }),
       liveness: Probe.fromHttpGet("/health", {
-        port: FLIPT_UPSTREAM_PORT,
+        port: FLIPT_PORT,
         periodSeconds: Duration.seconds(30),
         failureThreshold: 3,
       }),
       readiness: Probe.fromHttpGet("/health", {
-        port: FLIPT_UPSTREAM_PORT,
+        port: FLIPT_PORT,
         periodSeconds: Duration.seconds(10),
         failureThreshold: 3,
       }),
