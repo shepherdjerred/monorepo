@@ -33,6 +33,28 @@ import {
 export const FLIPT_PORT = 8080;
 const FLIPT_UPSTREAM_PORT = 8081;
 
+function createFliptHealthProbes() {
+  // Kubelet connects to the Pod IP; the private upstream only accepts
+  // loopback. The gateway forwards this health route to that upstream.
+  return {
+    startup: Probe.fromHttpGet("/health", {
+      port: FLIPT_PORT,
+      periodSeconds: Duration.seconds(5),
+      failureThreshold: 18,
+    }),
+    liveness: Probe.fromHttpGet("/health", {
+      port: FLIPT_PORT,
+      periodSeconds: Duration.seconds(30),
+      failureThreshold: 3,
+    }),
+    readiness: Probe.fromHttpGet("/health", {
+      port: FLIPT_PORT,
+      periodSeconds: Duration.seconds(10),
+      failureThreshold: 3,
+    }),
+  };
+}
+
 // The image declares no ENTRYPOINT and `CMD ["/flipt","server"]`, so Kubernetes
 // `args` alone would try to exec the flag as a binary. The full command is
 // restated here. Verified against flipt/flipt:v2.13.0.
@@ -387,23 +409,7 @@ export function createFliptDeployment(chart: Chart) {
         memory: { request: Size.mebibytes(128), limit: Size.mebibytes(512) },
       },
       securityContext: FLIPT_SECURITY_CONTEXT,
-      startup: Probe.fromHttpGet("/health", {
-        // Kubelet connects to the Pod IP; the private upstream only accepts
-        // loopback. The gateway forwards this health route to that upstream.
-        port: FLIPT_PORT,
-        periodSeconds: Duration.seconds(5),
-        failureThreshold: 18,
-      }),
-      liveness: Probe.fromHttpGet("/health", {
-        port: FLIPT_PORT,
-        periodSeconds: Duration.seconds(30),
-        failureThreshold: 3,
-      }),
-      readiness: Probe.fromHttpGet("/health", {
-        port: FLIPT_PORT,
-        periodSeconds: Duration.seconds(10),
-        failureThreshold: 3,
-      }),
+      ...createFliptHealthProbes(),
       envVariables: {
         // Everything Flipt writes lands under DATA_PATH, but HOME is redirected
         // to the scratch volume so a stray write cannot hit the read-only root.
@@ -437,21 +443,7 @@ export function createFliptDeployment(chart: Chart) {
       image: `ghcr.io/shepherdjerred/caddy-s3proxy:${versions["shepherdjerred/caddy-s3proxy"]}`,
       ports: [{ name: "http", number: FLIPT_PORT }],
       ...authenticatedGatewayContainerDefaults(),
-      startup: Probe.fromHttpGet("/health", {
-        port: FLIPT_PORT,
-        periodSeconds: Duration.seconds(5),
-        failureThreshold: 18,
-      }),
-      liveness: Probe.fromHttpGet("/health", {
-        port: FLIPT_PORT,
-        periodSeconds: Duration.seconds(30),
-        failureThreshold: 3,
-      }),
-      readiness: Probe.fromHttpGet("/health", {
-        port: FLIPT_PORT,
-        periodSeconds: Duration.seconds(10),
-        failureThreshold: 3,
-      }),
+      ...createFliptHealthProbes(),
       envVariables: {
         FLIPT_BASIC_HASH: EnvValue.fromSecretValue({
           secret: authSecret,
