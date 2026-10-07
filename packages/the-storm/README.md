@@ -1704,6 +1704,27 @@ scope and supplies no seven-case regression pass or promotion input. Acceptance
 requires the full regression inventory, native combat checks and simulation
 floors above; this command does not train, accept a model or enable rollout.
 
+The authored simulation advancement regression has its own original-evidence
+capture:
+
+```bash
+bun run bots:verify-simulation-floors --model .cache/rwf-java-parity/exact-candidate/onnx --output .cache/rwf-regression-capture/simulation-floors
+```
+
+The offline Java producer runs the same 16 strategy pairings, fixed seeds and
+measurement windows as `AdvanceTest` on the shipped training yard. Its exclusive,
+fsynced `simulation.jsonl` retains every tick's body identity, kit, position,
+liveness, attack targets and slot, plus the original Java measurements. The
+TypeScript verifier replays those ticks independently, requires agreement with
+Java, and applies the unchanged simulation width, attacking-team advancement and
+winding floors. It preserves anchor exclusions and the existing median convention.
+Missing ticks, changed pairings or seeds, incomplete cases and aggregate-only
+claims cannot pass. Actor/native inputs, the actual Java classpath and producer
+sources are fingerprinted before and after capture; failures retain the attempt
+without an automatic retry. These authored simulation records are regression
+evidence only. They supply no demonstrations, training data, native combat proof
+or model acceptance; training continues to use real Paper interactions.
+
 To verify Java-controlled sword damage against a player entering through
 `/rwf join`, use a separate fresh diagnostic directory:
 

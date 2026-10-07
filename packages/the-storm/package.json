@@ -14,6 +14,7 @@
     "#learning-load-wire": "./plugin/modules/rwfbots/src/main/resources/rwf-inference-load.json",
     "#learning-regression-wire": "./plugin/modules/rwfbots/src/main/resources/rwf-regression-capture.json",
     "#learning-melee-wire": "./plugin/modules/rwfbots/src/main/resources/rwf-melee-check.json",
+    "#learning-simulation-wire": "./plugin/modules/rwfbots/src/main/resources/rwf-simulation-check.json",
     "#learning-promotion-wire": "./plugin/modules/rwfbots/src/main/resources/rwf-actor-promotion.json"
   },
   "description": "Turbo shim over the Gradle build of The Storm's Paper plugin (plugin/) — scripts wrap Gradle so the workspace joins the task graph (caching + affected). Same pattern as the Go and Rust shims. tests/e2e is the TypeScript real-server harness.",
@@ -47,6 +48,7 @@
     "bots:verify-spectator-immunity": "bun tools/learning/native/regression/watcher.ts",
     "bots:verify-healing-lifecycle": "bun tools/learning/native/regression/healing.ts",
     "bots:verify-native-melee": "bun tools/learning/native/regression/melee.ts",
+    "bots:verify-simulation-floors": "bun tools/learning/native/simulation/index.ts",
     "bots:collect-preference": "bun tools/learning/native/collector.ts",
     "bots:promote": "bun tools/learning/promotion/index.ts",
     "test:preference-media": "bun --no-install --bun vitest run tests/media --config ../../vitest.config.ts",
