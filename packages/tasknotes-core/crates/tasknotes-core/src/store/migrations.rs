@@ -415,20 +415,23 @@ mod tests {
     /// the only ones that may convert to an empty list.
     #[test]
     fn an_absent_or_empty_legacy_queue_converts_to_nothing() {
-        assert!(
+        assert_eq!(
             migrate_v1_queue(None, &FixedClock, &HalfUnit)
                 .unwrap()
-                .is_empty()
+                .len(),
+            0
         );
-        assert!(
+        assert_eq!(
             migrate_v1_queue(Some(""), &FixedClock, &HalfUnit)
                 .unwrap()
-                .is_empty()
+                .len(),
+            0
         );
-        assert!(
+        assert_eq!(
             migrate_v1_queue(Some("[]"), &FixedClock, &HalfUnit)
                 .unwrap()
-                .is_empty()
+                .len(),
+            0
         );
     }
 

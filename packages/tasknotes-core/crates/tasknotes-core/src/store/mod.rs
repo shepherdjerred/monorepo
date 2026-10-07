@@ -1099,7 +1099,7 @@ mod tests {
         );
 
         let visible = store.snapshot().tasks.get(&id).unwrap();
-        assert!(visible.complete_instances.is_empty());
+        assert_eq!(visible.complete_instances.len(), 0);
         assert_eq!(
             visible.scheduled.as_deref(),
             Some("2026-07-04"),

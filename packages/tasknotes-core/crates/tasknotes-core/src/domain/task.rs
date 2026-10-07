@@ -396,7 +396,7 @@ mod tests {
         assert_eq!(task.priority, Priority::Normal);
         assert_eq!(task.total_tracked_time, 0);
         assert!(!task.archived);
-        assert!(task.contexts.is_empty());
+        assert_eq!(task.contexts.len(), 0);
         assert!(task.extra_fields.is_empty());
         assert_eq!(task.due, None);
     }

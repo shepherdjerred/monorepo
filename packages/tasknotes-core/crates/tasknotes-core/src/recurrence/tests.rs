@@ -168,7 +168,7 @@ fn expanding_a_rule_with_no_occurrences_is_bounded_by_the_window() {
     // point of the test is that it returns at all.
     let dates =
         parse("FREQ=MONTHLY;BYMONTHDAY=32").occurrences(window(ymd(2021, 1, 1), ymd(2030, 12, 31)));
-    assert!(dates.is_empty());
+    assert_eq!(dates.len(), 0);
 }
 
 #[test]
