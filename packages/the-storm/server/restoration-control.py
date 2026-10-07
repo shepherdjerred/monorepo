@@ -1345,6 +1345,169 @@ def remove_writer(path: Path, journal: JsonObject) -> None:
     save(path, journal)
 
 
+def rollback_proof(journal: JsonObject) -> JsonObject:
+    restored = journal.object("restore")
+    if restored.get("byteVerification") != "VERIFIED":
+        raise ValueError("Rollback requires the verified independent whole-volume proof")
+    proof = backup_contract.whole_proof(Path(restored.string("proofPath")), restored.string("proofSha256"))
+    if any(
+        proof.get(key) != expected
+        for key, expected in {
+            "requestId": journal.string("requestId"),
+            "backupUid": journal.object("backup").string("uid"),
+            "sourceVolumeUid": journal.string("volumeUid"),
+            "restoredVolumeUid": restored.string("volumeUid"),
+        }.items()
+    ):
+        raise ValueError("Rollback proof identifies different storage or request")
+    return proof
+
+
+def upload_rollback_operator(journal: JsonObject, proof: JsonObject) -> None:
+    """Upload reviewed operator code and hashes; backup contents never enter this upload."""
+    owned = Path(__file__).resolve().parent
+    payload = io.BytesIO()
+    with tarfile.open(fileobj=payload, mode="w") as archive:
+        for script in ("restoration_rollback.py", "restoration_files.py", "restoration_json.py"):
+            source = owned / script
+            if source.is_symlink() or not source.is_file():
+                raise ValueError("Rollback operator code must be regular files")
+            archive.add(source, arcname="operator/" + script, recursive=False)
+        encoded = json.dumps(proof).encode("utf-8")
+        entry = tarfile.TarInfo("rollback-proof.json")
+        entry.mode = 0o600
+        entry.size = len(encoded)
+        archive.addfile(entry, io.BytesIO(encoded))
+    name = writer_manifest(journal).object("metadata").string("name")
+    uploaded = subprocess.run(
+        [
+            "kubectl", "--context", CONTEXT, "-n", NAMESPACE, "exec", "-i", name,
+            "-c", "writer", "--", "tar", "-xf", "-", "-C", "/scratch",
+        ],
+        input=payload.getvalue(), capture_output=True, timeout=60,
+    )
+    if uploaded.returncode:
+        raise RuntimeError("Private rollback operator upload failed; admission remains closed")
+
+
+def rollback_writer_operation(journal: JsonObject, operation: str) -> JsonObject:
+    if operation not in ("inspect", "restore"):
+        raise ValueError("Unknown rollback writer operation")
+    name = writer_manifest(journal).object("metadata").string("name")
+    assert_writer(read("pod", name), journal)
+    return JsonObject.parse(
+        run(
+            [
+                "-n", NAMESPACE, "exec", name, "-c", "writer", "--", "python3",
+                "/scratch/operator/restoration_rollback.py", operation,
+                "--proof", "/scratch/rollback-proof.json",
+            ],
+            1800,
+        )
+    )
+
+
+def transfer_rollback(journal: JsonObject) -> None:
+    """Pipe the independent restore directly to verified pod scratch, never workstation storage."""
+    reader = reader_manifest(journal, RESTORED_NAMESPACE).object("metadata").string("name")
+    writer = writer_manifest(journal).object("metadata").string("name")
+    assert_reader(read("pod", reader, RESTORED_NAMESPACE), journal, RESTORED_NAMESPACE)
+    assert_writer(read("pod", writer), journal)
+    kubectl = ["kubectl", "--context", CONTEXT, "--request-timeout=30m"]
+    processes: list[subprocess.Popen[bytes]] = []
+    deadline = threading.Timer(1800, lambda: [process.kill() for process in processes if process.poll() is None])
+    try:
+        receiver = subprocess.Popen(
+            [
+                *kubectl, "-n", NAMESPACE, "exec", "-i", writer, "-c", "writer", "--", "python3",
+                "/scratch/operator/restoration_rollback.py", "receive", "--proof", "/scratch/rollback-proof.json",
+            ],
+            stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        )
+        processes.append(receiver)
+        if receiver.stdin is None:
+            raise RuntimeError("Rollback receiver has no private input stream")
+        sender = subprocess.Popen(
+            [
+                *kubectl, "-n", RESTORED_NAMESPACE, "exec", reader, "-c", "reader", "--",
+                "tar", "--numeric-owner", "-C", "/data", "-cf", "-", ".",
+            ],
+            stdout=receiver.stdin, stderr=subprocess.DEVNULL,
+        )
+        processes.append(sender)
+        receiver.stdin.close()
+        receiver.stdin = None
+        deadline.start()
+        if sender.wait(timeout=1800) != 0 or receiver.wait(timeout=60) != 0:
+            raise RuntimeError("Whole-volume rollback transfer failed; admission remains closed")
+    finally:
+        deadline.cancel()
+        for process in processes:
+            if process.poll() is None:
+                process.kill()
+                process.wait(timeout=30)
+
+
+def whole_rollback(path: Path, journal: JsonObject) -> None:
+    require_offline(journal, writer=bool(journal.get("writerUid")))
+    require_restore(journal)
+    proof = rollback_proof(journal)
+    if "installationPlan" not in journal:
+        raise ValueError("Whole-volume rollback requires a recorded installation plan")
+    name = reader_manifest(journal, RESTORED_NAMESPACE).object("metadata").string("name")
+    if journal.get("readersRemoved") is True:
+        for namespace in (NAMESPACE, RESTORED_NAMESPACE):
+            reader_name = reader_manifest(journal, namespace).object("metadata").string("name")
+            existing = run(["-n", namespace, "get", "pod", reader_name, "--ignore-not-found", "-o", "json"]).strip()
+            if not existing:
+                journal.strings("readers", {}).pop(namespace, None)
+    journal["readersRemoved"] = False
+    save(path, journal)
+    reader = ensure_resource(reader_manifest(journal, RESTORED_NAMESPACE))
+    assert_reader(reader, journal, RESTORED_NAMESPACE)
+    journal.strings("readers", {})[RESTORED_NAMESPACE] = reader.object("metadata").string("uid")
+    save(path, journal)
+    run(["-n", RESTORED_NAMESPACE, "wait", "--for=condition=Ready", "pod/" + name, "--timeout=45s"], 50)
+    require_restore(journal)
+    if remote_fingerprint(journal, RESTORED_NAMESPACE) != proof.strings("files"):
+        raise ValueError("Independent whole-volume restore changed before recovery")
+    writer = create_writer(path, journal)
+    writer_name = writer.object("metadata").string("name")
+    published = run(["-n", NAMESPACE, "exec", writer_name, "-c", "writer", "--", "sha256sum", "/plugins/TheStorm.jar"])
+    if published.split()[:1] != [journal.object("installationPlan").string("candidateJarSha256")]:
+        raise ValueError("Rollback writer does not contain the pinned candidate plugin")
+    upload_rollback_operator(journal, proof)
+    state = rollback_writer_operation(journal, "inspect")
+    if (
+        state.get("requestId") != journal.string("requestId")
+        or state.get("files") != len(proof.strings("files"))
+        or state.get("phase") not in ("STAGED", "COMMITTING", "INSTALLED", "WHOLE_VOLUME_RESTORED")
+    ):
+        raise ValueError("Rollback writer transaction does not identify this original volume")
+    if state.get("rollbackPhase") == "NOT_STAGED":
+        transfer_rollback(journal)
+    elif state.get("rollbackPhase") not in ("STAGED", "COMMITTING", "RESTORED"):
+        raise ValueError("Rollback writer returned an unreviewed recovery phase")
+    require_offline(journal, writer=True)
+    require_restore(journal)
+    if remote_fingerprint(journal, RESTORED_NAMESPACE) != proof.strings("files"):
+        raise ValueError("Independent whole-volume restore changed during recovery transfer")
+    rollback_proof(journal)
+    result = rollback_writer_operation(journal, "restore")
+    if (
+        result.get("requestId") != journal.string("requestId")
+        or result.get("phase") != "WHOLE_VOLUME_RESTORED"
+        or result.get("rollbackPhase") != "RESTORED"
+        or result.get("files") != len(proof.strings("files"))
+    ):
+        raise ValueError("Whole-volume recovery returned mismatched evidence")
+    require_offline(journal, writer=True)
+    require_restore(journal)
+    rollback_proof(journal)
+    journal["wholeVolumeRecovery"] = result
+    save(path, journal)
+
+
 def private_start(path: Path, journal: JsonObject) -> None:
     if (
         journal.get("privateStartup") == "ROLLED_BACK"
@@ -1762,6 +1925,7 @@ def main() -> None:
             "private-stop",
             "accept",
             "release",
+            "whole-rollback",
             "verify-rollback",
             "release-rollback",
         ),
@@ -1814,6 +1978,8 @@ def main() -> None:
             accept(arguments.journal, journal, arguments.evidence)
         elif arguments.operation == "release":
             release(arguments.journal, journal)
+        elif arguments.operation == "whole-rollback":
+            whole_rollback(arguments.journal, journal)
         elif arguments.operation == "verify-rollback":
             verify_rollback(arguments.journal, journal)
         elif arguments.operation == "release-rollback":

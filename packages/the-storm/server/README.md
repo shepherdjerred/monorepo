@@ -429,11 +429,19 @@ that denial with a server dry run alongside the update and scale probes.
 
 If private startup fails, keep admission closed and use `private-stop` before
 whole-volume recovery. The independently restored PVC remains available. A
-request-owned writer can stage that complete restored data tree with
-`restoration_files.stage_whole_rollback` and commit it with
-`restoration_files.commit_whole_rollback`; the source must be the recorded
-independent volume and match its whole-volume hash proof. Pair the restored
-volume with the recorded rollback image while the server is still stopped.
+`whole-rollback` controller operation recreates only the recorded restore reader
+and bounded production writer, checks their identities and the independently
+verified storage, and streams the complete restored volume directly between pods.
+Configuration and other plugin state remain inside the cluster. The receiver
+refuses unsafe, duplicate, linked or unverified entries and checks every scratch
+file before the stopped transaction can stage or commit. Source hashes and
+storage identities are checked again before commit. Writer creation revokes
+candidate acceptance and prior rollback proof; recovery cannot open a route or
+start Paper. A staged or interrupted rename transaction resumes without another
+transfer. A failed partial scratch transfer requires `remove-writer` and a new
+writer before retry; incomplete filesystem staging requires inspection.
+The filesystem transaction retains the failed activation while restoring the
+original file ownership and permissions.
 Run `verify-rollback` after removing the writer. It checks the completed rollback
 transaction and every current volume file against the original independent
 backup proof, excluding only the retained restoration workspace, then selects

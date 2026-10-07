@@ -9,7 +9,7 @@ import unittest
 from collections.abc import Mapping
 from contextlib import redirect_stdout
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from restoration_json import JsonObject
 
@@ -301,6 +301,280 @@ class RestorationControlTest(unittest.TestCase):
             ),
         ):
             control.verify_rollback(self.path, journal)
+
+    def whole_rollback_fixture(self):
+        patch.object(
+            control, "read", side_effect=lambda kind, name, namespace=control.NAMESPACE: self.cluster.read(
+                kind, name, namespace
+            )
+        ).start()
+        patch.object(
+            control, "run", side_effect=lambda arguments, timeout=30: self.cluster.run(arguments, timeout)
+        ).start()
+        journal, pods = self.reader_fixture()
+        hashes = {"world/level.dat": "d" * 64, "plugins/TheStorm/the-storm.db": "e" * 64}
+        with patch.object(control, "remote_fingerprint", return_value=hashes):
+            control.verify_backup(self.path, journal)
+        pods.clear()
+        journal.update(
+            installationPlan={"candidateJarSha256": "b" * 64},
+            installation={"phase": "INSTALLED"}, writerRemoved=True, writerUid="removed-writer",
+            readersRemoved=True, acceptance={"status": "VERIFIED"}, stoppedIncarnation={"podUid": "accepted"},
+        )
+        previous_run = control.run
+
+        def run(arguments: list[str], timeout: float = 30) -> str:
+            if "sha256sum" in arguments:
+                return "b" * 64 + "  /plugins/TheStorm.jar"
+            return previous_run(arguments, timeout)
+
+        patch.object(control, "run", side_effect=run).start()
+        return journal, pods, hashes
+
+    def recovery_result(self, phase: str = "RESTORED") -> JsonObject:
+        return JsonObject(
+            {"requestId": REQUEST, "phase": "WHOLE_VOLUME_RESTORED" if phase == "RESTORED" else "INSTALLED",
+             "rollbackPhase": phase, "files": 2}
+        )
+
+    def test_whole_rollback_recreates_owned_helpers_revokes_acceptance_and_stays_stopped_and_closed(self):
+        journal, pods, hashes = self.whole_rollback_fixture()
+        with (
+            patch.object(control, "remote_fingerprint", return_value=hashes),
+            patch.object(control, "upload_rollback_operator") as upload,
+            patch.object(control, "transfer_rollback") as transfer,
+            patch.object(control, "rollback_writer_operation", side_effect=[self.recovery_result("NOT_STAGED"),
+                                                                            self.recovery_result()]),
+        ):
+            control.whole_rollback(self.path, journal)
+        self.assertNotIn("acceptance", journal)
+        self.assertNotIn("stoppedIncarnation", journal)
+        self.assertNotIn("rollbackVerification", journal)
+        self.assertEqual(journal.object("installation")["phase"], "WRITE_PENDING")
+        self.assertEqual(journal["previousWriterUid"], "removed-writer")
+        self.assertIs(journal["writerRemoved"], False)
+        self.assertEqual(journal.object("wholeVolumeRecovery")["phase"], "WHOLE_VOLUME_RESTORED")
+        upload.assert_called_once()
+        transfer.assert_called_once_with(journal)
+        control.assert_writer(pods[control.NAMESPACE], journal)
+        control.assert_reader(pods[control.RESTORED_NAMESPACE], journal, control.RESTORED_NAMESPACE)
+        self.assertNotIn(control.NAMESPACE, journal.strings("readers"))
+        control.require_offline(journal, writer=True)
+        control.assert_closed(journal)
+        with self.assertRaisesRegex(ValueError, "rolled back"):
+            control.private_start(self.path, journal)
+
+    def test_whole_rollback_resumes_staged_committing_and_restored_transactions_without_another_transfer(self):
+        for phase in ("STAGED", "COMMITTING", "RESTORED"):
+            with self.subTest(phase=phase):
+                self.cluster = Cluster()
+                self.path.unlink(missing_ok=True)
+                self.path.with_name(self.path.name + ".backup-files.json").unlink(missing_ok=True)
+                journal, _, hashes = self.whole_rollback_fixture()
+                with (
+                    patch.object(control, "remote_fingerprint", return_value=hashes),
+                    patch.object(control, "upload_rollback_operator"),
+                    patch.object(control, "transfer_rollback") as transfer,
+                    patch.object(control, "rollback_writer_operation", side_effect=[self.recovery_result(phase),
+                                                                                    self.recovery_result()]),
+                ):
+                    control.whole_rollback(self.path, journal)
+                transfer.assert_not_called()
+                control.assert_closed(journal)
+
+    def test_whole_rollback_refuses_changed_proof_before_creating_any_helper(self):
+        journal, _, _ = self.whole_rollback_fixture()
+        Path(journal.object("restore").string("proofPath")).write_text("changed")
+        with patch.object(control, "ensure_resource") as create, self.assertRaisesRegex(ValueError, "proof changed"):
+            control.whole_rollback(self.path, journal)
+        create.assert_not_called()
+        self.assertEqual(journal.object("installation")["phase"], "INSTALLED")
+        control.assert_closed(journal)
+
+    def test_whole_rollback_refuses_changed_restore_before_writer_creation_and_before_commit(self):
+        for during_transfer in (False, True):
+            with self.subTest(during_transfer=during_transfer):
+                self.cluster = Cluster()
+                self.path.unlink(missing_ok=True)
+                self.path.with_name(self.path.name + ".backup-files.json").unlink(missing_ok=True)
+                journal, _, hashes = self.whole_rollback_fixture()
+                with (
+                    patch.object(control, "remote_fingerprint", side_effect=[hashes, {}] if during_transfer else [{}]),
+                    patch.object(control, "upload_rollback_operator"),
+                    patch.object(control, "transfer_rollback") as transfer,
+                    patch.object(control, "rollback_writer_operation", return_value=self.recovery_result("NOT_STAGED"))
+                    as operation,
+                    self.assertRaisesRegex(ValueError, "restore changed"),
+                ):
+                    control.whole_rollback(self.path, journal)
+                self.assertEqual(operation.call_count, 1 if during_transfer else 0)
+                self.assertEqual(transfer.call_count, 1 if during_transfer else 0)
+                self.assertNotIn("wholeVolumeRecovery", journal)
+                control.assert_closed(journal)
+
+    def test_whole_rollback_transfer_failure_never_commits_or_authorizes_reopening(self):
+        journal, _, hashes = self.whole_rollback_fixture()
+        with (
+            patch.object(control, "remote_fingerprint", return_value=hashes),
+            patch.object(control, "upload_rollback_operator"),
+            patch.object(control, "transfer_rollback", side_effect=RuntimeError("transfer failed")),
+            patch.object(control, "rollback_writer_operation", return_value=self.recovery_result("NOT_STAGED"))
+            as operation,
+            self.assertRaisesRegex(RuntimeError, "transfer failed"),
+        ):
+            control.whole_rollback(self.path, journal)
+        operation.assert_called_once_with(journal, "inspect")
+        self.assertNotIn("acceptance", journal)
+        self.assertNotIn("wholeVolumeRecovery", journal)
+        self.assertNotIn("rollbackVerification", journal)
+        control.require_offline(journal, writer=True)
+
+    def test_whole_rollback_can_proceed_to_independent_verification_after_writer_cleanup(self):
+        journal, pods, hashes = self.whole_rollback_fixture()
+        with (
+            patch.object(control, "remote_fingerprint", return_value=hashes),
+            patch.object(control, "upload_rollback_operator"),
+            patch.object(control, "transfer_rollback"),
+            patch.object(
+                control, "rollback_writer_operation",
+                side_effect=[self.recovery_result("NOT_STAGED"), self.recovery_result()],
+            ),
+        ):
+            control.whole_rollback(self.path, journal)
+        pods.pop(control.NAMESPACE)
+        control.remove_writer(self.path, journal)
+        previous_run, previous_create = control.run, control.ensure_resource
+        transaction = JsonObject({
+            "requestId": REQUEST, "phase": "WHOLE_VOLUME_RESTORED",
+            "wholeRollback": {"phase": "RESTORED"}, "original": hashes,
+        })
+
+        def run(arguments: list[str], timeout: float = 30) -> str:
+            return json.dumps(transaction) if "cat" in arguments else previous_run(arguments, timeout)
+
+        def create(manifest: Mapping[str, object]) -> JsonObject:
+            pod = previous_create(manifest)
+            pod.object("metadata")["uid"] += "-recreated"
+            pods[control.NAMESPACE] = copy.deepcopy(pod)
+            return pod
+
+        with (
+            patch.object(control, "run", side_effect=run),
+            patch.object(control, "ensure_resource", side_effect=create),
+            patch.object(control, "remote_fingerprint", return_value=hashes),
+        ):
+            control.verify_rollback(self.path, journal)
+        self.assertEqual(journal.object("rollbackVerification")["status"], "VERIFIED")
+        self.assertEqual(journal.strings("readers")[control.NAMESPACE], control.NAMESPACE + "-reader-uid-recreated")
+        self.assertIs(journal["writerRemoved"], True)
+        control.require_offline(journal, readers=True)
+
+    def test_whole_rollback_is_available_through_the_guarded_controller_cli(self):
+        journal, _, _ = self.whole_rollback_fixture()
+        with (
+            patch("sys.argv", ["restoration-control.py", "whole-rollback", "--journal", str(self.path),
+                               "--request", REQUEST, "--image", IMAGE]),
+            patch.object(control, "initialize", return_value=journal),
+            patch.object(control, "whole_rollback") as recover,
+            redirect_stdout(io.StringIO()),
+        ):
+            control.main()
+        recover.assert_called_once_with(self.path, journal)
+
+    def test_whole_rollback_refuses_mismatched_completion_evidence(self):
+        journal, _, hashes = self.whole_rollback_fixture()
+        result = self.recovery_result()
+        result["requestId"] = "foreign"
+        with (
+            patch.object(control, "remote_fingerprint", return_value=hashes),
+            patch.object(control, "upload_rollback_operator"),
+            patch.object(control, "transfer_rollback"),
+            patch.object(
+                control, "rollback_writer_operation", side_effect=[self.recovery_result("NOT_STAGED"), result]
+            ),
+            self.assertRaisesRegex(ValueError, "mismatched evidence"),
+        ):
+            control.whole_rollback(self.path, journal)
+        self.assertNotIn("wholeVolumeRecovery", journal)
+        control.require_offline(journal, writer=True)
+
+    def test_whole_rollback_upload_contains_only_operator_code_and_the_sealed_hash_proof(self):
+        journal, _, _ = self.whole_rollback_fixture()
+        proof = control.rollback_proof(journal)
+        with patch.object(control.subprocess, "run") as upload:
+            upload.return_value.returncode = 0
+            control.upload_rollback_operator(journal, proof)
+        payload = upload.call_args.kwargs["input"]
+        with tarfile.open(fileobj=io.BytesIO(payload), mode="r") as archive:
+            self.assertEqual(set(archive.getnames()), {
+                "operator/restoration_rollback.py", "operator/restoration_files.py",
+                "operator/restoration_json.py", "rollback-proof.json",
+            })
+            entry = archive.extractfile("rollback-proof.json")
+            assert entry is not None
+            self.assertEqual(json.load(entry), proof)
+
+    def transfer_fixture(self):
+        journal, pods, _ = self.whole_rollback_fixture()
+        for namespace in (control.NAMESPACE, control.RESTORED_NAMESPACE):
+            manifest = (
+                control.writer_manifest(journal) if namespace == control.NAMESPACE
+                else control.reader_manifest(journal, namespace)
+            )
+            manifest.object("metadata")["uid"] = namespace + "-transfer-helper"
+            pods[namespace] = manifest
+        journal["writerUid"] = pods[control.NAMESPACE].object("metadata").string("uid")
+        journal.strings("readers")[control.RESTORED_NAMESPACE] = (
+            pods[control.RESTORED_NAMESPACE].object("metadata").string("uid")
+        )
+        return journal, pods
+
+    def test_rollback_transfer_pipes_backup_directly_between_owned_pods_without_local_file_contents(self):
+        journal, _ = self.transfer_fixture()
+        receiver, sender = MagicMock(), MagicMock()
+        private_pipe = io.BytesIO()
+        receiver.stdin = private_pipe
+        for process in (receiver, sender):
+            process.wait.return_value = 0
+            process.poll.return_value = 0
+        with patch.object(control.subprocess, "Popen", side_effect=[receiver, sender]) as spawn:
+            control.transfer_rollback(journal)
+        self.assertIs(spawn.call_args_list[1].kwargs["stdout"], private_pipe)
+        self.assertEqual(spawn.call_args_list[0].kwargs["stdout"], control.subprocess.DEVNULL)
+        self.assertEqual(spawn.call_args_list[1].kwargs["stderr"], control.subprocess.DEVNULL)
+        self.assertIn("receive", spawn.call_args_list[0].args[0])
+        self.assertIn(control.RESTORED_NAMESPACE, spawn.call_args_list[1].args[0])
+        self.assertTrue(private_pipe.closed)
+
+    def test_rollback_transfer_timeout_kills_both_helpers_processes_and_retains_closed_admission(self):
+        journal, _ = self.transfer_fixture()
+        receiver, sender = MagicMock(), MagicMock()
+        receiver.stdin = io.BytesIO()
+        for process in (receiver, sender):
+            process.poll.return_value = None
+        sender.wait.side_effect = [control.subprocess.TimeoutExpired("fixture", 1800), 0]
+        receiver.wait.return_value = 0
+        with (
+            patch.object(control.subprocess, "Popen", side_effect=[receiver, sender]),
+            self.assertRaises(control.subprocess.TimeoutExpired),
+        ):
+            control.transfer_rollback(journal)
+        sender.kill.assert_called_once()
+        receiver.kill.assert_called_once()
+        control.assert_closed(journal)
+
+    def test_rollback_transfer_refuses_replaced_reader_or_writer_before_starting_any_stream(self):
+        for namespace in (control.NAMESPACE, control.RESTORED_NAMESPACE):
+            with self.subTest(namespace=namespace):
+                self.cluster = Cluster()
+                self.path.unlink(missing_ok=True)
+                self.path.with_name(self.path.name + ".backup-files.json").unlink(missing_ok=True)
+                journal, pods = self.transfer_fixture()
+                pods[namespace].object("metadata")["uid"] = "unexpected-replacement"
+                with patch.object(control.subprocess, "Popen") as spawn, self.assertRaises(ValueError):
+                    control.transfer_rollback(journal)
+                spawn.assert_not_called()
+                control.assert_closed(journal)
 
     def declare_image(self, image: str) -> None:
         application = self.cluster.objects["application", control.SERVER]
@@ -1239,7 +1513,8 @@ class RestorationControlTest(unittest.TestCase):
             if arguments[2:4] == ["get", "pods"]:
                 return json.dumps({"items": [pods[arguments[1]]] if arguments[1] in pods else []})
             if arguments[2:4] == ["get", "pod"]:
-                return json.dumps(pods[arguments[1]]) if arguments[1] in pods else ""
+                pod = pods.get(arguments[1])
+                return json.dumps(pod) if pod is not None and pod.object("metadata")["name"] == arguments[4] else ""
             if arguments[2] == "wait":
                 return "ready"
             return previous_run(arguments, timeout)
