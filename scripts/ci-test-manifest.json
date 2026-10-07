@@ -1062,7 +1062,7 @@
         },
         {
           "runner": "command",
-          "name": "rwf-learning-data",
+          "name": "rwf-learning",
           "command": ["bun", "run", "test:learning"]
         }
       ],

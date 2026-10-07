@@ -1203,6 +1203,48 @@ hashes. `--combatants 8` can inspect team captures; the default Trooper pilot
 export remains restricted to duels. These commands prepare data; they do not
 train or enable a learned controller.
 
+The Trooper behavior-cloning tools live in `tools/learning`, with dependencies
+pinned by `uv.lock`. Run these commands from this package:
+
+```bash
+uv sync --project tools/learning --locked
+uv run --project tools/learning --locked python tools/learning/train.py .cache/rwf-dataset --output .cache/rwf-models/seed-17 --device mps --seed 17 --max-seconds 3600
+uv run --project tools/learning --locked python tools/learning/export.py .cache/rwf-models/seed-17 --output .cache/rwf-models/seed-17-onnx
+bun run test:learning
+bun run lint:learning
+bun run typecheck:learning
+```
+
+The trainer requires dataset export schema 2, which pins the three split files
+by SHA-256. Re-export older datasets from their original human recordings.
+It checks whole-match isolation, fresh observation acknowledgements and
+continuous control sequences before training. The actor receives only the 34
+fair observation values, uses a 128-unit LSTM, and produces five categorical
+heads for movement, jump, sneak, sprint and attack. Memory resets at segment
+boundaries and carries across truncated training windows; padding contributes
+no loss. Validation selects the best checkpoint; test matches stay out of
+optimization and checkpoint selection.
+
+Choose `--device cpu` or `--device mps` explicitly. An unavailable MPS device
+fails. Each BC invocation has a cooperative wall-clock limit (at most eight
+hours), checked between training and validation windows. Reserve this time
+within the pilot's per-seed budget; these tools do not implement its total
+budget or PPO orchestration. Checkpoint and export directories must be new.
+Their manifests pin weights, feature order and the observation contract and
+remain `unaccepted`. ONNX export checks CPU parity for 16 recurrent steps at
+batch sizes 1, 3, 20 and 100; Java inference and combat acceptance require
+separate verification.
+
+For an accelerator and export check without human recordings:
+
+```bash
+uv run --project tools/learning --locked python tools/learning/verify.py --device mps --output .cache/rwf-training/mps-check
+```
+
+This command uses synthetic data and writes an explicitly unaccepted diagnostic
+checkpoint, ONNX actor and `verification.json`. It verifies training mechanics
+and numerical agreement, without measuring combat strength or human likeness.
+
 The disposable fixture plugin also exposes `rwflearn` through authenticated
 console/RCON. It runs two skill-1 Troopers on Paper with equal kit statistics;
 the candidate keeps authored aim and healing, and the basic opponent sprints,

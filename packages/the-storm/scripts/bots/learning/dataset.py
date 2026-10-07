@@ -332,12 +332,16 @@ def main() -> None:
                 for chunk in all_chunks:
                     if split[str(chunk["match"])] == name:
                         stream.write(json.dumps(chunk, allow_nan=False) + "\n")
-        manifest = {"schema": 1, "contract": CONTRACT_ID,
+        manifest = {"schema": 2, "contract": CONTRACT_ID,
                     "contract_sha256": hashlib.sha256(CONTRACT.read_bytes()).hexdigest(),
                     "features": features(), "tick_hz": 20, "max_ack_age_ticks": 2,
                     "action": {"move": 9, "jump": 2, "sneak": 2, "sprint": 2, "attack": 2},
                     "kit": "trooper", "sword_slot": SWORD_SLOT, "combatants": args.combatants,
                     "seed": args.seed, "split": split, "sources_sha256": sources,
+                    "provenance": "human-control-schema-3",
+                    "files_sha256": {f"{name}.jsonl": hashlib.sha256(
+                        (args.output / f"{name}.jsonl").read_bytes()).hexdigest()
+                        for name in ("train", "validation", "test")},
                     "report": report}
         (args.output / "manifest.json").write_text(
             json.dumps(manifest, indent=2, allow_nan=False) + "\n", encoding="utf-8")
