@@ -86,14 +86,14 @@
     "shepherdjerred/temporal-worker/workflows/candidate": {
       "version": "2.0.0-1005566",
       "digest": "sha256:49e6b12c31de035699be83c0b1a1dd0c57960284e267f8bae3bea23d9903c912",
-      "gitSha": "8b652f160ae791e03b3922aab9e715bb82e9a251",
-      "buildNumber": 1005566
+      "buildNumber": 1005566,
+      "gitSha": "8b652f160ae791e03b3922aab9e715bb82e9a251"
     },
     "shepherdjerred/temporal-worker/workflows/stable": {
-      "version": "2.0.0-1004374",
-      "digest": "sha256:7d261fe015af6cdc58184df28fdb953c8962c8f466d29dd7fa9f849d33d42b35",
-      "gitSha": "1b5cbcaf6f04bba2345be61b136b07ed69e0c2ff",
-      "buildNumber": 1004374
+      "version": "2.0.0-1005566",
+      "digest": "sha256:49e6b12c31de035699be83c0b1a1dd0c57960284e267f8bae3bea23d9903c912",
+      "buildNumber": 1005566,
+      "gitSha": "8b652f160ae791e03b3922aab9e715bb82e9a251"
     },
     "shepherdjerred/the-storm-server": {
       "version": "2.0.0-1005566",

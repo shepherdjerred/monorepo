@@ -1697,7 +1697,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1004374@sha256:7d261fe015af6cdc58184df28fdb953c8962c8f466d29dd7fa9f849d33d42b35",
+      "value": "2.0.0-1005566@sha256:49e6b12c31de035699be83c0b1a1dd0c57960284e267f8bae3bea23d9903c912",
       "notes": [
         "Stable central Workflow Worker image - promoted after a healthy 100% ramp",
         "not managed by renovate"
