@@ -1594,9 +1594,32 @@ Main-thread delivery checks match, body, life, kit and a maximum two-tick age;
 observation gaps and identity changes reset recurrent memory. Shutdown closes
 native sessions after pending inference without submitting new work after the
 pool closes. Corrupt metadata and model failures surface as errors. Ordinary
-matches remain authored; these commands do not accept a model or establish the
-human preference gate. The separate load command checks runtime capacity without
+matches use authored control by default; these diagnostics do not accept a model
+or establish the human preference gate. The separate load command checks runtime capacity without
 accepting the model or enabling ordinary learned play.
+
+Ordinary matches evaluate `the-storm-rwfbots-learning-enabled` once at the live
+transition, with the match UUID as entity and the match, map and world as context.
+The managed declaration defaults off, including its initial beta override;
+enable it only after the human pilot and all promotion gates pass. Missing Flipt
+bootstrap and transport outages keep that match authored. A successful false
+answer is final for the match; malformed values, missing declared flags and
+authorization failures surface as errors.
+
+When enabled, the module loads one accepted bundle from
+`rwfbots/learning/accepted/trooper` beneath TheStorm's data folder and validates
+and warms it on the compute pool. Loading remains asynchronous; late flag and
+load completions cannot enable a finished match or its successor. Only Trooper
+combat movement and attack timing use the learned actions. Normal drafting,
+difficulty levers, habits, kits, healing, abilities, navigation, objectives,
+governor thinning and personality ratings retain their authored paths. Skipped
+body ticks reset recurrent memory; idle ticks drain retired inference completions.
+Diagnostic attachments remain separate and never evaluate this rollout flag.
+An enabled flag requires the accepted asset; missing or corrupt bundles fail
+loudly. `/rwfbots debug learning` reports match state, action availability,
+authored-only ticks, pending startup, flag outages, load rejections and inference
+deadline, lifecycle and batch counters. The flag change does not publish or
+install an artifact.
 
 Payouts go through an outbox in `rwf_match_player` and the economy's keyed
 transfers (`rwf:<matchId>:<uuid>`), so a crash between the match ending and

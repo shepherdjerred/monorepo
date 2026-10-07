@@ -797,6 +797,10 @@ describe("Search and Destroy with rwfbots", () => {
       const { team, matchId } = await goesLiveMarked(match, names);
       await leaveSpawns(match.view, names);
       await thinkAtLevelZero(rcon, names, think.maxDecisionAgeTicks);
+      const learning = plain(await rcon.command("rwfbots debug learning"));
+      expect(learning).toContain("learning OFF; applied 0");
+      expect(learning).toContain("flag outages 0; model load rejects 0");
+      expect(learning).not.toContain("inference submitted");
       await offerHits(
         match,
         names.filter((name) => match.view.botTeam(name) !== team),
@@ -815,6 +819,10 @@ describe("Search and Destroy with rwfbots", () => {
         team,
         winner,
       });
+      await Bun.write(
+        path.join(settled.outDir, "learning.txt"),
+        learning + "\n",
+      );
       const recording = readRecording(
         await gzipLines(
           server,

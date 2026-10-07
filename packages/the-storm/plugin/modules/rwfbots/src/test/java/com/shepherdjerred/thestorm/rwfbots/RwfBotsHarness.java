@@ -28,6 +28,7 @@ import java.time.InstantSource;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 import java.util.random.RandomGenerator;
@@ -91,6 +92,9 @@ public final class RwfBotsHarness implements AutoCloseable {
   /** What the managed chat flag answers; read each time chat refreshes it. */
   public final AtomicBoolean chatFlag = new AtomicBoolean(true);
 
+  public final AtomicBoolean learningFlag = new AtomicBoolean(false);
+  public final AtomicInteger learningEvaluations = new AtomicInteger();
+
   private RwfBotsHarness(ServerMock server, WorldMock world, StormDatabase database) {
     this.server = server;
     this.world = world;
@@ -107,6 +111,18 @@ public final class RwfBotsHarness implements AutoCloseable {
                       @Override
                       public CompletableFuture<Boolean> enabled() {
                         return CompletableFuture.completedFuture(chatFlag.get());
+                      }
+
+                      @Override
+                      public void close() {}
+                    }),
+                Optional.of(
+                    new com.shepherdjerred.thestorm.rwfbots.app.learning.LearningGate() {
+                      @Override
+                      public CompletableFuture<Decision> evaluate(Context context) {
+                        learningEvaluations.incrementAndGet();
+                        return CompletableFuture.completedFuture(
+                            new Decision(learningFlag.get(), Source.FLIPT));
                       }
 
                       @Override

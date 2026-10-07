@@ -46,6 +46,7 @@ public final class RwfBotsPaper {
   private final Optional<GzipTraceFiles> traces;
   private final Optional<BotChat> chat;
   private final Optional<LobbyChatListener> heard;
+  private final com.shepherdjerred.thestorm.rwfbots.app.learning.MatchLearning learning;
 
   private RwfBotsPaper(Parts parts) {
     this.context = parts.context();
@@ -58,6 +59,7 @@ public final class RwfBotsPaper {
     this.traces = parts.traces();
     this.chat = parts.chat();
     this.heard = parts.heard();
+    this.learning = parts.learning();
   }
 
   private record Parts(
@@ -70,7 +72,8 @@ public final class RwfBotsPaper {
       RwfBotsCommand command,
       Optional<GzipTraceFiles> traces,
       Optional<BotChat> chat,
-      Optional<LobbyChatListener> heard) {}
+      Optional<LobbyChatListener> heard,
+      com.shepherdjerred.thestorm.rwfbots.app.learning.MatchLearning learning) {}
 
   /**
    * What the module loaded before wiring.
@@ -96,7 +99,8 @@ public final class RwfBotsPaper {
       World world,
       Supplier<long[]> tickTimes,
       ChatGate chatGate,
-      NavArtifact lobby) {}
+      NavArtifact lobby,
+      com.shepherdjerred.thestorm.rwfbots.app.learning.MatchLearning learning) {}
 
   /** Starts the Paper side; rwf's ports must already be published. */
   public static RwfBotsPaper start(ModuleContext module, App app) {
@@ -163,7 +167,8 @@ public final class RwfBotsPaper {
                 stimuli,
                 module.time(),
                 module.logger(),
-                lobby));
+                lobby,
+                app.learning()));
     var driver =
         new BodyDriver(
             new BodyDriver.Parts(app.bodies(), actions, app.world(), stimuli, bridge::rewound));
@@ -185,7 +190,8 @@ public final class RwfBotsPaper {
                 app.tickTimes(),
                 System::nanoTime,
                 lobby,
-                observations));
+                observations,
+                app.learning()));
     module.plugin().getServer().getPluginManager().registerEvents(stimuli, module.plugin());
     bridge.subscribe(events);
     var command =
@@ -230,7 +236,18 @@ public final class RwfBotsPaper {
     services.provide(com.shepherdjerred.thestorm.rwfbots.app.CombatHarness.class, roster.harness());
     services.provide(com.shepherdjerred.thestorm.rwf.app.ObservationSource.class, observations);
     return new RwfBotsPaper(
-        new Parts(module, roster, loop, bridge, stimuli, clock, command, traces, chat, heard));
+        new Parts(
+            module,
+            roster,
+            loop,
+            bridge,
+            stimuli,
+            clock,
+            command,
+            traces,
+            chat,
+            heard,
+            app.learning()));
   }
 
   public Roster roster() {
@@ -246,9 +263,18 @@ public final class RwfBotsPaper {
     return chat;
   }
 
+  /**
+   * Aggregate learning delivery and inference counters; targeting identifiers are not metric
+   * labels.
+   */
+  public com.shepherdjerred.thestorm.rwfbots.app.learning.MatchLearning.Metrics learningMetrics() {
+    return learning.metrics();
+  }
+
   /** Stops the ticker and the loop, despawns every bot and closes the trace file. */
   public void stop() {
     clock.cancel();
+    learning.close();
     bridge.close();
     heard.ifPresent(HandlerList::unregisterAll);
     chat.ifPresent(BotChat::close);

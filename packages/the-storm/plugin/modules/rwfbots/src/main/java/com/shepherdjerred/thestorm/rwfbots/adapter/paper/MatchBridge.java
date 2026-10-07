@@ -71,7 +71,8 @@ public final class MatchBridge implements Consumer<MatchNotification> {
       StimulusCollector stimuli,
       InstantSource time,
       ComponentLogger logger,
-      LobbyTicker lobby) {}
+      LobbyTicker lobby,
+      com.shepherdjerred.thestorm.rwfbots.app.learning.MatchLearning learning) {}
 
   public MatchBridge(Parts parts) {
     this.parts = parts;
@@ -291,6 +292,12 @@ public final class MatchBridge implements Consumer<MatchNotification> {
       bot.profile(profile, ThinkLoop.seed(seed, profile.id().value(), 0));
       parts.loop().register(profile);
     }
+    if (!parts.roster().harness().active(after.matchId()))
+      parts
+          .learning()
+          .begin(
+              new com.shepherdjerred.thestorm.rwfbots.app.learning.LearningGate.Context(
+                  after.matchId(), mapId, parts.world().getName(), seed));
     parts
         .traces()
         .ifPresent(traces -> logFailure(traces.begin(after.matchId()), "open the trace file"));
@@ -314,6 +321,7 @@ public final class MatchBridge implements Consumer<MatchNotification> {
   }
 
   private void ended(MatchState after) {
+    parts.learning().end();
     parts.loop().endMatch();
     parts.roster().session(null);
     parts.traces().ifPresent(traces -> logFailure(traces.end(), "close the trace file"));

@@ -191,6 +191,20 @@ const BotChatFlagSchema = z.strictObject({
   context: z.strictObject({ world: z.literal(rwfTestSettings.world) }),
 });
 
+/** Ordinary learned gameplay stays off in the authored native regression lane. */
+const BotLearningFlagSchema = z
+  .strictObject({
+    namespace_key: z.literal("the-storm"),
+    flag_key: z.literal("the-storm-rwfbots-learning-enabled"),
+    entity_id: z.uuid(),
+    context: z.strictObject({
+      match: z.uuid(),
+      map: z.string().min(1),
+      world: z.literal(rwfTestSettings.world),
+    }),
+  })
+  .refine((value) => value.entity_id === value.context.match);
+
 /**
  * The Flipt double: companions stay off; bot chat, the crier, merchant and rwf
  * gates open, except rwf for the players the suite denied.
@@ -216,6 +230,9 @@ async function evaluateFlag(
   }
   if (prod && BotChatFlagSchema.safeParse(body).success) {
     return Response.json({ enabled: true });
+  }
+  if (prod && BotLearningFlagSchema.safeParse(body).success) {
+    return Response.json({ enabled: false });
   }
   const evaluated = z
     .object({
