@@ -306,6 +306,39 @@ export function handoffDesiredState(desired: unknown, stack: string): unknown {
   };
 }
 
+export async function assertCleanHandoffSource(
+  read: typeof capturedRead = capturedRead,
+): Promise<void> {
+  const dirty = await read(
+    [
+      "git",
+      "status",
+      "--porcelain",
+      "--",
+      "package.json",
+      "bun.lock",
+      "bunfig.toml",
+      "tsconfig.base.json",
+      "packages/homelab/package.json",
+      "packages/homelab/tsconfig.json",
+      "packages/homelab/tsconfig.scripts.json",
+      "packages/homelab/src/cdk8s/package.json",
+      "packages/homelab/src/cdk8s/tsconfig.json",
+      "scripts/onepassword",
+      "packages/homelab/src/tofu",
+      "packages/homelab/scripts/tofu",
+      "packages/homelab/scripts/platform-desired-state.ts",
+      "packages/homelab/src/cdk8s/scripts/onepassword",
+      "packages/homelab/src/cdk8s/scripts/onepassword-lib.ts",
+    ],
+    "source status",
+  );
+  if (dirty.trim() !== "")
+    throw new Error(
+      "Verify requires clean owning source; preview remains available.",
+    );
+}
+
 export async function main(args: string[]): Promise<void> {
   const [stack, action, expectedHead] = args;
   assertPreparationAction(action ?? "");
@@ -327,6 +360,7 @@ export async function main(args: string[]): Promise<void> {
     throw new Error(
       "Verify requires the current expected source revision as the third argument.",
     );
+  if (action === "verify") await assertCleanHandoffSource();
   const items = await readVault();
   if (stack === "application-secrets" && action === "preview") {
     console.log(
@@ -378,24 +412,6 @@ export async function main(args: string[]): Promise<void> {
     );
     return;
   }
-  const dirty = await capturedRead(
-    [
-      "git",
-      "status",
-      "--porcelain",
-      "--",
-      "packages/homelab/src/tofu",
-      "packages/homelab/scripts/tofu",
-      "packages/homelab/scripts/platform-desired-state.ts",
-      "packages/homelab/src/cdk8s/scripts/onepassword",
-      "packages/homelab/src/cdk8s/scripts/onepassword-lib.ts",
-    ],
-    "source status",
-  );
-  if (dirty.trim() !== "")
-    throw new Error(
-      "Verify requires clean owning source; preview remains available.",
-    );
   const output = {
     openai: "openai_service_account_handoffs",
     "cloudflare-tokens": "cloudflare_api_token_handoffs",

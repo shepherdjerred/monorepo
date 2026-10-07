@@ -39,8 +39,10 @@ bun run --cwd packages/homelab/src/cdk8s audit:1password --live
 
 `preview` reads the vault and prints only target metadata, item versions,
 adoption compatibility and prerequisites. `verify <expected-head>` compares
-an existing sensitive handoff output to the declared fields. It requires clean
-owning source and cannot establish the source revision of live state. It
+an existing sensitive handoff output to the declared fields. Before reading
+credentials, it requires clean owning source, package import maps, the
+dependency lockfile, and Bun/TypeScript resolution configuration. It cannot
+establish the source revision of live state. It
 reports that gap and still requires consumer probes before revocation.
 Neither command writes, imports, applies, archives or deletes anything.
 

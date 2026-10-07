@@ -1,4 +1,7 @@
 import { describe, expect, test } from "vitest";
+import { mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import {
   assertPreparationAction,
   ApplicationSecretsSchema,
@@ -14,6 +17,7 @@ import {
   main,
   handoffEnvironment,
   handoffDesiredState,
+  assertCleanHandoffSource,
 } from "./credential-handoff.ts";
 import { collectOnePasswordTargets } from "#scripts/platform-desired-state.ts";
 import { parsePrivateJson, capturedRead } from "./secret-read.ts";
@@ -152,6 +156,46 @@ describe("label-only platform handoffs", () => {
 });
 
 describe("credential preparation", () => {
+  test.each([
+    "packages/homelab/package.json",
+    "packages/homelab/src/cdk8s/package.json",
+    "packages/homelab/tsconfig.scripts.json",
+    "tsconfig.base.json",
+    "bunfig.toml",
+    "bun.lock",
+  ])("verify rejects a dirty module-resolution input: %s", async (file) => {
+    const fixture = await mkdtemp(path.join(tmpdir(), "handoff-source-"));
+    const read = async (command: string[]) => {
+      const child = Bun.spawn(command, {
+        cwd: fixture,
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      const [stdout, , code] = await Promise.all([
+        new Response(child.stdout).text(),
+        new Response(child.stderr).text(),
+        child.exited,
+      ]);
+      expect(code).toBe(0);
+      return stdout;
+    };
+    try {
+      await read(["git", "init", "--quiet"]);
+      await assertCleanHandoffSource(read);
+      const fixturePath = path.join(fixture, file);
+      await mkdir(path.dirname(fixturePath), { recursive: true });
+      await writeFile(fixturePath, "synthetic module-resolution input\n");
+      await expect(assertCleanHandoffSource(read)).rejects.toThrow(
+        "Verify requires clean owning source",
+      );
+      await read(["git", "add", "--", file]);
+      await expect(assertCleanHandoffSource(read)).rejects.toThrow(
+        "Verify requires clean owning source",
+      );
+    } finally {
+      await rm(fixture, { recursive: true, force: true });
+    }
+  });
   test("failed private subprocess output stays out of errors", async () => {
     await expect(
       capturedRead(
