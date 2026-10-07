@@ -1750,6 +1750,25 @@ and full health through the original normal match ending. The original recording
 must contain only the sixteen bots and no human inputs. This diagnostic neither
 supplies demonstrations nor establishes the complete regression acceptance gate.
 
+To verify authored healing and ephemeral bot cleanup in another original showcase:
+
+```bash
+bun run bots:verify-healing-lifecycle --model .cache/rwf-java-parity/exact-candidate/onnx --output .cache/rwf-regression-capture/healing-lifecycle
+```
+
+The producer selects the first eligible Trooper from the ordinary sixteen-bot
+draft and its frozen personality content, respecting `never_eats` and
+`gapple_hoarder`. Native damage must reduce its health from twenty to eight;
+authored item use must consume one of three apples, restore health and grant
+four absorption points. Original controls must preserve the full eating interval
+without a learned action replacing item use. After Java controls have applied,
+the console-only fixture stops that exact match through the existing match API.
+Every original body must disappear after the lobby returns. Forced Citizens saves,
+registry queries and the retained empty `saves.yml` prove that ephemeral bots did
+not enter the persistent NPC registry. The verifier retains and replays the
+original journal and stopped all-bot recording. This diagnostic supplies no human
+demonstrations, complete regression acceptance or rollout.
+
 The producer verifies the sealed pilot and human ballot, recounts the original
 strength outcomes, recomputes the full raw load stream, and replays the original
 parity samples against the frozen Python weights and exact CPU ONNX export.

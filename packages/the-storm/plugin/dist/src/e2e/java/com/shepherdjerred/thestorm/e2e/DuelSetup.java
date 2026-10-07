@@ -31,6 +31,8 @@ record DuelSetup(
     List<Fighter> roster) {
   private static final Spec SPEC = load();
 
+  record Selection(long seed, String side, String mode, String opponent) {}
+
   record Fighter(
       int joinIndex,
       UUID body,
@@ -105,13 +107,7 @@ record DuelSetup(
         .orElseThrow();
   }
 
-  static DuelSetup capture(
-      MatchState match,
-      long seed,
-      String side,
-      String mode,
-      String opponent,
-      Function<UUID, Player> bodies) {
+  static DuelSetup capture(MatchState match, Selection selection, Function<UUID, Player> bodies) {
     if (match.phase() != MatchState.Phase.LIVE || match.combatants().size() != 2)
       throw new IllegalStateException("Native setup requires the original live duel");
     var roster = new ArrayList<Fighter>();
@@ -140,10 +136,10 @@ record DuelSetup(
         SPEC.version(),
         SPEC.kind(),
         match.matchId(),
-        seed,
-        side,
-        mode,
-        opponent,
+        selection.seed(),
+        selection.side(),
+        selection.mode(),
+        selection.opponent(),
         match.mapId().orElseThrow(),
         world.getKey().asString(),
         world.getTime(),

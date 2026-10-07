@@ -50,15 +50,7 @@ final class CaptureMarkers implements BasicCommand {
     }
     try {
       if (args.length == 2 && args[0].equals("observe")) {
-        if (active()) throw new IllegalStateException("Cannot replace an active duel observer");
-        var player = plugin.getServer().getPlayer(UUID.fromString(args[1]));
-        if (player == null) throw new IllegalArgumentException("Observer is not connected");
-        requireSpectator(player);
-        if (!player.getListeningPluginChannels().contains(DuelMarker.CHANNEL))
-          throw new IllegalArgumentException("Observer lacks the native duel clock channel");
-        observer = Optional.of(player.getUniqueId());
-        last = Optional.empty();
-        error = "";
+        observe(UUID.fromString(args[1]));
       } else if (args.length == 1 && args[0].equals("clear")) {
         if (active()) throw new IllegalStateException("Cannot remove an active duel observer");
         observer = Optional.empty();
@@ -87,7 +79,19 @@ final class CaptureMarkers implements BasicCommand {
     source.getSender().sendMessage(Component.text(JSON.writeValueAsString(reply)));
   }
 
-  void begin(UUID match, long seed, String side, String mode, String opponent) {
+  private void observe(UUID id) {
+    if (active()) throw new IllegalStateException("Cannot replace an active duel observer");
+    var player = plugin.getServer().getPlayer(id);
+    if (player == null) throw new IllegalArgumentException("Observer is not connected");
+    requireSpectator(player);
+    if (!player.getListeningPluginChannels().contains(DuelMarker.CHANNEL))
+      throw new IllegalArgumentException("Observer lacks the native duel clock channel");
+    observer = Optional.of(player.getUniqueId());
+    last = Optional.empty();
+    error = "";
+  }
+
+  void begin(UUID match, DuelSetup.Selection selection) {
     if (observer.isEmpty()) return;
     if (active()) throw new IllegalStateException("Previous observer duel is still active");
     firstTick = -1;
@@ -96,10 +100,10 @@ final class CaptureMarkers implements BasicCommand {
         player,
         new DuelMarker(
             match,
-            seed,
-            side,
-            mode,
-            opponent,
+            selection.seed(),
+            selection.side(),
+            selection.mode(),
+            selection.opponent(),
             0,
             "begin",
             -1,

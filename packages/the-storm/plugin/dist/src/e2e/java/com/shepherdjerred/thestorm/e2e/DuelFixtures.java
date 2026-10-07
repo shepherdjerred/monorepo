@@ -206,7 +206,7 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
                 .service(MatchEvents.class)
                 .subscribe(notification -> changed(MatchState.of(notification.after()))));
     match = Optional.of(current.matchId());
-    capture.begin(current.matchId(), seed, side, mode, opponent);
+    capture.begin(current.matchId(), new DuelSetup.Selection(seed, side, mode, opponent));
     var refusal = storm().service(ShowcaseControl.class).startSeeded(current.matchId(), 2, seed);
     if (refusal.isPresent()) {
       cancel();
@@ -241,7 +241,10 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
       if (fighter.team().orElseThrow().equals(side)) candidate = Optional.of(fighter.uuid());
     }
     if (candidate.isEmpty()) throw new IllegalStateException("candidate team missing");
-    setup = Optional.of(DuelSetup.capture(current, seed, side, mode, opponent, this::body));
+    setup =
+        Optional.of(
+            DuelSetup.capture(
+                current, new DuelSetup.Selection(seed, side, mode, opponent), this::body));
     result = "live";
     started = 0;
   }
