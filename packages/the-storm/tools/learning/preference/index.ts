@@ -7,6 +7,7 @@ import contract from "./contract.json";
 import { PreferenceLedger, digestFile, readJson } from "./ledger.ts";
 import { blindVideo, run } from "./media.ts";
 import { root } from "#learning/sandbox.ts";
+import type { DuelState } from "#learning/duels.ts";
 
 const args = parseArgs({
   allowPositionals: true,
@@ -99,7 +100,7 @@ switch (action) {
     await snapshot(clipsFile);
     const pairs = [];
     const recordings: string[] = [];
-    const states = [];
+    const states: DuelState[] = [];
     for (const pair of captures.pairs) {
       const learned = await snapshot(pair.learned.video);
       const authored = await snapshot(pair.authored.video);
@@ -109,13 +110,31 @@ switch (action) {
       }
       pairs.push({ pair: pair.pair, learned, authored });
     }
-    const rawRecords: unknown = JSON.parse(
-      await run([
-        "python3",
-        path.join(root, "scripts/bots/learning/preference_recording.py"),
-        ...recordings,
-      ]),
+    const recordGroups = await Promise.all(
+      recordings.map(async (file, index) => {
+        const state = states[index];
+        if (state === undefined)
+          throw new Error("preference recording has no capture state");
+        return z
+          .array(z.unknown())
+          .length(1)
+          .parse(
+            JSON.parse(
+              await run([
+                "python3",
+                path.join(
+                  root,
+                  "scripts/bots/learning/preference_recording.py",
+                ),
+                "--expected-seed",
+                state.seed.toString(),
+                file,
+              ]),
+            ),
+          );
+      }),
     );
+    const rawRecords: unknown = recordGroups.flat();
     const records = z
       .array(
         z

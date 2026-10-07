@@ -76,10 +76,10 @@ export async function encodeVideo(receiptFile: string) {
   const receiptHash = await digest(source);
   const raw: unknown = await Bun.file(source).json();
   const identity = z
-    .object({ schema: z.union([z.literal(1), z.literal(2)]) })
+    .object({ schema: z.union([z.literal(1), z.literal(3)]) })
     .parse(raw);
   const receipt =
-    identity.schema === 2 ? validateDuelFrames(raw) : validateFrames(raw);
+    identity.schema === 3 ? validateDuelFrames(raw) : validateFrames(raw);
   const directory = path.dirname(source);
   await verifyFrames(directory, receipt);
   const output = path.join(directory, "clip.mp4");
@@ -135,7 +135,7 @@ export async function encodeVideo(receiptFile: string) {
     video: output,
     frames: receipt.requestedFrames,
     fps: receipt.fps,
-    native_window_bound: receipt.schema === 2,
+    native_window_bound: receipt.schema === 3,
   };
   await writeFile(
     path.join(directory, "video.json"),

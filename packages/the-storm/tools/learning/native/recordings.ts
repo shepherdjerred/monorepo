@@ -8,6 +8,8 @@ import { root } from "#learning/sandbox.ts";
 
 /** Parse complete original schema-3 bot-only Trooper records after graceful Paper export. */
 export async function originalRecordings(output: string, states: DuelState[]) {
+  if (new Set(states.map((state) => state.match)).size !== states.length)
+    throw new Error("Native captures reuse an original match identity");
   const directory = path.join(output, "recordings");
   const files = await readdir(directory, { recursive: true });
   const recordings = await Promise.all(
@@ -20,8 +22,35 @@ export async function originalRecordings(output: string, states: DuelState[]) {
           "Original native model recording is missing or duplicated",
         );
       const file = path.join(directory, matching[0]);
-      return { file, sha256: await digestFile(file), match: state.match };
+      return {
+        file,
+        sha256: await digestFile(file),
+        match: state.match,
+        seed: state.seed,
+      };
     }),
+  );
+  const raw = await Promise.all(
+    recordings.map(
+      async (recording) =>
+        z
+          .array(z.unknown())
+          .length(1)
+          .parse(
+            JSON.parse(
+              await run([
+                "python3",
+                path.join(
+                  root,
+                  "scripts/bots/learning/preference_recording.py",
+                ),
+                "--expected-seed",
+                recording.seed.toString(),
+                recording.file,
+              ]),
+            ),
+          )[0],
+    ),
   );
   const parsed = z
     .array(
@@ -33,15 +62,7 @@ export async function originalRecordings(output: string, states: DuelState[]) {
       }),
     )
     .length(states.length)
-    .parse(
-      JSON.parse(
-        await run([
-          "python3",
-          path.join(root, "scripts/bots/learning/preference_recording.py"),
-          ...recordings.map((recording) => recording.file),
-        ]),
-      ),
-    );
+    .parse(raw);
   for (const [index, record] of parsed.entries()) {
     const state = states[index];
     const source = recordings[index];

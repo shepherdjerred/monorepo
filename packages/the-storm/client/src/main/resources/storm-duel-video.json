@@ -1,5 +1,6 @@
 {
-  "version": 2,
+  "version": 3,
+  "worldTickSource": "latest-received-paper-marker",
   "kind": "rwf-rendered-duel-frames",
   "liveTicks": 600,
   "frames": 900,
@@ -25,5 +26,11 @@
     "clock",
     "bindings"
   ],
-  "binding": ["index", "markerReceivedNanos", "marker", "sourceFrame"]
+  "binding": [
+    "index",
+    "markerReceivedNanos",
+    "marker",
+    "sourceFrame",
+    "clientWorldTick"
+  ]
 }

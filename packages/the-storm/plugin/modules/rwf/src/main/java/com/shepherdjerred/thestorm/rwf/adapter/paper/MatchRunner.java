@@ -7,6 +7,7 @@ import com.shepherdjerred.thestorm.rwf.app.MatchEvents;
 import com.shepherdjerred.thestorm.rwf.app.MatchNotification;
 import com.shepherdjerred.thestorm.rwf.app.MatchView;
 import com.shepherdjerred.thestorm.rwf.app.PayoutService;
+import com.shepherdjerred.thestorm.rwf.app.ShowcaseStart;
 import com.shepherdjerred.thestorm.rwf.app.store.MatchStore;
 import com.shepherdjerred.thestorm.rwf.domain.combat.AttackType;
 import com.shepherdjerred.thestorm.rwf.domain.combat.CombatRules;
@@ -627,24 +628,45 @@ final class MatchRunner implements MatchView, MatchEvents {
    * it, or returns why not. It then runs as any match would, without the humans rule.
    */
   Optional<String> startShowcase(int count) {
-    if (count < 2 || count > parts.config().match().maxCombatants()) {
-      return Optional.of("Showcase size is outside the configured bounds.");
+    var refusal = showcaseRefusal(count);
+    return refusal.isPresent() ? refusal : fillShowcase(count);
+  }
+
+  Optional<String> startSeededShowcase(UUID lobbyId, int count, long seed) {
+    if (!match.matchId().equals(lobbyId)) {
+      return Optional.of("The requested showcase lobby is no longer current.");
     }
-    if (!ready) {
-      return Optional.of("The match is still being prepared; try again in a moment.");
+    var refusal = showcaseRefusal(count);
+    if (refusal.isPresent()) {
+      return refusal;
     }
-    if (parts.bots().roster().isEmpty()) {
-      return Optional.of("No bot roster is provided; enable the rwfbots module.");
+    if (!match.members().isEmpty()) {
+      return Optional.of("A seeded showcase requires an empty lobby.");
     }
-    if (showcase.isPresent()) {
-      return Optional.of("A showcase is already running.");
+    var previous = match;
+    var previousTime = parts.context().world().getTime();
+    match = match.reseedEmptyLobby(seed);
+    parts.context().world().setTime(match.startingWorldTime());
+    refusal = fillShowcase(count);
+    if (refusal.isPresent()) {
+      match = previous;
+      parts.context().world().setTime(previousTime);
     }
-    if (humans() > 0) {
-      return Optional.of("Players are in the match; a showcase needs a lobby without them.");
-    }
-    if (!(match.phase() instanceof Phase.Lobby)) {
-      return Optional.of("A match is under way; start the showcase from the next lobby.");
-    }
+    return refusal;
+  }
+
+  private Optional<String> showcaseRefusal(int count) {
+    return new ShowcaseStart(
+            parts.config().match().maxCombatants(),
+            ready,
+            parts.bots().roster().isPresent(),
+            showcase.isPresent(),
+            humans(),
+            match.phase() instanceof Phase.Lobby)
+        .refusal(count);
+  }
+
+  private Optional<String> fillShowcase(int count) {
     showcase = OptionalInt.of(count);
     joinBots(count - match.members().size());
     if (match.members().isEmpty()) {

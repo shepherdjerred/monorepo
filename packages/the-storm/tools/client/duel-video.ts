@@ -12,6 +12,7 @@ const Binding = z.strictObject({
   markerReceivedNanos: z.number().int().nonnegative(),
   marker: DuelClockMarker,
   sourceFrame: z.number().int().min(0).max(899),
+  clientWorldTick: z.number().int().nonnegative(),
 });
 const Window = z.strictObject({
   window: z.literal("first-600-live-ticks-hold-terminal-frame"),
@@ -24,7 +25,7 @@ const Window = z.strictObject({
 });
 export const DuelFrameReceipt = z.strictObject({
   ...FrameReceipt.shape,
-  schema: z.literal(2),
+  schema: z.literal(3),
   kind: z.literal("rwf-rendered-duel-frames"),
   requestedFrames: z.literal(900),
   duel: Window,
@@ -34,7 +35,8 @@ export type DuelFrameReceipt = z.infer<typeof DuelFrameReceipt>;
 if (
   JSON.stringify(wire) !==
   JSON.stringify({
-    version: 2,
+    version: 3,
+    worldTickSource: "latest-received-paper-marker",
     kind: "rwf-rendered-duel-frames",
     liveTicks: 600,
     frames: 900,
@@ -114,6 +116,10 @@ function validateBinding(
       image.frame.elapsedNanos
   )
     throw new Error("Native frame used a stale received marker");
+  if (image.frame.worldTick !== binding.marker.worldTick)
+    throw new Error(
+      "Native frame world clock differs from its received Paper marker",
+    );
   validatePixelSource(receipt, binding, image.sha256);
 }
 

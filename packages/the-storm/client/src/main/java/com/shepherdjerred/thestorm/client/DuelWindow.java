@@ -11,7 +11,19 @@ final class DuelWindow {
   static final int FRAMES = 900;
   static final String WINDOW = "first-600-live-ticks-hold-terminal-frame";
 
-  record Binding(int index, long markerReceivedNanos, DuelMarker marker, int sourceFrame) {}
+  record Binding(
+      int index,
+      long markerReceivedNanos,
+      DuelMarker marker,
+      int sourceFrame,
+      long clientWorldTick) {
+    VideoFrames.Frame paperFrame(VideoFrames.Frame rendered) {
+      if (rendered.index() != index || rendered.worldTick() != clientWorldTick)
+        throw new IllegalArgumentException("Native render differs from its sampled client clock");
+      return new VideoFrames.Frame(
+          index, rendered.elapsedNanos(), marker.worldTick(), rendered.camera());
+    }
+  }
 
   record Receipt(
       String window,
@@ -55,15 +67,19 @@ final class DuelWindow {
     return true;
   }
 
-  Binding bind(int index, long now) {
+  Binding bind(int index, long now, long clientWorldTick) {
     var marker = java.util.Objects.requireNonNull(latest, "No live native marker was received");
-    if (!anchored || index != bindings.size() || index >= FRAMES || now < received)
+    if (!anchored
+        || index != bindings.size()
+        || index >= FRAMES
+        || now < received
+        || clientWorldTick < 0)
       throw new IllegalStateException("Native frame binding clock or inventory changed");
     if (index == 0 && marker.elapsed() != 0)
       throw new IllegalStateException("Native capture missed its first live render");
     if (terminalFrame < 0 && marker.marker().equals("terminal")) terminalFrame = index;
     var source = terminalFrame < 0 ? index : terminalFrame;
-    var binding = new Binding(index, received - started, marker, source);
+    var binding = new Binding(index, received - started, marker, source, clientWorldTick);
     bindings.add(binding);
     return binding;
   }

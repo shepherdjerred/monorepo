@@ -73,7 +73,9 @@ class VideoContractTest {
         java.util.Objects.requireNonNull(
             getClass().getResourceAsStream("/storm-duel-video.json"))) {
       var spec = Protocol.JSON.readTree(source);
-      assertThat(spec.required("version").intValue()).isEqualTo(2);
+      assertThat(spec.required("version").intValue()).isEqualTo(3);
+      assertThat(spec.required("worldTickSource").stringValue())
+          .isEqualTo("latest-received-paper-marker");
       assertThat(spec.required("kind").stringValue()).isEqualTo("rwf-rendered-duel-frames");
       assertThat(spec.required("liveTicks").intValue()).isEqualTo(DuelWindow.LIVE_TICKS);
       assertThat(spec.required("frames").intValue()).isEqualTo(DuelWindow.FRAMES);

@@ -46,7 +46,7 @@ class DuelWindowTest {
     late.accept(marker("begin", -1, "waiting"), 1000);
     late.accept(marker("tick", 0, "live"), 2000);
     late.accept(marker("tick", 1, "live"), 50002000);
-    assertThatThrownBy(() -> late.bind(0, 50002001)).hasMessageContaining("first live render");
+    assertThatThrownBy(() -> late.bind(0, 50002001, 31)).hasMessageContaining("first live render");
     var cancelled = window();
     cancelled.accept(marker("begin", -1, "waiting"), 1000);
     assertThatThrownBy(() -> cancelled.accept(marker("terminal", -1, "cancelled"), 1001))
@@ -63,7 +63,7 @@ class DuelWindowTest {
     var window = window();
     window.accept(marker("begin", -1, "waiting"), 1000);
     window.accept(marker("tick", 0, "live"), 2000);
-    for (int i = 0; i < 900; i++) window.bind(i, 2000 + i * FrameClock.SECOND / FrameClock.FPS);
+    for (int i = 0; i < 900; i++) window.bind(i, 2000 + i * FrameClock.SECOND / FrameClock.FPS, i);
     assertThatThrownBy(window::complete).hasMessageContaining("did not reach");
   }
 
@@ -82,13 +82,32 @@ class DuelWindowTest {
         }
         next++;
       }
-      window.bind(i, now);
+      window.bind(i, now, i);
     }
     return window;
   }
 
   private static DuelWindow window() {
     return new DuelWindow(new DuelTimeline.Expected(17, "red", "authored", "basic"), 1000);
+  }
+
+  @Test
+  void PaperFrameClockStaysAuthoritativeWhenTheSampledClientClockMovesBackwards() {
+    var window = window();
+    window.accept(marker("begin", -1, "waiting"), 1000);
+    window.accept(marker("tick", 0, "live"), 2000);
+    var first = window.bind(0, 2000, 42);
+    window.accept(marker("tick", 1, "live"), 50002000);
+    var next = window.bind(1, 50002000, 41);
+    var camera =
+        new VideoCapture.Camera(java.util.List.of(31.5, 74.62, 22.5), 180, 35, 70, false, false);
+    var rendered = new VideoFrames.Frame(1, 50000000, 41, camera);
+
+    assertThat(next.clientWorldTick()).isLessThan(first.clientWorldTick());
+    assertThat(next.paperFrame(rendered)).isEqualTo(new VideoFrames.Frame(1, 50000000, 31, camera));
+    assertThat(next.marker().worldTick()).isGreaterThan(first.marker().worldTick());
+    assertThatThrownBy(() -> next.paperFrame(new VideoFrames.Frame(1, 50000000, 32, camera)))
+        .hasMessageContaining("sampled client clock");
   }
 
   private static DuelMarker marker(String kind, int elapsed, String result) {
