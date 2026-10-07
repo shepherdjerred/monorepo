@@ -122,6 +122,7 @@ public final class BotTicker {
     }
     var match = session.orElseThrow();
     var snapshot = match.capture().capture(tick, state.orElseThrow());
+    roster.harness().captureTick(match.matchId(), tick);
     loop.publish(snapshot);
     var frame = new Frame(match, snapshot, loop.board());
     for (var bot : roster.live()) {

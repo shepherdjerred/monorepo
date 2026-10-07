@@ -4,7 +4,8 @@
   "type": "module",
   "imports": {
     "#e2e/*": "./tests/e2e/*",
-    "#learning/*": "./tools/learning/*"
+    "#learning/*": "./tools/learning/*",
+    "#learning-wire": "./plugin/modules/rwfbots/src/main/resources/rwf-duel.json"
   },
   "description": "Turbo shim over the Gradle build of The Storm's Paper plugin (plugin/) — scripts wrap Gradle so the workspace joins the task graph (caching + affected). Same pattern as the Go and Rust shims. tests/e2e is the TypeScript real-server harness.",
   "scripts": {
@@ -25,6 +26,7 @@
     "bots:generate": "bun scripts/bots/generate-personalities.ts",
     "bots:dataset": "python3 scripts/bots/learning/dataset.py",
     "bots:benchmark": "bun scripts/bots/benchmark.ts",
+    "bots:ppo": "bun tools/learning/run.ts",
     "test:learning": "python3 -m unittest discover -s scripts/bots/learning -p '*_test.py' && uv run --project tools/learning --locked python -m unittest discover -s tools/learning -p '*_test.py'",
     "lint:learning": "uv run --project tools/learning --locked ruff check tools/learning && uv run --project tools/learning --locked ruff format --check tools/learning",
     "typecheck:learning": "uv run --project tools/learning --locked pyright --project tools/learning",

@@ -13,16 +13,7 @@ public final class CombatCommands {
 
   public static List<BodyCommand> replace(
       List<BodyCommand> authored, ReflexInput input, ActionTicket ticket) {
-    if (input.self().heldSlot() != 1 || input.self().usingItem() || input.target().isEmpty())
-      return authored;
-    if (authored.stream()
-        .anyMatch(
-            command ->
-                command instanceof BodyCommand.StartUse
-                    || command instanceof BodyCommand.ReleaseUse
-                    || command instanceof BodyCommand.CancelUse
-                    || (command instanceof BodyCommand.SelectSlot(var slot) && slot != 1)))
-      return authored;
+    if (!eligible(authored, input)) return authored;
     var result = new ArrayList<BodyCommand>();
     for (var command : authored) {
       if (!(command instanceof BodyCommand.MoveToward
@@ -48,5 +39,18 @@ public final class CombatCommands {
       result.add(new BodyCommand.Attack(input.target().orElseThrow().id()));
     }
     return List.copyOf(result);
+  }
+
+  /** Whether the external sword controls will actually replace authored commands this tick. */
+  public static boolean eligible(List<BodyCommand> authored, ReflexInput input) {
+    if (input.self().heldSlot() != 1 || input.self().usingItem() || input.target().isEmpty())
+      return false;
+    return authored.stream()
+        .noneMatch(
+            command ->
+                command instanceof BodyCommand.StartUse
+                    || command instanceof BodyCommand.ReleaseUse
+                    || command instanceof BodyCommand.CancelUse
+                    || (command instanceof BodyCommand.SelectSlot(var slot) && slot != 1));
   }
 }

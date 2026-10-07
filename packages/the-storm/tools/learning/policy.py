@@ -16,7 +16,6 @@ RESOURCE = Path(__file__).resolve().parents[2] / (
 )
 CONTRACT = "rwf-combat-v1"
 HIDDEN = 128
-HEADS = {"move": 9, "jump": 2, "sneak": 2, "sprint": 2, "attack": 2}
 FEATURES = tuple(line.split("\t")[0] for line in RESOURCE.read_text(encoding="utf-8").splitlines())
 
 
@@ -55,6 +54,20 @@ def observation(value: object) -> list[float]:
             raise ValueError("observation must be finite and normalized")
         result.append(number)
     return result
+
+
+WIRE = mapping(json.loads(RESOURCE.with_name("rwf-duel.json").read_text(encoding="utf-8")))
+if WIRE["version"] != 2 or WIRE["contract"] != CONTRACT:
+    raise ValueError("unsupported duel wire contract")
+HEADS: dict[str, int] = {}
+for descriptor in array(WIRE["heads"]):
+    head = mapping(descriptor)
+    name = head["name"]
+    if not isinstance(name, str) or name in HEADS:
+        raise ValueError("invalid action head name")
+    HEADS[name] = integer(head["size"], 2, 9)
+if list(HEADS.items()) != [("move", 9), ("jump", 2), ("sneak", 2), ("sprint", 2), ("attack", 2)]:
+    raise ValueError("action heads differ from sword control contract")
 
 
 class Output(NamedTuple):
@@ -102,13 +115,17 @@ def device(name: str) -> torch.device:
     return torch.device(name)
 
 
-def write_checkpoint(model: Policy, out: Path, metadata: dict[str, object]) -> None:
+def write_checkpoint(
+    model: Policy, out: Path, metadata: dict[str, object], kind: str = "rwf-trooper-bc"
+) -> None:
+    if kind not in ("rwf-trooper-bc", "rwf-trooper-ppo"):
+        raise ValueError("unknown checkpoint kind")
     out.mkdir(parents=True, exist_ok=False)
     weights = out / "weights.pt"
     torch.save({key: tensor.detach().cpu() for key, tensor in model.state_dict().items()}, weights)
     manifest = {
         "schema": 1,
-        "kind": "rwf-trooper-bc",
+        "kind": kind,
         "acceptance": "unaccepted",
         "contract": CONTRACT,
         "contract_sha256": digest(RESOURCE),
@@ -128,7 +145,6 @@ def load_checkpoint(path: Path) -> tuple[Policy, dict[str, object]]:
     manifest = mapping(json.loads((path / "manifest.json").read_text(encoding="utf-8")))
     expected = {
         "schema": 1,
-        "kind": "rwf-trooper-bc",
         "acceptance": "unaccepted",
         "contract": CONTRACT,
         "contract_sha256": digest(RESOURCE),
@@ -137,10 +153,12 @@ def load_checkpoint(path: Path) -> tuple[Policy, dict[str, object]]:
         "hidden": HIDDEN,
         "tick_hz": 20,
     }
-    if set(manifest) != {*expected, "weights_sha256", "training"}:
+    if set(manifest) != {*expected, "kind", "weights_sha256", "training"}:
         raise ValueError("unknown or missing checkpoint fields")
     if any(manifest[key] != value for key, value in expected.items()):
         raise ValueError("checkpoint contract mismatch")
+    if manifest["kind"] not in ("rwf-trooper-bc", "rwf-trooper-ppo"):
+        raise ValueError("unknown checkpoint kind")
     weights = path / "weights.pt"
     if digest(weights) != manifest["weights_sha256"]:
         raise ValueError("checkpoint digest mismatch")

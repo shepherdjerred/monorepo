@@ -20,6 +20,9 @@ import java.util.UUID;
  */
 public final class CombatHarness {
   public interface Controller {
+    /** Capture evaluation totals before any body executes this world's commands. */
+    void captureTick(long tick);
+
     ReflexInput input(
         ReflexInput authored, com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact nav);
 
@@ -67,6 +70,10 @@ public final class CombatHarness {
 
   public boolean active(UUID matchId) {
     return controller.isPresent() && match.filter(matchId::equals).isPresent();
+  }
+
+  public void captureTick(UUID matchId, long tick) {
+    if (active(matchId)) controller.orElseThrow().captureTick(tick);
   }
 
   public OptionalLong seed(UUID matchId) {

@@ -46,6 +46,7 @@ import tools.jackson.databind.json.JsonMapper;
  */
 final class DuelFixtures implements BasicCommand, CombatHarness.Controller, Listener {
   private static final JsonMapper JSON = JsonMapper.builder().build();
+  private static final DuelProtocol PROTOCOL = DuelProtocol.load();
   private final JavaPlugin plugin;
   private Optional<MatchEvents.Subscription> subscription = Optional.empty();
   private Optional<UUID> match = Optional.empty();
@@ -59,6 +60,7 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
   private final Map<CombatantId, Decision> pursuit = new java.util.HashMap<>();
   private String side = "red";
   private String mode = "authored";
+  private String opponent = "basic";
   private long seed;
   private long started;
   private long acceptedTick = -1;
@@ -66,6 +68,10 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
   private long fallback;
   private double dealt;
   private double received;
+  private double sampledDealt;
+  private double sampledReceived;
+  private long sampleTick;
+  private final java.util.ArrayDeque<Long> used = new java.util.ArrayDeque<>();
   private String result = "waiting";
 
   DuelFixtures(JavaPlugin plugin) {
@@ -119,11 +125,15 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
   }
 
   private void begin(String[] args) {
-    if (args.length != 4) throw new IllegalArgumentException("begin needs seed, side and mode");
+    if (args.length < 4 || args.length > 5)
+      throw new IllegalArgumentException("begin needs seed, side, mode and optional opponent");
     var nextSeed = Long.parseLong(args[1]);
     if (!List.of("red", "blue").contains(args[2])
         || !List.of("authored", "external").contains(args[3]))
       throw new IllegalArgumentException("invalid side or mode");
+    var nextOpponent = args.length == 5 ? args[4] : "basic";
+    if (!PROTOCOL.opponents().contains(nextOpponent))
+      throw new IllegalArgumentException("unknown duel opponent");
     var current = storm().service(MatchView.class).current().map(MatchState::of).orElseThrow();
     if (current.phase() != MatchState.Phase.LOBBY
         || !current.combatants().isEmpty()
@@ -132,18 +142,22 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
     cancel();
     side = args[2];
     mode = args[3];
+    opponent = nextOpponent;
     seed = nextSeed;
     candidate = Optional.empty();
     latest = Optional.empty();
     action = Optional.empty();
     acceptedTick = -1;
     contexts.clear();
+    used.clear();
     seen.clear();
     pursuit.clear();
     applied = 0;
     fallback = 0;
     dealt = 0;
     received = 0;
+    sampledDealt = 0;
+    sampledReceived = 0;
     result = "waiting";
     var control = storm().service(CombatHarness.class);
     control.attach(seed, this);
@@ -243,7 +257,10 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
     } else {
       decision = pursuit.computeIfAbsent(self.id(), id -> pursuit(authored, nav));
     }
-    var gapples = self.team().value().equals(side) ? authored.gapplesLeft() : 0;
+    var gapples =
+        self.team().value().equals(side) || opponent.equals("authored")
+            ? authored.gapplesLeft()
+            : 0;
     return new ReflexInput(self, authored.snapshot(), decision, target, gapples);
   }
 
@@ -275,6 +292,13 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
   }
 
   @Override
+  public void captureTick(long tick) {
+    sampleTick = tick;
+    sampledDealt = dealt;
+    sampledReceived = received;
+  }
+
+  @Override
   public List<BodyCommand> commands(CombatHarness.Frame frame) {
     if (!result.equals("live")) return List.of(new BodyCommand.Stop());
     if (started == 0) started = frame.input().snapshot().tick();
@@ -283,7 +307,9 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
       storm().service(ShowcaseControl.class).stop(frame.matchId());
       return List.of();
     }
-    if (!candidate.filter(frame.body()::equals).isPresent()) return basic(frame);
+    if (!candidate.filter(frame.body()::equals).isPresent()) {
+      return opponent.equals("authored") ? frame.authored().commands() : basic(frame);
+    }
     latest = Optional.of(frame);
     contexts.addLast(frame);
     while (contexts.size() > 3) contexts.removeFirst();
@@ -293,16 +319,22 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
             ticket ->
                 ticket.applies(
                     frame.matchId(), frame.body(), frame.life(), frame.input().snapshot().tick()));
-    if (response.isEmpty()) {
+    if (response.isEmpty()
+        || !CombatCommands.eligible(frame.authored().commands(), frame.input())) {
       fallback++;
       return frame.authored().commands();
     }
     applied++;
+    var usedTick = response.orElseThrow().tick();
+    if (!used.contains(usedTick)) used.addLast(usedTick);
+    while (used.size() > 4) used.removeFirst();
     return CombatCommands.replace(
         frame.authored().commands(), frame.input(), response.orElseThrow());
   }
 
   private List<BodyCommand> basic(CombatHarness.Frame frame) {
+    if (opponent.equals("stationary"))
+      return List.of(new BodyCommand.SelectSlot(1), new BodyCommand.Stop());
     var input = frame.input();
     var target = input.target();
     if (target.isEmpty()) return frame.authored().commands();
@@ -314,7 +346,8 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
     var closing = distance > 2.7 ? 1.0 : distance < 2.3 ? -1.0 : 0.0;
     var elapsed = input.snapshot().tick() - started;
     var sign = ((elapsed / 20) & 1) == 0 ? 1.0 : -1.0;
-    var move = forward.scale(closing).plus(side.scale(sign * 0.5)).normalized();
+    var strafe = opponent.equals("chase") ? 0 : sign * 0.5;
+    var move = forward.scale(closing).plus(side.scale(strafe)).normalized();
     var look = Facing.looking(self.eye(), enemy.pos().plus(0, 1.0, 0));
     var commands = new ArrayList<BodyCommand>();
     commands.add(new BodyCommand.SelectSlot(1));
@@ -366,16 +399,21 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
   private Map<String, Object> state() {
     var current = storm().service(MatchView.class).current().map(MatchState::of).orElseThrow();
     var state = new java.util.LinkedHashMap<String, Object>();
-    state.put("protocol", 1);
-    state.put("contract", "rwf-combat-v1");
+    state.put("protocol", PROTOCOL.version());
+    state.put("contract", PROTOCOL.contract());
     state.put("seed", seed);
     state.put("side", side);
     state.put("mode", mode);
-    state.put("result", result);
+    state.put("opponent", opponent);
+    state.put("result", result.equals("live") && latest.isEmpty() ? "waiting" : result);
     state.put("phase", current.phase().name());
     state.put("match", match.map(UUID::toString).orElse(""));
     state.put("dealt", dealt);
     state.put("received", received);
+    state.put("sampleDealt", result.equals("live") ? sampledDealt : dealt);
+    state.put("sampleReceived", result.equals("live") ? sampledReceived : received);
+    state.put("sampleTick", sampleTick);
+    state.put("used", List.copyOf(used));
     state.put("applied", applied);
     state.put("fallback", fallback);
     latest.ifPresent(
@@ -388,6 +426,7 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
           if (result.equals("live"))
             frame.observation().ifPresent(sample -> state.put("observation", sample.values()));
         });
+    PROTOCOL.validate(state);
     return Map.copyOf(state);
   }
 
