@@ -336,17 +336,20 @@ export function createStormForumChart(app: App, input: ForumRelease): Chart {
       },
     },
   });
+  const selector = Pods.select(chart, "web-selector", { labels });
   const service = new Service(chart, "http-service", {
     metadata: { name: "storm-forum" },
-    selector: Pods.select(chart, "web-selector", { labels }),
-    ports: [
-      { port: 8080, name: "http" },
-      { port: 8081, name: "admin" },
-    ],
+    selector,
+    ports: [{ port: 8080, name: "http" }],
+  });
+  const adminService = new Service(chart, "admin-service", {
+    metadata: { name: "storm-forum-admin" },
+    selector,
+    ports: [{ port: 8081, name: "admin" }],
   });
   new TailscaleIngress(chart, "admin", {
     host: `${namespace}-admin`,
-    service,
+    service: adminService,
     port: 8081,
     probeModule: "tcp_connect",
   });
