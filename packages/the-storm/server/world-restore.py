@@ -664,7 +664,10 @@ def restart_arenas(staging: Path, candidate: Path, modern_data: Path, backup_pro
     if staging.is_relative_to(modern_data) or modern_data.is_relative_to(staging):
         raise ValueError("Arena restart requires independent input trees")
     receipt = json.loads((staging / JOURNAL).read_text(encoding="utf-8"))
-    if receipt["phase"] != "ARENA_TRANSPLANT_FAILED" or receipt["archiveSha256"] != ARCHIVE_SHA256:
+    if (
+        receipt["phase"] not in ("ARENA_TRANSPLANT_FAILED", "ARENA_TRANSPLANT_RESTARTING")
+        or receipt["archiveSha256"] != ARCHIVE_SHA256
+    ):
         raise ValueError("Arena restart requires a failed private transplant checkpoint")
     catalog = Path(__file__).resolve().parent / "owned/plugins/TheStorm/heritage.yml"
     if any(
@@ -674,23 +677,68 @@ def restart_arenas(staging: Path, candidate: Path, modern_data: Path, backup_pro
     source = staging / "heritage-preserved-layout"
     failed = staging / "arena-preserved-layout"
     log = staging / "arena-transplant.log"
-    if source.is_symlink() or failed.is_symlink() or log.is_symlink() or not log.is_file():
+    if source.is_symlink() or failed.is_symlink() or log.is_symlink():
         raise ValueError("Arena restart requires regular checkpoint paths")
+    if receipt["phase"] == "ARENA_TRANSPLANT_FAILED":
+        if not log.is_file():
+            raise ValueError("Arena restart requires its failed log")
+        restart = {
+            "archive": "arena-transplant-failed-" + str(uuid.uuid4()),
+            "failedJournal": dict(receipt),
+            "logSha256": digest(log),
+        }
+    else:
+        restart = receipt["arenaRestart"]
+        original = {key: value for key, value in receipt.items() if key != "arenaRestart"}
+        original["phase"] = "ARENA_TRANSPLANT_FAILED"
+        if restart["failedJournal"] != original:
+            raise ValueError("Arena restart original failure journal changed")
+    name = restart["archive"]
+    prefix = "arena-transplant-failed-"
+    if not isinstance(name, str) or not name.startswith(prefix) or name != prefix + str(uuid.UUID(name[len(prefix) :])):
+        raise ValueError("Arena restart archive name is not a scoped UUID")
+    archive = staging / name
+    archived_log = archive / "transplant.log"
+    if (
+        archive.is_symlink()
+        or archived_log.is_symlink()
+        or (archive.exists() and not archive.is_dir())
+        or failed.is_dir() == archive.is_dir()
+    ):
+        raise ValueError("Arena restart requires exactly one original or archived output")
+    output = failed if failed.is_dir() else archive
+    if (
+        log.is_file() == archived_log.is_file()
+        or digest(log if log.is_file() else archived_log) != restart["logSha256"]
+    ):
+        raise ValueError("Arena restart log changed or has an ambiguous location")
     expected = json.loads((staging / "heritage-preserved-layout-files.json").read_text(encoding="utf-8"))
     with ExitStack() as locks:
-        for root in (source, failed, modern_data):
+        for root in (source, output, modern_data):
             stopped_locks(root, locks)
         verified_backup(modern_data, backup_proof)
-        if fingerprint(source / "world") != expected or fingerprint(failed / "world") != expected:
+        if fingerprint(source / "world") != expected or fingerprint(output / "world") != expected:
             raise ValueError("Arena restart refuses changed historical input or partially written output")
-        archive = staging / ("arena-transplant-failed-" + str(uuid.uuid4()))
-        failed.rename(archive)
-        log.rename(archive / "transplant.log")
-        save_json(archive / "failed-journal.json", receipt)
+        if receipt["phase"] == "ARENA_TRANSPLANT_FAILED":
+            receipt.update(phase="ARENA_TRANSPLANT_RESTARTING", arenaRestart=restart)
+            save_json(staging / JOURNAL, receipt)
+        if output == failed:
+            failed.rename(archive)
+        if log.is_file():
+            log.rename(archived_log)
+        failure_receipt = archive / "failed-journal.json"
+        if failure_receipt.is_symlink():
+            raise ValueError("Archived failure receipt cannot be linked")
+        if failure_receipt.exists():
+            if json.loads(failure_receipt.read_text(encoding="utf-8")) != restart["failedJournal"]:
+                raise ValueError("Archived failure receipt changed")
+        else:
+            save_json(failure_receipt, restart["failedJournal"])
         receipt.setdefault("arenaTransplantRestarts", []).append(
-            {"archive": archive.name, "journalSha256": digest(archive / "failed-journal.json")}
+            {"archive": archive.name, "journalSha256": digest(failure_receipt)}
         )
         receipt.pop("arenaTransplantInputs")
+        receipt.pop("arenaRestart")
         receipt["phase"] = "NATIVE_HERITAGE_PRESERVED"
         save_json(staging / JOURNAL, receipt)
 

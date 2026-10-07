@@ -347,6 +347,48 @@ class RestoreTest(unittest.TestCase):
             restore.restart_arenas(staging, candidate, modern, proof)
         self.assertTrue(failed.is_symlink())
 
+    def test_restart_arenas_resumes_after_each_archival_interruption(self):
+        parent = self.root
+        real_rename, real_save = Path.rename, restore.save_json
+        for point in ("journal", "copy", "log", "receipt"):
+            with self.subTest(point=point):
+                self.root = parent / point
+                self.root.mkdir()
+                staging, candidate, modern, proof = self.failed_arena_fixture()
+                original = (staging / restore.JOURNAL).read_bytes()
+
+                def interrupt_rename(path: Path, target: Path, failure_point: str = point):
+                    result = real_rename(path, target)
+                    if (failure_point == "copy" and path.name == "arena-preserved-layout") or (
+                        failure_point == "log" and path.name == "arena-transplant.log"
+                    ):
+                        raise OSError("fixture interrupted after rename")
+                    return result
+
+                def interrupt_save(path: Path, value: dict[str, object], failure_point: str = point):
+                    real_save(path, value)
+                    if (failure_point == "journal" and value.get("phase") == "ARENA_TRANSPLANT_RESTARTING") or (
+                        failure_point == "receipt" and path.name == "failed-journal.json"
+                    ):
+                        raise OSError("fixture interrupted after save")
+
+                with (
+                    patch.object(Path, "rename", interrupt_rename),
+                    patch.object(restore, "save_json", interrupt_save),
+                    self.assertRaisesRegex(OSError, "fixture interrupted"),
+                ):
+                    restore.restart_arenas(staging, candidate, modern, proof)
+                pending = json.loads((staging / restore.JOURNAL).read_text())
+                self.assertEqual(pending["phase"], "ARENA_TRANSPLANT_RESTARTING")
+                restore.restart_arenas(staging, candidate, modern, proof)
+                completed = json.loads((staging / restore.JOURNAL).read_text())
+                self.assertEqual(completed["phase"], "NATIVE_HERITAGE_PRESERVED")
+                self.assertNotIn("arenaRestart", completed)
+                self.assertEqual(len(completed["arenaTransplantRestarts"]), 1)
+                archive = staging / completed["arenaTransplantRestarts"][0]["archive"]
+                self.assertEqual((archive / "failed-journal.json").read_bytes(), original)
+                self.assertEqual((archive / "transplant.log").read_text(), "failed before writes\n")
+
     def activation_fixture(self):
         staging, modern = self.root / "stage", self.root / "modern"
         source = staging / "arena-preserved-layout/world"

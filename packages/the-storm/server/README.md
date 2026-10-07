@@ -274,7 +274,9 @@ Keep the exported backup in a separate directory outside the historical staging
 tree. If a transplant fails before writing its private output, `restart-arenas`
 rechecks the catalog, candidate, backup proof and both trees, then archives the
 failed copy and log. It refuses an output that differs from the historical input;
-it cannot reset or authorize a production installation.
+it cannot reset or authorize a production installation. A recorded
+`ARENA_TRANSPLANT_RESTARTING` checkpoint resumes the same archive after an
+interruption, revalidating the inputs, output and log before continuing.
 
 Activation preparation preserves the historical overworld and transplanted
 columns, then copies the three retained arena dimensions byte for byte. Modern
