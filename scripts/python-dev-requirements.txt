@@ -1,5 +1,5 @@
 # Union of every inline uv-script dependency header across the repo's .py
-# files, plus the bare-python3 monitoring exporters' imports. Used ONLY to
+# files, standalone Python projects, and monitoring exporters' imports. Used ONLY to
 # give pyright a resolvable environment (locally: `uv venv && uv pip install
 # -r scripts/python-dev-requirements.txt`; CI: baked into the pyright check
 # container). Scripts themselves still declare their own deps inline for
@@ -32,3 +32,10 @@ types-boto3
 types-requests
 types-PyYAML
 types-six
+# Red Warfare's standalone trainer (packages/the-storm/tools/learning).
+# Runtime installs remain governed by its pyproject.toml and uv.lock.
+numpy>=2.2,<3
+torch>=2.9,<3
+onnx>=1.19,<2
+onnxruntime>=1.23,<2
+onnxscript>=0.5,<1
