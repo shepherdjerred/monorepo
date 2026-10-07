@@ -15,6 +15,7 @@ import {
   asOptionalString,
   EXCLUDED_TABLES,
   EXTRA_JSON_COLUMNS,
+  PRESERVED_WORK_ID_COLUMNS,
   TRACKED_SOURCES,
 } from "./support.ts";
 
@@ -144,6 +145,9 @@ export async function auditForUnregistered(
   const registeredKeys = new Set(
     registered.map((c) => `${c.table}.${c.column}`),
   );
+  const preservedKeys = new Set(
+    PRESERVED_WORK_ID_COLUMNS.map((c) => `${c.table}.${c.column}`),
+  );
   const offenders: string[] = [];
 
   for (const table of await db.listTables()) {
@@ -151,7 +155,8 @@ export async function auditForUnregistered(
       continue;
     }
     for (const column of await db.listTextColumns(table)) {
-      if (registeredKeys.has(`${table}.${column}`)) {
+      const key = `${table}.${column}`;
+      if (registeredKeys.has(key) || preservedKeys.has(key)) {
         continue;
       }
       if (await columnHoldsAny(db, table, column)) {

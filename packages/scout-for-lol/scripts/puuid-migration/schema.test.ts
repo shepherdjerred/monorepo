@@ -93,3 +93,68 @@ test("SQLite answers a query over the missing column instead of rejecting it", a
   expect(rows).toEqual([{ v: "identity", t: "capturedAt" }]);
   await db.close();
 });
+
+test("discovery registers current mastery and durable payload columns", async () => {
+  const db = await openWith([
+    `CREATE TABLE "ChampionMasterySnapshot" ("puuid" TEXT PRIMARY KEY, "entriesJson" TEXT)`,
+    `CREATE TABLE "ScoutWorkflowStart" ("requestId" TEXT PRIMARY KEY, "requestedWorkflowId" TEXT, "inputPayload" TEXT)`,
+    `CREATE TABLE "MatchNotificationIntent" ("intentKey" TEXT PRIMARY KEY, "payload" TEXT)`,
+    `CREATE TABLE "MatchSettlementAnnouncement" ("riotMatchId" TEXT, "family" TEXT, "itemKey" TEXT, "payload" TEXT, PRIMARY KEY ("riotMatchId", "family", "itemKey"))`,
+  ]);
+  const { discoverColumns } = await import("./discovery.ts");
+  const columns = await discoverColumns(db);
+  expect(columns.filter((column) => column.kind === "json")).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        table: "ChampionMasterySnapshot",
+        column: "entriesJson",
+      }),
+      expect.objectContaining({
+        table: "ScoutWorkflowStart",
+        column: "inputPayload",
+      }),
+      expect.objectContaining({
+        table: "MatchNotificationIntent",
+        column: "payload",
+      }),
+      expect.objectContaining({
+        table: "MatchSettlementAnnouncement",
+        column: "payload",
+      }),
+    ]),
+  );
+  await db.close();
+});
+
+test("the audit preserves exact durable keys without exempting other work data", async () => {
+  const identity = "p".repeat(78);
+  const db = await openWith([
+    `CREATE TABLE "ScoutTemporalWork" ("id" TEXT PRIMARY KEY, "payload" TEXT, "lastError" TEXT)`,
+    `CREATE TABLE "ScoutWorkflowStart" ("requestId" TEXT PRIMARY KEY, "requestedWorkflowId" TEXT, "inputPayload" TEXT)`,
+  ]);
+  await db.exec(
+    `INSERT INTO "ScoutTemporalWork" VALUES (${db.param(1)}, '{}', NULL)`,
+    [`champion-mastery:${identity}:123`],
+  );
+  await db.exec(
+    `INSERT INTO "ScoutWorkflowStart" VALUES ('request', ${db.param(1)}, '{}')`,
+    [`scout-detached-work:champion-mastery:${identity}:123`],
+  );
+  const { auditForUnregistered, discoverColumns } =
+    await import("./discovery.ts");
+  const columns = await discoverColumns(db);
+  await expect(auditForUnregistered(db, columns)).resolves.toBeUndefined();
+  expect(
+    columns.some(
+      (column) =>
+        column.column === "id" || column.column === "requestedWorkflowId",
+    ),
+  ).toBe(false);
+  await db.exec(`UPDATE "ScoutTemporalWork" SET "lastError"=${db.param(1)}`, [
+    identity,
+  ]);
+  await expect(auditForUnregistered(db, columns)).rejects.toThrow(
+    /ScoutTemporalWork\.lastError/,
+  );
+  await db.close();
+});
