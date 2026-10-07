@@ -1,0 +1,43 @@
+{
+  "version": 2,
+  "contract": "rwf-combat-v1",
+  "opponents": ["stationary", "chase", "basic", "authored"],
+  "results": [
+    "waiting",
+    "live",
+    "win",
+    "loss",
+    "draw",
+    "timeout",
+    "stopped",
+    "cancelled"
+  ],
+  "phases": ["LOBBY", "COUNTDOWN", "LIVE", "ENDED", "RESETTING"],
+  "heads": [
+    { "name": "move", "size": 9 },
+    { "name": "jump", "size": 2 },
+    { "name": "sneak", "size": 2 },
+    { "name": "sprint", "size": 2 },
+    { "name": "attack", "size": 2 }
+  ],
+  "required": [
+    "protocol",
+    "contract",
+    "seed",
+    "side",
+    "mode",
+    "opponent",
+    "result",
+    "phase",
+    "match",
+    "dealt",
+    "received",
+    "sampleDealt",
+    "sampleReceived",
+    "sampleTick",
+    "used",
+    "applied",
+    "fallback"
+  ],
+  "optional": ["body", "life", "tick", "elapsed", "hp", "observation"]
+}

@@ -15,7 +15,10 @@ import com.shepherdjerred.thestorm.rwfbots.domain.personality.Archetype;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Style;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Blackboard;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Role;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.Slot;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.SlotKind;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Strategy;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.TeamPlan;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombOwner;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombState;
@@ -41,24 +44,50 @@ final class TacticsCommitmentTest {
           Plan.of(
               Option.TAKE_SLOT, 0, new PlanStep.Route(new Vec3(25.5, 1, 15.5), Stance.AGGRESSIVE)));
 
+  private record Formation(Optional<Vec3> slot, boolean teamed) {}
+
   private static Situation situation(Role role, double enemyDistance, long hurtTick) {
+    return situation(
+        role, enemyDistance, hurtTick, new Formation(Optional.of(new Vec3(25.5, 1, 15.5)), true));
+  }
+
+  private static Situation situation(
+      Role role, double enemyDistance, long hurtTick, Formation formation) {
     var self = combatant(1, RED, SELF).withLastHurtTick(hurtTick);
     var enemy = combatant(2, BLUE, SELF.plus(enemyDistance, 0, 0));
+    var bodies = new java.util.ArrayList<>(List.of(self, enemy));
+    if (formation.teamed()) bodies.add(combatant(3, RED, SELF.plus(0, 0, 4)));
+    var board = Blackboard.open(RED, Strategy.RUSH);
+    if (formation.slot().isPresent()) {
+      var slot =
+          new Slot(
+              "flank-0",
+              SlotKind.FLANK,
+              role,
+              formation.slot().orElseThrow(),
+              enemy.pos(),
+              -1,
+              -1,
+              Optional.empty(),
+              0);
+      board =
+          board.withPlan(
+              new TeamPlan(
+                  Optional.of(Strategy.RUSH),
+                  Optional.of(SELF),
+                  Optional.empty(),
+                  List.of(),
+                  0.5,
+                  List.of(slot),
+                  Map.of(self.id(), slot.key()),
+                  0),
+              0);
+    }
     var snapshot =
         new WorldSnapshot(
-            100,
-            MatchPhase.LIVE,
-            List.of(self, enemy),
-            List.of(),
-            PoisonView.NONE,
-            "synthetic",
-            List.of());
+            100, MatchPhase.LIVE, bodies, List.of(), PoisonView.NONE, "synthetic", List.of());
     return new Situation(
-        self,
-        snapshot,
-        new Percept(PerceptionState.EMPTY, List.of(enemy), 100),
-        Blackboard.open(RED, Strategy.RUSH),
-        role);
+        self, snapshot, new Percept(PerceptionState.EMPTY, List.of(enemy), 100), board, role);
   }
 
   @Test
@@ -68,6 +97,60 @@ final class TacticsCommitmentTest {
           .as("distant detour %s", picked)
           .isEqualTo(Option.TAKE_SLOT);
     }
+  }
+
+  @Test
+  void aFlankKeepsItsAssignmentInCoverAndBetweenCompletedBounds() {
+    var cover =
+        Optional.of(
+            Plan.of(
+                Option.TAKE_SLOT,
+                0,
+                new PlanStep.Cover(Optional.empty(), SELF, SELF.plus(20, 0, 0), 110)));
+    for (var current : List.of(cover, Optional.<Plan>empty())) {
+      for (var picked : List.of(Option.HUNT, Option.ENGAGE, Option.ARM, Option.HELP_ARM)) {
+        assertThat(Tactics.choose(picked, current, situation(Role.ROTATE, 20, -1), Map.of()))
+            .as("unfinished flank in %s when %s picked", current, picked)
+            .isEqualTo(Option.TAKE_SLOT);
+      }
+    }
+  }
+
+  @Test
+  void aCompletedOrUnassignedFlankAndTheLastSurvivorMayChooseAnotherGoal() {
+    for (var point : List.of(Optional.of(SELF), Optional.<Vec3>empty())) {
+      assertThat(
+              Tactics.choose(
+                  Option.HUNT,
+                  ROUTE,
+                  situation(Role.ROTATE, 20, -1, new Formation(point, true)),
+                  Map.of()))
+          .isEqualTo(Option.HUNT);
+    }
+    assertThat(
+            Tactics.choose(
+                Option.ARM,
+                ROUTE,
+                situation(
+                    Role.ROTATE,
+                    20,
+                    -1,
+                    new Formation(Optional.of(new Vec3(25.5, 1, 15.5)), false)),
+                Map.of()))
+        .isEqualTo(Option.ARM);
+  }
+
+  @Test
+  void anExistingFightIsNotCancelledToRejoinAnUnfinishedLane() {
+    var fight =
+        Optional.of(
+            Plan.of(
+                Option.ENGAGE,
+                0,
+                new PlanStep.Fight(
+                    new com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId(2))));
+    assertThat(Tactics.choose(Option.ENGAGE, fight, situation(Role.ROTATE, 20, -1), Map.of()))
+        .isEqualTo(Option.ENGAGE);
   }
 
   @Test

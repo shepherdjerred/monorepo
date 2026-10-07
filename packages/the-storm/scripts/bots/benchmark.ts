@@ -1,21 +1,10 @@
-import { randomBytes } from "node:crypto";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { z } from "zod";
-import { stormModuleConfig } from "@shepherdjerred/mc-harness/sandbox/storm.ts";
-import { paper, serverImage } from "@shepherdjerred/mc-harness/pins.ts";
-import { thirdPartyPlugins } from "#e2e/harness/pins.ts";
-import { startFakeBrain } from "#e2e/harness/fake-brain.ts";
-import { startServer } from "#e2e/harness/server.ts";
-import { RconClient } from "#e2e/harness/rcon.ts";
-import {
-  rwfTestSettings,
-  rwfRecordingSalt,
-} from "#e2e/harness/rwf-settings.ts";
-import { DuelClient, type DuelState } from "#learning/duels.ts";
+import type { DuelClient, DuelState } from "#learning/duels.ts";
+import { frozenManifest, openPaperDuels, root } from "#learning/sandbox.ts";
 
-const root = path.resolve(import.meta.dirname, "../..");
 const args = parseArgs({
   options: {
     matches: { type: "string", default: "100" },
@@ -48,35 +37,6 @@ const out = path.resolve(
 );
 await mkdir(path.dirname(out), { recursive: true });
 await mkdir(out, { recursive: false });
-const content = path.join(root, "server/owned/plugins/TheStorm");
-const token = randomBytes(24).toString("hex");
-const stormJar = path.join(root, "plugin/dist/build/libs/TheStorm.jar");
-const fixturesJar = path.join(
-  root,
-  "plugin/dist/build/libs/TheStormFixtures.jar",
-);
-const frozenFiles = [
-  stormJar,
-  fixturesJar,
-  path.join(content, "rwf.yml"),
-  path.join(content, "rwfbots.yml"),
-  path.join(content, "rwf/kits.yml"),
-  path.join(content, "rwf/maps/training-yard/map.yml"),
-  path.join(content, "rwf/maps/training-yard/blocks.schem"),
-  path.join(content, "rwf/maps/training-yard/nav.rwfnav"),
-  path.join(
-    root,
-    "plugin/modules/rwfbots/src/main/resources/rwf-combat-v1.tsv",
-  ),
-];
-const hashes = await Promise.all(
-  frozenFiles.map(async (file) => ({
-    file: path.relative(root, file),
-    sha256: new Bun.CryptoHasher("sha256")
-      .update(await Bun.file(file).arrayBuffer())
-      .digest("hex"),
-  })),
-);
 await Bun.write(
   path.join(out, "manifest.json"),
   JSON.stringify(
@@ -84,23 +44,7 @@ await Bun.write(
       version: 1,
       matches,
       firstSeed,
-      hashes,
-      engine: "Paper",
-      runtime: {
-        serverImage,
-        paper: {
-          version: paper.version,
-          build: paper.build,
-          sha256: paper.sha256,
-        },
-        plugins: thirdPartyPlugins.map(({ name, version, sha256 }) => ({
-          name,
-          version,
-          sha256,
-        })),
-      },
-      controllerHz: 20,
-      timeoutTicks: 1200,
+      ...(await frozenManifest()),
       candidate: "authored Trooper, skill 1, no habits, authored healing",
       opponent:
         "basic: instant LOS aim, 10 CPS, sprint close to 2.3..2.7, strafe reversal every 20 ticks, no healing or jumping",
@@ -111,50 +55,10 @@ await Bun.write(
     2,
   ),
 );
-let server: Awaited<ReturnType<typeof startServer>> | undefined;
-let rcon: RconClient | undefined;
-const brain = startFakeBrain(token);
-const brainUrl = `http://host.docker.internal:${brain.port.toString()}`;
+let owner: Awaited<ReturnType<typeof openPaperDuels>> | undefined;
 try {
-  server = await startServer({
-    cacheDir: path.join(root, ".cache/e2e/learning"),
-    bootTimeoutMs: 180_000,
-    warmCache: true,
-    stormJar,
-    fixturesJar,
-    ownedConfigDir: content,
-    stormConfig: stormModuleConfig(
-      await Bun.file(path.join(content, "config.yml")).text(),
-      ["economy", "mail", "tracks", "rwf", "rwfbots"],
-    ),
-    rwf: {
-      ...rwfTestSettings,
-      countdown: "PT1S",
-      endLinger: "PT1S",
-      targetCombatants: 2,
-      maxCombatants: 2,
-    },
-    exportRecordingsDir: path.join(out, "recordings"),
-    sweep: {
-      intervalMinutes: 1,
-      redriveAfterMinutes: 0,
-      redriveBackoffMinutes: 0,
-      slaAfterMinutes: 10_080,
-    },
-    agent: { mode: "shadow", reviewSamplePercent: 100 },
-    brain: { baseUrl: brainUrl, token },
-    env: {
-      FLIPT_URL: brainUrl,
-      FLIPT_ENVIRONMENT: "prod",
-      RWF_RECORDING_SALT: rwfRecordingSalt,
-    },
-  });
-  rcon = await RconClient.connect({
-    host: server.info.host,
-    port: server.info.rconPort,
-    password: server.info.rconPassword,
-  });
-  const duels = new DuelClient(rcon);
+  owner = await openPaperDuels(out);
+  const duels = owner.duels;
   await duels.waitFor((state) => state.phase === "LOBBY", 90_000);
   if (args.values.probe) {
     const proof = await probe(duels);
@@ -214,12 +118,7 @@ try {
   console.warn(`Evidence: ${out}`);
   if (matches === 100 && !report.passed) process.exitCode = 1;
 } finally {
-  rcon?.close();
-  try {
-    await server?.stop();
-  } finally {
-    await brain.stop();
-  }
+  await owner?.stop();
 }
 
 async function probe(duels: DuelClient): Promise<Record<string, unknown>> {

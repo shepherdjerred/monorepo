@@ -1,27 +1,24 @@
 import { z } from "zod";
 import type { RconClient } from "#e2e/harness/rcon.ts";
+import protocol from "#learning-wire";
 
 export const DuelStateSchema = z
   .object({
-    protocol: z.literal(1),
-    contract: z.literal("rwf-combat-v1"),
+    protocol: z.literal(protocol.version),
+    contract: z.literal(protocol.contract),
     seed: z.number().int(),
     side: z.enum(["red", "blue"]),
     mode: z.enum(["authored", "external"]),
-    result: z.enum([
-      "waiting",
-      "live",
-      "win",
-      "loss",
-      "draw",
-      "timeout",
-      "stopped",
-      "cancelled",
-    ]),
-    phase: z.enum(["LOBBY", "COUNTDOWN", "LIVE", "ENDED", "RESETTING"]),
+    opponent: z.enum(protocol.opponents),
+    result: z.enum(protocol.results),
+    phase: z.enum(protocol.phases),
     match: z.union([z.uuid(), z.literal("")]),
     dealt: z.number().nonnegative(),
     received: z.number().nonnegative(),
+    sampleDealt: z.number().nonnegative(),
+    sampleReceived: z.number().nonnegative(),
+    sampleTick: z.number().int().nonnegative(),
+    used: z.array(z.number().int().nonnegative()).max(4),
     applied: z.number().int().nonnegative(),
     fallback: z.number().int().nonnegative(),
     body: z.uuid().optional(),
@@ -33,6 +30,18 @@ export const DuelStateSchema = z
   })
   .strict();
 export type DuelState = z.infer<typeof DuelStateSchema>;
+
+if (
+  protocol.version !== 2 ||
+  protocol.contract !== "rwf-combat-v1" ||
+  new Set([...protocol.required, ...protocol.optional]).size !==
+    Object.keys(DuelStateSchema.shape).length ||
+  [...protocol.required, ...protocol.optional].some(
+    (key) => !(key in DuelStateSchema.shape),
+  )
+) {
+  throw new Error("duel validator fields differ from wire contract");
+}
 
 export const ActionSchema = z
   .object({

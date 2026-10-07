@@ -1228,8 +1228,9 @@ optimization and checkpoint selection.
 Choose `--device cpu` or `--device mps` explicitly. An unavailable MPS device
 fails. Each BC invocation has a cooperative wall-clock limit (at most eight
 hours), checked between training and validation windows. Reserve this time
-within the pilot's per-seed budget; these tools do not implement its total
-budget or PPO orchestration. Checkpoint and export directories must be new.
+within the pilot's per-seed budget. The Paper PPO runner described below includes
+BC initialization in its cooperative invocation budget; the three-seed pilot's
+durable total budget requires separate orchestration. Checkpoint and export directories must be new.
 Their manifests pin weights, feature order and the observation contract and
 remain `unaccepted`. ONNX export checks CPU parity for 16 recurrent steps at
 batch sizes 1, 3, 20 and 100; Java inference and combat acceptance require
@@ -1268,8 +1269,12 @@ Draws, stops and 60-second timeouts count as non-wins. A failed 100-trial gate
 exits with status 1 after exporting evidence and removing the server. Short
 runs are diagnostics.
 
-`rwflearn begin <seed> <red|blue> <authored|external>` requires an empty
-training-yard lobby. `rwflearn state` returns a version-1 JSON envelope. Actor
+`rwflearn begin <seed> <red|blue> <authored|external> [stationary|chase|basic|authored]`
+requires an empty training-yard lobby. The optional opponent defaults to the
+frozen basic controller. Stationary does not move or attack; chase closes and
+attacks without strafing; authored uses its normal combat and healing.
+`rwflearn state` returns a version-2 JSON envelope, defined with its action
+layout in `plugin/modules/rwfbots/src/main/resources/rwf-duel.json`. Actor
 input is exclusively its 34-value `observation` vector, ordered by the same TSV
 as human recordings; damage totals and outcomes are separate evaluation data.
 The context fields `tick`, `elapsed` and `hp` describe the last captured frame
@@ -1282,6 +1287,39 @@ noncombat actions stay authored. Missing or expired actions restore authored
 control. `rwflearn cancel` stops only the exact bots-only experiment; experiments
 do not update personality ratings and cannot control the successor match.
 `tools/learning/duels.ts` provides the validated asynchronous RCON client.
+
+The PPO runner owns a disposable Paper server and a Python worker. RCON
+credentials stay in the server owner; the worker receives only validated
+observations and sends control requests over its private process pipes. From
+this package, after building the fixture and plugin jars:
+
+```bash
+bun run bots:ppo --dataset .cache/rwf-dataset --checkpoint .cache/rwf-models/seed-17 --device mps --seed 17 --seconds 3600 --opponent basic --output .cache/rwf-ppo/seed-17
+uv run --project tools/learning --locked python tools/learning/export.py .cache/rwf-ppo/seed-17/learning/final --output .cache/rwf-ppo/seed-17/onnx
+bun run bots:ppo --diagnostic --updates 1 --episodes 2 --seconds 240 --device mps --output .cache/rwf-ppo/diagnostic
+```
+
+Outside diagnostic mode, a genuine human dataset is required. An optional BC
+checkpoint must pin that dataset; otherwise BC initializes the actor within
+the same invocation. PPO uses four epochs, 64-tick recurrent windows, clipped
+policy and value objectives, and imitation from the human training split.
+It recomputes recurrent prefixes with the current weights for every window.
+Validation and test matches do not enter PPO optimization or checkpoint selection.
+
+Damage rewards use cumulative Paper damage sampled before any body acts, with
+`(damage dealt - damage received) / 20`, a `0.001` decision cost, and a `+1/-1`
+terminal win/loss bonus. Aim, item use, healing and navigation remain authored.
+Paper confirms which submitted decisions actually controlled a body; only
+those receive actor loss. Unapplied decisions still train the value function.
+Skipped 20 Hz observations or expired contexts discard the whole episode;
+three consecutive discarded episodes stop collection for repair. Budget
+expiry during an optimizer update restores its starting weights.
+
+Each run freezes the runtime inputs and writes automated rollouts, reports and
+an `unaccepted` actor checkpoint. Diagnostic initialization is synthetic and
+cannot pass a pilot quality gate. The current CLI selects one opponent per
+invocation; curriculum progression, historical opponents, frozen combat gates
+and blind human comparisons belong to the pilot orchestration.
 
 Payouts go through an outbox in `rwf_match_player` and the economy's keyed
 transfers (`rwf:<matchId>:<uuid>`), so a crash between the match ending and
@@ -1527,8 +1565,10 @@ is nearest. Slots go to bots by the Hungarian algorithm over archetype, role
 and kit fit, path distance and a bonus for the slot already held, so
 assignments stick. Tactics then take and hold the slot (ARM targets an unlit
 bomb for the plant slot, a bot beside an unwatched bomb or the last survivor).
-Lane and flank routes stay committed through distant sightings and calls to help arm;
-close contact, recent damage, survival and defusing can interrupt them.
+Unfinished lane and flank assignments stay committed through distant sightings,
+cover stops and the gaps between movement bounds. Close contact, recent damage,
+survival and defusing can interrupt them; an established fight continues, and
+reaching the slot or becoming the last survivor releases the assignment.
 A bot at its slot watches its angle and makes room for nearby teammates.
 Once an enemy the bot saw itself is within 24 blocks it moves up from cover to cover, and
 within 12 pairs alternate mover and holder; it holds its slot from cover,

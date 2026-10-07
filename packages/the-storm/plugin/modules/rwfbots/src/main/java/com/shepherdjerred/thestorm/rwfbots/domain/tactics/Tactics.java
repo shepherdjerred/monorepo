@@ -119,13 +119,14 @@ public final class Tactics {
   static Option choose(
       Option picked, Optional<Plan> current, Situation situation, Map<Option, Double> scores) {
     var now = situation.now();
+    if (current.map(plan -> plan.option() == Option.TAKE_SLOT).orElse(true)
+        && keepsLane(picked, situation)) {
+      return Option.TAKE_SLOT;
+    }
     if (current.isEmpty() || current.orElseThrow().option() == picked) {
       return picked;
     }
     var plan = current.orElseThrow();
-    if (keepsLane(plan, picked, situation)) {
-      return plan.option();
-    }
     var combatSwitch = combatOption(picked) && combatOption(plan.option());
     if (URGENT.contains(picked) && !combatSwitch) {
       return picked;
@@ -138,8 +139,8 @@ public final class Tactics {
     return now - plan.startedTick() < MIN_COMMIT_TICKS ? plan.option() : picked;
   }
 
-  /** A lane or flank is a movement assignment; distant sightings do not cancel it. */
-  private static boolean keepsLane(Plan plan, Option picked, Situation situation) {
+  /** An unfinished lane or flank survives distant sightings, including gaps between bounds. */
+  private static boolean keepsLane(Option picked, Situation situation) {
     var detour =
         picked == Option.HUNT
             || picked == Option.ENGAGE
@@ -156,9 +157,14 @@ public final class Tactics {
     return detour
         && !hurt
         && !close
+        && !situation.isLastAlive()
         && situation.role() == Role.ROTATE
-        && plan.option() == Option.TAKE_SLOT
-        && plan.current() instanceof PlanStep.Route;
+        && situation
+            .slot()
+            .filter(
+                slot ->
+                    slot.pos().horizontalDistance(situation.self().pos()) > Features.SLOT_RADIUS)
+            .isPresent();
   }
 
   private static boolean combatOption(Option option) {
