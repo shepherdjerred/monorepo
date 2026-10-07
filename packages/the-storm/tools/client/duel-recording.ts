@@ -18,7 +18,7 @@ export async function recordDuel(options: {
     seed: number;
     side: "red" | "blue";
     mode: "authored" | "external";
-    opponent: "authored" | "basic";
+    opponent: DuelState["opponent"];
   };
   begin: () => Promise<unknown>;
 }) {
