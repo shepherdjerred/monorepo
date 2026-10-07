@@ -1468,7 +1468,24 @@ bun tools/learning/java-run.ts --model .cache/rwf-java-parity/diagnostic/onnx --
 ```
 
 The parity command independently carries Java hidden and cell state through
-16 steps at batch sizes 1, 3, 20 and 100 against Python expectations. The native
+16 steps at batch sizes 1, 3, 20 and 100 against Python expectations. For an
+existing candidate, verify its exact ONNX bytes without re-exporting:
+
+```bash
+uv run --directory tools/learning --locked python -m promotion.parity --checkpoint "$PWD/.cache/rwf-ppo/diagnostic/learning/final" --actor "$PWD/.cache/rwf-java-parity/diagnostic/onnx" --output "$PWD/.cache/rwf-java-parity/exact-candidate"
+mise exec -- gradle -p plugin :rwfbots:actorParity -PactorParityDirectory="$PWD/.cache/rwf-java-parity/exact-candidate" -PactorParityReceipt="$PWD/.cache/rwf-java-parity/exact-candidate/java-receipt.json"
+```
+
+Preparation copies the candidate bytes, checks the full export metadata against
+the checkpoint, and compares Python and CPU ONNX Runtime with independent
+recurrent state. Java rejects mismatched artifact bindings, missing cases,
+unknown fields and inaccurate outputs. The versioned `rwf-actor-parity.json`
+contract fixes the replay batches, steps and elementwise tolerances. The
+exclusive receipt binds the actor, export manifest, checkpoint, weights,
+observation contract and sample file by SHA-256. It leaves the model unaccepted;
+strength, blind preference, native load and regression gates are still required.
+
+The native
 diagnostic runs both sides against authored and basic opponents with no Python
 action transport. It freezes artifact and runtime hashes, retains every result,
 exports native recordings and checks action accounting. Its counters distinguish

@@ -27,13 +27,15 @@ const fixturesJar = path.join(
 
 export async function frozenManifest() {
   const learning = path.join(root, "tools/learning");
-  const [listing, preference] = await Promise.all([
+  const [listing, preference, promotion] = await Promise.all([
     readdir(learning),
     readdir(path.join(learning, "preference")),
+    readdir(path.join(learning, "promotion")),
   ]);
   const sources = [
     ...listing,
     ...preference.map((file) => `preference/${file}`),
+    ...promotion.map((file) => `promotion/${file}`),
   ]
     .filter((file) => /\.(?:py|ts|toml|lock|json)$/u.test(file))
     .sort();
@@ -51,6 +53,10 @@ export async function frozenManifest() {
       "plugin/modules/rwfbots/src/main/resources/rwf-combat-v1.tsv",
     ),
     path.join(root, "plugin/modules/rwfbots/src/main/resources/rwf-duel.json"),
+    path.join(
+      root,
+      "plugin/modules/rwfbots/src/main/resources/rwf-actor-parity.json",
+    ),
     path.join(
       root,
       "plugin/modules/rwfbots/src/main/resources/rwf-inference-load.json",

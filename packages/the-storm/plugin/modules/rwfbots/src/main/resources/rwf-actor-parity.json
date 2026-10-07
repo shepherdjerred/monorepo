@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "samplesSchema": 2,
+  "receiptSchema": 1,
+  "kind": "rwf-actor-parity",
+  "batches": [1, 3, 20, 100],
+  "steps": 16,
+  "rtol": 0.0001,
+  "atol": 0.00001,
+  "samplesFields": [
+    "schema",
+    "onnx_sha256",
+    "actor_manifest_sha256",
+    "checkpoint_manifest_sha256",
+    "weights_sha256",
+    "contract_sha256",
+    "rtol",
+    "atol",
+    "cases"
+  ]
+}

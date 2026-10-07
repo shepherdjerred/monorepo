@@ -7,18 +7,24 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.json.JsonMapper;
 
 /** Independent Java recurrent replay of Python expectations; usable without Paper. */
 public final class ActorParity {
-  private static final JsonMapper JSON =
-      JsonMapper.builder().enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES).build();
+  private static final JsonMapper JSON = ActorParityEvidence.JSON;
 
   private ActorParity() {}
 
   public record Samples(
-      int schema, String onnx_sha256, double rtol, double atol, List<Case> cases) {}
+      int schema,
+      String onnx_sha256,
+      String actor_manifest_sha256,
+      String checkpoint_manifest_sha256,
+      String weights_sha256,
+      String contract_sha256,
+      double rtol,
+      double atol,
+      List<Case> cases) {}
 
   public record Case(int rows, List<Step> steps) {}
 
@@ -32,22 +38,28 @@ public final class ActorParity {
 
   public static Result verify(Path directory, Path samplesFile) {
     try {
+      var binding = ActorParityEvidence.binding(directory, samplesFile);
       var samples = JSON.readValue(Files.readString(samplesFile), Samples.class);
-      if (samples.schema() != 1
-          || samples.rtol() != 1e-4
-          || samples.atol() != 1e-5
-          || !samples
-              .onnx_sha256()
-              .equals(ActorManifest.sha256(Files.readAllBytes(directory.resolve("actor.onnx")))))
+      var contract = ActorParityEvidence.CONTRACT;
+      if (samples.schema() != contract.samplesSchema()
+          || samples.rtol() != contract.rtol()
+          || samples.atol() != contract.atol()
+          || !samples.onnx_sha256().equals(binding.onnx_sha256())
+          || !samples.actor_manifest_sha256().equals(binding.actor_manifest_sha256())
+          || !samples.checkpoint_manifest_sha256().equals(binding.checkpoint_manifest_sha256())
+          || !samples.weights_sha256().equals(binding.weights_sha256())
+          || !samples.contract_sha256().equals(binding.contract_sha256()))
         throw new IllegalArgumentException("invalid parity sample contract or model hash");
       var batches = samples.cases().stream().map(Case::rows).toList();
-      if (!batches.equals(List.of(1, 3, 20, 100)))
+      if (!batches.equals(contract.batches()))
         throw new IllegalArgumentException("incomplete parity batch cases");
       double maximum = 0;
       try (var actor = OnnxActor.load(directory, ActorManifest.Acceptance.UNACCEPTED_DIAGNOSTIC)) {
         for (var sample : samples.cases()) maximum = Math.max(maximum, replay(actor, sample));
       }
-      return new Result(batches, 16, maximum);
+      if (!binding.equals(ActorParityEvidence.binding(directory, samplesFile)))
+        throw new IllegalArgumentException("parity artifacts changed during replay");
+      return new Result(batches, contract.steps(), maximum);
     } catch (IOException failure) {
       throw new UncheckedIOException(failure);
     }
@@ -60,6 +72,8 @@ public final class ActorParity {
     var cell = new ActorMatrix(sample.rows(), 128, new float[sample.rows() * 128]);
     double maximum = 0;
     for (var step : sample.steps()) {
+      if (step.observation().size() != sample.rows())
+        throw new IllegalArgumentException("parity observation batch size mismatch");
       var output =
           actor.forward(new RecurrentActor.Input(matrix(step.observation(), 34), hidden, cell));
       maximum = Math.max(maximum, compare(output.logits(), matrix(step.logits(), 17)));
@@ -98,8 +112,15 @@ public final class ActorParity {
   }
 
   public static void main(String[] args) {
-    if (args.length != 2)
-      throw new IllegalArgumentException("ActorParity <onnx directory> <samples.json>");
-    System.out.println(JSON.writeValueAsString(verify(Path.of(args[0]), Path.of(args[1]))));
+    if (args.length != 2 && args.length != 3)
+      throw new IllegalArgumentException(
+          "ActorParity <onnx directory> <samples.json> [receipt.json]");
+    var directory = Path.of(args[0]);
+    var samples = Path.of(args[1]);
+    var result =
+        args.length == 3
+            ? ActorParityEvidence.write(directory, samples, Path.of(args[2]))
+            : verify(directory, samples);
+    System.out.println(JSON.writeValueAsString(result));
   }
 }
