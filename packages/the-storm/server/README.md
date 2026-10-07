@@ -297,6 +297,8 @@ input checkpoints remain immutable.
 | `fork-native-layout`        | Completed, sealed, unticked archive preparation                       | New private staging reusing the exact native archive conversion; old receipts remain intact      |
 | `preserve-heritage`         | Verified native layout                                                | Every saved archive chunk preserved with underground upgrade disabled                            |
 | `retain-arena-worlds`       | Heritage preservation and independently verified modern backup        | Sealed Settlement, Rustworks and RWF worlds; no overworld overlay                                |
+| `transplant-arenas`         | Heritage preservation and independently verified modern backup        | Optional reviewed arena-column overlay                                                           |
+| `restart-arenas`            | Failed transplant whose output matches its historical input           | Reverified inputs and archived failed copy and log                                               |
 | `prepare-database`          | Verified separate arenas and the same modern backup and candidate jar | Fresh candidate Flyway histories, retained identity/moderation rows and proven historical owners |
 | `prepare-activation`        | Verified arena and identity checkpoints and the same modern backup    | Independent assembled world retaining native RWF, Settlement and Rustworks dimensions            |
 | `verify-copy`               | Two independent stopped data trees                                    | Complete file hash comparison; symlinks and shared hard links are rejected                       |
@@ -319,6 +321,22 @@ The historical overworld contains only the archive's original structures.
 `retain-arena-worlds` preserves the modern arenas in their existing separate
 dimensions. The older `transplant-arenas` operation remains available for
 explicitly reviewed overlays; it is not part of a pristine archive restoration.
+
+Arena merging replaces full-height columns in the catalog's reviewed footprints.
+It preserves surrounding blocks, auxiliary records and historical companion data.
+Biome cells cover 4×4 columns. Complete cells take the modern arena biome;
+partial cells keep the historical biome so surrounding historical columns remain
+unchanged. Every differing partial cell is recorded in `biomeBoundary` in the
+transplant receipt. Arena blocks still use the exact approved columns.
+Referenced modern map IDs require a reviewed map merge before transplantation
+can succeed. The tool refuses unexplained
+chunk-wide persistent data in partial chunks.
+
+Keep the exported backup in a separate directory outside the historical staging
+tree. If a transplant fails before writing its private output, `restart-arenas`
+rechecks the catalog, candidate, backup proof and both trees, then archives the
+failed copy and log. It refuses an output that differs from the historical input;
+it cannot reset or authorize a production installation.
 
 Activation preparation preserves the historical overworld, then copies the
 three retained arena dimensions byte for byte. Modern
