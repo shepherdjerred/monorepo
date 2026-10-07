@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto";
+import { readdir } from "node:fs/promises";
 import path from "node:path";
 import { stormModuleConfig } from "@shepherdjerred/mc-harness/sandbox/storm.ts";
 import { paper, serverImage } from "@shepherdjerred/mc-harness/pins.ts";
@@ -21,6 +22,11 @@ const fixturesJar = path.join(
 );
 
 export async function frozenManifest() {
+  const learning = path.join(root, "tools/learning");
+  const listing = await readdir(learning);
+  const sources = listing
+    .filter((file) => /\.(?:py|ts|toml|lock|json)$/u.test(file))
+    .sort();
   const files = [
     stormJar,
     fixturesJar,
@@ -35,6 +41,7 @@ export async function frozenManifest() {
       "plugin/modules/rwfbots/src/main/resources/rwf-combat-v1.tsv",
     ),
     path.join(root, "plugin/modules/rwfbots/src/main/resources/rwf-duel.json"),
+    ...sources.map((file) => path.join(learning, file)),
   ];
   const hashes = await Promise.all(
     files.map(async (file) => ({

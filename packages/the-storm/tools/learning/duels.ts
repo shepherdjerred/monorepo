@@ -2,6 +2,18 @@ import { z } from "zod";
 import type { RconClient } from "#e2e/harness/rcon.ts";
 import protocol from "#learning-wire";
 
+const OpponentFrameSchema = z
+  .object({
+    body: z.uuid(),
+    life: z.number().int().nonnegative(),
+    tick: z.number().int().nonnegative(),
+    used: z.array(z.number().int().nonnegative()).max(4),
+    applied: z.number().int().nonnegative(),
+    fallback: z.number().int().nonnegative(),
+    observation: z.array(z.number().min(-1).max(1)).length(34).optional(),
+  })
+  .strict();
+
 export const DuelStateSchema = z
   .object({
     protocol: z.literal(protocol.version),
@@ -27,17 +39,23 @@ export const DuelStateSchema = z
     elapsed: z.number().int().nonnegative().optional(),
     hp: z.number().min(0).max(20).optional(),
     observation: z.array(z.number().min(-1).max(1)).length(34).optional(),
+    opponentFrame: OpponentFrameSchema.optional(),
   })
   .strict();
 export type DuelState = z.infer<typeof DuelStateSchema>;
 
 if (
-  protocol.version !== 2 ||
+  protocol.version !== 3 ||
   protocol.contract !== "rwf-combat-v1" ||
   new Set([...protocol.required, ...protocol.optional]).size !==
     Object.keys(DuelStateSchema.shape).length ||
   [...protocol.required, ...protocol.optional].some(
     (key) => !(key in DuelStateSchema.shape),
+  ) ||
+  new Set([...protocol.frameRequired, ...protocol.frameOptional]).size !==
+    Object.keys(OpponentFrameSchema.shape).length ||
+  [...protocol.frameRequired, ...protocol.frameOptional].some(
+    (key) => !(key in OpponentFrameSchema.shape),
   )
 ) {
   throw new Error("duel validator fields differ from wire contract");

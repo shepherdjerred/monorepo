@@ -6,6 +6,7 @@ import argparse
 import contextlib
 import copy
 import json
+import math
 import random
 import sys
 import time
@@ -13,6 +14,7 @@ from pathlib import Path
 
 import torch
 
+from curriculum import STAGES, Curriculum, History
 from data import Dataset, Sequence
 from paper import Discontinuity, OwnerConsole, collect
 from policy import FEATURES, device, digest, load_checkpoint, mapping, write_checkpoint
@@ -42,10 +44,21 @@ def main() -> None:
     parser.add_argument("--device", required=True, choices=("cpu", "mps"))
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--max-seconds", type=float, default=3600)
+    parser.add_argument("--deadline-ms", type=float, required=True)
+    parser.add_argument("--curriculum", action="store_true")
     parser.add_argument("--updates", type=int, default=100000)
     parser.add_argument("--episodes", type=int, default=4)
     parser.add_argument(
-        "--opponent", choices=("stationary", "chase", "basic", "authored"), default="basic"
+        "--opponent",
+        choices=(
+            "stationary",
+            "chase",
+            "basic",
+            "authored",
+            "authored-pressure",
+            "authored-patient",
+        ),
+        default="basic",
     )
     parser.add_argument("--diagnostic", action="store_true")
     args = parser.parse_args()
@@ -56,23 +69,34 @@ def main() -> None:
         or not 2 <= args.episodes <= 32
         or args.episodes % 2
         or args.output.exists()
+        or not math.isfinite(args.deadline_ms)
     ):
         parser.error("invalid settings, budget or existing output")
     if args.diagnostic and (
-        args.dataset or args.checkpoint or args.max_seconds > 300 or args.updates != 1
+        args.dataset
+        or args.checkpoint
+        or args.max_seconds > 300
+        or args.updates != (7 if args.curriculum else 1)
     ):
         parser.error(
-            "diagnostic mode requires one update, at most 300 seconds, and no human inputs"
+            "diagnostic requires one update (seven with curriculum), "
+            "at most 300 seconds, and no human inputs"
         )
     if not args.diagnostic and args.dataset is None:
         parser.error("a genuine human dataset is required")
     began = time.monotonic()
-    deadline = began + args.max_seconds
+    remaining = min(args.max_seconds, args.deadline_ms / 1000 - time.time())
+    # Reserve serialization time inside the owner's hard budget. Its watchdog
+    # terminates this process at the absolute deadline, even if imports hung.
+    if remaining <= 15:
+        parser.error("owner budget expired before worker initialization")
+    deadline = began + remaining - 15
     where = device(args.device)
     torch.set_num_threads(1)
     torch.manual_seed(args.seed)
     generator = torch.Generator().manual_seed(args.seed)
     randomizer = random.Random(args.seed)
+    history_randomizer = random.Random(args.seed + 1_000_000_007)
     data = synthetic() if args.diagnostic else Dataset.load(args.dataset)
     args.output.mkdir(parents=True, exist_ok=False)
     if args.checkpoint:
@@ -120,6 +144,13 @@ def main() -> None:
         "ready", {"diagnostic": args.diagnostic, "device": args.device, "dataset": data.fingerprint}
     )
     console = OwnerConsole()
+    # This handshake waits for the owner's Paper boot before allocating the
+    # remaining PPO window. Boot and BC are still charged to the outer budget.
+    console.command("state")
+    curriculum = Curriculum(time.monotonic(), deadline, args.diagnostic)
+    history = History(args.output / "history", data.fingerprint, args.seed)
+    if args.curriculum:
+        history.freeze(model.actor, 0, "bc")
     games: list[dict[str, object]] = []
     updates: list[dict[str, object]] = []
     censored: list[str] = []
@@ -127,14 +158,21 @@ def main() -> None:
     expired = False
     try:
         while len(updates) < args.updates and time.monotonic() < deadline:
+            previous_stage = curriculum.stage
+            opponent = curriculum.choose(time.monotonic()) if args.curriculum else args.opponent
+            if args.curriculum and curriculum.stage != previous_stage:
+                history.freeze(model.actor, len(updates), STAGES[previous_stage])
             episodes = []
+            historical = None
             while len(episodes) < args.episodes:
                 seed = args.seed + len(games) // 2
                 side = "red" if len(games) % 2 == 0 else "blue"
                 attempts += 1
+                if opponent == "historical" and len(episodes) % 2 == 0:
+                    historical = history.select(history_randomizer)
                 try:
                     episode, report = collect(
-                        console, model, generator, seed, side, where, deadline, args.opponent
+                        console, model, generator, seed, side, where, deadline, opponent, historical
                     )
                 except Discontinuity as error:
                     censored.append(str(error))
@@ -174,6 +212,10 @@ def main() -> None:
                 model.load_state_dict(before_update, strict=True)
                 raise
             updates.append(report)
+            if args.curriculum:
+                curriculum.completed()
+                if len(updates) % 25 == 0:
+                    history.freeze(model.actor, len(updates), STAGES[curriculum.stage])
             emit("update", report)
     except BudgetExpired:
         expired = True
@@ -189,6 +231,7 @@ def main() -> None:
         "initial_bc_weights_sha256": initial_sha,
         "seed": args.seed,
         "budget_seconds": args.max_seconds,
+        "owner_deadline_ms": args.deadline_ms,
         "elapsed_seconds": time.monotonic() - began,
         "expired": expired,
         "games": games,
@@ -197,12 +240,22 @@ def main() -> None:
         "imitation_split": "train",
         "test_used_for_selection": False,
         "pilot_acceptance_checked": False,
+        "curriculum": curriculum.report() if args.curriculum else None,
+        "historical_snapshots": len(history.entries),
     }
     write_checkpoint(model.actor, args.output / "final", report, "rwf-trooper-ppo")
     (args.output / "report.json").write_text(
         json.dumps(report, indent=2, allow_nan=False) + "\n", encoding="utf-8"
     )
-    emit("complete", {"games": len(games), "updates": len(updates), "expired": expired})
+    emit(
+        "complete",
+        {
+            "games": len(games),
+            "updates": len(updates),
+            "expired": expired,
+            "curriculum_complete": curriculum.complete() if args.curriculum else None,
+        },
+    )
 
 
 if __name__ == "__main__":

@@ -16,7 +16,9 @@ record DuelProtocol(
     List<String> phases,
     List<Head> heads,
     List<String> required,
-    List<String> optional) {
+    List<String> optional,
+    List<String> frameRequired,
+    List<String> frameOptional) {
   record Head(String name, int size) {}
 
   static DuelProtocol load() {
@@ -28,7 +30,7 @@ record DuelProtocol(
     try (var stream = CombatHarness.class.getResourceAsStream("/rwf-duel.json")) {
       if (stream == null) throw new IllegalStateException("duel wire contract missing");
       var protocol = json.readValue(stream, DuelProtocol.class);
-      if (protocol.version() != 2
+      if (protocol.version() != 3
           || !protocol.contract().equals("rwf-combat-v1")
           || protocol.heads().size() != 5
           || !protocol.heads().stream()
@@ -52,5 +54,14 @@ record DuelProtocol(
         || state.keySet().stream()
             .anyMatch(key -> !required.contains(key) && !optional.contains(key)))
       throw new IllegalStateException("duel state fields differ from wire contract");
+    if (state.containsKey("opponentFrame")) validateFrame(state.get("opponentFrame"));
+  }
+
+  private void validateFrame(Object value) {
+    if (!(value instanceof Map<?, ?> frame)
+        || !frame.keySet().containsAll(frameRequired)
+        || frame.keySet().stream()
+            .anyMatch(key -> !frameRequired.contains(key) && !frameOptional.contains(key)))
+      throw new IllegalStateException("opponent fields differ from wire contract");
   }
 }

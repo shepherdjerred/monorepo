@@ -14,7 +14,7 @@ from uuid import UUID
 import torch
 from torch import Tensor
 
-from policy import WIRE, array, integer, mapping, observation
+from policy import WIRE, Policy, array, integer, mapping, observation
 from ppo import ActorCritic, Episode, sample
 from train import BudgetExpired
 
@@ -42,10 +42,44 @@ class OwnerConsole:
             if response["error"] in (
                 "observation context expired",
                 "stale, duplicate or wrong-context action",
+                "duel no longer live",
             ):
                 raise Discontinuity(str(response["error"]))
             raise RuntimeError(str(response["error"]))
         return mapping(response["state"])
+
+
+@dataclass(frozen=True)
+class OpponentFrame:
+    body: str
+    life: int
+    tick: int
+    observations: list[float] | None
+    used: list[int]
+
+    @classmethod
+    def parse(cls, raw: dict[str, object], live: bool) -> OpponentFrame:
+        required = set(array(WIRE["frameRequired"]))
+        optional = set(array(WIRE["frameOptional"]))
+        if not required.issubset(raw) or set(raw) - required - optional:
+            raise ValueError("opponent frame fields differ from wire contract")
+        body = raw["body"]
+        if not isinstance(body, str) or str(UUID(body)) != body:
+            raise ValueError("invalid historical body identity")
+        life = integer(raw["life"], 0, 2**31 - 1)
+        tick = integer(raw["tick"], 0, 2**63 - 1)
+        used = [integer(value, 0, tick) for value in array(raw["used"])]
+        if len(used) > 4 or used != sorted(set(used)):
+            raise ValueError("invalid historical control acknowledgements")
+        for name in ("applied", "fallback"):
+            integer(raw[name], 0, 2**63 - 1)
+        return cls(body, life, tick, observation(raw["observation"]) if live else None, used)
+
+
+@dataclass(frozen=True)
+class FrozenOpponent:
+    actor: Policy
+    weights_sha256: str
 
 
 @dataclass(frozen=True)
@@ -60,6 +94,7 @@ class State:
     dealt: float
     received: float
     used: list[int]
+    opponent_frame: OpponentFrame | None
 
     @classmethod
     def parse(cls, raw: dict[str, object]) -> State:
@@ -75,6 +110,12 @@ class State:
             raise ValueError("unknown duel result")
         if phase not in array(WIRE["phases"]):
             raise ValueError("unknown duel phase")
+        if (
+            raw["opponent"] not in array(WIRE["opponents"])
+            or raw["mode"] not in ("authored", "external")
+            or raw["side"] not in ("red", "blue")
+        ):
+            raise ValueError("invalid Paper duel configuration")
         match = raw["match"]
         body = raw.get("body", "")
         if not isinstance(match, str) or not isinstance(body, str):
@@ -102,8 +143,21 @@ class State:
         if len(used) > 4 or used != sorted(set(used)):
             raise ValueError("invalid applied-control acknowledgements")
         values = observation(raw["observation"]) if result == "live" else None
+        opponent = None
+        if "opponentFrame" in raw:
+            if raw["opponent"] != "historical":
+                raise ValueError("unexpected historical opponent frame")
+            opponent = OpponentFrame.parse(mapping(raw["opponentFrame"]), result == "live")
+        if (
+            result == "live"
+            and raw["opponent"] == "historical"
+            and (opponent is None or opponent.tick != tick or opponent.body == body)
+        ):
+            raise ValueError("historical observations are not two coherent fair frames")
         assert isinstance(result, str) and isinstance(phase, str)
-        return cls(result, phase, match, body, life, tick, values, metrics[0], metrics[1], used)
+        return cls(
+            result, phase, match, body, life, tick, values, metrics[0], metrics[1], used, opponent
+        )
 
 
 class Discontinuity(ValueError):
@@ -128,6 +182,7 @@ def collect(
     where: torch.device,
     deadline: float,
     opponent: str = "basic",
+    historical: FrozenOpponent | None = None,
 ) -> tuple[Episode, dict[str, object]]:
     """Twenty-Hz queued actions; rewards are cut before any body acts at the next tick.
 
@@ -139,6 +194,8 @@ def collect(
         raise ValueError("invalid duel seed or side")
     if opponent not in array(WIRE["opponents"]):
         raise ValueError("unknown duel opponent")
+    if (opponent == "historical") != (historical is not None):
+        raise ValueError("historical duels require a frozen opponent")
     wait(console, lambda state: state.phase == "LOBBY", min(deadline, time.monotonic() + 30))
     console.command(f"begin {seed} {side} external {opponent}")
     started = time.monotonic()
@@ -150,11 +207,18 @@ def collect(
     ticks: list[int] = []
     confirmed: set[int] = set()
     inference_ms: list[float] = []
+    historical_ticks: list[int] = []
+    historical_confirmed: set[int] = set()
+    historical_generator = torch.Generator().manual_seed(seed + 1_000_000_007)
+    historical_hidden, historical_cell = model.actor.initial(1, torch.device("cpu"))
     model.eval()
     hidden, cell = model.actor.initial(1, where)
     try:
         state = wait(console, lambda item: item.result == "live", min(deadline, started + 15))
         identity = state.match, state.body, state.life
+        historical_identity = (
+            (state.opponent_frame.body, state.opponent_frame.life) if state.opponent_frame else None
+        )
         while state.result == "live":
             if time.monotonic() >= deadline:
                 raise BudgetExpired
@@ -166,14 +230,32 @@ def collect(
             with torch.no_grad():
                 output = model.forward(obs, hidden, cell)
                 chosen, log_prob = sample(output.logits, generator)
-            inference_ms.append((time.monotonic() - before) * 1000)
             hidden, cell = output.hidden, output.cell
             action = [int(value) for value in chosen[0].tolist()]
-            console.command(
-                " ".join(
-                    map(str, ["act", state.match, state.body, state.life, state.tick, *action])
-                )
-            )
+            fields: list[str | int] = [state.match, state.body, state.life, state.tick, *action]
+            if historical is not None:
+                other = state.opponent_frame
+                assert other is not None and other.observations is not None
+                if (other.body, other.life) != historical_identity:
+                    raise Discontinuity("historical body or life changed")
+                with torch.no_grad():
+                    frozen_output = historical.actor.forward(
+                        torch.tensor(other.observations, dtype=torch.float32)[None],
+                        historical_hidden,
+                        historical_cell,
+                    )
+                    frozen_action, _ = sample(frozen_output.logits, historical_generator)
+                historical_hidden, historical_cell = frozen_output.hidden, frozen_output.cell
+                fields += [
+                    state.match,
+                    other.body,
+                    other.life,
+                    other.tick,
+                    *map(int, frozen_action[0].tolist()),
+                ]
+                historical_ticks.append(other.tick)
+            inference_ms.append((time.monotonic() - before) * 1000)
+            console.command(" ".join(map(str, ["acts" if historical else "act", *fields])))
             following = wait(
                 console,
                 lambda item, previous_tick=state.tick: (
@@ -188,6 +270,8 @@ def collect(
             ):
                 raise Discontinuity("Paper skipped a twenty-Hz observation")
             confirmed.update(following.used)
+            if following.opponent_frame:
+                historical_confirmed.update(following.opponent_frame.used)
             dealt = following.dealt - state.dealt
             received = following.received - state.received
             if dealt < 0 or received < 0:
@@ -232,6 +316,10 @@ def collect(
             "seconds": time.monotonic() - started,
             "max_inference_ms": max(inference_ms),
             "reward": sum(rewards),
+            "historical_weights_sha256": historical.weights_sha256 if historical else None,
+            "historical_confirmed_controls": sum(
+                tick in historical_confirmed for tick in historical_ticks
+            ),
         }
     finally:
         console.command("cancel")

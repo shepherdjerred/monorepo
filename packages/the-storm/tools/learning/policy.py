@@ -57,7 +57,7 @@ def observation(value: object) -> list[float]:
 
 
 WIRE = mapping(json.loads(RESOURCE.with_name("rwf-duel.json").read_text(encoding="utf-8")))
-if WIRE["version"] != 2 or WIRE["contract"] != CONTRACT:
+if WIRE["version"] != 3 or WIRE["contract"] != CONTRACT:
     raise ValueError("unsupported duel wire contract")
 HEADS: dict[str, int] = {}
 for descriptor in array(WIRE["heads"]):
