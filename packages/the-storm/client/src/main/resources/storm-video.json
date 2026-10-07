@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "video": {
+    "width": 1280,
+    "height": 720,
+    "fps": 30,
+    "maximumFrames": 1800,
+    "pendingImages": 8
+  },
+  "source": "minecraft-framebuffer",
+  "cameraTolerance": { "position": 0.000001, "degrees": 0.0001 },
+  "kind": "rwf-rendered-frames",
+  "status": ["name", "state", "captured", "total", "error", "receipt"],
+  "receipt": [
+    "schema",
+    "kind",
+    "acceptance",
+    "source",
+    "fps",
+    "requestedFrames",
+    "complete",
+    "error",
+    "frames"
+  ],
+  "written": ["frame", "file", "sha256"],
+  "frame": ["index", "elapsedNanos", "worldTick", "camera"],
+  "camera": ["position", "yaw", "pitch", "fov", "hud", "nameplates"]
+}

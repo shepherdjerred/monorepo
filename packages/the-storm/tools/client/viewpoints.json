@@ -40,5 +40,6 @@
     "position": [-78.5, 73, -79.5],
     "yaw": -45,
     "pitch": 5
-  }
+  },
+  "recording": { "position": [1600.5, 76, 2106.5], "yaw": 180, "pitch": 35, "world": "world" }
 }

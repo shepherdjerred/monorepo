@@ -52,6 +52,25 @@ async function fixture(rcon: RconClient, name: string): Promise<string> {
       "data get entity @e[tag=storm_preview_fixture,limit=1] Health",
     );
   }
+  if (name === "recording") {
+    await rcon.command("gamemode spectator StormPreview");
+    await rcon.command("kill @e[tag=storm_recording_fixture]");
+    await rcon.command("setblock 1601 73 2101 minecraft:campfire[lit=true]");
+    await rcon.command(
+      'summon minecraft:pig 1602.5 73 2101.5 {NoAI:1b,Silent:1b,Invulnerable:1b,CustomName:"StormCaptureLabel",CustomNameVisible:1b,Tags:["storm_recording_fixture"]}',
+    );
+    const label = await rcon.command(
+      "data get entity @e[tag=storm_recording_fixture,limit=1] CustomName",
+    );
+    if (!label.includes("StormCaptureLabel"))
+      throw new Error("Recording fixture label was not created");
+    return "Recording fixture prepared";
+  }
+  if (name === "recording-label") {
+    return await rcon.command(
+      "data get entity @e[tag=storm_recording_fixture,limit=1] CustomName",
+    );
+  }
   throw new Error("Unknown fixture");
 }
 
