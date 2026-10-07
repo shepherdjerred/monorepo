@@ -37,6 +37,7 @@ public final class CombatHarness {
       UUID body,
       int life,
       ReflexInput input,
+      Optional<UUID> targetBody,
       Reflex.Step authored,
       Optional<com.shepherdjerred.thestorm.rwf.app.ObservationSource.Sample> observation) {}
 

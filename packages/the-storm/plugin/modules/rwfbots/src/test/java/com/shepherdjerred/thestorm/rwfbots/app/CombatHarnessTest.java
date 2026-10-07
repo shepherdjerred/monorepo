@@ -122,7 +122,8 @@ final class CombatHarnessTest {
     var authored =
         new Reflex.Step(ReflexState.initial(Facing.SOUTH), List.of(new BodyCommand.Stop()));
     var frame =
-        new CombatHarness.Frame(first, new UUID(5, 6), 0, input, authored, Optional.empty());
+        new CombatHarness.Frame(
+            first, new UUID(5, 6), 0, input, Optional.empty(), authored, Optional.empty());
     harness.captureTick(first, 11);
     assertThat(harness.commands(frame)).isSameAs(authored.commands());
     harness.finishTick(first, 11);

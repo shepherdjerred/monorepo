@@ -142,6 +142,7 @@ final class MatchLearningTest {
         BODY,
         life,
         input,
+        Optional.of(new UUID(9, 10)),
         authored,
         Optional.of(
             new ObservationSource.Sample(ObservationContract.ID, Collections.nCopies(34, 0.0))));

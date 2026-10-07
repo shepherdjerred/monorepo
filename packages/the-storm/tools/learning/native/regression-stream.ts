@@ -11,6 +11,7 @@ type Row =
   | Sample["actions"][number]
   | Sample["ticks"][number]
   | Sample["damage"][number]
+  | Sample["probes"][number]
   | Sample["transitions"][number];
 
 /** One original case's monotonic journal, including actions interrupted by synchronous endings. */
@@ -20,6 +21,7 @@ export class RegressionStream {
   readonly actions: RegressionAction[] = [];
   readonly ticks: Sample["ticks"] = [];
   readonly damage: Sample["damage"] = [];
+  readonly probes: Sample["probes"] = [];
   readonly transitions: Sample["transitions"] = [];
   before: Sample["inference"] = null;
   after: Sample["inference"] = null;
@@ -43,6 +45,7 @@ export class RegressionStream {
       ...state.actions,
       ...state.ticks,
       ...state.damage,
+      ...state.probes,
       ...state.transitions,
     ].sort((a, b) => a.sequence - b.sequence);
     if (rows.length > 5000)
@@ -55,6 +58,7 @@ export class RegressionStream {
     this.actions.push(...state.actions);
     this.ticks.push(...state.ticks);
     this.damage.push(...state.damage);
+    this.probes.push(...state.probes);
     this.transitions.push(...state.transitions);
     if (state.inference !== null) this.metrics(state.inference);
   }
@@ -70,6 +74,27 @@ export class RegressionStream {
     this.lastServerTick = row.serverTick;
     if ("fighters" in row) this.members(row);
     else if ("body" in row) this.action(row);
+    else if ("player" in row) this.probe(row);
+  }
+
+  private probe(row: Sample["probes"][number]) {
+    const player = this.roster.get(row.player);
+    const bot = this.roster.get(row.bot);
+    if (
+      player === undefined ||
+      bot === undefined ||
+      this.phase !== "LIVE" ||
+      row.match !== this.match ||
+      player.bot ||
+      player.alive !== row.playerAlive ||
+      !bot.bot ||
+      bot.alive !== row.botAlive ||
+      bot.kit !== row.botKit ||
+      player.team === bot.team
+    )
+      throw new Error(
+        "Regression player probe differs from the original native roster",
+      );
   }
 
   private members(row: Sample["transitions"][number]) {
@@ -99,6 +124,13 @@ export class RegressionStream {
     if (row.match !== this.match)
       throw new Error("Foreign regression action match");
     checkRegressionAction(row);
+    if (
+      (row.targetId === null) !== (row.targetBody === null) ||
+      (row.targetBody !== null && !this.roster.has(row.targetBody))
+    )
+      throw new Error(
+        "Regression target body differs from the original native roster",
+      );
     const offset = row.serverTick - row.botTick;
     if (this.offset !== undefined && offset !== this.offset)
       throw new Error("Regression body clock alignment changed");
