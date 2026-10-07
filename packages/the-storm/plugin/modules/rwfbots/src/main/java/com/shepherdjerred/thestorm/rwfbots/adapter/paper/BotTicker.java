@@ -47,6 +47,7 @@ public final class BotTicker {
   private final LongSupplier nanoClock;
   private final LobbyTicker lobby;
   private final com.shepherdjerred.thestorm.rwf.app.ObservationSource observations;
+  private final com.shepherdjerred.thestorm.rwfbots.app.learning.MatchLearning learning;
   private boolean inLobby;
   private final ThinkStats staleness = new ThinkStats();
   private final ThinkStats sections = new ThinkStats();
@@ -75,7 +76,8 @@ public final class BotTicker {
       Supplier<long[]> tickTimes,
       LongSupplier nanoClock,
       LobbyTicker lobby,
-      com.shepherdjerred.thestorm.rwf.app.ObservationSource observations) {}
+      com.shepherdjerred.thestorm.rwf.app.ObservationSource observations,
+      com.shepherdjerred.thestorm.rwfbots.app.learning.MatchLearning learning) {}
 
   public BotTicker(Parts parts) {
     this.roster = parts.roster();
@@ -88,6 +90,7 @@ public final class BotTicker {
     this.nanoClock = parts.nanoClock();
     this.lobby = parts.lobby();
     this.observations = parts.observations();
+    this.learning = parts.learning();
   }
 
   /** The ticks run so far; the snapshot clock. */
@@ -105,9 +108,14 @@ public final class BotTicker {
     return sections.percentileMillis(0.95);
   }
 
+  public com.shepherdjerred.thestorm.rwfbots.app.learning.MatchLearning.Metrics learningMetrics() {
+    return learning.metrics();
+  }
+
   /** One server tick. */
   public void run() {
     tick++;
+    learning.startTick(tick);
     if (lobbyTick()) {
       return;
     }
@@ -133,7 +141,10 @@ public final class BotTicker {
       }
       bot.profile().ifPresent(profile -> drive(bot, profile, frame));
     }
-    if (sameMatch(match)) roster.harness().finishTick(match.matchId(), tick);
+    if (sameMatch(match)) {
+      roster.harness().finishTick(match.matchId(), tick);
+      learning.finishTick(match.matchId(), tick);
+    }
     var elapsed = nanoClock.getAsLong() - started;
     sections.record(elapsed);
     governor.observe(new Governor.Sample(msptP95(tickTimes.get()), elapsed / 1_000_000.0));
@@ -207,19 +218,23 @@ public final class BotTicker {
                 : ReflexContext.Habits.of(profile.archetype(), profile.quirks()));
     var step = Reflex.tick(bot.reflex(), input, context, bot.random());
     bot.reflex(step.state());
+    var controls =
+        new com.shepherdjerred.thestorm.rwfbots.app.CombatHarness.Frame(
+            match.matchId(),
+            bot.uuid(),
+            epoch,
+            input,
+            step,
+            roster.harness().active(match.matchId())
+                    || (learning.active(match.matchId())
+                        && input.self().kit()
+                            == com.shepherdjerred.thestorm.rwfbots.domain.world.Kit.TROOPER)
+                ? observations.capture(bot.uuid())
+                : java.util.Optional.empty());
     var commands =
-        roster
-            .harness()
-            .commands(
-                new com.shepherdjerred.thestorm.rwfbots.app.CombatHarness.Frame(
-                    match.matchId(),
-                    bot.uuid(),
-                    epoch,
-                    input,
-                    step,
-                    roster.harness().active(match.matchId())
-                        ? observations.capture(bot.uuid())
-                        : java.util.Optional.empty()));
+        roster.harness().active(match.matchId())
+            ? roster.harness().commands(controls)
+            : learning.commands(controls);
     driver.apply(bot, commands, match.ids(), tick);
   }
 

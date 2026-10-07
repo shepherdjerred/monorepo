@@ -3,9 +3,12 @@ package com.shepherdjerred.thestorm.rwfbots.adapter.inference.promotion;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 
+import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
+import com.shepherdjerred.thestorm.rwfbots.adapter.inference.AcceptedModels;
 import com.shepherdjerred.thestorm.rwfbots.adapter.inference.ActorManifest;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.SplittableRandom;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import tools.jackson.databind.node.ObjectNode;
@@ -63,5 +66,35 @@ final class PromotionSealingTest {
         .isThrownBy(() -> PromotionBundle.seal(directory, original))
         .withMessageContaining("original actor changed");
     assertThat(directory.resolve("manifest.json")).doesNotExist();
+  }
+
+  @Test
+  void acceptedOwnerWarmsAndCachesOneSyntheticCodecActor(@TempDir Path directory) throws Exception {
+    var fixture = new PromotionFixture(directory);
+    assertThat(fixture.actor).isNotEmpty();
+    try (var pool = new DirectComputePool();
+        var models =
+            new AcceptedModels(
+                new AcceptedModels.Parts(directory, pool, new SplittableRandom(1), () -> 0))) {
+      var model = models.load().join();
+      assertThat(models.load().join()).isSameAs(model);
+      assertThat(model.metrics().submitted()).isZero();
+    }
+  }
+
+  @Test
+  void acceptedOwnerDoesNotTreatAnUnacceptedDiagnosticAsARequiredAsset(@TempDir Path directory)
+      throws Exception {
+    var fixture = new PromotionFixture(directory);
+    Files.writeString(
+        directory.resolve("manifest.json"),
+        PromotionContract.JSON.writeValueAsString(fixture.source));
+    try (var pool = new DirectComputePool();
+        var models =
+            new AcceptedModels(
+                new AcceptedModels.Parts(directory, pool, new SplittableRandom(1), () -> 0))) {
+      org.assertj.core.api.Assertions.assertThatThrownBy(() -> models.load().join())
+          .hasCauseInstanceOf(IllegalArgumentException.class);
+    }
   }
 }

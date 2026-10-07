@@ -25,6 +25,15 @@ val verifyManagedChatFlag =
 
 tasks.named("compileJava") { dependsOn(verifyManagedChatFlag) }
 
+val verifyManagedLearningFlag =
+    tasks.register<VerifyManagedFlag>("verifyManagedLearningFlag") {
+      inventory = layout.projectDirectory.file("../../../../feature-flags/src/managed-flag-inventory.json")
+      source = layout.projectDirectory.file(
+          "src/main/java/com/shepherdjerred/thestorm/rwfbots/adapter/remote/FliptLearningGate.java")
+      flagSource = "the-storm-rwfbots-learning"
+    }
+tasks.named("compileJava") { dependsOn(verifyManagedLearningFlag) }
+
 // The shipped personality files and rwfbots.yml are parsed by tests, so they are test inputs.
 val shippedPersonalities = file("../../../server/owned/plugins/TheStorm/rwfbots/personalities")
 val shippedConfig = file("../../../server/owned/plugins/TheStorm/rwfbots.yml")
