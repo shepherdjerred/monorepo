@@ -1404,6 +1404,60 @@ Console-transport results include authored fallbacks, so inspect their counts
 when assessing the controller; they do not establish sustained Java inference
 or its two-tick delivery gate.
 
+Blind preference reviews use a separate fixed capture schedule and a sealed
+ballot. They compare the first sealed pilot seed against authored combat;
+all three pilot seeds must first pass both strength gates. No seed is selected
+by evaluation score. Genuine dataset files, checkpoint hashes, the original
+claimed strength run and native runtime inputs are verified before preparation.
+
+```bash
+bun run bots:preference schedule --pilot .cache/rwf-pilot/trooper --evaluation .cache/rwf-evaluation/trooper --model .cache/rwf-pilot/trooper/seed-0/onnx
+bun run bots:preference prepare --pilot .cache/rwf-pilot/trooper --evaluation .cache/rwf-evaluation/trooper --model .cache/rwf-pilot/trooper/seed-0/onnx --clips .cache/rwf-preference/captures.json --output .cache/rwf-preference/review
+bun run bots:preference score --pilot .cache/rwf-pilot/trooper --output .cache/rwf-preference/review --answers .cache/rwf-preference/review/public/answers.json
+bun run test:preference-media
+```
+
+`schedule` prints the exact twenty paired red/blue matchups at fresh environment
+seeds and the candidate/runtime fingerprints. In the disposable Java-inference
+sandbox, film each matchup once using its learned and authored console commands.
+The model must be staged and warmed through `rwfinfer load` before capture. Use
+one fixed spectator camera, FOV and resolution, with HUD and nameplates hidden.
+Capture the first 600 live ticks at 1280x720, 30 fps; hold the terminal frame if
+the duel ends early so every clip remains 30 seconds. Retain losses and early
+endings. Wait for the lobby between matches and keep every native recording.
+Capture automation and validation of the depicted camera are separate from
+these review commands; the clip producer supplies that provenance.
+
+The strict `CaptureSet` schema in `tools/learning/preference/gate.ts` defines
+`captures.json`: candidate/runtime digests, zero retries, the shared camera and
+twenty ordered pairs. Each pair's `learned` and `authored` entries have video and
+recording paths plus the terminal `rwflearn state` reply. Learned entries also
+include the `rwfinfer metrics` reply's `metrics` object; authored entries use
+`metrics: null`. Paths resolve relative to `captures.json`. Learned delivery
+counts must match the terminal state. Complete schema-3 bot-only Trooper duels,
+unique match identities, common terrain and recorded outcomes are checked.
+The recording header's domain match seed differs from the controller's fixture
+seed; matchup verification uses the native fixture reply.
+
+Preparation claims the pilot once, freezes all source artifacts and review tools,
+and seals randomized A/B labels before publishing footage. `ffmpeg` and `ffprobe`
+must be installed, including H.264 encoding support. The pack re-encodes videos,
+removes audio, tags, chapters and extra streams, and validates frame count and
+format. Reused normalized clips fail. Give the reviewer only `public/`, keeping
+plans, native evidence and the answer key private. The reviewer watches A and B
+for the indicated red or blue fighter and fills every choice with `A`, `B` or
+`tie`, with optional reasons, without reading the private key.
+
+Scoring verifies all frozen inputs and public clip hashes, then seals one
+completed manual ballot. Fifteen of twenty votes must prefer learned behavior;
+ties and authored votes stay in the denominator. Partial, repeated or reordered
+ballots fail. An interrupted pack or completed review cannot automatically be
+rerolled. `preference-result.json` binds the result to the actor, pack, plan,
+answer key and ballot. This measures a preference for humanlike behavior,
+not indistinguishability from a human. Passing leaves the actor `unaccepted`
+with ordinary learned control disabled; promotion and the other gates remain
+separate.
+
 Java inference diagnostics load a frozen, unaccepted ONNX export only in the
 disposable fixture server:
 
