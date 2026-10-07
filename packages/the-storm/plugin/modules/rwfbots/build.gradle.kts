@@ -57,9 +57,9 @@ tasks.test {
 val prepareActorParity = tasks.register<Exec>("prepareActorParity") {
   val learning = rootProject.file("../tools/learning")
   val output = layout.buildDirectory.dir("actor-parity")
-  inputs.files(fileTree(learning) { include("*.py", "*.json", "*.toml", "*.lock") })
+  inputs.files(fileTree(learning) { include("*.py", "*.json", "*.toml", "*.lock", "promotion/*.py") })
       .withPropertyName("pythonActorTools").withPathSensitivity(PathSensitivity.RELATIVE)
-  inputs.files("src/main/resources/rwf-combat-v1.tsv", "src/main/resources/rwf-duel.json")
+  inputs.files("src/main/resources/rwf-combat-v1.tsv", "src/main/resources/rwf-duel.json", "src/main/resources/rwf-actor-parity.json")
       .withPropertyName("actorContracts").withPathSensitivity(PathSensitivity.RELATIVE)
   outputs.dir(output)
   doFirst {
@@ -73,8 +73,10 @@ tasks.register<JavaExec>("actorParity") {
   classpath = sourceSets.main.get().runtimeClasspath
   mainClass.set("com.shepherdjerred.thestorm.rwfbots.adapter.inference.ActorParity")
   val directory = providers.gradleProperty("actorParityDirectory")
+  val receipt = providers.gradleProperty("actorParityReceipt")
   doFirst {
     val samples = Path.of(directory.get())
     args(samples.resolve("onnx").toString(), samples.resolve("samples.json").toString())
+    receipt.orNull?.let { args(it) }
   }
 }
