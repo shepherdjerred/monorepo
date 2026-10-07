@@ -1374,6 +1374,56 @@ class RestorationControlTest(unittest.TestCase):
         )
         self.assertEqual(self.cluster.mutations, [])
 
+    def test_writer_create_readback_accepts_omitted_and_explicit_false_mount_defaults(self):
+        journal = self.initialize()
+        journal["writerUid"] = "writer-uid"
+        for explicit in (False, True):
+            with self.subTest(explicit=explicit):
+                pod = control.writer_manifest(journal)
+                pod.object("metadata")["uid"] = "writer-uid"
+                for mount in pod.object("spec").objects("containers")[0].objects("volumeMounts"):
+                    mount.pop("readOnly", None)
+                    if explicit:
+                        mount["readOnly"] = False
+                if explicit:
+                    pod.object("spec").objects("volumes")[0].object("persistentVolumeClaim")["readOnly"] = False
+                with patch.object(control, "run", return_value=json.dumps(pod)):
+                    observed = control.ensure_resource(control.writer_manifest(journal))
+                control.assert_writer(observed, journal)
+
+    def test_writer_refuses_read_only_mount_or_claim_even_with_defaulted_fields(self):
+        journal = self.initialize()
+        journal["writerUid"] = "writer-uid"
+        for change in ("data", "scratch", "temporary", "claim"):
+            with self.subTest(change=change):
+                pod = control.writer_manifest(journal)
+                pod.object("metadata")["uid"] = "writer-uid"
+                if change == "claim":
+                    pod.object("spec").objects("volumes")[0].object("persistentVolumeClaim")["readOnly"] = True
+                else:
+                    mount = next(
+                        value
+                        for value in pod.object("spec").objects("containers")[0].objects("volumeMounts")
+                        if value["name"] == change
+                    )
+                    mount["readOnly"] = True
+                with self.assertRaisesRegex(ValueError, "exact credential-free"):
+                    control.assert_writer(pod, journal)
+
+    def test_missing_security_and_reader_read_only_fields_are_not_writer_defaults(self):
+        journal = self.initialize()
+        journal["writerUid"] = "writer-uid"
+        pod = control.writer_manifest(journal)
+        pod.object("metadata")["uid"] = "writer-uid"
+        pod.object("spec").objects("containers")[0].object("securityContext").pop("allowPrivilegeEscalation")
+        with self.assertRaisesRegex(ValueError, "exact credential-free"):
+            control.assert_writer(pod, journal)
+        reader = control.reader_manifest(journal, control.NAMESPACE)
+        reader.object("metadata")["uid"] = "reader-uid"
+        reader.object("spec").objects("containers")[0].objects("volumeMounts")[0].pop("readOnly")
+        with self.assertRaisesRegex(ValueError, "read-only pod"):
+            control.assert_reader(reader, journal, control.NAMESPACE)
+
     def test_writer_refuses_replacement_credentials_extra_container_and_privileged_access(self):
         journal = self.initialize()
         journal["writerUid"] = "writer-uid"
