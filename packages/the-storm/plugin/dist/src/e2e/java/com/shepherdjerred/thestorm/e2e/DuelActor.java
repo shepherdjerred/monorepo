@@ -19,6 +19,8 @@ final class DuelActor {
   private long acceptedTick = -1;
   private long applied;
   private long fallback;
+  private long unavailable;
+  private long ineligible;
 
   Optional<CombatHarness.Frame> latest() {
     return latest;
@@ -29,17 +31,37 @@ final class DuelActor {
   }
 
   List<BodyCommand> commands(CombatHarness.Frame frame, boolean external) {
+    return commands(frame, external, action);
+  }
+
+  List<BodyCommand> commands(
+      CombatHarness.Frame frame, boolean external, Optional<ActionTicket> computed) {
     latest = Optional.of(frame);
     contexts.addLast(frame);
     while (contexts.size() > 3) contexts.removeFirst();
+    // The Java owner can revoke an otherwise young ticket after a kit/context
+    // change. Do not retain a separately cached action when it returns empty.
+    action = computed;
+    computed
+        .filter(ticket -> ticket.tick() > acceptedTick)
+        .ifPresent(
+            ticket -> {
+              validate(ticket);
+              accept(ticket);
+            });
     if (!external) return frame.authored().commands();
     var response =
         action.filter(
             ticket ->
                 ticket.applies(
                     frame.matchId(), frame.body(), frame.life(), frame.input().snapshot().tick()));
-    if (response.isEmpty()
-        || !CombatCommands.eligible(frame.authored().commands(), frame.input())) {
+    if (!CombatCommands.eligible(frame.authored().commands(), frame.input())) {
+      ineligible++;
+      fallback++;
+      return frame.authored().commands();
+    }
+    if (response.isEmpty()) {
+      unavailable++;
       fallback++;
       return frame.authored().commands();
     }
@@ -49,6 +71,10 @@ final class DuelActor {
     while (used.size() > 4) used.removeFirst();
     return CombatCommands.replace(
         frame.authored().commands(), frame.input(), response.orElseThrow());
+  }
+
+  Map<String, Long> delivery() {
+    return Map.of("applied", applied, "unavailable", unavailable, "ineligible", ineligible);
   }
 
   CombatHarness.Frame context(long tick) {

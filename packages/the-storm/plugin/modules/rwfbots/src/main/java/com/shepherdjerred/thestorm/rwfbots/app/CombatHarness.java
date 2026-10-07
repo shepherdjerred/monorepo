@@ -23,6 +23,9 @@ public final class CombatHarness {
     /** Capture evaluation totals before any body executes this world's commands. */
     void captureTick(long tick);
 
+    /** Submit a batch only after all current bodies have supplied their fair observations. */
+    default void finishTick(long tick) {}
+
     ReflexInput input(
         ReflexInput authored, com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact nav);
 
@@ -74,6 +77,10 @@ public final class CombatHarness {
 
   public void captureTick(UUID matchId, long tick) {
     if (active(matchId)) controller.orElseThrow().captureTick(tick);
+  }
+
+  public void finishTick(UUID matchId, long tick) {
+    if (active(matchId)) controller.orElseThrow().finishTick(tick);
   }
 
   public OptionalLong seed(UUID matchId) {

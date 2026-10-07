@@ -71,7 +71,7 @@ public final class Reflex {
   /** How hard crowding teammates bend a walking bot's heading. */
   static final double SEPARATION_WEIGHT = 1.2;
 
-  /** A bot waits for a moving teammate with a lower id this close ahead of it. */
+  /** A bot waits for a moving teammate this close ahead of it. */
   static final double YIELD = 2.2;
 
   /** A push from teammates stronger than this means the fight is crowded. */
@@ -434,7 +434,8 @@ public final class Reflex {
         destination = sidestep(destination);
       }
       // Near the end of the path the bot walks straight in: bending there makes it circle the spot.
-      if (index < waypoints.size() - FINAL_STRAIGHT) {
+      if (index < waypoints.size() - FINAL_STRAIGHT
+          || self.pos().horizontalDistance(destination) > SEPARATION) {
         destination = bend(destination, walkingApart());
       }
       if (yields(destination)) {

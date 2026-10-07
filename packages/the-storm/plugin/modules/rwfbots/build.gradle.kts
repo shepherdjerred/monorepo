@@ -1,8 +1,11 @@
+import java.nio.file.Path
+
 plugins { id("storm.jooq-conventions") }
 
 dependencies {
   // Bots fill rwf matches through its app ports (BotBodies, BotActions, MatchView, MatchEvents).
   implementation(project(":rwf"))
+  implementation(libs.onnxruntime)
   // Citizens is a runtime plugin (server/plugins.json); only rwfbots.adapter.citizens
   // may use it here (architecture tests). Non-transitive: the plugin jar is the API.
   compileOnly(libs.citizens) { isTransitive = false }
@@ -30,6 +33,9 @@ val trainingYardNav =
     file("../../../server/owned/plugins/TheStorm/rwf/maps/training-yard/nav.rwfnav")
 
 tasks.test {
+  dependsOn("prepareActorParity")
+  inputs.dir(layout.buildDirectory.dir("actor-parity"))
+      .withPropertyName("actorParity").withPathSensitivity(PathSensitivity.RELATIVE)
   inputs
       .dir(shippedPersonalities)
       .withPropertyName("shippedPersonalities")
@@ -45,4 +51,30 @@ tasks.test {
       .withPathSensitivity(PathSensitivity.RELATIVE)
   systemProperty("thestorm.rwfbots.config", shippedConfig.absolutePath)
   systemProperty("thestorm.rwfbots.trainingYardNav", trainingYardNav.absolutePath)
+  systemProperty("thestorm.rwfbots.actorParity", layout.buildDirectory.dir("actor-parity").get().asFile.absolutePath)
+}
+
+val prepareActorParity = tasks.register<Exec>("prepareActorParity") {
+  val learning = rootProject.file("../tools/learning")
+  val output = layout.buildDirectory.dir("actor-parity")
+  inputs.files(fileTree(learning) { include("*.py", "*.json", "*.toml", "*.lock") })
+      .withPropertyName("pythonActorTools").withPathSensitivity(PathSensitivity.RELATIVE)
+  inputs.files("src/main/resources/rwf-combat-v1.tsv", "src/main/resources/rwf-duel.json")
+      .withPropertyName("actorContracts").withPathSensitivity(PathSensitivity.RELATIVE)
+  outputs.dir(output)
+  doFirst {
+    val generated = output.get().asFile
+    check(!generated.exists() || generated.deleteRecursively()) { "Could not clear generated actor parity fixture" }
+  }
+  commandLine("uv", "run", "--project", learning, "--locked", "python", learning.resolve("java_parity.py"), "--output", output.get().asFile)
+}
+
+tasks.register<JavaExec>("actorParity") {
+  classpath = sourceSets.main.get().runtimeClasspath
+  mainClass.set("com.shepherdjerred.thestorm.rwfbots.adapter.inference.ActorParity")
+  val directory = providers.gradleProperty("actorParityDirectory")
+  doFirst {
+    val samples = Path.of(directory.get())
+    args(samples.resolve("onnx").toString(), samples.resolve("samples.json").toString())
+  }
 }
