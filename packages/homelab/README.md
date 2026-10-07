@@ -51,6 +51,10 @@ run with all container capabilities dropped. Static sites listen on port 8080
 behind the existing port-80 Service and also drop all capabilities. Image smoke
 checks verify the binary has no file capabilities and runs as a non-root user.
 
+Prometheus remains distroless and listens on loopback. Its startup, readiness,
+and liveness checks use HTTP through the same-pod gateway to reach the backend
+health endpoints with the operator's original probe timing limits.
+
 Deploys are driven by the generated Woodpecker pipeline. The
 [CI pipeline guide](../docs/wiki/src/content/docs/explanation/ci-pipeline-shape.md)
 explains its change selection and release ordering:

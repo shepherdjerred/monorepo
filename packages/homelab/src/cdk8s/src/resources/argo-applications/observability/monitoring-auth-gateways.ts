@@ -7,6 +7,31 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 export const PROMETHEUS_GATEWAY_PORT = 9091;
 export const ALERTMANAGER_GATEWAY_PORT = 9094;
 
+// listenLocal makes the operator generate exec probes, but the distroless
+// Prometheus image has no shell. HTTP through the same-pod gateway preserves
+// the backend's readiness/health endpoints and the operator's probe budgets.
+export const PROMETHEUS_HEALTH_PROBE_CONTAINER = {
+  name: "prometheus",
+  startupProbe: {
+    httpGet: { path: "/-/ready", port: PROMETHEUS_GATEWAY_PORT },
+    failureThreshold: 60,
+    periodSeconds: 15,
+    timeoutSeconds: 3,
+  },
+  readinessProbe: {
+    httpGet: { path: "/-/ready", port: PROMETHEUS_GATEWAY_PORT },
+    failureThreshold: 3,
+    periodSeconds: 5,
+    timeoutSeconds: 3,
+  },
+  livenessProbe: {
+    httpGet: { path: "/-/healthy", port: PROMETHEUS_GATEWAY_PORT },
+    failureThreshold: 6,
+    periodSeconds: 5,
+    timeoutSeconds: 3,
+  },
+};
+
 export const PROMETHEUS_GATEWAY_CONFIG = `{
   admin off
   auto_https off
@@ -163,6 +188,17 @@ export function createMonitoringAuthGateways(chart: Chart) {
     },
   );
 
+  const prometheusContainer = gatewayContainer({
+    name: "authenticated-gateway",
+    port: PROMETHEUS_GATEWAY_PORT,
+    configMapName: prometheusConfig.name,
+    secretName: auth.name,
+    secretEnvironment: {
+      PROMETHEUS_BASIC_HASH: "prometheus-basic-hash",
+      PROMETHEUS_WRITE_TOKEN: "prometheus-write-token",
+    },
+  });
+
   return {
     alertmanagerContainer: gatewayContainer({
       name: "authenticated-gateway",
@@ -174,15 +210,10 @@ export function createMonitoringAuthGateways(chart: Chart) {
         ALERTMANAGER_TOKEN: "alertmanager-token",
       },
     }),
-    prometheusContainer: gatewayContainer({
-      name: "authenticated-gateway",
-      port: PROMETHEUS_GATEWAY_PORT,
-      configMapName: prometheusConfig.name,
-      secretName: auth.name,
-      secretEnvironment: {
-        PROMETHEUS_BASIC_HASH: "prometheus-basic-hash",
-        PROMETHEUS_WRITE_TOKEN: "prometheus-write-token",
-      },
-    }),
+    prometheusContainer,
+    prometheusContainers: [
+      PROMETHEUS_HEALTH_PROBE_CONTAINER,
+      prometheusContainer,
+    ],
   };
 }

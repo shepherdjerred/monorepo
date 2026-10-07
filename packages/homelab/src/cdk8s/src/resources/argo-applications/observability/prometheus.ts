@@ -526,7 +526,7 @@ export async function createPrometheusApp(chart: Chart) {
         },
         secrets: [prometheusSecrets.name],
         volumes: [{ name: "auth-gateway-tmp", emptyDir: {} }],
-        containers: [monitoringAuthGateways.prometheusContainer],
+        containers: monitoringAuthGateways.prometheusContainers,
         additionalScrapeConfigs: [
           {
             job_name: "hass",
