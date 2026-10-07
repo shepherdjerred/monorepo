@@ -27,8 +27,14 @@ const fixturesJar = path.join(
 
 export async function frozenManifest() {
   const learning = path.join(root, "tools/learning");
-  const listing = await readdir(learning);
-  const sources = listing
+  const [listing, preference] = await Promise.all([
+    readdir(learning),
+    readdir(path.join(learning, "preference")),
+  ]);
+  const sources = [
+    ...listing,
+    ...preference.map((file) => `preference/${file}`),
+  ]
     .filter((file) => /\.(?:py|ts|toml|lock|json)$/u.test(file))
     .sort();
   const files = [
