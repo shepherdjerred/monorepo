@@ -121,7 +121,7 @@ public final class Roster implements BotBodies {
     var handles = new ArrayList<BotHandle>();
     // rwf walks bots into the lobby in this order: the ones always late come last.
     var order =
-        harness.active(matchId)
+        harness.controlled(matchId)
             ? pick.bots()
             : pick.bots().stream()
                 .sorted(

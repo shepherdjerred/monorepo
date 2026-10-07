@@ -188,7 +188,7 @@ public final class BotTicker {
     if (self.isEmpty() || !self.orElseThrow().alive()) {
       return;
     }
-    if (!roster.harness().active(frame.match().matchId()) && thinned(bot, profile, snapshot)) {
+    if (!roster.harness().controlled(frame.match().matchId()) && thinned(bot, profile, snapshot)) {
       return;
     }
     var epoch = loop.epoch(profile.id());
@@ -213,7 +213,7 @@ public final class BotTicker {
             match.nav().grid(),
             profile.levers(),
             bot.loadout(),
-            roster.harness().active(match.matchId())
+            roster.harness().controlled(match.matchId())
                 ? ReflexContext.Habits.NONE
                 : ReflexContext.Habits.of(profile.archetype(), profile.quirks()));
     var step = Reflex.tick(bot.reflex(), input, context, bot.random());

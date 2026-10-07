@@ -31,7 +31,8 @@ final class OrdinaryLearningTest {
     try (var harness =
         RwfBotsHarness.start(data, config -> config, h -> h.learningFlag.set(true))) {
       var human = harness.server.addPlayer("Alice");
-      human.teleport(new Location(harness.world, 8.5, 1, 6.5));
+      // Start the target directly ahead in clear sight; seeing it must not depend on wandering.
+      human.teleport(new Location(harness.world, 6.5, 1, 8.5));
       harness.match.fireJoin(new CombatantId.Human(human.getUniqueId()), human.getName());
       harness.match.fireMapChosen();
       var bots = harness.roster().fill(FakeMatch.MATCH_ID, 2);
@@ -42,6 +43,7 @@ final class OrdinaryLearningTest {
         harness.match.fireJoin(bot, entity.getName());
         var kit = bot.equals(bots.getFirst()) ? "trooper" : "longbow";
         harness.match.fighting(bot.uuid(), TeamColor.RED, kit);
+        entity.setRotation(0, 0);
         entity.getInventory().setHeldItemSlot(1);
       }
       harness.match.fighting(human.getUniqueId(), TeamColor.BLUE, "trooper");
@@ -52,7 +54,9 @@ final class OrdinaryLearningTest {
       var inference = harness.paper().learningMetrics().inference().orElseThrow();
       assertThat(inference.maximumBatch()).isEqualTo(1);
       assertThat(inference.submitted()).isPositive();
-      assertThat(harness.paper().learningMetrics().applied()).isPositive();
+      assertThat(harness.paper().learningMetrics().applied())
+          .as("learned actions applied: %s", harness.paper().learningMetrics())
+          .isPositive();
       assertThat(harness.paper().roster().harness().active(FakeMatch.MATCH_ID)).isFalse();
       for (var bot : harness.paper().roster().live()) {
         var profile = bot.profile().orElseThrow();

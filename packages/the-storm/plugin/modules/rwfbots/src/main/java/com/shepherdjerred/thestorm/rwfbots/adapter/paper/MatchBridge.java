@@ -136,7 +136,7 @@ public final class MatchBridge implements Consumer<MatchNotification> {
         .ifPresent(
             bot -> {
               var kit =
-                  parts.roster().harness().active(after.matchId())
+                  parts.roster().harness().controlled(after.matchId())
                       ? "trooper"
                       : parts.lobby().arrived(bot, after);
               parts
@@ -326,7 +326,7 @@ public final class MatchBridge implements Consumer<MatchNotification> {
     parts.roster().session(null);
     parts.traces().ifPresent(traces -> logFailure(traces.end(), "close the trace file"));
     if (after.phase() == MatchState.Phase.ENDED
-        && !parts.roster().harness().active(after.matchId())) {
+        && !parts.roster().harness().controlled(after.matchId())) {
       settle(after);
     }
   }
