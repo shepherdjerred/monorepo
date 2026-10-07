@@ -54,6 +54,10 @@ checks verify the binary has no file capabilities and runs as a non-root user.
 Prometheus remains distroless and listens on loopback. Its startup, readiness,
 and liveness checks use HTTP through the same-pod gateway to reach the backend
 health endpoints with the operator's original probe timing limits.
+ArgoCD waits for `NoPodReady` and `SomePodsNotReady` rollout conditions within
+the existing sync timeout. Prometheus health requires current-generation
+`Available` and `Reconciled` conditions; failed reconciliation still fails the
+sync. ArgoCD's configuration reconciles before the monitoring application wave.
 
 Deploys are driven by the generated Woodpecker pipeline. The
 [CI pipeline guide](../docs/wiki/src/content/docs/explanation/ci-pipeline-shape.md)

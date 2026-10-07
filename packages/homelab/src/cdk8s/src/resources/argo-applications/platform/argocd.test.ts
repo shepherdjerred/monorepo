@@ -5,7 +5,11 @@ import path from "node:path";
 import { Testing } from "cdk8s";
 import { stringify } from "yaml";
 import { z } from "zod";
-import { ARGO_APPLICATION_HEALTH_LUA, createArgoCdApp } from "./argocd.ts";
+import {
+  ARGO_APPLICATION_HEALTH_LUA,
+  PROMETHEUS_HEALTH_LUA,
+  createArgoCdApp,
+} from "./argocd.ts";
 
 vi.setConfig({ testTimeout: 15_000 });
 
@@ -24,6 +28,8 @@ const ApplicationSchema = z
                 "resource.customizations.health.cert-manager.io_Certificate":
                   z.string(),
                 "resource.customizations.health.argoproj.io_Application":
+                  z.string(),
+                "resource.customizations.health.monitoring.coreos.com_Prometheus":
                   z.string(),
               }),
               rbac: z.object({
@@ -57,7 +63,10 @@ afterEach(async () => {
   );
 });
 
-async function evaluateApplicationHealth(status: unknown): Promise<string> {
+async function evaluateApplicationHealth(
+  status: unknown,
+  prometheus = false,
+): Promise<string> {
   const directory = await mkdtemp(
     path.join(tmpdir(), "argocd-application-health-"),
   );
@@ -72,17 +81,21 @@ async function evaluateApplicationHealth(status: unknown): Promise<string> {
         kind: "ConfigMap",
         metadata: { name: "argocd-cm", namespace: "argocd" },
         data: {
-          "resource.customizations.health.argoproj.io_Application":
-            ARGO_APPLICATION_HEALTH_LUA,
+          [prometheus
+            ? "resource.customizations.health.monitoring.coreos.com_Prometheus"
+            : "resource.customizations.health.argoproj.io_Application"]:
+            prometheus ? PROMETHEUS_HEALTH_LUA : ARGO_APPLICATION_HEALTH_LUA,
         },
       }),
     ),
     Bun.write(
       resourcePath,
       stringify({
-        apiVersion: "argoproj.io/v1alpha1",
-        kind: "Application",
-        metadata: { name: "fixture", namespace: "argocd" },
+        apiVersion: prometheus
+          ? "monitoring.coreos.com/v1"
+          : "argoproj.io/v1alpha1",
+        kind: prometheus ? "Prometheus" : "Application",
+        metadata: { name: "fixture", namespace: "argocd", generation: 8 },
         status,
       }),
     ),
@@ -134,7 +147,133 @@ describe("ArgoCD application", () => {
       ],
     ).toBe(ARGO_APPLICATION_HEALTH_LUA);
   });
+});
 
+describe("ArgoCD Prometheus health", () => {
+  it("installs the executable Prometheus health customization", () => {
+    const application = synthArgoCdApplication();
+    expect(
+      application.spec.source.helm.valuesObject.configs.cm[
+        "resource.customizations.health.monitoring.coreos.com_Prometheus"
+      ],
+    ).toBe(PROMETHEUS_HEALTH_LUA);
+  });
+
+  it("waits for Prometheus rollout without accepting stale or failed reconciliation", async () => {
+    const available = {
+      type: "Available",
+      status: "True",
+      observedGeneration: 8,
+    };
+    const reconciled = {
+      type: "Reconciled",
+      status: "True",
+      observedGeneration: 8,
+    };
+    const fixtures = [
+      { name: "initialization", expected: "Progressing", conditions: [] },
+      {
+        name: "single replica init container",
+        expected: "Progressing",
+        conditions: [
+          {
+            ...available,
+            status: "False",
+            reason: "NoPodReady",
+            message:
+              "containers with incomplete status: [init-config-reloader]",
+          },
+          reconciled,
+        ],
+      },
+      {
+        name: "partial rollout",
+        expected: "Progressing",
+        conditions: [
+          { ...available, status: "Degraded", reason: "SomePodsNotReady" },
+          reconciled,
+        ],
+      },
+      {
+        name: "current ready pods",
+        expected: "Healthy",
+        conditions: [available, reconciled],
+      },
+      {
+        name: "stale ready pods",
+        expected: "Progressing",
+        conditions: [{ ...available, observedGeneration: 7 }, reconciled],
+      },
+      {
+        name: "stale reconciliation",
+        expected: "Progressing",
+        conditions: [available, { ...reconciled, observedGeneration: 7 }],
+      },
+      {
+        name: "missing reconciliation",
+        expected: "Progressing",
+        conditions: [available],
+      },
+      {
+        name: "unknown reconciliation",
+        expected: "Progressing",
+        conditions: [
+          available,
+          { ...reconciled, status: "Unknown", reason: "NotFound" },
+        ],
+      },
+      {
+        name: "failed reconciliation with ready pods",
+        expected: "Degraded",
+        conditions: [
+          available,
+          {
+            ...reconciled,
+            status: "False",
+            message: "creating StatefulSet failed",
+          },
+        ],
+      },
+      {
+        name: "failed reconciliation before pods ready",
+        expected: "Degraded",
+        conditions: [
+          { ...available, status: "False", reason: "NoPodReady" },
+          {
+            ...reconciled,
+            status: "False",
+            message: "creating StatefulSet failed",
+          },
+        ],
+      },
+      {
+        name: "missing StatefulSet",
+        expected: "Degraded",
+        conditions: [
+          { ...available, status: "False", reason: "StatefulSetNotFound" },
+          reconciled,
+        ],
+      },
+    ];
+    for (const fixture of fixtures) {
+      const output = await evaluateApplicationHealth(
+        { conditions: fixture.conditions },
+        true,
+      );
+      expect(output, fixture.name).toContain(fixture.expected);
+      for (const condition of fixture.conditions) {
+        if ("message" in condition) {
+          expect(output, fixture.name).toContain(condition.message);
+        }
+      }
+    }
+    expect(await evaluateApplicationHealth(undefined, true)).toContain(
+      "Progressing",
+    );
+  });
+});
+
+describe("ArgoCD Application health", () => {
   it("evaluates child state with current health and terminal failures", async () => {
     const fixtures = [
       {

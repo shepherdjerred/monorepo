@@ -5,6 +5,47 @@ import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 
+export const PROMETHEUS_HEALTH_LUA = `local hs = {
+  status = "Progressing",
+  message = "Waiting for Prometheus reconciliation and availability"
+}
+if obj.status == nil or obj.status.conditions == nil then
+  return hs
+end
+
+local available = nil
+local reconciled = nil
+for _, condition in ipairs(obj.status.conditions) do
+  if condition.observedGeneration == obj.metadata.generation then
+    if condition.type == "Available" then
+      available = condition
+    elseif condition.type == "Reconciled" then
+      reconciled = condition
+    end
+  end
+end
+
+-- A failed reconciliation must win even when the previous pods are Ready.
+if reconciled ~= nil and reconciled.status == "False" then
+  hs.status = "Degraded"
+  hs.message = reconciled.message or reconciled.reason or "Prometheus reconciliation failed"
+  return hs
+end
+
+if available == nil then
+  return hs
+end
+hs.message = available.message or available.reason or hs.message
+if available.status == "True" then
+  if reconciled ~= nil and reconciled.status == "True" then
+    hs.status = "Healthy"
+    hs.message = "All instances are available and reconciled"
+  end
+elseif available.reason ~= "NoPodReady" and available.reason ~= "SomePodsNotReady" then
+  hs.status = "Degraded"
+end
+return hs`;
+
 export const ARGO_APPLICATION_HEALTH_LUA = `hs = {}
 hs.status = "Progressing"
 hs.message = "Waiting for Application status"
@@ -281,6 +322,11 @@ export function createArgoCdApp(chart: Chart) {
         // workload health without widening the Woodpecker account's RBAC.
         "resource.customizations.health.argoproj.io_Application":
           ARGO_APPLICATION_HEALTH_LUA,
+        // A single-replica rollout reports NoPodReady while its init container
+        // runs. Treat it like SomePodsNotReady, bounded by the sync timeout;
+        // require current-generation reconciliation and availability for health.
+        "resource.customizations.health.monitoring.coreos.com_Prometheus":
+          PROMETHEUS_HEALTH_LUA,
         // A newly-created cert-manager Certificate reports Ready=False with
         // reason DoesNotExist while it creates its target Secret. ArgoCD's
         // documented generic Certificate health check classifies every False
