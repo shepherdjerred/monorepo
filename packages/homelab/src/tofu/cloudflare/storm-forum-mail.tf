@@ -19,7 +19,7 @@ resource "cloudflare_dns_record" "storm_forum_postal_dkim" {
 resource "cloudflare_dns_record" "storm_forum_postal_return_path" {
   zone_id = cloudflare_zone.ts_mc_net.id
   ttl     = 1
-  name    = "rp"
+  name    = "psrp"
   type    = "CNAME"
   content = "rp.sjer.red"
   proxied = false
