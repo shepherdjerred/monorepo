@@ -29,21 +29,13 @@ public final class SlotFit {
    * @param quirks its habits
    * @param roleWeights its role weights
    * @param kit the kit it plays
-   * @param startDelayTicks how long its opening pause still lasts, or zero when ready
    */
   public record Member(
-      Archetype archetype,
-      Set<Quirk> quirks,
-      Map<Role, Double> roleWeights,
-      Kit kit,
-      int startDelayTicks) {
+      Archetype archetype, Set<Quirk> quirks, Map<Role, Double> roleWeights, Kit kit) {
 
     public Member {
       quirks = Set.copyOf(quirks);
       roleWeights = Map.copyOf(roleWeights);
-      if (startDelayTicks < 0) {
-        throw new IllegalArgumentException("start delay must be nonnegative");
-      }
     }
   }
 

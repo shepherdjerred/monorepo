@@ -9,7 +9,6 @@ import com.shepherdjerred.thestorm.rwfbots.domain.personality.Archetype;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Quirk;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Style;
 import com.shepherdjerred.thestorm.rwfbots.domain.tactics.TacticsContext;
-import com.shepherdjerred.thestorm.rwfbots.domain.tactics.TacticsState;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Strategy;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BodyCommand;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
@@ -47,22 +46,6 @@ final class QuirksTest {
     assertThat(keen.body(1).distanceTo(start)).isGreaterThan(3);
     late.run(TacticsContext.LATE_MIN_TICKS + TacticsContext.LATE_SPREAD_TICKS + 40, w -> false);
     assertThat(late.body(1).distanceTo(start)).isGreaterThan(3);
-  }
-
-  @Test
-  void openingDelayCountsDownWithoutRepeatingOnLaterLives() {
-    var late = pair(3, Set.of(Quirk.LATE_TO_EVERYTHING));
-    var context = late.body(1).tacticsContext;
-    var duration = context.lateStartTicks();
-    assertThat(context.remainingStartTicks(TacticsState.fresh(0), 1000)).isEqualTo(duration);
-    late.run(1, w -> false);
-    var firstLife = late.body(1).tactics;
-    var born = firstLife.bornTick();
-    assertThat(born).isNotNegative();
-    assertThat(context.remainingStartTicks(firstLife, born + duration - 1)).isEqualTo(1);
-    assertThat(context.remainingStartTicks(firstLife, born + duration)).isZero();
-    assertThat(context.remainingStartTicks(firstLife, born + duration + 100)).isZero();
-    assertThat(context.remainingStartTicks(firstLife.nextLife(1), born + 1)).isZero();
   }
 
   @Test

@@ -317,8 +317,7 @@ public final class TeamBrain {
 
   /**
    * Hands one slot to every bot so the summed profit is largest: fit minus path distance, plus
-   * {@link #STICKY} for the slot already held, plus noise for erratic bots. A remaining opening
-   * pause makes distance costlier so ready teammates take the longer routes.
+   * {@link #STICKY} for the slot already held, plus noise for erratic bots.
    */
   static Map<CombatantId, String> assign(
       Dealing dealing, List<Slot> slots, RandomGenerator random) {
@@ -356,11 +355,8 @@ public final class TeamBrain {
   private static double profit(Dealing dealing, CombatantView bot, Slot slot, double distance) {
     var member = dealing.situation().memberOf(bot.id());
     var held = slot.key().equals(dealing.previous().assignment().get(bot.id()));
-    var openingPauseSeconds = member.startDelayTicks() / 20.0;
     return SlotFit.of(member, slot, dealing.nuke() && slot.kind() == SlotKind.PLANT)
-        - (DISTANCE_WEIGHT + openingPauseSeconds)
-            * Math.min(distance, DISTANCE_CAP)
-            / DISTANCE_SCALE
+        - DISTANCE_WEIGHT * Math.min(distance, DISTANCE_CAP) / DISTANCE_SCALE
         + (held ? STICKY : 0);
   }
 

@@ -51,13 +51,6 @@ final class Arenas {
 
   /** {@code perTeam} bots a side on the training yard, from its spawns, bombs and nuke. */
   static SimWorld yard(long seed, int perTeam, Strategy red, Strategy blue) {
-    return yard(seed, new Lineup(perTeam, red, blue, Set.of()));
-  }
-
-  record Lineup(int perTeam, Strategy red, Strategy blue, Set<Archetype> late) {}
-
-  /** The same lineup with opening pauses for the selected archetypes. */
-  static SimWorld yard(long seed, Lineup lineup) {
     var world = new SimWorld(YARD, seed);
     var id = 0;
     for (var bomb : YARD.sites().bombs()) {
@@ -74,17 +67,13 @@ final class Arenas {
               .filter(site -> site.team().orElseThrow().equals(team.value()))
               .sorted(Comparator.comparing(site -> site.name()))
               .toList();
-      for (var i = 0; i < lineup.perTeam(); i++) {
+      for (var i = 0; i < perTeam; i++) {
         var pick = EIGHT.get(i % EIGHT.size());
-        add(
-            world,
-            new SimWorld.Spawn(bot++, team, pick.kit(), spawns.get(i).cell().feet()),
-            pick,
-            lineup.late().contains(pick.archetype()) ? Set.of(Quirk.LATE_TO_EVERYTHING) : Set.of());
+        add(world, new SimWorld.Spawn(bot++, team, pick.kit(), spawns.get(i).cell().feet()), pick);
       }
     }
-    world.setStrategy(RED, lineup.red());
-    world.setStrategy(BLUE, lineup.blue());
+    world.setStrategy(RED, red);
+    world.setStrategy(BLUE, blue);
     return world;
   }
 
@@ -107,16 +96,13 @@ final class Arenas {
   }
 
   private static void add(SimWorld world, SimWorld.Spawn spawn, Pick pick) {
-    add(world, spawn, pick, Set.of());
-  }
-
-  private static void add(SimWorld world, SimWorld.Spawn spawn, Pick pick, Set<Quirk> quirks) {
     var archetype = pick.archetype();
     var levers =
         LeverCurves.at(0.65, LeverOffsets.NONE.plus(Lever.AGGRESSION, archetype.aggressionZ()));
     var aggression = Math.clamp(0.5 + 0.2 * archetype.aggressionZ(), 0, 1);
     world.addBot(
         spawn,
-        new SimWorld.Persona(levers, new Style(aggression, 0.5, 0.6, 0.5), archetype, quirks));
+        new SimWorld.Persona(
+            levers, new Style(aggression, 0.5, 0.6, 0.5), archetype, Set.<Quirk>of()));
   }
 }

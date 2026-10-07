@@ -86,8 +86,7 @@ final class PlaybookTest {
               Archetype.TACTICIAN,
               Set.of(),
               Map.of(Role.PLANT, 1.0, Role.ESCORT, 0.8),
-              Kit.TROOPER,
-              0));
+              Kit.TROOPER));
     }
     return out;
   }
@@ -201,8 +200,7 @@ final class PlaybookTest {
             Archetype.TACTICIAN,
             Set.of(Quirk.LOVES_NUKE),
             Map.of(Role.PLANT, 1.0, Role.ESCORT, 0.8),
-            Kit.TROOPER,
-            0));
+            Kit.TROOPER));
     var board =
         TeamBrain.tick(
             Blackboard.open(RED, Strategy.HUNT),
@@ -234,10 +232,10 @@ final class PlaybookTest {
     var anchor = bots.get(1).id();
     members.put(
         sniper,
-        new SlotFit.Member(Archetype.SNIPER, Set.of(), Map.of(Role.ROTATE, 1.0), Kit.LONGBOW, 0));
+        new SlotFit.Member(Archetype.SNIPER, Set.of(), Map.of(Role.ROTATE, 1.0), Kit.LONGBOW));
     members.put(
         anchor,
-        new SlotFit.Member(Archetype.ANCHOR, Set.of(), Map.of(Role.DEFEND, 1.0), Kit.TROOPER, 0));
+        new SlotFit.Member(Archetype.ANCHOR, Set.of(), Map.of(Role.DEFEND, 1.0), Kit.TROOPER));
     var board =
         TeamBrain.tick(
             Blackboard.open(RED, Strategy.SPLIT),
@@ -245,45 +243,5 @@ final class PlaybookTest {
             new SplittableRandom(1));
     assertThat(board.plan().slotOf(sniper).orElseThrow().kind()).isEqualTo(SlotKind.OVERWATCH);
     assertThat(board.plan().slotOf(anchor).orElseThrow().kind()).isEqualTo(SlotKind.ANCHOR);
-  }
-
-  @Test
-  void readyTeammatesTakeTheFieldWhileLateBotsGuardNearby() {
-    var bots = reds(8);
-    var members = new HashMap<>(members(bots));
-    var late = bots.get(0).id();
-    members.put(
-        late,
-        new SlotFit.Member(
-            Archetype.FLANKER,
-            Set.of(Quirk.LATE_TO_EVERYTHING),
-            Map.of(Role.ROTATE, 1.0),
-            Kit.TROOPER,
-            80));
-    var board =
-        TeamBrain.tick(
-            Blackboard.open(RED, Strategy.TURTLE),
-            new TeamBrain.TeamSituation(NAV, snapshot(0, bots), bots, members),
-            new SplittableRandom(1));
-    assertThat(board.plan().slotOf(late).orElseThrow().kind()).isEqualTo(SlotKind.ANCHOR);
-    for (var slot : board.plan().slots()) {
-      if (slot.kind() != SlotKind.ANCHOR) {
-        assertThat(board.plan().holderOf(slot.key()).orElseThrow()).isNotEqualTo(late);
-      }
-    }
-    members.put(
-        late,
-        new SlotFit.Member(
-            Archetype.FLANKER,
-            Set.of(Quirk.LATE_TO_EVERYTHING),
-            Map.of(Role.ROTATE, 1.0),
-            Kit.TROOPER,
-            0));
-    var ready =
-        TeamBrain.tick(
-            Blackboard.open(RED, Strategy.TURTLE),
-            new TeamBrain.TeamSituation(NAV, snapshot(100, bots), bots, members),
-            new SplittableRandom(1));
-    assertThat(ready.plan().slotOf(late).orElseThrow().kind()).isEqualTo(SlotKind.FLANK);
   }
 }
