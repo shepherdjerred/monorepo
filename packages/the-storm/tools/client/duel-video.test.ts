@@ -1,6 +1,8 @@
 import { expect, test } from "vitest";
 import { validateDuelClock, validateDuelPrefix } from "./duel-clock.ts";
 import { validateDuelFrames } from "./duel-video.ts";
+import { verifyDuelOutcome } from "./duel-recording.ts";
+import { DuelStateSchema } from "#learning/duels.ts";
 
 function fixture(ending = 20) {
   const expected = {
@@ -124,6 +126,77 @@ test("a full first-600-tick clip does not prove a full match terminal outcome", 
   expect(validateDuelFrames(raw).duel.terminalFrame).toBe(-1);
   expect(validateDuelPrefix(raw.duel.clock).complete).toBe(false);
   expect(() => validateDuelClock(raw.duel.clock)).toThrow("terminal marker");
+});
+
+function outcome(ending = 20) {
+  return DuelStateSchema.parse({
+    protocol: 3,
+    contract: "rwf-combat-v1",
+    seed: 17,
+    side: "red",
+    mode: "authored",
+    opponent: "basic",
+    result: "loss",
+    phase: "ENDED",
+    match: "11111111-2222-4333-8444-555555555555",
+    dealt: 0,
+    received: 20,
+    sampleDealt: 0,
+    sampleReceived: 20,
+    sampleTick: 9000 + ending,
+    used: [],
+    applied: 0,
+    fallback: 0,
+  });
+}
+
+test("rechecks an early terminal hold against its original full clock and outcome", () => {
+  const frames = validateDuelFrames(fixture());
+  const clock = validateDuelClock(fixture().duel.clock);
+  expect(() => verifyDuelOutcome(frames, clock, outcome())).not.toThrow();
+  for (const changed of [
+    { seed: 18 },
+    { side: "blue" },
+    { mode: "external" },
+    { opponent: "authored" },
+    { match: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee" },
+    { result: "win" },
+    { sampleTick: 9021 },
+  ])
+    expect(() =>
+      verifyDuelOutcome(
+        frames,
+        clock,
+        DuelStateSchema.parse({ ...outcome(), ...changed }),
+      ),
+    ).toThrow("captured outcome");
+});
+
+test("requires the recorded prefix to agree with a later full-match terminal", () => {
+  const frames = validateDuelFrames(fixture(-1));
+  const full = validateDuelClock(fixture(650).duel.clock);
+  expect(() => verifyDuelOutcome(frames, full, outcome(650))).not.toThrow();
+  const changed = structuredClone(full);
+  const tick = changed.entries[200];
+  if (tick === undefined) throw new Error("Missing unit clock tick");
+  tick.marker.worldTick++;
+  expect(() => verifyDuelOutcome(frames, changed, outcome(650))).toThrow(
+    "separate original clock",
+  );
+});
+
+test("normalizes independent journal origins but rejects a changed receive timestamp", () => {
+  const frames = validateDuelFrames(fixture());
+  const full = fixture().duel.clock;
+  for (const entry of full.entries) entry.receivedElapsedNanos += 5000;
+  const clock = validateDuelClock(full);
+  expect(() => verifyDuelOutcome(frames, clock, outcome())).not.toThrow();
+  const tick = clock.entries[5];
+  if (tick === undefined) throw new Error("Missing unit clock tick");
+  tick.receivedElapsedNanos++;
+  expect(() => verifyDuelOutcome(frames, clock, outcome())).toThrow(
+    "separate original clock",
+  );
 });
 
 test("rejects held live frames and changed terminal pixels", () => {

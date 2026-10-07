@@ -4,6 +4,30 @@ import { z } from "zod";
 import { digestFile, readJson } from "#learning/preference/ledger.ts";
 import { frozenManifest, root } from "#learning/sandbox.ts";
 
+/** Build exactly the artifacts that will be fingerprinted and staged in the native owner. */
+export async function buildCaptureInputs(): Promise<void> {
+  for (const [directory, tasks] of [
+    ["plugin", [":dist:shadowJar", ":dist:fixturesJar"]],
+    ["client", ["assemble"]],
+  ] as const) {
+    const build = Bun.spawn(
+      [
+        "mise",
+        "exec",
+        "--",
+        "gradle",
+        "-p",
+        path.join(root, directory),
+        ...tasks,
+        "--console=plain",
+      ],
+      { stdout: "inherit", stderr: "inherit" },
+    );
+    if ((await build.exited) !== 0)
+      throw new Error(`Native capture build failed: ${directory}`);
+  }
+}
+
 async function tree(directory: string): Promise<string[]> {
   const entries = await readdir(directory, { withFileTypes: true });
   const files: string[] = [];

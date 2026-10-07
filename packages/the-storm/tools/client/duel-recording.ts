@@ -1,11 +1,13 @@
 import type { DuelClient, DuelState } from "#learning/duels.ts";
 import { validateDuelClock } from "./duel-clock.ts";
 import { validateDuelFrames } from "./duel-video.ts";
+import type { DuelFrameReceipt } from "./duel-video.ts";
 import { request, waitFor } from "./protocol.ts";
 import type { Session } from "./protocol.ts";
 import { VideoStatus } from "./video-frames.ts";
 import { encodeVideo } from "./video.ts";
 import { z } from "zod";
+import { validateSetup } from "#learning/native/setup.ts";
 
 /** One original match attempt; full outcomes outlive the first-600-tick pixel window. */
 export async function recordDuel(options: {
@@ -57,6 +59,7 @@ export async function recordDuel(options: {
   if (rendered.status === "rejected") throw rendered.reason;
   if (completed.status === "rejected") throw completed.reason;
   const terminal = completed.value;
+  const setup = validateSetup(await duels.setup(), terminal);
   const framesFile = rendered.value.receipt;
   const frames = validateDuelFrames(await Bun.file(framesFile).json());
   const clockFile = z.string().parse(await request(session, "duel-seal"));
@@ -79,6 +82,30 @@ export async function recordDuel(options: {
     throw new Error(
       "Native model pixels differ from the original match outcome",
     );
+  verifyDuelOutcome(frames, clock, terminal);
+  const video = await encodeVideo(framesFile);
+  if (!video.native_window_bound)
+    throw new Error("Native model video lost its clock binding");
+  return { state: terminal, setup, framesFile, clockFile, frames, video };
+}
+
+/** Recheck the separate original clock when captured evidence is later prepared for review. */
+export function verifyDuelOutcome(
+  frames: DuelFrameReceipt,
+  clock: ReturnType<typeof validateDuelClock>,
+  terminal: DuelState,
+): void {
+  const last = clock.entries.at(-1)?.marker;
+  if (
+    clock.expected.seed !== terminal.seed ||
+    clock.expected.side !== terminal.side ||
+    clock.expected.mode !== terminal.mode ||
+    clock.expected.opponent !== terminal.opponent ||
+    last?.match !== terminal.match ||
+    last.result !== terminal.result ||
+    last.tick !== terminal.sampleTick
+  )
+    throw new Error("Original native clock differs from its captured outcome");
   const fullStart = clock.entries[1]?.receivedElapsedNanos;
   if (fullStart === undefined)
     throw new Error("Native model clock has no live anchor");
@@ -94,8 +121,4 @@ export async function recordDuel(options: {
         "Native model clip differs from the separate original clock",
       );
   });
-  const video = await encodeVideo(framesFile);
-  if (!video.native_window_bound)
-    throw new Error("Native model video lost its clock binding");
-  return { state: terminal, framesFile, clockFile, frames, video };
 }

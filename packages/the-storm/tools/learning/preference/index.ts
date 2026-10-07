@@ -2,12 +2,13 @@ import path from "node:path";
 import { parseArgs } from "node:util";
 import { z } from "zod";
 import { reviewEligibility } from "./eligibility.ts";
-import { preferenceSchedule, validateCaptures } from "./gate.ts";
+import { preferenceSchedule } from "./gate.ts";
 import contract from "./contract.json";
-import { PreferenceLedger, digestFile, readJson } from "./ledger.ts";
+import { PreferenceLedger, digestFile } from "./ledger.ts";
 import { blindVideo, run } from "./media.ts";
 import { root } from "#learning/sandbox.ts";
 import type { DuelState } from "#learning/duels.ts";
+import { verifyNativeCaptures } from "#learning/native/verify.ts";
 
 const args = parseArgs({
   allowPositionals: true,
@@ -81,7 +82,8 @@ switch (action) {
       required(args.values.evaluation),
       required(args.values.model),
     );
-    const captures = validateCaptures(await readJson(clipsFile));
+    const verified = await verifyNativeCaptures(pilot, eligible, clipsFile);
+    const captures = verified.captures;
     if (
       captures.actor_sha256 !== eligible.actor_sha256 ||
       captures.native_sha256 !== eligible.native_sha256
@@ -90,7 +92,10 @@ switch (action) {
         "preference captures use a different actor or native runtime",
       );
     const files = new Map(
-      eligible.files.map((file) => [file.file, file.sha256]),
+      [...eligible.files, ...verified.files].map((file) => [
+        file.file,
+        file.sha256,
+      ]),
     );
     const snapshot = async (file: string) => {
       const resolved = path.resolve(path.dirname(clipsFile), file);

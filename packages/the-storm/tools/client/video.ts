@@ -18,7 +18,7 @@ async function digest(file: string): Promise<string> {
   return hash.digest("hex");
 }
 
-async function verifyFrames(
+export async function verifyFrames(
   directory: string,
   receipt: RenderedReceipt,
 ): Promise<void> {
@@ -42,7 +42,7 @@ const Probe = z.object({
   format: z.object({ duration: z.string() }),
 });
 
-async function verifyVideo(
+export async function verifyVideo(
   file: string,
   receipt: RenderedReceipt,
 ): Promise<void> {
