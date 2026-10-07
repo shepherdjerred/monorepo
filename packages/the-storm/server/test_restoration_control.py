@@ -349,6 +349,68 @@ class RestorationControlTest(unittest.TestCase):
                 self.assertEqual(len(self.cluster.mutations), before)
                 control.require_offline(journal, readers=True)
 
+    def test_rollback_release_refuses_same_image_configuration_drift(self):
+        for change in ("claim", "command", "environment", "label"):
+            with self.subTest(change=change):
+                self.cluster = Cluster()
+                journal, transaction = self.rollback_fixture()
+                self.verify_rollback_fixture(journal, transaction)
+                journal["readersRemoved"] = True
+                self.declare_image(journal.string("rollbackImage"))
+                template = self.cluster.server.object("spec").object("template")
+                container = template.object("spec").objects("containers")[0]
+                if change == "claim":
+                    template.object("spec")["volumes"] = [
+                        {"name": "data", "persistentVolumeClaim": {"claimName": "different-claim"}}
+                    ]
+                elif change == "command":
+                    container["command"] = ["different-entrypoint"]
+                elif change == "environment":
+                    container["env"] = [{"name": "VERSION", "value": "different-version"}]
+                else:
+                    template["metadata"] = {"labels": {"different": "label"}}
+                control.assert_gitops_image(journal, journal.string("rollbackImage"))
+                before = len(self.cluster.mutations)
+                with self.assertRaisesRegex(ValueError, "exact accepted pod template"):
+                    control.release_rollback(self.path, journal)
+                self.assertEqual(len(self.cluster.mutations), before)
+                control.assert_closed(journal)
+                self.assertEqual(control.annotations(self.cluster.server)[control.LEASE], REQUEST)
+
+    def test_acquisition_refuses_preflight_template_drift_before_closing_any_route(self):
+        journal = self.initialize()
+        original = copy.deepcopy(self.cluster.server.object("spec").object("template"))
+        self.assertEqual(journal.object("rollbackTemplate"), original)
+        self.cluster.server.object("spec").object("template").object("spec").objects("containers")[0]["command"] = [
+            "different-entrypoint"
+        ]
+        with self.assertRaisesRegex(ValueError, "pod template changed before the rollback capture"):
+            control.acquire(self.path, journal)
+        self.assertEqual(self.cluster.mutations, [])
+        self.assertEqual(journal.string("phase"), "PREPARED")
+
+    def test_acquisition_refuses_template_drift_during_shutdown_before_acquiring_lease(self):
+        journal = self.initialize()
+        original_run = self.cluster.run
+
+        def drift_when_scaled_down(arguments: list[str], timeout: float = 30) -> str:
+            result = original_run(arguments, timeout)
+            if arguments[2:5] == ["patch", "statefulset", control.SERVER]:
+                self.cluster.server.object("spec").object("template").object("spec").objects("containers")[0][
+                    "command"
+                ] = ["different-entrypoint"]
+            return result
+
+        with (
+            patch.object(control, "run", side_effect=drift_when_scaled_down),
+            self.assertRaisesRegex(ValueError, "pod template changed before the rollback capture"),
+        ):
+            control.acquire(self.path, journal)
+        self.assertNotIn(control.LEASE, control.annotations(self.cluster.server))
+        self.assertEqual(journal.string("phase"), "ADMISSION_CLOSED")
+        self.assertEqual(self.cluster.server.object("spec").integer("replicas"), 0)
+        control.assert_closed(journal)
+
     def test_rollback_release_refuses_helpers_changed_proof_and_candidate_gitops_image(self):
         journal, transaction = self.rollback_fixture()
         self.verify_rollback_fixture(journal, transaction)

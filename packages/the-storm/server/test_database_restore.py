@@ -189,6 +189,43 @@ class DatabaseRestoreTest(unittest.TestCase):
         self.assertIn("essentials_teleport_uses", policy["resetTables"])
         self.assertNotIn("essentials_teleport_usage", policy["resetTables"])
 
+    def test_reviewed_policy_resets_welcome_markers_with_balances_and_retains_core_identity(self):
+        policy = restore.reviewed_policy(Path(__file__).with_name("restoration-policy.json"))
+        economy_tables = {"economy_account", "economy_ledger", "economy_player_seen"}
+        self.assertTrue(economy_tables <= set(policy["resetTables"]))
+        self.assertTrue(economy_tables.isdisjoint(policy["retainTables"]))
+        plugin = Path(__file__).parents[1] / "plugin"
+        migrations: dict[str, list[Path]] = {}
+        for file in plugin.glob("**/src/main/resources/db/migration/*/V*.sql"):
+            migrations.setdefault(file.parent.name, []).append(file)
+        original, candidate = self.root / "economy-original.db", self.root / "economy-candidate.db"
+        for database in (original, candidate):
+            with closing(sqlite3.connect(database)) as connection:
+                for module in policy["migrationModules"]:
+                    for file in sorted(migrations[module], key=lambda path: int(path.name.split("__")[0][1:])):
+                        connection.executescript(file.read_text(encoding="utf-8"))
+                    connection.execute(f"CREATE TABLE flyway_{module}_history(version TEXT PRIMARY KEY)")
+                connection.commit()
+        player = "00000000-0000-0000-0000-000000000001"
+        with closing(sqlite3.connect(original)) as connection:
+            connection.execute("INSERT INTO core_player VALUES (?, 'Alice', 123)", (player,))
+            connection.execute("INSERT INTO economy_player_seen VALUES (?, 100, 'Alice', 123)", (player,))
+            connection.execute("INSERT INTO economy_account VALUES ('player', ?, 500)", (player,))
+            connection.execute(
+                "INSERT INTO economy_ledger(from_kind,from_id,to_kind,to_id,amount,reason,at) "
+                "VALUES ('server','server','player',?,500,'starting-balance',100)",
+                (player,),
+            )
+            connection.commit()
+        before = hashlib.sha256(original.read_bytes()).hexdigest()
+        receipt = restore.retain_identity(original, candidate, policy)
+        self.assertEqual(receipt["retained"]["core_player"]["rows"], 1)
+        self.assertEqual(before, hashlib.sha256(original.read_bytes()).hexdigest())
+        with closing(sqlite3.connect(candidate)) as connection:
+            self.assertEqual(connection.execute("SELECT * FROM core_player").fetchall(), [(player, "Alice", 123)])
+            for table in economy_tables:
+                self.assertEqual(connection.execute(f'SELECT * FROM "{table}"').fetchall(), [])
+
     def test_policy_has_no_overlap_duplicates_or_unknown_fields(self):
         file = self.root / "policy.json"
         file.write_text(json.dumps(self.policy), encoding="utf-8")

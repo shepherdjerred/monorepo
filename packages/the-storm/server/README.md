@@ -292,6 +292,8 @@ records and personal letters are retained. World-bound staff state, including
 spawn overrides, jail coordinates and logout positions, requires an explicit
 position migration before import; IP bans can be retained without moving
 coordinates. Gameplay tables, teleport usage and migration histories start fresh.
+Economy balances, transfers and welcome-grant markers reset together, allowing
+returning players to receive the configured starting balance on their next join.
 The retention policy must cover every table produced by the current candidate;
 unknown tables abort preparation. Historical owner imports use the domain's
 stable town IDs and their recorded import time; archive dates do not imply
@@ -441,6 +443,11 @@ was already promoted, then use `release-rollback` to restore the captured routes
 with Java wake last. The controller requires unchanged verification, removed
 helpers, a stopped owned volume and the reconciled original image at both Helm
 precedence levels. Recovery release resumes after an interrupted route reopening.
+Preflight records the complete original pod template. Acquisition refuses drift
+before closing routes and before acquiring the stopped lease. Rollback release
+compares that original template again immediately before clearing the lease;
+same-image changes to storage, commands, environment or template metadata must
+be reconciled to the verified original configuration before reopening.
 Creating another writer invalidates both candidate and rollback acceptance.
 It also revokes the prior installation authorization before granting write access.
 Only a newly verified installation can authorize candidate startup again; a

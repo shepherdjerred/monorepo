@@ -300,6 +300,7 @@ def initialize(path: Path, request: str, image: str) -> JsonObject:
             "requestId": request,
             "candidateImage": image,
             "rollbackImage": server_image(server),
+            "rollbackTemplate": server.object("spec").object("template"),
             "serverUid": server.object("metadata").string("uid"),
             "claimUid": claim.object("metadata").string("uid"),
             "volumeName": claim.object("spec").string("volumeName"),
@@ -360,6 +361,13 @@ def assert_closed(journal: JsonObject) -> None:
         raise ValueError("A pod matches the closed public route selector")
 
 
+def assert_rollback_template(server: JsonObject, journal: JsonObject) -> None:
+    if server_image(server) != journal.string("rollbackImage"):
+        raise ValueError("Server image changed before the rollback capture")
+    if server.object("spec").object("template") != journal.object("rollbackTemplate"):
+        raise ValueError("Server pod template changed before the rollback capture")
+
+
 def acquire(path: Path, journal: JsonObject) -> None:
     claim = read("pvc", CLAIM)
     volume = read("pv", journal.string("volumeName"), "")
@@ -372,6 +380,8 @@ def acquire(path: Path, journal: JsonObject) -> None:
         raise ValueError("Storm data claim was replaced during maintenance")
     server = read("statefulset", SERVER)
     assert_owner(server, journal, allow_unheld=True)
+    if annotations(server).get(LEASE) is None:
+        assert_rollback_template(server, journal)
     if journal["phase"] == "PREPARED":
         if server.object("spec").integer("replicas") != 0:
             assert_empty()
@@ -387,8 +397,8 @@ def acquire(path: Path, journal: JsonObject) -> None:
         assert_closed(journal)
         server = read("statefulset", SERVER)
         assert_owner(server, journal, allow_unheld=True)
-        if annotations(server).get(LEASE) is None and server_image(server) != journal.string("rollbackImage"):
-            raise ValueError("Server image changed before the rollback capture")
+        if annotations(server).get(LEASE) is None:
+            assert_rollback_template(server, journal)
         if server.object("spec").integer("replicas") != 0:
             assert_empty()
             patch("statefulset", SERVER, server, [{"op": "add", "path": "/spec/replicas", "value": 0}])
@@ -397,6 +407,8 @@ def acquire(path: Path, journal: JsonObject) -> None:
             run(["-n", NAMESPACE, "wait", "--for=delete", "pod/" + SERVER + "-0", "--timeout=180s"], 190)
         server = read("statefulset", SERVER)
         assert_owner(server, journal, allow_unheld=True)
+        if annotations(server).get(LEASE) is None:
+            assert_rollback_template(server, journal)
         if server.object("spec").integer("replicas") != 0 or server.object("status", {}).get("replicas", 0) != 0:
             raise ValueError("Server has not finished stopping")
         pods = JsonObject.parse(run(["-n", NAMESPACE, "get", "pods", "-o", "json"])).objects("items")
@@ -1666,16 +1678,16 @@ def release_rollback(path: Path, journal: JsonObject) -> None:
         Path(journal.object("restore").string("proofPath")),
         verification.string("backupProofSha256"),
     )
-    reopen(path, journal, journal.string("rollbackImage"))
+    reopen(path, journal, journal.string("rollbackImage"), journal.object("rollbackTemplate"))
 
 
 def reopen(
-    path: Path, journal: JsonObject, expected_image: str, accepted_template: JsonObject | None = None
+    path: Path, journal: JsonObject, expected_image: str, accepted_template: JsonObject
 ) -> None:
     """Restore captured routes for an accepted candidate or byte-verified whole-volume rollback."""
     server = read("statefulset", SERVER)
     assert_owner(server, journal, allow_unheld=True)
-    if accepted_template is not None and server.object("spec").object("template") != accepted_template:
+    if server.object("spec").object("template") != accepted_template:
         raise ValueError("Release requires the exact accepted pod template")
     if server_image(server) != expected_image:
         raise ValueError("Release requires the accepted candidate image or recorded rollback image")
