@@ -58,6 +58,8 @@ ArgoCD waits for `NoPodReady` and `SomePodsNotReady` rollout conditions within
 the existing sync timeout. Prometheus health requires current-generation
 `Available` and `Reconciled` conditions; failed reconciliation still fails the
 sync. ArgoCD's configuration reconciles before the monitoring application wave.
+Embedded gateway ports declare TCP explicitly so the API's default does not
+leave the Prometheus and Alertmanager custom resources perpetually OutOfSync.
 
 Flipt's upstream also listens only on loopback, at port 8081. Both containers'
 HTTP health probes use the gateway's Pod-addressable port 8080, which forwards

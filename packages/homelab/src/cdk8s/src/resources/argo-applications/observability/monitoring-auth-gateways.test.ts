@@ -102,6 +102,7 @@ describe("monitoring mutation authentication", () => {
       gateways.alertmanagerContainer,
     ]) {
       for (const port of container.ports) {
+        expect(port.protocol).toBe("TCP");
         expect(port.name.length).toBeLessThanOrEqual(15);
         expect(port.name).toMatch(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
         expect(port.name).toMatch(/[a-z]/);

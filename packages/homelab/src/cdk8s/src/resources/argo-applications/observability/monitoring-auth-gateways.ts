@@ -125,7 +125,9 @@ function gatewayContainer(props: GatewayContainerProps) {
     args: [
       'printf "%s" "$CADDY_CONFIG" > /tmp/Caddyfile && exec caddy run --config /tmp/Caddyfile --adapter caddyfile',
     ],
-    ports: [{ name: "auth-web", containerPort: props.port }],
+    // Embedded CR container ports retain the API's TCP default in live state.
+    // Declare it so ArgoCD's server comparison converges after reconciliation.
+    ports: [{ name: "auth-web", containerPort: props.port, protocol: "TCP" }],
     env: [
       {
         name: "CADDY_CONFIG",
