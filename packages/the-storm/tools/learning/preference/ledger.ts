@@ -195,7 +195,7 @@ export class PreferenceLedger {
     );
   }
 
-  async score(answersFile: string) {
+  private async verifiedPack() {
     const plan = await this.plan();
     const pack = Pack.parse(
       await readJson(path.join(this.output, "pack.json")),
@@ -216,22 +216,95 @@ export class PreferenceLedger {
     )
       throw new Error("blind review does not refer to the frozen actor");
     for (const pair of review.pairs)
-      for (const clip of [pair.A, pair.B])
+      for (const [label, clip] of [
+        ["A", pair.A],
+        ["B", pair.B],
+      ] as const) {
+        if (
+          clip.file !==
+          `pair-${pair.pair.toString().padStart(2, "0")}-${label}.mp4`
+        )
+          throw new Error("blind review has a noncanonical clip path");
         if ((await digestFile(path.join(publicDir, clip.file))) !== clip.sha256)
           throw new Error("blind review footage changed");
-    const ballot = Ballot.parse(await readJson(answersFile));
-    const result = preferenceResult(review, key, ballot);
-    await seal(path.join(this.output, "answers.sealed.json"), jsonText(ballot));
-    const evidence = {
-      ...result,
+      }
+    return { plan, pack, review, key };
+  }
+
+  private async evidence(
+    pack: Awaited<ReturnType<PreferenceLedger["verifiedPack"]>>,
+    rawBallot: unknown,
+  ) {
+    const ballot = Ballot.parse(rawBallot);
+    return {
+      ...preferenceResult(pack.review, pack.key, ballot),
       plan_sha256: await digestFile(path.join(this.output, "plan.json")),
-      key_sha256: pack.key_sha256,
+      key_sha256: pack.pack.key_sha256,
       ballot_sha256: sha(jsonText(ballot)),
     };
+  }
+
+  async score(answersFile: string) {
+    const pack = await this.verifiedPack();
+    const ballot = Ballot.parse(await readJson(answersFile));
+    const evidence = await this.evidence(pack, ballot);
+    await seal(path.join(this.output, "answers.sealed.json"), jsonText(ballot));
     await seal(
       path.join(this.output, "preference-result.json"),
       jsonText(evidence),
     );
     return evidence;
+  }
+
+  /** Recompute the original sealed vote; never reseal, rescore or consume a ballot. */
+  async verifyResult() {
+    const owned = [
+      this.claimFile,
+      ...[
+        "plan.json",
+        "pack.claimed.json",
+        "labels.json",
+        "key.json",
+        "pack.json",
+        "public/review.json",
+        "answers.sealed.json",
+        "preference-result.json",
+      ].map((file) => path.join(this.output, file)),
+    ];
+    const frozen = await Promise.all(
+      owned.map(async (file) => ({ file, sha256: await digestFile(file) })),
+    );
+    const pack = await this.verifiedPack();
+    const ballotFile = path.join(this.output, "answers.sealed.json");
+    const reportFile = path.join(this.output, "preference-result.json");
+    const result = await this.evidence(pack, await readJson(ballotFile));
+    if (
+      (await digestFile(ballotFile)) !== result.ballot_sha256 ||
+      (await readFile(reportFile, "utf8")) !== jsonText(result)
+    )
+      throw new Error(
+        "sealed preference result differs from the original ballot",
+      );
+    const packClaim = await readJson(
+      path.join(this.output, "pack.claimed.json"),
+    );
+    z.object({ version: z.literal(1) })
+      .strict()
+      .parse(packClaim);
+    const labels = await readJson(path.join(this.output, "labels.json"));
+    if (jsonText(labels) !== jsonText(pack.key.pairs))
+      throw new Error("blind labels differ from the sealed answer key");
+    const files = [
+      ...pack.plan.files,
+      ...frozen,
+      ...pack.review.pairs.flatMap((pair) =>
+        [pair.A, pair.B].map((clip) => ({
+          file: path.join(this.output, "public", clip.file),
+          sha256: clip.sha256,
+        })),
+      ),
+    ];
+    await verifyFiles(files);
+    return { result, plan: pack.plan, files };
   }
 }

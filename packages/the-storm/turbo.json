@@ -13,6 +13,8 @@
     // test / test:ci. Gradle's up-to-date checks keep the later steps cheap.
     "build": {
       "inputs": [
+        "client/**",
+        "plugin/**/src/main/resources/**",
         "plugin/**/*.java",
         "plugin/**/*.kts",
         "plugin/**/*.kt",
@@ -25,7 +27,9 @@
         "server/owned/plugins/TheStorm/**",
         "$TURBO_ROOT$/packages/feature-flags/src/managed-flag-inventory.json",
         "!plugin/**/build/**",
-        "!plugin/.gradle/**"
+        "!plugin/.gradle/**",
+        "!client/**/build/**",
+        "!client/.gradle/**"
       ],
       "outputs": ["plugin/dist/build/libs/TheStorm.jar"],
       "passThroughEnv": [
@@ -38,6 +42,10 @@
     "test": {
       "dependsOn": ["lint"],
       "inputs": [
+        "client/**",
+        "scripts/**",
+        "tools/**",
+        "plugin/**/src/**",
         "plugin/**/*.java",
         "plugin/**/*.kts",
         "plugin/**/*.kt",
@@ -50,7 +58,12 @@
         "server/owned/plugins/TheStorm/**",
         "$TURBO_ROOT$/packages/feature-flags/src/managed-flag-inventory.json",
         "!plugin/**/build/**",
-        "!plugin/.gradle/**"
+        "!plugin/.gradle/**",
+        "!client/**/build/**",
+        "!client/.gradle/**",
+        "!tools/**/.venv/**",
+        "!tools/**/__pycache__/**",
+        "!scripts/**/__pycache__/**"
       ],
       "outputs": [],
       "passThroughEnv": [
@@ -63,6 +76,10 @@
     "test:ci": {
       "dependsOn": ["lint"],
       "inputs": [
+        "client/**",
+        "scripts/**",
+        "tools/**",
+        "plugin/**/src/**",
         "plugin/**/*.java",
         "plugin/**/*.kts",
         "plugin/**/*.kt",
@@ -75,7 +92,12 @@
         "server/owned/plugins/TheStorm/**",
         "$TURBO_ROOT$/packages/feature-flags/src/managed-flag-inventory.json",
         "!plugin/**/build/**",
-        "!plugin/.gradle/**"
+        "!plugin/.gradle/**",
+        "!client/**/build/**",
+        "!client/.gradle/**",
+        "!tools/**/.venv/**",
+        "!tools/**/__pycache__/**",
+        "!scripts/**/__pycache__/**"
       ],
       "outputs": [],
       "passThroughEnv": [
@@ -88,6 +110,10 @@
     "lint": {
       "dependsOn": ["typecheck"],
       "inputs": [
+        "client/**",
+        "scripts/**",
+        "tools/**",
+        "plugin/**/src/**",
         "plugin/**/*.java",
         "plugin/**/*.kts",
         "plugin/**/*.kt",
@@ -102,7 +128,12 @@
         "eslint.config.ts",
         "package.json",
         "!plugin/**/build/**",
-        "!plugin/.gradle/**"
+        "!plugin/.gradle/**",
+        "!client/**/build/**",
+        "!client/.gradle/**",
+        "!tools/**/.venv/**",
+        "!tools/**/__pycache__/**",
+        "!scripts/**/__pycache__/**"
       ],
       "outputs": [],
       "passThroughEnv": [
@@ -115,6 +146,10 @@
     "typecheck": {
       "dependsOn": ["build"],
       "inputs": [
+        "client/**",
+        "scripts/**",
+        "tools/**",
+        "plugin/**/src/**",
         "plugin/**/*.java",
         "plugin/**/*.kts",
         "plugin/**/*.kt",
@@ -131,7 +166,12 @@
         "eslint.config.ts",
         "package.json",
         "!plugin/**/build/**",
-        "!plugin/.gradle/**"
+        "!plugin/.gradle/**",
+        "!client/**/build/**",
+        "!client/.gradle/**",
+        "!tools/**/.venv/**",
+        "!tools/**/__pycache__/**",
+        "!scripts/**/__pycache__/**"
       ],
       "outputs": [],
       "passThroughEnv": [

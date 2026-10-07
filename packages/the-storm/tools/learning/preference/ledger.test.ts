@@ -57,6 +57,28 @@ async function answers(output: string, learnedVotes = 15) {
   return target;
 }
 
+async function verifyCommand(output: string) {
+  const child = Bun.spawn(
+    [
+      process.execPath,
+      path.join(import.meta.dirname, "index.ts"),
+      "verify",
+      "--pilot",
+      directory,
+      "--output",
+      output,
+    ],
+    { stdout: "pipe", stderr: "pipe" },
+  );
+  const [stdout, stderr, code] = await Promise.all([
+    new Response(child.stdout).text(),
+    new Response(child.stderr).text(),
+    child.exited,
+  ]);
+  expect(stderr).toBe("");
+  return { result: JSON.parse(stdout), code };
+}
+
 describe("immutable blind review ownership", () => {
   it("publishes only opaque labels and scores once with artifact fingerprints", async () => {
     const { output, claim, plan } = await fixture();
@@ -83,6 +105,15 @@ describe("immutable blind review ownership", () => {
     await expect(ledger.score(await answers(output, 20))).rejects.toThrow();
     expect(await readJson(path.join(output, "preference-result.json"))).toEqual(
       result,
+    );
+    const before = await readFile(path.join(output, "answers.sealed.json"));
+    const first = await ledger.verifyResult();
+    const second = await ledger.verifyResult();
+    expect(first.result).toEqual(result);
+    expect(second.result).toEqual(result);
+    expect(await verifyCommand(output)).toEqual({ result, code: 0 });
+    expect(await readFile(path.join(output, "answers.sealed.json"))).toEqual(
+      before,
     );
   });
 
@@ -149,5 +180,50 @@ describe("immutable blind review ownership", () => {
     expect(await readJson(path.join(output, "preference-result.json"))).toEqual(
       result,
     );
+    const verified = await ledger.verifyResult();
+    expect(verified.result.passed).toBe(false);
+    expect(await verifyCommand(output)).toEqual({ result, code: 1 });
+  });
+
+  it("recomputes the sealed vote and rejects changed ballots, results, labels or clips", async () => {
+    const { output, claim, plan } = await fixture();
+    const ledger = await PreferenceLedger.create(output, claim, plan);
+    await ledger.pack(copyFile);
+    const result = await ledger.score(await answers(output));
+    const report = path.join(output, "preference-result.json");
+    await writeFile(
+      report,
+      jsonText({ ...result, passed: true, learnedVotes: 20, ties: 0 }),
+    );
+    await expect(ledger.verifyResult()).rejects.toThrow(
+      "differs from the original ballot",
+    );
+    await writeFile(report, jsonText(result));
+    for (const name of [
+      "answers.sealed.json",
+      "labels.json",
+      "key.json",
+      "public/review.json",
+      "public/pair-01-A.mp4",
+    ]) {
+      const target = path.join(output, name);
+      const original = await readFile(target);
+      await writeFile(target, "changed sealed evidence");
+      await expect(ledger.verifyResult()).rejects.toThrow();
+      await writeFile(target, original);
+    }
+    const verified = await ledger.verifyResult();
+    expect(verified.result).toEqual(result);
+  });
+
+  it("does not let an interrupted score acquire a completed result", async () => {
+    const { output, claim, plan } = await fixture();
+    const ledger = await PreferenceLedger.create(output, claim, plan);
+    await ledger.pack(copyFile);
+    await expect(ledger.verifyResult()).rejects.toThrow();
+    const ballot = await answers(output);
+    await copyFile(ballot, path.join(output, "answers.sealed.json"));
+    await expect(ledger.verifyResult()).rejects.toThrow();
+    await expect(ledger.score(ballot)).rejects.toThrow();
   });
 });

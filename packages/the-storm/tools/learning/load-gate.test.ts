@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { LoadSample, type LoadTick } from "./load-client.ts";
-import { loadSummary, percentile } from "./load-gate.ts";
+import { inferenceDrained, loadSummary, percentile } from "./load-gate.ts";
 
 function state(submitted: number, deadlineMet: number, extra = {}) {
   return LoadSample.parse({
@@ -52,6 +52,15 @@ function ticks(alive = 100): LoadTick[] {
 }
 
 describe("native inference load evidence", () => {
+  test("starts the next window only after prior requests are accounted for", () => {
+    expect(inferenceDrained(state(100, 99))).toBe(false);
+    expect(inferenceDrained(state(100, 100))).toBe(true);
+    expect(inferenceDrained(state(100, 99, { deadlineMissed: 1 }))).toBe(true);
+    expect(() => inferenceDrained(state(100, 101))).toThrow("accounting");
+    const missing = state(0, 0);
+    delete missing.inference;
+    expect(() => inferenceDrained(missing)).toThrow("metrics missing");
+  });
   test("requires the full roster and uses every actual server tick", () => {
     const before = state(0, 0);
     const after = state(300_000, 299_900);

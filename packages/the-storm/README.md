@@ -1414,6 +1414,7 @@ claimed strength run and native runtime inputs are verified before preparation.
 bun run bots:preference schedule --pilot .cache/rwf-pilot/trooper --evaluation .cache/rwf-evaluation/trooper --model .cache/rwf-pilot/trooper/seed-0/onnx
 bun run bots:preference prepare --pilot .cache/rwf-pilot/trooper --evaluation .cache/rwf-evaluation/trooper --model .cache/rwf-pilot/trooper/seed-0/onnx --clips .cache/rwf-preference/captures.json --output .cache/rwf-preference/review
 bun run bots:preference score --pilot .cache/rwf-pilot/trooper --output .cache/rwf-preference/review --answers .cache/rwf-preference/review/public/answers.json
+bun run bots:preference verify --pilot .cache/rwf-pilot/trooper --output .cache/rwf-preference/review
 bun run test:preference-media
 ```
 
@@ -1457,6 +1458,12 @@ answer key and ballot. This measures a preference for humanlike behavior,
 not indistinguishability from a human. Passing leaves the actor `unaccepted`
 with ordinary learned control disabled; promotion and the other gates remain
 separate.
+
+`verify` rereads the original sealed ballot and recomputes every vote. It checks
+the frozen source files, pack, answer key, labels, all forty public clips and the
+exact stored result, retaining their hashes for promotion. Repeated verification
+does not write or consume evidence. A complete failed review still exits with
+status 1; missing, interrupted or changed evidence fails explicitly.
 
 Java inference diagnostics load a frozen, unaccepted ONNX export only in the
 disposable fixture server:
@@ -1524,6 +1531,14 @@ pending requests count against that fraction. Action age, full-batch size and
 native damage are also checked. `samples.jsonl`, `phases.json`, recordings and
 `verification.json` retain the evidence and input hashes. These bars supplement
 the existing authored load tests and gameplay floors; they do not replace them.
+
+Before writing its final report, the load runner reconstructs baseline and phase
+windows from every raw command reply. The declared tick arrays, match schedules
+and before/after counters must match that complete stream. Missing or duplicated
+ticks, foreign or oversized body populations, counter resets and pending work at
+the start of a window fail. Slow ticks, deaths, skipped requests and requests
+pending at the final boundary stay in their original denominators. This checks
+the load evidence; it does not accept an actor or establish normal-match behavior.
 
 The compute pool loads and warms native sessions and processes at most one
 immutable observation batch in flight. Busy ticks are skipped rather than queued.
