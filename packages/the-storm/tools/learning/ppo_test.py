@@ -55,7 +55,7 @@ def make_episode(model: ActorCritic, length: int = 12) -> Episode:
 
 def frame(tick: int = 10) -> dict[str, object]:
     return {
-        "protocol": 2,
+        "protocol": 3,
         "contract": "rwf-combat-v1",
         "seed": 3,
         "side": "red",

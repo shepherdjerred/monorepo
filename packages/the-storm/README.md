@@ -1269,11 +1269,15 @@ Draws, stops and 60-second timeouts count as non-wins. A failed 100-trial gate
 exits with status 1 after exporting evidence and removing the server. Short
 runs are diagnostics.
 
-`rwflearn begin <seed> <red|blue> <authored|external> [stationary|chase|basic|authored]`
+`rwflearn begin <seed> <red|blue> <authored|external> [opponent]`
 requires an empty training-yard lobby. The optional opponent defaults to the
 frozen basic controller. Stationary does not move or attack; chase closes and
 attacks without strafing; authored uses its normal combat and healing.
-`rwflearn state` returns a version-2 JSON envelope, defined with its action
+`authored-pressure` closes to 2.5 blocks and `authored-patient` prefers a
+2.7–3.0-block spacing band; both keep authored aim, click timing and healing.
+These movement variants are confined to the disposable fixture. The `historical`
+opponent requires external mode and controls the second body with a frozen actor.
+`rwflearn state` returns a version-3 JSON envelope, defined with its action
 layout in `plugin/modules/rwfbots/src/main/resources/rwf-duel.json`. Actor
 input is exclusively its 34-value `observation` vector, ordered by the same TSV
 as human recordings; damage totals and outcomes are separate evaluation data.
@@ -1287,6 +1291,11 @@ noncombat actions stay authored. Missing or expired actions restore authored
 control. `rwflearn cancel` stops only the exact bots-only experiment; experiments
 do not update personality ratings and cannot control the successor match.
 `tools/learning/duels.ts` provides the validated asynchronous RCON client.
+Historical duels additionally expose `opponentFrame` with that body's own fair
+observation, body/life/tick and applied-control acknowledgements. `rwflearn acts`
+accepts two consecutive nine-field action contexts, with distinct bodies and the
+same tick. It validates both before accepting either. Each body has independent
+action clocks, facing contexts and fallback accounting.
 
 The PPO runner owns a disposable Paper server and a Python worker. RCON
 credentials stay in the server owner; the worker receives only validated
@@ -1312,14 +1321,55 @@ terminal win/loss bonus. Aim, item use, healing and navigation remain authored.
 Paper confirms which submitted decisions actually controlled a body; only
 those receive actor loss. Unapplied decisions still train the value function.
 Skipped 20 Hz observations or expired contexts discard the whole episode;
+an action that races with the duel ending does the same, using the fixture's
+explicit `duel no longer live` response. Malformed requests still fail loudly;
 three consecutive discarded episodes stop collection for repair. Budget
 expiry during an optimizer update restores its starting weights.
 
 Each run freezes the runtime inputs and writes automated rollouts, reports and
 an `unaccepted` actor checkpoint. Diagnostic initialization is synthetic and
-cannot pass a pilot quality gate. The current CLI selects one opponent per
-invocation; curriculum progression, historical opponents, frozen combat gates
-and blind human comparisons belong to the pilot orchestration.
+cannot pass a pilot quality gate. The owner starts its deadline before launching
+uv/Python, charges imports, BC, device warmup and Paper boot to the same window,
+and kills the worker's private process group at that deadline, including Python
+children of uv. The running watchdog uses a monotonic timer; SIGINT/SIGTERM
+also cancel that owned group. The worker reserves 15 seconds within
+the window to serialize its final actor; server cleanup may finish afterward.
+
+The three-seed pilot initializes BC independently from the same human dataset
+and runs each seed for at most eight hours, sequentially. It freezes the trainer
+sources, uv lock, curriculum, runtime and all dataset split hashes. Run from this
+package with freshly built plugin and fixture jars:
+
+```bash
+bun run bots:pilot --dataset .cache/rwf-dataset --device mps --seeds 17,18,19 --output .cache/rwf-pilot/trooper
+bun run bots:pilot --resume --output .cache/rwf-pilot/trooper
+bun run bots:pilot --diagnostic --device cpu --seeds 17000,17001,17002 --output .cache/rwf-pilot/diagnostic
+```
+
+The curriculum in `tools/learning/curriculum.json` allocates the remaining PPO
+window to stationary targets (10%), chase/strafe (15%), authored styles (35%),
+then historical opponents (40%). Each phase must complete its minimum updates
+before advancing, so slow boot or training cannot skip a phase. A snapshot is
+frozen at BC initialization, each phase transition and every 25 updates.
+Historical matches sample the BC anchor plus the latest fifteen snapshots,
+using the same frozen opponent for each red/blue pair. Its weights are loaded
+with strict hash checks and disabled gradients; its memory resets each duel.
+Both policies receive only their own 34 fair features. Skipped observations
+continue to censor the entire duel.
+
+Immutable, fsynced seed claims and results record the original deadline and
+final actor hashes. Concurrent owners cannot claim the same seed. `--resume`
+continues only pending seeds after orderly frozen results, using the exact
+recorded inputs; it verifies previously frozen artifacts and never renews a
+claimed seed's window. A running, interrupted or failed seed stops the pilot
+for repair. Failure does not automatically retry training or start more seeds.
+The diagnostic preset instead allows three 300-second windows and seven updates
+per seed, exercising every opponent and phase with synthetic initialization.
+
+Finishing training only freezes candidates. The runner reports `unaccepted`
+and `pilotAcceptanceChecked: false`; frozen combat gates and blind human
+comparisons are separate acceptance work. It does not enable learned control
+in ordinary matches.
 
 Payouts go through an outbox in `rwf_match_player` and the economy's keyed
 transfers (`rwf:<matchId>:<uuid>`), so a crash between the match ending and

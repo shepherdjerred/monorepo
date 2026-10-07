@@ -51,9 +51,8 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
   private Optional<MatchEvents.Subscription> subscription = Optional.empty();
   private Optional<UUID> match = Optional.empty();
   private Optional<UUID> candidate = Optional.empty();
-  private Optional<CombatHarness.Frame> latest = Optional.empty();
-  private Optional<ActionTicket> action = Optional.empty();
-  private final java.util.ArrayDeque<CombatHarness.Frame> contexts = new java.util.ArrayDeque<>();
+  private DuelActor primary = new DuelActor();
+  private DuelActor historical = new DuelActor();
   private final java.util.IdentityHashMap<EntityDamageByEntityEvent, Double> healthBefore =
       new java.util.IdentityHashMap<>();
   private final Map<CombatantId, Vec3> seen = new java.util.HashMap<>();
@@ -63,15 +62,11 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
   private String opponent = "basic";
   private long seed;
   private long started;
-  private long acceptedTick = -1;
-  private long applied;
-  private long fallback;
   private double dealt;
   private double received;
   private double sampledDealt;
   private double sampledReceived;
   private long sampleTick;
-  private final java.util.ArrayDeque<Long> used = new java.util.ArrayDeque<>();
   private String result = "waiting";
 
   DuelFixtures(JavaPlugin plugin) {
@@ -112,6 +107,7 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
           if (args.length != 1) throw new IllegalArgumentException("state has no arguments");
         }
         case "act" -> submit(args);
+        case "acts" -> submitPair(args);
         case "cancel" -> cancel();
         default -> throw new IllegalArgumentException("unknown rwflearn command");
       }
@@ -134,6 +130,8 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
     var nextOpponent = args.length == 5 ? args[4] : "basic";
     if (!PROTOCOL.opponents().contains(nextOpponent))
       throw new IllegalArgumentException("unknown duel opponent");
+    if (nextOpponent.equals("historical") && !args[3].equals("external"))
+      throw new IllegalArgumentException("historical opponent requires external mode");
     var current = storm().service(MatchView.class).current().map(MatchState::of).orElseThrow();
     if (current.phase() != MatchState.Phase.LOBBY
         || !current.combatants().isEmpty()
@@ -145,15 +143,10 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
     opponent = nextOpponent;
     seed = nextSeed;
     candidate = Optional.empty();
-    latest = Optional.empty();
-    action = Optional.empty();
-    acceptedTick = -1;
-    contexts.clear();
-    used.clear();
+    primary = new DuelActor();
+    historical = new DuelActor();
     seen.clear();
     pursuit.clear();
-    applied = 0;
-    fallback = 0;
     dealt = 0;
     received = 0;
     sampledDealt = 0;
@@ -180,10 +173,10 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
       spawnDuel(current);
     } else if (current.phase() == MatchState.Phase.ENDED && result.equals("live")) {
       result = current.winner().map(w -> w.equals(side) ? "win" : "loss").orElse("draw");
-      action = Optional.empty();
+      clearActions();
     } else if (current.phase() == MatchState.Phase.RESETTING && result.equals("live")) {
       result = "stopped";
-      action = Optional.empty();
+      clearActions();
     }
   }
 
@@ -227,7 +220,7 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
     match.ifPresent(id -> storm().service(ShowcaseControl.class).stop(id));
     storm().service(CombatHarness.class).detach();
     match = Optional.empty();
-    action = Optional.empty();
+    clearActions();
     if (result.equals("live") || result.equals("waiting")) result = "cancelled";
   }
 
@@ -258,7 +251,9 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
       decision = pursuit.computeIfAbsent(self.id(), id -> pursuit(authored, nav));
     }
     var gapples =
-        self.team().value().equals(side) || opponent.equals("authored")
+        self.team().value().equals(side)
+                || opponent.startsWith("authored")
+                || opponent.equals("historical")
             ? authored.gapplesLeft()
             : 0;
     return new ReflexInput(self, authored.snapshot(), decision, target, gapples);
@@ -308,28 +303,47 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
       return List.of();
     }
     if (!candidate.filter(frame.body()::equals).isPresent()) {
-      return opponent.equals("authored") ? frame.authored().commands() : basic(frame);
+      if (opponent.equals("historical")) return historical.commands(frame, true);
+      return opponent.startsWith("authored") ? authored(frame) : basic(frame);
     }
-    latest = Optional.of(frame);
-    contexts.addLast(frame);
-    while (contexts.size() > 3) contexts.removeFirst();
-    if (!mode.equals("external")) return frame.authored().commands();
-    var response =
-        action.filter(
-            ticket ->
-                ticket.applies(
-                    frame.matchId(), frame.body(), frame.life(), frame.input().snapshot().tick()));
-    if (response.isEmpty()
-        || !CombatCommands.eligible(frame.authored().commands(), frame.input())) {
-      fallback++;
-      return frame.authored().commands();
-    }
-    applied++;
-    var usedTick = response.orElseThrow().tick();
-    if (!used.contains(usedTick)) used.addLast(usedTick);
-    while (used.size() > 4) used.removeFirst();
-    return CombatCommands.replace(
-        frame.authored().commands(), frame.input(), response.orElseThrow());
+    return primary.commands(frame, mode.equals("external"));
+  }
+
+  /** Frozen movement variants retain authored aim, click timing, healing and item use. */
+  private List<BodyCommand> authored(CombatHarness.Frame frame) {
+    var commands = frame.authored().commands();
+    if (opponent.equals("authored")
+        || !CombatCommands.eligible(commands, frame.input())
+        || frame.input().target().isEmpty()) return commands;
+    return commands.stream()
+        .map(
+            command -> {
+              if (!(command instanceof BodyCommand.MoveToward movement)) return command;
+              return (BodyCommand) styledMovement(frame, movement);
+            })
+        .toList();
+  }
+
+  private BodyCommand.MoveToward styledMovement(
+      CombatHarness.Frame frame, BodyCommand.MoveToward movement) {
+    var self = frame.input().self();
+    var toward = frame.input().target().orElseThrow().pos().minus(self.pos()).horizontal();
+    var radial = toward.normalized();
+    var sideways = new Vec3(-radial.z(), 0, radial.x());
+    var lateral = movement.waypoint().minus(self.pos()).horizontal().dot(sideways) < 0 ? -0.5 : 0.5;
+    var closing = styleClosing(toward.length());
+    var move = radial.scale(closing).plus(sideways.scale(lateral)).normalized();
+    return new BodyCommand.MoveToward(self.pos().plus(move), movement.sprint() && closing > 0);
+  }
+
+  private double styleClosing(double distance) {
+    if (opponent.equals("authored-pressure")) return distance > 2.5 ? 1.0 : 0.0;
+    return distance > 3.0 ? 1.0 : distance < 2.7 ? -1.0 : 0.0;
+  }
+
+  private void clearActions() {
+    primary.clearAction();
+    historical.clearAction();
   }
 
   private List<BodyCommand> basic(CombatHarness.Frame frame) {
@@ -362,30 +376,60 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
   }
 
   private void submit(String[] args) {
-    if (args.length != 10 || !mode.equals("external") || !result.equals("live"))
+    if (args.length != 10 || !mode.equals("external"))
       throw new IllegalArgumentException("act requires an external live duel and nine fields");
-    var tick = Long.parseLong(args[4]);
-    var current = latest.orElseThrow();
-    var now = current.input().snapshot().tick();
-    var frame =
-        contexts.stream()
-            .filter(context -> context.input().snapshot().tick() == tick)
-            .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("observation context expired"));
+    requireLive();
+    var request = request(args, 1);
+    request.actor().accept(request.ticket());
+  }
+
+  private void submitPair(String[] args) {
+    if (args.length != 19 || !opponent.equals("historical"))
+      throw new IllegalArgumentException("acts requires two historical live contexts");
+    requireLive();
+    // Validate both before changing either body; a rejected batch has no partial action.
+    var first = request(args, 1);
+    var second = request(args, 10);
+    if (first.actor() == second.actor() || first.ticket().tick() != second.ticket().tick())
+      throw new IllegalArgumentException("acts requires distinct bodies on the same tick");
+    first.actor().accept(first.ticket());
+    second.actor().accept(second.ticket());
+  }
+
+  private record Request(DuelActor actor, ActionTicket ticket) {}
+
+  private void requireLive() {
+    if (!result.equals("live")) throw new IllegalArgumentException("duel no longer live");
+  }
+
+  private Request request(String[] args, int offset) {
+    var body = UUID.fromString(args[offset + 1]);
+    var actor =
+        candidate.filter(body::equals).isPresent()
+            ? primary
+            : historical
+                .latest()
+                .filter(frame -> frame.body().equals(body))
+                .map(frame -> historical)
+                .orElseThrow(
+                    () -> new IllegalArgumentException("stale, duplicate or wrong-context action"));
+    var tick = Long.parseLong(args[offset + 3]);
+    var frame = actor.context(tick);
     var ticket =
         new ActionTicket(
-            UUID.fromString(args[1]),
-            UUID.fromString(args[2]),
-            Integer.parseInt(args[3]),
+            UUID.fromString(args[offset]),
+            body,
+            Integer.parseInt(args[offset + 2]),
             tick,
             frame.input().self().yaw(),
             new CombatAction(
-                Integer.parseInt(args[5]), bit(args[6]), bit(args[7]), bit(args[8]), bit(args[9])));
-    if (tick <= acceptedTick
-        || !ticket.applies(current.matchId(), current.body(), current.life(), now))
-      throw new IllegalArgumentException("stale, duplicate or wrong-context action");
-    acceptedTick = tick;
-    action = Optional.of(ticket);
+                Integer.parseInt(args[offset + 4]),
+                bit(args[offset + 5]),
+                bit(args[offset + 6]),
+                bit(args[offset + 7]),
+                bit(args[offset + 8])));
+    actor.validate(ticket);
+    return new Request(actor, ticket);
   }
 
   private static boolean bit(String text) {
@@ -405,7 +449,7 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
     state.put("side", side);
     state.put("mode", mode);
     state.put("opponent", opponent);
-    state.put("result", result.equals("live") && latest.isEmpty() ? "waiting" : result);
+    state.put("result", result.equals("live") && primary.latest().isEmpty() ? "waiting" : result);
     state.put("phase", current.phase().name());
     state.put("match", match.map(UUID::toString).orElse(""));
     state.put("dealt", dealt);
@@ -413,19 +457,16 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
     state.put("sampleDealt", result.equals("live") ? sampledDealt : dealt);
     state.put("sampleReceived", result.equals("live") ? sampledReceived : received);
     state.put("sampleTick", sampleTick);
-    state.put("used", List.copyOf(used));
-    state.put("applied", applied);
-    state.put("fallback", fallback);
-    latest.ifPresent(
-        frame -> {
-          state.put("body", frame.body().toString());
-          state.put("life", frame.life());
-          state.put("tick", frame.input().snapshot().tick());
-          state.put("elapsed", frame.input().snapshot().tick() - started);
-          state.put("hp", frame.input().self().health());
-          if (result.equals("live"))
-            frame.observation().ifPresent(sample -> state.put("observation", sample.values()));
-        });
+    state.putAll(primary.fields(result.equals("live")));
+    if (opponent.equals("historical") && historical.latest().isPresent())
+      state.put("opponentFrame", historical.fields(result.equals("live")));
+    primary
+        .latest()
+        .ifPresent(
+            frame -> {
+              state.put("elapsed", frame.input().snapshot().tick() - started);
+              state.put("hp", frame.input().self().health());
+            });
     PROTOCOL.validate(state);
     return Map.copyOf(state);
   }

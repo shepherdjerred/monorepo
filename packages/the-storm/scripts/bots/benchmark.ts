@@ -175,6 +175,18 @@ async function probe(duels: DuelClient): Promise<Record<string, unknown>> {
   if (after.applied < 5 || after.fallback <= before.fallback)
     throw new Error("action application or timeout fallback failed");
   await duels.command("cancel");
+  try {
+    await duels.action(before, stop);
+    throw new Error("ended duel action accepted");
+  } catch (error) {
+    rejected.push(terminalRace(error));
+  }
   await duels.waitFor((state) => state.phase === "LOBBY", 30_000);
   return { first, before, after, rejected };
+}
+
+function terminalRace(error: unknown): string {
+  if (!(error instanceof Error) || error.message !== "duel no longer live")
+    throw error;
+  return error.message;
 }

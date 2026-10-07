@@ -1,7 +1,15 @@
 {
-  "version": 2,
+  "version": 3,
   "contract": "rwf-combat-v1",
-  "opponents": ["stationary", "chase", "basic", "authored"],
+  "opponents": [
+    "stationary",
+    "chase",
+    "basic",
+    "authored",
+    "authored-pressure",
+    "authored-patient",
+    "historical"
+  ],
   "results": [
     "waiting",
     "live",
@@ -39,5 +47,15 @@
     "applied",
     "fallback"
   ],
-  "optional": ["body", "life", "tick", "elapsed", "hp", "observation"]
+  "optional": [
+    "body",
+    "life",
+    "tick",
+    "elapsed",
+    "hp",
+    "observation",
+    "opponentFrame"
+  ],
+  "frameRequired": ["body", "life", "tick", "used", "applied", "fallback"],
+  "frameOptional": ["observation"]
 }
