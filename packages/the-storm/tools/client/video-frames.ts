@@ -1,7 +1,7 @@
 import { z } from "zod";
 import wire from "#client-video-wire";
 
-const Camera = z.strictObject({
+export const Camera = z.strictObject({
   position: z.tuple([z.number(), z.number(), z.number()]),
   yaw: z.number(),
   pitch: z.number().min(-90).max(90),

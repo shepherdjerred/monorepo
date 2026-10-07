@@ -60,7 +60,11 @@ export const CaptureSet = z
   .strict();
 export type CaptureSet = z.infer<typeof CaptureSet>;
 
-export function preferenceSchedule() {
+export function preferenceSchedule(): {
+  pair: number;
+  seed: number;
+  side: "red" | "blue";
+}[] {
   return Array.from({ length: contract.pairs }, (_, index) => ({
     pair: index + 1,
     seed: contract.firstSeed + Math.floor(index / 2),

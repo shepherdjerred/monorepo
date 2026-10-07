@@ -1412,35 +1412,56 @@ claimed strength run and native runtime inputs are verified before preparation.
 
 ```bash
 bun run bots:preference schedule --pilot .cache/rwf-pilot/trooper --evaluation .cache/rwf-evaluation/trooper --model .cache/rwf-pilot/trooper/seed-0/onnx
-bun run bots:preference prepare --pilot .cache/rwf-pilot/trooper --evaluation .cache/rwf-evaluation/trooper --model .cache/rwf-pilot/trooper/seed-0/onnx --clips .cache/rwf-preference/captures.json --output .cache/rwf-preference/review
+bun run bots:collect-preference --pilot .cache/rwf-pilot/trooper --evaluation .cache/rwf-evaluation/trooper --model .cache/rwf-pilot/trooper/seed-0/onnx --output .cache/rwf-preference/capture
+bun run bots:preference prepare --pilot .cache/rwf-pilot/trooper --evaluation .cache/rwf-evaluation/trooper --model .cache/rwf-pilot/trooper/seed-0/onnx --clips .cache/rwf-preference/capture/captures.json --output .cache/rwf-preference/review
 bun run bots:preference score --pilot .cache/rwf-pilot/trooper --output .cache/rwf-preference/review --answers .cache/rwf-preference/review/public/answers.json
 bun run bots:preference verify --pilot .cache/rwf-pilot/trooper --output .cache/rwf-preference/review
 bun run test:preference-media
 ```
 
 `schedule` prints the exact twenty paired red/blue matchups at fresh environment
-seeds and the candidate/runtime fingerprints. In the disposable Java-inference
-sandbox, film each matchup once using its learned and authored console commands.
-The model must be staged and warmed through `rwfinfer load` before capture. Use
-one fixed spectator camera, FOV and resolution, with HUD and nameplates hidden.
-Capture the first 600 live ticks at 1280x720, 30 fps; hold the terminal frame if
-the duel ends early so every clip remains 30 seconds. Retain losses and early
-endings. Wait for the lobby between matches and keep every native recording.
-Preparation checks each original recording's domain seed against its scheduled
-controller seed, so mismatched lighting and team seeds cannot enter the review.
-Capture automation and validation of the depicted camera are separate from
-these review commands; the clip producer supplies that provenance.
+seeds and the candidate/runtime fingerprints. `collect-preference` verifies genuine
+pilot eligibility, builds and fingerprints the native inputs, and seals one
+exclusive capture claim in the pilot before allocating a disposable server.
+Diagnostic pilots are refused. An interrupted or failed collection keeps its
+claim and original evidence; the command has no resume or reroll option.
+
+The collector stages and warms the exact actor through `rwfinfer load`, attaches
+one native spectator, and records each scheduled learned/authored matchup once
+against the authored opponent. All forty matches use the same camera, FOV and
+resolution, with HUD and nameplates hidden. Each 1280x720, 30-fps clip covers the
+first 600 live ticks, holding the original terminal render if combat ends early.
+Losses and early endings remain. The recorder waits for the lobby between matches
+and retains the full terminal outcome even when it occurs after the clip.
+
+Before either fighter acts, the fixture samples an original setup receipt from
+Paper: roster join order, personalities, fresh body identities, team, kit, spawn,
+facing, velocity, health, held slot and world lighting. The neutral
+`rwf-duel-setup.json` contract fixes the spawn and equipment requirements; paired
+receipts must agree except for fresh identities and absolute world ticks. Each
+completed match envelope is sealed before the next match starts. After shutdown,
+the collector validates every exported schema-3 recording's actual domain seed
+against its scheduled controller seed, checks that model/runtime/renderer inputs
+stayed unchanged, and seals `captures.json` and `verification.json`.
+
+Preparation requires this claimed collection and rechecks the setup receipts,
+separate full-match clocks, every original PNG, encoded streams, recordings,
+delivery accounting and frozen inputs before creating the blind pack. Hand-written
+capture declarations or diagnostic pair outputs cannot substitute for it.
 
 The Java-model sandbox can own a native spectator and record a diagnostic pair:
 
 ```bash
 bun run bots:java-video --model .cache/rwf-pilot/trooper/seed-0/onnx --output .cache/rwf-java-video/trooper
+bun run bots:java-video --model .cache/rwf-pilot/trooper/seed-0/onnx --opponent authored --output .cache/rwf-java-video/trooper-authored
 ```
 
 This command stages and warms that exact unaccepted export, attaches one native
 client to the same disposable Paper instance, and runs a separate warm-up duel
 before recording one Java-controlled and one authored match against the basic
-opponent at a common controller and domain seed. The guarded seeded showcase port
+opponent (or `--opponent authored`) at a common controller and domain seed. It
+uses the same pair recorder and setup checks as the twenty-pair collector.
+The guarded seeded showcase port
 requires the exact empty lobby, preserves its identity and map, and settles the
 seeded world time before countdown. This also fixes team tie-breaks for the stable
 bot join order. Wall-clock timing and asynchronous inference can still change the
@@ -1531,8 +1552,8 @@ include the `rwfinfer metrics` reply's `metrics` object; authored entries use
 `metrics: null`. Paths resolve relative to `captures.json`. Learned delivery
 counts must match the terminal state. Complete schema-3 bot-only Trooper duels,
 unique match identities, common terrain and recorded outcomes are checked.
-The recording header's domain match seed differs from the controller's fixture
-seed; matchup verification uses the native fixture reply.
+The original recording header's domain seed must equal the controller's fixture
+seed; preparation checks both independently.
 
 Preparation claims the pilot once, freezes all source artifacts and review tools,
 and seals randomized A/B labels before publishing footage. `ffmpeg` and `ffprobe`

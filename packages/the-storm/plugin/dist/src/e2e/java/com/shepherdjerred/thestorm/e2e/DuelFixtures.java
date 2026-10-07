@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
-import org.bukkit.Location;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.command.RemoteConsoleCommandSender;
 import org.bukkit.entity.Player;
@@ -52,6 +51,7 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
   private Optional<MatchEvents.Subscription> subscription = Optional.empty();
   private Optional<UUID> match = Optional.empty();
   private Optional<UUID> candidate = Optional.empty();
+  private Optional<DuelSetup> setup = Optional.empty();
   private DuelActor primary = new DuelActor();
   private DuelActor historical = new DuelActor();
   private final java.util.IdentityHashMap<EntityDamageByEntityEvent, Double> healthBefore =
@@ -137,6 +137,18 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
         case "state" -> {
           if (args.length != 1) throw new IllegalArgumentException("state has no arguments");
         }
+        case "setup" -> {
+          if (args.length != 1) throw new IllegalArgumentException("setup has no arguments");
+          source
+              .getSender()
+              .sendMessage(
+                  Component.text(
+                      JSON.writeValueAsString(
+                          setup.orElseThrow(
+                              () ->
+                                  new IllegalStateException("Original duel setup is not ready")))));
+          return;
+        }
         case "act" -> submit(args);
         case "acts" -> submitPair(args);
         case "cancel" -> cancel();
@@ -175,6 +187,7 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
     opponent = nextOpponent;
     seed = nextSeed;
     candidate = Optional.empty();
+    setup = Optional.empty();
     primary = new DuelActor();
     historical = new DuelActor();
     seen.clear();
@@ -220,14 +233,14 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
       throw new IllegalStateException("duel roster changed");
     for (var fighter : current.combatants()) {
       var player = body(fighter.uuid());
-      var red = fighter.team().orElseThrow().equals("red");
-      var at = new Location(player.getWorld(), red ? 25.5 : 37.5, 65, 8.5, red ? -90 : 90, 0);
+      var at = DuelSetup.spawn(fighter.team().orElseThrow()).location(player.getWorld());
       if (!player.teleport(at)) throw new IllegalStateException("duel teleport refused");
       player.setVelocity(new Vector());
       player.getInventory().setHeldItemSlot(1);
       if (fighter.team().orElseThrow().equals(side)) candidate = Optional.of(fighter.uuid());
     }
     if (candidate.isEmpty()) throw new IllegalStateException("candidate team missing");
+    setup = Optional.of(DuelSetup.capture(current, seed, side, mode, opponent, this::body));
     result = "live";
     started = 0;
   }

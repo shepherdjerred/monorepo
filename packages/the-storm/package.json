@@ -10,6 +10,7 @@
     "#e2e/*": "./tests/e2e/*",
     "#learning/*": "./tools/learning/*",
     "#learning-wire": "./plugin/modules/rwfbots/src/main/resources/rwf-duel.json",
+    "#learning-setup-wire": "./plugin/modules/rwfbots/src/main/resources/rwf-duel-setup.json",
     "#learning-load-wire": "./plugin/modules/rwfbots/src/main/resources/rwf-inference-load.json",
     "#learning-promotion-wire": "./plugin/modules/rwfbots/src/main/resources/rwf-actor-promotion.json"
   },
@@ -37,6 +38,7 @@
     "bots:evaluate": "bun tools/learning/evaluation.ts",
     "bots:preference": "bun tools/learning/preference/index.ts",
     "bots:java-video": "bun tools/learning/native/diagnostic.ts",
+    "bots:collect-preference": "bun tools/learning/native/collector.ts",
     "bots:promote": "bun tools/learning/promotion/index.ts",
     "test:preference-media": "bun --no-install --bun vitest run tests/media --config ../../vitest.config.ts",
     "test:learning": "python3 -m unittest discover -s scripts/bots/learning -p '*_test.py' && uv run --project tools/learning --locked python -m unittest discover -s tools/learning -p '*_test.py' && bun --no-install --bun vitest run tools/learning --config ../../vitest.config.ts",

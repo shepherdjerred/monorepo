@@ -69,6 +69,19 @@ type Frozen = Extract<
   { status: "frozen" }
 >;
 
+function runtimeInputs(native: z.infer<typeof Native>) {
+  return {
+    ...native,
+    hashes: native.hashes.filter(
+      (file) => !file.file.startsWith("tools/learning/"),
+    ),
+  };
+}
+
+export function nativeFingerprint(raw: unknown): string {
+  return sha(JSON.stringify(runtimeInputs(Native.parse(raw))));
+}
+
 async function validateStrengthActor(
   index: number,
   declared: z.infer<typeof EvaluationActor> | undefined,
@@ -263,12 +276,6 @@ export async function reviewEligibility(
     );
   await snapshot(claimFile);
   await snapshot(path.join(evaluationPath, "evaluation-plan.json"));
-  const runtimeInputs = (native: z.infer<typeof Native>) => ({
-    ...native,
-    hashes: native.hashes.filter(
-      (file) => !file.file.startsWith("tools/learning/"),
-    ),
-  });
   if (
     JSON.stringify(runtimeInputs(plan.native)) !==
     JSON.stringify(runtimeInputs(inputs.native))
@@ -315,7 +322,7 @@ export async function reviewEligibility(
     await snapshot(path.join(root, file));
   return {
     actor_sha256: actorSha,
-    native_sha256: sha(JSON.stringify(runtimeInputs(inputs.native))),
+    native_sha256: nativeFingerprint(inputs.native),
     files: Array.from(files, ([file, sha256]) => ({ file, sha256 })),
   };
 }

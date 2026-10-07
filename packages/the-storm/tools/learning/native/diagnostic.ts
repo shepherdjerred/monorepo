@@ -2,38 +2,24 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { z } from "zod";
-import { captureInputs } from "./inputs.ts";
+import { captureInputs, buildCaptureInputs } from "./inputs.ts";
 import { originalRecordings } from "./recordings.ts";
-import { openPaperDuels, root } from "#learning/sandbox.ts";
-import { recordDuel } from "#client/duel-recording.ts";
-import { digestFile } from "#learning/preference/ledger.ts";
+import { openPaperDuels } from "#learning/sandbox.ts";
+import { capturePair } from "./pairs.ts";
+import type { NativeClip } from "./pairs.ts";
 
 const args = parseArgs({
-  options: { model: { type: "string" }, output: { type: "string" } },
+  options: {
+    model: { type: "string" },
+    output: { type: "string" },
+    opponent: { type: "string", default: "basic" },
+  },
   strict: true,
 });
 const model = path.resolve(z.string().min(1).parse(args.values.model));
 const output = path.resolve(z.string().min(1).parse(args.values.output));
-for (const [directory, tasks] of [
-  ["plugin", [":dist:shadowJar", ":dist:fixturesJar"]],
-  ["client", ["assemble"]],
-] as const) {
-  const build = Bun.spawn(
-    [
-      "mise",
-      "exec",
-      "--",
-      "gradle",
-      "-p",
-      path.join(root, directory),
-      ...tasks,
-      "--console=plain",
-    ],
-    { stdout: "inherit", stderr: "inherit" },
-  );
-  if ((await build.exited) !== 0)
-    throw new Error(`Native model capture build failed: ${directory}`);
-}
+const opponent = z.enum(["basic", "authored"]).parse(args.values.opponent);
+await buildCaptureInputs();
 await mkdir(path.dirname(output), { recursive: true });
 await mkdir(output, { recursive: false, mode: 0o700 });
 const inputs = await captureInputs(model);
@@ -50,7 +36,7 @@ await save("inputs.json", {
   ...inputs,
 });
 const paper = await openPaperDuels(output, model);
-const clips = [];
+const clips: NativeClip[] = [];
 let warmup;
 try {
   await paper.inference.load();
@@ -61,57 +47,18 @@ try {
     90_000,
   );
   await paper.duels.command("cancel");
-  for (const mode of ["external", "authored"] as const) {
-    observer.requireAlive();
-    await paper.duels.waitFor((state) => state.phase === "LOBBY", 30_000);
-    const expected = {
-      seed: 600_090_001,
-      side: "red",
-      mode,
-      opponent: "basic",
-    } as const;
-    const clip = await recordDuel({
-      session: observer.session,
-      duels: paper.duels,
-      name: `diagnostic-${mode}`,
-      expected,
-      begin: async () =>
-        mode === "external"
-          ? paper.inference.begin(
-              expected.seed,
-              expected.side,
-              expected.opponent,
-            )
-          : paper.duels.command(
-              `begin ${expected.seed.toString()} red authored basic`,
-            ),
-    });
-    const metrics =
-      mode === "external" ? await paper.inference.metrics() : null;
-    if (
-      mode === "external" &&
-      (clip.state.applied === 0 ||
-        metrics?.delivery.applied !== clip.state.applied ||
-        metrics.delivery.unavailable + metrics.delivery.ineligible !==
-          clip.state.fallback)
-    )
-      throw new Error(
-        "Native model capture has inconsistent Java delivery accounting",
-      );
-    clips.push({
-      ...expected,
-      state: clip.state,
-      metrics,
-      video: clip.video,
-      frame_receipt: clip.framesFile,
-      frame_receipt_sha256: await digestFile(clip.framesFile),
-      clock_receipt: clip.clockFile,
-      clock_receipt_sha256: await digestFile(clip.clockFile),
-      terminalFrame: clip.frames.duel.terminalFrame,
-      camera: clip.frames.frames[0]?.frame.camera,
-    });
-    await save(`${mode}.json`, clips.at(-1));
-  }
+  await capturePair({
+    paper,
+    observer,
+    name: "diagnostic",
+    seed: 600_090_001,
+    side: "red",
+    opponent,
+    onClip: async (clip) => {
+      clips.push(clip);
+      await save(`${clip.mode}.json`, clip);
+    },
+  });
 } catch (error) {
   await save("failure.json", {
     schema: 1,

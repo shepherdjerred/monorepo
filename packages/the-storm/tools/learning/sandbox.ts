@@ -69,6 +69,10 @@ export async function frozenManifest() {
     path.join(root, "plugin/modules/rwfbots/src/main/resources/rwf-duel.json"),
     path.join(
       root,
+      "plugin/modules/rwfbots/src/main/resources/rwf-duel-setup.json",
+    ),
+    path.join(
+      root,
       "plugin/modules/rwfbots/src/main/resources/rwf-actor-parity.json",
     ),
     path.join(

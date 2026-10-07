@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { RconClient } from "#e2e/harness/rcon.ts";
 import protocol from "#learning-wire";
+import { DuelSetup } from "#learning/native/setup.ts";
 
 const OpponentFrameSchema = z
   .object({
@@ -77,11 +78,19 @@ export class DuelClient {
   constructor(private readonly rcon: RconClient) {}
 
   async command(command: string): Promise<DuelState> {
+    return DuelStateSchema.parse(await this.reply(command));
+  }
+
+  async setup() {
+    return DuelSetup.parse(await this.reply("setup"));
+  }
+
+  private async reply(command: string): Promise<unknown> {
     const response = await this.rcon.command(`rwflearn ${command}`);
     const reply: unknown = JSON.parse(response.trim());
     const error = z.object({ error: z.string() }).safeParse(reply);
     if (error.success) throw new Error(error.data.error);
-    return DuelStateSchema.parse(reply);
+    return reply;
   }
 
   async action(context: DuelState, input: CombatAction): Promise<DuelState> {
