@@ -214,202 +214,246 @@ test("root release finalization requires exact revision and request identity", a
   );
 });
 
-test("root release finalization applies every exact wave before accepting a partial-wave prune result", async () => {
-  const syncBodies: unknown[] = [];
-  let activeRequest: unknown;
-  let requestedOperation: Record<string, unknown> | undefined;
-  let deleteRequests = 0;
-  let finalPruneReads = 0;
-  const removedApplication = "removed-worker";
-  const server = Bun.serve({
-    hostname: "127.0.0.1",
-    port: 0,
-    async fetch(request) {
-      const url = new URL(request.url);
-      if (url.pathname === "/api/charts/apps") {
-        return Response.json([
-          {
-            version: "2.0.0-43",
-            urls: ["charts/apps-2.0.0-43.tgz"],
-            digest: "a".repeat(64),
-          },
-        ]);
-      }
-      if (
-        request.method === "GET" &&
-        url.pathname === "/api/v1/applications/apps/manifests"
-      ) {
-        expect(url.searchParams.get("revision")).toBe("2.0.0-43");
-        return Response.json({
-          manifests: [
-            StagedRootApplication,
-            StagedRepositoryApplication,
-            StagedExternalApplication,
-            StagedAdmissionPolicy,
-          ],
-        });
-      }
-      if (
-        request.method === "GET" &&
-        url.pathname === `/api/v1/applications/${removedApplication}`
-      ) {
-        return Response.json({
-          metadata: {
-            annotations: {
-              "ci.sjer.red/application-lifecycle": "cascade",
+function assertFinalRootRequests(
+  syncBodies: readonly unknown[],
+  prerequisites: readonly {
+    group: string;
+    kind: string;
+    name: string;
+    namespace: string;
+  }[],
+): void {
+  const applicationRequest = SyncRequestSchema.parse(syncBodies[0]);
+  expect(applicationRequest.revision).toBe("2.0.0-43");
+  expect(applicationRequest.infos).toContainEqual(BATCH_PHASE_INFO);
+  expect(applicationRequest.resources).toEqual([
+    WorkerApplicationResource,
+    { group: "argoproj.io", kind: "Application", name: "external" },
+    ...prerequisites,
+  ]);
+  expect(applicationRequest.manifests).toBeUndefined();
+  const rootApplicationRequest = SyncRequestSchema.parse(syncBodies[1]);
+  expect(rootApplicationRequest.resources).toEqual([RootApplicationResource]);
+  const rootApplicationManifests = rootApplicationRequest.manifests;
+  if (rootApplicationManifests === undefined) {
+    throw new Error("Root Application is missing its suspended manifest");
+  }
+  expect(JSON.parse(rootApplicationManifests[0] ?? "")).toMatchObject({
+    spec: { syncPolicy: { automated: { enabled: false } } },
+  });
+  const policyRequest = SyncRequestSchema.parse(syncBodies[2]);
+  expect(policyRequest.resources).toEqual([
+    {
+      group: "admissionregistration.k8s.io",
+      kind: "ValidatingAdmissionPolicy",
+      name: "pvc-backup-policy.sjer.red",
+    },
+  ]);
+  expect(policyRequest.manifests).toBeUndefined();
+  const pruneRequest = RootSyncRequestSchema.parse(syncBodies[3]);
+  expect(pruneRequest.prune).toBe(true);
+  expect(pruneRequest.infos).toContainEqual(PRUNE_PHASE_INFO);
+  const rawPruneRequest = z
+    .record(z.string(), z.unknown())
+    .parse(syncBodies[3]);
+  expect(rawPruneRequest["resources"]).toBeUndefined();
+  expect(rawPruneRequest["manifests"]).toBeUndefined();
+}
+
+test.each([false, true])(
+  "root release finalization applies every exact wave before accepting a partial-wave prune result (colliding names: %s)",
+  async (collidingNames) => {
+    const prerequisites = collidingNames
+      ? ["forum", "docs"].map((namespace) => ({
+          group: "",
+          kind: "ConfigMap",
+          name: "settings",
+          namespace,
+        }))
+      : [];
+    const prerequisiteManifests = prerequisites.map(
+      ({ group: _group, ...resource }) =>
+        JSON.stringify({
+          apiVersion: "v1",
+          kind: resource.kind,
+          metadata: { name: resource.name, namespace: resource.namespace },
+        }),
+    );
+    const syncBodies: unknown[] = [];
+    let activeRequest: unknown;
+    let requestedOperation: Record<string, unknown> | undefined;
+    let deleteRequests = 0;
+    let finalPruneReads = 0;
+    let prerequisiteReads = 0;
+    const removedApplication = "removed-worker";
+    const server = Bun.serve({
+      hostname: "127.0.0.1",
+      port: 0,
+      async fetch(request) {
+        const url = new URL(request.url);
+        if (url.pathname === "/api/charts/apps") {
+          return Response.json([
+            {
+              version: "2.0.0-43",
+              urls: ["charts/apps-2.0.0-43.tgz"],
+              digest: "a".repeat(64),
             },
-            finalizers: ["resources-finalizer.argocd.argoproj.io"],
-          },
-        });
-      }
-      if (
-        request.method === "POST" &&
-        url.pathname === "/api/v1/applications/apps/sync"
-      ) {
-        activeRequest = await request.json();
-        syncBodies.push(activeRequest);
-        const manifestRequest = SyncRequestSchema.safeParse(activeRequest);
-        requestedOperation = manifestRequest.success
-          ? operationForSyncRequest(activeRequest)
-          : operationForRootSyncRequest(activeRequest);
-        return Response.json({ operation: requestedOperation });
-      }
-      if (
-        request.method === "DELETE" &&
-        url.pathname === "/api/v1/applications/apps/operation"
-      ) {
-        deleteRequests += 1;
-        activeRequest = undefined;
-        requestedOperation = undefined;
-        return Response.json({});
-      }
-      if (
-        request.method === "GET" &&
-        url.pathname === "/api/v1/applications/apps"
-      ) {
-        if (activeRequest === undefined || requestedOperation === undefined) {
+          ]);
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/v1/applications/apps/manifests"
+        ) {
+          expect(url.searchParams.get("revision")).toBe("2.0.0-43");
           return Response.json({
-            status: {
-              resources: [
-                {
-                  group: "argoproj.io",
-                  kind: "Application",
-                  name: removedApplication,
-                },
-              ],
+            manifests: [
+              StagedRootApplication,
+              StagedRepositoryApplication,
+              StagedExternalApplication,
+              StagedAdmissionPolicy,
+              ...prerequisiteManifests,
+            ],
+          });
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === `/api/v1/applications/${removedApplication}`
+        ) {
+          return Response.json({
+            metadata: {
+              annotations: {
+                "ci.sjer.red/application-lifecycle": "cascade",
+              },
+              finalizers: ["resources-finalizer.argocd.argoproj.io"],
             },
           });
         }
-        const manifestRequest = SyncRequestSchema.safeParse(activeRequest);
-        if (!manifestRequest.success) {
-          finalPruneReads += 1;
+        if (
+          request.method === "POST" &&
+          url.pathname === "/api/v1/applications/apps/sync"
+        ) {
+          activeRequest = await request.json();
+          syncBodies.push(activeRequest);
+          const manifestRequest = SyncRequestSchema.safeParse(activeRequest);
+          requestedOperation = manifestRequest.success
+            ? operationForSyncRequest(activeRequest)
+            : operationForRootSyncRequest(activeRequest);
+          return Response.json({ operation: requestedOperation });
         }
-        const resources = manifestRequest.success
-          ? manifestRequest.data.resources.map((resource) => ({
-              ...resource,
-              status: "Synced",
-            }))
-          : finalPruneResources(removedApplication, finalPruneReads > 1);
-        return Response.json({
-          operation: requestedOperation,
-          status: {
-            operationState: {
-              phase: "Running",
-              startedAt: new Date().toISOString(),
-              operation: requestedOperation,
-              syncResult: {
-                revision: "2.0.0-43",
-                resources,
+        if (
+          request.method === "DELETE" &&
+          url.pathname === "/api/v1/applications/apps/operation"
+        ) {
+          deleteRequests += 1;
+          activeRequest = undefined;
+          requestedOperation = undefined;
+          return Response.json({});
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/v1/applications/apps"
+        ) {
+          if (activeRequest === undefined || requestedOperation === undefined) {
+            return Response.json({
+              status: {
+                resources: [
+                  {
+                    group: "argoproj.io",
+                    kind: "Application",
+                    name: removedApplication,
+                  },
+                ],
+              },
+            });
+          }
+          const manifestRequest = SyncRequestSchema.safeParse(activeRequest);
+          if (!manifestRequest.success) {
+            finalPruneReads += 1;
+          }
+          let resources = manifestRequest.success
+            ? manifestRequest.data.resources.map((resource) => ({
+                ...resource,
+                status: "Synced",
+              }))
+            : finalPruneResources(removedApplication, finalPruneReads > 1);
+          if (
+            collidingNames &&
+            resources.some((resource) => resource["kind"] === "ConfigMap")
+          ) {
+            prerequisiteReads += 1;
+            if (prerequisiteReads === 1) {
+              resources = resources.filter(
+                (resource) => resource["namespace"] !== "docs",
+              );
+            }
+          }
+          return Response.json({
+            operation: requestedOperation,
+            status: {
+              operationState: {
+                phase: "Running",
+                startedAt: new Date().toISOString(),
+                operation: requestedOperation,
+                syncResult: {
+                  revision: "2.0.0-43",
+                  resources,
+                },
               },
             },
-          },
-        });
-      }
-      return new Response("not found", { status: 404 });
-    },
-  });
-
-  try {
-    const { exitCode, stdout, stderr } = await runArgocdCommand(
-      [
-        "bun",
-        "--no-install",
-        "scripts/argocd/argocd.ts",
-        "finalize-root-release",
-        "apps",
-        "--revision",
-        "2.0.0-43",
-        "--request-id",
-        RELEASE_REQUEST_ID,
-        "--timeout",
-        "1",
-      ],
-      {
-        cwd: path.resolve(import.meta.dir, "../../.."),
-        env: {
-          ...Bun.env,
-          ARGOCD_POLL_INTERVAL_MS: "5",
-          ARGOCD_SERVER_URL: server.url.origin,
-          ARGOCD_TOKEN: "test-token",
-          CHARTMUSEUM_ORIGIN: server.url.origin,
-        },
+          });
+        }
+        return new Response("not found", { status: 404 });
       },
-    );
-
-    expect(exitCode).toBe(0);
-    expect(stderr).toBe("");
-    expect(stdout).toContain("finalize-root-release: apps at 2.0.0-43");
-    expect(stdout).toContain("syncing exact root batch 1/3 (2 resources)");
-    expect(stdout).toContain("syncing exact root batch 2/3 (1 resources)");
-    expect(stdout).toContain("syncing exact root batch 3/3 (1 resources)");
-    expect(syncBodies).toHaveLength(4);
-    expect(deleteRequests).toBe(4);
-    expect(finalPruneReads).toBeGreaterThanOrEqual(2);
-
-    const applicationRequest = SyncRequestSchema.parse(syncBodies[0]);
-    expect(applicationRequest.revision).toBe("2.0.0-43");
-    expect(applicationRequest.infos).toContainEqual(BATCH_PHASE_INFO);
-    expect(applicationRequest.resources).toEqual([
-      WorkerApplicationResource,
-      {
-        group: "argoproj.io",
-        kind: "Application",
-        name: "external",
-      },
-    ]);
-    expect(applicationRequest.manifests).toBeUndefined();
-
-    const rootApplicationRequest = SyncRequestSchema.parse(syncBodies[1]);
-    expect(rootApplicationRequest.resources).toEqual([RootApplicationResource]);
-    const rootApplicationManifests = rootApplicationRequest.manifests;
-    if (rootApplicationManifests === undefined) {
-      throw new Error("Root Application is missing its suspended manifest");
-    }
-    expect(JSON.parse(rootApplicationManifests[0] ?? "")).toMatchObject({
-      spec: { syncPolicy: { automated: { enabled: false } } },
     });
 
-    const policyRequest = SyncRequestSchema.parse(syncBodies[2]);
-    expect(policyRequest.resources).toEqual([
-      {
-        group: "admissionregistration.k8s.io",
-        kind: "ValidatingAdmissionPolicy",
-        name: "pvc-backup-policy.sjer.red",
-      },
-    ]);
-    expect(policyRequest.manifests).toBeUndefined();
-    const pruneRequest = RootSyncRequestSchema.parse(syncBodies[3]);
-    expect(pruneRequest.prune).toBe(true);
-    expect(pruneRequest.infos).toContainEqual(PRUNE_PHASE_INFO);
-    const rawPruneRequest = z
-      .record(z.string(), z.unknown())
-      .parse(syncBodies[3]);
-    expect(rawPruneRequest["resources"]).toBeUndefined();
-    expect(rawPruneRequest["manifests"]).toBeUndefined();
-  } finally {
-    await server.stop(true);
-  }
-});
+    try {
+      const { exitCode, stdout, stderr } = await runArgocdCommand(
+        [
+          "bun",
+          "--no-install",
+          "scripts/argocd/argocd.ts",
+          "finalize-root-release",
+          "apps",
+          "--revision",
+          "2.0.0-43",
+          "--request-id",
+          RELEASE_REQUEST_ID,
+          "--timeout",
+          "1",
+        ],
+        {
+          cwd: path.resolve(import.meta.dir, "../../.."),
+          env: {
+            ...Bun.env,
+            ARGOCD_POLL_INTERVAL_MS: "5",
+            ARGOCD_SERVER_URL: server.url.origin,
+            ARGOCD_TOKEN: "test-token",
+            CHARTMUSEUM_ORIGIN: server.url.origin,
+          },
+        },
+      );
+
+      expect(exitCode).toBe(0);
+      expect(stderr).toBe("");
+      expect(stdout).toContain("finalize-root-release: apps at 2.0.0-43");
+      expect(stdout).toContain(
+        `syncing exact root batch 1/3 (${collidingNames ? "4" : "2"} resources)`,
+      );
+      expect(stdout).toContain("syncing exact root batch 2/3 (1 resources)");
+      expect(stdout).toContain("syncing exact root batch 3/3 (1 resources)");
+      expect(syncBodies).toHaveLength(4);
+      expect(deleteRequests).toBe(4);
+      expect(finalPruneReads).toBeGreaterThanOrEqual(2);
+      if (collidingNames) {
+        expect(prerequisiteReads).toBeGreaterThanOrEqual(2);
+      }
+
+      assertFinalRootRequests(syncBodies, prerequisites);
+    } finally {
+      await server.stop(true);
+    }
+  },
+);
 
 // A cluster-scoped selector has two equally valid spellings on the wire: Argo
 // may omit `namespace` or send it empty. Both name the same target, so adoption

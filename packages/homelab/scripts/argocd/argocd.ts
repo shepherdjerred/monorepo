@@ -60,6 +60,8 @@ import {
   SYNC_OPERATION_ID_INFO_NAME,
   SYNC_REQUEST_ID_INFO_NAME,
   SYNC_REVISION_INFO_NAME,
+  syncResultResourceIdentities,
+  syncResultResourceIdentity,
   type ManifestOverride,
   type ManifestOverrideBatch,
   type ReleasePhase,
@@ -649,35 +651,34 @@ function resourceIdentity(group: string, kind: string, name: string): string {
   return JSON.stringify([group, kind, name]);
 }
 
-function renderedResourceIdentity(manifestSource: string): string {
+function renderedSyncResource(manifestSource: string): SyncOperationResource {
   const resource = RenderedResourceSchema.parse(JSON.parse(manifestSource));
   const separator = resource.apiVersion.indexOf("/");
   const group = separator === -1 ? "" : resource.apiVersion.slice(0, separator);
-  return resourceIdentity(group, resource.kind, resource.metadata.name);
+  return {
+    group,
+    kind: resource.kind,
+    name: resource.metadata.name,
+    ...(resource.metadata.namespace === undefined
+      ? {}
+      : { namespace: resource.metadata.namespace }),
+  };
 }
 
 function renderedResourceIdentities(
   manifests: readonly string[],
 ): ReadonlySet<string> {
-  const identities = manifests.map(renderedResourceIdentity);
-  if (identities.length === 0) {
+  if (manifests.length === 0) {
     throw new Error("Rendered sync source contains no resources");
   }
-  const unique = new Set(identities);
-  if (unique.size !== identities.length) {
-    throw new Error(
-      "Rendered sync source contains duplicate group/kind/name identities",
-    );
-  }
-  return unique;
+  return syncResultResourceIdentities(manifests.map(renderedSyncResource));
 }
 
 /**
  * Two sync selectors are only the same target when their namespace agrees, so
  * comparing one live operation's selection against another's must keep it.
- * This is deliberately not `resourceIdentity`: that one compares selections
- * against rendered manifests and Argo sync results, whose namespaces are
- * populated inconsistently, so it stays namespace-agnostic on purpose.
+ * This is deliberately not a sync-result identity: result comparisons tolerate
+ * omitted namespaces only for names that are unique in the requested source.
  */
 function operationSelectorIdentities(
   resources: readonly SyncOperationResource[],
@@ -697,16 +698,7 @@ function operationSelectorIdentities(
 function operationResourceIdentities(
   resources: readonly SyncOperationResource[],
 ): ReadonlySet<string> {
-  const identities = resources.map(({ group, kind, name }) =>
-    resourceIdentity(group, kind, name),
-  );
-  const unique = new Set(identities);
-  if (unique.size !== identities.length) {
-    throw new Error(
-      "Sync operation contains duplicate group/kind/name identities",
-    );
-  }
-  return unique;
+  return syncResultResourceIdentities(resources);
 }
 
 function activeOperationResourceIdentities(
@@ -1890,22 +1882,13 @@ async function sync(
         token,
       );
     } else {
-      const identities = options.resources.map(({ group, kind, name }) =>
-        resourceIdentity(group, kind, name),
-      );
-      if (identities.length === 0) {
+      if (options.resources.length === 0) {
         throw new Error(
           "Manifest-override termination requires at least one selected resource",
         );
       }
-      const unique = new Set(identities);
-      if (unique.size !== identities.length) {
-        throw new Error(
-          "Manifest-override termination received duplicate group/kind/name identities",
-        );
-      }
       expectedResourceIdentities = {
-        desired: unique,
+        desired: syncResultResourceIdentities(options.resources),
         pruned: new Set(),
       };
     }
@@ -2299,6 +2282,13 @@ function syncResultApplied(
   }
   const appliedResourceIdentities = new Set<string>();
   const prunedResourceIdentities = new Set<string>();
+  const expectedIdentities =
+    expectedResourceIdentities === undefined
+      ? undefined
+      : new Set([
+          ...expectedResourceIdentities.desired,
+          ...expectedResourceIdentities.pruned,
+        ]);
   const everyReportedResourceApplied = resources.every((resource: unknown) => {
     if (!isRecord(resource)) {
       return false;
@@ -2309,10 +2299,12 @@ function syncResultApplied(
     const group = resource["group"];
     const kind = resource["kind"];
     const name = resource["name"];
+    const namespace = resource["namespace"];
     if (
       (group !== undefined && typeof group !== "string") ||
       typeof kind !== "string" ||
-      typeof name !== "string"
+      typeof name !== "string" ||
+      (namespace !== undefined && typeof namespace !== "string")
     ) {
       return false;
     }
@@ -2323,7 +2315,15 @@ function syncResultApplied(
     ) {
       return false;
     }
-    const identity = resourceIdentity(group ?? "", kind, name);
+    const identity = syncResultResourceIdentity(
+      {
+        group: group ?? "",
+        kind,
+        name,
+        ...(namespace === undefined ? {} : { namespace }),
+      },
+      expectedIdentities,
+    );
     appliedResourceIdentities.add(identity);
     if (status === "Pruned") {
       prunedResourceIdentities.add(identity);

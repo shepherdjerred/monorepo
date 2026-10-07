@@ -66,6 +66,67 @@ export type SyncOperationResource = {
   namespace?: string;
 };
 
+/** Argo may omit namespaces for unique targets; colliding names require them. */
+export function syncResultResourceIdentities(
+  resources: readonly SyncOperationResource[],
+): ReadonlySet<string> {
+  const byName = new Map<string, SyncOperationResource[]>();
+  for (const resource of resources) {
+    const identity = JSON.stringify([
+      resource.group,
+      resource.kind,
+      resource.name,
+    ]);
+    const targets = byName.get(identity) ?? [];
+    targets.push(resource);
+    byName.set(identity, targets);
+  }
+  const identities = new Set<string>();
+  for (const [identity, targets] of byName) {
+    if (targets.length === 1) {
+      identities.add(identity);
+      continue;
+    }
+    for (const target of targets) {
+      if (target.namespace === undefined || target.namespace === "") {
+        throw new Error(`Ambiguous sync resource namespace: ${identity}`);
+      }
+      const namespacedIdentity = JSON.stringify([
+        target.group,
+        target.kind,
+        target.name,
+        target.namespace,
+      ]);
+      if (identities.has(namespacedIdentity)) {
+        throw new Error(
+          `Duplicate sync resource identity: ${namespacedIdentity}`,
+        );
+      }
+      identities.add(namespacedIdentity);
+    }
+  }
+  return identities;
+}
+
+export function syncResultResourceIdentity(
+  resource: SyncOperationResource,
+  expected: ReadonlySet<string> | undefined,
+): string {
+  const identity = JSON.stringify([
+    resource.group,
+    resource.kind,
+    resource.name,
+  ]);
+  return expected === undefined || expected.has(identity)
+    ? identity
+    : JSON.stringify([
+        resource.group,
+        resource.kind,
+        resource.name,
+        resource.namespace ?? "",
+      ]);
+}
+
 export type ManifestOverride = {
   manifest: string;
   resource: SyncOperationResource;

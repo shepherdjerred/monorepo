@@ -10,8 +10,55 @@ import {
   requestedOperationId,
   requestedOperationRequestId,
   requestedOperationRevision,
+  syncResultResourceIdentities,
+  syncResultResourceIdentity,
   type ManifestOverride,
 } from "./argocd-manifest-overrides.ts";
+
+describe("sync result resource namespaces", () => {
+  const target = { group: "", kind: "Secret", name: "credentials" };
+
+  test("requires both namespaced targets when their names collide", () => {
+    const forum = { ...target, namespace: "forum" };
+    const docs = { ...target, namespace: "docs" };
+    const targets = [forum, docs];
+    const expected = syncResultResourceIdentities(targets);
+    expect(expected.size).toBe(2);
+    expect(expected.has(syncResultResourceIdentity(forum, expected))).toBe(
+      true,
+    );
+    expect(expected.has(syncResultResourceIdentity(docs, expected))).toBe(true);
+    expect(expected.has(syncResultResourceIdentity(target, expected))).toBe(
+      false,
+    );
+    expect(
+      expected.has(
+        syncResultResourceIdentity({ ...target, namespace: "other" }, expected),
+      ),
+    ).toBe(false);
+  });
+
+  test("preserves Argo's omitted namespace for an unambiguous target", () => {
+    const expected = syncResultResourceIdentities([
+      { ...target, namespace: "forum" },
+    ]);
+    expect(expected.has(syncResultResourceIdentity(target, expected))).toBe(
+      true,
+    );
+  });
+
+  test("rejects duplicate targets and ambiguous omitted namespaces", () => {
+    expect(() =>
+      syncResultResourceIdentities([
+        { ...target, namespace: "forum" },
+        { ...target, namespace: "forum" },
+      ]),
+    ).toThrow("Duplicate sync resource identity");
+    expect(() =>
+      syncResultResourceIdentities([{ ...target, namespace: "forum" }, target]),
+    ).toThrow("Ambiguous sync resource namespace");
+  });
+});
 
 function override(
   name: string,
