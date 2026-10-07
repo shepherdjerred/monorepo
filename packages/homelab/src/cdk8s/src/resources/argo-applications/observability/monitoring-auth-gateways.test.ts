@@ -29,6 +29,18 @@ function resources() {
 }
 
 describe("monitoring mutation authentication", () => {
+  test("uses Kubernetes-valid port names in both operator-managed sidecars", () => {
+    const app = new App();
+    const gateways = createMonitoringAuthGateways(new Chart(app, "gateways"));
+    for (const container of Object.values(gateways)) {
+      for (const port of container.ports) {
+        expect(port.name.length).toBeLessThanOrEqual(15);
+        expect(port.name).toMatch(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+        expect(port.name).toMatch(/[a-z]/);
+      }
+    }
+  });
+
   test("sources gateway credentials from the dedicated 1Password item", () => {
     const item = resources().find(
       (resource) => resource.kind === "OnePasswordItem",
