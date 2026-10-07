@@ -1658,6 +1658,17 @@ and contain every required case with no failures or skipped checks. Its measured
 advancement floors must pass the neutral promotion contract. Unit fixtures and
 diagnostic pilots cannot establish acceptance.
 
+Disposable regression fixtures can bind a controller with
+`CombatHarness.attachAuthored(botSlots, controller)`. This binds the next exact
+draft once and leaves ordinary personality selection, kit plans, difficulty,
+match-derived randomness, late arrivals, healing habits, governor thinning and
+rating settlement in place. Reflex inputs remain authored; the attachment owns
+the body-command hook and receives fair observations. Its successor match is
+unaffected. Ordinary accepted-model inference does not start while a fixture
+owns that hook. Controlled duel and load attachments retain their fixed Trooper
+rosters and experiment seeds. An attachment alone supplies no regression proof;
+acceptance still requires the complete measured evidence above.
+
 The producer verifies the sealed pilot and human ballot, recounts the original
 strength outcomes, recomputes the full raw load stream, and replays the original
 parity samples against the frozen Python weights and exact CPU ONNX export.
