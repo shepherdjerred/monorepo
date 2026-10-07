@@ -15,7 +15,11 @@ import { DuelClient } from "./duels.ts";
 import { InferenceClient } from "./inference.ts";
 import { InferenceLoadClient } from "./load-client.ts";
 import { gameplayFixtures } from "#e2e/gameplay-fixtures.ts";
-import { docker } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
+import {
+  docker,
+  serverLogs,
+} from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
+import { openNativeObserver } from "#learning/native/observer.ts";
 
 export const root = path.resolve(import.meta.dirname, "../..");
 const content = path.join(root, "server/owned/plugins/TheStorm");
@@ -27,15 +31,17 @@ const fixturesJar = path.join(
 
 export async function frozenManifest() {
   const learning = path.join(root, "tools/learning");
-  const [listing, preference, promotion] = await Promise.all([
+  const [listing, preference, promotion, native] = await Promise.all([
     readdir(learning),
     readdir(path.join(learning, "preference")),
     readdir(path.join(learning, "promotion")),
+    readdir(path.join(learning, "native")),
   ]);
   const sources = [
     ...listing,
     ...preference.map((file) => `preference/${file}`),
     ...promotion.map((file) => `promotion/${file}`),
+    ...native.map((file) => `native/${file}`),
   ]
     .filter((file) => /\.(?:py|ts|toml|lock|json)$/u.test(file))
     .sort();
@@ -106,13 +112,34 @@ export async function openPaperDuels(
   const brainUrl = `http://host.docker.internal:${brain.port.toString()}`;
   let server: Awaited<ReturnType<typeof startServer>> | undefined;
   let rcon: RconClient | undefined;
+  let observer: Awaited<ReturnType<typeof openNativeObserver>> | undefined;
+  let observerStarted = false;
   const stop = async () => {
-    rcon?.close();
-    try {
-      await server?.stop();
-    } finally {
-      await brain.stop();
+    const failures: unknown[] = [];
+    const steps = [
+      async () => observer?.stop(),
+      async () => {
+        if (observerStarted && server !== undefined)
+          await Bun.write(
+            path.join(output, "server.log"),
+            await serverLogs(server.info),
+          );
+      },
+      async () => {
+        rcon?.close();
+        await server?.stop();
+      },
+      async () => brain.stop(),
+    ];
+    for (const close of steps) {
+      try {
+        await close();
+      } catch (error) {
+        failures.push(error);
+      }
     }
+    if (failures.length > 0)
+      throw new AggregateError(failures, "Paper duel owner cleanup failed");
   };
   try {
     server = await startServer({
@@ -193,10 +220,28 @@ export async function openPaperDuels(
       port: server.info.rconPort,
       password: server.info.rconPassword,
     });
+    const observerConsole = rcon;
+    const address = `127.0.0.1:${server.info.gamePort.toString()}`;
     return {
       duels: new DuelClient(rcon),
       inference: new InferenceClient(rcon),
       load: new InferenceLoadClient(rcon),
+      async openObserver() {
+        if (profile !== "duel")
+          throw new Error("Native capture requires the duel profile");
+        if (observerStarted)
+          throw new Error(
+            "This Paper owner already started its native observer",
+          );
+        observerStarted = true;
+        observer = await openNativeObserver({
+          output: path.join(output, "client"),
+          packageRoot: root,
+          server: address,
+          rcon: observerConsole,
+        });
+        return observer;
+      },
       stop,
     };
   } catch (error) {

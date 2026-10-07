@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "imports": {
+    "#client/*": "./tools/client/*",
     "#client-duel-video-wire": "./client/src/main/resources/storm-duel-video.json",
     "#client-duel-clock-wire": "./client/src/main/resources/storm-duel-clock.json",
     "#client-video-wire": "./client/src/main/resources/storm-video.json",
@@ -35,6 +36,7 @@
     "bots:pilot": "bun tools/learning/pilot.ts",
     "bots:evaluate": "bun tools/learning/evaluation.ts",
     "bots:preference": "bun tools/learning/preference/index.ts",
+    "bots:java-video": "bun tools/learning/native/diagnostic.ts",
     "bots:promote": "bun tools/learning/promotion/index.ts",
     "test:preference-media": "bun --no-install --bun vitest run tests/media --config ../../vitest.config.ts",
     "test:learning": "python3 -m unittest discover -s scripts/bots/learning -p '*_test.py' && uv run --project tools/learning --locked python -m unittest discover -s tools/learning -p '*_test.py' && bun --no-install --bun vitest run tools/learning --config ../../vitest.config.ts",

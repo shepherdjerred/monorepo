@@ -14,16 +14,11 @@ import {
   rwfTestSettings,
 } from "#e2e/harness/rwf-settings.ts";
 import { startControl, ViewpointsSchema } from "./control.ts";
-import {
-  request,
-  socketReady,
-  StatusSchema,
-  waitFor,
-  type Session,
-} from "./protocol.ts";
+import { request, StatusSchema, waitFor, type Session } from "./protocol.ts";
 import { smoke, tour } from "./scripts.ts";
 import { verifyDuelClock } from "./verify-duel-clock.ts";
 import { verifyDuelVideo } from "./verify-duel-video.ts";
+import { startClient } from "./process.ts";
 
 const packageRoot = path.resolve(import.meta.dirname, "../..");
 
@@ -232,7 +227,13 @@ async function run(
     stop: runState.finish,
   });
   runState.cleanup.push(control);
-  await launch(session, runState);
+  const client = await startClient({
+    session,
+    privateDir: runState.privateDir,
+    packageRoot,
+    onExit: runState.finish,
+  });
+  runState.cleanup.push(client.stop);
   await rcon.command("op StormPreview");
   await rcon.command("gamemode creative StormPreview");
   await rcon.command("gamerule minecraft:advance_time false");
@@ -282,72 +283,4 @@ async function duelBotsConfig(ownedConfigDir: string): Promise<string> {
   );
   config.draft.kits = ["trooper"];
   return Bun.YAML.stringify(config);
-}
-
-async function launch(session: Session, runState: Run): Promise<void> {
-  const bootstrap = path.join(runState.privateDir, "bootstrap.json");
-  const { control: _control, ...config } = session;
-  await Bun.write(bootstrap, JSON.stringify(config));
-  await chmod(bootstrap, 0o600);
-  const log = Bun.file(path.join(runState.artifacts, "client.log"));
-  const child = Bun.spawn(
-    [
-      "mise",
-      "exec",
-      "--",
-      "gradle",
-      "-p",
-      path.join(packageRoot, "client"),
-      "runClient",
-      `-PpreviewSession=${bootstrap}`,
-      `-PpreviewGameDir=${path.join(runState.privateDir, "game")}`,
-      "--console=plain",
-      "--no-daemon",
-    ],
-    { stdout: log, stderr: log },
-  );
-  runState.cleanup.push(async () => {
-    if (child.exitCode === null) {
-      await request(session, "shutdown").catch(() => {
-        child.kill("SIGTERM");
-      });
-      const ended = await waitExit(child);
-      if (ended === null) {
-        child.kill("SIGKILL");
-        await child.exited;
-      }
-    }
-  });
-  void watch(child, runState.finish);
-  await waitFor(
-    "real client to join",
-    async () => {
-      if (child.exitCode !== null)
-        throw new Error(
-          `Client exited (${child.exitCode.toString()}); inspect ${log.name ?? "client.log"}`,
-        );
-      return (await socketReady(session.socket))
-        ? StatusSchema.parse(await request(session, "status")).connected
-        : false;
-    },
-    (connected) => connected,
-    180_000,
-  );
-}
-
-async function watch(child: Bun.Subprocess, finish: () => void): Promise<void> {
-  await child.exited;
-  finish();
-}
-
-async function waitExit(child: Bun.Subprocess): Promise<number | null> {
-  const { promise, resolve } = Promise.withResolvers<null>();
-  const timer = setTimeout(() => {
-    resolve(null);
-  }, 30_000);
-  try {
-    return await Promise.race([child.exited, promise]);
-  } finally {
-    clearTimeout(timer);
-  }
 }
