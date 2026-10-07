@@ -1,6 +1,7 @@
 import { Chart, JsonPatch } from "cdk8s";
 import { Construct } from "constructs";
 import {
+  Capability,
   ConfigMap,
   Deployment,
   DeploymentStrategy,
@@ -166,6 +167,8 @@ export type CaddyfileGeneratorProps = {
   s3Region?: string;
 };
 
+const STATIC_SITE_HTTP_PORT = 8080;
+
 /**
  * Generates a Caddyfile for S3 static sites.
  * Exported for testing/validation purposes.
@@ -176,6 +179,7 @@ export function generateCaddyfile(props: CaddyfileGeneratorProps): string {
   blocks.push(`{
 	order s3proxy last
 	auto_https off
+	http_port ${STATIC_SITE_HTTP_PORT.toString()}
 }
 `);
 
@@ -401,7 +405,7 @@ export class S3StaticSites extends Construct {
         resources: {},
         name: "caddy",
         image: `ghcr.io/shepherdjerred/caddy-s3proxy:${versions["shepherdjerred/caddy-s3proxy"]}`,
-        portNumber: 80,
+        portNumber: STATIC_SITE_HTTP_PORT,
         envVariables: {
           AWS_ACCESS_KEY_ID: EnvValue.fromSecretValue({
             secret: credentialsSecret,
@@ -416,6 +420,9 @@ export class S3StaticSites extends Construct {
           readOnlyRootFilesystem: false,
           user: 1000,
           group: 1000,
+          capabilities: {
+            drop: [Capability.ALL],
+          },
         },
       }),
     );
@@ -445,7 +452,7 @@ export class S3StaticSites extends Construct {
         name: "s3-static-sites",
       },
       selector: deployment,
-      ports: [{ port: 80 }],
+      ports: [{ port: 80, targetPort: STATIC_SITE_HTTP_PORT }],
     });
 
     for (const host of props.mailPolicies ?? []) {

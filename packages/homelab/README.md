@@ -46,6 +46,11 @@ some things I'm proud of:
 
 ## Deployment
 
+The custom Caddy image has no file capabilities, so non-root auth gateways can
+run with all container capabilities dropped. Static sites listen on port 8080
+behind the existing port-80 Service and also drop all capabilities. Image smoke
+checks verify the binary has no file capabilities and runs as a non-root user.
+
 Deploys are driven by the generated Woodpecker pipeline. The
 [CI pipeline guide](../docs/wiki/src/content/docs/explanation/ci-pipeline-shape.md)
 explains its change selection and release ordering:

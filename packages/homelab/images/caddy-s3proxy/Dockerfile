@@ -36,13 +36,21 @@ FROM caddy:2.11.4-alpine@sha256:6aeddd44c3078b0f9a35206472a11420648a79c184603ef9
 
 COPY --from=builder /usr/bin/caddy /usr/bin/caddy
 
+# The base image gives Caddy a file capability for privileged ports. That
+# prevents exec when a hardened gateway drops all capabilities. Workloads use
+# unprivileged listeners instead of relying on binary capabilities.
+RUN setcap -r /usr/bin/caddy
+
 LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"
 
 FROM runtime AS smoke
 # Alpine base: busybox ash supports pipefail, so a failing `caddy list-modules`
 # fails the smoke check instead of being masked by grep.
 SHELL ["/bin/ash", "-o", "pipefail", "-c"]
+RUN test -z "$(getcap /usr/bin/caddy)"
+USER 1000:1000
 RUN caddy version && caddy list-modules | grep -F "http.handlers.s3proxy"
+USER 0:0
 RUN --mount=type=secret,id=caddyfile \
   caddy adapt --config /run/secrets/caddyfile --adapter caddyfile >/dev/null
 
