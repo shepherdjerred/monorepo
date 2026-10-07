@@ -1429,6 +1429,29 @@ endings. Wait for the lobby between matches and keep every native recording.
 Capture automation and validation of the depicted camera are separate from
 these review commands; the clip producer supplies that provenance.
 
+The Java-model sandbox can own a native spectator and record a diagnostic pair:
+
+```bash
+bun run bots:java-video --model .cache/rwf-pilot/trooper/seed-0/onnx --output .cache/rwf-java-video/trooper
+```
+
+This command stages and warms that exact unaccepted export, attaches one native
+client to the same disposable Paper instance, and runs a separate warm-up duel
+before recording one Java-controlled and one authored match against the basic
+opponent at a common controller seed. Every match runs once. Losses and early terminal
+frames remain in the evidence. `inputs.json` hashes the actor, model manifest,
+native environment, renderer sources, compiled client classes, resources and
+client artifact before capture; the command checks those inputs again afterward.
+Each clip retains its frame receipt, separate full-match clock, original terminal
+state and Java delivery metrics. After graceful shutdown, it validates and hashes
+the original complete schema-3 bot-only Trooper recordings. Observer cleanup runs
+before Paper stops and exports recordings, including when capture fails.
+
+`verification.json` is model-specific diagnostic evidence. It does not establish
+genuine pilot eligibility or collect the twenty authored-opponent review pairs,
+score a human ballot, accept the model or enable ordinary learned play. The same
+owned observer and recorder are available to the fixed-schedule collector.
+
 The native timing bridge is exercised independently of training or voting:
 
 ```bash
