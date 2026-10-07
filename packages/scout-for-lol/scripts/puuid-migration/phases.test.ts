@@ -161,7 +161,7 @@ test("apply rewrites current durable JSON and mastery entries while preserving w
     accounts: [OLD_A],
     map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
   });
-  const stableWorkId = `champion-mastery:${NEW_A}:123`;
+  const stableWorkId = `champion-mastery:${OLD_A}:123`;
   const stableWorkflowId = `scout-detached-work:${stableWorkId}`;
   const payload = JSON.stringify({
     kind: "test",
@@ -172,10 +172,10 @@ test("apply rewrites current durable JSON and mastery entries while preserving w
     `CREATE TABLE "ChampionMasterySnapshot" ("puuid" TEXT PRIMARY KEY, "entriesJson" TEXT)`,
   );
   await db.exec(
-    `CREATE TABLE "ScoutWorkflowStart" ("requestId" TEXT PRIMARY KEY, "requestedWorkflowId" TEXT, "inputPayload" TEXT)`,
+    `CREATE TABLE "ScoutWorkflowStart" ("requestId" TEXT PRIMARY KEY, "requestedWorkflowId" TEXT, "inputPayload" TEXT, "acceptedAt" TEXT, "createdAt" INTEGER)`,
   );
   await db.exec(
-    `CREATE TABLE "MatchNotificationIntent" ("intentKey" TEXT PRIMARY KEY, "payload" TEXT)`,
+    `CREATE TABLE "MatchNotificationIntent" ("intentKey" TEXT PRIMARY KEY, "payload" TEXT, "state" TEXT, "createdAt" INTEGER)`,
   );
   await db.exec(
     `CREATE TABLE "MatchSettlementAnnouncement" ("riotMatchId" TEXT, "family" TEXT, "itemKey" TEXT, "payload" TEXT, PRIMARY KEY ("riotMatchId", "family", "itemKey"))`,
@@ -189,12 +189,12 @@ test("apply rewrites current durable JSON and mastery entries while preserving w
     [stableWorkId, payload],
   );
   await db.exec(
-    `INSERT INTO "ScoutWorkflowStart" VALUES ('request', ${db.param(1)}, ${db.param(2)})`,
-    [stableWorkflowId, payload],
+    `INSERT INTO "ScoutWorkflowStart" VALUES ('request', ${db.param(1)}, ${db.param(2)}, NULL, ${db.param(3)})`,
+    [stableWorkflowId, payload, Date.now()],
   );
   await db.exec(
-    `INSERT INTO "MatchNotificationIntent" VALUES ('intent', ${db.param(1)})`,
-    [payload],
+    `INSERT INTO "MatchNotificationIntent" VALUES ('intent', ${db.param(1)}, 'pending', ${db.param(2)})`,
+    [payload, Date.now()],
   );
   await db.exec(
     `INSERT INTO "MatchSettlementAnnouncement" VALUES ('match', 'earnings', 'item', ${db.param(1)})`,
@@ -804,6 +804,91 @@ test("collect maps an identity frozen in a Dare after its account is removed", a
     [OLD_B],
   );
   expect(rows.length).toBe(1);
+  await db.close();
+});
+
+test("collect classifies current payload columns and collects only actionable rows", async () => {
+  const db = await seed({ accounts: [] });
+  const archived = `ARCH_${"h".repeat(70)}`;
+  const payload = (puuid: string) => JSON.stringify({ data: { puuid } });
+  await db.exec(
+    `CREATE TABLE "ChampionMasterySnapshot" ("puuid" TEXT PRIMARY KEY, "entriesJson" TEXT)`,
+  );
+  await db.exec(
+    `CREATE TABLE "MatchSettlementAnnouncement" ("id" INTEGER PRIMARY KEY, "payload" TEXT)`,
+  );
+  await db.exec(
+    `CREATE TABLE "ScoutWorkflowStart" ("requestId" TEXT PRIMARY KEY, "requestedWorkflowId" TEXT, "inputPayload" TEXT, "acceptedAt" TEXT, "createdAt" INTEGER)`,
+  );
+  await db.exec(
+    `CREATE TABLE "MatchNotificationIntent" ("intentKey" TEXT PRIMARY KEY, "payload" TEXT, "state" TEXT, "createdAt" INTEGER)`,
+  );
+  await db.exec(
+    `INSERT INTO "ChampionMasterySnapshot" VALUES (${db.param(1)}, ${db.param(2)})`,
+    [archived, JSON.stringify([{ puuid: archived }])],
+  );
+  await db.exec(
+    `INSERT INTO "MatchSettlementAnnouncement" VALUES (1, ${db.param(1)})`,
+    [payload(archived)],
+  );
+  for (const [id, puuid, acceptedAt] of [
+    ["unaccepted", OLD_A, null],
+    ["accepted", archived, "2026-01-01"],
+  ] as const) {
+    await db.exec(
+      `INSERT INTO "ScoutWorkflowStart" VALUES (${db.param(1)}, ${db.param(2)}, ${db.param(3)}, ${db.param(4)}, ${db.param(5)})`,
+      [id, `workflow:${puuid}`, payload(puuid), acceptedAt, Date.now()],
+    );
+  }
+  for (const state of [
+    "pending",
+    "ready",
+    "sending",
+    "unknown-delivery",
+    "delivered",
+    "suppressed",
+    "expired",
+    "permission-denied",
+  ] as const) {
+    const actionable = [
+      "pending",
+      "ready",
+      "sending",
+      "unknown-delivery",
+    ].includes(state);
+    await db.exec(
+      `INSERT INTO "MatchNotificationIntent" VALUES (${db.param(1)}, ${db.param(2)}, ${db.param(3)}, ${db.param(4)})`,
+      [state, payload(actionable ? OLD_B : archived), state, Date.now()],
+    );
+  }
+  const { collect } = await import("./phases.ts");
+  await collect(db);
+  const rows = await db.query(
+    `SELECT "oldPuuid" FROM "PuuidKeyMap" ORDER BY "oldPuuid"`,
+  );
+  expect(rows.map((row) => row["oldPuuid"])).toEqual([OLD_A, OLD_B].toSorted());
+  await db.close();
+});
+
+test("unaccepted starts and nonterminal notification identities are dated at creation", async () => {
+  const db = await seed({ accounts: [], applied: true });
+  const beforeCutover = Date.now() - 3 * 24 * 60 * 60 * 1000;
+  await db.exec(
+    `CREATE TABLE "ScoutWorkflowStart" ("requestId" TEXT PRIMARY KEY, "inputPayload" TEXT, "acceptedAt" TEXT, "createdAt" INTEGER)`,
+  );
+  await db.exec(
+    `CREATE TABLE "MatchNotificationIntent" ("intentKey" TEXT PRIMARY KEY, "payload" TEXT, "state" TEXT, "createdAt" INTEGER)`,
+  );
+  await db.exec(
+    `INSERT INTO "ScoutWorkflowStart" VALUES ('pending', ${db.param(1)}, NULL, ${db.param(2)})`,
+    [JSON.stringify({ data: { puuid: OLD_A } }), beforeCutover],
+  );
+  await db.exec(
+    `INSERT INTO "MatchNotificationIntent" VALUES ('pending', ${db.param(1)}, 'pending', ${db.param(2)})`,
+    [JSON.stringify({ data: { puuid: OLD_B } }), Date.now()],
+  );
+  const { strayIdentities } = await import("./cutover.ts");
+  expect(await strayIdentities(db)).toEqual([OLD_A]);
   await db.close();
 });
 

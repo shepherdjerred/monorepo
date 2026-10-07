@@ -29,6 +29,12 @@ cannot be found by their names, including champion-mastery entries, notification
 and settlement payloads, and workflow-start input envelopes. Discovery and the
 completeness audit must agree; an unregistered data column still fails the audit.
 
+Each discovered column also needs a collection role. Mastery cache keys/entries
+and completed settlement presentation payloads are archives: existing mappings
+rewrite them, but they do not independently register watched players. Unaccepted
+workflow-start envelopes and nonterminal notification intents are dated tracked
+sources. Accepted starts and terminal intents remain historical payloads.
+
 `ScoutTemporalWork.id` and `ScoutWorkflowStart.requestedWorkflowId` are preserved
 durable business keys, not player references. They can embed the identity used
 when work was created, but accepted Temporal executions retain those exact keys.

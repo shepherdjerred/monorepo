@@ -209,6 +209,14 @@ export const ARCHIVE_COLUMNS: readonly { table: string; column: string }[] = [
   // Ledger and settlement records, written once and read for history.
   { table: "BucksLedgerEntry", column: "context" },
   { table: "BucksMatchEarning", column: "targetSnapshotJson" },
+  // Cached Riot observations, not registrations or instructions to watch a
+  // player. Their owners are tracked through Account; both cache forms still
+  // rewrite when a mapping exists.
+  { table: "ChampionMasterySnapshot", column: "puuid" },
+  { table: "ChampionMasterySnapshot", column: "entriesJson" },
+  // Completed settlement presentation inputs; this never replays settlement
+  // against the identities it reports.
+  { table: "MatchSettlementAnnouncement", column: "payload" },
   // Stored query results, which can name any participant a query returned.
   { table: "ExploreMessage", column: "preview" },
   { table: "ExploreMessage", column: "trace" },
@@ -278,6 +286,20 @@ export const TRACKED_SOURCES: readonly TrackedSource[] = [
   // Also mutable: a cell's holders change whenever the record is broken.
   objectJson("HallRecordCell", "holdersJson", "updatedAt"),
   objectJson("HallRecordCell", "evidenceJson", "updatedAt"),
+  // An unaccepted start is still an instruction that reconciliation may send
+  // to Temporal. Accepted starts remain historical envelopes, not a reason to
+  // collect every participant their input happened to contain.
+  {
+    ...objectJson("ScoutWorkflowStart", "inputPayload", "createdAt"),
+    where: `"acceptedAt" IS NULL`,
+  },
+  // Nonterminal delivery can still render its frozen announcement inputs.
+  // Preserve operator-resolvable unknown delivery as actionable; terminal
+  // intents are history and do not add identities to collection.
+  {
+    ...objectJson("MatchNotificationIntent", "payload", "createdAt"),
+    where: `"state" NOT IN ('delivered', 'suppressed', 'expired', 'permission-denied')`,
+  },
   // Unfinished work only. A failed row is requeueable — `work-store` moves it
   // back to `queued` — so its payload is an instruction that will still be
   // carried out, and the identity inside it gets written into whatever that run
