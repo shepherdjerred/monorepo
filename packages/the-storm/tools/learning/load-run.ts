@@ -4,7 +4,13 @@ import { parseArgs } from "node:util";
 import { z } from "zod";
 import { frozenManifest, openPaperDuels, root } from "./sandbox.ts";
 import type { LoadSample, LoadTick } from "./load-client.ts";
-import { loadProtocol, loadSummary, percentile } from "./load-gate.ts";
+import {
+  inferenceDrained,
+  loadProtocol,
+  loadSummary,
+  percentile,
+} from "./load-gate.ts";
+import { recomputeLoadEvidence } from "./promotion/load-evidence.ts";
 
 const args = parseArgs({
   options: { model: { type: "string" }, output: { type: "string" } },
@@ -155,11 +161,13 @@ function coverage(
 
 async function clearMatch(deadline: number) {
   let state = await paper.load.command("cancel");
-  while (state.phase !== "LOBBY") {
+  while (state.phase !== "LOBBY" || !inferenceDrained(state)) {
     await Bun.sleep(100);
     state = await paper.load.command("sample");
     if (Date.now() > deadline)
-      throw new Error("native load cleanup did not reach an empty lobby");
+      throw new Error(
+        "native load cleanup did not reach an empty lobby with drained inference",
+      );
   }
 }
 
@@ -230,27 +238,19 @@ try {
 }
 if (JSON.stringify(await inputs()) !== JSON.stringify(frozen))
   throw new Error("native load inputs changed during measurement");
-const rows = phases.map(({ bots, ticks, before, after, matches }) => ({
-  ...loadSummary(bots, ticks, before, after),
-  matches,
-}));
+const verified = recomputeLoadEvidence(
+  { baseline, phases },
+  await Bun.file(path.join(output, "samples.jsonl")).text(),
+);
 const report = {
   ...frozen,
-  baseline: {
-    ticks: baseline.length,
-    p95: percentile(
-      baseline.map((tick) => tick.milliseconds),
-      0.95,
-    ),
-  },
-  rows,
-  pass: rows.every((row) => row.pass),
+  ...verified,
 };
 await Bun.write(
   path.join(output, "verification.json"),
   JSON.stringify(report, null, 2) + "\n",
 );
-console.warn(JSON.stringify({ pass: report.pass, rows }));
+console.warn(JSON.stringify({ pass: report.pass, rows: verified.rows }));
 if (!report.pass)
   throw new Error(
     "native inference load failed frozen acceptance bars; all windows retained",

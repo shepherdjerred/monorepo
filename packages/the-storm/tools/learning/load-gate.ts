@@ -27,6 +27,16 @@ export function percentile(
   return value;
 }
 
+/** Cleanup drains prior work before a new window; the sealed prior denominator stays unchanged. */
+export function inferenceDrained(sample: LoadSample) {
+  const metrics = sample.inference;
+  if (metrics === undefined) throw new Error("load inference metrics missing");
+  const completed = metrics.deadlineMet + metrics.deadlineMissed;
+  if (completed > metrics.submitted)
+    throw new Error("load deadline accounting is inconsistent");
+  return completed === metrics.submitted;
+}
+
 export function loadSummary(
   bots: number,
   ticks: readonly LoadTick[],
