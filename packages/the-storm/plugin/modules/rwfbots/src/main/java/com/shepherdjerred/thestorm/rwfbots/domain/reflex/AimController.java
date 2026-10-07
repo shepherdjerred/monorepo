@@ -29,7 +29,8 @@ public final class AimController {
       pending.removeFirst();
     }
     var pursued = pending.getFirst();
-    var a = Math.exp(-1 / NOISE_TAU_TICKS);
+    // The seeded replay requires the same aim noise on every server CPU.
+    var a = StrictMath.exp(-1 / NOISE_TAU_TICKS);
     var kick = levers.aimErrorDeg() * Math.sqrt(1 - a * a);
     var errorYaw = state.errorYaw() * a + kick * random.nextGaussian();
     var errorPitch = state.errorPitch() * a + kick * random.nextGaussian();

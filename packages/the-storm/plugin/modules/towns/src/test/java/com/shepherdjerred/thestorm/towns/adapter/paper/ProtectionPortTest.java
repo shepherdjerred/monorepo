@@ -100,6 +100,27 @@ final class ProtectionPortTest extends AegisServer {
   }
 
   @Test
+  void preservationBlocksAutomaticChangesEvenForStaff() {
+    var preserved = at(1_000_000, 1_000_000);
+    alice.addAttachment(plugin, Guard.BYPASS_PERMISSION, true);
+    assertThat(port().check(alice.getUniqueId(), ProtectedAction.BUILD, preserved).isAllowed())
+        .as("staff may deliberately repair preserved terrain")
+        .isTrue();
+    for (var action :
+        new ProtectedAction[] {ProtectedAction.AUTOMATIC_BUILD, ProtectedAction.AUTOMATIC_BREAK}) {
+      assertThat(port().check(alice.getUniqueId(), action, preserved).isAllowed())
+          .as("background changes never inherit staff bypass")
+          .isFalse();
+    }
+    assertThat(
+            port()
+                .check(alice.getUniqueId(), ProtectedAction.AUTOMATIC_BUILD, at(500, 500))
+                .isAllowed())
+        .as("ordinary wilderness mechanisms still work")
+        .isTrue();
+  }
+
+  @Test
   void callsOffTheMainThreadThrow() throws InterruptedException {
     var port = port();
     var thrown = new AtomicReference<Throwable>();

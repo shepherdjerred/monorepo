@@ -18,6 +18,8 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.damage.DamageSource;
+import org.bukkit.damage.DamageType;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.event.block.Action;
@@ -143,6 +145,90 @@ final class GravesPaperTest {
   }
 
   @Test
+  void protectedLandNeverUsesTheUncheckedDeathSpotAndRetainsBelongings() {
+    harness.land.noBuilding = location -> true;
+    var drops = spyOnDrops();
+    var alice = aliceWithKit();
+    alice.setLevel(12);
+    var event =
+        new PlayerDeathEvent(
+            alice,
+            DamageSource.builder(DamageType.GENERIC).build(),
+            new ArrayList<>(
+                List.of(
+                    new ItemStack(Material.DIAMOND_SWORD),
+                    new ItemStack(Material.DIRT, 64),
+                    new ItemStack(Material.IRON_HELMET))),
+            12,
+            net.kyori.adventure.text.Component.empty(),
+            true);
+    harness.server.getPluginManager().callEvent(event);
+    harness.server.getScheduler().performTicks(5);
+
+    assertThat(harness.graves.all()).isEmpty();
+    assertThat(graveBlock().getType()).isEqualTo(Material.AIR);
+    assertThat(drops.drops).isEmpty();
+    assertThat(event.getKeepInventory()).isTrue();
+    assertThat(event.getKeepLevel()).isTrue();
+    assertThat(event.getDroppedExp()).isZero();
+    assertThat(alice.getInventory().getItem(0)).isEqualTo(new ItemStack(Material.DIAMOND_SWORD));
+    assertThat(alice.getInventory().getItem(5)).isEqualTo(new ItemStack(Material.DIRT, 64));
+    assertThat(alice.getInventory().getHelmet()).isEqualTo(new ItemStack(Material.IRON_HELMET));
+    assertThat(alice.getLevel()).isEqualTo(12);
+  }
+
+  @Test
+  void protectedBoundaryDeathRetainsBelongingsDespiteAdjacentWildernessRoom() {
+    harness.land.noBuilding = location -> location.getBlockX() <= 0;
+    harness.land.preserved = location -> location.getBlockX() <= 0;
+    var alice = aliceWithKit();
+    alice.setLevel(12);
+    assertThat(harness.world.getBlockAt(1, 5, 0).getType()).isEqualTo(Material.AIR);
+    var event =
+        new PlayerDeathEvent(
+            alice,
+            DamageSource.builder(DamageType.GENERIC).build(),
+            new ArrayList<>(List.of(new ItemStack(Material.DIAMOND_SWORD))),
+            12,
+            net.kyori.adventure.text.Component.empty(),
+            true);
+    harness.server.getPluginManager().callEvent(event);
+    harness.server.getScheduler().performTicks(5);
+
+    assertThat(harness.graves.all()).isEmpty();
+    assertThat(harness.world.getBlockAt(1, 5, 0).getType()).isEqualTo(Material.AIR);
+    assertThat(event.getKeepInventory()).isTrue();
+    assertThat(event.getKeepLevel()).isTrue();
+    assertThat(event.getDroppedExp()).isZero();
+    assertThat(event.getDrops()).isEmpty();
+    assertThat(alice.getInventory().getItem(0)).isEqualTo(new ItemStack(Material.DIAMOND_SWORD));
+    assertThat(alice.getLevel()).isEqualTo(12);
+  }
+
+  @Test
+  void protectedDeathWithNoItemsStillRetainsExperience() {
+    harness.land.noBuilding = location -> location.getBlockX() <= 0;
+    harness.land.preserved = location -> location.getBlockX() <= 0;
+    var alice = harness.playerAt("Alice", 0, 0);
+    alice.setLevel(12);
+    var event =
+        new PlayerDeathEvent(
+            alice,
+            DamageSource.builder(DamageType.GENERIC).build(),
+            new ArrayList<>(),
+            12,
+            net.kyori.adventure.text.Component.empty(),
+            true);
+    harness.server.getPluginManager().callEvent(event);
+
+    assertThat(harness.graves.all()).isEmpty();
+    assertThat(event.getKeepInventory()).isTrue();
+    assertThat(event.getKeepLevel()).isTrue();
+    assertThat(event.getDroppedExp()).isZero();
+    assertThat(alice.getLevel()).isEqualTo(12);
+  }
+
+  @Test
   void aDeathInASealedWorldLeavesNoGraveAndKeepsVanillaDrops() {
     var spy = spyOnDrops();
     harness.sealed.seal("arena");
@@ -218,6 +304,59 @@ final class GravesPaperTest {
     assertThat(graveBlock().getType()).isEqualTo(Material.AIR);
     assertThat(harness.store.loadAll().join()).isEmpty();
     assertThat(harness.saved).contains(alice.getUniqueId());
+  }
+
+  @Test
+  void anEmptiedPreservedGraveRetainsItsMarkerAndRowUntilCleanupCanResume() {
+    var alice = aliceDies();
+    alice.respawn();
+    harness.land.preserved = location -> true;
+    rightClick(alice, graveBlock());
+    harness.until(
+        () -> harness.graves.all().size() == 1 && harness.graves.all().getFirst().isEmpty());
+
+    assertThat(alice.getInventory().getItem(0)).isEqualTo(new ItemStack(Material.DIAMOND_SWORD));
+    assertThat(GraveBlocks.idAt(graveBlock())).isPresent();
+    assertThat(harness.store.loadAll().join())
+        .singleElement()
+        .satisfies(contents -> assertThat(contents.items()).isEmpty());
+
+    harness.land.preserved = location -> false;
+    harness
+        .server
+        .getPluginManager()
+        .callEvent(new ChunkLoadEvent(harness.world.getChunkAt(0, 0), false));
+    harness.until(() -> harness.graves.all().isEmpty());
+    assertThat(graveBlock().getType()).isEqualTo(Material.AIR);
+    assertThat(harness.store.loadAll().join()).isEmpty();
+  }
+
+  @Test
+  void preservationDefersGraveExpiryAndItsItemProjection() {
+    aliceDies();
+    harness.land.preserved = location -> true;
+    harness.clock.advance(Duration.ofDays(7));
+    harness
+        .server
+        .getPluginManager()
+        .callEvent(new ChunkLoadEvent(harness.world.getChunkAt(0, 0), false));
+    harness.server.getScheduler().performTicks(20);
+
+    assertThat(GraveBlocks.idAt(graveBlock())).isPresent();
+    assertThat(harness.store.pendingDrops().join()).isEmpty();
+    assertThat(harness.store.loadAll().join())
+        .singleElement()
+        .satisfies(contents -> assertThat(contents.items()).hasSize(3));
+
+    harness.land.preserved = location -> false;
+    harness
+        .server
+        .getPluginManager()
+        .callEvent(new ChunkLoadEvent(harness.world.getChunkAt(0, 0), false));
+    harness.until(() -> harness.store.pendingDrops().join().size() == 3);
+    harness.until(() -> graveBlock().getType() == Material.AIR);
+    harness.until(() -> harness.world.getEntitiesByClass(ItemDisplay.class).size() == 3);
+    assertThat(harness.world.getEntitiesByClass(ItemDisplay.class)).hasSize(3);
   }
 
   @Test
@@ -374,15 +513,15 @@ final class GravesPaperTest {
   }
 
   @Test
-  void withNowhereToBuildTheGraveGoesWhereTheOwnerDied() {
+  void withNowhereToBuildNoGraveReplacesProtectedLand() {
     harness.land.noBuilding = location -> true;
     var alice = aliceWithKit();
 
     alice.setHealth(0);
-    harness.until(() -> harness.graves.ownedBy(alice.getUniqueId()).size() == 1);
+    harness.server.getScheduler().performTicks(5);
 
-    assertThat(harness.graves.all().getFirst().grave().pos())
-        .isEqualTo(new GravePos("world", 0, 5, 0));
+    assertThat(harness.graves.all()).isEmpty();
+    assertThat(graveBlock().getType()).isEqualTo(Material.AIR);
   }
 
   @Test
@@ -430,6 +569,45 @@ final class GravesPaperTest {
 
     assertThat(GraveBlocks.idAt(harness.world.getBlockAt(4, 5, 4))).contains(id);
     assertThat(harness.graves.get(id)).contains(grave);
+  }
+
+  @Test
+  void restoredGravesCannotRecreateMarkersAfterTheirLandBecomesProtected() {
+    aliceDies();
+    var stored = harness.graves.all().getFirst();
+    var before = harness.recordedChanges.size();
+    graveBlock().setType(Material.AIR);
+    harness.land.noBuilding = location -> true;
+
+    harness
+        .server
+        .getPluginManager()
+        .callEvent(new ChunkLoadEvent(harness.world.getChunkAt(0, 0), false));
+
+    assertThat(graveBlock().getType()).isEqualTo(Material.AIR);
+    assertThat(harness.graves.get(stored.grave().id())).contains(stored);
+    assertThat(harness.recordedChanges).hasSize(before);
+  }
+
+  @Test
+  void graveMarkerPlacementAndRemovalHaveExplicitAuditActors() {
+    var alice = aliceDies();
+    assertThat(harness.recordedChanges)
+        .anySatisfy(
+            change -> {
+              assertThat(change.actor()).isEqualTo("#storm-graves");
+              assertThat(change.before().getMaterial()).isEqualTo(Material.AIR);
+              assertThat(change.after().getMaterial()).isEqualTo(Material.PLAYER_HEAD);
+            });
+    rightClick(alice, graveBlock());
+    harness.until(() -> harness.graves.all().isEmpty());
+    assertThat(harness.recordedChanges)
+        .anySatisfy(
+            change -> {
+              assertThat(change.actor()).isEqualTo("#storm-graves");
+              assertThat(change.before().getMaterial()).isEqualTo(Material.PLAYER_HEAD);
+              assertThat(change.after().getMaterial()).isEqualTo(Material.AIR);
+            });
   }
 
   @Test

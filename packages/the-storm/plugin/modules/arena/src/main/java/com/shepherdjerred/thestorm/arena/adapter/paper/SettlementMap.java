@@ -169,7 +169,7 @@ final class SettlementMap {
               d -> {
                 if (d.type() == SurvivalContent.DefenseType.BARRICADE)
                   barricade(d, Material.OAK_FENCE);
-                else world.block(d.block()).setType(Material.STONE_PRESSURE_PLATE, false);
+                else world.setBlock(d.block(), Material.STONE_PRESSURE_PLATE);
               });
     }
     gates();
@@ -182,9 +182,9 @@ final class SettlementMap {
       zone.purchaseSigns()
           .forEach(
               p -> {
-                if (state.accessible(zone.id())) world.block(p).setType(Material.AIR, false);
+                if (state.accessible(zone.id())) world.setBlock(p, Material.AIR);
                 else {
-                  world.block(p).setType(Material.OAK_SIGN, false);
+                  world.setBlock(p, Material.OAK_SIGN);
                   label(
                       p,
                       zone.name(),
@@ -231,8 +231,7 @@ final class SettlementMap {
               .filter(z -> z.id().equals(route.gateZone()))
               .findFirst()
               .orElseThrow();
-      zone.gate()
-          .forEach(p -> world.block(p).setType(open ? Material.AIR : Material.IRON_BARS, false));
+      zone.gate().forEach(p -> world.setBlock(p, open ? Material.AIR : Material.IRON_BARS));
     }
   }
 
@@ -360,7 +359,7 @@ final class SettlementMap {
   void barricade(SurvivalContent.Defense defense, Material material) {
     for (var dx = -1; dx <= 1; dx++) {
       var block = defense.block();
-      world.block(new BlockPos(block.x() + dx, block.y(), block.z())).setType(material, false);
+      world.setBlock(new BlockPos(block.x() + dx, block.y(), block.z()), material);
     }
   }
 }

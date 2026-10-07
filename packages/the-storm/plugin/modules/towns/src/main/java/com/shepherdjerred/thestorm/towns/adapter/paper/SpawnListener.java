@@ -32,7 +32,7 @@ final class SpawnListener implements Listener {
       event.setCancelled(true);
       return;
     }
-    if (land instanceof Land.RegionLand(var region)
+    if (land.underlyingLand() instanceof Land.RegionLand(var region)
         && !region.mobSpawns().allows(event.getSpawnReason().name())) {
       event.setCancelled(true);
     }

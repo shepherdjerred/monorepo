@@ -14,7 +14,7 @@ async function click(bot: Bot, rcon: RconClient, pos: Vec3) {
   const approach = new Vec3(pos.x + 0.5, pos.y, pos.z + 1.5);
   const moved = new Promise<void>((resolve) => bot.once("forcedMove", resolve));
   await rcon.command(
-    `tp ${bot.username} ${approach.x.toString()} ${approach.y.toString()} ${approach.z.toString()}`,
+    `minecraft:tp ${bot.username} ${approach.x.toString()} ${approach.y.toString()} ${approach.z.toString()}`,
   );
   await moved;
   await waitUntil(
@@ -406,7 +406,7 @@ test("vertical shrines play local music and require an explicit third-boon repla
         .filter((item) => item.name === "emerald")
         .reduce((sum, item) => sum + item.count, 0),
     ).toBe(before - 32);
-    await rcon.command(`tp ${bot.username} 52.5 105 -30.5`);
+    await rcon.command(`minecraft:tp ${bot.username} 52.5 105 -30.5`);
     await waitUntil(
       "record stopped outside shrine radius",
       () => stopped.length > 0,

@@ -30,6 +30,8 @@ public final class ProtectionEngine {
   }
 
   public Verdict decide(Actor actor, Act act, Land land) {
+    if (land instanceof Land.HeritageLand heritage)
+      return HeritageRule.decide(actor, act, heritage);
     if (land instanceof Land.WorkLand(var region)) {
       return new Verdict.Deny(new Denial.ByRegion(region.name(), act.action()));
     }
@@ -42,6 +44,7 @@ public final class ProtectionEngine {
       return Verdict.allow();
     }
     return switch (land) {
+      case Land.HeritageLand heritage -> HeritageRule.decide(actor, act, heritage);
       case Land.Wilderness _ -> Verdict.allow();
       case Land.TownLand(var claim) -> towns.decide(actor, act, claim);
       case Land.RegionLand(var region) -> RegionLandRule.decide(act, region);
@@ -97,6 +100,8 @@ public final class ProtectionEngine {
 
   private static boolean pvpOn(Land land) {
     return switch (land) {
+      case Land.HeritageLand(var site, _, _) ->
+          site.profile() == com.shepherdjerred.thestorm.towns.domain.region.RegionProfile.ARENA;
       case Land.Wilderness _ -> true;
       case Land.TownLand(var claim) -> claim.flags().has(ClaimFlag.PVP);
       case Land.RegionLand(var region) -> region.permits(FIGHT);

@@ -22,6 +22,37 @@ async function join(bot: Bot, round?: number) {
   await joined;
 }
 
+const PursuitPositionsSchema = z.array(
+  z.object({ id: z.guid(), x: z.number(), y: z.number(), z: z.number() }),
+);
+
+async function middleTerrace(
+  rcon: RconClient,
+  player: string,
+  cohort: Set<string>,
+  timeoutMs: number,
+): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (true) {
+    const enemies = PursuitPositionsSchema.parse(
+      JSON.parse(
+        await rcon.command(`storm-fixture-survival positions ${player} none`),
+      ),
+    );
+    if (
+      enemies.some(
+        (enemy) => cohort.has(enemy.id) && enemy.y > 87 && enemy.y < 91,
+      )
+    )
+      return;
+    if (Date.now() > deadline)
+      throw new Error(
+        "Timed out waiting for the upper horde descends to the middle terrace",
+      );
+    await Bun.sleep(50);
+  }
+}
+
 async function start(bot: Bot, rcon: RconClient, round: number) {
   await rcon.command("difficulty normal");
   const started = waitForMessage(
@@ -80,8 +111,10 @@ describe("run class builds on real Paper", () => {
           await rcon.command(
             `effect give ${secondBot.username} minecraft:resistance infinite 255 true`,
           );
-          await rcon.command(`tp ${bot.username} -33.5 73 63.5`);
-          await rcon.command(`tp ${secondBot.username} -31.5 73 63.5`);
+          await rcon.command(`minecraft:tp ${bot.username} -33.5 73 63.5`);
+          await rcon.command(
+            `minecraft:tp ${secondBot.username} -31.5 73 63.5`,
+          );
           await menu(bot, "/survival upgrades");
           await bot.clickWindow(index, 0, 0);
           await waitUntil(
@@ -171,8 +204,8 @@ describe("animated runic cache on real Paper", () => {
       await rcon.command(
         `effect give ${secondBot.username} minecraft:resistance infinite 255 true`,
       );
-      await rcon.command(`tp ${bot.username} -1.5 73 64.5`);
-      await rcon.command(`tp ${secondBot.username} 0.5 73 64.5`);
+      await rcon.command(`minecraft:tp ${bot.username} -1.5 73 64.5`);
+      await rcon.command(`minecraft:tp ${secondBot.username} 0.5 73 64.5`);
       await waitUntil(
         "market box tracking",
         () => bot.blockAt(new Vec3(-2, 73, 62)) !== null,
@@ -259,6 +292,7 @@ describe("vertical settlement pursuit and party scaling on real Paper", () => {
         `round ${round.toString()} pursues ${count.toString()} survivors across elevated terrain`,
         async ({ bot, server, rcon }) => {
           const teammates: Bot[] = [];
+          const upperCohort = new Set<string>();
           await rcon.command(`op ${bot.username}`);
           await join(bot, round);
           try {
@@ -281,7 +315,9 @@ describe("vertical settlement pursuit and party scaling on real Paper", () => {
               await rcon.command(
                 `effect give ${player.username} minecraft:resistance infinite 255 true`,
               );
-              await rcon.command(`tp ${player.username} 52.5 105 -30.5`);
+              await rcon.command(
+                `minecraft:tp ${player.username} 52.5 105 -30.5`,
+              );
             }
             await waitUntil(
               "upper terrace arrival",
@@ -300,28 +336,19 @@ describe("vertical settlement pursuit and party scaling on real Paper", () => {
               pursuitLegMs,
             );
             // UUIDs survive the client unloading and reloading the distant horde.
-            const upperCohort = new Set(
-              upperHorde().map((entity) => z.guid().parse(entity.uuid)),
-            );
+            for (const entity of upperHorde())
+              upperCohort.add(z.guid().parse(entity.uuid));
             for (const player of [bot, ...teammates])
-              await rcon.command(`tp ${player.username} 27.5 73 65.5`);
+              await rcon.command(
+                `minecraft:tp ${player.username} 27.5 73 65.5`,
+              );
             await waitUntil(
               "lower wharf arrival",
               () => bot.entity.position.y < 74 && bot.entity.position.x > 26,
             );
-            // The expanded map has two stair legs between its three terraces.
-            await waitUntil(
-              "the upper horde descends to the middle terrace",
-              () =>
-                Object.values(bot.entities).some(
-                  (entity) =>
-                    entity.uuid !== undefined &&
-                    upperCohort.has(entity.uuid) &&
-                    entity.position.y > 87 &&
-                    entity.position.y < 91,
-                ),
-              pursuitLegMs,
-            );
+            // Distant mobs can leave the client's tracking range on the middle
+            // terrace. Observe the same UUIDs on Paper through both stair legs.
+            await middleTerrace(rcon, bot.username, upperCohort, pursuitLegMs);
             await waitUntil(
               "horde traverses dock routes",
               () =>
@@ -334,6 +361,14 @@ describe("vertical settlement pursuit and party scaling on real Paper", () => {
               pursuitLegMs,
             );
             expect(bot.health).toBeGreaterThan(0);
+          } catch (error) {
+            const pursuit = await rcon.command(
+              `storm-fixture-survival pursuit ${bot.username} none`,
+            );
+            throw new Error(
+              `${String(error)}; cohort=${[...upperCohort].join(",")}; ${pursuit}`,
+              { cause: error },
+            );
           } finally {
             await rcon.command("arena stop settlement");
             await rcon.command("difficulty peaceful");
@@ -451,7 +486,7 @@ describe("legendary gear and local feedback on real Paper", () => {
     try {
       await start(bot, rcon, 15);
       await travelToRuneforge(bot, rcon);
-      await rcon.command(`tp ${bot.username} -64.5 73 3.5`);
+      await rcon.command(`minecraft:tp ${bot.username} -64.5 73 3.5`);
       for (const [id, material] of [
         ["STORMCALLER", "bow"],
         ["FROSTBITE", "crossbow"],
@@ -464,13 +499,13 @@ describe("legendary gear and local feedback on real Paper", () => {
         .find((item) => item.name === "blaze_rod");
       if (rod === undefined) throw new Error("Graviton missing");
       await bot.equip(rod, "hand");
-      await rcon.command(`tp ${bot.username} -64.5 73 16.5`);
+      await rcon.command(`minecraft:tp ${bot.username} -64.5 73 16.5`);
       const returnStation = bot.blockAt(new Vec3(-65, 73, 17));
       if (returnStation === null) throw new Error("Return station missing");
       const returned = waitForMessage(bot, /Back at the fortress/u, 15_000);
       await bot.activateBlock(returnStation);
       await returned;
-      await rcon.command(`tp ${bot.username} 23.5 105 -40.5`);
+      await rcon.command(`minecraft:tp ${bot.username} 23.5 105 -40.5`);
       expect(
         await rcon.command(
           `storm-fixture-survival targets ${bot.username} none`,
@@ -483,6 +518,13 @@ describe("legendary gear and local feedback on real Paper", () => {
             entity.position.distanceTo(new Vec3(19.5, 105, -40.5)) < 1,
         ),
       );
+      for (const target of [0, 1, 2]) {
+        expect(
+          await rcon.command(
+            `data get entity @e[type=minecraft:zombie,name="Legendary target ${target.toString()}",limit=1] IsBaby`,
+          ),
+        ).toMatch(/: 0b$/u);
+      }
       await legendaryEffects(bot, rcon);
       await bot.equip(rod, "hand");
       await bot.lookAt(new Vec3(19.5, 104.5, -40.5));

@@ -75,7 +75,9 @@ public final class BowSolver {
   static double heightAt(double horizontal, double elevationDegrees, double speed) {
     var elevation = Math.toRadians(elevationDegrees);
     var arrow =
-        new Arrow(Vec3.ZERO, new Vec3(speed * Math.cos(elevation), speed * Math.sin(elevation), 0));
+        new Arrow(
+            Vec3.ZERO,
+            new Vec3(speed * StrictMath.cos(elevation), speed * StrictMath.sin(elevation), 0));
     for (var tick = 0; tick < MAX_FLIGHT_TICKS; tick++) {
       var next = arrow.step();
       if (next.pos().x() >= horizontal) {

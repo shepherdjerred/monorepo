@@ -73,6 +73,16 @@ public final class TownsModule implements StormModule {
     var lockStore = new JooqLocksStore(context.database());
     var pvpStore = new JooqPvpStore(context.database());
     var state = new TownsState(new RegionIndex(config.regions()));
+    var heritage =
+        context.loadConfig(
+            "heritage.yml", com.shepherdjerred.thestorm.towns.domain.heritage.HeritageConfig.class);
+    for (var site : heritage.sites()) {
+      if (context.plugin().getServer().getWorld(site.world()) == null) {
+        throw new IllegalStateException("heritage world is not loaded: " + site.world());
+      }
+    }
+    state.attachHeritage(
+        new com.shepherdjerred.thestorm.towns.domain.heritage.HeritageIndex(heritage.sites()));
     state.load(await(store.loadAll(), "towns"));
     var leases = new JooqLeaseStore(context.database());
     var parcels = new ParcelBook(parcelsConfig, context.time());

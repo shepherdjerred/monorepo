@@ -4,10 +4,28 @@ export const MINING_NAMESPACE = "minecraft-tsmc";
 export const MINING_SERVER = "minecraft-tsmc";
 export const MINING_CLAIM = "datadir-minecraft-tsmc-0";
 export const MINING_LOCK_ANNOTATION = "sjer.red/mining-reset-lock";
+export const WORLD_RESTORE_LEASE_ANNOTATION = "sjer.red/world-restore-lease";
 export const MINING_IMAGE_ANNOTATION = "sjer.red/mining-reset-image";
 export const ROUTER_WAKE_ANNOTATION = "mc-router.itzg.me/autoScaleUp";
 
 export const MiningPeriodSchema = z.string().regex(/^\d{4}q[1-4]$/);
+
+export function miningLockOwner(
+  server: z.infer<typeof StatefulSetSchema>,
+  period: string,
+): string | undefined {
+  const heldBy = server.metadata.annotations?.[MINING_LOCK_ANNOTATION];
+  if (heldBy !== undefined && heldBy !== period) {
+    throw new Error(`Mining reset maintenance lock belongs to ${heldBy}`);
+  }
+  if (
+    heldBy === undefined &&
+    server.metadata.annotations?.[MINING_IMAGE_ANNOTATION] !== undefined
+  ) {
+    throw new Error("Mining reset image exists without its maintenance lock");
+  }
+  return heldBy;
+}
 
 const MetadataSchema = z.object({
   name: z.string(),

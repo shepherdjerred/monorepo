@@ -73,6 +73,7 @@ import { createMcSandboxApp } from "@shepherdjerred/homelab/cdk8s/src/resources/
 import { createStormForumApplications } from "@shepherdjerred/homelab/cdk8s/src/resources/storm-forum/releases.ts";
 import { createPvcBackupAdmissionPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/pvc-backup-admission.ts";
 import { createMinecraftMiningResetGuard } from "@shepherdjerred/homelab/cdk8s/src/resources/minecraft-mining-reset-guard.ts";
+import { createMinecraftRestorationGuard } from "@shepherdjerred/homelab/cdk8s/src/resources/minecraft-restoration-guard.ts";
 import { createArgoCdApplicationAdmissionPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/argocd-application-admission.ts";
 import { createWoodpeckerCiPodGuard } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/ci-pod-guard.ts";
 
@@ -87,6 +88,7 @@ export async function createAppsChart(app: App) {
   createArgoCdApplicationAdmissionPolicies(chart);
   createPvcBackupAdmissionPolicies(chart);
   createMinecraftMiningResetGuard(chart);
+  createMinecraftRestorationGuard(chart);
   createWoodpeckerCiPodGuard(chart);
 
   new Namespace(chart, `maintenance-namespace`, {

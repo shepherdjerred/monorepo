@@ -104,9 +104,11 @@ final class MapWorld {
       if (stone instanceof Slab replacement) {
         replacement.setType(slab.getType());
       }
-      block.setBlockData(stone, false);
+      context.blocks().set("#storm-rwf-crater", block, stone, false);
     } else {
-      block.setType(Material.COAL_BLOCK, false);
+      context
+          .blocks()
+          .set("#storm-rwf-crater", block, Material.COAL_BLOCK.createBlockData(), false);
     }
     cratered.add(pos);
   }
@@ -114,7 +116,13 @@ final class MapWorld {
   /** Puts every cratered block back from the schematic. */
   void revertCraters() {
     for (var pos : cratered) {
-      Places.block(context.world(), pos).setBlockData(map.blocks().at(pos), false);
+      context
+          .blocks()
+          .set(
+              "#storm-rwf-restore",
+              Places.block(context.world(), pos),
+              map.blocks().at(pos),
+              false);
     }
     cratered.clear();
   }

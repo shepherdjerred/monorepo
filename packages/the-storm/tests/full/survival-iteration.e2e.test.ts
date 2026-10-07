@@ -10,7 +10,7 @@ import { startSettlementRound as practice } from "#e2e/harness/settlement.ts";
 
 async function stand(bot: Bot, rcon: RconClient, at: Vec3) {
   await rcon.command(
-    `tp ${bot.username} ${at.x.toString()} ${at.y.toString()} ${at.z.toString()}`,
+    `minecraft:tp ${bot.username} ${at.x.toString()} ${at.y.toString()} ${at.z.toString()}`,
   );
   await waitUntil(
     "test position",
@@ -67,11 +67,11 @@ async function prepareWindCast(bot: Bot, rcon: RconClient): Promise<void> {
       return { ok: false, error } as const;
     }
   })();
-  await rcon.command(`tp ${boss} 19.5 105 -40.5`);
+  await rcon.command(`minecraft:tp ${boss} 19.5 105 -40.5`);
   await rcon.command(`data merge entity ${boss} {NoAI:1b}`);
   // Escorts must not obscure the damage caused by the locked boss cast.
   await rcon.command(
-    'execute as @e[type=minecraft:zombie,nbt={BukkitValues:{"thestorm:arena_entity":"settlement"}}] run attribute @s minecraft:attack_damage base set 0',
+    'execute as @e[type=!minecraft:breeze,nbt={BukkitValues:{"thestorm:arena_entity":"settlement"}}] run attribute @s minecraft:attack_damage base set 0',
   );
   await waitUntil("boss tracked by the client", () =>
     Object.values(bot.entities).some((entity) => entity.name === "breeze"),
@@ -230,6 +230,11 @@ describe("Settlement iteration on native Paper", () => {
       bot,
       rcon,
     }) => {
+      const messages: string[] = [];
+      const observe = (message: string) => {
+        messages.push(message);
+      };
+      bot.on("messagestr", observe);
       try {
         await practice(bot, rcon, 5);
         await rcon.command(
@@ -240,8 +245,10 @@ describe("Settlement iteration on native Paper", () => {
         );
         await stand(bot, rcon, new Vec3(23.5, 105, -40.5));
         await prepareWindCast(bot, rcon);
+        // Round five drafts zombies and husks; isolate both escort types from
+        // the cast assertion without changing the boss's scripted damage.
         await rcon.command(
-          'execute as @e[type=minecraft:zombie,nbt={BukkitValues:{"thestorm:arena_entity":"settlement"}}] run data merge entity @s {NoAI:1b}',
+          'execute as @e[type=!minecraft:breeze,nbt={BukkitValues:{"thestorm:arena_entity":"settlement"}}] run data merge entity @s {NoAI:1b}',
         );
         const cast = await currentWindCast(rcon, bot.username);
         await stand(bot, rcon, new Vec3(...cast.aim));
@@ -265,9 +272,18 @@ describe("Settlement iteration on native Paper", () => {
         const before = bot.health;
         await waitForMessage(bot, /recovery: attack now/u, 6000);
         await Bun.sleep(150);
-        if (dodge) expect(bot.health).toBe(before);
-        else expect(bot.health).toBeLessThan(before);
+        expect(
+          messages.some((message) => message.includes("Hit by Wind lanes.")),
+        ).toBe(!dodge);
+        const evidence = JSON.stringify({
+          cast,
+          at: bot.entity.position,
+          messages,
+        });
+        if (dodge) expect(bot.health, evidence).toBe(before);
+        else expect(bot.health, evidence).toBeLessThan(before);
       } finally {
+        bot.off("messagestr", observe);
         await stop(rcon);
       }
     }, 60_000);

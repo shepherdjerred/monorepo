@@ -207,6 +207,7 @@ final class ProtectionMatrixTest {
       return new Denial.NoPvp();
     }
     return switch (land) {
+      case Land.HeritageLand(var site, _, _) -> new Denial.ByRegion(site.name(), action);
       case Land.TownLand(var claim) -> new Denial.ByTown(claim.townId(), action);
       case Land.RegionLand(var region) -> new Denial.ByRegion(region.name(), action);
       case Land.WorkLand(var region) -> new Denial.ByRegion(region.name(), action);

@@ -48,7 +48,7 @@ final class LightSwitches {
       var block = grid.block(pos);
       var data = (Lightable) block.getBlockData();
       data.setLit(flip.on());
-      block.setBlockData(data, false);
+      kit.changes().set(player.getName(), block, data, false);
     }
     Replies.info(player, Feature.LIGHT_SWITCH, flip.on() ? "Lights on." : "Lights off.");
   }

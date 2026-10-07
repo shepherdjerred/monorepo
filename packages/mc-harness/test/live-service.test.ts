@@ -274,6 +274,47 @@ describe("live target reads", () => {
     expect(status).toBe(412);
     expect(String(json["error"])).toContain("op read 'op://");
   });
+
+  it("rechecks restoration leases before file reads despite cached ready status", async () => {
+    const { ctx, cluster, bridge } = await setup();
+    await expect(ctx.files("live")).resolves.toBeDefined();
+    cluster.sts = {
+      ...sts,
+      metadata: {
+        ...sts.metadata,
+        annotations: {
+          ...sts.metadata.annotations,
+          "sjer.red/world-restore-lease": "restore-test",
+        },
+      },
+    };
+    await expect(ctx.files("live")).rejects.toThrow(
+      /world restoration.*restore-test/u,
+    );
+    const { status, json } = await get(ctx, "/files/live/ls?path=world");
+    expect(status).toBe(409);
+    expect(String(json["error"])).toMatch(/world restoration/u);
+    expect(bridge.calls).toEqual([]);
+    expect(cluster.calls.every((args) => args[5] === "get")).toBe(true);
+  });
+
+  it("permits file reads during a mining reset without a restoration lease", async () => {
+    const { ctx } = await setup({
+      cluster: {
+        sts: {
+          ...sts,
+          metadata: {
+            ...sts.metadata,
+            annotations: {
+              ...sts.metadata.annotations,
+              "sjer.red/mining-reset-lock": "2026q4",
+            },
+          },
+        },
+      },
+    });
+    await expect(ctx.files("live")).resolves.toBeDefined();
+  });
 });
 
 describe("live target writes", () => {

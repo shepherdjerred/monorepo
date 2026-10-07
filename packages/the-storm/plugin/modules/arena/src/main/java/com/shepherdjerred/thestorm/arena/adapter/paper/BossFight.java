@@ -276,13 +276,13 @@ final class BossFight {
   private void placeHeart() {
     var block = arena.block(arena.mobSpawnBlock(heartSpot));
     replaced = block.getBlockData();
-    block.setType(Material.CREAKING_HEART, false);
+    arena.setBlock(arena.mobSpawnBlock(heartSpot), Material.CREAKING_HEART);
   }
 
   private void removeHeart() {
     var previous = replaced;
     if (previous != null) {
-      arena.block(arena.mobSpawnBlock(heartSpot)).setBlockData(previous, false);
+      arena.setBlock(arena.mobSpawnBlock(heartSpot), previous);
       replaced = null;
     }
   }

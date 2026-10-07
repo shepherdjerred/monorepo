@@ -94,7 +94,13 @@ final class BombMarkers {
   /** The TNT block becomes primed TNT with a long fuse that the match, not the entity, ends. */
   void arm(String bombId) {
     var site = site(bombId);
-    Places.block(world(), site.position()).setType(Material.AIR, false);
+    context
+        .blocks()
+        .set(
+            "#storm-rwf-bomb",
+            Places.block(world(), site.position()),
+            Material.AIR.createBlockData(),
+            false);
     removePrimed(bombId);
     var tnt =
         world()
@@ -119,14 +125,26 @@ final class BombMarkers {
   void restore(String bombId) {
     var site = site(bombId);
     removePrimed(bombId);
-    Places.block(world(), site.position()).setType(Material.TNT, false);
+    context
+        .blocks()
+        .set(
+            "#storm-rwf-bomb",
+            Places.block(world(), site.position()),
+            Material.TNT.createBlockData(),
+            false);
   }
 
   /** The bomb is gone for the rest of the match. */
   void remove(String bombId) {
     var site = site(bombId);
     removePrimed(bombId);
-    Places.block(world(), site.position()).setType(Material.AIR, false);
+    context
+        .blocks()
+        .set(
+            "#storm-rwf-bomb",
+            Places.block(world(), site.position()),
+            Material.AIR.createBlockData(),
+            false);
     var hologram = holograms.remove(bombId);
     if (hologram != null) {
       hologram.remove();

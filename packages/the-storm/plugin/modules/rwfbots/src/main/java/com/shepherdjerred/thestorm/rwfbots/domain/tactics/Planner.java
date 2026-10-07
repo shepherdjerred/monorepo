@@ -244,7 +244,8 @@ public final class Planner {
   private static Vec3 around(
       Situation situation, TacticsContext context, Vec3 centre, double radius) {
     var angle = situation.self().id().value() * GOLDEN_ANGLE;
-    var point = centre.plus(new Vec3(Math.cos(angle), 0, Math.sin(angle)).scale(radius));
+    var point =
+        centre.plus(new Vec3(StrictMath.cos(angle), 0, StrictMath.sin(angle)).scale(radius));
     var graph = context.nav().graph();
     var node = graph.nearestNodeWithin(point, SNAP);
     return node.isPresent() ? graph.feet(node.getAsInt()) : centre;

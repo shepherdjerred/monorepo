@@ -81,5 +81,7 @@ modules.forEach { name ->
 // Offline tooling under tools/: not a gameplay module, so dist never shades it
 // and the architecture project (which analyses dist and modules/*) never sees it.
 include("rwfmap")
+include("conversionguard")
+project(":conversionguard").projectDir = file("tools/conversionguard")
 
 project(":rwfmap").projectDir = file("tools/rwfmap")

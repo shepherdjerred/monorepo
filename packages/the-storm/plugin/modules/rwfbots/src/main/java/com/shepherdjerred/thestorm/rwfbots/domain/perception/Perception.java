@@ -182,7 +182,7 @@ public final class Perception {
   private static Vec3 blur(Vec3 pos, double error, RandomGenerator random) {
     var angle = random.nextDouble() * 2 * Math.PI;
     var radius = Math.sqrt(random.nextDouble()) * error;
-    return pos.plus(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
+    return pos.plus(StrictMath.cos(angle) * radius, 0, StrictMath.sin(angle) * radius);
   }
 
   /**

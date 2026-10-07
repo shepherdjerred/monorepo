@@ -313,7 +313,7 @@ final class LockCommands {
 
   private boolean frozen(Player player, Block block) {
     for (var part : LockGuard.container(block)) {
-      var land = parts.guard().land(part.getLocation());
+      var land = parts.guard().land(part.getLocation()).underlyingLand();
       if (land instanceof com.shepherdjerred.thestorm.towns.domain.land.Land.WorkLand
           || (land instanceof com.shepherdjerred.thestorm.towns.domain.land.Land.ParcelLand parcel
               && parcel.parcel().phase()

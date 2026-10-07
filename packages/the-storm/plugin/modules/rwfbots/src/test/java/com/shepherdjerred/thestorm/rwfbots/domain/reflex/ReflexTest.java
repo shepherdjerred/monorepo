@@ -19,11 +19,13 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.BombState;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Decision;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.MatchPhase;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Option;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.PoisonView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Stance;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Waypoint;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
 import java.util.ArrayList;
 import java.util.List;
@@ -203,6 +205,129 @@ final class ReflexTest {
     assertThat(started).isEqualTo(2);
     assertThat(self.health()).isGreaterThanOrEqualTo(Reflex.EAT_UNTIL);
     assertThat(state.isEating()).isFalse();
+  }
+
+  @Test
+  void walkingCorrectionGrowsAsTheGapToATeammateShrinks() {
+    var self = combatant(1, RED, new Vec3(5.5, 1, 5.5));
+    var near = combatant(2, RED, self.pos().plus(0, 0, 2));
+    var far = combatant(2, RED, self.pos().plus(0, 0, 2.75));
+    var nearMove = walkingMove(self, near);
+    var farMove = walkingMove(self, far);
+    assertThat(nearMove.waypoint().x()).isGreaterThan(self.pos().x());
+    assertThat(nearMove.waypoint().z()).isLessThan(farMove.waypoint().z());
+  }
+
+  @Test
+  void walkingLeavesAResponseMarginBeyondTheMeleeSpacingBand() {
+    var self = combatant(1, RED, new Vec3(5.5, 1, 5.5));
+    var ally = combatant(2, RED, new Vec3(5.5, 1, 8.25));
+    var move = walkingMove(self, ally);
+    assertThat(move.waypoint().x()).isGreaterThan(self.pos().x());
+    assertThat(move.waypoint().z()).isLessThan(self.pos().z());
+  }
+
+  @Test
+  void walkersAnticipateConvergingTeammatesBeforeTheyCrossTheSpacingBand() {
+    var self = combatant(1, RED, new Vec3(5.5, 1, 5.5));
+    var ally = combatant(2, RED, self.pos().plus(0, 0, 3.25));
+    var stationary = walkingMove(self, ally);
+    var converging = walkingMove(self, ally.withVel(new Vec3(0, 0, -0.2)));
+    assertThat(stationary.waypoint().z()).isEqualTo(self.pos().z());
+    assertThat(converging.waypoint().z()).isLessThan(self.pos().z());
+    assertThat(converging.waypoint().x()).isGreaterThan(self.pos().x());
+  }
+
+  @Test
+  void walkersAvoidTeammatesCrossingBetweenDistantPredictionEndpoints() {
+    var self = combatant(1, RED, new Vec3(5.5, 1, 5.5));
+    var ally = combatant(2, RED, self.pos().plus(0, 0, 3.25)).withVel(new Vec3(0, 0, -7));
+    var move = walkingMove(self, ally);
+    assertThat(move.waypoint().z()).isLessThan(self.pos().z());
+    assertThat(move.waypoint().x()).isGreaterThan(self.pos().x());
+  }
+
+  @Test
+  void walkersIgnoreConvergenceOutsideTheirReactionWindowAndRecedingTeammates() {
+    var self = combatant(1, RED, new Vec3(5.5, 1, 5.5));
+    var distant = combatant(2, RED, self.pos().plus(0, 0, 100)).withVel(new Vec3(0, 0, -0.2));
+    var receding = combatant(2, RED, self.pos().plus(0, 0, 3.25)).withVel(new Vec3(0, 0, 0.2));
+    assertThat(walkingMove(self, distant).waypoint().z()).isEqualTo(self.pos().z());
+    assertThat(walkingMove(self, receding).waypoint().z()).isEqualTo(self.pos().z());
+  }
+
+  private static BodyCommand.MoveToward walkingMove(CombatantView self, CombatantView ally) {
+    var path =
+        java.util.stream.IntStream.rangeClosed(1, 5)
+            .mapToObj(step -> new Waypoint(self.pos().plus(step * 2, 0, 0), Hop.WALK))
+            .toList();
+    var decision =
+        new Decision(
+            self.id(),
+            Option.TAKE_SLOT,
+            Optional.empty(),
+            path,
+            Stance.CAUTIOUS,
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            "take_slot:route",
+            1,
+            0);
+    var step =
+        Reflex.tick(
+            ReflexState.initial(self.facing()),
+            new ReflexInput(
+                self, world(1, List.of(self, ally), List.of()), decision, Optional.empty(), 0),
+            context(levers(1)),
+            new SplittableRandom(4));
+    return step.commands().stream()
+        .filter(BodyCommand.MoveToward.class::isInstance)
+        .map(BodyCommand.MoveToward.class::cast)
+        .findFirst()
+        .orElseThrow();
+  }
+
+  @Test
+  void holdingAndDrawingLeaveRoomForTeammatesAndStopWhenUncrowded() {
+    var self = combatant(1, RED, new Vec3(5.5, 1, 5.5));
+    var ally = combatant(2, RED, new Vec3(7.5, 1, 5.5));
+    var enemy = combatant(3, BLUE, new Vec3(25.5, 1, 5.5));
+    var holding =
+        new Decision(
+            self.id(),
+            Option.HOLD_SLOT,
+            Optional.empty(),
+            List.of(),
+            Stance.CAUTIOUS,
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            "hold-slot:hold",
+            1,
+            0);
+    var context = new ReflexContext(NAV.grid(), levers(1), Loadout.standard(Kit.LONGBOW));
+    for (var target : List.of(Optional.<CombatantView>empty(), Optional.of(enemy))) {
+      var step =
+          Reflex.tick(
+              ReflexState.initial(self.facing()),
+              new ReflexInput(
+                  self, world(1, List.of(self, ally, enemy), List.of()), holding, target, 0),
+              context,
+              new SplittableRandom(4));
+      assertThat(step.commands())
+          .contains(new BodyCommand.MoveToward(new Vec3(4.5, 1, 5.5), false));
+      assertThat(step.commands()).doesNotContain(new BodyCommand.Stop());
+      if (target.isPresent()) assertThat(step.commands()).contains(new BodyCommand.StartUse());
+    }
+    var uncrowded =
+        Reflex.tick(
+            ReflexState.initial(self.facing()),
+            new ReflexInput(
+                self, world(1, List.of(self, enemy), List.of()), holding, Optional.empty(), 0),
+            context,
+            new SplittableRandom(4));
+    assertThat(uncrowded.commands()).contains(new BodyCommand.Stop());
   }
 
   @Test

@@ -159,7 +159,7 @@ describe("signature weapons and boss phases on native Paper", () => {
         `give ${bot.username} minecraft:arrow[minecraft:custom_data={PublicBukkitValues:{"thestorm:arena_item":1b,"thestorm:survival_run":"${run}"}}] 32`,
       );
       await weapon(bot, rcon, "REPEATER", "bow");
-      await rcon.command(`tp ${bot.username} 52.5 105 -30.5`);
+      await rcon.command(`minecraft:tp ${bot.username} 52.5 105 -30.5`);
       await waitUntil("bow ammunition", () => arrows(bot) === 32);
       await bot.look(0, 0, true);
       const initial = await repeaterObservation(bot, rcon, "start");
@@ -224,7 +224,7 @@ describe("signature weapons and boss phases on native Paper", () => {
   test("Whirlwind cleaves once per recovery", async ({ bot, rcon }) => {
     await begin(bot, rcon, 15);
     try {
-      await rcon.command(`tp ${bot.username} 23.5 105 -40.5`);
+      await rcon.command(`minecraft:tp ${bot.username} 23.5 105 -40.5`);
       await waitUntil(
         "combat terrace",
         () => bot.entity.position.distanceTo(new Vec3(23.5, 105, -40.5)) < 0.6,
@@ -265,7 +265,7 @@ describe("signature weapons and boss phases on native Paper", () => {
     try {
       await weapon(bot, rcon, "RIFTBLADE", "diamond_sword");
       const approach = new Vec3(20.5, 73, 65.5);
-      await rcon.command(`tp ${bot.username} 20.5 73 65.5`);
+      await rcon.command(`minecraft:tp ${bot.username} 20.5 73 65.5`);
       await waitUntil(
         "closed wharf approach",
         () => bot.entity.position.distanceTo(approach) < 0.6,

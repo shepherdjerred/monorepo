@@ -60,6 +60,7 @@ export function renderLiveStatus(status: LiveStatusResponse): string {
     `  replicas ${String(status.readyReplicas)}/${String(status.replicas)} ready, pod ${status.podPhase ?? "none"}${status.podReady ? " (ready)" : ""}`,
     `  image ${status.image ?? "unknown"}`,
     `  mining-reset lock: ${status.miningResetLock ?? "none"}`,
+    `  world-restore lease: ${status.worldRestoreLease ?? "none"}`,
     `  bridge token: ${status.tokenConfigured ? "configured" : "missing"}; port-forward ${status.bridge.connected ? `127.0.0.1:${String(status.bridge.localPort)}` : "not connected"}`,
     ...(status.refusal === null ? [] : [`  refused: ${status.refusal}`]),
   ].join("\n");

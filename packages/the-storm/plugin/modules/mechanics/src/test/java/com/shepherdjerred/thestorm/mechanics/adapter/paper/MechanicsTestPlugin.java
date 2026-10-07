@@ -9,6 +9,8 @@ import com.shepherdjerred.thestorm.core.protection.HarmTarget;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
+import com.shepherdjerred.thestorm.core.world.AuditedBlockChanges;
+import com.shepherdjerred.thestorm.core.world.BlockChanges;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.mechanics.MechanicsModule;
 import java.io.IOException;
@@ -70,11 +72,17 @@ public class MechanicsTestPlugin extends JavaPlugin {
           }
 
           @Override
+          public boolean isPreserved(Location location) {
+            return false;
+          }
+
+          @Override
           public boolean sameLand(Location a, Location b) {
             return (a.getBlockX() < 0) == (b.getBlockX() < 0);
           }
         };
     services.provide(Protection.class, protection);
+    services.provide(BlockChanges.class, new AuditedBlockChanges(change -> {}));
     services.provide(SealedWorlds.class, sealed);
     var context =
         new ModuleContext(

@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.schedule.Cancellable;
 import com.shepherdjerred.thestorm.core.text.HouseStyle;
+import com.shepherdjerred.thestorm.core.world.BlockChanges;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.essentials.app.AfkStatus;
 import com.shepherdjerred.thestorm.essentials.app.TeleportGuards;
@@ -88,7 +89,8 @@ public final class QolPaper {
             policy,
             app.protection(),
             hooks,
-            app.sealed());
+            app.sealed(),
+            context.services().require(BlockChanges.class));
     var safe = new LastSafeSpots();
     var upkeep = new GraveUpkeep(runtime, parts);
     var deaths = new GraveDeaths(runtime, parts, safe, context.random());

@@ -31,9 +31,12 @@ final class TemporaryBlockGuardTest {
   private final TemporaryBlocks blocks =
       new TemporaryBlocks(
               new TemporaryBlocksWorldTest.MemoryStore(),
-              harness.server,
-              harness.clock,
-              harness.async)
+              new TemporaryBlocks.Dependencies(
+                  harness.server,
+                  harness.clock,
+                  harness.async,
+                  harness.protection,
+                  harness.changes))
           .withLoader(
               (world, key) ->
                   CompletableFuture.completedFuture(world.getBlockAt(key.x(), key.y(), key.z())));

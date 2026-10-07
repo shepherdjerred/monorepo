@@ -82,6 +82,10 @@ public class TownsTestPlugin extends JavaPlugin {
           shipped.substring(0, regions + 1) + Files.readString(TEST_REGIONS));
       Files.writeString(directory.resolve("parcels.yml"), "parcels: []\n");
       Files.copy(
+          Path.of("src/test/resources/heritage.yml"),
+          directory.resolve("heritage.yml"),
+          java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+      Files.copy(
           Path.of("../../../server/owned/plugins/TheStorm/plot-reconcile.json"),
           directory.resolve("plot-reconcile.json"),
           java.nio.file.StandardCopyOption.REPLACE_EXISTING);

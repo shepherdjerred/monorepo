@@ -68,7 +68,7 @@ public final class Softmax {
     }
     var total = 0.0;
     for (var entry : scores.entrySet()) {
-      var weight = Math.exp((entry.getValue() - max) / temperature);
+      var weight = StrictMath.exp((entry.getValue() - max) / temperature);
       probabilities.put(entry.getKey(), weight);
       total += weight;
     }

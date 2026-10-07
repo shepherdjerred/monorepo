@@ -50,7 +50,7 @@ final class Farm implements Spell {
     return Result.ok(
         () -> {
           for (var crop : screened.allowed()) {
-            grow(crop);
+            grow(caster, crop);
           }
           tools.fx().sound(kind(), Magic.at(caster));
         });
@@ -63,12 +63,12 @@ final class Farm implements Spell {
         && Growth.canGrow(ageable.getAge(), ageable.getMaximumAge());
   }
 
-  private void grow(Block crop) {
+  private void grow(Player caster, Block crop) {
     if (!(crop.getBlockData() instanceof Ageable ageable)) {
       return;
     }
     ageable.setAge(Growth.grow(ageable.getAge(), ageable.getMaximumAge(), settings.stages()));
-    crop.setBlockData(ageable);
+    tools.changes().set(caster.getName(), crop, ageable, true);
     tools.fx().burst(kind(), crop.getLocation().add(0.5, 0.5, 0.5), 4, 0.25);
   }
 }

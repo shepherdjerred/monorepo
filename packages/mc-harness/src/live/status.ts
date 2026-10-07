@@ -17,6 +17,7 @@ export const LIVE_CONTAINER = "minecraft-tsmc";
 export const LIVE_BRIDGE_PORT = 25_580;
 /** Set by the Temporal mining-reset workflow while it owns the server. */
 export const MINING_RESET_LOCK_ANNOTATION = "sjer.red/mining-reset-lock";
+export const WORLD_RESTORE_LEASE_ANNOTATION = "sjer.red/world-restore-lease";
 export const VELERO_NAMESPACE = "velero";
 
 /** kubectl target for live reads: tsmc's namespace as the scoped ServiceAccount. */
@@ -59,6 +60,7 @@ export type LiveClusterStatus = {
   podReady: boolean;
   image: string | null;
   miningResetLock: string | null;
+  worldRestoreLease: string | null;
 };
 
 export function parseLiveStatus(
@@ -79,7 +81,18 @@ export function parseLiveStatus(
     image: sts.spec.template.spec.containers[0]?.image ?? null,
     miningResetLock:
       sts.metadata.annotations?.[MINING_RESET_LOCK_ANNOTATION] ?? null,
+    worldRestoreLease:
+      sts.metadata.annotations?.[WORLD_RESTORE_LEASE_ANNOTATION] ?? null,
   };
+}
+
+/** Restoration leases block both bridge operations and direct file reads. */
+export function restorationRefusal(
+  status: Pick<LiveClusterStatus, "worldRestoreLease">,
+): string | null {
+  return status.worldRestoreLease === null
+    ? null
+    : `world restoration holds minecraft-tsmc (request ${status.worldRestoreLease}); use its private acceptance procedure`;
 }
 
 /**
@@ -87,6 +100,10 @@ export function parseLiveStatus(
  * deliberately out of scope: ask the user to join it (mc-router wakes it).
  */
 export function liveRefusal(status: LiveClusterStatus): string | null {
+  const restoration = restorationRefusal(status);
+  if (restoration !== null) {
+    return restoration;
+  }
   if (status.miningResetLock !== null) {
     return `the mining reset holds minecraft-tsmc (lock ${status.miningResetLock}); wait for it to finish — see the "Recover The Storm mining reset" how-to`;
   }

@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.towns.domain.world;
 
 import com.shepherdjerred.thestorm.towns.domain.land.ClaimFlag;
+import java.util.Map;
 import java.util.Optional;
 
 /** Which claim flag, if any, lets an effect happen inside one owner's land. */
@@ -13,26 +14,16 @@ final class Containment {
    * or empty when the effect is always allowed within one owner's land.
    */
   static Optional<ClaimFlag> flagFor(WorldEffect effect) {
-    return switch (effect) {
-      case EXPLOSION -> Optional.of(ClaimFlag.EXPLOSIONS);
-      case FIRE_SPREAD, FIRE_BURN -> Optional.of(ClaimFlag.FIRE_SPREAD);
-      case MOB_GRIEF -> Optional.of(ClaimFlag.MOB_GRIEFING);
-      case PISTON,
-          FLUID_FLOW,
-          ITEM_TRANSFER,
-          DISPENSE,
-          TREE_GROWTH,
-          BONEMEAL_SPREAD,
-          SCULK_SPREAD,
-          BLOCK_SPREAD,
-          FALLING_BLOCK,
-          PROJECTILE_IMPACT,
-          REDSTONE,
-          PORTAL_CREATION,
-          NATURAL_CHANGE ->
-          Optional.empty();
-    };
+    return Optional.ofNullable(FLAGS.get(effect));
   }
+
+  private static final Map<WorldEffect, ClaimFlag> FLAGS =
+      Map.of(
+          WorldEffect.EXPLOSION, ClaimFlag.EXPLOSIONS,
+          WorldEffect.FIRE_SPREAD, ClaimFlag.FIRE_SPREAD,
+          WorldEffect.FIRE_BURN, ClaimFlag.FIRE_SPREAD,
+          WorldEffect.MOB_GRIEF, ClaimFlag.MOB_GRIEFING,
+          WorldEffect.GRAZING, ClaimFlag.MOB_GRIEFING);
 
   /**
    * True when the effect also takes from where it starts, so starting on protected land and
@@ -41,24 +32,6 @@ final class Containment {
    * border.
    */
   static boolean takesFromSource(WorldEffect effect) {
-    return switch (effect) {
-      case ITEM_TRANSFER, DISPENSE -> true;
-      case PISTON,
-          FLUID_FLOW,
-          TREE_GROWTH,
-          BONEMEAL_SPREAD,
-          SCULK_SPREAD,
-          BLOCK_SPREAD,
-          EXPLOSION,
-          FIRE_SPREAD,
-          FIRE_BURN,
-          MOB_GRIEF,
-          FALLING_BLOCK,
-          PROJECTILE_IMPACT,
-          REDSTONE,
-          PORTAL_CREATION,
-          NATURAL_CHANGE ->
-          false;
-    };
+    return effect == WorldEffect.ITEM_TRANSFER || effect == WorldEffect.DISPENSE;
   }
 }

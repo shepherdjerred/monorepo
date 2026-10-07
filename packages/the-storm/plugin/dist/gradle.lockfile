@@ -49,6 +49,7 @@ it.unimi.dsi:fastutil:8.5.18=compileClasspath,e2eCompileClasspath,e2ePmdAuxClass
 javax.inject:javax.inject:1=annotationProcessor,compileClasspath,e2eAnnotationProcessor,e2eCompileClasspath,e2ePmdAuxClasspath,mainPmdAuxClasspath,testAnnotationProcessor,testCompileClasspath,testPmdAuxClasspath,testRuntimeClasspath
 net.bytebuddy:byte-buddy:1.18.11=testPmdAuxClasspath,testRuntimeClasspath
 net.bytebuddy:byte-buddy:1.18.3=testCompileClasspath
+net.coreprotect:coreprotect:24.1=compileClasspath,e2eCompileClasspath,e2ePmdAuxClasspath,mainPmdAuxClasspath
 net.dv8tion:JDA:6.7.0=mainPmdAuxClasspath,runtimeClasspath,testPmdAuxClasspath,testRuntimeClasspath
 net.kyori:adventure-api:5.2.0=compileClasspath,e2eCompileClasspath,e2ePmdAuxClasspath,mainPmdAuxClasspath,testCompileClasspath,testPmdAuxClasspath,testRuntimeClasspath
 net.kyori:adventure-bom:5.2.0=compileClasspath,e2eCompileClasspath,e2ePmdAuxClasspath,mainPmdAuxClasspath,testCompileClasspath,testPmdAuxClasspath,testRuntimeClasspath

@@ -46,6 +46,7 @@ import {
   type LiveClusterStatus,
   liveRefusal,
   readLiveStatus,
+  restorationRefusal,
 } from "./status.ts";
 
 /** A refusal the daemon reports as a client error with this status. */
@@ -211,10 +212,14 @@ export class LiveService {
 
   /**
    * tsmc's /data for read-only pulls. Needs a running pod but no bridge
-   * token; the mining-reset lock does not block reads.
+   * token; restoration leases block reads, but the mining-reset lock does not.
    */
   async files(): Promise<DataFiles> {
-    const status = await this.clusterStatus(false);
+    const status = await this.clusterStatus(true);
+    const restoration = restorationRefusal(status);
+    if (restoration !== null) {
+      throw new LiveError(restoration);
+    }
     if (!status.podReady) {
       throw new LiveError(
         `live tsmc has no ready pod (phase ${status.podPhase ?? "none"}); it is probably asleep`,

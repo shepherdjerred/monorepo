@@ -26,7 +26,7 @@ public final class LeverCurves {
     }
     var values = new EnumMap<Lever, Double>(Lever.class);
     for (var lever : Lever.values()) {
-      var shape = Math.pow(skill, lever.curveExponent());
+      var shape = StrictMath.pow(skill, lever.curveExponent());
       // Weighted so the endpoints are exact: skill 0 is the worst value, skill 1 the best.
       var onCurve = lever.worst() * (1 - shape) + lever.best() * shape;
       var sign = lever.lowerIsBetter() ? -1 : 1;

@@ -21,7 +21,7 @@ async function join(bot: Bot, round?: number) {
 
 async function travel(bot: Bot, rcon: RconClient, pos: Vec3) {
   await rcon.command(
-    `tp ${bot.username} ${pos.x.toString()} ${pos.y.toString()} ${pos.z.toString()}`,
+    `minecraft:tp ${bot.username} ${pos.x.toString()} ${pos.y.toString()} ${pos.z.toString()}`,
   );
   await waitUntil(
     "arrive at fixture",
@@ -195,7 +195,7 @@ describe("settlement expeditions on real Paper", () => {
           before + 3,
       );
       await travel(bot, rcon, new Vec3(55.5, 89, 1.5));
-      await rcon.command(`tp ${bot.username} 81 89 1`);
+      await rcon.command(`minecraft:tp ${bot.username} 81 89 1`);
       await waitUntil(
         "nearest foundry rescue",
         () => bot.entity.position.x < 72,

@@ -60,7 +60,7 @@ public record CoverPoints(List<CoverPoint> points) {
 
   /** The sector a threat at {@code threat} lies in, seen from {@code cover}. */
   public static int sectorOf(Vec3 cover, Vec3 threat) {
-    var angle = Math.toDegrees(Math.atan2(threat.z() - cover.z(), threat.x() - cover.x()));
+    var angle = Math.toDegrees(StrictMath.atan2(threat.z() - cover.z(), threat.x() - cover.x()));
     var sector = (int) Math.round(angle / (360.0 / SECTORS));
     return ((sector % SECTORS) + SECTORS) % SECTORS;
   }
@@ -68,7 +68,7 @@ public record CoverPoints(List<CoverPoint> points) {
   /** The unit horizontal direction at the middle of {@code sector}. */
   public static Vec3 direction(int sector) {
     var angle = Math.toRadians(sector * (360.0 / SECTORS));
-    return new Vec3(Math.cos(angle), 0, Math.sin(angle));
+    return new Vec3(StrictMath.cos(angle), 0, StrictMath.sin(angle));
   }
 
   /** Scans every node of {@code graph} for cover in {@code grid}. */

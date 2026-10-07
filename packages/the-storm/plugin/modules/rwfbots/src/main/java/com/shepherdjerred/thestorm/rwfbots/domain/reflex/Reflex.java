@@ -8,6 +8,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.BodyCommand;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Option;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Stance;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Waypoint;
 import java.util.ArrayList;
@@ -58,14 +59,17 @@ public final class Reflex {
   private static final double WAYPOINT_REACHED = 0.45;
   private static final double ALLY_SPACING = 0.9;
 
-  /** Teammates closer than this push each other apart while walking and fighting. */
+  /** Teammates closer than this push each other apart while fighting. */
   static final double SEPARATION = 2.5;
+
+  /** Moving formations leave another half block for teammates closing the gap. */
+  static final double WALK_SEPARATION = 3.0;
 
   /** The last waypoints of a path, which a bot walks straight at whoever is near. */
   static final int FINAL_STRAIGHT = 3;
 
   /** How hard crowding teammates bend a walking bot's heading. */
-  static final double SEPARATION_WEIGHT = 0.8;
+  static final double SEPARATION_WEIGHT = 1.2;
 
   /** A bot waits for a moving teammate with a lower id this close ahead of it. */
   static final double YIELD = 2.2;
@@ -124,13 +128,13 @@ public final class Reflex {
    */
   public static int fuseGap(Levers levers, RandomGenerator random) {
     var meanSlip = (1 - levers.technique()) * FUSE_SLIP_SCALE;
-    var slip = meanSlip <= 0 ? 0 : -Math.log(1 - random.nextDouble()) * meanSlip;
+    var slip = meanSlip <= 0 ? 0 : -StrictMath.log(1 - random.nextDouble()) * meanSlip;
     return FUSE_BASE_GAP + (int) Math.round(slip);
   }
 
   /** The gap until the next melee click: never under the CPS floor, log-normally above it. */
   public static double clickGap(Levers levers, RandomGenerator random) {
-    var factor = Math.exp(CLICK_GAP_LOG_MEAN + CLICK_GAP_LOG_SIGMA * random.nextGaussian());
+    var factor = StrictMath.exp(CLICK_GAP_LOG_MEAN + CLICK_GAP_LOG_SIGMA * random.nextGaussian());
     return levers.minClickGapTicks() * Math.max(1, factor);
   }
 
@@ -293,7 +297,7 @@ public final class Reflex {
       var yaw = Facing.looking(self.eye(), aimPoint).yaw();
       var desired = new Facing(yaw, pitch.getAsDouble());
       state = state.withAim(AimController.aim(state.aim(), desired, levers(), random));
-      commands.add(new BodyCommand.Stop());
+      standApart();
       if (!state.isDrawing()) {
         commands.add(new BodyCommand.SelectSlot(context.loadout().bowSlot()));
         commands.add(new BodyCommand.StartUse());
@@ -358,7 +362,7 @@ public final class Reflex {
       }
       var radial = toTarget.normalized();
       var side = new Vec3(-radial.z(), 0, radial.x()).scale(state.strafeDir());
-      var apart = apart();
+      var apart = apart(SEPARATION, 0);
       var closing = closing(distance, apart);
       var move = side.plus(radial.scale(closing)).plus(apart.scale(2.5));
       var point = self.pos().plus(move.isZero() ? radial : move.normalized());
@@ -379,7 +383,11 @@ public final class Reflex {
         state = state.withPath(index, input.decision().snapshotTick());
       }
       if (index >= waypoints.size()) {
-        commands.add(new BodyCommand.Stop());
+        if (input.decision().option() == Option.HOLD_ANGLE) {
+          commands.add(new BodyCommand.Stop());
+        } else {
+          standApart();
+        }
         hold();
         return;
       }
@@ -393,11 +401,11 @@ public final class Reflex {
       }
       // Near the end of the path the bot walks straight in: bending there makes it circle the spot.
       if (index < waypoints.size() - FINAL_STRAIGHT) {
-        destination = bend(destination, apart());
+        destination = bend(destination, walkingApart());
       }
       if (yields(destination)) {
         // Waiting for the teammate ahead: make room for the others while it clears.
-        var push = apart();
+        var push = walkingApart();
         commands.add(
             push.isZero()
                 ? new BodyCommand.Stop()
@@ -446,10 +454,10 @@ public final class Reflex {
     }
 
     /**
-     * A horizontal push away from teammates closer than {@link #SEPARATION}, stronger the closer
-     * they are, so a team does not bunch up in a doorway or a brawl.
+     * A horizontal push away from teammates at their closest approach during the reaction window,
+     * stronger the closer they are, so a team does not bunch up in a doorway or a brawl.
      */
-    private Vec3 apart() {
+    private Vec3 apart(double spacing, int aheadTicks) {
       var push = Vec3.ZERO;
       for (var other : input.snapshot().alive(self.team())) {
         if (other.id().equals(self.id())) {
@@ -457,11 +465,33 @@ public final class Reflex {
         }
         var away = self.pos().minus(other.pos()).horizontal();
         var distance = away.length();
-        if (distance < SEPARATION && distance > 1.0e-3) {
-          push = push.plus(away.normalized().scale((SEPARATION - distance) / SEPARATION));
+        var relative = self.vel().minus(other.vel()).horizontal();
+        var closestTick =
+            relative.isZero()
+                ? 0
+                : Math.clamp(-away.dot(relative) / relative.lengthSquared(), 0, aheadTicks);
+        var separation = away.plus(relative.scale(closestTick));
+        var closest = separation.length();
+        if (closest < spacing && distance > 1.0e-3) {
+          var direction = separation.isZero() ? away : separation;
+          push = push.plus(direction.normalized().scale((spacing - closest) / spacing));
         }
       }
       return push;
+    }
+
+    /** Leave room before converging teammates cross the spacing band during reaction delay. */
+    private Vec3 walkingApart() {
+      return apart(WALK_SEPARATION, levers().reactionTicks());
+    }
+
+    /** Holding a slot or drawing a bow still leaves room for crowding teammates. */
+    private void standApart() {
+      var push = walkingApart();
+      commands.add(
+          push.isZero()
+              ? new BodyCommand.Stop()
+              : new BodyCommand.MoveToward(self.pos().plus(push.normalized()), false));
     }
 
     /**

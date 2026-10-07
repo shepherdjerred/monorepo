@@ -15,6 +15,12 @@ import {
   MINING_RESET_IMAGE_ANNOTATION,
   MINING_RESET_LOCK_ANNOTATION,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/minecraft-mining-reset-guard.ts";
+import {
+  RESTORE_LEASE_ANNOTATION,
+  RESTORE_PHASE_ANNOTATION,
+  RESTORE_IMAGE_ANNOTATION,
+  RESTORE_ACCESS_SELECTOR,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/minecraft-restoration-guard.ts";
 
 const NAMESPACE = "minecraft-tsmc";
 const SECRET_NAME = "minecraft-tsmc-discord";
@@ -135,8 +141,8 @@ export function createMinecraftTsmcApp(chart: Chart) {
       eula: true,
       difficulty: "hard",
       maxPlayers: 20,
-      levelType: "LARGEBIOMES",
-      levelSeed: "6723312581398122416",
+      levelType: "NORMAL",
+      levelSeed: "-7243611913275695076",
       viewDistance: 10,
       memory: "8G",
       motd: "The Storm | Survival",
@@ -286,6 +292,9 @@ export function createMinecraftTsmcApp(chart: Chart) {
             "/spec/replicas",
             `/metadata/annotations/${MINING_RESET_LOCK_ANNOTATION.replaceAll("/", "~1")}`,
             `/metadata/annotations/${MINING_RESET_IMAGE_ANNOTATION.replaceAll("/", "~1")}`,
+            `/metadata/annotations/${RESTORE_LEASE_ANNOTATION.replaceAll("/", "~1")}`,
+            `/metadata/annotations/${RESTORE_PHASE_ANNOTATION.replaceAll("/", "~1")}`,
+            `/metadata/annotations/${RESTORE_IMAGE_ANNOTATION.replaceAll("/", "~1")}`,
             "/spec/podManagementPolicy",
             "/spec/revisionHistoryLimit",
             "/spec/persistentVolumeClaimRetentionPolicy",
@@ -300,6 +309,8 @@ export function createMinecraftTsmcApp(chart: Chart) {
           kind: "Service",
           jsonPointers: [
             "/metadata/annotations/mc-router.itzg.me~1autoScaleUp",
+            `/metadata/annotations/${RESTORE_LEASE_ANNOTATION.replaceAll("/", "~1")}`,
+            `/spec/selector/${RESTORE_ACCESS_SELECTOR.replaceAll("/", "~1")}`,
             "/spec/clusterIP",
             "/spec/clusterIPs",
             "/spec/ipFamilies",

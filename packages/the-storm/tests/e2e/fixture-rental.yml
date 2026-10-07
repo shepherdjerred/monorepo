@@ -1,0 +1,10 @@
+- id: market-01
+  name: Recovery Fixture Shop
+  kind: RENTAL_SHOP
+  area:
+    world: world
+    from: { x: 64, y: 69, z: -184 }
+    to: { x: 75, y: 96, z: -173 }
+  owners: []
+  provenance: Disposable recovery fixture; not a surveyed historical holding.
+  weeklyRent: 720

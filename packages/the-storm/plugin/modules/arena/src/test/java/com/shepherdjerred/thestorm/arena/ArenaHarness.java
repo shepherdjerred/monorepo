@@ -129,6 +129,9 @@ public final class ArenaHarness implements AutoCloseable {
 
   /** Enables the arena module as the plugin's only module. */
   ArenaHarness enable(Path directory) {
+    services.provide(
+        com.shepherdjerred.thestorm.core.world.BlockChanges.class,
+        new com.shepherdjerred.thestorm.core.world.AuditedBlockChanges(_ -> {}));
     services.provide(Wallets.class, wallets);
     services.provide(CrystalFormatter.class, wallets);
     enabling =

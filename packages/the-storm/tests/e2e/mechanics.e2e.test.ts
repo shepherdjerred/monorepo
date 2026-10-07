@@ -3,6 +3,8 @@ import { Vec3 } from "vec3";
 import { describe, expect } from "vitest";
 import { test } from "./fixtures.ts";
 import { waitUntil } from "./harness/bot.ts";
+import { eventually } from "./harness/rwf-match.ts";
+import { serverLogs } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 
 const bridgeDeck = [1, 2, 3].map((z) => new Vec3(400, -54, z));
 const piston = new Vec3(408, -45, 0);
@@ -13,6 +15,37 @@ function material(bot: Bot, at: Vec3) {
 }
 
 describe("The Storm mechanics on Paper", () => {
+  test("crushing pistons audit their removal before breaking and retain the natural drop", async ({
+    rcon,
+    server,
+  }) => {
+    await rcon.command("minecraft:forceload add 424 0");
+    try {
+      expect(
+        await rcon.command("execute if block 424 -45 0 minecraft:piston"),
+      ).toContain("Test passed");
+      expect(
+        await rcon.command("execute if block 425 -45 0 minecraft:oak_planks"),
+      ).toContain("Test passed");
+      await rcon.command("setblock 424 -45 1 minecraft:redstone_block");
+      await eventually("crushed block is removed", async () => {
+        const result = await rcon.command(
+          "execute unless block 425 -45 0 minecraft:oak_planks",
+        );
+        return result.includes("Test passed");
+      });
+      expect(
+        await rcon.command(
+          'execute positioned 425 -45 0 if entity @e[type=minecraft:item,nbt={Item:{id:"minecraft:oak_planks",count:1}},distance=..4]',
+        ),
+      ).toContain("Test passed");
+      expect(await serverLogs(server)).toContain(
+        "Audited crush before natural break: minecraft:oak_planks -> minecraft:air",
+      );
+    } finally {
+      await rcon.command("minecraft:forceload remove 424 0");
+    }
+  });
   test("preserves bridge blocks and drops its stored stock when the keeper sign breaks", async ({
     bot,
     rcon,
@@ -21,6 +54,10 @@ describe("The Storm mechanics on Paper", () => {
     if (planks === undefined) {
       throw new Error("minecraft-data has no oak planks item");
     }
+    await waitUntil(
+      "client receives its initial chunk",
+      () => bot.blockAt(bot.entity.position.floored()) !== null,
+    );
     await rcon.command(`tp ${bot.username} 400 -53 1`);
     await waitUntil(
       "bridge keeper sign to load",
@@ -91,6 +128,10 @@ describe("The Storm mechanics on Paper", () => {
     bot,
     rcon,
   }) => {
+    await waitUntil(
+      "client receives its initial chunk",
+      () => bot.blockAt(bot.entity.position.floored()) !== null,
+    );
     await rcon.command(`tp ${bot.username} 408 -43 0`);
     await waitUntil("piston to load", () => bot.blockAt(piston) !== null);
     expect(material(bot, piston)).toBe("piston");

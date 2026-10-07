@@ -78,18 +78,22 @@ afterEach(async () => {
 });
 
 describe("PVC backup policy", () => {
-  it("classifies 53 included and 27 excluded PVCs without duplicates", () => {
+  it("classifies 53 included and 28 excluded PVCs without duplicates", () => {
     const keys = PVC_BACKUP_POLICY.map((entry) =>
       pvcBackupPolicyKey(entry.namespace, entry.name),
     );
-    expect(keys).toHaveLength(80);
-    expect(new Set(keys).size).toBe(80);
+    expect(keys).toHaveLength(81);
+    expect(new Set(keys).size).toBe(81);
     expect(
       PVC_BACKUP_POLICY.filter((entry) => entry.backup === "enabled"),
     ).toHaveLength(53);
     expect(
       PVC_BACKUP_POLICY.filter((entry) => entry.backup === "disabled"),
-    ).toHaveLength(27);
+    ).toHaveLength(28);
+    expect(
+      getPvcBackupPolicy("minecraft-tsmc-restore", "datadir-minecraft-tsmc-0")
+        .backup,
+    ).toBe("disabled");
   });
 
   it("classifies every synthesized and operator-managed PVC", async () => {
@@ -160,10 +164,10 @@ describe("PVC backup policy", () => {
     expect(operatorManagedPvcCount).toBeGreaterThan(0);
     expect(admissionKinds.get("MutatingAdmissionPolicy")).toBe(3);
     expect(admissionKinds.get("MutatingAdmissionPolicyBinding")).toBe(3);
-    // Includes PVC backup, ArgoCD, CI pod, The Storm's server stop, and
-    // mc-harness sandbox pod guards.
-    expect(admissionKinds.get("ValidatingAdmissionPolicy")).toBe(5);
-    expect(admissionKinds.get("ValidatingAdmissionPolicyBinding")).toBe(5);
+    // Includes PVC backup, ArgoCD, CI pod, mining reset, restoration
+    // update/scale/delete and Service write/delete paths, and mc-harness sandbox pod guards.
+    expect(admissionKinds.get("ValidatingAdmissionPolicy")).toBe(10);
+    expect(admissionKinds.get("ValidatingAdmissionPolicyBinding")).toBe(10);
   }, 20_000);
 
   it("syncs admission policy updates before PVC changes", () => {

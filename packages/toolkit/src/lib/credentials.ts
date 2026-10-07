@@ -393,6 +393,23 @@ function flagValue(args: readonly string[], flag: string): string | undefined {
   return value;
 }
 
+function temporalCredentialsFor(
+  environment: Readonly<Record<string, string | undefined>>,
+  args: readonly string[],
+): readonly string[] {
+  const address =
+    flagValue(args, "--address") ?? environment["TEMPORAL_ADDRESS"];
+  if (
+    address !== TEMPORAL_IN_CLUSTER_ADDRESS &&
+    flagValue(args, "--tls") === "false"
+  ) {
+    throw new Error(
+      "toolkit: refusing to resolve TEMPORAL_API_KEY with --tls=false",
+    );
+  }
+  return address === TEMPORAL_IN_CLUSTER_ADDRESS ? [] : ["TEMPORAL_API_KEY"];
+}
+
 export function requiredCredentialsFor(
   command: string,
   _subcommand: string | undefined,
@@ -400,23 +417,11 @@ export function requiredCredentialsFor(
   args: readonly string[] = [],
 ): readonly string[] {
   switch (command) {
+    case "ci":
     case "woodpecker":
       return ["WOODPECKER_TOKEN"];
-    case "temporal": {
-      const address =
-        flagValue(args, "--address") ?? environment["TEMPORAL_ADDRESS"];
-      if (
-        address !== TEMPORAL_IN_CLUSTER_ADDRESS &&
-        flagValue(args, "--tls") === "false"
-      ) {
-        throw new Error(
-          "toolkit: refusing to resolve TEMPORAL_API_KEY with --tls=false",
-        );
-      }
-      return address === TEMPORAL_IN_CLUSTER_ADDRESS
-        ? []
-        : ["TEMPORAL_API_KEY"];
-    }
+    case "temporal":
+      return temporalCredentialsFor(environment, args);
     case "linear":
       return ["LINEAR_API_KEY"];
     case "posthog":

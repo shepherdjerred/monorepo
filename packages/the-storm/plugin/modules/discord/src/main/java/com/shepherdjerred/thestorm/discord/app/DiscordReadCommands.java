@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.core.schedule.Scheduler;
 import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
 import com.shepherdjerred.thestorm.economy.app.PlayerLeaderboard;
 import com.shepherdjerred.thestorm.towns.app.TownRead;
+import java.util.Optional;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 
@@ -58,13 +59,24 @@ public final class DiscordReadCommands {
   }
 
   /** Reads the bounded public town snapshot on Paper's main thread. */
-  public void towns(Consumer<String> reply) {
+  public void towns(int page, Optional<String> name, Consumer<String> reply) {
     scheduler.runOnMainThread(
         () -> {
           if (relay.isStopping()) {
             reply.accept(relay.stopMessage());
           } else {
-            reply.accept(DiscordCommandReplies.towns(towns.list(PAGE_SIZE)));
+            reply.accept(
+                name.map(
+                        requested ->
+                            towns
+                                .info(requested)
+                                .map(DiscordCommandReplies::town)
+                                .orElse(
+                                    "That town or historic site is not in the public directory."))
+                    .orElseGet(
+                        () ->
+                            DiscordCommandReplies.towns(
+                                towns.page(page, PAGE_SIZE), page, PAGE_SIZE)));
           }
         });
   }

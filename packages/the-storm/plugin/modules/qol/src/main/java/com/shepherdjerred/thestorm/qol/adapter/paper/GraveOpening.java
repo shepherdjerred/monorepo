@@ -2,6 +2,8 @@ package com.shepherdjerred.thestorm.qol.adapter.paper;
 
 import static java.util.stream.Collectors.toUnmodifiableSet;
 
+import com.shepherdjerred.thestorm.core.protection.Protection;
+import com.shepherdjerred.thestorm.core.world.BlockChanges;
 import com.shepherdjerred.thestorm.qol.app.GraveRegistry;
 import com.shepherdjerred.thestorm.qol.app.store.GraveStore;
 import com.shepherdjerred.thestorm.qol.domain.grave.Grave;
@@ -44,6 +46,8 @@ final class GraveOpening {
   private final GraveRegistry registry;
   private final GravePolicy policy;
   private final ServerHooks hooks;
+  private final Protection protection;
+  private final BlockChanges changes;
   private final GraveUpkeep upkeep;
   private final RandomGenerator random;
   private final Set<UUID> receiving = new HashSet<>();
@@ -55,6 +59,8 @@ final class GraveOpening {
     this.registry = parts.registry();
     this.policy = parts.policy();
     this.hooks = parts.hooks();
+    this.protection = parts.protection();
+    this.changes = parts.changes();
     this.upkeep = upkeep;
     this.random = random;
   }
@@ -71,7 +77,9 @@ final class GraveOpening {
     var found = registry.get(id);
     if (found.isEmpty()) {
       // A leftover block whose grave is already gone.
-      GraveBlocks.clear(block, id, runtime.server().createBlockData(Material.AIR));
+      if (!protection.isPreserved(block.getLocation())) {
+        GraveBlocks.clear(block, id, runtime.server().createBlockData(Material.AIR), changes);
+      }
       Say.info(player, Say.GRAVES, "This grave is empty.");
       return;
     }

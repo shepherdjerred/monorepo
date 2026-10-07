@@ -53,13 +53,17 @@ Before you start, you need:
    toolkit mc live status
    ```
 
-   It refuses while tsmc is asleep (scaled to zero) or while the mining reset
-   holds `sjer.red/mining-reset-lock`. To wake it, join `ts-mc.net` so mc-router
-   scales it up. The harness never scales the server or edits mc-router
-   annotations.
+   Inspect the reported restoration lease before starting a live operation.
+   While restoration holds the lease, await its operator even if a private
+   acceptance server is running. Public routes stay closed during that phase.
+   The harness refuses ordinary live access throughout restoration.
 
-4. Run reads and writes with `--target live`. Reads pass straight through;
-   writes need `--reason`:
+   It also refuses while tsmc is asleep (scaled to zero) or while the mining
+   reset holds its lock. For ordinary sleep, join `ts-mc.net` so mc-router wakes
+   the server. The harness never changes replicas or router annotations.
+
+4. After the live guard accepts the target, run reads and writes with
+   `--target live`. Writes need `--reason`:
 
    ```bash
    toolkit mc cmd --target live list
@@ -120,9 +124,12 @@ write. `mcLiveWorlds`, `mcLiveMaxRegionVolume`, `mcLiveBackupMaxAgeHours`,
 
 - **412 with an `op read` hint:** the daemon started without `MC_BRIDGE_TOKEN`.
   Restart it as in step 2.
-- **409 asleep or mining reset:** wait, or ask the user to join. See
+- **409 asleep:** ask the user to join so the router wakes the server.
+- **409 mining reset:** await the reset operator. See
   [Recover The Storm mining reset](/how-to/recover-the-storm-mining-reset/) for
   a held lock.
+- **409 world restoration:** await the restoration operator. A running private
+  acceptance server does not permit ordinary harness access or public joins.
 - **502 bridge health check:** the running image predates MCBridge or the token
   does not match `storm-brain`.
 - **403 `live write refused`:** the message names the missing flag, the player

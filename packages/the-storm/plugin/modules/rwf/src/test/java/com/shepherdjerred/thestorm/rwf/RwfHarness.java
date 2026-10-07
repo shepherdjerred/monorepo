@@ -158,6 +158,9 @@ public final class RwfHarness implements AutoCloseable {
    * to the variables the module reads (the salt is always present).
    */
   public RwfHarness enable(Path directory, boolean withBots, Map<String, String> environment) {
+    services.provide(
+        com.shepherdjerred.thestorm.core.world.BlockChanges.class,
+        new com.shepherdjerred.thestorm.core.world.AuditedBlockChanges(_ -> {}));
     services.provide(Wallets.class, wallets);
     services.provide(CrystalFormatter.class, wallets);
     services.provide(SealedWorlds.class, sealed);

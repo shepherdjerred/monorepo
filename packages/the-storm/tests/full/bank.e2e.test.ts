@@ -52,7 +52,7 @@ async function start(bot: Bot, rcon: RconClient, number = 4) {
 async function clickAt(bot: Bot, rcon: RconClient, pos: Vec3) {
   const approach = pos.offset(0.5, 0, 1.5);
   await rcon.command(
-    `tp ${bot.username} ${approach.x.toString()} ${approach.y.toString()} ${approach.z.toString()}`,
+    `minecraft:tp ${bot.username} ${approach.x.toString()} ${approach.y.toString()} ${approach.z.toString()}`,
   );
   await waitUntil(
     "bank fixture approach",
@@ -224,7 +224,7 @@ describe("run bank on native Paper", () => {
       await rcon.command(
         `give ${bot.username} minecraft:emerald[minecraft:custom_data={${tags(run)}}] 4`,
       );
-      await rcon.command(`tp ${bot.username} -1.5 73 64.5`);
+      await rcon.command(`minecraft:tp ${bot.username} -1.5 73 64.5`);
       const box = new Vec3(-2, 73, 62);
       await waitUntil(
         "active box loaded",

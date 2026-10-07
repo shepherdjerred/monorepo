@@ -5,6 +5,7 @@ import java.time.InstantSource;
 import org.bukkit.Location;
 import org.bukkit.entity.AbstractCubeMob;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Zombie;
 import org.bukkit.plugin.Plugin;
 
 /** Native acceptance bridge: drives the production factory and goal without reflection. */
@@ -42,25 +43,7 @@ public final class ArenaNativeProbe {
         player.setFoodLevel(10);
         yield "Prepared native food consumption";
       }
-      case "targets" -> {
-        for (var index = 0; index < 3; index++) {
-          var target =
-              runner
-                  .world()
-                  .spawnAt(
-                      new com.shepherdjerred.thestorm.arena.domain.wave.SpawnUnit(
-                          "zombie", 100, 1, 1),
-                      Places.at(player).clone().add(-4, 0, (index - 1) * 2),
-                      true)
-                  .orElseThrow()
-                  .getFirst();
-          runner.combat().probeTarget(target);
-          target.setAI(false);
-          target.customName(net.kyori.adventure.text.Component.text("Legendary target " + index));
-          target.setCustomNameVisible(true);
-        }
-        yield "Prepared three native legendary targets";
-      }
+      case "targets" -> targets(runner, player);
       case "legendary" -> {
         var id = com.shepherdjerred.thestorm.arena.domain.survival.LegendaryWeapon.valueOf(value);
         if (!runner.items().deliver(player, java.util.List.of(runner.items().legendary(id))))
@@ -89,6 +72,39 @@ public final class ArenaNativeProbe {
             + " "
             + runner.talents().status(player);
       }
+      case "positions" ->
+          runner.world().enemies().stream()
+              .map(
+                  enemy -> {
+                    var at = enemy.getLocation();
+                    return String.format(
+                        java.util.Locale.ROOT,
+                        "{\"id\":\"%s\",\"x\":%s,\"y\":%s,\"z\":%s}",
+                        enemy.getUniqueId(),
+                        at.getX(),
+                        at.getY(),
+                        at.getZ());
+                  })
+              .collect(java.util.stream.Collectors.joining(",", "[", "]"));
+      case "pursuit" ->
+          "Fighter "
+              + Places.at(player)
+              + " entrance="
+              + runner.map().entrance(player)
+              + " enemies="
+              + runner.world().enemies().stream()
+                  .map(
+                      enemy ->
+                          enemy.getType()
+                              + " id="
+                              + enemy.getUniqueId()
+                              + " at="
+                              + enemy.getLocation()
+                              + " target="
+                              + (enemy instanceof org.bukkit.entity.Mob mob
+                                  ? mob.getTarget()
+                                  : "none"))
+                  .toList();
       case "cast" -> {
         var boss = runner.combat().boss().orElseThrow();
         var cast = boss.cast().orElseThrow();
@@ -123,6 +139,30 @@ public final class ArenaNativeProbe {
       }
       default -> throw new IllegalArgumentException("Unknown native probe action " + action);
     };
+  }
+
+  private static String targets(SurvivalRunner runner, Player player) {
+    for (var index = 0; index < 3; index++) {
+      var target =
+          runner
+              .world()
+              .spawnAt(
+                  new com.shepherdjerred.thestorm.arena.domain.wave.SpawnUnit("zombie", 100, 1, 1),
+                  Places.at(player).clone().add(-4, 0, (index - 1) * 2),
+                  true)
+              .orElseThrow()
+              .getFirst();
+      runner.combat().probeTarget(target);
+      if (!(target instanceof Zombie zombie))
+        throw new IllegalStateException("A native legendary target must be a zombie");
+      // Paper randomizes zombie age at spawn. This fixture aims at adult chest
+      // height, so a baby target would turn a valid native shot into a miss.
+      zombie.setAdult();
+      target.setAI(false);
+      target.customName(net.kyori.adventure.text.Component.text("Legendary target " + index));
+      target.setCustomNameVisible(true);
+    }
+    return "Prepared three native legendary targets";
   }
 
   public static void pursue(AbstractCubeMob cube, Player target) {

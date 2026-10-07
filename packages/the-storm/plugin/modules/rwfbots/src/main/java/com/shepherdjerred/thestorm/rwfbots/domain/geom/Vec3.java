@@ -103,6 +103,6 @@ public record Vec3(double x, double y, double z) {
   /** The angle between this and {@code other}, in degrees; both must be non-zero. */
   public double angleTo(Vec3 other) {
     var cosine = normalized().dot(other.normalized());
-    return Math.toDegrees(Math.acos(Math.clamp(cosine, -1, 1)));
+    return Math.toDegrees(StrictMath.acos(Math.clamp(cosine, -1, 1)));
   }
 }

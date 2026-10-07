@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.qol.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.protection.Protection;
+import com.shepherdjerred.thestorm.core.world.BlockChanges;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.qol.app.GraveRegistry;
 import com.shepherdjerred.thestorm.qol.app.store.GraveStore;
@@ -24,4 +25,5 @@ record GraveParts(
     GravePolicy policy,
     Protection protection,
     ServerHooks hooks,
-    SealedWorlds sealed) {}
+    SealedWorlds sealed,
+    BlockChanges changes) {}

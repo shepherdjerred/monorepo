@@ -37,7 +37,7 @@ test("one ready-block click stays ready with an offhand item and duplicate packe
     await rcon.command(
       `item replace entity ${bot.username} weapon.offhand with minecraft:shield`,
     );
-    await rcon.command(`tp ${bot.username} -65.5 73 -60.5`);
+    await rcon.command(`minecraft:tp ${bot.username} -65.5 73 -60.5`);
     const position = new Vec3(-66, 73, -62);
     await waitUntil("ready block loaded", () => bot.blockAt(position) !== null);
     const block = bot.blockAt(position);
@@ -65,7 +65,7 @@ test("expiring salvage flashes and remains collectible during its warning", asyn
 }) => {
   await startProtectedSettlementRound(bot, rcon, 8);
   try {
-    await rcon.command(`tp ${bot.username} 52.5 105 -30.5`);
+    await rcon.command(`minecraft:tp ${bot.username} 52.5 105 -30.5`);
     await waitUntil("salvage approach", () => bot.entity.position.x > 52);
     await rcon.command(
       `storm-fixture-survival drop ${bot.username} REDSTONE_SURGE`,
@@ -80,7 +80,7 @@ test("expiring salvage flashes and remains collectible during its warning", asyn
       18_000,
     );
     const collected = waitForMessage(bot, /Redstone Surge ·/u);
-    await rcon.command(`tp ${bot.username} 48.5 105 -30.5`);
+    await rcon.command(`minecraft:tp ${bot.username} 48.5 105 -30.5`);
     await collected;
     expect(await rcon.command(`execute if entity ${display}`)).toBe(
       "Test failed",
@@ -110,7 +110,7 @@ test("nearby generator and cache particles arrive repeatedly above their blocks"
       [-1.5, 73, 62.5, 74],
     ] as const) {
       await rcon.command(
-        `tp ${bot.username} ${x.toString()} ${baseY.toString()} ${(positionZ + 4).toString()}`,
+        `minecraft:tp ${bot.username} ${x.toString()} ${baseY.toString()} ${(positionZ + 4).toString()}`,
       );
       await waitUntil(
         "particle viewpoint",
@@ -153,8 +153,8 @@ test("boss danger marks remain above the terrain throughout a native channel", a
       `effect give ${bot.username} minecraft:resistance infinite 255 true`,
     );
     await rcon.command(`storm-fixture-survival terrain ${bot.username} none`);
-    await rcon.command(`tp ${bot.username} 23.5 105 -40.5`);
-    await rcon.command(`tp ${boss} 19.5 105 -40.5`);
+    await rcon.command(`minecraft:tp ${bot.username} 23.5 105 -40.5`);
+    await rcon.command(`minecraft:tp ${boss} 19.5 105 -40.5`);
     await rcon.command(`data merge entity ${boss} {NoAI:1b}`);
     await waitForMessage(bot, /Breeze Sovereign casts.*marked ground/u, 15_000);
     particles.length = 0;

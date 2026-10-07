@@ -65,6 +65,10 @@ final class WorldRulesMatrixTest {
       REDSTONE           +  +  +   +    -  -  +  +  -  +  -  -  -
       PORTAL_CREATION    +  +  +   +    -  -  +  -  -  +  -  -  -
       NATURAL_CHANGE     +  +  +   +    -  -  +  -  -  +  -  -  -
+      GRAZING            +  -  +   -    -  -  +  -  -  +  -  -  -
+      GRASS_REGROWTH     +  +  +   +    -  -  +  -  -  +  -  -  -
+      CROP_GROWTH        +  +  +   +    -  -  +  -  -  +  -  -  -
+      SOIL_MOISTURE      +  +  +   +    -  -  +  -  -  +  -  -  -
       """;
 
   private static final EnumSet<ClaimFlag> ALL = EnumSet.allOf(ClaimFlag.class);

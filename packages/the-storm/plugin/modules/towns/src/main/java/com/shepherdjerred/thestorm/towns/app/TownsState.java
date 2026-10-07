@@ -39,6 +39,8 @@ public final class TownsState implements ClaimMap, TownDirectory, TrustLookup, L
   private static final Land WILDERNESS = new Land.Wilderness();
 
   private RegionIndex regions;
+  private com.shepherdjerred.thestorm.towns.domain.heritage.HeritageIndex heritage =
+      new com.shepherdjerred.thestorm.towns.domain.heritage.HeritageIndex(List.of());
   private @Nullable ParcelBook parcels;
   private final Map<String, Land.RegionLand> regionLands = new HashMap<>();
   private final Map<String, AdminRegion> workAreas = new HashMap<>();
@@ -84,6 +86,16 @@ public final class TownsState implements ClaimMap, TownDirectory, TrustLookup, L
     return regions;
   }
 
+  public void attachHeritage(
+      com.shepherdjerred.thestorm.towns.domain.heritage.HeritageIndex index) {
+    if (!heritage.sites().isEmpty()) throw new IllegalStateException("heritage is already loaded");
+    heritage = index;
+  }
+
+  public com.shepherdjerred.thestorm.towns.domain.heritage.HeritageIndex heritage() {
+    return heritage;
+  }
+
   public void attachParcels(ParcelBook parcels) {
     this.parcels = parcels;
   }
@@ -122,6 +134,10 @@ public final class TownsState implements ClaimMap, TownDirectory, TrustLookup, L
         return new Land.WorkLand(region);
       }
     }
+    return heritage.protect(pos, ordinaryLandAt(world, x, y, z));
+  }
+
+  private Land ordinaryLandAt(String world, int x, int y, int z) {
     var region = regions.regionAt(world, x, y, z);
     var parcelBook = parcels;
     var parcel = parcelBook == null ? null : parcelBook.at(world, x, y, z);
@@ -165,6 +181,9 @@ public final class TownsState implements ClaimMap, TownDirectory, TrustLookup, L
 
   @Override
   public Optional<AdminRegion> regionOverlapping(ChunkPos chunk) {
+    for (var site : heritage.sites()) {
+      if (site.footprint().contains(chunk)) return Optional.of(site.asRegion());
+    }
     for (var region : workAreas.values()) {
       if (region.areas().all().stream().anyMatch(area -> area.footprintContains(chunk))) {
         return Optional.of(region);
@@ -187,6 +206,15 @@ public final class TownsState implements ClaimMap, TownDirectory, TrustLookup, L
     return Optional.ofNullable(towns.get(townId));
   }
 
+  /** Historic directory names remain reserved after an imported town is renamed or disbanded. */
+  public boolean heritageNameReserved(String name, Optional<UUID> requester) {
+    return heritage.sites().stream()
+        .anyMatch(
+            site ->
+                (site.name().equalsIgnoreCase(name) || site.activeTownName().equalsIgnoreCase(name))
+                    && (site.activeTownId().isEmpty() || !site.activeTownId().equals(requester)));
+  }
+
   public Collection<Town> towns() {
     return List.copyOf(towns.values());
   }
@@ -196,6 +224,9 @@ public final class TownsState implements ClaimMap, TownDirectory, TrustLookup, L
     var settled = new ArrayList<ChunkPos>();
     addClaims(world, settled);
     addRegions(world, settled);
+    heritage.sites().stream()
+        .filter(site -> site.world().equals(world))
+        .forEach(site -> settled.addAll(site.footprint()));
     return List.copyOf(settled);
   }
 

@@ -10,6 +10,8 @@ import com.shepherdjerred.thestorm.core.protection.HarmTarget;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
+import com.shepherdjerred.thestorm.core.world.AuditedBlockChanges;
+import com.shepherdjerred.thestorm.core.world.BlockChanges;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.essentials.app.AfkStatus;
 import com.shepherdjerred.thestorm.essentials.app.TeleportGuard;
@@ -96,13 +98,14 @@ final class QolHarness implements AutoCloseable {
   static final class Land implements Protection {
     Predicate<Location> noContainers = location -> false;
     Predicate<Location> noBuilding = location -> false;
+    Predicate<Location> preserved = location -> false;
 
     @Override
     public Decision check(UUID player, ProtectedAction action, Location location) {
       var denied =
           switch (action) {
             case OPEN_CONTAINER -> noContainers.test(location);
-            case BUILD -> noBuilding.test(location);
+            case BUILD, AUTOMATIC_BUILD -> noBuilding.test(location);
             default -> false;
           };
       return denied
@@ -114,6 +117,11 @@ final class QolHarness implements AutoCloseable {
     public Decision checkHarm(
         UUID attacker, Location attackerAt, HarmTarget target, Location victimAt) {
       return Decision.allowed();
+    }
+
+    @Override
+    public boolean isPreserved(Location location) {
+      return preserved.test(location);
     }
 
     @Override
@@ -137,6 +145,7 @@ final class QolHarness implements AutoCloseable {
   final FaultyStore store;
   final CombatTracker combat;
   final List<UUID> saved = new CopyOnWriteArrayList<>();
+  final List<AuditedBlockChanges.Change> recordedChanges = new ArrayList<>();
   @Nullable QolPaper paper;
 
   private QolHarness(ServerMock server, WorldMock world, StormDatabase database, QolConfig config) {
@@ -169,6 +178,9 @@ final class QolHarness implements AutoCloseable {
     harness.store.failLoad = unreadable;
     enabling =
         plugin -> {
+          var services = new Services();
+          services.provide(
+              BlockChanges.class, new AuditedBlockChanges(harness.recordedChanges::add));
           var context =
               new ModuleContext(
                   plugin,
@@ -176,7 +188,7 @@ final class QolHarness implements AutoCloseable {
                   new PaperScheduler(plugin),
                   new DirectComputePool(),
                   database,
-                  new Services(),
+                  services,
                   directory,
                   harness.clock,
                   RandomGenerator.getDefault(),

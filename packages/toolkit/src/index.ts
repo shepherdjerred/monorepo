@@ -118,6 +118,10 @@ async function resolveCommandCredentials(
   args: readonly string[],
 ): Promise<void> {
   const subcommand = args[1];
+  // CI validates help and arguments before resolving its operational credentials.
+  if (command === "ci") {
+    return;
+  }
   if (
     command === "discord" &&
     subcommand === "daemon" &&

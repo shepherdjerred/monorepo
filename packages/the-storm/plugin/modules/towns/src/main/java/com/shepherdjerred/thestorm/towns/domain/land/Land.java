@@ -21,11 +21,28 @@ public sealed interface Land {
   /** Durable world work holds an area even against staff bypass until its journal settles. */
   record WorkLand(AdminRegion region) implements Land {}
 
+  /** Mandatory preservation layered over mutable claims, regions and permanent parcels. */
+  record HeritageLand(
+      com.shepherdjerred.thestorm.towns.domain.heritage.HeritageSite site,
+      java.util.Set<java.util.UUID> editors,
+      Land underlying)
+      implements Land {
+    public HeritageLand {
+      editors = java.util.Set.copyOf(editors);
+    }
+  }
+
+  /** Mutable parcel lifecycle remains authoritative beneath the immutable preservation floor. */
+  default Land underlyingLand() {
+    return this instanceof HeritageLand heritage ? heritage.underlying() : this;
+  }
+
   /** Safe arrival protection also applies to entities whose damage has no attributable actor. */
   default boolean preventsPlayerDamage() {
     return switch (this) {
       case RegionLand(var region) -> region.profile().preventsPlayerDamage();
       case ParcelLand(var parcel) -> parcel.profile().preventsPlayerDamage();
+      case HeritageLand(var site, _, _) -> site.profile().preventsPlayerDamage();
       default -> false;
     };
   }
@@ -38,6 +55,10 @@ public sealed interface Land {
       case RegionLand(var region) -> Optional.of(region.owner());
       case WorkLand(var region) -> Optional.of(region.owner());
       case ParcelLand(var parcel) -> Optional.of(new Owner.OfParcel(parcel.definition().id()));
+      case HeritageLand(var site, _, var underlying) ->
+          underlying instanceof ParcelLand
+              ? underlying.owner()
+              : Optional.of(new Owner.OfRegion(site.id()));
     };
   }
 

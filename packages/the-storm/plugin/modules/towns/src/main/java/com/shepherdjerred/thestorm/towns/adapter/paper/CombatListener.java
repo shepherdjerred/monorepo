@@ -52,7 +52,7 @@ final class CombatListener implements Listener {
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onSwing(PrePlayerAttackEntityEvent event) {
     // Scripted Citizens NPCs use the Player entity type, but town PvP flags do not apply to them.
-    if (isStormScriptedNpc(event.getAttacked())) return;
+    if (isStormScriptedNpc(event.getAttacked()) || isArenaEntity(event.getAttacked())) return;
     if (!guard.permitsHarm(event.getPlayer(), event.getAttacked(), true)) {
       event.setCancelled(true);
     }
@@ -62,13 +62,14 @@ final class CombatListener implements Listener {
   void onDamage(EntityDamageEvent event) {
     var victim = event.getEntity();
     var source = event.getDamageSource();
-    if (isStormScriptedNpc(victim)
-        || isStormScriptedNpc(source.getCausingEntity())
-        || (event instanceof EntityDamageByEntityEvent byEntity
-            && isStormScriptedNpc(byEntity.getDamager()))) {
+    if (scriptedDamage(event) || isArenaEntity(victim)) {
       return;
     }
     if (victim instanceof Player && guard.land(victim).preventsPlayerDamage()) {
+      event.setCancelled(true);
+      return;
+    }
+    if (unownedHeritageDamage(event)) {
       event.setCancelled(true);
       return;
     }
@@ -101,6 +102,41 @@ final class CombatListener implements Listener {
     if (!allowed) {
       event.setCancelled(true);
     }
+  }
+
+  /** Temporary game mobs remain governed by the arena's fighter and combat listeners. */
+  private boolean isArenaEntity(Entity entity) {
+    return isArenaEntity(entity, guard.land(entity));
+  }
+
+  static boolean isArenaEntity(Entity entity, Land land) {
+    return !(entity instanceof Player)
+        && land instanceof Land.HeritageLand(var site, _, _)
+        && site.profile() == com.shepherdjerred.thestorm.towns.domain.region.RegionProfile.ARENA
+        && site.id()
+            .equals(
+                entity
+                    .getPersistentDataContainer()
+                    .get(
+                        new org.bukkit.NamespacedKey("thestorm", "arena_entity"),
+                        org.bukkit.persistence.PersistentDataType.STRING));
+  }
+
+  private static boolean scriptedDamage(EntityDamageEvent event) {
+    return isStormScriptedNpc(event.getEntity())
+        || isStormScriptedNpc(event.getDamageSource().getCausingEntity())
+        || (event instanceof EntityDamageByEntityEvent byEntity
+            && isStormScriptedNpc(byEntity.getDamager()));
+  }
+
+  private boolean unownedHeritageDamage(EntityDamageEvent event) {
+    var victim = event.getEntity();
+    return !(victim instanceof Player)
+        && EntityKinds.subject(victim).isPresent()
+        && guard.land(victim) instanceof Land.HeritageLand
+        && guard.culprit(event.getDamageSource()).isEmpty()
+        && !(event instanceof EntityDamageByEntityEvent byEntity
+            && guard.culprit(byEntity.getDamager()).isPresent());
   }
 
   private static boolean isStormScriptedNpc(@Nullable Entity entity) {
@@ -262,6 +298,10 @@ final class CombatListener implements Listener {
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onLightning(LightningStrikeEvent event) {
+    if (guard.land(event.getLightning()) instanceof Land.HeritageLand) {
+      event.setCancelled(true);
+      return;
+    }
     if (event.getCause() != LightningStrikeEvent.Cause.TRIDENT) {
       return;
     }

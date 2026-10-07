@@ -9,7 +9,7 @@ import { startProtectedSettlementRound } from "#e2e/harness/settlement.ts";
 
 async function start(bot: Bot, rcon: RconClient) {
   await startProtectedSettlementRound(bot, rcon, 8);
-  await rcon.command(`tp ${bot.username} 52.5 105 -30.5`);
+  await rcon.command(`minecraft:tp ${bot.username} 52.5 105 -30.5`);
   await waitUntil(
     "safe test ground",
     () => bot.entity.position.distanceTo(new Vec3(52.5, 105, -30.5)) < 0.6,
@@ -58,7 +58,7 @@ test("run food and healing potions finish faster with their native effects intac
     await rcon.command(
       `give ${bot.username} minecraft:wheat[minecraft:custom_data={PublicBukkitValues:{"thestorm:arena_item":1b,"thestorm:survival_run":"${run}"}}] 4`,
     );
-    await rcon.command(`tp ${bot.username} -30.5 89 -18.5`);
+    await rcon.command(`minecraft:tp ${bot.username} -30.5 89 -18.5`);
     await waitUntil(
       "infirmary loaded",
       () => bot.blockAt(new Vec3(-31, 89, -20)) !== null,
@@ -74,7 +74,7 @@ test("run food and healing potions finish faster with their native effects intac
     if (bot.currentWindow !== null) await bot.closeWindow(bot.currentWindow);
     bot.deactivateItem();
     await bot.waitForTicks(2);
-    await rcon.command(`tp ${bot.username} 52.5 105 -30.5`);
+    await rcon.command(`minecraft:tp ${bot.username} 52.5 105 -30.5`);
     await waitUntil(
       "open air for drinking",
       () => bot.entity.position.distanceTo(new Vec3(52.5, 105, -30.5)) < 0.6,
@@ -151,7 +151,7 @@ describe("Settlement relic effects on native Paper", () => {
           .filter((item) => item.name === "redstone")
           .reduce((sum, item) => sum + item.count, 0),
       ).toBe(before - 2);
-      await rcon.command(`tp ${bot.username} 55.5 105 -30.5`);
+      await rcon.command(`minecraft:tp ${bot.username} 55.5 105 -30.5`);
       await waitUntil("away from anchor", () => bot.entity.position.x > 55);
       await bot.look(0, -Math.PI / 3, true);
       bot.activateItem();
@@ -226,7 +226,7 @@ describe("Settlement relic effects on native Paper", () => {
         ["COPPER_PULSE", "Copper Pulse"],
         ["MASONS_ECHO", "Mason's Echo"],
       ] as const) {
-        await rcon.command(`tp ${bot.username} 52.5 105 -30.5`);
+        await rcon.command(`minecraft:tp ${bot.username} 52.5 105 -30.5`);
         await waitUntil("pickup approach", () => bot.entity.position.x > 52);
         await rcon.command(`storm-fixture-survival drop ${bot.username} ${id}`);
         expect(
@@ -238,7 +238,7 @@ describe("Settlement relic effects on native Paper", () => {
           bot,
           new RegExp(title.replace("'", ".?"), "u"),
         );
-        await rcon.command(`tp ${bot.username} 48.5 105 -30.5`);
+        await rcon.command(`minecraft:tp ${bot.username} 48.5 105 -30.5`);
         await collected;
         expect(
           await rcon.command(

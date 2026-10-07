@@ -417,7 +417,7 @@ async function offerHits(match: Match, enemies: string[]): Promise<void> {
       if (target !== undefined) {
         const at = target.position.offset(1, 0, 0);
         await rcon.command(
-          `execute in ${dimension} run tp ${human.username} ${at.x.toString()} ${at.y.toString()} ${at.z.toString()}`,
+          `execute in ${dimension} run minecraft:tp ${human.username} ${at.x.toString()} ${at.y.toString()} ${at.z.toString()}`,
         );
       }
       await Bun.sleep(1500);

@@ -208,7 +208,7 @@ function advanceLines(
   return at8.map((team) => {
     const contact = atContact.find((other) => other.team === team.team);
     const later = by10.find((other) => other.team === team.team);
-    return `${team.team}: ${team.spreadAt.toFixed(0)} wide at 8 s, ${(contact?.spreadAt ?? 0).toFixed(0)} at contact; past own third ${percent(contact?.forward)} at contact, ${percent(later?.forward)} by 10 s; walked ${(contact?.winding ?? 0).toFixed(2)}x the ground gained`;
+    return `${team.team}: width ${team.spreadAt.toFixed(0)} at 8 s / ${(contact?.spreadAt ?? 0).toFixed(0)} at contact; past third ${percent(contact?.forward)} at contact / ${percent(later?.forward)} by 10 s; path/gain ${(contact?.winding ?? 0).toFixed(2)}x`;
   });
 }
 

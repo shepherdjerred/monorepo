@@ -39,4 +39,12 @@ public enum WorldEffect {
   PORTAL_CREATION,
   /** Leaves decaying, ice melting, weathering and other unowned natural changes. */
   NATURAL_CHANGE,
+  /** Only a sheep changing a grass block to dirt; decorative grass is excluded. */
+  GRAZING,
+  /** Grass blocks spreading back onto dirt, not plants, vines, mycelium or sculk. */
+  GRASS_REGROWTH,
+  /** Age changes to existing crops, without harvesting or replacing soil. */
+  CROP_GROWTH,
+  /** Farmland moisture changes, never farmland reverting to dirt. */
+  SOIL_MOISTURE,
 }

@@ -5,6 +5,7 @@ import {
   woodpeckerConfigFromEnv,
   loadWoodpeckerConfig,
   getPipeline,
+  WoodpeckerPipelineSchema,
 } from "#lib/woodpecker/ci.ts";
 import { logExcerpt, pipelineDiagnostics } from "#lib/ci/diagnostics.ts";
 import { ciFixture, CI_HEAD } from "./fixtures.ts";
@@ -23,6 +24,25 @@ const encode = (value: string, line: number) => ({
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
+});
+
+test("Woodpecker accepts its nullable error list and rejects other malformed values", () => {
+  const summary = { number: 7, commit: CI_HEAD, status: "success" };
+  for (const errors of [
+    undefined,
+    null,
+    [],
+    [{ message: "pipeline failed" }],
+  ]) {
+    expect(
+      WoodpeckerPipelineSchema.parse({ ...summary, errors }).errors,
+    ).toEqual(errors);
+  }
+  for (const errors of ["failed", 0, {}]) {
+    expect(() =>
+      WoodpeckerPipelineSchema.parse({ ...summary, errors }),
+    ).toThrow();
+  }
 });
 
 test("Woodpecker paginates and verifies PR identity, ignoring same-SHA push builds", async () => {
