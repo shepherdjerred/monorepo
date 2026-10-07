@@ -12,6 +12,7 @@ import {
   rwfRecordingSalt,
 } from "#e2e/harness/rwf-settings.ts";
 import { DuelClient } from "./duels.ts";
+import { InferenceClient } from "./inference.ts";
 
 export const root = path.resolve(import.meta.dirname, "../..");
 const content = path.join(root, "server/owned/plugins/TheStorm");
@@ -72,7 +73,10 @@ export async function frozenManifest() {
   };
 }
 
-export async function openPaperDuels(output: string) {
+export async function openPaperDuels(
+  output: string,
+  learningModelDir?: string,
+) {
   const token = randomBytes(24).toString("hex");
   const brain = startFakeBrain(token);
   const brainUrl = `http://host.docker.internal:${brain.port.toString()}`;
@@ -93,6 +97,7 @@ export async function openPaperDuels(output: string) {
       warmCache: true,
       stormJar,
       fixturesJar,
+      ...(learningModelDir === undefined ? {} : { learningModelDir }),
       ownedConfigDir: content,
       stormConfig: stormModuleConfig(
         await Bun.file(path.join(content, "config.yml")).text(),
@@ -125,7 +130,11 @@ export async function openPaperDuels(output: string) {
       port: server.info.rconPort,
       password: server.info.rconPassword,
     });
-    return { duels: new DuelClient(rcon), stop };
+    return {
+      duels: new DuelClient(rcon),
+      inference: new InferenceClient(rcon),
+      stop,
+    };
   } catch (error) {
     await stop();
     throw error;

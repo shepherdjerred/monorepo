@@ -23,6 +23,7 @@ com.google.guava:guava:33.6.0-jre=annotationProcessor,compileClasspath,mainPmdAu
 com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava=annotationProcessor,compileClasspath,mainPmdAuxClasspath,testAnnotationProcessor
 com.google.j2objc:j2objc-annotations:3.1=annotationProcessor,compileClasspath,mainPmdAuxClasspath,testAnnotationProcessor
 com.google.protobuf:protobuf-java:4.33.2=annotationProcessor,testAnnotationProcessor
+com.microsoft.onnxruntime:onnxruntime:1.30.0=mainPmdAuxClasspath,runtimeClasspath,testPmdAuxClasspath,testRuntimeClasspath
 com.mojang:brigadier:1.3.10=compileClasspath,mainPmdAuxClasspath
 com.uber.nullaway:nullaway:0.14.2=annotationProcessor,testAnnotationProcessor
 com.zaxxer:HikariCP:7.1.0=mainPmdAuxClasspath,runtimeClasspath,testPmdAuxClasspath,testRuntimeClasspath

@@ -28,6 +28,7 @@ com.google.guava:guava:33.6.0-jre=annotationProcessor,compileClasspath,e2eAnnota
 com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava=annotationProcessor,compileClasspath,e2eAnnotationProcessor,e2eCompileClasspath,e2ePmdAuxClasspath,mainPmdAuxClasspath,testAnnotationProcessor,testCompileClasspath,testPmdAuxClasspath,testRuntimeClasspath
 com.google.j2objc:j2objc-annotations:3.1=annotationProcessor,compileClasspath,e2eAnnotationProcessor,e2eCompileClasspath,e2ePmdAuxClasspath,mainPmdAuxClasspath,testAnnotationProcessor,testCompileClasspath,testPmdAuxClasspath,testRuntimeClasspath
 com.google.protobuf:protobuf-java:4.33.2=annotationProcessor,e2eAnnotationProcessor,testAnnotationProcessor
+com.microsoft.onnxruntime:onnxruntime:1.30.0=mainPmdAuxClasspath,runtimeClasspath,testPmdAuxClasspath,testRuntimeClasspath
 com.mojang:brigadier:1.3.10=compileClasspath,e2eCompileClasspath,e2ePmdAuxClasspath,mainPmdAuxClasspath,testCompileClasspath,testPmdAuxClasspath,testRuntimeClasspath
 com.neovisionaries:nv-websocket-client:2.14=mainPmdAuxClasspath,runtimeClasspath,testPmdAuxClasspath,testRuntimeClasspath
 com.squareup.okhttp3:okhttp-jvm:5.5.0=mainPmdAuxClasspath,runtimeClasspath,testPmdAuxClasspath,testRuntimeClasspath

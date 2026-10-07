@@ -133,6 +133,7 @@ public final class BotTicker {
       }
       bot.profile().ifPresent(profile -> drive(bot, profile, frame));
     }
+    if (sameMatch(match)) roster.harness().finishTick(match.matchId(), tick);
     var elapsed = nanoClock.getAsLong() - started;
     sections.record(elapsed);
     governor.observe(new Governor.Sample(msptP95(tickTimes.get()), elapsed / 1_000_000.0));

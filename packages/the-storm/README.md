@@ -1404,6 +1404,33 @@ Console-transport results include authored fallbacks, so inspect their counts
 when assessing the controller; they do not establish sustained Java inference
 or its two-tick delivery gate.
 
+Java inference diagnostics load a frozen, unaccepted ONNX export only in the
+disposable fixture server:
+
+```bash
+uv run --project tools/learning --locked python tools/learning/java_parity.py --checkpoint .cache/rwf-ppo/diagnostic/learning/final --output .cache/rwf-java-parity/diagnostic
+mise exec -- gradle -p plugin :rwfbots:actorParity -PactorParityDirectory="$PWD/.cache/rwf-java-parity/diagnostic"
+bun tools/learning/java-run.ts --model .cache/rwf-java-parity/diagnostic/onnx --output .cache/rwf-java-native/diagnostic
+```
+
+The parity command independently carries Java hidden and cell state through
+16 steps at batch sizes 1, 3, 20 and 100 against Python expectations. The native
+diagnostic runs both sides against authored and basic opponents with no Python
+action transport. It freezes artifact and runtime hashes, retains every result,
+exports native recordings and checks action accounting. Its counters distinguish
+unavailable actions from authored-only behavior such as healing.
+Expired results and results for retired match/body contexts have separate
+counters; dropping a retired context is a lifecycle guard, not a latency miss.
+
+The compute pool loads and warms native sessions and processes at most one
+immutable observation batch in flight. Busy ticks are skipped rather than queued.
+Main-thread delivery checks match, body, life, kit and a maximum two-tick age;
+observation gaps and identity changes reset recurrent memory. Shutdown closes
+native sessions after pending inference without submitting new work after the
+pool closes. Corrupt metadata and model failures surface as errors. Ordinary
+matches remain authored; these commands do not accept a model or establish the
+human preference or production load gates.
+
 Payouts go through an outbox in `rwf_match_player` and the economy's keyed
 transfers (`rwf:<matchId>:<uuid>`), so a crash between the match ending and
 the transfer pays exactly once on the next enable. Bots are never paid.

@@ -75,6 +75,8 @@ export type StartServerOptions = {
   mechanicsE2eJar?: string;
   mechanicsConfig?: string;
   fixturesJar?: string;
+  /** Explicit unaccepted ONNX export copied only into a disposable fixture server. */
+  learningModelDir?: string;
   companionsE2eJar?: string;
   /** Overrides for the staged rwf.yml when the suite plays Search and Destroy. */
   rwf?: RwfOverlay;
@@ -126,6 +128,27 @@ export type ServerResources = {
   memoryLimit: string;
 };
 
+async function stageLearningModel(
+  pluginsDir: string,
+  source: string | undefined,
+  fixturesJar: string | undefined,
+): Promise<void> {
+  if (source === undefined) return;
+  if (fixturesJar === undefined)
+    throw new Error("diagnostic learning model needs fixture jar");
+  const modelDir = path.join(
+    pluginsDir,
+    "TheStorm",
+    "rwfbots",
+    "learning",
+    "diagnostic",
+  );
+  await mkdir(modelDir, { recursive: true });
+  for (const file of ["manifest.json", "actor.onnx"]) {
+    await cp(path.join(source, file), path.join(modelDir, file));
+  }
+}
+
 /**
  * Builds this run's /plugins mount: the pinned third-party jars, the plugin
  * under test and its repository-owned config directory.
@@ -140,6 +163,7 @@ export async function stagePlugins(
     | "mechanicsE2eJar"
     | "mechanicsConfig"
     | "fixturesJar"
+    | "learningModelDir"
     | "companionsE2eJar"
     | "rwf"
     | "rwfbotsConfig"
@@ -190,6 +214,11 @@ export async function stagePlugins(
       .join("\n");
     await Bun.write(parcels, (await Bun.file(parcels).text()) + entries);
   }
+  await stageLearningModel(
+    pluginsDir,
+    options.learningModelDir,
+    options.fixturesJar,
+  );
   if (options.companionsE2eJar !== undefined) {
     await stageCompanionsE2e(pluginsDir, options.companionsE2eJar);
   }

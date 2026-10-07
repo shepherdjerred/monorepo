@@ -28,6 +28,7 @@ final class CombatHarnessTest {
     var controller = new Passthrough();
     harness.attach(42, controller);
     harness.captureTick(first, 10);
+    harness.finishTick(first, 10);
     assertThatIllegalStateException().isThrownBy(() -> harness.attach(43, new Passthrough()));
     var drafted = harness.draft(first, 2, catalog).orElseThrow();
     assertThat(drafted).extracting(d -> d.personality().id()).containsExactly("alpha", "beta");
@@ -37,10 +38,14 @@ final class CombatHarnessTest {
     assertThat(harness.active(second)).isFalse();
     assertThat(harness.draft(second, 2, catalog)).isEmpty();
     harness.captureTick(first, 11);
+    harness.finishTick(first, 11);
     harness.captureTick(second, 12);
+    harness.finishTick(second, 12);
     harness.detach();
     harness.captureTick(first, 13);
+    harness.finishTick(first, 13);
     assertThat(controller.captured).containsExactly(11L);
+    assertThat(controller.finished).containsExactly(11L);
     assertThat(harness.active(first)).isFalse();
     harness.attach(43, new Passthrough());
     assertThat(harness.draft(second, 2, catalog)).isPresent();
@@ -49,10 +54,16 @@ final class CombatHarnessTest {
 
   private static final class Passthrough implements CombatHarness.Controller {
     private final java.util.ArrayList<Long> captured = new java.util.ArrayList<>();
+    private final java.util.ArrayList<Long> finished = new java.util.ArrayList<>();
 
     @Override
     public void captureTick(long tick) {
       captured.add(tick);
+    }
+
+    @Override
+    public void finishTick(long tick) {
+      finished.add(tick);
     }
 
     @Override

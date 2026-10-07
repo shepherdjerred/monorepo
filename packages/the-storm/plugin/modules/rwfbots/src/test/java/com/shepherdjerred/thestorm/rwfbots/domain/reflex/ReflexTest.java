@@ -62,6 +62,42 @@ final class ReflexTest {
   }
 
   @Test
+  void aLongSmoothedFinalSegmentStillSeparatesButAReachedGoalDoesNotOrbit() {
+    assertThat(walkNear(new Vec3(12.5, 1, 5.5)).waypoint().z()).isLessThan(5.5);
+    assertThat(walkNear(new Vec3(6.5, 1, 5.5)).waypoint()).isEqualTo(new Vec3(6.5, 1, 5.5));
+  }
+
+  private static BodyCommand.MoveToward walkNear(Vec3 destination) {
+    var self = combatant(1, RED, new Vec3(5.5, 1, 5.5));
+    var ally = combatant(2, RED, new Vec3(5.5, 1, 7.5));
+    var decision =
+        new Decision(
+            self.id(),
+            Option.TAKE_SLOT,
+            Optional.empty(),
+            List.of(new Waypoint(destination, Hop.WALK)),
+            Stance.AGGRESSIVE,
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            "following",
+            1,
+            0);
+    var step =
+        Reflex.tick(
+            ReflexState.initial(self.facing()),
+            new ReflexInput(
+                self, world(1, List.of(self, ally), List.of()), decision, Optional.empty(), 3),
+            context(levers(1)),
+            new SplittableRandom(7));
+    return step.commands().stream()
+        .filter(BodyCommand.MoveToward.class::isInstance)
+        .map(BodyCommand.MoveToward.class::cast)
+        .findFirst()
+        .orElseThrow();
+  }
+
+  @Test
   void aMovingAttackerTracksATargetWithTheSameLateralVelocity() {
     var motion = new Vec3(0, 0, 0.3);
     var self =

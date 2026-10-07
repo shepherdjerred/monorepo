@@ -68,6 +68,10 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
   private double sampledReceived;
   private long sampleTick;
   private String result = "waiting";
+  private Optional<com.shepherdjerred.thestorm.rwfbots.app.learning.BatchedInference> inference =
+      Optional.empty();
+  private final List<com.shepherdjerred.thestorm.rwfbots.app.learning.InferenceRequest>
+      inferenceRequests = new ArrayList<>();
 
   DuelFixtures(JavaPlugin plugin) {
     this.plugin = plugin;
@@ -79,6 +83,30 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
         .registerEventHandler(
             LifecycleEvents.COMMANDS, event -> event.registrar().register("rwflearn", this));
     plugin.getServer().getPluginManager().registerEvents(this, plugin);
+    new InferenceFixtures(plugin, this).register();
+  }
+
+  void inference(com.shepherdjerred.thestorm.rwfbots.app.learning.BatchedInference model) {
+    if (result.equals("live")) throw new IllegalStateException("cannot replace a live duel model");
+    inference.ifPresent(com.shepherdjerred.thestorm.rwfbots.app.learning.BatchedInference::close);
+    inference = Optional.of(model);
+  }
+
+  void beginJava(long seed, String side, String opponent) {
+    if (inference.isEmpty()) throw new IllegalStateException("Java diagnostic model is not loaded");
+    if (!List.of("authored", "basic").contains(opponent))
+      throw new IllegalArgumentException("Java evaluation opponent must be authored or basic");
+    begin(new String[] {"begin", Long.toString(seed), side, "external", opponent});
+    inference.orElseThrow().reset(new java.util.SplittableRandom(seed));
+  }
+
+  Object inferenceMetrics() {
+    return Map.of(
+        "inference",
+            inference
+                .orElseThrow(() -> new IllegalStateException("Java model not loaded"))
+                .metrics(),
+        "delivery", primary.delivery());
   }
 
   private TheStormPlugin storm() {
@@ -288,9 +316,16 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
 
   @Override
   public void captureTick(long tick) {
+    inferenceRequests.clear();
     sampleTick = tick;
     sampledDealt = dealt;
     sampledReceived = received;
+  }
+
+  @Override
+  public void finishTick(long tick) {
+    if (result.equals("live"))
+      inference.ifPresent(model -> model.tick(tick, List.copyOf(inferenceRequests)));
   }
 
   @Override
@@ -306,7 +341,27 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
       if (opponent.equals("historical")) return historical.commands(frame, true);
       return opponent.startsWith("authored") ? authored(frame) : basic(frame);
     }
+    var request = javaRequest(frame);
+    if (inference.isPresent() && request.isPresent() && mode.equals("external")) {
+      var context = request.orElseThrow();
+      inferenceRequests.add(context);
+      return primary.commands(frame, true, inference.orElseThrow().action(context));
+    }
     return primary.commands(frame, mode.equals("external"));
+  }
+
+  private Optional<com.shepherdjerred.thestorm.rwfbots.app.learning.InferenceRequest> javaRequest(
+      CombatHarness.Frame frame) {
+    return frame
+        .observation()
+        .map(
+            observation ->
+                new com.shepherdjerred.thestorm.rwfbots.app.learning.InferenceRequest(
+                    new com.shepherdjerred.thestorm.rwfbots.app.learning.InferenceRequest.Identity(
+                        frame.matchId(), frame.body(), frame.life(), frame.input().self().kit()),
+                    frame.input().snapshot().tick(),
+                    frame.input().self().yaw(),
+                    observation.values()));
   }
 
   /** Frozen movement variants retain authored aim, click timing, healing and item use. */
@@ -376,6 +431,8 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
   }
 
   private void submit(String[] args) {
+    if (inference.isPresent())
+      throw new IllegalArgumentException("Java model owns this duel's controls");
     if (args.length != 10 || !mode.equals("external"))
       throw new IllegalArgumentException("act requires an external live duel and nine fields");
     requireLive();

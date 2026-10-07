@@ -7,12 +7,14 @@ import com.shepherdjerred.thestorm.rwfbots.adapter.content.NavFiles;
 import com.shepherdjerred.thestorm.rwfbots.adapter.content.PersonalityFiles;
 import com.shepherdjerred.thestorm.rwfbots.adapter.content.RwfBotsConfig;
 import com.shepherdjerred.thestorm.rwfbots.adapter.db.JooqPersonalityStatsStore;
+import com.shepherdjerred.thestorm.rwfbots.adapter.inference.DiagnosticModels;
 import com.shepherdjerred.thestorm.rwfbots.adapter.paper.Bodies;
 import com.shepherdjerred.thestorm.rwfbots.adapter.paper.RwfBotsPaper;
 import com.shepherdjerred.thestorm.rwfbots.adapter.remote.FliptChatGate;
 import com.shepherdjerred.thestorm.rwfbots.app.ChatGate;
 import com.shepherdjerred.thestorm.rwfbots.app.NavCatalog;
 import com.shepherdjerred.thestorm.rwfbots.app.StatsCache;
+import com.shepherdjerred.thestorm.rwfbots.app.learning.DiagnosticInference;
 import java.net.URI;
 import java.util.Optional;
 import java.util.function.Function;
@@ -53,6 +55,7 @@ public final class RwfBotsModule implements StormModule {
 
   private final Hooks hooks;
   private @Nullable RwfBotsPaper paper;
+  private @Nullable DiagnosticModels diagnosticModels;
 
   public RwfBotsModule() {
     this(Hooks.production());
@@ -69,6 +72,15 @@ public final class RwfBotsModule implements StormModule {
 
   @Override
   public void enable(ModuleContext context) {
+    var models =
+        new DiagnosticModels(
+            new DiagnosticModels.Parts(
+                context.dataDirectory().resolve("rwfbots/learning/diagnostic"),
+                context.compute(),
+                context.random(),
+                System::nanoTime));
+    diagnosticModels = models;
+    context.services().provide(DiagnosticInference.class, models);
     var config = context.loadConfig(CONFIG, RwfBotsConfig.class);
     var personalities = PersonalityFiles.load(context.dataDirectory());
     var nav = new NavCatalog();
@@ -179,6 +191,11 @@ public final class RwfBotsModule implements StormModule {
     if (current != null) {
       current.stop();
       paper = null;
+    }
+    var models = diagnosticModels;
+    if (models != null) {
+      models.close();
+      diagnosticModels = null;
     }
   }
 }
