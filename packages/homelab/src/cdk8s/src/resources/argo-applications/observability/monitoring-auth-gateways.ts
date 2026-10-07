@@ -100,7 +100,7 @@ function gatewayContainer(props: GatewayContainerProps) {
     args: [
       'printf "%s" "$CADDY_CONFIG" > /tmp/Caddyfile && exec caddy run --config /tmp/Caddyfile --adapter caddyfile',
     ],
-    ports: [{ name: "authenticated-web", containerPort: props.port }],
+    ports: [{ name: "auth-web", containerPort: props.port }],
     env: [
       {
         name: "CADDY_CONFIG",
