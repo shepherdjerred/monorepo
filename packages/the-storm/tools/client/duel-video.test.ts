@@ -3,6 +3,8 @@ import { validateDuelClock, validateDuelPrefix } from "./duel-clock.ts";
 import { validateDuelFrames } from "./duel-video.ts";
 import { verifyDuelOutcome } from "./duel-recording.ts";
 import { DuelStateSchema } from "#learning/duels.ts";
+import { InferenceMetrics } from "#learning/inference.ts";
+import { verifyLiveWindow } from "#learning/native/window-gate.ts";
 
 function fixture(ending = 20) {
   const expected = {
@@ -197,6 +199,81 @@ test("normalizes independent journal origins but rejects a changed receive times
   expect(() => verifyDuelOutcome(frames, clock, outcome())).toThrow(
     "separate original clock",
   );
+});
+
+test("the timing diagnostic requires a full live prefix and a separate later timeout", () => {
+  const rawFrames = fixture(-1);
+  const rawClock = fixture(1200).duel.clock;
+  for (const entry of [...rawFrames.duel.clock.entries, ...rawClock.entries]) {
+    entry.marker.mode = "external";
+    entry.marker.opponent = "stationary";
+    if (entry.marker.marker === "terminal") entry.marker.result = "timeout";
+  }
+  for (const binding of rawFrames.duel.bindings) {
+    binding.marker.mode = "external";
+    binding.marker.opponent = "stationary";
+  }
+  rawFrames.duel.clock.expected.mode = "external";
+  rawFrames.duel.clock.expected.opponent = "stationary";
+  rawClock.expected.mode = "external";
+  rawClock.expected.opponent = "stationary";
+  const frames = validateDuelFrames(rawFrames);
+  const clock = validateDuelClock(rawClock);
+  const state = DuelStateSchema.parse({
+    ...outcome(1200),
+    mode: "external",
+    opponent: "stationary",
+    result: "timeout",
+    received: 0,
+    sampleReceived: 0,
+    applied: 1200,
+  });
+  const metrics = InferenceMetrics.parse({
+    inference: {
+      submitted: 1201,
+      skipped: 0,
+      timely: 1200,
+      stale: 0,
+      expired: 0,
+      contextDrops: 0,
+      deadlineMet: 1200,
+      deadlineMissed: 0,
+      resets: 1,
+      rejected: 0,
+      hits: 1200,
+      misses: 1,
+      maximumNanos: 500_000,
+      maximumBatch: 1,
+    },
+    delivery: { applied: 1200, unavailable: 0, ineligible: 0 },
+  });
+  expect(verifyLiveWindow(frames, clock, state, metrics)).toEqual({
+    firstLiveElapsed: 0,
+    lastLiveElapsed: 599,
+    terminalElapsed: 1200,
+    renderedFrames: 900,
+    heldFrames: 0,
+  });
+  expect(() =>
+    verifyLiveWindow(
+      { ...frames, duel: { ...frames.duel, terminalFrame: 30 } },
+      clock,
+      state,
+      metrics,
+    ),
+  ).toThrow("full live window");
+  expect(() =>
+    verifyLiveWindow(frames, clock, { ...state, received: 1 }, metrics),
+  ).toThrow("undamaged timeout");
+  expect(() =>
+    verifyLiveWindow(frames, clock, { ...state, applied: 0 }, metrics),
+  ).toThrow("full live window");
+  expect(() =>
+    verifyLiveWindow(frames, clock, state, {
+      ...metrics,
+      delivery: { ...metrics.delivery, unavailable: 1 },
+    }),
+  ).toThrow("full live window");
 });
 
 test("rejects held live frames and changed terminal pixels", () => {

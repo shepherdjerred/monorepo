@@ -64,13 +64,13 @@ export class InferenceClient {
   async begin(
     seed: number,
     side: "red" | "blue",
-    opponent: "authored" | "basic",
+    opponent: "authored" | "basic" | "stationary",
   ): Promise<void> {
     const validated = z
       .object({
         seed: z.number().int().min(0).max(1_000_000_000),
         side: z.enum(["red", "blue"]),
-        opponent: z.enum(["authored", "basic"]),
+        opponent: z.enum(["authored", "basic", "stationary"]),
       })
       .strict()
       .parse({ seed, side, opponent });

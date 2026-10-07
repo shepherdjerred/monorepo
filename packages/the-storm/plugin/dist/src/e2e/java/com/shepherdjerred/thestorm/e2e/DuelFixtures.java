@@ -97,8 +97,9 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
 
   void beginJava(long seed, String side, String opponent) {
     if (inference.isEmpty()) throw new IllegalStateException("Java diagnostic model is not loaded");
-    if (!List.of("authored", "basic").contains(opponent))
-      throw new IllegalArgumentException("Java evaluation opponent must be authored or basic");
+    if (!List.of("authored", "basic", "stationary").contains(opponent))
+      throw new IllegalArgumentException(
+          "Java diagnostic opponent must be authored, basic or stationary");
     begin(new String[] {"begin", Long.toString(seed), side, "external", opponent});
     inference.orElseThrow().reset(new java.util.SplittableRandom(seed));
   }

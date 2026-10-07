@@ -1494,6 +1494,26 @@ The native timing bridge is exercised independently of training or voting:
 bun run client preview --rwf-duel --verify-duel-clock
 ```
 
+To verify a full window that remains live through tick 599:
+
+```bash
+bun run bots:verify-live-window --output .cache/rwf-native-window/full-live
+```
+
+This diagnostic exports a fixed, unaccepted jump-in-place actor with attack
+disabled, verifies recurrent CPU ONNX parity, and stages it in Java against the
+fixture's stationary opponent. No training or demonstration data is used. After
+a separate warm-up match, the command records 900 native live frames with zero
+held frames, waits for the ordinary 1200-tick fixture timeout, and checks that
+the separate full clock extends the recorded prefix. It requires sustained Java
+action application, zero damage and changing original pixels. Setup, model,
+runtime and renderer digests, frame/full-clock receipts, delivery metrics, the
+encoded stream and complete original recording remain in the exclusive output.
+`verification.json` records the measured live/terminal bounds. Failures preserve
+the output and a failure receipt; no automatic retry occurs. This verifies the
+timing and recording component, with a diagnostic actor that cannot establish
+pilot strength, human preference or model acceptance.
+
 The disposable fixture's console-only `rwfcapture observe <uuid>` admits a
 connected native spectator outside the duel roster. `rwflearn` sends a begin
 marker, one marker before bot actions each live tick, and a terminal marker
