@@ -179,6 +179,9 @@ public final class BotTicker {
   private record Frame(MatchSession match, WorldSnapshot snapshot, DecisionBoard board) {}
 
   private void drive(BotBody bot, BotProfile profile, Frame frame) {
+    if (!view.isFighting(frame.match().matchId(), bot.uuid())) {
+      return;
+    }
     var snapshot = frame.snapshot();
     if (bot.takeRecoveryRequest()) {
       loop.requestReplan(profile.id());

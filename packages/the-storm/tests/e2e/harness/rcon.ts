@@ -1,18 +1,30 @@
 import net from "node:net";
 
 // Source RCON as implemented by the vanilla/Paper server:
-// https://minecraft.wiki/w/RCON. Little-endian int32 length, id, type, then
-// an ASCII body terminated by two NUL bytes.
-const packetType = { command: 2, auth: 3 } as const;
-// The server splits responses into 4096-byte bodies; a shorter body ends one.
-const maxResponseBody = 4096;
+// Little-endian int32 length, id, type, then UTF-8 and two NUL bytes.
+const packetType = { responseValue: 0, command: 2, auth: 3 } as const;
+// Paper's RconClient splits at 4096 Java UTF-16 units, each at most 3 UTF-8
+// bytes. An exact-size final chunk has no extra empty terminator.
+const maxResponseBody = 4096 * 3;
 
 type Pending = {
   id: number;
+  type: number;
+  markerId?: number;
   chunks: string[];
   resolve: (body: string) => void;
   reject: (error: Error) => void;
 };
+
+function packet(id: number, type: number, body: string): Buffer {
+  const payload = Buffer.from(body, "utf8");
+  const encoded = Buffer.alloc(14 + payload.length);
+  encoded.writeInt32LE(10 + payload.length, 0);
+  encoded.writeInt32LE(id, 4);
+  encoded.writeInt32LE(type, 8);
+  payload.copy(encoded, 12);
+  return encoded;
+}
 
 export type RconConnectOptions = {
   host: string;
@@ -130,12 +142,6 @@ export class RconClient {
       throw new Error("RCON socket closed");
     }
     const id = this.nextId++;
-    const payload = Buffer.from(body, "utf8");
-    const packet = Buffer.alloc(14 + payload.length);
-    packet.writeInt32LE(10 + payload.length, 0);
-    packet.writeInt32LE(id, 4);
-    packet.writeInt32LE(type, 8);
-    payload.copy(packet, 12);
     return new Promise<string>((resolve, reject) => {
       const timer = setTimeout(() => {
         const error = new Error("RCON command timed out");
@@ -144,6 +150,7 @@ export class RconClient {
       }, this.timeoutMs);
       this.pending = {
         id,
+        type,
         chunks: [],
         resolve: (response) => {
           clearTimeout(timer);
@@ -154,7 +161,7 @@ export class RconClient {
           reject(error);
         },
       };
-      this.socket.write(packet);
+      this.socket.write(packet(id, type, body));
     });
   }
 
@@ -189,6 +196,11 @@ export class RconClient {
       pending.reject(new Error("RCON authentication rejected"));
       return;
     }
+    if (id === pending.markerId) {
+      this.pending = undefined;
+      pending.resolve(pending.chunks.join(""));
+      return;
+    }
     if (id !== pending.id) {
       this.fail(
         new Error(
@@ -198,9 +210,15 @@ export class RconClient {
       return;
     }
     pending.chunks.push(body);
-    if (Buffer.byteLength(body, "utf8") < maxResponseBody) {
+    if (pending.type === packetType.auth) {
       this.pending = undefined;
       pending.resolve(pending.chunks.join(""));
+    } else if (pending.markerId === undefined) {
+      // Paper processes requests serially. Its response to this protocol-only
+      // probe follows every command chunk. Wait for the first response before
+      // sending it: Paper cannot parse two requests coalesced into one read.
+      pending.markerId = this.nextId++;
+      this.socket.write(packet(pending.markerId, packetType.responseValue, ""));
     }
   }
 

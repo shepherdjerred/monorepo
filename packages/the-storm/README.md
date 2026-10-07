@@ -1669,6 +1669,34 @@ owns that hook. Controlled duel and load attachments retain their fixed Trooper
 rosters and experiment seeds. An attachment alone supplies no regression proof;
 acceptance still requires the complete measured evidence above.
 
+To exercise the authored attachment's native journal with an unaccepted export:
+
+```bash
+bun run bots:verify-regression-capture --model .cache/rwf-java-parity/exact-candidate/onnx --output .cache/rwf-regression-capture/diagnostic
+```
+
+One disposable Paper server loads and warms that exact Java actor, arms the
+`native-team-advancement` case once, and runs a normal sixteen-bot showcase to its
+original ending. Only eligible Trooper sword controls use the actor; other kits,
+aim and item actions remain authored. The console-only fixture retains every
+selected command and action context, native tick/batch, match transition and
+actual before/after damage measurement in a bounded journal. Sampling drains
+are fsynced to `commands.jsonl` before the next request. The verifier recounts
+every row, checks body/life/kit/tick eligibility and two-tick action age, rebuilds
+the selected controls with their original authored target identity, and checks
+authored fallbacks and original batch totals.
+
+The ticker checks the rules' current fighting roster before each body acts. A
+body killed by an earlier command in the same tick cannot act from the old world
+snapshot, even when the match continues for its teammates.
+
+The exclusive output keeps model/runtime/renderer fingerprints, the complete
+schema-3 recording and measured team trajectories. Failure preserves the attempt;
+there is no automatic retry. `verification.json` explicitly records diagnostic
+scope and supplies no seven-case regression pass or promotion input. Acceptance
+requires the full regression inventory, native combat checks and simulation
+floors above; this command does not train, accept a model or enable rollout.
+
 The producer verifies the sealed pilot and human ballot, recounts the original
 strength outcomes, recomputes the full raw load stream, and replays the original
 parity samples against the frozen Python weights and exact CPU ONNX export.

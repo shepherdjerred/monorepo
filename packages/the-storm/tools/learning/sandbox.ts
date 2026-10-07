@@ -83,6 +83,10 @@ export async function frozenManifest() {
       root,
       "plugin/modules/rwfbots/src/main/resources/rwf-inference-load.json",
     ),
+    path.join(
+      root,
+      "plugin/modules/rwfbots/src/main/resources/rwf-regression-capture.json",
+    ),
     ...sources.map((file) => path.join(learning, file)),
   ];
   const hashes = await Promise.all(
@@ -117,7 +121,7 @@ export async function frozenManifest() {
 export async function openPaperDuels(
   output: string,
   learningModelDir?: string,
-  profile: "duel" | "load" = "duel",
+  profile: "duel" | "load" | "regression" = "duel",
 ) {
   const token = randomBytes(24).toString("hex");
   const brain = startFakeBrain(token);
@@ -131,7 +135,10 @@ export async function openPaperDuels(
     const steps = [
       async () => observer?.stop(),
       async () => {
-        if (observerStarted && server !== undefined)
+        if (
+          server !== undefined &&
+          (observerStarted || profile === "regression")
+        )
           await Bun.write(
             path.join(output, "server.log"),
             await serverLogs(server.info),
@@ -170,8 +177,8 @@ export async function openPaperDuels(
         ...rwfTestSettings,
         countdown: "PT1S",
         endLinger: "PT1S",
-        targetCombatants: 2,
-        maxCombatants: 2,
+        targetCombatants: profile === "regression" ? 8 : 2,
+        maxCombatants: profile === "regression" ? 16 : 2,
       },
       exportRecordingsDir: path.join(output, "recordings"),
       sweep: {
@@ -235,6 +242,7 @@ export async function openPaperDuels(
     const observerConsole = rcon;
     const address = `127.0.0.1:${server.info.gamePort.toString()}`;
     return {
+      console: rcon,
       duels: new DuelClient(rcon),
       inference: new InferenceClient(rcon),
       load: new InferenceLoadClient(rcon),
