@@ -1686,6 +1686,13 @@ every row, checks body/life/kit/tick eligibility and two-tick action age, rebuil
 the selected controls with their original authored target identity, and checks
 authored fallbacks and original batch totals.
 
+The original console requests are bracketed by journal checkpoints. The complete
+recording must match every native body's test pseudonym, team and kit, keep each
+living body's two-tick frame cadence, and match the native normal ending. Both
+teams must meet the existing spacing, width at eight seconds and contact,
+ten-second advancement, and winding floors. The verifier rejects incomplete
+trajectories and fails on any missed floor.
+
 The ticker checks the rules' current fighting roster before each body acts. A
 body killed by an earlier command in the same tick cannot act from the old world
 snapshot, even when the match continues for its teammates.
