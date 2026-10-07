@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "matchesPerOpponent": 200,
+  "firstSeed": 500000000,
+  "opponents": ["authored", "basic"],
+  "sides": ["red", "blue"],
+  "minimumWins": { "authored": 120, "basic": 160 }
+}

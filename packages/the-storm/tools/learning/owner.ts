@@ -29,22 +29,37 @@ const WorkerMessage = z.discriminatedUnion("kind", [
     .strict(),
 ]);
 
-export type WorkerOptions = {
-  dataset?: string;
-  checkpoint?: string;
+type CommonOptions = {
   output: string;
   device: "cpu" | "mps";
   seed: number;
   seconds: number;
   deadlineMs: number;
-  updates: number;
-  episodes: number;
-  opponent: string;
   diagnostic: boolean;
-  curriculum: boolean;
 };
+export type WorkerOptions = CommonOptions &
+  (
+    | {
+        dataset?: string;
+        checkpoint?: string;
+        updates: number;
+        episodes: number;
+        opponent: string;
+        curriculum: boolean;
+        evaluation?: never;
+      }
+    | {
+        checkpoint: string;
+        evaluation: { matches: number; firstSeed: number };
+        dataset?: never;
+        updates?: never;
+        episodes?: never;
+        opponent?: never;
+        curriculum?: never;
+      }
+  );
 
-/** Own the worker, hard deadline and disposable Paper server as one lifetime. */
+/** Own a training/evaluation worker, deadline and Paper server as one lifetime. */
 export async function runPaperWorker(options: WorkerOptions) {
   const { output, deadlineMs } = options;
   if (process.platform !== "darwin" && process.platform !== "linux")
@@ -90,7 +105,7 @@ export async function runPaperWorker(options: WorkerOptions) {
       !session.completed
     )
       throw new Error(
-        `Paper PPO worker failed (${status.toString()}, budget expired: ${budget.expired.toString()}): ${output}/worker.log`,
+        `Paper learning worker failed (${status.toString()}, budget expired: ${budget.expired.toString()}): ${output}/worker.log`,
       );
     console.warn(`Evidence: ${output}`);
     return { completedMs: Date.now() };
@@ -108,6 +123,28 @@ export async function runPaperWorker(options: WorkerOptions) {
 
 function spawnWorker(options: WorkerOptions) {
   const { output, deadlineMs } = options;
+  const operation =
+    options.evaluation === undefined
+      ? [
+          "--max-seconds",
+          options.seconds.toString(),
+          "--updates",
+          options.updates.toString(),
+          "--episodes",
+          options.episodes.toString(),
+          "--opponent",
+          options.opponent,
+          ...(options.dataset === undefined
+            ? []
+            : ["--dataset", options.dataset]),
+          ...(options.curriculum ? ["--curriculum"] : []),
+        ]
+      : [
+          "--matches",
+          options.evaluation.matches.toString(),
+          "--first-seed",
+          options.evaluation.firstSeed.toString(),
+        ];
   return Bun.spawn(
     [
       "uv",
@@ -116,29 +153,24 @@ function spawnWorker(options: WorkerOptions) {
       path.join(root, "tools/learning"),
       "--locked",
       "python",
-      path.join(root, "tools/learning/worker.py"),
+      path.join(
+        root,
+        "tools/learning",
+        options.evaluation === undefined ? "worker.py" : "evaluate.py",
+      ),
       "--output",
       path.join(output, "learning"),
       "--device",
       options.device,
       "--seed",
       options.seed.toString(),
-      "--max-seconds",
-      options.seconds.toString(),
       "--deadline-ms",
       deadlineMs.toString(),
-      "--updates",
-      options.updates.toString(),
-      "--episodes",
-      options.episodes.toString(),
-      "--opponent",
-      options.opponent,
-      ...(options.dataset === undefined ? [] : ["--dataset", options.dataset]),
+      ...operation,
       ...(options.checkpoint === undefined
         ? []
         : ["--checkpoint", options.checkpoint]),
       ...(options.diagnostic ? ["--diagnostic"] : []),
-      ...(options.curriculum ? ["--curriculum"] : []),
     ],
     {
       detached: true,

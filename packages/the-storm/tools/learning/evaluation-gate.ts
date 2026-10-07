@@ -1,0 +1,145 @@
+import { z } from "zod";
+import contract from "./evaluation.json";
+
+if (
+  contract.version !== 1 ||
+  contract.matchesPerOpponent !== 200 ||
+  contract.firstSeed !== 500_000_000 ||
+  JSON.stringify(contract.opponents) !== '["authored","basic"]' ||
+  JSON.stringify(contract.sides) !== '["red","blue"]' ||
+  contract.minimumWins.authored !== 120 ||
+  contract.minimumWins.basic !== 160
+)
+  throw new Error("unsupported strength evaluation contract");
+
+const Digest = z.string().regex(/^[a-f0-9]{64}$/u);
+const Count = z.number().int().nonnegative();
+const Metric = z.number().nonnegative();
+export const EvaluationGame = z
+  .object({
+    opponent: z.enum(["authored", "basic"]),
+    seed: z.number().int().min(0).max(1_000_000_100),
+    side: z.enum(["red", "blue"]),
+    match: z.uuid(),
+    result: z.enum(["win", "loss", "draw", "timeout"]),
+    frames: Count.positive(),
+    submitted_controls: Count,
+    confirmed_controls: Count,
+    applied_controls: Count,
+    authored_fallbacks: Count,
+    missed_ticks: Count,
+    rejected_actions: Count,
+    memory_resets: Count,
+    dealt: Metric,
+    received: Metric,
+    seconds: Metric,
+    max_inference_ms: Metric,
+  })
+  .strict()
+  .refine(
+    (game) =>
+      game.confirmed_controls <= game.submitted_controls &&
+      game.submitted_controls <= game.frames,
+  );
+export const EvaluationReport = z
+  .object({
+    version: z.literal(1),
+    engine: z.literal("Paper"),
+    mode: z.enum(["pilot", "diagnostic"]),
+    acceptance: z.literal("unaccepted"),
+    actor_seed: z.number().int().min(0).max(1_000_000_000),
+    weights_sha256: Digest,
+    manifest_sha256: Digest,
+    games: z.array(EvaluationGame),
+    optimized: z.literal(false),
+    retried_duels: z.literal(0),
+    blind_preference_checked: z.literal(false),
+    pilot_acceptance_checked: z.literal(false),
+  })
+  .strict();
+
+export function evaluationSchedule(matches: number, firstSeed: number) {
+  if (!Number.isInteger(matches) || matches < 2 || matches > 200 || matches % 2)
+    throw new Error(
+      "evaluation needs paired sides and at most 200 games per opponent",
+    );
+  z.number().int().min(0).max(1_000_000_000).parse(firstSeed);
+  return ["authored", "basic"].flatMap((opponent) =>
+    Array.from({ length: matches }, (_, index) => ({
+      opponent,
+      seed: firstSeed + Math.floor(index / 2),
+      side: index % 2 === 0 ? "red" : "blue",
+    })),
+  );
+}
+
+/** Recompute from every scheduled outcome; incomplete or repeated evidence fails. */
+export function strengthResult(
+  raw: unknown,
+  matches: number,
+  firstSeed: number,
+) {
+  const report = EvaluationReport.parse(raw);
+  const schedule = evaluationSchedule(matches, firstSeed);
+  if (
+    report.games.length !== schedule.length ||
+    new Set(report.games.map((game) => game.match)).size !== schedule.length ||
+    report.games.some((game, index) => {
+      const expected = schedule[index];
+      return (
+        game.seed !== expected?.seed ||
+        game.side !== expected.side ||
+        game.opponent !== expected.opponent
+      );
+    })
+  )
+    throw new Error("evaluation evidence differs from the frozen schedule");
+  if (
+    report.mode === "pilot" &&
+    (matches !== contract.matchesPerOpponent ||
+      firstSeed !== contract.firstSeed)
+  )
+    throw new Error("pilot strength requires the fixed 200-game gates");
+  const opponents = contract.opponents.map((opponent) => {
+    const games = report.games.filter((game) => game.opponent === opponent);
+    const wins = games.filter((game) => game.result === "win").length;
+    const minimumWins =
+      opponent === "authored"
+        ? contract.minimumWins.authored
+        : contract.minimumWins.basic;
+    return {
+      opponent,
+      games: games.length,
+      wins,
+      losses: games.filter((game) => game.result === "loss").length,
+      draws: games.filter((game) => game.result === "draw").length,
+      timeouts: games.filter((game) => game.result === "timeout").length,
+      redWins: games.filter(
+        (game) => game.side === "red" && game.result === "win",
+      ).length,
+      blueWins: games.filter(
+        (game) => game.side === "blue" && game.result === "win",
+      ).length,
+      minimumWins,
+      passed: report.mode === "pilot" && wins >= minimumWins,
+      appliedControls: games.reduce(
+        (sum, game) => sum + game.applied_controls,
+        0,
+      ),
+      authoredFallbacks: games.reduce(
+        (sum, game) => sum + game.authored_fallbacks,
+        0,
+      ),
+      missedTicks: games.reduce((sum, game) => sum + game.missed_ticks, 0),
+      rejectedActions: games.reduce(
+        (sum, game) => sum + game.rejected_actions,
+        0,
+      ),
+    };
+  });
+  return {
+    report,
+    opponents,
+    passed: opponents.every((opponent) => opponent.passed),
+  };
+}
