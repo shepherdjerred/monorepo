@@ -33,11 +33,14 @@ public final class BatchedInference implements AutoCloseable {
   private long stale;
   private long expired;
   private long contextDrops;
+  private long deadlineMet;
+  private long deadlineMissed;
   private long resets;
   private long rejected;
   private long hits;
   private long misses;
   private long maximumNanos;
+  private int maximumBatch;
   private long generation;
   private @Nullable CompletableFuture<Boolean> closing;
 
@@ -51,11 +54,14 @@ public final class BatchedInference implements AutoCloseable {
       long stale,
       long expired,
       long contextDrops,
+      long deadlineMet,
+      long deadlineMissed,
       long resets,
       long rejected,
       long hits,
       long misses,
-      long maximumNanos) {}
+      long maximumNanos,
+      int maximumBatch) {}
 
   private static final class Slot {
     final InferenceRequest.Identity identity;
@@ -149,6 +155,10 @@ public final class BatchedInference implements AutoCloseable {
   private void commit(Completion completion, int index, long tick) {
     var pending = completion.requests().get(index);
     var request = pending.request();
+    // Deadline accounting includes retired contexts. Lifecycle rejection is a
+    // separate safety decision and must not conceal a slow completion.
+    if (tick - request.tick() <= 2) deadlineMet++;
+    else deadlineMissed++;
     var slot = slots.get(request.identity().body());
     if (slot == null
         || slot.generation != pending.generation()
@@ -194,6 +204,7 @@ public final class BatchedInference implements AutoCloseable {
                 return new Completion(pending, output, clock.getAsLong() - began);
               });
       submitted += rows;
+      maximumBatch = Math.max(maximumBatch, rows);
     } catch (RejectedExecutionException failure) {
       rejected += rows;
     }
@@ -247,11 +258,14 @@ public final class BatchedInference implements AutoCloseable {
         stale,
         expired,
         contextDrops,
+        deadlineMet,
+        deadlineMissed,
         resets,
         rejected,
         hits,
         misses,
-        maximumNanos);
+        maximumNanos,
+        maximumBatch);
   }
 
   /** Drop a finished match's recurrent state and use its successor's injected randomness. */

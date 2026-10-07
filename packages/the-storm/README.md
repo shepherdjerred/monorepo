@@ -1420,7 +1420,39 @@ action transport. It freezes artifact and runtime hashes, retains every result,
 exports native recordings and checks action accounting. Its counters distinguish
 unavailable actions from authored-only behavior such as healing.
 Expired results and results for retired match/body contexts have separate
-counters; dropping a retired context is a lifecycle guard, not a latency miss.
+counters. Deadline counters include every observed completion, including retired
+contexts, so a lifecycle rejection cannot conceal a missed deadline.
+
+Native inference load diagnostics use every shipped module and verify Docker's
+four-CPU cap, 8G heap setting and 10Gi memory limit:
+
+```bash
+mise exec -- gradle -p plugin :dist:shadowJar :dist:fixturesJar :companions:e2eJar
+bun tools/learning/load-run.ts --model .cache/rwf-java-parity/diagnostic/onnx --output .cache/rwf-java-load/diagnostic
+```
+
+The fixture's versioned wire contract is `rwf-inference-load.json` in the rwfbots
+resources. Java validates its record fields and each reply; TypeScript validates
+the same field inventory and parses replies strictly. A missing or incompatible
+contract stops the diagnostics.
+
+The frozen protocol in `tools/learning/load-gate.ts` measures a 90-second baseline,
+then 20, 50 and 100 real Troopers for at least 3,000 live ticks per phase. Each
+phase also requires 200 ticks with the entire roster alive and observed. Normal
+deaths and match endings remain active; successor matches restore the roster
+within a fixed budget, and every measured tick and match is retained. Authored
+navigation, aim, healing and abilities continue to run; eligible sword controls
+use Java inference. The diagnostic harness drives all bodies at 20 Hz without
+governor thinning or habit perturbations, so this is a capacity check for that
+controller rather than a normal-match rollout test.
+
+Paper tick-end events supply individual server durations. The overall, live and
+full-roster populations must each have p95 below 50 ms. At least 99% of attempted
+body inferences must be observed within two ticks; skipped, rejected and final
+pending requests count against that fraction. Action age, full-batch size and
+native damage are also checked. `samples.jsonl`, `phases.json`, recordings and
+`verification.json` retain the evidence and input hashes. These bars supplement
+the existing authored load tests and gameplay floors; they do not replace them.
 
 The compute pool loads and warms native sessions and processes at most one
 immutable observation batch in flight. Busy ticks are skipped rather than queued.
@@ -1429,7 +1461,8 @@ observation gaps and identity changes reset recurrent memory. Shutdown closes
 native sessions after pending inference without submitting new work after the
 pool closes. Corrupt metadata and model failures surface as errors. Ordinary
 matches remain authored; these commands do not accept a model or establish the
-human preference or production load gates.
+human preference gate. The separate load command checks runtime capacity without
+accepting the model or enabling ordinary learned play.
 
 Payouts go through an outbox in `rwf_match_player` and the economy's keyed
 transfers (`rwf:<matchId>:<uuid>`), so a crash between the match ending and

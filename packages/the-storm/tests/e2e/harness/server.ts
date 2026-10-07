@@ -403,27 +403,16 @@ export async function startServer(
     serverImage,
   ]);
   const id = containerId.trim();
+  let booted = false;
   const stop = async () => {
-    if (
-      options.exportWorldDir !== undefined ||
-      options.exportRecordingsDir !== undefined
-    ) {
-      await docker(["stop", "--time", "30", id]);
+    try {
+      // Failed boots have no recording directory yet. Export only a booted
+      // server, and always remove our container even if an export fails.
+      if (booted) await exportStoppedServer(id, options);
+    } finally {
+      await docker(["rm", "-f", "-v", id]);
+      await rm(stagingDir, { recursive: true, force: true });
     }
-    if (options.exportRecordingsDir !== undefined) {
-      await mkdir(options.exportRecordingsDir, { recursive: true });
-      await docker([
-        "cp",
-        `${id}:/data/plugins/TheStorm/rwf-recordings/.`,
-        options.exportRecordingsDir,
-      ]);
-    }
-    if (options.exportWorldDir !== undefined) {
-      await mkdir(options.exportWorldDir, { recursive: true });
-      await docker(["cp", `${id}:/data/world/.`, options.exportWorldDir]);
-    }
-    await docker(["rm", "-f", "-v", id]);
-    await rm(stagingDir, { recursive: true, force: true });
   };
   try {
     if (options.worldDir !== undefined) {
@@ -472,6 +461,7 @@ export async function startServer(
       ...connection,
       bootMs: Date.now() - started,
     });
+    booted = true;
     return { info, stop };
   } catch (error) {
     const { stdout, stderr } = await docker(["logs", id]);
@@ -481,5 +471,28 @@ export async function startServer(
     );
     await stop();
     throw error;
+  }
+}
+
+async function exportStoppedServer(
+  id: string,
+  options: StartServerOptions,
+): Promise<void> {
+  if (
+    options.exportWorldDir !== undefined ||
+    options.exportRecordingsDir !== undefined
+  )
+    await docker(["stop", "--time", "30", id]);
+  if (options.exportRecordingsDir !== undefined) {
+    await mkdir(options.exportRecordingsDir, { recursive: true });
+    await docker([
+      "cp",
+      `${id}:/data/plugins/TheStorm/rwf-recordings/.`,
+      options.exportRecordingsDir,
+    ]);
+  }
+  if (options.exportWorldDir !== undefined) {
+    await mkdir(options.exportWorldDir, { recursive: true });
+    await docker(["cp", `${id}:/data/world/.`, options.exportWorldDir]);
   }
 }
