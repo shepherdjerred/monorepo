@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "contract": "rwf-authored-simulation-floors-v1",
+  "strategies": ["RUSH", "SPLIT", "TURTLE", "HUNT"],
+  "attackingStrategies": ["RUSH", "SPLIT", "HUNT"],
+  "firstSeed": 10,
+  "perTeam": 8,
+  "maximumTicks": 900,
+  "spreadTick": 160,
+  "forwardTick": 200,
+  "sampleTicks": 10,
+  "third": 20,
+  "slots": [
+    "",
+    "PLANT",
+    "ESCORT",
+    "LANE",
+    "FLANK",
+    "OVERWATCH",
+    "ANCHOR",
+    "SWEEP"
+  ],
+  "lineup": [
+    "TROOPER",
+    "LONGBOW",
+    "TROOPER",
+    "TROOPER",
+    "SHORTBOW",
+    "TROOPER",
+    "TROOPER",
+    "REWIND"
+  ],
+  "records": {
+    "Header": [
+      "type",
+      "schema",
+      "contract",
+      "source",
+      "humanDemonstration",
+      "trainingData"
+    ],
+    "Run": ["type", "run", "seed", "red", "blue"],
+    "Tick": ["type", "run", "tick", "ready", "bodies"],
+    "Body": ["id", "team", "kit", "x", "z", "alive", "attacks", "slot"],
+    "End": ["type", "run", "tick", "contact", "measurements"],
+    "Metrics": ["team", "widthAt8", "widthAtContact", "forwardBy10", "winding"],
+    "Complete": ["type", "runs"]
+  }
+}

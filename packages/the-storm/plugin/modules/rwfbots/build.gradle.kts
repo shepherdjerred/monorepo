@@ -98,3 +98,33 @@ tasks.register<JavaExec>("actorPromotion") {
   val source = providers.gradleProperty("actorPromotionSource")
   doFirst { args(directory.get(), source.get()) }
 }
+
+// Original authored simulation regression data is generated explicitly, never used for training.
+val simulationClasspath = sourceSets.test.get().runtimeClasspath
+val simulationClasspathFile = layout.buildDirectory.file("simulation-classpath.json")
+val simulationCaptureInputs = tasks.register("simulationCaptureInputs") {
+  val runtimeFiles = simulationClasspath
+  val outputFile = simulationClasspathFile
+  dependsOn(tasks.named("testClasses"))
+  inputs.files(simulationClasspath).withPropertyName("simulationClasspath").withPathSensitivity(PathSensitivity.RELATIVE)
+  inputs.property("simulationRuntimePaths", runtimeFiles.elements.map { locations ->
+    locations.map { it.asFile.absolutePath }
+  })
+  outputs.file(simulationClasspathFile)
+  doLast {
+    outputFile.get().asFile.writeText(
+        groovy.json.JsonOutput.toJson(runtimeFiles.files.map { it.absolutePath }) + "\n")
+  }
+}
+tasks.register<JavaExec>("simulationCapture") {
+  dependsOn(simulationCaptureInputs)
+  classpath = simulationClasspath
+  mainClass.set("com.shepherdjerred.thestorm.rwfbots.sim.SimulationCapture")
+  systemProperty("thestorm.rwfbots.trainingYardNav", trainingYardNav.absolutePath)
+  val output = providers.gradleProperty("simulationCaptureFile")
+  inputs.property("simulationCaptureFile", output)
+  inputs.file(trainingYardNav).withPropertyName("trainingYardNav").withPathSensitivity(PathSensitivity.RELATIVE)
+  outputs.file(output)
+  outputs.upToDateWhen { false }
+  doFirst { args(output.get()) }
+}

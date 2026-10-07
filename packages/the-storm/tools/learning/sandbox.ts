@@ -101,6 +101,10 @@ export async function frozenManifest() {
       root,
       "plugin/modules/rwfbots/src/main/resources/rwf-melee-check.json",
     ),
+    path.join(
+      root,
+      "plugin/modules/rwfbots/src/main/resources/rwf-simulation-check.json",
+    ),
     ...sources.map((file) => path.join(learning, file)),
   ];
   const hashes = await Promise.all(
