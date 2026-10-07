@@ -1769,6 +1769,26 @@ not enter the persistent NPC registry. The verifier retains and replays the
 original journal and stopped all-bot recording. This diagnostic supplies no human
 demonstrations, complete regression acceptance or rollout.
 
+To verify native line-of-sight rejection and knockback:
+
+```bash
+bun run bots:verify-native-melee --model .cache/rwf-java-parity/exact-candidate/onnx --output .cache/rwf-regression-capture/native-melee
+```
+
+The producer selects two opposing Troopers from an ordinary sixteen-bot draft.
+Two console-only trials place those same original bodies in melee reach. A
+temporary two-block stone wall must produce `NO_LINE_OF_SIGHT` with unchanged
+health and velocity. With that wall removed, the actual melee API must reduce
+health and apply the rules' horizontal and upward knockback. Each trial restores
+the original air blocks before returning, retains native body snapshots and is
+bracketed by the original journal. The replay matches the clear hit's exact
+damage event and velocity, then independently requires a landed applied Java
+sword command with native knockback outside either direct trial. It preserves the
+original normal ending and all-bot recording. The shared melee probe contract has
+Java and TypeScript validators and enters the frozen input fingerprint. This is
+an automated diagnostic; it produces no human demonstrations, accepted policy or
+complete regression acceptance.
+
 The producer verifies the sealed pilot and human ballot, recounts the original
 strength outcomes, recomputes the full raw load stream, and replays the original
 parity samples against the frozen Python weights and exact CPU ONNX export.

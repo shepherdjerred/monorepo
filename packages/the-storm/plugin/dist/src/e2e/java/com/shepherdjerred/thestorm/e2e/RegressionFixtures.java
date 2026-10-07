@@ -151,6 +151,7 @@ final class RegressionFixtures implements BasicCommand, CombatHarness.Controller
   }
 
   void register() {
+    new RegressionMelee(plugin, this::meleeContext).register();
     plugin
         .getLifecycleManager()
         .registerEventHandler(
@@ -168,6 +169,15 @@ final class RegressionFixtures implements BasicCommand, CombatHarness.Controller
 
   private MatchState current() {
     return storm().service(MatchView.class).current().map(MatchState::of).orElseThrow();
+  }
+
+  private MatchState meleeContext() {
+    var state = current();
+    if (!caseName.equals("native-los-and-knockback")
+        || !result.equals("live")
+        || match.filter(state.matchId()::equals).isEmpty())
+      throw new IllegalStateException("melee trial requires the original live LOS regression case");
+    return state;
   }
 
   @Override
