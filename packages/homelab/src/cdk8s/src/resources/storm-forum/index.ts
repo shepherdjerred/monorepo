@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { ApiObject, Chart, type App } from "cdk8s";
+import { Chart, type App } from "cdk8s";
 import { Pods, Service } from "cdk8s-plus-31";
 import { z } from "zod";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
@@ -24,6 +24,7 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createForumDatabase } from "./database.ts";
 import { createForumNetwork } from "./network.ts";
 import { createForumStorage } from "./storage.ts";
+import { applyForumSyncWaves } from "./sync-waves.ts";
 
 export const ReleaseSchema = z
   .object({
@@ -435,39 +436,6 @@ export function createStormForumChart(app: App, input: ForumRelease): Chart {
   createForumNetwork(chart, release.stage);
   applyForumSyncWaves(chart);
   return chart;
-}
-
-function applyForumSyncWaves(chart: Chart): void {
-  for (const resource of chart.node.findAll()) {
-    if (!ApiObject.isApiObject(resource)) {
-      continue;
-    }
-    resource.metadata.addAnnotation(
-      "argocd.argoproj.io/sync-wave",
-      forumSyncWave(resource),
-    );
-  }
-}
-
-function forumSyncWave(resource: ApiObject): string {
-  switch (resource.kind) {
-    case "Namespace": {
-      return "-4";
-    }
-    case "OnePasswordItem":
-    case "Certificate": {
-      return "-3";
-    }
-    case "Deployment": {
-      return resource.name === "storm-forum-database" ? "-1" : "1";
-    }
-    case "Job": {
-      return "0";
-    }
-    default: {
-      return "-2";
-    }
-  }
 }
 
 function nginxConfiguration(release: ForumRelease): string {

@@ -70,6 +70,12 @@ server's 15-character and syntax limits. This includes sidecars in external
 Helm values and operator overrides, whose port names are not checked by their
 parent Application or custom-resource schemas.
 
+Storm Forum's active storage claims share a sync wave with their first consumer:
+the database Deployment at -1 and the release Job at 0. The ZFS storage class
+uses `WaitForFirstConsumer`, so an earlier PVC wave would block provisioning
+before ArgoCD could create the required Pod. The web Deployment remains at wave
+1, after the database is healthy and the release Job has completed.
+
 Deploys are driven by the generated Woodpecker pipeline. The
 [CI pipeline guide](../docs/wiki/src/content/docs/explanation/ci-pipeline-shape.md)
 explains its change selection and release ordering:

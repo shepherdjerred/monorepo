@@ -1,5 +1,6 @@
 import { App, Chart, Testing } from "cdk8s";
 import { describe, expect, it } from "vitest";
+import { z } from "zod";
 import { createStormForumChart } from "./index.ts";
 import { resetProbeRegistry } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/probe-registry.ts";
 import { createServiceProbesChart } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/service-probes-chart.ts";
@@ -176,4 +177,75 @@ describe("forum isolation and release resources", () => {
       }),
     ).toThrow();
   });
+});
+
+const WaveMetadataSchema = z.object({
+  name: z.string(),
+  annotations: z.object({
+    "argocd.argoproj.io/sync-wave": z.string().regex(/^-?\d+$/),
+  }),
+});
+const ClaimSchema = z.object({ metadata: WaveMetadataSchema });
+const ConsumerSchema = z.object({
+  metadata: WaveMetadataSchema,
+  spec: z.object({
+    template: z.object({
+      spec: z.object({
+        volumes: z.array(
+          z.object({
+            persistentVolumeClaim: z
+              .object({ claimName: z.string() })
+              .optional(),
+          }),
+        ),
+      }),
+    }),
+  }),
+});
+
+describe("forum delayed storage binding", () => {
+  it.each([
+    { stage: "prod", storageSlot: "primary" },
+    { stage: "beta", storageSlot: "primary" },
+    { stage: "beta", storageSlot: "recovery" },
+  ] as const)(
+    "applies active claims with their first consumer for $stage/$storageSlot",
+    (release) => {
+      resetProbeRegistry();
+      const rendered = Testing.synth(
+        createStormForumChart(new App(), { ...fixture, ...release }),
+      );
+      const claims = rendered
+        .filter((resource) => resource.kind === "PersistentVolumeClaim")
+        .map((resource) => ClaimSchema.parse(resource));
+      const firstConsumers = new Map<string, number>();
+      for (const rawConsumer of rendered.filter(
+        (resource) => resource.kind === "Deployment" || resource.kind === "Job",
+      )) {
+        const consumer = ConsumerSchema.parse(rawConsumer);
+        const wave = Number(
+          consumer.metadata.annotations["argocd.argoproj.io/sync-wave"],
+        );
+        for (const volume of consumer.spec.template.spec.volumes) {
+          if (!volume.persistentVolumeClaim) continue;
+          const name = volume.persistentVolumeClaim.claimName;
+          const previous = firstConsumers.get(name);
+          if (previous === undefined || wave < previous) {
+            firstConsumers.set(name, wave);
+          }
+        }
+      }
+      expect(firstConsumers.size).toBe(2);
+      for (const [name, wave] of firstConsumers) {
+        const claim = claims.find(
+          (resource) => resource.metadata.name === name,
+        );
+        if (!claim) throw new Error(`Missing active claim ${name}`);
+        expect(
+          Number(claim.metadata.annotations["argocd.argoproj.io/sync-wave"]),
+          `${name} must bind in its first consumer's wave`,
+        ).toBe(wave);
+      }
+    },
+  );
 });
