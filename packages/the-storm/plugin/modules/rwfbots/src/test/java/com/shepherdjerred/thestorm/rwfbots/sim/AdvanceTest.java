@@ -28,6 +28,9 @@ final class AdvanceTest {
   /** The narrowest any team may be across the yard at 8 s and at first contact. */
   private static final double MIN_WIDTH = 15;
 
+  /** Observed native opening regressions retain the real-server sixteen-block floor. */
+  private static final double MIN_OPENING_WIDTH = 16;
+
   /** The narrowest the median team may be across the yard. */
   private static final double MEDIAN_WIDTH = 24;
 
@@ -120,7 +123,9 @@ final class AdvanceTest {
     var scenarios =
         List.of(
             new Opening(5769237551960524108L, Strategy.TURTLE, Strategy.TURTLE),
-            new Opening(9179509738380524055L, Strategy.SPLIT, Strategy.RUSH));
+            new Opening(9179509738380524055L, Strategy.SPLIT, Strategy.RUSH),
+            new Opening(-8868335476120465519L, Strategy.RUSH, Strategy.HUNT),
+            new Opening(1556387721438142495L, Strategy.RUSH, Strategy.RUSH));
     for (var opening : scenarios) {
       var seed = opening.seed();
       var red = opening.red();
@@ -134,10 +139,10 @@ final class AdvanceTest {
       for (var team : List.of(RED, BLUE)) {
         assertThat(advance.spreadAt8(team))
             .as("%s %s %s %s width at 8 s", seed, red, blue, team)
-            .isGreaterThanOrEqualTo(MIN_WIDTH);
+            .isGreaterThanOrEqualTo(MIN_OPENING_WIDTH);
         assertThat(advance.spreadAtContact(team))
             .as("%s %s %s %s width at contact", seed, red, blue, team)
-            .isGreaterThanOrEqualTo(MIN_WIDTH);
+            .isGreaterThanOrEqualTo(MIN_OPENING_WIDTH);
         var anchors =
             world.boards.get(team).plan().slots().stream()
                 .filter(slot -> slot.kind() == SlotKind.ANCHOR)
