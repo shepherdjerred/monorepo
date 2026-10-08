@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { captureJson } from "./process.ts";
 import { sanitizeText } from "./redaction.ts";
+import { ciPods } from "./pods.ts";
 import { woodpeckerJson, type WoodpeckerConfig } from "#lib/woodpecker/ci.ts";
 
 const QueueSchema = z.object({
@@ -96,56 +97,58 @@ async function metric(
 
 export async function ciLoad(config: WoodpeckerConfig, signal?: AbortSignal) {
   const secrets = [config.token];
-  const [queue, admission, cpu, memory, disk, ioPressure] = await Promise.all([
-    section(
-      async () =>
-        QueueSchema.parse(
-          await woodpeckerJson("/api/queue/info", config, signal),
-        ),
-      secrets,
-    ),
-    section(
-      () =>
-        captureJson(
-          ["kubectl", "get", "clusterqueue", "woodpecker", "-o", "json"],
-          AdmissionSchema,
-          signal,
-        ),
-      secrets,
-    ),
-    section(
-      () =>
-        metric(
-          '100 * (1 - avg(rate(node_cpu_seconds_total{node="liskov",mode="idle"}[5m])))',
-          signal,
-        ),
-      secrets,
-    ),
-    section(
-      () =>
-        metric(
-          '{__name__=~"node_memory_MemAvailable_bytes|node_memory_MemTotal_bytes",node="liskov"}',
-          signal,
-        ),
-      secrets,
-    ),
-    section(
-      () =>
-        metric(
-          '{__name__=~"node_filesystem_avail_bytes|node_filesystem_size_bytes",node="liskov",mountpoint="/var"}',
-          signal,
-        ),
-      secrets,
-    ),
-    section(
-      () =>
-        metric(
-          'rate(node_pressure_io_waiting_seconds_total{node="liskov"}[5m])',
-          signal,
-        ),
-      secrets,
-    ),
-  ]);
+  const [queue, admission, cpu, memory, disk, ioPressure, pods] =
+    await Promise.all([
+      section(
+        async () =>
+          QueueSchema.parse(
+            await woodpeckerJson("/api/queue/info", config, signal),
+          ),
+        secrets,
+      ),
+      section(
+        () =>
+          captureJson(
+            ["kubectl", "get", "clusterqueue", "woodpecker", "-o", "json"],
+            AdmissionSchema,
+            signal,
+          ),
+        secrets,
+      ),
+      section(
+        () =>
+          metric(
+            '100 * (1 - avg(rate(node_cpu_seconds_total{node="liskov",mode="idle"}[5m])))',
+            signal,
+          ),
+        secrets,
+      ),
+      section(
+        () =>
+          metric(
+            '{__name__=~"node_memory_MemAvailable_bytes|node_memory_MemTotal_bytes",node="liskov"}',
+            signal,
+          ),
+        secrets,
+      ),
+      section(
+        () =>
+          metric(
+            '{__name__=~"node_filesystem_avail_bytes|node_filesystem_size_bytes",node="liskov",mountpoint="/var"}',
+            signal,
+          ),
+        secrets,
+      ),
+      section(
+        () =>
+          metric(
+            'rate(node_pressure_io_waiting_seconds_total{node="liskov"}[5m])',
+            signal,
+          ),
+        secrets,
+      ),
+      section(() => ciPods(signal), secrets),
+    ]);
   return {
     sampledAt: new Date().toISOString(),
     node: "liskov",
@@ -155,6 +158,7 @@ export async function ciLoad(config: WoodpeckerConfig, signal?: AbortSignal) {
     memory,
     disk,
     ioPressure,
+    pods,
     guidance:
       "Queued work and long builds are expected. Keep the same ci wait process running. Load alone does not mean CI failed.",
   };
@@ -207,6 +211,12 @@ export function formatLoad(report: LoadReport): string {
     ...formatMetric("Memory bytes", report.memory),
     ...formatMetric("Disk bytes (/var)", report.disk),
     ...formatMetric("I/O waiting ratio", report.ioPressure),
+    ...(report.pods.available
+      ? report.pods.data.map(
+          (pod) =>
+            `  ${pod.pod} task=${pod.taskId ?? "unknown"} step=${pod.step ?? "unknown"}: ${pod.waitingReason ?? pod.phase}; age=${Math.round(pod.ageSeconds).toString()}s startup=${pod.startupSeconds === null ? "unknown" : `${Math.round(pod.startupSeconds).toString()}s`}`,
+        )
+      : [`Pod telemetry unavailable: ${report.pods.error}`]),
     report.guidance,
   ].join("\n");
 }

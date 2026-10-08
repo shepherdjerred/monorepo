@@ -8,6 +8,7 @@ import { isFailure, workflowStatus } from "./status.ts";
 import { requiredChecks } from "./readiness.ts";
 import { pipelineDiagnostics, type Diagnostic } from "./diagnostics.ts";
 import { sanitizeText } from "./redaction.ts";
+import { pipelineTiming, formatTiming } from "./timing.ts";
 
 export function mainFailure(main: MainStatus): WoodpeckerPipeline | null {
   return main.latest !== null &&
@@ -85,6 +86,12 @@ function diagnosticText(diagnostic: Diagnostic): string {
   return `${diagnostic.workflow}${diagnostic.step === null ? "" : ` / ${diagnostic.step}`} exit=${String(diagnostic.exitCode)}\n${diagnostic.error ?? ""}\n${diagnostic.logs}${diagnostic.truncated ? "\n[excerpt truncated]" : ""}\n${diagnostic.url}`;
 }
 
+function timingSummary(snapshot: WaitResult["snapshot"]) {
+  return snapshot?.pipeline === undefined || snapshot.pipeline === null
+    ? null
+    : pipelineTiming(snapshot.pipeline);
+}
+
 export async function resultReport(
   result: WaitResult,
   observer: CiObserver,
@@ -120,6 +127,7 @@ export async function resultReport(
     pipeline: summarizePipeline(snapshot?.pipeline ?? null, observer),
     checks: snapshot === null ? [] : requiredChecks(snapshot),
     workflows: workflowSummary(snapshot),
+    timing: timingSummary(snapshot),
     main: snapshot === null ? null : summarizeMain(snapshot.main, observer),
     blockers: result.verdict.reasons,
     diagnostics,
@@ -151,6 +159,7 @@ export function formatResult(
   return [
     `${report.outcome.toUpperCase()}${identity}`,
     ...report.blockers,
+    ...(report.timing === null ? [] : [formatTiming(report.timing)]),
     ...report.diagnostics.map((diagnostic) => diagnosticText(diagnostic)),
     ...report.reviews.findings.map(
       (finding) =>

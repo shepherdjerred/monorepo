@@ -26,6 +26,11 @@ export const UV_CACHE = {
 export function bunInstallEnvironment(
   volumes: readonly StepVolume[] | undefined,
 ): Readonly<Record<string, string>> {
+  const uv = volumes?.find((volume) => volume.claim === UV_CACHE.claim);
+  if (uv !== undefined && uv.path !== UV_CACHE.path) {
+    throw new Error("UV cache volume must use its declared mount path");
+  }
+  const uvEnvironment = uv === undefined ? {} : { UV_CACHE_DIR: UV_CACHE.path };
   const cache = volumes?.find((volume) => volume.claim === BUN_CACHE.claim);
   const control = volumes?.find(
     (volume) => volume.claim === BUN_CACHE_CONTROL.claim,
@@ -38,7 +43,7 @@ export function bunInstallEnvironment(
   }
 
   if (cache === undefined || control === undefined) {
-    return { BUN_INSTALL_LOCK_MODE: "local" };
+    return { ...uvEnvironment, BUN_INSTALL_LOCK_MODE: "local" };
   }
 
   if (
@@ -49,6 +54,8 @@ export function bunInstallEnvironment(
   }
 
   return {
+    ...uvEnvironment,
+    BUN_INSTALL_CACHE_DIR: `${BUN_CACHE.path}/data`,
     BUN_INSTALL_LOCK_MODE: "shared",
     BUN_CACHE_LOCK_FILE: `${BUN_CACHE_CONTROL.path}/.gc.lock`,
   };
