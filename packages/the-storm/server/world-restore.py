@@ -1672,6 +1672,8 @@ def prepare_resources(
                 "files": files,
             },
         )
+        journal["resourceReceiptSha256"] = digest(root / "receipt.json")
+        save_json(staging / JOURNAL, journal)
 
 
 def main() -> None:

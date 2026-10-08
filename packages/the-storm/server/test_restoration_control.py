@@ -267,6 +267,7 @@ class RestorationControlTest(unittest.TestCase):
 
     def test_revision_rebinds_only_an_unstarted_closed_installation_and_revokes_start_first(self):
         journal = self.installation_fixture()
+        journal.pop("resourceBootstrap")
         old = JsonObject(
             {
                 "candidateImage": IMAGE,
@@ -312,8 +313,19 @@ class RestorationControlTest(unittest.TestCase):
             control.revise_installation(self.path, journal, self.path.parent, self.path, IMAGE)
         self.assertEqual(len(self.cluster.mutations), before)
 
+    def test_revision_refuses_recorded_resource_bootstrap_before_any_mutation(self):
+        for key in ("resourceBootstrapOperation", "resourceBootstrap"):
+            with self.subTest(key=key):
+                journal = self.installation_fixture()
+                journal[key] = {"phase": "PREPARED"}
+                before = len(self.cluster.mutations)
+                with self.assertRaisesRegex(ValueError, "resource-bootstrapped"):
+                    control.revise_installation(self.path, journal, self.path.parent, self.path, IMAGE)
+                self.assertEqual(len(self.cluster.mutations), before)
+
     def test_revision_resumes_an_image_patch_that_completed_before_local_save(self):
         journal = self.installation_fixture()
+        journal.pop("resourceBootstrap")
         old = JsonObject(
             {
                 "candidateImage": IMAGE,

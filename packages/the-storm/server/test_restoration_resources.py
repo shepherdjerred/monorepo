@@ -1,4 +1,6 @@
 import copy
+import json
+import os
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -100,6 +102,43 @@ class RestorationResourceTest(unittest.TestCase):
         manifest[storage.DATABASE] = "d" * 64
         with self.assertRaisesRegex(ValueError, "only nine"):
             resources.validate_files(manifest)
+
+    def test_retry_normalizes_permissions_after_copy_completed_before_parent_normalization(self):
+        chown = os.chown
+        copied = None
+
+        def interrupted(path, uid, gid):
+            nonlocal copied
+            path = Path(path)
+            if path.is_file() and path.name != "resource-copy.writing":
+                copied = path
+                path.chmod(0o600)
+                path.parent.chmod(0o700)
+                raise OSError("interrupted after atomic replacement")
+            return chown(path, uid, gid)
+
+        with patch.object(resources.os, "chown", side_effect=interrupted), self.assertRaisesRegex(OSError, "atomic"):
+            self.install()
+        self.assertIsNotNone(copied)
+        result = self.install()
+        self.assertEqual(result["phase"], "VERIFIED")
+        for name in resources.PATHS:
+            destination = self.data / name
+            self.assertEqual(destination.stat().st_mode & 0o777, 0o660)
+            self.assertEqual(destination.parent.stat().st_mode & 0o777, 0o770)
+
+    def test_receipt_and_payload_cannot_be_changed_together_after_native_preparation(self):
+        staging = self.data.parent / "staging"
+        root = staging / "resource-bootstrap"
+        root.mkdir(parents=True)
+        receipt = root / "receipt.json"
+        receipt.write_text(json.dumps({"files": self.prepared["installationFiles"]}))
+        (staging / "restore-journal.json").write_text(json.dumps({"resourceReceiptSha256": storage.digest(receipt)}))
+        changed = next(iter(resources.PATHS))
+        (self.payload / changed).write_bytes(b"replaced native metadata")
+        receipt.write_text(json.dumps({"files": storage.files(self.payload)}))
+        with self.assertRaisesRegex(ValueError, "changed after native preparation"):
+            resources.plan(staging, JsonObject({}), self.jar)
 
 
 if __name__ == "__main__":

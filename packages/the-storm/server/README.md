@@ -99,6 +99,8 @@ their old terrain. After `prepare-activation`, run `world-restore.py
 prepare-resources` with the same staging, pinned Paper/bootstrap, candidate,
 verified modern export and backup proof. This produces only native generator,
 identity and fresh level metadata for `wilds`, `peaks` and `mining`.
+The preparation journal seals the receipt hash before installation; changing
+metadata and its receipt together invalidates the native preparation proof.
 
 After installation, use `restoration-control.py bootstrap-resources` under the
 existing stopped lease, then `remove-writer` before `private-start`. The bounded
@@ -375,7 +377,7 @@ before rebinding the image. The volume transaction retains the original
 rollback archive and the superseded world/database, verifies unrelated files,
 and resumes interrupted staging or renames using its sealed revision journal.
 It reuses the existing independently verified backup. Any attempted Paper
-startup, changed storage identity, changed input or foreign helper refuses the
+startup, recorded resource bootstrap, changed storage identity, changed input or foreign helper refuses the
 revision; after startup, use whole-volume rollback instead.
 
 The controller's dormant writer template uses the exact candidate image and

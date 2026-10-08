@@ -23,10 +23,13 @@ def validate_files(value: dict[str, str]) -> dict[str, str]:
 
 def plan(staging: Path, control: JsonObject, candidate: Path) -> JsonObject:
     root = staging / "resource-bootstrap"
-    for path in (staging, root, root / "receipt.json", candidate):
+    for path in (staging, staging / "restore-journal.json", root, root / "receipt.json", candidate):
         if path.is_symlink():
             raise ValueError("Resource bootstrap inputs cannot be linked")
     receipt = JsonObject.parse((root / "receipt.json").read_bytes())
+    preparation = JsonObject.parse((staging / "restore-journal.json").read_bytes())
+    if preparation.get("resourceReceiptSha256") != storage.digest(root / "receipt.json"):
+        raise ValueError("Resource receipt changed after native preparation")
     owned = Path(__file__).resolve().parent
     expected = validate_files(receipt.strings("files"))
     native = receipt.object("native")
@@ -130,12 +133,14 @@ def install(data: Path, payload: Path, prepared: JsonObject, baked_jar: Path) ->
                 if storage.digest(temporary) != checksum:
                     raise ValueError("Resource copy staging changed")
                 temporary.replace(destination)
-                for parent in destination.parents:
-                    if parent == data / "world/dimensions/minecraft":
-                        break
-                    os.chown(parent, owner.st_uid, owner.st_gid)
-                    os.chmod(parent, 0o770)
-                    storage.sync_directory(parent)
+            os.chown(destination, owner.st_uid, owner.st_gid)
+            os.chmod(destination, 0o660)
+            for parent in destination.parents:
+                if parent == data / "world/dimensions/minecraft":
+                    break
+                os.chown(parent, owner.st_uid, owner.st_gid)
+                os.chmod(parent, 0o770)
+                storage.sync_directory(parent)
             if storage.digest(destination) != checksum:
                 raise ValueError("Resource metadata changed during installation")
         if storage.files(data, exclude_workspace=True) != {**untouched, **expected}:

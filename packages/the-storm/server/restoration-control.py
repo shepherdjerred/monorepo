@@ -1301,6 +1301,8 @@ def revise_installation(path: Path, journal: JsonObject, staging: Path, candidat
         raise ValueError("Revision requires an immutable replacement image")
     if journal.get("privateStartup") is not None or journal.get("acceptance") is not None:
         raise ValueError("An installation that has started requires whole-volume rollback")
+    if "resourceBootstrapOperation" in journal or "resourceBootstrap" in journal:
+        raise ValueError("A resource-bootstrapped installation requires whole-volume rollback before revision")
     revision = journal.object("installationRevision", {})
     if not revision:
         require_offline(journal)
