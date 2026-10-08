@@ -16,9 +16,15 @@ export function createPostgresOperatorApp(chart: Chart) {
       // migration explicit so a future chart default cannot move clusters back
       // to the deprecated Endpoints-backed DCS.
       kubernetes_use_configmaps: true,
-      // Four single-instance databases share this single-node cluster. Reconcile
-      // them serially during the v2 maintenance event to limit disruption.
+      // Seven single-instance databases share the production node. Keep their
+      // reconciliation serial to limit disruption.
       workers: 1,
+    },
+    configMajorVersionUpgrade: {
+      // Publish desired major pins together, then run each matching live
+      // upgrade only after its independent restore and maintenance checks.
+      // "manual" would run the upgrade as soon as its manifest changes.
+      major_version_upgrade_mode: "off",
     },
     configKubernetes: {
       // Since we have a single-node cluster, reduce resource requirements

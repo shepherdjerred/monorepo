@@ -50,6 +50,11 @@ with both server toolchains and a separately initialized target directory.
 Use the same Spilo image as the intended live upgrade. Fix any extension or
 compatibility error before proceeding.
 
+Initialize the target with the restored cluster's locale and checksum setting.
+Pass production's `shared_preload_libraries` through `--new-options` when
+checking the target. Extensions such as `pg_stat_kcache` require loading at
+startup. Keep the temporary server's TCP listener disabled.
+
 :::caution[Check the entire snapshot chain]
 An incremental snapshot needs its full base. A restore that receives only a
 volume, or reports `PartiallyFailed`, does not prove database recovery. Keep the

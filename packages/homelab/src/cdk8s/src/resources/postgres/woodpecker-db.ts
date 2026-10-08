@@ -36,7 +36,7 @@ export function createWoodpeckerPostgreSQLDatabase(chart: Chart) {
       numberOfInstances: 1,
       teamId: "homelab",
       postgresql: {
-        version: PostgresqlSpecPostgresqlVersion.VALUE_16,
+        version: PostgresqlSpecPostgresqlVersion.VALUE_18,
         parameters: {
           // Woodpecker's write pattern is step-log append plus small pipeline
           // row updates, with one connection per in-flight workflow and a

@@ -60,8 +60,8 @@ lychee = "0.24.2"
 # init container runs at deploy time)
 yq = "4"
 # Shared local/CI Postgres for scout-for-lol dev + tests. Prebuilt binaries
-# (initdb/pg_ctl/psql/createdb/dropdb); major 16 matches the homelab clusters
-# (resources/postgres/*.ts, PostgresqlSpecPostgresqlVersion.VALUE_16).
+# (initdb/pg_ctl/psql/createdb/dropdb); major 18 matches the homelab clusters
+# (resources/postgres/*.ts, PostgresqlSpecPostgresqlVersion.VALUE_18).
 # renovate: datasource=github-releases depName=theseus-rs/postgresql-binaries
 "ubi:theseus-rs/postgresql-binaries" = { version = "18.6.0", extract_all = "true", bin_path = "bin" }
 # Homelab automation (helm push, tofu wrappers, ArgoCD sync, site deploys)
