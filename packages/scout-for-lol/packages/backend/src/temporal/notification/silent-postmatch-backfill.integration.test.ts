@@ -245,6 +245,7 @@ async function seedMatch(seed: Seed = {}): Promise<RiotMatchId> {
     platformRoute: "NA1",
     policy: "FULL",
     deliveryMode: seed.deliveryMode ?? "live",
+    matchDataSource: "RIOT",
     owner: seed.owner ?? { kind: "temporal-v2" },
     promotion: null,
     gameCreatedAt: IsoInstantSchema.parse(

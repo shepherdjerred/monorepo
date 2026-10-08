@@ -540,6 +540,7 @@ async function recoverArchivedMatch(
       // v1's silent-backfill case exactly: a gap being filled, not a live
       // discovery, so no public delivery is owed for it.
       deliveryMode: "silent-backfill",
+      matchDataSource: context.matchDataSource,
       owner: { kind: "temporal-v2" },
       promotion: null,
       gameCreatedAt: isoInstantFromEpochMs(context.matchData.info.gameCreation),

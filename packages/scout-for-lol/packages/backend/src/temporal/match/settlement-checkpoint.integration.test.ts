@@ -149,6 +149,7 @@ beforeEach(async () => {
     policy: "FULL",
     // Owed no public delivery, which is the whole point of this case.
     deliveryMode: "silent-backfill",
+    matchDataSource: "RIOT",
     owner: { kind: "temporal-v2" },
     promotion: null,
     gameCreatedAt: IsoInstantSchema.parse("2026-09-18T09:00:00.000Z"),
@@ -169,6 +170,7 @@ beforeEach(async () => {
       platformRoute: "NA1",
       policy: "FULL",
       deliveryMode: "live",
+      matchDataSource: "RIOT",
       owner: { kind: "temporal-v2" },
       promotion: null,
       gameCreatedAt: IsoInstantSchema.parse("2026-09-18T09:00:00.000Z"),

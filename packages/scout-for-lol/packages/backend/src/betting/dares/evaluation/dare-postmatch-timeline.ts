@@ -1,3 +1,4 @@
+import type { MatchDataSource } from "@scout-for-lol/domain/match-processing/states.ts";
 import {
   MatchIdSchema,
   type Player,
@@ -34,7 +35,7 @@ const DEFAULT_DEPENDENCIES: DarePostmatchTimelineDependencies = {
 export async function settleBucksWithDareTimeline(
   input: {
     matchData: RawMatch;
-    matchDataSource: "RIOT" | "SCOUT_CLIENT";
+    matchDataSource: MatchDataSource;
     trackedPlayers: PlayerConfigEntry[];
     prismaClient?: ExtendedPrismaClient | undefined;
     /** Passed straight through; see `settleAndAwardBucks`. */

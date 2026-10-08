@@ -1,3 +1,4 @@
+import type { MatchDataSource } from "@scout-for-lol/domain/match-processing/states.ts";
 import {
   MatchIdSchema,
   type PlayerConfigEntry,
@@ -28,7 +29,7 @@ import {
  */
 export async function processCompetitiveProgressionMatch(input: {
   readonly match: RawMatch;
-  readonly matchDataSource: "RIOT" | "SCOUT_CLIENT";
+  readonly matchDataSource: MatchDataSource;
   readonly timeline: RawTimeline | null | undefined;
   readonly trackedPlayers: PlayerConfigEntry[];
 }): Promise<void> {

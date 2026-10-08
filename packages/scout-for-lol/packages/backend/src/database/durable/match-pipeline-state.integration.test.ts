@@ -45,6 +45,7 @@ async function observe(matchId: RiotMatchId): Promise<void> {
     gameCreatedAt: CREATED_AT,
     observedAt: OBSERVED_AT,
     deliveryMode: "live",
+    matchDataSource: "RIOT",
     artifacts: { match: null, timeline: null },
   });
 }

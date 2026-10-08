@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   AssignedPipelineOwnerSchema,
+  MatchDataSourceSchema,
   MatchDeliveryModeSchema,
   MatchProcessingStateSchema,
   matchProcessingStateCodec,
@@ -244,6 +245,17 @@ describe("MatchDeliveryModeSchema", () => {
     expect(() =>
       MatchDeliveryModeSchema.parse("postmatch_silent_backfill"),
     ).toThrow();
+  });
+});
+
+describe("MatchDataSourceSchema", () => {
+  test("names exactly the two payload provenances", () => {
+    expect(MatchDataSourceSchema.options).toEqual(["RIOT", "SCOUT_CLIENT"]);
+  });
+
+  test("rejects a lowercase or unknown source", () => {
+    expect(() => MatchDataSourceSchema.parse("riot")).toThrow();
+    expect(() => MatchDataSourceSchema.parse("TOURNAMENT")).toThrow();
   });
 });
 

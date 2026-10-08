@@ -1,3 +1,4 @@
+import type { MatchDataSource } from "@scout-for-lol/domain/match-processing/states.ts";
 import type { RawMatch } from "@scout-for-lol/data";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { ScoutTournamentResultResult } from "@scout-for-lol/temporal/activity-contracts";
@@ -43,7 +44,7 @@ export async function finalizeTournamentResult(input: {
  */
 export async function finalizeTournamentMatch(
   matchData: RawMatch,
-  matchDataSource: "RIOT" | "SCOUT_CLIENT" = "RIOT",
+  matchDataSource: MatchDataSource = "RIOT",
 ): Promise<ScoutTournamentResultResult> {
   // The same identity rule the finalizer uses, so the gate and the work can
   // never disagree about which custom game this match belongs to.

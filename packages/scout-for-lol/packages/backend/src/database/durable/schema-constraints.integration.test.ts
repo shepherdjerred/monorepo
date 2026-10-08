@@ -87,6 +87,16 @@ describe("MatchObservation constraints", () => {
     );
   });
 
+  test("defaults a row that names no provenance to RIOT", async () => {
+    await prisma.$executeRawUnsafe(
+      insertSql("MatchObservation", { ...valid, riotMatchId: "'NA1_14'" }),
+    );
+    const stored = await prisma.matchObservation.findUniqueOrThrow({
+      where: { riotMatchId: "NA1_14" },
+    });
+    expect(stored.matchDataSource).toBe("RIOT");
+  });
+
   test.each([
     [
       "policy vocabulary",
@@ -101,6 +111,15 @@ describe("MatchObservation constraints", () => {
         deliveryMode: "'postmatch_silent_backfill'",
       },
       "MatchObservation_delivery_mode_check",
+    ],
+    [
+      "payload provenance vocabulary",
+      {
+        ...valid,
+        riotMatchId: "'NA1_15'",
+        matchDataSource: "'TOURNAMENT'",
+      },
+      "MatchObservation_match_data_source_check",
     ],
     [
       "owner vocabulary",

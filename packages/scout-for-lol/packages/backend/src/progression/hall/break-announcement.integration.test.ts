@@ -60,6 +60,7 @@ async function observedMatch(
     platformRoute: PlatformRouteSchema.parse("NA1"),
     policy: "FULL",
     deliveryMode,
+    matchDataSource: "RIOT",
     owner: { kind: "temporal-v2" },
     promotion: null,
     gameCreatedAt: IsoInstantSchema.parse("2026-09-19T09:00:00.000Z"),

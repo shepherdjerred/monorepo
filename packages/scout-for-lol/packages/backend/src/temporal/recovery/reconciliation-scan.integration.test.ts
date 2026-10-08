@@ -217,6 +217,7 @@ async function seedObservation(args: {
       gameCreatedAt: GAME_CREATED_AT,
       observedAt: OBSERVED_AT,
       deliveryMode: "live",
+      matchDataSource: "RIOT",
       artifacts: { match: null, timeline: null },
     }),
   ).toEqual({ outcome: "applied" });

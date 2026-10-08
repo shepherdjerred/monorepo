@@ -1,3 +1,4 @@
+import type { MatchDataSource } from "@scout-for-lol/domain/match-processing/states.ts";
 import { ApplicationFailure } from "@temporalio/common";
 import {
   MatchIdSchema,
@@ -65,7 +66,7 @@ export type ScoutMatchContext = {
   readonly riotMatchId: RiotMatchId;
   readonly matchData: RawMatch;
   /** Durable provenance of the canonical match payload. */
-  readonly matchDataSource: "RIOT" | "SCOUT_CLIENT";
+  readonly matchDataSource: MatchDataSource;
   /**
    * The tracked accounts in this match, as the roster stands NOW.
    *
@@ -104,7 +105,7 @@ export type ScoutObservedMatchContext = {
   readonly riotMatchId: RiotMatchId;
   readonly matchData: RawMatch;
   /** Durable provenance of the canonical match payload. */
-  readonly matchDataSource: "RIOT" | "SCOUT_CLIENT";
+  readonly matchDataSource: MatchDataSource;
   /** Every PUUID the observation recorded as tracked in this match. */
   readonly observedPuuids: LeaguePuuid[];
   /** Those PUUIDs' configs, for the ones still registered. */
@@ -129,7 +130,7 @@ async function canonicalMatchData(
   riotMatchId: RiotMatchId,
 ): Promise<{
   readonly matchData: RawMatch;
-  readonly matchDataSource: "RIOT" | "SCOUT_CLIENT";
+  readonly matchDataSource: MatchDataSource;
 }> {
   const archived = await readArchivedCanonicalMatch(riotMatchId);
   const selectedLocal = await readSelectedLocalCanonicalMatch(riotMatchId);

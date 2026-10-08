@@ -79,6 +79,7 @@ async function observe(matchId: string, puuids: string[]): Promise<void> {
     platformRoute: platformRouteOf(parsed),
     policy: "FULL",
     deliveryMode: "live",
+    matchDataSource: "RIOT",
     owner: { kind: "temporal-v2" },
     promotion: null,
     gameCreatedAt: IsoInstantSchema.parse("2026-09-18T09:00:00.000Z"),

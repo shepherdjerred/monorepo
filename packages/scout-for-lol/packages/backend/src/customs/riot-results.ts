@@ -1,3 +1,4 @@
+import type { MatchDataSource } from "@scout-for-lol/domain/match-processing/states.ts";
 import {
   CustomGameStateSchema,
   CustomNightStateSchema,
@@ -9,9 +10,7 @@ import {
 import { ApplicationFailure } from "@temporalio/common";
 import type { Db, ExtendedPrismaClient } from "#src/database/index.ts";
 
-export type ManagedCustomResultSource = "RIOT" | "SCOUT_CLIENT";
-
-function resultAuditAttribution(source: ManagedCustomResultSource) {
+function resultAuditAttribution(source: MatchDataSource) {
   return source === "SCOUT_CLIENT"
     ? {
         actorId: "scout-client:canonical-match",
@@ -163,7 +162,7 @@ async function projectParticipantResults(
 export async function finalizeManagedCustomResult(
   client: ExtendedPrismaClient,
   match: RawMatch,
-  resultSource: ManagedCustomResultSource = "RIOT",
+  resultSource: MatchDataSource = "RIOT",
 ): Promise<string | undefined> {
   const matchId = MatchIdSchema.parse(match.metadata.matchId);
   const observedGame = await findObservedCustomGame(client, match);

@@ -111,6 +111,7 @@ test("mints for the accounts the match was observed for, not today's", async () 
     policy: "FULL",
     // Live, so the minter does not withhold for an unrelated reason.
     deliveryMode: "live",
+    matchDataSource: "RIOT",
     owner: { kind: "temporal-v2" },
     promotion: null,
     gameCreatedAt: IsoInstantSchema.parse("2026-09-18T09:00:00.000Z"),
