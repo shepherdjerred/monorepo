@@ -64,7 +64,7 @@ public enum CoreErrors {
             return value
         case .failure(let error):
             guard let coreError = error as? CoreError else {
-                throw CoreError.Invariant(message: "\(what): \(error.localizedDescription)")
+                throw CoreError.Invariant(detail: "\(what): \(error.localizedDescription)")
             }
             throw coreError
         }
@@ -79,7 +79,7 @@ public enum CoreErrors {
         case .success(let value):
             return value
         case .failure(let error):
-            throw CoreError.Validation(message: "\(what): \(error.localizedDescription)")
+            throw CoreError.Validation(detail: "\(what): \(error.localizedDescription)")
         }
     }
 
@@ -98,7 +98,7 @@ public enum CoreErrors {
         case .success(let value):
             return value
         case .failure(let error):
-            throw CoreError.Invariant(message: "\(what): \(error.localizedDescription)")
+            throw CoreError.Invariant(detail: "\(what): \(error.localizedDescription)")
         }
     }
 }
@@ -114,7 +114,7 @@ extension Data {
     /// fail somewhere further away instead of here.
     func decodedAsUtf8(describing what: String) throws(CoreError) -> String {
         guard let text = String(bytes: self, encoding: .utf8) else {
-            throw CoreError.Validation(message: "\(what) is not valid UTF-8")
+            throw CoreError.Validation(detail: "\(what) is not valid UTF-8")
         }
         return text
     }

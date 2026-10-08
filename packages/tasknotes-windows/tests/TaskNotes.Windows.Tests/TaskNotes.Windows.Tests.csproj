@@ -9,6 +9,23 @@
     <MSTestParallelizeWorkers>0</MSTestParallelizeWorkers>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="TrackingCaptureV2.json" LogicalName="TrackingCaptureV2.json" />
+    <EmbeddedResource
+      Include="TrackingCaptureUnicode.json"
+      LogicalName="TrackingCaptureUnicode.json"
+    />
+    <EmbeddedResource
+      Include="../../../tasknotes-core/crates/obsidian-sync/tests/reference/protocol.json"
+      LogicalName="ObsidianProtocolCapture.json"
+    />
+    <EmbeddedResource
+      Include="../../../tasknotes-fixtures/vault/facet-contract.json"
+      LogicalName="FacetContractCases.json"
+    />
+    <EmbeddedResource
+      Include="../../../tasknotes-fixtures/vault/facet-raw-contract.json"
+      LogicalName="FacetRawContractCases.json"
+    />
     <PackageReference Include="Microsoft.Testing.Extensions.JUnitReport" />
   </ItemGroup>
   <ItemGroup>

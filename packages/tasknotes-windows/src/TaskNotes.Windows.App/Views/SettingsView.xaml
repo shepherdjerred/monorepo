@@ -12,30 +12,95 @@
             <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="Settings" />
             <TextBlock
                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                Text="The server URL stays in local settings. The token stays only in Windows Credential Locker."
+                Text="Connect an existing Obsidian Sync vault. Account tokens and vault keys stay in Windows Credential Locker. Local folders are currently read-only."
                 TextWrapping="Wrap" />
             <TextBox
-                x:Name="ServerUrlTextBox"
-                AutomationProperties.AutomationId="TaskNotes.Settings.ServerUrl"
-                AutomationProperties.Name="TaskNotes server URL"
-                Header="Server URL"
-                PlaceholderText="https://tasks.example.com" />
+                x:Name="EmailTextBox"
+                AutomationProperties.AutomationId="Facet.Settings.Email"
+                AutomationProperties.Name="Obsidian account email"
+                Header="Obsidian account email" />
             <PasswordBox
-                x:Name="TokenPasswordBox"
-                AutomationProperties.AutomationId="TaskNotes.Settings.Token"
-                AutomationProperties.Name="TaskNotes bearer token"
-                Header="Bearer token" />
+                x:Name="AccountPasswordBox"
+                AutomationProperties.AutomationId="Facet.Settings.Password"
+                AutomationProperties.Name="Obsidian account password"
+                Header="Account password" />
+            <TextBox
+                x:Name="MfaTextBox"
+                AutomationProperties.AutomationId="Facet.Settings.Mfa"
+                Header="One-time code, when requested" />
             <Button
                 HorizontalAlignment="Left"
                 AutomationProperties.AutomationId="TaskNotes.Settings.Save"
-                AutomationProperties.Name="Save server settings and synchronize"
+                AutomationProperties.Name="Sign in to Obsidian and discover vaults"
                 Click="Save_Click"
-                Content="Save and sync" />
+                Content="Sign in" />
+            <ComboBox
+                x:Name="VaultComboBox"
+                AutomationProperties.AutomationId="Facet.Settings.Vaults"
+                DisplayMemberPath="Name"
+                Header="Existing Sync vault"
+                ItemsSource="{x:Bind ViewModel.Vaults, Mode=OneWay}" />
+            <PasswordBox
+                x:Name="VaultPasswordBox"
+                AutomationProperties.AutomationId="Facet.Settings.VaultPassword"
+                Header="Vault encryption password, when required" />
+            <CheckBox
+                x:Name="ApproveStandardCheckBox"
+                AutomationProperties.AutomationId="Facet.Settings.ApproveStandard"
+                Content="Use standard TaskNotes settings if this vault has no TaskNotes configuration" />
+            <Button
+                AutomationProperties.AutomationId="Facet.Settings.ConnectVault"
+                Click="ConnectVault_Click"
+                Content="Connect selected vault" />
+            <ComboBox
+                x:Name="ProfileComboBox"
+                AutomationProperties.AutomationId="Facet.Settings.Profiles"
+                DisplayMemberPath="Name"
+                Header="Configured vaults"
+                ItemsSource="{x:Bind ViewModel.Profiles, Mode=OneWay}" />
+            <Button
+                AutomationProperties.AutomationId="Facet.Settings.SelectProfile"
+                Click="SelectProfile_Click"
+                Content="Open selected vault" />
+            <Button
+                AutomationProperties.AutomationId="Facet.Settings.Reauthorize"
+                Click="Reauthorize_Click"
+                Content="Authorize selected vault again" />
+            <Button
+                AutomationProperties.AutomationId="Facet.Settings.RemoveProfile"
+                Click="RemoveProfile_Click"
+                Content="Remove selected vault from Facet" />
+            <Button
+                AutomationProperties.AutomationId="Facet.Settings.LocalFolder"
+                Click="LocalFolder_Click"
+                Content="Open local folder (read-only)" />
+            <Button
+                AutomationProperties.AutomationId="Facet.Settings.SignOut"
+                Click="SignOut_Click"
+                Content="Sign out of Obsidian" />
             <TextBlock
                 x:Name="ConnectionStatusText"
                 AutomationProperties.AutomationId="TaskNotes.Settings.Status"
                 AutomationProperties.LiveSetting="Polite"
+                Text="{x:Bind ViewModel.Status, Mode=OneWay}"
                 TextWrapping="Wrap" />
+            <TextBlock
+                x:Name="BackgroundSyncStatusText"
+                AutomationProperties.LiveSetting="Polite"
+                TextWrapping="Wrap" />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Click="EnableBackgroundSync_Click" Content="Enable background Sync" />
+                <Button Click="DisableBackgroundSync_Click" Content="Disable background Sync" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Click="EnableReminders_Click" Content="Enable Windows reminders" />
+                <Button Click="DisableReminders_Click" Content="Disable reminders on this device" />
+            </StackPanel>
+            <TextBlock
+                x:Name="ReminderStatusText"
+                AutomationProperties.LiveSetting="Polite"
+                TextWrapping="Wrap" />
+            <TextBlock Text="Reminders use Windows notifications. Delivery depends on Windows permissions and power settings; a computer off for more than five minutes after the firing time can miss a reminder." TextWrapping="Wrap" />
             <TextBox
                 x:Name="HotkeyTextBox"
                 AutomationProperties.AutomationId="TaskNotes.Settings.Hotkey"
@@ -100,38 +165,72 @@
             <TextBlock
                 Margin="0,16,0,0"
                 Style="{StaticResource SubtitleTextBlockStyle}"
-                Text="Parked changes" />
+                Text="Conflicts" />
             <TextBlock
                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                Text="Retry changes after correcting the server state, or discard them permanently."
+                Text="Both versions remain retained until you explicitly choose one."
                 TextWrapping="Wrap" />
+            <TextBlock
+                FontSize="20"
+                FontWeight="SemiBold"
+                Text="Saved actions" />
+            <TextBlock Text="Select the action's original vault before resuming. The original ID, timestamp and decision remain unchanged." TextWrapping="Wrap" />
             <ListView
-                AutomationProperties.AutomationId="TaskNotes.Settings.ParkedChanges"
-                ItemsSource="{x:Bind ViewModel.ParkedChanges, Mode=OneWay}"
+                AutomationProperties.AutomationId="Facet.Settings.SavedActions"
+                ItemsSource="{x:Bind ViewModel.PendingActions, Mode=OneWay}"
                 SelectionMode="None">
                 <ListView.ItemTemplate>
-                    <DataTemplate x:DataType="host:ParkedChange">
+                    <DataTemplate x:DataType="host:FacetPendingAction">
+                        <StackPanel Padding="0,8" Spacing="6">
+                            <TextBlock FontWeight="SemiBold" Text="{x:Bind ProfileName}" />
+                            <TextBlock Text="{x:Bind Kind}" />
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button
+                                    Click="ResumeAction_Click"
+                                    Content="Resume saved action"
+                                    Tag="{x:Bind Id}" />
+                                <Button
+                                    Click="RetireAction_Click"
+                                    Content="Retire rejected action"
+                                    Tag="{x:Bind Id}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+            <ListView
+                AutomationProperties.AutomationId="TaskNotes.Settings.ParkedChanges"
+                ItemsSource="{x:Bind ViewModel.Conflicts, Mode=OneWay}"
+                SelectionMode="None">
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="host:FacetConflict">
                         <Grid Padding="0,10" ColumnSpacing="8">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <StackPanel>
-                                <TextBlock FontWeight="SemiBold" Text="{x:Bind ErrorName}" />
-                                <TextBlock Text="{x:Bind Message}" TextWrapping="Wrap" />
+                                <TextBlock FontWeight="SemiBold" Text="{x:Bind Path}" />
                             </StackPanel>
                             <Button
                                 Grid.Column="1"
-                                AutomationProperties.Name="Retry parked change"
+                                AutomationProperties.Name="Keep local version"
                                 Click="RetryParked_Click"
-                                Content="Retry"
+                                Content="Keep local"
                                 Tag="{x:Bind Id}" />
                             <Button
                                 Grid.Column="2"
-                                AutomationProperties.Name="Discard parked change"
+                                AutomationProperties.Name="Keep remote version"
                                 Click="DiscardParked_Click"
-                                Content="Discard"
+                                Content="Keep remote"
+                                Tag="{x:Bind Id}" />
+                            <Button
+                                Grid.Column="3"
+                                AutomationProperties.Name="Review retained conflict versions"
+                                Click="ReviewConflict_Click"
+                                Content="Review versions"
                                 Tag="{x:Bind Id}" />
                         </Grid>
                     </DataTemplate>

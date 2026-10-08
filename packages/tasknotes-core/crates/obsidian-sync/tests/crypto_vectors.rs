@@ -2,7 +2,7 @@
 
 use obsidian_sync::{
     SyncError,
-    crypto::{EncryptionVersion, VaultCipher, VaultKey},
+    crypto::{ContentFrame, EncryptionVersion, VaultCipher, VaultKey},
 };
 use serde::Deserialize;
 
@@ -66,6 +66,16 @@ fn official_client_vectors_match_exact_bytes() -> Result<(), Box<dyn std::error:
             cipher.encrypt_content(&fixture.inputs.plaintext, fixture.inputs.nonce)?,
             case.content
         );
+        let mut frame = ContentFrame::new(fixture.inputs.plaintext.len(), fixture.inputs.nonce)?;
+        frame
+            .content_mut()?
+            .copy_from_slice(&fixture.inputs.plaintext);
+        let payload_pointer = frame.content()?.as_ptr();
+        let capacity = frame.capacity();
+        let owned = cipher.encrypt_content_frame(frame)?;
+        assert_eq!(owned, case.content);
+        assert_eq!(owned.as_ptr().wrapping_add(12), payload_pointer);
+        assert_eq!(owned.capacity(), capacity);
         assert_eq!(
             cipher.decrypt_content(&case.content)?,
             fixture.inputs.plaintext
@@ -84,6 +94,12 @@ fn official_client_vectors_match_exact_bytes() -> Result<(), Box<dyn std::error:
 
 #[test]
 fn authentication_truncation_and_diagnostics_are_safe() -> Result<(), Box<dyn std::error::Error>> {
+    assert!(matches!(
+        ContentFrame::new(usize::MAX, [0; 12]),
+        Err(SyncError::FileTooLarge)
+    ));
+    let frame = ContentFrame::new(10, [1; 12])?;
+    assert_eq!(format!("{frame:?}"), "ContentFrame([REDACTED])");
     let key = VaultKey::from_bytes(&[7; 32])?;
     assert_eq!(format!("{key:?}"), "VaultKey([REDACTED])");
     assert!(VaultKey::from_bytes(&[7; 31]).is_err());

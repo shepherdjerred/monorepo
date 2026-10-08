@@ -145,7 +145,7 @@ pub fn recurrence_anchor_parse(raw: &str) -> Result<RecurrenceAnchor, CoreError>
         "scheduled" => Ok(RecurrenceAnchor::Scheduled),
         "completion" => Ok(RecurrenceAnchor::Completion),
         _ => Err(CoreError::Validation {
-            message: format!("unknown recurrence anchor {raw:?}"),
+            detail: format!("unknown recurrence anchor {raw:?}"),
         }),
     }
 }
@@ -335,7 +335,7 @@ pub fn task_sort_apply(
 #[uniffi::export]
 pub fn task_from_json(json: &str) -> Result<Task, CoreError> {
     serde_json::from_str(json).map_err(|error| CoreError::Validation {
-        message: format!("could not parse a task: {error}"),
+        detail: format!("could not parse a task: {error}"),
     })
 }
 
@@ -348,7 +348,7 @@ pub fn task_from_json(json: &str) -> Result<Task, CoreError> {
 #[uniffi::export]
 pub fn task_to_json(task: &Task) -> Result<String, CoreError> {
     serde_json::to_string(task).map_err(|error| CoreError::Invariant {
-        message: format!("could not render a task as JSON: {error}"),
+        detail: format!("could not render a task as JSON: {error}"),
     })
 }
 
@@ -365,7 +365,7 @@ pub fn update_task_request_from_json(json: &str) -> Result<UpdateTaskRequest, Co
     serde_json::from_str::<domain::UpdateTaskRequest>(json)
         .map(UpdateTaskRequest::from)
         .map_err(|error| CoreError::Validation {
-            message: format!("could not parse a task update: {error}"),
+            detail: format!("could not parse a task update: {error}"),
         })
 }
 
@@ -381,7 +381,7 @@ pub fn update_task_request_from_json(json: &str) -> Result<UpdateTaskRequest, Co
 pub fn update_task_request_to_json(request: UpdateTaskRequest) -> Result<String, CoreError> {
     serde_json::to_string(&domain::UpdateTaskRequest::from(request)).map_err(|error| {
         CoreError::Invariant {
-            message: format!("could not render a task update as JSON: {error}"),
+            detail: format!("could not render a task update as JSON: {error}"),
         }
     })
 }
@@ -562,12 +562,12 @@ mod tests {
     fn an_unknown_enum_value_fails_loudly_across_the_boundary() {
         let error = task_status_parse("someday").unwrap_err();
         assert!(
-            matches!(error, CoreError::Invariant { ref message } if message.contains("unknown task status")),
+            matches!(error, CoreError::Invariant { detail: ref message } if message.contains("unknown task status")),
             "unexpected error: {error:?}"
         );
         let error = priority_parse("urgent").unwrap_err();
         assert!(
-            matches!(error, CoreError::Invariant { ref message } if message.contains("unknown priority")),
+            matches!(error, CoreError::Invariant { detail: ref message } if message.contains("unknown priority")),
             "unexpected error: {error:?}"
         );
         assert_eq!(
@@ -719,7 +719,7 @@ mod tests {
         // silently ignored one would reorder the list with nothing to notice.
         let error = task_sort_apply(&tasks, sort, Some("08/03/2026".to_owned())).unwrap_err();
         assert!(
-            matches!(error, CoreError::Validation { ref message } if message.contains("YYYY-MM-DD")),
+            matches!(error, CoreError::Validation { detail: ref message } if message.contains("YYYY-MM-DD")),
             "unexpected error: {error:?}"
         );
     }
@@ -735,7 +735,7 @@ mod tests {
     fn a_malformed_task_payload_is_a_validation_failure() {
         let error = task_from_json(r#"{"id":"Tasks/a.txt","title":"t"}"#).unwrap_err();
         assert!(
-            matches!(error, CoreError::Validation { ref message } if message.contains("markdown file")),
+            matches!(error, CoreError::Validation { detail: ref message } if message.contains("markdown file")),
             "unexpected error: {error:?}"
         );
     }
@@ -819,12 +819,12 @@ mod tests {
         let error =
             sort_config_from_json(r#"{"field":"scheduled","direction":"asc"}"#).unwrap_err();
         assert!(
-            matches!(error, CoreError::Validation { ref message } if message.contains("a sort")),
+            matches!(error, CoreError::Validation { detail: ref message } if message.contains("a sort")),
             "unexpected error: {error:?}"
         );
         let error = filter_config_from_json(r#"{"statuses":["procrastinating"]}"#).unwrap_err();
         assert!(
-            matches!(error, CoreError::Validation { ref message } if message.contains("a filter")),
+            matches!(error, CoreError::Validation { detail: ref message } if message.contains("a filter")),
             "unexpected error: {error:?}"
         );
 

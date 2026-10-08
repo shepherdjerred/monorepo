@@ -52,6 +52,7 @@
 //! is the retained DWARF that `reldbg` provides.
 
 use std::{
+    collections::BTreeMap,
     fs,
     path::{Path, PathBuf},
 };
@@ -311,10 +312,21 @@ pub fn check_bindings(profile: &str) -> Result<String, String> {
 /// Returns a message when a build, `lipo`, or a filesystem operation fails.
 pub fn build_xcframework(profile: &str, platforms: &[Platform]) -> Result<String, String> {
     let root = workspace_root()?;
+    let sources = native_source_snapshot(&root)?;
 
     // Regenerate first, so the header and modulemap that go into the framework
     // describe the library that goes in beside them.
     print!("{}", generate_bindings(profile)?);
+    check_native_sources(&root, &sources)?;
+    let headers =
+        [HEADER_FILE, MODULEMAP_FILE].map(|name| root.join("bindings").join("ffi").join(name));
+    let expected_headers: Vec<Vec<u8>> = headers
+        .iter()
+        .map(|path| {
+            fs::read(path)
+                .map_err(|error| format!("read generated header {}: {error}", path.display()))
+        })
+        .collect::<Result<_, _>>()?;
 
     let staging = root.join("target").join("xcframework");
     recreate_directory(&staging)?;
@@ -335,6 +347,7 @@ pub fn build_xcframework(profile: &str, platforms: &[Platform]) -> Result<String
             slices.push(build_library_for_platform(
                 &root, profile, target, *platform,
             )?);
+            check_native_sources(&root, &sources)?;
         }
 
         let slice = XcframeworkSlice::new(*platform);
@@ -369,16 +382,105 @@ pub fn build_xcframework(profile: &str, platforms: &[Platform]) -> Result<String
 
         libraries.push(slice);
     }
+    check_native_sources(&root, &sources)?;
+    for (path, expected) in headers.iter().zip(expected_headers) {
+        let actual = fs::read(path)
+            .map_err(|error| format!("read generated header {}: {error}", path.display()))?;
+        if actual != expected {
+            return Err("generated headers changed during the native build; rebuild all slices from one source state".to_owned());
+        }
+    }
     write(
         &output.join("Info.plist"),
         &xcframework_info_plist(&libraries, APPLE_LIBRARY_FILE),
     )?;
+
+    fs::write(
+        output.join("FacetSourceManifest.bin"),
+        native_artifact_manifest(&root)?,
+    )
+    .map_err(|error| format!("write native source manifest: {error}"))?;
+    check_native_sources(&root, &sources)?;
 
     let names: Vec<&str> = platforms.iter().map(|platform| platform.name()).collect();
     Ok(format!(
         "built bindings/artifacts/{XCFRAMEWORK_NAME} with slices: {}\n",
         names.join(", ")
     ))
+}
+
+fn native_source_snapshot(root: &Path) -> Result<BTreeMap<PathBuf, Vec<u8>>, String> {
+    let mut files = BTreeMap::new();
+    for name in [
+        "Cargo.toml",
+        "Cargo.lock",
+        "rust-toolchain.toml",
+        "uniffi.toml",
+    ] {
+        snapshot_file(&root.join(name), &mut files)?;
+    }
+    let crates = root.join("crates");
+    for entry in
+        fs::read_dir(&crates).map_err(|error| format!("read {}: {error}", crates.display()))?
+    {
+        let path = entry
+            .map_err(|error| format!("read crate source entry: {error}"))?
+            .path();
+        if path.is_dir() {
+            snapshot_file(&path.join("Cargo.toml"), &mut files)?;
+            snapshot_file(&path.join("build.rs"), &mut files)?;
+            snapshot_directory(&path.join("src"), &mut files)?;
+        }
+    }
+    snapshot_directory(&root.join(".cargo"), &mut files)?;
+    snapshot_directory(&root.join("xtask").join("src"), &mut files)?;
+    snapshot_directory(&root.join("../tasknotes-fixtures/schema"), &mut files)?;
+    Ok(files)
+}
+
+fn snapshot_file(path: &Path, files: &mut BTreeMap<PathBuf, Vec<u8>>) -> Result<(), String> {
+    match fs::read(path) {
+        Ok(bytes) => {
+            files.insert(path.to_owned(), bytes);
+            Ok(())
+        }
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(error) => Err(format!("read native source {}: {error}", path.display())),
+    }
+}
+
+fn snapshot_directory(path: &Path, files: &mut BTreeMap<PathBuf, Vec<u8>>) -> Result<(), String> {
+    if !path.exists() {
+        return Ok(());
+    }
+    for entry in fs::read_dir(path)
+        .map_err(|error| format!("read native source {}: {error}", path.display()))?
+    {
+        let entry = entry.map_err(|error| format!("read native source entry: {error}"))?;
+        let path = entry.path();
+        let kind = entry
+            .file_type()
+            .map_err(|error| format!("read native source type: {error}"))?;
+        if kind.is_symlink() {
+            return Err(format!(
+                "native source symlinks are unsupported: {}",
+                path.display()
+            ));
+        }
+        if kind.is_dir() {
+            snapshot_directory(&path, files)?;
+        } else if kind.is_file() {
+            snapshot_file(&path, files)?;
+        }
+    }
+    Ok(())
+}
+
+fn check_native_sources(root: &Path, expected: &BTreeMap<PathBuf, Vec<u8>>) -> Result<(), String> {
+    if &native_source_snapshot(root)? != expected {
+        return Err("Rust sources or dependency inputs changed during the native build; rebuild all slices from one source state".to_owned());
+    }
+    Ok(())
 }
 
 /// One library entry of an XCFramework's Info.plist.
@@ -494,20 +596,13 @@ fn xcframework_info_plist(slices: &[XcframeworkSlice], library: &str) -> String 
 /// spent misattributing the failure. This turns it into one line naming the
 /// command.
 ///
-/// ## Why modification time rather than a content hash
-///
-/// The question is not "do these agree" but "was one produced after the other",
-/// and mtime answers exactly that with no stamp file to keep honest. It is
-/// deliberately biased toward false positives: checking out a branch with older
-/// bindings marks the artifact stale even though its contents may match. The
-/// remedy in that case is the same command, so a spurious failure costs one
-/// rebuild, while a missed one costs a debugging session. A missing artifact —
-/// the fresh-clone case — is stale by definition.
+/// Successful packaging records exact source/dependency/schema and generated
+/// binding bytes. A later semantic change invalidates the artifact even when
+/// UniFFI checksums remain unchanged. Missing manifests require rebuilding.
 ///
 /// # Errors
 ///
-/// Returns a message when the artifact is missing or older than the generated
-/// Swift, or when a path cannot be read.
+/// Returns an actionable rebuild error for missing or mismatched artifacts.
 pub fn check_xcframework() -> Result<String, String> {
     let root = workspace_root()?;
     let artifact = root
@@ -525,53 +620,41 @@ pub fn check_xcframework() -> Result<String, String> {
         ));
     }
 
-    let generated = root
-        .join("bindings")
-        .join("Sources")
-        .join(SWIFT_MODULE)
-        .join(format!("{SWIFT_MODULE}.swift"));
-
-    let artifact_time = modified_at(&artifact)?;
-    let generated_time = modified_at(&generated)?;
-
-    if artifact_time < generated_time {
+    let recorded = fs::read(artifact.join("FacetSourceManifest.bin")).map_err(|_| {
+        format!("XCFramework has no verified source manifest; rebuild with: {rebuild}")
+    })?;
+    let current = native_artifact_manifest(&root)?;
+    if recorded != current {
         return Err(format!(
-            "bindings/artifacts/{XCFRAMEWORK_NAME} is older than the committed \
-             bindings.\n\
-             The generated Swift declares symbols the built library may not \
-             export yet, which surfaces as `Undefined symbol: _uniffi_…` at link \
-             time rather than as a stale artifact.\n\
-             Rebuild it with:\n    {rebuild}"
+            "XCFramework sources, dependencies, generated bindings, or shared schemas have changed; rebuild with: {rebuild}"
         ));
     }
-
-    Ok(format!(
-        "check-xcframework: bindings/artifacts/{XCFRAMEWORK_NAME} is newer than \
-         the committed bindings\n"
-    ))
+    Ok("check-xcframework: native artifact matches current Rust sources, dependencies, bindings, and shared schemas\n".to_owned())
 }
 
-/// The modification time of `path`, as a duration since the Unix epoch.
-///
-/// Returns the raw `SystemTime` comparison's inputs rather than the times
-/// themselves so that a clock before 1970 — which would make `duration_since`
-/// fail — is reported as the unreadable path it effectively is.
-fn modified_at(path: &Path) -> Result<std::time::Duration, String> {
-    fs::metadata(path)
-        .and_then(|metadata| metadata.modified())
-        .map_err(|error| {
-            format!(
-                "cannot read the modification time of {}: {error}",
-                path.display()
-            )
-        })?
-        .duration_since(std::time::UNIX_EPOCH)
-        .map_err(|error| {
-            format!(
-                "{} has a modification time before the Unix epoch: {error}",
-                path.display()
-            )
-        })
+fn native_artifact_manifest(root: &Path) -> Result<Vec<u8>, String> {
+    let mut files = native_source_snapshot(root)?;
+    snapshot_directory(&root.join("bindings").join("Sources"), &mut files)?;
+    snapshot_directory(&root.join("bindings").join("ffi"), &mut files)?;
+    let mut manifest = b"FacetSourceManifest-v1\0".to_vec();
+    for (path, bytes) in files {
+        let base = root
+            .parent()
+            .ok_or_else(|| "workspace parent missing".to_owned())?;
+        let relative = path
+            .strip_prefix(base)
+            .map_err(|_| "artifact source is outside package tree".to_owned())?
+            .to_string_lossy();
+        let length = u64::try_from(relative.len())
+            .map_err(|_| "source path exceeds manifest range".to_owned())?;
+        let size = u64::try_from(bytes.len())
+            .map_err(|_| "source file exceeds manifest range".to_owned())?;
+        manifest.extend_from_slice(&length.to_le_bytes());
+        manifest.extend_from_slice(relative.as_bytes());
+        manifest.extend_from_slice(&size.to_le_bytes());
+        manifest.extend_from_slice(&bytes);
+    }
+    Ok(manifest)
 }
 
 /// Build the XCFramework, then compile and run Swift against it.
@@ -1428,6 +1511,7 @@ fn build_bindgen(root: &Path, profile: &str) -> Result<PathBuf, String> {
         "cargo",
         &[
             "build",
+            "--locked",
             "--package",
             FFI_CRATE,
             "--features",
@@ -1460,6 +1544,7 @@ pub(crate) fn build_library(
 ) -> Result<PathBuf, String> {
     let mut arguments = vec![
         "build".to_owned(),
+        "--locked".to_owned(),
         "--package".to_owned(),
         FFI_CRATE.to_owned(),
         "--lib".to_owned(),
@@ -1495,6 +1580,7 @@ fn build_library_for_platform(
         "cargo",
         &[
             "build",
+            "--locked",
             "--package",
             FFI_CRATE,
             "--lib",
@@ -1591,8 +1677,8 @@ fn recreate_directory(path: &Path) -> Result<(), String> {
 /// an optimisation.** [`check_bindings`] regenerates on every run — it is gate 7,
 /// and it runs inside the package's `lint` script — so an unconditional copy
 /// would rewrite the committed bindings, and bump their modification time, every
-/// time anyone linted. [`check_xcframework`] reads exactly that timestamp, so it
-/// would then report the XCFramework stale after a lint that changed nothing.
+/// time anyone linted. Keeping no-op generation stable also avoids rebuilding
+/// consumers unnecessarily.
 ///
 /// A guard that fires when nothing is wrong gets ignored, which is the failure
 /// mode this whole area already suffers from. Skipping the no-op copy makes the
@@ -1623,6 +1709,75 @@ fn write(path: &Path, contents: &str) -> Result<(), String> {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn artifact_manifest_detects_semantic_schema_and_binding_drift()
+    -> Result<(), Box<dyn std::error::Error>> {
+        static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+        let unique = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let directory = std::env::temp_dir().join(format!(
+            "facet-artifact-manifest-{}-{unique}",
+            std::process::id()
+        ));
+        let root = directory.join("core");
+        let source = root.join("crates/engine/src");
+        let schema = directory.join("tasknotes-fixtures/schema");
+        let bindings = root.join("bindings/Sources/Core");
+        std::fs::create_dir_all(&source)?;
+        std::fs::create_dir_all(&schema)?;
+        std::fs::create_dir_all(&bindings)?;
+        std::fs::write(root.join("Cargo.toml"), "[workspace]\n")?;
+        let paths = [
+            source.join("lib.rs"),
+            schema.join("boundary.json"),
+            bindings.join("Core.swift"),
+        ];
+        for path in &paths {
+            std::fs::write(path, "original")?;
+        }
+        let baseline = super::native_artifact_manifest(&root)?;
+        for path in &paths {
+            std::fs::write(path, "changed")?;
+            assert_ne!(
+                super::native_artifact_manifest(&root)?,
+                baseline,
+                "{}",
+                path.display()
+            );
+            std::fs::write(path, "original")?;
+            assert_eq!(super::native_artifact_manifest(&root)?, baseline);
+        }
+        std::fs::remove_dir_all(directory)?;
+        Ok(())
+    }
+    #[test]
+    fn native_packaging_rejects_changed_sources_but_ignores_test_outputs()
+    -> Result<(), Box<dyn std::error::Error>> {
+        static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+        let nonce = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let root = std::env::temp_dir().join(format!(
+            "facet-native-snapshot-{}-{nonce}",
+            std::process::id()
+        ));
+        std::fs::create_dir(&root)?;
+        let source = root.join("crates").join("engine").join("src");
+        std::fs::create_dir_all(&source)?;
+        std::fs::write(root.join("Cargo.toml"), "[workspace]\n")?;
+        std::fs::write(source.join("lib.rs"), "pub const VERSION:u8=1;\n")?;
+        let snapshot = super::native_source_snapshot(&root)?;
+        super::check_native_sources(&root, &snapshot)?;
+        let outputs = root.join("target");
+        std::fs::create_dir_all(&outputs)?;
+        std::fs::write(outputs.join("unrelated"), "compiled output")?;
+        super::check_native_sources(&root, &snapshot)?;
+        std::fs::write(source.join("lib.rs"), "pub const VERSION:u8=2;\n")?;
+        assert!(super::check_native_sources(&root, &snapshot).is_err());
+        std::fs::write(source.join("lib.rs"), "pub const VERSION:u8=1;\n")?;
+        super::check_native_sources(&root, &snapshot)?;
+        std::fs::write(source.join("new.rs"), "// new module\n")?;
+        assert!(super::check_native_sources(&root, &snapshot).is_err());
+        std::fs::remove_dir_all(&root)?;
+        Ok(())
+    }
     use super::{
         FFI_MODULE, HOSTS_SOURCE, Platform, SMOKE_SOURCE, SWIFT_MODULE, XcframeworkSlice,
         profile_directory, smoke_manifest, workspace_root, xcframework_info_plist,

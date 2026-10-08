@@ -8,6 +8,22 @@ produce identical results.
 The package holds data only — no code, no dependencies — so the Rust crate can
 consume it without the React Native app package existing.
 
+The standalone engine contract is `schema/facet-engine.schema.json`, with shared
+positive/negative boundary cases in `vault/facet-contract.json`. Direct Sync
+checkpoint/metadata schemas are in `schema/obsidian-sync.schema.json`.
+The complete pinned TaskNotes specification corpus lives under `vault/upstream`,
+alongside its original manifest and per-file SHA-256 provenance. Importing and
+checking the 4,980 oracle cases does not claim that an implementation executes
+or passes them all.
+
+First-party `vault/runtime-tracking` inputs compare legacy time scalars with
+bounded tracking pages at fixed clocks, including nanosecond rounding boundaries.
+Rust component tests consume these language-neutral JSON files through repository
+relative paths and verify their exact byte hashes. Preserve those bytes when
+sharing inputs with native consumers; build caches and temporary capture folders
+are not fixture dependencies. These inputs are separate from the pinned upstream
+specification corpus and do not establish live Sync or OS acceptance.
+
 ```
 schema/scenario.schema.json   # JSON Schema (draft 2020-12) for the sync format
 scenarios/<id>.json           # one sync scenario per file; file name === `id`

@@ -4,6 +4,14 @@
     <RootNamespace>TaskNotes.Windows.Host</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource
+      Include="../../../tasknotes-fixtures/schema/facet-engine.schema.json"
+      LogicalName="FacetEngineSchema.json"
+    />
+    <EmbeddedResource
+      Include="../../../tasknotes-fixtures/schema/obsidian-sync.schema.json"
+      LogicalName="FacetSyncSchema.json"
+    />
     <ProjectReference Include="../TaskNotes.Core.Bindings/TaskNotes.Core.Bindings.csproj" />
   </ItemGroup>
   <ItemGroup>

@@ -4,130 +4,83 @@ using TaskNotes.Windows.Presentation;
 using Windows.Security.Credentials;
 using Windows.Storage;
 
-namespace TaskNotes.Windows.App
+namespace TaskNotes.Windows.App;
+
+internal sealed class AppSettingsService : IFacetSecretStore, IShellPreferencesStore
 {
-    internal sealed class AppSettingsService : IServerConfigurationStore, IShellPreferencesStore
-    {
-        private const string ServerUrlKey = "server-url";
 #if TASKNOTES_E2E
-        private const string CredentialResource = "red.sjer.TaskNotes.E2E";
+    private const string CredentialResource = "red.sjer.Facet.E2E";
 #else
-        private const string CredentialResource = "red.sjer.TaskNotes";
+    private const string CredentialResource = "red.sjer.Facet";
 #endif
-        private const string CredentialUser = "sync-token";
+    private readonly ApplicationDataContainer _localSettings = ApplicationData
+        .Current
+        .LocalSettings;
+    private readonly object _gate = new();
 
-        private readonly TaskNotesConfigurationStorage _storage = new(
-            new LocalServerUrlSettings(),
-            new CredentialTokenSettings()
-        );
-        private readonly ApplicationDataContainer _localSettings = ApplicationData
-            .Current
-            .LocalSettings;
-
-        public ServerConfiguration Load()
+    public string? Read(string identity)
+    {
+        lock (_gate)
         {
-            TaskNotesConfiguration configuration = _storage.Load();
-            return new ServerConfiguration(configuration.ServerUrl, configuration.Token);
-        }
-
-        ShellPreferences IShellPreferencesStore.Load()
-        {
-            return LoadShell();
-        }
-
-        public void Save(string serverUrl, string? token)
-        {
-            _storage.Save(serverUrl, token);
-        }
-
-        public ShellPreferences LoadShell()
-        {
-            return ShellPreferencesCodec.Load(_localSettings.Values);
-        }
-
-        public void Save(ShellPreferences preferences)
-        {
-            ShellPreferencesCodec.Save(_localSettings.Values, preferences);
-        }
-
-#if TASKNOTES_E2E
-        internal void ResetForE2E()
-        {
-            _localSettings.Values.Clear();
-            PasswordVault vault = new();
-            PasswordCredential? previous = CredentialTokenSettings.FindCredential(vault);
-            if (previous is not null)
+            try
             {
-                vault.Remove(previous);
+                PasswordCredential credential = new PasswordVault().Retrieve(
+                    CredentialResource,
+                    identity
+                );
+                credential.RetrievePassword();
+                return credential.Password;
             }
-        }
-#endif
-
-        private sealed class LocalServerUrlSettings : IServerUrlSettings
-        {
-            public string? Load()
+            catch (COMException exception) when (exception.HResult == unchecked((int)0x80070490))
             {
-                object? stored = ApplicationData.Current.LocalSettings.Values[ServerUrlKey];
-                return stored is string serverUrl ? serverUrl
-                    : stored is null ? null
-                    : throw new InvalidDataException(
-                        "The TaskNotes server URL setting has the wrong value type."
-                    );
-            }
-
-            public void Save(string serverUrl)
-            {
-                ApplicationData.Current.LocalSettings.Values[ServerUrlKey] = serverUrl;
-            }
-        }
-
-        private sealed class CredentialTokenSettings : ITokenSettings
-        {
-            public string? Load()
-            {
-                try
-                {
-                    PasswordCredential credential = new PasswordVault().Retrieve(
-                        CredentialResource,
-                        CredentialUser
-                    );
-                    credential.RetrievePassword();
-                    return credential.Password;
-                }
-                catch (COMException exception)
-                    when (exception.HResult == unchecked((int)0x80070490))
-                {
-                    return null;
-                }
-            }
-
-            public void Save(string? token)
-            {
-                PasswordVault vault = new();
-                PasswordCredential? previous = FindCredential(vault);
-                if (previous is not null)
-                {
-                    vault.Remove(previous);
-                }
-
-                if (!string.IsNullOrWhiteSpace(token))
-                {
-                    vault.Add(new PasswordCredential(CredentialResource, CredentialUser, token));
-                }
-            }
-
-            internal static PasswordCredential? FindCredential(PasswordVault vault)
-            {
-                try
-                {
-                    return vault.Retrieve(CredentialResource, CredentialUser);
-                }
-                catch (COMException exception)
-                    when (exception.HResult == unchecked((int)0x80070490))
-                {
-                    return null;
-                }
+                return null;
             }
         }
     }
+
+    public void Save(string identity, string value)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(value);
+        lock (_gate)
+        {
+            PasswordVault vault = new();
+            Remove(identity);
+            vault.Add(new PasswordCredential(CredentialResource, identity, value));
+        }
+    }
+
+    public void Remove(string identity)
+    {
+        lock (_gate)
+        {
+            PasswordVault vault = new();
+            try
+            {
+                vault.Remove(vault.Retrieve(CredentialResource, identity));
+            }
+            catch (COMException exception) when (exception.HResult == unchecked((int)0x80070490))
+            { }
+        }
+    }
+
+    ShellPreferences IShellPreferencesStore.Load() => LoadShell();
+
+    public ShellPreferences LoadShell() => ShellPreferencesCodec.Load(_localSettings.Values);
+
+    public void Save(ShellPreferences preferences) =>
+        ShellPreferencesCodec.Save(_localSettings.Values, preferences);
+
+#if TASKNOTES_E2E
+    internal void ResetForE2E()
+    {
+        _localSettings.Values.Clear();
+        PasswordVault vault = new();
+        try
+        {
+            foreach (var credential in vault.FindAllByResource(CredentialResource))
+                vault.Remove(credential);
+        }
+        catch (COMException exception) when (exception.HResult == unchecked((int)0x80070490)) { }
+    }
+#endif
 }

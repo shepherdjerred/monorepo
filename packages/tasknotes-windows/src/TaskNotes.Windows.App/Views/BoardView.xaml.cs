@@ -71,15 +71,16 @@ namespace TaskNotes.Windows.App.Views
                 return;
             }
 
-            string status = task.Status switch
-            {
-                "open" => "in-progress",
-                "in-progress" => "waiting",
-                "waiting" => "delegated",
-                "delegated" => "done",
-                "done" or "cancelled" => "open",
-                _ => throw new InvalidOperationException($"Unknown board status '{task.Status}'."),
-            };
+            var choices = RequireViewModel().State.StatusChoices;
+            int index = choices
+                .Select(choice => choice.Value)
+                .ToList()
+                .FindIndex(value => value == task.Status);
+            if (index < 0 || choices.Count == 0)
+                throw new InvalidOperationException(
+                    "The task workflow is not in this vault's configuration."
+                );
+            string status = choices[(index + 1) % choices.Count].Value;
             Run("advance-board-task", () => RequireViewModel().MoveBoardTaskAsync(taskId, status));
         }
 

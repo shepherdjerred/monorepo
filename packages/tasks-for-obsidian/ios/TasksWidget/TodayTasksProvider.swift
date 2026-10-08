@@ -22,7 +22,7 @@ struct TodayTasksProvider: TimelineProvider {
   }
 
   func getTimeline(in context: Context, completion: @escaping (Timeline<TodayTasksEntry>) -> Void) {
-    let calendar = Calendar.current
+    let calendar = Calendar.gregorianLocal
     let now = Date.now
     guard let envelope = WidgetDataEnvelope.load() else {
       let entry = TodayTasksEntry(date: now, data: .empty, isStale: true)

@@ -30,7 +30,7 @@ namespace TaskNotes.Windows.App
         {
             _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
             _uiOperations = uiOperations ?? throw new ArgumentNullException(nameof(uiOperations));
-            Title = "TaskNotes Pomodoro";
+            Title = "Facet Pomodoro";
             AppWindow.Resize(new SizeInt32(430, 330));
             AppWindow.Closing += AppWindow_Closing;
             _viewModel.PropertyChanged += ViewModel_PropertyChanged;

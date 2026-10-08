@@ -9,6 +9,8 @@ namespace TaskNotes.Windows.Presentation
     /// <summary>Portable state and commands for the main TaskNotes shell.</summary>
     public sealed partial class ShellViewModel : ObservableObject, IDisposable
     {
+        /// <summary>Every configured workflow value remains a real board column.</summary>
+        public ObservableCollection<BoardColumn> BoardColumns { get; } = [];
         private readonly ITaskNotesStore _store;
         private readonly IUiDispatcher _dispatcher;
         private readonly ILogger<ShellViewModel> _logger;
@@ -56,6 +58,8 @@ namespace TaskNotes.Windows.Presentation
                     OnPropertyChanged(nameof(ParkedChanges));
                     OnPropertyChanged(nameof(StatusMessage));
                     OnPropertyChanged(nameof(StatusSeverity));
+                    OnPropertyChanged(nameof(SavedNotice));
+                    OnPropertyChanged(nameof(SavedMaintenance));
                     UndoCompletionCommand.NotifyCanExecuteChanged();
                 }
             }
@@ -85,6 +89,17 @@ namespace TaskNotes.Windows.Presentation
 
         /// <summary>Gets parked mutations.</summary>
         public IReadOnlyList<ParkedChange> ParkedChanges => State.ParkedChanges;
+
+        /// <summary>Gets fixed Saved copy only for the complete current owner fence.</summary>
+        public FacetSavedNotice? SavedNotice =>
+            State.SavedNotice is { } notice
+            && State.SavedNoticeOwner is { } owner
+            && notice.BelongsTo(owner)
+                ? notice
+                : null;
+
+        /// <summary>Gets cleanup information without replacing the applied Saved outcome.</summary>
+        public string? SavedMaintenance => State.SavedMaintenance;
 
         /// <summary>Gets Open board rows.</summary>
         public ObservableCollection<TaskItem> OpenBoardTasks { get; } = [];
@@ -228,7 +243,17 @@ namespace TaskNotes.Windows.Presentation
 
         private void ApplyState()
         {
+            if (_disposed)
+                return;
             State = _store.State;
+            Replace(
+                BoardColumns,
+                State.StatusChoices.Select(choice => new BoardColumn(
+                    choice.Value,
+                    choice.Label,
+                    State.AllTasks.Where(task => task.Status == choice.Value).ToArray()
+                ))
+            );
             Replace(OpenBoardTasks, State.AllTasks.Where(task => task.Status == "open"));
             Replace(
                 InProgressBoardTasks,
@@ -264,5 +289,12 @@ namespace TaskNotes.Windows.Presentation
 
         /// <summary>Authentication or synchronization failure.</summary>
         Error,
+    }
+
+    /// <summary>A board column displays one open configured workflow string.</summary>
+    public sealed record BoardColumn(string Value, string Label, IReadOnlyList<TaskItem> Tasks)
+    {
+        /// <summary>Stable automation identity retains the exact configured workflow value.</summary>
+        public string AutomationId => AutomationIds.BoardColumn(Value);
     }
 }

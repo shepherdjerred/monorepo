@@ -70,6 +70,20 @@ namespace TaskNotes.Windows.Presentation
             private set => SetProperty(ref _report, value);
         }
 
+        /// <summary>Gets the current bounded overview of running sessions.</summary>
+        public FacetTrackingPage? Sessions => _store.State.TrackingSessions;
+
+        /// <summary>Loads the first or next original-owner session page.</summary>
+        public async Task LoadSessionsAsync(
+            bool nextPage = false,
+            CancellationToken cancellationToken = default
+        )
+        {
+            if (_store is IFacetTrackingStore tracking)
+                await tracking.LoadTrackingSessionsAsync(nextPage, cancellationToken);
+            OnPropertyChanged(nameof(Sessions));
+        }
+
         /// <summary>Loads one server aggregate period.</summary>
         public async Task LoadAsync(
             string period = "all",

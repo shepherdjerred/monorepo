@@ -1,0 +1,2326 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:facet:engine:v1",
+  "title": "Facet standalone engine JSON contract version 1",
+  "$comment": "Normative language-neutral source. Inputs default absent schemaVersion to v1; unknown versions fail. Profile array members and nested records inherit their envelope version.",
+  "$defs": {
+    "completionTarget": {
+      "anyOf": [
+        {"type":"string","format":"date"},
+        {"type":"string","format":"date-time"},
+        {"type":"null"}
+      ]
+    },
+    "trackingCursor": {
+      "type": "object", "properties": {"taskPath": {"type": "string", "minLength": 1}, "at": {"type": "string", "format": "date-time"}},
+      "required": ["taskPath", "at"], "additionalProperties": false
+    },
+    "trackingHistoryCursor": {
+      "type": "object", "properties": {"entryIndex": {"type": "integer", "minimum": 0, "maximum": 18446744073709551615}, "at": {"type": "string", "format": "date-time"}},
+      "required": ["entryIndex", "at"], "additionalProperties": false
+    },
+    "trackingRequest": {
+      "type": "object",
+      "properties": {"schemaVersion": {"const": 1}, "kind": {"const": "tracking_sessions"}, "at": {"type": "string", "format": "date-time"}, "limit": {"type": ["integer", "null"], "minimum": 1, "maximum": 128}, "expectedVersion": {"type": ["integer", "null"], "minimum": 0, "maximum": 18446744073709551615}, "after": {"anyOf": [{"$ref": "#/$defs/trackingCursor"}, {"type": "null"}]}},
+      "required": ["kind", "at"], "additionalProperties": false,
+      "anyOf": [{"properties": {"after": {"type": "null"}}}, {"properties": {"expectedVersion": {"type": "integer"}}, "required": ["expectedVersion"]}]
+    },
+    "trackingHistoryRequest": {
+      "type": "object",
+      "properties": {"schemaVersion": {"const": 1}, "kind": {"const": "tracking_history"}, "path": {"type": "string", "minLength": 1}, "at": {"type": "string", "format": "date-time"}, "limit": {"type": ["integer", "null"], "minimum": 1, "maximum": 128}, "expectedVersion": {"type": ["integer", "null"], "minimum": 0, "maximum": 18446744073709551615}, "after": {"anyOf": [{"$ref": "#/$defs/trackingHistoryCursor"}, {"type": "null"}]}},
+      "required": ["kind", "path", "at"], "additionalProperties": false,
+      "anyOf": [{"properties": {"after": {"type": "null"}}}, {"properties": {"expectedVersion": {"type": "integer"}}, "required": ["expectedVersion"]}]
+    },
+    "trackingProblem": {
+      "type": "object", "properties": {"taskPath": {"type": "string", "minLength": 1}, "code": {"enum": ["invalid_time_entries", "invalid_projects"]}},
+      "required": ["taskPath", "code"], "additionalProperties": false
+    },
+    "trackingSession": {
+      "type": "object",
+      "properties": {"sessionId": {"type": "string", "pattern": "^facet-tracking:[a-f0-9]{64}$"}, "taskPath": {"type": "string", "minLength": 1}, "title": {"type": "string"}, "taskRevision": {"type": "string", "pattern": "^[a-f0-9]{64}$"}, "startedAt": {"type": "string", "format": "date-time"}, "elapsedSeconds": {"type": "integer", "minimum": 0, "maximum": 18446744073709551615}, "state": {"const": "running"}, "projectLabels": {"type": "array", "items": {"type": "string"}}},
+      "required": ["sessionId", "taskPath", "title", "taskRevision", "startedAt", "elapsedSeconds", "state", "projectLabels"], "additionalProperties": false
+    },
+    "trackingSessions": {
+      "type": "object",
+      "properties": {"schemaVersion": {"const": 1}, "profileId": {"type": "string", "minLength": 1}, "version": {"type": "integer", "minimum": 0, "maximum": 18446744073709551615}, "at": {"type": "string", "format": "date-time"}, "totalCount": {"type": "integer", "minimum": 0, "maximum": 18446744073709551615}, "rows": {"type": "array", "maxItems": 128, "items": {"$ref": "#/$defs/trackingSession"}}, "nextCursor": {"anyOf": [{"$ref": "#/$defs/trackingCursor"}, {"type": "null"}]}, "problemCount": {"type": "integer", "minimum": 0, "maximum": 18446744073709551615}, "problems": {"type": "array", "maxItems": 128, "items": {"$ref": "#/$defs/trackingProblem"}}},
+      "required": ["schemaVersion", "profileId", "version", "at", "totalCount", "rows", "nextCursor", "problemCount", "problems"], "additionalProperties": false
+    },
+    "trackingHistoryEntry": {
+      "type": "object",
+      "properties": {"entryIndex": {"type": "integer", "minimum": 0, "maximum": 18446744073709551615}, "startedAt": {"type": "string", "format": "date-time"}, "endedAt": {"type": ["string", "null"], "format": "date-time"}, "elapsedSeconds": {"type": "integer", "minimum": 0, "maximum": 18446744073709551615}, "state": {"enum": ["running", "closed"]}},
+      "required": ["entryIndex", "startedAt", "endedAt", "elapsedSeconds", "state"], "additionalProperties": false
+    },
+    "trackingHistory": {
+      "type": "object",
+      "properties": {"schemaVersion": {"const": 1}, "profileId": {"type": "string", "minLength": 1}, "version": {"type": "integer", "minimum": 0, "maximum": 18446744073709551615}, "at": {"type": "string", "format": "date-time"}, "taskPath": {"type": "string", "minLength": 1}, "taskRevision": {"type": "string", "pattern": "^[a-f0-9]{64}$"}, "totalCount": {"type": "integer", "minimum": 0, "maximum": 18446744073709551615}, "rows": {"type": "array", "maxItems": 128, "items": {"$ref": "#/$defs/trackingHistoryEntry"}}, "nextCursor": {"anyOf": [{"$ref": "#/$defs/trackingHistoryCursor"}, {"type": "null"}]}, "problemCount": {"type": "integer", "minimum": 0, "maximum": 18446744073709551615}, "problems": {"type": "array", "maxItems": 128, "items": {"$ref": "#/$defs/trackingProblem"}}},
+      "required": ["schemaVersion", "profileId", "version", "at", "taskPath", "taskRevision", "totalCount", "rows", "nextCursor", "problemCount", "problems"], "additionalProperties": false
+    },
+    "payloadInfo": {
+      "$comment": "Metadata only. id is at most 256 UTF-8 bytes without controls. Callers additionally enforce written<=size and sealed=>written==size; these relational invariants are validated by the runtime's durable image reader.",
+      "type": "object",
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "id": {"type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[^\\u0000-\\u001f\\u007f-\\u009f]+$"},
+        "size": {"type": "integer", "minimum": 0, "maximum": 2147483647},
+        "revision": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "written": {"type": "integer", "minimum": 0, "maximum": 2147483647},
+        "state": {"enum": ["preparing", "sealed", "discarded"]}
+      },
+      "required": ["schemaVersion", "id", "size", "revision", "written", "state"],
+      "additionalProperties": false
+    },
+    "engineError": {
+      "$comment": "Sanitized error projection. HostContract is permanent callback corruption/ownership/range failure. Busy preserves immutable intent for retry; neither means a rejected mutation may be discarded.",
+      "oneOf": [
+        {"type":"object", "properties":{"kind":{"enum":["Storage","Host","HostContract","Validation","Configuration"]},"detail":{"type":"string"}},"required":["kind","detail"],"additionalProperties":false},
+        {"type":"object", "properties":{"kind":{"enum":["Conflict","NotFound","Closed","Busy"]}},"required":["kind"],"additionalProperties":false}
+      ]
+    },
+    "reminderCursor": {
+      "type": "object",
+      "properties": {
+        "fireAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "reminderId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "taskPath": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "fireAt",
+        "reminderId",
+        "taskPath"
+      ],
+      "additionalProperties": false
+    },
+    "reminderRequest": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "kind": {
+          "const": "reminder_plan"
+        },
+        "at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "timezone": {
+          "type": "string",
+          "minLength": 1
+        },
+        "from": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "to": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "limit": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 128
+        },
+        "after": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/reminderCursor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "expectedVersion": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        }
+      },
+      "required": [
+        "kind",
+        "at",
+        "timezone",
+        "from",
+        "to"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "anyOf": [
+            {
+              "properties": {
+                "after": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "required": [
+                "expectedVersion"
+              ],
+              "properties": {
+                "expectedVersion": {
+                  "type": "integer"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "reminderRow": {
+      "type": "object",
+      "properties": {
+        "notificationId": {
+          "type": "string",
+          "pattern": "^facet:[0-9a-f]{64}$"
+        },
+        "taskPath": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "taskRevision": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "reminderId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fireAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "occurrenceDate": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "notificationId",
+        "taskPath",
+        "title",
+        "taskRevision",
+        "reminderId",
+        "fireAt",
+        "occurrenceDate",
+        "description"
+      ],
+      "additionalProperties": false
+    },
+    "reminderProblem": {
+      "type": "object",
+      "properties": {
+        "taskPath": {
+          "type": "string"
+        },
+        "reminderId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "code": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "taskPath",
+        "reminderId",
+        "code"
+      ],
+      "additionalProperties": false
+    },
+    "reminderPlan": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "profileId": {
+          "type": "string"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "totalCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "rows": {
+          "type": "array",
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/reminderRow"
+          }
+        },
+        "nextCursor": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/reminderCursor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "problemCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "problems": {
+          "type": "array",
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/reminderProblem"
+          }
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "profileId",
+        "version",
+        "totalCount",
+        "rows",
+        "nextCursor",
+        "problemCount",
+        "problems"
+      ],
+      "additionalProperties": false
+    },
+    "normalizationCommand": {
+      "type": "object",
+      "properties": {"kind": {"const": "normalize"}, "path": {"type": "string", "minLength": 1}, "expectedRevision": {"type": ["string", "null"]}},
+      "required": ["kind", "path"],
+      "additionalProperties": false
+    },
+    "partialBatchCommand": {
+      "type": "object",
+      "properties": {
+        "kind": {"const": "batch_partial"},
+        "commands": {
+          "type": "array", "maxItems": 1000,
+          "items": {"allOf": [{"$ref": "#/$defs/command"}, {"not": {"properties": {"kind": {"enum": ["batch", "batch_partial", "undo", "pomodoro", "resolve_conflict"]}}, "required": ["kind"]}}]}
+        }
+      },
+      "required": ["kind", "commands"],
+      "additionalProperties": false
+    },
+    "referenceCommand": {
+      "oneOf": [
+        {"type":"object","properties":{"kind":{"const":"rename_references"},"path":{"type":"string","minLength":1},"newPath":{"type":"string","minLength":1},"expectedRevision":{"type":["string","null"]},"updateReferences":{"type":"boolean"}},"required":["kind","path","newPath","updateReferences"],"additionalProperties":false},
+        {"type":"object","properties":{"kind":{"const":"delete_checked"},"path":{"type":"string","minLength":1},"expectedRevision":{"type":["string","null"]},"checkBacklinks":{"type":"boolean"},"force":{"type":"boolean"}},"required":["kind","path","checkBacklinks","force"],"additionalProperties":false}
+      ]
+    },
+    "nullableRevision": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "conflictRevisions": {
+      "type": "object",
+      "properties": {
+        "base": {"$ref": "#/$defs/nullableRevision"},
+        "local": {"$ref": "#/$defs/nullableRevision"},
+        "remote": {"$ref": "#/$defs/nullableRevision"},
+        "current": {"$ref": "#/$defs/nullableRevision"}
+      },
+      "required": ["base", "local", "remote", "current"],
+      "additionalProperties": false
+    },
+    "resolutionChoice": {
+      "oneOf": [
+        {"type": "object", "properties": {"kind": {"const": "keep_local"}}, "required": ["kind"], "additionalProperties": false},
+        {"type": "object", "properties": {"kind": {"const": "keep_remote"}}, "required": ["kind"], "additionalProperties": false},
+        {"type": "object", "properties": {"kind": {"const": "keep_both"}, "newPath": {"type": "string", "minLength": 1}}, "required": ["kind", "newPath"], "additionalProperties": false},
+        {"type": "object", "properties": {"kind": {"const": "replace_payload"}, "deleted": {"type": "boolean"}}, "required": ["kind", "deleted"], "additionalProperties": false}
+      ]
+    },
+    "resolveConflictCommand": {
+      "type": "object",
+      "properties": {
+        "kind": {"const": "resolve_conflict"},
+        "conflictId": {"type": "string", "minLength": 1, "maxLength": 1024},
+        "expectedRevisions": {"$ref": "#/$defs/conflictRevisions"},
+        "resolution": {"$ref": "#/$defs/resolutionChoice"}
+      },
+      "required": ["kind", "conflictId", "expectedRevisions", "resolution"],
+      "additionalProperties": false
+    },
+    "profile": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "local_folder",
+            "obsidian_sync"
+          ]
+        },
+        "approveStandard": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "kind",
+        "approveStandard"
+      ],
+      "additionalProperties": false
+    },
+    "task": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "priority": {
+          "type": "string"
+        },
+        "completed": {
+          "type": "boolean"
+        },
+        "revision": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "body": {
+          "type": "string"
+        },
+        "isRecurring": {
+          "type": "boolean"
+        },
+        "isBlocked": {
+          "type": "boolean"
+        },
+        "isBlocking": {
+          "type": "boolean"
+        },
+        "hasActiveTimeSession": {
+          "type": "boolean"
+        },
+        "isPending": {
+          "type": "boolean"
+        },
+        "totalTrackedMinutes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "occurrenceDate": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        },
+        "effectiveDate": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        }
+      },
+      "required": [
+        "id",
+        "path",
+        "title",
+        "status",
+        "priority",
+        "completed",
+        "revision",
+        "properties",
+        "body",
+        "isRecurring",
+        "isBlocked",
+        "isBlocking",
+        "hasActiveTimeSession",
+        "isPending",
+        "totalTrackedMinutes",
+        "occurrenceDate",
+        "effectiveDate"
+      ],
+      "additionalProperties": false
+    },
+    "problem": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "message"
+      ],
+      "additionalProperties": false
+    },
+    "savedView": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "view": {
+          "type": "object",
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "name": {
+              "type": "string"
+            },
+            "query": {
+              "$ref": "#/$defs/query"
+            }
+          },
+          "required": [
+            "schemaVersion"
+          ],
+          "additionalProperties": true
+        },
+        "revision": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "view",
+        "revision"
+      ],
+      "additionalProperties": false
+    },
+    "group": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "taskIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "key",
+        "taskIds"
+      ],
+      "additionalProperties": false
+    },
+    "query": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "limit": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "statuses": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "priorities": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "completed": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "includeArchived": {
+          "type": "boolean"
+        },
+        "scope": {
+          "anyOf": [
+            {
+              "enum": [
+                "all",
+                "today",
+                "upcoming",
+                "overdue",
+                "completed",
+                "undated",
+                "inbox",
+                "agenda"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "today": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "upcomingDays": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "projects": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "contexts": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tags": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "hasNoDueDate": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "hasNoProject": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "dueBefore": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "dueAfter": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sortField": {
+          "anyOf": [
+            {
+              "enum": [
+                "title",
+                "priority",
+                "status",
+                "dueDate",
+                "effectiveDate",
+                "manual"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sortDirection": {
+          "anyOf": [
+            {
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "groupBy": {
+          "anyOf": [
+            {
+              "enum": [
+                "status",
+                "priority",
+                "project",
+                "context",
+                "effectiveDate"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "receipt": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "mutationId": {
+          "type": "string"
+        },
+        "applied": {
+          "type": "boolean"
+        },
+        "taskPath": {"type": ["string", "null"]},
+        "cleanupPending": {
+          "type": "boolean"
+        },
+        "diagnostics": {
+          "type": "array", "maxItems": 3, "uniqueItems": true,
+          "items": {"type": "object", "properties": {"code": {"enum": ["template_missing", "template_parse_failed", "filename_shortened"]}}, "required": ["code"], "additionalProperties": false}
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "pendingCount": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "mutationId",
+        "applied",
+        "cleanupPending",
+        "diagnostics",
+        "taskPath",
+        "paths",
+        "pendingCount"
+      ],
+      "additionalProperties": false
+    },
+    "conflict": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "base": {
+          "$ref": "#/$defs/binaryVersion"
+        },
+        "local": {
+          "$ref": "#/$defs/binaryVersion"
+        },
+        "remote": {
+          "$ref": "#/$defs/binaryVersion"
+        },
+        "remoteRevision": {
+          "type": "string"
+        },
+        "currentRevision": {
+          "$ref": "#/$defs/nullableRevision"
+        }
+      },
+      "required": [
+        "id",
+        "path",
+        "base",
+        "local",
+        "remote",
+        "remoteRevision",
+        "currentRevision"
+      ],
+      "additionalProperties": false
+    },
+    "upload": {
+      "type": "object",
+      "properties": {
+        "ctime": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "mtime": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "relatedPath": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "folder": {
+          "const": false
+        },
+        "mutationId": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "contentRevision": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "expectedRemoteRevision": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "payloadSize": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "deleted": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "mutationId",
+        "path",
+        "contentRevision",
+        "expectedRemoteRevision",
+        "ctime",
+        "mtime",
+        "relatedPath",
+        "folder",
+        "payloadSize",
+        "deleted"
+      ],
+      "additionalProperties": false
+    },
+    "advancedCommand": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": { "const": "set_occurrence_skipped" },
+            "path": { "type": "string" },
+            "expectedRevision": { "type": ["string", "null"] },
+            "occurrenceDate": { "type": "string", "format": "date" },
+            "skipped": { "type": "boolean" }
+          },
+          "required": ["kind", "path", "occurrenceDate", "skipped"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "set_completion"
+            },
+            "path": {
+              "type": "string"
+            },
+            "expectedRevision": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "completed": {
+              "type": "boolean"
+            },
+            "occurrenceDate": {
+              "$ref": "#/$defs/completionTarget"
+            }
+          },
+          "required": [
+            "kind",
+            "path",
+            "completed"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "batch"
+            },
+            "commands": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "#/$defs/command"
+                  },
+                  {
+                    "not": {
+                      "properties": {
+                        "kind": {
+                          "enum": [
+                            "batch",
+                            "batch_partial",
+                            "undo",
+                            "pomodoro",
+                            "resolve_conflict"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "kind"
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "commands"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "undo"
+            },
+            "receiptId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "receiptId"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "enum": [
+                "start_time",
+                "stop_time"
+              ]
+            },
+            "path": {
+              "type": "string"
+            },
+            "expectedRevision": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "path"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "set_time_entries"
+            },
+            "path": {
+              "type": "string"
+            },
+            "expectedRevision": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "entries": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/timeEntry"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "path",
+            "entries"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "pomodoro"
+            },
+            "deviceId": {
+              "type": "string"
+            },
+            "action": {
+              "enum": [
+                "start",
+                "pause",
+                "resume",
+                "stop"
+              ]
+            },
+            "taskPath": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "durationSeconds": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 1
+            }
+          },
+          "required": [
+            "kind",
+            "deviceId",
+            "action"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "reorder_views"
+            },
+            "ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "kind",
+            "ids"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "restore_default_views"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "timeEntry": {
+      "type": "object",
+      "properties": {
+        "startTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "endTime": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "duration": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        }
+      },
+      "required": [
+        "startTime"
+      ],
+      "additionalProperties": true
+    },
+    "capturePreview": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "properties": {
+          "type": "object"
+        },
+        "body": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "properties",
+        "body"
+      ],
+      "additionalProperties": false
+    },
+    "taskTime": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "path": {
+          "type": "string"
+        },
+        "totalSeconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "totalMinutes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "hasActiveSession": {
+          "type": "boolean"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/timeEntry"
+          }
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "path",
+        "totalSeconds",
+        "totalMinutes",
+        "hasActiveSession",
+        "entries"
+      ],
+      "additionalProperties": false
+    },
+    "timeReport": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "totalSeconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "totalMinutes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "seconds": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "minutes": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "path",
+              "title",
+              "seconds",
+              "minutes"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "totalSeconds",
+        "totalMinutes",
+        "rows"
+      ],
+      "additionalProperties": false
+    },
+    "pomodoro": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "status": {
+          "enum": [
+            "idle",
+            "running",
+            "paused",
+            "completed"
+          ]
+        },
+        "taskPath": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "durationSeconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400
+        },
+        "elapsedSeconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "startedAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "status",
+        "taskPath",
+        "durationSeconds",
+        "elapsedSeconds",
+        "startedAt",
+        "updatedAt"
+      ],
+      "additionalProperties": false
+    },
+    "discovery": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "configurationAvailable": {
+          "type": "boolean"
+        },
+        "initialSyncComplete": {
+          "type": "boolean"
+        },
+        "configuration": {
+          "type": [
+            "object",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "configurationAvailable",
+        "initialSyncComplete",
+        "configuration"
+      ],
+      "additionalProperties": false
+    },
+    "featureRequest": {
+      "oneOf": [
+        {"$ref": "#/$defs/trackingRequest"},
+        {"$ref": "#/$defs/trackingHistoryRequest"},
+        {"$ref": "#/$defs/reminderRequest"},
+        {
+          "type": "object",
+          "properties": {"schemaVersion": {"const": 1}, "kind": {"enum": ["mutation_receipt", "resolution_history", "batch_outcome"]}, "mutationId": {"type": "string", "minLength": 1, "maxLength": 256}},
+          "required": ["kind", "mutationId"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {"schemaVersion": {"const": 1}, "kind": {"const": "normalization_preview"}, "path": {"type": "string", "minLength": 1}},
+          "required": ["kind", "path"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "kind": {
+              "const": "capture_preview"
+            },
+            "input": {
+              "type": "string"
+            },
+            "at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "today": {
+              "type": "string",
+              "format": "date"
+            },
+            "context": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "properties": {
+                "projects": {
+                  "type": [
+                    "array",
+                    "null"
+                  ],
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "contexts": {
+                  "type": [
+                    "array",
+                    "null"
+                  ],
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "tags": {
+                  "type": [
+                    "array",
+                    "null"
+                  ],
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "scheduled": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "kind",
+            "input",
+            "at",
+            "today"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "kind": {
+              "const": "task_time"
+            },
+            "path": {
+              "type": "string"
+            },
+            "at": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "required": [
+            "kind",
+            "path",
+            "at"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "kind": {
+              "const": "time_report"
+            },
+            "from": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "to": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "at": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "required": [
+            "kind",
+            "from",
+            "to",
+            "at"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "kind": {
+              "const": "pomodoro"
+            },
+            "deviceId": {
+              "type": "string"
+            },
+            "at": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "required": [
+            "kind",
+            "deviceId",
+            "at"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "kind": {
+              "enum": ["discovery", "undo_available", "conformance"]
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "command": {
+      "oneOf": [
+        {"$ref": "#/$defs/normalizationCommand"},
+        {"$ref": "#/$defs/partialBatchCommand"},
+        {"$ref":"#/$defs/referenceCommand"},
+        {"$ref": "#/$defs/resolveConflictCommand"},
+        {
+          "$ref": "#/$defs/advancedCommand"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "create"
+            },
+            "path": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "properties": {
+              "type": "object"
+            },
+            "body": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "properties"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "update"
+            },
+            "path": {
+              "type": "string"
+            },
+            "expectedRevision": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "properties": {
+              "type": "object"
+            },
+            "body": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "path",
+            "properties"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {"const":"edit_task"},
+            "path": {"type":"string"},
+            "expectedRevision": {"type":["string","null"]},
+            "properties": {"type":"object","not":{"anyOf":[{"required":["status"]}]}},
+            "body": {"type":["string","null"]},
+            "status": {"type":["string","null"]},
+            "occurrenceDate": {"$ref":"#/$defs/completionTarget"}
+          },
+          "required":["kind","path","properties"],
+          "additionalProperties":false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "delete"
+            },
+            "path": {
+              "type": "string"
+            },
+            "expectedRevision": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "path"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "set_status"
+            },
+            "path": {
+              "type": "string"
+            },
+            "expectedRevision": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "status": {
+              "type": "string"
+            },
+            "occurrenceDate": {
+              "$ref": "#/$defs/completionTarget"
+            }
+          },
+          "required": [
+            "kind",
+            "path",
+            "status"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "toggle_complete"
+            },
+            "path": {
+              "type": "string"
+            },
+            "expectedRevision": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "occurrenceDate": {
+              "$ref": "#/$defs/completionTarget"
+            }
+          },
+          "required": [
+            "kind",
+            "path"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "rename"
+            },
+            "path": {
+              "type": "string"
+            },
+            "expectedRevision": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "newPath": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "path",
+            "newPath"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "archive"
+            },
+            "path": {
+              "type": "string"
+            },
+            "expectedRevision": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "archived": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "path",
+            "archived"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "save_view"
+            },
+            "id": {
+              "type": "string"
+            },
+            "view": {
+              "type": "object"
+            }
+          },
+          "required": [
+            "kind",
+            "id",
+            "view"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "delete_view"
+            },
+            "id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "id"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "undoAvailable": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {"const": 1}, "canUndo": {"type": "boolean"},
+        "receiptId": {"type": ["string", "null"]},
+        "at": {"type": ["string", "null"], "format": "date-time"},
+        "commandKind": {"type": ["string", "null"]}
+      },
+      "required": ["schemaVersion", "canUndo", "receiptId", "at", "commandKind"],
+      "additionalProperties": false,
+      "oneOf": [
+        {"properties": {"canUndo": {"const": false}, "receiptId": {"type": "null"}, "at": {"type": "null"}, "commandKind": {"type": "null"}}},
+        {"properties": {"canUndo": {"const": true}, "receiptId": {"type": "string", "minLength": 1}, "commandKind": {"type": "string", "minLength": 1}}}
+      ]
+    },
+    "batchOutcome": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {"const": 1}, "mutationId": {"type": "string"},
+        "total": {"type": "integer", "minimum": 0, "maximum": 1000},
+        "succeeded": {"type": "integer", "minimum": 0, "maximum": 1000},
+        "failed": {"type": "integer", "minimum": 0, "maximum": 1000},
+        "items": {"type": "array", "maxItems": 1000, "items": {
+          "type": "object",
+          "properties": {
+            "mutationId": {"type": "string"}, "applied": {"type": "boolean"},
+            "receipt": {"anyOf": [{"$ref": "#/$defs/receipt"}, {"type": "null"}]},
+            "error": {"type": ["string", "null"]}
+          },
+          "required": ["mutationId", "applied", "receipt", "error"],
+          "additionalProperties": false
+        }}
+      },
+      "required": ["schemaVersion", "mutationId", "total", "succeeded", "failed", "items"],
+      "additionalProperties": false
+    },
+    "normalizationPreview": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {"const": 1}, "frontmatter": {"type": "object"}, "changed": {"type": "boolean"},
+        "issues": {"type": "array", "items": {
+          "type": "object", "properties": {"code": {"type": "string"}, "field": {"type": "string"}},
+          "required": ["code", "field"], "additionalProperties": false
+        }}
+      },
+      "required": ["schemaVersion", "frontmatter", "changed", "issues"],
+      "additionalProperties": false
+    },
+    "mutationReceipt": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "mutationId": {"type": "string"},
+        "state": {"enum": ["absent", "pending", "parked", "applied"]},
+        "receipt": {"anyOf": [{"$ref": "#/$defs/receipt"}, {"type": "null"}]}
+      },
+      "required": ["schemaVersion", "mutationId", "state", "receipt"],
+      "additionalProperties": false,
+      "oneOf": [
+        {"properties": {"state": {"enum": ["absent", "pending"]}, "receipt": {"type": "null"}}},
+        {"properties": {"state": {"const": "applied"}, "receipt": {"allOf": [{"$ref": "#/$defs/receipt"}, {"properties": {"applied": {"const": true}}}]}}},
+        {"properties": {"state": {"const": "parked"}, "receipt": {"allOf": [{"$ref": "#/$defs/receipt"}, {"properties": {"applied": {"const": false}}}]}}}
+      ]
+    },
+    "resolutionHistory": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "mutationId": {"type": "string"},
+        "originalConflictId": {"type": "string"},
+        "conflict": {"$ref": "#/$defs/conflict"},
+        "receipt": {"$ref": "#/$defs/receipt"}
+      },
+      "required": ["schemaVersion", "mutationId", "originalConflictId", "conflict", "receipt"],
+      "additionalProperties": false
+    },
+    "mutation": {
+      "type": "object",
+      "properties": {
+        "executionContext": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/executionContext"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "mutationId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "command": {
+          "$ref": "#/$defs/command"
+        }
+      },
+      "required": [
+        "mutationId",
+        "at",
+        "command"
+      ],
+      "additionalProperties": false
+    },
+    "executionContext": {
+      "type": "object",
+      "properties": {
+        "today": {
+          "type": "string",
+          "format": "date"
+        },
+        "timezone": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "today",
+        "timezone"
+      ],
+      "additionalProperties": false
+    },
+    "remoteMetadata": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "uid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "ctime": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "mtime": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "relatedPath": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "contentHash": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-fA-F]{64}$"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "uid",
+        "ctime",
+        "mtime"
+      ],
+      "additionalProperties": false
+    },
+    "resolution": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "kind": {
+              "const": "keep_local"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "kind": {
+              "const": "keep_remote"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "kind": {
+              "const": "replace"
+            },
+            "bytes": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "bytes"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "kind": {
+              "const": "keep_both"
+            },
+            "newPath": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "newPath"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "snapshot": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "profileId": {
+          "type": "string"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tasks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/task"
+          }
+        },
+        "totalCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pendingCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "conflictCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "configuration": {
+          "type": ["object", "null"]
+        },
+        "problems": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/problem"
+          }
+        },
+        "views": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/savedView"
+          }
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/group"
+          }
+        },
+        "pendingTaskIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "profileId",
+        "version",
+        "tasks",
+        "totalCount",
+        "pendingCount",
+        "conflictCount",
+        "configuration",
+        "problems",
+        "views",
+        "groups",
+        "pendingTaskIds"
+      ],
+      "additionalProperties": false
+    },
+    "profiles": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "profiles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/profile"
+          }
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "profiles"
+      ],
+      "additionalProperties": false
+    },
+    "conflicts": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "conflicts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/conflict"
+          },
+          "maxItems": 128
+        },
+        "nextCursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "conflicts",
+        "nextCursor"
+      ],
+      "additionalProperties": false
+    },
+    "uploads": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "uploads": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/upload"
+          }
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "uploads"
+      ],
+      "additionalProperties": false
+    },
+    "supportReadiness": {
+      "type":"object",
+      "properties":{"name":{"type":"string"},"implemented":{"type":"boolean"},"missing":{"type":"array","items":{"type":"string"},"uniqueItems":true}},
+      "required":["name","implemented","missing"],"additionalProperties":false
+    },
+    "conformance": {
+      "type":"object",
+      "properties": {
+        "schemaVersion":{"const":1},"implementation":{"type":"string"},"version":{"type":"string"},"spec_version":{"const":"0.3.0-rc.9"},
+        "validation_modes":{"const":["strict"]},
+        "profiles":{"type":"array","items":{"enum":["core-lite","recurrence","extended","templating","materialized-occurrences"]},"uniqueItems":true},
+        "capabilities":{"type":"array","items":{"type":"string"},"uniqueItems":true},
+        "profileReadiness":{"type":"array","items":{"$ref":"#/$defs/supportReadiness"}},
+        "capabilityReadiness":{"type":"array","items":{"$ref":"#/$defs/supportReadiness"}},
+        "known_deviations":{"type":"array","items":{"type":"string"}},"compatibility_mode":{"type":"string"},
+        "configurationProviders":{"type":"object","properties":{"available":{"type":"array","items":{"enum":["plugin-data-json","tasknotes-yaml","standard"]},"uniqueItems":true},"selected":{"type":["string","null"],"enum":["plugin-data-json","tasknotes-yaml","standard",null]},"precedence":{"type":"string"},"fallback":{"const":"none"},"state":{"enum":["cached","waiting"]}},"required":["available","selected","precedence","fallback","state"],"additionalProperties":false}
+      },
+      "required":["schemaVersion","implementation","version","spec_version","validation_modes","profiles","capabilities","profileReadiness","capabilityReadiness","known_deviations","compatibility_mode","configurationProviders"],
+      "additionalProperties":false
+    },
+    "binaryVersion": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "size": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "size",
+        "revision"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$ref": "#/$defs/snapshot"
+}

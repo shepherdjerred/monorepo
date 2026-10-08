@@ -120,6 +120,7 @@ fn build_library(root: &Path, profile: &str) -> Result<PathBuf, String> {
         "cargo",
         &[
             "build",
+            "--locked",
             "--package",
             FFI_CRATE,
             "--lib",

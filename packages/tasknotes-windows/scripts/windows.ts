@@ -1,6 +1,9 @@
 import path from "node:path";
 import { resolveMise } from "./mise.ts";
-
+import { parseStoreIdentity, storeManifest } from "./store-identity.ts";
+import { createPackageVerifier } from "./package-verification.ts";
+import { XMLParser } from "fast-xml-parser";
+import { z } from "zod";
 const packageRoot = path.resolve(import.meta.dir, "..");
 const vswhere = path.join(
   Bun.env["ProgramFiles(x86)"] ?? String.raw`C:\Program Files (x86)`,
@@ -13,7 +16,11 @@ const vswhereExists = await Bun.file(vswhere).exists();
 const commandPath = `${path.dirname(mise)};${Bun.env["PATH"] ?? ""}`;
 let cachedDeveloperEnvironment: Record<string, string | undefined> | undefined;
 type Command = [string, ...string[]];
-
+const { verifyPackagedNative, verifyPackagedLicense } = createPackageVerifier(
+  packageRoot,
+  capture,
+  captureDeveloper,
+);
 function capture(command: Command): string {
   const result = Bun.spawnSync(command, { stdout: "pipe", stderr: "inherit" });
   if (result.exitCode !== 0) {
@@ -59,7 +66,6 @@ async function spawn(
 async function preflight(): Promise<void> {
   await spawn(["bun", "scripts/preflight.ts"]);
 }
-
 function developerEnvironment(): Record<string, string | undefined> {
   if (cachedDeveloperEnvironment !== undefined) {
     return cachedDeveloperEnvironment;
@@ -181,10 +187,108 @@ async function packageApp(
     "-p:GenerateAppxPackageOnBuild=true",
     `-p:AppxPackageDir=${appxDirectory}`,
   ]);
-  verifyPackagedNative(
+  await verifyPackagedNative(
     appxDirectory,
     configuration === "E2E" ? "red.sjer.TaskNotes.E2E" : "red.sjer.TaskNotes",
   );
+}
+
+async function packageStoreApp(
+  identityPath: string | undefined,
+): Promise<void> {
+  if (identityPath === undefined) {
+    throw new Error(
+      "Microsoft Partner Center enrollment and a reserved Facet product are required. Pass a nonsecret identity JSON copied from that product; the development identity cannot be submitted.",
+    );
+  }
+  const identity = parseStoreIdentity(await Bun.file(identityPath).json());
+  if (process.platform !== "win32")
+    throw new Error(
+      "Store packaging and Windows App Certification require Windows 11 x64.",
+    );
+  const manifestPath = path.join(
+    packageRoot,
+    ".build",
+    "store",
+    "Package.appxmanifest",
+  );
+  const template = await Bun.file(
+    path.join(
+      packageRoot,
+      "src",
+      "TaskNotes.Windows.App",
+      "Package.appxmanifest",
+    ),
+  ).text();
+  await Bun.write(manifestPath, storeManifest(template, identity));
+  await restore();
+  const directory = path.join(
+    packageRoot,
+    "AppPackages",
+    "Store",
+    `${identity.version}-${crypto.randomUUID()}`,
+  );
+  await spawnDeveloper([
+    "dotnet",
+    "build",
+    path.join(
+      packageRoot,
+      "src",
+      "TaskNotes.Windows.App",
+      "TaskNotes.Windows.App.csproj",
+    ),
+    "--configuration",
+    "Release",
+    "--no-restore",
+    "-p:GenerateAppxPackageOnBuild=true",
+    "-p:AppxPackageSigningEnabled=false",
+    `-p:FacetStoreManifest=${manifestPath}`,
+    `-p:AppxPackageDir=${directory}${path.sep}`,
+  ]);
+  const artifacts = [
+    ...new Bun.Glob("**/*.msix").scanSync({ cwd: directory, onlyFiles: true }),
+  ];
+  if (artifacts.length !== 1)
+    throw new Error("Expected one x64 Store package to verify.");
+  const [relative] = artifacts;
+  if (relative === undefined)
+    throw new Error("The Store package output is empty.");
+  const artifact = path.join(directory, relative);
+  const manifest = capture(["tar.exe", "-xOf", artifact, "AppxManifest.xml"]);
+  const packaged = z
+    .object({
+      Package: z.object({
+        Identity: z.object({
+          "@_Name": z.string(),
+          "@_Publisher": z.string(),
+          "@_Version": z.string(),
+        }),
+      }),
+    })
+    .parse(new XMLParser({ ignoreAttributes: false }).parse(manifest))
+    .Package.Identity;
+  if (
+    packaged["@_Name"] !== identity.name ||
+    packaged["@_Publisher"] !== identity.publisher ||
+    packaged["@_Version"] !== identity.version
+  ) {
+    throw new Error(
+      "The produced package does not have the registered Store identity.",
+    );
+  }
+  const files = capture(["tar.exe", "-tf", artifact])
+    .split(/\r?\n/u)
+    .map((entry) => entry.replaceAll("\\", "/"));
+  if (
+    !files.some((entry) => entry.endsWith("tasknotes_core_ffi.dll")) ||
+    files.includes("AppxSignature.p7x")
+  ) {
+    throw new Error(
+      "The Store package must include the native engine and await Store signing.",
+    );
+  }
+  await verifyPackagedLicense(artifact);
+  await Bun.write(Bun.stdout, `${artifact}\n`);
 }
 
 async function requireDevelopmentSigning(
@@ -304,69 +408,6 @@ async function runE2EScenario(): Promise<void> {
   ]);
 }
 
-function verifyPackagedNative(
-  appxDirectory: string,
-  expectedIdentity: string,
-): void {
-  const packages = [
-    ...new Bun.Glob("**/*.msix").scanSync({
-      cwd: appxDirectory,
-      onlyFiles: true,
-    }),
-  ];
-  if (packages.length === 0) {
-    throw new Error(`No MSIX was produced under ${appxDirectory}`);
-  }
-
-  const newest = packages
-    .map((relativePath) => ({
-      relativePath,
-      lastModified: Bun.file(path.join(appxDirectory, relativePath))
-        .lastModified,
-    }))
-    .sort((left, right) => right.lastModified - left.lastModified)[0];
-  if (newest === undefined) {
-    throw new Error(`No MSIX was produced under ${appxDirectory}`);
-  }
-
-  const archivePath = path.join(appxDirectory, newest.relativePath);
-  captureDeveloper(["signtool.exe", "verify", "/pa", "/all", archivePath]);
-  const entries = capture(["tar.exe", "-tf", archivePath])
-    .split(/\r?\n/u)
-    .map((entry) => entry.replaceAll("\\", "/"));
-  if (
-    !entries.some(
-      (entry) =>
-        entry.endsWith("/tasknotes_core_ffi.dll") ||
-        entry === "tasknotes_core_ffi.dll",
-    )
-  ) {
-    throw new Error(
-      `Packaged application is missing tasknotes_core_ffi.dll: ${archivePath}`,
-    );
-  }
-
-  const manifest = capture([
-    "tar.exe",
-    "-xOf",
-    archivePath,
-    "AppxManifest.xml",
-  ]);
-  const escapedIdentity = expectedIdentity.replaceAll(".", String.raw`\.`);
-  if (
-    !new RegExp(String.raw`\bName=["']${escapedIdentity}["']`, "u").test(
-      manifest,
-    )
-  ) {
-    throw new Error(
-      `Packaged application identity is not '${expectedIdentity}': ${archivePath}`,
-    );
-  }
-  if (!entries.includes("AppxSignature.p7x")) {
-    throw new Error(`Packaged application has no signature: ${archivePath}`);
-  }
-}
-
 const action = Bun.argv[2];
 switch (action) {
   case undefined:
@@ -385,6 +426,9 @@ switch (action) {
   case "package":
     await preflight();
     await packageApp();
+    break;
+  case "store-package":
+    await packageStoreApp(Bun.argv[3]);
     break;
   case "prepare-e2e":
     await preflight();

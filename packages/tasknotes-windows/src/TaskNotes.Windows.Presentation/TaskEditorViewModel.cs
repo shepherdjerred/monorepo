@@ -4,8 +4,15 @@ using TaskNotes.Windows.Host;
 namespace TaskNotes.Windows.Presentation
 {
     /// <summary>Portable editable task state with validation and dirty tracking.</summary>
-    public sealed class TaskEditorViewModel : ObservableObject, IDisposable
+    public sealed partial class TaskEditorViewModel : ObservableObject, IDisposable
     {
+        /// <summary>Configured open workflow values from the selected vault.</summary>
+        public IReadOnlyList<WorkflowChoice> StatusChoices =>
+            _original is null ? _store.State.StatusChoices : _statusChoices;
+
+        /// <summary>Configured open priority values from the selected vault.</summary>
+        public IReadOnlyList<WorkflowChoice> PriorityChoices =>
+            _original is null ? _store.State.PriorityChoices : _priorityChoices;
         private readonly ITaskNotesStore _store;
         private readonly IUiDispatcher _dispatcher;
         private TaskItem? _original;
@@ -25,6 +32,7 @@ namespace TaskNotes.Windows.Presentation
         private bool _isDirty;
         private bool _loading;
         private bool _disposed;
+        private long _draftGeneration;
 
         /// <summary>Initializes the task editor over the store facade.</summary>
         public TaskEditorViewModel(ITaskNotesStore store, IUiDispatcher dispatcher)
@@ -125,16 +133,31 @@ namespace TaskNotes.Windows.Presentation
             {
                 if (SetEditorProperty(ref _timeEstimate, value))
                 {
+                    if (!_loading)
+                        EstimateText =
+                            value?.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                            ?? string.Empty;
                     OnPropertyChanged(nameof(EstimateValue));
                 }
             }
         }
 
-        /// <summary>Gets or sets the estimate as a NumberBox-compatible value.</summary>
+        /// <summary>Legacy integral estimate adapter; fractional values are never rounded.</summary>
         public double EstimateValue
         {
             get => TimeEstimate is uint estimate ? estimate : double.NaN;
-            set => TimeEstimate = double.IsNaN(value) ? null : checked((uint)Math.Round(value));
+            set
+            {
+                if (!double.IsNaN(value) && value != Math.Truncate(value))
+                    throw new ArgumentException(
+                        "Use the exact estimate text for fractional minutes.",
+                        nameof(value)
+                    );
+                TimeEstimate = double.IsNaN(value) ? null : checked((uint)value);
+                EstimateText = double.IsNaN(value)
+                    ? string.Empty
+                    : value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            }
         }
 
         /// <summary>Gets dependency warnings for the loaded task.</summary>
@@ -145,7 +168,44 @@ namespace TaskNotes.Windows.Presentation
 
         /// <summary>Gets tracked minutes for the loaded task.</summary>
         public string TrackedTimeLabel =>
-            _original is null ? string.Empty : $"Tracked: {_original.TotalTrackedTime} minutes";
+            _original is null
+                ? string.Empty
+                : $"Tracked: {(_store.State.TaskTime is { } live && live.TaskId == TaskId ? live.TotalMinutes : _original.TotalTrackedTime)} minutes";
+
+        private FacetTrackingPage? OwnedHistory =>
+            !_disposed
+            && _original is not null
+            && _store.State.TrackingHistory is { } page
+            && page.Owner.ProfileId == _original.ProfileId
+            && page.Owner.TaskPath == _original.VaultPath
+            && page.Owner.TaskRevision == _original.ExpectedRevision
+                ? page
+                : null;
+
+        /// <summary>Gets the current bounded history page for the exact loaded task revision.</summary>
+        public IReadOnlyList<string> TrackingHistoryRows =>
+            OwnedHistory
+                ?.Rows.Select(row =>
+                    $"{row.GetProperty("startedAt").GetString()} → {row.GetProperty("endedAt").GetString() ?? "Running"} · {row.GetProperty("elapsedSeconds").GetUInt64()} seconds"
+                )
+                .ToArray()
+            ?? [];
+
+        /// <summary>Gets the history count and known data-problem summary.</summary>
+        public string TrackingHistorySummary =>
+            OwnedHistory is { } page
+                ? $"{page.Rows.Count} entries on this page · {page.TotalCount} total"
+                    + (page.ProblemCount == 0 ? "" : $" · {page.ProblemCount} entries need review")
+                : "";
+
+        /// <summary>Gets whether an original-owner continuation is available.</summary>
+        public bool HasMoreTrackingHistory => OwnedHistory?.Next is not null;
+
+        /// <summary>Loads another bounded page without changing the edit draft.</summary>
+        public Task LoadNextTrackingHistoryAsync(CancellationToken cancellationToken = default) =>
+            _store is IFacetTrackingStore tracking && HasMoreTrackingHistory
+                ? tracking.LoadNextTrackingHistoryAsync(cancellationToken)
+                : Task.CompletedTask;
 
         /// <summary>Gets the current timing command label.</summary>
         public string TimerLabel => IsTimerActive ? "Stop timer" : "Start timer";
@@ -184,6 +244,7 @@ namespace TaskNotes.Windows.Presentation
         /// <summary>Loads one immutable task snapshot.</summary>
         public void Load(TaskItem task)
         {
+            _draftGeneration++;
             ArgumentNullException.ThrowIfNull(task);
             _loading = true;
             try
@@ -201,6 +262,7 @@ namespace TaskNotes.Windows.Presentation
                 Contexts = string.Join(", ", task.Contexts);
                 Tags = string.Join(", ", task.Tags);
                 TimeEstimate = task.TimeEstimate;
+                LoadAdditionalFields(task);
                 ValidationError = null;
                 IsDirty = false;
                 OnPropertyChanged(nameof(IsLoaded));
@@ -229,25 +291,54 @@ namespace TaskNotes.Windows.Presentation
                 return false;
             }
             ValidationError = null;
-            await _store.UpdateTaskAsync(
-                new TaskEditInput
+            long draftGeneration = _draftGeneration;
+            TaskEditInput input = new()
+            {
+                Id = original.Id,
+                ProfileId = original.ProfileId,
+                ExpectedRevision = original.ExpectedRevision,
+                OccurrenceDate = original.OccurrenceDate,
+                Title = title,
+                Details = BlankAsNull(Details),
+                Status = Status,
+                Priority = Priority,
+                Due = BlankAsNull(Due),
+                Scheduled = BlankAsNull(Scheduled),
+                Recurrence = BlankAsNull(Recurrence),
+                RecurrenceAnchor = BlankAsNull(RecurrenceAnchor),
+                Projects = SplitValues(Projects),
+                Contexts = SplitValues(Contexts),
+                Tags = SplitValues(Tags),
+                TimeEstimate = TimeEstimate,
+                ChangedProperties = ChangedFields(original, title),
+                BodyChanged = !string.Equals(Details, original.Details, StringComparison.Ordinal),
+            };
+            try
+            {
+                if (_store is IFacetTaskEditorStore standalone)
                 {
-                    Id = original.Id,
-                    Title = title,
-                    Details = BlankAsNull(Details),
-                    Status = Status,
-                    Priority = Priority,
-                    Due = BlankAsNull(Due),
-                    Scheduled = BlankAsNull(Scheduled),
-                    Recurrence = BlankAsNull(Recurrence),
-                    RecurrenceAnchor = BlankAsNull(RecurrenceAnchor),
-                    Projects = SplitValues(Projects),
-                    Contexts = SplitValues(Contexts),
-                    Tags = SplitValues(Tags),
-                    TimeEstimate = TimeEstimate,
-                },
-                cancellationToken
-            );
+                    TaskItem saved = await standalone.SaveTaskEditAsync(input, cancellationToken);
+                    if (_disposed || draftGeneration != _draftGeneration)
+                        return true;
+                    Load(saved);
+                }
+                else
+                {
+                    await _store.UpdateTaskAsync(input, cancellationToken);
+                    if (_disposed || draftGeneration != _draftGeneration)
+                        return true;
+                    TaskItem? saved = _store.State.AllTasks.SingleOrDefault(task =>
+                        task.Id == original.Id && task.ProfileId == original.ProfileId
+                    );
+                    if (saved is not null)
+                        Load(saved);
+                }
+            }
+            catch (FacetSavedObservationException)
+            {
+                // Applied is authoritative; retain the draft until a fresh projection is available.
+                return true;
+            }
             IsDirty = false;
             return true;
         }
@@ -290,14 +381,15 @@ namespace TaskNotes.Windows.Presentation
         /// <summary>Clears the editor.</summary>
         public void Clear()
         {
+            _draftGeneration++;
             _original = null;
             _loading = true;
             try
             {
                 Title = string.Empty;
                 Details = null;
-                Status = "open";
-                Priority = "normal";
+                Status = string.Empty;
+                Priority = string.Empty;
                 Due = null;
                 Scheduled = null;
                 Recurrence = null;
@@ -306,6 +398,7 @@ namespace TaskNotes.Windows.Presentation
                 Contexts = string.Empty;
                 Tags = string.Empty;
                 TimeEstimate = null;
+                ClearAdditionalFields();
                 ValidationError = null;
                 IsDirty = false;
                 OnPropertyChanged(nameof(IsLoaded));
@@ -329,6 +422,7 @@ namespace TaskNotes.Windows.Presentation
                 return;
             }
             _disposed = true;
+            _draftGeneration++;
             _store.StateChanged -= StoreStateChanged;
         }
 
@@ -341,6 +435,7 @@ namespace TaskNotes.Windows.Presentation
             bool changed = SetProperty(ref field, value, name);
             if (changed && !_loading)
             {
+                _draftGeneration++;
                 IsDirty = true;
             }
             return changed;
@@ -362,8 +457,16 @@ namespace TaskNotes.Windows.Presentation
 
         private void NotifyTimingChanged()
         {
+            if (_disposed)
+                return;
+            OnPropertyChanged(nameof(TrackedTimeLabel));
+            OnPropertyChanged(nameof(TrackingHistoryRows));
+            OnPropertyChanged(nameof(TrackingHistorySummary));
+            OnPropertyChanged(nameof(HasMoreTrackingHistory));
             OnPropertyChanged(nameof(IsTimerActive));
             OnPropertyChanged(nameof(TimerLabel));
+            OnPropertyChanged(nameof(StatusChoices));
+            OnPropertyChanged(nameof(PriorityChoices));
         }
 
         private static string? BlankAsNull(string? value)

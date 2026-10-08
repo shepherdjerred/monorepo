@@ -312,7 +312,7 @@ pub fn recurrence_finite_instance_count(
     .finite_instance_count()
     .map(|count| {
         u32::try_from(count).map_err(|_| CoreError::Invariant {
-            message: format!("the finite instance count {count} does not fit in a u32"),
+            detail: format!("the finite instance count {count} does not fit in a u32"),
         })
     })
     .transpose()
@@ -641,7 +641,7 @@ mod tests {
         )
         .unwrap_err();
         assert!(
-            matches!(error, CoreError::Invariant { ref message } if message.contains("date window")),
+            matches!(error, CoreError::Invariant { detail: ref message } if message.contains("date window")),
             "unexpected error: {error:?}"
         );
     }
@@ -692,7 +692,7 @@ mod tests {
     fn a_malformed_today_is_a_validation_failure_rather_than_a_guess() {
         let error = recurrence_completion_target_date(None, None, None, "07/12/2026").unwrap_err();
         assert!(
-            matches!(error, CoreError::Validation { ref message } if message.contains("YYYY-MM-DD")),
+            matches!(error, CoreError::Validation { detail: ref message } if message.contains("YYYY-MM-DD")),
             "unexpected error: {error:?}"
         );
     }
@@ -702,7 +702,7 @@ mod tests {
         let error =
             recurrence_occurs_on("FREQ=DAILY", Some(scheduled()), None, "08/10/2026").unwrap_err();
         assert!(
-            matches!(error, CoreError::Validation { ref message } if message.contains("YYYY-MM-DD")),
+            matches!(error, CoreError::Validation { detail: ref message } if message.contains("YYYY-MM-DD")),
             "unexpected error: {error:?}"
         );
     }

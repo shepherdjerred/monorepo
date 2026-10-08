@@ -126,53 +126,53 @@ pub struct HttpResponse {
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error, uniffi::Error)]
 pub enum TransportError {
     /// The request outlived its timeout.
-    #[error("{message}")]
+    #[error("{detail}")]
     Timeout {
         /// What the platform reported.
-        message: String,
+        detail: String,
     },
 
     /// The host could not reach the network or the server at all.
-    #[error("{message}")]
+    #[error("{detail}")]
     Offline {
         /// What the platform reported.
-        message: String,
+        detail: String,
     },
 
     /// The TLS handshake or certificate validation failed.
-    #[error("{message}")]
+    #[error("{detail}")]
     Tls {
         /// What the platform reported.
-        message: String,
+        detail: String,
     },
 
     /// Anything else the platform's HTTP stack reported.
-    #[error("{message}")]
+    #[error("{detail}")]
     Other {
         /// What the platform reported.
-        message: String,
+        detail: String,
     },
 }
 
 impl From<TransportError> for CoreTransportError {
     fn from(error: TransportError) -> Self {
         match error {
-            TransportError::Timeout { message } => Self::timeout(message),
-            TransportError::Offline { message } => Self::offline(message),
-            TransportError::Tls { message } => Self::tls(message),
-            TransportError::Other { message } => Self::other(message),
+            TransportError::Timeout { detail } => Self::timeout(detail),
+            TransportError::Offline { detail } => Self::offline(detail),
+            TransportError::Tls { detail } => Self::tls(detail),
+            TransportError::Other { detail } => Self::other(detail),
         }
     }
 }
 
 impl From<CoreTransportError> for TransportError {
     fn from(error: CoreTransportError) -> Self {
-        let message = error.message;
+        let detail = error.message;
         match error.kind {
-            TransportErrorKind::Timeout => Self::Timeout { message },
-            TransportErrorKind::Offline => Self::Offline { message },
-            TransportErrorKind::Tls => Self::Tls { message },
-            TransportErrorKind::Other => Self::Other { message },
+            TransportErrorKind::Timeout => Self::Timeout { detail },
+            TransportErrorKind::Offline => Self::Offline { detail },
+            TransportErrorKind::Tls => Self::Tls { detail },
+            TransportErrorKind::Other => Self::Other { detail },
         }
     }
 }
@@ -413,7 +413,7 @@ mod tests {
             self.seen.lock().unwrap().push(request);
             self.answers.lock().unwrap().pop_front().unwrap_or_else(|| {
                 Err(TransportError::Other {
-                    message: "exhausted".to_owned(),
+                    detail: "exhausted".to_owned(),
                 })
             })
         }
@@ -514,11 +514,11 @@ mod tests {
     #[test]
     fn a_bad_base_url_fails_when_the_api_is_built_not_when_a_request_is_sent() {
         let host: Arc<dyn HttpClient> = scripted(Err(TransportError::Offline {
-            message: "n/a".to_owned(),
+            detail: "n/a".to_owned(),
         }));
         let error = TaskNotesApi::new(host, "vault.test:8080", 1_000).unwrap_err();
         assert!(
-            matches!(error, CoreError::Validation { ref message } if message.contains("scheme")),
+            matches!(error, CoreError::Validation { detail: ref message } if message.contains("scheme")),
             "unexpected error: {error:?}"
         );
     }
@@ -526,7 +526,7 @@ mod tests {
     #[test]
     fn cancelling_reaches_the_host_without_touching_the_engine() {
         let transport = scripted(Err(TransportError::Offline {
-            message: "n/a".to_owned(),
+            detail: "n/a".to_owned(),
         }));
         let host: Arc<dyn HttpClient> = Arc::<Scripted>::clone(&transport);
         let api = TaskNotesApi::new(host, "http://vault.test", 1_000).unwrap();

@@ -1,0 +1,461 @@
+{
+  "cases": [
+    {
+      "id": "empty-applied",
+      "valid": true,
+      "notice": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "original",
+        "applied": true,
+        "taskPath": "Tasks/task.md",
+        "cleanupPending": false,
+        "paths": [
+          "Tasks/task.md"
+        ],
+        "pendingCount": 1,
+        "diagnostics": []
+      }
+    },
+    {
+      "id": "template_missing",
+      "valid": true,
+      "notice": true,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "original",
+        "applied": true,
+        "taskPath": "Tasks/task.md",
+        "cleanupPending": false,
+        "paths": [
+          "Tasks/task.md"
+        ],
+        "pendingCount": 1,
+        "diagnostics": [
+          {
+            "code": "template_missing"
+          }
+        ]
+      }
+    },
+    {
+      "id": "template_parse_failed",
+      "valid": true,
+      "notice": true,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "original",
+        "applied": true,
+        "taskPath": "Tasks/task.md",
+        "cleanupPending": false,
+        "paths": [
+          "Tasks/task.md"
+        ],
+        "pendingCount": 1,
+        "diagnostics": [
+          {
+            "code": "template_parse_failed"
+          }
+        ]
+      }
+    },
+    {
+      "id": "filename_shortened",
+      "valid": true,
+      "notice": true,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "original",
+        "applied": true,
+        "taskPath": "Tasks/task.md",
+        "cleanupPending": false,
+        "paths": [
+          "Tasks/task.md"
+        ],
+        "pendingCount": 1,
+        "diagnostics": [
+          {
+            "code": "filename_shortened"
+          }
+        ]
+      }
+    },
+    {
+      "id": "all-codes",
+      "valid": true,
+      "notice": true,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "original",
+        "applied": true,
+        "taskPath": "Tasks/task.md",
+        "cleanupPending": false,
+        "paths": [
+          "Tasks/task.md"
+        ],
+        "pendingCount": 1,
+        "diagnostics": [
+          {
+            "code": "template_missing"
+          },
+          {
+            "code": "template_parse_failed"
+          },
+          {
+            "code": "filename_shortened"
+          }
+        ]
+      }
+    },
+    {
+      "id": "pending-never-says-saved",
+      "valid": true,
+      "notice": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "original",
+        "applied": false,
+        "taskPath": "Tasks/task.md",
+        "cleanupPending": false,
+        "paths": [
+          "Tasks/task.md"
+        ],
+        "pendingCount": 1,
+        "diagnostics": [
+          {
+            "code": "template_missing"
+          }
+        ]
+      }
+    },
+    {
+      "id": "missing-required-diagnostics",
+      "valid": false,
+      "notice": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "original",
+        "applied": true,
+        "taskPath": "Tasks/task.md",
+        "cleanupPending": false,
+        "paths": [
+          "Tasks/task.md"
+        ],
+        "pendingCount": 1
+      }
+    },
+    {
+      "id": "null",
+      "valid": false,
+      "notice": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "original",
+        "applied": true,
+        "taskPath": "Tasks/task.md",
+        "cleanupPending": false,
+        "paths": [
+          "Tasks/task.md"
+        ],
+        "pendingCount": 1,
+        "diagnostics": null
+      }
+    },
+    {
+      "id": "object",
+      "valid": false,
+      "notice": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "original",
+        "applied": true,
+        "taskPath": "Tasks/task.md",
+        "cleanupPending": false,
+        "paths": [
+          "Tasks/task.md"
+        ],
+        "pendingCount": 1,
+        "diagnostics": {}
+      }
+    },
+    {
+      "id": "string",
+      "valid": false,
+      "notice": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "original",
+        "applied": true,
+        "taskPath": "Tasks/task.md",
+        "cleanupPending": false,
+        "paths": [
+          "Tasks/task.md"
+        ],
+        "pendingCount": 1,
+        "diagnostics": "x"
+      }
+    },
+    {
+      "id": "primitive-entry",
+      "valid": false,
+      "notice": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "original",
+        "applied": true,
+        "taskPath": "Tasks/task.md",
+        "cleanupPending": false,
+        "paths": [
+          "Tasks/task.md"
+        ],
+        "pendingCount": 1,
+        "diagnostics": [
+          true
+        ]
+      }
+    },
+    {
+      "id": "unknown",
+      "valid": false,
+      "notice": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "original",
+        "applied": true,
+        "taskPath": "Tasks/task.md",
+        "cleanupPending": false,
+        "paths": [
+          "Tasks/task.md"
+        ],
+        "pendingCount": 1,
+        "diagnostics": [
+          {
+            "code": "unknown"
+          }
+        ]
+      }
+    },
+    {
+      "id": "wrong-code-type",
+      "valid": false,
+      "notice": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "original",
+        "applied": true,
+        "taskPath": "Tasks/task.md",
+        "cleanupPending": false,
+        "paths": [
+          "Tasks/task.md"
+        ],
+        "pendingCount": 1,
+        "diagnostics": [
+          {
+            "code": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "null-code",
+      "valid": false,
+      "notice": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "original",
+        "applied": true,
+        "taskPath": "Tasks/task.md",
+        "cleanupPending": false,
+        "paths": [
+          "Tasks/task.md"
+        ],
+        "pendingCount": 1,
+        "diagnostics": [
+          {
+            "code": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "missing-code",
+      "valid": false,
+      "notice": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "original",
+        "applied": true,
+        "taskPath": "Tasks/task.md",
+        "cleanupPending": false,
+        "paths": [
+          "Tasks/task.md"
+        ],
+        "pendingCount": 1,
+        "diagnostics": [
+          {}
+        ]
+      }
+    },
+    {
+      "id": "extra-field",
+      "valid": false,
+      "notice": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "original",
+        "applied": true,
+        "taskPath": "Tasks/task.md",
+        "cleanupPending": false,
+        "paths": [
+          "Tasks/task.md"
+        ],
+        "pendingCount": 1,
+        "diagnostics": [
+          {
+            "code": "template_missing",
+            "content": "untrusted"
+          }
+        ]
+      }
+    },
+    {
+      "id": "duplicate-codes",
+      "valid": false,
+      "notice": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "original",
+        "applied": true,
+        "taskPath": "Tasks/task.md",
+        "cleanupPending": false,
+        "paths": [
+          "Tasks/task.md"
+        ],
+        "pendingCount": 1,
+        "diagnostics": [
+          {
+            "code": "template_missing"
+          },
+          {
+            "code": "template_missing"
+          }
+        ]
+      }
+    },
+    {
+      "id": "too-many",
+      "valid": false,
+      "notice": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "original",
+        "applied": true,
+        "taskPath": "Tasks/task.md",
+        "cleanupPending": false,
+        "paths": [
+          "Tasks/task.md"
+        ],
+        "pendingCount": 1,
+        "diagnostics": [
+          {
+            "code": "template_missing"
+          },
+          {
+            "code": "template_missing"
+          },
+          {
+            "code": "template_missing"
+          },
+          {
+            "code": "template_missing"
+          }
+        ]
+      }
+    },
+    {
+      "id": "wrong-schema-version",
+      "valid": false,
+      "notice": false,
+      "value": {
+        "schemaVersion": 2,
+        "mutationId": "original",
+        "applied": true,
+        "taskPath": "Tasks/task.md",
+        "cleanupPending": false,
+        "paths": [
+          "Tasks/task.md"
+        ],
+        "pendingCount": 1,
+        "diagnostics": []
+      }
+    },
+    {
+      "id": "wrong-applied",
+      "valid": false,
+      "notice": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "original",
+        "applied": "true",
+        "taskPath": "Tasks/task.md",
+        "cleanupPending": false,
+        "paths": [
+          "Tasks/task.md"
+        ],
+        "pendingCount": 1,
+        "diagnostics": []
+      }
+    },
+    {
+      "id": "wrong-task-path",
+      "valid": false,
+      "notice": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "original",
+        "applied": true,
+        "taskPath": 5,
+        "cleanupPending": false,
+        "paths": [
+          "Tasks/task.md"
+        ],
+        "pendingCount": 1,
+        "diagnostics": []
+      }
+    },
+    {
+      "id": "unknown-receipt-field",
+      "valid": false,
+      "notice": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "original",
+        "applied": true,
+        "taskPath": "Tasks/task.md",
+        "cleanupPending": false,
+        "paths": [
+          "Tasks/task.md"
+        ],
+        "pendingCount": 1,
+        "diagnostics": [],
+        "extra": null
+      }
+    },
+    {
+      "id": "missing-applied",
+      "valid": false,
+      "notice": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "original",
+        "taskPath": "Tasks/task.md",
+        "cleanupPending": false,
+        "paths": [
+          "Tasks/task.md"
+        ],
+        "pendingCount": 1,
+        "diagnostics": []
+      }
+    }
+  ]
+}

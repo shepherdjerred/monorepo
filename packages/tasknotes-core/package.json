@@ -1,11 +1,13 @@
 {
   "name": "tasknotes-core",
+  "license": "GPL-3.0-only",
   "private": true,
   "description": "Turbo shim over the TaskNotes shared Rust core — scripts wrap cargo so the workspace participates in the task graph (caching + affected). Same pattern as the scout desktop Rust crate and the Go provider.",
   "devDependencies": {
     "@tasknotes/model-reference": "npm:@tasknotes/model@0.3.0-rc.9"
   },
   "scripts": {
+    "generate": "cargo xtask generate-bindings",
     "build": "cargo build --workspace --all-targets",
     "test": "bun ci/vault-reference.ts && cargo test --workspace",
     "coverage": "bun ci/coverage.ts",

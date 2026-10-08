@@ -1,0 +1,634 @@
+[
+  {
+    "id": "config_schema.0001",
+    "section": "§9.2.3",
+    "profile": "core-lite",
+    "operation": "config.provider_behavior",
+    "assertion": "envelope_error",
+    "requires": [
+      "config-lite"
+    ],
+    "input": {
+      "mode": "strict",
+      "providersReadable": false,
+      "hasRequiredKeys": false,
+      "shouldFail": true
+    },
+    "expect": {
+      "error": {
+        "$regex": "configuration|required effective keys|strict"
+      }
+    }
+  },
+  {
+    "id": "config_schema.0002",
+    "section": "§9.2.3",
+    "profile": "core-lite",
+    "operation": "config.provider_behavior",
+    "assertion": "envelope_equals",
+    "requires": [
+      "config-lite"
+    ],
+    "input": {
+      "mode": "permissive",
+      "providersReadable": false,
+      "hasRequiredKeys": false,
+      "shouldFail": false
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "accepted"
+      }
+    }
+  },
+  {
+    "id": "config_schema.0003",
+    "section": "§9.2.3",
+    "profile": "core-lite",
+    "operation": "config.provider_behavior",
+    "assertion": "envelope_equals",
+    "requires": [
+      "config-lite"
+    ],
+    "input": {
+      "mode": "strict",
+      "providersReadable": true,
+      "hasRequiredKeys": true,
+      "shouldFail": false
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "accepted"
+      }
+    }
+  },
+  {
+    "id": "config_schema.0004",
+    "section": "§9",
+    "profile": "core-lite",
+    "operation": "config.validate_schema",
+    "assertion": "envelope_equals",
+    "requires": [
+      "config-lite"
+    ],
+    "input": {
+      "value": {
+        "mode": "strict",
+        "reject_unknown_fields": false
+      },
+      "kind": "validation"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "config_schema.0005",
+    "section": "§9",
+    "profile": "core-lite",
+    "operation": "config.validate_schema",
+    "assertion": "envelope_equals",
+    "requires": [
+      "config-lite"
+    ],
+    "input": {
+      "value": {
+        "storage": "frontmatter",
+        "filename_format": "custom",
+        "custom_filename_template": "{{title}}"
+      },
+      "kind": "title"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "config_schema.0006",
+    "section": "§9",
+    "profile": "core-lite",
+    "operation": "config.validate_schema",
+    "assertion": "envelope_equals",
+    "requires": [
+      "config-lite"
+    ],
+    "input": {
+      "value": {
+        "enabled": true,
+        "template_path": "Templates/Task.md",
+        "failure_mode": "warning_fallback",
+        "unknown_variable_policy": "preserve"
+      },
+      "kind": "templating"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "config_schema.0007",
+    "section": "§9",
+    "profile": "core-lite",
+    "operation": "config.validate_schema",
+    "assertion": "envelope_equals",
+    "requires": [
+      "config-lite"
+    ],
+    "input": {
+      "value": {
+        "date_only_anchor_time": "09:30",
+        "apply_defaults_when_explicit": false
+      },
+      "kind": "reminders"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "config_schema.0008",
+    "section": "§9",
+    "profile": "core-lite",
+    "operation": "config.validate_schema",
+    "assertion": "envelope_equals",
+    "requires": [
+      "config-lite"
+    ],
+    "input": {
+      "value": {
+        "auto_stop_on_complete": true,
+        "auto_stop_notification": false
+      },
+      "kind": "time_tracking"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "config_schema.0009",
+    "section": "§9",
+    "profile": "core-lite",
+    "operation": "config.validate_schema",
+    "assertion": "envelope_equals",
+    "requires": [
+      "config-lite"
+    ],
+    "input": {
+      "value": {
+        "values": [
+          "open",
+          "done"
+        ],
+        "default": "open",
+        "completed_values": [
+          "done"
+        ]
+      },
+      "kind": "status"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "config_schema.0010",
+    "section": "§9",
+    "profile": "core-lite",
+    "operation": "config.validate_schema",
+    "assertion": "envelope_equals",
+    "requires": [
+      "config-lite"
+    ],
+    "input": {
+      "value": {
+        "method": "tag",
+        "tag": "task",
+        "combine": "or"
+      },
+      "kind": "task_detection"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "config_schema.0011",
+    "section": "§9",
+    "profile": "core-lite",
+    "operation": "config.validate_schema",
+    "assertion": "envelope_equals",
+    "requires": [
+      "config-lite"
+    ],
+    "input": {
+      "value": {
+        "default_reltype": "FINISHTOSTART",
+        "unresolved_target_severity": "warning"
+      },
+      "kind": "dependencies"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "config_schema.0012",
+    "section": "§9",
+    "profile": "core-lite",
+    "operation": "config.validate_schema",
+    "assertion": "envelope_equals",
+    "requires": [
+      "config-lite"
+    ],
+    "input": {
+      "value": {
+        "extensions": [
+          ".md"
+        ],
+        "unresolved_default_severity": "warning"
+      },
+      "kind": "links"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  },
+  {
+    "id": "config_schema.0013",
+    "section": "§9.19",
+    "profile": "core-lite",
+    "operation": "config.validate_schema",
+    "assertion": "envelope_error",
+    "requires": [
+      "config-lite"
+    ],
+    "input": {
+      "kind": "validation",
+      "value": {
+        "mode": "invalid"
+      },
+      "regex": "validation.mode|unsupported"
+    },
+    "expect": {
+      "error": {
+        "$regex": "validation.mode|unsupported"
+      }
+    }
+  },
+  {
+    "id": "config_schema.0014",
+    "section": "§9.19",
+    "profile": "core-lite",
+    "operation": "config.validate_schema",
+    "assertion": "envelope_error",
+    "requires": [
+      "config-lite"
+    ],
+    "input": {
+      "kind": "title",
+      "value": {
+        "storage": "invalid"
+      },
+      "regex": "title.storage|invalid"
+    },
+    "expect": {
+      "error": {
+        "$regex": "title.storage|invalid"
+      }
+    }
+  },
+  {
+    "id": "config_schema.0015",
+    "section": "§9.19",
+    "profile": "core-lite",
+    "operation": "config.validate_schema",
+    "assertion": "envelope_error",
+    "requires": [
+      "config-lite"
+    ],
+    "input": {
+      "kind": "title",
+      "value": {
+        "storage": "frontmatter",
+        "filename_format": "custom"
+      },
+      "regex": "custom_filename_template"
+    },
+    "expect": {
+      "error": {
+        "$regex": "custom_filename_template"
+      }
+    }
+  },
+  {
+    "id": "config_schema.0016",
+    "section": "§9.19",
+    "profile": "core-lite",
+    "operation": "config.validate_schema",
+    "assertion": "envelope_error",
+    "requires": [
+      "config-lite"
+    ],
+    "input": {
+      "kind": "templating",
+      "value": {
+        "enabled": true,
+        "template_path": ""
+      },
+      "regex": "templating.template_path|missing"
+    },
+    "expect": {
+      "error": {
+        "$regex": "templating.template_path|missing"
+      }
+    }
+  },
+  {
+    "id": "config_schema.0017",
+    "section": "§9.19",
+    "profile": "core-lite",
+    "operation": "config.validate_schema",
+    "assertion": "envelope_error",
+    "requires": [
+      "config-lite"
+    ],
+    "input": {
+      "kind": "templating",
+      "value": {
+        "enabled": true,
+        "template_path": "x",
+        "failure_mode": "bad"
+      },
+      "regex": "templating.failure_mode|invalid"
+    },
+    "expect": {
+      "error": {
+        "$regex": "templating.failure_mode|invalid"
+      }
+    }
+  },
+  {
+    "id": "config_schema.0018",
+    "section": "§9.19",
+    "profile": "core-lite",
+    "operation": "config.validate_schema",
+    "assertion": "envelope_error",
+    "requires": [
+      "config-lite"
+    ],
+    "input": {
+      "kind": "templating",
+      "value": {
+        "enabled": true,
+        "template_path": "x",
+        "unknown_variable_policy": "bad"
+      },
+      "regex": "templating.unknown_variable_policy|invalid"
+    },
+    "expect": {
+      "error": {
+        "$regex": "templating.unknown_variable_policy|invalid"
+      }
+    }
+  },
+  {
+    "id": "config_schema.0019",
+    "section": "§9.19",
+    "profile": "core-lite",
+    "operation": "config.validate_schema",
+    "assertion": "envelope_error",
+    "requires": [
+      "config-lite"
+    ],
+    "input": {
+      "kind": "reminders",
+      "value": {
+        "date_only_anchor_time": "24:10"
+      },
+      "regex": "reminders.date_only_anchor_time|invalid"
+    },
+    "expect": {
+      "error": {
+        "$regex": "reminders.date_only_anchor_time|invalid"
+      }
+    }
+  },
+  {
+    "id": "config_schema.0020",
+    "section": "§9.19",
+    "profile": "core-lite",
+    "operation": "config.validate_schema",
+    "assertion": "envelope_error",
+    "requires": [
+      "config-lite"
+    ],
+    "input": {
+      "kind": "time_tracking",
+      "value": {
+        "auto_stop_on_complete": "yes"
+      },
+      "regex": "time_tracking.auto_stop_on_complete|invalid"
+    },
+    "expect": {
+      "error": {
+        "$regex": "time_tracking.auto_stop_on_complete|invalid"
+      }
+    }
+  },
+  {
+    "id": "config_schema.0021",
+    "section": "§9.19",
+    "profile": "core-lite",
+    "operation": "config.validate_schema",
+    "assertion": "envelope_error",
+    "requires": [
+      "config-lite"
+    ],
+    "input": {
+      "kind": "time_tracking",
+      "value": {
+        "auto_stop_notification": "no"
+      },
+      "regex": "time_tracking.auto_stop_notification|invalid"
+    },
+    "expect": {
+      "error": {
+        "$regex": "time_tracking.auto_stop_notification|invalid"
+      }
+    }
+  },
+  {
+    "id": "config_schema.0022",
+    "section": "§9.19",
+    "profile": "core-lite",
+    "operation": "config.validate_schema",
+    "assertion": "envelope_error",
+    "requires": [
+      "config-lite"
+    ],
+    "input": {
+      "kind": "status",
+      "value": {
+        "values": [
+          "open",
+          "done"
+        ],
+        "default": "todo",
+        "completed_values": [
+          "done"
+        ]
+      },
+      "regex": "status.default|values"
+    },
+    "expect": {
+      "error": {
+        "$regex": "status.default|values"
+      }
+    }
+  },
+  {
+    "id": "config_schema.0023",
+    "section": "§9.19",
+    "profile": "core-lite",
+    "operation": "config.validate_schema",
+    "assertion": "envelope_error",
+    "requires": [
+      "config-lite"
+    ],
+    "input": {
+      "kind": "status",
+      "value": {
+        "values": [
+          "open",
+          "done"
+        ],
+        "default": "open",
+        "completed_values": []
+      },
+      "regex": "status.completed_values|non-empty"
+    },
+    "expect": {
+      "error": {
+        "$regex": "status.completed_values|non-empty"
+      }
+    }
+  },
+  {
+    "id": "config_schema.0024",
+    "section": "§9.19",
+    "profile": "core-lite",
+    "operation": "config.validate_schema",
+    "assertion": "envelope_error",
+    "requires": [
+      "config-lite"
+    ],
+    "input": {
+      "kind": "task_detection",
+      "value": {
+        "combine": "xor"
+      },
+      "regex": "task_detection.combine|invalid"
+    },
+    "expect": {
+      "error": {
+        "$regex": "task_detection.combine|invalid"
+      }
+    }
+  },
+  {
+    "id": "config_schema.0025",
+    "section": "§9.19",
+    "profile": "core-lite",
+    "operation": "config.validate_schema",
+    "assertion": "envelope_error",
+    "requires": [
+      "config-lite"
+    ],
+    "input": {
+      "kind": "dependencies",
+      "value": {
+        "default_reltype": "BLOCKS"
+      },
+      "regex": "dependencies.default_reltype|invalid"
+    },
+    "expect": {
+      "error": {
+        "$regex": "dependencies.default_reltype|invalid"
+      }
+    }
+  },
+  {
+    "id": "config_schema.0026",
+    "section": "§9.19",
+    "profile": "core-lite",
+    "operation": "config.validate_schema",
+    "assertion": "envelope_error",
+    "requires": [
+      "config-lite"
+    ],
+    "input": {
+      "kind": "dependencies",
+      "value": {
+        "unresolved_target_severity": "fatal"
+      },
+      "regex": "dependencies.unresolved_target_severity|invalid"
+    },
+    "expect": {
+      "error": {
+        "$regex": "dependencies.unresolved_target_severity|invalid"
+      }
+    }
+  },
+  {
+    "id": "config_schema.0027",
+    "section": "§9.19",
+    "profile": "core-lite",
+    "operation": "config.validate_schema",
+    "assertion": "envelope_error",
+    "requires": [
+      "config-lite"
+    ],
+    "input": {
+      "kind": "links",
+      "value": {
+        "unresolved_default_severity": "fatal"
+      },
+      "regex": "links.unresolved_default_severity|invalid"
+    },
+    "expect": {
+      "error": {
+        "$regex": "links.unresolved_default_severity|invalid"
+      }
+    }
+  }
+]

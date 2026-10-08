@@ -2,13 +2,14 @@
 <Package
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
   xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
+  xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
-  IgnorableNamespaces="uap rescap">
+  IgnorableNamespaces="uap rescap com">
   <Identity Name="red.sjer.TaskNotes" Publisher="CN=TaskNotes Development" Version="0.1.0.0" />
   <mp:PhoneIdentity PhoneProductId="9aef4ee9-3c02-4bc1-a36b-fd955c88dce8" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
-    <DisplayName>TaskNotes</DisplayName>
+    <DisplayName>Facet</DisplayName>
     <PublisherDisplayName>TaskNotes Development</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
@@ -21,8 +22,8 @@
   <Applications>
     <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="$targetentrypoint$">
       <uap:VisualElements
-        DisplayName="TaskNotes"
-        Description="Native TaskNotes client for Windows"
+        DisplayName="Facet"
+        Description="Facet tasks for your Obsidian vault"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png">
@@ -30,14 +31,32 @@
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
       </uap:VisualElements>
       <Extensions>
+        <Extension Category="windows.backgroundTasks" EntryPoint="Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.Task">
+          <BackgroundTasks><Task Type="general" /></BackgroundTasks>
+        </Extension>
+        <com:Extension Category="windows.comServer">
+          <com:ComServer>
+            <com:ExeServer Executable="TaskNotes.Windows.App.exe" Arguments="-FacetBackgroundServer" DisplayName="Facet background synchronization" LaunchAndActivationPermission="O:PSG:BUD:(A;;11;;;IU)(A;;11;;;S-1-15-2-1)S:(ML;;NX;;;LW)">
+              <com:Class Id="d5e32ce5-4205-4a47-8972-8aef763ce691" DisplayName="Facet background synchronization" />
+            </com:ExeServer>
+          </com:ComServer>
+        </com:Extension>
         <uap:Extension Category="windows.protocol">
           <uap:Protocol Name="tasknotes">
-            <uap:DisplayName>TaskNotes link</uap:DisplayName>
+            <uap:DisplayName>Facet link</uap:DisplayName>
           </uap:Protocol>
         </uap:Extension>
       </Extensions>
     </Application>
   </Applications>
+  <Extensions>
+    <Extension Category="windows.activatableClass.inProcessServer">
+      <InProcessServer>
+        <Path>Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.dll</Path>
+        <ActivatableClass ActivatableClassId="Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.Task" ThreadingModel="both" />
+      </InProcessServer>
+    </Extension>
+  </Extensions>
   <Capabilities>
     <Capability Name="internetClient" />
     <rescap:Capability Name="runFullTrust" />

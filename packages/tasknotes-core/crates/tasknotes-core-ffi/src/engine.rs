@@ -109,7 +109,7 @@ fn project(
 ) -> Result<TaskStoreSnapshot, CoreError> {
     let pending_count =
         u32::try_from(snapshot.pending_count).map_err(|_| CoreError::Invariant {
-            message: format!(
+            detail: format!(
                 "the pending command count {} does not fit in a u32",
                 snapshot.pending_count
             ),
@@ -151,7 +151,7 @@ impl FfiSyncEngine {
     /// panic.
     fn locked(&self) -> Result<std::sync::MutexGuard<'_, sync::SyncEngine>, CoreError> {
         self.inner.lock().map_err(|_| CoreError::Invariant {
-            message: "the sync engine's lock was poisoned by an earlier panic; \
+            detail: "the sync engine's lock was poisoned by an earlier panic; \
                       the engine's state is unknown and it must be rebuilt"
                 .to_owned(),
         })
@@ -576,7 +576,7 @@ mod tests {
     impl HttpClient for Offline {
         fn send(&self, _request: HttpRequest) -> Result<HttpResponse, TransportError> {
             Err(TransportError::Offline {
-                message: "the test host is offline".to_owned(),
+                detail: "the test host is offline".to_owned(),
             })
         }
 

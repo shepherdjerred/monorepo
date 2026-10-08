@@ -19,8 +19,8 @@
 
 strict: true
 
-# The only two default rules that contradict `swift-format`, disabled with the
-# evidence rather than pre-emptively. Both were found by formatting the tree and
+# The default rules that contradict `swift-format`, disabled with the
+# evidence rather than pre-emptively. These conflicts were found by formatting the tree and
 # then running `swiftlint --strict`; that is the procedure to follow if a future
 # rule starts fighting the formatter, rather than reaching for a suppression
 # comment or a baseline.
@@ -33,6 +33,13 @@ disabled_rules:
   # `swift-format` moves closure parameters to the next line when the signature
   # does not fit in `lineLength`; this rule requires them on the brace line.
   - closure_parameter_position
+  # Xcode 27's swift-format fixed point places the brace on its own line after
+  # multiline return types and if-await calls. SwiftLint 0.65.1 opening_brace
+  # rejects both canonical layouts. Reproduced with this .swift-format, two
+  # consecutive identical SHA-256 format outputs and strict formatter success;
+  # the unmodified strict linter rejected the declaration and if-await braces.
+  # The formatter continues to enforce the layout; semantic rules remain here.
+  - opening_brace
 
 # A run that lints nothing must fail rather than pass. Otherwise a bad
 # `excluded:` entry, a moved directory, or a wrong working directory turns the

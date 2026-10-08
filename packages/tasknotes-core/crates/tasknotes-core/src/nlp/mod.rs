@@ -143,6 +143,63 @@ pub fn parse_task_input(input: &str, today: NaiveDate) -> NlpParseResult {
     }
 }
 
+/// Parse capture input using configured priority values without enum coercion.
+/// Unknown priority tokens remain visible in the title.
+#[must_use]
+pub fn parse_configured_input(
+    input: &str,
+    today: NaiveDate,
+    priorities: &[&str],
+) -> ConfiguredParseResult {
+    let words: Vec<&str> = input.split_whitespace().collect();
+    let mut result = ConfiguredParseResult::default();
+    let mut title = Vec::new();
+    let mut cursor = 0;
+    while let Some(word) = words.get(cursor).copied() {
+        let start = cursor;
+        cursor += 1;
+        if let Some(value) = word.strip_prefix('!').and_then(|token| {
+            priorities
+                .iter()
+                .find(|value| value.eq_ignore_ascii_case(token))
+        }) {
+            result.priority = Some((*value).to_owned());
+        } else if let Some(value) = named_after(word, "p:") {
+            result.projects.push(value.to_owned());
+        } else if let Some(value) = named_after(word, "@") {
+            result.contexts.push(value.to_owned());
+        } else if let Some(value) = named_after(word, "#") {
+            result.tags.push(value.to_owned());
+        } else if result.due.is_none()
+            && let Some(phrase) = match_date_phrase(&words, start, today)
+        {
+            result.due = Some(to_iso_date(phrase.due));
+            cursor = start + phrase.consumed;
+        } else {
+            title.push(word);
+        }
+    }
+    result.title = title.join(" ");
+    result
+}
+
+/// Open workflow capture projection shared by standalone hosts.
+#[derive(Debug, Default, serde::Serialize)]
+pub struct ConfiguredParseResult {
+    /// Remaining visible title text.
+    pub title: String,
+    /// First parsed local civil due date.
+    pub due: Option<String>,
+    /// Exact configured priority value.
+    pub priority: Option<String>,
+    /// Explicit project values.
+    pub projects: Vec<String>,
+    /// Explicit context values.
+    pub contexts: Vec<String>,
+    /// Explicit tag values.
+    pub tags: Vec<String>,
+}
+
 /// `None` for an empty list, mirroring the TypeScript conditional spread.
 fn some_if_populated(values: Vec<String>) -> Option<Vec<String>> {
     (!values.is_empty()).then_some(values)
