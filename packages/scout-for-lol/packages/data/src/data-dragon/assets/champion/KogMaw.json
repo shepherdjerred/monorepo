@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.19.1",
+  "version": "16.20.1",
   "data": {
     "KogMaw": {
       "id": "KogMaw",
@@ -456,6 +456,19 @@
           "name": "Victorious Kog'Maw (Challenger)",
           "chromas": false,
           "parentSkin": 55
+        },
+        {
+          "id": "96065",
+          "num": 65,
+          "name": "Prestige Classic Baron Kog'Maw",
+          "chromas": true
+        },
+        {
+          "id": "96066",
+          "num": 66,
+          "name": "Prestige Classic Baron Kog'Maw (Vivid)",
+          "chromas": false,
+          "parentSkin": 65
         }
       ],
       "lore": "Belched forth from a rotting Void incursion deep in the wastelands of Icathia, Kog'Maw is an inquisitive yet putrid creature with a caustic, gaping mouth. This particular Void-spawn needs to gnaw and drool on anything within reach to truly understand it. Though not inherently evil, Kog'Maw's beguiling naiveté is dangerous, as it often precedes a feeding frenzy—not for sustenance, but to satisfy its unending curiosity.",

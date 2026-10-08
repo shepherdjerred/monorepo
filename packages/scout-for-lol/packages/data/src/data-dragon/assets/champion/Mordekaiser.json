@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.19.1",
+  "version": "16.20.1",
   "data": {
     "Mordekaiser": {
       "id": "Mordekaiser",
@@ -639,8 +639,8 @@
             "effect": ["{{ cooldown }} -> {{ cooldownNL }}"]
           },
           "maxrank": 3,
-          "cooldown": [140, 120, 100],
-          "cooldownBurn": "140/120/100",
+          "cooldown": [120, 110, 100],
+          "cooldownBurn": "120/110/100",
           "cost": [0, 0, 0],
           "costBurn": "0",
           "datavalues": {},

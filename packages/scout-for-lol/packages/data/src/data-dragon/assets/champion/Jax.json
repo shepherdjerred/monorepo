@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.19.1",
+  "version": "16.20.1",
   "data": {
     "Jax": {
       "id": "Jax",
@@ -70,7 +70,7 @@
           "id": "24008",
           "num": 8,
           "name": "SKT T1 Jax",
-          "chromas": false
+          "chromas": true
         },
         {
           "id": "24009",
@@ -307,6 +307,13 @@
           "name": "Prestige Magma Chamber Jax (Vivid)",
           "chromas": false,
           "parentSkin": 42
+        },
+        {
+          "id": "24044",
+          "num": 44,
+          "name": "SKT T1 Jax (Elite)",
+          "chromas": false,
+          "parentSkin": 8
         }
       ],
       "lore": "Unmatched in both his skill with unique armaments and his biting sarcasm, Jax is the last known weapons master of Icathia. After his homeland was laid low by its own hubris in unleashing the Void, Jax and his kind vowed to protect what little remained. As magic now rises in the world, this slumbering threat stirs once more, and Jax roams Valoran, wielding the last light of Icathia and testing all warriors he meets to see if any are strong enough to stand beside him...",

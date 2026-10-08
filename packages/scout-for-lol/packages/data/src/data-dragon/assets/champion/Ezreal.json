@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.19.1",
+  "version": "16.20.1",
   "data": {
     "Ezreal": {
       "id": "Ezreal",
@@ -534,6 +534,68 @@
           "name": "Porcelain Protector Ezreal (Lustrous)",
           "chromas": false,
           "parentSkin": 25
+        },
+        {
+          "id": "81078",
+          "num": 78,
+          "name": "HEARTSTEEL Live My Life Ezreal",
+          "chromas": false
+        },
+        {
+          "id": "81079",
+          "num": 79,
+          "name": "HEARTSTEEL Live My Life Ezreal (Ruby)",
+          "chromas": true,
+          "parentSkin": 78
+        },
+        {
+          "id": "81080",
+          "num": 80,
+          "name": "HEARTSTEEL Live My Life Ezreal (Sapphire)",
+          "chromas": false,
+          "parentSkin": 78
+        },
+        {
+          "id": "81081",
+          "num": 81,
+          "name": "HEARTSTEEL Live My Life Ezreal (Catseye)",
+          "chromas": false,
+          "parentSkin": 78
+        },
+        {
+          "id": "81082",
+          "num": 82,
+          "name": "HEARTSTEEL Live My Life Ezreal (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 78
+        },
+        {
+          "id": "81083",
+          "num": 83,
+          "name": "HEARTSTEEL Live My Life Ezreal (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 78
+        },
+        {
+          "id": "81084",
+          "num": 84,
+          "name": "HEARTSTEEL Live My Life Ezreal (Obsidian)",
+          "chromas": false,
+          "parentSkin": 78
+        },
+        {
+          "id": "81085",
+          "num": 85,
+          "name": "HEARTSTEEL Live My Life Ezreal (Pearl)",
+          "chromas": false,
+          "parentSkin": 78
+        },
+        {
+          "id": "81086",
+          "num": 86,
+          "name": "HEARTSTEEL Live My Life Ezreal (Peridot)",
+          "chromas": false,
+          "parentSkin": 78
         }
       ],
       "lore": "A dashing adventurer, unknowingly gifted in the magical arts, Ezreal raids long-lost catacombs, tangles with ancient curses, and overcomes seemingly impossible odds with ease. His courage and bravado knowing no bounds, he prefers to improvise his way out of any situation, relying partially on his wits, but mostly on his mystical Shuriman gauntlet, which he uses to unleash devastating arcane blasts. One thing is for sure—whenever Ezreal is around, trouble isn't too far behind. Or ahead. Probably everywhere.",

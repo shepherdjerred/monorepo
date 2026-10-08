@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.19.1",
+  "version": "16.20.1",
   "data": {
     "Swain": {
       "id": "Swain",
@@ -392,9 +392,9 @@
         "mp": 400,
         "mpperlevel": 29,
         "movespeed": 330,
-        "armor": 25,
+        "armor": 23,
         "armorperlevel": 4.7,
-        "spellblock": 31,
+        "spellblock": 34,
         "spellblockperlevel": 1.55,
         "attackrange": 525,
         "hpregen": 3,
@@ -490,8 +490,8 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [22, 21, 20, 19, 18],
-          "cooldownBurn": "22/21/20/19/18",
+          "cooldown": [20, 19, 18, 17, 16],
+          "cooldownBurn": "20/19/18/17/16",
           "cost": [60, 65, 70, 75, 80],
           "costBurn": "60/65/70/75/80",
           "datavalues": {},

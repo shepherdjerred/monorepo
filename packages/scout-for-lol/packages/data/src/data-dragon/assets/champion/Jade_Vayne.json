@@ -49,7 +49,7 @@
           "id": "67005",
           "num": 5,
           "name": "SKT T1 Vayne",
-          "chromas": false
+          "chromas": true
         },
         {
           "id": "67006",
@@ -512,6 +512,13 @@
           "name": "Demoncursed Vayne (Pearl)",
           "chromas": false,
           "parentSkin": 67
+        },
+        {
+          "id": "67074",
+          "num": 74,
+          "name": "SKT T1 Vayne (Elite)",
+          "chromas": false,
+          "parentSkin": 5
         }
       ],
       "lore": "Shauna Vayne is a deadly, remorseless Demacian monster hunter, who has dedicated her life to finding and destroying the demon that murdered her family. Armed with a wrist-mounted crossbow and a heart full of vengeance, she is only truly happy when slaying practitioners or creations of the dark arts, striking from the shadows with a flurry of silver bolts.",
@@ -544,8 +551,8 @@
         "spellblock": 33,
         "spellblockperlevel": 1.1,
         "attackrange": 550,
-        "hpregen": 4,
-        "hpregenperlevel": 0.5,
+        "hpregen": 5.5,
+        "hpregenperlevel": 0.4,
         "mpregen": 7,
         "mpregenperlevel": 0.4,
         "crit": 0,
@@ -562,18 +569,17 @@
           "description": "Vayne tumbles, maneuvering to carefully place her next shot. Her next attack deals bonus damage.",
           "tooltip": "Vayne rolls a short distance, and deals an additional <physicalDamage>{{ adratiobonus }} physical damage</physicalDamage> on her next Attack.<br /><br /><rules>This Ability triggers spell effects upon dealing damage.</rules>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "AD Ratio %", "@AbilityResourceName@ Cost"],
+            "label": ["Cooldown", "AD Ratio %"],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
-              "{{ totaladratio*100.000000 }}% -> {{ totaladrationl*100.000000 }}%",
-              "{{ cost }} -> {{ costNL }}"
+              "{{ totaladratio*100.000000 }}% -> {{ totaladrationl*100.000000 }}%"
             ]
           },
           "maxrank": 5,
           "cooldown": [6, 5, 4, 3, 2],
           "cooldownBurn": "6/5/4/3/2",
-          "cost": [46, 42, 38, 34, 30],
-          "costBurn": "46/42/38/34/30",
+          "cost": [30, 30, 30, 30, 30],
+          "costBurn": "30",
           "datavalues": {},
           "effect": [
             null,
