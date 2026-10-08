@@ -2,7 +2,7 @@
 
 The release app is SwiftUI over the shared Rust runtime. Native sources live in
 `ios/Facet`; `ios/project.yml` owns the Xcode project. Preserve the existing app
-identity, App Group, widget identifiers, intents, and Xcode Cloud product.
+identity, App Group, task widget identifiers, task intents, and Xcode Cloud product.
 
 - The platform host owns Keychain, provider grants, transport and lifecycle.
   Rust owns task semantics, configuration, recurrence, receipts and Sync policy.

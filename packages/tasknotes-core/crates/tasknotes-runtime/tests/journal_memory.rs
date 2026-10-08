@@ -436,12 +436,12 @@ fn real_199_mib_sqlite_migration_rename_replay_and_undo_stay_bounded()
     // Genuine v10 representation: its exact BLOB row is untouched; only remove
     // the metadata-only v11 column and restore the historical schema version.
     db.execute_batch(
-        "ALTER TABLE transfer_payload_state DROP COLUMN origin; ALTER TABLE journals DROP COLUMN diagnostics; ALTER TABLE journals DROP COLUMN title_plans; DROP TABLE title_lineage; PRAGMA user_version=10;",
+        "ALTER TABLE transfer_payload_state DROP COLUMN origin; ALTER TABLE journals DROP COLUMN diagnostics; ALTER TABLE journals DROP COLUMN title_plans; DROP TABLE title_lineage; CREATE TABLE device_state(profile TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,device TEXT NOT NULL,json TEXT NOT NULL,PRIMARY KEY(profile,device)); ALTER TABLE journals ADD COLUMN effect TEXT; PRAGMA user_version=10;",
     )?;
-    let engine = measure("genuine_v10_to_v11", || Engine::open(path, disk.clone()))?;
+    let engine = measure("genuine_v10_to_v12", || Engine::open(path, disk.clone()))?;
     assert_eq!(
         db.query_row("PRAGMA user_version", [], |row| row.get::<_, u32>(0))?,
-        11
+        12
     );
     assert_eq!(
         db.query_row(

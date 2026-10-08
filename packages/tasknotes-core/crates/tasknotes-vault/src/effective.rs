@@ -29,7 +29,6 @@ pub(crate) fn resolve(
                 "dependencies",
                 "links",
                 "reminders",
-                "time_tracking",
                 "status",
                 "task_detection",
             ]
@@ -305,7 +304,7 @@ fn workflow(
 
 // The development model oracle deliberately remains byte-for-byte pinned.
 // Production defaults follow TaskNotes 4.13.8 src/settings/defaults.ts and
-// tasknotes-spec 0.3.0-rc.9 section 9: filename titles and completion auto-stop.
+// tasknotes-spec 0.3.0-rc.9 section 9 for supported fields, including filename titles.
 fn production_baseline(config: &TaskNotesConfiguration) -> Result<Map<String, Value>> {
     let id = &config.identification;
     json!({"spec_version":"0.3.0-rc.9","mapping":config.mapping.role_to_field,
@@ -318,7 +317,6 @@ fn production_baseline(config: &TaskNotesConfiguration) -> Result<Map<String, Va
         "archive":{"move_on_archive":false,"folder":"TaskNotes/Archive","mode":"field"},
         "links":{"use_markdown_format":false,"extensions":[".md"]},
         "dependencies":{"treat_missing_target_as_blocked":true,"require_resolved_uid_on_write":false},
-        "time_tracking":{"auto_stop_on_complete":true,"auto_stop_notification":false},
         "occurrences":{"default_materialization":"manual","default_next_trigger":"completion","past_horizon":"P0D","future_horizon":"P14D"}
     }).as_object().cloned().ok_or_else(||invalid("built-in configuration violates its contract"))
 }

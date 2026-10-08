@@ -98,10 +98,6 @@ public final class FacetStore {
     @ObservationIgnored internal var activeMutationID: String? {
         didSet { if activeMutationID != nil, activeMutationID != oldValue { clearSavedNotice() } }
     }
-    @ObservationIgnored internal var trackingContinuation: FacetTrackingContinuation?
-    @ObservationIgnored internal var trackingGeneration: UInt64 = 0
-    public internal(set) var trackingSessions: FacetTrackingSessions?
-    public internal(set) var trackingHistory: FacetTrackingHistory?
     public internal(set) var isSaving = false {
         didSet { if isSaving, !oldValue { clearSavedNotice() } }
     }
@@ -197,6 +193,10 @@ public final class FacetStore {
 
     public func resumeSavedAction(_ action: FacetPendingMutation) async {
         guard let engine, !isSaving else { return }
+        guard action.canResume else {
+            error = FacetDraftError.retiredFeature.localizedDescription
+            return
+        }
         let ownsPresentation = presentationOwner(
             profileID: action.profileID, ownsEngine: { self.engine === engine })
         _ = await runSavedAction(

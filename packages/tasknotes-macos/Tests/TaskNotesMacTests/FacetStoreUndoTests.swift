@@ -21,7 +21,7 @@ extension FacetStoreOwnershipTests {
                 "revision":"\(String(repeating: "a", count: 64))",
                 "status":"open","priority":"normal","completed":false,"isRecurring":true,
                 "properties":{},"body":"","isBlocked":false,"isBlocking":false,
-                "hasActiveTimeSession":false,"totalTrackedMinutes":0,"isPending":false}
+                "isPending":false}
                 """))
         await context.store.toggle(task, profileID: "A")
         #expect(context.store.savedNotice == nil)

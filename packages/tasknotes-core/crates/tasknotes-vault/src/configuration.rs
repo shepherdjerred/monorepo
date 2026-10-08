@@ -121,7 +121,7 @@ pub fn validate_schema(kind: &str, value: &Value) -> Result<()> {
             ("unresolved_target_severity", &["warning", "error"]),
         ],
         "links" => &[("unresolved_default_severity", &["warning", "error"])],
-        "reminders" | "time_tracking" | "status" => &[],
+        "reminders" | "status" => &[],
         _ => return Err(invalid(&format!("config kind unsupported:{kind}"))),
     };
     for (key, allowed) in enums {
@@ -135,7 +135,6 @@ pub fn validate_schema(kind: &str, value: &Value) -> Result<()> {
         "validation" => &["reject_unknown_fields"],
         "templating" => &["enabled"],
         "reminders" => &["apply_defaults_when_explicit"],
-        "time_tracking" => &["auto_stop_on_complete", "auto_stop_notification"],
         _ => &[],
     };
     for key in bools {
@@ -229,13 +228,6 @@ pub fn map_plugin(source: &Value) -> Value {
             vec![
                 ("defaultTaskStatus", "status"),
                 ("defaultTaskPriority", "priority"),
-            ],
-        ),
-        (
-            "time_tracking",
-            vec![
-                ("autoStopTimeTrackingOnComplete", "auto_stop_on_complete"),
-                ("autoStopTimeTrackingNotification", "auto_stop_notification"),
             ],
         ),
         (

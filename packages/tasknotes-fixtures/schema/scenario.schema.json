@@ -578,9 +578,6 @@
                             "type": "string",
                             "enum": ["scheduled", "completion"]
                           },
-                          "timeEstimate": {
-                            "type": "number"
-                          },
                           "extraFields": {
                             "type": "object",
                             "propertyNames": {
@@ -732,9 +729,6 @@
                                 "type": "null"
                               }
                             ]
-                          },
-                          "timeEstimate": {
-                            "type": ["number", "null"]
                           },
                           "extraFields": {
                             "type": "object",
@@ -1142,9 +1136,6 @@
                             "type": "string",
                             "enum": ["scheduled", "completion"]
                           },
-                          "timeEstimate": {
-                            "type": "number"
-                          },
                           "extraFields": {
                             "type": "object",
                             "propertyNames": {
@@ -1299,9 +1290,6 @@
                                 "type": "null"
                               }
                             ]
-                          },
-                          "timeEstimate": {
-                            "type": ["number", "null"]
                           },
                           "extraFields": {
                             "type": "object",

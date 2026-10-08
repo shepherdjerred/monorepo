@@ -5,6 +5,23 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class FacetSchemaTest {
+    @Test fun retainedPrivateActionCorpusIsSeparateFromPublicCommands() {
+        val loader = requireNotNull(javaClass.classLoader)
+        val schema = FacetSchema(requireNotNull(loader.getResourceAsStream("schema/facet-engine.schema.json")).bufferedReader().use { it.readText() })
+        val corpus = Json.parseToJsonElement(requireNotNull(loader.getResourceAsStream("vault/facet-retained-actions.json")).bufferedReader().use { it.readText() }).jsonObject
+        val cases = corpus.getValue("cases").jsonArray
+        assertEquals(14, cases.size)
+        for (entry in cases) {
+            val test = entry.jsonObject
+            val mutation = test.getValue("value").jsonObject
+            val accepted = runCatching { FacetRetainedActions.validate(schema, mutation) }.isSuccess
+            assertEquals(test.getValue("id").jsonPrimitive.content, test.getValue("valid").jsonPrimitive.boolean, accepted)
+            if (accepted) {
+                assertEquals(false, FacetRetainedActions.canResume(mutation))
+                assertEquals(false, runCatching { schema.validate("mutation", mutation) }.isSuccess)
+            }
+        }
+    }
     @Test fun sharedRawNumericContractCorpus() {
         val loader = requireNotNull(javaClass.classLoader)
         val schema = FacetSchema(requireNotNull(loader.getResourceAsStream("schema/facet-engine.schema.json")).bufferedReader().use { it.readText() })

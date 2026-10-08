@@ -62,6 +62,27 @@ public sealed class FacetSchemaTests
     public void SharedRawNumericCorpusIsFullyValidated() =>
         ValidateCorpus("FacetRawContractCases.json", "raw", 7);
 
+    /// <summary>Historical private drafts do not restore removed public commands.</summary>
+    [TestMethod]
+    public void HistoricalPrivateActionCorpusIsFullyValidated()
+    {
+        ValidateCorpus("FacetRetainedActionCases.json", "value", 14);
+        using var stream = typeof(FacetSchemaTests).Assembly.GetManifestResourceStream(
+            "FacetRetainedActionCases.json"
+        )!;
+        using var document = JsonDocument.Parse(stream);
+        var schema = FacetSchema.Bundled();
+        foreach (var fixture in document.RootElement.GetProperty("cases").EnumerateArray())
+            if (fixture.GetProperty("valid").GetBoolean())
+            {
+                var mutation = fixture.GetProperty("value");
+                Assert.IsFalse(FacetRetainedActions.CanResume(mutation));
+                _ = Assert.ThrowsExactly<InvalidDataException>(() =>
+                    schema.Validate(mutation.GetRawText(), "mutation")
+                );
+            }
+    }
+
     private static void ValidateCorpus(string resource, string property, int minimumCases)
     {
         using var stream = typeof(FacetSchemaTests).Assembly.GetManifestResourceStream(resource)!;

@@ -184,16 +184,13 @@ namespace TaskNotes.Windows.App.Tests
                     [],
                     [],
                     [],
-                    null,
-                    0,
                     false,
                     false,
                     false,
                     false,
                     false,
                     null,
-                    string.Empty,
-                    false
+                    string.Empty
                 );
                 editorView.Load(task);
 

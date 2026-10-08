@@ -3,8 +3,8 @@ import { defineArchitecture } from "@shepherdjerred/architecture";
 /**
  * The sync server layers as: `domain/` (the task model and its rules) ->
  * `engine/` (sync and reconciliation) -> `store/` (persistence) -> the HTTP
- * layer. That transport layer is three directories, not one: `routes/` holds
- * health and pomodoro, `v2/routes.ts` is the primary upstream `/api/*` plugin
+ * layer. That transport layer is three directories: `routes/` holds
+ * health, `v2/routes.ts` is the primary upstream `/api/*` plugin
  * surface, and `middleware/` wraps both. A rule naming only `routes` would
  * leave the main API unenforced. Dependencies point inward only.
  */

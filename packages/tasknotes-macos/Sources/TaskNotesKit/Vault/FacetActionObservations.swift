@@ -33,7 +33,7 @@ internal struct FacetActionObservations {
             }
             state.undo.removeAll { $0 == target }
             if !state.undone.contains(target) { state.undone.append(target) }
-        } else if !["pomodoro", "start_time", "stop_time", "batch_partial"].contains(kind),
+        } else if kind != "batch_partial",
             receipt.object?.fields["paths"]?.array?.elements.isEmpty == false,
             !state.undone.contains(action.id)
         {

@@ -64,12 +64,6 @@
     {"id":"receipt-diagnostics-duplicate","definition":"receipt","valid":false,"value":{"schemaVersion":1,"mutationId":"warn","applied":true,"cleanupPending":false,"diagnostics":[{"code":"template_missing"},{"code":"template_missing"}],"paths":[],"pendingCount":0,"taskPath":null}},
     {"id":"receipt-diagnostics-four","definition":"receipt","valid":false,"value":{"schemaVersion":1,"mutationId":"warn","applied":true,"cleanupPending":false,"diagnostics":[{"code":"template_missing"},{"code":"template_parse_failed"},{"code":"filename_shortened"},{"code":"template_missing"}],"paths":[],"pendingCount":0,"taskPath":null}},
     {"id":"receipt-diagnostics-code-required","definition":"receipt","valid":false,"value":{"schemaVersion":1,"mutationId":"warn","applied":true,"cleanupPending":false,"diagnostics":[{}],"paths":[],"pendingCount":0,"taskPath":null}},
-    {"id":"tracking-first-page","definition":"featureRequest","valid":true,"value":{"schemaVersion":1,"kind":"tracking_sessions","at":"2026-10-03T12:00:00Z","limit":1}},
-    {"id":"tracking-null-optionals","definition":"featureRequest","valid":true,"value":{"schemaVersion":1,"kind":"tracking_sessions","at":"2026-10-03T12:00:00Z","limit":null,"expectedVersion":null,"after":null}},
-    {"id":"tracking-zero-limit","definition":"featureRequest","valid":false,"value":{"schemaVersion":1,"kind":"tracking_sessions","at":"2026-10-03T12:00:00Z","limit":0}},
-    {"id":"tracking-large-limit","definition":"featureRequest","valid":false,"value":{"schemaVersion":1,"kind":"tracking_sessions","at":"2026-10-03T12:00:00Z","limit":129}},
-    {"id":"tracking-unfenced-cursor","definition":"featureRequest","valid":false,"value":{"schemaVersion":1,"kind":"tracking_sessions","at":"2026-10-03T12:00:00Z","after":{"taskPath":"Tasks/a.md","at":"2026-10-03T12:00:00Z"}}},
-    {"id":"tracking-unknown-field","definition":"featureRequest","valid":false,"value":{"schemaVersion":1,"kind":"tracking_sessions","at":"2026-10-03T12:00:00Z","magic":true}},
     {"id":"reminder-first-page","definition":"featureRequest","valid":true,"value":{"schemaVersion":1,"kind":"reminder_plan","at":"2026-10-03T12:00:00Z","from":"2026-10-03T00:00:00Z","to":"2026-10-04T00:00:00Z","timezone":"UTC"}},
     {"id":"reminder-fenced-cursor","definition":"featureRequest","valid":true,"value":{"schemaVersion":1,"kind":"reminder_plan","at":"2026-10-03T12:00:00Z","from":"2026-10-03T00:00:00Z","to":"2026-10-04T00:00:00Z","timezone":"UTC","after":{"fireAt":"2026-10-03T15:00:00Z","reminderId":"same","taskPath":"Tasks/a.md"},"expectedVersion":1}},
     {"id":"reminder-integral-page-limit","definition":"featureRequest","valid":true,"value":{"schemaVersion":1,"kind":"reminder_plan","at":"2026-10-03T12:00:00Z","from":"2026-10-03T00:00:00Z","to":"2026-10-04T00:00:00Z","timezone":"UTC","limit":1.0}},
@@ -246,6 +240,15 @@
         "schemaVersion": 2,
         "profiles": []
       }
-    }
+    },
+    {"id":"removed-command-start_time","definition":"mutation","valid":false,"value":{"mutationId":"removed","at":"2026-10-03T12:00:00Z","command":{"kind":"start_time","path":"Tasks/a.md","expectedRevision":null}}},
+    {"id":"removed-command-stop_time","definition":"mutation","valid":false,"value":{"mutationId":"removed","at":"2026-10-03T12:00:00Z","command":{"kind":"stop_time","path":"Tasks/a.md","expectedRevision":null}}},
+    {"id":"removed-command-set_time_entries","definition":"mutation","valid":false,"value":{"mutationId":"removed","at":"2026-10-03T12:00:00Z","command":{"kind":"set_time_entries","path":"Tasks/a.md","entries":[]}}},
+    {"id":"removed-command-pomodoro","definition":"mutation","valid":false,"value":{"mutationId":"removed","at":"2026-10-03T12:00:00Z","command":{"kind":"pomodoro","deviceId":"phone","action":"start","taskPath":null,"durationSeconds":1500}}},
+    {"id":"removed-feature-task_time","definition":"featureRequest","valid":false,"value":{"kind":"task_time"}},
+    {"id":"removed-feature-time_report","definition":"featureRequest","valid":false,"value":{"kind":"time_report"}},
+    {"id":"removed-feature-pomodoro","definition":"featureRequest","valid":false,"value":{"kind":"pomodoro"}},
+    {"id":"removed-feature-tracking_sessions","definition":"featureRequest","valid":false,"value":{"kind":"tracking_sessions"}},
+    {"id":"removed-feature-tracking_history","definition":"featureRequest","valid":false,"value":{"kind":"tracking_history"}}
   ]
 }

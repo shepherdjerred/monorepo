@@ -43,7 +43,7 @@ struct FacetEditorEngineTests {
         #expect(result.tasks.first?.path == renamed.path)
         #expect(result.tasks.first?.properties["contexts"] == .array([.string("next edit")]))
     }
-    @Test func completedEditorUsesOneFenceAndConfiguredTimeStop() async throws {
+    @Test func completedEditorUsesOneFence() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { NativeTestFiles.remove(root) }
         let vault = try configuredVault(root)
@@ -54,13 +54,6 @@ struct FacetEditorEngineTests {
             profileID: profile.id,
             command: .object([
                 "kind": .string("create"), "properties": .object(["title": .string("Editor task")]),
-            ]))
-        let first = try #require(
-            await engine.snapshot(profileID: profile.id, query: .object([:])).tasks.first)
-        try await engine.execute(
-            profileID: profile.id,
-            command: .object([
-                "kind": .string("start_time"), "path": .string(first.path),
             ]))
         let editing = try #require(
             await engine.snapshot(profileID: profile.id, query: .object([:])).tasks.first)
@@ -76,7 +69,6 @@ struct FacetEditorEngineTests {
             await engine.snapshot(profileID: profile.id, query: .object([:])).tasks.first)
         #expect(saved.completed)
         #expect(saved.title == "Edited and completed")
-        #expect(!saved.hasActiveTimeSession)
         #expect(saved.properties["completedDate"]?.text != nil)
         let undo = try await engine.features(
             profileID: profile.id,
@@ -139,7 +131,7 @@ struct FacetEditorEngineTests {
         let settings = vault.appendingPathComponent(".obsidian/plugins/tasknotes")
         try FileManager.default.createDirectory(at: settings, withIntermediateDirectories: true)
         try JSONEncoder().encode([
-            "storeTitleInFilename": filenameTitles, "autoStopTimeTrackingOnComplete": true,
+            "storeTitleInFilename": filenameTitles
         ])
         .write(to: settings.appendingPathComponent("data.json"))
         return vault

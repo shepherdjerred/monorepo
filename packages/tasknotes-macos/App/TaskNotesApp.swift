@@ -61,11 +61,6 @@ struct TaskNotesApp: App {
             // inside `TaskNotesCommands`, because it belongs beside the panel
             // it opens.
             //
-            // There is deliberately **no** command for the two windows below:
-            // SwiftUI adds a Window-menu item for every `Window` scene on its
-            // own, from launch and before either has ever been opened. Verified
-            // by reading the running app's menu bar — an explicit pair produced
-            // `Pomodoro, Time Report, Pomodoro, Time Report`.
             FacetMacCommands(environment: environment)
         }
 
@@ -75,8 +70,6 @@ struct TaskNotesApp: App {
             FacetMacSettingsView(environment: environment)
         }
 
-        // The pomodoro timer and the time report, each a single `Window`.
-        //
         // The quick-add panel is deliberately **not** here: it is an `NSPanel`
         // built by hand, because SwiftUI exposes no way to make a scene's window
         // non-activating, and appearing without pulling the application forward

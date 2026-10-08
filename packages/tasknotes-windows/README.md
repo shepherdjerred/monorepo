@@ -6,6 +6,8 @@ Obsidian Sync engines through generated C# UniFFI bindings. The application
 stores its index and mutation journal locally and connects directly to an
 authorized Obsidian Sync vault.
 
+Existing duration and time-entry metadata remains untouched in vault notes.
+
 The host validates the complete mutation receipt before presenting its saved
 result. Template and filename notices accompany Saved and belong to the exact
 vault, action and engine request. Expected refresh or cleanup I/O failures keep
@@ -184,12 +186,17 @@ views, while command state and validation remain in portable view models. This
 keeps generated XAML and UI-thread concerns out of the portable test surface.
 
 `FacetTaskNotesStore` exposes the complete task snapshot, fixed and dynamic query
-projections, vocabulary, saved-view metadata, completion undo, live timing and
-Pomodoro state, pending IDs, sync state, errors, and retained conflicts. A
-single-reader channel executes every FFI call and publishes its immutable
-snapshot before completing the queued operation, so concurrent callers cannot
-replace newer state with an older snapshot. It runs away from the UI thread. Its
-bounded coalescing pump owns background drains and is awaited during disposal.
+projections, vocabulary, saved-view metadata, completion undo, pending IDs,
+sync state, errors, and retained conflicts. An `EngineRunner` single-reader
+channel executes every FFI call away from the UI thread. The standalone store
+serializes operations and background snapshot publication through one operation
+gate; its bounded coalescing pump is awaited during disposal.
+
+The retained server-backed `TaskNotesStore` publishes its immutable snapshot
+inside the queued engine operation, before completing that operation, and
+rejects older publication sequences. Concurrent callers cannot replace newer
+state with an older snapshot.
+
 Host callbacks supply app-private filesystem capabilities, bounded HTTP and
 WebSocket transport, clock and timezone context, cryptographic randomness,
 cancellation and secure credential storage. C# does not implement recurrence,
@@ -227,8 +234,7 @@ boundary have their own changed-line and non-regression checks.
 ## Native surface
 
 The `NavigationView` contains Inbox, Today, Upcoming, Browse, completed tasks,
-Board, saved views, projects, contexts, tags, Pomodoro, Time Report, and
-Settings. The reusable task workspace supports search, filters, sorting,
+Board, saved views, projects, contexts, tags, and Settings. The reusable task workspace supports search, filters, sorting,
 grouping, multi-selection, bulk mutation, task editing, recurrence completion,
 and LIFO completion undo. The shell also implements `tasknotes://` activation,
 singleton auxiliary windows, keyboard commands, a configurable global Quick
@@ -319,9 +325,5 @@ files are unlinked; interrupted cleanup resumes from that receipt. Missing or
 ambiguous legacy captures remain visible errors requiring review. Sealed
 metadata traversal does not read attachment contents.
 
-Standalone tracked-time summaries stream bounded history pages while preserving
-the core's per-entry rounding. The editor and Time Report show at most 128
-history entries or running sessions per page. Continuations retain their original
-vault, task revision, index version, clock and request owner; changing vaults or
-refreshing requires a fresh reading. Saved warnings belong to one applied action
-and clear when a newer action is admitted, including a rejected edit.
+Saved warnings belong to one applied action and clear when a newer action is
+admitted, including a rejected edit.

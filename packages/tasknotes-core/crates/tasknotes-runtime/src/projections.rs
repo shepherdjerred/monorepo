@@ -115,27 +115,6 @@ pub(crate) fn local(task: &mut TaskSnapshot, query: &Query) -> Result<()> {
             task.completed = complete.contains(&occurrence);
         }
     }
-    let entries = tasknotes_vault::tracking::normalize(
-        task.properties.get("timeEntries").unwrap_or(&json!([])),
-    )?;
-    task.has_active_time_session = entries.iter().any(|entry| entry.get("endTime").is_none());
-    // A fixed epoch is an arithmetic argument only for closed entries, whose
-    // elapsed result is independent of it. Open entries are excluded explicitly.
-    let now = query
-        .at
-        .as_deref()
-        .map(tasknotes_vault::temporal::parse_instant)
-        .transpose()?;
-    let closed: Vec<_> = entries
-        .iter()
-        .filter(|entry| entry.get("endTime").is_some())
-        .cloned()
-        .collect();
-    task.total_tracked_minutes = if let Some(now) = now {
-        tasknotes_vault::tracking::totals(&entries, now)?.1
-    } else {
-        tasknotes_vault::tracking::totals(&closed, chrono::DateTime::UNIX_EPOCH)?.0
-    };
     Ok(())
 }
 fn instance_days(task: &TaskSnapshot, key: &str) -> Result<Vec<NaiveDate>> {

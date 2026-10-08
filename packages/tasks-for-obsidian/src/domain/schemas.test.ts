@@ -19,11 +19,9 @@ describe("TaskSchema", () => {
     expect(task.tags).toEqual([]);
     expect(task.completeInstances).toEqual([]);
     expect(task.skippedInstances).toEqual([]);
-    expect(task.timeEntries).toEqual([]);
     expect(task.blockedBy).toEqual([]);
     expect(task.reminders).toEqual([]);
     expect(task.archived).toBe(false);
-    expect(task.totalTrackedTime).toBe(0);
     expect(task.isBlocked).toBe(false);
     expect(task.isBlocking).toBe(false);
     expect(task.extraFields).toEqual({});
@@ -36,7 +34,6 @@ describe("TaskSchema", () => {
       contexts: ["work"],
       projects: ["monorepo"],
       tags: ["release"],
-      timeEntries: [{ startTime: "2026-09-01T00:00:00Z", duration: 30 }],
       blockedBy: [{ uid: "dependency.md", reltype: "blocks" }],
       reminders: [{ type: "relative", offset: "-PT15M" }],
     });
@@ -44,9 +41,6 @@ describe("TaskSchema", () => {
     expect(task.contexts).toEqual(["work"]);
     expect(task.projects).toEqual(["monorepo"]);
     expect(task.tags).toEqual(["release"]);
-    expect(task.timeEntries).toEqual([
-      { startTime: "2026-09-01T00:00:00Z", duration: 30 },
-    ]);
     expect(task.blockedBy).toEqual([
       { uid: "dependency.md", reltype: "blocks" },
     ]);

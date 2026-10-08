@@ -10,41 +10,11 @@ const NOTE: &[u8] = b"---\ntitle: Frontmatter title\nstatus: open\ntags: [task]\
 
 #[test]
 fn official_defaults_and_partial_providers_drive_actual_titles_and_completion() -> Result<()> {
-    for (plugin, portable, filename, auto_stop, notification) in [
-        (None, None, true, true, false),
-        (Some(json!({})), None, true, true, false),
-        (
-            None,
-            Some("time_tracking:\n  auto_stop_notification: true\n"),
-            true,
-            true,
-            true,
-        ),
-        (
-            Some(json!({"autoStopTimeTrackingNotification":true})),
-            Some("time_tracking:\n  auto_stop_on_complete: false\n"),
-            true,
-            true,
-            true,
-        ),
-        (
-            Some(
-                json!({"storeTitleInFilename":false,"autoStopTimeTrackingOnComplete":false,"autoStopTimeTrackingNotification":true}),
-            ),
-            None,
-            false,
-            false,
-            true,
-        ),
-        (
-            None,
-            Some(
-                "title:\n  storage: frontmatter\ntime_tracking:\n  auto_stop_on_complete: false\n",
-            ),
-            false,
-            false,
-            false,
-        ),
+    for (plugin, portable, filename) in [
+        (None, None, true),
+        (Some(json!({})), None, true),
+        (Some(json!({"storeTitleInFilename":false})), None, false),
+        (None, Some("title:\n  storage: frontmatter\n"), false),
     ] {
         let files = Arc::new(Memory::default());
         if let Some(plugin) = plugin {
@@ -71,33 +41,15 @@ fn official_defaults_and_partial_providers_drive_actual_titles_and_completion() 
             .get("effective")
             .ok_or(RuntimeError::NotFound)?;
         assert_eq!(
-            effective.pointer("/time_tracking/auto_stop_on_complete"),
-            Some(&json!(auto_stop))
-        );
-        assert_eq!(
-            effective.pointer("/time_tracking/auto_stop_notification"),
-            Some(&json!(notification))
-        );
-        assert_eq!(
             effective.pointer("/task_detection/property_name"),
             Some(&json!(""))
         );
-        assert_completion_policy(&engine, &task.path, auto_stop)?;
+        assert_completion_policy(&engine, &task.path)?;
     }
     Ok(())
 }
 
-fn assert_completion_policy(engine: &Engine, path: &str, auto_stop: bool) -> Result<()> {
-    engine.execute(
-        "a",
-        &mutation(
-            "start",
-            Command::StartTime {
-                path: path.to_owned(),
-                expected_revision: None,
-            },
-        ),
-    )?;
+fn assert_completion_policy(engine: &Engine, path: &str) -> Result<()> {
     let mut finish = mutation(
         "finish",
         Command::SetStatus {
@@ -111,14 +63,10 @@ fn assert_completion_policy(engine: &Engine, path: &str, auto_stop: bool) -> Res
     engine.execute("a", &finish)?;
     let after = engine.snapshot("a", &Query::default())?;
     let task = after.tasks.first().ok_or(RuntimeError::NotFound)?;
-    assert_eq!(task.has_active_time_session, !auto_stop);
     assert_eq!(
         task.properties.get("completedDate"),
         Some(&json!("2026-10-03"))
     );
-    if auto_stop {
-        assert_eq!(task.total_tracked_minutes, 2);
-    }
     Ok(())
 }
 
@@ -128,10 +76,6 @@ fn invalid_recognized_plugin_settings_never_fall_back_or_publish_files() -> Resu
         json!({"storeTitleInFilename":"wrong"}),
         json!({"storeTitleInFilename":0}),
         json!({"storeTitleInFilename":null}),
-        json!({"autoStopTimeTrackingOnComplete":"wrong"}),
-        json!({"autoStopTimeTrackingOnComplete":1}),
-        json!({"autoStopTimeTrackingOnComplete":null}),
-        json!({"autoStopTimeTrackingNotification":[]}),
         json!({"taskTag":false}),
         json!({"tasksFolder":null}),
         json!({"taskFilenameFormat":"unknown"}),
@@ -181,7 +125,7 @@ fn invalid_remote_recognized_settings_are_retained_until_explicit_repair() -> Re
     let mut selected = profile(ProfileKind::ObsidianSync);
     selected.approve_standard = false;
     engine.register_profile(selected)?;
-    let invalid = br#"{"autoStopTimeTrackingOnComplete":null,"vendor":{"opaque":null}}"#;
+    let invalid = br#"{"storeTitleInFilename":null,"vendor":{"opaque":null}}"#;
     engine.ingest_remote("a", PLUGIN, Some(invalid), "1")?;
     engine.ingest_remote("a", "Tasks/Filename title.md", Some(NOTE), "2")?;
     assert_eq!(files.get("a", PLUGIN)?, Some(invalid.to_vec()));
@@ -193,7 +137,7 @@ fn invalid_remote_recognized_settings_are_retained_until_explicit_repair() -> Re
         engine.features_json("a", r#"{"kind":"discovery"}"#),
         Err(RuntimeError::Configuration(_))
     ));
-    let repaired = br#"{"autoStopTimeTrackingOnComplete":false,"vendor":{"opaque":null}}"#;
+    let repaired = br#"{"storeTitleInFilename":true,"vendor":{"opaque":null}}"#;
     engine.ingest_remote("a", PLUGIN, Some(repaired), "3")?;
     let snapshot = engine.snapshot("a", &Query::default())?;
     assert_eq!(

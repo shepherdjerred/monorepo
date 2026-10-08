@@ -8,6 +8,56 @@ import org.junit.Assert.assertThrows
 import org.junit.Test
 
 class FacetMutationRecoveryTest {
+    @Test fun persistedHistoricalActionsHaveOwnedRetirementDecisionsAndCannotResume() {
+        val loader = requireNotNull(javaClass.classLoader)
+        val schema = FacetSchema(requireNotNull(loader.getResourceAsStream("schema/facet-engine.schema.json")).bufferedReader().use { it.readText() })
+        val directory = Files.createTempDirectory("facet-retained-upgrade").toFile()
+        try {
+            val id = UUID.randomUUID().toString()
+            val activeId = UUID.randomUUID().toString()
+            fun mutation(identity: String, command: JsonObject) = buildJsonObject {
+                put("schemaVersion", 1); put("mutationId", identity); put("at", "2026-10-03T12:00:00Z"); put("command", command)
+            }
+            val historical = mutation(id, buildJsonObject { put("kind", "start_time"); put("path", "Tasks/a.md") })
+            val active = mutation(activeId, buildJsonObject { put("kind", "create"); put("properties", buildJsonObject { put("title", "Still supported") }) })
+            for (value in listOf(historical, active)) {
+                directory.resolve("${value.getValue("mutationId").jsonPrimitive.content}.json").writeText(buildJsonObject { put("profileId", "original-vault"); put("mutation", value) }.toString())
+            }
+            val before = directory.resolve("$id.json").readBytes()
+            val reopened = FacetMutationDrafts(directory)
+            val drafts = reopened.pending().onEach { FacetRetainedActions.validate(schema, it.mutation) }
+            assertEquals(2, drafts.size)
+            val retired = drafts.single { it.mutationId == id }
+            assertEquals(false, retired.canResume)
+            assertEquals(true, drafts.single { it.mutationId == activeId }.canResume)
+            org.junit.Assert.assertArrayEquals(before, directory.resolve("$id.json").readBytes())
+            fun outcome(identity: String, state: String, receipt: JsonElement = JsonNull) = buildJsonObject {
+                put("schemaVersion", 1); put("mutationId", identity); put("state", state); put("receipt", receipt)
+            }
+            assertThrows(FacetActionError::class.java) { FacetRetainedActions.retirement(schema, retired, outcome(id, "pending")) }
+            assertThrows(IllegalArgumentException::class.java) { FacetRetainedActions.retirement(schema, retired, outcome(activeId, "absent")) }
+            org.junit.Assert.assertArrayEquals(before, directory.resolve("$id.json").readBytes())
+            val receipt = buildJsonObject {
+                put("schemaVersion", 1); put("mutationId", id); put("applied", true); put("cleanupPending", false)
+                put("diagnostics", JsonArray(emptyList())); put("taskPath", JsonNull); put("paths", JsonArray(listOf(JsonPrimitive("Tasks/a.md")))); put("pendingCount", 1)
+            }
+            assertEquals(FacetDraftRetirement.OBSERVED, FacetRetainedActions.retirement(schema, retired, outcome(id, "applied", receipt)))
+            assertEquals(FacetDraftRetirement.REJECTED, FacetRetainedActions.retirement(schema, retired, outcome(id, "absent")))
+            val parkedReceipt = JsonObject(receipt + ("applied" to JsonPrimitive(false)))
+            assertEquals(FacetDraftRetirement.REJECTED, FacetRetainedActions.retirement(schema, retired, outcome(id, "parked", parkedReceipt)))
+            val foreignReceipt = JsonObject(receipt + ("mutationId" to JsonPrimitive(activeId)))
+            assertThrows(IllegalArgumentException::class.java) { FacetRetainedActions.retirement(schema, retired, outcome(id, "applied", foreignReceipt)) }
+            val foreignParkedReceipt = JsonObject(parkedReceipt + ("mutationId" to JsonPrimitive(activeId)))
+            assertThrows(IllegalArgumentException::class.java) { FacetRetainedActions.retirement(schema, retired, outcome(id, "parked", foreignParkedReceipt)) }
+            val activeDraft = drafts.single { it.mutationId == activeId }
+            assertThrows(FacetActionError::class.java) { FacetRetainedActions.retirement(schema, activeDraft, outcome(activeId, "applied", foreignReceipt)) }
+            val after = FacetMutationDrafts(directory).pending()
+            assertEquals(2, after.size)
+            assertEquals(active, after.single { it.mutationId == activeId }.mutation)
+            org.junit.Assert.assertArrayEquals(before, directory.resolve("$id.json").readBytes())
+        } finally { directory.deleteRecursively() }
+    }
+
     @Test fun onlyObservedOrphansAreEligibleForRestartCleanup() {
         val directory = Files.createTempDirectory("facet-observed-cleanup").toFile()
         try {

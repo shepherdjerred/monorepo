@@ -149,8 +149,7 @@ struct InspectorSnapshotTests {
         let detail = try TaskDetail.build(
             row: row,
             calendar: InspectorFixtures.calendar,
-            text: TaskDateText(locale: Locale(identifier: "en_US")),
-            duration: TaskDurationText(locale: Locale(identifier: "en_US"))
+            text: TaskDateText(locale: Locale(identifier: "en_US"))
         )
         return TaskInspectorForm(
             detail: detail,
@@ -204,7 +203,6 @@ enum InspectorFixtures {
             projects: ["[[Projects/Flat|the flat]]", "Admin"],
             contexts: ["home", "errands"],
             tags: ["urgent", "waiting"],
-            timeEstimate: 90,
             details: """
                 Ask about the **window** for the annual inspection.
 
@@ -268,7 +266,7 @@ enum InspectorFixtures {
 /// A task carrying the fields the inspector renders.
 ///
 /// Separate from the list fixtures' `coreTask`, which exposes neither tags, a
-/// time estimate, nor a note body — the three fields these images exist to show.
+/// note body — the three fields these images exist to show.
 @MainActor
 func inspectorTask(
     id: String,
@@ -281,7 +279,6 @@ func inspectorTask(
     projects: [ProjectName] = [],
     contexts: [ContextName] = [],
     tags: [TagName] = [],
-    timeEstimate: UInt32? = nil,
     details: String? = nil
 ) -> CoreTask {
     CoreTask(
@@ -302,12 +299,9 @@ func inspectorTask(
         completedDate: nil,
         dateCreated: nil,
         dateModified: nil,
-        timeEstimate: timeEstimate,
-        timeEntries: [],
         blockedBy: [],
         reminders: [],
         archived: false,
-        totalTrackedTime: 0,
         isBlocked: false,
         isBlocking: false,
         extraFields: "{}",

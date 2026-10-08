@@ -92,11 +92,19 @@ public struct FacetMacSettingsView: View {
     private let environment: FacetMacEnvironment
     public init(environment: FacetMacEnvironment) { self.environment = environment }
     public var body: some View {
+        FacetMacSettingsContent(store: environment.store)
+    }
+}
+
+internal struct FacetMacSettingsContent: View {
+    let store: FacetStore
+
+    var body: some View {
         VStack {
             QuickAddSettingsView()
-            Button("Connect Obsidian Sync…") { environment.store.showsAccount = true }
+            Button("Connect Obsidian Sync…") { store.showsAccount = true }
             Button("Sign out of Obsidian") {
-                _Concurrency.Task { await environment.store.signOut() }
+                _Concurrency.Task { await store.signOut() }
             }
         }.padding().frame(width: 480, height: 320)
     }

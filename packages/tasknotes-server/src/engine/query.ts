@@ -33,7 +33,6 @@ const FilterPropertySchema = z.union([
     "hasSubtasks",
     "dependencies.isBlocked",
     "dependencies.isBlocking",
-    "timeEstimate",
     "recurrence",
     "status.isCompleted",
   ]),
@@ -186,7 +185,6 @@ const DirectPropertySchema = z.enum([
   "dateModified",
   "archived",
   "hasSubtasks",
-  "timeEstimate",
   "recurrence",
 ]);
 

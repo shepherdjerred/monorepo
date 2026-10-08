@@ -60,9 +60,6 @@ namespace TaskNotes.Windows.Host
         /// <summary>Task editor tags.</summary>
         public const string EditorTags = "TaskNotes.Editor.Tags";
 
-        /// <summary>Task editor estimate.</summary>
-        public const string EditorEstimate = "TaskNotes.Editor.Estimate";
-
         /// <summary>Task editor save command.</summary>
         public const string EditorSave = "TaskNotes.Editor.Save";
 
@@ -104,21 +101,6 @@ namespace TaskNotes.Windows.Host
 
         /// <summary>Kanban board.</summary>
         public const string Board = "TaskNotes.Board";
-
-        /// <summary>Pomodoro window root.</summary>
-        public const string PomodoroWindow = "TaskNotes.Pomodoro";
-
-        /// <summary>Live Pomodoro server state.</summary>
-        public const string PomodoroStatus = "TaskNotes.Pomodoro.Status";
-
-        /// <summary>Time report window root.</summary>
-        public const string TimeReportWindow = "TaskNotes.TimeReport";
-
-        /// <summary>Aggregate tracked-time total.</summary>
-        public const string TimeReportTotal = "TaskNotes.TimeReport.Total";
-
-        /// <summary>Tracked-time report rows.</summary>
-        public const string TimeReportRows = "TaskNotes.TimeReport.Rows";
 
         /// <summary>Test-only diagnostic reset command.</summary>
         public const string ResetDiagnostic = "TaskNotes.Diagnostics.Reset";

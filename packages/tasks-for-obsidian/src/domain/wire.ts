@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import type { Task, TimeSummary, TaskTime } from "./types";
+import type { Task } from "./types";
 import { contextName, projectName, tagName, taskId } from "./types";
 import { PrioritySchema, TaskStatusSchema } from "./base-schemas";
 
@@ -32,12 +32,6 @@ const WireReminderSchema = z.looseObject({
   absoluteTime: z.string().optional(),
 });
 
-const WireTimeEntrySchema = z.looseObject({
-  startTime: z.string(),
-  endTime: z.string().optional(),
-  duration: z.number().optional(),
-});
-
 export const WireTaskSchema = z
   .looseObject({
     id: z.string().optional(),
@@ -57,12 +51,9 @@ export const WireTaskSchema = z
     completedDate: z.string().optional(),
     dateCreated: z.string().optional(),
     dateModified: z.string().optional(),
-    timeEstimate: z.number().optional(),
-    timeEntries: z.array(WireTimeEntrySchema).default([]),
     blockedBy: z.array(WireDependencySchema).default([]),
     reminders: z.array(WireReminderSchema).default([]),
     archived: z.boolean().default(false),
-    totalTrackedTime: z.number().default(0),
     isBlocked: z.boolean().default(false),
     isBlocking: z.boolean().default(false),
     customProperties: z.record(z.string(), z.unknown()).default({}),
@@ -87,12 +78,6 @@ export const WireTaskSchema = z
     completedDate: raw.completedDate,
     dateCreated: raw.dateCreated,
     dateModified: raw.dateModified,
-    timeEstimate: raw.timeEstimate,
-    timeEntries: raw.timeEntries.map((e) => ({
-      startTime: e.startTime,
-      ...(e.endTime === undefined ? {} : { endTime: e.endTime }),
-      ...(e.duration === undefined ? {} : { duration: e.duration }),
-    })),
     blockedBy: raw.blockedBy.map((d) => ({
       uid: d.uid,
       ...(d.reltype === undefined ? {} : { reltype: d.reltype }),
@@ -105,7 +90,6 @@ export const WireTaskSchema = z
       ...(r.absoluteTime === undefined ? {} : { absoluteTime: r.absoluteTime }),
     })),
     archived: raw.archived,
-    totalTrackedTime: raw.totalTrackedTime,
     isBlocked: raw.isBlocked,
     isBlocking: raw.isBlocking,
     extraFields: raw.customProperties,
@@ -181,37 +165,6 @@ export const WireFilterOptionsSchema = z
     contexts: raw.contexts,
     projects: raw.projects,
     tags: raw.tags,
-  }));
-
-/** GET /api/time/summary → the app's report shape. */
-export const WireTimeSummarySchema = z
-  .looseObject({
-    period: z.string(),
-    summary: z.looseObject({ totalMinutes: z.number() }),
-    topTasks: z.array(
-      z.object({ task: z.string(), title: z.string(), minutes: z.number() }),
-    ),
-  })
-  .transform((raw): TimeSummary => ({
-    totalTime: raw.summary.totalMinutes,
-    topTasks: raw.topTasks.map((t) => ({
-      taskId: taskId(t.task),
-      title: t.title,
-      minutes: t.minutes,
-    })),
-  }));
-
-/** GET /api/tasks/:id/time → per-task tracked time. */
-export const WireTaskTimeSchema = z
-  .looseObject({
-    summary: z.looseObject({
-      totalMinutes: z.number(),
-      activeSessions: z.number(),
-    }),
-  })
-  .transform((raw): TaskTime => ({
-    totalTime: raw.summary.totalMinutes,
-    hasActiveSession: raw.summary.activeSessions > 0,
   }));
 
 /** POST /api/nlp/parse → { parsed, taskData }; the app wants `parsed`. */

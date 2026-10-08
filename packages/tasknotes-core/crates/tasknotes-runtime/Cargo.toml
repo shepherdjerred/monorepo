@@ -24,5 +24,9 @@ obsidian-sync = { path = "../obsidian-sync" }
 stats_alloc.workspace = true
 tempfile.workspace = true
 
+[[test]]
+name = "crypto_memory"
+harness = false
+
 [lints]
 workspace = true

@@ -9,9 +9,6 @@ mod absolute_reminder_writes;
 #[path = "runtime_tests/canonical_writes.rs"]
 mod canonical_writes;
 
-#[path = "runtime_tests/native_tracking_capture.rs"]
-mod native_tracking_capture;
-
 #[path = "runtime_tests/domain_gap_review.rs"]
 mod domain_gap_review;
 
@@ -42,14 +39,14 @@ mod providers;
 mod reminder_scalars;
 #[path = "runtime_tests/reminders.rs"]
 mod reminders;
+#[path = "runtime_tests/retired_features.rs"]
+mod retired_features;
+#[path = "runtime_tests/retired_metadata_strict.rs"]
+mod retired_metadata_strict;
 #[path = "runtime_tests/strict_tasks.rs"]
 mod strict_tasks;
 #[path = "runtime_tests/temporal_writes.rs"]
 mod temporal_writes;
-#[path = "runtime_tests/tracking.rs"]
-mod tracking;
-#[path = "runtime_tests/tracking_schema_review.rs"]
-mod tracking_schema_review;
 #[path = "runtime_tests/uploads.rs"]
 mod uploads;
 
@@ -749,7 +746,7 @@ fn invalid_remote_metadata_and_mismatched_hashes_fail_before_any_file_io()
 }
 
 #[test]
-fn snapshot_projects_configured_dependencies_occurrences_time_and_all_pending_paths()
+fn snapshot_projects_configured_dependencies_occurrences_and_all_pending_paths()
 -> std::result::Result<(), Box<dyn std::error::Error>> {
     let files = Arc::new(Memory::default());
     files.seed("a", "tasknotes.yaml", b"title:\n  storage: frontmatter\n")?;
@@ -764,8 +761,7 @@ fn snapshot_projects_configured_dependencies_occurrences_time_and_all_pending_pa
         .iter()
         .find(|task| task.path.ends_with("parent.md"))
         .unwrap();
-    assert!(parent.is_recurring && parent.is_blocking && parent.has_active_time_session);
-    assert_eq!(parent.total_tracked_minutes, 1);
+    assert!(parent.is_recurring && parent.is_blocking);
     assert!(
         all.tasks
             .iter()
@@ -783,7 +779,6 @@ fn snapshot_projects_configured_dependencies_occurrences_time_and_all_pending_pa
     let task = today.tasks.first().unwrap();
     assert!(task.completed && task.is_blocking);
     assert_eq!(task.occurrence_date.as_deref(), Some("2026-10-03"));
-    assert_eq!(task.total_tracked_minutes, 2);
     let inbox = engine.snapshot("a", &serde_json::from_value(json!({"scope":"inbox"}))?)?;
     assert_eq!(inbox.total_count, 1);
     assert_eq!(inbox.tasks.first().unwrap().title, "Dependent");
@@ -1494,48 +1489,6 @@ fn initial_sync_retains_tasks_before_configuration_and_rebuilds_custom_mapping()
 }
 
 #[test]
-fn time_minutes_round_each_session_and_reports_clip_before_rounding()
--> std::result::Result<(), Box<dyn std::error::Error>> {
-    let files = Arc::new(Memory::default());
-    let engine = Engine::open(":memory:", files)?;
-    engine.register_profile(profile(ProfileKind::LocalFolder))?;
-    engine.refresh("a")?;
-    engine.execute("a", &mutation("create", create()))?;
-    let entries = json!([
-        {"startTime":"2026-10-03T11:00:00Z","endTime":"2026-10-03T11:00:31Z","duration":99,"vendor":"retained"},
-        {"startTime":"2026-10-03T11:01:00Z","endTime":"2026-10-03T11:01:31Z"},
-        {"startTime":"2026-10-03T11:02:00Z","endTime":"2026-10-03T11:02:29Z"},
-        {"startTime":"2026-10-03T11:59:29Z"}
-    ]);
-    engine.execute(
-        "a",
-        &mutation(
-            "entries",
-            Command::SetTimeEntries {
-                path: "Tasks/a.md".to_owned(),
-                expected_revision: None,
-                entries: serde_json::from_value(entries)?,
-            },
-        ),
-    )?;
-    let reading: Value = serde_json::from_str(&engine.features_json(
-        "a",
-        r#"{"kind":"task_time","path":"Tasks/a.md","at":"2026-10-03T12:00:00Z"}"#,
-    )?)?;
-    assert_eq!(reading["totalSeconds"], 122);
-    assert_eq!(reading["totalMinutes"], 3);
-    assert_eq!(reading["hasActiveSession"], true);
-    assert_eq!(reading["entries"][0]["duration"], 99);
-    assert_eq!(reading["entries"][0]["vendor"], "retained");
-    let closed:Value=serde_json::from_str(&engine.features_json("a",r#"{"kind":"time_report","from":"2026-10-03T11:00:00Z","to":"2026-10-03T11:03:00Z","at":"2026-10-03T12:00:00Z"}"#)?)?;
-    assert_eq!(closed["totalMinutes"], 2);
-    let clipped:Value=serde_json::from_str(&engine.features_json("a",r#"{"kind":"time_report","from":"2026-10-03T11:00:21Z","to":"2026-10-03T11:00:31Z","at":"2026-10-03T12:00:00Z"}"#)?)?;
-    assert_eq!(clipped["totalSeconds"], 10);
-    assert_eq!(clipped["totalMinutes"], 0);
-    Ok(())
-}
-
-#[test]
 fn completion_uses_explicit_local_day_and_recurrence_advances_offsets()
 -> std::result::Result<(), Box<dyn std::error::Error>> {
     let files = Arc::new(Memory::default());
@@ -1791,49 +1744,6 @@ fn absolute_completion_and_batch_undo_survive_relaunch_and_reject_later_edits()
 }
 
 #[test]
-fn durable_time_entries_and_period_reports_use_exact_timestamp_intersections()
--> std::result::Result<(), Box<dyn std::error::Error>> {
-    let files = Arc::new(Memory::default());
-    let engine = Engine::open(":memory:", files)?;
-    engine.register_profile(profile(ProfileKind::LocalFolder))?;
-    engine.refresh("a")?;
-    engine.execute("a", &mutation("create", create()))?;
-    engine.execute(
-        "a",
-        &mutation(
-            "start",
-            Command::StartTime {
-                path: "Tasks/a.md".to_owned(),
-                expected_revision: None,
-            },
-        ),
-    )?;
-    let request = json!({"kind":"task_time","path":"Tasks/a.md","at":"2026-10-03T12:02:30Z"});
-    let reading: Value = serde_json::from_str(&engine.features_json("a", &request.to_string())?)?;
-    assert_eq!(reading["totalSeconds"], 150);
-    assert_eq!(reading["hasActiveSession"], true);
-    let mut stop = mutation(
-        "stop",
-        Command::StopTime {
-            path: "Tasks/a.md".to_owned(),
-            expected_revision: None,
-        },
-    );
-    stop.at = "2026-10-03T12:03:30Z".to_owned();
-    engine.execute("a", &stop)?;
-    let request = json!({"kind":"time_report","from":"2026-10-03T12:01:00Z","to":"2026-10-03T12:03:00Z","at":"2026-10-03T12:10:00Z"});
-    let report: Value = serde_json::from_str(&engine.features_json("a", &request.to_string())?)?;
-    assert_eq!(report["totalSeconds"], 120);
-    assert_eq!(report["rows"][0]["minutes"], 2);
-    assert!(
-        engine
-            .execute("a", &mutation("stop-twice", stop.command))
-            .is_err()
-    );
-    Ok(())
-}
-
-#[test]
 fn configured_capture_preserves_unknown_priority_tokens_and_rejects_schema_drift()
 -> std::result::Result<(), Box<dyn std::error::Error>> {
     let files = Arc::new(Memory::default());
@@ -1937,45 +1847,6 @@ fn interrupted_rename_with_changed_source_is_parked_and_never_replayed_after_res
     restored.refresh("a")?;
     assert_eq!(files.get("a", "Tasks/a.md")?, Some(newer));
     assert!(restored.conflicts("a")?.is_empty());
-    Ok(())
-}
-
-#[test]
-fn device_local_pomodoro_restores_paused_elapsed_time_and_keeps_other_devices_independent()
--> std::result::Result<(), Box<dyn std::error::Error>> {
-    let directory = tempfile::tempdir()?;
-    let database = directory.path().join("timer.sqlite");
-    let files = Arc::new(Memory::default());
-    let engine = Engine::open(database.to_str().unwrap(), files.clone())?;
-    engine.register_profile(profile(ProfileKind::ObsidianSync))?;
-    engine.refresh("a")?;
-    let action = |action: &str| Command::Pomodoro {
-        device_id: "phone".to_owned(),
-        action: action.to_owned(),
-        task_path: None,
-        duration_seconds: Some(600),
-    };
-    engine.execute("a", &mutation("start", action("start")))?;
-    let mut pause = mutation("pause", action("pause"));
-    pause.at = "2026-10-03T12:02:00Z".to_owned();
-    engine.execute("a", &pause)?;
-    assert!(engine.pending_uploads("a")?.is_empty());
-    drop(engine);
-    let restored = Engine::open(database.to_str().unwrap(), files)?;
-    let request = json!({"kind":"pomodoro","deviceId":"phone","at":"2026-10-03T12:30:00Z"});
-    let reading: Value = serde_json::from_str(&restored.features_json("a", &request.to_string())?)?;
-    assert_eq!(reading["status"], "paused");
-    assert_eq!(reading["elapsedSeconds"], 120);
-    let request = json!({"kind":"pomodoro","deviceId":"desktop","at":"2026-10-03T12:30:00Z"});
-    let reading: Value = serde_json::from_str(&restored.features_json("a", &request.to_string())?)?;
-    assert_eq!(reading["status"], "idle");
-    let mut resume = mutation("resume", action("resume"));
-    resume.at = "2026-10-03T12:30:00Z".to_owned();
-    restored.execute("a", &resume)?;
-    let request = json!({"kind":"pomodoro","deviceId":"phone","at":"2026-10-03T12:38:00Z"});
-    let reading: Value = serde_json::from_str(&restored.features_json("a", &request.to_string())?)?;
-    assert_eq!(reading["status"], "completed");
-    assert_eq!(reading["elapsedSeconds"], 600);
     Ok(())
 }
 

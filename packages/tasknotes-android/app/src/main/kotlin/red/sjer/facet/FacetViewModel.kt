@@ -32,10 +32,6 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
     var capturePreviewInput by mutableStateOf(""); private set
     var capturePreviewOwner by mutableStateOf<String?>(null); private set
     var importedCopySummary by mutableStateOf<String?>(null); private set
-    var trackingHistory by mutableStateOf<FacetTrackingPage?>(null); private set
-    var trackingSessions by mutableStateOf<FacetTrackingPage?>(null); private set
-    var timeReport by mutableStateOf<JsonObject?>(null); private set
-    var pomodoro by mutableStateOf<JsonObject?>(null); private set
     var undoDepth by mutableIntStateOf(0); private set
     var conflicts by mutableStateOf<List<JsonObject>>(emptyList()); private set
     var conflictCursor by mutableStateOf<String?>(null); private set
@@ -49,7 +45,6 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
     private var reminderRefreshRequested = false
     private var reminderRefreshQueued = false
     private lateinit var engine: FacetEngineRunner
-    private lateinit var trackingSchema: FacetSchema
     private lateinit var account: ObsidianAccountHost
     private lateinit var mutations: FacetMutationController
     private var generation = 0L
@@ -65,54 +60,9 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
     private var previewGeneration = 0L
     private var savedQuery: JsonObject? = null
     private var visibleQuery: FacetPagedQuery? = null
-    private var deviceId = ""
     private val noticeAuthority = FacetNoticeAuthority()
     private var noticeOwner: FacetNoticeOwner? = null
     private var appliedNoticeOwner: FacetNoticeOwner? = null
-    private var trackingRequest = 0L
-    private var trackingEngine = 1L
-    private var historyOwner: FacetTrackingOwner? = null
-    private var sessionsOwner: FacetTrackingOwner? = null
-
-    private fun invalidateTracking() {
-        trackingRequest++; trackingEngine++; historyOwner = null; sessionsOwner = null
-        trackingHistory = null; trackingSessions = null
-    }
-    private fun captureTracking(profileId: String, task: VaultTask? = null): FacetTrackingOwner {
-        check(selected?.id == profileId) { "Select the original vault before reading tracked time." }
-        val reading = requireNotNull(allSnapshot) { "Refresh the vault before reading tracked time." }
-        check(reading.profileId == profileId)
-        task?.let { check(reading.tasks.any { current -> current.path == it.path && current.revision == it.revision }) { "Reload this task before reading time entries." } }
-        return FacetTrackingOwner(profileId, reading.version, Instant.now().toString(), ++trackingRequest, trackingEngine, task?.path, task?.revision)
-    }
-    private fun ownsTracking(owner: FacetTrackingOwner): Boolean = !cleared && selected?.id == owner.profileId
-        && allSnapshot?.version == owner.version && owner.engineGeneration == trackingEngine
-        && (if (owner.taskPath == null) sessionsOwner else historyOwner) == owner
-    fun loadTrackingHistory(profileId: String, task: VaultTask, nextPage: Boolean = false) {
-        val admission = reserveNoticeRequest()
-        val previous = if (nextPage) trackingHistory else null
-        val continuation = if (nextPage) previous?.next ?: return else null
-        val owner = continuation?.owner ?: captureTracking(profileId, task)
-        check(owner.profileId == profileId && owner.taskPath == task.path && owner.taskRevision == task.revision)
-        if (!nextPage) { historyOwner = owner; trackingHistory = null }
-        work(admission = admission) {
-            if (!ownsTracking(owner)) return@work
-            val page = FacetTrackingReader.readPage(trackingSchema, owner, continuation, engine::features)
-            if (ownsTracking(owner)) trackingHistory = page
-        }
-    }
-    fun loadTrackingSessions(nextPage: Boolean = false) {
-        val admission = reserveNoticeRequest()
-        val continuation = if (nextPage) trackingSessions?.next ?: return else null
-        val owner = continuation?.owner ?: captureTracking(requireNotNull(selected).id)
-        if (!nextPage) { sessionsOwner = owner; trackingSessions = null }
-        work(admission = admission) {
-            if (!ownsTracking(owner)) return@work
-            val page = FacetTrackingReader.readPage(trackingSchema, owner, continuation, engine::features)
-            if (ownsTracking(owner)) trackingSessions = page
-        }
-    }
-
     private fun clearNoticePresentation() {
         noticeOwner = null; appliedNoticeOwner = null; savedNotice = null; savedMaintenance = null
     }
@@ -145,11 +95,7 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
         engine = FacetEngineRunner.open(application) { candidate -> if (cleared) false else { engine = candidate; true } }
         account = withContext(Dispatchers.IO) { ObsidianAccountHost(application, engine).also { account = it } }
         val receiptSchema = FacetSchema(application.assets.open("facet-engine.schema.json").bufferedReader().use { it.readText() })
-        trackingSchema = receiptSchema
         mutations = FacetMutationController(NativeFacetMutationPort(engine), receiptSchema)
-        deviceId = withContext(Dispatchers.IO) {
-            preferences.getString("deviceId", null) ?: UUID.randomUUID().toString().also { check(preferences.edit().putString("deviceId", it).commit()) }
-        }
         profiles = engine.profiles()
         account.reconcileRemovedProfiles(profiles.map { it.id }.toSet())
         val selectedId = withContext(Dispatchers.IO) { preferences.getString("selectedProfile", null) }
@@ -166,19 +112,17 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
     private fun resetSelection(profile: VaultProfile) {
         reserveNoticeRequest()
         generation++; visibleQuery = null; selected = profile; snapshot = null; allSnapshot = null; syncState = ""; needsStandardConsent = false
-        invalidateTracking()
-        query = FacetQuery(); savedQuery = null; timeReport = null; pomodoro = null; conflicts = emptyList(); conflictCursor = null; conflictPreview = null
+        query = FacetQuery(); savedQuery = null; conflicts = emptyList(); conflictCursor = null; conflictPreview = null
         capturePreview = null; capturePreviewOwner = null; capturePreviewInput = ""; previewGeneration++
     }
-    fun changeQuery(value: FacetQuery) { val admission = reserveNoticeRequest(); invalidateTracking(); query = value; savedQuery = null; visibleQuery = null; generation++; work(admission = admission) { reload() } }
+    fun changeQuery(value: FacetQuery) { val admission = reserveNoticeRequest(); query = value; savedQuery = null; visibleQuery = null; generation++; work(admission = admission) { reload() } }
     fun openView(view: JsonObject) {
         val admission = reserveNoticeRequest()
-        invalidateTracking()
         savedQuery = view.getValue("view").jsonObject.getValue("query").jsonObject
         query = FacetQuery(viewId = view.getValue("id").jsonPrimitive.content); visibleQuery = null; generation++; work(admission = admission) { reload() }
     }
     fun refresh() {
-        val admission = reserveNoticeRequest(); invalidateTracking()
+        val admission = reserveNoticeRequest()
         work(admission = admission) { if (foreground) startSessions(); reload(refreshFiles = true); restoreActions() }
     }
 
@@ -439,28 +383,6 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
         command(profile.id, buildJsonObject { put("kind", "reorder_views"); put("ids", strings(ids)) })
     }
     fun restoreViews() { val profile = requireNotNull(selected); command(profile.id, buildJsonObject { put("kind", "restore_default_views") }) }
-    fun track(profileId: String, task: VaultTask, start: Boolean, updated: (VaultTask) -> Unit = {}) = mutationWork { request ->
-        val command = buildJsonObject { put("kind", if (start) "start_time" else "stop_time"); put("path", task.path); put("expectedRevision", task.revision) }
-        val id = actionId(profileId, command)
-        val owner = captureNoticeOwner(profileId, id, request)
-        applied(profileId, command, id, owner); clearAction(profileId, command)
-        if (selected?.id == profileId) { reload(); if (ownsNotice(owner)) allSnapshot?.tasks?.singleOrNull { it.path == task.path }?.let(updated) }; restoreActions()
-    }
-    fun report(from: String, to: String) = ownerWork { profile ->
-        val result = engine.features(profile.id, buildJsonObject { put("kind", "time_report"); put("from", from); put("to", to); put("at", Instant.now().toString()) })
-        if (selected?.id == profile.id) timeReport = result
-    }
-    fun readPomodoro() = ownerWork { profile ->
-        val result = engine.features(profile.id, buildJsonObject { put("kind", "pomodoro"); put("deviceId", deviceId); put("at", Instant.now().toString()) })
-        if (selected?.id == profile.id) pomodoro = result
-    }
-    fun pomodoro(action: String, task: VaultTask? = null) = ownerMutationWork { profile, request ->
-        val command = buildJsonObject { put("kind", "pomodoro"); put("deviceId", deviceId); put("action", action); task?.let { put("taskPath", it.path) } }
-        val id = actionId(profile.id, command)
-        applied(profile.id, command, id, captureNoticeOwner(profile.id, id, request)); clearAction(profile.id, command)
-        val result = engine.features(profile.id, buildJsonObject { put("kind", "pomodoro"); put("deviceId", deviceId); put("at", Instant.now().toString()) })
-        if (selected?.id == profile.id) { pomodoro = result; reload() }; restoreActions()
-    }
     fun bulk(profileId: String, tasks: List<VaultTask>, action: String, value: String = "") {
         reserveNoticeRequest()
         if (tasks.isEmpty()) return
@@ -590,8 +512,6 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
             check(all.size.toULong() <= page.totalCount) { "The engine returned too many vault rows." }
         } while (all.size.toULong() < page.totalCount)
         allSnapshot = page.copy(tasks = all)
-        if (trackingHistory?.owner?.version != page.version) { historyOwner = null; trackingHistory = null }
-        if (trackingSessions?.owner?.version != page.version) { sessionsOwner = null; trackingSessions = null }
         loadUndoAuthority(profile.id)
         requestReminderRefresh()
     }
@@ -606,7 +526,6 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
     fun resumeSync() {
         if (cleared) return
         val admission = reserveNoticeRequest()
-        invalidateTracking()
         foregroundLease = FacetBackgroundSync.resumeForeground()
         foreground = true
         sessionGeneration++
@@ -615,7 +534,6 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
     fun pauseSync() {
         if (cleared) return
         val admission = reserveNoticeRequest()
-        invalidateTracking()
         val lease = foregroundLease
         foreground = false
         sessionGeneration++
@@ -627,7 +545,6 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
     }
     private fun fenceAccountSessions() {
         reserveNoticeRequest()
-        invalidateTracking()
         FacetReminders.fence()
         FacetBackgroundSync.cancel(getApplication())
         sessionGeneration++
@@ -651,7 +568,7 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
             var opened = false
             try {
                 ObsidianReplicaSession.open(engine, account, profile.id,
-                    changed = { withContext(Dispatchers.Main) { if (foreground && ownerGeneration == sessionGeneration && selected?.id == profile.id) { reserveNoticeRequest(); invalidateTracking(); reload() } } },
+                    changed = { withContext(Dispatchers.Main) { if (foreground && ownerGeneration == sessionGeneration && selected?.id == profile.id) { reserveNoticeRequest(); reload() } } },
                     state = { status -> withContext(Dispatchers.Main) { if (foreground && ownerGeneration == sessionGeneration && selected?.id == profile.id) syncState = status } },
                     retain = { candidate ->
                         if (cleared || !foreground || ownerGeneration != sessionGeneration || sessions.containsKey(profile.id)) false
@@ -705,7 +622,6 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
         val lease = foregroundLease
         cleared = true; foreground = false; generation++; sessionGeneration++
         noticeAuthority.close(::clearNoticePresentation)
-        invalidateTracking()
         sessions.values.forEach { it.requestStop() }
         FacetBackgroundSync.retireForegroundWriter {
             operations.withLock {

@@ -4,6 +4,18 @@ use serde_json::json;
 use tasknotes_vault::config::{ConfigurationSource, DetectionMethod, TaskNotesConfiguration};
 
 #[test]
+fn standard_configuration_does_not_initialize_retired_timing_policy()
+-> Result<(), Box<dyn std::error::Error>> {
+    let config = TaskNotesConfiguration::resolve(None, None, true)?;
+    for role in ["timeEstimate", "timeEntries", "pomodoros"] {
+        assert!(!config.mapping.role_to_field.contains_key(role), "{role}");
+    }
+    assert!(!config.extra.contains_key("timeTracking"));
+    assert!(!config.extra.contains_key("time_tracking"));
+    Ok(())
+}
+
+#[test]
 fn portable_configuration_uses_spec_keys_and_preserves_extensions()
 -> Result<(), Box<dyn std::error::Error>> {
     let yaml = b"spec_version: 0.3.0-rc.9\nmapping:\n  status: state\n  completed_date: finishedOn\nstatus:\n  values: [backlog, working, finished]\n  default: backlog\n  completed_values: [finished]\ndefaults:\n  status: working\n  priority: high\n  reminders: []\ntask_detection:\n  method: property\n  property_name: kind\n  property_value: task\n  excluded_folders: Archive, Templates\ntitle:\n  storage: frontmatter\n  filename_format: timestamp\nlinks:\n  use_markdown_format: true\n";

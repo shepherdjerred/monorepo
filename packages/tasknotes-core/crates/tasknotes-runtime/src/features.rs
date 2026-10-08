@@ -3,7 +3,7 @@
 use crate::{Result, RuntimeError};
 use chrono::{DateTime, FixedOffset, NaiveDate};
 use serde::Deserialize;
-use serde_json::{Map, Value, json};
+use serde_json::{Value, json};
 use tasknotes_vault::config::TaskNotesConfiguration;
 
 #[derive(Debug, Deserialize)]
@@ -34,33 +34,7 @@ pub(crate) enum Request {
         today: String,
         context: Option<CaptureContext>,
     },
-    TaskTime {
-        path: String,
-        at: String,
-    },
-    TimeReport {
-        from: String,
-        to: String,
-        at: String,
-    },
-    Pomodoro {
-        device_id: String,
-        at: String,
-    },
     Discovery {},
-    TrackingSessions {
-        at: String,
-        limit: Option<u32>,
-        after: Option<TrackingCursor>,
-        expected_version: Option<u64>,
-    },
-    TrackingHistory {
-        path: String,
-        at: String,
-        limit: Option<u32>,
-        after: Option<TrackingHistoryCursor>,
-        expected_version: Option<u64>,
-    },
     ReminderPlan {
         at: String,
         timezone: String,
@@ -70,20 +44,6 @@ pub(crate) enum Request {
         after: Option<ReminderCursor>,
         expected_version: Option<u64>,
     },
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub(crate) struct TrackingCursor {
-    pub task_path: String,
-    pub at: String,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub(crate) struct TrackingHistoryCursor {
-    pub entry_index: u64,
-    pub at: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -108,19 +68,12 @@ pub(crate) fn parse_request(json: &str) -> Result<Request> {
     }
     if matches!(
         object.get("kind").and_then(Value::as_str),
-        Some("reminder_plan" | "tracking_sessions" | "tracking_history")
+        Some("reminder_plan")
     ) {
         for key in ["limit", "expectedVersion"] {
             if let Some(value) = object.get_mut(key) {
                 tasknotes_vault::json_boundary::normalize_unsigned(value)?;
             }
-        }
-        if let Some(value) = object
-            .get_mut("after")
-            .and_then(Value::as_object_mut)
-            .and_then(|after| after.get_mut("entryIndex"))
-        {
-            tasknotes_vault::json_boundary::normalize_unsigned(value)?;
         }
     }
     Ok(serde_json::from_value(request)?)
@@ -138,62 +91,6 @@ pub(crate) struct CaptureContext {
 pub(crate) fn timestamp(value: &str) -> Result<DateTime<FixedOffset>> {
     DateTime::parse_from_rfc3339(value)
         .map_err(|_| RuntimeError::Validation("time must be RFC3339".to_owned()))
-}
-
-pub(crate) fn time_reading(
-    path: &str,
-    properties: &Map<String, Value>,
-    at: &str,
-    period: Option<(&str, &str)>,
-) -> Result<Value> {
-    let now = timestamp(at)?;
-    let bounds = period
-        .map(|(from, to)| Ok::<_, RuntimeError>((timestamp(from)?, timestamp(to)?)))
-        .transpose()?;
-    if bounds.is_some_and(|(from, to)| from >= to) {
-        return Err(RuntimeError::Validation(
-            "report from must precede to".to_owned(),
-        ));
-    }
-    let entries =
-        tasknotes_vault::tracking::normalize(properties.get("timeEntries").unwrap_or(&json!([])))?;
-    let mut seconds = 0_u64;
-    let mut active = false;
-    let mut elapsed_entries = Vec::new();
-    for entry in &entries {
-        let start = timestamp(
-            entry
-                .get("startTime")
-                .and_then(Value::as_str)
-                .ok_or_else(|| {
-                    RuntimeError::Validation("entry startTime is required".to_owned())
-                })?,
-        )?;
-        let end = entry
-            .get("endTime")
-            .and_then(Value::as_str)
-            .map(timestamp)
-            .transpose()?;
-        active |= end.is_none();
-        let end = end.unwrap_or(now);
-        let (start, end) = bounds.map_or((start, end), |(from, to)| (start.max(from), end.min(to)));
-        if end > start {
-            elapsed_entries
-                .push(json!({"startTime":start.to_rfc3339(),"endTime":end.to_rfc3339()}));
-            seconds = seconds
-                .checked_add(
-                    u64::try_from((end - start).num_seconds()).map_err(|_| {
-                        RuntimeError::Validation("invalid entry duration".to_owned())
-                    })?,
-                )
-                .ok_or_else(|| RuntimeError::Validation("time total is too large".to_owned()))?;
-        }
-    }
-    let (_, minutes) =
-        tasknotes_vault::tracking::totals(&elapsed_entries, now.with_timezone(&chrono::Utc))?;
-    Ok(
-        json!({"schemaVersion":1,"path":path,"totalSeconds":seconds,"totalMinutes":minutes,"hasActiveSession":active,"entries":entries}),
-    )
 }
 
 pub(crate) fn capture(

@@ -30,6 +30,46 @@ struct BatchResult {
 }
 
 impl Engine {
+    // Prior clients persisted complete partial batches before applying children.
+    // Retire only withdrawn child policies; ordinary children keep their exact
+    // payloads and journal recovery. Do not translate a retired metadata command
+    // into an executable replacement.
+    pub(super) fn resume_retired_partial(&self, id: &str) -> Result<()> {
+        let batches: Vec<(String, usize)> = self.database(|db| {
+            let mut statement = db.prepare("SELECT id,fingerprint FROM partial_batches WHERE profile=? AND receipt IS NULL ORDER BY rowid")?;
+            let rows = statement.query_map([id], |row| Ok((row.get::<_,String>(0)?,row.get::<_,String>(1)?)))?;
+            let mut batches = Vec::new();
+            for row in rows {
+                let (batch, fingerprint) = row?;
+                let value: Value = serde_json::from_str(&fingerprint)?;
+                if super::retired_timing::contains_retired_command(&value) {
+                    let count = db.query_row("SELECT count(*) FROM partial_items WHERE profile=? AND id=?",params![id,batch],|row|row.get::<_,u32>(0))?;
+                    let count = usize::try_from(count).map_err(|_| RuntimeError::Storage("stored batch count exceeds address space".into()))?;
+                    batches.push((batch,count));
+                }
+            }
+            Ok(batches)
+        })?;
+        if batches.is_empty() {
+            return Ok(());
+        }
+        {
+            let coordinator = self.coordinator(id)?;
+            let _operation = lock_profile(&coordinator)?;
+            let profile = self.profile(id)?;
+            let config = self.configuration(&profile)?;
+            self.recover(id, Some(&config))?;
+        }
+        for (batch, count) in batches {
+            let mut items = Vec::with_capacity(count);
+            for ordinal in 0..count {
+                items.push(self.execute_partial_item(id, &batch, ordinal)?);
+            }
+            self.complete_partial(id, &batch, &items)?;
+        }
+        Ok(())
+    }
+
     pub(super) fn execute_partial(
         &self,
         id: &str,
@@ -136,24 +176,56 @@ impl Engine {
             self.validate_partial_item(id, &item)?;
             return Ok(item);
         }
-        let mutation: Mutation = serde_json::from_str(&mutation)?;
-        let item = match self.execute(id, &mutation) {
-            Ok(receipt) => Item {
-                mutation_id: mutation.mutation_id.clone(),
-                applied: receipt.applied,
-                error: (!receipt.applied).then(|| RuntimeError::Conflict.to_string()),
-                receipt: Some(receipt),
-            },
-            Err(error) => {
-                let state = self.mutation_receipt(id, &mutation.mutation_id)?;
-                if state.get("state").and_then(Value::as_str) == Some("pending") {
-                    return Err(error);
+        let value: Value = serde_json::from_str(&mutation)?;
+        let item = if super::retired_timing::contains_retired_command(&value) {
+            let metadata = super::retired_timing::stored_mutation(&mutation)?;
+            validate_identity(&metadata.mutation_id)?;
+            let receipt = self.database(|db| {
+                let row: Option<Option<String>> = db
+                    .query_row(
+                        "SELECT receipt FROM journals WHERE profile=? AND id=?",
+                        params![id, metadata.mutation_id],
+                        |row| row.get(0),
+                    )
+                    .optional()?;
+                match row {
+                    Some(None) => Err(RuntimeError::Conflict),
+                    Some(Some(raw)) => {
+                        checked_stored_receipt(db, id, &metadata.mutation_id, &raw).map(Some)
+                    }
+                    None => Ok(None),
                 }
-                Item {
+            })?;
+            Item {
+                mutation_id: metadata.mutation_id,
+                applied: receipt.as_ref().is_some_and(|receipt| receipt.applied),
+                error: if receipt.as_ref().is_some_and(|receipt| receipt.applied) {
+                    None
+                } else {
+                    Some("timing_features_removed".into())
+                },
+                receipt,
+            }
+        } else {
+            let mutation: Mutation = serde_json::from_value(value)?;
+            match self.execute(id, &mutation) {
+                Ok(receipt) => Item {
                     mutation_id: mutation.mutation_id.clone(),
-                    applied: false,
-                    receipt: None,
-                    error: Some(error.to_string()),
+                    applied: receipt.applied,
+                    error: (!receipt.applied).then(|| RuntimeError::Conflict.to_string()),
+                    receipt: Some(receipt),
+                },
+                Err(error) => {
+                    let state = self.mutation_receipt(id, &mutation.mutation_id)?;
+                    if state.get("state").and_then(Value::as_str) == Some("pending") {
+                        return Err(error);
+                    }
+                    Item {
+                        mutation_id: mutation.mutation_id.clone(),
+                        applied: false,
+                        receipt: None,
+                        error: Some(error.to_string()),
+                    }
                 }
             }
         };

@@ -18,7 +18,6 @@ struct FacetTaskEditor: View {
     @State private var projects: String
     @State private var contexts: String
     @State private var extras: FacetTaskExtras
-    @State private var validationError: String?
     @State private var showsDelete = false
     @State private var isSaving = false
     @State private var showsDiscard = false
@@ -66,13 +65,7 @@ struct FacetTaskEditor: View {
                 }
                 FacetTaskExtrasFields(draft: $extras)
                 Section("Markdown") { TextEditor(text: $bodyText).frame(minHeight: 180) }
-                Section("Time") {
-                    NavigationLink("Tracking, Pomodoro and reports") {
-                        FacetTimingView(store: store, profileID: profileID, task: task)
-                    }
-                }
                 Section {
-                    if let validationError { Text(validationError).foregroundStyle(.red) }
                     Text(task.path).font(.caption).foregroundStyle(.secondary).textSelection(
                         .enabled)
                     Button("Archive task") {
@@ -125,18 +118,13 @@ struct FacetTaskEditor: View {
         guard !isSaving else { return }
         isSaving = true
         defer { isSaving = false }
-        do {
-            let command = try editCommand()
-            if await store.execute(command, mutationID: mutationID, profileID: profileID) {
-                dismiss()
-            }
-        } catch {
-            validationError = error.localizedDescription
+        if await store.execute(editCommand(), mutationID: mutationID, profileID: profileID) {
+            dismiss()
         }
     }
 
-    private func editCommand() throws -> [String: FacetValue] {
-        let changes = try changedProperties()
+    private func editCommand() -> [String: FacetValue] {
+        let changes = changedProperties()
         var command: [String: FacetValue] = [
             "kind": .string("edit_task"), "path": .string(task.path),
             "expectedRevision": .string(task.revision), "properties": .object(changes),
@@ -147,8 +135,8 @@ struct FacetTaskEditor: View {
         return command
     }
 
-    private func changedProperties() throws -> [String: FacetValue] {
-        var changes = try extras.changes(from: task.properties)
+    private func changedProperties() -> [String: FacetValue] {
+        var changes = extras.changes(from: task.properties)
         if title != task.title { changes["title"] = .string(title) }
         if priority != task.priority { changes["priority"] = .string(priority) }
         for (role, edited) in [("due", due), ("scheduled", scheduled)]

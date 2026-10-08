@@ -14,8 +14,6 @@ import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import java.time.LocalDate
-import java.time.ZoneId
-import kotlinx.coroutines.delay
 import kotlinx.serialization.json.*
 import red.sjer.facet.host.VaultTask
 
@@ -66,7 +64,7 @@ fun FacetScreen(model: FacetViewModel) {
                 Column(Modifier.padding(16.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) { SignInForm(model); FolderImport(model) }
             } else {
                 Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf("Tasks", "Board", "Views", "Time", "Conflicts").forEach { label -> FilterChip(selected = destination == label, onClick = { destination = label }, label = { Text(label) }) }
+                    listOf("Tasks", "Board", "Views", "Conflicts").forEach { label -> FilterChip(selected = destination == label, onClick = { destination = label }, label = { Text(label) }) }
                 }
                 if (model.snapshot?.configuration == null && destination != "Settings") {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -79,7 +77,6 @@ fun FacetScreen(model: FacetViewModel) {
                     "Tasks" -> TaskList(model) { editor = profile.id to it }
                     "Board" -> Board(model) { editor = profile.id to it }
                     "Views" -> Views(model) { destination = "Tasks" }
-                    "Time" -> TimeScreen(model) { owner, task -> editor = owner to task }
                     "Conflicts" -> ConflictScreen(model)
                     "Settings" -> Settings(model)
                 }
@@ -125,7 +122,7 @@ private fun TaskList(model: FacetViewModel, edit: (VaultTask) -> Unit) {
                     Checkbox(checked = task.completed, onCheckedChange = { model.toggle(profile.id, task) }, enabled = !model.busy)
                     Column(Modifier.weight(1f).clickable { edit(task) }.padding(vertical = 12.dp)) {
                         Text(task.title, style = MaterialTheme.typography.titleMedium)
-                        val details = listOfNotNull(task.occurrenceDate ?: task.effectiveDate, task.status, task.priority.takeIf { it.isNotEmpty() }, "Blocked".takeIf { task.isBlocked }, "Tracking".takeIf { task.hasActiveTimeSession }, "Pending sync".takeIf { task.isPending })
+                        val details = listOfNotNull(task.occurrenceDate ?: task.effectiveDate, task.status, task.priority.takeIf { it.isNotEmpty() }, "Blocked".takeIf { task.isBlocked }, "Pending sync".takeIf { task.isPending })
                         Text(details.joinToString(" · "), style = MaterialTheme.typography.bodySmall)
                     }
                 }
@@ -233,49 +230,6 @@ private fun Views(model: FacetViewModel, opened: () -> Unit) {
 }
 
 @Composable
-private fun TimeScreen(model: FacetViewModel, openTask: (String, VaultTask) -> Unit) {
-    var from by rememberSaveable { mutableStateOf(LocalDate.now().minusDays(7).toString()) }
-    var to by rememberSaveable { mutableStateOf(LocalDate.now().plusDays(1).toString()) }
-    var taskPath by rememberSaveable { mutableStateOf("") }
-    val state = model.pomodoro
-    LaunchedEffect(model.selected?.id) { model.readPomodoro() }
-    LaunchedEffect(model.selected?.id, state?.getValue("status")?.jsonPrimitive?.content) {
-        while (state?.getValue("status")?.jsonPrimitive?.content == "running") { delay(1000); model.readPomodoro() }
-    }
-    Column(Modifier.padding(16.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Running sessions", style = MaterialTheme.typography.titleLarge)
-        Button(onClick = { model.loadTrackingSessions() }, enabled = !model.busy && model.allSnapshot != null) { Text("Refresh running sessions") }
-        model.trackingSessions?.takeIf { it.owner.profileId == model.selected?.id && it.owner.version == model.allSnapshot?.version }?.let { page ->
-            Text("${page.rows.size} sessions on this page · ${page.totalCount} total")
-            if (page.problemCount != 0uL) Text("${page.problemCount} tasks need review")
-            page.rows.forEach { row ->
-                val task = model.allSnapshot?.tasks?.singleOrNull { it.path == row.getValue("taskPath").jsonPrimitive.content && it.revision == row.getValue("taskRevision").jsonPrimitive.content }
-                Text("${row.getValue("title").jsonPrimitive.content} · ${row.getValue("elapsedSeconds").jsonPrimitive.content} seconds")
-                Button(onClick = { openTask(page.owner.profileId, requireNotNull(task)) }, enabled = !model.busy && task != null) { Text("Open task") }
-            }
-            if (page.next != null) Button(onClick = { model.loadTrackingSessions(true) }, enabled = !model.busy) { Text("More running sessions") }
-        }
-        Text("Pomodoro", style = MaterialTheme.typography.titleLarge)
-        state?.let { Text("${it.getValue("status").jsonPrimitive.content} · ${it.getValue("elapsedSeconds").jsonPrimitive.content} / ${it.getValue("durationSeconds").jsonPrimitive.content} seconds"); it.getValue("taskPath").jsonPrimitive.contentOrNull?.let { path -> Text(path) } }
-        ChoiceField("Task", taskPath, listOf(WorkflowOption("", "Unlinked")) + model.allSnapshot?.tasks.orEmpty().map { WorkflowOption(it.path, it.title) }) { taskPath = it }
-        Row(Modifier.horizontalScroll(rememberScrollState())) {
-            listOf("start", "pause", "resume", "stop").forEach { action -> TextButton(onClick = { model.pomodoro(action, model.allSnapshot?.tasks?.singleOrNull { it.path == taskPath }) }, enabled = !model.busy) { Text(action.replaceFirstChar { it.uppercase() }) } }
-        }
-        HorizontalDivider()
-        Text("Time report", style = MaterialTheme.typography.titleLarge)
-        OutlinedTextField(from, { from = it }, label = { Text("From date (inclusive)") })
-        OutlinedTextField(to, { to = it }, label = { Text("To date (exclusive)") })
-        val start = runCatching { LocalDate.parse(from).atStartOfDay(ZoneId.systemDefault()).toInstant().toString() }.getOrNull()
-        val end = runCatching { LocalDate.parse(to).atStartOfDay(ZoneId.systemDefault()).toInstant().toString() }.getOrNull()
-        Button(onClick = { model.report(requireNotNull(start), requireNotNull(end)) }, enabled = !model.busy && start != null && end != null) { Text("Run report") }
-        model.timeReport?.let { report ->
-            Text("${report.getValue("totalMinutes").jsonPrimitive.content} minutes total")
-            report.getValue("rows").jsonArray.forEach { row -> val value = row.jsonObject; Text("${value.getValue("title").jsonPrimitive.content}: ${value.getValue("minutes").jsonPrimitive.content} minutes") }
-        }
-    }
-}
-
-@Composable
 private fun Settings(model: FacetViewModel) {
     var signOut by remember { mutableStateOf(false) }
     var remove by remember { mutableStateOf<red.sjer.facet.host.VaultProfile?>(null) }
@@ -290,15 +244,15 @@ private fun Settings(model: FacetViewModel) {
         if (model.pendingActions.isEmpty()) Text("No saved actions need resuming.")
         model.pendingActions.forEach { action ->
             val owner = model.profiles.firstOrNull { it.id == action.profileId }?.name ?: action.profileId
-            Text("${action.mutation.getValue("command").jsonObject.getValue("kind").jsonPrimitive.content} · $owner")
-            TextButton(onClick = { model.resume(action) }, enabled = !model.busy) { Text("Resume saved action") }
-            TextButton(onClick = { retire = action }, enabled = !model.busy) { Text("Retire rejected action") }
+            Text("${if (action.canResume) action.mutation.getValue("command").jsonObject.getValue("kind").jsonPrimitive.content else "Removed feature action"} · $owner")
+            TextButton(onClick = { model.resume(action) }, enabled = !model.busy && action.canResume) { Text("Resume saved action") }
+            TextButton(onClick = { retire = action }, enabled = !model.busy) { Text("Retire saved action") }
         }
         model.snapshot?.let { Text("${it.pendingCount} pending uploads · ${it.conflictCount} conflicts"); it.problems.forEach { problem -> Text("${problem.path}: ${problem.message}") } }
     }
     if (signOut) Confirmation("Sign out?", "Synchronization stops before credentials are removed. Vault copies and pending actions remain on this device.", "Sign out", { signOut = false }) { model.signOut(); signOut = false }
     remove?.let { profile -> Confirmation("Remove ${profile.name}?", "Facet stops synchronization and removes this vault's settled app state and access key. Files remain intact. Pending uploads, conflicts or saved actions must be resolved first.", "Remove vault", { remove = null }) { model.removeProfile(profile); remove = null } }
-    retire?.let { action -> Confirmation("Retire rejected action?", "The native engine must confirm this action is absent or parked. Pending and applied actions stay retained. No preserved conflict versions are removed.", "Check and retire", { retire = null }) { model.retireRejected(action); retire = null } }
+    retire?.let { action -> Confirmation("Retire saved action?", if (action.canResume) "The native engine must confirm this action is absent or parked. Pending and applied actions stay retained. No preserved conflict versions are removed." else "Facet checks the original saved outcome before clearing this private draft. Pending work remains retained; applied changes and preserved vault versions remain intact.", "Check and retire", { retire = null }) { model.retireRejected(action); retire = null } }
 }
 
 @Composable

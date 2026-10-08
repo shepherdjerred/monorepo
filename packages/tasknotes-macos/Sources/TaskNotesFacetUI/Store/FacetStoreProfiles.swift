@@ -40,9 +40,6 @@ extension FacetStore {
         savedQuery = [:]
         selectedViewID = nil
         savedNotice = nil
-        trackingContinuation = nil
-        trackingSessions = nil
-        trackingHistory = nil
     }
 
     public func refresh() async {

@@ -30,14 +30,6 @@
                 Key="Z"
                 Invoked="UndoAccelerator_Invoked"
                 Modifiers="Control" />
-            <KeyboardAccelerator
-                Key="P"
-                Invoked="PomodoroAccelerator_Invoked"
-                Modifiers="Control,Shift" />
-            <KeyboardAccelerator
-                Key="T"
-                Invoked="TimeReportAccelerator_Invoked"
-                Modifiers="Control,Shift" />
         </Grid.KeyboardAccelerators>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -143,16 +135,6 @@
                 </NavigationViewItem>
             </NavigationView.MenuItems>
             <NavigationView.FooterMenuItems>
-                <NavigationViewItem Content="Pomodoro" Tag="pomodoro">
-                    <NavigationViewItem.Icon>
-                        <SymbolIcon Symbol="Clock" />
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-                <NavigationViewItem Content="Time Report" Tag="time-report">
-                    <NavigationViewItem.Icon>
-                        <SymbolIcon Symbol="Document" />
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
                 <NavigationViewItem Content="Settings" Tag="settings">
                     <NavigationViewItem.Icon>
                         <SymbolIcon Symbol="Setting" />

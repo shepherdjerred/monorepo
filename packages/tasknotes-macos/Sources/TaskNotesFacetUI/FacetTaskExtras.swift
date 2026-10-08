@@ -7,7 +7,6 @@ struct FacetTaskExtras: Equatable {
     var recurrence: String
     var skipped: String
     var attachments: String
-    var estimate: String
     var reminders: FacetValue
     var dependencies: FacetValue
     var dateCreated: String
@@ -17,24 +16,13 @@ struct FacetTaskExtras: Equatable {
         recurrence = properties["recurrence"]?.text ?? ""
         skipped = Self.tokens(properties["skippedInstances"])
         attachments = Self.tokens(properties["attachments"])
-        if let value = properties["timeEstimate"] {
-            switch value {
-            case .integer(let minutes): estimate = String(minutes)
-            case .unsigned(let minutes): estimate = String(minutes)
-            case .rawNumber(let minutes): estimate = minutes
-            case .number(let minutes): estimate = NSDecimalNumber(decimal: minutes).stringValue
-            case .null: estimate = ""
-            case .bool, .string, .array, .object: estimate = "Invalid estimate in this note"
-            }
-        } else {
-            estimate = ""
-        }
+
         reminders = properties["reminders"] ?? .array([])
         dependencies = properties["blockedBy"] ?? .array([])
         dateCreated = properties["dateCreated"]?.text ?? ""
     }
 
-    func changes(from original: [String: FacetValue]) throws -> [String: FacetValue] {
+    func changes(from original: [String: FacetValue]) -> [String: FacetValue] {
         let previous = Self(properties: original)
         var changes: [String: FacetValue] = [:]
         for (key, value, before) in [
@@ -45,17 +33,6 @@ struct FacetTaskExtras: Equatable {
         }
         if recurrence != previous.recurrence {
             changes["recurrence"] = recurrence.isEmpty ? .null : .string(recurrence)
-        }
-        if estimate != previous.estimate {
-            if estimate.isEmpty {
-                changes["timeEstimate"] = .null
-            } else {
-                let value = try FacetFeatureProjection.parseJSON(estimate)
-                switch value {
-                case .integer, .unsigned, .number, .rawNumber: changes["timeEstimate"] = value
-                case .null, .bool, .string, .array, .object: throw FacetEditorError.estimate
-                }
-            }
         }
         if reminders != previous.reminders { changes["reminders"] = reminders }
         if dependencies != previous.dependencies { changes["blockedBy"] = dependencies }
@@ -71,11 +48,6 @@ struct FacetTaskExtras: Equatable {
     }
 }
 
-enum FacetEditorError: Error, LocalizedError {
-    case estimate
-    var errorDescription: String? { "Enter the estimate as a number of minutes." }
-}
-
 struct FacetTaskExtrasFields: View {
     @Binding var draft: FacetTaskExtras
     var body: some View {
@@ -89,7 +61,6 @@ struct FacetTaskExtrasFields: View {
             TextField(
                 "Skipped occurrence dates, one per line", text: $draft.skipped, axis: .vertical)
         }
-        Section("Estimate") { TextField("Minutes", text: $draft.estimate) }
         Section("Creation date") {
             TextField("Created date-time", text: $draft.dateCreated)
             Text(

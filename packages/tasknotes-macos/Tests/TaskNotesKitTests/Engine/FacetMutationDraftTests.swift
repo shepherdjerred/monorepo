@@ -4,6 +4,46 @@ import Testing
 @testable import TaskNotesKit
 
 struct FacetMutationDraftTests {
+    @Test func retiredActionRemainsByteIdenticalUntilExplicitSafeRetirement() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { NativeTestFiles.remove(root) }
+        let id = UUID().uuidString
+        let drafts = try FacetMutationDrafts(directory: root)
+        _ = try drafts.envelope(
+            profileID: "vault", id: id,
+            command: .object(["kind": .string("start_time"), "path": .string("Tasks/a.md")]),
+            at: "2026-10-03T12:00:00Z")
+        let path = root.appendingPathComponent(id + ".json")
+        let before = try Data(contentsOf: path)
+        let saved = try #require(drafts.pending().first)
+        let schema = try FacetSchema.bundled()
+        try schema.validate(saved.mutation, definition: "retainedMutation")
+        #expect(!saved.canResume)
+        #expect(try Data(contentsOf: path) == before)
+        let pending = FacetValue.object([
+            "schemaVersion": .integer(1), "mutationId": .string(id),
+            "state": .string("pending"), "receipt": .null,
+        ])
+        #expect(throws: FacetDraftError.self) {
+            try FacetRetainedActions.validateRetirement(saved, outcome: pending, schema: schema)
+        }
+        #expect(try Data(contentsOf: path) == before)
+        let absent = FacetValue.object([
+            "schemaVersion": .integer(1), "mutationId": .string(id),
+            "state": .string("absent"), "receipt": .null,
+        ])
+        try FacetRetainedActions.validateRetirement(saved, outcome: absent, schema: schema)
+        let wrong = FacetValue.object([
+            "schemaVersion": .integer(1), "mutationId": .string(UUID().uuidString),
+            "state": .string("absent"), "receipt": .null,
+        ])
+        #expect(throws: FacetContractError.self) {
+            try FacetRetainedActions.validateRetirement(saved, outcome: wrong, schema: schema)
+        }
+        try drafts.discard(id: id)
+        #expect(try drafts.pending().isEmpty)
+    }
+
     @Test func interruptedStagingCannotMasqueradeAsACommittedAction() throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { NativeTestFiles.remove(root) }

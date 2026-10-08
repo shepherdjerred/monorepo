@@ -188,10 +188,11 @@
                                 <Button
                                     Click="ResumeAction_Click"
                                     Content="Resume saved action"
+                                    IsEnabled="{x:Bind CanResume}"
                                     Tag="{x:Bind Id}" />
                                 <Button
                                     Click="RetireAction_Click"
-                                    Content="Retire rejected action"
+                                    Content="Retire saved action"
                                     Tag="{x:Bind Id}" />
                             </StackPanel>
                         </StackPanel>

@@ -99,36 +99,3 @@ fn recurring_create_inserts_seeded_dtstart_before_rule() -> Result<()> {
     );
     Ok(())
 }
-
-#[test]
-fn explicit_create_time_entries_write_canonical_seconds() -> Result<()> {
-    let (engine, _) = setup()?;
-    engine.execute("a",&mutation("canonical-entries",create(json!({"timeEntries":[{"startTime":"2026-10-01T14:00:00.750+02:00","endTime":"2026-10-01T14:01:30.999+02:00","vendor":"preserved"}]}))?))?;
-    assert_eq!(
-        properties(&engine)?.get("timeEntries"),
-        Some(
-            &json!([{"startTime":"2026-10-01T12:00:00Z","endTime":"2026-10-01T12:01:30Z","vendor":"preserved"}])
-        )
-    );
-    Ok(())
-}
-
-#[test]
-fn newly_started_time_entry_writes_seconds_from_original_clock() -> Result<()> {
-    let (engine, _) = setup()?;
-    engine.execute("a", &mutation("create", create(json!({}))?))?;
-    let mut start = mutation(
-        "start",
-        Command::StartTime {
-            path: "Tasks/a.md".into(),
-            expected_revision: None,
-        },
-    );
-    start.at = "2026-10-03T12:00:00.750Z".into();
-    engine.execute("a", &start)?;
-    assert_eq!(
-        properties(&engine)?.get("timeEntries"),
-        Some(&json!([{"startTime":"2026-10-03T12:00:00Z"}]))
-    );
-    Ok(())
-}

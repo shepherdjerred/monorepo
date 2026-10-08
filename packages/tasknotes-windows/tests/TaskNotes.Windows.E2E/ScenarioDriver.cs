@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -118,12 +117,6 @@ namespace TaskNotes.Windows.E2E
                     break;
                 case "kanban":
                     await KanbanAsync(session, configuration, evidence, cancellationToken);
-                    break;
-                case "time-tracking-report":
-                    await TimeTrackingAsync(session, configuration, evidence, cancellationToken);
-                    break;
-                case "pomodoro":
-                    await PomodoroAsync(session, configuration, evidence, cancellationToken);
                     break;
                 case "parked-errors":
                     await ParkedErrorsAsync(session, configuration, evidence, cancellationToken);
@@ -257,7 +250,6 @@ namespace TaskNotes.Windows.E2E
             CancellationToken cancellationToken
         )
         {
-            await SeedTimeReportTaskAsync(configuration, cancellationToken);
             await ConfigureAsync(session, configuration, cancellationToken);
             await PostChaosAsync(configuration, "/__chaos/offline", null, cancellationToken);
             await QuickAddAsync(
@@ -438,7 +430,6 @@ namespace TaskNotes.Windows.E2E
             session.SetValue(AutomationIds.EditorProjects, "Project/E2E");
             session.SetValue(AutomationIds.EditorContexts, "desktop");
             session.SetValue(AutomationIds.EditorTags, "windows, e2e");
-            session.SetValue(AutomationIds.EditorEstimate, "45");
             session.Invoke(AutomationIds.EditorSave);
             string markdown = await WaitForVaultAsync(
                 configuration,
@@ -459,7 +450,6 @@ namespace TaskNotes.Windows.E2E
                 "desktop",
                 "windows",
                 "e2e",
-                "timeEstimate: 45",
                 "Markdown **details** from Windows E2E"
             );
             evidence.Record(
@@ -795,14 +785,10 @@ namespace TaskNotes.Windows.E2E
             _ = session.WaitForAutomationId(AutomationIds.Board, cancellationToken);
             UiAutomationSession.ActivateProtocol("tasknotes-e2e://settings");
             _ = session.WaitForAutomationId(AutomationIds.ServerUrl, cancellationToken);
-            UiAutomationSession.ActivateProtocol("tasknotes-e2e://pomodoro");
-            _ = session.WaitForAutomationId(AutomationIds.PomodoroWindow, cancellationToken);
-            UiAutomationSession.ActivateProtocol("tasknotes-e2e://time-report");
-            _ = session.WaitForAutomationId(AutomationIds.TimeReportWindow, cancellationToken);
             evidence.Record(
                 "activation.fixed",
                 EvidenceKind.UIA,
-                "Every fixed-list, board, settings, Pomodoro, and Time Report protocol route reached its concrete destination."
+                "Every fixed-list, board, and settings protocol route reached its concrete destination."
             );
             UiAutomationSession.ActivateProtocol("tasknotes-e2e://search?q=Seeded");
             _ = await session.WaitForTextAsync(
@@ -936,109 +922,6 @@ namespace TaskNotes.Windows.E2E
                 "kanban.failure-visible",
                 EvidenceKind.UIA,
                 $"Injected board mutation failure surfaced in the live status instead of disappearing: {error}"
-            );
-        }
-
-        private static async Task TimeTrackingAsync(
-            UiAutomationSession session,
-            ScenarioConfiguration configuration,
-            ScenarioEvidence evidence,
-            CancellationToken cancellationToken
-        )
-        {
-            await ConfigureAsync(session, configuration, cancellationToken);
-            AutomationElement row = session.WaitForName("Seeded open task", cancellationToken);
-            UiAutomationSession.InvokeDescendantByName(row, "Edit");
-            session.InvokeByName("Start timer");
-            await AssertTaskTimeStateAsync(
-                configuration,
-                "TaskNotes/seeded-open-task-1a2b3c4d.md",
-                expectedActive: true,
-                cancellationToken
-            );
-            session.InvokeByName("Stop timer");
-            await AssertTaskTimeStateAsync(
-                configuration,
-                "TaskNotes/seeded-open-task-1a2b3c4d.md",
-                expectedActive: false,
-                cancellationToken
-            );
-            evidence.Record(
-                "timing.task-server",
-                EvidenceKind.Server,
-                "The live task-time endpoint reported active after Start and inactive after Stop."
-            );
-            string markdown = await WaitForVaultAsync(
-                configuration,
-                "Seeded open task",
-                true,
-                cancellationToken
-            );
-            AssertMarkdownContains(markdown, "timeEntries:", "startTime:", "endTime:");
-            evidence.Record(
-                "timing.markdown",
-                EvidenceKind.Markdown,
-                "The server persisted a completed start/end time entry in the task Markdown."
-            );
-            session.InvokeByName("Open Time Report");
-            AutomationElement report = session.WaitForAutomationId(
-                AutomationIds.TimeReportWindow,
-                cancellationToken
-            );
-            _ = UiAutomationSession.WaitForNameWithin(
-                report,
-                "Windows time report seed",
-                cancellationToken
-            );
-            _ = await session.WaitForTextAsync(
-                AutomationIds.TimeReportTotal,
-                text => text.StartsWith("Total:", StringComparison.Ordinal),
-                cancellationToken
-            );
-            evidence.Record(
-                "timing.report-ui",
-                EvidenceKind.UIA,
-                "Time Report exposed the tracked task row and an aggregate Total value from the server."
-            );
-        }
-
-        private static async Task PomodoroAsync(
-            UiAutomationSession session,
-            ScenarioConfiguration configuration,
-            ScenarioEvidence evidence,
-            CancellationToken cancellationToken
-        )
-        {
-            await ConfigureAsync(session, configuration, cancellationToken);
-            session.InvokeByName("Open Pomodoro");
-            AutomationElement window = session.WaitForAutomationId(
-                AutomationIds.PomodoroWindow,
-                cancellationToken
-            );
-            UiAutomationSession.InvokeDescendantByName(window, "Start");
-            await AssertPomodoroStateAsync(configuration, expectedActive: true, cancellationToken);
-            _ = await session.WaitForTextAsync(
-                AutomationIds.PomodoroStatus,
-                text => text.Contains("remaining", StringComparison.OrdinalIgnoreCase),
-                cancellationToken
-            );
-            session.InvokeByName("Open Pomodoro");
-            Assert.AreEqual(1, session.CountTopLevelWindows("TaskNotes Pomodoro"));
-            evidence.Record(
-                "window.pomodoro-singleton",
-                EvidenceKind.UIA,
-                "Reopening Pomodoro retained one top-level auxiliary window for the app process."
-            );
-            UiAutomationSession.InvokeDescendantByName(window, "Pause / resume");
-            await AssertPomodoroStateAsync(configuration, expectedActive: true, cancellationToken);
-            UiAutomationSession.InvokeDescendantByName(window, "Pause / resume");
-            await AssertPomodoroStateAsync(configuration, expectedActive: true, cancellationToken);
-            UiAutomationSession.InvokeDescendantByName(window, "Stop");
-            await AssertPomodoroStateAsync(configuration, expectedActive: false, cancellationToken);
-            evidence.Record(
-                "pomodoro.server-lifecycle",
-                EvidenceKind.Server,
-                "The real server reported active through start/pause/resume and inactive after stop."
             );
         }
 
@@ -1595,85 +1478,6 @@ namespace TaskNotes.Windows.E2E
             _ = response.EnsureSuccessStatusCode();
             Stream body = await response.Content.ReadAsStreamAsync(cancellationToken);
             return await JsonDocument.ParseAsync(body, cancellationToken: cancellationToken);
-        }
-
-        private static async Task SeedTimeReportTaskAsync(
-            ScenarioConfiguration configuration,
-            CancellationToken cancellationToken
-        )
-        {
-            DateTimeOffset end = DateTimeOffset.UtcNow.AddMinutes(-1);
-            DateTimeOffset start = end.AddMinutes(-10);
-            var body = new
-            {
-                title = "Windows time report seed",
-                status = "open",
-                priority = "normal",
-                tags = new[] { "task", "windows-e2e" },
-                projects = Array.Empty<string>(),
-                contexts = Array.Empty<string>(),
-                timeEntries = new[]
-                {
-                    new
-                    {
-                        startTime = start.ToString("O", CultureInfo.InvariantCulture),
-                        endTime = end.ToString("O", CultureInfo.InvariantCulture),
-                    },
-                },
-            };
-            using HttpClient client = new();
-            using HttpRequestMessage request = new(
-                HttpMethod.Post,
-                $"{configuration.ProxyUrl}/api/tasks"
-            );
-            request.Headers.Authorization = new AuthenticationHeaderValue(
-                "Bearer",
-                configuration.AuthToken
-            );
-            request.Content = new StringContent(
-                JsonSerializer.Serialize(body),
-                Encoding.UTF8,
-                "application/json"
-            );
-            using HttpResponseMessage response = await client.SendAsync(request, cancellationToken);
-            _ = response.EnsureSuccessStatusCode();
-        }
-
-        private static async Task AssertTaskTimeStateAsync(
-            ScenarioConfiguration configuration,
-            string taskId,
-            bool expectedActive,
-            CancellationToken cancellationToken
-        )
-        {
-            string encoded = Uri.EscapeDataString(taskId);
-            using JsonDocument response = await GetServerJsonAsync(
-                configuration,
-                $"/api/tasks/{encoded}/time",
-                cancellationToken
-            );
-            int active = response
-                .RootElement.GetProperty("summary")
-                .GetProperty("activeSessions")
-                .GetInt32();
-            Assert.AreEqual(expectedActive, active > 0);
-        }
-
-        private static async Task AssertPomodoroStateAsync(
-            ScenarioConfiguration configuration,
-            bool expectedActive,
-            CancellationToken cancellationToken
-        )
-        {
-            using JsonDocument response = await GetServerJsonAsync(
-                configuration,
-                "/api/pomodoro/status",
-                cancellationToken
-            );
-            Assert.AreEqual(
-                expectedActive,
-                response.RootElement.GetProperty("active").GetBoolean()
-            );
         }
     }
 

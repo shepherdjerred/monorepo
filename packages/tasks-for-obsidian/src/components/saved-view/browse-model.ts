@@ -34,10 +34,10 @@ export type BrowseProject = {
 export type DestinationItem = {
   readonly kind: "destination";
   readonly key: string;
-  readonly destination: "search" | "completed" | "reports" | "settings";
+  readonly destination: "search" | "completed" | "settings";
   readonly title: string;
   readonly subtitle: string;
-  readonly icon: "search" | "check-circle" | "bar-chart-2" | "settings";
+  readonly icon: "search" | "check-circle" | "settings";
 };
 
 export type BrowseItem =
@@ -240,17 +240,6 @@ export function buildBrowseSections({
           title: "Completed",
           subtitle: taskCountLabel(completedCount, "completed"),
           icon: "check-circle",
-        }),
-      ],
-    },
-    {
-      title: "Insights",
-      data: [
-        destination("reports", {
-          destination: "reports",
-          title: "Reports",
-          subtitle: "Review tracked time",
-          icon: "bar-chart-2",
         }),
       ],
     },

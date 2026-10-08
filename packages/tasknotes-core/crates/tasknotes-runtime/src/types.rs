@@ -478,12 +478,6 @@ pub struct TaskSnapshot {
     /// Another task has an unresolved dependency on this task.
     #[serde(default)]
     pub is_blocking: bool,
-    /// A time entry is open, independent of whether a read clock was supplied.
-    #[serde(default)]
-    pub has_active_time_session: bool,
-    /// Per-entry rounded minutes; live entries require Query.at.
-    #[serde(default)]
-    pub total_tracked_minutes: u64,
     /// Instance represented by a recurrence-aware date query.
     #[serde(default)]
     pub occurrence_date: Option<String>,
@@ -751,17 +745,6 @@ pub enum Command {
         /// Selected disposition; replacement content uses the binary channel.
         resolution: ResolutionChoice,
     },
-    /// Change one device's private durable focus timer.
-    Pomodoro {
-        /// Device-owned secure installation identity; never synchronized.
-        device_id: String,
-        /// start, pause, resume, or stop.
-        action: String,
-        /// Optional associated logical task.
-        task_path: Option<String>,
-        /// Focus interval seconds; omitted uses configured work duration.
-        duration_seconds: Option<u64>,
-    },
     /// Persist portable view order without replacing preference maps.
     ReorderViews {
         /// Complete desired ordering of currently saved views.
@@ -801,29 +784,6 @@ pub enum Command {
         /// True skips; false removes skip membership only.
         skipped: bool,
     },
-    /// Begin a task's durable time entry.
-    StartTime {
-        /// Current logical path.
-        path: String,
-        /// Optional optimistic revision.
-        expected_revision: Option<String>,
-    },
-    /// Finish the task's active time entry.
-    StopTime {
-        /// Current logical path.
-        path: String,
-        /// Optional optimistic revision.
-        expected_revision: Option<String>,
-    },
-    /// Replace validated time entries, preserving arbitrary entry properties.
-    SetTimeEntries {
-        /// Current logical path.
-        path: String,
-        /// Optional optimistic revision.
-        expected_revision: Option<String>,
-        /// Entries use upstream startTime/endTime/duration names.
-        entries: Vec<Map<String, Value>>,
-    },
     /// Create a task, applying defaults and configured detection.
     Create {
         /// Optional explicit safe path; otherwise derive from title.
@@ -854,7 +814,7 @@ pub enum Command {
         properties: Map<String, Value>,
         /// Explicit body replacement; null or absence leaves the body unchanged.
         body: Option<String>,
-        /// Optional configured transition, including completion and time-stop semantics.
+        /// Optional configured transition, including completion semantics.
         status: Option<String>,
         /// Displayed recurring occurrence; absence uses the immutable mutation civil day.
         occurrence_date: Option<String>,
@@ -966,7 +926,6 @@ impl Command {
                             Self::Batch { .. }
                                 | Self::BatchPartial { .. }
                                 | Self::Undo { .. }
-                                | Self::Pomodoro { .. }
                                 | Self::ResolveConflict { .. }
                         )
                     })
@@ -988,7 +947,6 @@ impl Command {
                             Self::Batch { .. }
                                 | Self::BatchPartial { .. }
                                 | Self::Undo { .. }
-                                | Self::Pomodoro { .. }
                                 | Self::ResolveConflict { .. }
                         )
                     })

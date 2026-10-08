@@ -6783,78 +6783,6 @@ public protocol TaskNotesApiProtocol: AnyObject, Sendable {
      */
     func cancelAll() 
     
-    /**
-     * Toggle the current interval between running and paused.
-     *
-     * # Errors
-     *
-     * Propagates the core's transport, HTTP, and response-validation failure.
-     */
-    func pausePomodoro() throws  -> PomodoroStatus
-    
-    /**
-     * Read the current server-backed focus interval.
-     *
-     * # Errors
-     *
-     * Propagates the core's transport, HTTP, and response-validation failure.
-     */
-    func pomodoroStatus() throws  -> PomodoroStatus
-    
-    /**
-     * Start a server-backed focus interval, optionally assigned to a task.
-     *
-     * # Errors
-     *
-     * Propagates the core's transport, HTTP, and response-validation failure.
-     */
-    func startPomodoro(taskId: TaskId?) throws  -> PomodoroStatus
-    
-    /**
-     * Start tracking time against a task through the core-owned wire client.
-     *
-     * # Errors
-     *
-     * Propagates the core's transport, HTTP, and response-validation failure.
-     */
-    func startTimeTracking(taskId: TaskId) throws  -> Task
-    
-    /**
-     * Stop the current server-backed focus interval.
-     *
-     * # Errors
-     *
-     * Propagates the core's transport, HTTP, and response-validation failure.
-     */
-    func stopPomodoro() throws  -> PomodoroStatus
-    
-    /**
-     * Stop tracking time against a task through the core-owned wire client.
-     *
-     * # Errors
-     *
-     * Propagates the core's transport, HTTP, and response-validation failure.
-     */
-    func stopTimeTracking(taskId: TaskId) throws  -> Task
-    
-    /**
-     * Read tracked-time totals for one task.
-     *
-     * # Errors
-     *
-     * Propagates the core's transport, HTTP, and response-validation failure.
-     */
-    func taskTime(taskId: TaskId) throws  -> TaskTime
-    
-    /**
-     * Read the aggregate time report for a named server period.
-     *
-     * # Errors
-     *
-     * Propagates the core's transport, HTTP, and response-validation failure.
-     */
-    func timeSummary(period: String) throws  -> TimeSummary
-    
 }
 /**
  * The TaskNotes `/v2` API, over a host transport.
@@ -6972,139 +6900,6 @@ open func cancelAll()  {try! rustCall() {
             self.uniffiCloneHandle(),uniffiCallStatus
     )
 }
-}
-    
-    /**
-     * Toggle the current interval between running and paused.
-     *
-     * # Errors
-     *
-     * Propagates the core's transport, HTTP, and response-validation failure.
-     */
-open func pausePomodoro()throws  -> PomodoroStatus  {
-    return try  FfiConverterTypePomodoroStatus_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
-        uniffiCallStatus in
-    uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_pause_pomodoro(
-            self.uniffiCloneHandle(),uniffiCallStatus
-    )
-})
-}
-    
-    /**
-     * Read the current server-backed focus interval.
-     *
-     * # Errors
-     *
-     * Propagates the core's transport, HTTP, and response-validation failure.
-     */
-open func pomodoroStatus()throws  -> PomodoroStatus  {
-    return try  FfiConverterTypePomodoroStatus_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
-        uniffiCallStatus in
-    uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_pomodoro_status(
-            self.uniffiCloneHandle(),uniffiCallStatus
-    )
-})
-}
-    
-    /**
-     * Start a server-backed focus interval, optionally assigned to a task.
-     *
-     * # Errors
-     *
-     * Propagates the core's transport, HTTP, and response-validation failure.
-     */
-open func startPomodoro(taskId: TaskId?)throws  -> PomodoroStatus  {
-    return try  FfiConverterTypePomodoroStatus_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
-        uniffiCallStatus in
-    uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_start_pomodoro(
-            self.uniffiCloneHandle(),
-        FfiConverterOptionTypeTaskId.lower(taskId),uniffiCallStatus
-    )
-})
-}
-    
-    /**
-     * Start tracking time against a task through the core-owned wire client.
-     *
-     * # Errors
-     *
-     * Propagates the core's transport, HTTP, and response-validation failure.
-     */
-open func startTimeTracking(taskId: TaskId)throws  -> Task  {
-    return try  FfiConverterTypeTask_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
-        uniffiCallStatus in
-    uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_start_time_tracking(
-            self.uniffiCloneHandle(),
-        FfiConverterTypeTaskId_lower(taskId),uniffiCallStatus
-    )
-})
-}
-    
-    /**
-     * Stop the current server-backed focus interval.
-     *
-     * # Errors
-     *
-     * Propagates the core's transport, HTTP, and response-validation failure.
-     */
-open func stopPomodoro()throws  -> PomodoroStatus  {
-    return try  FfiConverterTypePomodoroStatus_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
-        uniffiCallStatus in
-    uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_stop_pomodoro(
-            self.uniffiCloneHandle(),uniffiCallStatus
-    )
-})
-}
-    
-    /**
-     * Stop tracking time against a task through the core-owned wire client.
-     *
-     * # Errors
-     *
-     * Propagates the core's transport, HTTP, and response-validation failure.
-     */
-open func stopTimeTracking(taskId: TaskId)throws  -> Task  {
-    return try  FfiConverterTypeTask_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
-        uniffiCallStatus in
-    uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_stop_time_tracking(
-            self.uniffiCloneHandle(),
-        FfiConverterTypeTaskId_lower(taskId),uniffiCallStatus
-    )
-})
-}
-    
-    /**
-     * Read tracked-time totals for one task.
-     *
-     * # Errors
-     *
-     * Propagates the core's transport, HTTP, and response-validation failure.
-     */
-open func taskTime(taskId: TaskId)throws  -> TaskTime  {
-    return try  FfiConverterTypeTaskTime_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
-        uniffiCallStatus in
-    uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_task_time(
-            self.uniffiCloneHandle(),
-        FfiConverterTypeTaskId_lower(taskId),uniffiCallStatus
-    )
-})
-}
-    
-    /**
-     * Read the aggregate time report for a named server period.
-     *
-     * # Errors
-     *
-     * Propagates the core's transport, HTTP, and response-validation failure.
-     */
-open func timeSummary(period: String)throws  -> TimeSummary  {
-    return try  FfiConverterTypeTimeSummary_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
-        uniffiCallStatus in
-    uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_time_summary(
-            self.uniffiCloneHandle(),
-        FfiConverterString.lower(period),uniffiCallStatus
-    )
-})
 }
     
 
@@ -7661,10 +7456,6 @@ public struct CreateTaskRequest: Equatable, Hashable {
      */
     public var recurrenceAnchor: RecurrenceAnchor?
     /**
-     * The estimate in whole minutes.
-     */
-    public var timeEstimate: UInt32?
-    /**
      * Extra frontmatter keys to write, as a JSON object string.
      */
     public var extraFields: ExtraFields?
@@ -7706,9 +7497,6 @@ public struct CreateTaskRequest: Equatable, Hashable {
          * What the recurrence is measured from.
          */recurrenceAnchor: RecurrenceAnchor?, 
         /**
-         * The estimate in whole minutes.
-         */timeEstimate: UInt32?, 
-        /**
          * Extra frontmatter keys to write, as a JSON object string.
          */extraFields: ExtraFields?) {
         self.title = title
@@ -7722,7 +7510,6 @@ public struct CreateTaskRequest: Equatable, Hashable {
         self.tags = tags
         self.recurrence = recurrence
         self.recurrenceAnchor = recurrenceAnchor
-        self.timeEstimate = timeEstimate
         self.extraFields = extraFields
     }
 
@@ -7753,7 +7540,6 @@ public struct FfiConverterTypeCreateTaskRequest: FfiConverterRustBuffer {
                 tags: FfiConverterOptionSequenceTypeTagName.read(from: &buf), 
                 recurrence: FfiConverterOptionString.read(from: &buf), 
                 recurrenceAnchor: FfiConverterOptionTypeRecurrenceAnchor.read(from: &buf), 
-                timeEstimate: FfiConverterOptionUInt32.read(from: &buf), 
                 extraFields: FfiConverterOptionTypeExtraFields.read(from: &buf)
         )
     }
@@ -7770,7 +7556,6 @@ public struct FfiConverterTypeCreateTaskRequest: FfiConverterRustBuffer {
         FfiConverterOptionSequenceTypeTagName.write(value.tags, into: &buf)
         FfiConverterOptionString.write(value.recurrence, into: &buf)
         FfiConverterOptionTypeRecurrenceAnchor.write(value.recurrenceAnchor, into: &buf)
-        FfiConverterOptionUInt32.write(value.timeEstimate, into: &buf)
         FfiConverterOptionTypeExtraFields.write(value.extraFields, into: &buf)
     }
 }
@@ -8961,85 +8746,6 @@ public func FfiConverterTypeHttpResponse_lower(_ value: HttpResponse) -> RustBuf
 
 
 /**
- * See [`tasknotes_core::domain::InlineTimeEntry`].
- */
-public struct InlineTimeEntry: Equatable, Hashable {
-    /**
-     * When tracking started.
-     */
-    public var startTime: String
-    /**
-     * When tracking stopped; absent while a session is running.
-     */
-    public var endTime: String?
-    /**
-     * The interval's length in whole minutes.
-     */
-    public var duration: UInt32?
-
-    // Default memberwise initializers are never public by default, so we
-    // declare one manually.
-    public init(
-        /**
-         * When tracking started.
-         */startTime: String, 
-        /**
-         * When tracking stopped; absent while a session is running.
-         */endTime: String?, 
-        /**
-         * The interval's length in whole minutes.
-         */duration: UInt32?) {
-        self.startTime = startTime
-        self.endTime = endTime
-        self.duration = duration
-    }
-
-    
-
-    
-}
-
-#if compiler(>=6)
-extension InlineTimeEntry: Sendable {}
-#endif
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public struct FfiConverterTypeInlineTimeEntry: FfiConverterRustBuffer {
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> InlineTimeEntry {
-        return
-            try InlineTimeEntry(
-                startTime: FfiConverterString.read(from: &buf), 
-                endTime: FfiConverterOptionString.read(from: &buf), 
-                duration: FfiConverterOptionUInt32.read(from: &buf)
-        )
-    }
-
-    public static func write(_ value: InlineTimeEntry, into buf: inout [UInt8]) {
-        FfiConverterString.write(value.startTime, into: &buf)
-        FfiConverterOptionString.write(value.endTime, into: &buf)
-        FfiConverterOptionUInt32.write(value.duration, into: &buf)
-    }
-}
-
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypeInlineTimeEntry_lift(_ buf: RustBuffer) throws -> InlineTimeEntry {
-    return try FfiConverterTypeInlineTimeEntry.lift(buf)
-}
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypeInlineTimeEntry_lower(_ value: InlineTimeEntry) -> RustBuffer {
-    return FfiConverterTypeInlineTimeEntry.lower(value)
-}
-
-
-/**
  * See [`tasknotes_core::net::InstanceCompletion`].
  */
 public struct InstanceCompletion: Equatable, Hashable {
@@ -10002,95 +9708,6 @@ public func FfiConverterTypePagination_lower(_ value: Pagination) -> RustBuffer 
 
 
 /**
- * See [`tasknotes_core::domain::PomodoroStatus`].
- */
-public struct PomodoroStatus: Equatable, Hashable {
-    /**
-     * Whether a session is running.
-     */
-    public var active: Bool
-    /**
-     * The task being worked on.
-     */
-    public var taskId: TaskId?
-    /**
-     * Seconds left in the current phase.
-     */
-    public var timeRemaining: UInt32?
-    /**
-     * Which phase is running.
-     */
-    public var phase: PomodoroPhase?
-
-    // Default memberwise initializers are never public by default, so we
-    // declare one manually.
-    public init(
-        /**
-         * Whether a session is running.
-         */active: Bool, 
-        /**
-         * The task being worked on.
-         */taskId: TaskId?, 
-        /**
-         * Seconds left in the current phase.
-         */timeRemaining: UInt32?, 
-        /**
-         * Which phase is running.
-         */phase: PomodoroPhase?) {
-        self.active = active
-        self.taskId = taskId
-        self.timeRemaining = timeRemaining
-        self.phase = phase
-    }
-
-    
-
-    
-}
-
-#if compiler(>=6)
-extension PomodoroStatus: Sendable {}
-#endif
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public struct FfiConverterTypePomodoroStatus: FfiConverterRustBuffer {
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> PomodoroStatus {
-        return
-            try PomodoroStatus(
-                active: FfiConverterBool.read(from: &buf), 
-                taskId: FfiConverterOptionTypeTaskId.read(from: &buf), 
-                timeRemaining: FfiConverterOptionUInt32.read(from: &buf), 
-                phase: FfiConverterOptionTypePomodoroPhase.read(from: &buf)
-        )
-    }
-
-    public static func write(_ value: PomodoroStatus, into buf: inout [UInt8]) {
-        FfiConverterBool.write(value.active, into: &buf)
-        FfiConverterOptionTypeTaskId.write(value.taskId, into: &buf)
-        FfiConverterOptionUInt32.write(value.timeRemaining, into: &buf)
-        FfiConverterOptionTypePomodoroPhase.write(value.phase, into: &buf)
-    }
-}
-
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypePomodoroStatus_lift(_ buf: RustBuffer) throws -> PomodoroStatus {
-    return try FfiConverterTypePomodoroStatus.lift(buf)
-}
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypePomodoroStatus_lower(_ value: PomodoroStatus) -> RustBuffer {
-    return FfiConverterTypePomodoroStatus.lower(value)
-}
-
-
-/**
  * See [`tasknotes_core::domain::QueryResponse`].
  */
 public struct QueryResponse: Equatable, Hashable {
@@ -10497,14 +10114,6 @@ public struct Task: Equatable, Hashable {
      */
     public var dateModified: String?
     /**
-     * The estimate in whole minutes.
-     */
-    public var timeEstimate: UInt32?
-    /**
-     * Tracked work intervals stored in the note's frontmatter.
-     */
-    public var timeEntries: [InlineTimeEntry]
-    /**
      * Tasks this one is blocked by.
      */
     public var blockedBy: [BlockedByEntry]
@@ -10516,10 +10125,6 @@ public struct Task: Equatable, Hashable {
      * Whether the task is archived.
      */
     public var archived: Bool
-    /**
-     * Total tracked time in whole minutes, as the server computed it.
-     */
-    public var totalTrackedTime: UInt32
     /**
      * Whether something else is blocking this task.
      */
@@ -10592,12 +10197,6 @@ public struct Task: Equatable, Hashable {
          * When the note was last modified.
          */dateModified: String?, 
         /**
-         * The estimate in whole minutes.
-         */timeEstimate: UInt32?, 
-        /**
-         * Tracked work intervals stored in the note's frontmatter.
-         */timeEntries: [InlineTimeEntry], 
-        /**
          * Tasks this one is blocked by.
          */blockedBy: [BlockedByEntry], 
         /**
@@ -10606,9 +10205,6 @@ public struct Task: Equatable, Hashable {
         /**
          * Whether the task is archived.
          */archived: Bool, 
-        /**
-         * Total tracked time in whole minutes, as the server computed it.
-         */totalTrackedTime: UInt32, 
         /**
          * Whether something else is blocking this task.
          */isBlocked: Bool, 
@@ -10638,12 +10234,9 @@ public struct Task: Equatable, Hashable {
         self.completedDate = completedDate
         self.dateCreated = dateCreated
         self.dateModified = dateModified
-        self.timeEstimate = timeEstimate
-        self.timeEntries = timeEntries
         self.blockedBy = blockedBy
         self.reminders = reminders
         self.archived = archived
-        self.totalTrackedTime = totalTrackedTime
         self.isBlocked = isBlocked
         self.isBlocking = isBlocking
         self.extraFields = extraFields
@@ -10683,12 +10276,9 @@ public struct FfiConverterTypeTask: FfiConverterRustBuffer {
                 completedDate: FfiConverterOptionString.read(from: &buf), 
                 dateCreated: FfiConverterOptionString.read(from: &buf), 
                 dateModified: FfiConverterOptionString.read(from: &buf), 
-                timeEstimate: FfiConverterOptionUInt32.read(from: &buf), 
-                timeEntries: FfiConverterSequenceTypeInlineTimeEntry.read(from: &buf), 
                 blockedBy: FfiConverterSequenceTypeBlockedByEntry.read(from: &buf), 
                 reminders: FfiConverterSequenceTypeReminder.read(from: &buf), 
                 archived: FfiConverterBool.read(from: &buf), 
-                totalTrackedTime: FfiConverterUInt32.read(from: &buf), 
                 isBlocked: FfiConverterBool.read(from: &buf), 
                 isBlocking: FfiConverterBool.read(from: &buf), 
                 extraFields: FfiConverterTypeExtraFields.read(from: &buf), 
@@ -10714,12 +10304,9 @@ public struct FfiConverterTypeTask: FfiConverterRustBuffer {
         FfiConverterOptionString.write(value.completedDate, into: &buf)
         FfiConverterOptionString.write(value.dateCreated, into: &buf)
         FfiConverterOptionString.write(value.dateModified, into: &buf)
-        FfiConverterOptionUInt32.write(value.timeEstimate, into: &buf)
-        FfiConverterSequenceTypeInlineTimeEntry.write(value.timeEntries, into: &buf)
         FfiConverterSequenceTypeBlockedByEntry.write(value.blockedBy, into: &buf)
         FfiConverterSequenceTypeReminder.write(value.reminders, into: &buf)
         FfiConverterBool.write(value.archived, into: &buf)
-        FfiConverterUInt32.write(value.totalTrackedTime, into: &buf)
         FfiConverterBool.write(value.isBlocked, into: &buf)
         FfiConverterBool.write(value.isBlocking, into: &buf)
         FfiConverterTypeExtraFields.write(value.extraFields, into: &buf)
@@ -11005,10 +10592,6 @@ public struct TaskStats: Equatable, Hashable {
      * Archived tasks.
      */
     public var archived: UInt32
-    /**
-     * Tasks with at least one tracked interval.
-     */
-    public var withTimeTracking: UInt32
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
@@ -11027,16 +10610,12 @@ public struct TaskStats: Equatable, Hashable {
          */overdue: UInt32, 
         /**
          * Archived tasks.
-         */archived: UInt32, 
-        /**
-         * Tasks with at least one tracked interval.
-         */withTimeTracking: UInt32) {
+         */archived: UInt32) {
         self.total = total
         self.completed = completed
         self.active = active
         self.overdue = overdue
         self.archived = archived
-        self.withTimeTracking = withTimeTracking
     }
 
     
@@ -11059,8 +10638,7 @@ public struct FfiConverterTypeTaskStats: FfiConverterRustBuffer {
                 completed: FfiConverterUInt32.read(from: &buf), 
                 active: FfiConverterUInt32.read(from: &buf), 
                 overdue: FfiConverterUInt32.read(from: &buf), 
-                archived: FfiConverterUInt32.read(from: &buf), 
-                withTimeTracking: FfiConverterUInt32.read(from: &buf)
+                archived: FfiConverterUInt32.read(from: &buf)
         )
     }
 
@@ -11070,7 +10648,6 @@ public struct FfiConverterTypeTaskStats: FfiConverterRustBuffer {
         FfiConverterUInt32.write(value.active, into: &buf)
         FfiConverterUInt32.write(value.overdue, into: &buf)
         FfiConverterUInt32.write(value.archived, into: &buf)
-        FfiConverterUInt32.write(value.withTimeTracking, into: &buf)
     }
 }
 
@@ -11197,312 +10774,6 @@ public func FfiConverterTypeTaskStoreSnapshot_lower(_ value: TaskStoreSnapshot) 
 
 
 /**
- * See [`tasknotes_core::domain::TaskTime`].
- */
-public struct TaskTime: Equatable, Hashable {
-    /**
-     * Whole minutes tracked against one task.
-     */
-    public var totalTime: UInt32
-    /**
-     * Whether a session is running right now.
-     */
-    public var hasActiveSession: Bool
-
-    // Default memberwise initializers are never public by default, so we
-    // declare one manually.
-    public init(
-        /**
-         * Whole minutes tracked against one task.
-         */totalTime: UInt32, 
-        /**
-         * Whether a session is running right now.
-         */hasActiveSession: Bool) {
-        self.totalTime = totalTime
-        self.hasActiveSession = hasActiveSession
-    }
-
-    
-
-    
-}
-
-#if compiler(>=6)
-extension TaskTime: Sendable {}
-#endif
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public struct FfiConverterTypeTaskTime: FfiConverterRustBuffer {
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TaskTime {
-        return
-            try TaskTime(
-                totalTime: FfiConverterUInt32.read(from: &buf), 
-                hasActiveSession: FfiConverterBool.read(from: &buf)
-        )
-    }
-
-    public static func write(_ value: TaskTime, into buf: inout [UInt8]) {
-        FfiConverterUInt32.write(value.totalTime, into: &buf)
-        FfiConverterBool.write(value.hasActiveSession, into: &buf)
-    }
-}
-
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypeTaskTime_lift(_ buf: RustBuffer) throws -> TaskTime {
-    return try FfiConverterTypeTaskTime.lift(buf)
-}
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypeTaskTime_lower(_ value: TaskTime) -> RustBuffer {
-    return FfiConverterTypeTaskTime.lower(value)
-}
-
-
-/**
- * See [`tasknotes_core::domain::TimeEntry`].
- */
-public struct TimeEntry: Equatable, Hashable {
-    /**
-     * The task the interval belongs to.
-     */
-    public var taskId: TaskId
-    /**
-     * When tracking started.
-     */
-    public var startTime: String
-    /**
-     * When tracking stopped; absent while a session is running.
-     */
-    public var endTime: String?
-    /**
-     * The interval's length in whole minutes.
-     */
-    public var duration: UInt32?
-
-    // Default memberwise initializers are never public by default, so we
-    // declare one manually.
-    public init(
-        /**
-         * The task the interval belongs to.
-         */taskId: TaskId, 
-        /**
-         * When tracking started.
-         */startTime: String, 
-        /**
-         * When tracking stopped; absent while a session is running.
-         */endTime: String?, 
-        /**
-         * The interval's length in whole minutes.
-         */duration: UInt32?) {
-        self.taskId = taskId
-        self.startTime = startTime
-        self.endTime = endTime
-        self.duration = duration
-    }
-
-    
-
-    
-}
-
-#if compiler(>=6)
-extension TimeEntry: Sendable {}
-#endif
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public struct FfiConverterTypeTimeEntry: FfiConverterRustBuffer {
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TimeEntry {
-        return
-            try TimeEntry(
-                taskId: FfiConverterTypeTaskId.read(from: &buf), 
-                startTime: FfiConverterString.read(from: &buf), 
-                endTime: FfiConverterOptionString.read(from: &buf), 
-                duration: FfiConverterOptionUInt32.read(from: &buf)
-        )
-    }
-
-    public static func write(_ value: TimeEntry, into buf: inout [UInt8]) {
-        FfiConverterTypeTaskId.write(value.taskId, into: &buf)
-        FfiConverterString.write(value.startTime, into: &buf)
-        FfiConverterOptionString.write(value.endTime, into: &buf)
-        FfiConverterOptionUInt32.write(value.duration, into: &buf)
-    }
-}
-
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypeTimeEntry_lift(_ buf: RustBuffer) throws -> TimeEntry {
-    return try FfiConverterTypeTimeEntry.lift(buf)
-}
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypeTimeEntry_lower(_ value: TimeEntry) -> RustBuffer {
-    return FfiConverterTypeTimeEntry.lower(value)
-}
-
-
-/**
- * See [`tasknotes_core::domain::TimeSummary`].
- */
-public struct TimeSummary: Equatable, Hashable {
-    /**
-     * Whole minutes tracked across everything in scope.
-     */
-    public var totalTime: UInt32
-    /**
-     * The busiest tasks, in the server's order.
-     */
-    public var topTasks: [TopTask]
-
-    // Default memberwise initializers are never public by default, so we
-    // declare one manually.
-    public init(
-        /**
-         * Whole minutes tracked across everything in scope.
-         */totalTime: UInt32, 
-        /**
-         * The busiest tasks, in the server's order.
-         */topTasks: [TopTask]) {
-        self.totalTime = totalTime
-        self.topTasks = topTasks
-    }
-
-    
-
-    
-}
-
-#if compiler(>=6)
-extension TimeSummary: Sendable {}
-#endif
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public struct FfiConverterTypeTimeSummary: FfiConverterRustBuffer {
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TimeSummary {
-        return
-            try TimeSummary(
-                totalTime: FfiConverterUInt32.read(from: &buf), 
-                topTasks: FfiConverterSequenceTypeTopTask.read(from: &buf)
-        )
-    }
-
-    public static func write(_ value: TimeSummary, into buf: inout [UInt8]) {
-        FfiConverterUInt32.write(value.totalTime, into: &buf)
-        FfiConverterSequenceTypeTopTask.write(value.topTasks, into: &buf)
-    }
-}
-
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypeTimeSummary_lift(_ buf: RustBuffer) throws -> TimeSummary {
-    return try FfiConverterTypeTimeSummary.lift(buf)
-}
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypeTimeSummary_lower(_ value: TimeSummary) -> RustBuffer {
-    return FfiConverterTypeTimeSummary.lower(value)
-}
-
-
-/**
- * See [`tasknotes_core::domain::TopTask`].
- */
-public struct TopTask: Equatable, Hashable {
-    /**
-     * The task.
-     */
-    public var taskId: TaskId
-    /**
-     * Its title.
-     */
-    public var title: String
-    /**
-     * Whole minutes tracked against it.
-     */
-    public var minutes: UInt32
-
-    // Default memberwise initializers are never public by default, so we
-    // declare one manually.
-    public init(
-        /**
-         * The task.
-         */taskId: TaskId, 
-        /**
-         * Its title.
-         */title: String, 
-        /**
-         * Whole minutes tracked against it.
-         */minutes: UInt32) {
-        self.taskId = taskId
-        self.title = title
-        self.minutes = minutes
-    }
-
-    
-
-    
-}
-
-#if compiler(>=6)
-extension TopTask: Sendable {}
-#endif
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public struct FfiConverterTypeTopTask: FfiConverterRustBuffer {
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TopTask {
-        return
-            try TopTask(
-                taskId: FfiConverterTypeTaskId.read(from: &buf), 
-                title: FfiConverterString.read(from: &buf), 
-                minutes: FfiConverterUInt32.read(from: &buf)
-        )
-    }
-
-    public static func write(_ value: TopTask, into buf: inout [UInt8]) {
-        FfiConverterTypeTaskId.write(value.taskId, into: &buf)
-        FfiConverterString.write(value.title, into: &buf)
-        FfiConverterUInt32.write(value.minutes, into: &buf)
-    }
-}
-
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypeTopTask_lift(_ buf: RustBuffer) throws -> TopTask {
-    return try FfiConverterTypeTopTask.lift(buf)
-}
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypeTopTask_lower(_ value: TopTask) -> RustBuffer {
-    return FfiConverterTypeTopTask.lower(value)
-}
-
-
-/**
  * A partial update to a task.
  *
  * Mirrors [`tasknotes_core::domain::UpdateTaskRequest`] field for field, in
@@ -11555,10 +10826,6 @@ public struct UpdateTaskRequest: Equatable, Hashable {
      */
     public var recurrenceAnchor: RecurrenceAnchorUpdate
     /**
-     * The estimate in whole minutes; `Clear` deletes it.
-     */
-    public var timeEstimate: MinutesUpdate
-    /**
      * The full replacement set of extra frontmatter keys, as a JSON object
      * string.
      */
@@ -11601,9 +10868,6 @@ public struct UpdateTaskRequest: Equatable, Hashable {
          * What the recurrence is measured from; `Clear` deletes it.
          */recurrenceAnchor: RecurrenceAnchorUpdate, 
         /**
-         * The estimate in whole minutes; `Clear` deletes it.
-         */timeEstimate: MinutesUpdate, 
-        /**
          * The full replacement set of extra frontmatter keys, as a JSON object
          * string.
          */extraFields: ExtraFields?) {
@@ -11618,7 +10882,6 @@ public struct UpdateTaskRequest: Equatable, Hashable {
         self.tags = tags
         self.recurrence = recurrence
         self.recurrenceAnchor = recurrenceAnchor
-        self.timeEstimate = timeEstimate
         self.extraFields = extraFields
     }
 
@@ -11649,7 +10912,6 @@ public struct FfiConverterTypeUpdateTaskRequest: FfiConverterRustBuffer {
                 tags: FfiConverterOptionSequenceTypeTagName.read(from: &buf), 
                 recurrence: FfiConverterTypeTextUpdate.read(from: &buf), 
                 recurrenceAnchor: FfiConverterTypeRecurrenceAnchorUpdate.read(from: &buf), 
-                timeEstimate: FfiConverterTypeMinutesUpdate.read(from: &buf), 
                 extraFields: FfiConverterOptionTypeExtraFields.read(from: &buf)
         )
     }
@@ -11666,7 +10928,6 @@ public struct FfiConverterTypeUpdateTaskRequest: FfiConverterRustBuffer {
         FfiConverterOptionSequenceTypeTagName.write(value.tags, into: &buf)
         FfiConverterTypeTextUpdate.write(value.recurrence, into: &buf)
         FfiConverterTypeRecurrenceAnchorUpdate.write(value.recurrenceAnchor, into: &buf)
-        FfiConverterTypeMinutesUpdate.write(value.timeEstimate, into: &buf)
         FfiConverterOptionTypeExtraFields.write(value.extraFields, into: &buf)
     }
 }
@@ -13520,99 +12781,6 @@ public func FfiConverterTypeHttpMethod_lower(_ value: HttpMethod) -> RustBuffer 
 
 
 /**
- * A clearable whole-minutes field.
- *
- * The exported counterpart of [`tasknotes_core::domain::MinutesUpdate`].
- */
-
-public enum MinutesUpdate: Equatable, Hashable {
-    
-    /**
-     * The key is absent from the payload: leave the stored value alone.
-     */
-    case unchanged
-    /**
-     * The key is present and `null`: delete the stored value.
-     */
-    case clear
-    /**
-     * The key is present with a value: store it.
-     */
-    case set(
-        /**
-         * The value to store.
-         */value: UInt32
-    )
-
-
-
-
-
-}
-
-#if compiler(>=6)
-extension MinutesUpdate: Sendable {}
-#endif
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public struct FfiConverterTypeMinutesUpdate: FfiConverterRustBuffer {
-    typealias SwiftType = MinutesUpdate
-
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> MinutesUpdate {
-        let variant: Int32 = try readInt(&buf)
-        switch variant {
-        
-        case 1: return .unchanged
-        
-        case 2: return .clear
-        
-        case 3: return .set(value: try FfiConverterUInt32.read(from: &buf)
-        )
-        
-        default: throw UniffiInternalError.unexpectedEnumCase
-        }
-    }
-
-    public static func write(_ value: MinutesUpdate, into buf: inout [UInt8]) {
-        switch value {
-        
-        
-        case .unchanged:
-            writeInt(&buf, Int32(1))
-        
-        
-        case .clear:
-            writeInt(&buf, Int32(2))
-        
-        
-        case let .set(value):
-            writeInt(&buf, Int32(3))
-            FfiConverterUInt32.write(value, into: &buf)
-            
-        }
-    }
-}
-
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypeMinutesUpdate_lift(_ buf: RustBuffer) throws -> MinutesUpdate {
-    return try FfiConverterTypeMinutesUpdate.lift(buf)
-}
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypeMinutesUpdate_lower(_ value: MinutesUpdate) -> RustBuffer {
-    return FfiConverterTypeMinutesUpdate.lower(value)
-}
-
-
-
-/**
  * See [`tasknotes_core::recurrence::MonthlyOrdinal`].
  */
 
@@ -14272,81 +13440,6 @@ public func FfiConverterTypeObsidianSessionEffect_lift(_ buf: RustBuffer) throws
 #endif
 public func FfiConverterTypeObsidianSessionEffect_lower(_ value: ObsidianSessionEffect) -> RustBuffer {
     return FfiConverterTypeObsidianSessionEffect.lower(value)
-}
-
-
-
-/**
- * See [`tasknotes_core::domain::PomodoroPhase`].
- */
-
-public enum PomodoroPhase: Equatable, Hashable {
-    
-    /**
-     * A focus interval.
-     */
-    case work
-    /**
-     * A rest interval.
-     */
-    case `break`
-
-
-
-
-
-}
-
-#if compiler(>=6)
-extension PomodoroPhase: Sendable {}
-#endif
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public struct FfiConverterTypePomodoroPhase: FfiConverterRustBuffer {
-    typealias SwiftType = PomodoroPhase
-
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> PomodoroPhase {
-        let variant: Int32 = try readInt(&buf)
-        switch variant {
-        
-        case 1: return .work
-        
-        case 2: return .`break`
-        
-        default: throw UniffiInternalError.unexpectedEnumCase
-        }
-    }
-
-    public static func write(_ value: PomodoroPhase, into buf: inout [UInt8]) {
-        switch value {
-        
-        
-        case .work:
-            writeInt(&buf, Int32(1))
-        
-        
-        case .`break`:
-            writeInt(&buf, Int32(2))
-        
-        }
-    }
-}
-
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypePomodoroPhase_lift(_ buf: RustBuffer) throws -> PomodoroPhase {
-    return try FfiConverterTypePomodoroPhase.lift(buf)
-}
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypePomodoroPhase_lower(_ value: PomodoroPhase) -> RustBuffer {
-    return FfiConverterTypePomodoroPhase.lower(value)
 }
 
 
@@ -16072,30 +15165,6 @@ fileprivate struct FfiConverterOptionTypeFrequency: FfiConverterRustBuffer {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
-fileprivate struct FfiConverterOptionTypePomodoroPhase: FfiConverterRustBuffer {
-    typealias SwiftType = PomodoroPhase?
-
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
-        guard let value = value else {
-            writeInt(&buf, Int8(0))
-            return
-        }
-        writeInt(&buf, Int8(1))
-        FfiConverterTypePomodoroPhase.write(value, into: &buf)
-    }
-
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
-        switch try readInt(&buf) as Int8 {
-        case 0: return nil
-        case 1: return try FfiConverterTypePomodoroPhase.read(from: &buf)
-        default: throw UniffiInternalError.unexpectedOptionalTag
-        }
-    }
-}
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
 fileprivate struct FfiConverterOptionTypePriority: FfiConverterRustBuffer {
     typealias SwiftType = Priority?
 
@@ -16584,31 +15653,6 @@ fileprivate struct FfiConverterSequenceTypeHttpHeader: FfiConverterRustBuffer {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
-fileprivate struct FfiConverterSequenceTypeInlineTimeEntry: FfiConverterRustBuffer {
-    typealias SwiftType = [InlineTimeEntry]
-
-    public static func write(_ value: [InlineTimeEntry], into buf: inout [UInt8]) {
-        let len = Int32(value.count)
-        writeInt(&buf, len)
-        for item in value {
-            FfiConverterTypeInlineTimeEntry.write(item, into: &buf)
-        }
-    }
-
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [InlineTimeEntry] {
-        let len: Int32 = try readInt(&buf)
-        var seq = [InlineTimeEntry]()
-        seq.reserveCapacity(Int(len))
-        for _ in 0 ..< len {
-            seq.append(try FfiConverterTypeInlineTimeEntry.read(from: &buf))
-        }
-        return seq
-    }
-}
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
 fileprivate struct FfiConverterSequenceTypeObsidianHttpHeader: FfiConverterRustBuffer {
     typealias SwiftType = [ObsidianHttpHeader]
 
@@ -16701,31 +15745,6 @@ fileprivate struct FfiConverterSequenceTypeTask: FfiConverterRustBuffer {
         seq.reserveCapacity(Int(len))
         for _ in 0 ..< len {
             seq.append(try FfiConverterTypeTask.read(from: &buf))
-        }
-        return seq
-    }
-}
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-fileprivate struct FfiConverterSequenceTypeTopTask: FfiConverterRustBuffer {
-    typealias SwiftType = [TopTask]
-
-    public static func write(_ value: [TopTask], into buf: inout [UInt8]) {
-        let len = Int32(value.count)
-        writeInt(&buf, len)
-        for item in value {
-            FfiConverterTypeTopTask.write(item, into: &buf)
-        }
-    }
-
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [TopTask] {
-        let len: Int32 = try readInt(&buf)
-        var seq = [TopTask]()
-        seq.reserveCapacity(Int(len))
-        for _ in 0 ..< len {
-            seq.append(try FfiConverterTypeTopTask.read(from: &buf))
         }
         return seq
     }
@@ -18170,50 +17189,6 @@ public func dateParseLocal(raw: String, viewerUtcOffsetSeconds: Int32)throws  ->
 })
 }
 /**
- * Format a duration as `H:MM:SS`, or `MM:SS` under an hour.
- *
- * Minutes and seconds are always two digits; hours are not padded, so ten
- * hours reads `10:00:00` and one reads `1:00:00`.
- */
-public func elapsedFormat(seconds: UInt64) -> String  {
-    return try!  FfiConverterString.lift(try! rustCall() {
-        uniffiCallStatus in
-    uniffi_tasknotes_core_ffi_fn_func_elapsed_format(
-        FfiConverterUInt64.lower(seconds),uniffiCallStatus
-    )
-})
-}
-/**
- * Whole seconds between a stored `startTime` and `now`.
- *
- * Both are RFC 3339 timestamps — the form the server writes, since every
- * `startTime` it emits comes from `Date.prototype.toISOString`. A zoneless
- * value is rejected rather than guessed at: without an offset there is no way
- * to place it on the timeline, and picking one would make a running timer's
- * reading depend on where the user happens to be sitting.
- *
- * A `start` after `now` yields `0` — clock skew between the host and whatever
- * wrote the entry, and a timer sitting at `00:00` until it catches up is the
- * correct rendering of "no time has elapsed yet".
- *
- * # Errors
- *
- * Returns [`CoreError::Validation`] when either argument is not a parseable
- * RFC 3339 timestamp. **This diverges from the TypeScript**, which returns `0`
- * for an unparseable value: a timer frozen at `00:00` is indistinguishable
- * from a session that just began, so a corrupt `timeEntries` row would be
- * invisible.
- */
-public func elapsedSecondsSince(start: String, now: String)throws  -> UInt64  {
-    return try  FfiConverterUInt64.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
-        uniffiCallStatus in
-    uniffi_tasknotes_core_ffi_fn_func_elapsed_seconds_since(
-        FfiConverterString.lower(start),
-        FfiConverterString.lower(now),uniffiCallStatus
-    )
-})
-}
-/**
  * The schema version this release writes.
  *
  * Exported so a host can tell "never migrated" from "already current" without
@@ -18781,12 +17756,6 @@ private let initializationResult: InitializationResult = {
     if (uniffi_tasknotes_core_ffi_checksum_func_date_parse_local() != 47880) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_elapsed_format() != 49010) {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if (uniffi_tasknotes_core_ffi_checksum_func_elapsed_seconds_since() != 23598) {
-        return InitializationResult.apiChecksumMismatch
-    }
     if (uniffi_tasknotes_core_ffi_checksum_func_migration_current_schema_version() != 13709) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -19076,30 +18045,6 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_cancel_all() != 59292) {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_pause_pomodoro() != 58341) {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_pomodoro_status() != 54685) {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_start_pomodoro() != 52891) {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_start_time_tracking() != 7312) {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_stop_pomodoro() != 34297) {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_stop_time_tracking() != 23374) {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_task_time() != 12914) {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_time_summary() != 8961) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_cancel_request() != 1389) {

@@ -237,10 +237,6 @@ pub fn template_values(
             .unwrap_or_default();
         values.insert(key.into(), value);
     }
-    values.insert(
-        "timeEstimate".into(),
-        fm.get("timeEstimate").and_then(scalar).unwrap_or_default(),
-    );
     for (key, format) in [
         ("year", "%Y"),
         ("month", "%m"),

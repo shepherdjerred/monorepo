@@ -52,7 +52,14 @@ fn full_pinned_spec_corpus() -> TestResult {
             row.1 += 1;
             if !compat::supports(operation) && !runtime_adapter::supports(operation) {
                 if row.2.is_empty() {
-                    row.2 = format!("{id}: production operation unavailable");
+                    let disposition = if operation.starts_with("time.")
+                        || operation == "validation.time_entries"
+                    {
+                        "withdrawn timing capability outside Facet product scope"
+                    } else {
+                        "production operation unavailable"
+                    };
+                    row.2 = format!("{id}: {disposition}");
                 }
                 continue;
             }

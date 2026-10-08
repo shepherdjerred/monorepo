@@ -7,27 +7,6 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class FacetWorkFailureTest {
-    @Test fun corruptTrackingCannotAssignOrBecomeSavedMaintenance() = runBlocking {
-        val loader = requireNotNull(javaClass.classLoader)
-        val schema = FacetSchema(requireNotNull(loader.getResourceAsStream("schema/facet-engine.schema.json")).bufferedReader().use { it.readText() })
-        val capture = FacetRawJson.parseObject(requireNotNull(loader.getResourceAsStream("tracking-capture-v2.json")).bufferedReader().use { it.readText() })
-        val raw = capture.getValue("cases").jsonArray.first().jsonObject.getValue("historyPagesRaw").jsonArray.first().jsonPrimitive.content
-        val valid = FacetRawJson.parseObject(raw)
-        val owner = FacetTrackingOwner(valid.getValue("profileId").jsonPrimitive.content, 1uL, valid.getValue("at").jsonPrimitive.content, 7, 9, valid.getValue("taskPath").jsonPrimitive.content, valid.getValue("taskRevision").jsonPrimitive.content)
-        var assigned: FacetTrackingPage? = null
-        val failure = runCatching {
-            val page = FacetTrackingReader.readPage(schema, owner, null) { _, _ -> JsonObject(valid.toMutableMap().apply { put("version", JsonPrimitive(2)) }) }
-            assigned = page
-        }.exceptionOrNull()
-        assertNull(assigned)
-        assertTrue(failure is FacetTrackingContractException)
-        val contract = failure as FacetTrackingContractException
-        for (applied in listOf(false, true)) {
-            val propagated = assertThrows(FacetTrackingContractException::class.java) { FacetWorkFailure.present(contract, applied, true) }
-            assertSame(contract, propagated)
-        }
-    }
-
     @Test fun expectedProviderStorageAndOwnAppliedObservationRemainUseful() {
         val failure = java.io.IOException("component storage failure")
         assertEquals("Saved. Refresh the vault to update the list.", FacetWorkFailure.present(failure, true, true))
@@ -36,7 +15,7 @@ class FacetWorkFailureTest {
     }
 
     @Test fun delayedContractFailuresAreFencedBeforeClassification() = runBlocking {
-        for (contract in listOf(FacetTrackingContractException("corrupt tracking"), FacetReceiptContractException("corrupt receipt"))) {
+        for (contract in listOf(FacetReceiptContractException("corrupt receipt"))) {
             val authority = FacetNoticeAuthority()
             val ticket = authority.begin()
             val owner = authority.capture(ticket, "p", "mutation")

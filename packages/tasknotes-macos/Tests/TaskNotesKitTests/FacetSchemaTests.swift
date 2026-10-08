@@ -96,6 +96,33 @@ struct FacetSchemaTests {
         }
     }
 
+    @Test func sharedRetainedActionsStayPrivateAndStrict() throws {
+        let schema = try FacetSchema.bundled()
+        let source = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        let corpus = try FacetJSON.parse(
+            Data(
+                contentsOf: source.appendingPathComponent(
+                    "tasknotes-fixtures/vault/facet-retained-actions.json")))
+        let cases = try #require(corpus.object?.fields["cases"]?.array?.elements)
+        for item in cases {
+            let fields = try #require(item.object?.fields)
+            let name = try #require(fields["id"]?.text)
+            let mutation = try #require(fields["value"])
+            if fields["valid"] == .bool(true) {
+                try schema.validate(mutation, definition: "retainedMutation")
+                #expect(!FacetRetainedActions.canResume(mutation), Comment(rawValue: name))
+            } else {
+                #expect(throws: FacetContractError.self) {
+                    try schema.validate(mutation, definition: "retainedMutation")
+                }
+            }
+            #expect(throws: FacetContractError.self) {
+                try schema.validate(mutation, definition: "mutation")
+            }
+        }
+    }
+
     @Test func sharedRawNumericCorpus() throws {
         let schema = try FacetSchema.bundled()
         let source = URL(fileURLWithPath: #filePath).deletingLastPathComponent()

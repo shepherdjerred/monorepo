@@ -59,7 +59,7 @@ struct FacetPresentationTests {
         #expect(portable["query"]?.object?.fields["at"] == nil)
         #expect(portable["query"]?.object?.fields["today"] == nil)
     }
-    @Test func untouchedReminderVendorFieldsAndExactEstimatesSurviveEditing() throws {
+    @Test func untouchedReminderVendorFieldsSurviveEditing() throws {
         let original: [String: FacetValue] = [
             "reminders": .array([
                 .object([
@@ -72,12 +72,8 @@ struct FacetPresentationTests {
         ]
         var edited = FacetTaskExtras(properties: original)
         edited.tags = "changed"
-        edited.estimate = "1.000000000000000001"
-        let patch = try edited.changes(from: original)
+        let patch = edited.changes(from: original)
         #expect(patch["reminders"] == nil)
-        #expect(patch["timeEstimate"] == .rawNumber("1.000000000000000001"))
-        edited.estimate = "true"
-        #expect(throws: FacetEditorError.self) { try edited.changes(from: original) }
     }
 
     @Test func portableViewKeepsMultipleChoicesAndLiveCivilDay() async throws {

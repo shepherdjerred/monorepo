@@ -88,13 +88,6 @@ export const taskDetailStyles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 8,
   },
-  estimateInput: {
-    minWidth: 52,
-    minHeight: 44,
-    marginLeft: "auto",
-    textAlign: "right",
-    fontSize: 16,
-  },
   fieldError: {
     marginBottom: 10,
     marginLeft: 29,

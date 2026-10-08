@@ -258,43 +258,7 @@ describe("NLP endpoints", () => {
   });
 });
 
-describe("time tracking (current contract)", () => {
-  test("start/stop tracking and per-task time parse", async () => {
-    const tracked = unwrap(await client.createTask({ title: "Tracked" }));
-
-    const started = await client.startTimeTracking(tracked.id);
-    expect(started.ok).toBe(true);
-    const stopped = await client.stopTimeTracking(tracked.id);
-    expect(stopped.ok).toBe(true);
-
-    const time = unwrap(await client.getTaskTime(tracked.id));
-    expect(time.hasActiveSession).toBe(false); // stopped above
-    expect(time.totalTime).toBeGreaterThanOrEqual(0);
-
-    await client.deleteTask(tracked.id);
-  });
-
-  test("time summary responds with the v2 report shape", async () => {
-    // Review finding #16 (route-shadowed always-empty summary) is fixed by
-    // the P3 rebuild — this now asserts a real report.
-    const summary = unwrap(await client.getTimeSummary());
-    expect(summary.totalTime).toBeGreaterThanOrEqual(0);
-    expect(Array.isArray(summary.topTasks)).toBe(true);
-  });
-});
-
-describe("pomodoro & calendar", () => {
-  test("pomodoro start/status/pause/stop parse", async () => {
-    const started = await client.startPomodoro();
-    expect(started.ok).toBe(true);
-    const status = await client.getPomodoroStatus();
-    expect(status.ok).toBe(true);
-    const paused = await client.pausePomodoro();
-    expect(paused.ok).toBe(true);
-    const stopped = await client.stopPomodoro();
-    expect(stopped.ok).toBe(true);
-  });
-
+describe("calendar", () => {
   test("calendar events parse", async () => {
     // The server's default calendar window is [today, today+30d] — the due
     // date must be dynamic or the test starts failing once the date passes.

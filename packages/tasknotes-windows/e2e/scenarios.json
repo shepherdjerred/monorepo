@@ -77,20 +77,6 @@
       ]
     },
     {
-      "id": "time-tracking-report",
-      "test": "TimeTrackingAndReport",
-      "assertions": [
-        "timing.task-server",
-        "timing.markdown",
-        "timing.report-ui"
-      ]
-    },
-    {
-      "id": "pomodoro",
-      "test": "PomodoroLifecycle",
-      "assertions": ["pomodoro.server-lifecycle", "window.pomodoro-singleton"]
-    },
-    {
       "id": "parked-errors",
       "test": "SynchronizationAndParkedErrors",
       "assertions": ["sync.parked", "sync.retry-discard"]

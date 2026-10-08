@@ -56,22 +56,17 @@ pub use project::{project_display_name, project_matches, project_path};
 pub use query::{FilterOptions, TaskQueryFilter};
 pub use report::{
     ApiResponse, CalendarEvent, HealthState, HealthStatus, NlpParseResult, Pagination,
-    PomodoroPhase, PomodoroStatus, QueryResponse, TaskList, TaskStats, TaskTime, TimeEntry,
-    TimeSummary, TopTask, VaultInfo,
+    QueryResponse, TaskList, TaskStats, VaultInfo,
 };
 pub use request::{
-    CreateTaskRequest, MinutesUpdate, RecurrenceAnchorUpdate, TaskTitle, TextUpdate,
-    UpdateTaskRequest,
+    CreateTaskRequest, RecurrenceAnchorUpdate, TaskTitle, TextUpdate, UpdateTaskRequest,
 };
 pub use serde_ext::FieldUpdate;
 pub use status::{ACTIVE_STATUSES, ALL_STATUSES, COMPLETED_STATUSES, TaskStatus};
-pub use task::{
-    BlockedByEntry, ExtraFields, InlineTimeEntry, RecurrenceAnchor, Reminder, ReminderKind, Task,
-};
+pub use task::{BlockedByEntry, ExtraFields, RecurrenceAnchor, Reminder, ReminderKind, Task};
 pub use wire::{
     WIRE_FIELD_RENAMES, WireCalendarEvent, WireCalendarEvents, WireConfiguredValue,
     WireDeleteResponse, WireDependency, WireFilterOptions, WireNlpCreate, WireNlpParse,
-    WireQueryResponse, WireReminder, WireTask, WireTaskList, WireTaskTime, WireTaskTimeTotals,
-    WireTimeEntry, WireTimeSummary, WireTimeTotals, WireTopTask, create_task_body,
-    to_wire_task_fields, unwrap_envelope, update_task_body,
+    WireQueryResponse, WireReminder, WireTask, WireTaskList, create_task_body, to_wire_task_fields,
+    unwrap_envelope, update_task_body,
 };

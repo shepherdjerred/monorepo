@@ -14,8 +14,6 @@ namespace TaskNotes.Windows.Tests
         internal int ScheduleCount { get; private set; }
         internal int PrioritizeCount { get; private set; }
         internal int DeleteManyCount { get; private set; }
-        internal int TimingCount { get; private set; }
-        internal int PomodoroCount { get; private set; }
         internal int ParkedCount { get; private set; }
         internal string? LastAddedInput { get; private set; }
         internal TaskListQuery? LastAddContext { get; private set; }
@@ -164,40 +162,6 @@ namespace TaskNotes.Windows.Tests
             return Task.CompletedTask;
         }
 
-        public Task LoadTaskTimeAsync(
-            string taskId,
-            CancellationToken cancellationToken = default
-        ) => RecordTimingAsync();
-
-        public Task StartTimeTrackingAsync(
-            string taskId,
-            CancellationToken cancellationToken = default
-        ) => RecordTimingAsync();
-
-        public Task StopTimeTrackingAsync(
-            string taskId,
-            CancellationToken cancellationToken = default
-        ) => RecordTimingAsync();
-
-        public Task LoadTimeReportAsync(
-            string period = "all",
-            CancellationToken cancellationToken = default
-        ) => RecordTimingAsync();
-
-        public Task LoadPomodoroAsync(CancellationToken cancellationToken = default) =>
-            RecordPomodoroAsync();
-
-        public Task StartPomodoroAsync(
-            string? taskId,
-            CancellationToken cancellationToken = default
-        ) => RecordPomodoroAsync();
-
-        public Task PauseOrResumePomodoroAsync(CancellationToken cancellationToken = default) =>
-            RecordPomodoroAsync();
-
-        public Task StopPomodoroAsync(CancellationToken cancellationToken = default) =>
-            RecordPomodoroAsync();
-
         public Task<SavedViewDefinition> CreateSavedViewAsync(
             string name,
             string symbol,
@@ -242,18 +206,6 @@ namespace TaskNotes.Windows.Tests
         ) => RecordParkedAsync();
 
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
-
-        private Task RecordTimingAsync()
-        {
-            TimingCount++;
-            return Task.CompletedTask;
-        }
-
-        private Task RecordPomodoroAsync()
-        {
-            PomodoroCount++;
-            return Task.CompletedTask;
-        }
 
         private Task RecordParkedAsync()
         {

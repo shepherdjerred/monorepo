@@ -81,12 +81,14 @@ class FacetEngineRunner private constructor(context: Context) {
     }
 
     suspend fun pendingMutations(profileId: String? = null, afterId: String? = null, limit: Int = 128): List<PendingFacetMutation> = call {
-        drafts.pending(profileId, afterId, limit).onEach { schema.validate("mutation", it.mutation) }
+        drafts.pending(profileId, afterId, limit).onEach { FacetRetainedActions.validate(schema, it.mutation) }
     }
 
     /** Replays the complete persisted envelope in its owning profile; never constructs a new timestamp. */
     suspend fun retryMutation(mutationId: String): JsonObject = call {
         val draft = requireNotNull(drafts.read(mutationId)) { "The saved action is unavailable." }
+        FacetRetainedActions.validate(schema, draft.mutation)
+        if (!draft.canResume) throw FacetActionError("This saved action uses a removed feature. Check its outcome and retire its private draft.")
         applyMutation(draft.profileId, draft.mutation)
     }
 
@@ -147,7 +149,7 @@ class FacetEngineRunner private constructor(context: Context) {
         drafts.discard(mutationId)
     }
 
-    /** Explicit draft revision is allowed only after the runtime proves no applied/pending action remains. */
+    /** Retire rejected drafts or acknowledge completed historical actions using the owning runtime receipt. */
     suspend fun retireRejectedMutation(mutationId: String) = call {
         val draft = requireNotNull(drafts.read(mutationId))
         val request = buildJsonObject { put("schemaVersion", 1); put("kind", "mutation_receipt"); put("mutationId", mutationId) }
@@ -155,8 +157,8 @@ class FacetEngineRunner private constructor(context: Context) {
         val result = Json.parseToJsonElement(core.featuresJson(draft.profileId, request.toString())).jsonObject
         schema.validate("mutationReceipt", result)
         require(result.getValue("mutationId").jsonPrimitive.content == mutationId)
-        val state = result.getValue("state").jsonPrimitive.content
-        if (state !in setOf("absent", "parked")) throw FacetActionError("This action is still pending or already saved. Resume it before changing the decision.")
+        if (FacetRetainedActions.retirement(schema, draft, result) == FacetDraftRetirement.OBSERVED)
+            drafts.recordObserved(mutationId, draft.profileId)
         drafts.discard(mutationId)
     }
 
@@ -184,11 +186,6 @@ class FacetEngineRunner private constructor(context: Context) {
         val result = FacetRawJson.parseObject(core.featuresJson(id, request.toString()))
         val definition = when (request.getValue("kind").jsonPrimitive.content) {
             "capture_preview" -> "capturePreview"
-            "task_time" -> "taskTime"
-            "tracking_sessions" -> "trackingSessions"
-            "tracking_history" -> "trackingHistory"
-            "time_report" -> "timeReport"
-            "pomodoro" -> "pomodoro"
             "discovery" -> "discovery"
             "mutation_receipt" -> "mutationReceipt"
             "resolution_history" -> "resolutionHistory"

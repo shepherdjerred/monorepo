@@ -1,6 +1,6 @@
 //! Configurable frontmatter validation with stable semantic issue codes.
 
-use crate::{Result, mapping::FieldMapping, temporal, tracking};
+use crate::{Result, mapping::FieldMapping, temporal};
 use serde_json::{Map, Value, json};
 
 /// Evaluate core semantic fields without discarding unknown frontmatter.
@@ -89,6 +89,7 @@ pub fn evaluate_mapped(
     for key in fm.keys() {
         if !mapping.role_to_field.contains_key(key)
             && !mapping.role_to_field.values().any(|f| f == key)
+            && !mapping.preserves_retired_field(key)
         {
             issues.push(json!({"code":"unknown_field","severity":if reject_unknown_fields{"error"}else{"info"},"field":key,"message":"field is not mapped to a known semantic role"}));
         }
@@ -198,24 +199,6 @@ fn validate_values(
                 &format!("expected array for {role}"),
                 mapping,
             );
-        }
-    }
-    if let Some(entries) = normalized.get("timeEntries").filter(|v| !v.is_null()) {
-        if !entries.is_array() {
-            issue(
-                issues,
-                "invalid_type",
-                "error",
-                "timeEntries",
-                "expected array for timeEntries",
-                mapping,
-            );
-        } else if let Err(error) = tracking::normalize(entries) {
-            let code = match error {
-                crate::VaultError::Document(code) => code,
-                other => other.to_string(),
-            };
-            issue(issues, &code, "error", "timeEntries", &code, mapping);
         }
     }
     for role in [
