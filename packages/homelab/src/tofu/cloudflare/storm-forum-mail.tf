@@ -11,7 +11,7 @@ resource "cloudflare_dns_record" "storm_forum_postal_verification" {
 resource "cloudflare_dns_record" "storm_forum_postal_dkim" {
   zone_id = cloudflare_zone.ts_mc_net.id
   ttl     = 1
-  name    = "postal-PUcWaL._domainkey"
+  name    = "postal-pucwal._domainkey"
   type    = "TXT"
   content = "v=DKIM1; t=s; h=sha256; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDP3gYfobFff0FOxghUPTZ+k6J8IUhHcRa2PKQEFA+/zEo0Qeon8v5F0rjPXUdqenBEPgA/F/NPx8D6pZuVB8YAbUmFLCTfzrInT7M4jpOKLgV1bo2V0quSXuxs1vydu/UFmmRezH35GFt9aXcsUqWu+YlUVz9KLbfIv/P0aSCYmQIDAQAB;"
 }
