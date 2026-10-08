@@ -131,7 +131,8 @@ final class Theme extends \XF\Pub\Controller\AbstractController
                 if (file_put_contents($temp, $png) === false || !rename($temp, $path)) { throw new \RuntimeException('Cannot persist card'); }
             }
         } finally { flock($lock, LOCK_UN); fclose($lock); }
-        $this->app()->response()->setHeaders(['Content-Type'=>'image/png', 'Cache-Control'=>'public, max-age=3600', 'X-Content-Type-Options'=>'nosniff']);
+        $this->app()->response()->contentType('image/png', '');
+        $this->app()->response()->setHeaders(['Cache-Control'=>'public, max-age=3600', 'X-Content-Type-Options'=>'nosniff']);
         $reply = $this->view('Storm\Forum:Image', '', ['path'=>$path]);
         $reply->setResponseType('raw');
         return $reply;

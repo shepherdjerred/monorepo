@@ -47,6 +47,9 @@ const REPOSITORY_CHART_URLS = new Set([
 // s3-static-sites retires hostname bindings and probes when ownership moves to
 // an application such as the forum. Its bindings disable DNS updates; static
 // buckets and DNS records are owned outside this chart.
+// storm-forum replaces its completed, uniquely named release Job on upgrades.
+// Its database and attachment PVCs remain declared. Without pruning, obsolete
+// completed Jobs keep the healthy forum OutOfSync and fail the release gate.
 const PRUNED_RELEASE_CHARTS = new Set([
   "birmel",
   "freshrss",
@@ -55,6 +58,7 @@ const PRUNED_RELEASE_CHARTS = new Set([
   "scout-beta",
   "scout-prod",
   "service-probes",
+  "storm-forum",
   "temporal",
   "trmnl-dashboard",
   "turbo-cache",
