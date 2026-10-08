@@ -1,4 +1,4 @@
-import { ApiObject, Chart, JsonPatch } from "cdk8s";
+import { Chart } from "cdk8s";
 import type { App } from "cdk8s";
 import { createScoutDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/index.ts";
 import { createScoutPostgreSQLDatabase } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/scout-db.ts";
@@ -331,16 +331,5 @@ export function createScoutChart(
         ],
       },
     });
-  }
-
-  // Fence every Beta application writer during the PUUID archive cutover.
-  // PostgreSQL is operator-owned, not a Deployment, and stays available to the
-  // migration. Removing this block resumes the original replicas via GitOps.
-  if (stage === "beta") {
-    for (const resource of chart.node.findAll()) {
-      if (resource instanceof ApiObject && resource.kind === "Deployment") {
-        resource.addJsonPatch(JsonPatch.replace("/spec/replicas", 0));
-      }
-    }
   }
 }

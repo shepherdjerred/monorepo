@@ -646,7 +646,7 @@ describe("Hosted Scout roles", () => {
         );
         expect(
           z.object({ replicas: z.number() }).parse(resource.spec).replicas,
-        ).toBe(stage === "beta" ? 0 : 1);
+        ).toBe(1);
         expect(resource.metadata["annotations"]).toEqual(
           expect.objectContaining({ "argocd.argoproj.io/sync-wave": "1" }),
         );
@@ -658,7 +658,7 @@ describe("Hosted Scout roles", () => {
       ).toBe(false);
     },
   );
-  test("Beta data maintenance fences all five application writers, not the database or Prod", () => {
+  test("Beta resumes all five application roles without changing the database or Prod", () => {
     const beta = scoutResources("beta");
     const deployments = beta.filter(
       (resource) => resource.kind === "Deployment",
@@ -675,7 +675,7 @@ describe("Hosted Scout roles", () => {
     for (const resource of deployments) {
       expect(
         z.object({ replicas: z.number() }).parse(resource.spec).replicas,
-      ).toBe(0);
+      ).toBe(1);
     }
     const database = findResource(beta, "postgresql", "scout-beta-postgresql");
     expect(
