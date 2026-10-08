@@ -107,7 +107,7 @@ class RestorationResourceTest(unittest.TestCase):
         chown = os.chown
         copied = None
 
-        def interrupted(path, uid, gid):
+        def interrupted(path: Path, uid: int, gid: int) -> None:
             nonlocal copied
             path = Path(path)
             if path.is_file() and path.name != "resource-copy.writing":

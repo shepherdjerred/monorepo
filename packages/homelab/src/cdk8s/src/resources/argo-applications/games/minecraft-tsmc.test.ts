@@ -97,10 +97,12 @@ describe("minecraft-tsmc runs The Storm's image", () => {
       .parse(values["extraEnv"]);
     expect(extraEnv["CFG_PROXY_PROTOCOL"]).toBe("true");
     expect(values["livenessProbe"]).toMatchObject({
-      command: ["mc-health", "--use-proxy"],
+      command: ["mc-monitor", "status", "--use-proxy", "--timeout", "2s"],
+      timeoutSeconds: 5,
     });
     expect(values["readinessProbe"]).toMatchObject({
-      command: ["mc-health", "--use-proxy"],
+      command: ["mc-monitor", "status", "--use-proxy", "--timeout", "2s"],
+      timeoutSeconds: 5,
     });
     expect(extraEnv["STORM_BRAIN_BEARER_TOKEN"]).toEqual({
       valueFrom: {
@@ -113,12 +115,18 @@ describe("minecraft-tsmc runs The Storm's image", () => {
   });
 
   test("uses PROXY-aware health probes for both PROXY-enabled Paper servers", () => {
-    for (const values of [tsmcValues(), shuxinValues()]) {
+    for (const { values, command } of [
+      {
+        values: tsmcValues(),
+        command: ["mc-monitor", "status", "--use-proxy", "--timeout", "2s"],
+      },
+      { values: shuxinValues(), command: ["mc-health", "--use-proxy"] },
+    ]) {
       expect(values["livenessProbe"]).toMatchObject({
-        command: ["mc-health", "--use-proxy"],
+        command,
       });
       expect(values["readinessProbe"]).toMatchObject({
-        command: ["mc-health", "--use-proxy"],
+        command,
       });
     }
   });

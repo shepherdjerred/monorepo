@@ -110,6 +110,16 @@ requires this proof. It can also complete after a failed private startup has
 been stopped; it does not reinstall the historical world or bypass the
 installation revision and rollback rules.
 
+Converted historical chunks have their old lighting invalidated. BlueMap's
+generated map configuration normally omits chunks without native light data.
+Under the private restoration lease, `repair-private-map` changes only the
+main map's `ignore-missing-light-data` setting, journals its original bytes,
+reloads BlueMap and queues a forced full render. It loads no gameplay chunks
+and survives restarts because the generated map file is runtime state. BlueMap
+renders unlit chunks at full brightness and cannot use their lighting to hide
+caves or reproduce night mode. See the
+[BlueMap map configuration](https://bluemap.bluecolored.de/wiki/configs/Maps.html).
+
 Prevent admissions and mc-router wake-ups during the cutover. Preserve the old
 image digest and relevant Flipt values. Require exact-head checks and published
 image verification before activation.

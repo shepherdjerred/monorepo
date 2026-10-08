@@ -297,6 +297,38 @@ class RestorationControlTest(unittest.TestCase):
         self.assertEqual(self.cluster.server.object("spec")["replicas"], 0)
         control.assert_closed(journal)
 
+    def test_private_map_repair_requires_closed_candidate_and_invalidates_acceptance(self):
+        journal = self.installation_fixture()
+        control.private_start(self.path, journal)
+        journal["acceptance"] = {"status": "VERIFIED"}
+        evidence = {
+            "phase": "VERIFIED",
+            "requestId": REQUEST,
+            "candidateJarSha256": "b" * 64,
+            "worldTicks": 0,
+            "configSha256": "c" * 64,
+        }
+        original = control.run
+        commands = []
+
+        def commands_only(arguments: list[str], timeout: float = 30):
+            if "rcon-cli" in arguments:
+                commands.append(arguments[-2:])
+                return "completed"
+            return original(arguments, timeout)
+
+        subprocess_result = MagicMock(returncode=0, stdout=json.dumps(evidence))
+        with (
+            patch.object(control.subprocess, "run", return_value=subprocess_result),
+            patch.object(control, "run", side_effect=commands_only),
+        ):
+            control.repair_private_map(self.path, journal)
+        self.assertEqual(journal["privateMapRepair"], evidence)
+        self.assertNotIn("acceptance", journal)
+        self.assertEqual(commands, [["bluemap", "reload"], ["force-update", "world"]])
+        self.assertEqual(subprocess_result.returncode, 0)
+        control.assert_closed(journal)
+
     def test_incomplete_revision_refuses_private_start_even_with_a_stale_installed_receipt(self):
         journal = self.installation_fixture()
         journal["installationRevision"] = {"phase": "PREPARED"}

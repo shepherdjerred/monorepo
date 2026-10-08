@@ -1816,6 +1816,75 @@ def private_start(path: Path, journal: JsonObject) -> None:
     save(path, journal)
 
 
+def repair_private_map(path: Path, journal: JsonObject) -> None:
+    """Repair the generated renderer configuration while public routes stay closed."""
+    assert_closed(journal)
+    server = read("statefulset", SERVER)
+    assert_owner(server, journal)
+    if annotations(server).get(PHASE) != "VALIDATING" or server_image(server) != journal.string("candidateImage"):
+        raise ValueError("Map rendering repair requires this private candidate")
+    if journal.get("privateStartup") != "VALIDATING" or journal.object("installation").get("phase") != "INSTALLED":
+        raise ValueError("Map rendering repair requires a verified private installation")
+    owned = Path(__file__).resolve().parent
+    files = {
+        name: (owned / name).read_text()
+        for name in ("restoration_maps.py", "restoration_files.py", "restoration_json.py")
+    }
+    # Transfer only operator source into a unique temporary directory. No
+    # credentials, gameplay JARs or world data cross this stream.
+    loader = (
+        "import json,runpy,sys,tempfile\nfrom pathlib import Path\n"
+        f"files=json.loads({json.dumps(json.dumps(files))})\n"
+        "with tempfile.TemporaryDirectory(prefix='storm-map-operator-') as directory:\n"
+        " root=Path(directory)\n"
+        " for name,source in files.items(): (root/name).write_text(source)\n"
+        " sys.path.insert(0,directory)\n"
+        " runpy.run_path(str(root/'restoration_maps.py'),run_name='__main__')\n"
+    )
+    for key in ("acceptance", "stoppingIncarnation", "stoppedIncarnation"):
+        journal.pop(key, None)
+    save(path, journal)
+    result = subprocess.run(
+        [
+            "kubectl",
+            "--context",
+            CONTEXT,
+            "-n",
+            NAMESPACE,
+            "exec",
+            "-i",
+            SERVER + "-0",
+            "--",
+            "python3",
+            "-",
+            "--request",
+            journal.string("requestId"),
+            "--jar-sha",
+            journal.object("installation").string("candidateJarSha256"),
+        ],
+        input=loader,
+        text=True,
+        capture_output=True,
+        timeout=60,
+    )
+    if result.returncode:
+        raise RuntimeError("Private map repair failed: " + result.stderr.strip())
+    evidence = JsonObject.parse(result.stdout)
+    if (
+        evidence.get("phase") != "VERIFIED"
+        or evidence.get("requestId") != journal.string("requestId")
+        or evidence.get("candidateJarSha256") != journal.object("installation").get("candidateJarSha256")
+        or evidence.get("worldTicks") != 0
+        or re.fullmatch(r"[a-f0-9]{64}", evidence.string("configSha256")) is None
+    ):
+        raise ValueError("Private map repair returned different evidence")
+    assert_closed(journal)
+    journal["privateMapRepair"] = evidence
+    save(path, journal)
+    run(["-n", NAMESPACE, "exec", SERVER + "-0", "--", "rcon-cli", "bluemap", "reload"], 45)
+    run(["-n", NAMESPACE, "exec", SERVER + "-0", "--", "rcon-cli", "bluemap", "force-update", "world"], 45)
+
+
 def pod_incarnation(pod: JsonObject) -> JsonObject:
     statuses = pod.object("status", {}).objects("containerStatuses", [])
     status = statuses[0] if len(statuses) == 1 else JsonObject()
@@ -2264,6 +2333,7 @@ def main() -> None:
             "remove-writer",
             "private-start",
             "repair-private-probes",
+            "repair-private-map",
             "private-stop",
             "accept",
             "release",
@@ -2326,6 +2396,8 @@ def main() -> None:
             private_start(arguments.journal, journal)
         elif arguments.operation == "repair-private-probes":
             repair_private_probes(arguments.journal, journal)
+        elif arguments.operation == "repair-private-map":
+            repair_private_map(arguments.journal, journal)
         elif arguments.operation == "private-stop":
             private_stop(arguments.journal, journal)
         elif arguments.operation == "accept":
