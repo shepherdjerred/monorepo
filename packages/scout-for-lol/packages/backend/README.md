@@ -614,6 +614,24 @@ replay upload. A failure that isn't a typed rejection is recorded on the
 artifact's `lastError` with its own message, and the upload is `FAILED`, which
 the device retries; a `REJECTED` upload is final.
 
+### When a client payload becomes the match
+
+Riot gets two minutes of first refusal: ingress dispatches a client post-game
+with `readyAt` two minutes out, and `resolveLocalCanonicalMatch` selects only
+observations that old. A game Riot withholds — any custom, live Clash among
+them, or a queue `queue-post-match.ts` marks `never` — skips the wait
+(`riotWithholdsMatchResult`); Riot is still asked first and still wins when it
+does publish. A payload must field at least two sides, so an old client's
+one-player history row is never published as the match.
+
+A client-sourced match finishes its cursor step without moving the account's
+Riot polling cursor (`advanceMatchCursor`): the cursor anchors the next poll in
+Riot's own match list, where a client-only id would read as a gap every time.
+
+A gameflow session that names the game's teams is checked for its observer like
+a lobby, since it binds customs and duels just as surely. A bare phase and a
+live game frame are exempt; the Live Client API names players by Riot ID only.
+
 ## The prematch path
 
 The `prematch-*` modules serve `scoutPrematchDiscoveryWorkflow` and

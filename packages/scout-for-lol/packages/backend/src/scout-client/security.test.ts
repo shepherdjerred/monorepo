@@ -24,6 +24,21 @@ function observation(payload: unknown) {
   });
 }
 
+/** An in-progress gameflow session whose only player is `puuid`. */
+function session(puuid: string) {
+  return ScoutClientObservationSchema.parse({
+    ...observation({}),
+    kind: "gameflow",
+    payload: {
+      resource: "gameflow_session",
+      data: {
+        phase: "InProgress",
+        gameData: { teamOne: [{ puuid }], teamTwo: [] },
+      },
+    },
+  });
+}
+
 describe("Scout Client ingress security", () => {
   test("stores only digests that verify the original secret", () => {
     const secret = randomSecret("sct_");
@@ -101,6 +116,55 @@ describe("Scout Client ingress security", () => {
         NOW,
       ),
     ).toBe("future_timestamp");
+  });
+
+  test("quarantines a game's session that doesn't name its observer", () => {
+    // A session with teams binds a custom or a duel to its game, just as a
+    // lobby does, so it must attest who observed it.
+    expect(
+      observationQuarantineReason(
+        session("someone-else"),
+        new Set([PUUID]),
+        new Set(["0.1.0"]),
+        NOW,
+      ),
+    ).toBe("observer_puuid_not_in_payload");
+    expect(
+      observationQuarantineReason(
+        session(PUUID),
+        new Set([PUUID]),
+        new Set(["0.1.0"]),
+        NOW,
+      ),
+    ).toBeNull();
+  });
+
+  test("leaves a bare phase and a live game frame exempt", () => {
+    // Neither names players by PUUID: a phase is one word, and the Live
+    // Client API identifies players by Riot ID only.
+    for (const [kind, payload] of [
+      ["gameflow", { resource: "gameflow_phase", data: "InProgress" }],
+      [
+        "live_game_frame",
+        {
+          resource: "live_game_frame",
+          data: { allPlayers: [{ riotId: "a#b" }] },
+        },
+      ],
+    ] as const) {
+      expect(
+        observationQuarantineReason(
+          ScoutClientObservationSchema.parse({
+            ...observation({}),
+            kind,
+            payload,
+          }),
+          new Set([PUUID]),
+          new Set(["0.1.0"]),
+          NOW,
+        ),
+      ).toBeNull();
+    }
   });
 
   test("advances a restored device beyond the backend high-water mark", () => {

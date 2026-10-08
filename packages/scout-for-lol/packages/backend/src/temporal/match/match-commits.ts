@@ -226,9 +226,26 @@ export async function advanceMatchCursor(input: {
     matchId: input.riotMatchId,
   });
   const advancedAt = toIsoInstant(new Date());
+  // The account cursor anchors the next Riot poll in Riot's own match list.
+  // A match whose payload came from the Scout Client is one Riot can't see,
+  // so as an anchor it would look like a gap on every poll. Its step is
+  // still finished; it just moves no Riot cursor, and counts as neither.
+  const fromClient =
+    (await prisma.scoutClientCanonicalMatch.findUnique({
+      where: { riotMatchId: input.riotMatchId },
+      select: { riotMatchId: true },
+    })) !== null;
   let advanced = 0;
   let alreadyAdvanced = 0;
   for (const association of tracked) {
+    if (fromClient) {
+      await markTrackedAccountCursorAdvanced(prisma, {
+        matchId: input.riotMatchId,
+        puuid: association.puuid,
+        advancedAt,
+      });
+      continue;
+    }
     const cursor = await advanceAccountCursor(prisma, {
       puuid: association.puuid,
       matchId,

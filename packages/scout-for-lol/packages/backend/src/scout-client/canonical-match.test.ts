@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { LeaguePuuidSchema, RawMatchSchema } from "@scout-for-lol/data";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import { z } from "zod";
 import { LocalMatchBundleSchema } from "./canonical/lcu-schema.ts";
 
 const mocks = vi.hoisted(() => ({
@@ -64,6 +65,47 @@ function candidate(
   };
 }
 
+/** The local player's opponent in a 1v1: a second player on team 200. */
+const localOpponentPuuid = LeaguePuuidSchema.parse("q".repeat(78));
+
+const LocalHistoryRowSchema = z.looseObject({
+  participantIdentities: z.array(
+    z.looseObject({
+      participantId: z.number(),
+      player: z.looseObject({}),
+    }),
+  ),
+  participants: z.array(z.looseObject({ participantId: z.number() })),
+});
+
+/**
+ * The real one-player list row, completed with an opponent so the game fields
+ * two sides, as `games/{id}` reports a 1v1 custom.
+ */
+function twoPlayerHistory(): unknown {
+  const row = LocalHistoryRowSchema.parse(localMatchHistory);
+  const [identity] = row.participantIdentities;
+  const [participant] = row.participants;
+  if (identity === undefined || participant === undefined) {
+    throw new Error("History fixture has no local player");
+  }
+  return {
+    ...row,
+    participantIdentities: [
+      identity,
+      {
+        ...identity,
+        participantId: 2,
+        player: { ...identity.player, puuid: localOpponentPuuid },
+      },
+    ],
+    participants: [
+      participant,
+      { ...participant, participantId: 2, teamId: 200 },
+    ],
+  };
+}
+
 function localBundleCandidate(timing: {
   readonly gameStartTimestamp: number;
   readonly gameEndTimestamp: number;
@@ -71,17 +113,12 @@ function localBundleCandidate(timing: {
   return candidate(
     {
       data: {
-        matchHistory: localMatchHistory,
+        matchHistory: twoPlayerHistory(),
         endOfGame: {
-          players: [
-            {
-              puuid: localObserverPuuid,
-              stats: {
-                ...localSourceParticipant,
-                puuid: localObserverPuuid,
-              },
-            },
-          ],
+          players: [localObserverPuuid, localOpponentPuuid].map((puuid) => ({
+            puuid,
+            stats: { ...localSourceParticipant, puuid },
+          })),
         },
         timing,
       },
@@ -132,7 +169,7 @@ describe("parseLocalCanonicalMatch", () => {
     expect(converted?.metadata).toEqual({
       dataVersion: "local-1",
       matchId: localMatchId,
-      participants: [localObserverPuuid],
+      participants: [localObserverPuuid, localOpponentPuuid],
     });
     expect(converted?.info.endOfGameResult).toBe("GameComplete");
     expect(converted?.info.gameStartTimestamp).toBe(LOCAL_GAME_START);
@@ -155,7 +192,10 @@ describe("parseLocalCanonicalMatch", () => {
       new Map([[LOCAL_LCU_UUID, localObserverPuuid]]),
     );
 
-    expect(converted?.metadata.participants).toEqual([localObserverPuuid]);
+    expect(converted?.metadata.participants).toEqual([
+      localObserverPuuid,
+      localOpponentPuuid,
+    ]);
     expect(converted?.info.participants[0]?.puuid).toBe(localObserverPuuid);
   });
 
@@ -166,6 +206,37 @@ describe("parseLocalCanonicalMatch", () => {
       parseLocalCanonicalMatch(
         localMatchId,
         asClientSentIt(localBundleCandidate(LOCAL_TIMING)),
+      ),
+    ).toBeNull();
+  });
+
+  test("refuses a one-player list row even with its end-of-game block", () => {
+    // What an older client sent: the history list's row names only the local
+    // player. Promoting it would publish a one-player match as the game.
+    expect(
+      parseLocalCanonicalMatch(
+        localMatchId,
+        candidate(
+          {
+            data: {
+              matchHistory: localMatchHistory,
+              endOfGame: {
+                players: [
+                  {
+                    puuid: localObserverPuuid,
+                    stats: {
+                      ...localSourceParticipant,
+                      puuid: localObserverPuuid,
+                    },
+                  },
+                ],
+              },
+              timing: LOCAL_TIMING,
+            },
+          },
+          "NA1",
+          localObserverPuuid,
+        ),
       ),
     ).toBeNull();
   });
@@ -291,9 +362,38 @@ describe("resolveLocalCanonicalMatch", () => {
           equals: fixture.info.platformId,
           mode: "insensitive",
         },
-        receivedAt: { lte: expect.any(Date) },
       },
       orderBy: [{ capturedAt: "asc" }, { observationId: "asc" }],
     });
+  });
+
+  test("gives Riot two minutes on a matchmade game", async () => {
+    const now = new Date();
+    mocks.findUnique.mockResolvedValue(null);
+    mocks.findMany.mockResolvedValue([
+      { ...candidate({ data: fixture }), receivedAt: now },
+    ]);
+
+    await expect(
+      resolveLocalCanonicalMatch(riotMatchId, now),
+    ).resolves.toBeNull();
+    expect(mocks.upsert).not.toHaveBeenCalled();
+  });
+
+  test("uses a custom's client payload as soon as it arrives", async () => {
+    // Riot almost never publishes a custom, so waiting only delays the report.
+    const custom = RawMatchSchema.parse({
+      ...fixture,
+      info: { ...fixture.info, gameType: "CUSTOM_GAME" },
+    });
+    const now = new Date();
+    const fresh = { ...candidate({ data: custom }), receivedAt: now };
+    mocks.findUnique.mockResolvedValue(null);
+    mocks.findMany.mockResolvedValue([fresh]);
+    mocks.upsert.mockResolvedValue({ sourceObservation: fresh });
+
+    await expect(resolveLocalCanonicalMatch(riotMatchId, now)).resolves.toEqual(
+      custom,
+    );
   });
 });

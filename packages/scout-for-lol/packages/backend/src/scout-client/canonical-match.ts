@@ -2,6 +2,7 @@ import { ApplicationFailure } from "@temporalio/common";
 import {
   RawInfoSchema,
   RawMatchSchema,
+  riotWithholdsMatchResult,
   type RawMatch,
   type RawTimeline,
 } from "@scout-for-lol/data";
@@ -205,7 +206,9 @@ export function localCanonicalMatchesAgree(
 /**
  * Resolve or select an immutable local canonical payload. Selection is
  * allowed only after the observation has been present for two minutes, giving
- * Riot the first opportunity to supply its payload.
+ * Riot the first opportunity to supply its payload — unless Riot withholds
+ * this game's result (a custom, or a queue it never publishes), when the
+ * client's payload is used as soon as it arrives.
  */
 export async function resolveLocalCanonicalMatch(
   riotMatchId: RiotMatchId,
@@ -223,7 +226,6 @@ export async function resolveLocalCanonicalMatch(
       disposition: "ACCEPTED",
       gameId,
       platformId: { equals: platform, mode: "insensitive" },
-      receivedAt: { lte: cutoff },
     },
     orderBy: [{ capturedAt: "asc" }, { observationId: "asc" }],
   });
@@ -233,9 +235,14 @@ export async function resolveLocalCanonicalMatch(
       identities: await candidateIdentities(candidate),
     })),
   );
+  // Which queue a payload is from is only known once it parses, so the
+  // two-minute window is applied here rather than in the query.
   const valid = parsed.flatMap(({ candidate, identities }) => {
     const match = parseLocalCanonicalMatch(riotMatchId, candidate, identities);
-    return match === null ? [] : [{ candidate, match }];
+    return match === null ||
+      (candidate.receivedAt > cutoff && !riotWithholdsMatchResult(match.info))
+      ? []
+      : [{ candidate, match }];
   });
   if (valid.length === 0) return null;
 

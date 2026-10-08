@@ -13,6 +13,11 @@ import {
 } from "@scout-for-lol/temporal/match-receipts";
 import type * as DatabaseModule from "#src/database/index.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
+import {
+  testAccountId,
+  testGuildId,
+  testPuuid,
+} from "#src/testing/test-ids.ts";
 
 /**
  * The stage-receipt attestation against real receipt rows.
@@ -33,8 +38,10 @@ vi.mock("#src/database/index.ts", async () => {
   return { ...actual, prisma };
 });
 
-const { recordClientMatchTerminal, recordMatchReceipts } =
+const { advanceMatchCursor, recordClientMatchTerminal, recordMatchReceipts } =
   await import("#src/temporal/match/match-commits.ts");
+const { listTrackedAccounts, recordTrackedAccounts } =
+  await import("#src/database/durable/tracked-account-repository.ts");
 const { readMatchPipelineState } =
   await import("#src/temporal/match/match-reads.ts");
 const { listReceipts, recordReceipt } =
@@ -210,6 +217,134 @@ describe("recordClientMatchTerminal", () => {
       SCOUT_CLIENT_MATCH_TERMINAL_RECEIPT_KIND,
       (evidence) => scoutClientMatchTerminalEvidenceCodec.parse(evidence),
     );
+  });
+});
+
+describe("advanceMatchCursor", () => {
+  const PUUID = testPuuid("cursor-source");
+  const GUILD = testGuildId("8301");
+  const OWNER = testAccountId("8301");
+
+  async function seedTrackedAccount(matchId: RiotMatchId): Promise<void> {
+    await prisma.account.deleteMany({ where: { puuid: PUUID } });
+    await prisma.player.deleteMany({ where: { serverId: GUILD } });
+    const player = await prisma.player.create({
+      data: {
+        alias: "cursor-source",
+        serverId: GUILD,
+        creatorDiscordId: OWNER,
+        createdTime: new Date(RECORDED_AT),
+        updatedTime: new Date(RECORDED_AT),
+      },
+    });
+    await prisma.account.create({
+      data: {
+        alias: "cursor-source",
+        puuid: PUUID,
+        region: "AMERICA_NORTH",
+        playerId: player.id,
+        serverId: GUILD,
+        creatorDiscordId: OWNER,
+        createdTime: new Date(RECORDED_AT),
+        updatedTime: new Date(RECORDED_AT),
+      },
+    });
+    await seedObservation(matchId);
+    await recordTrackedAccounts(prisma, [
+      {
+        matchId,
+        puuid: PUUID,
+        playerId: null,
+        accountId: null,
+        cursorAdvancedAt: null,
+      },
+    ]);
+  }
+
+  /** What the client dispatcher leaves behind when it selects its payload. */
+  async function selectClientPayload(matchId: RiotMatchId): Promise<void> {
+    const device = await prisma.scoutClientDevice.create({
+      data: {
+        owner: {
+          connectOrCreate: {
+            where: { discordId: OWNER },
+            create: { discordId: OWNER, discordUsername: "owner" },
+          },
+        },
+        pairing: {
+          create: {
+            secretDigest: crypto.randomUUID(),
+            deviceName: "desktop",
+            platform: "windows",
+            architecture: "x86_64",
+            appVersion: "0.1.0",
+            protocolVersion: 1,
+            expiresAt: new Date(Date.now() + 60_000),
+          },
+        },
+        tokenDigest: crypto.randomUUID(),
+        deviceName: "desktop",
+        platform: "windows",
+        architecture: "x86_64",
+        appVersion: "0.1.0",
+        protocolVersion: 1,
+      },
+    });
+    const observation = await prisma.scoutClientObservation.create({
+      data: {
+        observationId: crypto.randomUUID(),
+        deviceId: device.id,
+        sequence: 1n,
+        capturedAt: new Date(RECORDED_AT),
+        protocolVersion: 1,
+        schemaVersion: 1,
+        appVersion: "0.1.0",
+        kind: "post_game",
+        payload: { resource: "post_game", data: {} },
+        bodyDigest: crypto.randomUUID(),
+        disposition: "ACCEPTED",
+      },
+    });
+    await prisma.scoutClientCanonicalMatch.create({
+      data: {
+        riotMatchId: matchId,
+        sourceObservationId: observation.observationId,
+        payloadDigest: observation.bodyDigest,
+        selectedAt: new Date(RECORDED_AT),
+      },
+    });
+  }
+
+  async function storedCursor() {
+    return prisma.account.findFirstOrThrow({
+      where: { puuid: PUUID },
+      select: { lastProcessedMatchId: true },
+    });
+  }
+
+  test("moves the Riot polling cursor for a Riot match", async () => {
+    const matchId = RiotMatchIdSchema.parse("NA1_8301");
+    await seedTrackedAccount(matchId);
+
+    await expect(advanceMatchCursor({ riotMatchId: matchId })).resolves.toEqual(
+      { advanced: 1, alreadyAdvanced: 0 },
+    );
+    expect(await storedCursor()).toEqual({ lastProcessedMatchId: matchId });
+  });
+
+  test("never anchors the Riot poll on a match only the client saw", async () => {
+    // Riot's match list has no such id, so as the cursor it would read as a
+    // gap on every poll.
+    const matchId = RiotMatchIdSchema.parse("NA1_8302");
+    await seedTrackedAccount(matchId);
+    await selectClientPayload(matchId);
+
+    await expect(advanceMatchCursor({ riotMatchId: matchId })).resolves.toEqual(
+      { advanced: 0, alreadyAdvanced: 0 },
+    );
+    expect(await storedCursor()).toEqual({ lastProcessedMatchId: null });
+    const [association] = await listTrackedAccounts(prisma, { matchId });
+    expect(association?.cursorAdvancedAt).not.toBeNull();
   });
 });
 

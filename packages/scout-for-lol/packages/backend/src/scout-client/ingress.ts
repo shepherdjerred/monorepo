@@ -4,6 +4,7 @@ import {
   type ScoutClientObservation,
   type ScoutClientObservationBatch,
   type ScoutClientObservationQuarantineReason,
+  riotWithholdsMatchResult,
   withoutScoutClientCredentials,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
@@ -135,6 +136,33 @@ function payloadContainsPuuid(payload: unknown, puuid: string): boolean {
         );
 }
 
+const GameflowRosterSchema = z.object({
+  data: z.object({
+    gameData: z.object({
+      teamOne: z.array(z.object({ puuid: z.string() }).loose()),
+      teamTwo: z.array(z.object({ puuid: z.string() }).loose()),
+    }),
+  }),
+});
+
+/**
+ * A gameflow session naming the game's players, which binds a custom or a
+ * duel to its game as surely as a lobby does, so it must name its observer
+ * too. A bare phase, or a session before teams exist, names nobody and is
+ * exempt. A live game frame stays exempt: the Live Client API names players
+ * by Riot ID only, never by PUUID, so it can't be checked this way.
+ */
+function gameflowCarriesRoster(observation: ScoutClientObservation): boolean {
+  if (observation.kind !== "gameflow") return false;
+  const roster = GameflowRosterSchema.safeParse(observation.payload);
+  return (
+    roster.success &&
+    roster.data.data.gameData.teamOne.length +
+      roster.data.data.gameData.teamTwo.length >
+      0
+  );
+}
+
 export function observationQuarantineReason(
   observation: ScoutClientObservation,
   verifiedPuuids: ReadonlySet<string>,
@@ -157,7 +185,10 @@ export function observationQuarantineReason(
     return "unverified_local_puuid";
   }
   const participantKinds = new Set(["lobby", "champ_select", "post_game"]);
-  if (participantKinds.has(observation.kind)) {
+  if (
+    participantKinds.has(observation.kind) ||
+    gameflowCarriesRoster(observation)
+  ) {
     if (observation.localPuuid === undefined) {
       return "missing_observer_puuid";
     }
@@ -369,9 +400,12 @@ export function acceptedClientMatchDispatches(
       .filter((receipt) => receipt.outcome !== "quarantined")
       .map((receipt) => receipt.observationId),
   );
-  const readyAt = IsoInstantSchema.parse(
+  // Riot gets first refusal for two minutes — except on a game it will never
+  // publish, a custom or a never-published queue, which is ready at once.
+  const riotFirstReadyAt = IsoInstantSchema.parse(
     new Date(now.getTime() + LOCAL_CANONICAL_DELAY_MS).toISOString(),
   );
+  const immediatelyReadyAt = IsoInstantSchema.parse(now.toISOString());
   const starts = new Map<string, ScoutClientMatchDispatchItem>();
   for (const raw of batch.observations) {
     const observation = translateObservation(raw, identities);
@@ -408,7 +442,9 @@ export function acceptedClientMatchDispatches(
       sourcePuuid,
       deliveryMode,
       gameEndTimestamp: match.info.gameEndTimestamp,
-      readyAt,
+      readyAt: riotWithholdsMatchResult(match.info)
+        ? immediatelyReadyAt
+        : riotFirstReadyAt,
       completionTargets: [],
     };
     const existing = starts.get(parsed.data);
