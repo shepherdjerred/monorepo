@@ -48,7 +48,7 @@ pub fn elapsed_format(seconds: u64) -> String {
 pub fn elapsed_seconds_since(start: &str, now: &str) -> Result<u64, CoreError> {
     let now: DateTime<Utc> = DateTime::parse_from_rfc3339(now)
         .map_err(|error| CoreError::Validation {
-            message: format!("now {now:?} is not an RFC 3339 timestamp: {error}"),
+            detail: format!("now {now:?} is not an RFC 3339 timestamp: {error}"),
         })?
         .to_utc();
     elapsed::elapsed_seconds_since(start, now).map_err(CoreError::from)
@@ -89,7 +89,7 @@ mod tests {
         ] {
             let error = elapsed_seconds_since(start, now).unwrap_err();
             assert!(
-                matches!(error, CoreError::Validation { ref message } if message.contains("RFC 3339")),
+                matches!(error, CoreError::Validation { detail: ref message } if message.contains("RFC 3339")),
                 "unexpected error: {error:?}"
             );
         }

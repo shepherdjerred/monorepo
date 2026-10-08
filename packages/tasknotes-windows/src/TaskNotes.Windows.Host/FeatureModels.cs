@@ -125,6 +125,18 @@ namespace TaskNotes.Windows.Host
     /// <summary>A UI-facing task containing domain values supplied by the core.</summary>
     public sealed record TaskItem
     {
+        /// <summary>Exact normalized properties retained for untouched editor fields.</summary>
+        public System.Text.Json.JsonElement? Properties { get; init; }
+
+        /// <summary>Owning standalone vault, frozen with this projection.</summary>
+        public string? ProfileId { get; init; }
+
+        /// <summary>Exact vault path for profile-qualified notification navigation.</summary>
+        public string? VaultPath { get; init; }
+
+        /// <summary>Exact Markdown revision loaded by the editor.</summary>
+        public string? ExpectedRevision { get; init; }
+
         /// <summary>Initializes a projected task.</summary>
         public TaskItem(
             string id,
@@ -270,6 +282,24 @@ namespace TaskNotes.Windows.Host
     /// <summary>Editable task fields passed to the core as one partial update.</summary>
     public sealed record TaskEditInput
     {
+        /// <summary>Changed normalized fields; null preserves the legacy complete-edit caller contract.</summary>
+        public IReadOnlyDictionary<
+            string,
+            System.Text.Json.JsonElement
+        >? ChangedProperties { get; init; }
+
+        /// <summary>Whether Markdown body changed in a partial editor save.</summary>
+        public bool BodyChanged { get; init; } = true;
+
+        /// <summary>Occurrence selected when the editor was opened.</summary>
+        public string? OccurrenceDate { get; init; }
+
+        /// <summary>Owning standalone profile required by partial saves.</summary>
+        public string? ProfileId { get; init; }
+
+        /// <summary>Revision the user reviewed before editing.</summary>
+        public string? ExpectedRevision { get; init; }
+
         /// <summary>Gets the task identifier.</summary>
         public required string Id { get; init; }
 

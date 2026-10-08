@@ -20,6 +20,7 @@ pub fn generate_bindings(profile: &str) -> Result<String, String> {
         "cargo",
         &[
             "run",
+            "--locked",
             "--package",
             "tasknotes-core-ffi",
             "--features",

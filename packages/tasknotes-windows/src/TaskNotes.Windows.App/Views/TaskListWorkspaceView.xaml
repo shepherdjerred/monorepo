@@ -142,7 +142,7 @@
             <AppBarSeparator />
             <AppBarButton
                 x:Name="UndoButton"
-                AutomationProperties.Name="Undo last completion"
+                AutomationProperties.Name="Undo last saved change"
                 Click="Undo_Click"
                 Icon="Undo"
                 IsEnabled="False"
@@ -154,19 +154,32 @@
                 Label="Inspector" />
         </CommandBar>
 
-        <InfoBar
-            x:Name="StatusBar"
-            Grid.Row="3"
-            Margin="0,0,0,10"
-            IsClosable="False"
-            IsOpen="True"
-            Severity="Informational">
-            <TextBlock
-                x:Name="StatusText"
-                AutomationProperties.AutomationId="TaskNotes.SyncStatus"
-                AutomationProperties.LiveSetting="Polite"
-                Text="Loading cached tasks…" />
-        </InfoBar>
+        <StackPanel Grid.Row="3" Spacing="6">
+            <InfoBar
+                x:Name="StatusBar"
+                Margin="0,0,0,10"
+                IsClosable="False"
+                IsOpen="True"
+                Severity="Informational">
+                <TextBlock
+                    x:Name="StatusText"
+                    AutomationProperties.AutomationId="TaskNotes.SyncStatus"
+                    AutomationProperties.LiveSetting="Polite"
+                    Text="Loading cached tasks…" />
+            </InfoBar>
+            <InfoBar
+                x:Name="SavedBar"
+                Title="Saved"
+                IsClosable="False"
+                IsOpen="False"
+                Severity="Informational">
+                <TextBlock
+                    x:Name="SavedText"
+                    AutomationProperties.AutomationId="TaskNotes.SavedWarnings"
+                    AutomationProperties.LiveSetting="Polite"
+                    TextWrapping="Wrap" />
+            </InfoBar>
+        </StackPanel>
 
         <ListView
             x:Name="TaskList"
@@ -223,32 +236,7 @@
                         <Grid.ContextFlyout>
                             <MenuFlyout>
                                 <MenuFlyoutItem Click="EditTask_Click" Text="Edit" />
-                                <MenuFlyoutSubItem Text="Move to status">
-                                    <MenuFlyoutItem
-                                        Click="MoveStatus_Click"
-                                        Tag="open"
-                                        Text="Open" />
-                                    <MenuFlyoutItem
-                                        Click="MoveStatus_Click"
-                                        Tag="in-progress"
-                                        Text="In progress" />
-                                    <MenuFlyoutItem
-                                        Click="MoveStatus_Click"
-                                        Tag="waiting"
-                                        Text="Waiting" />
-                                    <MenuFlyoutItem
-                                        Click="MoveStatus_Click"
-                                        Tag="delegated"
-                                        Text="Delegated" />
-                                    <MenuFlyoutItem
-                                        Click="MoveStatus_Click"
-                                        Tag="done"
-                                        Text="Done" />
-                                    <MenuFlyoutItem
-                                        Click="MoveStatus_Click"
-                                        Tag="cancelled"
-                                        Text="Cancelled" />
-                                </MenuFlyoutSubItem>
+                                <MenuFlyoutItem Click="MoveStatus_Click" Text="Move to status…" />
                                 <MenuFlyoutSeparator />
                                 <MenuFlyoutItem Click="DeleteTask_Click" Text="Delete" />
                             </MenuFlyout>

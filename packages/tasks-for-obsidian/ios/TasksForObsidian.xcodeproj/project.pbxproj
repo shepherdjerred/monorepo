@@ -3,352 +3,486 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0C80B921A6F3F58F76C31292 /* libPods-TasksForObsidian.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DCACB8F33CDC322A6C60F78 /* libPods-TasksForObsidian.a */; };
-		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
-		7A11E2E5D0DE4CA0B45C1A01 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A11E2E5D0DE4CA0B45C1A02 /* SceneDelegate.swift */; };
-		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
-		E19B46A355184D2FA5BC166C /* complete.wav in Resources */ = {isa = PBXBuildFile; fileRef = 7E2F375BF79D498ABCCB414A /* complete.wav */; };
-		E7C8B6EB5FE641159FA0B595 /* delete.wav in Resources */ = {isa = PBXBuildFile; fileRef = D46F3A8068C244D7BF495293 /* delete.wav */; };
-		EF5A5B93E0F582F95A4D984B /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
-		FCD92C3D55E44B60B5722C17 /* create.wav in Resources */ = {isa = PBXBuildFile; fileRef = 122847316460414586706DFD /* create.wav */; };
+		0D5774A2BD39F48B59434829 /* FacetLiveActivities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69561D43E7300E337BEE8673 /* FacetLiveActivities.swift */; };
+		15CCDA632D7D90E3CC9292AB /* AddTaskIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0551C3579148BC83303F1BF /* AddTaskIntent.swift */; };
+		17E952D3AC313611A855B10E /* StopTrackingIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABAEBACF43A67ADAC1DC28D4 /* StopTrackingIntent.swift */; };
+		1A0B5037D6A491F17C9C6CE8 /* FacetBackgroundTasks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E5FAAB06F3019475B51FBC /* FacetBackgroundTasks.swift */; };
+		2152BC46B66CE6EC5542E377 /* ThirdPartyNotices.txt in Resources */ = {isa = PBXBuildFile; fileRef = F8C245C44AB0D651366FB161 /* ThirdPartyNotices.txt */; };
+		346852036A4FE2AD0150F607 /* WidgetTaskData.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDA151A27A535E9FA36866B7 /* WidgetTaskData.swift */; };
+		3C44E83452BCAB256C22B944 /* FirstPartyLicense.txt in Resources */ = {isa = PBXBuildFile; fileRef = B3597F195C7228F52ACBCDA6 /* FirstPartyLicense.txt */; };
+		3CF03EA3A6136D76C0F60D02 /* TaskNotesFacetUI in Frameworks */ = {isa = PBXBuildFile; productRef = 8E93EF9EAB1C58E3A2EE7FE9 /* TaskNotesFacetUI */; };
+		43B2502A9D974509A13813C0 /* TimeTrackingAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 949E39FE89098708BFC412E1 /* TimeTrackingAttributes.swift */; };
+		4E6985EC943E01996BBC1153 /* TodayTasksProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6BF83CBECB8F58FCC65ADA5 /* TodayTasksProvider.swift */; };
+		5E35F12DFBC5E4D7348AFDBD /* StandaloneTaskTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C1FE2E1714BD10C069C8089 /* StandaloneTaskTests.swift */; };
+		5FD7C4C5B836E6573B5BC8D6 /* native-license-inventory.json in Resources */ = {isa = PBXBuildFile; fileRef = 8CDC691E8EC7FF52D91BE422 /* native-license-inventory.json */; };
+		627CDAC192B0737973D4B7D7 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = EC8628C61F82B35854041D56 /* PrivacyInfo.xcprivacy */; };
+		7334E2D08BECCBCFF0276DD4 /* ShowTodayIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAAE9579B3F7C4994E642188 /* ShowTodayIntent.swift */; };
+		7FC704D0EB54DDB12208A276 /* QuickAddControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53407DF630BC00824148CE26 /* QuickAddControl.swift */; };
+		8115E6B624D505275BD876C6 /* TasksWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAF24620168AF2CDDE7ACD24 /* TasksWidgetBundle.swift */; };
+		90203752117D2A4D09AB1816 /* TaskShortcutsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 723F2DEE626C06A660A4022D /* TaskShortcutsProvider.swift */; };
+		96EBFAA80520FA6A14F9B2B8 /* FacetApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E2F39573B7D1B833BA08ACD /* FacetApp.swift */; };
+		A6F3F9F4DDCF4D154097C4A4 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9AA2B4C15E18713C3F2425A2 /* Images.xcassets */; };
+		B3955A3306298696C54BB912 /* StopTrackingIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABAEBACF43A67ADAC1DC28D4 /* StopTrackingIntent.swift */; };
+		BA193902757571848D61269F /* TodayTasksWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8E83C6DA31E3B637A745D46 /* TodayTasksWidget.swift */; };
+		C67365CB821A80210909E7DE /* TaskNotesKit in Frameworks */ = {isa = PBXBuildFile; productRef = 6ED2E69C5C7F08C7894ED288 /* TaskNotesKit */; };
+		D918BBEE68EE6DF1B12CF94B /* TimeTrackingAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 949E39FE89098708BFC412E1 /* TimeTrackingAttributes.swift */; };
+		E3D436BA38277C0B7D67D49C /* ThirdPartyNotices.txt in Resources */ = {isa = PBXBuildFile; fileRef = F8C245C44AB0D651366FB161 /* ThirdPartyNotices.txt */; };
+		E5749667862993D2E64EBB46 /* TaskNotesKit in Frameworks */ = {isa = PBXBuildFile; productRef = EF3123F128552877ED5CD5F8 /* TaskNotesKit */; };
+		ED6889804A3E2E9123972097 /* FirstPartyLicense.txt in Resources */ = {isa = PBXBuildFile; fileRef = B3597F195C7228F52ACBCDA6 /* FirstPartyLicense.txt */; };
+		EF814BFF430D1C983C5BC731 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 198212E9090D23DE654809E2 /* PrivacyInfo.xcprivacy */; };
+		F12E617D02429ABA28551ECA /* TimeTrackingLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3B35053E49E4F3BD3263A45 /* TimeTrackingLiveActivity.swift */; };
+		F510B6887C8F927D63054FA9 /* native-license-inventory.json in Resources */ = {isa = PBXBuildFile; fileRef = 8CDC691E8EC7FF52D91BE422 /* native-license-inventory.json */; };
+		FC9246240CCF7A1091C8FC9A /* TasksWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 9881866560205578B184C28C /* TasksWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		27DC1F75260E4DF2B38D6FC2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0AD24AC74D13FFB8C544A0CC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C472C3CC4582577161EB935C;
+			remoteInfo = TasksForObsidian;
+		};
+		FBD5B756E8053DC0000384EA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0AD24AC74D13FFB8C544A0CC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1C1FDA23D5E68FFBBB9F5DBA;
+			remoteInfo = TasksWidget;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		74F2661727D1A2924C8A5386 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				FC9246240CCF7A1091C8FC9A /* TasksWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
-		122847316460414586706DFD /* create.wav */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = create.wav; path = ../src/assets/sounds/create.wav; sourceTree = "<group>"; };
-		13B07F961A680F5B00A75B9A /* TasksForObsidian.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TasksForObsidian.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = TasksForObsidian/Images.xcassets; sourceTree = "<group>"; };
-		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = TasksForObsidian/Info.plist; sourceTree = "<group>"; };
-		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = TasksForObsidian/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		3B4392A12AC88292D35C810B /* Pods-TasksForObsidian.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TasksForObsidian.debug.xcconfig"; path = "Target Support Files/Pods-TasksForObsidian/Pods-TasksForObsidian.debug.xcconfig"; sourceTree = "<group>"; };
-		5709B34CF0A7D63546082F79 /* Pods-TasksForObsidian.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TasksForObsidian.release.xcconfig"; path = "Target Support Files/Pods-TasksForObsidian/Pods-TasksForObsidian.release.xcconfig"; sourceTree = "<group>"; };
-		5DCACB8F33CDC322A6C60F78 /* libPods-TasksForObsidian.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-TasksForObsidian.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = TasksForObsidian/AppDelegate.swift; sourceTree = "<group>"; };
-		7A11E2E5D0DE4CA0B45C1A02 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SceneDelegate.swift; path = TasksForObsidian/SceneDelegate.swift; sourceTree = "<group>"; };
-		7E2F375BF79D498ABCCB414A /* complete.wav */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = complete.wav; path = ../src/assets/sounds/complete.wav; sourceTree = "<group>"; };
-		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = TasksForObsidian/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		D46F3A8068C244D7BF495293 /* delete.wav */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = delete.wav; path = ../src/assets/sounds/delete.wav; sourceTree = "<group>"; };
-		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		16E5FAAB06F3019475B51FBC /* FacetBackgroundTasks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacetBackgroundTasks.swift; sourceTree = "<group>"; };
+		198212E9090D23DE654809E2 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		32DC94CF5EEA15A26B6B524F /* TasksForObsidianUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TasksForObsidianUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		4C1FE2E1714BD10C069C8089 /* StandaloneTaskTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StandaloneTaskTests.swift; sourceTree = "<group>"; };
+		53407DF630BC00824148CE26 /* QuickAddControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickAddControl.swift; sourceTree = "<group>"; };
+		69561D43E7300E337BEE8673 /* FacetLiveActivities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacetLiveActivities.swift; sourceTree = "<group>"; };
+		723F2DEE626C06A660A4022D /* TaskShortcutsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskShortcutsProvider.swift; sourceTree = "<group>"; };
+		8CDC691E8EC7FF52D91BE422 /* native-license-inventory.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "native-license-inventory.json"; sourceTree = "<group>"; };
+		948471B3C8F8B0172CDCBCD5 /* tasknotes-macos */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "tasknotes-macos"; path = "../../tasknotes-macos"; sourceTree = SOURCE_ROOT; };
+		949E39FE89098708BFC412E1 /* TimeTrackingAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeTrackingAttributes.swift; sourceTree = "<group>"; };
+		9881866560205578B184C28C /* TasksWidget.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = TasksWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		9AA2B4C15E18713C3F2425A2 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
+		9E2F39573B7D1B833BA08ACD /* FacetApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacetApp.swift; sourceTree = "<group>"; };
+		A5B7AB076CD71F50C048C052 /* TasksForObsidian.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = TasksForObsidian.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A8E83C6DA31E3B637A745D46 /* TodayTasksWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayTasksWidget.swift; sourceTree = "<group>"; };
+		AB98B37994A7CE6C1C8EBEDA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		ABAEBACF43A67ADAC1DC28D4 /* StopTrackingIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopTrackingIntent.swift; sourceTree = "<group>"; };
+		B0551C3579148BC83303F1BF /* AddTaskIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTaskIntent.swift; sourceTree = "<group>"; };
+		B3597F195C7228F52ACBCDA6 /* FirstPartyLicense.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = FirstPartyLicense.txt; sourceTree = "<group>"; };
+		BAAE9579B3F7C4994E642188 /* ShowTodayIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowTodayIntent.swift; sourceTree = "<group>"; };
+		C6BF83CBECB8F58FCC65ADA5 /* TodayTasksProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayTasksProvider.swift; sourceTree = "<group>"; };
+		CAF24620168AF2CDDE7ACD24 /* TasksWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TasksWidgetBundle.swift; sourceTree = "<group>"; };
+		DDA151A27A535E9FA36866B7 /* WidgetTaskData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetTaskData.swift; sourceTree = "<group>"; };
+		E3B35053E49E4F3BD3263A45 /* TimeTrackingLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeTrackingLiveActivity.swift; sourceTree = "<group>"; };
+		EAC0D0E1DE43BD5AD7367A49 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		EC8628C61F82B35854041D56 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		F8C245C44AB0D651366FB161 /* ThirdPartyNotices.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = ThirdPartyNotices.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		13B07F8C1A680F5B00A75B9A /* Frameworks */ = {
+		9783FB38CA32CA68456CA03C /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0C80B921A6F3F58F76C31292 /* libPods-TasksForObsidian.a in Frameworks */,
+				E5749667862993D2E64EBB46 /* TaskNotesKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B09DCDBD9015D1616365854C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3CF03EA3A6136D76C0F60D02 /* TaskNotesFacetUI in Frameworks */,
+				C67365CB821A80210909E7DE /* TaskNotesKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		13B07FAE1A68108700A75B9A /* TasksForObsidian */ = {
+		11BFFDE88EEF284D42538686 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				13B07FB51A68108700A75B9A /* Images.xcassets */,
-				761780EC2CA45674006654EE /* AppDelegate.swift */,
-				7A11E2E5D0DE4CA0B45C1A02 /* SceneDelegate.swift */,
-				13B07FB61A68108700A75B9A /* Info.plist */,
-				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
-				13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */,
-			);
-			name = TasksForObsidian;
-			sourceTree = "<group>";
-		};
-		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				5DCACB8F33CDC322A6C60F78 /* libPods-TasksForObsidian.a */,
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		7384F407425C43309051BF95 /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-				122847316460414586706DFD /* create.wav */,
-				7E2F375BF79D498ABCCB414A /* complete.wav */,
-				D46F3A8068C244D7BF495293 /* delete.wav */,
-			);
-			name = Resources;
-			path = "";
-			sourceTree = "<group>";
-		};
-		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Libraries;
-			sourceTree = "<group>";
-		};
-		83CBB9F61A601CBA00E9B192 = {
-			isa = PBXGroup;
-			children = (
-				13B07FAE1A68108700A75B9A /* TasksForObsidian */,
-				832341AE1AAA6A7D00B99B32 /* Libraries */,
-				83CBBA001A601CBA00E9B192 /* Products */,
-				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				BBD78D7AC51CEA395F1C20DB /* Pods */,
-				7384F407425C43309051BF95 /* Resources */,
-			);
-			indentWidth = 2;
-			sourceTree = "<group>";
-			tabWidth = 2;
-			usesTabs = 0;
-		};
-		83CBBA001A601CBA00E9B192 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				13B07F961A680F5B00A75B9A /* TasksForObsidian.app */,
+				A5B7AB076CD71F50C048C052 /* TasksForObsidian.app */,
+				32DC94CF5EEA15A26B6B524F /* TasksForObsidianUITests.xctest */,
+				9881866560205578B184C28C /* TasksWidget.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		BBD78D7AC51CEA395F1C20DB /* Pods */ = {
+		1AAEB9824313465DDDA12145 /* ios */ = {
 			isa = PBXGroup;
 			children = (
-				3B4392A12AC88292D35C810B /* Pods-TasksForObsidian.debug.xcconfig */,
-				5709B34CF0A7D63546082F79 /* Pods-TasksForObsidian.release.xcconfig */,
+				B3597F195C7228F52ACBCDA6 /* FirstPartyLicense.txt */,
+				8CDC691E8EC7FF52D91BE422 /* native-license-inventory.json */,
+				F8C245C44AB0D651366FB161 /* ThirdPartyNotices.txt */,
 			);
-			path = Pods;
+			name = ios;
+			path = "../../tasknotes-macos/Resources/ios";
+			sourceTree = "<group>";
+		};
+		500FA6BDBE5C4560D1709129 /* Facet */ = {
+			isa = PBXGroup;
+			children = (
+				9E2F39573B7D1B833BA08ACD /* FacetApp.swift */,
+				16E5FAAB06F3019475B51FBC /* FacetBackgroundTasks.swift */,
+				69561D43E7300E337BEE8673 /* FacetLiveActivities.swift */,
+				EAC0D0E1DE43BD5AD7367A49 /* Info.plist */,
+			);
+			path = Facet;
+			sourceTree = "<group>";
+		};
+		75584E90AE0A829202CC5248 = {
+			isa = PBXGroup;
+			children = (
+				500FA6BDBE5C4560D1709129 /* Facet */,
+				89466CA39BB94F6E5FC50406 /* FacetUITests */,
+				AA7F34AC8106BA1B07CDA3B5 /* Intents */,
+				1AAEB9824313465DDDA12145 /* ios */,
+				FB068F4E4FAA83256ACCAB33 /* Packages */,
+				FB4472FA046702E8BD0471AA /* TasksForObsidian */,
+				87E06775827324601297C34A /* TasksWidget */,
+				11BFFDE88EEF284D42538686 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		87E06775827324601297C34A /* TasksWidget */ = {
+			isa = PBXGroup;
+			children = (
+				AB98B37994A7CE6C1C8EBEDA /* Info.plist */,
+				198212E9090D23DE654809E2 /* PrivacyInfo.xcprivacy */,
+				53407DF630BC00824148CE26 /* QuickAddControl.swift */,
+				CAF24620168AF2CDDE7ACD24 /* TasksWidgetBundle.swift */,
+				949E39FE89098708BFC412E1 /* TimeTrackingAttributes.swift */,
+				E3B35053E49E4F3BD3263A45 /* TimeTrackingLiveActivity.swift */,
+				C6BF83CBECB8F58FCC65ADA5 /* TodayTasksProvider.swift */,
+				A8E83C6DA31E3B637A745D46 /* TodayTasksWidget.swift */,
+				DDA151A27A535E9FA36866B7 /* WidgetTaskData.swift */,
+			);
+			path = TasksWidget;
+			sourceTree = "<group>";
+		};
+		89466CA39BB94F6E5FC50406 /* FacetUITests */ = {
+			isa = PBXGroup;
+			children = (
+				4C1FE2E1714BD10C069C8089 /* StandaloneTaskTests.swift */,
+			);
+			path = FacetUITests;
+			sourceTree = "<group>";
+		};
+		AA7F34AC8106BA1B07CDA3B5 /* Intents */ = {
+			isa = PBXGroup;
+			children = (
+				B0551C3579148BC83303F1BF /* AddTaskIntent.swift */,
+				BAAE9579B3F7C4994E642188 /* ShowTodayIntent.swift */,
+				ABAEBACF43A67ADAC1DC28D4 /* StopTrackingIntent.swift */,
+				723F2DEE626C06A660A4022D /* TaskShortcutsProvider.swift */,
+			);
+			name = Intents;
+			path = TasksForObsidian/Intents;
+			sourceTree = "<group>";
+		};
+		FB068F4E4FAA83256ACCAB33 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				948471B3C8F8B0172CDCBCD5 /* tasknotes-macos */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		FB4472FA046702E8BD0471AA /* TasksForObsidian */ = {
+			isa = PBXGroup;
+			children = (
+				9AA2B4C15E18713C3F2425A2 /* Images.xcassets */,
+				EC8628C61F82B35854041D56 /* PrivacyInfo.xcprivacy */,
+			);
+			path = TasksForObsidian;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		13B07F861A680F5B00A75B9A /* TasksForObsidian */ = {
+		1C1FDA23D5E68FFBBB9F5DBA /* TasksWidget */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "TasksForObsidian" */;
+			buildConfigurationList = CCECDE03C38CD1A1A9A35DE5 /* Build configuration list for PBXNativeTarget "TasksWidget" */;
 			buildPhases = (
-				C38B50BA6285516D6DCD4F65 /* [CP] Check Pods Manifest.lock */,
-				13B07F871A680F5B00A75B9A /* Sources */,
-				13B07F8C1A680F5B00A75B9A /* Frameworks */,
-				13B07F8E1A680F5B00A75B9A /* Resources */,
-				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
-				00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */,
-				E235C05ADACE081382539298 /* [CP] Copy Pods Resources */,
+				75372319AD467F95D7A73878 /* Sources */,
+				DCC467316E9E7D2B81D1FC7E /* Resources */,
+				9783FB38CA32CA68456CA03C /* Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
+			name = TasksWidget;
+			packageProductDependencies = (
+				EF3123F128552877ED5CD5F8 /* TaskNotesKit */,
+			);
+			productName = TasksWidget;
+			productReference = 9881866560205578B184C28C /* TasksWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		AD0560CD53A29237C5B89EF1 /* TasksForObsidianUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DC5A2B4938132A310A72B301 /* Build configuration list for PBXNativeTarget "TasksForObsidianUITests" */;
+			buildPhases = (
+				AB01E8EA44665B893D89F0F6 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				653A5535434E79A48CE2F4E6 /* PBXTargetDependency */,
+			);
+			name = TasksForObsidianUITests;
+			packageProductDependencies = (
+			);
+			productName = TasksForObsidianUITests;
+			productReference = 32DC94CF5EEA15A26B6B524F /* TasksForObsidianUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		C472C3CC4582577161EB935C /* TasksForObsidian */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 32B92EC7BDEFD4DCB0762DF6 /* Build configuration list for PBXNativeTarget "TasksForObsidian" */;
+			buildPhases = (
+				D58ABB52DED34412230E4E39 /* Sources */,
+				803663BF41195A58A3C91BD0 /* Resources */,
+				B09DCDBD9015D1616365854C /* Frameworks */,
+				74F2661727D1A2924C8A5386 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				DE6426495B3B454F53B1E73E /* PBXTargetDependency */,
+			);
 			name = TasksForObsidian;
+			packageProductDependencies = (
+				8E93EF9EAB1C58E3A2EE7FE9 /* TaskNotesFacetUI */,
+				6ED2E69C5C7F08C7894ED288 /* TaskNotesKit */,
+			);
 			productName = TasksForObsidian;
-			productReference = 13B07F961A680F5B00A75B9A /* TasksForObsidian.app */;
+			productReference = A5B7AB076CD71F50C048C052 /* TasksForObsidian.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		83CBB9F71A601CBA00E9B192 /* Project object */ = {
+		0AD24AC74D13FFB8C544A0CC /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1210;
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
 				TargetAttributes = {
-					13B07F861A680F5B00A75B9A = {
-						LastSwiftMigration = 1120;
+					1C1FDA23D5E68FFBBB9F5DBA = {
+						ProvisioningStyle = Automatic;
+					};
+					AD0560CD53A29237C5B89EF1 = {
+						ProvisioningStyle = Automatic;
+						TestTargetID = C472C3CC4582577161EB935C;
+					};
+					C472C3CC4582577161EB935C = {
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
-			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "TasksForObsidian" */;
-			compatibilityVersion = "Xcode 12.0";
+			buildConfigurationList = FD40881EFA0504254C5AECA3 /* Build configuration list for PBXProject "TasksForObsidian" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
-				en,
 				Base,
+				en,
 			);
-			mainGroup = 83CBB9F61A601CBA00E9B192;
-			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
+			mainGroup = 75584E90AE0A829202CC5248;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				DD65A4504B0C422BA08653FD /* XCLocalSwiftPackageReference "../../tasknotes-macos" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 11BFFDE88EEF284D42538686 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				13B07F861A680F5B00A75B9A /* TasksForObsidian */,
+				C472C3CC4582577161EB935C /* TasksForObsidian */,
+				1C1FDA23D5E68FFBBB9F5DBA /* TasksWidget */,
+				AD0560CD53A29237C5B89EF1 /* TasksForObsidianUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		13B07F8E1A680F5B00A75B9A /* Resources */ = {
+		803663BF41195A58A3C91BD0 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
-				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
-				EF5A5B93E0F582F95A4D984B /* PrivacyInfo.xcprivacy in Resources */,
-				FCD92C3D55E44B60B5722C17 /* create.wav in Resources */,
-				E19B46A355184D2FA5BC166C /* complete.wav in Resources */,
-				E7C8B6EB5FE641159FA0B595 /* delete.wav in Resources */,
+				ED6889804A3E2E9123972097 /* FirstPartyLicense.txt in Resources */,
+				A6F3F9F4DDCF4D154097C4A4 /* Images.xcassets in Resources */,
+				627CDAC192B0737973D4B7D7 /* PrivacyInfo.xcprivacy in Resources */,
+				E3D436BA38277C0B7D67D49C /* ThirdPartyNotices.txt in Resources */,
+				5FD7C4C5B836E6573B5BC8D6 /* native-license-inventory.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DCC467316E9E7D2B81D1FC7E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3C44E83452BCAB256C22B944 /* FirstPartyLicense.txt in Resources */,
+				EF814BFF430D1C983C5BC731 /* PrivacyInfo.xcprivacy in Resources */,
+				2152BC46B66CE6EC5542E377 /* ThirdPartyNotices.txt in Resources */,
+				F510B6887C8F927D63054FA9 /* native-license-inventory.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
-/* Begin PBXShellScriptBuildPhase section */
-		00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"$(SRCROOT)/.xcode.env.local",
-				"$(SRCROOT)/.xcode.env",
-			);
-			name = "Bundle React Native code and images";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "set -e\n\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"$REACT_NATIVE_PATH/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"\\\"$WITH_ENVIRONMENT\\\" \\\"$REACT_NATIVE_XCODE\\\"\"\n";
-		};
-		00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-TasksForObsidian/Pods-TasksForObsidian-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-TasksForObsidian/Pods-TasksForObsidian-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TasksForObsidian/Pods-TasksForObsidian-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		C38B50BA6285516D6DCD4F65 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-TasksForObsidian-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		E235C05ADACE081382539298 /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-TasksForObsidian/Pods-TasksForObsidian-resources-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Copy Pods Resources";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-TasksForObsidian/Pods-TasksForObsidian-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TasksForObsidian/Pods-TasksForObsidian-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-/* End PBXShellScriptBuildPhase section */
-
 /* Begin PBXSourcesBuildPhase section */
-		13B07F871A680F5B00A75B9A /* Sources */ = {
+		75372319AD467F95D7A73878 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
-				7A11E2E5D0DE4CA0B45C1A01 /* SceneDelegate.swift in Sources */,
+				7FC704D0EB54DDB12208A276 /* QuickAddControl.swift in Sources */,
+				B3955A3306298696C54BB912 /* StopTrackingIntent.swift in Sources */,
+				8115E6B624D505275BD876C6 /* TasksWidgetBundle.swift in Sources */,
+				43B2502A9D974509A13813C0 /* TimeTrackingAttributes.swift in Sources */,
+				F12E617D02429ABA28551ECA /* TimeTrackingLiveActivity.swift in Sources */,
+				4E6985EC943E01996BBC1153 /* TodayTasksProvider.swift in Sources */,
+				BA193902757571848D61269F /* TodayTasksWidget.swift in Sources */,
+				346852036A4FE2AD0150F607 /* WidgetTaskData.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AB01E8EA44665B893D89F0F6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5E35F12DFBC5E4D7348AFDBD /* StandaloneTaskTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D58ABB52DED34412230E4E39 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				15CCDA632D7D90E3CC9292AB /* AddTaskIntent.swift in Sources */,
+				96EBFAA80520FA6A14F9B2B8 /* FacetApp.swift in Sources */,
+				1A0B5037D6A491F17C9C6CE8 /* FacetBackgroundTasks.swift in Sources */,
+				0D5774A2BD39F48B59434829 /* FacetLiveActivities.swift in Sources */,
+				7334E2D08BECCBCFF0276DD4 /* ShowTodayIntent.swift in Sources */,
+				17E952D3AC313611A855B10E /* StopTrackingIntent.swift in Sources */,
+				90203752117D2A4D09AB1816 /* TaskShortcutsProvider.swift in Sources */,
+				D918BBEE68EE6DF1B12CF94B /* TimeTrackingAttributes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		653A5535434E79A48CE2F4E6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C472C3CC4582577161EB935C /* TasksForObsidian */;
+			targetProxy = 27DC1F75260E4DF2B38D6FC2 /* PBXContainerItemProxy */;
+		};
+		DE6426495B3B454F53B1E73E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 1C1FDA23D5E68FFBBB9F5DBA /* TasksWidget */;
+			targetProxy = FBD5B756E8053DC0000384EA /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
-		13B07F941A680F5B00A75B9A /* Debug */ = {
+		09E5EFFC500983657441BA68 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 3B4392A12AC88292D35C810B /* Pods-TasksForObsidian.debug.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_ENABLE_MODULES = YES;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 63ZAG7X889;
-				ENABLE_BITCODE = NO;
-				INFOPLIST_FILE = TasksForObsidian/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					"-ObjC",
-					"-lc++",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
-				PRODUCT_NAME = TasksForObsidian;
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 5.0;
-				VERSIONING_SYSTEM = "apple-generic";
+				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.example.TasksForObsidian.UITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = TasksForObsidian;
 			};
 			name = Debug;
 		};
-		13B07F951A680F5B00A75B9A /* Release */ = {
+		158326C13AE88402CDE3CC9D /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 5709B34CF0A7D63546082F79 /* Pods-TasksForObsidian.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_ENABLE_MODULES = YES;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 63ZAG7X889;
-				INFOPLIST_FILE = TasksForObsidian/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				CODE_SIGN_ENTITLEMENTS = TasksForObsidian/TasksForObsidian.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = Facet/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					"-ObjC",
-					"-lc++",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.example.TasksForObsidian;
 				PRODUCT_NAME = TasksForObsidian;
-				SWIFT_VERSION = 5.0;
-				VERSIONING_SYSTEM = "apple-generic";
+				SDKROOT = iphoneos;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
-		83CBBA201A601CBA00E9B192 /* Debug */ = {
+		2CBEE1B04D10AC43DF760A38 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = TasksForObsidian/TasksForObsidian.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = Facet/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.example.TasksForObsidian;
+				PRODUCT_NAME = TasksForObsidian;
+				SDKROOT = iphoneos;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		41852FB6B5761F2120306AF9 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
@@ -361,77 +495,63 @@
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "";
-				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
 					"$(inherited)",
+					"DEBUG=1",
 				);
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
-				LD_RUNPATH_SEARCH_PATHS = (
-					/usr/lib/swift,
-					"$(inherited)",
-				);
-				LIBRARY_SEARCH_PATHS = (
-					"\"$(SDKROOT)/usr/lib/swift\"",
-					"\"$(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)\"",
-					"\"$(inherited)\"",
-				);
-				MTL_ENABLE_DEBUG_INFO = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_CFLAGS = (
-					"$(inherited)",
-					"-DRCT_REMOVE_LEGACY_ARCH=1",
-				);
-				OTHER_CPLUSPLUSFLAGS = (
-					"$(OTHER_CFLAGS)",
-					"-DFOLLY_NO_CONFIG",
-					"-DFOLLY_MOBILE=1",
-					"-DFOLLY_USE_LIBCPP=1",
-					"-DFOLLY_CFG_NO_COROUTINES=1",
-					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
-					"-DRCT_REMOVE_LEGACY_ARCH=1",
-				);
-				PODFILE_DIR = "$(SRCROOT)";
-				REACT_NATIVE_PATH = "${PODS_ROOT}/../../../../node_modules/.bun/react-native@0.87.1+dbc632880bdc69be/node_modules/react-native";
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
-				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
-				USE_HERMES = true;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_TREAT_WARNINGS_AS_ERRORS = YES;
+				SWIFT_VERSION = 6;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
-		83CBBA211A601CBA00E9B192 /* Release */ = {
+		7C401BF5A529145D12CB7295 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
@@ -444,14 +564,16 @@
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				COPY_PHASE_STRIP = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "";
-				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -459,61 +581,136 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
-				LD_RUNPATH_SEARCH_PATHS = (
-					/usr/lib/swift,
-					"$(inherited)",
-				);
-				LIBRARY_SEARCH_PATHS = (
-					"\"$(SDKROOT)/usr/lib/swift\"",
-					"\"$(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)\"",
-					"\"$(inherited)\"",
-				);
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 0.1.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
-				OTHER_CFLAGS = (
-					"$(inherited)",
-					"-DRCT_REMOVE_LEGACY_ARCH=1",
-				);
-				OTHER_CPLUSPLUSFLAGS = (
-					"$(OTHER_CFLAGS)",
-					"-DFOLLY_NO_CONFIG",
-					"-DFOLLY_MOBILE=1",
-					"-DFOLLY_USE_LIBCPP=1",
-					"-DFOLLY_CFG_NO_COROUTINES=1",
-					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
-					"-DRCT_REMOVE_LEGACY_ARCH=1",
-				);
-				PODFILE_DIR = "$(SRCROOT)";
-				REACT_NATIVE_PATH = "${PODS_ROOT}/../../../../node_modules/.bun/react-native@0.87.1+dbc632880bdc69be/node_modules/react-native";
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
-				USE_HERMES = true;
-				VALIDATE_PRODUCT = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_TREAT_WARNINGS_AS_ERRORS = YES;
+				SWIFT_VERSION = 6;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		7E96874E26651A0B45BA614F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.example.TasksForObsidian.UITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = TasksForObsidian;
+			};
+			name = Release;
+		};
+		E07AC7C0FB045F4DA6474FCC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = TasksWidget/TasksWidget.entitlements;
+				INFOPLIST_FILE = TasksWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.example.TasksForObsidian.TasksWidget;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		FC35FACCB274ADC07072E502 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = TasksWidget/TasksWidget.entitlements;
+				INFOPLIST_FILE = TasksWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.example.TasksForObsidian.TasksWidget;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "TasksForObsidian" */ = {
+		32B92EC7BDEFD4DCB0762DF6 /* Build configuration list for PBXNativeTarget "TasksForObsidian" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				13B07F941A680F5B00A75B9A /* Debug */,
-				13B07F951A680F5B00A75B9A /* Release */,
+				2CBEE1B04D10AC43DF760A38 /* Debug */,
+				158326C13AE88402CDE3CC9D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
-		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "TasksForObsidian" */ = {
+		CCECDE03C38CD1A1A9A35DE5 /* Build configuration list for PBXNativeTarget "TasksWidget" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				83CBBA201A601CBA00E9B192 /* Debug */,
-				83CBBA211A601CBA00E9B192 /* Release */,
+				E07AC7C0FB045F4DA6474FCC /* Debug */,
+				FC35FACCB274ADC07072E502 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
+		};
+		DC5A2B4938132A310A72B301 /* Build configuration list for PBXNativeTarget "TasksForObsidianUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				09E5EFFC500983657441BA68 /* Debug */,
+				7E96874E26651A0B45BA614F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		FD40881EFA0504254C5AECA3 /* Build configuration list for PBXProject "TasksForObsidian" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				41852FB6B5761F2120306AF9 /* Debug */,
+				7C401BF5A529145D12CB7295 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		DD65A4504B0C422BA08653FD /* XCLocalSwiftPackageReference "../../tasknotes-macos" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../../tasknotes-macos";
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		6ED2E69C5C7F08C7894ED288 /* TaskNotesKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = TaskNotesKit;
+		};
+		8E93EF9EAB1C58E3A2EE7FE9 /* TaskNotesFacetUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = TaskNotesFacetUI;
+		};
+		EF3123F128552877ED5CD5F8 /* TaskNotesKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = TaskNotesKit;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
-	rootObject = 83CBB9F71A601CBA00E9B192 /* Project object */;
+	rootObject = 0AD24AC74D13FFB8C544A0CC /* Project object */;
 }

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Monochrome check from branding/Facet/source/icon-ios-1024.svg. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp" android:viewportWidth="100" android:viewportHeight="100">
+    <path android:pathData="M34,54 L46,66 L70,38" android:fillColor="#00000000" android:strokeColor="#ffffff"
+        android:strokeWidth="10" android:strokeLineCap="round" android:strokeLineJoin="round" />
+</vector>

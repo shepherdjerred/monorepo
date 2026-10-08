@@ -4,18 +4,72 @@
 [`packages/tasknotes-core`](../tasknotes-core). Bundle identifier
 `red.sjer.tasknotes.mac`, deployment target macOS 15.
 
+First-party code is GPL-3.0-only. Native bundles include the exact repository
+[license text](../../LICENSE) alongside separate locked third-party notices.
+
 ## Architecture
 
-Three SwiftPM library targets (`Package.swift` owns their settings; the split
-is deliberate):
+SwiftPM library targets (`Package.swift` owns their settings):
 
 - `TaskNotesUniFFI` — the seam onto the machine-generated UniFFI bindings from
   `tasknotes-core/bindings/`; lint-exempt by design.
 - `TaskNotesKit` — all portable logic, zero SwiftUI/AppKit imports, so the bulk
   of correctness testing runs headless. Includes `Host/` (the core's
   host-implemented traits: clock, randomness, retry scheduler, HTTP, storage)
-  and `Store/` (the `@Observable` store over `FfiSyncEngine`).
+  and `Vault/` (the standalone `FfiFacetEngine`, exact JSON validation,
+  descriptor-confined file access, durable action drafts, and recovery).
+- `TaskNotesFacetUI` — shared iOS/macOS SwiftUI presentation over the standalone
+  engine. Profiles select a supported local folder or an app-private Obsidian
+  Sync replica. Native HTTP/WebSocket hosts execute Rust Sync effects; account
+  tokens and vault keys live in the platform secure store.
 - `TaskNotesMac` — SwiftUI views, scenes, and commands; `MainActor`-isolated.
+
+The app requires no TaskNotes server. SQLite stores the private index, journals,
+outbox, and conflict metadata; Markdown and attachments remain the vault data.
+TaskNotes interpretation, queries, mutation policy, and Sync protocol rules
+belong to Rust. The native host supplies files, transport, lifecycle, and secure
+storage. Generic cloud/document provider write support requires provider-specific
+acceptance; selecting a URL alone does not establish safe write capability.
+
+File callbacks use immutable snapshots and durable replacement stages, with
+chunks capped at 1 MiB. Rust owns the upload/download payloads and their durable
+disposition; native transport passes owned transfer identities instead of whole
+attachments or JSON byte arrays. Conflict versions open lazily for exact export
+or text previews capped at 1 MiB. Larger versions remain retained and selectable.
+Socket reconnects preserve admitted transfer receipts. Explicit shutdown drains
+transport, cancels and unbinds the session, closes payload handles, then closes
+the runtime and file capabilities. Closing a handle never deletes retained bytes.
+
+Running sessions and task time history use bounded Rust projections from the
+private index. Page continuations retain their vault, version and clock context.
+The app retains the current page, and Refresh returns to the first page.
+The Apple host discards results after the owning request, vault, engine or
+lifecycle changes. Elapsed time and tracking problems remain Rust policy.
+Applied mutation receipts carry validated, bounded warnings when a configured
+template could not be used or a filename was shortened. The app keeps the Saved
+outcome primary and reports cleanup or contract failures separately.
+
+The conflict inbox can keep either exact version, preserve both at a chosen new
+vault path, export complete binary versions, or submit a text resolution capped
+at 1 MiB of UTF-8. Submitted owner, revision fences, timestamp and bytes remain
+fixed for retry. Uncertain actions stay in the private durable queue; the inbox
+closes a resolution only after the runtime reports an applied receipt.
+
+iOS folder onboarding imports an independent app-private copy, including
+attachments and empty folders, through coordinated read-only source access.
+The source stays unchanged and later edits do not synchronize with that folder.
+Interrupted copies retain a private import intent and offer retry; a completed
+copy becomes a profile only after registration succeeds. Symlinks and unsupported
+source entries fail visibly rather than being silently omitted. Provider-specific
+materialization still requires acceptance on the selected provider.
+
+Device reminders require explicit system notification authorization. Rust
+supplies version-fenced firing plans; native delivery schedules the nearest 64
+entries over 30 days and reports entries awaiting the next refresh. Existing OS
+entries survive unreadable or changing plans. Reminder notification routes keep
+their owning profile and wait behind an unsaved editor. Native background
+failures use bounded diagnostic classifications that exclude vault contents and
+account responses.
 
 The Xcode application target (`project.yml`, XcodeGen — the `.xcodeproj` is
 generated and gitignored) links `TaskNotesMac` and supplies only the `@main`
@@ -51,6 +105,7 @@ bun run mac:e2e:ci        # signed CI suite; requires TASKNOTES_UITEST_IDENTITY
 bun run mac:verify        # generate + build + test + lint + format + app + smoke
 
 bun run mac:release       # operator-run release lane (scripts/release.ts)
+bun run mac:store -- --dry-run # unsigned Mac App Store archive for inspection
 ```
 
 ### Signed UI tests
@@ -71,13 +126,18 @@ changes on every build and loses the trust grant.
 
 `lint` and `test` participate in the repository's Linux CI verify graph:
 SwiftLint ships a static Linux binary, and the Vitest suite covers only the
-platform-independent `scripts/` helpers. The Swift suites need a Swift
-toolchain and the Rust XCFramework, so they stay on the hard `tasknotes-native`
-Woodpecker lane after Linux `verify`, which changed TaskNotes paths also
-select. It validates the Swift bindings, runs `mac:verify` and `mac:analyze`,
-and executes the signed UI suite with the one preflight-discovered Apple
-Development certificate. The root lefthook `pre-commit` hook still runs the
-fast local subset, and `mac:verify` remains the focused pre-PR command.
+platform-independent `scripts/` helpers. Swift/Xcode/UI checks require macOS.
+The macOS Woodpecker lane is currently paused in the repository's CI source;
+Linux verification does not establish native build or interaction acceptance.
+Run focused native checks locally and retain the exact artifact fingerprints,
+test transcripts, and rendered UI evidence. Older server harness suites remain
+regression references until equivalent standalone coverage is established.
+
+`mac:release` preserves direct Developer ID distribution. `mac:store` creates
+an archive and validates reviewed App Store export options and bundle identity;
+it does not submit to a store. Signed export requires the owner's Apple team,
+profiles, current agreements, and encryption determination. XcodeGen is pinned
+in the root mise manifest; use `mise install` to provision it.
 
 See [AGENTS.md](AGENTS.md) for the host/threading invariants that must remain in
 context. The architecture and command reference live on this page; the release

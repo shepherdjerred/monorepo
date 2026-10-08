@@ -14,12 +14,22 @@ namespace TaskNotes.Windows.App
         private readonly TextBlock _total = new() { Text = "Loading…" };
         private readonly ListView _rows = new() { SelectionMode = ListViewSelectionMode.None };
         private readonly UiOperationQueue _uiOperations;
+        private readonly ListView _sessions = new() { SelectionMode = ListViewSelectionMode.None };
+        private readonly TextBlock _sessionSummary = new();
+        private readonly Button _moreSessions = new() { Content = "More running sessions" };
+        private readonly Func<string, string, Task> _openTask;
+        private bool _closed;
 
-        internal TimeReportWindow(TimeReportViewModel viewModel, UiOperationQueue uiOperations)
+        internal TimeReportWindow(
+            TimeReportViewModel viewModel,
+            UiOperationQueue uiOperations,
+            Func<string, string, Task> openTask
+        )
         {
             _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
             _uiOperations = uiOperations ?? throw new ArgumentNullException(nameof(uiOperations));
-            Title = "TaskNotes Time Report";
+            _openTask = openTask ?? throw new ArgumentNullException(nameof(openTask));
+            Title = "Facet Time Report";
             AppWindow.Resize(new SizeInt32(640, 620));
             AppWindow.Closing += AppWindow_Closing;
             _viewModel.PropertyChanged += ViewModel_PropertyChanged;
@@ -42,12 +52,27 @@ namespace TaskNotes.Windows.App
             root.Children.Add(_period);
             root.Children.Add(_total);
             root.Children.Add(_rows);
+            root.Children.Add(new TextBlock { Text = "Running sessions" });
+            root.Children.Add(_sessionSummary);
+            root.Children.Add(_sessions);
+            Button refreshSessions = new() { Content = "Refresh running sessions" };
+            refreshSessions.Click += (_, _) =>
+                _uiOperations.Run("refresh-running-sessions", () => _viewModel.LoadSessionsAsync());
+            _moreSessions.Click += (_, _) =>
+                _uiOperations.Run(
+                    "more-running-sessions",
+                    () => _viewModel.LoadSessionsAsync(true)
+                );
+            root.Children.Add(refreshSessions);
+            root.Children.Add(_moreSessions);
             Content = root;
         }
 
         internal async Task LoadAsync()
         {
             await RunAsync();
+            await _viewModel.LoadSessionsAsync();
+            UpdateState();
         }
 
         private void Period_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -72,6 +97,29 @@ namespace TaskNotes.Windows.App
 
         private void UpdateState()
         {
+            if (_closed)
+                return;
+            _sessions.Items.Clear();
+            var page = _viewModel.Sessions;
+            _sessionSummary.Text = page is null
+                ? "No running sessions loaded."
+                : $"{page.Rows.Count} sessions on this page · {page.TotalCount} total"
+                    + (page.ProblemCount == 0 ? "" : $" · {page.ProblemCount} tasks need review");
+            _moreSessions.IsEnabled = page?.Next is not null;
+            if (page is not null)
+                foreach (var session in page.Rows)
+                {
+                    string profile = page.Owner.ProfileId;
+                    string path = session.GetProperty("taskPath").GetString()!;
+                    Button open = new()
+                    {
+                        Content =
+                            $"{session.GetProperty("title").GetString()} · {session.GetProperty("elapsedSeconds").GetUInt64()} seconds",
+                    };
+                    open.Click += (_, _) =>
+                        _uiOperations.Run("open-running-task", () => _openTask(profile, path));
+                    _sessions.Items.Add(open);
+                }
             TimeReportReading? report = _viewModel.Report;
             _total.Text = report is null
                 ? "No report loaded."
@@ -114,6 +162,7 @@ namespace TaskNotes.Windows.App
         {
             _ = sender;
             _ = args;
+            _closed = true;
             _viewModel.PropertyChanged -= ViewModel_PropertyChanged;
         }
     }

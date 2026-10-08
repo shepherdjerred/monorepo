@@ -86,7 +86,7 @@ public final class SavedViewStore {
     ) -> SavedView? {
         let trimmed = name.trimmingWhitespace()
         guard !trimmed.isEmpty else {
-            lastError = .Validation(message: "a saved view needs a name")
+            lastError = .Validation(detail: "a saved view needs a name")
             return nil
         }
         let view = SavedView(id: id, name: trimmed, symbol: symbol, draft: draft)

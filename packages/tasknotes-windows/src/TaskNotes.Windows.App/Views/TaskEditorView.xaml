@@ -30,27 +30,19 @@
                     </Grid.ColumnDefinitions>
                     <ComboBox
                         AutomationProperties.AutomationId="TaskNotes.Editor.Status"
+                        DisplayMemberPath="Label"
                         Header="Status"
+                        ItemsSource="{x:Bind ViewModel.StatusChoices, Mode=OneWay}"
                         SelectedValue="{x:Bind ViewModel.Status, Mode=TwoWay}"
-                        SelectedValuePath="Tag">
-                        <ComboBoxItem Content="Open" Tag="open" />
-                        <ComboBoxItem Content="In progress" Tag="in-progress" />
-                        <ComboBoxItem Content="Waiting" Tag="waiting" />
-                        <ComboBoxItem Content="Delegated" Tag="delegated" />
-                        <ComboBoxItem Content="Done" Tag="done" />
-                        <ComboBoxItem Content="Cancelled" Tag="cancelled" />
-                    </ComboBox>
+                        SelectedValuePath="Value" />
                     <ComboBox
                         Grid.Column="1"
                         AutomationProperties.AutomationId="TaskNotes.Editor.Priority"
+                        DisplayMemberPath="Label"
                         Header="Priority"
+                        ItemsSource="{x:Bind ViewModel.PriorityChoices, Mode=OneWay}"
                         SelectedValue="{x:Bind ViewModel.Priority, Mode=TwoWay}"
-                        SelectedValuePath="Tag">
-                        <ComboBoxItem Content="None" Tag="none" />
-                        <ComboBoxItem Content="Low" Tag="low" />
-                        <ComboBoxItem Content="Normal" Tag="normal" />
-                        <ComboBoxItem Content="High" Tag="high" />
-                    </ComboBox>
+                        SelectedValuePath="Value" />
                 </Grid>
                 <TextBox
                     AutomationProperties.AutomationId="TaskNotes.Editor.Scheduled"
@@ -91,17 +83,85 @@
                     Header="Tags"
                     PlaceholderText="Comma separated"
                     Text="{x:Bind ViewModel.Tags, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                <NumberBox
+                <TextBox
                     AutomationProperties.AutomationId="TaskNotes.Editor.Estimate"
                     Header="Estimate (minutes)"
-                    Minimum="0"
-                    SpinButtonPlacementMode="Inline"
-                    Value="{x:Bind ViewModel.EstimateValue, Mode=TwoWay}" />
+                    Text="{x:Bind ViewModel.EstimateText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBox
+                    Header="Dependencies"
+                    PlaceholderText="Comma separated task IDs or references"
+                    Text="{x:Bind ViewModel.BlockedBy, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBox
+                    Header="Completed date"
+                    PlaceholderText="YYYY-MM-DD"
+                    Text="{x:Bind ViewModel.CompletedDate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBox
+                    Header="Completed occurrences"
+                    PlaceholderText="Comma separated YYYY-MM-DD dates"
+                    Text="{x:Bind ViewModel.CompleteInstances, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBox
+                    Header="Skipped occurrences"
+                    PlaceholderText="Comma separated YYYY-MM-DD dates"
+                    Text="{x:Bind ViewModel.SkippedInstances, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBox
+                    AcceptsReturn="True"
+                    Header="Attachment references"
+                    PlaceholderText="One vault reference per line"
+                    Text="{x:Bind ViewModel.Attachments, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBox
+                    Header="Created time"
+                    PlaceholderText="Explicit RFC3339 timestamp for missing metadata"
+                    Text="{x:Bind ViewModel.DateCreated, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBlock Text="Reminders" />
+                <ItemsControl ItemsSource="{x:Bind ViewModel.Reminders, Mode=OneWay}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Margin="0,0,0,12" Spacing="6">
+                                <TextBlock Text="{Binding ExistingValueWarning}" />
+                                <ComboBox
+                                    DisplayMemberPath="Label"
+                                    Header="Type"
+                                    IsEnabled="{Binding IsEditable}"
+                                    ItemsSource="{Binding TypeChoices}"
+                                    SelectedValue="{Binding Type, Mode=TwoWay}"
+                                    SelectedValuePath="Value" />
+                                <ComboBox
+                                    DisplayMemberPath="Label"
+                                    Header="Relative to"
+                                    IsEnabled="{Binding IsEditable}"
+                                    ItemsSource="{Binding RelatedToChoices}"
+                                    SelectedValue="{Binding RelatedTo, Mode=TwoWay}"
+                                    SelectedValuePath="Value" />
+                                <TextBox
+                                    Header="Relative offset"
+                                    IsEnabled="{Binding IsEditable}"
+                                    PlaceholderText="-PT15M"
+                                    Text="{Binding Offset, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBox
+                                    Header="Absolute time"
+                                    IsEnabled="{Binding IsEditable}"
+                                    PlaceholderText="2026-10-03T09:00:00-07:00"
+                                    Text="{Binding AbsoluteTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <Button
+                                    Click="RemoveReminder_Click"
+                                    Content="Remove reminder"
+                                    IsEnabled="{Binding IsEditable}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <Button Click="AddReminder_Click" Content="Add reminder" />
                 <TextBlock
                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                     Text="{x:Bind ViewModel.DependencyLabel, Mode=OneWay}"
                     TextWrapping="Wrap" />
                 <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind ViewModel.TrackedTimeLabel, Mode=OneWay}" />
+                <TextBlock Text="{x:Bind ViewModel.TrackingHistorySummary, Mode=OneWay}" TextWrapping="Wrap" />
+                <ItemsControl ItemsSource="{x:Bind ViewModel.TrackingHistoryRows, Mode=OneWay}" />
+                <Button
+                    Click="MoreTimeEntries_Click"
+                    Content="More time entries"
+                    IsEnabled="{x:Bind ViewModel.HasMoreTrackingHistory, Mode=OneWay}" />
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <Button Click="ToggleTime_Click" Content="{x:Bind ViewModel.TimerLabel, Mode=OneWay}" />
                     <Button

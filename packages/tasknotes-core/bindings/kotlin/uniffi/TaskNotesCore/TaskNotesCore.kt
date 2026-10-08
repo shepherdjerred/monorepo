@@ -650,6 +650,42 @@ internal open class UniffiForeignFutureResultVoid(
 internal interface UniffiForeignFutureCompleteVoid : com.sun.jna.Callback {
     fun callback(`callbackData`: Long,`result`: UniffiForeignFutureResultVoid.UniffiByValue,)
 }
+internal interface UniffiCallbackInterfaceFacetVaultFilesMethod0 : com.sun.jna.Callback {
+    fun callback(`uniffiHandle`: Long,`profileId`: RustBuffer.ByValue,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,)
+}
+internal interface UniffiCallbackInterfaceFacetVaultFilesMethod1 : com.sun.jna.Callback {
+    fun callback(`uniffiHandle`: Long,`profileId`: RustBuffer.ByValue,`path`: RustBuffer.ByValue,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,)
+}
+internal interface UniffiCallbackInterfaceFacetVaultFilesMethod2 : com.sun.jna.Callback {
+    fun callback(`uniffiHandle`: Long,`profileId`: RustBuffer.ByValue,`backupId`: RustBuffer.ByValue,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,)
+}
+internal interface UniffiCallbackInterfaceFacetVaultFilesMethod3 : com.sun.jna.Callback {
+    fun callback(`uniffiHandle`: Long,`profileId`: RustBuffer.ByValue,`snapshotId`: RustBuffer.ByValue,`offset`: Long,`length`: Int,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,)
+}
+internal interface UniffiCallbackInterfaceFacetVaultFilesMethod4 : com.sun.jna.Callback {
+    fun callback(`uniffiHandle`: Long,`profileId`: RustBuffer.ByValue,`snapshotId`: RustBuffer.ByValue,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,)
+}
+internal interface UniffiCallbackInterfaceFacetVaultFilesMethod5 : com.sun.jna.Callback {
+    fun callback(`uniffiHandle`: Long,`profileId`: RustBuffer.ByValue,`operationId`: RustBuffer.ByValue,`path`: RustBuffer.ByValue,`expectedRevision`: RustBuffer.ByValue,`size`: Long,`revision`: RustBuffer.ByValue,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,)
+}
+internal interface UniffiCallbackInterfaceFacetVaultFilesMethod6 : com.sun.jna.Callback {
+    fun callback(`uniffiHandle`: Long,`profileId`: RustBuffer.ByValue,`stageId`: RustBuffer.ByValue,`offset`: Long,`bytes`: RustBuffer.ByValue,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,)
+}
+internal interface UniffiCallbackInterfaceFacetVaultFilesMethod7 : com.sun.jna.Callback {
+    fun callback(`uniffiHandle`: Long,`profileId`: RustBuffer.ByValue,`stageId`: RustBuffer.ByValue,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,)
+}
+internal interface UniffiCallbackInterfaceFacetVaultFilesMethod8 : com.sun.jna.Callback {
+    fun callback(`uniffiHandle`: Long,`profileId`: RustBuffer.ByValue,`operationId`: RustBuffer.ByValue,`path`: RustBuffer.ByValue,`expectedRevision`: RustBuffer.ByValue,`stageId`: RustBuffer.ByValue,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,)
+}
+internal interface UniffiCallbackInterfaceFacetVaultFilesMethod9 : com.sun.jna.Callback {
+    fun callback(`uniffiHandle`: Long,`profileId`: RustBuffer.ByValue,`stageId`: RustBuffer.ByValue,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,)
+}
+internal interface UniffiCallbackInterfaceFacetVaultFilesMethod10 : com.sun.jna.Callback {
+    fun callback(`uniffiHandle`: Long,`profileId`: RustBuffer.ByValue,`afterId`: RustBuffer.ByValue,`limit`: Int,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,)
+}
+internal interface UniffiCallbackInterfaceFacetVaultFilesMethod11 : com.sun.jna.Callback {
+    fun callback(`uniffiHandle`: Long,`profileId`: RustBuffer.ByValue,`id`: RustBuffer.ByValue,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,)
+}
 internal interface UniffiCallbackInterfaceClockMethod0 : com.sun.jna.Callback {
     fun callback(`uniffiHandle`: Long,`uniffiOutReturn`: LongByReference,uniffiCallStatus: UniffiRustCallStatus,)
 }
@@ -730,6 +766,58 @@ internal interface UniffiCallbackInterfaceHttpClientMethod0 : com.sun.jna.Callba
 }
 internal interface UniffiCallbackInterfaceHttpClientMethod1 : com.sun.jna.Callback {
     fun callback(`uniffiHandle`: Long,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,)
+}
+@Structure.FieldOrder("uniffiFree", "uniffiClone", "listFiles", "openFileSnapshot", "openDisplacedSnapshot", "readSnapshotChunk", "closeSnapshot", "beginReplacement", "writeReplacementChunk", "sealReplacement", "compareExchangeStaged", "discardReplacement", "displacedMetadata", "acknowledgeDisplaced")
+internal open class UniffiVTableCallbackInterfaceFacetVaultFiles(
+    @JvmField internal var `uniffiFree`: UniffiCallbackInterfaceFree? = null,
+    @JvmField internal var `uniffiClone`: UniffiCallbackInterfaceClone? = null,
+    @JvmField internal var `listFiles`: UniffiCallbackInterfaceFacetVaultFilesMethod0? = null,
+    @JvmField internal var `openFileSnapshot`: UniffiCallbackInterfaceFacetVaultFilesMethod1? = null,
+    @JvmField internal var `openDisplacedSnapshot`: UniffiCallbackInterfaceFacetVaultFilesMethod2? = null,
+    @JvmField internal var `readSnapshotChunk`: UniffiCallbackInterfaceFacetVaultFilesMethod3? = null,
+    @JvmField internal var `closeSnapshot`: UniffiCallbackInterfaceFacetVaultFilesMethod4? = null,
+    @JvmField internal var `beginReplacement`: UniffiCallbackInterfaceFacetVaultFilesMethod5? = null,
+    @JvmField internal var `writeReplacementChunk`: UniffiCallbackInterfaceFacetVaultFilesMethod6? = null,
+    @JvmField internal var `sealReplacement`: UniffiCallbackInterfaceFacetVaultFilesMethod7? = null,
+    @JvmField internal var `compareExchangeStaged`: UniffiCallbackInterfaceFacetVaultFilesMethod8? = null,
+    @JvmField internal var `discardReplacement`: UniffiCallbackInterfaceFacetVaultFilesMethod9? = null,
+    @JvmField internal var `displacedMetadata`: UniffiCallbackInterfaceFacetVaultFilesMethod10? = null,
+    @JvmField internal var `acknowledgeDisplaced`: UniffiCallbackInterfaceFacetVaultFilesMethod11? = null,
+) : Structure() {
+    class UniffiByValue(
+        `uniffiFree`: UniffiCallbackInterfaceFree? = null,
+        `uniffiClone`: UniffiCallbackInterfaceClone? = null,
+        `listFiles`: UniffiCallbackInterfaceFacetVaultFilesMethod0? = null,
+        `openFileSnapshot`: UniffiCallbackInterfaceFacetVaultFilesMethod1? = null,
+        `openDisplacedSnapshot`: UniffiCallbackInterfaceFacetVaultFilesMethod2? = null,
+        `readSnapshotChunk`: UniffiCallbackInterfaceFacetVaultFilesMethod3? = null,
+        `closeSnapshot`: UniffiCallbackInterfaceFacetVaultFilesMethod4? = null,
+        `beginReplacement`: UniffiCallbackInterfaceFacetVaultFilesMethod5? = null,
+        `writeReplacementChunk`: UniffiCallbackInterfaceFacetVaultFilesMethod6? = null,
+        `sealReplacement`: UniffiCallbackInterfaceFacetVaultFilesMethod7? = null,
+        `compareExchangeStaged`: UniffiCallbackInterfaceFacetVaultFilesMethod8? = null,
+        `discardReplacement`: UniffiCallbackInterfaceFacetVaultFilesMethod9? = null,
+        `displacedMetadata`: UniffiCallbackInterfaceFacetVaultFilesMethod10? = null,
+        `acknowledgeDisplaced`: UniffiCallbackInterfaceFacetVaultFilesMethod11? = null,
+    ): UniffiVTableCallbackInterfaceFacetVaultFiles(`uniffiFree`,`uniffiClone`,`listFiles`,`openFileSnapshot`,`openDisplacedSnapshot`,`readSnapshotChunk`,`closeSnapshot`,`beginReplacement`,`writeReplacementChunk`,`sealReplacement`,`compareExchangeStaged`,`discardReplacement`,`displacedMetadata`,`acknowledgeDisplaced`,), Structure.ByValue
+
+   internal fun uniffiSetValue(other: UniffiVTableCallbackInterfaceFacetVaultFiles) {
+        `uniffiFree` = other.`uniffiFree`
+        `uniffiClone` = other.`uniffiClone`
+        `listFiles` = other.`listFiles`
+        `openFileSnapshot` = other.`openFileSnapshot`
+        `openDisplacedSnapshot` = other.`openDisplacedSnapshot`
+        `readSnapshotChunk` = other.`readSnapshotChunk`
+        `closeSnapshot` = other.`closeSnapshot`
+        `beginReplacement` = other.`beginReplacement`
+        `writeReplacementChunk` = other.`writeReplacementChunk`
+        `sealReplacement` = other.`sealReplacement`
+        `compareExchangeStaged` = other.`compareExchangeStaged`
+        `discardReplacement` = other.`discardReplacement`
+        `displacedMetadata` = other.`displacedMetadata`
+        `acknowledgeDisplaced` = other.`acknowledgeDisplaced`
+    }
+
 }
 @Structure.FieldOrder("uniffiFree", "uniffiClone", "nowMillis", "localYmd")
 internal open class UniffiVTableCallbackInterfaceClock(
@@ -1075,6 +1163,8 @@ internal object IntegrityCheckingUniffiLib {
     ): Int
     external fun uniffi_tasknotes_core_ffi_checksum_func_parse_task_input(
     ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_func_obsidian_transport_limits(
+    ): Int
     external fun uniffi_tasknotes_core_ffi_checksum_func_recurrence_build_common(
     ): Int
     external fun uniffi_tasknotes_core_ffi_checksum_func_recurrence_completion_target_date(
@@ -1124,6 +1214,82 @@ internal object IntegrityCheckingUniffiLib {
     external fun uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_status(
     ): Int
     external fun uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_sync_now(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_list_files(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_open_file_snapshot(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_open_displaced_snapshot(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_read_snapshot_chunk(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_close_snapshot(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_begin_replacement(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_write_replacement_chunk(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_seal_replacement(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_compare_exchange_staged(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_discard_replacement(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_displaced_metadata(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_acknowledge_displaced(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_acknowledge_upload(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_apply_sync_checkpoint_delta(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_close_runtime(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_conflicts_json(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_conflicts_page_json(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_execute(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_execute_payload_id_json(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_features_json(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_identity(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_load_checkpoint(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_pending_uploads_json(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_profiles_json(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_refresh(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_register_profile(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_remove_profile(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_save_checkpoint(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_snapshot_json(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_begin_payload(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_conflict_payload(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_open_payload(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_close_handle(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_discard(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_info_json(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_read_chunk(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_seal(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_write_chunk(
     ): Int
     external fun uniffi_tasknotes_core_ffi_checksum_method_clock_now_millis(
     ): Int
@@ -1199,6 +1365,52 @@ internal object IntegrityCheckingUniffiLib {
     ): Int
     external fun uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_time_summary(
     ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_cancel_request(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_list_vaults(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_prepare_vault(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_response(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_sign_in(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_sign_out(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_user_info(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_vault_access(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_apply_download(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_begin(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_bind_runtime(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_cancel(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_checkpoint_json(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_checkpoint_persisted(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_complete_remote(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_disconnected(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_opened(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_queue_download(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_queue_durable_upload(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_receive_binary(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_receive_text(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_tick(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_unbind_runtime(
+    ): Int
     external fun uniffi_tasknotes_core_ffi_checksum_method_ffivaultconfiguration_configuration_json(
     ): Int
     external fun uniffi_tasknotes_core_ffi_checksum_method_ffivaultconfiguration_is_completed(
@@ -1215,7 +1427,13 @@ internal object IntegrityCheckingUniffiLib {
     ): Int
     external fun uniffi_tasknotes_core_ffi_checksum_constructor_ffisyncengine_new(
     ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_constructor_ffifacetengine_new(
+    ): Int
     external fun uniffi_tasknotes_core_ffi_checksum_constructor_tasknotesapi_new(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_constructor_ffiobsidianaccount_new(
+    ): Int
+    external fun uniffi_tasknotes_core_ffi_checksum_constructor_ffiobsidiansession_new(
     ): Int
     external fun uniffi_tasknotes_core_ffi_checksum_constructor_ffivaultconfiguration_new(
     ): Int
@@ -1238,6 +1456,7 @@ internal object UniffiLib {
     init {
         Native.register(UniffiLib::class.java, findLibraryName(componentName = "TaskNotesCore"))
         uniffiCallbackInterfaceClock.register(this)
+        uniffiCallbackInterfaceFacetVaultFiles.register(this)
         uniffiCallbackInterfaceHttpClient.register(this)
         uniffiCallbackInterfaceMigrationStorage.register(this)
         uniffiCallbackInterfaceQueueStorage.register(this)
@@ -1280,6 +1499,98 @@ internal object UniffiLib {
     ): RustBuffer.ByValue
     external fun uniffi_tasknotes_core_ffi_fn_method_ffisyncengine_sync_now(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
+    external fun uniffi_tasknotes_core_ffi_fn_clone_facetvaultfiles(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): Long
+    external fun uniffi_tasknotes_core_ffi_fn_free_facetvaultfiles(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    external fun uniffi_tasknotes_core_ffi_fn_init_callback_vtable_facetvaultfiles(`vtable`: UniffiVTableCallbackInterfaceFacetVaultFiles,
+    ): Unit
+    external fun uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_list_files(`ptr`: Long,`profileId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_open_file_snapshot(`ptr`: Long,`profileId`: RustBuffer.ByValue,`path`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_open_displaced_snapshot(`ptr`: Long,`profileId`: RustBuffer.ByValue,`backupId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_read_snapshot_chunk(`ptr`: Long,`profileId`: RustBuffer.ByValue,`snapshotId`: RustBuffer.ByValue,`offset`: Long,`length`: Int,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_close_snapshot(`ptr`: Long,`profileId`: RustBuffer.ByValue,`snapshotId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    external fun uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_begin_replacement(`ptr`: Long,`profileId`: RustBuffer.ByValue,`operationId`: RustBuffer.ByValue,`path`: RustBuffer.ByValue,`expectedRevision`: RustBuffer.ByValue,`size`: Long,`revision`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_write_replacement_chunk(`ptr`: Long,`profileId`: RustBuffer.ByValue,`stageId`: RustBuffer.ByValue,`offset`: Long,`bytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_seal_replacement(`ptr`: Long,`profileId`: RustBuffer.ByValue,`stageId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_compare_exchange_staged(`ptr`: Long,`profileId`: RustBuffer.ByValue,`operationId`: RustBuffer.ByValue,`path`: RustBuffer.ByValue,`expectedRevision`: RustBuffer.ByValue,`stageId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_discard_replacement(`ptr`: Long,`profileId`: RustBuffer.ByValue,`stageId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    external fun uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_displaced_metadata(`ptr`: Long,`profileId`: RustBuffer.ByValue,`afterId`: RustBuffer.ByValue,`limit`: Int,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_acknowledge_displaced(`ptr`: Long,`profileId`: RustBuffer.ByValue,`id`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    external fun uniffi_tasknotes_core_ffi_fn_clone_ffifacetengine(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): Long
+    external fun uniffi_tasknotes_core_ffi_fn_free_ffifacetengine(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    external fun uniffi_tasknotes_core_ffi_fn_constructor_ffifacetengine_new(`databasePath`: RustBuffer.ByValue,`files`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): Long
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_acknowledge_upload(`ptr`: Long,`profileId`: RustBuffer.ByValue,`mutationId`: RustBuffer.ByValue,`revision`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_apply_sync_checkpoint_delta(`ptr`: Long,`profileId`: RustBuffer.ByValue,`deltaJson`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_close_runtime(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_conflicts_json(`ptr`: Long,`profileId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_conflicts_page_json(`ptr`: Long,`profileId`: RustBuffer.ByValue,`afterId`: RustBuffer.ByValue,`limit`: Int,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_execute(`ptr`: Long,`profileId`: RustBuffer.ByValue,`commandJson`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_execute_payload_id_json(`ptr`: Long,`profileId`: RustBuffer.ByValue,`mutationJson`: RustBuffer.ByValue,`payload`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_features_json(`ptr`: Long,`profileId`: RustBuffer.ByValue,`requestJson`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_identity(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_load_checkpoint(`ptr`: Long,`profileId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_pending_uploads_json(`ptr`: Long,`profileId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_profiles_json(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_refresh(`ptr`: Long,`profileId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_register_profile(`ptr`: Long,`profileJson`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_remove_profile(`ptr`: Long,`profileId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_save_checkpoint(`ptr`: Long,`profileId`: RustBuffer.ByValue,`checkpointJson`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_snapshot_json(`ptr`: Long,`profileId`: RustBuffer.ByValue,`queryJson`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_begin_payload(`ptr`: Long,`profileId`: RustBuffer.ByValue,`payloadId`: RustBuffer.ByValue,`size`: Long,`revision`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Long
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_conflict_payload(`ptr`: Long,`profileId`: RustBuffer.ByValue,`conflictId`: RustBuffer.ByValue,`version`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_open_payload(`ptr`: Long,`profileId`: RustBuffer.ByValue,`payloadId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Long
+    external fun uniffi_tasknotes_core_ffi_fn_clone_ffifacetpayload(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): Long
+    external fun uniffi_tasknotes_core_ffi_fn_free_ffifacetpayload(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffifacetpayload_close_handle(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffifacetpayload_discard(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffifacetpayload_info_json(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffifacetpayload_read_chunk(`ptr`: Long,`offset`: Long,`length`: Int,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffifacetpayload_seal(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffifacetpayload_write_chunk(`ptr`: Long,`offset`: Long,`bytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
     external fun uniffi_tasknotes_core_ffi_fn_clone_clock(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Long
     external fun uniffi_tasknotes_core_ffi_fn_free_clock(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
@@ -1401,6 +1712,64 @@ internal object UniffiLib {
     external fun uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_task_time(`ptr`: Long,`taskId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     external fun uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_time_summary(`ptr`: Long,`period`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_clone_ffiobsidianaccount(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): Long
+    external fun uniffi_tasknotes_core_ffi_fn_free_ffiobsidianaccount(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    external fun uniffi_tasknotes_core_ffi_fn_constructor_ffiobsidianaccount_new(uniffi_out_err: UniffiRustCallStatus, 
+    ): Long
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_cancel_request(`ptr`: Long,`requestId`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_list_vaults(`ptr`: Long,`token`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_prepare_vault(`ptr`: Long,`vaultId`: RustBuffer.ByValue,`password`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_response(`ptr`: Long,`requestId`: Long,`status`: Short,`body`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_sign_in(`ptr`: Long,`email`: RustBuffer.ByValue,`password`: RustBuffer.ByValue,`mfa`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_sign_out(`ptr`: Long,`token`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_user_info(`ptr`: Long,`token`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_vault_access(`ptr`: Long,`token`: RustBuffer.ByValue,`vaultId`: RustBuffer.ByValue,`keyBytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_clone_ffiobsidiansession(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): Long
+    external fun uniffi_tasknotes_core_ffi_fn_free_ffiobsidiansession(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    external fun uniffi_tasknotes_core_ffi_fn_constructor_ffiobsidiansession_new(`options`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Long
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_apply_download(`ptr`: Long,`transferId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_begin(`ptr`: Long,`nowMs`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_bind_runtime(`ptr`: Long,`engine`: Long,`profileId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_cancel(`ptr`: Long,`nowMs`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_checkpoint_json(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_checkpoint_persisted(`ptr`: Long,`revision`: Long,`nowMs`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_complete_remote(`ptr`: Long,`uid`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_disconnected(`ptr`: Long,`nowMs`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_opened(`ptr`: Long,`nowMs`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_queue_download(`ptr`: Long,`uid`: Long,`nowMs`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_queue_durable_upload(`ptr`: Long,`operationId`: RustBuffer.ByValue,`nonce`: RustBuffer.ByValue,`nowMs`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_receive_binary(`ptr`: Long,`bytes`: RustBuffer.ByValue,`nowMs`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_receive_text(`ptr`: Long,`text`: RustBuffer.ByValue,`nowMs`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_tick(`ptr`: Long,`nowMs`: Long,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_unbind_runtime(`ptr`: Long,`nowMs`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     external fun uniffi_tasknotes_core_ffi_fn_clone_ffivaultconfiguration(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Long
@@ -1555,6 +1924,8 @@ internal object UniffiLib {
     external fun uniffi_tasknotes_core_ffi_fn_func_api_default_timeout_millis(uniffi_out_err: UniffiRustCallStatus, 
     ): Int
     external fun uniffi_tasknotes_core_ffi_fn_func_parse_task_input(`input`: RustBuffer.ByValue,`today`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    external fun uniffi_tasknotes_core_ffi_fn_func_obsidian_transport_limits(uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     external fun uniffi_tasknotes_core_ffi_fn_func_recurrence_build_common(`draft`: RustBuffer.ByValue,`start`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
@@ -1889,6 +2260,9 @@ private fun uniffiCheckApiChecksums(lib: IntegrityCheckingUniffiLib) {
     if ((lib.uniffi_tasknotes_core_ffi_checksum_func_parse_task_input() and 0xFFFF) != 63614) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_func_obsidian_transport_limits() and 0xFFFF) != 11202) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if ((lib.uniffi_tasknotes_core_ffi_checksum_func_recurrence_build_common() and 0xFFFF) != 53313) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
@@ -1962,6 +2336,120 @@ private fun uniffiCheckApiChecksums(lib: IntegrityCheckingUniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_sync_now() and 0xFFFF) != 53642) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_list_files() and 0xFFFF) != 51532) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_open_file_snapshot() and 0xFFFF) != 38214) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_open_displaced_snapshot() and 0xFFFF) != 18249) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_read_snapshot_chunk() and 0xFFFF) != 30733) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_close_snapshot() and 0xFFFF) != 17187) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_begin_replacement() and 0xFFFF) != 4564) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_write_replacement_chunk() and 0xFFFF) != 11198) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_seal_replacement() and 0xFFFF) != 25728) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_compare_exchange_staged() and 0xFFFF) != 40697) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_discard_replacement() and 0xFFFF) != 42242) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_displaced_metadata() and 0xFFFF) != 57896) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_acknowledge_displaced() and 0xFFFF) != 39503) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_acknowledge_upload() and 0xFFFF) != 46419) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_apply_sync_checkpoint_delta() and 0xFFFF) != 62061) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_close_runtime() and 0xFFFF) != 60446) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_conflicts_json() and 0xFFFF) != 3014) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_conflicts_page_json() and 0xFFFF) != 54053) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_execute() and 0xFFFF) != 17115) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_execute_payload_id_json() and 0xFFFF) != 31345) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_features_json() and 0xFFFF) != 46671) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_identity() and 0xFFFF) != 23365) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_load_checkpoint() and 0xFFFF) != 10592) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_pending_uploads_json() and 0xFFFF) != 53416) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_profiles_json() and 0xFFFF) != 32937) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_refresh() and 0xFFFF) != 43230) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_register_profile() and 0xFFFF) != 11566) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_remove_profile() and 0xFFFF) != 31981) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_save_checkpoint() and 0xFFFF) != 39607) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_snapshot_json() and 0xFFFF) != 44877) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_begin_payload() and 0xFFFF) != 32033) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_conflict_payload() and 0xFFFF) != 29379) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_open_payload() and 0xFFFF) != 64968) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_close_handle() and 0xFFFF) != 53344) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_discard() and 0xFFFF) != 46465) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_info_json() and 0xFFFF) != 6626) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_read_chunk() and 0xFFFF) != 57249) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_seal() and 0xFFFF) != 25391) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_write_chunk() and 0xFFFF) != 5745) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if ((lib.uniffi_tasknotes_core_ffi_checksum_method_clock_now_millis() and 0xFFFF) != 20431) {
@@ -2075,6 +2563,75 @@ private fun uniffiCheckApiChecksums(lib: IntegrityCheckingUniffiLib) {
     if ((lib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_time_summary() and 0xFFFF) != 8961) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_cancel_request() and 0xFFFF) != 1389) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_list_vaults() and 0xFFFF) != 50649) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_prepare_vault() and 0xFFFF) != 4718) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_response() and 0xFFFF) != 29430) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_sign_in() and 0xFFFF) != 61691) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_sign_out() and 0xFFFF) != 47888) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_user_info() and 0xFFFF) != 47281) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_vault_access() and 0xFFFF) != 50660) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_apply_download() and 0xFFFF) != 31820) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_begin() and 0xFFFF) != 10328) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_bind_runtime() and 0xFFFF) != 59765) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_cancel() and 0xFFFF) != 28370) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_checkpoint_json() and 0xFFFF) != 40477) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_checkpoint_persisted() and 0xFFFF) != 40394) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_complete_remote() and 0xFFFF) != 34050) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_disconnected() and 0xFFFF) != 42337) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_opened() and 0xFFFF) != 8305) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_queue_download() and 0xFFFF) != 25380) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_queue_durable_upload() and 0xFFFF) != 31365) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_receive_binary() and 0xFFFF) != 65356) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_receive_text() and 0xFFFF) != 21315) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_tick() and 0xFFFF) != 31077) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_unbind_runtime() and 0xFFFF) != 20593) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffivaultconfiguration_configuration_json() and 0xFFFF) != 54722) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
@@ -2099,7 +2656,16 @@ private fun uniffiCheckApiChecksums(lib: IntegrityCheckingUniffiLib) {
     if ((lib.uniffi_tasknotes_core_ffi_checksum_constructor_ffisyncengine_new() and 0xFFFF) != 55747) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_constructor_ffifacetengine_new() and 0xFFFF) != 11879) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if ((lib.uniffi_tasknotes_core_ffi_checksum_constructor_tasknotesapi_new() and 0xFFFF) != 55934) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_constructor_ffiobsidianaccount_new() and 0xFFFF) != 31117) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if ((lib.uniffi_tasknotes_core_ffi_checksum_constructor_ffiobsidiansession_new() and 0xFFFF) != 16463) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if ((lib.uniffi_tasknotes_core_ffi_checksum_constructor_ffivaultconfiguration_new() and 0xFFFF) != 16189) {
@@ -2904,6 +3470,3388 @@ public object FfiConverterTypeClock: FfiConverter<Clock, Long> {
     override fun allocationSize(value: Clock) = 8UL
 
     override fun write(value: Clock, buf: ByteBuffer) {
+        buf.putLong(lower(value))
+    }
+}
+
+
+// This template implements a class for working with a Rust struct via a handle
+// to the live Rust struct on the other side of the FFI.
+//
+// There's some subtlety here, because we have to be careful not to operate on a Rust
+// struct after it has been dropped, and because we must expose a public API for freeing
+// theq Kotlin wrapper object in lieu of reliable finalizers. The core requirements are:
+//
+//   * Each instance holds an opaque handle to the underlying Rust struct.
+//     Method calls need to read this handle from the object's state and pass it in to
+//     the Rust FFI.
+//
+//   * When an instance is no longer needed, its handle should be passed to a
+//     special destructor function provided by the Rust FFI, which will drop the
+//     underlying Rust struct.
+//
+//   * Given an instance, calling code is expected to call the special
+//     `destroy` method in order to free it after use, either by calling it explicitly
+//     or by using a higher-level helper like the `use` method. Failing to do so risks
+//     leaking the underlying Rust struct.
+//
+//   * We can't assume that calling code will do the right thing, and must be prepared
+//     to handle Kotlin method calls executing concurrently with or even after a call to
+//     `destroy`, and to handle multiple (possibly concurrent!) calls to `destroy`.
+//
+//   * We must never allow Rust code to operate on the underlying Rust struct after
+//     the destructor has been called, and must never call the destructor more than once.
+//     Doing so may trigger memory unsafety.
+//
+//   * To mitigate many of the risks of leaking memory and use-after-free unsafety, a `Cleaner`
+//     is implemented to call the destructor when the Kotlin object becomes unreachable.
+//     This is done in a background thread. This is not a panacea, and client code should be aware that
+//      1. the thread may starve if some there are objects that have poorly performing
+//     `drop` methods or do significant work in their `drop` methods.
+//      2. the thread is shared across the whole library. This can be tuned by using `android_cleaner = true`,
+//         or `android = true` in the [`kotlin` section of the `uniffi.toml` file](https://mozilla.github.io/uniffi-rs/kotlin/configuration.html).
+//
+// If we try to implement this with mutual exclusion on access to the handle, there is the
+// possibility of a race between a method call and a concurrent call to `destroy`:
+//
+//    * Thread A starts a method call, reads the value of the handle, but is interrupted
+//      before it can pass the handle over the FFI to Rust.
+//    * Thread B calls `destroy` and frees the underlying Rust struct.
+//    * Thread A resumes, passing the already-read handle value to Rust and triggering
+//      a use-after-free.
+//
+// One possible solution would be to use a `ReadWriteLock`, with each method call taking
+// a read lock (and thus allowed to run concurrently) and the special `destroy` method
+// taking a write lock (and thus blocking on live method calls). However, we aim not to
+// generate methods with any hidden blocking semantics, and a `destroy` method that might
+// block if called incorrectly seems to meet that bar.
+//
+// So, we achieve our goals by giving each instance an associated `AtomicLong` counter to track
+// the number of in-flight method calls, and an `AtomicBoolean` flag to indicate whether `destroy`
+// has been called. These are updated according to the following rules:
+//
+//    * The initial value of the counter is 1, indicating a live object with no in-flight calls.
+//      The initial value for the flag is false.
+//
+//    * At the start of each method call, we atomically check the counter.
+//      If it is 0 then the underlying Rust struct has already been destroyed and the call is aborted.
+//      If it is nonzero them we atomically increment it by 1 and proceed with the method call.
+//
+//    * At the end of each method call, we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+//    * When `destroy` is called, we atomically flip the flag from false to true.
+//      If the flag was already true we silently fail.
+//      Otherwise we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+// Astute readers may observe that this all sounds very similar to the way that Rust's `Arc<T>` works,
+// and indeed it is, with the addition of a flag to guard against multiple calls to `destroy`.
+//
+// The overall effect is that the underlying Rust struct is destroyed only when `destroy` has been
+// called *and* all in-flight method calls have completed, avoiding violating any of the expectations
+// of the underlying Rust code.
+//
+// This makes a cleaner a better alternative to _not_ calling `destroy()` as
+// and when the object is finished with, but the abstraction is not perfect: if the Rust object's `drop`
+// method is slow, and/or there are many objects to cleanup, and it's on a low end Android device, then the cleaner
+// thread may be starved, and the app will leak memory.
+//
+// In this case, `destroy`ing manually may be a better solution.
+//
+// The cleaner can live side by side with the manual calling of `destroy`. In the order of responsiveness, uniffi objects
+// with Rust peers are reclaimed:
+//
+// 1. By calling the `destroy` method of the object, which calls `rustObject.free()`. If that doesn't happen:
+// 2. When the object becomes unreachable, AND the Cleaner thread gets to call `rustObject.free()`. If the thread is starved then:
+// 3. The memory is reclaimed when the process terminates.
+//
+// [1] https://stackoverflow.com/questions/24376768/can-java-finalize-an-object-when-it-is-still-in-scope/24380219
+//
+
+
+/**
+ * Platform folder/replica capabilities; callbacks run outside SQLite locks.
+ */
+public interface FacetVaultFiles {
+    
+    /**
+     * Return logical paths, excluding private host backup/application directories.
+     *
+     * # Errors
+     * Returns capability, permission, or provider failures.
+     */
+    fun `listFiles`(`profileId`: kotlin.String): List<kotlin.String>
+    
+    /**
+     * Capture an immutable read image, or return absence for a missing regular file.
+     *
+     * # Errors
+     * Returns capability, permission, or provider failures.
+     */
+    fun `openFileSnapshot`(`profileId`: kotlin.String, `path`: kotlin.String): FacetFileSnapshot?
+    
+    /**
+     * Open one exact retained predecessor without loading its bytes.
+     *
+     * # Errors
+     * Returns wrong-owner, missing, changed or inaccessible backup failures.
+     */
+    fun `openDisplacedSnapshot`(`profileId`: kotlin.String, `backupId`: kotlin.String): FacetFileSnapshot
+    
+    /**
+     * Read one exact immutable range of at most one MiB.
+     *
+     * # Errors
+     * Returns wrong-owner, stale handle, invalid range or provider failures.
+     */
+    fun `readSnapshotChunk`(`profileId`: kotlin.String, `snapshotId`: kotlin.String, `offset`: kotlin.ULong, `length`: kotlin.UInt): kotlin.ByteArray
+    
+    /**
+     * Release only a temporary image; never acknowledge a durable predecessor.
+     *
+     * # Errors
+     * Returns unknown/wrong-owner handles or durable cleanup failures.
+     */
+    fun `closeSnapshot`(`profileId`: kotlin.String, `snapshotId`: kotlin.String)
+    
+    /**
+     * Persist or resume an exact staged intent, retaining its contiguous prefix.
+     *
+     * # Errors
+     * Returns changed intent, unsupported durability or provider failures.
+     */
+    fun `beginReplacement`(`profileId`: kotlin.String, `operationId`: kotlin.String, `path`: kotlin.String, `expectedRevision`: kotlin.String?, `size`: kotlin.ULong, `revision`: kotlin.String): FacetReplacementStage
+    
+    /**
+     * Commit at most one MiB or verify an exact already-committed prefix retry.
+     *
+     * # Errors
+     * Returns changed/gapped/overlapping chunks or durable provider failures.
+     */
+    fun `writeReplacementChunk`(`profileId`: kotlin.String, `stageId`: kotlin.String, `offset`: kotlin.ULong, `bytes`: kotlin.ByteArray): FacetReplacementStage
+    
+    /**
+     * Verify the exact declared size/hash and retain an immutable sealed source.
+     *
+     * # Errors
+     * Returns incomplete/corrupt/unknown stages or durable provider failures.
+     */
+    fun `sealReplacement`(`profileId`: kotlin.String, `stageId`: kotlin.String): FacetReplacementStage
+    
+    /**
+     * Exchange a sealed stage/tombstone or replay its original durable outcome.
+     *
+     * # Errors
+     * Returns unsupported atomic capabilities or durable I/O failures.
+     */
+    fun `compareExchangeStaged`(`profileId`: kotlin.String, `operationId`: kotlin.String, `path`: kotlin.String, `expectedRevision`: kotlin.String?, `stageId`: kotlin.String?): FacetStagedExchange
+    
+    /**
+     * Retire source/slot bytes after durable disposition, retaining exact receipts.
+     *
+     * # Errors
+     * Returns unknown/wrong-owner stages or unresolved predecessor/durability failures.
+     */
+    fun `discardReplacement`(`profileId`: kotlin.String, `stageId`: kotlin.String)
+    
+    /**
+     * Recover unacknowledged captured versions after process relaunch.
+     *
+     * # Errors
+     * Returns unavailable/corrupt backup storage failures.
+     */
+    fun `displacedMetadata`(`profileId`: kotlin.String, `afterId`: kotlin.String?, `limit`: kotlin.UInt): List<FacetDisplacedMetadata>
+    
+    /**
+     * Remove a backup only after Rust has retained/committed it durably.
+     *
+     * # Errors
+     * Returns backup permission, identity, or durable I/O failures.
+     */
+    fun `acknowledgeDisplaced`(`profileId`: kotlin.String, `id`: kotlin.String)
+    
+    companion object
+}
+
+/**
+ * Platform folder/replica capabilities; callbacks run outside SQLite locks.
+ */
+open class FacetVaultFilesImpl: Disposable, AutoCloseable, FacetVaultFiles
+{
+
+    @Suppress("UNUSED_PARAMETER")
+    /**
+     * @suppress
+     */
+    constructor(withHandle: UniffiWithHandle, handle: Long) {
+        this.handle = handle
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(handle))
+    }
+
+    /**
+     * @suppress
+     *
+     * This constructor can be used to instantiate a fake object. Only used for tests. Any
+     * attempt to actually use an object constructed this way will fail as there is no
+     * connected Rust object.
+     */
+    @Suppress("UNUSED_PARAMETER")
+    constructor(noHandle: NoHandle) {
+        this.handle = 0
+        this.cleanable = null
+    }
+
+    protected val handle: Long
+    protected val cleanable: UniffiCleaner.Cleanable?
+
+    private val wasDestroyed = AtomicBoolean(false)
+    private val callCounter = AtomicLong(1)
+
+    /**
+     * Whether the current object has been destroyed and its reference is gone in the Rust side.
+     */
+    val uniffiIsDestroyed: Boolean get() = wasDestroyed.get()
+
+    override fun destroy() {
+        // Only allow a single call to this method.
+        // TODO: maybe we should log a warning if called more than once?
+        if (this.wasDestroyed.compareAndSet(false, true)) {
+            // This decrement always matches the initial count of 1 given at creation time.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable?.clean()
+            }
+        }
+    }
+
+    @Synchronized
+    override fun close() {
+        this.destroy()
+    }
+
+    internal inline fun <R> callWithHandle(block: (handle: Long) -> R): R {
+        // Check and increment the call counter, to keep the object alive.
+        // This needs a compare-and-set retry loop in case of concurrent updates.
+        do {
+            val c = this.callCounter.get()
+            if (c == 0L) {
+                throw IllegalStateException("${this.javaClass.simpleName} object has already been destroyed")
+            }
+            if (c == Long.MAX_VALUE) {
+                throw IllegalStateException("${this.javaClass.simpleName} call counter would overflow")
+            }
+        } while (! this.callCounter.compareAndSet(c, c + 1L))
+        // Now we can safely do the method call without the handle being freed concurrently.
+        try {
+            return block(this.uniffiCloneHandle())
+        } finally {
+            // This decrement always matches the increment we performed above.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable?.clean()
+            }
+        }
+    }
+
+    // Use a static inner class instead of a closure so as not to accidentally
+    // capture `this` as part of the cleanable's action.
+    private class UniffiCleanAction(private val handle: Long) : Runnable {
+        override fun run() {
+            if (handle == 0.toLong()) {
+                // Fake object created with `NoHandle`, don't try to free.
+                return;
+            }
+            uniffiRustCall { status ->
+                UniffiLib.uniffi_tasknotes_core_ffi_fn_free_facetvaultfiles(handle, status)
+            }
+        }
+    }
+
+    /**
+     * @suppress
+     */
+    fun uniffiCloneHandle(): Long {
+        if (handle == 0.toLong()) {
+            throw InternalException("uniffiCloneHandle() called on NoHandle object");
+        }
+        return uniffiRustCall() { status ->
+            UniffiLib.uniffi_tasknotes_core_ffi_fn_clone_facetvaultfiles(handle, status)
+        }
+    }
+
+    
+    /**
+     * Return logical paths, excluding private host backup/application directories.
+     *
+     * # Errors
+     * Returns capability, permission, or provider failures.
+     */
+    @Throws(FacetHostException::class)override fun `listFiles`(`profileId`: kotlin.String): List<kotlin.String> {
+            return FfiConverterSequenceString.lift(
+    callWithHandle {
+    uniffiRustCallWithError(FacetHostException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_list_files(
+        it,
+        
+        FfiConverterString.lower(`profileId`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Capture an immutable read image, or return absence for a missing regular file.
+     *
+     * # Errors
+     * Returns capability, permission, or provider failures.
+     */
+    @Throws(FacetHostException::class)override fun `openFileSnapshot`(`profileId`: kotlin.String, `path`: kotlin.String): FacetFileSnapshot? {
+            return FfiConverterOptionalTypeFacetFileSnapshot.lift(
+    callWithHandle {
+    uniffiRustCallWithError(FacetHostException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_open_file_snapshot(
+        it,
+        
+        FfiConverterString.lower(`profileId`),
+        FfiConverterString.lower(`path`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Open one exact retained predecessor without loading its bytes.
+     *
+     * # Errors
+     * Returns wrong-owner, missing, changed or inaccessible backup failures.
+     */
+    @Throws(FacetHostException::class)override fun `openDisplacedSnapshot`(`profileId`: kotlin.String, `backupId`: kotlin.String): FacetFileSnapshot {
+            return FfiConverterTypeFacetFileSnapshot.lift(
+    callWithHandle {
+    uniffiRustCallWithError(FacetHostException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_open_displaced_snapshot(
+        it,
+        
+        FfiConverterString.lower(`profileId`),
+        FfiConverterString.lower(`backupId`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Read one exact immutable range of at most one MiB.
+     *
+     * # Errors
+     * Returns wrong-owner, stale handle, invalid range or provider failures.
+     */
+    @Throws(FacetHostException::class)override fun `readSnapshotChunk`(`profileId`: kotlin.String, `snapshotId`: kotlin.String, `offset`: kotlin.ULong, `length`: kotlin.UInt): kotlin.ByteArray {
+            return FfiConverterByteArray.lift(
+    callWithHandle {
+    uniffiRustCallWithError(FacetHostException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_read_snapshot_chunk(
+        it,
+        
+        FfiConverterString.lower(`profileId`),
+        FfiConverterString.lower(`snapshotId`),
+        FfiConverterULong.lower(`offset`),
+        FfiConverterUInt.lower(`length`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Release only a temporary image; never acknowledge a durable predecessor.
+     *
+     * # Errors
+     * Returns unknown/wrong-owner handles or durable cleanup failures.
+     */
+    @Throws(FacetHostException::class)override fun `closeSnapshot`(`profileId`: kotlin.String, `snapshotId`: kotlin.String)
+        = 
+    callWithHandle {
+    uniffiRustCallWithError(FacetHostException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_close_snapshot(
+        it,
+        
+        FfiConverterString.lower(`profileId`),
+        FfiConverterString.lower(`snapshotId`),_status)
+}
+    }
+    
+    
+
+    
+    /**
+     * Persist or resume an exact staged intent, retaining its contiguous prefix.
+     *
+     * # Errors
+     * Returns changed intent, unsupported durability or provider failures.
+     */
+    @Throws(FacetHostException::class)override fun `beginReplacement`(`profileId`: kotlin.String, `operationId`: kotlin.String, `path`: kotlin.String, `expectedRevision`: kotlin.String?, `size`: kotlin.ULong, `revision`: kotlin.String): FacetReplacementStage {
+            return FfiConverterTypeFacetReplacementStage.lift(
+    callWithHandle {
+    uniffiRustCallWithError(FacetHostException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_begin_replacement(
+        it,
+        
+        FfiConverterString.lower(`profileId`),
+        FfiConverterString.lower(`operationId`),
+        FfiConverterString.lower(`path`),
+        FfiConverterOptionalString.lower(`expectedRevision`),
+        FfiConverterULong.lower(`size`),
+        FfiConverterString.lower(`revision`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Commit at most one MiB or verify an exact already-committed prefix retry.
+     *
+     * # Errors
+     * Returns changed/gapped/overlapping chunks or durable provider failures.
+     */
+    @Throws(FacetHostException::class)override fun `writeReplacementChunk`(`profileId`: kotlin.String, `stageId`: kotlin.String, `offset`: kotlin.ULong, `bytes`: kotlin.ByteArray): FacetReplacementStage {
+            return FfiConverterTypeFacetReplacementStage.lift(
+    callWithHandle {
+    uniffiRustCallWithError(FacetHostException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_write_replacement_chunk(
+        it,
+        
+        FfiConverterString.lower(`profileId`),
+        FfiConverterString.lower(`stageId`),
+        FfiConverterULong.lower(`offset`),
+        FfiConverterByteArray.lower(`bytes`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Verify the exact declared size/hash and retain an immutable sealed source.
+     *
+     * # Errors
+     * Returns incomplete/corrupt/unknown stages or durable provider failures.
+     */
+    @Throws(FacetHostException::class)override fun `sealReplacement`(`profileId`: kotlin.String, `stageId`: kotlin.String): FacetReplacementStage {
+            return FfiConverterTypeFacetReplacementStage.lift(
+    callWithHandle {
+    uniffiRustCallWithError(FacetHostException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_seal_replacement(
+        it,
+        
+        FfiConverterString.lower(`profileId`),
+        FfiConverterString.lower(`stageId`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Exchange a sealed stage/tombstone or replay its original durable outcome.
+     *
+     * # Errors
+     * Returns unsupported atomic capabilities or durable I/O failures.
+     */
+    @Throws(FacetHostException::class)override fun `compareExchangeStaged`(`profileId`: kotlin.String, `operationId`: kotlin.String, `path`: kotlin.String, `expectedRevision`: kotlin.String?, `stageId`: kotlin.String?): FacetStagedExchange {
+            return FfiConverterTypeFacetStagedExchange.lift(
+    callWithHandle {
+    uniffiRustCallWithError(FacetHostException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_compare_exchange_staged(
+        it,
+        
+        FfiConverterString.lower(`profileId`),
+        FfiConverterString.lower(`operationId`),
+        FfiConverterString.lower(`path`),
+        FfiConverterOptionalString.lower(`expectedRevision`),
+        FfiConverterOptionalString.lower(`stageId`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Retire source/slot bytes after durable disposition, retaining exact receipts.
+     *
+     * # Errors
+     * Returns unknown/wrong-owner stages or unresolved predecessor/durability failures.
+     */
+    @Throws(FacetHostException::class)override fun `discardReplacement`(`profileId`: kotlin.String, `stageId`: kotlin.String)
+        = 
+    callWithHandle {
+    uniffiRustCallWithError(FacetHostException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_discard_replacement(
+        it,
+        
+        FfiConverterString.lower(`profileId`),
+        FfiConverterString.lower(`stageId`),_status)
+}
+    }
+    
+    
+
+    
+    /**
+     * Recover unacknowledged captured versions after process relaunch.
+     *
+     * # Errors
+     * Returns unavailable/corrupt backup storage failures.
+     */
+    @Throws(FacetHostException::class)override fun `displacedMetadata`(`profileId`: kotlin.String, `afterId`: kotlin.String?, `limit`: kotlin.UInt): List<FacetDisplacedMetadata> {
+            return FfiConverterSequenceTypeFacetDisplacedMetadata.lift(
+    callWithHandle {
+    uniffiRustCallWithError(FacetHostException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_displaced_metadata(
+        it,
+        
+        FfiConverterString.lower(`profileId`),
+        FfiConverterOptionalString.lower(`afterId`),
+        FfiConverterUInt.lower(`limit`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Remove a backup only after Rust has retained/committed it durably.
+     *
+     * # Errors
+     * Returns backup permission, identity, or durable I/O failures.
+     */
+    @Throws(FacetHostException::class)override fun `acknowledgeDisplaced`(`profileId`: kotlin.String, `id`: kotlin.String)
+        = 
+    callWithHandle {
+    uniffiRustCallWithError(FacetHostException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_acknowledge_displaced(
+        it,
+        
+        FfiConverterString.lower(`profileId`),
+        FfiConverterString.lower(`id`),_status)
+}
+    }
+    
+    
+
+    
+
+    
+
+
+    
+    
+    /**
+     * @suppress
+     */
+    companion object
+    
+}
+
+
+
+// Put the implementation in an object so we don't pollute the top-level namespace
+internal object uniffiCallbackInterfaceFacetVaultFiles {
+    internal object `listFiles`: UniffiCallbackInterfaceFacetVaultFilesMethod0 {
+        override fun callback(`uniffiHandle`: Long,`profileId`: RustBuffer.ByValue,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,) {
+            val uniffiObj = FfiConverterTypeFacetVaultFiles.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`listFiles`(
+                    FfiConverterString.lift(`profileId`),
+                )
+            }
+            val writeReturn = { value: List<kotlin.String> -> uniffiOutReturn.setValue(FfiConverterSequenceString.lower(value)) }
+            uniffiTraitInterfaceCallWithError(
+                uniffiCallStatus,
+                makeCall,
+                writeReturn,
+                { e: FacetHostException -> FfiConverterTypeFacetHostError.lower(e) }
+            )
+        }
+    }
+    internal object `openFileSnapshot`: UniffiCallbackInterfaceFacetVaultFilesMethod1 {
+        override fun callback(`uniffiHandle`: Long,`profileId`: RustBuffer.ByValue,`path`: RustBuffer.ByValue,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,) {
+            val uniffiObj = FfiConverterTypeFacetVaultFiles.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`openFileSnapshot`(
+                    FfiConverterString.lift(`profileId`),
+                    FfiConverterString.lift(`path`),
+                )
+            }
+            val writeReturn = { value: FacetFileSnapshot? -> uniffiOutReturn.setValue(FfiConverterOptionalTypeFacetFileSnapshot.lower(value)) }
+            uniffiTraitInterfaceCallWithError(
+                uniffiCallStatus,
+                makeCall,
+                writeReturn,
+                { e: FacetHostException -> FfiConverterTypeFacetHostError.lower(e) }
+            )
+        }
+    }
+    internal object `openDisplacedSnapshot`: UniffiCallbackInterfaceFacetVaultFilesMethod2 {
+        override fun callback(`uniffiHandle`: Long,`profileId`: RustBuffer.ByValue,`backupId`: RustBuffer.ByValue,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,) {
+            val uniffiObj = FfiConverterTypeFacetVaultFiles.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`openDisplacedSnapshot`(
+                    FfiConverterString.lift(`profileId`),
+                    FfiConverterString.lift(`backupId`),
+                )
+            }
+            val writeReturn = { value: FacetFileSnapshot -> uniffiOutReturn.setValue(FfiConverterTypeFacetFileSnapshot.lower(value)) }
+            uniffiTraitInterfaceCallWithError(
+                uniffiCallStatus,
+                makeCall,
+                writeReturn,
+                { e: FacetHostException -> FfiConverterTypeFacetHostError.lower(e) }
+            )
+        }
+    }
+    internal object `readSnapshotChunk`: UniffiCallbackInterfaceFacetVaultFilesMethod3 {
+        override fun callback(`uniffiHandle`: Long,`profileId`: RustBuffer.ByValue,`snapshotId`: RustBuffer.ByValue,`offset`: Long,`length`: Int,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,) {
+            val uniffiObj = FfiConverterTypeFacetVaultFiles.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`readSnapshotChunk`(
+                    FfiConverterString.lift(`profileId`),
+                    FfiConverterString.lift(`snapshotId`),
+                    FfiConverterULong.lift(`offset`),
+                    FfiConverterUInt.lift(`length`),
+                )
+            }
+            val writeReturn = { value: kotlin.ByteArray -> uniffiOutReturn.setValue(FfiConverterByteArray.lower(value)) }
+            uniffiTraitInterfaceCallWithError(
+                uniffiCallStatus,
+                makeCall,
+                writeReturn,
+                { e: FacetHostException -> FfiConverterTypeFacetHostError.lower(e) }
+            )
+        }
+    }
+    internal object `closeSnapshot`: UniffiCallbackInterfaceFacetVaultFilesMethod4 {
+        override fun callback(`uniffiHandle`: Long,`profileId`: RustBuffer.ByValue,`snapshotId`: RustBuffer.ByValue,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,) {
+            val uniffiObj = FfiConverterTypeFacetVaultFiles.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`closeSnapshot`(
+                    FfiConverterString.lift(`profileId`),
+                    FfiConverterString.lift(`snapshotId`),
+                )
+            }
+            val writeReturn = { _: Unit -> Unit }
+            uniffiTraitInterfaceCallWithError(
+                uniffiCallStatus,
+                makeCall,
+                writeReturn,
+                { e: FacetHostException -> FfiConverterTypeFacetHostError.lower(e) }
+            )
+        }
+    }
+    internal object `beginReplacement`: UniffiCallbackInterfaceFacetVaultFilesMethod5 {
+        override fun callback(`uniffiHandle`: Long,`profileId`: RustBuffer.ByValue,`operationId`: RustBuffer.ByValue,`path`: RustBuffer.ByValue,`expectedRevision`: RustBuffer.ByValue,`size`: Long,`revision`: RustBuffer.ByValue,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,) {
+            val uniffiObj = FfiConverterTypeFacetVaultFiles.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`beginReplacement`(
+                    FfiConverterString.lift(`profileId`),
+                    FfiConverterString.lift(`operationId`),
+                    FfiConverterString.lift(`path`),
+                    FfiConverterOptionalString.lift(`expectedRevision`),
+                    FfiConverterULong.lift(`size`),
+                    FfiConverterString.lift(`revision`),
+                )
+            }
+            val writeReturn = { value: FacetReplacementStage -> uniffiOutReturn.setValue(FfiConverterTypeFacetReplacementStage.lower(value)) }
+            uniffiTraitInterfaceCallWithError(
+                uniffiCallStatus,
+                makeCall,
+                writeReturn,
+                { e: FacetHostException -> FfiConverterTypeFacetHostError.lower(e) }
+            )
+        }
+    }
+    internal object `writeReplacementChunk`: UniffiCallbackInterfaceFacetVaultFilesMethod6 {
+        override fun callback(`uniffiHandle`: Long,`profileId`: RustBuffer.ByValue,`stageId`: RustBuffer.ByValue,`offset`: Long,`bytes`: RustBuffer.ByValue,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,) {
+            val uniffiObj = FfiConverterTypeFacetVaultFiles.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`writeReplacementChunk`(
+                    FfiConverterString.lift(`profileId`),
+                    FfiConverterString.lift(`stageId`),
+                    FfiConverterULong.lift(`offset`),
+                    FfiConverterByteArray.lift(`bytes`),
+                )
+            }
+            val writeReturn = { value: FacetReplacementStage -> uniffiOutReturn.setValue(FfiConverterTypeFacetReplacementStage.lower(value)) }
+            uniffiTraitInterfaceCallWithError(
+                uniffiCallStatus,
+                makeCall,
+                writeReturn,
+                { e: FacetHostException -> FfiConverterTypeFacetHostError.lower(e) }
+            )
+        }
+    }
+    internal object `sealReplacement`: UniffiCallbackInterfaceFacetVaultFilesMethod7 {
+        override fun callback(`uniffiHandle`: Long,`profileId`: RustBuffer.ByValue,`stageId`: RustBuffer.ByValue,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,) {
+            val uniffiObj = FfiConverterTypeFacetVaultFiles.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`sealReplacement`(
+                    FfiConverterString.lift(`profileId`),
+                    FfiConverterString.lift(`stageId`),
+                )
+            }
+            val writeReturn = { value: FacetReplacementStage -> uniffiOutReturn.setValue(FfiConverterTypeFacetReplacementStage.lower(value)) }
+            uniffiTraitInterfaceCallWithError(
+                uniffiCallStatus,
+                makeCall,
+                writeReturn,
+                { e: FacetHostException -> FfiConverterTypeFacetHostError.lower(e) }
+            )
+        }
+    }
+    internal object `compareExchangeStaged`: UniffiCallbackInterfaceFacetVaultFilesMethod8 {
+        override fun callback(`uniffiHandle`: Long,`profileId`: RustBuffer.ByValue,`operationId`: RustBuffer.ByValue,`path`: RustBuffer.ByValue,`expectedRevision`: RustBuffer.ByValue,`stageId`: RustBuffer.ByValue,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,) {
+            val uniffiObj = FfiConverterTypeFacetVaultFiles.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`compareExchangeStaged`(
+                    FfiConverterString.lift(`profileId`),
+                    FfiConverterString.lift(`operationId`),
+                    FfiConverterString.lift(`path`),
+                    FfiConverterOptionalString.lift(`expectedRevision`),
+                    FfiConverterOptionalString.lift(`stageId`),
+                )
+            }
+            val writeReturn = { value: FacetStagedExchange -> uniffiOutReturn.setValue(FfiConverterTypeFacetStagedExchange.lower(value)) }
+            uniffiTraitInterfaceCallWithError(
+                uniffiCallStatus,
+                makeCall,
+                writeReturn,
+                { e: FacetHostException -> FfiConverterTypeFacetHostError.lower(e) }
+            )
+        }
+    }
+    internal object `discardReplacement`: UniffiCallbackInterfaceFacetVaultFilesMethod9 {
+        override fun callback(`uniffiHandle`: Long,`profileId`: RustBuffer.ByValue,`stageId`: RustBuffer.ByValue,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,) {
+            val uniffiObj = FfiConverterTypeFacetVaultFiles.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`discardReplacement`(
+                    FfiConverterString.lift(`profileId`),
+                    FfiConverterString.lift(`stageId`),
+                )
+            }
+            val writeReturn = { _: Unit -> Unit }
+            uniffiTraitInterfaceCallWithError(
+                uniffiCallStatus,
+                makeCall,
+                writeReturn,
+                { e: FacetHostException -> FfiConverterTypeFacetHostError.lower(e) }
+            )
+        }
+    }
+    internal object `displacedMetadata`: UniffiCallbackInterfaceFacetVaultFilesMethod10 {
+        override fun callback(`uniffiHandle`: Long,`profileId`: RustBuffer.ByValue,`afterId`: RustBuffer.ByValue,`limit`: Int,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,) {
+            val uniffiObj = FfiConverterTypeFacetVaultFiles.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`displacedMetadata`(
+                    FfiConverterString.lift(`profileId`),
+                    FfiConverterOptionalString.lift(`afterId`),
+                    FfiConverterUInt.lift(`limit`),
+                )
+            }
+            val writeReturn = { value: List<FacetDisplacedMetadata> -> uniffiOutReturn.setValue(FfiConverterSequenceTypeFacetDisplacedMetadata.lower(value)) }
+            uniffiTraitInterfaceCallWithError(
+                uniffiCallStatus,
+                makeCall,
+                writeReturn,
+                { e: FacetHostException -> FfiConverterTypeFacetHostError.lower(e) }
+            )
+        }
+    }
+    internal object `acknowledgeDisplaced`: UniffiCallbackInterfaceFacetVaultFilesMethod11 {
+        override fun callback(`uniffiHandle`: Long,`profileId`: RustBuffer.ByValue,`id`: RustBuffer.ByValue,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,) {
+            val uniffiObj = FfiConverterTypeFacetVaultFiles.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`acknowledgeDisplaced`(
+                    FfiConverterString.lift(`profileId`),
+                    FfiConverterString.lift(`id`),
+                )
+            }
+            val writeReturn = { _: Unit -> Unit }
+            uniffiTraitInterfaceCallWithError(
+                uniffiCallStatus,
+                makeCall,
+                writeReturn,
+                { e: FacetHostException -> FfiConverterTypeFacetHostError.lower(e) }
+            )
+        }
+    }
+
+    internal object uniffiFree: UniffiCallbackInterfaceFree {
+        override fun callback(handle: Long) {
+            FfiConverterTypeFacetVaultFiles.handleMap.remove(handle)
+        }
+    }
+
+    internal object uniffiClone: UniffiCallbackInterfaceClone {
+        override fun callback(handle: Long): Long {
+            return FfiConverterTypeFacetVaultFiles.handleMap.clone(handle)
+        }
+    }
+
+    internal var vtable = UniffiVTableCallbackInterfaceFacetVaultFiles.UniffiByValue(
+        uniffiFree,
+        uniffiClone,
+        `listFiles`,
+        `openFileSnapshot`,
+        `openDisplacedSnapshot`,
+        `readSnapshotChunk`,
+        `closeSnapshot`,
+        `beginReplacement`,
+        `writeReplacementChunk`,
+        `sealReplacement`,
+        `compareExchangeStaged`,
+        `discardReplacement`,
+        `displacedMetadata`,
+        `acknowledgeDisplaced`,
+    )
+
+    // Registers the foreign callback with the Rust side.
+    // This method is generated for each callback interface.
+    internal fun register(lib: UniffiLib) {
+        lib.uniffi_tasknotes_core_ffi_fn_init_callback_vtable_facetvaultfiles(vtable)
+    }
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeFacetVaultFiles: FfiConverter<FacetVaultFiles, Long> {
+    internal val handleMap = UniffiHandleMap<FacetVaultFiles>()
+
+    override fun lower(value: FacetVaultFiles): Long {
+        if (value is FacetVaultFilesImpl) {
+             // Rust-implemented object.  Clone the handle and return it
+            return value.uniffiCloneHandle()
+         } else {
+            // Kotlin object, generate a new vtable handle and return that.
+            return handleMap.insert(value)
+         }
+    }
+
+    override fun lift(value: Long): FacetVaultFiles {
+        if ((value and 1.toLong()) == 0.toLong()) {
+            // Rust-generated handle, construct a new class that uses the handle to implement the
+            // interface
+            return FacetVaultFilesImpl(UniffiWithHandle, value)
+        } else {
+            // Kotlin-generated handle, get the object from the handle map
+            return handleMap.remove(value)
+        }
+    }
+
+    override fun read(buf: ByteBuffer): FacetVaultFiles {
+        return lift(buf.getLong())
+    }
+
+    override fun allocationSize(value: FacetVaultFiles) = 8UL
+
+    override fun write(value: FacetVaultFiles, buf: ByteBuffer) {
+        buf.putLong(lower(value))
+    }
+}
+
+
+// This template implements a class for working with a Rust struct via a handle
+// to the live Rust struct on the other side of the FFI.
+//
+// There's some subtlety here, because we have to be careful not to operate on a Rust
+// struct after it has been dropped, and because we must expose a public API for freeing
+// theq Kotlin wrapper object in lieu of reliable finalizers. The core requirements are:
+//
+//   * Each instance holds an opaque handle to the underlying Rust struct.
+//     Method calls need to read this handle from the object's state and pass it in to
+//     the Rust FFI.
+//
+//   * When an instance is no longer needed, its handle should be passed to a
+//     special destructor function provided by the Rust FFI, which will drop the
+//     underlying Rust struct.
+//
+//   * Given an instance, calling code is expected to call the special
+//     `destroy` method in order to free it after use, either by calling it explicitly
+//     or by using a higher-level helper like the `use` method. Failing to do so risks
+//     leaking the underlying Rust struct.
+//
+//   * We can't assume that calling code will do the right thing, and must be prepared
+//     to handle Kotlin method calls executing concurrently with or even after a call to
+//     `destroy`, and to handle multiple (possibly concurrent!) calls to `destroy`.
+//
+//   * We must never allow Rust code to operate on the underlying Rust struct after
+//     the destructor has been called, and must never call the destructor more than once.
+//     Doing so may trigger memory unsafety.
+//
+//   * To mitigate many of the risks of leaking memory and use-after-free unsafety, a `Cleaner`
+//     is implemented to call the destructor when the Kotlin object becomes unreachable.
+//     This is done in a background thread. This is not a panacea, and client code should be aware that
+//      1. the thread may starve if some there are objects that have poorly performing
+//     `drop` methods or do significant work in their `drop` methods.
+//      2. the thread is shared across the whole library. This can be tuned by using `android_cleaner = true`,
+//         or `android = true` in the [`kotlin` section of the `uniffi.toml` file](https://mozilla.github.io/uniffi-rs/kotlin/configuration.html).
+//
+// If we try to implement this with mutual exclusion on access to the handle, there is the
+// possibility of a race between a method call and a concurrent call to `destroy`:
+//
+//    * Thread A starts a method call, reads the value of the handle, but is interrupted
+//      before it can pass the handle over the FFI to Rust.
+//    * Thread B calls `destroy` and frees the underlying Rust struct.
+//    * Thread A resumes, passing the already-read handle value to Rust and triggering
+//      a use-after-free.
+//
+// One possible solution would be to use a `ReadWriteLock`, with each method call taking
+// a read lock (and thus allowed to run concurrently) and the special `destroy` method
+// taking a write lock (and thus blocking on live method calls). However, we aim not to
+// generate methods with any hidden blocking semantics, and a `destroy` method that might
+// block if called incorrectly seems to meet that bar.
+//
+// So, we achieve our goals by giving each instance an associated `AtomicLong` counter to track
+// the number of in-flight method calls, and an `AtomicBoolean` flag to indicate whether `destroy`
+// has been called. These are updated according to the following rules:
+//
+//    * The initial value of the counter is 1, indicating a live object with no in-flight calls.
+//      The initial value for the flag is false.
+//
+//    * At the start of each method call, we atomically check the counter.
+//      If it is 0 then the underlying Rust struct has already been destroyed and the call is aborted.
+//      If it is nonzero them we atomically increment it by 1 and proceed with the method call.
+//
+//    * At the end of each method call, we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+//    * When `destroy` is called, we atomically flip the flag from false to true.
+//      If the flag was already true we silently fail.
+//      Otherwise we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+// Astute readers may observe that this all sounds very similar to the way that Rust's `Arc<T>` works,
+// and indeed it is, with the addition of a flag to guard against multiple calls to `destroy`.
+//
+// The overall effect is that the underlying Rust struct is destroyed only when `destroy` has been
+// called *and* all in-flight method calls have completed, avoiding violating any of the expectations
+// of the underlying Rust code.
+//
+// This makes a cleaner a better alternative to _not_ calling `destroy()` as
+// and when the object is finished with, but the abstraction is not perfect: if the Rust object's `drop`
+// method is slow, and/or there are many objects to cleanup, and it's on a low end Android device, then the cleaner
+// thread may be starved, and the app will leak memory.
+//
+// In this case, `destroy`ing manually may be a better solution.
+//
+// The cleaner can live side by side with the manual calling of `destroy`. In the order of responsiveness, uniffi objects
+// with Rust peers are reclaimed:
+//
+// 1. By calling the `destroy` method of the object, which calls `rustObject.free()`. If that doesn't happen:
+// 2. When the object becomes unreachable, AND the Cleaner thread gets to call `rustObject.free()`. If the thread is starved then:
+// 3. The memory is reclaimed when the process terminates.
+//
+// [1] https://stackoverflow.com/questions/24376768/can-java-finalize-an-object-when-it-is-still-in-scope/24380219
+//
+
+
+/**
+ * Rust-owned durable standalone engine. Hosts call it on their serial worker.
+ */
+public interface FfiFacetEngineInterface {
+    
+    /**
+     * Commit an exact service acknowledgement without replacing newer edits.
+     *
+     * # Errors
+     * Rejects unknown receipts and storage failures.
+     */
+    fun `acknowledgeUpload`(`profileId`: kotlin.String, `mutationId`: kotlin.String, `revision`: kotlin.String)
+    
+    /**
+     * Persist a normalized protocol delta before acknowledging its barrier.
+     *
+     * # Errors
+     * Rejects invalid/cursor-regressing deltas and storage failures.
+     */
+    fun `applySyncCheckpointDelta`(`profileId`: kotlin.String, `deltaJson`: kotlin.String)
+    
+    /**
+     * Reject new operations and wait for active callbacks before retiring this engine.
+     * Durable journals and staged recovery receipts remain for the next engine.
+     *
+     * # Errors
+     * Returns coordinator/storage failures; shutdown never discards pending state.
+     */
+    fun `closeRuntime`()
+    
+    /**
+     * Return conflict versions stored outside TaskNotes indexing.
+     *
+     * # Errors
+     * Returns profile/storage failures.
+     */
+    fun `conflictsJson`(`profileId`: kotlin.String): kotlin.String
+    
+    /**
+     * Read bounded conflict metadata without binary JSON expansion.
+     *
+     * # Errors
+     * Returns invalid page, profile, and storage failures.
+     */
+    fun `conflictsPageJson`(`profileId`: kotlin.String, `afterId`: kotlin.String?, `limit`: kotlin.UInt): kotlin.String
+    
+    /**
+     * Execute an idempotent command and return its durable receipt.
+     *
+     * # Errors
+     * Returns validation, conflict, capability, or storage failures.
+     */
+    fun `execute`(`profileId`: kotlin.String, `commandJson`: kotlin.String): kotlin.String
+    
+    /**
+     * Execute an immutable command using a sealed owner-scoped payload handle.
+     *
+     * # Errors
+     * Rejects missing/misplaced payloads, reused identities and stale revisions.
+     */
+    fun `executePayloadIdJson`(`profileId`: kotlin.String, `mutationJson`: kotlin.String, `payload`: FfiFacetPayload?): kotlin.String
+    
+    /**
+     * Read shared capture, timing and configuration projections.
+     *
+     * # Errors
+     * Returns validation, configuration, capability and storage failures.
+     */
+    fun `featuresJson`(`profileId`: kotlin.String, `requestJson`: kotlin.String): kotlin.String
+    
+    /**
+     * Return the nonsecret durable SQLite owner namespace before opening capabilities.
+     *
+     * # Errors
+     * Returns Closed after engine shutdown begins.
+     */
+    fun `identity`(): kotlin.String
+    
+    /**
+     * Read the last durable protocol cursor document.
+     *
+     * # Errors
+     * Returns profile/storage failures.
+     */
+    fun `loadCheckpoint`(`profileId`: kotlin.String): kotlin.String?
+    
+    /**
+     * Return immutable upload receipts, omitting paths with conflicts.
+     *
+     * # Errors
+     * Returns profile/storage failures.
+     */
+    fun `pendingUploadsJson`(`profileId`: kotlin.String): kotlin.String
+    
+    /**
+     * Return registered profiles as JSON.
+     *
+     * # Errors
+     * Returns storage/corrupt-state failures.
+     */
+    fun `profilesJson`(): kotlin.String
+    
+    /**
+     * Recover interrupted writes and index provider changes.
+     *
+     * # Errors
+     * Returns provider, configuration, or durable-state failures.
+     */
+    fun `refresh`(`profileId`: kotlin.String): kotlin.String
+    
+    /**
+     * Register a versioned profile JSON document.
+     *
+     * # Errors
+     * Rejects malformed identities, unsupported schemas, or category changes.
+     */
+    fun `registerProfile`(`profileJson`: kotlin.String): kotlin.String
+    
+    /**
+     * Remove an empty profile without deleting user-owned vault files.
+     *
+     * # Errors
+     * Rejects pending work or unresolved conflicts.
+     */
+    fun `removeProfile`(`profileId`: kotlin.String)
+    
+    /**
+     * Persist a full protocol cursor before acknowledging its barrier.
+     *
+     * # Errors
+     * Rejects invalid JSON and storage failures.
+     */
+    fun `saveCheckpoint`(`profileId`: kotlin.String, `checkpointJson`: kotlin.String)
+    
+    /**
+     * Return a paged durable snapshot with shared filter/sort/group semantics.
+     *
+     * # Errors
+     * Rejects invalid query/schema values or unavailable index state.
+     */
+    fun `snapshotJson`(`profileId`: kotlin.String, `queryJson`: kotlin.String): kotlin.String
+    
+    /**
+     * Begin/resume an immutable incoming image. No complete file crosses FFI.
+     *
+     * # Errors
+     * Rejects changed/reserved IDs, size/hash bounds or unavailable profiles.
+     */
+    fun `beginPayload`(`profileId`: kotlin.String, `payloadId`: kotlin.String, `size`: kotlin.ULong, `revision`: kotlin.String): FfiFacetPayload
+    
+    /**
+     * Open one retained conflict/archive image for bounded lazy reads. A null
+     * result denotes an actual tombstone, distinct from a sealed empty image.
+     *
+     * # Errors
+     * Rejects unknown roles, missing conflicts or invalid retained metadata.
+     */
+    fun `conflictPayload`(`profileId`: kotlin.String, `conflictId`: kotlin.String, `version`: kotlin.String): FfiFacetPayload?
+    
+    /**
+     * Restore one caller-owned incoming handle after process restart.
+     *
+     * # Errors
+     * Rejects runtime-owned identities, absent profiles/images or stale storage.
+     */
+    fun `openPayload`(`profileId`: kotlin.String, `payloadId`: kotlin.String): FfiFacetPayload
+    
+    companion object
+}
+
+/**
+ * Rust-owned durable standalone engine. Hosts call it on their serial worker.
+ */
+open class FfiFacetEngine: Disposable, AutoCloseable, FfiFacetEngineInterface
+{
+
+    @Suppress("UNUSED_PARAMETER")
+    /**
+     * @suppress
+     */
+    constructor(withHandle: UniffiWithHandle, handle: Long) {
+        this.handle = handle
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(handle))
+    }
+
+    /**
+     * @suppress
+     *
+     * This constructor can be used to instantiate a fake object. Only used for tests. Any
+     * attempt to actually use an object constructed this way will fail as there is no
+     * connected Rust object.
+     */
+    @Suppress("UNUSED_PARAMETER")
+    constructor(noHandle: NoHandle) {
+        this.handle = 0
+        this.cleanable = null
+    }
+    /**
+     * Open/create the app-private SQLite database.
+     *
+     * # Errors
+     * Returns storage failures; vault capabilities are checked when opened.
+     */
+    constructor(`databasePath`: kotlin.String, `files`: FacetVaultFiles) :
+        this(UniffiWithHandle, 
+    uniffiRustCallWithError(FacetEngineException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_constructor_ffifacetengine_new(
+    
+        
+        FfiConverterString.lower(`databasePath`),
+        FfiConverterTypeFacetVaultFiles.lower(`files`),_status)
+}
+    )
+
+    protected val handle: Long
+    protected val cleanable: UniffiCleaner.Cleanable?
+
+    private val wasDestroyed = AtomicBoolean(false)
+    private val callCounter = AtomicLong(1)
+
+    /**
+     * Whether the current object has been destroyed and its reference is gone in the Rust side.
+     */
+    val uniffiIsDestroyed: Boolean get() = wasDestroyed.get()
+
+    override fun destroy() {
+        // Only allow a single call to this method.
+        // TODO: maybe we should log a warning if called more than once?
+        if (this.wasDestroyed.compareAndSet(false, true)) {
+            // This decrement always matches the initial count of 1 given at creation time.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable?.clean()
+            }
+        }
+    }
+
+    @Synchronized
+    override fun close() {
+        this.destroy()
+    }
+
+    internal inline fun <R> callWithHandle(block: (handle: Long) -> R): R {
+        // Check and increment the call counter, to keep the object alive.
+        // This needs a compare-and-set retry loop in case of concurrent updates.
+        do {
+            val c = this.callCounter.get()
+            if (c == 0L) {
+                throw IllegalStateException("${this.javaClass.simpleName} object has already been destroyed")
+            }
+            if (c == Long.MAX_VALUE) {
+                throw IllegalStateException("${this.javaClass.simpleName} call counter would overflow")
+            }
+        } while (! this.callCounter.compareAndSet(c, c + 1L))
+        // Now we can safely do the method call without the handle being freed concurrently.
+        try {
+            return block(this.uniffiCloneHandle())
+        } finally {
+            // This decrement always matches the increment we performed above.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable?.clean()
+            }
+        }
+    }
+
+    // Use a static inner class instead of a closure so as not to accidentally
+    // capture `this` as part of the cleanable's action.
+    private class UniffiCleanAction(private val handle: Long) : Runnable {
+        override fun run() {
+            if (handle == 0.toLong()) {
+                // Fake object created with `NoHandle`, don't try to free.
+                return;
+            }
+            uniffiRustCall { status ->
+                UniffiLib.uniffi_tasknotes_core_ffi_fn_free_ffifacetengine(handle, status)
+            }
+        }
+    }
+
+    /**
+     * @suppress
+     */
+    fun uniffiCloneHandle(): Long {
+        if (handle == 0.toLong()) {
+            throw InternalException("uniffiCloneHandle() called on NoHandle object");
+        }
+        return uniffiRustCall() { status ->
+            UniffiLib.uniffi_tasknotes_core_ffi_fn_clone_ffifacetengine(handle, status)
+        }
+    }
+
+    
+    /**
+     * Commit an exact service acknowledgement without replacing newer edits.
+     *
+     * # Errors
+     * Rejects unknown receipts and storage failures.
+     */
+    @Throws(FacetEngineException::class)override fun `acknowledgeUpload`(`profileId`: kotlin.String, `mutationId`: kotlin.String, `revision`: kotlin.String)
+        = 
+    callWithHandle {
+    uniffiRustCallWithError(FacetEngineException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_acknowledge_upload(
+        it,
+        
+        FfiConverterString.lower(`profileId`),
+        FfiConverterString.lower(`mutationId`),
+        FfiConverterString.lower(`revision`),_status)
+}
+    }
+    
+    
+
+    
+    /**
+     * Persist a normalized protocol delta before acknowledging its barrier.
+     *
+     * # Errors
+     * Rejects invalid/cursor-regressing deltas and storage failures.
+     */
+    @Throws(FacetEngineException::class)override fun `applySyncCheckpointDelta`(`profileId`: kotlin.String, `deltaJson`: kotlin.String)
+        = 
+    callWithHandle {
+    uniffiRustCallWithError(FacetEngineException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_apply_sync_checkpoint_delta(
+        it,
+        
+        FfiConverterString.lower(`profileId`),
+        FfiConverterString.lower(`deltaJson`),_status)
+}
+    }
+    
+    
+
+    
+    /**
+     * Reject new operations and wait for active callbacks before retiring this engine.
+     * Durable journals and staged recovery receipts remain for the next engine.
+     *
+     * # Errors
+     * Returns coordinator/storage failures; shutdown never discards pending state.
+     */
+    @Throws(FacetEngineException::class)override fun `closeRuntime`()
+        = 
+    callWithHandle {
+    uniffiRustCallWithError(FacetEngineException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_close_runtime(
+        it,
+        _status)
+}
+    }
+    
+    
+
+    
+    /**
+     * Return conflict versions stored outside TaskNotes indexing.
+     *
+     * # Errors
+     * Returns profile/storage failures.
+     */
+    @Throws(FacetEngineException::class)override fun `conflictsJson`(`profileId`: kotlin.String): kotlin.String {
+            return FfiConverterString.lift(
+    callWithHandle {
+    uniffiRustCallWithError(FacetEngineException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_conflicts_json(
+        it,
+        
+        FfiConverterString.lower(`profileId`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Read bounded conflict metadata without binary JSON expansion.
+     *
+     * # Errors
+     * Returns invalid page, profile, and storage failures.
+     */
+    @Throws(FacetEngineException::class)override fun `conflictsPageJson`(`profileId`: kotlin.String, `afterId`: kotlin.String?, `limit`: kotlin.UInt): kotlin.String {
+            return FfiConverterString.lift(
+    callWithHandle {
+    uniffiRustCallWithError(FacetEngineException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_conflicts_page_json(
+        it,
+        
+        FfiConverterString.lower(`profileId`),
+        FfiConverterOptionalString.lower(`afterId`),
+        FfiConverterUInt.lower(`limit`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Execute an idempotent command and return its durable receipt.
+     *
+     * # Errors
+     * Returns validation, conflict, capability, or storage failures.
+     */
+    @Throws(FacetEngineException::class)override fun `execute`(`profileId`: kotlin.String, `commandJson`: kotlin.String): kotlin.String {
+            return FfiConverterString.lift(
+    callWithHandle {
+    uniffiRustCallWithError(FacetEngineException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_execute(
+        it,
+        
+        FfiConverterString.lower(`profileId`),
+        FfiConverterString.lower(`commandJson`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Execute an immutable command using a sealed owner-scoped payload handle.
+     *
+     * # Errors
+     * Rejects missing/misplaced payloads, reused identities and stale revisions.
+     */
+    @Throws(FacetEngineException::class)override fun `executePayloadIdJson`(`profileId`: kotlin.String, `mutationJson`: kotlin.String, `payload`: FfiFacetPayload?): kotlin.String {
+            return FfiConverterString.lift(
+    callWithHandle {
+    uniffiRustCallWithError(FacetEngineException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_execute_payload_id_json(
+        it,
+        
+        FfiConverterString.lower(`profileId`),
+        FfiConverterString.lower(`mutationJson`),
+        FfiConverterOptionalTypeFfiFacetPayload.lower(`payload`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Read shared capture, timing and configuration projections.
+     *
+     * # Errors
+     * Returns validation, configuration, capability and storage failures.
+     */
+    @Throws(FacetEngineException::class)override fun `featuresJson`(`profileId`: kotlin.String, `requestJson`: kotlin.String): kotlin.String {
+            return FfiConverterString.lift(
+    callWithHandle {
+    uniffiRustCallWithError(FacetEngineException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_features_json(
+        it,
+        
+        FfiConverterString.lower(`profileId`),
+        FfiConverterString.lower(`requestJson`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Return the nonsecret durable SQLite owner namespace before opening capabilities.
+     *
+     * # Errors
+     * Returns Closed after engine shutdown begins.
+     */
+    @Throws(FacetEngineException::class)override fun `identity`(): kotlin.String {
+            return FfiConverterString.lift(
+    callWithHandle {
+    uniffiRustCallWithError(FacetEngineException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_identity(
+        it,
+        _status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Read the last durable protocol cursor document.
+     *
+     * # Errors
+     * Returns profile/storage failures.
+     */
+    @Throws(FacetEngineException::class)override fun `loadCheckpoint`(`profileId`: kotlin.String): kotlin.String? {
+            return FfiConverterOptionalString.lift(
+    callWithHandle {
+    uniffiRustCallWithError(FacetEngineException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_load_checkpoint(
+        it,
+        
+        FfiConverterString.lower(`profileId`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Return immutable upload receipts, omitting paths with conflicts.
+     *
+     * # Errors
+     * Returns profile/storage failures.
+     */
+    @Throws(FacetEngineException::class)override fun `pendingUploadsJson`(`profileId`: kotlin.String): kotlin.String {
+            return FfiConverterString.lift(
+    callWithHandle {
+    uniffiRustCallWithError(FacetEngineException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_pending_uploads_json(
+        it,
+        
+        FfiConverterString.lower(`profileId`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Return registered profiles as JSON.
+     *
+     * # Errors
+     * Returns storage/corrupt-state failures.
+     */
+    @Throws(FacetEngineException::class)override fun `profilesJson`(): kotlin.String {
+            return FfiConverterString.lift(
+    callWithHandle {
+    uniffiRustCallWithError(FacetEngineException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_profiles_json(
+        it,
+        _status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Recover interrupted writes and index provider changes.
+     *
+     * # Errors
+     * Returns provider, configuration, or durable-state failures.
+     */
+    @Throws(FacetEngineException::class)override fun `refresh`(`profileId`: kotlin.String): kotlin.String {
+            return FfiConverterString.lift(
+    callWithHandle {
+    uniffiRustCallWithError(FacetEngineException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_refresh(
+        it,
+        
+        FfiConverterString.lower(`profileId`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Register a versioned profile JSON document.
+     *
+     * # Errors
+     * Rejects malformed identities, unsupported schemas, or category changes.
+     */
+    @Throws(FacetEngineException::class)override fun `registerProfile`(`profileJson`: kotlin.String): kotlin.String {
+            return FfiConverterString.lift(
+    callWithHandle {
+    uniffiRustCallWithError(FacetEngineException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_register_profile(
+        it,
+        
+        FfiConverterString.lower(`profileJson`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Remove an empty profile without deleting user-owned vault files.
+     *
+     * # Errors
+     * Rejects pending work or unresolved conflicts.
+     */
+    @Throws(FacetEngineException::class)override fun `removeProfile`(`profileId`: kotlin.String)
+        = 
+    callWithHandle {
+    uniffiRustCallWithError(FacetEngineException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_remove_profile(
+        it,
+        
+        FfiConverterString.lower(`profileId`),_status)
+}
+    }
+    
+    
+
+    
+    /**
+     * Persist a full protocol cursor before acknowledging its barrier.
+     *
+     * # Errors
+     * Rejects invalid JSON and storage failures.
+     */
+    @Throws(FacetEngineException::class)override fun `saveCheckpoint`(`profileId`: kotlin.String, `checkpointJson`: kotlin.String)
+        = 
+    callWithHandle {
+    uniffiRustCallWithError(FacetEngineException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_save_checkpoint(
+        it,
+        
+        FfiConverterString.lower(`profileId`),
+        FfiConverterString.lower(`checkpointJson`),_status)
+}
+    }
+    
+    
+
+    
+    /**
+     * Return a paged durable snapshot with shared filter/sort/group semantics.
+     *
+     * # Errors
+     * Rejects invalid query/schema values or unavailable index state.
+     */
+    @Throws(FacetEngineException::class)override fun `snapshotJson`(`profileId`: kotlin.String, `queryJson`: kotlin.String): kotlin.String {
+            return FfiConverterString.lift(
+    callWithHandle {
+    uniffiRustCallWithError(FacetEngineException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_snapshot_json(
+        it,
+        
+        FfiConverterString.lower(`profileId`),
+        FfiConverterString.lower(`queryJson`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Begin/resume an immutable incoming image. No complete file crosses FFI.
+     *
+     * # Errors
+     * Rejects changed/reserved IDs, size/hash bounds or unavailable profiles.
+     */
+    @Throws(FacetEngineException::class)override fun `beginPayload`(`profileId`: kotlin.String, `payloadId`: kotlin.String, `size`: kotlin.ULong, `revision`: kotlin.String): FfiFacetPayload {
+            return FfiConverterTypeFfiFacetPayload.lift(
+    callWithHandle {
+    uniffiRustCallWithError(FacetEngineException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_begin_payload(
+        it,
+        
+        FfiConverterString.lower(`profileId`),
+        FfiConverterString.lower(`payloadId`),
+        FfiConverterULong.lower(`size`),
+        FfiConverterString.lower(`revision`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Open one retained conflict/archive image for bounded lazy reads. A null
+     * result denotes an actual tombstone, distinct from a sealed empty image.
+     *
+     * # Errors
+     * Rejects unknown roles, missing conflicts or invalid retained metadata.
+     */
+    @Throws(FacetEngineException::class)override fun `conflictPayload`(`profileId`: kotlin.String, `conflictId`: kotlin.String, `version`: kotlin.String): FfiFacetPayload? {
+            return FfiConverterOptionalTypeFfiFacetPayload.lift(
+    callWithHandle {
+    uniffiRustCallWithError(FacetEngineException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_conflict_payload(
+        it,
+        
+        FfiConverterString.lower(`profileId`),
+        FfiConverterString.lower(`conflictId`),
+        FfiConverterString.lower(`version`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Restore one caller-owned incoming handle after process restart.
+     *
+     * # Errors
+     * Rejects runtime-owned identities, absent profiles/images or stale storage.
+     */
+    @Throws(FacetEngineException::class)override fun `openPayload`(`profileId`: kotlin.String, `payloadId`: kotlin.String): FfiFacetPayload {
+            return FfiConverterTypeFfiFacetPayload.lift(
+    callWithHandle {
+    uniffiRustCallWithError(FacetEngineException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_open_payload(
+        it,
+        
+        FfiConverterString.lower(`profileId`),
+        FfiConverterString.lower(`payloadId`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+
+    
+
+
+    
+    
+    /**
+     * @suppress
+     */
+    companion object
+    
+}
+
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeFfiFacetEngine: FfiConverter<FfiFacetEngine, Long> {
+    override fun lower(value: FfiFacetEngine): Long {
+        return value.uniffiCloneHandle()
+    }
+
+    override fun lift(value: Long): FfiFacetEngine {
+        return FfiFacetEngine(UniffiWithHandle, value)
+    }
+
+    override fun read(buf: ByteBuffer): FfiFacetEngine {
+        return lift(buf.getLong())
+    }
+
+    override fun allocationSize(value: FfiFacetEngine) = 8UL
+
+    override fun write(value: FfiFacetEngine, buf: ByteBuffer) {
+        buf.putLong(lower(value))
+    }
+}
+
+
+// This template implements a class for working with a Rust struct via a handle
+// to the live Rust struct on the other side of the FFI.
+//
+// There's some subtlety here, because we have to be careful not to operate on a Rust
+// struct after it has been dropped, and because we must expose a public API for freeing
+// theq Kotlin wrapper object in lieu of reliable finalizers. The core requirements are:
+//
+//   * Each instance holds an opaque handle to the underlying Rust struct.
+//     Method calls need to read this handle from the object's state and pass it in to
+//     the Rust FFI.
+//
+//   * When an instance is no longer needed, its handle should be passed to a
+//     special destructor function provided by the Rust FFI, which will drop the
+//     underlying Rust struct.
+//
+//   * Given an instance, calling code is expected to call the special
+//     `destroy` method in order to free it after use, either by calling it explicitly
+//     or by using a higher-level helper like the `use` method. Failing to do so risks
+//     leaking the underlying Rust struct.
+//
+//   * We can't assume that calling code will do the right thing, and must be prepared
+//     to handle Kotlin method calls executing concurrently with or even after a call to
+//     `destroy`, and to handle multiple (possibly concurrent!) calls to `destroy`.
+//
+//   * We must never allow Rust code to operate on the underlying Rust struct after
+//     the destructor has been called, and must never call the destructor more than once.
+//     Doing so may trigger memory unsafety.
+//
+//   * To mitigate many of the risks of leaking memory and use-after-free unsafety, a `Cleaner`
+//     is implemented to call the destructor when the Kotlin object becomes unreachable.
+//     This is done in a background thread. This is not a panacea, and client code should be aware that
+//      1. the thread may starve if some there are objects that have poorly performing
+//     `drop` methods or do significant work in their `drop` methods.
+//      2. the thread is shared across the whole library. This can be tuned by using `android_cleaner = true`,
+//         or `android = true` in the [`kotlin` section of the `uniffi.toml` file](https://mozilla.github.io/uniffi-rs/kotlin/configuration.html).
+//
+// If we try to implement this with mutual exclusion on access to the handle, there is the
+// possibility of a race between a method call and a concurrent call to `destroy`:
+//
+//    * Thread A starts a method call, reads the value of the handle, but is interrupted
+//      before it can pass the handle over the FFI to Rust.
+//    * Thread B calls `destroy` and frees the underlying Rust struct.
+//    * Thread A resumes, passing the already-read handle value to Rust and triggering
+//      a use-after-free.
+//
+// One possible solution would be to use a `ReadWriteLock`, with each method call taking
+// a read lock (and thus allowed to run concurrently) and the special `destroy` method
+// taking a write lock (and thus blocking on live method calls). However, we aim not to
+// generate methods with any hidden blocking semantics, and a `destroy` method that might
+// block if called incorrectly seems to meet that bar.
+//
+// So, we achieve our goals by giving each instance an associated `AtomicLong` counter to track
+// the number of in-flight method calls, and an `AtomicBoolean` flag to indicate whether `destroy`
+// has been called. These are updated according to the following rules:
+//
+//    * The initial value of the counter is 1, indicating a live object with no in-flight calls.
+//      The initial value for the flag is false.
+//
+//    * At the start of each method call, we atomically check the counter.
+//      If it is 0 then the underlying Rust struct has already been destroyed and the call is aborted.
+//      If it is nonzero them we atomically increment it by 1 and proceed with the method call.
+//
+//    * At the end of each method call, we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+//    * When `destroy` is called, we atomically flip the flag from false to true.
+//      If the flag was already true we silently fail.
+//      Otherwise we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+// Astute readers may observe that this all sounds very similar to the way that Rust's `Arc<T>` works,
+// and indeed it is, with the addition of a flag to guard against multiple calls to `destroy`.
+//
+// The overall effect is that the underlying Rust struct is destroyed only when `destroy` has been
+// called *and* all in-flight method calls have completed, avoiding violating any of the expectations
+// of the underlying Rust code.
+//
+// This makes a cleaner a better alternative to _not_ calling `destroy()` as
+// and when the object is finished with, but the abstraction is not perfect: if the Rust object's `drop`
+// method is slow, and/or there are many objects to cleanup, and it's on a low end Android device, then the cleaner
+// thread may be starved, and the app will leak memory.
+//
+// In this case, `destroy`ing manually may be a better solution.
+//
+// The cleaner can live side by side with the manual calling of `destroy`. In the order of responsiveness, uniffi objects
+// with Rust peers are reclaimed:
+//
+// 1. By calling the `destroy` method of the object, which calls `rustObject.free()`. If that doesn't happen:
+// 2. When the object becomes unreachable, AND the Cleaner thread gets to call `rustObject.free()`. If the thread is starved then:
+// 3. The memory is reclaimed when the process terminates.
+//
+// [1] https://stackoverflow.com/questions/24376768/can-java-finalize-an-object-when-it-is-still-in-scope/24380219
+//
+
+
+/**
+ * One opaque owner-scoped SQLite image. Close drops only this handle; explicit
+ * discard releases incoming bytes only when no durable owner references them.
+ */
+public interface FfiFacetPayloadInterface {
+    
+    /**
+     * Retire this transient handle without deleting any durable bytes.
+     */
+    fun `closeHandle`()
+    
+    /**
+     * Release only unreferenced incoming image bytes. The retired immutable ID
+     * remains, so changed/repeated operations cannot revive its former payload.
+     *
+     * # Errors
+     * Rejects retained/durable references and expired owners/handles.
+     */
+    fun `discard`()
+    
+    /**
+     * Return metadata only, including the exact durable staging prefix.
+     *
+     * # Errors
+     * Rejects expired owners/handles or corrupt retained metadata.
+     */
+    fun `infoJson`(): kotlin.String
+    
+    /**
+     * Read an exact immutable range at most one MiB, including zero at EOF.
+     *
+     * # Errors
+     * Rejects invalid ranges, unsealed bytes or expired owners/handles.
+     */
+    fun `readChunk`(`offset`: kotlin.ULong, `length`: kotlin.UInt): kotlin.ByteArray
+    
+    /**
+     * Verify the complete digest and durably make this image immutable.
+     *
+     * # Errors
+     * Rejects incomplete/mismatched data, retained images or expired owners.
+     */
+    fun `seal`(): kotlin.String
+    
+    /**
+     * Write a contiguous durable prefix or verify an exact bounded retry.
+     *
+     * # Errors
+     * Rejects retained images, changed chunks, invalid bounds or stale owners.
+     */
+    fun `writeChunk`(`offset`: kotlin.ULong, `bytes`: kotlin.ByteArray): kotlin.String
+    
+    companion object
+}
+
+/**
+ * One opaque owner-scoped SQLite image. Close drops only this handle; explicit
+ * discard releases incoming bytes only when no durable owner references them.
+ */
+open class FfiFacetPayload: Disposable, AutoCloseable, FfiFacetPayloadInterface
+{
+
+    @Suppress("UNUSED_PARAMETER")
+    /**
+     * @suppress
+     */
+    constructor(withHandle: UniffiWithHandle, handle: Long) {
+        this.handle = handle
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(handle))
+    }
+
+    /**
+     * @suppress
+     *
+     * This constructor can be used to instantiate a fake object. Only used for tests. Any
+     * attempt to actually use an object constructed this way will fail as there is no
+     * connected Rust object.
+     */
+    @Suppress("UNUSED_PARAMETER")
+    constructor(noHandle: NoHandle) {
+        this.handle = 0
+        this.cleanable = null
+    }
+
+    protected val handle: Long
+    protected val cleanable: UniffiCleaner.Cleanable?
+
+    private val wasDestroyed = AtomicBoolean(false)
+    private val callCounter = AtomicLong(1)
+
+    /**
+     * Whether the current object has been destroyed and its reference is gone in the Rust side.
+     */
+    val uniffiIsDestroyed: Boolean get() = wasDestroyed.get()
+
+    override fun destroy() {
+        // Only allow a single call to this method.
+        // TODO: maybe we should log a warning if called more than once?
+        if (this.wasDestroyed.compareAndSet(false, true)) {
+            // This decrement always matches the initial count of 1 given at creation time.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable?.clean()
+            }
+        }
+    }
+
+    @Synchronized
+    override fun close() {
+        this.destroy()
+    }
+
+    internal inline fun <R> callWithHandle(block: (handle: Long) -> R): R {
+        // Check and increment the call counter, to keep the object alive.
+        // This needs a compare-and-set retry loop in case of concurrent updates.
+        do {
+            val c = this.callCounter.get()
+            if (c == 0L) {
+                throw IllegalStateException("${this.javaClass.simpleName} object has already been destroyed")
+            }
+            if (c == Long.MAX_VALUE) {
+                throw IllegalStateException("${this.javaClass.simpleName} call counter would overflow")
+            }
+        } while (! this.callCounter.compareAndSet(c, c + 1L))
+        // Now we can safely do the method call without the handle being freed concurrently.
+        try {
+            return block(this.uniffiCloneHandle())
+        } finally {
+            // This decrement always matches the increment we performed above.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable?.clean()
+            }
+        }
+    }
+
+    // Use a static inner class instead of a closure so as not to accidentally
+    // capture `this` as part of the cleanable's action.
+    private class UniffiCleanAction(private val handle: Long) : Runnable {
+        override fun run() {
+            if (handle == 0.toLong()) {
+                // Fake object created with `NoHandle`, don't try to free.
+                return;
+            }
+            uniffiRustCall { status ->
+                UniffiLib.uniffi_tasknotes_core_ffi_fn_free_ffifacetpayload(handle, status)
+            }
+        }
+    }
+
+    /**
+     * @suppress
+     */
+    fun uniffiCloneHandle(): Long {
+        if (handle == 0.toLong()) {
+            throw InternalException("uniffiCloneHandle() called on NoHandle object");
+        }
+        return uniffiRustCall() { status ->
+            UniffiLib.uniffi_tasknotes_core_ffi_fn_clone_ffifacetpayload(handle, status)
+        }
+    }
+
+    
+    /**
+     * Retire this transient handle without deleting any durable bytes.
+     */override fun `closeHandle`()
+        = 
+    callWithHandle {
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffifacetpayload_close_handle(
+        it,
+        _status)
+}
+    }
+    
+    
+
+    
+    /**
+     * Release only unreferenced incoming image bytes. The retired immutable ID
+     * remains, so changed/repeated operations cannot revive its former payload.
+     *
+     * # Errors
+     * Rejects retained/durable references and expired owners/handles.
+     */
+    @Throws(FacetEngineException::class)override fun `discard`()
+        = 
+    callWithHandle {
+    uniffiRustCallWithError(FacetEngineException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffifacetpayload_discard(
+        it,
+        _status)
+}
+    }
+    
+    
+
+    
+    /**
+     * Return metadata only, including the exact durable staging prefix.
+     *
+     * # Errors
+     * Rejects expired owners/handles or corrupt retained metadata.
+     */
+    @Throws(FacetEngineException::class)override fun `infoJson`(): kotlin.String {
+            return FfiConverterString.lift(
+    callWithHandle {
+    uniffiRustCallWithError(FacetEngineException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffifacetpayload_info_json(
+        it,
+        _status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Read an exact immutable range at most one MiB, including zero at EOF.
+     *
+     * # Errors
+     * Rejects invalid ranges, unsealed bytes or expired owners/handles.
+     */
+    @Throws(FacetEngineException::class)override fun `readChunk`(`offset`: kotlin.ULong, `length`: kotlin.UInt): kotlin.ByteArray {
+            return FfiConverterByteArray.lift(
+    callWithHandle {
+    uniffiRustCallWithError(FacetEngineException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffifacetpayload_read_chunk(
+        it,
+        
+        FfiConverterULong.lower(`offset`),
+        FfiConverterUInt.lower(`length`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Verify the complete digest and durably make this image immutable.
+     *
+     * # Errors
+     * Rejects incomplete/mismatched data, retained images or expired owners.
+     */
+    @Throws(FacetEngineException::class)override fun `seal`(): kotlin.String {
+            return FfiConverterString.lift(
+    callWithHandle {
+    uniffiRustCallWithError(FacetEngineException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffifacetpayload_seal(
+        it,
+        _status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Write a contiguous durable prefix or verify an exact bounded retry.
+     *
+     * # Errors
+     * Rejects retained images, changed chunks, invalid bounds or stale owners.
+     */
+    @Throws(FacetEngineException::class)override fun `writeChunk`(`offset`: kotlin.ULong, `bytes`: kotlin.ByteArray): kotlin.String {
+            return FfiConverterString.lift(
+    callWithHandle {
+    uniffiRustCallWithError(FacetEngineException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffifacetpayload_write_chunk(
+        it,
+        
+        FfiConverterULong.lower(`offset`),
+        FfiConverterByteArray.lower(`bytes`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+
+    
+
+
+    
+    
+    /**
+     * @suppress
+     */
+    companion object
+    
+}
+
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeFfiFacetPayload: FfiConverter<FfiFacetPayload, Long> {
+    override fun lower(value: FfiFacetPayload): Long {
+        return value.uniffiCloneHandle()
+    }
+
+    override fun lift(value: Long): FfiFacetPayload {
+        return FfiFacetPayload(UniffiWithHandle, value)
+    }
+
+    override fun read(buf: ByteBuffer): FfiFacetPayload {
+        return lift(buf.getLong())
+    }
+
+    override fun allocationSize(value: FfiFacetPayload) = 8UL
+
+    override fun write(value: FfiFacetPayload, buf: ByteBuffer) {
+        buf.putLong(lower(value))
+    }
+}
+
+
+// This template implements a class for working with a Rust struct via a handle
+// to the live Rust struct on the other side of the FFI.
+//
+// There's some subtlety here, because we have to be careful not to operate on a Rust
+// struct after it has been dropped, and because we must expose a public API for freeing
+// theq Kotlin wrapper object in lieu of reliable finalizers. The core requirements are:
+//
+//   * Each instance holds an opaque handle to the underlying Rust struct.
+//     Method calls need to read this handle from the object's state and pass it in to
+//     the Rust FFI.
+//
+//   * When an instance is no longer needed, its handle should be passed to a
+//     special destructor function provided by the Rust FFI, which will drop the
+//     underlying Rust struct.
+//
+//   * Given an instance, calling code is expected to call the special
+//     `destroy` method in order to free it after use, either by calling it explicitly
+//     or by using a higher-level helper like the `use` method. Failing to do so risks
+//     leaking the underlying Rust struct.
+//
+//   * We can't assume that calling code will do the right thing, and must be prepared
+//     to handle Kotlin method calls executing concurrently with or even after a call to
+//     `destroy`, and to handle multiple (possibly concurrent!) calls to `destroy`.
+//
+//   * We must never allow Rust code to operate on the underlying Rust struct after
+//     the destructor has been called, and must never call the destructor more than once.
+//     Doing so may trigger memory unsafety.
+//
+//   * To mitigate many of the risks of leaking memory and use-after-free unsafety, a `Cleaner`
+//     is implemented to call the destructor when the Kotlin object becomes unreachable.
+//     This is done in a background thread. This is not a panacea, and client code should be aware that
+//      1. the thread may starve if some there are objects that have poorly performing
+//     `drop` methods or do significant work in their `drop` methods.
+//      2. the thread is shared across the whole library. This can be tuned by using `android_cleaner = true`,
+//         or `android = true` in the [`kotlin` section of the `uniffi.toml` file](https://mozilla.github.io/uniffi-rs/kotlin/configuration.html).
+//
+// If we try to implement this with mutual exclusion on access to the handle, there is the
+// possibility of a race between a method call and a concurrent call to `destroy`:
+//
+//    * Thread A starts a method call, reads the value of the handle, but is interrupted
+//      before it can pass the handle over the FFI to Rust.
+//    * Thread B calls `destroy` and frees the underlying Rust struct.
+//    * Thread A resumes, passing the already-read handle value to Rust and triggering
+//      a use-after-free.
+//
+// One possible solution would be to use a `ReadWriteLock`, with each method call taking
+// a read lock (and thus allowed to run concurrently) and the special `destroy` method
+// taking a write lock (and thus blocking on live method calls). However, we aim not to
+// generate methods with any hidden blocking semantics, and a `destroy` method that might
+// block if called incorrectly seems to meet that bar.
+//
+// So, we achieve our goals by giving each instance an associated `AtomicLong` counter to track
+// the number of in-flight method calls, and an `AtomicBoolean` flag to indicate whether `destroy`
+// has been called. These are updated according to the following rules:
+//
+//    * The initial value of the counter is 1, indicating a live object with no in-flight calls.
+//      The initial value for the flag is false.
+//
+//    * At the start of each method call, we atomically check the counter.
+//      If it is 0 then the underlying Rust struct has already been destroyed and the call is aborted.
+//      If it is nonzero them we atomically increment it by 1 and proceed with the method call.
+//
+//    * At the end of each method call, we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+//    * When `destroy` is called, we atomically flip the flag from false to true.
+//      If the flag was already true we silently fail.
+//      Otherwise we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+// Astute readers may observe that this all sounds very similar to the way that Rust's `Arc<T>` works,
+// and indeed it is, with the addition of a flag to guard against multiple calls to `destroy`.
+//
+// The overall effect is that the underlying Rust struct is destroyed only when `destroy` has been
+// called *and* all in-flight method calls have completed, avoiding violating any of the expectations
+// of the underlying Rust code.
+//
+// This makes a cleaner a better alternative to _not_ calling `destroy()` as
+// and when the object is finished with, but the abstraction is not perfect: if the Rust object's `drop`
+// method is slow, and/or there are many objects to cleanup, and it's on a low end Android device, then the cleaner
+// thread may be starved, and the app will leak memory.
+//
+// In this case, `destroy`ing manually may be a better solution.
+//
+// The cleaner can live side by side with the manual calling of `destroy`. In the order of responsiveness, uniffi objects
+// with Rust peers are reclaimed:
+//
+// 1. By calling the `destroy` method of the object, which calls `rustObject.free()`. If that doesn't happen:
+// 2. When the object becomes unreachable, AND the Cleaner thread gets to call `rustObject.free()`. If the thread is starved then:
+// 3. The memory is reclaimed when the process terminates.
+//
+// [1] https://stackoverflow.com/questions/24376768/can-java-finalize-an-object-when-it-is-still-in-scope/24380219
+//
+
+
+/**
+ * Account request/response correlation and opaque managed-password ownership.
+ * Native code performs HTTP requests outside this handle's lock.
+ */
+public interface FfiObsidianAccountInterface {
+    
+    /**
+     * Cancel/release an HTTP request after native cancellation/transport error.
+     *
+     * # Errors
+     * Rejects a poisoned boundary lock. Removal is idempotent for a response
+     * already consumed or invalidated by an account switch.
+     */
+    fun `cancelRequest`(`requestId`: kotlin.ULong)
+    
+    /**
+     * Prepare owned/shared vault discovery with version-3 negotiation.
+     *
+     * # Errors
+     * Returns a typed lock/queue error.
+     */
+    fun `listVaults`(`token`: kotlin.String): ObsidianHttpRequest
+    
+    /**
+     * Derive a selected vault key on the background runner. Managed vaults
+     * require no user password; E2E vaults require one. Store returned bytes
+     * only after `vault_access` succeeds.
+     *
+     * # Errors
+     * Rejects an unknown vault, absent password, or key derivation failure.
+     */
+    fun `prepareVault`(`vaultId`: kotlin.String, `password`: kotlin.String?): ObsidianPreparedVault
+    
+    /**
+     * Decode the matching response; no network operation runs under the lock.
+     *
+     * # Errors
+     * Rejects stale IDs, malformed schemas and service failures with redaction.
+     */
+    fun `response`(`requestId`: kotlin.ULong, `status`: kotlin.UShort, `body`: kotlin.String): ObsidianAccountResponse
+    
+    /**
+     * Prepare sign-in; native UI collects the optional one-time MFA code.
+     *
+     * # Errors
+     * Returns a typed lock/queue error without including credentials.
+     */
+    fun `signIn`(`email`: kotlin.String, `password`: kotlin.String, `mfa`: kotlin.String): ObsidianHttpRequest
+    
+    /**
+     * Prepare remote sign-out. Native code also removes its secure token.
+     *
+     * # Errors
+     * Returns a typed lock/queue error.
+     */
+    fun `signOut`(`token`: kotlin.String): ObsidianHttpRequest
+    
+    /**
+     * Validate a secure-storage token against current account metadata.
+     *
+     * # Errors
+     * Returns a typed lock/queue error.
+     */
+    fun `userInfo`(`token`: kotlin.String): ObsidianHttpRequest
+    
+    /**
+     * Prepare service key validation before storing the derived profile key.
+     *
+     * # Errors
+     * Rejects unknown vaults or invalid key lengths.
+     */
+    fun `vaultAccess`(`token`: kotlin.String, `vaultId`: kotlin.String, `keyBytes`: kotlin.ByteArray): ObsidianHttpRequest
+    
+    companion object
+}
+
+/**
+ * Account request/response correlation and opaque managed-password ownership.
+ * Native code performs HTTP requests outside this handle's lock.
+ */
+open class FfiObsidianAccount: Disposable, AutoCloseable, FfiObsidianAccountInterface
+{
+
+    @Suppress("UNUSED_PARAMETER")
+    /**
+     * @suppress
+     */
+    constructor(withHandle: UniffiWithHandle, handle: Long) {
+        this.handle = handle
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(handle))
+    }
+
+    /**
+     * @suppress
+     *
+     * This constructor can be used to instantiate a fake object. Only used for tests. Any
+     * attempt to actually use an object constructed this way will fail as there is no
+     * connected Rust object.
+     */
+    @Suppress("UNUSED_PARAMETER")
+    constructor(noHandle: NoHandle) {
+        this.handle = 0
+        this.cleanable = null
+    }
+    /**
+     * Create an account boundary with no stored credentials.
+     */
+    constructor() :
+        this(UniffiWithHandle, 
+    uniffiRustCall() { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_constructor_ffiobsidianaccount_new(
+    
+        _status)
+}
+    )
+
+    protected val handle: Long
+    protected val cleanable: UniffiCleaner.Cleanable?
+
+    private val wasDestroyed = AtomicBoolean(false)
+    private val callCounter = AtomicLong(1)
+
+    /**
+     * Whether the current object has been destroyed and its reference is gone in the Rust side.
+     */
+    val uniffiIsDestroyed: Boolean get() = wasDestroyed.get()
+
+    override fun destroy() {
+        // Only allow a single call to this method.
+        // TODO: maybe we should log a warning if called more than once?
+        if (this.wasDestroyed.compareAndSet(false, true)) {
+            // This decrement always matches the initial count of 1 given at creation time.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable?.clean()
+            }
+        }
+    }
+
+    @Synchronized
+    override fun close() {
+        this.destroy()
+    }
+
+    internal inline fun <R> callWithHandle(block: (handle: Long) -> R): R {
+        // Check and increment the call counter, to keep the object alive.
+        // This needs a compare-and-set retry loop in case of concurrent updates.
+        do {
+            val c = this.callCounter.get()
+            if (c == 0L) {
+                throw IllegalStateException("${this.javaClass.simpleName} object has already been destroyed")
+            }
+            if (c == Long.MAX_VALUE) {
+                throw IllegalStateException("${this.javaClass.simpleName} call counter would overflow")
+            }
+        } while (! this.callCounter.compareAndSet(c, c + 1L))
+        // Now we can safely do the method call without the handle being freed concurrently.
+        try {
+            return block(this.uniffiCloneHandle())
+        } finally {
+            // This decrement always matches the increment we performed above.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable?.clean()
+            }
+        }
+    }
+
+    // Use a static inner class instead of a closure so as not to accidentally
+    // capture `this` as part of the cleanable's action.
+    private class UniffiCleanAction(private val handle: Long) : Runnable {
+        override fun run() {
+            if (handle == 0.toLong()) {
+                // Fake object created with `NoHandle`, don't try to free.
+                return;
+            }
+            uniffiRustCall { status ->
+                UniffiLib.uniffi_tasknotes_core_ffi_fn_free_ffiobsidianaccount(handle, status)
+            }
+        }
+    }
+
+    /**
+     * @suppress
+     */
+    fun uniffiCloneHandle(): Long {
+        if (handle == 0.toLong()) {
+            throw InternalException("uniffiCloneHandle() called on NoHandle object");
+        }
+        return uniffiRustCall() { status ->
+            UniffiLib.uniffi_tasknotes_core_ffi_fn_clone_ffiobsidianaccount(handle, status)
+        }
+    }
+
+    
+    /**
+     * Cancel/release an HTTP request after native cancellation/transport error.
+     *
+     * # Errors
+     * Rejects a poisoned boundary lock. Removal is idempotent for a response
+     * already consumed or invalidated by an account switch.
+     */
+    @Throws(ObsidianBoundaryException::class)override fun `cancelRequest`(`requestId`: kotlin.ULong)
+        = 
+    callWithHandle {
+    uniffiRustCallWithError(ObsidianBoundaryException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_cancel_request(
+        it,
+        
+        FfiConverterULong.lower(`requestId`),_status)
+}
+    }
+    
+    
+
+    
+    /**
+     * Prepare owned/shared vault discovery with version-3 negotiation.
+     *
+     * # Errors
+     * Returns a typed lock/queue error.
+     */
+    @Throws(ObsidianBoundaryException::class)override fun `listVaults`(`token`: kotlin.String): ObsidianHttpRequest {
+            return FfiConverterTypeObsidianHttpRequest.lift(
+    callWithHandle {
+    uniffiRustCallWithError(ObsidianBoundaryException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_list_vaults(
+        it,
+        
+        FfiConverterString.lower(`token`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Derive a selected vault key on the background runner. Managed vaults
+     * require no user password; E2E vaults require one. Store returned bytes
+     * only after `vault_access` succeeds.
+     *
+     * # Errors
+     * Rejects an unknown vault, absent password, or key derivation failure.
+     */
+    @Throws(ObsidianBoundaryException::class)override fun `prepareVault`(`vaultId`: kotlin.String, `password`: kotlin.String?): ObsidianPreparedVault {
+            return FfiConverterTypeObsidianPreparedVault.lift(
+    callWithHandle {
+    uniffiRustCallWithError(ObsidianBoundaryException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_prepare_vault(
+        it,
+        
+        FfiConverterString.lower(`vaultId`),
+        FfiConverterOptionalString.lower(`password`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Decode the matching response; no network operation runs under the lock.
+     *
+     * # Errors
+     * Rejects stale IDs, malformed schemas and service failures with redaction.
+     */
+    @Throws(ObsidianBoundaryException::class)override fun `response`(`requestId`: kotlin.ULong, `status`: kotlin.UShort, `body`: kotlin.String): ObsidianAccountResponse {
+            return FfiConverterTypeObsidianAccountResponse.lift(
+    callWithHandle {
+    uniffiRustCallWithError(ObsidianBoundaryException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_response(
+        it,
+        
+        FfiConverterULong.lower(`requestId`),
+        FfiConverterUShort.lower(`status`),
+        FfiConverterString.lower(`body`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Prepare sign-in; native UI collects the optional one-time MFA code.
+     *
+     * # Errors
+     * Returns a typed lock/queue error without including credentials.
+     */
+    @Throws(ObsidianBoundaryException::class)override fun `signIn`(`email`: kotlin.String, `password`: kotlin.String, `mfa`: kotlin.String): ObsidianHttpRequest {
+            return FfiConverterTypeObsidianHttpRequest.lift(
+    callWithHandle {
+    uniffiRustCallWithError(ObsidianBoundaryException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_sign_in(
+        it,
+        
+        FfiConverterString.lower(`email`),
+        FfiConverterString.lower(`password`),
+        FfiConverterString.lower(`mfa`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Prepare remote sign-out. Native code also removes its secure token.
+     *
+     * # Errors
+     * Returns a typed lock/queue error.
+     */
+    @Throws(ObsidianBoundaryException::class)override fun `signOut`(`token`: kotlin.String): ObsidianHttpRequest {
+            return FfiConverterTypeObsidianHttpRequest.lift(
+    callWithHandle {
+    uniffiRustCallWithError(ObsidianBoundaryException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_sign_out(
+        it,
+        
+        FfiConverterString.lower(`token`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Validate a secure-storage token against current account metadata.
+     *
+     * # Errors
+     * Returns a typed lock/queue error.
+     */
+    @Throws(ObsidianBoundaryException::class)override fun `userInfo`(`token`: kotlin.String): ObsidianHttpRequest {
+            return FfiConverterTypeObsidianHttpRequest.lift(
+    callWithHandle {
+    uniffiRustCallWithError(ObsidianBoundaryException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_user_info(
+        it,
+        
+        FfiConverterString.lower(`token`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Prepare service key validation before storing the derived profile key.
+     *
+     * # Errors
+     * Rejects unknown vaults or invalid key lengths.
+     */
+    @Throws(ObsidianBoundaryException::class)override fun `vaultAccess`(`token`: kotlin.String, `vaultId`: kotlin.String, `keyBytes`: kotlin.ByteArray): ObsidianHttpRequest {
+            return FfiConverterTypeObsidianHttpRequest.lift(
+    callWithHandle {
+    uniffiRustCallWithError(ObsidianBoundaryException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_vault_access(
+        it,
+        
+        FfiConverterString.lower(`token`),
+        FfiConverterString.lower(`vaultId`),
+        FfiConverterByteArray.lower(`keyBytes`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+
+    
+
+
+    
+    
+    /**
+     * @suppress
+     */
+    companion object
+    
+}
+
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeFfiObsidianAccount: FfiConverter<FfiObsidianAccount, Long> {
+    override fun lower(value: FfiObsidianAccount): Long {
+        return value.uniffiCloneHandle()
+    }
+
+    override fun lift(value: Long): FfiObsidianAccount {
+        return FfiObsidianAccount(UniffiWithHandle, value)
+    }
+
+    override fun read(buf: ByteBuffer): FfiObsidianAccount {
+        return lift(buf.getLong())
+    }
+
+    override fun allocationSize(value: FfiObsidianAccount) = 8UL
+
+    override fun write(value: FfiObsidianAccount, buf: ByteBuffer) {
+        buf.putLong(lower(value))
+    }
+}
+
+
+// This template implements a class for working with a Rust struct via a handle
+// to the live Rust struct on the other side of the FFI.
+//
+// There's some subtlety here, because we have to be careful not to operate on a Rust
+// struct after it has been dropped, and because we must expose a public API for freeing
+// theq Kotlin wrapper object in lieu of reliable finalizers. The core requirements are:
+//
+//   * Each instance holds an opaque handle to the underlying Rust struct.
+//     Method calls need to read this handle from the object's state and pass it in to
+//     the Rust FFI.
+//
+//   * When an instance is no longer needed, its handle should be passed to a
+//     special destructor function provided by the Rust FFI, which will drop the
+//     underlying Rust struct.
+//
+//   * Given an instance, calling code is expected to call the special
+//     `destroy` method in order to free it after use, either by calling it explicitly
+//     or by using a higher-level helper like the `use` method. Failing to do so risks
+//     leaking the underlying Rust struct.
+//
+//   * We can't assume that calling code will do the right thing, and must be prepared
+//     to handle Kotlin method calls executing concurrently with or even after a call to
+//     `destroy`, and to handle multiple (possibly concurrent!) calls to `destroy`.
+//
+//   * We must never allow Rust code to operate on the underlying Rust struct after
+//     the destructor has been called, and must never call the destructor more than once.
+//     Doing so may trigger memory unsafety.
+//
+//   * To mitigate many of the risks of leaking memory and use-after-free unsafety, a `Cleaner`
+//     is implemented to call the destructor when the Kotlin object becomes unreachable.
+//     This is done in a background thread. This is not a panacea, and client code should be aware that
+//      1. the thread may starve if some there are objects that have poorly performing
+//     `drop` methods or do significant work in their `drop` methods.
+//      2. the thread is shared across the whole library. This can be tuned by using `android_cleaner = true`,
+//         or `android = true` in the [`kotlin` section of the `uniffi.toml` file](https://mozilla.github.io/uniffi-rs/kotlin/configuration.html).
+//
+// If we try to implement this with mutual exclusion on access to the handle, there is the
+// possibility of a race between a method call and a concurrent call to `destroy`:
+//
+//    * Thread A starts a method call, reads the value of the handle, but is interrupted
+//      before it can pass the handle over the FFI to Rust.
+//    * Thread B calls `destroy` and frees the underlying Rust struct.
+//    * Thread A resumes, passing the already-read handle value to Rust and triggering
+//      a use-after-free.
+//
+// One possible solution would be to use a `ReadWriteLock`, with each method call taking
+// a read lock (and thus allowed to run concurrently) and the special `destroy` method
+// taking a write lock (and thus blocking on live method calls). However, we aim not to
+// generate methods with any hidden blocking semantics, and a `destroy` method that might
+// block if called incorrectly seems to meet that bar.
+//
+// So, we achieve our goals by giving each instance an associated `AtomicLong` counter to track
+// the number of in-flight method calls, and an `AtomicBoolean` flag to indicate whether `destroy`
+// has been called. These are updated according to the following rules:
+//
+//    * The initial value of the counter is 1, indicating a live object with no in-flight calls.
+//      The initial value for the flag is false.
+//
+//    * At the start of each method call, we atomically check the counter.
+//      If it is 0 then the underlying Rust struct has already been destroyed and the call is aborted.
+//      If it is nonzero them we atomically increment it by 1 and proceed with the method call.
+//
+//    * At the end of each method call, we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+//    * When `destroy` is called, we atomically flip the flag from false to true.
+//      If the flag was already true we silently fail.
+//      Otherwise we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+// Astute readers may observe that this all sounds very similar to the way that Rust's `Arc<T>` works,
+// and indeed it is, with the addition of a flag to guard against multiple calls to `destroy`.
+//
+// The overall effect is that the underlying Rust struct is destroyed only when `destroy` has been
+// called *and* all in-flight method calls have completed, avoiding violating any of the expectations
+// of the underlying Rust code.
+//
+// This makes a cleaner a better alternative to _not_ calling `destroy()` as
+// and when the object is finished with, but the abstraction is not perfect: if the Rust object's `drop`
+// method is slow, and/or there are many objects to cleanup, and it's on a low end Android device, then the cleaner
+// thread may be starved, and the app will leak memory.
+//
+// In this case, `destroy`ing manually may be a better solution.
+//
+// The cleaner can live side by side with the manual calling of `destroy`. In the order of responsiveness, uniffi objects
+// with Rust peers are reclaimed:
+//
+// 1. By calling the `destroy` method of the object, which calls `rustObject.free()`. If that doesn't happen:
+// 2. When the object becomes unreachable, AND the Cleaner thread gets to call `rustObject.free()`. If the thread is starved then:
+// 3. The memory is reclaimed when the process terminates.
+//
+// [1] https://stackoverflow.com/questions/24376768/can-java-finalize-an-object-when-it-is-still-in-scope/24380219
+//
+
+
+/**
+ * Serial native session wrapper. The host owns socket epochs, secure storage,
+ * monotonic timers and DB transactions, with no callbacks under this lock.
+ */
+public interface FfiObsidianSessionInterface {
+    
+    /**
+     * Apply one authenticated opaque download using its original pending
+     * metadata. Exact retry reuses staged bytes and the durable remote journal.
+     * `complete_remote` remains separate and fails before this succeeds.
+     *
+     * # Errors
+     * Rejects stale/wrong-epoch handles, changed owners or application failure.
+     */
+    fun `applyDownload`(`transferId`: kotlin.String)
+    
+    /**
+     * Begin opening the socket and replay committed pending notices.
+     *
+     * # Errors
+     * Rejects an already active session.
+     */
+    fun `begin`(`nowMs`: kotlin.ULong): List<ObsidianSessionEffect>
+    
+    /**
+     * Bind one actual remote vault to its private runtime profile. The session
+     * holds a Weak engine reference, and creates no engine/callback cycle.
+     * Exact same-owner rebind is idempotent; a different owner requires unbind.
+     *
+     * # Errors
+     * Rejects local profiles, closed engines or changed durable vault ownership.
+     */
+    fun `bindRuntime`(`engine`: FfiFacetEngine, `profileId`: kotlin.String)
+    
+    /**
+     * Cancel transport work and return all pending receipt identifiers.
+     *
+     * # Errors
+     * Returns a typed lock failure.
+     */
+    fun `cancel`(`nowMs`: kotlin.ULong): List<ObsidianSessionEffect>
+    
+    /**
+     * Non-secret crash-recovery envelope, for explicit lifecycle persistence.
+     *
+     * # Errors
+     * Returns a typed lock/serialization error.
+     */
+    fun `checkpointJson`(): kotlin.String
+    
+    /**
+     * Confirm the exact checkpoint snapshot has committed to profile storage.
+     *
+     * # Errors
+     * Rejects unknown/out-of-order barrier revisions.
+     */
+    fun `checkpointPersisted`(`revision`: kotlin.ULong, `nowMs`: kotlin.ULong): List<ObsidianSessionEffect>
+    
+    /**
+     * Mark a remote revision durably applied or parked in the conflict inbox.
+     *
+     * # Errors
+     * Rejects notices not yet delivered behind the durability barrier.
+     */
+    fun `completeRemote`(`uid`: kotlin.ULong): List<ObsidianSessionEffect>
+    
+    /**
+     * Report current-socket loss; queued upload snapshots remain immutable.
+     *
+     * # Errors
+     * Returns a typed lock failure.
+     */
+    fun `disconnected`(`nowMs`: kotlin.ULong): List<ObsidianSessionEffect>
+    
+    /**
+     * Report successful socket opening for the current socket epoch.
+     *
+     * # Errors
+     * Rejects an unexpected lifecycle callback.
+     */
+    fun `opened`(`nowMs`: kotlin.ULong): List<ObsidianSessionEffect>
+    
+    /**
+     * Queue a service revision download once metadata is durably available.
+     *
+     * # Errors
+     * Rejects invalid revision identifiers or queue exhaustion.
+     */
+    fun `queueDownload`(`uid`: kotlin.ULong, `nowMs`: kotlin.ULong): List<ObsidianSessionEffect>
+    
+    /**
+     * Queue the exact durable outbox head with its original clocks and bytes.
+     * Admission precedes the single Rust encrypted-frame allocation.
+     *
+     * # Errors
+     * Rejects wrong/closed owners, changed receipts, nonce or memory admission.
+     */
+    fun `queueDurableUpload`(`operationId`: kotlin.String, `nonce`: kotlin.ByteArray, `nowMs`: kotlin.ULong): List<ObsidianSessionEffect>
+    
+    /**
+     * Report a complete encrypted binary frame.
+     *
+     * # Errors
+     * Returns a typed lock/lifecycle failure.
+     */
+    fun `receiveBinary`(`bytes`: kotlin.ByteArray, `nowMs`: kotlin.ULong): List<ObsidianSessionEffect>
+    
+    /**
+     * Report a complete text frame without persisting/logging it.
+     *
+     * # Errors
+     * Returns a typed lock/lifecycle failure.
+     */
+    fun `receiveText`(`text`: kotlin.String, `nowMs`: kotlin.ULong): List<ObsidianSessionEffect>
+    
+    /**
+     * Wake heartbeat, timeout and reconnect work using a monotonic clock.
+     *
+     * # Errors
+     * Returns a typed lock failure.
+     */
+    fun `tick`(`nowMs`: kotlin.ULong): List<ObsidianSessionEffect>
+    
+    /**
+     * Stop socket work, drop transient completions and invalidate this binding.
+     * Durable incoming images, outbox and pending notices remain for replay.
+     *
+     * # Errors
+     * Returns a poisoned serialization lock or protocol state failure.
+     */
+    fun `unbindRuntime`(`nowMs`: kotlin.ULong): List<ObsidianSessionEffect>
+    
+    companion object
+}
+
+/**
+ * Serial native session wrapper. The host owns socket epochs, secure storage,
+ * monotonic timers and DB transactions, with no callbacks under this lock.
+ */
+open class FfiObsidianSession: Disposable, AutoCloseable, FfiObsidianSessionInterface
+{
+
+    @Suppress("UNUSED_PARAMETER")
+    /**
+     * @suppress
+     */
+    constructor(withHandle: UniffiWithHandle, handle: Long) {
+        this.handle = handle
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(handle))
+    }
+
+    /**
+     * @suppress
+     *
+     * This constructor can be used to instantiate a fake object. Only used for tests. Any
+     * attempt to actually use an object constructed this way will fail as there is no
+     * connected Rust object.
+     */
+    @Suppress("UNUSED_PARAMETER")
+    constructor(noHandle: NoHandle) {
+        this.handle = 0
+        this.cleanable = null
+    }
+    /**
+     * Restore one private-replica session from secure-storage key/token and
+     * durable checkpoint. Empty checkpoint JSON means first setup only.
+     *
+     * # Errors
+     * Rejects invalid configuration, key, version, or restored state.
+     */
+    constructor(`options`: ObsidianSessionOptions) :
+        this(UniffiWithHandle, 
+    uniffiRustCallWithError(ObsidianBoundaryException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_constructor_ffiobsidiansession_new(
+    
+        
+        FfiConverterTypeObsidianSessionOptions.lower(`options`),_status)
+}
+    )
+
+    protected val handle: Long
+    protected val cleanable: UniffiCleaner.Cleanable?
+
+    private val wasDestroyed = AtomicBoolean(false)
+    private val callCounter = AtomicLong(1)
+
+    /**
+     * Whether the current object has been destroyed and its reference is gone in the Rust side.
+     */
+    val uniffiIsDestroyed: Boolean get() = wasDestroyed.get()
+
+    override fun destroy() {
+        // Only allow a single call to this method.
+        // TODO: maybe we should log a warning if called more than once?
+        if (this.wasDestroyed.compareAndSet(false, true)) {
+            // This decrement always matches the initial count of 1 given at creation time.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable?.clean()
+            }
+        }
+    }
+
+    @Synchronized
+    override fun close() {
+        this.destroy()
+    }
+
+    internal inline fun <R> callWithHandle(block: (handle: Long) -> R): R {
+        // Check and increment the call counter, to keep the object alive.
+        // This needs a compare-and-set retry loop in case of concurrent updates.
+        do {
+            val c = this.callCounter.get()
+            if (c == 0L) {
+                throw IllegalStateException("${this.javaClass.simpleName} object has already been destroyed")
+            }
+            if (c == Long.MAX_VALUE) {
+                throw IllegalStateException("${this.javaClass.simpleName} call counter would overflow")
+            }
+        } while (! this.callCounter.compareAndSet(c, c + 1L))
+        // Now we can safely do the method call without the handle being freed concurrently.
+        try {
+            return block(this.uniffiCloneHandle())
+        } finally {
+            // This decrement always matches the increment we performed above.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable?.clean()
+            }
+        }
+    }
+
+    // Use a static inner class instead of a closure so as not to accidentally
+    // capture `this` as part of the cleanable's action.
+    private class UniffiCleanAction(private val handle: Long) : Runnable {
+        override fun run() {
+            if (handle == 0.toLong()) {
+                // Fake object created with `NoHandle`, don't try to free.
+                return;
+            }
+            uniffiRustCall { status ->
+                UniffiLib.uniffi_tasknotes_core_ffi_fn_free_ffiobsidiansession(handle, status)
+            }
+        }
+    }
+
+    /**
+     * @suppress
+     */
+    fun uniffiCloneHandle(): Long {
+        if (handle == 0.toLong()) {
+            throw InternalException("uniffiCloneHandle() called on NoHandle object");
+        }
+        return uniffiRustCall() { status ->
+            UniffiLib.uniffi_tasknotes_core_ffi_fn_clone_ffiobsidiansession(handle, status)
+        }
+    }
+
+    
+    /**
+     * Apply one authenticated opaque download using its original pending
+     * metadata. Exact retry reuses staged bytes and the durable remote journal.
+     * `complete_remote` remains separate and fails before this succeeds.
+     *
+     * # Errors
+     * Rejects stale/wrong-epoch handles, changed owners or application failure.
+     */
+    @Throws(ObsidianBoundaryException::class)override fun `applyDownload`(`transferId`: kotlin.String)
+        = 
+    callWithHandle {
+    uniffiRustCallWithError(ObsidianBoundaryException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_apply_download(
+        it,
+        
+        FfiConverterString.lower(`transferId`),_status)
+}
+    }
+    
+    
+
+    
+    /**
+     * Begin opening the socket and replay committed pending notices.
+     *
+     * # Errors
+     * Rejects an already active session.
+     */
+    @Throws(ObsidianBoundaryException::class)override fun `begin`(`nowMs`: kotlin.ULong): List<ObsidianSessionEffect> {
+            return FfiConverterSequenceTypeObsidianSessionEffect.lift(
+    callWithHandle {
+    uniffiRustCallWithError(ObsidianBoundaryException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_begin(
+        it,
+        
+        FfiConverterULong.lower(`nowMs`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Bind one actual remote vault to its private runtime profile. The session
+     * holds a Weak engine reference, and creates no engine/callback cycle.
+     * Exact same-owner rebind is idempotent; a different owner requires unbind.
+     *
+     * # Errors
+     * Rejects local profiles, closed engines or changed durable vault ownership.
+     */
+    @Throws(ObsidianBoundaryException::class)override fun `bindRuntime`(`engine`: FfiFacetEngine, `profileId`: kotlin.String)
+        = 
+    callWithHandle {
+    uniffiRustCallWithError(ObsidianBoundaryException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_bind_runtime(
+        it,
+        
+        FfiConverterTypeFfiFacetEngine.lower(`engine`),
+        FfiConverterString.lower(`profileId`),_status)
+}
+    }
+    
+    
+
+    
+    /**
+     * Cancel transport work and return all pending receipt identifiers.
+     *
+     * # Errors
+     * Returns a typed lock failure.
+     */
+    @Throws(ObsidianBoundaryException::class)override fun `cancel`(`nowMs`: kotlin.ULong): List<ObsidianSessionEffect> {
+            return FfiConverterSequenceTypeObsidianSessionEffect.lift(
+    callWithHandle {
+    uniffiRustCallWithError(ObsidianBoundaryException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_cancel(
+        it,
+        
+        FfiConverterULong.lower(`nowMs`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Non-secret crash-recovery envelope, for explicit lifecycle persistence.
+     *
+     * # Errors
+     * Returns a typed lock/serialization error.
+     */
+    @Throws(ObsidianBoundaryException::class)override fun `checkpointJson`(): kotlin.String {
+            return FfiConverterString.lift(
+    callWithHandle {
+    uniffiRustCallWithError(ObsidianBoundaryException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_checkpoint_json(
+        it,
+        _status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Confirm the exact checkpoint snapshot has committed to profile storage.
+     *
+     * # Errors
+     * Rejects unknown/out-of-order barrier revisions.
+     */
+    @Throws(ObsidianBoundaryException::class)override fun `checkpointPersisted`(`revision`: kotlin.ULong, `nowMs`: kotlin.ULong): List<ObsidianSessionEffect> {
+            return FfiConverterSequenceTypeObsidianSessionEffect.lift(
+    callWithHandle {
+    uniffiRustCallWithError(ObsidianBoundaryException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_checkpoint_persisted(
+        it,
+        
+        FfiConverterULong.lower(`revision`),
+        FfiConverterULong.lower(`nowMs`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Mark a remote revision durably applied or parked in the conflict inbox.
+     *
+     * # Errors
+     * Rejects notices not yet delivered behind the durability barrier.
+     */
+    @Throws(ObsidianBoundaryException::class)override fun `completeRemote`(`uid`: kotlin.ULong): List<ObsidianSessionEffect> {
+            return FfiConverterSequenceTypeObsidianSessionEffect.lift(
+    callWithHandle {
+    uniffiRustCallWithError(ObsidianBoundaryException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_complete_remote(
+        it,
+        
+        FfiConverterULong.lower(`uid`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Report current-socket loss; queued upload snapshots remain immutable.
+     *
+     * # Errors
+     * Returns a typed lock failure.
+     */
+    @Throws(ObsidianBoundaryException::class)override fun `disconnected`(`nowMs`: kotlin.ULong): List<ObsidianSessionEffect> {
+            return FfiConverterSequenceTypeObsidianSessionEffect.lift(
+    callWithHandle {
+    uniffiRustCallWithError(ObsidianBoundaryException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_disconnected(
+        it,
+        
+        FfiConverterULong.lower(`nowMs`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Report successful socket opening for the current socket epoch.
+     *
+     * # Errors
+     * Rejects an unexpected lifecycle callback.
+     */
+    @Throws(ObsidianBoundaryException::class)override fun `opened`(`nowMs`: kotlin.ULong): List<ObsidianSessionEffect> {
+            return FfiConverterSequenceTypeObsidianSessionEffect.lift(
+    callWithHandle {
+    uniffiRustCallWithError(ObsidianBoundaryException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_opened(
+        it,
+        
+        FfiConverterULong.lower(`nowMs`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Queue a service revision download once metadata is durably available.
+     *
+     * # Errors
+     * Rejects invalid revision identifiers or queue exhaustion.
+     */
+    @Throws(ObsidianBoundaryException::class)override fun `queueDownload`(`uid`: kotlin.ULong, `nowMs`: kotlin.ULong): List<ObsidianSessionEffect> {
+            return FfiConverterSequenceTypeObsidianSessionEffect.lift(
+    callWithHandle {
+    uniffiRustCallWithError(ObsidianBoundaryException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_queue_download(
+        it,
+        
+        FfiConverterULong.lower(`uid`),
+        FfiConverterULong.lower(`nowMs`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Queue the exact durable outbox head with its original clocks and bytes.
+     * Admission precedes the single Rust encrypted-frame allocation.
+     *
+     * # Errors
+     * Rejects wrong/closed owners, changed receipts, nonce or memory admission.
+     */
+    @Throws(ObsidianBoundaryException::class)override fun `queueDurableUpload`(`operationId`: kotlin.String, `nonce`: kotlin.ByteArray, `nowMs`: kotlin.ULong): List<ObsidianSessionEffect> {
+            return FfiConverterSequenceTypeObsidianSessionEffect.lift(
+    callWithHandle {
+    uniffiRustCallWithError(ObsidianBoundaryException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_queue_durable_upload(
+        it,
+        
+        FfiConverterString.lower(`operationId`),
+        FfiConverterByteArray.lower(`nonce`),
+        FfiConverterULong.lower(`nowMs`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Report a complete encrypted binary frame.
+     *
+     * # Errors
+     * Returns a typed lock/lifecycle failure.
+     */
+    @Throws(ObsidianBoundaryException::class)override fun `receiveBinary`(`bytes`: kotlin.ByteArray, `nowMs`: kotlin.ULong): List<ObsidianSessionEffect> {
+            return FfiConverterSequenceTypeObsidianSessionEffect.lift(
+    callWithHandle {
+    uniffiRustCallWithError(ObsidianBoundaryException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_receive_binary(
+        it,
+        
+        FfiConverterByteArray.lower(`bytes`),
+        FfiConverterULong.lower(`nowMs`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Report a complete text frame without persisting/logging it.
+     *
+     * # Errors
+     * Returns a typed lock/lifecycle failure.
+     */
+    @Throws(ObsidianBoundaryException::class)override fun `receiveText`(`text`: kotlin.String, `nowMs`: kotlin.ULong): List<ObsidianSessionEffect> {
+            return FfiConverterSequenceTypeObsidianSessionEffect.lift(
+    callWithHandle {
+    uniffiRustCallWithError(ObsidianBoundaryException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_receive_text(
+        it,
+        
+        FfiConverterString.lower(`text`),
+        FfiConverterULong.lower(`nowMs`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Wake heartbeat, timeout and reconnect work using a monotonic clock.
+     *
+     * # Errors
+     * Returns a typed lock failure.
+     */
+    @Throws(ObsidianBoundaryException::class)override fun `tick`(`nowMs`: kotlin.ULong): List<ObsidianSessionEffect> {
+            return FfiConverterSequenceTypeObsidianSessionEffect.lift(
+    callWithHandle {
+    uniffiRustCallWithError(ObsidianBoundaryException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_tick(
+        it,
+        
+        FfiConverterULong.lower(`nowMs`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Stop socket work, drop transient completions and invalidate this binding.
+     * Durable incoming images, outbox and pending notices remain for replay.
+     *
+     * # Errors
+     * Returns a poisoned serialization lock or protocol state failure.
+     */
+    @Throws(ObsidianBoundaryException::class)override fun `unbindRuntime`(`nowMs`: kotlin.ULong): List<ObsidianSessionEffect> {
+            return FfiConverterSequenceTypeObsidianSessionEffect.lift(
+    callWithHandle {
+    uniffiRustCallWithError(ObsidianBoundaryException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_unbind_runtime(
+        it,
+        
+        FfiConverterULong.lower(`nowMs`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+
+    
+
+
+    
+    
+    /**
+     * @suppress
+     */
+    companion object
+    
+}
+
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeFfiObsidianSession: FfiConverter<FfiObsidianSession, Long> {
+    override fun lower(value: FfiObsidianSession): Long {
+        return value.uniffiCloneHandle()
+    }
+
+    override fun lift(value: Long): FfiObsidianSession {
+        return FfiObsidianSession(UniffiWithHandle, value)
+    }
+
+    override fun read(buf: ByteBuffer): FfiObsidianSession {
+        return lift(buf.getLong())
+    }
+
+    override fun allocationSize(value: FfiObsidianSession) = 8UL
+
+    override fun write(value: FfiObsidianSession, buf: ByteBuffer) {
         buf.putLong(lower(value))
     }
 }
@@ -8539,6 +12487,258 @@ public object FfiConverterTypeDeadLetterError: FfiConverterRustBuffer<DeadLetter
 
 
 /**
+ * Durable captured provider version surviving process termination.
+ */
+data class FacetDisplacedMetadata (
+    /**
+     * Stable host backup identity.
+     */
+    var `id`: kotlin.String
+    , 
+    /**
+     * Logical vault-relative source.
+     */
+    var `path`: kotlin.String
+    , 
+    /**
+     * Exact retained byte count.
+     */
+    var `size`: kotlin.ULong
+    , 
+    /**
+     * Immutable SHA256 payload revision.
+     */
+    var `revision`: kotlin.String
+    
+){
+    
+
+    
+
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeFacetDisplacedMetadata: FfiConverterRustBuffer<FacetDisplacedMetadata> {
+    override fun read(buf: ByteBuffer): FacetDisplacedMetadata {
+        return FacetDisplacedMetadata(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: FacetDisplacedMetadata) = (
+            FfiConverterString.allocationSize(value.`id`) +
+            FfiConverterString.allocationSize(value.`path`) +
+            FfiConverterULong.allocationSize(value.`size`) +
+            FfiConverterString.allocationSize(value.`revision`)
+    )
+
+    override fun write(value: FacetDisplacedMetadata, buf: ByteBuffer) {
+            FfiConverterString.write(value.`id`, buf)
+            FfiConverterString.write(value.`path`, buf)
+            FfiConverterULong.write(value.`size`, buf)
+            FfiConverterString.write(value.`revision`, buf)
+    }
+}
+
+
+
+/**
+ * Profile/lifetime-owned immutable read image; bytes use bounded chunks.
+ */
+data class FacetFileSnapshot (
+    /**
+     * Opaque owner-checked image identity, never a path.
+     */
+    var `id`: kotlin.String
+    , 
+    /**
+     * Exact immutable byte count.
+     */
+    var `size`: kotlin.ULong
+    , 
+    /**
+     * Lowercase SHA256 of the complete image.
+     */
+    var `revision`: kotlin.String
+    
+){
+    
+
+    
+
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeFacetFileSnapshot: FfiConverterRustBuffer<FacetFileSnapshot> {
+    override fun read(buf: ByteBuffer): FacetFileSnapshot {
+        return FacetFileSnapshot(
+            FfiConverterString.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: FacetFileSnapshot) = (
+            FfiConverterString.allocationSize(value.`id`) +
+            FfiConverterULong.allocationSize(value.`size`) +
+            FfiConverterString.allocationSize(value.`revision`)
+    )
+
+    override fun write(value: FacetFileSnapshot, buf: ByteBuffer) {
+            FfiConverterString.write(value.`id`, buf)
+            FfiConverterULong.write(value.`size`, buf)
+            FfiConverterString.write(value.`revision`, buf)
+    }
+}
+
+
+
+/**
+ * Durable immutable replacement intent and committed byte prefix.
+ */
+data class FacetReplacementStage (
+    /**
+     * Opaque durable host stage identity.
+     */
+    var `id`: kotlin.String
+    , 
+    /**
+     * Exact original facet-write operation identity.
+     */
+    var `operationId`: kotlin.String
+    , 
+    /**
+     * Logical vault-relative destination.
+     */
+    var `path`: kotlin.String
+    , 
+    /**
+     * Exact declared replacement byte count.
+     */
+    var `size`: kotlin.ULong
+    , 
+    /**
+     * Exact lowercase SHA256 target digest.
+     */
+    var `revision`: kotlin.String
+    , 
+    /**
+     * Durably committed contiguous prefix length.
+     */
+    var `written`: kotlin.ULong
+    , 
+    /**
+     * Source is verified, immutable and ready for exchange.
+     */
+    var `sealed`: kotlin.Boolean
+    
+){
+    
+
+    
+
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeFacetReplacementStage: FfiConverterRustBuffer<FacetReplacementStage> {
+    override fun read(buf: ByteBuffer): FacetReplacementStage {
+        return FacetReplacementStage(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterBoolean.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: FacetReplacementStage) = (
+            FfiConverterString.allocationSize(value.`id`) +
+            FfiConverterString.allocationSize(value.`operationId`) +
+            FfiConverterString.allocationSize(value.`path`) +
+            FfiConverterULong.allocationSize(value.`size`) +
+            FfiConverterString.allocationSize(value.`revision`) +
+            FfiConverterULong.allocationSize(value.`written`) +
+            FfiConverterBoolean.allocationSize(value.`sealed`)
+    )
+
+    override fun write(value: FacetReplacementStage, buf: ByteBuffer) {
+            FfiConverterString.write(value.`id`, buf)
+            FfiConverterString.write(value.`operationId`, buf)
+            FfiConverterString.write(value.`path`, buf)
+            FfiConverterULong.write(value.`size`, buf)
+            FfiConverterString.write(value.`revision`, buf)
+            FfiConverterULong.write(value.`written`, buf)
+            FfiConverterBoolean.write(value.`sealed`, buf)
+    }
+}
+
+
+
+/**
+ * Original recorded atomic outcome with metadata-only retained predecessor.
+ */
+data class FacetStagedExchange (
+    /**
+     * Whether replacement/deletion actually occurred.
+     */
+    var `applied`: kotlin.Boolean
+    , 
+    /**
+     * Exact durable captured predecessor, including competing writer effects.
+     */
+    var `displaced`: FacetDisplacedMetadata?
+    
+){
+    
+
+    
+
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeFacetStagedExchange: FfiConverterRustBuffer<FacetStagedExchange> {
+    override fun read(buf: ByteBuffer): FacetStagedExchange {
+        return FacetStagedExchange(
+            FfiConverterBoolean.read(buf),
+            FfiConverterOptionalTypeFacetDisplacedMetadata.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: FacetStagedExchange) = (
+            FfiConverterBoolean.allocationSize(value.`applied`) +
+            FfiConverterOptionalTypeFacetDisplacedMetadata.allocationSize(value.`displaced`)
+    )
+
+    override fun write(value: FacetStagedExchange, buf: ByteBuffer) {
+            FfiConverterBoolean.write(value.`applied`, buf)
+            FfiConverterOptionalTypeFacetDisplacedMetadata.write(value.`displaced`, buf)
+    }
+}
+
+
+
+/**
  * See [`tasknotes_core::domain::FilterChain`].
  *
  * A conjunction: a task belongs when it passes **every** member. Appended
@@ -9250,6 +13450,426 @@ public object FfiConverterTypeNlpParseResult: FfiConverterRustBuffer<NlpParseRes
             FfiConverterOptionalSequenceString.write(value.`contexts`, buf)
             FfiConverterOptionalSequenceString.write(value.`tags`, buf)
             FfiConverterOptionalString.write(value.`recurrence`, buf)
+    }
+}
+
+
+
+/**
+ * One deterministic account-request HTTP header.
+ */
+data class ObsidianHttpHeader (
+    /**
+     * Header name.
+     */
+    var `name`: kotlin.String
+    , 
+    /**
+     * Header value. Tokens/passwords never use this field.
+     */
+    var `value`: kotlin.String
+    
+){
+    
+
+    
+
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeObsidianHttpHeader: FfiConverterRustBuffer<ObsidianHttpHeader> {
+    override fun read(buf: ByteBuffer): ObsidianHttpHeader {
+        return ObsidianHttpHeader(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: ObsidianHttpHeader) = (
+            FfiConverterString.allocationSize(value.`name`) +
+            FfiConverterString.allocationSize(value.`value`)
+    )
+
+    override fun write(value: ObsidianHttpHeader, buf: ByteBuffer) {
+            FfiConverterString.write(value.`name`, buf)
+            FfiConverterString.write(value.`value`, buf)
+    }
+}
+
+
+
+/**
+ * HTTP work for the native transport, not a persistent preference record.
+ */
+data class ObsidianHttpRequest (
+    /**
+     * Local request identifier; never sent to Obsidian.
+     */
+    var `requestId`: kotlin.ULong
+    , 
+    /**
+     * Fixed official account API destination.
+     */
+    var `url`: kotlin.String
+    , 
+    /**
+     * True: issue OPTIONS first with Origin, then the POST request.
+     */
+    var `preflight`: kotlin.Boolean
+    , 
+    /**
+     * POST headers (the OPTIONS preflight uses only Origin).
+     */
+    var `headers`: List<ObsidianHttpHeader>
+    , 
+    /**
+     * Secret-bearing POST body; transport-only, never logged or stored.
+     */
+    var `body`: kotlin.String
+    
+){
+    
+
+    
+
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeObsidianHttpRequest: FfiConverterRustBuffer<ObsidianHttpRequest> {
+    override fun read(buf: ByteBuffer): ObsidianHttpRequest {
+        return ObsidianHttpRequest(
+            FfiConverterULong.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterBoolean.read(buf),
+            FfiConverterSequenceTypeObsidianHttpHeader.read(buf),
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: ObsidianHttpRequest) = (
+            FfiConverterULong.allocationSize(value.`requestId`) +
+            FfiConverterString.allocationSize(value.`url`) +
+            FfiConverterBoolean.allocationSize(value.`preflight`) +
+            FfiConverterSequenceTypeObsidianHttpHeader.allocationSize(value.`headers`) +
+            FfiConverterString.allocationSize(value.`body`)
+    )
+
+    override fun write(value: ObsidianHttpRequest, buf: ByteBuffer) {
+            FfiConverterULong.write(value.`requestId`, buf)
+            FfiConverterString.write(value.`url`, buf)
+            FfiConverterBoolean.write(value.`preflight`, buf)
+            FfiConverterSequenceTypeObsidianHttpHeader.write(value.`headers`, buf)
+            FfiConverterString.write(value.`body`, buf)
+    }
+}
+
+
+
+/**
+ * Derived profile secret. Copy key bytes into platform secure storage and
+ * release this transient record; never serialize it into the runtime DB.
+ */
+data class ObsidianPreparedVault (
+    /**
+     * Non-secret selected-vault description.
+     */
+    var `vault`: ObsidianRemoteVault
+    , 
+    /**
+     * Exact 32-byte key for platform secure storage.
+     */
+    var `keyBytes`: kotlin.ByteArray
+    
+){
+    
+
+    
+
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeObsidianPreparedVault: FfiConverterRustBuffer<ObsidianPreparedVault> {
+    override fun read(buf: ByteBuffer): ObsidianPreparedVault {
+        return ObsidianPreparedVault(
+            FfiConverterTypeObsidianRemoteVault.read(buf),
+            FfiConverterByteArray.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: ObsidianPreparedVault) = (
+            FfiConverterTypeObsidianRemoteVault.allocationSize(value.`vault`) +
+            FfiConverterByteArray.allocationSize(value.`keyBytes`)
+    )
+
+    override fun write(value: ObsidianPreparedVault, buf: ByteBuffer) {
+            FfiConverterTypeObsidianRemoteVault.write(value.`vault`, buf)
+            FfiConverterByteArray.write(value.`keyBytes`, buf)
+    }
+}
+
+
+
+/**
+ * Non-secret onboarding metadata for an owned or shared remote vault.
+ */
+data class ObsidianRemoteVault (
+    /**
+     * Stable service identifier.
+     */
+    var `id`: kotlin.String
+    , 
+    /**
+     * Display name.
+     */
+    var `name`: kotlin.String
+    , 
+    /**
+     * Validated regional hostname.
+     */
+    var `host`: kotlin.String
+    , 
+    /**
+     * Service region identifier.
+     */
+    var `region`: kotlin.String
+    , 
+    /**
+     * Exact HKDF salt.
+     */
+    var `salt`: kotlin.String
+    , 
+    /**
+     * Supported encryption version number.
+     */
+    var `encryptionVersion`: kotlin.UByte
+    , 
+    /**
+     * Service-managed password (the password itself never leaves Rust).
+     */
+    var `managed`: kotlin.Boolean
+    , 
+    /**
+     * Appeared in the account's shared-vault list.
+     */
+    var `shared`: kotlin.Boolean
+    
+){
+    
+
+    
+
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeObsidianRemoteVault: FfiConverterRustBuffer<ObsidianRemoteVault> {
+    override fun read(buf: ByteBuffer): ObsidianRemoteVault {
+        return ObsidianRemoteVault(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterUByte.read(buf),
+            FfiConverterBoolean.read(buf),
+            FfiConverterBoolean.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: ObsidianRemoteVault) = (
+            FfiConverterString.allocationSize(value.`id`) +
+            FfiConverterString.allocationSize(value.`name`) +
+            FfiConverterString.allocationSize(value.`host`) +
+            FfiConverterString.allocationSize(value.`region`) +
+            FfiConverterString.allocationSize(value.`salt`) +
+            FfiConverterUByte.allocationSize(value.`encryptionVersion`) +
+            FfiConverterBoolean.allocationSize(value.`managed`) +
+            FfiConverterBoolean.allocationSize(value.`shared`)
+    )
+
+    override fun write(value: ObsidianRemoteVault, buf: ByteBuffer) {
+            FfiConverterString.write(value.`id`, buf)
+            FfiConverterString.write(value.`name`, buf)
+            FfiConverterString.write(value.`host`, buf)
+            FfiConverterString.write(value.`region`, buf)
+            FfiConverterString.write(value.`salt`, buf)
+            FfiConverterUByte.write(value.`encryptionVersion`, buf)
+            FfiConverterBoolean.write(value.`managed`, buf)
+            FfiConverterBoolean.write(value.`shared`, buf)
+    }
+}
+
+
+
+/**
+ * Session bootstrap. Key/token fields are transient secure-storage reads;
+ * filter/checkpoint fields use the shared non-secret JSON contracts.
+ */
+data class ObsidianSessionOptions (
+    /**
+     * Validated official regional hostname.
+     */
+    var `host`: kotlin.String
+    , 
+    /**
+     * Transient secure-storage account token.
+     */
+    var `token`: kotlin.String
+    , 
+    /**
+     * Stable remote vault identifier.
+     */
+    var `vaultId`: kotlin.String
+    , 
+    /**
+     * Device label for service history.
+     */
+    var `deviceName`: kotlin.String
+    , 
+    /**
+     * Exact negotiated cipher version.
+     */
+    var `encryptionVersion`: kotlin.UByte
+    , 
+    /**
+     * Exact remote HKDF salt.
+     */
+    var `salt`: kotlin.String
+    , 
+    /**
+     * Transient secure-storage 32-byte key.
+     */
+    var `keyBytes`: kotlin.ByteArray
+    , 
+    /**
+     * Empty only on first setup; otherwise the saved versioned checkpoint.
+     */
+    var `checkpointJson`: kotlin.String
+    , 
+    /**
+     * Optional explicit `SyncFilter` JSON; absence enables all categories.
+     */
+    var `filterJson`: kotlin.String?
+    
+){
+    
+
+    
+
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeObsidianSessionOptions: FfiConverterRustBuffer<ObsidianSessionOptions> {
+    override fun read(buf: ByteBuffer): ObsidianSessionOptions {
+        return ObsidianSessionOptions(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterUByte.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterByteArray.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterOptionalString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: ObsidianSessionOptions) = (
+            FfiConverterString.allocationSize(value.`host`) +
+            FfiConverterString.allocationSize(value.`token`) +
+            FfiConverterString.allocationSize(value.`vaultId`) +
+            FfiConverterString.allocationSize(value.`deviceName`) +
+            FfiConverterUByte.allocationSize(value.`encryptionVersion`) +
+            FfiConverterString.allocationSize(value.`salt`) +
+            FfiConverterByteArray.allocationSize(value.`keyBytes`) +
+            FfiConverterString.allocationSize(value.`checkpointJson`) +
+            FfiConverterOptionalString.allocationSize(value.`filterJson`)
+    )
+
+    override fun write(value: ObsidianSessionOptions, buf: ByteBuffer) {
+            FfiConverterString.write(value.`host`, buf)
+            FfiConverterString.write(value.`token`, buf)
+            FfiConverterString.write(value.`vaultId`, buf)
+            FfiConverterString.write(value.`deviceName`, buf)
+            FfiConverterUByte.write(value.`encryptionVersion`, buf)
+            FfiConverterString.write(value.`salt`, buf)
+            FfiConverterByteArray.write(value.`keyBytes`, buf)
+            FfiConverterString.write(value.`checkpointJson`, buf)
+            FfiConverterOptionalString.write(value.`filterJson`, buf)
+    }
+}
+
+
+
+/**
+ * Shared framing limits; host transports enforce these before message copying.
+ */
+data class ObsidianTransportLimits (
+    /**
+     * Maximum UTF-8 text message byte count.
+     */
+    var `textMessageBytes`: kotlin.ULong
+    , 
+    /**
+     * Maximum binary piece byte count.
+     */
+    var `binaryMessageBytes`: kotlin.ULong
+    , 
+    /**
+     * Protocol's default full plaintext file limit, before service negotiation.
+     */
+    var `defaultFileBytes`: kotlin.ULong
+    
+){
+    
+
+    
+
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeObsidianTransportLimits: FfiConverterRustBuffer<ObsidianTransportLimits> {
+    override fun read(buf: ByteBuffer): ObsidianTransportLimits {
+        return ObsidianTransportLimits(
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: ObsidianTransportLimits) = (
+            FfiConverterULong.allocationSize(value.`textMessageBytes`) +
+            FfiConverterULong.allocationSize(value.`binaryMessageBytes`) +
+            FfiConverterULong.allocationSize(value.`defaultFileBytes`)
+    )
+
+    override fun write(value: ObsidianTransportLimits, buf: ByteBuffer) {
+            FfiConverterULong.write(value.`textMessageBytes`, buf)
+            FfiConverterULong.write(value.`binaryMessageBytes`, buf)
+            FfiConverterULong.write(value.`defaultFileBytes`, buf)
     }
 }
 
@@ -11591,7 +16211,7 @@ public object FfiConverterTypeCommonWeekday: FfiConverterRustBuffer<CommonWeekda
  * committed bindings diff.
  *
  * ⚠️ UniFFI keeps Rust's `PascalCase` for error cases, so this reads
- * `.Invariant(message:)` in Swift while a plain `uniffi::Enum` reads
+ * `.Invariant(detail:)` in Swift while a plain `uniffi::Enum` reads
  * `.inProgress`. That inconsistency is upstream and expected; the generated
  * target is lint-exempt, so it will not fail a build.
  */
@@ -11606,10 +16226,10 @@ sealed class CoreException: kotlin.Exception() {
         /**
          * What was expected, and what was seen instead.
          */
-        val `message`: kotlin.String
+        val `detail`: kotlin.String
         ) : CoreException() {
         override val message
-            get() = "message=${ `message` }"
+            get() = "detail=${ `detail` }"
     }
     
     /**
@@ -11620,10 +16240,10 @@ sealed class CoreException: kotlin.Exception() {
         /**
          * What the transport reported.
          */
-        val `message`: kotlin.String
+        val `detail`: kotlin.String
         ) : CoreException() {
         override val message
-            get() = "message=${ `message` }"
+            get() = "detail=${ `detail` }"
     }
     
     /**
@@ -11634,7 +16254,7 @@ sealed class CoreException: kotlin.Exception() {
         /**
          * What the server said, or what the client inferred.
          */
-        val `message`: kotlin.String, 
+        val `detail`: kotlin.String, 
         
         /**
          * The HTTP status. `0` is used for an envelope-level `success: false`,
@@ -11643,7 +16263,7 @@ sealed class CoreException: kotlin.Exception() {
         val `status`: kotlin.UShort
         ) : CoreException() {
         override val message
-            get() = "message=${ `message` }, status=${ `status` }"
+            get() = "detail=${ `detail` }, status=${ `status` }"
     }
     
     /**
@@ -11654,10 +16274,10 @@ sealed class CoreException: kotlin.Exception() {
         /**
          * Which field failed, and how.
          */
-        val `message`: kotlin.String
+        val `detail`: kotlin.String
         ) : CoreException() {
         override val message
-            get() = "message=${ `message` }"
+            get() = "detail=${ `detail` }"
     }
     
     /**
@@ -11666,12 +16286,12 @@ sealed class CoreException: kotlin.Exception() {
     class NotFound(
         
         /**
-         * The rendered `"<resource> not found: <id>"` message.
+         * The rendered `"<resource> not found: <id>"` detail.
          */
-        val `message`: kotlin.String
+        val `detail`: kotlin.String
         ) : CoreException() {
         override val message
-            get() = "message=${ `message` }"
+            get() = "detail=${ `detail` }"
     }
     
     /**
@@ -11682,10 +16302,10 @@ sealed class CoreException: kotlin.Exception() {
         /**
          * Why the connection could not be established.
          */
-        val `message`: kotlin.String
+        val `detail`: kotlin.String
         ) : CoreException() {
         override val message
-            get() = "message=${ `message` }"
+            get() = "detail=${ `detail` }"
     }
     
 
@@ -11735,33 +16355,33 @@ public object FfiConverterTypeCoreError : FfiConverterRustBuffer<CoreException> 
             is CoreException.Invariant -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
-                + FfiConverterString.allocationSize(value.`message`)
+                + FfiConverterString.allocationSize(value.`detail`)
             )
             is CoreException.Network -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
-                + FfiConverterString.allocationSize(value.`message`)
+                + FfiConverterString.allocationSize(value.`detail`)
             )
             is CoreException.Api -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
-                + FfiConverterString.allocationSize(value.`message`)
+                + FfiConverterString.allocationSize(value.`detail`)
                 + FfiConverterUShort.allocationSize(value.`status`)
             )
             is CoreException.Validation -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
-                + FfiConverterString.allocationSize(value.`message`)
+                + FfiConverterString.allocationSize(value.`detail`)
             )
             is CoreException.NotFound -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
-                + FfiConverterString.allocationSize(value.`message`)
+                + FfiConverterString.allocationSize(value.`detail`)
             )
             is CoreException.Connection -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
-                + FfiConverterString.allocationSize(value.`message`)
+                + FfiConverterString.allocationSize(value.`detail`)
             )
         }
     }
@@ -11770,33 +16390,33 @@ public object FfiConverterTypeCoreError : FfiConverterRustBuffer<CoreException> 
         when(value) {
             is CoreException.Invariant -> {
                 buf.putInt(1)
-                FfiConverterString.write(value.`message`, buf)
+                FfiConverterString.write(value.`detail`, buf)
                 Unit
             }
             is CoreException.Network -> {
                 buf.putInt(2)
-                FfiConverterString.write(value.`message`, buf)
+                FfiConverterString.write(value.`detail`, buf)
                 Unit
             }
             is CoreException.Api -> {
                 buf.putInt(3)
-                FfiConverterString.write(value.`message`, buf)
+                FfiConverterString.write(value.`detail`, buf)
                 FfiConverterUShort.write(value.`status`, buf)
                 Unit
             }
             is CoreException.Validation -> {
                 buf.putInt(4)
-                FfiConverterString.write(value.`message`, buf)
+                FfiConverterString.write(value.`detail`, buf)
                 Unit
             }
             is CoreException.NotFound -> {
                 buf.putInt(5)
-                FfiConverterString.write(value.`message`, buf)
+                FfiConverterString.write(value.`detail`, buf)
                 Unit
             }
             is CoreException.Connection -> {
                 buf.putInt(6)
-                FfiConverterString.write(value.`message`, buf)
+                FfiConverterString.write(value.`detail`, buf)
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
@@ -11858,6 +16478,409 @@ public object FfiConverterTypeDateGroup: FfiConverterRustBuffer<DateGroup> {
 }
 
 
+
+
+
+
+
+/**
+ * Standalone engine failures, independent of the retired server API.
+ */
+sealed class FacetEngineException: kotlin.Exception() {
+    
+    /**
+     * Private state cannot be read/written.
+     */
+    class Storage(
+        
+        /**
+         * Safe diagnostic.
+         */
+        val `detail`: kotlin.String
+        ) : FacetEngineException() {
+        override val message
+            get() = "detail=${ `detail` }"
+    }
+    
+    /**
+     * Platform provider/capability failure.
+     */
+    class Host(
+        
+        /**
+         * Safe diagnostic.
+         */
+        val `detail`: kotlin.String
+        ) : FacetEngineException() {
+        override val message
+            get() = "detail=${ `detail` }"
+    }
+    
+    /**
+     * Permanent provider metadata/ownership/range contract failure.
+     */
+    class HostContract(
+        
+        /**
+         * Content-free invariant diagnostic.
+         */
+        val `detail`: kotlin.String
+        ) : FacetEngineException() {
+        override val message
+            get() = "detail=${ `detail` }"
+    }
+    
+    /**
+     * Requested semantic operation is invalid.
+     */
+    class Validation(
+        
+        /**
+         * Safe diagnostic.
+         */
+        val `detail`: kotlin.String
+        ) : FacetEngineException() {
+        override val message
+            get() = "detail=${ `detail` }"
+    }
+    
+    /**
+     * Selected configuration cannot be used.
+     */
+    class Configuration(
+        
+        /**
+         * Safe diagnostic.
+         */
+        val `detail`: kotlin.String
+        ) : FacetEngineException() {
+        override val message
+            get() = "detail=${ `detail` }"
+    }
+    
+    /**
+     * Reload or resolve a preserved overlap before saving.
+     */
+    class Conflict(
+        ) : FacetEngineException() {
+        override val message
+            get() = ""
+    }
+    
+    /**
+     * Profile, file, or conflict no longer exists.
+     */
+    class NotFound(
+        ) : FacetEngineException() {
+        override val message
+            get() = ""
+    }
+    
+    /**
+     * Explicitly retired engine handle.
+     */
+    class Closed(
+        ) : FacetEngineException() {
+        override val message
+            get() = ""
+    }
+    
+    /**
+     * Nonblocking admission or callback reentry; preserve the exact draft.
+     */
+    class Busy(
+        ) : FacetEngineException() {
+        override val message
+            get() = ""
+    }
+    
+
+    
+
+
+    companion object ErrorHandler : UniffiRustCallStatusErrorHandler<FacetEngineException> {
+        override fun lift(error_buf: RustBuffer.ByValue): FacetEngineException = FfiConverterTypeFacetEngineError.lift(error_buf)
+    }
+
+    
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeFacetEngineError : FfiConverterRustBuffer<FacetEngineException> {
+    override fun read(buf: ByteBuffer): FacetEngineException {
+        
+
+        return when(buf.getInt()) {
+            1 -> FacetEngineException.Storage(
+                FfiConverterString.read(buf),
+                )
+            2 -> FacetEngineException.Host(
+                FfiConverterString.read(buf),
+                )
+            3 -> FacetEngineException.HostContract(
+                FfiConverterString.read(buf),
+                )
+            4 -> FacetEngineException.Validation(
+                FfiConverterString.read(buf),
+                )
+            5 -> FacetEngineException.Configuration(
+                FfiConverterString.read(buf),
+                )
+            6 -> FacetEngineException.Conflict()
+            7 -> FacetEngineException.NotFound()
+            8 -> FacetEngineException.Closed()
+            9 -> FacetEngineException.Busy()
+            else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: FacetEngineException): ULong {
+        return when(value) {
+            is FacetEngineException.Storage -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`detail`)
+            )
+            is FacetEngineException.Host -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`detail`)
+            )
+            is FacetEngineException.HostContract -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`detail`)
+            )
+            is FacetEngineException.Validation -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`detail`)
+            )
+            is FacetEngineException.Configuration -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`detail`)
+            )
+            is FacetEngineException.Conflict -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is FacetEngineException.NotFound -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is FacetEngineException.Closed -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is FacetEngineException.Busy -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+        }
+    }
+
+    override fun write(value: FacetEngineException, buf: ByteBuffer) {
+        when(value) {
+            is FacetEngineException.Storage -> {
+                buf.putInt(1)
+                FfiConverterString.write(value.`detail`, buf)
+                Unit
+            }
+            is FacetEngineException.Host -> {
+                buf.putInt(2)
+                FfiConverterString.write(value.`detail`, buf)
+                Unit
+            }
+            is FacetEngineException.HostContract -> {
+                buf.putInt(3)
+                FfiConverterString.write(value.`detail`, buf)
+                Unit
+            }
+            is FacetEngineException.Validation -> {
+                buf.putInt(4)
+                FfiConverterString.write(value.`detail`, buf)
+                Unit
+            }
+            is FacetEngineException.Configuration -> {
+                buf.putInt(5)
+                FfiConverterString.write(value.`detail`, buf)
+                Unit
+            }
+            is FacetEngineException.Conflict -> {
+                buf.putInt(6)
+                Unit
+            }
+            is FacetEngineException.NotFound -> {
+                buf.putInt(7)
+                Unit
+            }
+            is FacetEngineException.Closed -> {
+                buf.putInt(8)
+                Unit
+            }
+            is FacetEngineException.Busy -> {
+                buf.putInt(9)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+
+}
+
+
+
+
+
+/**
+ * Expected filesystem capability failure, without note contents or secrets.
+ */
+sealed class FacetHostException: kotlin.Exception() {
+    
+    /**
+     * A provider or persisted capability is temporarily unavailable.
+     */
+    class Unavailable(
+        
+        /**
+         * Safe recovery diagnostic.
+         */
+        val `detail`: kotlin.String
+        ) : FacetHostException() {
+        override val message
+            get() = "detail=${ `detail` }"
+    }
+    
+    /**
+     * User must restore folder permission.
+     */
+    class PermissionDenied(
+        
+        /**
+         * Safe recovery diagnostic.
+         */
+        val `detail`: kotlin.String
+        ) : FacetHostException() {
+        override val message
+            get() = "detail=${ `detail` }"
+    }
+    
+    /**
+     * Durable filesystem operation failed.
+     */
+    class Io(
+        
+        /**
+         * Safe recovery diagnostic.
+         */
+        val `detail`: kotlin.String
+        ) : FacetHostException() {
+        override val message
+            get() = "detail=${ `detail` }"
+    }
+    
+    /**
+     * Permanent owned-callback violation; no provider outage retry or fallback.
+     */
+    class Contract(
+        
+        /**
+         * Content-free invariant code or fixed diagnostic.
+         */
+        val `detail`: kotlin.String
+        ) : FacetHostException() {
+        override val message
+            get() = "detail=${ `detail` }"
+    }
+    
+
+    
+
+
+    companion object ErrorHandler : UniffiRustCallStatusErrorHandler<FacetHostException> {
+        override fun lift(error_buf: RustBuffer.ByValue): FacetHostException = FfiConverterTypeFacetHostError.lift(error_buf)
+    }
+
+    
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeFacetHostError : FfiConverterRustBuffer<FacetHostException> {
+    override fun read(buf: ByteBuffer): FacetHostException {
+        
+
+        return when(buf.getInt()) {
+            1 -> FacetHostException.Unavailable(
+                FfiConverterString.read(buf),
+                )
+            2 -> FacetHostException.PermissionDenied(
+                FfiConverterString.read(buf),
+                )
+            3 -> FacetHostException.Io(
+                FfiConverterString.read(buf),
+                )
+            4 -> FacetHostException.Contract(
+                FfiConverterString.read(buf),
+                )
+            else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: FacetHostException): ULong {
+        return when(value) {
+            is FacetHostException.Unavailable -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`detail`)
+            )
+            is FacetHostException.PermissionDenied -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`detail`)
+            )
+            is FacetHostException.Io -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`detail`)
+            )
+            is FacetHostException.Contract -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`detail`)
+            )
+        }
+    }
+
+    override fun write(value: FacetHostException, buf: ByteBuffer) {
+        when(value) {
+            is FacetHostException.Unavailable -> {
+                buf.putInt(1)
+                FfiConverterString.write(value.`detail`, buf)
+                Unit
+            }
+            is FacetHostException.PermissionDenied -> {
+                buf.putInt(2)
+                FfiConverterString.write(value.`detail`, buf)
+                Unit
+            }
+            is FacetHostException.Io -> {
+                buf.putInt(3)
+                FfiConverterString.write(value.`detail`, buf)
+                Unit
+            }
+            is FacetHostException.Contract -> {
+                buf.putInt(4)
+                FfiConverterString.write(value.`detail`, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+
+}
 
 
 
@@ -12174,6 +17197,805 @@ public object FfiConverterTypeMonthlyOrdinal: FfiConverterRustBuffer<MonthlyOrdi
 
     override fun write(value: MonthlyOrdinal, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+/**
+ * Account responses. Credential-bearing tokens are secure-storage inputs only.
+ */
+sealed class ObsidianAccountResponse {
+    
+    /**
+     * Repeat sign-in with a one-time code.
+     */
+    object MfaRequired : ObsidianAccountResponse()
+    
+    
+    /**
+     * A new one-time code is required.
+     */
+    object MfaRejected : ObsidianAccountResponse()
+    
+    
+    /**
+     * Authenticated account session; immediately save token securely.
+     */
+    data class SignedIn(
+        /**
+         * Secure-storage input; never vault/DB/preference data.
+         */
+        val `token`: kotlin.String, 
+        /**
+         * Display name.
+         */
+        val `name`: kotlin.String, 
+        /**
+         * Account email.
+         */
+        val `email`: kotlin.String) : ObsidianAccountResponse()
+        
+    {
+        
+
+        companion object
+    }
+    
+    /**
+     * Account service metadata, not a credential cache.
+     */
+    data class UserInfo(
+        /**
+         * Service metadata retained as JSON.
+         */
+        val `metadataJson`: kotlin.String) : ObsidianAccountResponse()
+        
+    {
+        
+
+        companion object
+    }
+    
+    /**
+     * Owned/shared vault choices with no managed passwords exposed.
+     */
+    data class Vaults(
+        /**
+         * Stable-ID vault choices.
+         */
+        val `vaults`: List<uniffi.TaskNotesCore.ObsidianRemoteVault>) : ObsidianAccountResponse()
+        
+    {
+        
+
+        companion object
+    }
+    
+    /**
+     * The service accepted the prepared vault key proof.
+     */
+    object AccessGranted : ObsidianAccountResponse()
+    
+    
+    /**
+     * The service invalidated the account token.
+     */
+    object SignedOut : ObsidianAccountResponse()
+    
+    
+
+    
+
+    
+    
+
+
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeObsidianAccountResponse : FfiConverterRustBuffer<ObsidianAccountResponse>{
+    override fun read(buf: ByteBuffer): ObsidianAccountResponse {
+        return when(buf.getInt()) {
+            1 -> ObsidianAccountResponse.MfaRequired
+            2 -> ObsidianAccountResponse.MfaRejected
+            3 -> ObsidianAccountResponse.SignedIn(
+                FfiConverterString.read(buf),
+                FfiConverterString.read(buf),
+                FfiConverterString.read(buf),
+                )
+            4 -> ObsidianAccountResponse.UserInfo(
+                FfiConverterString.read(buf),
+                )
+            5 -> ObsidianAccountResponse.Vaults(
+                FfiConverterSequenceTypeObsidianRemoteVault.read(buf),
+                )
+            6 -> ObsidianAccountResponse.AccessGranted
+            7 -> ObsidianAccountResponse.SignedOut
+            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: ObsidianAccountResponse): ULong = when(value) {
+        is ObsidianAccountResponse.MfaRequired -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+            )
+        }
+        is ObsidianAccountResponse.MfaRejected -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+            )
+        }
+        is ObsidianAccountResponse.SignedIn -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`token`)
+                + FfiConverterString.allocationSize(value.`name`)
+                + FfiConverterString.allocationSize(value.`email`)
+            )
+        }
+        is ObsidianAccountResponse.UserInfo -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`metadataJson`)
+            )
+        }
+        is ObsidianAccountResponse.Vaults -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterSequenceTypeObsidianRemoteVault.allocationSize(value.`vaults`)
+            )
+        }
+        is ObsidianAccountResponse.AccessGranted -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+            )
+        }
+        is ObsidianAccountResponse.SignedOut -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+            )
+        }
+    }
+
+    override fun write(value: ObsidianAccountResponse, buf: ByteBuffer) {
+        when(value) {
+            is ObsidianAccountResponse.MfaRequired -> {
+                buf.putInt(1)
+                Unit
+            }
+            is ObsidianAccountResponse.MfaRejected -> {
+                buf.putInt(2)
+                Unit
+            }
+            is ObsidianAccountResponse.SignedIn -> {
+                buf.putInt(3)
+                FfiConverterString.write(value.`token`, buf)
+                FfiConverterString.write(value.`name`, buf)
+                FfiConverterString.write(value.`email`, buf)
+                Unit
+            }
+            is ObsidianAccountResponse.UserInfo -> {
+                buf.putInt(4)
+                FfiConverterString.write(value.`metadataJson`, buf)
+                Unit
+            }
+            is ObsidianAccountResponse.Vaults -> {
+                buf.putInt(5)
+                FfiConverterSequenceTypeObsidianRemoteVault.write(value.`vaults`, buf)
+                Unit
+            }
+            is ObsidianAccountResponse.AccessGranted -> {
+                buf.putInt(6)
+                Unit
+            }
+            is ObsidianAccountResponse.SignedOut -> {
+                buf.putInt(7)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+}
+
+
+
+
+
+
+
+/**
+ * Typed boundary failures never contain credentials or peer/file payloads.
+ */
+sealed class ObsidianBoundaryException: kotlin.Exception() {
+    
+    /**
+     * The engine handle's serialization lock was poisoned.
+     */
+    class Lock(
+        ) : ObsidianBoundaryException() {
+        override val message
+            get() = ""
+    }
+    
+    /**
+     * A malformed local request or unmatched request identifier.
+     */
+    class Request(
+        ) : ObsidianBoundaryException() {
+        override val message
+            get() = ""
+    }
+    
+    /**
+     * Nonblocking admission; retain the exact operation and retry later.
+     */
+    class Busy(
+        ) : ObsidianBoundaryException() {
+        override val message
+            get() = ""
+    }
+    
+    /**
+     * Account, crypto, transport, or protocol rejection, redacted upstream.
+     */
+    class Boundary(
+        
+        /**
+         * Stable Rust error category, for native recovery UI.
+         */
+        val `code`: kotlin.String, 
+        
+        /**
+         * Sanitized, fixed engine message.
+         */
+        val `detail`: kotlin.String
+        ) : ObsidianBoundaryException() {
+        override val message
+            get() = "code=${ `code` }, detail=${ `detail` }"
+    }
+    
+
+    
+
+
+    companion object ErrorHandler : UniffiRustCallStatusErrorHandler<ObsidianBoundaryException> {
+        override fun lift(error_buf: RustBuffer.ByValue): ObsidianBoundaryException = FfiConverterTypeObsidianBoundaryError.lift(error_buf)
+    }
+
+    
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeObsidianBoundaryError : FfiConverterRustBuffer<ObsidianBoundaryException> {
+    override fun read(buf: ByteBuffer): ObsidianBoundaryException {
+        
+
+        return when(buf.getInt()) {
+            1 -> ObsidianBoundaryException.Lock()
+            2 -> ObsidianBoundaryException.Request()
+            3 -> ObsidianBoundaryException.Busy()
+            4 -> ObsidianBoundaryException.Boundary(
+                FfiConverterString.read(buf),
+                FfiConverterString.read(buf),
+                )
+            else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: ObsidianBoundaryException): ULong {
+        return when(value) {
+            is ObsidianBoundaryException.Lock -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is ObsidianBoundaryException.Request -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is ObsidianBoundaryException.Busy -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is ObsidianBoundaryException.Boundary -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`code`)
+                + FfiConverterString.allocationSize(value.`detail`)
+            )
+        }
+    }
+
+    override fun write(value: ObsidianBoundaryException, buf: ByteBuffer) {
+        when(value) {
+            is ObsidianBoundaryException.Lock -> {
+                buf.putInt(1)
+                Unit
+            }
+            is ObsidianBoundaryException.Request -> {
+                buf.putInt(2)
+                Unit
+            }
+            is ObsidianBoundaryException.Busy -> {
+                buf.putInt(3)
+                Unit
+            }
+            is ObsidianBoundaryException.Boundary -> {
+                buf.putInt(4)
+                FfiConverterString.write(value.`code`, buf)
+                FfiConverterString.write(value.`detail`, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+
+}
+
+
+
+/**
+ * Native projection of ordered protocol work. Native executors handle these
+ * after the Rust call returns; payloads/credentials are never diagnostic data.
+ */
+sealed class ObsidianSessionEffect {
+    
+    /**
+     * Open a new secure socket. Ignore callbacks from superseded socket epochs.
+     */
+    data class Connect(
+        /**
+         * Secure official WebSocket URL.
+         */
+        val `url`: kotlin.String) : ObsidianSessionEffect()
+        
+    {
+        
+
+        companion object
+    }
+    
+    /**
+     * Transient WebSocket JSON, including the login token/key proof.
+     */
+    data class SendText(
+        /**
+         * Transport-only payload.
+         */
+        val `text`: kotlin.String) : ObsidianSessionEffect()
+        
+    {
+        
+
+        companion object
+    }
+    
+    /**
+     * An encrypted binary piece.
+     */
+    data class SendBinary(
+        /**
+         * Transport-only ciphertext.
+         */
+        val `bytes`: kotlin.ByteArray) : ObsidianSessionEffect()
+        
+    {
+        
+
+        companion object
+    }
+    
+    /**
+     * Close/cancel the current socket.
+     */
+    object Close : ObsidianSessionEffect()
+    
+    
+    /**
+     * Save atomically, then call `checkpoint_persisted(revision)`.
+     */
+    data class PersistCheckpoint(
+        /**
+         * Local durability barrier revision.
+         */
+        val `revision`: kotlin.ULong, 
+        /**
+         * Versioned non-secret durable state.
+         */
+        val `checkpointJson`: kotlin.String) : ObsidianSessionEffect()
+        
+    {
+        
+
+        companion object
+    }
+    
+    /**
+     * Apply the atomic delta through the runtime, then acknowledge its revision.
+     */
+    data class PersistCheckpointDelta(
+        /**
+         * Exact local barrier revision.
+         */
+        val `revision`: kotlin.ULong, 
+        /**
+         * Cursor/initial/pending upsert/remove shared JSON envelope.
+         */
+        val `deltaJson`: kotlin.String) : ObsidianSessionEffect()
+        
+    {
+        
+
+        companion object
+    }
+    
+    /**
+     * Durable notice. Retain selected=false metadata without pulling content.
+     */
+    data class RemoteChange(
+        /**
+         * Shared Rust metadata schema, including uid/path/hash.
+         */
+        val `metadataJson`: kotlin.String) : ObsidianSessionEffect()
+        
+    {
+        
+
+        companion object
+    }
+    
+    /**
+     * Initial stream and its cursor barrier are committed; uploads may start.
+     */
+    data class Ready(
+        /**
+         * Current service cursor.
+         */
+        val `cursor`: kotlin.ULong) : ObsidianSessionEffect()
+        
+    {
+        
+
+        companion object
+    }
+    
+    /**
+     * Authenticated session-owned payload. Apply by handle before completion.
+     */
+    data class DownloadedPayload(
+        /**
+         * Pull revision identifier.
+         */
+        val `uid`: kotlin.ULong, 
+        /**
+         * Opaque engine/profile/session-epoch handle, never a logical path.
+         */
+        val `transferId`: kotlin.String, 
+        /**
+         * Exact authenticated plaintext length; no complete file crosses FFI.
+         */
+        val `payloadSize`: kotlin.ULong, 
+        /**
+         * Tombstone, distinct from a zero-byte file.
+         */
+        val `deleted`: kotlin.Boolean, 
+        /**
+         * Integrity hash over original bytes.
+         */
+        val `contentHash`: kotlin.String?) : ObsidianSessionEffect()
+        
+    {
+        
+
+        companion object
+    }
+    
+    /**
+     * Exact immutable outbox receipt acknowledged remotely.
+     */
+    data class Uploaded(
+        /**
+         * Caller durable mutation identifier.
+         */
+        val `operationId`: kotlin.String, 
+        /**
+         * SHA-256 over the original snapshot.
+         */
+        val `contentHash`: kotlin.String) : ObsidianSessionEffect()
+        
+    {
+        
+
+        companion object
+    }
+    
+    /**
+     * Typed failure. Retryable cases reconnect on monotonic ticks.
+     */
+    data class Failed(
+        /**
+         * Stable error category.
+         */
+        val `code`: kotlin.String, 
+        /**
+         * Sanitized engine message.
+         */
+        val `message`: kotlin.String, 
+        /**
+         * Whether automatic reconnection is permitted.
+         */
+        val `retryable`: kotlin.Boolean, 
+        /**
+         * Active immutable receipt, if any.
+         */
+        val `operationId`: kotlin.String?) : ObsidianSessionEffect()
+        
+    {
+        
+
+        companion object
+    }
+    
+    /**
+     * Session cancellation did not acknowledge this receipt.
+     */
+    data class Cancelled(
+        /**
+         * Caller durable mutation identifier.
+         */
+        val `operationId`: kotlin.String) : ObsidianSessionEffect()
+        
+    {
+        
+
+        companion object
+    }
+    
+
+    
+
+    
+    
+
+
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeObsidianSessionEffect : FfiConverterRustBuffer<ObsidianSessionEffect>{
+    override fun read(buf: ByteBuffer): ObsidianSessionEffect {
+        return when(buf.getInt()) {
+            1 -> ObsidianSessionEffect.Connect(
+                FfiConverterString.read(buf),
+                )
+            2 -> ObsidianSessionEffect.SendText(
+                FfiConverterString.read(buf),
+                )
+            3 -> ObsidianSessionEffect.SendBinary(
+                FfiConverterByteArray.read(buf),
+                )
+            4 -> ObsidianSessionEffect.Close
+            5 -> ObsidianSessionEffect.PersistCheckpoint(
+                FfiConverterULong.read(buf),
+                FfiConverterString.read(buf),
+                )
+            6 -> ObsidianSessionEffect.PersistCheckpointDelta(
+                FfiConverterULong.read(buf),
+                FfiConverterString.read(buf),
+                )
+            7 -> ObsidianSessionEffect.RemoteChange(
+                FfiConverterString.read(buf),
+                )
+            8 -> ObsidianSessionEffect.Ready(
+                FfiConverterULong.read(buf),
+                )
+            9 -> ObsidianSessionEffect.DownloadedPayload(
+                FfiConverterULong.read(buf),
+                FfiConverterString.read(buf),
+                FfiConverterULong.read(buf),
+                FfiConverterBoolean.read(buf),
+                FfiConverterOptionalString.read(buf),
+                )
+            10 -> ObsidianSessionEffect.Uploaded(
+                FfiConverterString.read(buf),
+                FfiConverterString.read(buf),
+                )
+            11 -> ObsidianSessionEffect.Failed(
+                FfiConverterString.read(buf),
+                FfiConverterString.read(buf),
+                FfiConverterBoolean.read(buf),
+                FfiConverterOptionalString.read(buf),
+                )
+            12 -> ObsidianSessionEffect.Cancelled(
+                FfiConverterString.read(buf),
+                )
+            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: ObsidianSessionEffect): ULong = when(value) {
+        is ObsidianSessionEffect.Connect -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`url`)
+            )
+        }
+        is ObsidianSessionEffect.SendText -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`text`)
+            )
+        }
+        is ObsidianSessionEffect.SendBinary -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterByteArray.allocationSize(value.`bytes`)
+            )
+        }
+        is ObsidianSessionEffect.Close -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+            )
+        }
+        is ObsidianSessionEffect.PersistCheckpoint -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterULong.allocationSize(value.`revision`)
+                + FfiConverterString.allocationSize(value.`checkpointJson`)
+            )
+        }
+        is ObsidianSessionEffect.PersistCheckpointDelta -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterULong.allocationSize(value.`revision`)
+                + FfiConverterString.allocationSize(value.`deltaJson`)
+            )
+        }
+        is ObsidianSessionEffect.RemoteChange -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`metadataJson`)
+            )
+        }
+        is ObsidianSessionEffect.Ready -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterULong.allocationSize(value.`cursor`)
+            )
+        }
+        is ObsidianSessionEffect.DownloadedPayload -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterULong.allocationSize(value.`uid`)
+                + FfiConverterString.allocationSize(value.`transferId`)
+                + FfiConverterULong.allocationSize(value.`payloadSize`)
+                + FfiConverterBoolean.allocationSize(value.`deleted`)
+                + FfiConverterOptionalString.allocationSize(value.`contentHash`)
+            )
+        }
+        is ObsidianSessionEffect.Uploaded -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`operationId`)
+                + FfiConverterString.allocationSize(value.`contentHash`)
+            )
+        }
+        is ObsidianSessionEffect.Failed -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`code`)
+                + FfiConverterString.allocationSize(value.`message`)
+                + FfiConverterBoolean.allocationSize(value.`retryable`)
+                + FfiConverterOptionalString.allocationSize(value.`operationId`)
+            )
+        }
+        is ObsidianSessionEffect.Cancelled -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`operationId`)
+            )
+        }
+    }
+
+    override fun write(value: ObsidianSessionEffect, buf: ByteBuffer) {
+        when(value) {
+            is ObsidianSessionEffect.Connect -> {
+                buf.putInt(1)
+                FfiConverterString.write(value.`url`, buf)
+                Unit
+            }
+            is ObsidianSessionEffect.SendText -> {
+                buf.putInt(2)
+                FfiConverterString.write(value.`text`, buf)
+                Unit
+            }
+            is ObsidianSessionEffect.SendBinary -> {
+                buf.putInt(3)
+                FfiConverterByteArray.write(value.`bytes`, buf)
+                Unit
+            }
+            is ObsidianSessionEffect.Close -> {
+                buf.putInt(4)
+                Unit
+            }
+            is ObsidianSessionEffect.PersistCheckpoint -> {
+                buf.putInt(5)
+                FfiConverterULong.write(value.`revision`, buf)
+                FfiConverterString.write(value.`checkpointJson`, buf)
+                Unit
+            }
+            is ObsidianSessionEffect.PersistCheckpointDelta -> {
+                buf.putInt(6)
+                FfiConverterULong.write(value.`revision`, buf)
+                FfiConverterString.write(value.`deltaJson`, buf)
+                Unit
+            }
+            is ObsidianSessionEffect.RemoteChange -> {
+                buf.putInt(7)
+                FfiConverterString.write(value.`metadataJson`, buf)
+                Unit
+            }
+            is ObsidianSessionEffect.Ready -> {
+                buf.putInt(8)
+                FfiConverterULong.write(value.`cursor`, buf)
+                Unit
+            }
+            is ObsidianSessionEffect.DownloadedPayload -> {
+                buf.putInt(9)
+                FfiConverterULong.write(value.`uid`, buf)
+                FfiConverterString.write(value.`transferId`, buf)
+                FfiConverterULong.write(value.`payloadSize`, buf)
+                FfiConverterBoolean.write(value.`deleted`, buf)
+                FfiConverterOptionalString.write(value.`contentHash`, buf)
+                Unit
+            }
+            is ObsidianSessionEffect.Uploaded -> {
+                buf.putInt(10)
+                FfiConverterString.write(value.`operationId`, buf)
+                FfiConverterString.write(value.`contentHash`, buf)
+                Unit
+            }
+            is ObsidianSessionEffect.Failed -> {
+                buf.putInt(11)
+                FfiConverterString.write(value.`code`, buf)
+                FfiConverterString.write(value.`message`, buf)
+                FfiConverterBoolean.write(value.`retryable`, buf)
+                FfiConverterOptionalString.write(value.`operationId`, buf)
+                Unit
+            }
+            is ObsidianSessionEffect.Cancelled -> {
+                buf.putInt(12)
+                FfiConverterString.write(value.`operationId`, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
     }
 }
 
@@ -12817,10 +18639,10 @@ sealed class TransportException: kotlin.Exception() {
         /**
          * What the platform reported.
          */
-        val `message`: kotlin.String
+        val `detail`: kotlin.String
         ) : TransportException() {
         override val message
-            get() = "message=${ `message` }"
+            get() = "detail=${ `detail` }"
     }
     
     /**
@@ -12831,10 +18653,10 @@ sealed class TransportException: kotlin.Exception() {
         /**
          * What the platform reported.
          */
-        val `message`: kotlin.String
+        val `detail`: kotlin.String
         ) : TransportException() {
         override val message
-            get() = "message=${ `message` }"
+            get() = "detail=${ `detail` }"
     }
     
     /**
@@ -12845,10 +18667,10 @@ sealed class TransportException: kotlin.Exception() {
         /**
          * What the platform reported.
          */
-        val `message`: kotlin.String
+        val `detail`: kotlin.String
         ) : TransportException() {
         override val message
-            get() = "message=${ `message` }"
+            get() = "detail=${ `detail` }"
     }
     
     /**
@@ -12859,10 +18681,10 @@ sealed class TransportException: kotlin.Exception() {
         /**
          * What the platform reported.
          */
-        val `message`: kotlin.String
+        val `detail`: kotlin.String
         ) : TransportException() {
         override val message
-            get() = "message=${ `message` }"
+            get() = "detail=${ `detail` }"
     }
     
 
@@ -12905,22 +18727,22 @@ public object FfiConverterTypeTransportError : FfiConverterRustBuffer<TransportE
             is TransportException.Timeout -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
-                + FfiConverterString.allocationSize(value.`message`)
+                + FfiConverterString.allocationSize(value.`detail`)
             )
             is TransportException.Offline -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
-                + FfiConverterString.allocationSize(value.`message`)
+                + FfiConverterString.allocationSize(value.`detail`)
             )
             is TransportException.Tls -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
-                + FfiConverterString.allocationSize(value.`message`)
+                + FfiConverterString.allocationSize(value.`detail`)
             )
             is TransportException.Other -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
-                + FfiConverterString.allocationSize(value.`message`)
+                + FfiConverterString.allocationSize(value.`detail`)
             )
         }
     }
@@ -12929,22 +18751,22 @@ public object FfiConverterTypeTransportError : FfiConverterRustBuffer<TransportE
         when(value) {
             is TransportException.Timeout -> {
                 buf.putInt(1)
-                FfiConverterString.write(value.`message`, buf)
+                FfiConverterString.write(value.`detail`, buf)
                 Unit
             }
             is TransportException.Offline -> {
                 buf.putInt(2)
-                FfiConverterString.write(value.`message`, buf)
+                FfiConverterString.write(value.`detail`, buf)
                 Unit
             }
             is TransportException.Tls -> {
                 buf.putInt(3)
-                FfiConverterString.write(value.`message`, buf)
+                FfiConverterString.write(value.`detail`, buf)
                 Unit
             }
             is TransportException.Other -> {
                 buf.putInt(4)
-                FfiConverterString.write(value.`message`, buf)
+                FfiConverterString.write(value.`detail`, buf)
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
@@ -13051,10 +18873,10 @@ sealed class VaultBoundaryException: kotlin.Exception() {
         /**
          * Safe configuration diagnostic, without vault contents.
          */
-        val `message`: kotlin.String
+        val `detail`: kotlin.String
         ) : VaultBoundaryException() {
         override val message
-            get() = "message=${ `message` }"
+            get() = "detail=${ `detail` }"
     }
     
     /**
@@ -13065,10 +18887,10 @@ sealed class VaultBoundaryException: kotlin.Exception() {
         /**
          * Safe document diagnostic, without document contents.
          */
-        val `message`: kotlin.String
+        val `detail`: kotlin.String
         ) : VaultBoundaryException() {
         override val message
-            get() = "message=${ `message` }"
+            get() = "detail=${ `detail` }"
     }
     
     /**
@@ -13125,12 +18947,12 @@ public object FfiConverterTypeVaultBoundaryError : FfiConverterRustBuffer<VaultB
             is VaultBoundaryException.Configuration -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
-                + FfiConverterString.allocationSize(value.`message`)
+                + FfiConverterString.allocationSize(value.`detail`)
             )
             is VaultBoundaryException.Document -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
-                + FfiConverterString.allocationSize(value.`message`)
+                + FfiConverterString.allocationSize(value.`detail`)
             )
             is VaultBoundaryException.Path -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
@@ -13147,12 +18969,12 @@ public object FfiConverterTypeVaultBoundaryError : FfiConverterRustBuffer<VaultB
         when(value) {
             is VaultBoundaryException.Configuration -> {
                 buf.putInt(1)
-                FfiConverterString.write(value.`message`, buf)
+                FfiConverterString.write(value.`detail`, buf)
                 Unit
             }
             is VaultBoundaryException.Document -> {
                 buf.putInt(2)
-                FfiConverterString.write(value.`message`, buf)
+                FfiConverterString.write(value.`detail`, buf)
                 Unit
             }
             is VaultBoundaryException.Path -> {
@@ -13461,6 +19283,38 @@ public object FfiConverterOptionalByteArray: FfiConverterRustBuffer<kotlin.ByteA
 /**
  * @suppress
  */
+public object FfiConverterOptionalTypeFfiFacetPayload: FfiConverterRustBuffer<FfiFacetPayload?> {
+    override fun read(buf: ByteBuffer): FfiFacetPayload? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeFfiFacetPayload.read(buf)
+    }
+
+    override fun allocationSize(value: FfiFacetPayload?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeFfiFacetPayload.allocationSize(value)
+        }
+    }
+
+    override fun write(value: FfiFacetPayload?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeFfiFacetPayload.write(value, buf)
+        }
+    }
+}
+
+
+
+
+/**
+ * @suppress
+ */
 public object FfiConverterOptionalTypeTaskNotesApi: FfiConverterRustBuffer<TaskNotesApi?> {
     override fun read(buf: ByteBuffer): TaskNotesApi? {
         if (buf.get().toInt() == 0) {
@@ -13515,6 +19369,70 @@ public object FfiConverterOptionalTypeCommonRecurrenceDraft: FfiConverterRustBuf
         } else {
             buf.put(1)
             FfiConverterTypeCommonRecurrenceDraft.write(value, buf)
+        }
+    }
+}
+
+
+
+
+/**
+ * @suppress
+ */
+public object FfiConverterOptionalTypeFacetDisplacedMetadata: FfiConverterRustBuffer<FacetDisplacedMetadata?> {
+    override fun read(buf: ByteBuffer): FacetDisplacedMetadata? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeFacetDisplacedMetadata.read(buf)
+    }
+
+    override fun allocationSize(value: FacetDisplacedMetadata?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeFacetDisplacedMetadata.allocationSize(value)
+        }
+    }
+
+    override fun write(value: FacetDisplacedMetadata?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeFacetDisplacedMetadata.write(value, buf)
+        }
+    }
+}
+
+
+
+
+/**
+ * @suppress
+ */
+public object FfiConverterOptionalTypeFacetFileSnapshot: FfiConverterRustBuffer<FacetFileSnapshot?> {
+    override fun read(buf: ByteBuffer): FacetFileSnapshot? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeFacetFileSnapshot.read(buf)
+    }
+
+    override fun allocationSize(value: FacetFileSnapshot?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeFacetFileSnapshot.allocationSize(value)
+        }
+    }
+
+    override fun write(value: FacetFileSnapshot?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeFacetFileSnapshot.write(value, buf)
         }
     }
 }
@@ -14241,6 +20159,34 @@ public object FfiConverterSequenceTypeDeadLetterEntry: FfiConverterRustBuffer<Li
 /**
  * @suppress
  */
+public object FfiConverterSequenceTypeFacetDisplacedMetadata: FfiConverterRustBuffer<List<FacetDisplacedMetadata>> {
+    override fun read(buf: ByteBuffer): List<FacetDisplacedMetadata> {
+        val len = buf.getInt()
+        return List<FacetDisplacedMetadata>(len) {
+            FfiConverterTypeFacetDisplacedMetadata.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<FacetDisplacedMetadata>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterTypeFacetDisplacedMetadata.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<FacetDisplacedMetadata>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeFacetDisplacedMetadata.write(it, buf)
+        }
+    }
+}
+
+
+
+
+/**
+ * @suppress
+ */
 public object FfiConverterSequenceTypeFilterConfig: FfiConverterRustBuffer<List<FilterConfig>> {
     override fun read(buf: ByteBuffer): List<FilterConfig> {
         val len = buf.getInt()
@@ -14315,6 +20261,62 @@ public object FfiConverterSequenceTypeInlineTimeEntry: FfiConverterRustBuffer<Li
         buf.putInt(value.size)
         value.iterator().forEach {
             FfiConverterTypeInlineTimeEntry.write(it, buf)
+        }
+    }
+}
+
+
+
+
+/**
+ * @suppress
+ */
+public object FfiConverterSequenceTypeObsidianHttpHeader: FfiConverterRustBuffer<List<ObsidianHttpHeader>> {
+    override fun read(buf: ByteBuffer): List<ObsidianHttpHeader> {
+        val len = buf.getInt()
+        return List<ObsidianHttpHeader>(len) {
+            FfiConverterTypeObsidianHttpHeader.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<ObsidianHttpHeader>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterTypeObsidianHttpHeader.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<ObsidianHttpHeader>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeObsidianHttpHeader.write(it, buf)
+        }
+    }
+}
+
+
+
+
+/**
+ * @suppress
+ */
+public object FfiConverterSequenceTypeObsidianRemoteVault: FfiConverterRustBuffer<List<ObsidianRemoteVault>> {
+    override fun read(buf: ByteBuffer): List<ObsidianRemoteVault> {
+        val len = buf.getInt()
+        return List<ObsidianRemoteVault>(len) {
+            FfiConverterTypeObsidianRemoteVault.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<ObsidianRemoteVault>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterTypeObsidianRemoteVault.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<ObsidianRemoteVault>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeObsidianRemoteVault.write(it, buf)
         }
     }
 }
@@ -14455,6 +20457,34 @@ public object FfiConverterSequenceTypeCommonWeekday: FfiConverterRustBuffer<List
         buf.putInt(value.size)
         value.iterator().forEach {
             FfiConverterTypeCommonWeekday.write(it, buf)
+        }
+    }
+}
+
+
+
+
+/**
+ * @suppress
+ */
+public object FfiConverterSequenceTypeObsidianSessionEffect: FfiConverterRustBuffer<List<ObsidianSessionEffect>> {
+    override fun read(buf: ByteBuffer): List<ObsidianSessionEffect> {
+        val len = buf.getInt()
+        return List<ObsidianSessionEffect>(len) {
+            FfiConverterTypeObsidianSessionEffect.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<ObsidianSessionEffect>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterTypeObsidianSessionEffect.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<ObsidianSessionEffect>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeObsidianSessionEffect.write(it, buf)
         }
     }
 }
@@ -15937,6 +21967,23 @@ public typealias FfiConverterTypeTimerId = FfiConverterULong
         
         FfiConverterString.lower(`input`),
         FfiConverterString.lower(`today`),_status)
+}
+    )
+    }
+    
+
+        /**
+         * Return the authoritative native transport resource policy.
+         *
+         * # Errors
+         * Reports an unsupported platform integer width.
+         */
+    @Throws(ObsidianBoundaryException::class) fun `obsidianTransportLimits`(): ObsidianTransportLimits {
+            return FfiConverterTypeObsidianTransportLimits.lift(
+    uniffiRustCallWithError(ObsidianBoundaryException) { _status ->
+    UniffiLib.uniffi_tasknotes_core_ffi_fn_func_obsidian_transport_limits(
+    
+        _status)
 }
     )
     }
