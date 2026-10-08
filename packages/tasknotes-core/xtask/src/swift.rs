@@ -984,7 +984,6 @@ func titleOnlyCreate(_ title: TaskTitle) -> CreateTaskRequest {
         tags: nil,
         recurrence: nil,
         recurrenceAnchor: nil,
-        timeEstimate: nil,
         extraFields: nil
     )
 }
@@ -1245,9 +1244,7 @@ func smokePureHelpers() throws {
     }
     guard calendarWeekdays().count == 7 else { throw Failure("wrong number of weekday headers") }
 
-    guard elapsedFormat(seconds: 3661) == "1:01:01", elapsedFormat(seconds: 59) == "00:59" else {
-        throw Failure("elapsedFormat disagrees with the core")
-    }
+}
     guard try elapsedSecondsSince(start: "2026-08-08T10:00:00Z", now: "2026-08-08T10:01:30Z") == 90 else {
         throw Failure("elapsedSecondsSince disagrees with the core")
     }

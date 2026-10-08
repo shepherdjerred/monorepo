@@ -16,28 +16,6 @@ internal fun editEntry(entries: JsonArray, index: Int, field: String, value: Str
 }
 
 @Composable
-internal fun TypedTimeEntries(document: String, busy: Boolean, change: (String) -> Unit) {
-    val parsed = Json.parseToJsonElement(document)
-    Text("Time entries", style = MaterialTheme.typography.titleSmall)
-    if (parsed !is JsonArray) {
-        Text("The existing time-entry value is preserved. Correct it in your vault before editing entries.")
-        return
-    }
-    parsed.forEachIndexed { index, entry ->
-        if (entry !is JsonObject) Text("Existing entry ${index + 1} is preserved and cannot be edited here.")
-        else Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("Entry ${index + 1}")
-            val start = (entry["startTime"] as? JsonPrimitive)?.contentOrNull ?: ""
-            val end = (entry["endTime"] as? JsonPrimitive)?.contentOrNull ?: ""
-            OutlinedTextField(start, { change(editEntry(parsed, index, "startTime", it).toString()) }, label = { Text("Start (RFC3339)") }, enabled = !busy, modifier = Modifier.fillMaxWidth())
-            OutlinedTextField(end, { change(editEntry(parsed, index, "endTime", it.takeIf(String::isNotBlank)).toString()) }, label = { Text("End (blank for active entry)") }, enabled = !busy, modifier = Modifier.fillMaxWidth())
-            TextButton(onClick = { change(JsonArray(parsed.filterIndexed { position, _ -> position != index }).toString()) }, enabled = !busy) { Text("Remove entry") }
-        }
-    }
-    TextButton(onClick = { change(JsonArray(parsed + buildJsonObject { put("startTime", ""); put("endTime", JsonNull) }).toString()) }, enabled = !busy) { Text("Add time entry") }
-}
-
-@Composable
 internal fun TypedReminders(document: String, busy: Boolean, change: (String) -> Unit) {
     val parsed = Json.parseToJsonElement(document)
     Text("Reminders", style = MaterialTheme.typography.titleSmall)

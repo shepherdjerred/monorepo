@@ -29,7 +29,6 @@
 pub mod calendar;
 pub mod dates;
 pub mod domain;
-pub mod elapsed;
 pub mod net;
 pub mod nlp;
 pub mod recurrence;

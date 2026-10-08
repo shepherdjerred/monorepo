@@ -1423,26 +1423,6 @@ static class _UniFFILib {
     
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
 
     static _UniFFILib() {
         _UniFFILib.uniffiCheckContractApiVersion();
@@ -2742,94 +2722,6 @@ static class _UniFFILib {
     [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern
 #endif
-     RustBuffer uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_pause_pomodoro(ulong @ptr,ref UniffiRustCallStatus _uniffi_out_err
-    );
-
-    #if NET8_0_OR_GREATER
-    [LibraryImport("tasknotes_core_ffi")]
-    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
-    public static partial
-#else
-    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
-    public static extern
-#endif
-     RustBuffer uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_pomodoro_status(ulong @ptr,ref UniffiRustCallStatus _uniffi_out_err
-    );
-
-    #if NET8_0_OR_GREATER
-    [LibraryImport("tasknotes_core_ffi")]
-    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
-    public static partial
-#else
-    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
-    public static extern
-#endif
-     RustBuffer uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_start_pomodoro(ulong @ptr,RustBuffer @taskId,ref UniffiRustCallStatus _uniffi_out_err
-    );
-
-    #if NET8_0_OR_GREATER
-    [LibraryImport("tasknotes_core_ffi")]
-    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
-    public static partial
-#else
-    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
-    public static extern
-#endif
-     RustBuffer uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_start_time_tracking(ulong @ptr,RustBuffer @taskId,ref UniffiRustCallStatus _uniffi_out_err
-    );
-
-    #if NET8_0_OR_GREATER
-    [LibraryImport("tasknotes_core_ffi")]
-    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
-    public static partial
-#else
-    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
-    public static extern
-#endif
-     RustBuffer uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_stop_pomodoro(ulong @ptr,ref UniffiRustCallStatus _uniffi_out_err
-    );
-
-    #if NET8_0_OR_GREATER
-    [LibraryImport("tasknotes_core_ffi")]
-    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
-    public static partial
-#else
-    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
-    public static extern
-#endif
-     RustBuffer uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_stop_time_tracking(ulong @ptr,RustBuffer @taskId,ref UniffiRustCallStatus _uniffi_out_err
-    );
-
-    #if NET8_0_OR_GREATER
-    [LibraryImport("tasknotes_core_ffi")]
-    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
-    public static partial
-#else
-    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
-    public static extern
-#endif
-     RustBuffer uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_task_time(ulong @ptr,RustBuffer @taskId,ref UniffiRustCallStatus _uniffi_out_err
-    );
-
-    #if NET8_0_OR_GREATER
-    [LibraryImport("tasknotes_core_ffi")]
-    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
-    public static partial
-#else
-    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
-    public static extern
-#endif
-     RustBuffer uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_time_summary(ulong @ptr,RustBuffer @period,ref UniffiRustCallStatus _uniffi_out_err
-    );
-
-    #if NET8_0_OR_GREATER
-    [LibraryImport("tasknotes_core_ffi")]
-    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
-    public static partial
-#else
-    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
-    public static extern
-#endif
      ulong uniffi_tasknotes_core_ffi_fn_clone_ffiobsidianaccount(ulong @handle,ref UniffiRustCallStatus _uniffi_out_err
     );
 
@@ -3920,28 +3812,6 @@ static class _UniFFILib {
     public static extern
 #endif
      RustBuffer uniffi_tasknotes_core_ffi_fn_func_date_parse_local(RustBuffer @raw,int @viewerUtcOffsetSeconds,ref UniffiRustCallStatus _uniffi_out_err
-    );
-
-    #if NET8_0_OR_GREATER
-    [LibraryImport("tasknotes_core_ffi")]
-    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
-    public static partial
-#else
-    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
-    public static extern
-#endif
-     RustBuffer uniffi_tasknotes_core_ffi_fn_func_elapsed_format(ulong @seconds,ref UniffiRustCallStatus _uniffi_out_err
-    );
-
-    #if NET8_0_OR_GREATER
-    [LibraryImport("tasknotes_core_ffi")]
-    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
-    public static partial
-#else
-    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
-    public static extern
-#endif
-     ulong uniffi_tasknotes_core_ffi_fn_func_elapsed_seconds_since(RustBuffer @start,RustBuffer @now,ref UniffiRustCallStatus _uniffi_out_err
     );
 
     #if NET8_0_OR_GREATER
@@ -5338,28 +5208,6 @@ static class _UniFFILib {
     [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern
 #endif
-     ushort uniffi_tasknotes_core_ffi_checksum_func_elapsed_format(
-    );
-
-    #if NET8_0_OR_GREATER
-    [LibraryImport("tasknotes_core_ffi")]
-    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
-    public static partial
-#else
-    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
-    public static extern
-#endif
-     ushort uniffi_tasknotes_core_ffi_checksum_func_elapsed_seconds_since(
-    );
-
-    #if NET8_0_OR_GREATER
-    [LibraryImport("tasknotes_core_ffi")]
-    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
-    public static partial
-#else
-    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
-    public static extern
-#endif
      ushort uniffi_tasknotes_core_ffi_checksum_func_migration_current_schema_version(
     );
 
@@ -6427,94 +6275,6 @@ static class _UniFFILib {
     [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern
 #endif
-     ushort uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_pause_pomodoro(
-    );
-
-    #if NET8_0_OR_GREATER
-    [LibraryImport("tasknotes_core_ffi")]
-    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
-    public static partial
-#else
-    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
-    public static extern
-#endif
-     ushort uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_pomodoro_status(
-    );
-
-    #if NET8_0_OR_GREATER
-    [LibraryImport("tasknotes_core_ffi")]
-    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
-    public static partial
-#else
-    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
-    public static extern
-#endif
-     ushort uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_start_pomodoro(
-    );
-
-    #if NET8_0_OR_GREATER
-    [LibraryImport("tasknotes_core_ffi")]
-    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
-    public static partial
-#else
-    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
-    public static extern
-#endif
-     ushort uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_start_time_tracking(
-    );
-
-    #if NET8_0_OR_GREATER
-    [LibraryImport("tasknotes_core_ffi")]
-    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
-    public static partial
-#else
-    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
-    public static extern
-#endif
-     ushort uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_stop_pomodoro(
-    );
-
-    #if NET8_0_OR_GREATER
-    [LibraryImport("tasknotes_core_ffi")]
-    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
-    public static partial
-#else
-    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
-    public static extern
-#endif
-     ushort uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_stop_time_tracking(
-    );
-
-    #if NET8_0_OR_GREATER
-    [LibraryImport("tasknotes_core_ffi")]
-    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
-    public static partial
-#else
-    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
-    public static extern
-#endif
-     ushort uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_task_time(
-    );
-
-    #if NET8_0_OR_GREATER
-    [LibraryImport("tasknotes_core_ffi")]
-    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
-    public static partial
-#else
-    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
-    public static extern
-#endif
-     ushort uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_time_summary(
-    );
-
-    #if NET8_0_OR_GREATER
-    [LibraryImport("tasknotes_core_ffi")]
-    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
-    public static partial
-#else
-    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
-    public static extern
-#endif
      ushort uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_cancel_request(
     );
 
@@ -7283,18 +7043,6 @@ static class _UniFFILib {
             }
         }
         {
-            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_elapsed_format();
-            if (checksum != 49010) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_elapsed_format` checksum `49010`, library returned `{checksum}`");
-            }
-        }
-        {
-            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_elapsed_seconds_since();
-            if (checksum != 23598) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_elapsed_seconds_since` checksum `23598`, library returned `{checksum}`");
-            }
-        }
-        {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_migration_current_schema_version();
             if (checksum != 13709) {
                 throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_migration_current_schema_version` checksum `13709`, library returned `{checksum}`");
@@ -7874,54 +7622,6 @@ static class _UniFFILib {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_cancel_all();
             if (checksum != 59292) {
                 throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_cancel_all` checksum `59292`, library returned `{checksum}`");
-            }
-        }
-        {
-            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_pause_pomodoro();
-            if (checksum != 58341) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_pause_pomodoro` checksum `58341`, library returned `{checksum}`");
-            }
-        }
-        {
-            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_pomodoro_status();
-            if (checksum != 54685) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_pomodoro_status` checksum `54685`, library returned `{checksum}`");
-            }
-        }
-        {
-            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_start_pomodoro();
-            if (checksum != 52891) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_start_pomodoro` checksum `52891`, library returned `{checksum}`");
-            }
-        }
-        {
-            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_start_time_tracking();
-            if (checksum != 7312) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_start_time_tracking` checksum `7312`, library returned `{checksum}`");
-            }
-        }
-        {
-            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_stop_pomodoro();
-            if (checksum != 34297) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_stop_pomodoro` checksum `34297`, library returned `{checksum}`");
-            }
-        }
-        {
-            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_stop_time_tracking();
-            if (checksum != 23374) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_stop_time_tracking` checksum `23374`, library returned `{checksum}`");
-            }
-        }
-        {
-            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_task_time();
-            if (checksum != 12914) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_task_time` checksum `12914`, library returned `{checksum}`");
-            }
-        }
-        {
-            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_time_summary();
-            if (checksum != 8961) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_time_summary` checksum `8961`, library returned `{checksum}`");
             }
         }
         {
@@ -14938,78 +14638,6 @@ internal interface ITaskNotesApi {
     /// the app is quitting mid-request.
     /// </summary>
     void CancelAll();
-    /// <summary>
-    /// Toggle the current interval between running and paused.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    PomodoroStatus PausePomodoro();
-    /// <summary>
-    /// Read the current server-backed focus interval.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    PomodoroStatus PomodoroStatus();
-    /// <summary>
-    /// Start a server-backed focus interval, optionally assigned to a task.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    PomodoroStatus StartPomodoro(TaskId? @taskId);
-    /// <summary>
-    /// Start tracking time against a task through the core-owned wire client.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    Task StartTimeTracking(TaskId @taskId);
-    /// <summary>
-    /// Stop the current server-backed focus interval.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    PomodoroStatus StopPomodoro();
-    /// <summary>
-    /// Stop tracking time against a task through the core-owned wire client.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    Task StopTimeTracking(TaskId @taskId);
-    /// <summary>
-    /// Read tracked-time totals for one task.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    TaskTime TaskTime(TaskId @taskId);
-    /// <summary>
-    /// Read the aggregate time report for a named server period.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    TimeSummary TimeSummary(string @period);
 }
 /// <summary>
 /// The TaskNotes `/v2` API, over a host transport.
@@ -15157,134 +14785,6 @@ internal class TaskNotesApi : ITaskNotesApi, IDisposable {
 ));
     }
     
-    
-    
-    /// <summary>
-    /// Toggle the current interval between running and paused.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    public PomodoroStatus PausePomodoro() {
-        return CallWithPointer(thisPtr => FfiConverterTypePomodoroStatus.INSTANCE.Lift(
-    _UniffiHelpers.RustCallWithError(FfiConverterTypeCoreError.INSTANCE, (ref UniffiRustCallStatus _status) =>
-    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_pause_pomodoro(thisPtr,  ref _status)
-)));
-    }
-    
-    
-    /// <summary>
-    /// Read the current server-backed focus interval.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    public PomodoroStatus PomodoroStatus() {
-        return CallWithPointer(thisPtr => FfiConverterTypePomodoroStatus.INSTANCE.Lift(
-    _UniffiHelpers.RustCallWithError(FfiConverterTypeCoreError.INSTANCE, (ref UniffiRustCallStatus _status) =>
-    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_pomodoro_status(thisPtr,  ref _status)
-)));
-    }
-    
-    
-    /// <summary>
-    /// Start a server-backed focus interval, optionally assigned to a task.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    public PomodoroStatus StartPomodoro(TaskId? @taskId) {
-        return CallWithPointer(thisPtr => FfiConverterTypePomodoroStatus.INSTANCE.Lift(
-    _UniffiHelpers.RustCallWithError(FfiConverterTypeCoreError.INSTANCE, (ref UniffiRustCallStatus _status) =>
-    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_start_pomodoro(thisPtr, FfiConverterOptionalTypeTaskId.INSTANCE.Lower(@taskId), ref _status)
-)));
-    }
-    
-    
-    /// <summary>
-    /// Start tracking time against a task through the core-owned wire client.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    public Task StartTimeTracking(TaskId @taskId) {
-        return CallWithPointer(thisPtr => FfiConverterTypeTask.INSTANCE.Lift(
-    _UniffiHelpers.RustCallWithError(FfiConverterTypeCoreError.INSTANCE, (ref UniffiRustCallStatus _status) =>
-    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_start_time_tracking(thisPtr, FfiConverterTypeTaskId.INSTANCE.Lower(@taskId), ref _status)
-)));
-    }
-    
-    
-    /// <summary>
-    /// Stop the current server-backed focus interval.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    public PomodoroStatus StopPomodoro() {
-        return CallWithPointer(thisPtr => FfiConverterTypePomodoroStatus.INSTANCE.Lift(
-    _UniffiHelpers.RustCallWithError(FfiConverterTypeCoreError.INSTANCE, (ref UniffiRustCallStatus _status) =>
-    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_stop_pomodoro(thisPtr,  ref _status)
-)));
-    }
-    
-    
-    /// <summary>
-    /// Stop tracking time against a task through the core-owned wire client.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    public Task StopTimeTracking(TaskId @taskId) {
-        return CallWithPointer(thisPtr => FfiConverterTypeTask.INSTANCE.Lift(
-    _UniffiHelpers.RustCallWithError(FfiConverterTypeCoreError.INSTANCE, (ref UniffiRustCallStatus _status) =>
-    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_stop_time_tracking(thisPtr, FfiConverterTypeTaskId.INSTANCE.Lower(@taskId), ref _status)
-)));
-    }
-    
-    
-    /// <summary>
-    /// Read tracked-time totals for one task.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    public TaskTime TaskTime(TaskId @taskId) {
-        return CallWithPointer(thisPtr => FfiConverterTypeTaskTime.INSTANCE.Lift(
-    _UniffiHelpers.RustCallWithError(FfiConverterTypeCoreError.INSTANCE, (ref UniffiRustCallStatus _status) =>
-    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_task_time(thisPtr, FfiConverterTypeTaskId.INSTANCE.Lower(@taskId), ref _status)
-)));
-    }
-    
-    
-    /// <summary>
-    /// Read the aggregate time report for a named server period.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    public TimeSummary TimeSummary(string @period) {
-        return CallWithPointer(thisPtr => FfiConverterTypeTimeSummary.INSTANCE.Lift(
-    _UniffiHelpers.RustCallWithError(FfiConverterTypeCoreError.INSTANCE, (ref UniffiRustCallStatus _status) =>
-    _UniFFILib.uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_time_summary(thisPtr, FfiConverterString.INSTANCE.Lower(@period), ref _status)
-)));
-    }
     
     
 
@@ -15666,9 +15166,6 @@ class FfiConverterTypeCommonRecurrenceDraft: FfiConverterRustBuffer<CommonRecurr
 /// <param name="RecurrenceAnchor">
 /// What the recurrence is measured from.
 /// </param>
-/// <param name="TimeEstimate">
-/// The estimate in whole minutes.
-/// </param>
 /// <param name="ExtraFields">
 /// Extra frontmatter keys to write, as a JSON object string.
 /// </param>
@@ -15718,10 +15215,6 @@ internal record CreateTaskRequest (
     /// </summary>
     RecurrenceAnchor? RecurrenceAnchor, 
     /// <summary>
-    /// The estimate in whole minutes.
-    /// </summary>
-    uint? TimeEstimate, 
-    /// <summary>
     /// Extra frontmatter keys to write, as a JSON object string.
     /// </summary>
     ExtraFields? ExtraFields
@@ -15744,7 +15237,6 @@ class FfiConverterTypeCreateTaskRequest: FfiConverterRustBuffer<CreateTaskReques
             Tags: FfiConverterOptionalSequenceTypeTagName.INSTANCE.Read(stream),
             Recurrence: FfiConverterOptionalString.INSTANCE.Read(stream),
             RecurrenceAnchor: FfiConverterOptionalTypeRecurrenceAnchor.INSTANCE.Read(stream),
-            TimeEstimate: FfiConverterOptionalUInt32.INSTANCE.Read(stream),
             ExtraFields: FfiConverterOptionalTypeExtraFields.INSTANCE.Read(stream)
         );
     }
@@ -15762,7 +15254,6 @@ class FfiConverterTypeCreateTaskRequest: FfiConverterRustBuffer<CreateTaskReques
             + FfiConverterOptionalSequenceTypeTagName.INSTANCE.AllocationSize(value.Tags)
             + FfiConverterOptionalString.INSTANCE.AllocationSize(value.Recurrence)
             + FfiConverterOptionalTypeRecurrenceAnchor.INSTANCE.AllocationSize(value.RecurrenceAnchor)
-            + FfiConverterOptionalUInt32.INSTANCE.AllocationSize(value.TimeEstimate)
             + FfiConverterOptionalTypeExtraFields.INSTANCE.AllocationSize(value.ExtraFields);
     }
 
@@ -15778,7 +15269,6 @@ class FfiConverterTypeCreateTaskRequest: FfiConverterRustBuffer<CreateTaskReques
             FfiConverterOptionalSequenceTypeTagName.INSTANCE.Write(value.Tags, stream);
             FfiConverterOptionalString.INSTANCE.Write(value.Recurrence, stream);
             FfiConverterOptionalTypeRecurrenceAnchor.INSTANCE.Write(value.RecurrenceAnchor, stream);
-            FfiConverterOptionalUInt32.INSTANCE.Write(value.TimeEstimate, stream);
             FfiConverterOptionalTypeExtraFields.INSTANCE.Write(value.ExtraFields, stream);
     }
 }
@@ -16643,61 +16133,6 @@ class FfiConverterTypeHttpResponse: FfiConverterRustBuffer<HttpResponse> {
 
 
 /// <summary>
-/// See [`tasknotes_core::domain::InlineTimeEntry`].
-/// </summary>
-/// <param name="StartTime">
-/// When tracking started.
-/// </param>
-/// <param name="EndTime">
-/// When tracking stopped; absent while a session is running.
-/// </param>
-/// <param name="Duration">
-/// The interval's length in whole minutes.
-/// </param>
-internal record InlineTimeEntry (
-    /// <summary>
-    /// When tracking started.
-    /// </summary>
-    string StartTime, 
-    /// <summary>
-    /// When tracking stopped; absent while a session is running.
-    /// </summary>
-    string? EndTime, 
-    /// <summary>
-    /// The interval's length in whole minutes.
-    /// </summary>
-    uint? Duration
-) {
-}
-
-class FfiConverterTypeInlineTimeEntry: FfiConverterRustBuffer<InlineTimeEntry> {
-    public static FfiConverterTypeInlineTimeEntry INSTANCE = new FfiConverterTypeInlineTimeEntry();
-
-    public override InlineTimeEntry Read(BigEndianStream stream) {
-        return new InlineTimeEntry(
-            StartTime: FfiConverterString.INSTANCE.Read(stream),
-            EndTime: FfiConverterOptionalString.INSTANCE.Read(stream),
-            Duration: FfiConverterOptionalUInt32.INSTANCE.Read(stream)
-        );
-    }
-
-    public override int AllocationSize(InlineTimeEntry value) {
-        return 0
-            + FfiConverterString.INSTANCE.AllocationSize(value.StartTime)
-            + FfiConverterOptionalString.INSTANCE.AllocationSize(value.EndTime)
-            + FfiConverterOptionalUInt32.INSTANCE.AllocationSize(value.Duration);
-    }
-
-    public override void Write(InlineTimeEntry value, BigEndianStream stream) {
-            FfiConverterString.INSTANCE.Write(value.StartTime, stream);
-            FfiConverterOptionalString.INSTANCE.Write(value.EndTime, stream);
-            FfiConverterOptionalUInt32.INSTANCE.Write(value.Duration, stream);
-    }
-}
-
-
-
-/// <summary>
 /// See [`tasknotes_core::net::InstanceCompletion`].
 /// </summary>
 /// <param name="Date">
@@ -17420,71 +16855,6 @@ class FfiConverterTypePagination: FfiConverterRustBuffer<Pagination> {
 
 
 /// <summary>
-/// See [`tasknotes_core::domain::PomodoroStatus`].
-/// </summary>
-/// <param name="Active">
-/// Whether a session is running.
-/// </param>
-/// <param name="TaskId">
-/// The task being worked on.
-/// </param>
-/// <param name="TimeRemaining">
-/// Seconds left in the current phase.
-/// </param>
-/// <param name="Phase">
-/// Which phase is running.
-/// </param>
-internal record PomodoroStatus (
-    /// <summary>
-    /// Whether a session is running.
-    /// </summary>
-    bool Active, 
-    /// <summary>
-    /// The task being worked on.
-    /// </summary>
-    TaskId? TaskId, 
-    /// <summary>
-    /// Seconds left in the current phase.
-    /// </summary>
-    uint? TimeRemaining, 
-    /// <summary>
-    /// Which phase is running.
-    /// </summary>
-    PomodoroPhase? Phase
-) {
-}
-
-class FfiConverterTypePomodoroStatus: FfiConverterRustBuffer<PomodoroStatus> {
-    public static FfiConverterTypePomodoroStatus INSTANCE = new FfiConverterTypePomodoroStatus();
-
-    public override PomodoroStatus Read(BigEndianStream stream) {
-        return new PomodoroStatus(
-            Active: FfiConverterBoolean.INSTANCE.Read(stream),
-            TaskId: FfiConverterOptionalTypeTaskId.INSTANCE.Read(stream),
-            TimeRemaining: FfiConverterOptionalUInt32.INSTANCE.Read(stream),
-            Phase: FfiConverterOptionalTypePomodoroPhase.INSTANCE.Read(stream)
-        );
-    }
-
-    public override int AllocationSize(PomodoroStatus value) {
-        return 0
-            + FfiConverterBoolean.INSTANCE.AllocationSize(value.Active)
-            + FfiConverterOptionalTypeTaskId.INSTANCE.AllocationSize(value.TaskId)
-            + FfiConverterOptionalUInt32.INSTANCE.AllocationSize(value.TimeRemaining)
-            + FfiConverterOptionalTypePomodoroPhase.INSTANCE.AllocationSize(value.Phase);
-    }
-
-    public override void Write(PomodoroStatus value, BigEndianStream stream) {
-            FfiConverterBoolean.INSTANCE.Write(value.Active, stream);
-            FfiConverterOptionalTypeTaskId.INSTANCE.Write(value.TaskId, stream);
-            FfiConverterOptionalUInt32.INSTANCE.Write(value.TimeRemaining, stream);
-            FfiConverterOptionalTypePomodoroPhase.INSTANCE.Write(value.Phase, stream);
-    }
-}
-
-
-
-/// <summary>
 /// See [`tasknotes_core::domain::QueryResponse`].
 /// </summary>
 /// <param name="Tasks">
@@ -17776,12 +17146,6 @@ class FfiConverterTypeSyncStatus: FfiConverterRustBuffer<SyncStatus> {
 /// <param name="DateModified">
 /// When the note was last modified.
 /// </param>
-/// <param name="TimeEstimate">
-/// The estimate in whole minutes.
-/// </param>
-/// <param name="TimeEntries">
-/// Tracked work intervals stored in the note's frontmatter.
-/// </param>
 /// <param name="BlockedBy">
 /// Tasks this one is blocked by.
 /// </param>
@@ -17790,9 +17154,6 @@ class FfiConverterTypeSyncStatus: FfiConverterRustBuffer<SyncStatus> {
 /// </param>
 /// <param name="Archived">
 /// Whether the task is archived.
-/// </param>
-/// <param name="TotalTrackedTime">
-/// Total tracked time in whole minutes, as the server computed it.
 /// </param>
 /// <param name="IsBlocked">
 /// Whether something else is blocking this task.
@@ -17876,14 +17237,6 @@ internal record Task (
     /// </summary>
     string? DateModified, 
     /// <summary>
-    /// The estimate in whole minutes.
-    /// </summary>
-    uint? TimeEstimate, 
-    /// <summary>
-    /// Tracked work intervals stored in the note's frontmatter.
-    /// </summary>
-    InlineTimeEntry[] TimeEntries, 
-    /// <summary>
     /// Tasks this one is blocked by.
     /// </summary>
     BlockedByEntry[] BlockedBy, 
@@ -17895,10 +17248,6 @@ internal record Task (
     /// Whether the task is archived.
     /// </summary>
     bool Archived, 
-    /// <summary>
-    /// Total tracked time in whole minutes, as the server computed it.
-    /// </summary>
-    uint TotalTrackedTime, 
     /// <summary>
     /// Whether something else is blocking this task.
     /// </summary>
@@ -17940,12 +17289,9 @@ class FfiConverterTypeTask: FfiConverterRustBuffer<Task> {
             CompletedDate: FfiConverterOptionalString.INSTANCE.Read(stream),
             DateCreated: FfiConverterOptionalString.INSTANCE.Read(stream),
             DateModified: FfiConverterOptionalString.INSTANCE.Read(stream),
-            TimeEstimate: FfiConverterOptionalUInt32.INSTANCE.Read(stream),
-            TimeEntries: FfiConverterSequenceTypeInlineTimeEntry.INSTANCE.Read(stream),
             BlockedBy: FfiConverterSequenceTypeBlockedByEntry.INSTANCE.Read(stream),
             Reminders: FfiConverterSequenceTypeReminder.INSTANCE.Read(stream),
             Archived: FfiConverterBoolean.INSTANCE.Read(stream),
-            TotalTrackedTime: FfiConverterUInt32.INSTANCE.Read(stream),
             IsBlocked: FfiConverterBoolean.INSTANCE.Read(stream),
             IsBlocking: FfiConverterBoolean.INSTANCE.Read(stream),
             ExtraFields: FfiConverterTypeExtraFields.INSTANCE.Read(stream),
@@ -17972,12 +17318,9 @@ class FfiConverterTypeTask: FfiConverterRustBuffer<Task> {
             + FfiConverterOptionalString.INSTANCE.AllocationSize(value.CompletedDate)
             + FfiConverterOptionalString.INSTANCE.AllocationSize(value.DateCreated)
             + FfiConverterOptionalString.INSTANCE.AllocationSize(value.DateModified)
-            + FfiConverterOptionalUInt32.INSTANCE.AllocationSize(value.TimeEstimate)
-            + FfiConverterSequenceTypeInlineTimeEntry.INSTANCE.AllocationSize(value.TimeEntries)
             + FfiConverterSequenceTypeBlockedByEntry.INSTANCE.AllocationSize(value.BlockedBy)
             + FfiConverterSequenceTypeReminder.INSTANCE.AllocationSize(value.Reminders)
             + FfiConverterBoolean.INSTANCE.AllocationSize(value.Archived)
-            + FfiConverterUInt32.INSTANCE.AllocationSize(value.TotalTrackedTime)
             + FfiConverterBoolean.INSTANCE.AllocationSize(value.IsBlocked)
             + FfiConverterBoolean.INSTANCE.AllocationSize(value.IsBlocking)
             + FfiConverterTypeExtraFields.INSTANCE.AllocationSize(value.ExtraFields)
@@ -18002,12 +17345,9 @@ class FfiConverterTypeTask: FfiConverterRustBuffer<Task> {
             FfiConverterOptionalString.INSTANCE.Write(value.CompletedDate, stream);
             FfiConverterOptionalString.INSTANCE.Write(value.DateCreated, stream);
             FfiConverterOptionalString.INSTANCE.Write(value.DateModified, stream);
-            FfiConverterOptionalUInt32.INSTANCE.Write(value.TimeEstimate, stream);
-            FfiConverterSequenceTypeInlineTimeEntry.INSTANCE.Write(value.TimeEntries, stream);
             FfiConverterSequenceTypeBlockedByEntry.INSTANCE.Write(value.BlockedBy, stream);
             FfiConverterSequenceTypeReminder.INSTANCE.Write(value.Reminders, stream);
             FfiConverterBoolean.INSTANCE.Write(value.Archived, stream);
-            FfiConverterUInt32.INSTANCE.Write(value.TotalTrackedTime, stream);
             FfiConverterBoolean.INSTANCE.Write(value.IsBlocked, stream);
             FfiConverterBoolean.INSTANCE.Write(value.IsBlocking, stream);
             FfiConverterTypeExtraFields.INSTANCE.Write(value.ExtraFields, stream);
@@ -18225,9 +17565,6 @@ class FfiConverterTypeTaskQueryFilter: FfiConverterRustBuffer<TaskQueryFilter> {
 /// <param name="Archived">
 /// Archived tasks.
 /// </param>
-/// <param name="WithTimeTracking">
-/// Tasks with at least one tracked interval.
-/// </param>
 internal record TaskStats (
     /// <summary>
     /// Every task in the vault.
@@ -18248,11 +17585,7 @@ internal record TaskStats (
     /// <summary>
     /// Archived tasks.
     /// </summary>
-    uint Archived, 
-    /// <summary>
-    /// Tasks with at least one tracked interval.
-    /// </summary>
-    uint WithTimeTracking
+    uint Archived
 ) {
 }
 
@@ -18265,8 +17598,7 @@ class FfiConverterTypeTaskStats: FfiConverterRustBuffer<TaskStats> {
             Completed: FfiConverterUInt32.INSTANCE.Read(stream),
             Active: FfiConverterUInt32.INSTANCE.Read(stream),
             Overdue: FfiConverterUInt32.INSTANCE.Read(stream),
-            Archived: FfiConverterUInt32.INSTANCE.Read(stream),
-            WithTimeTracking: FfiConverterUInt32.INSTANCE.Read(stream)
+            Archived: FfiConverterUInt32.INSTANCE.Read(stream)
         );
     }
 
@@ -18276,8 +17608,7 @@ class FfiConverterTypeTaskStats: FfiConverterRustBuffer<TaskStats> {
             + FfiConverterUInt32.INSTANCE.AllocationSize(value.Completed)
             + FfiConverterUInt32.INSTANCE.AllocationSize(value.Active)
             + FfiConverterUInt32.INSTANCE.AllocationSize(value.Overdue)
-            + FfiConverterUInt32.INSTANCE.AllocationSize(value.Archived)
-            + FfiConverterUInt32.INSTANCE.AllocationSize(value.WithTimeTracking);
+            + FfiConverterUInt32.INSTANCE.AllocationSize(value.Archived);
     }
 
     public override void Write(TaskStats value, BigEndianStream stream) {
@@ -18286,7 +17617,6 @@ class FfiConverterTypeTaskStats: FfiConverterRustBuffer<TaskStats> {
             FfiConverterUInt32.INSTANCE.Write(value.Active, stream);
             FfiConverterUInt32.INSTANCE.Write(value.Overdue, stream);
             FfiConverterUInt32.INSTANCE.Write(value.Archived, stream);
-            FfiConverterUInt32.INSTANCE.Write(value.WithTimeTracking, stream);
     }
 }
 
@@ -18375,216 +17705,6 @@ class FfiConverterTypeTaskStoreSnapshot: FfiConverterRustBuffer<TaskStoreSnapsho
 
 
 /// <summary>
-/// See [`tasknotes_core::domain::TaskTime`].
-/// </summary>
-/// <param name="TotalTime">
-/// Whole minutes tracked against one task.
-/// </param>
-/// <param name="HasActiveSession">
-/// Whether a session is running right now.
-/// </param>
-internal record TaskTime (
-    /// <summary>
-    /// Whole minutes tracked against one task.
-    /// </summary>
-    uint TotalTime, 
-    /// <summary>
-    /// Whether a session is running right now.
-    /// </summary>
-    bool HasActiveSession
-) {
-}
-
-class FfiConverterTypeTaskTime: FfiConverterRustBuffer<TaskTime> {
-    public static FfiConverterTypeTaskTime INSTANCE = new FfiConverterTypeTaskTime();
-
-    public override TaskTime Read(BigEndianStream stream) {
-        return new TaskTime(
-            TotalTime: FfiConverterUInt32.INSTANCE.Read(stream),
-            HasActiveSession: FfiConverterBoolean.INSTANCE.Read(stream)
-        );
-    }
-
-    public override int AllocationSize(TaskTime value) {
-        return 0
-            + FfiConverterUInt32.INSTANCE.AllocationSize(value.TotalTime)
-            + FfiConverterBoolean.INSTANCE.AllocationSize(value.HasActiveSession);
-    }
-
-    public override void Write(TaskTime value, BigEndianStream stream) {
-            FfiConverterUInt32.INSTANCE.Write(value.TotalTime, stream);
-            FfiConverterBoolean.INSTANCE.Write(value.HasActiveSession, stream);
-    }
-}
-
-
-
-/// <summary>
-/// See [`tasknotes_core::domain::TimeEntry`].
-/// </summary>
-/// <param name="TaskId">
-/// The task the interval belongs to.
-/// </param>
-/// <param name="StartTime">
-/// When tracking started.
-/// </param>
-/// <param name="EndTime">
-/// When tracking stopped; absent while a session is running.
-/// </param>
-/// <param name="Duration">
-/// The interval's length in whole minutes.
-/// </param>
-internal record TimeEntry (
-    /// <summary>
-    /// The task the interval belongs to.
-    /// </summary>
-    TaskId TaskId, 
-    /// <summary>
-    /// When tracking started.
-    /// </summary>
-    string StartTime, 
-    /// <summary>
-    /// When tracking stopped; absent while a session is running.
-    /// </summary>
-    string? EndTime, 
-    /// <summary>
-    /// The interval's length in whole minutes.
-    /// </summary>
-    uint? Duration
-) {
-}
-
-class FfiConverterTypeTimeEntry: FfiConverterRustBuffer<TimeEntry> {
-    public static FfiConverterTypeTimeEntry INSTANCE = new FfiConverterTypeTimeEntry();
-
-    public override TimeEntry Read(BigEndianStream stream) {
-        return new TimeEntry(
-            TaskId: FfiConverterTypeTaskId.INSTANCE.Read(stream),
-            StartTime: FfiConverterString.INSTANCE.Read(stream),
-            EndTime: FfiConverterOptionalString.INSTANCE.Read(stream),
-            Duration: FfiConverterOptionalUInt32.INSTANCE.Read(stream)
-        );
-    }
-
-    public override int AllocationSize(TimeEntry value) {
-        return 0
-            + FfiConverterTypeTaskId.INSTANCE.AllocationSize(value.TaskId)
-            + FfiConverterString.INSTANCE.AllocationSize(value.StartTime)
-            + FfiConverterOptionalString.INSTANCE.AllocationSize(value.EndTime)
-            + FfiConverterOptionalUInt32.INSTANCE.AllocationSize(value.Duration);
-    }
-
-    public override void Write(TimeEntry value, BigEndianStream stream) {
-            FfiConverterTypeTaskId.INSTANCE.Write(value.TaskId, stream);
-            FfiConverterString.INSTANCE.Write(value.StartTime, stream);
-            FfiConverterOptionalString.INSTANCE.Write(value.EndTime, stream);
-            FfiConverterOptionalUInt32.INSTANCE.Write(value.Duration, stream);
-    }
-}
-
-
-
-/// <summary>
-/// See [`tasknotes_core::domain::TimeSummary`].
-/// </summary>
-/// <param name="TotalTime">
-/// Whole minutes tracked across everything in scope.
-/// </param>
-/// <param name="TopTasks">
-/// The busiest tasks, in the server's order.
-/// </param>
-internal record TimeSummary (
-    /// <summary>
-    /// Whole minutes tracked across everything in scope.
-    /// </summary>
-    uint TotalTime, 
-    /// <summary>
-    /// The busiest tasks, in the server's order.
-    /// </summary>
-    TopTask[] TopTasks
-) {
-}
-
-class FfiConverterTypeTimeSummary: FfiConverterRustBuffer<TimeSummary> {
-    public static FfiConverterTypeTimeSummary INSTANCE = new FfiConverterTypeTimeSummary();
-
-    public override TimeSummary Read(BigEndianStream stream) {
-        return new TimeSummary(
-            TotalTime: FfiConverterUInt32.INSTANCE.Read(stream),
-            TopTasks: FfiConverterSequenceTypeTopTask.INSTANCE.Read(stream)
-        );
-    }
-
-    public override int AllocationSize(TimeSummary value) {
-        return 0
-            + FfiConverterUInt32.INSTANCE.AllocationSize(value.TotalTime)
-            + FfiConverterSequenceTypeTopTask.INSTANCE.AllocationSize(value.TopTasks);
-    }
-
-    public override void Write(TimeSummary value, BigEndianStream stream) {
-            FfiConverterUInt32.INSTANCE.Write(value.TotalTime, stream);
-            FfiConverterSequenceTypeTopTask.INSTANCE.Write(value.TopTasks, stream);
-    }
-}
-
-
-
-/// <summary>
-/// See [`tasknotes_core::domain::TopTask`].
-/// </summary>
-/// <param name="TaskId">
-/// The task.
-/// </param>
-/// <param name="Title">
-/// Its title.
-/// </param>
-/// <param name="Minutes">
-/// Whole minutes tracked against it.
-/// </param>
-internal record TopTask (
-    /// <summary>
-    /// The task.
-    /// </summary>
-    TaskId TaskId, 
-    /// <summary>
-    /// Its title.
-    /// </summary>
-    string Title, 
-    /// <summary>
-    /// Whole minutes tracked against it.
-    /// </summary>
-    uint Minutes
-) {
-}
-
-class FfiConverterTypeTopTask: FfiConverterRustBuffer<TopTask> {
-    public static FfiConverterTypeTopTask INSTANCE = new FfiConverterTypeTopTask();
-
-    public override TopTask Read(BigEndianStream stream) {
-        return new TopTask(
-            TaskId: FfiConverterTypeTaskId.INSTANCE.Read(stream),
-            Title: FfiConverterString.INSTANCE.Read(stream),
-            Minutes: FfiConverterUInt32.INSTANCE.Read(stream)
-        );
-    }
-
-    public override int AllocationSize(TopTask value) {
-        return 0
-            + FfiConverterTypeTaskId.INSTANCE.AllocationSize(value.TaskId)
-            + FfiConverterString.INSTANCE.AllocationSize(value.Title)
-            + FfiConverterUInt32.INSTANCE.AllocationSize(value.Minutes);
-    }
-
-    public override void Write(TopTask value, BigEndianStream stream) {
-            FfiConverterTypeTaskId.INSTANCE.Write(value.TaskId, stream);
-            FfiConverterString.INSTANCE.Write(value.Title, stream);
-            FfiConverterUInt32.INSTANCE.Write(value.Minutes, stream);
-    }
-}
-
-
-
-/// <summary>
 /// A partial update to a task.
 ///
 /// Mirrors [`tasknotes_core::domain::UpdateTaskRequest`] field for field, in
@@ -18623,9 +17743,6 @@ class FfiConverterTypeTopTask: FfiConverterRustBuffer<TopTask> {
 /// </param>
 /// <param name="RecurrenceAnchor">
 /// What the recurrence is measured from; `Clear` deletes it.
-/// </param>
-/// <param name="TimeEstimate">
-/// The estimate in whole minutes; `Clear` deletes it.
 /// </param>
 /// <param name="ExtraFields">
 /// The full replacement set of extra frontmatter keys, as a JSON object
@@ -18677,10 +17794,6 @@ internal record UpdateTaskRequest (
     /// </summary>
     RecurrenceAnchorUpdate RecurrenceAnchor, 
     /// <summary>
-    /// The estimate in whole minutes; `Clear` deletes it.
-    /// </summary>
-    MinutesUpdate TimeEstimate, 
-    /// <summary>
     /// The full replacement set of extra frontmatter keys, as a JSON object
     /// string.
     /// </summary>
@@ -18704,7 +17817,6 @@ class FfiConverterTypeUpdateTaskRequest: FfiConverterRustBuffer<UpdateTaskReques
             Tags: FfiConverterOptionalSequenceTypeTagName.INSTANCE.Read(stream),
             Recurrence: FfiConverterTypeTextUpdate.INSTANCE.Read(stream),
             RecurrenceAnchor: FfiConverterTypeRecurrenceAnchorUpdate.INSTANCE.Read(stream),
-            TimeEstimate: FfiConverterTypeMinutesUpdate.INSTANCE.Read(stream),
             ExtraFields: FfiConverterOptionalTypeExtraFields.INSTANCE.Read(stream)
         );
     }
@@ -18722,7 +17834,6 @@ class FfiConverterTypeUpdateTaskRequest: FfiConverterRustBuffer<UpdateTaskReques
             + FfiConverterOptionalSequenceTypeTagName.INSTANCE.AllocationSize(value.Tags)
             + FfiConverterTypeTextUpdate.INSTANCE.AllocationSize(value.Recurrence)
             + FfiConverterTypeRecurrenceAnchorUpdate.INSTANCE.AllocationSize(value.RecurrenceAnchor)
-            + FfiConverterTypeMinutesUpdate.INSTANCE.AllocationSize(value.TimeEstimate)
             + FfiConverterOptionalTypeExtraFields.INSTANCE.AllocationSize(value.ExtraFields);
     }
 
@@ -18738,7 +17849,6 @@ class FfiConverterTypeUpdateTaskRequest: FfiConverterRustBuffer<UpdateTaskReques
             FfiConverterOptionalSequenceTypeTagName.INSTANCE.Write(value.Tags, stream);
             FfiConverterTypeTextUpdate.INSTANCE.Write(value.Recurrence, stream);
             FfiConverterTypeRecurrenceAnchorUpdate.INSTANCE.Write(value.RecurrenceAnchor, stream);
-            FfiConverterTypeMinutesUpdate.INSTANCE.Write(value.TimeEstimate, stream);
             FfiConverterOptionalTypeExtraFields.INSTANCE.Write(value.ExtraFields, stream);
     }
 }
@@ -20435,95 +19545,6 @@ class FfiConverterTypeHttpMethod: FfiConverterRustBuffer<HttpMethod> {
 
 
 /// <summary>
-/// A clearable whole-minutes field.
-///
-/// The exported counterpart of [`tasknotes_core::domain::MinutesUpdate`].
-/// </summary>
-internal record MinutesUpdate {
-    
-    /// <summary>
-    /// The key is absent from the payload: leave the stored value alone.
-    /// </summary>
-    public record Unchanged: MinutesUpdate {}
-    
-    
-    /// <summary>
-    /// The key is present and `null`: delete the stored value.
-    /// </summary>
-    public record Clear: MinutesUpdate {}
-    
-    
-    /// <summary>
-    /// The key is present with a value: store it.
-    /// </summary>
-    public record Set (
-        uint Value
-    ) : MinutesUpdate {}
-    
-
-    
-}
-
-class FfiConverterTypeMinutesUpdate : FfiConverterRustBuffer<MinutesUpdate>{
-    public static FfiConverterRustBuffer<MinutesUpdate> INSTANCE = new FfiConverterTypeMinutesUpdate();
-
-    public override MinutesUpdate Read(BigEndianStream stream) {
-        var value = stream.ReadInt();
-        switch (value) {
-            case 1:
-                return new MinutesUpdate.Unchanged(
-                );
-            case 2:
-                return new MinutesUpdate.Clear(
-                );
-            case 3:
-                return new MinutesUpdate.Set(
-                    FfiConverterUInt32.INSTANCE.Read(stream)
-                );
-            default:
-                throw new InternalException(String.Format("invalid enum value '{0}' in FfiConverterTypeMinutesUpdate.Read()", value));
-        }
-    }
-
-    public override int AllocationSize(MinutesUpdate value) {
-        switch (value) {
-            case MinutesUpdate.Unchanged variant_value:
-                return 4;
-            case MinutesUpdate.Clear variant_value:
-                return 4;
-            case MinutesUpdate.Set variant_value:
-                return 4
-                    + FfiConverterUInt32.INSTANCE.AllocationSize(variant_value.Value);
-            default:
-                throw new InternalException(String.Format("invalid enum value '{0}' in FfiConverterTypeMinutesUpdate.AllocationSize()", value));
-        }
-    }
-
-    public override void Write(MinutesUpdate value, BigEndianStream stream) {
-        switch (value) {
-            case MinutesUpdate.Unchanged variant_value:
-                stream.WriteInt(1);
-                break;
-            case MinutesUpdate.Clear variant_value:
-                stream.WriteInt(2);
-                break;
-            case MinutesUpdate.Set variant_value:
-                stream.WriteInt(3);
-                FfiConverterUInt32.INSTANCE.Write(variant_value.Value, stream);
-                break;
-            default:
-                throw new InternalException(String.Format("invalid enum value '{0}' in FfiConverterTypeMinutesUpdate.Write()", value));
-        }
-    }
-}
-
-
-
-
-
-
-
-/// <summary>
 /// See [`tasknotes_core::recurrence::MonthlyOrdinal`].
 /// </summary>
 internal enum MonthlyOrdinal: int {
@@ -21162,51 +20183,6 @@ class FfiConverterTypeObsidianSessionEffect : FfiConverterRustBuffer<ObsidianSes
                 break;
             default:
                 throw new InternalException(String.Format("invalid enum value '{0}' in FfiConverterTypeObsidianSessionEffect.Write()", value));
-        }
-    }
-}
-
-
-
-
-
-
-
-/// <summary>
-/// See [`tasknotes_core::domain::PomodoroPhase`].
-/// </summary>
-internal enum PomodoroPhase: int {
-    /// <summary>
-    /// A focus interval.
-    /// </summary>
-    Work,
-    /// <summary>
-    /// A rest interval.
-    /// </summary>
-    Break
-}
-
-class FfiConverterTypePomodoroPhase: FfiConverterRustBuffer<PomodoroPhase> {
-    public static FfiConverterTypePomodoroPhase INSTANCE = new FfiConverterTypePomodoroPhase();
-
-    public override PomodoroPhase Read(BigEndianStream stream) {
-        var value = stream.ReadInt();
-        switch (value) {
-            case 1: return PomodoroPhase.Work;
-            case 2: return PomodoroPhase.Break;
-            default: throw new InternalException(String.Format("invalid enum value '{0}' in FfiConverterTypePomodoroPhase.Read()", value));
-        }
-    }
-
-    public override int AllocationSize(PomodoroPhase value) {
-        return 4;
-    }
-
-    public override void Write(PomodoroPhase value, BigEndianStream stream) {
-        switch (value) {
-            case PomodoroPhase.Work: stream.WriteInt(1); break;
-            case PomodoroPhase.Break: stream.WriteInt(2); break;
-            default: throw new InternalException(String.Format("invalid enum value '{0}' in FfiConverterTypePomodoroPhase.Write()", value));
         }
     }
 }
@@ -22765,37 +21741,6 @@ class FfiConverterOptionalTypeFrequency: FfiConverterRustBuffer<Frequency?> {
 
 
 
-class FfiConverterOptionalTypePomodoroPhase: FfiConverterRustBuffer<PomodoroPhase?> {
-    public static FfiConverterOptionalTypePomodoroPhase INSTANCE = new FfiConverterOptionalTypePomodoroPhase();
-
-    public override PomodoroPhase? Read(BigEndianStream stream) {
-        if (stream.ReadByte() == 0) {
-            return null;
-        }
-        return FfiConverterTypePomodoroPhase.INSTANCE.Read(stream);
-    }
-
-    public override int AllocationSize(PomodoroPhase? value) {
-        if (value == null) {
-            return 1;
-        } else {
-            return 1 + FfiConverterTypePomodoroPhase.INSTANCE.AllocationSize((PomodoroPhase)value);
-        }
-    }
-
-    public override void Write(PomodoroPhase? value, BigEndianStream stream) {
-        if (value == null) {
-            stream.WriteByte(0);
-        } else {
-            stream.WriteByte(1);
-            FfiConverterTypePomodoroPhase.INSTANCE.Write((PomodoroPhase)value, stream);
-        }
-    }
-}
-
-
-
-
 class FfiConverterOptionalTypePriority: FfiConverterRustBuffer<Priority?> {
     public static FfiConverterOptionalTypePriority INSTANCE = new FfiConverterOptionalTypePriority();
 
@@ -23536,52 +22481,6 @@ class FfiConverterSequenceTypeHttpHeader: FfiConverterRustBuffer<HttpHeader[]> {
 
 
 
-class FfiConverterSequenceTypeInlineTimeEntry: FfiConverterRustBuffer<InlineTimeEntry[]> {
-    public static FfiConverterSequenceTypeInlineTimeEntry INSTANCE = new FfiConverterSequenceTypeInlineTimeEntry();
-
-    public override InlineTimeEntry[]  Read(BigEndianStream stream) {
-        var length = stream.ReadInt();
-        if (length == 0) {
-            return [];
-        }
-
-        var result = new InlineTimeEntry[length];
-        var readFn = FfiConverterTypeInlineTimeEntry.INSTANCE.Read;
-        for (int i = 0; i < length; i++) {
-            result[i] = readFn(stream);
-        }
-        return result;
-    }
-
-    public override int AllocationSize(InlineTimeEntry[]  value) {
-        var sizeForLength = 4;
-
-        // details/1-empty-list-as-default-method-parameter.md
-        if (value == null) {
-            return sizeForLength;
-        }
-
-        var allocationSizeFn = FfiConverterTypeInlineTimeEntry.INSTANCE.AllocationSize;
-        var sizeForItems = value.Sum(item => allocationSizeFn(item));
-        return sizeForLength + sizeForItems;
-    }
-
-    public override void Write(InlineTimeEntry[] value, BigEndianStream stream) {
-        // details/1-empty-list-as-default-method-parameter.md
-        if (value == null) {
-            stream.WriteInt(0);
-            return;
-        }
-
-        stream.WriteInt(value.Length);
-        var writerFn = FfiConverterTypeInlineTimeEntry.INSTANCE.Write;
-        value.ForEach(item => writerFn(item, stream));
-    }
-}
-
-
-
-
 class FfiConverterSequenceTypeObsidianHttpHeader: FfiConverterRustBuffer<ObsidianHttpHeader[]> {
     public static FfiConverterSequenceTypeObsidianHttpHeader INSTANCE = new FfiConverterSequenceTypeObsidianHttpHeader();
 
@@ -23759,52 +22658,6 @@ class FfiConverterSequenceTypeTask: FfiConverterRustBuffer<Task[]> {
 
         stream.WriteInt(value.Length);
         var writerFn = FfiConverterTypeTask.INSTANCE.Write;
-        value.ForEach(item => writerFn(item, stream));
-    }
-}
-
-
-
-
-class FfiConverterSequenceTypeTopTask: FfiConverterRustBuffer<TopTask[]> {
-    public static FfiConverterSequenceTypeTopTask INSTANCE = new FfiConverterSequenceTypeTopTask();
-
-    public override TopTask[]  Read(BigEndianStream stream) {
-        var length = stream.ReadInt();
-        if (length == 0) {
-            return [];
-        }
-
-        var result = new TopTask[length];
-        var readFn = FfiConverterTypeTopTask.INSTANCE.Read;
-        for (int i = 0; i < length; i++) {
-            result[i] = readFn(stream);
-        }
-        return result;
-    }
-
-    public override int AllocationSize(TopTask[]  value) {
-        var sizeForLength = 4;
-
-        // details/1-empty-list-as-default-method-parameter.md
-        if (value == null) {
-            return sizeForLength;
-        }
-
-        var allocationSizeFn = FfiConverterTypeTopTask.INSTANCE.AllocationSize;
-        var sizeForItems = value.Sum(item => allocationSizeFn(item));
-        return sizeForLength + sizeForItems;
-    }
-
-    public override void Write(TopTask[] value, BigEndianStream stream) {
-        // details/1-empty-list-as-default-method-parameter.md
-        if (value == null) {
-            stream.WriteInt(0);
-            return;
-        }
-
-        stream.WriteInt(value.Length);
-        var writerFn = FfiConverterTypeTopTask.INSTANCE.Write;
         value.ForEach(item => writerFn(item, stream));
     }
 }
@@ -25258,50 +24111,6 @@ internal static class TaskNotesCoreMethods {
         return FfiConverterOptionalString.INSTANCE.Lift(
     _UniffiHelpers.RustCallWithError(FfiConverterTypeCoreError.INSTANCE, (ref UniffiRustCallStatus _status) =>
     _UniFFILib.uniffi_tasknotes_core_ffi_fn_func_date_parse_local(FfiConverterString.INSTANCE.Lower(@raw), FfiConverterInt32.INSTANCE.Lower(@viewerUtcOffsetSeconds), ref _status)
-));
-    }
-
-
-    /// <summary>
-    /// Format a duration as `H:MM:SS`, or `MM:SS` under an hour.
-    ///
-    /// Minutes and seconds are always two digits; hours are not padded, so ten
-    /// hours reads `10:00:00` and one reads `1:00:00`.
-    /// </summary>
-    public static string ElapsedFormat(ulong @seconds) {
-        return FfiConverterString.INSTANCE.Lift(
-    _UniffiHelpers.RustCall( (ref UniffiRustCallStatus _status) =>
-    _UniFFILib.uniffi_tasknotes_core_ffi_fn_func_elapsed_format(FfiConverterUInt64.INSTANCE.Lower(@seconds), ref _status)
-));
-    }
-
-
-    /// <summary>
-    /// Whole seconds between a stored `startTime` and `now`.
-    ///
-    /// Both are RFC 3339 timestamps — the form the server writes, since every
-    /// `startTime` it emits comes from `Date.prototype.toISOString`. A zoneless
-    /// value is rejected rather than guessed at: without an offset there is no way
-    /// to place it on the timeline, and picking one would make a running timer's
-    /// reading depend on where the user happens to be sitting.
-    ///
-    /// A `start` after `now` yields `0` — clock skew between the host and whatever
-    /// wrote the entry, and a timer sitting at `00:00` until it catches up is the
-    /// correct rendering of "no time has elapsed yet".
-    ///
-    /// # Errors
-    ///
-    /// Returns [`CoreError::Validation`] when either argument is not a parseable
-    /// RFC 3339 timestamp. **This diverges from the TypeScript**, which returns `0`
-    /// for an unparseable value: a timer frozen at `00:00` is indistinguishable
-    /// from a session that just began, so a corrupt `timeEntries` row would be
-    /// invisible.
-    /// </summary>
-    /// <exception cref="CoreException"></exception>
-    public static ulong ElapsedSecondsSince(string @start, string @now) {
-        return FfiConverterUInt64.INSTANCE.Lift(
-    _UniffiHelpers.RustCallWithError(FfiConverterTypeCoreError.INSTANCE, (ref UniffiRustCallStatus _status) =>
-    _UniFFILib.uniffi_tasknotes_core_ffi_fn_func_elapsed_seconds_since(FfiConverterString.INSTANCE.Lower(@start), FfiConverterString.INSTANCE.Lower(@now), ref _status)
 ));
     }
 

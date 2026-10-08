@@ -404,7 +404,8 @@ public sealed record FacetPendingAction(
     string Id,
     string ProfileId,
     string ProfileName,
-    string Kind
+    string Kind,
+    bool CanResume = true
 );
 
 /// <summary>Conflict identity and immutable version metadata; values never enter diagnostics.</summary>

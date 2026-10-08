@@ -5,19 +5,6 @@ using Core = uniffi.TaskNotesCore;
 
 namespace TaskNotes.Windows.Host;
 
-/// <summary>Standalone bounded tracking pages retain their original request owners.</summary>
-public interface IFacetTrackingStore
-{
-    /// <summary>Load a fresh running-session page or its original owner's next page.</summary>
-    Task LoadTrackingSessionsAsync(
-        bool nextPage = false,
-        CancellationToken cancellationToken = default
-    );
-
-    /// <summary>Continue the displayed task history without changing its original clock or vault.</summary>
-    Task LoadNextTrackingHistoryAsync(CancellationToken cancellationToken = default);
-}
-
 /// <summary>A standalone edit returns the projection identified by its durable applied receipt.</summary>
 public interface IFacetTaskEditorStore
 {
@@ -29,11 +16,7 @@ public interface IFacetTaskEditorStore
 }
 
 /// <summary>Standalone store consumed by every Windows presentation surface.</summary>
-public sealed class FacetTaskNotesStore
-    : ITaskNotesStore,
-        IFacetProfileStore,
-        IFacetTaskEditorStore,
-        IFacetTrackingStore
+public sealed class FacetTaskNotesStore : ITaskNotesStore, IFacetProfileStore, IFacetTaskEditorStore
 {
     private readonly string _directory;
     private readonly FacetProfileCatalog _catalog;
@@ -71,11 +54,6 @@ public sealed class FacetTaskNotesStore
     private readonly FacetNoticeAuthority _noticeAuthority = new();
     private FacetNoticeAdmission? _operationNoticeAdmission;
     private FacetNoticeOwner? _updateNoticeOwner;
-    private long _trackingRequestGeneration;
-    private long _trackingEngineGeneration = 1;
-    private FacetTrackingOwner? _historyOwner;
-    private FacetTrackingOwner? _sessionsOwner;
-    private string? _indexedProfileId;
 
     private bool OwnsNotice(FacetNoticeOwner owner) =>
         !_disposed && owner == _noticeOwner && _noticeAuthority.Owns(owner, SelectedProfileId);
@@ -99,22 +77,6 @@ public sealed class FacetTaskNotesStore
         if (hadNotice)
             Notify();
         return admission;
-    }
-
-    private void InvalidateTracking()
-    {
-        _trackingRequestGeneration++;
-        _trackingEngineGeneration++;
-        _historyOwner = null;
-        _sessionsOwner = null;
-        _indexedProfileId = null;
-        State = State with
-        {
-            TrackingHistory = null,
-            TrackingSessions = null,
-            TaskTime = null,
-            FacetIndexVersion = null,
-        };
     }
 
     /// <summary>Restore local capability metadata and secure account ownership.</summary>
@@ -297,7 +259,6 @@ public sealed class FacetTaskNotesStore
     public Task RefreshAsync(CancellationToken cancellationToken = default)
     {
         _ = BeginNoticeRequest();
-        InvalidateTracking();
         return SerializedAsync(
             async () =>
             {
@@ -325,7 +286,6 @@ public sealed class FacetTaskNotesStore
     public Task SetQueryAsync(TaskListQuery query, CancellationToken cancellationToken = default)
     {
         _ = BeginNoticeRequest();
-        InvalidateTracking();
         return SerializedAsync(
             async () =>
             {
@@ -629,253 +589,6 @@ public sealed class FacetTaskNotesStore
         );
 
     /// <inheritdoc/>
-    public Task LoadTaskTimeAsync(string taskId, CancellationToken cancellationToken = default)
-    {
-        _ = BeginNoticeRequest();
-        var owner = CaptureTrackingOwner(taskId);
-        _historyOwner = owner;
-        return SerializedAsync(
-            () => PublishTaskTimeAsync(taskId, cancellationToken, owner),
-            cancellationToken
-        );
-    }
-
-    private FacetTrackingOwner CaptureTrackingOwner(string? taskId)
-    {
-        string profile = Selected;
-        if (_indexedProfileId != profile)
-            throw new InvalidOperationException("Refresh the vault before reading tracked time.");
-        ulong version =
-            State.FacetIndexVersion
-            ?? throw new InvalidOperationException(
-                "Refresh the vault before reading tracked time."
-            );
-        var task = taskId is null
-            ? null
-            : State.AllTasks.Single(row => row.Id == taskId && row.ProfileId == profile);
-        if (task is not null && (task.VaultPath is null || task.ExpectedRevision is null))
-            throw new InvalidDataException(
-                "The tracking task has no authoritative path or revision."
-            );
-        return new(
-            profile,
-            version,
-            Timestamp(),
-            Interlocked.Increment(ref _trackingRequestGeneration),
-            _trackingEngineGeneration,
-            task?.VaultPath,
-            task?.ExpectedRevision
-        );
-    }
-
-    private bool OwnsTracking(FacetTrackingOwner owner) =>
-        !_disposed
-        && Selected == owner.ProfileId
-        && State.FacetIndexVersion == owner.Version
-        && _trackingEngineGeneration == owner.EngineGeneration
-        && (owner.TaskPath is null ? _sessionsOwner : _historyOwner) == owner;
-
-    private async Task PublishTaskTimeAsync(
-        string taskId,
-        CancellationToken cancellationToken,
-        FacetTrackingOwner? captured = null
-    )
-    {
-        var owner = captured ?? CaptureTrackingOwner(taskId);
-        if (captured is null)
-            _historyOwner = owner;
-        if (!OwnsTracking(owner))
-            return;
-        var page = await FacetTrackingReader
-            .ReadPageAsync(_receiptSchema, owner, null, _engine.FeaturesAsync, cancellationToken)
-            .ConfigureAwait(false);
-        if (!OwnsTracking(owner))
-            return;
-        if (page.ProblemCount != 0)
-        {
-            State = State with { TrackingHistory = page, TaskTime = null };
-            Notify();
-            throw new ArgumentException(
-                "Some tracking entries could not be read. Review this task's time entries."
-            );
-        }
-        var totals = await FacetTrackingReader
-            .ReadTotalsAsync(_receiptSchema, owner, _engine.FeaturesAsync, cancellationToken)
-            .ConfigureAwait(false);
-        if (!OwnsTracking(owner))
-            return;
-        State = State with
-        {
-            TaskTime = new TaskTimeReading(
-                taskId,
-                checked((uint)totals.TotalMinutes),
-                totals.HasActiveSession
-            ),
-            TrackingHistory = page,
-        };
-        Notify();
-    }
-
-    /// <inheritdoc/>
-    public Task LoadNextTrackingHistoryAsync(CancellationToken cancellationToken = default)
-    {
-        _ = BeginNoticeRequest();
-        var page =
-            State.TrackingHistory
-            ?? throw new InvalidOperationException(
-                "Refresh tracked time before continuing its history."
-            );
-        var continuation =
-            page.Next ?? throw new InvalidOperationException("There are no more tracking entries.");
-        return SerializedAsync(
-            async () =>
-            {
-                if (!OwnsTracking(page.Owner))
-                    return;
-                var next = await FacetTrackingReader
-                    .ReadPageAsync(
-                        _receiptSchema,
-                        page.Owner,
-                        continuation,
-                        _engine.FeaturesAsync,
-                        cancellationToken
-                    )
-                    .ConfigureAwait(false);
-                if (!OwnsTracking(page.Owner))
-                    return;
-                State = State with { TrackingHistory = next };
-                Notify();
-            },
-            cancellationToken
-        );
-    }
-
-    /// <inheritdoc/>
-    public Task LoadTrackingSessionsAsync(
-        bool nextPage = false,
-        CancellationToken cancellationToken = default
-    )
-    {
-        _ = BeginNoticeRequest();
-        var current = nextPage
-            ? State.TrackingSessions
-                ?? throw new InvalidOperationException(
-                    "Refresh running sessions before continuing."
-                )
-            : null;
-        var owner = current?.Owner ?? CaptureTrackingOwner(null);
-        var continuation = current?.Next;
-        if (nextPage && continuation is null)
-            throw new InvalidOperationException("There are no more running sessions.");
-        if (!nextPage)
-            _sessionsOwner = owner;
-        return SerializedAsync(
-            async () =>
-            {
-                if (!OwnsTracking(owner))
-                    return;
-                var page = await FacetTrackingReader
-                    .ReadPageAsync(
-                        _receiptSchema,
-                        owner,
-                        continuation,
-                        _engine.FeaturesAsync,
-                        cancellationToken
-                    )
-                    .ConfigureAwait(false);
-                if (!OwnsTracking(owner))
-                    return;
-                State = State with { TrackingSessions = page };
-                Notify();
-            },
-            cancellationToken
-        );
-    }
-
-    /// <inheritdoc/>
-    public Task StartTimeTrackingAsync(
-        string taskId,
-        CancellationToken cancellationToken = default
-    ) => TimeCommandAsync(taskId, "start_time", cancellationToken);
-
-    /// <inheritdoc/>
-    public Task StopTimeTrackingAsync(
-        string taskId,
-        CancellationToken cancellationToken = default
-    ) => TimeCommandAsync(taskId, "stop_time", cancellationToken);
-
-    /// <inheritdoc/>
-    public Task LoadTimeReportAsync(
-        string period = "all",
-        CancellationToken cancellationToken = default
-    ) =>
-        SerializedAsync(
-            async () =>
-            {
-                DateTimeOffset now = _time.GetUtcNow();
-                DateTime today = TimeZoneInfo.ConvertTime(now, _time.LocalTimeZone).Date;
-                DateTimeOffset StartOf(DateTime date) =>
-                    new(date, _time.LocalTimeZone.GetUtcOffset(date));
-                DateTimeOffset start = period switch
-                {
-                    "all" => DateTimeOffset.UnixEpoch,
-                    "today" => StartOf(today),
-                    "week" => StartOf(today.AddDays(-6)),
-                    "month" => StartOf(new DateTime(today.Year, today.Month, 1)),
-                    _ => throw new ArgumentException("Unknown report period.", nameof(period)),
-                };
-                JsonElement report = await FeatureAsync(
-                        new
-                        {
-                            kind = "time_report",
-                            from = start.ToString("O", CultureInfo.InvariantCulture),
-                            to = now.ToString("O", CultureInfo.InvariantCulture),
-                            at = now.ToString("O", CultureInfo.InvariantCulture),
-                        },
-                        cancellationToken
-                    )
-                    .ConfigureAwait(false);
-                State = State with
-                {
-                    TimeReport = new TimeReportReading(
-                        report.GetProperty("totalMinutes").GetUInt32(),
-                        report
-                            .GetProperty("rows")
-                            .EnumerateArray()
-                            .Select(row => new TimeReportRow(
-                                row.GetProperty("path").GetString()!,
-                                row.GetProperty("title").GetString()!,
-                                row.GetProperty("minutes").GetUInt32()
-                            ))
-                            .ToArray()
-                    ),
-                };
-                Notify();
-            },
-            cancellationToken
-        );
-
-    /// <inheritdoc/>
-    public Task LoadPomodoroAsync(CancellationToken cancellationToken = default) =>
-        SerializedAsync(() => PublishPomodoroAsync(cancellationToken), cancellationToken);
-
-    /// <inheritdoc/>
-    public Task StartPomodoroAsync(string? taskId, CancellationToken cancellationToken = default) =>
-        PomodoroCommandAsync("start", taskId, cancellationToken);
-
-    /// <inheritdoc/>
-    public Task PauseOrResumePomodoroAsync(CancellationToken cancellationToken = default) =>
-        PomodoroCommandAsync(
-            State.Pomodoro?.Phase == "paused" ? "resume" : "pause",
-            null,
-            cancellationToken
-        );
-
-    /// <inheritdoc/>
-    public Task StopPomodoroAsync(CancellationToken cancellationToken = default) =>
-        PomodoroCommandAsync("stop", null, cancellationToken);
-
-    /// <inheritdoc/>
     public Task<SavedViewDefinition> CreateSavedViewAsync(
         string name,
         string symbol,
@@ -1041,6 +754,11 @@ public sealed class FacetTaskNotesStore
             {
                 var envelope = RetainedAction(mutationId);
                 using var document = JsonDocument.Parse(envelope.Document);
+                if (!FacetRetainedActions.CanResume(document.RootElement))
+                    throw new ArgumentException(
+                        "This saved action uses a removed feature. Check its outcome and retire its private draft.",
+                        nameof(mutationId)
+                    );
                 var command = document.RootElement.GetProperty("command");
                 string? undoId =
                     command.GetProperty("kind").GetString() == "undo"
@@ -1082,7 +800,28 @@ public sealed class FacetTaskNotesStore
                         "The retained action observation belongs to another identity."
                     );
                 string state = status.RootElement.GetProperty("state").GetString()!;
-                if (state is not "absent" and not "parked")
+                var observedReceipt = status.RootElement.GetProperty("receipt");
+                if (
+                    observedReceipt.ValueKind != JsonValueKind.Null
+                    && observedReceipt.GetProperty("mutationId").GetString() != mutationId
+                )
+                    throw new InvalidDataException(
+                        "The retained action receipt belongs to another identity."
+                    );
+                using var document = JsonDocument.Parse(envelope.Document);
+                bool retired = !FacetRetainedActions.CanResume(document.RootElement);
+                if (state == "applied" && retired)
+                {
+                    var receipt = status.RootElement.GetProperty("receipt");
+                    if (
+                        receipt.GetProperty("mutationId").GetString() != mutationId
+                        || !receipt.GetProperty("applied").GetBoolean()
+                    )
+                        throw new InvalidDataException(
+                            "The saved outcome belongs to a different action."
+                        );
+                }
+                else if (state is not "absent" and not "parked")
                     throw new ArgumentException(
                         "Pending and applied actions remain retained. Resume the original action before changing its decision.",
                         nameof(mutationId)
@@ -1122,11 +861,18 @@ public sealed class FacetTaskNotesStore
             .PendingEntries.Select(entry =>
             {
                 using var document = JsonDocument.Parse(entry.Document);
+                bool canResume = FacetRetainedActions.CanResume(document.RootElement);
                 return new FacetPendingAction(
                     entry.Id,
                     entry.Profile,
                     Profiles.Single(p => p.Id == entry.Profile).Name,
-                    document.RootElement.GetProperty("command").GetProperty("kind").GetString()!
+                    canResume
+                        ? document
+                            .RootElement.GetProperty("command")
+                            .GetProperty("kind")
+                            .GetString()!
+                        : "Removed feature action",
+                    canResume
                 );
             })
             .ToArray();
@@ -1238,7 +984,6 @@ public sealed class FacetTaskNotesStore
         SerializedAsync(
             async () =>
             {
-                InvalidateTracking();
                 _catalog.Select(id);
                 await PublishAsync().ConfigureAwait(false);
             },
@@ -1767,27 +1512,6 @@ public sealed class FacetTaskNotesStore
         };
     }
 
-    private Task TimeCommandAsync(string id, string kind, CancellationToken cancellationToken) =>
-        SerializedAsync(
-            async () =>
-            {
-                var task = RequireTask(id);
-                await MutateAsync(
-                        new
-                        {
-                            kind,
-                            path = PathOf(task),
-                            expectedRevision = Revision(task),
-                        },
-                        false,
-                        cancellationToken
-                    )
-                    .ConfigureAwait(false);
-                await PublishTaskTimeAsync(id, cancellationToken).ConfigureAwait(false);
-            },
-            cancellationToken
-        );
-
     private async Task<JsonElement> MutateAsync(
         object command,
         bool completion,
@@ -1962,62 +1686,6 @@ public sealed class FacetTaskNotesStore
         return document.RootElement.Clone();
     }
 
-    private async Task PublishPomodoroAsync(CancellationToken cancellationToken)
-    {
-        var result = await FeatureAsync(
-                new
-                {
-                    kind = "pomodoro",
-                    deviceId = _catalog.DeviceId,
-                    at = Timestamp(),
-                },
-                cancellationToken
-            )
-            .ConfigureAwait(false);
-        string status = result.GetProperty("status").GetString()!;
-        uint remaining =
-            result.GetProperty("durationSeconds").GetUInt32()
-            - Math.Min(
-                result.GetProperty("durationSeconds").GetUInt32(),
-                result.GetProperty("elapsedSeconds").GetUInt32()
-            );
-        State = State with
-        {
-            Pomodoro = new PomodoroReading(
-                status is "running" or "paused",
-                Text(result, "taskPath"),
-                remaining,
-                status
-            ),
-        };
-        Notify();
-    }
-
-    private Task PomodoroCommandAsync(
-        string action,
-        string? taskId,
-        CancellationToken cancellationToken
-    ) =>
-        SerializedAsync(
-            async () =>
-            {
-                await MutateAsync(
-                        new
-                        {
-                            kind = "pomodoro",
-                            action,
-                            deviceId = _catalog.DeviceId,
-                            taskPath = taskId is null ? null : PathOf(RequireTask(taskId)),
-                        },
-                        false,
-                        cancellationToken
-                    )
-                    .ConfigureAwait(false);
-                await PublishPomodoroAsync(cancellationToken).ConfigureAwait(false);
-            },
-            cancellationToken
-        );
-
     private async Task PublishAsync(FacetNoticeOwner? observationOwner = null)
     {
         try
@@ -2139,7 +1807,6 @@ public sealed class FacetTaskNotesStore
                 Selected,
                 (Profiles.Single(p => p.Id == Selected).PrivateReplica ? false : true, null)
             );
-        _indexedProfileId = Selected;
         _noticeAuthority.Observe(
             SelectedProfileId,
             currentNoticeOwner =>
@@ -2147,17 +1814,6 @@ public sealed class FacetTaskNotesStore
                 State = State with
                 {
                     AllTasks = projectedAll,
-                    FacetIndexVersion = all.Snapshot.GetProperty("version").GetUInt64(),
-                    TrackingHistory =
-                        State.TrackingHistory?.Owner.Version
-                        == all.Snapshot.GetProperty("version").GetUInt64()
-                            ? State.TrackingHistory
-                            : null,
-                    TrackingSessions =
-                        State.TrackingSessions?.Owner.Version
-                        == all.Snapshot.GetProperty("version").GetUInt64()
-                            ? State.TrackingSessions
-                            : null,
                     FacetPendingActions = RetainedActions(),
                     FacetConflicts = conflicts,
                     VisibleTasks = projectedVisible,
@@ -2377,20 +2033,13 @@ public sealed class FacetTaskNotesStore
             Strings(properties, "projects"),
             Strings(properties, "contexts"),
             Strings(properties, "tags"),
-            properties.TryGetProperty("timeEstimate", out var estimate)
-            && estimate.ValueKind == JsonValueKind.Number
-            && estimate.TryGetUInt32(out uint wholeEstimate)
-                ? wholeEstimate
-                : null,
-            task.GetProperty("totalTrackedMinutes").GetUInt32(),
             task.GetProperty("isBlocked").GetBoolean(),
             task.GetProperty("isBlocking").GetBoolean(),
             task.GetProperty("completed").GetBoolean(),
             task.GetProperty("isRecurring").GetBoolean(),
             pending.Contains(PathOf(task)),
             Text(task, "occurrenceDate"),
-            group,
-            task.GetProperty("hasActiveTimeSession").GetBoolean()
+            group
         )
         {
             Properties = properties.Clone(),
@@ -2577,7 +2226,6 @@ public sealed class FacetTaskNotesStore
                 return new ValueTask(_disposeTask);
             _disposed = true;
             _noticeAuthority.Close(ClearNoticePresentation);
-            InvalidateTracking();
             if (_activeOperations == 0)
                 _operationsDrained.SetResult(true);
             _disposeTask = DisposeCoreAsync();

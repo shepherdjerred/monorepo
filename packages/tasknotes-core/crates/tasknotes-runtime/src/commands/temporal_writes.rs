@@ -42,14 +42,14 @@ pub(super) fn prepare_transition(
     properties: &mut Map<String, Value>,
     config: &TaskNotesConfiguration,
 ) -> Result<()> {
-    // Transitions compare an entry's original precision with the original clock.
+    // Validate reminder writes before staging a completion transition.
     apply(properties, config, false, &Boundary::Command)
 }
 
 fn apply(
     properties: &mut Map<String, Value>,
     config: &TaskNotesConfiguration,
-    write_entries: bool,
+    write_reminders: bool,
     boundary: &Boundary,
 ) -> Result<()> {
     for (key, value) in properties.iter_mut() {
@@ -64,17 +64,9 @@ fn apply(
         if value.is_null() {
             continue;
         }
-        if role == "timeEntries" {
-            if write_entries {
-                *value = canonical_entries(value)?;
-            } else {
-                tasknotes_vault::tracking::normalize(value)?;
-            }
-            continue;
-        }
         if role == "reminders" {
             let reminders = canonical_absolute_reminders(value)?;
-            if write_entries {
+            if write_reminders {
                 *value = reminders;
             }
             continue;
@@ -104,27 +96,6 @@ fn command_role<'a>(key: &'a str, config: &'a TaskNotesConfiguration) -> &'a str
     canonical_role(key)
         .or_else(|| config.mapping.field_to_role.get(key).map(String::as_str))
         .unwrap_or(key)
-}
-
-fn canonical_entries(value: &Value) -> Result<Value> {
-    // Validate the original precision before truncation can hide an inverted range.
-    let mut entries = tasknotes_vault::tracking::normalize(value)?;
-    for entry in &mut entries {
-        let entry = entry
-            .as_object_mut()
-            .ok_or_else(|| RuntimeError::Storage("validated time entry is not an object".into()))?;
-        for role in ["startTime", "endTime"] {
-            if let Some(value) = entry.get_mut(role) {
-                let text = value.as_str().ok_or_else(|| {
-                    RuntimeError::Storage("validated time entry instant is not a string".into())
-                })?;
-                *value = Value::String(temporal::canonical_instant(text)?);
-            }
-        }
-    }
-    Ok(Value::Array(tasknotes_vault::tracking::normalize(
-        &Value::Array(entries),
-    )?))
 }
 
 fn canonical_absolute_reminders(value: &Value) -> Result<Value> {

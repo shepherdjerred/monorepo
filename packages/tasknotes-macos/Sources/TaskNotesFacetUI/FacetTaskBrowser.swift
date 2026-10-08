@@ -9,7 +9,6 @@ struct FacetTaskBrowser: View {
     @State private var editor: FacetEditorSelection?
     @State private var bulk: FacetBulkSelection?
     @State private var viewsProfile: FacetProfileSelection?
-    @State private var timingProfile: FacetProfileSelection?
 
     var body: some View {
         Group {
@@ -19,9 +18,6 @@ struct FacetTaskBrowser: View {
             ToolbarItemGroup {
                 Button("Saved views", systemImage: "rectangle.stack") {
                     viewsProfile = FacetProfileSelection(id: snapshot.profileId)
-                }
-                Button("Time and focus", systemImage: "timer") {
-                    timingProfile = FacetProfileSelection(id: snapshot.profileId)
                 }
                 Button("Undo", systemImage: "arrow.uturn.backward") {
                     _Concurrency.Task { await store.undoLast(profileID: snapshot.profileId) }
@@ -48,11 +44,6 @@ struct FacetTaskBrowser: View {
         }
         .sheet(item: $viewsProfile) { owner in
             FacetSavedViewsForm(store: store, profileID: owner.id, board: $board)
-        }
-        .sheet(item: $timingProfile) { owner in
-            NavigationStack {
-                FacetTimingView(store: store, profileID: owner.id, task: nil)
-            }
         }
         .onChange(of: snapshot.profileId) { selected = [] }
     }
@@ -84,9 +75,6 @@ struct FacetTaskBrowser: View {
                         }
                     }.buttonStyle(.plain)
                     Spacer()
-                    if task.hasActiveTimeSession {
-                        Image(systemName: "timer").accessibilityLabel("Tracking time")
-                    }
                 }.accessibilityIdentifier("facet.task.\(task.path)")
             }
             if snapshot.totalCount > UInt64(snapshot.tasks.count) {

@@ -2,8 +2,7 @@
  * Server-internal domain shapes.
  *
  * The `/api/*` contract lives in `tasknotes-types/v2` (snake_case, TaskInfo).
- * These are small server-side helper shapes: the NLP parser's output and the
- * ephemeral pomodoro status, neither of which is part of the wire contract.
+ * This contains the server-side NLP parser's output.
  */
 
 export type Priority =
@@ -18,12 +17,4 @@ export type NlpParseResult = {
   contexts?: string[] | undefined;
   tags?: string[] | undefined;
   recurrence?: string | undefined;
-};
-
-/** Ephemeral pomodoro state (src/store/pomodoro-store.ts). */
-export type PomodoroStatus = {
-  active: boolean;
-  taskId?: string | undefined;
-  timeRemaining?: number | undefined;
-  type?: ("work" | "break") | undefined;
 };

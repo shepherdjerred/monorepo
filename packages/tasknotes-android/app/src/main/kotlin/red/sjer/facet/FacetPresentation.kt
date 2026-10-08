@@ -37,9 +37,9 @@ fun workflow(configuration: JsonObject?, field: String): List<WorkflowOption> =
 data class TaskEditorDraft(
     val title: String, val body: String, val status: String, val priority: String,
     val due: String, val scheduled: String, val recurrence: String, val recurrenceAnchor: String,
-    val projects: String, val contexts: String, val tags: String, val estimate: String,
+    val projects: String, val contexts: String, val tags: String,
     val completedDate: String, val completeInstances: String, val skippedInstances: String,
-    val blockedBy: String, val timeEntries: String,
+    val blockedBy: String,
     val reminders: String = "[]", val attachments: String = "",
     val dateCreated: String = "",
 ) {
@@ -56,8 +56,6 @@ data class TaskEditorDraft(
             fun list(name: String, value: String, before: String) { if (value != before) put(name, strings(splitValues(value))) }
             list("projects", projects, original.projects); list("contexts", contexts, original.contexts); list("tags", tags, original.tags)
             list("completeInstances", completeInstances, original.completeInstances); list("skippedInstances", skippedInstances, original.skippedInstances); list("blockedBy", blockedBy, original.blockedBy)
-            if (estimate != original.estimate) put("timeEstimate", if (estimate.isBlank()) JsonNull else exactNumber(estimate))
-            if (timeEntries != original.timeEntries) put("timeEntries", Json.parseToJsonElement(timeEntries).jsonArray)
             if (reminders != original.reminders) put("reminders", Json.parseToJsonElement(reminders).jsonArray)
             if (attachments != original.attachments) put("attachments", strings(attachments.lines().map(String::trim).filter(String::isNotEmpty)))
         }
@@ -76,16 +74,9 @@ data class TaskEditorDraft(
                 when (value) { JsonNull -> ""; is JsonArray -> value.joinToString(", ") { if (it is JsonPrimitive) it.content else it.toString() }; is JsonPrimitive -> value.content; else -> value.toString() }
             } ?: ""
             val attachments = task.properties["attachments"]?.let { value -> if (value is JsonArray) value.joinToString("\n") { if (it is JsonPrimitive) it.content else it.toString() } else if (value == JsonNull) "" else value.toString() } ?: ""
-            return TaskEditorDraft(task.title, task.body, task.status, task.priority, scalar("due"), scalar("scheduled"), scalar("recurrence"), scalar("recurrenceAnchor"), list("projects"), list("contexts"), list("tags"), scalar("timeEstimate"), scalar("completedDate"), list("completeInstances"), list("skippedInstances"), list("blockedBy"), task.properties["timeEntries"]?.toString() ?: "[]", task.properties["reminders"]?.toString() ?: "[]", attachments, scalar("dateCreated"))
+            return TaskEditorDraft(task.title, task.body, task.status, task.priority, scalar("due"), scalar("scheduled"), scalar("recurrence"), scalar("recurrenceAnchor"), list("projects"), list("contexts"), list("tags"), scalar("completedDate"), list("completeInstances"), list("skippedInstances"), list("blockedBy"), task.properties["reminders"]?.toString() ?: "[]", attachments, scalar("dateCreated"))
         }
     }
-}
-
-/** Parses an exact JSON numeric token; no integer truncation or binary floating-point conversion. */
-fun exactNumber(text: String): JsonPrimitive {
-    val value = Json.parseToJsonElement(text.trim())
-    require(value is JsonPrimitive && !value.isString && value != JsonNull && value.content != "true" && value.content != "false") { "Enter a numeric estimate in minutes." }
-    return value
 }
 
 fun strings(values: List<String>): JsonArray = JsonArray(values.map(::JsonPrimitive))

@@ -43,8 +43,6 @@ public struct FacetTask: Codable, Identifiable, Sendable {
     public let isRecurring: Bool
     public let isBlocked: Bool
     public let isBlocking: Bool
-    public let hasActiveTimeSession: Bool
-    public let totalTrackedMinutes: UInt64
     public let occurrenceDate: String?
     public let effectiveDate: String?
     public let isPending: Bool

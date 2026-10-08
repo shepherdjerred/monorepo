@@ -40,11 +40,6 @@ Socket reconnects preserve admitted transfer receipts. Explicit shutdown drains
 transport, cancels and unbinds the session, closes payload handles, then closes
 the runtime and file capabilities. Closing a handle never deletes retained bytes.
 
-Running sessions and task time history use bounded Rust projections from the
-private index. Page continuations retain their vault, version and clock context.
-The app retains the current page, and Refresh returns to the first page.
-The Apple host discards results after the owning request, vault, engine or
-lifecycle changes. Elapsed time and tracking problems remain Rust policy.
 Applied mutation receipts carry validated, bounded warnings when a configured
 template could not be used or a filename was shortened. The app keeps the Saved
 outcome primary and reports cleanup or contract failures separately.
@@ -93,6 +88,7 @@ bun run mac:build         # preflight + swift build
 bun run mac:test          # preflight + swift test
 bun run mac:typecheck     # preflight + swift build --build-tests
 bun run mac:snapshots     # snapshot suite only (TaskNotesMacTests)
+swift test --filter FacetGallerySnapshotTests # standalone presentation gallery
 bun run lint              # SwiftLint --strict + ci/no-suppressions.sh
 bun run mac:format        # swift-format in place (mac:format:check to verify)
 
@@ -107,6 +103,14 @@ bun run mac:verify        # generate + build + test + lint + format + app + smok
 bun run mac:release       # operator-run release lane (scripts/release.ts)
 bun run mac:store -- --dry-run # unsigned Mac App Store archive for inspection
 ```
+
+The standalone gallery renders the app's actual SwiftUI workspace and forms
+offscreen into `.build/snapshots/facet-gallery-*.png`. Its 31 fixture states cover
+vault setup, account verification, Sync selection, task lists and boards, task
+dates and recurrence, reminders, saved views, preferences, retained actions and conflicts.
+Additional dark and narrow layouts check representative surfaces. These images
+show presentation with a disconnected fixture store; they do not establish
+live Sync, system permissions, simulator interaction or core runtime acceptance.
 
 ### Signed UI tests
 

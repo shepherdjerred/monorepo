@@ -209,24 +209,6 @@ namespace TaskNotes.Windows.Host
         /// <summary>Gets the device-local saved views.</summary>
         public IReadOnlyList<SavedViewDefinition> SavedViews { get; init; } = [];
 
-        /// <summary>Gets the selected task's live timing state.</summary>
-        public TaskTimeReading? TaskTime { get; init; }
-
-        /// <summary>Exact cached snapshot version owning standalone tracking reads.</summary>
-        public ulong? FacetIndexVersion { get; init; }
-
-        /// <summary>Current bounded task-history page, with its original request continuation.</summary>
-        public FacetTrackingPage? TrackingHistory { get; init; }
-
-        /// <summary>Current bounded running-session page, with its original request continuation.</summary>
-        public FacetTrackingPage? TrackingSessions { get; init; }
-
-        /// <summary>Gets the latest aggregate time report.</summary>
-        public TimeReportReading? TimeReport { get; init; }
-
-        /// <summary>Gets the latest server-backed Pomodoro state.</summary>
-        public PomodoroReading? Pomodoro { get; init; }
-
         /// <summary>Gets whether another completion can be undone.</summary>
         public bool CanUndoCompletion { get; init; }
 

@@ -22,8 +22,6 @@ import { ProjectDetailScreen } from "../screens/ProjectDetailScreen";
 import { QuickAddScreen } from "../screens/QuickAddScreen";
 import { SearchScreen } from "../screens/SearchScreen";
 import { SettingsScreen } from "../screens/SettingsScreen";
-import { PomodoroScreen } from "../screens/PomodoroScreen";
-import { TimeReportScreen } from "../screens/TimeReportScreen";
 import { ContextDetailScreen } from "../screens/ContextDetailScreen";
 import { TagDetailScreen } from "../screens/TagDetailScreen";
 import { SavedViewScreen } from "../screens/SavedViewScreen";
@@ -261,16 +259,6 @@ export const AppNavigator = React.memo(function AppNavigatorComponent() {
           name="Settings"
           component={SettingsScreen}
           options={{ title: "Settings", headerLargeTitleEnabled: true }}
-        />
-        <Stack.Screen
-          name="Pomodoro"
-          component={PomodoroScreen}
-          options={{ title: "Pomodoro" }}
-        />
-        <Stack.Screen
-          name="TimeReport"
-          component={TimeReportScreen}
-          options={{ title: "Time Report", headerLargeTitleEnabled: true }}
         />
       </Stack.Navigator>
     </NavigationContainer>

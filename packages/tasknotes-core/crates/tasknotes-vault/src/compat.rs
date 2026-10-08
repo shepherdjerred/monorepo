@@ -56,13 +56,6 @@ pub const OPERATIONS: &[&str] = &[
     "link.parse",
     "link.resolve",
     "link.update_references_on_rename",
-    "time.start",
-    "time.stop",
-    "time.replace_entries",
-    "time.remove_entry",
-    "time.auto_stop_on_complete",
-    "time.report_totals",
-    "validation.time_entries",
     "validation.core_evaluate",
     "create_compat.create",
     "recurrence.complete",
@@ -135,13 +128,6 @@ pub fn execute(operation: &str, input: &Value, context: &ExecutionContext) -> Re
     }
     if operation == "validation.core_evaluate" {
         return crate::validation::evaluate(input);
-    }
-    if operation.starts_with("time.") || operation == "validation.time_entries" {
-        return crate::tracking::execute(
-            operation,
-            input,
-            context.today.and_time(chrono::NaiveTime::MIN).and_utc(),
-        );
     }
     if operation == "create_compat.create" {
         let now = input

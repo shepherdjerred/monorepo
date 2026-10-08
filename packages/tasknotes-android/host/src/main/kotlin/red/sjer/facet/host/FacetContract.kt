@@ -3,7 +3,7 @@ package red.sjer.facet.host
 import kotlinx.serialization.json.*
 
 data class VaultProfile(val id: String, val name: String, val kind: String, val approveStandard: Boolean)
-data class VaultTask(val id: String, val path: String, val title: String, val status: String, val priority: String, val completed: Boolean, val revision: String, val properties: JsonObject, val body: String, val isRecurring: Boolean, val isBlocked: Boolean, val isBlocking: Boolean, val hasActiveTimeSession: Boolean, val totalTrackedMinutes: ULong, val occurrenceDate: String?, val effectiveDate: String?, val isPending: Boolean)
+data class VaultTask(val id: String, val path: String, val title: String, val status: String, val priority: String, val completed: Boolean, val revision: String, val properties: JsonObject, val body: String, val isRecurring: Boolean, val isBlocked: Boolean, val isBlocking: Boolean, val occurrenceDate: String?, val effectiveDate: String?, val isPending: Boolean)
 data class VaultProblem(val path: String, val message: String)
 data class VaultSnapshot(val profileId: String, val version: ULong, val tasks: List<VaultTask>, val totalCount: ULong, val pendingCount: ULong, val conflictCount: ULong, val configuration: JsonObject?, val problems: List<VaultProblem>, val views: List<JsonObject>, val groups: List<JsonObject>, val pendingTaskIds: List<String>)
 
@@ -31,7 +31,7 @@ object FacetContract {
     private fun task(value: JsonObject): VaultTask = VaultTask(
         value.string("id"), value.string("path"), value.string("title"), value.string("status"), value.string("priority"),
         value.boolean("completed"), value.string("revision"), value.getValue("properties").jsonObject, value.string("body"),
-        value.boolean("isRecurring"), value.boolean("isBlocked"), value.boolean("isBlocking"), value.boolean("hasActiveTimeSession"), value.unsigned("totalTrackedMinutes"),
+        value.boolean("isRecurring"), value.boolean("isBlocked"), value.boolean("isBlocking"),
         value.getValue("occurrenceDate").jsonPrimitive.contentOrNull, value.getValue("effectiveDate").jsonPrimitive.contentOrNull, value.boolean("isPending"),
     )
 

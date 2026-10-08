@@ -80,8 +80,6 @@ namespace TaskNotes.Windows.App
                     services.AddSingleton<QuickAddViewModel>();
                     services.AddSingleton<FacetSettingsViewModel>();
                     services.AddSingleton<GlobalHotkeyViewModel>();
-                    services.AddSingleton<PomodoroViewModel>();
-                    services.AddSingleton<TimeReportViewModel>();
                     services.AddSingleton(provider => new MainWindow(
                         provider.GetRequiredService<FacetTaskNotesStore>(),
                         provider.GetRequiredService<ShellViewModel>(),
@@ -91,9 +89,7 @@ namespace TaskNotes.Windows.App
                         provider.GetRequiredService<QuickAddViewModel>(),
                         provider.GetRequiredService<TaskEditorViewModel>(),
                         provider.GetRequiredService<FacetSettingsViewModel>(),
-                        provider.GetRequiredService<GlobalHotkeyViewModel>(),
-                        provider.GetRequiredService<PomodoroViewModel>(),
-                        provider.GetRequiredService<TimeReportViewModel>()
+                        provider.GetRequiredService<GlobalHotkeyViewModel>()
                     ));
                 })
                 .Build();
