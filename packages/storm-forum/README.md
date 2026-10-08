@@ -75,6 +75,21 @@ are checkpointed; unsupported revisions reject before writes, including dry runs
 explicit archive directory without modifying it; optional `--public-archives`
 recovery copies verified public images into this package.
 
+For already imported profiles, run
+`bun packages/storm-forum/scripts/restore-avatars.ts` from the repository root
+to validate `config/avatar-recovery.json` against **production**, namespace
+`storm-forum`, deployment `storm-forum-web`. Existing authenticated `kubectl`
+access is required. Review the dry-run identities before adding `--apply`.
+The command checks pinned image hashes and original-to-native identity mappings,
+holds the history lock, rejects pending account merges, and uses XenForo's avatar
+service only for profiles without custom avatars or Gravatars. It preserves
+import checkpoints and never runs during deployment. Provenance distinguishes
+archived bytes from explicitly approved current Minecraft heads; archived
+player UUIDs support renamed players. After applying, repeat the dry run to
+confirm preservation, check the returned image URLs for HTTP 200, and inspect
+the affected profiles in the live forum. Add verified assets and provenance to
+Git; never change checkpointed historical identity metadata to fill an avatar.
+
 To recover an archived account, register and verify a current account, then submit
 ownership evidence in **Private Support → Account Recovery**. Only the author and
 staff can read the request; indexing, activity feeds and watch mail are disabled.
