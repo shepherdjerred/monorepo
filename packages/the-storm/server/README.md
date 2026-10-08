@@ -206,16 +206,28 @@ stays on Jenkins until that mirror exists.
 ## Historic land protection
 
 `owned/plugins/TheStorm/heritage.yml` is the mandatory preservation catalog.
-It protects spawn, the reconstructed footprints of 64 historic sites, and the
-Settlement, Rustworks and Colosseum structures across the full world height.
+It protects Spawn, reconstructed historical towns and dwellings, and the Colosseum
+across the full world height. Settlement and Rustworks are protected in their
+separate arena worlds. Wilderness remains editable.
 Original Towny claim files were not recovered; the displayed boundaries are
 reconstructed preservation footprints. Claim flags, unclaiming and town
 deletion cannot remove this protection.
 
 Verified editors may intentionally edit only the catalog's proven construction
-chunks. Buffers remain in staff custody. Exact shop boundaries and their proven
-owner UUIDs live in `parcels.yml`; permanent historical shops have no rent or
+chunks. Buffers remain in staff custody. Exact shop boundaries and their assigned
+owner UUIDs live in `parcels.yml`; provenance distinguishes direct evidence from
+reasonable sign/name matches. Permanent historical shops have no rent or
 expiry. Public container permissions do not inherit into historical holdings.
+
+The offline restoration imports built-in container locks throughout these
+holdings, including furnaces, brewing stands and hoppers. Assigned shop owners
+manage their shop's locks; joint owners can open, unlock and manage trust. Town
+construction chunks use their identified leadership, with ordinary member
+sharing and redstone access initially disabled. Unidentified holdings and
+ownership boundaries remain in staff custody. Historical locks retain archived
+owner names before those players rejoin, do not consume the ordinary lock quota,
+and keep their ownership when a player leaves a town. Hopper transfers require
+the same primary owner at every locked endpoint.
 
 The immutable floor blocks destructive environmental changes. Sheep may graze
 grass blocks, grass blocks may regrow, and existing crops may age and farmland
@@ -236,37 +248,43 @@ its phase and verification receipts before the next operation can proceed.
 Failed copies remain available for inspection. The source archive and successful
 input checkpoints remain immutable.
 
-| Operation                   | Required checkpoint                                                | Result                                                                                           |
-| --------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
-| `prepare`                   | Approved archive SHA-256                                           | Validated archive paths, complete chunk inventory, source file hashes                            |
-| `convert-legacy`            | Prepared private copy                                              | Guarded Paper 1.21.7 conversion and clean shutdown                                               |
-| `convert-companions`        | Legacy terrain converted                                           | Individually converted vanilla players, statistics and maps                                      |
-| `convert-native-chunks`     | Legacy companion checkpoint                                        | Native 26.2 terrain, embedded entities and block entities                                        |
-| `convert-native-companions` | Native terrain checkpoint                                          | Native item codecs, safe player positions, verified beds and map allocation counter              |
-| `convert-native-auxiliary`  | Native companion checkpoint                                        | Native entity and POI stores                                                                     |
-| `rehearse-native-layout`    | All native archive data converted                                  | Frozen Paper 26.2 startup, native dimension layout and metadata verification                     |
-| `preserve-heritage`         | Verified native layout                                             | Saved protected terrain with underground upgrade disabled                                        |
-| `transplant-arenas`         | Heritage preservation and independently verified modern backup     | Current Settlement and Rustworks columns merged into a separate historical world copy            |
-| `prepare-database`          | Verified arena merge and the same modern backup and candidate jar  | Fresh candidate Flyway histories, retained identity/moderation rows and proven historical owners |
-| `prepare-activation`        | Verified arena and identity checkpoints and the same modern backup | Independent assembled world retaining native RWF, Settlement and Rustworks dimensions            |
-| `verify-copy`               | Two independent stopped data trees                                 | Complete file hash comparison; symlinks and shared hard links are rejected                       |
-| `database-inventory`        | Existing database                                                  | Integrity check, table schemas and row counts without private row contents                       |
+| Operation                   | Required checkpoint                                                   | Result                                                                                           |
+| --------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `prepare`                   | Approved archive SHA-256                                              | Validated archive paths, complete chunk inventory, source file hashes                            |
+| `convert-legacy`            | Prepared private copy                                                 | Guarded Paper 1.21.7 conversion and clean shutdown                                               |
+| `convert-companions`        | Legacy terrain converted                                              | Individually converted vanilla players, statistics and maps                                      |
+| `convert-native-chunks`     | Legacy companion checkpoint                                           | Native 26.2 terrain, embedded entities and block entities                                        |
+| `convert-native-companions` | Native terrain checkpoint                                             | Native item codecs, safe player positions, verified beds and map allocation counter              |
+| `convert-native-auxiliary`  | Native companion checkpoint                                           | Native entity and POI stores                                                                     |
+| `rehearse-native-layout`    | All native archive data converted                                     | Frozen Paper 26.2 startup, native dimension layout and metadata verification                     |
+| `fork-native-layout`        | Completed, sealed, unticked archive preparation                       | New private staging reusing the exact native archive conversion; old receipts remain intact      |
+| `preserve-heritage`         | Verified native layout                                                | Every saved archive chunk preserved with underground upgrade disabled                            |
+| `retain-arena-worlds`       | Heritage preservation and independently verified modern backup        | Sealed Settlement, Rustworks and RWF worlds; no overworld overlay                                |
+| `prepare-database`          | Verified separate arenas and the same modern backup and candidate jar | Fresh candidate Flyway histories, retained identity/moderation rows and proven historical owners |
+| `prepare-activation`        | Verified arena and identity checkpoints and the same modern backup    | Independent assembled world retaining native RWF, Settlement and Rustworks dimensions            |
+| `verify-copy`               | Two independent stopped data trees                                    | Complete file hash comparison; symlinks and shared hard links are rejected                       |
+| `database-inventory`        | Existing database                                                     | Integrity check, table schemas and row counts without private row contents                       |
 
 Converters use the exact pinned Paper bootstrap and verify every library hash.
 The conversion guard freezes ticking before world initialization. Whole-world
 inventory checks preserve every pregenerated historical terrain chunk.
-Heritage preservation changes only generation and lighting metadata in the
-protected chunks; their saved sections, biomes, foundations and records remain
-unchanged. Unprotected chunks retain Minecraft's supported underground upgrade.
+Heritage preservation changes only generation and lighting metadata in every
+saved archive chunk; saved sections, biomes, foundations and records remain
+unchanged. This prevents automatic height expansion from generating terrain
+inside the restored archive. It grants no additional wilderness protection.
+New chunks beyond the saved archive still use the current Minecraft generator.
+Because this checkpoint preserves every saved chunk, subsequent claim catalog
+refinements do not change its terrain proof. Separate arena retention verifies
+that complete preservation receipt and binds the current catalog to the
+candidate used for database preparation and activation.
 
-Arena merging replaces full-height columns in the catalog's reviewed footprints.
-It preserves surrounding blocks, auxiliary records and historical companion data.
-Partial biome cells must agree, and referenced modern map IDs require a reviewed
-map merge before transplantation can succeed. The tool refuses unexplained
-chunk-wide persistent data in partial chunks.
+The historical overworld contains only the archive's original structures.
+`retain-arena-worlds` preserves the modern arenas in their existing separate
+dimensions. The older `transplant-arenas` operation remains available for
+explicitly reviewed overlays; it is not part of a pristine archive restoration.
 
-Activation preparation preserves the historical overworld and transplanted
-columns, then copies the three retained arena dimensions byte for byte. Modern
+Activation preparation preserves the historical overworld, then copies the
+three retained arena dimensions byte for byte. Modern
 resource-world terrain and vanilla player progression are excluded. Its native
 verifier reads every chunk and persistent entity without running a world. A
 separate private repair preserves every unowned historical farm animal while
@@ -299,6 +317,20 @@ unknown tables abort preparation. Historical owner imports use the domain's
 stable town IDs and their recorded import time; archive dates do not imply
 founding dates.
 
+`NativeHistoricalLocks.java` then surveys the sealed, unticked native world using
+the candidate's actual land resolver. It imports only lock records into the
+fresh database and reads them back through the gameplay persistence adapter.
+Its inventory records every protected container, source block-entity hashes,
+archived owner names, joint ownership, and boundary conflicts. Original 1.8 double
+chests are grouped before native neighbor updates without changing their blocks.
+Containers lacking a saved block entity are inventoried explicitly as absent;
+the importer does not fabricate inventories or write terrain. Arena loot and
+personal ender-chest storage do not receive these property locks.
+Preparation and installation verify the sealed lock receipt, input configuration
+and tool hashes, request identity, database counts and disabled sharing defaults.
+Plot recovery writes auxiliary archive version 2 with this ownership metadata;
+version 1 ordinary locks migrate explicitly when an older archive is read.
+
 `restoration_files.py` provides filesystem primitives for stopped-volume
 installation. It has no production CLI. Staging verifies the entire stopped
 volume against the sealed original manifest and copies only the native world
@@ -319,6 +351,18 @@ resumable renames. Unexpected writes or changed backup bytes abort the operation
 Its completion still requires the controller to select the recorded rollback
 image before restarting. These primitives do not acquire a lease, start a pod,
 release maintenance or open a route.
+
+Before the first Paper startup, `restoration-control.py revise-installation`
+can replace a completed installation with another fully verified activation
+layout and immutable candidate image under the same closed maintenance lease.
+Pass the replacement digest through `--image` and its staging and jar through
+`--staging` and `--candidate`. The controller revokes startup authorization
+before rebinding the image. The volume transaction retains the original
+rollback archive and the superseded world/database, verifies unrelated files,
+and resumes interrupted staging or renames using its sealed revision journal.
+It reuses the existing independently verified backup. Any attempted Paper
+startup, changed storage identity, changed input or foreign helper refuses the
+revision; after startup, use whole-volume rollback instead.
 
 The controller's dormant writer template uses the exact candidate image and
 mounts only the recorded data claim and bounded scratch directories. It receives
@@ -404,7 +448,7 @@ Use a local port forward for private acceptance and retain the observed evidence
 `accept --evidence <private-json>` records acceptance only for the running pod's
 exact UID, published image digest and candidate plugin. Its `checks` object must
 record `VERIFIED` for startup, historical spawn, the town directory, proven plot
-editors, heritage protection, grazing and growth, each of the three arenas,
+editors, heritage protection, historical container locks, grazing and growth, each of the three arenas,
 CoreProtect lookup and rollback, retained identities, historical player data,
 maps and private admission. The evidence also carries `requestId`,
 `candidateImage`, `candidateJarSha256`, `podUid`, `containerId` and `restartCount`.

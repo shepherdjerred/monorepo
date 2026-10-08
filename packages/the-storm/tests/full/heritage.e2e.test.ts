@@ -132,7 +132,71 @@ describe("historical preservation on real Paper", () => {
       }
     }
   }, 45_000);
+});
 
+describe("historical grazing on real Paper", () => {
+  test("protected Spawn lets native sheep graze and grass regrow", async ({
+    bot,
+    rcon,
+  }) => {
+    const grass = Array.from(
+      { length: 9 },
+      (_, index) => new Vec3(310 + (index % 3), 200, 7 + Math.floor(index / 3)),
+    );
+    const griefing = await rcon.command("gamerule mob_griefing");
+    const originalGriefing = /\b(true|false)\b/u.exec(griefing)?.[1];
+    if (originalGriefing === undefined) {
+      throw new Error("Could not read the original mob griefing gamerule");
+    }
+    const tickSpeed = await rcon.command("gamerule random_tick_speed");
+    const originalTickSpeed = /\b(\d+)\b/u.exec(tickSpeed)?.[1];
+    if (originalTickSpeed === undefined) {
+      throw new Error("Could not read the original random tick speed gamerule");
+    }
+    try {
+      await rcon.command("gamerule mob_griefing true");
+      await rcon.command("gamerule random_tick_speed 0");
+      await rcon.command("time set noon");
+      await rcon.command("fill 309 200 6 313 204 10 minecraft:glass");
+      await rcon.command("fill 310 201 7 312 203 9 air");
+      await rcon.command("fill 310 200 7 312 200 9 minecraft:grass_block");
+      await rcon.command(`tp ${bot.username} 311.5 205 8.5`);
+      expect(
+        await rcon.command(
+          'summon minecraft:sheep 311.5 201 8.5 {Age:-24000,Sheared:1b,Tags:["e2e_heritage_graze"]}',
+        ),
+      ).toContain("Summoned");
+      await waitUntil(
+        "a native sheep eats protected Spawn grass",
+        () => grass.some((position) => bot.blockAt(position)?.name === "dirt"),
+        30_000,
+      );
+      const grazed = grass.find(
+        (position) => bot.blockAt(position)?.name === "dirt",
+      );
+      if (grazed === undefined)
+        throw new Error("Grazed grass was not observed");
+      await rcon.command(
+        "kill @e[type=minecraft:sheep,tag=e2e_heritage_graze]",
+      );
+      await rcon.command("gamerule random_tick_speed 4096");
+      await waitUntil(
+        "grazed Spawn grass regrows",
+        () => bot.blockAt(grazed)?.name === "grass_block",
+        10_000,
+      );
+    } finally {
+      await rcon.command(
+        "kill @e[type=minecraft:sheep,tag=e2e_heritage_graze]",
+      );
+      await rcon.command(`gamerule random_tick_speed ${originalTickSpeed}`);
+      await rcon.command(`gamerule mob_griefing ${originalGriefing}`);
+      await rcon.command("fill 309 200 6 313 204 10 air");
+    }
+  }, 60_000);
+});
+
+describe("historical respawn on real Paper", () => {
   test("a native death and respawn keep items and experience when preservation forbids a grave", async ({
     bot,
     rcon,

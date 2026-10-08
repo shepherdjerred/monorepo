@@ -5,10 +5,13 @@ import json
 from pathlib import Path
 
 import restoration_files
+import restoration_revision
 from restoration_json import JsonObject
 
 
 def install(data: Path, payload: Path, plan: JsonObject, baked_jar: Path) -> JsonObject:
+    if "revisionOf" in plan:
+        return restoration_revision.revise(data, payload, plan, baked_jar)
     if plan.get("status") != "VERIFIED_INSTALLATION_PLAN" or restoration_files.digest(baked_jar) != plan.string(
         "candidateJarSha256"
     ):

@@ -71,6 +71,14 @@ final class TownsConfigTest {
         .containsExactly("spawn", "arena", "settlement", "rustworks");
     assertThat(config.claims().worlds()).containsExactly("world");
     assertThat(config.claims().defaultFlags()).containsExactly(ClaimFlag.PVP);
+    for (var id : Set.of("settlement", "rustworks")) {
+      var region =
+          config.regions().stream()
+              .filter(value -> value.id().equals(id))
+              .findFirst()
+              .orElseThrow();
+      assertThat(region.areas().all()).allSatisfy(area -> assertThat(area.world()).isEqualTo(id));
+    }
   }
 
   @Test

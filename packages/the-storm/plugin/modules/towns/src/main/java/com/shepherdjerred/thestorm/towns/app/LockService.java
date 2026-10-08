@@ -155,8 +155,11 @@ public final class LockService {
 
   private boolean isBusy(Optional<Lock> lock) {
     return reloading
-        || lock.filter(found -> busy.containsKey(found.id()) || ownerBusy.test(found.owner()))
-            .isPresent();
+        || lock.filter(found -> busy.containsKey(found.id()) || ownersSettling(found)).isPresent();
+  }
+
+  private boolean ownersSettling(Lock lock) {
+    return lock.owners().stream().anyMatch(ownerBusy);
   }
 
   /** Applies the exact lock ids already transferred with a committed membership write. */
@@ -222,7 +225,7 @@ public final class LockService {
 
   /** Extends a newly placed chest only when its lock can be saved now. */
   public Optional<Change<Lock>> extendOnPlacement(Lock lock, BlockPos block) {
-    if (reloading || ownerBusy.test(lock.owner()) || busy.containsKey(lock.id())) {
+    if (reloading || ownersSettling(lock) || busy.containsKey(lock.id())) {
       return Optional.empty();
     }
     var current = book.byId(lock.id());
@@ -296,7 +299,7 @@ public final class LockService {
    * being reloaded from storage is applied to the reloaded locks, not lost.
    */
   private void whenSettled(Lock lock, Runnable change) {
-    if (reloading || ownerBusy.test(lock.owner()) || busy.containsKey(lock.id())) {
+    if (reloading || ownersSettling(lock) || busy.containsKey(lock.id())) {
       deferred.add(new Deferred(Optional.of(lock), change));
     } else {
       change.run();

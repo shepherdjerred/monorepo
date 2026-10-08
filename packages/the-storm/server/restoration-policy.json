@@ -92,6 +92,8 @@
     "towns_leases",
     "towns_lock",
     "towns_lock_block",
+    "towns_lock_historical_owner",
+    "towns_lock_restoration",
     "towns_lock_trust",
     "towns_member",
     "towns_pending_payout",

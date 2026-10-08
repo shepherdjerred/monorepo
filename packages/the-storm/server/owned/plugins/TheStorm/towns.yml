@@ -130,10 +130,6 @@ regions:
         - world: settlement
           from: { x: -82, y: -64, z: -80 }
           to: { x: 79, y: 319, z: 79 }
-        # Retain protection at the source until bounded terrain restoration is verified.
-        - world: world
-          from: { x: 1710, y: -64, z: 2128 }
-          to: { x: 1871, y: 319, z: 2287 }
     allow:
       - action: INTERACT
         subjects: [DOOR, TRAPDOOR, FENCE_GATE, BUTTON, LEVER, PRESSURE_PLATE]
@@ -156,9 +152,6 @@ regions:
         - world: rustworks
           from: { x: -98, y: -64, z: -100 }
           to: { x: 95, y: 319, z: 99 }
-        - world: world
-          from: { x: 1918, y: -64, z: 2112 }
-          to: { x: 2111, y: 319, z: 2311 }
     allow:
       - action: INTERACT
         subjects: [DOOR, TRAPDOOR, FENCE_GATE, BUTTON, LEVER, PRESSURE_PLATE]

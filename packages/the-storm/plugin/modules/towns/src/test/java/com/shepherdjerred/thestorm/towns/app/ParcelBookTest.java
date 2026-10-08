@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.towns.app;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.shepherdjerred.thestorm.core.config.StrictYaml;
 import com.shepherdjerred.thestorm.towns.domain.land.Land;
 import com.shepherdjerred.thestorm.towns.domain.parcel.Lease;
 import com.shepherdjerred.thestorm.towns.domain.parcel.ParcelDefinition;
@@ -23,6 +24,8 @@ import com.shepherdjerred.thestorm.towns.domain.region.RegionProfile;
 import com.shepherdjerred.thestorm.towns.domain.region.RegionSpawns;
 import com.shepherdjerred.thestorm.towns.domain.world.WorldEffect;
 import com.shepherdjerred.thestorm.towns.domain.world.WorldRules;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.time.InstantSource;
 import java.util.List;
@@ -39,6 +42,54 @@ final class ParcelBookTest {
       new Cuboid("world", new BlockCorner(1, 66, 1), new BlockCorner(12, 96, 12));
   private static final Act BUILD = new Act(Action.BUILD, Subject.BLOCK);
   private static final Act OPEN = new Act(Action.OPEN_CONTAINER, Subject.CONTAINER);
+
+  @Test
+  void restoredShopDistrictContainsEveryReviewedBuildingAndInferredOwners() throws Exception {
+    var path = Path.of("../../../server/owned/plugins/TheStorm/parcels.yml");
+    var config =
+        StrictYaml.parse(path.toString(), Files.readString(path), ParcelsConfig.class)
+            .fold(
+                value -> value,
+                errors -> {
+                  throw new AssertionError(errors);
+                });
+    assertThat(config.parcels()).hasSize(20);
+    assertThat(
+            config.parcels().stream().filter(parcel -> parcel.kind() == ParcelKind.PERMANENT_SHOP))
+        .hasSize(19)
+        .allSatisfy(parcel -> assertThat(parcel.weeklyRent()).isZero());
+    assertThat(config.parcels().stream().filter(parcel -> !parcel.owners().isEmpty())).hasSize(6);
+    var shared =
+        config.parcels().stream()
+            .filter(parcel -> parcel.id().equals("anteron-zah-shop"))
+            .findFirst()
+            .orElseThrow();
+    assertThat(shared.owners())
+        .containsExactlyInAnyOrder(
+            UUID.fromString("a35bbf91-d274-4e26-bc64-09d8c06a3c9d"),
+            UUID.fromString("9cee5afe-e1e3-4c7a-83b1-eaf5fdcc96a0"));
+    assertThat(config.parcels().stream().map(ParcelDefinition::id))
+        .contains(
+            "lawful-farm-shop",
+            "mining-building-shop",
+            "anteron-zah-shop",
+            "level-30-shop",
+            "skymart-shop");
+    var book = new ParcelBook(config, InstantSource.fixed(EXPIRY));
+    var state = new TownsState(new RegionIndex(List.of()));
+    state.attachParcels(book);
+    for (var point :
+        List.of(
+            new int[] {10, -142}, new int[] {93, -87}, new int[] {134, -60}, new int[] {68, -39})) {
+      var land = state.landAt("world", point[0], 69, point[1]);
+      assertThat(land).isInstanceOf(Land.ParcelLand.class);
+      assertThat(
+              new ProtectionEngine(state, player -> false)
+                  .decide(Actor.player(STRANGER), BUILD, land)
+                  .isAllowed())
+          .isFalse();
+    }
+  }
 
   @Test
   void ownerBuildsBeforeExpiryAndOnlyWithdrawsDuringGrace() {

@@ -72,7 +72,9 @@ public final class LockBook implements LockIndex {
           .computeIfAbsent(block.world(), world -> new Long2ObjectOpenHashMap<>())
           .put(key(block.x(), block.y(), block.z()), lock);
     }
-    counts.merge(lock.owner(), 1, Integer::sum);
+    if (!lock.restoration().imported()) {
+      counts.merge(lock.owner(), 1, Integer::sum);
+    }
   }
 
   /** Removes the lock with {@code id}, if any. */
@@ -86,6 +88,9 @@ public final class LockBook implements LockIndex {
       if (blocks != null) {
         blocks.remove(key(block.x(), block.y(), block.z()));
       }
+    }
+    if (lock.restoration().imported()) {
+      return;
     }
     var count = counts.getOrDefault(lock.owner(), 0);
     if (count <= 1) {

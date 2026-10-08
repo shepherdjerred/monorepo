@@ -4,6 +4,7 @@ from pathlib import Path
 
 import restoration_backup
 import restoration_files
+import restoration_locks
 from restoration_json import JsonObject
 
 ARCHIVE_SHA256 = "89fc7865604b5ab9ecf3030c90a192f8f9c963083cc77135949c953ae6b645fa"
@@ -108,6 +109,9 @@ def plan(staging: Path, control: JsonObject, candidate: Path) -> JsonObject:
     for name in ("restoration-policy.json", "database-restore.py"):
         if database_proof.object("inputs").get(name) != restoration_files.digest(owned / name):
             raise ValueError("Identity retention policy or importer changed after database preparation")
+    restoration_locks.verify(
+        staging, database_proof, control.string("requestId"), layout / "plugins/TheStorm/the-storm.db"
+    )
     retained = receipt.object("retainedDimensions")
     if set(retained) != set(DIMENSIONS):
         raise ValueError("Installation lacks the complete retained arena dimension selection")
@@ -131,6 +135,7 @@ def plan(staging: Path, control: JsonObject, candidate: Path) -> JsonObject:
             "candidateImage": control.string("candidateImage"),
             "candidateJarSha256": candidate_sha,
             "activationReceiptSha256": journal.string("activationReceiptSha256"),
+            "overworldOverlay": receipt.get("overworldOverlay"),
             "layout": str(layout),
             "files": expected,
             "installationFiles": selected,

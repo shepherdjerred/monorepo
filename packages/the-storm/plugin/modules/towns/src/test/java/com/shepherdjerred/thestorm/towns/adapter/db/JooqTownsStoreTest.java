@@ -288,23 +288,33 @@ final class JooqTownsStoreTest {
             MEMBER,
             Set.of(new BlockPos("world", 0, 64, 0)),
             Map.of(OWNER, LockGrant.USE),
-            new Lock.Options(true, true));
+            new Lock.Options(true, true),
+            Lock.Restoration.NONE);
     var split =
         Lock.of(
             UUID.randomUUID(),
             MEMBER,
             Set.of(new BlockPos("world", 15, 64, 0), new BlockPos("world", 16, 64, 0)));
     var foreign = Lock.of(UUID.randomUUID(), MEMBER, Set.of(new BlockPos("world", 17, 64, 0)));
+    var historical =
+        new Lock(
+            UUID.randomUUID(),
+            MEMBER,
+            Set.of(new BlockPos("world", 2, 64, 0)),
+            Map.of(),
+            Lock.Options.NONE,
+            new Lock.Restoration(UUID.randomUUID(), "heritage:town", Map.of(MEMBER, "Member")));
     await(locks.save(inside));
     await(locks.save(split));
     await(locks.save(foreign));
+    await(locks.save(historical));
 
     var updated = Fixtures.townA().withoutMember(MEMBER);
     assertThat(await(store.saveDeparture(updated, MEMBER))).containsExactly(inside.id());
 
     assertThat(load().towns()).contains(updated);
     assertThat(await(locks.loadAll()))
-        .containsExactlyInAnyOrder(inside.ownedBy(OWNER), split, foreign);
+        .containsExactlyInAnyOrder(inside.ownedBy(OWNER), split, foreign, historical);
   }
 
   @Test

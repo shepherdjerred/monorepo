@@ -260,7 +260,10 @@ final class LockCommands {
       return;
     }
     var people = new ArrayList<UUID>();
-    people.add(found.owner());
+    people.addAll(
+        found.owners().stream()
+            .filter(id -> !found.restoration().owners().containsKey(id))
+            .toList());
     people.addAll(found.trusted().keySet());
     var _ =
         parts
@@ -272,7 +275,9 @@ final class LockCommands {
                     player.sendMessage(Notices.error("Could not look up the lock; try again."));
                     return;
                   }
-                  player.sendMessage(Notices.info(describe(found, names)));
+                  var resolved = new java.util.HashMap<>(found.restoration().owners());
+                  resolved.putAll(names);
+                  player.sendMessage(Notices.info(describe(found, resolved)));
                 });
   }
 
@@ -291,7 +296,7 @@ final class LockCommands {
                 .sorted()
                 .collect(joining(", "));
     return "Locked by "
-        + nameOf.apply(lock.owner())
+        + lock.owners().stream().map(nameOf).sorted().collect(joining(", "))
         + (lock.blocks().size() == 2 ? " (both halves)" : "")
         + (lock.options().sharedWithTown() ? "; their town may open it" : "")
         + "; trusted: "

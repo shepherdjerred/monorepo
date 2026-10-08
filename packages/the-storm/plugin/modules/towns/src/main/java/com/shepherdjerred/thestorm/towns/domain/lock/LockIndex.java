@@ -10,6 +10,6 @@ public interface LockIndex {
   /** The lock covering {@code block}, if any. */
   Optional<Lock> lockAt(BlockPos block);
 
-  /** How many locks {@code owner} holds. */
+  /** Ordinary locks counted toward the player's allowance; restored locks are exempt. */
   int countOf(UUID owner);
 }
