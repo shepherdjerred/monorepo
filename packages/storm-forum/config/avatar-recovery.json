@@ -5,7 +5,775 @@
     "historicalName": "RiotShielder",
     "file": "avatar-1.png",
     "sha256": "09d5aa1f867e186d0dfa68d1b8d96b438d2f57ec0275556865a129ea1ef9e779",
-    "source": "media.minecraftforum.net/avatars/thumbnails/610/684/140/140/635796496637239062.png",
-    "capturedAt": "20191124062857"
+    "provenance": {
+      "kind": "archived",
+      "originalHostPath": "media.minecraftforum.net/avatars/thumbnails/610/684/140/140/635796496637239062.png",
+      "capturedAt": "20191124062857"
+    }
+  },
+  {
+    "originalId": 2,
+    "expectedUserId": 3,
+    "historicalName": "jordanzilla02",
+    "file": "avatar-2.png",
+    "sha256": "4ebd647e33cd0b79e0ebcebda416b64bf3b80cca0f38b1d0593b8ea7beb38ecb",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/a0d2d4d795ff40efa7b4cbb5d32d4671/96.png",
+      "fetchedAt": "2026-10-08T22:50:05.710Z",
+      "minecraftName": "JordanVC",
+      "uuid": "a0d2d4d795ff40efa7b4cbb5d32d4671",
+      "identityEvidence": "Archived player bukkit.lastKnownName=jordanzilla02; Worlds/TheStorm_survival-main_map1_1.14.4-upgrade_snapshot-2023-06-18.zip:world/playerdata/a0d2d4d7-95ff-40ef-a7b4-cbb5d32d4671.dat"
+    }
+  },
+  {
+    "originalId": 4,
+    "expectedUserId": 5,
+    "historicalName": "Captin_NutJob",
+    "file": "avatar-4.png",
+    "sha256": "8bddfe656cdbce3329a39b3ebc356c528205c10aa3aed8c73b5f2e75c90801e7",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/19fb9cbb30c64c4ba0751a09c54fb764/96.png",
+      "fetchedAt": "2026-10-08T22:50:05.279Z",
+      "minecraftName": "NickelbackVEVO",
+      "uuid": "19fb9cbb30c64c4ba0751a09c54fb764",
+      "identityEvidence": "Archived player bukkit.lastKnownName=Captin_NutJob; Worlds/TheStorm_creative_snapshot-2016-01-10.zip:home/files/servers/creative/world/playerdata/19fb9cbb-30c6-4c4b-a075-1a09c54fb764.dat"
+    }
+  },
+  {
+    "originalId": 6,
+    "expectedUserId": 6,
+    "historicalName": "MrCrazyCyborg",
+    "file": "avatar-6.png",
+    "sha256": "2b06dd8bab206040ad0e179e8fb472580d8e47e6e9d1f11169fa3c4fc05193e5",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/bb05a93b34fb47278509106b209ce6f3/96.png",
+      "fetchedAt": "2026-10-08T22:50:06.859Z",
+      "minecraftName": "MrCrazyCyborg",
+      "uuid": "bb05a93b34fb47278509106b209ce6f3",
+      "identityEvidence": "Archived forum/Minecraft name MrCrazyCyborg; current Mojang name lookup"
+    }
+  },
+  {
+    "originalId": 8,
+    "expectedUserId": 7,
+    "historicalName": "TaylerKing",
+    "file": "avatar-8.png",
+    "sha256": "bbe108cc39370e65fa239ebb4093bf119e591760de0775da12d3ef822de7f007",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/f64d0ec052b34e4b92029ded865e2135/96.png",
+      "fetchedAt": "2026-10-08T22:50:08.431Z",
+      "minecraftName": "taylerking",
+      "uuid": "f64d0ec052b34e4b92029ded865e2135",
+      "identityEvidence": "Archived forum/Minecraft name TaylerKing; current Mojang name lookup"
+    }
+  },
+  {
+    "originalId": 20,
+    "expectedUserId": 9,
+    "historicalName": "King_daxi",
+    "file": "avatar-20.png",
+    "sha256": "3d5dd0d23607e0bef6a20224d9f43c198d318a2284591356c511ba75bb338f5f",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/74c17ec405114ac0871895b6bc3d6ebf/96.png",
+      "fetchedAt": "2026-10-08T22:50:08.378Z",
+      "minecraftName": "king_daxi",
+      "uuid": "74c17ec405114ac0871895b6bc3d6ebf",
+      "identityEvidence": "Archived player bukkit.lastKnownName=king_daxi; Worlds/TheStorm_survival-main_map1_1.14.4-upgrade_snapshot-2023-06-18.zip:world/playerdata/74c17ec4-0511-4ac0-8718-95b6bc3d6ebf.dat"
+    }
+  },
+  {
+    "originalId": 42,
+    "expectedUserId": 12,
+    "historicalName": "raquel101",
+    "file": "avatar-42.png",
+    "sha256": "a9600f53aad6b98a1f3273cd4d054da370e6dca274a7827d0e77f3c0cd742469",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/ac4695e5da594662940611a9c1f878a3/96.png",
+      "fetchedAt": "2026-10-08T22:50:09.677Z",
+      "minecraftName": "hellogoldfish",
+      "uuid": "ac4695e5da594662940611a9c1f878a3",
+      "identityEvidence": "Archived player bukkit.lastKnownName=raquel101; Worlds/TheStorm_survival-main_map1_1.14.4-upgrade_snapshot-2023-06-18.zip:world/playerdata/ac4695e5-da59-4662-9406-11a9c1f878a3.dat"
+    }
+  },
+  {
+    "originalId": 43,
+    "expectedUserId": 13,
+    "historicalName": "ShadowBlade2498",
+    "file": "avatar-43.png",
+    "sha256": "776587a1e18f917a27754416a7f907ca1dee5254eacb4fe2adc5e56649c325d0",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/519465a0399341b9ab13df8e767893a4/96.png",
+      "fetchedAt": "2026-10-08T22:50:09.731Z",
+      "minecraftName": "ShadowBlade2498",
+      "uuid": "519465a0399341b9ab13df8e767893a4",
+      "identityEvidence": "Archived player bukkit.lastKnownName=ShadowBlade2498; Worlds/TheStorm_creative_snapshot-2016-01-10.zip:home/files/servers/creative/world/playerdata/519465a0-3993-41b9-ab13-df8e767893a4.dat"
+    }
+  },
+  {
+    "originalId": 68,
+    "expectedUserId": 14,
+    "historicalName": "PigsPotato",
+    "file": "avatar-68.png",
+    "sha256": "8f2ae68e33bb740e5d547ba00b9fef055eb30369748944d9a904a2137331062a",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/711d3ed7389a446ca32fde8b3f1975d2/96.png",
+      "fetchedAt": "2026-10-08T22:50:10.962Z",
+      "minecraftName": "PigsPotato",
+      "uuid": "711d3ed7389a446ca32fde8b3f1975d2",
+      "identityEvidence": "Archived player bukkit.lastKnownName=PigsPotato; Worlds/TheStorm_survival-main_map1_1.14.4-upgrade_snapshot-2023-06-18.zip:world/playerdata/711d3ed7-389a-446c-a32f-de8b3f1975d2.dat"
+    }
+  },
+  {
+    "originalId": 95,
+    "expectedUserId": 15,
+    "historicalName": "TMainMan",
+    "file": "avatar-95.png",
+    "sha256": "7f85e1c816266891cfe170e7b42f59cb604a48cc71c121cb8f2ce7351f03b2e1",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/5fad71aa2e694e699d9a72f1bf401a7f/96.png",
+      "fetchedAt": "2026-10-08T22:50:16.275Z",
+      "minecraftName": "TMainMan",
+      "uuid": "5fad71aa2e694e699d9a72f1bf401a7f",
+      "identityEvidence": "Archived player bukkit.lastKnownName=TMainMan; Worlds/TheStorm_survival-main_map1_1.14.4-upgrade_snapshot-2023-06-18.zip:world/playerdata/5fad71aa-2e69-4e69-9d9a-72f1bf401a7f.dat"
+    }
+  },
+  {
+    "originalId": 98,
+    "expectedUserId": 16,
+    "historicalName": "TimeGlitch",
+    "file": "avatar-98.png",
+    "sha256": "2ecdd30a7770a70c505e11bab1da201918e6ad187a6842d5aa8ae38afd43448c",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/3f88002779034e5786aa8ce0d7d56039/96.png",
+      "fetchedAt": "2026-10-08T22:50:12.101Z",
+      "minecraftName": "TimeGlitch",
+      "uuid": "3f88002779034e5786aa8ce0d7d56039",
+      "identityEvidence": "Archived player bukkit.lastKnownName=TimeGlitch; Worlds/TheStorm_creative_snapshot-2016-01-10.zip:home/files/servers/creative/world/playerdata/3f880027-7903-4e57-86aa-8ce0d7d56039.dat"
+    }
+  },
+  {
+    "originalId": 134,
+    "expectedUserId": 17,
+    "historicalName": "Cinnaminty",
+    "file": "avatar-134.png",
+    "sha256": "da99b50f62d5370381b3d8345c7c8adfce122677b12eb1d5a4189c90d64840fe",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/1644b8661d1e49a2b8744dba7b04affe/96.png",
+      "fetchedAt": "2026-10-08T22:50:15.869Z",
+      "minecraftName": "Cinnaminty",
+      "uuid": "1644b8661d1e49a2b8744dba7b04affe",
+      "identityEvidence": "Archived player bukkit.lastKnownName=Cinnaminty; Worlds/TheStorm_creative_snapshot-2016-01-10.zip:home/files/servers/creative/world/playerdata/1644b866-1d1e-49a2-b874-4dba7b04affe.dat"
+    }
+  },
+  {
+    "originalId": 136,
+    "expectedUserId": 18,
+    "historicalName": "E_Nater",
+    "file": "avatar-136.png",
+    "sha256": "e1a0fc65bb3a1ae52a4ccc594b7e51c1961e55ac4fe7a70ac714aeea9cc17884",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/6d3b1e2aee0e4469989aea483db0d74f/96.png",
+      "fetchedAt": "2026-10-08T22:50:17.375Z",
+      "minecraftName": "E_Nater",
+      "uuid": "6d3b1e2aee0e4469989aea483db0d74f",
+      "identityEvidence": "Archived player bukkit.lastKnownName=E_Nater; Worlds/TheStorm_survival-main_map1_1.14.4-upgrade_snapshot-2023-06-18.zip:world/playerdata/6d3b1e2a-ee0e-4469-989a-ea483db0d74f.dat"
+    }
+  },
+  {
+    "originalId": 138,
+    "expectedUserId": 19,
+    "historicalName": "Miksuu",
+    "file": "avatar-138.png",
+    "sha256": "cfadc428fa714219b08ccaf7bc0efafedd7ad7b26ca20ffe03a7c9cd8d7f0ab8",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/00d48bd1aee14a799ddbb6f098613806/96.png",
+      "fetchedAt": "2026-10-08T22:50:17.586Z",
+      "minecraftName": "Miksuu",
+      "uuid": "00d48bd1aee14a799ddbb6f098613806",
+      "identityEvidence": "Archived player bukkit.lastKnownName=Miksuu; Worlds/TheStorm_survival-main_map1_1.14.4-upgrade_snapshot-2023-06-18.zip:world/playerdata/00d48bd1-aee1-4a79-9ddb-b6f098613806.dat"
+    }
+  },
+  {
+    "originalId": 140,
+    "expectedUserId": 20,
+    "historicalName": "PikachuPals",
+    "file": "avatar-140.png",
+    "sha256": "0668b3fe220698524e67c65beacce90d8a8a37c447f614d1bd750a40df217c94",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/af1c824a8ff549129470b32c07ffd1f8/96.png",
+      "fetchedAt": "2026-10-08T22:50:18.566Z",
+      "minecraftName": "PikachuPals",
+      "uuid": "af1c824a8ff549129470b32c07ffd1f8",
+      "identityEvidence": "Archived player bukkit.lastKnownName=PikachuPals; Worlds/TheStorm_creative_snapshot-2016-01-10.zip:home/files/servers/creative/world/playerdata/af1c824a-8ff5-4912-9470-b32c07ffd1f8.dat"
+    }
+  },
+  {
+    "originalId": 146,
+    "expectedUserId": 22,
+    "historicalName": "WackyNWise",
+    "file": "avatar-146.png",
+    "sha256": "134561383b75f92d288df84453ad7cfcd2ec68d614123717a7714c32a52ff271",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/acc83cec07a64fe7a5ecc8c840ec931a/96.png",
+      "fetchedAt": "2026-10-08T22:50:19.602Z",
+      "minecraftName": "WackyNWise",
+      "uuid": "acc83cec07a64fe7a5ecc8c840ec931a",
+      "identityEvidence": "Archived player bukkit.lastKnownName=WackyNWise; Worlds/TheStorm_creative_snapshot-2016-01-10.zip:home/files/servers/creative/world/playerdata/acc83cec-07a6-4fe7-a5ec-c8c840ec931a.dat"
+    }
+  },
+  {
+    "originalId": 151,
+    "expectedUserId": 24,
+    "historicalName": "MrBlueFTW",
+    "file": "avatar-151.png",
+    "sha256": "928d38cc27ed586890be8b6488b22c28c17be8a2d70aa1161a0d075de83bd922",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/dfa161510ac1454fb6743573f5242210/96.png",
+      "fetchedAt": "2026-10-08T22:50:20.639Z",
+      "minecraftName": "MrBiohazardous",
+      "uuid": "dfa161510ac1454fb6743573f5242210",
+      "identityEvidence": "Archived player bukkit.lastKnownName=MrBlueFTW; Worlds/TheStorm_creative_snapshot-2016-01-10.zip:home/files/servers/creative/world/playerdata/dfa16151-0ac1-454f-b674-3573f5242210.dat"
+    }
+  },
+  {
+    "originalId": 154,
+    "expectedUserId": 25,
+    "historicalName": "The_Sea_Wolf",
+    "file": "avatar-154.png",
+    "sha256": "5ca2b73d4b77c9c44ec94a81a526f6d69765a58b562d7ad99e8e4c1bc5bd76c1",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/f0fe25dc66504b4cb2ec950f581d0882/96.png",
+      "fetchedAt": "2026-10-08T22:50:20.899Z",
+      "minecraftName": "The_Sea_Wolf",
+      "uuid": "f0fe25dc66504b4cb2ec950f581d0882",
+      "identityEvidence": "Archived player bukkit.lastKnownName=The_Sea_Wolf; Worlds/TheStorm_survival-main_map1_1.14.4-upgrade_snapshot-2023-06-18.zip:world/playerdata/f0fe25dc-6650-4b4c-b2ec-950f581d0882.dat"
+    }
+  },
+  {
+    "originalId": 159,
+    "expectedUserId": 26,
+    "historicalName": "bowman3058",
+    "file": "avatar-159.png",
+    "sha256": "13424a1680415a22b50329ada0c0f45203701f3238ecb460cf1fffc9f3e40fd7",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/6ebb702842e1439b88c9a7cf80587570/96.png",
+      "fetchedAt": "2026-10-08T22:50:21.719Z",
+      "minecraftName": "Bowman3058",
+      "uuid": "6ebb702842e1439b88c9a7cf80587570",
+      "identityEvidence": "Archived player bukkit.lastKnownName=bowman3058; Worlds/TheStorm_creative_snapshot-2016-01-10.zip:home/files/servers/creative/world/playerdata/6ebb7028-42e1-439b-88c9-a7cf80587570.dat"
+    }
+  },
+  {
+    "originalId": 196,
+    "expectedUserId": 29,
+    "historicalName": "yolksoup",
+    "file": "avatar-196.png",
+    "sha256": "2d145a5a269ccbbc02408a9773cd56b25fb0620b990852772537efe48c2b71e5",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/3a889551a32e4df3b544758a1cd35514/96.png",
+      "fetchedAt": "2026-10-08T22:50:22.139Z",
+      "minecraftName": "yolksoup",
+      "uuid": "3a889551a32e4df3b544758a1cd35514",
+      "identityEvidence": "Archived player bukkit.lastKnownName=yolksoup; Worlds/TheStorm_survival-main_map1_1.14.4-upgrade_snapshot-2023-06-18.zip:world/playerdata/3a889551-a32e-4df3-b544-758a1cd35514.dat"
+    }
+  },
+  {
+    "originalId": 200,
+    "expectedUserId": 32,
+    "historicalName": "Arrowgirl97",
+    "file": "avatar-200.png",
+    "sha256": "d560139bab1f8c95714b4aad3cee896d0abef111ec04cf2cb750abff7f55a33f",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/c18bd66b3a294f13ad6193f21a098266/96.png",
+      "fetchedAt": "2026-10-08T22:50:23.215Z",
+      "minecraftName": "WorraKorra",
+      "uuid": "c18bd66b3a294f13ad6193f21a098266",
+      "identityEvidence": "Archived player bukkit.lastKnownName=ArrowGirl97; Worlds/TheStorm_creative_snapshot-2016-01-10.zip:home/files/servers/creative/world/playerdata/c18bd66b-3a29-4f13-ad61-93f21a098266.dat"
+    }
+  },
+  {
+    "originalId": 208,
+    "expectedUserId": 34,
+    "historicalName": "X_D",
+    "file": "avatar-208.png",
+    "sha256": "c19452984eb809e5615363381036db95addaf3ad8e857b2f32fb4f2d5405e528",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/1f89dffaef4e4e899720cffd9c161542/96.png",
+      "fetchedAt": "2026-10-08T22:50:23.438Z",
+      "minecraftName": "X_D",
+      "uuid": "1f89dffaef4e4e899720cffd9c161542",
+      "identityEvidence": "Archived player bukkit.lastKnownName=X_D; Worlds/TheStorm_creative_snapshot-2016-01-10.zip:home/files/servers/creative/world/playerdata/1f89dffa-ef4e-4e89-9720-cffd9c161542.dat"
+    }
+  },
+  {
+    "originalId": 233,
+    "expectedUserId": 39,
+    "historicalName": "minershm",
+    "file": "avatar-233.png",
+    "sha256": "f20dfa2ab31017a87e9974197b7bf7f3ac519bbcdf98e8f3a6947a6846acf032",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/cd8948ae29b349d29461b16154d3cb89/96.png",
+      "fetchedAt": "2026-10-08T22:50:24.727Z",
+      "minecraftName": "minershm",
+      "uuid": "cd8948ae29b349d29461b16154d3cb89",
+      "identityEvidence": "Archived player bukkit.lastKnownName=minershm; Worlds/TheStorm_survival-main_map1_1.14.4-upgrade_snapshot-2023-06-18.zip:world/playerdata/cd8948ae-29b3-49d2-9461-b16154d3cb89.dat"
+    }
+  },
+  {
+    "originalId": 249,
+    "expectedUserId": 40,
+    "historicalName": "cyberzone620",
+    "file": "avatar-249.png",
+    "sha256": "78413e21646341077fdd8c5e61fc54e2d2a5723548381bc92bfa474d5b4d0492",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/d5b6c9b8a5cb41a382d685fc70b670ac/96.png",
+      "fetchedAt": "2026-10-08T22:50:25.318Z",
+      "minecraftName": "Cyfurion",
+      "uuid": "d5b6c9b8a5cb41a382d685fc70b670ac",
+      "identityEvidence": "Archived player bukkit.lastKnownName=cyberzone620; Worlds/TheStorm_survival-main_map1_1.14.4-upgrade_snapshot-2023-06-18.zip:world/playerdata/d5b6c9b8-a5cb-41a3-82d6-85fc70b670ac.dat"
+    }
+  },
+  {
+    "originalId": 259,
+    "expectedUserId": 41,
+    "historicalName": "Minecraftspace12",
+    "file": "avatar-259.png",
+    "sha256": "6ba9138e18de2959ebf0d99218f9bc241b64bce42bf062c32e0ef3066e4ecfa8",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/718a3fe1e41b40058c70c21974a693d1/96.png",
+      "fetchedAt": "2026-10-08T22:50:26.031Z",
+      "minecraftName": "buhguhsuh",
+      "uuid": "718a3fe1e41b40058c70c21974a693d1",
+      "identityEvidence": "Archived player bukkit.lastKnownName=minecraftspace12; Worlds/TheStorm_creative_snapshot-2016-01-10.zip:home/files/servers/creative/world/playerdata/718a3fe1-e41b-4005-8c70-c21974a693d1.dat"
+    }
+  },
+  {
+    "originalId": 274,
+    "expectedUserId": 42,
+    "historicalName": "PBrowne",
+    "file": "avatar-274.png",
+    "sha256": "bd5ecffe91e119e98305e42d34370b3cb16fde7a3231c203d696a8a09ca90724",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/5c3e630c19ca4354931860f8b1fd566a/96.png",
+      "fetchedAt": "2026-10-08T22:50:26.663Z",
+      "minecraftName": "PBrowne",
+      "uuid": "5c3e630c19ca4354931860f8b1fd566a",
+      "identityEvidence": "Archived player bukkit.lastKnownName=PBrowne; Worlds/TheStorm_creative_snapshot-2016-01-10.zip:home/files/servers/creative/world/playerdata/5c3e630c-19ca-4354-9318-60f8b1fd566a.dat"
+    }
+  },
+  {
+    "originalId": 353,
+    "expectedUserId": 43,
+    "historicalName": "EternalRegret",
+    "file": "avatar-353.png",
+    "sha256": "70f18ee9aef6152160f3255a3bab97b2235f028d8cbeec9e41d14f158116a51f",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/4ef5998cd6b347799da59065d3b1a365/96.png",
+      "fetchedAt": "2026-10-08T22:50:27.379Z",
+      "minecraftName": "Nlis",
+      "uuid": "4ef5998cd6b347799da59065d3b1a365",
+      "identityEvidence": "Archived player bukkit.lastKnownName=EternalRegret; Worlds/TheStorm_survival-main_map1_1.14.4-upgrade_snapshot-2023-06-18.zip:world/playerdata/4ef5998c-d6b3-4779-9da5-9065d3b1a365.dat"
+    }
+  },
+  {
+    "originalId": 367,
+    "expectedUserId": 45,
+    "historicalName": "odlak_Oddball",
+    "file": "avatar-367.png",
+    "sha256": "b2c4c6d2ce3fb2ebe31b5764b4a2acacc71e76783463ee45262d064d3d8067d8",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/f83253883c14499ca7f3da80a458b25e/96.png",
+      "fetchedAt": "2026-10-08T22:50:27.999Z",
+      "minecraftName": "PastaKiddo",
+      "uuid": "f83253883c14499ca7f3da80a458b25e",
+      "identityEvidence": "Archived player bukkit.lastKnownName=odlak_Oddball; Worlds/TheStorm_survival-main_map1_1.14.4-upgrade_snapshot-2023-06-18.zip:world/playerdata/f8325388-3c14-499c-a7f3-da80a458b25e.dat"
+    }
+  },
+  {
+    "originalId": 372,
+    "expectedUserId": 46,
+    "historicalName": "EdeTheWolf",
+    "file": "avatar-372.png",
+    "sha256": "4684a70aadf2c2389a634dd7a28c573f6621d442ee40bb41c00b463d1c437d4a",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/39ba511d0ccf4affa740c179099c3214/96.png",
+      "fetchedAt": "2026-10-08T22:50:29.223Z",
+      "minecraftName": "EdeTheWolf",
+      "uuid": "39ba511d0ccf4affa740c179099c3214",
+      "identityEvidence": "Archived player bukkit.lastKnownName=EdeTheWolf; Worlds/TheStorm_creative_snapshot-2016-01-10.zip:home/files/servers/creative/world/playerdata/39ba511d-0ccf-4aff-a740-c179099c3214.dat"
+    }
+  },
+  {
+    "originalId": 399,
+    "expectedUserId": 48,
+    "historicalName": "DragonWIthAIDS",
+    "file": "avatar-399.png",
+    "sha256": "48ee604e903e3c3f2627d820e6b03c7bdd77331f07f461bc1e811987e86ba0e2",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/98e13b6148054d73b6a58bd080dc98b4/96.png",
+      "fetchedAt": "2026-10-08T22:50:29.329Z",
+      "minecraftName": "DragonWithAIDS",
+      "uuid": "98e13b6148054d73b6a58bd080dc98b4",
+      "identityEvidence": "Archived player bukkit.lastKnownName=DragonWIthAIDS; Worlds/TheStorm_creative_snapshot-2016-01-10.zip:home/files/servers/creative/world/playerdata/98e13b61-4805-4d73-b6a5-8bd080dc98b4.dat"
+    }
+  },
+  {
+    "originalId": 407,
+    "expectedUserId": 50,
+    "historicalName": "Zah262",
+    "file": "avatar-407.png",
+    "sha256": "7f85e1c816266891cfe170e7b42f59cb604a48cc71c121cb8f2ce7351f03b2e1",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/9cee5afee1e34c7a83b1eaf5fdcc96a0/96.png",
+      "fetchedAt": "2026-10-08T22:50:30.484Z",
+      "minecraftName": "Zah262",
+      "uuid": "9cee5afee1e34c7a83b1eaf5fdcc96a0",
+      "identityEvidence": "Archived player bukkit.lastKnownName=Zah262; Worlds/TheStorm_creative_snapshot-2016-01-10.zip:home/files/servers/creative/world/playerdata/9cee5afe-e1e3-4c7a-83b1-eaf5fdcc96a0.dat"
+    }
+  },
+  {
+    "originalId": 434,
+    "expectedUserId": 51,
+    "historicalName": "sneaky_goose",
+    "file": "avatar-434.png",
+    "sha256": "acea42a632f55d57faaa511910f682117bb7086aa11503b181f4dd828ef6de29",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/4c1aebeeff924cdb91f24175316c3d60/96.png",
+      "fetchedAt": "2026-10-08T22:50:30.701Z",
+      "minecraftName": "sneaky_goose",
+      "uuid": "4c1aebeeff924cdb91f24175316c3d60",
+      "identityEvidence": "Archived player bukkit.lastKnownName=sneaky_goose; Worlds/TheStorm_survival-main_map1_1.14.4-upgrade_snapshot-2023-06-18.zip:world/playerdata/4c1aebee-ff92-4cdb-91f2-4175316c3d60.dat"
+    }
+  },
+  {
+    "originalId": 449,
+    "expectedUserId": 52,
+    "historicalName": "shadowstarcat",
+    "file": "avatar-449.png",
+    "sha256": "fda064aa991bd38437db6fe511d027b56fdb7bdc6cf72264d42f187035bcf3bb",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/708f65f246cd4d92845918adfcca5de5/96.png",
+      "fetchedAt": "2026-10-08T22:50:31.750Z",
+      "minecraftName": "shadowstarcat",
+      "uuid": "708f65f246cd4d92845918adfcca5de5",
+      "identityEvidence": "Archived player bukkit.lastKnownName=shadowstarcat; Worlds/TheStorm_creative_snapshot-2016-01-10.zip:home/files/servers/creative/world/playerdata/708f65f2-46cd-4d92-8459-18adfcca5de5.dat"
+    }
+  },
+  {
+    "originalId": 453,
+    "expectedUserId": 53,
+    "historicalName": "TallEspanol",
+    "file": "avatar-453.png",
+    "sha256": "3112fecfc4ef1ad3cb76f44623c7ca050815dd8a512db0c46fd9c15531ffc960",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/3637705eaa394d0687eabac590c181d1/96.png",
+      "fetchedAt": "2026-10-08T22:50:32.004Z",
+      "minecraftName": "Unknown_Rares",
+      "uuid": "3637705eaa394d0687eabac590c181d1",
+      "identityEvidence": "Archived player bukkit.lastKnownName=TallEspanol; Worlds/TheStorm_survival-main_map1_1.14.4-upgrade_snapshot-2023-06-18.zip:world/playerdata/3637705e-aa39-4d06-87ea-bac590c181d1.dat"
+    }
+  },
+  {
+    "originalId": 476,
+    "expectedUserId": 55,
+    "historicalName": "AgentAnteater",
+    "file": "avatar-476.png",
+    "sha256": "7c943e9beb39876095b0509e05b9a99c69f490a40af07f3623a2f9e25164a150",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/6ac03960c3fb4799ac71c560e98cfe86/96.png",
+      "fetchedAt": "2026-10-08T22:50:33.248Z",
+      "minecraftName": "AgentAnteater",
+      "uuid": "6ac03960c3fb4799ac71c560e98cfe86",
+      "identityEvidence": "Archived player bukkit.lastKnownName=AgentAnteater; Worlds/TheStorm_survival-main_map1_1.14.4-upgrade_snapshot-2023-06-18.zip:world/playerdata/6ac03960-c3fb-4799-ac71-c560e98cfe86.dat"
+    }
+  },
+  {
+    "originalId": 523,
+    "expectedUserId": 56,
+    "historicalName": "Four_Dee",
+    "file": "avatar-523.png",
+    "sha256": "0f8fd3b34bc80f5ce3d5a653d73c155b2e41806e8e7fc2fb97cd52883a3e21f7",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/83daccd0f59a4d76a85def11de78408a/96.png",
+      "fetchedAt": "2026-10-08T22:50:33.722Z",
+      "minecraftName": "Four_Dee",
+      "uuid": "83daccd0f59a4d76a85def11de78408a",
+      "identityEvidence": "Archived player bukkit.lastKnownName=Four_Dee; Worlds/TheStorm_survival-main_map1_1.14.4-upgrade_snapshot-2023-06-18.zip:world/playerdata/83daccd0-f59a-4d76-a85d-ef11de78408a.dat"
+    }
+  },
+  {
+    "originalId": 625,
+    "expectedUserId": 58,
+    "historicalName": "EngRos",
+    "file": "avatar-625.png",
+    "sha256": "dd12ef3d1767d32bcf3b4395ae3cb75ae112f510b34a691c763693a0c43667a7",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/e6a3a10604b54c3691a69b5e8ec8359e/96.png",
+      "fetchedAt": "2026-10-08T22:50:34.486Z",
+      "minecraftName": "EngRos",
+      "uuid": "e6a3a10604b54c3691a69b5e8ec8359e",
+      "identityEvidence": "Archived player bukkit.lastKnownName=EngRos; Worlds/TheStorm_creative_snapshot-2016-01-10.zip:home/files/servers/creative/world/playerdata/e6a3a106-04b5-4c36-91a6-9b5e8ec8359e.dat"
+    }
+  },
+  {
+    "originalId": 635,
+    "expectedUserId": 59,
+    "historicalName": "Xynbot",
+    "file": "avatar-635.png",
+    "sha256": "9e69fceca575b2b8a3197fe523961e0baf68315c958f826493258c949d70a0e1",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/78ba748c2ac94568954063354a87dfbc/96.png",
+      "fetchedAt": "2026-10-08T22:50:34.970Z",
+      "minecraftName": "yTapiocaDosGrau_",
+      "uuid": "78ba748c2ac94568954063354a87dfbc",
+      "identityEvidence": "Archived player bukkit.lastKnownName=Xynbot; Worlds/TheStorm_survival-main_map2_snapshot-2016-01-10.zip:home/files/servers/survival/world/playerdata/78ba748c-2ac9-4568-9540-63354a87dfbc.dat"
+    }
+  },
+  {
+    "originalId": 648,
+    "expectedUserId": 60,
+    "historicalName": "Weemich",
+    "file": "avatar-648.png",
+    "sha256": "c45c701dd3679a331b192193429ff71a08b7f4c80843ead4bcb97bd9520e5e1c",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/2a5308d915044043a4e660a57b0f7fc6/96.png",
+      "fetchedAt": "2026-10-08T22:50:35.563Z",
+      "minecraftName": "Weemich",
+      "uuid": "2a5308d915044043a4e660a57b0f7fc6",
+      "identityEvidence": "Archived player bukkit.lastKnownName=Weemich; Worlds/TheStorm_creative_snapshot-2016-01-10.zip:home/files/servers/creative/world/playerdata/2a5308d9-1504-4043-a4e6-60a57b0f7fc6.dat"
+    }
+  },
+  {
+    "originalId": 860,
+    "expectedUserId": 61,
+    "historicalName": "wrgauthier",
+    "file": "avatar-860.png",
+    "sha256": "ff1e91645f82dc9ba3d9237ee26d715d0000ec72283f5888a9c80631b1c1300a",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/ab8607d9c896442a8c4734d23b9456c3/96.png",
+      "fetchedAt": "2026-10-08T22:50:36.135Z",
+      "minecraftName": "lon3lyNEVER",
+      "uuid": "ab8607d9c896442a8c4734d23b9456c3",
+      "identityEvidence": "Archived player bukkit.lastKnownName=wrgauthier; Worlds/TheStorm_creative_snapshot-2016-01-10.zip:home/files/servers/creative/world/playerdata/ab8607d9-c896-442a-8c47-34d23b9456c3.dat"
+    }
+  },
+  {
+    "originalId": 870,
+    "expectedUserId": 62,
+    "historicalName": "uUBigGuyUu",
+    "file": "avatar-870.png",
+    "sha256": "da4fa9e0b7b3b4a159594d5bb50a3ed0d71a3ba9414b08484f591c9ef942c442",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/6b39cfcb9a8d4b8d9c0896cce0c05945/96.png",
+      "fetchedAt": "2026-10-08T22:50:36.811Z",
+      "minecraftName": "GenghisConnor",
+      "uuid": "6b39cfcb9a8d4b8d9c0896cce0c05945",
+      "identityEvidence": "Archived player bukkit.lastKnownName=uUBigGuyUu; Worlds/TheStorm_creative_snapshot-2016-01-10.zip:home/files/servers/creative/world/playerdata/6b39cfcb-9a8d-4b8d-9c08-96cce0c05945.dat"
+    }
+  },
+  {
+    "originalId": 900,
+    "expectedUserId": 63,
+    "historicalName": "dynamicswish",
+    "file": "avatar-900.png",
+    "sha256": "3591ce47f47c727341683659f3b76de0d27be2c51d99e82f2b6cbf099067139e",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/c4cdac0fee72498c958556a20c019caf/96.png",
+      "fetchedAt": "2026-10-08T22:50:37.390Z",
+      "minecraftName": "AGGJoe",
+      "uuid": "c4cdac0fee72498c958556a20c019caf",
+      "identityEvidence": "Archived player bukkit.lastKnownName=dynamicswish; Worlds/TheStorm_creative_snapshot-2016-01-10.zip:home/files/servers/creative/world/playerdata/c4cdac0f-ee72-498c-9585-56a20c019caf.dat"
+    }
+  },
+  {
+    "originalId": 903,
+    "expectedUserId": 64,
+    "historicalName": "RaviaX",
+    "file": "avatar-903.png",
+    "sha256": "9510e4537fad2f2a0ef59d2ae7e2386f71cee807f2e4eef33c2e3131a1c3c55b",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/3c25f5a0652144079008dd9af7e90ec4/96.png",
+      "fetchedAt": "2026-10-08T22:50:38.076Z",
+      "minecraftName": "RaviaX",
+      "uuid": "3c25f5a0652144079008dd9af7e90ec4",
+      "identityEvidence": "Archived player bukkit.lastKnownName=RaviaX; Worlds/TheStorm_creative_snapshot-2016-01-10.zip:home/files/servers/creative/world/playerdata/3c25f5a0-6521-4407-9008-dd9af7e90ec4.dat"
+    }
+  },
+  {
+    "originalId": 938,
+    "expectedUserId": 65,
+    "historicalName": "IndigoFusionbolt",
+    "file": "avatar-938.png",
+    "sha256": "26d463a82bf107a04c5406b60e7ab725d2f7dae5840e26fca946a1e4ae197714",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/20fcbd833f4646ed95cf6b7a394c7da9/96.png",
+      "fetchedAt": "2026-10-08T22:50:38.627Z",
+      "minecraftName": "molluskman",
+      "uuid": "20fcbd833f4646ed95cf6b7a394c7da9",
+      "identityEvidence": "Archived player bukkit.lastKnownName=IndigoFusionBolt; Worlds/TheStorm_survival-main_map1_1.14.4-upgrade_snapshot-2023-06-18.zip:world/playerdata/20fcbd83-3f46-46ed-95cf-6b7a394c7da9.dat"
+    }
+  },
+  {
+    "originalId": 1026,
+    "expectedUserId": 66,
+    "historicalName": "Excellex",
+    "file": "avatar-1026.png",
+    "sha256": "3c58820ac9980add6312d788728162b432afde7f821de0d89b8c02c2666c6b3e",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/0539e520e9204366b21a84dc2810359a/96.png",
+      "fetchedAt": "2026-10-08T22:50:39.284Z",
+      "minecraftName": "VengeOG",
+      "uuid": "0539e520e9204366b21a84dc2810359a",
+      "identityEvidence": "Archived player bukkit.lastKnownName=Excellex; Worlds/TheStorm_creative_snapshot-2016-01-10.zip:home/files/servers/creative/world/playerdata/0539e520-e920-4366-b21a-84dc2810359a.dat"
+    }
+  },
+  {
+    "originalId": 1030,
+    "expectedUserId": 67,
+    "historicalName": "grocketman",
+    "file": "avatar-1030.png",
+    "sha256": "f87af6cf6173cdacd6a8b6032a58d03062176d31723aceac19e451f1d6da219e",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/8ccb8f414c154d399f73b5d9585d0950/96.png",
+      "fetchedAt": "2026-10-08T22:50:39.854Z",
+      "minecraftName": "Grocky",
+      "uuid": "8ccb8f414c154d399f73b5d9585d0950",
+      "identityEvidence": "Archived player bukkit.lastKnownName=grocketman; Worlds/TheStorm_creative_snapshot-2016-01-10.zip:home/files/servers/creative/world/playerdata/8ccb8f41-4c15-4d39-9f73-b5d9585d0950.dat"
+    }
+  },
+  {
+    "originalId": 1041,
+    "expectedUserId": 68,
+    "historicalName": "ajw912",
+    "file": "avatar-1041.png",
+    "sha256": "0367135151313602221aa8bec6f38c6f20953ab282ea38ad20c778035167c4a6",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/463788648c3e43cba0261e434326d12e/96.png",
+      "fetchedAt": "2026-10-08T22:50:40.459Z",
+      "minecraftName": "orangutanw",
+      "uuid": "463788648c3e43cba0261e434326d12e",
+      "identityEvidence": "Archived player bukkit.lastKnownName=ajw912; Worlds/TheStorm_creative_snapshot-2016-01-10.zip:home/files/servers/creative/world/playerdata/46378864-8c3e-43cb-a026-1e434326d12e.dat"
+    }
+  },
+  {
+    "originalId": 1062,
+    "expectedUserId": 69,
+    "historicalName": "DemonicChild666",
+    "file": "avatar-1062.png",
+    "sha256": "1d0b6b089deefe0547cc3a4217ef31752ae8e066dd6615b734895b3a40c27410",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/1f8c8ece8f60475289145027e2403df7/96.png",
+      "fetchedAt": "2026-10-08T22:50:40.916Z",
+      "minecraftName": "6Demon6Illvilja6",
+      "uuid": "1f8c8ece8f60475289145027e2403df7",
+      "identityEvidence": "Archived player bukkit.lastKnownName=DemonicChild666; Worlds/TheStorm_creative_snapshot-2016-01-10.zip:home/files/servers/creative/world/playerdata/1f8c8ece-8f60-4752-8914-5027e2403df7.dat"
+    }
+  },
+  {
+    "originalId": 1085,
+    "expectedUserId": 70,
+    "historicalName": "tgm889",
+    "file": "avatar-1085.png",
+    "sha256": "5db463d306d124b99b3c3c9085e260a4a609cadd4d08887ef19a7bef2245549e",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/9f8fd0f405ae4e21abccceb263ce6cf0/96.png",
+      "fetchedAt": "2026-10-08T22:50:41.677Z",
+      "minecraftName": "Dunbars123",
+      "uuid": "9f8fd0f405ae4e21abccceb263ce6cf0",
+      "identityEvidence": "Archived player bukkit.lastKnownName=tgm889; Worlds/TheStorm_survival-main_map2_snapshot-2016-01-10.zip:home/files/servers/survival/world/playerdata/9f8fd0f4-05ae-4e21-abcc-ceb263ce6cf0.dat"
+    }
+  },
+  {
+    "originalId": 1118,
+    "expectedUserId": 72,
+    "historicalName": "custompcmaxx",
+    "file": "avatar-1118.png",
+    "sha256": "fe43683a28b7ce8052535f021e3763b56e4b35f4487416c4b1958a4400d964c2",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/5d5e2b4346d44c0ca1aa58c464931838/96.png",
+      "fetchedAt": "2026-10-08T22:50:42.174Z",
+      "minecraftName": "ThingDad",
+      "uuid": "5d5e2b4346d44c0ca1aa58c464931838",
+      "identityEvidence": "Archived player bukkit.lastKnownName=custompcmaxx; Worlds/TheStorm_survival-main_map2_snapshot-2016-01-10.zip:home/files/servers/survival/world/playerdata/5d5e2b43-46d4-4c0c-a1aa-58c464931838.dat"
+    }
+  },
+  {
+    "originalId": 1121,
+    "expectedUserId": 73,
+    "historicalName": "Setery",
+    "file": "avatar-1121.png",
+    "sha256": "699ae81192aa6710c17f84f648175555041ea82e5ce015fbad062eeb7e36e51e",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/4cbf0d593b40473d83180c97aba5e548/96.png",
+      "fetchedAt": "2026-10-08T22:50:42.863Z",
+      "minecraftName": "Setery",
+      "uuid": "4cbf0d593b40473d83180c97aba5e548",
+      "identityEvidence": "Archived player bukkit.lastKnownName=Setery; Worlds/TheStorm_survival-main_map1_1.14.4-upgrade_snapshot-2023-06-18.zip:world/playerdata/4cbf0d59-3b40-473d-8318-0c97aba5e548.dat"
+    }
+  },
+  {
+    "originalId": 1165,
+    "expectedUserId": 74,
+    "historicalName": "MystXtreme",
+    "file": "avatar-1165.png",
+    "sha256": "eeb804e28e32573cac3f2e00b76752ed07c02e9d3bdbc3fce36a848cb3ff7d2d",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/ea084274121b4b54ac67cce58217dd92/96.png",
+      "fetchedAt": "2026-10-08T22:50:43.473Z",
+      "minecraftName": "MystXtreme",
+      "uuid": "ea084274121b4b54ac67cce58217dd92",
+      "identityEvidence": "Archived forum/Minecraft name MystXtreme; current Mojang name lookup"
+    }
   }
 ]

@@ -19,8 +19,21 @@ const manifest = z
       historicalName: z.string().min(1),
       file: z.string().regex(/^avatar-\d+\.png$/),
       sha256: z.string().regex(/^[a-f0-9]{64}$/),
-      source: z.string().min(1),
-      capturedAt: z.string().regex(/^\d{14}$/),
+      provenance: z.discriminatedUnion("kind", [
+        z.object({
+          kind: z.literal("archived"),
+          originalHostPath: z.string().min(1),
+          capturedAt: z.string().regex(/^\d{14}$/),
+        }),
+        z.object({
+          kind: z.literal("current-minecraft"),
+          sourceUrl: z.url(),
+          fetchedAt: z.iso.datetime(),
+          minecraftName: z.string().regex(/^\w{1,16}$/),
+          uuid: z.string().regex(/^[a-f0-9]{32}$/),
+          identityEvidence: z.string().min(1),
+        }),
+      ]),
     }),
   )
   .parse(await Bun.file(path.join(root, "config/avatar-recovery.json")).json());
