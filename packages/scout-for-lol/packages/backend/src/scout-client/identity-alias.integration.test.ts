@@ -8,6 +8,7 @@ import {
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { RiotHttpError } from "#src/league/api/client/errors.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
+import { createTestScoutClientDevice } from "#src/testing/scout-client-device.ts";
 import type { AuthenticatedScoutClient } from "./authentication.ts";
 
 const { prisma } = createTestDatabase("scout-client-identity-alias");
@@ -223,30 +224,13 @@ beforeEach(async () => {
       },
     },
   });
-  const created = await prisma.scoutClientDevice.create({
-    data: {
-      owner: { create: { discordId: OWNER_ID, discordUsername: "owner" } },
-      pairing: {
-        create: {
-          secretDigest: crypto.randomUUID(),
-          deviceName: "desktop",
-          platform: "windows",
-          architecture: "x86_64",
-          appVersion: "0.1.0",
-          protocolVersion: 1,
-          expiresAt: new Date(now.getTime() + 60_000),
-        },
-      },
-      tokenDigest: crypto.randomUUID(),
-      deviceName: "desktop",
-      platform: "windows",
-      architecture: "x86_64",
+  device = {
+    deviceId: await createTestScoutClientDevice(prisma, OWNER_ID, {
       appVersion: "0.1.0",
-      protocolVersion: 1,
-      versions: { create: { appVersion: "0.1.0" } },
-    },
-  });
-  device = { deviceId: created.id, ownerId: OWNER_ID, appVersion: "0.1.0" };
+    }),
+    ownerId: OWNER_ID,
+    appVersion: "0.1.0",
+  };
 });
 
 afterAll(async () => {

@@ -13,6 +13,7 @@ import {
 } from "@scout-for-lol/temporal/match-receipts";
 import type * as DatabaseModule from "#src/database/index.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
+import { createTestScoutClientDevice } from "#src/testing/scout-client-device.ts";
 import {
   testAccountId,
   testGuildId,
@@ -263,37 +264,11 @@ describe("advanceMatchCursor", () => {
 
   /** What the client dispatcher leaves behind when it selects its payload. */
   async function selectClientPayload(matchId: RiotMatchId): Promise<void> {
-    const device = await prisma.scoutClientDevice.create({
-      data: {
-        owner: {
-          connectOrCreate: {
-            where: { discordId: OWNER },
-            create: { discordId: OWNER, discordUsername: "owner" },
-          },
-        },
-        pairing: {
-          create: {
-            secretDigest: crypto.randomUUID(),
-            deviceName: "desktop",
-            platform: "windows",
-            architecture: "x86_64",
-            appVersion: "0.1.0",
-            protocolVersion: 1,
-            expiresAt: new Date(Date.now() + 60_000),
-          },
-        },
-        tokenDigest: crypto.randomUUID(),
-        deviceName: "desktop",
-        platform: "windows",
-        architecture: "x86_64",
-        appVersion: "0.1.0",
-        protocolVersion: 1,
-      },
-    });
+    const deviceId = await createTestScoutClientDevice(prisma, OWNER);
     const observation = await prisma.scoutClientObservation.create({
       data: {
         observationId: crypto.randomUUID(),
-        deviceId: device.id,
+        deviceId,
         sequence: 1n,
         capturedAt: new Date(RECORDED_AT),
         protocolVersion: 1,
