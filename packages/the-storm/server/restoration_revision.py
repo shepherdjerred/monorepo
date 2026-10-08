@@ -39,7 +39,17 @@ def revise(data: Path, payload: Path, plan: JsonObject, baked_jar: Path) -> Json
         or current.get("privateStartup") != "PENDING"
     ):
         raise ValueError("Revision requires the same unstarted installation and verified backup")
-    if not revision.exists():
+    revision_journal = revision / "journal.json"
+    if not revision_journal.exists():
+        if revision.exists():
+            # No copies or renames can run before the first durable journal. An
+            # interrupted bootstrap may leave an empty directory or its unpublished
+            # atomic-write file; reconstruct only after verifying the entire old volume.
+            if not revision.is_dir() or any(
+                child.name != "journal.json.writing" or not child.is_file() for child in revision.iterdir()
+            ):
+                raise ValueError("Uninitialized revision workspace contains unexpected entries")
+            storage.files(revision)  # Refuse linked or non-regular unpublished journal bytes.
         if (
             current.get("phase") != "INSTALLED"
             or current.get("candidateImage") != prior.get("candidateImage")
@@ -51,7 +61,7 @@ def revise(data: Path, payload: Path, plan: JsonObject, baked_jar: Path) -> Json
         required = sum((payload / name).stat().st_size for name in expected)
         if shutil.disk_usage(data).free < required * 2:
             raise ValueError("Insufficient space for independent revision staging")
-        revision.mkdir(mode=0o700)
+        revision.mkdir(mode=0o700, exist_ok=True)
         state = JsonObject(
             {
                 "phase": "STAGING",
