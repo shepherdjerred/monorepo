@@ -342,6 +342,22 @@
       "skipArtifactsUpdate": true
     },
     {
+      "description": "The Storm client's reproducible Minecraft archive string is a local JarProcessor cache ID, not a Maven dependency. The Gradle extractor mistakes its colon-separated ID for coordinates.",
+      "matchManagers": ["gradle"],
+      "matchDatasources": ["maven"],
+      "matchFileNames": ["packages/the-storm/client/build.gradle.kts"],
+      "matchPackageNames": ["storm:reproducible-minecraft-archive"],
+      "enabled": false
+    },
+    {
+      "description": "Storm Citizens is intentionally pinned to an immutable Jenkins build through an Ivy repository, not a Maven release. Upgrade its server, harness and Gradle pins with matching checksums and Paper acceptance together, following packages/the-storm/server/README.md.",
+      "matchManagers": ["gradle"],
+      "matchDatasources": ["maven"],
+      "matchFileNames": ["packages/the-storm/**"],
+      "matchPackageNames": ["net.citizensnpcs:citizens-main"],
+      "enabled": false
+    },
+    {
       "description": "The repository-owned AsusWRT provider is built and installed from packages/terraform-provider-asuswrt; it is intentionally not published to a provider registry.",
       "matchDatasources": ["terraform-provider"],
       "matchPackageNames": ["shepherdjerred/asuswrt"],
