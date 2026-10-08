@@ -15,7 +15,7 @@ const fixture = {
   trustedConnectorCidr: "10.244.0.0/16",
 };
 
-describe("forum isolation and release resources", () => {
+describe("forum upgrade snapshot contract", () => {
   it("gives upgrade jobs scoped snapshot credentials before account migrations", () => {
     resetProbeRegistry();
     const rendered = Testing.synth(
@@ -25,6 +25,7 @@ describe("forum isolation and release resources", () => {
         preUpgradeBackup: {
           bundleSha256: "d".repeat(64),
           xenforoVersion: "2.3.8",
+          runtimeImage: `ghcr.io/shepherdjerred/storm-forum@sha256:${"d".repeat(64)}`,
         },
       }),
     );
@@ -40,6 +41,15 @@ describe("forum isolation and release resources", () => {
     expect(json).toContain(
       '"name":"BACKUP_SOURCE_BUNDLE_SHA256","value":"' + "d".repeat(64) + '"',
     );
+    expect(json).toContain(
+      JSON.stringify({
+        name: "BACKUP_SOURCE_RUNTIME_IMAGE",
+        value: fixture.image.replace("a".repeat(64), "d".repeat(64)),
+      }),
+    );
+    expect(json).toContain(
+      '"name":"RUNTIME_IMAGE","value":"' + fixture.image + '"',
+    );
   });
   it("preserves the completed bootstrap job until a new release explicitly requests a pre-upgrade backup", () => {
     resetProbeRegistry();
@@ -47,7 +57,13 @@ describe("forum isolation and release resources", () => {
     expect(
       JSON.stringify(rendered.find((resource) => resource.kind === "Job")),
     ).not.toContain("BACKUP_");
+    expect(
+      JSON.stringify(rendered.find((resource) => resource.kind === "Job")),
+    ).not.toContain('"name":"RUNTIME_IMAGE"');
   });
+});
+
+describe("forum isolation and release resources", () => {
   it.each(["beta", "prod"] as const)(
     "renders distinct public and admin health probes for %s",
     (stage) => {

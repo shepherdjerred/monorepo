@@ -8,8 +8,8 @@ import {
   beginStormForumBackup,
   endStormForumBackup,
   snapshotForum,
-  SnapshotSourceSchema,
 } from "./backup.ts";
+import { SnapshotSourceSchema } from "./storage.ts";
 
 const BundleEnvironmentSchema = z.object({
   BUNDLE_ENDPOINT: z.url(),
@@ -143,6 +143,7 @@ export async function releaseForum(stage: Stage): Promise<void> {
       const sourceBundle = SnapshotSourceSchema.parse({
         bundleSha256: Bun.env["BACKUP_SOURCE_BUNDLE_SHA256"],
         xenforoVersion: Bun.env["BACKUP_SOURCE_XENFORO_VERSION"],
+        runtimeImage: Bun.env["BACKUP_SOURCE_RUNTIME_IMAGE"],
       });
       const snapshot = await snapshotForum(
         owner,
@@ -169,6 +170,15 @@ export async function releaseForum(stage: Stage): Promise<void> {
     );
     await runPhp(["cmd.php", "storm:configure", "--stage", stage]);
     await runPhp(["cmd.php", "storm:styles"], "/app/forum", 5 * 60_000);
+    // ACP merges are resumable manual jobs. Finish them before the importer
+    // checks its ownership fence; an unfinished merge still blocks import.
+    await runPhp([
+      "cmd.php",
+      "xf:run-jobs",
+      "--manual-only",
+      "--max-execution-time",
+      "50",
+    ]);
     await runPhp(["cmd.php", "storm:seed"]);
     await runPhp(["cmd.php", "storm:history"], "/app/forum", 5 * 60_000);
     await runPhp(

@@ -299,6 +299,7 @@
         "scripts/*.ts",
         "test/backup-roundtrip.ts",
         "test/release-preflight.ts",
+        "test/release-installation.ts",
         "test/s3-fixture.ts",
         "test/smtp-fixture.ts"
       ],

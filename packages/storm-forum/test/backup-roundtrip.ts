@@ -6,7 +6,10 @@ import {
   endStormForumBackup,
   snapshotForum,
 } from "#src/backup.ts";
-import { SnapshotEnvironmentSchema } from "#src/storage.ts";
+import {
+  SnapshotEnvironmentSchema,
+  SnapshotSourceSchema,
+} from "#src/storage.ts";
 import { SnapshotSchema, validateSnapshot } from "#src/restore.ts";
 import { forumManifest } from "#src/config.ts";
 const storage = SnapshotEnvironmentSchema.parse(Bun.env);
@@ -21,6 +24,7 @@ const owner = "2bcd3a5e-992f-49f4-bb34-901ca3dd32b2";
 const previousBundle = {
   bundleSha256: "b".repeat(64),
   xenforoVersion: forumManifest.xenforoVersion,
+  runtimeImage: `ghcr.io/shepherdjerred/storm-forum@sha256:${"b".repeat(64)}`,
 };
 // Emulate the unsafe production settings that recovery must replace.
 await runPhp(["cmd.php", "storm:configure", "--stage", "prod"]);
@@ -91,7 +95,7 @@ try {
       cancellationSignal: new AbortController().signal,
       heartbeat,
     },
-    { bundleSha256: previousBundle.bundleSha256, xenforoVersion: "2.3.8" },
+    { ...previousBundle, xenforoVersion: "2.3.8" },
   );
   const manifest = SnapshotSchema.parse(
     await client.file(old.manifestKey).json(),
@@ -100,7 +104,33 @@ try {
   assert.equal(manifest.bundleSha256, previousBundle.bundleSha256);
   assert.throws(
     () =>
-      validateSnapshot(manifest, old.manifestKey, previousBundle.bundleSha256),
+      validateSnapshot(manifest, old.manifestKey, previousBundle, {
+        ...previousBundle,
+        xenforoVersion: "2.3.8",
+      }),
+    /installed release/,
+  );
+  const source = SnapshotSourceSchema.parse(
+    await client
+      .file(old.manifestKey.replace(/manifest\.json$/, "source-release.json"))
+      .json(),
+  );
+  assert.equal(source.runtimeImage, previousBundle.runtimeImage);
+  const matchingVersion = {
+    ...manifest,
+    xenforoVersion: forumManifest.xenforoVersion,
+  };
+  assert.throws(
+    () =>
+      validateSnapshot(
+        matchingVersion,
+        old.manifestKey,
+        {
+          bundleSha256: previousBundle.bundleSha256,
+          runtimeImage: storage.RUNTIME_IMAGE,
+        },
+        previousBundle,
+      ),
     /installed release/,
   );
 } finally {

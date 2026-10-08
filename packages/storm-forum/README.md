@@ -140,14 +140,19 @@ requests, waits for the maximum request lifetime, exports MariaDB, and archives
 manifest last commits the pair. The protected bucket participates in the existing
 SeaweedFS-to-R2 backup policy. Only a tested pair establishes restore confidence.
 
-For an upgrade, declare `preUpgradeBackup: { "bundleSha256": "<currently deployed bundle>", "xenforoVersion": "<currently deployed version>" }`
+For an upgrade, declare `preUpgradeBackup: { "bundleSha256": "<currently deployed bundle>", "xenforoVersion": "<currently deployed version>", "runtimeImage": "ghcr.io/shepherdjerred/storm-forum@sha256:<currently deployed digest>" }`
 alongside a new release ID. The release Job snapshots before migrations and records
-that previous bundle so recovery uses matching application files. Completed bootstrap
+that previous bundle, XenForo version, and runtime image so recovery uses matching
+application files and add-on code. The `source-release.json` record is uploaded before
+the manifest; the v1 manifest remains readable by the previous runtime during rollback.
+Completed bootstrap
 Jobs remain unchanged until the next explicit release; an installed forum cannot
 upgrade without the source bundle and backup credentials.
 
 Recovery requires `STORM_FORUM_STAGE=beta`, the backup reader credentials,
-`RESTORE_MANIFEST_KEY`, and the exact `BUNDLE_SHA256` recorded in the snapshot.
+`RESTORE_MANIFEST_KEY`, and the exact `BUNDLE_SHA256` and `RUNTIME_IMAGE` recorded in the snapshot.
+The chart supplies the immutable runtime image identity. New runtimes require the
+source record and reject image mismatches; older snapshots require their original runtime.
 The restore command rejects occupied databases, occupied attachment directories,
 mixed releases, invalid archive paths, links, and checksum mismatches. Before
 clearing maintenance it reapplies the beta URL, closes registration, selects the

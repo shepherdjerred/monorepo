@@ -37,7 +37,20 @@ XF::asVisitor($target, function () use ($app, $nodes, $seeds, &$published) {
     }
 });
 $app->registry()->set('stormForumSeedThreads', $published);
-$run('storm:seed'); $run('storm:seed');
+$edited = $app->em()->find('XF:Thread', $published['welcome'], ['FirstPost']);
+$edited->FirstPost->message .= "\nStaff-authored replacement content."; $edited->FirstPost->save();
+$rejected = false;
+try { $run('storm:seed'); }
+catch (RuntimeException $error) { $rejected = str_contains($error->getMessage(), 'reviewed target'); }
+$check($rejected && $edited->discussion_state === 'visible', 'Retirement hid staff-edited content');
+$edited->FirstPost->message = $seeds[0]['message']; $edited->FirstPost->save();
+// The operation's current administrator need not be the original publisher.
+$operator = $app->finder('XF:User')->where('user_id', '!=', 1)->where('user_id', '!=', $sourceId)->order('user_id')->fetchOne();
+$operatorWasAdmin = $operator->is_admin;
+$operator->is_admin = true; $operator->save(); $target->is_admin = false; $target->save();
+try { $run('storm:seed'); }
+finally { $target->is_admin = true; $target->save(); $operator->is_admin = $operatorWasAdmin; $operator->save(); }
+$run('storm:seed');
 foreach ($published as $id) { $check($app->em()->find('XF:Thread', $id)->discussion_state === 'deleted', 'Generated launch thread remains visible'); }
 $check(count($app->registry()->get('stormForumRetiredSeeds')) === 3, 'Seed retirement is not permanent');
 // Roll back a native merge failure even after native finalization deleted the donor.
@@ -50,6 +63,25 @@ catch (RuntimeException $error) { $check($error->getMessage() === 'fixture rollb
 $check(!$app->db()->inTransaction() && $app->db()->fetchOne('SELECT user_id FROM xf_user WHERE user_id = ?', $sourceId), 'Failed native merge left a transaction or deleted its source');
 $check($posts === $app->db()->fetchAll('SELECT post_id,username,message,post_date FROM xf_post WHERE user_id = ? ORDER BY post_id', $sourceId), 'Failed native merge changed historical posts');
 $check(!$app->registry()->get('stormForumHistoricalMerge'), 'Failed native merge left a pending import lock');
+// Resume the same manual ACP job before importing, just as a release does.
+$partial = new class($app) extends Storm\Forum\Service\UserMerge {
+    protected function stepPreMerge() { parent::stepPreMerge(); usleep(2000); }
+};
+$partial->setSource($source)->setTarget($target);
+$continuation = $partial->merge(0.001);
+$check(!$continuation->isCompleted() && $app->registry()->get('stormForumHistoricalMerge'), 'Resumable merge fixture did not establish its import fence');
+$rejected = false;
+try { $run('storm:history'); }
+catch (RuntimeException $error) { $rejected = str_contains($error->getMessage(), 'pending historical account merge'); }
+$check($rejected, 'History ran during an unfinished native merge');
+$state = $continuation->getContinueData();
+$app->jobManager()->enqueueUnique('fixture-user-merge', 'XF:UserMerge', [
+    'sourceUserId'=>$sourceId, 'targetUserId'=>1,
+    'currentStep'=>$state['currentStep'], 'lastOffset'=>$state['lastOffset'],
+], true);
+$run('xf:run-jobs', ['--manual-only'=>true, '--max-execution-time'=>50]);
+$check(!$app->registry()->get('stormForumHistoricalMerge'), 'Native manual job did not clear the import fence');
+$run('storm:history');
 $run('storm:accounts', ['--stage'=>'prod']); $run('storm:accounts', ['--stage'=>'prod']);
 $entry = $app->registry()->get('stormForumHistoricalUsers')[1];
 $check($entry['claimed'] && $entry['userId'] === 1 && in_array($sourceId, $entry['retiredUserIds'], true), 'Completed account merge lost its archive mapping');

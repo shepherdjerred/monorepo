@@ -16,12 +16,15 @@ final class Seed extends \XF\Cli\Command\AbstractCommand
         $seeds = json_decode(file_get_contents('/opt/storm-forum/config/seed-content.json'), true, 512, JSON_THROW_ON_ERROR);
         $published = $app->registry()->get('stormForumSeedThreads') ?: [];
         $retired = $app->registry()->get('stormForumRetiredSeeds') ?: [];
-        \XF::asVisitor($author, function () use ($app, $seeds, $published, $author, &$retired) {
+        \XF::asVisitor($author, function () use ($app, $seeds, $published, &$retired) {
             foreach ($seeds as $seed) {
                 if (isset($retired[$seed['key']])) { continue; }
                 if (isset($published[$seed['key']])) {
                     $thread = $app->em()->find('XF:Thread', $published[$seed['key']], ['FirstPost']);
-                    if (!$thread || $thread->title !== $seed['title'] || $thread->user_id !== $author->user_id || $thread->reply_count !== 0) {
+                    $reviewedHashes = [hash('sha256', $seed['message'])];
+                    if (isset($seed['previousMessageHash'])) { $reviewedHashes[] = $seed['previousMessageHash']; }
+                    if (!$thread || $thread->title !== $seed['title'] || $thread->user_id !== $seed['authorId'] || $thread->reply_count !== 0
+                        || !$thread->FirstPost || !in_array(hash('sha256', $thread->FirstPost->message), $reviewedHashes, true)) {
                         throw new \RuntimeException('Generated launch thread differs from its reviewed target');
                     }
                     if ($thread->discussion_state !== 'deleted') {

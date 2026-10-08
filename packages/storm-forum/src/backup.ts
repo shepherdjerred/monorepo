@@ -4,7 +4,7 @@ import { S3Client } from "bun";
 import { Context } from "@temporalio/activity";
 import { z } from "zod";
 import { StageSchema, forumManifest } from "./config.ts";
-import { SnapshotEnvironmentSchema } from "./storage.ts";
+import { SnapshotEnvironmentSchema, SnapshotSourceSchema } from "./storage.ts";
 
 const MARKER = "/var/lib/storm-forum/.maintenance";
 const OwnerSchema = z.uuid();
@@ -14,12 +14,6 @@ const MarkerSchema = z
 const BackupEnvironmentSchema = SnapshotEnvironmentSchema.extend({
   STORM_FORUM_STAGE: StageSchema,
 });
-export const SnapshotSourceSchema = z
-  .object({
-    bundleSha256: z.string().regex(/^[a-f0-9]{64}$/),
-    xenforoVersion: z.string().min(1),
-  })
-  .strict();
 
 export async function beginStormForumBackup(owner: string): Promise<void> {
   OwnerSchema.parse(owner);
@@ -115,6 +109,7 @@ export async function snapshotForum(
     sourceRelease ?? {
       bundleSha256: env.BUNDLE_SHA256,
       xenforoVersion: forumManifest.xenforoVersion,
+      runtimeImage: env.RUNTIME_IMAGE,
     },
   );
   const marker = MarkerSchema.parse(await Bun.file(MARKER).json());
@@ -131,6 +126,14 @@ export async function snapshotForum(
   const prefix = `snapshots/${env.STORM_FORUM_STAGE}/${owner}`;
   const manifestKey = `${prefix}/manifest.json`;
   if (await client.file(manifestKey).exists()) {
+    const committedSource = SnapshotSourceSchema.parse(
+      await client.file(`${prefix}/source-release.json`).json(),
+    );
+    if (JSON.stringify(committedSource) !== JSON.stringify(source)) {
+      throw new Error(
+        "Committed snapshot belongs to a different source release",
+      );
+    }
     return { manifestKey };
   }
   const temporary = `/var/lib/storm-forum/.backup/${owner}`;
@@ -182,6 +185,12 @@ export async function snapshotForum(
       payloads.push({ key, sha256: hash, bytes: Bun.file(path).size });
     }
     // The manifest commits the pair. An interrupted upload has no restoreable snapshot.
+    context.cancellationSignal.throwIfAborted();
+    // Keep the v1 manifest readable by the previous runtime during rollback.
+    // New runtimes require this source record before restoring the pair.
+    await client
+      .file(`${prefix}/source-release.json`)
+      .write(JSON.stringify(source));
     context.cancellationSignal.throwIfAborted();
     await client.file(manifestKey).write(
       JSON.stringify({

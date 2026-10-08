@@ -58,7 +58,7 @@
     <time class="stormArticleDate" datetime="{{ date($thread.post_date, 'Y-m-d') }}"><span>{{ date($thread.post_date, 'M') }}</span><strong>{{ date($thread.post_date, 'j') }}</strong></time>
     <h2 class="block-header"><a href="{{ link('threads', $thread) }}">{$thread.title}</a></h2>
     <div class="stormArticleByline"><span>by <xf:username user="$thread.User" username="{$thread.username}" /> · <xf:date time="$thread.post_date" /> · {$thread.view_count|number} views · {$thread.FirstPost.reaction_score|number} reactions</span><a href="{{ link('threads', $thread) }}">{$thread.reply_count|number} comments</a></div>
-    <div class="stormArticleBody"><div class="stormArticleSnippet">{{ bb_code_snippet($thread.FirstPost.message, 'post', $thread.FirstPost, 750, {'stripQuote': true}) }}</div><xf:avatar user="$thread.User" size="m" /></div>
+    <div class="stormArticleBody"><div class="stormArticleSnippet">{{ bb_code_snippet($thread.FirstPost.message, 'post', $thread.FirstPost, 750) }}</div><xf:avatar user="$thread.User" size="m" /></div>
     <div class="block-footer"><a class="stormArticleContinue" href="{{ link('threads', $thread) }}">Continue reading →</a></div>
   </div></article>
 </xf:foreach>

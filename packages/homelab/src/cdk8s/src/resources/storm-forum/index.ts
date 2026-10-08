@@ -25,6 +25,7 @@ import { createForumDatabase } from "./database.ts";
 import { createForumNetwork } from "./network.ts";
 import { createForumStorage } from "./storage.ts";
 import { applyForumSyncWaves } from "./sync-waves.ts";
+import { upgradeBackupEnvironment } from "./upgrade-environment.ts";
 
 export const ReleaseSchema = z
   .object({
@@ -44,6 +45,9 @@ export const ReleaseSchema = z
       .object({
         bundleSha256: z.string().regex(/^[a-f0-9]{64}$/),
         xenforoVersion: z.string().min(1),
+        runtimeImage: z
+          .string()
+          .regex(/^ghcr\.io\/shepherdjerred\/storm-forum@sha256:[a-f0-9]{64}$/),
       })
       .strict()
       .optional(),
@@ -317,6 +321,7 @@ export function createStormForumChart(app: App, input: ForumRelease): Chart {
               ],
               env: [
                 ...(base.env ?? []),
+                { name: "RUNTIME_IMAGE", value: release.image },
                 ...credentials(["BACKUP_ACCESS_KEY", "BACKUP_SECRET_KEY"]),
                 {
                   name: "BACKUP_ENDPOINT",
@@ -399,6 +404,9 @@ export function createStormForumChart(app: App, input: ForumRelease): Chart {
               ],
               env: [
                 ...(base.env ?? []),
+                ...(release.restore || release.preUpgradeBackup
+                  ? [{ name: "RUNTIME_IMAGE", value: release.image }]
+                  : []),
                 ...(release.restore
                   ? [
                       ...["ACCESS_KEY", "SECRET_KEY"].map((suffix) => ({
@@ -428,29 +436,10 @@ export function createStormForumChart(app: App, input: ForumRelease): Chart {
                         "ADMIN_EMAIL",
                       ]),
                       ...(release.preUpgradeBackup
-                        ? [
-                            ...credentials([
-                              "BACKUP_ACCESS_KEY",
-                              "BACKUP_SECRET_KEY",
-                            ]),
-                            {
-                              name: "BACKUP_ENDPOINT",
-                              value:
-                                "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
-                            },
-                            {
-                              name: "BACKUP_BUCKET",
-                              value: "storm-forum-backups",
-                            },
-                            {
-                              name: "BACKUP_SOURCE_BUNDLE_SHA256",
-                              value: release.preUpgradeBackup.bundleSha256,
-                            },
-                            {
-                              name: "BACKUP_SOURCE_XENFORO_VERSION",
-                              value: release.preUpgradeBackup.xenforoVersion,
-                            },
-                          ]
+                        ? upgradeBackupEnvironment(
+                            release.preUpgradeBackup,
+                            credentials,
+                          )
                         : []),
                     ]),
                 {

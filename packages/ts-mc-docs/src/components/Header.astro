@@ -159,6 +159,7 @@ const api = forumActive ? `${forum}/storm-theme/` : undefined;
       if (event.key !== "Escape") return;
       document.documentElement.removeAttribute("data-storm-menu-open");
       toggle.setAttribute("aria-expanded", "false");
+      toggle.setAttribute("aria-label", "Open navigation");
       toggle.focus();
     });
   }
