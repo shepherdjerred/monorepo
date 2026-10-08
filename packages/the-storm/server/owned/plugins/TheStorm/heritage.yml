@@ -17614,5 +17614,225 @@
         "editors": [],
         "provenance": "Public home or farm sign at 1371,17,358 in the July 2015 archive identifies this otherwise missed structure. Reconstructed five-by-five chunk preservation footprint includes a one-chunk grace around the central built location; exact original Towny boundaries and owner UUID are unavailable. Held in staff custody.",
       },
+      {
+        "id": "archive-bed-009",
+        "name": "Historic Hillside Storage Home (-169, -603)",
+        "kind": "HERITAGE",
+        "activeTownName": "",
+        "world": "world",
+        "profile": "SAFE",
+        "protectedChunks": [],
+        "protectedAreas":
+          [
+            {
+              "world": "world",
+              "from": { "x": -208, "y": -64, "z": -640 },
+              "to": { "x": -129, "y": 319, "z": -561 },
+            },
+          ],
+        "editingChunks": [],
+        "editors": [],
+        "provenance": "Additional July 2015 survey: 84.2 nearby loaded hours, an extant saved bed at -169,51,-603 associated with riverdolphins, and visually reviewed original surface/interior block slices confirm a dwelling missed by the earlier above-Y48 material scan. Reconstructed footprint includes a chunk grace. Saved beds corroborate occupation, not ownership; original Towny boundaries and land ownership are unavailable. Held in staff custody.",
+      },
+      {
+        "id": "archive-bed-012",
+        "name": "Historic Stronghold Residence (-1025, -565)",
+        "kind": "HERITAGE",
+        "activeTownName": "",
+        "world": "world",
+        "profile": "SAFE",
+        "protectedChunks": [],
+        "protectedAreas":
+          [
+            {
+              "world": "world",
+              "from": { "x": -1072, "y": -64, "z": -608 },
+              "to": { "x": -993, "y": 319, "z": -529 },
+            },
+          ],
+        "editingChunks": [],
+        "editors": [],
+        "provenance": "Additional July 2015 survey: 71.9 nearby loaded hours, an extant saved bed at -1025,45,-565 associated with funybomb, and visually reviewed original surface/interior block slices confirm a dwelling missed by the earlier above-Y48 material scan. Reconstructed footprint includes a chunk grace. Saved beds corroborate occupation, not ownership; original Towny boundaries and land ownership are unavailable. Held in staff custody.",
+      },
+      {
+        "id": "archive-bed-021",
+        "name": "Historic Bedrock Residence (-604, 681)",
+        "kind": "HERITAGE",
+        "activeTownName": "",
+        "world": "world",
+        "profile": "SAFE",
+        "protectedChunks": [],
+        "protectedAreas":
+          [
+            {
+              "world": "world",
+              "from": { "x": -640, "y": -64, "z": 640 },
+              "to": { "x": -561, "y": 319, "z": 719 },
+            },
+          ],
+        "editingChunks": [],
+        "editors": [],
+        "provenance": "Additional July 2015 survey: 33.2 nearby loaded hours, an extant saved bed at -604,5,681 associated with BlackLionDreamer, and visually reviewed original surface/interior block slices confirm a dwelling missed by the earlier above-Y48 material scan. Reconstructed footprint includes a chunk grace. Saved beds corroborate occupation, not ownership; original Towny boundaries and land ownership are unavailable. Held in staff custody.",
+      },
+      {
+        "id": "archive-bed-027",
+        "name": "Historic Underground Farm Residence (-5113, -54)",
+        "kind": "HERITAGE",
+        "activeTownName": "",
+        "world": "world",
+        "profile": "SAFE",
+        "protectedChunks": [],
+        "protectedAreas":
+          [
+            {
+              "world": "world",
+              "from": { "x": -5168, "y": -64, "z": -112 },
+              "to": { "x": -5057, "y": 319, "z": -1 },
+            },
+          ],
+        "editingChunks": [],
+        "editors": [],
+        "provenance": "Additional July 2015 survey: 20.4 nearby loaded hours, an extant saved bed at -5113,30,-54 associated with ghost1angel,tvallier, and visually reviewed original surface/interior block slices confirm a dwelling missed by the earlier above-Y48 material scan. Reconstructed footprint includes a chunk grace. Saved beds corroborate occupation, not ownership; original Towny boundaries and land ownership are unavailable. Held in staff custody.",
+      },
+      {
+        "id": "archive-bed-028",
+        "name": "Historic Mountain Residence (-3292, -5323)",
+        "kind": "HERITAGE",
+        "activeTownName": "",
+        "world": "world",
+        "profile": "SAFE",
+        "protectedChunks": [],
+        "protectedAreas":
+          [
+            {
+              "world": "world",
+              "from": { "x": -3328, "y": -64, "z": -5360 },
+              "to": { "x": -3249, "y": 319, "z": -5281 },
+            },
+          ],
+        "editingChunks": [],
+        "editors": [],
+        "provenance": "Additional July 2015 survey: 20.4 nearby loaded hours, an extant saved bed at -3292,122,-5323 associated with gure1234321, and visually reviewed original surface/interior block slices confirm a dwelling missed by the earlier above-Y48 material scan. Reconstructed footprint includes a chunk grace. Saved beds corroborate occupation, not ownership; original Towny boundaries and land ownership are unavailable. Held in staff custody.",
+      },
+      {
+        "id": "archive-bed-035",
+        "name": "Historic Cavern Residence (-1261, 41)",
+        "kind": "HERITAGE",
+        "activeTownName": "",
+        "world": "world",
+        "profile": "SAFE",
+        "protectedChunks": [],
+        "protectedAreas":
+          [
+            {
+              "world": "world",
+              "from": { "x": -1296, "y": -64, "z": 0 },
+              "to": { "x": -1217, "y": 319, "z": 79 },
+            },
+          ],
+        "editingChunks": [],
+        "editors": [],
+        "provenance": "Additional July 2015 survey: 17.1 nearby loaded hours, an extant saved bed at -1261,16,41 associated with ModdedFodder,keeks789, and visually reviewed original surface/interior block slices confirm a dwelling missed by the earlier above-Y48 material scan. Reconstructed footprint includes a chunk grace. Saved beds corroborate occupation, not ownership; original Towny boundaries and land ownership are unavailable. Held in staff custody.",
+      },
+      {
+        "id": "archive-bed-037",
+        "name": "Historic Underground Wooden Home (-38, 2551)",
+        "kind": "HERITAGE",
+        "activeTownName": "",
+        "world": "world",
+        "profile": "SAFE",
+        "protectedChunks": [],
+        "protectedAreas":
+          [
+            {
+              "world": "world",
+              "from": { "x": -80, "y": -64, "z": 2512 },
+              "to": { "x": -1, "y": 319, "z": 2591 },
+            },
+          ],
+        "editingChunks": [],
+        "editors": [],
+        "provenance": "Additional July 2015 survey: 14.4 nearby loaded hours, an extant saved bed at -38,39,2551 associated with Boey422, and visually reviewed original surface/interior block slices confirm a dwelling missed by the earlier above-Y48 material scan. Reconstructed footprint includes a chunk grace. Saved beds corroborate occupation, not ownership; original Towny boundaries and land ownership are unavailable. Held in staff custody.",
+      },
+      {
+        "id": "archive-bed-041",
+        "name": "Historic Mine Stair Residence (1568, -2136)",
+        "kind": "HERITAGE",
+        "activeTownName": "",
+        "world": "world",
+        "profile": "SAFE",
+        "protectedChunks": [],
+        "protectedAreas":
+          [
+            {
+              "world": "world",
+              "from": { "x": 1536, "y": -64, "z": -2176 },
+              "to": { "x": 1615, "y": 319, "z": -2097 },
+            },
+          ],
+        "editingChunks": [],
+        "editors": [],
+        "provenance": "Additional July 2015 survey: 9.3 nearby loaded hours, an extant saved bed at 1568,26,-2136 associated with TheDevilAngel101, and visually reviewed original surface/interior block slices confirm a dwelling missed by the earlier above-Y48 material scan. Reconstructed footprint includes a chunk grace. Saved beds corroborate occupation, not ownership; original Towny boundaries and land ownership are unavailable. Held in staff custody.",
+      },
+      {
+        "id": "archive-bed-044",
+        "name": "Historic Mountain Shelter (2229, -2237)",
+        "kind": "HERITAGE",
+        "activeTownName": "",
+        "world": "world",
+        "profile": "SAFE",
+        "protectedChunks": [],
+        "protectedAreas":
+          [
+            {
+              "world": "world",
+              "from": { "x": 2192, "y": -64, "z": -2272 },
+              "to": { "x": 2271, "y": 319, "z": -2193 },
+            },
+          ],
+        "editingChunks": [],
+        "editors": [],
+        "provenance": "Additional July 2015 survey: 7.3 nearby loaded hours, an extant saved bed at 2229,100,-2237 associated with thomashot, and visually reviewed original surface/interior block slices confirm a dwelling missed by the earlier above-Y48 material scan. Reconstructed footprint includes a chunk grace. Saved beds corroborate occupation, not ownership; original Towny boundaries and land ownership are unavailable. Held in staff custody.",
+      },
+      {
+        "id": "archive-bed-046",
+        "name": "Historic Forest Cottage (-3192, -2524)",
+        "kind": "HERITAGE",
+        "activeTownName": "",
+        "world": "world",
+        "profile": "SAFE",
+        "protectedChunks": [],
+        "protectedAreas":
+          [
+            {
+              "world": "world",
+              "from": { "x": -3232, "y": -64, "z": -2560 },
+              "to": { "x": -3153, "y": 319, "z": -2481 },
+            },
+          ],
+        "editingChunks": [],
+        "editors": [],
+        "provenance": "Additional July 2015 survey: 6.6 nearby loaded hours, an extant saved bed at -3192,64,-2524 associated with brianna0909, and visually reviewed original surface/interior block slices confirm a dwelling missed by the earlier above-Y48 material scan. Reconstructed footprint includes a chunk grace. Saved beds corroborate occupation, not ownership; original Towny boundaries and land ownership are unavailable. Held in staff custody.",
+      },
+      {
+        "id": "archive-bed-047",
+        "name": "Historic Hillside Farmhouse (1608, -418)",
+        "kind": "HERITAGE",
+        "activeTownName": "",
+        "world": "world",
+        "profile": "SAFE",
+        "protectedChunks": [],
+        "protectedAreas":
+          [
+            {
+              "world": "world",
+              "from": { "x": 1568, "y": -64, "z": -464 },
+              "to": { "x": 1647, "y": 319, "z": -385 },
+            },
+          ],
+        "editingChunks": [],
+        "editors": [],
+        "provenance": "Additional July 2015 survey: 6.2 nearby loaded hours, an extant saved bed at 1608,66,-418 associated with Zack2004, and visually reviewed original surface/interior block slices confirm a dwelling missed by the earlier above-Y48 material scan. Reconstructed footprint includes a chunk grace. Saved beds corroborate occupation, not ownership; original Towny boundaries and land ownership are unavailable. Held in staff custody.",
+      },
     ],
 }

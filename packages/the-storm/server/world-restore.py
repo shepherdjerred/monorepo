@@ -21,6 +21,7 @@ from contextlib import ExitStack, closing, contextmanager
 from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
 
+import restoration_locks
 from restoration_json import JsonObject
 
 ARCHIVE_SHA256 = "89fc7865604b5ab9ecf3030c90a192f8f9c963083cc77135949c953ae6b645fa"
@@ -919,6 +920,10 @@ def prepare_database(
     catalog = owned / "owned/plugins/TheStorm/heritage.yml"
     policy = owned / "restoration-policy.json"
     tool = owned / "conversion/RestorationDatabase.java"
+    lock_tool = owned / "conversion/NativeHistoricalLocks.java"
+    terrain_tool = owned / "conversion/NativeTerrain.java"
+    parcels = owned / "owned/plugins/TheStorm/parcels.yml"
+    towns = owned / "owned/plugins/TheStorm/towns.yml"
     retention = owned / "database-restore.py"
     spec = importlib.util.spec_from_file_location("database_restore", retention)
     if spec is None or spec.loader is None:
@@ -926,13 +931,32 @@ def prepare_database(
     database_restore = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(database_restore)
     reviewed = database_restore.reviewed_policy(policy)
-    inputs = {path.name: digest(path) for path in (catalog, policy, tool, retention, candidate, backup_proof)}
+    input_paths = (
+        catalog,
+        parcels,
+        towns,
+        policy,
+        tool,
+        lock_tool,
+        terrain_tool,
+        retention,
+        owned / "restoration_locks.py",
+        candidate,
+        backup_proof,
+    )
+    inputs = {path.name: digest(path) for path in input_paths}
+    historical = staging / "heritage-preserved-layout/world"
+    historical_expected = json.loads((staging / "heritage-preserved-layout-files.json").read_text(encoding="utf-8"))
+    if fingerprint(historical) != historical_expected:
+        raise ValueError("Historical container import requires the sealed preserved archive")
+    inputs["historicalManifestSha256"] = digest(staging / "heritage-preserved-layout-files.json")
     classpath = conversion_classpath(bootstrap, paper, "26.2") + os.pathsep + str(candidate)
     root = staging / "restoration-database"
     if root.exists() or root.is_symlink():
         raise ValueError("Database preparation already exists; retain and inspect its evidence")
     with ExitStack() as locks:
         stopped_locks(modern_data, locks)
+        stopped_locks(historical, locks)
         expected = verified_backup(modern_data, backup_proof)
         root.mkdir(mode=0o700)
         imported_at = datetime.now(UTC).isoformat()
@@ -974,18 +998,74 @@ def prepare_database(
                     stderr=subprocess.STDOUT,
                     timeout=120,
                 )
+                if imported.returncode != 0:
+                    raise ValueError("Historical owner import failed; inspect the private log")
+                classes = root / "native-lock-tools"
+                classes.mkdir(mode=0o700)
+                compiled = subprocess.run(
+                    ["javac", "--class-path", classpath, "-d", str(classes), str(lock_tool), str(terrain_tool)],
+                    cwd=root,
+                    stdout=log,
+                    stderr=subprocess.STDOUT,
+                    timeout=120,
+                )
+                if compiled.returncode != 0:
+                    raise ValueError("Historical container importer compilation failed; inspect the private log")
+                lock_receipt = root / "historical-locks.json"
+                imported_locks = subprocess.run(
+                    [
+                        "java",
+                        "-Xmx2G",
+                        "--class-path",
+                        classpath + os.pathsep + str(classes),
+                        "NativeHistoricalLocks",
+                        str(historical),
+                        str(database),
+                        str(catalog),
+                        str(parcels),
+                        str(towns),
+                        receipt["requestId"],
+                        str(lock_receipt),
+                    ],
+                    cwd=root,
+                    stdout=log,
+                    stderr=subprocess.STDOUT,
+                    timeout=1200,
+                )
                 log.flush()
                 os.fsync(log.fileno())
-            if imported.returncode != 0:
-                raise ValueError("Historical owner import failed; inspect the private log")
+            if imported_locks.returncode != 0:
+                raise ValueError("Historical container lock import failed; inspect the private log")
+            lock_facts = json.loads(lock_receipt.read_text(encoding="utf-8"))
+            if (
+                lock_facts["requestId"] != receipt["requestId"]
+                or lock_facts["heritageSha256"] != digest(catalog)
+                or lock_facts["parcelsSha256"] != digest(parcels)
+                or lock_facts["townsSha256"] != digest(towns)
+                or lock_facts["locks"] <= 0
+                or lock_facts["databaseReadback"] != "VERIFIED"
+                or lock_facts["worldTicks"] != 0
+                or lock_facts["terrainChanged"] is not False
+                or lock_facts["containerContentsChanged"] is not False
+                or fingerprint(historical) != historical_expected
+            ):
+                raise ValueError("Historical lock import changed its source or failed readback")
+            imported_counts = {
+                "towns_town": 7,
+                "towns_member": 7,
+                "towns_lock": lock_facts["locks"],
+                "towns_lock_block": lock_facts["containerBlocks"],
+                "towns_lock_restoration": lock_facts["locks"],
+                "towns_lock_historical_owner": lock_facts["historicalOwners"],
+            }
             with closing(sqlite3.connect(database.as_uri() + "?mode=ro&immutable=1", uri=True)) as connection:
                 for table, count in (("towns_town", 7), ("towns_member", 7), ("towns_claim", 0)):
                     if connection.execute("SELECT COUNT(*) FROM " + table).fetchone() != (count,):
                         raise ValueError("Historical directory import has unexpected members or claims")
                 for table in reviewed["resetTables"]:
-                    if table not in ("towns_town", "towns_member") and connection.execute(
-                        'SELECT COUNT(*) FROM "' + table + '"'
-                    ).fetchone() != (0,):
+                    if connection.execute('SELECT COUNT(*) FROM "' + table + '"').fetchone() != (
+                        imported_counts.get(table, 0),
+                    ):
                         raise ValueError("Unexpected gameplay progression in the prepared database")
                 if connection.execute("PRAGMA integrity_check").fetchone() != ("ok",) or list(
                     connection.execute("PRAGMA foreign_key_check")
@@ -993,9 +1073,9 @@ def prepare_database(
                     raise ValueError("Prepared database failed integrity or foreign-key checks")
             if fingerprint(modern_data) != expected:
                 raise ValueError("Database preparation changed its immutable modern backup")
-            if inputs != {
-                path.name: digest(path) for path in (catalog, policy, tool, retention, candidate, backup_proof)
-            }:
+            final_inputs = {path.name: digest(path) for path in input_paths}
+            final_inputs["historicalManifestSha256"] = digest(staging / "heritage-preserved-layout-files.json")
+            if inputs != final_inputs:
                 raise ValueError("Database preparation inputs changed while running")
             proof.update(
                 townImport="VERIFIED",
@@ -1003,6 +1083,9 @@ def prepare_database(
                 historicalOwners=7,
                 historicalClaims=0,
                 importedAt=imported_at,
+                historicalContainerLocks="VERIFIED",
+                historicalLocksReceiptSha256=digest(lock_receipt),
+                historicalLockCounts=imported_counts,
                 databaseSha256=digest(database),
                 originalDatabaseSha256=digest(original_database),
                 upgradedSourceSha256=digest(upgraded_source),
@@ -1110,6 +1193,7 @@ def prepare_activation(
     database_facts = json.loads(database_receipt.read_text(encoding="utf-8"))
     if database_facts.get("databaseSha256") != digest(database) or database_facts.get("townImport") != "VERIFIED":
         raise ValueError("Prepared identity database changed or lacks its verified historical import")
+    restoration_locks.verify(staging, JsonObject(database_facts), receipt["requestId"], database)
     mode = receipt.get("arenaRetentionMode")
     if mode not in (None, "SEPARATE_WORLDS"):
         raise ValueError("Unknown arena retention mode")

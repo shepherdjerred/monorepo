@@ -8,6 +8,7 @@ import restoration_activation as activation
 import restoration_backup
 import restoration_files
 from restoration_json import JsonObject
+from test_restoration_locks import fixture as lock_fixture
 
 REQUEST = "6903b19f-f4d2-42a5-91ba-6ce046562c83"
 IMAGE = "ghcr.io/shepherdjerred/the-storm-server:fixture@sha256:" + "a" * 64
@@ -27,7 +28,7 @@ class RestorationActivationTest(unittest.TestCase):
         self.candidate.write_bytes(b"synthetic plugin")
         self.write("world/level.dat", b"historical metadata")
         self.write("world/dimensions/minecraft/overworld/region/r.0.0.mca", b"historical terrain")
-        self.write("plugins/TheStorm/the-storm.db", b"migrated database")
+        lock_proof = lock_fixture(self.staging, self.layout / "plugins/TheStorm/the-storm.db", REQUEST)
         retained = {}
         for dimension in activation.DIMENSIONS:
             prefix = "world/dimensions/minecraft/" + dimension + "/"
@@ -84,17 +85,21 @@ class RestorationActivationTest(unittest.TestCase):
             for name in ("NativeActivationCheck.java", "NativeAnimalIdentityRepair.java", "NativeLayoutMetadata.java")
         }
         database = self.staging / "restoration-database/receipt.json"
-        database.parent.mkdir()
+        database.parent.mkdir(exist_ok=True)
         self.save(
             database,
             {
+                **lock_proof,
                 "townImport": "VERIFIED",
                 "gameplayReset": True,
                 "sourceVersionMigration": "VERIFIED_PRIVATE_COPY",
                 "databaseSha256": original["plugins/TheStorm/the-storm.db"],
                 "inputs": {
-                    name: restoration_files.digest(owned / name)
-                    for name in ("restoration-policy.json", "database-restore.py")
+                    **lock_proof.object("inputs"),
+                    **{
+                        name: restoration_files.digest(owned / name)
+                        for name in ("restoration-policy.json", "database-restore.py")
+                    },
                 },
             },
         )

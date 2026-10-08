@@ -1773,6 +1773,7 @@ ACCEPTANCE_CHECKS = (
     "townDirectory",
     "provenPlotEditors",
     "heritageProtection",
+    "historicalContainerLocks",
     "grazingAndGrowth",
     "settlement",
     "rustworks",

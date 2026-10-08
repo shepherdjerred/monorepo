@@ -56,6 +56,31 @@ final class JooqLocksAndPvpStoreTest {
   }
 
   @Test
+  void restoredJointOwnershipAndNamesRoundTripAndAreDeleted() throws Exception {
+    var lock =
+        new Lock(
+            UUID.randomUUID(),
+            OWNER,
+            Set.of(LEFT, RIGHT),
+            Map.of(),
+            Lock.Options.NONE,
+            new Lock.Restoration(
+                UUID.randomUUID(), "parcel:shared", Map.of(OWNER, "Owner", MEMBER, "Member")));
+    await(locks.save(lock));
+    assertThat(await(locks.loadAll())).containsExactly(lock);
+    await(locks.save(lock.withTrust(NOMAD, LockGrant.USE)));
+    assertThat(await(locks.loadAll())).containsExactly(lock.withTrust(NOMAD, LockGrant.USE));
+    await(locks.delete(lock.id()));
+    assertThat(await(locks.loadAll())).isEmpty();
+    int historicalOwners =
+        await(database.read(dsl -> dsl.fetchCount(DSL.table("towns_lock_historical_owner"))));
+    int restorations =
+        await(database.read(dsl -> dsl.fetchCount(DSL.table("towns_lock_restoration"))));
+    assertThat(historicalOwners).isZero();
+    assertThat(restorations).isZero();
+  }
+
+  @Test
   void aLockWithBothHalvesAndItsTrustRoundTrips() throws Exception {
     var lock =
         new Lock(
@@ -63,7 +88,8 @@ final class JooqLocksAndPvpStoreTest {
             OWNER,
             Set.of(LEFT, RIGHT),
             Map.of(NOMAD, LockGrant.USE, MEMBER, LockGrant.MANAGE),
-            new Lock.Options(true, true));
+            new Lock.Options(true, true),
+            Lock.Restoration.NONE);
 
     await(locks.save(lock));
 

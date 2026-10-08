@@ -44,6 +44,7 @@ public final class StormFixtures extends JavaPlugin {
     }
     if (enabled(modules, "towns", prepared)) {
       protectedWorlds();
+      HistoricalLockFixtures.seed(world, content.toPath());
     }
     if (enabled(modules, "essentials", prepared)) {
       world.setSpawnLocation(0, 65, 0);

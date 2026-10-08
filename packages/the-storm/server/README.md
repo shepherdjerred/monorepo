@@ -206,7 +206,7 @@ stays on Jenkins until that mirror exists.
 ## Historic land protection
 
 `owned/plugins/TheStorm/heritage.yml` is the mandatory preservation catalog.
-It protects Spawn, 219 reconstructed historical footprints, and the Colosseum
+It protects Spawn, reconstructed historical towns and dwellings, and the Colosseum
 across the full world height. Settlement and Rustworks are protected in their
 separate arena worlds. Wilderness remains editable.
 Original Towny claim files were not recovered; the displayed boundaries are
@@ -214,9 +214,20 @@ reconstructed preservation footprints. Claim flags, unclaiming and town
 deletion cannot remove this protection.
 
 Verified editors may intentionally edit only the catalog's proven construction
-chunks. Buffers remain in staff custody. Exact shop boundaries and their proven
-owner UUIDs live in `parcels.yml`; permanent historical shops have no rent or
+chunks. Buffers remain in staff custody. Exact shop boundaries and their assigned
+owner UUIDs live in `parcels.yml`; provenance distinguishes direct evidence from
+reasonable sign/name matches. Permanent historical shops have no rent or
 expiry. Public container permissions do not inherit into historical holdings.
+
+The offline restoration imports built-in container locks throughout these
+holdings, including furnaces, brewing stands and hoppers. Assigned shop owners
+manage their shop's locks; joint owners can open, unlock and manage trust. Town
+construction chunks use their identified leadership, with ordinary member
+sharing and redstone access initially disabled. Unidentified holdings and
+ownership boundaries remain in staff custody. Historical locks retain archived
+owner names before those players rejoin, do not consume the ordinary lock quota,
+and keep their ownership when a player leaves a town. Hopper transfers require
+the same primary owner at every locked endpoint.
 
 The immutable floor blocks destructive environmental changes. Sheep may graze
 grass blocks, grass blocks may regrow, and existing crops may age and farmland
@@ -305,6 +316,20 @@ The retention policy must cover every table produced by the current candidate;
 unknown tables abort preparation. Historical owner imports use the domain's
 stable town IDs and their recorded import time; archive dates do not imply
 founding dates.
+
+`NativeHistoricalLocks.java` then surveys the sealed, unticked native world using
+the candidate's actual land resolver. It imports only lock records into the
+fresh database and reads them back through the gameplay persistence adapter.
+Its inventory records every protected container, source block-entity hashes,
+archived owner names, joint ownership, and boundary conflicts. Original 1.8 double
+chests are grouped before native neighbor updates without changing their blocks.
+Containers lacking a saved block entity are inventoried explicitly as absent;
+the importer does not fabricate inventories or write terrain. Arena loot and
+personal ender-chest storage do not receive these property locks.
+Preparation and installation verify the sealed lock receipt, input configuration
+and tool hashes, request identity, database counts and disabled sharing defaults.
+Plot recovery writes auxiliary archive version 2 with this ownership metadata;
+version 1 ordinary locks migrate explicitly when an older archive is read.
 
 `restoration_files.py` provides filesystem primitives for stopped-volume
 installation. It has no production CLI. Staging verifies the entire stopped
@@ -423,7 +448,7 @@ Use a local port forward for private acceptance and retain the observed evidence
 `accept --evidence <private-json>` records acceptance only for the running pod's
 exact UID, published image digest and candidate plugin. Its `checks` object must
 record `VERIFIED` for startup, historical spawn, the town directory, proven plot
-editors, heritage protection, grazing and growth, each of the three arenas,
+editors, heritage protection, historical container locks, grazing and growth, each of the three arenas,
 CoreProtect lookup and rollback, retained identities, historical player data,
 maps and private admission. The evidence also carries `requestId`,
 `candidateImage`, `candidateJarSha256`, `podUid`, `containerId` and `restartCount`.

@@ -562,7 +562,8 @@ final class PackedShops implements Listener {
               Math.addExact(block.y(), offset.y()),
               Math.addExact(block.z(), offset.z())));
     }
-    return new Lock(saved.id(), saved.owner(), blocks, saved.trusted(), saved.options());
+    return new Lock(
+        saved.id(), saved.owner(), blocks, saved.trusted(), saved.options(), saved.restoration());
   }
 
   private boolean permission(UUID owner, UUID recovery, String world, BlockVector3 pos) {

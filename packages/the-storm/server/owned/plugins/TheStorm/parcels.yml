@@ -64,11 +64,12 @@ parcels:
       world: world
       from: { x: 102, y: -64, z: -181 }
       to: { x: 120, y: 319, z: -160 }
-    owners: []
+    owners: [4ef5998c-d6b3-4779-9da5-9065d3b1a365]
     provenance: >-
       The sign at 105,73,-169 names Eternal's Minemart; its bordered floor
-      spans 102..120,-181..-160. The display name does not establish a UUID;
-      editing remains in staff custody.
+      spans 102..120,-181..-160. EternalRegret is the only archived player name
+      matching Eternal; the same archive identifies Eternal's Castle near their
+      saved position and bed. Reasonably inferred ownership, not recovered Towny records.
     weeklyRent: 0
   - id: setery-shop
     name: Setery10's Historical Shop
@@ -77,11 +78,13 @@ parcels:
       world: world
       from: { x: 102, y: -64, z: -153 }
       to: { x: 121, y: 319, z: -138 }
-    owners: []
+    owners: [4cbf0d59-3b40-473d-8318-0c97aba5e548]
     provenance: >-
       Signs at 109,67,-139 and 108,155,-152 name Setery10's ground and sky
       shops. The ground shop's slab border establishes this footprint.
-      No corroborated UUID is available; editing remains in staff custody.
+      Setery is the sole matching lastKnownName among all 4413 archived players.
+      The archive also contains a Setery10 identifying sign at 66,75,3707.
+      Reasonably inferred historical alias; original Towny records are absent.
     weeklyRent: 0
   - id: lawful-farm-shop
     name: Innocent and Lawful Farm Shop
@@ -174,11 +177,18 @@ parcels:
       world: world
       from: { x: 90, y: -64, z: -101 }
       to: { x: 113, y: 319, z: -78 }
-    owners: []
+    owners:
+      [
+        a35bbf91-d274-4e26-bc64-09d8c06a3c9d,
+        9cee5afe-e1e3-4c7a-83b1-eaf5fdcc96a0,
+      ]
     provenance: >-
       Anteron Exchange signs at 93,64,-87 and 93,64,-90 identify the ground
       shop; Zah's Shop sign at 99,112,-88 is upstairs in the same footprint.
-      Neither display name proves an owner UUID; both remain in staff custody.
+      xX_Anteron_Xx is the sole archived player name matching Anteron. Zah262's
+      signed estate at 1198,103,-803 and Zah's Wolf Den at 1242,51,-813 coincide
+      with that player's saved bed. Reasonably inferred UUIDs; both owners share
+      the entire building by the operator's decision, including its container locks.
     weeklyRent: 0
   - id: central-west-south-shop
     name: Historical Central West Shop

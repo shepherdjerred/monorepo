@@ -138,7 +138,7 @@ final class PlotResetting {
       }
       var auxiliary =
           new AuxiliaryArchive.Contents(
-              1, shops.snapshot(shopArea(def.area()), expected.owner()), locks);
+              2, shops.snapshot(shopArea(def.area()), expected.owner()), locks);
       var captured = parts.world().capture(def.area());
       return captured
           .thenApplyAsync(

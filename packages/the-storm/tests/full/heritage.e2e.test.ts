@@ -148,6 +148,11 @@ describe("historical grazing on real Paper", () => {
     if (originalGriefing === undefined) {
       throw new Error("Could not read the original mob griefing gamerule");
     }
+    const tickSpeed = await rcon.command("gamerule random_tick_speed");
+    const originalTickSpeed = /\b(\d+)\b/u.exec(tickSpeed)?.[1];
+    if (originalTickSpeed === undefined) {
+      throw new Error("Could not read the original random tick speed gamerule");
+    }
     try {
       await rcon.command("gamerule mob_griefing true");
       await rcon.command("gamerule random_tick_speed 0");
@@ -184,7 +189,7 @@ describe("historical grazing on real Paper", () => {
       await rcon.command(
         "kill @e[type=minecraft:sheep,tag=e2e_heritage_graze]",
       );
-      await rcon.command("gamerule random_tick_speed 3");
+      await rcon.command(`gamerule random_tick_speed ${originalTickSpeed}`);
       await rcon.command(`gamerule mob_griefing ${originalGriefing}`);
       await rcon.command("fill 309 200 6 313 204 10 air");
     }

@@ -17,6 +17,7 @@ from typing import Literal
 from unittest.mock import patch
 
 from restoration_json import JsonObject
+from test_restoration_locks import fixture as lock_fixture
 
 spec = importlib.util.spec_from_file_location("restore", Path(__file__).with_name("world-restore.py"))
 assert spec is not None and spec.loader is not None
@@ -271,10 +272,14 @@ class RestoreTest(unittest.TestCase):
         bootstrap.mkdir()
         database_root = staging / "restoration-database"
         database_root.mkdir()
-        (database_root / "the-storm.db").write_bytes(b"migrated identity")
+        database_proof = lock_fixture(staging, database_root / "the-storm.db", "fixture-request")
         restore.save_json(
             database_root / "receipt.json",
-            {"townImport": "VERIFIED", "databaseSha256": restore.digest(database_root / "the-storm.db")},
+            {
+                **database_proof,
+                "townImport": "VERIFIED",
+                "databaseSha256": restore.digest(database_root / "the-storm.db"),
+            },
         )
         inputs = {candidate.name: restore.digest(candidate), proof.name: restore.digest(proof)}
         receipt = {
@@ -387,7 +392,10 @@ class RestoreTest(unittest.TestCase):
         verification.assert_called_once()
         assembled = staging / "activation-layout"
         self.assertEqual((assembled / "world/level.dat").read_bytes(), b"historical metadata")
-        self.assertEqual((assembled / "plugins/TheStorm/the-storm.db").read_bytes(), b"migrated identity")
+        self.assertEqual(
+            (assembled / "plugins/TheStorm/the-storm.db").read_bytes(),
+            (staging / "restoration-database/the-storm.db").read_bytes(),
+        )
         for name in ("settlement", "rustworks", "rwf"):
             self.assertEqual(
                 restore.fingerprint(assembled / "world/dimensions/minecraft" / name),

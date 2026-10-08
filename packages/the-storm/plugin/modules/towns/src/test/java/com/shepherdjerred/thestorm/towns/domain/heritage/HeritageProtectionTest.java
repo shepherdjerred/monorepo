@@ -13,6 +13,7 @@ import com.shepherdjerred.thestorm.towns.domain.protection.Actor;
 import com.shepherdjerred.thestorm.towns.domain.protection.ProtectionEngine;
 import com.shepherdjerred.thestorm.towns.domain.protection.Subject;
 import com.shepherdjerred.thestorm.towns.domain.region.RegionIndex;
+import com.shepherdjerred.thestorm.towns.domain.region.RegionProfile;
 import com.shepherdjerred.thestorm.towns.domain.world.WorldEffect;
 import com.shepherdjerred.thestorm.towns.domain.world.WorldRules;
 import java.nio.file.Files;
@@ -53,9 +54,9 @@ final class HeritageProtectionTest {
   @Test
   void catalogContainsEveryReviewedSiteAndSevenProvenMayors() throws Exception {
     var catalog = catalog();
-    assertThat(catalog.sites()).hasSize(223);
+    assertThat(catalog.sites()).hasSize(234);
     assertThat(catalog.sites().stream().filter(site -> site.id().startsWith("archive-")))
-        .hasSize(155)
+        .hasSize(166)
         .allSatisfy(
             site -> {
               assertThat(site.kind()).isEqualTo(HeritageSite.Kind.HERITAGE);
@@ -194,14 +195,36 @@ final class HeritageProtectionTest {
   }
 
   @Test
+  void additionalInteriorDwellingsArePreservedWithoutInventedOwnership() throws Exception {
+    var sites =
+        catalog().sites().stream().filter(site -> site.id().startsWith("archive-bed-")).toList();
+    assertThat(sites)
+        .hasSize(11)
+        .allSatisfy(
+            site -> {
+              assertThat(site.profile()).isEqualTo(RegionProfile.SAFE);
+              assertThat(site.editors()).isEmpty();
+              assertThat(site.editingChunks()).isEmpty();
+              assertThat(site.provenance()).contains("not ownership", "visually reviewed");
+              assertThat(site.protectedAreas())
+                  .singleElement()
+                  .satisfies(
+                      area -> {
+                        assertThat(area.from().y()).isEqualTo(-64);
+                        assertThat(area.to().y()).isEqualTo(319);
+                      });
+            });
+  }
+
+  @Test
   void directoryIncludesSpawnAndMultiwordNamesWithoutFakeMembers() throws Exception {
     var directory = new TownListings(state());
     assertThat(directory.page(1, 25).towns().getFirst().name()).isEqualTo("Spawn");
-    assertThat(directory.page(9, 25).towns()).hasSize(23);
-    var lastPageName = directory.page(9, 25).towns().getLast().name();
+    assertThat(directory.page(10, 25).towns()).hasSize(9);
+    var lastPageName = directory.page(10, 25).towns().getLast().name();
     assertThat(directory.matchingNames(lastPageName.toUpperCase(java.util.Locale.ROOT)))
         .containsExactly(lastPageName);
-    assertThat(directory.matchingNames("")).hasSize(223);
+    assertThat(directory.matchingNames("")).hasSize(234);
     var falls = directory.info("Frost_Falls").orElseThrow();
     assertThat(falls.name()).isEqualTo("Frost Falls");
     assertThat(falls.members()).isZero();
@@ -227,11 +250,11 @@ final class HeritageProtectionTest {
     state.addTown(town);
     var directory = new TownListings(state);
     assertThat(directory.info(site.name()).orElseThrow().members()).isEqualTo(1);
-    assertThat(directory.page(1, 25).total()).isEqualTo(223);
+    assertThat(directory.page(1, 25).total()).isEqualTo(234);
     state.replaceTown(town.renamed("NewIdentity"));
     assertThat(directory.info("NewIdentity").orElseThrow().name()).isEqualTo(site.name());
     assertThat(directory.info(site.name()).orElseThrow().members()).isEqualTo(1);
-    assertThat(directory.page(1, 25).total()).isEqualTo(223);
+    assertThat(directory.page(1, 25).total()).isEqualTo(234);
     state.removeTown(town.id());
     assertThat(directory.info(site.name()).orElseThrow().members()).isZero();
     assertThat(state.heritageNameReserved(site.activeTownName(), java.util.Optional.empty()))

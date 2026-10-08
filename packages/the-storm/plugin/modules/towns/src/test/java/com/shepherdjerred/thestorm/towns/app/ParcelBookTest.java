@@ -44,7 +44,7 @@ final class ParcelBookTest {
   private static final Act OPEN = new Act(Action.OPEN_CONTAINER, Subject.CONTAINER);
 
   @Test
-  void restoredShopDistrictContainsEveryReviewedBuildingWithoutInventingOwners() throws Exception {
+  void restoredShopDistrictContainsEveryReviewedBuildingAndInferredOwners() throws Exception {
     var path = Path.of("../../../server/owned/plugins/TheStorm/parcels.yml");
     var config =
         StrictYaml.parse(path.toString(), Files.readString(path), ParcelsConfig.class)
@@ -58,7 +58,16 @@ final class ParcelBookTest {
             config.parcels().stream().filter(parcel -> parcel.kind() == ParcelKind.PERMANENT_SHOP))
         .hasSize(19)
         .allSatisfy(parcel -> assertThat(parcel.weeklyRent()).isZero());
-    assertThat(config.parcels().stream().filter(parcel -> !parcel.owners().isEmpty())).hasSize(3);
+    assertThat(config.parcels().stream().filter(parcel -> !parcel.owners().isEmpty())).hasSize(6);
+    var shared =
+        config.parcels().stream()
+            .filter(parcel -> parcel.id().equals("anteron-zah-shop"))
+            .findFirst()
+            .orElseThrow();
+    assertThat(shared.owners())
+        .containsExactlyInAnyOrder(
+            UUID.fromString("a35bbf91-d274-4e26-bc64-09d8c06a3c9d"),
+            UUID.fromString("9cee5afe-e1e3-4c7a-83b1-eaf5fdcc96a0"));
     assertThat(config.parcels().stream().map(ParcelDefinition::id))
         .contains(
             "lawful-farm-shop",
