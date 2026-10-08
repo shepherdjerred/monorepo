@@ -82,7 +82,10 @@ const WorkloadSchema = z.object({
 
 const MinecraftApplicationSchema = z.object({
   kind: z.literal("Application"),
-  metadata: z.object({ name: z.string() }),
+  metadata: z.object({
+    name: z.string(),
+    annotations: z.record(z.string(), z.string()).optional(),
+  }),
   spec: z.object({
     source: z.object({
       helm: z.object({ valuesObject: z.record(z.string(), z.unknown()) }),
@@ -574,6 +577,10 @@ describe("Burst-memory sharing policy", () => {
       },
     });
     expectSjerredPostCutoverCleanup(sjerredApplication);
+    expect(sjerredApplication?.metadata.annotations).toMatchObject({
+      "argocd.argoproj.io/client-side-apply-migration-manager":
+        "argocd-application-controller",
+    });
     expect(sjerred?.["extraEnv"]).toEqual({
       ALLOW_FLIGHT: "TRUE",
       ENABLE_WHITELIST: "TRUE",

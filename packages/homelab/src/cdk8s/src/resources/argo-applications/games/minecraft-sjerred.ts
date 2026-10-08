@@ -259,6 +259,13 @@ export function createMinecraftSjerredApp(chart: Chart) {
   return new Application(chart, "minecraft-sjerred-app", {
     metadata: {
       name: "minecraft-sjerred",
+      annotations: {
+        // Older ArgoCD client-side writes still co-own the channel's Secret
+        // reference. Migrate that ownership before server-side apply removes
+        // valueFrom and applies the repository-owned channel ID.
+        "argocd.argoproj.io/client-side-apply-migration-manager":
+          "argocd-application-controller",
+      },
     },
     spec: {
       revisionHistoryLimit: 2,
