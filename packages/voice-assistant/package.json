@@ -20,8 +20,8 @@
     "@opentelemetry/api": "^1.9.1",
     "node-av": "^6.1.1",
     "onnxruntime-node": "1.30.0",
-    "sherpa-onnx": "1.13.7",
-    "sherpa-onnx-node": "1.13.7",
+    "sherpa-onnx": "1.13.8",
+    "sherpa-onnx-node": "1.13.8",
     "zod": "^4.4.3"
   },
   "devDependencies": {
