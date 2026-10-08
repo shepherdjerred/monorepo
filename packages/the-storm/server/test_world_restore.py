@@ -63,6 +63,42 @@ class RestoreTest(unittest.TestCase):
             restore.prepare(archive, destination)
         self.assertFalse(destination.exists())
 
+    def test_database_preparation_locks_the_historical_data_root(self):
+        staging = self.root / "staging"
+        historical = staging / "heritage-preserved-layout/world"
+        historical.mkdir(parents=True)
+        (historical / "level.dat").write_bytes(b"historical")
+        (historical / "session.lock").write_bytes(b"lock")
+        modern = self.root / "modern"
+        (modern / "world").mkdir(parents=True)
+        (modern / "world/level.dat").write_bytes(b"modern")
+        (modern / "world/session.lock").write_bytes(b"lock")
+        paper, candidate, backup = (self.root / name for name in ("paper.jar", "TheStorm.jar", "backup.json"))
+        for path in (paper, candidate, backup):
+            path.write_bytes(b"fixture")
+        bootstrap = self.root / "bootstrap"
+        bootstrap.mkdir()
+        restore.save_json(staging / "heritage-preserved-layout-files.json", restore.fingerprint(historical))
+        restore.save_json(
+            staging / restore.JOURNAL,
+            {
+                "phase": "ARENAS_PRESERVED",
+                "archiveSha256": restore.ARCHIVE_SHA256,
+                "arenaTransplantInputs": {
+                    backup.name: restore.digest(backup),
+                    candidate.name: restore.digest(candidate),
+                },
+            },
+        )
+        with (
+            patch.object(restore, "conversion_classpath", return_value="fixture"),
+            patch.object(restore, "verified_backup", side_effect=ValueError("backup verification reached")) as verify,
+            self.assertRaisesRegex(ValueError, "backup verification reached"),
+        ):
+            restore.prepare_database(staging, paper, bootstrap, candidate, modern, backup)
+        verify.assert_called_once_with(modern.resolve(), backup.resolve())
+        self.assertFalse((staging / "restoration-database").exists())
+
     def test_headers_preserve_negative_coordinates_and_reject_overlap(self):
         region = self.root / "region"
         region.mkdir()

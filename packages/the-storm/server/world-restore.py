@@ -956,7 +956,7 @@ def prepare_database(
         raise ValueError("Database preparation already exists; retain and inspect its evidence")
     with ExitStack() as locks:
         stopped_locks(modern_data, locks)
-        stopped_locks(historical, locks)
+        stopped_locks(historical.parent, locks)
         expected = verified_backup(modern_data, backup_proof)
         root.mkdir(mode=0o700)
         imported_at = datetime.now(UTC).isoformat()
