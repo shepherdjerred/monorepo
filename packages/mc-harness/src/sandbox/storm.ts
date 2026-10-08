@@ -106,6 +106,11 @@ const STORM_IMAGE_CONFIGS: Readonly<
     moduleKeys: STORM_IMAGE_MODULE_KEYS,
     enabledModules: STORM_IMAGE_ENABLED_MODULES,
   },
+  // Pipeline 6602's exact published /plugins/TheStorm/config.yml has these keys.
+  "6ed63721f4ad14c7d29a389eacd2685016941caf1515f7d9b67dbbc010511144": {
+    moduleKeys: STORM_IMAGE_MODULE_KEYS,
+    enabledModules: STORM_IMAGE_ENABLED_MODULES,
+  },
 };
 
 export function stormImageConfig(image: string): {
