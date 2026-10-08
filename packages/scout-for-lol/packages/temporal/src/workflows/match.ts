@@ -1,10 +1,5 @@
 import { z } from "zod";
-import {
-  ApplicationFailure,
-  deprecatePatch,
-  patched,
-  startChild,
-} from "@temporalio/workflow";
+import { ApplicationFailure, patched, startChild } from "@temporalio/workflow";
 import { WorkflowExecutionAlreadyStartedError } from "@temporalio/common";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
@@ -53,14 +48,7 @@ import {
   installMatchDispatchCompletionHandler,
   processDiscoveredMatchesThroughDispatcher,
 } from "./shared-match-dispatch.ts";
-
-/**
- * The marker post-match discoveries recorded after the ownership read was
- * retired. Never rename it: a patch id names one change to this Workflow's
- * command sequence for as long as an execution that recorded it can replay.
- */
-export const SCOUT_POSTMATCH_OWNERSHIP_RETIRED_PATCH =
-  "scout-v2-retired-postmatch-ownership";
+import { replayRetiredPostmatchOwnershipRead } from "./retired-ownership.ts";
 
 /**
  * One discovered match as the loop consumes it: the id always, and the fields
@@ -217,11 +205,11 @@ export async function scoutPostMatchDiscoveryWorkflow(
   rawInput: ScoutPostMatchDiscoveryInputEnvelope,
 ): Promise<ScoutPostMatchDiscoveryResultEnvelope> {
   const input = scoutPostMatchDiscoveryInputCodec.parse(rawInput);
-  // Discoveries recorded between the ownership read's retirement and this
-  // release carry the retirement marker; every one recorded before it has
-  // closed. `deprecatePatch` accepts the marker where it stands and records
-  // nothing new. Remove it once no discovery carrying the marker is retained.
-  deprecatePatch(SCOUT_POSTMATCH_OWNERSHIP_RETIRED_PATCH);
+  // Discovery owns every pass unconditionally. Histories recorded while the
+  // v1 rollback switch existed asked first, and closed ones are retained and
+  // replayed before promotion; this replays that read for them and does
+  // nothing for any other run. See `retired-ownership.ts`.
+  await replayRetiredPostmatchOwnershipRead(input);
   const dispatchResults = installMatchDispatchCompletionHandler();
   setWorkflowPhase("**Phase:** discovering completed matches");
   const scan = await realtimePipelineActivities(

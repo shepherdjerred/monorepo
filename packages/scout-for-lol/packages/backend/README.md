@@ -466,13 +466,16 @@ awaiting a child.
 
 ### Post-match discovery patches
 
-Discovery runs every minute, so its histories turn over quickly. Runs recorded
-while the retired ownership read existed have all closed; runs recorded since
-carry the `scout-v2-retired-postmatch-ownership` marker, which
-`scoutPostMatchDiscoveryWorkflow` now accepts through `deprecatePatch`. That
-call still writes the marker, flagged deprecated, so the release that deletes
-it replays every history in between (`match-replay.test.ts` replays a committed
-fixture carrying the marker).
+No discovery recorded while the retired ownership read existed is still
+running, but closed histories stay retained for the namespace's 30 days and
+are replayed against a candidate bundle before promotion. So
+`scoutPostMatchDiscoveryWorkflow` still replays the read for those histories
+(`replayRetiredPostmatchOwnershipRead` in the Scout Temporal package's
+`workflows/retired-ownership.ts`), runs recorded since carry the
+`scout-v2-retired-postmatch-ownership` marker, and the realtime worker still
+answers the read with `run-v2`. `match-replay.test.ts` replays committed
+fixtures of both generations. Once no history predating the retirement is
+retained, the gate becomes `deprecatePatch` of the retired marker.
 
 `ScoutEffectClaim` keeps taking the top-level Prisma client, and
 `src/temporal/effect-claims.ts` carries the reason: `claimScoutEffect` is an
@@ -619,9 +622,9 @@ and callout refresh, and, unless betting is hard-disabled, parlay market
 activation and betting and parlay window closes. Discovery records one
 `prematch_detections_total{status}` sample per probed account (`game`,
 `idle`, `unreadable`). The maintenance tail sits behind the
-`scout-v2-prematch-maintenance` patch, now `deprecatePatch`: every retained
-poll history carries the marker, and the call still writes it, flagged
-deprecated.
+`scout-v2-prematch-maintenance` patch. It stays `patched` until no closed poll
+history recorded before the tail is retained, because retained histories are
+replayed before promotion and one of them completed where the tail now runs.
 
 Notification intents are keyed `prematch-discord:<matchId>:<channelId>`, a
 delivered or `unknown-delivery` intent is never redriven, and betting pools are

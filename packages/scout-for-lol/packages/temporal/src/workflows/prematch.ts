@@ -1,10 +1,4 @@
-import {
-  deprecatePatch,
-  isCancellation,
-  log,
-  patched,
-  startChild,
-} from "@temporalio/workflow";
+import { isCancellation, log, patched, startChild } from "@temporalio/workflow";
 import {
   ApplicationFailure,
   WorkflowExecutionAlreadyStartedError,
@@ -87,15 +81,18 @@ export async function scoutPrematchDiscoveryWorkflow(
     }
   }
 
-  // Every poll recorded since the maintenance tail shipped carries this
-  // marker, and every one recorded before it has closed. `deprecatePatch`
-  // accepts the marker where it stands and records nothing new. Remove it
-  // once no poll carrying the marker is retained.
-  deprecatePatch(SCOUT_PREMATCH_MAINTENANCE_PATCH);
-  setWorkflowPhase("**Phase:** running prematch maintenance");
-  await realtimePipelineActivities(input.stage).runPrematchMaintenance({
-    stage: input.stage,
-  });
+  // Gated, although it is appended at the end. Closed discovery histories are
+  // retained for the namespace's 30-day retention and replayed against a
+  // candidate bundle before promotion, and one recorded before the tail
+  // completed right after its last child start, so an unconditional Activity
+  // there would fail that replay. Retire with `deprecatePatch` once no history
+  // predating it is retained.
+  if (patched(SCOUT_PREMATCH_MAINTENANCE_PATCH)) {
+    setWorkflowPhase("**Phase:** running prematch maintenance");
+    await realtimePipelineActivities(input.stage).runPrematchMaintenance({
+      stage: input.stage,
+    });
+  }
 
   return scoutPrematchDiscoveryResultCodec.serialize({
     status: "completed",
