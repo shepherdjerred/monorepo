@@ -1208,7 +1208,9 @@ class RestorationControlTest(unittest.TestCase):
     def test_pending_writer_recovery_precedes_install_and_rollback_mount_checks(self):
         for operation in ("install", "whole_rollback"):
             with self.subTest(operation=operation):
+                self.path.unlink(missing_ok=True)
                 journal = self.initialize()
+                self.assertNotIn("writerUid", journal)
                 journal["productionWriteAuthorized"] = True
                 journal["writerCreationPending"] = True
                 pod = control.writer_manifest(journal)
@@ -1237,7 +1239,9 @@ class RestorationControlTest(unittest.TestCase):
     def test_pending_writer_recovery_requires_authorization_and_offline_validation_before_save(self):
         for failure in ("authorization", "offline", "command"):
             with self.subTest(failure=failure):
+                self.path.unlink(missing_ok=True)
                 journal = self.initialize()
+                self.assertNotIn("writerUid", journal)
                 journal["writerCreationPending"] = True
                 journal["productionWriteAuthorized"] = failure != "authorization"
                 pod = control.writer_manifest(journal)
