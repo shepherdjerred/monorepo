@@ -53,16 +53,19 @@ def render_unlit(data: Path, request: str, jar_sha: str) -> JsonObject:
         raise ValueError("Map configuration changed outside the bounded lighting repair")
     storage.save(receipt_path, receipt)
     if current != updated:
-        temporary = workspace / "bluemap-config.writing"
-        if temporary.is_symlink():
-            raise ValueError("Map copy staging cannot be linked")
+        temporary = workspace / f"bluemap-config-{uuid.uuid4()}.writing"
         owner = config.stat()
-        temporary.write_bytes(updated)
-        os.chmod(temporary, owner.st_mode & 0o777)
-        os.chown(temporary, owner.st_uid, owner.st_gid)
-        with temporary.open("rb") as stream:
-            os.fsync(stream.fileno())
-        temporary.replace(config)
+        descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+        try:
+            with os.fdopen(descriptor, "wb") as stream:
+                stream.write(updated)
+                stream.flush()
+                os.fchmod(stream.fileno(), owner.st_mode & 0o777)
+                os.fchown(stream.fileno(), owner.st_uid, owner.st_gid)
+                os.fsync(stream.fileno())
+            temporary.replace(config)
+        finally:
+            temporary.unlink(missing_ok=True)
         storage.sync_directory(config.parent)
     if config.read_bytes() != updated:
         raise ValueError("Map configuration readback changed")

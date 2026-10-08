@@ -1,5 +1,6 @@
 import shutil
 import unittest
+import uuid
 from pathlib import Path
 from unittest.mock import patch
 
@@ -53,6 +54,29 @@ class RestorationMapsTest(unittest.TestCase):
         with patch.object(Path, "replace", interrupted), self.assertRaisesRegex(OSError, "interrupted"):
             self.repair()
         self.assertEqual(self.repair()["phase"], "VERIFIED")
+
+    def test_exclusive_staging_refuses_links_without_changing_the_target(self):
+        identifier = uuid.UUID("00000000-0000-0000-0000-000000000001")
+        staging = self.data / storage.WORKSPACE / self.request / f"bluemap-config-{identifier}.writing"
+        target = self.data / "untouched"
+        target.write_bytes(b"preserved unrelated content")
+        before = target.stat()
+        original = self.config.read_bytes()
+        staging.symlink_to(target)
+        with patch.object(restoration_maps.uuid, "uuid4", return_value=identifier), self.assertRaises(FileExistsError):
+            self.repair()
+        self.assertEqual(target.read_bytes(), b"preserved unrelated content")
+        self.assertEqual((target.stat().st_uid, target.stat().st_gid, target.stat().st_mode),
+                         (before.st_uid, before.st_gid, before.st_mode))
+        self.assertEqual(self.config.read_bytes(), original)
+        self.assertTrue(staging.is_symlink())
+
+    def test_atomic_copy_preserves_original_permissions(self):
+        self.config.chmod(0o640)
+        before = self.config.stat()
+        self.repair()
+        after = self.config.stat()
+        self.assertEqual((after.st_uid, after.st_gid, after.st_mode), (before.st_uid, before.st_gid, before.st_mode))
 
     def test_foreign_config_wrong_plugin_and_changed_receipt_refused(self):
         self.repair()
