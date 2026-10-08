@@ -1,9 +1,9 @@
 //! Durable image plans and native staged exchange; binary bytes remain bounded.
 
 use super::{
-    DeviceEffect, Engine, Mutation, ProfileKind, Receipt, Result, RuntimeError,
-    TaskNotesConfiguration, apply_remote_receipt, archive_resolution, count, payloads,
-    receipt_task_path, restore_resolution,
+    Engine, Mutation, ProfileKind, Receipt, Result, RuntimeError, TaskNotesConfiguration,
+    apply_remote_receipt, archive_resolution, count, payloads, receipt_task_path,
+    restore_resolution,
 };
 use crate::types::{
     Conflict, DisplacedMetadata, PAYLOAD_CHUNK_BYTES, PayloadInfo, ReplacementStage,
@@ -176,28 +176,68 @@ impl Engine {
     ) -> Result<Receipt> {
         let selected = self.profile(profile)?;
         self.database(|db| {
-            let tx=db.transaction()?;
-            let fingerprint:String=tx.query_row("SELECT fingerprint FROM journals WHERE profile=? AND id=?",params![profile,id],|row|row.get(0))?;
-            let mutation=if fingerprint.starts_with('{') {Some(serde_json::from_str::<Mutation>(&fingerprint)?)}else {None};
-            super::title_lineage::apply_changes(&tx,profile,id,writes)?;
+            let tx = db.transaction()?;
+            let fingerprint: String = tx.query_row(
+                "SELECT fingerprint FROM journals WHERE profile=? AND id=?",
+                params![profile, id],
+                |row| row.get(0),
+            )?;
+            let mutation = if fingerprint.starts_with('{') {
+                Some(super::retired_timing::stored_mutation(&fingerprint)?)
+            } else {
+                None
+            };
+            super::title_lineage::apply_changes(&tx, profile, id, writes)?;
             for write in writes {
-                cache_image(&tx,profile,&write.path,write.after.as_ref(),config,false)?;
-                if selected.kind==ProfileKind::ObsidianSync && !remote && write.before!=write.after {
-                    queue_image_upload(&tx,profile,&format!("{id}:{}",write.ordinal),write,mutation.as_ref())?;
+                cache_image(
+                    &tx,
+                    profile,
+                    &write.path,
+                    write.after.as_ref(),
+                    config,
+                    false,
+                )?;
+                if selected.kind == ProfileKind::ObsidianSync
+                    && !remote
+                    && write.before != write.after
+                {
+                    queue_image_upload(
+                        &tx,
+                        profile,
+                        &format!("{id}:{}", write.ordinal),
+                        write,
+                        mutation.as_ref(),
+                    )?;
                 }
             }
-            tx.execute("UPDATE profiles SET configuration=?,version=version+1 WHERE id=?",params![config.map(serde_json::to_string).transpose()?,profile])?;
-            let effect:Option<String>=tx.query_row("SELECT effect FROM journals WHERE profile=? AND id=?",params![profile,id],|row|row.get(0))?;
-            if let Some(effect)=effect {
-                let effect:DeviceEffect=serde_json::from_str(&effect)?;
-                tx.execute("INSERT INTO device_state(profile,device,json) VALUES(?,?,?) ON CONFLICT(profile,device) DO UPDATE SET json=excluded.json",params![profile,effect.device,serde_json::to_string(&effect.state)?])?;
+            tx.execute(
+                "UPDATE profiles SET configuration=?,version=version+1 WHERE id=?",
+                params![config.map(serde_json::to_string).transpose()?, profile],
+            )?;
+            let receipt = Receipt {
+                mutation_id: id.to_owned(),
+                applied: true,
+                cleanup_pending: false,
+                diagnostics: read_diagnostics(&tx, profile, id)?,
+                task_path: receipt_task_path(mutation.as_ref(), writes)?,
+                paths: writes.iter().map(|write| write.path.clone()).collect(),
+                pending_count: count(&tx, "outbox", profile)?,
+            };
+            archive_resolution(&tx, profile, id)?;
+            if let Some(Mutation {
+                command: crate::types::Command::Undo { receipt_id },
+                ..
+            }) = &mutation
+            {
+                restore_resolution(&tx, profile, receipt_id)?;
             }
-            let receipt=Receipt{mutation_id:id.to_owned(),applied:true,cleanup_pending:false,diagnostics:read_diagnostics(&tx,profile,id)?,task_path:receipt_task_path(mutation.as_ref(),writes)?,paths:writes.iter().map(|write|write.path.clone()).collect(),pending_count:count(&tx,"outbox",profile)?};
-            archive_resolution(&tx,profile,id)?;
-            if let Some(Mutation{command:crate::types::Command::Undo{receipt_id},..})=&mutation {restore_resolution(&tx,profile,receipt_id)?;}
-            apply_remote_receipt(&tx,profile,id)?;
-            tx.execute("UPDATE journals SET receipt=? WHERE profile=? AND id=?",params![serde_json::to_string(&receipt)?,profile,id])?;
-            tx.commit()?;Ok(receipt)
+            apply_remote_receipt(&tx, profile, id)?;
+            tx.execute(
+                "UPDATE journals SET receipt=? WHERE profile=? AND id=?",
+                params![serde_json::to_string(&receipt)?, profile, id],
+            )?;
+            tx.commit()?;
+            Ok(receipt)
         })
     }
 

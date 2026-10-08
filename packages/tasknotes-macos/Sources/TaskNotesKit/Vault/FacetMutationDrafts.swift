@@ -105,7 +105,7 @@ internal struct FacetMutationDrafts: Sendable {
         return try FacetJSON.decoder(bytes).decode(Draft.self, from: bytes)
     }
 
-    /// Called only once the UI has observed an applied durable receipt.
+    /// Called after an applied receipt or explicit receipt-backed retirement.
     func discard(id: String) throws {
         guard UUID(uuidString: id) != nil else { throw FacetContractError.unsupportedResponse }
         let files = try VaultDirectory(url: directory)
@@ -134,4 +134,42 @@ public struct FacetPendingMutation: Sendable, Identifiable {
     public let profileID: String
     public let id: String
     public let mutation: FacetValue
+    public var canResume: Bool { FacetRetainedActions.canResume(mutation) }
+}
+
+/// Historical private drafts remain readable without restoring public commands.
+internal enum FacetRetainedActions {
+    static func canResume(_ mutation: FacetValue) -> Bool {
+        guard let command = mutation.object?.fields["command"] else { return false }
+        return supports(command)
+    }
+
+    private static func supports(_ command: FacetValue) -> Bool {
+        guard let kind = command.object?.fields["kind"]?.text else { return false }
+        if ["start_time", "stop_time", "set_time_entries", "pomodoro"].contains(kind) {
+            return false
+        }
+        if ["batch", "batch_partial"].contains(kind) {
+            return command.object?.fields["commands"]?.array?.elements.allSatisfy(supports) == true
+        }
+        return true
+    }
+
+    static func validateRetirement(
+        _ saved: FacetPendingMutation, outcome: FacetValue, schema: FacetSchema
+    ) throws {
+        try schema.validate(saved.mutation, definition: "retainedMutation")
+        try schema.validate(outcome, definition: "mutationReceipt")
+        guard !saved.canResume,
+            outcome.object?.fields["mutationId"] == .string(saved.id)
+        else { throw FacetContractError.unsupportedResponse }
+        let state = outcome.object?.fields["state"]?.text
+        if state == "applied" {
+            guard let receipt = outcome.object?.fields["receipt"]?.object?.fields,
+                receipt["mutationId"] == .string(saved.id), receipt["applied"] == .bool(true)
+            else { throw FacetContractError.unsupportedResponse }
+        } else if state != "absent" && state != "parked" {
+            throw FacetDraftError.changedNote
+        }
+    }
 }

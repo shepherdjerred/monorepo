@@ -301,7 +301,7 @@ public sealed class FacetPersistenceTests
                 {
                     new
                     {
-                        kind = "complete",
+                        kind = "set_completion",
                         path = "a.md",
                         expectedRevision = "old",
                         completed = true,
@@ -320,7 +320,7 @@ public sealed class FacetPersistenceTests
                         completed = true,
                         expectedRevision = "published",
                         path = "a.md",
-                        kind = "complete",
+                        kind = "set_completion",
                     },
                 },
                 kind = "batch",

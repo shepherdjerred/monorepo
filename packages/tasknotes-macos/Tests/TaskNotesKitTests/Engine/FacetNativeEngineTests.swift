@@ -4,7 +4,36 @@ import Testing
 @testable import TaskNotesKit
 
 struct FacetNativeEngineTests {
-    @Test func nativeTimingViewsAndPartialBatchKeepAppliedWork() async throws {
+    @Test func removedSavedActionCannotResumeAndRetiresOnlyAfterOutcomeCheck() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let vault = root.appendingPathComponent("vault")
+        let engineDirectory = root.appendingPathComponent("engine")
+        try FileManager.default.createDirectory(at: vault, withIntermediateDirectories: true)
+        defer { NativeTestFiles.remove(root) }
+        let engine = try await FacetEngine.open(directory: engineDirectory)
+        let profile = try await engine.registerLocal(directory: vault, approveStandard: true)
+        let id = UUID().uuidString
+        let draftsDirectory = engineDirectory.appendingPathComponent("action-drafts")
+        let drafts = try FacetMutationDrafts(directory: draftsDirectory)
+        _ = try drafts.envelope(
+            profileID: profile.id, id: id,
+            command: .object(["kind": .string("stop_time"), "path": .string("Tasks/old.md")]),
+            at: "2026-10-03T12:00:00Z")
+        let path = draftsDirectory.appendingPathComponent(id + ".json")
+        let original = try Data(contentsOf: path)
+        let pending = try #require(await engine.pendingMutations().first)
+        #expect(!pending.canResume)
+        await #expect(throws: FacetDraftError.retiredFeature) {
+            try await engine.retryMutation(id: id)
+        }
+        #expect(try Data(contentsOf: path) == original)
+        try await engine.retireSavedMutation(id: id)
+        #expect(try await engine.pendingMutations().isEmpty)
+        #expect(try await engine.snapshot(profileID: profile.id, query: .object([:])).tasks.isEmpty)
+        try await engine.close()
+    }
+
+    @Test func nativeViewsAndPartialBatchKeepAppliedWork() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         let vault = root.appendingPathComponent("vault")
         try FileManager.default.createDirectory(at: vault, withIntermediateDirectories: true)
@@ -16,11 +45,10 @@ struct FacetNativeEngineTests {
             profileID: profile.id,
             command: .object([
                 "kind": .string("create"),
-                "properties": .object(["title": .string("Tracked task")]),
+                "properties": .object(["title": .string("Native task")]),
             ]))
         let task = try #require(
             await engine.snapshot(profileID: profile.id, query: .object([:])).tasks.first)
-        try await verifyTracking(engine: engine, profileID: profile.id, path: task.path)
         try await engine.execute(
             profileID: profile.id,
             command: .object([
@@ -52,23 +80,6 @@ struct FacetNativeEngineTests {
         let snapshot = try await engine.snapshot(profileID: profile.id, query: .object([:]))
         #expect(snapshot.views.first?.view["name"] == .string("Native work"))
         #expect(snapshot.tasks.first?.properties["contexts"] == .array([.string("saved")]))
-    }
-
-    private func verifyTracking(engine: FacetEngine, profileID: String, path: String) async throws {
-        try await engine.execute(
-            profileID: profileID,
-            command: .object(["kind": .string("start_time"), "path": .string(path)]))
-        let timeValue = try await engine.features(
-            profileID: profileID,
-            request: .object([
-                "kind": .string("task_time"), "path": .string(path),
-                "at": .string(Date.now.ISO8601Format()),
-            ]))
-        let time = try FacetFeatureProjection.decode(FacetTaskTime.self, from: timeValue)
-        #expect(time.hasActiveSession)
-        try await engine.execute(
-            profileID: profileID,
-            command: .object(["kind": .string("stop_time"), "path": .string(path)]))
     }
 
     @Test func standaloneCaptureReceiptReplayAndFeaturesValidate() async throws {

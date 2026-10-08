@@ -154,23 +154,6 @@ namespace TaskNotes.Windows.App.Views
             );
         }
 
-        private void MoreTimeEntries_Click(object sender, RoutedEventArgs eventArgs)
-        {
-            _ = sender;
-            _ = eventArgs;
-            Run("more-time-entries", () => RequireViewModel().LoadNextTrackingHistoryAsync());
-        }
-
-        private void ToggleTime_Click(object sender, RoutedEventArgs eventArgs)
-        {
-            _ = sender;
-            _ = eventArgs;
-            if (RequireViewModel().IsLoaded)
-            {
-                Run("toggle-time", () => RequireViewModel().ToggleTimeAsync());
-            }
-        }
-
         private void Run(string operationName, Func<Task> operation)
         {
             UiOperationQueue operations =

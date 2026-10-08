@@ -19,8 +19,6 @@ export type RootStackParamList = {
   QuickAdd: CaptureSeedRouteParams | undefined;
   Search: undefined;
   Settings: undefined;
-  Pomodoro: { taskId?: TaskId } | undefined;
-  TimeReport: undefined;
 };
 
 export type MainTabParamList = {

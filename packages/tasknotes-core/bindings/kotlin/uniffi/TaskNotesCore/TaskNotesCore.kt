@@ -1151,10 +1151,6 @@ internal object IntegrityCheckingUniffiLib {
     ): Int
     external fun uniffi_tasknotes_core_ffi_checksum_func_date_parse_local(
     ): Int
-    external fun uniffi_tasknotes_core_ffi_checksum_func_elapsed_format(
-    ): Int
-    external fun uniffi_tasknotes_core_ffi_checksum_func_elapsed_seconds_since(
-    ): Int
     external fun uniffi_tasknotes_core_ffi_checksum_func_migration_current_schema_version(
     ): Int
     external fun uniffi_tasknotes_core_ffi_checksum_func_run_migrations(
@@ -1348,22 +1344,6 @@ internal object IntegrityCheckingUniffiLib {
     external fun uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_base_url(
     ): Int
     external fun uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_cancel_all(
-    ): Int
-    external fun uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_pause_pomodoro(
-    ): Int
-    external fun uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_pomodoro_status(
-    ): Int
-    external fun uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_start_pomodoro(
-    ): Int
-    external fun uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_start_time_tracking(
-    ): Int
-    external fun uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_stop_pomodoro(
-    ): Int
-    external fun uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_stop_time_tracking(
-    ): Int
-    external fun uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_task_time(
-    ): Int
-    external fun uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_time_summary(
     ): Int
     external fun uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_cancel_request(
     ): Int
@@ -1697,22 +1677,6 @@ internal object UniffiLib {
     ): RustBuffer.ByValue
     external fun uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_cancel_all(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
-    external fun uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_pause_pomodoro(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    external fun uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_pomodoro_status(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    external fun uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_start_pomodoro(`ptr`: Long,`taskId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    external fun uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_start_time_tracking(`ptr`: Long,`taskId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    external fun uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_stop_pomodoro(`ptr`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    external fun uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_stop_time_tracking(`ptr`: Long,`taskId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    external fun uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_task_time(`ptr`: Long,`taskId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    external fun uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_time_summary(`ptr`: Long,`period`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
     external fun uniffi_tasknotes_core_ffi_fn_clone_ffiobsidianaccount(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Long
     external fun uniffi_tasknotes_core_ffi_fn_free_ffiobsidianaccount(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
@@ -1913,10 +1877,6 @@ internal object UniffiLib {
     ): RustBuffer.ByValue
     external fun uniffi_tasknotes_core_ffi_fn_func_date_parse_local(`raw`: RustBuffer.ByValue,`viewerUtcOffsetSeconds`: Int,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
-    external fun uniffi_tasknotes_core_ffi_fn_func_elapsed_format(`seconds`: Long,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    external fun uniffi_tasknotes_core_ffi_fn_func_elapsed_seconds_since(`start`: RustBuffer.ByValue,`now`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): Long
     external fun uniffi_tasknotes_core_ffi_fn_func_migration_current_schema_version(uniffi_out_err: UniffiRustCallStatus, 
     ): Int
     external fun uniffi_tasknotes_core_ffi_fn_func_run_migrations(`storage`: Long,`clock`: Long,`random`: Long,uniffi_out_err: UniffiRustCallStatus, 
@@ -2242,12 +2202,6 @@ private fun uniffiCheckApiChecksums(lib: IntegrityCheckingUniffiLib) {
     if ((lib.uniffi_tasknotes_core_ffi_checksum_func_date_parse_local() and 0xFFFF) != 47880) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if ((lib.uniffi_tasknotes_core_ffi_checksum_func_elapsed_format() and 0xFFFF) != 49010) {
-        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    }
-    if ((lib.uniffi_tasknotes_core_ffi_checksum_func_elapsed_seconds_since() and 0xFFFF) != 23598) {
-        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    }
     if ((lib.uniffi_tasknotes_core_ffi_checksum_func_migration_current_schema_version() and 0xFFFF) != 13709) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
@@ -2537,30 +2491,6 @@ private fun uniffiCheckApiChecksums(lib: IntegrityCheckingUniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if ((lib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_cancel_all() and 0xFFFF) != 59292) {
-        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    }
-    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_pause_pomodoro() and 0xFFFF) != 58341) {
-        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    }
-    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_pomodoro_status() and 0xFFFF) != 54685) {
-        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    }
-    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_start_pomodoro() and 0xFFFF) != 52891) {
-        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    }
-    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_start_time_tracking() and 0xFFFF) != 7312) {
-        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    }
-    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_stop_pomodoro() and 0xFFFF) != 34297) {
-        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    }
-    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_stop_time_tracking() and 0xFFFF) != 23374) {
-        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    }
-    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_task_time() and 0xFFFF) != 12914) {
-        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    }
-    if ((lib.uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_time_summary() and 0xFFFF) != 8961) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if ((lib.uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_cancel_request() and 0xFFFF) != 1389) {
@@ -11458,78 +11388,6 @@ public interface TaskNotesApiInterface {
      */
     fun `cancelAll`()
     
-    /**
-     * Toggle the current interval between running and paused.
-     *
-     * # Errors
-     *
-     * Propagates the core's transport, HTTP, and response-validation failure.
-     */
-    fun `pausePomodoro`(): PomodoroStatus
-    
-    /**
-     * Read the current server-backed focus interval.
-     *
-     * # Errors
-     *
-     * Propagates the core's transport, HTTP, and response-validation failure.
-     */
-    fun `pomodoroStatus`(): PomodoroStatus
-    
-    /**
-     * Start a server-backed focus interval, optionally assigned to a task.
-     *
-     * # Errors
-     *
-     * Propagates the core's transport, HTTP, and response-validation failure.
-     */
-    fun `startPomodoro`(`taskId`: TaskId?): PomodoroStatus
-    
-    /**
-     * Start tracking time against a task through the core-owned wire client.
-     *
-     * # Errors
-     *
-     * Propagates the core's transport, HTTP, and response-validation failure.
-     */
-    fun `startTimeTracking`(`taskId`: TaskId): Task
-    
-    /**
-     * Stop the current server-backed focus interval.
-     *
-     * # Errors
-     *
-     * Propagates the core's transport, HTTP, and response-validation failure.
-     */
-    fun `stopPomodoro`(): PomodoroStatus
-    
-    /**
-     * Stop tracking time against a task through the core-owned wire client.
-     *
-     * # Errors
-     *
-     * Propagates the core's transport, HTTP, and response-validation failure.
-     */
-    fun `stopTimeTracking`(`taskId`: TaskId): Task
-    
-    /**
-     * Read tracked-time totals for one task.
-     *
-     * # Errors
-     *
-     * Propagates the core's transport, HTTP, and response-validation failure.
-     */
-    fun `taskTime`(`taskId`: TaskId): TaskTime
-    
-    /**
-     * Read the aggregate time report for a named server period.
-     *
-     * # Errors
-     *
-     * Propagates the core's transport, HTTP, and response-validation failure.
-     */
-    fun `timeSummary`(`period`: kotlin.String): TimeSummary
-    
     companion object
 }
 
@@ -11705,179 +11563,6 @@ open class TaskNotesApi: Disposable, AutoCloseable, TaskNotesApiInterface
 }
     }
     
-    
-
-    
-    /**
-     * Toggle the current interval between running and paused.
-     *
-     * # Errors
-     *
-     * Propagates the core's transport, HTTP, and response-validation failure.
-     */
-    @Throws(CoreException::class)override fun `pausePomodoro`(): PomodoroStatus {
-            return FfiConverterTypePomodoroStatus.lift(
-    callWithHandle {
-    uniffiRustCallWithError(CoreException) { _status ->
-    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_pause_pomodoro(
-        it,
-        _status)
-}
-    }
-    )
-    }
-    
-
-    
-    /**
-     * Read the current server-backed focus interval.
-     *
-     * # Errors
-     *
-     * Propagates the core's transport, HTTP, and response-validation failure.
-     */
-    @Throws(CoreException::class)override fun `pomodoroStatus`(): PomodoroStatus {
-            return FfiConverterTypePomodoroStatus.lift(
-    callWithHandle {
-    uniffiRustCallWithError(CoreException) { _status ->
-    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_pomodoro_status(
-        it,
-        _status)
-}
-    }
-    )
-    }
-    
-
-    
-    /**
-     * Start a server-backed focus interval, optionally assigned to a task.
-     *
-     * # Errors
-     *
-     * Propagates the core's transport, HTTP, and response-validation failure.
-     */
-    @Throws(CoreException::class)override fun `startPomodoro`(`taskId`: TaskId?): PomodoroStatus {
-            return FfiConverterTypePomodoroStatus.lift(
-    callWithHandle {
-    uniffiRustCallWithError(CoreException) { _status ->
-    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_start_pomodoro(
-        it,
-        
-        FfiConverterOptionalTypeTaskId.lower(`taskId`),_status)
-}
-    }
-    )
-    }
-    
-
-    
-    /**
-     * Start tracking time against a task through the core-owned wire client.
-     *
-     * # Errors
-     *
-     * Propagates the core's transport, HTTP, and response-validation failure.
-     */
-    @Throws(CoreException::class)override fun `startTimeTracking`(`taskId`: TaskId): Task {
-            return FfiConverterTypeTask.lift(
-    callWithHandle {
-    uniffiRustCallWithError(CoreException) { _status ->
-    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_start_time_tracking(
-        it,
-        
-        FfiConverterTypeTaskId.lower(`taskId`),_status)
-}
-    }
-    )
-    }
-    
-
-    
-    /**
-     * Stop the current server-backed focus interval.
-     *
-     * # Errors
-     *
-     * Propagates the core's transport, HTTP, and response-validation failure.
-     */
-    @Throws(CoreException::class)override fun `stopPomodoro`(): PomodoroStatus {
-            return FfiConverterTypePomodoroStatus.lift(
-    callWithHandle {
-    uniffiRustCallWithError(CoreException) { _status ->
-    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_stop_pomodoro(
-        it,
-        _status)
-}
-    }
-    )
-    }
-    
-
-    
-    /**
-     * Stop tracking time against a task through the core-owned wire client.
-     *
-     * # Errors
-     *
-     * Propagates the core's transport, HTTP, and response-validation failure.
-     */
-    @Throws(CoreException::class)override fun `stopTimeTracking`(`taskId`: TaskId): Task {
-            return FfiConverterTypeTask.lift(
-    callWithHandle {
-    uniffiRustCallWithError(CoreException) { _status ->
-    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_stop_time_tracking(
-        it,
-        
-        FfiConverterTypeTaskId.lower(`taskId`),_status)
-}
-    }
-    )
-    }
-    
-
-    
-    /**
-     * Read tracked-time totals for one task.
-     *
-     * # Errors
-     *
-     * Propagates the core's transport, HTTP, and response-validation failure.
-     */
-    @Throws(CoreException::class)override fun `taskTime`(`taskId`: TaskId): TaskTime {
-            return FfiConverterTypeTaskTime.lift(
-    callWithHandle {
-    uniffiRustCallWithError(CoreException) { _status ->
-    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_task_time(
-        it,
-        
-        FfiConverterTypeTaskId.lower(`taskId`),_status)
-}
-    }
-    )
-    }
-    
-
-    
-    /**
-     * Read the aggregate time report for a named server period.
-     *
-     * # Errors
-     *
-     * Propagates the core's transport, HTTP, and response-validation failure.
-     */
-    @Throws(CoreException::class)override fun `timeSummary`(`period`: kotlin.String): TimeSummary {
-            return FfiConverterTypeTimeSummary.lift(
-    callWithHandle {
-    uniffiRustCallWithError(CoreException) { _status ->
-    UniffiLib.uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_time_summary(
-        it,
-        
-        FfiConverterString.lower(`period`),_status)
-}
-    }
-    )
-    }
     
 
     
@@ -12294,11 +11979,6 @@ data class CreateTaskRequest (
     var `recurrenceAnchor`: RecurrenceAnchor?
     , 
     /**
-     * The estimate in whole minutes.
-     */
-    var `timeEstimate`: kotlin.UInt?
-    , 
-    /**
      * Extra frontmatter keys to write, as a JSON object string.
      */
     var `extraFields`: ExtraFields?
@@ -12329,7 +12009,6 @@ public object FfiConverterTypeCreateTaskRequest: FfiConverterRustBuffer<CreateTa
             FfiConverterOptionalSequenceTypeTagName.read(buf),
             FfiConverterOptionalString.read(buf),
             FfiConverterOptionalTypeRecurrenceAnchor.read(buf),
-            FfiConverterOptionalUInt.read(buf),
             FfiConverterOptionalTypeExtraFields.read(buf),
         )
     }
@@ -12346,7 +12025,6 @@ public object FfiConverterTypeCreateTaskRequest: FfiConverterRustBuffer<CreateTa
             FfiConverterOptionalSequenceTypeTagName.allocationSize(value.`tags`) +
             FfiConverterOptionalString.allocationSize(value.`recurrence`) +
             FfiConverterOptionalTypeRecurrenceAnchor.allocationSize(value.`recurrenceAnchor`) +
-            FfiConverterOptionalUInt.allocationSize(value.`timeEstimate`) +
             FfiConverterOptionalTypeExtraFields.allocationSize(value.`extraFields`)
     )
 
@@ -12362,7 +12040,6 @@ public object FfiConverterTypeCreateTaskRequest: FfiConverterRustBuffer<CreateTa
             FfiConverterOptionalSequenceTypeTagName.write(value.`tags`, buf)
             FfiConverterOptionalString.write(value.`recurrence`, buf)
             FfiConverterOptionalTypeRecurrenceAnchor.write(value.`recurrenceAnchor`, buf)
-            FfiConverterOptionalUInt.write(value.`timeEstimate`, buf)
             FfiConverterOptionalTypeExtraFields.write(value.`extraFields`, buf)
     }
 }
@@ -13196,61 +12873,6 @@ public object FfiConverterTypeHttpResponse: FfiConverterRustBuffer<HttpResponse>
 
 
 /**
- * See [`tasknotes_core::domain::InlineTimeEntry`].
- */
-data class InlineTimeEntry (
-    /**
-     * When tracking started.
-     */
-    var `startTime`: kotlin.String
-    , 
-    /**
-     * When tracking stopped; absent while a session is running.
-     */
-    var `endTime`: kotlin.String?
-    , 
-    /**
-     * The interval's length in whole minutes.
-     */
-    var `duration`: kotlin.UInt?
-    
-){
-    
-
-    
-
-    
-    companion object
-}
-
-/**
- * @suppress
- */
-public object FfiConverterTypeInlineTimeEntry: FfiConverterRustBuffer<InlineTimeEntry> {
-    override fun read(buf: ByteBuffer): InlineTimeEntry {
-        return InlineTimeEntry(
-            FfiConverterString.read(buf),
-            FfiConverterOptionalString.read(buf),
-            FfiConverterOptionalUInt.read(buf),
-        )
-    }
-
-    override fun allocationSize(value: InlineTimeEntry) = (
-            FfiConverterString.allocationSize(value.`startTime`) +
-            FfiConverterOptionalString.allocationSize(value.`endTime`) +
-            FfiConverterOptionalUInt.allocationSize(value.`duration`)
-    )
-
-    override fun write(value: InlineTimeEntry, buf: ByteBuffer) {
-            FfiConverterString.write(value.`startTime`, buf)
-            FfiConverterOptionalString.write(value.`endTime`, buf)
-            FfiConverterOptionalUInt.write(value.`duration`, buf)
-    }
-}
-
-
-
-/**
  * See [`tasknotes_core::net::InstanceCompletion`].
  */
 data class InstanceCompletion (
@@ -13939,69 +13561,6 @@ public object FfiConverterTypePagination: FfiConverterRustBuffer<Pagination> {
 
 
 /**
- * See [`tasknotes_core::domain::PomodoroStatus`].
- */
-data class PomodoroStatus (
-    /**
-     * Whether a session is running.
-     */
-    var `active`: kotlin.Boolean
-    , 
-    /**
-     * The task being worked on.
-     */
-    var `taskId`: TaskId?
-    , 
-    /**
-     * Seconds left in the current phase.
-     */
-    var `timeRemaining`: kotlin.UInt?
-    , 
-    /**
-     * Which phase is running.
-     */
-    var `phase`: PomodoroPhase?
-    
-){
-    
-
-    
-
-    
-    companion object
-}
-
-/**
- * @suppress
- */
-public object FfiConverterTypePomodoroStatus: FfiConverterRustBuffer<PomodoroStatus> {
-    override fun read(buf: ByteBuffer): PomodoroStatus {
-        return PomodoroStatus(
-            FfiConverterBoolean.read(buf),
-            FfiConverterOptionalTypeTaskId.read(buf),
-            FfiConverterOptionalUInt.read(buf),
-            FfiConverterOptionalTypePomodoroPhase.read(buf),
-        )
-    }
-
-    override fun allocationSize(value: PomodoroStatus) = (
-            FfiConverterBoolean.allocationSize(value.`active`) +
-            FfiConverterOptionalTypeTaskId.allocationSize(value.`taskId`) +
-            FfiConverterOptionalUInt.allocationSize(value.`timeRemaining`) +
-            FfiConverterOptionalTypePomodoroPhase.allocationSize(value.`phase`)
-    )
-
-    override fun write(value: PomodoroStatus, buf: ByteBuffer) {
-            FfiConverterBoolean.write(value.`active`, buf)
-            FfiConverterOptionalTypeTaskId.write(value.`taskId`, buf)
-            FfiConverterOptionalUInt.write(value.`timeRemaining`, buf)
-            FfiConverterOptionalTypePomodoroPhase.write(value.`phase`, buf)
-    }
-}
-
-
-
-/**
  * See [`tasknotes_core::domain::QueryResponse`].
  */
 data class QueryResponse (
@@ -14327,16 +13886,6 @@ data class Task (
     var `dateModified`: kotlin.String?
     , 
     /**
-     * The estimate in whole minutes.
-     */
-    var `timeEstimate`: kotlin.UInt?
-    , 
-    /**
-     * Tracked work intervals stored in the note's frontmatter.
-     */
-    var `timeEntries`: List<InlineTimeEntry>
-    , 
-    /**
      * Tasks this one is blocked by.
      */
     var `blockedBy`: List<BlockedByEntry>
@@ -14350,11 +13899,6 @@ data class Task (
      * Whether the task is archived.
      */
     var `archived`: kotlin.Boolean
-    , 
-    /**
-     * Total tracked time in whole minutes, as the server computed it.
-     */
-    var `totalTrackedTime`: kotlin.UInt
     , 
     /**
      * Whether something else is blocking this task.
@@ -14408,12 +13952,9 @@ public object FfiConverterTypeTask: FfiConverterRustBuffer<Task> {
             FfiConverterOptionalString.read(buf),
             FfiConverterOptionalString.read(buf),
             FfiConverterOptionalString.read(buf),
-            FfiConverterOptionalUInt.read(buf),
-            FfiConverterSequenceTypeInlineTimeEntry.read(buf),
             FfiConverterSequenceTypeBlockedByEntry.read(buf),
             FfiConverterSequenceTypeReminder.read(buf),
             FfiConverterBoolean.read(buf),
-            FfiConverterUInt.read(buf),
             FfiConverterBoolean.read(buf),
             FfiConverterBoolean.read(buf),
             FfiConverterTypeExtraFields.read(buf),
@@ -14439,12 +13980,9 @@ public object FfiConverterTypeTask: FfiConverterRustBuffer<Task> {
             FfiConverterOptionalString.allocationSize(value.`completedDate`) +
             FfiConverterOptionalString.allocationSize(value.`dateCreated`) +
             FfiConverterOptionalString.allocationSize(value.`dateModified`) +
-            FfiConverterOptionalUInt.allocationSize(value.`timeEstimate`) +
-            FfiConverterSequenceTypeInlineTimeEntry.allocationSize(value.`timeEntries`) +
             FfiConverterSequenceTypeBlockedByEntry.allocationSize(value.`blockedBy`) +
             FfiConverterSequenceTypeReminder.allocationSize(value.`reminders`) +
             FfiConverterBoolean.allocationSize(value.`archived`) +
-            FfiConverterUInt.allocationSize(value.`totalTrackedTime`) +
             FfiConverterBoolean.allocationSize(value.`isBlocked`) +
             FfiConverterBoolean.allocationSize(value.`isBlocking`) +
             FfiConverterTypeExtraFields.allocationSize(value.`extraFields`) +
@@ -14469,12 +14007,9 @@ public object FfiConverterTypeTask: FfiConverterRustBuffer<Task> {
             FfiConverterOptionalString.write(value.`completedDate`, buf)
             FfiConverterOptionalString.write(value.`dateCreated`, buf)
             FfiConverterOptionalString.write(value.`dateModified`, buf)
-            FfiConverterOptionalUInt.write(value.`timeEstimate`, buf)
-            FfiConverterSequenceTypeInlineTimeEntry.write(value.`timeEntries`, buf)
             FfiConverterSequenceTypeBlockedByEntry.write(value.`blockedBy`, buf)
             FfiConverterSequenceTypeReminder.write(value.`reminders`, buf)
             FfiConverterBoolean.write(value.`archived`, buf)
-            FfiConverterUInt.write(value.`totalTrackedTime`, buf)
             FfiConverterBoolean.write(value.`isBlocked`, buf)
             FfiConverterBoolean.write(value.`isBlocking`, buf)
             FfiConverterTypeExtraFields.write(value.`extraFields`, buf)
@@ -14686,11 +14221,6 @@ data class TaskStats (
      * Archived tasks.
      */
     var `archived`: kotlin.UInt
-    , 
-    /**
-     * Tasks with at least one tracked interval.
-     */
-    var `withTimeTracking`: kotlin.UInt
     
 ){
     
@@ -14712,7 +14242,6 @@ public object FfiConverterTypeTaskStats: FfiConverterRustBuffer<TaskStats> {
             FfiConverterUInt.read(buf),
             FfiConverterUInt.read(buf),
             FfiConverterUInt.read(buf),
-            FfiConverterUInt.read(buf),
         )
     }
 
@@ -14721,8 +14250,7 @@ public object FfiConverterTypeTaskStats: FfiConverterRustBuffer<TaskStats> {
             FfiConverterUInt.allocationSize(value.`completed`) +
             FfiConverterUInt.allocationSize(value.`active`) +
             FfiConverterUInt.allocationSize(value.`overdue`) +
-            FfiConverterUInt.allocationSize(value.`archived`) +
-            FfiConverterUInt.allocationSize(value.`withTimeTracking`)
+            FfiConverterUInt.allocationSize(value.`archived`)
     )
 
     override fun write(value: TaskStats, buf: ByteBuffer) {
@@ -14731,7 +14259,6 @@ public object FfiConverterTypeTaskStats: FfiConverterRustBuffer<TaskStats> {
             FfiConverterUInt.write(value.`active`, buf)
             FfiConverterUInt.write(value.`overdue`, buf)
             FfiConverterUInt.write(value.`archived`, buf)
-            FfiConverterUInt.write(value.`withTimeTracking`, buf)
     }
 }
 
@@ -14814,218 +14341,6 @@ public object FfiConverterTypeTaskStoreSnapshot: FfiConverterRustBuffer<TaskStor
 
 
 /**
- * See [`tasknotes_core::domain::TaskTime`].
- */
-data class TaskTime (
-    /**
-     * Whole minutes tracked against one task.
-     */
-    var `totalTime`: kotlin.UInt
-    , 
-    /**
-     * Whether a session is running right now.
-     */
-    var `hasActiveSession`: kotlin.Boolean
-    
-){
-    
-
-    
-
-    
-    companion object
-}
-
-/**
- * @suppress
- */
-public object FfiConverterTypeTaskTime: FfiConverterRustBuffer<TaskTime> {
-    override fun read(buf: ByteBuffer): TaskTime {
-        return TaskTime(
-            FfiConverterUInt.read(buf),
-            FfiConverterBoolean.read(buf),
-        )
-    }
-
-    override fun allocationSize(value: TaskTime) = (
-            FfiConverterUInt.allocationSize(value.`totalTime`) +
-            FfiConverterBoolean.allocationSize(value.`hasActiveSession`)
-    )
-
-    override fun write(value: TaskTime, buf: ByteBuffer) {
-            FfiConverterUInt.write(value.`totalTime`, buf)
-            FfiConverterBoolean.write(value.`hasActiveSession`, buf)
-    }
-}
-
-
-
-/**
- * See [`tasknotes_core::domain::TimeEntry`].
- */
-data class TimeEntry (
-    /**
-     * The task the interval belongs to.
-     */
-    var `taskId`: TaskId
-    , 
-    /**
-     * When tracking started.
-     */
-    var `startTime`: kotlin.String
-    , 
-    /**
-     * When tracking stopped; absent while a session is running.
-     */
-    var `endTime`: kotlin.String?
-    , 
-    /**
-     * The interval's length in whole minutes.
-     */
-    var `duration`: kotlin.UInt?
-    
-){
-    
-
-    
-
-    
-    companion object
-}
-
-/**
- * @suppress
- */
-public object FfiConverterTypeTimeEntry: FfiConverterRustBuffer<TimeEntry> {
-    override fun read(buf: ByteBuffer): TimeEntry {
-        return TimeEntry(
-            FfiConverterTypeTaskId.read(buf),
-            FfiConverterString.read(buf),
-            FfiConverterOptionalString.read(buf),
-            FfiConverterOptionalUInt.read(buf),
-        )
-    }
-
-    override fun allocationSize(value: TimeEntry) = (
-            FfiConverterTypeTaskId.allocationSize(value.`taskId`) +
-            FfiConverterString.allocationSize(value.`startTime`) +
-            FfiConverterOptionalString.allocationSize(value.`endTime`) +
-            FfiConverterOptionalUInt.allocationSize(value.`duration`)
-    )
-
-    override fun write(value: TimeEntry, buf: ByteBuffer) {
-            FfiConverterTypeTaskId.write(value.`taskId`, buf)
-            FfiConverterString.write(value.`startTime`, buf)
-            FfiConverterOptionalString.write(value.`endTime`, buf)
-            FfiConverterOptionalUInt.write(value.`duration`, buf)
-    }
-}
-
-
-
-/**
- * See [`tasknotes_core::domain::TimeSummary`].
- */
-data class TimeSummary (
-    /**
-     * Whole minutes tracked across everything in scope.
-     */
-    var `totalTime`: kotlin.UInt
-    , 
-    /**
-     * The busiest tasks, in the server's order.
-     */
-    var `topTasks`: List<TopTask>
-    
-){
-    
-
-    
-
-    
-    companion object
-}
-
-/**
- * @suppress
- */
-public object FfiConverterTypeTimeSummary: FfiConverterRustBuffer<TimeSummary> {
-    override fun read(buf: ByteBuffer): TimeSummary {
-        return TimeSummary(
-            FfiConverterUInt.read(buf),
-            FfiConverterSequenceTypeTopTask.read(buf),
-        )
-    }
-
-    override fun allocationSize(value: TimeSummary) = (
-            FfiConverterUInt.allocationSize(value.`totalTime`) +
-            FfiConverterSequenceTypeTopTask.allocationSize(value.`topTasks`)
-    )
-
-    override fun write(value: TimeSummary, buf: ByteBuffer) {
-            FfiConverterUInt.write(value.`totalTime`, buf)
-            FfiConverterSequenceTypeTopTask.write(value.`topTasks`, buf)
-    }
-}
-
-
-
-/**
- * See [`tasknotes_core::domain::TopTask`].
- */
-data class TopTask (
-    /**
-     * The task.
-     */
-    var `taskId`: TaskId
-    , 
-    /**
-     * Its title.
-     */
-    var `title`: kotlin.String
-    , 
-    /**
-     * Whole minutes tracked against it.
-     */
-    var `minutes`: kotlin.UInt
-    
-){
-    
-
-    
-
-    
-    companion object
-}
-
-/**
- * @suppress
- */
-public object FfiConverterTypeTopTask: FfiConverterRustBuffer<TopTask> {
-    override fun read(buf: ByteBuffer): TopTask {
-        return TopTask(
-            FfiConverterTypeTaskId.read(buf),
-            FfiConverterString.read(buf),
-            FfiConverterUInt.read(buf),
-        )
-    }
-
-    override fun allocationSize(value: TopTask) = (
-            FfiConverterTypeTaskId.allocationSize(value.`taskId`) +
-            FfiConverterString.allocationSize(value.`title`) +
-            FfiConverterUInt.allocationSize(value.`minutes`)
-    )
-
-    override fun write(value: TopTask, buf: ByteBuffer) {
-            FfiConverterTypeTaskId.write(value.`taskId`, buf)
-            FfiConverterString.write(value.`title`, buf)
-            FfiConverterUInt.write(value.`minutes`, buf)
-    }
-}
-
-
-
-/**
  * A partial update to a task.
  *
  * Mirrors [`tasknotes_core::domain::UpdateTaskRequest`] field for field, in
@@ -15089,11 +14404,6 @@ data class UpdateTaskRequest (
     var `recurrenceAnchor`: RecurrenceAnchorUpdate
     , 
     /**
-     * The estimate in whole minutes; `Clear` deletes it.
-     */
-    var `timeEstimate`: MinutesUpdate
-    , 
-    /**
      * The full replacement set of extra frontmatter keys, as a JSON object
      * string.
      */
@@ -15125,7 +14435,6 @@ public object FfiConverterTypeUpdateTaskRequest: FfiConverterRustBuffer<UpdateTa
             FfiConverterOptionalSequenceTypeTagName.read(buf),
             FfiConverterTypeTextUpdate.read(buf),
             FfiConverterTypeRecurrenceAnchorUpdate.read(buf),
-            FfiConverterTypeMinutesUpdate.read(buf),
             FfiConverterOptionalTypeExtraFields.read(buf),
         )
     }
@@ -15142,7 +14451,6 @@ public object FfiConverterTypeUpdateTaskRequest: FfiConverterRustBuffer<UpdateTa
             FfiConverterOptionalSequenceTypeTagName.allocationSize(value.`tags`) +
             FfiConverterTypeTextUpdate.allocationSize(value.`recurrence`) +
             FfiConverterTypeRecurrenceAnchorUpdate.allocationSize(value.`recurrenceAnchor`) +
-            FfiConverterTypeMinutesUpdate.allocationSize(value.`timeEstimate`) +
             FfiConverterOptionalTypeExtraFields.allocationSize(value.`extraFields`)
     )
 
@@ -15158,7 +14466,6 @@ public object FfiConverterTypeUpdateTaskRequest: FfiConverterRustBuffer<UpdateTa
             FfiConverterOptionalSequenceTypeTagName.write(value.`tags`, buf)
             FfiConverterTypeTextUpdate.write(value.`recurrence`, buf)
             FfiConverterTypeRecurrenceAnchorUpdate.write(value.`recurrenceAnchor`, buf)
-            FfiConverterTypeMinutesUpdate.write(value.`timeEstimate`, buf)
             FfiConverterOptionalTypeExtraFields.write(value.`extraFields`, buf)
     }
 }
@@ -17042,110 +16349,6 @@ public object FfiConverterTypeHttpMethod: FfiConverterRustBuffer<HttpMethod> {
 
 
 /**
- * A clearable whole-minutes field.
- *
- * The exported counterpart of [`tasknotes_core::domain::MinutesUpdate`].
- */
-sealed class MinutesUpdate {
-    
-    /**
-     * The key is absent from the payload: leave the stored value alone.
-     */
-    object Unchanged : MinutesUpdate()
-    
-    
-    /**
-     * The key is present and `null`: delete the stored value.
-     */
-    object Clear : MinutesUpdate()
-    
-    
-    /**
-     * The key is present with a value: store it.
-     */
-    data class Set(
-        /**
-         * The value to store.
-         */
-        val `value`: kotlin.UInt) : MinutesUpdate()
-        
-    {
-        
-
-        companion object
-    }
-    
-
-    
-
-    
-    
-
-
-    companion object
-}
-
-/**
- * @suppress
- */
-public object FfiConverterTypeMinutesUpdate : FfiConverterRustBuffer<MinutesUpdate>{
-    override fun read(buf: ByteBuffer): MinutesUpdate {
-        return when(buf.getInt()) {
-            1 -> MinutesUpdate.Unchanged
-            2 -> MinutesUpdate.Clear
-            3 -> MinutesUpdate.Set(
-                FfiConverterUInt.read(buf),
-                )
-            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
-        }
-    }
-
-    override fun allocationSize(value: MinutesUpdate): ULong = when(value) {
-        is MinutesUpdate.Unchanged -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
-                4UL
-            )
-        }
-        is MinutesUpdate.Clear -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
-                4UL
-            )
-        }
-        is MinutesUpdate.Set -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
-                4UL
-                + FfiConverterUInt.allocationSize(value.`value`)
-            )
-        }
-    }
-
-    override fun write(value: MinutesUpdate, buf: ByteBuffer) {
-        when(value) {
-            is MinutesUpdate.Unchanged -> {
-                buf.putInt(1)
-                Unit
-            }
-            is MinutesUpdate.Clear -> {
-                buf.putInt(2)
-                Unit
-            }
-            is MinutesUpdate.Set -> {
-                buf.putInt(3)
-                FfiConverterUInt.write(value.`value`, buf)
-                Unit
-            }
-        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
-    }
-}
-
-
-
-
-
-/**
  * See [`tasknotes_core::recurrence::MonthlyOrdinal`].
  */
 
@@ -17996,49 +17199,6 @@ public object FfiConverterTypeObsidianSessionEffect : FfiConverterRustBuffer<Obs
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
-    }
-}
-
-
-
-
-
-/**
- * See [`tasknotes_core::domain::PomodoroPhase`].
- */
-
-enum class PomodoroPhase {
-    
-    /**
-     * A focus interval.
-     */
-    WORK,
-    /**
-     * A rest interval.
-     */
-    BREAK;
-
-    
-
-
-    companion object
-}
-
-
-/**
- * @suppress
- */
-public object FfiConverterTypePomodoroPhase: FfiConverterRustBuffer<PomodoroPhase> {
-    override fun read(buf: ByteBuffer) = try {
-        PomodoroPhase.values()[buf.getInt() - 1]
-    } catch (e: IndexOutOfBoundsException) {
-        throw RuntimeException("invalid enum value, something is very wrong!!", e)
-    }
-
-    override fun allocationSize(value: PomodoroPhase) = 4UL
-
-    override fun write(value: PomodoroPhase, buf: ByteBuffer) {
-        buf.putInt(value.ordinal + 1)
     }
 }
 
@@ -19603,38 +18763,6 @@ public object FfiConverterOptionalTypeFrequency: FfiConverterRustBuffer<Frequenc
 /**
  * @suppress
  */
-public object FfiConverterOptionalTypePomodoroPhase: FfiConverterRustBuffer<PomodoroPhase?> {
-    override fun read(buf: ByteBuffer): PomodoroPhase? {
-        if (buf.get().toInt() == 0) {
-            return null
-        }
-        return FfiConverterTypePomodoroPhase.read(buf)
-    }
-
-    override fun allocationSize(value: PomodoroPhase?): ULong {
-        if (value == null) {
-            return 1UL
-        } else {
-            return 1UL + FfiConverterTypePomodoroPhase.allocationSize(value)
-        }
-    }
-
-    override fun write(value: PomodoroPhase?, buf: ByteBuffer) {
-        if (value == null) {
-            buf.put(0)
-        } else {
-            buf.put(1)
-            FfiConverterTypePomodoroPhase.write(value, buf)
-        }
-    }
-}
-
-
-
-
-/**
- * @suppress
- */
 public object FfiConverterOptionalTypePriority: FfiConverterRustBuffer<Priority?> {
     override fun read(buf: ByteBuffer): Priority? {
         if (buf.get().toInt() == 0) {
@@ -20243,34 +19371,6 @@ public object FfiConverterSequenceTypeHttpHeader: FfiConverterRustBuffer<List<Ht
 /**
  * @suppress
  */
-public object FfiConverterSequenceTypeInlineTimeEntry: FfiConverterRustBuffer<List<InlineTimeEntry>> {
-    override fun read(buf: ByteBuffer): List<InlineTimeEntry> {
-        val len = buf.getInt()
-        return List<InlineTimeEntry>(len) {
-            FfiConverterTypeInlineTimeEntry.read(buf)
-        }
-    }
-
-    override fun allocationSize(value: List<InlineTimeEntry>): ULong {
-        val sizeForLength = 4UL
-        val sizeForItems = value.map { FfiConverterTypeInlineTimeEntry.allocationSize(it) }.sum()
-        return sizeForLength + sizeForItems
-    }
-
-    override fun write(value: List<InlineTimeEntry>, buf: ByteBuffer) {
-        buf.putInt(value.size)
-        value.iterator().forEach {
-            FfiConverterTypeInlineTimeEntry.write(it, buf)
-        }
-    }
-}
-
-
-
-
-/**
- * @suppress
- */
 public object FfiConverterSequenceTypeObsidianHttpHeader: FfiConverterRustBuffer<List<ObsidianHttpHeader>> {
     override fun read(buf: ByteBuffer): List<ObsidianHttpHeader> {
         val len = buf.getInt()
@@ -20373,34 +19473,6 @@ public object FfiConverterSequenceTypeTask: FfiConverterRustBuffer<List<Task>> {
         buf.putInt(value.size)
         value.iterator().forEach {
             FfiConverterTypeTask.write(it, buf)
-        }
-    }
-}
-
-
-
-
-/**
- * @suppress
- */
-public object FfiConverterSequenceTypeTopTask: FfiConverterRustBuffer<List<TopTask>> {
-    override fun read(buf: ByteBuffer): List<TopTask> {
-        val len = buf.getInt()
-        return List<TopTask>(len) {
-            FfiConverterTypeTopTask.read(buf)
-        }
-    }
-
-    override fun allocationSize(value: List<TopTask>): ULong {
-        val sizeForLength = 4UL
-        val sizeForItems = value.map { FfiConverterTypeTopTask.allocationSize(it) }.sum()
-        return sizeForLength + sizeForItems
-    }
-
-    override fun write(value: List<TopTask>, buf: ByteBuffer) {
-        buf.putInt(value.size)
-        value.iterator().forEach {
-            FfiConverterTypeTopTask.write(it, buf)
         }
     }
 }
@@ -21824,57 +20896,6 @@ public typealias FfiConverterTypeTimerId = FfiConverterULong
         
         FfiConverterString.lower(`raw`),
         FfiConverterInt.lower(`viewerUtcOffsetSeconds`),_status)
-}
-    )
-    }
-    
-
-        /**
-         * Format a duration as `H:MM:SS`, or `MM:SS` under an hour.
-         *
-         * Minutes and seconds are always two digits; hours are not padded, so ten
-         * hours reads `10:00:00` and one reads `1:00:00`.
-         */ fun `elapsedFormat`(`seconds`: kotlin.ULong): kotlin.String {
-            return FfiConverterString.lift(
-    uniffiRustCall() { _status ->
-    UniffiLib.uniffi_tasknotes_core_ffi_fn_func_elapsed_format(
-    
-        
-        FfiConverterULong.lower(`seconds`),_status)
-}
-    )
-    }
-    
-
-        /**
-         * Whole seconds between a stored `startTime` and `now`.
-         *
-         * Both are RFC 3339 timestamps — the form the server writes, since every
-         * `startTime` it emits comes from `Date.prototype.toISOString`. A zoneless
-         * value is rejected rather than guessed at: without an offset there is no way
-         * to place it on the timeline, and picking one would make a running timer's
-         * reading depend on where the user happens to be sitting.
-         *
-         * A `start` after `now` yields `0` — clock skew between the host and whatever
-         * wrote the entry, and a timer sitting at `00:00` until it catches up is the
-         * correct rendering of "no time has elapsed yet".
-         *
-         * # Errors
-         *
-         * Returns [`CoreError::Validation`] when either argument is not a parseable
-         * RFC 3339 timestamp. **This diverges from the TypeScript**, which returns `0`
-         * for an unparseable value: a timer frozen at `00:00` is indistinguishable
-         * from a session that just began, so a corrupt `timeEntries` row would be
-         * invisible.
-         */
-    @Throws(CoreException::class) fun `elapsedSecondsSince`(`start`: kotlin.String, `now`: kotlin.String): kotlin.ULong {
-            return FfiConverterULong.lift(
-    uniffiRustCallWithError(CoreException) { _status ->
-    UniffiLib.uniffi_tasknotes_core_ffi_fn_func_elapsed_seconds_since(
-    
-        
-        FfiConverterString.lower(`start`),
-        FfiConverterString.lower(`now`),_status)
 }
     )
     }

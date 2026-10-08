@@ -36,9 +36,9 @@ mod receipt_migration;
 mod reminders;
 mod remote_images;
 mod resolution_images;
+mod retired_timing;
 mod staged;
 mod title_lineage;
-mod tracking;
 mod undo;
 mod uploads;
 mod vault_io;
@@ -215,6 +215,15 @@ ALTER TABLE journals ADD COLUMN title_plans TEXT NOT NULL DEFAULT '[]';
 CREATE TABLE title_lineage(profile TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,path TEXT NOT NULL,json TEXT NOT NULL,PRIMARY KEY(profile,path));
 PRAGMA user_version=11;
 ";
+// Retire only application-private timer state. Vault bytes, staged file images,
+// immutable journal fingerprints, receipts and upload ownership remain intact.
+const SCHEMA_TWELVE: &str = "
+DROP TABLE device_state;
+ALTER TABLE journals DROP COLUMN effect;
+UPDATE files SET task=json_remove(task,'$.hasActiveTimeSession','$.totalTrackedMinutes') WHERE task IS NOT NULL;
+UPDATE refresh_stage SET task=json_remove(task,'$.hasActiveTimeSession','$.totalTrackedMinutes') WHERE task IS NOT NULL;
+PRAGMA user_version=12;
+";
 const MIGRATE_IMAGE_ORIGIN_SQL: &str = "UPDATE transfer_payload_state SET origin=(SELECT image.origin FROM transfer_payloads AS image WHERE image.row_id=transfer_payload_state.row_id)";
 
 fn migrate_bounded_payloads(db: &mut Connection, version: u32) -> Result<()> {
@@ -244,12 +253,6 @@ struct RemoteMetadata {
     mtime: u64,
     related_path: Option<String>,
     content_hash: Option<String>,
-}
-
-#[derive(Serialize, Deserialize)]
-struct DeviceEffect {
-    device: String,
-    state: crate::pomodoro::State,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -364,7 +367,7 @@ impl Engine {
                 tx.execute_batch(SCHEMA_FOUR)?;
                 tx.commit()?;
             }
-            4..=11 => {}
+            4..=12 => {}
             _ => {
                 return Err(RuntimeError::Storage(
                     "unsupported database schema".to_owned(),
@@ -397,6 +400,11 @@ impl Engine {
             tx.commit()?;
         }
         migrate_bounded_payloads(&mut db, version)?;
+        if version < 12 {
+            let tx = db.transaction()?;
+            tx.execute_batch(SCHEMA_TWELVE)?;
+            tx.commit()?;
+        }
         let identity: String = db.query_row(
             "SELECT value FROM engine_metadata WHERE key='identity'",
             [],
@@ -565,6 +573,7 @@ impl Engine {
     /// # Errors
     /// Returns provider/configuration failures and unresolved write conflicts.
     pub fn refresh(&self, id: &str) -> Result<Snapshot> {
+        self.resume_retired_partial(id)?;
         let coordinator = self.coordinator(id)?;
         let _operation = lock_profile(&coordinator)?;
         let profile = self.profile(id)?;
@@ -773,20 +782,16 @@ impl Engine {
             title_changes =
                 self.database(|db| title_lineage::undo_changes(db, id, receipt_id, &writes))?;
         }
-        let effect = self.prepare_device_effect(id, &config, mutation)?;
         self.check_unresolved_writes(id, mutation, &writes)?;
         self.database(|db| {
             let tx = db.transaction()?;
             tx.execute(
-                "INSERT INTO journals(profile,id,fingerprint,writes,effect,payload_revision,resolution_conflict,diagnostics,title_plans) VALUES(?,?,?,?,?,?,?,?,?)",
+                "INSERT INTO journals(profile,id,fingerprint,writes,payload_revision,resolution_conflict,diagnostics,title_plans) VALUES(?,?,?,?,?,?,?,?)",
                 params![
                     id,
                     mutation.mutation_id,
                     fingerprint,
                     "[]",
-                    effect
-                        .map(|value| serde_json::to_string(&value))
-                        .transpose()?,
                     payload_revision,
                     match &mutation.command {crate::types::Command::ResolveConflict {conflict_id,..}=>Some(conflict_id.as_str()),_=>None},
                     serde_json::to_string(&diagnostics)?,
@@ -825,74 +830,6 @@ impl Engine {
             }
         }
         Ok(())
-    }
-
-    fn read_device_state(&self, id: &str, device: &str) -> Result<crate::pomodoro::State> {
-        self.database(|db| {
-            let json: Option<String> = db
-                .query_row(
-                    "SELECT json FROM device_state WHERE profile=? AND device=?",
-                    params![id, device],
-                    |row| row.get(0),
-                )
-                .optional()?;
-            json.map(|json| serde_json::from_str(&json).map_err(RuntimeError::from))
-                .transpose()
-                .map(Option::unwrap_or_default)
-        })
-    }
-
-    fn prepare_device_effect(
-        &self,
-        id: &str,
-        config: &TaskNotesConfiguration,
-        mutation: &Mutation,
-    ) -> Result<Option<DeviceEffect>> {
-        let crate::types::Command::Pomodoro {
-            device_id,
-            action,
-            task_path,
-            duration_seconds,
-        } = &mutation.command
-        else {
-            return Ok(None);
-        };
-        validate_identity(device_id)?;
-        if let Some(path) = task_path {
-            VaultPath::parse(path)?;
-            if self.files.read_file(id, path)?.is_none() {
-                return Err(RuntimeError::NotFound);
-            }
-        }
-        let duration = duration_seconds.map_or_else(
-            || {
-                config
-                    .extra
-                    .get("pomodoroWorkDuration")
-                    .map_or(Ok(1_500), |value| {
-                        value
-                            .as_u64()
-                            .and_then(|minutes| minutes.checked_mul(60))
-                            .ok_or_else(|| {
-                                RuntimeError::Configuration(
-                                    "Pomodoro work duration must be whole minutes".to_owned(),
-                                )
-                            })
-                    })
-            },
-            Ok,
-        )?;
-        let state = crate::pomodoro::transition(
-            self.read_device_state(id, device_id)?,
-            action,
-            task_path.as_deref(),
-            duration,
-            &mutation.at,
-        )?;
-        Ok(Some(DeviceEffect {
-            device: device_id.clone(),
-            state,
-        }))
     }
 
     fn plan_undo(&self, id: &str, receipt_id: &str) -> Result<Vec<staged::DurableFile>> {
@@ -940,7 +877,7 @@ impl Engine {
         Ok(restored)
     }
 
-    /// Read shared capture, timing, and onboarding projections.
+    /// Read shared capture and onboarding projections.
     ///
     /// # Errors
     /// Rejects unknown contract versions, invalid timestamps and unavailable data.
@@ -952,19 +889,6 @@ impl Engine {
         let value = match request {
             crate::features::Request::Conformance {} => self.conformance(id)?,
             crate::features::Request::UndoAvailable {} => self.undo_available(id)?,
-            crate::features::Request::TrackingSessions {
-                at,
-                limit,
-                after,
-                expected_version,
-            } => self.tracking_sessions(id, &at, limit, after.as_ref(), expected_version)?,
-            crate::features::Request::TrackingHistory {
-                path,
-                at,
-                limit,
-                after,
-                expected_version,
-            } => self.tracking_history(id, &path, &at, limit, after.as_ref(), expected_version)?,
             crate::features::Request::ReminderPlan {
                 at,
                 timezone,
@@ -1009,35 +933,6 @@ impl Engine {
                 &today,
                 context.as_ref(),
             )?,
-            crate::features::Request::TaskTime { path, at } => {
-                let config = self.configuration(&profile)?;
-                let bytes = self
-                    .files
-                    .read_file(id, &path)?
-                    .ok_or(RuntimeError::NotFound)?;
-                let document = TaskDocument::parse(VaultPath::parse(&path)?, &bytes)?;
-                crate::features::time_reading(
-                    &path,
-                    &config.mapping.normalize(document.frontmatter()),
-                    &at,
-                    None,
-                )?
-            }
-            crate::features::Request::TimeReport { from, to, at } => {
-                self.time_report(id, &from, &to, &at)?
-            }
-            crate::features::Request::Pomodoro { device_id, at } => {
-                validate_identity(&device_id)?;
-                let mut value = serde_json::to_value(crate::pomodoro::reading(
-                    self.read_device_state(id, &device_id)?,
-                    &at,
-                )?)?;
-                value
-                    .as_object_mut()
-                    .ok_or_else(|| RuntimeError::Storage("timer projection is invalid".to_owned()))?
-                    .insert("schemaVersion".to_owned(), Value::from(1));
-                value
-            }
             crate::features::Request::Discovery {} => self.discovery(&profile)?,
         };
         Ok(serde_json::to_string(&value)?)
@@ -1112,32 +1007,6 @@ impl Engine {
             })?
             .insert("schemaVersion".to_owned(), Value::from(1));
         Ok(value)
-    }
-
-    fn time_report(&self, id: &str, from: &str, to: &str, at: &str) -> Result<Value> {
-        if crate::features::timestamp(from)? >= crate::features::timestamp(to)? {
-            return Err(RuntimeError::Validation(
-                "report from must precede to".to_owned(),
-            ));
-        }
-        crate::features::timestamp(at)?;
-        self.database(|db| {
-            let mut statement=db.prepare("SELECT task FROM files WHERE profile=? AND task IS NOT NULL ORDER BY path")?;
-            let mut tasks=statement.query([id])?;
-            let mut rows=Vec::new();
-            let mut total=0_u64;
-            let mut total_minutes=0_u64;
-            while let Some(row)=tasks.next()? {
-                let task:TaskSnapshot=serde_json::from_str(&row.get::<_,String>(0)?)?;
-                let reading=crate::features::time_reading(&task.path,&task.properties,at,Some((from,to)))?;
-                let seconds=reading.get("totalSeconds").and_then(Value::as_u64).ok_or_else(||RuntimeError::Storage("time projection is invalid".to_owned()))?;
-                let minutes=reading.get("totalMinutes").and_then(Value::as_u64).ok_or_else(||RuntimeError::Storage("time projection is invalid".to_owned()))?;
-                total=total.checked_add(seconds).ok_or_else(||RuntimeError::Validation("report total is too large".to_owned()))?;
-                total_minutes=total_minutes.checked_add(minutes).ok_or_else(||RuntimeError::Validation("report total is too large".to_owned()))?;
-                if seconds>0 {rows.push(serde_json::json!({"path":task.path,"title":task.title,"seconds":seconds,"minutes":minutes}));}
-            }
-            Ok(serde_json::json!({"schemaVersion":1,"totalSeconds":total,"totalMinutes":total_minutes,"rows":rows}))
-        })
     }
 
     fn existing_receipt(
@@ -1902,8 +1771,6 @@ fn project_task(
         is_recurring: false,
         is_blocked: false,
         is_blocking: false,
-        has_active_time_session: false,
-        total_tracked_minutes: 0,
         occurrence_date: None,
         effective_date: None,
         is_pending: false,

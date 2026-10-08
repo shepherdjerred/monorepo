@@ -21,14 +21,16 @@ fn old_tables(db: &rusqlite::Connection) -> Result<BTreeMap<String, Vec<Vec<Valu
         "conflicts",
         "conflict_archive",
         "journal_remote",
-        "device_state",
         "checkpoints",
         "checkpoint_pending",
         "partial_batches",
         "partial_items",
     ] {
         let projection = if table == "journals" {
-            "profile,id,fingerprint,writes,receipt,remote,effect,payload_revision,resolution_conflict"
+            // Schema12 intentionally retires device timers and their effects.
+            // Compare every retained journal field and all file/payload owners;
+            // retired_features separately proves this exact timer retirement.
+            "profile,id,fingerprint,writes,receipt,remote,payload_revision,resolution_conflict"
         } else {
             "*"
         };
@@ -340,6 +342,16 @@ fn assert_historical_columns(db: &rusqlite::Connection, version: u32) -> Result<
 
 fn remove_version_eleven_metadata(db: &rusqlite::Connection) -> Result<()> {
     db.execute_batch("UPDATE journals SET receipt=json_remove(receipt,'$.diagnostics') WHERE receipt IS NOT NULL; UPDATE partial_batches SET receipt=json_remove(receipt,'$.diagnostics') WHERE receipt IS NOT NULL; UPDATE partial_items SET outcome=json_remove(outcome,'$.receipt.diagnostics') WHERE outcome IS NOT NULL; ALTER TABLE journals DROP COLUMN diagnostics; ALTER TABLE journals DROP COLUMN title_plans; DROP TABLE title_lineage;")?;
+    // Restore the actual v9/v10 column order and retain immutable row identities.
+    // This fixture conversion changes no payload BLOB or journal fingerprint.
+    let foreign_keys: u32 = db.query_row("PRAGMA foreign_keys", [], |row| row.get(0))?;
+    // Fixture-only table recreation must preserve child rows rather than run
+    // deletion cascades. The real schema12 migration never drops journals.
+    db.execute_batch("PRAGMA foreign_keys=OFF; CREATE TABLE device_state(profile TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,device TEXT NOT NULL,json TEXT NOT NULL,PRIMARY KEY(profile,device)); CREATE TABLE historical_journals(profile TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,id TEXT NOT NULL,fingerprint TEXT NOT NULL,writes TEXT NOT NULL,receipt TEXT,remote INTEGER NOT NULL DEFAULT 0,effect TEXT,payload_revision TEXT,resolution_conflict TEXT,PRIMARY KEY(profile,id)); INSERT INTO historical_journals(rowid,profile,id,fingerprint,writes,receipt,remote,effect,payload_revision,resolution_conflict) SELECT rowid,profile,id,fingerprint,writes,receipt,remote,NULL,payload_revision,resolution_conflict FROM journals; DROP TABLE journals; ALTER TABLE historical_journals RENAME TO journals;")?;
+    if foreign_keys != 0 {
+        db.execute_batch("PRAGMA foreign_keys=ON;")?;
+    }
+
     let rows=db.prepare("SELECT profile,id,json_array_length(result,'$.items') FROM partial_batches WHERE result IS NOT NULL")?.query_map([],|row|Ok((row.get::<_,String>(0)?,row.get::<_,String>(1)?,row.get::<_,u32>(2)?)))?.collect::<rusqlite::Result<Vec<_>>>()?;
     for (profile, id, count) in rows {
         for index in 0..count {
@@ -419,7 +431,7 @@ fn migration_preserves_receipts_and_real_undo(version: u32) -> Result<()> {
     let engine = Engine::open(path_str, files.clone())?;
     assert_eq!(
         db.query_row("PRAGMA user_version", [], |row| row.get::<_, i64>(0))?,
-        11
+        12
     );
     assert_eq!(old_tables(&db)?, before);
     assert_migrated_receipt_metadata(&db, &engine, &partial)?;

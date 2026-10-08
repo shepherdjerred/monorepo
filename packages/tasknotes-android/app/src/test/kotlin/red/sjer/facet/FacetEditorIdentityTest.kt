@@ -9,7 +9,7 @@ class FacetEditorIdentityTest {
     @Test fun restoredEditorKeepsOriginalOwnerRevisionAndExactUnknownProperties() {
         val properties = Json.parseToJsonElement("""{"timeEstimate":19.1234567890123456789,"vendor":{"large":9007199254740993,"exponent":1.234567890123456789e20,"nullable":null},"reminders":"legacy-invalid-value"}""").jsonObject
         val original = VaultTask("Tasks/shared.md", "Tasks/shared.md", "Original", "custom status", "P0 client", false,
-            "a".repeat(64), properties, "Original body\n", true, true, false, true, ULong.MAX_VALUE, "2026-10-04", null, true)
+            "a".repeat(64), properties, "Original body\n", true, true, false, "2026-10-04", null, true)
         val restored = restoreEditorIdentity(saveEditorIdentity("original-vault" to original))
         assertEquals("original-vault", restored.first)
         assertEquals(original, restored.second)
@@ -23,7 +23,7 @@ class FacetEditorIdentityTest {
 
     @Test fun malformedRestorationDoesNotSubstituteNewOwnerOrLatestRevision() {
         assertThrows(IllegalArgumentException::class.java) { restoreEditorIdentity(emptyList()) }
-        assertThrows(IllegalArgumentException::class.java) { restoreEditorIdentity(List(18) { "" }) }
+        assertThrows(IllegalArgumentException::class.java) { restoreEditorIdentity(List(16) { "" }) }
         assertThrows(IllegalArgumentException::class.java) { restoreTaskBasis(emptyList()) }
     }
 }

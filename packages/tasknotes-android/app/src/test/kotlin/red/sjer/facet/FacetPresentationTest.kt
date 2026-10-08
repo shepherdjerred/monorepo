@@ -11,23 +11,18 @@ class FacetPresentationTest {
         val changes = TaskEditorDraft.from(original).copy(body = "Reviewed").command(original).getValue("properties").jsonObject
         assertTrue(changes.isEmpty())
     }
-    @Test fun exactEstimatesAndTypedEntryEditsPreserveUnknownData() {
+    @Test fun typedReminderEditsPreserveUnknownData() {
         val original = task().copy(properties = JsonObject(task().properties + mapOf("timeEstimate" to Json.parseToJsonElement("9007199254740993"), "reminders" to Json.parseToJsonElement("[{\"id\":\"r1\",\"type\":\"absolute\",\"absoluteTime\":\"2026-10-03T17:00:00Z\",\"vendor\":{\"integer\":9007199254740993}}]"))))
         val draft = TaskEditorDraft.from(original)
         assertFalse(draft.copy(body = "Only body").command(original).getValue("properties").jsonObject.containsKey("timeEstimate"))
         val reminders = editEntry(Json.parseToJsonElement(draft.reminders).jsonArray, 0, "absoluteTime", "2026-10-04T17:00:00Z")
-        val changed = draft.copy(estimate = "19.125", reminders = reminders.toString(), attachments = "[[first.pdf]]\n[[second.pdf]]").command(original).getValue("properties").jsonObject
-        assertEquals("19.125", changed.getValue("timeEstimate").toString())
+        val changed = draft.copy(reminders = reminders.toString(), attachments = "[[first.pdf]]\n[[second.pdf]]").command(original).getValue("properties").jsonObject
         assertEquals("9007199254740993", changed.getValue("reminders").jsonArray[0].jsonObject.getValue("vendor").jsonObject.getValue("integer").toString())
         assertEquals(2, changed.getValue("attachments").jsonArray.size)
-        assertEquals("1.234567890123456789e20", exactNumber("1.234567890123456789e20").toString())
-        listOf("\"20\"", "true", "null", "[1]").forEach { text ->
-            try { exactNumber(text); fail("Rejected nonnumeric value expected") } catch (_: IllegalArgumentException) { }
-        }
     }
     private fun task() = VaultTask("id", "Tasks/custom.md", "Original", "needs-review", "urgent-client", false, "a".repeat(64), buildJsonObject {
         put("title", "Original"); put("status", "needs-review"); put("priority", "urgent-client"); put("projects", strings(listOf("[[Project, with comma]]"))); put("externalNumber", Json.parseToJsonElement("9007199254740993")); put("due", "2026-10-04")
-    }, "Body", true, false, true, false, 2uL, "2026-10-03", "2026-10-03", false)
+    }, "Body", true, false, true, "2026-10-03", "2026-10-03", false)
 
     @Test fun bodyEditPreservesArbitraryWorkflowAndUnknownProperties() {
         val original = task()

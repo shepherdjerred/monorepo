@@ -23,7 +23,6 @@ const TASKS: TaskInfo[] = [
   task({
     path: "d.md",
     due: "2026-07-09",
-    timeEntries: [{ startTime: "2026-07-01T09:00:00Z", duration: 5 }],
   }),
 ];
 
@@ -36,7 +35,6 @@ describe("computeStats", () => {
       active: 2, // a (open) + d (open); c is archived
       overdue: 1, // a: due 07-01 < 07-03
       archived: 1,
-      withTimeTracking: 1,
     });
   });
 });

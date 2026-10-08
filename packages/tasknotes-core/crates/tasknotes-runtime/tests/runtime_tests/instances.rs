@@ -593,19 +593,6 @@ fn ordinary_writes_cannot_hide_an_invalid_recognized_source_with_a_valid_patch()
     for command in [
         write("zz_completed", json!(["2026-10-03"]), false),
         write("zz_completed", json!(["2026-10-03"]), true),
-        Command::StartTime {
-            path: PATH.into(),
-            expected_revision: None,
-        },
-        Command::StopTime {
-            path: PATH.into(),
-            expected_revision: None,
-        },
-        Command::SetTimeEntries {
-            path: PATH.into(),
-            expected_revision: None,
-            entries: vec![],
-        },
         Command::Archive {
             path: PATH.into(),
             expected_revision: None,

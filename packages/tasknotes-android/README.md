@@ -23,6 +23,8 @@ SQLite/vault storage, Keystore credentials, account HTTP, and the serial
 WebSocket executor. `app` supplies Compose workflows and lifecycle. Task,
 configuration and Sync policy stay in Rust. No TaskNotes server is required.
 
+Existing duration and time-entry metadata remains untouched in vault notes.
+
 The host validates the complete raw mutation receipt before presenting template
 or filename notices alongside Saved. Each presentation belongs to its original
 vault, action, request and engine. Expected observation or cleanup I/O retains
@@ -108,9 +110,3 @@ and Java's [jarsigner contract](https://docs.oracle.com/en/java/javase/25/docs/s
 Store enrollment, owner upload-key provisioning, signing acceptance, submission
 and real Obsidian Sync acceptance are separate gates. Native runtime and E2E
 acceptance remain separate from this archive/signature verification.
-
-The Time editor and running-session overview read bounded pages of at most 128
-entries. Each continuation retains its original vault, task revision, index
-version, clock and request owner. Changing vaults, refreshing or changing account
-ownership requires a fresh reading. History reads preserve the editable draft;
-Saved warnings belong to one applied action and clear when a new action begins.

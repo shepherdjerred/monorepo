@@ -24,12 +24,8 @@ namespace TaskNotes.Windows.App
         private readonly TaskEditorViewModel _taskEditor;
         private readonly FacetSettingsViewModel _settingsViewModel;
         private readonly GlobalHotkeyViewModel _globalHotkey;
-        private readonly PomodoroViewModel _pomodoro;
-        private readonly TimeReportViewModel _timeReport;
         private readonly FacetReminderDelivery _reminders;
         private TaskListQuery _query = TaskListQuery.Today;
-        private PomodoroWindow? _pomodoroWindow;
-        private TimeReportWindow? _timeReportWindow;
         private bool _loaded;
         private string _navigationRoute = "today";
         private CancellationTokenSource? SearchCancellation { get; set; }
@@ -44,9 +40,7 @@ namespace TaskNotes.Windows.App
             QuickAddViewModel quickAdd,
             TaskEditorViewModel taskEditor,
             FacetSettingsViewModel settingsViewModel,
-            GlobalHotkeyViewModel globalHotkey,
-            PomodoroViewModel pomodoro,
-            TimeReportViewModel timeReport
+            GlobalHotkeyViewModel globalHotkey
         )
         {
             Store = store ?? throw new ArgumentNullException(nameof(store));
@@ -59,8 +53,6 @@ namespace TaskNotes.Windows.App
             _settingsViewModel =
                 settingsViewModel ?? throw new ArgumentNullException(nameof(settingsViewModel));
             _globalHotkey = globalHotkey ?? throw new ArgumentNullException(nameof(globalHotkey));
-            _pomodoro = pomodoro ?? throw new ArgumentNullException(nameof(pomodoro));
-            _timeReport = timeReport ?? throw new ArgumentNullException(nameof(timeReport));
             _reminders = new FacetReminderDelivery(Store);
             InitializeComponent();
             BoardDestination.Initialize(_uiOperations, RunUiOperationAsync);
@@ -70,8 +62,6 @@ namespace TaskNotes.Windows.App
                 ConfirmAsync,
                 ShowValidationMessage
             );
-            TaskWorkspace.OpenPomodoroRequested += OpenPomodoro_Click;
-            TaskWorkspace.OpenTimeReportRequested += OpenTimeReport_Click;
             TaskWorkspace.RefreshRequested += Refresh_Click;
             TaskWorkspace.SearchChanged += SearchBox_TextChanged;
             TaskWorkspace.SearchSubmitted += SearchBox_QuerySubmitted;
@@ -144,8 +134,6 @@ namespace TaskNotes.Windows.App
             Navigation.IsEnabled = false;
             TaskWorkspace.IsEnabled = false;
             SettingsDestination.IsEnabled = false;
-            _pomodoroWindow?.Close();
-            _timeReportWindow?.Close();
             ReleaseResources();
         }
 
@@ -182,12 +170,6 @@ namespace TaskNotes.Windows.App
                     break;
                 case "quick-add":
                     await ShowQuickAddAsync(activation.Query ?? string.Empty);
-                    break;
-                case "pomodoro":
-                    await ShowPomodoroAsync();
-                    break;
-                case "time-report":
-                    await ShowTimeReportAsync();
                     break;
                 case "tasks":
                     if (!await TaskWorkspace.Editor.ConfirmDiscardAsync())
@@ -331,8 +313,6 @@ namespace TaskNotes.Windows.App
             ReleaseResources();
             ViewModel.Dispose();
             _settingsViewModel.Dispose();
-            _pomodoroWindow?.Close();
-            _timeReportWindow?.Close();
         }
 
         private void Store_StateChanged(object? sender, EventArgs e)
@@ -372,16 +352,6 @@ namespace TaskNotes.Windows.App
             _ = sender;
             if (args.InvokedItemContainer?.Tag is not string destination)
             {
-                return;
-            }
-            if (destination == "pomodoro")
-            {
-                _uiOperations.Run("open-pomodoro", ShowPomodoroAsync);
-                return;
-            }
-            if (destination == "time-report")
-            {
-                _uiOperations.Run("open-time-report", ShowTimeReportAsync);
                 return;
             }
             _uiOperations.Run("navigate", () => NavigateAsync(destination));
@@ -1116,8 +1086,12 @@ namespace TaskNotes.Windows.App
                     {
                         if (
                             await ConfirmAsync(
-                                "Retire rejected action?",
-                                "Rust must confirm this action is absent or parked. Pending/applied actions and preserved conflict versions stay retained."
+                                "Retire saved action?",
+                                Store
+                                    .State.FacetPendingActions.Single(action => action.Id == id)
+                                    .CanResume
+                                    ? "Rust must confirm this action is absent or parked. Pending/applied actions and preserved conflict versions stay retained."
+                                    : "Facet checks the original saved outcome before clearing this private draft. Pending work remains retained; applied changes and preserved vault versions remain intact."
                             )
                         )
                             await RunUiOperationAsync(() =>
@@ -1204,59 +1178,6 @@ namespace TaskNotes.Windows.App
                 }
                 catch (DecoderFallbackException) { }
             return "Binary file. Both immutable versions remain retained.";
-        }
-
-        private void OpenPomodoro_Click(object sender, RoutedEventArgs e)
-        {
-            _ = sender;
-            _ = e;
-            _uiOperations.Run("open-pomodoro", ShowPomodoroAsync);
-        }
-
-        private async Task ShowPomodoroAsync()
-        {
-            if (_pomodoroWindow is null)
-            {
-                PomodoroWindow window = new(_pomodoro, _uiOperations);
-                window.AppWindow.Closing += (_, _) => _pomodoroWindow = null;
-                _pomodoroWindow = window;
-            }
-            _pomodoroWindow.Activate();
-            await _pomodoroWindow.LoadAsync();
-        }
-
-        private void OpenTimeReport_Click(object sender, RoutedEventArgs e)
-        {
-            _ = sender;
-            _ = e;
-            _uiOperations.Run("open-time-report", ShowTimeReportAsync);
-        }
-
-        private async Task ShowTimeReportAsync()
-        {
-            if (_timeReportWindow is null)
-            {
-                TimeReportWindow window = new(
-                    _timeReport,
-                    _uiOperations,
-                    async (profile, path) =>
-                    {
-                        var task =
-                            Store.State.AllTasks.SingleOrDefault(row =>
-                                row.ProfileId == profile && row.VaultPath == path
-                            )
-                            ?? throw new ArgumentException(
-                                "Refresh the vault before opening this running task."
-                            );
-                        await LoadTaskAsync(task);
-                        Activate();
-                    }
-                );
-                window.AppWindow.Closing += (_, _) => _timeReportWindow = null;
-                _timeReportWindow = window;
-            }
-            _timeReportWindow.Activate();
-            await _timeReportWindow.LoadAsync();
         }
 
         private void InitializeGlobalHotkey(string binding)
@@ -1399,26 +1320,6 @@ namespace TaskNotes.Windows.App
                 "undo-accelerator",
                 () => RunUiOperationAsync(() => ViewModel.UndoCompletionCommand.ExecuteAsync(null))
             );
-        }
-
-        private void PomodoroAccelerator_Invoked(
-            KeyboardAccelerator sender,
-            KeyboardAcceleratorInvokedEventArgs args
-        )
-        {
-            _ = sender;
-            args.Handled = true;
-            _uiOperations.Run("pomodoro-accelerator", ShowPomodoroAsync);
-        }
-
-        private void TimeReportAccelerator_Invoked(
-            KeyboardAccelerator sender,
-            KeyboardAcceleratorInvokedEventArgs args
-        )
-        {
-            _ = sender;
-            args.Handled = true;
-            _uiOperations.Run("time-report-accelerator", ShowTimeReportAsync);
         }
 
         private async Task<bool> RunUiOperationAsync(Func<Task> operation)

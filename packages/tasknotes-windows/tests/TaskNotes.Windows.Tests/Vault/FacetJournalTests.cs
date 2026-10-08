@@ -6,6 +6,21 @@ namespace TaskNotes.Windows.Tests;
 [TestClass]
 public sealed class FacetJournalTests
 {
+    /// <summary>Historical compatibility does not admit malformed commands or reset their retained bytes.</summary>
+    [TestMethod]
+    public void MalformedHistoricalCommandCannotBypassStartupValidation()
+    {
+        using TemporaryDirectory directory = new();
+        var journal = new FacetMutationJournal(directory.Path);
+        _ = journal.Prepare("owner", new { kind = "start_time" });
+        string file = Path.Combine(directory.Path, "mutation-envelopes.json");
+        byte[] before = File.ReadAllBytes(file);
+        _ = Assert.ThrowsExactly<InvalidDataException>(() =>
+            new FacetMutationJournal(directory.Path)
+        );
+        CollectionAssert.AreEqual(before, File.ReadAllBytes(file));
+    }
+
     /// <summary>Completion observation is atomic and cannot add duplicate history or pop another receipt.</summary>
     [TestMethod]
     public void StaleObservationsCannotChangeDurableUndoHistory()

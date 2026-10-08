@@ -2,18 +2,16 @@ import path from "node:path";
 import {
   applyFrontmatterPatch,
   buildRecurringTaskCompletePlan,
-  buildStartTimeTrackingPlan,
-  buildStopTimeTrackingPlan,
   buildTaskUpdatePlan,
   detectTaskFile,
-  getActiveTimeEntry,
   getDefaultCompletedStatus,
   isCompletedStatus,
-  parseTaskDocument,
+  mapTaskFromFrontmatter,
+  parseFrontmatter,
   recurringCompletePlanToFrontmatterPatch,
   serializeMarkdownDocument,
   serializeTaskDocument,
-  taskInfoUpdatesToFrontmatterPatch,
+  TaskInfoV2Schema,
 } from "tasknotes-types/v2";
 import type {
   CompleteInstanceRequest,
@@ -47,7 +45,7 @@ import {
 
 /**
  * The vault-backed task store, built entirely on @tasknotes/model — the
- * plugin's own engine. Reads are tolerant (`parseTaskDocument` +
+ * plugin's own engine. Reads are tolerant (`parseFrontmatter` +
  * `detectTaskFile`); every task-like file that fails to parse is COUNTED
  * and LOGGED, never silently dropped (review finding #2). Writes are
  * read-modify-write from disk through the model's plan builders and
@@ -164,14 +162,27 @@ export class TaskRepository {
     const snapshot = await readFileSnapshot(this.absPath(relPath));
     if (snapshot === null) return null;
     try {
-      const doc = parseTaskDocument(snapshot.text, {
-        path: relPath,
-        fieldMapping: this.config.fieldMapping,
-        storeTitleInFilename: this.config.storeTitleInFilename,
-        userFields: this.config.userFields,
-        statuses: this.config.statuses,
-        priorities: this.config.priorities,
-      });
+      const doc = parseFrontmatter(snapshot.text);
+      // Retired fields remain opaque vault data. Exclude them before the
+      // upstream mapper or update plans can normalize or rewrite them.
+      const retiredFields = new Set([
+        this.config.fieldMapping.timeEntries,
+        this.config.fieldMapping.timeEstimate,
+        "totalTrackedTime",
+      ]);
+      const task = mapTaskFromFrontmatter(
+        this.config.fieldMapping,
+        Object.fromEntries(
+          Object.entries(doc.frontmatter).filter(
+            ([key]) => !retiredFields.has(key),
+          ),
+        ),
+        relPath,
+        this.config.storeTitleInFilename,
+        this.config.userFields,
+        this.config.statuses,
+        this.config.priorities,
+      );
       const isTask = detectTaskFile({
         taskDetection: this.config.taskIdentification,
         frontmatter: doc.frontmatter,
@@ -180,7 +191,7 @@ export class TaskRepository {
       });
       if (!isTask) return null;
       return {
-        task: this.completeTask(doc.task, relPath),
+        task: this.completeTask(task, relPath),
         frontmatter: doc.frontmatter,
         body: doc.body,
         mtimeMs: snapshot.mtimeMs,
@@ -193,7 +204,7 @@ export class TaskRepository {
   /** Fill required TaskInfo fields the tolerant parser may leave absent. */
   private completeTask(partial: Partial<TaskInfo>, relPath: string): TaskInfo {
     const filenameTitle = path.basename(relPath, ".md");
-    return {
+    const task = {
       ...partial,
       title: partial.title ?? filenameTitle,
       status: partial.status ?? this.config.defaults.status,
@@ -202,6 +213,8 @@ export class TaskRepository {
       id: relPath,
       archived: partial.archived ?? false,
     };
+    TaskInfoV2Schema.parse(task);
+    return task;
   }
 
   // -- write side -----------------------------------------------------------
@@ -402,51 +415,6 @@ export class TaskRepository {
     return this.applyPlanPatch(id, fresh, patch, {});
   }
 
-  /**
-   * Start a tracking session (upstream: 400 if one is already active).
-   *
-   * Builds the patch from the SAME `fresh` read used for the guard check and
-   * writes it directly via applyPlanPatch (like completeInstance) instead of
-   * delegating to update(), which would take its own independent readFresh.
-   * Two concurrent starts each doing guard-check + write against their own
-   * fresh read let a later write silently clobber an earlier session; a
-   * single snapshot per call closes that window.
-   */
-  async startTime(id: string): Promise<TaskInfo> {
-    const fresh = await this.readFresh(id);
-    if (getActiveTimeEntry(fresh.task) !== undefined) {
-      throw new TimeTrackingError("Time tracking is already active");
-    }
-    const plan = buildStartTimeTrackingPlan(
-      fresh.task,
-      this.clock().toISOString(),
-    );
-    const patch = taskInfoUpdatesToFrontmatterPatch(
-      { timeEntries: plan.updatedTask.timeEntries ?? [] },
-      this.config.fieldMapping,
-    );
-    return this.applyPlanPatch(id, fresh, patch, {});
-  }
-
-  /** Stop the active tracking session (upstream: 400 if none). Single-read, see startTime. */
-  async stopTime(id: string): Promise<TaskInfo> {
-    const fresh = await this.readFresh(id);
-    const active = getActiveTimeEntry(fresh.task);
-    if (active === undefined) {
-      throw new TimeTrackingError("No active time tracking session");
-    }
-    const plan = buildStopTimeTrackingPlan(
-      fresh.task,
-      active,
-      this.clock().toISOString(),
-    );
-    const patch = taskInfoUpdatesToFrontmatterPatch(
-      { timeEntries: plan.updatedTask.timeEntries ?? [] },
-      this.config.fieldMapping,
-    );
-    return this.applyPlanPatch(id, fresh, patch, {});
-  }
-
   /** True when `status` is a completed status under the user's workflow. */
   isCompleted(status: string | undefined): boolean {
     return isCompletedStatus(status, this.config.statuses);
@@ -518,13 +486,6 @@ export class TaskNotFoundError extends Error {
   constructor(id: string) {
     super(`Task not found: ${id}`);
     this.name = "TaskNotFoundError";
-  }
-}
-
-export class TimeTrackingError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "TimeTrackingError";
   }
 }
 

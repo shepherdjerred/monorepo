@@ -17,7 +17,7 @@ public import TaskNotesUniFFI
 ///
 /// ## `unchanged` / `clear` / `set`, and why absence is not emptiness
 ///
-/// `UpdateTaskRequest`'s clearable fields are `TextUpdate`, `MinutesUpdate` and
+/// `UpdateTaskRequest`'s clearable fields are `TextUpdate` and
 /// `RecurrenceAnchorUpdate`, each with three states that mean three different
 /// things **in the vault's frontmatter**:
 ///
@@ -29,7 +29,7 @@ public import TaskNotesUniFFI
 ///
 /// Confusing the first two is silent data loss: a form that spelled every field
 /// on every save would send `clear` for each one the user never opened, and the
-/// user's `due`, `recurrence` and `timeEstimate` would quietly disappear from
+/// user's `due` and `recurrence` would quietly disappear from
 /// the note. Per-field commit removes the possibility rather than guarding
 /// against it — each case below builds a payload in which **exactly one** field
 /// is not `unchanged`, and ``UpdateTaskRequest/untouched`` is the only way any
@@ -76,9 +76,6 @@ public enum TaskFieldEdit: Sendable, Equatable {
     /// What the rule is measured from; `nil` deletes the key.
     case recurrenceAnchor(RecurrenceAnchor?)
 
-    /// The estimate in whole minutes; `nil` deletes the key.
-    case timeEstimate(UInt32?)
-
     /// The note body below the frontmatter; `nil` deletes it.
     case details(String?)
 
@@ -102,8 +99,6 @@ public enum TaskFieldEdit: Sendable, Equatable {
         case .recurrence(let value): request.recurrence = TextUpdate.of(value)
         case .recurrenceAnchor(let value):
             request.recurrenceAnchor = value.map { .set(value: $0) } ?? .clear
-        case .timeEstimate(let value):
-            request.timeEstimate = value.map { .set(value: $0) } ?? .clear
         case .details(let value): request.details = TextUpdate.of(value)
         }
         return request
@@ -187,7 +182,7 @@ extension UpdateTaskRequest {
     /// A partial update that changes nothing.
     ///
     /// The base every edit is built from, and the reason no call site ever
-    /// spells thirteen fields. Spelling them by hand is how a `clear` ends up
+    /// spells all fields. Spelling them by hand is how a `clear` ends up
     /// where an `unchanged` belonged, which deletes a frontmatter key the user
     /// never touched.
     public static var untouched: Self {
@@ -203,7 +198,6 @@ extension UpdateTaskRequest {
             tags: nil,
             recurrence: .unchanged,
             recurrenceAnchor: .unchanged,
-            timeEstimate: .unchanged,
             extraFields: nil
         )
     }

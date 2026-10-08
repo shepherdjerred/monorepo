@@ -136,14 +136,13 @@ public actor FacetEngine {
         try schema.validate(request, definition: "featureRequest")
         let json = try engine.featuresJson(profileId: profileID, requestJson: encode(request))
         let definitions = [
-            "capture_preview": "capturePreview", "task_time": "taskTime",
-            "time_report": "timeReport", "pomodoro": "pomodoro", "discovery": "discovery",
+            "capture_preview": "capturePreview",
+            "discovery": "discovery",
             "mutation_receipt": "mutationReceipt", "resolution_history": "resolutionHistory",
             "batch_outcome": "batchOutcome", "normalization_preview": "normalizationPreview",
             "undo_available": "undoAvailable",
             "conformance": "conformance",
             "reminder_plan": "reminderPlan",
-            "tracking_sessions": "trackingSessions", "tracking_history": "trackingHistory",
         ]
         guard let kind = request.object?.fields["kind"]?.text, let definition = definitions[kind]
         else {
@@ -272,6 +271,7 @@ public enum FacetContractError: Error, LocalizedError {
 public enum FacetDraftError: Error, LocalizedError {
     case changedNote
     case changedOperation
+    case retiredFeature
     public var errorDescription: String? {
         switch self {
         case .changedNote:
@@ -279,6 +279,9 @@ public enum FacetDraftError: Error, LocalizedError {
                 + "review the conflict inbox before retrying."
         case .changedOperation:
             "This saved action belongs to a different draft or vault. Start a new action to save the changed draft."
+        case .retiredFeature:
+            "This saved action uses a removed feature. Its original request is retained. "
+                + "Check its outcome before retiring it."
         }
     }
 }

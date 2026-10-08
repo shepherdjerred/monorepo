@@ -248,10 +248,6 @@ namespace TaskNotes.Windows.Tests
             Assert.AreEqual("TaskNotes.Task.task.md", AutomationIds.TaskRow("task.md"));
             Assert.AreEqual("TaskNotes.Route.today", AutomationIds.Route("today"));
             Assert.AreEqual("TaskNotes.Board.done", AutomationIds.BoardColumn("done"));
-            TaskTimeReading timing = new("task.md", 42, true);
-            Assert.AreEqual("task.md", timing.TaskId);
-            Assert.AreEqual(42u, timing.TotalMinutes);
-            Assert.IsTrue(timing.HasActiveSession);
         }
 
         /// <summary>Sorts saved views and rejects duplicate IDs, blank names, and malformed core documents.</summary>

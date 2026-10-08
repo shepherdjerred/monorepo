@@ -22,7 +22,6 @@ targets:
     platform: iOS
     sources:
       - path: Facet
-      - path: TasksWidget/TimeTrackingAttributes.swift
       - path: TasksForObsidian/Intents
       - path: TasksForObsidian/Images.xcassets
       - path: TasksForObsidian/PrivacyInfo.xcprivacy
@@ -54,7 +53,6 @@ targets:
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         ITSAppUsesNonExemptEncryption: true
-        NSSupportsLiveActivities: true
         LSSupportsOpeningDocumentsInPlace: true
         UISupportsDocumentBrowser: false
         UILaunchScreen: {}
@@ -78,7 +76,6 @@ targets:
       - path: TasksWidget
         excludes:
           - "*.entitlements"
-      - path: TasksForObsidian/Intents/StopTrackingIntent.swift
       - path: ../../tasknotes-macos/Resources/ios/ThirdPartyNotices.txt
         buildPhase: resources
       - path: ../../tasknotes-macos/Resources/ios/FirstPartyLicense.txt

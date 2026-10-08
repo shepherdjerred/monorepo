@@ -48,12 +48,6 @@ export type TaskIndicatorPresentation =
       readonly accessibilityLabel: string;
     }
   | {
-      readonly kind: "estimate" | "tracked";
-      readonly minutes: number;
-      readonly label: string;
-      readonly accessibilityLabel: string;
-    }
-  | {
       readonly kind: "pending-sync";
       readonly label: string;
       readonly accessibilityLabel: string;
@@ -251,11 +245,6 @@ function createIndicators(
   task: Task,
   pending: boolean,
 ): TaskIndicatorPresentation[] {
-  requireValidMinutes(task.totalTrackedTime, "total tracked time");
-  if (task.timeEstimate !== undefined) {
-    requireValidMinutes(task.timeEstimate, "time estimate");
-  }
-
   const indicators: TaskIndicatorPresentation[] = [];
   const priority = createPriorityIndicator(task.priority);
   if (priority !== undefined) indicators.push(priority);
@@ -279,24 +268,6 @@ function createIndicators(
       value: task.recurrence,
       label: "Repeats",
       accessibilityLabel: "Recurring task",
-    });
-  }
-
-  if (task.timeEstimate !== undefined && task.timeEstimate > 0) {
-    indicators.push({
-      kind: "estimate",
-      minutes: task.timeEstimate,
-      label: `Est. ${formatCompactDuration(task.timeEstimate)}`,
-      accessibilityLabel: `Estimated time ${formatAccessibleDuration(task.timeEstimate)}`,
-    });
-  }
-
-  if (task.totalTrackedTime > 0) {
-    indicators.push({
-      kind: "tracked",
-      minutes: task.totalTrackedTime,
-      label: `${formatCompactDuration(task.totalTrackedTime)} tracked`,
-      accessibilityLabel: `${formatAccessibleDuration(task.totalTrackedTime)} tracked`,
     });
   }
 
@@ -361,12 +332,6 @@ function requireValidDate(date: Date, label: string): Date {
   return date;
 }
 
-function requireValidMinutes(minutes: number, label: string): void {
-  if (!Number.isFinite(minutes) || minutes < 0) {
-    throw new TypeError(`Invalid ${label}: ${String(minutes)}`);
-  }
-}
-
 function dateRelation(date: Date, referenceDate: Date): TaskDateRelation {
   const difference = localDayIndex(date) - localDayIndex(referenceDate);
   if (difference < 0) return "overdue";
@@ -409,28 +374,4 @@ function createCollectionAccessibility(
   if (values.length === 0) return [];
   const label = values.length === 1 ? singular : `${singular}s`;
   return [`${label} ${values.join(", ")}`];
-}
-
-function formatCompactDuration(minutes: number): string {
-  if (minutes < 60) return `${String(minutes)}m`;
-  const hours = Math.floor(minutes / 60);
-  const remainingMinutes = minutes % 60;
-  return remainingMinutes === 0
-    ? `${String(hours)}h`
-    : `${String(hours)}h ${String(remainingMinutes)}m`;
-}
-
-function formatAccessibleDuration(minutes: number): string {
-  const hours = Math.floor(minutes / 60);
-  const remainingMinutes = minutes % 60;
-  const parts: string[] = [];
-  if (hours > 0) {
-    parts.push(`${String(hours)} ${hours === 1 ? "hour" : "hours"}`);
-  }
-  if (hours === 0 || remainingMinutes > 0) {
-    parts.push(
-      `${String(remainingMinutes)} ${remainingMinutes === 1 ? "minute" : "minutes"}`,
-    );
-  }
-  return parts.join(" ");
 }

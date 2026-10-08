@@ -55,8 +55,6 @@ namespace TaskNotes.Windows.App.Views
             set => SetValue(EditorViewModelProperty, value);
         }
 
-        internal event RoutedEventHandler? OpenPomodoroRequested;
-        internal event RoutedEventHandler? OpenTimeReportRequested;
         internal event RoutedEventHandler? RefreshRequested;
         internal event Action<string>? SearchChanged;
         internal event Action<string>? SearchSubmitted;
@@ -155,12 +153,6 @@ namespace TaskNotes.Windows.App.Views
 
         internal string[] SelectedTaskIds() =>
             [.. TaskList.SelectedItems.OfType<TaskItem>().Select(task => task.Id)];
-
-        private void OpenPomodoro_Click(object sender, RoutedEventArgs eventArgs) =>
-            OpenPomodoroRequested?.Invoke(sender, eventArgs);
-
-        private void OpenTimeReport_Click(object sender, RoutedEventArgs eventArgs) =>
-            OpenTimeReportRequested?.Invoke(sender, eventArgs);
 
         private void Refresh_Click(object sender, RoutedEventArgs eventArgs) =>
             RefreshRequested?.Invoke(sender, eventArgs);

@@ -8,7 +8,6 @@
     "contexts": "contexts",
     "projects": "projects",
     "attachments": "attachments",
-    "timeEstimate": "timeEstimate",
     "completedDate": "completedDate",
     "dateCreated": "dateCreated",
     "dateModified": "dateModified",
@@ -22,11 +21,9 @@
     "occurrencePastHorizon": "occurrence_past_horizon",
     "occurrenceFutureHorizon": "occurrence_future_horizon",
     "archiveTag": "archived",
-    "timeEntries": "timeEntries",
     "completeInstances": "complete_instances",
     "skippedInstances": "skipped_instances",
     "blockedBy": "blockedBy",
-    "pomodoros": "pomodoros",
     "icsEventId": "icsEventId",
     "icsEventTag": "ics_event",
     "googleCalendarEventId": "googleCalendarEventId",
@@ -134,10 +131,5 @@
     "defaultNextTrigger": "completion",
     "pastHorizon": "P0D",
     "futureHorizon": "P14D"
-  },
-  "timeTracking": {
-    "autoStopOnComplete": false,
-    "autoStopNotification": true,
-    "defaultSessionDescription": "Work session"
   }
 }

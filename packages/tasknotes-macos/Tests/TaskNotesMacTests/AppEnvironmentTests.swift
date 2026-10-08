@@ -483,7 +483,6 @@ private func createRequest(title: String) -> CreateTaskRequest {
         tags: nil,
         recurrence: nil,
         recurrenceAnchor: nil,
-        timeEstimate: nil,
         extraFields: nil
     )
 }

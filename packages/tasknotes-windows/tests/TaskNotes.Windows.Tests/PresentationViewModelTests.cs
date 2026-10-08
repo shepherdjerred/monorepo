@@ -111,12 +111,9 @@ namespace TaskNotes.Windows.Tests
             Assert.IsTrue(await retained.SaveAsync(TestContext.CancellationToken));
             Assert.IsTrue(retained.IsDirty);
             Assert.AreEqual("Already saved", retained.Title);
-            var report = new TimeReportViewModel(failed);
-            await report.LoadSessionsAsync(cancellationToken: TestContext.CancellationToken);
-            Assert.IsNull(report.Sessions);
         }
 
-        /// <summary>Typed field controls retain exact values and extensions, freeze workflows, and reject malformed numeric drafts.</summary>
+        /// <summary>Typed field controls retain exact values and extensions, freeze workflows, and validate reminder drafts.</summary>
         [TestMethod]
         public async Task TypedEditorFieldsPreserveExtensionsAndValidateOnlyChanges()
         {
@@ -142,7 +139,6 @@ namespace TaskNotes.Windows.Tests
             };
             using TaskEditorViewModel editor = new(store, new TestDispatcher());
             editor.Load(task);
-            Assert.AreEqual("31.625", editor.EstimateText);
             Assert.AreEqual("one", editor.BlockedBy);
             Assert.AreEqual("2026-10-03", editor.CompletedDate);
             Assert.AreEqual("2026-10-03", editor.CompleteInstances);
@@ -168,7 +164,6 @@ namespace TaskNotes.Windows.Tests
             Assert.AreEqual(task.ExpectedRevision, store.LastEdit.ExpectedRevision);
             editor.Discard();
             Assert.AreEqual(task.Details, editor.Details);
-            editor.EstimateText = "";
             editor.BlockedBy = "two, three";
             editor.CompletedDate = "";
             editor.DateCreated = "2026-10-03T10:00:00Z";
@@ -186,7 +181,6 @@ namespace TaskNotes.Windows.Tests
             Assert.IsTrue(editor.IsDirty);
             Assert.IsTrue(await editor.SaveAsync(TestContext.CancellationToken));
             var changed = store.LastEdit!.ChangedProperties!;
-            Assert.AreEqual(System.Text.Json.JsonValueKind.Null, changed["timeEstimate"].ValueKind);
             Assert.AreEqual(
                 System.Text.Json.JsonValueKind.Null,
                 changed["completedDate"].ValueKind
@@ -211,14 +205,6 @@ namespace TaskNotes.Windows.Tests
                 editor.SaveAsync(TestContext.CancellationToken)
             );
             editor.Discard();
-            foreach (string invalid in new[] { "not-a-number", "\"20\"", "null", "{}" })
-            {
-                editor.EstimateText = invalid;
-                _ = await Assert.ThrowsExactlyAsync<ArgumentException>(() =>
-                    editor.SaveAsync(TestContext.CancellationToken)
-                );
-                Assert.IsTrue(editor.IsDirty);
-            }
             editor.Clear();
             Assert.AreEqual("", editor.Attachments);
             Assert.AreEqual("", editor.CompleteInstances);
@@ -321,7 +307,6 @@ namespace TaskNotes.Windows.Tests
             editor.Scheduled = "2026-08-11";
             editor.Recurrence = "FREQ=DAILY";
             editor.RecurrenceAnchor = "scheduled";
-            editor.TimeEstimate = 30;
             Assert.IsTrue(await editor.SaveAsync(TestContext.CancellationToken));
 
             TaskEditInput edit =
@@ -445,16 +430,13 @@ namespace TaskNotes.Windows.Tests
                 [],
                 [],
                 [],
-                null,
-                0,
                 false,
                 false,
                 status == "done",
                 false,
                 false,
                 null,
-                string.Empty,
-                false
+                string.Empty
             );
         }
 

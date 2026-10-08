@@ -28,11 +28,10 @@ use tasknotes_core::{
     dates::{DateGroup, UpcomingHorizon},
     domain::{
         BlockedByEntry, CalendarEvent, ContextName, CreateTaskRequest, ExtraFields, FilterChain,
-        FilterConfig, FilterOptions, HealthState, HealthStatus, InlineTimeEntry, NlpParseResult,
-        Pagination, PomodoroPhase, PomodoroStatus, Priority, ProjectName, QueryResponse,
-        RecurrenceAnchor, Reminder, ReminderKind, SortConfig, SortDirection, SortField, TagName,
-        Task, TaskId, TaskList, TaskQueryFilter, TaskStats, TaskStatus, TaskTime, TaskTitle,
-        TimeEntry, TimeSummary, TopTask, VaultInfo,
+        FilterConfig, FilterOptions, HealthState, HealthStatus, NlpParseResult, Pagination,
+        Priority, ProjectName, QueryResponse, RecurrenceAnchor, Reminder, ReminderKind, SortConfig,
+        SortDirection, SortField, TagName, Task, TaskId, TaskList, TaskQueryFilter, TaskStats,
+        TaskStatus, TaskTitle, VaultInfo,
     },
     net::{InstanceCompletion, InstanceRestore},
     recurrence::{
@@ -122,15 +121,6 @@ pub enum SortDirection {
     Desc,
 }
 
-/// See [`tasknotes_core::domain::PomodoroPhase`].
-#[uniffi::remote(Enum)]
-pub enum PomodoroPhase {
-    /// A focus interval.
-    Work,
-    /// A rest interval.
-    Break,
-}
-
 /// See [`tasknotes_core::domain::HealthState`].
 #[uniffi::remote(Enum)]
 pub enum HealthState {
@@ -164,17 +154,6 @@ pub struct BlockedByEntry {
     pub reltype: Option<String>,
     /// The required gap between the blocker and this task.
     pub gap: Option<String>,
-}
-
-/// See [`tasknotes_core::domain::InlineTimeEntry`].
-#[uniffi::remote(Record)]
-pub struct InlineTimeEntry {
-    /// When tracking started.
-    pub start_time: String,
-    /// When tracking stopped; absent while a session is running.
-    pub end_time: Option<String>,
-    /// The interval's length in whole minutes.
-    pub duration: Option<u32>,
 }
 
 /// See [`tasknotes_core::domain::Task`].
@@ -218,18 +197,12 @@ pub struct Task {
     pub date_created: Option<String>,
     /// When the note was last modified.
     pub date_modified: Option<String>,
-    /// The estimate in whole minutes.
-    pub time_estimate: Option<u32>,
-    /// Tracked work intervals stored in the note's frontmatter.
-    pub time_entries: Vec<InlineTimeEntry>,
     /// Tasks this one is blocked by.
     pub blocked_by: Vec<BlockedByEntry>,
     /// Reminders attached to the task.
     pub reminders: Vec<Reminder>,
     /// Whether the task is archived.
     pub archived: bool,
-    /// Total tracked time in whole minutes, as the server computed it.
-    pub total_tracked_time: u32,
     /// Whether something else is blocking this task.
     pub is_blocked: bool,
     /// Whether this task blocks something else.
@@ -268,8 +241,6 @@ pub struct CreateTaskRequest {
     pub recurrence: Option<String>,
     /// What the recurrence is measured from.
     pub recurrence_anchor: Option<RecurrenceAnchor>,
-    /// The estimate in whole minutes.
-    pub time_estimate: Option<u32>,
     /// Extra frontmatter keys to write, as a JSON object string.
     pub extra_fields: Option<ExtraFields>,
 }
@@ -430,8 +401,6 @@ pub struct TaskStats {
     pub overdue: u32,
     /// Archived tasks.
     pub archived: u32,
-    /// Tasks with at least one tracked interval.
-    pub with_time_tracking: u32,
 }
 
 /// See [`tasknotes_core::domain::NlpParseResult`].
@@ -451,19 +420,6 @@ pub struct NlpParseResult {
     pub tags: Option<Vec<String>>,
     /// The recurrence rule, if one was recognised.
     pub recurrence: Option<String>,
-}
-
-/// See [`tasknotes_core::domain::PomodoroStatus`].
-#[uniffi::remote(Record)]
-pub struct PomodoroStatus {
-    /// Whether a session is running.
-    pub active: bool,
-    /// The task being worked on.
-    pub task_id: Option<TaskId>,
-    /// Seconds left in the current phase.
-    pub time_remaining: Option<u32>,
-    /// Which phase is running.
-    pub phase: Option<PomodoroPhase>,
 }
 
 /// See [`tasknotes_core::domain::CalendarEvent`].
@@ -490,48 +446,6 @@ pub struct HealthStatus {
     pub uptime: Option<u64>,
     /// Whether the request was authenticated.
     pub authenticated: Option<bool>,
-}
-
-/// See [`tasknotes_core::domain::TimeEntry`].
-#[uniffi::remote(Record)]
-pub struct TimeEntry {
-    /// The task the interval belongs to.
-    pub task_id: TaskId,
-    /// When tracking started.
-    pub start_time: String,
-    /// When tracking stopped; absent while a session is running.
-    pub end_time: Option<String>,
-    /// The interval's length in whole minutes.
-    pub duration: Option<u32>,
-}
-
-/// See [`tasknotes_core::domain::TopTask`].
-#[uniffi::remote(Record)]
-pub struct TopTask {
-    /// The task.
-    pub task_id: TaskId,
-    /// Its title.
-    pub title: String,
-    /// Whole minutes tracked against it.
-    pub minutes: u32,
-}
-
-/// See [`tasknotes_core::domain::TimeSummary`].
-#[uniffi::remote(Record)]
-pub struct TimeSummary {
-    /// Whole minutes tracked across everything in scope.
-    pub total_time: u32,
-    /// The busiest tasks, in the server's order.
-    pub top_tasks: Vec<TopTask>,
-}
-
-/// See [`tasknotes_core::domain::TaskTime`].
-#[uniffi::remote(Record)]
-pub struct TaskTime {
-    /// Whole minutes tracked against one task.
-    pub total_time: u32,
-    /// Whether a session is running right now.
-    pub has_active_session: bool,
 }
 
 // ── Sync stack ─────────────────────────────────────────────────────────────

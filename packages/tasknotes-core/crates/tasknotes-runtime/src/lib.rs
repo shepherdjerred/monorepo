@@ -8,7 +8,6 @@ mod commands;
 pub mod engine;
 mod features;
 pub mod merge;
-mod pomodoro;
 mod projections;
 mod query;
 pub mod types;

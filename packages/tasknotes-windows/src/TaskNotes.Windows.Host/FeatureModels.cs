@@ -153,16 +153,13 @@ namespace TaskNotes.Windows.Host
             IReadOnlyList<string> projects,
             IReadOnlyList<string> contexts,
             IReadOnlyList<string> tags,
-            uint? timeEstimate,
-            uint totalTrackedTime,
             bool isBlocked,
             bool isBlocking,
             bool isCompleted,
             bool isRecurring,
             bool isPending,
             string? occurrenceDate,
-            string groupLabel,
-            bool hasActiveTimeSession
+            string groupLabel
         )
         {
             Id = id;
@@ -179,8 +176,6 @@ namespace TaskNotes.Windows.Host
             Projects = projects;
             Contexts = contexts;
             Tags = tags;
-            TimeEstimate = timeEstimate;
-            TotalTrackedTime = totalTrackedTime;
             IsBlocked = isBlocked;
             IsBlocking = isBlocking;
             IsCompleted = isCompleted;
@@ -188,7 +183,6 @@ namespace TaskNotes.Windows.Host
             IsPending = isPending;
             OccurrenceDate = occurrenceDate;
             GroupLabel = groupLabel;
-            HasActiveTimeSession = hasActiveTimeSession;
         }
 
         /// <summary>Gets the stable task identifier.</summary>
@@ -233,12 +227,6 @@ namespace TaskNotes.Windows.Host
         /// <summary>Gets the tags.</summary>
         public IReadOnlyList<string> Tags { get; }
 
-        /// <summary>Gets the estimate in minutes.</summary>
-        public uint? TimeEstimate { get; }
-
-        /// <summary>Gets the total tracked minutes.</summary>
-        public uint TotalTrackedTime { get; }
-
         /// <summary>Gets whether another task blocks this task.</summary>
         public bool IsBlocked { get; }
 
@@ -259,9 +247,6 @@ namespace TaskNotes.Windows.Host
 
         /// <summary>Gets the presentation group label.</summary>
         public string GroupLabel { get; }
-
-        /// <summary>Gets whether the synchronized task snapshot contains an open time entry.</summary>
-        public bool HasActiveTimeSession { get; }
 
         /// <summary>Gets the compact synchronization label.</summary>
         public string PendingLabel => IsPending ? "Pending" : string.Empty;
@@ -335,9 +320,6 @@ namespace TaskNotes.Windows.Host
 
         /// <summary>Gets the tags.</summary>
         public IReadOnlyList<string> Tags { get; init; } = [];
-
-        /// <summary>Gets the estimate in minutes.</summary>
-        public uint? TimeEstimate { get; init; }
     }
 
     /// <summary>The core's natural-language preview plus contextual defaults.</summary>
@@ -381,21 +363,4 @@ namespace TaskNotes.Windows.Host
         /// <summary>Gets the presentation grouping.</summary>
         public TaskGroupChoice Group { get; init; }
     }
-
-    /// <summary>Tracked-time state for one task.</summary>
-    public sealed record TaskTimeReading(string TaskId, uint TotalMinutes, bool HasActiveSession);
-
-    /// <summary>One row in the aggregate time report.</summary>
-    public sealed record TimeReportRow(string TaskId, string Title, uint Minutes);
-
-    /// <summary>The aggregate time report returned by the server.</summary>
-    public sealed record TimeReportReading(uint TotalMinutes, IReadOnlyList<TimeReportRow> Rows);
-
-    /// <summary>The current server-backed Pomodoro state.</summary>
-    public sealed record PomodoroReading(
-        bool IsActive,
-        string? TaskId,
-        uint? SecondsRemaining,
-        string? Phase
-    );
 }

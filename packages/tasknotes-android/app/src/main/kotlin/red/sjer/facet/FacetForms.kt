@@ -26,8 +26,8 @@ internal fun ChoiceField(label: String, value: String, choices: List<WorkflowOpt
 }
 
 private val DraftSaver = listSaver<TaskEditorDraft, String>(
-    save = { listOf(it.title, it.body, it.status, it.priority, it.due, it.scheduled, it.recurrence, it.recurrenceAnchor, it.projects, it.contexts, it.tags, it.estimate, it.completedDate, it.completeInstances, it.skippedInstances, it.blockedBy, it.timeEntries, it.reminders, it.attachments, it.dateCreated) },
-    restore = { TaskEditorDraft(it[0], it[1], it[2], it[3], it[4], it[5], it[6], it[7], it[8], it[9], it[10], it[11], it[12], it[13], it[14], it[15], it[16], it[17], it[18], it[19]) },
+    save = { listOf(it.title, it.body, it.status, it.priority, it.due, it.scheduled, it.recurrence, it.recurrenceAnchor, it.projects, it.contexts, it.tags, it.completedDate, it.completeInstances, it.skippedInstances, it.blockedBy, it.reminders, it.attachments, it.dateCreated) },
+    restore = { TaskEditorDraft(it[0], it[1], it[2], it[3], it[4], it[5], it[6], it[7], it[8], it[9], it[10], it[11], it[12], it[13], it[14], it[15], it[16], it[17]) },
 )
 
 private val TaskBasisSaver = listSaver<VaultTask, String>(
@@ -50,14 +50,11 @@ internal fun TaskEditor(profileId: String, task: VaultTask, model: FacetViewMode
     var deleting by remember { mutableStateOf(false) }
     var section by rememberSaveable { mutableStateOf("Details") }
     val mutationId = rememberSaveable(profileId, task.id, draft) { UUID.randomUUID().toString() }
-    LaunchedEffect(profileId, basis.path, basis.revision, section) {
-        if (section == "Time") model.loadTrackingHistory(profileId, basis)
-    }
     fun close() { if (draft != original) discard = true else dismiss() }
     AlertDialog(onDismissRequest = { if (!model.busy) close() }, title = { Text(task.title) }, text = {
         Column(Modifier.heightIn(max = 520.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("Details", "Recurrence", "Time", "Extras").forEach { label -> FilterChip(selected = section == label, onClick = { section = label }, label = { Text(label) }) }
+                listOf("Details", "Recurrence", "Extras").forEach { label -> FilterChip(selected = section == label, onClick = { section = label }, label = { Text(label) }) }
             }
             when (section) {
                 "Details" -> {
@@ -79,18 +76,6 @@ internal fun TaskEditor(profileId: String, task: VaultTask, model: FacetViewMode
                     DraftField("Completed occurrences (dates)", draft.completeInstances, model.busy) { draft = draft.copy(completeInstances = it) }
                     DraftField("Skipped occurrences (dates)", draft.skippedInstances, model.busy) { draft = draft.copy(skippedInstances = it) }
                     task.occurrenceDate?.let { Text("Selected occurrence: $it") }
-                }
-                "Time" -> {
-                    DraftField("Estimate (minutes)", draft.estimate, model.busy) { draft = draft.copy(estimate = it) }
-                    Text("${basis.totalTrackedMinutes} minutes tracked")
-                    model.trackingHistory?.takeIf { page -> page.owner.profileId == profileId && page.owner.taskPath == basis.path && page.owner.taskRevision == basis.revision }?.let { page ->
-                        Text("${page.rows.size} entries on this page · ${page.totalCount} total")
-                        if (page.problemCount != 0uL) Text("${page.problemCount} entries need review")
-                        page.rows.forEach { row -> Text("${row.getValue("startedAt").jsonPrimitive.content} → ${row.getValue("endedAt").jsonPrimitive.contentOrNull ?: "Running"} · ${row.getValue("elapsedSeconds").jsonPrimitive.content} seconds") }
-                        if (page.next != null) Button(onClick = { model.loadTrackingHistory(profileId, basis, true) }, enabled = !model.busy) { Text("More time entries") }
-                    }
-                    Button(onClick = { model.track(profileId, basis, !basis.hasActiveTimeSession) { changed -> basis = changed; draft = TaskEditorDraft.from(changed) } }, enabled = !model.busy && draft == original) { Text(if (basis.hasActiveTimeSession) "Stop tracking" else "Start tracking") }
-                    TypedTimeEntries(draft.timeEntries, model.busy) { draft = draft.copy(timeEntries = it) }
                 }
                 "Extras" -> {
                     DraftField("Created time (explicit RFC3339)", draft.dateCreated, model.busy) { draft = draft.copy(dateCreated = it) }

@@ -6,6 +6,7 @@ import {
   CompleteInstanceRequestSchema,
   NlpRequestSchema,
   TaskCreationRequestSchema,
+  TaskInfoV2Schema,
   TaskUpdateRequestSchema,
   generateRecurringInstances,
 } from "tasknotes-types/v2";
@@ -14,7 +15,6 @@ import type { TaskNotesModelConfig } from "tasknotes-types/v2";
 import {
   NotRecurringError,
   TaskNotFoundError,
-  TimeTrackingError,
   type Clock,
   type TaskRepository,
 } from "../engine/task-repository.ts";
@@ -23,11 +23,6 @@ import { FilterQuerySchema, evaluateQuery } from "../engine/query.ts";
 import { ymd } from "../engine/date.ts";
 import { parseTaskInput } from "../nlp/parser.ts";
 import { computeFilterOptions, computeStats } from "../engine/stats.ts";
-import {
-  computeActiveSessions,
-  computeTimeSummary,
-} from "../engine/time-reports.ts";
-
 /**
  * The v2 route table — the upstream TaskNotes plugin HTTP API, transcribed
  * endpoint-for-endpoint from the upstream controllers, served by the
@@ -46,7 +41,6 @@ function errorStatus(error: unknown): 400 | 404 | 409 | 500 {
   if (error instanceof TaskNotFoundError) return 404;
   if (error instanceof RecurringRestoreConflictError) return 409;
   if (error instanceof NotRecurringError) return 400;
-  if (error instanceof TimeTrackingError) return 400;
   if (error instanceof z.ZodError) return 400;
   // A malformed JSON request body (JSON.parse / c.req.json() throws a
   // SyntaxError) is a client error, not a server fault → 400, not 500.
@@ -139,7 +133,10 @@ export function v2Routes(deps: V2Dependencies): Hono {
   // update response had put it into the base.
   const withDetails = (task: { path: string }): Record<string, unknown> => {
     const entry = repo.get(task.path);
-    return { ...task, details: entry === undefined ? "" : entry.body.trim() };
+    return TaskInfoV2Schema.parse({
+      ...task,
+      details: entry === undefined ? "" : entry.body.trim(),
+    });
   };
 
   // -- tasks ---------------------------------------------------------------
@@ -243,68 +240,6 @@ export function v2Routes(deps: V2Dependencies): Hono {
     c.json(computeStats(repo.list(), config, ymd(clock()))),
   );
 
-  // -- time tracking -------------------------------------------------------
-
-  app.post("/api/tasks/:id/time/start", (c) =>
-    guard(c, async () =>
-      c.json(withDetails(await repo.startTime(c.req.param("id")))),
-    ),
-  );
-
-  app.post("/api/tasks/:id/time/stop", (c) =>
-    guard(c, async () =>
-      c.json(withDetails(await repo.stopTime(c.req.param("id")))),
-    ),
-  );
-
-  app.get("/api/tasks/:id/time", (c) =>
-    guard(c, () => {
-      const entry = repo.get(c.req.param("id"));
-      if (entry === undefined) {
-        return c.json({ success: false, error: "Task not found" }, 404);
-      }
-      const task = entry.task;
-      const entries = task.timeEntries ?? [];
-      const now = clock();
-      let totalMinutes = 0;
-      let completedSessions = 0;
-      let activeSessions = 0;
-      for (const e of entries) {
-        if (e.endTime === undefined) {
-          activeSessions += 1;
-          totalMinutes += Math.floor(
-            (now.getTime() - new Date(e.startTime).getTime()) / 60_000,
-          );
-        } else {
-          completedSessions += 1;
-          totalMinutes += Math.floor(
-            (new Date(e.endTime).getTime() - new Date(e.startTime).getTime()) /
-              60_000,
-          );
-        }
-      }
-      return c.json({
-        task: {
-          id: task.path,
-          title: task.title,
-          status: task.status,
-          priority: task.priority,
-        },
-        summary: {
-          totalMinutes,
-          totalHours: Math.round((totalMinutes / 60) * 100) / 100,
-          totalSessions: entries.length,
-          completedSessions,
-          activeSessions,
-        },
-      });
-    }),
-  );
-
-  app.get("/api/time/active", (c) =>
-    c.json(computeActiveSessions(repo.list(), clock())),
-  );
-
   // -- NLP -------------------------------------------------------------------
 
   app.post("/api/nlp/parse", (c) =>
@@ -380,29 +315,6 @@ export function v2Routes(deps: V2Dependencies): Hono {
         total: events.length,
         sources: { tasks: events.length },
       });
-    }),
-  );
-
-  app.get("/api/time/summary", (c) =>
-    guard(c, () => {
-      const from = c.req.query("from");
-      const to = c.req.query("to");
-      return c.json(
-        computeTimeSummary(
-          repo.list(),
-          {
-            period: c.req.query("period") ?? "today",
-            fromDate:
-              from === undefined
-                ? undefined
-                : parseDateQueryParam("from", from),
-            toDate:
-              to === undefined ? undefined : parseDateQueryParam("to", to),
-          },
-          config,
-          clock(),
-        ),
-      );
     }),
   );
 

@@ -1,5 +1,7 @@
 //! Isolated near-limit allocation evidence for authenticated file framing.
 //! Native allocator/provider/FFI peaks are measured by their host acceptance.
+//! A single-purpose executable avoids libtest's progress-thread allocations
+//! contaminating the process-wide allocation counter during long operations.
 use obsidian_sync::crypto::{EncryptionVersion, VaultCipher, VaultKey};
 use stats_alloc::{INSTRUMENTED_SYSTEM, Region, StatsAlloc};
 use std::alloc::System;
@@ -7,7 +9,16 @@ use std::alloc::System;
 #[global_allocator]
 static GLOBAL: &StatsAlloc<System> = &INSTRUMENTED_SYSTEM;
 
-#[test]
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    near_limit_encrypt_allocates_one_exact_frame_and_owned_decrypt_reuses_it()?;
+    // CI's Cargo reporter consumes this actual completed case. Emit it only
+    // after every allocation, identity, capacity and content assertion passes.
+    eprintln!(
+        "test near_limit_encrypt_allocates_one_exact_frame_and_owned_decrypt_reuses_it ... ok"
+    );
+    Ok(())
+}
+
 fn near_limit_encrypt_allocates_one_exact_frame_and_owned_decrypt_reuses_it()
 -> Result<(), Box<dyn std::error::Error>> {
     let key = VaultKey::from_bytes(&[1; 32])?;

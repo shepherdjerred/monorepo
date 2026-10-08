@@ -154,33 +154,6 @@
       ]
     },
     {
-      "id": "timing.task-tracking",
-      "sources": ["ios"],
-      "disposition": "applicable",
-      "windowsSurface": "Task inspector timing section",
-      "interaction": "Start and stop server-backed task timing and show active state",
-      "tests": ["time-tracking-report"],
-      "assertions": ["timing.task-server", "timing.markdown"]
-    },
-    {
-      "id": "timing.report",
-      "sources": ["macos", "ios"],
-      "disposition": "applicable",
-      "windowsSurface": "Time Report window",
-      "interaction": "Show server-computed totals and top-task rows",
-      "tests": ["time-tracking-report"],
-      "assertions": ["timing.report-ui"]
-    },
-    {
-      "id": "timing.pomodoro",
-      "sources": ["macos", "ios"],
-      "disposition": "applicable",
-      "windowsSurface": "Pomodoro window",
-      "interaction": "Start, pause or resume, stop, refresh, and reopen the server-backed interval",
-      "tests": ["pomodoro"],
-      "assertions": ["pomodoro.server-lifecycle", "window.pomodoro-singleton"]
-    },
-    {
       "id": "settings.server-and-token",
       "sources": ["macos", "ios"],
       "disposition": "applicable",
@@ -230,7 +203,7 @@
       "sources": ["macos", "ios"],
       "disposition": "applicable",
       "windowsSurface": "MSIX protocol activation",
-      "interaction": "Route fixed, entity, task, saved-view, Quick Add, Settings, Board, Pomodoro, and Time Report links",
+      "interaction": "Route fixed, entity, task, saved-view, Quick Add, Settings, Board links",
       "tests": ["deep-links-entities"],
       "assertions": [
         "activation.fixed",
@@ -252,13 +225,9 @@
       "sources": ["macos"],
       "disposition": "applicable",
       "windowsSurface": "Singleton auxiliary AppWindows",
-      "interaction": "Open and reactivate Quick Add, Pomodoro, and Time Report windows",
-      "tests": ["pomodoro", "time-tracking-report", "global-quick-add"],
-      "assertions": [
-        "window.pomodoro-singleton",
-        "timing.report-ui",
-        "hotkey.invoke-cancel"
-      ]
+      "interaction": "Open and reactivate the Quick Add window",
+      "tests": ["global-quick-add"],
+      "assertions": ["hotkey.invoke-cancel"]
     },
     {
       "id": "windowing.persistence",

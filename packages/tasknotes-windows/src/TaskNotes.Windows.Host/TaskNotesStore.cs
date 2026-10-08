@@ -24,9 +24,6 @@ namespace TaskNotes.Windows.Host
         private Core.TaskNotesApi? _api;
         private BearerHttpTransport? _transport;
         private TaskListQuery _query = TaskListQuery.Today;
-        private TaskTimeReading? _taskTime;
-        private TimeReportReading? _timeReport;
-        private PomodoroReading? _pomodoro;
         private bool _configured;
         private bool _disposed;
 
@@ -375,99 +372,6 @@ namespace TaskNotes.Windows.Host
             _drainPump.Request();
         }
 
-        /// <summary>Reads live timing totals for one task.</summary>
-        public Task LoadTaskTimeAsync(string taskId, CancellationToken cancellationToken = default)
-        {
-            ArgumentException.ThrowIfNullOrWhiteSpace(taskId);
-            return RunLiveAsync(
-                () =>
-                {
-                    Core.TaskTime reading = RequireApi().TaskTime(taskId);
-                    _taskTime = new TaskTimeReading(
-                        taskId,
-                        reading.TotalTime,
-                        reading.HasActiveSession
-                    );
-                    return Observe();
-                },
-                cancellationToken
-            );
-        }
-
-        /// <summary>Starts live server-backed time tracking for one task.</summary>
-        public Task StartTimeTrackingAsync(
-            string taskId,
-            CancellationToken cancellationToken = default
-        )
-        {
-            ArgumentException.ThrowIfNullOrWhiteSpace(taskId);
-            return MutateTimeAsync(taskId, api => api.StartTimeTracking(taskId), cancellationToken);
-        }
-
-        /// <summary>Stops live server-backed time tracking for one task.</summary>
-        public Task StopTimeTrackingAsync(
-            string taskId,
-            CancellationToken cancellationToken = default
-        )
-        {
-            ArgumentException.ThrowIfNullOrWhiteSpace(taskId);
-            return MutateTimeAsync(taskId, api => api.StopTimeTracking(taskId), cancellationToken);
-        }
-
-        /// <summary>Loads the aggregate server-backed time report.</summary>
-        public Task LoadTimeReportAsync(
-            string period = "all",
-            CancellationToken cancellationToken = default
-        )
-        {
-            ArgumentException.ThrowIfNullOrWhiteSpace(period);
-            return RunLiveAsync(
-                () =>
-                {
-                    Core.TimeSummary report = RequireApi().TimeSummary(period);
-                    _timeReport = new TimeReportReading(
-                        report.TotalTime,
-                        [
-                            .. report.TopTasks.Select(row => new TimeReportRow(
-                                row.TaskId,
-                                row.Title,
-                                row.Minutes
-                            )),
-                        ]
-                    );
-                    return Observe();
-                },
-                cancellationToken
-            );
-        }
-
-        /// <summary>Loads the current server-backed Pomodoro state.</summary>
-        public Task LoadPomodoroAsync(CancellationToken cancellationToken = default)
-        {
-            return MutatePomodoroAsync(api => api.PomodoroStatus(), cancellationToken);
-        }
-
-        /// <summary>Starts a server-backed Pomodoro interval.</summary>
-        public Task StartPomodoroAsync(
-            string? taskId,
-            CancellationToken cancellationToken = default
-        )
-        {
-            return MutatePomodoroAsync(api => api.StartPomodoro(taskId), cancellationToken);
-        }
-
-        /// <summary>Toggles the server-backed Pomodoro interval between running and paused.</summary>
-        public Task PauseOrResumePomodoroAsync(CancellationToken cancellationToken = default)
-        {
-            return MutatePomodoroAsync(api => api.PausePomodoro(), cancellationToken);
-        }
-
-        /// <summary>Stops the server-backed Pomodoro interval.</summary>
-        public Task StopPomodoroAsync(CancellationToken cancellationToken = default)
-        {
-            return MutatePomodoroAsync(api => api.StopPomodoro(), cancellationToken);
-        }
-
         /// <summary>Creates a saved view from the supplied query.</summary>
         public async Task<SavedViewDefinition> CreateSavedViewAsync(
             string name,
@@ -773,7 +677,6 @@ namespace TaskNotes.Windows.Host
                 [.. preview.Tags],
                 preview.Recurrence,
                 null,
-                null,
                 null
             );
             _ = engine.Dispatch(new Core.CommandInput.Create(request));
@@ -810,7 +713,6 @@ namespace TaskNotes.Windows.Host
                     task.RecurrenceAnchor,
                     input.RecurrenceAnchor
                 ),
-                TimeEstimate = MinutesUpdate(task.TimeEstimate, input.TimeEstimate),
             };
             _ = engine.Dispatch(new Core.CommandInput.Update(task.Id, request));
             return Observe();
@@ -897,46 +799,6 @@ namespace TaskNotes.Windows.Host
                 .ConfigureAwait(false);
             await PublishAsync(state).ConfigureAwait(false);
             _drainPump.Request();
-        }
-
-        private async Task MutateTimeAsync(
-            string taskId,
-            Func<Core.TaskNotesApi, CoreTask> mutation,
-            CancellationToken cancellationToken
-        )
-        {
-            await RunLiveAsync(
-                    () =>
-                    {
-                        _ = mutation(RequireApi());
-                        Core.TaskTime reading = RequireApi().TaskTime(taskId);
-                        _taskTime = new TaskTimeReading(
-                            taskId,
-                            reading.TotalTime,
-                            reading.HasActiveSession
-                        );
-                        RequireEngine().SyncNow();
-                        return Observe();
-                    },
-                    cancellationToken
-                )
-                .ConfigureAwait(false);
-        }
-
-        private Task MutatePomodoroAsync(
-            Func<Core.TaskNotesApi, Core.PomodoroStatus> operation,
-            CancellationToken cancellationToken
-        )
-        {
-            return RunLiveAsync(
-                () =>
-                {
-                    Core.PomodoroStatus status = operation(RequireApi());
-                    _pomodoro = ProjectPomodoro(status);
-                    return Observe();
-                },
-                cancellationToken
-            );
         }
 
         private async Task RunLiveAsync(
@@ -1045,9 +907,6 @@ namespace TaskNotes.Windows.Host
                     project: false
                 ),
                 SavedViews = _savedViews.Presentation,
-                TaskTime = _taskTime,
-                TimeReport = _timeReport,
-                Pomodoro = _pomodoro,
                 CanUndoCompletion = _completionUndo.CanUndo,
                 CompletionUndoDepth = _completionUndo.Depth,
             };
@@ -1067,7 +926,6 @@ namespace TaskNotes.Windows.Host
                 null,
                 new Core.TextUpdate.Unchanged(),
                 new Core.RecurrenceAnchorUpdate.Unchanged(),
-                new Core.MinutesUpdate.Unchanged(),
                 null
             );
         }
@@ -1101,13 +959,6 @@ namespace TaskNotes.Windows.Host
                 : desired is Core.RecurrenceAnchor value
                     ? new Core.RecurrenceAnchorUpdate.Set(value)
                 : new Core.RecurrenceAnchorUpdate.Clear();
-        }
-
-        private static Core.MinutesUpdate MinutesUpdate(uint? current, uint? requested)
-        {
-            return current == requested ? new Core.MinutesUpdate.Unchanged()
-                : requested is uint value ? new Core.MinutesUpdate.Set(value)
-                : new Core.MinutesUpdate.Clear();
         }
 
         private static Core.TaskStatus? ParseChangedStatus(CoreTask task, string requested)
@@ -1156,18 +1007,6 @@ namespace TaskNotes.Windows.Host
             return engine
                 .Snapshot()
                 .Tasks.Single(item => string.Equals(item.Id, taskId, StringComparison.Ordinal));
-        }
-
-        private static PomodoroReading ProjectPomodoro(Core.PomodoroStatus status)
-        {
-            string? phase = status.Phase switch
-            {
-                null => null,
-                Core.PomodoroPhase.Work => "work",
-                Core.PomodoroPhase.Break => "break",
-                _ => throw new InvalidOperationException($"Unknown Pomodoro phase {status.Phase}."),
-            };
-            return new PomodoroReading(status.Active, status.TaskId, status.TimeRemaining, phase);
         }
 
         private static string CommandId(Core.Command command)
@@ -1341,9 +1180,6 @@ namespace TaskNotes.Windows.Host
             _transport?.Dispose();
             _transport = null;
             _configured = false;
-            _taskTime = null;
-            _timeReport = null;
-            _pomodoro = null;
             _completionUndo.Clear();
         }
 

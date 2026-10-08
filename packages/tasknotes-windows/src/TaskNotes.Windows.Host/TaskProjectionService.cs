@@ -371,16 +371,13 @@ namespace TaskNotes.Windows.Host
                 task.Projects,
                 task.Contexts,
                 task.Tags,
-                task.TimeEstimate,
-                task.TotalTrackedTime,
                 task.IsBlocked,
                 task.IsBlocking,
                 completed,
                 recurring,
                 pending,
                 occurrence,
-                GroupLabel(task, occurrence, group, today),
-                task.TimeEntries.Any(entry => entry.EndTime is null)
+                GroupLabel(task, occurrence, group, today)
             );
         }
 

@@ -149,8 +149,6 @@ packages/tasknotes-fixtures/vault/facet-raw-contract.json
 # Exact protocol, numeric/time and mutation-receipt captures exercise raw JSON
 # boundaries; keep the captured spelling/precision rather than reprint JSON.
 packages/tasknotes-core/crates/obsidian-sync/tests/reference/protocol.json
-packages/tasknotes-fixtures/vault/runtime-tracking/core-aggregate-inputs.json
-packages/tasknotes-fixtures/vault/runtime-tracking/core-nano-aggregate-inputs.json
 packages/tasknotes-android/app/src/test/resources/receiptwarnings/actual-receipt-warning.json
 packages/tasknotes-android/app/src/test/resources/receiptwarnings/strict-raw-receipts.json
 packages/tasknotes-android/host/src/test/resources/tracking-capture-unicode.json

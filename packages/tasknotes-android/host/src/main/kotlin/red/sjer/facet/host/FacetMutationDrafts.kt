@@ -193,4 +193,5 @@ internal class FacetMutationDrafts(private val directory: File) {
 
 data class PendingFacetMutation(val profileId: String, val mutation: JsonObject) {
     val mutationId: String get() = mutation.getValue("mutationId").jsonPrimitive.content
+    val canResume: Boolean get() = FacetRetainedActions.canResume(mutation)
 }

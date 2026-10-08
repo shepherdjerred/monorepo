@@ -10,8 +10,7 @@ No TaskNotes server is required. `tasks-for-obsidian` remains the workspace name
 First-party code is GPL-3.0-only. The native bundle contains the exact repository
 [license text](../../LICENSE) and separate notices for its locked dependencies.
 
-The registered app identity, App Group, widget extension, App Intents, and Live
-Activity declarations are preserved. Vault credentials live in Keychain;
+The registered app identity, App Group, widget extension and task App Intents are preserved. Vault credentials live in Keychain;
 the App Group contains only bounded widget snapshots and action requests.
 The shared runtime owns task interpretation, queries, durable mutations,
 conflicts, and Sync state. Native hosts own transport and filesystem capability.

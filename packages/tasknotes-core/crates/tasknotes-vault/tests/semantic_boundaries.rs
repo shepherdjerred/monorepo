@@ -11,7 +11,6 @@ fn known_configuration_sections_require_objects() {
         "links",
         "dependencies",
         "templating",
-        "time_tracking",
         "reminders",
         "task_detection",
     ] {
@@ -86,30 +85,6 @@ fn creation_storage_success_and_fallback_keep_exact_order() -> Result<(), Box<dy
         );
         assert_eq!(count, 1);
     }
-    Ok(())
-}
-
-#[test]
-fn tracking_preserves_fractional_instants_before_rounding() -> Result<(), Box<dyn std::error::Error>>
-{
-    let entries = tasknotes_vault::tracking::normalize(
-        &json!([{"startTime":"2026-02-20T11:00:00.750+01:00","endTime":"2026-02-20T10:00:30.249Z","vendor":"preserved"}]),
-    )?;
-    let first = entries.first().ok_or("entry missing")?;
-    assert_eq!(
-        first.get("startTime"),
-        Some(&json!("2026-02-20T10:00:00.750Z"))
-    );
-    assert_eq!(
-        first.get("endTime"),
-        Some(&json!("2026-02-20T10:00:30.249Z"))
-    );
-    assert_eq!(first.get("vendor"), Some(&json!("preserved")));
-    let totals = tasknotes_vault::tracking::totals(
-        &entries,
-        temporal::parse_instant("2026-02-20T10:10:00Z")?,
-    )?;
-    assert_eq!(totals, (0, 0));
     Ok(())
 }
 

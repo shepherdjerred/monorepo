@@ -19,13 +19,27 @@ extension FacetEngine {
         -> [FacetPendingMutation]
     {
         let saved = try drafts.pending(profileID: profileID, afterID: afterID)
-        for draft in saved { try schema.validate(draft.mutation, definition: "mutation") }
+        for draft in saved { try schema.validate(draft.mutation, definition: "retainedMutation") }
         return saved
     }
 
     @discardableResult public func retryMutation(id: String) throws -> FacetMutationReceipt {
         let saved = try drafts.read(id: id)
+        try schema.validate(saved.mutation, definition: "retainedMutation")
+        guard saved.canResume else { throw FacetDraftError.retiredFeature }
         return try applyMutation(profileID: saved.profileID, mutation: saved.mutation)
+    }
+
+    /// The runtime proves the saved outcome before an obsolete private draft is cleared.
+    public func retireSavedMutation(id: String) throws {
+        let saved = try drafts.read(id: id)
+        let outcome = try features(
+            profileID: saved.profileID,
+            request: .object([
+                "kind": .string("mutation_receipt"), "mutationId": .string(id),
+            ]))
+        try FacetRetainedActions.validateRetirement(saved, outcome: outcome, schema: schema)
+        try drafts.discard(id: id)
     }
 
     public func applyIntentCapture(_ capture: FacetIntentCapture) throws {

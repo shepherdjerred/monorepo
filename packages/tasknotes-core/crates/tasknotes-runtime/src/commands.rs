@@ -48,15 +48,11 @@ pub(crate) fn plan(
         match &mutation.command {
             Command::RenameReferences { .. }
             | Command::DeleteChecked { .. }
-            | Command::StartTime { .. }
-            | Command::StopTime { .. }
-            | Command::SetTimeEntries { .. }
             | Command::SetOccurrenceSkipped { .. }
             | Command::EditTask { .. }
             | Command::Normalize { .. } => Err(RuntimeError::Validation(
                 "reference policy was not dispatched".to_owned(),
             )),
-            Command::Pomodoro { .. } => Ok(Vec::new()),
             Command::ReorderViews { ids } => reorder_views(&context, ids),
             Command::RestoreDefaultViews {} => restore_views(&context),
             Command::Batch { commands } => batch(files, id, config, mutation, commands),
@@ -170,29 +166,6 @@ fn reference_policy(context: &PlanContext, command: &Command) -> Option<Result<V
             body.as_deref(),
             status.as_deref(),
             occurrence_date.as_deref(),
-        )),
-        Command::StartTime {
-            path,
-            expected_revision,
-        }
-        | Command::StopTime {
-            path,
-            expected_revision,
-        } => Some(time(
-            context,
-            path,
-            expected_revision.as_deref(),
-            matches!(command, Command::StartTime { .. }),
-        )),
-        Command::SetTimeEntries {
-            path,
-            expected_revision,
-            entries,
-        } => Some(set_entries(
-            context,
-            path,
-            expected_revision.as_deref(),
-            entries,
         )),
         Command::Normalize {
             path,
@@ -346,21 +319,6 @@ fn status_changes(
         ),
     ]))
 }
-fn set_entries(
-    context: &PlanContext,
-    path: &str,
-    expected: Option<&str>,
-    entries: &[Map<String, Value>],
-) -> Result<Vec<PlannedFile>> {
-    let entries = tasknotes_vault::tracking::normalize(&json!(entries))?;
-    update(
-        context,
-        path,
-        expected,
-        Map::from_iter([("timeEntries".to_owned(), json!(entries))]),
-        None,
-    )
-}
 fn delete(context: &PlanContext, path: &str, expected: Option<&str>) -> Result<Vec<PlannedFile>> {
     let old = read(context.files, context.id, path, expected)?;
     Ok(vec![PlannedFile {
@@ -388,10 +346,7 @@ fn batch(
     for command in commands {
         if matches!(
             command,
-            Command::Batch { .. }
-                | Command::BatchPartial { .. }
-                | Command::Undo { .. }
-                | Command::Pomodoro { .. }
+            Command::Batch { .. } | Command::BatchPartial { .. } | Command::Undo { .. }
         ) {
             return Err(RuntimeError::Validation(
                 "nested batches and undo are not batch commands".to_owned(),
@@ -470,33 +425,6 @@ fn restore_views(context: &PlanContext) -> Result<Vec<PlannedFile>> {
         writes.extend(save_view(context, id, view)?);
     }
     Ok(writes)
-}
-
-fn time(
-    context: &PlanContext,
-    path: &str,
-    expected: Option<&str>,
-    start: bool,
-) -> Result<Vec<PlannedFile>> {
-    let old = read(context.files, context.id, path, expected)?;
-    let document = TaskDocument::parse(VaultPath::parse(path)?, &old)?;
-    let normalized = context.config.mapping.normalize(document.frontmatter());
-    let entries = normalized
-        .get("timeEntries")
-        .cloned()
-        .unwrap_or_else(|| json!([]));
-    let result = tasknotes_vault::tracking::execute(
-        if start { "time.start" } else { "time.stop" },
-        &json!({"entries":entries}),
-        tasknotes_vault::temporal::parse_instant(&context.mutation.at)?,
-    )?;
-    update(
-        context,
-        path,
-        Some(document.revision().as_str()),
-        Map::from_iter([("timeEntries".to_owned(), result_field(&result, "value")?)]),
-        None,
-    )
 }
 
 struct PlanContext<'a> {
@@ -1288,7 +1216,6 @@ fn update(
     let at = &context.mutation.at;
     let old = read(files, id, path, expected)?;
     let document = TaskDocument::parse(VaultPath::parse(path)?, &old)?;
-    apply_auto_stop(context, &document, &mut properties)?;
     temporal_writes::canonicalize(&mut properties, config)?;
     let new_path = updated_path(context, path, &properties)?;
     if config.store_title_in_filename
@@ -1332,62 +1259,6 @@ fn update(
         before: Some(old),
         bytes: Some(write.bytes),
     }])
-}
-
-fn apply_auto_stop(
-    context: &PlanContext,
-    document: &TaskDocument,
-    properties: &mut Map<String, Value>,
-) -> Result<()> {
-    let old = context.config.mapping.normalize(document.frontmatter());
-    let status_transition = properties
-        .get("status")
-        .and_then(Value::as_str)
-        .is_some_and(|value| {
-            context
-                .config
-                .statuses
-                .iter()
-                .any(|status| status.value == value && status.is_completed)
-                && !old
-                    .get("status")
-                    .and_then(Value::as_str)
-                    .is_some_and(|old_value| {
-                        context
-                            .config
-                            .statuses
-                            .iter()
-                            .any(|status| status.value == old_value && status.is_completed)
-                    })
-        });
-    let occurrence_transition = properties
-        .get("completeInstances")
-        .and_then(Value::as_array)
-        .is_some_and(|values| {
-            values.iter().any(|value| {
-                !old.get("completeInstances")
-                    .and_then(Value::as_array)
-                    .is_some_and(|old| old.contains(value))
-            })
-        });
-    let entries = match properties.get("timeEntries") {
-        // Explicit command null removes the role; it must not inspect old entries.
-        Some(Value::Null) => json!([]),
-        Some(entries) => entries.clone(),
-        None => old.get("timeEntries").cloned().unwrap_or_else(|| json!([])),
-    };
-    let now = tasknotes_vault::temporal::parse_instant(&context.mutation.at)?;
-    let policy = tasknotes_vault::tracking::execute(
-        "time.auto_stop_on_complete",
-        &json!({"autoStopOnComplete":context.config.effective.get("time_tracking").and_then(|value|value.get("auto_stop_on_complete"))==Some(&Value::Bool(true)),"isCompletionTransition":status_transition||occurrence_transition,"taskEntries":entries}),
-        now,
-    )?;
-    if policy.get("stopped") == Some(&Value::Bool(true)) {
-        let result =
-            tasknotes_vault::tracking::execute("time.stop", &json!({"entries":entries}), now)?;
-        properties.insert("timeEntries".to_owned(), result_field(&result, "value")?);
-    }
-    Ok(())
 }
 
 fn updated_path(

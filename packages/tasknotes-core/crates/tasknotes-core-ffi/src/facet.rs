@@ -749,9 +749,6 @@ fn decode<T: serde::de::DeserializeOwned>(json: &str) -> Result<T, FacetEngineEr
                 normalize_integer(number)?;
             }
         }
-        if let Some(command) = object.get_mut("command") {
-            normalize_command_numbers(command)?;
-        }
     }
     serde_json::from_value(value).map_err(|_| FacetEngineError::Validation {
         detail: "JSON violates its schema".to_owned(),
@@ -766,23 +763,6 @@ fn normalize_integer(value: &mut Value) -> Result<(), FacetEngineError> {
     })
 }
 
-fn normalize_command_numbers(value: &mut Value) -> Result<(), FacetEngineError> {
-    if let Some(object) = value.as_object_mut() {
-        if object.get("kind").and_then(Value::as_str) == Some("pomodoro")
-            && let Some(number) = object.get_mut("durationSeconds")
-        {
-            normalize_integer(number)?;
-        }
-        if object.get("kind").and_then(Value::as_str) == Some("batch")
-            && let Some(commands) = object.get_mut("commands").and_then(Value::as_array_mut)
-        {
-            for command in commands {
-                normalize_command_numbers(command)?;
-            }
-        }
-    }
-    Ok(())
-}
 fn encode<T: serde::Serialize>(value: &T) -> Result<String, FacetEngineError> {
     let mut value = serde_json::to_value(value).map_err(|_| FacetEngineError::Storage {
         detail: "engine state cannot be serialized".to_owned(),
@@ -1051,7 +1031,7 @@ pub(crate) mod tests {
                 case["id"]
             );
         }
-        assert_eq!(cases.len(), 127);
+        assert_eq!(cases.len(), 130);
         let registered:Value=serde_json::from_str(&engine.register_profile(r#"{"schemaVersion":1.0,"id":"a","name":"Example","kind":"local_folder","approveStandard":true}"#)?)?;
         assert_eq!(registered["schemaVersion"], 1);
         let profiles: Value = serde_json::from_str(&engine.profiles_json()?)?;

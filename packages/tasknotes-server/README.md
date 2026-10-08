@@ -14,9 +14,7 @@ One surface, envelope responses (`{ success, data, error? }`):
 
 - Task CRUD and query (upstream FilterQuery trees), stats, filter options
 - NLP parsing/creation (`/api/nlp/parse`, `/api/nlp/create`)
-- Time tracking (`/api/tasks/:id/time/*`, `/api/time/*`)
 - Calendar events with recurring expansion (`/api/calendars/events`)
-- Pomodoro (ephemeral, vault-independent) (`/api/pomodoro/*`)
 - Health and engine status (`/api/health`, `/api/engine-status`)
 
 ## Commands

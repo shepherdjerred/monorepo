@@ -25,6 +25,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@tasknotes/model-reference": "npm:@tasknotes/model@0.2.2",
     "@shepherdjerred/architecture": "workspace:*",
     "@shepherdjerred/eslint-config": "workspace:*",
     "@types/bun": "1.4.2",
