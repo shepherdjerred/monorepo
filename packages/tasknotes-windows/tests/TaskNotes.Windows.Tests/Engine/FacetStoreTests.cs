@@ -12,70 +12,65 @@ namespace TaskNotes.Windows.Tests;
 [TestClass]
 public sealed class FacetStoreTests
 {
-    private static readonly string[] ClosingWriteTitles = ["Accepted", "Already queued"];
-
-    /// <summary>Actual store history streams aggregates and replaces pages while preserving an edited draft.</summary>
+    /// <summary>Existing private drafts survive startup without exposing retired execution; native absence permits only explicit owned cleanup.</summary>
     [TestMethod]
-    public async Task BoundedNativeHistoryPagesAndSessionsPreserveDraftAndSelectionOwner()
+    public async Task HistoricalActionsRemainReadableAndRetireAfterNativeObservation()
     {
         using Fixture fixture = new();
-        string entries = JsonSerializer.Serialize(
-            Enumerable
-                .Range(0, 130)
-                .Select(_ => new
-                {
-                    startTime = "2026-10-07T10:00:00.000000001Z",
-                    endTime = "2026-10-07T10:00:30Z",
-                })
+        const string original =
+            "---\ntitle: Existing\nstatus: open\npriority: normal\ntags: [task]\ndateCreated: '2026-10-03T12:00:00Z'\ntimeEntries: [{startTime: '2026-10-03T11:00:00Z'}]\n---\nRetain all bytes\n";
+        fixture.Seed("existing.md", original);
+        var journal = new FacetMutationJournal(fixture.StatePath);
+        var old = journal.Prepare("p", new { kind = "start_time", path = "existing.md" });
+        var timer = journal.Prepare(
+            "p",
+            new
+            {
+                kind = "pomodoro",
+                deviceId = "phone",
+                action = "start",
+            }
         );
-        fixture.Seed(
-            "history.md",
-            $"---\ntitle: History\nstatus: open\npriority: normal\ntags: [task]\ntimeEntries: {entries}\n---\n"
+        var active = journal.Prepare(
+            "p",
+            new { kind = "create", properties = new { title = "Retained supported draft" } }
         );
-        fixture.Seed(
-            "running.md",
-            "---\ntitle: Running\nstatus: open\npriority: normal\ntags: [task]\ntimeEntries: [{startTime: '2026-10-07T12:00:01Z'}]\n---\n"
-        );
-        fixture.AddSecondProfile();
-        await using var store = fixture.Open(
-            new FixedTime(new DateTimeOffset(2026, 10, 7, 12, 0, 0, TimeSpan.Zero))
-        );
+        string journalPath = Path.Combine(fixture.StatePath, "mutation-envelopes.json");
+        byte[] before = await File.ReadAllBytesAsync(journalPath, TestContext.CancellationToken);
+        await using var store = fixture.Open();
         await store.InitializeAsync(null, null, TestContext.CancellationToken);
-        var task = store.State.AllTasks.Single(row => row.Title == "History");
-        using var editor = new TaskEditorViewModel(store, new Dispatcher());
-        editor.Load(task);
-        editor.Title = "Keep this draft";
-        await store.LoadTaskTimeAsync(task.Id, TestContext.CancellationToken);
-        Assert.AreEqual(0U, store.State.TaskTime!.TotalMinutes);
-        Assert.HasCount(128, store.State.TrackingHistory!.Rows);
-        Assert.AreEqual(130UL, store.State.TrackingHistory.TotalCount);
-        Assert.HasCount(128, editor.TrackingHistoryRows);
-        Assert.AreEqual("128 entries on this page · 130 total", editor.TrackingHistorySummary);
-        Assert.AreEqual("Tracked: 0 minutes", editor.TrackedTimeLabel);
-        Assert.IsTrue(editor.HasMoreTrackingHistory);
-        await editor.LoadNextTrackingHistoryAsync(TestContext.CancellationToken);
-        Assert.HasCount(2, store.State.TrackingHistory!.Rows);
-        Assert.IsNull(store.State.TrackingHistory.Next);
-        Assert.HasCount(2, editor.TrackingHistoryRows);
-        Assert.IsFalse(editor.HasMoreTrackingHistory);
-        await editor.LoadNextTrackingHistoryAsync(TestContext.CancellationToken);
-        Assert.AreEqual("Keep this draft", editor.Title);
-        Assert.IsTrue(editor.IsDirty);
-        var report = new TimeReportViewModel(store);
-        await report.LoadSessionsAsync(false, TestContext.CancellationToken);
-        Assert.HasCount(1, store.State.TrackingSessions!.Rows);
-        Assert.AreSame(store.State.TrackingSessions, report.Sessions);
-        Assert.AreEqual(
-            0UL,
-            store.State.TrackingSessions.Rows[0].GetProperty("elapsedSeconds").GetUInt64()
+        Assert.AreEqual("Existing", store.State.AllTasks.Single().Title);
+        Assert.HasCount(3, store.State.FacetPendingActions);
+        Assert.IsFalse(
+            store.State.FacetPendingActions.Single(action => action.Id == old.Id).CanResume
         );
-        await store.SelectProfileAsync("q", TestContext.CancellationToken);
-        Assert.IsNull(store.State.TrackingHistory);
-        Assert.IsNull(store.State.TrackingSessions);
-        Assert.IsEmpty(editor.TrackingHistoryRows);
-        Assert.AreEqual("", editor.TrackingHistorySummary);
-        Assert.AreEqual("Keep this draft", editor.Title);
+        Assert.IsFalse(
+            store.State.FacetPendingActions.Single(action => action.Id == timer.Id).CanResume
+        );
+        Assert.IsTrue(
+            store.State.FacetPendingActions.Single(action => action.Id == active.Id).CanResume
+        );
+        _ = await Assert.ThrowsExactlyAsync<ArgumentException>(() =>
+            store.ResumeMutationAsync(old.Id, TestContext.CancellationToken)
+        );
+        CollectionAssert.AreEqual(
+            before,
+            await File.ReadAllBytesAsync(journalPath, TestContext.CancellationToken)
+        );
+        await store.RetireRejectedMutationAsync(old.Id, TestContext.CancellationToken);
+        Assert.HasCount(2, store.State.FacetPendingActions);
+        Assert.IsTrue(store.State.FacetPendingActions.Any(action => action.Id == active.Id));
+        Assert.IsTrue(store.State.FacetPendingActions.Any(action => action.Id == timer.Id));
+        Assert.AreEqual(
+            original,
+            await File.ReadAllTextAsync(
+                Path.Combine(fixture.Root, "existing.md"),
+                TestContext.CancellationToken
+            )
+        );
     }
+
+    private static readonly string[] ClosingWriteTitles = ["Accepted", "Already queued"];
 
     /// <summary>Actual native warnings clear immediately when a different action is admitted.</summary>
     [TestMethod]
@@ -312,24 +307,19 @@ public sealed class FacetStoreTests
         }
     }
 
-    /// <summary>Crossing midnight between native pages cannot change the logical query clock.</summary>
+    /// <summary>Paged native reads retain the entire task corpus.</summary>
     [TestMethod]
-    public async Task PagedTaskReadKeepsOneClockAcrossMidnight()
+    public async Task PagedTaskReadRetainsTheCompleteCorpus()
     {
         using Fixture fixture = new();
         for (int index = 0; index < 1001; index++)
             fixture.Seed(
                 $"task-{index:D4}.md",
-                "---\ntitle: Clocked\nstatus: open\npriority: normal\ndateCreated: '2026-10-03T12:00:00Z'\ntags: [task]\ntimeEntries:\n  - startTime: '2026-10-03T23:00:00Z'\n---\n"
+                "---\ntitle: Clocked\nstatus: open\npriority: normal\ndateCreated: '2026-10-03T12:00:00Z'\ntags: [task]\n---\n"
             );
         await using var store = fixture.Open(new AdvancingTime());
         await store.InitializeAsync(null, null, TestContext.CancellationToken);
         Assert.HasCount(1001, store.State.AllTasks);
-        Assert.IsTrue(store.State.AllTasks.All(task => task.HasActiveTimeSession));
-        CollectionAssert.AreEqual(
-            new uint[] { 58 },
-            store.State.AllTasks.Select(task => task.TotalTrackedTime).Distinct().ToArray()
-        );
     }
 
     /// <summary>Disposal fences new requests, preserves already accepted writes and shares one actual drain across callers.</summary>
@@ -392,7 +382,7 @@ public sealed class FacetStoreTests
         }
     }
 
-    /// <summary>A configured editor transition changes content, stamps completion, stops tracking and is undone atomically.</summary>
+    /// <summary>A configured editor transition changes content, stamps completion and is undone atomically.</summary>
     [TestMethod]
     public async Task ConfiguredEditorTransitionUsesOneCoreDecisionAndUndo()
     {
@@ -404,12 +394,7 @@ public sealed class FacetStoreTests
         );
         await using var store = fixture.Open();
         await store.InitializeAsync(null, null, TestContext.CancellationToken);
-        await store.StartTimeTrackingAsync(
-            store.State.AllTasks.Single().Id,
-            TestContext.CancellationToken
-        );
         TaskItem original = store.State.AllTasks.Single();
-        Assert.IsTrue(original.HasActiveTimeSession);
         byte[] before = await File.ReadAllBytesAsync(
             Path.Combine(fixture.Root, "review.md"),
             TestContext.CancellationToken
@@ -424,7 +409,6 @@ public sealed class FacetStoreTests
         Assert.AreEqual("Approved from editor", completed.Title);
         Assert.AreEqual("finished-verified", completed.Status);
         Assert.IsTrue(completed.IsCompleted);
-        Assert.IsFalse(completed.HasActiveTimeSession);
         Assert.AreEqual("", completed.Details);
         Assert.AreEqual(
             "2026-10-03T12:00:00Z",
@@ -468,7 +452,6 @@ public sealed class FacetStoreTests
                 TestContext.CancellationToken
             )
         );
-        Assert.IsTrue(store.State.AllTasks.Single().HasActiveTimeSession);
         Assert.AreEqual("awaiting-review", store.State.AllTasks.Single().Status);
     }
 
@@ -708,7 +691,6 @@ public sealed class FacetStoreTests
             TestContext.CancellationToken
         );
         editor.Load(store.State.AllTasks.Single());
-        editor.EstimateText = "19.125";
         editor.Reminders.Single().AbsoluteTime = "2026-10-04T17:00:00Z";
         editor.Attachments += "\n[[second.pdf]]";
         editor.CompletedDate = "2026-10-03";
@@ -716,7 +698,7 @@ public sealed class FacetStoreTests
         editor.SkippedInstances = "2026-10-04";
         Assert.IsTrue(await editor.SaveAsync(TestContext.CancellationToken));
         JsonElement properties = store.State.AllTasks.Single().Properties!.Value;
-        Assert.AreEqual("19.125", properties.GetProperty("timeEstimate").GetRawText());
+        Assert.AreEqual(estimate, properties.GetProperty("timeEstimate").GetRawText());
         Assert.IsTrue(
             properties
                 .GetProperty("reminders")[0]
@@ -832,7 +814,7 @@ public sealed class FacetStoreTests
 
     /// <summary>Configured date/priority groups and all report periods retain native projections and reject invalid selectors.</summary>
     [TestMethod]
-    public async Task DateQueriesAndClosedTimeEntriesReachEveryPresentationSelector()
+    public async Task DateQueriesReachEveryPresentationSelector()
     {
         using Fixture fixture = new();
         var civilDay = new DateTime(2026, 10, 3);
@@ -842,8 +824,8 @@ public sealed class FacetStoreTests
         string today = civilDay.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         string future = civilDay.AddDays(2).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         fixture.Seed(
-            "tracked.md",
-            $"---\ntitle: Tracked\nstatus: open\npriority: normal\ntags: [task]\nprojects: [Work]\ncontexts: [desk]\ndue: {today}\ntimeEntries:\n  - startTime: '{end.AddMinutes(-30).ToString("O", CultureInfo.InvariantCulture)}'\n    endTime: '{end.ToString("O", CultureInfo.InvariantCulture)}'\n---\n"
+            "today.md",
+            $"---\ntitle: Today\nstatus: open\npriority: normal\ntags: [task]\nprojects: [Work]\ncontexts: [desk]\ndue: {today}\n---\n"
         );
         fixture.Seed(
             "future.md",
@@ -887,41 +869,6 @@ public sealed class FacetStoreTests
             TestContext.CancellationToken
         );
         Assert.IsEmpty(store.State.VisibleTasks);
-        foreach (string period in new[] { "all", "today", "week", "month" })
-        {
-            await store.LoadTimeReportAsync(period, TestContext.CancellationToken);
-            Assert.IsNotNull(store.State.TimeReport);
-            Assert.AreEqual(30u, store.State.TimeReport.TotalMinutes);
-            Assert.AreEqual("Tracked", store.State.TimeReport.Rows.Single().Title);
-        }
-        await using (
-            FacetEngineService engine = FacetPortableCapability.Open(
-                fixture.DatabasePath,
-                [new FacetFolderCapability("p", fixture.Root, true)]
-            )
-        )
-        {
-            await engine.InitializeAsync(TestContext.CancellationToken);
-            using var clipped = JsonDocument.Parse(
-                await engine.FeaturesAsync(
-                    "p",
-                    JsonSerializer.Serialize(
-                        new
-                        {
-                            kind = "time_report",
-                            from = end.AddMinutes(-15).ToString("O", CultureInfo.InvariantCulture),
-                            to = clock.GetUtcNow().ToString("O", CultureInfo.InvariantCulture),
-                            at = clock.GetUtcNow().ToString("O", CultureInfo.InvariantCulture),
-                        }
-                    ),
-                    TestContext.CancellationToken
-                )
-            );
-            Assert.AreEqual(15u, clipped.RootElement.GetProperty("totalMinutes").GetUInt32());
-        }
-        _ = await Assert.ThrowsExactlyAsync<ArgumentException>(() =>
-            store.LoadTimeReportAsync("unsupported", TestContext.CancellationToken)
-        );
         foreach (
             TaskListKind kind in new[]
             {
@@ -1208,7 +1155,6 @@ public sealed class FacetStoreTests
             editor.Projects = "Work";
             editor.Contexts = "desktop";
             editor.Tags = "task, quality";
-            editor.EstimateText = "42";
             Assert.IsTrue(await editor.SaveAsync(TestContext.CancellationToken));
             Assert.AreEqual(
                 "Body **preserved**",
@@ -1324,9 +1270,9 @@ public sealed class FacetStoreTests
         Assert.HasCount(1, store.State.VisibleTasks);
     }
 
-    /// <summary>Saved query lifecycle and task timing/Pomodoro use the same production core.</summary>
+    /// <summary>Saved query lifecycle uses the production core.</summary>
     [TestMethod]
-    public async Task SavedViewsTimingAndPomodoroPersistThroughTheFacade()
+    public async Task SavedViewsPersistThroughTheFacade()
     {
         using Fixture fixture = new();
         await using var store = fixture.Open();
@@ -1363,21 +1309,6 @@ public sealed class FacetStoreTests
         Assert.AreEqual(copy.Id, store.State.SavedViews[0].Id);
         await store.DeleteSavedViewAsync(view.Id, TestContext.CancellationToken);
         Assert.HasCount(1, store.State.SavedViews);
-        await store.StartTimeTrackingAsync(id, TestContext.CancellationToken);
-        Assert.IsTrue(store.State.TaskTime!.HasActiveSession);
-        Assert.IsTrue(store.State.AllTasks.Single().HasActiveTimeSession);
-        await store.StopTimeTrackingAsync(id, TestContext.CancellationToken);
-        Assert.IsFalse(store.State.TaskTime!.HasActiveSession);
-        await store.LoadTimeReportAsync("all", TestContext.CancellationToken);
-        Assert.IsNotNull(store.State.TimeReport);
-        await store.StartPomodoroAsync(id, TestContext.CancellationToken);
-        Assert.AreEqual("running", store.State.Pomodoro!.Phase);
-        await store.PauseOrResumePomodoroAsync(TestContext.CancellationToken);
-        Assert.AreEqual("paused", store.State.Pomodoro!.Phase);
-        await store.PauseOrResumePomodoroAsync(TestContext.CancellationToken);
-        Assert.AreEqual("running", store.State.Pomodoro!.Phase);
-        await store.StopPomodoroAsync(TestContext.CancellationToken);
-        Assert.IsFalse(store.State.Pomodoro!.IsActive);
     }
 
     /// <summary>Revoking a capability preserves the cached complete index and denies mutations.</summary>
@@ -1529,6 +1460,11 @@ public sealed class FacetStoreTests
             await engine.InitializeAsync(cancellationToken);
             await engine.RegisterProfileAsync("p", "Fixture", Root, true, true, cancellationToken);
             await engine.RefreshAsync("p", cancellationToken);
+            await using var remote = await FacetRemoteFixture.OpenAsync(
+                engine,
+                "p",
+                cancellationToken
+            );
             for (int index = 0; index < count; index++)
             {
                 string path = $"Tasks/conflict-{index:D3}.md";
@@ -1541,14 +1477,7 @@ public sealed class FacetStoreTests
                         mtime = 2000,
                     }
                 );
-                await FacetRemoteFixture.ApplyAsync(
-                    engine,
-                    "p",
-                    path,
-                    Markdown("base"),
-                    metadata,
-                    cancellationToken
-                );
+                await remote.ApplyAsync(path, Markdown("base"), metadata, cancellationToken);
                 if (index % 16 == 0)
                     progress?.Invoke(
                         $"base imports={index + 1}; elapsedMs={elapsed.ElapsedMilliseconds}"
@@ -1623,14 +1552,7 @@ public sealed class FacetStoreTests
                         mtime = 3000,
                     }
                 );
-                await FacetRemoteFixture.ApplyAsync(
-                    engine,
-                    "p",
-                    path,
-                    Markdown("remote"),
-                    metadata,
-                    cancellationToken
-                );
+                await remote.ApplyAsync(path, Markdown("remote"), metadata, cancellationToken);
                 if (index % 16 == 0)
                     progress?.Invoke(
                         $"remote conflicts={index + 1}; elapsedMs={elapsed.ElapsedMilliseconds}"
@@ -1655,7 +1577,7 @@ public sealed class FacetStoreTests
             Seed(
                 ".obsidian/plugins/tasknotes/data.json",
                 """
-                {"storeTitleInFilename":false,"customStatuses":[{"id":"review","value":"awaiting-review","label":"Review","color":"#123456","isCompleted":false,"order":0},{"id":"finished","value":"finished-verified","label":"Verified","color":"#123456","isCompleted":true,"order":1}],"customPriorities":[{"id":"exceptional","value":"exceptional","label":"Exceptional","color":"#123456","weight":1}],"defaultTaskStatus":"awaiting-review","defaultTaskPriority":"exceptional","autoStopTimeTrackingOnComplete":true}
+                {"storeTitleInFilename":false,"customStatuses":[{"id":"review","value":"awaiting-review","label":"Review","color":"#123456","isCompleted":false,"order":0},{"id":"finished","value":"finished-verified","label":"Verified","color":"#123456","isCompleted":true,"order":1}],"customPriorities":[{"id":"exceptional","value":"exceptional","label":"Exceptional","color":"#123456","weight":1}],"defaultTaskStatus":"awaiting-review","defaultTaskPriority":"exceptional"}
                 """
             );
 

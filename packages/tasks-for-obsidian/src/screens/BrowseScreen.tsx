@@ -203,9 +203,6 @@ export function BrowseScreen({ navigation }: Props) {
         case "completed":
           setCompletedVisible(true);
           return;
-        case "reports":
-          navigation.navigate("TimeReport");
-          return;
         case "settings":
           navigation.navigate("Settings");
           return;

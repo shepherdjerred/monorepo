@@ -85,20 +85,6 @@ namespace TaskNotes.Windows.E2E
             return RunAsync("kanban");
         }
 
-        /// <summary>Exercises live task timing and aggregate time reports.</summary>
-        [TestMethod, TestCategory("time-tracking-report")]
-        public Task TimeTrackingAndReport()
-        {
-            return RunAsync("time-tracking-report");
-        }
-
-        /// <summary>Exercises live Pomodoro state and singleton window restoration.</summary>
-        [TestMethod, TestCategory("pomodoro")]
-        public Task PomodoroLifecycle()
-        {
-            return RunAsync("pomodoro");
-        }
-
         /// <summary>Exercises transient, authentication, and parked synchronization failures.</summary>
         [TestMethod, TestCategory("parked-errors")]
         public Task SynchronizationAndParkedErrors()

@@ -20,10 +20,6 @@ const CAPABILITIES: &[Registration] = &[
         missing: &[],
     },
     Registration {
-        name: "time-tracking",
-        missing: &[],
-    },
-    Registration {
         name: "dependencies",
         missing: &["scoped_dependency_operations"],
     },

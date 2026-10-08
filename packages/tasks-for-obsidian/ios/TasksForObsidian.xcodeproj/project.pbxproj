@@ -7,15 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0D5774A2BD39F48B59434829 /* FacetLiveActivities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69561D43E7300E337BEE8673 /* FacetLiveActivities.swift */; };
 		15CCDA632D7D90E3CC9292AB /* AddTaskIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0551C3579148BC83303F1BF /* AddTaskIntent.swift */; };
-		17E952D3AC313611A855B10E /* StopTrackingIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABAEBACF43A67ADAC1DC28D4 /* StopTrackingIntent.swift */; };
 		1A0B5037D6A491F17C9C6CE8 /* FacetBackgroundTasks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E5FAAB06F3019475B51FBC /* FacetBackgroundTasks.swift */; };
 		2152BC46B66CE6EC5542E377 /* ThirdPartyNotices.txt in Resources */ = {isa = PBXBuildFile; fileRef = F8C245C44AB0D651366FB161 /* ThirdPartyNotices.txt */; };
 		346852036A4FE2AD0150F607 /* WidgetTaskData.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDA151A27A535E9FA36866B7 /* WidgetTaskData.swift */; };
 		3C44E83452BCAB256C22B944 /* FirstPartyLicense.txt in Resources */ = {isa = PBXBuildFile; fileRef = B3597F195C7228F52ACBCDA6 /* FirstPartyLicense.txt */; };
 		3CF03EA3A6136D76C0F60D02 /* TaskNotesFacetUI in Frameworks */ = {isa = PBXBuildFile; productRef = 8E93EF9EAB1C58E3A2EE7FE9 /* TaskNotesFacetUI */; };
-		43B2502A9D974509A13813C0 /* TimeTrackingAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 949E39FE89098708BFC412E1 /* TimeTrackingAttributes.swift */; };
 		4E6985EC943E01996BBC1153 /* TodayTasksProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6BF83CBECB8F58FCC65ADA5 /* TodayTasksProvider.swift */; };
 		5E35F12DFBC5E4D7348AFDBD /* StandaloneTaskTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C1FE2E1714BD10C069C8089 /* StandaloneTaskTests.swift */; };
 		5FD7C4C5B836E6573B5BC8D6 /* native-license-inventory.json in Resources */ = {isa = PBXBuildFile; fileRef = 8CDC691E8EC7FF52D91BE422 /* native-license-inventory.json */; };
@@ -26,15 +23,12 @@
 		90203752117D2A4D09AB1816 /* TaskShortcutsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 723F2DEE626C06A660A4022D /* TaskShortcutsProvider.swift */; };
 		96EBFAA80520FA6A14F9B2B8 /* FacetApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E2F39573B7D1B833BA08ACD /* FacetApp.swift */; };
 		A6F3F9F4DDCF4D154097C4A4 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9AA2B4C15E18713C3F2425A2 /* Images.xcassets */; };
-		B3955A3306298696C54BB912 /* StopTrackingIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABAEBACF43A67ADAC1DC28D4 /* StopTrackingIntent.swift */; };
 		BA193902757571848D61269F /* TodayTasksWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8E83C6DA31E3B637A745D46 /* TodayTasksWidget.swift */; };
 		C67365CB821A80210909E7DE /* TaskNotesKit in Frameworks */ = {isa = PBXBuildFile; productRef = 6ED2E69C5C7F08C7894ED288 /* TaskNotesKit */; };
-		D918BBEE68EE6DF1B12CF94B /* TimeTrackingAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 949E39FE89098708BFC412E1 /* TimeTrackingAttributes.swift */; };
 		E3D436BA38277C0B7D67D49C /* ThirdPartyNotices.txt in Resources */ = {isa = PBXBuildFile; fileRef = F8C245C44AB0D651366FB161 /* ThirdPartyNotices.txt */; };
 		E5749667862993D2E64EBB46 /* TaskNotesKit in Frameworks */ = {isa = PBXBuildFile; productRef = EF3123F128552877ED5CD5F8 /* TaskNotesKit */; };
 		ED6889804A3E2E9123972097 /* FirstPartyLicense.txt in Resources */ = {isa = PBXBuildFile; fileRef = B3597F195C7228F52ACBCDA6 /* FirstPartyLicense.txt */; };
 		EF814BFF430D1C983C5BC731 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 198212E9090D23DE654809E2 /* PrivacyInfo.xcprivacy */; };
-		F12E617D02429ABA28551ECA /* TimeTrackingLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3B35053E49E4F3BD3263A45 /* TimeTrackingLiveActivity.swift */; };
 		F510B6887C8F927D63054FA9 /* native-license-inventory.json in Resources */ = {isa = PBXBuildFile; fileRef = 8CDC691E8EC7FF52D91BE422 /* native-license-inventory.json */; };
 		FC9246240CCF7A1091C8FC9A /* TasksWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 9881866560205578B184C28C /* TasksWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
@@ -76,25 +70,21 @@
 		32DC94CF5EEA15A26B6B524F /* TasksForObsidianUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TasksForObsidianUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4C1FE2E1714BD10C069C8089 /* StandaloneTaskTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StandaloneTaskTests.swift; sourceTree = "<group>"; };
 		53407DF630BC00824148CE26 /* QuickAddControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickAddControl.swift; sourceTree = "<group>"; };
-		69561D43E7300E337BEE8673 /* FacetLiveActivities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacetLiveActivities.swift; sourceTree = "<group>"; };
 		723F2DEE626C06A660A4022D /* TaskShortcutsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskShortcutsProvider.swift; sourceTree = "<group>"; };
 		8CDC691E8EC7FF52D91BE422 /* native-license-inventory.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "native-license-inventory.json"; sourceTree = "<group>"; };
 		948471B3C8F8B0172CDCBCD5 /* tasknotes-macos */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "tasknotes-macos"; path = "../../tasknotes-macos"; sourceTree = SOURCE_ROOT; };
-		949E39FE89098708BFC412E1 /* TimeTrackingAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeTrackingAttributes.swift; sourceTree = "<group>"; };
 		9881866560205578B184C28C /* TasksWidget.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = TasksWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		9AA2B4C15E18713C3F2425A2 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		9E2F39573B7D1B833BA08ACD /* FacetApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacetApp.swift; sourceTree = "<group>"; };
 		A5B7AB076CD71F50C048C052 /* TasksForObsidian.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = TasksForObsidian.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A8E83C6DA31E3B637A745D46 /* TodayTasksWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayTasksWidget.swift; sourceTree = "<group>"; };
 		AB98B37994A7CE6C1C8EBEDA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		ABAEBACF43A67ADAC1DC28D4 /* StopTrackingIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopTrackingIntent.swift; sourceTree = "<group>"; };
 		B0551C3579148BC83303F1BF /* AddTaskIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTaskIntent.swift; sourceTree = "<group>"; };
 		B3597F195C7228F52ACBCDA6 /* FirstPartyLicense.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = FirstPartyLicense.txt; sourceTree = "<group>"; };
 		BAAE9579B3F7C4994E642188 /* ShowTodayIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowTodayIntent.swift; sourceTree = "<group>"; };
 		C6BF83CBECB8F58FCC65ADA5 /* TodayTasksProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayTasksProvider.swift; sourceTree = "<group>"; };
 		CAF24620168AF2CDDE7ACD24 /* TasksWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TasksWidgetBundle.swift; sourceTree = "<group>"; };
 		DDA151A27A535E9FA36866B7 /* WidgetTaskData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetTaskData.swift; sourceTree = "<group>"; };
-		E3B35053E49E4F3BD3263A45 /* TimeTrackingLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeTrackingLiveActivity.swift; sourceTree = "<group>"; };
 		EAC0D0E1DE43BD5AD7367A49 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		EC8628C61F82B35854041D56 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		F8C245C44AB0D651366FB161 /* ThirdPartyNotices.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = ThirdPartyNotices.txt; sourceTree = "<group>"; };
@@ -147,7 +137,6 @@
 			children = (
 				9E2F39573B7D1B833BA08ACD /* FacetApp.swift */,
 				16E5FAAB06F3019475B51FBC /* FacetBackgroundTasks.swift */,
-				69561D43E7300E337BEE8673 /* FacetLiveActivities.swift */,
 				EAC0D0E1DE43BD5AD7367A49 /* Info.plist */,
 			);
 			path = Facet;
@@ -174,8 +163,6 @@
 				198212E9090D23DE654809E2 /* PrivacyInfo.xcprivacy */,
 				53407DF630BC00824148CE26 /* QuickAddControl.swift */,
 				CAF24620168AF2CDDE7ACD24 /* TasksWidgetBundle.swift */,
-				949E39FE89098708BFC412E1 /* TimeTrackingAttributes.swift */,
-				E3B35053E49E4F3BD3263A45 /* TimeTrackingLiveActivity.swift */,
 				C6BF83CBECB8F58FCC65ADA5 /* TodayTasksProvider.swift */,
 				A8E83C6DA31E3B637A745D46 /* TodayTasksWidget.swift */,
 				DDA151A27A535E9FA36866B7 /* WidgetTaskData.swift */,
@@ -196,7 +183,6 @@
 			children = (
 				B0551C3579148BC83303F1BF /* AddTaskIntent.swift */,
 				BAAE9579B3F7C4994E642188 /* ShowTodayIntent.swift */,
-				ABAEBACF43A67ADAC1DC28D4 /* StopTrackingIntent.swift */,
 				723F2DEE626C06A660A4022D /* TaskShortcutsProvider.swift */,
 			);
 			name = Intents;
@@ -361,10 +347,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7FC704D0EB54DDB12208A276 /* QuickAddControl.swift in Sources */,
-				B3955A3306298696C54BB912 /* StopTrackingIntent.swift in Sources */,
 				8115E6B624D505275BD876C6 /* TasksWidgetBundle.swift in Sources */,
-				43B2502A9D974509A13813C0 /* TimeTrackingAttributes.swift in Sources */,
-				F12E617D02429ABA28551ECA /* TimeTrackingLiveActivity.swift in Sources */,
 				4E6985EC943E01996BBC1153 /* TodayTasksProvider.swift in Sources */,
 				BA193902757571848D61269F /* TodayTasksWidget.swift in Sources */,
 				346852036A4FE2AD0150F607 /* WidgetTaskData.swift in Sources */,
@@ -386,11 +369,8 @@
 				15CCDA632D7D90E3CC9292AB /* AddTaskIntent.swift in Sources */,
 				96EBFAA80520FA6A14F9B2B8 /* FacetApp.swift in Sources */,
 				1A0B5037D6A491F17C9C6CE8 /* FacetBackgroundTasks.swift in Sources */,
-				0D5774A2BD39F48B59434829 /* FacetLiveActivities.swift in Sources */,
 				7334E2D08BECCBCFF0276DD4 /* ShowTodayIntent.swift in Sources */,
-				17E952D3AC313611A855B10E /* StopTrackingIntent.swift in Sources */,
 				90203752117D2A4D09AB1816 /* TaskShortcutsProvider.swift in Sources */,
-				D918BBEE68EE6DF1B12CF94B /* TimeTrackingAttributes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

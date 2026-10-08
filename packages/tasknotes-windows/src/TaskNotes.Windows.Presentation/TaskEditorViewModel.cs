@@ -27,7 +27,6 @@ namespace TaskNotes.Windows.Presentation
         private string _projects = string.Empty;
         private string _contexts = string.Empty;
         private string _tags = string.Empty;
-        private uint? _timeEstimate;
         private string? _validationError;
         private bool _isDirty;
         private bool _loading;
@@ -125,107 +124,11 @@ namespace TaskNotes.Windows.Presentation
             set => SetEditorProperty(ref _tags, value);
         }
 
-        /// <summary>Gets or sets the estimate in minutes.</summary>
-        public uint? TimeEstimate
-        {
-            get => _timeEstimate;
-            set
-            {
-                if (SetEditorProperty(ref _timeEstimate, value))
-                {
-                    if (!_loading)
-                        EstimateText =
-                            value?.ToString(System.Globalization.CultureInfo.InvariantCulture)
-                            ?? string.Empty;
-                    OnPropertyChanged(nameof(EstimateValue));
-                }
-            }
-        }
-
-        /// <summary>Legacy integral estimate adapter; fractional values are never rounded.</summary>
-        public double EstimateValue
-        {
-            get => TimeEstimate is uint estimate ? estimate : double.NaN;
-            set
-            {
-                if (!double.IsNaN(value) && value != Math.Truncate(value))
-                    throw new ArgumentException(
-                        "Use the exact estimate text for fractional minutes.",
-                        nameof(value)
-                    );
-                TimeEstimate = double.IsNaN(value) ? null : checked((uint)value);
-                EstimateText = double.IsNaN(value)
-                    ? string.Empty
-                    : value.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            }
-        }
-
         /// <summary>Gets dependency warnings for the loaded task.</summary>
         public string DependencyLabel =>
             _original is { IsBlocked: true } ? "Blocked by another task"
             : _original is { IsBlocking: true } ? "Blocking another task"
             : "No dependency warnings";
-
-        /// <summary>Gets tracked minutes for the loaded task.</summary>
-        public string TrackedTimeLabel =>
-            _original is null
-                ? string.Empty
-                : $"Tracked: {(_store.State.TaskTime is { } live && live.TaskId == TaskId ? live.TotalMinutes : _original.TotalTrackedTime)} minutes";
-
-        private FacetTrackingPage? OwnedHistory =>
-            !_disposed
-            && _original is not null
-            && _store.State.TrackingHistory is { } page
-            && page.Owner.ProfileId == _original.ProfileId
-            && page.Owner.TaskPath == _original.VaultPath
-            && page.Owner.TaskRevision == _original.ExpectedRevision
-                ? page
-                : null;
-
-        /// <summary>Gets the current bounded history page for the exact loaded task revision.</summary>
-        public IReadOnlyList<string> TrackingHistoryRows =>
-            OwnedHistory
-                ?.Rows.Select(row =>
-                    $"{row.GetProperty("startedAt").GetString()} → {row.GetProperty("endedAt").GetString() ?? "Running"} · {row.GetProperty("elapsedSeconds").GetUInt64()} seconds"
-                )
-                .ToArray()
-            ?? [];
-
-        /// <summary>Gets the history count and known data-problem summary.</summary>
-        public string TrackingHistorySummary =>
-            OwnedHistory is { } page
-                ? $"{page.Rows.Count} entries on this page · {page.TotalCount} total"
-                    + (page.ProblemCount == 0 ? "" : $" · {page.ProblemCount} entries need review")
-                : "";
-
-        /// <summary>Gets whether an original-owner continuation is available.</summary>
-        public bool HasMoreTrackingHistory => OwnedHistory?.Next is not null;
-
-        /// <summary>Loads another bounded page without changing the edit draft.</summary>
-        public Task LoadNextTrackingHistoryAsync(CancellationToken cancellationToken = default) =>
-            _store is IFacetTrackingStore tracking && HasMoreTrackingHistory
-                ? tracking.LoadNextTrackingHistoryAsync(cancellationToken)
-                : Task.CompletedTask;
-
-        /// <summary>Gets the current timing command label.</summary>
-        public string TimerLabel => IsTimerActive ? "Stop timer" : "Start timer";
-
-        /// <summary>Gets whether the loaded task has a live timing session.</summary>
-        public bool IsTimerActive
-        {
-            get
-            {
-                if (TaskId is not string taskId)
-                {
-                    return false;
-                }
-                return
-                    _store.State.TaskTime is { } live
-                    && string.Equals(live.TaskId, taskId, StringComparison.Ordinal)
-                    ? live.HasActiveSession
-                    : _original?.HasActiveTimeSession == true;
-            }
-        }
 
         /// <summary>Gets the current validation message.</summary>
         public string? ValidationError
@@ -261,16 +164,13 @@ namespace TaskNotes.Windows.Presentation
                 Projects = string.Join(", ", task.Projects);
                 Contexts = string.Join(", ", task.Contexts);
                 Tags = string.Join(", ", task.Tags);
-                TimeEstimate = task.TimeEstimate;
                 LoadAdditionalFields(task);
                 ValidationError = null;
                 IsDirty = false;
                 OnPropertyChanged(nameof(IsLoaded));
                 OnPropertyChanged(nameof(TaskId));
-                OnPropertyChanged(nameof(EstimateValue));
                 OnPropertyChanged(nameof(DependencyLabel));
-                OnPropertyChanged(nameof(TrackedTimeLabel));
-                NotifyTimingChanged();
+                NotifyWorkflowChoicesChanged();
             }
             finally
             {
@@ -309,7 +209,6 @@ namespace TaskNotes.Windows.Presentation
                 Projects = SplitValues(Projects),
                 Contexts = SplitValues(Contexts),
                 Tags = SplitValues(Tags),
-                TimeEstimate = TimeEstimate,
                 ChangedProperties = ChangedFields(original, title),
                 BodyChanged = !string.Equals(Details, original.Details, StringComparison.Ordinal),
             };
@@ -351,24 +250,6 @@ namespace TaskNotes.Windows.Presentation
             return _store.DeleteTaskAsync(taskId, cancellationToken);
         }
 
-        /// <summary>Starts or stops live server-backed timing for the loaded task.</summary>
-        public Task ToggleTimeAsync(CancellationToken cancellationToken = default)
-        {
-            string taskId =
-                TaskId ?? throw new InvalidOperationException("Load a task before timing it.");
-            return IsTimerActive
-                ? _store.StopTimeTrackingAsync(taskId, cancellationToken)
-                : _store.StartTimeTrackingAsync(taskId, cancellationToken);
-        }
-
-        /// <summary>Loads live timing details for the current task.</summary>
-        public Task LoadTimeAsync(CancellationToken cancellationToken = default)
-        {
-            string taskId =
-                TaskId ?? throw new InvalidOperationException("Load a task before reading timing.");
-            return _store.LoadTaskTimeAsync(taskId, cancellationToken);
-        }
-
         /// <summary>Restores the original values without persisting.</summary>
         public void Discard()
         {
@@ -397,16 +278,13 @@ namespace TaskNotes.Windows.Presentation
                 Projects = string.Empty;
                 Contexts = string.Empty;
                 Tags = string.Empty;
-                TimeEstimate = null;
                 ClearAdditionalFields();
                 ValidationError = null;
                 IsDirty = false;
                 OnPropertyChanged(nameof(IsLoaded));
                 OnPropertyChanged(nameof(TaskId));
-                OnPropertyChanged(nameof(EstimateValue));
                 OnPropertyChanged(nameof(DependencyLabel));
-                OnPropertyChanged(nameof(TrackedTimeLabel));
-                NotifyTimingChanged();
+                NotifyWorkflowChoicesChanged();
             }
             finally
             {
@@ -447,24 +325,18 @@ namespace TaskNotes.Windows.Presentation
             _ = eventArgs;
             if (_dispatcher.HasThreadAccess)
             {
-                NotifyTimingChanged();
+                NotifyWorkflowChoicesChanged();
             }
             else
             {
-                _dispatcher.Enqueue(NotifyTimingChanged);
+                _dispatcher.Enqueue(NotifyWorkflowChoicesChanged);
             }
         }
 
-        private void NotifyTimingChanged()
+        private void NotifyWorkflowChoicesChanged()
         {
             if (_disposed)
                 return;
-            OnPropertyChanged(nameof(TrackedTimeLabel));
-            OnPropertyChanged(nameof(TrackingHistoryRows));
-            OnPropertyChanged(nameof(TrackingHistorySummary));
-            OnPropertyChanged(nameof(HasMoreTrackingHistory));
-            OnPropertyChanged(nameof(IsTimerActive));
-            OnPropertyChanged(nameof(TimerLabel));
             OnPropertyChanged(nameof(StatusChoices));
             OnPropertyChanged(nameof(PriorityChoices));
         }

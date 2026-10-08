@@ -6,8 +6,6 @@ use serde_json::{Map, Value};
 pub(crate) fn validate(source: &Map<String, Value>) -> Result<()> {
     for key in [
         "storeTitleInFilename",
-        "autoStopTimeTrackingOnComplete",
-        "autoStopTimeTrackingNotification",
         "moveArchivedTasks",
         "useFrontmatterMarkdownLinks",
     ] {
@@ -78,7 +76,6 @@ pub(crate) fn mapped_section(key: &str, value: &Value) -> Result<()> {
         "dependencies",
         "links",
         "reminders",
-        "time_tracking",
         "status",
         "task_detection",
     ]

@@ -7,7 +7,6 @@ namespace TaskNotes.Windows.Presentation;
 
 public sealed partial class TaskEditorViewModel
 {
-    private string _estimateText = string.Empty;
     private string _blockedBy = string.Empty;
     private string _completedDate = string.Empty;
     private string _dateCreated = string.Empty;
@@ -16,13 +15,6 @@ public sealed partial class TaskEditorViewModel
     private string _attachments = string.Empty;
     private IReadOnlyList<WorkflowChoice> _statusChoices = [];
     private IReadOnlyList<WorkflowChoice> _priorityChoices = [];
-
-    /// <summary>Exact numeric estimate text, without conversion through floating point.</summary>
-    public string EstimateText
-    {
-        get => _estimateText;
-        set => SetEditorProperty(ref _estimateText, value);
-    }
 
     /// <summary>Comma-separated dependency identifiers or references.</summary>
     public string BlockedBy
@@ -101,11 +93,6 @@ public sealed partial class TaskEditorViewModel
             _statusChoices = [.. _statusChoices, new(task.Status, task.Status)];
         if (!_priorityChoices.Any(choice => choice.Value == task.Priority))
             _priorityChoices = [.. _priorityChoices, new(task.Priority, task.Priority)];
-        EstimateText = Scalar(
-            task,
-            "timeEstimate",
-            task.TimeEstimate?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? ""
-        );
         BlockedBy = List(task, "blockedBy");
         CompletedDate = Scalar(task, "completedDate");
         DateCreated = Scalar(task, "dateCreated");
@@ -128,8 +115,7 @@ public sealed partial class TaskEditorViewModel
 
     private void ClearAdditionalFields()
     {
-        EstimateText =
-            BlockedBy =
+        BlockedBy =
             CompletedDate =
             CompleteInstances =
             SkippedInstances =
@@ -180,38 +166,6 @@ public sealed partial class TaskEditorViewModel
                     StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
                 )
             );
-        string originalEstimate = Scalar(
-            original,
-            "timeEstimate",
-            original.TimeEstimate?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? ""
-        );
-        if (EstimateText != originalEstimate)
-        {
-            if (string.IsNullOrWhiteSpace(EstimateText))
-                Put("timeEstimate", null);
-            else
-            {
-                JsonElement number;
-                try
-                {
-                    number = JsonSerializer.Deserialize<JsonElement>(EstimateText);
-                }
-                catch (JsonException error)
-                {
-                    throw new ArgumentException(
-                        "Enter a numeric estimate in minutes.",
-                        nameof(original),
-                        error
-                    );
-                }
-                if (number.ValueKind != JsonValueKind.Number)
-                    throw new ArgumentException(
-                        "Enter a numeric estimate in minutes.",
-                        nameof(original)
-                    );
-                fields.Add("timeEstimate", number);
-            }
-        }
         var currentReminders = Reminders.Select(row => row.Document()).ToArray();
         string beforeReminders =
             original.Properties is JsonElement p

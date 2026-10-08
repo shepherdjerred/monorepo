@@ -824,6 +824,10 @@
       "directory": "packages/tasknotes-core",
       "steps": [
         {
+          "runner": "vitest",
+          "args": ["ci/vault-reference.test.ts"]
+        },
+        {
           "runner": "cargo",
           "args": ["--workspace"]
         }

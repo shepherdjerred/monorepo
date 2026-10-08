@@ -91,33 +91,6 @@ namespace TaskNotes.Windows.Host
             CancellationToken cancellationToken = default
         );
 
-        /// <summary>Loads task timing details.</summary>
-        Task LoadTaskTimeAsync(string taskId, CancellationToken cancellationToken = default);
-
-        /// <summary>Starts task timing.</summary>
-        Task StartTimeTrackingAsync(string taskId, CancellationToken cancellationToken = default);
-
-        /// <summary>Stops task timing.</summary>
-        Task StopTimeTrackingAsync(string taskId, CancellationToken cancellationToken = default);
-
-        /// <summary>Loads the aggregate time report.</summary>
-        Task LoadTimeReportAsync(
-            string period = "all",
-            CancellationToken cancellationToken = default
-        );
-
-        /// <summary>Loads Pomodoro state.</summary>
-        Task LoadPomodoroAsync(CancellationToken cancellationToken = default);
-
-        /// <summary>Starts a Pomodoro.</summary>
-        Task StartPomodoroAsync(string? taskId, CancellationToken cancellationToken = default);
-
-        /// <summary>Pauses or resumes the current Pomodoro.</summary>
-        Task PauseOrResumePomodoroAsync(CancellationToken cancellationToken = default);
-
-        /// <summary>Stops the current Pomodoro.</summary>
-        Task StopPomodoroAsync(CancellationToken cancellationToken = default);
-
         /// <summary>Creates a saved view from a query.</summary>
         Task<SavedViewDefinition> CreateSavedViewAsync(
             string name,

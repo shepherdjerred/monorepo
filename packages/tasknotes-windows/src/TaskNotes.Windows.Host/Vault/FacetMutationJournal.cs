@@ -20,6 +20,16 @@ internal sealed class FacetMutationJournal
             : new Journal(1, [], []);
         if (_journal.SchemaVersion != 1)
             throw new InvalidDataException("Unsupported mutation journal version.");
+        var schema = FacetSchema.Bundled();
+        foreach (var (key, entry) in _journal.Pending)
+        {
+            if (entry.Key != key || string.IsNullOrWhiteSpace(entry.Profile))
+                throw new InvalidDataException("The retained action ownership is corrupt.");
+            schema.Validate(entry.Document, "retainedMutation");
+            using var document = JsonDocument.Parse(entry.Document);
+            if (document.RootElement.GetProperty("mutationId").GetString() != entry.Id)
+                throw new InvalidDataException("The retained action identity is corrupt.");
+        }
     }
 
     internal Entry Prepare(string profile, object command, string? requestKey = null)

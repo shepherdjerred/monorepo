@@ -42,16 +42,6 @@ fn combined_editor_completion_commits_once_and_undo_restores_exact_original() ->
         "a",
         &create_at("Tasks/a.md", &json!({"title":"Original","vendor":"kept"}))?,
     )?;
-    engine.execute(
-        "a",
-        &mutation(
-            "timer",
-            Command::StartTime {
-                path: "Tasks/a.md".to_owned(),
-                expected_revision: None,
-            },
-        ),
-    )?;
     let original = files
         .get("a", "Tasks/a.md")?
         .ok_or(RuntimeError::NotFound)?;
@@ -83,8 +73,6 @@ fn combined_editor_completion_commits_once_and_undo_restores_exact_original() ->
         Some(&json!("2026-10-03"))
     );
     assert_eq!(task.body, "Edited body\n");
-    assert!(!task.has_active_time_session);
-    assert_eq!(task.total_tracked_minutes, 2);
     drop(engine);
     let engine = Engine::open(database, files.clone())?;
     assert_eq!(
@@ -194,7 +182,7 @@ fn incomplete_existing_note_requires_explicit_known_metadata_repair() -> Result<
 }
 
 #[test]
-fn editor_transition_uses_staged_recurrence_and_time_entries() -> Result<()> {
+fn editor_transition_uses_staged_recurrence_and_preserves_unknown_metadata() -> Result<()> {
     let files = Arc::new(Memory::default());
     files.seed("a", "tasknotes.yaml", workflow())?;
     let engine = Engine::open(":memory:", files.clone())?;
@@ -224,8 +212,6 @@ fn editor_transition_uses_staged_recurrence_and_time_entries() -> Result<()> {
         Some(&json!(["2026-10-02"]))
     );
     assert_eq!(task.properties.get("scheduled"), Some(&json!("2026-10-03")));
-    assert!(!task.has_active_time_session);
-    assert_eq!(task.total_tracked_minutes, 2);
     assert_eq!(
         task.properties
             .get("timeEntries")
@@ -261,7 +247,7 @@ fn conformance_reports_actual_readiness_without_provider_io_or_incomplete_profil
     assert_eq!(claim.get("profiles"), Some(&json!([])));
     assert_eq!(
         claim.get("capabilities"),
-        Some(&json!(["batch", "concurrency", "time-tracking"]))
+        Some(&json!(["batch", "concurrency"]))
     );
     assert_eq!(
         claim
@@ -541,7 +527,7 @@ fn semantic_noop_keeps_source_timestamp_and_pending_receipts_unchanged() -> Resu
 }
 
 fn workflow() -> &'static [u8] {
-    b"title:\n  storage: frontmatter\nmapping:\n  status: state\n  date_created: born\n  date_modified: changed\n  completed_date: settled\nstatus:\n  values: [queued, finished, cancelled]\n  completed_values: [finished]\n  default: queued\ntime_tracking:\n  auto_stop_on_complete: true\n"
+    b"title:\n  storage: frontmatter\nmapping:\n  status: state\n  date_created: born\n  date_modified: changed\n  completed_date: settled\nstatus:\n  values: [queued, finished, cancelled]\n  completed_values: [finished]\n  default: queued\n"
 }
 
 fn create_at(path: &str, properties: &Value) -> Result<Mutation> {
@@ -556,72 +542,6 @@ fn create_at(path: &str, properties: &Value) -> Result<Mutation> {
             body: None,
         },
     ))
-}
-
-#[test]
-fn configured_status_completion_stops_only_its_own_task_and_is_idempotent() -> Result<()> {
-    let files = Arc::new(Memory::default());
-    files.seed("a", "tasknotes.yaml", workflow())?;
-    let engine = Engine::open(":memory:", files.clone())?;
-    engine.register_profile(profile(ProfileKind::LocalFolder))?;
-    engine.refresh("a")?;
-    for path in ["Tasks/a.md", "Tasks/b.md"] {
-        engine.execute(
-            "a",
-            &create_at(path, &json!({"title":path,"vendor":"kept"}))?,
-        )?;
-        engine.execute(
-            "a",
-            &mutation(
-                &format!("start:{path}"),
-                Command::StartTime {
-                    path: path.to_owned(),
-                    expected_revision: None,
-                },
-            ),
-        )?;
-    }
-    let mut complete = mutation(
-        "finish",
-        Command::SetStatus {
-            path: "Tasks/a.md".to_owned(),
-            expected_revision: None,
-            status: "finished".to_owned(),
-            occurrence_date: None,
-        },
-    );
-    complete.at = "2026-10-03T12:02:00Z".to_owned();
-    engine.execute("a", &complete)?;
-    let snapshot = engine.snapshot("a", &super::Query::default())?;
-    let task = snapshot
-        .tasks
-        .iter()
-        .find(|task| task.path == "Tasks/a.md")
-        .ok_or(RuntimeError::NotFound)?;
-    assert_eq!(task.status, "finished");
-    assert_eq!(
-        task.properties.get("completedDate"),
-        Some(&json!("2026-10-03"))
-    );
-    assert_eq!(task.properties.get("vendor"), Some(&json!("kept")));
-    assert!(!task.has_active_time_session);
-    assert_eq!(task.total_tracked_minutes, 2);
-    assert!(
-        snapshot
-            .tasks
-            .iter()
-            .find(|task| task.path == "Tasks/b.md")
-            .ok_or(RuntimeError::NotFound)?
-            .has_active_time_session
-    );
-    let saved = files.get("a", "Tasks/a.md")?;
-    let count = exchanges(&files)?;
-    complete.mutation_id = "already-finished".to_owned();
-    complete.at = "2026-10-04T13:00:00Z".to_owned();
-    assert_eq!(engine.execute("a", &complete)?.paths, Vec::<String>::new());
-    assert_eq!(files.get("a", "Tasks/a.md")?, saved);
-    assert_eq!(exchanges(&files)?, count);
-    Ok(())
 }
 
 #[test]

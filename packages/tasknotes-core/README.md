@@ -91,11 +91,14 @@ lower section; missing nested keys receive schema defaults rather than values
 from the discarded lower section. `effective` retains normalized policies.
 A present invalid selected provider fails; it never silently falls through.
 The immutable development oracle is `@tasknotes/model@0.3.0-rc.9`; its captured
-defaults and `ci/vault-reference.ts` remain unchanged. Production configuration
+defaults remain byte-identical in `ci/reference/vault-defaults.json`.
+`ci/vault-reference.ts` checks that complete development capture against the pinned
+model, then checks production defaults with exactly three retired timing mappings
+and the `timeTracking` section removed. Every retained default remains guarded.
+Production configuration
 uses the pinned official [TaskNotes 4.13.8 settings defaults](https://raw.githubusercontent.com/callumalpass/tasknotes/4.13.8/src/settings/defaults.ts)
-and specification: filename titles, automatic time stop on completion, and no
-automatic-stop notification. Those differ from the development model's captured
-baseline. Missing provider sections and nested keys receive the production
+and specification for supported task features, including filename titles.
+Those differ from the development model's captured baseline. Missing provider sections and nested keys receive the production
 baseline; explicit opposite values are honored. Present malformed recognized
 plugin settings fail with typed configuration errors before compatibility
 mapping can drop them. Apps do not execute the development oracle.
@@ -131,19 +134,13 @@ roles, unknown properties and body bytes remain intact. The original mutation
 clock and execution timezone remain part of request identity and day resolution;
 equivalent writes leave dateModified unchanged when persisted state is unchanged.
 
-Explicit time-entry writes and generated start/stop or completion auto-stop writes
-persist `startTime`/`endTime` at UTC whole seconds. Original full-precision ranges
-and the single active-entry constraint are validated before truncation; editor
-transitions compare those original instants with the original mutation clock.
-Additional entry properties, including supplied duration metadata, survive.
 Explicit reminder writes canonicalize absolute entries' `absoluteTime` to UTC
 whole seconds after template/default precedence. Relative offset strings and all
 other reminder values retain their precision and order. Explicit normalization applies
 the same rule; unrelated updates and edits leave historical reminder timestamps
 unchanged. Invalid explicitly written absolute times fail before file effects.
 Create and Update resolve command property aliases before creation or completion
-transition planning, retaining original entry precision for auto-stop. Explicit
-null time entries remove that role without inspecting or restoring old entries.
+transition planning.
 Temporal
 canonicalization of template and persisted document keys uses configured
 physical mappings and exact canonical roles, preserving unconfigured snake-case
@@ -162,7 +159,7 @@ seed is absent or invalid, with no fallback past an invalid preferred seed.
 Create also validates explicit temporal-role inputs before template/default
 planning; errors detected at that earlier boundary remain temporal input errors.
 Read-only
-legacy recurrence and tracking compatibility remain separate from these writes.
+legacy recurrence compatibility remains separate from these writes.
 
 Recurring completion accepts an explicit date or offset-qualified datetime through
 SetCompletion, ToggleComplete, SetStatus, and EditTask. Datetimes select the target
@@ -212,12 +209,14 @@ under `Facet/Views`, with versioned `facetView` frontmatter.
 
 Task creates and updates validate the resulting mapped document in strict mode
 by default. Unknown fields survive unless `reject_unknown_fields` is explicitly
-enabled. Ordinary edits that remove configured task detection fail visibly
+enabled. Historical duration estimates, work entries and Pomodoro counts, including
+their configured physical keys, remain opaque preservation metadata even under
+that policy. They are not task roles and receive no timing validation or completion
+effects; unrelated unknown fields still fail closed. Ordinary edits that remove configured task detection fail visibly
 before publication. Semantically unchanged updates keep original bytes and
 `dateModified`. A raw patch that sets a completed status without its required
 completion date is rejected; `set_status` performs that configured transition.
-With `time_tracking.auto_stop_on_complete`, completion closes only that task's
-active entry in the same journal. Recurring board moves accept optional
+Recurring board moves accept optional
 `occurrenceDate`, using the immutable mutation civil day when absent, and update
 the instance rather than converting completion into a parent status rewrite.
 
@@ -256,7 +255,7 @@ Its existing alias-conflict policy can retain conflicting legacy keys.
 Editors use `edit_task` when saving properties/body together with a status
 transition. It accepts `path`, optional `expectedRevision`, non-status
 `properties`, optional `body`, optional `status`, and optional `occurrenceDate`.
-The transition sees staged edits to recurrence, dates and time entries; all
+The transition sees staged edits to recurrence and dates; all
 changes use one original revision fence and journal/Undo unit. Status values in
 `properties`, including configured physical aliases, are rejected. Null or
 absent body/status leaves that value unchanged. A malformed existing note must
@@ -267,7 +266,7 @@ publish; normalization never invents its historical creation date.
 configuration provider status, and explicit outstanding profile requirements.
 Metadata reads work while a replica waits for configuration and never contact
 the provider. Optional capability claims currently cover durable partial batch,
-concurrency fences, and time tracking. Profiles remain unclaimed while their
+and concurrency fences. Profiles remain unclaimed while their
 runtime requirements are incomplete; pure fixture coverage does not grant a
 profile claim. The full pinned corpus remains a strict failing gate for those
 requirements and the recorded upstream link contradictions.
@@ -329,12 +328,11 @@ retain filename-derived titles, and changed title mapping yields a visible probl
 Mutable payload origin lives in side-state metadata, so migrating origin does not
 rewrite immutable payload BLOB rows.
 
-`tracking_sessions` and `tracking_history` project bounded active sessions and
-per-task entries from cached SQLite metadata. Pages require the original profile,
-version and clock; nullable `nextCursor` ends iteration. Cursors contain position
-and clock, so consumers must keep their original request owner when continuing
-across profile changes. Malformed entries/projects produce bounded typed problems;
-provider I/O is not used for these reads.
+Time tracking, Pomodoro timers, work reports and time estimates are outside the
+product. Existing timing frontmatter remains opaque custom metadata and survives
+ordinary task edits, completion and Undo. SQLite schema 12 retires private device
+timer state and timer effects; it retains staged task images, journal identities,
+receipts and upload ownership so historical task writes can recover safely.
 
 `featuresJson` request `undo_available` returns the `undoAvailable` contract:
 eligibility, the latest eligible receipt ID, original clock, and command kind.
@@ -354,7 +352,7 @@ ordinary path/revision fields. It rejects referenced files unless force is set.
 `batch` commits one grouped file journal. `batch_partial` instead runs up to
 1,000 independent commands, retaining each original child mutation and outcome
 before advancing. Empty partial batches are valid. Nested batches, Undo,
-Pomodoro, and conflict decisions are rejected. An uncertain pending child stops
+and conflict decisions are rejected. An uncertain pending child stops
 the batch for exact retry; definite item failures remain in its durable outcome.
 The parent receipt means orchestration completed, so consumers inspect individual
 items rather than treating it as success for every command. The `batch_outcome`

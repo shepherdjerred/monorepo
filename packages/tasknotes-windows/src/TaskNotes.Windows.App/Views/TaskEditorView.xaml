@@ -84,10 +84,6 @@
                     PlaceholderText="Comma separated"
                     Text="{x:Bind ViewModel.Tags, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                 <TextBox
-                    AutomationProperties.AutomationId="TaskNotes.Editor.Estimate"
-                    Header="Estimate (minutes)"
-                    Text="{x:Bind ViewModel.EstimateText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                <TextBox
                     Header="Dependencies"
                     PlaceholderText="Comma separated task IDs or references"
                     Text="{x:Bind ViewModel.BlockedBy, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
@@ -155,15 +151,7 @@
                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                     Text="{x:Bind ViewModel.DependencyLabel, Mode=OneWay}"
                     TextWrapping="Wrap" />
-                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind ViewModel.TrackedTimeLabel, Mode=OneWay}" />
-                <TextBlock Text="{x:Bind ViewModel.TrackingHistorySummary, Mode=OneWay}" TextWrapping="Wrap" />
-                <ItemsControl ItemsSource="{x:Bind ViewModel.TrackingHistoryRows, Mode=OneWay}" />
-                <Button
-                    Click="MoreTimeEntries_Click"
-                    Content="More time entries"
-                    IsEnabled="{x:Bind ViewModel.HasMoreTrackingHistory, Mode=OneWay}" />
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                    <Button Click="ToggleTime_Click" Content="{x:Bind ViewModel.TimerLabel, Mode=OneWay}" />
                     <Button
                         AutomationProperties.AutomationId="TaskNotes.Editor.Save"
                         Click="Save_Click"

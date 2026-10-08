@@ -165,4 +165,20 @@ extension FacetStore {
             return false
         }
     }
+    public func retireSavedAction(_ action: FacetPendingMutation) async {
+        guard let engine, !isSaving, !action.canResume,
+            selectedProfileID == action.profileID
+        else { return }
+        let ownsPresentation = presentationOwner(
+            profileID: action.profileID, ownsEngine: { self.engine === engine })
+        isSaving = true
+        defer { isSaving = false }
+        do {
+            try await engine.retireSavedMutation(id: action.id)
+            await refreshSavedActions(
+                ownsPresentation: ownsPresentation, load: { try await engine.pendingMutations() })
+        } catch {
+            if ownsPresentation() { self.error = error.localizedDescription }
+        }
+    }
 }

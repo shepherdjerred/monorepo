@@ -197,10 +197,7 @@ let package = Package(
             name: "TaskNotesKitTests",
             dependencies: ["TaskNotesKit", "TaskNotesTestSupport", "TaskNotesUniFFI"],
             resources: [
-                .copy("Fixtures/warning-cases.json"),
-                .copy("Fixtures/tracking-sqlite-capture.json"),
-                .copy("Fixtures/tracking-unicode-capture.json"),
-                .copy("Fixtures/tracking-native64-capture.json"),
+                .copy("Fixtures/warning-cases.json")
             ],
             swiftSettings: authoredSwiftSettings + [.defaultIsolation(nil)]
         ),
@@ -225,11 +222,7 @@ let package = Package(
                 "TaskNotesMac", "TaskNotesKit", "TaskNotesFacetUI", "TaskNotesTestSupport",
                 "TaskNotesUniFFI",
             ],
-            resources: [
-                .copy("Fixtures/tracking-sqlite-capture.json"),
-                .copy("Fixtures/tracking-unicode-capture.json"),
-                .copy("Fixtures/tracking-native64-capture.json"),
-            ],
+            resources: [],
             swiftSettings: authoredSwiftSettings + [.defaultIsolation(MainActor.self)]
         ),
     ]

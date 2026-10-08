@@ -20,8 +20,8 @@ public import struct Foundation.URL
 ///
 /// The routes are `linking.ts`'s, all of them: `today`, `inbox`, `upcoming`,
 /// `browse`, `kanban`, `task/:taskId`, `project/:name`, `context/:name`,
-/// `tag/:name`, `view/:id`, plus the five that name a command rather than a
-/// screen — `quick-add`, `search`, `settings`, `pomodoro`, `time-report`.
+/// `tag/:name`, `view/:id`, plus the three that name a command rather than a
+/// screen — `quick-add`, `search`, `settings`.
 /// Keeping them identical is what lets one bookmark, one Shortcuts action or
 /// one note link work on the phone and on the Mac, and it is the reason the
 /// entity routes are ported even though this app can also reach those screens
@@ -81,7 +81,7 @@ public struct TaskNotesURL: Equatable, Hashable, Sendable {
     /// `tasknotes://kanban`.
     public static let board = TaskNotesURL(.board)
 
-    /// `tasknotes://quick-add`, `tasknotes://pomodoro`.
+    /// `tasknotes://quick-add`, `tasknotes://settings`.
     public static func action(_ action: TaskNotesAction) -> TaskNotesURL {
         TaskNotesURL(.action(action))
     }

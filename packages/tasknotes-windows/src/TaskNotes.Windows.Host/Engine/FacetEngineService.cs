@@ -269,7 +269,7 @@ public sealed class FacetEngineService : IAsyncDisposable
             cancellationToken
         );
 
-    /// <summary>Read shared NLP, timing, discovery or device-local Pomodoro state.</summary>
+    /// <summary>Read shared NLP, discovery and mutation state.</summary>
     public Task<string> FeaturesAsync(
         string profileId,
         string requestJson,
@@ -283,11 +283,6 @@ public sealed class FacetEngineService : IAsyncDisposable
                 string definition = document.RootElement.GetProperty("kind").GetString() switch
                 {
                     "capture_preview" => "capturePreview",
-                    "task_time" => "taskTime",
-                    "tracking_sessions" => "trackingSessions",
-                    "tracking_history" => "trackingHistory",
-                    "time_report" => "timeReport",
-                    "pomodoro" => "pomodoro",
                     "discovery" => "discovery",
                     "mutation_receipt" => "mutationReceipt",
                     "resolution_history" => "resolutionHistory",
