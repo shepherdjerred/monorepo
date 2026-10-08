@@ -223,6 +223,92 @@ class RestorationControlTest(unittest.TestCase):
         )
         return journal
 
+    def test_revision_rebinds_only_an_unstarted_closed_installation_and_revokes_start_first(self):
+        journal = self.installation_fixture()
+        old = JsonObject(
+            {
+                "candidateImage": IMAGE,
+                "candidateJarSha256": "b" * 64,
+                "installationFiles": {"world/level.dat": "c" * 64},
+            }
+        )
+        journal["installationPlan"] = old
+        image = IMAGE.replace("fixture", "replacement")
+        plan = JsonObject({**old, "candidateImage": image, "overworldOverlay": False})
+
+        def installing(path: Path, bound: JsonObject, staging: Path, candidate: Path, revision_plan: JsonObject):
+            self.assertEqual(bound.object("installation")["phase"], "REVISION_PENDING")
+            self.assertEqual(bound["candidateImage"], image)
+            self.assertEqual(control.annotations(self.cluster.server)[control.IMAGE], image)
+            self.assertEqual(revision_plan.object("revisionOf"), old)
+            bound["installation"] = {"phase": "INSTALLED"}
+
+        with (
+            patch.object(control, "require_restore"),
+            patch.object(control.restoration_activation, "plan", side_effect=lambda *args: copy.deepcopy(plan)),
+            patch.object(control, "install", side_effect=installing),
+        ):
+            control.revise_installation(self.path, journal, self.path.parent, self.path, image)
+        self.assertEqual(journal.object("installationRevision")["phase"], "INSTALLED")
+        self.assertEqual(journal["rollbackImage"], IMAGE)
+        self.assertEqual(self.cluster.server.object("spec")["replicas"], 0)
+        control.assert_closed(journal)
+
+    def test_incomplete_revision_refuses_private_start_even_with_a_stale_installed_receipt(self):
+        journal = self.installation_fixture()
+        journal["installationRevision"] = {"phase": "PREPARED"}
+        before = len(self.cluster.mutations)
+        with self.assertRaisesRegex(ValueError, "completed installation revision"):
+            control.private_start(self.path, journal)
+        self.assertEqual(len(self.cluster.mutations), before)
+
+    def test_revision_refuses_any_prior_startup_without_changing_the_image(self):
+        journal = self.installation_fixture()
+        journal["privateStartup"] = "STARTING"
+        before = len(self.cluster.mutations)
+        with self.assertRaisesRegex(ValueError, "whole-volume rollback"):
+            control.revise_installation(self.path, journal, self.path.parent, self.path, IMAGE)
+        self.assertEqual(len(self.cluster.mutations), before)
+
+    def test_revision_resumes_an_image_patch_that_completed_before_local_save(self):
+        journal = self.installation_fixture()
+        old = JsonObject(
+            {
+                "candidateImage": IMAGE,
+                "candidateJarSha256": "b" * 64,
+                "installationFiles": {"world/level.dat": "c" * 64},
+            }
+        )
+        image = IMAGE.replace("fixture", "replacement")
+        plan = JsonObject({**old, "candidateImage": image, "overworldOverlay": False})
+        journal["installationPlan"] = old
+        saving = control.save
+
+        def interrupted(path: Path, state: JsonObject):
+            if state.get("candidateImage") == image:
+                raise OSError("injected journal save interruption")
+            saving(path, state)
+
+        with (
+            patch.object(control, "require_restore"),
+            patch.object(control.restoration_activation, "plan", side_effect=lambda *args: copy.deepcopy(plan)),
+            patch.object(control, "save", side_effect=interrupted),
+            self.assertRaises(OSError),
+        ):
+            control.revise_installation(self.path, journal, self.path.parent, self.path, image)
+        saved = JsonObject.parse(self.path.read_bytes())
+        self.assertEqual(saved["candidateImage"], IMAGE)
+        self.assertEqual(saved.object("installation")["phase"], "REVISION_PENDING")
+        self.assertEqual(control.annotations(self.cluster.server)[control.IMAGE], image)
+        with (
+            patch.object(control, "require_restore"),
+            patch.object(control.restoration_activation, "plan", side_effect=lambda *args: copy.deepcopy(plan)),
+            patch.object(control, "install"),
+        ):
+            control.revise_installation(self.path, saved, self.path.parent, self.path, image)
+        self.assertEqual(saved["candidateImage"], image)
+        self.assertEqual(saved.object("installationRevision")["phase"], "INSTALLED")
+
     def acceptance_evidence(self) -> Path:
         evidence = self.path.parent / "acceptance.json"
         evidence.write_text(
@@ -304,9 +390,9 @@ class RestorationControlTest(unittest.TestCase):
 
     def whole_rollback_fixture(self):
         patch.object(
-            control, "read", side_effect=lambda kind, name, namespace=control.NAMESPACE: self.cluster.read(
-                kind, name, namespace
-            )
+            control,
+            "read",
+            side_effect=lambda kind, name, namespace=control.NAMESPACE: self.cluster.read(kind, name, namespace),
         ).start()
         patch.object(
             control, "run", side_effect=lambda arguments, timeout=30: self.cluster.run(arguments, timeout)
@@ -318,8 +404,12 @@ class RestorationControlTest(unittest.TestCase):
         pods.clear()
         journal.update(
             installationPlan={"candidateJarSha256": "b" * 64},
-            installation={"phase": "INSTALLED"}, writerRemoved=True, writerUid="removed-writer",
-            readersRemoved=True, acceptance={"status": "VERIFIED"}, stoppedIncarnation={"podUid": "accepted"},
+            installation={"phase": "INSTALLED"},
+            writerRemoved=True,
+            writerUid="removed-writer",
+            readersRemoved=True,
+            acceptance={"status": "VERIFIED"},
+            stoppedIncarnation={"podUid": "accepted"},
         )
         previous_run = control.run
 
@@ -333,8 +423,12 @@ class RestorationControlTest(unittest.TestCase):
 
     def recovery_result(self, phase: str = "RESTORED") -> JsonObject:
         return JsonObject(
-            {"requestId": REQUEST, "phase": "WHOLE_VOLUME_RESTORED" if phase == "RESTORED" else "INSTALLED",
-             "rollbackPhase": phase, "files": 2}
+            {
+                "requestId": REQUEST,
+                "phase": "WHOLE_VOLUME_RESTORED" if phase == "RESTORED" else "INSTALLED",
+                "rollbackPhase": phase,
+                "files": 2,
+            }
         )
 
     def test_whole_rollback_recreates_owned_helpers_revokes_acceptance_and_stays_stopped_and_closed(self):
@@ -343,8 +437,11 @@ class RestorationControlTest(unittest.TestCase):
             patch.object(control, "remote_fingerprint", return_value=hashes),
             patch.object(control, "upload_rollback_operator") as upload,
             patch.object(control, "transfer_rollback") as transfer,
-            patch.object(control, "rollback_writer_operation", side_effect=[self.recovery_result("NOT_STAGED"),
-                                                                            self.recovery_result()]),
+            patch.object(
+                control,
+                "rollback_writer_operation",
+                side_effect=[self.recovery_result("NOT_STAGED"), self.recovery_result()],
+            ),
         ):
             control.whole_rollback(self.path, journal)
         self.assertNotIn("acceptance", journal)
@@ -375,8 +472,11 @@ class RestorationControlTest(unittest.TestCase):
                     patch.object(control, "remote_fingerprint", return_value=hashes),
                     patch.object(control, "upload_rollback_operator"),
                     patch.object(control, "transfer_rollback") as transfer,
-                    patch.object(control, "rollback_writer_operation", side_effect=[self.recovery_result(phase),
-                                                                                    self.recovery_result()]),
+                    patch.object(
+                        control,
+                        "rollback_writer_operation",
+                        side_effect=[self.recovery_result(phase), self.recovery_result()],
+                    ),
                 ):
                     control.whole_rollback(self.path, journal)
                 transfer.assert_not_called()
@@ -402,8 +502,9 @@ class RestorationControlTest(unittest.TestCase):
                     patch.object(control, "remote_fingerprint", side_effect=[hashes, {}] if during_transfer else [{}]),
                     patch.object(control, "upload_rollback_operator"),
                     patch.object(control, "transfer_rollback") as transfer,
-                    patch.object(control, "rollback_writer_operation", return_value=self.recovery_result("NOT_STAGED"))
-                    as operation,
+                    patch.object(
+                        control, "rollback_writer_operation", return_value=self.recovery_result("NOT_STAGED")
+                    ) as operation,
                     self.assertRaisesRegex(ValueError, "restore changed"),
                 ):
                     control.whole_rollback(self.path, journal)
@@ -418,8 +519,9 @@ class RestorationControlTest(unittest.TestCase):
             patch.object(control, "remote_fingerprint", return_value=hashes),
             patch.object(control, "upload_rollback_operator"),
             patch.object(control, "transfer_rollback", side_effect=RuntimeError("transfer failed")),
-            patch.object(control, "rollback_writer_operation", return_value=self.recovery_result("NOT_STAGED"))
-            as operation,
+            patch.object(
+                control, "rollback_writer_operation", return_value=self.recovery_result("NOT_STAGED")
+            ) as operation,
             self.assertRaisesRegex(RuntimeError, "transfer failed"),
         ):
             control.whole_rollback(self.path, journal)
@@ -436,7 +538,8 @@ class RestorationControlTest(unittest.TestCase):
             patch.object(control, "upload_rollback_operator"),
             patch.object(control, "transfer_rollback"),
             patch.object(
-                control, "rollback_writer_operation",
+                control,
+                "rollback_writer_operation",
                 side_effect=[self.recovery_result("NOT_STAGED"), self.recovery_result()],
             ),
         ):
@@ -444,10 +547,14 @@ class RestorationControlTest(unittest.TestCase):
         pods.pop(control.NAMESPACE)
         control.remove_writer(self.path, journal)
         previous_run, previous_create = control.run, control.ensure_resource
-        transaction = JsonObject({
-            "requestId": REQUEST, "phase": "WHOLE_VOLUME_RESTORED",
-            "wholeRollback": {"phase": "RESTORED"}, "original": hashes,
-        })
+        transaction = JsonObject(
+            {
+                "requestId": REQUEST,
+                "phase": "WHOLE_VOLUME_RESTORED",
+                "wholeRollback": {"phase": "RESTORED"},
+                "original": hashes,
+            }
+        )
 
         def run(arguments: list[str], timeout: float = 30) -> str:
             return json.dumps(transaction) if "cat" in arguments else previous_run(arguments, timeout)
@@ -472,8 +579,19 @@ class RestorationControlTest(unittest.TestCase):
     def test_whole_rollback_is_available_through_the_guarded_controller_cli(self):
         journal, _, _ = self.whole_rollback_fixture()
         with (
-            patch("sys.argv", ["restoration-control.py", "whole-rollback", "--journal", str(self.path),
-                               "--request", REQUEST, "--image", IMAGE]),
+            patch(
+                "sys.argv",
+                [
+                    "restoration-control.py",
+                    "whole-rollback",
+                    "--journal",
+                    str(self.path),
+                    "--request",
+                    REQUEST,
+                    "--image",
+                    IMAGE,
+                ],
+            ),
             patch.object(control, "initialize", return_value=journal),
             patch.object(control, "whole_rollback") as recover,
             redirect_stdout(io.StringIO()),
@@ -506,10 +624,15 @@ class RestorationControlTest(unittest.TestCase):
             control.upload_rollback_operator(journal, proof)
         payload = upload.call_args.kwargs["input"]
         with tarfile.open(fileobj=io.BytesIO(payload), mode="r") as archive:
-            self.assertEqual(set(archive.getnames()), {
-                "operator/restoration_rollback.py", "operator/restoration_files.py",
-                "operator/restoration_json.py", "rollback-proof.json",
-            })
+            self.assertEqual(
+                set(archive.getnames()),
+                {
+                    "operator/restoration_rollback.py",
+                    "operator/restoration_files.py",
+                    "operator/restoration_json.py",
+                    "rollback-proof.json",
+                },
+            )
             entry = archive.extractfile("rollback-proof.json")
             assert entry is not None
             self.assertEqual(json.load(entry), proof)
@@ -518,7 +641,8 @@ class RestorationControlTest(unittest.TestCase):
         journal, pods, _ = self.whole_rollback_fixture()
         for namespace in (control.NAMESPACE, control.RESTORED_NAMESPACE):
             manifest = (
-                control.writer_manifest(journal) if namespace == control.NAMESPACE
+                control.writer_manifest(journal)
+                if namespace == control.NAMESPACE
                 else control.reader_manifest(journal, namespace)
             )
             manifest.object("metadata")["uid"] = namespace + "-transfer-helper"
@@ -586,7 +710,9 @@ class RestorationControlTest(unittest.TestCase):
 
     def test_failed_backup_can_abort_without_a_restore_or_candidate_acceptance(self):
         for status in (
-            {"phase": "Failed"}, {"phase": "PartiallyFailed"}, {"phase": "FailedValidation"},
+            {"phase": "Failed"},
+            {"phase": "PartiallyFailed"},
+            {"phase": "FailedValidation"},
             {"phase": "Completed", "errors": 1},
         ):
             with self.subTest(status=status):
@@ -609,8 +735,10 @@ class RestorationControlTest(unittest.TestCase):
                 self.assertEqual(journal.string("phase"), "REOPENED")
                 self.assertEqual(
                     self.cluster.mutations[before:],
-                    [("statefulset", control.SERVER),
-                     *[("service", name) for name in (*control.SERVICES[1:], control.SERVICES[0])]],
+                    [
+                        ("statefulset", control.SERVER),
+                        *[("service", name) for name in (*control.SERVICES[1:], control.SERVICES[0])],
+                    ],
                 )
 
     def test_abort_resumes_interrupted_routes_after_clearing_the_lease_and_is_idempotent_after_wake(self):
@@ -646,11 +774,18 @@ class RestorationControlTest(unittest.TestCase):
         journal = self.initialize()
         control.acquire(self.path, journal)
         for key, value in (
-            ("productionWriteAuthorized", None), ("productionWriteAuthorized", True),
-            ("writerUid", "writer"), ("previousWriterUid", "old-writer"),
-            ("writerCreationPending", True), ("installation", {"phase": "WRITE_PENDING"}),
-            ("wholeVolumeRecovery", {}), ("privateStartup", "STOPPED"), ("acceptance", {}),
-            ("stoppingIncarnation", {}), ("stoppedIncarnation", {}), ("rollbackVerification", {}),
+            ("productionWriteAuthorized", None),
+            ("productionWriteAuthorized", True),
+            ("writerUid", "writer"),
+            ("previousWriterUid", "old-writer"),
+            ("writerCreationPending", True),
+            ("installation", {"phase": "WRITE_PENDING"}),
+            ("wholeVolumeRecovery", {}),
+            ("privateStartup", "STOPPED"),
+            ("acceptance", {}),
+            ("stoppingIncarnation", {}),
+            ("stoppedIncarnation", {}),
+            ("rollbackVerification", {}),
         ):
             with self.subTest(key=key, value=value):
                 changed = copy.deepcopy(journal)
@@ -788,8 +923,10 @@ class RestorationControlTest(unittest.TestCase):
     def test_abort_is_available_through_the_guarded_controller_cli(self):
         journal = self.initialize()
         with (
-            patch("sys.argv", ["restoration-control", "abort", "--journal", str(self.path),
-                               "--request", REQUEST, "--image", IMAGE]),
+            patch(
+                "sys.argv",
+                ["restoration-control", "abort", "--journal", str(self.path), "--request", REQUEST, "--image", IMAGE],
+            ),
             patch.object(control, "initialize", return_value=journal),
             patch.object(control, "abort") as aborting,
             redirect_stdout(io.StringIO()),
@@ -1071,9 +1208,7 @@ class RestorationControlTest(unittest.TestCase):
         original_read = self.cluster.read
         reads = 0
 
-        def drift_after_incarnation_check(
-            kind: str, name: str, namespace: str = control.NAMESPACE
-        ) -> JsonObject:
+        def drift_after_incarnation_check(kind: str, name: str, namespace: str = control.NAMESPACE) -> JsonObject:
             nonlocal reads
             if kind == "statefulset":
                 reads += 1

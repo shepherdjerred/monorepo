@@ -288,6 +288,83 @@ class RestoreTest(unittest.TestCase):
         restore.save_json(staging / restore.JOURNAL, receipt)
         return staging, paper, bootstrap, candidate, modern, proof
 
+    def test_native_layout_fork_keeps_original_receipts_and_exact_unticked_bytes(self):
+        original, new = self.root / "old", self.root / "new"
+        world = original / "native-layout-rehearsal/world"
+        world.mkdir(parents=True)
+        (world / "level.dat").write_bytes(b"unticked converted archive")
+        restore.save_json(original / "native-layout-rehearsal-files.json", restore.fingerprint(world))
+        restore.save_json(original / "native-layout-metadata-receipt.json", {"worldTicks": 0})
+        restore.save_json(original / "source-chunks.json", {"0,0": 2})
+        restore.save_json(
+            original / restore.JOURNAL,
+            {
+                "phase": "ACTIVATION_LAYOUT_READY",
+                "archiveSha256": restore.ARCHIVE_SHA256,
+                "requestId": "fixture-request",
+                "nativeLayoutReceiptSha256": restore.digest(original / "native-layout-metadata-receipt.json"),
+                "arenaRetentionMode": "old",
+                "activationReceiptSha256": "old",
+            },
+        )
+        before = restore.fingerprint(original)
+        restore.fork_native_layout(original, new)
+        self.assertEqual(restore.fingerprint(original), before)
+        self.assertEqual(restore.fingerprint(new / "native-layout-rehearsal/world"), restore.fingerprint(world))
+        journal = JsonObject.parse((new / restore.JOURNAL).read_bytes())
+        self.assertEqual(journal["phase"], "NATIVE_LAYOUT_REHEARSED")
+        self.assertNotIn("arenaRetentionMode", journal)
+        self.assertNotIn("activationReceiptSha256", journal)
+        with self.assertRaises(ValueError):
+            restore.fork_native_layout(original, new)
+        (world / "level.dat").write_bytes(b"corruption")
+        with self.assertRaises(ValueError):
+            restore.fork_native_layout(original, self.root / "refused")
+        self.assertFalse((self.root / "refused").exists())
+
+    def test_separate_arena_retention_and_activation_never_overlay_the_main_world(self):
+        arguments = self.activation_fixture()
+        staging, _, _, candidate, modern, proof = arguments
+        (staging / "arena-preserved-layout").rename(staging / "heritage-preserved-layout")
+        (staging / "arena-preserved-layout-files.json").rename(staging / "heritage-preserved-layout-files.json")
+        journal = JsonObject.parse((staging / restore.JOURNAL).read_bytes())
+        journal["phase"] = "NATIVE_HERITAGE_PRESERVED"
+        converter = Path(__file__).parent / "conversion/NativePreservationCheckpoint.java"
+        journal["preservationInputs"] = {"catalog": "f" * 64, "converter": restore.digest(converter)}
+        preserved = staging / "heritage-preservation-receipt.json"
+        restore.save_json(
+            preserved,
+            {"preservedChunks": restore.EXPECTED_CHUNKS, "dataVersion": 4903, "terrainChanged": False, "worldTicks": 0},
+        )
+        journal["preservationReceiptSha256"] = restore.digest(preserved)
+        restore.save_json(staging / restore.JOURNAL, journal)
+        before = restore.fingerprint(modern)
+        restore.retain_arena_worlds(staging, candidate, modern, proof)
+        journal = JsonObject.parse((staging / restore.JOURNAL).read_bytes())
+        self.assertEqual(journal["arenaRetentionMode"], "SEPARATE_WORLDS")
+        journal["phase"] = "IDENTITY_DATABASE_READY"
+        restore.save_json(staging / restore.JOURNAL, journal)
+        with (
+            patch.object(restore, "conversion_classpath", return_value="fixture"),
+            patch.object(
+                restore, "repair_animal_identities", return_value=JsonObject({"beforeFiles": {}, "afterFiles": {}})
+            ),
+            patch.object(restore, "run_activation_check", return_value={"status": "VERIFIED"}),
+        ):
+            restore.prepare_activation(*arguments)
+        self.assertEqual(
+            (staging / "activation-layout/world/dimensions/minecraft/overworld/region/r.0.0.mca").read_bytes(),
+            b"protected terrain",
+        )
+        self.assertEqual(restore.fingerprint(modern), before)
+        facts = JsonObject.parse((staging / "activation-layout-receipt.json").read_bytes())
+        self.assertIs(facts["overworldOverlay"], False)
+        for name in ("settlement", "rustworks", "rwf"):
+            self.assertEqual(
+                restore.fingerprint(staging / "activation-layout/world/dimensions/minecraft" / name),
+                restore.fingerprint(modern / "world/dimensions/minecraft" / name),
+            )
+
     def test_activation_assembly_preserves_arena_dimensions_and_historical_data_without_modern_resource_worlds(self):
         arguments = self.activation_fixture()
         staging, _, _, _, modern, _ = arguments

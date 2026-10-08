@@ -547,8 +547,75 @@ def rehearse_native_layout(staging: Path, paper: Path, bootstrap: Path, guard: P
     save_json(staging / JOURNAL, receipt)
 
 
+def fork_native_layout(original: Path, staging: Path) -> None:
+    """Reuse an unticked, verified conversion in new staging while retaining every old receipt."""
+    if original.is_symlink() or staging.is_symlink() or staging.exists():
+        raise ValueError("Native layout reuse requires regular input and new independent staging")
+    original, staging = original.resolve(strict=True), staging.resolve()
+    if original.is_relative_to(staging) or staging.is_relative_to(original):
+        raise ValueError("Native layout reuse requires independent roots")
+    journal = original / JOURNAL
+    evidence_paths = (
+        journal,
+        original / "native-layout-rehearsal-files.json",
+        original / "native-layout-metadata-receipt.json",
+        original / "source-chunks.json",
+    )
+    if any(path.is_symlink() or not path.is_file() for path in evidence_paths):
+        raise ValueError("Native layout evidence must be regular files")
+    receipt = json.loads(journal.read_text(encoding="utf-8"))
+    if receipt["phase"] != "ACTIVATION_LAYOUT_READY" or receipt["archiveSha256"] != ARCHIVE_SHA256:
+        raise ValueError("Native layout reuse requires the completed archive preparation")
+    manifest = original / "native-layout-rehearsal-files.json"
+    expected = json.loads(manifest.read_text(encoding="utf-8"))
+    metadata = original / "native-layout-metadata-receipt.json"
+    if digest(metadata) != receipt["nativeLayoutReceiptSha256"]:
+        raise ValueError("Native layout metadata receipt changed")
+    source = original / "native-layout-rehearsal"
+    evidence = {path.name: digest(path) for path in (journal, manifest, metadata, original / "source-chunks.json")}
+    with ExitStack() as locks:
+        stopped_locks(source, locks)
+        if fingerprint(source / "world") != expected:
+            raise ValueError("Verified native archive data changed before reuse")
+        required = sum(path.stat().st_size for path in (source / "world").rglob("*") if path.is_file()) * 2
+        if shutil.disk_usage(staging.parent).free < required:
+            raise ValueError("Insufficient capacity for independent native layout reuse")
+        staging.mkdir(mode=0o700)
+        try:
+            shutil.copytree(source / "world", staging / "native-layout-rehearsal/world")
+            for path in (manifest, metadata, original / "source-chunks.json"):
+                shutil.copy2(path, staging / path.name)
+            if (
+                fingerprint(staging / "native-layout-rehearsal/world") != expected
+                or fingerprint(source / "world") != expected
+            ):
+                raise ValueError("Native layout reuse changed archive data")
+            if evidence != {
+                path.name: digest(path) for path in (journal, manifest, metadata, original / "source-chunks.json")
+            }:
+                raise ValueError("Native layout input evidence changed during reuse")
+            copied = {
+                key: value
+                for key, value in receipt.items()
+                if not key.startswith(("preservation", "arena", "database", "activation")) and key != "townImportedAt"
+            }
+            copied.update(
+                phase="NATIVE_LAYOUT_REHEARSED",
+                reusedNativeLayout={
+                    "source": str(original),
+                    "inputs": evidence,
+                    "terrainGeneration": False,
+                    "worldTicks": 0,
+                },
+            )
+            save_json(staging / JOURNAL, copied)
+        except BaseException:
+            save_json(staging / JOURNAL, {"phase": "NATIVE_LAYOUT_REUSE_FAILED", "inputs": evidence})
+            raise
+
+
 def preserve_heritage(staging: Path, paper: Path, bootstrap: Path, candidate: Path) -> None:
-    """Keep height-upgrade generation out of the whole protected footprint, on a private copy."""
+    """Preserve the complete archive terrain on a private copy; claim rights remain catalog-scoped."""
     staging, paper, bootstrap, candidate = (
         path.resolve(strict=True) for path in (staging, paper, bootstrap, candidate)
     )
@@ -604,7 +671,8 @@ def preserve_heritage(staging: Path, paper: Path, bootstrap: Path, candidate: Pa
             proof = json.loads(result.read_text(encoding="utf-8"))
             if (
                 proof["chunks"] != 638647
-                or proof["protectedChunks"] != 14619
+                or proof["preservedChunks"] != EXPECTED_CHUNKS
+                or proof["catalogSha256"] != digest(catalog)
                 or proof["terrainChanged"] is not False
                 or proof["worldTicks"] != 0
             ):
@@ -752,6 +820,82 @@ def transplant_arenas(
             receipt["phase"] = "ARENA_TRANSPLANT_FAILED"
             save_json(staging / JOURNAL, receipt)
             raise
+        save_json(staging / JOURNAL, receipt)
+
+
+def retain_arena_worlds(staging: Path, candidate: Path, modern_data: Path, backup_proof: Path) -> None:
+    """Seal separate arena worlds from the verified backup without overlaying historical terrain."""
+    paths = (staging, candidate, modern_data, backup_proof)
+    if any(path.is_symlink() for path in paths):
+        raise ValueError("Arena retention inputs cannot be symlinks")
+    staging, candidate, modern_data, backup_proof = (path.resolve(strict=True) for path in paths)
+    if staging.is_relative_to(modern_data) or modern_data.is_relative_to(staging):
+        raise ValueError("Arena retention requires independent historical staging and restored backup")
+    receipt = json.loads((staging / JOURNAL).read_text(encoding="utf-8"))
+    if receipt["phase"] != "NATIVE_HERITAGE_PRESERVED" or receipt["archiveSha256"] != ARCHIVE_SHA256:
+        raise ValueError("Arena retention requires the verified historical preservation checkpoint")
+    catalog = Path(__file__).resolve().parent / "owned/plugins/TheStorm/heritage.yml"
+    preserved = staging / "heritage-preservation-receipt.json"
+    converter = Path(__file__).resolve().parent / "conversion/NativePreservationCheckpoint.java"
+    if (
+        digest(preserved) != receipt["preservationReceiptSha256"]
+        or digest(converter) != receipt["preservationInputs"]["converter"]
+    ):
+        raise ValueError("Full archive preservation evidence changed")
+    preservation = json.loads(preserved.read_text(encoding="utf-8"))
+    if (
+        preservation.get("preservedChunks") != EXPECTED_CHUNKS
+        or preservation.get("dataVersion") != 4903
+        or preservation.get("terrainChanged") is not False
+        or preservation.get("worldTicks") != 0
+    ):
+        raise ValueError("Separate arena retention requires every saved historical chunk preserved")
+    # All saved terrain is already preserved. Later claim refinements cannot change those bytes.
+    # Bind the current claim catalog separately to the candidate used for database and activation.
+    source = staging / "heritage-preserved-layout"
+    expected = json.loads((staging / "heritage-preserved-layout-files.json").read_text(encoding="utf-8"))
+    proof = staging / "arena-retention-receipt.json"
+    if proof.exists() or proof.is_symlink():
+        raise ValueError("Arena retention evidence already exists")
+    with ExitStack() as locks:
+        stopped_locks(source, locks)
+        stopped_locks(modern_data, locks)
+        modern_expected = verified_backup(modern_data, backup_proof)
+        if fingerprint(source / "world") != expected:
+            raise ValueError("Historical terrain changed before arena retention")
+        retained = {}
+        for name in ("settlement", "rustworks", "rwf"):
+            prefix = "world/dimensions/minecraft/" + name + "/"
+            files = {
+                file.removeprefix(prefix): checksum
+                for file, checksum in modern_expected.items()
+                if file.startswith(prefix)
+            }
+            if "data/paper/metadata.dat" not in files or not any(file.startswith("region/") for file in files):
+                raise ValueError("The actual backup lacks a complete arena world: " + name)
+            retained[name] = files
+        inputs = {path.name: digest(path) for path in (candidate, catalog, backup_proof)}
+        if fingerprint(modern_data) != modern_expected or fingerprint(source / "world") != expected:
+            raise ValueError("Arena retention inputs changed during verification")
+        save_json(
+            proof,
+            {
+                "schemaVersion": 1,
+                "status": "VERIFIED",
+                "retainedDimensions": retained,
+                "overworldOverlay": False,
+                "terrainChanged": False,
+                "worldTicks": 0,
+                "historicalFilesSha256": digest(staging / "heritage-preserved-layout-files.json"),
+                "inputs": inputs,
+            },
+        )
+        receipt.update(
+            phase="ARENAS_PRESERVED",
+            arenaRetentionMode="SEPARATE_WORLDS",
+            arenaTransplantInputs=inputs,
+            arenaRetentionReceiptSha256=digest(proof),
+        )
         save_json(staging / JOURNAL, receipt)
 
 
@@ -966,8 +1110,21 @@ def prepare_activation(
     database_facts = json.loads(database_receipt.read_text(encoding="utf-8"))
     if database_facts.get("databaseSha256") != digest(database) or database_facts.get("townImport") != "VERIFIED":
         raise ValueError("Prepared identity database changed or lacks its verified historical import")
-    source = staging / "arena-preserved-layout"
-    expected = json.loads((staging / "arena-preserved-layout-files.json").read_text(encoding="utf-8"))
+    mode = receipt.get("arenaRetentionMode")
+    if mode not in (None, "SEPARATE_WORLDS"):
+        raise ValueError("Unknown arena retention mode")
+    source_name = "heritage-preserved-layout" if mode == "SEPARATE_WORLDS" else "arena-preserved-layout"
+    source = staging / source_name
+    expected = json.loads((staging / (source_name + "-files.json")).read_text(encoding="utf-8"))
+    if mode == "SEPARATE_WORLDS":
+        retention = staging / "arena-retention-receipt.json"
+        if digest(retention) != receipt["arenaRetentionReceiptSha256"]:
+            raise ValueError("Separate arena retention proof changed")
+        facts = json.loads(retention.read_text(encoding="utf-8"))
+        if facts["overworldOverlay"] is not False or facts["historicalFilesSha256"] != digest(
+            staging / (source_name + "-files.json")
+        ):
+            raise ValueError("Separate arena retention did not preserve the historical world")
     owned = Path(__file__).resolve().parent
     tools = [
         owned / "conversion" / name
@@ -1054,6 +1211,7 @@ def prepare_activation(
                     "backupProofSha256": digest(backup_proof),
                     "databaseSha256": database_facts["databaseSha256"],
                     "historicalChunks": EXPECTED_CHUNKS,
+                    "overworldOverlay": mode != "SEPARATE_WORLDS",
                     "retainedDimensions": retained,
                     "freshDimensions": ["wilds", "peaks", "mining"],
                     "native": native,
@@ -1396,9 +1554,15 @@ def main() -> None:
     preserving.add_argument("--paper", required=True, type=Path)
     preserving.add_argument("--bootstrap", required=True, type=Path)
     preserving.add_argument("--candidate", required=True, type=Path)
+    forking = commands.add_parser("fork-native-layout")
+    forking.add_argument("--original", required=True, type=Path)
+    forking.add_argument("--staging", required=True, type=Path)
     arenas = commands.add_parser("transplant-arenas")
     for name in ("staging", "paper", "bootstrap", "candidate", "modern-data", "backup-proof"):
         arenas.add_argument("--" + name, required=True, type=Path)
+    retaining = commands.add_parser("retain-arena-worlds")
+    for name in ("staging", "candidate", "modern-data", "backup-proof"):
+        retaining.add_argument("--" + name, required=True, type=Path)
     database = commands.add_parser("prepare-database")
     for name in ("staging", "paper", "bootstrap", "candidate", "modern-data", "backup-proof"):
         database.add_argument("--" + name, required=True, type=Path)
@@ -1418,7 +1582,9 @@ def main() -> None:
     inventory.add_argument("--output", required=True, type=Path)
     arguments = parser.parse_args()
     with ExitStack() as operations:
-        if arguments.command not in ("prepare", "verify-copy", "database-inventory"):
+        if arguments.command == "fork-native-layout":
+            operations.enter_context(operation_lock(arguments.original))
+        elif arguments.command not in ("prepare", "verify-copy", "database-inventory"):
             operations.enter_context(operation_lock(arguments.staging))
         execute(arguments)
 
@@ -1442,6 +1608,8 @@ def execute(arguments: argparse.Namespace) -> None:
         restart_companions(arguments.staging)
     elif arguments.command == "preserve-heritage":
         preserve_heritage(arguments.staging, arguments.paper, arguments.bootstrap, arguments.candidate)
+    elif arguments.command == "fork-native-layout":
+        fork_native_layout(arguments.original, arguments.staging)
     elif arguments.command == "transplant-arenas":
         transplant_arenas(
             arguments.staging,
@@ -1451,6 +1619,8 @@ def execute(arguments: argparse.Namespace) -> None:
             arguments.modern_data,
             arguments.backup_proof,
         )
+    elif arguments.command == "retain-arena-worlds":
+        retain_arena_worlds(arguments.staging, arguments.candidate, arguments.modern_data, arguments.backup_proof)
     elif arguments.command == "prepare-database":
         prepare_database(
             arguments.staging,

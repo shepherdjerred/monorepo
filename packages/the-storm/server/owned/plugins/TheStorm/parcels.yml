@@ -83,3 +83,173 @@ parcels:
       shops. The ground shop's slab border establishes this footprint.
       No corroborated UUID is available; editing remains in staff custody.
     weeklyRent: 0
+  - id: lawful-farm-shop
+    name: Innocent and Lawful Farm Shop
+    kind: PERMANENT_SHOP
+    area:
+      world: world
+      from: { x: -3, y: -64, z: -157 }
+      to: { x: 18, y: 319, z: -137 }
+    owners: []
+    provenance: >-
+      Public shop sign at 10,65,-142 and the original building layers identify
+      this reconstructed footprint. No corroborated UUID; held in staff custody.
+    weeklyRent: 0
+  - id: northwest-shop
+    name: Historical Northwest Shop
+    kind: PERMANENT_SHOP
+    area:
+      world: world
+      from: { x: 55, y: -64, z: -160 }
+      to: { x: 76, y: 319, z: -141 }
+    owners: []
+    provenance: >-
+      Original archive floor and wall layers identify the enclosed building
+      northeast of Smaland47's shop. Original owner records absent; staff custody.
+    weeklyRent: 0
+  - id: west-shop
+    name: Historical West Shop
+    kind: PERMANENT_SHOP
+    area:
+      world: world
+      from: { x: 18, y: -64, z: -124 }
+      to: { x: 33, y: 319, z: -107 }
+    owners: []
+    provenance: >-
+      Original floor and wall layers identify this western shop building.
+      Its owner is not established by surviving signs; held in staff custody.
+    weeklyRent: 0
+  - id: west-center-shop
+    name: Historical West Central Shop
+    kind: PERMANENT_SHOP
+    area:
+      world: world
+      from: { x: 39, y: -64, z: -124 }
+      to: { x: 59, y: 319, z: -107 }
+    owners: []
+    provenance: >-
+      Original floor and wall layers identify the second western shop building.
+      No corroborated owner UUID; held in staff custody.
+    weeklyRent: 0
+  - id: central-round-shop
+    name: Historical Central Round Shop
+    kind: PERMANENT_SHOP
+    area:
+      world: world
+      from: { x: 63, y: -64, z: -124 }
+      to: { x: 80, y: 319, z: -107 }
+    owners: []
+    provenance: >-
+      Reviewed original layers show the rounded timber building and its
+      stone slab perimeter. No corroborated owner UUID; held in staff custody.
+    weeklyRent: 0
+  - id: central-north-shop
+    name: Historical Central North Shop
+    kind: PERMANENT_SHOP
+    area:
+      world: world
+      from: { x: 94, y: -64, z: -124 }
+      to: { x: 118, y: 319, z: -107 }
+    owners: []
+    provenance: >-
+      The y=66 stone slab border encloses 94..118,-124..-107 in the archive.
+      Original ownership records are absent; held in staff custody.
+    weeklyRent: 0
+  - id: mining-building-shop
+    name: Mining and Building Shop
+    kind: PERMANENT_SHOP
+    area:
+      world: world
+      from: { x: 122, y: -64, z: -123 }
+      to: { x: 141, y: 319, z: -108 }
+    owners: []
+    provenance: >-
+      Sign at 131,67,-118 identifies the mining and building shop plans.
+      The y=66 stone slab border defines this footprint; no proven owner UUID.
+    weeklyRent: 0
+  - id: anteron-zah-shop
+    name: Anteron Exchange and Zah's Shop
+    kind: PERMANENT_SHOP
+    area:
+      world: world
+      from: { x: 90, y: -64, z: -101 }
+      to: { x: 113, y: 319, z: -78 }
+    owners: []
+    provenance: >-
+      Anteron Exchange signs at 93,64,-87 and 93,64,-90 identify the ground
+      shop; Zah's Shop sign at 99,112,-88 is upstairs in the same footprint.
+      Neither display name proves an owner UUID; both remain in staff custody.
+    weeklyRent: 0
+  - id: central-west-south-shop
+    name: Historical Central West Shop
+    kind: PERMANENT_SHOP
+    area:
+      world: world
+      from: { x: 63, y: -64, z: -98 }
+      to: { x: 80, y: 319, z: -85 }
+    owners: []
+    provenance: >-
+      Original y=70 stone slab perimeter and building layers identify this
+      shop west of Anteron Exchange. No proven owner UUID; staff custody.
+    weeklyRent: 0
+  - id: central-south-shop
+    name: Historical Central South Shop
+    kind: PERMANENT_SHOP
+    area:
+      world: world
+      from: { x: 94, y: -64, z: -76 }
+      to: { x: 118, y: 319, z: -56 }
+    owners: []
+    provenance: >-
+      Reviewed original floors and walls identify this building south of
+      Anteron Exchange. No proven owner UUID; held in staff custody.
+    weeklyRent: 0
+  - id: level-30-shop
+    name: Level 30 Shop
+    kind: PERMANENT_SHOP
+    area:
+      world: world
+      from: { x: 125, y: -64, z: -75 }
+      to: { x: 144, y: 319, z: -60 }
+    owners: []
+    provenance: >-
+      Sign at 134,69,-60 identifies Level 30 Shop. The y=65 stone slab border
+      encloses this footprint. No proven owner UUID; held in staff custody.
+    weeklyRent: 0
+  - id: skymart-shop
+    name: Skymart
+    kind: PERMANENT_SHOP
+    area:
+      world: world
+      from: { x: 56, y: -64, z: -49 }
+      to: { x: 76, y: 319, z: -32 }
+    owners: []
+    provenance: >-
+      Skymart signs at 68,68,-39, 68,67,-41 and 68,67,-37 identify this
+      southwest shop; original floors and walls define its footprint.
+      No proven owner UUID; held in staff custody.
+    weeklyRent: 0
+  - id: southwest-center-shop
+    name: Historical Southwest Central Shop
+    kind: PERMANENT_SHOP
+    area:
+      world: world
+      from: { x: 90, y: -64, z: -49 }
+      to: { x: 114, y: 319, z: -33 }
+    owners: []
+    provenance: >-
+      Original floor and wall layers identify the shop immediately east of
+      Skymart. No proven owner UUID; held in staff custody.
+    weeklyRent: 0
+  - id: southeast-shop
+    name: Historical Southeast Shop
+    kind: PERMANENT_SHOP
+    area:
+      world: world
+      from: { x: 118, y: -64, z: -48 }
+      to: { x: 137, y: 319, z: -35 }
+    owners: []
+    provenance: >-
+      Original y=65 stone slab border encloses 118..137,-48..-35.
+      No proven owner UUID; held in staff custody.
+    weeklyRent: 0
