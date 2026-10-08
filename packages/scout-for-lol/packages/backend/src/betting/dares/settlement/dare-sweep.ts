@@ -57,7 +57,6 @@ async function expireOne(
     const facts = await dareMoneyFactsInTransaction(tx, {
       dareId: dare.id,
       serverId: dare.serverId,
-      potTotal: dare.potTotal,
       targetAliases: dare.targets.map((target) => target.alias),
       conditionSummary: revision.plainLanguage,
     });
@@ -71,7 +70,7 @@ async function expireOne(
       revision: dare.fundedRevision ?? dare.currentRevision,
       category: "lifecycle",
       kind: "expired",
-      summary: `The acceptance window expired; ${dare.potTotal.toString()} Bryan Bucks were fully refunded.`,
+      summary: `The acceptance window expired; ${facts.potTotal.toString()} Bryan Bucks were fully refunded.`,
       deduplicationKey: `dare:${dare.id.toString()}:revision:${(dare.fundedRevision ?? dare.currentRevision).toString()}:expired`,
       occurredAt: now,
     });

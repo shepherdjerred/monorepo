@@ -9,7 +9,7 @@ import type {
   DareContributorRefund,
   DareTargetPayout,
 } from "#src/betting/dares/settlement/dare-ledger.ts";
-import { DiscordAccountIdSchema } from "@scout-for-lol/data";
+import { DiscordAccountIdSchema, type DarePotTotal } from "@scout-for-lol/data";
 import type { Db } from "#src/database/index.ts";
 
 /**
@@ -59,7 +59,7 @@ export async function recordTerminalDareAnnouncement(
   // argument list rebuilt at each call site IS the duplication, just spelled
   // as arguments.
   input: {
-    dare: { id: number; potTotal: number; challengerDiscordId: string };
+    dare: { id: number; challengerDiscordId: string };
     contract: { revision: number; plainLanguage: string };
     matchId?: string | undefined;
     now: Date;
@@ -75,7 +75,7 @@ export async function recordTerminalDareAnnouncement(
       await enqueueTerminalDareNotification(tx, {
         dareId: input.dare.id,
         revision: input.contract.revision,
-        potTotal: input.dare.potTotal,
+        potTotal: settled.potTotal,
         resolution,
         ...(input.matchId === undefined ? {} : { matchId: input.matchId }),
         now: input.now,
@@ -98,7 +98,7 @@ export async function recordTerminalDareAnnouncement(
 
 /** What the settling transaction moved, as the public result post states it. */
 export type DareSettledMoney = {
-  potTotal: number;
+  potTotal: DarePotTotal;
   payouts: readonly DareTargetPayout[];
   refunds: readonly DareContributorRefund[];
   voidReason: string | null;

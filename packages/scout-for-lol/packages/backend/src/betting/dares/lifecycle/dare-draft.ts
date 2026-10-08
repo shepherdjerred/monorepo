@@ -1,6 +1,8 @@
 import {
   BUCKS_INT32_MAX,
-  StorableBucksStakeSchema,
+  DarePileOnSchema,
+  DarePotTotalSchema,
+  StorableDareChallengerStakeSchema,
   DARE_SQL_EVALUATOR_VERSION,
   DARE_MAX_TARGETS,
   DareDeadlineSpecSchema,
@@ -15,6 +17,7 @@ import {
   type DiscordAccountId,
   type DiscordChannelId,
   type DiscordGuildId,
+  type StorableDareChallengerStake,
 } from "@scout-for-lol/data";
 import {
   compileDareSql,
@@ -62,7 +65,7 @@ export type PreparedDareDraft = {
   plainLanguage: string;
   targets: DareTargetBinding[];
   deadlineSpec: DareDeadlineSpec;
-  openingStake: number;
+  openingStake: StorableDareChallengerStake;
   preview: DareSqlEvidence;
 };
 
@@ -107,6 +110,10 @@ function definitionIssues(input: DareDraftDefinition, now: Date): string[] {
   return issues;
 }
 
+const WIDEST_STAKE = StorableDareChallengerStakeSchema.parse(BUCKS_INT32_MAX);
+const WIDEST_POT = DarePotTotalSchema.parse(BUCKS_INT32_MAX);
+const WIDEST_PILE_ON = DarePileOnSchema.parse(BUCKS_INT32_MAX);
+
 /**
  * The callout this draft would post with every number at its widest, so a
  * draft that fits now cannot outgrow Discord's limit once it is funded. The
@@ -117,9 +124,9 @@ function worstCaseCalloutLength(input: DareDraftDefinition): number {
   return dareCalloutContent({
     id: BUCKS_INT32_MAX,
     challengerDiscordId: "9".repeat(20),
-    openingStake: BUCKS_INT32_MAX,
-    potTotal: BUCKS_INT32_MAX,
-    contributions: [{ discordId: "9".repeat(20), amount: BUCKS_INT32_MAX }],
+    openingStake: WIDEST_STAKE,
+    potTotal: WIDEST_POT,
+    pileOns: [{ discordId: "9".repeat(20), amount: WIDEST_PILE_ON }],
     targetAliases: input.targets.map((target) => target.alias),
     revision: BUCKS_INT32_MAX,
     plainLanguage: input.plainLanguage,
@@ -149,7 +156,9 @@ export async function prepareDareDraft(
 > {
   const targets = DareTargetBindingSchema.array().parse(definition.targets);
   const deadlineSpec = DareDeadlineSpecSchema.parse(definition.deadlineSpec);
-  const stake = StorableBucksStakeSchema.safeParse(definition.openingStake);
+  const stake = StorableDareChallengerStakeSchema.safeParse(
+    definition.openingStake,
+  );
   const issues = definitionIssues(definition, now);
   if (!stake.success) {
     issues.push("The opening stake must be a positive whole number of BB.");

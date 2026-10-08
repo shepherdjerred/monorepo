@@ -49,7 +49,8 @@ function getOptionalEnvVar(
   }
 }
 
-const EnvironmentSchema = z.enum(["dev", "beta", "prod"]);
+/** The deployment stage this process runs in. */
+export const EnvironmentSchema = z.enum(["dev", "beta", "prod"]);
 export type Environment = z.infer<typeof EnvironmentSchema>;
 
 /**

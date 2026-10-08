@@ -3,6 +3,9 @@ import type { MessageCreateOptions, MessageEditOptions } from "discord.js";
 import {
   BucksDareStateSchema,
   BucksMessageRefSchema,
+  DareChallengerStakeSchema,
+  DarePileOnSchema,
+  DarePotTotalSchema,
   DareSqlCompilationSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
@@ -152,9 +155,14 @@ export async function loadDareCalloutState(
   const rendered = renderDareCallout({
     id: dare.id,
     challengerDiscordId: dare.challengerDiscordId,
-    openingStake: dare.openingStake,
-    potTotal: dare.potTotal,
-    contributions: dare.contributions,
+    openingStake: DareChallengerStakeSchema.parse(dare.openingStake),
+    potTotal: DarePotTotalSchema.parse(dare.potTotal),
+    // Contribution rows are ordered by id, so the first is the challenger's
+    // opening stake and every later row is a pile-on.
+    pileOns: dare.contributions.slice(1).map((contribution) => ({
+      discordId: contribution.discordId,
+      amount: DarePileOnSchema.parse(contribution.amount),
+    })),
     targetAliases: dare.targets.map((target) => target.alias),
     revision: revisionNumber,
     plainLanguage: revision.plainLanguage,

@@ -1,5 +1,8 @@
 import { z } from "zod";
 import {
+  BucksAmountSchema,
+  DarePayoutSchema,
+  DarePotTotalSchema,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data";
@@ -50,20 +53,20 @@ export const DareResultAnnouncementSchema = z.strictObject({
   resolution: z.enum(["achieved", "unachieved", "voided"]),
   challengerDiscordId: DiscordAccountIdSchema,
   plainLanguage: z.string().min(1),
-  potTotal: z.number().int().nonnegative(),
+  potTotal: DarePotTotalSchema,
   payouts: z.array(
     z.strictObject({
       discordId: DiscordAccountIdSchema,
       alias: z.string().min(1),
-      net: z.number().int().nonnegative(),
-      fee: z.number().int().nonnegative(),
+      net: DarePayoutSchema,
+      fee: BucksAmountSchema,
     }),
   ),
   refunds: z.array(
     z.strictObject({
       discordId: DiscordAccountIdSchema,
-      refunded: z.number().int().nonnegative(),
-      fee: z.number().int().nonnegative(),
+      refunded: BucksAmountSchema,
+      fee: BucksAmountSchema,
     }),
   ),
   voidReason: z.string().min(1).nullable(),

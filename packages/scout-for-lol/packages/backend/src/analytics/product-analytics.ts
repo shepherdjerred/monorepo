@@ -1,6 +1,7 @@
 import { PostHog } from "posthog-node";
 import type { BucksLedgerKind } from "@scout-for-lol/data";
 import configuration, {
+  type Environment,
   type ProductAnalyticsConfiguration,
 } from "#src/configuration.ts";
 import { createLogger } from "#src/logger.ts";
@@ -291,7 +292,7 @@ function createPostHogTransport(
 
 export function createProductAnalytics(options: {
   analyticsConfiguration: ProductAnalyticsConfiguration | undefined;
-  environment: "dev" | "beta" | "prod";
+  environment: Environment;
   version: string;
   transport?: ProductAnalyticsTransport;
 }): ProductAnalytics {

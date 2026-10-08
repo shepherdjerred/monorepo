@@ -1,3 +1,7 @@
+import type {
+  ExploreQuotaScope,
+  ExploreQuotaWindow,
+} from "@scout-for-lol/data";
 import { z } from "zod";
 
 /**
@@ -109,3 +113,39 @@ export const ExploreQuotaLimitsInputSchema = z.union([
     })
     .pipe(ExploreQuotaLimitsSchema),
 ]);
+
+/**
+ * Explore answers that may run at once across every user.
+ *
+ * Fixed, unlike the question ceilings: it bounds concurrent provider work
+ * rather than spend, and both admission paths refuse at the same number.
+ */
+export const EXPLORE_MAX_ACTIVE_RUNS = 5;
+
+export type ExploreQuotaRule = {
+  scope: ExploreQuotaScope;
+  window: ExploreQuotaWindow;
+  limit: number;
+};
+
+/**
+ * The question quota as ordered rules: the per-user windows narrowest first,
+ * then the global windows.
+ *
+ * The one place a limits object becomes rules. The in-process limiter and the
+ * durable reservation both read this list, so they cannot disagree about which
+ * windows exist, which scope each charges, or the order a refusal names them.
+ */
+export function exploreQuotaRules(
+  limits: ExploreQuotaLimits,
+): ExploreQuotaRule[] {
+  return [
+    { scope: "user", window: "minute", limit: limits.userMinute },
+    { scope: "user", window: "hour", limit: limits.userHour },
+    { scope: "user", window: "day", limit: limits.userDay },
+    { scope: "user", window: "week", limit: limits.userWeek },
+    { scope: "global", window: "hour", limit: limits.globalHour },
+    { scope: "global", window: "day", limit: limits.globalDay },
+    { scope: "global", window: "week", limit: limits.globalWeek },
+  ];
+}

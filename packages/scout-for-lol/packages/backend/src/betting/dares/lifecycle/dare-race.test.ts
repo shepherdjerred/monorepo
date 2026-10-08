@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { DareSqlCompetition, DareSqlEvidence } from "@scout-for-lol/data";
-import { DareSqlEvidenceSchema } from "@scout-for-lol/data";
+import { DarePotTotalSchema, DareSqlEvidenceSchema } from "@scout-for-lol/data";
 import {
   compileDareSql,
   dareSqlRaceEvidence,
@@ -202,7 +202,7 @@ describe("Dare races", () => {
       facts: {
         dareId: 1,
         serverId: "guild",
-        potTotal: 5,
+        potTotal: DarePotTotalSchema.parse(5),
         targetAliases: ["Alpha", "Beta"],
         conditionSummary: "First to win",
       },

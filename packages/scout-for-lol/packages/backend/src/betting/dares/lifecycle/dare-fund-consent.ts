@@ -1,6 +1,7 @@
 import {
-  BucksStakeSchema,
   DARE_SQL_COMPILER_VERSION,
+  DareChallengerStakeSchema,
+  darePotOf,
   DareSqlCompilationSchema,
   DiscordAccountIdSchema,
   PlayerIdSchema,
@@ -94,6 +95,8 @@ export async function fundDareInTransaction(
     absoluteDeadline !== null && absoluteDeadline < defaultAcceptDeadline
       ? absoluteDeadline
       : defaultAcceptDeadline;
+  const openingStake = DareChallengerStakeSchema.parse(revision.openingStake);
+  const potTotal = darePotOf(openingStake);
   const claimed = await tx.bucksDare.updateManyAndReturn({
     where: {
       id: input.dareId,
@@ -104,8 +107,8 @@ export async function fundDareInTransaction(
     data: {
       dareState: "pending_accept",
       fundedRevision: input.revision,
-      openingStake: revision.openingStake,
-      potTotal: revision.openingStake,
+      openingStake,
+      potTotal,
       proposalExpiresAt: input.now,
       acceptDeadline,
       ...pendingDareCalloutRefresh(),
@@ -131,13 +134,13 @@ export async function fundDareInTransaction(
     facts: {
       dareId: dare.id,
       serverId: dare.serverId,
-      potTotal: revision.openingStake,
+      potTotal,
       targetAliases: targets.map((target) => target.alias),
       conditionSummary: revision.plainLanguage,
     },
     bucksAccountId: input.bucksAccountId,
     discordId: input.actorDiscordId,
-    amount: BucksStakeSchema.parse(revision.openingStake),
+    amount: openingStake,
   });
   await enqueueDareNotificationInTransaction(tx, {
     dareId: dare.id,
@@ -145,7 +148,7 @@ export async function fundDareInTransaction(
     category: "lifecycle",
     kind: "funded",
     actorDiscordId: input.actorDiscordId,
-    summary: `Funded for ${revision.openingStake.toString()} Bryan Bucks and awaiting target acceptance.`,
+    summary: `Funded for ${openingStake.toString()} Bryan Bucks and awaiting target acceptance.`,
     deduplicationKey: `dare:${dare.id.toString()}:revision:${input.revision.toString()}:funded`,
     occurredAt: input.now,
   });
@@ -153,7 +156,7 @@ export async function fundDareInTransaction(
     kind: "funded",
     dareId: dare.id,
     revision: input.revision,
-    potTotal: revision.openingStake,
+    potTotal,
     balanceAfter: balance,
     acceptDeadline,
   } as const;
@@ -253,7 +256,6 @@ export async function acceptDareInTransaction(
     const facts = await dareMoneyFactsInTransaction(tx, {
       dareId: dare.id,
       serverId: dare.serverId,
-      potTotal: dare.potTotal,
       targetAliases: targets.map((target) => target.alias),
       conditionSummary: revision.plainLanguage,
     });

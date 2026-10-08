@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { StorableBucksStakeSchema } from "#src/model/bucks/bryan-bucks-money.ts";
+import { StorableDareChallengerStakeSchema } from "#src/model/bucks/bryan-bucks-money.ts";
 import { DivisionSchema } from "#src/model/riot/division.ts";
 import { RankSchema, RankedQueueTypeSchema } from "#src/model/riot/rank.ts";
 import { TierSchema } from "#src/model/riot/tier.ts";
@@ -65,7 +65,7 @@ export type DareDeadlineSpec = z.infer<typeof DareDeadlineSpecSchema>;
 
 export const DareContractRuntimeSchema = z.strictObject({
   targets: z.array(DareTargetBindingSchema).min(1).max(DARE_MAX_TARGETS),
-  openingStake: StorableBucksStakeSchema,
+  openingStake: StorableDareChallengerStakeSchema,
   serverId: z.string().min(1),
   channelId: z.string().min(1),
   revision: z.number().int().positive(),

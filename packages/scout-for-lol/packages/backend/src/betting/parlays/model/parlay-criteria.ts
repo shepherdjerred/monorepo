@@ -10,6 +10,7 @@ import {
   OPPONENT_PING_CATALOG,
   OpponentPingFieldSchema,
   MatchNumericFieldSchema,
+  NumericOperatorSchema,
   PARTICIPANT_BOOLEAN_CATALOG,
   PARTICIPANT_NUMERIC_SETTLEMENT_CATALOG,
   ParticipantBooleanFieldSchema,
@@ -18,6 +19,7 @@ import {
   TEAM_OBJECTIVE_CATALOG,
   TeamBooleanFieldSchema,
   TeamObjectiveSchema,
+  type NumericOperator,
 } from "#src/betting/parlays/model/parlay-catalog.ts";
 
 export const PARLAY_SCHEMA_VERSION = 1;
@@ -31,7 +33,6 @@ export const PARLAY_CATALOG_VERSION = "2026-08-23";
 export const PARLAY_EVALUATOR_VERSION = "1";
 export const PARLAY_SUBJECT_ALIAS_MAX_LENGTH = 100;
 
-const NumericOperatorSchema = z.enum(["gte", "lte", "eq"]);
 const SelectedTeamSchema = z.literal("selected");
 
 const ParticipantNumericConditionSchema = z.strictObject({
@@ -309,7 +310,7 @@ export function parlaySemanticIssues(
 }
 
 function numericPhrase(
-  operator: "gte" | "lte" | "eq",
+  operator: NumericOperator,
   threshold: number,
   field: string,
 ) {

@@ -9,6 +9,8 @@ import {
   StorableBucksAmountSchema,
   StorableBucksDeltaSchema,
   StorableBucksStakeSchema,
+  StorableDareChallengerStakeSchema,
+  StorableDarePileOnSchema,
   storableAmount,
   storableDelta,
   storableStake,
@@ -18,6 +20,10 @@ import {
   type StorableBucksAmount,
   type StorableBucksDelta,
   type StorableBucksStake,
+  type DareChallengerStake,
+  type DarePileOn,
+  type StorableDareChallengerStake,
+  type StorableDarePileOn,
 } from "./bryan-bucks-money.ts";
 
 const stake = (value: number) => BucksStakeSchema.parse(value);
@@ -148,5 +154,29 @@ describe("storable brands", () => {
   test("storability does not blur the semantic brands together", () => {
     expectTypeOf<StorableBucksStake>().not.toExtend<StorableBucksAmount>();
     expectTypeOf<StorableBucksAmount>().not.toExtend<StorableBucksDelta>();
+  });
+});
+
+describe("storable Dare money", () => {
+  test("bounds the Dare contributions their Int columns hold", () => {
+    expect(StorableDareChallengerStakeSchema.parse(BUCKS_INT32_MAX)).toBe(
+      BUCKS_INT32_MAX,
+    );
+    expect(
+      StorableDareChallengerStakeSchema.safeParse(BUCKS_INT32_MAX + 1).success,
+    ).toBe(false);
+    expect(StorableDarePileOnSchema.safeParse(0).success).toBe(false);
+    expect(
+      StorableDarePileOnSchema.safeParse(BUCKS_INT32_MAX + 1).success,
+    ).toBe(false);
+  });
+
+  test("keeps both the Dare meaning and generic storability", () => {
+    expectTypeOf<StorableDareChallengerStake>().toExtend<DareChallengerStake>();
+    expectTypeOf<StorableDareChallengerStake>().toExtend<StorableBucksStake>();
+    expectTypeOf<StorableDarePileOn>().toExtend<DarePileOn>();
+    expectTypeOf<StorableDarePileOn>().toExtend<StorableBucksStake>();
+    expectTypeOf<StorableBucksStake>().not.toExtend<StorableDarePileOn>();
+    expectTypeOf<StorableDarePileOn>().not.toExtend<StorableDareChallengerStake>();
   });
 });

@@ -1,7 +1,9 @@
 import {
+  DareChallengerStakeSchema,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
   type ConfirmationIntentPayload,
+  type DareChallengerStake,
   type DareIntentPayload,
   type DiscordAccountId,
   type DiscordGuildId,
@@ -148,7 +150,7 @@ async function executeAction(
 async function openingStakeNeeded(
   input: DareIntentTarget,
   dependencies: DareDependencies,
-): Promise<number> {
+): Promise<DareChallengerStake> {
   const revision =
     await dependencies.prismaClient.bucksDareRevision.findUniqueOrThrow({
       where: {
@@ -159,7 +161,7 @@ async function openingStakeNeeded(
       },
       select: { openingStake: true },
     });
-  return revision.openingStake;
+  return DareChallengerStakeSchema.parse(revision.openingStake);
 }
 
 async function insufficientOutcome(

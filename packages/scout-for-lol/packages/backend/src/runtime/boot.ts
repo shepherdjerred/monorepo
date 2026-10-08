@@ -12,6 +12,7 @@ import {
   scoutRuntimeCapabilities,
   type ScoutRuntimeRole,
 } from "#src/configuration/runtime-role.ts";
+import type { Environment } from "#src/configuration.ts";
 import { createLogger } from "#src/logger.ts";
 import {
   runScoutBootSteps,
@@ -49,7 +50,7 @@ export type ScoutRuntime = {
 export async function startScoutRuntime(
   role: ScoutRuntimeRole,
   dependencies: ScoutRuntimeDependencies,
-  stage: "dev" | "beta" | "prod" = "dev",
+  stage: Environment = "dev",
 ): Promise<ScoutRuntime> {
   const capabilities = scoutRuntimeCapabilities(role, stage);
   const bootSteps = scoutBootSteps(capabilities);
