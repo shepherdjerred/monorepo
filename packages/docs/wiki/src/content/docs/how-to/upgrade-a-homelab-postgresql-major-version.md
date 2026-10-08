@@ -23,6 +23,10 @@ kubectl exec -n temporal temporal-postgresql-0 -c postgres -- \
 Record the exact PVC, PV, volume handle, storage class, extensions, database
 sizes, and writer workloads. Keep the inventory and acceptance results in the PR.
 
+Inspect the installed Spilo upgrade helpers for extension removal and unlogged
+table truncation. Confirm that no application data depends on those objects
+before invoking the upgrade.
+
 The [database source definitions](https://github.com/shepherdjerred/monorepo/tree/main/packages/homelab/src/cdk8s/src/resources/postgres)
 and [operator configuration](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/platform/postgres-operator.ts)
 own the desired state.
@@ -88,6 +92,16 @@ focused checks and exact-head Woodpecker CI. Publish and reconcile through
 Stop the selected database's writers through their approved maintenance path.
 Take a final consistent independent backup. Confirm its pod's `PGVERSION`
 matches the new source pin and that both toolchains are present.
+
+For an application using a dedicated non-superuser database role, record its
+current connection limit, set `ALTER ROLE <role> CONNECTION LIMIT 0`, and
+terminate that role's existing sessions. Verify that no application sessions or
+prepared transactions remain, then issue `CHECKPOINT` before the final backup.
+Keep the limit at zero throughout the upgrade. This blocks new application
+connections during maintenance; it does not restrict superusers or background
+workers. Restore the exact original limit after the database checks pass, then
+verify the application's read/write flow. Retain the recorded limit for recovery
+if the upgrade fails.
 
 For a single-member cluster, invoke the documented Spilo entrypoint:
 
