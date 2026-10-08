@@ -1,12 +1,12 @@
 import { z } from "zod";
-import { MatchIdSchema } from "#src/model/matches/match.ts";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 
 export const ExploreMatchCardSizeSchema = z.enum(["S", "M", "L"]);
 export type ExploreMatchCardSize = z.infer<typeof ExploreMatchCardSizeSchema>;
 
 export const ExploreMatchCardRequestSchema = z
   .object({
-    matchId: MatchIdSchema,
+    matchId: RiotMatchIdSchema,
     size: ExploreMatchCardSizeSchema,
   })
   .strict();
@@ -81,7 +81,7 @@ const ExploreMatchCardTeamSchema = z
 
 export const ExploreMatchSnapshotSchema = z
   .object({
-    matchId: MatchIdSchema,
+    matchId: RiotMatchIdSchema,
     gameCreationMs: z.number().int().nonnegative(),
     gameDurationSeconds: z.number().int().nonnegative(),
     queue: z.string().min(1).max(200).nullable(),

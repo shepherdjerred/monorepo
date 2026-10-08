@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import {
   DURATION_BUCKETS,
@@ -15,7 +16,7 @@ function match(input: {
   win?: boolean;
 }): ParlayHistoryMatch {
   return {
-    matchId: `NA1_${input.value.toString()}`,
+    matchId: RiotMatchIdSchema.parse(`NA1_${input.value.toString()}`),
     createdAtMs: 1_700_000_000_000 + input.value,
     durationSeconds: input.durationSeconds ?? 1800,
     win: input.win ?? true,

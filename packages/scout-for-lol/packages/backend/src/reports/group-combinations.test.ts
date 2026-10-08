@@ -1,3 +1,7 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/parse/compile.ts";
 import type {
@@ -33,7 +37,7 @@ function fact(overrides: Partial<GroupFactRow> = {}): GroupFactRow {
   return {
     playerId: 1,
     playerAlias: "P1",
-    matchId: "NA1_1",
+    matchId: RiotMatchIdSchema.parse("NA1_1"),
     teamId: 100,
     playerSubteamId: null,
     values,
@@ -53,7 +57,7 @@ function withValues(
 }
 
 function stack(
-  matchId: string,
+  matchId: RiotMatchId,
   count: number,
   overrides: Record<string, string | number | boolean | null> = {},
 ): GroupFactRow[] {
@@ -101,13 +105,13 @@ function value(row: PlanAggregateRow | undefined, name: string): unknown {
 
 describe("teammate-group folding", () => {
   test("group(2) on a 5-stack yields all C(5,2)=10 pairs", () => {
-    const rows = aggregate(stack("NA1_1", 5), 2);
+    const rows = aggregate(stack(RiotMatchIdSchema.parse("NA1_1"), 5), 2);
     expect(rows).toHaveLength(10);
     expect(rows.every((row) => value(row, "games") === 1)).toBe(true);
   });
 
   test("group(3) on a 5-stack sums member counters and carries game facts", () => {
-    const rows = aggregate(stack("NA1_1", 5), 3);
+    const rows = aggregate(stack(RiotMatchIdSchema.parse("NA1_1"), 5), 3);
     expect(rows).toHaveLength(10);
     const trio = rows.find((row) => row.label === "P1 + P2 + P3");
     expect(value(trio, "kills")).toBe(3);
@@ -119,7 +123,7 @@ describe("teammate-group folding", () => {
   });
 
   test("group(all) on a 5-stack yields every size 2..5", () => {
-    const rows = aggregate(stack("NA1_1", 5), "all");
+    const rows = aggregate(stack(RiotMatchIdSchema.parse("NA1_1"), 5), "all");
     // C(5,2)+C(5,3)+C(5,4)+C(5,5) = 10+10+5+1
     expect(rows).toHaveLength(26);
     const full = rows.find((row) => row.label === "P1 + P2 + P3 + P4 + P5");
@@ -182,8 +186,8 @@ describe("teammate-group folding", () => {
   test("accumulates the same tuple across matches", () => {
     const rows = aggregate(
       [
-        ...stack("NA1_1", 2, { win: true }),
-        ...stack("NA1_2", 2, { win: false }),
+        ...stack(RiotMatchIdSchema.parse("NA1_1"), 2, { win: true }),
+        ...stack(RiotMatchIdSchema.parse("NA1_2"), 2, { win: false }),
       ],
       2,
     );
@@ -206,14 +210,16 @@ describe("teammate-group folding", () => {
   });
 
   test("requested size larger than the roster yields nothing", () => {
-    expect(aggregate(stack("NA1_1", 2), 4)).toHaveLength(0);
+    expect(
+      aggregate(stack(RiotMatchIdSchema.parse("NA1_1"), 2), 4),
+    ).toHaveLength(0);
   });
 
   test("HAVING, ORDER BY and LIMIT run over the folded rows", () => {
     const facts = [
-      ...stack("NA1_1", 2),
-      ...stack("NA1_2", 2),
-      ...stack("NA1_3", 3).slice(2),
+      ...stack(RiotMatchIdSchema.parse("NA1_1"), 2),
+      ...stack(RiotMatchIdSchema.parse("NA1_2"), 2),
+      ...stack(RiotMatchIdSchema.parse("NA1_3"), 3).slice(2),
     ];
     const plan = compileScoutQl(
       `SELECT ${QUERY_OUTPUTS} FROM player_groups GROUP BY group(2) HAVING games >= 2 ORDER BY kills DESC`,
@@ -240,7 +246,7 @@ describe("teammate-group folding", () => {
       for (let member = 0; member < 5; member++) {
         facts.push(
           fact({
-            matchId: `NA1_${matchIndex.toString()}`,
+            matchId: RiotMatchIdSchema.parse(`NA1_${matchIndex.toString()}`),
             playerId: base + member + 1,
             playerAlias: `P${(base + member + 1).toString()}`,
           }),
@@ -308,7 +314,7 @@ describe("aggregates a teammate group cannot answer", () => {
           "SELECT COUNT(*) AS games FROM player_groups GROUP BY group(2)",
         ),
         groups: foldGroupCombinations({
-          facts: stack("NA1_1", 2),
+          facts: stack(RiotMatchIdSchema.parse("NA1_1"), 2),
           size: 2,
           gameLevelColumns: GAME_LEVEL,
         }),
@@ -320,7 +326,7 @@ describe("aggregates a teammate group cannot answer", () => {
       aggregateFoldedGroups({
         plan: memberScoped,
         groups: foldGroupCombinations({
-          facts: stack("NA1_1", 2),
+          facts: stack(RiotMatchIdSchema.parse("NA1_1"), 2),
           size: 2,
           gameLevelColumns: GAME_LEVEL,
         }),

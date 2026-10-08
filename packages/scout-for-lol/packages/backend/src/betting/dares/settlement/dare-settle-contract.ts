@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   DareContractSchema,
   DareSqlCompilationSchema,
@@ -129,7 +130,7 @@ async function resolveDare(
     finality: DareFinality;
     proof: DareProof | null;
     now: Date;
-    matchId?: string | undefined;
+    matchId?: RiotMatchId | undefined;
     /** Whether the match this settles is owed a public delivery. */
     notify: DareNotificationDisposition;
   },

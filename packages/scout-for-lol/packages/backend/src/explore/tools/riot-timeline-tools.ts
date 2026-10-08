@@ -1,6 +1,7 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { tool } from "ai";
 import { z } from "zod";
-import { MatchIdSchema } from "@scout-for-lol/data";
+import { RiotMatchIdSchema } from "@scout-for-lol/data";
 import { ScoutExploreTimelineResultSchema } from "@scout-for-lol/temporal";
 import configuration from "#src/configuration.ts";
 import { currentScoutTemporalSupervisor } from "#src/temporal/runtime.ts";
@@ -10,7 +11,7 @@ import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
 const ACQUISITION_BUCKET_MS = 10 * 60 * 1000;
 
 export function invalidTimelineMatchIds(
-  matchIds: readonly string[],
+  matchIds: readonly RiotMatchId[],
   eligible: ReadonlySet<string>,
 ): string[] {
   return matchIds.filter((matchId) => !eligible.has(matchId));
@@ -25,7 +26,7 @@ export function createRiotTimelineExploreTools(input: {
       description:
         "Fetch and permanently add timelines for up to 10 match IDs from the most recent successful ScoutQL query. Use only when a timeline analysis needs data that coverage inspection shows is missing. Load riot-history first.",
       inputSchema: z
-        .object({ matchIds: z.array(MatchIdSchema).min(1).max(10) })
+        .object({ matchIds: z.array(RiotMatchIdSchema).min(1).max(10) })
         .strict(),
       outputSchema: ScoutExploreTimelineResultSchema.extend({
         ok: z.boolean(),

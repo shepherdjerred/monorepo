@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { DiscordGuildIdSchema, MatchIdSchema } from "@scout-for-lol/data";
+import { DiscordGuildIdSchema, RiotMatchIdSchema } from "@scout-for-lol/data";
 import { isMvpVotesEnabledForGuild } from "#src/mvp-votes/eligibility.ts";
 import { loadMatchMvpTallyForGuilds } from "#src/mvp-votes/query/tally.ts";
 import { guildFeatureStatus } from "#src/trpc/guild-feature-status.ts";
 import { router, webProcedure } from "#src/trpc/trpc.ts";
 
-const MatchTallyInput = z.strictObject({ matchId: MatchIdSchema });
+const MatchTallyInput = z.strictObject({ matchId: RiotMatchIdSchema });
 
 /**
  * Read-only community MVP tally for the signed-in viewer's enabled guilds.

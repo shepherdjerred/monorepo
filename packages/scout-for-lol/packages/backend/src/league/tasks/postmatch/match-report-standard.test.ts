@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
-  MatchIdSchema,
+  RiotMatchIdSchema,
   PlayerConfigEntrySchema,
   RawMatchSchema,
   type RawTimeline,
@@ -64,7 +64,11 @@ async function arenaFixture() {
 }
 
 const clientTimeline: RawTimeline = {
-  metadata: { dataVersion: "local-1", matchId: "NA1_1", participants: [] },
+  metadata: {
+    dataVersion: "local-1",
+    matchId: RiotMatchIdSchema.parse("NA1_1"),
+    participants: [],
+  },
   info: { frameInterval: 60_000, frames: [], gameId: 1, participants: [] },
 };
 
@@ -75,7 +79,7 @@ describe("required progression timelines", () => {
 
   test("rejects an unsupported Arena timeline before progression advances", async () => {
     const fixture = await arenaFixture();
-    const matchId = MatchIdSchema.parse(fixture.match.metadata.matchId);
+    const matchId = fixture.match.metadata.matchId;
 
     await expect(
       fetchTimelineForProgression(fixture.match, matchId, fixture.players),
@@ -100,7 +104,7 @@ describe("timelines for client-sourced matches", () => {
       timeline: clientTimeline,
     });
     const fixture = await arenaFixture();
-    const matchId = MatchIdSchema.parse(fixture.match.metadata.matchId);
+    const matchId = fixture.match.metadata.matchId;
 
     await expect(
       fetchTimelineForDare(fixture.match, matchId, fixture.players),
@@ -122,7 +126,7 @@ describe("timelines for client-sourced matches", () => {
       timeline: null,
     });
     const fixture = await arenaFixture();
-    const matchId = MatchIdSchema.parse(fixture.match.metadata.matchId);
+    const matchId = fixture.match.metadata.matchId;
 
     await expect(
       fetchTimelineForProgression(fixture.match, matchId, fixture.players),

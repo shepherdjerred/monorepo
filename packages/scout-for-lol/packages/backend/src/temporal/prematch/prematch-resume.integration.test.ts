@@ -8,7 +8,10 @@ import {
 } from "vitest";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { ApplicationFailure } from "@temporalio/common";
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { ArtifactDescriptorSchema } from "@scout-for-lol/domain/artifacts/descriptors.ts";
 import { recordReceipt } from "#src/database/durable/receipt-repository.ts";
 import {
@@ -70,18 +73,15 @@ function mockArchivedObject(text: string): void {
 }
 
 /** Settle a resume into its value or its error, without throwing. */
-async function settleResume(matchId: string): Promise<unknown> {
-  return await resumeArchivedPrematchContext(
-    RiotMatchIdSchema.parse(matchId),
-    prisma,
-  ).then(
+async function settleResume(matchId: RiotMatchId): Promise<unknown> {
+  return await resumeArchivedPrematchContext(matchId, prisma).then(
     (value) => value,
     (error: unknown) => error,
   );
 }
 
 async function standingArchiveReceipt(args: {
-  matchId: string;
+  matchId: RiotMatchId;
   key: string;
   digest: string;
 }): Promise<void> {
@@ -96,7 +96,7 @@ async function standingArchiveReceipt(args: {
   await recordReceipt(
     prisma,
     buildReceipt({
-      matchId: RiotMatchIdSchema.parse(args.matchId),
+      matchId: args.matchId,
       kind: rawArchiveReceiptKind("prematch"),
       evidence: rawArchiveEvidenceCodec.serialize(
         rawArchiveEvidenceOf(descriptor),
@@ -122,7 +122,7 @@ describe("resumeArchivedPrematchContext", () => {
     const archived = { ...rawCurrentGameInfoFixture(), gameId: 5_500_000_201 };
     const text = JSON.stringify(archived, null, 2);
     await standingArchiveReceipt({
-      matchId,
+      matchId: RiotMatchIdSchema.parse(matchId),
       key: ARCHIVED_KEY,
       digest: computeSha256Digest(new TextEncoder().encode(text)),
     });
@@ -154,7 +154,7 @@ describe("resumeArchivedPrematchContext", () => {
   ])("gives up terminally on $name", async ({ error }) => {
     const matchId = "NA1_5500000203";
     await standingArchiveReceipt({
-      matchId,
+      matchId: RiotMatchIdSchema.parse(matchId),
       key: ARCHIVED_KEY,
       digest: computeSha256Digest(new TextEncoder().encode("gone")),
     });
@@ -164,7 +164,7 @@ describe("resumeArchivedPrematchContext", () => {
 
     // Riot's storage looked and the object is not there. No retry brings it
     // back, and the run must not carry on from something else.
-    const settled = await settleResume(matchId);
+    const settled = await settleResume(RiotMatchIdSchema.parse(matchId));
     expect(settled).toBeInstanceOf(ApplicationFailure);
     if (!(settled instanceof ApplicationFailure)) return;
     expect(settled.type).toBe("MissingArchivedSnapshot");
@@ -193,7 +193,7 @@ describe("resumeArchivedPrematchContext", () => {
       };
       const text = JSON.stringify(archived, null, 2);
       await standingArchiveReceipt({
-        matchId,
+        matchId: RiotMatchIdSchema.parse(matchId),
         key: ARCHIVED_KEY,
         digest: computeSha256Digest(new TextEncoder().encode(text)),
       });
@@ -205,7 +205,7 @@ describe("resumeArchivedPrematchContext", () => {
       // there. Terminating here would strand the archived snapshot without its
       // projection or its notifications forever, because once the game ended
       // discovery cannot start another execution to try again.
-      const settled = await settleResume(matchId);
+      const settled = await settleResume(RiotMatchIdSchema.parse(matchId));
       expect(settled).toBeInstanceOf(Error);
       expect(settled).not.toBeInstanceOf(ApplicationFailure);
 
@@ -223,7 +223,7 @@ describe("resumeArchivedPrematchContext", () => {
     const matchId = "NA1_5500000202";
     const archived = { ...rawCurrentGameInfoFixture(), gameId: 5_500_000_202 };
     await standingArchiveReceipt({
-      matchId,
+      matchId: RiotMatchIdSchema.parse(matchId),
       key: ARCHIVED_KEY,
       digest: computeSha256Digest(
         new TextEncoder().encode("the bytes we archived"),

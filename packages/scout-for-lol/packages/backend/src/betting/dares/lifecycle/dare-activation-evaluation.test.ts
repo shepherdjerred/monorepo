@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import {
   DareContractSchema,
@@ -59,7 +60,7 @@ function evidence(values: number[]) {
     achieved: false,
     results: values.map((value, index) => ({
       gameSet: "attempts",
-      matchId: `match-${index.toString()}`,
+      matchId: `NA1_${(9_700_000_000 + index).toString()}`,
       gameEndAt: `2026-02-0${(index + 2).toString()}T00:00:00.000Z`,
       matched: false,
       projections: { score: value },
@@ -67,7 +68,9 @@ function evidence(values: number[]) {
     })),
     targetDependencies: ["T1"],
     coverage: "complete",
-    sourceMatchIds: values.map((_, index) => `match-${index.toString()}`),
+    sourceMatchIds: values.map(
+      (_, index) => `NA1_${(9_700_000_000 + index).toString()}`,
+    ),
     queryHash: HASH,
   });
 }
@@ -92,7 +95,7 @@ describe("Dare activation evaluation", () => {
     expect(snapshot.targets[0]).toMatchObject({
       baselineValue: 6,
       sampleCount: 2,
-      sourceMatchIds: ["match-1", "match-2"],
+      sourceMatchIds: ["NA1_9700000001", "NA1_9700000002"],
       dateSpan: {
         start: "2026-02-03T00:00:00.000Z",
         end: "2026-02-04T00:00:00.000Z",
@@ -279,7 +282,11 @@ describe("Dare rank and improvement evaluation", () => {
               start: "2026-01-01T00:00:00.000Z",
               end: "2026-01-03T00:00:00.000Z",
             },
-            sourceMatchIds: ["a", "b", "c"],
+            sourceMatchIds: [
+              RiotMatchIdSchema.parse("NA1_9100000000"),
+              RiotMatchIdSchema.parse("NA1_9100000010"),
+              RiotMatchIdSchema.parse("NA1_9100000020"),
+            ],
           },
         ],
       },
@@ -319,7 +326,10 @@ describe("Dare rank and improvement evaluation", () => {
               start: "2026-01-01T00:00:00.000Z",
               end: "2026-01-02T00:00:00.000Z",
             },
-            sourceMatchIds: ["a", "b"],
+            sourceMatchIds: [
+              RiotMatchIdSchema.parse("NA1_9100000000"),
+              RiotMatchIdSchema.parse("NA1_9100000010"),
+            ],
           },
         ],
       },
@@ -330,7 +340,7 @@ describe("Dare rank and improvement evaluation", () => {
       currentValue: 8,
       targetValue: 8,
       goalMet: true,
-      sourceMatchIds: ["match-0", "match-1"],
+      sourceMatchIds: ["NA1_9700000000", "NA1_9700000001"],
     });
   });
 });

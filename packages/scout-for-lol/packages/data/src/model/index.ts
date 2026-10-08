@@ -22,6 +22,7 @@ export * from "./matches/loading-screen.ts";
 export * from "./riot/map.ts";
 export * from "./core/onboarding.ts";
 export * from "./matches/match.ts";
+export * from "./matches/match-id.ts";
 export * from "./matches/match-helpers.ts";
 export * from "./riot/player.ts";
 export * from "./riot/player-config.ts";

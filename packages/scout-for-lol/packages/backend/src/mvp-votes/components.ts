@@ -10,9 +10,9 @@ import {
   TextInputStyle,
   type MessageCreateOptions,
 } from "discord.js";
-import type { LeaguePuuid, MatchId } from "@scout-for-lol/data";
-import type { MatchMvpCategory } from "#src/mvp-votes/custom-id.ts";
+import type { LeaguePuuid, RiotMatchId } from "@scout-for-lol/data";
 import {
+  type MatchMvpCategory,
   formatVoteButtonCustomId,
   formatVoteModalCustomId,
   formatVoteSelectCustomId,
@@ -36,7 +36,7 @@ function truncateLabel(label: string): string {
 }
 
 export function mvpVoteButtonRow(
-  matchId: MatchId,
+  matchId: RiotMatchId,
 ): ActionRowBuilder<ButtonBuilder> {
   return new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
@@ -52,7 +52,7 @@ export function mvpVoteButtonRow(
 
 export function withMvpVoteFurniture(
   message: MessageCreateOptions,
-  matchId: MatchId,
+  matchId: RiotMatchId,
 ): MessageCreateOptions {
   const components = [...(message.components ?? []), mvpVoteButtonRow(matchId)];
   const embeds = [...(message.embeds ?? []), emptyMvpTallyEmbed()];
@@ -60,7 +60,7 @@ export function withMvpVoteFurniture(
 }
 
 export function mvpVoteSelectRow(input: {
-  matchId: MatchId;
+  matchId: RiotMatchId;
   category: MatchMvpCategory;
   roster: MatchMvpRoster;
   aliases: ReadonlyMap<LeaguePuuid, string>;
@@ -91,7 +91,7 @@ export function mvpVoteSelectRow(input: {
 }
 
 export function mvpVoteModal(input: {
-  matchId: MatchId;
+  matchId: RiotMatchId;
   category: MatchMvpCategory;
   nomineeIndex: number;
 }): ModalBuilder {

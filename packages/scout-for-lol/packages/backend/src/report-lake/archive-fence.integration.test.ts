@@ -20,7 +20,6 @@ import {
   prematchReceiptMatchId,
   rawArchiveEvidenceCodec,
   rawArchiveReceiptKind,
-  receiptMatchId,
 } from "#src/report-lake/durable-receipts.ts";
 import {
   archiveMatchReceipted,
@@ -512,7 +511,7 @@ describe("two overlapping match archives", () => {
   test("cannot interleave put and attest", async () => {
     const first = await matchFetchedAs(1800);
     const second = await matchFetchedAs(1801);
-    const matchId = receiptMatchId(first.metadata.matchId);
+    const matchId = first.metadata.matchId;
 
     const [a, b] = await Promise.all([
       archiveMatchReceipted(first, [], { database: prisma }),

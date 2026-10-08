@@ -1,7 +1,7 @@
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import {
   LeaguePuuidSchema,
-  MatchIdSchema,
+  RiotMatchIdSchema,
   type Rank,
 } from "@scout-for-lol/data";
 import {
@@ -40,7 +40,7 @@ describe("deadline-bounded rank history", () => {
   test("ignores a rank observation from a match after the deadline", async () => {
     const deadline = new Date("2026-02-08T00:00:00.000Z");
     await saveMatchRankHistory({
-      matchId: MatchIdSchema.parse("NA1_BEFORE_DEADLINE"),
+      matchId: RiotMatchIdSchema.parse("NA1_9100000020"),
       puuid: PUUID,
       queueType: "solo",
       rankBefore: BEFORE,
@@ -51,7 +51,7 @@ describe("deadline-bounded rank history", () => {
       prismaClient: db,
     });
     await saveMatchRankHistory({
-      matchId: MatchIdSchema.parse("NA1_AFTER_DEADLINE"),
+      matchId: RiotMatchIdSchema.parse("NA1_9100000000"),
       puuid: PUUID,
       queueType: "solo",
       rankBefore: BEFORE,
@@ -71,7 +71,7 @@ describe("deadline-bounded rank history", () => {
     const activation = new Date("2026-02-01T00:00:00.000Z");
     const deadline = new Date("2026-02-08T00:00:00.000Z");
     await saveMatchRankHistory({
-      matchId: MatchIdSchema.parse("NA1_BEFORE_ACTIVATION"),
+      matchId: RiotMatchIdSchema.parse("NA1_9100000010"),
       puuid: PUUID,
       queueType: "solo",
       rankBefore: AFTER,

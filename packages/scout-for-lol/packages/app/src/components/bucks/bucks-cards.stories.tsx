@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/data";
 import type { ComponentProps } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Loaded } from "@shepherdjerred/loaded";
@@ -32,7 +33,7 @@ function nameOf(discordId: string): string {
 }
 
 const OUTCOME_MARKET: OutcomeMarketView = {
-  matchId: "NA1_5021846713",
+  matchId: RiotMatchIdSchema.parse("NA1_5021846713"),
   sides: [
     {
       teamId: 100,
@@ -65,7 +66,7 @@ const OPEN_MARKETS: BucksOpenMarkets = {
   outcome: [{ ...OUTCOME_MARKET, closesAt: "2026-09-13T18:02:30.000Z" }],
   parlays: [
     {
-      matchId: "NA1_5021846713",
+      matchId: RiotMatchIdSchema.parse("NA1_5021846713"),
       closesAt: "2026-09-13T18:02:30.000Z",
       subjects: ["jerred"],
       legs: [
@@ -185,7 +186,7 @@ export const PendingPositions: Story = {
       positions={[
         {
           marketType: "outcome",
-          matchId: "NA1_5021846713",
+          matchId: RiotMatchIdSchema.parse("NA1_5021846713"),
           gameAlias: "jerred",
           sideLabel: "Blue side",
           offeredStake: 1000,
@@ -195,7 +196,7 @@ export const PendingPositions: Story = {
         },
         {
           marketType: "outcome",
-          matchId: "NA1_5021840022",
+          matchId: RiotMatchIdSchema.parse("NA1_5021840022"),
           gameAlias: "bryan",
           sideLabel: "Red side",
           offeredStake: 250,
@@ -205,7 +206,7 @@ export const PendingPositions: Story = {
         },
         {
           marketType: "parlay",
-          matchId: "NA1_5021839114",
+          matchId: RiotMatchIdSchema.parse("NA1_5021839114"),
           subjectAlias: "hunter",
           side: "YES",
           stake: 120,
@@ -227,7 +228,7 @@ export const Ledger: Story = {
           delta: 1500,
           balanceAfter: 3000,
           label: "Bet settled",
-          matchId: "NA1_5021840022",
+          matchId: RiotMatchIdSchema.parse("NA1_5021840022"),
           createdAt: "2026-09-12T22:14:00.000Z",
         },
         {
@@ -235,7 +236,7 @@ export const Ledger: Story = {
           delta: -250,
           balanceAfter: 1500,
           label: "Bet placed",
-          matchId: "NA1_5021840022",
+          matchId: RiotMatchIdSchema.parse("NA1_5021840022"),
           createdAt: "2026-09-12T21:02:00.000Z",
         },
         {

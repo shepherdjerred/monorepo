@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import * as Sentry from "@sentry/bun";
 import type { Logger, ILogObj } from "tslog";
 import { z } from "zod";
@@ -60,7 +61,7 @@ export function reportCorruptBucksRow(
   error: BucksCorruptIdentityError,
   scope: {
     source: "betting-settle-corrupt-row" | "betting-sweep-corrupt-row";
-    matchId: string;
+    matchId: RiotMatchId;
     poolId: number;
     serverId?: string | undefined;
   },

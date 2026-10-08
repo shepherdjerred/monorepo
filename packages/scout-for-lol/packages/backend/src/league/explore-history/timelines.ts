@@ -1,5 +1,6 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
-import { MatchIdSchema, PlatformRouteSchema } from "@scout-for-lol/data";
+import { RiotMatchIdSchema, PlatformRouteSchema } from "@scout-for-lol/data";
 import {
   ScoutExploreTimelineInputSchema,
   ScoutExploreTimelineResultSchema,
@@ -21,13 +22,13 @@ import { runSettledWorkers } from "#src/league/explore-history/worker-pool.ts";
 
 const MAX_PARALLEL_TIMELINE_READS = 3;
 const MatchRefRowSchema = z.object({
-  match_id: MatchIdSchema,
+  match_id: RiotMatchIdSchema,
   platform_id: PlatformRouteSchema,
   game_creation_ms: z.union([z.bigint(), z.number()]).transform(Number),
 });
-const CoverageRowSchema = z.object({ match_id: MatchIdSchema });
+const CoverageRowSchema = z.object({ match_id: RiotMatchIdSchema });
 
-async function resolveMatchRefs(matchIds: string[]): Promise<{
+async function resolveMatchRefs(matchIds: RiotMatchId[]): Promise<{
   refs: z.infer<typeof MatchRefRowSchema>[];
   complete: Set<string>;
 }> {
@@ -65,7 +66,9 @@ export async function importExploreTimelines(
   rawInput: ScoutExploreTimelineInput,
 ): Promise<ScoutExploreTimelineResult> {
   const input = ScoutExploreTimelineInputSchema.parse(rawInput);
-  const { refs, complete } = await resolveMatchRefs(input.matchIds);
+  const { refs, complete } = await resolveMatchRefs(
+    input.matchIds.map((matchId) => RiotMatchIdSchema.parse(matchId)),
+  );
   const missing = refs.filter((ref) => !complete.has(ref.match_id));
   let nextIndex = 0;
   let ingested = 0;

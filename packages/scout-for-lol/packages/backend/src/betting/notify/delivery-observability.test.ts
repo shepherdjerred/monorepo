@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import {
   observeBucksDelivery,
@@ -96,7 +97,7 @@ describe("recordBucksDeliverySkip", () => {
       surface: "prematch",
       operation: "edit",
       reason: "skipped_no_refs",
-      matchId: "NA1_1",
+      matchId: RiotMatchIdSchema.parse("NA1_1"),
       serverId: "1337623164146155593",
     });
 
@@ -115,7 +116,7 @@ describe("recordBucksDeliverySkip", () => {
       surface: "prematch",
       operation: "edit",
       reason: "skipped_no_base",
-      matchId: "NA1_1",
+      matchId: RiotMatchIdSchema.parse("NA1_1"),
       serverId: "1337623164146155593",
     });
 

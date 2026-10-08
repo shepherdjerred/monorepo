@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { pendingDareCalloutRefresh } from "#src/betting/dares/presentation/dare-callout-refresh-state.ts";
 import type { Db } from "#src/database/index.ts";
 
@@ -11,7 +12,7 @@ export async function claimActiveDareSettlement(
     proof: unknown;
     now: Date;
     /** The match this settlement happened on, if it was a match's. */
-    matchId?: string | undefined;
+    matchId?: RiotMatchId | undefined;
   },
 ): Promise<DareTerminalResolution> {
   const resolution =

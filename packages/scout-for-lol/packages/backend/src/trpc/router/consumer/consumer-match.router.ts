@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import {
-  MatchIdSchema,
+  RiotMatchIdSchema,
   PlayerIdSchema,
   TimelineCursorSchema,
   TimelineEventFilterSchema,
@@ -34,7 +34,7 @@ import { protectedProcedure, router } from "#src/trpc/trpc.ts";
 
 const MatchInput = z.object({
   playerId: PlayerIdSchema,
-  matchId: MatchIdSchema,
+  matchId: RiotMatchIdSchema,
 });
 
 const TimelinePageInput = MatchInput.extend({

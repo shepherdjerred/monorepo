@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
@@ -45,7 +46,10 @@ async function rankedBundle() {
 
 describe("convertLcuMatchBundle", () => {
   test("converts a real ranked game with every participant", async () => {
-    const match = convertLcuMatchBundle("NA1_5654104474", await rankedBundle());
+    const match = convertLcuMatchBundle(
+      RiotMatchIdSchema.parse("NA1_5654104474"),
+      await rankedBundle(),
+    );
 
     expect(match).not.toBeNull();
     expect(match?.metadata.dataVersion).toBe("local-1");
@@ -59,7 +63,10 @@ describe("convertLcuMatchBundle", () => {
   });
 
   test("names champions by their Match-V5 key, not the display name", async () => {
-    const match = convertLcuMatchBundle("NA1_5654104474", await rankedBundle());
+    const match = convertLcuMatchBundle(
+      RiotMatchIdSchema.parse("NA1_5654104474"),
+      await rankedBundle(),
+    );
     const wukong = match?.info.participants.find(
       (participant) => participant.championId === 62,
     );
@@ -68,7 +75,10 @@ describe("convertLcuMatchBundle", () => {
   });
 
   test("keeps the rune page and leaves the unreported stat shards absent", async () => {
-    const match = convertLcuMatchBundle("NA1_5654104474", await rankedBundle());
+    const match = convertLcuMatchBundle(
+      RiotMatchIdSchema.parse("NA1_5654104474"),
+      await rankedBundle(),
+    );
     const perks = match?.info.participants[0]?.perks;
 
     expect(perks?.styles).toHaveLength(2);
@@ -77,7 +87,10 @@ describe("convertLcuMatchBundle", () => {
   });
 
   test("states which team took the first Rift Herald", async () => {
-    const match = convertLcuMatchBundle("NA1_5654104474", await rankedBundle());
+    const match = convertLcuMatchBundle(
+      RiotMatchIdSchema.parse("NA1_5654104474"),
+      await rankedBundle(),
+    );
     const firsts =
       match?.info.teams.filter((team) => team.objectives.riftHerald.first) ??
       [];
@@ -97,7 +110,7 @@ describe("convertLcuMatchBundle", () => {
     ).json();
 
     expect(
-      convertLcuMatchBundle("NA1_5654104474", {
+      convertLcuMatchBundle(RiotMatchIdSchema.parse("NA1_5654104474"), {
         ...FixtureSchema.parse(raw),
         timing: { gameStartTimestamp: 1, gameEndTimestamp: 2 },
       }),

@@ -1,10 +1,6 @@
 import { AttachmentBuilder, type MessageCreateOptions } from "discord.js";
 import { ApplicationFailure } from "@temporalio/common";
-import {
-  MatchIdSchema,
-  resolveQueueTypeFromGame,
-  type MatchId,
-} from "@scout-for-lol/data";
+import { resolveQueueTypeFromGame } from "@scout-for-lol/data";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { matchLinkComponents } from "#src/league/tasks/postmatch/match-report-components.ts";
 import { withMvpVoteFurniture } from "#src/mvp-votes/components.ts";
@@ -138,7 +134,7 @@ function bufferedAttachment(file: unknown): {
 
 function classifyComponents(
   message: MessageCreateOptions,
-  matchId: MatchId,
+  matchId: RiotMatchId,
 ): ScoutReportComponents {
   const components = message.components ?? [];
   if (components.length === 0) return "none";
@@ -162,7 +158,7 @@ function classifyComponents(
 /** Take v1's built message apart into the parts the receipt attests. */
 function disassembleReport(
   message: MessageCreateOptions,
-  matchId: MatchId,
+  matchId: RiotMatchId,
   game: { queueId: number; gameCreation: number },
 ): ScoutPostmatchRender {
   const content = message.content;
@@ -256,7 +252,7 @@ export async function renderPostmatchNotification(
       "MissingDomainRecord",
     );
   }
-  return disassembleReport(message, context.matchId, {
+  return disassembleReport(message, context.riotMatchId, {
     queueId: context.matchData.info.queueId,
     gameCreation: context.matchData.info.gameCreation,
   });
@@ -271,7 +267,7 @@ export function buildPostmatchNotificationMessage(
   riotMatchId: RiotMatchId,
   artifact: ScoutAttestedReportArtifact,
 ): MessageCreateOptions {
-  const matchId = MatchIdSchema.parse(riotMatchId);
+  const matchId = riotMatchId;
   const [attachment, embed] = attachReportImage(artifact.image, matchId);
   const files = [attachment];
   if (artifact.review !== undefined) {

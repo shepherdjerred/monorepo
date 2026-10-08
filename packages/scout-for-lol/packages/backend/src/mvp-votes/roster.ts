@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import {
   LeaguePuuidSchema,
@@ -57,7 +58,7 @@ function displayRiotId(participant: {
 }
 
 export function freezeMatchMvpRosterFromParticipants(
-  matchId: string,
+  matchId: RiotMatchId,
   participants: unknown[],
 ): MatchMvpRoster {
   if (participants.length !== 10) {

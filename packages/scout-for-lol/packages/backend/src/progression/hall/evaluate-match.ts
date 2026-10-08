@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   HallRecordEvidenceSchema,
   HallRecordHolderSchema,
@@ -101,7 +102,7 @@ async function evaluateCandidate(
 
 async function evaluateGuild(
   guildId: DiscordGuildId,
-  matchId: string,
+  matchId: RiotMatchId,
   matchesByPuuid: ReadonlyMap<string, ProgressionMatchRow>,
 ): Promise<void> {
   await prisma.$transaction(async (tx) => {

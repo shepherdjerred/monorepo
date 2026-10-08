@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type {
   RawCurrentGameInfo,
   RawMatch,
@@ -10,7 +11,6 @@ import {
   buildReceipt,
   lakeStagingEvidenceCodec,
   prematchReceiptMatchId,
-  receiptMatchId,
   recordReceiptFailOpen,
   type LakeStagingEvidence,
   type ReceiptRecordOutcome,
@@ -43,11 +43,11 @@ import {
 
 export class ReceiptedStagingError extends Error {
   readonly objectKind: LakeStagingEvidence["objectKind"];
-  readonly matchId: string;
+  readonly matchId: RiotMatchId;
 
   constructor(args: {
     objectKind: LakeStagingEvidence["objectKind"];
-    matchId: string;
+    matchId: RiotMatchId;
   }) {
     super(
       `Report lake staging failed for ${args.objectKind} ${args.matchId}; no receipt was recorded.`,
@@ -90,7 +90,7 @@ type ReceiptOptions = {
 
 async function receiptStagedFiles(args: {
   objectKind: LakeStagingEvidence["objectKind"];
-  matchId: string;
+  matchId: RiotMatchId;
   staged: boolean;
   files: readonly string[];
   options: ReceiptOptions;
@@ -114,7 +114,7 @@ async function receiptStagedFiles(args: {
   });
   const receipt = await recordReceiptFailOpen({
     record: buildReceipt({
-      matchId: receiptMatchId(args.matchId),
+      matchId: args.matchId,
       kind: lakeStagingReceiptKind(args.objectKind),
       // Version 2 attests the complete projection, including raw_documents.
       version: 2,

@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import { BucksStakeSchema } from "@scout-for-lol/data";
 import {
@@ -131,7 +132,7 @@ describe("/bb command contract", () => {
       pendingPositionCount: 10,
       pendingPositions: Array.from({ length: 10 }, (_, index) => ({
         marketType: "outcome" as const,
-        matchId: `NA1_${index.toString()}`,
+        matchId: RiotMatchIdSchema.parse(`NA1_${index.toString()}`),
         gameAlias: `player-${index.toString()}-${"x".repeat(500)}`,
         teamId: 100,
         sideLabel: "WIN",
@@ -159,7 +160,7 @@ describe("/bb command contract", () => {
       pendingPositions: [
         {
           marketType: "outcome",
-          matchId: "NA1_1",
+          matchId: RiotMatchIdSchema.parse("NA1_1"),
           gameAlias: "bryan",
           teamId: 200,
           sideLabel: "LOSE",
@@ -188,7 +189,7 @@ describe("/bb command contract", () => {
       pendingPositions: [
         {
           marketType: "parlay",
-          matchId: "NA1_1",
+          matchId: RiotMatchIdSchema.parse("NA1_1"),
           subjectAlias: "Parlay (bryan)",
           side: "YES",
           stake: 5,

@@ -101,7 +101,7 @@ export async function reconcileProcessedClientBinding(
   if (await duelMatchNeedsTimeline(context.matchData)) {
     const timeline = await fetchTimelineForDuelProgression(
       context.matchData,
-      context.matchId,
+      context.riotMatchId,
       context.trackedPlayers,
     );
     await processDuelResult(

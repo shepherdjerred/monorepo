@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   createLlmRuntime,
   providerCredentialsFromEnv,
@@ -149,7 +150,12 @@ function scenario(input: {
       ),
     })),
     shortlist: buildParlayShortlist({
-      matchId: `live-${input.queue}-${input.subjectCount.toString()}-${input.historyAvailable.toString()}`,
+      // A stable synthetic id per scenario: the shortlist seeds from it.
+      matchId: RiotMatchIdSchema.parse(
+        `NA1_${Bun.hash(
+          `live-${input.queue}-${input.subjectCount.toString()}-${input.historyAvailable.toString()}`,
+        ).toString()}`,
+      ),
       subjects: selected.map((subject) => ({
         key: subject.key,
         lane: "adc",
@@ -238,7 +244,9 @@ function syntheticHistory(
       (_unused, index) => {
         const spread = (index * 7 + subjectIndex * 3) % 20;
         return {
-          matchId: `LIVE_${subject.key}_${index.toString()}`,
+          matchId: RiotMatchIdSchema.parse(
+            `NA1_${(9_000_000 + subjectIndex * 100 + index).toString()}`,
+          ),
           createdAtMs: 1_700_000_000_000 + index,
           durationSeconds: 1500 + ((index * 137) % 1500),
           win: index % 2 === 0,

@@ -11,7 +11,10 @@ import type {
   PlayerConfigEntry,
   RawCurrentGameInfo,
 } from "@scout-for-lol/data";
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
@@ -75,7 +78,10 @@ function trackedPlayer(): PlayerConfigEntry {
   };
 }
 
-function gameFor(riotMatchId: string, queueId: number): RawCurrentGameInfo {
+function gameFor(
+  riotMatchId: RiotMatchId,
+  queueId: number,
+): RawCurrentGameInfo {
   return {
     // Every seat a real puuid: a pool's frozen roster parses each one.
     ...fullPrematchRosterFixture([

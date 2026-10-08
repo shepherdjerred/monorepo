@@ -1,3 +1,5 @@
+import { spectatorGameMatchId } from "#src/durable/match/match-identity.ts";
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   stagingDirectory,
   listStagingEntries as listEntries,
@@ -68,7 +70,10 @@ export type StagingWriteResult = {
 
 type StagingWriteOptions = { source?: StagingSource };
 
-export function matchStagingFilePath(lakeDir: string, matchId: string): string {
+export function matchStagingFilePath(
+  lakeDir: string,
+  matchId: RiotMatchId,
+): string {
   return path.join(
     matchesStagingDir(lakeDir),
     `${sanitizeFileStem(matchId)}.jsonl`,
@@ -77,7 +82,7 @@ export function matchStagingFilePath(lakeDir: string, matchId: string): string {
 
 export function matchTeamStagingFilePath(
   lakeDir: string,
-  matchId: string,
+  matchId: RiotMatchId,
 ): string {
   return path.join(
     matchTeamsStagingDir(lakeDir),
@@ -87,7 +92,7 @@ export function matchTeamStagingFilePath(
 
 export function matchTeamBanStagingFilePath(
   lakeDir: string,
-  matchId: string,
+  matchId: RiotMatchId,
 ): string {
   return path.join(
     matchTeamBansStagingDir(lakeDir),
@@ -121,7 +126,7 @@ export type StagingFileEntry = Awaited<ReturnType<typeof listEntries>>[number];
 export function timelineStagingFilePath(
   lakeDir: string,
   table: Extract<ReportLakeStagingTable, `timeline_${string}`>,
-  matchId: string,
+  matchId: RiotMatchId,
 ): string {
   return path.join(
     stagingDirectory(lakeDir, table),
@@ -235,7 +240,7 @@ export async function stagePrematchGeneration(
           content: toNdjson([
             rawDocumentRow({
               kind: "prematch",
-              matchId: `${gameInfo.platformId}_${String(gameInfo.gameId)}`,
+              matchId: spectatorGameMatchId(gameInfo),
               document: gameInfo,
               capturedAt: observedAt,
               ...options,
@@ -380,7 +385,7 @@ export async function writeCompetitionRankHistoryStagingFile(
 }
 
 /** The sanitized natural id a staging file would use — for fold bookkeeping. */
-export function stagingIdForMatch(matchId: string): string {
+export function stagingIdForMatch(matchId: RiotMatchId): string {
   return sanitizeFileStem(matchId);
 }
 
@@ -395,7 +400,7 @@ export function stagingIdForCompetitionRankHistory(
   return sanitizeFileStem(`${competitionId.toString()}_${date}`);
 }
 
-export function stagingIdForTimeline(matchId: string): string {
+export function stagingIdForTimeline(matchId: RiotMatchId): string {
   return sanitizeFileStem(matchId);
 }
 

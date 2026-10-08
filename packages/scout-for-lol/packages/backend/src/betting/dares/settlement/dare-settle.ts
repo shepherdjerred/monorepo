@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import * as Sentry from "@sentry/bun";
 import type { DareContract, RawMatch } from "@scout-for-lol/data";
 import type { Prisma } from "#generated/prisma/client/index.js";
@@ -33,7 +34,7 @@ type ActiveDareRow = Prisma.BucksDareGetPayload<{
 function reportDareBatchFailure(
   stage: "inspect" | "settle",
   dare: { id: number },
-  matchId: string,
+  matchId: RiotMatchId,
   error: unknown,
 ): void {
   logger.error(
@@ -54,7 +55,7 @@ async function inspectStoredContract(
   prismaClient: ExtendedPrismaClient,
   options: {
     now: Date;
-    matchId: string;
+    matchId: RiotMatchId;
     notify: DareNotificationDisposition;
   },
 ): Promise<
@@ -207,7 +208,7 @@ export async function settleActiveDareAtBound(
  * lets the receipt still name that Dare.
  */
 export async function listDareIdsSettledByMatch(
-  matchId: string,
+  matchId: RiotMatchId,
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<number[]> {
   const rows = await prismaClient.bucksDare.findMany({

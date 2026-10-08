@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   creditOf,
   debitOf,
@@ -73,7 +74,7 @@ export async function transferHouseCut(
     amount: BucksStake;
     kind: "winner_fee" | "cancel_fee";
     context: BucksLedgerContext;
-    matchId: string;
+    matchId: RiotMatchId;
     betId: number;
     houseRefundableHeld?: bigint | undefined;
   },

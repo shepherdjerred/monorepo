@@ -2,6 +2,7 @@ import {
   OperationsIntentPayloadSchema,
   type OperationsIntentKind,
   type OperationsIntentPayload,
+  type RiotMatchId,
 } from "@scout-for-lol/data";
 import type { ConfirmationCardState } from "#src/lib/explore/explore-intent-cards.ts";
 
@@ -48,7 +49,10 @@ export type OperationsRequestDraft =
       readonly messageId: string;
       readonly deliveredAt: string;
     }
-  | { readonly kind: "ops_repair_projection"; readonly riotMatchId: string }
+  | {
+      readonly kind: "ops_repair_projection";
+      readonly riotMatchId: RiotMatchId;
+    }
   | {
       readonly kind: "ops_release_recovery_policy";
       readonly recoveryBatchId: string;

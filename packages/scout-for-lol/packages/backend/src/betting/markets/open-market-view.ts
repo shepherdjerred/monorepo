@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   BucksParlaySideSchema,
   BucksStakeSchema,
@@ -47,7 +48,7 @@ export type OpenOutcomeMarketSide = {
 };
 
 export type OpenOutcomeMarketView = {
-  matchId: string;
+  matchId: RiotMatchId;
   closesAt: Date;
   sides: OpenOutcomeMarketSide[];
   yourPosition: {
@@ -59,7 +60,7 @@ export type OpenOutcomeMarketView = {
 };
 
 export type OpenParlayMarketView = {
-  matchId: string;
+  matchId: RiotMatchId;
   closesAt: Date;
   subjects: string[];
   legs: string[];

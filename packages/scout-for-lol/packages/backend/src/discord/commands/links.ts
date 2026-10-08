@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import configuration from "#src/configuration.ts";
 
 function getOrigin(): string {
@@ -19,7 +20,7 @@ export function getExploreConversationUrl(conversationId: string): string {
   return `${getOrigin()}/app/explore/${conversationId}`;
 }
 
-export function getExploreMatchUrl(matchId: string): string {
+export function getExploreMatchUrl(matchId: RiotMatchId): string {
   return `${getOrigin()}/app/explore/matches/${matchId}`;
 }
 

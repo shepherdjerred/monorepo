@@ -1,4 +1,4 @@
-import { MatchIdSchema } from "@scout-for-lol/data";
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   freezeMatchMvpRosterFromParticipants,
   type MatchMvpRoster,
@@ -6,9 +6,9 @@ import {
 import { bucksTestPuuid } from "#src/testing/bucks-fixtures.ts";
 
 /** Ten-player Flex roster used by MVP vote query, tRPC, and vote tests. */
-export function freezeMvpTestRoster(matchId: string): MatchMvpRoster {
+export function freezeMvpTestRoster(matchId: RiotMatchId): MatchMvpRoster {
   return freezeMatchMvpRosterFromParticipants(
-    MatchIdSchema.parse(matchId),
+    matchId,
     Array.from({ length: 10 }, (_unused, index) => ({
       participantId: index + 1,
       puuid: bucksTestPuuid(index),

@@ -1,15 +1,17 @@
-import type { APIEmbed, Channel, MessageEditOptions } from "discord.js";
-import { EmbedBuilder } from "discord.js";
+import {
+  type APIEmbed,
+  type Channel,
+  type MessageEditOptions,
+  EmbedBuilder,
+} from "discord.js";
 import { z } from "zod";
 import {
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
-  MatchIdSchema,
   type DiscordChannelId,
   type DiscordGuildId,
-  type MatchId,
+  type RiotMatchId,
 } from "@scout-for-lol/data";
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { listIntentsForMatch } from "#src/database/durable/intent-repository.ts";
 import { fetchChannelForDelivery } from "#src/discord/utils/channel.ts";
@@ -46,7 +48,7 @@ type TargetProgress = z.infer<typeof TargetProgressSchema>;
 type TargetOutcome = "updated" | "unavailable";
 
 type MvpTallyRefreshInput = {
-  matchId: MatchId;
+  matchId: RiotMatchId;
   serverId: DiscordGuildId;
   desiredRevision: number;
   requeueGeneration: number;
@@ -87,7 +89,7 @@ const defaultEditMessage: MvpTallyMessageEdit = async (input) => {
   await channel.messages.edit(input.messageId, input.options);
 };
 
-function refreshKey(matchId: MatchId, serverId: DiscordGuildId): string {
+function refreshKey(matchId: RiotMatchId, serverId: DiscordGuildId): string {
   return `mvp:${serverId}:${matchId}`;
 }
 
@@ -181,12 +183,12 @@ async function assertCurrentClaim(
 }
 
 async function deliveredPostmatchRefs(
-  matchId: MatchId,
+  matchId: RiotMatchId,
   prismaClient: ExtendedPrismaClient,
 ): Promise<{ channelId: DiscordChannelId; messageId: string }[]> {
   const [intents, contestRefs] = await Promise.all([
     listIntentsForMatch(prismaClient, {
-      matchId: RiotMatchIdSchema.parse(matchId),
+      matchId: matchId,
     }),
     listMatchMvpReportRefs(matchId, prismaClient),
   ]);
@@ -460,7 +462,7 @@ export async function refreshMvpTallyMessages(
   prismaClient: ExtendedPrismaClient = prisma,
   editMessage: MvpTallyMessageEdit = defaultEditMessage,
 ): Promise<boolean> {
-  const matchId = MatchIdSchema.parse(input.matchId);
+  const matchId = input.matchId;
   const serverId = DiscordGuildIdSchema.parse(input.serverId);
   return await enqueuePerKey(
     tallyRefreshTails,

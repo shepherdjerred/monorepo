@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import * as Sentry from "@sentry/bun";
 import {
   BucksDeltaSchema,
@@ -251,7 +252,7 @@ export async function awardBucksForMatch(
 
 export async function awardForGuild(input: {
   prismaClient: ExtendedPrismaClient;
-  matchId: string;
+  matchId: RiotMatchId;
   serverId: string;
   matchCreatedAt: Date;
   targets: readonly EarnTarget[];

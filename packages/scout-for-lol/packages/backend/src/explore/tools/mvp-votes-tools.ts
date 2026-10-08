@@ -2,7 +2,7 @@ import { tool } from "ai";
 import { z } from "zod";
 import {
   DiscordGuildIdSchema,
-  MatchIdSchema,
+  RiotMatchIdSchema,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
@@ -55,7 +55,7 @@ const LeaderboardToolInputSchema = z.strictObject({
 });
 
 const MatchTallyToolInputSchema = z.strictObject({
-  matchId: MatchIdSchema,
+  matchId: RiotMatchIdSchema,
 });
 
 const MatchMvpExploreNomineeSchema = MatchMvpTallyNomineeSchema.omit({

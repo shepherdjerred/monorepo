@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { preserveRawJson } from "./preserve-raw-json.ts";
 
@@ -213,7 +214,7 @@ export const RawTimelineInfoSchema = z
  */
 export const RawTimelineMetadataSchema = z.object({
   dataVersion: z.string(),
-  matchId: z.string(),
+  matchId: RiotMatchIdSchema,
   participants: z.array(z.string()),
 });
 

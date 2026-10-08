@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import {
   HOUR_MS,
@@ -52,11 +53,17 @@ describe("postmatch mint gap sweep against Postgres", () => {
       observedAt: new Date(NOW - 2 * HOUR_MS),
       completedAt: new Date(NOW - POSTMATCH_MINT_GAP_GRACE_MS - MINUTE_MS),
     };
-    await seedOwedMatch(prisma, { matchId: "NA1_9701", ...inside });
-    await seedOwedMatch(prisma, { matchId: "NA1_9702", ...inside });
+    await seedOwedMatch(prisma, {
+      matchId: RiotMatchIdSchema.parse("NA1_9701"),
+      ...inside,
+    });
+    await seedOwedMatch(prisma, {
+      matchId: RiotMatchIdSchema.parse("NA1_9702"),
+      ...inside,
+    });
     // Observed just before the lookback: a gap old enough to stop paging.
     await seedOwedMatch(prisma, {
-      matchId: "NA1_9703",
+      matchId: RiotMatchIdSchema.parse("NA1_9703"),
       observedAt: new Date(NOW - POSTMATCH_MINT_GAP_LOOKBACK_MS - MINUTE_MS),
       completedAt: new Date(NOW - POSTMATCH_MINT_GAP_LOOKBACK_MS),
     });
@@ -68,7 +75,7 @@ describe("postmatch mint gap sweep against Postgres", () => {
     // no intent. The kind comes from the lane's table, so a rename there that
     // the sweep did not follow would leave this at 2.
     await seedReceipt(prisma, {
-      matchId: "NA1_9701",
+      matchId: RiotMatchIdSchema.parse("NA1_9701"),
       kind: scoutNotificationRenderReceiptKind("postmatch"),
     });
     await collectPostmatchMintGapMetrics(prisma);

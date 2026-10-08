@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/data";
 import { useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import {
@@ -97,7 +98,7 @@ export function retainedEventFields(event: object): [string, string][] {
 
 type MatchTimelineProps = {
   source: { kind: "consumer"; playerId: number } | { kind: "explore" };
-  matchId: string;
+  matchId: RiotMatchId;
   coverage: Coverage;
   participantIds: number[];
 };
@@ -345,7 +346,7 @@ function timelineQueryOptions(coverage: Coverage) {
   };
 }
 
-function timelineEventsInput<T extends { matchId: string }>(
+function timelineEventsInput<T extends { matchId: RiotMatchId }>(
   baseInput: T,
   state: TimelineState,
 ) {
@@ -361,7 +362,7 @@ function timelineEventsInput<T extends { matchId: string }>(
   };
 }
 
-function timelineFramesInput<T extends { matchId: string }>(
+function timelineFramesInput<T extends { matchId: RiotMatchId }>(
   baseInput: T,
   state: TimelineState,
 ) {

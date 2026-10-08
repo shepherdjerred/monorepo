@@ -1,7 +1,7 @@
 import { describe, expect, test, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router";
-import { MatchLoadoutSchema } from "@scout-for-lol/data";
+import { MatchLoadoutSchema, RiotMatchIdSchema } from "@scout-for-lol/data";
 import { ChampionComparisonTable } from "#src/components/match/champion-comparison-table.tsx";
 import {
   MatchScoreboards,
@@ -123,7 +123,7 @@ describe("player profile details", () => {
           profileSearch="?games=all&amp;queue=flex"
           entries={[
             {
-              matchId: "NA1_123",
+              matchId: RiotMatchIdSchema.parse("NA1_123"),
               gameCreationMs: Date.now(),
               gameDurationSeconds: 1800,
               queue: "flex",

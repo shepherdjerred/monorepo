@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/data";
 import { useSearchParams } from "react-router";
 import { z } from "zod";
 import type { HistoryCursor } from "#src/components/player/recorded-match-history.tsx";
@@ -5,7 +6,7 @@ import type { HistoryCursor } from "#src/components/player/recorded-match-histor
 const Cursors = z.array(
   z.object({
     gameCreationMs: z.number().int(),
-    matchId: z.string().min(1),
+    matchId: RiotMatchIdSchema,
     consumed: z.number().int().nonnegative().optional(),
   }),
 );

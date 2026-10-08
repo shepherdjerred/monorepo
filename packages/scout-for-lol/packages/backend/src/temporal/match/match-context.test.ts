@@ -1,6 +1,5 @@
 import { beforeEach, expect, test, vi } from "vitest";
 import { RawMatchSchema } from "@scout-for-lol/data";
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 
 const mocks = vi.hoisted(() => ({
   fetchMatchData: vi.fn(),
@@ -39,7 +38,7 @@ const { resolveScoutMatchContext } = await import("./match-context.ts");
 const fixture = RawMatchSchema.parse(
   await Bun.file("../../testdata/rift.json").json(),
 );
-const riotMatchId = RiotMatchIdSchema.parse(fixture.metadata.matchId);
+const riotMatchId = fixture.metadata.matchId;
 const trackedPuuid = fixture.metadata.participants[0];
 
 beforeEach(() => {

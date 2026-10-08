@@ -4,7 +4,7 @@ import {
   CompetitionIdSchema,
   ChampionIdSchema,
   ExploreConversationIdSchema,
-  MatchIdSchema,
+  RiotMatchIdSchema,
   PlayerIdSchema,
   ReportIdSchema,
 } from "@scout-for-lol/data";
@@ -34,11 +34,11 @@ export const ConsumerChampionParamsSchema = z.object({
 
 export const ConsumerMatchParamsSchema = z.object({
   playerId: z.coerce.number().pipe(PlayerIdSchema),
-  matchId: MatchIdSchema,
+  matchId: RiotMatchIdSchema,
 });
 
 export const ExploreMatchParamsSchema = z.object({
-  matchId: MatchIdSchema,
+  matchId: RiotMatchIdSchema,
 });
 
 export const CompetitionParamsSchema = z.object({

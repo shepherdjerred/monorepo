@@ -2,6 +2,7 @@ import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import {
   IsoInstantSchema,
   type NotificationIntentKey,
+  RiotMatchIdSchema,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import { NotificationAttemptNonceSchema } from "@scout-for-lol/domain/notifications/intent.ts";
 import {
@@ -61,7 +62,7 @@ beforeEach(async () => {
   scoutDurableNotificationIntentsRetired.reset();
 });
 
-const MATCH_ID = "NA1_9300";
+const MATCH_ID = RiotMatchIdSchema.parse("NA1_9300");
 const CHANNEL = testChannelId("9300");
 const OTHER_CHANNEL = testChannelId("9301");
 const PUUID = testPuuid("9300");
@@ -108,7 +109,10 @@ describe("retireOrphanedNotificationIntents: whose audience is gone", () => {
       puuid: PUUID,
       alias: "deleted",
     });
-    await seedTrackedAccount(prisma, { matchId: MATCH_ID, puuid: PUUID });
+    await seedTrackedAccount(prisma, {
+      matchId: MATCH_ID,
+      puuid: PUUID,
+    });
     const pending = await seedChannelIntent(prisma, {
       name: "pending",
       matchId: MATCH_ID,
@@ -141,7 +145,10 @@ describe("retireOrphanedNotificationIntents: whose audience is gone", () => {
       puuid: PUUID,
       alias: "live",
     });
-    await seedTrackedAccount(prisma, { matchId: MATCH_ID, puuid: PUUID });
+    await seedTrackedAccount(prisma, {
+      matchId: MATCH_ID,
+      puuid: PUUID,
+    });
     const ready = await readyIntent("live");
 
     const counts = await sweep();
@@ -177,7 +184,10 @@ describe("retireOrphanedNotificationIntents: whose audience is gone", () => {
       puuid: testPuuid("9399"),
       alias: "someone-else",
     });
-    await seedTrackedAccount(prisma, { matchId: MATCH_ID, puuid: PUUID });
+    await seedTrackedAccount(prisma, {
+      matchId: MATCH_ID,
+      puuid: PUUID,
+    });
     const ready = await readyIntent("someone-else");
 
     const counts = await sweep();
@@ -192,7 +202,10 @@ describe("retireOrphanedNotificationIntents: whose audience is gone", () => {
       puuid: PUUID,
       alias: "other-channel",
     });
-    await seedTrackedAccount(prisma, { matchId: MATCH_ID, puuid: PUUID });
+    await seedTrackedAccount(prisma, {
+      matchId: MATCH_ID,
+      puuid: PUUID,
+    });
     const ready = await readyIntent("other-channel");
 
     const counts = await sweep();

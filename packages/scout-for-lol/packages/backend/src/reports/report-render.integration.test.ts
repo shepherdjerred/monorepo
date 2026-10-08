@@ -1,3 +1,7 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   createTestDatabase,
@@ -52,7 +56,7 @@ const lakeDir = resolveLakeDir();
 function fact(input: {
   player: number;
   alias: string;
-  matchId: string;
+  matchId: RiotMatchId;
   win: boolean;
   discordId?: string | null;
   championId?: number;
@@ -84,10 +88,30 @@ async function seedFacts(): Promise<void> {
   await writeTestLake(lakeDir, {
     serverId,
     matchFacts: [
-      fact({ player: 1, alias: "Alpha", matchId: "NA1_a1", win: true }),
-      fact({ player: 1, alias: "Alpha", matchId: "NA1_a2", win: true }),
-      fact({ player: 1, alias: "Alpha", matchId: "NA1_a3", win: false }),
-      fact({ player: 2, alias: "Bravo", matchId: "NA1_b1", win: true }),
+      fact({
+        player: 1,
+        alias: "Alpha",
+        matchId: RiotMatchIdSchema.parse("NA1_9100000000"),
+        win: true,
+      }),
+      fact({
+        player: 1,
+        alias: "Alpha",
+        matchId: RiotMatchIdSchema.parse("NA1_9100000010"),
+        win: true,
+      }),
+      fact({
+        player: 1,
+        alias: "Alpha",
+        matchId: RiotMatchIdSchema.parse("NA1_9100000020"),
+        win: false,
+      }),
+      fact({
+        player: 2,
+        alias: "Bravo",
+        matchId: RiotMatchIdSchema.parse("NA1_9100000040"),
+        win: true,
+      }),
     ],
   });
 }
@@ -151,7 +175,7 @@ describe("RENDER clause — text kinds", () => {
         fact({
           player: 1,
           alias: "Alpha",
-          matchId: "NA1_asset_label",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000030"),
           win: true,
           items: [3031],
         }),
@@ -188,70 +212,70 @@ describe("RENDER clause — leaderboard top-3 mentions", () => {
         fact({
           player: 1,
           alias: "Alpha",
-          matchId: "NA1_m1",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000090"),
           win: true,
           discordId: testAccountId("1001"),
         }),
         fact({
           player: 1,
           alias: "Alpha",
-          matchId: "NA1_m2",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000110"),
           win: true,
           discordId: testAccountId("1001"),
         }),
         fact({
           player: 1,
           alias: "Alpha",
-          matchId: "NA1_m3",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000120"),
           win: true,
           discordId: testAccountId("1001"),
         }),
         fact({
           player: 1,
           alias: "Alpha",
-          matchId: "NA1_m4",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000130"),
           win: true,
           discordId: testAccountId("1001"),
         }),
         fact({
           player: 2,
           alias: "Bravo",
-          matchId: "NA1_m5",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000140"),
           win: true,
           discordId: testAccountId("1002"),
         }),
         fact({
           player: 2,
           alias: "Bravo",
-          matchId: "NA1_m6",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000150"),
           win: true,
           discordId: testAccountId("1002"),
         }),
         fact({
           player: 2,
           alias: "Bravo",
-          matchId: "NA1_m7",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000160"),
           win: true,
           discordId: testAccountId("1002"),
         }),
         fact({
           player: 3,
           alias: "Charlie",
-          matchId: "NA1_m8",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000170"),
           win: true,
           discordId: testAccountId("1003"),
         }),
         fact({
           player: 3,
           alias: "Charlie",
-          matchId: "NA1_m9",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000180"),
           win: true,
           discordId: testAccountId("1003"),
         }),
         fact({
           player: 4,
           alias: "Delta",
-          matchId: "NA1_m10",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000100"),
           win: true,
           discordId: testAccountId("1004"),
         }),
@@ -286,49 +310,49 @@ describe("RENDER clause — leaderboard mentions option", () => {
         fact({
           player: 1,
           alias: "Alpha",
-          matchId: "NA1_n1",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000190"),
           win: true,
           discordId: testAccountId("6001"),
         }),
         fact({
           player: 1,
           alias: "Alpha",
-          matchId: "NA1_n2",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000200"),
           win: true,
           discordId: testAccountId("6001"),
         }),
         fact({
           player: 1,
           alias: "Alpha",
-          matchId: "NA1_n3",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000210"),
           win: true,
           discordId: testAccountId("6001"),
         }),
         fact({
           player: 1,
           alias: "Alpha",
-          matchId: "NA1_n4",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000220"),
           win: true,
           discordId: testAccountId("6001"),
         }),
         fact({
           player: 2,
           alias: "Bravo",
-          matchId: "NA1_n5",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000230"),
           win: true,
           discordId: testAccountId("6002"),
         }),
         fact({
           player: 2,
           alias: "Bravo",
-          matchId: "NA1_n6",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000240"),
           win: true,
           discordId: testAccountId("6002"),
         }),
         fact({
           player: 2,
           alias: "Bravo",
-          matchId: "NA1_n7",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000250"),
           win: true,
           discordId: testAccountId("6002"),
         }),
@@ -359,21 +383,21 @@ describe("RENDER clause — leaderboard mentions option", () => {
         fact({
           player: 1,
           alias: "Alpha",
-          matchId: "NA1_o1",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000260"),
           win: true,
           discordId: testAccountId("7001"),
         }),
         fact({
           player: 1,
           alias: "Alpha",
-          matchId: "NA1_o2",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000270"),
           win: true,
           discordId: testAccountId("7001"),
         }),
         fact({
           player: 2,
           alias: "Bravo",
-          matchId: "NA1_o3",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000280"),
           win: true,
           discordId: testAccountId("7002"),
         }),
@@ -422,7 +446,7 @@ describe("RENDER clause — leaderboard mention fallbacks", () => {
           alias: "Lux",
           championId: 99,
           championName: "Lux",
-          matchId: "NA1_lux",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000080"),
           win: true,
           discordId: testAccountId("1999"),
         }),
@@ -442,14 +466,14 @@ describe("RENDER clause — leaderboard mention fallbacks", () => {
         fact({
           player: 1,
           alias: "Alpha",
-          matchId: "NA1_f1",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000050"),
           win: true,
           discordId: testAccountId("2001"),
         }),
         fact({
           player: 2,
           alias: "Bravo",
-          matchId: "NA1_f2",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000060"),
           win: true,
         }),
       ],
@@ -473,8 +497,18 @@ describe("RENDER clause — leaderboard mention fallbacks", () => {
     await writeTestLake(lakeDir, {
       serverId,
       matchFacts: [
-        fact({ player: 1, alias: "Alpha", matchId: "NA1_g1", win: true }),
-        fact({ player: 2, alias: "Bravo", matchId: "NA1_g1", win: true }),
+        fact({
+          player: 1,
+          alias: "Alpha",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000070"),
+          win: true,
+        }),
+        fact({
+          player: 2,
+          alias: "Bravo",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000070"),
+          win: true,
+        }),
       ],
     });
     const result = await executeReportQuery({

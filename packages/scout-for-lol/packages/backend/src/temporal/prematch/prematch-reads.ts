@@ -242,9 +242,9 @@ export function drivablePrematchIntentKeys(
  * and attested by its `lake-staging-prematch` receipt.
  */
 export async function planPrematchFanOut(input: {
-  riotMatchId: string;
+  riotMatchId: RiotMatchId;
 }): Promise<ScoutFanOutResult> {
-  const matchId = RiotMatchIdSchema.parse(input.riotMatchId);
+  const matchId = input.riotMatchId;
   const intents = await listIntentsForMatch(prisma, { matchId });
   return ScoutFanOutResultSchema.parse({
     notificationIntentKeys: drivablePrematchIntentKeys(
@@ -311,7 +311,7 @@ export type LivePrematchCapture = Pick<
  * holding several receipts counts once, from the earliest.
  */
 export function livePrematchCapturesOf(
-  receipts: readonly { riotMatchId: string; recordedAt: Date }[],
+  receipts: readonly { riotMatchId: RiotMatchId; recordedAt: Date }[],
   now: Date,
 ): LivePrematchCapture[] {
   const earliest = new Map<string, Date>();

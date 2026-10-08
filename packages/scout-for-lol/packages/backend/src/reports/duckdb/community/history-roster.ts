@@ -1,3 +1,7 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { withMatchIdsSource } from "#src/reports/duckdb/community/match-source.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
@@ -5,7 +9,7 @@ import { bindParams } from "#src/reports/duckdb/lake-reads.ts";
 
 const LakeInt = z.union([z.bigint(), z.number()]).transform(Number);
 const HistoryRosterRowSchema = z.object({
-  match_id: z.string(),
+  match_id: RiotMatchIdSchema,
   participant_id: LakeInt,
   team_id: LakeInt,
   champion_name: z.string(),
@@ -15,7 +19,7 @@ const HistoryRosterRowSchema = z.object({
 
 /** Match IDs originate from an already-authorized and bounded history page. */
 export async function fetchHistoryRosters(options: {
-  matchIds: string[];
+  matchIds: RiotMatchId[];
   lakeDir?: string;
 }) {
   return await withMatchIdsSource(

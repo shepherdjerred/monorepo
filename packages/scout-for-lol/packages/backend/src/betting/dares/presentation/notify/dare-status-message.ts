@@ -1,3 +1,7 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import {
   BucksAmountSchema,
@@ -35,7 +39,7 @@ export type DareNotificationEventInput = {
   category: z.infer<typeof DareNotificationCategorySchema>;
   kind: z.infer<typeof DareNotificationKindSchema>;
   actorDiscordId?: string | undefined;
-  matchId?: string | undefined;
+  matchId?: RiotMatchId | undefined;
   summary: string;
   deduplicationKey: string;
   occurredAt: Date;
@@ -83,7 +87,7 @@ export const DareStatusAnnouncementSchema = z.strictObject({
   kind: DareNotificationKindSchema,
   summary: z.string().min(1),
   actorDiscordId: DiscordAccountIdSchema.optional(),
-  matchId: z.string().min(1).optional(),
+  matchId: RiotMatchIdSchema.optional(),
   result: DareResultAnnouncementSchema.optional(),
 });
 export type DareStatusAnnouncement = z.infer<

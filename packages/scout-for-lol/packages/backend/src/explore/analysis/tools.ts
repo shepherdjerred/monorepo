@@ -1,3 +1,7 @@
+import {
+  type RiotMatchId,
+  RiotMatchIdSchema,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { tool } from "ai";
 import { z } from "zod";
 import { prisma } from "#src/database/index.ts";
@@ -24,7 +28,7 @@ type Json = z.infer<ReturnType<typeof z.json>>;
 type Dataset = {
   data: Json;
   bytes: number;
-  matchIds: string[];
+  matchIds: RiotMatchId[];
   generation: string;
   scope: QueryServers;
 };
@@ -205,7 +209,9 @@ export function createAnalysisTools(
               ? []
               : result.rows.flatMap((row) => {
                   const id = row.keys[idGrouping];
-                  return typeof id === "string" ? [id.replace(":", "_")] : [];
+                  return typeof id === "string"
+                    ? [RiotMatchIdSchema.parse(id.replace(":", "_"))]
+                    : [];
                 });
           const current = await captureAnalysisGeneration();
           if (before.id !== current.id)

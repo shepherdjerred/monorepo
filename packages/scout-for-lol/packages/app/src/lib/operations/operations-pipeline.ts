@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/data";
 import {
   notificationActions,
   type NotificationBlocked,
@@ -23,7 +24,7 @@ export type PipelineOwnerKind = "unowned" | "legacy-v1" | "temporal-v2";
 
 export type MatchPipelineData = {
   readonly processing: {
-    readonly matchId: string;
+    readonly matchId: RiotMatchId;
     readonly owner: { readonly kind: PipelineOwnerKind };
     readonly policy: "ARCHIVE_ONLY" | "FULL";
     readonly promotion: { readonly promotedAt: string } | null;

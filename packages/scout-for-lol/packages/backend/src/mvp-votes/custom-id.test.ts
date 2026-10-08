@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { MatchIdSchema } from "@scout-for-lol/data";
+import { RiotMatchIdSchema } from "@scout-for-lol/data";
 import {
   formatVoteButtonCustomId,
   formatVoteModalCustomId,
@@ -9,7 +9,7 @@ import {
   parseVoteCustomId,
 } from "#src/mvp-votes/custom-id.ts";
 
-const MATCH = MatchIdSchema.parse("NA1_5421167767");
+const MATCH = RiotMatchIdSchema.parse("NA1_5421167767");
 
 describe("MVP vote custom IDs", () => {
   test("round-trips buttons, selects, and modals for both categories", () => {
@@ -42,7 +42,7 @@ describe("MVP vote custom IDs", () => {
   });
 
   test("stays inside Discord's length limit", () => {
-    const longMatch = MatchIdSchema.parse("NA1_12345678901234567890");
+    const longMatch = RiotMatchIdSchema.parse("NA1_12345678901234567890");
     expect(
       formatVoteModalCustomId({
         category: "enemy",

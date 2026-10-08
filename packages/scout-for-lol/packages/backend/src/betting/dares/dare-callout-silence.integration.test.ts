@@ -1,3 +1,7 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import { type DareTargetBinding, type RawMatch } from "@scout-for-lol/data";
 import { silentSettlementSink } from "#src/betting/notify/announcement-sink.ts";
@@ -245,7 +249,7 @@ async function outboxKinds(dareId: number): Promise<string[]> {
   });
 }
 
-function matchFor(matchId: string, fixture: RawMatch): RawMatch {
+function matchFor(matchId: RiotMatchId, fixture: RawMatch): RawMatch {
   return targetMatchAt(
     fixture,
     matchId,
@@ -254,13 +258,13 @@ function matchFor(matchId: string, fixture: RawMatch): RawMatch {
 }
 
 /** A match that does NOT resolve the Dare, so its capture stays open. */
-async function nonResolvingMatch(matchId: string): Promise<RawMatch> {
+async function nonResolvingMatch(matchId: RiotMatchId): Promise<RawMatch> {
   lake.achieved = false;
   return matchFor(matchId, await loadRiftFixture());
 }
 
 /** A match the active Dare's contract resolves against. */
-async function qualifyingMatch(matchId: string): Promise<RawMatch> {
+async function qualifyingMatch(matchId: RiotMatchId): Promise<RawMatch> {
   lake.achieved = true;
   return matchFor(matchId, await loadRiftFixture());
 }
@@ -276,10 +280,14 @@ describe("withholding a Dare notification", () => {
 
     // A match the Dare's contract does NOT resolve on: it captures evidence
     // and stays active, which is the state under test.
-    await settleDaresForMatch(await nonResolvingMatch("NA1_7000000004"), db, {
-      now: new Date(T0.getTime() + 2 * 60 * 60 * 1000),
-      notify: "withhold",
-    });
+    await settleDaresForMatch(
+      await nonResolvingMatch(RiotMatchIdSchema.parse("NA1_7000000004")),
+      db,
+      {
+        now: new Date(T0.getTime() + 2 * 60 * 60 * 1000),
+        notify: "withhold",
+      },
+    );
 
     expect(await outboxKinds(dareId)).toEqual(beforeSettlement);
     expect(
@@ -300,12 +308,16 @@ describe("withholding a Dare notification", () => {
     // test is whether SETTLEMENT adds one.
     const beforeSettlement = await outboxKinds(dareId);
 
-    await settleDaresForMatch(await qualifyingMatch("NA1_7000000001"), db, {
-      now: new Date(T0.getTime() + 2 * 60 * 60 * 1000),
-      notify: silentSettlementSink.mayEnqueueDareNotification()
-        ? "enqueue"
-        : "withhold",
-    });
+    await settleDaresForMatch(
+      await qualifyingMatch(RiotMatchIdSchema.parse("NA1_7000000001")),
+      db,
+      {
+        now: new Date(T0.getTime() + 2 * 60 * 60 * 1000),
+        notify: silentSettlementSink.mayEnqueueDareNotification()
+          ? "enqueue"
+          : "withhold",
+      },
+    );
 
     // The Dare settled — the silence is about announcing, never about money.
     const settled = await db.bucksDare.findUniqueOrThrow({
@@ -331,9 +343,13 @@ describe("withholding a Dare notification", () => {
     const dareId = await activeDare("enqueued-notification");
     const beforeSettlement = await outboxKinds(dareId);
 
-    await settleDaresForMatch(await qualifyingMatch("NA1_7000000002"), db, {
-      now: new Date(T0.getTime() + 2 * 60 * 60 * 1000),
-    });
+    await settleDaresForMatch(
+      await qualifyingMatch(RiotMatchIdSchema.parse("NA1_7000000002")),
+      db,
+      {
+        now: new Date(T0.getTime() + 2 * 60 * 60 * 1000),
+      },
+    );
 
     const afterSettlement = await outboxKinds(dareId);
     expect(afterSettlement.length).toBeGreaterThan(beforeSettlement.length);
@@ -354,9 +370,13 @@ describe("withholding a Dare notification", () => {
     const dareId = await activeDare("hook-withheld-notification");
     const beforeSettlement = await outboxKinds(dareId);
 
-    await settleAndAwardBucks(await qualifyingMatch("NA1_7000000003"), db, {
-      announcementSink: silentSettlementSink,
-    });
+    await settleAndAwardBucks(
+      await qualifyingMatch(RiotMatchIdSchema.parse("NA1_7000000003")),
+      db,
+      {
+        announcementSink: silentSettlementSink,
+      },
+    );
 
     expect(await outboxKinds(dareId)).toEqual(beforeSettlement);
   });

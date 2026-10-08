@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   RawCurrentGameInfoSchema,
   RawMatchSchema,
@@ -38,7 +39,7 @@ export async function loadRawMatchFixture(): Promise<RawMatch> {
  * tell two otherwise identical timelines apart.
  */
 export function rawTimelineFixture(
-  matchId: string,
+  matchId: RiotMatchId,
   overrides: { frameIntervalMs?: number } = {},
 ): RawTimeline {
   return RawTimelineSchema.parse({

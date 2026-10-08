@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 export type DareFinality = {
   value: boolean | null;
   final: boolean;
@@ -28,7 +29,7 @@ export type DareSettlementSummary = {
   dareId: number;
   serverId: string;
   channelId: string;
-  matchId?: string | undefined;
+  matchId?: RiotMatchId | undefined;
   resolution: "captured" | "achieved" | "unachieved" | "voided";
   value: boolean | null;
   finality: DareFinality;

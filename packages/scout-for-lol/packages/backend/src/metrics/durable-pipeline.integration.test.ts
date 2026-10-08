@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import {
   collectDurablePipelineMetrics,
@@ -39,7 +40,7 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-const MATCH_ID = "NA1_9100";
+const MATCH_ID = RiotMatchIdSchema.parse("NA1_9100");
 const NOW = Date.now();
 const HOUR_MS = 60 * 60 * 1000;
 
@@ -250,7 +251,7 @@ describe("durable pipeline sweep against Postgres", () => {
     const observedAt = new Date(NOW - 10 * 60 * 1000);
     await prisma.matchObservation.create({
       data: {
-        riotMatchId: "NA1_9150",
+        riotMatchId: RiotMatchIdSchema.parse("NA1_9150"),
         platformRoute: "NA1",
         processingPolicy: "FULL",
         deliveryMode: "live",

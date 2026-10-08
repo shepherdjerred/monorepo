@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { RiotTeamId } from "@scout-for-lol/data";
 
 /**
@@ -16,7 +17,7 @@ export type ClosedPosition = {
 };
 
 export type ClosedPool = {
-  matchId: string;
+  matchId: RiotMatchId;
   serverId: string;
   messageRefs: { channelId: string; messageId: string }[];
   humanMatchedPerSide: number;

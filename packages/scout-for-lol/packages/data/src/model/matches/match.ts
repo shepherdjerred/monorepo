@@ -8,13 +8,6 @@ import { RankSchema } from "#src/model/riot/rank.ts";
 import { PlayerConfigEntrySchema } from "#src/model/riot/player-config.ts";
 import { filter, first, pipe } from "remeda";
 
-/**
- * Branded type for Riot Games Match IDs
- * Format: "{PLATFORM_ID}_{GAME_ID}" (e.g., "NA1_5370969615")
- */
-export type MatchId = z.infer<typeof MatchIdSchema>;
-export const MatchIdSchema = z.string().brand<"MatchId">();
-
 export type CompletedMatch = z.infer<typeof CompletedMatchSchema>;
 export const CompletedMatchSchema = z.strictObject({
   durationInSeconds: z.number().nonnegative(),

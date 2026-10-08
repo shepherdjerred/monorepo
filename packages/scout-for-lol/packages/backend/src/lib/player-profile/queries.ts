@@ -1,3 +1,7 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import {
   computeKda,
@@ -57,7 +61,7 @@ const RECENT_FORM_GAMES = 20;
 
 const MatchHistoryCursorSchema = z.object({
   gameCreationMs: z.number().int(),
-  matchId: z.string().min(1),
+  matchId: RiotMatchIdSchema,
   consumed: z.number().int().nonnegative().optional(),
 });
 
@@ -72,7 +76,7 @@ export const PlayerMatchHistoryInput = PlayerLookupInput.extend({
 });
 
 export type MatchHistoryEntry = {
-  matchId: string;
+  matchId: RiotMatchId;
   gameCreationMs: number;
   gameDurationSeconds: number;
   queue: string | null;

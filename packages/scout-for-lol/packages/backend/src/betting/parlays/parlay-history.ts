@@ -1,5 +1,9 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
-import type { RankedQueueType } from "@scout-for-lol/data";
+import { type RankedQueueType, type MatchLakeRow } from "@scout-for-lol/data";
 import {
   BLUE_TEAM_ID,
   PARTICIPANTS_PER_TEAM,
@@ -11,7 +15,6 @@ import {
   PARLAY_HISTORY_COLUMNS,
 } from "#src/betting/parlays/model/parlay-stat-fields.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
-import type { MatchLakeRow } from "@scout-for-lol/data";
 import {
   withDuckDBConnection,
   type DuckDBSession,
@@ -86,7 +89,7 @@ function throwIfDeadlineAborted(deadline: AbortSignal | undefined): void {
 const LakeNumberSchema = z.union([z.bigint(), z.number()]).transform(Number);
 
 const HistoryParticipantSchema = z.looseObject({
-  match_id: z.string(),
+  match_id: RiotMatchIdSchema,
   puuid: z.string(),
   team_id: LakeNumberSchema,
   win: z.boolean(),
@@ -98,7 +101,7 @@ const HistoryParticipantSchema = z.looseObject({
 });
 
 export type ParlayHistoryMatch = {
-  matchId: string;
+  matchId: RiotMatchId;
   createdAtMs: number;
   durationSeconds: number;
   /** The subject's own outcome and position in that match. */
@@ -324,7 +327,7 @@ export async function fetchParlayHistory(
         ]),
       );
       return rows.map((row) =>
-        z.object({ puuid: z.string(), match_id: z.string() }).parse(row),
+        z.object({ puuid: z.string(), match_id: RiotMatchIdSchema }).parse(row),
       );
     }, connectionOptions());
     throwIfDeadlineAborted(options.deadline);
@@ -363,9 +366,9 @@ export async function fetchParlayHistory(
       byMatch.set(parsed.data.match_id, bucket);
     }
 
-    const wanted = new Map<string, Set<string>>();
+    const wanted = new Map<string, Set<RiotMatchId>>();
     for (const row of selected) {
-      const bucket = wanted.get(row.puuid) ?? new Set<string>();
+      const bucket = wanted.get(row.puuid) ?? new Set<RiotMatchId>();
       bucket.add(row.match_id);
       wanted.set(row.puuid, bucket);
     }
@@ -373,7 +376,7 @@ export async function fetchParlayHistory(
     const history = new Map<string, ParlayHistoryMatch[]>();
     for (const puuid of puuids) {
       const matches: ParlayHistoryMatch[] = [];
-      for (const matchId of wanted.get(puuid) ?? new Set<string>()) {
+      for (const matchId of wanted.get(puuid) ?? new Set<RiotMatchId>()) {
         const participants = byMatch.get(matchId);
         if (participants === undefined || isVoidMatch(participants)) {
           continue;

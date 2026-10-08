@@ -43,7 +43,7 @@ import {
  * to UTC milliseconds, so fixtures use `.000Z` instants.
  */
 
-const MATCH_ID = "NA1_5312279829";
+const MATCH_ID = RiotMatchIdSchema.parse("NA1_5312279829");
 const GUILD_ID = "100000000000000001";
 const CHANNEL_ID = "300000000000000001";
 const ACCOUNT_DISCORD_ID = "200000000000000001";
@@ -271,7 +271,7 @@ describe("MatchNotificationIntent codec", () => {
     });
   }
 
-  const intentMatchId = RiotMatchIdSchema.parse(MATCH_ID);
+  const intentMatchId = MATCH_ID;
 
   function record(value: NotificationIntent): MatchNotificationIntentRecord {
     return { matchId: intentMatchId, intent: value };
@@ -461,7 +461,7 @@ describe("MatchNotificationIntent codec", () => {
 
 describe("MatchNotificationIntent subject codec", () => {
   const original: MatchNotificationIntentRecord = {
-    matchId: RiotMatchIdSchema.parse(MATCH_ID),
+    matchId: MATCH_ID,
     intent: NotificationIntentSchema.parse({
       key: "intent-NA1_5312279829-post-match",
       kind: "postmatch",

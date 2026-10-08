@@ -1,11 +1,6 @@
 import type { MatchDataSource } from "@scout-for-lol/domain/match-processing/states.ts";
 import { ApplicationFailure } from "@temporalio/common";
-import {
-  MatchIdSchema,
-  type MatchId,
-  type PlayerConfigEntry,
-  type RawMatch,
-} from "@scout-for-lol/data";
+import { type PlayerConfigEntry, type RawMatch } from "@scout-for-lol/data";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import { prisma } from "#src/database/index.ts";
@@ -26,7 +21,7 @@ import {
 } from "#src/scout-client/canonical-match.ts";
 
 function requireAuthoritativeMatchData(
-  matchId: string,
+  matchId: RiotMatchId,
   matchData: RawMatch | undefined,
 ): RawMatch {
   if (matchData === undefined) {
@@ -61,8 +56,6 @@ function requireAuthoritativeMatchData(
  * choice deliberate every time, and names which side of the commit it is on.
  */
 export type ScoutMatchContext = {
-  /** The loose v1 match id the task services take. */
-  readonly matchId: MatchId;
   readonly riotMatchId: RiotMatchId;
   readonly matchData: RawMatch;
   /** Durable provenance of the canonical match payload. */
@@ -101,7 +94,6 @@ async function readArchivedCanonicalMatch(
  * still holds.
  */
 export type ScoutObservedMatchContext = {
-  readonly matchId: MatchId;
   readonly riotMatchId: RiotMatchId;
   readonly matchData: RawMatch;
   /** Durable provenance of the canonical match payload. */
@@ -125,10 +117,7 @@ export type ScoutObservedMatchContext = {
  * `MatchObservationRecordSchema` accepts, so the id is the source of truth for
  * this by construction.
  */
-async function canonicalMatchData(
-  matchId: MatchId,
-  riotMatchId: RiotMatchId,
-): Promise<{
+async function canonicalMatchData(riotMatchId: RiotMatchId): Promise<{
   readonly matchData: RawMatch;
   readonly matchDataSource: MatchDataSource;
 }> {
@@ -137,7 +126,7 @@ async function canonicalMatchData(
   const riotMatch =
     archived === null && selectedLocal === null
       ? await fetchMatchData(
-          matchId,
+          riotMatchId,
           platformRouteOf(riotMatchId),
           "return_undefined_on_404",
         )
@@ -162,16 +151,11 @@ async function canonicalMatchData(
 export async function resolveScoutMatchContext(
   riotMatchId: RiotMatchId,
 ): Promise<ScoutMatchContext> {
-  const matchId = MatchIdSchema.parse(riotMatchId);
   const accounts = await getAccountsWithState(prisma, getActiveServerIds());
   const allPlayerConfigs = accounts.map((account) => account.config);
-  const { matchData, matchDataSource } = await canonicalMatchData(
-    matchId,
-    riotMatchId,
-  );
+  const { matchData, matchDataSource } = await canonicalMatchData(riotMatchId);
   const participants = new Set<string>(matchData.metadata.participants);
   return {
-    matchId,
     riotMatchId,
     matchData,
     matchDataSource,
@@ -229,14 +213,9 @@ export async function observedTrackedPuuids(
 export async function resolveScoutObservedMatchContext(
   riotMatchId: RiotMatchId,
 ): Promise<ScoutObservedMatchContext> {
-  const matchId = MatchIdSchema.parse(riotMatchId);
-  const { matchData, matchDataSource } = await canonicalMatchData(
-    matchId,
-    riotMatchId,
-  );
+  const { matchData, matchDataSource } = await canonicalMatchData(riotMatchId);
   const observedPuuids = await observedTrackedPuuids(riotMatchId);
   return {
-    matchId,
     riotMatchId,
     matchData,
     matchDataSource,

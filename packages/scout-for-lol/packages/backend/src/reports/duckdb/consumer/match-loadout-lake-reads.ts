@@ -1,3 +1,7 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { LOADOUT_COLUMNS } from "@scout-for-lol/data/model/reports/lake-columns.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
@@ -12,7 +16,7 @@ import {
 const LakeIntSchema = z.union([z.bigint(), z.number()]).transform(Number);
 
 const MatchLoadoutRowSchema = z.object({
-  match_id: z.string(),
+  match_id: RiotMatchIdSchema,
   game_duration_seconds: LakeIntSchema,
   puuid: z.string(),
   participant_id: LakeIntSchema,
@@ -44,7 +48,7 @@ export type LakeMatchLoadoutRow = z.infer<typeof MatchLoadoutRowSchema>;
 
 /** Read the participant and loadout columns needed by an Explore card. */
 export async function fetchMatchLoadoutRows(options: {
-  matchId: string;
+  matchId: RiotMatchId;
   abortSignal?: AbortSignal | undefined;
   lakeDir?: string;
 }): Promise<LakeMatchLoadoutRow[]> {

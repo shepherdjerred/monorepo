@@ -9,6 +9,7 @@ import { PlatformRouteSchema } from "@scout-for-lol/domain/identity/routes.ts";
 import {
   IsoInstantSchema,
   RiotMatchIdSchema,
+  type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import type * as DatabaseModule from "#src/database/index.ts";
 import type { ProgressionMatchRow } from "#src/progression/progression-lake-reads.ts";
@@ -82,7 +83,7 @@ function rankedQueue(): ProgressionMatchRow["queue"] {
   return queue;
 }
 
-function row(matchId: string): ProgressionMatchRow {
+function row(matchId: RiotMatchId): ProgressionMatchRow {
   return {
     match_id: matchId,
     game_end_at: "2026-09-19T09:30:00.000Z",
@@ -121,7 +122,7 @@ function row(matchId: string): ProgressionMatchRow {
 const FIXTURE = await loadRawMatchFixture();
 
 /** The evaluator reads only the metadata before the lake row takes over. */
-function rawMatch(matchId: string): RawMatch {
+function rawMatch(matchId: RiotMatchId): RawMatch {
   return {
     ...FIXTURE,
     metadata: { ...FIXTURE.metadata, matchId, participants: [PUUID] },
@@ -207,7 +208,7 @@ describe("evaluateHallMatch's announcement", () => {
   test("mints the hall intent for a live match", async () => {
     const matchId = await observedMatch("live");
 
-    await evaluateHallMatch(rawMatch(matchId));
+    await evaluateHallMatch(rawMatch(RiotMatchIdSchema.parse(matchId)));
 
     const intents = await prisma.matchNotificationIntent.findMany();
     expect(intents.map((intent) => intent.intentKey)).toEqual([
@@ -223,7 +224,7 @@ describe("evaluateHallMatch's announcement", () => {
   test("a silent backfill updates the records but announces nothing", async () => {
     const matchId = await observedMatch("silent-backfill");
 
-    await evaluateHallMatch(rawMatch(matchId));
+    await evaluateHallMatch(rawMatch(RiotMatchIdSchema.parse(matchId)));
 
     // The record itself is still broken: silence is about the message.
     const cells = await prisma.hallRecordCell.findMany();
@@ -233,11 +234,11 @@ describe("evaluateHallMatch's announcement", () => {
 
   test("re-evaluating the same match announces nothing new", async () => {
     const matchId = await observedMatch("live");
-    await evaluateHallMatch(rawMatch(matchId));
+    await evaluateHallMatch(rawMatch(RiotMatchIdSchema.parse(matchId)));
 
     // A retried progression Activity: the cells already hold this match, so
     // nothing breaks again and no second intent appears.
-    await evaluateHallMatch(rawMatch(matchId));
+    await evaluateHallMatch(rawMatch(RiotMatchIdSchema.parse(matchId)));
 
     expect(await prisma.matchNotificationIntent.count()).toBe(1);
   });

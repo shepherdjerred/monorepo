@@ -1,3 +1,7 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import {
   TimelineEventLakeRowSchema,
@@ -59,7 +63,7 @@ export async function runSource<T>(options: {
 
 const MatchParticipantRowSchema = z
   .object({
-    match_id: z.string(),
+    match_id: RiotMatchIdSchema,
     game_creation_ms: LakeIntSchema,
     game_duration_seconds: LakeIntSchema,
     queue: z.string().nullable(),
@@ -103,7 +107,7 @@ const MatchParticipantRowSchema = z
 export type LakeMatchParticipantRow = z.infer<typeof MatchParticipantRowSchema>;
 
 export async function fetchFullMatch(options: {
-  matchId: string;
+  matchId: RiotMatchId;
   lakeDir?: string;
 }): Promise<LakeMatchParticipantRow[]> {
   return await withLakeQueryRetry(
@@ -138,7 +142,7 @@ export async function fetchFullMatch(options: {
 }
 
 export async function fetchFullMatchTeams(options: {
-  matchId: string;
+  matchId: RiotMatchId;
   lakeDir?: string;
 }): Promise<MatchTeamLakeRow[]> {
   return await withLakeQueryRetry(
@@ -172,7 +176,7 @@ const TimelineCoverageRowSchema = z.object({
 export type LakeTimelineCoverage = z.infer<typeof TimelineCoverageRowSchema>;
 
 export async function fetchTimelineCoverage(options: {
-  matchId: string;
+  matchId: RiotMatchId;
   abortSignal?: AbortSignal | undefined;
   lakeDir?: string;
 }): Promise<LakeTimelineCoverage | null> {
@@ -238,7 +242,7 @@ const TIMELINE_EVENT_COLUMNS = Object.keys(TimelineEventReadSchema.shape).join(
 );
 
 export async function fetchTimelineEventPage(options: {
-  matchId: string;
+  matchId: RiotMatchId;
   offset: number;
   limit: number;
   eventTypes?: string[];
@@ -334,7 +338,7 @@ const LaneDeltaFrameSchema = z.object({
 export type LaneDeltaFrame = z.infer<typeof LaneDeltaFrameSchema>;
 
 export async function fetchTimelineFramesAtIndex(options: {
-  matchId: string;
+  matchId: RiotMatchId;
   frameIndex: number;
   lakeDir?: string;
 }): Promise<LaneDeltaFrame[]> {
@@ -362,7 +366,7 @@ const TIMELINE_FRAME_COLUMNS = Object.keys(TimelineFrameReadSchema.shape).join(
 );
 
 export async function fetchTimelineFramesAtTime(options: {
-  matchId: string;
+  matchId: RiotMatchId;
   timestampMs: number;
   lakeDir?: string;
 }) {
@@ -387,7 +391,7 @@ export async function fetchTimelineFramesAtTime(options: {
 }
 
 export async function fetchTimelineFramePage(options: {
-  matchId: string;
+  matchId: RiotMatchId;
   offset: number;
   limit: number;
   participantIds?: number[];
@@ -432,7 +436,7 @@ const TimelineChartFrameSchema = z.object({
 export type TimelineChartFrame = z.infer<typeof TimelineChartFrameSchema>;
 
 export async function fetchTimelineChartFrames(options: {
-  matchId: string;
+  matchId: RiotMatchId;
   lakeDir?: string;
 }): Promise<TimelineChartFrame[]> {
   return await withLakeQueryRetry(

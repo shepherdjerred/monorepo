@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
@@ -12,7 +13,7 @@ import {
 
 const LakeInt = z.union([z.number(), z.bigint()]).transform(Number);
 const GuildMatchRowSchema = z.object({
-  match_id: z.string(),
+  match_id: RiotMatchIdSchema,
   game_creation_ms: LakeInt,
   queue: z.string().nullable(),
   queue_id: LakeInt,

@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { RawMatchSchema, type RawMatch } from "@scout-for-lol/data";
 import { convertParticipant } from "./lcu-participant.ts";
 import { firstObjectiveTeam } from "./lcu-team.ts";
@@ -49,7 +50,7 @@ function sourcePuuid(player: SourcePlayer) {
  * closed instead of receiving plausible-looking zeroes.
  */
 export function convertLcuMatchBundle(
-  riotMatchId: string,
+  riotMatchId: RiotMatchId,
   payload: unknown,
 ): RawMatch | null {
   const parsed = LocalMatchBundleSchema.safeParse(payload);

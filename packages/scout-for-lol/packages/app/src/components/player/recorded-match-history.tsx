@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/data";
 import type { ComponentProps } from "react";
 import type { Loaded } from "@shepherdjerred/loaded";
 import { Button } from "@scout-for-lol/design-system/components/button";
@@ -6,7 +7,7 @@ import { MatchHistoryList } from "#src/components/player/player-profile-sections
 
 export type HistoryCursor = {
   gameCreationMs: number;
-  matchId: string;
+  matchId: RiotMatchId;
   consumed?: number | undefined;
 };
 

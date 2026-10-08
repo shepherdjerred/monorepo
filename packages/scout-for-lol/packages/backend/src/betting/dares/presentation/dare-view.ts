@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   BucksDareStateSchema,
   DareSqlCompilationSchema,
@@ -72,7 +73,7 @@ type VisibleDareRow = {
   }[];
   _count: { evidence: number };
   evidence: {
-    matchId: string;
+    matchId: RiotMatchId;
     gameStartAt: Date;
     gameEndAt: Date;
     queueType: string;

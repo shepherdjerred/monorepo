@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   fetchTimelineEventPage,
   fetchTimelineFramePage,
@@ -17,7 +18,9 @@ export const MATCH_KEY_EVENT_TYPES = [
 ];
 
 /** Call only after the surface's match authorization has succeeded. */
-export async function fetchMatchReviewTimeline(input: { matchId: string }) {
+export async function fetchMatchReviewTimeline(input: {
+  matchId: RiotMatchId;
+}) {
   const coverage = await fetchTimelineCoverage(input);
   if (coverage === null) return { coverage, frames: [], events: [] };
   const [frames, events, participants] = await Promise.all([
@@ -60,7 +63,7 @@ export async function fetchMatchReviewTimeline(input: { matchId: string }) {
 }
 
 type TimelinePageInput = {
-  matchId: string;
+  matchId: RiotMatchId;
   participantIds?: number[] | undefined;
   cursor?: { offset: number } | undefined;
 };

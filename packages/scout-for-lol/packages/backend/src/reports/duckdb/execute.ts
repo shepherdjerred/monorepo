@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import type { DuckDBValue } from "@duckdb/node-api";
 import { scoutQlSourceCatalog } from "@scout-for-lol/data/model/scoutql/catalog/catalog-columns.ts";
 import type {
@@ -294,7 +295,7 @@ function groupFactFrom(
   return {
     playerId: requireNumberField(row, columns.playerId),
     playerAlias: requireStringField(row, columns.playerAlias),
-    matchId: requireStringField(row, columns.matchId),
+    matchId: RiotMatchIdSchema.parse(requireStringField(row, columns.matchId)),
     teamId: requireNumberField(row, columns.teamId),
     playerSubteamId: optionalNumberField(row, columns.playerSubteamId),
     values,

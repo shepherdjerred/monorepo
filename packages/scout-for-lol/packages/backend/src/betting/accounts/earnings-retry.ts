@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import * as Sentry from "@sentry/bun";
 import {
   DiscordGuildIdSchema,
@@ -33,13 +34,13 @@ const EarnTargetSnapshotSchema = z.array(
 );
 
 type PendingEarningMatchLoader = (
-  matchId: string,
+  matchId: RiotMatchId,
   matchCreatedAt: Date,
   puuidRemap: ReadonlyMap<string, string>,
 ) => Promise<RawMatch | undefined>;
 
 type PendingEarningMarker = {
-  matchId: string;
+  matchId: RiotMatchId;
   serverId: string;
   awardedAt: Date;
   targetSnapshotJson: string;
@@ -114,7 +115,7 @@ export async function retryPendingBucksEarnings(
       matchCreatedAt: true,
     },
   });
-  const markersByMatch = new Map<string, PendingEarningMarker[]>();
+  const markersByMatch = new Map<RiotMatchId, PendingEarningMarker[]>();
   for (const marker of pending) {
     markersByMatch.set(marker.matchId, [
       ...(markersByMatch.get(marker.matchId) ?? []),

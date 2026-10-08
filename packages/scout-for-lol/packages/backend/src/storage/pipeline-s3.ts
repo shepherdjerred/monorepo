@@ -13,7 +13,7 @@
  */
 
 import type {
-  MatchId,
+  RiotMatchId,
   ReviewPipelineOutput,
   PipelineContext,
   StageTrace,
@@ -26,7 +26,7 @@ import { trackedPlayerCountMetadata } from "#src/storage/s3-metadata.ts";
 const logger = createLogger("pipeline-s3");
 
 type SavePipelineTracesParams = {
-  matchId: MatchId;
+  matchId: RiotMatchId;
   queueType: string;
   trackedPlayerAliases: string[];
   output: ReviewPipelineOutput;
@@ -36,7 +36,7 @@ type SavePipelineTracesParams = {
  * Save a single stage trace to S3
  */
 async function saveStageTrace(params: {
-  matchId: MatchId;
+  matchId: RiotMatchId;
   queueType: string;
   trackedPlayerAliases: string[];
   stageName: string;
@@ -91,7 +91,7 @@ async function saveStageTrace(params: {
  * Save image generation trace to S3
  */
 async function saveImageGenerationTrace(params: {
-  matchId: MatchId;
+  matchId: RiotMatchId;
   queueType: string;
   trackedPlayerAliases: string[];
   trace: ImageGenerationTrace;
@@ -139,7 +139,7 @@ async function saveImageGenerationTrace(params: {
  * Save final review text to S3
  */
 async function saveFinalReview(params: {
-  matchId: MatchId;
+  matchId: RiotMatchId;
   queueType: string;
   trackedPlayerAliases: string[];
   reviewText: string;
@@ -177,7 +177,7 @@ async function saveFinalReview(params: {
  * Save final review image to S3
  */
 async function saveFinalImage(params: {
-  matchId: MatchId;
+  matchId: RiotMatchId;
   queueType: string;
   trackedPlayerAliases: string[];
   imageBase64: string;
@@ -374,7 +374,7 @@ export async function savePipelineTracesToS3(
  * around the new pipeline output format.
  */
 export async function savePipelineDebugToS3(params: {
-  matchId: MatchId;
+  matchId: RiotMatchId;
   queueType: string;
   trackedPlayerAliases: string[];
   output: ReviewPipelineOutput;

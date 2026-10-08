@@ -1,10 +1,11 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { ExploreCardSelectionError } from "./card-selection-error.ts";
 import {
   ExploreMatchCardSchema,
   ExploreMatchSnapshotSchema,
   isArenaQueueOrMode,
   isClassicAssetMode,
-  MatchIdSchema,
+  RiotMatchIdSchema,
   type ExploreMatchCard,
   type ExploreMatchCardRequest,
   type ExploreMatchSnapshot,
@@ -29,7 +30,7 @@ function requiredFirst(
 }
 
 type ExploreMatchSupportLookup = (
-  matchId: string,
+  matchId: RiotMatchId,
 ) => Promise<
   readonly Pick<LakeMatchParticipantRow, "queue_id" | "game_mode">[]
 >;
@@ -141,23 +142,23 @@ export function exploreMatchSnapshot(
 export function matchIdsInPreview(
   preview: ReportAiPreviewSummary | null,
   source: ScoutQlSource | null,
-): Set<string> {
+): Set<RiotMatchId> {
   if (preview === null || source !== "match_participants") return new Set();
   const hasLabelMatchId = preview.columns.some(
     (column) =>
       column.key === "label" && column.label.toLowerCase() === "match id",
   );
-  const ids = new Set<string>();
+  const ids = new Set<RiotMatchId>();
   for (const row of preview.rows) {
     if (hasLabelMatchId) {
-      const parsed = MatchIdSchema.safeParse(row.label);
+      const parsed = RiotMatchIdSchema.safeParse(row.label);
       if (parsed.success) ids.add(parsed.data);
     }
     for (const value of row.values) {
       if (value.column !== "match_id" || typeof value.value !== "string") {
         continue;
       }
-      const parsed = MatchIdSchema.safeParse(value.value);
+      const parsed = RiotMatchIdSchema.safeParse(value.value);
       if (parsed.success) ids.add(parsed.data);
     }
   }
@@ -170,12 +171,12 @@ export function matchIdsInPreview(
  * from an otherwise-successful answer.
  */
 export async function supportedExploreMatchIds(input: {
-  matchIds: Set<string>;
+  matchIds: Set<RiotMatchId>;
   lookup?: ExploreMatchSupportLookup;
 }): Promise<Set<string>> {
   const lookup =
     input.lookup ??
-    (async (matchId: string) => await fetchFullMatch({ matchId }));
+    (async (matchId: RiotMatchId) => await fetchFullMatch({ matchId }));
   const supported = await Promise.all(
     [...input.matchIds].map(async (matchId) => {
       const rows = await lookup(matchId);

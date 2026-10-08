@@ -1,15 +1,14 @@
-import {
-  MatchIdSchema,
-  DiscordGuildIdSchema,
-  type DiscordGuildId,
-} from "@scout-for-lol/data";
+import { DiscordGuildIdSchema, type DiscordGuildId } from "@scout-for-lol/data";
 import { prepareNotificationPresentation } from "#src/temporal/notification/notification-presentation.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   ScoutNotificationRenderResultSchema,
   type ScoutNotificationRenderResult,
 } from "@scout-for-lol/temporal/activity-contracts";
-import type { ScoutIntentRef } from "@scout-for-lol/temporal/pipeline-contracts";
+import {
+  type ScoutIntentRef,
+  type ScoutDurableCommit,
+} from "@scout-for-lol/temporal/pipeline-contracts";
 import { prisma } from "#src/database/index.ts";
 import { recordReceipt } from "#src/database/durable/receipt-repository.ts";
 import { buildReceipt } from "#src/report-lake/durable-receipts.ts";
@@ -17,7 +16,6 @@ import { saveToS3 } from "#src/storage/s3-helpers.ts";
 import type { StoredObject } from "#src/storage/object-integrity.ts";
 import { requireIntentRecord } from "#src/temporal/notification-lane/notification-reads.ts";
 import type { NotificationIntentKind } from "@scout-for-lol/domain/notifications/intent.ts";
-import type { ScoutDurableCommit } from "@scout-for-lol/temporal/pipeline-contracts";
 import {
   runGuardedEffect,
   type ScoutEffectFence,
@@ -128,7 +126,7 @@ async function commitNotificationImage(
   const stored = await saveToS3({
     abortSignal: fence.signal,
     ...(asset.keyDate === undefined ? {} : { keyDate: asset.keyDate }),
-    matchId: MatchIdSchema.parse(riotMatchId),
+    matchId: riotMatchId,
     assetType: asset.assetType,
     extension: "png",
     body: image,

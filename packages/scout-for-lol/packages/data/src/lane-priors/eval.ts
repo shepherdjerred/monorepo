@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import type { RawMatch } from "#src/league/raw-match.schema.ts";
 import { LaneSchema, parseLane, type Lane } from "#src/model/riot/lane.ts";
@@ -99,7 +100,7 @@ function accuracy(correct: number, total: number): number {
   return total === 0 ? 0 : correct / total;
 }
 
-function participantKey(matchId: string, participantId: number): string {
+function participantKey(matchId: RiotMatchId, participantId: number): string {
   return `${matchId}:${participantId.toString()}`;
 }
 

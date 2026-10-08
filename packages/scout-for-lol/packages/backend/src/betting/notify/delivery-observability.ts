@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   bettingMessageOperationDurationSeconds,
   bettingMessageOperationsTotal,
@@ -78,7 +79,7 @@ export async function observeBucksDelivery<T>(
   input: {
     surface: BucksMessageSurface;
     operation: BucksMessageOperation;
-    matchId?: string;
+    matchId?: RiotMatchId;
     serverId?: string;
     channelId?: string;
   },
@@ -123,7 +124,7 @@ export function recordBucksDeliverySkip(input: {
   surface: BucksMessageSurface;
   operation: BucksMessageOperation;
   reason: BucksMessageSkipReason;
-  matchId: string;
+  matchId: RiotMatchId;
   serverId: string;
 }): void {
   bettingMessageOperationsTotal.inc({

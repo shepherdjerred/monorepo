@@ -14,6 +14,10 @@
  * No writes. Touches only S3 read APIs.
  */
 
+import {
+  type RiotMatchId,
+  RiotMatchIdSchema,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { GetObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { createHash } from "node:crypto";
 import { parseArgs } from "node:util";
@@ -47,7 +51,7 @@ const StageTraceSchema = z.object({
 });
 
 type ParsedArgs = {
-  matchId: string;
+  matchId: RiotMatchId;
   stage: string;
   date: string | undefined;
   days: number;
@@ -79,7 +83,7 @@ function parseCli(): ParsedArgs {
   }
 
   return {
-    matchId,
+    matchId: RiotMatchIdSchema.parse(matchId),
     stage,
     date: values.date,
     days: Math.floor(daysParsed),
@@ -104,7 +108,7 @@ function datePrefixes(date: string | undefined, days: number): string[] {
 
 async function findTraceKey(params: {
   bucket: string;
-  matchId: string;
+  matchId: RiotMatchId;
   stage: string;
   prefixes: string[];
 }): Promise<string | undefined> {

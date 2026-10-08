@@ -1,5 +1,6 @@
 import {
   IsoInstantSchema,
+  RiotMatchIdSchema,
   type IsoInstant,
   type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
@@ -21,6 +22,20 @@ import {
 export function platformRouteOf(matchId: RiotMatchId): PlatformRoute {
   const [platform] = matchId.split("_");
   return PlatformRouteSchema.parse(platform);
+}
+
+/**
+ * The Riot match id a spectator game will be recorded under. Riot assembles
+ * it from exactly the platform and game id the spectator payload carries, so
+ * a prematch snapshot knows its match id before MatchV5 does.
+ */
+export function spectatorGameMatchId(game: {
+  readonly platformId: string;
+  readonly gameId: number;
+}): RiotMatchId {
+  return RiotMatchIdSchema.parse(
+    `${game.platformId}_${game.gameId.toString()}`,
+  );
 }
 
 export function toIsoInstant(value: Date): IsoInstant {

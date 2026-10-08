@@ -3,7 +3,7 @@ import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
-  MatchIdSchema,
+  RiotMatchIdSchema,
   RawMatchSchema,
 } from "@scout-for-lol/data";
 import { createTestDatabase } from "#src/testing/test-database.ts";
@@ -29,7 +29,7 @@ import {
 const { prisma: db } = createTestDatabase("mvp-votes");
 
 const SERVER_ID = DiscordGuildIdSchema.parse("1337623164146155593");
-const MATCH_ID = MatchIdSchema.parse("NA1_5000000099");
+const MATCH_ID = RiotMatchIdSchema.parse("NA1_5000000099");
 const VOTER = bucksTestDiscordId(1);
 const OTHER = bucksTestDiscordId(2);
 const RIFT_FIXTURE = new URL("../../../../testdata/rift.json", import.meta.url);
@@ -296,7 +296,7 @@ describe("Match MVP voter eligibility and contest backfill", () => {
 
   test("fills query columns on a contest that predated those fields", async () => {
     const match = RawMatchSchema.parse(await Bun.file(RIFT_FIXTURE).json());
-    const matchId = MatchIdSchema.parse(match.metadata.matchId);
+    const matchId = match.metadata.matchId;
     await db.matchMvpContest.create({
       data: { matchId, roster: freezeMatchMvpRoster(match) },
     });

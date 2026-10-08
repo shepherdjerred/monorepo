@@ -1,6 +1,9 @@
 import { afterAll, describe, expect, test, vi } from "vitest";
 import { ApplicationFailure } from "@temporalio/common";
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import type { MatchDataSource } from "@scout-for-lol/domain/match-processing/states.ts";
 import {
@@ -39,9 +42,8 @@ const riot = vi.hoisted(
 vi.mock("#src/database/index.ts", async () => await testDatabaseModule(prisma));
 
 vi.mock("#src/temporal/match/match-context.ts", () => ({
-  resolveScoutMatchContext: (riotMatchId: string) =>
+  resolveScoutMatchContext: (riotMatchId: RiotMatchId) =>
     Promise.resolve({
-      matchId: riotMatchId,
       riotMatchId,
       matchData: { info: { gameCreation: riot.gameCreation } },
       matchDataSource: riot.matchDataSource,

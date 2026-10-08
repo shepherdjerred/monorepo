@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -39,7 +40,9 @@ function matchAt(
 ): RawMatch {
   const match = structuredClone(base);
   const start = base.info.gameStartTimestamp + index * 3_600_000;
-  match.metadata.matchId = `NA1_STREAK_${index.toString()}`;
+  match.metadata.matchId = RiotMatchIdSchema.parse(
+    `NA1_81001${index.toString()}`,
+  );
   match.info.gameId = base.info.gameId + index + 1;
   match.info.gameCreation = start;
   match.info.gameStartTimestamp = start;
@@ -386,7 +389,7 @@ describe("Dare SQL eligibility boundaries", () => {
         matchOrder: "newest",
       }),
     ).resolves.toMatchObject({
-      sourceMatchIds: ["NA1_STREAK_1", "NA1_STREAK_2"],
+      sourceMatchIds: ["NA1_810011", "NA1_810012"],
     });
   });
 
@@ -422,7 +425,7 @@ describe("Dare SQL eligibility boundaries", () => {
       }),
     ).resolves.toMatchObject({
       achieved: true,
-      sourceMatchIds: ["NA1_STREAK_1"],
+      sourceMatchIds: ["NA1_810011"],
     });
   });
 
@@ -457,7 +460,7 @@ describe("Dare SQL eligibility boundaries", () => {
       }),
     ).resolves.toMatchObject({
       achieved: true,
-      sourceMatchIds: ["NA1_STREAK_1"],
+      sourceMatchIds: ["NA1_810011"],
     });
   });
 });

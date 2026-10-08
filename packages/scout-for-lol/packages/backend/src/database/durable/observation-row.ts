@@ -4,6 +4,7 @@ import {
   S3ObjectKeySchema,
   Sha256DigestSchema,
   IsoInstantSchema,
+  type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import { PlatformRouteSchema } from "@scout-for-lol/domain/identity/routes.ts";
 import {
@@ -78,7 +79,7 @@ export const MatchObservationRecordSchema = z
 
 /** Column shape of a MatchObservation row, minus the DB-managed timestamps. */
 export type MatchObservationRow = {
-  riotMatchId: string;
+  riotMatchId: RiotMatchId;
   platformRoute: string;
   processingPolicy: string;
   deliveryMode: string;

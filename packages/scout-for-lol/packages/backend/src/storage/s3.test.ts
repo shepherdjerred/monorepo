@@ -1,3 +1,7 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { RawMatchSchema, type RawMatch } from "@scout-for-lol/data";
 import { archiveMatchToS3 } from "#src/storage/s3.ts";
@@ -22,7 +26,7 @@ async function loadMatchFixture(): Promise<RawMatch> {
 type KeyCase = {
   name: string;
   date: string;
-  matchId: string;
+  matchId: RiotMatchId;
   filename: string;
   expected: string;
 };
@@ -31,79 +35,79 @@ const keyCases: KeyCase[] = [
   {
     name: "match key follows the game hierarchy",
     date: "2025-10-16T14:30:45Z",
-    matchId: "NA1_1234567890",
+    matchId: RiotMatchIdSchema.parse("NA1_1234567890"),
     filename: "match.json",
     expected: "games/2025/10/16/NA1_1234567890/match.json",
   },
   {
     name: "match key pads single-digit dates",
     date: "2025-01-05T08:15:30Z",
-    matchId: "EUW1_9876543210",
+    matchId: RiotMatchIdSchema.parse("EUW1_9876543210"),
     filename: "match.json",
     expected: "games/2025/01/05/EUW1_9876543210/match.json",
   },
   {
     name: "match key retains its JSON extension",
     date: "2025-12-31T23:59:59Z",
-    matchId: "KR_1111111111",
+    matchId: RiotMatchIdSchema.parse("KR_1111111111"),
     filename: "match.json",
     expected: "games/2025/12/31/KR_1111111111/match.json",
   },
   {
     name: "image key follows the game hierarchy",
     date: "2025-10-16T14:30:45Z",
-    matchId: "NA1_1234567890",
+    matchId: RiotMatchIdSchema.parse("NA1_1234567890"),
     filename: "report.png",
     expected: "games/2025/10/16/NA1_1234567890/report.png",
   },
   {
     name: "image key pads single-digit dates",
     date: "2025-01-05T08:15:30Z",
-    matchId: "EUW1_9876543210",
+    matchId: RiotMatchIdSchema.parse("EUW1_9876543210"),
     filename: "report.png",
     expected: "games/2025/01/05/EUW1_9876543210/report.png",
   },
   {
     name: "image key retains its PNG extension",
     date: "2025-12-31T23:59:59Z",
-    matchId: "KR_1111111111",
+    matchId: RiotMatchIdSchema.parse("KR_1111111111"),
     filename: "report.png",
     expected: "games/2025/12/31/KR_1111111111/report.png",
   },
   {
     name: "SVG key follows the game hierarchy",
     date: "2025-10-16T14:30:45Z",
-    matchId: "NA1_1234567890",
+    matchId: RiotMatchIdSchema.parse("NA1_1234567890"),
     filename: "report.svg",
     expected: "games/2025/10/16/NA1_1234567890/report.svg",
   },
   {
     name: "SVG key pads single-digit dates",
     date: "2025-01-05T08:15:30Z",
-    matchId: "EUW1_9876543210",
+    matchId: RiotMatchIdSchema.parse("EUW1_9876543210"),
     filename: "report.svg",
     expected: "games/2025/01/05/EUW1_9876543210/report.svg",
   },
   {
     name: "SVG key retains its SVG extension",
     date: "2025-12-31T23:59:59Z",
-    matchId: "KR_1111111111",
+    matchId: RiotMatchIdSchema.parse("KR_1111111111"),
     filename: "report.svg",
     expected: "games/2025/12/31/KR_1111111111/report.svg",
   },
   {
     name: "match key retains special match-id characters",
     date: "2025-10-16T14:30:45Z",
-    matchId: "NA1_1234567890_SPECIAL",
+    matchId: RiotMatchIdSchema.parse("NA1_9100000010"),
     filename: "match.json",
-    expected: "games/2025/10/16/NA1_1234567890_SPECIAL/match.json",
+    expected: "games/2025/10/16/NA1_9100000010/match.json",
   },
   {
     name: "image key retains special match-id characters",
     date: "2025-10-16T14:30:45Z",
-    matchId: "EUW1_9876543210_TEST",
+    matchId: RiotMatchIdSchema.parse("NA1_9100000000"),
     filename: "report.png",
-    expected: "games/2025/10/16/EUW1_9876543210_TEST/report.png",
+    expected: "games/2025/10/16/NA1_9100000000/report.png",
   },
 ];
 
@@ -130,7 +134,7 @@ describe("S3 key generation logic", () => {
   test("match, PNG, and SVG keys share one game directory", () => {
     const input = {
       date: "2025-10-16T14:30:45Z",
-      matchId: "NA1_1234567890",
+      matchId: RiotMatchIdSchema.parse("NA1_1234567890"),
     };
     const matchKey = buildFixtureKey({ ...input, filename: "match.json" });
     const pngKey = buildFixtureKey({ ...input, filename: "report.png" });
@@ -145,12 +149,16 @@ describe("S3 key generation logic", () => {
   });
 
   test.each([
-    ["2025-01-01T00:00:00Z", "games/2025/01/01/TEST_123/match.json"],
-    ["2025-06-15T12:00:00Z", "games/2025/06/15/TEST_123/match.json"],
-    ["2025-12-31T23:59:59Z", "games/2025/12/31/TEST_123/match.json"],
+    ["2025-01-01T00:00:00Z", "games/2025/01/01/NA1_9100000020/match.json"],
+    ["2025-06-15T12:00:00Z", "games/2025/06/15/NA1_9100000020/match.json"],
+    ["2025-12-31T23:59:59Z", "games/2025/12/31/NA1_9100000020/match.json"],
   ])("formats every date component for %s", (date, expected) => {
     expect(
-      buildFixtureKey({ date, matchId: "TEST_123", filename: "match.json" }),
+      buildFixtureKey({
+        date,
+        matchId: RiotMatchIdSchema.parse("NA1_9100000020"),
+        filename: "match.json",
+      }),
     ).toBe(expected);
   });
 });

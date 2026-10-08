@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { RawMatchSchema, type RawMatch } from "@scout-for-lol/data";
 import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settle-types.ts";
@@ -117,7 +118,7 @@ function summary(dareId: number): DareSettlementSummary {
     dareId,
     serverId: "guild-one",
     channelId: "channel-one",
-    matchId: "NA1_7001",
+    matchId: RiotMatchIdSchema.parse("NA1_7001"),
     resolution: "achieved",
     value: true,
     finality: { value: true, final: true, reason: "monotone_success" },

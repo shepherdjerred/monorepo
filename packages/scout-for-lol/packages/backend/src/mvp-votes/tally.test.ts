@@ -3,7 +3,7 @@ import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
   LeaguePuuidSchema,
-  MatchIdSchema,
+  RiotMatchIdSchema,
   type LeaguePuuid,
 } from "@scout-for-lol/data";
 import { freezeMatchMvpRosterFromParticipants } from "#src/mvp-votes/roster.ts";
@@ -30,7 +30,7 @@ function aliases(
 
 function roster() {
   return freezeMatchMvpRosterFromParticipants(
-    "NA1_1",
+    RiotMatchIdSchema.parse("NA1_1"),
     Array.from({ length: 10 }, (_unused, index) => ({
       participantId: index + 1,
       puuid: puuid(index),
@@ -47,7 +47,7 @@ function vote(
     Pick<StoredMatchMvpVote, "category" | "nomineeIndex" | "voterPuuid">,
 ): StoredMatchMvpVote {
   return {
-    matchId: MatchIdSchema.parse("NA1_1"),
+    matchId: RiotMatchIdSchema.parse("NA1_1"),
     serverId: DiscordGuildIdSchema.parse("1337623164146155593"),
     voterDiscordId: DiscordAccountIdSchema.parse("160509172704739328"),
     voterTeamId: 100,

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { MatchIdSchema } from "@scout-for-lol/data";
+import { RiotMatchIdSchema } from "@scout-for-lol/data";
 import { saveImageToS3 } from "#src/storage/s3.ts";
 import {
   currentUtcDatePath,
@@ -16,7 +16,12 @@ async function uploadImage(
   queueType = "solo",
   body = new TextEncoder().encode(`${queueType}-image-data`),
 ) {
-  return saveImageToS3(MatchIdSchema.parse(matchIdValue), body, queueType, []);
+  return saveImageToS3(
+    RiotMatchIdSchema.parse(matchIdValue),
+    body,
+    queueType,
+    [],
+  );
 }
 
 beforeEach(resetS3TestState);
@@ -73,7 +78,7 @@ describe("saveImageToS3 success cases", () => {
     const imageBuffer = new Uint8Array(5 * 1024 * 1024);
     mockSuccessfulPut();
 
-    await uploadImage("NA1_LARGE", "solo", imageBuffer);
+    await uploadImage("NA1_9400000070", "solo", imageBuffer);
 
     const body = getValidatedPutCommand().input.Body;
     expect(body).toBeInstanceOf(Uint8Array);
@@ -83,7 +88,7 @@ describe("saveImageToS3 success cases", () => {
   });
 
   test("retains special characters in the key, metadata, and URL", async () => {
-    const matchId = "NA1_1234567890_SPECIAL";
+    const matchId = "NA1_9400000010";
     mockSuccessfulPut();
 
     const result = await uploadImage(matchId);
@@ -97,8 +102,8 @@ describe("saveImageToS3 success cases", () => {
 
 describe("saveImageToS3 configuration", () => {
   test.each([
-    { name: "missing", bucket: undefined, matchId: "NA1_NO_BUCKET" },
-    { name: "empty", bucket: "", matchId: "NA1_EMPTY_BUCKET" },
+    { name: "missing", bucket: undefined, matchId: "NA1_9400000090" },
+    { name: "empty", bucket: "", matchId: "NA1_9400000050" },
   ])(
     "skips upload when S3_BUCKET_NAME is $name",
     async ({ bucket, matchId }) => {
@@ -114,14 +119,14 @@ describe("saveImageToS3 configuration", () => {
 describe("saveImageToS3 error handling", () => {
   test.each([
     {
-      matchId: "NA1_ERROR_CASE",
+      matchId: "NA1_9400000060",
       failure: "S3 upload failed",
-      expected: "Failed to save PNG NA1_ERROR_CASE to S3",
+      expected: "Failed to save PNG NA1_9400000060 to S3",
     },
     {
-      matchId: "EUW1_SPECIFIC_ERROR",
+      matchId: "NA1_9400000000",
       failure: "Network timeout",
-      expected: "Failed to save PNG EUW1_SPECIFIC_ERROR to S3",
+      expected: "Failed to save PNG NA1_9400000000 to S3",
     },
   ])(
     "reports $matchId when upload fails",
@@ -136,15 +141,15 @@ describe("saveImageToS3 error handling", () => {
   test("returns a URL when the SDK resolves a non-200 response", async () => {
     mockSuccessfulPut(500);
 
-    await expect(uploadImage("NA1_BAD_STATUS")).resolves.toBeDefined();
+    await expect(uploadImage("NA1_9400000020")).resolves.toBeDefined();
   });
 
   test("preserves the original error details", async () => {
-    const matchId = "NA1_DETAILED_ERROR";
+    const matchId = "NA1_9400000040";
     mockFailedPut("Access Denied");
 
     await expect(uploadImage(matchId)).rejects.toThrow(
-      "Failed to save PNG NA1_DETAILED_ERROR to S3: Access Denied",
+      "Failed to save PNG NA1_9400000040 to S3: Access Denied",
     );
   });
 });
@@ -153,11 +158,11 @@ describe("saveImageToS3 key and URL format", () => {
   test("uses today's date, a PNG extension, and an s3 URL", async () => {
     mockSuccessfulPut();
 
-    const result = await uploadImage("NA1_DATE_TEST");
+    const result = await uploadImage("NA1_9400000030");
     const key = getValidatedPutCommand().input.Key;
 
     expect(key).toMatch(
-      /^games\/\d{4}\/\d{2}\/\d{2}\/NA1_DATE_TEST\/report\.png$/,
+      /^games\/\d{4}\/\d{2}\/\d{2}\/NA1_9400000030\/report\.png$/,
     );
     expect(key).toContain(`games/${currentUtcDatePath()}/`);
     expect(key.endsWith(".png")).toBe(true);
@@ -170,12 +175,12 @@ describe("saveImageToS3 metadata", () => {
     const beforeUpload = new Date();
     mockSuccessfulPut();
 
-    await uploadImage("NA1_METADATA");
+    await uploadImage("NA1_9400000080");
     const afterUpload = new Date();
     const metadata = getValidatedPutCommand().input.Metadata;
     const uploadedAt = metadata?.["uploadedAt"];
 
-    expect(metadata?.["matchId"]).toBe("NA1_METADATA");
+    expect(metadata?.["matchId"]).toBe("NA1_9400000080");
     expect(metadata?.["queueType"]).toBe("solo");
     expect(uploadedAt).toBeDefined();
 

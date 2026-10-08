@@ -130,7 +130,7 @@ function unknownDeliveryState(
 }
 
 type NotificationQueueSubject =
-  { matchId: string } | { duelId: string } | { dareId: number };
+  { matchId: RiotMatchId } | { duelId: string } | { dareId: number };
 
 /** Keep the queue's subject explicit without inventing a Riot match for a Duel. */
 function notificationSubject(

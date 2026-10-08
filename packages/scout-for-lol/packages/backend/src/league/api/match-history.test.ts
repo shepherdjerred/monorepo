@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest";
 import { filterNewMatches } from "#src/league/api/match-history.ts";
-import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
+import { RiotMatchIdSchema } from "@scout-for-lol/data/index.ts";
 
 function matchId(id: string) {
-  return MatchIdSchema.parse(id);
+  return RiotMatchIdSchema.parse(id);
 }
 
 describe("filterNewMatches", () => {

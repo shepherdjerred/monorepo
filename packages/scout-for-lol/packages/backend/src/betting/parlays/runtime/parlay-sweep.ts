@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import * as Sentry from "@sentry/bun";
 import {
   BucksDeltaSchema,
@@ -22,7 +23,7 @@ import { logBucksTransition } from "#src/betting/transition-log.ts";
 const logger = createLogger("betting-parlay-sweep");
 
 type ClosedParlayMarket = {
-  matchId: string;
+  matchId: RiotMatchId;
   serverId: string;
   messageRefs: { channelId: string; messageId: string }[];
 };

@@ -1,7 +1,8 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { BucksStake, RiotTeamId } from "@scout-for-lol/data";
 
 type PendingPositionBase = {
-  matchId: string;
+  matchId: RiotMatchId;
   closesAt: Date;
   poolState: string;
 };

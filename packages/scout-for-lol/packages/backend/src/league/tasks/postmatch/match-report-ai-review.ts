@@ -1,13 +1,11 @@
-import type {
-  ExceptionalGameResult,
-  MatchId,
-  CompletedMatch,
-  QueueType,
-  RawMatch,
-  RawTimeline,
-  DiscordGuildId,
-} from "@scout-for-lol/data/index.ts";
 import {
+  type ExceptionalGameResult,
+  type RiotMatchId,
+  type CompletedMatch,
+  type QueueType,
+  type RawMatch,
+  type RawTimeline,
+  type DiscordGuildId,
   isExceptionalGame,
   MIN_GAME_DURATION_SECONDS,
 } from "@scout-for-lol/data/index.ts";
@@ -79,7 +77,7 @@ export type AiReviewResult = {
 
 export type AiReviewContext = {
   completedMatch: CompletedMatch;
-  matchId: MatchId;
+  matchId: RiotMatchId;
   matchData: RawMatch;
   timelineData: RawTimeline | undefined;
   targetGuildIds: DiscordGuildId[];

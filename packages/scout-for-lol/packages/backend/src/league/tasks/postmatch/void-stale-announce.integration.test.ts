@@ -1,3 +1,7 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data/index.ts";
 import { VOID_GRACE_MS } from "#src/betting/constants.ts";
@@ -39,13 +43,13 @@ vi.mock("#src/betting/notify/message-refresh.ts", () => ({
 const { voidStaleAndAnnounce } =
   await import("#src/league/tasks/postmatch/void-stale-announce.ts");
 
-const MATCH_ID = "NA1_7701";
-const HEALTHY_MATCH_ID = "NA1_7702";
+const MATCH_ID = RiotMatchIdSchema.parse("NA1_7701");
+const HEALTHY_MATCH_ID = RiotMatchIdSchema.parse("NA1_7702");
 const SERVER = DiscordGuildIdSchema.parse("1337623164146155593");
 const CHANNEL = "300000000000007701";
 const REPORT_MESSAGE = "400000000000007701";
 
-async function makeStalePool(matchId: string = MATCH_ID) {
+async function makeStalePool(matchId: RiotMatchId = MATCH_ID) {
   const closesAt = new Date(Date.now() - VOID_GRACE_MS - 60_000);
   return await prisma.bucksMatchPool.create({
     data: {
@@ -104,7 +108,7 @@ describe("voidStaleAndAnnounce", () => {
   test("voids and announces a healthy match while another match's lookup fails", async () => {
     const broken = await makeStalePool(MATCH_ID);
     const healthy = await makeStalePool(HEALTHY_MATCH_ID);
-    stubs.postmatchReplyTargets.mockImplementation((matchId: string) =>
+    stubs.postmatchReplyTargets.mockImplementation((matchId: RiotMatchId) =>
       matchId === MATCH_ID
         ? Promise.reject(new Error("malformed delivered intent"))
         : Promise.resolve(new Map([[CHANNEL, REPORT_MESSAGE]])),

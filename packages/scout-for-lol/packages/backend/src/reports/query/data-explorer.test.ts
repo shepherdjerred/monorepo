@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import {
   browseReportData,
@@ -74,7 +75,7 @@ describe("report data explorer", () => {
         {
           playerId: 1,
           playerAlias: "Lux Player",
-          matchId: "NA1_explorer_ts",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000020"),
           puuid: testPuuid("report-explorer-ts"),
           queue: "solo",
           championId: 99,
@@ -115,7 +116,7 @@ describe("report data explorer", () => {
         {
           playerId: 1,
           playerAlias: "Lux Player",
-          matchId: "NA1_explorer_1",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000000"),
           puuid: testPuuid("report-explorer-1"),
           queue: "solo",
           championId: 99,
@@ -130,7 +131,7 @@ describe("report data explorer", () => {
         {
           playerId: 2,
           playerAlias: "Ashe Player",
-          matchId: "NA1_explorer_2",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000010"),
           puuid: testPuuid("report-explorer-2"),
           queue: "aram",
           championName: "Ashe",

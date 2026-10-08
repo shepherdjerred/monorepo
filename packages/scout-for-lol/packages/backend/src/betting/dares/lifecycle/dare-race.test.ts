@@ -1,6 +1,14 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
-import type { DareSqlCompetition, DareSqlEvidence } from "@scout-for-lol/data";
-import { DarePotTotalSchema, DareSqlEvidenceSchema } from "@scout-for-lol/data";
+import {
+  type DareSqlCompetition,
+  type DareSqlEvidence,
+  DarePotTotalSchema,
+  DareSqlEvidenceSchema,
+} from "@scout-for-lol/data";
 import {
   compileDareSql,
   dareSqlRaceEvidence,
@@ -23,7 +31,7 @@ const RACE: DareSqlCompetition = {
 
 function result(input: {
   gameSet: string;
-  matchId: string;
+  matchId: RiotMatchId;
   gameEndAt: string;
   targetKey: string;
 }): DareSqlEvidence["results"][number] {
@@ -44,13 +52,13 @@ describe("Dare races", () => {
       dareSqlRaceEvidence(RACE, [
         result({
           gameSet: "t2_lane",
-          matchId: "NA1_later_ingest",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000020"),
           gameEndAt: tiedAt,
           targetKey: "T2",
         }),
         result({
           gameSet: "t1_lane",
-          matchId: "NA1_first_ingest",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000010"),
           gameEndAt: tiedAt,
           targetKey: "T1",
         }),
@@ -66,19 +74,19 @@ describe("Dare races", () => {
       dareSqlRaceEvidence(RACE, [
         result({
           gameSet: "t1_lane",
-          matchId: "NA1_second",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000040"),
           gameEndAt: "2026-09-02T18:02:00.000Z",
           targetKey: "T1",
         }),
         result({
           gameSet: "t1_lane",
-          matchId: "NA1_first",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000000"),
           gameEndAt: "2026-09-02T18:00:00.000Z",
           targetKey: "T1",
         }),
         result({
           gameSet: "t2_lane",
-          matchId: "NA1_other",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000030"),
           gameEndAt: "2026-09-02T18:01:00.000Z",
           targetKey: "T2",
         }),
@@ -96,7 +104,7 @@ describe("Dare races", () => {
       results: [],
       targetDependencies: ["T1"],
       coverage: "not_required",
-      sourceMatchIds: ["NA1_win"],
+      sourceMatchIds: ["NA1_9400000010"],
       queryHash: "a".repeat(64),
       race: { leaders: ["T1"], qualifyingGameEndAt: wonAt },
     });
@@ -131,7 +139,7 @@ describe("Dare races", () => {
       results: [],
       targetDependencies: ["T1"],
       coverage: "not_required",
-      sourceMatchIds: ["NA1_transient_best"],
+      sourceMatchIds: ["NA1_9400000000"],
       queryHash: "a".repeat(64),
     });
     expect(

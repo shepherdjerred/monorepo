@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import path from "node:path";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "#generated/prisma/client/index.js";
@@ -313,7 +314,7 @@ export async function seedDesignAuditDatabase(
           playerId: player.id,
           playerAlias,
           discordId,
-          matchId: "design-audit-match-1",
+          matchId: RiotMatchIdSchema.parse("NA1_9200000001"),
           puuid,
           queue: "solo",
           win: true,
@@ -329,7 +330,7 @@ export async function seedDesignAuditDatabase(
           playerId: player.id,
           playerAlias,
           discordId,
-          matchId: "design-audit-match-2",
+          matchId: RiotMatchIdSchema.parse("NA1_9200000002"),
           puuid: secondaryPuuid,
           queue: "flex",
           win: true,
@@ -346,7 +347,7 @@ export async function seedDesignAuditDatabase(
           playerId: player.id,
           playerAlias,
           discordId,
-          matchId: "design-audit-match-3",
+          matchId: RiotMatchIdSchema.parse("NA1_9200000003"),
           puuid,
           queue: "solo",
           win: false,
@@ -362,7 +363,7 @@ export async function seedDesignAuditDatabase(
           playerId: player.id,
           playerAlias,
           discordId,
-          matchId: "design-audit-match-4",
+          matchId: RiotMatchIdSchema.parse("NA1_9200000004"),
           puuid: secondaryPuuid,
           queue: "flex",
           win: false,
@@ -380,7 +381,7 @@ export async function seedDesignAuditDatabase(
         {
           playerId: 901,
           playerAlias: "Teammate One",
-          matchId: "design-audit-match-1",
+          matchId: RiotMatchIdSchema.parse("NA1_9200000001"),
           puuid: "f".repeat(78),
           queue: "solo",
           win: false,
@@ -394,7 +395,7 @@ export async function seedDesignAuditDatabase(
         {
           playerId: 902,
           playerAlias: "Teammate Two",
-          matchId: "design-audit-match-2",
+          matchId: RiotMatchIdSchema.parse("NA1_9200000002"),
           puuid: "g".repeat(78),
           queue: "flex",
           win: false,
@@ -409,7 +410,7 @@ export async function seedDesignAuditDatabase(
         {
           playerId: 903,
           playerAlias: "Teammate Three",
-          matchId: "design-audit-match-3",
+          matchId: RiotMatchIdSchema.parse("NA1_9200000003"),
           puuid: "h".repeat(78),
           queue: "solo",
           win: true,
@@ -423,7 +424,7 @@ export async function seedDesignAuditDatabase(
         {
           playerId: 904,
           playerAlias: "Teammate Four",
-          matchId: "design-audit-match-4",
+          matchId: RiotMatchIdSchema.parse("NA1_9200000004"),
           puuid: "i".repeat(78),
           queue: "flex",
           win: true,

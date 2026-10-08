@@ -1,3 +1,7 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test, vi } from "vitest";
 import { BucksPoolTotalSchema } from "@scout-for-lol/data";
 import {
@@ -10,7 +14,7 @@ import { defaultDareCalloutDependencies } from "#src/betting/dares/presentation/
 describe("refreshSettledPoolMessages", () => {
   test("removes straight-bet controls once even when no outcome is announced", async () => {
     const settlement: SettlementSummary = {
-      matchId: "NA1_123",
+      matchId: RiotMatchIdSchema.parse("NA1_123"),
       serverId: "guild-one",
       winningTeamId: 100,
       voidReason: undefined,
@@ -20,7 +24,7 @@ describe("refreshSettledPoolMessages", () => {
       bets: [],
     };
     const refreshed: (readonly {
-      matchId: string;
+      matchId: RiotMatchId;
       serverId: string;
     }[])[] = [];
 

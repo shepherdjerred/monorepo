@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/data";
 import { Loaded } from "@shepherdjerred/loaded";
 import {
   ErrorState,
@@ -14,7 +15,7 @@ import type { BucksBetSubmission } from "#src/components/bucks/bucks-bet-form.ts
 import { remainingMs } from "#src/lib/bucks/bucks-countdown.ts";
 
 export type BucksMatchParlayRow = {
-  matchId: string;
+  matchId: RiotMatchId;
   closesAt: string;
   subjects: string[];
   legs: string[];
@@ -77,11 +78,11 @@ export function BucksMarketSections(props: {
   canBet: boolean;
   nameOf: (discordId: string) => string;
   marketErrors: MarketErrorMap;
-  placeOutcome: (matchId: string, submission: BucksBetSubmission) => void;
+  placeOutcome: (matchId: RiotMatchId, submission: BucksBetSubmission) => void;
   placeOutcomePending: boolean;
-  placeParlay: (matchId: string, submission: BucksBetSubmission) => void;
+  placeParlay: (matchId: RiotMatchId, submission: BucksBetSubmission) => void;
   placeParlayPending: boolean;
-  onCancelRequest: (matchId: string) => void;
+  onCancelRequest: (matchId: RiotMatchId) => void;
 }) {
   const { markets } = props;
   if (markets === undefined) {

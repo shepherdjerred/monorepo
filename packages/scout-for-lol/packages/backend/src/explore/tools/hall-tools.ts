@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { tool } from "ai";
 import { z } from "zod";
 import {
@@ -46,7 +47,7 @@ const HallCellSchema = z.strictObject({
   holders: z.array(z.string()),
   games: z.array(
     z.strictObject({
-      matchId: z.string(),
+      matchId: RiotMatchIdSchema,
       gameEndAt: z.string(),
       holder: z.string(),
     }),

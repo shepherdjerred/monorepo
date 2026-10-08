@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   BucksDeltaSchema,
   BucksParlaySideSchema,
@@ -27,7 +28,7 @@ export type CancelParlayBetResult =
  */
 export async function cancelParlayBet(
   input: {
-    matchId: string;
+    matchId: RiotMatchId;
     serverId: DiscordGuildId;
     discordId: DiscordAccountId;
   },
@@ -55,7 +56,7 @@ export async function cancelParlayBet(
 
 async function cancelParlayBetInner(
   input: {
-    matchId: string;
+    matchId: RiotMatchId;
     serverId: DiscordGuildId;
     discordId: DiscordAccountId;
   },

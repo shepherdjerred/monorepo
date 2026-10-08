@@ -1,6 +1,10 @@
-import type { MatchId } from "@scout-for-lol/data/index.ts";
-import type { MessageCreateOptions } from "discord.js";
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
+import type { RiotMatchId } from "@scout-for-lol/data/index.ts";
+import {
+  type MessageCreateOptions,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+} from "discord.js";
 import { getExploreMatchUrl } from "#src/discord/commands/links.ts";
 
 /**
@@ -11,7 +15,7 @@ import { getExploreMatchUrl } from "#src/discord/commands/links.ts";
  * so those report paths must not attach this button.
  */
 export function matchLinkComponents(
-  matchId: MatchId,
+  matchId: RiotMatchId,
 ): NonNullable<MessageCreateOptions["components"]> {
   return [
     new ActionRowBuilder<ButtonBuilder>().addComponents(

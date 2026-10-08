@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { ProgressionAccountSchema } from "#src/model/progression/account.ts";
 import {
@@ -23,7 +24,7 @@ export const HallRecordHolderSchema = ProgressionAccountSchema.extend({});
 export type HallRecordHolder = z.infer<typeof HallRecordHolderSchema>;
 
 export const HallRecordEvidenceSchema = z.strictObject({
-  matchId: z.string().min(1),
+  matchId: RiotMatchIdSchema,
   gameEndAt: z.iso.datetime(),
   value: z.number(),
   holder: HallRecordHolderSchema,

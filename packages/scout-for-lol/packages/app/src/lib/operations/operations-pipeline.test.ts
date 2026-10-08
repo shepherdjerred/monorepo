@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/data";
 import { describe, expect, test } from "vitest";
 import type { NotificationStateKind } from "#src/lib/operations/operations-notification-actions.ts";
 import {
@@ -7,7 +8,7 @@ import {
   type MatchPipelineData,
 } from "#src/lib/operations/operations-pipeline.ts";
 
-const MATCH_ID = "NA1_1234567890";
+const MATCH_ID = RiotMatchIdSchema.parse("NA1_1234567890");
 
 /** The moment the fixture picture was read. */
 const NOW = Date.parse("2026-09-14T12:00:00.000Z");

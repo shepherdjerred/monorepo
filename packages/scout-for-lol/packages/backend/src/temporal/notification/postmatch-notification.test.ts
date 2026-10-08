@@ -14,7 +14,6 @@ import {
   S3ObjectKeySchema,
   Sha256DigestSchema,
 } from "@scout-for-lol/domain/identity/brands.ts";
-import { MatchIdSchema } from "@scout-for-lol/data";
 
 /**
  * The postmatch render takes v1's built message apart and the postmatch
@@ -48,7 +47,7 @@ const { matchLinkComponents } =
 const { withMvpVoteFurniture } = await import("#src/mvp-votes/components.ts");
 
 const RIOT_MATCH = RiotMatchIdSchema.parse("NA1_9301");
-const MATCH = MatchIdSchema.parse("NA1_9301");
+const MATCH = RiotMatchIdSchema.parse("NA1_9301");
 const IMAGE = new Uint8Array([137, 80, 78, 71, 1]);
 const REVIEW = new Uint8Array([137, 80, 78, 71, 2, 2]);
 const LIVE = { kind: "live" } as const;

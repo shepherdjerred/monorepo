@@ -1,5 +1,8 @@
 import { afterAll, expect, test, vi } from "vitest";
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { RawMatchSchema } from "@scout-for-lol/data";
 import {
   createTestDatabase,
@@ -72,8 +75,8 @@ async function riftPayload(): Promise<unknown> {
 }
 
 /** An observation for `matchId`, tracking `puuids`. */
-async function observe(matchId: string, puuids: string[]): Promise<void> {
-  const parsed = RiotMatchIdSchema.parse(matchId);
+async function observe(matchId: RiotMatchId, puuids: string[]): Promise<void> {
+  const parsed = matchId;
   await observeMatch(prisma, {
     matchId: parsed,
     platformRoute: platformRouteOf(parsed),
@@ -163,7 +166,7 @@ test("observed roster survives a live roster narrowed to nothing", async () => {
       updatedTime: new Date(),
     },
   });
-  await observe("NA1_9801", [puuid]);
+  await observe(RiotMatchIdSchema.parse("NA1_9801"), [puuid]);
 
   const live = await resolveScoutMatchContext(
     RiotMatchIdSchema.parse("NA1_9801"),
@@ -190,7 +193,7 @@ test("observed roster survives a live roster narrowed to nothing", async () => {
  */
 test("observed roster is empty for a match observed for nobody", async () => {
   riot.response = await riftPayload();
-  await observe("NA1_9802", []);
+  await observe(RiotMatchIdSchema.parse("NA1_9802"), []);
 
   const observed = await resolveScoutObservedMatchContext(
     RiotMatchIdSchema.parse("NA1_9802"),

@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import { LeaguePuuidSchema } from "@scout-for-lol/data";
 import type {
@@ -32,7 +33,7 @@ function historyMatch(input: {
   dragons?: number;
 }): ParlayHistoryMatch {
   return {
-    matchId: `NA1_${input.index.toString()}`,
+    matchId: RiotMatchIdSchema.parse(`NA1_${input.index.toString()}`),
     createdAtMs: 1_700_000_000_000 + input.index,
     durationSeconds: input.durationSeconds ?? 1800,
     win: input.win ?? true,

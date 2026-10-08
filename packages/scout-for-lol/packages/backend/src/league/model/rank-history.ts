@@ -1,10 +1,11 @@
-import type {
-  MatchId,
-  LeaguePuuid,
-  Rank,
-  RankedQueueType,
+import {
+  type RiotMatchId,
+  type LeaguePuuid,
+  type Rank,
+  type RankedQueueType,
+  rankToLeaguePoints,
+  RankSchema,
 } from "@scout-for-lol/data";
-import { rankToLeaguePoints, RankSchema } from "@scout-for-lol/data";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -14,7 +15,7 @@ const logger = createLogger("rank-history");
  * Store rank history for a match
  */
 export async function saveMatchRankHistory(params: {
-  matchId: MatchId;
+  matchId: RiotMatchId;
   puuid: LeaguePuuid;
   queueType: RankedQueueType;
   rankBefore: Rank | undefined;
@@ -236,7 +237,7 @@ export async function getHighestRankForPuuidsInWindow(params: {
  * holds today. A PUUID with no row is simply absent.
  */
 export async function getRecordedRankChangesForMatch(
-  matchId: MatchId,
+  matchId: RiotMatchId,
   queueType: RankedQueueType,
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<Map<string, { before: Rank | undefined; after: Rank | undefined }>> {

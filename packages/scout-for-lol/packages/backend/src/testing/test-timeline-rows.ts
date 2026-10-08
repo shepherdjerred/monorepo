@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type {
   TimelineEventLakeRow,
   TimelineParticipantFrameLakeRow,
@@ -11,7 +12,7 @@ import { lakeMonth, lakeTimestamp } from "#src/report-lake/schema.ts";
 
 /** A timeline frame with every stat zeroed or absent except those given. */
 export function testFrameRow(input: {
-  readonly matchId: string;
+  readonly matchId: RiotMatchId;
   readonly gameCreationAt: Date;
   readonly puuid: string;
   readonly participantId: number;

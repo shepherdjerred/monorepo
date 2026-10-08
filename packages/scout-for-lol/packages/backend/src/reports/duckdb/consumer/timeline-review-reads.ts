@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import { runSource } from "./profile-lake-reads.ts";
@@ -22,7 +23,7 @@ const TimelineReviewFrameSchema = z.object({
 });
 
 export async function fetchTimelineReviewParticipants(options: {
-  matchId: string;
+  matchId: RiotMatchId;
   lakeDir?: string;
 }) {
   return await withLakeQueryRetry(
@@ -47,7 +48,7 @@ export async function fetchTimelineReviewParticipants(options: {
 
 /** Only the snapshot fields used by interactive match review. */
 export async function fetchTimelineReviewFrames(options: {
-  matchId: string;
+  matchId: RiotMatchId;
   lakeDir?: string;
 }) {
   return await withLakeQueryRetry(

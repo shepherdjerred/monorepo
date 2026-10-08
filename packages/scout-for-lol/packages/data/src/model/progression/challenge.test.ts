@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import {
   CHALLENGE_CONTRACT_VERSION,
@@ -30,7 +31,7 @@ function evidence(input: {
   placement?: number | null;
 }): ChallengeEvidenceMatch {
   return {
-    matchId: input.id,
+    matchId: RiotMatchIdSchema.parse(`NA1_${input.id}`),
     gameEndAt: `2026-01-${input.id.padStart(2, "0")}T00:00:00.000Z`,
     queue: input.queue ?? "solo",
     championId: input.championId,
@@ -353,7 +354,7 @@ describe("challenge predicate evaluation and missing evidence", () => {
 
   test("parses legacy evidence without placement field defaulting to null", () => {
     const parsed = ChallengeEvidenceMatchSchema.parse({
-      matchId: "1",
+      matchId: "NA1_1",
       gameEndAt: "2026-01-01T00:00:00.000Z",
       queue: "solo",
       championId: 1,

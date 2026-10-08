@@ -4,7 +4,7 @@ import {
   ChallengeEvidenceMatchSchema,
   ChallengeProgressSchema,
   LeaguePuuidSchema,
-  MatchIdSchema,
+  RiotMatchIdSchema,
   challengeNeedsTimeline,
   evaluateChallengeContract,
 } from "@scout-for-lol/data";
@@ -275,7 +275,14 @@ export async function recomputeChallengeRunPage(
     const page = await fetchChallengeEvidence({
       puuids: accounts.map((account) => account.puuid),
       startAt: run.originalStartAt,
-      ...(input.cursor === undefined ? {} : { cursor: input.cursor }),
+      ...(input.cursor === undefined
+        ? {}
+        : {
+            cursor: {
+              ...input.cursor,
+              matchId: RiotMatchIdSchema.parse(input.cursor.matchId),
+            },
+          }),
       limit: PAGE_SIZE,
     });
     for (const entry of page.evidence) {
@@ -284,14 +291,14 @@ export async function recomputeChallengeRunPage(
           runId_revision_matchId_puuid: {
             runId: input.runId,
             revision: input.revision,
-            matchId: MatchIdSchema.parse(entry.match.matchId),
+            matchId: entry.match.matchId,
             puuid: LeaguePuuidSchema.parse(entry.puuid),
           },
         },
         create: {
           runId: input.runId,
           revision: input.revision,
-          matchId: MatchIdSchema.parse(entry.match.matchId),
+          matchId: entry.match.matchId,
           puuid: LeaguePuuidSchema.parse(entry.puuid),
           gameEndAt: new Date(entry.match.gameEndAt),
           timelineComplete: entry.match.timelineEvidenceAvailable,

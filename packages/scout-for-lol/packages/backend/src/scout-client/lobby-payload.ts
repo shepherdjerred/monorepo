@@ -3,7 +3,10 @@ import {
   type Lane,
   type ScoutClientObservation,
 } from "@scout-for-lol/data";
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 
 type ObservedGameState = "PLAYING" | "RESULT_PENDING";
@@ -200,7 +203,7 @@ export function observedLobbyMatchesDuelSettings(payload: unknown): boolean {
 /** Extract the authoritative Riot match identity from live post-game evidence. */
 export function observedPostGameMatchId(
   observation: ScoutClientObservation,
-): string | null {
+): RiotMatchId | null {
   if (
     observation.kind !== "post_game" ||
     observationResource(observation.payload) !== "post_game" ||

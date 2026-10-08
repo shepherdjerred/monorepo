@@ -3,7 +3,7 @@ import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
-  MatchIdSchema,
+  RiotMatchIdSchema,
 } from "@scout-for-lol/data";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { bucksTestPuuid } from "#src/testing/bucks-fixtures.ts";
@@ -22,7 +22,7 @@ vi.mock("#src/discord/utils/channel.ts", () => ({
 }));
 
 const { prisma: db } = createTestDatabase("mvp-message-refresh");
-const matchId = MatchIdSchema.parse("NA1_5000000099");
+const matchId = RiotMatchIdSchema.parse("NA1_5000000099");
 const serverId = DiscordGuildIdSchema.parse("1337623164146155593");
 const firstChannel = DiscordChannelIdSchema.parse("300000000000000001");
 const secondChannel = DiscordChannelIdSchema.parse("300000000000000002");

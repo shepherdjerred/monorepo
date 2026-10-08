@@ -1,10 +1,10 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { MatchDataSource } from "@scout-for-lol/domain/match-processing/states.ts";
 import {
   CustomGameStateSchema,
   CustomNightStateSchema,
   CustomTeamSchema,
   CustomWinnerSchema,
-  MatchIdSchema,
   type RawMatch,
 } from "@scout-for-lol/data";
 import { ApplicationFailure } from "@temporalio/common";
@@ -33,7 +33,7 @@ export async function findObservedCustomGame(
   client: ExtendedPrismaClient,
   match: RawMatch,
 ) {
-  const matchId = MatchIdSchema.parse(match.metadata.matchId);
+  const matchId = match.metadata.matchId;
   const bound = await client.customGame.findFirst({
     where: { matchId },
     include: observedCustomGameInclude,
@@ -81,7 +81,10 @@ function incompleteResult(message: string): ApplicationFailure {
   );
 }
 
-function requireWinner(winningTeams: ReadonlySet<string>, matchId: string) {
+function requireWinner(
+  winningTeams: ReadonlySet<string>,
+  matchId: RiotMatchId,
+) {
   const values = [...winningTeams];
   if (values.length !== 1) {
     throw incompleteResult(
@@ -114,7 +117,7 @@ type ObservedCustomGame = NonNullable<
 
 function verifiedResultNightId(
   game: ObservedCustomGame,
-  matchId: string,
+  matchId: RiotMatchId,
 ): string | null {
   if (game.state !== "VERIFIED") return null;
   if (game.matchId !== matchId) {
@@ -129,7 +132,7 @@ async function projectParticipantResults(
   transaction: Db,
   game: ObservedCustomGame,
   match: RawMatch,
-  matchId: string,
+  matchId: RiotMatchId,
 ) {
   requireCompleteRoster(game.participants.length, game.id);
   const winningTeams = new Set<string>();
@@ -164,7 +167,7 @@ export async function finalizeManagedCustomResult(
   match: RawMatch,
   resultSource: MatchDataSource = "RIOT",
 ): Promise<string | undefined> {
-  const matchId = MatchIdSchema.parse(match.metadata.matchId);
+  const matchId = match.metadata.matchId;
   const observedGame = await findObservedCustomGame(client, match);
 
   if (observedGame === null) return;

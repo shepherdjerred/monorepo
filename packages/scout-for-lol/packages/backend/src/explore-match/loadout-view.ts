@@ -1,9 +1,10 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { ExploreCardSelectionError } from "./card-selection-error.ts";
 import {
   EXPLORE_LOADOUT_BUILD_PATH_MAX_EVENTS,
   ExploreLoadoutCardSchema,
   LeaguePuuidSchema,
-  MatchIdSchema,
+  RiotMatchIdSchema,
   getItemInfo,
   getRuneTreeInfo,
   listRunes,
@@ -31,7 +32,7 @@ const spellByNumericId = new Map(
 );
 
 export type ExploreLoadoutPair = {
-  matchId: string;
+  matchId: RiotMatchId;
   puuid: string;
 };
 
@@ -59,7 +60,7 @@ export function loadoutPairsInPreview(
     if (typeof matchIdValue !== "string" || typeof puuidValue !== "string") {
       continue;
     }
-    const matchId = MatchIdSchema.safeParse(matchIdValue);
+    const matchId = RiotMatchIdSchema.safeParse(matchIdValue);
     const puuid = LeaguePuuidSchema.safeParse(puuidValue);
     if (matchId.success && puuid.success) {
       pairs.add(
@@ -310,7 +311,7 @@ function runePage(row: LakeMatchLoadoutRow) {
 }
 
 async function timelineForParticipant(
-  matchId: string,
+  matchId: RiotMatchId,
   participantId: number,
   abortSignal: AbortSignal | undefined,
 ): Promise<TimelineEventRead[] | null> {

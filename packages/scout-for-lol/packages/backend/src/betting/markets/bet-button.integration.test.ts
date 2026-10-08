@@ -1,3 +1,7 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import { ButtonStyle } from "discord.js";
 import {
@@ -29,7 +33,7 @@ const { prisma: db } = createTestDatabase("bucks-bet-button");
 
 const SERVER_ID = DiscordGuildIdSchema.parse("1337623164146155593");
 const BETTOR = bucksTestDiscordId(1);
-const MATCH_ID = "NA1_5000000042";
+const MATCH_ID = RiotMatchIdSchema.parse("NA1_5000000042");
 
 /**
  * A stand-in for discord.js's ButtonInteraction.
@@ -64,7 +68,7 @@ function betId(subjectIndex: number, side: "W" | "L", amount: number) {
 }
 
 function recordingRefreshes(
-  calls: { matchId: string; serverId: string }[],
+  calls: { matchId: RiotMatchId; serverId: string }[],
 ): BetButtonDependencies {
   return {
     refreshMessages: (input) => {
@@ -208,7 +212,7 @@ describe("handleBetButton", () => {
       amount: 0,
     });
     const { interaction, replies } = fakeInteraction(cancelId);
-    const refreshes: { matchId: string; serverId: string }[] = [];
+    const refreshes: { matchId: RiotMatchId; serverId: string }[] = [];
     await handleBetButton(interaction, db, recordingRefreshes(refreshes));
 
     expect(replies[0]).toContain("Cancelled");
@@ -246,7 +250,7 @@ describe("handleBetButton", () => {
   });
 
   test("refreshes the shared prematch summary after a placement", async () => {
-    const refreshes: { matchId: string; serverId: string }[] = [];
+    const refreshes: { matchId: RiotMatchId; serverId: string }[] = [];
 
     await handleBetButton(
       fakeInteraction(betId(0, "W", 5)).interaction,
@@ -333,7 +337,7 @@ describe("handleBetButton", () => {
     });
 
     const { interaction, replies } = fakeInteraction(betId(0, "W", 5));
-    const refreshes: { matchId: string; serverId: string }[] = [];
+    const refreshes: { matchId: RiotMatchId; serverId: string }[] = [];
     await handleBetButton(interaction, db, recordingRefreshes(refreshes));
 
     expect(replies[0]).toContain("Betting has closed");
@@ -434,7 +438,7 @@ describe("buildBettingRows", () => {
 
   test("every button carries a parseable, in-range custom ID", () => {
     const rows = buildBettingRows({
-      matchId: "EUW1_1234567890123",
+      matchId: RiotMatchIdSchema.parse("EUW1_1234567890123"),
       roster: bucksTestRoster(),
     });
 

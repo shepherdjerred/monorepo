@@ -1,9 +1,5 @@
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
-import {
-  PlayerConfigEntrySchema,
-  RawMatchSchema,
-  type MatchId,
-} from "@scout-for-lol/data";
+import { PlayerConfigEntrySchema, RawMatchSchema } from "@scout-for-lol/data";
 import type * as GeneratorModule from "#src/league/tasks/postmatch/match-report-generator.ts";
 import type * as ImageModule from "#src/league/tasks/postmatch/match-report-image.ts";
 import {
@@ -21,8 +17,10 @@ import {
   SCOUT_MATCH_RECEIPT_KINDS,
   scoutMatchStageEvidenceCodec,
 } from "@scout-for-lol/temporal/match-receipts";
-import type { StoredObject } from "#src/storage/object-integrity.ts";
-import { computeSha256Digest } from "#src/storage/object-integrity.ts";
+import {
+  type StoredObject,
+  computeSha256Digest,
+} from "#src/storage/object-integrity.ts";
 import {
   createTestDatabase,
   testDatabaseModule,
@@ -100,7 +98,7 @@ vi.mock("#src/discord/utils/channel.ts", () => ({
 // A real Flex match, so v1's own generator runs end to end — the queue
 // community-MVP votes attach to — with only its expensive leaves stubbed.
 vi.mock("#src/temporal/match/match-context.ts", () => ({
-  resolveScoutObservedMatchContext: (riotMatchId: string) =>
+  resolveScoutObservedMatchContext: (riotMatchId: RiotMatchId) =>
     Promise.resolve({
       matchId: riotMatchId,
       riotMatchId,
@@ -139,7 +137,7 @@ vi.mock(
     return {
       ...actual,
       // The Satori pass, replaced by fixed bytes through v1's own furniture.
-      createMatchImage: (_match: unknown, matchId: MatchId) =>
+      createMatchImage: (_match: unknown, matchId: RiotMatchId) =>
         Promise.resolve(
           actual.attachReportImage(
             new Uint8Array([137, 80, 78, 71, 7]),
@@ -187,7 +185,7 @@ vi.mock(
 );
 vi.mock("#src/storage/s3-helpers.ts", () => ({
   saveToS3: (config: {
-    matchId: string;
+    matchId: RiotMatchId;
     assetType: string;
     body: Uint8Array;
     keyDate?: Date;

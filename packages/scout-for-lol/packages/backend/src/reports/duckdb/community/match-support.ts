@@ -1,16 +1,20 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { withMatchIdsSource } from "#src/reports/duckdb/community/match-source.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import { bindParams } from "#src/reports/duckdb/lake-reads.ts";
 
 const MatchSupportRowSchema = z.object({
-  match_id: z.string(),
+  match_id: RiotMatchIdSchema,
   queue_id: z.number(),
   game_mode: z.string(),
 });
 
 export async function fetchMatchSupport(options: {
-  matchIds: string[];
+  matchIds: RiotMatchId[];
   abortSignal?: AbortSignal | undefined;
   lakeDir?: string | undefined;
 }): Promise<

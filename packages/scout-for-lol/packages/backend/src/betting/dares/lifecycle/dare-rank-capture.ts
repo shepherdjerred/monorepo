@@ -1,6 +1,5 @@
 import {
   DareContractSchema,
-  MatchIdSchema,
   rankForQueue,
   resolveQueueTypeFromGame,
   type Player,
@@ -116,7 +115,7 @@ export async function capturePostmatchRanksForDares(
     queue,
     dependencies.prismaClient,
   );
-  const matchId = MatchIdSchema.parse(input.matchData.metadata.matchId);
+  const matchId = input.matchData.metadata.matchId;
   const capturedAt = input.now ?? new Date();
   const changes = new Map<
     string,

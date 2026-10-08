@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { vi } from "vitest";
 import {
   DareSqlEvidenceSchema,
@@ -10,7 +11,7 @@ import {
 export function makeTwistedFateMatch(
   fixture: RawMatch,
   input: {
-    matchId: string;
+    matchId: RiotMatchId;
     timePlayed: number;
     creepScore: number;
     gameStartTimestamp?: number | undefined;
@@ -136,7 +137,7 @@ export async function loadRiftFixture(): Promise<RawMatch> {
 /** A 25-minute Twisted Fate game by the stubbed target, started at `startAt`. */
 export function targetMatchAt(
   fixture: RawMatch,
-  matchId: string,
+  matchId: RiotMatchId,
   startAt: Date,
   creepScore = 200,
 ): RawMatch {
@@ -153,7 +154,7 @@ export function targetMatchAt(
  * game cap is reached, so the Dare is final on that match.
  */
 export function finalUnachievedEvidence(input: {
-  matchId: string;
+  matchId: RiotMatchId;
   queryHash: string;
 }): DareSqlEvidence {
   return DareSqlEvidenceSchema.parse({
@@ -185,7 +186,7 @@ export async function stubbedDareSqlModule(
  * contract unachieved and final on `matchId`.
  */
 export function finalUnachievedDareSqlModule(input: {
-  matchId: string;
+  matchId: RiotMatchId;
   queryHash: string;
 }) {
   return {

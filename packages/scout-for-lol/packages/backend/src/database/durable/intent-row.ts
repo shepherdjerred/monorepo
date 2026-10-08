@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import {
   NotificationIntentSchema,
   type NotificationIntent,
@@ -91,7 +94,7 @@ export type MatchNotificationIntentRow = NotificationIntentStateColumns & {
   intentKey: string;
   subjectKind: "match" | "duel" | "dare";
   subjectId: string;
-  riotMatchId: string | null;
+  riotMatchId: RiotMatchId | null;
   kind: string;
   originKind: string;
   recoveryBatchId: string | null;

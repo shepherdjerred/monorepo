@@ -1,10 +1,11 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import type { DareSqlCompilation, DareSqlEvidence } from "@scout-for-lol/data";
 import type { DuckDBSession } from "#src/reports/duckdb/instance.ts";
 
 const TimelineEvidenceRowSchema = z.strictObject({
   event_id: z.string(),
-  match_id: z.string(),
+  match_id: RiotMatchIdSchema,
   target_key: z.string().regex(/^T[1-5]$/u),
   event_timestamp_ms: z.coerce.number().int().nonnegative(),
   frame_index: z.coerce.number().int().nonnegative(),

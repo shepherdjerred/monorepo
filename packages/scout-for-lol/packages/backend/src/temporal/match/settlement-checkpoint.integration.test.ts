@@ -55,7 +55,7 @@ const settlement = vi.hoisted(
 vi.mock("#src/database/index.ts", async () => await testDatabaseModule(prisma));
 
 vi.mock("#src/temporal/match/match-context.ts", () => ({
-  resolveScoutObservedMatchContext: (riotMatchId: string) =>
+  resolveScoutObservedMatchContext: (riotMatchId: RiotMatchId) =>
     Promise.resolve({
       matchId: riotMatchId,
       riotMatchId,
@@ -193,7 +193,7 @@ async function standingSettlementReceipt(
 function settlementPayload(
   serverId: string,
   betId: number,
-  matchId: string = PARTLY_SETTLED,
+  matchId: RiotMatchId = PARTLY_SETTLED,
 ): unknown {
   return {
     matchId,

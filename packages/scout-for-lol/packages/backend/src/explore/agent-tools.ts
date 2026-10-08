@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { tool } from "ai";
 import { registerExploreToolContracts } from "#src/explore/inspection/tool-contracts.ts";
 import { exploreAnalysisEnabled } from "#src/config/dynamic.ts";
@@ -74,7 +75,7 @@ export type RunState = {
   /** Match ids from the most recent query that support a two-team card. */
   lastMatchIds: Set<string>;
   /** Every match id in the most recent query, including card-ineligible modes. */
-  lastQueryMatchIds: Set<string>;
+  lastQueryMatchIds: Set<RiotMatchId>;
   /** Exact participant pairs returned by the most recent participant query. */
   lastQueryLoadoutPairs: Set<string>;
   /** Skills loaded this turn, so result messages can stop nudging. */

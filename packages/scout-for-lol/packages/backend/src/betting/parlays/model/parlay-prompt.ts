@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import {
   getChampionTags,
@@ -105,7 +106,7 @@ function summarize(
 }
 
 async function recentHistory(input: {
-  matchId: string;
+  matchId: RiotMatchId;
   queue: RankedQueueType;
   subjects: readonly ParlaySubject[];
   championByPuuid: ReadonlyMap<string, string>;
@@ -150,7 +151,7 @@ async function recentHistory(input: {
 }
 
 export async function buildParlayGenerationContext(input: {
-  matchId: string;
+  matchId: RiotMatchId;
   queue: RankedQueueType;
   loadingScreenData: LoadingScreenData;
   selectedTeamId: 100 | 200;

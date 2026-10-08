@@ -2,9 +2,10 @@ import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   NotificationIntentKeySchema,
   RiotMatchIdSchema,
+  type RiotMatchId,
+  IsoInstantSchema,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import { PlatformRouteSchema } from "@scout-for-lol/domain/identity/routes.ts";
-import { IsoInstantSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import type * as DatabaseModule from "#src/database/index.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { testGuildId } from "#src/testing/test-ids.ts";
@@ -108,11 +109,11 @@ const { toIsoInstant } = await import("#src/durable/match/match-identity.ts");
 const GAME_CREATED_AT = Date.parse("2026-09-19T09:00:00.000Z");
 
 async function observe(
-  matchId: string,
+  matchId: RiotMatchId,
   deliveryMode: "live" | "silent-backfill",
 ): Promise<void> {
   await observeMatch(prisma, {
-    matchId: RiotMatchIdSchema.parse(matchId),
+    matchId: matchId,
     platformRoute: PlatformRouteSchema.parse("NA1"),
     policy: "FULL",
     deliveryMode,
@@ -125,9 +126,9 @@ async function observe(
   });
 }
 
-function mint(matchId: string) {
+function mint(matchId: RiotMatchId) {
   return mintPostmatchIntents(prisma, {
-    matchId: RiotMatchIdSchema.parse(matchId),
+    matchId: matchId,
     puuids: [],
     queue: { queueId: 420, gameMode: "CLASSIC", gameType: "MATCHED_GAME" },
     gameCreation: GAME_CREATED_AT,

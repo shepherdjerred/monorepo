@@ -1,3 +1,7 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import {
   DiscordAccountIdSchema,
@@ -61,7 +65,7 @@ async function seedPlayer(options: {
 }
 
 function matchFact(options: {
-  matchId: string;
+  matchId: RiotMatchId;
   puuid: string;
   kills: number;
   teamId: number;
@@ -107,7 +111,7 @@ describe("player.profileSummary", () => {
       serverId: guildId,
       matchFacts: [
         matchFact({
-          matchId: "NA1_a",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000000"),
           puuid: MAIN,
           kills: 5,
           teamId: 100,
@@ -115,7 +119,7 @@ describe("player.profileSummary", () => {
           playerId: 1,
         }),
         matchFact({
-          matchId: "NA1_b",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000010"),
           puuid: SMURF,
           kills: 4,
           teamId: 100,
@@ -144,7 +148,7 @@ describe("player.profileSummary", () => {
     await seedPlayer({ serverId: guildId, alias: "Ranked", puuids: [MAIN] });
     await testPrisma.matchRankHistory.create({
       data: {
-        matchId: "NA1_rank_old",
+        matchId: RiotMatchIdSchema.parse("NA1_9100000080"),
         puuid: MAIN,
         queueType: "solo",
         rankAfter: JSON.stringify({
@@ -180,7 +184,7 @@ describe("player.profileSummary", () => {
 
     await testPrisma.matchRankHistory.create({
       data: {
-        matchId: "NA1_rank_new",
+        matchId: RiotMatchIdSchema.parse("NA1_9100000070"),
         puuid: MAIN,
         queueType: "solo",
         rankAfter: JSON.stringify({
@@ -201,7 +205,7 @@ describe("player.profileSummary", () => {
 
     await testPrisma.matchRankHistory.create({
       data: {
-        matchId: "NA1_rank_unavailable",
+        matchId: RiotMatchIdSchema.parse("NA1_9100000090"),
         puuid: MAIN,
         queueType: "solo",
         rankAfter: null,
@@ -291,7 +295,7 @@ describe("player.rankHistory", () => {
     await seedPlayer({ serverId: guildId, alias: "Climber", puuids: [MAIN] });
     await testPrisma.matchRankHistory.create({
       data: {
-        matchId: "NA1_old",
+        matchId: RiotMatchIdSchema.parse("NA1_9100000060"),
         puuid: MAIN,
         queueType: "solo",
         rankAfter: JSON.stringify({
@@ -307,7 +311,7 @@ describe("player.rankHistory", () => {
     });
     await testPrisma.matchRankHistory.create({
       data: {
-        matchId: "NA1_live",
+        matchId: RiotMatchIdSchema.parse("NA1_9100000030"),
         puuid: MAIN,
         queueType: "solo",
         rankAfter: JSON.stringify({
@@ -323,7 +327,7 @@ describe("player.rankHistory", () => {
     });
     await testPrisma.matchRankHistory.create({
       data: {
-        matchId: "NA1_unranked",
+        matchId: RiotMatchIdSchema.parse("NA1_9100000110"),
         puuid: MAIN,
         queueType: "solo",
         rankAfter: null,
@@ -363,7 +367,7 @@ describe("player.rankHistory", () => {
     await seedPlayer({ serverId: guildId, alias: "Stale", puuids: [MAIN] });
     await testPrisma.matchRankHistory.create({
       data: {
-        matchId: "NA1_fresh",
+        matchId: RiotMatchIdSchema.parse("NA1_9100000020"),
         puuid: MAIN,
         queueType: "flex",
         rankAfter: JSON.stringify({
@@ -452,7 +456,7 @@ describe("player.matchHistory", () => {
       serverId: guildId,
       matchFacts: [
         matchFact({
-          matchId: "NA1_team",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000100"),
           puuid: MAIN,
           kills: 5,
           teamId: 100,
@@ -463,7 +467,7 @@ describe("player.matchHistory", () => {
       // Teammates Scout has match rows for but this guild does not track.
       untrackedMatchFacts: [
         matchFact({
-          matchId: "NA1_team",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000100"),
           puuid: testPuuid("router-ally"),
           kills: 5,
           teamId: 100,
@@ -471,7 +475,7 @@ describe("player.matchHistory", () => {
           playerId: 91,
         }),
         matchFact({
-          matchId: "NA1_team",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000100"),
           puuid: testPuuid("router-enemy"),
           kills: 7,
           teamId: 200,
@@ -499,7 +503,7 @@ describe("player.matchHistory", () => {
       serverId: guildId,
       matchFacts: [
         matchFact({
-          matchId: "NA1_lp",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000040"),
           puuid: MAIN,
           kills: 5,
           teamId: 100,
@@ -510,7 +514,7 @@ describe("player.matchHistory", () => {
     });
     await testPrisma.matchRankHistory.create({
       data: {
-        matchId: "NA1_lp",
+        matchId: RiotMatchIdSchema.parse("NA1_9100000040"),
         puuid: MAIN,
         queueType: "solo",
         rankBefore: JSON.stringify({
@@ -544,7 +548,7 @@ describe("player.matchHistory", () => {
       serverId: guildId,
       matchFacts: [
         matchFact({
-          matchId: "NA1_norank",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000050"),
           puuid: MAIN,
           kills: 5,
           teamId: 100,
@@ -567,7 +571,7 @@ describe("player.matchHistory", () => {
       serverId: guildId,
       matchFacts: [0, 1, 2].map((index) => ({
         ...matchFact({
-          matchId: `NA1_${index.toString()}`,
+          matchId: RiotMatchIdSchema.parse(`NA1_${index.toString()}`),
           puuid: MAIN,
           kills: 5,
           teamId: 100,

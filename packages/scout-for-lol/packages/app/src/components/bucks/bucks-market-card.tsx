@@ -1,4 +1,4 @@
-import { formatInteger } from "@scout-for-lol/data";
+import { formatInteger, type RiotMatchId } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Card,
@@ -23,7 +23,7 @@ export type OutcomeMarketSideView = {
 };
 
 export type OutcomeMarketView = {
-  matchId: string;
+  matchId: RiotMatchId;
   sides: OutcomeMarketSideView[];
   yourPosition: {
     teamId: number;

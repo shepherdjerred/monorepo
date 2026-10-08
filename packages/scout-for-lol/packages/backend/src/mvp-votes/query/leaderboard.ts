@@ -1,8 +1,8 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import {
   DiscordGuildIdSchema,
   LeaguePuuidSchema,
-  MatchIdSchema,
   type DiscordGuildId,
   type LeaguePuuid,
 } from "@scout-for-lol/data";
@@ -47,7 +47,7 @@ export type MvpVoteLeaderboardResult = z.infer<
 
 type NomineeAgg = {
   voteCount: number;
-  matchIds: Set<string>;
+  matchIds: Set<RiotMatchId>;
 };
 
 function emptyLeaderboard(
@@ -67,7 +67,7 @@ async function displayNamesForNominees(
   input: {
     serverId: DiscordGuildId;
     puuids: readonly LeaguePuuid[];
-    sampleMatchIdByPuuid: ReadonlyMap<LeaguePuuid, string>;
+    sampleMatchIdByPuuid: ReadonlyMap<LeaguePuuid, RiotMatchId>;
   },
   prismaClient: ExtendedPrismaClient,
 ): Promise<Map<LeaguePuuid, string>> {
@@ -161,9 +161,7 @@ export async function loadMvpVoteLeaderboard(
   if (contests.length === 0) {
     return emptyLeaderboard(parsed);
   }
-  const matchIds = contests.map((contest) =>
-    MatchIdSchema.parse(contest.matchId),
-  );
+  const matchIds = contests.map((contest) => contest.matchId);
   const votes = await prismaClient.matchMvpVote.findMany({
     where: {
       serverId: parsed.serverId,

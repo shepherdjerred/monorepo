@@ -1,3 +1,7 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import {
   orderMatchIntentsByCompletion,
@@ -6,7 +10,7 @@ import {
   type MatchIntentOrderResult,
 } from "#src/league/tasks/postmatch/match-intents.ts";
 
-function intent(matchId: string): DiscoveredMatchIntent {
+function intent(matchId: RiotMatchId): DiscoveredMatchIntent {
   return {
     matchId,
     sourcePuuid: `puuid-${matchId}`,
@@ -35,21 +39,25 @@ describe("post-match discovery intent ordering", () => {
   test("globally orders player-grouped matches by completion time and match ID", async () => {
     const completionTimes = new Map([
       ["NA1_300", 300],
-      ["NA1_100_B", 100],
-      ["NA1_100_A", 100],
+      ["NA1_9100000010", 100],
+      ["NA1_9100000000", 100],
     ]);
 
     const ordered = requireOrdered(
       await orderMatchIntentsByCompletion(
-        [intent("NA1_300"), intent("NA1_100_B"), intent("NA1_100_A")],
+        [
+          intent(RiotMatchIdSchema.parse("NA1_300")),
+          intent(RiotMatchIdSchema.parse("NA1_9100000010")),
+          intent(RiotMatchIdSchema.parse("NA1_9100000000")),
+        ],
         300,
         completionResolver(completionTimes),
       ),
     );
 
     expect(ordered.intents.map((match) => match.matchId)).toEqual([
-      "NA1_100_A",
-      "NA1_100_B",
+      "NA1_9100000000",
+      "NA1_9100000010",
       "NA1_300",
     ]);
     expect(ordered.intents.map((match) => match.gameEndTimestamp)).toEqual([
@@ -60,17 +68,17 @@ describe("post-match discovery intent ordering", () => {
 
   test("defers matches newer than one poll-start completion watermark", async () => {
     const completionTimes = new Map([
-      ["NA1_STABLE", 999],
-      ["NA1_TARGET_A_RACE", 1001],
-      ["NA1_TARGET_B_RACE", 1002],
+      ["NA1_9100000030", 999],
+      ["NA1_9100000040", 1001],
+      ["NA1_9100000050", 1002],
     ]);
 
     const ordered = requireOrdered(
       await orderMatchIntentsByCompletion(
         [
-          intent("NA1_TARGET_B_RACE"),
-          intent("NA1_STABLE"),
-          intent("NA1_TARGET_A_RACE"),
+          intent(RiotMatchIdSchema.parse("NA1_9100000050")),
+          intent(RiotMatchIdSchema.parse("NA1_9100000030")),
+          intent(RiotMatchIdSchema.parse("NA1_9100000040")),
         ],
         1000,
         completionResolver(completionTimes),
@@ -78,22 +86,25 @@ describe("post-match discovery intent ordering", () => {
     );
 
     expect(ordered.intents.map((match) => match.matchId)).toEqual([
-      "NA1_STABLE",
+      "NA1_9100000030",
     ]);
     expect(ordered.deferredMatchIds).toEqual([
-      "NA1_TARGET_B_RACE",
-      "NA1_TARGET_A_RACE",
+      "NA1_9100000050",
+      "NA1_9100000040",
     ]);
   });
 
   test("withholds the whole batch when one completion time is unresolved", async () => {
     await expect(
       orderMatchIntentsByCompletion(
-        [intent("NA1_UNKNOWN"), intent("NA1_KNOWN")],
+        [
+          intent(RiotMatchIdSchema.parse("NA1_9100000060")),
+          intent(RiotMatchIdSchema.parse("NA1_9100000020")),
+        ],
         200,
         (match) =>
-          Promise.resolve(match.matchId === "NA1_KNOWN" ? 200 : undefined),
+          Promise.resolve(match.matchId === "NA1_9100000020" ? 200 : undefined),
       ),
-    ).resolves.toEqual({ kind: "unavailable", matchId: "NA1_UNKNOWN" });
+    ).resolves.toEqual({ kind: "unavailable", matchId: "NA1_9100000060" });
   });
 });

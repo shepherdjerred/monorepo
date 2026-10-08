@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -26,7 +27,7 @@ import { isScoutOperator } from "#src/operations/operator-allowlist.ts";
 
 const logger = createLogger("support-interactions");
 
-export function supportContactRow(matchId?: string) {
+export function supportContactRow(matchId?: RiotMatchId) {
   return new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setStyle(ButtonStyle.Secondary)
@@ -38,7 +39,7 @@ export function supportContactRow(matchId?: string) {
 /** Passive product control, not an additional outreach message. Freeze before sending. */
 export async function withSupportAction(
   message: MessageCreateOptions,
-  matchId: string,
+  matchId: RiotMatchId,
   serverId: string,
 ): Promise<MessageCreateOptions> {
   if (
@@ -56,7 +57,7 @@ export async function withSupportAction(
   };
 }
 
-export function buildSupportModal(matchId = "") {
+export function buildSupportModal(matchId?: RiotMatchId) {
   const input = new TextInputBuilder()
     .setCustomId("message")
     .setStyle(TextInputStyle.Paragraph)
@@ -64,27 +65,27 @@ export function buildSupportModal(matchId = "") {
     .setMaxLength(4000);
   const label = new LabelBuilder()
     .setLabel(
-      matchId === ""
+      matchId === undefined
         ? "How can Scout help?"
         : "What happened or was confusing?",
     )
     .setTextInputComponent(input);
   return new ModalBuilder()
-    .setCustomId(`support:message:${matchId}`)
+    .setCustomId(`support:message:${matchId ?? ""}`)
     .setTitle("Contact Scout privately")
     .addLabelComponents(label);
 }
 
 async function showSupportModal(
   interaction: ButtonInteraction,
-  matchId: string,
+  matchId: RiotMatchId | undefined,
 ): Promise<void> {
   await interaction.showModal(buildSupportModal(matchId));
   if (isScoutOperator(interaction.user.id)) return;
   try {
     await recordSupportTouchpoint(
       `opened:${interaction.id}`,
-      matchId === "" ? "HELP" : "REPORT",
+      matchId === undefined ? "HELP" : "REPORT",
       "OPENED",
     );
   } catch {
@@ -146,7 +147,7 @@ export async function handleSupportInteraction(
     ...(interaction.guildId === null ? {} : { serverId: interaction.guildId }),
   });
   if (action === "contact" && interaction.isButton()) {
-    await showSupportModal(interaction, matchId);
+    await showSupportModal(interaction, context.matchId);
     return true;
   }
   if (action === "message" && interaction.isModalSubmit()) {

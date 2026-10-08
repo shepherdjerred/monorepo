@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import {
   RawCurrentGameInfoSchema,
@@ -23,7 +24,6 @@ import type {
 import {
   prematchReceiptMatchId,
   rawArchiveReceiptRecord,
-  receiptMatchId,
   recordReceiptFailOpen,
   storedRawArchiveDescriptor,
   type ReceiptRecordOutcome,
@@ -119,13 +119,13 @@ type ArchivedResult<T> = Extract<
 >;
 
 async function receiptArchived<T>(args: {
-  matchId: string;
+  matchId: RiotMatchId;
   artifact: ArtifactDescriptor;
   options: ReceiptOptions;
 }): Promise<ArchivedResult<T>> {
   const receipt = await recordReceiptFailOpen({
     record: rawArchiveReceiptRecord({
-      matchId: receiptMatchId(args.matchId),
+      matchId: args.matchId,
       artifact: args.artifact,
     }),
     writeKind: "raw-archive",
@@ -240,7 +240,7 @@ function fenceDeadlineFor(clock: FenceClock, now: number): number | null {
  */
 async function readArchivedPayload<T>(args: {
   descriptor: ArtifactDescriptor;
-  matchId: string;
+  matchId: RiotMatchId;
   abortSignal: AbortSignal;
   parse: (value: unknown) => { success: true; data: T } | { success: false };
   expected: string;
@@ -281,7 +281,7 @@ async function readArchivedPayload<T>(args: {
  */
 export async function readArchivedPrematchSnapshot(
   descriptor: ArtifactDescriptor,
-  matchId: string,
+  matchId: RiotMatchId,
 ): Promise<RawCurrentGameInfo> {
   return await readArchivedPayload({
     descriptor,
@@ -295,7 +295,7 @@ export async function readArchivedPrematchSnapshot(
 /** Read a receipted canonical match back from raw storage. */
 export async function readArchivedMatchPayload(
   descriptor: ArtifactDescriptor,
-  matchId: string,
+  matchId: RiotMatchId,
 ): Promise<RawMatch> {
   return await readArchivedPayload({
     descriptor,
@@ -432,7 +432,7 @@ async function withinFenceDeadline<T>(
  * database has always been able to take it.
  */
 async function archiveUnderFence<T>(args: {
-  matchId: string;
+  matchId: RiotMatchId;
   artifactKind: ArtifactKind;
   options: ReceiptOptions;
   put: (abortSignal: AbortSignal) => Promise<RawArchiveResult>;
@@ -462,7 +462,7 @@ async function archiveUnderFence<T>(args: {
         // until after it, inside `withinFenceDeadline`.
         const stored = await storedRawArchiveDescriptor(
           tx,
-          receiptMatchId(args.matchId),
+          args.matchId,
           args.artifactKind,
         );
         if (stored !== null) {

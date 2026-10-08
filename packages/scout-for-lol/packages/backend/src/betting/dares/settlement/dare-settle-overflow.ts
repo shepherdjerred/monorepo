@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { BucksStorageOverflowError } from "#src/betting/ledger.ts";
 import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settle-types.ts";
 import {
@@ -12,7 +13,7 @@ export async function settleDareOrVoidOnStorageOverflow(
     dare: RefundableDareRow;
     prismaClient: ExtendedPrismaClient;
     now: Date;
-    matchId?: string | undefined;
+    matchId?: RiotMatchId | undefined;
     /** Whether the match this settles is owed a public delivery. */
     notify: DareNotificationDisposition;
   },

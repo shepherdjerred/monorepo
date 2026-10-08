@@ -1,6 +1,5 @@
 import type { MatchDataSource } from "@scout-for-lol/domain/match-processing/states.ts";
 import {
-  MatchIdSchema,
   type Player,
   type PlayerConfigEntry,
   type RawMatch,
@@ -62,7 +61,7 @@ export async function settleBucksWithDareTimeline(
   const timeline = timelineRequired
     ? await dependencies.fetchTimeline(
         input.matchData,
-        MatchIdSchema.parse(input.matchData.metadata.matchId),
+        input.matchData.metadata.matchId,
         input.trackedPlayers,
       )
     : undefined;

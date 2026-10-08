@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   loadRawMatchFixture,
@@ -106,7 +107,7 @@ describe("the no-bucket path", () => {
       family: "timeline",
       archive: async () =>
         await archiveTimelineReceipted(
-          rawTimelineFixture("NA1_5370969615"),
+          rawTimelineFixture(RiotMatchIdSchema.parse("NA1_5370969615")),
           [],
           new Date(),
         ),
@@ -207,7 +208,9 @@ describe("receipted match archival", () => {
 
 describe("receipted timeline archival", () => {
   test("receipts the timeline against its own match id", async () => {
-    const timeline = rawTimelineFixture("NA1_5370969615");
+    const timeline = rawTimelineFixture(
+      RiotMatchIdSchema.parse("NA1_5370969615"),
+    );
     mockSuccessfulPut();
 
     const result = await archiveTimelineReceipted(

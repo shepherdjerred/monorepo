@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/data";
 import { useState, type ReactNode } from "react";
 import { useSearchParams } from "react-router";
 import {
@@ -27,7 +28,7 @@ import {
 
 export function MatchReview(props: {
   source: ReviewSource;
-  matchId: string;
+  matchId: RiotMatchId;
   match: {
     teams: MatchTeam[];
     mapId: number;
@@ -58,7 +59,7 @@ export function MatchReview(props: {
 
 function MatchReviewContent(props: {
   source: ReviewSource;
-  matchId: string;
+  matchId: RiotMatchId;
   teams: MatchTeam[];
   showRiftMap: boolean;
   durationSeconds: number;

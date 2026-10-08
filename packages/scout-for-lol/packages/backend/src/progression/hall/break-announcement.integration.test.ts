@@ -4,6 +4,7 @@ import {
   IsoInstantSchema,
   NotificationIntentKeySchema,
   RiotMatchIdSchema,
+  type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import type * as DatabaseModule from "#src/database/index.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
@@ -71,7 +72,7 @@ async function observedMatch(
 }
 
 function announce(
-  matchId: string,
+  matchId: RiotMatchId,
   overrides: Partial<{
     channelId: string;
     records: ReturnType<typeof hallBreakRecords>;
@@ -81,20 +82,18 @@ function announce(
     guildId: GUILD,
     matchId,
     channelId: overrides.channelId ?? CHANNEL,
-    records:
-      overrides.records ??
-      hallBreakRecords(2, RiotMatchIdSchema.parse(matchId)),
+    records: overrides.records ?? hallBreakRecords(2, matchId),
     now: NOW,
   });
 }
 
-function keyOf(matchId: string) {
+function keyOf(matchId: RiotMatchId) {
   return NotificationIntentKeySchema.parse(
-    hallRecordBreakIntentKey(RiotMatchIdSchema.parse(matchId), GUILD),
+    hallRecordBreakIntentKey(matchId, GUILD),
   );
 }
 
-async function intentRows(matchId: string) {
+async function intentRows(matchId: RiotMatchId) {
   return await prisma.matchNotificationIntent.findMany({
     where: { riotMatchId: matchId },
   });
@@ -112,9 +111,13 @@ describe("a live match", () => {
   test("mints one pending hall intent", async () => {
     const matchId = await observedMatch();
 
-    expect(await announce(matchId)).toBe("intent-minted");
+    expect(await announce(RiotMatchIdSchema.parse(matchId))).toBe(
+      "intent-minted",
+    );
 
-    const stored = await getIntent(prisma, { intentKey: keyOf(matchId) });
+    const stored = await getIntent(prisma, {
+      intentKey: keyOf(RiotMatchIdSchema.parse(matchId)),
+    });
     expect(stored?.matchId).toBe(matchId);
     expect(stored?.intent).toMatchObject({
       kind: "hall-record-break",
@@ -133,37 +136,45 @@ describe("a live match", () => {
 
   test("the match's own fan-out starts a notification child for it", async () => {
     const matchId = await observedMatch();
-    await announce(matchId);
+    await announce(RiotMatchIdSchema.parse(matchId));
 
-    const plan = await planMatchFanOut({ riotMatchId: matchId });
+    const plan = await planMatchFanOut({
+      riotMatchId: RiotMatchIdSchema.parse(matchId),
+    });
 
-    expect(plan.notificationIntentKeys).toContain(keyOf(matchId));
+    expect(plan.notificationIntentKeys).toContain(
+      keyOf(RiotMatchIdSchema.parse(matchId)),
+    );
   });
 
   test("a channel change re-evaluating the same break mints no second key", async () => {
     const matchId = await observedMatch();
-    await announce(matchId);
+    await announce(RiotMatchIdSchema.parse(matchId));
 
-    expect(await announce(matchId, { channelId: OTHER_CHANNEL })).toBe(
-      "intent-standing",
-    );
+    expect(
+      await announce(RiotMatchIdSchema.parse(matchId), {
+        channelId: OTHER_CHANNEL,
+      }),
+    ).toBe("intent-standing");
 
-    const rows = await intentRows(matchId);
-    expect(rows.map((row) => row.intentKey)).toEqual([keyOf(matchId)]);
+    const rows = await intentRows(RiotMatchIdSchema.parse(matchId));
+    expect(rows.map((row) => row.intentKey)).toEqual([
+      keyOf(RiotMatchIdSchema.parse(matchId)),
+    ]);
     // The standing row is the decision; its target is not rewritten.
     expect(rows[0]?.targetId).toBe(CHANNEL);
   });
 
   test("a different payload under a standing key throws instead of choosing", async () => {
     const matchId = await observedMatch();
-    await announce(matchId);
+    await announce(RiotMatchIdSchema.parse(matchId));
 
     await expect(
-      announce(matchId, {
+      announce(RiotMatchIdSchema.parse(matchId), {
         records: hallBreakRecords(1, RiotMatchIdSchema.parse(matchId)),
       }),
     ).rejects.toThrow(/different announcement/u);
-    expect(await intentRows(matchId)).toHaveLength(1);
+    expect(await intentRows(RiotMatchIdSchema.parse(matchId))).toHaveLength(1);
   });
 });
 
@@ -171,12 +182,14 @@ describe("a silent or backfilled match", () => {
   test("announces nothing", async () => {
     const matchId = await observedMatch("silent-backfill");
 
-    expect(await announce(matchId)).toBe("silent");
+    expect(await announce(RiotMatchIdSchema.parse(matchId))).toBe("silent");
 
-    expect(await intentRows(matchId)).toEqual([]);
+    expect(await intentRows(RiotMatchIdSchema.parse(matchId))).toEqual([]);
   });
 
   test("a match with no observation is a broken contract, not a default", async () => {
-    await expect(announce("NA1_4799999")).rejects.toThrow(/no observation/u);
+    await expect(
+      announce(RiotMatchIdSchema.parse("NA1_4799999")),
+    ).rejects.toThrow(/no observation/u);
   });
 });

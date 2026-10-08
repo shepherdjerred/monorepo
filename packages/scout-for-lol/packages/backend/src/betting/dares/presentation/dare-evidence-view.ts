@@ -1,4 +1,8 @@
 import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
+import {
   BucksDareStateSchema,
   DareProgressSchema,
   DareSqlCompilationSchema,
@@ -12,7 +16,7 @@ import { deriveDareProgress } from "#src/betting/dares/presentation/dare-progres
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 
 export const DareEvidenceInspectionSchema = z.strictObject({
-  matchId: z.string().min(1),
+  matchId: RiotMatchIdSchema,
   gameStartAt: z.iso.datetime(),
   gameEndAt: z.iso.datetime(),
   queue: z.string().min(1),
@@ -41,11 +45,11 @@ export type DareEvidencePage = z.infer<typeof DareEvidencePageSchema>;
 const DEFAULT_PAGE_SIZE = 10;
 const SourceReferencesSchema = z.array(
   z
-    .strictObject({ matchId: z.string().min(1) })
+    .strictObject({ matchId: RiotMatchIdSchema })
     .transform((row) => row.matchId),
 );
 
-function cursorFor(row: { gameEndAt: string; matchId: string }): string {
+function cursorFor(row: { gameEndAt: string; matchId: RiotMatchId }): string {
   return `${row.gameEndAt}|${row.matchId}`;
 }
 

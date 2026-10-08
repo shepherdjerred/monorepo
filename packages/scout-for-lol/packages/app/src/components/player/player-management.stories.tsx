@@ -1,7 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { Loaded } from "@shepherdjerred/loaded";
-import { ROLE_CATALOG, createPermissionSet } from "@scout-for-lol/data";
+import {
+  ROLE_CATALOG,
+  createPermissionSet,
+  RiotMatchIdSchema,
+} from "@scout-for-lol/data";
 import { Label } from "@scout-for-lol/design-system/components/forms/field";
 import type { StorySeed } from "#src/lib/storybook/trpc-stub.ts";
 import { PlayerAliasCombobox } from "./player-alias-combobox.tsx";
@@ -92,7 +96,7 @@ const SUBSCRIPTIONS: PlayerSubscriptionRow[] = [
 
 const MATCH_ENTRIES = [
   {
-    matchId: "NA1_5182736451",
+    matchId: RiotMatchIdSchema.parse("NA1_5182736451"),
     gameCreationMs: Date.now() - 7_200_000,
     gameDurationSeconds: 1942,
     queue: "Ranked Solo/Duo",
@@ -109,7 +113,7 @@ const MATCH_ENTRIES = [
     account: { gameName: "sjerred", tagLine: "NA1", region: "NA" },
   },
   {
-    matchId: "NA1_5182701122",
+    matchId: RiotMatchIdSchema.parse("NA1_5182701122"),
     gameCreationMs: Date.now() - 172_800_000,
     gameDurationSeconds: 2104,
     queue: "Clash",
@@ -205,7 +209,7 @@ const historyArgs = {
   entries: MATCH_ENTRIES,
   nextCursor: {
     gameCreationMs: MATCH_ENTRIES[1]?.gameCreationMs ?? 0,
-    matchId: "NA1_5182701122",
+    matchId: RiotMatchIdSchema.parse("NA1_5182701122"),
   },
   page: 0,
   playerId: 42,

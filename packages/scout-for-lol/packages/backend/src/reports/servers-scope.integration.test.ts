@@ -1,3 +1,7 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { testGuildId, testPuuid } from "#src/testing/test-ids.ts";
@@ -35,7 +39,7 @@ const lakeDir = resolveLakeDir();
 const BOUND = "game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY";
 
 function game(input: {
-  matchId: string;
+  matchId: RiotMatchId;
   playerId: number;
   alias: string;
   puuid: string;
@@ -99,14 +103,14 @@ describe("servers scope", () => {
       matchFacts: [
         // Alpha knows her as player 11 and Beta as player 72; the same account.
         game({
-          matchId: "NA1_1",
+          matchId: RiotMatchIdSchema.parse("NA1_1"),
           playerId: 11,
           alias: "Mira",
           puuid: mira,
           servers: [ALPHA],
         }),
         game({
-          matchId: "NA1_2",
+          matchId: RiotMatchIdSchema.parse("NA1_2"),
           playerId: 72,
           alias: "Mira B",
           puuid: mira,
@@ -126,7 +130,7 @@ describe("servers scope", () => {
       serverId: ALPHA,
       matchFacts: [
         game({
-          matchId: "NA1_1",
+          matchId: RiotMatchIdSchema.parse("NA1_1"),
           playerId: 21,
           alias: "Otto",
           puuid: testPuuid("servers-otto-main"),
@@ -134,7 +138,7 @@ describe("servers scope", () => {
           discordId: "900000000000000021",
         }),
         game({
-          matchId: "NA1_2",
+          matchId: RiotMatchIdSchema.parse("NA1_2"),
           playerId: 83,
           alias: "Otto Smurf",
           puuid: testPuuid("servers-otto-smurf"),
@@ -154,14 +158,14 @@ describe("servers scope", () => {
       serverId: ALPHA,
       matchFacts: [
         game({
-          matchId: "NA1_1",
+          matchId: RiotMatchIdSchema.parse("NA1_1"),
           playerId: 31,
           alias: "Ana",
           puuid: testPuuid("servers-ana"),
           servers: [ALPHA],
         }),
         game({
-          matchId: "NA1_2",
+          matchId: RiotMatchIdSchema.parse("NA1_2"),
           playerId: 94,
           alias: "Bo",
           puuid: testPuuid("servers-bo"),
@@ -183,14 +187,14 @@ describe("servers scope", () => {
       serverId: ALPHA,
       matchFacts: [
         game({
-          matchId: "NA1_1",
+          matchId: RiotMatchIdSchema.parse("NA1_1"),
           playerId: 41,
           alias: "Cy",
           puuid: testPuuid("servers-cy"),
           servers: [ALPHA],
         }),
         game({
-          matchId: "NA1_2",
+          matchId: RiotMatchIdSchema.parse("NA1_2"),
           playerId: 41,
           alias: "Cy",
           puuid: testPuuid("servers-cy"),
@@ -209,14 +213,14 @@ describe("servers scope", () => {
       serverId: ALPHA,
       matchFacts: [
         game({
-          matchId: "NA1_1",
+          matchId: RiotMatchIdSchema.parse("NA1_1"),
           playerId: 51,
           alias: "Dee",
           puuid: testPuuid("servers-dee"),
           servers: [ALPHA],
         }),
         game({
-          matchId: "NA1_1",
+          matchId: RiotMatchIdSchema.parse("NA1_1"),
           playerId: 105,
           alias: "Eli",
           puuid: testPuuid("servers-eli"),
@@ -243,7 +247,7 @@ describe("servers scope", () => {
       serverId: ALPHA,
       matchFacts: [
         game({
-          matchId: "NA1_1",
+          matchId: RiotMatchIdSchema.parse("NA1_1"),
           playerId: 61,
           alias: "Fay",
           puuid: fay,
@@ -266,7 +270,7 @@ describe("servers scope", () => {
       serverId: ALPHA,
       matchFacts: [
         game({
-          matchId: "NA1_1",
+          matchId: RiotMatchIdSchema.parse("NA1_1"),
           playerId: 71,
           alias: "Gus",
           puuid: testPuuid("servers-gus"),

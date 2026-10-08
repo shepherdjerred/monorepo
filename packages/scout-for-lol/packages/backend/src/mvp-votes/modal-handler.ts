@@ -1,7 +1,7 @@
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
-  type MatchId,
+  type RiotMatchId,
 } from "@scout-for-lol/data";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { parseVoteCustomId } from "#src/mvp-votes/custom-id.ts";
@@ -66,7 +66,7 @@ export async function handleMvpVoteModal(
     await interaction.editReply({ content: MVP_VOTE_NOT_ENABLED });
     return;
   }
-  const matchId: MatchId = parsed.matchId;
+  const matchId: RiotMatchId = parsed.matchId;
   const roster = await loadMatchMvpRoster(matchId, prismaClient);
   if (roster === undefined) {
     throw new Error(
