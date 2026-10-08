@@ -152,15 +152,6 @@ async function observedMatch(
   return matchId;
 }
 
-function unobservedMatch(): string {
-  seq += 1;
-  const matchId = RiotMatchIdSchema.parse(
-    `NA1_48${String(seq).padStart(3, "0")}`,
-  );
-  stubs.rows = [row(matchId)];
-  return matchId;
-}
-
 beforeEach(async () => {
   await prisma.matchNotificationIntent.deleteMany();
   await prisma.hallRecordCell.deleteMany();
@@ -215,7 +206,7 @@ describe("evaluateHallMatch's announcement", () => {
   test("mints the hall intent for a live match", async () => {
     const matchId = await observedMatch("live");
 
-    await evaluateHallMatch(rawMatch(matchId), { kind: "temporal-v2" });
+    await evaluateHallMatch(rawMatch(matchId));
 
     const intents = await prisma.matchNotificationIntent.findMany();
     expect(intents.map((intent) => intent.intentKey)).toEqual([
@@ -228,23 +219,10 @@ describe("evaluateHallMatch's announcement", () => {
     });
   });
 
-  test("legacy ingestion without an observation updates the records but announces nothing", async () => {
-    const matchId = unobservedMatch();
-
-    await evaluateHallMatch(rawMatch(matchId), {
-      kind: "legacy-v1",
-      silent: false,
-    });
-
-    const cells = await prisma.hallRecordCell.findMany();
-    expect(cells.map((cell) => cell.currentValue)).toEqual([30]);
-    expect(await prisma.matchNotificationIntent.count()).toBe(0);
-  });
-
   test("a silent backfill updates the records but announces nothing", async () => {
     const matchId = await observedMatch("silent-backfill");
 
-    await evaluateHallMatch(rawMatch(matchId), { kind: "temporal-v2" });
+    await evaluateHallMatch(rawMatch(matchId));
 
     // The record itself is still broken: silence is about the message.
     const cells = await prisma.hallRecordCell.findMany();
@@ -254,11 +232,11 @@ describe("evaluateHallMatch's announcement", () => {
 
   test("re-evaluating the same match announces nothing new", async () => {
     const matchId = await observedMatch("live");
-    await evaluateHallMatch(rawMatch(matchId), { kind: "temporal-v2" });
+    await evaluateHallMatch(rawMatch(matchId));
 
     // A retried progression Activity: the cells already hold this match, so
     // nothing breaks again and no second intent appears.
-    await evaluateHallMatch(rawMatch(matchId), { kind: "temporal-v2" });
+    await evaluateHallMatch(rawMatch(matchId));
 
     expect(await prisma.matchNotificationIntent.count()).toBe(1);
   });

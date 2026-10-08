@@ -23,7 +23,7 @@ import type { Db } from "#src/database/index.ts";
  * a batch was created over cannot grow, and matches archived after it belong to
  * the live pipeline. The range only ever SHRINKS, as matches in it gain
  * observations — which is exactly the outcome the batch is working towards, and
- * why `processRecoveryPageV2` can page the remaining work from the front
+ * why `processRecoveryPage` can page the remaining work from the front
  * without a stored position.
  *
  * The two anti-join families are raw SQL for the reason

@@ -21,8 +21,8 @@ import {
 } from "@scout-for-lol/domain/notifications/intent.ts";
 import {
   SCOUT_WORKFLOW_NAMES,
-  scoutLakeProjectionV2WorkflowId,
-  scoutPipelineReconciliationV2WorkflowId,
+  scoutLakeProjectionWorkflowId,
+  scoutPipelineReconciliationWorkflowId,
 } from "@scout-for-lol/temporal";
 import {
   DiscordGuildIdSchema,
@@ -172,7 +172,7 @@ async function pageThroughQueue(
   return seen;
 }
 
-const RECONCILE_WORKFLOW_ID = scoutPipelineReconciliationV2WorkflowId(
+const RECONCILE_WORKFLOW_ID = scoutPipelineReconciliationWorkflowId(
   configuration.environment,
   "operator",
 );
@@ -181,11 +181,11 @@ const RECONCILE_WORKFLOW_ID = scoutPipelineReconciliationV2WorkflowId(
 function reconcileRequest() {
   return {
     requestedWorkflowId: RECONCILE_WORKFLOW_ID,
-    workflowType: SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2,
+    workflowType: SCOUT_WORKFLOW_NAMES.pipelineReconciliation,
     requestedBy: null,
     requestSource: "operations:reconcile-pipeline",
     inputPayload: {
-      kind: SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2,
+      kind: SCOUT_WORKFLOW_NAMES.pipelineReconciliation,
       version: 1,
       data: { stage: configuration.environment, trigger: "operator" },
     },
@@ -492,7 +492,7 @@ describe("workflow starts travel as post-commit durable requests", () => {
     }
     expect(result.dispatch.requestId).toBe(start.requestId);
     expect(start).toMatchObject({
-      workflowType: SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2,
+      workflowType: SCOUT_WORKFLOW_NAMES.pipelineReconciliation,
       requestSource: "operations:reconcile-pipeline",
       requestedBy: OPERATOR,
       // No Temporal connection in this harness, so the request is durable
@@ -501,7 +501,7 @@ describe("workflow starts travel as post-commit durable requests", () => {
       runId: null,
     });
     expect(JSON.parse(start.inputPayload)).toEqual({
-      kind: SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2,
+      kind: SCOUT_WORKFLOW_NAMES.pipelineReconciliation,
       version: 1,
       data: { stage: configuration.environment, trigger: "operator" },
     });
@@ -516,11 +516,11 @@ describe("workflow starts travel as post-commit durable requests", () => {
     // dispatch must refuse rather than adopt it.
     const seeded = await requestWorkflowStart(db, {
       requestedWorkflowId: RECONCILE_WORKFLOW_ID,
-      workflowType: SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2,
+      workflowType: SCOUT_WORKFLOW_NAMES.pipelineReconciliation,
       requestedBy: null,
       requestSource: "test:pre-existing",
       inputPayload: {
-        kind: SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2,
+        kind: SCOUT_WORKFLOW_NAMES.pipelineReconciliation,
         version: 1,
         data: { stage: configuration.environment, trigger: "schedule" },
       },
@@ -956,15 +956,15 @@ describe("the workflow-start queue pages by request key", () => {
           `NA1_53122798${(30 + index).toString()}`,
         );
         const requested = await requestWorkflowStart(db, {
-          requestedWorkflowId: scoutLakeProjectionV2WorkflowId(
+          requestedWorkflowId: scoutLakeProjectionWorkflowId(
             configuration.environment,
             matchId,
           ),
-          workflowType: SCOUT_WORKFLOW_NAMES.lakeProjectionV2,
+          workflowType: SCOUT_WORKFLOW_NAMES.lakeProjection,
           requestedBy: null,
           requestSource: "test:shared-millisecond",
           inputPayload: {
-            kind: SCOUT_WORKFLOW_NAMES.lakeProjectionV2,
+            kind: SCOUT_WORKFLOW_NAMES.lakeProjection,
             version: 1,
             data: { stage: configuration.environment, riotMatchId: matchId },
           },

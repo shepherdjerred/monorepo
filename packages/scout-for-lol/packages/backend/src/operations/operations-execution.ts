@@ -51,7 +51,7 @@ import {
 } from "#src/database/durable/recovery-repository.ts";
 import type { AuditDetail } from "#src/lib/audit/audited-mutation.ts";
 import type { OperationsWorkflowStart } from "#src/operations/workflow-dispatch.ts";
-import { settleNotificationTip } from "#src/temporal/v2/notification/notification-presentation.ts";
+import { settleNotificationTip } from "#src/temporal/notification/notification-presentation.ts";
 
 /** What the target of an operations intent is, when it is missing. */
 export type OperationsTargetKind =

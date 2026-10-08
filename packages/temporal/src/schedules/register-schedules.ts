@@ -97,8 +97,8 @@ export const DELETED_SCHEDULE_IDS = [
   // workspace now that each app calls its provider directly.
   "openai-complimentary-usage-hourly",
   // The Riot tournament lobby poller was retired with the Tournament API
-  // integration; its orphaned Schedule kept starting no-op
-  // `scoutRealtimePollWorkflow` runs every 20 seconds.
+  // integration; its orphaned Schedule kept starting no-op v1 realtime polls
+  // every 20 seconds.
   "scout-prod-tournament-lobby-poll",
   // The protobufjs v8 watch retired once @temporalio/proto moved to ^8.
   "protobufjs-v8-watch-weekly",

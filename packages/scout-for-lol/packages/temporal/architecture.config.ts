@@ -15,10 +15,10 @@ import { defineArchitecture } from "@shepherdjerred/architecture";
  * invisible to it, and the package does not declare the backend as a
  * dependency. `eslint.config.ts` in the Scout root forbids the import instead.
  *
- * `contracts-v2` is not given a boundary of its own: the fixture for a layer is
- * selected by file-name prefix, and `contracts-v2-` would overlap the one that
- * proves `contracts-is-a-leaf`. It imports only `contracts` and the domain
- * package today, and `contracts` is the leaf everything above it builds on.
+ * Each boundary is proven by one fixture in `architecture-fixtures/`, selected
+ * by the `<from-layer>-` file-name prefix. `pipeline-contracts` has no boundary
+ * of its own: its test exercises the contract modules built on it, and it
+ * imports only `contracts` and the domain package.
  */
 
 /**
@@ -28,16 +28,16 @@ import { defineArchitecture } from "@shepherdjerred/architecture";
  */
 export const layers = [
   "activities",
-  "activity-contracts-v2",
+  "activity-contracts",
   "contracts",
-  "contracts-v2",
   "execution-metadata",
   "identifiers",
-  "match-receipts-v2",
+  "match-receipts",
   "notification-suppression-result",
+  "pipeline-contracts",
   "signals",
-  "silent-postmatch-backfill-v2",
-  "workflow-contracts-v2",
+  "silent-postmatch-backfill",
+  "workflow-contracts",
   "workflow-ui-interceptor",
   "workflows",
 ];
@@ -63,50 +63,50 @@ export default defineArchitecture({
       to: everythingExcept("contracts"),
     },
     {
-      name: "activity-contracts-v2-is-contracts-only",
+      name: "activity-contracts-is-contracts-only",
       comment:
-        "The V2 Activity contracts are pure schemas. They may build on the shared contracts but " +
+        "The pipeline Activity contracts are pure schemas. They may build on the shared contracts but " +
         "must not reach into Workflow code, signals or the interceptor, which would drag the " +
         "Workflow sandbox into every Activity implementation.",
-      from: "activity-contracts-v2",
+      from: "activity-contracts",
       to: everythingExcept(
-        "activity-contracts-v2",
+        "activity-contracts",
         "contracts",
-        "contracts-v2",
+        "pipeline-contracts",
         "notification-suppression-result",
       ),
     },
     {
-      name: "workflow-contracts-v2-is-contracts-only",
+      name: "workflow-contracts-is-contracts-only",
       comment:
-        "The V2 Workflow contracts are pure schemas shared with clients that start and signal " +
+        "The pipeline Workflow contracts are pure schemas shared with clients that start and signal " +
         "Workflows. They may build on the shared contracts but must not import Workflow code, " +
         "signals or the interceptor.",
-      from: "workflow-contracts-v2",
+      from: "workflow-contracts",
       to: everythingExcept(
-        "workflow-contracts-v2",
+        "workflow-contracts",
         "contracts",
-        "contracts-v2",
+        "pipeline-contracts",
       ),
     },
     {
-      name: "match-receipts-v2-is-contracts-only",
+      name: "match-receipts-is-contracts-only",
       comment:
         "Match receipts are persisted and replayed, so their schema may depend on the contracts " +
         "only. Reaching into Workflow code would tie stored data to Workflow module layout.",
-      from: "match-receipts-v2",
-      to: everythingExcept("match-receipts-v2", "contracts", "contracts-v2"),
+      from: "match-receipts",
+      to: everythingExcept("match-receipts", "contracts", "pipeline-contracts"),
     },
     {
-      name: "silent-postmatch-backfill-v2-is-contracts-only",
+      name: "silent-postmatch-backfill-is-contracts-only",
       comment:
         "The backfill request schema is shared by the Workflow and its clients, so it may depend " +
         "on the contracts only.",
-      from: "silent-postmatch-backfill-v2",
+      from: "silent-postmatch-backfill",
       to: everythingExcept(
-        "silent-postmatch-backfill-v2",
+        "silent-postmatch-backfill",
         "contracts",
-        "contracts-v2",
+        "pipeline-contracts",
       ),
     },
   ],

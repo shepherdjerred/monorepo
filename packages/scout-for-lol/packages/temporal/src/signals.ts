@@ -1,9 +1,9 @@
 import { defineSignal } from "@temporalio/workflow";
 import type { ScoutDuelSeriesChange } from "./contracts.ts";
 import type {
-  ScoutClientMatchDispatchBatchV2,
-  ScoutClientMatchDispatchResultV2,
-} from "./workflow-contracts-v2.ts";
+  ScoutClientMatchDispatchBatch,
+  ScoutClientMatchDispatchResult,
+} from "./workflow-contracts.ts";
 
 export const requestStopSignal = defineSignal("requestStop");
 export const reconcileReportSchedulesSignal = defineSignal(
@@ -14,9 +14,9 @@ export const requestInitialHistoryRunSignal = defineSignal(
 );
 export const duelSeriesChangedSignal =
   defineSignal<[ScoutDuelSeriesChange]>("duelSeriesChanged");
-export const dispatchScoutClientMatchesV2Signal = defineSignal<
-  [ScoutClientMatchDispatchBatchV2]
+export const dispatchScoutClientMatchesSignal = defineSignal<
+  [ScoutClientMatchDispatchBatch]
 >("dispatchScoutClientMatchesV2");
-export const scoutClientMatchDispatchCompletedV2Signal = defineSignal<
-  [ScoutClientMatchDispatchResultV2]
+export const scoutClientMatchDispatchCompletedSignal = defineSignal<
+  [ScoutClientMatchDispatchResult]
 >("scoutClientMatchDispatchCompletedV2");

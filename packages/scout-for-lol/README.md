@@ -154,13 +154,6 @@ Every boundary has a negative fixture in the package's
 and fails if any boundary lacks one that violates it; `bun run lint` runs
 `check-architecture` against the real source.
 
-Temporal exception: `check-architecture` is not yet part of the `temporal`
-lint script, because the ownership workflows (`realtime.ts` and
-`workflows/ownership/*`) form an eager import cycle that the always-on
-`no-circular` rule rejects. Those files are deleted by the ownership removal;
-wire the check into the lint script in that change. Until then the Temporal
-boundaries are proven by their fixtures only.
-
 **Domain boundaries:**
 
 - Explore owns saved conversational queries, including `/scout ask`.

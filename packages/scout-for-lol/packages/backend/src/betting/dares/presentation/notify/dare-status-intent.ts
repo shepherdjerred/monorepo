@@ -6,7 +6,7 @@ import {
 } from "@scout-for-lol/data";
 import {
   SCOUT_WORKFLOW_NAMES,
-  scoutNotificationV2WorkflowId,
+  scoutNotificationWorkflowId,
 } from "@scout-for-lol/temporal";
 import type { Db } from "#src/database/index.ts";
 import configuration from "#src/configuration.ts";
@@ -151,12 +151,12 @@ async function mintAndStart(
   if (created.outcome === "already-applied") return;
   const stage = configuration.temporalNamespace;
   const requested = await requestWorkflowStart(db, {
-    requestedWorkflowId: scoutNotificationV2WorkflowId(stage, key),
-    workflowType: SCOUT_WORKFLOW_NAMES.notificationV2,
+    requestedWorkflowId: scoutNotificationWorkflowId(stage, key),
+    workflowType: SCOUT_WORKFLOW_NAMES.notification,
     requestedBy: null,
     requestSource,
     inputPayload: {
-      kind: SCOUT_WORKFLOW_NAMES.notificationV2,
+      kind: SCOUT_WORKFLOW_NAMES.notification,
       version: 1,
       data: { stage, intentKey: key },
     },

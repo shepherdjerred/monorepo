@@ -44,8 +44,8 @@ vi.mock("#src/betting/dares/sql/dare-sql.ts", async () => {
 
 const { captureDareSqlForMatch } =
   await import("#src/betting/dares/settlement/dare-settle-contract.ts");
-const { buildDareStatusNotificationMessageV2 } =
-  await import("#src/temporal/v2/notification/dare-status-notification.ts");
+const { buildDareStatusNotificationMessage } =
+  await import("#src/temporal/notification/dare-status-notification.ts");
 
 function contract(): DareContract {
   return DareContractSchema.parse({
@@ -173,7 +173,7 @@ describe("the Dare result post", () => {
 
     const record = notificationIntentRowToRecord(rows[0]);
     if (!("dareId" in record)) throw new Error("expected a Dare subject");
-    const message = buildDareStatusNotificationMessageV2(record);
+    const message = buildDareStatusNotificationMessage(record);
     expect(message.content).toContain(
       `🛡️ **Scout Dare #${dare.id.toString()}: THE DARE SURVIVED**`,
     );

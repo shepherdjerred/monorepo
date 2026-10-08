@@ -15,10 +15,7 @@ import { prisma, type Db } from "#src/database/index.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { parseProgressionJson } from "#src/progression/json.ts";
 import { lockHallRecords } from "#src/progression/hall/baseline.ts";
-import {
-  announceHallRecordBreak,
-  type HallAnnouncementDelivery,
-} from "#src/progression/hall/break-announcement.ts";
+import { announceHallRecordBreak } from "#src/progression/hall/break-announcement.ts";
 import { HallBreakPayloadSchema } from "#src/progression/hall/break-payload.ts";
 import { hallSettingsFromRow } from "#src/progression/hall/settings.ts";
 import {
@@ -106,7 +103,6 @@ async function evaluateGuild(
   guildId: DiscordGuildId,
   matchId: string,
   matchesByPuuid: ReadonlyMap<string, ProgressionMatchRow>,
-  delivery: HallAnnouncementDelivery,
 ): Promise<void> {
   await prisma.$transaction(async (tx) => {
     await lockHallRecords(tx, guildId);
@@ -166,17 +162,13 @@ async function evaluateGuild(
       matchId,
       channelId: settings.channelId,
       records: payload,
-      delivery,
       now: new Date(),
     });
   });
 }
 
 /** Evaluate one durably ingested match before account cursors advance. */
-export async function evaluateHallMatch(
-  matchData: RawMatch,
-  delivery: HallAnnouncementDelivery,
-): Promise<void> {
+export async function evaluateHallMatch(matchData: RawMatch): Promise<void> {
   const matchId = matchData.metadata.matchId;
   const participantPuuids = matchData.metadata.participants;
   const accounts = await prisma.account.findMany({
@@ -223,6 +215,6 @@ export async function evaluateHallMatch(
     if (configuredGuildIds.has(guildId)) guildIds.add(guildId);
   }
   for (const guildId of guildIds) {
-    await evaluateGuild(guildId, matchId, byPuuid, delivery);
+    await evaluateGuild(guildId, matchId, byPuuid);
   }
 }

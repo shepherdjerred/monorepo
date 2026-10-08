@@ -13,15 +13,14 @@ import {
   upsertIntent,
 } from "#src/database/durable/intent-repository.ts";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
-import { getObservation } from "#src/database/durable/observation-repository.ts";
 import { hallRecordBreakIntentKey } from "#src/durable/match/delivery-intents.ts";
 import { toIsoInstant } from "#src/durable/match/match-identity.ts";
 import type { HallBreakPayload } from "#src/progression/hall/break-payload.ts";
 import {
   hallRecordBreakAnnouncementCodec,
   hallRecordBreakAnnouncementEnvelope,
-} from "#src/temporal/v2/notification/announcement-codecs.ts";
-import { matchMayAnnounce } from "#src/temporal/v2/notification/match-intents.ts";
+} from "#src/temporal/notification/announcement-codecs.ts";
+import { matchMayAnnounce } from "#src/temporal/notification/match-intents.ts";
 
 /**
  * How long a Hall record-break announcement stays worth sending: one day past
@@ -40,10 +39,6 @@ export type HallBreakAnnouncementPath =
   /** An intent already stands for this (match, guild): it keeps ownership. */
   | "intent-standing";
 
-export type HallAnnouncementDelivery =
-  | { readonly kind: "legacy-v1"; readonly silent: boolean }
-  | { readonly kind: "temporal-v2" };
-
 /**
  * Announce one guild's record break for one match as a `hall-record-break`
  * notification intent.
@@ -53,10 +48,9 @@ export type HallAnnouncementDelivery =
  *
  * ## Silence
  *
- * The committed observation decides silence: only a `live` observation
- * announces. A v1 evaluation that is already silent, or whose match has no
- * live observation, announces nothing, because an intent without an observed
- * match could never enter the post-commit fan-out.
+ * The committed observation decides silence: only a match that may announce
+ * mints an intent, because an intent without an observed match could never
+ * enter the post-commit fan-out.
  *
  * ## The key is the decision, the row is the truth
  *
@@ -73,18 +67,11 @@ export async function announceHallRecordBreak(
     matchId: string;
     channelId: string;
     records: readonly HallBreakPayload[];
-    delivery: HallAnnouncementDelivery;
     now: Date;
   },
 ): Promise<HallBreakAnnouncementPath> {
   const riotMatchId = RiotMatchIdSchema.parse(args.matchId);
-  if (args.delivery.kind === "legacy-v1") {
-    if (args.delivery.silent) return "silent";
-    const observation = await getObservation(tx, { matchId: riotMatchId });
-    if (observation?.deliveryMode !== "live") return "silent";
-  } else if (!(await matchMayAnnounce(tx, riotMatchId))) {
-    return "silent";
-  }
+  if (!(await matchMayAnnounce(tx, riotMatchId))) return "silent";
 
   const key = NotificationIntentKeySchema.parse(
     hallRecordBreakIntentKey(riotMatchId, args.guildId),

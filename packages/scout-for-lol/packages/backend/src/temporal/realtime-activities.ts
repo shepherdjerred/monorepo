@@ -2,21 +2,16 @@ import { Context } from "@temporalio/activity";
 import { ApplicationFailure } from "@temporalio/common";
 import type { ScoutTemporalActivityGroups } from "#src/temporal/connected-runtime.ts";
 import { heartbeatWhile, probeQueue } from "#src/temporal/activity-runtime.ts";
-import { temporalWorkHardDisabled } from "#src/temporal/work-features.ts";
-import { createScoutV2MatchActivities } from "#src/temporal/v2/match-activities.ts";
-import { createScoutV2NotificationActivities } from "#src/temporal/v2/notification-activities.ts";
-import { createScoutV2PrematchActivities } from "#src/temporal/v2/prematch/prematch-activities.ts";
+import { ScoutPostMatchMaintenanceInputSchema } from "@scout-for-lol/temporal/contracts";
+import { createScoutMatchActivities } from "#src/temporal/match/match-activities.ts";
+import { createScoutNotificationActivities } from "#src/temporal/notification-lane/notification-activities.ts";
+import { createScoutPrematchActivities } from "#src/temporal/prematch/prematch-activities.ts";
 
 /**
- * The realtime queue's Activities, for both pipelines.
- *
- * This group lives apart from the other three because it is the one that now
- * carries two pipelines: v1's poll, discovery, maintenance and ingest, plus
- * the nine Activities of the V2 per-match core, those of its prematch path,
- * and the five that drive one notification intent to Discord.
- * `SCOUT_V2_ACTIVITY_QUEUE_CLASSES` assigns every one of them to this same
- * queue so one worker registration serves an open v1 execution and a V2 one
- * alike.
+ * The realtime queue's Activities: the per-match core, its prematch path, the
+ * five that drive one notification intent to Discord, and post-match
+ * maintenance. `SCOUT_PIPELINE_ACTIVITY_QUEUE_CLASSES` assigns every one of them to
+ * this queue.
  *
  * The notification lane's sixth Activity, the render, is absent on purpose: it
  * belongs to `background`, so a Satori pass can never queue ahead of a live
@@ -30,51 +25,23 @@ import { createScoutV2PrematchActivities } from "#src/temporal/v2/prematch/prema
 
 export function createRealtimeActivities(): ScoutTemporalActivityGroups["realtime"] {
   return {
-    ...createScoutV2MatchActivities(),
-    ...createScoutV2NotificationActivities(),
-    ...createScoutV2PrematchActivities(),
+    ...createScoutMatchActivities(),
+    ...createScoutNotificationActivities(),
+    ...createScoutPrematchActivities(),
     probeQueue,
-    pollRealtime: async (input) => {
-      // The tournament poller was replaced by Scout client ingress, but an
-      // execution started by the former Schedule can still retry its recorded
-      // Activity. Complete that legacy command without calling the removed
-      // Tournament API; keeping it here also preserves workflow replay.
-      if (input.kind === "tournament-lobbies") return;
-      if (temporalWorkHardDisabled(input.kind)) return;
-      await heartbeatWhile({ kind: input.kind, phase: "running" }, async () => {
-        const { checkPreMatch } =
-          await import("#src/league/tasks/prematch/index.ts");
-        // V2 owns live-game detection unconditionally. A v1 poll still
-        // running this Activity (one open when that changed, or one the
-        // not-yet-updated Schedule started) runs v1's maintenance only, so it
-        // can never announce a game the V2 path also captures. That holds for
-        // a recorded `pollRealtime` without `activeGameDetectionOwner` that
-        // retries after the change, too.
-        await checkPreMatch({ activeGameDetection: "v2" });
-      });
-      Context.current().heartbeat({ kind: input.kind, phase: "complete" });
-    },
-    discoverPostMatchIds: async (input) =>
-      await heartbeatWhile(
-        { phase: "discovering-postmatch-intents" },
-        async () => {
-          if (input.pollOwner === undefined) {
-            const { discoverPostMatchIntents } =
-              await import("#src/league/tasks/postmatch/match-history-polling.ts");
-            return await discoverPostMatchIntents();
-          }
-          // A pass the V2 ownership gate delegated: the gate already holds
-          // the durable claim, so re-present it rather than opening the poll
-          // over it. A pass that could not run throws instead of returning
-          // `skipped`, so v1's maintenance never closes a claim nothing used.
-          const { discoverDelegatedPostMatchIntents } =
-            await import("#src/temporal/v2/ownership/postmatch-ownership.ts");
-          return await discoverDelegatedPostMatchIntents({
-            pollOwner: new Date(input.pollOwner),
-          });
-        },
-      ),
     runPostMatchMaintenance: async (input) => {
+      const pollOwner =
+        ScoutPostMatchMaintenanceInputSchema.shape.pollOwner.safeParse(
+          input.pollOwner,
+        );
+      if (!pollOwner.success) {
+        // Every discovery claims its poll before maintenance runs, so a
+        // maintenance input without one is a broken contract, not a retry.
+        throw ApplicationFailure.nonRetryable(
+          "Post-match maintenance requires the poll claim its discovery opened",
+          "MissingPostMatchPollOwner",
+        );
+      }
       await heartbeatWhile({ phase: "postmatch-maintenance" }, async () => {
         const { runPostMatchMaintenance } =
           await import("#src/league/tasks/postmatch/index.ts");
@@ -87,10 +54,7 @@ export function createRealtimeActivities(): ScoutTemporalActivityGroups["realtim
               input.evidenceWatermark === undefined
                 ? undefined
                 : new Date(input.evidenceWatermark),
-            pollOwner:
-              input.pollOwner === undefined
-                ? undefined
-                : { startedAt: new Date(input.pollOwner) },
+            pollOwner: { startedAt: new Date(pollOwner.data) },
           });
         } catch (error) {
           // A poll this run no longer owns is not a transient fault: the
@@ -103,29 +67,6 @@ export function createRealtimeActivities(): ScoutTemporalActivityGroups["realtim
         }
       });
       Context.current().heartbeat({ phase: "complete" });
-    },
-    reconcileIngestedMatchCursor: async (input) =>
-      await heartbeatWhile(
-        { matchId: input.matchId, phase: "reconciling-cursor" },
-        async () => {
-          const { reconcileIngestedMatchCursor } =
-            await import("#src/league/tasks/postmatch/cursor-reconciliation.ts");
-          return await reconcileIngestedMatchCursor(input);
-        },
-      ),
-    ingestMatch: async (input) => {
-      await heartbeatWhile(
-        { matchId: input.matchId, phase: "ingesting" },
-        async () => {
-          const { ingestDiscoveredMatch } =
-            await import("#src/league/tasks/postmatch/temporal-match-ingestion.ts");
-          await ingestDiscoveredMatch(input);
-        },
-      );
-      Context.current().heartbeat({
-        matchId: input.matchId,
-        phase: "complete",
-      });
     },
   };
 }

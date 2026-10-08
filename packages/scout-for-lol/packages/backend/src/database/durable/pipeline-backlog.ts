@@ -2,7 +2,7 @@ import type { ReceiptKind } from "@scout-for-lol/domain/match-processing/states.
 import type { Db } from "#src/database/index.ts";
 import {
   listLiveRecoveryBatches,
-  listStalledV2MatchProcessing,
+  listStalledMatchProcessing,
   listUnacceptedWorkflowStarts,
   listUnprojectedLakeMatches,
 } from "#src/database/durable/pipeline-scan.ts";
@@ -77,7 +77,7 @@ export async function oldestStalledMatchProcessingAt(
   db: Db,
   args: { observationReceiptKind: ReceiptKind },
 ): Promise<Date | null> {
-  const [oldest] = await listStalledV2MatchProcessing(db, {
+  const [oldest] = await listStalledMatchProcessing(db, {
     observationReceiptKind: args.observationReceiptKind,
     // A contested match is still unfinished work; the gauge must not read a
     // backlog that an operator has to clear as a backlog that drained.

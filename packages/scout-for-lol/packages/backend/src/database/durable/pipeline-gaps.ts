@@ -83,7 +83,7 @@ export async function oldestReadyNotificationIntentAt(
  *
  * "Finished" is every tracked-account cursor advanced. The Workflow mints the
  * post-match intents immediately BEFORE it advances the cursors (see
- * `match-v2.ts`), so a match whose cursors have all moved has been past the
+ * `match.ts`), so a match whose cursors have all moved has been past the
  * mint, and one with no postmatch intent row either had nowhere to send or
  * minted nothing when it should have. `settledBefore` is a grace on the last
  * advance so a scrape racing the Activity cannot count a match mid-commit.

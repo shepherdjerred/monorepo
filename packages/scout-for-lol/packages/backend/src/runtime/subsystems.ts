@@ -21,7 +21,7 @@ import { setDiscordGatewayState } from "#src/metrics/platform/discord-gateway-he
 import { registerLakeStagingLagSweep } from "#src/report-lake/lake-staging-lag.ts";
 import type { ScoutRuntimeDependencies } from "#src/runtime/boot.ts";
 import type { ScoutTemporalSupervisor } from "#src/temporal/supervisor.ts";
-import { registerPostmatchMintGapSweep } from "#src/temporal/v2/notification/postmatch-mint-gap.ts";
+import { registerPostmatchMintGapSweep } from "#src/temporal/notification/postmatch-mint-gap.ts";
 
 const logger = createLogger("runtime-subsystems");
 

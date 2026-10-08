@@ -17,7 +17,6 @@ import {
   scoutExploreTimelineWorkflowId,
   scoutDetachedWorkWorkflowId,
   scoutInteractiveWorkflowId,
-  scoutMatchWorkflowId,
   scoutReportScheduleReconcilerWorkflowId,
   scoutQueueCanaryWorkflowId,
   scoutHallBaselineWorkflowId,
@@ -30,7 +29,6 @@ import {
   type ScoutExploreTimelineInput,
   type ScoutDetachedWorkInput,
   type ScoutInteractiveRunInput,
-  type ScoutMatchIngestionInput,
   type ScoutReportRunInput,
   type ScoutQueueCanaryInput,
   type ScoutStage,
@@ -99,24 +97,6 @@ function startMetadata(
     }),
     summary,
     description,
-  });
-}
-
-export async function startScoutMatchIngestion(
-  client: Client,
-  input: ScoutMatchIngestionInput,
-): Promise<WorkflowHandle> {
-  return await client.workflow.start(SCOUT_WORKFLOW_NAMES.matchIngestion, {
-    ...RESTART_FAILED_START_POLICIES,
-    workflowId: scoutMatchWorkflowId(input.stage, input.matchId),
-    taskQueue: scoutTaskQueues(input.stage).workflow,
-    args: [input],
-    ...startMetadata(
-      input.stage,
-      "workflow",
-      "Ingest Scout match",
-      "Coordinates durable ingestion for one completed match.",
-    ),
   });
 }
 

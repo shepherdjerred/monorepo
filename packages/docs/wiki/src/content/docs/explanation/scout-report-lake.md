@@ -134,8 +134,8 @@ is complete. Guild-scoped lookbacks therefore see the new identity mapping and
 facts together.
 
 The import never enters the normal post-match processor. Historical matches do
-not send Discord messages, generate reports or AI recaps, write ActiveGame
-state, settle Bryan Bucks, award earnings, or fabricate per-match rank deltas.
+not send Discord messages, generate reports or AI recaps, settle Bryan Bucks,
+award earnings, or fabricate per-match rank deltas.
 The live poller resumes only after the fixed snapshot is stored and its newest
 ID becomes the cursor, so a game completed during import is notified once.
 
@@ -223,8 +223,8 @@ and stays fatal.
 
 The receipt write itself is the one fail-open step. Refusing an archive because
 its bookkeeping row could not be inserted would trade a bookkeeping problem for a
-data-loss one, so a broken receipt write is logged and metered while the v1 write
-stands.
+data-loss one, so a broken receipt write is logged and metered while the archive
+write stands.
 
 Two counters record that, and keeping them apart is what makes either usable
 (defined in [metrics/durable.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/metrics/durable.ts), applied in

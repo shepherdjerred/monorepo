@@ -6,15 +6,16 @@ import {
 import type { RetryPolicy } from "@temporalio/common";
 import type {
   ScoutTemporalActivities,
-  ScoutTemporalV2Activities,
+  ScoutPipelineActivities,
 } from "#src/activities.ts";
 import {
   NOTIFICATION_DELIVERY_HEARTBEAT_TIMEOUT_MS,
   NOTIFICATION_DELIVERY_START_TO_CLOSE_MS,
-} from "#src/activity-contracts-v2.ts";
+} from "#src/activity-contracts.ts";
 import type { ScoutStage } from "#src/contracts.ts";
 import { DETACHED_WORK_MAX_ATTEMPTS } from "#src/contracts.ts";
 import { scoutTaskQueues } from "#src/identifiers.ts";
+import { renameBridgedActivities } from "./generation-rename.ts";
 
 const NON_RETRYABLE_FAILURES = [
   "InvalidSavedQuery",
@@ -119,25 +120,25 @@ export function lakeActivities(stage: ScoutStage) {
 }
 
 // ───────────────────────────────────────────────────────────────────────────
-// V2 durable pipeline
+// Durable match pipeline
 // ───────────────────────────────────────────────────────────────────────────
 
-export function realtimeV2Activities(stage: ScoutStage) {
-  return proxyActivities<ScoutTemporalV2Activities>({
+export function realtimePipelineActivities(stage: ScoutStage) {
+  return renameBridgedActivities<ScoutPipelineActivities>({
     taskQueue: scoutTaskQueues(stage).realtime,
     ...REALTIME_ACTIVITY_OPTIONS,
   });
 }
 
-export function backgroundV2Activities(stage: ScoutStage) {
-  return proxyActivities<ScoutTemporalV2Activities>({
+export function backgroundPipelineActivities(stage: ScoutStage) {
+  return renameBridgedActivities<ScoutPipelineActivities>({
     taskQueue: scoutTaskQueues(stage).background,
     ...BACKGROUND_ACTIVITY_OPTIONS,
   });
 }
 
-export function lakeV2Activities(stage: ScoutStage) {
-  return proxyActivities<ScoutTemporalV2Activities>({
+export function lakePipelineActivities(stage: ScoutStage) {
+  return renameBridgedActivities<ScoutPipelineActivities>({
     taskQueue: scoutTaskQueues(stage).lake,
     ...LAKE_ACTIVITY_OPTIONS,
   });
@@ -152,9 +153,9 @@ export function lakeV2Activities(stage: ScoutStage) {
  * admits, not a branch the Workflow chose. Background because it is the
  * render, and the render must never sit in front of a live match.
  */
-export function silentPostmatchBackfillV2Activities(stage: ScoutStage) {
-  return proxyActivities<
-    Pick<ScoutTemporalV2Activities, "backfillSilentPostmatchArtifactV2">
+export function silentPostmatchBackfillActivities(stage: ScoutStage) {
+  return renameBridgedActivities<
+    Pick<ScoutPipelineActivities, "backfillSilentPostmatchArtifact">
   >({
     taskQueue: scoutTaskQueues(stage).background,
     ...BACKGROUND_ACTIVITY_OPTIONS,
@@ -164,7 +165,7 @@ export function silentPostmatchBackfillV2Activities(stage: ScoutStage) {
 /**
  * The one V2 deviation from the sibling options, and the reason it exists.
  *
- * `deliverNotificationV2` is the single Activity whose retry is itself the
+ * `deliverNotification` is the single Activity whose retry is itself the
  * hazard: the request may have reached Discord and posted a message before
  * the response was lost, so a second attempt can double-deliver to a user.
  * `maximumAttempts: 1` makes an ambiguous send terminate as one attempt, which
@@ -173,7 +174,7 @@ export function silentPostmatchBackfillV2Activities(stage: ScoutStage) {
  * looked. Retrying here would trade a visible stall for an invisible
  * duplicate.
  *
- * The timeouts are stated in `activity-contracts-v2.ts` rather than here,
+ * The timeouts are stated in `activity-contracts.ts` rather than here,
  * because the Activity derives its own pre-send budget from them: everything
  * it does before contacting Discord is answered inside that budget, so a
  * server-side timeout can only ever mean the Discord request itself went
@@ -198,9 +199,9 @@ export const NOTIFICATION_DELIVERY_ACTIVITY_OPTIONS = {
   },
 } satisfies QueueActivityOptions;
 
-export function notificationDeliveryV2Activities(stage: ScoutStage) {
-  return proxyActivities<
-    Pick<ScoutTemporalV2Activities, "deliverNotificationV2">
+export function notificationDeliveryActivities(stage: ScoutStage) {
+  return renameBridgedActivities<
+    Pick<ScoutPipelineActivities, "deliverNotification">
   >({
     taskQueue: scoutTaskQueues(stage).realtime,
     ...NOTIFICATION_DELIVERY_ACTIVITY_OPTIONS,

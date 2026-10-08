@@ -11,16 +11,16 @@ import {
 import type { ScoutWorkflowStartRequest } from "@scout-for-lol/domain/recovery/workflow-start.ts";
 import {
   SCOUT_WORKFLOW_NAMES,
-  scoutLakeProjectionV2WorkflowId,
-  scoutNotificationV2WorkflowId,
-  scoutPipelineReconciliationV2WorkflowId,
+  scoutLakeProjectionWorkflowId,
+  scoutNotificationWorkflowId,
+  scoutPipelineReconciliationWorkflowId,
   type ScoutStage,
 } from "@scout-for-lol/temporal";
 import {
-  ScoutLakeProjectionV2InputSchema,
-  ScoutNotificationV2InputSchema,
-  ScoutPipelineReconciliationV2InputSchema,
-} from "@scout-for-lol/temporal/workflow-contracts-v2";
+  ScoutLakeProjectionInputSchema,
+  ScoutNotificationInputSchema,
+  ScoutPipelineReconciliationInputSchema,
+} from "@scout-for-lol/temporal/workflow-contracts";
 import type { DiscordAccountId } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
 import {
@@ -30,10 +30,10 @@ import {
 import { scoutTemporalStartsAvailable } from "#src/temporal/availability.ts";
 import { currentScoutTemporalSupervisor } from "#src/temporal/runtime.ts";
 import {
-  startScoutLakeProjectionV2,
-  startScoutNotificationV2,
-  startScoutPipelineReconciliationV2,
-} from "#src/temporal/starts-v2.ts";
+  startScoutLakeProjection,
+  startScoutNotification,
+  startScoutPipelineReconciliation,
+} from "#src/temporal/pipeline-starts.ts";
 
 /**
  * Dispatching an operator's Workflow start, after the confirmation intent has
@@ -167,57 +167,57 @@ function planStart(
   const supervisor = currentScoutTemporalSupervisor();
   switch (request.kind) {
     case "reconcile-pipeline": {
-      const input = ScoutPipelineReconciliationV2InputSchema.parse({
+      const input = ScoutPipelineReconciliationInputSchema.parse({
         stage,
         trigger: "operator",
       });
       return {
-        requestedWorkflowId: scoutPipelineReconciliationV2WorkflowId(
+        requestedWorkflowId: scoutPipelineReconciliationWorkflowId(
           stage,
           input.trigger,
         ),
-        workflowType: SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2,
+        workflowType: SCOUT_WORKFLOW_NAMES.pipelineReconciliation,
         requestSource: "operations:reconcile-pipeline",
         input,
         start: async () =>
-          await startScoutPipelineReconciliationV2(
+          await startScoutPipelineReconciliation(
             requireClient(supervisor),
             input,
           ),
       };
     }
     case "repair-projection": {
-      const input = ScoutLakeProjectionV2InputSchema.parse({
+      const input = ScoutLakeProjectionInputSchema.parse({
         stage,
         riotMatchId: request.riotMatchId,
       });
       return {
-        requestedWorkflowId: scoutLakeProjectionV2WorkflowId(
+        requestedWorkflowId: scoutLakeProjectionWorkflowId(
           stage,
           input.riotMatchId,
         ),
-        workflowType: SCOUT_WORKFLOW_NAMES.lakeProjectionV2,
+        workflowType: SCOUT_WORKFLOW_NAMES.lakeProjection,
         requestSource: "operations:repair-projection",
         input,
         start: async () =>
-          await startScoutLakeProjectionV2(requireClient(supervisor), input),
+          await startScoutLakeProjection(requireClient(supervisor), input),
       };
     }
     case "retry-notification": {
-      const input = ScoutNotificationV2InputSchema.parse({
+      const input = ScoutNotificationInputSchema.parse({
         stage,
         intentKey: request.intentKey,
       });
       return {
-        requestedWorkflowId: scoutNotificationV2WorkflowId(
+        requestedWorkflowId: scoutNotificationWorkflowId(
           stage,
           input.intentKey,
         ),
-        workflowType: SCOUT_WORKFLOW_NAMES.notificationV2,
+        workflowType: SCOUT_WORKFLOW_NAMES.notification,
         requestSource: "operations:retry-notification",
         input,
         start: async () =>
-          await startScoutNotificationV2(requireClient(supervisor), input),
+          await startScoutNotification(requireClient(supervisor), input),
       };
     }
   }

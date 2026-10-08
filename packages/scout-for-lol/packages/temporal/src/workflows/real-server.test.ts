@@ -13,6 +13,7 @@ import {
 } from "@temporalio/client";
 import { NativeConnection, Worker } from "@temporalio/worker";
 import { SCOUT_WORKFLOW_NAMES, scoutTaskQueues } from "#src/identifiers.ts";
+import { scoutPrematchDiscoveryInputCodec } from "#src/workflow-contracts.ts";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "../../../../../..");
 const workflowsPath = new URL("index.ts", import.meta.url).pathname;
@@ -139,10 +140,12 @@ async function startWorkers(input: {
       namespace: "dev",
       taskQueue: queues.realtime,
       activities: {
-        ingestMatch: async (activityInput: { matchId: string }) => {
-          input.matchRuns.push(activityInput.matchId);
+        discoverPrematchGames: async (activityInput: { stage: string }) => {
+          input.matchRuns.push(activityInput.stage);
           await input.blockMatch;
+          return { games: [], complete: true };
         },
+        runPrematchMaintenance: () => Promise.resolve(),
       },
     }),
     await Worker.create({
@@ -218,33 +221,27 @@ test("real server preserves IDs, catches up Schedules, survives outages, and rep
   runtime = runtimeState;
 
   const duplicateOptions = {
-    workflowId: "scout-dev-match-NA1_4242",
+    workflowId: "scout-dev-prematch-poll-duplicate",
     workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
     workflowIdConflictPolicy: WorkflowIdConflictPolicy.USE_EXISTING,
     taskQueue: scoutTaskQueues("dev").workflow,
-    args: [
-      {
-        stage: "dev",
-        matchId: "NA1_4242",
-        sourcePuuid: "puuid-real-server",
-        region: "AMERICA_NORTH",
-        delivery: "live",
-      },
-    ],
+    args: [scoutPrematchDiscoveryInputCodec.serialize({ stage: "dev" })],
   } as const;
   const first = await client.workflow.start(
-    SCOUT_WORKFLOW_NAMES.matchIngestion,
+    SCOUT_WORKFLOW_NAMES.prematchDiscovery,
     duplicateOptions,
   );
-  await expect.poll(() => matchRuns, { timeout: 20_000 }).toEqual(["NA1_4242"]);
+  await expect.poll(() => matchRuns, { timeout: 20_000 }).toEqual(["dev"]);
   const duplicate = await client.workflow.start(
-    SCOUT_WORKFLOW_NAMES.matchIngestion,
+    SCOUT_WORKFLOW_NAMES.prematchDiscovery,
     duplicateOptions,
   );
   expect(duplicate.workflowId).toBe(first.workflowId);
   matchGate.resolve(null);
-  await expect(first.result()).resolves.toBe("completed");
-  expect(matchRuns).toEqual(["NA1_4242"]);
+  await expect(first.result()).resolves.toMatchObject({
+    data: { status: "completed" },
+  });
+  expect(matchRuns).toEqual(["dev"]);
 
   const replayHistory = await first.fetchHistory();
   await Worker.runReplayHistory({ workflowsPath }, replayHistory);

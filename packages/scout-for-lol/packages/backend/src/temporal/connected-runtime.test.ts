@@ -4,6 +4,7 @@ import {
   discardPartialRuntime,
   isRuntimeAlreadyInstalled,
   reconnectDelayMs,
+  withPreRenameActivityNames,
 } from "#src/temporal/connected-runtime.ts";
 
 /**
@@ -210,5 +211,29 @@ describe("isRuntimeAlreadyInstalled", () => {
       false,
     );
     expect(isRuntimeAlreadyInstalled(undefined)).toBe(false);
+  });
+});
+
+const commit = () => Promise.resolve("commit");
+const legacyRead = () => Promise.resolve("legacy");
+const maintenance = () => Promise.resolve("maintenance");
+const probe = () => Promise.resolve("probe");
+
+describe("the generation rename's Activity registration", () => {
+  test("registers each renamed pipeline Activity under its old name too", () => {
+    const registered = withPreRenameActivityNames({
+      commitMatchObservation: commit,
+      readLegacyMatchCompletionV2: legacyRead,
+      runPrematchMaintenance: maintenance,
+      probeQueue: probe,
+    });
+
+    expect(registered).toEqual({
+      commitMatchObservation: commit,
+      commitMatchObservationV2: commit,
+      readLegacyMatchCompletionV2: legacyRead,
+      runPrematchMaintenance: maintenance,
+      probeQueue: probe,
+    });
   });
 });

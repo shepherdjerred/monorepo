@@ -52,22 +52,6 @@ function freshPollOpening(startedAt: Date) {
 }
 
 /**
- * Open the post-match poll unconditionally — v1's own start, which overwrites
- * whatever poll status stands. v1 serializes its polls in-process and through
- * its Schedule's overlap policy, so it has never needed the row to refuse it.
- */
-export async function markPostMatchPollStarted(
-  startedAt: Date,
-  prismaClient: ExtendedPrismaClient = prisma,
-): Promise<void> {
-  await prismaClient.botState.upsert({
-    where: { id: BOT_STATE_ID },
-    update: freshPollOpening(startedAt),
-    create: { id: BOT_STATE_ID, ...freshPollOpening(startedAt) },
-  });
-}
-
-/**
  * How long a claimed poll may stand before another claimant may take it over.
  *
  * A V2 discovery holds its claim from the discovery Activity through the
@@ -79,8 +63,8 @@ export async function markPostMatchPollStarted(
  * and the threshold is the safety valve for that case rather than a bound on
  * an ordinary run. A holder that runs longer than the bound keeps its claim
  * live with {@link renewPostMatchPollClaim}: the bound is measured from the
- * later of the claim and its last renewal. It is deliberately much longer than the five-minute
- * in-process valve v1's poll uses, which guards one Activity's span: a false
+ * later of the claim and its last renewal. It is deliberately much longer than
+ * the five-minute in-process valve, which guards one Activity's span: a false
  * takeover of a live run fails that run's maintenance loudly at the close.
  */
 export const POST_MATCH_POLL_STALE_AFTER_MS = 30 * 60 * 1000;
@@ -189,28 +173,6 @@ export async function claimPostMatchPoll(
 }
 
 /**
- * Keep a held claim live past the staleness bound.
- *
- * Applied only while the row still names `owner`'s poll as the running one,
- * so renewing never revives a claim that was closed or taken over. Returns
- * whether the claim was renewed.
- */
-export async function renewPostMatchPollClaim(
-  input: { owner: PostMatchPollOwner; renewedAt: Date },
-  prismaClient: ExtendedPrismaClient = prisma,
-): Promise<boolean> {
-  const renewed = await prismaClient.botState.updateMany({
-    where: {
-      id: BOT_STATE_ID,
-      pollStatus: "running",
-      pollStartedAt: input.owner.startedAt,
-    },
-    data: { pollClaimRenewedAt: input.renewedAt },
-  });
-  return renewed.count === 1;
-}
-
-/**
  * A poll write presented by a holder the row no longer names.
  *
  * Thrown rather than returned because it is a durable-write conflict: the
@@ -271,30 +233,24 @@ function pollCompletion(input: {
 }
 
 /**
- * Close the poll as completed. With an `owner`, only that owner's running
- * poll is closed and any other standing state is a
- * {@link PostMatchPollOwnershipError}; without one — v1's close — whatever
- * stands is overwritten, as it always has been.
+ * Close the poll as completed. Only `owner`'s running poll is closed; any
+ * other standing state is a {@link PostMatchPollOwnershipError}.
  */
 export async function markPostMatchPollCompleted(
   input: {
     completedAt: Date;
     evidenceComplete: boolean;
     evidenceWatermark?: Date | undefined;
-    owner?: PostMatchPollOwner | undefined;
+    owner: PostMatchPollOwner;
   },
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<void> {
-  const completion = pollCompletion(input);
-  if (input.owner !== undefined) {
-    await closeOwnedPoll(prismaClient, input.owner, "complete", completion);
-    return;
-  }
-  await prismaClient.botState.upsert({
-    where: { id: BOT_STATE_ID },
-    update: completion,
-    create: { id: BOT_STATE_ID, ...completion },
-  });
+  await closeOwnedPoll(
+    prismaClient,
+    input.owner,
+    "complete",
+    pollCompletion(input),
+  );
 }
 
 function pollFailure(error: unknown, failedAt: Date) {
@@ -311,19 +267,14 @@ export async function markPostMatchPollFailed(
   error: unknown,
   failedAt: Date,
   options: {
-    owner?: PostMatchPollOwner | undefined;
+    owner: PostMatchPollOwner;
     prismaClient?: ExtendedPrismaClient;
-  } = {},
+  },
 ): Promise<void> {
-  const prismaClient = options.prismaClient ?? prisma;
-  const failure = pollFailure(error, failedAt);
-  if (options.owner !== undefined) {
-    await closeOwnedPoll(prismaClient, options.owner, "fail", failure);
-    return;
-  }
-  await prismaClient.botState.upsert({
-    where: { id: BOT_STATE_ID },
-    update: failure,
-    create: { id: BOT_STATE_ID, ...failure },
-  });
+  await closeOwnedPoll(
+    options.prismaClient ?? prisma,
+    options.owner,
+    "fail",
+    pollFailure(error, failedAt),
+  );
 }

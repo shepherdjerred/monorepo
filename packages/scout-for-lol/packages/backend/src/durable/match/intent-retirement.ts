@@ -36,7 +36,7 @@ import { createLogger } from "#src/logger.ts";
  * cheap enough for both callers: the send path asks it before minting an
  * attempt, and the scheduled sweep asks it for every drivable intent it can
  * see. The Discord evidence — a deleted channel, a guild Scout left — is the
- * send path's alone (`temporal/v2/notification/intent-audience.ts`), because it
+ * send path's alone (`temporal/notification/intent-audience.ts`), because it
  * costs a request per intent.
  */
 

@@ -16,11 +16,11 @@ import {
 import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import configuration from "#src/configuration.ts";
 import { currentScoutTemporalSupervisor } from "#src/temporal/runtime.ts";
-import { signalScoutClientMatchDispatchV2 } from "#src/temporal/starts-v2.ts";
+import { signalScoutClientMatchDispatch } from "#src/temporal/pipeline-starts.ts";
 import {
-  ScoutClientMatchDispatchBatchV2Schema,
-  type ScoutClientMatchDispatchItemV2,
-} from "@scout-for-lol/temporal/workflow-contracts-v2";
+  ScoutClientMatchDispatchBatchSchema,
+  type ScoutClientMatchDispatchItem,
+} from "@scout-for-lol/temporal/workflow-contracts";
 import type { AuthenticatedScoutClient } from "./authentication.ts";
 import {
   LOCAL_CANONICAL_DELAY_MS,
@@ -344,7 +344,7 @@ export async function ingestObservationBatch(
 
 function postGameDeliveryMode(
   observation: ScoutClientObservation,
-): ScoutClientMatchDispatchItemV2["deliveryMode"] | null {
+): ScoutClientMatchDispatchItem["deliveryMode"] | null {
   const resource = observationResource(observation.payload);
   if (resource === "post_game") return "live";
   return /^match_history_game:\d{1,32}$/u.test(resource ?? "")
@@ -363,7 +363,7 @@ export function acceptedClientMatchDispatches(
   receipts: readonly Receipt[],
   now = new Date(),
   identities: IdentityMap = new Map(),
-): readonly ScoutClientMatchDispatchItemV2[] {
+): readonly ScoutClientMatchDispatchItem[] {
   const accepted = new Set(
     receipts
       .filter((receipt) => receipt.outcome !== "quarantined")
@@ -372,7 +372,7 @@ export function acceptedClientMatchDispatches(
   const readyAt = IsoInstantSchema.parse(
     new Date(now.getTime() + LOCAL_CANONICAL_DELAY_MS).toISOString(),
   );
-  const starts = new Map<string, ScoutClientMatchDispatchItemV2>();
+  const starts = new Map<string, ScoutClientMatchDispatchItem>();
   for (const raw of batch.observations) {
     const observation = translateObservation(raw, identities);
     if (
@@ -403,7 +403,7 @@ export function acceptedClientMatchDispatches(
       identities,
     );
     if (match === null) continue;
-    const candidate: ScoutClientMatchDispatchItemV2 = {
+    const candidate: ScoutClientMatchDispatchItem = {
       riotMatchId: parsed.data,
       sourcePuuid,
       deliveryMode,
@@ -470,10 +470,10 @@ export async function startAcceptedClientMatches(
         "Temporal is unavailable; native match start was not accepted",
       );
     }
-    await signalScoutClientMatchDispatchV2(
+    await signalScoutClientMatchDispatch(
       supervisor.client(),
       configuration.environment,
-      ScoutClientMatchDispatchBatchV2Schema.parse(starts),
+      ScoutClientMatchDispatchBatchSchema.parse(starts),
     );
   }
   for (const riotMatchId of acceptedClientBindingMatchIds(batch, receipts)) {

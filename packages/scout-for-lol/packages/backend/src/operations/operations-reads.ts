@@ -4,8 +4,8 @@ import {
   type WorkflowStartRequestId,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import type { NotificationIntentState } from "@scout-for-lol/domain/notifications/intent.ts";
-import { SCOUT_V2_MATCH_RECEIPT_KINDS } from "@scout-for-lol/temporal/match-receipts-v2";
-import { SCOUT_V2_WORKFLOW_NAMES } from "@scout-for-lol/temporal/identifiers";
+import { SCOUT_MATCH_RECEIPT_KINDS } from "@scout-for-lol/temporal/match-receipts";
+import { SCOUT_PIPELINE_START_WORKFLOW_TYPES } from "@scout-for-lol/temporal/identifiers";
 import { prisma } from "#src/database/index.ts";
 import {
   getMatchPipelineState,
@@ -14,7 +14,7 @@ import {
 import {
   listLiveRecoveryBatches,
   listStalledNotificationIntents,
-  listStalledV2MatchProcessing,
+  listStalledMatchProcessing,
   listUnacceptedWorkflowStarts,
   listUnknownDeliveryIntents,
   listUnprojectedLakeMatches,
@@ -199,8 +199,8 @@ export async function readOperationsQueues(args: {
     liveRecoveryBatches,
     unacceptedStarts,
   ] = await Promise.all([
-    listStalledV2MatchProcessing(prisma, {
-      observationReceiptKind: SCOUT_V2_MATCH_RECEIPT_KINDS.observation,
+    listStalledMatchProcessing(prisma, {
+      observationReceiptKind: SCOUT_MATCH_RECEIPT_KINDS.observation,
       // The operator surface is where a contested match must be visible.
       contested: { kind: "include" },
       limit,
@@ -230,7 +230,7 @@ export async function readOperationsQueues(args: {
       after: cursorFor("liveRecoveryBatches"),
     }),
     listUnacceptedWorkflowStarts(prisma, {
-      workflowTypes: SCOUT_V2_WORKFLOW_NAMES,
+      workflowTypes: SCOUT_PIPELINE_START_WORKFLOW_TYPES,
       limit,
       after: startsAfter,
     }),

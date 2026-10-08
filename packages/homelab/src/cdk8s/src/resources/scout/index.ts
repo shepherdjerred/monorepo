@@ -406,7 +406,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
 
   const roleEnvVariables: Record<string, EnvValue> = {
     ...envVariables,
-    SCOUT_RUNTIME_ROLE: EnvValue.fromValue("application-isolated"),
+    SCOUT_RUNTIME_ROLE: EnvValue.fromValue("application"),
   };
 
   deployment.addContainer(

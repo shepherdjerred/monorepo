@@ -16,7 +16,7 @@ import { createScoutWorkerPool } from "./worker-pool.test-fixtures.ts";
  * the test was actually reporting.
  */
 
-export type ScoutV2WorkflowHarness = {
+export type ScoutWorkflowHarness = {
   /** The client for the environment of the test currently running. */
   client: () => Client;
   /**
@@ -45,7 +45,7 @@ export type ScoutV2WorkflowHarness = {
  * scenario inherits another's executions, and the workers are drained before
  * it is torn down.
  */
-export function useScoutV2WorkflowHarness(): ScoutV2WorkflowHarness {
+export function useScoutWorkflowHarness(): ScoutWorkflowHarness {
   const pool = createScoutWorkerPool();
   let environment: TestWorkflowEnvironment | null = null;
 

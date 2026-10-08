@@ -26,7 +26,7 @@ const stubs = vi.hoisted(() => ({
   announceSettlements: vi.fn(),
   refreshClosedBucksMessages: vi.fn(),
 }));
-vi.mock("#src/temporal/v2/notification/settlement-notification.ts", () => ({
+vi.mock("#src/temporal/notification/settlement-notification.ts", () => ({
   postmatchReplyTargets: stubs.postmatchReplyTargets,
 }));
 vi.mock("#src/betting/notify/announce.ts", () => ({

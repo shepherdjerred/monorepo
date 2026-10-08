@@ -2,15 +2,12 @@ import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { DiscordAccountIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import {
-  scoutLakeProjectionV2WorkflowId,
-  scoutPipelineReconciliationV2WorkflowId,
+  scoutLakeProjectionWorkflowId,
+  scoutPipelineReconciliationWorkflowId,
 } from "@scout-for-lol/temporal";
 import * as databaseModule from "#src/database/index.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
-import {
-  fakeV2Temporal,
-  type FakeV2Temporal,
-} from "#src/testing/fake-v2-temporal.ts";
+import { fakeTemporal, type FakeTemporal } from "#src/testing/fake-temporal.ts";
 import {
   IsoInstantSchema,
   WorkflowRunIdSchema,
@@ -20,7 +17,7 @@ import {
   recordWorkflowStartAccepted,
   requestWorkflowStart,
 } from "#src/database/durable/workflow-start-repository.ts";
-import { startScoutPipelineReconciliationV2 } from "#src/temporal/starts-v2.ts";
+import { startScoutPipelineReconciliation } from "#src/temporal/pipeline-starts.ts";
 
 /**
  * The operator dispatch against a real durable table and a modelled Temporal.
@@ -73,7 +70,7 @@ const prisma = base.$extends({
 });
 vi.doMock("#src/database/index.ts", () => ({ ...databaseModule, prisma }));
 
-let temporal: FakeV2Temporal = fakeV2Temporal();
+let temporal: FakeTemporal = fakeTemporal();
 let available = true;
 /**
  * And around the dispatcher's START call, so a test can run the other driver
@@ -87,7 +84,7 @@ let dispatcherStarts = 0;
 const hookedClient = {
   workflow: {
     start: async (
-      ...args: Parameters<FakeV2Temporal["client"]["workflow"]["start"]>
+      ...args: Parameters<FakeTemporal["client"]["workflow"]["start"]>
     ) => {
       dispatcherStarts += 1;
       const hook = beforeStart;
@@ -112,8 +109,8 @@ const { dispatchOperationsWorkflowStart } =
 const STAGE = "beta";
 const OPERATOR = DiscordAccountIdSchema.parse("200000000000000001");
 const MATCH_ID = RiotMatchIdSchema.parse("NA1_5312279829");
-const RECONCILE_ID = scoutPipelineReconciliationV2WorkflowId(STAGE, "operator");
-const PROJECTION_ID = scoutLakeProjectionV2WorkflowId(STAGE, MATCH_ID);
+const RECONCILE_ID = scoutPipelineReconciliationWorkflowId(STAGE, "operator");
+const PROJECTION_ID = scoutLakeProjectionWorkflowId(STAGE, MATCH_ID);
 
 async function reconcile() {
   return await dispatchOperationsWorkflowStart(
@@ -149,11 +146,11 @@ const OBSERVED = IsoInstantSchema.parse("2026-09-16T10:00:00.000Z");
 async function otherDriverRequests(): Promise<WorkflowStartRequestId> {
   const other = await requestWorkflowStart(base, {
     requestedWorkflowId: RECONCILE_ID,
-    workflowType: "scoutPipelineReconciliationV2Workflow",
+    workflowType: "scoutPipelineReconciliationWorkflow",
     requestedBy: OPERATOR,
     requestSource: "operations:reconcile-pipeline",
     inputPayload: {
-      kind: "scoutPipelineReconciliationV2Workflow",
+      kind: "scoutPipelineReconciliationWorkflow",
       version: 1,
       data: RECONCILE_INPUT,
     },
@@ -198,7 +195,7 @@ async function otherDriverAccepts(
   requestId: WorkflowStartRequestId,
   acceptedAt: ReturnType<typeof now>,
 ): Promise<string> {
-  const started = await startScoutPipelineReconciliationV2(
+  const started = await startScoutPipelineReconciliation(
     temporal.client,
     RECONCILE_INPUT,
   );
@@ -248,7 +245,7 @@ async function rowsFor(requestedWorkflowId: string) {
 
 beforeEach(async () => {
   await prisma.scoutWorkflowStart.deleteMany();
-  temporal = fakeV2Temporal();
+  temporal = fakeTemporal();
   available = true;
   aroundInsert = null;
   beforeAccept = null;
@@ -475,7 +472,7 @@ describe("simultaneous requests", () => {
       temporal.close(RECONCILE_ID, "completed");
       // A third party — no durable row, because it starts from inside the
       // Workflow sandbox — begins the replacement.
-      const replacement = await startScoutPipelineReconciliationV2(
+      const replacement = await startScoutPipelineReconciliation(
         temporal.client,
         RECONCILE_INPUT,
       );

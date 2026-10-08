@@ -36,7 +36,7 @@
  * `installed-guilds` / `bot-rest` ports, and this change removes the gateway
  * from the `application` role entirely. `application` therefore serves as soon
  * as its own dependencies are ready. `combined` keeps connecting first — it
- * still owns a shard, and it is what production runs.
+ * still owns a shard in local development.
  *
  * ## Shutdown order
  *

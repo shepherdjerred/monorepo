@@ -173,11 +173,11 @@ describe("durable pipeline sweep against Postgres", () => {
         {
           requestId: crypto.randomUUID(),
           requestedWorkflowId: "wf-unaccepted",
-          workflowType: "scoutMatchProcessingV2Workflow",
+          workflowType: "scoutMatchProcessingWorkflow",
           requestedBy: null,
           requestSource: "test",
           inputPayload: JSON.stringify({
-            kind: "scoutMatchProcessingV2Workflow",
+            kind: "scoutMatchProcessingWorkflow",
             version: 1,
             data: {},
           }),
@@ -188,11 +188,11 @@ describe("durable pipeline sweep against Postgres", () => {
           // on, so an accepted start must not be able to set the age.
           requestId: crypto.randomUUID(),
           requestedWorkflowId: "wf-accepted",
-          workflowType: "scoutMatchProcessingV2Workflow",
+          workflowType: "scoutMatchProcessingWorkflow",
           requestedBy: null,
           requestSource: "test",
           inputPayload: JSON.stringify({
-            kind: "scoutMatchProcessingV2Workflow",
+            kind: "scoutMatchProcessingWorkflow",
             version: 1,
             data: {},
           }),

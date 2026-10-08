@@ -40,9 +40,6 @@ describe("runtime boot order", () => {
       "report-lake",
       "temporal-core",
       "http-server",
-      // Interim: this role carries the competition activity worker, and the
-      // realtime/background queues, until `activity-worker` is deployable.
-      "competition-worker",
       "database-seeding",
     ]);
     // The Discord-before-HTTP ordering existed because web code read the live
@@ -50,16 +47,6 @@ describe("runtime boot order", () => {
     // ports, and this role has no shard to wait for at all.
     expect(steps).not.toContain("discord-gateway");
     expect(steps).not.toContain("voice-assistant");
-  });
-
-  test("isolated application omits competition activity boot", () => {
-    expect(bootStepsFor("application-isolated")).toEqual([
-      "champion-assets",
-      "report-lake",
-      "temporal-core",
-      "http-server",
-      "database-seeding",
-    ]);
   });
 
   test("gateway boots the shard and nothing that owns data", () => {
@@ -168,19 +155,6 @@ describe("runtime shutdown order", () => {
 
   test("application drains without gateway or voice steps", () => {
     expect(shutdownStepsFor("application")).toEqual([
-      "temporal",
-      // Interim, mirroring the boot plan: drained here until `activity-worker`
-      // is deployable and takes it back.
-      "competition-worker",
-      "http-server",
-      "dynamic-config",
-      "product-analytics",
-      "database",
-    ]);
-  });
-
-  test("isolated application has no competition activity to drain", () => {
-    expect(shutdownStepsFor("application-isolated")).toEqual([
       "temporal",
       "http-server",
       "dynamic-config",

@@ -8,15 +8,17 @@ import {
 } from "#src/metrics/durable.ts";
 
 /**
- * The fail-open boundary every durable dual-write goes through.
+ * The fail-open boundary for durable writes that RECORD an effect rather than
+ * decide it.
  *
- * This wave makes Postgres the operational RECORD of what the v1 pipeline
- * does, while v1 remains authoritative for behaviour. That asymmetry is the
- * whole contract of this module: a durable write that throws must never reach
- * the pipeline, because the pipeline's own error handling is what decides
- * whether a cursor advances or a report is retried. A broken recorder would
- * otherwise be able to block ingestion, which is exactly the failure mode the
- * durable tables exist to remove.
+ * Its callers — the channel delivery recorder the prematch intents go
+ * through, the workflow-start request rows, and the receipted lake staging —
+ * write a record of something whose outcome is decided elsewhere: by the
+ * notification Workflow, by the Temporal start itself, by the lake writer.
+ * That asymmetry is the whole contract of this module: a recording write that
+ * throws must never reach its caller, because the caller's own error handling
+ * is what decides whether the effect is retried. A broken recorder would
+ * otherwise be able to block the effect it only describes.
  *
  * Swallowing is not silence. Every failure logs loudly and increments
  * `scout_durable_dualwrite_failures_total{write_kind}`, so parity loss is
@@ -101,7 +103,7 @@ export function reportDurableWriteFailure(
 ): void {
   countDurableWriteFailure(kind);
   logger.error(
-    `❌ Durable dual-write ${kind} failed; the authoritative v1 pipeline continues unaffected`,
+    `❌ Durable record write ${kind} failed; the effect it describes continues unaffected`,
     error,
   );
 }
@@ -176,21 +178,5 @@ export async function recordDurableWrite<T extends { outcome: string }>(
   } catch (error) {
     reportDurableWriteFailure(kind, error);
     return undefined;
-  }
-}
-
-/**
- * Parse a branded identity out of a looser v1 value behind the same fail-open
- * boundary. `null` means "record nothing for this match": the durable facts
- * are keyed by that identity, so without it there is nothing truthful to
- * write. No record is counted, because resolving an identity is not itself a
- * recorded fact — only the failure is.
- */
-export function resolveDurableIdentity<T>(resolve: () => T): T | null {
-  try {
-    return resolve();
-  } catch (error) {
-    reportDurableWriteFailure("match-identity", error);
-    return null;
   }
 }

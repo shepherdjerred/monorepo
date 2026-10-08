@@ -22,7 +22,7 @@ import {
   markTrackedAccountCursorAdvanced,
   recordTrackedAccounts,
 } from "#src/database/durable/tracked-account-repository.ts";
-import { SCOUT_V2_MATCH_RECEIPT_KINDS } from "@scout-for-lol/temporal/match-receipts-v2";
+import { SCOUT_MATCH_RECEIPT_KINDS } from "@scout-for-lol/temporal/match-receipts";
 
 const { prisma } = createTestDatabase("durable-match-pipeline-state");
 
@@ -108,7 +108,7 @@ describe("getMatchPipelineState", () => {
     await recordReceipt(prisma, {
       matchId,
       receipt: {
-        kind: SCOUT_V2_MATCH_RECEIPT_KINDS.archive,
+        kind: SCOUT_MATCH_RECEIPT_KINDS.archive,
         version: 1,
         scope: { kind: "global" },
         recordedAt: OBSERVED_AT,
@@ -150,7 +150,7 @@ describe("getMatchPipelineState", () => {
       promotion: null,
     });
     expect(state?.processing.receipts.map((receipt) => receipt.kind)).toEqual([
-      SCOUT_V2_MATCH_RECEIPT_KINDS.archive,
+      SCOUT_MATCH_RECEIPT_KINDS.archive,
     ]);
     expect(state?.intents.map((record) => record.intent.key)).toEqual([
       "notify:7101",

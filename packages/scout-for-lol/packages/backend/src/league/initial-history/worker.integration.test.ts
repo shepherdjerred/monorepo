@@ -94,7 +94,6 @@ beforeEach(async () => {
   await deleteIfExists(() => prisma.currentRankSnapshot.deleteMany());
   await deleteIfExists(() => prisma.matchRankHistory.deleteMany());
   await deleteIfExists(() => prisma.bucksMatchEarning.deleteMany());
-  await deleteIfExists(() => prisma.activeGame.deleteMany());
   await deleteIfExists(() => prisma.account.deleteMany());
   await deleteIfExists(() => prisma.player.deleteMany());
 });
@@ -270,7 +269,6 @@ describe("initial history worker", () => {
     );
 
     expect(await prisma.matchRankHistory.count()).toBe(0);
-    expect(await prisma.activeGame.count()).toBe(0);
     expect(await prisma.bucksMatchEarning.count()).toBe(0);
   });
 

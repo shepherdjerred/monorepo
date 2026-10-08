@@ -38,72 +38,6 @@ export const ScoutWorkflowStatusSchema = z.enum([
 ]);
 export type ScoutWorkflowStatus = z.infer<typeof ScoutWorkflowStatusSchema>;
 
-export const ScoutRealtimePollInputSchema = z.object({
-  stage: ScoutStageSchema,
-  // Keep the retired tournament discriminator while executions created by the
-  // former Schedule can still replay or retry their recorded Activity.
-  kind: z.enum(["prematch", "tournament-lobbies"]),
-  scheduledStartAt: IsoInstantSchema.optional(),
-  maximumAgeSeconds: z.number().int().positive(),
-  /**
-   * Set to `v2` only by the prematch ownership router, when V2 owns the
-   * pass: `scoutPrematchDiscoveryV2Workflow` has already detected this
-   * pass's live games, so `pollRealtime` runs v1's prematch maintenance
-   * (betting windows, Dare expiry, parlay activation) without v1's
-   * active-game detection. Absent on every other run, including every run
-   * recorded before the router, which keeps v1's whole pass unchanged.
-   */
-  activeGameDetectionOwner: z.literal("v2").optional(),
-});
-export type ScoutRealtimePollInput = z.infer<
-  typeof ScoutRealtimePollInputSchema
->;
-
-export const ScoutMatchIngestionInputSchema = z.object({
-  stage: ScoutStageSchema,
-  matchId: OpaqueIdentifierSchema,
-  sourcePuuid: RiotPuuidSchema,
-  region: z.enum([
-    "BRAZIL",
-    "EU_EAST",
-    "EU_WEST",
-    "KOREA",
-    "LAT_NORTH",
-    "LAT_SOUTH",
-    "AMERICA_NORTH",
-    "OCEANIA",
-    "TURKEY",
-    "RUSSIA",
-    "JAPAN",
-    "VIETNAM",
-    "TAIWAN",
-    "SINGAPORE",
-    "PBE",
-  ]),
-  delivery: z.enum(["live", "silent-backfill"]),
-});
-export type ScoutMatchIngestionInput = z.infer<
-  typeof ScoutMatchIngestionInputSchema
->;
-
-export const ScoutPostMatchDiscoveryInputSchema = z.object({
-  stage: ScoutStageSchema,
-  scheduledStartAt: IsoInstantSchema.optional(),
-  /**
-   * The durable poll claim this v1 pass runs under, by the instant it was
-   * claimed at. Set only when the V2 ownership gate delegates to v1: the gate
-   * claims the poll first, so two overlapping handoffs cannot both run v1.
-   * Discovery re-presents the claim instead of opening the poll
-   * unconditionally, and the Workflow's `...input` spread carries it to
-   * maintenance, whose close is then guarded on it. Absent for every v1 run
-   * the gate did not start, which keeps v1's own open and close unchanged.
-   */
-  pollOwner: z.iso.datetime().optional(),
-});
-export type ScoutPostMatchDiscoveryInput = z.infer<
-  typeof ScoutPostMatchDiscoveryInputSchema
->;
-
 export const ScoutInitialHistoryInputSchema = z.object({
   stage: ScoutStageSchema,
   puuid: RiotPuuidSchema,
@@ -201,11 +135,6 @@ export const ScoutBackgroundJobInputSchema = z.object({
     "notification-intent-expiry",
     "prediction-ingest",
     "legacy-backfill",
-    // Retired: the Hall and Duel outbox drain. Accepted as a no-op for one
-    // release so a run the not-yet-deleted Schedule starts, or one already in
-    // flight, still parses while schedule reconciliation removes
-    // `scout-prod-progression-outbox`.
-    "progression-outbox",
     "progression-reconciliation",
     "mvp-tally-refresh",
     "support-inbox",
@@ -377,54 +306,19 @@ export type IngestionReconciliationResult = z.infer<
   typeof IngestionReconciliationResultSchema
 >;
 
-/**
- * Whether a rediscovered match's ingestion child is confirmed COMPLETED, and
- * its discovering account's cursor therefore moved past the match.
- *
- * `reconciled` means the child reached a terminal COMPLETED status, which it
- * only does once every ingestion effect has run — so the match's evidence is
- * captured and the run may carry on and settle. `not-completed` covers every
- * other status: the execution may still be mid-ingest, so the caller must not
- * advance anything or settle on it.
- */
-export const IngestedMatchCursorReconciliationSchema = z.object({
-  outcome: z.enum(["reconciled", "not-completed"]),
-});
-export type IngestedMatchCursorReconciliation = z.infer<
-  typeof IngestedMatchCursorReconciliationSchema
->;
-
-export const PostMatchDiscoveryResultSchema = z.object({
-  matches: z.array(ScoutMatchIngestionInputSchema.omit({ stage: true })),
-  // Old activity completions predate this field and only returned after a
-  // complete discovery. Defaulting those replayed payloads to true preserves
-  // in-flight workflow compatibility across the rollout.
-  evidenceComplete: z.boolean().default(true),
-  // Optional for activity payload compatibility during rollout. New discovery
-  // binds deadline settlement to this poll-start completion watermark.
+export const ScoutPostMatchMaintenanceInputSchema = z.object({
+  stage: ScoutStageSchema,
+  settleDareV2Deadlines: z.boolean(),
   evidenceWatermark: z.iso.datetime().optional(),
+  /**
+   * Which poll this maintenance may close, by the instant it was claimed at.
+   *
+   * Post-match discovery claims its poll durably for the whole Workflow, and
+   * the close is guarded on this identity, so a run whose claim was taken
+   * over fails loudly instead of marking a later run's poll complete.
+   */
+  pollOwner: z.iso.datetime(),
 });
-export type PostMatchDiscoveryResult = z.infer<
-  typeof PostMatchDiscoveryResultSchema
->;
-
-export const ScoutPostMatchMaintenanceInputSchema =
-  ScoutPostMatchDiscoveryInputSchema.extend({
-    settleDareV2Deadlines: z.boolean(),
-    evidenceWatermark: z.iso.datetime().optional(),
-    /**
-     * Which poll this maintenance may close, by the instant it was claimed at.
-     *
-     * Present only for a V2 discovery, whose poll is claimed durably and spans
-     * the whole Workflow: the close is guarded on this identity, so a run
-     * whose claim was taken over fails loudly instead of marking a later run's
-     * poll complete. Absent for v1, whose poll and maintenance are one
-     * Activity and whose close overwrites whatever stands, exactly as it
-     * always has — optional rather than required so an in-flight v1 history
-     * that recorded no such field still parses.
-     */
-    pollOwner: z.iso.datetime().optional(),
-  });
 export type ScoutPostMatchMaintenanceInput = z.infer<
   typeof ScoutPostMatchMaintenanceInputSchema
 >;

@@ -169,14 +169,30 @@ describe("local runtime flags", () => {
     expect(configuration.skipReportLakeFold).toBe(true);
   });
 
-  test("accepts every declared runtime role in beta", () => {
+  test("accepts every hosted runtime role in beta", () => {
     Bun.env["ENVIRONMENT"] = "beta";
     Bun.env["TEMPORAL_NAMESPACE"] = "beta";
-    for (const role of SCOUT_RUNTIME_ROLES) {
+    for (const role of SCOUT_RUNTIME_ROLES.filter(
+      (candidate) => candidate !== "combined",
+    )) {
       Bun.env["SCOUT_RUNTIME_ROLE"] = role;
       resetConfigurationForTests();
       expect(configuration.runtimeRole).toBe(role);
     }
+  });
+
+  test("refuses the combined role and an unset role outside development", () => {
+    Bun.env["ENVIRONMENT"] = "prod";
+    Bun.env["TEMPORAL_NAMESPACE"] = "prod";
+    Bun.env["SCOUT_RUNTIME_ROLE"] = "combined";
+    resetConfigurationForTests();
+    expect(() => configuration.runtimeRole).toThrow(/development-only/);
+
+    delete Bun.env["SCOUT_RUNTIME_ROLE"];
+    resetConfigurationForTests();
+    expect(() => configuration.runtimeRole).toThrow(
+      /SCOUT_RUNTIME_ROLE must be set in prod/,
+    );
   });
 
   test("requires an active Temporal namespace", () => {
@@ -198,6 +214,7 @@ describe("local runtime flags", () => {
   test("requires the active Temporal namespace to match the Scout stage", () => {
     Bun.env["ENVIRONMENT"] = "beta";
     Bun.env["TEMPORAL_NAMESPACE"] = "prod";
+    Bun.env["SCOUT_RUNTIME_ROLE"] = "application";
     resetConfigurationForTests();
 
     expect(() => configuration.temporalNamespace).toThrow(
@@ -227,13 +244,14 @@ describe("local runtime flags", () => {
     // A typo'd role that silently fell back to `combined` would put a second
     // gateway connection and a second report-lake writer into the cluster.
     expect(() => configuration.runtimeRole).toThrow(
-      /Invalid SCOUT_RUNTIME_ROLE="aplication", expected one of: combined, application, application-isolated, gateway, activity-worker/,
+      /Invalid SCOUT_RUNTIME_ROLE="aplication", expected one of: combined, application, gateway, activity-worker/,
     );
   });
 
   test("rejects skipping the boot report-lake fold outside development", () => {
     Bun.env["ENVIRONMENT"] = "beta";
     Bun.env["TEMPORAL_NAMESPACE"] = "beta";
+    Bun.env["SCOUT_RUNTIME_ROLE"] = "application";
     Bun.env["SCOUT_DEV_SKIP_REPORT_LAKE_FOLD"] = "true";
     resetConfigurationForTests();
 

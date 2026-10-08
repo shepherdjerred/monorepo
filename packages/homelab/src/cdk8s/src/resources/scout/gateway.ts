@@ -192,11 +192,8 @@ export function createScoutGatewayDeployment(
         //
         // The gateway's Service, ServiceMonitor and NetworkPolicy deliberately
         // stay in wave 0: the policy governing this pod should exist before the
-        // pod does.
-        //
-        // Retiring inverts this to wave -2 so the scale-to-zero is applied,
-        // and gated on termination, BEFORE the backend returns to combined.
-        // See SCOUT_GATEWAY_SYNC_WAVE.
+        // pod does. Hosted stages cannot return to `combined`: the backend
+        // refuses that role outside development.
         [ARGOCD_SYNC_WAVE_ANNOTATION]: SCOUT_GATEWAY_SYNC_WAVE,
       },
     },

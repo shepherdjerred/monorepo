@@ -14,7 +14,7 @@ import {
   buildCommunityInsights,
   squadChemistry,
 } from "#src/trpc/router/consumer/community-insights.ts";
-import { listLivePrematchGames } from "#src/temporal/v2/prematch/prematch-reads.ts";
+import { listLivePrematchGames } from "#src/temporal/prematch/prematch-reads.ts";
 import { protectedProcedure, router } from "#src/trpc/trpc.ts";
 
 const GuildInput = z.object({ guildId: DiscordGuildIdSchema });
@@ -223,8 +223,8 @@ export const consumerGuildRouter = router({
         ),
       ),
     );
-    // The V2 prematch captures, not `ActiveGame`: only v1 wrote that table.
-    // A game the report lake already holds is over, whatever its TTL says.
+    // The prematch captures. A game the report lake already holds is over,
+    // whatever its TTL says.
     const live = await listLivePrematchGames({
       now: new Date(),
       completedMatchIds: async (matchIds) => {

@@ -1,6 +1,6 @@
 import { Counter, Gauge } from "prom-client";
-import { SCOUT_V2_MATCH_RECEIPT_KINDS } from "@scout-for-lol/temporal/match-receipts-v2";
-import { SCOUT_V2_WORKFLOW_NAMES } from "@scout-for-lol/temporal/identifiers";
+import { SCOUT_MATCH_RECEIPT_KINDS } from "@scout-for-lol/temporal/match-receipts";
+import { SCOUT_PIPELINE_START_WORKFLOW_TYPES } from "@scout-for-lol/temporal/identifiers";
 import type { Db } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { registry } from "#src/metrics/registry.ts";
@@ -147,7 +147,7 @@ export const scoutDurableObservationLag = new Gauge({
  * Live V2 matches that finished their core without a post-match intent.
  *
  * Defined here with every other durable gauge, but FILLED by
- * `temporal/v2/notification/postmatch-mint-gap.ts`: the read excludes matches
+ * `temporal/notification/postmatch-mint-gap.ts`: the read excludes matches
  * carrying the post-match render receipt, whose kind the notification lane
  * owns and `metrics/` may not import. It registers through
  * `sweep-registry.ts`, as the lake lag does. -1 means the read failed.
@@ -165,7 +165,7 @@ export const scoutDurablePostmatchMintGaps = new Gauge({
  * models a kind as a branded kebab-case string on purpose — the owning
  * workflow of a later wave defines its own, so the domain must not enumerate
  * them — but every value that ever reaches this label is a literal in one of
- * the four owner modules (`durable-receipts.ts`, `match-receipts-v2.ts`,
+ * the four owner modules (`durable-receipts.ts`, `match-receipts.ts`,
  * `receipt-evidence.ts`, and the V2 notification and recovery receipt
  * modules). No request, match, guild, or user input can put a value here, so
  * the series count is the number of kinds the source declares.
@@ -268,7 +268,7 @@ function ageSeconds(oldest: Date | null, now: number): number {
  * pays for it and one set of series describes the deployment — see
  * `sweep-policy.ts` for why that is a deployment fact rather than a process
  * one. The lake family and the post-match mint gap are not here: their
- * receipt-kind vocabularies belong to `report-lake/` and `temporal/v2/`, which
+ * receipt-kind vocabularies belong to `report-lake/` and `temporal/`, which
  * `metrics/` may not import, so each registers itself through
  * `sweep-registry.ts`.
  *
@@ -306,11 +306,11 @@ export async function collectDurablePipelineMetrics(db: Db): Promise<void> {
       countNotificationIntentsByState(db),
       countRecoveryBatchesByState(db),
       oldestStalledMatchProcessingAt(db, {
-        observationReceiptKind: SCOUT_V2_MATCH_RECEIPT_KINDS.observation,
+        observationReceiptKind: SCOUT_MATCH_RECEIPT_KINDS.observation,
       }),
       oldestLiveRecoveryBatchAt(db),
       oldestUnacceptedWorkflowStartAt(db, {
-        workflowTypes: SCOUT_V2_WORKFLOW_NAMES,
+        workflowTypes: SCOUT_PIPELINE_START_WORKFLOW_TYPES,
       }),
       oldestReadyNotificationIntentAt(db),
       observationLag(db, {

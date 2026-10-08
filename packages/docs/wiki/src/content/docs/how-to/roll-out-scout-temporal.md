@@ -55,7 +55,7 @@ Activity Worker is not polling its declared queue; stop the rollout.
 
 ## Verify hosted queue ownership
 
-1. Confirm the application runs `application-isolated`, and the dedicated
+1. Confirm the application runs the `application` role, and the dedicated
    gateway and activity worker each have one ready pod. Read the exact
    deployed image digests and chart revision.
 2. Confirm the application owns `interactive` and `lake`, and the activity

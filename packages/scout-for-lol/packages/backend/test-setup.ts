@@ -9,6 +9,12 @@ import path from "node:path";
 Bun.env.NODE_ENV = "test";
 Bun.env["TEMPORAL_NAMESPACE"] = "dev";
 
+// Hosted stages refuse to boot without a runtime role, and many suites switch
+// ENVIRONMENT to beta or prod to exercise stage-specific behaviour. The web
+// surface they exercise is the application role's. A suite that needs the
+// development default (`combined`) deletes this explicitly.
+Bun.env["SCOUT_RUNTIME_ROLE"] = Bun.env["SCOUT_RUNTIME_ROLE"] ?? "application";
+
 // Set S3_BUCKET_NAME for tests that require it
 // This must be set before the configuration module is imported
 Bun.env["S3_BUCKET_NAME"] = "test-bucket";

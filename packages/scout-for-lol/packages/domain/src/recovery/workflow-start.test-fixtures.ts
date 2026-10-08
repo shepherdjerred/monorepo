@@ -11,7 +11,7 @@ import type {
 } from "#src/recovery/workflow-start.ts";
 
 export const WORKFLOW_ID = "scout-beta-pipeline-reconciliation-v2-operator";
-export const WORKFLOW_TYPE = "scoutPipelineReconciliationV2Workflow";
+export const WORKFLOW_TYPE = "scoutPipelineReconciliationWorkflow";
 export const REQUESTED_AT = IsoInstantSchema.parse("2026-09-16T10:00:00.000Z");
 export const ACCEPTED_AT = IsoInstantSchema.parse("2026-09-16T10:00:01.000Z");
 export const RUN_ID = WorkflowRunIdSchema.parse("run-1");

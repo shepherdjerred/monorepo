@@ -71,8 +71,6 @@ export const SCOUT_FLAG_KEYS = [
   "scout-temporal-call-graph-tracing",
   "scout_client_ingestion",
   "scout_operations_console_enabled",
-  "scout_v2_postmatch_ownership_enabled",
-  "scout_v2_prematch_ownership_enabled",
   "voice_assistant_enabled",
 ] as const;
 
@@ -107,8 +105,6 @@ export const SCOUT_BOOLEAN_FLAG_KEYS = [
   "scout-temporal-call-graph-tracing",
   "scout_client_ingestion",
   "scout_operations_console_enabled",
-  "scout_v2_postmatch_ownership_enabled",
-  "scout_v2_prematch_ownership_enabled",
   "voice_assistant_enabled",
 ] as const;
 
