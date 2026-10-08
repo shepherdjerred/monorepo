@@ -22,7 +22,10 @@ describe("forum isolation and release resources", () => {
       createStormForumChart(new App(), {
         ...fixture,
         stage: "prod",
-        preUpgradeBackup: { bundleSha256: "d".repeat(64) },
+        preUpgradeBackup: {
+          bundleSha256: "d".repeat(64),
+          xenforoVersion: "2.3.8",
+        },
       }),
     );
     const job = rendered.find((resource) => resource.kind === "Job");
@@ -31,6 +34,9 @@ describe("forum isolation and release resources", () => {
     expect(json).toContain('"name":"BACKUP_SECRET_KEY"');
     expect(json).toContain('"value":"storm-forum-backups"');
     expect(json).not.toContain('"key":"RESTORE_ACCESS_KEY"');
+    expect(json).toContain(
+      '"name":"BACKUP_SOURCE_XENFORO_VERSION","value":"2.3.8"',
+    );
     expect(json).toContain(
       '"name":"BACKUP_SOURCE_BUNDLE_SHA256","value":"' + "d".repeat(64) + '"',
     );

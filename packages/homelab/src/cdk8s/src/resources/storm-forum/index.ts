@@ -41,7 +41,10 @@ export const ReleaseSchema = z
     bundleKey: z.string().regex(/^releases\/[\w.-]+\.zip$/),
     releaseId: z.string().regex(/^[a-f0-9]{12}$/),
     preUpgradeBackup: z
-      .object({ bundleSha256: z.string().regex(/^[a-f0-9]{64}$/) })
+      .object({
+        bundleSha256: z.string().regex(/^[a-f0-9]{64}$/),
+        xenforoVersion: z.string().min(1),
+      })
       .strict()
       .optional(),
     storageSlot: z.enum(["primary", "recovery"]).optional(),
@@ -442,6 +445,10 @@ export function createStormForumChart(app: App, input: ForumRelease): Chart {
                             {
                               name: "BACKUP_SOURCE_BUNDLE_SHA256",
                               value: release.preUpgradeBackup.bundleSha256,
+                            },
+                            {
+                              name: "BACKUP_SOURCE_XENFORO_VERSION",
+                              value: release.preUpgradeBackup.xenforoVersion,
                             },
                           ]
                         : []),

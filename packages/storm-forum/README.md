@@ -140,7 +140,7 @@ requests, waits for the maximum request lifetime, exports MariaDB, and archives
 manifest last commits the pair. The protected bucket participates in the existing
 SeaweedFS-to-R2 backup policy. Only a tested pair establishes restore confidence.
 
-For an upgrade, declare `preUpgradeBackup: { "bundleSha256": "<currently deployed bundle>" }`
+For an upgrade, declare `preUpgradeBackup: { "bundleSha256": "<currently deployed bundle>", "xenforoVersion": "<currently deployed version>" }`
 alongside a new release ID. The release Job snapshots before migrations and records
 that previous bundle so recovery uses matching application files. Completed bootstrap
 Jobs remain unchanged until the next explicit release; an installed forum cannot

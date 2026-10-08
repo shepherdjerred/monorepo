@@ -347,6 +347,14 @@ try {
     process.stdout.write(
       await run([
         "exec",
+        app,
+        "bun",
+        "/opt/storm-forum/test/release-installation.ts",
+      ]),
+    );
+    process.stdout.write(
+      await run([
+        "exec",
         "-w",
         "/app/forum",
         app,

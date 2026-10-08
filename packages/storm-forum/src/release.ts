@@ -8,6 +8,7 @@ import {
   beginStormForumBackup,
   endStormForumBackup,
   snapshotForum,
+  SnapshotSourceSchema,
 } from "./backup.ts";
 
 const BundleEnvironmentSchema = z.object({
@@ -118,6 +119,7 @@ export async function releaseForum(stage: Stage): Promise<void> {
   let completed = false;
   let ownsMaintenance = false;
   let mutating = false;
+  let unsafeInstallation = false;
   try {
     await handle.writeFile(
       JSON.stringify({ stage, owner, startedAt: new Date().toISOString() }),
@@ -126,17 +128,22 @@ export async function releaseForum(stage: Stage): Promise<void> {
     await beginStormForumBackup(owner);
     ownsMaintenance = true;
     await Bun.sleep(65_000);
-    const installation = await runPhp(
+    unsafeInstallation = true;
+    const installationOutput = await runPhp(
       ["/opt/storm-forum/runtime/installed.php"],
       "/app/forum",
     );
-    if (installation.trim() === "installed") {
+    const installation = z
+      .enum(["installed", "empty"])
+      .parse(installationOutput.trim());
+    unsafeInstallation = false;
+    if (installation === "installed") {
       // The database has not been upgraded yet. Restore it with the previous
       // private bundle, rather than recording this job's incoming bundle.
-      const sourceBundle = z
-        .string()
-        .regex(/^[a-f0-9]{64}$/)
-        .parse(Bun.env["BACKUP_SOURCE_BUNDLE_SHA256"]);
+      const sourceBundle = SnapshotSourceSchema.parse({
+        bundleSha256: Bun.env["BACKUP_SOURCE_BUNDLE_SHA256"],
+        xenforoVersion: Bun.env["BACKUP_SOURCE_XENFORO_VERSION"],
+      });
       const snapshot = await snapshotForum(
         owner,
         {
@@ -148,8 +155,6 @@ export async function releaseForum(stage: Stage): Promise<void> {
         sourceBundle,
       );
       process.stdout.write(`Pre-upgrade snapshot: ${snapshot.manifestKey}\n`);
-    } else if (installation.trim() !== "empty") {
-      throw new Error("Unexpected installation state");
     }
     mutating = true;
     await runPhp(
@@ -176,7 +181,7 @@ export async function releaseForum(stage: Stage): Promise<void> {
   } finally {
     await handle.close();
     // A failed migration requires inspection before another release can run.
-    if (completed || !mutating) {
+    if (completed || (!mutating && !unsafeInstallation)) {
       if (ownsMaintenance) {
         await endStormForumBackup(owner);
       }

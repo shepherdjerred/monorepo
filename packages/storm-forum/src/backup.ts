@@ -14,6 +14,12 @@ const MarkerSchema = z
 const BackupEnvironmentSchema = SnapshotEnvironmentSchema.extend({
   STORM_FORUM_STAGE: StageSchema,
 });
+export const SnapshotSourceSchema = z
+  .object({
+    bundleSha256: z.string().regex(/^[a-f0-9]{64}$/),
+    xenforoVersion: z.string().min(1),
+  })
+  .strict();
 
 export async function beginStormForumBackup(owner: string): Promise<void> {
   OwnerSchema.parse(owner);
@@ -101,15 +107,16 @@ export async function snapshotStormForum(
 export async function snapshotForum(
   owner: string,
   context: Pick<Context, "heartbeat" | "cancellationSignal">,
-  sourceBundleSha256?: string,
+  sourceRelease?: z.infer<typeof SnapshotSourceSchema>,
 ): Promise<{ manifestKey: string }> {
   OwnerSchema.parse(owner);
-  const env = BackupEnvironmentSchema.parse({
-    ...Bun.env,
-    ...(sourceBundleSha256 === undefined
-      ? {}
-      : { BUNDLE_SHA256: sourceBundleSha256 }),
-  });
+  const env = BackupEnvironmentSchema.parse(Bun.env);
+  const source = SnapshotSourceSchema.parse(
+    sourceRelease ?? {
+      bundleSha256: env.BUNDLE_SHA256,
+      xenforoVersion: forumManifest.xenforoVersion,
+    },
+  );
   const marker = MarkerSchema.parse(await Bun.file(MARKER).json());
   if (marker.owner !== owner) {
     throw new Error("Snapshot requires this execution's maintenance window");
@@ -181,8 +188,8 @@ export async function snapshotForum(
         schemaVersion: 1,
         stage: env.STORM_FORUM_STAGE,
         owner,
-        xenforoVersion: forumManifest.xenforoVersion,
-        bundleSha256: env.BUNDLE_SHA256,
+        xenforoVersion: source.xenforoVersion,
+        bundleSha256: source.bundleSha256,
         createdAt: new Date().toISOString(),
         payloads,
       }),
