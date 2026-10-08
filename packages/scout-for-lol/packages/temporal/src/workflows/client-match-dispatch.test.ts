@@ -520,6 +520,42 @@ test("the shared dispatcher waits for authoritative legacy completion", async ()
   );
 }, 90_000);
 
+test("the shared dispatcher advances past a legacy match the backend reports finished", async () => {
+  // The backend answers every legacy-v1 match complete now that v1 is gone,
+  // whatever its execution's terminal status was, so the serialized
+  // dispatcher never waits on a run that can no longer finish.
+  const legacyStore = createScoutMatchStore();
+  legacyStore.observed = true;
+  legacyStore.owner = { kind: "legacy-v1" };
+  const secondFanOut = Promise.withResolvers<true>();
+  const log: string[] = [];
+  await harness.startWorkers({
+    ...routedMatchActivities(legacyStore, createScoutMatchStore(), {
+      legacyCompleted: () => true,
+      onFanOut: (riotMatchId) => {
+        log.push(`${riotMatchId}:fan-out`);
+        if (riotMatchId === SECOND_MATCH_ID) secondFanOut.resolve(true);
+      },
+    }),
+  });
+  const workflowId = "client-match-dispatch-legacy-finished";
+  await startDispatcher(workflowId);
+  const dispatcher = harness.client().workflow.getHandle(workflowId);
+
+  await dispatcher.signal(dispatchScoutClientMatchesSignal, [
+    dispatchItem(MATCH_ID, 1),
+    dispatchItem(SECOND_MATCH_ID, 2),
+  ]);
+  await secondFanOut.promise;
+  await terminateDispatcher(
+    workflowId,
+    "test observed the legacy match skipped",
+  );
+
+  expect(log).toEqual([`${SECOND_MATCH_ID}:fan-out`]);
+  expect(legacyStore.calls).not.toContain("commitMatchObservation");
+}, 90_000);
+
 test("keeps the active frontier monotonic when mixed evidence has an earlier timestamp", async () => {
   const olderStore = createScoutMatchStore();
   const newerStore = createScoutMatchStore();

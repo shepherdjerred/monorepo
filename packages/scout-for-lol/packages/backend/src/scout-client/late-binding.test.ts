@@ -294,27 +294,7 @@ test("keeps ARCHIVE_ONLY late binding free of financial and progression effects"
   expect(mocks.processDuel).not.toHaveBeenCalled();
 });
 
-test("leaves a legacy-owned match whose v1 workflow did not complete", async () => {
-  mocks.readState.mockResolvedValue(
-    pipelineState(
-      [
-        SCOUT_MATCH_RECEIPT_KINDS.settlement,
-        SCOUT_MATCH_RECEIPT_KINDS.progression,
-      ],
-      { owner: "legacy-v1" },
-    ),
-  );
-
-  await expect(reconcileProcessedClientBinding(riotMatchId)).rejects.toThrow(
-    "is still applying binding-dependent stages",
-  );
-
-  expect(mocks.resolveContext).not.toHaveBeenCalled();
-  expect(mocks.finalizeCustom).not.toHaveBeenCalled();
-  expect(mocks.awardBucks).not.toHaveBeenCalled();
-});
-
-test("replays legacy binding projectors from authoritative workflow completion", async () => {
+test("replays binding projectors for a match the retired v1 pipeline owned", async () => {
   mocks.readState.mockResolvedValue(pipelineState([], { owner: "legacy-v1" }));
   mocks.readLegacyCompletion.mockResolvedValue({ completed: true });
 

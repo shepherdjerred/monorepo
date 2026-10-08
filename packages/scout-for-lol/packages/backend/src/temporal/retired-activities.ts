@@ -1,6 +1,8 @@
 import { Context } from "@temporalio/activity";
 import { ApplicationFailure } from "@temporalio/common";
 import { IsoInstantSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import { heartbeatWhile } from "#src/temporal/activity-runtime.ts";
+import { temporalWorkHardDisabled } from "#src/temporal/work-features.ts";
 
 /**
  * Activities the retired v1 pipeline and its ownership routers declared,
@@ -14,10 +16,12 @@ import { IsoInstantSchema } from "@scout-for-lol/domain/identity/brands.ts";
  *
  * The ownership reads answer exactly as they did once the ownership flags were
  * retired: the durable pipeline owns every pass, and no claim backs the
- * answer, so a renewal or release finds nothing held. The v1 Activities have
- * no implementation left; a bundle reaches them only through a v1 handoff the
- * ownership reads no longer make, so reaching one is a broken contract and
- * fails without retrying.
+ * answer, so a renewal or release finds nothing held. `pollRealtime` does what
+ * it did then too: the prematch maintenance pass, with live-game detection
+ * left to prematch discovery. The v1 ingestion Activities have no
+ * implementation left; a bundle reaches them only through a v1 post-match
+ * handoff the ownership read no longer makes, so reaching one is a broken
+ * contract and fails without retrying.
  */
 function retiredV1Activity(name: string): () => Promise<never> {
   return () =>
@@ -54,7 +58,17 @@ export const RETIRED_REALTIME_ACTIVITIES = {
   },
   renewPrematchPassClaimV2: notHeld,
   releasePrematchPassClaimV2: notHeld,
-  pollRealtime: retiredV1Activity("pollRealtime"),
+  pollRealtime: async (input: { kind: string }) => {
+    // The tournament poller's retired kind completed without work then too.
+    if (input.kind === "tournament-lobbies") return;
+    if (temporalWorkHardDisabled(input.kind)) return;
+    await heartbeatWhile({ kind: input.kind, phase: "running" }, async () => {
+      const { runPrematchMaintenance } =
+        await import("#src/temporal/prematch/prematch-maintenance.ts");
+      await runPrematchMaintenance();
+    });
+    Context.current().heartbeat({ kind: input.kind, phase: "complete" });
+  },
   ingestMatch: retiredV1Activity("ingestMatch"),
   reconcileIngestedMatchCursor: retiredV1Activity(
     "reconcileIngestedMatchCursor",

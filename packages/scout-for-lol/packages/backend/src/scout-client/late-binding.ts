@@ -64,8 +64,8 @@ export async function reconcileProcessedClientBinding(
   }
   let stagesComplete = clientBindingStagesAreComplete(state);
   if (state.state.owner.kind === "legacy-v1") {
-    // Its stage receipts were fail-open records; only the retired v1
-    // ingestion's own terminal status says whether every stage ran.
+    // The retired v1 pipeline will never touch it again; see
+    // `readLegacyMatchCompletion` for why that answers complete.
     const legacyCompletion = await readLegacyMatchCompletion({
       stage: configuration.environment,
       riotMatchId,

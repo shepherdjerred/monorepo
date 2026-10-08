@@ -379,9 +379,10 @@ export type ScoutMatchPipelineStateResult = z.infer<
 /**
  * Whether a match the retired v1 pipeline owned has finished.
  *
- * Its durable receipts were fail-open records, so only the v1 ingestion's own
- * terminal status proves every stage ran: COMPLETED, and not FAILED or
- * TERMINATED, which every drained execution also is.
+ * The v1 pipeline is gone, so the backend answers `completed` for every such
+ * match; see `readLegacyMatchCompletion` in the backend. The Activity and its
+ * one-field result stay because open histories and a still-routed pre-rename
+ * bundle depend on them.
  */
 export const ScoutLegacyMatchCompletionV2ResultSchema = z.strictObject({
   completed: z.boolean(),

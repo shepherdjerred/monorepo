@@ -428,9 +428,12 @@ and the Workflow reports the stored owner and stops before settlement rather
 than re-applying that owner's effects. Those rows are never rewritten to
 `TEMPORAL_V2`: the stalled-match scan would sweep thousands of historical
 matches into processing children and redeliver them. `readLegacyMatchCompletionV2`
-answers for them from the retired v1 ingestion's own terminal status
-(`src/temporal/match/legacy-completion.ts`): only COMPLETED proves every stage
-ran, since a drained execution can also have FAILED or been TERMINATED.
+answers `completed: true` for them (`src/temporal/match/legacy-completion.ts`),
+whatever the closed v1 execution's status, and logs that status once per match.
+Nothing will process those matches again, so a v1 run that FAILED or was
+TERMINATED mid-stage is accepted data loss; waiting on it would wedge the
+serialized client-match dispatcher, and the binding projectors late binding
+runs instead are idempotent.
 
 The core refuses a match whose discovering account is no longer tracked:
 discovery carries the source account into the per-match input, and
