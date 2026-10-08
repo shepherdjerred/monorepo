@@ -95,6 +95,43 @@ class RestorationInstallTest(unittest.TestCase):
         self.assertEqual(result["phase"], "INSTALLED")
         self.assertEqual((root / "revision/previous/world/region/r.0.0.mca").read_bytes(), b"historical terrain")
 
+    def test_revision_directory_creation_interruption_resumes_before_any_volume_change(self):
+        root = self.revision()
+        baseline = restoration_files.files(self.data, exclude_workspace=True)
+        mkdir = type(root).mkdir
+
+        def interrupted(directory: Path, mode: int = 0o777, parents: bool = False, exist_ok: bool = False) -> None:
+            mkdir(directory, mode, parents, exist_ok)
+            if directory == root.resolve() / "revision":
+                raise OSError("injected crash after revision directory creation")
+
+        with patch.object(type(root), "mkdir", interrupted), self.assertRaises(OSError):
+            restoration_install.install(self.data, self.payload, self.plan, self.jar)
+        self.assertFalse((root / "revision/journal.json").exists())
+        self.assertEqual(restoration_files.files(self.data, exclude_workspace=True), baseline)
+        self.assertEqual(
+            restoration_install.install(self.data, self.payload, self.plan, self.jar)["phase"], "INSTALLED"
+        )
+        self.assertEqual((root / "original/world/region/r.0.0.mca").read_bytes(), b"modern terrain")
+
+    def test_revision_unpublished_partial_journal_resumes_from_verified_old_volume(self):
+        root = self.revision()
+        (root / "revision").mkdir()
+        (root / "revision/journal.json.writing").write_bytes(b'{"phase": "STAG')
+        result = restoration_install.install(self.data, self.payload, self.plan, self.jar)
+        self.assertEqual(result["phase"], "INSTALLED")
+        self.assertFalse((root / "revision/journal.json.writing").exists())
+        self.assertEqual((root / "revision/previous/world/region/r.0.0.mca").read_bytes(), b"historical terrain")
+
+    def test_revision_unjournaled_foreign_bytes_are_refused_without_volume_changes(self):
+        root = self.revision()
+        baseline = restoration_files.files(self.data, exclude_workspace=True)
+        (root / "revision").mkdir()
+        (root / "revision/unexpected").write_bytes(b"foreign bytes")
+        with self.assertRaisesRegex(ValueError, "unexpected entries"):
+            restoration_install.install(self.data, self.payload, self.plan, self.jar)
+        self.assertEqual(restoration_files.files(self.data, exclude_workspace=True), baseline)
+
     def test_revision_refuses_changed_prior_plan_or_unrelated_runtime_bytes(self):
         self.revision()
         (self.data / "server.properties").write_bytes(b"unexpected runtime change")
