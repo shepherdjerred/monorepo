@@ -32,6 +32,7 @@ for (const extension of [
   "exif",
   "mbstring",
   "openssl",
+  "Zend OPcache",
 ]) {
   assert.ok(
     extensions.includes(extension),

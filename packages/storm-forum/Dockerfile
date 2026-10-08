@@ -11,7 +11,7 @@ FROM php:8.5.9-fpm-bookworm@sha256:0fed012de2202d7ef0314744ccfa274b870f07cd6a91f
 # hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends libfreetype6-dev libjpeg62-turbo-dev libpng-dev libzip-dev libicu-dev unzip mariadb-client ca-certificates \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j2 gd mysqli zip intl opcache exif \
+    && docker-php-ext-install -j2 gd mysqli zip intl exif \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /app/forum /var/lib/storm-forum /tmp/storm-forum \
     && chown -R 1000:1000 /app /var/lib/storm-forum /tmp/storm-forum
