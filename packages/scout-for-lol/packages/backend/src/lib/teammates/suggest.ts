@@ -29,6 +29,7 @@ import { prisma } from "#src/database/index.ts";
 import { getRecentMatchIds } from "#src/league/api/match-history.ts";
 import { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
 import { createSuggestionCache } from "#src/lib/teammates/suggestion-cache.ts";
+import { recentClientRounds } from "#src/lib/teammates/client-rounds.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("teammate-suggestions");
@@ -302,14 +303,7 @@ async function collectMatchRounds(
       interleaved.push({ matchId, region: queue.region });
     }
   }
-  const seen = new Set<string>();
-  return interleaved
-    .filter((round) => {
-      if (seen.has(round.matchId)) return false;
-      seen.add(round.matchId);
-      return true;
-    })
-    .slice(0, matchCount);
+  return withoutRepeatedMatches(interleaved).slice(0, matchCount);
 }
 
 async function fetchRoundMatches(
@@ -358,6 +352,21 @@ export async function suggestTeammates(
   );
 }
 
+/**
+ * One entry per match, keeping the first — Riot's copy, when a match reached
+ * both Riot's history and the player's Scout Client.
+ */
+export function withoutRepeatedMatches<T extends { readonly matchId: string }>(
+  rounds: readonly T[],
+): T[] {
+  const seen = new Set<string>();
+  return rounds.filter((round) => {
+    if (seen.has(round.matchId)) return false;
+    seen.add(round.matchId);
+    return true;
+  });
+}
+
 async function runSuggestion(
   input: SuggestTeammatesInput,
 ): Promise<SuggestTeammatesResult> {
@@ -376,21 +385,24 @@ async function runSuggestion(
   // list call per account lets a many-account player blow past matchCount
   // before any detail fetch. Exclusion still uses every self PUUID.
   const budgetedAccounts = selfAccounts.slice(0, input.matchCount);
-  const rounds = await collectMatchRounds(
-    budgetedAccounts,
-    input.alias,
-    input.matchCount,
-  );
-  if (rounds === undefined) {
+  // Games Riot never lists — ARAM Mayhem, for one — count through the
+  // player's own Scout Client, exactly as Riot's games do.
+  const [rounds, clientRounds] = await Promise.all([
+    collectMatchRounds(budgetedAccounts, input.alias, input.matchCount),
+    recentClientRounds(selfAccounts, input.matchCount),
+  ]);
+  if (rounds === undefined && clientRounds.length === 0) {
     logger.warn(
       `[teammates] Riot unavailable for suggestion run: ${input.alias}`,
     );
     return { kind: "riot-unavailable" };
   }
-  if (rounds.length === 0) return { kind: "no-matches" };
 
-  const fetched = await fetchRoundMatches(rounds);
+  const riotRounds =
+    rounds === undefined ? [] : await fetchRoundMatches(rounds);
+  const fetched = withoutRepeatedMatches([...riotRounds, ...clientRounds]);
   if (fetched.length === 0) {
+    if ((rounds ?? []).length === 0) return { kind: "no-matches" };
     logger.warn(`[teammates] No match details fetched for: ${input.alias}`);
     return { kind: "riot-unavailable" };
   }
