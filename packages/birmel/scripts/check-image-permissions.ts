@@ -15,7 +15,7 @@ async function checkTree(directory: string): Promise<number> {
     );
   }
   if (!writableData && !metadata.isSymbolicLink()) {
-    if ((metadata.mode & 0o007) !== 0 || (metadata.mode & 0o040) === 0) {
+    if ((metadata.mode & 0o027) !== 0 || (metadata.mode & 0o040) === 0) {
       violations.push(
         `Unexpected application mode ${(metadata.mode & 0o777).toString(8)} at ${directory}`,
       );
