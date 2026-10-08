@@ -18,6 +18,7 @@ $check($data['viewer']['id'] === $staff->user_id && $data['viewer']['username'] 
 $check($data['viewer']['alerts'] === $staff->alerts_unviewed && $data['viewer']['conversations'] === $staff->conversations_unread, 'Viewer unread counts differ from native state');
 $check(!isset($data['viewer']['email']) && count($data['viewer']) === 6, 'Viewer endpoint exposed unnecessary account data');
 foreach ($data['links'] as $route=>$url) {
+    if ($route === 'register' && !$app->options()->registrationSetup['enabled']) { $check($url === null, 'Closed registration exposed a signup action'); continue; }
     $params = $route === 'logout' ? ['t'=>$app['csrf.token']] : [];
     $check($url === $app->router('public')->buildLink('canonical:' . $route, null, $params), 'Viewer bypassed native account routes or logout CSRF protection');
 }

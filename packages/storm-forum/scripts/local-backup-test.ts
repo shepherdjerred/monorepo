@@ -51,6 +51,7 @@ const env = {
   BACKUP_ACCESS_KEY: "local-fixture",
   BACKUP_SECRET_KEY: randomBytes(32).toString("hex"),
   BUNDLE_SHA256: "a".repeat(64),
+  RUNTIME_IMAGE: `ghcr.io/shepherdjerred/storm-forum@sha256:${"a".repeat(64)}`,
   MARIADB_ROOT_PASSWORD: randomBytes(32).toString("hex"),
 };
 const run = async (argv: string[], overrides: Record<string, string> = {}) => {
@@ -83,7 +84,7 @@ const run = async (argv: string[], overrides: Record<string, string> = {}) => {
   return output;
 };
 const bootstrap = Object.keys(env).flatMap((key) =>
-  /^(?:DB_|ADMIN_|FORUM_URL|POSTAL_|TURNSTILE_|BACKUP_|BUNDLE_SHA256|STORM_FORUM_STAGE)/.test(
+  /^(?:DB_|ADMIN_|FORUM_URL|POSTAL_|TURNSTILE_|BACKUP_|BUNDLE_SHA256|RUNTIME_IMAGE|STORM_FORUM_STAGE)/.test(
     key,
   )
     ? ["-e", key]
@@ -213,7 +214,12 @@ try {
       "-c",
       "mkdir -p /var/lib/storm-forum/data /var/lib/storm-forum/internal_data /tmp/storm-forum && sleep infinity",
     ],
-    { DB_HOST: database, RESTORE_MANIFEST_KEY: manifestKey },
+    {
+      DB_HOST: database,
+      RESTORE_MANIFEST_KEY: manifestKey,
+      BUNDLE_SHA256: "b".repeat(64),
+      RUNTIME_IMAGE: `ghcr.io/shepherdjerred/storm-forum@sha256:${"b".repeat(64)}`,
+    },
   );
   // Reuse the licensed application only inside the disposable container filesystem.
   const archive = Bun.spawn(
@@ -241,7 +247,7 @@ try {
   );
 } finally {
   for (const name of [target, database, fixture]) {
-    const cleanup = Bun.spawn(["docker", "rm", "-f", name], {
+    const cleanup = Bun.spawn(["docker", "rm", "-f", "-v", name], {
       stdout: "ignore",
       stderr: "ignore",
     });

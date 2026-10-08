@@ -12,7 +12,7 @@ $check = static function (bool $condition, string $message): void {
     if (!$condition) { throw new RuntimeException($message); }
 };
 $map = $app->registry()->get('stormForumMap');
-$check(count(array_filter(array_keys($map), fn($key) => str_starts_with($key, 'node:'))) === 13, 'Managed node count incorrect');
+$check(count(array_filter(array_keys($map), fn($key) => str_starts_with($key, 'node:'))) === 14, 'Managed node count incorrect');
 $before = $app->db()->fetchOne('SELECT COUNT(*) FROM xf_node');
 $app->service('Storm\Forum:Configuration')->apply(json_decode(file_get_contents('/opt/storm-forum/config/forum.json'), true, 512, JSON_THROW_ON_ERROR), 'beta');
 $check($before == $app->db()->fetchOne('SELECT COUNT(*) FROM xf_node'), 'Repeat configuration created duplicate nodes');

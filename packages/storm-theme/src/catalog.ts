@@ -95,6 +95,7 @@ export const ThemeCatalogSchema = z
                 "petals",
                 "sparks",
                 "leaves",
+                "ghosts",
                 "snow",
               ])
               .nullable(),
@@ -130,7 +131,7 @@ export const ThemeCatalogSchema = z
       if (theme.effect !== null && theme.window === null) {
         ctx.addIssue({
           code: "custom",
-          message: "Falling effects require a festival window",
+          message: "Holiday effects require a festival window",
         });
       }
       if (theme.window !== null) {

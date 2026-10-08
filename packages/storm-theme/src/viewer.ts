@@ -13,6 +13,8 @@ const ViewerResponse = z.object({
     .nullable(),
   links: z.object({
     login: z.url(),
+    // Additive during coordinated docs/forum releases; null means registration is closed.
+    register: z.url().nullable().optional(),
     account: z.url(),
     "account/alerts": z.url(),
     conversations: z.url(),
@@ -47,6 +49,9 @@ export function startViewer(root: HTMLElement, api: URL): void {
       account.replaceChildren();
       if (viewer === null) {
         account.append(link("Log in", links.login));
+        if (links.register !== undefined && links.register !== null) {
+          account.append(link("Register", links.register));
+        }
         return;
       }
       const menu = document.createElement("details");

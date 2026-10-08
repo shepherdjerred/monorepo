@@ -1,11 +1,31 @@
 import assert from "node:assert/strict";
+import { S3Client } from "bun";
 import { runPhp } from "#src/process.ts";
 import {
   beginStormForumBackup,
   endStormForumBackup,
   snapshotForum,
 } from "#src/backup.ts";
+import {
+  SnapshotEnvironmentSchema,
+  SnapshotSourceSchema,
+} from "#src/storage.ts";
+import { SnapshotSchema, validateSnapshot } from "#src/restore.ts";
+import { forumManifest } from "#src/config.ts";
+const storage = SnapshotEnvironmentSchema.parse(Bun.env);
+const client = new S3Client({
+  endpoint: storage.BACKUP_ENDPOINT,
+  bucket: storage.BACKUP_BUCKET,
+  accessKeyId: storage.BACKUP_ACCESS_KEY,
+  secretAccessKey: storage.BACKUP_SECRET_KEY,
+  region: "us-east-1",
+});
 const owner = "2bcd3a5e-992f-49f4-bb34-901ca3dd32b2";
+const previousBundle = {
+  bundleSha256: "b".repeat(64),
+  xenforoVersion: forumManifest.xenforoVersion,
+  runtimeImage: `ghcr.io/shepherdjerred/storm-forum@sha256:${"b".repeat(64)}`,
+};
 // Emulate the unsafe production settings that recovery must replace.
 await runPhp(["cmd.php", "storm:configure", "--stage", "prod"]);
 await runPhp([
@@ -38,15 +58,23 @@ try {
   await assert.rejects(
     snapshotForum(owner, { cancellationSignal: cancelled.signal, heartbeat }),
   );
-  const result = await snapshotForum(owner, {
-    cancellationSignal: new AbortController().signal,
-    heartbeat,
-  });
-  assert.deepEqual(
-    await snapshotForum(owner, {
+  const result = await snapshotForum(
+    owner,
+    {
       cancellationSignal: new AbortController().signal,
       heartbeat,
-    }),
+    },
+    previousBundle,
+  );
+  assert.deepEqual(
+    await snapshotForum(
+      owner,
+      {
+        cancellationSignal: new AbortController().signal,
+        heartbeat,
+      },
+      previousBundle,
+    ),
     result,
   );
   assert.ok(
@@ -56,4 +84,55 @@ try {
   process.stdout.write(result.manifestKey + "\n");
 } finally {
   await endStormForumBackup(owner);
+}
+await beginStormForumBackup(other);
+try {
+  // A future XF upgrade must describe the source version, even though the
+  // snapshot worker runs the incoming image. A mismatched restore must fail.
+  const old = await snapshotForum(
+    other,
+    {
+      cancellationSignal: new AbortController().signal,
+      heartbeat,
+    },
+    { ...previousBundle, xenforoVersion: "2.3.8" },
+  );
+  const manifest = SnapshotSchema.parse(
+    await client.file(old.manifestKey).json(),
+  );
+  assert.equal(manifest.xenforoVersion, "2.3.8");
+  assert.equal(manifest.bundleSha256, previousBundle.bundleSha256);
+  assert.throws(
+    () =>
+      validateSnapshot(manifest, old.manifestKey, previousBundle, {
+        ...previousBundle,
+        xenforoVersion: "2.3.8",
+      }),
+    /installed release/,
+  );
+  const source = SnapshotSourceSchema.parse(
+    await client
+      .file(old.manifestKey.replace(/manifest\.json$/, "source-release.json"))
+      .json(),
+  );
+  assert.equal(source.runtimeImage, previousBundle.runtimeImage);
+  const matchingVersion = {
+    ...manifest,
+    xenforoVersion: forumManifest.xenforoVersion,
+  };
+  assert.throws(
+    () =>
+      validateSnapshot(
+        matchingVersion,
+        old.manifestKey,
+        {
+          bundleSha256: previousBundle.bundleSha256,
+          runtimeImage: storage.RUNTIME_IMAGE,
+        },
+        previousBundle,
+      ),
+    /installed release/,
+  );
+} finally {
+  await endStormForumBackup(other);
 }

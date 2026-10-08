@@ -2,7 +2,7 @@ export async function runPhp(
   args: readonly string[],
   cwd = "/app/forum",
   timeoutMs = 90_000,
-): Promise<void> {
+): Promise<string> {
   const command =
     args[0] === "cmd.php"
       ? ["/opt/storm-forum/runtime/command.php", ...args.slice(1)]
@@ -29,4 +29,5 @@ export async function runPhp(
       `PHP operation ${args[0] ?? "unknown"} failed (${String(code)}); captured ${String(stdout.length + stderr.length)} diagnostic bytes`,
     );
   }
+  return stdout;
 }

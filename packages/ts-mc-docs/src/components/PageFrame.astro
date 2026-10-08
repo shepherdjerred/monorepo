@@ -1,0 +1,58 @@
+---
+import TableOfContents from "@astrojs/starlight/components/TableOfContents.astro";
+import ThemePicker from "./ThemePicker.astro";
+import { forumUrl } from "../forum-release.ts";
+const { hasSidebar, toc } = Astro.locals.starlightRoute;
+---
+
+<div class="stormDocsPage">
+  <header class="stormDocsPageHeader">
+    <slot name="header" />
+  </header>
+  <div class="stormDocsGarland" aria-hidden="true"></div>
+  <div class="stormDocsBody stormDocsInner">
+    <main id="storm-content" class="stormDocsMain" tabindex="-1">
+      <slot />
+    </main>
+    {hasSidebar && (
+      <aside class="stormDocsSidebar" aria-label="Documentation navigation">
+        <nav
+          class="stormDocsMobileCommunity stormDocsBlock"
+          aria-label="The Storm community"
+        >
+          <a href={forumUrl}>Home</a>
+          <a href={`${forumUrl}/forums/`}>Forums</a>
+          <a href={`${forumUrl}/whats-new/`}>What's new</a>
+          <a href={`${forumUrl}/members/`}>Members</a>
+        </nav>
+        <div class="stormDocsBlock">
+          <h2 class="stormDocsBlockHeader">Documentation</h2>
+          <div class="stormDocsSidebarContent">
+            <slot name="sidebar" />
+          </div>
+        </div>
+        {toc && (
+          <div class="stormDocsBlock stormDocsToc">
+            <TableOfContents />
+          </div>
+        )}
+      </aside>
+    )}
+  </div>
+  <footer class="stormDocsFooter">
+    <div class="stormDocsInner">
+      <div class="stormDocsFooterLinks">
+        <ThemePicker />
+        <nav aria-label="Community links">
+          <a href={`${forumUrl}/misc/contact/`}>Contact us</a>
+          <a href={`${forumUrl}/help/terms/`}>Terms and rules</a>
+          <a href={`${forumUrl}/help/privacy-policy/`}>Privacy policy</a>
+          <a href={`${forumUrl}/help/`}>Help</a>
+          <a href={forumUrl}>Home</a>
+        </nav>
+      </div>
+      <p>The Storm player documentation</p>
+      <p>An Audentio Design design creation. · Adapted for The Storm</p>
+    </div>
+  </footer>
+</div>

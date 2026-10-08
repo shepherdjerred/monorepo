@@ -362,10 +362,10 @@ async function main(): Promise<void> {
     uploadArg === undefined ||
     stylesArg === undefined ||
     destinationArg === undefined ||
-    apply !== "--apply"
+    (apply !== "--apply" && apply !== "--publish-only")
   ) {
     throw new Error(
-      "Usage: prepare-production.ts <fresh XenForo upload> <style exports> <private output directory> --apply",
+      "Usage: prepare-production.ts <fresh XenForo upload> <style exports> <private output directory> (--apply | --publish-only)",
     );
   }
   const destination = path.resolve(destinationArg);
@@ -374,6 +374,20 @@ async function main(): Promise<void> {
     path.resolve(stylesArg),
     destination,
   );
+  if (apply === "--publish-only") {
+    const gateway = ItemSchema.parse(await op(["get", gatewayItem]));
+    await uploadBundle(
+      s3(gateway, "storm-forum-releases", "SEAWEEDFS"),
+      bundle,
+    );
+    process.stdout.write(
+      JSON.stringify({
+        bundleSha256: bundle.bundleSha256,
+        bundleKey: bundle.bundleKey,
+      }) + "\n",
+    );
+    return;
+  }
   const { gateway, releases, siteKey, captchaKey } = await loadStorage();
   const postal = await preparePostal();
   const runtime = await prepareRuntime(siteKey, captchaKey, postal);

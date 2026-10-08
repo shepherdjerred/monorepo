@@ -4,7 +4,12 @@ import { S3Client } from "bun";
 import { z } from "zod";
 import { forumManifest, type Stage } from "./config.ts";
 import { runPhp } from "./process.ts";
-import { beginStormForumBackup, endStormForumBackup } from "./backup.ts";
+import {
+  beginStormForumBackup,
+  endStormForumBackup,
+  snapshotForum,
+} from "./backup.ts";
+import { SnapshotSourceSchema } from "./storage.ts";
 
 const BundleEnvironmentSchema = z.object({
   BUNDLE_ENDPOINT: z.url(),
@@ -14,6 +19,27 @@ const BundleEnvironmentSchema = z.object({
   BUNDLE_KEY: z.string().regex(/^releases\/[\w.-]+\.zip$/),
   BUNDLE_SHA256: z.string().regex(/^[a-f0-9]{64}$/),
 });
+const InstallationSchema = z.discriminatedUnion("state", [
+  z
+    .object({
+      state: z.literal("installed"),
+      xenforoVersion: z.string().min(1),
+    })
+    .strict(),
+  z.object({ state: z.literal("empty") }).strict(),
+]);
+export function validateBackupSource(
+  source: unknown,
+  installedVersion: string,
+) {
+  const release = SnapshotSourceSchema.parse(source);
+  if (release.xenforoVersion !== installedVersion) {
+    throw new Error(
+      "Backup source XenForo version differs from the installed database",
+    );
+  }
+  return release;
+}
 export async function assembleBundle(): Promise<void> {
   const env = BundleEnvironmentSchema.parse(Bun.env);
   const client = new S3Client({
@@ -114,6 +140,7 @@ export async function releaseForum(stage: Stage): Promise<void> {
   let completed = false;
   let ownsMaintenance = false;
   let mutating = false;
+  let unsafeInstallation = false;
   try {
     await handle.writeFile(
       JSON.stringify({ stage, owner, startedAt: new Date().toISOString() }),
@@ -122,6 +149,38 @@ export async function releaseForum(stage: Stage): Promise<void> {
     await beginStormForumBackup(owner);
     ownsMaintenance = true;
     await Bun.sleep(65_000);
+    unsafeInstallation = true;
+    const installationOutput = await runPhp(
+      ["/opt/storm-forum/runtime/installed.php"],
+      "/app/forum",
+    );
+    const installation = InstallationSchema.parse(
+      JSON.parse(installationOutput),
+    );
+    unsafeInstallation = false;
+    if (installation.state === "installed") {
+      // The database has not been upgraded yet. Restore it with the previous
+      // private bundle, rather than recording this job's incoming bundle.
+      const sourceBundle = validateBackupSource(
+        {
+          bundleSha256: Bun.env["BACKUP_SOURCE_BUNDLE_SHA256"],
+          xenforoVersion: Bun.env["BACKUP_SOURCE_XENFORO_VERSION"],
+          runtimeImage: Bun.env["BACKUP_SOURCE_RUNTIME_IMAGE"],
+        },
+        installation.xenforoVersion,
+      );
+      const snapshot = await snapshotForum(
+        owner,
+        {
+          cancellationSignal: new AbortController().signal,
+          heartbeat: (message) => {
+            process.stdout.write(`${String(message)}\n`);
+          },
+        },
+        sourceBundle,
+      );
+      process.stdout.write(`Pre-upgrade snapshot: ${snapshot.manifestKey}\n`);
+    }
     mutating = true;
     await runPhp(
       ["/opt/storm-forum/runtime/install.php"],
@@ -135,14 +194,28 @@ export async function releaseForum(stage: Stage): Promise<void> {
     );
     await runPhp(["cmd.php", "storm:configure", "--stage", stage]);
     await runPhp(["cmd.php", "storm:styles"], "/app/forum", 5 * 60_000);
+    // ACP merges are resumable manual jobs. Finish them before the importer
+    // checks its ownership fence; an unfinished merge still blocks import.
+    await runPhp([
+      "cmd.php",
+      "xf:run-jobs",
+      "--manual-only",
+      "--max-execution-time",
+      "50",
+    ]);
     await runPhp(["cmd.php", "storm:seed"]);
     await runPhp(["cmd.php", "storm:history"], "/app/forum", 5 * 60_000);
+    await runPhp(
+      ["cmd.php", "storm:accounts", "--stage", stage],
+      "/app/forum",
+      5 * 60_000,
+    );
     await runPhp(["cmd.php", "xf:run-jobs", "--max-execution-time", "50"]);
     completed = true;
   } finally {
     await handle.close();
     // A failed migration requires inspection before another release can run.
-    if (completed || !mutating) {
+    if (completed || (!mutating && !unsafeInstallation)) {
       if (ownsMaintenance) {
         await endStormForumBackup(owner);
       }

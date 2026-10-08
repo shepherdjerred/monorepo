@@ -30,7 +30,7 @@ const data = JSON.stringify({
       (location.protocol === "https:" ? "; Secure" : "");
     saved = legacy;
   }
-  if (legacy) {
+  if (legacy && stormLocalPreferences) {
     document.cookie =
       "storm_preferences=; Path=/; Max-Age=0; SameSite=Lax" +
       (location.protocol === "https:" ? "; Secure" : "");

@@ -25,6 +25,7 @@ import { createForumDatabase } from "./database.ts";
 import { createForumNetwork } from "./network.ts";
 import { createForumStorage } from "./storage.ts";
 import { applyForumSyncWaves } from "./sync-waves.ts";
+import { upgradeBackupEnvironment } from "./upgrade-environment.ts";
 
 export const ReleaseSchema = z
   .object({
@@ -40,6 +41,16 @@ export const ReleaseSchema = z
     bundleSha256: z.string().regex(/^[a-f0-9]{64}$/),
     bundleKey: z.string().regex(/^releases\/[\w.-]+\.zip$/),
     releaseId: z.string().regex(/^[a-f0-9]{12}$/),
+    preUpgradeBackup: z
+      .object({
+        bundleSha256: z.string().regex(/^[a-f0-9]{64}$/),
+        xenforoVersion: z.string().min(1),
+        runtimeImage: z
+          .string()
+          .regex(/^ghcr\.io\/shepherdjerred\/storm-forum@sha256:[a-f0-9]{64}$/),
+      })
+      .strict()
+      .optional(),
     storageSlot: z.enum(["primary", "recovery"]).optional(),
     restore: z
       .object({
@@ -310,6 +321,7 @@ export function createStormForumChart(app: App, input: ForumRelease): Chart {
               ],
               env: [
                 ...(base.env ?? []),
+                { name: "RUNTIME_IMAGE", value: release.image },
                 ...credentials(["BACKUP_ACCESS_KEY", "BACKUP_SECRET_KEY"]),
                 {
                   name: "BACKUP_ENDPOINT",
@@ -392,6 +404,9 @@ export function createStormForumChart(app: App, input: ForumRelease): Chart {
               ],
               env: [
                 ...(base.env ?? []),
+                ...(release.restore || release.preUpgradeBackup
+                  ? [{ name: "RUNTIME_IMAGE", value: release.image }]
+                  : []),
                 ...(release.restore
                   ? [
                       ...["ACCESS_KEY", "SECRET_KEY"].map((suffix) => ({
@@ -414,11 +429,19 @@ export function createStormForumChart(app: App, input: ForumRelease): Chart {
                         value: release.restore.manifestKey,
                       },
                     ]
-                  : credentials([
-                      "ADMIN_USERNAME",
-                      "ADMIN_PASSWORD",
-                      "ADMIN_EMAIL",
-                    ])),
+                  : [
+                      ...credentials([
+                        "ADMIN_USERNAME",
+                        "ADMIN_PASSWORD",
+                        "ADMIN_EMAIL",
+                      ]),
+                      ...(release.preUpgradeBackup
+                        ? upgradeBackupEnvironment(
+                            release.preUpgradeBackup,
+                            credentials,
+                          )
+                        : []),
+                    ]),
                 {
                   name: "FORUM_URL",
                   value:

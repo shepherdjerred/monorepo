@@ -299,6 +299,16 @@ try {
       "/app/forum",
       app,
       "php",
+      "/opt/storm-forum/test/accounts.php",
+    ]),
+  );
+  process.stdout.write(
+    await run([
+      "exec",
+      "-w",
+      "/app/forum",
+      app,
+      "php",
       "/opt/storm-forum/test/mail.php",
     ]),
   );
@@ -334,6 +344,14 @@ try {
       );
     }
     process.stdout.write(repeatBuild);
+    process.stdout.write(
+      await run([
+        "exec",
+        app,
+        "bun",
+        "/opt/storm-forum/test/release-installation.ts",
+      ]),
+    );
     process.stdout.write(
       await run([
         "exec",
@@ -418,7 +436,7 @@ try {
   }
 } finally {
   for (const container of [web, app, db]) {
-    const cleanup = Bun.spawn(["docker", "rm", "-f", container], {
+    const cleanup = Bun.spawn(["docker", "rm", "-f", "-v", container], {
       stdout: "ignore",
       stderr: "ignore",
     });

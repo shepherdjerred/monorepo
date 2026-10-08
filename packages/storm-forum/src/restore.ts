@@ -4,7 +4,11 @@ import { S3Client } from "bun";
 import { z } from "zod";
 import { forumManifest } from "./config.ts";
 import { beginStormForumBackup, endStormForumBackup } from "./backup.ts";
-import { SnapshotEnvironmentSchema } from "./storage.ts";
+import {
+  SnapshotEnvironmentSchema,
+  SnapshotSourceSchema,
+  RuntimeImageSchema,
+} from "./storage.ts";
 import { runPhp } from "./process.ts";
 
 export const SnapshotSchema = z
@@ -31,14 +35,20 @@ export const SnapshotSchema = z
 export function validateSnapshot(
   value: unknown,
   manifestKey: string,
-  bundleSha256: string,
+  release: { bundleSha256: string; runtimeImage: string },
+  sourceRelease: unknown,
 ) {
   const snapshot = SnapshotSchema.parse(value);
+  const source = SnapshotSourceSchema.parse(sourceRelease);
+  RuntimeImageSchema.parse(release.runtimeImage);
   const prefix = `snapshots/${snapshot.stage}/${snapshot.owner}`;
   if (
     manifestKey !== `${prefix}/manifest.json` ||
-    snapshot.bundleSha256 !== bundleSha256 ||
-    snapshot.xenforoVersion !== forumManifest.xenforoVersion
+    snapshot.bundleSha256 !== release.bundleSha256 ||
+    snapshot.xenforoVersion !== forumManifest.xenforoVersion ||
+    source.bundleSha256 !== snapshot.bundleSha256 ||
+    source.xenforoVersion !== snapshot.xenforoVersion ||
+    source.runtimeImage !== release.runtimeImage
   ) {
     throw new Error("Snapshot does not match its key and installed release");
   }
@@ -83,7 +93,15 @@ export async function restoreForum(): Promise<void> {
     const snapshot = validateSnapshot(
       await client.file(env.RESTORE_MANIFEST_KEY).json(),
       env.RESTORE_MANIFEST_KEY,
-      env.BUNDLE_SHA256,
+      { bundleSha256: env.BUNDLE_SHA256, runtimeImage: env.RUNTIME_IMAGE },
+      await client
+        .file(
+          env.RESTORE_MANIFEST_KEY.replace(
+            /manifest\.json$/,
+            "source-release.json",
+          ),
+        )
+        .json(),
     );
     for (const payload of snapshot.payloads) {
       const name = payload.key.endsWith("/database.sql")

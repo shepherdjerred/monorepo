@@ -21,6 +21,7 @@ final class History extends \XF\Cli\Command\AbstractCommand
         self::assertUniqueAttachmentOwnership($history);
         $nodes = $app->registry()->get('stormForumMap');
         $read = static fn(string $key) => (new \XF\DataRegistry($db))->get($key) ?: [];
+        if ($read('stormForumHistoricalMerge')) { throw new \RuntimeException('Finish the pending historical account merge before importing.'); }
         $map = $read('stormForumHistory'); $users = $read('stormForumHistoricalUsers');
         self::assertMappedPostsRetained($history, $map);
         $assets = array_column($history['attachments'], null, 'originalId');
@@ -66,6 +67,7 @@ final class History extends \XF\Cli\Command\AbstractCommand
         if ($input->getOption('dry-run')) { return 0; }
         if (!$db->fetchOne('SELECT GET_LOCK(?, 0)', 'storm-history-import')) { throw new \RuntimeException('Another history import is running'); }
         try {
+            if ($read('stormForumHistoricalMerge')) { throw new \RuntimeException('Finish the pending historical account merge before importing.'); }
             $map = $read('stormForumHistory'); $users = $read('stormForumHistoricalUsers');
             self::assertMappedPostsRetained($history, $map);
             self::assertMappedMetadataUnchanged($history, $map, $users);

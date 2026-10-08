@@ -37,6 +37,27 @@ export async function startStormTheme(root: HTMLElement): Promise<void> {
         : undefined,
     assetBase = new URL(baseValue, location.href);
   if (docs && api) startViewer(root, api);
+  async function copyAddress(event: Event) {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    const button = target.closest<HTMLButtonElement>("[data-storm-copy]");
+    if (!button) return;
+    const address = button.dataset["stormCopy"];
+    if (address === undefined || address === "")
+      throw new Error("Missing server address");
+    const feedback = button
+      .closest(".stormJoin")
+      ?.querySelector("[data-storm-copy-status]");
+    try {
+      await navigator.clipboard.writeText(address);
+      if (feedback) feedback.textContent = "Server IP copied.";
+    } catch {
+      if (feedback) feedback.textContent = `Copy this server IP: ${address}`;
+    }
+  }
+  root.ownerDocument.addEventListener("click", (event) => {
+    void copyAddress(event);
+  });
   const media = matchMedia("(prefers-color-scheme: dark)"),
     reduced = matchMedia("(prefers-reduced-motion: reduce)");
   const cookieName =
@@ -50,7 +71,8 @@ export async function startStormTheme(root: HTMLElement): Promise<void> {
   layer.className = "stormEffects";
   layer.setAttribute("aria-hidden", "true");
   document.body.prepend(layer);
-  const status = root.querySelector<HTMLElement>("[data-storm-status]");
+  const controls = docs ? document : root;
+  const status = controls.querySelector<HTMLElement>("[data-storm-status]");
 
   function apply() {
     const mode =
@@ -69,7 +91,7 @@ export async function startStormTheme(root: HTMLElement): Promise<void> {
       enabled: preferences.effects,
       reduced: reduced.matches,
     });
-    syncControls(root, preferences);
+    syncControls(controls, preferences);
   }
   async function request(url: URL, options?: RequestInit): Promise<unknown> {
     const response = await fetch(url, { credentials: "include", ...options });
@@ -157,7 +179,7 @@ export async function startStormTheme(root: HTMLElement): Promise<void> {
       error(error_);
     }
   }
-  root
+  controls
     .querySelectorAll<HTMLFormElement>("[data-storm-preferences]")
     .forEach((form) => {
       form.addEventListener("submit", (event) => {
@@ -180,8 +202,10 @@ export async function startStormTheme(root: HTMLElement): Promise<void> {
   await refresh();
 }
 
-const root = document.querySelector("#storm-theme-root");
-if (root instanceof HTMLElement) {
+async function initializeStormTheme(): Promise<void> {
+  const root = document.querySelector("#storm-theme-root");
+  if (!(root instanceof HTMLElement))
+    throw new TypeError("Missing Storm theme root");
   try {
     await startStormTheme(root);
   } catch (error) {
@@ -190,4 +214,15 @@ if (root instanceof HTMLElement) {
       error instanceof Error ? error.message : "Unknown response",
     );
   }
+}
+if (document.readyState === "loading") {
+  document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+      void initializeStormTheme();
+    },
+    { once: true },
+  );
+} else {
+  void initializeStormTheme();
 }

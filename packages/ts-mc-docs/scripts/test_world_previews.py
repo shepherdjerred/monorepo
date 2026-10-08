@@ -8,6 +8,7 @@ import unittest
 import zipfile
 from argparse import Namespace
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import call, patch
 
 from world_archive import (
@@ -16,6 +17,7 @@ from world_archive import (
     Catalog,
     extract_preview,
     load_catalog,
+    require_space,
     run,
     upload_download,
     verify,
@@ -36,6 +38,23 @@ def level(x: int, z: int) -> bytes:
 
 
 class PreviewTests(unittest.TestCase):
+    def setUp(self):
+        self.disk_usage = patch("world_archive.shutil.disk_usage", return_value=SimpleNamespace(free=100 * 1024**3))
+        self.disk_usage.start()
+        self.addCleanup(self.disk_usage.stop)
+
+    def test_disk_guard_rejects_insufficient_space_before_extracting(self):
+        with (
+            patch("world_archive.shutil.disk_usage", return_value=SimpleNamespace(free=14 * 1024**3)),
+            self.assertRaisesRegex(RuntimeError, "Disk guard"),
+        ):
+            require_space(Path("."))
+        with (
+            patch("world_archive.shutil.disk_usage", return_value=SimpleNamespace(free=16 * 1024**3)),
+            self.assertRaisesRegex(RuntimeError, "Disk guard"),
+        ):
+            require_space(Path("."), 2 * 1024**3)
+
     def test_fresh_upload_refuses_to_replace_a_published_object_with_different_bytes(self):
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "world.zip"

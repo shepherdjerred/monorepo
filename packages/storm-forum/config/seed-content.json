@@ -1,6 +1,7 @@
 [
   {
     "key": "welcome",
+    "authorId": 1,
     "node": "news",
     "title": "Welcome back to The Storm",
     "message": "A fresh chapter for our Minecraft community. Explore the server, share your builds, and reconnect with old friends.\n\n[B]Server IP: ts-mc.net[/B]. We support Minecraft Java + Bedrock. Bedrock players use port [B]30004[/B]. Read the [URL=https://docs.ts-mc.net]server documentation[/URL], introduce yourself in General, and tell us what you are building.\n\nExplore the restored discussions and announcements, share a memory, or start something new.",
@@ -8,12 +9,14 @@
   },
   {
     "key": "rules",
+    "authorId": 1,
     "node": "rules",
     "title": "Rules & getting started",
     "message": "Welcome! Treat other players with respect. Harassment, discrimination, threats, spam, and sharing another person's private information are not welcome here.\n\nRespect other people's builds and follow the server's published rules. Use Bug Reports for reproducible problems and Feedback for ideas. Reports, Appeals, and Applications are private to their author and staff.\n\nNew accounts verify their email. Their first three approved posts and first 24 hours establish posting history before automatic promotion; messages, signatures, and profile posts are restricted during that period.\n\nJoin at [B]ts-mc.net[/B]. See [URL=https://docs.ts-mc.net]the documentation[/URL] for server guidance. Contact staff through Private Support if you need help."
   },
   {
     "key": "history",
+    "authorId": 1,
     "node": "general",
     "title": "The Storm: community history",
     "message": "The Storm has a long history of builds, adventures, and friendships. Browse the restored public discussions and announcements to revisit those moments.\n\nHistorical posts retain their original names and dates, with profiles that bring each person's contributions together. Some images and posts were not preserved in the archives.\n\nHave a memory or a missing piece of the story? Start a discussion here or contact staff.",

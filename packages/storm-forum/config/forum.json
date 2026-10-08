@@ -99,24 +99,32 @@
       "type": "Forum",
       "access": "author-staff"
     },
+    {
+      "key": "recovery",
+      "title": "Account Recovery",
+      "description": "Register and verify your email, then request your archived profile here. Share ownership evidence privately with staff. Only you and staff can read your request; a matching username alone is not proof of ownership.",
+      "parent": "support",
+      "type": "Forum",
+      "access": "author-staff"
+    },
     { "key": "staff", "title": "Staff", "type": "Forum", "access": "staff" }
   ],
   "vendorDependencies": [
     {
       "key": "flexile-light",
-      "version": "4.0.0",
+      "version": "4.1.0",
       "kind": "style",
       "path": "vendor/flexile-storm-light.zip",
       "mode": "light",
-      "sha256": "cae93ad3c9f6a3125f55945707debd30cb766afbe595b42afe6a37d62bda6dc7"
+      "sha256": "f90472e8d2dea2039c2b20e0cb0b8f8c94704e4af3f6ae8ec9c4f7a534768653"
     },
     {
       "key": "flexile-dark",
-      "version": "4.0.0",
+      "version": "4.1.0",
       "kind": "style",
       "path": "vendor/flexile-storm-dark.zip",
       "mode": "dark",
-      "sha256": "e77c1909a5f0955643b9d7ab7513a5899b60bd29e36f919dd8b62ebf667875c6"
+      "sha256": "cebdab8ced54fe60fb937f08721a71ea39e0f38e3afb73cfab69547ae45882d0"
     }
   ]
 }

@@ -78,7 +78,7 @@ final class Configuration extends \XF\Service\AbstractService
             'profilePost' => ['post' => 'allow', 'comment' => 'allow'],
         ]);
         foreach ([3, 4] as $staffId) {
-            $this->permissions($staffId, ['general' => ['submitWithoutApproval' => 'allow', 'requireTfa' => 'allow']]);
+            $this->permissions($staffId, ['general' => ['submitWithoutApproval' => 'allow', 'requireTfa' => 'allow', 'cleanSpam' => 'allow']]);
         }
         $promotion = $this->managed('promotion:trusted', 'XF:UserGroupPromotion');
         $promotion->title = 'The Storm: established member';
@@ -97,6 +97,7 @@ final class Configuration extends \XF\Service\AbstractService
         foreach ($manifest['nodes'] as $order => $definition) {
             $node = $this->managed('node:' . $definition['key'], 'XF:Node');
             $node->title = $definition['title'];
+            if (isset($definition['description'])) { $node->description = $definition['description']; }
             $node->node_type_id = $definition['type'];
             $node->node_name = $definition['key'];
             $node->parent_node_id = isset($definition['parent']) ? $this->map['node:' . $definition['parent']] : 0;
@@ -160,6 +161,10 @@ final class Configuration extends \XF\Service\AbstractService
             'captcha' => 'Turnstile', 'jobRunTrigger' => 'cron',
             'adminRequireTfa' => true,
             'attachmentMaxFileSize' => $manifest['attachmentLimitKiB'],
+            'attachmentMaxPerMessage' => 10,
+            'registrationCheckDnsBl' => ['check'=>1, 'action'=>'moderate', 'projectHoneyPotKey'=>''],
+            'floodCheckLength' => 30, 'floodCheckLengthDiscussion' => 180,
+            'maxContentSpamMessages' => 5,
             'stopForumSpam' => ['enabled' => true, 'denyThreshold' => 3, 'moderateThreshold' => 1, 'frequencyCutOff' => 5, 'lastSeenCutOff' => 7, 'hashEmail' => true, 'submitRejections' => false, 'apiKey' => false],
         ];
         $repository = $this->repository('XF:Option');

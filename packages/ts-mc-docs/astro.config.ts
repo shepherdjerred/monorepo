@@ -37,6 +37,8 @@ export default defineConfig({
         Header: "./src/components/Header.astro",
         ThemeProvider: "./src/components/ThemeProvider.astro",
         ThemeSelect: "./src/components/ThemeSelect.astro",
+        PageFrame: "./src/components/PageFrame.astro",
+        TwoColumnContent: "./src/components/TwoColumnContent.astro",
       },
       description: "Documentation for The Storm Minecraft server.",
       editLink: {

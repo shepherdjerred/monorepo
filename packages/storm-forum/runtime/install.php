@@ -8,7 +8,7 @@ if ((new XF\Install\Helper($app))->isInstalled()) {
     fwrite(STDOUT, "Existing installation; no install action taken.\n");
     exit(0);
 }
-if ($app->db()->fetchOne("SHOW TABLES LIKE 'xf_user'")) {
+if ($app->db()->fetchOne('SHOW TABLES')) {
     throw new RuntimeException('Incomplete installation: inspect the failed release before resuming; existing tables will not be overwritten.');
 }
 $get = static function (string $key): string {
