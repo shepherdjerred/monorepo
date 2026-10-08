@@ -1,7 +1,7 @@
 import { mkdtemp, mkdir, readFile, rm, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { createGzipEncoder, packTar, type TarEntry } from "modern-tar";
+import { packTar, type TarEntry } from "modern-tar";
 import { afterEach, expect, test, vi } from "vitest";
 import {
   artifactDefinition,
@@ -50,7 +50,9 @@ async function compressedTar(
   const body = new Response(tar).body;
   if (body === null) throw new Error("test could not create tar stream");
   return new Uint8Array(
-    await new Response(body.pipeThrough(createGzipEncoder())).arrayBuffer(),
+    await new Response(
+      body.pipeThrough(new CompressionStream("gzip")),
+    ).arrayBuffer(),
   );
 }
 

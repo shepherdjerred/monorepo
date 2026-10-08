@@ -76,15 +76,15 @@
   },
   "devDependencies": {
     "@eslint/compat": "^2.1.0",
-    "@vitest/coverage-istanbul": "5.0.1",
+    "@vitest/coverage-istanbul": "5.0.3",
     "jscpd": "5.4.0",
-    "knip": "6.39.0",
+    "knip": "6.40.0",
     "lefthook": "^2.1.10",
     "markdownlint-cli2": "^0.23.0",
     "prettier": "^3.9.9",
     "prettier-plugin-astro": "^1.0.1",
     "turbo": "2.11.7",
-    "vitest": "5.0.1"
+    "vitest": "5.0.3"
   },
   "workspaces": [
     "packages/alert-dashboard",
@@ -188,13 +188,13 @@
     "@ai-sdk/provider-utils": "5.0.53",
     "@grpc/grpc-js": "1.14.5",
     "@opentelemetry/api": "1.9.1",
-    "@typescript-eslint/eslint-plugin": "8.71.0",
-    "@typescript-eslint/parser": "8.71.0",
-    "@typescript-eslint/utils": "8.71.0",
+    "@typescript-eslint/eslint-plugin": "8.71.1",
+    "@typescript-eslint/parser": "8.71.1",
+    "@typescript-eslint/utils": "8.71.1",
     "axios": "1.20.0",
     "@opentelemetry/propagator-jaeger": "2.11.0",
     "fast-xml-parser": "5.11.1",
-    "js-yaml": "5.4.2",
+    "js-yaml": "5.4.3",
     "linkify-it": "6.1.0",
     "svgo": "4.1.0",
     "devalue": "6.0.2",
@@ -205,9 +205,9 @@
     "brace-expansion": "5.0.12",
     "ip-address": "10.7.3",
     "js-cookie": "3.0.8",
-    "nanoid": "6.0.1",
+    "nanoid": "6.0.2",
     "pdfjs-dist": "6.4.299",
-    "postcss": "8.5.28",
+    "postcss": "8.5.29",
     "sanitize-html": "2.18.0",
     "shell-quote": "1.12.0",
     "satteri": "0.10.5",
@@ -219,7 +219,7 @@
     "sherpa-onnx-win-x64": "1.13.7",
     "socket.io-parser": "4.2.7",
     "tmp": "0.2.7",
-    "typescript-eslint": "8.71.0"
+    "typescript-eslint": "8.71.1"
   },
   "trustedDependencies": [
     "@lng2004/node-datachannel",

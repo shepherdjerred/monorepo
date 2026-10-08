@@ -321,9 +321,9 @@
       "allowedVersions": "!/-(armhf|arm64)$/"
     },
     {
-      "description": "Ignore bogus LinuxServer qBittorrent OS tags such as 20.04.1; those are stale Ubuntu YY.MM-based image tags, not qBittorrent app versions. qBittorrent never zero-pads its minor version, so rejecting a leading-zero minor excludes them while keeping every semantic app tag.",
+      "description": "Track modern qBittorrent app tags with single-digit majors 4-9. Historical Ubuntu tags use two-digit majors such as 14 and 20; Docker version normalization removes their zero-padded minor, so checking the minor alone cannot reject those stale images.",
       "matchPackageNames": ["linuxserver/qbittorrent"],
-      "allowedVersions": "/^[0-9]+\\.(0|[1-9][0-9]*)\\.[0-9]+$/"
+      "allowedVersions": "/^[4-9]\\.(0|[1-9][0-9]*)\\.[0-9]+$/"
     },
     {
       "description": "sherpa-onnx 1.13.2-1.13.4 miss KWS/streaming-ASR detections on FEAT_SME arm64 (bundled onnxruntime 1.27.0 Conv bug, k2-fsa/sherpa-onnx#3791/#3776). Fixed upstream via ORT 1.27.1 in k2-fsa/sherpa-onnx#3831 (macOS) and #3850 (Linux aarch64/Android), both merged before the 1.13.5 release. allowedVersions skips only the broken window; the functional startup smoke in packages/streambot/src/voice/local-models.ts is the upgrade gate before bumping past the current 1.13.1 pin.",
@@ -340,6 +340,14 @@
       "matchDatasources": ["terraform-provider"],
       "matchPackageNames": ["hashicorp/aws"],
       "skipArtifactsUpdate": true
+    },
+    {
+      "description": "Storm's Java convention script resolves tool and library versions from libs.versions.toml. Skip native Gradle extraction of this catalog-only consumer, which mistakes version(\"jacoco\") and version(\"pmd\") for literal versions; the authoritative TOML catalog remains managed.",
+      "matchManagers": ["gradle"],
+      "matchFileNames": [
+        "packages/the-storm/plugin/build-logic/src/main/kotlin/storm.java-conventions.gradle.kts"
+      ],
+      "enabled": false
     },
     {
       "description": "The Storm client's reproducible Minecraft archive string is a local JarProcessor cache ID, not a Maven dependency. The Gradle extractor mistakes its colon-separated ID for coordinates.",
