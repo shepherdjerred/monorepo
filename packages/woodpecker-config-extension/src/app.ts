@@ -22,6 +22,7 @@ import {
   isInternalImagePinChange,
 } from "#src/pipeline/internal-image-pin-change.ts";
 import { signRemoteCacheSteps } from "#src/pipeline/turbo-cache.ts";
+import type { SuccessfulWorkflowPipeline } from "#src/woodpecker-api.ts";
 
 export type AppOptions = {
   /** Resolves Woodpecker's signing key; the caller caches it. */
@@ -38,13 +39,13 @@ export type AppOptions = {
     branch: string,
   ) => Promise<string | undefined>;
   /**
-   * Resolves the newest commit whose images were built, pushed and pinned --
-   * a stricter question than "last green", answered from per-workflow outcomes.
+   * Resolves the newest pipeline with successful image and pin handoffs. Its
+   * commit scopes builds; its number addresses pins not yet merged into main.
    */
   readonly imageReleaseBase: (
     repoId: number,
     branch: string,
-  ) => Promise<string | undefined>;
+  ) => Promise<SuccessfulWorkflowPipeline | undefined>;
   readonly compareChangedFiles?: typeof changedFilesSince;
   /** Checks an exact hosted-automation head against forge review state. */
   readonly hostedAutomationApproved?: (pipeline: Pipeline) => Promise<boolean>;
@@ -294,7 +295,8 @@ export function createApp(options: AppOptions): Hono {
       images,
       changedBase,
       verifyBase,
-      imageReleaseBase,
+      imageReleaseBase: imageReleaseBase?.commit,
+      imageReleasePipeline: imageReleaseBase?.pipelineNumber,
     });
     const selected = signRemoteCacheSteps(
       selectSteps(

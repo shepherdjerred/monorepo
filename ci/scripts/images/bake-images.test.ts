@@ -3,7 +3,6 @@ import {
   annotate,
   ensureBuilder,
   execute,
-  lastSuccessfulImageReleaseCommit,
   manifestDigest,
   pushImages,
   runSmoke,
@@ -11,6 +10,7 @@ import {
   type CommandExecutor,
   VERSION_CATALOG_URL,
 } from "./bake-images.ts";
+import { lastSuccessfulImageReleaseCommit } from "./live-version-catalog.ts";
 import { writeFallbackReport } from "./image-selection-report.ts";
 import { ensureAnonymousGhcrPull } from "./ghcr-public-access.ts";
 import {
@@ -587,6 +587,7 @@ test("uses the image-release base the extension resolved, after validating it", 
   expect(
     await lastSuccessfulImageReleaseCommit("current", executor, {
       CI_LAST_IMAGE_RELEASE_COMMIT: "image-green-commit",
+      CI_LAST_IMAGE_RELEASE_PIPELINE: "6485",
     }),
   ).toBe("image-green-commit");
   // An environment variable is not proof the commit is in this checkout.
@@ -597,6 +598,43 @@ test("uses the image-release base the extension resolved, after validating it", 
   expect(
     await lastSuccessfulImageReleaseCommit("current", executor, {}),
   ).toBeUndefined();
+});
+
+test("builds every image when a legacy extension supplies a commit without artifact coordinates", async () => {
+  const commands: string[][] = [];
+  const executor: CommandExecutor = async (command) => {
+    commands.push([...command]);
+    throw new Error("must not use an unaddressable image release base");
+  };
+  expect(
+    await lastSuccessfulImageReleaseCommit("current", executor, {
+      CI_LAST_IMAGE_RELEASE_COMMIT: "image-green-commit",
+    }),
+  ).toBeUndefined();
+  expect(
+    await selectedTargets(
+      { affected: false, push: true },
+      "current",
+      executor,
+      (commit) =>
+        lastSuccessfulImageReleaseCommit(commit, executor, {
+          CI_LAST_IMAGE_RELEASE_COMMIT: "image-green-commit",
+        }),
+    ),
+  ).toEqual({
+    targets: knownImageTargets,
+    fallbackReason: "could not resolve last completed main image release",
+  });
+  expect(commands).toEqual([]);
+});
+
+test("rejects malformed release artifact coordinates instead of narrowing image selection", async () => {
+  await expect(
+    lastSuccessfulImageReleaseCommit("current", async () => commandResult(), {
+      CI_LAST_IMAGE_RELEASE_COMMIT: "image-green-commit",
+      CI_LAST_IMAGE_RELEASE_PIPELINE: "../6485",
+    }),
+  ).rejects.toThrow("Image release pipeline must be a positive safe integer");
 });
 
 test("selects affected image targets from the merge base", async () => {

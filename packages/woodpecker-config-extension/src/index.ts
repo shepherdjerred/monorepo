@@ -4,6 +4,7 @@ import { fetchPublicKey } from "#src/signature.ts";
 import { createRawFetcher } from "#src/images.ts";
 import {
   lastCommitWithSuccessfulWorkflows,
+  lastPipelineWithSuccessfulWorkflows,
   lastSuccessfulCommit,
 } from "#src/woodpecker-api.ts";
 import { hasExactHeadApproval } from "#src/github-approval.ts";
@@ -53,10 +54,10 @@ const app = createApp({
       baseUrl: serverUrl,
       token: apiToken,
     }),
-  // The image lane's base must be a commit whose images were built, pushed
-  // AND pinned -- the two workflows named here.
+  // Keep the commit and its artifact coordinates together. Commit-back can
+  // succeed by updating a pending PR, before those pins reach main.
   imageReleaseBase: (repoId, branch) =>
-    lastCommitWithSuccessfulWorkflows(
+    lastPipelineWithSuccessfulWorkflows(
       repoId,
       branch,
       ["images", "version-commit-back"],

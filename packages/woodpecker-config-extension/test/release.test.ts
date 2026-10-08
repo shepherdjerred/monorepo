@@ -173,15 +173,18 @@ describe("release chain", () => {
       images: IMAGES,
       changedBase: "x",
       imageReleaseBase: "deadbeef",
+      imageReleasePipeline: 6485,
     });
     expect(steps.find((s) => s.key === "images")?.environment).toMatchObject({
       CI_LAST_IMAGE_RELEASE_COMMIT: "deadbeef",
+      CI_LAST_IMAGE_RELEASE_PIPELINE: "6485",
     });
   });
 
   test("an absent image release base is passed through as empty", () => {
     expect(step("images")?.environment).toMatchObject({
       CI_LAST_IMAGE_RELEASE_COMMIT: "",
+      CI_LAST_IMAGE_RELEASE_PIPELINE: "",
     });
   });
 });

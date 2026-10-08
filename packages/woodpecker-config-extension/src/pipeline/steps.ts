@@ -102,10 +102,12 @@ export type PipelineInputs = {
   /** Last successful verify workflow, even if a later release lane failed. */
   readonly verifyBase?: string | undefined;
   /**
-   * Newest commit whose images were built, pushed, AND pinned. Stricter than
+   * Newest commit with successful image publication and pin handoffs. Stricter than
    * `changedBase`, and undefined when no recent build qualifies.
    */
   readonly imageReleaseBase?: string | undefined;
+  /** Handoff coordinates belonging to exactly that image-release commit. */
+  readonly imageReleasePipeline?: number | undefined;
   /** One operator-requested platform plan or saved-plan apply. */
   readonly platformOperation?: PlatformOperation;
 };
@@ -115,11 +117,13 @@ export function buildPipelineSteps({
   changedBase = "",
   verifyBase,
   imageReleaseBase = "",
+  imageReleasePipeline,
   platformOperation,
 }: PipelineInputs): CiStep[] {
   const sharedEnvironment = {
     CI_CHANGED_BASE: changedBase,
     CI_LAST_IMAGE_RELEASE_COMMIT: imageReleaseBase,
+    CI_LAST_IMAGE_RELEASE_PIPELINE: imageReleasePipeline?.toString() ?? "",
   };
 
   const steps: CiStep[] = [

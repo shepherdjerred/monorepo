@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { parse } from "yaml";
 import {
   lastCommitWithSuccessfulWorkflows,
+  lastPipelineWithSuccessfulWorkflows,
   lastSuccessfulCommit,
 } from "#src/woodpecker-api.ts";
 import { buildPipelineSteps } from "#src/pipeline/steps.ts";
@@ -124,6 +125,35 @@ describe("last commit with successful workflows", () => {
     baseUrl: "https://woodpecker.example.com",
     token: "t",
   };
+
+  test("keeps the qualifying commit paired with its pipeline's handoffs", async () => {
+    await expect(
+      lastPipelineWithSuccessfulWorkflows(
+        7,
+        "main",
+        ["images", "version-commit-back"],
+        {
+          ...options,
+          fetchImpl: server(
+            [
+              { number: 6524, commit: "newer-failed-release" },
+              { number: 6485, commit: "published-release" },
+            ],
+            {
+              6524: [
+                { name: "images", state: "success" },
+                { name: "version-commit-back", state: "killed" },
+              ],
+              6485: [
+                { name: "images", state: "success" },
+                { name: "version-commit-back", state: "success" },
+              ],
+            },
+          ),
+        },
+      ),
+    ).resolves.toEqual({ commit: "published-release", pipelineNumber: 6485 });
+  });
 
   test("returns the newest commit where every named workflow succeeded", async () => {
     const commit = await lastCommitWithSuccessfulWorkflows(

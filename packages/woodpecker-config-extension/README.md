@@ -65,6 +65,21 @@ catalog. ArgoCD must reconcile that new pin before Woodpecker generates
 pipelines with changed extension code. The original bootstrap image is not a
 substitute for this release path.
 
+The image baseline includes both a commit and a pipeline number. It requires
+successful `images` and `version-commit-back` workflows; the latter can update
+a pending pin PR before the catalog on main changes. Before selecting image
+targets, the image lane reads that pipeline's required `version-catalog` and
+`pin-candidates` handoffs and retains its published internal image pins in the
+live main catalog. Newer main pins, upstream versions, metadata and retirements
+remain authoritative. Equal release numbers with different digests fail.
+
+Both the no-target path and a partial image build publish the retained catalog
+for Helm and the next image baseline. Runtime comparison and Temporal candidate
+selection use that same catalog, preserving an active candidate while stable
+and candidate differ. An older extension that supplies only a commit provides
+no addressable baseline, so the image lane builds all targets during migration.
+Once a pipeline number is supplied, a missing handoff is a contract failure.
+
 When a graph change retires a failing lane, the deployed image can still select
 that lane for the PR carrying its replacement. Changes under this package are
 also inputs to every workflow, so an extension-only PR cannot escape the old

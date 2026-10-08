@@ -1,6 +1,16 @@
 import { asRecord } from "../../../scripts/lib/json.ts";
 import type { BuildxCommandResult } from "./bake-retry.ts";
 import { TransientError } from "../../../scripts/lib/transient-error.ts";
+import {
+  parseVersionCatalogText,
+  serializeVersionCatalog,
+} from "../../../packages/version-catalog/src/index.ts";
+import { parsePinCandidates } from "../../../scripts/lib/pin-candidates.ts";
+import {
+  ciHandoffConfigFromEnv,
+  readRequiredHandoff,
+} from "../../../scripts/lib/ci/ci-handoff.ts";
+import { ensureAncestor } from "../selectors/ensure-ancestor.ts";
 
 const VERSION_CATALOG_PATH = "packages/version-catalog/src/catalog.json";
 
@@ -8,15 +18,159 @@ export type LiveCatalogExecutor = (
   command: readonly string[],
 ) => Promise<BuildxCommandResult>;
 
+function releaseNumber(value: string): bigint {
+  const match = /^2\.0\.0-([1-9]\d*)@sha256:[a-f\d]{64}$/.exec(value);
+  if (match?.[1] === undefined) {
+    throw new Error(`Invalid internal image release pin: ${value}`);
+  }
+  return BigInt(match[1]);
+}
+
+/**
+ * Reconstruct a completed release, then retain its published pins in current
+ * main. Commit-back may still be pending in a PR. Current catalog metadata,
+ * retirements, upstream versions and newer image pins remain authoritative.
+ * A no-target release writes this catalog back to the handoff, so retention
+ * survives any number of consecutive no-target or partial-image builds.
+ */
+export function retainPublishedImagePins(
+  currentSource: string,
+  previousSource: string,
+  candidatesSource: string,
+): string {
+  const current = parseVersionCatalogText(currentSource);
+  const previous = parseVersionCatalogText(previousSource);
+  const batch = parsePinCandidates(candidatesSource);
+  const published = new Map(
+    previous.entries
+      .filter(
+        (entry) =>
+          entry.category === "internal-image" && entry.artifactType === "image",
+      )
+      .map((entry) => [entry.name, entry.value]),
+  );
+  for (const [key, candidate] of Object.entries(batch.candidates)) {
+    if (!published.has(key)) {
+      throw new Error(
+        `Published candidate contains unknown internal image key ${key}`,
+      );
+    }
+    if (candidate.version !== `2.0.0-${batch.buildNumber.toString()}`) {
+      throw new Error(
+        `Published candidate version does not match its build for ${key}`,
+      );
+    }
+    published.set(key, `${candidate.version}@${candidate.digest}`);
+  }
+  return serializeVersionCatalog({
+    ...current,
+    entries: current.entries.map((entry) => {
+      const value = published.get(entry.name);
+      if (
+        value === undefined ||
+        entry.category !== "internal-image" ||
+        entry.artifactType !== "image"
+      )
+        return entry;
+      const currentBuild = releaseNumber(entry.value);
+      const publishedBuild = releaseNumber(value);
+      if (currentBuild === publishedBuild && entry.value !== value) {
+        throw new Error(
+          `Conflicting published image pins for ${entry.name} at release ${currentBuild.toString()}`,
+        );
+      }
+      return publishedBuild > currentBuild ? { ...entry, value } : entry;
+    }),
+  });
+}
+
+export async function readPublishedVersionCatalogSource(
+  currentSource: string,
+  pipelineNumber: string,
+  readHandoff: (key: string, pipelineNumber: string) => Promise<string> = (
+    key,
+    number,
+  ) =>
+    readRequiredHandoff(key, {
+      ...ciHandoffConfigFromEnv(),
+      pipelineNumber: number,
+    }),
+): Promise<string> {
+  if (
+    !/^[1-9]\d*$/.test(pipelineNumber) ||
+    !Number.isSafeInteger(Number(pipelineNumber))
+  ) {
+    throw new Error("Image release pipeline must be a positive safe integer");
+  }
+  const [catalog, candidates] = await Promise.all([
+    readHandoff("version-catalog", pipelineNumber),
+    readHandoff("pin-candidates", pipelineNumber),
+  ]);
+  return retainPublishedImagePins(currentSource, catalog, candidates);
+}
+
+async function imageReleaseBase(
+  currentCommit: string,
+  executor: LiveCatalogExecutor,
+  environment: Readonly<Record<string, string | undefined>>,
+): Promise<{ commit: string; pipelineNumber: string } | undefined> {
+  const commit = environment["CI_LAST_IMAGE_RELEASE_COMMIT"];
+  const pipelineNumber = environment["CI_LAST_IMAGE_RELEASE_PIPELINE"];
+  // A legacy extension's commit alone cannot address its published pins.
+  // Without a complete baseline, callers must build every image target.
+  if (pipelineNumber === undefined || pipelineNumber.length === 0)
+    return undefined;
+  if (
+    !/^[1-9]\d*$/.test(pipelineNumber) ||
+    !Number.isSafeInteger(Number(pipelineNumber))
+  ) {
+    throw new Error("Image release pipeline must be a positive safe integer");
+  }
+  if (commit === undefined || commit.length === 0) {
+    throw new Error("Image release pipeline has no corresponding commit");
+  }
+  const canFetch =
+    environment["CI_PIPELINE_EVENT"] === "push" ||
+    environment["CI_PIPELINE_EVENT"] === "manual";
+  // The extension's answer still has to be an ancestor of this checkout.
+  return (await ensureAncestor(commit, currentCommit, executor, canFetch))
+    ? { commit, pipelineNumber }
+    : undefined;
+}
+
+export async function lastSuccessfulImageReleaseCommit(
+  currentCommit: string,
+  executor: LiveCatalogExecutor,
+  environment: Readonly<Record<string, string | undefined>> = Bun.env,
+): Promise<string | undefined> {
+  const base = await imageReleaseBase(currentCommit, executor, environment);
+  return base?.commit;
+}
+
+export async function resolveImageReleaseCatalog(
+  currentCommit: string,
+  executor: LiveCatalogExecutor,
+  environment: Readonly<Record<string, string | undefined>> = Bun.env,
+): Promise<{ catalog: string; baseCommit: string | undefined }> {
+  // Fetch first so both catalog selection and ancestry use current origin/main.
+  const current = await readLiveVersionCatalogSource(executor);
+  const base = await imageReleaseBase(currentCommit, executor, environment);
+  return {
+    baseCommit: base?.commit,
+    catalog:
+      base === undefined
+        ? current
+        : await readPublishedVersionCatalogSource(current, base.pipelineNumber),
+  };
+}
+
 /**
  * Reads the version catalog from live origin/main. The image push records it
  * as build metadata and derives Temporal Workflow candidate pins from it.
  *
- * Candidate safety comes from the pin rules in pin-candidate-images.ts: a new
- * candidate is published only while stable and candidate are converged, so a
- * candidate that is ramping is never replaced. A pending version-bump branch
- * does not need to be waited on; commit-back merges pending state per pin and
- * the newer build wins, which only ever replaces a candidate nobody ramped.
+ * Published pins from the completed baseline are retained before selection
+ * and candidate derivation. Main alone may lag a pending version-bump PR and
+ * incorrectly report that stable and candidate are still converged.
  */
 export async function readLiveVersionCatalogSource(
   executor: LiveCatalogExecutor,
