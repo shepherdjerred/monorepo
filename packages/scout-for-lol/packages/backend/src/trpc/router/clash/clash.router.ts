@@ -7,6 +7,7 @@ import {
   assertClashSurfaceEnabledForGuild,
   clashSurfaceStatus,
 } from "#src/league/clash/access.ts";
+import { readClientClashBracketsForGuild } from "#src/league/clash/client-clash.ts";
 import { readClashHistoryForGuild } from "#src/league/clash/history.ts";
 import {
   readClashRosterForGuild,
@@ -46,6 +47,7 @@ export const clashRouter = router({
     await assertClashGuildReadable(ctx.user, input.guildId, "roster");
     return {
       teams: await readClashRosterForGuild(input.guildId),
+      brackets: await readClientClashBracketsForGuild(input.guildId),
       resultsNote:
         "Roster is who is registered this weekend among tracked players. There is no bracket or win/loss.",
     };

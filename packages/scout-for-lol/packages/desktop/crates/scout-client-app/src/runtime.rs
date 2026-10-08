@@ -16,8 +16,8 @@ use scout_client_core::diagnostics::{
     DiagnosticCategory, DiagnosticEvent, DiagnosticLevel, DiagnosticOutcome, Diagnostics, FileSink,
 };
 use scout_client_core::lcu::{
-    GameId, LcuClient, LcuEndpoint, LcuError, LcuResource, LeagueLockfile, LiveClient,
-    discover_lockfile,
+    ClashBracketId, ClashRosterId, ClashTournamentId, GameId, LcuClient, LcuEndpoint, LcuError,
+    LcuResource, LeagueLockfile, LiveClient, discover_lockfile,
 };
 use scout_client_core::outbox::{LobbyBinding, ObservationOutbox};
 use scout_client_core::protocol::{
@@ -1736,6 +1736,85 @@ fn should_emit_live_game_frame(previous: Option<&[u8]>) -> bool {
     previous.is_none()
 }
 
+/// The profile resources every pass reads: (endpoint, cache key, kind).
+const PROFILE_SNAPSHOT_ENDPOINTS: &[(LcuEndpoint, &str, ObservationKind)] = &[
+    (
+        LcuEndpoint::ChampionMastery,
+        "champion_mastery",
+        ObservationKind::ChampionMastery,
+    ),
+    (
+        LcuEndpoint::ChampionMasteryMilestones,
+        "champion_mastery_milestones",
+        ObservationKind::ChampionMastery,
+    ),
+    (
+        LcuEndpoint::Challenges,
+        "challenges",
+        ObservationKind::Challenges,
+    ),
+    (
+        LcuEndpoint::ChallengeSummary,
+        "challenge_summary",
+        ObservationKind::Challenges,
+    ),
+    (
+        LcuEndpoint::ClashPlayer,
+        "clash_player",
+        ObservationKind::Clash,
+    ),
+    (
+        LcuEndpoint::ClashTournaments,
+        "clash_tournaments",
+        ObservationKind::Clash,
+    ),
+    (
+        LcuEndpoint::ClashSummary,
+        "clash_summary",
+        ObservationKind::Clash,
+    ),
+    (
+        LcuEndpoint::ClashCheckinAllowed,
+        "clash_checkin_allowed",
+        ObservationKind::Clash,
+    ),
+    (
+        LcuEndpoint::ClashCurrentTournamentIds,
+        "clash_current_tournament_ids",
+        ObservationKind::Clash,
+    ),
+    (
+        LcuEndpoint::ClashHistoryAndWinners,
+        "clash_history_and_winners",
+        ObservationKind::Clash,
+    ),
+    (
+        LcuEndpoint::ClashPlayerHistory,
+        "clash_player_history",
+        ObservationKind::Clash,
+    ),
+    (
+        LcuEndpoint::ClashRewards,
+        "clash_rewards",
+        ObservationKind::Clash,
+    ),
+    (
+        LcuEndpoint::ClashStateFlags,
+        "clash_state_flags",
+        ObservationKind::Clash,
+    ),
+    (
+        LcuEndpoint::ClashTournamentState,
+        "clash_tournament_state",
+        ObservationKind::Clash,
+    ),
+    (
+        LcuEndpoint::ClashInvitedRosters,
+        "clash_invited_rosters",
+        ObservationKind::Clash,
+    ),
+];
+
 async fn collect_profile_snapshots(
     client: &LcuClient,
     outbox: &ObservationOutbox,
@@ -1743,84 +1822,12 @@ async fn collect_profile_snapshots(
     local_puuid: Option<&str>,
     diagnostics: &Diagnostics,
 ) -> Result<(), String> {
-    for (endpoint, key, kind) in [
-        (
-            LcuEndpoint::ChampionMastery,
-            "champion_mastery",
-            ObservationKind::ChampionMastery,
-        ),
-        (
-            LcuEndpoint::ChampionMasteryMilestones,
-            "champion_mastery_milestones",
-            ObservationKind::ChampionMastery,
-        ),
-        (
-            LcuEndpoint::Challenges,
-            "challenges",
-            ObservationKind::Challenges,
-        ),
-        (
-            LcuEndpoint::ChallengeSummary,
-            "challenge_summary",
-            ObservationKind::Challenges,
-        ),
-        (
-            LcuEndpoint::ClashPlayer,
-            "clash_player",
-            ObservationKind::Clash,
-        ),
-        (
-            LcuEndpoint::ClashTournaments,
-            "clash_tournaments",
-            ObservationKind::Clash,
-        ),
-        (
-            LcuEndpoint::ClashSummary,
-            "clash_summary",
-            ObservationKind::Clash,
-        ),
-        (
-            LcuEndpoint::ClashCheckinAllowed,
-            "clash_checkin_allowed",
-            ObservationKind::Clash,
-        ),
-        (
-            LcuEndpoint::ClashCurrentTournamentIds,
-            "clash_current_tournament_ids",
-            ObservationKind::Clash,
-        ),
-        (
-            LcuEndpoint::ClashHistoryAndWinners,
-            "clash_history_and_winners",
-            ObservationKind::Clash,
-        ),
-        (
-            LcuEndpoint::ClashPlayerHistory,
-            "clash_player_history",
-            ObservationKind::Clash,
-        ),
-        (
-            LcuEndpoint::ClashRewards,
-            "clash_rewards",
-            ObservationKind::Clash,
-        ),
-        (
-            LcuEndpoint::ClashStateFlags,
-            "clash_state_flags",
-            ObservationKind::Clash,
-        ),
-        (
-            LcuEndpoint::ClashTournamentState,
-            "clash_tournament_state",
-            ObservationKind::Clash,
-        ),
-        (
-            LcuEndpoint::ClashInvitedRosters,
-            "clash_invited_rosters",
-            ObservationKind::Clash,
-        ),
-    ] {
-        observe_endpoint(
+    let mut first_failure = None;
+    let mut any_read = false;
+    for &(endpoint, key, kind) in PROFILE_SNAPSHOT_ENDPOINTS {
+        // One endpoint failing — Clash's are off outside a tournament window —
+        // must not cost the rest. Each failure is already recorded.
+        let read = observe_endpoint(
             client,
             outbox,
             payloads,
@@ -1829,9 +1836,142 @@ async fn collect_profile_snapshots(
             local_puuid,
             diagnostics,
         )
-        .await?;
+        .await;
+        match read {
+            Ok(_) => any_read = true,
+            Err(error) => {
+                first_failure.get_or_insert(error);
+            }
+        }
     }
-    Ok(())
+    collect_clash_details(client, outbox, payloads, (local_puuid, diagnostics)).await;
+    // Only a pass where nothing could be read is a failed tick.
+    match first_failure {
+        Some(error) if !any_read => Err(error),
+        _ => Ok(()),
+    }
+}
+
+/// The most rosters, brackets or tournaments one pass reads by ID.
+const MAX_CLASH_DETAIL_READS: usize = 4;
+
+/// The Clash resources only an ID reaches — the player's roster, its record,
+/// its bracket, and the tournaments in play — read with IDs from the Clash
+/// payloads the pass just read.
+///
+/// Built from the League client's field names as best known
+/// (`rosterId`, `bracketId`, `tournamentId`/`id`). A name that never appears
+/// reads nothing, and every read is best-effort: each failure is recorded and
+/// the rest still run.
+async fn collect_clash_details(
+    client: &LcuClient,
+    outbox: &ObservationOutbox,
+    payloads: &mut HashMap<String, Vec<u8>>,
+    observer: (Option<&str>, &Diagnostics),
+) {
+    let rosters = ids_from(
+        payloads,
+        &["clash_player", "clash_invited_rosters", "clash_summary"],
+        &["rosterId"],
+    )
+    .into_iter()
+    .filter_map(|id| ClashRosterId::parse(&id))
+    .take(MAX_CLASH_DETAIL_READS)
+    .collect::<Vec<_>>();
+    let tournaments = ids_from(
+        payloads,
+        &["clash_current_tournament_ids", "clash_tournament_state"],
+        &["tournamentId", "id"],
+    )
+    .into_iter()
+    .filter_map(|id| ClashTournamentId::parse(&id))
+    .take(MAX_CLASH_DETAIL_READS)
+    .collect::<Vec<_>>();
+    let mut reads = Vec::new();
+    for roster in rosters {
+        reads.push((LcuResource::ClashRoster(roster), "clash_roster"));
+        reads.push((LcuResource::ClashRosterStats(roster), "clash_roster_stats"));
+    }
+    for tournament in tournaments {
+        reads.push((LcuResource::ClashTournament(tournament), "clash_tournament"));
+    }
+    for (resource, name) in reads {
+        let cache_key = format!("{name}:{}", resource.path());
+        let slot = ObservationSlot {
+            cache_key: &cache_key,
+            resource: name,
+            kind: ObservationKind::Clash,
+        };
+        let _ = observe_resource(client, outbox, payloads, resource, slot, observer).await;
+    }
+    // A roster names its bracket once it has one.
+    let brackets = ids_from(payloads, &["clash_roster"], &["bracketId"])
+        .into_iter()
+        .filter_map(|id| ClashBracketId::parse(&id))
+        .take(MAX_CLASH_DETAIL_READS)
+        .collect::<Vec<_>>();
+    for bracket in brackets {
+        let resource = LcuResource::ClashBracket(bracket);
+        let cache_key = format!("clash_bracket:{}", resource.path());
+        let slot = ObservationSlot {
+            cache_key: &cache_key,
+            resource: "clash_bracket",
+            kind: ObservationKind::Clash,
+        };
+        let _ = observe_resource(client, outbox, payloads, resource, slot, observer).await;
+    }
+}
+
+/// Every value of `keys` in the cached payloads named `sources`, plus any
+/// scalar a source holds as a bare list (the League client answers some ID
+/// lists as `[123, 456]`). Deduplicated, in the order found.
+fn ids_from(payloads: &HashMap<String, Vec<u8>>, sources: &[&str], keys: &[&str]) -> Vec<String> {
+    let mut found = Vec::new();
+    for source in sources {
+        let cached = payloads
+            .iter()
+            .filter(|(key, _)| key.as_str() == *source || key.starts_with(&format!("{source}:")))
+            .filter_map(|(_, body)| serde_json::from_slice::<Value>(body).ok());
+        for value in cached {
+            if let Value::Array(items) = &value {
+                found.extend(items.iter().filter_map(scalar_id));
+            }
+            collect_values(&value, keys, &mut found);
+        }
+    }
+    let mut seen = std::collections::HashSet::new();
+    found.retain(|id| seen.insert(id.clone()));
+    found
+}
+
+fn scalar_id(value: &Value) -> Option<String> {
+    match value {
+        Value::String(text) if !text.is_empty() => Some(text.clone()),
+        Value::Number(number) => number.as_u64().map(|id| id.to_string()),
+        _ => None,
+    }
+}
+
+/// Every non-empty value of `keys`, searched depth-first.
+fn collect_values(value: &Value, keys: &[&str], found: &mut Vec<String>) {
+    match value {
+        Value::Object(object) => {
+            for (key, child) in object {
+                if keys.contains(&key.as_str())
+                    && let Some(id) = scalar_id(child)
+                {
+                    found.push(id);
+                }
+                collect_values(child, keys, found);
+            }
+        }
+        Value::Array(items) => {
+            for item in items {
+                collect_values(item, keys, found);
+            }
+        }
+        _ => {}
+    }
 }
 
 async fn collect_recent_matches(
@@ -2039,27 +2179,10 @@ async fn observe_endpoint(
     local_puuid: Option<&str>,
     diagnostics: &Diagnostics,
 ) -> Result<Option<Value>, String> {
-    let key = slot.cache_key;
     let payload = match client.get(endpoint).await {
         Ok(payload) => payload,
         Err(error) => {
-            // The League client is the other half of every observation, and
-            // until now a failure to read it was invisible: the typed LcuError
-            // was flattened to a string at this line and never recorded, so a
-            // client that had quietly stopped seeing games looked identical to
-            // one with nothing to report.
-            diagnostics.counters().lcu_error();
-            diagnostics.record(
-                DiagnosticEvent::new(
-                    DiagnosticLevel::Warn,
-                    DiagnosticCategory::Lcu,
-                    "lcu_read",
-                    DiagnosticOutcome::Failed,
-                )
-                // The endpoint travels in the detail rather than the operation
-                // because a slot borrows its name; both are bounded text.
-                .with_detail(format!("{key}: {error}")),
-            );
+            record_lcu_read_failure(diagnostics, slot.cache_key, &error);
             return Err(error.to_string());
         }
     };
@@ -2072,6 +2195,56 @@ async fn observe_endpoint(
         diagnostics,
     )?;
     Ok(payload)
+}
+
+/// [`observe_endpoint`] for a resource addressed by an ID from another
+/// payload. The ID stays out of diagnostics; the resource name stands in.
+async fn observe_resource(
+    client: &LcuClient,
+    outbox: &ObservationOutbox,
+    payloads: &mut HashMap<String, Vec<u8>>,
+    resource: LcuResource,
+    slot: ObservationSlot<'_>,
+    observer: (Option<&str>, &Diagnostics),
+) -> Result<Option<Value>, String> {
+    let (local_puuid, diagnostics) = observer;
+    let payload = match client.get_resource(resource).await {
+        Ok(payload) => payload,
+        Err(error) => {
+            record_lcu_read_failure(diagnostics, slot.resource, &error);
+            return Err(error.to_string());
+        }
+    };
+    record_endpoint_payload(
+        outbox,
+        payloads,
+        slot,
+        payload.as_ref(),
+        local_puuid,
+        diagnostics,
+    )?;
+    Ok(payload)
+}
+
+/// Record a League client read that failed.
+///
+/// The League client is the other half of every observation, and a failure
+/// to read it used to be invisible: the typed `LcuError` was flattened to a
+/// string and never recorded, so a client that had quietly stopped seeing
+/// games looked identical to one with nothing to report.
+fn record_lcu_read_failure(diagnostics: &Diagnostics, name: &str, error: &LcuError) {
+    diagnostics.counters().lcu_error();
+    diagnostics.record(
+        DiagnosticEvent::new(
+            DiagnosticLevel::Warn,
+            DiagnosticCategory::Lcu,
+            "lcu_read",
+            DiagnosticOutcome::Failed,
+        )
+        // The name travels in the detail rather than the operation because a
+        // slot borrows it; both are bounded text.
+        .with_detail(format!("{name}: {error}")),
+    );
 }
 
 /// File one endpoint read: queue the payload if it changed since this slot
@@ -2391,8 +2564,8 @@ mod tests {
     use super::{
         END_OF_GAME_SLOT, GAME_CLIENT_END_OF_GAME_SLOT, RuntimeState, apply_observation_receipt,
         bind_observed_lobby, clear_replay_error, clear_runtime_error, find_string,
-        game_start_evidence, optional_lockfile, outbox_file_name, record_endpoint_payload,
-        replay_platform_id, replay_sha256, set_error, set_replay_error,
+        game_start_evidence, ids_from, optional_lockfile, outbox_file_name,
+        record_endpoint_payload, replay_platform_id, replay_sha256, set_error, set_replay_error,
         should_emit_live_game_frame, should_refresh_lobby, update_state,
     };
     use scout_client_core::diagnostics::Diagnostics;
@@ -2411,6 +2584,44 @@ mod tests {
             "phase": "InProgress",
             "gameData": { "gameId": 5_653_248_720_u64 },
         }))
+    }
+
+    #[test]
+    fn clash_ids_come_from_the_payloads_already_read() -> Result<(), serde_json::Error> {
+        let mut payloads = HashMap::new();
+        payloads.insert(
+            "clash_player".to_owned(),
+            serde_json::to_vec(&json!({
+                "summonerId": 1,
+                "rosterId": "f1c2a7d0-4b9e-4a17-9c3e-2d8f6a5b1c0e",
+            }))?,
+        );
+        payloads.insert(
+            "clash_current_tournament_ids".to_owned(),
+            serde_json::to_vec(&json!([3021, 3022, 3021]))?,
+        );
+        payloads.insert(
+            "clash_roster:/lol-clash/v1/roster/f1c2a7d0-4b9e-4a17-9c3e-2d8f6a5b1c0e".to_owned(),
+            serde_json::to_vec(&json!({ "members": [], "bracketId": 18276 }))?,
+        );
+        payloads.insert(
+            "lobby".to_owned(),
+            serde_json::to_vec(&json!({ "rosterId": "not-from-a-clash-source" }))?,
+        );
+
+        assert_eq!(
+            ids_from(&payloads, &["clash_player"], &["rosterId"]),
+            vec!["f1c2a7d0-4b9e-4a17-9c3e-2d8f6a5b1c0e".to_owned()]
+        );
+        assert_eq!(
+            ids_from(&payloads, &["clash_current_tournament_ids"], &["id"]),
+            vec!["3021".to_owned(), "3022".to_owned()]
+        );
+        assert_eq!(
+            ids_from(&payloads, &["clash_roster"], &["bracketId"]),
+            vec!["18276".to_owned()]
+        );
+        Ok(())
     }
 
     #[test]

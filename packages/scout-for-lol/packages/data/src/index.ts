@@ -1,6 +1,7 @@
 export * from "./model/index.ts";
 export * from "./customs/customs.schema.ts";
 export * from "./scout-client/protocol.schema.ts";
+export * from "./scout-client/lcu-clash.schema.ts";
 export {
   friendGroupHistory,
   getPerson,
