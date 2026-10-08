@@ -243,10 +243,16 @@ export function createMinecraftTsmcApp(chart: Chart) {
       },
       DISCORD_CHANNEL_ID: "1043751242649829439",
     },
-    // Paper expects HAProxy's PROXY header when connecting. mc-health normally
-    // speaks raw Minecraft, so its probes must use the PROXY-aware mode too.
-    livenessProbe: { command: ["mc-health", "--use-proxy"] },
-    readinessProbe: { command: ["mc-health", "--use-proxy"] },
+    // mc-health ignores positional arguments. Call mc-monitor directly so
+    // Paper receives the required HAProxy PROXY header before the status ping.
+    livenessProbe: {
+      command: ["mc-monitor", "status", "--use-proxy", "--timeout", "2s"],
+      timeoutSeconds: 5,
+    },
+    readinessProbe: {
+      command: ["mc-monitor", "status", "--use-proxy", "--timeout", "2s"],
+      timeoutSeconds: 5,
+    },
   };
 
   // DNS records are now managed by mc-router

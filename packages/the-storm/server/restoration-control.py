@@ -1719,6 +1719,43 @@ def bootstrap_resources(path: Path, journal: JsonObject, staging: Path, candidat
     save(path, journal)
 
 
+def repair_private_probes(path: Path, journal: JsonObject) -> None:
+    """Repair the ignored mc-health arguments under closed, request-owned private admission."""
+    assert_closed(journal)
+    server = read("statefulset", SERVER)
+    assert_owner(server, journal)
+    if annotations(server).get(PHASE) != "VALIDATING" or server_image(server) != journal.string("candidateImage"):
+        raise ValueError("Probe repair requires this private candidate")
+    command = ["mc-monitor", "status", "--use-proxy", "--timeout", "2s"]
+    container = server.object("spec").object("template").object("spec").objects("containers")[0]
+    before = {name: container.object(name) for name in ("livenessProbe", "readinessProbe")}
+    if any(
+        probe.object("exec").get("command") not in (["mc-health", "--use-proxy"], command) for probe in before.values()
+    ):
+        raise ValueError("Private probes changed outside the known mc-health repair")
+    status = run(["-n", NAMESPACE, "exec", SERVER + "-0", "--", *command], 10)
+    if "version=Paper 26.2 " not in status:
+        raise ValueError("Proxy-aware probe did not report the expected running Paper")
+    if "privateProbeRepair" not in journal:
+        journal["privateProbeRepair"] = {"phase": "PREPARED", "before": before, "command": command}
+        save(path, journal)
+    for key in ("acceptance", "stoppingIncarnation", "stoppedIncarnation"):
+        journal.pop(key, None)
+    edits = []
+    for name in before:
+        prefix = "/spec/template/spec/containers/0/" + name
+        edits.extend(
+            [
+                {"op": "replace", "path": prefix + "/exec/command", "value": command},
+                {"op": "add", "path": prefix + "/timeoutSeconds", "value": 5},
+            ]
+        )
+    assert_closed(journal)
+    patch("statefulset", SERVER, server, edits)
+    journal.object("privateProbeRepair")["phase"] = "APPLIED"
+    save(path, journal)
+
+
 def private_start(path: Path, journal: JsonObject) -> None:
     if (
         journal.get("privateStartup") == "ROLLED_BACK"
@@ -2224,6 +2261,7 @@ def main() -> None:
             "bootstrap-resources",
             "remove-writer",
             "private-start",
+            "repair-private-probes",
             "private-stop",
             "accept",
             "release",
@@ -2284,6 +2322,8 @@ def main() -> None:
             bootstrap_resources(arguments.journal, journal, arguments.staging, arguments.candidate)
         elif arguments.operation == "private-start":
             private_start(arguments.journal, journal)
+        elif arguments.operation == "repair-private-probes":
+            repair_private_probes(arguments.journal, journal)
         elif arguments.operation == "private-stop":
             private_stop(arguments.journal, journal)
         elif arguments.operation == "accept":

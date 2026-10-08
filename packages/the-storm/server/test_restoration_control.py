@@ -124,10 +124,11 @@ class Cluster:
             raise RuntimeError("resourceVersion test failed")
         for operation in operations[1:]:
             keys = [key.replace("~1", "/").replace("~0", "~") for key in operation.string("path").split("/")[1:]]
-            if keys == ["spec", "template", "spec", "containers", "0", "image"]:
-                resource.object("spec").object("template").object("spec").objects("containers")[0]["image"] = operation[
-                    "value"
-                ]
+            if keys[:5] == ["spec", "template", "spec", "containers", "0"]:
+                parent = resource.object("spec").object("template").object("spec").objects("containers")[0]
+                for key in keys[5:-1]:
+                    parent = parent.object(key)
+                parent[keys[-1]] = operation["value"]
                 continue
             parent = resource
             for key in keys[:-1]:
@@ -235,6 +236,34 @@ class RestorationControlTest(unittest.TestCase):
             journal["resourceBootstrap"] = evidence
             with self.assertRaisesRegex(ValueError, "fresh resource metadata"):
                 control.private_start(self.path, journal)
+
+    def test_private_probe_repair_requires_real_status_and_preserves_other_probe_fields(self):
+        journal = self.installation_fixture()
+        container = self.cluster.server.object("spec").object("template").object("spec").objects("containers")[0]
+        for name in ("livenessProbe", "readinessProbe"):
+            container[name] = {"exec": {"command": ["mc-health", "--use-proxy"]}, "failureThreshold": 20}
+        control.private_start(self.path, journal)
+        mutations = len(self.cluster.mutations)
+        with self.assertRaisesRegex(ValueError, "expected running Paper"):
+            control.repair_private_probes(self.path, journal)
+        self.assertEqual(len(self.cluster.mutations), mutations)
+        run = self.cluster.run
+
+        def healthy(arguments: list[str], timeout: float = 30) -> str:
+            if "mc-monitor" in arguments:
+                return "localhost:25565 : version=Paper 26.2 online=0 max=20"
+            return run(arguments, timeout)
+
+        with patch.object(control, "run", side_effect=healthy):
+            control.repair_private_probes(self.path, journal)
+        self.assertEqual(journal.object("privateProbeRepair").get("phase"), "APPLIED")
+        for name in ("livenessProbe", "readinessProbe"):
+            probe = container.object(name)
+            self.assertEqual(probe.get("failureThreshold"), 20)
+            self.assertEqual(probe.get("timeoutSeconds"), 5)
+            self.assertEqual(
+                probe.object("exec").get("command"), ["mc-monitor", "status", "--use-proxy", "--timeout", "2s"]
+            )
 
     def test_revision_rebinds_only_an_unstarted_closed_installation_and_revokes_start_first(self):
         journal = self.installation_fixture()
