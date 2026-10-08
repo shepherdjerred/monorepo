@@ -9,6 +9,8 @@ mod runtime;
 mod startup;
 mod ui;
 
+use std::cell::RefCell;
+use std::rc::Rc;
 use std::sync::Arc;
 
 use eframe::egui;
@@ -78,7 +80,42 @@ fn main() -> eframe::Result {
     let background = arguments.iter().any(|argument| argument == "--background");
     let backend_origin = backend_origin(&arguments);
     let runtime = ClientRuntime::start(backend_origin);
-    install_panic_hook(Arc::clone(runtime.diagnostics()));
+    let diagnostics = Arc::clone(runtime.diagnostics());
+    install_panic_hook(Arc::clone(&diagnostics));
+    // The runtime starts once; whichever renderer gets far enough to build the
+    // app takes it.
+    let runtime = Rc::new(RefCell::new(Some(runtime)));
+    let first = run_with(eframe::Renderer::Wgpu, background, Rc::clone(&runtime));
+    let Err(error) = first else {
+        return first;
+    };
+    if runtime.borrow().is_none() {
+        // The app was built, so this is a failure while running, not a
+        // renderer that could not start.
+        return Err(error);
+    }
+    diagnostics.record(
+        DiagnosticEvent::new(
+            DiagnosticLevel::Warn,
+            DiagnosticCategory::Runtime,
+            "start_renderer",
+            DiagnosticOutcome::Failed,
+        )
+        .with_detail(format!("wgpu unavailable, using glow: {error}")),
+    );
+    run_with(eframe::Renderer::Glow, background, runtime)
+}
+
+/// Run the window with `renderer`.
+///
+/// wgpu is preferred: glow unwraps `make_current` every frame on Windows and
+/// panicked when the GL context was invalidated (sleep/resume, a driver reset,
+/// a display change), where wgpu reports a lost surface and reconfigures.
+fn run_with(
+    renderer: eframe::Renderer,
+    background: bool,
+    runtime: Rc<RefCell<Option<ClientRuntime>>>,
+) -> eframe::Result {
     let viewport = egui::ViewportBuilder::default()
         .with_app_id(APP_ID)
         .with_title("Scout Client")
@@ -87,12 +124,19 @@ fn main() -> eframe::Result {
         .with_min_inner_size([620.0, 420.0]);
     let options = eframe::NativeOptions {
         viewport,
+        renderer,
         ..Default::default()
     };
     eframe::run_native(
         "Scout Client",
         options,
-        Box::new(move |context| Ok(Box::new(ScoutApp::new(context, runtime)))),
+        Box::new(move |context| {
+            let runtime = runtime
+                .borrow_mut()
+                .take()
+                .ok_or("the client runtime was already handed to a window")?;
+            Ok(Box::new(ScoutApp::new(context, runtime)))
+        }),
     )
 }
 

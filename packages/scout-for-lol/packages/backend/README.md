@@ -598,6 +598,22 @@ A client that sent no timeline is a final miss rather than a retry, because Riot
 can't see the game and none is ever coming: Dares record missing coverage and
 duels go to organizer review.
 
+### Replay files
+
+`scout-client/replay-upload.ts` accepts a `.rofl` only after the container
+check (`replay/container.ts`) ties it to evidence: its SHA-256 matches the
+declared digest, its player is the uploader's (through the alias table), and
+its build is the observed match's. Builds are compared part by part as numbers,
+because a replay header zero-pads the revision (`16.19.823.0722`) where the match
+states it bare (`16.19.823.722`).
+
+The verified file is then streamed to object storage. The shared S3 client
+(`storage/s3-client.ts`) checksums only when an operation requires it; the
+SDK's default per-request checksum cannot hash a streamed body and failed every
+replay upload. A failure that isn't a typed rejection is recorded on the
+artifact's `lastError` with its own message, and the upload is `FAILED`, which
+the device retries; a `REJECTED` upload is final.
+
 ## The prematch path
 
 The `prematch-*` modules serve `scoutPrematchDiscoveryWorkflow` and

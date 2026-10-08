@@ -142,8 +142,9 @@ beforeEach(() => {
 function replayFixture(
   puuid = LOCAL_PUUID,
   goldEarned = MATCH_STATS.goldEarned.toString(),
+  headerVersion = LEAGUE_PATCH,
 ): Uint8Array {
-  const version = Buffer.from(LEAGUE_PATCH, "ascii");
+  const version = Buffer.from(headerVersion, "ascii");
   const header = Buffer.alloc(15);
   header.write("RIOT", 0, "ascii");
   header.writeUInt16LE(2, 4);
@@ -354,6 +355,67 @@ test("accepts a replay that names its player by League-client UUID once aliased"
   await expect(
     uploadReplay(replayRequest(body), "123", DEVICE),
   ).resolves.toEqual({ outcome: "accepted", digest, bytes: body.byteLength });
+});
+
+test("stores the replay at its declared length in the replay bucket", async () => {
+  const body = replayFixture();
+
+  await uploadReplay(replayRequest(body), "123", DEVICE);
+
+  expect(mocks.send).toHaveBeenCalledTimes(1);
+  expect(mocks.send.mock.calls[0]?.[0]).toMatchObject({
+    input: {
+      Bucket: "replay-test",
+      ContentLength: body.byteLength,
+      ContentType: "application/vnd.riot.rofl",
+    },
+  });
+});
+
+test("records the storage failure it actually hit", async () => {
+  // Every replay on beta failed this way, recorded only as "SeaweedFS upload
+  // failed" while the real cause was an SDK checksum error.
+  mocks.send.mockRejectedValueOnce(
+    new Error("Unable to calculate hash for flowing readable stream"),
+  );
+
+  await expect(
+    uploadReplay(replayRequest(replayFixture()), "123", DEVICE),
+  ).rejects.toThrow("flowing readable stream");
+  expect(mocks.updateMany).toHaveBeenCalledWith(
+    expect.objectContaining({
+      data: {
+        uploadState: "FAILED",
+        lastError:
+          "storage upload failed: Error: Unable to calculate hash for flowing readable stream",
+      },
+    }),
+  );
+});
+
+test("accepts a replay whose header zero-pads the build revision", async () => {
+  // A real replay: the header says 16.19.823.0722, the match 16.19.823.722.
+  const body = replayFixture(
+    LOCAL_PUUID,
+    MATCH_STATS.goldEarned.toString(),
+    "16.18.817.05716",
+  );
+
+  await expect(
+    uploadReplay(replayRequest(body), "123", DEVICE),
+  ).resolves.toMatchObject({ outcome: "accepted" });
+});
+
+test("still refuses a replay from a different build", async () => {
+  const body = replayFixture(
+    LOCAL_PUUID,
+    MATCH_STATS.goldEarned.toString(),
+    "16.18.818.5716",
+  );
+
+  await expect(
+    uploadReplay(replayRequest(body), "123", DEVICE),
+  ).rejects.toMatchObject({ status: 403 });
 });
 
 test("refuses a UUID-named replay whose player has no alias", async () => {
