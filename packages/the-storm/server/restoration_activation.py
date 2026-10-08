@@ -131,6 +131,7 @@ def plan(staging: Path, control: JsonObject, candidate: Path) -> JsonObject:
             "candidateImage": control.string("candidateImage"),
             "candidateJarSha256": candidate_sha,
             "activationReceiptSha256": journal.string("activationReceiptSha256"),
+            "overworldOverlay": receipt.get("overworldOverlay"),
             "layout": str(layout),
             "files": expected,
             "installationFiles": selected,

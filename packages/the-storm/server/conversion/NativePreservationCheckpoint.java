@@ -6,8 +6,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashSet;
-import java.util.Map;
+import java.util.HexFormat;
+import java.util.LinkedHashMap;
 import java.util.TreeMap;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -20,11 +23,11 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.storage.RegionFileStorage;
 import net.minecraft.world.level.chunk.storage.RegionStorageInfo;
 
-/** Prevent the height-expansion generator from modifying any protected historical chunk. */
+/** Preserve every saved historical chunk without changing terrain or granting wilderness protection. */
 public final class NativePreservationCheckpoint {
   private NativePreservationCheckpoint() {}
 
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) throws IOException, NoSuchAlgorithmException {
     if (args.length != 4) throw new IllegalArgumentException("Expected source region, copied target region, heritage config, new receipt");
     SharedConstants.tryDetectVersion();
     if (!SharedConstants.getCurrentVersion().name().equals("26.2")) throw new IllegalStateException("Native preservation requires pinned Paper 26.2");
@@ -43,8 +46,11 @@ public final class NativePreservationCheckpoint {
     }
     var protectedChunks = new HashSet<ChunkPos>();
     catalog.sites().forEach(site -> site.footprint().forEach(chunk -> {
-      if (!chunk.world().equals("world")) throw new IllegalArgumentException("Unexpected protected dimension");
-      protectedChunks.add(new ChunkPos(chunk.x(), chunk.z()));
+      if (chunk.world().equals("world")) {
+        protectedChunks.add(new ChunkPos(chunk.x(), chunk.z()));
+      } else if (!java.util.Set.of("settlement", "rustworks", "rwf").contains(chunk.world())) {
+        throw new IllegalArgumentException("Unexpected protected dimension");
+      }
     }));
     var seen = new HashSet<ChunkPos>();
     var statuses = new TreeMap<String, Long>();
@@ -82,8 +88,8 @@ public final class NativePreservationCheckpoint {
           if (status.equals("minecraft:empty") && retrogen.isEmpty()) {
             throw new IllegalStateException("An empty historical chunk lacks underground-only upgrade metadata");
           }
-          if (protectedChunks.contains(position)) {
-            seen.add(position);
+          if (protectedChunks.contains(position)) seen.add(position);
+          {
             var preserved = before.copy();
             preserved.putString("Status", "minecraft:full");
             preserved.remove("below_zero_retrogen");
@@ -107,10 +113,19 @@ public final class NativePreservationCheckpoint {
     if (count != 638647 || !seen.equals(protectedChunks)) {
       throw new IllegalStateException("Preservation did not cover every original or protected chunk");
     }
-    Files.writeString(output, new Gson().toJson(Map.of("schemaVersion", 1, "dataVersion", 4903,
-        "chunks", count, "protectedChunks", seen.size(), "changedMetadata", changed,
-        "inputStatuses", statuses, "inputUndergroundUpgradeTargets", retrogenTargets,
-        "terrainChanged", false, "worldTicks", 0)) + "\n", StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW);
+    var facts = new LinkedHashMap<String, Object>();
+    facts.put("schemaVersion", 1);
+    facts.put("dataVersion", 4903);
+    facts.put("chunks", count);
+    facts.put("protectedChunks", seen.size());
+    facts.put("preservedChunks", count);
+    facts.put("changedMetadata", changed);
+    facts.put("catalogSha256", HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(file))));
+    facts.put("inputStatuses", statuses);
+    facts.put("inputUndergroundUpgradeTargets", retrogenTargets);
+    facts.put("terrainChanged", false);
+    facts.put("worldTicks", 0);
+    Files.writeString(output, new Gson().toJson(facts) + "\n", StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW);
   }
 
   private static void requireStatus(String status) {

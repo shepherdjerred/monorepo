@@ -1263,7 +1263,12 @@ def upload_installation(journal: JsonObject, plan: JsonObject) -> None:
                 if source.is_symlink() or not source.is_file() or restoration_files.digest(source) != checksum:
                     raise ValueError("Prepared installation changed before upload")
                 archive.add(source, arcname="payload/" + relative, recursive=False)
-            for script in ("restoration_install.py", "restoration_files.py", "restoration_json.py"):
+            for script in (
+                "restoration_install.py",
+                "restoration_files.py",
+                "restoration_revision.py",
+                "restoration_json.py",
+            ):
                 source = owned / script
                 if source.is_symlink() or not source.is_file():
                     raise ValueError("Operator installation code must be regular files")
@@ -1284,11 +1289,76 @@ def upload_installation(journal: JsonObject, plan: JsonObject) -> None:
         raise
 
 
-def install(path: Path, journal: JsonObject, staging: Path, candidate: Path) -> None:
+def revise_installation(path: Path, journal: JsonObject, staging: Path, candidate: Path, image: str) -> None:
+    """Rebind an unstarted, stopped installation to a new sealed plan under the same lease."""
+    if not re.fullmatch(r"ghcr\.io/shepherdjerred/the-storm-server:[A-Za-z0-9._-]+@sha256:[a-f0-9]{64}", image):
+        raise ValueError("Revision requires an immutable replacement image")
+    if journal.get("privateStartup") is not None or journal.get("acceptance") is not None:
+        raise ValueError("An installation that has started requires whole-volume rollback")
+    revision = journal.object("installationRevision", {})
+    if not revision:
+        require_offline(journal)
+        require_restore(journal)
+        if journal.object("installation").get("phase") != "INSTALLED" or journal.get("writerRemoved") is not True:
+            raise ValueError("Revision requires a completed unstarted installation and removed writer")
+        proposed = JsonObject({**journal, "candidateImage": image})
+        plan = restoration_activation.plan(staging, proposed, candidate)
+        if plan.get("overworldOverlay") is not False:
+            raise ValueError("Pristine archive revision refuses an overworld arena overlay")
+        old = journal.object("installationPlan")
+        plan["revisionOf"] = {key: old[key] for key in ("candidateImage", "candidateJarSha256", "installationFiles")}
+        revision = JsonObject(
+            {
+                "phase": "PREPARED",
+                "previousImage": journal.string("candidateImage"),
+                "previousPlan": old,
+                "previousInstallation": JsonObject.parse(json.dumps(journal.object("installation"))),
+                "plan": plan,
+            }
+        )
+        journal["installationRevision"] = revision
+        journal.object("installation")["phase"] = "REVISION_PENDING"
+        save(path, journal)
+    plan = revision.object("plan")
+    if image != plan.string("candidateImage"):
+        raise ValueError("Revision belongs to a different replacement image")
+    check = restoration_activation.plan(staging, JsonObject({**journal, "candidateImage": image}), candidate)
+    if JsonObject({key: value for key, value in plan.items() if key != "revisionOf"}) != check:
+        raise ValueError("Sealed replacement plan changed")
+    if check.get("overworldOverlay") is not False:
+        raise ValueError("Pristine archive revision refuses an overworld arena overlay")
+    server = read("statefulset", SERVER)
+    bound = annotations(server).get(IMAGE)
+    if bound not in (revision.string("previousImage"), image):
+        raise ValueError("Revision maintenance image was changed by another writer")
+    actual = JsonObject({**journal, "candidateImage": bound})
+    recover_writer_identity(path, actual)
+    require_offline(actual, writer=actual.get("writerRemoved") is not True)
+    require_restore(journal)
+    if bound != image:
+        patch(
+            "statefulset",
+            SERVER,
+            server,
+            [{"op": "replace", "path": "/metadata/annotations/" + pointer(IMAGE), "value": image}],
+        )
+    journal.update(actual)
+    journal["candidateImage"] = image
+    journal["installationPlan"] = plan
+    revision["phase"] = "INSTALLING"
+    save(path, journal)
+    install(path, journal, staging, candidate, plan)
+    revision["phase"] = "INSTALLED"
+    save(path, journal)
+
+
+def install(
+    path: Path, journal: JsonObject, staging: Path, candidate: Path, revision_plan: JsonObject | None = None
+) -> None:
     recover_writer_identity(path, journal)
     require_offline(journal, writer=bool(journal.get("writerUid")))
     require_restore(journal)
-    plan = restoration_activation.plan(staging, journal, candidate)
+    plan = revision_plan if revision_plan is not None else restoration_activation.plan(staging, journal, candidate)
     if journal.get("installationPlan") is not None and journal.object("installationPlan") != plan:
         raise ValueError("Installation inputs changed after the plan was recorded")
     journal["installationPlan"] = plan
@@ -1408,10 +1478,26 @@ def upload_rollback_operator(journal: JsonObject, proof: JsonObject) -> None:
     name = writer_manifest(journal).object("metadata").string("name")
     uploaded = subprocess.run(
         [
-            "kubectl", "--context", CONTEXT, "-n", NAMESPACE, "exec", "-i", name,
-            "-c", "writer", "--", "tar", "-xf", "-", "-C", "/scratch",
+            "kubectl",
+            "--context",
+            CONTEXT,
+            "-n",
+            NAMESPACE,
+            "exec",
+            "-i",
+            name,
+            "-c",
+            "writer",
+            "--",
+            "tar",
+            "-xf",
+            "-",
+            "-C",
+            "/scratch",
         ],
-        input=payload.getvalue(), capture_output=True, timeout=60,
+        input=payload.getvalue(),
+        capture_output=True,
+        timeout=60,
     )
     if uploaded.returncode:
         raise RuntimeError("Private rollback operator upload failed; admission remains closed")
@@ -1425,9 +1511,18 @@ def rollback_writer_operation(journal: JsonObject, operation: str) -> JsonObject
     return JsonObject.parse(
         run(
             [
-                "-n", NAMESPACE, "exec", name, "-c", "writer", "--", "python3",
-                "/scratch/operator/restoration_rollback.py", operation,
-                "--proof", "/scratch/rollback-proof.json",
+                "-n",
+                NAMESPACE,
+                "exec",
+                name,
+                "-c",
+                "writer",
+                "--",
+                "python3",
+                "/scratch/operator/restoration_rollback.py",
+                operation,
+                "--proof",
+                "/scratch/rollback-proof.json",
             ],
             1800,
         )
@@ -1446,20 +1541,48 @@ def transfer_rollback(journal: JsonObject) -> None:
     try:
         receiver = subprocess.Popen(
             [
-                *kubectl, "-n", NAMESPACE, "exec", "-i", writer, "-c", "writer", "--", "python3",
-                "/scratch/operator/restoration_rollback.py", "receive", "--proof", "/scratch/rollback-proof.json",
+                *kubectl,
+                "-n",
+                NAMESPACE,
+                "exec",
+                "-i",
+                writer,
+                "-c",
+                "writer",
+                "--",
+                "python3",
+                "/scratch/operator/restoration_rollback.py",
+                "receive",
+                "--proof",
+                "/scratch/rollback-proof.json",
             ],
-            stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
         )
         processes.append(receiver)
         if receiver.stdin is None:
             raise RuntimeError("Rollback receiver has no private input stream")
         sender = subprocess.Popen(
             [
-                *kubectl, "-n", RESTORED_NAMESPACE, "exec", reader, "-c", "reader", "--",
-                "tar", "--numeric-owner", "-C", "/data", "-cf", "-", ".",
+                *kubectl,
+                "-n",
+                RESTORED_NAMESPACE,
+                "exec",
+                reader,
+                "-c",
+                "reader",
+                "--",
+                "tar",
+                "--numeric-owner",
+                "-C",
+                "/data",
+                "-cf",
+                "-",
+                ".",
             ],
-            stdout=receiver.stdin, stderr=subprocess.DEVNULL,
+            stdout=receiver.stdin,
+            stderr=subprocess.DEVNULL,
         )
         processes.append(sender)
         receiver.stdin.close()
@@ -1543,6 +1666,8 @@ def private_start(path: Path, journal: JsonObject) -> None:
     ):
         raise ValueError("Candidate installation was rolled back; release the verified original volume")
     assert_closed(journal)
+    if journal.object("installationRevision", {}).get("phase", "INSTALLED") != "INSTALLED":
+        raise ValueError("Private startup requires a completed installation revision")
     server = read("statefulset", SERVER)
     assert_owner(server, journal)
     if journal.object("installation").get("phase") != "INSTALLED" or journal.get("writerRemoved") is not True:
@@ -1874,13 +1999,24 @@ def release_rollback(path: Path, journal: JsonObject) -> None:
 
 def abort(path: Path, journal: JsonObject) -> None:
     """Reopen the untouched original volume only before any production write authorization."""
-    if journal.get("productionWriteAuthorized") is not False or any(
-        key in journal
-        for key in (
-            "writerUid", "previousWriterUid", "installation", "wholeVolumeRecovery", "privateStartup",
-            "acceptance", "stoppingIncarnation", "stoppedIncarnation", "rollbackVerification",
+    if (
+        journal.get("productionWriteAuthorized") is not False
+        or any(
+            key in journal
+            for key in (
+                "writerUid",
+                "previousWriterUid",
+                "installation",
+                "wholeVolumeRecovery",
+                "privateStartup",
+                "acceptance",
+                "stoppingIncarnation",
+                "stoppedIncarnation",
+                "rollbackVerification",
+            )
         )
-    ) or journal.get("writerCreationPending"):
+        or journal.get("writerCreationPending")
+    ):
         raise ValueError("Abort requires no production writer authorization, installation or candidate startup")
     claim = read("pvc", CLAIM)
     volume = read("pv", journal.string("volumeName"), "")
@@ -1895,14 +2031,18 @@ def abort(path: Path, journal: JsonObject) -> None:
         or volume_source(volume) != journal.strings("volumeSource")
     ):
         raise ValueError("Abort requires the recorded original volume and claim")
-    expected = JsonObject({
-        "status": "NO_PRODUCTION_WRITE_AUTHORIZATION", "requestId": journal.string("requestId"),
-        "serverUid": journal.string("serverUid"), "volumeUid": journal.string("volumeUid"),
-        "rollbackImage": journal.string("rollbackImage"),
-        "templateSha256": hashlib.sha256(
-            json.dumps(journal.object("rollbackTemplate"), sort_keys=True).encode("utf-8")
-        ).hexdigest(),
-    })
+    expected = JsonObject(
+        {
+            "status": "NO_PRODUCTION_WRITE_AUTHORIZATION",
+            "requestId": journal.string("requestId"),
+            "serverUid": journal.string("serverUid"),
+            "volumeUid": journal.string("volumeUid"),
+            "rollbackImage": journal.string("rollbackImage"),
+            "templateSha256": hashlib.sha256(
+                json.dumps(journal.object("rollbackTemplate"), sort_keys=True).encode("utf-8")
+            ).hexdigest(),
+        }
+    )
     receipt = path.with_name(path.name + ".pre-install-abort.json")
     if journal.string("phase") == "LEASED_OFFLINE":
         require_offline(journal, readers=True)
@@ -1937,9 +2077,7 @@ def abort(path: Path, journal: JsonObject) -> None:
     reopen(path, journal, journal.string("rollbackImage"), journal.object("rollbackTemplate"))
 
 
-def reopen(
-    path: Path, journal: JsonObject, expected_image: str, accepted_template: JsonObject
-) -> None:
+def reopen(path: Path, journal: JsonObject, expected_image: str, accepted_template: JsonObject) -> None:
     """Restore captured routes for an accepted candidate or byte-verified whole-volume rollback."""
     server = read("statefulset", SERVER)
     assert_owner(server, journal, allow_unheld=True)
@@ -2013,6 +2151,7 @@ def main() -> None:
             "remove-readers",
             "plan-install",
             "install",
+            "revise-installation",
             "remove-writer",
             "private-start",
             "private-stop",
@@ -2035,14 +2174,19 @@ def main() -> None:
     arguments = parser.parse_args()
     if arguments.operation == "export-backup" and (arguments.export_dir is None or arguments.export_proof is None):
         parser.error("export-backup requires --export-dir and --export-proof")
-    if arguments.operation in ("plan-install", "install") and (
+    if arguments.operation in ("plan-install", "install", "revise-installation") and (
         arguments.staging is None or arguments.candidate is None
     ):
         parser.error("Installation requires --staging and --candidate")
     if arguments.operation == "accept" and arguments.evidence is None:
         parser.error("accept requires --evidence")
     with journal_lock(arguments.journal):
-        journal = initialize(arguments.journal, arguments.request, arguments.image)
+        image = arguments.image
+        if arguments.operation == "revise-installation":
+            if arguments.journal.is_symlink() or not arguments.journal.is_file():
+                raise ValueError("Revision requires an existing regular maintenance journal")
+            image = JsonObject.parse(arguments.journal.read_bytes()).string("candidateImage")
+        journal = initialize(arguments.journal, arguments.request, image)
         if arguments.operation == "acquire":
             acquire(arguments.journal, journal)
         elif arguments.operation == "backup":
@@ -2062,6 +2206,8 @@ def main() -> None:
             save(arguments.journal, journal)
         elif arguments.operation == "install":
             install(arguments.journal, journal, arguments.staging, arguments.candidate)
+        elif arguments.operation == "revise-installation":
+            revise_installation(arguments.journal, journal, arguments.staging, arguments.candidate, arguments.image)
         elif arguments.operation == "remove-writer":
             remove_writer(arguments.journal, journal)
         elif arguments.operation == "private-start":
