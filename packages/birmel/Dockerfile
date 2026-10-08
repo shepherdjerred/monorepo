@@ -54,6 +54,9 @@ COPY --parents \
   packages/homelab/src/helm-types/package.json \
   ./
 RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/birmel'
+# Prepare migration engines before the runtime copy applies file permissions.
+COPY --parents packages/birmel/prisma packages/birmel/prisma.config.ts ./
+RUN cd packages/birmel && bunx --trust prisma generate
 
 # ── runtime: sandbox runtimes + COPY-only app layers — no build tooling ─────
 FROM base AS runtime
@@ -104,10 +107,12 @@ COPY --chmod=0444 \
 # relative symlinks (store at node_modules/.bun), so copying the whole install
 # root between same-rooted stages is safe. Kept BEFORE the source COPY so a
 # source edit doesn't re-push this layer.
-COPY --from=prod-deps /app/ /app/
+# Apply the existing access policy while materializing each layer. Recursively
+# changing a copied tree later forces expensive overlay filesystem copy-up.
+COPY --from=prod-deps --chown=0:1000 --chmod=o-rwx,g+rX /app/ /app/
 
 # Scoped source closure + the generated Prisma client from the build stage.
-COPY --parents \
+COPY --parents --chown=0:1000 --chmod=o-rwx,g+rX \
   tsconfig.base.json \
   packages/birmel \
   packages/config \
@@ -118,15 +123,20 @@ COPY --parents \
   packages/s3-signed-request \
   packages/llm-runtime \
   ./
-# Bake Prisma's migration engines into the production dependency tree. Bun's
-# production install omits lifecycle scripts, so the CLI otherwise downloads
-# engines on first use. Runtime and smoke execute as uid 1000 over root-owned
-# node_modules, which correctly prevents that startup write. Generate once as
-# root during the image build so migrate deploy is read-only at runtime.
-RUN cd packages/birmel && bunx --trust prisma generate
-COPY --from=build /app/packages/birmel/generated packages/birmel/generated
-COPY --from=build /app/packages/glitter-context/dist packages/glitter-context/dist
-COPY --from=build /app/packages/llm-models/dist packages/llm-models/dist
+COPY --from=build --chown=0:1000 --chmod=o-rwx,g+rX /app/packages/birmel/generated packages/birmel/generated
+COPY --from=build --chown=0:1000 --chmod=o-rwx,g+rX /app/packages/glitter-context/dist packages/glitter-context/dist
+COPY --from=build --chown=0:1000 --chmod=o-rwx,g+rX /app/packages/llm-models/dist packages/llm-models/dist
+
+# COPY applies modes to contents, not its destination root or parent scaffold.
+# Normalize those directories without rewriting the copied files.
+# Keep filesystem work before release metadata to reuse it across revisions.
+RUN chown 0:1000 /app /app/packages && \
+    chmod o-rwx,g+rX /app /app/packages \
+      /app/packages/birmel/generated \
+      /app/packages/glitter-context/dist \
+      /app/packages/llm-models/dist && \
+    install -d -o 1000 -g 1000 -m 0700 /app/data && \
+    install -d -o 1000 -g 1000 -m 0755 /app/data/screenshots
 
 ARG VERSION=dev
 ARG GIT_SHA=unknown
@@ -141,12 +151,19 @@ LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorep
 # unmigrated database, resolves the verified baseline, and runs migrate deploy
 # before starting Discord.
 WORKDIR /app/packages/birmel
-RUN chown -R root:1000 /app && chmod -R o-rwx /app && chmod -R g+rX /app && \
-    mkdir -p /app/data/screenshots && chown -R 1000:1000 /app/data && chmod 700 /app/data
 USER 1000:1000
 CMD ["bun", "scripts/start.ts"]
 
 FROM runtime AS smoke
+USER 0:0
+RUN bun run check:image-permissions
+USER 1001:1001
+RUN test ! -r /app/packages/birmel/package.json && test ! -x /app/data
+USER 1002:1002
+RUN test ! -r /app/packages/birmel/package.json && test ! -x /app/data
+USER 1000:1000
+RUN test -r /app/packages/birmel/package.json && \
+    test ! -w /app/packages/birmel/package.json && test -w /app/data
 # The smoke harness ships in CI context only — the scoped source COPY
 # excludes .buildkite, so stage it here (never in the pushed image stage).
 COPY ci/scripts/images/smoke-app-in-image.ts /app/ci/scripts/images/smoke-app-in-image.ts
