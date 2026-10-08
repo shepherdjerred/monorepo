@@ -51,9 +51,10 @@ final class Theme extends \XF\Pub\Controller\AbstractController
         $this->cors();
         $user = \XF::visitor();
         $links = [];
-        foreach (['login','account','account/alerts','conversations','logout'] as $route) {
+        foreach (['login','register','account','account/alerts','conversations','logout'] as $route) {
             $links[$route] = $this->buildLink('canonical:' . $route, null, $route === 'logout' ? ['t'=>$this->app()['csrf.token']] : []);
         }
+        if (!$this->options()->registrationSetup['enabled']) { $links['register'] = null; }
         return $this->json(['viewer'=>$user->user_id ? [
             'id'=>$user->user_id, 'username'=>$user->username,
             'avatar'=>$user->getAvatarUrl('s', 'custom', true) ?: null,

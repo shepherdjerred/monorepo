@@ -4,4 +4,8 @@
     <find><![CDATA[<xf:username user="$user" rich="true" defaultname="{$fallbackName}"]]></find>
     <replace><![CDATA[<xf:username user="$user" rich="true" defaultname="{$fallbackName}" username="{{ ($user.storm_historical && $fallbackName) ? $fallbackName : null }}"]]></replace>
   </modification>
+  <modification type="public" template="member_view" modification_key="storm_account_recovery" description="Offer private staff-reviewed recovery for archived profiles" execution_order="10" enabled="1" action="str_replace">
+    <find><![CDATA[<xf:css src="member.less" />]]></find>
+    <replace><![CDATA[$0<xf:include template="storm_account_recovery" />]]></replace>
+  </modification>
 </template_modifications>

@@ -8,6 +8,7 @@ const symbols = {
   petals: "✿",
   sparks: "•",
   leaves: "",
+  ghosts: "",
   confetti: "■",
 };
 
@@ -76,7 +77,9 @@ export function renderEffects(
   const animated =
     settings.enabled && !settings.reduced && theme.effect !== null;
   if (!animated || theme.effect === null) return;
-  const count = matchMedia("(max-width: 800px)").matches ? 12 : 28;
+  const mobile = matchMedia("(max-width: 800px)").matches;
+  const count =
+    theme.effect === "ghosts" ? (mobile ? 5 : 12) : mobile ? 12 : 28;
   for (let index = 0; index < count; index++) {
     const particle = document.createElement("span");
     particle.textContent = symbols[theme.effect];
@@ -93,7 +96,7 @@ export function renderEffects(
 }
 
 export function syncControls(
-  root: HTMLElement,
+  root: ParentNode,
   preferences: StormPreferences,
 ): void {
   for (const form of root.querySelectorAll<HTMLFormElement>(

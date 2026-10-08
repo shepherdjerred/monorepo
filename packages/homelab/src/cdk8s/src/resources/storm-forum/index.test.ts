@@ -16,6 +16,32 @@ const fixture = {
 };
 
 describe("forum isolation and release resources", () => {
+  it("gives upgrade jobs scoped snapshot credentials before account migrations", () => {
+    resetProbeRegistry();
+    const rendered = Testing.synth(
+      createStormForumChart(new App(), {
+        ...fixture,
+        stage: "prod",
+        preUpgradeBackup: { bundleSha256: "d".repeat(64) },
+      }),
+    );
+    const job = rendered.find((resource) => resource.kind === "Job");
+    const json = JSON.stringify(job);
+    expect(json).toContain('"name":"BACKUP_ACCESS_KEY"');
+    expect(json).toContain('"name":"BACKUP_SECRET_KEY"');
+    expect(json).toContain('"value":"storm-forum-backups"');
+    expect(json).not.toContain('"key":"RESTORE_ACCESS_KEY"');
+    expect(json).toContain(
+      '"name":"BACKUP_SOURCE_BUNDLE_SHA256","value":"' + "d".repeat(64) + '"',
+    );
+  });
+  it("preserves the completed bootstrap job until a new release explicitly requests a pre-upgrade backup", () => {
+    resetProbeRegistry();
+    const rendered = Testing.synth(createStormForumChart(new App(), fixture));
+    expect(
+      JSON.stringify(rendered.find((resource) => resource.kind === "Job")),
+    ).not.toContain("BACKUP_");
+  });
   it.each(["beta", "prod"] as const)(
     "renders distinct public and admin health probes for %s",
     (stage) => {

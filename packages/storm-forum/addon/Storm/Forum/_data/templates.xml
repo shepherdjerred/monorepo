@@ -17,7 +17,7 @@
           <xf:option value="{$theme.id}">{$theme.name}</xf:option>
         </xf:foreach>
       </xf:selectrow>
-      <xf:checkboxrow label="Holiday effects"><xf:option name="storm_effects" selected="{$stormEffects}">Show falling holiday decorations</xf:option></xf:checkboxrow>
+      <xf:checkboxrow label="Holiday effects"><xf:option name="storm_effects" selected="{$stormEffects}">Show holiday effects</xf:option></xf:checkboxrow>
       <xf:inforow>Effects respect your device’s reduced-motion setting and appear only on holiday themes.</xf:inforow>
       <xf:inforow>Follow calendar currently uses <strong>{$stormEffectiveTheme}</strong>. Choosing a specific theme keeps it throughout the year.</xf:inforow>
     </div>
@@ -32,7 +32,17 @@
 <link rel="stylesheet" href="{{ base_url('styles/storm/effects.css') }}" />
 <script type="module" src="{{ base_url('styles/storm/browser.js') }}"></script>
   ]]></template>
-  <template type="public" title="storm_portal" version_id="1000070" version_string="1.0.0"><![CDATA[
+  <template type="public" title="storm_account_recovery" version_id="4010070" version_string="4.1.0"><![CDATA[
+<xf:if is="$user.storm_archived">
+  <div class="block"><div class="block-container"><div class="block-body block-row">
+    <strong>Is this your old account?</strong>
+    <p>This archived profile preserves your posts. Register and verify your email, then ask staff to combine it with your current account. Share ownership evidence privately; a matching name alone is not enough.</p>
+    <xf:if is="$xf.visitor.user_id"><a class="button button--primary" href="{{ link('forums', $stormRecoveryForum) }}">Request account recovery</a>
+    <xf:else /><a class="button button--primary" href="{{ link('register') }}">Register to recover your account</a></xf:if>
+  </div></div></div>
+</xf:if>
+  ]]></template>
+  <template type="public" title="storm_portal" version_id="4010070" version_string="4.1.0"><![CDATA[
 <xf:title>The Storm</xf:title>
 <xf:h1 hidden="true" />
 <xf:css src="storm_forum.less" />
@@ -45,28 +55,51 @@
 </section>
 <xf:foreach loop="$news" value="$thread">
   <article class="block stormArticle"><div class="block-container">
+    <time class="stormArticleDate" datetime="{{ date($thread.post_date, 'Y-m-d') }}"><span>{{ date($thread.post_date, 'M') }}</span><strong>{{ date($thread.post_date, 'j') }}</strong></time>
     <h2 class="block-header"><a href="{{ link('threads', $thread) }}">{$thread.title}</a></h2>
-    <div class="block-body"><div class="block-row">{{ bb_code($thread.FirstPost.message, 'post', $thread.FirstPost) }}</div></div>
-    <div class="block-footer"><xf:date time="$thread.post_date" /> · {$thread.username} · <a href="{{ link('threads', $thread) }}">Join the discussion</a></div>
+    <div class="stormArticleByline"><span>by <xf:username user="$thread.User" username="{$thread.username}" /> · <xf:date time="$thread.post_date" /> · {$thread.view_count|number} views · {$thread.FirstPost.reaction_score|number} reactions</span><a href="{{ link('threads', $thread) }}">{$thread.reply_count|number} comments</a></div>
+    <div class="stormArticleBody"><div class="stormArticleSnippet">{{ bb_code_snippet($thread.FirstPost.message, 'post', $thread.FirstPost, 750, {'stripQuote': true}) }}</div><xf:avatar user="$thread.User" size="m" /></div>
+    <div class="block-footer"><a class="stormArticleContinue" href="{{ link('threads', $thread) }}">Continue reading →</a></div>
   </div></article>
 </xf:foreach>
+<xf:pagenav page="$page" perpage="$perPage" total="$total" link="storm-home" />
 <xf:sidebar>
-  <div class="block"><div class="block-container"><h3 class="block-header">Minecraft</h3><div class="block-body block-row">
-    <p><strong>Server IP: ts-mc.net</strong></p><p>Minecraft Java + Bedrock</p><p>Bedrock port: <strong>30004</strong></p>
-    <xf:if is="$status && $status.state == 'online'"><p>Online · {$status.online} / {$status.maximum} players</p>
-    <xf:elseif is="$status && $status.state == 'sleeping'" /><p>Sleeping · join to wake the server.</p>
-    <xf:elseif is="$status && $status.state == 'starting'" /><p>Starting · check again shortly.</p>
-    <xf:else /><p>Status unavailable. You can still try joining.</p></xf:if>
-    <xf:if is="$status"><small>Checked <xf:date time="$status.checkedAt" /></small></xf:if>
+  <div class="block stormJoin"><div class="block-container"><h3 class="block-header">Join The Storm</h3><div class="block-body block-row">
+    <div class="stormJoinAddress"><strong>ts-mc.net</strong><button type="button" class="button" data-storm-copy="ts-mc.net" aria-label="Copy server IP ts-mc.net">Copy IP</button></div>
+    <p>Minecraft Java + Bedrock<br /><span class="u-muted">Bedrock port: 30004</span></p>
+    <xf:if is="$status && $status.state == 'online'"><span class="stormJoinBadge stormJoinBadge--online">Online · {$status.online} / {$status.maximum}</span>
+    <xf:elseif is="$status && $status.state == 'sleeping'" /><span class="stormJoinBadge">Sleeping</span><small>Join to wake the server.</small>
+    <xf:elseif is="$status && $status.state == 'starting'" /><span class="stormJoinBadge">Starting</span><small>Check again shortly.</small>
+    <xf:else /><span class="stormJoinBadge">Status unavailable</span><small>You can still try joining.</small></xf:if>
+    <xf:if is="$status"><small class="u-muted">Checked <xf:date time="$status.checkedAt" /></small></xf:if>
+    <span data-storm-copy-status role="status"></span>
   </div></div></div>
   <xf:widget key="storm_recent_threads" />
 </xf:sidebar>
   ]]></template>
-  <template type="public" title="storm_forum.less" version_id="1000070" version_string="1.0.0"><![CDATA[
+  <template type="public" title="storm_forum.less" version_id="4010070" version_string="4.1.0"><![CDATA[
 .stormWelcome {display:flex;gap:2rem;align-items:center;padding:2rem;margin-bottom:2rem;border-radius:12px;background:fade(@xf-paletteColor2, 14%);}
 .stormWelcome h1 {margin:0 0 .5rem;font-size:2rem;}
 .stormWelcome .button {margin:.5rem .5rem 0 0;}
-.stormArticle .block-row {padding:1.5rem;}
+.stormArticle {position:relative;margin-left:12px;}
+.stormArticle .block-header {font-size:15px;font-weight:normal;padding:8px 12px;}
+.stormArticleDate {position:absolute;top:36px;left:-13px;width:38px;text-align:center;background:@xf-contentAltBg;border:1px solid @xf-borderColor;border-radius:4px;overflow:hidden;box-shadow:0 1px 3px fade(#000,10%);}
+.stormArticleDate span {display:block;background:@xf-linkColor;color:@xf-contentBg;font-size:10px;font-weight:bold;text-transform:uppercase;padding:4px;}
+.stormArticleDate strong {display:block;font-size:21px;padding:4px;}
+.stormArticleByline {display:flex;justify-content:space-between;gap:10px;padding:8px 12px 8px 34px;color:@xf-textColorDimmed;font-size:11px;}
+.stormArticleBody {display:flex;gap:20px;padding:4px 12px 14px 34px;align-items:flex-start;}
+.stormArticleSnippet {flex:1;min-width:0;line-height:1.5;}
+.stormArticleSnippet img {max-width:100%;height:auto;}
+.stormArticleBody .avatar {flex-shrink:0;border:4px solid @xf-contentAltBg;box-shadow:0 0 0 1px @xf-borderColor;border-radius:50%;}
+.stormArticleContinue {display:block;text-align:right;font-size:12px;font-weight:bold;}
+.stormJoinAddress {display:flex;align-items:center;justify-content:space-between;gap:6px;}
+.stormJoinAddress strong {font-size:18px;}
+.stormJoin .button {font-size:11px;padding:5px 8px;}
+.stormJoin p {margin:10px 0;font-size:12px;line-height:1.6;}
+.stormJoinBadge {display:inline-block;padding:3px 7px;border-radius:20px;background:@xf-contentHighlightBg;color:@xf-textColor;font-size:11px;font-weight:bold;border:1px solid @xf-borderColor;}
+.stormJoinBadge--online {border-color:@xf-linkColor;}
+.stormJoin small {display:block;margin-top:6px;font-size:11px;}
+@media(max-width:450px) {.stormArticleBody .avatar {display:none;} .stormArticleByline {flex-wrap:wrap;}}
 @media(max-width:650px) {.stormWelcome {flex-direction:column;text-align:center;padding:1.5rem;} .stormWelcome h1 {font-size:1.6rem;}}
   ]]></template>
 </templates>

@@ -40,6 +40,10 @@ export const ReleaseSchema = z
     bundleSha256: z.string().regex(/^[a-f0-9]{64}$/),
     bundleKey: z.string().regex(/^releases\/[\w.-]+\.zip$/),
     releaseId: z.string().regex(/^[a-f0-9]{12}$/),
+    preUpgradeBackup: z
+      .object({ bundleSha256: z.string().regex(/^[a-f0-9]{64}$/) })
+      .strict()
+      .optional(),
     storageSlot: z.enum(["primary", "recovery"]).optional(),
     restore: z
       .object({
@@ -414,11 +418,34 @@ export function createStormForumChart(app: App, input: ForumRelease): Chart {
                         value: release.restore.manifestKey,
                       },
                     ]
-                  : credentials([
-                      "ADMIN_USERNAME",
-                      "ADMIN_PASSWORD",
-                      "ADMIN_EMAIL",
-                    ])),
+                  : [
+                      ...credentials([
+                        "ADMIN_USERNAME",
+                        "ADMIN_PASSWORD",
+                        "ADMIN_EMAIL",
+                      ]),
+                      ...(release.preUpgradeBackup
+                        ? [
+                            ...credentials([
+                              "BACKUP_ACCESS_KEY",
+                              "BACKUP_SECRET_KEY",
+                            ]),
+                            {
+                              name: "BACKUP_ENDPOINT",
+                              value:
+                                "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
+                            },
+                            {
+                              name: "BACKUP_BUCKET",
+                              value: "storm-forum-backups",
+                            },
+                            {
+                              name: "BACKUP_SOURCE_BUNDLE_SHA256",
+                              value: release.preUpgradeBackup.bundleSha256,
+                            },
+                          ]
+                        : []),
+                    ]),
                 {
                   name: "FORUM_URL",
                   value:

@@ -45,7 +45,7 @@ final class ThemeCatalog
                 $asset($theme['logos'][$mode]);
                 $asset($theme['contentLogos'][$mode]);
             }
-            if (!in_array($theme['effect'], [null,'confetti','hearts','petals','sparks','leaves','snow'], true)
+            if (!in_array($theme['effect'], [null,'confetti','hearts','petals','sparks','leaves','ghosts','snow'], true)
                 || ($theme['effect'] !== null && $theme['window'] === null)) { throw new \RuntimeException('Invalid Storm holiday effect'); }
             if ($theme['window'] !== null) {
                 [$start, $end] = $theme['window'];

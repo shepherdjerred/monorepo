@@ -40,12 +40,12 @@ production and password-protected test installation terms.
 
 ## Entrypoints
 
-| Command                   | Behavior                                                                                                                                                                                                                  |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `bun src/cli.ts assemble` | Verify and unpack the private bundle; combine the system and Postal certificate authorities.                                                                                                                              |
-| `bun src/cli.ts release`  | Take an exclusive release lock, close requests, install the fresh database or preserve an installed database, install pinned dependencies, configure, import styles, publish managed editorial threads, and rebuild jobs. |
-| `bun src/cli.ts worker`   | Poll the stage's Temporal activity queue for housekeeping and coordinated snapshots.                                                                                                                                      |
-| `bun src/cli.ts restore`  | Verify a committed backup pair and restore into an empty, private beta database and empty attachment directories.                                                                                                         |
+| Command                   | Behavior                                                                                                                                                                                                                                 |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bun src/cli.ts assemble` | Verify and unpack the private bundle; combine the system and Postal certificate authorities.                                                                                                                                             |
+| `bun src/cli.ts release`  | Take an exclusive release lock, close requests, snapshot an existing installation, install pinned dependencies, configure, import styles/history, retire generated launch content, apply the authorized account merge, and rebuild jobs. |
+| `bun src/cli.ts worker`   | Poll the stage's Temporal activity queue for housekeeping and coordinated snapshots.                                                                                                                                                     |
+| `bun src/cli.ts restore`  | Verify a committed backup pair and restore into an empty, private beta database and empty attachment directories.                                                                                                                        |
 
 Release jobs are explicit and versioned. A failed migration leaves its release
 lock and maintenance marker for inspection; restarting a pod never retries a
@@ -54,17 +54,17 @@ and marker after diagnosing the failure and verifying the database state.
 Release code rejects an incomplete installation rather than overwriting tables.
 An upgrade to a different XenForo version requires an explicit migration change.
 
-Managed nodes, groups, permissions, navigation, widgets, styles, and initial
-editorial threads retain stable IDs. Configuration never deletes unrelated
-content. Existing editorial text remains editable by staff and is preserved on
-releases. Private support is readable by its author and staff. The portal and
+Managed nodes, groups, permissions, navigation, widgets, and styles retain stable
+IDs. `storm:seed` soft-deletes only the three mapped, unreplied generated launch
+threads and records their permanent retirement. It never recreates them or deletes
+unrelated content. Private support is readable by its author and staff. The portal and
 recent-thread widget query only public forums.
 
 `storm:history` imports the reviewed `config/history.json` corpus with native
 profile-only identities keyed by original member ID, original post names and
 dates, recovered avatars, formatting, and native attachments. Profiles have
 empty email addresses, native NoPassword authentication, and no restored staff
-privileges or account-claim flow. Transactional checkpoints preserve IDs, edits,
+privileges. Transactional checkpoints preserve IDs, edits,
 and new replies. A reviewed corpus revision requires `storm:history --migrate`;
 edited messages are retained and reported. Revisions cannot omit mapped posts or
 discussions; use native moderation to hide or correct existing content. Reviewed
@@ -74,6 +74,15 @@ are checkpointed; unsupported revisions reject before writes, including dry runs
 `scripts/enrich-history.ts` reads an
 explicit archive directory without modifying it; optional `--public-archives`
 recovery copies verified public images into this package.
+
+To recover an archived account, register and verify a current account, then submit
+ownership evidence in **Private Support → Account Recovery**. Only the author and
+staff can read the request; indexing, activity feeds and watch mail are disabled.
+Staff review the evidence and use XenForo ACP's native user merge with the archived
+profile as the source and verified current login as the target. The merge preserves
+that login and historical author labels, retargets import checkpoints and redirects
+old profile URLs. A matching name alone is insufficient. `storm:accounts --stage prod`
+performs the explicitly authorized RiotShielder-to-Jerred merge once; beta skips it.
 
 The theme API shares native preferences and a credentialed, no-store viewer
 summary with player docs. Account, alerts, conversations, login, and logout use
@@ -103,6 +112,8 @@ and scoped storage identities, and emits only release pins and public mail DNS
 records. Credentials travel through process pipes and memory. Reload the S3
 gateway after its mounted identity configuration updates, then commit the
 production release entry using the image digest published by CI.
+For an existing installation, `--publish-only` packages, uploads and checks the
+new private bundle without changing runtime credentials or storage identities.
 
 The dedicated stage-specific 1Password item supplies these required fields:
 
@@ -128,6 +139,12 @@ requests, waits for the maximum request lifetime, exports MariaDB, and archives
 `data/` and `internal_data/`. Payloads have checksums and sizes. Uploading the
 manifest last commits the pair. The protected bucket participates in the existing
 SeaweedFS-to-R2 backup policy. Only a tested pair establishes restore confidence.
+
+For an upgrade, declare `preUpgradeBackup: { "bundleSha256": "<currently deployed bundle>" }`
+alongside a new release ID. The release Job snapshots before migrations and records
+that previous bundle so recovery uses matching application files. Completed bootstrap
+Jobs remain unchanged until the next explicit release; an installed forum cannot
+upgrade without the source bundle and backup credentials.
 
 Recovery requires `STORM_FORUM_STAGE=beta`, the backup reader credentials,
 `RESTORE_MANIFEST_KEY`, and the exact `BUNDLE_SHA256` recorded in the snapshot.

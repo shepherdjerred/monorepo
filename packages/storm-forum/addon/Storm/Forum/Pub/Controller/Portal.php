@@ -12,12 +12,15 @@ final class Portal extends \XF\Pub\Controller\AbstractController
         $forum = $this->app()->find('XF:Forum', $map['node:news']);
         if (!$forum) { throw new \RuntimeException('Managed news forum is missing.'); }
         $news = new \XF\Mvc\Entity\ArrayCollection([]);
+        $page = max(1, $this->filterPage()); $perPage = 12; $total = 0;
         if ($forum->canView()) {
-            $news = $this->app()->finder('XF:Thread')
+            $finder = $this->app()->finder('XF:Thread')
             ->where('node_id', $map['node:news'])
             ->where('discussion_state', 'visible')
-            ->order('post_date', 'DESC')->limit(12)->with(['FirstPost', 'User'])->fetch();
-        $news = $news->filter(fn($thread) => $thread->canView());
+            ->order('post_date', 'DESC')->order('thread_id', 'DESC')->with(['FirstPost', 'User']);
+            $total = $finder->total();
+            $this->assertValidPage($page, $perPage, $total, 'storm-home');
+            $news = $finder->limitByPage($page, $perPage)->fetch()->filter(fn($thread) => $thread->canView());
         }
         // Filter permissions before exposing anything to a public portal.
         // Recent activity uses XF's native widget, which applies visitor permissions.
@@ -29,6 +32,6 @@ final class Portal extends \XF\Pub\Controller\AbstractController
                 $status = null;
             }
         }
-        return $this->view('Storm\Forum:Portal', 'storm_portal', ['news' => $news, 'status' => $status]);
+        return $this->view('Storm\Forum:Portal', 'storm_portal', ['news' => $news, 'status' => $status, 'page'=>$page, 'perPage'=>$perPage, 'total'=>$total]);
     }
 }

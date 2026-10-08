@@ -299,6 +299,16 @@ try {
       "/app/forum",
       app,
       "php",
+      "/opt/storm-forum/test/accounts.php",
+    ]),
+  );
+  process.stdout.write(
+    await run([
+      "exec",
+      "-w",
+      "/app/forum",
+      app,
+      "php",
       "/opt/storm-forum/test/mail.php",
     ]),
   );

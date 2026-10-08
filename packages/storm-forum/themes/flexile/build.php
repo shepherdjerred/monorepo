@@ -12,6 +12,10 @@ if (!in_array(parse_url($app->options()->boardUrl, PHP_URL_HOST), ['localhost', 
     throw new RuntimeException('Theme builds require a disposable localhost installation');
 }
 $core = $app->em()->find('XF:Style', 1);
+$layout = json_decode(file_get_contents('/opt/storm-theme/layout.json'), true, 512, JSON_THROW_ON_ERROR);
+foreach ($layout as $name => $value) {
+    if (!is_int($value) || $value <= 0) { throw new RuntimeException('Invalid shared Storm layout: ' . $name); }
+}
 if (!$core) { throw new RuntimeException('Disposable installation is missing its core style'); }
 $updateTemplate = static function ($style, string $title, string $text, string $addon = '') use ($app): void {
     $template = $app->finder('XF:Template')->where(['style_id'=>$style->style_id,'type'=>'public','title'=>$title])->fetchOne() ?: $app->em()->create('XF:Template');
@@ -23,7 +27,7 @@ foreach (['light', 'dark'] as $mode) {
     $dark = $mode === 'dark';
     $title = 'Flexile · The Storm · ' . ucfirst($mode);
     $style = $app->finder('XF:Style')->where('title', $title)->fetchOne() ?: $app->em()->create('XF:Style');
-    $style->bulkSet(['title'=>$title,'description'=>'Private Flexile adaptation for The Storm, version 4.0.0.','parent_id'=>1,'user_selectable'=>false,'enable_variations'=>true]);
+    $style->bulkSet(['title'=>$title,'description'=>'Private Flexile adaptation for The Storm, version 4.1.0.','parent_id'=>1,'user_selectable'=>false,'enable_variations'=>true]);
     $style->save();
     // Native exports omit inherited values. Clear previous snapshots so fresh and repeat builds agree.
     foreach ($app->finder('XF:StyleProperty')->where('style_id', $style->style_id)->fetch() as $property) {
@@ -55,22 +59,22 @@ foreach (['light', 'dark'] as $mode) {
     $plain = [
         'fontFamilyBody' => "'Trebuchet MS', Helvetica, Arial, sans-serif",
         'fontFamilyUi' => "'Trebuchet MS', Helvetica, Arial, sans-serif",
-        'fontSizeNormal' => '13px',
+        'fontSizeNormal' => $layout['bodyFontSize'] . 'px',
         'fontSizeSmall' => '12px',
         'fontSizeSmaller' => '11px',
         'fontSizeLarge' => '15px',
         'fontSizeLarger' => '18px',
         'fontSizeLargest' => '24px',
-        'pageWidthMax' => '1170px',
-        'sidebarWidth' => '250px',
-        'sidebarSpacer' => '12px',
-        'publicLogoWidth' => '270',
-        'publicLogoHeight' => '83',
-        'publicNavPaddingH' => '15px',
-        'publicNavPaddingV' => '8px',
+        'pageWidthMax' => $layout['pageWidth'] . 'px',
+        'sidebarWidth' => $layout['sidebarWidth'] . 'px',
+        'sidebarSpacer' => $layout['sidebarGap'] . 'px',
+        'publicLogoWidth' => (string)$layout['logoWidth'],
+        'publicLogoHeight' => (string)$layout['logoHeight'],
+        'publicNavPaddingH' => $layout['navPaddingX'] . 'px',
+        'publicNavPaddingV' => $layout['navPaddingY'] . 'px',
         'publicSubNavPaddingV' => '8px',
         'publicNavSticky' => 'primary',
-        'blockBorderRadius' => '6px',
+        'blockBorderRadius' => $layout['borderRadius'] . 'px',
         'avatarBorderRadius' => '5px',
     ];
     $colors = [
@@ -142,7 +146,7 @@ foreach (['light', 'dark'] as $mode) {
     $updateTemplate($style, 'PAGE_CONTAINER', $page, 'XF');
     $export = $app->service('XF:Style\Export', $style);
     $document = $export->exportToXml();
-    $document->documentElement->setAttribute('storm_flexile_version','4.0.0');
+    $document->documentElement->setAttribute('storm_flexile_version','4.1.0');
     $document->documentElement->setAttribute('storm_flexile_mode',$mode);
     $zip = new ZipArchive();
     $file = $destination . '/flexile-storm-' . $mode . '.zip';

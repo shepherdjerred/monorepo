@@ -8,6 +8,7 @@ const NodeSchema = z
   .object({
     key: z.string().regex(/^[a-z]+$/),
     title: z.string().min(1),
+    description: z.string().optional(),
     type: z.enum(["Category", "Forum"]),
     parent: z.string().optional(),
     access: z

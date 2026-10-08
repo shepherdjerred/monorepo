@@ -1,5 +1,6 @@
 import { mkdir } from "node:fs/promises";
 import seed from "#data/seed-catalog.json";
+import layout from "#data/layout.json";
 import { mix, readable } from "#src/colors.ts";
 
 const root = new URL("../", import.meta.url);
@@ -10,7 +11,7 @@ const effects: Record<string, string> = {
   easter: "petals",
   midsummer: "sparks",
   harvest: "leaves",
-  halloween: "leaves",
+  halloween: "ghosts",
   thanksgiving: "leaves",
   christmas: "snow",
 };
@@ -25,6 +26,24 @@ async function output(relative: string, value: string) {
 }
 if (!check) await mkdir(new URL("assets/logos/", root), { recursive: true });
 const logo = await Bun.file(new URL("assets/logo.svg", root)).text();
+const geometry =
+  ":root {\n" +
+  Object.entries(layout)
+    .map(([name, value]) => {
+      if (!Number.isInteger(value) || value <= 0)
+        throw new Error("Invalid Storm layout: " + name);
+      return (
+        "  --storm-" +
+        name.replaceAll(/[A-Z]/g, (letter) => "-" + letter.toLowerCase()) +
+        ": " +
+        String(value) +
+        "px;"
+      );
+    })
+    .join("\n") +
+  "\n}\n";
+await output("src/layout.css", geometry);
+await output("assets/layout.css", geometry);
 const themes = [];
 for (const theme of seed.themes) {
   const palettes = { light: {}, dark: {} };

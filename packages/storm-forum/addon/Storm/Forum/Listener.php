@@ -8,6 +8,9 @@ final class Listener
         $theme = $app->registry()->get('stormForumSeason');
         \Storm\Forum\Service\ThemeCatalog::theme($theme);
         $params['stormPublicTheme'] = $theme;
+        $map = $app->registry()->get('stormForumMap');
+        if (!isset($map['node:recovery'])) { throw new \RuntimeException('Configure account recovery before serving requests'); }
+        $params['stormRecoveryForum'] = $app->find('XF:Forum', $map['node:recovery']);
     }
 
     public static function mailTransport(\XF\Container $container, ?\Symfony\Component\Mailer\Transport\TransportInterface &$transport): void

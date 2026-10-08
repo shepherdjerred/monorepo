@@ -1206,7 +1206,7 @@
           "metaThemeColor": "#382338"
         }
       },
-      "effect": "leaves",
+      "effect": "ghosts",
       "logos": {
         "light": "logos/halloween-light.svg",
         "dark": "logos/halloween-dark.svg"

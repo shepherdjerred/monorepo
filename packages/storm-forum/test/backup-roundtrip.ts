@@ -6,6 +6,7 @@ import {
   snapshotForum,
 } from "#src/backup.ts";
 const owner = "2bcd3a5e-992f-49f4-bb34-901ca3dd32b2";
+const previousBundle = "b".repeat(64);
 // Emulate the unsafe production settings that recovery must replace.
 await runPhp(["cmd.php", "storm:configure", "--stage", "prod"]);
 await runPhp([
@@ -38,15 +39,23 @@ try {
   await assert.rejects(
     snapshotForum(owner, { cancellationSignal: cancelled.signal, heartbeat }),
   );
-  const result = await snapshotForum(owner, {
-    cancellationSignal: new AbortController().signal,
-    heartbeat,
-  });
-  assert.deepEqual(
-    await snapshotForum(owner, {
+  const result = await snapshotForum(
+    owner,
+    {
       cancellationSignal: new AbortController().signal,
       heartbeat,
-    }),
+    },
+    previousBundle,
+  );
+  assert.deepEqual(
+    await snapshotForum(
+      owner,
+      {
+        cancellationSignal: new AbortController().signal,
+        heartbeat,
+      },
+      previousBundle,
+    ),
     result,
   );
   assert.ok(

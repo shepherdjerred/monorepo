@@ -4,7 +4,11 @@ import { S3Client } from "bun";
 import { z } from "zod";
 import { forumManifest, type Stage } from "./config.ts";
 import { runPhp } from "./process.ts";
-import { beginStormForumBackup, endStormForumBackup } from "./backup.ts";
+import {
+  beginStormForumBackup,
+  endStormForumBackup,
+  snapshotForum,
+} from "./backup.ts";
 
 const BundleEnvironmentSchema = z.object({
   BUNDLE_ENDPOINT: z.url(),
@@ -122,6 +126,31 @@ export async function releaseForum(stage: Stage): Promise<void> {
     await beginStormForumBackup(owner);
     ownsMaintenance = true;
     await Bun.sleep(65_000);
+    const installation = await runPhp(
+      ["/opt/storm-forum/runtime/installed.php"],
+      "/app/forum",
+    );
+    if (installation.trim() === "installed") {
+      // The database has not been upgraded yet. Restore it with the previous
+      // private bundle, rather than recording this job's incoming bundle.
+      const sourceBundle = z
+        .string()
+        .regex(/^[a-f0-9]{64}$/)
+        .parse(Bun.env["BACKUP_SOURCE_BUNDLE_SHA256"]);
+      const snapshot = await snapshotForum(
+        owner,
+        {
+          cancellationSignal: new AbortController().signal,
+          heartbeat: (message) => {
+            process.stdout.write(`${String(message)}\n`);
+          },
+        },
+        sourceBundle,
+      );
+      process.stdout.write(`Pre-upgrade snapshot: ${snapshot.manifestKey}\n`);
+    } else if (installation.trim() !== "empty") {
+      throw new Error("Unexpected installation state");
+    }
     mutating = true;
     await runPhp(
       ["/opt/storm-forum/runtime/install.php"],
@@ -137,6 +166,11 @@ export async function releaseForum(stage: Stage): Promise<void> {
     await runPhp(["cmd.php", "storm:styles"], "/app/forum", 5 * 60_000);
     await runPhp(["cmd.php", "storm:seed"]);
     await runPhp(["cmd.php", "storm:history"], "/app/forum", 5 * 60_000);
+    await runPhp(
+      ["cmd.php", "storm:accounts", "--stage", stage],
+      "/app/forum",
+      5 * 60_000,
+    );
     await runPhp(["cmd.php", "xf:run-jobs", "--max-execution-time", "50"]);
     completed = true;
   } finally {

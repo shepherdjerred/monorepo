@@ -213,7 +213,11 @@ try {
       "-c",
       "mkdir -p /var/lib/storm-forum/data /var/lib/storm-forum/internal_data /tmp/storm-forum && sleep infinity",
     ],
-    { DB_HOST: database, RESTORE_MANIFEST_KEY: manifestKey },
+    {
+      DB_HOST: database,
+      RESTORE_MANIFEST_KEY: manifestKey,
+      BUNDLE_SHA256: "b".repeat(64),
+    },
   );
   // Reuse the licensed application only inside the disposable container filesystem.
   const archive = Bun.spawn(

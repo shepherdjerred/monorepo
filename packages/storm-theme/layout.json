@@ -1,0 +1,13 @@
+{
+  "pageWidth": 1170,
+  "sidebarWidth": 250,
+  "sidebarGap": 12,
+  "framePadding": 10,
+  "panelPadding": 20,
+  "bodyFontSize": 13,
+  "logoWidth": 270,
+  "logoHeight": 83,
+  "navPaddingX": 15,
+  "navPaddingY": 8,
+  "borderRadius": 6
+}

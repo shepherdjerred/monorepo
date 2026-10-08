@@ -101,9 +101,15 @@ export async function snapshotStormForum(
 export async function snapshotForum(
   owner: string,
   context: Pick<Context, "heartbeat" | "cancellationSignal">,
+  sourceBundleSha256?: string,
 ): Promise<{ manifestKey: string }> {
   OwnerSchema.parse(owner);
-  const env = BackupEnvironmentSchema.parse(Bun.env);
+  const env = BackupEnvironmentSchema.parse({
+    ...Bun.env,
+    ...(sourceBundleSha256 === undefined
+      ? {}
+      : { BUNDLE_SHA256: sourceBundleSha256 }),
+  });
   const marker = MarkerSchema.parse(await Bun.file(MARKER).json());
   if (marker.owner !== owner) {
     throw new Error("Snapshot requires this execution's maintenance window");
