@@ -17,8 +17,8 @@ from world_archive import (
     Catalog,
     extract_preview,
     load_catalog,
-    run,
     require_space,
+    run,
     upload_download,
     verify,
     verify_checkpoint,
@@ -44,12 +44,16 @@ class PreviewTests(unittest.TestCase):
         self.addCleanup(self.disk_usage.stop)
 
     def test_disk_guard_rejects_insufficient_space_before_extracting(self):
-        with patch("world_archive.shutil.disk_usage", return_value=SimpleNamespace(free=14 * 1024**3)):
-            with self.assertRaisesRegex(RuntimeError, "Disk guard"):
-                require_space(Path("."))
-        with patch("world_archive.shutil.disk_usage", return_value=SimpleNamespace(free=16 * 1024**3)):
-            with self.assertRaisesRegex(RuntimeError, "Disk guard"):
-                require_space(Path("."), 2 * 1024**3)
+        with (
+            patch("world_archive.shutil.disk_usage", return_value=SimpleNamespace(free=14 * 1024**3)),
+            self.assertRaisesRegex(RuntimeError, "Disk guard"),
+        ):
+            require_space(Path("."))
+        with (
+            patch("world_archive.shutil.disk_usage", return_value=SimpleNamespace(free=16 * 1024**3)),
+            self.assertRaisesRegex(RuntimeError, "Disk guard"),
+        ):
+            require_space(Path("."), 2 * 1024**3)
 
     def test_fresh_upload_refuses_to_replace_a_published_object_with_different_bytes(self):
         with tempfile.TemporaryDirectory() as temporary:
