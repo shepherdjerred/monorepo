@@ -94,6 +94,20 @@ listing all modules alone does not prove these asynchronous checks succeeded.
 
 ## Preparing an existing volume
 
+Historical restoration recreates the resource dimensions without retaining
+their old terrain. After `prepare-activation`, run `world-restore.py
+prepare-resources` with the same staging, pinned Paper/bootstrap, candidate,
+verified modern export and backup proof. This produces only native generator,
+identity and fresh level metadata for `wilds`, `peaks` and `mining`.
+
+After installation, use `restoration-control.py bootstrap-resources` under the
+existing stopped lease, then `remove-writer` before `private-start`. The bounded
+transaction refuses existing resource terrain, retains a complete hash manifest
+of all other volume data, and requires byte-identical readback. Private startup
+requires this proof. It can also complete after a failed private startup has
+been stopped; it does not reinstall the historical world or bypass the
+installation revision and rollback rules.
+
 Prevent admissions and mc-router wake-ups during the cutover. Preserve the old
 image digest and relevant Flipt values. Require exact-head checks and published
 image verification before activation.

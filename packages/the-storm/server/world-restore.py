@@ -1603,6 +1603,72 @@ def database_inventory(database: Path, output: Path) -> None:
         save_json(output, {"schemaVersion": 1, "tables": tables})
 
 
+def prepare_resources(
+    staging: Path, paper: Path, bootstrap: Path, candidate: Path, modern_data: Path, backup_proof: Path
+) -> None:
+    """Prepare fresh resource metadata independently of the sealed historical activation layout."""
+    import restoration_resources
+
+    for path in (staging, paper, bootstrap, candidate, modern_data, backup_proof):
+        if path.is_symlink():
+            raise ValueError("Resource preparation inputs cannot be linked")
+    journal = json.loads((staging / JOURNAL).read_text(encoding="utf-8"))
+    activation = json.loads((staging / "activation-layout-receipt.json").read_text(encoding="utf-8"))
+    if (
+        journal.get("phase") != "ACTIVATION_LAYOUT_READY"
+        or digest(staging / "activation-layout-receipt.json") != journal.get("activationReceiptSha256")
+        or activation.get("candidateJarSha256") != digest(candidate)
+        or activation.get("backupProofSha256") != digest(backup_proof)
+    ):
+        raise ValueError("Fresh resource metadata requires the sealed historical activation inputs")
+    proof = JsonObject.parse(backup_proof.read_bytes())
+    if proof.get("schemaVersion") != 2 or proof.get("requestId") != journal.get("requestId"):
+        raise ValueError("Resource metadata requires the request-owned verified production export")
+    tool = Path(__file__).with_name("conversion") / "NativeResourceBootstrap.java"
+    classpath = conversion_classpath(bootstrap, paper, "26.2")
+    root = staging / "resource-bootstrap"
+    if root.exists() or root.is_symlink():
+        raise ValueError("Resource preparation exists; retain its evidence rather than replacing it")
+    with ExitStack() as locks:
+        stopped_locks(modern_data, locks)
+        expected = verified_backup(modern_data, backup_proof)
+        subprocess.run(
+            [
+                "java",
+                "-Xmx1G",
+                "--class-path",
+                classpath,
+                str(tool.resolve()),
+                str((modern_data / "world").resolve()),
+                str(root.resolve()),
+                journal["requestId"],
+            ],
+            cwd=bootstrap,
+            check=True,
+            timeout=180,
+        )
+        payload = root / "payload"
+        payload.mkdir()
+        (root / "world").rename(payload / "world")
+        files = restoration_resources.validate_files(fingerprint(payload))
+        if fingerprint(modern_data) != expected:
+            raise ValueError("The verified production export changed during resource preparation")
+        save_json(
+            root / "receipt.json",
+            {
+                "schemaVersion": 1,
+                "status": "VERIFIED",
+                "testOnly": False,
+                "requestId": journal["requestId"],
+                "candidateJarSha256": digest(candidate),
+                "backupProofSha256": digest(backup_proof),
+                "nativeToolSha256": digest(tool),
+                "native": json.loads((root / "native-receipt.json").read_text(encoding="utf-8")),
+                "files": files,
+            },
+        )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
@@ -1653,6 +1719,9 @@ def main() -> None:
     activation = commands.add_parser("prepare-activation")
     for name in ("staging", "paper", "bootstrap", "candidate", "modern-data", "backup-proof"):
         activation.add_argument("--" + name, required=True, type=Path)
+    resources = commands.add_parser("prepare-resources")
+    for name in ("staging", "paper", "bootstrap", "candidate", "modern-data", "backup-proof"):
+        resources.add_argument("--" + name, required=True, type=Path)
     restarting = commands.add_parser("restart-companions")
     restarting.add_argument("--staging", required=True, type=Path)
     reusing = commands.add_parser("reuse-native-chunks")
@@ -1725,6 +1794,15 @@ def execute(arguments: argparse.Namespace) -> None:
         )
     elif arguments.command == "reuse-native-chunks":
         reuse_native_chunks(arguments.staging)
+    elif arguments.command == "prepare-resources":
+        prepare_resources(
+            arguments.staging,
+            arguments.paper,
+            arguments.bootstrap,
+            arguments.candidate,
+            arguments.modern_data,
+            arguments.backup_proof,
+        )
     elif arguments.command == "verify-copy":
         verify_copy(arguments.original, arguments.restored, arguments.output)
     elif arguments.command == "database-inventory":

@@ -201,6 +201,12 @@ class RestorationControlTest(unittest.TestCase):
         control.acquire(self.path, journal)
         journal["installation"] = {"phase": "INSTALLED", "candidateJarSha256": "b" * 64}
         journal["writerRemoved"] = True
+        journal["resourceBootstrap"] = {
+            "phase": "VERIFIED",
+            "requestId": journal.string("requestId"),
+            "candidateJarSha256": "b" * 64,
+            "files": 9,
+        }
         self.cluster.objects["pod", control.SERVER + "-0"] = JsonObject(
             {
                 "metadata": {
@@ -222,6 +228,13 @@ class RestorationControlTest(unittest.TestCase):
             }
         )
         return journal
+
+    def test_private_start_refuses_missing_or_stale_resource_bootstrap(self):
+        journal = self.installation_fixture()
+        for evidence in ({}, {"phase": "VERIFIED", "requestId": "other-request"}):
+            journal["resourceBootstrap"] = evidence
+            with self.assertRaisesRegex(ValueError, "fresh resource metadata"):
+                control.private_start(self.path, journal)
 
     def test_revision_rebinds_only_an_unstarted_closed_installation_and_revokes_start_first(self):
         journal = self.installation_fixture()

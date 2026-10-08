@@ -22,6 +22,7 @@ from typing import IO
 
 import restoration_activation
 import restoration_files
+import restoration_resources
 from restoration_json import JsonObject
 
 CONTEXT = "admin@torvalds"
@@ -1225,10 +1226,14 @@ def create_writer(path: Path, journal: JsonObject) -> JsonObject:
     return pod
 
 
-def upload_installation(journal: JsonObject, plan: JsonObject) -> None:
+def upload_installation(journal: JsonObject, plan: JsonObject, *, resources: bool = False) -> None:
     """Stream only approved world/identity files and operator code into bounded scratch storage."""
     name = writer_manifest(journal).object("metadata").string("name")
-    expected = restoration_files.installation_manifest(plan.strings("installationFiles"))
+    expected = (
+        restoration_resources.validate_files(plan.strings("installationFiles"))
+        if resources
+        else restoration_files.installation_manifest(plan.strings("installationFiles"))
+    )
     layout = Path(plan.string("layout"))
     owned = Path(__file__).resolve().parent
     process = subprocess.Popen(
@@ -1268,6 +1273,7 @@ def upload_installation(journal: JsonObject, plan: JsonObject) -> None:
                 "restoration_files.py",
                 "restoration_revision.py",
                 "restoration_json.py",
+                "restoration_resources.py",
             ):
                 source = owned / script
                 if source.is_symlink() or not source.is_file():
@@ -1659,6 +1665,60 @@ def whole_rollback(path: Path, journal: JsonObject) -> None:
     save(path, journal)
 
 
+def bootstrap_resources(path: Path, journal: JsonObject, staging: Path, candidate: Path) -> None:
+    """Add only fresh resource metadata to an installed, stopped volume; retain historical data."""
+    recover_writer_identity(path, journal)
+    require_offline(journal, writer=journal.get("writerRemoved") is not True)
+    require_restore(journal)
+    prepared = restoration_resources.plan(staging, journal, candidate)
+    operation = journal.object("resourceBootstrapOperation", {})
+    if not operation:
+        if journal.object("installation").get("phase") != "INSTALLED" or journal.get("writerRemoved") is not True:
+            raise ValueError("Resource bootstrap requires verified installation and removed writer")
+        operation = JsonObject(
+            {
+                "plan": prepared,
+                "installation": JsonObject.parse(json.dumps(journal.object("installation"))),
+            }
+        )
+        journal["resourceBootstrapOperation"] = operation
+        save(path, journal)
+    if operation.object("plan") != prepared:
+        raise ValueError("Fresh resource bootstrap inputs changed")
+    create_writer(path, journal)
+    upload_installation(journal, JsonObject({**prepared, "layout": prepared.string("payload")}), resources=True)
+    require_offline(journal, writer=True)
+    name = writer_manifest(journal).object("metadata").string("name")
+    result = JsonObject.parse(
+        run(
+            [
+                "-n",
+                NAMESPACE,
+                "exec",
+                name,
+                "-c",
+                "writer",
+                "--",
+                "python3",
+                "/scratch/operator/restoration_resources.py",
+                "--plan",
+                "/scratch/plan.json",
+            ],
+            1800,
+        )
+    )
+    if (
+        result.get("phase") != "VERIFIED"
+        or any(result.get(key) != prepared.get(key) for key in ("requestId", "candidateJarSha256", "receiptSha256"))
+        or result.get("files") != 9
+    ):
+        raise ValueError("Stopped resource bootstrap returned mismatched evidence")
+    require_offline(journal, writer=True)
+    journal["installation"] = JsonObject.parse(json.dumps(operation.object("installation")))
+    journal["resourceBootstrap"] = result
+    save(path, journal)
+
+
 def private_start(path: Path, journal: JsonObject) -> None:
     if (
         journal.get("privateStartup") == "ROLLED_BACK"
@@ -1672,6 +1732,14 @@ def private_start(path: Path, journal: JsonObject) -> None:
     assert_owner(server, journal)
     if journal.object("installation").get("phase") != "INSTALLED" or journal.get("writerRemoved") is not True:
         raise ValueError("Private startup requires verified installation and writer cleanup")
+    resources = journal.object("resourceBootstrap", {})
+    if (
+        resources.get("phase") != "VERIFIED"
+        or resources.get("requestId") != journal.string("requestId")
+        or resources.get("candidateJarSha256") != journal.object("installation").get("candidateJarSha256")
+        or resources.get("files") != 9
+    ):
+        raise ValueError("Private startup requires verified fresh resource metadata")
     if annotations(server).get(PHASE) == "OFFLINE":
         require_offline(journal)
         for key in ("acceptance", "stoppingIncarnation", "stoppedIncarnation", "rollbackVerification"):
@@ -2153,6 +2221,7 @@ def main() -> None:
             "plan-install",
             "install",
             "revise-installation",
+            "bootstrap-resources",
             "remove-writer",
             "private-start",
             "private-stop",
@@ -2175,7 +2244,7 @@ def main() -> None:
     arguments = parser.parse_args()
     if arguments.operation == "export-backup" and (arguments.export_dir is None or arguments.export_proof is None):
         parser.error("export-backup requires --export-dir and --export-proof")
-    if arguments.operation in ("plan-install", "install", "revise-installation") and (
+    if arguments.operation in ("plan-install", "install", "revise-installation", "bootstrap-resources") and (
         arguments.staging is None or arguments.candidate is None
     ):
         parser.error("Installation requires --staging and --candidate")
@@ -2211,6 +2280,8 @@ def main() -> None:
             revise_installation(arguments.journal, journal, arguments.staging, arguments.candidate, arguments.image)
         elif arguments.operation == "remove-writer":
             remove_writer(arguments.journal, journal)
+        elif arguments.operation == "bootstrap-resources":
+            bootstrap_resources(arguments.journal, journal, arguments.staging, arguments.candidate)
         elif arguments.operation == "private-start":
             private_start(arguments.journal, journal)
         elif arguments.operation == "private-stop":
