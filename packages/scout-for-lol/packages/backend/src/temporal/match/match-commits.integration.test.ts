@@ -1,4 +1,5 @@
 import { afterAll, describe, expect, test, vi } from "vitest";
+import { RawMatchSchema } from "@scout-for-lol/data";
 import {
   IsoInstantSchema,
   RiotMatchIdSchema,
@@ -262,8 +263,25 @@ describe("advanceMatchCursor", () => {
     ]);
   }
 
-  /** What the client dispatcher leaves behind when it selects its payload. */
-  async function selectClientPayload(matchId: RiotMatchId): Promise<void> {
+  /**
+   * What the client dispatcher leaves behind when it selects a client's
+   * payload for matchId: a real match, of gameType.
+   */
+  async function selectClientPayload(
+    matchId: RiotMatchId,
+    gameType: string,
+  ): Promise<void> {
+    const fixture = RawMatchSchema.parse(
+      await Bun.file(
+        new URL("../../../../../testdata/rift.json", import.meta.url),
+      ).json(),
+    );
+    const gameId = Number(matchId.slice(matchId.indexOf("_") + 1));
+    const match = {
+      ...fixture,
+      metadata: { ...fixture.metadata, matchId },
+      info: { ...fixture.info, gameId, platformId: "NA1", gameType },
+    };
     const deviceId = await createTestScoutClientDevice(prisma, OWNER);
     const observation = await prisma.scoutClientObservation.create({
       data: {
@@ -275,7 +293,10 @@ describe("advanceMatchCursor", () => {
         schemaVersion: 1,
         appVersion: "0.1.0",
         kind: "post_game",
-        payload: { resource: "post_game", data: {} },
+        platformId: "NA1",
+        gameId: gameId.toString(),
+        localPuuid: fixture.metadata.participants[0] ?? null,
+        payload: { resource: "post_game", data: match },
         bodyDigest: crypto.randomUUID(),
         disposition: "ACCEPTED",
       },
@@ -307,19 +328,32 @@ describe("advanceMatchCursor", () => {
     expect(await storedCursor()).toEqual({ lastProcessedMatchId: matchId });
   });
 
-  test("never anchors the Riot poll on a match only the client saw", async () => {
-    // Riot's match list has no such id, so as the cursor it would read as a
-    // gap on every poll.
+  test("never anchors the Riot poll on a game Riot withholds", async () => {
+    // A custom will never appear in Riot's match list, so as the cursor it
+    // would read as a gap on every poll.
     const matchId = RiotMatchIdSchema.parse("NA1_8302");
     await seedTrackedAccount(matchId);
-    await selectClientPayload(matchId);
+    await selectClientPayload(matchId, "CUSTOM_GAME");
 
     await expect(advanceMatchCursor({ riotMatchId: matchId })).resolves.toEqual(
       { advanced: 0, alreadyAdvanced: 0 },
     );
     expect(await storedCursor()).toEqual({ lastProcessedMatchId: null });
     const [association] = await listTrackedAccounts(prisma, { matchId });
-    expect(association?.cursorAdvancedAt).not.toBeNull();
+    expect(association?.cursorAdvancedAt).toEqual(expect.any(String));
+  });
+
+  test("still moves the cursor for a client payload Riot will publish", async () => {
+    // A matchmade game selected from the client only because Riot was slow
+    // past the two-minute window: Riot will list it, so it anchors the poll.
+    const matchId = RiotMatchIdSchema.parse("NA1_8303");
+    await seedTrackedAccount(matchId);
+    await selectClientPayload(matchId, "MATCHED_GAME");
+
+    await expect(advanceMatchCursor({ riotMatchId: matchId })).resolves.toEqual(
+      { advanced: 1, alreadyAdvanced: 0 },
+    );
+    expect(await storedCursor()).toEqual({ lastProcessedMatchId: matchId });
   });
 });
 

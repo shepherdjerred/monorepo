@@ -624,9 +624,12 @@ them, or a queue `queue-post-match.ts` marks `never` — skips the wait
 does publish. A payload must field at least two sides, so an old client's
 one-player history row is never published as the match.
 
-A client-sourced match finishes its cursor step without moving the account's
-Riot polling cursor (`advanceMatchCursor`): the cursor anchors the next poll in
-Riot's own match list, where a client-only id would read as a gap every time.
+A client-sourced match of a game Riot withholds finishes its cursor step
+without moving the account's Riot polling cursor (`advanceMatchCursor`): the
+cursor anchors the next poll in Riot's own match list, where that id will never
+appear and would read as a gap every time. A client payload for any other queue
+only means Riot was slow past the window; Riot will list it, so its cursor
+advances as usual.
 
 A gameflow session that names the game's teams is checked for its observer like
 a lobby, since it binds customs and duels just as surely. A bare phase and a

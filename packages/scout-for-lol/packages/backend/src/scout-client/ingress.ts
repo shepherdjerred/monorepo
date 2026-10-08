@@ -136,11 +136,17 @@ function payloadContainsPuuid(payload: unknown, puuid: string): boolean {
         );
 }
 
+/**
+ * The lists a gameflow session names players in. Their entries aren't
+ * validated here: a bot carries no PUUID, and whether the session names
+ * anyone must not depend on whether every entry is well-formed.
+ */
 const GameflowRosterSchema = z.object({
   data: z.object({
     gameData: z.object({
-      teamOne: z.array(z.object({ puuid: z.string() }).loose()),
-      teamTwo: z.array(z.object({ puuid: z.string() }).loose()),
+      teamOne: z.array(z.unknown()).optional(),
+      teamTwo: z.array(z.unknown()).optional(),
+      playerChampionSelections: z.array(z.unknown()).optional(),
     }),
   }),
 });
@@ -148,18 +154,19 @@ const GameflowRosterSchema = z.object({
 /**
  * A gameflow session naming the game's players, which binds a custom or a
  * duel to its game as surely as a lobby does, so it must name its observer
- * too. A bare phase, or a session before teams exist, names nobody and is
- * exempt. A live game frame stays exempt: the Live Client API names players
- * by Riot ID only, never by PUUID, so it can't be checked this way.
+ * too — in its teams or its champion selections, whichever it carries. A bare
+ * phase, or a session before anyone is listed, names nobody and is exempt. A
+ * live game frame stays exempt: the Live Client API names players by Riot ID
+ * only, never by PUUID, so it can't be checked this way.
  */
 function gameflowCarriesRoster(observation: ScoutClientObservation): boolean {
   if (observation.kind !== "gameflow") return false;
   const roster = GameflowRosterSchema.safeParse(observation.payload);
-  return (
-    roster.success &&
-    roster.data.data.gameData.teamOne.length +
-      roster.data.data.gameData.teamTwo.length >
-      0
+  if (!roster.success) return false;
+  const { teamOne, teamTwo, playerChampionSelections } =
+    roster.data.data.gameData;
+  return [teamOne, teamTwo, playerChampionSelections].some(
+    (players) => players !== undefined && players.length > 0,
   );
 }
 

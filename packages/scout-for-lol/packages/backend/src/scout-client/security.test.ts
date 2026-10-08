@@ -139,6 +139,39 @@ describe("Scout Client ingress security", () => {
     ).toBeNull();
   });
 
+  test("checks a session's roster however it lists players", () => {
+    // A bot carries no PUUID, and some sessions list players only in their
+    // champion selections; neither may let a session skip the check.
+    const withBot = {
+      resource: "gameflow_session",
+      data: {
+        phase: "InProgress",
+        gameData: { teamOne: [{ championId: 1 }], teamTwo: [] },
+      },
+    };
+    const selectionsOnly = {
+      resource: "gameflow_session",
+      data: {
+        phase: "InProgress",
+        gameData: { playerChampionSelections: [{ puuid: "someone-else" }] },
+      },
+    };
+    for (const payload of [withBot, selectionsOnly]) {
+      expect(
+        observationQuarantineReason(
+          ScoutClientObservationSchema.parse({
+            ...observation({}),
+            kind: "gameflow",
+            payload,
+          }),
+          new Set([PUUID]),
+          new Set(["0.1.0"]),
+          NOW,
+        ),
+      ).toBe("observer_puuid_not_in_payload");
+    }
+  });
+
   test("leaves a bare phase and a live game frame exempt", () => {
     // Neither names players by PUUID: a phase is one word, and the Live
     // Client API identifies players by Riot ID only.
