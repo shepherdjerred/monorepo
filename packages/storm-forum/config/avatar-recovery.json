@@ -222,6 +222,21 @@
     }
   },
   {
+    "originalId": 144,
+    "expectedUserId": 21,
+    "historicalName": "John_FireBlade",
+    "file": "avatar-144.png",
+    "sha256": "9056cbd273f64488f721305cb3f2d34cf7cbd4803c6f3d457d265bce75d48657",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/5ae4675e165f448898a0f887a6c39963/96.png",
+      "fetchedAt": "2026-10-08T23:08:16.613Z",
+      "minecraftName": "Reganator_",
+      "uuid": "5ae4675e165f448898a0f887a6c39963",
+      "identityEvidence": "NameMC profile namemc.com/profile/Reganator_.1 name history: John_FireBlade -> Reganator_; matching archived player bukkit.lastKnownName=JohnFire; Worlds/TheStorm_survival-main_map1_1.14.4-upgrade_snapshot-2023-06-18.zip:world/playerdata/5ae4675e-165f-4488-98a0-f887a6c39963.dat"
+    }
+  },
+  {
     "originalId": 146,
     "expectedUserId": 22,
     "historicalName": "WackyNWise",
@@ -234,6 +249,21 @@
       "minecraftName": "WackyNWise",
       "uuid": "acc83cec07a64fe7a5ecc8c840ec931a",
       "identityEvidence": "Archived player bukkit.lastKnownName=WackyNWise; Worlds/TheStorm_creative_snapshot-2016-01-10.zip:home/files/servers/creative/world/playerdata/acc83cec-07a6-4fe7-a5ec-c8c840ec931a.dat"
+    }
+  },
+  {
+    "originalId": 149,
+    "expectedUserId": 23,
+    "historicalName": "Setery10",
+    "file": "avatar-149.png",
+    "sha256": "699ae81192aa6710c17f84f648175555041ea82e5ce015fbad062eeb7e36e51e",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/4cbf0d593b40473d83180c97aba5e548/96.png",
+      "fetchedAt": "2026-10-08T23:08:16.764Z",
+      "minecraftName": "Setery",
+      "uuid": "4cbf0d593b40473d83180c97aba5e548",
+      "identityEvidence": "NameMC profile namemc.com/profile/Setery.1 name history: Setery10 -> Setery; matching archived player bukkit.lastKnownName=Setery; Worlds/TheStorm_survival-main_map1_1.14.4-upgrade_snapshot-2023-06-18.zip:world/playerdata/4cbf0d59-3b40-473d-8318-0c97aba5e548.dat"
     }
   },
   {
@@ -324,6 +354,21 @@
       "minecraftName": "X_D",
       "uuid": "1f89dffaef4e4e899720cffd9c161542",
       "identityEvidence": "Archived player bukkit.lastKnownName=X_D; Worlds/TheStorm_creative_snapshot-2016-01-10.zip:home/files/servers/creative/world/playerdata/1f89dffa-ef4e-4e89-9720-cffd9c161542.dat"
+    }
+  },
+  {
+    "originalId": 224,
+    "expectedUserId": 38,
+    "historicalName": "landrover20",
+    "file": "avatar-224.png",
+    "sha256": "612adba44f5b0b5f9a4dc0e221b60a0704c0c19d2c80ab9971b212563ce49d52",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/7e2845ca551b4efa949abd7e29a9f9dc/96.png",
+      "fetchedAt": "2026-10-08T23:08:17.477Z",
+      "minecraftName": "Planned",
+      "uuid": "7e2845ca551b4efa949abd7e29a9f9dc",
+      "identityEvidence": "NameMC profile namemc.com/profile/Planned.3 name history: landrover20 -> Planned; matching archived player bukkit.lastKnownName=_LandRover_; Worlds/TheStorm_survival-main_map1_1.14.4-upgrade_snapshot-2023-06-18.zip:world/playerdata/7e2845ca-551b-4efa-949a-bd7e29a9f9dc.dat"
     }
   },
   {
@@ -504,6 +549,21 @@
       "minecraftName": "Unknown_Rares",
       "uuid": "3637705eaa394d0687eabac590c181d1",
       "identityEvidence": "Archived player bukkit.lastKnownName=TallEspanol; Worlds/TheStorm_survival-main_map1_1.14.4-upgrade_snapshot-2023-06-18.zip:world/playerdata/3637705e-aa39-4d06-87ea-bac590c181d1.dat"
+    }
+  },
+  {
+    "originalId": 459,
+    "expectedUserId": 54,
+    "historicalName": "ULecks",
+    "file": "avatar-459.png",
+    "sha256": "0a44555ef725f50801080dbb4ac7b2e16a26c99bbe4d8070aa25f78444e36f25",
+    "provenance": {
+      "kind": "current-minecraft",
+      "sourceUrl": "https://minotar.net/helm/7e468e04949544708a944717419841b5/96.png",
+      "fetchedAt": "2026-10-08T23:08:18.144Z",
+      "minecraftName": "tedbb",
+      "uuid": "7e468e04949544708a944717419841b5",
+      "identityEvidence": "NameMC profile namemc.com/profile/tedbb.2 name history: ULecks -> tedbb; matching archived player bukkit.lastKnownName=DarkRanger995; Worlds/TheStorm_survival-main_map1_1.14.4-upgrade_snapshot-2023-06-18.zip:world/playerdata/7e468e04-9495-4470-8a94-4717419841b5.dat"
     }
   },
   {
