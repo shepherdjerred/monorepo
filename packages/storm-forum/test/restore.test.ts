@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { validateSnapshot } from "#src/restore.ts";
+import { validateBackupSource } from "#src/release.ts";
 const owner = "f8d36d3a-e74e-4b28-a661-b03ed85c7e55";
 const prefix = `snapshots/prod/${owner}`;
 const sha = "a".repeat(64);
@@ -19,6 +20,15 @@ const snapshot = {
   })),
 };
 describe("coordinated restore contract", () => {
+  it("rejects stale source-version metadata before committing a snapshot", () => {
+    expect(validateBackupSource(source, source.xenforoVersion)).toEqual(source);
+    expect(() =>
+      validateBackupSource(
+        { ...source, xenforoVersion: "2.3.8" },
+        source.xenforoVersion,
+      ),
+    ).toThrow(/installed database/);
+  });
   it("accepts the committed pair for the exact private release", () => {
     expect(
       validateSnapshot(snapshot, `${prefix}/manifest.json`, source, source)

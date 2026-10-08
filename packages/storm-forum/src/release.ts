@@ -19,6 +19,27 @@ const BundleEnvironmentSchema = z.object({
   BUNDLE_KEY: z.string().regex(/^releases\/[\w.-]+\.zip$/),
   BUNDLE_SHA256: z.string().regex(/^[a-f0-9]{64}$/),
 });
+const InstallationSchema = z.discriminatedUnion("state", [
+  z
+    .object({
+      state: z.literal("installed"),
+      xenforoVersion: z.string().min(1),
+    })
+    .strict(),
+  z.object({ state: z.literal("empty") }).strict(),
+]);
+export function validateBackupSource(
+  source: unknown,
+  installedVersion: string,
+) {
+  const release = SnapshotSourceSchema.parse(source);
+  if (release.xenforoVersion !== installedVersion) {
+    throw new Error(
+      "Backup source XenForo version differs from the installed database",
+    );
+  }
+  return release;
+}
 export async function assembleBundle(): Promise<void> {
   const env = BundleEnvironmentSchema.parse(Bun.env);
   const client = new S3Client({
@@ -133,18 +154,21 @@ export async function releaseForum(stage: Stage): Promise<void> {
       ["/opt/storm-forum/runtime/installed.php"],
       "/app/forum",
     );
-    const installation = z
-      .enum(["installed", "empty"])
-      .parse(installationOutput.trim());
+    const installation = InstallationSchema.parse(
+      JSON.parse(installationOutput),
+    );
     unsafeInstallation = false;
-    if (installation === "installed") {
+    if (installation.state === "installed") {
       // The database has not been upgraded yet. Restore it with the previous
       // private bundle, rather than recording this job's incoming bundle.
-      const sourceBundle = SnapshotSourceSchema.parse({
-        bundleSha256: Bun.env["BACKUP_SOURCE_BUNDLE_SHA256"],
-        xenforoVersion: Bun.env["BACKUP_SOURCE_XENFORO_VERSION"],
-        runtimeImage: Bun.env["BACKUP_SOURCE_RUNTIME_IMAGE"],
-      });
+      const sourceBundle = validateBackupSource(
+        {
+          bundleSha256: Bun.env["BACKUP_SOURCE_BUNDLE_SHA256"],
+          xenforoVersion: Bun.env["BACKUP_SOURCE_XENFORO_VERSION"],
+          runtimeImage: Bun.env["BACKUP_SOURCE_RUNTIME_IMAGE"],
+        },
+        installation.xenforoVersion,
+      );
       const snapshot = await snapshotForum(
         owner,
         {

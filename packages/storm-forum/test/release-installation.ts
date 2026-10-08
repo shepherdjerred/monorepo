@@ -1,10 +1,28 @@
 import assert from "node:assert/strict";
 import { rename, unlink } from "node:fs/promises";
-import { releaseForum } from "#src/release.ts";
+import { releaseForum, validateBackupSource } from "#src/release.ts";
 import { endStormForumBackup } from "#src/backup.ts";
 import { z } from "zod";
 import { runPhp } from "#src/process.ts";
+import { forumManifest } from "#src/config.ts";
 const OwnerSchema = z.object({ owner: z.uuid() });
+const installed = z
+  .object({ state: z.literal("installed"), xenforoVersion: z.string().min(1) })
+  .strict()
+  .parse(JSON.parse(await runPhp(["/opt/storm-forum/runtime/installed.php"])));
+assert.equal(installed.xenforoVersion, forumManifest.xenforoVersion);
+assert.throws(
+  () =>
+    validateBackupSource(
+      {
+        xenforoVersion: "2.3.8",
+        bundleSha256: "a".repeat(64),
+        runtimeImage: `ghcr.io/shepherdjerred/storm-forum@sha256:${"a".repeat(64)}`,
+      },
+      installed.xenforoVersion,
+    ),
+  /differs from the installed database/,
+);
 
 // Only the disposable licensed fixture runs this test. Keep the database intact
 // while emulating a missing native installation marker.
