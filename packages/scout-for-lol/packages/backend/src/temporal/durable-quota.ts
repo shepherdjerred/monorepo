@@ -2,6 +2,15 @@ import type { DiscordAccountId, DiscordGuildId } from "@scout-for-lol/data";
 import { ExploreQuotaSnapshotSchema } from "@scout-for-lol/data";
 import { exploreQuotaLimits } from "#src/config/dynamic.ts";
 import {
+  EXPLORE_MAX_ACTIVE_RUNS,
+  exploreQuotaRules,
+} from "#src/configuration/explore-quota.ts";
+import {
+  REPORT_AI_MAX_ACTIVE_RUNS,
+  REPORT_AI_QUOTA_RULES,
+} from "#src/configuration/report-ai-quota.ts";
+import { QUOTA_WINDOW_MS } from "#src/utils/quota-buckets.ts";
+import {
   prisma,
   type Db,
   type ExtendedPrismaClient,
@@ -49,7 +58,7 @@ export async function durableExploreQuotaRejection(
   const active = await database.scoutInteractiveRun.count({
     where: { kind: "explore", state: { in: ACTIVE_STATUSES } },
   });
-  if (active >= 5) {
+  if (active >= EXPLORE_MAX_ACTIVE_RUNS) {
     return {
       reason: "Explore is busy right now. Try again shortly.",
       retryAfterSeconds: 30,
@@ -69,45 +78,24 @@ export async function durableExploreQuotaRejection(
       retryAfterSeconds: 30,
     };
   }
-  const limits = exploreQuotaLimits();
-  const rules = [
-    { durationMs: 60_000, limit: limits.userMinute, label: "minute" },
-    { durationMs: 3_600_000, limit: limits.userHour, label: "hour" },
-    { durationMs: 86_400_000, limit: limits.userDay, label: "day" },
-    { durationMs: 604_800_000, limit: limits.userWeek, label: "week" },
-  ];
-  for (const rule of rules) {
-    const start = startOfWindow(now, rule.durationMs);
+  // Every user window is checked before any global one, so a person at their
+  // own ceiling is told so rather than that Explore is busy.
+  for (const rule of exploreQuotaRules(exploreQuotaLimits())) {
+    const durationMs = QUOTA_WINDOW_MS[rule.window];
+    const start = startOfWindow(now, durationMs);
     const used = await countSince({
       database,
       kind: "explore",
-      ownerId: userId,
       since: start,
+      ...(rule.scope === "user" ? { ownerId: userId } : {}),
     });
     if (used >= rule.limit) {
+      const subject = rule.scope === "user" ? "You have" : "Explore has";
       return {
-        reason: `You have used ${used.toString()} of ${rule.limit.toString()} questions for this ${rule.label}.`,
+        reason: `${subject} used ${used.toString()} of ${rule.limit.toString()} questions for this ${rule.window}.`,
         retryAfterSeconds: Math.max(
           1,
-          Math.ceil((start.getTime() + rule.durationMs - now) / 1000),
-        ),
-      };
-    }
-  }
-  const globalRules = [
-    { durationMs: 3_600_000, limit: limits.globalHour, label: "hour" },
-    { durationMs: 86_400_000, limit: limits.globalDay, label: "day" },
-    { durationMs: 604_800_000, limit: limits.globalWeek, label: "week" },
-  ];
-  for (const rule of globalRules) {
-    const start = startOfWindow(now, rule.durationMs);
-    const used = await countSince({ database, kind: "explore", since: start });
-    if (used >= rule.limit) {
-      return {
-        reason: `Explore has used ${used.toString()} of ${rule.limit.toString()} questions for this ${rule.label}.`,
-        retryAfterSeconds: Math.max(
-          1,
-          Math.ceil((start.getTime() + rule.durationMs - now) / 1000),
+          Math.ceil((start.getTime() + durationMs - now) / 1000),
         ),
       };
     }
@@ -121,54 +109,11 @@ export async function durableExploreQuotaStatus(
   now = Date.now(),
   database: QuotaClient = prisma,
 ) {
-  const limits = exploreQuotaLimits();
-  const rules = [
-    {
-      scope: "user",
-      window: "minute",
-      durationMs: 60_000,
-      limit: limits.userMinute,
-    },
-    {
-      scope: "user",
-      window: "hour",
-      durationMs: 3_600_000,
-      limit: limits.userHour,
-    },
-    {
-      scope: "user",
-      window: "day",
-      durationMs: 86_400_000,
-      limit: limits.userDay,
-    },
-    {
-      scope: "user",
-      window: "week",
-      durationMs: 604_800_000,
-      limit: limits.userWeek,
-    },
-    {
-      scope: "global",
-      window: "hour",
-      durationMs: 3_600_000,
-      limit: limits.globalHour,
-    },
-    {
-      scope: "global",
-      window: "day",
-      durationMs: 86_400_000,
-      limit: limits.globalDay,
-    },
-    {
-      scope: "global",
-      window: "week",
-      durationMs: 604_800_000,
-      limit: limits.globalWeek,
-    },
-  ] as const;
+  const rules = exploreQuotaRules(exploreQuotaLimits());
   const quota = await Promise.all(
     rules.map(async (rule) => {
-      const start = startOfWindow(now, rule.durationMs);
+      const durationMs = QUOTA_WINDOW_MS[rule.window];
+      const start = startOfWindow(now, durationMs);
       const used = await countSince({
         database,
         kind: "explore",
@@ -181,7 +126,7 @@ export async function durableExploreQuotaStatus(
         used,
         limit: rule.limit,
         remaining: Math.max(0, rule.limit - used),
-        resetsAt: new Date(start.getTime() + rule.durationMs).toISOString(),
+        resetsAt: new Date(start.getTime() + durationMs).toISOString(),
       });
     }),
   );
@@ -200,7 +145,7 @@ export async function durableReportAiQuotaRejection(
       state: { in: ACTIVE_STATUSES },
     },
   });
-  if (active >= 5) {
+  if (active >= REPORT_AI_MAX_ACTIVE_RUNS) {
     return {
       reason: "AI report editing is busy. Try again shortly.",
       retryAfterSeconds: 60,
@@ -222,20 +167,9 @@ export async function durableReportAiQuotaRejection(
   }
   if (exempt) return null;
 
-  const rules = [
-    { durationMs: 60_000, limit: 1, scope: "user_guild" },
-    { durationMs: 3_600_000, limit: 3, scope: "user_guild" },
-    { durationMs: 86_400_000, limit: 8, scope: "user_guild" },
-    { durationMs: 604_800_000, limit: 30, scope: "user_guild" },
-    { durationMs: 3_600_000, limit: 5, scope: "guild" },
-    { durationMs: 86_400_000, limit: 20, scope: "guild" },
-    { durationMs: 604_800_000, limit: 100, scope: "guild" },
-    { durationMs: 3_600_000, limit: 30, scope: "global" },
-    { durationMs: 86_400_000, limit: 150, scope: "global" },
-    { durationMs: 604_800_000, limit: 500, scope: "global" },
-  ] as const;
-  for (const rule of rules) {
-    const start = startOfWindow(now, rule.durationMs);
+  for (const rule of REPORT_AI_QUOTA_RULES) {
+    const durationMs = QUOTA_WINDOW_MS[rule.window];
+    const start = startOfWindow(now, durationMs);
     const used = await countSince({
       database,
       kind: "report-ai",
@@ -248,7 +182,7 @@ export async function durableReportAiQuotaRejection(
         reason: "AI report editing quota is exhausted for this time window.",
         retryAfterSeconds: Math.max(
           1,
-          Math.ceil((start.getTime() + rule.durationMs - now) / 1000),
+          Math.ceil((start.getTime() + durationMs - now) / 1000),
         ),
       };
     }

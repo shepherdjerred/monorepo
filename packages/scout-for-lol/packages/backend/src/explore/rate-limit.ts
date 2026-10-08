@@ -6,9 +6,12 @@ import type {
 import {
   createQuotaEngine,
   quotaSecondsUntil,
-  type QuotaRule,
 } from "#src/utils/quota-buckets.ts";
 import { exploreQuotaLimits } from "#src/config/dynamic.ts";
+import {
+  EXPLORE_MAX_ACTIVE_RUNS,
+  exploreQuotaRules,
+} from "#src/configuration/explore-quota.ts";
 
 /**
  * Explore quotas are per person, not per server.
@@ -63,32 +66,16 @@ export type ExploreRateLimitTicket = {
   finish: () => void;
 };
 
-const MAX_ACTIVE_GLOBAL_RUNS = 5;
-
 /**
  * Resolved per call rather than frozen at module load.
  *
  * These ceilings bound question volume, so an operator has to be able to move
  * them — down during a cost surprise, or up for one environment — without a
  * rebuild. `exploreQuotaLimits()` is the typed configuration read; the
- * shipped policy is its default, so a backend with no flag override
- * behaves exactly as these numbers did when they were literals here.
+ * shipped policy is its default.
  */
-function quotaRules(): QuotaRule<ExploreQuotaScope>[] {
-  const limits = exploreQuotaLimits();
-  return [
-    { scope: "user", window: "minute", limit: limits.userMinute },
-    { scope: "user", window: "hour", limit: limits.userHour },
-    { scope: "user", window: "day", limit: limits.userDay },
-    { scope: "user", window: "week", limit: limits.userWeek },
-    { scope: "global", window: "hour", limit: limits.globalHour },
-    { scope: "global", window: "day", limit: limits.globalDay },
-    { scope: "global", window: "week", limit: limits.globalWeek },
-  ];
-}
-
 const engine = createQuotaEngine<ExploreQuotaScope, ExploreRateLimitIdentity>({
-  rules: quotaRules,
+  rules: () => exploreQuotaRules(exploreQuotaLimits()),
   scopeKey: (scope, identity) =>
     scope === "global" ? "global" : identity.userId,
 });
@@ -121,7 +108,7 @@ export function tryStartExploreTurn(
 ): ExploreRateLimitTicket | ExploreRateLimitRejection {
   const quota = engine.snapshots(identity, now);
 
-  if (activeGlobalRuns >= MAX_ACTIVE_GLOBAL_RUNS) {
+  if (activeGlobalRuns >= EXPLORE_MAX_ACTIVE_RUNS) {
     return {
       allowed: false,
       quota,
