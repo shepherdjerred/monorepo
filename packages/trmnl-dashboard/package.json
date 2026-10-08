@@ -25,7 +25,8 @@
     "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
-    "@sentry/bun": "^10.76.0",
+    "@shepherdjerred/sentry-config": "workspace:*",
+    "@sentry/bun": "^11.5.0",
     "@shepherdjerred/config": "workspace:*",
     "@shepherdjerred/feature-flags": "workspace:*",
     "@shepherdjerred/home-assistant": "workspace:*",
@@ -41,7 +42,7 @@
     "liquidjs": "^10.29.0",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
-    "vitest": "5.0.1",
-    "@vitest/coverage-istanbul": "5.0.1"
+    "vitest": "5.0.3",
+    "@vitest/coverage-istanbul": "5.0.3"
   }
 }

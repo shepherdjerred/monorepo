@@ -3469,7 +3469,7 @@ export type ArgocdHelmValuesRedisha = {
   /**
    * Prometheus redis-exporter sidecar
    *
-   * @default {"enabled":false,"image":"ghcr.io/oliver006/redis_exporter","tag":"v1.75.0"}
+   * @default {"enabled":false,"image":"ghcr.io/oliver006/redis_exporter","tag":"v1.93.0"}
    */
   exporter?: ArgocdHelmValuesRedishaExporter;
   /**
@@ -3579,7 +3579,7 @@ export type ArgocdHelmValuesRedishaExporter = {
   /**
    * Tag to use for the redis-exporter
    *
-   * @default "v1.75.0"
+   * @default "v1.93.0"
    */
   tag?: string;
 };
@@ -4026,6 +4026,12 @@ export type ArgocdHelmValuesRedisSecretInitServiceAccountAnnotations = {
 export type ArgocdHelmValuesRedisSecretInitDnsConfig = object;
 
 export type ArgocdHelmValuesServer = {
+  /**
+   * Enable Argo CD server. Set to `false` for an Argo CD Core installation (see [Argo CD Core](#argo-cd-core))
+   *
+   * @default true
+   */
+  enabled?: boolean;
   /**
    * Argo CD server name
    *
@@ -9493,7 +9499,7 @@ export type ArgocdHelmValues = {
   /**
    * Server
    *
-   * @default {...} (53 keys)
+   * @default {...} (54 keys)
    */
   server?: ArgocdHelmValuesServer;
   /**
@@ -9923,6 +9929,7 @@ export type ArgocdHelmParameters = {
   "redisSecretInit.affinity"?: string;
   "redisSecretInit.nodeSelector"?: string;
   "redisSecretInit.tolerations"?: string;
+  "server.enabled"?: string;
   "server.name"?: string;
   "server.replicas"?: string;
   "server.runtimeClassName"?: string;

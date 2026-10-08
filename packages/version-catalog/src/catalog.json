@@ -36,7 +36,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "v0.18.0@sha256:ab570d2e13336c081575aa05de90dd861d3588eb2fc1a66ff5315b380c3197c3"
+      "value": "v0.22.1@sha256:62512c46a431a018ca7360cc5451efe83b9f627516f39d82ca3f9fc487ae3e5d"
     },
     {
       "name": "connect",
@@ -48,7 +48,7 @@
         "registryUrl": "https://1password.github.io/connect-helm-charts/",
         "versioning": "semver"
       },
-      "value": "2.4.1"
+      "value": "2.4.2"
     },
     {
       "name": "argo-cd",
@@ -60,7 +60,7 @@
         "registryUrl": "https://argoproj.github.io/argo-helm",
         "versioning": "semver"
       },
-      "value": "10.9.6"
+      "value": "10.10.0"
     },
     {
       "name": "cert-manager",
@@ -84,7 +84,7 @@
         "registryUrl": "https://intel.github.io/helm-charts/",
         "versioning": "semver"
       },
-      "value": "0.37.0"
+      "value": "0.37.1"
     },
     {
       "name": "node-feature-discovery",
@@ -108,7 +108,7 @@
         "registryUrl": "https://prometheus-community.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "91.9.0"
+      "value": "92.0.0"
     },
     {
       "name": "prometheus-adapter",
@@ -132,7 +132,7 @@
         "registryUrl": "https://prometheus-community.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "11.19.1"
+      "value": "11.20.0"
     },
     {
       "name": "tailscale-operator",
@@ -255,7 +255,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "1.6.2@sha256:8b30e81c4aec2991f469e78fae8afaa89ecc9b21a80e3897f50427216b55470c"
+      "value": "1.6.2@sha256:c1673816321156b904af9b7e6415ea547ae9622e4acc375358f1e1eb9ed1e904"
     },
     {
       "name": "seerr-team/seerr",
@@ -279,7 +279,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "v2.5.1@sha256:20388de48f0e088ad9feb9904f6a452fd9ef933a79c7b2bf186e388224e8f437"
+      "value": "v2.5.2@sha256:06e498cded70c9815522c6b2d8708b31759c1e37714746d1eeb56f1e40a8fd95"
     },
     {
       "name": "linuxserver/prowlarr",
@@ -291,7 +291,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "2.6.5@sha256:f2b26429893d4c4cb71941b7ee50b1bdecd9d5f9f9e02d5410615e9f4f7c8d95"
+      "value": "2.6.5@sha256:f9151e5bc1025c6d0a630d503210cdcb6bb55a7cc098562609d96a408d838902"
     },
     {
       "name": "qdm12/gluetun",
@@ -367,7 +367,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "2026.9.3@sha256:072c067d25ccbe61d46e18f0d0723255f2bb5304f7317caa95b27031520ff92c"
+      "value": "2026.10.0@sha256:9b49eed8f62806d5d45ddf59ecefb5710429598ea6d3fcccd2af938f621b2b07"
     },
     {
       "name": "tailscale/golink",
@@ -391,7 +391,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "docker"
       },
-      "value": "2026.9.4@sha256:3e6710a7ab2a61311d9d899b719f6c3657791c63e8f4942cec4ebc42401d6b76"
+      "value": "2026.10.0@sha256:1b64d38f38d922bf9d59336451fd6453e1d614f934456af4ee3d2a51061be3a4"
     },
     {
       "name": "bropat/eufy-security-ws",
@@ -538,7 +538,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "2.1.5@sha256:26cfac865d0924afc7f1e34a65e34e41c22f7b6b61d0c23a6aaebad13104b113"
+      "value": "2.1.6@sha256:8a381a5a11225475cc4a14ad4fee7c627fdc4fa5804fe3a34febe3aeda9f4e23"
     },
     {
       "name": "dotdc/grafana-dashboards-kubernetes",
@@ -705,7 +705,7 @@
         "registryUrl": "https://openebs.github.io/openebs",
         "versioning": "semver"
       },
-      "value": "4.6.1"
+      "value": "4.6.2"
     },
     {
       "name": "shepherdjerred/storm-forum",
@@ -740,7 +740,7 @@
         "versioning": "semver",
         "packageName": "shepherdjerred/scout-for-lol"
       },
-      "value": "2.0.0-1005593@sha256:10130d8c61a5a91dc66c81324b8d74bb5941b3da0efde52c9b0ad5b2ec88eae6",
+      "value": "2.0.0-1006547@sha256:bbdee5d457e646650dabdb0f1174f2c5e4f21e1cc747bd21cfc20fe1cfa6953f",
       "notes": [
         "Prod promotion = merging a reviewed PR for this pin (normally Renovate). Each 2.0.0-<n>",
         "tag is minted by the scout-tag-release CI step only after site version",
@@ -824,7 +824,7 @@
         "versioning": "semver",
         "packageName": "shepherdjerred/starlight-karma-bot"
       },
-      "value": "2.0.0-1005566@sha256:a2098942c052fb40275a93c10df897325ee39ac7b9ad995e87df335071a66665"
+      "value": "2.0.0-1006547@sha256:1f11be5bd05d655cb6faf8cf1253372bbed1f5536511e063e6cf92418c5ca564"
     },
     {
       "name": "shepherdjerred/birmel",
@@ -907,7 +907,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "1.30.0@sha256:258b8edfc8a76a61f60d2d6a14d8f8d12495d78abf38646a2137612dfa264a21"
+      "value": "1.30.1@sha256:48b63b9bc3d042a1301c32971b01af8841c7f059b452589c5bf77f475ba44c61"
     },
     {
       "name": "oven/bun",
@@ -991,7 +991,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "0.74.0@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969"
+      "value": "0.75.0@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa"
     },
     {
       "name": "semgrep/semgrep",
@@ -1003,7 +1003,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "1.176.1@sha256:34ab619bf1391a24bfda3f05debd0d8a6ce3093c2d5f9d39cfc00f83c1397823"
+      "value": "1.180.0@sha256:529ee8a277ec8adc5b534d7c74eea0a47e9de21d62852b6ba7ac6ba9566845c3"
     },
     {
       "name": "woodpeckerci/woodpecker-server",
@@ -1015,7 +1015,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "v3.18.1@sha256:58dafbe56bb3529d78b48ee8d56a1f4b0886748763fd04ac23c01cc06c3dd24e"
+      "value": "v3.19.0@sha256:6ca167a3c58b50c5a3c903dd8db92b39cfc30c560a47052cff7dd0235123a9cb"
     },
     {
       "name": "woodpeckerci/woodpecker-agent",
@@ -1027,7 +1027,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "v3.18.1@sha256:73ee7cc63161b40bfefa4a26eae45c518a09124ab34f7e3c5e781df85e1ba4ac"
+      "value": "v3.19.0@sha256:f85f163e09494ace3377a3f3a6043f131fb47e3e627f7438de42417ee06ca56d"
     },
     {
       "name": "woodpecker-ci/plugin-git",
@@ -1051,7 +1051,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "2.14.2@sha256:e734b1df7561c20656157c7669a0ba2f0aad71a2577bd419ad4b2f22c64867a5",
+      "value": "2.14.3@sha256:781b0549dca80cf5aca27bf416fc766d44cad57333a7368098a755c5f12b8822",
       "notes": [
         "Self-hosted Turborepo remote cache backing the workspace task graph."
       ]
@@ -1095,7 +1095,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "v0.33.1@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea",
+      "value": "v0.34.0@sha256:b059f8d7226d0b326bc871af489a5dddf65e36af4d20d14251b072974d9ee87c",
       "notes": [
         "Persistent BuildKit daemon backing CI image builds (bounded-GC cache on a",
         "compressed ZFS PVC, replacing the per-run throwaway builder inside dind —",
@@ -1251,7 +1251,7 @@
         "registryUrl": "https://ghcr.io/recyclarr",
         "versioning": "docker"
       },
-      "value": "8.7.2@sha256:6e69e009e1cd7493ff6093e8e187b5d3788c75b4a2c0c5127b6a1beda1c19728"
+      "value": "8.7.3@sha256:9c6c74d52cfc6f740a5a3624aa83867e171bb70b90453ddb7a4048b8c80445f9"
     },
     {
       "name": "siderolabs/talos",
@@ -1406,7 +1406,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "8.5.9-fpm-bookworm@sha256:0fed012de2202d7ef0314744ccfa274b870f07cd6a91f88b78f74a849bb03f02"
+      "value": "8.5.11-fpm-bookworm@sha256:dd198c828c224e479bdaa184cdcf04a28c73d186bf5a885493bf9cc78d7196ef"
     },
     {
       "name": "library/mariadb",
@@ -1510,7 +1510,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "bookworm-slim@sha256:3783cc01769c7b2b1b83a5c5ad96c815348e28ed7da68e2e3687004faa906251"
+      "value": "bookworm-slim@sha256:7c7b2c966bc9ee8cedfeef67e0e279108992c77681fa595db4a9d65c06ccc587"
     },
     {
       "name": "library/nginx",

@@ -23,7 +23,7 @@
   "dependencies": {
     "@shepherdjerred/config": "workspace:*",
     "@shepherdjerred/feature-flags": "workspace:*",
-    "@openai/codex-sdk": "0.160.0",
+    "@openai/codex-sdk": "0.161.0",
     "@shepherdjerred/llm-runtime": "workspace:*",
     "zod": "^4.4.3"
   },
@@ -31,9 +31,9 @@
     "@shepherdjerred/eslint-config": "workspace:*",
     "@types/bun": "1.4.2",
     "@typescript/native": "npm:typescript@7.0.2",
-    "@vitest/coverage-istanbul": "5.0.1",
+    "@vitest/coverage-istanbul": "5.0.3",
     "eslint": "^10.7.0",
     "typescript": "^6.0.3",
-    "vitest": "5.0.1"
+    "vitest": "5.0.3"
   }
 }

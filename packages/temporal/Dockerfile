@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1-labs@sha256:63e440b412b6acba117974e793b7e7f702e58ee65e044bdff1b8d388ee0d853b
+# syntax=docker/dockerfile:1-labs@sha256:ad43eec41369d9ef94412c0d1eb3203d12218d01da225afc92a3aeba3a0e7796
 # temporal-worker image. Build context is the REPO ROOT (single Bun workspace,
 # one root bun.lock, isolated linker). Built via `bun run docker:build` in this
 # package (which passes `-f Dockerfile ../..`).
@@ -64,6 +64,7 @@ COPY --parents \
   packages/unix-socket-daemon/src \
   packages/mc-harness/src/protocol \
   packages/config \
+  packages/sentry-config \
   packages/ops-model \
   packages/ops-clients \
   packages/version-catalog/package.json \
@@ -145,7 +146,7 @@ ARG KOMETA_VERSION=2.5.1
 # "ubi:theseus-rs/postgresql-binaries" entry: the bot-clone backend tests must
 # run against the same server binaries here as on dev/CI machines.
 # renovate: datasource=github-releases depName=theseus-rs/postgresql-binaries
-ARG POSTGRESQL_BINARIES_VERSION=16.15.0
+ARG POSTGRESQL_BINARIES_VERSION=18.6.0
 ARG KOMETA_COMMIT=1b43f5f113242059c74330bebed041d5f94f50c7
 
 # --- Base system deps: ca-certificates, curl, git, libxml2, and the pod-local agent firewall ---
@@ -429,6 +430,7 @@ COPY --parents \
   packages/homelab/src/domain-registry.json \
   packages/temporal-observability \
   packages/config \
+  packages/sentry-config \
   packages/feature-flags \
   packages/code-review \
   packages/glitter-context \
@@ -478,6 +480,10 @@ ENTRYPOINT ["/usr/bin/tini", "-s", "--"]
 CMD ["bun", "src/worker.ts"]
 
 FROM runtime AS smoke
+# Prove the bot-clone test database works with the repository's selected
+# PostgreSQL major, not only that the worker and binary can print a version.
+# Keep this throwaway database and tool manifest out of the production stage.
+COPY .mise.toml /tmp/temporal-smoke.mise.toml
 # The smoke harness ships in CI context only — the scoped source COPY
 # excludes ci/, so stage it here (never in the pushed image stage).
 COPY ci/scripts/images/smoke-app-in-image.ts /app/ci/scripts/images/smoke-app-in-image.ts
@@ -490,6 +496,14 @@ ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 # points at /tmp so any tool cache has a writable target.
 USER 1000:1000
 ENV HOME=/tmp
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+RUN bun -e 'const pin = Bun.TOML.parse(await Bun.file("/tmp/temporal-smoke.mise.toml").text()).tools["ubi:theseus-rs/postgresql-binaries"].version; const result = Bun.spawnSync(["postgres", "--version"]); if (result.exitCode !== 0 || !result.stdout.toString().startsWith("postgres (PostgreSQL) " + pin.split(".")[0] + ".")) throw new Error("Temporal PostgreSQL binaries must match the repository major");' \
+    && initdb -D /tmp/temporal-pg-smoke -U smoke --auth=trust --encoding=UTF8 --no-locale --data-checksums \
+    && pg_ctl -D /tmp/temporal-pg-smoke -w -t 30 -l /tmp/temporal-pg-smoke.log -o "-c listen_addresses='' -k /tmp -p 5489" start \
+    && trap 'pg_ctl -D /tmp/temporal-pg-smoke -m fast -w stop' EXIT \
+    && createdb -h /tmp -p 5489 -U smoke temporal_smoke \
+    && [ "$(psql -h /tmp -p 5489 -U smoke -d temporal_smoke -v ON_ERROR_STOP=1 -At -c "SELECT current_setting('data_checksums')")" = "on" ] \
+    && [ "$(psql -h /tmp -p 5489 -U smoke -d temporal_smoke -v ON_ERROR_STOP=1 -At -c "CREATE TABLE smoke (value integer); INSERT INTO smoke VALUES (42); SELECT value FROM smoke;" | tail -1)" = "42" ]
 RUN bun /app/ci/scripts/images/smoke-app-in-image.ts
 
 FROM runtime AS image

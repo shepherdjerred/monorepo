@@ -1,6 +1,7 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
+import { sentryDataCollection } from "@shepherdjerred/sentry-config";
 import App from "./components/app.tsx";
 import { migrateStorage } from "./storage/migrate.ts";
 import "#styles/globals.css";
@@ -14,6 +15,7 @@ const sentryRelease =
     : undefined;
 
 Sentry.init({
+  dataCollection: sentryDataCollection(),
   dsn: "https://34fcb766ca0f49499b001635c5cc5cb2@bugsink.sjer.red/3",
   release: sentryRelease,
   environment: import.meta.env.MODE,

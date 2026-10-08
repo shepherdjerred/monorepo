@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1-labs@sha256:63e440b412b6acba117974e793b7e7f702e58ee65e044bdff1b8d388ee0d853b
+# syntax=docker/dockerfile:1-labs@sha256:ad43eec41369d9ef94412c0d1eb3203d12218d01da225afc92a3aeba3a0e7796
 # Headless Discord Plays Pokémon. Build context is the REPO ROOT (single Bun
 # workspace, one root bun.lock, isolated linker, workspace:* deps). Built via
 # `bun run docker:build` in packages/discord-plays-pokemon/packages/backend
@@ -23,7 +23,7 @@
 # uses clang wasm32-unknown-unknown + wasm-ld (LLVM, NOT emscripten): trixie's
 # clang-19 produces a Bun-loadable binary (bookworm's clang-14 does not).
 # ---------------------------------------------------------------------------
-FROM debian:trixie-slim@sha256:a99cfc517144bc59b1978475ec53b46ecabec7e43635402ee5b77cc54cd1b20a AS wasm-builder
+FROM debian:trixie-slim@sha256:a29215f6a35e51e22adffa17f89e9d2ef06214e64a2bad10d765c46aea49f11f AS wasm-builder
 
 # Pinned commit of ottohg/pokeemerald-wasm. Kept in sync with the OTTOHG_SHA in
 # packages/discord-plays-pokemon/scripts/build-wasm.ts (the single source of
@@ -112,6 +112,7 @@ COPY --parents \
   packages/discord-plays-pokemon/packages/common \
   packages/discord-plays-pokemon/packages/frontend \
   packages/discord-plays-core \
+  packages/sentry-config \
   packages/discord-stream-lifecycle \
   packages/discord-video-stream \
   packages/llm-models \
@@ -195,6 +196,7 @@ COPY --parents \
   packages/discord-plays-pokemon/packages/backend \
   packages/discord-plays-pokemon/packages/common \
   packages/discord-plays-core \
+  packages/sentry-config \
   packages/discord-stream-lifecycle \
   packages/discord-video-stream \
   packages/llm-models \

@@ -78,18 +78,18 @@ afterEach(async () => {
 });
 
 describe("PVC backup policy", () => {
-  it("classifies 53 included and 28 excluded PVCs without duplicates", () => {
+  it("classifies 53 included and 35 excluded PVCs without duplicates", () => {
     const keys = PVC_BACKUP_POLICY.map((entry) =>
       pvcBackupPolicyKey(entry.namespace, entry.name),
     );
-    expect(keys).toHaveLength(81);
-    expect(new Set(keys).size).toBe(81);
+    expect(keys).toHaveLength(88);
+    expect(new Set(keys).size).toBe(88);
     expect(
       PVC_BACKUP_POLICY.filter((entry) => entry.backup === "enabled"),
     ).toHaveLength(53);
     expect(
       PVC_BACKUP_POLICY.filter((entry) => entry.backup === "disabled"),
-    ).toHaveLength(28);
+    ).toHaveLength(35);
     expect(
       getPvcBackupPolicy("minecraft-tsmc-restore", "datadir-minecraft-tsmc-0")
         .backup,
@@ -294,5 +294,34 @@ describe("PVC backup policy", () => {
     ).toThrow(
       "PVC test-unknown/missing-policy-entry is missing from the explicit backup policy",
     );
+  });
+});
+
+describe("PostgreSQL restore backup policy", () => {
+  it("excludes isolated PostgreSQL restore copies while retaining every source backup", () => {
+    const clusters = [
+      ["scout-beta", "scout-beta", "scout-beta"],
+      ["phoenix", "phoenix", "phoenix"],
+      ["grafana", "prometheus", "grafana"],
+      ["bugsink", "bugsink", "bugsink"],
+      ["scout-prod", "scout-prod", "scout-prod"],
+      ["temporal", "temporal", "temporal"],
+      ["woodpecker", "woodpecker", "woodpecker"],
+    ] as const;
+    for (const [rehearsal, sourceNamespace, cluster] of clusters) {
+      const name = `pgdata-${cluster}-postgresql-0`;
+      expect(getPvcBackupPolicy(sourceNamespace, name).backup).toBe("enabled");
+      expect(
+        getPvcBackupLabels(
+          getPvcBackupPolicy(`pg18-rehearsal-${rehearsal}`, name),
+        ),
+      ).toEqual({
+        "velero.io/backup": "disabled",
+        "velero.io/exclude-from-backup": "true",
+      });
+      expect(() => getPvcBackupPolicy("unclassified-restore", name)).toThrow(
+        "missing from the explicit backup policy",
+      );
+    }
   });
 });

@@ -62,9 +62,9 @@
     "typedoc-plugin-extras": "^4.0.1",
     "typedoc-plugin-zod": "^1.4.3",
     "typescript": "^6.0.3",
-    "vitest": "5.0.1",
+    "vitest": "5.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
-    "@vitest/coverage-istanbul": "5.0.1"
+    "@vitest/coverage-istanbul": "5.0.3"
   },
   "files": [
     "dist",

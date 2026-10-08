@@ -1,5 +1,6 @@
 import { Client, Connection } from "@temporalio/client";
 import * as Sentry from "@sentry/bun";
+import { sentryDataCollection } from "@shepherdjerred/sentry-config";
 import { sanitizeHttpCredentialBreadcrumb } from "./observability/http-credentials.ts";
 import { DefaultLogger, NativeConnection, Runtime } from "@temporalio/worker";
 import type { Worker } from "@temporalio/worker";
@@ -127,6 +128,7 @@ function initSentry(): void {
   }
 
   Sentry.init({
+    dataCollection: sentryDataCollection(),
     beforeBreadcrumb: sanitizeHttpCredentialBreadcrumb,
     dsn,
     environment: Bun.env["ENVIRONMENT"] ?? "production",
@@ -136,7 +138,7 @@ function initSentry(): void {
     // with the duplicate-registration check and silently fall back to a no-op
     // tracer — no spans reach Tempo. Sentry stays for errors via captureException;
     // performance traces go to Tempo only.
-    skipOpenTelemetrySetup: true,
+    enableOpenTelemetrySetup: false,
   });
   jsonLog("info", "Sentry initialized");
 }

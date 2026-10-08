@@ -658,6 +658,11 @@
       ]
     },
     {
+      "package": "@shepherdjerred/sentry-config",
+      "directory": "packages/sentry-config",
+      "steps": [{ "runner": "vitest", "args": ["test"] }]
+    },
+    {
       "package": "starlight-karma-bot",
       "directory": "packages/starlight-karma-bot",
       "steps": [

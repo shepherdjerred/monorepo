@@ -14,7 +14,7 @@ Bun.env["OPENAI_API_KEY"] ??= "test-key";
 Bun.env["TELEMETRY_ENABLED"] = "true";
 Bun.env["TELEMETRY_SERVICE_NAME"] = "birmel-test";
 // Sentry stays enabled with an unreachable DSN so we actually exercise the
-// skipOpenTelemetrySetup: true path. tracesSampleRate=0 keeps the SDK quiet.
+// enableOpenTelemetrySetup: false path. tracesSampleRate=0 keeps the SDK quiet.
 Bun.env["SENTRY_ENABLED"] = "true";
 Bun.env["SENTRY_DSN"] = "https://public@127.0.0.1:1/0";
 Bun.env["SENTRY_ENVIRONMENT"] = "development";

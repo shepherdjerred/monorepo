@@ -63,7 +63,7 @@ yq = "4"
 # (initdb/pg_ctl/psql/createdb/dropdb); major 16 matches the homelab clusters
 # (resources/postgres/*.ts, PostgresqlSpecPostgresqlVersion.VALUE_16).
 # renovate: datasource=github-releases depName=theseus-rs/postgresql-binaries
-"ubi:theseus-rs/postgresql-binaries" = { version = "16.15.0", extract_all = "true", bin_path = "bin" }
+"ubi:theseus-rs/postgresql-binaries" = { version = "18.6.0", extract_all = "true", bin_path = "bin" }
 # Homelab automation (helm push, tofu wrappers, ArgoCD sync, site deploys)
 helm = "4"
 opentofu = "1.13.1"

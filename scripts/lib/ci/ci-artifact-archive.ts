@@ -12,8 +12,6 @@ import {
 } from "node:fs/promises";
 import path from "node:path";
 import {
-  createGzipDecoder,
-  createGzipEncoder,
   createTarDecoder,
   packTar,
   type ParsedTarEntry,
@@ -183,7 +181,9 @@ async function gzip(bytes: Uint8Array): Promise<Uint8Array> {
   if (body === null)
     throw new Error("could not create artifact compression stream");
   return new Uint8Array(
-    await new Response(body.pipeThrough(createGzipEncoder())).arrayBuffer(),
+    await new Response(
+      body.pipeThrough(new CompressionStream("gzip")),
+    ).arrayBuffer(),
   );
 }
 
@@ -383,7 +383,7 @@ export async function restoreCiArtifactArchive(
   if (compressedBody === null)
     throw new Error("could not read CI artifact archive");
   const decoded = compressedBody
-    .pipeThrough(createGzipDecoder())
+    .pipeThrough(new DecompressionStream("gzip"))
     .pipeThrough(createTarDecoder({ strict: true }));
   const iterator = decoded[Symbol.asyncIterator]();
   const first = await iterator.next();

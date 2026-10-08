@@ -484,5 +484,47 @@
     "name": "flipt-data",
     "backup": "enabled",
     "reason": "Flipt git-backed flag state — the only durable copy of every flag definition"
+  },
+  {
+    "namespace": "pg18-rehearsal-scout-beta",
+    "name": "pgdata-scout-beta-postgresql-0",
+    "backup": "disabled",
+    "reason": "Isolated PostgreSQL restore verification copy; the independent source backup remains protected"
+  },
+  {
+    "namespace": "pg18-rehearsal-phoenix",
+    "name": "pgdata-phoenix-postgresql-0",
+    "backup": "disabled",
+    "reason": "Isolated PostgreSQL restore verification copy; the independent source backup remains protected"
+  },
+  {
+    "namespace": "pg18-rehearsal-grafana",
+    "name": "pgdata-grafana-postgresql-0",
+    "backup": "disabled",
+    "reason": "Isolated PostgreSQL restore verification copy; the independent source backup remains protected"
+  },
+  {
+    "namespace": "pg18-rehearsal-bugsink",
+    "name": "pgdata-bugsink-postgresql-0",
+    "backup": "disabled",
+    "reason": "Isolated PostgreSQL restore verification copy; the independent source backup remains protected"
+  },
+  {
+    "namespace": "pg18-rehearsal-scout-prod",
+    "name": "pgdata-scout-prod-postgresql-0",
+    "backup": "disabled",
+    "reason": "Isolated PostgreSQL restore verification copy; the independent source backup remains protected"
+  },
+  {
+    "namespace": "pg18-rehearsal-temporal",
+    "name": "pgdata-temporal-postgresql-0",
+    "backup": "disabled",
+    "reason": "Isolated PostgreSQL restore verification copy; the independent source backup remains protected"
+  },
+  {
+    "namespace": "pg18-rehearsal-woodpecker",
+    "name": "pgdata-woodpecker-postgresql-0",
+    "backup": "disabled",
+    "reason": "Isolated PostgreSQL restore verification copy; the independent source backup remains protected"
   }
 ]

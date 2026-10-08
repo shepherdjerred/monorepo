@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@shepherdjerred/sentry-config": "workspace:*",
     "@ai-sdk/anthropic": "^4.0.62",
     "@ai-sdk/google": "^4.0.79",
     "@ai-sdk/openai": "^4.0.74",
@@ -13,11 +14,11 @@
     "@scout-for-lol/data": "workspace:*",
     "@scout-for-lol/design-system": "workspace:*",
     "@scout-for-lol/report": "workspace:*",
-    "@sentry/browser": "^10.0.0",
+    "@sentry/browser": "^11.5.0",
     "@shepherdjerred/llm-models": "workspace:*",
     "@tailwindcss/typography": "^0.5.16",
     "@tailwindcss/vite": "^4.2.4",
-    "ai": "^7.0.127",
+    "ai": "^7.0.133",
     "astro": "^7.3.3",
     "astro-icon": "^1.1.1",
     "astro-opengraph-images": "workspace:*",
@@ -57,8 +58,8 @@
     "eslint": "^10.7.0",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
-    "vitest": "5.0.1",
-    "@vitest/coverage-istanbul": "5.0.1"
+    "vitest": "5.0.3",
+    "@vitest/coverage-istanbul": "5.0.3"
   },
   "description": "Web frontend for Scout for League of Legends",
   "keywords": [

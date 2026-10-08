@@ -63,18 +63,19 @@ beta, but the identifiers are still real. Prefer beta unless the bug is
 production-only.
 
 :::danger[Do not hand-roll this with kubectl and pg_dump]
-Three things fail silently. The Spilo pod carries several PostgreSQL toolchains
-and `PATH` resolves to the newest — 18, against a 16 server — which writes an
-archive the local client cannot read while still exiting 0. The cluster runs
-`pg_stat_kcache` and `set_user`, which the local build does not ship, so
-dumping them breaks the restore. And the dump's own `CREATE SCHEMA public`
-collides with the one `createdb` provides, which under `--single-transaction`
-rolls back everything.
+The Spilo pod carries several PostgreSQL toolchains. The helper selects
+`pg_dump` by the running server's major version and refuses an older local
+restore client. Run `mise install` after a repository toolchain change.
+Monitoring extensions absent from the local build are excluded from the dump.
+The helper also recreates the target schema before restoring and verifies that
+every source table arrived. A direct dump bypasses these checks and credential
+redaction.
 [`dev-db-pull-plan.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/scripts/dev/dev-db-pull-plan.ts)
-handles all three.
+enforces these checks.
 :::
 
 ## Related
 
 - [Connect to a homelab database](/how-to/connect-to-a-homelab-database/)
 - [Run the Scout design audit](/how-to/run-scout-design-audit/)
+- [Upgrade a homelab PostgreSQL major version](/how-to/upgrade-a-homelab-postgresql-major-version/)

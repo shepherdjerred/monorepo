@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1-labs@sha256:63e440b412b6acba117974e793b7e7f702e58ee65e044bdff1b8d388ee0d853b
+# syntax=docker/dockerfile:1-labs@sha256:ad43eec41369d9ef94412c0d1eb3203d12218d01da225afc92a3aeba3a0e7796
 # Headless Discord Plays Mario Kart. Build context is the REPO ROOT (single Bun
 # workspace, one root bun.lock, isolated linker, workspace:* deps). Built via
 # `bun run docker:build` in packages/discord-plays-mario-kart/packages/backend
@@ -72,6 +72,7 @@ COPY --parents \
   packages/discord-plays-mario-kart/packages/common \
   packages/discord-plays-mario-kart/packages/frontend \
   packages/discord-plays-core \
+  packages/sentry-config \
   packages/discord-stream-lifecycle \
   packages/discord-video-stream \
   packages/loaded \
@@ -141,6 +142,7 @@ COPY --parents \
   packages/discord-plays-mario-kart/packages/backend \
   packages/discord-plays-mario-kart/packages/common \
   packages/discord-plays-core \
+  packages/sentry-config \
   packages/discord-stream-lifecycle \
   packages/discord-video-stream \
   ./

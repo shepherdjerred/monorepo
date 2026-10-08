@@ -85,6 +85,14 @@ lock-guarded `prisma generate`. Storage is SQLite through
 unmigrated database, resolves the verified baseline when appropriate, and runs
 `prisma migrate deploy` before starting the bot.
 
+## Observability
+
+Bugsink receives errors through Sentry. The typed configuration requires
+`SENTRY_TRACES_SAMPLE_RATE=0`; OpenTelemetry owns traces sent to Tempo and
+Phoenix. Sentry initialization uses the shared data collection policy from
+`@shepherdjerred/sentry-config` to retain the existing privacy defaults during
+SDK upgrades.
+
 ## Docker
 
 ```bash

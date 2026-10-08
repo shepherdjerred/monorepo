@@ -57,6 +57,6 @@
     "bun-types": "1.4.2",
     "eslint": "^10.7.0",
     "typescript": "^6.0.3",
-    "vitest": "5.0.1"
+    "vitest": "5.0.3"
   }
 }
