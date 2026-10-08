@@ -40,7 +40,7 @@
     "@types/node": "^26.1.1",
     "@types/react": "^19.3.0",
     "@typescript/native": "npm:typescript@7.0.2",
-    "@vitest/coverage-istanbul": "5.0.1",
+    "@vitest/coverage-istanbul": "5.0.3",
     "bun-types": "1.4.2",
     "eslint": "^10.7.0",
     "eslint-import-resolver-typescript": "^4.4.4",
@@ -55,8 +55,8 @@
     "jiti": "^2.7.0",
     "prettier": "^3.9.9",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.71.0",
-    "vitest": "5.0.1"
+    "typescript-eslint": "^8.71.1",
+    "vitest": "5.0.3"
   },
   "dependencies": {
     "@scout-for-lol/design-system": "workspace:*",

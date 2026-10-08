@@ -287,7 +287,7 @@ test("rejects stale qBittorrent Ubuntu tags while retaining semantic app tags", 
     await Bun.file(`${root}/renovate.json`).json(),
   );
   const description =
-    "Ignore bogus LinuxServer qBittorrent OS tags such as 20.04.1; those are stale Ubuntu YY.MM-based image tags, not qBittorrent app versions. qBittorrent never zero-pads its minor version, so rejecting a leading-zero minor excludes them while keeping every semantic app tag.";
+    "Track modern qBittorrent app tags with single-digit majors 4-9. Historical Ubuntu tags use two-digit majors such as 14 and 20; Docker version normalization removes their zero-padded minor, so checking the minor alone cannot reject those stale images.";
   const rules = config.packageRules.filter((candidate) =>
     candidate.matchPackageNames?.includes("linuxserver/qbittorrent"),
   );
@@ -296,7 +296,7 @@ test("rejects stale qBittorrent Ubuntu tags while retaining semantic app tags", 
     {
       description,
       matchPackageNames: ["linuxserver/qbittorrent"],
-      allowedVersions: String.raw`/^[0-9]+\.(0|[1-9][0-9]*)\.[0-9]+$/`,
+      allowedVersions: String.raw`/^[4-9]\.(0|[1-9][0-9]*)\.[0-9]+$/`,
     },
   ]);
 
@@ -306,8 +306,35 @@ test("rejects stale qBittorrent Ubuntu tags while retaining semantic app tags", 
   }
   const allowed = new RegExp(allowedVersions.slice(1, -1));
   expect(allowed.test("20.04.1")).toBe(false);
+  expect(allowed.test("20.4.1")).toBe(false);
+  expect(allowed.test("14.04.1")).toBe(false);
+  expect(allowed.test("14.4.1")).toBe(false);
   expect(allowed.test("5.2.3")).toBe(true);
   expect(allowed.test("5.10.0")).toBe(true);
+  expect(allowed.test("6.0.0")).toBe(true);
+});
+
+test("keeps Storm tool versions managed at the authoritative Gradle catalog", async () => {
+  const config = RenovateConfigSchema.parse(
+    await Bun.file(`${root}/renovate.json`).json(),
+  );
+  const consumer =
+    "packages/the-storm/plugin/build-logic/src/main/kotlin/storm.java-conventions.gradle.kts";
+  const rule = config.packageRules.find(
+    (candidate) =>
+      candidate.matchManagers?.includes("gradle") === true &&
+      candidate.matchFileNames?.includes(consumer) === true,
+  );
+  expect(rule?.enabled).toBe(false);
+  expect(rule?.matchFileNames).toEqual([consumer]);
+  const source = await Bun.file(`${root}/${consumer}`).text();
+  expect(source).toContain('toolVersion = version("jacoco")');
+  expect(source).toContain('toolVersion = version("pmd")');
+  const catalog = "packages/the-storm/plugin/gradle/libs.versions.toml";
+  expect(config.ignorePaths).not.toContain(catalog);
+  const catalogSource = await Bun.file(`${root}/${catalog}`).text();
+  expect(catalogSource).toMatch(/^jacoco = "\d+\.\d+\.\d+"$/m);
+  expect(catalogSource).toMatch(/^pmd = "\d+\.\d+\.\d+"$/m);
 });
 
 test("updates application Dockerfile tool pins without hardcoded test fixtures", async () => {
