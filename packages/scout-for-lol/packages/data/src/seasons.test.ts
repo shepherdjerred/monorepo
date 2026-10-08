@@ -56,6 +56,7 @@ describe("seasons", () => {
         "2026_SEASON_2_ACT_1",
         "2026_SEASON_2_ACT_2",
         "2026_SEASON_3_ACT_1",
+        "2026_SEASON_3_ACT_2",
       ] as const;
       for (const id of validIds) {
         const result = SeasonIdSchema.safeParse(id);
@@ -130,15 +131,20 @@ describe("seasons", () => {
       const choices = getSeasonChoices(new Date("2026-06-15T12:00:00-07:00"));
 
       expect(choices.map((choice) => choice.value)).toEqual([
+        "2026_SEASON_3_ACT_2",
         "2026_SEASON_3_ACT_1",
         "2026_SEASON_2_ACT_2",
       ]);
     });
 
     test("includes a season through its exact end boundary", () => {
-      const choices = getSeasonChoices(new Date("2026-10-20T23:59:59-07:00"));
+      const choices = getSeasonChoices(new Date("2026-10-06T23:59:59-07:00"));
 
       expect(choices).toEqual([
+        {
+          name: "Worlds 2026",
+          value: "2026_SEASON_3_ACT_2",
+        },
         {
           name: "Classic (Act 1)",
           value: "2026_SEASON_3_ACT_1",
@@ -147,9 +153,15 @@ describe("seasons", () => {
     });
 
     test("returns no choices after every bundled season has ended", () => {
-      expect(getSeasonChoices(new Date("2026-10-21T00:00:00-07:00"))).toEqual(
+      expect(getSeasonChoices(new Date("2027-01-07T00:00:00-08:00"))).toEqual(
         [],
       );
+    });
+
+    test("keeps Worlds available after Act I ends", () => {
+      expect(getSeasonChoices(new Date("2026-10-07T11:00:00-07:00"))).toEqual([
+        { name: "Worlds 2026", value: "2026_SEASON_3_ACT_2" },
+      ]);
     });
 
     test("returns valid labeled Discord choices", () => {
@@ -192,11 +204,18 @@ describe("seasons", () => {
       expect(dates).toBeUndefined();
     });
 
-    test("should use the Season 3 Act 1 patch boundaries", () => {
+    test("uses the published Season 3 Act I end date", () => {
       const dates = getSeasonDates("2026_SEASON_3_ACT_1");
       expect(dates).toEqual({
         startDate: new Date("2026-07-29T12:00:00-07:00"),
-        endDate: new Date("2026-10-20T23:59:59-07:00"),
+        endDate: new Date("2026-10-06T23:59:59-07:00"),
+      });
+    });
+
+    test("uses the published Worlds Act II schedule across PT daylight saving", () => {
+      expect(getSeasonDates("2026_SEASON_3_ACT_2")).toEqual({
+        startDate: new Date("2026-10-07T11:00:00-07:00"),
+        endDate: new Date("2027-01-06T23:59:59-08:00"),
       });
     });
   });
@@ -233,7 +252,7 @@ describe("ranked splits", () => {
       id: "2026_SEASON_3",
       displayName: "2026 Season 3",
       startDate: new Date("2026-07-29T12:00:00-07:00"),
-      endDate: new Date("2026-10-20T23:59:59-07:00"),
+      endDate: new Date("2027-01-06T23:59:59-08:00"),
     });
   });
 
@@ -243,6 +262,9 @@ describe("ranked splits", () => {
     ).toBe("2026_SEASON_3");
     expect(
       getCurrentRankedSplit(new Date("2026-09-23T00:00:00-07:00")).id,
+    ).toBe("2026_SEASON_3");
+    expect(
+      getCurrentRankedSplit(new Date("2026-10-21T12:00:00-07:00")).id,
     ).toBe("2026_SEASON_3");
     expect(
       getCurrentRankedSplit(new Date("2026-06-15T12:00:00-07:00")).id,

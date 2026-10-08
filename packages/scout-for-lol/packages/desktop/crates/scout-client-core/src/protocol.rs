@@ -566,7 +566,7 @@ mod tests {
         let batch = ObservationBatch::bounded(observations)?;
         let encoded = serde_json::to_vec(&batch).map_err(ProtocolError::Serialize)?;
 
-        assert!(!batch.observations.is_empty());
+        assert_ne!(batch.observations.len(), 0);
         assert!(batch.observations.len() < 100);
         assert!(encoded.len() <= MAX_OBSERVATION_BATCH_BYTES);
         Ok(())

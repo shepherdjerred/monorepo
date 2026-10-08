@@ -41,11 +41,11 @@ type Props<T extends string> = {
 export function MultiSelectSection<T extends string>({
   title,
   items,
-  selected,
+  selected = [],
   labelFn,
   onToggle,
   onCreate,
-  createPlaceholder,
+  createPlaceholder = "Add…",
   matches,
   testIDPrefix,
   disabled = false,
@@ -54,7 +54,7 @@ export function MultiSelectSection<T extends string>({
   const reducedMotion = useReducedMotion();
   const [draft, setDraft] = useState("");
 
-  const current = selected ?? [];
+  const current = selected;
   const matcher = matches ?? ((a: T, b: T): boolean => a === b);
   const available = items.filter(
     (item) => !current.some((s) => matcher(s, item)),
@@ -138,7 +138,7 @@ export function MultiSelectSection<T extends string>({
             editable={!disabled}
             onChangeText={setDraft}
             onSubmitEditing={handleCreate}
-            placeholder={createPlaceholder ?? "Add…"}
+            placeholder={createPlaceholder}
             placeholderTextColor={colors.textTertiary}
             autoCapitalize="none"
             autoCorrect={false}

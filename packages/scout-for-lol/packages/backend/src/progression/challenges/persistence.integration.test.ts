@@ -482,7 +482,13 @@ describe("challenge timeline durability", () => {
     });
     const slugs = templates
       .map((t) => t.slug)
-      .toSorted((left, right) => (left ?? "").localeCompare(right ?? ""));
+      .toSorted((left, right) => {
+        let leftSlug = left;
+        leftSlug ??= "";
+        let rightSlug = right;
+        rightSlug ??= "";
+        return leftSlug.localeCompare(rightSlug);
+      });
     expect(slugs).toEqual([
       "scout-win-every-champion-arena-first",
       "scout-win-every-champion-arena-win",

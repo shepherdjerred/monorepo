@@ -154,7 +154,7 @@ const reviewedRules = Object.fromEntries(
 );
 
 export const reviewedUnicornConfig: TSESLint.FlatConfig.Config = {
-  ...unicorn.configs["flat/recommended"],
+  ...unicorn.configs.recommended,
   name: "unicorn/reviewed-recommended",
   rules: {
     // These core rules are replaced by the corresponding reviewed Unicorn

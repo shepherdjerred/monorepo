@@ -31,14 +31,16 @@ type ColumnSpec = [
 ];
 
 function columnGroup(group: string, specs: ColumnSpec[]): ExplorerColumn[] {
-  return specs.map(([id, label, type, description, defaultVisible]) => ({
-    id,
-    label,
-    type,
-    description,
-    group,
-    defaultVisible: defaultVisible ?? false,
-  }));
+  return specs.map(
+    ([id, label, type, description, defaultVisible = false]) => ({
+      id,
+      label,
+      type,
+      description,
+      group,
+      defaultVisible,
+    }),
+  );
 }
 
 /**

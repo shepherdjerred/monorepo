@@ -2378,7 +2378,7 @@ mod tests {
             serde_json::to_vec(&json!({ "partyId": "party-1" }))?,
         );
         bind_observed_lobby(&outbox, &payloads, Some("puuid"), &diagnostics)?;
-        assert!(outbox.pending(100)?.is_empty());
+        assert_eq!(outbox.pending(100)?.len(), 0);
 
         // In game: LCU drops the lobby and names the game, with no link back.
         payloads.remove("lobby");
@@ -2415,7 +2415,7 @@ mod tests {
 
         bind_observed_lobby(&outbox, &payloads, Some("puuid"), &diagnostics)?;
 
-        assert!(outbox.pending(100)?.is_empty());
+        assert_eq!(outbox.pending(100)?.len(), 0);
         assert_eq!(lobby_bindings(&diagnostics), Some(0));
         let _ = std::fs::remove_file(&path);
         Ok(())

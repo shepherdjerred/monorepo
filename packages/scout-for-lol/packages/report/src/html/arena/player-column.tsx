@@ -35,7 +35,10 @@ export function PlayerColumn({
   totalTeamDamage: number;
   teamSize: number;
 }) {
-  const damagePercent = round((player.damage / (maxTeamDamage || 1)) * 100, 0);
+  const damagePercent = round(
+    (player.damage / (maxTeamDamage === 0 ? 1 : maxTeamDamage)) * 100,
+    0,
+  );
   const teamDamagePercent = getDamageSharePercent(
     player.damage,
     totalTeamDamage,

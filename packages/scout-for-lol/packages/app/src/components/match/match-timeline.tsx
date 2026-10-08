@@ -161,7 +161,7 @@ function MatchTimelineContent(
   },
 ) {
   const {
-    eventType,
+    eventType = "",
     setEventType,
     participantId,
     setParticipantId,
@@ -193,7 +193,7 @@ function MatchTimelineContent(
           <span className="block">Event type</span>
           <select
             name="eventType"
-            value={eventType ?? ""}
+            value={eventType}
             className="h-9 rounded-md border border-input bg-background px-3"
             onChange={(event) => {
               setEventType(event.currentTarget.value || undefined);

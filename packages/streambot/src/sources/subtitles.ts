@@ -109,7 +109,7 @@ export function parseSidecarName(
   const middle = rest.slice(1, rest.length - (ext.length + 1));
   const tokens = middle.length > 0 ? middle.split(".") : [];
 
-  const [langToken, ...modifierTokens] = tokens;
+  const [langToken = null, ...modifierTokens] = tokens;
   let modifier: SubtitleModifier | null = null;
   for (const raw of modifierTokens) {
     const parsed = SubtitleModifierSchema.safeParse(raw.toLowerCase());
@@ -118,7 +118,7 @@ export function parseSidecarName(
       break;
     }
   }
-  return { lang: langToken ?? null, modifier };
+  return { lang: langToken, modifier };
 }
 
 export type SidecarCandidate = SidecarInfo & { readonly file: string };

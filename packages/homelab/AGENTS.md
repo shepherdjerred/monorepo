@@ -47,6 +47,18 @@ Immutable-field preflight evaluates the revision being applied and respects
 only declared, effective `jsonPointers`. Unknown selectors or operation fields
 fail closed.
 
+Talos and Kubernetes version changes are source and live operations in the
+same delivery. Pair catalog, installer, bootstrap and associated client pins
+with the corresponding live upgrade; never merge a pin-only update or report
+the upgrade complete without verifying the running versions on every node.
+Read the live versions before selecting targets, follow the supported upgrade
+path through required intermediate releases, and do not advance the next pin
+while the previous live upgrade is incomplete. ArgoCD does not upgrade the
+Talos OS or Kubernetes control plane. Use the existing upgrade procedure in
+`README.md` and record per-node versions, health checks and observed disruption
+in the PR. If live execution is blocked, keep the pin change unmerged and
+record the blocker.
+
 Storage deletion, R2 orphan cleanup, state surgery, and resource replacement
 are destructive. Produce and review the exact candidate set first, then use the
 existing revalidation workflow. A successful backup is not restore proof.

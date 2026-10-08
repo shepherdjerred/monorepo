@@ -79,9 +79,8 @@ describe("web media artwork", () => {
       (entry) => artwork.forEntry(entry, GUILD),
     );
     const ids = urls.map(
-      (url) =>
-        new URL(url ?? "", "http://127.0.0.1:8080").searchParams.get("id") ??
-        "",
+      (url = "") =>
+        new URL(url, "http://127.0.0.1:8080").searchParams.get("id") ?? "",
     );
     await Promise.all(ids.map((id) => artwork.resolve(id)));
     expect(lookup).toHaveBeenCalledTimes(1);

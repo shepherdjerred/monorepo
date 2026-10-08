@@ -133,9 +133,9 @@ async function handleRemoveTimeout(
 
 async function handleListBans(
   guild: Guild,
-  limit: number | undefined,
+  limit: number | undefined = 100,
 ): Promise<ModerationResult> {
-  const bans = await guild.bans.fetch({ limit: limit ?? 100 });
+  const bans = await guild.bans.fetch({ limit: limit });
   const list = bans.map((b) => ({
     id: b.user.id,
     username: b.user.username,

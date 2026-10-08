@@ -7,6 +7,7 @@ import {
 } from "@opentelemetry/sdk-trace-base";
 import { resourceFromAttributes } from "@opentelemetry/resources";
 import { trace, type Context, type Span } from "@opentelemetry/api";
+import { ExportResultCode } from "@opentelemetry/core";
 import {
   LlmArchiveSpanProcessor,
   type ArchiveUploader,
@@ -290,7 +291,7 @@ test("redacts secrets inside body attributes on the forwarded span", async () =>
   expect(collector.spans.length).toBe(1);
   const body = collector.spans[0]!.attributes["gen_ai.input.messages"];
   expect(typeof body).toBe("string");
-  if (typeof body !== "string") throw new Error("missing body attribute");
+  if (typeof body !== "string") throw new TypeError("missing body attribute");
   expect(body).not.toContain("aaa-bbb-ccc");
   expect(body).toContain("[REDACTED]");
 });
@@ -372,7 +373,7 @@ test("registers as SimpleSpanProcessor compat (does not throw)", () => {
   };
   const simple = new SimpleSpanProcessor({
     export(_spans, cb) {
-      cb({ code: 0 });
+      cb({ code: ExportResultCode.SUCCESS });
     },
     async shutdown() {
       // no-op: smoke-test stub

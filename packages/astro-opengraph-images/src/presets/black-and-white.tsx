@@ -2,7 +2,7 @@ import type { RenderFunctionInput } from "#src/types.js";
 
 export function blackAndWhite({
   title,
-  description,
+  description = "",
 }: RenderFunctionInput): React.ReactNode {
   return (
     <div
@@ -30,7 +30,7 @@ export function blackAndWhite({
           fontSize: 40,
         }}
       >
-        {description ?? ""}
+        {description}
       </div>
     </div>
   );

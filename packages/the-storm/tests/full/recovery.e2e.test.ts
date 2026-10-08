@@ -30,10 +30,8 @@ describe("minor survival recovery on real Paper", () => {
       for (const player of [bot, secondBot]) {
         await rcon.command(`minecraft:tp ${player.username} -37.5 101 40.5`);
       }
-      await waitUntil(
-        "isolated recovery platform",
-        () =>
-          bot.entity.position.y === 101 && secondBot.entity.position.y === 101,
+      await waitUntil("isolated recovery platform", () =>
+        [bot, secondBot].every((player) => player.entity.position.y === 101),
       );
       await rcon.command(`damage ${bot.username} 15 minecraft:generic`);
       await waitUntil("injured survivor", () => bot.health === 5);
@@ -68,6 +66,8 @@ describe("minor survival recovery on real Paper", () => {
       });
       await Bun.sleep(8000);
       expect(bot.health).toBeCloseTo(20 / 3, 3);
+      for (const player of [bot, secondBot])
+        expect(player.entity.position.y).toBeGreaterThan(100);
 
       const apple = bot.inventory
         .items()

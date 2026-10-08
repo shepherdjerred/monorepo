@@ -21,9 +21,9 @@ export function normalizeLogin(login: string | null): string | null {
 /** True when `login` belongs to `provider` (exact, case-insensitive match). */
 export function isProviderAuthor(
   provider: ReviewProvider,
-  login: string | null | undefined,
+  login: string | null = null,
 ): boolean {
-  const normalized = normalizeLogin(login ?? null);
+  const normalized = normalizeLogin(login);
   if (normalized === null) return false;
   const lower = normalized.toLowerCase();
   return provider.authorLogins.some((token) => lower === token.toLowerCase());

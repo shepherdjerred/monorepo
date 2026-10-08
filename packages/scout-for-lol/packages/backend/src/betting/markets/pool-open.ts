@@ -23,8 +23,8 @@ import {
 import { logBucksTransition } from "#src/betting/transition-log.ts";
 
 /** Prometheus label values must be bounded; a queue with spaces is normalised. */
-function metricQueueType(queueType: string | undefined): string {
-  return (queueType ?? "unknown").replaceAll(" ", "_");
+function metricQueueType(queueType = "unknown"): string {
+  return queueType.replaceAll(" ", "_");
 }
 
 const logger = createLogger("betting-pool-open");

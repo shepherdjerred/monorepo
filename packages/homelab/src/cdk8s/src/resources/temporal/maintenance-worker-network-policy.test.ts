@@ -114,7 +114,7 @@ describe("maintenance worker network boundary", () => {
     expect(
       jobs
         .map((job) => job.metadata?.name)
-        .sort((left, right) => (left ?? "").localeCompare(right ?? "")),
+        .sort((left = "", right = "") => left.localeCompare(right)),
     ).toEqual(["temporal-namespace-init", "temporal-schema-migration"]);
     expect(
       namedResources.filter((resource) => resource.kind === "CronJob"),

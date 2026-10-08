@@ -87,7 +87,7 @@ async function metric(
     throw new Error("Prometheus returned no samples for CI load");
   for (const sample of result.data.result) {
     if (!Number.isFinite(Number(sample.value[1])))
-      throw new Error("Prometheus returned a non-finite CI load sample");
+      throw new TypeError("Prometheus returned a non-finite CI load sample");
     if (Date.now() / 1000 - sample.value[0] > 120)
       throw new Error("CI load telemetry is stale");
   }

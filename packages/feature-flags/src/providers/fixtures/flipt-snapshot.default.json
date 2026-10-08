@@ -4,16 +4,58 @@
   },
   "flags": [
     {
+      "key": "plain-on",
+      "name": "",
+      "description": "",
+      "enabled": true,
+      "type": "BOOLEAN_FLAG_TYPE",
+      "createdAt": "2026-10-05T01:25:24.240885Z",
+      "updatedAt": "2026-10-05T01:25:24.240885Z",
+      "rules": [],
+      "rollouts": []
+    },
+    {
+      "key": "plain-off",
+      "name": "",
+      "description": "",
+      "enabled": false,
+      "type": "BOOLEAN_FLAG_TYPE",
+      "createdAt": "2026-10-05T01:25:24.240885Z",
+      "updatedAt": "2026-10-05T01:25:24.240885Z",
+      "rules": [],
+      "rollouts": []
+    },
+    {
+      "key": "ramp-30",
+      "name": "",
+      "description": "",
+      "enabled": false,
+      "type": "BOOLEAN_FLAG_TYPE",
+      "createdAt": "2026-10-05T01:25:24.240885Z",
+      "updatedAt": "2026-10-05T01:25:24.240885Z",
+      "rules": [],
+      "rollouts": [
+        {
+          "type": "THRESHOLD_ROLLOUT_TYPE",
+          "rank": 1,
+          "threshold": {
+            "percentage": 30,
+            "value": true
+          }
+        }
+      ]
+    },
+    {
       "key": "model-name",
       "name": "",
       "description": "",
       "enabled": true,
       "type": "VARIANT_FLAG_TYPE",
-      "createdAt": "2026-09-24T19:32:38.891290Z",
-      "updatedAt": "2026-09-24T19:32:38.891290Z",
+      "createdAt": "2026-10-05T01:25:24.240885Z",
+      "updatedAt": "2026-10-05T01:25:24.240885Z",
       "rules": [
         {
-          "id": "9b56abe5-210e-4aa7-9aab-159d30e0a01d",
+          "id": "1bbe46c9-438a-4de3-b493-00e67f4ecfa9",
           "segments": [
             {
               "key": "everyone",
@@ -27,58 +69,16 @@
           "segmentOperator": "OR_SEGMENT_OPERATOR",
           "distributions": [
             {
-              "ruleId": "9b56abe5-210e-4aa7-9aab-159d30e0a01d",
+              "ruleId": "1bbe46c9-438a-4de3-b493-00e67f4ecfa9",
               "variantKey": "gpt-5.6-sol",
-              "variantAttachment": "null",
+              "variantAttachment": "{}",
               "rollout": 100
             }
           ]
         }
       ],
       "rollouts": []
-    },
-    {
-      "key": "plain-on",
-      "name": "",
-      "description": "",
-      "enabled": true,
-      "type": "BOOLEAN_FLAG_TYPE",
-      "createdAt": "2026-09-24T19:32:38.891290Z",
-      "updatedAt": "2026-09-24T19:32:38.891290Z",
-      "rules": [],
-      "rollouts": []
-    },
-    {
-      "key": "plain-off",
-      "name": "",
-      "description": "",
-      "enabled": false,
-      "type": "BOOLEAN_FLAG_TYPE",
-      "createdAt": "2026-09-24T19:32:38.891290Z",
-      "updatedAt": "2026-09-24T19:32:38.891290Z",
-      "rules": [],
-      "rollouts": []
-    },
-    {
-      "key": "ramp-30",
-      "name": "",
-      "description": "",
-      "enabled": false,
-      "type": "BOOLEAN_FLAG_TYPE",
-      "createdAt": "2026-09-24T19:32:38.891290Z",
-      "updatedAt": "2026-09-24T19:32:38.891290Z",
-      "rules": [],
-      "rollouts": [
-        {
-          "type": "THRESHOLD_ROLLOUT_TYPE",
-          "rank": 1,
-          "threshold": {
-            "percentage": 30,
-            "value": true
-          }
-        }
-      ]
     }
   ],
-  "digest": "49515220acf7fb574f8178d5c3bbcdb9b4890b5c"
+  "digest": "a2d891d14af143e0759211cc4e350c8f09edcf1c"
 }

@@ -72,7 +72,7 @@ function alertGroupId(alert: AlertmanagerAlert): string {
     identity.taskQueue,
   ];
   const suffix = qualifiers.some((value) => value !== undefined)
-    ? `:${qualifiers.map((value) => encodeURIComponent(value ?? "-")).join(":")}`
+    ? `:${qualifiers.map((value = "-") => encodeURIComponent(value)).join(":")}`
     : "";
   return `alerts:${identity.alertname}:${identity.namespace ?? "-"}${suffix}${identity.state === "active" ? "" : `:${identity.state}`}`;
 }

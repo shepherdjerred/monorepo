@@ -31,6 +31,7 @@ export const SeasonIdSchema = z.enum([
   "2026_SEASON_2_ACT_1",
   "2026_SEASON_2_ACT_2",
   "2026_SEASON_3_ACT_1",
+  "2026_SEASON_3_ACT_2",
 ]);
 
 export type SeasonId = z.infer<typeof SeasonIdSchema>;
@@ -86,7 +87,17 @@ export const SEASONS: Record<SeasonId, SeasonData> = {
     id: "2026_SEASON_3_ACT_1",
     displayName: "Classic (Act 1)",
     startDate: new Date("2026-07-29T12:00:00-07:00"),
-    endDate: new Date("2026-10-20T23:59:59-07:00"),
+    // Riot's Act I pass deactivation date, retaining the existing season ID:
+    // https://support.riotgames.com/en-us/league-of-legends/events/league-of-legends-season-3-act-i/
+    endDate: new Date("2026-10-06T23:59:59-07:00"),
+  },
+  "2026_SEASON_3_ACT_2": {
+    id: "2026_SEASON_3_ACT_2",
+    displayName: "Worlds 2026",
+    // Published Act II start and pass deactivation, with PT's DST offsets:
+    // https://support.riotgames.com/en-us/league-of-legends/events/league-of-legends-season-3-worlds-2026/
+    startDate: new Date("2026-10-07T11:00:00-07:00"),
+    endDate: new Date("2027-01-06T23:59:59-08:00"),
   },
 };
 

@@ -14,8 +14,8 @@ describe("createPlayerAnonymizer", () => {
     const runOne = createPlayerAnonymizer();
     const runTwo = createPlayerAnonymizer();
 
-    const first = keys.map(([key, name]) => runOne(key ?? "", name ?? ""));
-    const second = keys.map(([key, name]) => runTwo(key ?? "", name ?? ""));
+    const first = keys.map(([key = "", name = ""]) => runOne(key, name));
+    const second = keys.map(([key = "", name = ""]) => runTwo(key, name));
 
     expect(second).toEqual(first);
   });

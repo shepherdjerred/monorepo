@@ -96,6 +96,10 @@ let CI and ArgoCD apply it; do not make an untracked dashboard or cluster
 mutation when a declarative path exists. Load the homelab development or
 operations skill before changing or operating that system.
 
+Talos and Kubernetes version bumps must include the matching live cluster
+upgrade. Follow `packages/homelab/AGENTS.md`; never deliver a pin-only update or
+advance to another target while the previous live upgrade remains incomplete.
+
 These are separate acceptance layers:
 
 1. source and focused local checks;

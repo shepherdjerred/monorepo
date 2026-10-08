@@ -173,7 +173,7 @@ in addition to its existing DNS and zone settings permissions. Preserve existing
 CT recipients with the explicit null `ct_alert_recipient` override; new alerts
 deliver to the confirmed `root@sjer.red` inbox by default. The baseline keeps
 the previously configured recipient on `better-skill-capped.com`. Cloudflare
-provider 5.25.0 omits unchanged `enabled` on recipient-only updates even though
+provider 5.27.0 omits unchanged `enabled` on recipient-only updates even though
 the API requires it. A recipient change triggers a create-before-destroy state
 replacement: Create sends the full configuration and this provider's Delete
 is a no-op, so alerts stay enabled. Recheck that contract when upgrading the

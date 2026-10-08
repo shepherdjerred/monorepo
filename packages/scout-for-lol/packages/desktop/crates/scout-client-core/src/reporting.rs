@@ -119,15 +119,11 @@ pub fn start_error_reporting(environment: &str) -> Option<ClientInitGuard> {
     }
     Some(sentry::init((
         BUGSINK_DSN,
-        ClientOptions {
-            release: Some(env!("CARGO_PKG_VERSION").into()),
-            environment: Some(environment.to_owned().into()),
-            // Bugsink has no performance monitoring; every call site in this
-            // repository says so.
-            traces_sample_rate: 0.0,
-            shutdown_timeout: FLUSH_TIMEOUT,
-            ..Default::default()
-        },
+        // Tracing stays disabled by default: Bugsink only receives errors.
+        ClientOptions::new()
+            .release(env!("CARGO_PKG_VERSION"))
+            .environment(environment.to_owned())
+            .shutdown_timeout(FLUSH_TIMEOUT),
     )))
 }
 

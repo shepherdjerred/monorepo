@@ -138,7 +138,7 @@ describe("Temporal workflow outcome rules", () => {
       expect(
         rules
           .map((rule) => rule.labels?.["task_queue"])
-          .toSorted((left, right) => (left ?? "").localeCompare(right ?? "")),
+          .toSorted((left = "", right = "") => left.localeCompare(right)),
       ).toEqual(
         TEMPORAL_DOMAIN_QUEUES.map((definition) => definition.queue).toSorted(
           (left, right) => left.localeCompare(right),

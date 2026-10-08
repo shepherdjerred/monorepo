@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   ActionRowBuilder,
   ButtonBuilder,
+  ButtonStyle,
   type APIEmbed,
   type MessageCreateOptions,
 } from "discord.js";
@@ -103,10 +104,19 @@ const button = z
   .union([
     z.strictObject({
       ...buttonBase,
-      style: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
+      style: z.union([
+        z.literal(ButtonStyle.Primary),
+        z.literal(ButtonStyle.Secondary),
+        z.literal(ButtonStyle.Success),
+        z.literal(ButtonStyle.Danger),
+      ]),
       custom_id: z.string(),
     }),
-    z.strictObject({ ...buttonBase, style: z.literal(5), url: z.string() }),
+    z.strictObject({
+      ...buttonBase,
+      style: z.literal(ButtonStyle.Link),
+      url: z.string(),
+    }),
   ])
   .transform((value) => {
     const output = new ButtonBuilder().setStyle(value.style);

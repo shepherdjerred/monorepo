@@ -34,7 +34,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "v0.12.0@sha256:ad4163685598187f6d645c8873b16760001b0d94c6055e2306738c5098f7b512"
+      "value": "v0.18.0@sha256:ab570d2e13336c081575aa05de90dd861d3588eb2fc1a66ff5315b380c3197c3"
     },
     {
       "name": "connect",
@@ -58,7 +58,7 @@
         "registryUrl": "https://argoproj.github.io/argo-helm",
         "versioning": "semver"
       },
-      "value": "10.9.2"
+      "value": "10.9.6"
     },
     {
       "name": "cert-manager",
@@ -106,7 +106,7 @@
         "registryUrl": "https://prometheus-community.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "91.5.1"
+      "value": "91.9.0"
     },
     {
       "name": "prometheus-adapter",
@@ -130,7 +130,7 @@
         "registryUrl": "https://prometheus-community.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "11.18.0"
+      "value": "11.19.1"
     },
     {
       "name": "tailscale-operator",
@@ -241,7 +241,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "docker"
       },
-      "value": "2.18.1@sha256:e35570d636471f8aabfac7044057712679f954844a763ba735baa9659ea142b5"
+      "value": "2.18.2@sha256:bfcd2f3f6f89d2171d161ac1780723d1633f8de3c4c993d0dc52aa9edb729e16"
     },
     {
       "name": "linuxserver/bazarr",
@@ -253,7 +253,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "1.6.1@sha256:762f802274598da27255b2e5778f262b2b71b355a23e3812d9ee1520f8dbe37c"
+      "value": "1.6.2@sha256:8b30e81c4aec2991f469e78fae8afaa89ecc9b21a80e3897f50427216b55470c"
     },
     {
       "name": "seerr-team/seerr",
@@ -265,7 +265,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "v3.4.1@sha256:f4768de5f616248d723e05891f3345a1402123775d03bf0890dbfedc0831bda1"
+      "value": "v3.5.0@sha256:27602401178d54f1964442287b9f23f67a3fa2252645ee8065839ea1c3f69e45"
     },
     {
       "name": "kometateam/kometa",
@@ -313,7 +313,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "docker"
       },
-      "value": "5.2.3@sha256:457e4eec2ee3f5e4ef59f237ad51f6143deba9f7445ab48bb5204a98888ef9aa",
+      "value": "5.2.4@sha256:b522f9f4b769f8f36d49d22d5eb6a92e9aa18904c6a1830b1439df511ec21983",
       "notes": [
         "Keep this on qBittorrent app versions only. LinuxServer also publishes",
         "stale OS-style tags like 20.04.1 that resolve to old app builds."
@@ -329,7 +329,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "6.4.4@sha256:adb6c09d6b729ea5e642c99cea35af72702ef476bf4763f153299ac5db9f0b4f"
+      "value": "6.4.4@sha256:7dfd049e79c00b16fbc29c3f5d96a9e7b9e73a23930b4c5b3c4541d60b366814"
     },
     {
       "name": "linuxserver/sonarr",
@@ -341,7 +341,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "4.0.20@sha256:a5c1a5fecbef946927ab90ad68df319ac5fe644057e5fc18cd993f01ac07b2b2"
+      "value": "4.0.20@sha256:f247545d23ba8b233d6604575347e48a623fe6ad75dda02348bf81917f3b5c06"
     },
     {
       "name": "timothyjmiller/cloudflare-ddns",
@@ -389,7 +389,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "docker"
       },
-      "value": "2026.9.3@sha256:d8922685169707fd91e8b9729902d975f06157d005e422874d201e0261dda196"
+      "value": "2026.9.4@sha256:3e6710a7ab2a61311d9d899b719f6c3657791c63e8f4942cec4ebc42401d6b76"
     },
     {
       "name": "bropat/eufy-security-ws",
@@ -413,7 +413,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "11.24.1@sha256:00abebce88205b47c3b611e983bbc692753170e3603c691bc5765f82265cafa4"
+      "value": "11.24.2@sha256:717f9d2609021b001d3543ec7144c4fc3ba0e31b61dbcd616383b93613b22f89"
     },
     {
       "name": "koush/scrypted",
@@ -536,7 +536,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "2.1.5@sha256:455bb8427106eb8522f9133a43d4e6ca799d4983c1b53e77a2bc6f7290855483"
+      "value": "2.1.5@sha256:26cfac865d0924afc7f1e34a65e34e41c22f7b6b61d0c23a6aaebad13104b113"
     },
     {
       "name": "dotdc/grafana-dashboards-kubernetes",
@@ -679,7 +679,7 @@
         "registryUrl": "https://grafana.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "1.12.1"
+      "value": "1.13.0"
     },
     {
       "name": "grafana/grafana-image-renderer",
@@ -691,7 +691,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "v5.12.4@sha256:4c5574b3261ca7566fbca11d3fb3615bd8e753c69cb4fe9108f3ec8d1d3841d6"
+      "value": "v5.12.5@sha256:76542ccc4c045e5ff9f80f87b25de6fcc71b31222172de5031a8ceba33772ee1"
     },
     {
       "name": "openebs",
@@ -939,7 +939,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "TL2024-historic@sha256:7995b32f28e7d91c11fc8b222b97244949c58cb2b61c4705e2d3f39f97bc8c31"
+      "value": "TL2024-historic@sha256:fb0fed9b911b4836314f8041d27d7ff75dd1544d12ee359a2a91f765609c072d"
     },
     {
       "name": "grafana/tempo",
@@ -951,7 +951,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "3.0.3@sha256:0296560ac66f8a3600d7fb3014a52c189d4d9c3549ad6ff441bf2409855d68d5"
+      "value": "3.1.0@sha256:3076b8dcdfb32fd6bc5ccef85e7b7313e6199b9cb84366257fc17ecb696db5fd"
     },
     {
       "name": "minio/mc",
@@ -987,7 +987,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "0.72.0@sha256:cffe3f5161a47a6823fbd23d985795b3ed72a4c806da4c4df16266c02accdd6f"
+      "value": "0.74.0@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969"
     },
     {
       "name": "semgrep/semgrep",
@@ -999,7 +999,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "1.170.0@sha256:c98f8829eea377274ee4b10656458b078b88232469b2ff913f091c2317347c9d"
+      "value": "1.176.1@sha256:34ab619bf1391a24bfda3f05debd0d8a6ce3093c2d5f9d39cfc00f83c1397823"
     },
     {
       "name": "woodpeckerci/woodpecker-server",
@@ -1047,7 +1047,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "2.14.1@sha256:8aa1c158d885757149fa953e92c0c8da544cf4a1e9a19b7feb684e59cf7b4bb0",
+      "value": "2.14.2@sha256:e734b1df7561c20656157c7669a0ba2f0aad71a2577bd419ad4b2f22c64867a5",
       "notes": [
         "Self-hosted Turborepo remote cache backing the workspace task graph."
       ]
@@ -1063,7 +1063,7 @@
         "versioning": "semver",
         "packageName": "kueue/charts/kueue"
       },
-      "value": "0.19.6@sha256:f74af5397ba326b94b4d2808f5fb6eac4996ab0f20a3358af0afd3a7a1e12c1a"
+      "value": "0.20.0@sha256:61857945f1109da052dcc01baf79ea912a6c2a5ffeb087f3dfe270c9ea198c9c"
     },
     {
       "name": "tonistiigi/binfmt",
@@ -1091,7 +1091,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "v0.33.0@sha256:6c2fa84a6b61ccd72899dde4239f8d5717f05f9a8ca6f3cad185fb1a95a94de3",
+      "value": "v0.33.1@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea",
       "notes": [
         "Persistent BuildKit daemon backing CI image builds (bounded-GC cache on a",
         "compressed ZFS PVC, replacing the per-run throwaway builder inside dind —",
@@ -1108,7 +1108,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "3.14-alpine@sha256:9e9fde4d32eedce0b661d9ab91e826b62dddf28e928c230ec55f1866cac66b01"
+      "value": "3.14-alpine@sha256:f6a589d43c42b9e7f7dc67a12d37132491f362859a5d750607710cc56da3bc72"
     },
     {
       "name": "bitnamilegacy/kubectl",
@@ -1144,18 +1144,16 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "v1.14.0@sha256:7e82f717f44e89671212e0dfce7e061321c386ea84a33bca64a671670ca6c278",
+      "value": "v1.14.4@sha256:c85a7fa803569e3128c33e4f5766f84ab156c8d171c9f1dd2715581d45ce98fa",
       "notes": [
-        "PINNED to v1.14.0 (last release that works on Cloudflare R2). The plugin always sets an",
-        "(often empty) `Tagging` field on PutObject; v1.14.1's dependency bump pulled a newer",
-        "aws-sdk-go-v2 that started emitting an empty `x-amz-tagging` header on the wire, which R2",
-        "rejects with `501 NotImplemented` (\"Header 'x-amz-tagging' with value '' not implemented\").",
-        "That fails Velero's backup-metadata upload, so every backup since the v1.14.1 deploy",
-        "(2026-06-21, PR #1307) is marked Failed and leaves orphaned ZFS snapshots + R2 data behind",
-        "(incidents #5860 and #5849). v1.14.2 is NOT a fix — it still sets Tagging unconditionally; the",
-        "upstream guard (velero-io/velero-plugin-for-aws#299) is on main, not in any release yet.",
-        "Renovate is blocked to <1.14.1 in renovate.json until a release contains #299 and is",
-        "verified on R2."
+        "v1.14.1-1.14.2 send an empty x-amz-tagging header, which Cloudflare R2 rejects with",
+        "501 NotImplemented; backup-metadata uploads then fail and leave orphaned ZFS/R2 data",
+        "(incidents #5860 and #5849). renovate.json excludes that broken release window.",
+        "The upstream guard (velero-io/velero-plugin-for-aws#299) landed in v1.14.3. v1.14.4's",
+        "buildPutObjectInput sets Tagging only when configured. Its released source passed an",
+        "R2 upload/read-back/delete probe with this repository's storage-location settings.",
+        "Verify the released plugin's R2 upload path before future version bumps. A successful",
+        "object probe does not prove a complete Velero backup or restore."
       ]
     },
     {
@@ -1179,7 +1177,7 @@
         "datasource": "github-releases",
         "versioning": "semver"
       },
-      "value": "v1.37.0"
+      "value": "v1.37.1"
     },
     {
       "name": "paper",
@@ -1260,7 +1258,7 @@
         "datasource": "github-releases",
         "versioning": "semver"
       },
-      "value": "1.14.1"
+      "value": "1.14.2"
     },
     {
       "name": "postgres-operator",
@@ -1272,7 +1270,7 @@
         "registryUrl": "https://opensource.zalando.com/postgres-operator/charts/postgres-operator",
         "versioning": "semver"
       },
-      "value": "2.0.2"
+      "value": "2.0.3"
     },
     {
       "name": "cooperspencer/gickup",
@@ -1332,7 +1330,7 @@
         "registryUrl": "https://charts.bitnami.com/bitnami",
         "versioning": "semver"
       },
-      "value": "28.2.3"
+      "value": "28.3.1"
     },
     {
       "name": "seaweedfs",
@@ -1344,7 +1342,7 @@
         "registryUrl": "https://seaweedfs.github.io/seaweedfs/helm",
         "versioning": "semver"
       },
-      "value": "4.47.0"
+      "value": "4.48.0"
     },
     {
       "name": "mariadb",
@@ -1356,7 +1354,7 @@
         "registryUrl": "https://charts.bitnami.com/bitnami",
         "versioning": "semver"
       },
-      "value": "28.0.2"
+      "value": "28.1.1"
     },
     {
       "name": "bitnami/mariadb",
@@ -1368,7 +1366,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "latest@sha256:c12340aa3504ba0df3e198a5d2375528761e7ddcaa1935f28d34d844f5e14f75"
+      "value": "latest@sha256:354e5aec20455bce931a05fa791c51e4a45879015bee09591295c76fe88c037e"
     },
     {
       "name": "bitnami/mysqld-exporter",
@@ -1380,7 +1378,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "latest@sha256:0ede898447e52b6de75642db8c49dd053577fb97c3b06b74939e3accf7a13fe8"
+      "value": "latest@sha256:4960928f55c4d2d587310776e5b2cf1b5def4aebd87b93e4baa5546d95bab256"
     },
     {
       "name": "postalserver/postal",
@@ -1404,7 +1402,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "8.3.35-fpm-bookworm@sha256:536a1188a926efe7e6f927b7ca01f3a043c63d0a527567c6d4d3bf9fbd637866"
+      "value": "8.5.9-fpm-bookworm@sha256:0fed012de2202d7ef0314744ccfa274b870f07cd6a91f88b78f74a849bb03f02"
     },
     {
       "name": "library/mariadb",
@@ -1416,7 +1414,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "11.8@sha256:79d59758afc91b89b120b0a8904d637f5a3b3e1c4900f29b740d6d46c72fef68"
+      "value": "11.8@sha256:6422478cb8e159f080fb1d8ccf65101e26fe51385787fde7d16c3b165a331f15"
     },
     {
       "name": "boky/postfix",
@@ -1452,7 +1450,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "latest@sha256:cfc4eee658595834ef304eadb0c3ea721f3b7cb6404ad8b7cb909cc5b5145b23",
+      "value": "latest@sha256:4b3d9475d65571d28cbb19544d3820ec2945e4c8b2f18279394282b8dc3a592e",
       "notes": [
         "Alpine-based image bundling yq + busybox coreutils (sh/find/cmp/diff/cp);",
         "used by the Minecraft config-drift init container for semantic YAML/JSON",
@@ -1481,7 +1479,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "2.54.0@sha256:ae0f6f4bce38d2b8c40becc0d6241a08d9f57186ea03029de2189a2b5e722d94",
+      "value": "2.54.0@sha256:a4bb51f1a3553df194ce679fc1db721d8bfba2046fa1a88fe9d4ac551ffbce25",
       "notes": [
         "Initializes Flipt's local storage as committed normal Git repositories."
       ]
@@ -1520,7 +1518,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "1.31.6-alpine@sha256:d10753d9289b8e3f884386351f73554ce72b631378949deddd75e83ee296c427"
+      "value": "1.31.6-alpine@sha256:df221db836e1754089190208cee7eeda94f233197056426eda74a43ab1abeac2"
     },
     {
       "name": "bugsink/bugsink",
@@ -1532,7 +1530,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "2.6.0@sha256:46fc01ffbd6054f2d493a25fd9de6efbddd9092d0fef363bfdb8117cf9ac61f5"
+      "value": "2.6.1@sha256:c5e3657451f4ba1ddb145a5118a4347314206cc5ba98f40e5f268c6c0975963e"
     },
     {
       "name": "arizephoenix/phoenix",
@@ -1544,7 +1542,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "regex:^version-(?<major>[0-9]+)[.](?<minor>[0-9]+)[.](?<patch>[0-9]+)-nonroot$"
       },
-      "value": "version-20.16.0-nonroot@sha256:e4a41a209b07289581a5d48167a11051c12704ac48983056fe0989b6f13b467a",
+      "value": "version-20.19.0-nonroot@sha256:f2109e09662e2bd9570af155e707fab8cf92eab79911727d183d8e667d9411c9",
       "notes": [
         "Phoenix publishes semver releases only under version-X.Y.Z tags; the nonroot",
         "variant runs as UID 65532 and is the one the upstream Helm chart deploys."
@@ -1650,7 +1648,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "2.54.1@sha256:ff0943fe532b8e33c46cd28b29e81e0ce0b6f55b9ee50a38ef1b437cc4de3fa5"
+      "value": "2.55.0@sha256:3899d5cf749b5555c9f798d46f2423b1d6190ea391ca713db5d1bba961759e58"
     },
     {
       "name": "temporalio/admin-tools",
@@ -1727,7 +1725,7 @@
         "versioning": "semver",
         "packageName": "flipt/flipt"
       },
-      "value": "v2.13.0@sha256:d96f7cbe499dfa2cb1e626ce0230a9d5e068896975a855000a7a8645826862e4",
+      "value": "v2.13.1@sha256:3118adad2f21d2d4793765265e9eb1c99b547019f062ce438430089ba7cea89b",
       "notes": [
         "Feature flag server. Fair Core License; the free tier covers the UI, local git storage, and evaluation.",
         "A bump requires re-capturing packages/feature-flags/src/providers/fixtures/flipt-snapshot.default.json,",

@@ -114,11 +114,11 @@ export async function restoreForum(): Promise<void> {
     ];
     const command = async (
       argv: string[],
-      input?: ReturnType<typeof Bun.file>,
+      input: ReturnType<typeof Bun.file> | "ignore" = "ignore",
     ) => {
       const child = Bun.spawn(argv, {
         env: { ...Bun.env, MYSQL_PWD: env.DB_PASSWORD },
-        stdin: input ?? "ignore",
+        stdin: input,
         stdout: "pipe",
         stderr: "ignore",
         timeout: 10 * 60_000,

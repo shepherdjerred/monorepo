@@ -94,7 +94,9 @@ export function createAgentChatS3Store(input: {
           if (result.done) break;
           const value: unknown = result.value;
           if (!(value instanceof Uint8Array))
-            throw new Error("Session object stream returned non-binary data");
+            throw new TypeError(
+              "Session object stream returned non-binary data",
+            );
           length += value.byteLength;
           if (length > MAX_SESSION_OBJECT_BYTES)
             throw new Error("Session object exceeds the download limit");

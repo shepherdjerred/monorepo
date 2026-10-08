@@ -30,8 +30,8 @@ export function createTier3Tools(context: ToolContext): ToolSet {
       "Find transactions near a given date (within 3 days) to provide temporal context. Useful for understanding what a payment might be for based on surrounding transactions.",
     inputSchema: NearbyTransactionsInput,
     outputSchema: z.string(),
-    execute: ({ date, daysRange }) =>
-      handleNearbyTransactions(date, daysRange ?? 3, context),
+    execute: ({ date, daysRange = 3 }) =>
+      handleNearbyTransactions(date, daysRange, context),
   });
   const categoryInfo = tool({
     description:

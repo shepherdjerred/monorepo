@@ -109,8 +109,8 @@ export default function ReportQueryEditor(props: {
     }
   };
 
-  const handleChange: OnChange = (value) => {
-    props.onChange(value ?? "");
+  const handleChange: OnChange = (value = "") => {
+    props.onChange(value);
   };
 
   const handleFormat = () => {

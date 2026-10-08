@@ -41,13 +41,13 @@ export const TEMPORAL_ROWS_LIMIT = 2000;
  */
 export function effectiveRowLimit(
   plan: ScoutQlPlan,
-  rowLimitCeiling?: number,
+  rowLimitCeiling = 0,
 ): number {
   const ceiling =
     planTemporalGrouping(plan) === null
       ? REPORT_MAX_ROWS_LIMIT
       : TEMPORAL_ROWS_LIMIT;
-  return Math.min(plan.limit, Math.max(ceiling, rowLimitCeiling ?? 0));
+  return Math.min(plan.limit, Math.max(ceiling, rowLimitCeiling));
 }
 
 export type PlanResultInput = {

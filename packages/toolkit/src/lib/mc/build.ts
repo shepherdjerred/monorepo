@@ -30,7 +30,11 @@ export async function runBuildCli(args: string[]): Promise<number> {
   return new Promise((resolve, reject) => {
     child.on("error", reject);
     child.on("exit", (code) => {
-      resolve(code ?? 1);
+      if (code === null) {
+        resolve(1);
+        return;
+      }
+      resolve(code);
     });
   });
 }

@@ -37,7 +37,7 @@ describe("custom games and Bryan Bucks", () => {
     // The MVP formula normalizes each player's share against a hardcoded
     // five-man baseline, so a smaller lobby produces systematically wrong
     // grades and payouts rather than merely noisy ones.
-    for (const [blue, red] of [
+    for (const [blue = 0, red = 0] of [
       [1, 1],
       [2, 2],
       [3, 3],
@@ -46,7 +46,7 @@ describe("custom games and Bryan Bucks", () => {
       expect(
         isBettableGame({
           queueType: "custom",
-          participants: lobby(blue ?? 0, red ?? 0),
+          participants: lobby(blue, red),
           isScoutManagedCustom: true,
         }),
       ).toBe(false);

@@ -103,7 +103,8 @@ export function validateDareSqlRaceRootFromAst(
     stringValue(achieved["type"]) !== "CONJUNCTION_OR" ||
     lanes.includes(null) ||
     lanes
-      .toSorted((left, right) => (left ?? "").localeCompare(right ?? ""))
+      .filter((lane) => lane !== null)
+      .toSorted((left, right) => left.localeCompare(right))
       .join("|") !== expected.join("|")
   ) {
     throw new Error(

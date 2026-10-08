@@ -413,10 +413,10 @@ describe("Paper smoke lane", () => {
       throw new Error(`missing Paper environment for ${lane}`);
     const dataDir = candidate.environment["STORM_E2E_DATA_DIR"];
     if (typeof dataDir !== "string")
-      throw new Error(`missing data path for ${lane}`);
+      throw new TypeError(`missing data path for ${lane}`);
     const sharedData = candidate.environment["STORM_E2E_STORM_DATA_DIR"];
     if (typeof sharedData !== "string")
-      throw new Error(`missing shared plugin data path for ${lane}`);
+      throw new TypeError(`missing shared plugin data path for ${lane}`);
     expect(sharedData.endsWith("/TheStorm")).toBe(true);
     expect(paper.environment["EXTRA_ARGS"]).toBe(
       `--plugins ${sharedData.slice(0, -"/TheStorm".length)}`,
@@ -428,7 +428,7 @@ describe("Paper smoke lane", () => {
     expect(paper.environment["COPY_CONFIG_DEST"]).toBe("/data");
     const pluginPath = candidate.environment["STORM_E2E_PLUGIN_DIR"];
     if (typeof pluginPath !== "string")
-      throw new Error(`missing plugin path for ${lane}`);
+      throw new TypeError(`missing plugin path for ${lane}`);
     expect(candidate.environment["STORM_E2E_FULL"]).toBe("0");
     expect(paper.environment["FLIPT_ENVIRONMENT"]).toBe("prod");
   });

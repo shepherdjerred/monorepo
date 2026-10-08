@@ -26,7 +26,7 @@
     "@prisma/adapter-libsql": "7.10.0",
     "@prisma/client": "^7.10.0",
     "@prisma/client-runtime-utils": "7.10.0",
-    "@sentry/bun": "^10.75.3",
+    "@sentry/bun": "^10.76.0",
     "@shepherdjerred/config": "workspace:*",
     "@shepherdjerred/feature-flags": "workspace:*",
     "cron-parser": "^5.5.0",

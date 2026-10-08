@@ -1,4 +1,3 @@
-import { fileURLToPath } from "node:url";
 import type { Lane } from "#src/model/riot/lane.ts";
 import { latestVersion } from "./version.ts";
 import {
@@ -25,7 +24,9 @@ export function getChampionDisplayNameById(championId: number): string {
   return getChampionDisplayNameFromRegistry(championId);
 }
 
-function getAbsolutePath(relativePath: string): string {
+async function getAbsolutePath(relativePath: string): Promise<string> {
+  // Browser consumers use the URL getters; only local asset reads need Node.
+  const { fileURLToPath } = await import("node:url");
   // `pathname` is a URL path, not a filesystem path: on Windows it yields
   // `/C:/...`, which no file API accepts. Every asset lookup here then
   // reports a file that is plainly on disk as missing.
@@ -51,7 +52,7 @@ async function loadImageAsBase64(
   relativePath: string,
   mimeType: string,
 ): Promise<string> {
-  const absolutePath = getAbsolutePath(relativePath);
+  const absolutePath = await getAbsolutePath(relativePath);
   const file = Bun.file(absolutePath);
   const exists = await file.exists();
 
@@ -72,13 +73,13 @@ export async function validateChampionImage(
 ): Promise<void> {
   const normalized = normalizeChampionName(championName);
   const relativePath = `./assets/img/champion/${normalized}.png`;
-  const absolutePath = getAbsolutePath(relativePath);
+  const absolutePath = await getAbsolutePath(relativePath);
   await validateImageExists(absolutePath, `Champion image for ${normalized}`);
 }
 
 export async function validateItemImage(itemId: number): Promise<void> {
   const relativePath = `./assets/img/item/${itemId.toString()}.png`;
-  const absolutePath = getAbsolutePath(relativePath);
+  const absolutePath = await getAbsolutePath(relativePath);
   await validateImageExists(
     absolutePath,
     `Item image for item ${itemId.toString()}`,
@@ -89,7 +90,7 @@ export async function validateSpellImage(
   spellImageName: string,
 ): Promise<void> {
   const relativePath = `./assets/img/spell/${spellImageName}`;
-  const absolutePath = getAbsolutePath(relativePath);
+  const absolutePath = await getAbsolutePath(relativePath);
   await validateImageExists(
     absolutePath,
     `Summoner spell image ${spellImageName}`,
@@ -99,7 +100,7 @@ export async function validateSpellImage(
 export async function validateRuneIcon(runeIconPath: string): Promise<void> {
   const filename = runeIconPath.split("/").pop() ?? "unknown.png";
   const relativePath = `./assets/img/rune/${filename}`;
-  const absolutePath = getAbsolutePath(relativePath);
+  const absolutePath = await getAbsolutePath(relativePath);
   await validateImageExists(absolutePath, `Rune image ${filename}`);
 }
 
@@ -108,13 +109,13 @@ export async function validateAugmentIcon(
 ): Promise<void> {
   const filename = augmentIconPath.split("/").pop() ?? "unknown.png";
   const relativePath = `./assets/img/augment/${filename}`;
-  const absolutePath = getAbsolutePath(relativePath);
+  const absolutePath = await getAbsolutePath(relativePath);
   await validateImageExists(absolutePath, `Augment image ${filename}`);
 }
 
 export async function validateLaneIcon(lane: Lane): Promise<void> {
   const relativePath = `./assets/img/lane/${lane}.png`;
-  const absolutePath = getAbsolutePath(relativePath);
+  const absolutePath = await getAbsolutePath(relativePath);
   await validateImageExists(absolutePath, `Lane icon for ${lane}`);
 }
 
@@ -195,7 +196,7 @@ export async function validateChampionLoadingImage(
   const normalized = normalizeChampionName(championName);
   // Only the base skin (skin 0) is downloaded + shipped.
   const relativePath = `./assets/img/champion-loading/${normalized}_0.jpg`;
-  const absolutePath = getAbsolutePath(relativePath);
+  const absolutePath = await getAbsolutePath(relativePath);
   await validateImageExists(
     absolutePath,
     `Champion loading image for ${normalized}`,
@@ -217,7 +218,7 @@ export async function getChampionLoadingImageBase64(
   // Only the base skin (skin 0) is ever rendered, so it's the only loading
   // screen art we download + ship (see update-data-dragon.ts).
   const requested = `./assets/img/champion-loading/${normalized}_0.jpg`;
-  const requestedAbs = getAbsolutePath(requested);
+  const requestedAbs = await getAbsolutePath(requested);
 
   if (await Bun.file(requestedAbs).exists()) {
     return loadImageAsBase64(requested, "image/jpeg");
@@ -239,7 +240,7 @@ export async function validateChampionSplashImage(
   const normalized = normalizeChampionName(championName);
   // Only the base skin (skin 0) is downloaded + shipped.
   const relativePath = `./assets/img/champion-splash/${normalized}_0.jpg`;
-  const absolutePath = getAbsolutePath(relativePath);
+  const absolutePath = await getAbsolutePath(relativePath);
   await validateImageExists(
     absolutePath,
     `Champion splash image for ${normalized}`,
@@ -261,7 +262,7 @@ export async function getChampionSplashImageBase64(
   // Only the base skin (skin 0) is ever rendered, so it's the only splash art
   // we download + ship (see update-data-dragon.ts).
   const requested = `./assets/img/champion-splash/${normalized}_0.jpg`;
-  const requestedAbs = getAbsolutePath(requested);
+  const requestedAbs = await getAbsolutePath(requested);
 
   if (await Bun.file(requestedAbs).exists()) {
     return loadImageAsBase64(requested, "image/jpeg");

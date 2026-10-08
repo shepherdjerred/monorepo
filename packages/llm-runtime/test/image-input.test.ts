@@ -45,7 +45,7 @@ function capturingRuntime(replies: readonly string[]) {
     appName: "Runtime Test",
     fetch: (_input, init) => {
       const body = init?.body;
-      if (typeof body !== "string") throw new Error("expected a JSON body");
+      if (typeof body !== "string") throw new TypeError("expected a JSON body");
       bodies.push(JSON.parse(body));
       const reply = replies[bodies.length - 1] ?? replies.at(-1) ?? "{}";
       return Promise.resolve(Response.json(responsesBody(reply)));

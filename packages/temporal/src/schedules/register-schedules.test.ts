@@ -723,8 +723,8 @@ test("terminates running executions of injected retired workflow types", async (
       },
       getHandle(workflowId: string, runId: string) {
         return {
-          terminate: async (reason?: string) => {
-            terminated.push(`${workflowId}/${runId}: ${reason ?? ""}`);
+          terminate: async (reason = "") => {
+            terminated.push(`${workflowId}/${runId}: ${reason}`);
           },
         };
       },

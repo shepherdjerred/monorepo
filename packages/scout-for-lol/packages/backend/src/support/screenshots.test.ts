@@ -28,7 +28,7 @@ const storage = vi.fn(
     if (key === undefined) throw new Error("Missing storage key");
     if (command instanceof PutObjectCommand) {
       if (!(command.input.Body instanceof Uint8Array))
-        throw new Error("Expected bytes");
+        throw new TypeError("Expected bytes");
       objects.set(key, command.input.Body);
       return {};
     }

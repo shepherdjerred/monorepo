@@ -196,8 +196,8 @@ function thirdLayer(map: MapInfo, frame: Frame): string[] {
   });
 }
 
-function percent(share: number | undefined): string {
-  return `${((share ?? 0) * 100).toFixed(0)}%`;
+function percent(share = 0): string {
+  return `${(share * 100).toFixed(0)}%`;
 }
 
 function advanceLines(

@@ -482,14 +482,14 @@ class FakeCluster {
 
   private answer(
     rest: readonly string[],
-    stdin: string | undefined,
+    stdin: string | undefined = "{}",
   ): { stdout: string; stderr: string } {
     const [verb, kind, name] = rest;
     if (verb === "auth") {
       return ok("yes\n");
     }
     if (verb === "create") {
-      const manifest = CreatedPodSchema.parse(JSON.parse(stdin ?? "{}"));
+      const manifest = CreatedPodSchema.parse(JSON.parse(stdin));
       const id = manifest.metadata.labels[SANDBOX_LABEL] ?? "";
       this.pods.set(
         id,

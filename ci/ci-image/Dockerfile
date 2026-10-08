@@ -22,8 +22,8 @@ RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Docker CLI + buildx for image-build steps (BuildKit runs in-pod)
-COPY --from=docker:29-cli@sha256:018edbc908e08fcc9dbf029c812c34251e9b4719e6f71ca0e5eae2a987d014ca /usr/local/bin/docker /usr/local/bin/docker
-COPY --from=docker/buildx-bin:0.37.1@sha256:0ef4e936b9057e45a8c6595c01a8116353acd102b6a5720af7c3bcb50346e2ca /buildx /usr/local/lib/docker/cli-plugins/docker-buildx
+COPY --from=docker:29-cli@sha256:b1805116a6a86cc591b5d5f60a910a0715cdcc9d18d866ad68b1457ead25c35c /usr/local/bin/docker /usr/local/bin/docker
+COPY --from=docker/buildx-bin:0.37.2@sha256:f3acee6a2e18c8528ea096762e21e4c793c5a8001380f28801701b2112ae932a /buildx /usr/local/lib/docker/cli-plugins/docker-buildx
 
 # swiftlint from the official release zip: the -static build is
 # self-contained (the dynamic binary needs Swift runtime libs neither the
@@ -70,7 +70,7 @@ RUN mise trust .mise.toml && mise install && mise reshim \
 
 # uv/uvx for the python checks (ruff via uvx, pyright bootstraps a venv)
 # renovate: datasource=pypi depName=uv
-ARG UV_VERSION=0.12.18
+ARG UV_VERSION=0.12.23
 RUN curl -LsSf "https://astral.sh/uv/${UV_VERSION}/install.sh" | sh
 
 # The bun download cache is NOT baked into this image anymore. The old

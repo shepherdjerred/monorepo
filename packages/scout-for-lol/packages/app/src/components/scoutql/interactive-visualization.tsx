@@ -190,10 +190,10 @@ function fallbackSeriesName(
   return seriesName === undefined || seriesName === "" ? fallback : seriesName;
 }
 
-function emptyPointClickDetails(seriesName: string | undefined): {
+function emptyPointClickDetails(seriesName: string | undefined = ""): {
   label: string;
   value: number | null;
   seriesName: string;
 } {
-  return { label: "", value: null, seriesName: seriesName ?? "" };
+  return { label: "", value: null, seriesName: seriesName };
 }

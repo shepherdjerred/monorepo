@@ -11,7 +11,7 @@
     "test:report": "CI_TEST_COVERAGE=1 bun ci/run-ci-test.ts"
   },
   "dependencies": {
-    "@openai/codex-sdk": "0.156.1",
+    "@openai/codex-sdk": "0.160.0",
     "@shepherdjerred/code-review": "workspace:*",
     "@shepherdjerred/llm-runtime": "workspace:*",
     "@shepherdjerred/release-tools": "workspace:*",

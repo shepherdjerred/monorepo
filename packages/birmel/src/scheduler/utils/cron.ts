@@ -113,17 +113,17 @@ export function simpleToCron(
   schedule: "hourly" | "daily" | "weekly" | "monthly",
   time = "00:00",
 ): string {
-  const [hour, minute] = time.split(":").map(Number);
+  const [hour = 0, minute = 0] = time.split(":").map(Number);
 
   switch (schedule) {
     case "hourly":
-      return `${String(minute ?? 0)} * * * *`;
+      return `${String(minute)} * * * *`;
     case "daily":
-      return `${String(minute ?? 0)} ${String(hour ?? 0)} * * *`;
+      return `${String(minute)} ${String(hour)} * * *`;
     case "weekly":
-      return `${String(minute ?? 0)} ${String(hour ?? 0)} * * 0`; // Sunday
+      return `${String(minute)} ${String(hour)} * * 0`; // Sunday
     case "monthly":
-      return `${String(minute ?? 0)} ${String(hour ?? 0)} 1 * *`; // 1st of month
+      return `${String(minute)} ${String(hour)} 1 * *`; // 1st of month
     default:
       throw new Error(`Unknown schedule type: ${String(schedule)}`); // exhaustive check
   }

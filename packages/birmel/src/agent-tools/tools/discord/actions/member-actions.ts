@@ -56,14 +56,14 @@ export async function handleGetMember(
 export async function handleSearchMembers(
   guild: Guild,
   query: string | undefined,
-  limit: number | undefined,
+  limit: number | undefined = 10,
 ): Promise<MemberResult> {
   if (query == null || query.length === 0) {
     return { success: false, message: "query is required for search" };
   }
   const members = await guild.members.search({
     query,
-    limit: limit ?? 10,
+    limit: limit,
   });
   const list = members.map((m) => ({
     id: m.id,
@@ -79,9 +79,9 @@ export async function handleSearchMembers(
 
 export async function handleListMembers(
   guild: Guild,
-  limit: number | undefined,
+  limit: number | undefined = 100,
 ): Promise<MemberResult> {
-  const members = await guild.members.fetch({ limit: limit ?? 100 });
+  const members = await guild.members.fetch({ limit: limit });
   const list = members.map((m) => ({
     id: m.id,
     username: m.user.username,

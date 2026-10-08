@@ -105,7 +105,7 @@ export function evaluateFreshness(input: {
     };
   const scheduleCreatedAt = Date.parse(input.scheduleCreatedAt ?? "");
   if (!Number.isFinite(scheduleCreatedAt))
-    throw new Error(
+    throw new TypeError(
       `Schedule ${input.registration.scheduleId} has an unparseable scheduleCreatedAt: ${input.scheduleCreatedAt ?? "missing"}`,
     );
   if (input.paused)
@@ -120,7 +120,7 @@ export function evaluateFreshness(input: {
     input.registration.receiptRequiredAfter,
   );
   if (!Number.isFinite(receiptRequiredAfter))
-    throw new Error(
+    throw new TypeError(
       `Schedule ${input.registration.scheduleId} has an unparseable receiptRequiredAfter: ${input.registration.receiptRequiredAfter}`,
     );
   const effectiveActivation = Math.max(receiptRequiredAfter, scheduleCreatedAt);

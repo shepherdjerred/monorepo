@@ -55,7 +55,11 @@ function waitForExit(proc: ChildProcess): Promise<number> {
     }
     proc.once("error", reject);
     proc.once("exit", (code) => {
-      resolve(code ?? 1);
+      if (code === null) {
+        resolve(1);
+        return;
+      }
+      resolve(code);
     });
   });
 }

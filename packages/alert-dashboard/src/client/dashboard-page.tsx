@@ -168,10 +168,10 @@ export function DashboardPage(): React.JSX.Element {
           ["Warning", summaryData?.warning],
           ["Silenced", summaryData?.silenced],
           ["Inhibited", summaryData?.inhibited],
-        ].map(([label, value]) => (
+        ].map(([label, value = "—"]) => (
           <div className="summary-card" key={label}>
             <span>{label}</span>
-            <strong>{value ?? "—"}</strong>
+            <strong>{value}</strong>
           </div>
         ))}
       </section>

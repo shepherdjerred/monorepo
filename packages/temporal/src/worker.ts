@@ -272,8 +272,8 @@ async function startRoleServices(options: StartRoleServicesOptions): Promise<{
 // worker throws in parseTemporalBootstrapMetadata before it ever connects.
 // Kubernetes deployments always set both explicitly, so this never masks a
 // real deploy-config bug — only the two local paths above.
-function localBootstrapEnvironment(value: string | undefined): string {
-  return value ?? "dev";
+function localBootstrapEnvironment(value: string | undefined = "dev"): string {
+  return value;
 }
 
 function localReleaseCommit(value: string | undefined): string {

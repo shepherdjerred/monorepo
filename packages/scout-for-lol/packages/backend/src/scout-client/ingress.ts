@@ -51,7 +51,7 @@ export class ScoutClientObservationConflict extends Error {}
 export function nextScoutClientObservationSequence(
   maximumSequence: bigint | null,
 ): number {
-  const nextSequence = (maximumSequence ?? 0n) + 1n;
+  const nextSequence = maximumSequence === null ? 1n : maximumSequence + 1n;
   if (nextSequence > BigInt(Number.MAX_SAFE_INTEGER)) {
     throw new RangeError("Scout Client device sequence is exhausted");
   }
