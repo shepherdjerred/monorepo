@@ -1,11 +1,11 @@
-import configuration from "#src/configuration.ts";
+import configuration, { type Environment } from "#src/configuration.ts";
 
 /** Permissions required for notifications and generated match reports. */
 const BASE_BOT_INSTALL_PERMISSIONS =
   (1n << 10n) | (1n << 11n) | (1n << 14n) | (1n << 15n);
 const CUSTOMS_BETA_PERMISSIONS = (1n << 4n) | (1n << 20n) | (1n << 24n);
 
-export function botInstallPermissions(environment: "dev" | "beta" | "prod") {
+export function botInstallPermissions(environment: Environment) {
   return (
     BASE_BOT_INSTALL_PERMISSIONS |
     (environment === "beta" ? CUSTOMS_BETA_PERMISSIONS : 0n)

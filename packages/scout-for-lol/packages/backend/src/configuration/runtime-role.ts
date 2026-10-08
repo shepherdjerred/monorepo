@@ -44,6 +44,7 @@
  * the product's HTTP surface — see {@link ScoutRuntimeCapabilities.httpSurface}.
  */
 
+import type { ScoutStage } from "@scout-for-lol/temporal";
 import { z } from "zod";
 
 export const ScoutRuntimeRoleSchema = z.enum([
@@ -296,7 +297,9 @@ const SCOUT_RUNTIME_CAPABILITIES: Readonly<
 
 export function scoutRuntimeCapabilities(
   role: ScoutRuntimeRole,
-  stage: "dev" | "beta" | "prod" = "dev",
+  // The Temporal stage rather than configuration's Environment (the same
+  // three stages): configuration.ts imports this module.
+  stage: ScoutStage = "dev",
 ): ScoutRuntimeCapabilities {
   const capabilities = SCOUT_RUNTIME_CAPABILITIES[role];
   // Beta's external versioned Worker Deployment owns Workflow tasks. Embedded
