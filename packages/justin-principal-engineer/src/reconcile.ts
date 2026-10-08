@@ -8,6 +8,7 @@ import { createTaskState } from "#src/host/task-state.ts";
 import { retryBlockedTask } from "#src/host/task-retry.ts";
 import type { PullRequest } from "#src/integrations/github.ts";
 import { githubHost } from "#src/integrations/github-host.ts";
+import { checkGitHubAccess } from "#src/integrations/github-access.ts";
 import { LinearClient, providerForIssue } from "#src/integrations/linear.ts";
 import type { RuntimePaths } from "#src/runtime/paths.ts";
 import { writeInfo } from "#src/runtime/output.ts";
@@ -68,6 +69,11 @@ export class Reconciler {
   public async reconcile(): Promise<void> {
     await this.store.initialize();
     const outcome = await this.store.withLock(async () => {
+      await checkGitHubAccess({
+        config: this.config,
+        paths: this.paths,
+        run: this.run,
+      });
       await this.reconcileLocked();
       return true;
     });

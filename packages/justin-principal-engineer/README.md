@@ -47,6 +47,8 @@ checks GitHub App repository and branch protection access using the bot identity
 Credential failures stop startup before a task is claimed. `doctor` performs
 the same checks, and each coding turn checks OpenAI again before installing or
 building container dependencies.
+Each scheduled or development reconcile checks GitHub access under the local
+lock before selecting or advancing a task, so revoked permissions stop new work.
 
 `dev` runs the real configured Linear queue in the foreground, using the same
 durable task state as the LaunchAgent. It injects credentials through `op run`

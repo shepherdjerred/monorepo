@@ -23,7 +23,7 @@ monorepo. Grant these repository permissions:
 | Commit statuses | Read       |
 
 Approve permission updates on the App installation after changing these settings.
-Administration read access lets PR health inspect branch protection before merging.
+Administration read access lets [PR health inspect branch protection](https://github.com/shepherdjerred/monorepo/blob/main/packages/toolkit/src/lib/ci/github.ts) before merging.
 
 Store its App ID, installation ID, and generated private key in 1Password. Do
 not copy them into the repository or the runner configuration.
