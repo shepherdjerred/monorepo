@@ -40,6 +40,9 @@ Prisma `Int` column is 32 bits wide, and a value bound for one has to fit.
   `StorableBucksAmount` **is** a `BucksAmount` — the brands intersect — so
   checking storability never forces a conversion on the way back out, and only
   code that genuinely requires a storable value has to say so.
+- `StorableDareChallengerStakeSchema` and `StorableDarePileOnSchema` do the
+  same for the two Dare inputs a user supplies. Each is still a
+  `StorableBucksStake`, so the ledger takes it unchanged.
 - `storableStake`, `storableAmount`, and `storableDelta` assert an
   already-branded value against that bound at a persistence boundary. Callers
   that must not throw (user input, quote arithmetic) use the schemas'

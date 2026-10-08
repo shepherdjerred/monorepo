@@ -1,6 +1,6 @@
 import {
   DareContractSchema,
-  StorableBucksStakeSchema,
+  StorableDarePileOnSchema,
   type DareDeadlineSpec,
   type DareTargetBinding,
   type DiscordAccountId,
@@ -65,7 +65,7 @@ type DareIntentAction = "fund" | "accept" | "decline" | "cancel";
 export function contribute(amount: number) {
   return {
     kind: "dare_contribute" as const,
-    amount: StorableBucksStakeSchema.parse(amount),
+    amount: StorableDarePileOnSchema.parse(amount),
   };
 }
 

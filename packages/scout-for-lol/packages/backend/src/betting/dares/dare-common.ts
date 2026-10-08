@@ -10,6 +10,7 @@ import {
   type DareTargetBinding,
   type DiscordAccountId,
   type DiscordGuildId,
+  type StorableDareChallengerStake,
 } from "@scout-for-lol/data";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import {
@@ -60,7 +61,7 @@ export async function claimDareDraftRevision(
     serverId: DiscordGuildId;
     challengerDiscordId: DiscordAccountId;
     expectedRevision: number;
-    openingStake: number;
+    openingStake: StorableDareChallengerStake;
   },
 ): Promise<number | undefined> {
   const updated = await tx.bucksDare.updateManyAndReturn({

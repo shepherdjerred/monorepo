@@ -67,6 +67,18 @@ describe("data re-exports the identical domain schema objects", () => {
     expect(dataBucksMoney.BucksPoolTotalSchema).toBe(
       domainBucksMoney.BucksPoolTotalSchema,
     );
+    expect(dataBucksMoney.DareChallengerStakeSchema).toBe(
+      domainBucksMoney.DareChallengerStakeSchema,
+    );
+    expect(dataBucksMoney.DarePileOnSchema).toBe(
+      domainBucksMoney.DarePileOnSchema,
+    );
+    expect(dataBucksMoney.DarePotTotalSchema).toBe(
+      domainBucksMoney.DarePotTotalSchema,
+    );
+    expect(dataBucksMoney.DarePayoutSchema).toBe(
+      domainBucksMoney.DarePayoutSchema,
+    );
     // The storable schemas are built ON the domain ones here in data, so they
     // are deliberately NOT the same object — only their base must be.
     expect(dataBucksMoney.StorableBucksStakeSchema).not.toBe(

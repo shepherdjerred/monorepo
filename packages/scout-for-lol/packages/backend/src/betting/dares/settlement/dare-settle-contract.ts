@@ -146,7 +146,6 @@ async function resolveDare(
     dareId: input.dare.id,
     ...(input.matchId === undefined ? {} : { matchId: input.matchId }),
     serverId: input.dare.serverId,
-    potTotal: input.dare.potTotal,
     targetAliases: input.dare.targets.map((target) => target.alias),
     conditionSummary: `${input.contract.queryHash}: ${input.contract.canonicalSql}`,
   });

@@ -148,3 +148,65 @@ export function sumToPoolTotal(values: Iterable<BucksAmount>): BucksPoolTotal {
   }
   return BucksPoolTotalSchema.parse(total);
 }
+
+/*
+ * Dare money.
+ *
+ * A Dare moves four different quantities, and the product contract is that
+ * they are never collapsed into one another:
+ *
+ * - `DareChallengerStake` — the challenger's opening commitment that funds the
+ *   pot. Positive.
+ * - `DarePileOn` — money added to a pot after it is funded. Positive.
+ * - `DarePotTotal` — the pot: the opening stake plus every pile-on. A sum over
+ *   many contributors, so it refines `BucksPoolTotal`; zero before funding.
+ * - `DarePayout` — the net share credited to one target after the house cut.
+ *   Non-negative: a share can floor to zero.
+ *
+ * Each refines the generic brand it is a special case of, so the ledger
+ * helpers above (`debitOf`, `creditOf`, ...) still accept them, while one Dare
+ * quantity never passes for another. Presentation formats them as plain
+ * numbers; the brand only has to survive until the value is rendered.
+ */
+
+/** The challenger's opening commitment. */
+export const DareChallengerStakeSchema =
+  BucksStakeSchema.brand<"DareChallengerStake">();
+export type DareChallengerStake = z.infer<typeof DareChallengerStakeSchema>;
+
+/** One contribution raising an already-funded pot. */
+export const DarePileOnSchema = BucksStakeSchema.brand<"DarePileOn">();
+export type DarePileOn = z.infer<typeof DarePileOnSchema>;
+
+/** A Dare's pot: the opening stake plus every pile-on. */
+export const DarePotTotalSchema = BucksPoolTotalSchema.brand<"DarePotTotal">();
+export type DarePotTotal = z.infer<typeof DarePotTotalSchema>;
+
+/** The net amount one target is credited when a Dare is achieved. */
+export const DarePayoutSchema = BucksAmountSchema.brand<"DarePayout">();
+export type DarePayout = z.infer<typeof DarePayoutSchema>;
+
+/** The pot a Dare holds the moment its challenger funds it. */
+export function darePotOf(stake: DareChallengerStake): DarePotTotal {
+  return DarePotTotalSchema.parse(stake);
+}
+
+/** One contributor's pile-ons, summed. Throws when the sum leaves the
+ * safe-integer domain. */
+export function addPileOns(
+  first: DarePileOn,
+  ...rest: readonly DarePileOn[]
+): DarePileOn {
+  return DarePileOnSchema.parse(
+    rest.reduce<number>((sum, value) => sum + value, first),
+  );
+}
+
+/** A target's net payout: its gross share less the house cut. Throws when the
+ * cut exceeds the share. */
+export function darePayoutOf(
+  grossShare: BucksAmount,
+  fee: BucksAmount,
+): DarePayout {
+  return DarePayoutSchema.parse(grossShare - fee);
+}

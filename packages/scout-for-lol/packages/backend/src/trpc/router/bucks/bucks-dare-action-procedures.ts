@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import {
-  StorableBucksStakeSchema,
+  StorableDarePileOnSchema,
   DareIntentPayloadSchema,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
@@ -46,7 +46,7 @@ const LegacyDarePayloadSchema = z
     }),
     z.strictObject({
       action: z.literal("contribute"),
-      amount: StorableBucksStakeSchema,
+      amount: StorableDarePileOnSchema,
     }),
   ])
   .transform((legacy) =>

@@ -24,7 +24,6 @@ async function freshFacts(tx: Db, dareId: number) {
   return await dareMoneyFactsInTransaction(tx, {
     dareId,
     serverId: dare.serverId,
-    potTotal: dare.potTotal,
     targetAliases: dare.targets.map((target) => target.alias),
     conditionSummary: revision.plainLanguage,
   });

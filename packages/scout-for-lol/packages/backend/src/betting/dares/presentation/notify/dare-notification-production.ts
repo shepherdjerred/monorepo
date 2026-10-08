@@ -1,4 +1,4 @@
-import type { DareContract } from "@scout-for-lol/data";
+import type { DareContract, DarePotTotal } from "@scout-for-lol/data";
 import type { DareFinality } from "#src/betting/dares/settlement/dare-settle-types.ts";
 import { enqueueDareNotificationInTransaction } from "#src/betting/dares/presentation/notify/dare-notification-outbox.ts";
 import { deriveDareProgress } from "#src/betting/dares/presentation/dare-progress.ts";
@@ -21,7 +21,7 @@ function terminalKind(resolution: TerminalResolution) {
 
 function terminalSummary(
   resolution: TerminalResolution,
-  potTotal: number,
+  potTotal: DarePotTotal,
 ): string {
   if (resolution === "achieved") {
     return `Dare achieved; the ${potTotal.toString()} Bryan Bucks pot was paid out.`;
@@ -36,7 +36,7 @@ export async function enqueueTerminalDareNotification(
   input: {
     dareId: number;
     revision: number;
-    potTotal: number;
+    potTotal: DarePotTotal;
     resolution: TerminalResolution;
     matchId?: string | undefined;
     now: Date;

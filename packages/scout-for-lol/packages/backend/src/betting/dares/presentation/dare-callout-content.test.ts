@@ -1,5 +1,12 @@
 import { describe, expect, test } from "vitest";
-import { DiscordAccountIdSchema } from "@scout-for-lol/data";
+import {
+  BucksAmountSchema,
+  DareChallengerStakeSchema,
+  DarePayoutSchema,
+  DarePileOnSchema,
+  DarePotTotalSchema,
+  DiscordAccountIdSchema,
+} from "@scout-for-lol/data";
 import {
   DARE_CALLOUT_MAX_LENGTH,
   dareCalloutContent,
@@ -11,14 +18,17 @@ const ACCEPT_DEADLINE = new Date("2026-09-02T12:00:00.000Z");
 function content(input: {
   openingStake: number;
   potTotal: number;
-  contributions: readonly { discordId: string; amount: number }[];
+  pileOns: readonly { discordId: string; amount: number }[];
 }) {
   return dareCalloutContent({
     id: 1,
     challengerDiscordId: "100",
-    openingStake: input.openingStake,
-    potTotal: input.potTotal,
-    contributions: input.contributions,
+    openingStake: DareChallengerStakeSchema.parse(input.openingStake),
+    potTotal: DarePotTotalSchema.parse(input.potTotal),
+    pileOns: input.pileOns.map((pileOn) => ({
+      discordId: pileOn.discordId,
+      amount: DarePileOnSchema.parse(pileOn.amount),
+    })),
     targetAliases: ["Virmel"],
     revision: 1,
     plainLanguage: "Virmel wins a game with at least 8 CS per minute.",
@@ -38,7 +48,7 @@ describe("dareCalloutContent", () => {
     const rendered = content({
       openingStake: 10,
       potTotal: 10,
-      contributions: [{ discordId: "100", amount: 10 }],
+      pileOns: [],
     });
 
     expect(rendered).toContain("<@100> put **10 BB** on Virmel.");
@@ -53,10 +63,7 @@ describe("dareCalloutContent", () => {
     const rendered = content({
       openingStake: 10,
       potTotal: 15,
-      contributions: [
-        { discordId: "100", amount: 10 },
-        { discordId: "200", amount: 5 },
-      ],
+      pileOns: [{ discordId: "200", amount: 5 }],
     });
 
     expect(rendered).toContain("<@100> put **10 BB** on Virmel.");
@@ -69,8 +76,7 @@ describe("dareCalloutContent", () => {
     const rendered = content({
       openingStake: 10,
       potTotal: 25,
-      contributions: [
-        { discordId: "100", amount: 10 },
+      pileOns: [
         { discordId: "200", amount: 5 },
         { discordId: "300", amount: 2 },
         { discordId: "200", amount: 5 },
@@ -89,10 +95,7 @@ describe("dareCalloutContent", () => {
     const rendered = content({
       openingStake: 10,
       potTotal: 20,
-      contributions: [
-        { discordId: "100", amount: 10 },
-        { discordId: "200", amount: 10 },
-      ],
+      pileOns: [{ discordId: "200", amount: 10 }],
     });
 
     expect(rendered).toContain("put **10 BB**");
@@ -103,13 +106,10 @@ describe("dareCalloutContent", () => {
     const rendered = content({
       openingStake: 10,
       potTotal: 211,
-      contributions: [
-        { discordId: "100", amount: 10 },
-        ...Array.from({ length: 200 }, (_, index) => ({
-          discordId: (index + 200).toString(),
-          amount: 1,
-        })),
-      ],
+      pileOns: Array.from({ length: 200 }, (_, index) => ({
+        discordId: (index + 200).toString(),
+        amount: 1,
+      })),
     });
 
     expect(rendered.length).toBeLessThanOrEqual(2000);
@@ -129,8 +129,8 @@ describe("renderDareResult", () => {
       (200_000_000_000_000_000n + BigInt(index)).toString(),
     ),
     alias: `Target ${index.toString()}`,
-    net: 16,
-    fee: 4,
+    net: DarePayoutSchema.parse(16),
+    fee: BucksAmountSchema.parse(4),
   }));
 
   test("truncates overlong plain-language text and still names a payout", () => {
@@ -139,7 +139,7 @@ describe("renderDareResult", () => {
       resolution: "achieved",
       challengerDiscordId: challenger,
       plainLanguage: longPlainLanguage,
-      potTotal: 600,
+      potTotal: DarePotTotalSchema.parse(600),
       payouts,
       refunds: [],
       voidReason: null,
@@ -165,9 +165,15 @@ describe("renderDareResult", () => {
       resolution: "unachieved",
       challengerDiscordId: challenger,
       plainLanguage: "Virmel wins a game.",
-      potTotal: 20,
+      potTotal: DarePotTotalSchema.parse(20),
       payouts: [],
-      refunds: [{ discordId: challenger, refunded: 20, fee: 0 }],
+      refunds: [
+        {
+          discordId: challenger,
+          refunded: BucksAmountSchema.parse(20),
+          fee: BucksAmountSchema.parse(0),
+        },
+      ],
       voidReason: null,
     });
 

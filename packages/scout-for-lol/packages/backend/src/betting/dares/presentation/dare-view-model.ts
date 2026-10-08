@@ -1,5 +1,9 @@
 import {
+  BucksAmountSchema,
   BucksDareStateSchema,
+  DareChallengerStakeSchema,
+  DarePayoutSchema,
+  DarePotTotalSchema,
   DareDeadlineSpecSchema,
   DarePollHealthSchema,
   DareProgressSchema,
@@ -13,8 +17,8 @@ const StoredTargetSchema = DareTargetBindingSchema.omit({
 }).extend({
   acceptedAt: z.iso.datetime().nullable(),
   declinedAt: z.iso.datetime().nullable(),
-  payout: z.number().int().nullable(),
-  fee: z.number().int().nullable(),
+  payout: DarePayoutSchema.nullable(),
+  fee: BucksAmountSchema.nullable(),
 });
 
 export const DareViewerRoleSchema = z.enum([
@@ -44,8 +48,8 @@ export const DareListItemSchema = z.strictObject({
   displayTitle: z.string().min(1).nullable(),
   statusPhrases: z.record(z.string().min(1), z.string().min(1)).nullable(),
   plainLanguage: z.string().min(1),
-  openingStake: z.number().int().positive(),
-  potTotal: z.number().int().nonnegative(),
+  openingStake: DareChallengerStakeSchema,
+  potTotal: DarePotTotalSchema,
   evidenceGames: z.number().int().nonnegative(),
   progress: DareProgressSchema,
   viewerRoles: z.array(DareViewerRoleSchema),

@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
+  BucksAmountSchema,
+  DarePayoutSchema,
+  DarePotTotalSchema,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data";
@@ -88,8 +91,15 @@ function resultRecord(target: "channel" | "dm" = "channel") {
           resolution: "achieved",
           challengerDiscordId: CHALLENGER_ID,
           plainLanguage: "Virmel wins on Twisted Fate",
-          potTotal: 30,
-          payouts: [{ discordId: PAYEE_ID, alias: "Virmel", net: 28, fee: 2 }],
+          potTotal: DarePotTotalSchema.parse(30),
+          payouts: [
+            {
+              discordId: PAYEE_ID,
+              alias: "Virmel",
+              net: DarePayoutSchema.parse(28),
+              fee: BucksAmountSchema.parse(2),
+            },
+          ],
           refunds: [],
           voidReason: null,
         },

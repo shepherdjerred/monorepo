@@ -1,7 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
-  StorableBucksStakeSchema,
+  StorableDareChallengerStakeSchema,
   DareDeadlineSpecSchema,
   DareTargetBindingSchema,
   DARE_MAX_QUERY_LENGTH,
@@ -24,7 +24,7 @@ export const DareDraftEditorInputSchema = z.strictObject({
   plainLanguage: z.string().min(1).max(4000),
   queryText: z.string().min(1).max(DARE_MAX_QUERY_LENGTH),
   deadlineSpec: DareDeadlineSpecSchema,
-  openingStake: StorableBucksStakeSchema,
+  openingStake: StorableDareChallengerStakeSchema,
 });
 
 export const DareDraftPreviewInputSchema = DareDraftEditorInputSchema.extend({

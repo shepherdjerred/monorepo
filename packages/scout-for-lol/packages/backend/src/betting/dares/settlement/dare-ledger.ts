@@ -1,14 +1,19 @@
 import {
   BucksAmountSchema,
   BucksStakeSchema,
+  DarePotTotalSchema,
   DiscordGuildIdSchema,
   ZERO_BUCKS,
   amountToStake,
   creditOf,
+  darePayoutOf,
   debitOf,
   subtractAmounts,
   type BucksAmount,
-  type BucksStake,
+  type DareChallengerStake,
+  type DarePayout,
+  type DarePileOn,
+  type DarePotTotal,
   type DiscordAccountId,
 } from "@scout-for-lol/data";
 import {
@@ -42,13 +47,13 @@ export type DareTargetPayout = {
   grossShare: BucksAmount;
   fee: BucksAmount;
   /** Net amount credited. */
-  net: BucksAmount;
+  net: DarePayout;
 };
 
 export type DareLedgerFacts = {
   dareId: number;
   serverId: string;
-  potTotal: number;
+  potTotal: DarePotTotal;
   targetAliases: readonly string[];
   conditionSummary: string;
   matchId?: string | undefined;
@@ -61,15 +66,17 @@ type DarePayoutTarget = {
   bucksAccountId: number;
 };
 
+/** The ledger facts for a Dare, with its pot read from storage inside the
+ * transaction that will move it. */
 export async function dareMoneyFactsInTransaction(
   tx: Db,
-  facts: DareLedgerFacts,
+  facts: Omit<DareLedgerFacts, "potTotal">,
 ): Promise<DareLedgerFacts> {
   const row = await tx.bucksDare.findUniqueOrThrow({
     where: { id: facts.dareId },
     select: { potTotal: true },
   });
-  return { ...facts, potTotal: row.potTotal };
+  return { ...facts, potTotal: DarePotTotalSchema.parse(row.potTotal) };
 }
 
 function assertConservation(condition: boolean, detail: string): void {
@@ -100,7 +107,7 @@ export async function stakeDareContributionInTransaction(
     facts: DareLedgerFacts;
     bucksAccountId: number;
     discordId: DiscordAccountId;
-    amount: BucksStake;
+    amount: DareChallengerStake | DarePileOn;
   },
 ): Promise<number> {
   await tx.bucksDareContribution.create({
@@ -331,7 +338,7 @@ export function allocateDareTargetPayouts(input: {
       alias: target.alias,
       grossShare,
       fee,
-      net: subtractAmounts(grossShare, fee),
+      net: darePayoutOf(grossShare, fee),
     };
   });
   assertConservation(

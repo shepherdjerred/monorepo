@@ -1,4 +1,12 @@
-import { formatInteger, type BucksDareState } from "@scout-for-lol/data";
+import {
+  addPileOns,
+  formatInteger,
+  type BucksAmount,
+  type BucksDareState,
+  type DareChallengerStake,
+  type DarePileOn,
+  type DarePotTotal,
+} from "@scout-for-lol/data";
 import type { DareResultAnnouncement } from "#src/betting/dares/presentation/notify/dare-status-message.ts";
 
 /**
@@ -23,20 +31,26 @@ type DareCalloutTarget = {
   declinedAt: Date | null;
 };
 
-export type DareCalloutContribution = {
+/** One pile-on, or one contributor's pile-ons summed for display. */
+export type DareCalloutPileOn = {
   discordId: string;
-  amount: number;
+  amount: DarePileOn;
 };
 
-function pileOnContributions(
-  contributions: readonly DareCalloutContribution[],
-): DareCalloutContribution[] {
-  const totals = new Map<string, number>();
+function pileOnsByContributor(
+  pileOns: readonly DareCalloutPileOn[],
+): DareCalloutPileOn[] {
+  const totals = new Map<string, DarePileOn>();
   const order: string[] = [];
-  for (const contribution of contributions.slice(1)) {
-    const current = totals.get(contribution.discordId);
-    if (current === undefined) order.push(contribution.discordId);
-    totals.set(contribution.discordId, (current ?? 0) + contribution.amount);
+  for (const pileOn of pileOns) {
+    const current = totals.get(pileOn.discordId);
+    if (current === undefined) order.push(pileOn.discordId);
+    totals.set(
+      pileOn.discordId,
+      current === undefined
+        ? pileOn.amount
+        : addPileOns(current, pileOn.amount),
+    );
   }
   return order.map((discordId) => {
     const amount = totals.get(discordId);
@@ -48,7 +62,7 @@ function pileOnContributions(
 }
 
 function renderPileOnLines(
-  contributions: readonly DareCalloutContribution[],
+  contributions: readonly DareCalloutPileOn[],
   visibleCount: number,
 ): string[] {
   const visible = contributions.slice(0, visibleCount);
@@ -69,7 +83,7 @@ function renderPileOnLines(
 
 function renderWithinDiscordLimit(input: {
   baseLines: readonly string[];
-  pileOns: readonly DareCalloutContribution[];
+  pileOns: readonly DareCalloutPileOn[];
   enforceDiscordLimit: boolean;
 }): { content: string; visibleCount: number } {
   const fullContent = [
@@ -100,9 +114,10 @@ function renderWithinDiscordLimit(input: {
 export type DareCalloutInput = {
   id: number;
   challengerDiscordId: string;
-  openingStake: number;
-  potTotal: number;
-  contributions: readonly DareCalloutContribution[];
+  openingStake: DareChallengerStake;
+  potTotal: DarePotTotal;
+  /** Every contribution after the challenger's opening stake, in order. */
+  pileOns: readonly DareCalloutPileOn[];
   targetAliases: readonly string[];
   revision: number;
   plainLanguage: string;
@@ -167,7 +182,7 @@ export function renderDareCallout(input: DareCalloutInput): {
   content: string;
   contributorDiscordIds: string[];
 } {
-  const pileOns = pileOnContributions(input.contributions);
+  const pileOns = pileOnsByContributor(input.pileOns);
   const rendered = renderWithinDiscordLimit({
     baseLines: [
       `🎯 **Scout Dare #${input.id.toString()}**`,
@@ -195,11 +210,11 @@ export function dareCalloutContent(input: DareCalloutInput): string {
   return renderDareCallout(input).content;
 }
 
-function resultAmount(amount: number): string {
+function resultAmount(amount: BucksAmount | DarePotTotal): string {
   return `**${formatInteger(amount)} BB**`;
 }
 
-function resultFee(fee: number): string {
+function resultFee(fee: BucksAmount): string {
   return fee > 0 ? ` · ${resultAmount(fee)} fee` : "";
 }
 

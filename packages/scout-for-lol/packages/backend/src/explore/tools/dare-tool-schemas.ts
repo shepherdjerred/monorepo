@@ -1,6 +1,6 @@
 import { z } from "zod";
 import {
-  StorableBucksStakeSchema,
+  StorableDareChallengerStakeSchema,
   DARE_MAX_HORIZON_DAYS,
   DARE_MAX_QUERY_LENGTH,
   DARE_MAX_TARGETS,
@@ -35,7 +35,7 @@ export const DareDefinitionToolInputSchema = z.strictObject({
   queryText: z.string().min(1).max(DARE_MAX_QUERY_LENGTH),
   plainLanguage: z.string().min(1).max(4000),
   deadlineSpec: DareDeadlineSpecSchema,
-  openingStake: StorableBucksStakeSchema,
+  openingStake: StorableDareChallengerStakeSchema,
   competition: DareSqlCompetitionSchema.default({ kind: "standard" }),
   activation: DareActivationSchema.default({ kind: "immediate" }),
 });

@@ -69,7 +69,6 @@ export async function voidDareWithFullRefund(
     const facts = await dareMoneyFactsInTransaction(tx, {
       dareId: dare.id,
       serverId: dare.serverId,
-      potTotal: dare.potTotal,
       targetAliases: dare.targets.map((target) => target.alias),
       conditionSummary: revision?.plainLanguage ?? "(Dare contract unreadable)",
     });
@@ -106,7 +105,7 @@ export async function voidDareWithFullRefund(
         revision: revisionNumber,
         category: "lifecycle",
         kind: "voided",
-        summary: `The Dare was voided (${reason.replaceAll("_", " ")}); ${dare.potTotal.toString()} Bryan Bucks were fully refunded.`,
+        summary: `The Dare was voided (${reason.replaceAll("_", " ")}); ${facts.potTotal.toString()} Bryan Bucks were fully refunded.`,
         deduplicationKey: `dare:${dare.id.toString()}:revision:${revisionNumber.toString()}:voided`,
         occurredAt: now,
       });
