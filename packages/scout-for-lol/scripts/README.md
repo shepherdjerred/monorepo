@@ -35,6 +35,12 @@ rewrite them, but they do not independently register watched players. Unaccepted
 workflow-start envelopes and nonterminal notification intents are dated tracked
 sources. Accepted starts and terminal intents remain historical payloads.
 
+`ExploreToolPayload.payload` stores JSON inspection captures and query datasets
+for on-demand reads, not instructions replayed into model history. Register it
+for discovery and as an archive: translate identities already in the map,
+preserve the rows and unrelated values, and never collect arbitrary query
+participants as watched players.
+
 `ScoutTemporalWork.id` and `ScoutWorkflowStart.requestedWorkflowId` are preserved
 durable business keys, not player references. They can embed the identity used
 when work was created, but accepted Temporal executions retain those exact keys.

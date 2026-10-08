@@ -118,6 +118,7 @@ export const EXTRA_JSON_COLUMNS: readonly {
   { table: "DuelGame", column: "evidenceJson" },
   { table: "ExploreMessage", column: "preview" },
   { table: "ExploreMessage", column: "trace" },
+  { table: "ExploreToolPayload", column: "payload" },
   { table: "HallRecordCell", column: "holdersJson" },
   { table: "HallRecordCell", column: "evidenceJson" },
   { table: "MatchNotificationIntent", column: "payload" },
@@ -220,6 +221,9 @@ export const ARCHIVE_COLUMNS: readonly { table: string; column: string }[] = [
   // Stored query results, which can name any participant a query returned.
   { table: "ExploreMessage", column: "preview" },
   { table: "ExploreMessage", column: "trace" },
+  // On-demand inspection captures and full query datasets. These are never
+  // replayed as instructions; they can include arbitrary observed participants.
+  { table: "ExploreToolPayload", column: "payload" },
   { table: "ScoutInteractiveRun", column: "trace" },
 ];
 
