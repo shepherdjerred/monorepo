@@ -158,7 +158,7 @@ export class LinearClient {
       "--state",
       "started",
       "--limit",
-      "0",
+      "all",
       "--json",
     ]);
     const candidates = QuerySchema.parse(JSON.parse(output));

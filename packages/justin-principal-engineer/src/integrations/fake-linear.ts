@@ -44,6 +44,15 @@ export function defaultStates(): Record<
 
 const TeamKeySchema = z.object({ key: z.string() });
 
+function validateQueryLimit(args: readonly string[]): void {
+  const limitIndex = args.indexOf("--limit");
+  if (limitIndex !== -1) {
+    z.union([z.literal("all"), z.string().regex(/^[1-9]\d*$/)]).parse(
+      args[limitIndex + 1],
+    );
+  }
+}
+
 export function fakeLinearRunner(
   recorded: string[][] = [],
   options: {
@@ -62,6 +71,7 @@ export function fakeLinearRunner(
   return (args) => {
     recorded.push([...args]);
     if (args[2] === "issue" && args[3] === "query") {
+      validateQueryLimit(args);
       return respond(
         JSON.stringify(
           refreshNodes.map((issue) => ({
