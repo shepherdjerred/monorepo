@@ -61,9 +61,10 @@ orphan a Docker agent. The terminal shows agent stages, elapsed time, and task
 phases. Idle runs poll every five seconds; use `--interval-seconds 60` to slow
 the loop down. Ctrl-C drains the current turn and exits with state preserved.
 
-Startup builds the host Toolkit from the same checkout and puts that binary
-first on the reconcile's command path. Review parsing and host workflow changes
-therefore use the development tree without replacing the installed Toolkit.
+Startup builds the host Toolkit as an executable Bun source bundle and puts it
+first on the reconcile's command path. This avoids macOS native executable
+signing during iteration. Review parsing and host workflow changes therefore
+use the development tree without replacing the installed Toolkit.
 Restart `dev` after changing Toolkit source to rebuild that binary.
 
 Dev agent containers read Justin's source and package manifest from this

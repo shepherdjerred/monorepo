@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 
 import path from "node:path";
+import { chmod } from "node:fs/promises";
 import { parseArgs } from "node:util";
 import { z } from "zod";
 
@@ -61,14 +62,27 @@ async function main(): Promise<void> {
   log("Checking GitHub App repository and branch protection access");
   await checkGitHubAccess({ config: initialConfig, paths, run: runCommand });
   const sourcePackage = path.resolve(import.meta.dirname, "..");
+  const toolkitDirectory = path.resolve(sourcePackage, "../toolkit/dist/dev");
+  const toolkitPath = path.join(toolkitDirectory, "toolkit");
   log("Building the trusted host Toolkit from this checkout");
   requireSuccess(
     "Dev host Toolkit build",
     await runCommand(
-      [process.execPath, "run", "--filter", "@shepherdjerred/toolkit", "build"],
+      [
+        process.execPath,
+        "build",
+        path.resolve(sourcePackage, "../toolkit/src/index.ts"),
+        "--target",
+        "bun",
+        "--external",
+        "ffmpeg-static",
+        "--outfile",
+        toolkitPath,
+      ],
       { cwd: path.resolve(sourcePackage, "../..") },
     ),
   );
+  await chmod(toolkitPath, 0o700);
   const controller = new AbortController();
   const stop = () => {
     if (controller.signal.aborted) return;
@@ -98,7 +112,7 @@ async function main(): Promise<void> {
         cwd: path.resolve(sourcePackage, "../.."),
         env: {
           ...Bun.env,
-          PATH: `${path.resolve(sourcePackage, "../toolkit/dist")}:${Bun.env["PATH"] ?? ""}`,
+          PATH: `${toolkitDirectory}:${Bun.env["PATH"] ?? ""}`,
           LINEAR_API_KEY: config.linear.apiKey,
           WOODPECKER_TOKEN: config.woodpecker.apiToken,
           WOODPECKER_URL: config.woodpecker.baseUrl,
