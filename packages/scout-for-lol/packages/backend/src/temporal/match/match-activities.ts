@@ -46,9 +46,18 @@ export function createScoutMatchActivities(): ScoutMatchActivities {
           return await readMatchPipelineState(input);
         },
       ),
-    // Every v1 execution has drained, so a match it owned has finished. The
-    // Activity stays registered because open histories recorded the read.
-    readLegacyMatchCompletionV2: () => Promise.resolve({ completed: true }),
+    readLegacyMatchCompletionV2: async (input) =>
+      await heartbeatWhile(
+        {
+          riotMatchId: input.riotMatchId,
+          phase: "reading-legacy-match-completion-v2",
+        },
+        async () => {
+          const { readLegacyMatchCompletion } =
+            await import("#src/temporal/match/legacy-completion.ts");
+          return await readLegacyMatchCompletion(input);
+        },
+      ),
     archiveMatchArtifacts: async (input) =>
       await heartbeatWhile(
         { riotMatchId: input.riotMatchId, phase: "archiving-match-v2" },

@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
   duelNeedsTimeline: vi.fn(),
   fetchTimeline: vi.fn(),
   processDuel: vi.fn(),
+  readLegacyCompletion: vi.fn(),
 }));
 
 vi.mock("#src/configuration.ts", () => ({
@@ -32,6 +33,9 @@ vi.mock("#src/betting/accounts/earnings.ts", () => ({
 }));
 vi.mock("#src/league/tasks/postmatch/match-report-standard.ts", () => ({
   fetchTimelineForDuelProgression: mocks.fetchTimeline,
+}));
+vi.mock("#src/temporal/match/legacy-completion.ts", () => ({
+  readLegacyMatchCompletion: mocks.readLegacyCompletion,
 }));
 vi.mock("#src/progression/duels/results.ts", () => ({
   duelMatchNeedsTimeline: mocks.duelNeedsTimeline,
@@ -119,6 +123,7 @@ beforeEach(() => {
   mocks.awardBucks.mockResolvedValue([]);
   mocks.lateBindingSink.mockReturnValue(mocks.settlementSink);
   mocks.mintStandingIntents.mockResolvedValue(undefined);
+  mocks.readLegacyCompletion.mockResolvedValue({ completed: false });
 });
 
 test("leaves a new match for its ordinary workflow", async () => {
@@ -289,14 +294,37 @@ test("keeps ARCHIVE_ONLY late binding free of financial and progression effects"
   expect(mocks.processDuel).not.toHaveBeenCalled();
 });
 
-test("replays binding projectors for a match the retired v1 pipeline owned", async () => {
-  // Every v1 execution has drained, so a match it owned is as complete as it
-  // will ever be, whatever stage receipts it left.
+test("leaves a legacy-owned match whose v1 workflow did not complete", async () => {
+  mocks.readState.mockResolvedValue(
+    pipelineState(
+      [
+        SCOUT_MATCH_RECEIPT_KINDS.settlement,
+        SCOUT_MATCH_RECEIPT_KINDS.progression,
+      ],
+      { owner: "legacy-v1" },
+    ),
+  );
+
+  await expect(reconcileProcessedClientBinding(riotMatchId)).rejects.toThrow(
+    "is still applying binding-dependent stages",
+  );
+
+  expect(mocks.resolveContext).not.toHaveBeenCalled();
+  expect(mocks.finalizeCustom).not.toHaveBeenCalled();
+  expect(mocks.awardBucks).not.toHaveBeenCalled();
+});
+
+test("replays legacy binding projectors from authoritative workflow completion", async () => {
   mocks.readState.mockResolvedValue(pipelineState([], { owner: "legacy-v1" }));
+  mocks.readLegacyCompletion.mockResolvedValue({ completed: true });
 
   await expect(reconcileProcessedClientBinding(riotMatchId)).resolves.toBe(
     true,
   );
 
   expectBindingProjectors();
+  expect(mocks.readLegacyCompletion).toHaveBeenCalledWith({
+    stage: "beta",
+    riotMatchId,
+  });
 });

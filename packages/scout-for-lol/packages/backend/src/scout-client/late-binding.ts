@@ -9,6 +9,7 @@ import { awardBucksForMatch } from "#src/betting/accounts/earnings.ts";
 import configuration from "#src/configuration.ts";
 import { finalizeAndPublishManagedCustomResult } from "#src/customs/riot-result-publication.ts";
 import { prisma } from "#src/database/index.ts";
+import { readLegacyMatchCompletion } from "#src/temporal/match/legacy-completion.ts";
 import { fetchTimelineForDuelProgression } from "#src/league/tasks/postmatch/match-report-standard.ts";
 import {
   duelMatchNeedsTimeline,
@@ -61,12 +62,16 @@ export async function reconcileProcessedClientBinding(
     // match forever or blocking newer observations in the outbox.
     return false;
   }
-  // A match the retired v1 pipeline owned finished there: every v1 execution
-  // has drained, so its binding-dependent stages are as complete as they will
-  // ever be.
-  const stagesComplete =
-    state.state.owner.kind === "legacy-v1" ||
-    clientBindingStagesAreComplete(state);
+  let stagesComplete = clientBindingStagesAreComplete(state);
+  if (state.state.owner.kind === "legacy-v1") {
+    // Its stage receipts were fail-open records; only the retired v1
+    // ingestion's own terminal status says whether every stage ran.
+    const legacyCompletion = await readLegacyMatchCompletion({
+      stage: configuration.environment,
+      riotMatchId,
+    });
+    stagesComplete = legacyCompletion.completed;
+  }
   if (!stagesComplete) {
     throw new Error(
       `Match pipeline ${riotMatchId} is still applying binding-dependent stages; retry reconciliation`,
