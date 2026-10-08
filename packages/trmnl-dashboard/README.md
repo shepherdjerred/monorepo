@@ -101,7 +101,7 @@ From the repository root, validate all four layouts for all three plugins:
 ```bash
 docker run --rm --entrypoint sh \
   -v "$(pwd):/workspace" -w /workspace \
-  trmnl/trmnlp:v0.11.0@sha256:4ac6d7f35ff30665b6c3b2634c2ba830488b2ee38783acc2ce953b652cb1c973 \
+  trmnl/trmnlp:v0.22.1@sha256:62512c46a431a018ca7360cc5451efe83b9f627516f39d82ca3f9fc487ae3e5d \
   packages/trmnl-dashboard/scripts/trmnlp-ci.sh validate
 ```
 
@@ -110,11 +110,11 @@ Preview one plugin at `http://localhost:4567`:
 ```bash
 docker run --rm --entrypoint sh -p 4567:4567 \
   -v "$(pwd):/workspace" -w /workspace \
-  trmnl/trmnlp:v0.11.0@sha256:4ac6d7f35ff30665b6c3b2634c2ba830488b2ee38783acc2ce953b652cb1c973 \
+  trmnl/trmnlp:v0.22.1@sha256:62512c46a431a018ca7360cc5451efe83b9f627516f39d82ca3f9fc487ae3e5d \
   packages/trmnl-dashboard/scripts/trmnlp-ci.sh serve pets
 ```
 
-Buildkite runs the same validation without secrets on pull requests. On main,
+Woodpecker runs the same validation without secrets on pull requests. On main,
 the path-selected `trmnl` lane validates all three projects before publishing
 any of them, then pushes plugin `303046`, `303047`, and `464652` in that order.
 The publisher uses the dedicated account-level `TRMNL_API_KEY` from

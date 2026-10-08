@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1-labs@sha256:63e440b412b6acba117974e793b7e7f702e58ee65e044bdff1b8d388ee0d853b
+# syntax=docker/dockerfile:1-labs@sha256:ad43eec41369d9ef94412c0d1eb3203d12218d01da225afc92a3aeba3a0e7796
 FROM oven/bun:1.4.2@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895 AS bun
 WORKDIR /app
 COPY --parents package.json bun.lock bunfig.toml patches/ scripts/package.json packages/*/package.json packages/*/packages/*/package.json packages/docs/wiki/package.json packages/homelab/src/cdk8s/package.json packages/homelab/src/helm-types/package.json ./
@@ -6,7 +6,7 @@ RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/storm-f
 COPY packages/storm-theme /app/packages/storm-theme
 RUN bun /app/packages/storm-theme/scripts/generate.ts --check && bun build /app/packages/storm-theme/src/browser.ts --target browser --minify --outdir /app/packages/storm-theme/dist
 
-FROM php:8.5.9-fpm-bookworm@sha256:0fed012de2202d7ef0314744ccfa274b870f07cd6a91f88b78f74a849bb03f02 AS runtime
+FROM php:8.5.11-fpm-bookworm@sha256:dd198c828c224e479bdaa184cdcf04a28c73d186bf5a885493bf9cc78d7196ef AS runtime
 # Distribution packages receive security updates when the pinned base is rebuilt.
 # hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends libfreetype6-dev libjpeg62-turbo-dev libpng-dev libzip-dev libicu-dev unzip mariadb-client ca-certificates \

@@ -1,10 +1,10 @@
-# syntax=docker/dockerfile:1-labs@sha256:63e440b412b6acba117974e793b7e7f702e58ee65e044bdff1b8d388ee0d853b
+# syntax=docker/dockerfile:1-labs@sha256:ad43eec41369d9ef94412c0d1eb3203d12218d01da225afc92a3aeba3a0e7796
 # CI toolchain image — baked from the repo's .mise.toml so agents run the
 # EXACT tool versions developers run. Rebuilt every main build via registry
 # cache (near-free when unchanged); the toolchain layers invalidate on
 # .mise.toml changes.
 
-FROM debian:bookworm-slim@sha256:3783cc01769c7b2b1b83a5c5ad96c815348e28ed7da68e2e3687004faa906251 AS base
+FROM debian:bookworm-slim@sha256:7c7b2c966bc9ee8cedfeef67e0e279108992c77681fa595db4a9d65c06ccc587 AS base
 
 # Fail-fast shell for every RUN: a failing producer in a pipeline (curl | sh,
 # printf | sha256sum) must fail the build, not be masked by the consumer.
@@ -22,8 +22,8 @@ RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Docker CLI + buildx for image-build steps (BuildKit runs in-pod)
-COPY --from=docker:29-cli@sha256:b1805116a6a86cc591b5d5f60a910a0715cdcc9d18d866ad68b1457ead25c35c /usr/local/bin/docker /usr/local/bin/docker
-COPY --from=docker/buildx-bin:0.37.2@sha256:f3acee6a2e18c8528ea096762e21e4c793c5a8001380f28801701b2112ae932a /buildx /usr/local/lib/docker/cli-plugins/docker-buildx
+COPY --from=docker:29-cli@sha256:35cfcf893c20f2931f4909151b5407aaaeab711277de7ce8b8f521f095d54c32 /usr/local/bin/docker /usr/local/bin/docker
+COPY --from=docker/buildx-bin:0.38.0@sha256:abcf2315937f37bdb52615d1698a4696e3952e88c440a07e7552cbefbc72b1b6 /buildx /usr/local/lib/docker/cli-plugins/docker-buildx
 
 # swiftlint from the official release zip: the -static build is
 # self-contained (the dynamic binary needs Swift runtime libs neither the

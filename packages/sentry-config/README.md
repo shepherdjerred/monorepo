@@ -12,6 +12,10 @@ Sentry.init({
 });
 ```
 
+Browser applications can use `sentryBrowserOptions({ dsn, environment, release })`
+to include the same policy and validate an untyped build-time release value.
+The application still supplies its own DSN and environment.
+
 Sentry 11 collects additional data by default. The factory explicitly retains
 the previous policy: no automatic user information, cookies, HTTP bodies,
 GenAI input/output, database query data, queue data, or GraphQL documents and

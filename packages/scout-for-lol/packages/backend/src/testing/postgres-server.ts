@@ -16,7 +16,8 @@ import { createLogger } from "#src/logger.ts";
 const logger = createLogger("postgres-server");
 
 const DEFAULT_PORT = 5471;
-const POSTGRES_INSTALL_DIR = "ubi-theseus-rs-postgresql-binaries";
+const POSTGRES_MAJOR = 18;
+let binariesVerified = false;
 /** initdb/start window guard only; normal operation takes no lock. */
 const LOCK_STALE_MS = 120_000;
 const START_WAIT_MS = 120_000;
@@ -40,7 +41,7 @@ export function devDatabaseUrl(dbName: string): string {
 /** Version-suffixed so a future major bump gets a fresh initdb. */
 export function devPostgresDataRoot(): string {
   if (runsAsRoot()) {
-    return "/tmp/scout-for-lol/postgres/16";
+    return `/tmp/scout-for-lol/postgres/${POSTGRES_MAJOR.toString()}`;
   }
   const xdg = Bun.env["XDG_DATA_HOME"];
   const home = Bun.env["HOME"];
@@ -52,7 +53,7 @@ export function devPostgresDataRoot(): string {
   }
   const base =
     xdg !== undefined && xdg !== "" ? xdg : `${home ?? ""}/.local/share`;
-  return `${base}/scout-for-lol/postgres/16`;
+  return `${base}/scout-for-lol/postgres/${POSTGRES_MAJOR.toString()}`;
 }
 
 type RunResult = { exitCode: number; stdout: string; stderr: string };
@@ -91,29 +92,13 @@ function asPostgresOwner(cmd: string[]): string[] {
   if (su === null) {
     throw new Error("Root-hosted Postgres tests require su");
   }
-  const miseDataDir = Bun.env["MISE_DATA_DIR"];
-  let resolvedExecutable: string | null = null;
-  if (miseDataDir !== undefined && miseDataDir !== "") {
-    const matches = [
-      ...new Bun.Glob(`${POSTGRES_INSTALL_DIR}/*/bin/${executable}`).scanSync({
-        cwd: `${miseDataDir}/installs`,
-        onlyFiles: true,
-      }),
-    ];
-    if (matches.length > 1) {
-      throw new Error(
-        `Expected at most one installed Postgres ${executable}, found ${matches.length.toString()}`,
-      );
-    }
-    const match = matches[0];
-    if (match !== undefined) {
-      resolvedExecutable = `${miseDataDir}/installs/${match}`;
-    }
-  }
-  resolvedExecutable ??= Bun.which(executable);
-  if (resolvedExecutable === null) {
+  // Resolve the repository's selected tool, even when old versions remain
+  // installed. Running a mise shim as nobody would resolve that user's config.
+  const selected = run(["mise", "which", executable]);
+  const resolvedExecutable = selected.stdout.trim();
+  if (resolvedExecutable === "" || selected.exitCode !== 0) {
     throw new Error(
-      `Root-hosted Postgres tests require ${executable} on PATH or in MISE_DATA_DIR`,
+      `Root-hosted Postgres tests require the mise-selected ${executable}: ${selected.stderr}`,
     );
   }
   return [
@@ -149,6 +134,68 @@ function serverIsUp(port: number): boolean {
     "-q",
   ]);
   return result.exitCode === 0;
+}
+
+/** Refuse another major or an unrelated server without stopping either. */
+export function assertDevPostgresIdentity(
+  versionNumber: number,
+  dataDirectory: string,
+  expectedDataDirectory: string,
+): void {
+  if (Math.floor(versionNumber / 10_000) !== POSTGRES_MAJOR) {
+    throw new Error(
+      `Dev PostgreSQL requires major ${POSTGRES_MAJOR.toString()}, but the port serves version ${versionNumber.toString()}. Stop or migrate that server explicitly, or choose an unused SCOUT_PG_PORT.`,
+    );
+  }
+  if (dataDirectory !== expectedDataDirectory) {
+    throw new Error(
+      `Dev PostgreSQL port belongs to ${dataDirectory}, expected ${expectedDataDirectory}. Choose an unused SCOUT_PG_PORT; the existing server was not changed.`,
+    );
+  }
+}
+
+function verifyRunningServer(dataDir: string): void {
+  const identity = psqlMaintenance(
+    String.raw`SELECT current_setting('server_version_num') || E'\n' || current_setting('data_directory')`,
+  ).split("\n");
+  const version = Number(identity[0]);
+  const directory = identity[1];
+  if (directory === undefined || !Number.isInteger(version)) {
+    throw new Error("Dev PostgreSQL returned an invalid server identity");
+  }
+  assertDevPostgresIdentity(
+    version,
+    canonicalDirectory(directory),
+    Bun.file(`${dataDir}/PG_VERSION`).size > 0
+      ? canonicalDirectory(dataDir)
+      : dataDir,
+  );
+}
+
+function canonicalDirectory(directory: string): string {
+  const result = run(["realpath", directory]);
+  if (result.exitCode !== 0) {
+    throw new Error(
+      `Cannot resolve PostgreSQL directory ${directory}: ${result.stderr}`,
+    );
+  }
+  return result.stdout.trim();
+}
+
+function verifyBinaries(): void {
+  if (binariesVerified) return;
+  const version = run(["postgres", "--version"]);
+  if (
+    version.exitCode !== 0 ||
+    !version.stdout.startsWith(
+      `postgres (PostgreSQL) ${POSTGRES_MAJOR.toString()}.`,
+    )
+  ) {
+    throw binariesHint(
+      `Expected PostgreSQL ${POSTGRES_MAJOR.toString()} binaries: ${version.stdout}${version.stderr}`,
+    );
+  }
+  binariesVerified = true;
 }
 
 /**
@@ -205,23 +252,26 @@ function lockIsStale(lockDir: string): boolean {
 
 /**
  * Idempotently ensure the shared dev server is initialized and running.
- * Fast path is one pg_isready probe.
+ * Reuse requires readiness, the selected major, and this harness's data dir.
  */
 export function ensureDevPostgres(): { port: number; superUrl: string } {
   const port = devPostgresPort();
   const superUrl = devDatabaseUrl("postgres");
+  const dataRoot = devPostgresDataRoot();
+  const dataDir = `${dataRoot}/pgdata`;
+  verifyBinaries();
   if (serverIsUp(port)) {
+    verifyRunningServer(dataDir);
     return { port, superUrl };
   }
 
-  const dataRoot = devPostgresDataRoot();
-  const dataDir = `${dataRoot}/pgdata`;
   const lockDir = `${dataRoot}/.ensure.lock`;
   run(["mkdir", "-p", dataRoot]);
 
   const deadline = Date.now() + START_WAIT_MS;
   for (;;) {
     if (serverIsUp(port)) {
+      verifyRunningServer(dataDir);
       return { port, superUrl };
     }
     if (acquireLock(lockDir)) {
@@ -243,6 +293,7 @@ export function ensureDevPostgres(): { port: number; superUrl: string } {
   try {
     // Re-check under the lock — the previous holder may have finished.
     if (serverIsUp(port)) {
+      verifyRunningServer(dataDir);
       return { port, superUrl };
     }
 
@@ -268,9 +319,20 @@ export function ensureDevPostgres(): { port: number; superUrl: string } {
         "--auth=trust",
         "--encoding=UTF8",
         "--no-locale",
+        "--data-checksums",
       ]);
       if (init.exitCode !== 0) {
         throw binariesHint(`initdb failed: ${init.stderr}`);
+      }
+    } else {
+      const storedVersion = run(["cat", `${dataDir}/PG_VERSION`]);
+      if (
+        storedVersion.exitCode !== 0 ||
+        storedVersion.stdout.trim() !== POSTGRES_MAJOR.toString()
+      ) {
+        throw new Error(
+          `Refusing to start an unreadable or different PostgreSQL major from ${dataDir}: ${storedVersion.stderr}`,
+        );
       }
     }
 
@@ -295,6 +357,7 @@ export function ensureDevPostgres(): { port: number; superUrl: string } {
         `pg_ctl start failed: ${start.stderr} (log: ${dataRoot}/server.log)`,
       );
     }
+    verifyRunningServer(dataDir);
     return { port, superUrl };
   } finally {
     releaseLock(lockDir);

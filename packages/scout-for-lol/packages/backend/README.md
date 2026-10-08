@@ -1482,6 +1482,26 @@ check refuses only ledger drift (a `BucksAccount` balance that disagrees with
 its ledger sum). Local fixture databases use their existing bootstrap path
 rather than this hosted-image entrypoint.
 
+### Local PostgreSQL
+
+Development and tests use the PostgreSQL 18 binaries selected by the root Mise
+configuration. The harness initializes a checksummed cluster under
+`$XDG_DATA_HOME/scout-for-lol/postgres/18/pgdata`, or
+`$HOME/.local/share/scout-for-lol/postgres/18/pgdata` when XDG is unset.
+Root-hosted CI uses `/tmp/scout-for-lol/postgres/18/pgdata`.
+
+The harness reuses a server only when its major version and data directory
+match. An older server on port 5471 causes an explicit error; its files and
+process remain untouched. Choose an unused port while keeping that server:
+
+```bash
+SCOUT_PG_PORT=5483 bun run test
+```
+
+Turbo passes and hashes `SCOUT_PG_PORT` for both `test` and `test:ci`. Moving
+existing development data to a new major requires an explicit dump/restore;
+starting the harness does not migrate a previous cluster.
+
 ## Configuration
 
 Environment variables are validated with `env-var`/Zod at startup. Discord and

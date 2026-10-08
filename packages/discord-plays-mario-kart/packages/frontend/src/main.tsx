@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/react";
-import { sentryDataCollection } from "@shepherdjerred/sentry-config";
+import { sentryBrowserOptions } from "@shepherdjerred/sentry-config";
 import type { ErrorBoundaryProps } from "@sentry/react";
 import React from "react";
 import ReactDOM from "react-dom/client";
@@ -14,20 +14,13 @@ const ErrorBoundary = Sentry.ErrorBoundary as unknown as React.ComponentType<
   ErrorBoundaryProps & { children: React.ReactNode }
 >;
 
-// VITE_SENTRY_RELEASE is injected at image-build time (before `bun run build`
-// in buildDiscordPlaysMarioKartImageHelper). Guard the untyped env access so
-// `release` is `string | undefined`, never `any`.
-const sentryRelease =
-  typeof import.meta.env.VITE_SENTRY_RELEASE === "string"
-    ? import.meta.env.VITE_SENTRY_RELEASE
-    : undefined;
-
-Sentry.init({
-  dataCollection: sentryDataCollection(),
-  dsn: "https://c2f90a5857e940e1997b49791d9fc684@bugsink.sjer.red/13",
-  release: sentryRelease,
-  environment: import.meta.env.MODE,
-});
+Sentry.init(
+  sentryBrowserOptions({
+    dsn: "https://c2f90a5857e940e1997b49791d9fc684@bugsink.sjer.red/13",
+    release: import.meta.env.VITE_SENTRY_RELEASE,
+    environment: import.meta.env.MODE,
+  }),
+);
 
 const queryClient = new QueryClient();
 

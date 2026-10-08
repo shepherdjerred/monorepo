@@ -1,11 +1,36 @@
 import * as Sentry from "@sentry/bun";
 import type { Envelope, Event } from "@sentry/core";
 import { afterEach, expect, test } from "vitest";
-import { sentryDataCollection } from "@shepherdjerred/sentry-config";
+import {
+  sentryBrowserOptions,
+  sentryDataCollection,
+} from "@shepherdjerred/sentry-config";
 
 afterEach(async () => {
   await Sentry.close();
 });
+
+test.each([
+  { release: "image-release", expected: "image-release" },
+  { release: undefined, expected: undefined },
+  { release: 123, expected: undefined },
+])(
+  "browser options retain application identity and validate release $release",
+  ({ release, expected }) => {
+    expect(
+      sentryBrowserOptions({
+        dsn: "https://public@example.com/1",
+        environment: "production",
+        release,
+      }),
+    ).toEqual({
+      dsn: "https://public@example.com/1",
+      environment: "production",
+      release: expected,
+      dataCollection: sentryDataCollection(),
+    });
+  },
+);
 
 test("the SDK filters automatic request identity while retaining error context", async () => {
   const envelopes: Envelope[] = [];

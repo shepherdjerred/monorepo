@@ -2564,6 +2564,7 @@
     "s3rver@3.7.1": "patches/s3rver@3.7.1.patch",
     "react-native-sound@0.13.0": "patches/react-native-sound@0.13.0.patch",
     "bun-types@1.4.2": "patches/bun-types@1.4.2.patch",
+    "@astrojs/internal-helpers@0.12.0": "patches/@astrojs%2Finternal-helpers@0.12.0.patch",
     "@astrojs/starlight@0.42.2": "patches/@astrojs%2Fstarlight@0.42.2.patch",
     "@react-native-menu/menu@2.0.0": "patches/@react-native-menu%2Fmenu@2.0.0.patch",
     "react-native-worklets@0.13.0": "patches/react-native-worklets@0.13.0.patch",

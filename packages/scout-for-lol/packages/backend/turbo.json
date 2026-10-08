@@ -17,11 +17,11 @@
     // test script interpolates the PostgreSQL test URL — ambient value
     // changes results. Everything else is pinned by the test-setup preload.
     "test": {
-      "env": ["DATABASE_URL"],
+      "env": ["DATABASE_URL", "SCOUT_PG_PORT"],
       "passThroughEnv": ["MISE_DATA_DIR"]
     },
     "test:ci": {
-      "env": ["DATABASE_URL"],
+      "env": ["DATABASE_URL", "SCOUT_PG_PORT"],
       "passThroughEnv": ["MISE_DATA_DIR"]
     },
     // Typed lint (projectService) resolves the generated Prisma client; root's

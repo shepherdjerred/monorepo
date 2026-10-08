@@ -242,7 +242,7 @@
     },
     "packages/discord-plays-mario-kart/packages/frontend/src/main.tsx|packages/discord-plays-pokemon/packages/frontend/src/main.tsx": {
       "clones": 2,
-      "tokens": 214
+      "tokens": 207
     },
     "packages/discord-plays-mario-kart/packages/frontend/src/model/connection.ts|packages/discord-plays-pokemon/packages/frontend/src/model/connection.ts": {
       "clones": 1,
