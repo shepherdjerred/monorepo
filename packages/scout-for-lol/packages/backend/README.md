@@ -664,6 +664,15 @@ The LCU shapes (`data/src/scout-client/lcu-clash.schema.ts`) were written
 before a Clash window could confirm them. Every field is optional, and an
 unrecognised payload projects to nothing rather than failing.
 
+### Prematch coverage
+
+Prematch still comes from Riot's Spectator API. Whether the client should build
+prematch itself depends on how often Spectator misses a game the client saw,
+so `scout-client/prematch-coverage.ts` measures it: over the last day (less a
+15-minute grace), `scout_client_observed_games{custom}` counts games a client
+reported in progress and `scout_client_games_without_prematch{custom}` those
+with no `raw-archive-prematch` receipt. Both read -1 when the sweep fails.
+
 ### Provenance
 
 A client-sourced match is read like a Riot one everywhere; where it came from
