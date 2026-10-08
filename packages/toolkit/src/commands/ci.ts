@@ -117,6 +117,7 @@ async function showLoad(
     report.memory,
     report.disk,
     report.ioPressure,
+    report.pods,
   ].some((section) => !section.available)
     ? 2
     : 0;

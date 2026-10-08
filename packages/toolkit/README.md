@@ -101,6 +101,17 @@ do not restart polls or diagnose an outage from elapsed time alone. A sparse
 heartbeat appears every five minutes. Disconnects reconnect with backoff and a
 fresh snapshot. `load` reports each unavailable telemetry source explicitly.
 
+`explain` and wait reports include pipeline elapsed time, workflow start delays,
+time without any active workflow, and per-step API phase timings in JSON. The
+report identifies the pipeline attempt and numeric workflow IDs. The string
+`taskId` matches the native pod task-UUID label: Woodpecker 3.19 uses the workflow
+ID's decimal representation for both its queue and backend task ID. API phase timings
+include admission and pod startup; they are not process CPU time. Parallel phases
+overlap and must not be added together to estimate elapsed pipeline time.
+Missing timestamps remain unknown, including activity totals with incomplete
+workflow evidence. Live intervals account for local clock skew. Completion delay
+is a lower bound because the pipeline API does not identify required dependencies.
+
 Main is checked automatically. A failed last completed push keeps main red
 while its recovery build is pending. When main is red, report its evidence and
 await instructions; do not independently fix it. `ci explain --main` is an

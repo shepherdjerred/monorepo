@@ -34,6 +34,14 @@ guarantee a dependency-closed set, which the emitter then relies on.
   by the image lane, so baking them into this service would pin every build to
   whatever was current at deploy time.
 
+## Dependency caches
+
+Shared download caches are paired with explicit tool paths: Bun uses
+`/woodpecker/bun-cache/data`, and uv uses `/woodpecker/uv-cache`. The emitter
+only supplies a shared path when its declared volume is mounted. Bun's download
+cache and its maintenance-lock volume must be mounted together. Installed
+dependencies remain private to each workflow workspace.
+
 ## Pipeline authorization
 
 `src/authorization.ts` admits only the owner's named accounts and bots. Justin
