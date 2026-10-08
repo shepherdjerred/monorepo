@@ -436,7 +436,7 @@ try {
   }
 } finally {
   for (const container of [web, app, db]) {
-    const cleanup = Bun.spawn(["docker", "rm", "-f", container], {
+    const cleanup = Bun.spawn(["docker", "rm", "-f", "-v", container], {
       stdout: "ignore",
       stderr: "ignore",
     });

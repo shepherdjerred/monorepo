@@ -247,7 +247,7 @@ try {
   );
 } finally {
   for (const name of [target, database, fixture]) {
-    const cleanup = Bun.spawn(["docker", "rm", "-f", name], {
+    const cleanup = Bun.spawn(["docker", "rm", "-f", "-v", name], {
       stdout: "ignore",
       stderr: "ignore",
     });
