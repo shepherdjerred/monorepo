@@ -314,20 +314,71 @@ class RestorationControlTest(unittest.TestCase):
         def commands_only(arguments: list[str], timeout: float = 30):
             if "rcon-cli" in arguments:
                 commands.append(arguments[-2:])
-                return "completed"
+                if arguments[-1] == "tasks" and commands.count(["bluemap", "tasks"]) == 1:
+                    return "BlueMap Tasks >\n"
+                return {
+                    "reload": "\x1b[32mReloading BlueMap...\x1b[0m\n",
+                    "world": "Creating update-tasks ...\n",
+                    "tasks": "updating map 'world' ...\n",
+                }[arguments[-1]]
             return original(arguments, timeout)
 
         subprocess_result = MagicMock(returncode=0, stdout=json.dumps(evidence))
         with (
             patch.object(control.subprocess, "run", return_value=subprocess_result),
             patch.object(control, "run", side_effect=commands_only),
+            patch.object(control.threading, "Event"),
         ):
             control.repair_private_map(self.path, journal)
-        self.assertEqual(journal["privateMapRepair"], evidence)
+        self.assertEqual(journal.object("privateMapRepair")["configSha256"], evidence["configSha256"])
+        self.assertEqual(
+            journal.object("privateMapRepair").object("renderCommands"),
+            {"reload": "Reloading BlueMap...", "force-update": "Creating update-tasks ..."},
+        )
+        self.assertEqual(journal.object("privateMapRepair")["renderTaskReadback"], "updating map 'world' ...")
         self.assertNotIn("acceptance", journal)
-        self.assertEqual(commands, [["bluemap", "reload"], ["force-update", "world"]])
+        self.assertEqual(
+            commands, [["bluemap", "reload"], ["force-update", "world"], ["bluemap", "tasks"], ["bluemap", "tasks"]]
+        )
         self.assertEqual(subprocess_result.returncode, 0)
         control.assert_closed(journal)
+
+    def test_private_map_repair_cannot_retain_verified_proof_after_application_rejection(self):
+        original = control.run
+        for rejected in ("reload", "world", "tasks"):
+            with self.subTest(rejected=rejected):
+                self.cluster = Cluster()
+                self.path.unlink(missing_ok=True)
+                journal = self.installation_fixture()
+                control.private_start(self.path, journal)
+                journal["acceptance"] = {"status": "VERIFIED"}
+                journal["privateMapRepair"] = {"phase": "VERIFIED"}
+                evidence = {
+                    "phase": "VERIFIED", "requestId": REQUEST, "candidateJarSha256": "b" * 64,
+                    "worldTicks": 0, "configSha256": "c" * 64,
+                }
+                def command(arguments: list[str], timeout: float = 30, rejected: str = rejected):
+                    if "rcon-cli" not in arguments:
+                        return original(arguments, timeout)
+                    return "No map found" if arguments[-1] == rejected else {
+                        "reload": "Reloading BlueMap...",
+                        "world": "Creating update-tasks ...",
+                        "tasks": "updating map 'world' ...",
+                    }[arguments[-1]]
+
+                with (
+                    patch.object(
+                        control.subprocess, "run", return_value=MagicMock(returncode=0, stdout=json.dumps(evidence))
+                    ),
+                    patch.object(control, "run", side_effect=command),
+                    patch.object(control.threading, "Event"),
+                    self.assertRaisesRegex(ValueError, "BlueMap"),
+                ):
+                    control.repair_private_map(self.path, journal)
+                saved = JsonObject.parse(self.path.read_bytes())
+                self.assertNotIn("privateMapRepair", saved)
+                self.assertNotIn("acceptance", saved)
+                control.assert_closed(journal)
 
     def test_incomplete_revision_refuses_private_start_even_with_a_stale_installed_receipt(self):
         journal = self.installation_fixture()

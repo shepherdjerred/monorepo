@@ -1841,7 +1841,7 @@ def repair_private_map(path: Path, journal: JsonObject) -> None:
         " sys.path.insert(0,directory)\n"
         " runpy.run_path(str(root/'restoration_maps.py'),run_name='__main__')\n"
     )
-    for key in ("acceptance", "stoppingIncarnation", "stoppedIncarnation"):
+    for key in ("acceptance", "stoppingIncarnation", "stoppedIncarnation", "privateMapRepair"):
         journal.pop(key, None)
     save(path, journal)
     result = subprocess.run(
@@ -1878,11 +1878,31 @@ def repair_private_map(path: Path, journal: JsonObject) -> None:
         or re.fullmatch(r"[a-f0-9]{64}", evidence.string("configSha256")) is None
     ):
         raise ValueError("Private map repair returned different evidence")
+    responses = {}
+    for command, expected in (
+        (["reload"], "Reloading BlueMap..."),
+        (["force-update", "world"], "Creating update-tasks ..."),
+    ):
+        response = run(["-n", NAMESPACE, "exec", SERVER + "-0", "--", "rcon-cli", "bluemap", *command], 45)
+        response = re.sub(r"\x1b\[[0-9;]*m|§.", "", response).strip()
+        if response != expected:
+            raise ValueError("BlueMap rejected the private render command: " + response)
+        responses[command[0]] = response
+    # Reload/task creation is asynchronous even after RCON acknowledges it.
+    for attempt in range(10):
+        tasks = run(["-n", NAMESPACE, "exec", SERVER + "-0", "--", "rcon-cli", "bluemap", "tasks"], 5)
+        tasks = re.sub(r"\x1b\[[0-9;]*m|§.", "", tasks)
+        if re.search(r"(?:preparing map 'world' update|updating map 'world')", tasks):
+            break
+        if attempt < 9:
+            threading.Event().wait(1)
+    else:
+        raise ValueError("BlueMap did not report the required world render task")
+    evidence["renderCommands"] = responses
+    evidence["renderTaskReadback"] = tasks.strip()
     assert_closed(journal)
     journal["privateMapRepair"] = evidence
     save(path, journal)
-    run(["-n", NAMESPACE, "exec", SERVER + "-0", "--", "rcon-cli", "bluemap", "reload"], 45)
-    run(["-n", NAMESPACE, "exec", SERVER + "-0", "--", "rcon-cli", "bluemap", "force-update", "world"], 45)
 
 
 def pod_incarnation(pod: JsonObject) -> JsonObject:
