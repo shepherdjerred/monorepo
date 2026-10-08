@@ -159,7 +159,7 @@ function repoFromEnvironment(): string {
   return httpsMatch?.[1] ?? DEFAULT_REPO;
 }
 
-async function waitForReview(): Promise<void> {
+export async function waitForReview(): Promise<void> {
   // A non-pull-request build reports a value rather than omitting the
   // variable, so anything that is not a positive integer means "not a pull
   // request" rather than a misconfiguration.

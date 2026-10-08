@@ -88,6 +88,7 @@ const SHARED_APPLICATION_IMAGE_INPUTS = [
 
 export const TARGET_PATH_PREFIXES: Readonly<Record<string, readonly string[]>> =
   {
+    "woodpecker-config-extension": ["scripts/review/", "scripts/lib/review/"],
     "scout-for-lol": [
       "packages/scout-for-lol/scripts/contract-hash.ts",
       "packages/scout-for-lol/tsconfig.base.json",
@@ -563,6 +564,4 @@ async function main(): Promise<void> {
   console.log(JSON.stringify(targets));
 }
 
-if (import.meta.main) {
-  await main();
-}
+if (import.meta.main) await main();

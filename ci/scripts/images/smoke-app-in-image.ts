@@ -78,6 +78,7 @@ const commands: Record<
     env: {
       WOODPECKER_URL: "https://woodpecker.sjer.red",
       CI_REPO_SLUG: "monorepo",
+      CI_GATE_IMAGE: `ghcr.io/shepherdjerred/woodpecker-config-extension@sha256:${"0".repeat(64)}`,
       WOODPECKER_API_TOKEN: "smoke-test-token",
       GITHUB_APPROVAL_READ_TOKEN: "smoke-test-approval-token",
     },

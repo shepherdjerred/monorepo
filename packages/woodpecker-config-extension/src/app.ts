@@ -25,6 +25,7 @@ import { signRemoteCacheSteps } from "#src/pipeline/turbo-cache.ts";
 import type { SuccessfulWorkflowPipeline } from "#src/woodpecker-api.ts";
 
 export type AppOptions = {
+  readonly trustedGateImage?: string;
   /** Resolves Woodpecker's signing key; the caller caches it. */
   readonly publicKey: () => Promise<KeyObject>;
   /** Reads a committed file at a given commit. */
@@ -171,6 +172,8 @@ async function resolveChangedFiles({
 
 export function createApp(options: AppOptions): Hono {
   const app = new Hono();
+  const gateDirectory =
+    options.trustedGateImage === undefined ? "/workspace" : "/app";
 
   app.get("/healthz", (context) => context.text("ok"));
 
@@ -293,6 +296,7 @@ export function createApp(options: AppOptions): Hono {
     }
     const steps = buildPipelineSteps({
       images,
+      trustedGateImage: options.trustedGateImage,
       changedBase,
       verifyBase,
       imageReleaseBase: imageReleaseBase?.commit,
@@ -316,7 +320,14 @@ export function createApp(options: AppOptions): Hono {
     return context.json({
       configs: emitWorkflows(
         pipeline.event === "pull_request"
-          ? [...selected, completionStep(selected, images.base)]
+          ? [
+              ...selected,
+              completionStep(
+                selected,
+                options.trustedGateImage ?? images.base,
+                gateDirectory,
+              ),
+            ]
           : selected,
         identity,
       ),

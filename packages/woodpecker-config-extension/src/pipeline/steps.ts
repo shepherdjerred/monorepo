@@ -94,6 +94,8 @@ function verifyCommands(options: {
 
 export type PipelineInputs = {
   readonly images: CiImages;
+  /** Image of the deployed policy service, supplied by trusted bootstrap. */
+  readonly trustedGateImage?: string | undefined;
   /**
    * Newest commit on the default branch whose pipeline succeeded, or undefined
    * when the branch has never gone green.
@@ -114,6 +116,7 @@ export type PipelineInputs = {
 
 export function buildPipelineSteps({
   images,
+  trustedGateImage,
   changedBase = "",
   verifyBase,
   imageReleaseBase = "",
@@ -170,7 +173,7 @@ export function buildPipelineSteps({
     // session. The lane definitions stay in macos.ts for restoration.
     ...observabilityE2eSteps(images),
     ...stormE2eSteps(images),
-    ...prGateSteps(images),
+    ...prGateSteps(images, trustedGateImage),
   ];
 
   // Each workflow has its own container and environment. The in-step

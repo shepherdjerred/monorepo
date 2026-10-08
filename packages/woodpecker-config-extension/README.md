@@ -58,6 +58,19 @@ bot pipeline. The image delivery path below promotes that reviewed policy.
 
 ## Image delivery
 
+The deployed extension image also contains the bundled review poller at
+`/app/review-gate.js`. Its `CI_GATE_IMAGE` bootstrap value is the same digest
+as the running extension, supplied by the homelab chart. Review and completion
+therefore use trusted policy without cloning a PR or installing dependencies.
+The poller prints its baked `GIT_SHA` policy revision. Findings, timeouts, and
+API errors fail; only the existing unanimous provider-quota exception passes
+with an explicit message that no review ran.
+
+Deploy the chart's bootstrap setting before promoting an image that requires
+it. Roll back the image and its matching bootstrap value together. Changes to
+the review scripts or their code-review dependency select this image for a
+rebuild. The persistent Codex auth volume is unused by bundled polling.
+
 The Paper E2E service loads the staged workspace plugin tree directly through
 `EXTRA_ARGS=--plugins .../sidecar-plugins` and copies Bukkit configuration through
 `COPY_CONFIG_SRC` into `/data`. The preparation step assigns the plugin tree and

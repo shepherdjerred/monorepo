@@ -72,6 +72,9 @@ export function createWoodpeckerConfigExtension(chart: Chart): void {
       image: `ghcr.io/shepherdjerred/woodpecker-config-extension:${versions["shepherdjerred/woodpecker-config-extension"]}`,
       ports: [{ name: "http", number: CONFIG_EXTENSION_PORT }],
       envVariables: {
+        CI_GATE_IMAGE: EnvValue.fromValue(
+          `ghcr.io/shepherdjerred/woodpecker-config-extension:${versions["shepherdjerred/woodpecker-config-extension"]}`,
+        ),
         WOODPECKER_URL: EnvValue.fromValue(WOODPECKER_PUBLIC_HOST),
         CI_REPO_SLUG: EnvValue.fromValue("shepherdjerred/monorepo"),
         WOODPECKER_API_TOKEN: EnvValue.fromSecretValue({

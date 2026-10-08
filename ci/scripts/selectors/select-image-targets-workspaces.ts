@@ -24,6 +24,9 @@ export type WorkspacePackage = {
 // toolkit-only or frontend-only dep bump changes the embedded artifact even
 // though no file under the target's source prefixes changed.
 const TARGET_EXTRA_OWNERS: Readonly<Record<string, readonly string[]>> = {
+  // The checkout-free review bundle is built from root scripts; its library
+  // ships in the image without becoming a dependency of the HTTP service.
+  "woodpecker-config-extension": ["@shepherdjerred/code-review"],
   "temporal-worker": ["@shepherdjerred/toolkit"],
   "discord-plays-pokemon": ["@discord-plays-pokemon/frontend"],
   "discord-plays-mario-kart": ["@discord-plays-mario-kart/frontend"],

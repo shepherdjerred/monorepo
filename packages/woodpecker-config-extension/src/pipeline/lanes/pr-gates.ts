@@ -2,6 +2,7 @@ import type { CiImages } from "#src/images.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
 import { MEDIUM_TIER, PR_DRY_RUN_TIER } from "#src/pipeline/tiers.ts";
 import { GLOBAL_SELECTOR_INPUTS } from "#src/pipeline/inputs.ts";
+import { BUN_CACHE, BUN_CACHE_CONTROL } from "#src/pipeline/cache.ts";
 import {
   GITHUB_DOWNLOAD,
   STATE_BACKEND,
@@ -39,7 +40,10 @@ const DRY_RUN_SITES = [
   "scout-design-system",
 ];
 
-export function prGateSteps(images: CiImages): CiStep[] {
+export function prGateSteps(
+  images: CiImages,
+  trustedGateImage?: string,
+): CiStep[] {
   return [
     {
       key: "pr-dryrun",
@@ -101,12 +105,17 @@ export function prGateSteps(images: CiImages): CiStep[] {
         ],
       },
       secrets: [GITHUB_DOWNLOAD, ...STATE_BACKEND],
+      volumes: [BUN_CACHE, BUN_CACHE_CONTROL],
     },
     {
       key: "codex-review-gate",
       label: "automated review gate",
-      image: images.base,
-      commands: [". ci/scripts/toolchain.sh", "ci/scripts/review-gate.sh"],
+      image: trustedGateImage ?? images.base,
+      commands:
+        trustedGateImage === undefined
+          ? [". ci/scripts/toolchain.sh", "ci/scripts/review-gate.sh"]
+          : ["cd /app", "bun /app/review-gate.js"],
+      ...(trustedGateImage === undefined ? {} : { skipClone: true }),
       // Multi-provider OR gate: one clean review from any enabled provider
       // passes, a P0 from any of them vetoes, and unanimous quota blocks
       // stay advisory. Only providers confirmed reviewing in production
@@ -121,9 +130,10 @@ export function prGateSteps(images: CiImages): CiStep[] {
       events: ["pull_request"],
       // Codex's auth bundle carries a refresh token, so it must outlive the
       // ephemeral step pod.
-      volumes: [
-        { claim: "woodpecker-codex-auth", path: "/woodpecker/codex-auth" },
-      ],
+      volumes:
+        trustedGateImage === undefined
+          ? [{ claim: "woodpecker-codex-auth", path: "/woodpecker/codex-auth" }]
+          : [],
       secrets: [
         GITHUB_DOWNLOAD,
         grant("ci-github-credentials", "GITHUB_REVIEW_TOKEN"),

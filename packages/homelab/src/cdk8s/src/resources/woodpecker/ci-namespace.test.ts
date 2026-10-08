@@ -72,6 +72,28 @@ function agentEnvironment(): Map<string, string | undefined> {
   return new Map(container.env.map((entry) => [entry.name, entry.value]));
 }
 
+it("pins review execution to the deployed configuration policy image", () => {
+  const deployment = z
+    .object({
+      spec: z.object({
+        template: z.object({
+          spec: z.object({
+            containers: z.array(
+              z.object({ image: z.string(), env: EnvSchema }),
+            ),
+          }),
+        }),
+      }),
+    })
+    .parse(find("Deployment", "woodpecker-woodpecker-config-extension"));
+  const container = deployment.spec.template.spec.containers[0];
+  if (container === undefined) throw new Error("extension has no container");
+  expect(
+    container.env.find((entry) => entry.name === "CI_GATE_IMAGE")?.value,
+  ).toBe(container.image);
+  expect(container.image).toMatch(/@sha256:[a-f\d]{64}$/u);
+});
+
 const PodTemplateSchema = z.object({
   metadata: z.object({ name: z.string(), namespace: z.string() }).loose(),
   spec: z.object({
