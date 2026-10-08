@@ -100,7 +100,12 @@ bun run docker:build   # builds birmel:dev from the repo root context (Dockerfil
 ```
 
 The image contains Bun, Python, and the isolation utilities required by the
-credential-free code sidecar. Production deploys go through the Buildkite image
+credential-free code sidecar. Application files are copied as root-owned with
+access for group 1000 and no access for other users; `/app/data` belongs to uid 1000. The image smoke checks the complete tree and exercises access as both the
+application uid and the untrusted snippet uids before checking startup. These
+filesystem layers are independent of release metadata.
+
+Production deploys go through the Woodpecker image
 build and ArgoCD GitOps flow.
 
 See [AGENTS.md](AGENTS.md) for contributor/agent workflow notes.
