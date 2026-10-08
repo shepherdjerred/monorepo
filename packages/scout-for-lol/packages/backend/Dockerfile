@@ -141,6 +141,7 @@ COPY --parents \
   packages/scout-for-lol/packages/report \
   packages/scout-for-lol/packages/temporal \
   packages/config \
+  packages/sentry-config \
   packages/feature-flags \
   packages/llm-models \
   packages/llm-observability \

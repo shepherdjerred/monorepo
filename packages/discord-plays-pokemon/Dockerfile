@@ -112,6 +112,7 @@ COPY --parents \
   packages/discord-plays-pokemon/packages/common \
   packages/discord-plays-pokemon/packages/frontend \
   packages/discord-plays-core \
+  packages/sentry-config \
   packages/discord-stream-lifecycle \
   packages/discord-video-stream \
   packages/llm-models \
@@ -195,6 +196,7 @@ COPY --parents \
   packages/discord-plays-pokemon/packages/backend \
   packages/discord-plays-pokemon/packages/common \
   packages/discord-plays-core \
+  packages/sentry-config \
   packages/discord-stream-lifecycle \
   packages/discord-video-stream \
   packages/llm-models \

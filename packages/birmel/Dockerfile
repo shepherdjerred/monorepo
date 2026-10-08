@@ -32,6 +32,7 @@ COPY --parents \
   tsconfig.base.json \
   packages/birmel \
   packages/config \
+  packages/sentry-config \
   packages/feature-flags \
   packages/glitter-context \
   packages/llm-models \
@@ -110,6 +111,7 @@ COPY --parents \
   tsconfig.base.json \
   packages/birmel \
   packages/config \
+  packages/sentry-config \
   packages/feature-flags \
   packages/llm-models \
   packages/llm-observability \

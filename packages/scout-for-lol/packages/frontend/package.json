@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@shepherdjerred/sentry-config": "workspace:*",
     "@ai-sdk/anthropic": "^4.0.62",
     "@ai-sdk/google": "^4.0.79",
     "@ai-sdk/openai": "^4.0.74",
@@ -13,7 +14,7 @@
     "@scout-for-lol/data": "workspace:*",
     "@scout-for-lol/design-system": "workspace:*",
     "@scout-for-lol/report": "workspace:*",
-    "@sentry/browser": "^10.0.0",
+    "@sentry/browser": "^11.5.0",
     "@shepherdjerred/llm-models": "workspace:*",
     "@tailwindcss/typography": "^0.5.16",
     "@tailwindcss/vite": "^4.2.4",

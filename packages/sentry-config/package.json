@@ -1,34 +1,25 @@
 {
-  "name": "@shepherdjerred/temporal-observability",
-  "version": "0.1.0",
+  "name": "@shepherdjerred/sentry-config",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
+  "description": "Shared Sentry data collection policy for browser and Bun applications",
   "exports": {
-    "./interceptors": "./src/interceptors.ts",
-    "./log-fields": "./src/log-fields.ts",
-    "./tracing-resource": "./src/tracing-resource.ts",
-    "./workflow-span-sink": "./src/workflow-span-sink.ts"
+    ".": "./src/index.ts"
   },
   "scripts": {
-    "lint": "bunx eslint --cache .",
+    "build": "bun --no-install build src/index.ts --outdir dist --target browser",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
+    "lint": "bunx --no-install eslint --cache .",
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run test",
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
     "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
-    "@opentelemetry/api": "^1.9.1",
-    "@opentelemetry/core": "^2.12.0",
-    "@opentelemetry/resources": "^2.12.0",
-    "@opentelemetry/sdk-trace-base": "^2.12.0",
-    "@opentelemetry/semantic-conventions": "^1.40.0",
-    "@temporalio/activity": "1.24.0",
-    "@temporalio/interceptors-opentelemetry-v2": "1.24.0",
-    "@temporalio/worker": "1.24.0",
-    "@temporalio/workflow": "1.24.0",
-    "zod": "^4.4.3"
+    "@sentry/core": "11.5.0"
   },
   "devDependencies": {
+    "@sentry/bun": "11.5.0",
     "@shepherdjerred/eslint-config": "workspace:*",
     "@tsconfig/node-lts": "^24.0.0",
     "@tsconfig/recommended": "^1.0.13",
@@ -38,6 +29,7 @@
     "eslint": "^10.7.0",
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
-    "vitest": "5.0.3"
+    "vitest": "5.0.3",
+    "@vitest/coverage-istanbul": "5.0.3"
   }
 }

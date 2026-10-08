@@ -59,6 +59,7 @@ COPY --parents \
   tsconfig.base.json \
   packages/trmnl-dashboard \
   packages/config \
+  packages/sentry-config \
   packages/feature-flags \
   packages/home-assistant \
   packages/ops-model \

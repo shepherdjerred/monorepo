@@ -25,7 +25,8 @@
     "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
-    "@sentry/bun": "^10.76.0",
+    "@shepherdjerred/sentry-config": "workspace:*",
+    "@sentry/bun": "^11.5.0",
     "@shepherdjerred/config": "workspace:*",
     "@shepherdjerred/feature-flags": "workspace:*",
     "@shepherdjerred/home-assistant": "workspace:*",

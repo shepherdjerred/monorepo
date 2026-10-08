@@ -7,6 +7,7 @@
  *  imported, so initializing Sentry there would have left those failures
  *  visible only in container logs. */
 import * as Sentry from "@sentry/bun";
+import { sentryDataCollection } from "@shepherdjerred/sentry-config";
 import configuration from "#src/configuration.ts";
 import { filterStarlightSentryEvent } from "#src/sentry-filters.ts";
 
@@ -21,6 +22,7 @@ export function initObservability(): void {
   initialized = true;
 
   Sentry.init({
+    dataCollection: sentryDataCollection(),
     dsn: configuration.sentryDsn,
     environment: configuration.environment,
     release: configuration.gitSha,

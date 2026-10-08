@@ -10,6 +10,7 @@ import { LoadingBlockDefaults } from "@shepherdjerred/loaded/react.tsx";
 import { RouterProvider } from "react-router";
 import { QueryClientProvider } from "@tanstack/react-query";
 import * as Sentry from "@sentry/react";
+import { sentryDataCollection } from "@shepherdjerred/sentry-config";
 import { TRPCProvider, trpcClient } from "#src/lib/query/trpc.ts";
 import { filterScoutAppSentryEvent } from "#src/lib/sentry-filters.ts";
 import { queryClient } from "#src/lib/query/query-client.ts";
@@ -26,6 +27,7 @@ const sentryRelease =
     : undefined;
 
 Sentry.init({
+  dataCollection: sentryDataCollection(),
   dsn: "https://337945d2208840dca4a573be311a1bbb@bugsink.sjer.red/1",
   release: sentryRelease,
   environment: import.meta.env.MODE,

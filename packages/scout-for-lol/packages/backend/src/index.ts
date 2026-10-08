@@ -1,5 +1,6 @@
 import configuration from "#src/configuration.ts";
 import * as Sentry from "@sentry/bun";
+import { sentryDataCollection } from "@shepherdjerred/sentry-config";
 import { createLogger } from "#src/logger.ts";
 import { filterScoutSentryEvent } from "#src/sentry-filters.ts";
 import { initializeTracing } from "#src/observability/tracing.ts";
@@ -35,11 +36,12 @@ if (
 ) {
   logger.info("🔍 Initializing Sentry error tracking");
   Sentry.init({
+    dataCollection: sentryDataCollection(),
     dsn: configuration.sentryDsn,
     environment: configuration.environment,
     // Scout's NodeSDK owns the global OpenTelemetry providers. Sentry remains
     // responsible for error tracking without attempting a second registration.
-    skipOpenTelemetrySetup: true,
+    enableOpenTelemetrySetup: false,
     // Use image tag (e.g. "2.0.0-998") as the release so Bugsink groups
     // events per deploy and matches what ArgoCD reports.
     release: configuration.version,

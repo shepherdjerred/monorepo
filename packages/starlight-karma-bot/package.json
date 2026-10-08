@@ -23,10 +23,11 @@
     "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
+    "@shepherdjerred/sentry-config": "workspace:*",
     "@prisma/adapter-libsql": "7.10.0",
     "@prisma/client": "^7.10.0",
     "@prisma/client-runtime-utils": "7.10.0",
-    "@sentry/bun": "^10.76.0",
+    "@sentry/bun": "^11.5.0",
     "@shepherdjerred/config": "workspace:*",
     "@shepherdjerred/feature-flags": "workspace:*",
     "cron-parser": "^5.5.0",

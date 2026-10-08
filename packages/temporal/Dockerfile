@@ -64,6 +64,7 @@ COPY --parents \
   packages/unix-socket-daemon/src \
   packages/mc-harness/src/protocol \
   packages/config \
+  packages/sentry-config \
   packages/ops-model \
   packages/ops-clients \
   packages/version-catalog/package.json \
@@ -429,6 +430,7 @@ COPY --parents \
   packages/homelab/src/domain-registry.json \
   packages/temporal-observability \
   packages/config \
+  packages/sentry-config \
   packages/feature-flags \
   packages/code-review \
   packages/glitter-context \

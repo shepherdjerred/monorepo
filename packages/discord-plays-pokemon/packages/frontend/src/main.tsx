@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/react";
+import { sentryDataCollection } from "@shepherdjerred/sentry-config";
 import type { ErrorBoundaryProps } from "@sentry/react";
 import React from "react";
 import ReactDOM from "react-dom/client";
@@ -22,6 +23,7 @@ const sentryRelease =
     : undefined;
 
 Sentry.init({
+  dataCollection: sentryDataCollection(),
   dsn: "https://9c905c2bb5924e55b4dea32e2a95f0d1@bugsink.sjer.red/8",
   release: sentryRelease,
   environment: import.meta.env.MODE,

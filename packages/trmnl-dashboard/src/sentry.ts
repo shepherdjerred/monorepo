@@ -1,6 +1,7 @@
 // trmnl-dashboard runs on Bun (`bun run src/index.ts`), so we use `@sentry/bun`
 // — `@sentry/node` silently fails to ship events under Bun.
 import * as Sentry from "@sentry/bun";
+import { sentryDataCollection } from "@shepherdjerred/sentry-config";
 
 /**
  * Initialize Sentry error reporting. No-op when SENTRY_DSN is unset (local
@@ -15,6 +16,7 @@ export function initializeSentry(): void {
   }
 
   Sentry.init({
+    dataCollection: sentryDataCollection(),
     dsn,
     environment: Bun.env["ENVIRONMENT"] ?? "production",
     release: Bun.env["VERSION"],

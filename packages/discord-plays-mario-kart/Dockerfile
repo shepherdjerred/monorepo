@@ -72,6 +72,7 @@ COPY --parents \
   packages/discord-plays-mario-kart/packages/common \
   packages/discord-plays-mario-kart/packages/frontend \
   packages/discord-plays-core \
+  packages/sentry-config \
   packages/discord-stream-lifecycle \
   packages/discord-video-stream \
   packages/loaded \
@@ -141,6 +142,7 @@ COPY --parents \
   packages/discord-plays-mario-kart/packages/backend \
   packages/discord-plays-mario-kart/packages/common \
   packages/discord-plays-core \
+  packages/sentry-config \
   packages/discord-stream-lifecycle \
   packages/discord-video-stream \
   ./

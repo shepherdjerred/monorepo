@@ -59,6 +59,7 @@ COPY --parents \
   tsconfig.base.json \
   packages/starlight-karma-bot \
   packages/config \
+  packages/sentry-config \
   packages/feature-flags \
   ./
 # Bake Prisma's engines into the production dependency tree. Bun's production

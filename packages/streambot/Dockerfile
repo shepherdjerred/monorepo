@@ -193,6 +193,7 @@ COPY --exclude=packages/streambot/test/fixtures/voice-corpus \
   packages/discord-video-stream \
   packages/voice-assistant \
   packages/config \
+  packages/sentry-config \
   packages/feature-flags \
   ./
 COPY --from=build /app/packages/discord-stream-lifecycle/dist packages/discord-stream-lifecycle/dist
