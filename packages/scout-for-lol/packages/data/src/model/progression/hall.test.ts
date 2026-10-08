@@ -27,6 +27,7 @@ function matchRow(): MatchLakeRow {
     game_mode: "CLASSIC",
     game_type: "MATCHED_GAME",
     game_version: "16.1.1",
+    data_source: "RIOT",
     end_of_game_result: "GameComplete",
     map_id: 11,
     puuid: "puuid-1",

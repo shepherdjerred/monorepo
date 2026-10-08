@@ -161,6 +161,7 @@ function matchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
     game_mode: fact.gameMode ?? "CLASSIC",
     game_type: "MATCHED_GAME",
     game_version: "16.1.1",
+    data_source: "RIOT",
     end_of_game_result: "GameComplete",
     map_id: fact.mapId ?? 11,
     puuid: fact.puuid,

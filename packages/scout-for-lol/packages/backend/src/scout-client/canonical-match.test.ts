@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { LeaguePuuidSchema, RawMatchSchema } from "@scout-for-lol/data";
+import {
+  LeaguePuuidSchema,
+  RawMatchSchema,
+  SCOUT_CLIENT_DATA_VERSION,
+  type RawMatch,
+} from "@scout-for-lol/data";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { LocalMatchBundleSchema } from "./canonical/lcu-schema.ts";
@@ -50,6 +55,14 @@ if (localSourceParticipant === undefined) {
 beforeEach(() => {
   vi.resetAllMocks();
 });
+
+/** A match as selected from a client: stamped as the client's, whatever it claimed. */
+function asClientMatch(match: RawMatch): RawMatch {
+  return {
+    ...match,
+    metadata: { ...match.metadata, dataVersion: SCOUT_CLIENT_DATA_VERSION },
+  };
+}
 
 function candidate(
   payload: unknown,
@@ -150,13 +163,13 @@ describe("parseLocalCanonicalMatch", () => {
   test("accepts a complete wrapped payload with matching identities", () => {
     expect(
       parseLocalCanonicalMatch(riotMatchId, candidate({ data: fixture })),
-    ).toEqual(fixture);
+    ).toEqual(asClientMatch(fixture));
   });
 
   test("derives metadata around a complete LCU match info payload", () => {
     expect(
       parseLocalCanonicalMatch(riotMatchId, candidate({ data: fixture.info })),
-    ).toEqual(fixture);
+    ).toEqual(asClientMatch(fixture));
   });
 
   test("accepts a complete local history and end-game bundle", () => {
@@ -351,7 +364,7 @@ describe("resolveLocalCanonicalMatch", () => {
     mocks.upsert.mockResolvedValue({ sourceObservation: valid });
 
     await expect(resolveLocalCanonicalMatch(riotMatchId)).resolves.toEqual(
-      fixture,
+      asClientMatch(fixture),
     );
     expect(mocks.findMany).toHaveBeenCalledWith({
       where: {
@@ -393,7 +406,7 @@ describe("resolveLocalCanonicalMatch", () => {
     mocks.upsert.mockResolvedValue({ sourceObservation: fresh });
 
     await expect(resolveLocalCanonicalMatch(riotMatchId, now)).resolves.toEqual(
-      custom,
+      asClientMatch(custom),
     );
   });
 });

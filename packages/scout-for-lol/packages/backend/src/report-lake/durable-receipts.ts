@@ -17,6 +17,8 @@ import {
   ArtifactDescriptorSchema,
   type ArtifactDescriptor,
   type ArtifactKind,
+  LakeArtifactKindSchema,
+  type LakeArtifactKind,
 } from "@scout-for-lol/domain/artifacts/descriptors.ts";
 import {
   IsoInstantSchema,
@@ -67,13 +69,14 @@ const RAW_ARCHIVE_RECEIPT_KINDS = {
   match: ReceiptKindSchema.parse("raw-archive-match"),
   timeline: ReceiptKindSchema.parse("raw-archive-timeline"),
   prematch: ReceiptKindSchema.parse("raw-archive-prematch"),
+  client_bundle: ReceiptKindSchema.parse("raw-archive-client-bundle"),
 } as const satisfies Record<ArtifactKind, ReceiptKind>;
 
 const LAKE_STAGING_RECEIPT_KINDS = {
   match: ReceiptKindSchema.parse("lake-staging-match"),
   timeline: ReceiptKindSchema.parse("lake-staging-timeline"),
   prematch: ReceiptKindSchema.parse("lake-staging-prematch"),
-} as const satisfies Record<ArtifactKind, ReceiptKind>;
+} as const satisfies Record<LakeArtifactKind, ReceiptKind>;
 
 /** The canonical object store holds this artifact. */
 export function rawArchiveReceiptKind(artifact: ArtifactKind): ReceiptKind {
@@ -81,7 +84,9 @@ export function rawArchiveReceiptKind(artifact: ArtifactKind): ReceiptKind {
 }
 
 /** The lake projection for this artifact reached its staging files. */
-export function lakeStagingReceiptKind(artifact: ArtifactKind): ReceiptKind {
+export function lakeStagingReceiptKind(
+  artifact: LakeArtifactKind,
+): ReceiptKind {
   return LAKE_STAGING_RECEIPT_KINDS[artifact];
 }
 
@@ -110,7 +115,8 @@ export const RECEIPT_VERSION = 1;
  */
 export type LakeStagingEvidence = z.infer<typeof LakeStagingEvidenceSchema>;
 export const LakeStagingEvidenceSchema = z.strictObject({
-  objectKind: ArtifactDescriptorSchema.shape.kind,
+  // Only the kinds the lake projects; a client bundle is never staged.
+  objectKind: LakeArtifactKindSchema,
   sourceObjectKey: ArtifactDescriptorSchema.shape.key,
   digest: ArtifactDescriptorSchema.shape.digest,
   fileCount: z.number().int().positive(),

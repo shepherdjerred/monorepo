@@ -1,5 +1,6 @@
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { MatchIdSchema } from "@scout-for-lol/data";
 import {
   loadRawMatchFixture,
   rawCurrentGameInfoFixture,
@@ -8,6 +9,7 @@ import {
 import {
   ArtifactDescriptorSchema,
   ArtifactKindSchema,
+  LakeArtifactKindSchema,
 } from "@scout-for-lol/domain/artifacts/descriptors.ts";
 import { matchProcessingReceiptIdentityKey } from "@scout-for-lol/domain/match-processing/states.ts";
 import { SCOUT_MATCH_RECEIPT_KINDS } from "@scout-for-lol/temporal/match-receipts";
@@ -51,6 +53,7 @@ vi.mock("#src/database/durable/receipt-repository.ts", () => ({
 }));
 
 const ARTIFACT_KINDS = ArtifactKindSchema.options;
+const LAKE_ARTIFACT_KINDS = LakeArtifactKindSchema.options;
 
 const {
   RECEIPTED_LAKE_RECEIPT_KINDS,
@@ -61,6 +64,7 @@ const {
   rawArchiveReceiptKind,
 } = await import("#src/report-lake/durable-receipts.ts");
 const {
+  archiveClientBundleReceipted,
   archiveMatchReceipted,
   archivePrematchReceipted,
   archiveTimelineReceipted,
@@ -225,6 +229,48 @@ describe("receipted timeline archival", () => {
   });
 });
 
+describe("receipted client bundle archival", () => {
+  test("stores the bundle beside the match it was converted from", async () => {
+    const match = await loadRawMatchFixture();
+    const matchId = MatchIdSchema.parse(match.metadata.matchId);
+    const payload = { resource: "post_game", data: { matchHistory: {} } };
+    mockSuccessfulPut();
+
+    const result = await archiveClientBundleReceipted({
+      matchId,
+      payload,
+      gameCreatedAt: new Date(match.info.gameCreation),
+      observationId: "00000000-0000-4000-8000-000000000001",
+    });
+
+    if (result.status !== "archived") throw new Error("expected an archive");
+    expect(result.artifact.kind).toBe("client_bundle");
+    const put = getValidatedPutCommand().input;
+    expect(put.Key).toMatch(
+      new RegExp(
+        String.raw`^games/\d{4}/\d{2}/\d{2}/${matchId}/client-bundle\.json$`,
+        "u",
+      ),
+    );
+    expect(put.Metadata?.["source"]).toBe("SCOUT_CLIENT");
+    expect(recordedReceipt().receipt.kind).toBe("raw-archive-client-bundle");
+  });
+
+  test("records the match's own source in its archive metadata", async () => {
+    const match = await loadRawMatchFixture();
+    mockSuccessfulPut();
+
+    await archiveMatchReceipted(
+      { ...match, metadata: { ...match.metadata, dataVersion: "local-1" } },
+      [],
+    );
+
+    expect(getValidatedPutCommand().input.Metadata?.["source"]).toBe(
+      "SCOUT_CLIENT",
+    );
+  });
+});
+
 describe("a full ingest receipts every one of its artifacts", () => {
   test("match and timeline record two distinct receipt identities", async () => {
     // All three artifacts of a game share one match id, so a single
@@ -270,17 +316,21 @@ describe("a full ingest receipts every one of its artifacts", () => {
       "raw-archive-match",
       "raw-archive-timeline",
       "raw-archive-prematch",
+      "raw-archive-client-bundle",
     ]);
   });
 
   test("staging kinds are distinct from archive kinds for the same artifact", () => {
-    for (const kind of ARTIFACT_KINDS) {
+    for (const kind of LAKE_ARTIFACT_KINDS) {
       expect(lakeStagingReceiptKind(kind)).not.toBe(
         rawArchiveReceiptKind(kind),
       );
     }
+    // A client bundle is archived but never staged: the lake reads the match
+    // converted from it, so it has an archive receipt and no staging one.
+    expect(LAKE_ARTIFACT_KINDS).not.toContain("client_bundle");
     expect(new Set(RECEIPTED_LAKE_RECEIPT_KINDS).size).toBe(
-      ARTIFACT_KINDS.length * 2,
+      ARTIFACT_KINDS.length + LAKE_ARTIFACT_KINDS.length,
     );
   });
 

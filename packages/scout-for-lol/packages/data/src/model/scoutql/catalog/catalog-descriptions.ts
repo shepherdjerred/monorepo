@@ -20,6 +20,8 @@ const DESCRIPTIONS: Record<string, string> = {
   game_mode: "Riot game mode (CLASSIC, ARAM, …).",
   game_type: "Riot game type (MATCHED_GAME, …).",
   game_version: "Full game version string (see the patch dimension).",
+  data_source:
+    "Where the match result came from: RIOT, or SCOUT_CLIENT for a game Riot never published that a player's Scout Client captured.",
   end_of_game_result: "End-of-game result (GameComplete, or an abort state).",
   map_id: "Riot numeric map id.",
   puuid: "Riot player UUID for this participant.",

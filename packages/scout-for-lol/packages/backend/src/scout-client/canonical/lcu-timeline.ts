@@ -1,6 +1,7 @@
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   RawTimelineSchema,
+  SCOUT_CLIENT_DATA_VERSION,
   type RawTimeline,
   type RawTimelineEvent,
 } from "@scout-for-lol/data";
@@ -202,7 +203,7 @@ export function convertLcuTimeline(
   );
   const converted = RawTimelineSchema.safeParse({
     metadata: {
-      dataVersion: "local-1",
+      dataVersion: SCOUT_CLIENT_DATA_VERSION,
       matchId: riotMatchId,
       participants: identities.map((identity) => identity.player.puuid),
     },

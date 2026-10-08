@@ -30,7 +30,13 @@ import {
   storedRawArchiveDescriptor,
   type ReceiptRecordOutcome,
 } from "#src/report-lake/durable-receipts.ts";
-import { archiveMatchReceipted } from "#src/report-lake/receipted-archive.ts";
+import {
+  archiveClientBundleReceipted,
+  archiveMatchReceipted,
+  type ReceiptedArchiveResult,
+} from "#src/report-lake/receipted-archive.ts";
+import { readSelectedLocalCanonicalMatch } from "#src/scout-client/canonical-match.ts";
+import { MatchIdSchema } from "@scout-for-lol/data";
 import { durableCommit } from "#src/temporal/match/match-commits.ts";
 import {
   resolveScoutMatchContext,
@@ -102,7 +108,96 @@ function archiveReceiptCommit(
 }
 
 /**
- * Archive one match's raw payload, at most once, and attest to it.
+ * What the receipted door answered for one artifact, as an archived artifact
+ * this run can report — or `null` on the dev/test no-bucket path, where
+ * nothing was archived and there is no honest claim to record.
+ */
+function archivedArtifactFrom(
+  result: ReceiptedArchiveResult<unknown>,
+  matchId: RiotMatchId,
+): ScoutArchivedArtifact | null {
+  if (result.status === "skipped_no_bucket") return null;
+  if (result.status === "already_archived") {
+    // A rival writer archived this artifact between the receipt read and the
+    // door's own gate. The door answered from the standing receipt without
+    // putting, so the canonical object is intact and this run has nothing to
+    // attest that is not already attested.
+    return alreadyStored(result.artifact);
+  }
+  return {
+    descriptor: result.artifact,
+    outcome: "stored",
+    receipt: {
+      kind: rawArchiveReceiptKind(result.artifact.kind),
+      commit: archiveReceiptCommit(result.receipt, matchId),
+    },
+  };
+}
+
+function alreadyStored(descriptor: ArtifactDescriptor): ScoutArchivedArtifact {
+  return {
+    descriptor,
+    outcome: "already-stored",
+    receipt: {
+      kind: rawArchiveReceiptKind(descriptor.kind),
+      commit: { outcome: "already-applied" },
+    },
+  };
+}
+
+async function archiveMatchArtifact(
+  riotMatchId: RiotMatchId,
+): Promise<ScoutArchivedArtifact | null> {
+  const archived = await readArchivedMatchArtifact(riotMatchId);
+  if (archived !== null) return alreadyStored(archived);
+  const context = await resolveScoutMatchContext(riotMatchId);
+  return archivedArtifactFrom(
+    await archiveMatchReceipted(
+      context.matchData,
+      context.trackedPlayers.map((player) => player.alias),
+    ),
+    riotMatchId,
+  );
+}
+
+/**
+ * The Scout Client bundle a client-sourced match was converted from,
+ * archived beside the match — or `null` for a match whose result is Riot's.
+ *
+ * Gated by its own receipt rather than the match's, so a run that crashed
+ * between the two writes still archives the bundle on its retry.
+ */
+async function archiveClientBundleArtifact(
+  riotMatchId: RiotMatchId,
+): Promise<ScoutArchivedArtifact | null> {
+  const archived = await storedRawArchiveDescriptor(
+    prisma,
+    riotMatchId,
+    "client_bundle",
+  );
+  if (archived !== null) return alreadyStored(archived);
+  const selected = await prisma.scoutClientCanonicalMatch.findUnique({
+    where: { riotMatchId },
+    include: { sourceObservation: true },
+  });
+  if (selected === null) return null;
+  const match = await readSelectedLocalCanonicalMatch(riotMatchId);
+  if (match === null) return null;
+  return archivedArtifactFrom(
+    await archiveClientBundleReceipted({
+      matchId: MatchIdSchema.parse(riotMatchId),
+      payload: selected.sourceObservation.payload,
+      gameCreatedAt: new Date(match.info.gameCreation),
+      observationId: selected.sourceObservationId,
+    }),
+    riotMatchId,
+  );
+}
+
+/**
+ * Archive one match's raw payload — and, for a match whose result came from
+ * the Scout Client, the client bundle it was converted from — at most once
+ * each, and attest to them.
  *
  * The replay gate is the receipt rather than an effect claim, and that is
  * deliberate: the receipt is what names the artifact, so a replay that reads
@@ -113,57 +208,13 @@ function archiveReceiptCommit(
 export async function archiveMatchArtifacts(input: {
   riotMatchId: RiotMatchId;
 }): Promise<ScoutArchiveResult> {
-  const archived = await readArchivedMatchArtifact(input.riotMatchId);
-  if (archived !== null) {
-    const artifact: ScoutArchivedArtifact = {
-      descriptor: archived,
-      outcome: "already-stored",
-      receipt: {
-        kind: rawArchiveReceiptKind(archived.kind),
-        commit: { outcome: "already-applied" },
-      },
-    };
-    return { artifacts: [artifact] };
-  }
-
-  const context = await resolveScoutMatchContext(input.riotMatchId);
-  const result = await archiveMatchReceipted(
-    context.matchData,
-    context.trackedPlayers.map((player) => player.alias),
-  );
-  if (result.status === "skipped_no_bucket") {
-    // The dev/test no-bucket path. Nothing was archived, so there is no honest
-    // claim to record and no descriptor to report — exactly as v1 records
-    // nothing here.
-    return { artifacts: [] };
-  }
-  if (result.status === "already_archived") {
-    // A rival writer archived this match between the receipt read above and
-    // the door's own gate. The door answered from the standing receipt without
-    // putting, so the canonical object is intact and this run has nothing to
-    // attest that is not already attested.
-    return {
-      artifacts: [
-        {
-          descriptor: result.artifact,
-          outcome: "already-stored",
-          receipt: {
-            kind: rawArchiveReceiptKind(result.artifact.kind),
-            commit: { outcome: "already-applied" },
-          },
-        },
-      ],
-    };
-  }
-  const artifact: ScoutArchivedArtifact = {
-    descriptor: result.artifact,
-    outcome: "stored",
-    receipt: {
-      kind: rawArchiveReceiptKind(result.artifact.kind),
-      commit: archiveReceiptCommit(result.receipt, input.riotMatchId),
-    },
+  const match = await archiveMatchArtifact(input.riotMatchId);
+  const bundle = await archiveClientBundleArtifact(input.riotMatchId);
+  return {
+    artifacts: [match, bundle].flatMap((artifact) =>
+      artifact === null ? [] : [artifact],
+    ),
   };
-  return { artifacts: [artifact] };
 }
 
 function observationDrift(matchId: RiotMatchId, detail: string): never {

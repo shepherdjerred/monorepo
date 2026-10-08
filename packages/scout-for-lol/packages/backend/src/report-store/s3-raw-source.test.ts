@@ -15,6 +15,9 @@ describe("classifyRawObjectKey", () => {
     ["prematch/2026/07/12/123/spectator-data.json", "prematch"],
     ["games/2026/07/12/NA1_1/report.png", "ignored"],
     ["games/2026/07/12/NA1_1/report.svg", "ignored"],
+    // Evidence a client-sourced match was converted from; the lake reads the
+    // converted match.json beside it, never the bundle.
+    ["games/2026/07/12/NA1_1/client-bundle.json", "ignored"],
     ["failed-validations/2026/07/12/NA1_1/match.json", "ignored"],
     ["prematch/2026/07/12/123/loading-screen.png", "ignored"],
   ];
