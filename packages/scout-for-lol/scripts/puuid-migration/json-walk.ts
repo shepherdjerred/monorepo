@@ -123,7 +123,10 @@ export function translateJsonColumnValue(
   );
   return rewriteEmbedded
     ? translateStrings(value, (text) =>
-        text.replaceAll(/[\w-]{70,90}/gu, (token) => map.get(token) ?? token),
+        text.replaceAll(
+          /(?<![\w-])[\w-]{70,90}(?![\w-])/gu,
+          (token) => map.get(token) ?? token,
+        ),
       )
     : translateJsonValue(value, map);
 }

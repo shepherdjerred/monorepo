@@ -32,7 +32,15 @@ test("inspection archives translate mapped tokens in nested prompts and query te
 });
 
 test("inspection substitution requires a complete mapped token and is idempotent", () => {
-  const payload = [old, unrelated, `${old}suffix`, `prefix${old}`, `(${old})`];
+  const payload = [
+    old,
+    unrelated,
+    `${old}suffix`,
+    `prefix${old}`,
+    `${"x".repeat(90)}${old}`,
+    `${old}${"x".repeat(100)}`,
+    `(${old})`,
+  ];
   const source = { table: "ExploreToolPayload", column: "payload" };
   const translated = translateJsonColumnValue(payload, map, source);
   expect(translated).toEqual([
@@ -40,6 +48,8 @@ test("inspection substitution requires a complete mapped token and is idempotent
     unrelated,
     `${old}suffix`,
     `prefix${old}`,
+    `${"x".repeat(90)}${old}`,
+    `${old}${"x".repeat(100)}`,
     `(${replacement})`,
   ]);
   expect(translateJsonColumnValue(translated, map, source)).toEqual(translated);
