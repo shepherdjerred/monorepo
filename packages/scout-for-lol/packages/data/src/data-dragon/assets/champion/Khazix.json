@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.19.1",
+  "version": "16.20.1",
   "data": {
     "Khazix": {
       "id": "Khazix",
@@ -579,7 +579,7 @@
         {
           "id": "KhazixE",
           "name": "Leap",
-          "description": "Kha'Zix leaps to an area, dealing physical damage upon landing. If he chooses to <font color='#00DD33'>Evolve Wings</font>, Leap's range increases by 200 and the cooldown resets on champion kill or assist.",
+          "description": "Kha'Zix leaps to an area, dealing physical damage upon landing. If he chooses to <font color='#00DD33'>Evolve Wings</font>, Leap's range increases and the cooldown resets on champion kill or assist.",
           "tooltip": "Kha'Zix leaps, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> upon landing.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],

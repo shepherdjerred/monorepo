@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.19.1",
+  "version": "16.20.1",
   "data": {
     "Yone": {
       "id": "Yone",
@@ -537,6 +537,68 @@
           "name": "Inkshadow Yone (Paragon)",
           "chromas": false,
           "parentSkin": 35
+        },
+        {
+          "id": "777077",
+          "num": 77,
+          "name": "HEARTSTEEL Live My Life Yone",
+          "chromas": false
+        },
+        {
+          "id": "777078",
+          "num": 78,
+          "name": "HEARTSTEEL Live My Life Yone (Ruby)",
+          "chromas": true,
+          "parentSkin": 77
+        },
+        {
+          "id": "777079",
+          "num": 79,
+          "name": "HEARTSTEEL Live My Life Yone (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 77
+        },
+        {
+          "id": "777080",
+          "num": 80,
+          "name": "HEARTSTEEL Live My Life Yone (Catseye)",
+          "chromas": false,
+          "parentSkin": 77
+        },
+        {
+          "id": "777081",
+          "num": 81,
+          "name": "HEARTSTEEL Live My Life Yone (Pearl)",
+          "chromas": false,
+          "parentSkin": 77
+        },
+        {
+          "id": "777082",
+          "num": 82,
+          "name": "HEARTSTEEL Live My Life Yone (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 77
+        },
+        {
+          "id": "777083",
+          "num": 83,
+          "name": "HEARTSTEEL Live My Life Yone (Sapphire)",
+          "chromas": false,
+          "parentSkin": 77
+        },
+        {
+          "id": "777084",
+          "num": 84,
+          "name": "HEARTSTEEL Live My Life Yone (Emerald)",
+          "chromas": false,
+          "parentSkin": 77
+        },
+        {
+          "id": "777085",
+          "num": 85,
+          "name": "HEARTSTEEL Live My Life Yone (Obsidian)",
+          "chromas": false,
+          "parentSkin": 77
         }
       ],
       "lore": "In life, he was Yone—half-brother of Yasuo, and renowned student of his village's sword school. But upon his death at the hands of his brother, he found himself hunted by a malevolent entity of the spirit realm, and was forced to slay it with its own sword. Now, cursed to wear its demonic mask upon his face, Yone tirelessly hunts all such creatures in order to understand what he has become.",

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.19.1",
+  "version": "16.20.1",
   "data": {
     "Zed": {
       "id": "Zed",
@@ -499,6 +499,13 @@
           "name": "Prestige Spirit Blossom Zed (Vivid)",
           "chromas": false,
           "parentSkin": 69
+        },
+        {
+          "id": "238071",
+          "num": 71,
+          "name": "SKT T1 Zed (Elite)",
+          "chromas": false,
+          "parentSkin": 2
         }
       ],
       "lore": "Utterly ruthless and without mercy, Zed is the leader of the Order of Shadow, an organization he created with the intent of militarizing Ionia's magical and martial traditions to drive out Noxian invaders. During the war, desperation led him to unlock the secret shadow form—a malevolent spirit magic as dangerous and corrupting as it is powerful. Zed has mastered all of these forbidden techniques to destroy anything he sees as a threat to his nation, or his new order.",

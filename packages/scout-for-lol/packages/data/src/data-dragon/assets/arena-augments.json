@@ -6310,9 +6310,9 @@
         "__type": "GameCalculation",
         "mFormulaParts": [
           {
-            "__type": "{ee18a47b}",
-            "{0589a59c}": "BaseDamageMin",
-            "{0b65bc23}": "BaseDamageMax"
+            "EndDataValue": "BaseDamageMax",
+            "StartDataValue": "BaseDamageMin",
+            "__type": "{ee18a47b}"
           },
           {
             "__type": "StatByCoefficientCalculationPart",

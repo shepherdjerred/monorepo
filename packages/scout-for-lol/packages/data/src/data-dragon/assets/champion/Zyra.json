@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.19.1",
+  "version": "16.20.1",
   "data": {
     "Zyra": {
       "id": "Zyra",
@@ -40,7 +40,7 @@
           "id": "143003",
           "num": 3,
           "name": "SKT T1 Zyra",
-          "chromas": false
+          "chromas": true
         },
         {
           "id": "143004",
@@ -522,6 +522,13 @@
           "name": "Spirit Blossom Zyra (Obsidian)",
           "chromas": false,
           "parentSkin": 64
+        },
+        {
+          "id": "143074",
+          "num": 74,
+          "name": "SKT T1 Zyra (Elite)",
+          "chromas": false,
+          "parentSkin": 3
         }
       ],
       "lore": "Born in an ancient, sorcerous catastrophe, Zyra is the wrath of nature given form—an alluring hybrid of plant and human, kindling new life with every step. She views the many mortals of Valoran as little more than prey for her seeded progeny, and thinks nothing of slaying them with flurries of deadly spines. Though her true purpose has not been revealed, Zyra wanders the world, indulging her most primal urges to colonize, and strangle all other life from it.",
