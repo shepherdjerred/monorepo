@@ -6,43 +6,14 @@ import {
   type VersionCatalog,
   type VersionCatalogEntry,
 } from "@shepherdjerred/version-catalog";
+import {
+  PinCandidateSchema,
+  type PinCandidates,
+} from "./pin-candidates-schema.ts";
 
-const DigestSchema = z
-  .string()
-  .regex(/^sha256:[0-9a-f]{64}$/, "digest must be canonical sha256");
-const VersionSchema = z.string().min(1);
-/**
- * The commit an image was built from, as baked into its `GIT_SHA`.
- *
- * Optional because pins minted before this field existed have none. Without
- * it a pin records only a version and a digest, and the commit it corresponds
- * to lives nowhere in the repo — so a reviewer cannot tell `2.0.0-13000` from
- * `2.0.0-13153` and an operator has nothing to contradict a wrong assumption.
- * That is precisely how a Worker Deployment came to route to a Build ID no
- * running pod carried. Build numbers do not order with commits: 13000 is
- * `3f9be51c` while 13153 is `c42ee297`.
- */
-const GitShaSchema = z
-  .string()
-  .regex(/^[0-9a-f]{40}$/, "gitSha must be a 40-character lowercase commit");
-const CandidateSchema = z
-  .object({
-    version: VersionSchema,
-    digest: DigestSchema,
-    gitSha: GitShaSchema.optional(),
-  })
-  .strict();
-const PinSchema = CandidateSchema.extend({
+const PinSchema = PinCandidateSchema.extend({
   buildNumber: z.number().int().positive(),
 });
-
-export const PinCandidatesSchema = z
-  .object({
-    schema: z.literal("pin-candidates/v1"),
-    buildNumber: z.number().int().positive(),
-    candidates: z.record(z.string().min(1), CandidateSchema),
-  })
-  .strict();
 
 export const PinCandidatesStateSchema = z
   .object({
@@ -51,7 +22,6 @@ export const PinCandidatesStateSchema = z
   })
   .strict();
 
-export type PinCandidates = z.infer<typeof PinCandidatesSchema>;
 export type PinCandidatesState = z.infer<typeof PinCandidatesStateSchema>;
 type PinStatePin = PinCandidatesState["pins"][string];
 
@@ -61,10 +31,6 @@ function parseJson(text: string, description: string): unknown {
   } catch (error) {
     throw new Error(`${description} is not valid JSON`, { cause: error });
   }
-}
-
-export function parsePinCandidates(text: string): PinCandidates {
-  return PinCandidatesSchema.parse(parseJson(text, "pin candidates"));
 }
 
 export function parsePinCandidatesState(text: string): PinCandidatesState {

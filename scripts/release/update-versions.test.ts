@@ -13,7 +13,6 @@ import {
   mergePinCandidates,
   mergePinStates,
   mergeVersionCatalogSources,
-  parsePinCandidates,
   parsePinCandidatesState,
   parseVersionCatalogSource,
   retainCurrentImagePins,
@@ -21,6 +20,7 @@ import {
   serializePinCandidatesState,
   validateStateAgainstVersions,
 } from "../lib/pin-candidates.ts";
+import { parsePinCandidates } from "../lib/pin-candidates-schema.ts";
 
 const A =
   "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";

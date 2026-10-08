@@ -92,6 +92,12 @@ bootstrap (`FLIPT_URL=http://127.0.0.1:9`, `FLIPT_ENVIRONMENT=beta`), so
 companions fail closed and do not spawn or act in the disposable world. The
 image must bake MCBridge; earlier images never answer the bridge health check.
 
+Each published pin also requires a digest-specific module schema snapshot in
+`src/sandbox/storm.ts`. When advancing a pin, inspect that exact image's
+`/plugins/TheStorm/config.yml` and register its keys. Both production and
+candidate profiles are checked by the harness tests; an unknown digest fails
+instead of borrowing the current checkout's schema.
+
 The locally built `TheStormFixtures.jar` also prepares the named worlds and
 geometry a fresh volume requires. Both providers mount it as a single file,
 preserving the image's baked plugin tree. Build it with

@@ -135,22 +135,28 @@ describe("run ids and exit codes", () => {
 });
 
 describe("published Storm image profiles", () => {
-  it("uses the module schema snapshot pinned to the image digest", () => {
-    const config = stormImageConfig(stormServerImages.prod);
-    expect(config.moduleKeys).toContain("rwfbots");
-    expect(config.enabledModules).toContain("companions");
-    expect(config.enabledModules).not.toContain("rwf");
+  it.each(["prod", "candidate"] as const)(
+    "uses the module schema snapshot pinned to the %s image digest",
+    (channel) => {
+      const config = stormImageConfig(stormServerImages[channel]);
+      expect(config.moduleKeys).toContain("rwfbots");
+      expect(config.enabledModules).toContain("companions");
+      expect(config.enabledModules).not.toContain("rwf");
 
-    const profile = resolveProfile(
-      { profile: "storm-prod", world: "flat" },
-      { bridgeToken: "token", rconPassword: "password" },
-    );
-    expect(profile.staged[0]).toMatchObject({
-      kind: "storm-config",
-      modules: config.enabledModules,
-      moduleKeys: config.moduleKeys,
-    });
-  });
+      const profile = resolveProfile(
+        {
+          profile: channel === "prod" ? "storm-prod" : "storm-candidate",
+          world: "flat",
+        },
+        { bridgeToken: "token", rconPassword: "password" },
+      );
+      expect(profile.staged[0]).toMatchObject({
+        kind: "storm-config",
+        modules: config.enabledModules,
+        moduleKeys: config.moduleKeys,
+      });
+    },
+  );
 
   it("requires a schema snapshot for each published image digest", () => {
     expect(() =>

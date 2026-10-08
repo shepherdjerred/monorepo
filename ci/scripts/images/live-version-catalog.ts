@@ -5,7 +5,7 @@ import {
   parseVersionCatalogText,
   serializeVersionCatalog,
 } from "../../../packages/version-catalog/src/index.ts";
-import { parsePinCandidates } from "../../../scripts/lib/pin-candidates.ts";
+import { parsePinCandidates } from "../../../scripts/lib/pin-candidates-schema.ts";
 import {
   ciHandoffConfigFromEnv,
   readRequiredHandoff,
@@ -151,6 +151,7 @@ export async function resolveImageReleaseCatalog(
   currentCommit: string,
   executor: LiveCatalogExecutor,
   environment: Readonly<Record<string, string | undefined>> = Bun.env,
+  readHandoff?: (key: string, pipelineNumber: string) => Promise<string>,
 ): Promise<{ catalog: string; baseCommit: string | undefined }> {
   // Fetch first so both catalog selection and ancestry use current origin/main.
   const current = await readLiveVersionCatalogSource(executor);
@@ -160,7 +161,11 @@ export async function resolveImageReleaseCatalog(
     catalog:
       base === undefined
         ? current
-        : await readPublishedVersionCatalogSource(current, base.pipelineNumber),
+        : await readPublishedVersionCatalogSource(
+            current,
+            base.pipelineNumber,
+            readHandoff,
+          ),
   };
 }
 

@@ -1,8 +1,9 @@
-import { expect, test } from "vitest";
+import { expect, test, vi } from "vitest";
 import {
   readLiveVersionCatalogSource,
   readPublishedVersionCatalogSource,
   retainPublishedImagePins,
+  resolveImageReleaseCatalog,
 } from "./live-version-catalog.ts";
 import {
   parseVersionCatalogText,
@@ -211,6 +212,9 @@ test("rejects unknown candidate keys, invalid versions and malformed handoffs", 
     ),
   ).toThrow("Invalid internal image release pin");
   expect(() => retainPublishedImagePins(main, main, "{}")).toThrow();
+  expect(() => retainPublishedImagePins(main, main, "{")).toThrow(
+    "pin candidates is not valid JSON",
+  );
 });
 
 test("requires both handoffs from the same completed pipeline", async () => {
@@ -234,4 +238,88 @@ test("requires both handoffs from the same completed pipeline", async () => {
   await expect(
     readPublishedVersionCatalogSource(main, "../6485", async () => main),
   ).rejects.toThrow("Image release pipeline");
+});
+
+test("uses the validated baseline for both target selection and retained pins", async () => {
+  const main = catalog([["worker", pin(100)]]);
+  const commands: string[] = [];
+  const reads: string[] = [];
+  const release = await resolveImageReleaseCatalog(
+    "current",
+    async (command) => {
+      commands.push(command.join(" "));
+      return commandResult(0, command[1] === "show" ? main : "");
+    },
+    {
+      CI_LAST_IMAGE_RELEASE_COMMIT: "published-source",
+      CI_LAST_IMAGE_RELEASE_PIPELINE: "6485",
+    },
+    async (key, pipeline) => {
+      reads.push(`${pipeline}/${key}`);
+      return key === "version-catalog" ? main : candidates(200, ["worker"]);
+    },
+  );
+  expect(release.baseCommit).toBe("published-source");
+  expect(entries(release.catalog)[0]?.value).toBe(pin(200, "b"));
+  expect(commands).toEqual([
+    "git fetch --no-tags --depth=100 origin main",
+    "git show origin/main:packages/version-catalog/src/catalog.json",
+    "git cat-file -e published-source^{commit}",
+    "git merge-base --is-ancestor published-source current",
+  ]);
+  expect(reads).toEqual(["6485/version-catalog", "6485/pin-candidates"]);
+});
+
+test("does not reuse pins or narrow builds from a release outside current ancestry", async () => {
+  const main = catalog([["worker", pin(100)]]);
+  const release = await resolveImageReleaseCatalog(
+    "current",
+    async (command) => {
+      if (command[1] === "merge-base") return commandResult(1);
+      return commandResult(0, command[1] === "show" ? main : "");
+    },
+    {
+      CI_LAST_IMAGE_RELEASE_COMMIT: "other-branch",
+      CI_LAST_IMAGE_RELEASE_PIPELINE: "6485",
+    },
+    async (_key, pipeline) => {
+      throw new Error(`must not read unrelated pipeline ${pipeline}`);
+    },
+  );
+  expect(release).toEqual({ catalog: main, baseCommit: undefined });
+});
+
+test("reads the required published artifacts through the configured S3 handoff store", async () => {
+  const main = catalog([["worker", pin(100)]]);
+  const requested: string[] = [];
+  vi.stubEnv("CI_PIPELINE_NUMBER", "7000");
+  vi.stubEnv("SEAWEEDFS_HANDOFF_ACCESS_KEY_ID", "test-key");
+  vi.stubEnv("SEAWEEDFS_HANDOFF_SECRET_ACCESS_KEY", "test-secret");
+  vi.stubGlobal("fetch", async (request: Request) => {
+    const path = new URL(request.url).pathname;
+    requested.push(path);
+    return new Response(
+      path.endsWith("/version-catalog.json")
+        ? main
+        : candidates(200, ["worker"]),
+    );
+  });
+  try {
+    const release = await resolveImageReleaseCatalog(
+      "current",
+      async (command) => commandResult(0, command[1] === "show" ? main : ""),
+      {
+        CI_LAST_IMAGE_RELEASE_COMMIT: "published-source",
+        CI_LAST_IMAGE_RELEASE_PIPELINE: "6485",
+      },
+    );
+    expect(entries(release.catalog)[0]?.value).toBe(pin(200, "b"));
+    expect(requested.sort()).toEqual([
+      "/ci-handoff/6485/pin-candidates.json",
+      "/ci-handoff/6485/version-catalog.json",
+    ]);
+  } finally {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+  }
 });
