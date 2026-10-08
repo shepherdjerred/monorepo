@@ -232,7 +232,7 @@ type PatchedActivity = {
 
 const MINT: PatchedActivity = {
   patchId: SCOUT_MATCH_MINT_INTENTS_PATCH,
-  activityType: "mintPostmatchNotificationIntents",
+  activityType: "mintPostmatchNotificationIntentsV2",
 };
 
 /**
@@ -389,7 +389,7 @@ test("a history recorded before the mint existed still replays", async () => {
     (recorded.events ?? []).filter(
       (event) =>
         event.activityTaskScheduledEventAttributes?.activityType?.name ===
-        "mintPostmatchNotificationIntents",
+        "mintPostmatchNotificationIntentsV2",
     ),
   ).toHaveLength(1);
   // Five events leave: the marker, the phase upsert, and the mint's schedule,

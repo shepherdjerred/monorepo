@@ -1,5 +1,6 @@
 import {
   condition,
+  continueAsNew,
   getExternalWorkflowHandle,
   isCancellation,
   patched,
@@ -29,9 +30,7 @@ import {
   type ScoutClientMatchDispatchInputEnvelope,
 } from "#src/workflow-contracts.ts";
 import { setWorkflowPhase } from "#src/workflow-ui-interceptor.ts";
-import { SCOUT_WORKFLOW_NAMES } from "#src/identifiers.ts";
 import { realtimePipelineActivities } from "./activity-options.ts";
-import { continueAsRenamed } from "./generation-rename.ts";
 import { processMatchAsChild } from "./match.ts";
 
 function compareClientDispatchItems(
@@ -524,9 +523,7 @@ export async function scoutClientMatchDispatchWorkflow(
 
   for (;;) {
     if (workflowInfo().continueAsNewSuggested) {
-      await continueAsRenamed<typeof scoutClientMatchDispatchWorkflow>(
-        SCOUT_WORKFLOW_NAMES.clientMatchDispatch,
-      )(
+      await continueAsNew<typeof scoutClientMatchDispatchWorkflow>(
         scoutClientMatchDispatchInputCodec.serialize({
           stage: input.stage,
           pending: [...pending.values()].sort(compareClientDispatchItems),

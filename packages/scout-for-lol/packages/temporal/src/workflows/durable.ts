@@ -1,4 +1,9 @@
-import { isCancellation, sleep, workflowInfo } from "@temporalio/workflow";
+import {
+  continueAsNew,
+  isCancellation,
+  sleep,
+  workflowInfo,
+} from "@temporalio/workflow";
 import { ApplicationFailure } from "@temporalio/common";
 import type { NotificationAttemptNonce } from "@scout-for-lol/domain/notifications/intent.ts";
 import type { RecoveryBatchState } from "@scout-for-lol/domain/recovery/batch.ts";
@@ -30,11 +35,7 @@ import {
   type ScoutRecoveryBatchInputEnvelope,
   type ScoutRecoveryBatchResultEnvelope,
 } from "#src/workflow-contracts.ts";
-import {
-  SCOUT_WORKFLOW_NAMES,
-  scoutNotificationAttemptNonce,
-} from "#src/identifiers.ts";
-import { continueAsRenamed } from "./generation-rename.ts";
+import { scoutNotificationAttemptNonce } from "#src/identifiers.ts";
 import { setWorkflowPhase } from "#src/workflow-ui-interceptor.ts";
 import {
   backgroundPipelineActivities,
@@ -547,9 +548,7 @@ export async function scoutRecoveryBatchWorkflow(
     progress = advanced.progress;
     if (state.kind === "processing") observedProcessing = state;
     if (workflowInfo().continueAsNewSuggested) {
-      await continueAsRenamed<typeof scoutRecoveryBatchWorkflow>(
-        SCOUT_WORKFLOW_NAMES.recoveryBatch,
-      )(rawInput);
+      await continueAsNew<typeof scoutRecoveryBatchWorkflow>(rawInput);
     }
   }
 
@@ -557,9 +556,7 @@ export async function scoutRecoveryBatchWorkflow(
     // The page budget ran out with work left. Continuing as new is the whole
     // reason the row owns the cursor: the next run reads exactly where this
     // one stopped, with a history that starts empty.
-    await continueAsRenamed<typeof scoutRecoveryBatchWorkflow>(
-      SCOUT_WORKFLOW_NAMES.recoveryBatch,
-    )(rawInput);
+    await continueAsNew<typeof scoutRecoveryBatchWorkflow>(rawInput);
   }
 
   return scoutRecoveryBatchResultCodec.serialize({
@@ -625,7 +622,7 @@ export async function scoutPipelineReconciliationWorkflow(
   // Work remains. The sweep is idempotent and the children are abandoned, so a
   // fresh history picks up exactly where this one left off without carrying
   // anything but the input it was given.
-  return await continueAsRenamed<typeof scoutPipelineReconciliationWorkflow>(
-    SCOUT_WORKFLOW_NAMES.pipelineReconciliation,
-  )(rawInput);
+  return await continueAsNew<typeof scoutPipelineReconciliationWorkflow>(
+    rawInput,
+  );
 }

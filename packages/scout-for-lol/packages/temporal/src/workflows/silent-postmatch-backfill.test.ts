@@ -21,6 +21,7 @@ import {
   applicationFailureOf,
   settleWorkflow,
 } from "./workflow-harness.test-fixtures.ts";
+import { withPreRenameActivityNames } from "#src/identifiers.ts";
 import { createScoutWorkerPool } from "./worker-pool.test-fixtures.ts";
 
 /**
@@ -135,7 +136,7 @@ afterEach(async () => {
 });
 
 async function startWorkers(store: Store): Promise<void> {
-  const activities = activitiesFor(store);
+  const activities = withPreRenameActivityNames(activitiesFor(store));
   for (const taskQueue of [
     "scout-dev",
     "scout-dev-realtime",
@@ -221,7 +222,7 @@ describe("the silent post-match backfill", () => {
     // Nothing that could announce it: no minter, no send, no child.
     expect(store.forbiddenCalls).toEqual([]);
     expect(new Set(run.scheduledActivities)).toEqual(
-      new Set(["backfillSilentPostmatchArtifact"]),
+      new Set(["backfillSilentPostmatchArtifactV2"]),
     );
     expect(run.childrenStarted).toBe(0);
   }, 60_000);

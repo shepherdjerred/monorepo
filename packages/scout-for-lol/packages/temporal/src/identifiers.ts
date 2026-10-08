@@ -34,16 +34,18 @@ export const SCOUT_WORKFLOW_NAMES = {
   hallBaseline: "scoutHallBaselineWorkflow",
   challengeRunRecompute: "scoutChallengeRunRecomputeWorkflow",
   duelSeries: "scoutDuelSeriesWorkflow",
-  postMatchDiscovery: "scoutPostMatchDiscoveryWorkflow",
-  matchProcessing: "scoutMatchProcessingWorkflow",
-  clientMatchDispatch: "scoutClientMatchDispatchWorkflow",
-  prematchDiscovery: "scoutPrematchDiscoveryWorkflow",
-  prematchGame: "scoutPrematchGameWorkflow",
-  notification: "scoutNotificationWorkflow",
-  lakeProjection: "scoutLakeProjectionWorkflow",
-  recoveryBatch: "scoutRecoveryBatchWorkflow",
-  pipelineReconciliation: "scoutPipelineReconciliationWorkflow",
-  silentPostmatchBackfill: "scoutSilentPostmatchBackfillWorkflow",
+  // The pipeline types keep their pre-rename names for one release; see
+  // `SCOUT_RENAMED_WORKFLOW_TYPES` below for why, and for the new names.
+  postMatchDiscovery: "scoutPostMatchDiscoveryV2Workflow",
+  matchProcessing: "scoutMatchProcessingV2Workflow",
+  clientMatchDispatch: "scoutClientMatchDispatchV2Workflow",
+  prematchDiscovery: "scoutPrematchDiscoveryV2Workflow",
+  prematchGame: "scoutPrematchGameV2Workflow",
+  notification: "scoutNotificationV2Workflow",
+  lakeProjection: "scoutLakeProjectionV2Workflow",
+  recoveryBatch: "scoutRecoveryBatchV2Workflow",
+  pipelineReconciliation: "scoutPipelineReconciliationV2Workflow",
+  silentPostmatchBackfill: "scoutSilentPostmatchBackfillV2Workflow",
 } as const;
 
 /**
@@ -68,50 +70,41 @@ export type ScoutPipelineWorkflowName =
   (typeof SCOUT_PIPELINE_WORKFLOW_NAMES)[number];
 
 // ───────────────────────────────────────────────────────────────────────────
-// The generation rename, bridged for one release
+// The generation rename, staged across releases
 // ───────────────────────────────────────────────────────────────────────────
 
 /**
- * The patch that moves a history onto the renamed Workflow and Activity types.
+ * The renamed Workflow type of each pipeline Workflow, registered beside the
+ * name it is issued under.
  *
- * Temporal checks a replayed command against its recorded event by TYPE: an
- * Activity scheduled under one name and replayed under another, or a child
- * started under one Workflow type and replayed under another, is
- * nondeterminism, and the execution wedges. So a history recorded before the
- * rename keeps issuing the old names for every command it already recorded,
- * and this patch moves it onto the new names from its next new command on.
- * Every execution started after the deploy records the marker first and uses
- * the new names throughout.
+ * Temporal resolves a Workflow by its type name, and every worker that can run
+ * a Scout Workflow has to know a name before anything issues it: beta's routed
+ * Worker Deployment build, prod's embedded poller, and the central Temporal
+ * worker that owns the Schedules all update on their own schedules. So the
+ * rename lands in two steps. This release REGISTERS the renamed names — the
+ * bundle exports each Workflow under its renamed function name and keeps the
+ * old name as an alias — while everything that issues a type, Schedules,
+ * clients and child starts alike, still issues the old name held in
+ * `SCOUT_WORKFLOW_NAMES`. The follow-up switches issuance to these names once
+ * every routed bundle and the prod backend image register them, and a release
+ * after that drops the aliases.
  *
- * Never rename it. Retire it with `deprecatePatch` in the release that drops
- * the aliases below, once no execution predating it is open.
+ * The same staging applies to Activities (`scoutPreRenameActivityType`).
  */
-export const SCOUT_GENERATION_RENAME_PATCH = "scout-generation-rename";
-
-/**
- * The type each renamed Workflow was registered under before the rename.
- *
- * Three things read it for exactly one release: the Workflow bundle, which
- * registers each old type as an alias of the renamed function so open
- * executions and Schedules that name it still find a definition; child starts
- * in histories recorded before the rename; and the reconciliation scan, whose
- * `ScoutWorkflowStart` type filter must match rows written under either name.
- */
-export const SCOUT_PRE_RENAME_WORKFLOW_TYPES = {
-  [SCOUT_WORKFLOW_NAMES.postMatchDiscovery]:
-    "scoutPostMatchDiscoveryV2Workflow",
-  [SCOUT_WORKFLOW_NAMES.matchProcessing]: "scoutMatchProcessingV2Workflow",
+export const SCOUT_RENAMED_WORKFLOW_TYPES = {
+  [SCOUT_WORKFLOW_NAMES.postMatchDiscovery]: "scoutPostMatchDiscoveryWorkflow",
+  [SCOUT_WORKFLOW_NAMES.matchProcessing]: "scoutMatchProcessingWorkflow",
   [SCOUT_WORKFLOW_NAMES.clientMatchDispatch]:
-    "scoutClientMatchDispatchV2Workflow",
-  [SCOUT_WORKFLOW_NAMES.prematchDiscovery]: "scoutPrematchDiscoveryV2Workflow",
-  [SCOUT_WORKFLOW_NAMES.prematchGame]: "scoutPrematchGameV2Workflow",
-  [SCOUT_WORKFLOW_NAMES.notification]: "scoutNotificationV2Workflow",
-  [SCOUT_WORKFLOW_NAMES.lakeProjection]: "scoutLakeProjectionV2Workflow",
-  [SCOUT_WORKFLOW_NAMES.recoveryBatch]: "scoutRecoveryBatchV2Workflow",
+    "scoutClientMatchDispatchWorkflow",
+  [SCOUT_WORKFLOW_NAMES.prematchDiscovery]: "scoutPrematchDiscoveryWorkflow",
+  [SCOUT_WORKFLOW_NAMES.prematchGame]: "scoutPrematchGameWorkflow",
+  [SCOUT_WORKFLOW_NAMES.notification]: "scoutNotificationWorkflow",
+  [SCOUT_WORKFLOW_NAMES.lakeProjection]: "scoutLakeProjectionWorkflow",
+  [SCOUT_WORKFLOW_NAMES.recoveryBatch]: "scoutRecoveryBatchWorkflow",
   [SCOUT_WORKFLOW_NAMES.pipelineReconciliation]:
-    "scoutPipelineReconciliationV2Workflow",
+    "scoutPipelineReconciliationWorkflow",
   [SCOUT_WORKFLOW_NAMES.silentPostmatchBackfill]:
-    "scoutSilentPostmatchBackfillV2Workflow",
+    "scoutSilentPostmatchBackfillWorkflow",
 } as const satisfies Record<
   | ScoutPipelineWorkflowName
   | typeof SCOUT_WORKFLOW_NAMES.silentPostmatchBackfill,
@@ -119,20 +112,19 @@ export const SCOUT_PRE_RENAME_WORKFLOW_TYPES = {
 >;
 
 export type ScoutRenamedWorkflowName =
-  keyof typeof SCOUT_PRE_RENAME_WORKFLOW_TYPES;
+  keyof typeof SCOUT_RENAMED_WORKFLOW_TYPES;
 
-/** Every Workflow type a renamed Workflow's executions can carry right now. */
+/** Both names a pipeline Workflow is registered under during the rename. */
 export function scoutWorkflowTypesOf(
   workflowType: ScoutRenamedWorkflowName,
 ): readonly [string, string] {
-  return [workflowType, SCOUT_PRE_RENAME_WORKFLOW_TYPES[workflowType]];
+  return [workflowType, SCOUT_RENAMED_WORKFLOW_TYPES[workflowType]];
 }
 
 /**
- * Every Workflow type a pipeline start row can carry during this release: the
- * renamed type and the one it replaced. `ScoutWorkflowStart` rows written
- * before the rename keep their type, so a scan filtered on the new names alone
- * would strand them.
+ * Every Workflow type a pipeline start row can carry across the rename: rows
+ * keep the type they were requested under, so a scan filtered on one name
+ * alone would strand the rows written under the other.
  */
 export const SCOUT_PIPELINE_START_WORKFLOW_TYPES: readonly string[] =
   SCOUT_PIPELINE_WORKFLOW_NAMES.flatMap((name) => scoutWorkflowTypesOf(name));
@@ -149,13 +141,34 @@ const UNRENAMED_PIPELINE_ACTIVITIES: ReadonlySet<string> = new Set([
 /**
  * The name an Activity was registered under before the rename: the
  * `V2`-suffixed name for a renamed pipeline Activity, and the name itself for
- * anything else.
+ * anything else. Pipeline Activities are scheduled under this name for one
+ * more release, for the reason `SCOUT_RENAMED_WORKFLOW_TYPES` gives, and
+ * Activity workers register both.
  */
 export function scoutPreRenameActivityType(name: string): string {
   return Object.hasOwn(SCOUT_PIPELINE_ACTIVITY_QUEUE_CLASSES, name) &&
     !UNRENAMED_PIPELINE_ACTIVITIES.has(name)
     ? `${name}V2`
     : name;
+}
+
+/**
+ * Register every renamed pipeline Activity under its pre-rename name as well.
+ *
+ * Pipeline Activities are scheduled under their old names in this release, and
+ * an Activity task scheduled before the deploy retries against the new worker,
+ * so the old names must resolve. The new names are registered too, so the
+ * release that switches issuance finds every worker ready for them.
+ */
+export function withPreRenameActivityNames(
+  activities: object,
+): Record<string, unknown> {
+  const registered: Record<string, unknown> = { ...activities };
+  for (const [name, implementation] of Object.entries(activities)) {
+    const preRename = scoutPreRenameActivityType(name);
+    if (preRename !== name) registered[preRename] = implementation;
+  }
+  return registered;
 }
 
 /**

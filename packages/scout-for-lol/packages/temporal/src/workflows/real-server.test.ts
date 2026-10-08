@@ -140,7 +140,7 @@ async function startWorkers(input: {
       namespace: "dev",
       taskQueue: queues.realtime,
       activities: {
-        discoverPrematchGames: async (activityInput: { stage: string }) => {
+        discoverPrematchGamesV2: async (activityInput: { stage: string }) => {
           input.matchRuns.push(activityInput.stage);
           await input.blockMatch;
           return { games: [], complete: true };

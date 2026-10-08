@@ -1,5 +1,4 @@
 import { startChild } from "@temporalio/workflow";
-import { renamedChildWorkflowType } from "./generation-rename.ts";
 import { WorkflowExecutionAlreadyStartedError } from "@temporalio/common";
 import type { ScoutStage } from "#src/contracts.ts";
 import type { ScoutReconciliationScanResult } from "#src/activity-contracts.ts";
@@ -163,7 +162,7 @@ async function startReconciliationChild(
 ): Promise<boolean> {
   if (!RECONCILIATION_STARTABLE.has(child.workflowType)) return false;
   try {
-    await startChild(renamedChildWorkflowType(child.workflowType), {
+    await startChild(child.workflowType, {
       workflowId: child.workflowId,
       workflowIdReusePolicy: child.reuse,
       taskQueue: scoutTaskQueues(stage).workflow,

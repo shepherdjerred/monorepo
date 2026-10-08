@@ -36,6 +36,7 @@ import {
   scoutReconciliationStubs,
   scoutRecoveryStubs,
 } from "./durable.test-fixtures.ts";
+import { withPreRenameActivityNames } from "#src/identifiers.ts";
 import { createScoutWorkerPool } from "./worker-pool.test-fixtures.ts";
 
 let environment: TestWorkflowEnvironment;
@@ -75,7 +76,7 @@ async function startWorkers(
       await Worker.create({
         connection: environment.nativeConnection,
         taskQueue: `scout-dev-${queue}`,
-        activities,
+        activities: withPreRenameActivityNames(activities),
         maxConcurrentActivityTaskExecutions: 4,
       }),
     );

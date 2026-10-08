@@ -1,87 +1,33 @@
 import {
-  inWorkflowContext,
-  makeContinueAsNewFunc,
-  patched,
   proxyActivities,
   type ActivityInterfaceFor,
   type ActivityOptions,
-  type Workflow,
 } from "@temporalio/workflow";
 import type { ScoutPipelineActivities } from "#src/activities.ts";
-import {
-  SCOUT_GENERATION_RENAME_PATCH,
-  SCOUT_PRE_RENAME_WORKFLOW_TYPES,
-  scoutPreRenameActivityType,
-  type ScoutRenamedWorkflowName,
-} from "#src/identifiers.ts";
+import { scoutPreRenameActivityType } from "#src/identifiers.ts";
 
 /**
- * Whether this history issues the renamed Workflow and Activity types.
+ * Proxy the pipeline Activities under their renamed surface, scheduling each
+ * under the name it was registered with before the rename.
  *
- * A history recorded before the rename answers `false` while it replays the
- * commands it already recorded, so each one is reissued under the name it was
- * recorded with; it answers `true` from its first new command on, and so does
- * every history started after the rename. See
- * `SCOUT_GENERATION_RENAME_PATCH` for why the names cannot simply change.
+ * Every Activity worker registers both names in this release, but a worker
+ * still running the previous image knows only the old ones, so the old name is
+ * the one that is safe to issue. The follow-up switches issuance to the new
+ * names behind a patch, once every Activity worker registers them; see
+ * `SCOUT_RENAMED_WORKFLOW_TYPES`.
  */
-function usesRenamedTypes(): boolean {
-  return patched(SCOUT_GENERATION_RENAME_PATCH);
-}
-
-/** The Workflow type to start a renamed child under, in this history. */
-export function renamedChildWorkflowType(
-  workflowType: ScoutRenamedWorkflowName,
-): string {
-  return usesRenamedTypes()
-    ? workflowType
-    : SCOUT_PRE_RENAME_WORKFLOW_TYPES[workflowType];
-}
-
-/**
- * Continue a renamed Workflow as new under its renamed type.
- *
- * Continue-as-new keeps the CURRENT type by default, so an execution started
- * under the pre-rename type would carry it into every run it continues into
- * and stop the moment the alias is removed. Naming the type moves it onto the
- * renamed one at its next continue-as-new. Replay does not check the type a
- * continue-as-new names, so this needs no patch.
- */
-export function continueAsRenamed<F extends Workflow>(
-  workflowType: ScoutRenamedWorkflowName,
-): (...args: Parameters<F>) => Promise<never> {
-  return makeContinueAsNewFunc<F>({ workflowType });
-}
-
-/**
- * Proxy the pipeline Activities, scheduling each under the name this history
- * is entitled to.
- *
- * The caller sees the renamed surface; only the Activity type on the wire
- * changes, and only for a history recorded before the rename. Outside a
- * Workflow — a unit test inspecting the surface — nothing is scheduled, so the
- * plain proxy answers.
- */
-export function renameBridgedActivities<
+export function preRenameActivities<
   Activities extends Partial<ScoutPipelineActivities>,
 >(options: ActivityOptions): ActivityInterfaceFor<Activities> {
   const activities = proxyActivities<Activities>(options);
   return new Proxy(activities, {
     get(target, property, receiver) {
-      if (
-        typeof property !== "string" ||
-        !inWorkflowContext() ||
-        scoutPreRenameActivityType(property) === property ||
-        usesRenamedTypes()
-      ) {
-        const current: unknown = Reflect.get(target, property, receiver);
-        return current;
-      }
-      const preRename: unknown = Reflect.get(
-        target,
-        scoutPreRenameActivityType(property),
-        receiver,
-      );
-      return preRename;
+      const name =
+        typeof property === "string"
+          ? scoutPreRenameActivityType(property)
+          : property;
+      const activity: unknown = Reflect.get(target, name, receiver);
+      return activity;
     },
   });
 }

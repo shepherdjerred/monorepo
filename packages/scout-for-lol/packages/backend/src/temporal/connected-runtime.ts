@@ -8,8 +8,8 @@ import {
 } from "@temporalio/worker";
 import type { ScoutStage } from "@scout-for-lol/temporal";
 import {
-  scoutPreRenameActivityType,
   scoutTaskQueues,
+  withPreRenameActivityNames,
 } from "@scout-for-lol/temporal";
 import type { ScoutTemporalQueueClass } from "#src/configuration/runtime-role.ts";
 import type { ScoutTemporalActivities } from "@scout-for-lol/temporal/activities";
@@ -20,6 +20,7 @@ import type {
   ScoutNotificationActivities,
 } from "#src/temporal/durable-activity-surface.ts";
 import { createLogger } from "#src/logger.ts";
+import { RETIRED_REALTIME_ACTIVITIES } from "#src/temporal/retired-activities.ts";
 import {
   createTemporalClientTracingInterceptor,
   createTemporalWorkerTracing,
@@ -31,25 +32,23 @@ import { getTracingRuntime } from "#src/observability/tracing.ts";
 const logger = createLogger("temporal-supervisor");
 
 /**
- * One release only: register every renamed pipeline Activity under its
- * pre-rename name as well.
- *
- * An Activity task already scheduled under the old name before this deploy
- * retries against this worker, and so does every task a not-yet-updated
- * Workflow worker schedules during the rollout. Without the old name here
- * those tasks fail as unregistered. Removed together with
- * `SCOUT_GENERATION_RENAME_PATCH`.
+ * What each embedded Activity worker registers: its group, every renamed
+ * pipeline Activity under its pre-rename name too, and on `realtime` the
+ * Activities a still-routed pre-rename bundle can schedule. See
+ * `withPreRenameActivityNames` and `RETIRED_REALTIME_ACTIVITIES`.
  */
-export function withPreRenameActivityNames(
-  activities: object,
-): Record<string, unknown> {
-  const registered: Record<string, unknown> = { ...activities };
-  for (const [name, implementation] of Object.entries(activities)) {
-    const preRename = scoutPreRenameActivityType(name);
-    if (preRename !== name) registered[preRename] = implementation;
-  }
-  return registered;
+export function registeredActivities(groups: ScoutTemporalActivityGroups) {
+  return {
+    interactive: groups.interactive,
+    lake: withPreRenameActivityNames(groups.lake),
+    realtime: {
+      ...withPreRenameActivityNames(groups.realtime),
+      ...RETIRED_REALTIME_ACTIVITIES,
+    },
+    background: withPreRenameActivityNames(groups.background),
+  };
 }
+
 const RECONNECT_DELAY_MS = 5000;
 const RECONNECT_DELAY_MAX_MS = 60_000;
 /**
@@ -285,6 +284,7 @@ export async function createConnectedRuntime(
         ? await Connection.connect()
         : await Connection.connect({ address: options.address });
     const queues = scoutTaskQueues(options.stage);
+    const registered = registeredActivities(options.activities);
     const tracing = createScoutTemporalTracing(options.callGraphTracing);
     const commonOptions = {
       connection: nativeConnection,
@@ -315,7 +315,7 @@ export async function createConnectedRuntime(
         await Worker.create({
           ...commonOptions,
           taskQueue: queues.interactive,
-          activities: options.activities.interactive,
+          activities: registered.interactive,
           maxConcurrentActivityTaskExecutions: 2,
         }),
       );
@@ -325,7 +325,7 @@ export async function createConnectedRuntime(
         await Worker.create({
           ...commonOptions,
           taskQueue: queues.lake,
-          activities: withPreRenameActivityNames(options.activities.lake),
+          activities: registered.lake,
           maxConcurrentActivityTaskExecutions: 1,
         }),
       );
@@ -335,7 +335,7 @@ export async function createConnectedRuntime(
         await Worker.create({
           ...commonOptions,
           taskQueue: queues.realtime,
-          activities: withPreRenameActivityNames(options.activities.realtime),
+          activities: registered.realtime,
           maxConcurrentActivityTaskExecutions: 4,
         }),
       );
@@ -345,7 +345,7 @@ export async function createConnectedRuntime(
         await Worker.create({
           ...commonOptions,
           taskQueue: queues.background,
-          activities: withPreRenameActivityNames(options.activities.background),
+          activities: registered.background,
           maxConcurrentActivityTaskExecutions: 1,
         }),
       );

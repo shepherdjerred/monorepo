@@ -38,7 +38,6 @@ import {
   SCOUT_MATCH_STAGE_CONFLICT_RECEIPT_KIND,
 } from "#src/match-receipts.ts";
 import { setWorkflowPhase } from "#src/workflow-ui-interceptor.ts";
-import { renamedChildWorkflowType } from "./generation-rename.ts";
 import {
   realtimeActivities,
   realtimePipelineActivities,
@@ -342,7 +341,7 @@ export async function processMatchAsChild(
 ): Promise<boolean> {
   try {
     const child = await startChild<typeof scoutMatchProcessingWorkflow>(
-      renamedChildWorkflowType(SCOUT_WORKFLOW_NAMES.matchProcessing),
+      SCOUT_WORKFLOW_NAMES.matchProcessing,
       {
         workflowId: scoutMatchProcessingWorkflowId(stage, match.riotMatchId),
         workflowIdReusePolicy: "ALLOW_DUPLICATE_FAILED_ONLY",
@@ -452,7 +451,7 @@ export async function startMatchFanOutChildren(
   for (const child of children) {
     if (!IMPLEMENTED_FAN_OUT_WORKFLOWS.includes(child.workflowType)) continue;
     try {
-      await startChild(renamedChildWorkflowType(child.workflowType), {
+      await startChild(child.workflowType, {
         workflowId: child.workflowId,
         workflowIdReusePolicy:
           child.family === "notifications"

@@ -5,8 +5,7 @@ import { Worker } from "@temporalio/worker";
 import { DeterminismViolationError } from "@temporalio/workflow";
 import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import {
-  SCOUT_GENERATION_RENAME_PATCH,
-  SCOUT_PRE_RENAME_WORKFLOW_TYPES,
+  SCOUT_RENAMED_WORKFLOW_TYPES,
   SCOUT_WORKFLOW_NAMES,
   scoutMatchProcessingWorkflowId,
 } from "#src/identifiers.ts";
@@ -24,7 +23,7 @@ import recordedMatchFanOut from "./fixtures/match-processing.fan-out-children.js
 
 /**
  * Histories recorded under the pre-rename Workflow and Activity types,
- * replayed against the renamed bundle.
+ * replayed against the renamed bundle, and what that bundle issues now.
  *
  * Replay checks every recorded command by type, so these are the executions
  * the rename could wedge: the client-match dispatcher singleton, which never
@@ -32,6 +31,10 @@ import recordedMatchFanOut from "./fixtures/match-processing.fan-out-children.js
  * Activity in flight; and a completed match run whose fan-out started its
  * notification and lake children. Each fixture was recorded by running the
  * pre-rename source against the same Activity stubs these tests use.
+ *
+ * In this release the bundle registers both names but still issues the old
+ * ones, so a run recorded now matches what the pre-rename bundle records —
+ * which is what lets the two run side by side.
  */
 
 const harness = useScoutWorkflowHarness();
@@ -63,24 +66,6 @@ function namesIn(history: History) {
   };
 }
 
-/** Whether the history carries the rename patch's marker, read from its bytes. */
-function recordsRenameMarker(history: History): boolean {
-  const decoder = new TextDecoder();
-  return (history.events ?? []).some((event) => {
-    const marker = event.markerRecordedEventAttributes;
-    return (
-      marker?.markerName === "core_patch" &&
-      Object.values(marker.details ?? {}).some((payloads) =>
-        (payloads.payloads ?? []).some((payload) =>
-          decoder
-            .decode(payload.data ?? new Uint8Array())
-            .includes(SCOUT_GENERATION_RENAME_PATCH),
-        ),
-      )
-    );
-  });
-}
-
 test("a dispatcher caught mid-run under the pre-rename types replays", async () => {
   const recorded = fixtureHistory(recordedDispatcher);
 
@@ -91,8 +76,6 @@ test("a dispatcher caught mid-run under the pre-rename types replays", async () 
     activities: ["readMatchPipelineStateV2"],
     children: ["scoutMatchProcessingV2Workflow"],
   });
-  expect(recordsRenameMarker(recorded)).toBe(false);
-
   await Worker.runReplayHistory({ workflowsPath }, recorded);
 }, 120_000);
 
@@ -119,59 +102,74 @@ test("a match run whose fan-out started pre-rename children replays", async () =
     "scoutNotificationV2Workflow",
     "scoutLakeProjectionV2Workflow",
   ]);
-  expect(recordsRenameMarker(recorded)).toBe(false);
-
   await Worker.runReplayHistory({ workflowsPath }, recorded);
 }, 120_000);
 
 test("the dispatcher fixture fails replay once its child names the new type", async () => {
-  // The negative control: without the rename gate, a pre-rename history
-  // would issue the renamed child type where it recorded the old one.
+  // The negative control: a bundle that issued the renamed child type where
+  // the history recorded the old one would wedge this execution.
+  const renamed =
+    SCOUT_RENAMED_WORKFLOW_TYPES[SCOUT_WORKFLOW_NAMES.matchProcessing];
   const tampered = historyFromJSON(
     JSON.parse(
       JSON.stringify(recordedDispatcher).replace(
-        `"name":"${SCOUT_PRE_RENAME_WORKFLOW_TYPES[SCOUT_WORKFLOW_NAMES.matchProcessing]}"`,
         `"name":"${SCOUT_WORKFLOW_NAMES.matchProcessing}"`,
+        `"name":"${renamed}"`,
       ),
     ),
   );
-  expect(namesIn(tampered).children).toEqual([
-    SCOUT_WORKFLOW_NAMES.matchProcessing,
-  ]);
+  expect(namesIn(tampered).children).toEqual([renamed]);
 
   await expect(
     Worker.runReplayHistory({ workflowsPath }, tampered),
   ).rejects.toBeInstanceOf(DeterminismViolationError);
 }, 120_000);
 
-test("a run recorded now names the rename and uses the renamed types", async () => {
+const matchInput = scoutMatchProcessingInputCodec.serialize({
+  stage: "dev",
+  riotMatchId: MATCH_ID,
+  sourcePuuid: LeaguePuuidSchema.parse("s".repeat(78)),
+  deliveryMode: "live",
+});
+
+test("a run recorded now issues the pre-rename types, as the old bundle does", async () => {
+  await harness.startWorkers(scoutMatchActivityStubs(createScoutMatchStore()));
+  const handle = await harness
+    .client()
+    .workflow.start(SCOUT_WORKFLOW_NAMES.matchProcessing, {
+      taskQueue: "scout-dev",
+      workflowId: scoutMatchProcessingWorkflowId("dev", MATCH_ID),
+      args: [matchInput],
+    });
+  await handle.result();
+  const recorded = await handle.fetchHistory();
+  const names = namesIn(recorded);
+
+  expect(names.workflowType).toBe("scoutMatchProcessingV2Workflow");
+  expect(names.activities.filter((name) => !name.endsWith("V2"))).toEqual([]);
+  expect(names.children).toEqual([
+    "scoutNotificationV2Workflow",
+    "scoutLakeProjectionV2Workflow",
+  ]);
+
+  await Worker.runReplayHistory({ workflowsPath }, recorded);
+}, 120_000);
+
+test("the renamed Workflow type is registered too", async () => {
+  // The follow-up switches issuance to the new names, so every bundle in this
+  // release must already resolve them.
   await harness.startWorkers(scoutMatchActivityStubs(createScoutMatchStore()));
   const handle = await harness
     .client()
     .workflow.start(scoutMatchProcessingWorkflow, {
       taskQueue: "scout-dev",
       workflowId: scoutMatchProcessingWorkflowId("dev", MATCH_ID),
-      args: [
-        scoutMatchProcessingInputCodec.serialize({
-          stage: "dev",
-          riotMatchId: MATCH_ID,
-          sourcePuuid: LeaguePuuidSchema.parse("s".repeat(78)),
-          deliveryMode: "live",
-        }),
-      ],
+      args: [matchInput],
     });
   await handle.result();
   const recorded = await handle.fetchHistory();
-  const names = namesIn(recorded);
 
-  expect(recordsRenameMarker(recorded)).toBe(true);
-  expect(names.workflowType).toBe(SCOUT_WORKFLOW_NAMES.matchProcessing);
-  expect(names.activities.filter((name) => name.endsWith("V2"))).toEqual([]);
-  expect(names.children).toEqual([
-    SCOUT_WORKFLOW_NAMES.notification,
-    SCOUT_WORKFLOW_NAMES.lakeProjection,
-  ]);
-  expect(SCOUT_GENERATION_RENAME_PATCH).toBe("scout-generation-rename");
-
-  await Worker.runReplayHistory({ workflowsPath }, recorded);
+  expect(namesIn(recorded).workflowType).toBe(
+    SCOUT_RENAMED_WORKFLOW_TYPES[SCOUT_WORKFLOW_NAMES.matchProcessing],
+  );
 }, 120_000);

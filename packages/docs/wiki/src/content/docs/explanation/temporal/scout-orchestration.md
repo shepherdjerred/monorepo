@@ -98,9 +98,11 @@ Candidate and stable images can coexist without duplicating Discord or
 report-lake ownership because neither version runs Activities.
 
 Potentially open Workflows still protect command or control-flow changes with
-replay patches. Temporal compares Workflow and Activity types on replay, so
-renaming a type is a command change too: it ships with alias registrations for
-the old names and a patch that moves each history onto the new ones. Retained histories exercise those patches before promotion.
+replay patches. Temporal compares Workflow and Activity types on replay, and
+workers resolve both by name, so renaming a type is staged: a release
+registers the new name beside the old one while still issuing the old one, a
+later release switches issuance behind a patch, and a last one drops the old
+name. Retained histories exercise those patches before promotion.
 Continue-As-New bounds long histories, but it is not a compatibility escape
 hatch for the history that already exists. During the one-time bootstrap, the
 unversioned embedded poller remains available until the first stable versioned

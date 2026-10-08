@@ -28,7 +28,6 @@ import {
   scoutTaskQueues,
 } from "#src/identifiers.ts";
 import { setWorkflowPhase } from "#src/workflow-ui-interceptor.ts";
-import { renamedChildWorkflowType } from "./generation-rename.ts";
 import { realtimePipelineActivities } from "./activity-options.ts";
 import { planMatchFanOutChildren } from "./match-fan-out.ts";
 import { startMatchFanOutChildren } from "./match.ts";
@@ -126,7 +125,7 @@ async function startPrematchGameChild(
 ): Promise<boolean> {
   try {
     await startChild<typeof scoutPrematchGameWorkflow>(
-      renamedChildWorkflowType(SCOUT_WORKFLOW_NAMES.prematchGame),
+      SCOUT_WORKFLOW_NAMES.prematchGame,
       {
         workflowId: scoutPrematchGameWorkflowId(stage, gameRef),
         workflowIdReusePolicy: "ALLOW_DUPLICATE_FAILED_ONLY",

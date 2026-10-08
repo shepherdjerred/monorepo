@@ -94,10 +94,10 @@ export {
   scoutPrematchGameMatchId,
   scoutPrematchGameWorkflowId,
   scoutRecoveryBatchWorkflowId,
-  SCOUT_GENERATION_RENAME_PATCH,
-  SCOUT_PRE_RENAME_WORKFLOW_TYPES,
+  SCOUT_RENAMED_WORKFLOW_TYPES,
   scoutPreRenameActivityType,
   scoutWorkflowTypesOf,
+  withPreRenameActivityNames,
   SCOUT_PIPELINE_START_WORKFLOW_TYPES,
 } from "./identifiers.ts";
 export type {
