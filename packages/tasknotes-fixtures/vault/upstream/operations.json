@@ -1,0 +1,2761 @@
+[
+  {
+    "id": "ops.0001",
+    "section": "§5.2",
+    "profile": "core-lite",
+    "operation": "op.mutate_with_validation",
+    "assertion": "envelope_error",
+    "input": {
+      "strict": true,
+      "frontmatter": {
+        "title": "X",
+        "status": 3
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "validation|invalid_type"
+      }
+    }
+  },
+  {
+    "id": "ops.0002",
+    "section": "§5.2",
+    "profile": "core-lite",
+    "operation": "op.mutate_with_validation",
+    "assertion": "envelope_error",
+    "input": {
+      "strict": false,
+      "frontmatter": {
+        "title": "X",
+        "status": 3
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "validation|missing_required|invalid_type"
+      }
+    }
+  },
+  {
+    "id": "ops.0003",
+    "section": "§5.2",
+    "profile": "core-lite",
+    "operation": "op.mutate_with_validation",
+    "assertion": "envelope_equals",
+    "input": {
+      "strict": true,
+      "frontmatter": {
+        "title": "Valid task",
+        "status": "open",
+        "dateCreated": "2026-02-20T10:00:00Z",
+        "dateModified": "2026-02-20T10:00:00Z"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "accepted"
+      }
+    }
+  },
+  {
+    "id": "ops.0004",
+    "section": "§5.2",
+    "profile": "core-lite",
+    "operation": "op.atomic_write",
+    "assertion": "envelope_equals",
+    "input": {
+      "original": {
+        "title": "X",
+        "status": "open",
+        "vendor": "ZX-42"
+      },
+      "patch": {
+        "status": "done"
+      },
+      "simulateFailureAfterWrite": true
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "committed": false,
+        "persisted": {
+          "$contains": {
+            "title": "X",
+            "status": "open",
+            "vendor": "ZX-42"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "ops.0005",
+    "section": "§5.2",
+    "profile": "core-lite",
+    "operation": "op.atomic_write",
+    "assertion": "envelope_equals",
+    "input": {
+      "original": {
+        "title": "X",
+        "status": "open",
+        "vendor": "ZX-42"
+      },
+      "patch": {
+        "status": "done"
+      },
+      "simulateFailureAfterWrite": false
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "committed": true,
+        "persisted": {
+          "$contains": {
+            "title": "X",
+            "status": "done",
+            "vendor": "ZX-42"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "ops.0006",
+    "section": "§5.2",
+    "profile": "core-lite",
+    "operation": "op.idempotency_check",
+    "assertion": "envelope_equals",
+    "input": {
+      "operation": "complete_nonrecurring",
+      "first": {
+        "status": "open",
+        "completedDate": null
+      },
+      "second": {
+        "status": "done",
+        "completedDate": "2026-02-20"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "idempotent": true
+      }
+    }
+  },
+  {
+    "id": "ops.0007",
+    "section": "§5.22",
+    "profile": "core-lite",
+    "operation": "op.mutate_with_validation",
+    "assertion": "envelope_equals",
+    "input": {
+      "strict": true,
+      "frontmatter": {
+        "title": "Valid via interface",
+        "status": "open",
+        "dateCreated": "2026-02-20T10:00:00Z",
+        "dateModified": "2026-02-20T10:00:00Z"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "accepted"
+      }
+    }
+  },
+  {
+    "id": "ops.0008",
+    "section": "§5.2",
+    "profile": "core-lite",
+    "operation": "op.idempotency_check",
+    "assertion": "envelope_equals",
+    "input": {
+      "operation": "create",
+      "first": null,
+      "second": {
+        "title": "New task",
+        "status": "open"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "idempotent": true
+      }
+    }
+  },
+  {
+    "id": "ops.0009",
+    "section": "§5.2.1",
+    "profile": "core-lite",
+    "operation": "date.resolve_operation_target",
+    "assertion": "envelope_equals",
+    "input": {
+      "explicitDate": "2026-02-20",
+      "scheduled": "2026-02-19",
+      "due": "2026-02-18"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "2026-02-20"
+      }
+    }
+  },
+  {
+    "id": "ops.0010",
+    "section": "§5.2.1",
+    "profile": "core-lite",
+    "operation": "date.resolve_operation_target",
+    "assertion": "envelope_equals",
+    "input": {
+      "scheduled": "2026-02-19T09:00:00Z",
+      "due": "2026-02-18"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "2026-02-19"
+      }
+    }
+  },
+  {
+    "id": "ops.0011",
+    "section": "§5.2.1",
+    "profile": "core-lite",
+    "operation": "date.resolve_operation_target",
+    "assertion": "envelope_equals",
+    "input": {
+      "due": "2026-02-18T10:00:00Z"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "2026-02-18"
+      }
+    }
+  },
+  {
+    "id": "ops.0012",
+    "section": "§5.4",
+    "profile": "core-lite",
+    "operation": "op.update_patch",
+    "assertion": "envelope_equals",
+    "input": {
+      "original": {
+        "title": "Weekly review",
+        "status": "open",
+        "priority": "normal",
+        "scheduled": "2026-02-20",
+        "vendorTicket": "ZX-42"
+      },
+      "patch": {
+        "priority": "high"
+      },
+      "expectContains": {
+        "title": "Weekly review",
+        "priority": "high",
+        "vendorTicket": "ZX-42"
+      },
+      "changed": true
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "changed": true,
+        "frontmatter": {
+          "$contains": {
+            "title": "Weekly review",
+            "priority": "high",
+            "vendorTicket": "ZX-42"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "ops.0013",
+    "section": "§5.4",
+    "profile": "core-lite",
+    "operation": "op.update_patch",
+    "assertion": "envelope_equals",
+    "input": {
+      "original": {
+        "title": "Weekly review",
+        "status": "open",
+        "scheduled": "2026-02-20",
+        "due": "2026-02-22",
+        "vendorTicket": "ZX-42"
+      },
+      "patch": {
+        "status": "in-progress"
+      },
+      "expectContains": {
+        "status": "in-progress",
+        "scheduled": "2026-02-20",
+        "due": "2026-02-22",
+        "vendorTicket": "ZX-42"
+      },
+      "changed": true
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "changed": true,
+        "frontmatter": {
+          "$contains": {
+            "status": "in-progress",
+            "scheduled": "2026-02-20",
+            "due": "2026-02-22",
+            "vendorTicket": "ZX-42"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "ops.0014",
+    "section": "§5.4",
+    "profile": "core-lite",
+    "operation": "op.update_patch",
+    "assertion": "envelope_equals",
+    "input": {
+      "original": {
+        "title": "Weekly review",
+        "status": "open",
+        "priority": "normal",
+        "vendorTicket": "ZX-42"
+      },
+      "patch": {
+        "status": "open"
+      },
+      "expectContains": {
+        "status": "open",
+        "vendorTicket": "ZX-42"
+      },
+      "changed": false
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "changed": false,
+        "frontmatter": {
+          "$contains": {
+            "status": "open",
+            "vendorTicket": "ZX-42"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "ops.0015",
+    "section": "§5.4",
+    "profile": "core-lite",
+    "operation": "op.update_patch",
+    "assertion": "envelope_equals",
+    "input": {
+      "original": {
+        "title": "Weekly review",
+        "status": "open",
+        "due": "2026-02-20",
+        "customClient": "ACME"
+      },
+      "patch": {
+        "due": "2026-02-20T09:00:00Z"
+      },
+      "expectContains": {
+        "due": "2026-02-20T09:00:00Z",
+        "customClient": "ACME"
+      },
+      "changed": true
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "changed": true,
+        "frontmatter": {
+          "$contains": {
+            "due": "2026-02-20T09:00:00Z",
+            "customClient": "ACME"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "ops.0016",
+    "section": "§5.5",
+    "profile": "core-lite",
+    "operation": "op.complete_nonrecurring",
+    "assertion": "envelope_equals",
+    "input": {
+      "frontmatter": {
+        "title": "Buy groceries",
+        "status": "open"
+      },
+      "completedValues": [
+        "done",
+        "cancelled"
+      ],
+      "explicitDate": "2026-02-20",
+      "expectedStatus": "done",
+      "expectedCompletedDate": "2026-02-20"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "status": "done",
+        "completedDate": "2026-02-20"
+      }
+    }
+  },
+  {
+    "id": "ops.0017",
+    "section": "§5.5",
+    "profile": "core-lite",
+    "operation": "op.complete_nonrecurring",
+    "assertion": "envelope_equals",
+    "input": {
+      "frontmatter": {
+        "title": "Buy groceries",
+        "status": "open"
+      },
+      "completedValues": [
+        "cancelled",
+        "done"
+      ],
+      "explicitDate": "2026-02-20",
+      "expectedStatus": "cancelled",
+      "expectedCompletedDate": "2026-02-20"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "status": "cancelled",
+        "completedDate": "2026-02-20"
+      }
+    }
+  },
+  {
+    "id": "ops.0018",
+    "section": "§5.5",
+    "profile": "core-lite",
+    "operation": "op.complete_nonrecurring",
+    "assertion": "envelope_equals",
+    "input": {
+      "frontmatter": {
+        "title": "Buy groceries",
+        "status": "done",
+        "completedDate": "2026-02-19"
+      },
+      "completedValues": [
+        "done",
+        "cancelled"
+      ],
+      "expectedStatus": "done",
+      "expectedCompletedDateRegex": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "status": "done",
+        "completedDate": {
+          "$regex": "^\\d{4}-\\d{2}-\\d{2}$"
+        }
+      }
+    }
+  },
+  {
+    "id": "ops.0019",
+    "section": "§5.5",
+    "profile": "core-lite",
+    "operation": "op.complete_nonrecurring",
+    "assertion": "envelope_equals",
+    "input": {
+      "frontmatter": {
+        "title": "Buy groceries",
+        "status": "open",
+        "completedDate": "2026-02-19"
+      },
+      "completedValues": [
+        "done",
+        "cancelled"
+      ],
+      "expectedStatus": "done",
+      "expectedCompletedDateRegex": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "status": "done",
+        "completedDate": {
+          "$regex": "^\\d{4}-\\d{2}-\\d{2}$"
+        }
+      }
+    }
+  },
+  {
+    "id": "ops.0020",
+    "section": "§5.6",
+    "profile": "core-lite",
+    "operation": "op.uncomplete_nonrecurring",
+    "assertion": "envelope_equals",
+    "input": {
+      "frontmatter": {
+        "title": "Buy groceries",
+        "status": "done",
+        "completedDate": "2026-02-20"
+      },
+      "defaultStatus": "open",
+      "clearCompletedDate": true,
+      "expectedStatus": "open",
+      "expectedCompletedDate": null
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "status": "open",
+        "completedDate": null
+      }
+    }
+  },
+  {
+    "id": "ops.0021",
+    "section": "§5.6",
+    "profile": "core-lite",
+    "operation": "op.uncomplete_nonrecurring",
+    "assertion": "envelope_equals",
+    "input": {
+      "frontmatter": {
+        "title": "Buy groceries",
+        "status": "cancelled",
+        "completedDate": "2026-02-20"
+      },
+      "defaultStatus": "open",
+      "clearCompletedDate": false,
+      "expectedStatus": "open",
+      "expectedCompletedDate": "2026-02-20"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "status": "open",
+        "completedDate": "2026-02-20"
+      }
+    }
+  },
+  {
+    "id": "ops.0022",
+    "section": "§5.6",
+    "profile": "core-lite",
+    "operation": "op.uncomplete_nonrecurring",
+    "assertion": "envelope_equals",
+    "input": {
+      "frontmatter": {
+        "title": "Buy groceries",
+        "status": "open"
+      },
+      "defaultStatus": "open",
+      "clearCompletedDate": true,
+      "expectedStatus": "open",
+      "expectedCompletedDate": null
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "status": "open",
+        "completedDate": null
+      }
+    }
+  },
+  {
+    "id": "ops.0023",
+    "section": "§5.7",
+    "profile": "recurrence",
+    "operation": "recurrence.complete",
+    "assertion": "recurrence_complete_invariants",
+    "input": {
+      "recurrence": "FREQ=DAILY",
+      "recurrenceAnchor": "scheduled",
+      "scheduled": "2026-02-20",
+      "due": "2026-02-21",
+      "dateCreated": "2026-02-01",
+      "completionDate": "2026-02-20",
+      "completeInstances": [
+        "2026-02-19"
+      ],
+      "skippedInstances": [
+        "2026-02-22"
+      ]
+    }
+  },
+  {
+    "id": "ops.0024",
+    "section": "§5.8",
+    "profile": "recurrence",
+    "operation": "recurrence.uncomplete_instance",
+    "assertion": "envelope_equals",
+    "input": {
+      "targetDate": "2026-02-20",
+      "completeInstances": [
+        "2026-02-20",
+        "2026-02-21"
+      ],
+      "skippedInstances": [
+        "2026-02-23"
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "completeInstances": [
+          "2026-02-21"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ops.0025",
+    "section": "§5.9",
+    "profile": "recurrence",
+    "operation": "recurrence.skip_instance",
+    "assertion": "envelope_equals",
+    "input": {
+      "targetDate": "2026-02-20",
+      "completeInstances": [
+        "2026-02-20"
+      ],
+      "skippedInstances": [
+        "2026-02-22"
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "skippedInstances": {
+          "$contains": [
+            "2026-02-20"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "ops.0026",
+    "section": "§5.9",
+    "profile": "recurrence",
+    "operation": "recurrence.unskip_instance",
+    "assertion": "envelope_equals",
+    "input": {
+      "targetDate": "2026-02-20",
+      "completeInstances": [
+        "2026-02-20"
+      ],
+      "skippedInstances": [
+        "2026-02-21",
+        "2026-02-22"
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "skippedInstances": [
+          "2026-02-21",
+          "2026-02-22"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ops.0027",
+    "section": "§4.11",
+    "profile": "recurrence",
+    "operation": "recurrence.effective_state",
+    "assertion": "envelope_equals",
+    "input": {
+      "targetDate": "2026-02-20",
+      "completeInstances": [
+        "2026-02-20"
+      ],
+      "skippedInstances": [
+        "2026-02-21"
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "completed"
+      }
+    }
+  },
+  {
+    "id": "ops.0028",
+    "section": "§5.7",
+    "profile": "recurrence",
+    "operation": "recurrence.complete",
+    "assertion": "recurrence_complete_invariants",
+    "input": {
+      "recurrence": "FREQ=DAILY",
+      "recurrenceAnchor": "scheduled",
+      "scheduled": "2026-02-20",
+      "due": "2026-02-21",
+      "dateCreated": "2026-02-01",
+      "completionDate": "2026-02-21",
+      "completeInstances": [
+        "2026-02-19"
+      ],
+      "skippedInstances": [
+        "2026-02-22"
+      ]
+    }
+  },
+  {
+    "id": "ops.0029",
+    "section": "§5.8",
+    "profile": "recurrence",
+    "operation": "recurrence.uncomplete_instance",
+    "assertion": "envelope_equals",
+    "input": {
+      "targetDate": "2026-02-21",
+      "completeInstances": [
+        "2026-02-20",
+        "2026-02-21"
+      ],
+      "skippedInstances": [
+        "2026-02-23"
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "completeInstances": [
+          "2026-02-20"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ops.0030",
+    "section": "§5.8",
+    "profile": "recurrence",
+    "operation": "recurrence.uncomplete_instance",
+    "assertion": "envelope_equals",
+    "input": {
+      "targetDate": "2026-02-21",
+      "recurrenceAnchor": "completion",
+      "recurrence": "DTSTART:20260221;FREQ=DAILY",
+      "completeInstances": [
+        "2026-02-20",
+        "2026-02-21"
+      ],
+      "skippedInstances": []
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "completeInstances": [
+          "2026-02-20"
+        ],
+        "updatedRecurrence": "DTSTART:20260221;FREQ=DAILY"
+      }
+    }
+  },
+  {
+    "id": "ops.0031",
+    "section": "§5.9",
+    "profile": "recurrence",
+    "operation": "recurrence.skip_instance",
+    "assertion": "envelope_equals",
+    "input": {
+      "targetDate": "2026-02-21",
+      "completeInstances": [
+        "2026-02-20"
+      ],
+      "skippedInstances": [
+        "2026-02-22"
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "skippedInstances": {
+          "$contains": [
+            "2026-02-21"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "ops.0032",
+    "section": "§5.9",
+    "profile": "recurrence",
+    "operation": "recurrence.unskip_instance",
+    "assertion": "envelope_equals",
+    "input": {
+      "targetDate": "2026-02-21",
+      "completeInstances": [
+        "2026-02-20"
+      ],
+      "skippedInstances": [
+        "2026-02-21",
+        "2026-02-22"
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "skippedInstances": [
+          "2026-02-22"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ops.0033",
+    "section": "§4.11",
+    "profile": "recurrence",
+    "operation": "recurrence.effective_state",
+    "assertion": "envelope_equals",
+    "input": {
+      "targetDate": "2026-02-21",
+      "completeInstances": [
+        "2026-02-20"
+      ],
+      "skippedInstances": [
+        "2026-02-21"
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "skipped"
+      }
+    }
+  },
+  {
+    "id": "ops.0034",
+    "section": "§5.7",
+    "profile": "recurrence",
+    "operation": "recurrence.complete",
+    "assertion": "recurrence_complete_invariants",
+    "input": {
+      "recurrence": "FREQ=DAILY",
+      "recurrenceAnchor": "scheduled",
+      "scheduled": "2026-02-20",
+      "due": "2026-02-21",
+      "dateCreated": "2026-02-01",
+      "completionDate": "2026-02-22",
+      "completeInstances": [
+        "2026-02-19"
+      ],
+      "skippedInstances": [
+        "2026-02-22"
+      ]
+    }
+  },
+  {
+    "id": "ops.0035",
+    "section": "§5.8",
+    "profile": "recurrence",
+    "operation": "recurrence.uncomplete_instance",
+    "assertion": "envelope_equals",
+    "input": {
+      "targetDate": "2026-02-22",
+      "completeInstances": [
+        "2026-02-20",
+        "2026-02-21"
+      ],
+      "skippedInstances": [
+        "2026-02-23"
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "completeInstances": [
+          "2026-02-20",
+          "2026-02-21"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ops.0036",
+    "section": "§5.9",
+    "profile": "recurrence",
+    "operation": "recurrence.skip_instance",
+    "assertion": "envelope_equals",
+    "input": {
+      "targetDate": "2026-02-22",
+      "completeInstances": [
+        "2026-02-20"
+      ],
+      "skippedInstances": [
+        "2026-02-22"
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "skippedInstances": {
+          "$contains": [
+            "2026-02-22"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "ops.0037",
+    "section": "§5.9",
+    "profile": "recurrence",
+    "operation": "recurrence.unskip_instance",
+    "assertion": "envelope_equals",
+    "input": {
+      "targetDate": "2026-02-22",
+      "completeInstances": [
+        "2026-02-20"
+      ],
+      "skippedInstances": [
+        "2026-02-21",
+        "2026-02-22"
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "skippedInstances": [
+          "2026-02-21"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ops.0038",
+    "section": "§4.11",
+    "profile": "recurrence",
+    "operation": "recurrence.effective_state",
+    "assertion": "envelope_equals",
+    "input": {
+      "targetDate": "2026-02-22",
+      "completeInstances": [
+        "2026-02-20"
+      ],
+      "skippedInstances": [
+        "2026-02-21"
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "open"
+      }
+    }
+  },
+  {
+    "id": "ops.0039",
+    "section": "§5.7",
+    "profile": "recurrence",
+    "operation": "recurrence.complete",
+    "assertion": "recurrence_complete_invariants",
+    "input": {
+      "recurrence": "FREQ=DAILY",
+      "recurrenceAnchor": "scheduled",
+      "scheduled": "2026-02-20",
+      "due": "2026-02-21",
+      "dateCreated": "2026-02-01",
+      "completionDate": "2026-02-23",
+      "completeInstances": [
+        "2026-02-19"
+      ],
+      "skippedInstances": [
+        "2026-02-22"
+      ]
+    }
+  },
+  {
+    "id": "ops.0040",
+    "section": "§5.8",
+    "profile": "recurrence",
+    "operation": "recurrence.uncomplete_instance",
+    "assertion": "envelope_equals",
+    "input": {
+      "targetDate": "2026-02-23",
+      "completeInstances": [
+        "2026-02-20",
+        "2026-02-21"
+      ],
+      "skippedInstances": [
+        "2026-02-23"
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "completeInstances": [
+          "2026-02-20",
+          "2026-02-21"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ops.0041",
+    "section": "§5.9",
+    "profile": "recurrence",
+    "operation": "recurrence.skip_instance",
+    "assertion": "envelope_equals",
+    "input": {
+      "targetDate": "2026-02-23",
+      "completeInstances": [
+        "2026-02-20"
+      ],
+      "skippedInstances": [
+        "2026-02-22"
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "skippedInstances": {
+          "$contains": [
+            "2026-02-23"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "ops.0042",
+    "section": "§5.9",
+    "profile": "recurrence",
+    "operation": "recurrence.unskip_instance",
+    "assertion": "envelope_equals",
+    "input": {
+      "targetDate": "2026-02-23",
+      "completeInstances": [
+        "2026-02-20"
+      ],
+      "skippedInstances": [
+        "2026-02-21",
+        "2026-02-22"
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "skippedInstances": [
+          "2026-02-21",
+          "2026-02-22"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ops.0043",
+    "section": "§4.11",
+    "profile": "recurrence",
+    "operation": "recurrence.effective_state",
+    "assertion": "envelope_equals",
+    "input": {
+      "targetDate": "2026-02-23",
+      "completeInstances": [
+        "2026-02-20"
+      ],
+      "skippedInstances": [
+        "2026-02-21"
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "open"
+      }
+    }
+  },
+  {
+    "id": "ops.0044",
+    "section": "§5.10.1",
+    "profile": "extended",
+    "operation": "dependency.add",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "current": [
+        {
+          "uid": "[[a]]",
+          "reltype": "FINISHTOSTART"
+        }
+      ],
+      "entry": {
+        "uid": "[[b]]",
+        "reltype": "STARTTOSTART"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": [
+          {
+            "uid": "[[a]]",
+            "reltype": "FINISHTOSTART"
+          },
+          {
+            "uid": "[[b]]",
+            "reltype": "STARTTOSTART"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "ops.0045",
+    "section": "§5.10.2",
+    "profile": "extended",
+    "operation": "dependency.remove",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "current": [
+        {
+          "uid": "[[a]]",
+          "reltype": "FINISHTOSTART"
+        },
+        {
+          "uid": "[[b]]",
+          "reltype": "STARTTOSTART"
+        }
+      ],
+      "uid": "[[a]]"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": [
+          {
+            "uid": "[[b]]",
+            "reltype": "STARTTOSTART"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "ops.0046",
+    "section": "§5.10.3",
+    "profile": "extended",
+    "operation": "dependency.replace",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "current": [
+        {
+          "uid": "[[a]]",
+          "reltype": "FINISHTOSTART"
+        }
+      ],
+      "entries": [
+        {
+          "uid": "[[z]]",
+          "reltype": "FINISHTOFINISH"
+        }
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": [
+          {
+            "uid": "[[z]]",
+            "reltype": "FINISHTOFINISH"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "ops.0047",
+    "section": "§5.10.1",
+    "profile": "extended",
+    "operation": "dependency.add",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "current": [],
+      "entry": {
+        "uid": "[[a]]",
+        "reltype": "FINISHTOSTART"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": [
+          {
+            "uid": "[[a]]",
+            "reltype": "FINISHTOSTART"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "ops.0048",
+    "section": "§5.10.2",
+    "profile": "extended",
+    "operation": "dependency.remove",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "current": [
+        {
+          "uid": "[[a]]",
+          "reltype": "FINISHTOSTART"
+        }
+      ],
+      "uid": "[[a]]"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": []
+      }
+    }
+  },
+  {
+    "id": "ops.0049",
+    "section": "§5.10.3",
+    "profile": "extended",
+    "operation": "dependency.replace",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "current": [
+        {
+          "uid": "[[a]]",
+          "reltype": "FINISHTOSTART"
+        },
+        {
+          "uid": "[[b]]",
+          "reltype": "STARTTOSTART"
+        }
+      ],
+      "entries": []
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": []
+      }
+    }
+  },
+  {
+    "id": "ops.0050",
+    "section": "§5.10.3",
+    "profile": "extended",
+    "operation": "dependency.replace",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "current": [
+        {
+          "uid": "[[a]]",
+          "reltype": "FINISHTOSTART"
+        }
+      ],
+      "entries": [
+        {
+          "uid": "[[x]]",
+          "reltype": "FINISHTOSTART"
+        },
+        {
+          "uid": "[[y]]",
+          "reltype": "STARTTOSTART"
+        },
+        {
+          "uid": "[[z]]",
+          "reltype": "FINISHTOFINISH"
+        }
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": [
+          {
+            "uid": "[[x]]",
+            "reltype": "FINISHTOSTART"
+          },
+          {
+            "uid": "[[y]]",
+            "reltype": "STARTTOSTART"
+          },
+          {
+            "uid": "[[z]]",
+            "reltype": "FINISHTOFINISH"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "ops.0051",
+    "section": "§5.11.1",
+    "profile": "extended",
+    "operation": "reminder.add",
+    "assertion": "envelope_equals",
+    "requires": [
+      "reminders"
+    ],
+    "input": {
+      "current": [
+        {
+          "id": "r1",
+          "type": "absolute",
+          "absoluteTime": "2026-02-20T09:00:00Z"
+        }
+      ],
+      "entry": {
+        "id": "r2",
+        "type": "relative",
+        "relatedTo": "due",
+        "offset": "-PT1H"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": {
+          "$contains": [
+            {
+              "id": "r1"
+            },
+            {
+              "id": "r2",
+              "type": "relative",
+              "relatedTo": "due",
+              "offset": "-PT1H"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "ops.0052",
+    "section": "§5.11.2",
+    "profile": "extended",
+    "operation": "reminder.update",
+    "assertion": "envelope_equals",
+    "requires": [
+      "reminders"
+    ],
+    "input": {
+      "current": [
+        {
+          "id": "r1",
+          "type": "relative",
+          "relatedTo": "due",
+          "offset": "-PT1H"
+        }
+      ],
+      "id": "r1",
+      "patch": {
+        "offset": "-PT30M"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": [
+          {
+            "id": "r1",
+            "type": "relative",
+            "relatedTo": "due",
+            "offset": "-PT30M"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "ops.0053",
+    "section": "§5.11.3",
+    "profile": "extended",
+    "operation": "reminder.remove",
+    "assertion": "envelope_equals",
+    "requires": [
+      "reminders"
+    ],
+    "input": {
+      "current": [
+        {
+          "id": "r1",
+          "type": "relative",
+          "relatedTo": "due",
+          "offset": "-PT1H"
+        },
+        {
+          "id": "r2",
+          "type": "absolute",
+          "absoluteTime": "2026-02-20T09:00:00Z"
+        }
+      ],
+      "id": "r1"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": [
+          {
+            "id": "r2",
+            "type": "absolute",
+            "absoluteTime": "2026-02-20T09:00:00Z"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "ops.0054",
+    "section": "§5.11.1",
+    "profile": "extended",
+    "operation": "reminder.add",
+    "assertion": "envelope_equals",
+    "requires": [
+      "reminders"
+    ],
+    "input": {
+      "current": [],
+      "entry": {
+        "id": "r1",
+        "type": "absolute",
+        "absoluteTime": "2026-02-20T09:00:00Z"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": [
+          {
+            "id": "r1",
+            "type": "absolute",
+            "absoluteTime": "2026-02-20T09:00:00Z"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "ops.0055",
+    "section": "§5.11.2",
+    "profile": "extended",
+    "operation": "reminder.update",
+    "assertion": "envelope_equals",
+    "requires": [
+      "reminders"
+    ],
+    "input": {
+      "current": [
+        {
+          "id": "r1",
+          "type": "absolute",
+          "absoluteTime": "2026-02-20T09:00:00Z"
+        }
+      ],
+      "id": "r1",
+      "patch": {
+        "absoluteTime": "2026-02-21T10:00:00Z"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": [
+          {
+            "id": "r1",
+            "type": "absolute",
+            "absoluteTime": "2026-02-21T10:00:00Z"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "ops.0056",
+    "section": "§5.11.3",
+    "profile": "extended",
+    "operation": "reminder.remove",
+    "assertion": "envelope_equals",
+    "requires": [
+      "reminders"
+    ],
+    "input": {
+      "current": [
+        {
+          "id": "r1",
+          "type": "relative",
+          "relatedTo": "due",
+          "offset": "-PT1H"
+        }
+      ],
+      "id": "r1"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": []
+      }
+    }
+  },
+  {
+    "id": "ops.0057",
+    "section": "§5.10.1",
+    "profile": "extended",
+    "operation": "dependency.add",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dependencies"
+    ],
+    "input": {
+      "current": [
+        {
+          "uid": "[[a]]",
+          "reltype": "FINISHTOSTART"
+        }
+      ],
+      "entry": {
+        "uid": "[[a]]",
+        "reltype": "STARTTOSTART"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": [
+          {
+            "uid": "[[a]]",
+            "reltype": "FINISHTOSTART"
+          },
+          {
+            "uid": "[[a]]",
+            "reltype": "STARTTOSTART"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "ops.0058",
+    "section": "§5.11.2",
+    "profile": "extended",
+    "operation": "reminder.update",
+    "assertion": "envelope_error",
+    "requires": [
+      "reminders"
+    ],
+    "input": {
+      "current": [
+        {
+          "id": "r1",
+          "type": "relative",
+          "relatedTo": "due",
+          "offset": "-PT1H"
+        }
+      ],
+      "id": "r99",
+      "patch": {
+        "offset": "-PT30M"
+      }
+    },
+    "expect": {
+      "error": {
+        "$regex": "not_found|reminder|unknown"
+      }
+    }
+  },
+  {
+    "id": "ops.0059",
+    "section": "§5.12",
+    "profile": "extended",
+    "operation": "archive.apply",
+    "assertion": "envelope_equals",
+    "requires": [
+      "archive"
+    ],
+    "input": {
+      "frontmatter": {
+        "title": "Archive me",
+        "status": "open",
+        "tags": [
+          "task"
+        ]
+      },
+      "mode": "tag"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "deleted": false
+      }
+    }
+  },
+  {
+    "id": "ops.0060",
+    "section": "§5.13",
+    "profile": "core-lite",
+    "operation": "delete.remove",
+    "assertion": "envelope_equals",
+    "input": {
+      "path": "tasks/demo.md",
+      "checkBacklinks": true,
+      "force": true
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "deleted": true
+      }
+    }
+  },
+  {
+    "id": "ops.0061",
+    "section": "§5.13",
+    "profile": "core-lite",
+    "operation": "delete.remove",
+    "assertion": "envelope_error",
+    "input": {
+      "path": "tasks/demo.md",
+      "checkBacklinks": true,
+      "force": false,
+      "brokenLinks": [
+        "tasks/other.md"
+      ]
+    },
+    "expect": {
+      "error": {
+        "$regex": "backlink|dependency|force"
+      }
+    }
+  },
+  {
+    "id": "ops.0062",
+    "section": "§5.14",
+    "profile": "extended",
+    "operation": "rename.apply",
+    "assertion": "envelope_equals",
+    "requires": [
+      "rename"
+    ],
+    "input": {
+      "fromPath": "tasks/Old.md",
+      "toPath": "tasks/New.md",
+      "titleStorage": "filename",
+      "updateReferences": true
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "path": "tasks/New.md",
+        "referencesUpdated": true
+      }
+    }
+  },
+  {
+    "id": "ops.0063",
+    "section": "§5.14",
+    "profile": "extended",
+    "operation": "rename.apply",
+    "assertion": "envelope_equals",
+    "requires": [
+      "rename"
+    ],
+    "input": {
+      "fromPath": "tasks/OldNoRef.md",
+      "toPath": "tasks/NewNoRef.md",
+      "titleStorage": "filename",
+      "updateReferences": false
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "path": "tasks/NewNoRef.md",
+        "referencesUpdated": false
+      }
+    }
+  },
+  {
+    "id": "ops.0064",
+    "section": "§5.14",
+    "profile": "extended",
+    "operation": "rename.apply",
+    "assertion": "envelope_equals",
+    "requires": [
+      "rename"
+    ],
+    "input": {
+      "fromPath": "tasks/sub/OldNested.md",
+      "toPath": "tasks/sub/NewNested.md",
+      "titleStorage": "filename",
+      "updateReferences": true
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "path": "tasks/sub/NewNested.md",
+        "referencesUpdated": true
+      }
+    }
+  },
+  {
+    "id": "ops.0065",
+    "section": "§5.14",
+    "profile": "extended",
+    "operation": "rename.apply",
+    "assertion": "envelope_equals",
+    "requires": [
+      "rename"
+    ],
+    "input": {
+      "fromPath": "tasks/FrontmatterMode.md",
+      "toPath": "archive/FrontmatterModeRenamed.md",
+      "titleStorage": "frontmatter",
+      "updateReferences": false
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "path": "archive/FrontmatterModeRenamed.md",
+        "referencesUpdated": false
+      }
+    }
+  },
+  {
+    "id": "ops.0066",
+    "section": "§5.4.4",
+    "profile": "extended",
+    "operation": "rename.title_storage_interaction",
+    "assertion": "envelope_equals",
+    "requires": [
+      "rename"
+    ],
+    "input": {
+      "titleStorage": "filename",
+      "oldPath": "tasks/Old.md",
+      "newTitle": "New Title",
+      "expectedPathRegex": "^tasks/New(?:-| )Title\\.md$",
+      "expectedFrontmatterTitle": "New Title",
+      "expectedRenamed": true
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "path": {
+          "$regex": "^tasks/New(?:-| )Title\\.md$"
+        },
+        "renamed": true,
+        "frontmatter": {
+          "$contains": {
+            "title": "New Title"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "ops.0067",
+    "section": "§5.4.4",
+    "profile": "extended",
+    "operation": "rename.title_storage_interaction",
+    "assertion": "envelope_equals",
+    "requires": [
+      "rename"
+    ],
+    "input": {
+      "titleStorage": "frontmatter",
+      "oldPath": "tasks/Old.md",
+      "newTitle": "New Title",
+      "expectedPath": "tasks/Old.md",
+      "expectedFrontmatterTitle": "New Title",
+      "expectedRenamed": false
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "path": "tasks/Old.md",
+        "renamed": false,
+        "frontmatter": {
+          "$contains": {
+            "title": "New Title"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "ops.0068",
+    "section": "§5.15",
+    "profile": "extended",
+    "operation": "batch.apply",
+    "assertion": "envelope_equals",
+    "requires": [
+      "batch"
+    ],
+    "input": {
+      "items": [
+        {
+          "id": "a"
+        },
+        {
+          "id": "b"
+        },
+        {
+          "id": "c"
+        }
+      ],
+      "outcomes": [
+        {
+          "id": "a",
+          "ok": true
+        },
+        {
+          "id": "b",
+          "ok": false
+        },
+        {
+          "id": "c",
+          "ok": true
+        }
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "total": 3,
+        "succeeded": 2,
+        "failed": 1
+      }
+    }
+  },
+  {
+    "id": "ops.0069",
+    "section": "§5.15",
+    "profile": "extended",
+    "operation": "batch.apply",
+    "assertion": "envelope_equals",
+    "requires": [
+      "batch"
+    ],
+    "input": {
+      "items": [
+        {
+          "id": "a"
+        },
+        {
+          "id": "b"
+        }
+      ],
+      "outcomes": [
+        {
+          "id": "a",
+          "ok": true
+        },
+        {
+          "id": "b",
+          "ok": true
+        }
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "total": 2,
+        "succeeded": 2,
+        "failed": 0
+      }
+    }
+  },
+  {
+    "id": "ops.0070",
+    "section": "§5.15",
+    "profile": "extended",
+    "operation": "batch.apply",
+    "assertion": "envelope_equals",
+    "requires": [
+      "batch"
+    ],
+    "input": {
+      "items": [
+        {
+          "id": "a"
+        },
+        {
+          "id": "b"
+        }
+      ],
+      "outcomes": [
+        {
+          "id": "a",
+          "ok": false
+        },
+        {
+          "id": "b",
+          "ok": false
+        }
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "total": 2,
+        "succeeded": 0,
+        "failed": 2
+      }
+    }
+  },
+  {
+    "id": "ops.0071",
+    "section": "§5.15",
+    "profile": "extended",
+    "operation": "batch.apply",
+    "assertion": "envelope_equals",
+    "requires": [
+      "batch"
+    ],
+    "input": {
+      "items": [],
+      "outcomes": []
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "total": 0,
+        "succeeded": 0,
+        "failed": 0
+      }
+    }
+  },
+  {
+    "id": "ops.0072",
+    "section": "§5.16",
+    "profile": "extended",
+    "operation": "op.detect_conflict",
+    "assertion": "envelope_error",
+    "requires": [
+      "concurrency"
+    ],
+    "input": {
+      "expectedVersion": "a",
+      "actualVersion": "b",
+      "overwrite": false
+    },
+    "expect": {
+      "error": {
+        "$regex": "conflict|write_conflict"
+      }
+    }
+  },
+  {
+    "id": "ops.0073",
+    "section": "§5.16",
+    "profile": "extended",
+    "operation": "op.detect_conflict",
+    "assertion": "envelope_equals",
+    "requires": [
+      "concurrency"
+    ],
+    "input": {
+      "expectedVersion": "abc",
+      "actualVersion": "abc",
+      "overwrite": false
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "conflict": false
+      }
+    }
+  },
+  {
+    "id": "ops.0074",
+    "section": "§5.16",
+    "profile": "extended",
+    "operation": "op.detect_conflict",
+    "assertion": "envelope_equals",
+    "requires": [
+      "concurrency"
+    ],
+    "input": {
+      "expectedVersion": "a",
+      "actualVersion": "b",
+      "overwrite": true
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "conflict": false
+      }
+    }
+  },
+  {
+    "id": "ops.0075",
+    "section": "§5.17",
+    "profile": "extended",
+    "operation": "op.dry_run",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dry-run"
+    ],
+    "input": {
+      "operation": "update",
+      "patch": {
+        "status": "done"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "wrote": false,
+        "plannedChanges": {
+          "$contains": [
+            "status"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "ops.0076",
+    "section": "§5.17",
+    "profile": "extended",
+    "operation": "op.dry_run",
+    "assertion": "envelope_equals",
+    "requires": [
+      "dry-run"
+    ],
+    "input": {
+      "operation": "create",
+      "patch": {
+        "title": "New task",
+        "status": "open"
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "wrote": false,
+        "plannedChanges": {
+          "$contains": [
+            "title",
+            "status"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "ops.0077",
+    "section": "§5.18",
+    "profile": "core-lite",
+    "operation": "op.error_shape",
+    "assertion": "envelope_equals",
+    "input": {
+      "operation": "update",
+      "code": "invalid_type",
+      "message": "bad value",
+      "field": "status"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "operation": "update",
+        "code": "invalid_type",
+        "message": {
+          "$regex": ".+"
+        }
+      }
+    }
+  },
+  {
+    "id": "ops.0078",
+    "section": "§5.18",
+    "profile": "core-lite",
+    "operation": "op.error_shape",
+    "assertion": "envelope_equals",
+    "input": {
+      "operation": "create",
+      "code": "missing_required_field",
+      "message": "title is required",
+      "field": "title"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "code": "missing_required_field",
+        "message": {
+          "$regex": ".+"
+        }
+      }
+    }
+  },
+  {
+    "id": "ops.0079",
+    "section": "§5.18",
+    "profile": "core-lite",
+    "operation": "op.error_shape",
+    "assertion": "envelope_equals",
+    "input": {
+      "operation": "delete",
+      "code": "file_not_found",
+      "message": "file does not exist"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "code": "file_not_found",
+        "message": {
+          "$regex": ".+"
+        }
+      }
+    }
+  },
+  {
+    "id": "ops.0080",
+    "section": "§5.19.1",
+    "profile": "extended",
+    "operation": "time.start",
+    "assertion": "envelope_equals",
+    "requires": [
+      "time-tracking"
+    ],
+    "input": {
+      "entries": [],
+      "now": "2026-02-20T09:00:00Z",
+      "dateModified": "2026-02-20T08:00:00Z"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": [
+          {
+            "startTime": "2026-02-20T09:00:00Z"
+          }
+        ],
+        "dateModified": {
+          "$regex": "^2026-02-20T09:00:00Z$|^\\d{4}-\\d{2}-\\d{2}T"
+        }
+      }
+    }
+  },
+  {
+    "id": "ops.0081",
+    "section": "§5.19.1",
+    "profile": "extended",
+    "operation": "time.start",
+    "assertion": "envelope_error",
+    "requires": [
+      "time-tracking"
+    ],
+    "input": {
+      "entries": [
+        {
+          "startTime": "2026-02-20T09:00:00Z"
+        }
+      ],
+      "now": "2026-02-20T09:30:00Z"
+    },
+    "expect": {
+      "error": {
+        "$regex": "time_tracking_already_active|active"
+      }
+    }
+  },
+  {
+    "id": "ops.0082",
+    "section": "§5.19.2",
+    "profile": "extended",
+    "operation": "time.stop",
+    "assertion": "envelope_equals",
+    "requires": [
+      "time-tracking"
+    ],
+    "input": {
+      "entries": [
+        {
+          "startTime": "2026-02-20T09:00:00Z"
+        }
+      ],
+      "now": "2026-02-20T10:00:00Z",
+      "dateModified": "2026-02-20T09:00:00Z"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": [
+          {
+            "startTime": "2026-02-20T09:00:00Z",
+            "endTime": "2026-02-20T10:00:00Z"
+          }
+        ],
+        "dateModified": {
+          "$regex": "^2026-02-20T10:00:00Z$|^\\d{4}-\\d{2}-\\d{2}T"
+        }
+      }
+    }
+  },
+  {
+    "id": "ops.0083",
+    "section": "§5.19.2",
+    "profile": "extended",
+    "operation": "time.stop",
+    "assertion": "envelope_error",
+    "requires": [
+      "time-tracking"
+    ],
+    "input": {
+      "entries": [],
+      "now": "2026-02-20T10:00:00Z"
+    },
+    "expect": {
+      "error": {
+        "$regex": "no_active_time_entry|active"
+      }
+    }
+  },
+  {
+    "id": "ops.0084",
+    "section": "§5.19.3",
+    "profile": "extended",
+    "operation": "time.replace_entries",
+    "assertion": "envelope_equals",
+    "requires": [
+      "time-tracking"
+    ],
+    "input": {
+      "entries": [
+        {
+          "startTime": "2026-02-20T09:00:00Z",
+          "endTime": "2026-02-20T10:00:00Z",
+          "duration": 60
+        }
+      ],
+      "dateModified": "2026-02-20T10:00:00Z"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": [
+          {
+            "startTime": "2026-02-20T09:00:00Z",
+            "endTime": "2026-02-20T10:00:00Z"
+          }
+        ],
+        "dateModified": {
+          "$regex": "^\\d{4}-\\d{2}-\\d{2}T"
+        }
+      }
+    }
+  },
+  {
+    "id": "ops.0085",
+    "section": "§5.19.4",
+    "profile": "extended",
+    "operation": "time.remove_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "time-tracking"
+    ],
+    "input": {
+      "entries": [
+        {
+          "startTime": "2026-02-20T09:00:00Z",
+          "endTime": "2026-02-20T10:00:00Z"
+        },
+        {
+          "startTime": "2026-02-21T09:00:00Z"
+        }
+      ],
+      "selector": {
+        "index": 0
+      },
+      "dateModified": "2026-02-21T09:00:00Z"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": [
+          {
+            "startTime": "2026-02-21T09:00:00Z"
+          }
+        ],
+        "dateModified": {
+          "$regex": "^\\d{4}-\\d{2}-\\d{2}T"
+        }
+      }
+    }
+  },
+  {
+    "id": "ops.0086",
+    "section": "§5.19.5",
+    "profile": "extended",
+    "operation": "time.auto_stop_on_complete",
+    "assertion": "envelope_equals",
+    "requires": [
+      "time-tracking"
+    ],
+    "input": {
+      "autoStopOnComplete": true,
+      "isCompletionTransition": true,
+      "taskEntries": [
+        {
+          "startTime": "2026-02-20T09:00:00Z"
+        }
+      ],
+      "now": "2026-02-20T09:30:00Z"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "stopped": true
+      }
+    }
+  },
+  {
+    "id": "ops.0087",
+    "section": "§5.19.6",
+    "profile": "extended",
+    "operation": "time.report_totals",
+    "assertion": "envelope_equals",
+    "requires": [
+      "time-tracking"
+    ],
+    "input": {
+      "entries": [
+        {
+          "startTime": "2026-02-20T09:00:00Z",
+          "endTime": "2026-02-20T10:00:00Z"
+        },
+        {
+          "startTime": "2026-02-20T10:30:00Z",
+          "endTime": "2026-02-20T11:00:00Z"
+        }
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "closed_minutes": 90
+      }
+    }
+  },
+  {
+    "id": "ops.0088",
+    "section": "§5.19.6",
+    "profile": "extended",
+    "operation": "time.report_totals",
+    "assertion": "envelope_equals",
+    "requires": [
+      "time-tracking"
+    ],
+    "input": {
+      "entries": [
+        {
+          "startTime": "2026-02-20T09:00:00Z",
+          "endTime": "2026-02-20T10:00:00Z"
+        },
+        {
+          "startTime": "2026-02-20T11:00:00Z"
+        }
+      ],
+      "now": "2026-02-20T11:30:00Z"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "closed_minutes": 60,
+        "live_minutes": 90
+      }
+    }
+  },
+  {
+    "id": "ops.0089",
+    "section": "§5.19.1",
+    "profile": "extended",
+    "operation": "time.start",
+    "assertion": "envelope_equals",
+    "requires": [
+      "time-tracking"
+    ],
+    "input": {
+      "entries": [
+        {
+          "startTime": "2026-02-20T08:00:00Z",
+          "endTime": "2026-02-20T09:00:00Z"
+        },
+        {
+          "startTime": "2026-02-20T10:00:00Z",
+          "endTime": "2026-02-20T11:00:00Z"
+        }
+      ],
+      "now": "2026-02-20T14:00:00Z",
+      "dateModified": "2026-02-20T11:00:00Z"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": [
+          {
+            "startTime": "2026-02-20T08:00:00Z",
+            "endTime": "2026-02-20T09:00:00Z"
+          },
+          {
+            "startTime": "2026-02-20T10:00:00Z",
+            "endTime": "2026-02-20T11:00:00Z"
+          },
+          {
+            "startTime": "2026-02-20T14:00:00Z"
+          }
+        ],
+        "dateModified": {
+          "$regex": "^\\d{4}-\\d{2}-\\d{2}T"
+        }
+      }
+    }
+  },
+  {
+    "id": "ops.0090",
+    "section": "§5.19.2",
+    "profile": "extended",
+    "operation": "time.stop",
+    "assertion": "envelope_equals",
+    "requires": [
+      "time-tracking"
+    ],
+    "input": {
+      "entries": [
+        {
+          "startTime": "2026-02-20T08:00:00Z",
+          "endTime": "2026-02-20T09:00:00Z"
+        },
+        {
+          "startTime": "2026-02-20T10:00:00Z"
+        }
+      ],
+      "now": "2026-02-20T11:00:00Z",
+      "dateModified": "2026-02-20T10:00:00Z"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": [
+          {
+            "startTime": "2026-02-20T08:00:00Z",
+            "endTime": "2026-02-20T09:00:00Z"
+          },
+          {
+            "startTime": "2026-02-20T10:00:00Z",
+            "endTime": "2026-02-20T11:00:00Z"
+          }
+        ],
+        "dateModified": {
+          "$regex": "^\\d{4}-\\d{2}-\\d{2}T"
+        }
+      }
+    }
+  },
+  {
+    "id": "ops.0091",
+    "section": "§5.19.3",
+    "profile": "extended",
+    "operation": "time.replace_entries",
+    "assertion": "envelope_equals",
+    "requires": [
+      "time-tracking"
+    ],
+    "input": {
+      "entries": [],
+      "dateModified": "2026-02-20T10:00:00Z"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": [],
+        "dateModified": {
+          "$regex": "^\\d{4}-\\d{2}-\\d{2}T"
+        }
+      }
+    }
+  },
+  {
+    "id": "ops.0092",
+    "section": "§5.19.3",
+    "profile": "extended",
+    "operation": "time.replace_entries",
+    "assertion": "envelope_equals",
+    "requires": [
+      "time-tracking"
+    ],
+    "input": {
+      "entries": [
+        {
+          "startTime": "2026-02-20T09:00:00Z",
+          "endTime": "2026-02-20T10:00:00Z"
+        },
+        {
+          "startTime": "2026-02-20T11:00:00Z"
+        }
+      ],
+      "dateModified": "2026-02-20T11:00:00Z"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": [
+          {
+            "startTime": "2026-02-20T09:00:00Z",
+            "endTime": "2026-02-20T10:00:00Z"
+          },
+          {
+            "startTime": "2026-02-20T11:00:00Z"
+          }
+        ],
+        "dateModified": {
+          "$regex": "^\\d{4}-\\d{2}-\\d{2}T"
+        }
+      }
+    }
+  },
+  {
+    "id": "ops.0093",
+    "section": "§5.19.4",
+    "profile": "extended",
+    "operation": "time.remove_entry",
+    "assertion": "envelope_equals",
+    "requires": [
+      "time-tracking"
+    ],
+    "input": {
+      "entries": [
+        {
+          "startTime": "2026-02-20T09:00:00Z",
+          "endTime": "2026-02-20T10:00:00Z"
+        }
+      ],
+      "selector": {
+        "index": 0
+      },
+      "dateModified": "2026-02-20T10:00:00Z"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": [],
+        "dateModified": {
+          "$regex": "^\\d{4}-\\d{2}-\\d{2}T"
+        }
+      }
+    }
+  },
+  {
+    "id": "ops.0094",
+    "section": "§5.19.4",
+    "profile": "extended",
+    "operation": "time.remove_entry",
+    "assertion": "envelope_error",
+    "requires": [
+      "time-tracking"
+    ],
+    "input": {
+      "entries": [
+        {
+          "startTime": "2026-02-20T09:00:00Z",
+          "endTime": "2026-02-20T10:00:00Z"
+        }
+      ],
+      "selector": {
+        "index": 5
+      },
+      "dateModified": "2026-02-20T10:00:00Z"
+    },
+    "expect": {
+      "error": {
+        "$regex": "index_out_of_range|out_of_range|[Ii]nvalid|not_found"
+      }
+    }
+  },
+  {
+    "id": "ops.0095",
+    "section": "§5.19.5",
+    "profile": "extended",
+    "operation": "time.auto_stop_on_complete",
+    "assertion": "envelope_equals",
+    "requires": [
+      "time-tracking"
+    ],
+    "input": {
+      "autoStopOnComplete": false,
+      "isCompletionTransition": true,
+      "taskEntries": [
+        {
+          "startTime": "2026-02-20T09:00:00Z"
+        }
+      ],
+      "now": "2026-02-20T09:30:00Z"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "stopped": false
+      }
+    }
+  },
+  {
+    "id": "ops.0096",
+    "section": "§5.19.5",
+    "profile": "extended",
+    "operation": "time.auto_stop_on_complete",
+    "assertion": "envelope_equals",
+    "requires": [
+      "time-tracking"
+    ],
+    "input": {
+      "autoStopOnComplete": true,
+      "isCompletionTransition": false,
+      "taskEntries": [
+        {
+          "startTime": "2026-02-20T09:00:00Z"
+        }
+      ],
+      "now": "2026-02-20T09:30:00Z"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "stopped": false
+      }
+    }
+  },
+  {
+    "id": "ops.0097",
+    "section": "§5.19.5",
+    "profile": "extended",
+    "operation": "time.auto_stop_on_complete",
+    "assertion": "envelope_equals",
+    "requires": [
+      "time-tracking"
+    ],
+    "input": {
+      "autoStopOnComplete": true,
+      "isCompletionTransition": true,
+      "taskEntries": [
+        {
+          "startTime": "2026-02-20T08:00:00Z",
+          "endTime": "2026-02-20T09:00:00Z"
+        }
+      ],
+      "now": "2026-02-20T09:30:00Z"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "stopped": false
+      }
+    }
+  },
+  {
+    "id": "ops.0098",
+    "section": "§5.19.6",
+    "profile": "extended",
+    "operation": "time.report_totals",
+    "assertion": "envelope_equals",
+    "requires": [
+      "time-tracking"
+    ],
+    "input": {
+      "entries": []
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "closed_minutes": 0
+      }
+    }
+  },
+  {
+    "id": "ops.0099",
+    "section": "§5.19.6",
+    "profile": "extended",
+    "operation": "time.report_totals",
+    "assertion": "envelope_equals",
+    "requires": [
+      "time-tracking"
+    ],
+    "input": {
+      "entries": [
+        {
+          "startTime": "2026-02-20T09:00:00Z"
+        }
+      ],
+      "now": "2026-02-20T10:00:00Z"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "closed_minutes": 0,
+        "live_minutes": 60
+      }
+    }
+  },
+  {
+    "id": "ops.0100",
+    "section": "§5.19.6",
+    "profile": "extended",
+    "operation": "time.report_totals",
+    "assertion": "envelope_equals",
+    "requires": [
+      "time-tracking"
+    ],
+    "input": {
+      "entries": [
+        {
+          "startTime": "2026-02-20T09:00:00Z",
+          "endTime": "2026-02-20T09:30:00Z"
+        },
+        {
+          "startTime": "2026-02-20T10:00:00Z",
+          "endTime": "2026-02-20T10:15:00Z"
+        },
+        {
+          "startTime": "2026-02-20T11:00:00Z",
+          "endTime": "2026-02-20T11:45:00Z"
+        }
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "closed_minutes": 90
+      }
+    }
+  }
+]

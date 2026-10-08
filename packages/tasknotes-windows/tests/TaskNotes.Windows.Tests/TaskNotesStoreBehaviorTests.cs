@@ -353,6 +353,12 @@ namespace TaskNotes.Windows.Tests
             using TemporaryDirectory directory = new();
             await using TaskNotesStore store = new(directory.Path);
             await store.InitializeAsync(null, null, TestContext.CancellationToken);
+            List<int> observedCounts = [];
+            store.StateChanged += (_, _) =>
+            {
+                lock (observedCounts)
+                    observedCounts.Add(store.State.AllTasks.Count);
+            };
             Task[] additions =
             [
                 .. Enumerable
@@ -372,6 +378,17 @@ namespace TaskNotes.Windows.Tests
                     .Distinct(StringComparer.Ordinal)
                     .Count()
             );
+            lock (observedCounts)
+            {
+                Assert.IsNotEmpty(observedCounts);
+                Assert.AreEqual(24, observedCounts[^1]);
+                Assert.IsTrue(
+                    observedCounts
+                        .Zip(observedCounts.Skip(1))
+                        .All(pair => pair.First <= pair.Second),
+                    "A published observation must not regress to an earlier worker snapshot."
+                );
+            }
         }
 
         /// <summary>Projects stable labels and automation identifiers without platform dependencies.</summary>

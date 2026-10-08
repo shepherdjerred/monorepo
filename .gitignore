@@ -137,3 +137,5 @@ packages/streambot/scratch/
 
 # toolkit mc build working directories (minecraft-building skill examples)
 /builds/
+# Localized mise bootstrap/tools cache; bin/mise is the generated wrapper.
+.mise/

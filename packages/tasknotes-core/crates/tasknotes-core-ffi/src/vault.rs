@@ -13,16 +13,16 @@ use tasknotes_vault::{
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error, uniffi::Error)]
 pub enum VaultBoundaryError {
     /// The selected configuration is invalid or needs explicit approval.
-    #[error("Invalid TaskNotes configuration: {message}")]
+    #[error("Invalid TaskNotes configuration: {detail}")]
     Configuration {
         /// Safe configuration diagnostic, without vault contents.
-        message: String,
+        detail: String,
     },
     /// A document or requested edit is invalid.
-    #[error("Invalid task document: {message}")]
+    #[error("Invalid task document: {detail}")]
     Document {
         /// Safe document diagnostic, without document contents.
-        message: String,
+        detail: String,
     },
     /// A path is not a safe vault-relative identity.
     #[error("Invalid vault-relative path")]
@@ -35,8 +35,8 @@ pub enum VaultBoundaryError {
 impl From<VaultError> for VaultBoundaryError {
     fn from(value: VaultError) -> Self {
         match value {
-            VaultError::Configuration(message) => Self::Configuration { message },
-            VaultError::Document(message) => Self::Document { message },
+            VaultError::Configuration(detail) => Self::Configuration { detail },
+            VaultError::Document(detail) => Self::Document { detail },
             VaultError::Path => Self::Path,
             VaultError::Conflict => Self::Conflict,
         }
@@ -104,7 +104,7 @@ impl FfiVaultDocument {
     /// Returns a typed boundary error if serialization fails.
     pub fn properties_json(&self) -> Result<String, VaultBoundaryError> {
         serde_json::to_string(self.inner.frontmatter()).map_err(|_| VaultBoundaryError::Document {
-            message: "properties cannot be serialized".to_owned(),
+            detail: "properties cannot be serialized".to_owned(),
         })
     }
 
@@ -120,7 +120,7 @@ impl FfiVaultDocument {
     ) -> Result<VaultDocumentWrite, VaultBoundaryError> {
         let edits: Vec<PropertyEdit> =
             serde_json::from_str(edits_json).map_err(|_| VaultBoundaryError::Document {
-                message: "property edits violate their schema".to_owned(),
+                detail: "property edits violate their schema".to_owned(),
             })?;
         self.inner
             .plan(&edits, body.as_deref())
@@ -162,7 +162,7 @@ impl FfiVaultConfiguration {
     /// Returns a typed boundary error if serialization fails.
     pub fn configuration_json(&self) -> Result<String, VaultBoundaryError> {
         serde_json::to_string(&self.inner).map_err(|_| VaultBoundaryError::Configuration {
-            message: "configuration cannot be serialized".to_owned(),
+            detail: "configuration cannot be serialized".to_owned(),
         })
     }
 

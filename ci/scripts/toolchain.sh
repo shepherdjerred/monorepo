@@ -115,6 +115,13 @@ case "${MISE_TOOLCHAIN_SCOPE:-full}" in
     # stale ci-base image. Rebuild shims so commands such as gh are reachable
     # through the PATH exported above (release build 6529).
     mise_ci reshim
+    # Public SDK bootstrap only; product behavior does not use environment vars.
+    # Match ci/ci-image/Dockerfile and repair stale x86_64 images at runtime.
+    export ANDROID_HOME=/opt/android-sdk
+    export ANDROID_SDK_ROOT="$ANDROID_HOME"
+    if [ "$(uname -s)" = Linux ] && [ "$(uname -m)" = x86_64 ]; then
+      bash ci/scripts/android-sdk.sh
+    fi
     # Codex executes tool calls through a login shell, whose /etc/profile can
     # replace PATH and hide mise shims (release build 6549). Expose the real
     # mise-managed binary on the login shell's stable system path.

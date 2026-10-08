@@ -41,10 +41,10 @@ struct SyncMessageTests {
     func theCredentialFailureIsStatedFirst() throws {
         let message = try #require(
             SyncMessage.of(
-                status: status(.authError, error: .Api(message: "Unauthorized", status: 401)),
+                status: status(.authError, error: .Api(detail: "Unauthorized", status: 401)),
                 pendingCount: 1,
-                storeError: .Validation(message: "that is not a date"),
-                credentialError: .Invariant(message: "the login Keychain is locked"),
+                storeError: .Validation(detail: "that is not a date"),
+                credentialError: .Invariant(detail: "the login Keychain is locked"),
                 parkedCount: 3))
         #expect(message.tone == .attention)
         #expect(message.title == "This Mac would not release the server credential")
@@ -66,7 +66,7 @@ struct SyncMessageTests {
     func aFailureBecomesABanner() throws {
         let message = try #require(
             SyncMessage.of(
-                status: status(.backoff, error: .Connection(message: "connection refused")),
+                status: status(.backoff, error: .Connection(detail: "connection refused")),
                 pendingCount: 2,
                 storeError: nil))
         #expect(message.tone == .degraded)
@@ -101,7 +101,7 @@ struct SyncMessageTests {
         #expect(
             try tone(
                 SyncMessage.of(
-                    status: status(.backoff, error: .Connection(message: "refused")),
+                    status: status(.backoff, error: .Connection(detail: "refused")),
                     pendingCount: 1,
                     storeError: nil)) == .degraded)
         #expect(
@@ -123,7 +123,7 @@ struct SyncMessageTests {
             #require(SyncMessage.of(status: status(.idle), pendingCount: 3, storeError: nil)),
             #require(
                 SyncMessage.of(
-                    status: status(.backoff, error: .Connection(message: "refused")),
+                    status: status(.backoff, error: .Connection(detail: "refused")),
                     pendingCount: 1,
                     storeError: nil)),
             #require(
@@ -137,9 +137,9 @@ struct SyncMessageTests {
     func aLocalFailureTakesPrecedence() throws {
         let message = try #require(
             SyncMessage.of(
-                status: status(.backoff, error: .Network(message: "offline")),
+                status: status(.backoff, error: .Network(detail: "offline")),
                 pendingCount: 1,
-                storeError: .Validation(message: "that is not a date")))
+                storeError: .Validation(detail: "that is not a date")))
         #expect(message.detail == "that is not a date")
     }
 
@@ -155,10 +155,10 @@ struct SyncMessageTests {
 
     @Test("an HTTP status is shown, and an envelope failure's zero is not")
     func errorMessagesReadForAHuman() {
-        #expect(CoreError.Api(message: "boom", status: 503).userMessage == "boom (HTTP 503)")
-        #expect(CoreError.Api(message: "boom", status: 0).userMessage == "boom")
+        #expect(CoreError.Api(detail: "boom", status: 503).userMessage == "boom (HTTP 503)")
+        #expect(CoreError.Api(detail: "boom", status: 0).userMessage == "boom")
         #expect(
-            CoreError.NotFound(message: "task not found: a.md").userMessage
+            CoreError.NotFound(detail: "task not found: a.md").userMessage
                 == "task not found: a.md")
     }
 }

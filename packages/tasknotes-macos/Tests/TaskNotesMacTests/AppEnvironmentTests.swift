@@ -588,7 +588,7 @@ private struct Fixture {
 /// fails; writing is not part of what this stands for and is never called.
 private struct UnreadableTokenStore: ServerTokenStore {
     static let failure = CoreError.Invariant(
-        message: "could not read the stored server token (Keychain status -25308)"
+        detail: "could not read the stored server token (Keychain status -25308)"
     )
 
     func token() -> Result<String?, CoreError> { .failure(Self.failure) }
@@ -611,7 +611,7 @@ private struct UnreadableTokenStore: ServerTokenStore {
 /// true.
 private final class RefusingTokenStore: ServerTokenStore {
     static let failure = CoreError.Invariant(
-        message: "could not store the server token (Keychain status -25308)"
+        detail: "could not store the server token (Keychain status -25308)"
     )
 
     private let stored: Mutex<String?>

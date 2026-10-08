@@ -1,0 +1,214 @@
+{
+  "schemaVersion": 1,
+  "provenance": "23 unchanged accepted-fragment JSON values and 3 unchanged C#/Kotlin driver literals",
+  "cases": [
+    {
+      "id": "empty-applied",
+      "receiptJson": "{\"schemaVersion\":1,\"mutationId\":\"original\",\"applied\":true,\"taskPath\":\"Tasks/task.md\",\"cleanupPending\":false,\"paths\":[\"Tasks/task.md\"],\"pendingCount\":1,\"diagnostics\":[]}",
+      "expectedMutationId": "original",
+      "accepted": true,
+      "notice": false,
+      "layer": "full-shared-schema"
+    },
+    {
+      "id": "template_missing",
+      "receiptJson": "{\"schemaVersion\":1,\"mutationId\":\"original\",\"applied\":true,\"taskPath\":\"Tasks/task.md\",\"cleanupPending\":false,\"paths\":[\"Tasks/task.md\"],\"pendingCount\":1,\"diagnostics\":[{\"code\":\"template_missing\"}]}",
+      "expectedMutationId": "original",
+      "accepted": true,
+      "notice": true,
+      "layer": "full-shared-schema"
+    },
+    {
+      "id": "template_parse_failed",
+      "receiptJson": "{\"schemaVersion\":1,\"mutationId\":\"original\",\"applied\":true,\"taskPath\":\"Tasks/task.md\",\"cleanupPending\":false,\"paths\":[\"Tasks/task.md\"],\"pendingCount\":1,\"diagnostics\":[{\"code\":\"template_parse_failed\"}]}",
+      "expectedMutationId": "original",
+      "accepted": true,
+      "notice": true,
+      "layer": "full-shared-schema"
+    },
+    {
+      "id": "filename_shortened",
+      "receiptJson": "{\"schemaVersion\":1,\"mutationId\":\"original\",\"applied\":true,\"taskPath\":\"Tasks/task.md\",\"cleanupPending\":false,\"paths\":[\"Tasks/task.md\"],\"pendingCount\":1,\"diagnostics\":[{\"code\":\"filename_shortened\"}]}",
+      "expectedMutationId": "original",
+      "accepted": true,
+      "notice": true,
+      "layer": "full-shared-schema"
+    },
+    {
+      "id": "all-codes",
+      "receiptJson": "{\"schemaVersion\":1,\"mutationId\":\"original\",\"applied\":true,\"taskPath\":\"Tasks/task.md\",\"cleanupPending\":false,\"paths\":[\"Tasks/task.md\"],\"pendingCount\":1,\"diagnostics\":[{\"code\":\"template_missing\"},{\"code\":\"template_parse_failed\"},{\"code\":\"filename_shortened\"}]}",
+      "expectedMutationId": "original",
+      "accepted": true,
+      "notice": true,
+      "layer": "full-shared-schema"
+    },
+    {
+      "id": "pending-never-says-saved",
+      "receiptJson": "{\"schemaVersion\":1,\"mutationId\":\"original\",\"applied\":false,\"taskPath\":\"Tasks/task.md\",\"cleanupPending\":false,\"paths\":[\"Tasks/task.md\"],\"pendingCount\":1,\"diagnostics\":[{\"code\":\"template_missing\"}]}",
+      "expectedMutationId": "original",
+      "accepted": true,
+      "notice": false,
+      "layer": "full-shared-schema"
+    },
+    {
+      "id": "missing-required-diagnostics",
+      "receiptJson": "{\"schemaVersion\":1,\"mutationId\":\"original\",\"applied\":true,\"taskPath\":\"Tasks/task.md\",\"cleanupPending\":false,\"paths\":[\"Tasks/task.md\"],\"pendingCount\":1}",
+      "expectedMutationId": "original",
+      "accepted": false,
+      "notice": false,
+      "layer": "full-shared-schema"
+    },
+    {
+      "id": "null",
+      "receiptJson": "{\"schemaVersion\":1,\"mutationId\":\"original\",\"applied\":true,\"taskPath\":\"Tasks/task.md\",\"cleanupPending\":false,\"paths\":[\"Tasks/task.md\"],\"pendingCount\":1,\"diagnostics\":null}",
+      "expectedMutationId": "original",
+      "accepted": false,
+      "notice": false,
+      "layer": "full-shared-schema"
+    },
+    {
+      "id": "object",
+      "receiptJson": "{\"schemaVersion\":1,\"mutationId\":\"original\",\"applied\":true,\"taskPath\":\"Tasks/task.md\",\"cleanupPending\":false,\"paths\":[\"Tasks/task.md\"],\"pendingCount\":1,\"diagnostics\":{}}",
+      "expectedMutationId": "original",
+      "accepted": false,
+      "notice": false,
+      "layer": "full-shared-schema"
+    },
+    {
+      "id": "string",
+      "receiptJson": "{\"schemaVersion\":1,\"mutationId\":\"original\",\"applied\":true,\"taskPath\":\"Tasks/task.md\",\"cleanupPending\":false,\"paths\":[\"Tasks/task.md\"],\"pendingCount\":1,\"diagnostics\":\"x\"}",
+      "expectedMutationId": "original",
+      "accepted": false,
+      "notice": false,
+      "layer": "full-shared-schema"
+    },
+    {
+      "id": "primitive-entry",
+      "receiptJson": "{\"schemaVersion\":1,\"mutationId\":\"original\",\"applied\":true,\"taskPath\":\"Tasks/task.md\",\"cleanupPending\":false,\"paths\":[\"Tasks/task.md\"],\"pendingCount\":1,\"diagnostics\":[true]}",
+      "expectedMutationId": "original",
+      "accepted": false,
+      "notice": false,
+      "layer": "full-shared-schema"
+    },
+    {
+      "id": "unknown",
+      "receiptJson": "{\"schemaVersion\":1,\"mutationId\":\"original\",\"applied\":true,\"taskPath\":\"Tasks/task.md\",\"cleanupPending\":false,\"paths\":[\"Tasks/task.md\"],\"pendingCount\":1,\"diagnostics\":[{\"code\":\"unknown\"}]}",
+      "expectedMutationId": "original",
+      "accepted": false,
+      "notice": false,
+      "layer": "full-shared-schema"
+    },
+    {
+      "id": "wrong-code-type",
+      "receiptJson": "{\"schemaVersion\":1,\"mutationId\":\"original\",\"applied\":true,\"taskPath\":\"Tasks/task.md\",\"cleanupPending\":false,\"paths\":[\"Tasks/task.md\"],\"pendingCount\":1,\"diagnostics\":[{\"code\":true}]}",
+      "expectedMutationId": "original",
+      "accepted": false,
+      "notice": false,
+      "layer": "full-shared-schema"
+    },
+    {
+      "id": "null-code",
+      "receiptJson": "{\"schemaVersion\":1,\"mutationId\":\"original\",\"applied\":true,\"taskPath\":\"Tasks/task.md\",\"cleanupPending\":false,\"paths\":[\"Tasks/task.md\"],\"pendingCount\":1,\"diagnostics\":[{\"code\":null}]}",
+      "expectedMutationId": "original",
+      "accepted": false,
+      "notice": false,
+      "layer": "full-shared-schema"
+    },
+    {
+      "id": "missing-code",
+      "receiptJson": "{\"schemaVersion\":1,\"mutationId\":\"original\",\"applied\":true,\"taskPath\":\"Tasks/task.md\",\"cleanupPending\":false,\"paths\":[\"Tasks/task.md\"],\"pendingCount\":1,\"diagnostics\":[{}]}",
+      "expectedMutationId": "original",
+      "accepted": false,
+      "notice": false,
+      "layer": "full-shared-schema"
+    },
+    {
+      "id": "extra-field",
+      "receiptJson": "{\"schemaVersion\":1,\"mutationId\":\"original\",\"applied\":true,\"taskPath\":\"Tasks/task.md\",\"cleanupPending\":false,\"paths\":[\"Tasks/task.md\"],\"pendingCount\":1,\"diagnostics\":[{\"code\":\"template_missing\",\"content\":\"untrusted\"}]}",
+      "expectedMutationId": "original",
+      "accepted": false,
+      "notice": false,
+      "layer": "full-shared-schema"
+    },
+    {
+      "id": "duplicate-codes",
+      "receiptJson": "{\"schemaVersion\":1,\"mutationId\":\"original\",\"applied\":true,\"taskPath\":\"Tasks/task.md\",\"cleanupPending\":false,\"paths\":[\"Tasks/task.md\"],\"pendingCount\":1,\"diagnostics\":[{\"code\":\"template_missing\"},{\"code\":\"template_missing\"}]}",
+      "expectedMutationId": "original",
+      "accepted": false,
+      "notice": false,
+      "layer": "full-shared-schema"
+    },
+    {
+      "id": "too-many",
+      "receiptJson": "{\"schemaVersion\":1,\"mutationId\":\"original\",\"applied\":true,\"taskPath\":\"Tasks/task.md\",\"cleanupPending\":false,\"paths\":[\"Tasks/task.md\"],\"pendingCount\":1,\"diagnostics\":[{\"code\":\"template_missing\"},{\"code\":\"template_missing\"},{\"code\":\"template_missing\"},{\"code\":\"template_missing\"}]}",
+      "expectedMutationId": "original",
+      "accepted": false,
+      "notice": false,
+      "layer": "full-shared-schema"
+    },
+    {
+      "id": "wrong-schema-version",
+      "receiptJson": "{\"schemaVersion\":2,\"mutationId\":\"original\",\"applied\":true,\"taskPath\":\"Tasks/task.md\",\"cleanupPending\":false,\"paths\":[\"Tasks/task.md\"],\"pendingCount\":1,\"diagnostics\":[]}",
+      "expectedMutationId": "original",
+      "accepted": false,
+      "notice": false,
+      "layer": "full-shared-schema"
+    },
+    {
+      "id": "wrong-applied",
+      "receiptJson": "{\"schemaVersion\":1,\"mutationId\":\"original\",\"applied\":\"true\",\"taskPath\":\"Tasks/task.md\",\"cleanupPending\":false,\"paths\":[\"Tasks/task.md\"],\"pendingCount\":1,\"diagnostics\":[]}",
+      "expectedMutationId": "original",
+      "accepted": false,
+      "notice": false,
+      "layer": "full-shared-schema"
+    },
+    {
+      "id": "wrong-task-path",
+      "receiptJson": "{\"schemaVersion\":1,\"mutationId\":\"original\",\"applied\":true,\"taskPath\":5,\"cleanupPending\":false,\"paths\":[\"Tasks/task.md\"],\"pendingCount\":1,\"diagnostics\":[]}",
+      "expectedMutationId": "original",
+      "accepted": false,
+      "notice": false,
+      "layer": "full-shared-schema"
+    },
+    {
+      "id": "unknown-receipt-field",
+      "receiptJson": "{\"schemaVersion\":1,\"mutationId\":\"original\",\"applied\":true,\"taskPath\":\"Tasks/task.md\",\"cleanupPending\":false,\"paths\":[\"Tasks/task.md\"],\"pendingCount\":1,\"diagnostics\":[],\"extra\":null}",
+      "expectedMutationId": "original",
+      "accepted": false,
+      "notice": false,
+      "layer": "full-shared-schema"
+    },
+    {
+      "id": "missing-applied",
+      "receiptJson": "{\"schemaVersion\":1,\"mutationId\":\"original\",\"taskPath\":\"Tasks/task.md\",\"cleanupPending\":false,\"paths\":[\"Tasks/task.md\"],\"pendingCount\":1,\"diagnostics\":[]}",
+      "expectedMutationId": "original",
+      "accepted": false,
+      "notice": false,
+      "layer": "full-shared-schema"
+    },
+    {
+      "id": "duplicate-diagnostics-raw",
+      "receiptJson": "{\"schemaVersion\":1,\"mutationId\":\"original\",\"applied\":true,\"taskPath\":null,\"cleanupPending\":false,\"paths\":[],\"pendingCount\":0,\"diagnostics\":[],\"diagnostics\":[]}",
+      "expectedMutationId": "original",
+      "accepted": false,
+      "notice": false,
+      "layer": "raw-unique-object-keys"
+    },
+    {
+      "id": "escaped-equivalent-code-key-raw",
+      "receiptJson": "{\"schemaVersion\":1,\"mutationId\":\"original\",\"applied\":true,\"taskPath\":null,\"cleanupPending\":false,\"paths\":[],\"pendingCount\":0,\"diagnostics\":[{\"code\":\"template_missing\",\"co\\u0064e\":\"template_missing\"}]}",
+      "expectedMutationId": "original",
+      "accepted": false,
+      "notice": false,
+      "layer": "raw-unique-object-keys"
+    },
+    {
+      "id": "foreign-action",
+      "receiptJson": "{\"schemaVersion\":1,\"mutationId\":\"wrong\",\"applied\":true,\"taskPath\":null,\"cleanupPending\":false,\"paths\":[],\"pendingCount\":0,\"diagnostics\":[]}",
+      "expectedMutationId": "original",
+      "accepted": false,
+      "notice": false,
+      "layer": "request-identity"
+    }
+  ]
+}

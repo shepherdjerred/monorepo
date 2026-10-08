@@ -100,7 +100,7 @@ public struct KeychainTokenStore: ServerTokenStore {
         }
         guard let data = item as? Data, let token = String(data: data, encoding: .utf8) else {
             return .failure(
-                .Invariant(message: "the stored server token is not readable text")
+                .Invariant(detail: "the stored server token is not readable text")
             )
         }
         return .success(token)
@@ -157,7 +157,7 @@ public struct KeychainTokenStore: ServerTokenStore {
     /// every other "something this Mac could not do", and `TaskNotesStore`
     /// already routes that to the connection banner.
     private static func failure(_ what: String, _ status: OSStatus) -> CoreError {
-        .Invariant(message: "\(what) (Keychain status \(status))")
+        .Invariant(detail: "\(what) (Keychain status \(status))")
     }
 }
 

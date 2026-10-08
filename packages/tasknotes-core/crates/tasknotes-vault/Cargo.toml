@@ -8,6 +8,10 @@ license.workspace = true
 publish.workspace = true
 
 [dependencies]
+chrono.workspace = true
+chrono-tz.workspace = true
+regex.workspace = true
+tasknotes-core = { path = "../tasknotes-core" }
 semver.workspace = true
 hex.workspace = true
 indexmap.workspace = true
@@ -20,6 +24,8 @@ sha2.workspace = true
 
 [dev-dependencies]
 proptest.workspace = true
+tasknotes-runtime = { path = "../tasknotes-runtime" }
+tempfile.workspace = true
 
 [lints]
 workspace = true

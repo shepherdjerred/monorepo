@@ -21,7 +21,7 @@
 	<true/>
 
 	<!--
-	  Outbound only: the app talks to a TaskNotes server over HTTP. It never
+	  Outbound only: the app connects directly to Obsidian Sync over TLS. It never
 	  listens, so there is no `network.server` entitlement.
 	-->
 	<key>com.apple.security.network.client</key>

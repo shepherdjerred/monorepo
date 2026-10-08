@@ -21,6 +21,7 @@ namespace TaskNotes.Windows.Tests
         internal TaskListQuery? LastAddContext { get; private set; }
         internal TaskListQuery? LastQuery { get; private set; }
         internal TaskEditInput? LastEdit { get; private set; }
+        internal Func<TaskEditInput, CancellationToken, Task>? Update { get; set; }
         internal string? LastDeletedId { get; private set; }
         internal QuickAddPreview Preview { get; set; } =
             new("Preview", null, "normal", [], [], [], null);
@@ -89,7 +90,7 @@ namespace TaskNotes.Windows.Tests
         )
         {
             LastEdit = input;
-            return Task.CompletedTask;
+            return Update?.Invoke(input, cancellationToken) ?? Task.CompletedTask;
         }
 
         public Task DeleteTaskAsync(string taskId, CancellationToken cancellationToken = default)

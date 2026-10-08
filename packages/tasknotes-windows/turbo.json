@@ -19,6 +19,11 @@
         "USERPROFILE"
       ],
       "inputs": [
+        "$TURBO_ROOT$/packages/tasknotes-fixtures/schema/facet-engine.schema.json",
+        "$TURBO_ROOT$/packages/tasknotes-fixtures/schema/obsidian-sync.schema.json",
+        "$TURBO_ROOT$/packages/tasknotes-fixtures/vault/facet-contract.json",
+        "$TURBO_ROOT$/packages/tasknotes-fixtures/vault/facet-raw-contract.json",
+        "$TURBO_ROOT$/packages/tasknotes-core/bindings/csharp/**",
         "src/**",
         "tests/**",
         "Directory.Build.props",

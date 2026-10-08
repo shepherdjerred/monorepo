@@ -1,6 +1,7 @@
 {
   "name": "tasknotes-windows",
   "private": true,
+  "license": "GPL-3.0-only",
   "type": "module",
   "description": "Native Windows TaskNotes client over the shared Rust core",
   "devDependencies": {
@@ -17,7 +18,8 @@
     "tasknotes-core": "workspace:*",
     "tasknotes-server": "workspace:*",
     "typescript": "^6.0.3",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "vitest": "5.0.1"
   },
   "scripts": {
     "build": "bun scripts/dotnet.ts build TaskNotes.Windows.Portable.slnx --configuration Release --property:RestoreLockedMode=true",
@@ -26,7 +28,8 @@
     "format:check": "bun scripts/dotnet.ts tool restore && bun scripts/dotnet.ts csharpier check src tests && bun scripts/xaml-format.ts --check",
     "analysis": "bun run typecheck && bun scripts/quality-check.ts && bunx jscpd --config .jscpd.json --silent",
     "lint": "bun run format:check && bun run analysis && bun node_modules/eslint/bin/eslint.js --cache .",
-    "test": "bun run test:unit && bun run test:integration",
+    "test": "bun run test:scripts && bun run test:unit && bun run test:integration",
+    "test:scripts": "bun --no-install --bun vitest --config ../../vitest.config.ts run scripts",
     "test:unit": "bun scripts/test.ts unit",
     "test:integration": "bun scripts/test.ts integration",
     "test:winui": "bun scripts/test.ts winui",
@@ -43,6 +46,7 @@
     "windows:build": "bun scripts/windows.ts build",
     "windows:test": "bun scripts/windows.ts test",
     "windows:package": "bun scripts/windows.ts package",
+    "windows:store-package": "bun scripts/windows.ts store-package",
     "windows:cross-package": "bun scripts/cross-package.ts",
     "windows:run": "bun scripts/windows.ts run",
     "windows:parity-check": "bun scripts/parity-check.ts",

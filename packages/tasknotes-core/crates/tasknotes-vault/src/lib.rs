@@ -4,10 +4,30 @@
 //! hosts must compare the supplied content revision before committing them.
 #![forbid(unsafe_code)]
 
+pub mod compat;
 pub mod config;
+pub mod configuration;
+pub mod creation;
+pub mod detection_policy;
 pub mod document;
+mod effective;
+pub mod filename;
+pub mod instances;
+pub mod json_boundary;
+pub mod links;
 pub mod mapping;
+pub mod migration;
+pub mod migration_policy;
+pub mod operations;
 pub mod path;
+mod plugin_boundary;
+pub mod progression;
+pub mod relationships;
+pub mod reminder_schedule;
+pub mod templating;
+pub mod temporal;
+pub mod tracking;
+pub mod validation;
 
 use thiserror::Error;
 

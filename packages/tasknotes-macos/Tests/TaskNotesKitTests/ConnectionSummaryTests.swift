@@ -149,7 +149,7 @@ struct ConnectionSummaryTests {
     @MainActor
     func aFailedStoreReadsAsUnavailable() {
         let failed: Result<TaskNotesStore, CoreError> = .failure(
-            .Invariant(message: "Application Support is unwritable")
+            .Invariant(detail: "Application Support is unwritable")
         )
         #expect(ConnectionSummary.of(store: failed).reading == .unavailable)
         #expect(ConnectionSummary.of(store: failed).title == "Unavailable")

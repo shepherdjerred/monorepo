@@ -3,6 +3,8 @@
 **/obj/
 AppPackages/
 artifacts/
+TestResults/
 BundleArtifacts/
 *.pfx
 Directory.Build.local.props
+generated/notices/

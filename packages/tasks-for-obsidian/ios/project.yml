@@ -1,0 +1,128 @@
+name: TasksForObsidian
+options:
+  minimumXcodeGenVersion: "2.46.0"
+  deploymentTarget:
+    iOS: "18.0"
+packages:
+  FacetApple:
+    path: ../../tasknotes-macos
+settings:
+  base:
+    SWIFT_VERSION: "6"
+    SWIFT_STRICT_CONCURRENCY: complete
+    SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
+    IPHONEOS_DEPLOYMENT_TARGET: "18.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_STYLE: Automatic
+    TARGETED_DEVICE_FAMILY: "1,2"
+targets:
+  TasksForObsidian:
+    type: application
+    platform: iOS
+    sources:
+      - path: Facet
+      - path: TasksWidget/TimeTrackingAttributes.swift
+      - path: TasksForObsidian/Intents
+      - path: TasksForObsidian/Images.xcassets
+      - path: TasksForObsidian/PrivacyInfo.xcprivacy
+      - path: ../../tasknotes-macos/Resources/ios/ThirdPartyNotices.txt
+        buildPhase: resources
+      - path: ../../tasknotes-macos/Resources/ios/FirstPartyLicense.txt
+        buildPhase: resources
+      - path: ../../tasknotes-macos/Resources/ios/native-license-inventory.json
+        buildPhase: resources
+    dependencies:
+      - package: FacetApple
+        product: TaskNotesFacetUI
+      - package: FacetApple
+        product: TaskNotesKit
+      - target: TasksWidget
+        embed: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.reactjs.native.example.TasksForObsidian
+        PRODUCT_NAME: TasksForObsidian
+        CODE_SIGN_ENTITLEMENTS: TasksForObsidian/TasksForObsidian.entitlements
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    info:
+      path: Facet/Info.plist
+      properties:
+        CFBundleDisplayName: Facet
+        CFBundleName: Facet
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        ITSAppUsesNonExemptEncryption: true
+        NSSupportsLiveActivities: true
+        LSSupportsOpeningDocumentsInPlace: true
+        UISupportsDocumentBrowser: false
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        CFBundleURLTypes:
+          - CFBundleURLName: com.tasksforobsidian
+            CFBundleURLSchemes:
+              - tasknotes
+        UIBackgroundModes:
+          - processing
+          - fetch
+        BGTaskSchedulerPermittedIdentifiers:
+          - org.reactjs.native.example.TasksForObsidian.sync
+  TasksWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: TasksWidget
+        excludes:
+          - "*.entitlements"
+      - path: TasksForObsidian/Intents/StopTrackingIntent.swift
+      - path: ../../tasknotes-macos/Resources/ios/ThirdPartyNotices.txt
+        buildPhase: resources
+      - path: ../../tasknotes-macos/Resources/ios/FirstPartyLicense.txt
+        buildPhase: resources
+      - path: ../../tasknotes-macos/Resources/ios/native-license-inventory.json
+        buildPhase: resources
+    dependencies:
+      - package: FacetApple
+        product: TaskNotesKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.reactjs.native.example.TasksForObsidian.TasksWidget
+        CODE_SIGN_ENTITLEMENTS: TasksWidget/TasksWidget.entitlements
+        APPLICATION_EXTENSION_API_ONLY: YES
+        SKIP_INSTALL: YES
+    info:
+      path: TasksWidget/Info.plist
+      properties:
+        CFBundleDisplayName: Facet
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+  TasksForObsidianUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: FacetUITests
+    dependencies:
+      - target: TasksForObsidian
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.reactjs.native.example.TasksForObsidian.UITests
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  TasksForObsidian:
+    build:
+      targets:
+        TasksForObsidian: all
+    run:
+      config: Debug
+    archive:
+      config: Release
+    test:
+      config: Debug
+      targets:
+        - TasksForObsidianUITests

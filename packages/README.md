@@ -33,15 +33,16 @@ hold only scoped invariants that agents must keep in context.
 
 ## TaskNotes
 
-| Package                                   | Description                                                    |
-| ----------------------------------------- | -------------------------------------------------------------- |
-| [tasknotes-core](tasknotes-core/)         | Shared Rust core (domain, sync, recurrence) + UniFFI bindings  |
-| [tasknotes-macos](tasknotes-macos/)       | Facet for macOS — native SwiftUI app over the Rust core        |
-| [tasknotes-server](tasknotes-server/)     | TaskNotes sync server (Bun + Hono)                             |
-| [tasknotes-windows](tasknotes-windows/)   | Facet for Windows — native WinUI app over the Rust core        |
-| [tasknotes-types](tasknotes-types/)       | Shared TypeScript/Zod schemas for TaskNotes                    |
-| [tasknotes-fixtures](tasknotes-fixtures/) | Language-neutral JSON oracles shared by the TS and Rust cores  |
-| [tasks-for-obsidian](tasks-for-obsidian/) | Facet for iOS — React Native app synced with an Obsidian vault |
+| Package                                   | Description                                                   |
+| ----------------------------------------- | ------------------------------------------------------------- |
+| [tasknotes-core](tasknotes-core/)         | Shared Rust core (domain, sync, recurrence) + UniFFI bindings |
+| [tasknotes-android](tasknotes-android/)   | Facet for Android — native Compose app over the Rust core     |
+| [tasknotes-macos](tasknotes-macos/)       | Facet for macOS — native SwiftUI app over the Rust core       |
+| [tasknotes-server](tasknotes-server/)     | TaskNotes sync server (Bun + Hono)                            |
+| [tasknotes-windows](tasknotes-windows/)   | Facet for Windows — native WinUI app over the Rust core       |
+| [tasknotes-types](tasknotes-types/)       | Shared TypeScript/Zod schemas for TaskNotes                   |
+| [tasknotes-fixtures](tasknotes-fixtures/) | Language-neutral JSON oracles shared by the TS and Rust cores |
+| [tasks-for-obsidian](tasks-for-obsidian/) | Facet for iOS — native SwiftUI app over the Rust core         |
 
 ## Websites
 

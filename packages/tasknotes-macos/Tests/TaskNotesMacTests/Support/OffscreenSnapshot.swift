@@ -219,8 +219,8 @@ enum OffscreenSnapshot {
     /// raw buffer: `bitmapData` is an `UnsafeMutablePointer`, and this package
     /// builds with strict memory safety on.
     private static func distinctColors(in rep: NSBitmapImageRep) -> Int {
-        let strideX = max(1, rep.pixelsWide / 40)
-        let strideY = max(1, rep.pixelsHigh / 40)
+        let strideX = max(1, rep.pixelsWide / 160)
+        let strideY = max(1, rep.pixelsHigh / 160)
         var seen: Set<Int> = []
         for y in stride(from: 0, to: rep.pixelsHigh, by: strideY) {
             for x in stride(from: 0, to: rep.pixelsWide, by: strideX) {

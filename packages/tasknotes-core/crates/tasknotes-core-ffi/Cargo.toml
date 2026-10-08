@@ -43,10 +43,18 @@ required-features = ["cli"]
 # workspace pin as the core; no new dependency enters the lockfile.
 chrono = { workspace = true }
 serde_json = { workspace = true }
+serde = { workspace = true }
+zeroize = { workspace = true }
 tasknotes-core = { path = "../tasknotes-core" }
 tasknotes-vault = { path = "../tasknotes-vault" }
+tasknotes-runtime = { path = "../tasknotes-runtime" }
+obsidian-sync = { path = "../obsidian-sync" }
 thiserror = { workspace = true }
 uniffi = { workspace = true }
+
+[dev-dependencies]
+tempfile.workspace = true
+stats_alloc.workspace = true
 
 [lints]
 workspace = true

@@ -16,6 +16,8 @@ const child = Bun.spawn(
     "--package",
     "tasknotes-vault",
     "--package",
+    "tasknotes-runtime",
+    "--package",
     "obsidian-sync",
     "--all-features",
     "--all-targets",

@@ -18,6 +18,8 @@ namespace TaskNotes.Windows.Host
         private readonly RetryTimerScheduler _scheduler;
         private readonly ILogger<TaskNotesStore> _logger;
         private readonly CompletionUndoCoordinator _completionUndo = new();
+        private readonly object _publicationGate = new();
+        private long _publicationSequence;
         private Core.FfiSyncEngine? _engine;
         private Core.TaskNotesApi? _api;
         private BearerHttpTransport? _transport;
@@ -1026,6 +1028,7 @@ namespace TaskNotes.Windows.Host
                     : null
             )
             {
+                PublicationSequence = ++_publicationSequence,
                 AllTasks = all.Tasks,
                 VisibleTasks = visible.Tasks,
                 Query = _query,
@@ -1184,12 +1187,12 @@ namespace TaskNotes.Windows.Host
         {
             return error switch
             {
-                Core.CoreException.Invariant invariant => invariant.message,
-                Core.CoreException.Network network => network.message,
-                Core.CoreException.Api api => $"{api.message} (HTTP {api.status})",
-                Core.CoreException.Validation validation => validation.message,
-                Core.CoreException.NotFound notFound => notFound.message,
-                Core.CoreException.Connection connection => connection.message,
+                Core.CoreException.Invariant invariant => invariant.detail,
+                Core.CoreException.Network network => network.detail,
+                Core.CoreException.Api api => $"{api.detail} (HTTP {api.status})",
+                Core.CoreException.Validation validation => validation.detail,
+                Core.CoreException.NotFound notFound => notFound.detail,
+                Core.CoreException.Connection connection => connection.detail,
                 _ => error.Message,
             };
         }
@@ -1316,8 +1319,13 @@ namespace TaskNotes.Windows.Host
 
         private void ApplyState(TaskNotesState state)
         {
-            State = state;
-            StateChanged?.Invoke(this, EventArgs.Empty);
+            lock (_publicationGate)
+            {
+                if (state.PublicationSequence < State.PublicationSequence)
+                    return;
+                State = state;
+                StateChanged?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         private void RetireEngine()

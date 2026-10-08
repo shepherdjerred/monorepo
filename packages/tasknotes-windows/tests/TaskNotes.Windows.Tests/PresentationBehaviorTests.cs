@@ -235,8 +235,10 @@ namespace TaskNotes.Windows.Tests
             Assert.AreEqual("Blocked by another task", editor.DependencyLabel);
             Assert.AreEqual("Tracked: 12 minutes", editor.TrackedTimeLabel);
             Assert.AreEqual("Stop timer", editor.TimerLabel);
-            editor.EstimateValue = 31.6;
-            Assert.AreEqual(32u, editor.TimeEstimate);
+            _ = Assert.ThrowsExactly<ArgumentException>(() => editor.EstimateValue = 31.6);
+            Assert.AreEqual(45u, editor.TimeEstimate);
+            editor.EstimateText = "31.6";
+            Assert.AreEqual("31.6", editor.EstimateText);
             editor.EstimateValue = double.NaN;
             Assert.IsNull(editor.TimeEstimate);
             await editor.LoadTimeAsync(TestContext.CancellationToken);

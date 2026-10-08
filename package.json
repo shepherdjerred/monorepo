@@ -161,6 +161,7 @@
     "packages/storm-theme",
     "packages/streambot",
     "packages/tasknotes-core",
+    "packages/tasknotes-android",
     "packages/tasknotes-e2e",
     "packages/tasknotes-windows",
     "packages/tasknotes-fixtures",

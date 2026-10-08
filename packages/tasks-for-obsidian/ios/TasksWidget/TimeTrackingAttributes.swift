@@ -1,14 +1,18 @@
 import ActivityKit
 import Foundation
 
-struct TimeTrackingAttributes: ActivityAttributes {
-  public struct ContentState: Codable, Hashable {
-    var elapsedSeconds: Int
-    var isPaused: Bool
+nonisolated struct TimeTrackingAttributes: ActivityAttributes {
+  struct ContentState: Codable, Hashable {
+    let taskTitle: String
+    let projectLabels: [String]
+    let taskRevision: String
+    let elapsedSeconds: UInt64
+    let observedAt: Date
   }
 
-  var taskId: String
-  var taskTitle: String
-  var projectName: String?
-  var startTime: Date
+  let profileID: String
+  let engineIdentity: String
+  let sessionID: String
+  let taskPath: String
+  let startedAt: Date
 }

@@ -1,0 +1,199 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/.mise.toml",
+        "$TURBO_ROOT$/LICENSE",
+        "$TURBO_ROOT$/packages/tasknotes-core/crates/*/src/**",
+        "$TURBO_ROOT$/packages/tasknotes-core/crates/*/build.rs",
+        "$TURBO_ROOT$/packages/tasknotes-core/**/Cargo.toml",
+        "$TURBO_ROOT$/packages/tasknotes-core/Cargo.lock",
+        "$TURBO_ROOT$/packages/tasknotes-core/rust-toolchain.toml",
+        "$TURBO_ROOT$/packages/tasknotes-core/uniffi.toml",
+        "$TURBO_ROOT$/packages/tasknotes-core/.cargo/**",
+        "$TURBO_ROOT$/packages/tasknotes-core/xtask/src/**",
+        "$TURBO_ROOT$/packages/tasknotes-core/bindings/kotlin/**",
+        "$TURBO_ROOT$/packages/tasknotes-fixtures/schema/**",
+        "$TURBO_ROOT$/packages/tasknotes-fixtures/vault/facet*-contract.json",
+        "$TURBO_ROOT$/packages/tasknotes-macos/scripts/generate-native-notices.ts",
+        "$TURBO_ROOT$/packages/tasknotes-macos/scripts/license-texts/**",
+        "!**/build/**",
+        "!**/.gradle/**",
+        "!**/.cxx/**",
+        "!**/node_modules/**"
+      ],
+      "passThroughEnv": [
+        "ANDROID_HOME",
+        "ANDROID_SDK_ROOT",
+        "JAVA_HOME",
+        "MISE_DATA_DIR"
+      ],
+      "dependsOn": ["^build"],
+      "outputs": ["app/build/outputs/**", "build/rust-jni/**"]
+    },
+    "typecheck": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/.mise.toml",
+        "$TURBO_ROOT$/LICENSE",
+        "$TURBO_ROOT$/packages/tasknotes-core/crates/*/src/**",
+        "$TURBO_ROOT$/packages/tasknotes-core/crates/*/build.rs",
+        "$TURBO_ROOT$/packages/tasknotes-core/**/Cargo.toml",
+        "$TURBO_ROOT$/packages/tasknotes-core/Cargo.lock",
+        "$TURBO_ROOT$/packages/tasknotes-core/rust-toolchain.toml",
+        "$TURBO_ROOT$/packages/tasknotes-core/uniffi.toml",
+        "$TURBO_ROOT$/packages/tasknotes-core/.cargo/**",
+        "$TURBO_ROOT$/packages/tasknotes-core/xtask/src/**",
+        "$TURBO_ROOT$/packages/tasknotes-core/bindings/kotlin/**",
+        "$TURBO_ROOT$/packages/tasknotes-fixtures/schema/**",
+        "$TURBO_ROOT$/packages/tasknotes-fixtures/vault/facet*-contract.json",
+        "$TURBO_ROOT$/packages/tasknotes-macos/scripts/generate-native-notices.ts",
+        "$TURBO_ROOT$/packages/tasknotes-macos/scripts/license-texts/**",
+        "!**/build/**",
+        "!**/.gradle/**",
+        "!**/.cxx/**",
+        "!**/node_modules/**"
+      ],
+      "passThroughEnv": [
+        "ANDROID_HOME",
+        "ANDROID_SDK_ROOT",
+        "JAVA_HOME",
+        "MISE_DATA_DIR"
+      ],
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "test": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/.mise.toml",
+        "$TURBO_ROOT$/LICENSE",
+        "$TURBO_ROOT$/packages/tasknotes-core/crates/*/src/**",
+        "$TURBO_ROOT$/packages/tasknotes-core/crates/*/build.rs",
+        "$TURBO_ROOT$/packages/tasknotes-core/**/Cargo.toml",
+        "$TURBO_ROOT$/packages/tasknotes-core/Cargo.lock",
+        "$TURBO_ROOT$/packages/tasknotes-core/rust-toolchain.toml",
+        "$TURBO_ROOT$/packages/tasknotes-core/uniffi.toml",
+        "$TURBO_ROOT$/packages/tasknotes-core/.cargo/**",
+        "$TURBO_ROOT$/packages/tasknotes-core/xtask/src/**",
+        "$TURBO_ROOT$/packages/tasknotes-core/bindings/kotlin/**",
+        "$TURBO_ROOT$/packages/tasknotes-fixtures/schema/**",
+        "$TURBO_ROOT$/packages/tasknotes-fixtures/vault/facet*-contract.json",
+        "$TURBO_ROOT$/packages/tasknotes-macos/scripts/generate-native-notices.ts",
+        "$TURBO_ROOT$/packages/tasknotes-macos/scripts/license-texts/**",
+        "!**/build/**",
+        "!**/.gradle/**",
+        "!**/.cxx/**",
+        "!**/node_modules/**"
+      ],
+      "passThroughEnv": [
+        "ANDROID_HOME",
+        "ANDROID_SDK_ROOT",
+        "JAVA_HOME",
+        "MISE_DATA_DIR"
+      ],
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "test:ci": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/.mise.toml",
+        "$TURBO_ROOT$/LICENSE",
+        "$TURBO_ROOT$/packages/tasknotes-core/crates/*/src/**",
+        "$TURBO_ROOT$/packages/tasknotes-core/crates/*/build.rs",
+        "$TURBO_ROOT$/packages/tasknotes-core/**/Cargo.toml",
+        "$TURBO_ROOT$/packages/tasknotes-core/Cargo.lock",
+        "$TURBO_ROOT$/packages/tasknotes-core/rust-toolchain.toml",
+        "$TURBO_ROOT$/packages/tasknotes-core/uniffi.toml",
+        "$TURBO_ROOT$/packages/tasknotes-core/.cargo/**",
+        "$TURBO_ROOT$/packages/tasknotes-core/xtask/src/**",
+        "$TURBO_ROOT$/packages/tasknotes-core/bindings/kotlin/**",
+        "$TURBO_ROOT$/packages/tasknotes-fixtures/schema/**",
+        "$TURBO_ROOT$/packages/tasknotes-fixtures/vault/facet*-contract.json",
+        "$TURBO_ROOT$/packages/tasknotes-macos/scripts/generate-native-notices.ts",
+        "$TURBO_ROOT$/packages/tasknotes-macos/scripts/license-texts/**",
+        "!**/build/**",
+        "!**/.gradle/**",
+        "!**/.cxx/**",
+        "!**/node_modules/**"
+      ],
+      "passThroughEnv": [
+        "ANDROID_HOME",
+        "ANDROID_SDK_ROOT",
+        "JAVA_HOME",
+        "MISE_DATA_DIR"
+      ],
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "test:report": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/.mise.toml",
+        "$TURBO_ROOT$/LICENSE",
+        "$TURBO_ROOT$/packages/tasknotes-core/crates/*/src/**",
+        "$TURBO_ROOT$/packages/tasknotes-core/crates/*/build.rs",
+        "$TURBO_ROOT$/packages/tasknotes-core/**/Cargo.toml",
+        "$TURBO_ROOT$/packages/tasknotes-core/Cargo.lock",
+        "$TURBO_ROOT$/packages/tasknotes-core/rust-toolchain.toml",
+        "$TURBO_ROOT$/packages/tasknotes-core/uniffi.toml",
+        "$TURBO_ROOT$/packages/tasknotes-core/.cargo/**",
+        "$TURBO_ROOT$/packages/tasknotes-core/xtask/src/**",
+        "$TURBO_ROOT$/packages/tasknotes-core/bindings/kotlin/**",
+        "$TURBO_ROOT$/packages/tasknotes-fixtures/schema/**",
+        "$TURBO_ROOT$/packages/tasknotes-fixtures/vault/facet*-contract.json",
+        "$TURBO_ROOT$/packages/tasknotes-macos/scripts/generate-native-notices.ts",
+        "$TURBO_ROOT$/packages/tasknotes-macos/scripts/license-texts/**",
+        "!**/build/**",
+        "!**/.gradle/**",
+        "!**/.cxx/**",
+        "!**/node_modules/**"
+      ],
+      "passThroughEnv": [
+        "ANDROID_HOME",
+        "ANDROID_SDK_ROOT",
+        "JAVA_HOME",
+        "MISE_DATA_DIR"
+      ],
+      "dependsOn": ["^build"],
+      "outputs": [],
+      "cache": false
+    },
+    "lint": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/.mise.toml",
+        "$TURBO_ROOT$/LICENSE",
+        "$TURBO_ROOT$/packages/tasknotes-core/crates/*/src/**",
+        "$TURBO_ROOT$/packages/tasknotes-core/crates/*/build.rs",
+        "$TURBO_ROOT$/packages/tasknotes-core/**/Cargo.toml",
+        "$TURBO_ROOT$/packages/tasknotes-core/Cargo.lock",
+        "$TURBO_ROOT$/packages/tasknotes-core/rust-toolchain.toml",
+        "$TURBO_ROOT$/packages/tasknotes-core/uniffi.toml",
+        "$TURBO_ROOT$/packages/tasknotes-core/.cargo/**",
+        "$TURBO_ROOT$/packages/tasknotes-core/xtask/src/**",
+        "$TURBO_ROOT$/packages/tasknotes-core/bindings/kotlin/**",
+        "$TURBO_ROOT$/packages/tasknotes-fixtures/schema/**",
+        "$TURBO_ROOT$/packages/tasknotes-fixtures/vault/facet*-contract.json",
+        "$TURBO_ROOT$/packages/tasknotes-macos/scripts/generate-native-notices.ts",
+        "$TURBO_ROOT$/packages/tasknotes-macos/scripts/license-texts/**",
+        "!**/build/**",
+        "!**/.gradle/**",
+        "!**/.cxx/**",
+        "!**/node_modules/**"
+      ],
+      "passThroughEnv": [
+        "ANDROID_HOME",
+        "ANDROID_SDK_ROOT",
+        "JAVA_HOME",
+        "MISE_DATA_DIR"
+      ],
+      "dependsOn": ["^build"],
+      "outputs": []
+    }
+  }
+}

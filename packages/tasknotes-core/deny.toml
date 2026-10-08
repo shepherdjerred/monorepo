@@ -29,12 +29,9 @@ ignore = []
 
 [licenses]
 version = 2
-# Allow-list only: this crate ships inside a signed, notarized, closed-source
-# macOS app and a Windows app, so a copyleft dependency is a distribution
-# problem, not a style problem. GPL-*, AGPL-*, LGPL-* and OpenSSL are excluded
-# by being absent — cargo-deny's `version = 2` license config has no `deny`
-# list, and an allow-list is the stronger formulation anyway (a new copyleft
-# licence nobody has heard of is rejected by default).
+# Registry dependencies retain a reviewed allow-list. The owner's explicit
+# GPL version 3 grant applies only to the six first-party workspace packages
+# listed below; it does not blanket-approve new third-party copyleft licenses.
 allow = [
   "Apache-2.0",
   "Apache-2.0 WITH LLVM-exception",
@@ -45,9 +42,18 @@ allow = [
 ]
 confidence-threshold = 0.93
 exceptions = [
+  { name = "tasknotes-core", version = "=0.1.0", allow = ["GPL-3.0-only"] },
+  { name = "tasknotes-core-ffi", version = "=0.1.0", allow = ["GPL-3.0-only"] },
+  { name = "tasknotes-vault", version = "=0.1.0", allow = ["GPL-3.0-only"] },
+  { name = "tasknotes-runtime", version = "=0.1.0", allow = ["GPL-3.0-only"] },
+  { name = "obsidian-sync", version = "=0.1.0", allow = ["GPL-3.0-only"] },
+  { name = "xtask", version = "=0.1.0", allow = ["GPL-3.0-only"] },
   # serde-saphyr's byte decoder includes WHATWG tables under BSD-3-Clause.
   # Reviewed license terms retain attribution; no copyleft or runtime code loading.
   { name = "encoding_rs", version = "=0.8.42", allow = ["BSD-3-Clause"] },
+  # SQLite's hashlink dependency uses foldhash under the permissive zlib license.
+  # Retain the copyright/license notice in packaged third-party attribution.
+  { name = "foldhash", version = "=0.2.0", allow = ["Zlib"] },
 ]
 
 [bans]
@@ -73,12 +79,18 @@ skip-tree = []
 allow-build-scripts = [
   { name = "anyhow" },
   { name = "camino" },
+  # Pinned build.rs is empty unless optional filtering/case-insensitive features
+  # are enabled. Neither feature is enabled; all bundled IANA zones are retained.
+  { name = "chrono-tz", version = "=0.10.4" },
   # Version-specific SIMD cfg selection; reviewed build.rs has no I/O.
   { name = "encoding_rs", version = "=0.8.42" },
   { name = "fs-err" },
   { name = "getrandom" },
   { name = "iana-time-zone-haiku" },
   { name = "libc" },
+  # Compiles the pinned bundled SQLite amalgamation using cc. Reviewed build.rs
+  # has no network download; system-library discovery is unused with bundled.
+  { name = "libsqlite3-sys", version = "=0.38.2" },
   { name = "num-traits" },
   { name = "proc-macro2" },
   { name = "quote" },

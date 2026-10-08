@@ -2010,6 +2010,14 @@
         "vitest": "5.0.3",
       },
     },
+    "packages/tasknotes-android": {
+      "name": "tasknotes-android",
+      "devDependencies": {
+        "@tasknotes/fixtures": "workspace:*",
+        "tasknotes-core": "workspace:*",
+        "vitest": "5.0.1",
+      },
+    },
     "packages/tasknotes-core": {
       "name": "tasknotes-core",
       "devDependencies": {
@@ -2102,6 +2110,7 @@
         "tasknotes-core": "workspace:*",
         "tasknotes-server": "workspace:*",
         "typescript": "^6.0.3",
+        "vitest": "5.0.1",
         "zod": "^4.4.3",
       },
     },
@@ -8061,6 +8070,8 @@
     "tar-fs": ["tar-fs@3.1.3", "", { "dependencies": { "pump": "^3.0.0", "tar-stream": "^3.1.5" }, "optionalDependencies": { "bare-fs": "^4.0.1", "bare-path": "^3.0.0" } }, "sha512-/hU4AXnIdZu+Gvl1pk0oI5f5HxWsCJRtY2aFaJdk9VvyL48DWU6iU5WAIPG+wIi1YvWA6eTJvIviP/tMAZZNwQ=="],
 
     "tar-stream": ["tar-stream@3.2.0", "", { "dependencies": { "b4a": "^1.6.4", "bare-fs": "^4.5.5", "fast-fifo": "^1.2.0", "streamx": "^2.15.0" } }, "sha512-ojzvCvVaNp6aOTFmG7jaRD0meowIAuPc3cMMhSgKiVWws1GyHbGd/xvnyuRKcKlMpt3qvxx6r0hreCNITP9hIg=="],
+
+    "tasknotes-android": ["tasknotes-android@workspace:packages/tasknotes-android"],
 
     "tasknotes-core": ["tasknotes-core@workspace:packages/tasknotes-core"],
 

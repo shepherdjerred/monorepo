@@ -719,6 +719,34 @@
       ]
     },
     {
+      "package": "tasknotes-android",
+      "directory": "packages/tasknotes-android",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["scripts"]
+        },
+        {
+          "runner": "gradle",
+          "args": [
+            "--console=plain",
+            ":host:testDebugUnitTest",
+            ":app:testDebugUnitTest"
+          ]
+        }
+      ],
+      "excludedSuites": [
+        {
+          "path": "host/src/androidTest",
+          "reason": "Instrumentation requires an Android emulator or device and packaged Rust JNI artifacts; run android:runtime as the native runtime gate."
+        },
+        {
+          "path": "app/src/androidTest",
+          "reason": "Compose instrumentation requires an Android emulator or device; run android:runtime as the native runtime gate."
+        }
+      ]
+    },
+    {
       "package": "tasknotes-core",
       "directory": "packages/tasknotes-core",
       "steps": [
@@ -763,6 +791,7 @@
         }
       ],
       "steps": [
+        { "runner": "vitest", "args": ["scripts"] },
         {
           "runner": "dotnet",
           "args": [

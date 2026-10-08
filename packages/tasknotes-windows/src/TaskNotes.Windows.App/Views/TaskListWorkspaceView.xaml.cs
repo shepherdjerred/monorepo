@@ -134,6 +134,20 @@ namespace TaskNotes.Windows.App.Views
             RaiseLiveRegionChanged(StatusText);
         }
 
+        internal void SetSavedNotice(
+            TaskNotes.Windows.Host.FacetSavedNotice? notice,
+            string? maintenance
+        )
+        {
+            SavedText.Text = string.Join(
+                Environment.NewLine,
+                (notice?.Messages ?? []).Concat(maintenance is null ? [] : [maintenance])
+            );
+            SavedBar.IsOpen = notice is not null || maintenance is not null;
+            if (SavedBar.IsOpen)
+                RaiseLiveRegionChanged(SavedText);
+        }
+
         internal void FocusSearch(FocusState state)
         {
             _ = SearchBox.Focus(state);

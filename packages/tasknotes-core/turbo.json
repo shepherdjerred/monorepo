@@ -2,6 +2,29 @@
   "$schema": "https://turborepo.dev/schema.json",
   "extends": ["//"],
   "tasks": {
+    "generate": {
+      "inputs": [
+        "crates/**/*.rs",
+        "crates/**/Cargo.toml",
+        "crates/tasknotes-vault/src/defaults.json",
+        "xtask/**/*.rs",
+        "xtask/Cargo.toml",
+        "Cargo.toml",
+        "Cargo.lock",
+        "rust-toolchain.toml",
+        ".cargo/config.toml",
+        "uniffi.toml",
+        "tools/uniffi-bindgen-cs/**",
+        "$TURBO_ROOT$/packages/tasknotes-fixtures/schema/**",
+        "!target/**"
+      ],
+      "outputs": [
+        "bindings/Sources/**",
+        "bindings/ffi/**",
+        "bindings/csharp/**",
+        "bindings/kotlin/**"
+      ]
+    },
     // cargo keeps its own incremental artifacts in `target/`, which is
     // gitignored — and explicit input globs hash gitignored files, so it is
     // negated everywhere. No task declares outputs: turbo's win here is the
@@ -13,8 +36,10 @@
         "**/*.rs",
         "**/Cargo.toml",
         "Cargo.lock",
+        "rust-toolchain.toml",
         ".cargo/config.toml",
         "rustfmt.toml",
+        "crates/tasknotes-vault/src/defaults.json",
         "!target/**"
       ],
       "outputs": []
@@ -24,7 +49,14 @@
         "**/*.rs",
         "**/Cargo.toml",
         "Cargo.lock",
+        "rust-toolchain.toml",
         ".cargo/config.toml",
+        "ci/vault-reference.ts",
+        "crates/tasknotes-vault/src/defaults.json",
+        "$TURBO_ROOT$/packages/tasknotes-fixtures/scenarios/**",
+        "$TURBO_ROOT$/packages/tasknotes-fixtures/recurrence/**",
+        "$TURBO_ROOT$/packages/tasknotes-fixtures/vault/**",
+        "$TURBO_ROOT$/packages/tasknotes-fixtures/schema/**",
         "!target/**"
       ],
       "outputs": []
@@ -34,7 +66,14 @@
         "**/*.rs",
         "**/Cargo.toml",
         "Cargo.lock",
+        "rust-toolchain.toml",
         ".cargo/config.toml",
+        "ci/vault-reference.ts",
+        "crates/tasknotes-vault/src/defaults.json",
+        "$TURBO_ROOT$/packages/tasknotes-fixtures/scenarios/**",
+        "$TURBO_ROOT$/packages/tasknotes-fixtures/recurrence/**",
+        "$TURBO_ROOT$/packages/tasknotes-fixtures/vault/**",
+        "$TURBO_ROOT$/packages/tasknotes-fixtures/schema/**",
         "!target/**"
       ],
       "outputs": []
@@ -59,6 +98,7 @@
         "**/*.rs",
         "**/Cargo.toml",
         "Cargo.lock",
+        "rust-toolchain.toml",
         ".cargo/config.toml",
         "clippy.toml",
         "deny.toml",
@@ -72,6 +112,10 @@
         "bindings/Sources/**",
         "bindings/ffi/**",
         "bindings/csharp/**",
+        "bindings/kotlin/**",
+        "ci/vault-reference.ts",
+        "crates/tasknotes-vault/src/defaults.json",
+        "$TURBO_ROOT$/packages/tasknotes-fixtures/schema/**",
         "!target/**"
       ],
       "outputs": []
@@ -81,7 +125,9 @@
         "**/*.rs",
         "**/Cargo.toml",
         "Cargo.lock",
+        "rust-toolchain.toml",
         ".cargo/config.toml",
+        "crates/tasknotes-vault/src/defaults.json",
         "!target/**"
       ],
       "outputs": []

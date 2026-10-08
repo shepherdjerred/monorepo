@@ -25,7 +25,7 @@
   <Target Name="BuildTaskNotesNative" BeforeTargets="PrepareForBuild" Condition="'$(NeedsTaskNotesNative)' == 'true'">
     <Error Condition="'$(TaskNotesNativeFileName)' == ''" Text="TaskNotes native builds do not support this host operating system." />
     <Exec
-      Command="$(TaskNotesCargoBuild) --package tasknotes-core-ffi --lib $(TaskNotesRustProfileArgument)"
+      Command="$(TaskNotesCargoBuild) --locked --package tasknotes-core-ffi --lib $(TaskNotesRustProfileArgument)"
       WorkingDirectory="$(TaskNotesCoreRoot)" />
   </Target>
 

@@ -133,8 +133,26 @@ fn configuration_precedence_is_explicit_and_corruption_is_fatal()
         ConfigurationSource::Standard
     );
     assert_eq!(
-        TaskNotesConfiguration::resolve(Some(b"{}"), Some(b"not: [valid"), false)?.source,
+        TaskNotesConfiguration::resolve(
+            Some(b"{}"),
+            Some(b"title:\n  storage: frontmatter\n"),
+            false
+        )?
+        .source,
         ConfigurationSource::PluginDataJson
+    );
+    let selected = TaskNotesConfiguration::resolve(
+        Some(b"{}"),
+        Some(b"title:\n  storage: frontmatter\n"),
+        false,
+    )?;
+    assert!(
+        !selected.store_title_in_filename,
+        "unshadowed lower title section remains selected"
+    );
+    assert!(
+        TaskNotesConfiguration::resolve(Some(b"{}"), Some(b"not: [valid"), false).is_err(),
+        "a present corrupt lower provider must fail before section selection"
     );
     assert!(TaskNotesConfiguration::resolve(Some(b"not json"), None, true).is_err());
     assert!(

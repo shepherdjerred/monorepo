@@ -916,6 +916,2535 @@ public func FfiConverterTypeClock_lower(_ value: Clock) -> UInt64 {
 
 
 /**
+ * Platform folder/replica capabilities; callbacks run outside SQLite locks.
+ */
+public protocol FacetVaultFiles: AnyObject, Sendable {
+    
+    /**
+     * Return logical paths, excluding private host backup/application directories.
+     *
+     * # Errors
+     * Returns capability, permission, or provider failures.
+     */
+    func listFiles(profileId: String) throws  -> [String]
+    
+    /**
+     * Capture an immutable read image, or return absence for a missing regular file.
+     *
+     * # Errors
+     * Returns capability, permission, or provider failures.
+     */
+    func openFileSnapshot(profileId: String, path: String) throws  -> FacetFileSnapshot?
+    
+    /**
+     * Open one exact retained predecessor without loading its bytes.
+     *
+     * # Errors
+     * Returns wrong-owner, missing, changed or inaccessible backup failures.
+     */
+    func openDisplacedSnapshot(profileId: String, backupId: String) throws  -> FacetFileSnapshot
+    
+    /**
+     * Read one exact immutable range of at most one MiB.
+     *
+     * # Errors
+     * Returns wrong-owner, stale handle, invalid range or provider failures.
+     */
+    func readSnapshotChunk(profileId: String, snapshotId: String, offset: UInt64, length: UInt32) throws  -> Data
+    
+    /**
+     * Release only a temporary image; never acknowledge a durable predecessor.
+     *
+     * # Errors
+     * Returns unknown/wrong-owner handles or durable cleanup failures.
+     */
+    func closeSnapshot(profileId: String, snapshotId: String) throws 
+    
+    /**
+     * Persist or resume an exact staged intent, retaining its contiguous prefix.
+     *
+     * # Errors
+     * Returns changed intent, unsupported durability or provider failures.
+     */
+    func beginReplacement(profileId: String, operationId: String, path: String, expectedRevision: String?, size: UInt64, revision: String) throws  -> FacetReplacementStage
+    
+    /**
+     * Commit at most one MiB or verify an exact already-committed prefix retry.
+     *
+     * # Errors
+     * Returns changed/gapped/overlapping chunks or durable provider failures.
+     */
+    func writeReplacementChunk(profileId: String, stageId: String, offset: UInt64, bytes: Data) throws  -> FacetReplacementStage
+    
+    /**
+     * Verify the exact declared size/hash and retain an immutable sealed source.
+     *
+     * # Errors
+     * Returns incomplete/corrupt/unknown stages or durable provider failures.
+     */
+    func sealReplacement(profileId: String, stageId: String) throws  -> FacetReplacementStage
+    
+    /**
+     * Exchange a sealed stage/tombstone or replay its original durable outcome.
+     *
+     * # Errors
+     * Returns unsupported atomic capabilities or durable I/O failures.
+     */
+    func compareExchangeStaged(profileId: String, operationId: String, path: String, expectedRevision: String?, stageId: String?) throws  -> FacetStagedExchange
+    
+    /**
+     * Retire source/slot bytes after durable disposition, retaining exact receipts.
+     *
+     * # Errors
+     * Returns unknown/wrong-owner stages or unresolved predecessor/durability failures.
+     */
+    func discardReplacement(profileId: String, stageId: String) throws 
+    
+    /**
+     * Recover unacknowledged captured versions after process relaunch.
+     *
+     * # Errors
+     * Returns unavailable/corrupt backup storage failures.
+     */
+    func displacedMetadata(profileId: String, afterId: String?, limit: UInt32) throws  -> [FacetDisplacedMetadata]
+    
+    /**
+     * Remove a backup only after Rust has retained/committed it durably.
+     *
+     * # Errors
+     * Returns backup permission, identity, or durable I/O failures.
+     */
+    func acknowledgeDisplaced(profileId: String, id: String) throws 
+    
+}
+/**
+ * Platform folder/replica capabilities; callbacks run outside SQLite locks.
+ */
+open class FacetVaultFilesImpl: FacetVaultFiles, @unchecked Sendable {
+    fileprivate let handle: UInt64
+
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public struct NoHandle {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    required public init(unsafeFromHandle handle: UInt64) {
+        self.handle = handle
+    }
+
+    // This constructor can be used to instantiate a fake object.
+    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    //
+    // - Warning:
+    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public init(noHandle: NoHandle) {
+        self.handle = 0
+    }
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public func uniffiCloneHandle() -> UInt64 {
+        return try! rustCall { uniffi_tasknotes_core_ffi_fn_clone_facetvaultfiles(self.handle, $0) }
+    }
+    // No primary constructor declared for this class.
+
+    deinit {
+        if handle == 0 {
+            // Mock objects have handle=0 don't try to free them
+            return
+        }
+
+        try! rustCall { uniffi_tasknotes_core_ffi_fn_free_facetvaultfiles(handle, $0) }
+    }
+
+    
+
+    
+    /**
+     * Return logical paths, excluding private host backup/application directories.
+     *
+     * # Errors
+     * Returns capability, permission, or provider failures.
+     */
+open func listFiles(profileId: String)throws  -> [String]  {
+    return try  FfiConverterSequenceString.lift(try rustCallWithError(FfiConverterTypeFacetHostError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_list_files(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(profileId),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Capture an immutable read image, or return absence for a missing regular file.
+     *
+     * # Errors
+     * Returns capability, permission, or provider failures.
+     */
+open func openFileSnapshot(profileId: String, path: String)throws  -> FacetFileSnapshot?  {
+    return try  FfiConverterOptionTypeFacetFileSnapshot.lift(try rustCallWithError(FfiConverterTypeFacetHostError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_open_file_snapshot(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(profileId),
+        FfiConverterString.lower(path),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Open one exact retained predecessor without loading its bytes.
+     *
+     * # Errors
+     * Returns wrong-owner, missing, changed or inaccessible backup failures.
+     */
+open func openDisplacedSnapshot(profileId: String, backupId: String)throws  -> FacetFileSnapshot  {
+    return try  FfiConverterTypeFacetFileSnapshot_lift(try rustCallWithError(FfiConverterTypeFacetHostError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_open_displaced_snapshot(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(profileId),
+        FfiConverterString.lower(backupId),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Read one exact immutable range of at most one MiB.
+     *
+     * # Errors
+     * Returns wrong-owner, stale handle, invalid range or provider failures.
+     */
+open func readSnapshotChunk(profileId: String, snapshotId: String, offset: UInt64, length: UInt32)throws  -> Data  {
+    return try  FfiConverterData.lift(try rustCallWithError(FfiConverterTypeFacetHostError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_read_snapshot_chunk(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(profileId),
+        FfiConverterString.lower(snapshotId),
+        FfiConverterUInt64.lower(offset),
+        FfiConverterUInt32.lower(length),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Release only a temporary image; never acknowledge a durable predecessor.
+     *
+     * # Errors
+     * Returns unknown/wrong-owner handles or durable cleanup failures.
+     */
+open func closeSnapshot(profileId: String, snapshotId: String)throws   {try rustCallWithError(FfiConverterTypeFacetHostError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_close_snapshot(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(profileId),
+        FfiConverterString.lower(snapshotId),uniffiCallStatus
+    )
+}
+}
+    
+    /**
+     * Persist or resume an exact staged intent, retaining its contiguous prefix.
+     *
+     * # Errors
+     * Returns changed intent, unsupported durability or provider failures.
+     */
+open func beginReplacement(profileId: String, operationId: String, path: String, expectedRevision: String?, size: UInt64, revision: String)throws  -> FacetReplacementStage  {
+    return try  FfiConverterTypeFacetReplacementStage_lift(try rustCallWithError(FfiConverterTypeFacetHostError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_begin_replacement(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(profileId),
+        FfiConverterString.lower(operationId),
+        FfiConverterString.lower(path),
+        FfiConverterOptionString.lower(expectedRevision),
+        FfiConverterUInt64.lower(size),
+        FfiConverterString.lower(revision),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Commit at most one MiB or verify an exact already-committed prefix retry.
+     *
+     * # Errors
+     * Returns changed/gapped/overlapping chunks or durable provider failures.
+     */
+open func writeReplacementChunk(profileId: String, stageId: String, offset: UInt64, bytes: Data)throws  -> FacetReplacementStage  {
+    return try  FfiConverterTypeFacetReplacementStage_lift(try rustCallWithError(FfiConverterTypeFacetHostError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_write_replacement_chunk(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(profileId),
+        FfiConverterString.lower(stageId),
+        FfiConverterUInt64.lower(offset),
+        FfiConverterData.lower(bytes),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Verify the exact declared size/hash and retain an immutable sealed source.
+     *
+     * # Errors
+     * Returns incomplete/corrupt/unknown stages or durable provider failures.
+     */
+open func sealReplacement(profileId: String, stageId: String)throws  -> FacetReplacementStage  {
+    return try  FfiConverterTypeFacetReplacementStage_lift(try rustCallWithError(FfiConverterTypeFacetHostError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_seal_replacement(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(profileId),
+        FfiConverterString.lower(stageId),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Exchange a sealed stage/tombstone or replay its original durable outcome.
+     *
+     * # Errors
+     * Returns unsupported atomic capabilities or durable I/O failures.
+     */
+open func compareExchangeStaged(profileId: String, operationId: String, path: String, expectedRevision: String?, stageId: String?)throws  -> FacetStagedExchange  {
+    return try  FfiConverterTypeFacetStagedExchange_lift(try rustCallWithError(FfiConverterTypeFacetHostError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_compare_exchange_staged(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(profileId),
+        FfiConverterString.lower(operationId),
+        FfiConverterString.lower(path),
+        FfiConverterOptionString.lower(expectedRevision),
+        FfiConverterOptionString.lower(stageId),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Retire source/slot bytes after durable disposition, retaining exact receipts.
+     *
+     * # Errors
+     * Returns unknown/wrong-owner stages or unresolved predecessor/durability failures.
+     */
+open func discardReplacement(profileId: String, stageId: String)throws   {try rustCallWithError(FfiConverterTypeFacetHostError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_discard_replacement(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(profileId),
+        FfiConverterString.lower(stageId),uniffiCallStatus
+    )
+}
+}
+    
+    /**
+     * Recover unacknowledged captured versions after process relaunch.
+     *
+     * # Errors
+     * Returns unavailable/corrupt backup storage failures.
+     */
+open func displacedMetadata(profileId: String, afterId: String?, limit: UInt32)throws  -> [FacetDisplacedMetadata]  {
+    return try  FfiConverterSequenceTypeFacetDisplacedMetadata.lift(try rustCallWithError(FfiConverterTypeFacetHostError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_displaced_metadata(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(profileId),
+        FfiConverterOptionString.lower(afterId),
+        FfiConverterUInt32.lower(limit),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Remove a backup only after Rust has retained/committed it durably.
+     *
+     * # Errors
+     * Returns backup permission, identity, or durable I/O failures.
+     */
+open func acknowledgeDisplaced(profileId: String, id: String)throws   {try rustCallWithError(FfiConverterTypeFacetHostError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_facetvaultfiles_acknowledge_displaced(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(profileId),
+        FfiConverterString.lower(id),uniffiCallStatus
+    )
+}
+}
+    
+
+    
+}
+
+
+
+// Put the implementation in a struct so we don't pollute the top-level namespace
+fileprivate struct UniffiCallbackInterfaceFacetVaultFiles {
+
+    // Create the VTable using a series of closures.
+    // Swift automatically converts these into C callback functions.
+    //
+    // Store the vtable directly.
+    static let vtable: UniffiVTableCallbackInterfaceFacetVaultFiles = UniffiVTableCallbackInterfaceFacetVaultFiles(
+        uniffiFree: { (uniffiHandle: UInt64) -> () in
+            do {
+                try FfiConverterTypeFacetVaultFiles.handleMap.remove(handle: uniffiHandle)
+            } catch {
+                print("Uniffi callback interface FacetVaultFiles: handle missing in uniffiFree")
+            }
+        },
+        uniffiClone: { (uniffiHandle: UInt64) -> UInt64 in
+            do {
+                return try FfiConverterTypeFacetVaultFiles.handleMap.clone(handle: uniffiHandle)
+            } catch {
+                fatalError("Uniffi callback interface FacetVaultFiles: handle missing in uniffiClone")
+            }
+        },
+        listFiles: { (
+            uniffiHandle: UInt64,
+            profileId: RustBuffer,
+            uniffiOutReturn: UnsafeMutablePointer<RustBuffer>,
+            uniffiCallStatus: UnsafeMutablePointer<RustCallStatus>
+        ) in
+            let makeCall = {
+                () throws -> [String] in
+                guard let uniffiObj = try? FfiConverterTypeFacetVaultFiles.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return try uniffiObj.listFiles(
+                     profileId: try FfiConverterString.lift(profileId)
+                )
+            }
+
+            
+            let writeReturn = { uniffiOutReturn.pointee = FfiConverterSequenceString.lower($0) }
+            uniffiTraitInterfaceCallWithError(
+                callStatus: uniffiCallStatus,
+                makeCall: makeCall,
+                writeReturn: writeReturn,
+                lowerError: FfiConverterTypeFacetHostError_lower
+            )
+        },
+        openFileSnapshot: { (
+            uniffiHandle: UInt64,
+            profileId: RustBuffer,
+            path: RustBuffer,
+            uniffiOutReturn: UnsafeMutablePointer<RustBuffer>,
+            uniffiCallStatus: UnsafeMutablePointer<RustCallStatus>
+        ) in
+            let makeCall = {
+                () throws -> FacetFileSnapshot? in
+                guard let uniffiObj = try? FfiConverterTypeFacetVaultFiles.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return try uniffiObj.openFileSnapshot(
+                     profileId: try FfiConverterString.lift(profileId),
+                     path: try FfiConverterString.lift(path)
+                )
+            }
+
+            
+            let writeReturn = { uniffiOutReturn.pointee = FfiConverterOptionTypeFacetFileSnapshot.lower($0) }
+            uniffiTraitInterfaceCallWithError(
+                callStatus: uniffiCallStatus,
+                makeCall: makeCall,
+                writeReturn: writeReturn,
+                lowerError: FfiConverterTypeFacetHostError_lower
+            )
+        },
+        openDisplacedSnapshot: { (
+            uniffiHandle: UInt64,
+            profileId: RustBuffer,
+            backupId: RustBuffer,
+            uniffiOutReturn: UnsafeMutablePointer<RustBuffer>,
+            uniffiCallStatus: UnsafeMutablePointer<RustCallStatus>
+        ) in
+            let makeCall = {
+                () throws -> FacetFileSnapshot in
+                guard let uniffiObj = try? FfiConverterTypeFacetVaultFiles.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return try uniffiObj.openDisplacedSnapshot(
+                     profileId: try FfiConverterString.lift(profileId),
+                     backupId: try FfiConverterString.lift(backupId)
+                )
+            }
+
+            
+            let writeReturn = { uniffiOutReturn.pointee = FfiConverterTypeFacetFileSnapshot_lower($0) }
+            uniffiTraitInterfaceCallWithError(
+                callStatus: uniffiCallStatus,
+                makeCall: makeCall,
+                writeReturn: writeReturn,
+                lowerError: FfiConverterTypeFacetHostError_lower
+            )
+        },
+        readSnapshotChunk: { (
+            uniffiHandle: UInt64,
+            profileId: RustBuffer,
+            snapshotId: RustBuffer,
+            offset: UInt64,
+            length: UInt32,
+            uniffiOutReturn: UnsafeMutablePointer<RustBuffer>,
+            uniffiCallStatus: UnsafeMutablePointer<RustCallStatus>
+        ) in
+            let makeCall = {
+                () throws -> Data in
+                guard let uniffiObj = try? FfiConverterTypeFacetVaultFiles.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return try uniffiObj.readSnapshotChunk(
+                     profileId: try FfiConverterString.lift(profileId),
+                     snapshotId: try FfiConverterString.lift(snapshotId),
+                     offset: try FfiConverterUInt64.lift(offset),
+                     length: try FfiConverterUInt32.lift(length)
+                )
+            }
+
+            
+            let writeReturn = { uniffiOutReturn.pointee = FfiConverterData.lower($0) }
+            uniffiTraitInterfaceCallWithError(
+                callStatus: uniffiCallStatus,
+                makeCall: makeCall,
+                writeReturn: writeReturn,
+                lowerError: FfiConverterTypeFacetHostError_lower
+            )
+        },
+        closeSnapshot: { (
+            uniffiHandle: UInt64,
+            profileId: RustBuffer,
+            snapshotId: RustBuffer,
+            uniffiOutReturn: UnsafeMutableRawPointer,
+            uniffiCallStatus: UnsafeMutablePointer<RustCallStatus>
+        ) in
+            let makeCall = {
+                () throws -> () in
+                guard let uniffiObj = try? FfiConverterTypeFacetVaultFiles.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return try uniffiObj.closeSnapshot(
+                     profileId: try FfiConverterString.lift(profileId),
+                     snapshotId: try FfiConverterString.lift(snapshotId)
+                )
+            }
+
+            
+            let writeReturn = { () }
+            uniffiTraitInterfaceCallWithError(
+                callStatus: uniffiCallStatus,
+                makeCall: makeCall,
+                writeReturn: writeReturn,
+                lowerError: FfiConverterTypeFacetHostError_lower
+            )
+        },
+        beginReplacement: { (
+            uniffiHandle: UInt64,
+            profileId: RustBuffer,
+            operationId: RustBuffer,
+            path: RustBuffer,
+            expectedRevision: RustBuffer,
+            size: UInt64,
+            revision: RustBuffer,
+            uniffiOutReturn: UnsafeMutablePointer<RustBuffer>,
+            uniffiCallStatus: UnsafeMutablePointer<RustCallStatus>
+        ) in
+            let makeCall = {
+                () throws -> FacetReplacementStage in
+                guard let uniffiObj = try? FfiConverterTypeFacetVaultFiles.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return try uniffiObj.beginReplacement(
+                     profileId: try FfiConverterString.lift(profileId),
+                     operationId: try FfiConverterString.lift(operationId),
+                     path: try FfiConverterString.lift(path),
+                     expectedRevision: try FfiConverterOptionString.lift(expectedRevision),
+                     size: try FfiConverterUInt64.lift(size),
+                     revision: try FfiConverterString.lift(revision)
+                )
+            }
+
+            
+            let writeReturn = { uniffiOutReturn.pointee = FfiConverterTypeFacetReplacementStage_lower($0) }
+            uniffiTraitInterfaceCallWithError(
+                callStatus: uniffiCallStatus,
+                makeCall: makeCall,
+                writeReturn: writeReturn,
+                lowerError: FfiConverterTypeFacetHostError_lower
+            )
+        },
+        writeReplacementChunk: { (
+            uniffiHandle: UInt64,
+            profileId: RustBuffer,
+            stageId: RustBuffer,
+            offset: UInt64,
+            bytes: RustBuffer,
+            uniffiOutReturn: UnsafeMutablePointer<RustBuffer>,
+            uniffiCallStatus: UnsafeMutablePointer<RustCallStatus>
+        ) in
+            let makeCall = {
+                () throws -> FacetReplacementStage in
+                guard let uniffiObj = try? FfiConverterTypeFacetVaultFiles.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return try uniffiObj.writeReplacementChunk(
+                     profileId: try FfiConverterString.lift(profileId),
+                     stageId: try FfiConverterString.lift(stageId),
+                     offset: try FfiConverterUInt64.lift(offset),
+                     bytes: try FfiConverterData.lift(bytes)
+                )
+            }
+
+            
+            let writeReturn = { uniffiOutReturn.pointee = FfiConverterTypeFacetReplacementStage_lower($0) }
+            uniffiTraitInterfaceCallWithError(
+                callStatus: uniffiCallStatus,
+                makeCall: makeCall,
+                writeReturn: writeReturn,
+                lowerError: FfiConverterTypeFacetHostError_lower
+            )
+        },
+        sealReplacement: { (
+            uniffiHandle: UInt64,
+            profileId: RustBuffer,
+            stageId: RustBuffer,
+            uniffiOutReturn: UnsafeMutablePointer<RustBuffer>,
+            uniffiCallStatus: UnsafeMutablePointer<RustCallStatus>
+        ) in
+            let makeCall = {
+                () throws -> FacetReplacementStage in
+                guard let uniffiObj = try? FfiConverterTypeFacetVaultFiles.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return try uniffiObj.sealReplacement(
+                     profileId: try FfiConverterString.lift(profileId),
+                     stageId: try FfiConverterString.lift(stageId)
+                )
+            }
+
+            
+            let writeReturn = { uniffiOutReturn.pointee = FfiConverterTypeFacetReplacementStage_lower($0) }
+            uniffiTraitInterfaceCallWithError(
+                callStatus: uniffiCallStatus,
+                makeCall: makeCall,
+                writeReturn: writeReturn,
+                lowerError: FfiConverterTypeFacetHostError_lower
+            )
+        },
+        compareExchangeStaged: { (
+            uniffiHandle: UInt64,
+            profileId: RustBuffer,
+            operationId: RustBuffer,
+            path: RustBuffer,
+            expectedRevision: RustBuffer,
+            stageId: RustBuffer,
+            uniffiOutReturn: UnsafeMutablePointer<RustBuffer>,
+            uniffiCallStatus: UnsafeMutablePointer<RustCallStatus>
+        ) in
+            let makeCall = {
+                () throws -> FacetStagedExchange in
+                guard let uniffiObj = try? FfiConverterTypeFacetVaultFiles.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return try uniffiObj.compareExchangeStaged(
+                     profileId: try FfiConverterString.lift(profileId),
+                     operationId: try FfiConverterString.lift(operationId),
+                     path: try FfiConverterString.lift(path),
+                     expectedRevision: try FfiConverterOptionString.lift(expectedRevision),
+                     stageId: try FfiConverterOptionString.lift(stageId)
+                )
+            }
+
+            
+            let writeReturn = { uniffiOutReturn.pointee = FfiConverterTypeFacetStagedExchange_lower($0) }
+            uniffiTraitInterfaceCallWithError(
+                callStatus: uniffiCallStatus,
+                makeCall: makeCall,
+                writeReturn: writeReturn,
+                lowerError: FfiConverterTypeFacetHostError_lower
+            )
+        },
+        discardReplacement: { (
+            uniffiHandle: UInt64,
+            profileId: RustBuffer,
+            stageId: RustBuffer,
+            uniffiOutReturn: UnsafeMutableRawPointer,
+            uniffiCallStatus: UnsafeMutablePointer<RustCallStatus>
+        ) in
+            let makeCall = {
+                () throws -> () in
+                guard let uniffiObj = try? FfiConverterTypeFacetVaultFiles.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return try uniffiObj.discardReplacement(
+                     profileId: try FfiConverterString.lift(profileId),
+                     stageId: try FfiConverterString.lift(stageId)
+                )
+            }
+
+            
+            let writeReturn = { () }
+            uniffiTraitInterfaceCallWithError(
+                callStatus: uniffiCallStatus,
+                makeCall: makeCall,
+                writeReturn: writeReturn,
+                lowerError: FfiConverterTypeFacetHostError_lower
+            )
+        },
+        displacedMetadata: { (
+            uniffiHandle: UInt64,
+            profileId: RustBuffer,
+            afterId: RustBuffer,
+            limit: UInt32,
+            uniffiOutReturn: UnsafeMutablePointer<RustBuffer>,
+            uniffiCallStatus: UnsafeMutablePointer<RustCallStatus>
+        ) in
+            let makeCall = {
+                () throws -> [FacetDisplacedMetadata] in
+                guard let uniffiObj = try? FfiConverterTypeFacetVaultFiles.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return try uniffiObj.displacedMetadata(
+                     profileId: try FfiConverterString.lift(profileId),
+                     afterId: try FfiConverterOptionString.lift(afterId),
+                     limit: try FfiConverterUInt32.lift(limit)
+                )
+            }
+
+            
+            let writeReturn = { uniffiOutReturn.pointee = FfiConverterSequenceTypeFacetDisplacedMetadata.lower($0) }
+            uniffiTraitInterfaceCallWithError(
+                callStatus: uniffiCallStatus,
+                makeCall: makeCall,
+                writeReturn: writeReturn,
+                lowerError: FfiConverterTypeFacetHostError_lower
+            )
+        },
+        acknowledgeDisplaced: { (
+            uniffiHandle: UInt64,
+            profileId: RustBuffer,
+            id: RustBuffer,
+            uniffiOutReturn: UnsafeMutableRawPointer,
+            uniffiCallStatus: UnsafeMutablePointer<RustCallStatus>
+        ) in
+            let makeCall = {
+                () throws -> () in
+                guard let uniffiObj = try? FfiConverterTypeFacetVaultFiles.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return try uniffiObj.acknowledgeDisplaced(
+                     profileId: try FfiConverterString.lift(profileId),
+                     id: try FfiConverterString.lift(id)
+                )
+            }
+
+            
+            let writeReturn = { () }
+            uniffiTraitInterfaceCallWithError(
+                callStatus: uniffiCallStatus,
+                makeCall: makeCall,
+                writeReturn: writeReturn,
+                lowerError: FfiConverterTypeFacetHostError_lower
+            )
+        }
+    )
+
+    // Rust stores this pointer for future callback invocations, so it must live
+    // for the process lifetime (not just for the init function call).
+    //
+    // `nonisolated(unsafe)` is needed under Swift 6 strict concurrency.
+    // This is safe because the pointee is initialized once during static init
+    // and never mutated by either side of the FFI.  Its fields are C function pointers.
+    nonisolated(unsafe) static let vtablePtr: UnsafePointer<UniffiVTableCallbackInterfaceFacetVaultFiles> = {
+        let ptr = UnsafeMutablePointer<UniffiVTableCallbackInterfaceFacetVaultFiles>.allocate(capacity: 1)
+        ptr.initialize(to: vtable)
+        return UnsafePointer(ptr)
+    }()
+}
+
+private func uniffiCallbackInitFacetVaultFiles() {
+    uniffi_tasknotes_core_ffi_fn_init_callback_vtable_facetvaultfiles(UniffiCallbackInterfaceFacetVaultFiles.vtablePtr)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeFacetVaultFiles: FfiConverter {
+    fileprivate static let handleMap = UniffiHandleMap<FacetVaultFiles>()
+
+    typealias FfiType = UInt64
+    typealias SwiftType = FacetVaultFiles
+
+    public static func lift(_ handle: UInt64) throws -> FacetVaultFiles {
+        if ((handle & 1) == 0) {
+            // Rust-generated handle, construct a new class that uses the handle to implement the
+            // interface
+            return FacetVaultFilesImpl(unsafeFromHandle: handle)
+        } else {
+            // Swift-generated handle, get the object from the handle map
+            return try handleMap.remove(handle: handle)
+        }
+    }
+
+    public static func lower(_ value: FacetVaultFiles) -> UInt64 {
+         if let rustImpl = value as? FacetVaultFilesImpl {
+             // Rust-implemented object.  Clone the handle and return it
+            return rustImpl.uniffiCloneHandle()
+         } else {
+            // Swift object, generate a new vtable handle and return that.
+            return handleMap.insert(obj: value)
+         }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> FacetVaultFiles {
+        let handle: UInt64 = try readInt(&buf)
+        return try lift(handle)
+    }
+
+    public static func write(_ value: FacetVaultFiles, into buf: inout [UInt8]) {
+        writeInt(&buf, lower(value))
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeFacetVaultFiles_lift(_ handle: UInt64) throws -> FacetVaultFiles {
+    return try FfiConverterTypeFacetVaultFiles.lift(handle)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeFacetVaultFiles_lower(_ value: FacetVaultFiles) -> UInt64 {
+    return FfiConverterTypeFacetVaultFiles.lower(value)
+}
+
+
+
+
+
+
+/**
+ * Rust-owned durable standalone engine. Hosts call it on their serial worker.
+ */
+public protocol FfiFacetEngineProtocol: AnyObject, Sendable {
+    
+    /**
+     * Commit an exact service acknowledgement without replacing newer edits.
+     *
+     * # Errors
+     * Rejects unknown receipts and storage failures.
+     */
+    func acknowledgeUpload(profileId: String, mutationId: String, revision: String) throws 
+    
+    /**
+     * Persist a normalized protocol delta before acknowledging its barrier.
+     *
+     * # Errors
+     * Rejects invalid/cursor-regressing deltas and storage failures.
+     */
+    func applySyncCheckpointDelta(profileId: String, deltaJson: String) throws 
+    
+    /**
+     * Reject new operations and wait for active callbacks before retiring this engine.
+     * Durable journals and staged recovery receipts remain for the next engine.
+     *
+     * # Errors
+     * Returns coordinator/storage failures; shutdown never discards pending state.
+     */
+    func closeRuntime() throws 
+    
+    /**
+     * Return conflict versions stored outside TaskNotes indexing.
+     *
+     * # Errors
+     * Returns profile/storage failures.
+     */
+    func conflictsJson(profileId: String) throws  -> String
+    
+    /**
+     * Read bounded conflict metadata without binary JSON expansion.
+     *
+     * # Errors
+     * Returns invalid page, profile, and storage failures.
+     */
+    func conflictsPageJson(profileId: String, afterId: String?, limit: UInt32) throws  -> String
+    
+    /**
+     * Execute an idempotent command and return its durable receipt.
+     *
+     * # Errors
+     * Returns validation, conflict, capability, or storage failures.
+     */
+    func execute(profileId: String, commandJson: String) throws  -> String
+    
+    /**
+     * Execute an immutable command using a sealed owner-scoped payload handle.
+     *
+     * # Errors
+     * Rejects missing/misplaced payloads, reused identities and stale revisions.
+     */
+    func executePayloadIdJson(profileId: String, mutationJson: String, payload: FfiFacetPayload?) throws  -> String
+    
+    /**
+     * Read shared capture, timing and configuration projections.
+     *
+     * # Errors
+     * Returns validation, configuration, capability and storage failures.
+     */
+    func featuresJson(profileId: String, requestJson: String) throws  -> String
+    
+    /**
+     * Return the nonsecret durable SQLite owner namespace before opening capabilities.
+     *
+     * # Errors
+     * Returns Closed after engine shutdown begins.
+     */
+    func identity() throws  -> String
+    
+    /**
+     * Read the last durable protocol cursor document.
+     *
+     * # Errors
+     * Returns profile/storage failures.
+     */
+    func loadCheckpoint(profileId: String) throws  -> String?
+    
+    /**
+     * Return immutable upload receipts, omitting paths with conflicts.
+     *
+     * # Errors
+     * Returns profile/storage failures.
+     */
+    func pendingUploadsJson(profileId: String) throws  -> String
+    
+    /**
+     * Return registered profiles as JSON.
+     *
+     * # Errors
+     * Returns storage/corrupt-state failures.
+     */
+    func profilesJson() throws  -> String
+    
+    /**
+     * Recover interrupted writes and index provider changes.
+     *
+     * # Errors
+     * Returns provider, configuration, or durable-state failures.
+     */
+    func refresh(profileId: String) throws  -> String
+    
+    /**
+     * Register a versioned profile JSON document.
+     *
+     * # Errors
+     * Rejects malformed identities, unsupported schemas, or category changes.
+     */
+    func registerProfile(profileJson: String) throws  -> String
+    
+    /**
+     * Remove an empty profile without deleting user-owned vault files.
+     *
+     * # Errors
+     * Rejects pending work or unresolved conflicts.
+     */
+    func removeProfile(profileId: String) throws 
+    
+    /**
+     * Persist a full protocol cursor before acknowledging its barrier.
+     *
+     * # Errors
+     * Rejects invalid JSON and storage failures.
+     */
+    func saveCheckpoint(profileId: String, checkpointJson: String) throws 
+    
+    /**
+     * Return a paged durable snapshot with shared filter/sort/group semantics.
+     *
+     * # Errors
+     * Rejects invalid query/schema values or unavailable index state.
+     */
+    func snapshotJson(profileId: String, queryJson: String) throws  -> String
+    
+    /**
+     * Begin/resume an immutable incoming image. No complete file crosses FFI.
+     *
+     * # Errors
+     * Rejects changed/reserved IDs, size/hash bounds or unavailable profiles.
+     */
+    func beginPayload(profileId: String, payloadId: String, size: UInt64, revision: String) throws  -> FfiFacetPayload
+    
+    /**
+     * Open one retained conflict/archive image for bounded lazy reads. A null
+     * result denotes an actual tombstone, distinct from a sealed empty image.
+     *
+     * # Errors
+     * Rejects unknown roles, missing conflicts or invalid retained metadata.
+     */
+    func conflictPayload(profileId: String, conflictId: String, version: String) throws  -> FfiFacetPayload?
+    
+    /**
+     * Restore one caller-owned incoming handle after process restart.
+     *
+     * # Errors
+     * Rejects runtime-owned identities, absent profiles/images or stale storage.
+     */
+    func openPayload(profileId: String, payloadId: String) throws  -> FfiFacetPayload
+    
+}
+/**
+ * Rust-owned durable standalone engine. Hosts call it on their serial worker.
+ */
+open class FfiFacetEngine: FfiFacetEngineProtocol, @unchecked Sendable {
+    fileprivate let handle: UInt64
+
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public struct NoHandle {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    required public init(unsafeFromHandle handle: UInt64) {
+        self.handle = handle
+    }
+
+    // This constructor can be used to instantiate a fake object.
+    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    //
+    // - Warning:
+    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public init(noHandle: NoHandle) {
+        self.handle = 0
+    }
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public func uniffiCloneHandle() -> UInt64 {
+        return try! rustCall { uniffi_tasknotes_core_ffi_fn_clone_ffifacetengine(self.handle, $0) }
+    }
+    /**
+     * Open/create the app-private SQLite database.
+     *
+     * # Errors
+     * Returns storage failures; vault capabilities are checked when opened.
+     */
+public convenience init(databasePath: String, files: FacetVaultFiles)throws  {
+    let handle =
+        try rustCallWithError(FfiConverterTypeFacetEngineError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_constructor_ffifacetengine_new(
+        FfiConverterString.lower(databasePath),
+        FfiConverterTypeFacetVaultFiles_lower(files),uniffiCallStatus
+    )
+}
+    self.init(unsafeFromHandle: handle)
+}
+
+    deinit {
+        if handle == 0 {
+            // Mock objects have handle=0 don't try to free them
+            return
+        }
+
+        try! rustCall { uniffi_tasknotes_core_ffi_fn_free_ffifacetengine(handle, $0) }
+    }
+
+    
+
+    
+    /**
+     * Commit an exact service acknowledgement without replacing newer edits.
+     *
+     * # Errors
+     * Rejects unknown receipts and storage failures.
+     */
+open func acknowledgeUpload(profileId: String, mutationId: String, revision: String)throws   {try rustCallWithError(FfiConverterTypeFacetEngineError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_acknowledge_upload(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(profileId),
+        FfiConverterString.lower(mutationId),
+        FfiConverterString.lower(revision),uniffiCallStatus
+    )
+}
+}
+    
+    /**
+     * Persist a normalized protocol delta before acknowledging its barrier.
+     *
+     * # Errors
+     * Rejects invalid/cursor-regressing deltas and storage failures.
+     */
+open func applySyncCheckpointDelta(profileId: String, deltaJson: String)throws   {try rustCallWithError(FfiConverterTypeFacetEngineError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_apply_sync_checkpoint_delta(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(profileId),
+        FfiConverterString.lower(deltaJson),uniffiCallStatus
+    )
+}
+}
+    
+    /**
+     * Reject new operations and wait for active callbacks before retiring this engine.
+     * Durable journals and staged recovery receipts remain for the next engine.
+     *
+     * # Errors
+     * Returns coordinator/storage failures; shutdown never discards pending state.
+     */
+open func closeRuntime()throws   {try rustCallWithError(FfiConverterTypeFacetEngineError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_close_runtime(
+            self.uniffiCloneHandle(),uniffiCallStatus
+    )
+}
+}
+    
+    /**
+     * Return conflict versions stored outside TaskNotes indexing.
+     *
+     * # Errors
+     * Returns profile/storage failures.
+     */
+open func conflictsJson(profileId: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeFacetEngineError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_conflicts_json(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(profileId),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Read bounded conflict metadata without binary JSON expansion.
+     *
+     * # Errors
+     * Returns invalid page, profile, and storage failures.
+     */
+open func conflictsPageJson(profileId: String, afterId: String?, limit: UInt32)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeFacetEngineError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_conflicts_page_json(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(profileId),
+        FfiConverterOptionString.lower(afterId),
+        FfiConverterUInt32.lower(limit),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Execute an idempotent command and return its durable receipt.
+     *
+     * # Errors
+     * Returns validation, conflict, capability, or storage failures.
+     */
+open func execute(profileId: String, commandJson: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeFacetEngineError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_execute(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(profileId),
+        FfiConverterString.lower(commandJson),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Execute an immutable command using a sealed owner-scoped payload handle.
+     *
+     * # Errors
+     * Rejects missing/misplaced payloads, reused identities and stale revisions.
+     */
+open func executePayloadIdJson(profileId: String, mutationJson: String, payload: FfiFacetPayload?)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeFacetEngineError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_execute_payload_id_json(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(profileId),
+        FfiConverterString.lower(mutationJson),
+        FfiConverterOptionTypeFfiFacetPayload.lower(payload),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Read shared capture, timing and configuration projections.
+     *
+     * # Errors
+     * Returns validation, configuration, capability and storage failures.
+     */
+open func featuresJson(profileId: String, requestJson: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeFacetEngineError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_features_json(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(profileId),
+        FfiConverterString.lower(requestJson),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Return the nonsecret durable SQLite owner namespace before opening capabilities.
+     *
+     * # Errors
+     * Returns Closed after engine shutdown begins.
+     */
+open func identity()throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeFacetEngineError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_identity(
+            self.uniffiCloneHandle(),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Read the last durable protocol cursor document.
+     *
+     * # Errors
+     * Returns profile/storage failures.
+     */
+open func loadCheckpoint(profileId: String)throws  -> String?  {
+    return try  FfiConverterOptionString.lift(try rustCallWithError(FfiConverterTypeFacetEngineError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_load_checkpoint(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(profileId),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Return immutable upload receipts, omitting paths with conflicts.
+     *
+     * # Errors
+     * Returns profile/storage failures.
+     */
+open func pendingUploadsJson(profileId: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeFacetEngineError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_pending_uploads_json(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(profileId),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Return registered profiles as JSON.
+     *
+     * # Errors
+     * Returns storage/corrupt-state failures.
+     */
+open func profilesJson()throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeFacetEngineError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_profiles_json(
+            self.uniffiCloneHandle(),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Recover interrupted writes and index provider changes.
+     *
+     * # Errors
+     * Returns provider, configuration, or durable-state failures.
+     */
+open func refresh(profileId: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeFacetEngineError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_refresh(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(profileId),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Register a versioned profile JSON document.
+     *
+     * # Errors
+     * Rejects malformed identities, unsupported schemas, or category changes.
+     */
+open func registerProfile(profileJson: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeFacetEngineError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_register_profile(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(profileJson),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Remove an empty profile without deleting user-owned vault files.
+     *
+     * # Errors
+     * Rejects pending work or unresolved conflicts.
+     */
+open func removeProfile(profileId: String)throws   {try rustCallWithError(FfiConverterTypeFacetEngineError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_remove_profile(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(profileId),uniffiCallStatus
+    )
+}
+}
+    
+    /**
+     * Persist a full protocol cursor before acknowledging its barrier.
+     *
+     * # Errors
+     * Rejects invalid JSON and storage failures.
+     */
+open func saveCheckpoint(profileId: String, checkpointJson: String)throws   {try rustCallWithError(FfiConverterTypeFacetEngineError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_save_checkpoint(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(profileId),
+        FfiConverterString.lower(checkpointJson),uniffiCallStatus
+    )
+}
+}
+    
+    /**
+     * Return a paged durable snapshot with shared filter/sort/group semantics.
+     *
+     * # Errors
+     * Rejects invalid query/schema values or unavailable index state.
+     */
+open func snapshotJson(profileId: String, queryJson: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeFacetEngineError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_snapshot_json(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(profileId),
+        FfiConverterString.lower(queryJson),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Begin/resume an immutable incoming image. No complete file crosses FFI.
+     *
+     * # Errors
+     * Rejects changed/reserved IDs, size/hash bounds or unavailable profiles.
+     */
+open func beginPayload(profileId: String, payloadId: String, size: UInt64, revision: String)throws  -> FfiFacetPayload  {
+    return try  FfiConverterTypeFfiFacetPayload_lift(try rustCallWithError(FfiConverterTypeFacetEngineError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_begin_payload(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(profileId),
+        FfiConverterString.lower(payloadId),
+        FfiConverterUInt64.lower(size),
+        FfiConverterString.lower(revision),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Open one retained conflict/archive image for bounded lazy reads. A null
+     * result denotes an actual tombstone, distinct from a sealed empty image.
+     *
+     * # Errors
+     * Rejects unknown roles, missing conflicts or invalid retained metadata.
+     */
+open func conflictPayload(profileId: String, conflictId: String, version: String)throws  -> FfiFacetPayload?  {
+    return try  FfiConverterOptionTypeFfiFacetPayload.lift(try rustCallWithError(FfiConverterTypeFacetEngineError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_conflict_payload(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(profileId),
+        FfiConverterString.lower(conflictId),
+        FfiConverterString.lower(version),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Restore one caller-owned incoming handle after process restart.
+     *
+     * # Errors
+     * Rejects runtime-owned identities, absent profiles/images or stale storage.
+     */
+open func openPayload(profileId: String, payloadId: String)throws  -> FfiFacetPayload  {
+    return try  FfiConverterTypeFfiFacetPayload_lift(try rustCallWithError(FfiConverterTypeFacetEngineError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffifacetengine_open_payload(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(profileId),
+        FfiConverterString.lower(payloadId),uniffiCallStatus
+    )
+})
+}
+    
+
+    
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeFfiFacetEngine: FfiConverter {
+    typealias FfiType = UInt64
+    typealias SwiftType = FfiFacetEngine
+
+    public static func lift(_ handle: UInt64) throws -> FfiFacetEngine {
+        return FfiFacetEngine(unsafeFromHandle: handle)
+    }
+
+    public static func lower(_ value: FfiFacetEngine) -> UInt64 {
+        return value.uniffiCloneHandle()
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> FfiFacetEngine {
+        let handle: UInt64 = try readInt(&buf)
+        return try lift(handle)
+    }
+
+    public static func write(_ value: FfiFacetEngine, into buf: inout [UInt8]) {
+        writeInt(&buf, lower(value))
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeFfiFacetEngine_lift(_ handle: UInt64) throws -> FfiFacetEngine {
+    return try FfiConverterTypeFfiFacetEngine.lift(handle)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeFfiFacetEngine_lower(_ value: FfiFacetEngine) -> UInt64 {
+    return FfiConverterTypeFfiFacetEngine.lower(value)
+}
+
+
+
+
+
+
+/**
+ * One opaque owner-scoped SQLite image. Close drops only this handle; explicit
+ * discard releases incoming bytes only when no durable owner references them.
+ */
+public protocol FfiFacetPayloadProtocol: AnyObject, Sendable {
+    
+    /**
+     * Retire this transient handle without deleting any durable bytes.
+     */
+    func closeHandle() 
+    
+    /**
+     * Release only unreferenced incoming image bytes. The retired immutable ID
+     * remains, so changed/repeated operations cannot revive its former payload.
+     *
+     * # Errors
+     * Rejects retained/durable references and expired owners/handles.
+     */
+    func discard() throws 
+    
+    /**
+     * Return metadata only, including the exact durable staging prefix.
+     *
+     * # Errors
+     * Rejects expired owners/handles or corrupt retained metadata.
+     */
+    func infoJson() throws  -> String
+    
+    /**
+     * Read an exact immutable range at most one MiB, including zero at EOF.
+     *
+     * # Errors
+     * Rejects invalid ranges, unsealed bytes or expired owners/handles.
+     */
+    func readChunk(offset: UInt64, length: UInt32) throws  -> Data
+    
+    /**
+     * Verify the complete digest and durably make this image immutable.
+     *
+     * # Errors
+     * Rejects incomplete/mismatched data, retained images or expired owners.
+     */
+    func seal() throws  -> String
+    
+    /**
+     * Write a contiguous durable prefix or verify an exact bounded retry.
+     *
+     * # Errors
+     * Rejects retained images, changed chunks, invalid bounds or stale owners.
+     */
+    func writeChunk(offset: UInt64, bytes: Data) throws  -> String
+    
+}
+/**
+ * One opaque owner-scoped SQLite image. Close drops only this handle; explicit
+ * discard releases incoming bytes only when no durable owner references them.
+ */
+open class FfiFacetPayload: FfiFacetPayloadProtocol, @unchecked Sendable {
+    fileprivate let handle: UInt64
+
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public struct NoHandle {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    required public init(unsafeFromHandle handle: UInt64) {
+        self.handle = handle
+    }
+
+    // This constructor can be used to instantiate a fake object.
+    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    //
+    // - Warning:
+    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public init(noHandle: NoHandle) {
+        self.handle = 0
+    }
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public func uniffiCloneHandle() -> UInt64 {
+        return try! rustCall { uniffi_tasknotes_core_ffi_fn_clone_ffifacetpayload(self.handle, $0) }
+    }
+    // No primary constructor declared for this class.
+
+    deinit {
+        if handle == 0 {
+            // Mock objects have handle=0 don't try to free them
+            return
+        }
+
+        try! rustCall { uniffi_tasknotes_core_ffi_fn_free_ffifacetpayload(handle, $0) }
+    }
+
+    
+
+    
+    /**
+     * Retire this transient handle without deleting any durable bytes.
+     */
+open func closeHandle()  {try! rustCall() {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffifacetpayload_close_handle(
+            self.uniffiCloneHandle(),uniffiCallStatus
+    )
+}
+}
+    
+    /**
+     * Release only unreferenced incoming image bytes. The retired immutable ID
+     * remains, so changed/repeated operations cannot revive its former payload.
+     *
+     * # Errors
+     * Rejects retained/durable references and expired owners/handles.
+     */
+open func discard()throws   {try rustCallWithError(FfiConverterTypeFacetEngineError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffifacetpayload_discard(
+            self.uniffiCloneHandle(),uniffiCallStatus
+    )
+}
+}
+    
+    /**
+     * Return metadata only, including the exact durable staging prefix.
+     *
+     * # Errors
+     * Rejects expired owners/handles or corrupt retained metadata.
+     */
+open func infoJson()throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeFacetEngineError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffifacetpayload_info_json(
+            self.uniffiCloneHandle(),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Read an exact immutable range at most one MiB, including zero at EOF.
+     *
+     * # Errors
+     * Rejects invalid ranges, unsealed bytes or expired owners/handles.
+     */
+open func readChunk(offset: UInt64, length: UInt32)throws  -> Data  {
+    return try  FfiConverterData.lift(try rustCallWithError(FfiConverterTypeFacetEngineError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffifacetpayload_read_chunk(
+            self.uniffiCloneHandle(),
+        FfiConverterUInt64.lower(offset),
+        FfiConverterUInt32.lower(length),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Verify the complete digest and durably make this image immutable.
+     *
+     * # Errors
+     * Rejects incomplete/mismatched data, retained images or expired owners.
+     */
+open func seal()throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeFacetEngineError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffifacetpayload_seal(
+            self.uniffiCloneHandle(),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Write a contiguous durable prefix or verify an exact bounded retry.
+     *
+     * # Errors
+     * Rejects retained images, changed chunks, invalid bounds or stale owners.
+     */
+open func writeChunk(offset: UInt64, bytes: Data)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeFacetEngineError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffifacetpayload_write_chunk(
+            self.uniffiCloneHandle(),
+        FfiConverterUInt64.lower(offset),
+        FfiConverterData.lower(bytes),uniffiCallStatus
+    )
+})
+}
+    
+
+    
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeFfiFacetPayload: FfiConverter {
+    typealias FfiType = UInt64
+    typealias SwiftType = FfiFacetPayload
+
+    public static func lift(_ handle: UInt64) throws -> FfiFacetPayload {
+        return FfiFacetPayload(unsafeFromHandle: handle)
+    }
+
+    public static func lower(_ value: FfiFacetPayload) -> UInt64 {
+        return value.uniffiCloneHandle()
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> FfiFacetPayload {
+        let handle: UInt64 = try readInt(&buf)
+        return try lift(handle)
+    }
+
+    public static func write(_ value: FfiFacetPayload, into buf: inout [UInt8]) {
+        writeInt(&buf, lower(value))
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeFfiFacetPayload_lift(_ handle: UInt64) throws -> FfiFacetPayload {
+    return try FfiConverterTypeFfiFacetPayload.lift(handle)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeFfiFacetPayload_lower(_ value: FfiFacetPayload) -> UInt64 {
+    return FfiConverterTypeFfiFacetPayload.lower(value)
+}
+
+
+
+
+
+
+/**
+ * Account request/response correlation and opaque managed-password ownership.
+ * Native code performs HTTP requests outside this handle's lock.
+ */
+public protocol FfiObsidianAccountProtocol: AnyObject, Sendable {
+    
+    /**
+     * Cancel/release an HTTP request after native cancellation/transport error.
+     *
+     * # Errors
+     * Rejects a poisoned boundary lock. Removal is idempotent for a response
+     * already consumed or invalidated by an account switch.
+     */
+    func cancelRequest(requestId: UInt64) throws 
+    
+    /**
+     * Prepare owned/shared vault discovery with version-3 negotiation.
+     *
+     * # Errors
+     * Returns a typed lock/queue error.
+     */
+    func listVaults(token: String) throws  -> ObsidianHttpRequest
+    
+    /**
+     * Derive a selected vault key on the background runner. Managed vaults
+     * require no user password; E2E vaults require one. Store returned bytes
+     * only after `vault_access` succeeds.
+     *
+     * # Errors
+     * Rejects an unknown vault, absent password, or key derivation failure.
+     */
+    func prepareVault(vaultId: String, password: String?) throws  -> ObsidianPreparedVault
+    
+    /**
+     * Decode the matching response; no network operation runs under the lock.
+     *
+     * # Errors
+     * Rejects stale IDs, malformed schemas and service failures with redaction.
+     */
+    func response(requestId: UInt64, status: UInt16, body: String) throws  -> ObsidianAccountResponse
+    
+    /**
+     * Prepare sign-in; native UI collects the optional one-time MFA code.
+     *
+     * # Errors
+     * Returns a typed lock/queue error without including credentials.
+     */
+    func signIn(email: String, password: String, mfa: String) throws  -> ObsidianHttpRequest
+    
+    /**
+     * Prepare remote sign-out. Native code also removes its secure token.
+     *
+     * # Errors
+     * Returns a typed lock/queue error.
+     */
+    func signOut(token: String) throws  -> ObsidianHttpRequest
+    
+    /**
+     * Validate a secure-storage token against current account metadata.
+     *
+     * # Errors
+     * Returns a typed lock/queue error.
+     */
+    func userInfo(token: String) throws  -> ObsidianHttpRequest
+    
+    /**
+     * Prepare service key validation before storing the derived profile key.
+     *
+     * # Errors
+     * Rejects unknown vaults or invalid key lengths.
+     */
+    func vaultAccess(token: String, vaultId: String, keyBytes: Data) throws  -> ObsidianHttpRequest
+    
+}
+/**
+ * Account request/response correlation and opaque managed-password ownership.
+ * Native code performs HTTP requests outside this handle's lock.
+ */
+open class FfiObsidianAccount: FfiObsidianAccountProtocol, @unchecked Sendable {
+    fileprivate let handle: UInt64
+
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public struct NoHandle {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    required public init(unsafeFromHandle handle: UInt64) {
+        self.handle = handle
+    }
+
+    // This constructor can be used to instantiate a fake object.
+    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    //
+    // - Warning:
+    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public init(noHandle: NoHandle) {
+        self.handle = 0
+    }
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public func uniffiCloneHandle() -> UInt64 {
+        return try! rustCall { uniffi_tasknotes_core_ffi_fn_clone_ffiobsidianaccount(self.handle, $0) }
+    }
+    /**
+     * Create an account boundary with no stored credentials.
+     */
+public convenience init() {
+    let handle =
+        try! rustCall() {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_constructor_ffiobsidianaccount_new(uniffiCallStatus
+    )
+}
+    self.init(unsafeFromHandle: handle)
+}
+
+    deinit {
+        if handle == 0 {
+            // Mock objects have handle=0 don't try to free them
+            return
+        }
+
+        try! rustCall { uniffi_tasknotes_core_ffi_fn_free_ffiobsidianaccount(handle, $0) }
+    }
+
+    
+
+    
+    /**
+     * Cancel/release an HTTP request after native cancellation/transport error.
+     *
+     * # Errors
+     * Rejects a poisoned boundary lock. Removal is idempotent for a response
+     * already consumed or invalidated by an account switch.
+     */
+open func cancelRequest(requestId: UInt64)throws   {try rustCallWithError(FfiConverterTypeObsidianBoundaryError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_cancel_request(
+            self.uniffiCloneHandle(),
+        FfiConverterUInt64.lower(requestId),uniffiCallStatus
+    )
+}
+}
+    
+    /**
+     * Prepare owned/shared vault discovery with version-3 negotiation.
+     *
+     * # Errors
+     * Returns a typed lock/queue error.
+     */
+open func listVaults(token: String)throws  -> ObsidianHttpRequest  {
+    return try  FfiConverterTypeObsidianHttpRequest_lift(try rustCallWithError(FfiConverterTypeObsidianBoundaryError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_list_vaults(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(token),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Derive a selected vault key on the background runner. Managed vaults
+     * require no user password; E2E vaults require one. Store returned bytes
+     * only after `vault_access` succeeds.
+     *
+     * # Errors
+     * Rejects an unknown vault, absent password, or key derivation failure.
+     */
+open func prepareVault(vaultId: String, password: String?)throws  -> ObsidianPreparedVault  {
+    return try  FfiConverterTypeObsidianPreparedVault_lift(try rustCallWithError(FfiConverterTypeObsidianBoundaryError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_prepare_vault(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(vaultId),
+        FfiConverterOptionString.lower(password),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Decode the matching response; no network operation runs under the lock.
+     *
+     * # Errors
+     * Rejects stale IDs, malformed schemas and service failures with redaction.
+     */
+open func response(requestId: UInt64, status: UInt16, body: String)throws  -> ObsidianAccountResponse  {
+    return try  FfiConverterTypeObsidianAccountResponse_lift(try rustCallWithError(FfiConverterTypeObsidianBoundaryError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_response(
+            self.uniffiCloneHandle(),
+        FfiConverterUInt64.lower(requestId),
+        FfiConverterUInt16.lower(status),
+        FfiConverterString.lower(body),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Prepare sign-in; native UI collects the optional one-time MFA code.
+     *
+     * # Errors
+     * Returns a typed lock/queue error without including credentials.
+     */
+open func signIn(email: String, password: String, mfa: String)throws  -> ObsidianHttpRequest  {
+    return try  FfiConverterTypeObsidianHttpRequest_lift(try rustCallWithError(FfiConverterTypeObsidianBoundaryError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_sign_in(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(email),
+        FfiConverterString.lower(password),
+        FfiConverterString.lower(mfa),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Prepare remote sign-out. Native code also removes its secure token.
+     *
+     * # Errors
+     * Returns a typed lock/queue error.
+     */
+open func signOut(token: String)throws  -> ObsidianHttpRequest  {
+    return try  FfiConverterTypeObsidianHttpRequest_lift(try rustCallWithError(FfiConverterTypeObsidianBoundaryError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_sign_out(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(token),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Validate a secure-storage token against current account metadata.
+     *
+     * # Errors
+     * Returns a typed lock/queue error.
+     */
+open func userInfo(token: String)throws  -> ObsidianHttpRequest  {
+    return try  FfiConverterTypeObsidianHttpRequest_lift(try rustCallWithError(FfiConverterTypeObsidianBoundaryError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_user_info(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(token),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Prepare service key validation before storing the derived profile key.
+     *
+     * # Errors
+     * Rejects unknown vaults or invalid key lengths.
+     */
+open func vaultAccess(token: String, vaultId: String, keyBytes: Data)throws  -> ObsidianHttpRequest  {
+    return try  FfiConverterTypeObsidianHttpRequest_lift(try rustCallWithError(FfiConverterTypeObsidianBoundaryError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffiobsidianaccount_vault_access(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(token),
+        FfiConverterString.lower(vaultId),
+        FfiConverterData.lower(keyBytes),uniffiCallStatus
+    )
+})
+}
+    
+
+    
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeFfiObsidianAccount: FfiConverter {
+    typealias FfiType = UInt64
+    typealias SwiftType = FfiObsidianAccount
+
+    public static func lift(_ handle: UInt64) throws -> FfiObsidianAccount {
+        return FfiObsidianAccount(unsafeFromHandle: handle)
+    }
+
+    public static func lower(_ value: FfiObsidianAccount) -> UInt64 {
+        return value.uniffiCloneHandle()
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> FfiObsidianAccount {
+        let handle: UInt64 = try readInt(&buf)
+        return try lift(handle)
+    }
+
+    public static func write(_ value: FfiObsidianAccount, into buf: inout [UInt8]) {
+        writeInt(&buf, lower(value))
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeFfiObsidianAccount_lift(_ handle: UInt64) throws -> FfiObsidianAccount {
+    return try FfiConverterTypeFfiObsidianAccount.lift(handle)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeFfiObsidianAccount_lower(_ value: FfiObsidianAccount) -> UInt64 {
+    return FfiConverterTypeFfiObsidianAccount.lower(value)
+}
+
+
+
+
+
+
+/**
+ * Serial native session wrapper. The host owns socket epochs, secure storage,
+ * monotonic timers and DB transactions, with no callbacks under this lock.
+ */
+public protocol FfiObsidianSessionProtocol: AnyObject, Sendable {
+    
+    /**
+     * Apply one authenticated opaque download using its original pending
+     * metadata. Exact retry reuses staged bytes and the durable remote journal.
+     * `complete_remote` remains separate and fails before this succeeds.
+     *
+     * # Errors
+     * Rejects stale/wrong-epoch handles, changed owners or application failure.
+     */
+    func applyDownload(transferId: String) throws 
+    
+    /**
+     * Begin opening the socket and replay committed pending notices.
+     *
+     * # Errors
+     * Rejects an already active session.
+     */
+    func begin(nowMs: UInt64) throws  -> [ObsidianSessionEffect]
+    
+    /**
+     * Bind one actual remote vault to its private runtime profile. The session
+     * holds a Weak engine reference, and creates no engine/callback cycle.
+     * Exact same-owner rebind is idempotent; a different owner requires unbind.
+     *
+     * # Errors
+     * Rejects local profiles, closed engines or changed durable vault ownership.
+     */
+    func bindRuntime(engine: FfiFacetEngine, profileId: String) throws 
+    
+    /**
+     * Cancel transport work and return all pending receipt identifiers.
+     *
+     * # Errors
+     * Returns a typed lock failure.
+     */
+    func cancel(nowMs: UInt64) throws  -> [ObsidianSessionEffect]
+    
+    /**
+     * Non-secret crash-recovery envelope, for explicit lifecycle persistence.
+     *
+     * # Errors
+     * Returns a typed lock/serialization error.
+     */
+    func checkpointJson() throws  -> String
+    
+    /**
+     * Confirm the exact checkpoint snapshot has committed to profile storage.
+     *
+     * # Errors
+     * Rejects unknown/out-of-order barrier revisions.
+     */
+    func checkpointPersisted(revision: UInt64, nowMs: UInt64) throws  -> [ObsidianSessionEffect]
+    
+    /**
+     * Mark a remote revision durably applied or parked in the conflict inbox.
+     *
+     * # Errors
+     * Rejects notices not yet delivered behind the durability barrier.
+     */
+    func completeRemote(uid: UInt64) throws  -> [ObsidianSessionEffect]
+    
+    /**
+     * Report current-socket loss; queued upload snapshots remain immutable.
+     *
+     * # Errors
+     * Returns a typed lock failure.
+     */
+    func disconnected(nowMs: UInt64) throws  -> [ObsidianSessionEffect]
+    
+    /**
+     * Report successful socket opening for the current socket epoch.
+     *
+     * # Errors
+     * Rejects an unexpected lifecycle callback.
+     */
+    func opened(nowMs: UInt64) throws  -> [ObsidianSessionEffect]
+    
+    /**
+     * Queue a service revision download once metadata is durably available.
+     *
+     * # Errors
+     * Rejects invalid revision identifiers or queue exhaustion.
+     */
+    func queueDownload(uid: UInt64, nowMs: UInt64) throws  -> [ObsidianSessionEffect]
+    
+    /**
+     * Queue the exact durable outbox head with its original clocks and bytes.
+     * Admission precedes the single Rust encrypted-frame allocation.
+     *
+     * # Errors
+     * Rejects wrong/closed owners, changed receipts, nonce or memory admission.
+     */
+    func queueDurableUpload(operationId: String, nonce: Data, nowMs: UInt64) throws  -> [ObsidianSessionEffect]
+    
+    /**
+     * Report a complete encrypted binary frame.
+     *
+     * # Errors
+     * Returns a typed lock/lifecycle failure.
+     */
+    func receiveBinary(bytes: Data, nowMs: UInt64) throws  -> [ObsidianSessionEffect]
+    
+    /**
+     * Report a complete text frame without persisting/logging it.
+     *
+     * # Errors
+     * Returns a typed lock/lifecycle failure.
+     */
+    func receiveText(text: String, nowMs: UInt64) throws  -> [ObsidianSessionEffect]
+    
+    /**
+     * Wake heartbeat, timeout and reconnect work using a monotonic clock.
+     *
+     * # Errors
+     * Returns a typed lock failure.
+     */
+    func tick(nowMs: UInt64) throws  -> [ObsidianSessionEffect]
+    
+    /**
+     * Stop socket work, drop transient completions and invalidate this binding.
+     * Durable incoming images, outbox and pending notices remain for replay.
+     *
+     * # Errors
+     * Returns a poisoned serialization lock or protocol state failure.
+     */
+    func unbindRuntime(nowMs: UInt64) throws  -> [ObsidianSessionEffect]
+    
+}
+/**
+ * Serial native session wrapper. The host owns socket epochs, secure storage,
+ * monotonic timers and DB transactions, with no callbacks under this lock.
+ */
+open class FfiObsidianSession: FfiObsidianSessionProtocol, @unchecked Sendable {
+    fileprivate let handle: UInt64
+
+    /// Used to instantiate a [FFIObject] without an actual handle, for fakes in tests, mostly.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public struct NoHandle {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    required public init(unsafeFromHandle handle: UInt64) {
+        self.handle = handle
+    }
+
+    // This constructor can be used to instantiate a fake object.
+    // - Parameter noHandle: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    //
+    // - Warning:
+    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing handle the FFI lower functions will crash.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public init(noHandle: NoHandle) {
+        self.handle = 0
+    }
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public func uniffiCloneHandle() -> UInt64 {
+        return try! rustCall { uniffi_tasknotes_core_ffi_fn_clone_ffiobsidiansession(self.handle, $0) }
+    }
+    /**
+     * Restore one private-replica session from secure-storage key/token and
+     * durable checkpoint. Empty checkpoint JSON means first setup only.
+     *
+     * # Errors
+     * Rejects invalid configuration, key, version, or restored state.
+     */
+public convenience init(options: ObsidianSessionOptions)throws  {
+    let handle =
+        try rustCallWithError(FfiConverterTypeObsidianBoundaryError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_constructor_ffiobsidiansession_new(
+        FfiConverterTypeObsidianSessionOptions_lower(options),uniffiCallStatus
+    )
+}
+    self.init(unsafeFromHandle: handle)
+}
+
+    deinit {
+        if handle == 0 {
+            // Mock objects have handle=0 don't try to free them
+            return
+        }
+
+        try! rustCall { uniffi_tasknotes_core_ffi_fn_free_ffiobsidiansession(handle, $0) }
+    }
+
+    
+
+    
+    /**
+     * Apply one authenticated opaque download using its original pending
+     * metadata. Exact retry reuses staged bytes and the durable remote journal.
+     * `complete_remote` remains separate and fails before this succeeds.
+     *
+     * # Errors
+     * Rejects stale/wrong-epoch handles, changed owners or application failure.
+     */
+open func applyDownload(transferId: String)throws   {try rustCallWithError(FfiConverterTypeObsidianBoundaryError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_apply_download(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(transferId),uniffiCallStatus
+    )
+}
+}
+    
+    /**
+     * Begin opening the socket and replay committed pending notices.
+     *
+     * # Errors
+     * Rejects an already active session.
+     */
+open func begin(nowMs: UInt64)throws  -> [ObsidianSessionEffect]  {
+    return try  FfiConverterSequenceTypeObsidianSessionEffect.lift(try rustCallWithError(FfiConverterTypeObsidianBoundaryError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_begin(
+            self.uniffiCloneHandle(),
+        FfiConverterUInt64.lower(nowMs),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Bind one actual remote vault to its private runtime profile. The session
+     * holds a Weak engine reference, and creates no engine/callback cycle.
+     * Exact same-owner rebind is idempotent; a different owner requires unbind.
+     *
+     * # Errors
+     * Rejects local profiles, closed engines or changed durable vault ownership.
+     */
+open func bindRuntime(engine: FfiFacetEngine, profileId: String)throws   {try rustCallWithError(FfiConverterTypeObsidianBoundaryError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_bind_runtime(
+            self.uniffiCloneHandle(),
+        FfiConverterTypeFfiFacetEngine_lower(engine),
+        FfiConverterString.lower(profileId),uniffiCallStatus
+    )
+}
+}
+    
+    /**
+     * Cancel transport work and return all pending receipt identifiers.
+     *
+     * # Errors
+     * Returns a typed lock failure.
+     */
+open func cancel(nowMs: UInt64)throws  -> [ObsidianSessionEffect]  {
+    return try  FfiConverterSequenceTypeObsidianSessionEffect.lift(try rustCallWithError(FfiConverterTypeObsidianBoundaryError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_cancel(
+            self.uniffiCloneHandle(),
+        FfiConverterUInt64.lower(nowMs),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Non-secret crash-recovery envelope, for explicit lifecycle persistence.
+     *
+     * # Errors
+     * Returns a typed lock/serialization error.
+     */
+open func checkpointJson()throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeObsidianBoundaryError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_checkpoint_json(
+            self.uniffiCloneHandle(),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Confirm the exact checkpoint snapshot has committed to profile storage.
+     *
+     * # Errors
+     * Rejects unknown/out-of-order barrier revisions.
+     */
+open func checkpointPersisted(revision: UInt64, nowMs: UInt64)throws  -> [ObsidianSessionEffect]  {
+    return try  FfiConverterSequenceTypeObsidianSessionEffect.lift(try rustCallWithError(FfiConverterTypeObsidianBoundaryError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_checkpoint_persisted(
+            self.uniffiCloneHandle(),
+        FfiConverterUInt64.lower(revision),
+        FfiConverterUInt64.lower(nowMs),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Mark a remote revision durably applied or parked in the conflict inbox.
+     *
+     * # Errors
+     * Rejects notices not yet delivered behind the durability barrier.
+     */
+open func completeRemote(uid: UInt64)throws  -> [ObsidianSessionEffect]  {
+    return try  FfiConverterSequenceTypeObsidianSessionEffect.lift(try rustCallWithError(FfiConverterTypeObsidianBoundaryError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_complete_remote(
+            self.uniffiCloneHandle(),
+        FfiConverterUInt64.lower(uid),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Report current-socket loss; queued upload snapshots remain immutable.
+     *
+     * # Errors
+     * Returns a typed lock failure.
+     */
+open func disconnected(nowMs: UInt64)throws  -> [ObsidianSessionEffect]  {
+    return try  FfiConverterSequenceTypeObsidianSessionEffect.lift(try rustCallWithError(FfiConverterTypeObsidianBoundaryError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_disconnected(
+            self.uniffiCloneHandle(),
+        FfiConverterUInt64.lower(nowMs),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Report successful socket opening for the current socket epoch.
+     *
+     * # Errors
+     * Rejects an unexpected lifecycle callback.
+     */
+open func opened(nowMs: UInt64)throws  -> [ObsidianSessionEffect]  {
+    return try  FfiConverterSequenceTypeObsidianSessionEffect.lift(try rustCallWithError(FfiConverterTypeObsidianBoundaryError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_opened(
+            self.uniffiCloneHandle(),
+        FfiConverterUInt64.lower(nowMs),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Queue a service revision download once metadata is durably available.
+     *
+     * # Errors
+     * Rejects invalid revision identifiers or queue exhaustion.
+     */
+open func queueDownload(uid: UInt64, nowMs: UInt64)throws  -> [ObsidianSessionEffect]  {
+    return try  FfiConverterSequenceTypeObsidianSessionEffect.lift(try rustCallWithError(FfiConverterTypeObsidianBoundaryError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_queue_download(
+            self.uniffiCloneHandle(),
+        FfiConverterUInt64.lower(uid),
+        FfiConverterUInt64.lower(nowMs),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Queue the exact durable outbox head with its original clocks and bytes.
+     * Admission precedes the single Rust encrypted-frame allocation.
+     *
+     * # Errors
+     * Rejects wrong/closed owners, changed receipts, nonce or memory admission.
+     */
+open func queueDurableUpload(operationId: String, nonce: Data, nowMs: UInt64)throws  -> [ObsidianSessionEffect]  {
+    return try  FfiConverterSequenceTypeObsidianSessionEffect.lift(try rustCallWithError(FfiConverterTypeObsidianBoundaryError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_queue_durable_upload(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(operationId),
+        FfiConverterData.lower(nonce),
+        FfiConverterUInt64.lower(nowMs),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Report a complete encrypted binary frame.
+     *
+     * # Errors
+     * Returns a typed lock/lifecycle failure.
+     */
+open func receiveBinary(bytes: Data, nowMs: UInt64)throws  -> [ObsidianSessionEffect]  {
+    return try  FfiConverterSequenceTypeObsidianSessionEffect.lift(try rustCallWithError(FfiConverterTypeObsidianBoundaryError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_receive_binary(
+            self.uniffiCloneHandle(),
+        FfiConverterData.lower(bytes),
+        FfiConverterUInt64.lower(nowMs),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Report a complete text frame without persisting/logging it.
+     *
+     * # Errors
+     * Returns a typed lock/lifecycle failure.
+     */
+open func receiveText(text: String, nowMs: UInt64)throws  -> [ObsidianSessionEffect]  {
+    return try  FfiConverterSequenceTypeObsidianSessionEffect.lift(try rustCallWithError(FfiConverterTypeObsidianBoundaryError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_receive_text(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(text),
+        FfiConverterUInt64.lower(nowMs),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Wake heartbeat, timeout and reconnect work using a monotonic clock.
+     *
+     * # Errors
+     * Returns a typed lock failure.
+     */
+open func tick(nowMs: UInt64)throws  -> [ObsidianSessionEffect]  {
+    return try  FfiConverterSequenceTypeObsidianSessionEffect.lift(try rustCallWithError(FfiConverterTypeObsidianBoundaryError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_tick(
+            self.uniffiCloneHandle(),
+        FfiConverterUInt64.lower(nowMs),uniffiCallStatus
+    )
+})
+}
+    
+    /**
+     * Stop socket work, drop transient completions and invalidate this binding.
+     * Durable incoming images, outbox and pending notices remain for replay.
+     *
+     * # Errors
+     * Returns a poisoned serialization lock or protocol state failure.
+     */
+open func unbindRuntime(nowMs: UInt64)throws  -> [ObsidianSessionEffect]  {
+    return try  FfiConverterSequenceTypeObsidianSessionEffect.lift(try rustCallWithError(FfiConverterTypeObsidianBoundaryError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_method_ffiobsidiansession_unbind_runtime(
+            self.uniffiCloneHandle(),
+        FfiConverterUInt64.lower(nowMs),uniffiCallStatus
+    )
+})
+}
+    
+
+    
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeFfiObsidianSession: FfiConverter {
+    typealias FfiType = UInt64
+    typealias SwiftType = FfiObsidianSession
+
+    public static func lift(_ handle: UInt64) throws -> FfiObsidianSession {
+        return FfiObsidianSession(unsafeFromHandle: handle)
+    }
+
+    public static func lower(_ value: FfiObsidianSession) -> UInt64 {
+        return value.uniffiCloneHandle()
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> FfiObsidianSession {
+        let handle: UInt64 = try readInt(&buf)
+        return try lift(handle)
+    }
+
+    public static func write(_ value: FfiObsidianSession, into buf: inout [UInt8]) {
+        writeInt(&buf, lower(value))
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeFfiObsidianSession_lift(_ handle: UInt64) throws -> FfiObsidianSession {
+    return try FfiConverterTypeFfiObsidianSession.lift(handle)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeFfiObsidianSession_lower(_ value: FfiObsidianSession) -> UInt64 {
+    return FfiConverterTypeFfiObsidianSession.lower(value)
+}
+
+
+
+
+
+
+/**
  * The offline-first sync engine, as the host holds it.
  *
  * One object owns the queue, the store and the drain loop. Construct exactly
@@ -5428,6 +7957,362 @@ public func FfiConverterTypeDeadLetterError_lower(_ value: DeadLetterError) -> R
 
 
 /**
+ * Durable captured provider version surviving process termination.
+ */
+public struct FacetDisplacedMetadata: Equatable, Hashable {
+    /**
+     * Stable host backup identity.
+     */
+    public var id: String
+    /**
+     * Logical vault-relative source.
+     */
+    public var path: String
+    /**
+     * Exact retained byte count.
+     */
+    public var size: UInt64
+    /**
+     * Immutable SHA256 payload revision.
+     */
+    public var revision: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Stable host backup identity.
+         */id: String, 
+        /**
+         * Logical vault-relative source.
+         */path: String, 
+        /**
+         * Exact retained byte count.
+         */size: UInt64, 
+        /**
+         * Immutable SHA256 payload revision.
+         */revision: String) {
+        self.id = id
+        self.path = path
+        self.size = size
+        self.revision = revision
+    }
+
+    
+
+    
+}
+
+#if compiler(>=6)
+extension FacetDisplacedMetadata: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeFacetDisplacedMetadata: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> FacetDisplacedMetadata {
+        return
+            try FacetDisplacedMetadata(
+                id: FfiConverterString.read(from: &buf), 
+                path: FfiConverterString.read(from: &buf), 
+                size: FfiConverterUInt64.read(from: &buf), 
+                revision: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: FacetDisplacedMetadata, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.id, into: &buf)
+        FfiConverterString.write(value.path, into: &buf)
+        FfiConverterUInt64.write(value.size, into: &buf)
+        FfiConverterString.write(value.revision, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeFacetDisplacedMetadata_lift(_ buf: RustBuffer) throws -> FacetDisplacedMetadata {
+    return try FfiConverterTypeFacetDisplacedMetadata.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeFacetDisplacedMetadata_lower(_ value: FacetDisplacedMetadata) -> RustBuffer {
+    return FfiConverterTypeFacetDisplacedMetadata.lower(value)
+}
+
+
+/**
+ * Profile/lifetime-owned immutable read image; bytes use bounded chunks.
+ */
+public struct FacetFileSnapshot: Equatable, Hashable {
+    /**
+     * Opaque owner-checked image identity, never a path.
+     */
+    public var id: String
+    /**
+     * Exact immutable byte count.
+     */
+    public var size: UInt64
+    /**
+     * Lowercase SHA256 of the complete image.
+     */
+    public var revision: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Opaque owner-checked image identity, never a path.
+         */id: String, 
+        /**
+         * Exact immutable byte count.
+         */size: UInt64, 
+        /**
+         * Lowercase SHA256 of the complete image.
+         */revision: String) {
+        self.id = id
+        self.size = size
+        self.revision = revision
+    }
+
+    
+
+    
+}
+
+#if compiler(>=6)
+extension FacetFileSnapshot: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeFacetFileSnapshot: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> FacetFileSnapshot {
+        return
+            try FacetFileSnapshot(
+                id: FfiConverterString.read(from: &buf), 
+                size: FfiConverterUInt64.read(from: &buf), 
+                revision: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: FacetFileSnapshot, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.id, into: &buf)
+        FfiConverterUInt64.write(value.size, into: &buf)
+        FfiConverterString.write(value.revision, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeFacetFileSnapshot_lift(_ buf: RustBuffer) throws -> FacetFileSnapshot {
+    return try FfiConverterTypeFacetFileSnapshot.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeFacetFileSnapshot_lower(_ value: FacetFileSnapshot) -> RustBuffer {
+    return FfiConverterTypeFacetFileSnapshot.lower(value)
+}
+
+
+/**
+ * Durable immutable replacement intent and committed byte prefix.
+ */
+public struct FacetReplacementStage: Equatable, Hashable {
+    /**
+     * Opaque durable host stage identity.
+     */
+    public var id: String
+    /**
+     * Exact original facet-write operation identity.
+     */
+    public var operationId: String
+    /**
+     * Logical vault-relative destination.
+     */
+    public var path: String
+    /**
+     * Exact declared replacement byte count.
+     */
+    public var size: UInt64
+    /**
+     * Exact lowercase SHA256 target digest.
+     */
+    public var revision: String
+    /**
+     * Durably committed contiguous prefix length.
+     */
+    public var written: UInt64
+    /**
+     * Source is verified, immutable and ready for exchange.
+     */
+    public var sealed: Bool
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Opaque durable host stage identity.
+         */id: String, 
+        /**
+         * Exact original facet-write operation identity.
+         */operationId: String, 
+        /**
+         * Logical vault-relative destination.
+         */path: String, 
+        /**
+         * Exact declared replacement byte count.
+         */size: UInt64, 
+        /**
+         * Exact lowercase SHA256 target digest.
+         */revision: String, 
+        /**
+         * Durably committed contiguous prefix length.
+         */written: UInt64, 
+        /**
+         * Source is verified, immutable and ready for exchange.
+         */sealed: Bool) {
+        self.id = id
+        self.operationId = operationId
+        self.path = path
+        self.size = size
+        self.revision = revision
+        self.written = written
+        self.sealed = sealed
+    }
+
+    
+
+    
+}
+
+#if compiler(>=6)
+extension FacetReplacementStage: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeFacetReplacementStage: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> FacetReplacementStage {
+        return
+            try FacetReplacementStage(
+                id: FfiConverterString.read(from: &buf), 
+                operationId: FfiConverterString.read(from: &buf), 
+                path: FfiConverterString.read(from: &buf), 
+                size: FfiConverterUInt64.read(from: &buf), 
+                revision: FfiConverterString.read(from: &buf), 
+                written: FfiConverterUInt64.read(from: &buf), 
+                sealed: FfiConverterBool.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: FacetReplacementStage, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.id, into: &buf)
+        FfiConverterString.write(value.operationId, into: &buf)
+        FfiConverterString.write(value.path, into: &buf)
+        FfiConverterUInt64.write(value.size, into: &buf)
+        FfiConverterString.write(value.revision, into: &buf)
+        FfiConverterUInt64.write(value.written, into: &buf)
+        FfiConverterBool.write(value.sealed, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeFacetReplacementStage_lift(_ buf: RustBuffer) throws -> FacetReplacementStage {
+    return try FfiConverterTypeFacetReplacementStage.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeFacetReplacementStage_lower(_ value: FacetReplacementStage) -> RustBuffer {
+    return FfiConverterTypeFacetReplacementStage.lower(value)
+}
+
+
+/**
+ * Original recorded atomic outcome with metadata-only retained predecessor.
+ */
+public struct FacetStagedExchange: Equatable, Hashable {
+    /**
+     * Whether replacement/deletion actually occurred.
+     */
+    public var applied: Bool
+    /**
+     * Exact durable captured predecessor, including competing writer effects.
+     */
+    public var displaced: FacetDisplacedMetadata?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Whether replacement/deletion actually occurred.
+         */applied: Bool, 
+        /**
+         * Exact durable captured predecessor, including competing writer effects.
+         */displaced: FacetDisplacedMetadata?) {
+        self.applied = applied
+        self.displaced = displaced
+    }
+
+    
+
+    
+}
+
+#if compiler(>=6)
+extension FacetStagedExchange: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeFacetStagedExchange: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> FacetStagedExchange {
+        return
+            try FacetStagedExchange(
+                applied: FfiConverterBool.read(from: &buf), 
+                displaced: FfiConverterOptionTypeFacetDisplacedMetadata.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: FacetStagedExchange, into buf: inout [UInt8]) {
+        FfiConverterBool.write(value.applied, into: &buf)
+        FfiConverterOptionTypeFacetDisplacedMetadata.write(value.displaced, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeFacetStagedExchange_lift(_ buf: RustBuffer) throws -> FacetStagedExchange {
+    return try FfiConverterTypeFacetStagedExchange.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeFacetStagedExchange_lower(_ value: FacetStagedExchange) -> RustBuffer {
+    return FfiConverterTypeFacetStagedExchange.lower(value)
+}
+
+
+/**
  * See [`tasknotes_core::domain::FilterChain`].
  *
  * A conjunction: a task belongs when it passes **every** member. Appended
@@ -6438,6 +9323,592 @@ public func FfiConverterTypeNlpParseResult_lift(_ buf: RustBuffer) throws -> Nlp
 #endif
 public func FfiConverterTypeNlpParseResult_lower(_ value: NlpParseResult) -> RustBuffer {
     return FfiConverterTypeNlpParseResult.lower(value)
+}
+
+
+/**
+ * One deterministic account-request HTTP header.
+ */
+public struct ObsidianHttpHeader: Equatable, Hashable {
+    /**
+     * Header name.
+     */
+    public var name: String
+    /**
+     * Header value. Tokens/passwords never use this field.
+     */
+    public var value: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Header name.
+         */name: String, 
+        /**
+         * Header value. Tokens/passwords never use this field.
+         */value: String) {
+        self.name = name
+        self.value = value
+    }
+
+    
+
+    
+}
+
+#if compiler(>=6)
+extension ObsidianHttpHeader: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeObsidianHttpHeader: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ObsidianHttpHeader {
+        return
+            try ObsidianHttpHeader(
+                name: FfiConverterString.read(from: &buf), 
+                value: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ObsidianHttpHeader, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.name, into: &buf)
+        FfiConverterString.write(value.value, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeObsidianHttpHeader_lift(_ buf: RustBuffer) throws -> ObsidianHttpHeader {
+    return try FfiConverterTypeObsidianHttpHeader.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeObsidianHttpHeader_lower(_ value: ObsidianHttpHeader) -> RustBuffer {
+    return FfiConverterTypeObsidianHttpHeader.lower(value)
+}
+
+
+/**
+ * HTTP work for the native transport, not a persistent preference record.
+ */
+public struct ObsidianHttpRequest: Equatable, Hashable {
+    /**
+     * Local request identifier; never sent to Obsidian.
+     */
+    public var requestId: UInt64
+    /**
+     * Fixed official account API destination.
+     */
+    public var url: String
+    /**
+     * True: issue OPTIONS first with Origin, then the POST request.
+     */
+    public var preflight: Bool
+    /**
+     * POST headers (the OPTIONS preflight uses only Origin).
+     */
+    public var headers: [ObsidianHttpHeader]
+    /**
+     * Secret-bearing POST body; transport-only, never logged or stored.
+     */
+    public var body: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Local request identifier; never sent to Obsidian.
+         */requestId: UInt64, 
+        /**
+         * Fixed official account API destination.
+         */url: String, 
+        /**
+         * True: issue OPTIONS first with Origin, then the POST request.
+         */preflight: Bool, 
+        /**
+         * POST headers (the OPTIONS preflight uses only Origin).
+         */headers: [ObsidianHttpHeader], 
+        /**
+         * Secret-bearing POST body; transport-only, never logged or stored.
+         */body: String) {
+        self.requestId = requestId
+        self.url = url
+        self.preflight = preflight
+        self.headers = headers
+        self.body = body
+    }
+
+    
+
+    
+}
+
+#if compiler(>=6)
+extension ObsidianHttpRequest: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeObsidianHttpRequest: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ObsidianHttpRequest {
+        return
+            try ObsidianHttpRequest(
+                requestId: FfiConverterUInt64.read(from: &buf), 
+                url: FfiConverterString.read(from: &buf), 
+                preflight: FfiConverterBool.read(from: &buf), 
+                headers: FfiConverterSequenceTypeObsidianHttpHeader.read(from: &buf), 
+                body: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ObsidianHttpRequest, into buf: inout [UInt8]) {
+        FfiConverterUInt64.write(value.requestId, into: &buf)
+        FfiConverterString.write(value.url, into: &buf)
+        FfiConverterBool.write(value.preflight, into: &buf)
+        FfiConverterSequenceTypeObsidianHttpHeader.write(value.headers, into: &buf)
+        FfiConverterString.write(value.body, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeObsidianHttpRequest_lift(_ buf: RustBuffer) throws -> ObsidianHttpRequest {
+    return try FfiConverterTypeObsidianHttpRequest.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeObsidianHttpRequest_lower(_ value: ObsidianHttpRequest) -> RustBuffer {
+    return FfiConverterTypeObsidianHttpRequest.lower(value)
+}
+
+
+/**
+ * Derived profile secret. Copy key bytes into platform secure storage and
+ * release this transient record; never serialize it into the runtime DB.
+ */
+public struct ObsidianPreparedVault: Equatable, Hashable {
+    /**
+     * Non-secret selected-vault description.
+     */
+    public var vault: ObsidianRemoteVault
+    /**
+     * Exact 32-byte key for platform secure storage.
+     */
+    public var keyBytes: Data
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Non-secret selected-vault description.
+         */vault: ObsidianRemoteVault, 
+        /**
+         * Exact 32-byte key for platform secure storage.
+         */keyBytes: Data) {
+        self.vault = vault
+        self.keyBytes = keyBytes
+    }
+
+    
+
+    
+}
+
+#if compiler(>=6)
+extension ObsidianPreparedVault: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeObsidianPreparedVault: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ObsidianPreparedVault {
+        return
+            try ObsidianPreparedVault(
+                vault: FfiConverterTypeObsidianRemoteVault.read(from: &buf), 
+                keyBytes: FfiConverterData.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ObsidianPreparedVault, into buf: inout [UInt8]) {
+        FfiConverterTypeObsidianRemoteVault.write(value.vault, into: &buf)
+        FfiConverterData.write(value.keyBytes, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeObsidianPreparedVault_lift(_ buf: RustBuffer) throws -> ObsidianPreparedVault {
+    return try FfiConverterTypeObsidianPreparedVault.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeObsidianPreparedVault_lower(_ value: ObsidianPreparedVault) -> RustBuffer {
+    return FfiConverterTypeObsidianPreparedVault.lower(value)
+}
+
+
+/**
+ * Non-secret onboarding metadata for an owned or shared remote vault.
+ */
+public struct ObsidianRemoteVault: Equatable, Hashable {
+    /**
+     * Stable service identifier.
+     */
+    public var id: String
+    /**
+     * Display name.
+     */
+    public var name: String
+    /**
+     * Validated regional hostname.
+     */
+    public var host: String
+    /**
+     * Service region identifier.
+     */
+    public var region: String
+    /**
+     * Exact HKDF salt.
+     */
+    public var salt: String
+    /**
+     * Supported encryption version number.
+     */
+    public var encryptionVersion: UInt8
+    /**
+     * Service-managed password (the password itself never leaves Rust).
+     */
+    public var managed: Bool
+    /**
+     * Appeared in the account's shared-vault list.
+     */
+    public var shared: Bool
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Stable service identifier.
+         */id: String, 
+        /**
+         * Display name.
+         */name: String, 
+        /**
+         * Validated regional hostname.
+         */host: String, 
+        /**
+         * Service region identifier.
+         */region: String, 
+        /**
+         * Exact HKDF salt.
+         */salt: String, 
+        /**
+         * Supported encryption version number.
+         */encryptionVersion: UInt8, 
+        /**
+         * Service-managed password (the password itself never leaves Rust).
+         */managed: Bool, 
+        /**
+         * Appeared in the account's shared-vault list.
+         */shared: Bool) {
+        self.id = id
+        self.name = name
+        self.host = host
+        self.region = region
+        self.salt = salt
+        self.encryptionVersion = encryptionVersion
+        self.managed = managed
+        self.shared = shared
+    }
+
+    
+
+    
+}
+
+#if compiler(>=6)
+extension ObsidianRemoteVault: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeObsidianRemoteVault: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ObsidianRemoteVault {
+        return
+            try ObsidianRemoteVault(
+                id: FfiConverterString.read(from: &buf), 
+                name: FfiConverterString.read(from: &buf), 
+                host: FfiConverterString.read(from: &buf), 
+                region: FfiConverterString.read(from: &buf), 
+                salt: FfiConverterString.read(from: &buf), 
+                encryptionVersion: FfiConverterUInt8.read(from: &buf), 
+                managed: FfiConverterBool.read(from: &buf), 
+                shared: FfiConverterBool.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ObsidianRemoteVault, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.id, into: &buf)
+        FfiConverterString.write(value.name, into: &buf)
+        FfiConverterString.write(value.host, into: &buf)
+        FfiConverterString.write(value.region, into: &buf)
+        FfiConverterString.write(value.salt, into: &buf)
+        FfiConverterUInt8.write(value.encryptionVersion, into: &buf)
+        FfiConverterBool.write(value.managed, into: &buf)
+        FfiConverterBool.write(value.shared, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeObsidianRemoteVault_lift(_ buf: RustBuffer) throws -> ObsidianRemoteVault {
+    return try FfiConverterTypeObsidianRemoteVault.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeObsidianRemoteVault_lower(_ value: ObsidianRemoteVault) -> RustBuffer {
+    return FfiConverterTypeObsidianRemoteVault.lower(value)
+}
+
+
+/**
+ * Session bootstrap. Key/token fields are transient secure-storage reads;
+ * filter/checkpoint fields use the shared non-secret JSON contracts.
+ */
+public struct ObsidianSessionOptions: Equatable, Hashable {
+    /**
+     * Validated official regional hostname.
+     */
+    public var host: String
+    /**
+     * Transient secure-storage account token.
+     */
+    public var token: String
+    /**
+     * Stable remote vault identifier.
+     */
+    public var vaultId: String
+    /**
+     * Device label for service history.
+     */
+    public var deviceName: String
+    /**
+     * Exact negotiated cipher version.
+     */
+    public var encryptionVersion: UInt8
+    /**
+     * Exact remote HKDF salt.
+     */
+    public var salt: String
+    /**
+     * Transient secure-storage 32-byte key.
+     */
+    public var keyBytes: Data
+    /**
+     * Empty only on first setup; otherwise the saved versioned checkpoint.
+     */
+    public var checkpointJson: String
+    /**
+     * Optional explicit `SyncFilter` JSON; absence enables all categories.
+     */
+    public var filterJson: String?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Validated official regional hostname.
+         */host: String, 
+        /**
+         * Transient secure-storage account token.
+         */token: String, 
+        /**
+         * Stable remote vault identifier.
+         */vaultId: String, 
+        /**
+         * Device label for service history.
+         */deviceName: String, 
+        /**
+         * Exact negotiated cipher version.
+         */encryptionVersion: UInt8, 
+        /**
+         * Exact remote HKDF salt.
+         */salt: String, 
+        /**
+         * Transient secure-storage 32-byte key.
+         */keyBytes: Data, 
+        /**
+         * Empty only on first setup; otherwise the saved versioned checkpoint.
+         */checkpointJson: String, 
+        /**
+         * Optional explicit `SyncFilter` JSON; absence enables all categories.
+         */filterJson: String?) {
+        self.host = host
+        self.token = token
+        self.vaultId = vaultId
+        self.deviceName = deviceName
+        self.encryptionVersion = encryptionVersion
+        self.salt = salt
+        self.keyBytes = keyBytes
+        self.checkpointJson = checkpointJson
+        self.filterJson = filterJson
+    }
+
+    
+
+    
+}
+
+#if compiler(>=6)
+extension ObsidianSessionOptions: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeObsidianSessionOptions: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ObsidianSessionOptions {
+        return
+            try ObsidianSessionOptions(
+                host: FfiConverterString.read(from: &buf), 
+                token: FfiConverterString.read(from: &buf), 
+                vaultId: FfiConverterString.read(from: &buf), 
+                deviceName: FfiConverterString.read(from: &buf), 
+                encryptionVersion: FfiConverterUInt8.read(from: &buf), 
+                salt: FfiConverterString.read(from: &buf), 
+                keyBytes: FfiConverterData.read(from: &buf), 
+                checkpointJson: FfiConverterString.read(from: &buf), 
+                filterJson: FfiConverterOptionString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ObsidianSessionOptions, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.host, into: &buf)
+        FfiConverterString.write(value.token, into: &buf)
+        FfiConverterString.write(value.vaultId, into: &buf)
+        FfiConverterString.write(value.deviceName, into: &buf)
+        FfiConverterUInt8.write(value.encryptionVersion, into: &buf)
+        FfiConverterString.write(value.salt, into: &buf)
+        FfiConverterData.write(value.keyBytes, into: &buf)
+        FfiConverterString.write(value.checkpointJson, into: &buf)
+        FfiConverterOptionString.write(value.filterJson, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeObsidianSessionOptions_lift(_ buf: RustBuffer) throws -> ObsidianSessionOptions {
+    return try FfiConverterTypeObsidianSessionOptions.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeObsidianSessionOptions_lower(_ value: ObsidianSessionOptions) -> RustBuffer {
+    return FfiConverterTypeObsidianSessionOptions.lower(value)
+}
+
+
+/**
+ * Shared framing limits; host transports enforce these before message copying.
+ */
+public struct ObsidianTransportLimits: Equatable, Hashable {
+    /**
+     * Maximum UTF-8 text message byte count.
+     */
+    public var textMessageBytes: UInt64
+    /**
+     * Maximum binary piece byte count.
+     */
+    public var binaryMessageBytes: UInt64
+    /**
+     * Protocol's default full plaintext file limit, before service negotiation.
+     */
+    public var defaultFileBytes: UInt64
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Maximum UTF-8 text message byte count.
+         */textMessageBytes: UInt64, 
+        /**
+         * Maximum binary piece byte count.
+         */binaryMessageBytes: UInt64, 
+        /**
+         * Protocol's default full plaintext file limit, before service negotiation.
+         */defaultFileBytes: UInt64) {
+        self.textMessageBytes = textMessageBytes
+        self.binaryMessageBytes = binaryMessageBytes
+        self.defaultFileBytes = defaultFileBytes
+    }
+
+    
+
+    
+}
+
+#if compiler(>=6)
+extension ObsidianTransportLimits: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeObsidianTransportLimits: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ObsidianTransportLimits {
+        return
+            try ObsidianTransportLimits(
+                textMessageBytes: FfiConverterUInt64.read(from: &buf), 
+                binaryMessageBytes: FfiConverterUInt64.read(from: &buf), 
+                defaultFileBytes: FfiConverterUInt64.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ObsidianTransportLimits, into buf: inout [UInt8]) {
+        FfiConverterUInt64.write(value.textMessageBytes, into: &buf)
+        FfiConverterUInt64.write(value.binaryMessageBytes, into: &buf)
+        FfiConverterUInt64.write(value.defaultFileBytes, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeObsidianTransportLimits_lift(_ buf: RustBuffer) throws -> ObsidianTransportLimits {
+    return try FfiConverterTypeObsidianTransportLimits.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeObsidianTransportLimits_lower(_ value: ObsidianTransportLimits) -> RustBuffer {
+    return FfiConverterTypeObsidianTransportLimits.lower(value)
 }
 
 
@@ -9160,7 +12631,7 @@ public func FfiConverterTypeCommonWeekday_lower(_ value: CommonWeekday) -> RustB
  * committed bindings diff.
  *
  * ⚠️ UniFFI keeps Rust's `PascalCase` for error cases, so this reads
- * `.Invariant(message:)` in Swift while a plain `uniffi::Enum` reads
+ * `.Invariant(detail:)` in Swift while a plain `uniffi::Enum` reads
  * `.inProgress`. That inconsistency is upstream and expected; the generated
  * target is lint-exempt, so it will not fail a build.
  */
@@ -9176,7 +12647,7 @@ enum CoreError: Swift.Error, Equatable, Hashable, Foundation.LocalizedError {
     case Invariant(
         /**
          * What was expected, and what was seen instead.
-         */message: String
+         */detail: String
     )
     /**
      * The request never reached the server, or the response never arrived.
@@ -9184,7 +12655,7 @@ enum CoreError: Swift.Error, Equatable, Hashable, Foundation.LocalizedError {
     case Network(
         /**
          * What the transport reported.
-         */message: String
+         */detail: String
     )
     /**
      * The server answered with a non-success HTTP status.
@@ -9192,7 +12663,7 @@ enum CoreError: Swift.Error, Equatable, Hashable, Foundation.LocalizedError {
     case Api(
         /**
          * What the server said, or what the client inferred.
-         */message: String, 
+         */detail: String, 
         /**
          * The HTTP status. `0` is used for an envelope-level `success: false`,
          * which carries no HTTP status of its own.
@@ -9204,15 +12675,15 @@ enum CoreError: Swift.Error, Equatable, Hashable, Foundation.LocalizedError {
     case Validation(
         /**
          * Which field failed, and how.
-         */message: String
+         */detail: String
     )
     /**
      * The addressed resource does not exist.
      */
     case NotFound(
         /**
-         * The rendered `"<resource> not found: <id>"` message.
-         */message: String
+         * The rendered `"<resource> not found: <id>"` detail.
+         */detail: String
     )
     /**
      * No server could be reached at the configured address at all.
@@ -9220,7 +12691,7 @@ enum CoreError: Swift.Error, Equatable, Hashable, Foundation.LocalizedError {
     case Connection(
         /**
          * Why the connection could not be established.
-         */message: String
+         */detail: String
     )
 
     
@@ -9252,23 +12723,23 @@ public struct FfiConverterTypeCoreError: FfiConverterRustBuffer {
 
         
         case 1: return .Invariant(
-            message: try FfiConverterString.read(from: &buf)
+            detail: try FfiConverterString.read(from: &buf)
             )
         case 2: return .Network(
-            message: try FfiConverterString.read(from: &buf)
+            detail: try FfiConverterString.read(from: &buf)
             )
         case 3: return .Api(
-            message: try FfiConverterString.read(from: &buf), 
+            detail: try FfiConverterString.read(from: &buf), 
             status: try FfiConverterUInt16.read(from: &buf)
             )
         case 4: return .Validation(
-            message: try FfiConverterString.read(from: &buf)
+            detail: try FfiConverterString.read(from: &buf)
             )
         case 5: return .NotFound(
-            message: try FfiConverterString.read(from: &buf)
+            detail: try FfiConverterString.read(from: &buf)
             )
         case 6: return .Connection(
-            message: try FfiConverterString.read(from: &buf)
+            detail: try FfiConverterString.read(from: &buf)
             )
 
          default: throw UniffiInternalError.unexpectedEnumCase
@@ -9282,35 +12753,35 @@ public struct FfiConverterTypeCoreError: FfiConverterRustBuffer {
 
         
         
-        case let .Invariant(message):
+        case let .Invariant(detail):
             writeInt(&buf, Int32(1))
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(detail, into: &buf)
             
         
-        case let .Network(message):
+        case let .Network(detail):
             writeInt(&buf, Int32(2))
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(detail, into: &buf)
             
         
-        case let .Api(message,status):
+        case let .Api(detail,status):
             writeInt(&buf, Int32(3))
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(detail, into: &buf)
             FfiConverterUInt16.write(status, into: &buf)
             
         
-        case let .Validation(message):
+        case let .Validation(detail):
             writeInt(&buf, Int32(4))
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(detail, into: &buf)
             
         
-        case let .NotFound(message):
+        case let .NotFound(detail):
             writeInt(&buf, Int32(5))
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(detail, into: &buf)
             
         
-        case let .Connection(message):
+        case let .Connection(detail):
             writeInt(&buf, Int32(6))
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(detail, into: &buf)
             
         }
     }
@@ -9435,6 +12906,322 @@ public func FfiConverterTypeDateGroup_lower(_ value: DateGroup) -> RustBuffer {
     return FfiConverterTypeDateGroup.lower(value)
 }
 
+
+
+/**
+ * Standalone engine failures, independent of the retired server API.
+ */
+public 
+enum FacetEngineError: Swift.Error, Equatable, Hashable, Foundation.LocalizedError {
+
+    
+    
+    /**
+     * Private state cannot be read/written.
+     */
+    case Storage(
+        /**
+         * Safe diagnostic.
+         */detail: String
+    )
+    /**
+     * Platform provider/capability failure.
+     */
+    case Host(
+        /**
+         * Safe diagnostic.
+         */detail: String
+    )
+    /**
+     * Permanent provider metadata/ownership/range contract failure.
+     */
+    case HostContract(
+        /**
+         * Content-free invariant diagnostic.
+         */detail: String
+    )
+    /**
+     * Requested semantic operation is invalid.
+     */
+    case Validation(
+        /**
+         * Safe diagnostic.
+         */detail: String
+    )
+    /**
+     * Selected configuration cannot be used.
+     */
+    case Configuration(
+        /**
+         * Safe diagnostic.
+         */detail: String
+    )
+    /**
+     * Reload or resolve a preserved overlap before saving.
+     */
+    case Conflict
+    /**
+     * Profile, file, or conflict no longer exists.
+     */
+    case NotFound
+    /**
+     * Explicitly retired engine handle.
+     */
+    case Closed
+    /**
+     * Nonblocking admission or callback reentry; preserve the exact draft.
+     */
+    case Busy
+
+    
+
+    
+
+    
+    public var errorDescription: String? {
+        String(reflecting: self)
+    }
+    
+}
+
+#if compiler(>=6)
+extension FacetEngineError: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeFacetEngineError: FfiConverterRustBuffer {
+    typealias SwiftType = FacetEngineError
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> FacetEngineError {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+
+        
+
+        
+        case 1: return .Storage(
+            detail: try FfiConverterString.read(from: &buf)
+            )
+        case 2: return .Host(
+            detail: try FfiConverterString.read(from: &buf)
+            )
+        case 3: return .HostContract(
+            detail: try FfiConverterString.read(from: &buf)
+            )
+        case 4: return .Validation(
+            detail: try FfiConverterString.read(from: &buf)
+            )
+        case 5: return .Configuration(
+            detail: try FfiConverterString.read(from: &buf)
+            )
+        case 6: return .Conflict
+        case 7: return .NotFound
+        case 8: return .Closed
+        case 9: return .Busy
+
+         default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: FacetEngineError, into buf: inout [UInt8]) {
+        switch value {
+
+        
+
+        
+        
+        case let .Storage(detail):
+            writeInt(&buf, Int32(1))
+            FfiConverterString.write(detail, into: &buf)
+            
+        
+        case let .Host(detail):
+            writeInt(&buf, Int32(2))
+            FfiConverterString.write(detail, into: &buf)
+            
+        
+        case let .HostContract(detail):
+            writeInt(&buf, Int32(3))
+            FfiConverterString.write(detail, into: &buf)
+            
+        
+        case let .Validation(detail):
+            writeInt(&buf, Int32(4))
+            FfiConverterString.write(detail, into: &buf)
+            
+        
+        case let .Configuration(detail):
+            writeInt(&buf, Int32(5))
+            FfiConverterString.write(detail, into: &buf)
+            
+        
+        case .Conflict:
+            writeInt(&buf, Int32(6))
+        
+        
+        case .NotFound:
+            writeInt(&buf, Int32(7))
+        
+        
+        case .Closed:
+            writeInt(&buf, Int32(8))
+        
+        
+        case .Busy:
+            writeInt(&buf, Int32(9))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeFacetEngineError_lift(_ buf: RustBuffer) throws -> FacetEngineError {
+    return try FfiConverterTypeFacetEngineError.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeFacetEngineError_lower(_ value: FacetEngineError) -> RustBuffer {
+    return FfiConverterTypeFacetEngineError.lower(value)
+}
+
+
+/**
+ * Expected filesystem capability failure, without note contents or secrets.
+ */
+public 
+enum FacetHostError: Swift.Error, Equatable, Hashable, Foundation.LocalizedError {
+
+    
+    
+    /**
+     * A provider or persisted capability is temporarily unavailable.
+     */
+    case Unavailable(
+        /**
+         * Safe recovery diagnostic.
+         */detail: String
+    )
+    /**
+     * User must restore folder permission.
+     */
+    case PermissionDenied(
+        /**
+         * Safe recovery diagnostic.
+         */detail: String
+    )
+    /**
+     * Durable filesystem operation failed.
+     */
+    case Io(
+        /**
+         * Safe recovery diagnostic.
+         */detail: String
+    )
+    /**
+     * Permanent owned-callback violation; no provider outage retry or fallback.
+     */
+    case Contract(
+        /**
+         * Content-free invariant code or fixed diagnostic.
+         */detail: String
+    )
+
+    
+
+    
+
+    
+    public var errorDescription: String? {
+        String(reflecting: self)
+    }
+    
+}
+
+#if compiler(>=6)
+extension FacetHostError: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeFacetHostError: FfiConverterRustBuffer {
+    typealias SwiftType = FacetHostError
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> FacetHostError {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+
+        
+
+        
+        case 1: return .Unavailable(
+            detail: try FfiConverterString.read(from: &buf)
+            )
+        case 2: return .PermissionDenied(
+            detail: try FfiConverterString.read(from: &buf)
+            )
+        case 3: return .Io(
+            detail: try FfiConverterString.read(from: &buf)
+            )
+        case 4: return .Contract(
+            detail: try FfiConverterString.read(from: &buf)
+            )
+
+         default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: FacetHostError, into buf: inout [UInt8]) {
+        switch value {
+
+        
+
+        
+        
+        case let .Unavailable(detail):
+            writeInt(&buf, Int32(1))
+            FfiConverterString.write(detail, into: &buf)
+            
+        
+        case let .PermissionDenied(detail):
+            writeInt(&buf, Int32(2))
+            FfiConverterString.write(detail, into: &buf)
+            
+        
+        case let .Io(detail):
+            writeInt(&buf, Int32(3))
+            FfiConverterString.write(detail, into: &buf)
+            
+        
+        case let .Contract(detail):
+            writeInt(&buf, Int32(4))
+            FfiConverterString.write(detail, into: &buf)
+            
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeFacetHostError_lift(_ buf: RustBuffer) throws -> FacetHostError {
+    return try FfiConverterTypeFacetHostError.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeFacetHostError_lower(_ value: FacetHostError) -> RustBuffer {
+    return FfiConverterTypeFacetHostError.lower(value)
+}
 
 
 /**
@@ -9936,6 +13723,555 @@ public func FfiConverterTypeMonthlyOrdinal_lift(_ buf: RustBuffer) throws -> Mon
 #endif
 public func FfiConverterTypeMonthlyOrdinal_lower(_ value: MonthlyOrdinal) -> RustBuffer {
     return FfiConverterTypeMonthlyOrdinal.lower(value)
+}
+
+
+
+/**
+ * Account responses. Credential-bearing tokens are secure-storage inputs only.
+ */
+
+public enum ObsidianAccountResponse: Equatable, Hashable {
+    
+    /**
+     * Repeat sign-in with a one-time code.
+     */
+    case mfaRequired
+    /**
+     * A new one-time code is required.
+     */
+    case mfaRejected
+    /**
+     * Authenticated account session; immediately save token securely.
+     */
+    case signedIn(
+        /**
+         * Secure-storage input; never vault/DB/preference data.
+         */token: String, 
+        /**
+         * Display name.
+         */name: String, 
+        /**
+         * Account email.
+         */email: String
+    )
+    /**
+     * Account service metadata, not a credential cache.
+     */
+    case userInfo(
+        /**
+         * Service metadata retained as JSON.
+         */metadataJson: String
+    )
+    /**
+     * Owned/shared vault choices with no managed passwords exposed.
+     */
+    case vaults(
+        /**
+         * Stable-ID vault choices.
+         */vaults: [ObsidianRemoteVault]
+    )
+    /**
+     * The service accepted the prepared vault key proof.
+     */
+    case accessGranted
+    /**
+     * The service invalidated the account token.
+     */
+    case signedOut
+
+
+
+
+
+}
+
+#if compiler(>=6)
+extension ObsidianAccountResponse: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeObsidianAccountResponse: FfiConverterRustBuffer {
+    typealias SwiftType = ObsidianAccountResponse
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ObsidianAccountResponse {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .mfaRequired
+        
+        case 2: return .mfaRejected
+        
+        case 3: return .signedIn(token: try FfiConverterString.read(from: &buf), name: try FfiConverterString.read(from: &buf), email: try FfiConverterString.read(from: &buf)
+        )
+        
+        case 4: return .userInfo(metadataJson: try FfiConverterString.read(from: &buf)
+        )
+        
+        case 5: return .vaults(vaults: try FfiConverterSequenceTypeObsidianRemoteVault.read(from: &buf)
+        )
+        
+        case 6: return .accessGranted
+        
+        case 7: return .signedOut
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: ObsidianAccountResponse, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .mfaRequired:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .mfaRejected:
+            writeInt(&buf, Int32(2))
+        
+        
+        case let .signedIn(token,name,email):
+            writeInt(&buf, Int32(3))
+            FfiConverterString.write(token, into: &buf)
+            FfiConverterString.write(name, into: &buf)
+            FfiConverterString.write(email, into: &buf)
+            
+        
+        case let .userInfo(metadataJson):
+            writeInt(&buf, Int32(4))
+            FfiConverterString.write(metadataJson, into: &buf)
+            
+        
+        case let .vaults(vaults):
+            writeInt(&buf, Int32(5))
+            FfiConverterSequenceTypeObsidianRemoteVault.write(vaults, into: &buf)
+            
+        
+        case .accessGranted:
+            writeInt(&buf, Int32(6))
+        
+        
+        case .signedOut:
+            writeInt(&buf, Int32(7))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeObsidianAccountResponse_lift(_ buf: RustBuffer) throws -> ObsidianAccountResponse {
+    return try FfiConverterTypeObsidianAccountResponse.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeObsidianAccountResponse_lower(_ value: ObsidianAccountResponse) -> RustBuffer {
+    return FfiConverterTypeObsidianAccountResponse.lower(value)
+}
+
+
+
+/**
+ * Typed boundary failures never contain credentials or peer/file payloads.
+ */
+public 
+enum ObsidianBoundaryError: Swift.Error, Equatable, Hashable, Foundation.LocalizedError {
+
+    
+    
+    /**
+     * The engine handle's serialization lock was poisoned.
+     */
+    case Lock
+    /**
+     * A malformed local request or unmatched request identifier.
+     */
+    case Request
+    /**
+     * Nonblocking admission; retain the exact operation and retry later.
+     */
+    case Busy
+    /**
+     * Account, crypto, transport, or protocol rejection, redacted upstream.
+     */
+    case Boundary(
+        /**
+         * Stable Rust error category, for native recovery UI.
+         */code: String, 
+        /**
+         * Sanitized, fixed engine message.
+         */detail: String
+    )
+
+    
+
+    
+
+    
+    public var errorDescription: String? {
+        String(reflecting: self)
+    }
+    
+}
+
+#if compiler(>=6)
+extension ObsidianBoundaryError: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeObsidianBoundaryError: FfiConverterRustBuffer {
+    typealias SwiftType = ObsidianBoundaryError
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ObsidianBoundaryError {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+
+        
+
+        
+        case 1: return .Lock
+        case 2: return .Request
+        case 3: return .Busy
+        case 4: return .Boundary(
+            code: try FfiConverterString.read(from: &buf), 
+            detail: try FfiConverterString.read(from: &buf)
+            )
+
+         default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: ObsidianBoundaryError, into buf: inout [UInt8]) {
+        switch value {
+
+        
+
+        
+        
+        case .Lock:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .Request:
+            writeInt(&buf, Int32(2))
+        
+        
+        case .Busy:
+            writeInt(&buf, Int32(3))
+        
+        
+        case let .Boundary(code,detail):
+            writeInt(&buf, Int32(4))
+            FfiConverterString.write(code, into: &buf)
+            FfiConverterString.write(detail, into: &buf)
+            
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeObsidianBoundaryError_lift(_ buf: RustBuffer) throws -> ObsidianBoundaryError {
+    return try FfiConverterTypeObsidianBoundaryError.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeObsidianBoundaryError_lower(_ value: ObsidianBoundaryError) -> RustBuffer {
+    return FfiConverterTypeObsidianBoundaryError.lower(value)
+}
+
+
+/**
+ * Native projection of ordered protocol work. Native executors handle these
+ * after the Rust call returns; payloads/credentials are never diagnostic data.
+ */
+
+public enum ObsidianSessionEffect: Equatable, Hashable {
+    
+    /**
+     * Open a new secure socket. Ignore callbacks from superseded socket epochs.
+     */
+    case connect(
+        /**
+         * Secure official WebSocket URL.
+         */url: String
+    )
+    /**
+     * Transient WebSocket JSON, including the login token/key proof.
+     */
+    case sendText(
+        /**
+         * Transport-only payload.
+         */text: String
+    )
+    /**
+     * An encrypted binary piece.
+     */
+    case sendBinary(
+        /**
+         * Transport-only ciphertext.
+         */bytes: Data
+    )
+    /**
+     * Close/cancel the current socket.
+     */
+    case close
+    /**
+     * Save atomically, then call `checkpoint_persisted(revision)`.
+     */
+    case persistCheckpoint(
+        /**
+         * Local durability barrier revision.
+         */revision: UInt64, 
+        /**
+         * Versioned non-secret durable state.
+         */checkpointJson: String
+    )
+    /**
+     * Apply the atomic delta through the runtime, then acknowledge its revision.
+     */
+    case persistCheckpointDelta(
+        /**
+         * Exact local barrier revision.
+         */revision: UInt64, 
+        /**
+         * Cursor/initial/pending upsert/remove shared JSON envelope.
+         */deltaJson: String
+    )
+    /**
+     * Durable notice. Retain selected=false metadata without pulling content.
+     */
+    case remoteChange(
+        /**
+         * Shared Rust metadata schema, including uid/path/hash.
+         */metadataJson: String
+    )
+    /**
+     * Initial stream and its cursor barrier are committed; uploads may start.
+     */
+    case ready(
+        /**
+         * Current service cursor.
+         */cursor: UInt64
+    )
+    /**
+     * Authenticated session-owned payload. Apply by handle before completion.
+     */
+    case downloadedPayload(
+        /**
+         * Pull revision identifier.
+         */uid: UInt64, 
+        /**
+         * Opaque engine/profile/session-epoch handle, never a logical path.
+         */transferId: String, 
+        /**
+         * Exact authenticated plaintext length; no complete file crosses FFI.
+         */payloadSize: UInt64, 
+        /**
+         * Tombstone, distinct from a zero-byte file.
+         */deleted: Bool, 
+        /**
+         * Integrity hash over original bytes.
+         */contentHash: String?
+    )
+    /**
+     * Exact immutable outbox receipt acknowledged remotely.
+     */
+    case uploaded(
+        /**
+         * Caller durable mutation identifier.
+         */operationId: String, 
+        /**
+         * SHA-256 over the original snapshot.
+         */contentHash: String
+    )
+    /**
+     * Typed failure. Retryable cases reconnect on monotonic ticks.
+     */
+    case failed(
+        /**
+         * Stable error category.
+         */code: String, 
+        /**
+         * Sanitized engine message.
+         */message: String, 
+        /**
+         * Whether automatic reconnection is permitted.
+         */retryable: Bool, 
+        /**
+         * Active immutable receipt, if any.
+         */operationId: String?
+    )
+    /**
+     * Session cancellation did not acknowledge this receipt.
+     */
+    case cancelled(
+        /**
+         * Caller durable mutation identifier.
+         */operationId: String
+    )
+
+
+
+
+
+}
+
+#if compiler(>=6)
+extension ObsidianSessionEffect: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeObsidianSessionEffect: FfiConverterRustBuffer {
+    typealias SwiftType = ObsidianSessionEffect
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ObsidianSessionEffect {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .connect(url: try FfiConverterString.read(from: &buf)
+        )
+        
+        case 2: return .sendText(text: try FfiConverterString.read(from: &buf)
+        )
+        
+        case 3: return .sendBinary(bytes: try FfiConverterData.read(from: &buf)
+        )
+        
+        case 4: return .close
+        
+        case 5: return .persistCheckpoint(revision: try FfiConverterUInt64.read(from: &buf), checkpointJson: try FfiConverterString.read(from: &buf)
+        )
+        
+        case 6: return .persistCheckpointDelta(revision: try FfiConverterUInt64.read(from: &buf), deltaJson: try FfiConverterString.read(from: &buf)
+        )
+        
+        case 7: return .remoteChange(metadataJson: try FfiConverterString.read(from: &buf)
+        )
+        
+        case 8: return .ready(cursor: try FfiConverterUInt64.read(from: &buf)
+        )
+        
+        case 9: return .downloadedPayload(uid: try FfiConverterUInt64.read(from: &buf), transferId: try FfiConverterString.read(from: &buf), payloadSize: try FfiConverterUInt64.read(from: &buf), deleted: try FfiConverterBool.read(from: &buf), contentHash: try FfiConverterOptionString.read(from: &buf)
+        )
+        
+        case 10: return .uploaded(operationId: try FfiConverterString.read(from: &buf), contentHash: try FfiConverterString.read(from: &buf)
+        )
+        
+        case 11: return .failed(code: try FfiConverterString.read(from: &buf), message: try FfiConverterString.read(from: &buf), retryable: try FfiConverterBool.read(from: &buf), operationId: try FfiConverterOptionString.read(from: &buf)
+        )
+        
+        case 12: return .cancelled(operationId: try FfiConverterString.read(from: &buf)
+        )
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: ObsidianSessionEffect, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case let .connect(url):
+            writeInt(&buf, Int32(1))
+            FfiConverterString.write(url, into: &buf)
+            
+        
+        case let .sendText(text):
+            writeInt(&buf, Int32(2))
+            FfiConverterString.write(text, into: &buf)
+            
+        
+        case let .sendBinary(bytes):
+            writeInt(&buf, Int32(3))
+            FfiConverterData.write(bytes, into: &buf)
+            
+        
+        case .close:
+            writeInt(&buf, Int32(4))
+        
+        
+        case let .persistCheckpoint(revision,checkpointJson):
+            writeInt(&buf, Int32(5))
+            FfiConverterUInt64.write(revision, into: &buf)
+            FfiConverterString.write(checkpointJson, into: &buf)
+            
+        
+        case let .persistCheckpointDelta(revision,deltaJson):
+            writeInt(&buf, Int32(6))
+            FfiConverterUInt64.write(revision, into: &buf)
+            FfiConverterString.write(deltaJson, into: &buf)
+            
+        
+        case let .remoteChange(metadataJson):
+            writeInt(&buf, Int32(7))
+            FfiConverterString.write(metadataJson, into: &buf)
+            
+        
+        case let .ready(cursor):
+            writeInt(&buf, Int32(8))
+            FfiConverterUInt64.write(cursor, into: &buf)
+            
+        
+        case let .downloadedPayload(uid,transferId,payloadSize,deleted,contentHash):
+            writeInt(&buf, Int32(9))
+            FfiConverterUInt64.write(uid, into: &buf)
+            FfiConverterString.write(transferId, into: &buf)
+            FfiConverterUInt64.write(payloadSize, into: &buf)
+            FfiConverterBool.write(deleted, into: &buf)
+            FfiConverterOptionString.write(contentHash, into: &buf)
+            
+        
+        case let .uploaded(operationId,contentHash):
+            writeInt(&buf, Int32(10))
+            FfiConverterString.write(operationId, into: &buf)
+            FfiConverterString.write(contentHash, into: &buf)
+            
+        
+        case let .failed(code,message,retryable,operationId):
+            writeInt(&buf, Int32(11))
+            FfiConverterString.write(code, into: &buf)
+            FfiConverterString.write(message, into: &buf)
+            FfiConverterBool.write(retryable, into: &buf)
+            FfiConverterOptionString.write(operationId, into: &buf)
+            
+        
+        case let .cancelled(operationId):
+            writeInt(&buf, Int32(12))
+            FfiConverterString.write(operationId, into: &buf)
+            
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeObsidianSessionEffect_lift(_ buf: RustBuffer) throws -> ObsidianSessionEffect {
+    return try FfiConverterTypeObsidianSessionEffect.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeObsidianSessionEffect_lower(_ value: ObsidianSessionEffect) -> RustBuffer {
+    return FfiConverterTypeObsidianSessionEffect.lower(value)
 }
 
 
@@ -10887,7 +15223,7 @@ enum TransportError: Swift.Error, Equatable, Hashable, Foundation.LocalizedError
     case Timeout(
         /**
          * What the platform reported.
-         */message: String
+         */detail: String
     )
     /**
      * The host could not reach the network or the server at all.
@@ -10895,7 +15231,7 @@ enum TransportError: Swift.Error, Equatable, Hashable, Foundation.LocalizedError
     case Offline(
         /**
          * What the platform reported.
-         */message: String
+         */detail: String
     )
     /**
      * The TLS handshake or certificate validation failed.
@@ -10903,7 +15239,7 @@ enum TransportError: Swift.Error, Equatable, Hashable, Foundation.LocalizedError
     case Tls(
         /**
          * What the platform reported.
-         */message: String
+         */detail: String
     )
     /**
      * Anything else the platform's HTTP stack reported.
@@ -10911,7 +15247,7 @@ enum TransportError: Swift.Error, Equatable, Hashable, Foundation.LocalizedError
     case Other(
         /**
          * What the platform reported.
-         */message: String
+         */detail: String
     )
 
     
@@ -10943,16 +15279,16 @@ public struct FfiConverterTypeTransportError: FfiConverterRustBuffer {
 
         
         case 1: return .Timeout(
-            message: try FfiConverterString.read(from: &buf)
+            detail: try FfiConverterString.read(from: &buf)
             )
         case 2: return .Offline(
-            message: try FfiConverterString.read(from: &buf)
+            detail: try FfiConverterString.read(from: &buf)
             )
         case 3: return .Tls(
-            message: try FfiConverterString.read(from: &buf)
+            detail: try FfiConverterString.read(from: &buf)
             )
         case 4: return .Other(
-            message: try FfiConverterString.read(from: &buf)
+            detail: try FfiConverterString.read(from: &buf)
             )
 
          default: throw UniffiInternalError.unexpectedEnumCase
@@ -10966,24 +15302,24 @@ public struct FfiConverterTypeTransportError: FfiConverterRustBuffer {
 
         
         
-        case let .Timeout(message):
+        case let .Timeout(detail):
             writeInt(&buf, Int32(1))
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(detail, into: &buf)
             
         
-        case let .Offline(message):
+        case let .Offline(detail):
             writeInt(&buf, Int32(2))
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(detail, into: &buf)
             
         
-        case let .Tls(message):
+        case let .Tls(detail):
             writeInt(&buf, Int32(3))
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(detail, into: &buf)
             
         
-        case let .Other(message):
+        case let .Other(detail):
             writeInt(&buf, Int32(4))
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(detail, into: &buf)
             
         }
     }
@@ -11097,7 +15433,7 @@ enum VaultBoundaryError: Swift.Error, Equatable, Hashable, Foundation.LocalizedE
     case Configuration(
         /**
          * Safe configuration diagnostic, without vault contents.
-         */message: String
+         */detail: String
     )
     /**
      * A document or requested edit is invalid.
@@ -11105,7 +15441,7 @@ enum VaultBoundaryError: Swift.Error, Equatable, Hashable, Foundation.LocalizedE
     case Document(
         /**
          * Safe document diagnostic, without document contents.
-         */message: String
+         */detail: String
     )
     /**
      * A path is not a safe vault-relative identity.
@@ -11145,10 +15481,10 @@ public struct FfiConverterTypeVaultBoundaryError: FfiConverterRustBuffer {
 
         
         case 1: return .Configuration(
-            message: try FfiConverterString.read(from: &buf)
+            detail: try FfiConverterString.read(from: &buf)
             )
         case 2: return .Document(
-            message: try FfiConverterString.read(from: &buf)
+            detail: try FfiConverterString.read(from: &buf)
             )
         case 3: return .Path
         case 4: return .Conflict
@@ -11164,14 +15500,14 @@ public struct FfiConverterTypeVaultBoundaryError: FfiConverterRustBuffer {
 
         
         
-        case let .Configuration(message):
+        case let .Configuration(detail):
             writeInt(&buf, Int32(1))
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(detail, into: &buf)
             
         
-        case let .Document(message):
+        case let .Document(detail):
             writeInt(&buf, Int32(2))
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(detail, into: &buf)
             
         
         case .Path:
@@ -11496,6 +15832,30 @@ fileprivate struct FfiConverterOptionData: FfiConverterRustBuffer {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterOptionTypeFfiFacetPayload: FfiConverterRustBuffer {
+    typealias SwiftType = FfiFacetPayload?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeFfiFacetPayload.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeFfiFacetPayload.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterOptionTypeTaskNotesApi: FfiConverterRustBuffer {
     typealias SwiftType = TaskNotesApi?
 
@@ -11536,6 +15896,54 @@ fileprivate struct FfiConverterOptionTypeCommonRecurrenceDraft: FfiConverterRust
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeCommonRecurrenceDraft.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterOptionTypeFacetDisplacedMetadata: FfiConverterRustBuffer {
+    typealias SwiftType = FacetDisplacedMetadata?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeFacetDisplacedMetadata.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeFacetDisplacedMetadata.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterOptionTypeFacetFileSnapshot: FfiConverterRustBuffer {
+    typealias SwiftType = FacetFileSnapshot?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeFacetFileSnapshot.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeFacetFileSnapshot.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -12101,6 +16509,31 @@ fileprivate struct FfiConverterSequenceTypeDeadLetterEntry: FfiConverterRustBuff
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterSequenceTypeFacetDisplacedMetadata: FfiConverterRustBuffer {
+    typealias SwiftType = [FacetDisplacedMetadata]
+
+    public static func write(_ value: [FacetDisplacedMetadata], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeFacetDisplacedMetadata.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [FacetDisplacedMetadata] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [FacetDisplacedMetadata]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeFacetDisplacedMetadata.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterSequenceTypeFilterConfig: FfiConverterRustBuffer {
     typealias SwiftType = [FilterConfig]
 
@@ -12168,6 +16601,56 @@ fileprivate struct FfiConverterSequenceTypeInlineTimeEntry: FfiConverterRustBuff
         seq.reserveCapacity(Int(len))
         for _ in 0 ..< len {
             seq.append(try FfiConverterTypeInlineTimeEntry.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceTypeObsidianHttpHeader: FfiConverterRustBuffer {
+    typealias SwiftType = [ObsidianHttpHeader]
+
+    public static func write(_ value: [ObsidianHttpHeader], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeObsidianHttpHeader.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [ObsidianHttpHeader] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [ObsidianHttpHeader]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeObsidianHttpHeader.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceTypeObsidianRemoteVault: FfiConverterRustBuffer {
+    typealias SwiftType = [ObsidianRemoteVault]
+
+    public static func write(_ value: [ObsidianRemoteVault], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeObsidianRemoteVault.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [ObsidianRemoteVault] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [ObsidianRemoteVault]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeObsidianRemoteVault.read(from: &buf))
         }
         return seq
     }
@@ -12293,6 +16776,31 @@ fileprivate struct FfiConverterSequenceTypeCommonWeekday: FfiConverterRustBuffer
         seq.reserveCapacity(Int(len))
         for _ in 0 ..< len {
             seq.append(try FfiConverterTypeCommonWeekday.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceTypeObsidianSessionEffect: FfiConverterRustBuffer {
+    typealias SwiftType = [ObsidianSessionEffect]
+
+    public static func write(_ value: [ObsidianSessionEffect], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeObsidianSessionEffect.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [ObsidianSessionEffect] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [ObsidianSessionEffect]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeObsidianSessionEffect.read(from: &buf))
         }
         return seq
     }
@@ -13784,6 +18292,19 @@ public func parseTaskInput(input: String, today: String)throws  -> NlpParseResul
 })
 }
 /**
+ * Return the authoritative native transport resource policy.
+ *
+ * # Errors
+ * Reports an unsupported platform integer width.
+ */
+public func obsidianTransportLimits()throws  -> ObsidianTransportLimits  {
+    return try  FfiConverterTypeObsidianTransportLimits_lift(try rustCallWithError(FfiConverterTypeObsidianBoundaryError_lift) {
+        uniffiCallStatus in
+    uniffi_tasknotes_core_ffi_fn_func_obsidian_transport_limits(uniffiCallStatus
+    )
+})
+}
+/**
  * Validate and canonically serialize the common-pattern editor model.
  *
  * # Errors
@@ -14278,6 +18799,9 @@ private let initializationResult: InitializationResult = {
     if (uniffi_tasknotes_core_ffi_checksum_func_parse_task_input() != 63614) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_tasknotes_core_ffi_checksum_func_obsidian_transport_limits() != 11202) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_build_common() != 53313) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -14351,6 +18875,120 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_sync_now() != 53642) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_list_files() != 51532) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_open_file_snapshot() != 38214) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_open_displaced_snapshot() != 18249) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_read_snapshot_chunk() != 30733) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_close_snapshot() != 17187) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_begin_replacement() != 4564) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_write_replacement_chunk() != 11198) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_seal_replacement() != 25728) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_compare_exchange_staged() != 40697) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_discard_replacement() != 42242) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_displaced_metadata() != 57896) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_facetvaultfiles_acknowledge_displaced() != 39503) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_acknowledge_upload() != 46419) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_apply_sync_checkpoint_delta() != 62061) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_close_runtime() != 60446) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_conflicts_json() != 3014) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_conflicts_page_json() != 54053) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_execute() != 17115) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_execute_payload_id_json() != 31345) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_features_json() != 46671) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_identity() != 23365) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_load_checkpoint() != 10592) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_pending_uploads_json() != 53416) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_profiles_json() != 32937) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_refresh() != 43230) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_register_profile() != 11566) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_remove_profile() != 31981) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_save_checkpoint() != 39607) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_snapshot_json() != 44877) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_begin_payload() != 32033) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_conflict_payload() != 29379) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffifacetengine_open_payload() != 64968) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_close_handle() != 53344) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_discard() != 46465) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_info_json() != 6626) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_read_chunk() != 57249) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_seal() != 25391) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffifacetpayload_write_chunk() != 5745) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_tasknotes_core_ffi_checksum_method_clock_now_millis() != 20431) {
@@ -14464,6 +19102,75 @@ private let initializationResult: InitializationResult = {
     if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_time_summary() != 8961) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_cancel_request() != 1389) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_list_vaults() != 50649) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_prepare_vault() != 4718) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_response() != 29430) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_sign_in() != 61691) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_sign_out() != 47888) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_user_info() != 47281) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffiobsidianaccount_vault_access() != 50660) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_apply_download() != 31820) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_begin() != 10328) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_bind_runtime() != 59765) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_cancel() != 28370) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_checkpoint_json() != 40477) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_checkpoint_persisted() != 40394) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_complete_remote() != 34050) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_disconnected() != 42337) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_opened() != 8305) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_queue_download() != 25380) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_queue_durable_upload() != 31365) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_receive_binary() != 65356) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_receive_text() != 21315) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_tick() != 31077) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffiobsidiansession_unbind_runtime() != 20593) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_tasknotes_core_ffi_checksum_method_ffivaultconfiguration_configuration_json() != 54722) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -14488,7 +19195,16 @@ private let initializationResult: InitializationResult = {
     if (uniffi_tasknotes_core_ffi_checksum_constructor_ffisyncengine_new() != 55747) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_tasknotes_core_ffi_checksum_constructor_ffifacetengine_new() != 11879) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_tasknotes_core_ffi_checksum_constructor_tasknotesapi_new() != 55934) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_constructor_ffiobsidianaccount_new() != 31117) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_constructor_ffiobsidiansession_new() != 16463) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_tasknotes_core_ffi_checksum_constructor_ffivaultconfiguration_new() != 16189) {
@@ -14499,6 +19215,7 @@ private let initializationResult: InitializationResult = {
     }
 
     uniffiCallbackInitClock()
+    uniffiCallbackInitFacetVaultFiles()
     uniffiCallbackInitHttpClient()
     uniffiCallbackInitMigrationStorage()
     uniffiCallbackInitQueueStorage()

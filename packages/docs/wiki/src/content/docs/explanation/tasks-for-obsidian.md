@@ -1,81 +1,72 @@
 ---
 title: About the TaskNotes clients
-description: Why native and React Native clients share one Rust policy core over an authoritative markdown vault.
+description: Why Facet native apps share a Rust task runtime and synchronize vaults without a TaskNotes server.
 sidebar:
   order: 6
 ---
 
-TaskNotes keeps durable task data in a markdown vault while several clients
-provide platform-native interaction. The vault remains authoritative; clients
-cache and queue work but never become a second source of truth.
+Facet edits TaskNotes Markdown through a shared Rust runtime, with native apps
+supplying secure storage, filesystem capabilities and transport.
 
-The central tension is unchanged. Markdown is ideal for data meant to outlive
-an application, but poorly suited to an occasionally offline device that must
-feel immediate.
+A vault can be a selected local folder or an app-private Obsidian Sync replica.
+Both choices work without a TaskNotes server. SQLite records indexes, immutable
+actions, synchronization checkpoints and conflicts; Markdown holds the task data.
+
+Markdown survives applications and makes tasks available to Obsidian and ordinary
+editors. A durable local coordinator protects interrupted edits during disconnection.
 
 ## Why policy lives in a shared core
 
-Recurrence, mutations, filtering, and synchronization are easy to make almost
-identical. Almost identical is dangerous when every client edits the same
-files.
+Recurrence, mutations and filtering are easy to make almost identical.
+Small differences become dangerous when several clients edit the same files.
 
-The native macOS and Windows clients therefore call one Rust core through
-generated UniFFI bindings. Their shells provide storage, HTTP, time, randomness,
-and retry timers. They do not reinterpret domain or wire rules.
+The [Rust implementation](https://github.com/shepherdjerred/monorepo/tree/main/packages/tasknotes-core)
+separates pure task/vault logic from its SQLite runtime adapter. Generated UniFFI
+bindings connect Swift, Kotlin and C# hosts to that runtime.
 
-That boundary covers writing recurrence rules as well as reading them. The
-[shared recurrence implementation](https://github.com/shepherdjerred/monorepo/blob/4741dca55f0a2c7d57948a6f1775240916247c3d/packages/tasknotes-core/crates/tasknotes-core/src/recurrence/common.rs)
-parses only the common patterns a native editor can reproduce without loss,
-validates recurrence drafts, and serializes their canonical RRULE form. The
-[macOS shell integration](https://github.com/shepherdjerred/monorepo/blob/4741dca55f0a2c7d57948a6f1775240916247c3d/packages/tasknotes-macos/Sources/TaskNotesKit/Detail/RecurrenceSummary.swift)
-collects presentation state but does not assemble rule text. Existing rules
-outside that closed editor model remain authoritative until a person explicitly
-replaces them.
+Queries, configured fields, arbitrary workflow values and receipts cross a
+language-neutral schema. Each host validates it. Native presentation chooses
+queries and formats results; it does not reconstruct task semantics.
 
-Windows adds a portable Presentation layer between WinUI and the host. Focused
-view models own navigation, validation, command state, and screen projections.
-This keeps Windows UI code testable without loading WinUI or the generated
-binding.
-
-The React Native client still has a TypeScript implementation. Both languages
-execute the same language-neutral JSON scenarios and recurrence corpus. Those
-fixtures are the independent oracle that exposes drift.
+The [iOS product](https://github.com/shepherdjerred/monorepo/tree/main/packages/tasks-for-obsidian)
+uses SwiftUI and the shared Apple host. Android uses Compose with generated Kotlin
+bindings. Language-neutral scenarios provide the independent behavioral oracle.
 
 ## Why clients still have host code
 
-The Rust core deliberately performs no filesystem, network, or clock I/O. Each
-platform owns the capabilities only it can implement correctly.
+The pure core performs no filesystem, network or clock I/O. The runtime adapter
+owns SQLite coordination. Native hosts implement operating-system capabilities.
 
-- macOS uses app-container files, URLSession, and Keychain-backed settings.
-- Windows uses atomic local-data files, HttpClient, and Credential Locker.
-- React Native integrates with its existing mobile storage and navigation.
+The [Apple host](https://github.com/shepherdjerred/monorepo/tree/main/packages/tasknotes-macos)
+supplies coordinated folder access, URLSession and Keychain. Android supplies
+private replica files, platform transport and Keystore-backed secrets.
+The [Windows host](https://github.com/shepherdjerred/monorepo/tree/main/packages/tasknotes-windows)
+supplies atomic local files, platform HTTP/WebSockets and secure credentials.
 
-This split preserves platform-native security and lifecycle behavior without
-copying synchronization policy.
+A folder picker grants access; it does not prove safe writes. Supported providers
+must preserve confinement, materialize bytes and retain displaced versions until
+the runtime acknowledges them. Unsupported capabilities fail visibly.
+
+Private Sync replicas avoid asking external providers to implement those
+operations. The Rust Sync session emits transport and checkpoint effects.
+The host commits checkpoint changes before acknowledging their exact revision.
+It applies downloaded bytes before completing the corresponding remote notice.
+
+Vault keys and account tokens belong in platform secure storage. Widgets receive
+small durable projections and actions. Shared containers cannot become credential
+caches. Downloaded Obsidian configuration is data; native hosts do not execute plugins.
 
 ## What remains authoritative
 
-Every successful mutation eventually becomes a markdown edit on the server.
-Offline commands are durable and replayable. Mutations the server cannot safely
-apply are parked for an explicit retry or discard decision.
+An applied local mutation becomes a coordinated Markdown edit and a durable
+receipt. A Sync profile also retains an immutable upload snapshot. Incoming
+changes merge against durable base bytes; unsafe merges enter the conflict inbox.
 
-The iOS simulator and Windows packaged-app suites share orchestration for
-temporary seeded vaults, real server processes, bearer authentication, and a
-deterministic network-failure proxy. Platform drivers remain native: Maestro
-drives iOS, while Windows uses UI Automation directly.
+Receipt identity includes the original timestamp, payload and owning profile.
+Retaining a UUID while changing the timestamp produces a different action.
+The complete envelope lets a restarted host retry an uncertain response safely.
 
-Parity is an evidence contract, not a list of test names. Each applicable
-surface names the UI, server, persistence, or markdown assertions that must run
-before the Windows gate accepts it.
-
-The strongest integration checks inspect resulting markdown, not merely a
-client's rendered state. A UI can look correct while the vault is wrong; the
-file is the contract that matters.
-
-## Related
-
-- [React Native client](https://github.com/shepherdjerred/monorepo/tree/main/packages/tasks-for-obsidian)
-- [Rust core and generated bindings](https://github.com/shepherdjerred/monorepo/tree/main/packages/tasknotes-core)
-- [Native macOS client](https://github.com/shepherdjerred/monorepo/tree/main/packages/tasknotes-macos)
-- [Native Windows client](https://github.com/shepherdjerred/monorepo/tree/main/packages/tasknotes-windows)
-- [TaskNotes server](https://github.com/shepherdjerred/monorepo/tree/main/packages/tasknotes-server)
+Native integration checks inspect real Markdown after editing and relaunch.
+Filesystem recovery, schema conformance, rendered interaction, live Sync and
+signed store artifacts prove different boundaries. A rendered task alone cannot
+prove that the vault was saved correctly.
