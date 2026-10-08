@@ -99,28 +99,29 @@ changing model identity.
 
 Schedule defaults: [Scout schedule definitions](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/schedules/scout-schedule-definitions.ts).
 
-| Workflow                   | Trigger                                          | Brain                  | Output                         |
-| -------------------------- | ------------------------------------------------ | ---------------------- | ------------------------------ |
-| data-dragon version check  | 06:00 Sun–Fri                                    | deterministic          | heartbeat + **auto-merge PR**  |
-| data-dragon weekly refresh | Sat 06:00                                        | deterministic          | heartbeat + **auto-merge PR**  |
-| season-refresh             | Mon 07:00                                        | agent research + gates | heartbeat + PR                 |
-| showcase-refresh           | Mon 10:00                                        | deterministic          | PR                             |
-| queue-windows              | daily 06:45                                      | deterministic          | heartbeat + gated PR           |
-| image-gc                   | daily 04:00                                      | deterministic          | S3 deletions                   |
-| competition updates        | every minute                                     | deterministic          | due Discord standings          |
-| clash snapshot             | every 15 minutes                                 | deterministic          | Clash-v1 schedule and roster   |
-| notification intent expiry | every 5 minutes                                  | deterministic          | overdue intents to `expired`   |
-| progression reconciliation | every minute, initially active                   | deterministic          | resume interrupted starts      |
-| V2 pipeline reconciliation | every minute; beta active, prod initially paused | deterministic          | re-drive stalled V2 work       |
-| realtime and post-match    | fixed Schedules                                  | deterministic          | match child Workflows          |
-| initial history            | reconciliation                                   | deterministic          | paged S3/lake ingestion        |
-| Explore ranked history     | on-demand Explore tool                           | deterministic          | 100 ranked games + lake fold   |
-| Explore match timelines    | on-demand Explore tool                           | deterministic          | up to 10 timelines + lake fold |
-| report Schedule reconcile  | Signal + every minute                            | deterministic          | per-report Schedules           |
-| report run                 | report Schedule or manual request                | deterministic          | persisted and Discord output   |
-| Explore turn               | one user turn                                    | LLM with durable guard | persisted answer and SSE       |
-| report-AI edit             | one user edit                                    | LLM with durable guard | persisted report revision      |
-| queue canary               | operator before/after rollout                    | deterministic          | four queue-routing results     |
+| Workflow                   | Trigger                                          | Brain                  | Output                          |
+| -------------------------- | ------------------------------------------------ | ---------------------- | ------------------------------- |
+| data-dragon version check  | 06:00 Sun–Fri                                    | deterministic          | heartbeat + **auto-merge PR**   |
+| data-dragon weekly refresh | Sat 06:00                                        | deterministic          | heartbeat + **auto-merge PR**   |
+| season-refresh             | Mon 07:00                                        | agent research + gates | heartbeat + PR                  |
+| showcase-refresh           | Mon 10:00                                        | deterministic          | PR                              |
+| queue-windows              | daily 06:45                                      | deterministic          | heartbeat + gated PR            |
+| image-gc                   | daily 04:00                                      | deterministic          | S3 deletions                    |
+| competition updates        | every minute                                     | deterministic          | due Discord standings           |
+| clash snapshot             | every 15 minutes                                 | deterministic          | Clash-v1 schedule and roster    |
+| notification intent expiry | every 5 minutes                                  | deterministic          | overdue intents to `expired`    |
+| progression reconciliation | every minute, initially active                   | deterministic          | resume interrupted starts       |
+| pipeline reconciliation    | every minute; beta active, prod initially paused | deterministic          | re-drive stalled pipeline work  |
+| prematch discovery         | every 30 seconds                                 | deterministic          | one game Workflow per live game |
+| post-match discovery       | every minute                                     | deterministic          | serialized match Workflows      |
+| initial history            | reconciliation                                   | deterministic          | paged S3/lake ingestion         |
+| Explore ranked history     | on-demand Explore tool                           | deterministic          | 100 ranked games + lake fold    |
+| Explore match timelines    | on-demand Explore tool                           | deterministic          | up to 10 timelines + lake fold  |
+| report Schedule reconcile  | Signal + every minute                            | deterministic          | per-report Schedules            |
+| report run                 | report Schedule or manual request                | deterministic          | persisted and Discord output    |
+| Explore turn               | one user turn                                    | LLM with durable guard | persisted answer and SSE        |
+| report-AI edit             | one user edit                                    | LLM with durable guard | persisted report revision       |
+| queue canary               | operator before/after rollout                    | deterministic          | four queue-routing results      |
 
 ## Glitter
 

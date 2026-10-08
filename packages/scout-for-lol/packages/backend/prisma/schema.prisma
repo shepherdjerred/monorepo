@@ -1206,36 +1206,7 @@ model BotState {
   pollEvidenceComplete      Boolean?
   pollFailureReason         String?
   pollStatus                String    @default("never")
-  // The durable prematch pass claim. One `scoutRealtimePollWorkflow` run
-  // holds it at a time, named by its Temporal run ID, whichever pipeline owns
-  // the pass. NULL `prematchPassHolder` means the pass is free. A claim goes
-  // stale only when both its start and its last renewal are past the bound.
-  prematchPassHolder        String?
-  prematchPassClaimedAt     DateTime?
-  prematchPassRenewedAt     DateTime?
   updatedAt                 DateTime  @updatedAt
-}
-
-model ActiveGame {
-  id                  Int      @id @default(autoincrement())
-  gameId              BigInt // Riot game ID (from Spectator V5 API)
-  trackedPuuids       String // JSON array of tracked puuids detected in this game
-  prematchMessageIds  String? // JSON object: Discord channel ID -> prematch message ID
-  // JSON object: Discord channel ID -> postmatch report message ID.
-  //
-  // The Bryan Bucks settlement embed replies to the postmatch report, and the
-  // report IDs were previously held only in an in-memory Map for the duration
-  // of one poll. A restart between delivering the report and announcing the
-  // settlement permanently lost the reply target, because the settlement
-  // summary is one-shot and a later pass returns nothing for an already
-  // settled pool.
-  postmatchMessageIds String?
-  prematchMatchId     String?  @unique // Platform-qualified Riot match ID and active-game key
-  detectedAt          DateTime // When we first detected this game
-  expiresAt           DateTime // TTL: auto-cleanup after this time (detectedAt + 3 hours)
-  updatedAt           DateTime @updatedAt
-
-  @@index([expiresAt])
 }
 
 // Records every match for which the AI review pipeline has been entered.
@@ -1516,15 +1487,13 @@ model BucksOpenPosition {
 // Per guild, not per match: one match can be announced in several guilds, and
 // paying guild A's winners out of guild B's losers would be wrong.
 //
-// Not a column on ActiveGame — that row has a 3-hour TTL and is swept every
-// poll, and staked Bucks must outlive it.
+// Staked Bucks outlive the live game, so the pool is its own row.
 model BucksMatchPool {
   id       Int    @id @default(autoincrement())
   matchId  String
   serverId String
 
-  // Copied from ActiveGame so the window does not depend on a row the TTL
-  // sweep deletes.
+  // When the game was detected, which opens the betting window.
   detectedAt DateTime
 
   // Retired with the peek feature; no code reads this anymore, but
@@ -2740,8 +2709,7 @@ model MatchObservation {
 
 /// Frozen 10-player Flex roster for community MVP votes. Match-global: the
 /// players are a fact of the Riot match, while ballots below are per guild.
-/// `reportMessageIds` is the durable channel→message map for tally edits;
-/// ActiveGame.postmatchMessageIds expires with the 3-hour active-game TTL.
+/// `reportMessageIds` is the durable channel→message map for tally edits.
 model MatchMvpContest {
   matchId          String    @id
   roster           Json

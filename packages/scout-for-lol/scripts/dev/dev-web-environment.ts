@@ -170,8 +170,8 @@ export function buildDevEnvironment(
     VITE_DOCS_ORIGIN: options.docsOrigin,
     // The backend picks its shape from one role rather than two booleans. A
     // local instance that does not own the single BETA gateway runs the same
-    // `application` role the split deployment will: web surface, interactive
-    // and lake workers, report lake, no shard.
+    // `application` role the hosted split does: web surface, interactive and
+    // lake workers, report lake, no shard.
     SCOUT_RUNTIME_ROLE:
       isDesignAuditBoot || !options.discordGatewayEnabled
         ? "application"

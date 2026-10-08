@@ -39,7 +39,8 @@ export const PENDING_EARNING_RETRY_DELAY_MS = 5 * 60 * 1000;
  * every stake refunded.
  *
  * Six hours is chosen against two existing constants rather than picked round:
- * `ActiveGame`'s TTL is 3h and `MAX_DISCORD_ALERT_AGE_MS` is 3h, so by the
+ * a live game is tracked for 3h (`LIVE_GAME_TTL_MS`) and
+ * `MAX_DISCORD_ALERT_AGE_MS` is 3h, so by the
  * time this fires the match can no longer arrive through the normal post-match
  * path at all. The trade, stated plainly: a match whose settlement kept
  * throwing ends in a refund rather than a wrong payout. For a friendly-stakes

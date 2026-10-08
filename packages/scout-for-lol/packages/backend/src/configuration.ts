@@ -176,6 +176,7 @@ function computeConfiguration() {
   // the process has not connected to yet.
   const runtimeRole = parseScoutRuntimeRole(
     env.get("SCOUT_RUNTIME_ROLE").asString(),
+    environment,
   );
   // Local-only escape hatch for the boot-time report-lake fold, which is the
   // one startup step a developer routinely cannot satisfy: with no published

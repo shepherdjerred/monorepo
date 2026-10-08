@@ -1,13 +1,11 @@
 import { z } from "zod";
 import { defineVersionedCodec } from "@scout-for-lol/domain/codec/versioned.ts";
-import {
-  DiscordMessageIdSchema,
-  type IsoInstant,
-  type RiotMatchId,
+import type {
+  IsoInstant,
+  RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   DiscordAccountIdSchema,
-  DiscordChannelIdSchema,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/domain/identity/discord.ts";
 import {
@@ -18,8 +16,8 @@ import {
 import type { MatchProcessingReceiptRecord } from "#src/database/durable/receipt-row.ts";
 
 /**
- * The closed set of receipt kinds the v1 dual-write bridge records, and the
- * versioned evidence each one carries.
+ * The closed set of per-match receipt kinds, and the versioned evidence each
+ * one carries.
  *
  * The domain deliberately leaves {@link ReceiptKindSchema} open — it is a
  * kebab-case brand, not an enum — because receipt kinds belong to the pipeline
@@ -80,24 +78,6 @@ export const settlementEvidenceCodec = defineVersionedCodec({
 });
 
 /**
- * Delivery evidence names the Discord messages that exist because of this
- * match, so the receipt can be checked against Discord itself. Sorted by
- * channel so a replay produces byte-identical evidence.
- */
-export const deliveryEvidenceCodec = defineVersionedCodec({
-  kind: "delivery-evidence",
-  version: 1,
-  schema: z.strictObject({
-    deliveries: z.array(
-      z.strictObject({
-        channelId: DiscordChannelIdSchema,
-        messageId: DiscordMessageIdSchema,
-      }),
-    ),
-  }),
-});
-
-/**
  * The progression stage returns nothing identifying — a challenge-run revision
  * id never leaves `processCompetitiveProgressionMatch` — so this receipt
  * records the shape of the input it ran over rather than inventing an identity
@@ -115,32 +95,9 @@ export const progressionEvidenceCodec = defineVersionedCodec({
 export type SettlementEvidence = Parameters<
   typeof settlementEvidenceCodec.serialize
 >[0];
-export type DeliveryEvidence = Parameters<
-  typeof deliveryEvidenceCodec.serialize
->[0];
 export type ProgressionEvidence = Parameters<
   typeof progressionEvidenceCodec.serialize
 >[0];
-
-/** One delivered Discord message, before it is parsed into evidence. */
-export type DeliveredMessage = { channelId: string; messageId: string };
-
-/**
- * Parse and canonicalize a guild's delivered messages. Sorting here rather
- * than at each call site is what makes a replayed delivery's evidence compare
- * equal instead of conflicting.
- */
-export function deliveryEvidence(
-  delivered: readonly DeliveredMessage[],
-): DeliveryEvidence {
-  const deliveries = delivered
-    .map((entry) => ({
-      channelId: DiscordChannelIdSchema.parse(entry.channelId),
-      messageId: DiscordMessageIdSchema.parse(entry.messageId),
-    }))
-    .toSorted((left, right) => left.channelId.localeCompare(right.channelId));
-  return { deliveries };
-}
 
 /** Sort and deduplicate an identity list so replayed evidence compares equal. */
 export function canonicalIdentities<T extends string | number>(

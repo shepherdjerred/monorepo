@@ -26,7 +26,7 @@ import {
   type TemporalBootstrapMetadata,
 } from "#shared/execution-metadata.ts";
 import * as workflowEntrypoint from "#workflows/index.ts";
-import { scoutPostMatchDiscoveryV2InputCodec } from "@scout-for-lol/temporal/workflow-contracts-v2";
+import { scoutPostMatchDiscoveryInputCodec } from "@scout-for-lol/temporal/workflow-contracts";
 
 const DYNAMIC_AGENT_TASK_MEMO = {
   [DYNAMIC_AGENT_TASK_MEMO_KEY]: true,
@@ -105,7 +105,7 @@ test.each(["beta", "prod"] as const)(
     const schedule = findScheduleById(`scout-${stage}-postmatch-discovery`);
     expect(schedule.workflowType).toBe("scoutPostMatchDiscoveryV2Workflow");
     expect(schedule.args).toEqual([
-      scoutPostMatchDiscoveryV2InputCodec.serialize({
+      scoutPostMatchDiscoveryInputCodec.serialize({
         stage,
         trigger: "schedule",
       }),

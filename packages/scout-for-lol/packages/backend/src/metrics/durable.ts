@@ -2,7 +2,9 @@ import { Counter } from "prom-client";
 import { registry } from "#src/metrics/registry.ts";
 
 /**
- * Parity instrumentation for the durable dual-write bridge.
+ * Instrumentation for durable record writes (`durable/match/durable-facts.ts`).
+ * The metric names keep the `dualwrite` word they were introduced under, so
+ * existing dashboards and alerts keep reading them.
  *
  * THIS IS THE SINGLE DEFINITION SITE for these metrics. prom-client throws at
  * import time when two modules register the same metric name on the shared
@@ -19,14 +21,14 @@ import { registry } from "#src/metrics/registry.ts";
 
 export const scoutDurableDualwriteFailuresTotal = new Counter({
   name: "scout_durable_dualwrite_failures_total",
-  help: "Durable dual-write side-effects that failed without failing the v1 path, by write kind.",
+  help: "Durable record writes that failed without failing the effect they describe, by write kind.",
   labelNames: ["write_kind"] as const,
   registers: [registry],
 });
 
 export const scoutDurableDualwriteRecordsTotal = new Counter({
   name: "scout_durable_dualwrite_records_total",
-  help: "Durable facts recorded alongside the v1 pipeline, by write kind and repository outcome.",
+  help: "Durable facts recorded, by write kind and repository outcome.",
   labelNames: ["write_kind", "outcome"] as const,
   registers: [registry],
 });

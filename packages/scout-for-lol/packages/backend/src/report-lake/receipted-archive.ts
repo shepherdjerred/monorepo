@@ -178,7 +178,7 @@ const ARCHIVE_POOL_MAX_WAIT_MS = 10_000;
  * is what keeps a starved follower from spending its whole lifetime waiting
  * and then failing for want of budget, and it keeps the normal case — one
  * holder, one follower — inside the full external deadline with room to
- * spare. This mirrors the 600/900 split `temporal/v2/effect-fence.ts`
+ * spare. This mirrors the 600/900 split `temporal/effect-fence.ts`
  * documents for the same class of hazard.
  */
 export type ArchiveFenceBudget = {

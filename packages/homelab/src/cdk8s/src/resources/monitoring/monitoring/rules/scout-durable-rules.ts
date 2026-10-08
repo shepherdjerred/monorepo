@@ -36,7 +36,7 @@ import { escapePrometheusTemplate } from "./shared.ts";
  * ## Why none of these name a role
  *
  * Every gauge here is produced by whichever role owns the database sweeps —
- * `application-isolated` in both stages — and the rules deliberately do not
+ * `application` in both stages — and the rules deliberately do not
  * say which. They ask whether the answer exists and what it says, so they need
  * no edit when a stage's sweep owner changes.
  *
@@ -173,7 +173,7 @@ export function getScoutDurableRuleGroup(): PrometheusRuleSpecGroups {
         annotations: {
           summary: "Scout finished live matches without minting their reports",
           message: escapePrometheusTemplate(
-            "Scout {{ $labels.environment }} has {{ $value }} live V2 match(es) observed in the last 6 hours whose processing finished at least 15 minutes ago with a subscribed channel owed a report, but no postmatch intent was minted and no report was rendered. Those reports will never be sent. Check `mintPostmatchNotificationIntentsV2` in recent scoutMatchProcessingV2Workflow histories. After fixing the cause, render the missed reports with scoutSilentPostmatchBackfillV2Workflow; the backfill's receipts clear this alert.",
+            "Scout {{ $labels.environment }} has {{ $value }} live V2 match(es) observed in the last 6 hours whose processing finished at least 15 minutes ago with a subscribed channel owed a report, but no postmatch intent was minted and no report was rendered. Those reports will never be sent. Check `mintPostmatchNotificationIntentsV2` (renamed `mintPostmatchNotificationIntents`) in recent scoutMatchProcessingV2Workflow (renamed scoutMatchProcessingWorkflow) histories. After fixing the cause, render the missed reports with scoutSilentPostmatchBackfillV2Workflow (renamed scoutSilentPostmatchBackfillWorkflow); the backfill's receipts clear this alert.",
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(

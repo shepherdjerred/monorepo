@@ -6,7 +6,6 @@ import {
 } from "@scout-for-lol/data";
 import configuration from "#src/configuration.ts";
 import { evaluateHallMatch } from "#src/progression/hall/evaluate-match.ts";
-import type { HallAnnouncementDelivery } from "#src/progression/hall/break-announcement.ts";
 import {
   launchPreparedChallengeRuns,
   prepareChallengeRunsForMatch,
@@ -32,7 +31,6 @@ export async function processCompetitiveProgressionMatch(input: {
   readonly matchDataSource: "RIOT" | "SCOUT_CLIENT";
   readonly timeline: RawTimeline | null | undefined;
   readonly trackedPlayers: PlayerConfigEntry[];
-  readonly delivery: HallAnnouncementDelivery;
 }): Promise<void> {
   const preparedByRun = new Map<string, PreparedChallengeRun>();
   async function prepareCurrentRuns(): Promise<
@@ -99,7 +97,7 @@ export async function processCompetitiveProgressionMatch(input: {
   }
   await processDuelResult(input.match, timeline, configuration.environment);
 
-  await evaluateHallMatch(input.match, input.delivery);
+  await evaluateHallMatch(input.match);
   // Catch a run start or account edit that committed while evidence was being
   // staged or duel and Hall processing ran. Preparing a match revision
   // supersedes its independently launched recompute, and waiting revisions are

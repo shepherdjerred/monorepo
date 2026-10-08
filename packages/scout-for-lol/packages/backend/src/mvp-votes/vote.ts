@@ -188,9 +188,9 @@ function parseReportMessageIds(value: unknown): Record<string, string> {
 }
 
 /**
- * Persist delivered report message IDs on the contest so tally refresh
- * still has a target after ActiveGame rows expire. No-op when this match has
- * no contest (no vote furniture).
+ * Persist delivered report message IDs on the contest, the durable
+ * channel-to-message map tally refresh edits through. No-op when this match
+ * has no contest (no vote furniture).
  */
 export async function recordMatchMvpReportRefs(
   matchId: MatchId,

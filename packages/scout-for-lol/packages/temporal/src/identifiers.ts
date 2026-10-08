@@ -13,13 +13,13 @@ import type {
   ScoutQueueClass,
   ScoutStage,
 } from "./contracts.ts";
-import type { ScoutPrematchGameRef, ScoutV2Trigger } from "./contracts-v2.ts";
-import type { ScoutV2ActivityName } from "./activities.ts";
+import type {
+  ScoutPrematchGameRef,
+  ScoutTrigger,
+} from "./pipeline-contracts.ts";
+import type { ScoutPipelineActivityName } from "./activities.ts";
 
 export const SCOUT_WORKFLOW_NAMES = {
-  realtimePoll: "scoutRealtimePollWorkflow",
-  postMatchDiscovery: "scoutPostMatchDiscoveryWorkflow",
-  matchIngestion: "scoutMatchIngestionWorkflow",
   initialHistory: "scoutInitialHistoryWorkflow",
   exploreHistory: "scoutExploreHistoryWorkflow",
   exploreTimeline: "scoutExploreTimelineWorkflow",
@@ -34,38 +34,142 @@ export const SCOUT_WORKFLOW_NAMES = {
   hallBaseline: "scoutHallBaselineWorkflow",
   challengeRunRecompute: "scoutChallengeRunRecomputeWorkflow",
   duelSeries: "scoutDuelSeriesWorkflow",
-  postMatchDiscoveryV2: "scoutPostMatchDiscoveryV2Workflow",
-  matchProcessingV2: "scoutMatchProcessingV2Workflow",
-  clientMatchDispatchV2: "scoutClientMatchDispatchV2Workflow",
-  prematchDiscoveryV2: "scoutPrematchDiscoveryV2Workflow",
-  prematchGameV2: "scoutPrematchGameV2Workflow",
-  notificationV2: "scoutNotificationV2Workflow",
-  lakeProjectionV2: "scoutLakeProjectionV2Workflow",
-  recoveryBatchV2: "scoutRecoveryBatchV2Workflow",
-  pipelineReconciliationV2: "scoutPipelineReconciliationV2Workflow",
-  silentPostmatchBackfillV2: "scoutSilentPostmatchBackfillV2Workflow",
+  // The pipeline types keep their pre-rename names for one release; see
+  // `SCOUT_RENAMED_WORKFLOW_TYPES` below for why, and for the new names.
+  postMatchDiscovery: "scoutPostMatchDiscoveryV2Workflow",
+  matchProcessing: "scoutMatchProcessingV2Workflow",
+  clientMatchDispatch: "scoutClientMatchDispatchV2Workflow",
+  prematchDiscovery: "scoutPrematchDiscoveryV2Workflow",
+  prematchGame: "scoutPrematchGameV2Workflow",
+  notification: "scoutNotificationV2Workflow",
+  lakeProjection: "scoutLakeProjectionV2Workflow",
+  recoveryBatch: "scoutRecoveryBatchV2Workflow",
+  pipelineReconciliation: "scoutPipelineReconciliationV2Workflow",
+  silentPostmatchBackfill: "scoutSilentPostmatchBackfillV2Workflow",
 } as const;
 
 /**
- * The nine V2 Workflow Types, as a closed set.
+ * The nine durable match-pipeline Workflow Types, as a closed set.
  *
- * They are NEW types: the v1 entries above keep their names and their inputs
- * because open v1 executions recorded them. The task queue NAMES are likewise
- * unchanged — `scoutTaskQueues` is shared — since an open execution recorded
- * the queue it was dispatched on.
+ * The task queue NAMES are shared with every other Scout Workflow —
+ * `scoutTaskQueues` — since an open execution recorded the queue it was
+ * dispatched on.
  */
-export const SCOUT_V2_WORKFLOW_NAMES = [
-  SCOUT_WORKFLOW_NAMES.postMatchDiscoveryV2,
-  SCOUT_WORKFLOW_NAMES.matchProcessingV2,
-  SCOUT_WORKFLOW_NAMES.clientMatchDispatchV2,
-  SCOUT_WORKFLOW_NAMES.prematchDiscoveryV2,
-  SCOUT_WORKFLOW_NAMES.prematchGameV2,
-  SCOUT_WORKFLOW_NAMES.notificationV2,
-  SCOUT_WORKFLOW_NAMES.lakeProjectionV2,
-  SCOUT_WORKFLOW_NAMES.recoveryBatchV2,
-  SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2,
+export const SCOUT_PIPELINE_WORKFLOW_NAMES = [
+  SCOUT_WORKFLOW_NAMES.postMatchDiscovery,
+  SCOUT_WORKFLOW_NAMES.matchProcessing,
+  SCOUT_WORKFLOW_NAMES.clientMatchDispatch,
+  SCOUT_WORKFLOW_NAMES.prematchDiscovery,
+  SCOUT_WORKFLOW_NAMES.prematchGame,
+  SCOUT_WORKFLOW_NAMES.notification,
+  SCOUT_WORKFLOW_NAMES.lakeProjection,
+  SCOUT_WORKFLOW_NAMES.recoveryBatch,
+  SCOUT_WORKFLOW_NAMES.pipelineReconciliation,
 ] as const;
-export type ScoutV2WorkflowName = (typeof SCOUT_V2_WORKFLOW_NAMES)[number];
+export type ScoutPipelineWorkflowName =
+  (typeof SCOUT_PIPELINE_WORKFLOW_NAMES)[number];
+
+// ───────────────────────────────────────────────────────────────────────────
+// The generation rename, staged across releases
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * The renamed Workflow type of each pipeline Workflow, registered beside the
+ * name it is issued under.
+ *
+ * Temporal resolves a Workflow by its type name, and every worker that can run
+ * a Scout Workflow has to know a name before anything issues it: beta's routed
+ * Worker Deployment build, prod's embedded poller, and the central Temporal
+ * worker that owns the Schedules all update on their own schedules. So the
+ * rename lands in two steps. This release REGISTERS the renamed names — the
+ * bundle exports each Workflow under its renamed function name and keeps the
+ * old name as an alias — while everything that issues a type, Schedules,
+ * clients and child starts alike, still issues the old name held in
+ * `SCOUT_WORKFLOW_NAMES`. The follow-up switches issuance to these names once
+ * every routed bundle and the prod backend image register them, and a release
+ * after that drops the aliases.
+ *
+ * The same staging applies to Activities (`scoutPreRenameActivityType`).
+ */
+export const SCOUT_RENAMED_WORKFLOW_TYPES = {
+  [SCOUT_WORKFLOW_NAMES.postMatchDiscovery]: "scoutPostMatchDiscoveryWorkflow",
+  [SCOUT_WORKFLOW_NAMES.matchProcessing]: "scoutMatchProcessingWorkflow",
+  [SCOUT_WORKFLOW_NAMES.clientMatchDispatch]:
+    "scoutClientMatchDispatchWorkflow",
+  [SCOUT_WORKFLOW_NAMES.prematchDiscovery]: "scoutPrematchDiscoveryWorkflow",
+  [SCOUT_WORKFLOW_NAMES.prematchGame]: "scoutPrematchGameWorkflow",
+  [SCOUT_WORKFLOW_NAMES.notification]: "scoutNotificationWorkflow",
+  [SCOUT_WORKFLOW_NAMES.lakeProjection]: "scoutLakeProjectionWorkflow",
+  [SCOUT_WORKFLOW_NAMES.recoveryBatch]: "scoutRecoveryBatchWorkflow",
+  [SCOUT_WORKFLOW_NAMES.pipelineReconciliation]:
+    "scoutPipelineReconciliationWorkflow",
+  [SCOUT_WORKFLOW_NAMES.silentPostmatchBackfill]:
+    "scoutSilentPostmatchBackfillWorkflow",
+} as const satisfies Record<
+  | ScoutPipelineWorkflowName
+  | typeof SCOUT_WORKFLOW_NAMES.silentPostmatchBackfill,
+  string
+>;
+
+export type ScoutRenamedWorkflowName =
+  keyof typeof SCOUT_RENAMED_WORKFLOW_TYPES;
+
+/** Both names a pipeline Workflow is registered under during the rename. */
+export function scoutWorkflowTypesOf(
+  workflowType: ScoutRenamedWorkflowName,
+): readonly [string, string] {
+  return [workflowType, SCOUT_RENAMED_WORKFLOW_TYPES[workflowType]];
+}
+
+/**
+ * Every Workflow type a pipeline start row can carry across the rename: rows
+ * keep the type they were requested under, so a scan filtered on one name
+ * alone would strand the rows written under the other.
+ */
+export const SCOUT_PIPELINE_START_WORKFLOW_TYPES: readonly string[] =
+  SCOUT_PIPELINE_WORKFLOW_NAMES.flatMap((name) => scoutWorkflowTypesOf(name));
+
+/**
+ * The two pipeline Activities whose names did not change: one never carried
+ * the suffix, and one kept its name because open histories recorded it.
+ */
+const UNRENAMED_PIPELINE_ACTIVITIES: ReadonlySet<string> = new Set([
+  "readLegacyMatchCompletionV2",
+  "runPrematchMaintenance",
+] satisfies ScoutPipelineActivityName[]);
+
+/**
+ * The name an Activity was registered under before the rename: the
+ * `V2`-suffixed name for a renamed pipeline Activity, and the name itself for
+ * anything else. Pipeline Activities are scheduled under this name for one
+ * more release, for the reason `SCOUT_RENAMED_WORKFLOW_TYPES` gives, and
+ * Activity workers register both.
+ */
+export function scoutPreRenameActivityType(name: string): string {
+  return Object.hasOwn(SCOUT_PIPELINE_ACTIVITY_QUEUE_CLASSES, name) &&
+    !UNRENAMED_PIPELINE_ACTIVITIES.has(name)
+    ? `${name}V2`
+    : name;
+}
+
+/**
+ * Register every renamed pipeline Activity under its pre-rename name as well.
+ *
+ * Pipeline Activities are scheduled under their old names in this release, and
+ * an Activity task scheduled before the deploy retries against the new worker,
+ * so the old names must resolve. The new names are registered too, so the
+ * release that switches issuance finds every worker ready for them.
+ */
+export function withPreRenameActivityNames(
+  activities: object,
+): Record<string, unknown> {
+  const registered: Record<string, unknown> = { ...activities };
+  for (const [name, implementation] of Object.entries(activities)) {
+    const preRename = scoutPreRenameActivityType(name);
+    if (preRename !== name) registered[preRename] = implementation;
+  }
+  return registered;
+}
 
 /**
  * How a V2 family reuses a Workflow ID when something re-drives it.
@@ -111,32 +215,32 @@ export type ScoutV2WorkflowName = (typeof SCOUT_V2_WORKFLOW_NAMES)[number];
  * `REJECT_DUPLICATE` only while the table could hold one request per Workflow
  * id (SJ-205); that limitation is gone, and so is the one-shot behaviour.
  */
-export type ScoutV2ReusePolicy =
+export type ScoutReusePolicy =
   "ALLOW_DUPLICATE" | "ALLOW_DUPLICATE_FAILED_ONLY";
 
-export const SCOUT_V2_REDRIVABLE_WORKFLOW_NAMES = [
-  SCOUT_WORKFLOW_NAMES.matchProcessingV2,
-  SCOUT_WORKFLOW_NAMES.notificationV2,
-  SCOUT_WORKFLOW_NAMES.lakeProjectionV2,
-  SCOUT_WORKFLOW_NAMES.recoveryBatchV2,
+export const SCOUT_REDRIVABLE_WORKFLOW_NAMES = [
+  SCOUT_WORKFLOW_NAMES.matchProcessing,
+  SCOUT_WORKFLOW_NAMES.notification,
+  SCOUT_WORKFLOW_NAMES.lakeProjection,
+  SCOUT_WORKFLOW_NAMES.recoveryBatch,
 ] as const;
-export type ScoutV2RedrivableWorkflowName =
-  (typeof SCOUT_V2_REDRIVABLE_WORKFLOW_NAMES)[number];
+export type ScoutRedrivableWorkflowName =
+  (typeof SCOUT_REDRIVABLE_WORKFLOW_NAMES)[number];
 
 /** Every V2 Workflow whose start terms this table decides. */
-export type ScoutV2ReusePolicyWorkflowName =
-  | ScoutV2RedrivableWorkflowName
-  | typeof SCOUT_WORKFLOW_NAMES.clientMatchDispatchV2
-  | typeof SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2;
+export type ScoutReusePolicyWorkflowName =
+  | ScoutRedrivableWorkflowName
+  | typeof SCOUT_WORKFLOW_NAMES.clientMatchDispatch
+  | typeof SCOUT_WORKFLOW_NAMES.pipelineReconciliation;
 
-export const SCOUT_V2_REUSE_POLICIES = {
-  [SCOUT_WORKFLOW_NAMES.matchProcessingV2]: "ALLOW_DUPLICATE_FAILED_ONLY",
-  [SCOUT_WORKFLOW_NAMES.clientMatchDispatchV2]: "ALLOW_DUPLICATE_FAILED_ONLY",
-  [SCOUT_WORKFLOW_NAMES.notificationV2]: "ALLOW_DUPLICATE",
-  [SCOUT_WORKFLOW_NAMES.lakeProjectionV2]: "ALLOW_DUPLICATE_FAILED_ONLY",
-  [SCOUT_WORKFLOW_NAMES.recoveryBatchV2]: "ALLOW_DUPLICATE",
-  [SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2]: "ALLOW_DUPLICATE",
-} as const satisfies Record<ScoutV2ReusePolicyWorkflowName, ScoutV2ReusePolicy>;
+export const SCOUT_REUSE_POLICIES = {
+  [SCOUT_WORKFLOW_NAMES.matchProcessing]: "ALLOW_DUPLICATE_FAILED_ONLY",
+  [SCOUT_WORKFLOW_NAMES.clientMatchDispatch]: "ALLOW_DUPLICATE_FAILED_ONLY",
+  [SCOUT_WORKFLOW_NAMES.notification]: "ALLOW_DUPLICATE",
+  [SCOUT_WORKFLOW_NAMES.lakeProjection]: "ALLOW_DUPLICATE_FAILED_ONLY",
+  [SCOUT_WORKFLOW_NAMES.recoveryBatch]: "ALLOW_DUPLICATE",
+  [SCOUT_WORKFLOW_NAMES.pipelineReconciliation]: "ALLOW_DUPLICATE",
+} as const satisfies Record<ScoutReusePolicyWorkflowName, ScoutReusePolicy>;
 
 export function scoutTaskQueues(stage: ScoutStage) {
   const prefix = `scout-${stage}`;
@@ -155,13 +259,6 @@ export function scoutInteractiveWorkflowId(
   databaseRunId: string,
 ): string {
   return `scout-${stage}-${kind}-${databaseRunId}`;
-}
-
-export function scoutMatchWorkflowId(
-  stage: ScoutStage,
-  matchId: string,
-): string {
-  return `scout-${stage}-match-${matchId}`;
 }
 
 export function scoutInitialHistoryWorkflowId(
@@ -258,14 +355,16 @@ export function scoutSchedulePrefix(stage: ScoutStage): string {
 // ───────────────────────────────────────────────────────────────────────────
 
 /**
- * Every V2 Workflow ID is `scout-{stage}-{kind}-v2-{identity}` and is derived
- * only from values already in the Workflow input, so a restart, a retry and a
- * reconciliation sweep all compute the same ID and collapse onto the same
- * execution instead of racing duplicates.
+ * Every pipeline Workflow ID is `scout-{stage}-{kind}-v2-{identity}` and is
+ * derived only from values already in the Workflow input, so a restart, a
+ * retry and a reconciliation sweep all compute the same ID and collapse onto
+ * the same execution instead of racing duplicates.
  *
- * The `-v2-` marker keeps a V2 execution from colliding with its v1 sibling
- * while both pipelines run: `scout-prod-match-NA1_1` (v1) and
- * `scout-prod-match-v2-NA1_1` (V2) are the same match under two owners.
+ * The `-v2-` marker is identity, not a generation label, and stays: dropping
+ * it would make `scout-prod-match-NA1_1` collide with the closed execution the
+ * retired v1 pipeline ran under that ID, which `ALLOW_DUPLICATE_FAILED_ONLY`
+ * refuses to reuse, and would split one match across two IDs for every open
+ * execution.
  *
  * Each interpolated identity must match `[A-Za-z0-9_.:-]+`, which is what
  * `scripts/replay-*-histories.ts` selects candidate histories with. The
@@ -280,15 +379,15 @@ export function scoutSchedulePrefix(stage: ScoutStage): string {
  * execution, so an operator sweep cannot be silently absorbed by the
  * scheduled run that happened to already be in flight.
  */
-export function scoutPostMatchDiscoveryV2WorkflowId(
+export function scoutPostMatchDiscoveryWorkflowId(
   stage: ScoutStage,
-  trigger: ScoutV2Trigger,
+  trigger: ScoutTrigger,
 ): string {
   return `scout-${stage}-post-match-discovery-v2-${trigger}`;
 }
 
 /** The per-match core: one execution per match, forever. */
-export function scoutMatchProcessingV2WorkflowId(
+export function scoutMatchProcessingWorkflowId(
   stage: ScoutStage,
   riotMatchId: RiotMatchId,
 ): string {
@@ -296,18 +395,8 @@ export function scoutMatchProcessingV2WorkflowId(
 }
 
 /** One serialized native-match dispatcher per environment. */
-export function scoutClientMatchDispatchV2WorkflowId(
-  stage: ScoutStage,
-): string {
+export function scoutClientMatchDispatchWorkflowId(stage: ScoutStage): string {
   return `scout-${stage}-client-match-dispatch-v2`;
-}
-
-/**
- * The stage-singleton ID v1's retired prematch router started V2 discovery
- * under. Scheduled polls take the Schedule's own per-action IDs instead.
- */
-export function scoutPrematchDiscoveryV2WorkflowId(stage: ScoutStage): string {
-  return `scout-${stage}-prematch-discovery-v2`;
 }
 
 /**
@@ -318,28 +407,28 @@ export function scoutPrematchDiscoveryV2WorkflowId(stage: ScoutStage): string {
  * them; `gameRef.puuid` stays out of the ID and records only which account
  * surfaced the game so the spectator fetch can be re-issued.
  */
-export function scoutPrematchGameV2WorkflowId(
+export function scoutPrematchGameWorkflowId(
   stage: ScoutStage,
   gameRef: ScoutPrematchGameRef,
 ): string {
   return `scout-${stage}-prematch-game-v2-${gameRef.platform}_${gameRef.gameId}`;
 }
 
-export function scoutNotificationV2WorkflowId(
+export function scoutNotificationWorkflowId(
   stage: ScoutStage,
   intentKey: NotificationIntentKey,
 ): string {
   return `scout-${stage}-notification-v2-${intentKey}`;
 }
 
-export function scoutLakeProjectionV2WorkflowId(
+export function scoutLakeProjectionWorkflowId(
   stage: ScoutStage,
   riotMatchId: RiotMatchId,
 ): string {
   return `scout-${stage}-lake-projection-v2-${riotMatchId}`;
 }
 
-export function scoutRecoveryBatchV2WorkflowId(
+export function scoutRecoveryBatchWorkflowId(
   stage: ScoutStage,
   recoveryBatchId: RecoveryBatchId,
 ): string {
@@ -347,9 +436,9 @@ export function scoutRecoveryBatchV2WorkflowId(
 }
 
 /** One reconciliation run per trigger, for the same reason as discovery. */
-export function scoutPipelineReconciliationV2WorkflowId(
+export function scoutPipelineReconciliationWorkflowId(
   stage: ScoutStage,
-  trigger: ScoutV2Trigger,
+  trigger: ScoutTrigger,
 ): string {
   return `scout-${stage}-pipeline-reconciliation-v2-${trigger}`;
 }
@@ -362,7 +451,7 @@ export function scoutPipelineReconciliationV2WorkflowId(
  * running it, and a rerun after it closed is a deliberate new label or a
  * reuse the Workflow is idempotent under.
  */
-export function scoutSilentPostmatchBackfillV2WorkflowId(
+export function scoutSilentPostmatchBackfillWorkflowId(
   stage: ScoutStage,
   label: string,
 ): string {
@@ -377,7 +466,7 @@ export function scoutSilentPostmatchBackfillV2WorkflowId(
  * already carries. That is what lets a prematch snapshot, its match payload
  * and its timeline share one receipt scope.
  */
-export function scoutPrematchGameV2MatchId(
+export function scoutPrematchGameMatchId(
   gameRef: ScoutPrematchGameRef,
 ): RiotMatchId {
   return RiotMatchIdSchema.parse(`${gameRef.platform}_${gameRef.gameId}`);
@@ -419,44 +508,38 @@ export function scoutNotificationAttemptNonce(
  * `workflows/activity-options.ts` because the Activity Worker needs it too,
  * and that module imports `@temporalio/workflow`.
  */
-export const SCOUT_V2_ACTIVITY_QUEUE_CLASSES = {
-  resolvePostMatchDiscoveryOwnerV2: "realtime",
-  releasePostMatchPollClaimV2: "realtime",
-  renewPostMatchPollClaimV2: "realtime",
-  discoverPostMatchIdsV2: "realtime",
-  discoverPrematchGamesV2: "realtime",
-  resolvePrematchPassOwnerV2: "realtime",
-  renewPrematchPassClaimV2: "realtime",
-  releasePrematchPassClaimV2: "realtime",
-  readMatchPipelineStateV2: "realtime",
+export const SCOUT_PIPELINE_ACTIVITY_QUEUE_CLASSES = {
+  discoverPostMatchIds: "realtime",
+  discoverPrematchGames: "realtime",
+  readMatchPipelineState: "realtime",
   readLegacyMatchCompletionV2: "realtime",
-  readNotificationIntentV2: "realtime",
-  readRecoveryBatchV2: "background",
-  archiveMatchArtifactsV2: "realtime",
-  commitMatchObservationV2: "realtime",
-  settleMatchMarketsV2: "realtime",
-  applyMatchProgressionV2: "realtime",
-  finalizeTournamentResultV2: "realtime",
-  recordMatchReceiptsV2: "realtime",
-  recordClientMatchTerminalV2: "realtime",
-  advanceMatchCursorV2: "realtime",
-  mintPostmatchNotificationIntentsV2: "realtime",
-  planMatchFanOutV2: "realtime",
-  archivePrematchSnapshotV2: "realtime",
-  planPrematchFanOutV2: "realtime",
-  openPrematchMarketsV2: "realtime",
+  readNotificationIntent: "realtime",
+  readRecoveryBatch: "background",
+  archiveMatchArtifacts: "realtime",
+  commitMatchObservation: "realtime",
+  settleMatchMarkets: "realtime",
+  applyMatchProgression: "realtime",
+  finalizeTournamentResult: "realtime",
+  recordMatchReceipts: "realtime",
+  recordClientMatchTerminal: "realtime",
+  advanceMatchCursor: "realtime",
+  mintPostmatchNotificationIntents: "realtime",
+  planMatchFanOut: "realtime",
+  archivePrematchSnapshot: "realtime",
+  planPrematchFanOut: "realtime",
+  openPrematchMarkets: "realtime",
   runPrematchMaintenance: "realtime",
-  markNotificationReadyV2: "realtime",
-  renderNotificationArtifactV2: "background",
-  beginNotificationSendV2: "realtime",
-  deliverNotificationV2: "realtime",
-  recordNotificationOutcomeV2: "realtime",
-  afterNotificationDeliveredV2: "realtime",
-  stageLakeProjectionV2: "lake",
-  scanRecoveryPageV2: "background",
-  processRecoveryPageV2: "background",
-  digestRecoveryBatchV2: "background",
-  closeRecoveryBatchV2: "background",
-  scanPipelineReconciliationPageV2: "background",
-  backfillSilentPostmatchArtifactV2: "background",
-} as const satisfies Record<ScoutV2ActivityName, ScoutQueueClass>;
+  markNotificationReady: "realtime",
+  renderNotificationArtifact: "background",
+  beginNotificationSend: "realtime",
+  deliverNotification: "realtime",
+  recordNotificationOutcome: "realtime",
+  afterNotificationDelivered: "realtime",
+  stageLakeProjection: "lake",
+  scanRecoveryPage: "background",
+  processRecoveryPage: "background",
+  digestRecoveryBatch: "background",
+  closeRecoveryBatch: "background",
+  scanPipelineReconciliationPage: "background",
+  backfillSilentPostmatchArtifact: "background",
+} as const satisfies Record<ScoutPipelineActivityName, ScoutQueueClass>;

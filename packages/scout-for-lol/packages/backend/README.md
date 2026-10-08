@@ -65,7 +65,7 @@ Muted senders also retain their minimal restriction state.
 `scout_support_conversations_enabled` gates new Discord controls, screenshots,
 operator alerts, and reply DMs; stored web messages remain readable and bot DM
 intake still gets receipts. `scout_support_report_action_enabled` additionally
-controls the passive report feedback button. V2 freezes that button with the
+controls the passive report feedback button. Delivery freezes that button with the
 notification presentation before delivery. These controls create no additional
 outreach messages and do not change existing outreach budgets. Fourteen-day
 Operations measurements exclude operator conversations and count report actions
@@ -257,18 +257,23 @@ unless a tool explicitly selects or summarizes them.
 
 ## Durable match facts
 
-`src/durable/match/` holds the typed services the per-match pipeline calls.
-Each one runs an injected v1 operation — archive, settlement, progression,
-delivery, workflow start — and then records what that operation did in the
-durable tables (`MatchObservation`, `MatchTrackedAccount`,
-`MatchProcessingReceipt`, `MatchNotificationIntent`, `ScoutWorkflowStart`).
+`src/durable/match/` holds the typed services the per-match pipeline shares:
+the receipt evidence vocabulary (`receipt-evidence.ts`), the notification
+intent keys (`delivery-intents.ts`), the
+`ScoutWorkflowStart` request record (`workflow-start-facts.ts`), intent expiry
+and audience retirement, and the tracked-account association builder
+(`archive-facts.ts`). The durable tables they write are `MatchObservation`,
+`MatchTrackedAccount`, `MatchProcessingReceipt`, `MatchNotificationIntent` and
+`ScoutWorkflowStart`.
 
-The legacy v1 pipeline remains authoritative for its behaviour. Its durable writes are
-fail-open: it can never throw into the pipeline, so a recorder outage cannot
-stall ingestion or suppress a report. `ScoutEffectClaim` is still the
-at-most-once Discord delivery guard; a notification intent is a record of what
-that guard let through, keyed by the same string so the two describe the same
-send.
+Writes that RECORD an effect decided elsewhere go through the fail-open
+boundary in `durable-facts.ts`: the `ScoutWorkflowStart` request rows and the
+receipted lake staging. A recorder outage
+can never throw into the effect it describes. Writes the pipeline decides from
+are strict instead; see [The per-match core](#the-per-match-core).
+`ScoutEffectClaim` is the at-most-once guard for an effect, and a notification
+intent is keyed by the same string as its send's claim, so the two describe
+the same send.
 
 Receipt evidence names things by durable identity — Discord message ids, ledger
 row ids, object key plus content digest — never by a count or a local path, so
@@ -289,14 +294,13 @@ version wrote it rather than re-dating old artifacts from a column that meant
 something slightly different at the time.
 
 `MatchObservation`'s artifact columns are stamped from that same archive.
-`report-store/store.ts` runs live ingest through the receipted doors and passes
-the descriptor back up through `recordMatchForReportStore` to
-`requestMatchArchive`, so the stored key and digest are what the put actually
-wrote rather than a key rebuilt from the layout convention. They stay NULL when
-no object was written (no bucket configured) or when an earlier run had already
-archived the match, which is exactly what NULL means there.
+`commitMatchObservation` reads the standing `raw-archive-match` receipt
+(`readArchivedMatchArtifact`), so the stored key and digest are what the put
+actually wrote rather than a key rebuilt from the layout convention. They stay
+NULL when no object was written (no bucket configured), which is exactly what
+NULL means there.
 
-Two metrics carry the parity signal, both defined once in
+Two metrics count the recording writes, both defined once in
 `src/metrics/durable.ts` — prom-client throws at import time on a duplicate
 metric name, so a second definition site takes the process down on boot rather
 than at the first `inc()`:
@@ -305,8 +309,9 @@ than at the first `inc()`:
   recorded, by repository answer (`applied`, `already-applied`, `adopted`,
   `conflict`).
 - `scout_durable_dualwrite_failures_total{write_kind}` — writes that failed and
-  were swallowed. Non-zero means the durable record is behind what the pipeline
-  actually did. These failures deliberately do not reach Sentry: an outage
+  were swallowed. Non-zero means the durable record is behind what the system
+  actually did. The `dualwrite` word is the name the metrics were introduced
+  under, kept so dashboards and alerts keep reading them. These failures deliberately do not reach Sentry: an outage
   would raise one event per write per channel per match and bury the errors
   that actually stop work.
 
@@ -317,7 +322,7 @@ process. Neither is derived from a database sweep, so neither belongs in
 
 `write_kind` comes from the single closed set in
 `src/durable/match/durable-facts.ts`, which covers the receipted lake
-projection's kinds as well as the per-match services'; a new dual-write site
+projection's kinds as well as the per-match services'; a new recording site
 adds a member there rather than passing a free-form string. `outcome` is parsed
 from the repository's own answer before it becomes a label. The two fail-open
 wrappers — `recordDurableWrite` and `recordReceiptFailOpen` — refuse to nest,
@@ -326,9 +331,9 @@ twice.
 
 ## Durable pipeline observability
 
-The dual-write counters above say what the pipeline _did_. Seven more families in
-`src/metrics/durable-pipeline.ts` — likewise a single definition site — say what
-it is still _holding_, which is the half the V2 acceptance checklist asks about:
+The recording counters above say what the pipeline _did_. Seven more families
+in `src/metrics/durable-pipeline.ts` — likewise a single definition site — say
+what it is still _holding_:
 
 - `scout_durable_notification_intents{state}` — intents per state of the domain
   machine, zero-filled across all nine. `state="unknown-delivery"` is the
@@ -348,7 +353,7 @@ it is still _holding_, which is the half the V2 acceptance checklist asks about:
   two hours. The observation row stores no game end, so this includes the
   game's own length (healthy p90 is about 40–45 minutes). An empty window reads
   0, so it does not detect discovery that has stopped outright.
-- `scout_durable_postmatch_mint_gaps` — live V2 matches observed in the last six
+- `scout_durable_postmatch_mint_gaps` — live matches observed in the last six
   hours whose cursors all advanced at least 15 minutes ago, with an unmuted,
   unfiltered subscription owed a report, but no postmatch intent and no
   postmatch render receipt. It under-counts on purpose: queue-filtered
@@ -369,7 +374,7 @@ match id, guild id, or intent key is ever a label.
 The gauges are swept from the database at scrape time and so belong to the one
 role with `databaseMetricSweeps` (see the runtime roles section). The lake lag
 is swept by `report-lake/`, and the mint gap by
-`temporal/v2/notification/postmatch-mint-gap.ts`, because their receipt-kind
+`temporal/notification/postmatch-mint-gap.ts`, because their receipt-kind
 vocabularies live there and `architecture.config.ts` forbids `metrics/` from
 importing those layers; each registers through `metrics/sweep-registry.ts`,
 which exists for exactly that inversion. `metrics/sweeps.ts` is the list of everything a
@@ -380,28 +385,24 @@ That is what lets an alert say which pods it is asking about — most sharply fo
 `discord_connection_status`, which a gateway-less pod reports as a truthful 0,
 so an unscoped `min by (environment)` reads a correct deployment as an outage.
 
-## The V2 per-match core
+## The per-match core
 
-`src/temporal/v2/` holds the nine Activities `scoutMatchProcessingV2Workflow`
-calls. They are thin orchestration over the same services the v1 pipeline uses
-— the receipted archive door, the Bucks settlement hook, the challenge advisory
-lock, the durable repositories — with one deliberate inversion: **V2's durable
-writes are strict, not fail-open.**
+`src/temporal/` holds the Activities `scoutMatchProcessingWorkflow` calls. They
+are thin orchestration over shared services — the receipted archive door, the
+Bucks settlement hook, the challenge advisory lock, the durable repositories —
+and their durable writes are strict, not fail-open.
 
-That is not a disagreement with the section above, it is the consequence of who
-depends on the record. A v1 dual-write is a parity record beside an
-authoritative pipeline, so a recorder outage must never stall ingestion. In V2
-the durable record IS the pipeline's memory: a resumed Workflow decides which
+The durable record IS the pipeline's memory: a resumed Workflow decides which
 phases already happened by reading it back. A write that quietly failed there
-would send the next run to re-apply an effect it cannot see. So the V2
-Activities go to the repositories directly and report the repository's own
-answer, and an unwritable record fails the Activity for Temporal to retry.
+would send the next run to re-apply an effect it cannot see. So the Activities
+go to the repositories directly and report the repository's own answer, and an
+unwritable record fails the Activity for Temporal to retry.
 
 Two vocabularies live alongside each other for the same reason. The
 evidence-bearing receipts (`settlement`, `progression`, `raw-archive-match`)
-say WHAT happened and are written by the phase that has the evidence. The V2
+say WHAT happened and are written by the phase that has the evidence. The
 stage receipts (`v2-match-*`, declared in `@scout-for-lol/temporal`'s
-`match-receipts-v2.ts`) say WHICH PHASE this owner completed, carry evidence
+`match-receipts.ts`) say WHICH PHASE this owner completed, carry evidence
 derived from the match reference alone, and are what the resume point reads.
 A resumed run cannot reconstruct settled bet ids, so it could never re-assert
 an evidence-bearing receipt without either inventing evidence or recording a
@@ -412,7 +413,7 @@ Workflow fails the run that meets one, but a failed execution is not durable:
 under `ALLOW_DUPLICATE_FAILED_ONLY` the next discovery starts a fresh execution
 whose resume read sees the standing kind without the outcome that contested
 it, and would skip the phase and advance the cursor over the same drift one
-poll later. So `recordMatchReceiptsV2` records `v2-match-stage-conflict` — the
+poll later. So `recordMatchReceipts` records `v2-match-stage-conflict` — the
 same shape as the recovery tail's `v2-recovery-conflict`, evidence naming the
 match alone — and every later execution refuses at its resume point until an
 operator has looked and removed the marker. The reconciliation sweep leaves
@@ -420,84 +421,118 @@ such a match alone (it would start a failing child per tick); the operator
 listing and the backlog gauge still show it, because it is exactly what a
 person needs to see.
 
-Ownership, not the effect claims, is what keeps the two pipelines off one
-match. `commitMatchObservationV2` claims `temporal-v2`; a match v1 already owns
-answers `ownership-held-by-another-owner`, and the Workflow reports the stored
-owner and stops before settlement rather than re-applying v1's effects. The V2
-guards are separate keys from v1's precisely so a shared key can never make one
-pipeline's completion suppress the other's work.
+A match the retired v1 pipeline observed keeps its `legacy-v1` owner and
+`LEGACY_V1` row. `commitMatchObservation` claims `temporal-v2` for every new
+match; a match another owner holds answers `ownership-held-by-another-owner`,
+and the Workflow reports the stored owner and stops before settlement rather
+than re-applying that owner's effects. Those rows are never rewritten to
+`TEMPORAL_V2`: the stalled-match scan would sweep thousands of historical
+matches into processing children and redeliver them. `readLegacyMatchCompletionV2`
+answers `completed: true` for them (`src/temporal/match/legacy-completion.ts`),
+whatever the closed v1 execution's status, and logs that status once per match.
+Nothing will process those matches again, so a v1 run that FAILED or was
+TERMINATED mid-stage is accepted data loss; waiting on it would wedge the
+serialized client-match dispatcher, and the binding projectors late binding
+runs instead are idempotent.
 
-Two places where the core and v1 were compared and a decision recorded. v1
-refuses a match whose discovering account is no longer tracked; V2's platform
-check is weaker, not equivalent, so that precondition is restored — discovery
-carries the source account into the per-match input and
-`commitMatchObservationV2` fails non-retryably before any effect unless it is
+The core refuses a match whose discovering account is no longer tracked:
+discovery carries the source account into the per-match input, and
+`commitMatchObservation` fails non-retryably before any effect unless it is
 still tracked and in the match. A run started without a source, which is what
 a reconciliation restart is, resumes an observation that already passed it.
-And v1 advances the account cursor inside its progression lock while V2 keeps
-it as the last Activity, after the stage receipts; that is a ruling, not an
-omission, and `match-v2.ts` records the three facts behind it.
+The account cursor is the last Activity, after the stage receipts, and outside
+the progression lock; `match.ts` records the three facts behind that ruling.
 
-### The post-match poll is owned for a whole V2 run
+### The post-match poll is owned for a whole run
 
-`BotState.pollStatus` is one row two pipelines write, and it says whether a
-post-match poll is in flight. For v1 that question spans one Activity —
-discovery and the maintenance that closes the poll are the same call — so v1
-opens the poll unconditionally and guards itself with a worker-local flag and
-its Schedule's overlap policy. That is unchanged, deliberately: a durable claim
-v1 could not release would refuse the next Schedule tick after a worker died
-mid-pass, where today it simply runs again.
+`BotState.pollStatus` says whether a post-match poll is in flight. A poll spans
+a WORKFLOW: discovery, every match child it awaits in turn, and the maintenance
+that closes the poll at the end. A worker-local flag cannot span that, because
+it is released the moment the discovery Activity returns. A second discovery
+starting in that window — an operator's, against a scheduled run still working
+through its children — would otherwise open a poll of its own, and the first
+run's maintenance would then mark that NEWER poll complete underneath it.
 
-A V2 poll spans a WORKFLOW: discovery, every match child it awaits in turn, and
-the maintenance that closes the poll at the end. A worker-local flag cannot
-span that, because it is released the moment the discovery Activity returns. A
-second discovery starting in that window — an operator's, against a scheduled
-run still working through its children — was therefore not told a poll was
-running; it opened one of its own, and the first run's maintenance then marked
-that NEWER poll complete underneath it, flipping the status while a live poll
-was still running and freeing a third run to start on top of it.
-
-So V2's discovery takes a DURABLE claim (`claimPostMatchPoll`), and the claim's
+So discovery takes a DURABLE claim (`claimPostMatchPoll`), and the claim's
 identity — the instant it was claimed at — rides the scan result through the
 Workflow to the maintenance call, which closes only the poll that identity
 names. An overlapping discovery is told the poll is held and reports `skipped`,
-which the Workflow already treats as "opened nothing, so close nothing". A run
+which the Workflow already treats as "opened nothing, so close nothing".
+Maintenance requires that identity: there is no unowned close. A run
 whose claim was taken over closes nothing and fails the Activity
 non-retryably, because the poll it meant to close is someone else's and the
 identity cannot come back. Takeover needs the claim to have stood past a
 30-minute bound, which only a TERMINATED run can do: a worker that dies is
 replaced from history, its children keep running, and its maintenance still
 releases the claim. `post-match-poll-ownership.integration.test.ts` proves the
-claim and the guarded close against a real Postgres; `match-v2.test.ts` proves
+claim and the guarded close against a real Postgres; `match.test.ts` proves
 the overlap end to end, with the second discovery starting while the first is
 awaiting a child.
 
-### Post-match discovery ownership
+### Post-match discovery patches
 
-V2 owns post-match discovery unconditionally; no code reads the
-`scout_v2_postmatch_ownership_enabled` rollback switch any more. Discoveries
-recorded while it existed asked `resolvePostMatchDiscoveryOwnerV2` first,
-behind the `scout-v2-postmatch-ownership` patch, and can still be open when
-this deploys. `ownership/postmatch-ownership-v2.ts` in the Scout Temporal
-package replays that read for them and nothing else: every new run records the
-`scout-v2-retired-postmatch-ownership` marker and skips it, and the backend
-answers a retried read with `run-v2`. A bare `deprecatePatch` would not do,
-because it schedules discovery where those histories recorded the read
-(`match-v2-replay.test.ts` replays a committed fixture of that generation).
-Once no discovery started before the retirement is still running, the gate
-becomes `deprecatePatch` of the retirement marker.
-
-The delegated-v1 Activities (`releasePostMatchPollClaimV2`,
-`renewPostMatchPollClaimV2`, `discoverDelegatedPostMatchIntents`) stay
-registered until v1's Workflow types are removed.
+No discovery recorded while the retired ownership read existed is still
+running, but closed histories stay retained for the namespace's 30 days and
+are replayed against a candidate bundle before promotion. So
+`scoutPostMatchDiscoveryWorkflow` still replays the read for those histories
+(`replayRetiredPostmatchOwnershipRead` in the Scout Temporal package's
+`workflows/retired-ownership.ts`), runs recorded since carry the
+`scout-v2-retired-postmatch-ownership` marker, and the realtime worker still
+answers the read with `run-v2`. `match-replay.test.ts` replays committed
+fixtures of both generations. Once no history predating the retirement is
+retained, the gate becomes `deprecatePatch` of the retired marker.
 
 `ScoutEffectClaim` keeps taking the top-level Prisma client, and
 `src/temporal/effect-claims.ts` carries the reason: `claimScoutEffect` is an
 insert that expects to fail and then READS the existing row back, and in
 Postgres a constraint violation aborts the surrounding transaction, so the
 read-back could not run inside one. The guard and the fact are therefore two
-commits by construction, which is why every V2 guarded-effect result reports
+commits by construction, which is why every guarded-effect result reports
 them as separate outcomes and names the reconcile.
+
+### Renamed pipeline types, staged across releases
+
+The pipeline's Workflow and Activity functions lost their `V2` suffix
+(`scoutMatchProcessingWorkflow`, `commitMatchObservation`). A type name is
+identity in Temporal: replay checks every recorded command by type, and a
+worker resolves a Workflow or Activity by its name. The workers that can run
+Scout Workflows deploy independently — beta's routed Worker Deployment build,
+prod's embedded poller, the central worker that owns the Schedules — so a
+name must be registered everywhere before anything issues it. The rename
+therefore lands in steps.
+
+This release registers both names and issues only the old ones:
+
+- `SCOUT_WORKFLOW_NAMES` still holds the `*V2Workflow` types, so Schedules,
+  client starts and child starts issue them. The Workflow bundle exports each
+  Workflow under its renamed function name and keeps the old name as an alias;
+  `SCOUT_RENAMED_WORKFLOW_TYPES` maps one to the other.
+- Pipeline Activities are scheduled under their old names
+  (`preRenameActivities` in the Scout Temporal package's
+  `workflows/generation-rename.ts`), and Activity workers register both names
+  (`withPreRenameActivityNames`, composed in `registeredActivities` in
+  `src/temporal/connected-runtime.ts`).
+- The realtime worker also keeps the Activities a still-routed pre-rename
+  bundle can schedule: the retired ownership reads, answering as they did once
+  the ownership flags were retired, and the v1 Activities, which fail
+  non-retryably (`src/temporal/retired-activities.ts`).
+  `routed-bundle-activities.test.ts` checks every Activity the oldest routed
+  build declares against this registration, and the central package's
+  `scout-schedule-workflow-types.test.ts` checks every Scout Schedule type
+  against this bundle and the routed one.
+- `ScoutWorkflowStart` rows keep the type they were written with, so the
+  reconciliation sweep, the operator listing and the backlog gauge filter on
+  both names (`SCOUT_PIPELINE_START_WORKFLOW_TYPES`).
+
+`generation-rename-replay.test.ts` replays a dispatcher and a match run
+recorded mid-flight under the old names, and shows a run recorded now issues
+the same names. The next step switches issuance to the new names — Schedules,
+`SCOUT_WORKFLOW_NAMES`, and child and Activity types behind a patch so open
+histories keep replaying — once every routed bundle and the prod backend image
+register them. A later step drops the aliases and the retired Activities.
+Workflow IDs, signal names, codec kinds and Schedule IDs that contain `v2` are
+identities and stay as they are, and so does `readLegacyMatchCompletionV2`,
+which open histories recorded.
 
 ## Scout Client player identity
 
@@ -563,75 +598,63 @@ A client that sent no timeline is a final miss rather than a retry, because Riot
 can't see the game and none is ever coming: Dares record missing coverage and
 duels go to organizer review.
 
-## The V2 prematch path
+## The prematch path
 
-The `prematch-*` modules beside them serve `scoutPrematchDiscoveryV2Workflow`
-and `scoutPrematchGameV2Workflow`, and they are shaped differently from the
+The `prematch-*` modules serve `scoutPrematchDiscoveryWorkflow` and
+`scoutPrematchGameWorkflow`, and they are shaped differently from the
 per-match core on purpose.
 
 There is no resume-point read, because there is nothing for one to answer: the
 pipeline-state aggregate hangs off `MatchObservation`, and a live game has not
 been observed yet by definition. The per-game Workflow has one phase instead of
 four, so its replay gate is the receipts themselves — the archive's inside the
-door (below), the lake projection's inside `archivePrematchSnapshotV2`. There
-are also no V2 stage receipts here: those exist so a resumed run can gate a
-phase whose evidence it cannot reconstruct, and the two evidence-bearing
-receipts this path writes already answer exactly the question it asks.
+door (below), the lake projection's inside `archivePrematchSnapshot`. There
+are also no stage receipts here: those exist so a resumed run can gate a phase
+whose evidence it cannot reconstruct, and the two evidence-bearing receipts
+this path writes already answer exactly the question it asks.
 
 ### Prematch detection and maintenance
 
-The `prematch-poll` Schedule starts `scoutPrematchDiscoveryV2Workflow` every
+The `prematch-poll` Schedule starts `scoutPrematchDiscoveryWorkflow` (under its
+pre-rename type, `scoutPrematchDiscoveryV2Workflow`) every
 30 seconds in every stage, with a `SKIP` overlap policy and a one-minute
 catch-up window: a poll that outlives its interval drops the tick behind it,
 and a tick the server missed by more than a minute is not replayed. Each poll
-detects live games, starts one `scoutPrematchGameV2Workflow` per game, and
+detects live games, starts one `scoutPrematchGameWorkflow` per game, and
 then runs `runPrematchMaintenance`
-(`src/temporal/v2/prematch/prematch-maintenance.ts`): Dare v2 accept-window
-expiry and callout refresh, and, unless betting is hard-disabled, parlay
-activation, betting and parlay window closes, Dare proposal TTL, Dare accept
-expiry, and Dare summary delivery. Discovery records one
+(`src/temporal/prematch/prematch-maintenance.ts`): Dare accept-window expiry
+and callout refresh, and, unless betting is hard-disabled, parlay market
+activation and betting and parlay window closes. Discovery records one
 `prematch_detections_total{status}` sample per probed account (`game`,
-`idle`, `unreadable`).
+`idle`, `unreadable`). The maintenance tail sits behind the
+`scout-v2-prematch-maintenance` patch. It stays `patched` until no closed poll
+history recorded before the tail is retained, because retained histories are
+replayed before promotion and one of them completed where the tail now runs.
 
-v1's `scoutRealtimePollWorkflow` stays registered until its open executions
-drain. Its prematch router (`ownership/prematch-ownership-v2.ts`, behind the
-`scout-v2-prematch-ownership` patch) is kept only so those histories replay.
-No code reads the `scout_v2_prematch_ownership_enabled` flag, and the
-`BotState` pass claim is gone: `resolvePrematchPassOwnerV2` now answers
-`run-v2` with no claim, the renewal and release answer `not-held`, and v1's
-`pollRealtime` runs its maintenance only, never detection.
+Notification intents are keyed `prematch-discord:<matchId>:<channelId>`, a
+delivered or `unknown-delivery` intent is never redriven, and betting pools are
+unique per match and guild.
 
-Both ownership flags stay declared in `managed-flag-inventory.json` until v1
-is removed, so the inventory check does not alert while a worker that still
-evaluates them can be running. They are deleted from the inventory and
-declared retired in the same change that removes v1.
-
-V2 discovery still drops any game with a live `ActiveGame` row, so a game v1
-announced shortly before the switch is not announced again. Notification
-intents share one key, `prematch-discord:<matchId>:<channelId>`, in both
-pipelines, a delivered or `unknown-delivery` intent is never redriven, and
-betting pools are unique per match and guild.
-
-Nothing writes `ActiveGame` now. The consumer live view reads
-`listLivePrematchGames` (`src/temporal/v2/prematch/prematch-reads.ts`): V2
-`raw-archive-prematch` receipts younger than the three-hour tracked lifetime,
-minus games the report lake already holds, with each roster read from the
-archived spectator snapshot. The stale-pool void sweep replies to the
-delivered post-match intents (`postmatchReplyTargets`).
+The consumer live view reads `listLivePrematchGames`
+(`src/temporal/prematch/prematch-reads.ts`): `raw-archive-prematch` receipts
+younger than `LIVE_GAME_TTL_MS` (three hours,
+`src/temporal/prematch/prematch-intents.ts`), minus games the report lake
+already holds, with each roster read from the archived spectator snapshot. The
+stale-pool void sweep replies to the delivered post-match intents
+(`postmatchReplyTargets`).
 
 ### Games against bots
 
-Both pipelines wait out a spectator roster shorter than ten, because that is
-nearly always a lobby still loading in. A game against bots looks the same and
+Prematch detection waits out a spectator roster shorter than ten, because that
+is nearly always a lobby still loading in. A game against bots looks the same and
 never fills: Riot omits bots from the spectator roster entirely, so a custom
 against nine of them reports one participant for its whole length. Only the
 local Scout Client sees the rest, in the LCU lobby's `customTeam100` and
 `customTeam200`.
 
 `clientRosterCompletion` (`league/tasks/prematch/client-bot-roster.ts`) is the
-one rule both pipelines ask — v1's `shouldDeferRoster`, and V2's discovery and
-capture through `isPrematchRosterReady`, which must agree for the reason given
-above. It answers only once the game has started (`gameLength >= 0`), so a
+one rule discovery and capture both ask through `isPrematchRosterReady`, and
+they must agree for the reason given above. It answers only once the game has started (`gameLength >= 0`), so a
 loading lobby still waits, and only when the client's bots leave somebody on
 both sides. The bots come from the tracked player's own accepted observations
 in two hops, because LCU never names the lobby and the game in one payload: the
@@ -646,13 +669,13 @@ rule in `LoadingScreenDataSchema` exempts that side for the same reason. A
 completed roster is counted as
 `prematch_detections_total{status="client_completed_roster"}`.
 
-### V2 prematch delivery and markets
+### Prematch delivery and markets
 
-Behind the `scout-v2-prematch-delivery` patch, `scoutPrematchGameV2Workflow`
-does what v1's `sendPrematchNotification` does, after its capture and plan:
+Behind the `scout-v2-prematch-delivery` patch, `scoutPrematchGameWorkflow`
+does three things after its capture and plan:
 
-1. `openPrematchMarketsV2` (`src/temporal/v2/prematch/prematch-markets.ts`)
-   runs v1's one-of-two Bucks decision behind the V2 effect fence, with a
+1. `openPrematchMarkets` (`src/temporal/prematch/prematch-markets.ts`)
+   makes the one-of-two Bucks decision behind the effect fence, with a
    `prematch-markets` receipt. A standard Classic lobby gets the participation
    point (`awardClassicPrematchForGame`, once per match and guild by its
    `BucksMatchEarning` marker). Any other bettable game gets one pool per
@@ -660,12 +683,12 @@ does what v1's `sendPrematchNotification` does, after its capture and plan:
    match and guild by `BucksMatchPool`'s unique key). A failure is retried,
    stays visible in the history, and the game is still announced without a
    market.
-2. One `scoutNotificationV2Workflow` child per drivable prematch intent, with
+2. One `scoutNotificationWorkflow` child per drivable prematch intent, with
    the post-match path's reuse policy. The plan leaves out delivered and
    `unknown-delivery` intents and any unsent intent past its freshness
    deadline.
 3. Each child builds its message with its guild's buttons when that guild
-   holds an open pool. After delivery, `afterNotificationDeliveredV2` runs
+   holds an open pool. After delivery, `afterNotificationDelivered` runs
    `prematch-follow-up.ts`: it appends the message to the pool's refs with a
    compare-and-set, refreshes the pool's messages, enqueues the parlay once
    per match and counts the guild's core output. A failed ref write is
@@ -684,11 +707,6 @@ original scope and remain readable.
 
 The release procedure is maintained in the
 [Scout Temporal rollout guide](https://wiki.sjer.red/how-to/roll-out-scout-temporal/).
-
-A rollback is the same two changes with the value `false`. The next pass runs
-v1 again, and v1 skips every game V2 already captured, even one whose
-announcement V2 has not delivered yet. The choice is deliberate: a game
-announced late or not at all is better than a game announced twice.
 
 ### Durable state before live state
 
@@ -712,10 +730,11 @@ reports three outcomes rather than two: a confirmed `not-in-game` (Riot
 answered 404), an `in-game` payload, and `unavailable` — a timeout, a 401, a
 429, an upstream 5xx, or a payload that failed its schema. Those used to
 collapse into one "no game" value, which is safe for a caller that re-polls on
-a timer and fatal for one whose conclusion is durable. The V2 capture throws on
-`unavailable` and lets the Activity retry be its wait loop; v1's pollers still
-treat it as a skipped tick, which is stated explicitly at each call site rather
-than inherited from a value that could not tell the difference.
+a timer and fatal for one whose conclusion is durable. The capture throws on
+`unavailable` and lets the Activity retry be its wait loop; discovery counts it
+as an `unreadable` probe and the Explore current-opponent tool answers
+`unavailable`, each stated explicitly at its call site rather than inherited
+from a value that could not tell the difference.
 
 It shapes the STORAGE boundary the resume path reads through too, where the
 same collapse is available and just as costly. `ArchivedObjectUnusableError`
@@ -732,9 +751,9 @@ only layer that sees the SDK's error taxonomy, and the Activity translates it
 into Temporal's retry vocabulary.
 
 The capture stages the lake rows inline rather than deferring to
-`stageLakeProjectionV2`, which is the one place this path diverges from the
+`stageLakeProjection`, which is the one place this path diverges from the
 per-match core's separation of archive from projection. It has nowhere to defer
-to: `scoutLakeProjectionV2Workflow` is keyed by a match id and projects the
+to: `scoutLakeProjectionWorkflow` is keyed by a match id and projects the
 MatchV5 payload, which does not exist while the game is still being played.
 
 ### The archive door is fenced, for every artifact family
@@ -745,8 +764,8 @@ per (match, kind), but the BYTES under it are not guaranteed identical across
 two fetches. A prematch payload varies by construction, since `gameLength`
 advances between polls. A MatchV5 response is semantically stable once the game
 is over, but stability of meaning is not identity of bytes: serialization order
-and late corrections both produce a different body for the same match, and the
-v1-vs-V2 dual-run window archives one match from two independent fetches.
+and late corrections both produce a different body for the same match, and a
+retried or re-driven run can archive one match from two independent fetches.
 
 An earlier revision of this section claimed match and timeline payloads were
 immutable and left those doors unfenced. That was wrong, and the failure it
@@ -779,9 +798,10 @@ put anyway would still overwrite, just in an orderly fashion. So the lock wraps
 the read-gate, the put and the attestation as one critical section, and an
 artifact already archived is answered from its standing receipt with no put at
 all. The fence lives in the DOOR rather than in any caller because several
-pipelines enter through it — v1's ingest paths and the V2 Activities — and a
-fence at one call site would serialize that caller against itself while leaving
-the cross-pipeline race open.
+callers enter through it — the per-match archive, the prematch capture, and the
+report-store ingest the history imports use — and a fence at one call site would
+serialize that caller against itself while leaving the race between callers
+open.
 
 The attestation is written through the fencing transaction so the arrangement
 fails closed: an advisory xact lock dies with its transaction, and Prisma ends
@@ -821,22 +841,22 @@ wait itself is bounded by a `SET LOCAL lock_timeout` on the lock statement, so
 a starved follower fails at the lock rather than spending its lifetime waiting.
 All three are proved in `archive-fence.integration.test.ts` — a holder that
 leaves without a receipt for the wait, an injected slow receipt lookup for the
-derivation point. This mirrors the 600/900 split `temporal/v2/effect-fence.ts`
+derivation point. This mirrors the 600/900 split `temporal/effect-fence.ts`
 documents for the same hazard.
 
 Two contracts the fence must not change. The RECEIPT is fail-open and the put's
 exclusivity is not: a receipt write that aborts the fencing transaction after
 the canonical put landed is reported as `archived` with `receipt: "failed"` —
 the object is in S3, the record of it is not, which is what that answer has
-always meant — so a bookkeeping outage cannot turn v1's live ingest into a
+always meant — so a bookkeeping outage cannot turn a live ingest into a
 failure, while a failure before the put still propagates. And with no bucket
 configured the door answers `skipped_no_bucket` before any transaction opens,
 so the documented dev/test no-op stays a storage no-op that needs no database.
 
 Because the door gates its put, it also hands back the CANONICAL payload with
 `already_archived`, not just a descriptor. A caller holding its own fetch of the
-same artifact — the two pipelines poll independently, and a payload can differ
-between polls — would otherwise stage lake rows derived from its own bytes
+same artifact — two runs can fetch independently, and a payload can differ
+between fetches — would otherwise stage lake rows derived from its own bytes
 while the staging receipt named the archived object they did not come from,
 leaving the lake disagreeing with both its receipt and canonical S3. Returning
 the verified archived contents makes staging the wrong bytes unrepresentable
@@ -855,47 +875,44 @@ worth seeing. A receipt that could not be written at all is the opposite case
 and throws retryably.
 
 The capture also mints the prematch delivery intents, and that is likewise
-forced rather than chosen. `planPrematchFanOutV2` READS intents — the frozen
+forced rather than chosen. `planPrematchFanOut` READS intents — the frozen
 contract's discipline — and receives only a match reference, while the channels
 owed an announcement are derived from the tracked accounts in the game, which
 only the spectator roster names. The capture is the one Activity holding that
-roster. It mints them `pending`; `markNotificationReadyV2` is the notification
+roster. It mints them `pending`; `markNotificationReady` is the notification
 Workflow's own phase.
 
-Both pipelines mint against the same channel while the rollout runs, so the
-prematch intent key format lives in `durable/match/delivery-intents.ts`
-(`prematchDeliveryKeyPrefix` + `deliveryIntentKey`) and both callers build it
-there. Two spellings would mean two rows and one channel told twice. The V2
-write is strict where v1's recorder is fail-open, for the reason the section
-above gives, and it reads before it writes: `upsertIntent` compares the whole
-stored row, so a retry on a later clock would otherwise be answered
-`intent-differs`.
+The prematch intent key format lives in `durable/match/delivery-intents.ts`
+(`prematchDeliveryKeyPrefix` + `deliveryIntentKey`), so every caller builds it
+the same way. Two spellings would mean two rows and one channel told twice. The
+write is strict, for the reason the per-match core gives, and it reads before
+it writes: `upsertIntent` compares the whole stored row, so a retry on a later
+clock would otherwise be answered `intent-differs`.
 
 An `intent-differs` conflict that survives that read is reported rather than
 thrown — the opposite call from the receipt conflict above, because the two
 mean different things. A receipt mismatch is two producers disagreeing about a
 fact, where only one answer can be true. `intent-differs` is two producers
-minting the same INSTRUCTION during the window where both pipelines are live,
-differing only in the clock each stamped it with; the stored row is a valid,
-drivable instruction whoever wrote it. Failing would turn a benign dual-run
-race into a flapping child. It stays a distinct outcome rather than folding
-into "already existed", so a rate that climbs after v1 is retired — when the
-race should be impossible — is visible.
+minting the same INSTRUCTION, differing only in the clock each stamped it with;
+the stored row is a valid, drivable instruction whoever wrote it. Failing would
+turn a benign race into a flapping child. It stays a distinct outcome rather
+than folding into "already existed", so a rate that climbs — when the race
+should be rare — is visible.
 
-Dedup is the per-game Workflow ID rather than the `ActiveGame` row.
-`scoutPrematchGameV2WorkflowId` drops the puuid, so one game surfaced through
+Dedup is the per-game Workflow ID.
+`scoutPrematchGameWorkflowId` drops the puuid, so one game surfaced through
 every tracked account in it computes one ID, and
 `ALLOW_DUPLICATE_FAILED_ONLY` replaces a run that failed while refusing one
 that is running or done. Unlike post-match discovery, the poller does not wait
 for its children and does not stop at a taken ID: live games have no chronology
-to protect, and the discovery Workflow ID is a per-stage singleton, so waiting
-would put the next poll behind the slowest game.
+to protect, and the Schedule's `SKIP` overlap policy allows one poll at a time,
+so waiting would put the next poll behind the slowest game.
 
-## The V2 notification lane
+## The notification lane
 
-`scoutNotificationV2Workflow` drives one `MatchNotificationIntent` through the
-frozen domain machine. The Activities live in `src/temporal/v2/notification-*`
-and `src/temporal/v2/notification/`, and three facts about the lane are
+`scoutNotificationWorkflow` drives one `MatchNotificationIntent` through the
+frozen domain machine. The Activities live in `src/temporal/notification-lane/`
+and `src/temporal/notification/`, and three facts about the lane are
 load-bearing for anyone extending it.
 
 The row's `subjectKind` and `subjectId` name the event being announced.
@@ -908,13 +925,13 @@ required `riotMatchId` because older application pods still write that shape.
 New writers populate both match columns, and the database rejects a mismatch.
 
 Duel challenge, lobby-ready, and overdue transitions mint `duel-status` intents
-and request a V2 notification Workflow in the same database transaction as the
+and request a notification Workflow in the same database transaction as the
 series change. Reconciliation starts a requested Workflow after a producer
 crash. Its first read Activity records Temporal's run id as acceptance of that
 request, so later sweeps stop treating it as an unaccepted start. Repeated
 producer transitions reuse the standing intent without opening a new request.
 The invite expires at the series deadline; lobby-ready and overdue
-messages expire after two hours and seven days respectively. V2 stores the
+messages expire after two hours and seven days respectively. The intent stores the
 guild, series, and mention list in a versioned announcement and verifies the
 series and target channel before sending. It does not create a match render
 receipt for a Duel subject.
@@ -940,7 +957,8 @@ resolved. The
 intent expires thirty days after the event, and an ambiguous DM failure stays
 `unknown-delivery` for operator resolution. The legacy Dare event/delivery
 tables continue draining pre-cutover rows; a standing legacy event owns its
-deduplication key and prevents V2 from announcing the same event again.
+deduplication key and prevents the notification lane from announcing the same
+event again.
 
 ### An intent says what it announces and where it came from
 
@@ -951,14 +969,14 @@ mint, mirrored into columns, and versioned in the payload envelope
 (`notificationIntentCodec` version 3; a version-1 payload derives its kind from
 the key prefix the two producers of that version used, and refuses any other
 prefix). The kind selects the renderer and the message builder: a `prematch`
-intent is rendered from the archived spectator snapshot and delivered as v1's
+intent is rendered from the archived spectator snapshot and delivered as the
 game-start message, and nothing on that arm reads a MatchV5 payload — so a
 prematch intent re-driven after its game ended can never deliver a post-match
 report. A prematch message carries its guild's Bryan Bucks buttons and
 live-market line exactly when that guild holds an open pool for the match,
 and the post-delivery follow-up records the message on the pool so the close
 sweep and the settlement announcement can find it (see
-[V2 prematch delivery and markets](#v2-prematch-delivery-and-markets)).
+[Prematch delivery and markets](#prematch-delivery-and-markets)).
 
 ### The announcement kinds carry their message on the intent
 
@@ -970,13 +988,13 @@ parlay result and this guild's earnings exactly as settlement produced them.
 The intent carries those presentation inputs rather than the receipt's
 identities on purpose — the receipt names no amounts, and rebuilding pool
 totals and payouts from ledger rows would be a second implementation of
-settlement arithmetic. The arm composes v1's own builder
+settlement arithmetic. The arm composes the shared builder
 (`prepareSettlementAnnouncement`) so budgets and mention safety exist once. A
 settlement recap replies to the delivered POSTMATCH intent's `messageId` for
 the same channel (`failIfNotExists: false`), with one plain send when the
-reply itself is refused. It refuses a DM target as terminal: v1's private
-settlement receipts are a separate, budgeted fan-out that is not ported, and
-is an explicit gap.
+reply itself is refused. It refuses a DM target as terminal: private
+settlement receipts would be a separate, budgeted fan-out, and that is an
+explicit gap.
 
 A `hall-record-break` intent is one guild's Hall of Fame announcement for one
 match, keyed `hall-record-break:<riotMatchId>:<guildId>` — by guild, not
@@ -986,8 +1004,8 @@ channel, so a Hall channel change never mints a second one. Its envelope is
 records. An envelope whose every record id was since
 retired, or that does not parse, is terminal `content-unavailable` rather than
 an empty embed. The per-server `hall_of_fame_enabled` policy is re-read before
-delivery by `notification/kind-policy.ts`, in `markNotificationReadyV2` and
-again in `beginNotificationSendV2` (after the recovery gate, before the
+delivery by `notification/kind-policy.ts`, in `markNotificationReady` and
+again in `beginNotificationSend` (after the recovery gate, before the
 audience check): a guild that turned the Hall off gets the intent suppressed
 `feature-disabled` through the domain's `suppress`, and no attempt is minted.
 The delivery Activity checks the flag again immediately before the Discord
@@ -1004,28 +1022,28 @@ derived from the intent key, so retrying that Activity keeps one event identity.
 
 ### Delivery sends exactly what the render attested, and establishes nothing
 
-`renderNotificationArtifactV2` runs on `background` under the effect fence and
-is the only place v1's report generator runs on the V2 lane. That matters
+`renderNotificationArtifact` runs on `background` under the effect fence and
+is the only place the report generator runs on the notification lane. That matters
 beyond the Satori cost: the generator refetches every tracked player's rank and
 upserts this match's `MatchRankHistory`, and it spends the one AI review a
 match is allowed (`markAiAttempted` is global to the match). Both are facts
 about the MATCH, established once — so the render evaluates the review's
 per-guild gate against the whole audience the report will reach
-(`resolvePostmatchDeliveryChannels`, shared with v1's own delivery) rather than
+(`resolvePostmatchDeliveryChannels`, shared with intent minting) rather than
 against one channel's guild.
 
 What the generator built is then committed and attested whole: the report image
-and, when the match earned one, the review's image as objects under v1's key
-layout, plus the content line and which components were attached
+and, when the match earned one, the review's image as objects under the report
+key layout, plus the content line and which components were attached
 (`v2-notification-render` evidence version 2, keyed per `(kind, match)`). A
 prematch render attests the loading screen, or `none` for a queue it cannot
-draw, which the send answers with v1's fallback embed; the announcement kinds
+draw, which the send answers with the fallback embed; the announcement kinds
 attest `none` (`text-only`).
 
-`deliverNotificationV2` runs on `realtime` and only reassembles. It reads the
+`deliverNotification` runs on `realtime` and only reassembles. It reads the
 receipt, fetches the objects it names, verifies each against its digest and
 size (`notification/notification-artifact.ts`, one reader per kind), and
-rebuilds the message with v1's own furniture builders. It runs no generator, no
+rebuilds the message with the shared furniture builders. It runs no generator, no
 Riot read and no model call, so a delivery re-driven days later — a
 reconciliation sweep after the player's next game — rewrites no history, and
 every channel's message carries the same review rather than the first one
@@ -1038,7 +1056,7 @@ reconciliation to re-drive forever.
 
 ### Only the Discord request may be ambiguous
 
-`deliverNotificationV2` runs with `maximumAttempts: 1`, because a retry can
+`deliverNotification` runs with `maximumAttempts: 1`, because a retry can
 post a second message, so any failure the Workflow cannot attribute is recorded
 as `unknown-delivery` — a dead end only an operator leaves. That is the right
 answer for the Discord request and the wrong answer for everything around it,
@@ -1047,7 +1065,7 @@ so two boundaries keep the rest out of it.
 Before the send, the Activity works under a pre-send budget
 (`notification/pre-send-budget.ts`) that is strictly shorter than its own
 heartbeat and start-to-close timeouts, which are stated once in
-`activity-contracts-v2.ts` so the two cannot drift. The receipt read, object
+`activity-contracts.ts` so the two cannot drift. The receipt read, object
 fetch, policy gate and guild lookup provably contact nobody, so whatever has
 not finished by then is answered by the Activity as a definite, retryable
 non-send while it is still alive to answer — rather than by the server's clock,
@@ -1056,7 +1074,7 @@ unanswered send. The object read takes the budget's `AbortSignal` and is
 genuinely cancelled.
 
 After the send, nothing runs in that Activity at all. The Dare callout refresh
-is `afterNotificationDeliveredV2`, its own Activity, called by the Workflow
+is `afterNotificationDelivered`, its own Activity, called by the Workflow
 only once the outcome is durably recorded: a best-effort Discord edit that
 outlived the heartbeat timeout used to kill the delivery Activity before its
 decided `delivered` result could be returned, turning a message Discord had
@@ -1073,15 +1091,15 @@ attempt genuinely may succeed.
 
 ### The silent post-match backfill renders and announces nothing
 
-`scoutSilentPostmatchBackfillV2Workflow` is an operator tool with no Schedule.
+`scoutSilentPostmatchBackfillWorkflow` is an operator tool with no Schedule.
 It takes an explicit list of match ids and, for each, runs the same fenced
 render a `postmatch` intent's notification child runs, committing the same
 report objects and the same `v2-notification-render-postmatch` receipt. It
-exists for matches whose V2 core finished without minting their report intents,
+exists for matches whose core finished without minting their report intents,
 which leaves no notification child to render them.
 
 It cannot announce anything. The Workflow proxies one Activity,
-`backfillSilentPostmatchArtifactV2`, and starts no child. The backend Activity
+`backfillSilentPostmatchArtifact`, and starts no child. The backend Activity
 (`notification/silent-postmatch-backfill.ts`) imports neither the minter nor
 the delivery code. It reads the pipeline state first and skips the match,
 giving the reason, in any of these cases:
@@ -1102,7 +1120,7 @@ idempotent, because a receipt that already stands turns the match into a skip.
 
 ```bash
 toolkit temporal workflow start --namespace <stage> \
-  --task-queue scout-<stage> --type scoutSilentPostmatchBackfillV2Workflow \
+  --task-queue scout-<stage> --type scoutSilentPostmatchBackfillWorkflow \
   --workflow-id scout-<stage>-silent-postmatch-backfill-v2-<label> \
   --input-file <envelope.json>
 ```
@@ -1121,7 +1139,7 @@ born of it at their next read. `notificationDeliveryDecision`
 permits everything, `stale-private-only` permits DMs only (through `sendDM`'s
 own budget), `no-external` permits nothing. A held intent is neither failed nor
 suppressed: the Workflow's opening read returns `held` and the run ends `no-op`
-with a `disposition` naming the policy and target; `beginNotificationSendV2`
+with a `disposition` naming the policy and target; `beginNotificationSend`
 refuses it with `policy-held` before any nonce is minted; the send itself
 refuses too; and the reconciliation sweep's stalled-intent read excludes it in
 SQL so it is not re-driven every minute until the batch is released. Nothing
@@ -1143,11 +1161,6 @@ repository's state guard miss, and the re-read answers `send-in-flight`, so the
 attempt wins. Each run logs its counts; the result is visible on
 `scout_durable_notification_intents{state="expired"}`.
 
-A v1 stale-path adoption that later proves a send for an intent the sweep
-already expired records `conflict` on `intent-delivered`, which is the adoption
-path's existing rule that a terminal state contradicting a proven send is worth
-seeing rather than overwriting.
-
 ### Intents whose audience was deleted are retired, not re-targeted
 
 An intent names one audience, and when that audience is deleted before
@@ -1158,7 +1171,7 @@ nothing re-derives a channel or subscription for it. `retireOrphaned` moves
 only `pending` and `ready`; `sending` and `unknown-delivery` conflict, so a
 retirement always loses to a send in flight.
 
-The send path discovers it. `beginNotificationSendV2`, for an unattempted
+The send path discovers it. `beginNotificationSend`, for an unattempted
 intent and before any nonce is minted, first checks a Hall intent against its
 guild's installation lifecycle. A removal stamp or an `installedAt` later than
 the intent's creation retires it as `guild-left`, including when the bot was
@@ -1201,19 +1214,16 @@ transaction through `announceHallRecordBreak`
 creation plus 24 hours. A standing intent is left as it is; one whose records
 differ from this evaluation's throws instead of choosing.
 
-V2 uses the committed observation to suppress a `silent-backfill` match and
-throws if that observation is absent. Legacy v1 announces only when its own
-discovery-time decision is not silent and the match has a `live`
-observation; without one the records are still updated but nothing is
-announced, because an intent without an observation could not enter V2
+The committed observation decides silence: a `silent-backfill` match updates
+its records and announces nothing, and a match with no observation throws,
+because an intent without an observed match could never enter the post-commit
 fan-out.
 
-Progression runs before the V2 match core's post-commit fan-out, and
-`planMatchFanOutV2` starts a notification child for every drivable non-prematch
+Progression runs before the match core's post-commit fan-out, and
+`planMatchFanOut` starts a notification child for every drivable non-prematch
 intent of the match, so a minted hall intent is driven by the same run with no
-extra wiring. An intent minted while v1 owns post-match discovery has no such
-fan-out and stays `pending` until a `scoutPipelineReconciliationV2Workflow`
-run drives it.
+extra wiring. An intent the fan-out misses stays `pending` until a
+`scoutPipelineReconciliationWorkflow` run drives it.
 
 ## Beta Customs operations
 
@@ -1379,28 +1389,31 @@ directly. Two rules come with it:
 
 ## Runtime roles
 
-The image boots into one of five shapes, selected by `SCOUT_RUNTIME_ROLE`
-(default `combined`). The vocabulary and the exact subsystem set per role are
-one table in `configuration/runtime-role.ts`; `runtime/plan.ts` derives the boot
-and shutdown order from it, and `runtime/subsystems.ts` performs the steps. An
-unrecognised value throws at startup rather than falling back.
+The image boots into one of four shapes, selected by `SCOUT_RUNTIME_ROLE`. The
+vocabulary and the exact subsystem set per role are one table in
+`configuration/runtime-role.ts`; `runtime/plan.ts` derives the boot and
+shutdown order from it, and `runtime/subsystems.ts` performs the steps. Unset
+means `combined` in development and is refused in beta and production;
+`combined` itself is refused outside development, and an unrecognised value
+always throws at startup rather than falling back.
 
-| Subsystem                           | `combined`                                        | `application`                                     | `application-isolated`      | `gateway`          | `activity-worker`    |
-| ----------------------------------- | ------------------------------------------------- | ------------------------------------------------- | --------------------------- | ------------------ | -------------------- |
-| Champion assets                     | yes                                               | yes                                               | yes                         | yes                | yes                  |
-| Voice assistant and Discord gateway | yes                                               | —                                                 | —                           | yes                | —                    |
-| Report-lake access                  | read + write                                      | read + write                                      | read + write                | read-only          | read + staging write |
-| Report-lake fold / publish          | yes                                               | yes                                               | yes                         | —                  | —                    |
-| Temporal workers                    | workflow, interactive, lake, realtime, background | workflow, interactive, lake, realtime, background | workflow, interactive, lake | none (client only) | realtime, background |
-| Discord REST                        | yes                                               | yes                                               | yes                         | yes                | yes                  |
-| HTTP surface                        | full                                              | full                                              | full                        | health + metrics   | health + metrics     |
-| Competition activity worker         | yes                                               | yes                                               | —                           | —                  | yes                  |
-| Database metric sweeps and seeding  | yes                                               | yes                                               | yes                         | —                  | —                    |
+| Subsystem                           | `combined`                                        | `application`               | `gateway`          | `activity-worker`    |
+| ----------------------------------- | ------------------------------------------------- | --------------------------- | ------------------ | -------------------- |
+| Champion assets                     | yes                                               | yes                         | yes                | yes                  |
+| Voice assistant and Discord gateway | yes                                               | —                           | yes                | —                    |
+| Report-lake access                  | read + write                                      | read + write                | read-only          | read + staging write |
+| Report-lake fold / publish          | yes                                               | yes                         | —                  | —                    |
+| Temporal workers                    | workflow, interactive, lake, realtime, background | workflow, interactive, lake | none (client only) | realtime, background |
+| Discord REST                        | yes                                               | yes                         | yes                | yes                  |
+| HTTP surface                        | full                                              | full                        | health + metrics   | health + metrics     |
+| Competition activity worker         | yes                                               | —                           | —                  | yes                  |
+| Database metric sweeps and seeding  | yes                                               | yes                         | —                  | —                    |
 
 Notes that are easy to get wrong:
 
-- **`combined` is the unsplit role.** It boots and drains in the established
-  order. Split stages select the other roles through stage-scoped topology.
+- **`combined` is the development role.** It is everything in one process:
+  local development runs it whenever it owns the Discord gateway, and runs
+  `application` otherwise. Hosted stages always run the three split roles.
 - **Voice is gateway-coupled by design.** It reads an active voice connection's
   audio, so it cannot be moved off the shard. That makes `gateway` an explicitly
   stateful role.
@@ -1424,8 +1437,8 @@ Notes that are easy to get wrong:
   with write access, on the same node and SELinux level. The volume must have
   `ZFSVolume.spec.shared=yes`; generation bundles keep independent staging
   writes separate from the application's fold and publish operation.
-- **Hosted activity ownership is fixed.** Both stages run `application-isolated`,
-  a separate gateway, and an activity worker. The worker owns realtime,
+- **Hosted activity ownership is fixed.** Both stages run `application`, a
+  separate gateway, and an activity worker. The worker owns realtime,
   background, and competition Activities. The application owns interactive and
   lake Activities; production retains its embedded Workflow poller. Beta's
   dedicated Workflow Deployment owns Workflow routing. Rollback uses an

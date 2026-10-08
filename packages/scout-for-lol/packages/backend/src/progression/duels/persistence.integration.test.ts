@@ -6,7 +6,7 @@ import {
   type PlayerId,
   type Region,
 } from "@scout-for-lol/data";
-import { scoutNotificationV2WorkflowId } from "@scout-for-lol/temporal";
+import { scoutNotificationWorkflowId } from "@scout-for-lol/temporal";
 import { NotificationIntentKeySchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { notificationIntentCodec } from "@scout-for-lol/domain/notifications/intent-codec.ts";
 import {
@@ -30,7 +30,7 @@ import {
 import { listGuildDuels } from "#src/progression/duels/read.ts";
 import { mintDuelStatusIntent } from "#src/progression/duels/status-intent.ts";
 import { duelStatusAnnouncementCodec } from "#src/progression/duels/status-message.ts";
-import { acceptNotificationStart } from "#src/temporal/v2/notification-reads.ts";
+import { acceptNotificationStart } from "#src/temporal/notification-lane/notification-reads.ts";
 import {
   createTestDatabase,
   dropTestDatabase,
@@ -136,7 +136,7 @@ async function verifyConcurrentDirectDuelRetries(): Promise<void> {
   expect(intent.kind).toBe("duel-status");
   const start = await db.scoutWorkflowStart.findFirstOrThrow();
   expect(start.requestedWorkflowId).toBe(
-    scoutNotificationV2WorkflowId(
+    scoutNotificationWorkflowId(
       "dev",
       NotificationIntentKeySchema.parse(intent.intentKey),
     ),

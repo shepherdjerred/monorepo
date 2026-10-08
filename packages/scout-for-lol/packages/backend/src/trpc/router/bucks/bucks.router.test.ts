@@ -31,7 +31,10 @@ import {
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 
 const originalEnvironment = Bun.env["ENVIRONMENT"];
+const originalRole = Bun.env["SCOUT_RUNTIME_ROLE"];
 Bun.env["ENVIRONMENT"] = "beta";
+// Hosted stages name their role; the web surface is the application's.
+Bun.env["SCOUT_RUNTIME_ROLE"] = "application";
 resetConfigurationForTests();
 
 const trpc = await createOfflineTrpcHarness("trpc-bucks-test");
@@ -178,6 +181,11 @@ afterAll(async () => {
     delete Bun.env["ENVIRONMENT"];
   } else {
     Bun.env["ENVIRONMENT"] = originalEnvironment;
+  }
+  if (originalRole === undefined) {
+    delete Bun.env["SCOUT_RUNTIME_ROLE"];
+  } else {
+    Bun.env["SCOUT_RUNTIME_ROLE"] = originalRole;
   }
 });
 

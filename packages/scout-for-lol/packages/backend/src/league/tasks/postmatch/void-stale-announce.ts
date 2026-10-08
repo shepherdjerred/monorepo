@@ -6,7 +6,7 @@ import {
   voidStaleBettingPools,
   type StaleBettingPool,
 } from "#src/betting/settlement/void-stale.ts";
-import { postmatchReplyTargets } from "#src/temporal/v2/notification/settlement-notification.ts";
+import { postmatchReplyTargets } from "#src/temporal/notification/settlement-notification.ts";
 
 /**
  * Void the pools whose match never resolved, then refresh and announce them,

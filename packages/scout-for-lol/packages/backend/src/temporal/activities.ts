@@ -17,8 +17,8 @@ import {
   type NonSupportBackgroundJobInput,
 } from "./activity-runtime.ts";
 import { createRealtimeActivities } from "#src/temporal/realtime-activities.ts";
-import { createScoutV2BackgroundActivities } from "#src/temporal/v2/background-activities.ts";
-import { createScoutV2LakeActivities } from "#src/temporal/v2/lake-activities.ts";
+import { createScoutBackgroundActivities } from "#src/temporal/background-activities.ts";
+import { createScoutLakeActivities } from "#src/temporal/lake/lake-activities.ts";
 import { temporalWorkHardDisabled } from "#src/temporal/work-features.ts";
 type DetachedWorkInput = Parameters<
   ScoutTemporalActivityGroups["background"]["runDetachedBackgroundWork"]
@@ -119,12 +119,8 @@ async function runBackgroundJobByKind(
         await import("#src/durable/match/intent-expiry.ts");
       await runNotificationIntentExpiry();
       const { settleTerminalNotificationTips } =
-        await import("#src/temporal/v2/notification/notification-presentation.ts");
+        await import("#src/temporal/notification/notification-presentation.ts");
       await settleTerminalNotificationTips();
-      break;
-    }
-    case "progression-outbox": {
-      // Retired with the Hall and Duel outbox tables; see the contract.
       break;
     }
     case "progression-reconciliation": {
@@ -198,7 +194,7 @@ function createInteractiveActivities(): ScoutTemporalActivityGroups["interactive
 }
 function createBackgroundActivities(): ScoutTemporalActivityGroups["background"] {
   return {
-    ...createScoutV2BackgroundActivities(),
+    ...createScoutBackgroundActivities(),
     probeQueue,
     fetchInitialHistoryPage: async (input) => {
       return await heartbeatWhile(
@@ -417,7 +413,7 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
 }
 function createLakeActivities(): ScoutTemporalActivityGroups["lake"] {
   return {
-    ...createScoutV2LakeActivities(),
+    ...createScoutLakeActivities(),
     probeQueue,
     runDetachedLakeWork: runDetachedWork,
     runReportLakeJob: async (input) => {

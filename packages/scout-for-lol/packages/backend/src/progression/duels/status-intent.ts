@@ -5,7 +5,7 @@ import {
 } from "@scout-for-lol/data";
 import {
   SCOUT_WORKFLOW_NAMES,
-  scoutNotificationV2WorkflowId,
+  scoutNotificationWorkflowId,
   type ScoutStage,
 } from "@scout-for-lol/temporal";
 import type { Db } from "#src/database/index.ts";
@@ -75,12 +75,12 @@ export async function mintDuelStatusIntent(
 
   const input = { stage: args.stage, intentKey: key };
   const requested = await requestWorkflowStart(db, {
-    requestedWorkflowId: scoutNotificationV2WorkflowId(args.stage, key),
-    workflowType: SCOUT_WORKFLOW_NAMES.notificationV2,
+    requestedWorkflowId: scoutNotificationWorkflowId(args.stage, key),
+    workflowType: SCOUT_WORKFLOW_NAMES.notification,
     requestedBy: null,
     requestSource: `duel-status:${args.payload.kind}`,
     inputPayload: {
-      kind: SCOUT_WORKFLOW_NAMES.notificationV2,
+      kind: SCOUT_WORKFLOW_NAMES.notification,
       version: 1,
       data: input,
     },

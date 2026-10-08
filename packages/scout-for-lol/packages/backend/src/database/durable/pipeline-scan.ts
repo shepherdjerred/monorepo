@@ -81,7 +81,7 @@ import {
  * domain union cannot reach production until someone says what driving it
  * would do — which is the question that decides membership of all of them.
  *
- * `temporal/v2/match-reads.ts` spells the same drivable set for its per-match
+ * `temporal/match-reads.ts` spells the same drivable set for its per-match
  * fan-out. The duplication stands because the persistence layer is driven by
  * the application and must not import it; what keeps the two honest is that
  * this table is exhaustive over the domain union, so a state added there fails
@@ -325,7 +325,7 @@ export type LiveRecoveryBatchRow = {
  * Workflow reads to know the domain commit stands. The cursor advance has no
  * stage receipt at all — `MatchTrackedAccount.cursorAdvancedAt` is per account
  * and monotonic, so it answers "did this happen" more precisely than one
- * match-wide receipt could (see `match-receipts-v2.ts`) — so the second half of
+ * match-wide receipt could (see `match-receipts.ts`) — so the second half of
  * the question has to be asked of that column. A run that committed the
  * observation and died before the cursors moved is exactly the state this
  * family exists to find, and either check alone would miss half of it.
@@ -370,7 +370,7 @@ export type LiveRecoveryBatchRow = {
  */
 /**
  * Whether a stalled-match listing carries matches whose stage receipts are
- * contested. See {@link listStalledV2MatchProcessing}.
+ * contested. See {@link listStalledMatchProcessing}.
  */
 export type ContestedMatchListing =
   | { readonly kind: "include" }
@@ -379,7 +379,7 @@ export type ContestedMatchListing =
       readonly stageConflictReceiptKind: ReceiptKind;
     };
 
-export async function listStalledV2MatchProcessing(
+export async function listStalledMatchProcessing(
   db: Db,
   args: {
     observationReceiptKind: ReceiptKind;

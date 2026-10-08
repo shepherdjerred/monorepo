@@ -23,28 +23,28 @@ const embedded = ["beta", "prod"].flatMap((environment) =>
   ].map((queue) => {
     const role = ["realtime", "background"].includes(queue)
       ? "activity-worker"
-      : "application-isolated";
+      : "application";
     return constant(
       `scout_temporal_workers{environment="${environment}",role="${role}",queue_class="${queue}",namespace="scout-${environment}",pod="${role}"}`,
     );
   }),
 );
 const scrapes = ["beta", "prod"].flatMap((stage) =>
-  ["application-isolated", "activity-worker"].map((pod) =>
+  ["application", "activity-worker"].map((pod) =>
     constant(`up{namespace="scout-${stage}",pod="${pod}"}`),
   ),
 );
 const known = constant(
-  'scout_temporal_workflow_routing_known{environment="beta",role="application-isolated",namespace="scout-beta",pod="application-isolated"}',
+  'scout_temporal_workflow_routing_known{environment="beta",role="application",namespace="scout-beta",pod="application"}',
 );
 const routingTime: Series = {
   series:
-    'scout_temporal_workflow_routing_timestamp_seconds{environment="beta",role="application-isolated",namespace="scout-beta",pod="application-isolated"}',
+    'scout_temporal_workflow_routing_timestamp_seconds{environment="beta",role="application",namespace="scout-beta",pod="application"}',
   values: "0+60x10",
 };
 function route(build: string, routing = "current", percentage = 100): Series {
   return constant(
-    `scout_temporal_workflow_routed_version{environment="beta",role="application-isolated",namespace="scout-beta",pod="application-isolated",temporal_namespace="beta",worker_deployment_name="scout-beta-workflows",worker_build_id="${build}",routing="${routing}"}`,
+    `scout_temporal_workflow_routed_version{environment="beta",role="application",namespace="scout-beta",pod="application",temporal_namespace="beta",worker_deployment_name="scout-beta-workflows",worker_build_id="${build}",routing="${routing}"}`,
     percentage,
   );
 }

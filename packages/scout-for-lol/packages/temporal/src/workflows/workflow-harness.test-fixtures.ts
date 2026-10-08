@@ -3,6 +3,7 @@ import { WorkflowFailedError, type Client } from "@temporalio/client";
 import { ApplicationFailure, type Duration } from "@temporalio/common";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
+import { withPreRenameActivityNames } from "#src/identifiers.ts";
 import { createScoutWorkerPool } from "./worker-pool.test-fixtures.ts";
 
 /**
@@ -16,7 +17,7 @@ import { createScoutWorkerPool } from "./worker-pool.test-fixtures.ts";
  * the test was actually reporting.
  */
 
-export type ScoutV2WorkflowHarness = {
+export type ScoutWorkflowHarness = {
   /** The client for the environment of the test currently running. */
   client: () => Client;
   /**
@@ -45,7 +46,7 @@ export type ScoutV2WorkflowHarness = {
  * scenario inherits another's executions, and the workers are drained before
  * it is torn down.
  */
-export function useScoutV2WorkflowHarness(): ScoutV2WorkflowHarness {
+export function useScoutWorkflowHarness(): ScoutWorkflowHarness {
   const pool = createScoutWorkerPool();
   let environment: TestWorkflowEnvironment | null = null;
 
@@ -87,7 +88,9 @@ export function useScoutV2WorkflowHarness(): ScoutV2WorkflowHarness {
         await Worker.create({
           connection: live.nativeConnection,
           taskQueue: "scout-dev-realtime",
-          activities,
+          // As the production Activity worker does: the bundle schedules the
+          // pre-rename names in this release.
+          activities: withPreRenameActivityNames(activities),
           maxConcurrentActivityTaskExecutions: 4,
         }),
       );

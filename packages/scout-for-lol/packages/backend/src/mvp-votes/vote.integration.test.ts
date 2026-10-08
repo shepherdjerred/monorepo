@@ -168,7 +168,7 @@ describe("Match MVP votes", () => {
 });
 
 describe("Match MVP report references", () => {
-  test("persists report message refs on the contest, not the ActiveGame TTL", async () => {
+  test("persists report message refs on the contest", async () => {
     const frozen = roster();
     await db.matchMvpContest.create({
       data: { matchId: MATCH_ID, roster: frozen },

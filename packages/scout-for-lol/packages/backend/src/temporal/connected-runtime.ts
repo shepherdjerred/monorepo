@@ -7,16 +7,20 @@ import {
   Worker,
 } from "@temporalio/worker";
 import type { ScoutStage } from "@scout-for-lol/temporal";
-import { scoutTaskQueues } from "@scout-for-lol/temporal";
+import {
+  scoutTaskQueues,
+  withPreRenameActivityNames,
+} from "@scout-for-lol/temporal";
 import type { ScoutTemporalQueueClass } from "#src/configuration/runtime-role.ts";
 import type { ScoutTemporalActivities } from "@scout-for-lol/temporal/activities";
-import type { ScoutV2MatchActivities } from "#src/temporal/v2/match-activity-surface.ts";
+import type { ScoutMatchActivities } from "#src/temporal/match/match-activity-surface.ts";
 import type {
-  ScoutV2BackgroundActivities,
-  ScoutV2LakeActivities,
-  ScoutV2NotificationActivities,
-} from "#src/temporal/v2/durable-activity-surface.ts";
+  ScoutBackgroundActivities,
+  ScoutLakeActivities,
+  ScoutNotificationActivities,
+} from "#src/temporal/durable-activity-surface.ts";
 import { createLogger } from "#src/logger.ts";
+import { RETIRED_REALTIME_ACTIVITIES } from "#src/temporal/retired-activities.ts";
 import {
   createTemporalClientTracingInterceptor,
   createTemporalWorkerTracing,
@@ -26,6 +30,25 @@ import { sanitizeTemporalLogFields } from "@shepherdjerred/temporal-observabilit
 import { getTracingRuntime } from "#src/observability/tracing.ts";
 
 const logger = createLogger("temporal-supervisor");
+
+/**
+ * What each embedded Activity worker registers: its group, every renamed
+ * pipeline Activity under its pre-rename name too, and on `realtime` the
+ * Activities a still-routed pre-rename bundle can schedule. See
+ * `withPreRenameActivityNames` and `RETIRED_REALTIME_ACTIVITIES`.
+ */
+export function registeredActivities(groups: ScoutTemporalActivityGroups) {
+  return {
+    interactive: groups.interactive,
+    lake: withPreRenameActivityNames(groups.lake),
+    realtime: {
+      ...withPreRenameActivityNames(groups.realtime),
+      ...RETIRED_REALTIME_ACTIVITIES,
+    },
+    background: withPreRenameActivityNames(groups.background),
+  };
+}
+
 const RECONNECT_DELAY_MS = 5000;
 const RECONNECT_DELAY_MAX_MS = 60_000;
 /**
@@ -104,13 +127,12 @@ function installConfiguredRuntime(): void {
 }
 
 /**
- * Every queue serves both pipelines. v1's Activities and their V2 counterparts
- * are declared on the same queue classes in `SCOUT_V2_ACTIVITY_QUEUE_CLASSES`,
- * so one worker registration carries both and an open v1 execution and a V2 one
- * dispatch to the same place — which is what makes the V2 rollout a matter of
- * starting Workflows rather than of moving workers.
+ * The pipeline Activities are declared on queue classes in
+ * `SCOUT_PIPELINE_ACTIVITY_QUEUE_CLASSES`, beside the other Scout Activities
+ * that share those queues, so one worker registration per queue carries them
+ * all.
  *
- * The V2 groups are split by queue rather than by domain because the queue is
+ * The pipeline groups are split by queue rather than by domain because the queue is
  * the promise being made. The notification lane spans two of them: its four
  * short domain commits and its Discord send are `realtime`, where latency is
  * the product, while its render is `background`, where a slow Satori pass
@@ -118,15 +140,10 @@ function installConfiguredRuntime(): void {
  */
 type RealtimeActivities = Pick<
   ScoutTemporalActivities,
-  | "pollRealtime"
-  | "discoverPostMatchIds"
-  | "runPostMatchMaintenance"
-  | "ingestMatch"
-  | "reconcileIngestedMatchCursor"
-  | "probeQueue"
+  "runPostMatchMaintenance" | "probeQueue"
 > &
-  ScoutV2MatchActivities &
-  ScoutV2NotificationActivities;
+  ScoutMatchActivities &
+  ScoutNotificationActivities;
 type InteractiveActivities = Pick<
   ScoutTemporalActivities,
   "runInteractive" | "persistInteractiveOutcome" | "probeQueue"
@@ -145,7 +162,7 @@ type BackgroundActivities = Pick<
   | "markDuelSeriesOverdue"
   | "probeQueue"
 > &
-  ScoutV2BackgroundActivities & {
+  ScoutBackgroundActivities & {
     syncScoutBryanBucksAnalytics: () => Promise<{
       status: "reconciled" | "skipped";
       detail: string;
@@ -160,7 +177,7 @@ type LakeActivities = Pick<
   | "markChallengeRunRecomputeFailure"
   | "probeQueue"
 > &
-  ScoutV2LakeActivities;
+  ScoutLakeActivities;
 
 export type ScoutTemporalActivityGroups = {
   readonly realtime: RealtimeActivities;
@@ -267,6 +284,7 @@ export async function createConnectedRuntime(
         ? await Connection.connect()
         : await Connection.connect({ address: options.address });
     const queues = scoutTaskQueues(options.stage);
+    const registered = registeredActivities(options.activities);
     const tracing = createScoutTemporalTracing(options.callGraphTracing);
     const commonOptions = {
       connection: nativeConnection,
@@ -297,7 +315,7 @@ export async function createConnectedRuntime(
         await Worker.create({
           ...commonOptions,
           taskQueue: queues.interactive,
-          activities: options.activities.interactive,
+          activities: registered.interactive,
           maxConcurrentActivityTaskExecutions: 2,
         }),
       );
@@ -307,7 +325,7 @@ export async function createConnectedRuntime(
         await Worker.create({
           ...commonOptions,
           taskQueue: queues.lake,
-          activities: options.activities.lake,
+          activities: registered.lake,
           maxConcurrentActivityTaskExecutions: 1,
         }),
       );
@@ -317,7 +335,7 @@ export async function createConnectedRuntime(
         await Worker.create({
           ...commonOptions,
           taskQueue: queues.realtime,
-          activities: options.activities.realtime,
+          activities: registered.realtime,
           maxConcurrentActivityTaskExecutions: 4,
         }),
       );
@@ -327,7 +345,7 @@ export async function createConnectedRuntime(
         await Worker.create({
           ...commonOptions,
           taskQueue: queues.background,
-          activities: options.activities.background,
+          activities: registered.background,
           maxConcurrentActivityTaskExecutions: 1,
         }),
       );

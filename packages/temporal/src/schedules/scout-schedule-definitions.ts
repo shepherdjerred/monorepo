@@ -5,10 +5,10 @@ import {
   type ScoutStage,
 } from "@scout-for-lol/temporal";
 import {
-  scoutPipelineReconciliationV2InputCodec,
-  scoutPostMatchDiscoveryV2InputCodec,
-  scoutPrematchDiscoveryV2InputCodec,
-} from "@scout-for-lol/temporal/workflow-contracts-v2";
+  scoutPipelineReconciliationInputCodec,
+  scoutPostMatchDiscoveryInputCodec,
+  scoutPrematchDiscoveryInputCodec,
+} from "@scout-for-lol/temporal/workflow-contracts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import type { ScheduleDefinition } from "./schedule-types.ts";
 
@@ -112,20 +112,18 @@ function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
   return [
     intervalSchedule(stage, {
       name: "prematch-poll",
-      // V2 owns live-game detection and runs the prematch maintenance sweeps
-      // at the end of each poll. v1's `scoutRealtimePollWorkflow` stays
-      // registered until its open executions drain; pointing this line back
-      // at it is the rollback.
-      workflowType: SCOUT_WORKFLOW_NAMES.prematchDiscoveryV2,
-      args: [scoutPrematchDiscoveryV2InputCodec.serialize({ stage })],
+      // Live-game detection, with the prematch maintenance sweeps at the end
+      // of each poll.
+      workflowType: SCOUT_WORKFLOW_NAMES.prematchDiscovery,
+      args: [scoutPrematchDiscoveryInputCodec.serialize({ stage })],
       every: "30 seconds",
       catchupWindow: CATCHUP_LIVE,
     }),
     intervalSchedule(stage, {
       name: "postmatch-discovery",
-      workflowType: SCOUT_WORKFLOW_NAMES.postMatchDiscoveryV2,
+      workflowType: SCOUT_WORKFLOW_NAMES.postMatchDiscovery,
       args: [
-        scoutPostMatchDiscoveryV2InputCodec.serialize({
+        scoutPostMatchDiscoveryInputCodec.serialize({
           stage,
           trigger: "schedule",
         }),
@@ -141,9 +139,9 @@ function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
     }),
     intervalSchedule(stage, {
       name: "pipeline-reconciliation-v2",
-      workflowType: SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2,
+      workflowType: SCOUT_WORKFLOW_NAMES.pipelineReconciliation,
       args: [
-        scoutPipelineReconciliationV2InputCodec.serialize({
+        scoutPipelineReconciliationInputCodec.serialize({
           stage,
           trigger: "schedule",
         }),

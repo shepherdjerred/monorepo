@@ -76,7 +76,7 @@ describe("Scout activity worker topology", () => {
   test("owning leaves the worker as the sole realtime and competition owner", () => {
     for (const stage of ["beta", "prod"] as const) {
       expect(runtimeRole(deployment(stage, "scout-backend"))).toBe(
-        "application-isolated",
+        "application",
       );
       expect(runtimeRole(deployment(stage, "scout-activity-worker"))).toBe(
         "activity-worker",

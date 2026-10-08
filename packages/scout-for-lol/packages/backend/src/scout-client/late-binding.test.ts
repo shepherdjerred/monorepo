@@ -1,9 +1,9 @@
 import { beforeEach, expect, test, vi } from "vitest";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import {
-  SCOUT_V2_CLIENT_MATCH_TERMINAL_RECEIPT_KIND,
-  SCOUT_V2_MATCH_RECEIPT_KINDS,
-} from "@scout-for-lol/temporal/match-receipts-v2";
+  SCOUT_CLIENT_MATCH_TERMINAL_RECEIPT_KIND,
+  SCOUT_MATCH_RECEIPT_KINDS,
+} from "@scout-for-lol/temporal/match-receipts";
 import { bucksTestDiscordId } from "#src/testing/bucks-fixtures.ts";
 
 const mocks = vi.hoisted(() => ({
@@ -34,22 +34,22 @@ vi.mock("#src/betting/accounts/earnings.ts", () => ({
 vi.mock("#src/league/tasks/postmatch/match-report-standard.ts", () => ({
   fetchTimelineForDuelProgression: mocks.fetchTimeline,
 }));
-vi.mock("#src/league/tasks/postmatch/cursor-reconciliation.ts", () => ({
-  readLegacyMatchCompletionV2: mocks.readLegacyCompletion,
+vi.mock("#src/temporal/match/legacy-completion.ts", () => ({
+  readLegacyMatchCompletion: mocks.readLegacyCompletion,
 }));
 vi.mock("#src/progression/duels/results.ts", () => ({
   duelMatchNeedsTimeline: mocks.duelNeedsTimeline,
   processDuelResult: mocks.processDuel,
 }));
-vi.mock("#src/temporal/v2/match-context.ts", () => ({
-  resolveScoutV2MatchContext: mocks.resolveContext,
+vi.mock("#src/temporal/match/match-context.ts", () => ({
+  resolveScoutMatchContext: mocks.resolveContext,
 }));
-vi.mock("#src/temporal/v2/match-effects.ts", () => ({
+vi.mock("#src/temporal/match/match-effects.ts", () => ({
   lateBindingEarningsCheckpointSink: mocks.lateBindingSink,
-  mintStandingLateBindingEarningIntentsV2: mocks.mintStandingIntents,
+  mintStandingLateBindingEarningIntents: mocks.mintStandingIntents,
 }));
-vi.mock("#src/temporal/v2/match-reads.ts", () => ({
-  readMatchPipelineStateV2: mocks.readState,
+vi.mock("#src/temporal/match/match-reads.ts", () => ({
+  readMatchPipelineState: mocks.readState,
 }));
 
 const { reconcileProcessedClientBinding } = await import("./late-binding.ts");
@@ -138,27 +138,7 @@ test("leaves a new match for its ordinary workflow", async () => {
 
 test("leaves an active match pipeline to consume the binding", async () => {
   mocks.readState.mockResolvedValue(
-    pipelineState([SCOUT_V2_MATCH_RECEIPT_KINDS.observation]),
-  );
-
-  await expect(reconcileProcessedClientBinding(riotMatchId)).rejects.toThrow(
-    "is still applying binding-dependent stages",
-  );
-
-  expect(mocks.resolveContext).not.toHaveBeenCalled();
-  expect(mocks.finalizeCustom).not.toHaveBeenCalled();
-  expect(mocks.awardBucks).not.toHaveBeenCalled();
-});
-
-test("leaves a legacy-owned match until its workflow completes", async () => {
-  mocks.readState.mockResolvedValue(
-    pipelineState(
-      [
-        SCOUT_V2_MATCH_RECEIPT_KINDS.settlement,
-        SCOUT_V2_MATCH_RECEIPT_KINDS.progression,
-      ],
-      { owner: "legacy-v1" },
-    ),
+    pipelineState([SCOUT_MATCH_RECEIPT_KINDS.observation]),
   );
 
   await expect(reconcileProcessedClientBinding(riotMatchId)).rejects.toThrow(
@@ -172,7 +152,7 @@ test("leaves a legacy-owned match until its workflow completes", async () => {
 
 test("acknowledges a durable terminal reconciliation without replaying it", async () => {
   mocks.readState.mockResolvedValue(
-    pipelineState([SCOUT_V2_CLIENT_MATCH_TERMINAL_RECEIPT_KIND]),
+    pipelineState([SCOUT_CLIENT_MATCH_TERMINAL_RECEIPT_KIND]),
   );
 
   await expect(reconcileProcessedClientBinding(riotMatchId)).resolves.toBe(
@@ -187,9 +167,9 @@ test("acknowledges a durable terminal reconciliation without replaying it", asyn
 test("replays binding-dependent projectors after their stage receipts stand", async () => {
   mocks.readState.mockResolvedValue(
     pipelineState([
-      SCOUT_V2_MATCH_RECEIPT_KINDS.settlement,
-      SCOUT_V2_MATCH_RECEIPT_KINDS.progression,
-      SCOUT_V2_MATCH_RECEIPT_KINDS.tournament,
+      SCOUT_MATCH_RECEIPT_KINDS.settlement,
+      SCOUT_MATCH_RECEIPT_KINDS.progression,
+      SCOUT_MATCH_RECEIPT_KINDS.tournament,
     ]),
   );
 
@@ -213,9 +193,9 @@ test("checkpoints and mints earnings created by a live late binding", async () =
   mocks.awardBucks.mockResolvedValue(earnings);
   mocks.readState.mockResolvedValue(
     pipelineState([
-      SCOUT_V2_MATCH_RECEIPT_KINDS.settlement,
-      SCOUT_V2_MATCH_RECEIPT_KINDS.progression,
-      SCOUT_V2_MATCH_RECEIPT_KINDS.tournament,
+      SCOUT_MATCH_RECEIPT_KINDS.settlement,
+      SCOUT_MATCH_RECEIPT_KINDS.progression,
+      SCOUT_MATCH_RECEIPT_KINDS.tournament,
     ]),
   );
 
@@ -248,9 +228,9 @@ test("keeps late-binding earnings silent for a backfill", async () => {
   mocks.readState.mockResolvedValue(
     pipelineState(
       [
-        SCOUT_V2_MATCH_RECEIPT_KINDS.settlement,
-        SCOUT_V2_MATCH_RECEIPT_KINDS.progression,
-        SCOUT_V2_MATCH_RECEIPT_KINDS.tournament,
+        SCOUT_MATCH_RECEIPT_KINDS.settlement,
+        SCOUT_MATCH_RECEIPT_KINDS.progression,
+        SCOUT_MATCH_RECEIPT_KINDS.tournament,
       ],
       { deliveryMode: "silent-backfill" },
     ),
@@ -270,9 +250,9 @@ test("keeps late-binding earnings silent for a backfill", async () => {
 test("retains the ingress retry when durable delivery minting fails", async () => {
   mocks.readState.mockResolvedValue(
     pipelineState([
-      SCOUT_V2_MATCH_RECEIPT_KINDS.settlement,
-      SCOUT_V2_MATCH_RECEIPT_KINDS.progression,
-      SCOUT_V2_MATCH_RECEIPT_KINDS.tournament,
+      SCOUT_MATCH_RECEIPT_KINDS.settlement,
+      SCOUT_MATCH_RECEIPT_KINDS.progression,
+      SCOUT_MATCH_RECEIPT_KINDS.tournament,
     ]),
   );
   mocks.mintStandingIntents.mockRejectedValue(
@@ -293,7 +273,7 @@ test("retains the ingress retry when durable delivery minting fails", async () =
 
 test("keeps ARCHIVE_ONLY late binding free of financial and progression effects", async () => {
   mocks.readState.mockResolvedValue(
-    pipelineState([SCOUT_V2_MATCH_RECEIPT_KINDS.tournament], {
+    pipelineState([SCOUT_MATCH_RECEIPT_KINDS.tournament], {
       policy: "ARCHIVE_ONLY",
     }),
   );
@@ -314,7 +294,7 @@ test("keeps ARCHIVE_ONLY late binding free of financial and progression effects"
   expect(mocks.processDuel).not.toHaveBeenCalled();
 });
 
-test("replays legacy binding projectors from authoritative workflow completion", async () => {
+test("replays binding projectors for a match the retired v1 pipeline owned", async () => {
   mocks.readState.mockResolvedValue(pipelineState([], { owner: "legacy-v1" }));
   mocks.readLegacyCompletion.mockResolvedValue({ completed: true });
 

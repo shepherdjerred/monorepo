@@ -25,7 +25,7 @@ import { scoutTemporalDuplicateEffectClaims } from "#src/metrics/platform/tempor
  * that is not already inside a transaction.
  *
  * So the V2 Activity contracts do not treat two commits as a limitation to
- * design around: `ScoutGuardedEffectV2Result` reports `guard` and `fact` as
+ * design around: `ScoutGuardedEffectResult` reports `guard` and `fact` as
  * separate outcomes precisely because they ARE separate commits, and a run
  * that claimed the guard and died before the fact is expected to come back and
  * find `guard: already-applied` with `fact: applied`. That reconcile is
@@ -34,12 +34,6 @@ import { scoutTemporalDuplicateEffectClaims } from "#src/metrics/platform/tempor
  */
 
 const UniqueViolationSchema = z.object({ code: z.literal("P2002") });
-
-/**
- * The effect kind every per-channel Discord send is claimed under. Named here
- * so the claim site and the queries that look those claims up cannot drift.
- */
-export const DISCORD_CHANNEL_MESSAGE_EFFECT_KIND = "discord-channel-message";
 
 /**
  * The `state` column's vocabulary. Parsed rather than trusted: the column is a

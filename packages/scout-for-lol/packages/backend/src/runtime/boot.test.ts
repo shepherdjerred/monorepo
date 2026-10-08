@@ -117,26 +117,12 @@ describe("scout runtime boot", () => {
       "report-lake",
       "temporal-core",
       "http-server",
-      // Interim: carried here until `activity-worker` is deployable.
-      "competition-worker",
       "database-seeding",
     ]);
     // The bot token is used, but only to authorize REST — never to open a
     // shard.
     expect(log.discord).toEqual(["rest-token", "gateway-marked-disabled"]);
     expect(log.boot).not.toContain("discord-gateway");
-  });
-
-  test("isolated application starts without competition activities", async () => {
-    const log = await boot("application-isolated");
-    expect(log.boot).toEqual([
-      "champion-assets",
-      "report-lake",
-      "temporal-core",
-      "http-server",
-      "database-seeding",
-    ]);
-    expect(log.discord).toEqual(["rest-token", "gateway-marked-disabled"]);
   });
 
   test("gateway boots without the product HTTP surface, but with the lake", async () => {
@@ -196,11 +182,7 @@ describe("scout runtime boot", () => {
       expect(log.metricSweeps).toHaveLength(1);
       if (log.metricSweeps[0] === true) sweepers.push(role);
     }
-    expect(sweepers).toEqual([
-      "combined",
-      "application",
-      "application-isolated",
-    ]);
+    expect(sweepers).toEqual(["combined", "application"]);
   });
 
   test("the metric decision is made before any subsystem starts", async () => {

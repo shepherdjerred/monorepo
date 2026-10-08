@@ -1,6 +1,6 @@
 import { ScheduleOverlapPolicy } from "@temporalio/client";
 import { SCOUT_WORKFLOW_NAMES } from "@scout-for-lol/temporal";
-import { scoutPrematchDiscoveryV2InputCodec } from "@scout-for-lol/temporal/workflow-contracts-v2";
+import { scoutPrematchDiscoveryInputCodec } from "@scout-for-lol/temporal/workflow-contracts";
 import { describe, expect, test } from "vitest";
 import { buildSchedulePolicies } from "./register-schedules.ts";
 import { SCHEDULES } from "./schedule-definitions.ts";
@@ -18,17 +18,17 @@ describe("Scout prematch poll schedule", () => {
       // the Schedule starts it directly; v1's realtime poll is not started.
       expect(schedule).toMatchObject({
         namespace: stage,
-        workflowType: SCOUT_WORKFLOW_NAMES.prematchDiscoveryV2,
+        workflowType: SCOUT_WORKFLOW_NAMES.prematchDiscovery,
         taskQueue: `scout-${stage}`,
         timing: { kind: "interval", every: "30 seconds" },
       });
       expect(schedule.workflowType).toBe("scoutPrematchDiscoveryV2Workflow");
       expect(schedule.args).toEqual([
-        scoutPrematchDiscoveryV2InputCodec.serialize({ stage }),
+        scoutPrematchDiscoveryInputCodec.serialize({ stage }),
       ]);
-      expect(
-        scoutPrematchDiscoveryV2InputCodec.parse(schedule.args[0]),
-      ).toEqual({ stage });
+      expect(scoutPrematchDiscoveryInputCodec.parse(schedule.args[0])).toEqual({
+        stage,
+      });
     },
   );
 

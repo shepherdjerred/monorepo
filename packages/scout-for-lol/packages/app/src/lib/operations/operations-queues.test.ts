@@ -57,7 +57,7 @@ const QUEUES: OperationsQueuesData = {
   unacceptedWorkflowStarts: [
     {
       requestedWorkflowId: "scout-recon-beta-operator",
-      workflowType: "scoutPipelineReconciliationV2",
+      workflowType: "scoutPipelineReconciliation",
       requestedAt: "2026-09-14T09:00:00.000Z",
       requestSource: "operations:reconcile-pipeline",
     },

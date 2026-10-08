@@ -1,6 +1,5 @@
 import {
   IsoInstantSchema,
-  RiotMatchIdSchema,
   type IsoInstant,
   type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
@@ -10,19 +9,9 @@ import {
 } from "@scout-for-lol/domain/identity/routes.ts";
 
 /**
- * Identity conversions between the v1 pipeline's loose values and the durable
- * tables' branded ones.
- *
- * v1's `MatchId` is an unvalidated branded string and its instants are `Date`s;
- * the durable tables take {@link RiotMatchId} and {@link IsoInstant}. Every
- * conversion here parses rather than casts, and every call sits inside the
- * dual-write fail-open boundary, so a v1 value that cannot be a durable
- * identity is recorded as a parity failure instead of breaking the pipeline.
+ * Identity conversions into the durable tables' branded values. Every
+ * conversion parses rather than casts.
  */
-
-export function toRiotMatchId(value: string): RiotMatchId {
-  return RiotMatchIdSchema.parse(value);
-}
 
 /**
  * The platform prefix of a Riot match id. `MatchObservationRecordSchema` also

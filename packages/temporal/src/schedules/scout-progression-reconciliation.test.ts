@@ -1,6 +1,6 @@
 import { ScheduleOverlapPolicy } from "@temporalio/client";
 import { ScoutBackgroundJobInputSchema } from "@scout-for-lol/temporal";
-import { scoutPipelineReconciliationV2InputCodec } from "@scout-for-lol/temporal/workflow-contracts-v2";
+import { scoutPipelineReconciliationInputCodec } from "@scout-for-lol/temporal/workflow-contracts";
 import { describe, expect, test } from "vitest";
 import { SCHEDULES } from "./schedule-definitions.ts";
 import { buildScheduleState } from "./schedule-state.ts";
@@ -67,7 +67,7 @@ describe("Scout progression and V2 pipeline reconciliation schedules", () => {
         stage === "beta" ? undefined : PAUSE_NOTE,
       );
       expect(
-        scoutPipelineReconciliationV2InputCodec.parse(pipeline?.args[0]),
+        scoutPipelineReconciliationInputCodec.parse(pipeline?.args[0]),
       ).toEqual({ stage, trigger: "schedule" });
     },
   );

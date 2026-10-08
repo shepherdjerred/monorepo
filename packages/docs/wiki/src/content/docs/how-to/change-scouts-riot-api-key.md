@@ -238,9 +238,9 @@ Scaling `scout-backend` to zero is the only thing that stops Riot writes; there
 is no maintenance flag for core ingestion. It is a routine operation — the
 deployment already replaces rather than rolls
 ([`scout/index.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/scout/index.ts)). Leave
-`scout-workflow-worker` up: the realtime poll workflow skips a stale poll rather
-than queueing it
-([`realtime.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/temporal/src/workflows/realtime.ts)),
+`scout-workflow-worker` up: the discovery Schedules skip an overlapping run and replay
+only ticks missed within a short catch-up window
+([`scout-schedule-definitions.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/schedules/scout-schedule-definitions.ts)),
 so there is no catch-up dogpile on restart.
 
 :::caution[Prod's database leaves with the pod]

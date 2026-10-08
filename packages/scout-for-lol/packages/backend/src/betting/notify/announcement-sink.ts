@@ -196,7 +196,7 @@ export const announcingSettlementSink: SettlementAnnouncementSink = {
   },
   mayEnqueueDareNotification: () => true,
   mayPostDareCallout: () => true,
-  // v1 announces from this call stack; there is nothing to recover.
+  // This sink announces from its own call stack; there is nothing to recover.
   recordAnnouncementItem: () => Promise.resolve(),
 };
 
