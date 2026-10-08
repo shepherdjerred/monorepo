@@ -740,7 +740,7 @@
         "versioning": "semver",
         "packageName": "shepherdjerred/scout-for-lol"
       },
-      "value": "2.0.0-1005593@sha256:10130d8c61a5a91dc66c81324b8d74bb5941b3da0efde52c9b0ad5b2ec88eae6",
+      "value": "2.0.0-1006485@sha256:cd439cd43670a7c5d44921e909002fc937c02624f0feed55a3a54b14f6bca8da",
       "notes": [
         "Prod promotion = merging a reviewed PR for this pin (normally Renovate). Each 2.0.0-<n>",
         "tag is minted by the scout-tag-release CI step only after site version",
