@@ -1637,6 +1637,7 @@ def prepare_resources(
     with ExitStack() as locks:
         stopped_locks(modern_data, locks)
         expected = verified_backup(modern_data, backup_proof)
+        tool_sha256 = digest(tool)
         subprocess.run(
             [
                 "java",
@@ -1652,6 +1653,8 @@ def prepare_resources(
             check=True,
             timeout=180,
         )
+        if digest(tool) != tool_sha256:
+            raise ValueError("Native resource tool changed during resource preparation")
         payload = root / "payload"
         payload.mkdir()
         (root / "world").rename(payload / "world")
@@ -1667,7 +1670,7 @@ def prepare_resources(
                 "requestId": journal["requestId"],
                 "candidateJarSha256": digest(candidate),
                 "backupProofSha256": digest(backup_proof),
-                "nativeToolSha256": digest(tool),
+                "nativeToolSha256": tool_sha256,
                 "native": json.loads((root / "native-receipt.json").read_text(encoding="utf-8")),
                 "files": files,
             },

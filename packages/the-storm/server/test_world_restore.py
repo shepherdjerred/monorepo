@@ -132,6 +132,39 @@ class RestoreTest(unittest.TestCase):
         verify.assert_called_once_with(modern.resolve(), backup.resolve())
         self.assertFalse((staging / "restoration-database").exists())
 
+    def test_resource_preparation_rejects_native_tool_changed_during_generation(self):
+        staging, paper, bootstrap, candidate, modern, proof = self.activation_fixture()
+        tool_root = self.root / "operator"
+        (tool_root / "conversion").mkdir(parents=True)
+        tool = tool_root / "conversion/NativeResourceBootstrap.java"
+        tool.write_bytes(b"original source")
+        restore.save_json(proof, {"schemaVersion": 2, "requestId": "fixture-request"})
+        receipt = staging / "activation-layout-receipt.json"
+        restore.save_json(
+            receipt,
+            {"candidateJarSha256": restore.digest(candidate), "backupProofSha256": restore.digest(proof)},
+        )
+        restore.save_json(
+            staging / restore.JOURNAL,
+            {
+                "phase": "ACTIVATION_LAYOUT_READY",
+                "requestId": "fixture-request",
+                "activationReceiptSha256": restore.digest(receipt),
+            },
+        )
+        before = restore.fingerprint(modern)
+        with (
+            patch.object(restore, "__file__", str(tool_root / "world-restore.py")),
+            patch.object(restore, "conversion_classpath", return_value="fixture"),
+            patch.object(restore, "verified_backup", return_value=before),
+            patch.object(restore.subprocess, "run", side_effect=lambda *a, **kw: tool.write_bytes(b"changed source")),
+            self.assertRaisesRegex(ValueError, "tool changed"),
+        ):
+            restore.prepare_resources(staging, paper, bootstrap, candidate, modern, proof)
+        self.assertEqual(restore.fingerprint(modern), before)
+        self.assertFalse((staging / "resource-bootstrap/receipt.json").exists())
+        self.assertNotIn("resourceReceiptSha256", json.loads((staging / restore.JOURNAL).read_text()))
+
     def test_headers_preserve_negative_coordinates_and_reject_overlap(self):
         region = self.root / "region"
         region.mkdir()
