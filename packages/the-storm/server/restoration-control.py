@@ -1161,6 +1161,25 @@ def remove_readers(path: Path, journal: JsonObject) -> None:
     save(path, journal)
 
 
+def recover_writer_identity(path: Path, journal: JsonObject, existing: str | None = None) -> None:
+    """Recover custody of an already authorized helper before checking stopped mounts."""
+    if journal.get("writerUid") is not None or journal.get("writerCreationPending") is not True:
+        return
+    if journal.get("productionWriteAuthorized") is not True:
+        raise ValueError("Pending writer recovery requires recorded production write authorization")
+    if existing is None:
+        name = writer_manifest(journal).object("metadata").string("name")
+        existing = run(["-n", NAMESPACE, "get", "pod", name, "--ignore-not-found", "-o", "json"]).strip()
+    if not existing:
+        return
+    pod = JsonObject.parse(existing)
+    proposed = JsonObject({**journal, "writerUid": pod.object("metadata").string("uid")})
+    assert_writer(pod, proposed)
+    require_offline(proposed, writer=True)
+    journal["writerUid"] = proposed.string("writerUid")
+    save(path, journal)
+
+
 def create_writer(path: Path, journal: JsonObject) -> JsonObject:
     # A writer can run either installation or whole-volume recovery. Revoke
     # the old installation before granting write access, even if the writer
@@ -1173,12 +1192,7 @@ def create_writer(path: Path, journal: JsonObject) -> JsonObject:
     save(path, journal)
     name = writer_manifest(journal).object("metadata").string("name")
     existing = run(["-n", NAMESPACE, "get", "pod", name, "--ignore-not-found", "-o", "json"]).strip()
-    if existing and journal.get("writerUid") is None and journal.get("writerCreationPending") is True:
-        pod = JsonObject.parse(existing)
-        proposed = JsonObject({**journal, "writerUid": pod.object("metadata").string("uid")})
-        assert_writer(pod, proposed)
-        journal["writerUid"] = proposed.string("writerUid")
-        save(path, journal)
+    recover_writer_identity(path, journal, existing)
     require_offline(journal, writer=bool(journal.get("writerUid")))
     if journal.get("writerRemoved") is True:
         if existing:
@@ -1271,6 +1285,7 @@ def upload_installation(journal: JsonObject, plan: JsonObject) -> None:
 
 
 def install(path: Path, journal: JsonObject, staging: Path, candidate: Path) -> None:
+    recover_writer_identity(path, journal)
     require_offline(journal, writer=bool(journal.get("writerUid")))
     require_restore(journal)
     plan = restoration_activation.plan(staging, journal, candidate)
@@ -1461,6 +1476,7 @@ def transfer_rollback(journal: JsonObject) -> None:
 
 
 def whole_rollback(path: Path, journal: JsonObject) -> None:
+    recover_writer_identity(path, journal)
     require_offline(journal, writer=bool(journal.get("writerUid")))
     require_restore(journal)
     proof = rollback_proof(journal)

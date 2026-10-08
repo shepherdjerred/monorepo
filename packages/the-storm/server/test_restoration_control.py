@@ -1205,6 +1205,55 @@ class RestorationControlTest(unittest.TestCase):
                 self.assertEqual(len(self.cluster.mutations), before)
                 control.require_offline(journal)
 
+    def test_pending_writer_recovery_precedes_install_and_rollback_mount_checks(self):
+        for operation in ("install", "whole_rollback"):
+            with self.subTest(operation=operation):
+                journal = self.initialize()
+                journal["productionWriteAuthorized"] = True
+                journal["writerCreationPending"] = True
+                pod = control.writer_manifest(journal)
+                pod.object("metadata")["uid"] = "pending-writer"
+
+                def check_stopped(proposed: JsonObject, **kwargs: bool) -> None:
+                    self.assertEqual(proposed.get("writerUid"), "pending-writer")
+                    self.assertEqual(kwargs, {"writer": True})
+
+                with (
+                    patch.object(control, "run", return_value=json.dumps(pod)),
+                    patch.object(control, "require_offline", side_effect=check_stopped),
+                    patch.object(control, "require_restore", side_effect=ValueError("restore changed")),
+                    patch.object(control, "create_writer") as creating,
+                    patch.object(control, "upload_installation") as uploading,
+                    self.assertRaisesRegex(ValueError, "restore changed"),
+                ):
+                    if operation == "install":
+                        control.install(self.path, journal, self.path.parent, self.path.parent / "candidate.jar")
+                    else:
+                        control.whole_rollback(self.path, journal)
+                self.assertEqual(JsonObject.parse(self.path.read_bytes()).get("writerUid"), "pending-writer")
+                creating.assert_not_called()
+                uploading.assert_not_called()
+
+    def test_pending_writer_recovery_requires_authorization_and_offline_validation_before_save(self):
+        for failure in ("authorization", "offline", "command"):
+            with self.subTest(failure=failure):
+                journal = self.initialize()
+                journal["writerCreationPending"] = True
+                journal["productionWriteAuthorized"] = failure != "authorization"
+                pod = control.writer_manifest(journal)
+                pod.object("metadata")["uid"] = "pending-writer"
+                if failure == "command":
+                    pod.object("spec").objects("containers")[0]["command"] = ["start-paper"]
+                with (
+                    patch.object(control, "run", return_value=json.dumps(pod)),
+                    patch.object(control, "require_offline", side_effect=ValueError("route reopened")),
+                    patch.object(control, "save") as saving,
+                    self.assertRaises(ValueError),
+                ):
+                    control.recover_writer_identity(self.path, journal)
+                self.assertNotIn("writerUid", journal)
+                saving.assert_not_called()
+
     def test_uncertain_writer_creation_adopts_only_the_recorded_pending_exact_helper(self):
         journal = self.initialize()
         journal["writerCreationPending"] = True
