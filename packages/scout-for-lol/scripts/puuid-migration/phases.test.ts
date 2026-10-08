@@ -818,7 +818,12 @@ test("inspection payloads rewrite known identities without collecting query part
       `CREATE TABLE "ExploreToolPayload" ("id" TEXT PRIMARY KEY, "direction" TEXT, "payload" TEXT, "createdAt" INTEGER)`,
     );
     const values = [
-      { puuid: OLD_A, nested: { player_puuid: unrelated }, value: 3 },
+      {
+        puuid: OLD_A,
+        nested: { player_puuid: unrelated },
+        prompt: `Find (${OLD_A}), not (${unrelated}).`,
+        value: 3,
+      },
       { data: [{ puuid: unrelated }, { sourcePuuid: OLD_A }] },
       [OLD_A, unrelated, null, { name: "preserved" }],
     ];
@@ -826,6 +831,15 @@ test("inspection payloads rewrite known identities without collecting query part
       await db.exec(
         `INSERT INTO "ExploreToolPayload" VALUES (${db.param(1)}, ${db.param(2)}, ${db.param(3)}, ${db.param(4)})`,
         [index.toString(), direction, JSON.stringify(values[index]), 1],
+      );
+    }
+    for (const table of ["ExploreMessage", "ScoutInteractiveRun"]) {
+      await db.exec(
+        `CREATE TABLE "${table}" ("id" TEXT PRIMARY KEY, "trace" TEXT)`,
+      );
+      await db.exec(
+        `INSERT INTO "${table}" VALUES ('kept-id', ${db.param(1)})`,
+        [JSON.stringify({ query: `SELECT '${OLD_A}'`, observed: unrelated })],
       );
     }
     const { collect, apply } = await import("./phases.ts");
@@ -844,6 +858,7 @@ test("inspection payloads rewrite known identities without collecting query part
         payload: JSON.stringify({
           puuid: NEW_A,
           nested: { player_puuid: unrelated },
+          prompt: `Find (${NEW_A}), not (${unrelated}).`,
           value: 3,
         }),
         createdAt: 1,
@@ -868,6 +883,17 @@ test("inspection payloads rewrite known identities without collecting query part
         createdAt: 1,
       },
     ]);
+    for (const table of ["ExploreMessage", "ScoutInteractiveRun"]) {
+      expect(await db.query(`SELECT * FROM "${table}"`)).toEqual([
+        {
+          id: "kept-id",
+          trace: JSON.stringify({
+            query: `SELECT '${NEW_A}'`,
+            observed: unrelated,
+          }),
+        },
+      ]);
+    }
   } finally {
     await db.close();
   }

@@ -12,7 +12,7 @@ import {
   readPuuids,
   readTrackedPuuids,
 } from "./discovery.ts";
-import { parseJson, translateJsonValue } from "./json-walk.ts";
+import { parseJson, translateJsonColumnValue } from "./json-walk.ts";
 import {
   collectKnownIdentities,
   cutoverApplied,
@@ -357,7 +357,7 @@ async function rewriteJsonColumn(
       continue;
     }
     const serialized = JSON.stringify(
-      translateJsonValue(parseJson(value), map),
+      translateJsonColumnValue(parseJson(value), map, col),
     );
     if (serialized === value) {
       continue;

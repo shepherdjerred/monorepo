@@ -41,6 +41,13 @@ for discovery and as an archive: translate identities already in the map,
 preserve the rows and unrelated values, and never collect arbitrary query
 participants as watched players.
 
+Inspection prompts and query text can embed a mapped PUUID inside a longer
+string. `EMBEDDED_PUUID_ARCHIVE_COLUMNS` explicitly limits whole-token
+substitution to `ExploreMessage.trace`, `ScoutInteractiveRun.trace`, and
+`ExploreToolPayload.payload`. Actionable contracts and workflow-start payloads
+retain structural whole-value rewriting; embedded durable business keys must
+not change. Unmapped tokens and longer lookalikes remain untouched.
+
 `ScoutTemporalWork.id` and `ScoutWorkflowStart.requestedWorkflowId` are preserved
 durable business keys, not player references. They can embed the identity used
 when work was created, but accepted Temporal executions retain those exact keys.

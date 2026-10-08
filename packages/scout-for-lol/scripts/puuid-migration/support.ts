@@ -227,6 +227,14 @@ export const ARCHIVE_COLUMNS: readonly { table: string; column: string }[] = [
   { table: "ScoutInteractiveRun", column: "trace" },
 ];
 
+/** Inspection-only archives also embed identities in prompts and query text.
+ * Do not apply token substitution to actionable contracts or durable work IDs. */
+export const EMBEDDED_PUUID_ARCHIVE_COLUMNS = [
+  { table: "ExploreMessage", column: "trace" },
+  { table: "ScoutInteractiveRun", column: "trace" },
+  { table: "ExploreToolPayload", column: "payload" },
+] as const;
+
 /**
  * Where a tracked identity can live, and how to read and date it.
  *
