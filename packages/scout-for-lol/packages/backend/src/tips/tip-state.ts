@@ -1,7 +1,10 @@
 import type { DiscordAccountId, DiscordGuildId } from "@scout-for-lol/data";
 import { prisma, type Db } from "#src/database/index.ts";
 import type { FeatureTipKey } from "#src/analytics/product-analytics.ts";
-import { parseTipKey } from "#src/tips/tip-catalog.ts";
+import {
+  parsePersistedTipKey,
+  type PersistedFeatureTipKey,
+} from "#src/tips/tip-catalog.ts";
 
 /**
  * Who a tip is aimed at. A guild-channel message has no `discordId`; a DM
@@ -30,12 +33,12 @@ function audienceWhere(audience: TipAudience) {
 export async function shownTipKeys(
   audience: TipAudience,
   db: Db = prisma,
-): Promise<Set<FeatureTipKey>> {
+): Promise<Set<PersistedFeatureTipKey>> {
   const rows = await db.featureTipImpression.findMany({
     where: audienceWhere(audience),
     select: { tipKey: true },
   });
-  return new Set(rows.map((row) => parseTipKey(row.tipKey)));
+  return new Set(rows.map((row) => parsePersistedTipKey(row.tipKey)));
 }
 
 /** When this audience last saw a tip, or undefined if it never has. */
@@ -47,7 +50,7 @@ export async function lastTipShownAt(
     where: audienceWhere(audience),
     select: { shownAt: true, tipKey: true },
   });
-  for (const row of rows) parseTipKey(row.tipKey);
+  for (const row of rows) parsePersistedTipKey(row.tipKey);
   return rows.reduce<Date | undefined>(
     (latest, row) =>
       latest === undefined || row.shownAt > latest ? row.shownAt : latest,

@@ -91,3 +91,20 @@ export function parseTipKey(value: string): FeatureTipKey {
   }
   return tip.key;
 }
+
+/** Removed features retain their original impression history, not eligibility. */
+const RETIRED_FEATURE_TIP_KEYS = ["tournament-lobbies"] as const;
+
+export type PersistedFeatureTipKey =
+  FeatureTipKey | (typeof RETIRED_FEATURE_TIP_KEYS)[number];
+
+/**
+ * Impression reads recognize explicitly retired keys as well as active tips.
+ * Keep parseTipKey active-only for new notification presentations and claims;
+ * retirement must not reactivate a feature or relabel its historical use.
+ * Unrecognized persisted keys still fail at this boundary.
+ */
+export function parsePersistedTipKey(value: string): PersistedFeatureTipKey {
+  const retired = RETIRED_FEATURE_TIP_KEYS.find((key) => key === value);
+  return retired ?? parseTipKey(value);
+}
