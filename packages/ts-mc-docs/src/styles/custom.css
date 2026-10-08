@@ -455,6 +455,7 @@ html[data-storm-surface="docs"] .stormDocsMain {
     grid-row: 1;
   }
   .stormDocsMenuToggle {
+    flex: 0 0 47px;
     display: flex !important;
   }
   .stormDocsMobileCommunity {
@@ -512,7 +513,8 @@ html[data-storm-surface="docs"] .stormDocsMain {
   .stormDocsSmallLogo {
     display: block !important;
     width: 100px;
-    flex: 0 0 100px;
+    flex: 0 1 100px;
+    min-width: 0;
   }
   .stormDocsSmallLogo img {
     display: block;
@@ -523,6 +525,7 @@ html[data-storm-surface="docs"] .stormDocsMain {
     display: flex !important;
   }
   .stormDocsActions {
+    flex: 0 0 auto;
     gap: 0;
     margin-left: auto;
   }
