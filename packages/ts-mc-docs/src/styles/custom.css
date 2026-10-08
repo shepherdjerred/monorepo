@@ -457,6 +457,17 @@ html[data-storm-surface="docs"] .stormDocsMain {
   .stormDocsMenuToggle {
     flex: 0 0 47px;
     display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 47px;
+    height: 40px;
+    padding: 0;
+    margin-right: 5px;
+    border: 0;
+    border-radius: 3px;
+    color: var(--storm-chrome-text-color);
+    background: #0000001f;
+    cursor: pointer;
   }
   .stormDocsMobileCommunity {
     display: flex;
@@ -496,19 +507,6 @@ html[data-storm-surface="docs"] .stormDocsMain {
   }
   .stormDocsHeader .stormDocsNav {
     display: none !important;
-  }
-  .stormDocsMenuToggle {
-    align-items: center;
-    justify-content: center;
-    width: 47px;
-    height: 40px;
-    padding: 0;
-    margin-right: 5px;
-    border: 0;
-    border-radius: 3px;
-    color: var(--storm-chrome-text-color);
-    background: #0000001f;
-    cursor: pointer;
   }
   .stormDocsSmallLogo {
     display: block !important;
