@@ -63,6 +63,39 @@ class RestoreTest(unittest.TestCase):
             restore.prepare(archive, destination)
         self.assertFalse(destination.exists())
 
+    def test_resource_preparation_rejects_overlapping_roots_before_any_backup_write(self):
+        for relationship in ("same", "staging-inside", "backup-inside", "ancestor-link"):
+            with self.subTest(relationship=relationship):
+                root = self.root / relationship
+                root.mkdir()
+                modern = root / "modern"
+                modern.mkdir()
+                if relationship == "same":
+                    staging = modern
+                elif relationship in ("staging-inside", "ancestor-link"):
+                    staging = modern / "staging"
+                    staging.mkdir()
+                    if relationship == "ancestor-link":
+                        (root / "alias").symlink_to(modern, target_is_directory=True)
+                        staging = root / "alias/staging"
+                else:
+                    staging = root
+                paper, candidate, proof = (root / name for name in ("paper.jar", "candidate.jar", "proof.json"))
+                for path in (paper, candidate, proof):
+                    path.write_bytes(b"fixture")
+                bootstrap = root / "bootstrap"
+                bootstrap.mkdir()
+                (modern / "world.dat").write_bytes(b"verified recovery bytes")
+                before = restore.fingerprint(modern)
+                with (
+                    patch.object(restore.subprocess, "run") as java,
+                    self.assertRaisesRegex(ValueError, "independent staging"),
+                ):
+                    restore.prepare_resources(staging, paper, bootstrap, candidate, modern, proof)
+                java.assert_not_called()
+                self.assertEqual(restore.fingerprint(modern), before)
+                self.assertFalse((staging / "resource-bootstrap").exists())
+
     def test_database_preparation_locks_the_historical_data_root(self):
         staging = self.root / "staging"
         historical = staging / "heritage-preserved-layout/world"

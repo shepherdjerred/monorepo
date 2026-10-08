@@ -1612,6 +1612,11 @@ def prepare_resources(
     for path in (staging, paper, bootstrap, candidate, modern_data, backup_proof):
         if path.is_symlink():
             raise ValueError("Resource preparation inputs cannot be linked")
+    staging, paper, bootstrap, candidate, modern_data, backup_proof = (
+        path.resolve(strict=True) for path in (staging, paper, bootstrap, candidate, modern_data, backup_proof)
+    )
+    if staging.is_relative_to(modern_data) or modern_data.is_relative_to(staging):
+        raise ValueError("Resource preparation requires independent staging and restored backup trees")
     journal = json.loads((staging / JOURNAL).read_text(encoding="utf-8"))
     activation = json.loads((staging / "activation-layout-receipt.json").read_text(encoding="utf-8"))
     if (
