@@ -1432,7 +1432,7 @@
     },
     "1221": {
       "name": "Top Lane Quest Reward",
-      "description": "<mainText><stats></stats><br><br><font color = '#00FF00'>Rewards</font><br>• Enhance your Teleport with a large max-health shield on use<br>• Flat bonus experience, more experience from all sources, and an increased level cap</mainText>",
+      "description": "<mainText><stats></stats><br><br><font color = '#00FF00'>Rewards</font><br>• Enhance your Teleport with a  shield for 10s on use and 30s reduced cooldown<br>• Flat bonus experience, more experience from all sources, and an increased level cap</mainText>",
       "plaintext": "",
       "stats": {},
       "gold": {
@@ -1452,7 +1452,7 @@
     },
     "1222": {
       "name": "Top Lane Quest",
-      "description": "<mainText><stats></stats><br><br>Takedown champions, minions, towers, plates, and epic monsters to complete your quest. Earn points much faster in top lane!<br><br><font color = '#00FF00'>Rewards</font><br>• Enhance your Teleport with a large max-health shield on use<br>• Flat bonus experience, more experience from all sources, and increased level cap</mainText>",
+      "description": "<mainText><stats></stats><br><br>Takedown champions, minions, towers, plates, and epic monsters to complete your quest. Earn points much faster in top lane!<br><br><font color = '#00FF00'>Rewards</font><br>• Enhance your Teleport with a large max-health shield on use and reduced cooldown<br>• Flat bonus experience, more experience from all sources, and increased level cap</mainText>",
       "plaintext": "",
       "stats": {},
       "gold": {
@@ -5468,7 +5468,7 @@
     },
     "3152": {
       "name": "Hextech Rocketbelt",
-      "description": "<mainText><stats><attention>60</attention> Ability Power<br><attention>350</attention> Health<br><attention>20</attention> Ability Haste</stats><br><br><active>Supersonic</active><br>Dash in target direction, unleashing missiles that deal <magicDamage>magic damage</magicDamage>.</mainText>",
+      "description": "<mainText><stats><attention>60</attention> Ability Power<br><attention>350</attention> Health<br><attention>10</attention> Ability Haste</stats><br><br><active>Supersonic</active><br>Dash in target direction, unleashing missiles that deal <magicDamage>magic damage</magicDamage>.</mainText>",
       "plaintext": "Activate to dash forward and unleash a fiery explosion",
       "stats": {
         "FlatHPPoolMod": 350,
@@ -12741,7 +12741,7 @@
     },
     "223152": {
       "name": "Hextech Rocketbelt",
-      "description": "<mainText><stats><attention>95</attention> Ability Power<br><attention>400</attention> Health<br><attention>20</attention> Ability Haste</stats><br><br><active>Active -</active> <active>Supersonic:</active> Dash in target direction, unleashing an arc of magic missiles that deal damage.</mainText>",
+      "description": "<mainText><stats><attention>95</attention> Ability Power<br><attention>400</attention> Health<br><attention>10</attention> Ability Haste</stats><br><br><active>Active -</active> <active>Supersonic:</active> Dash in target direction, unleashing an arc of magic missiles that deal damage.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 400,
@@ -19236,11 +19236,11 @@
     },
     "773064": {
       "name": "Force of Nature",
-      "description": "<mainText><stats><attention>76</attention> Magic Resist<br><attention>8%</attention> Move Speed<br><attention>20</attention> Health Regen per 5 seconds</stats><br><br><jadeUnique>Steadfast</jadeUnique>: Regenerate an additional <scaleHealth> health</scaleHealth> per 5 seconds.</mainText>",
+      "description": "<mainText><stats><attention>76</attention> Magic Resist<br><attention>8%</attention> Move Speed<br><attention>40</attention> Health Regen per 5 seconds</stats><br><br><jadeUnique>Steadfast</jadeUnique>: Regenerate an additional <scaleHealth> health</scaleHealth> per 5 seconds.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatSpellBlockMod": 76,
-        "FlatHPRegenMod": 4,
+        "FlatHPRegenMod": 8,
         "PercentMovementSpeedMod": 0.08
       },
       "gold": {
@@ -19261,12 +19261,12 @@
     },
     "773065": {
       "name": "Spirit Visage",
-      "description": "<mainText><stats><attention>400</attention> Health<br><attention>55</attention> Magic Resist<br><attention>4</attention> Health Regen per 5 seconds<br><attention>20%</attention> Cooldown Reduction</stats><br><br><jadeUnique>Lifeforce:</jadeUnique> Increases <healing>self-healing</healing>, <healing>Health Regen</healing>, <lifeSteal>Lifesteal</lifeSteal>, and <lifeSteal>Spell Vamp</lifeSteal> effects by 20%.</mainText>",
+      "description": "<mainText><stats><attention>400</attention> Health<br><attention>55</attention> Magic Resist<br><attention>20</attention> Health Regen per 5 seconds<br><attention>20%</attention> Cooldown Reduction</stats><br><br><jadeUnique>Lifeforce:</jadeUnique> Increases <healing>self-healing</healing>, <healing>Health Regen</healing>, <lifeSteal>Lifesteal</lifeSteal>, and <lifeSteal>Spell Vamp</lifeSteal> effects by 20%.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatSpellBlockMod": 55,
         "FlatHPPoolMod": 400,
-        "FlatHPRegenMod": 0.8
+        "FlatHPRegenMod": 4
       },
       "gold": {
         "base": 500,
@@ -19602,11 +19602,11 @@
     },
     "773083": {
       "name": "Warmog's Armor",
-      "description": "<mainText><stats><attention>920</attention> Health<br><attention>10</attention> Health Regen per 5 seconds</stats><br><br><jadeUnique>Passive:</jadeUnique> Permanently gain <scaleHealth>3.5 Health</scaleHealth> and <healing>0.1 Health Regen</healing> per 5 sec. per stack. 1 stack is gained per minion or monster kill and 10 stacks are gained per Takedown. Maximum bonuses: <scaleHealth> Health</scaleHealth> and <healing> Health Regen</healing> per 5 seconds.</mainText>",
+      "description": "<mainText><stats><attention>920</attention> Health<br><attention>30</attention> Health Regen per 5 seconds</stats><br><br><jadeUnique>Passive:</jadeUnique> Permanently gain <scaleHealth>3.5 Health</scaleHealth> and <healing>0.1 Health Regen</healing> per 5 sec. per stack. 1 stack is gained per minion or monster kill and 10 stacks are gained per Takedown. Maximum bonuses: <scaleHealth> Health</scaleHealth> and <healing> Health Regen</healing> per 5 seconds.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 920,
-        "FlatHPRegenMod": 2
+        "FlatHPRegenMod": 6
       },
       "gold": {
         "base": 995,
@@ -19935,7 +19935,7 @@
         "30": false,
         "453": true
       },
-      "tags": ["SpellBlock", "HealthRegen", "SpellDamage"]
+      "tags": ["Health", "SpellBlock", "HealthRegen"]
     },
     "773105": {
       "name": "Aegis of the Legion",

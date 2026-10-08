@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.19.1",
+  "version": "16.20.1",
   "data": {
     "Cassiopeia": {
       "id": "Cassiopeia",
@@ -294,9 +294,9 @@
         "difficulty": 10
       },
       "stats": {
-        "hp": 630,
+        "hp": 610,
         "hpperlevel": 98,
-        "mp": 480,
+        "mp": 450,
         "mpperlevel": 40,
         "movespeed": 335,
         "armor": 18,

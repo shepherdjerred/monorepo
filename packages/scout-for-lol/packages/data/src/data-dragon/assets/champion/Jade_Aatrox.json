@@ -1,0 +1,899 @@
+{
+  "data": {
+    "Jade_Aatrox": {
+      "id": "Aatrox",
+      "key": "266",
+      "name": "Aatrox",
+      "title": "the Darkin Blade",
+      "image": {
+        "full": "Aatrox.png",
+        "sprite": "champion0.png",
+        "group": "champion",
+        "x": 0,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "266000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "266001",
+          "num": 1,
+          "name": "Justicar Aatrox",
+          "chromas": false
+        },
+        {
+          "id": "266002",
+          "num": 2,
+          "name": "Mecha Aatrox",
+          "chromas": true
+        },
+        {
+          "id": "266003",
+          "num": 3,
+          "name": "Sea Hunter Aatrox",
+          "chromas": false
+        },
+        {
+          "id": "266004",
+          "num": 4,
+          "name": "Mecha Aatrox (Obsidian)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "266005",
+          "num": 5,
+          "name": "Mecha Aatrox (Pearl)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "266006",
+          "num": 6,
+          "name": "Mecha Aatrox (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "266007",
+          "num": 7,
+          "name": "Blood Moon Aatrox",
+          "chromas": true
+        },
+        {
+          "id": "266008",
+          "num": 8,
+          "name": "Prestige Blood Moon Aatrox",
+          "chromas": false
+        },
+        {
+          "id": "266009",
+          "num": 9,
+          "name": "Victorious Aatrox",
+          "chromas": true
+        },
+        {
+          "id": "266010",
+          "num": 10,
+          "name": "Victorious Aatrox (Amber)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "266011",
+          "num": 11,
+          "name": "Odyssey Aatrox",
+          "chromas": true
+        },
+        {
+          "id": "266012",
+          "num": 12,
+          "name": "Odyssey Aatrox (Ruby)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "266013",
+          "num": 13,
+          "name": "Odyssey Aatrox (Citrine)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "266014",
+          "num": 14,
+          "name": "Odyssey Aatrox (Turquoise)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "266015",
+          "num": 15,
+          "name": "Odyssey Aatrox (Sapphire)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "266016",
+          "num": 16,
+          "name": "Odyssey Aatrox (Emerald)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "266017",
+          "num": 17,
+          "name": "Odyssey Aatrox (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "266018",
+          "num": 18,
+          "name": "Odyssey Aatrox (Rainbow)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "266019",
+          "num": 19,
+          "name": "Odyssey Aatrox (Merc)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "266020",
+          "num": 20,
+          "name": "Prestige Blood Moon Aatrox (2022)",
+          "chromas": false
+        },
+        {
+          "id": "266021",
+          "num": 21,
+          "name": "Lunar Eclipse Aatrox",
+          "chromas": true
+        },
+        {
+          "id": "266022",
+          "num": 22,
+          "name": "Lunar Eclipse Aatrox (Ruby)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "266023",
+          "num": 23,
+          "name": "Lunar Eclipse Aatrox (Citrine)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "266024",
+          "num": 24,
+          "name": "Lunar Eclipse Aatrox (Emerald)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "266025",
+          "num": 25,
+          "name": "Lunar Eclipse Aatrox (Turquoise)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "266026",
+          "num": 26,
+          "name": "Lunar Eclipse Aatrox (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "266027",
+          "num": 27,
+          "name": "Lunar Eclipse Aatrox (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "266028",
+          "num": 28,
+          "name": "Lunar Eclipse Aatrox (Obsidian)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "266029",
+          "num": 29,
+          "name": "Lunar Eclipse Aatrox (Rainbow)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "266030",
+          "num": 30,
+          "name": "DRX Aatrox",
+          "chromas": true
+        },
+        {
+          "id": "266031",
+          "num": 31,
+          "name": "Prestige DRX Aatrox",
+          "chromas": false
+        },
+        {
+          "id": "266032",
+          "num": 32,
+          "name": "DRX Aatrox (Elite)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "266033",
+          "num": 33,
+          "name": "Primordian Aatrox",
+          "chromas": true
+        },
+        {
+          "id": "266034",
+          "num": 34,
+          "name": "Primordian Aatrox (Ruby)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "266035",
+          "num": 35,
+          "name": "Primordian Aatrox (Catseye)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "266036",
+          "num": 36,
+          "name": "Primordian Aatrox (Sapphire)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "266037",
+          "num": 37,
+          "name": "Primordian Aatrox (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "266038",
+          "num": 38,
+          "name": "Primordian Aatrox (Emerald)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "266039",
+          "num": 39,
+          "name": "Primordian Aatrox (Abyssal)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "266040",
+          "num": 40,
+          "name": "Blood Moon Aatrox (Paragon)",
+          "chromas": false,
+          "parentSkin": 7
+        }
+      ],
+      "lore": "Once honored defenders of Shurima against the Void, Aatrox and his brethren would eventually become an even greater threat to Runeterra, and were defeated only by cunning mortal sorcery. But after centuries of imprisonment, Aatrox was the first to find freedom once more, corrupting and transforming those foolish enough to try and wield the magical weapon that contained his essence. Now, with stolen flesh, he walks Runeterra in a brutal approximation of his previous form, seeking an apocalyptic and long overdue vengeance.",
+      "blurb": "Once honored defenders of Shurima against the Void, Aatrox and his brethren would eventually become an even greater threat to Runeterra, and were defeated only by cunning mortal sorcery. But after centuries of imprisonment, Aatrox was the first to find...",
+      "allytips": [
+        "Use Umbral Dash while casting The Darkin Blade to increase your chances of hitting the enemy.",
+        "Crowd Control abilities like Infernal Chains or your allies' immobilizing effects will help you set up The Darkin Blade.",
+        "Cast World Ender when you are sure you can force a fight."
+      ],
+      "enemytips": [
+        "Aatrox's attacks are very telegraphed, so use the time to dodge the hit zones.",
+        "Aatrox's Infernal Chains are easier to exit when running towards the sides or at Aatrox.",
+        "Keep your distance when Aatrox uses his Ultimate to prevent him from reviving."
+      ],
+      "tags": [
+        "Fighter"
+      ],
+      "partype": "Blood Well",
+      "info": {
+        "attack": 8,
+        "defense": 4,
+        "magic": 3,
+        "difficulty": 4
+      },
+      "stats": {
+        "hp": 650,
+        "hpperlevel": 114,
+        "mp": 0,
+        "mpperlevel": 0,
+        "movespeed": 345,
+        "armor": 38,
+        "armorperlevel": 4.8,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 175,
+        "hpregen": 3,
+        "hpregenperlevel": 0.5,
+        "mpregen": 0,
+        "mpregenperlevel": 0,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 60,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 2.5,
+        "attackspeed": 0.651
+      },
+      "spells": [
+        {
+          "id": "AatroxQ",
+          "name": "The Darkin Blade",
+          "description": "Aatrox slams his greatsword down, dealing physical damage. He can swing three times, each with a different area of effect.",
+          "tooltip": "Aatrox slams his greatsword, dealing <physicalDamage>{{ qdamage }} physical damage</physicalDamage>. If they are hit on the edge, they are briefly <status>Knocked Up</status> and they take <physicalDamage>{{ qedgedamage }}</physicalDamage> instead. This Ability can be <recast>Recast</recast> twice, each one changing shape and dealing 25% more damage than the previous one.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Cooldown",
+              "Damage",
+              "Total AD Ratio"
+            ],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ qbasedamage }} -> {{ qbasedamageNL }}",
+              "{{ qtotaladratio*100.000000 }}% -> {{ qtotaladrationl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            14,
+            12,
+            10,
+            8,
+            6
+          ],
+          "cooldownBurn": "14/12/10/8/6",
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [
+            25000,
+            25000,
+            25000,
+            25000,
+            25000
+          ],
+          "rangeBurn": "25000",
+          "image": {
+            "full": "AatroxQ.png",
+            "sprite": "spell0.png",
+            "group": "spell",
+            "x": 192,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "AatroxW",
+          "name": "Infernal Chains",
+          "description": "Aatrox smashes the ground, dealing damage to the first enemy hit. Champions and large monsters have to leave the impact area quickly or they will be dragged to the center and take the damage again.",
+          "tooltip": "Aatrox fires a chain, <status>Slowing</status> the first enemy hit by {{ wslowpercentage*-100 }}% for {{ wslowduration }} seconds and dealing <physicalDamage>{{ wdamage }} physical damage</physicalDamage>. Champions and large jungle monsters have {{ wslowduration }} seconds to leave the impact area or be <status>Pulled</status> back to the center and damaged again for the same amount.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Cooldown",
+              "Damage",
+              "Slow"
+            ],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ wbasedamage }} -> {{ wbasedamageNL }}",
+              "{{ wslowpercentage*-100.000000 }}% -> {{ wslowpercentagenl*-100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            18,
+            16.5,
+            15,
+            13.5,
+            12
+          ],
+          "cooldownBurn": "18/16.5/15/13.5/12",
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [
+            825,
+            825,
+            825,
+            825,
+            825
+          ],
+          "rangeBurn": "825",
+          "image": {
+            "full": "AatroxW.png",
+            "sprite": "spell0.png",
+            "group": "spell",
+            "x": 240,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "AatroxE",
+          "name": "Umbral Dash",
+          "description": "Passively, Aatrox heals when damaging enemy champions. On activation, he dashes in a direction.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Aatrox heals for <lifeSteal>{{ totalevamp }}</lifeSteal> of the damage he deals to Champions.<br /><br /><spellActive>Active:</spellActive> Aatrox dashes. He can use this Ability while winding up his other Abilities.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            9,
+            8,
+            7,
+            6,
+            5
+          ],
+          "cooldownBurn": "9/8/7/6/5",
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [
+            25000,
+            25000,
+            25000,
+            25000,
+            25000
+          ],
+          "rangeBurn": "25000",
+          "image": {
+            "full": "AatroxE.png",
+            "sprite": "spell0.png",
+            "group": "spell",
+            "x": 288,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "AatroxR",
+          "name": "World Ender",
+          "description": "Aatrox unleashes his demonic form, fearing nearby enemy minions and gaining attack damage, increased healing, and Move Speed. If he gets a takedown, this effect is extended.",
+          "tooltip": "Aatrox reveals his true demonic form, <status>Fearing</status> nearby minions for {{ rminionfearduration }} seconds and gaining <speed>{{ rmovementspeedbonus*100 }}% Move Speed</speed> decaying over {{ rduration }} seconds. He also gains <scaleAD>{{ rtotaladamp*100 }}% Attack Damage</scaleAD> and increases <healing>self-healing by {{ rhealingamp*100 }}%</healing> for the duration.<br /><br />Champion takedowns extend the duration of this effect by {{ rextension }} seconds and refresh the <speed>Move Speed</speed> effect.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Total Attack Damage Increase",
+              "Healing Increase",
+              "Move Speed",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ rtotaladamp*100.000000 }}% -> {{ rtotaladampnl*100.000000 }}%",
+              "{{ rhealingamp*100.000000 }}% -> {{ rhealingampnl*100.000000 }}%",
+              "{{ rmovementspeedbonus*100.000000 }}% -> {{ rmovementspeedbonusnl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            120,
+            100,
+            80
+          ],
+          "cooldownBurn": "120/100/80",
+          "cost": [
+            0,
+            0,
+            0
+          ],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [
+            25000,
+            25000,
+            25000
+          ],
+          "rangeBurn": "25000",
+          "image": {
+            "full": "AatroxR.png",
+            "sprite": "spell0.png",
+            "group": "spell",
+            "x": 336,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        }
+      ],
+      "passive": {
+        "name": "Deathbringer Stance",
+        "description": "Periodically, Aatrox's next basic attack deals bonus <magicDamage>magic damage</magicDamage> and heals him, based on the target's max health. ",
+        "image": {
+          "full": "Aatrox_Passive.png",
+          "sprite": "passive0.png",
+          "group": "passive",
+          "x": 0,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

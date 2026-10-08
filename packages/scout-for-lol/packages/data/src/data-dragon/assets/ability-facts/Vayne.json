@@ -20,7 +20,7 @@
       "name": "Tumble",
       "maxRank": 5,
       "cooldownByRank": [6, 5, 4, 3, 2],
-      "costByRank": [46, 42, 38, 34, 30],
+      "costByRank": [30, 30, 30, 30, 30],
       "costType": "Mana",
       "rangeByRank": [300, 300, 300, 300, 300],
       "dataValues": {

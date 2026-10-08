@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.19.1",
+  "version": "16.20.1",
   "data": {
     "LeeSin": {
       "id": "LeeSin",
@@ -58,7 +58,7 @@
           "id": "64006",
           "num": 6,
           "name": "SKT T1 Lee Sin",
-          "chromas": false
+          "chromas": true
         },
         {
           "id": "64007",
@@ -557,6 +557,13 @@
           "name": "Storm Dragon Lee Sin (Beacon)",
           "chromas": false,
           "parentSkin": 31
+        },
+        {
+          "id": "64082",
+          "num": 82,
+          "name": "SKT T1 Lee Sin (Elite)",
+          "chromas": false,
+          "parentSkin": 6
         }
       ],
       "lore": "A master of Ionia's ancient martial arts, Lee Sin is a principled fighter who channels the essence of the dragon spirit to face any challenge. Though he lost his sight many years ago, the warrior-monk has devoted his life to protecting his homeland against any who would dare upset its sacred balance. Enemies who underestimate his meditative demeanor will endure his fabled burning fists and blazing roundhouse kicks.",

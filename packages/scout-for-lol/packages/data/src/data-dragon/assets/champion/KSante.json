@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.19.1",
+  "version": "16.20.1",
   "data": {
     "KSante": {
       "id": "KSante",
@@ -139,6 +139,68 @@
           "name": "HEARTSTEEL K'Sante (Rockstar)",
           "chromas": false,
           "parentSkin": 8
+        },
+        {
+          "id": "897018",
+          "num": 18,
+          "name": "HEARTSTEEL Live My Life K'Sante",
+          "chromas": true
+        },
+        {
+          "id": "897019",
+          "num": 19,
+          "name": "HEARTSTEEL Live My Life K'Sante (Ruby)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "897020",
+          "num": 20,
+          "name": "HEARTSTEEL Live My Life K'Sante (Sapphire)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "897021",
+          "num": 21,
+          "name": "HEARTSTEEL Live My Life K'Sante (Turquoise)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "897022",
+          "num": 22,
+          "name": "HEARTSTEEL Live My Life K'Sante (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "897023",
+          "num": 23,
+          "name": "HEARTSTEEL Live My Life K'Sante (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "897024",
+          "num": 24,
+          "name": "HEARTSTEEL Live My Life K'Sante (Obsidian)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "897025",
+          "num": 25,
+          "name": "HEARTSTEEL Live My Life K'Sante (Pearl)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "897026",
+          "num": 26,
+          "name": "HEARTSTEEL Live My Life K'Sante (Catseye)",
+          "chromas": false,
+          "parentSkin": 18
         }
       ],
       "lore": "Defiant and courageous, K'Sante battles colossal beasts and ruthless Ascended to protect his home of Nazumah, a coveted oasis amid the sands of Shurima. But after a falling-out with his former partner, K'Sante realizes that in order to become a warrior worthy of leading his city, he must temper his single-minded drive for success. Only then can he avoid falling prey to his own pride and find the wisdom he needs to defeat the vicious monsters threatening his people.",
@@ -257,8 +319,8 @@
           "maxrank": 5,
           "cooldown": [14, 13, 12, 11, 10],
           "cooldownBurn": "14/13/12/11/10",
-          "cost": [40, 45, 50, 55, 60],
-          "costBurn": "40/45/50/55/60",
+          "cost": [45, 50, 55, 60, 65],
+          "costBurn": "45/50/55/60/65",
           "datavalues": {},
           "effect": [
             null,

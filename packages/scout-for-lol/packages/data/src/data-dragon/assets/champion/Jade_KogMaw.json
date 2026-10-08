@@ -453,6 +453,19 @@
           "name": "Victorious Kog'Maw (Challenger)",
           "chromas": false,
           "parentSkin": 55
+        },
+        {
+          "id": "96065",
+          "num": 65,
+          "name": "Prestige Classic Baron Kog'Maw",
+          "chromas": true
+        },
+        {
+          "id": "96066",
+          "num": 66,
+          "name": "Prestige Classic Baron Kog'Maw (Vivid)",
+          "chromas": false,
+          "parentSkin": 65
         }
       ],
       "lore": "Belched forth from a rotting Void incursion deep in the wastelands of Icathia, Kog'Maw is an inquisitive yet putrid creature with a caustic, gaping mouth. This particular Void-spawn needs to gnaw and drool on anything within reach to truly understand it. Though not inherently evil, Kog'Maw's beguiling naiveté is dangerous, as it often precedes a feeding frenzy—not for sustenance, but to satisfy its unending curiosity.",
@@ -468,10 +481,7 @@
         "The range on Living Artillery increases each rank.",
         "Bio-Arcane Barrage allows Kog'Maw to kill Baron Nashor extremely early. It can be valuable to ward Nashor when Kog'Maw completes his Blade of the Ruined King."
       ],
-      "tags": [
-        "Marksman",
-        "Mage"
-      ],
+      "tags": ["Marksman", "Mage"],
       "partype": "Mana",
       "info": {
         "attack": 8,
@@ -508,11 +518,7 @@
           "description": "Kog'Maw launches a corrosive projectile which deals magic damage and corrodes the target's armor and magic resist for a short time. Kog'Maw also gains additional attack speed.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Kog'Maw gains <attackSpeed>{{ attackspeed*100 }}% Attack Speed</attackSpeed>.<br /><br /><spellActive>Active:</spellActive> Kog'Maw vomits a corrosive projectile that deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the first enemy hit and shreds <scaleArmor>{{ shredamount }}% Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> for {{ shredduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Attack Speed",
-              "Damage",
-              "Armor and Magic Resist Shred"
-            ],
+            "label": ["Attack Speed", "Damage", "Armor and Magic Resist Shred"],
             "effect": [
               "{{ attackspeed*100.000000 }}% -> {{ attackspeednl*100.000000 }}%",
               "{{ basedamage }} -> {{ basedamageNL }}",
@@ -520,95 +526,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            7,
-            7,
-            7,
-            7,
-            7
-          ],
+          "cooldown": [7, 7, 7, 7, 7],
           "cooldownBurn": "7",
-          "cost": [
-            40,
-            40,
-            40,
-            40,
-            40
-          ],
+          "cost": [40, 40, 40, 40, 40],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              1,
-              1,
-              1,
-              1,
-              1
-            ],
-            [
-              1,
-              1,
-              1,
-              1,
-              1
-            ],
-            [
-              100,
-              100,
-              100,
-              100,
-              100
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1],
+            [100, 100, 100, 100, 100],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -626,13 +560,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            1175,
-            1175,
-            1175,
-            1175,
-            1175
-          ],
+          "range": [1175, 1175, 1175, 1175, 1175],
           "rangeBurn": "1175",
           "image": {
             "full": "KogMawQ.png",
@@ -651,105 +579,30 @@
           "description": "Kog'Maw's attacks gain range and deal a percent of the target's maximum health as magic damage %i:OnHit% <OnHit>On-Hit</OnHit>.",
           "tooltip": "Kog'Maw gains {{ range }} Attack Range and his Attacks deal an additional <magicDamage>{{ totalhealthdamage }} max Health magic damage</magicDamage> %i:OnHit% <OnHit>On-Hit</OnHit> for {{ duration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Range",
-              "Maximum Health Damage"
-            ],
+            "label": ["Range", "Maximum Health Damage"],
             "effect": [
               "{{ range }} -> {{ rangeNL }}",
               "{{ maxhealthdamage }}% -> {{ maxhealthdamageNL }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            17,
-            17,
-            17,
-            17,
-            17
-          ],
+          "cooldown": [17, 17, 17, 17, 17],
           "cooldownBurn": "17",
-          "cost": [
-            40,
-            40,
-            40,
-            40,
-            40
-          ],
+          "cost": [40, 40, 40, 40, 40],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -767,13 +620,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            530,
-            530,
-            530,
-            530,
-            530
-          ],
+          "range": [530, 530, 530, 530, 530],
           "rangeBurn": "530",
           "image": {
             "full": "KogMawBioArcaneBarrage.png",
@@ -792,11 +639,7 @@
           "description": "Kog'Maw launches a peculiar ooze which damages all enemies it passes through and leaves a trail which slows enemies who stand on it.",
           "tooltip": "Kog'Maw spits bile, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and leaving a trail of ooze for {{ trailduration }} seconds. Enemies in the ooze are <status>Slowed</status> by {{ slowamount }}%.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Slow",
-              "@AbilityResourceName@ Cost"
-            ],
+            "label": ["Damage", "Slow", "@AbilityResourceName@ Cost"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ slowamount }}% -> {{ slowamountNL }}%",
@@ -804,95 +647,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            12,
-            12,
-            12,
-            12,
-            12
-          ],
+          "cooldown": [12, 12, 12, 12, 12],
           "cooldownBurn": "12",
-          "cost": [
-            40,
-            55,
-            70,
-            85,
-            100
-          ],
+          "cost": [40, 55, 70, 85, 100],
           "costBurn": "40/55/70/85/100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -910,13 +681,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            1200,
-            1200,
-            1200,
-            1200,
-            1200
-          ],
+          "range": [1200, 1200, 1200, 1200, 1200],
           "rangeBurn": "1200",
           "image": {
             "full": "KogMawVoidOoze.png",
@@ -935,12 +700,7 @@
           "description": "Kog'Maw fires an artillery shell at a great distance dealing magic damage (increased significantly on low health enemies) and revealing non-stealthed targets. Additionally, multiple Living Artilleries in a short period of time cause them to cost additional Mana.",
           "tooltip": "Kog'Maw shoots acid at an area, dealing <magicDamage>{{ basedamagecalc }} plus {{ tooltipmissinghealthdamageamp }}% per 1% missing Health magic damage</magicDamage> and revealing enemies hit for 2 seconds. Enemies below <healing>40% Health</healing> instead take <magicDamage>{{ maxdamagecalc }} magic damage</magicDamage>.<br /><br />Subsequent shots within {{ manacostduration }} seconds cost an additional <scaleMana>{{ basecost }} Mana</scaleMana> (max: <scaleMana>{{ manacostcap }} Mana</scaleMana>).{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Range",
-              "Cooldown",
-              "Total AP Ratio"
-            ],
+            "label": ["Damage", "Range", "Cooldown", "Total AP Ratio"],
             "effect": [
               "{{ damage }} -> {{ damageNL }}",
               "{{ castrange }} -> {{ castrangeNL }}",
@@ -949,71 +709,23 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            2,
-            1.5,
-            1
-          ],
+          "cooldown": [2, 1.5, 1],
           "cooldownBurn": "2/1.5/1",
-          "cost": [
-            40,
-            40,
-            40
-          ],
+          "cost": [40, 40, 40],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -1031,11 +743,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            1300,
-            1550,
-            1800
-          ],
+          "range": [1300, 1550, 1800],
           "rangeBurn": "1300/1550/1800",
           "image": {
             "full": "KogMawLivingArtillery.png",
