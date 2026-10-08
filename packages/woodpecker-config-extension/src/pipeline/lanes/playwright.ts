@@ -3,6 +3,7 @@ import { HANDOFF_KEYS } from "#src/pipeline/lanes/tofu.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
 import { BROWSER_TIER } from "#src/pipeline/tiers.ts";
 import { GLOBAL_SELECTOR_INPUTS } from "#src/pipeline/inputs.ts";
+import { BUN_CACHE, BUN_CACHE_CONTROL } from "#src/pipeline/cache.ts";
 import {
   TURBO_CACHE_TOKEN,
   TURBO_REMOTE_CACHE_ENVIRONMENT,
@@ -56,6 +57,7 @@ export function playwrightSteps(images: CiImages, changedBase = ""): CiStep[] {
       dependsOn: ["verify"],
       timeoutMinutes: 30,
       resources: BROWSER_TIER,
+      volumes: [BUN_CACHE, BUN_CACHE_CONTROL],
       secrets: [
         {
           secret: "ci-github-credentials",

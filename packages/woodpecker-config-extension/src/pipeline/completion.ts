@@ -47,6 +47,7 @@ for (let attempt = 0; attempt < 20; attempt++) {
 export function completionStep(
   selected: readonly CiStep[],
   image: string,
+  workingDirectory: "/workspace" | "/app" = "/workspace",
 ): CiStep {
   const blocking = selected.filter((step) => step.allowFailure !== true);
   if (blocking.length === 0) {
@@ -58,7 +59,10 @@ export function completionStep(
     image,
     // skip_clone leaves Woodpecker's workspace without the repo's .mise.toml.
     // The CI image keeps that pinned toolchain at /workspace.
-    commands: ["cd /workspace", `bun -e ${shellQuote(CHECK_STATUSES)}`],
+    commands: [
+      `cd ${workingDirectory}`,
+      `bun -e ${shellQuote(CHECK_STATUSES)}`,
+    ],
     environment: {
       CI_EXPECTED_CONTEXTS: JSON.stringify(
         blocking.map((step) => `ci/woodpecker/pr/${step.key}`),

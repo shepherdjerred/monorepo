@@ -69,6 +69,16 @@ function selectWithReasons(
   );
 }
 
+test("rebuilds the bundled review policy when its source or library changes", async () => {
+  for (const path of [
+    "scripts/review/bundled-review-gate.ts",
+    "scripts/lib/review/review-gate-poll.ts",
+    "packages/code-review/src/gate.ts",
+  ]) {
+    expect(await select([path])).toContain("woodpecker-config-extension");
+  }
+});
+
 describe("selectImageTargets", () => {
   test("selects a standalone application image", async () => {
     expect(await select(["packages/tasknotes-server/src/index.ts"])).toEqual([

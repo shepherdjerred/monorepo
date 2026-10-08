@@ -12,8 +12,19 @@ COPY --parents \
   ./
 RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/woodpecker-config-extension'
 
+FROM prod-deps AS review-build
+RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/root-scripts'
+COPY --parents scripts/lib/ scripts/review/ packages/code-review/ ./
+RUN bun build scripts/review/bundled-review-gate.ts --target bun --outfile /review-gate.js
+
 FROM base AS runtime
+# Both the service and its checkout-free gate use this trusted image. The
+# generated workflow wraps commands with bash and GNU timeout.
+# hadolint ignore=DL3008
+RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends bash coreutils \
+    && rm -rf /var/lib/apt/lists/*
 COPY --from=prod-deps /app/ /app/
+COPY --from=review-build /review-gate.js /app/review-gate.js
 COPY --parents \
   tsconfig.base.json \
   packages/version-catalog/src \
