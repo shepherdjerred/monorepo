@@ -1,71 +1,27 @@
 #!/bin/bash
 set -euo pipefail
 
-# Ensure Homebrew binaries are in PATH on both Apple Silicon and Intel workers.
-if [ -d "/opt/homebrew/bin" ]; then
-  export PATH="/opt/homebrew/bin:$PATH"
-fi
-if [ -d "/usr/local/bin" ]; then
-  export PATH="/usr/local/bin:$PATH"
-fi
-
-# Xcode Cloud provides CI_PRIMARY_REPOSITORY_PATH. Fall back for local script testing.
 if [ -n "${CI_PRIMARY_REPOSITORY_PATH:-}" ]; then
-  REPO_ROOT="$CI_PRIMARY_REPOSITORY_PATH"
+  facet_repo_root="$CI_PRIMARY_REPOSITORY_PATH"
 else
-  SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-  REPO_ROOT="$(cd "$SCRIPT_DIR/../../../.." && pwd)"
+  facet_script_directory="$(cd "$(dirname "$0")" && pwd)"
+  facet_repo_root="$(cd "$facet_script_directory/../../../.." && pwd)"
 fi
 
-PKG_DIR="$REPO_ROOT/packages/tasks-for-obsidian"
+cd "$facet_repo_root"
+facet_mise="$facet_repo_root/bin/mise"
+"$facet_mise" trust "$facet_repo_root/.mise.toml"
+"$facet_mise" install --yes bun rust aqua:yonaskolb/XcodeGen
+# Tools are installed explicitly above. Do not let exec provision the rest of
+# the monorepo tool inventory in Apple's temporary native build environment.
+export MISE_EXEC_AUTO_INSTALL=false
+"$facet_mise" exec -- bun install --frozen-lockfile --ignore-scripts
 
-export HOMEBREW_NO_AUTO_UPDATE=1
+cd "$facet_repo_root/packages/tasknotes-core"
+"$facet_mise" exec -- rustup target add aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios
+"$facet_mise" exec -- cargo xtask build-xcframework --platform ios --platform ios-sim
+"$facet_mise" exec -- cargo xtask check-xcframework
+"$facet_mise" exec -- bun ../tasknotes-macos/scripts/generate-native-notices.ts --ios
 
-if ! command -v node >/dev/null 2>&1; then
-  echo "[ci_post_clone] Installing Node via Homebrew..."
-  brew install node
-fi
-
-if ! command -v bun >/dev/null 2>&1; then
-  echo "[ci_post_clone] Installing Bun..."
-  # renovate: datasource=github-releases depName=oven-sh/bun
-  # Must match `bun = "<version>"` in the root .mise.toml: an older bun cannot
-  # parse newer bun.lock versions (lockfileVersion 2 from bun 1.4 failed every
-  # Archive from #92 to #100 with "Unknown lockfile version"). Enforced by
-  # `bun run check:ios-native-deps`.
-  BUN_INSTALL_TAG="bun-v1.4.2"
-  curl -fsSL https://bun.sh/install | bash -s "$BUN_INSTALL_TAG"
-  export BUN_INSTALL="$HOME/.bun"
-  export PATH="$BUN_INSTALL/bin:$PATH"
-fi
-
-# tasknotes-types is a `file:` dependency consumed from source (its package.json
-# main/exports point at src/*.ts). The Release/Archive Metro bundle follows
-# tasknotes-types/src/v2.ts, which re-exports "@tasknotes/model" — a dependency
-# declared by tasknotes-types, NOT by this app. Bun does not install a `file:`
-# dir dependency's own transitive deps into the consumer, so Metro resolves
-# "@tasknotes/model" from packages/tasknotes-types/node_modules. That directory
-# must be populated on the worker, or the bundle fails with UnableToResolveError.
-# --ignore-scripts: `bun install` in any workspace member resolves the WHOLE root
-# workspace, so it would run the native install scripts of unrelated trusted
-# packages (root package.json trustedDependencies: node-av, sharp,
-# node-datachannel, @sentry/profiling-node, …). node-av needs a prebuilt binary
-# or a system FFmpeg, neither of which exists on the Xcode Cloud worker, so its
-# install script exits 1 and fails the whole bootstrap (build #61). None of these
-# native Node addons are needed here: the iOS app's native code comes from
-# CocoaPods (pod install below) and Metro only needs JS resolution + a hoisted
-# node_modules tree. So skip lifecycle scripts on both installs.
-TYPES_DIR="$REPO_ROOT/packages/tasknotes-types"
-echo "[ci_post_clone] Installing tasknotes-types dependencies in $TYPES_DIR (needed for Metro to resolve @tasknotes/model)"
-cd "$TYPES_DIR"
-bun install --frozen-lockfile --linker hoisted --ignore-scripts
-
-echo "[ci_post_clone] Installing JS dependencies in $PKG_DIR"
-cd "$PKG_DIR"
-# React Native + CocoaPods expect a physical node_modules tree.
-# Bun's isolated linker can omit it on clean CI workers, so force hoisted mode.
-bun install --frozen-lockfile --linker hoisted --ignore-scripts
-
-echo "[ci_post_clone] Installing CocoaPods dependencies"
-cd "$PKG_DIR/ios"
-pod install
+cd "$facet_repo_root/packages/tasks-for-obsidian/ios"
+"$facet_mise" exec -- xcodegen generate

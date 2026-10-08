@@ -158,7 +158,7 @@ struct PortableDetection {
     tag: Option<String>,
     property_name: Option<String>,
     property_value: Option<String>,
-    excluded_folders: Option<String>,
+    excluded_folders: Option<Value>,
     #[serde(flatten)]
     extra: IndexMap<String, Value>,
 }
@@ -304,15 +304,30 @@ fn apply_portable_presentation(
     title: Option<PortableTitle>,
 ) -> Result<()> {
     if let Some(detection) = detection {
-        if detection.extra.contains_key("methods")
-            || detection.extra.contains_key("field_presence")
+        if detection.extra.contains_key("field_presence")
             || detection.extra.contains_key("field_match")
         {
             return Err(VaultError::Configuration(
-                "multiple detection methods are not yet supported".to_owned(),
+                "field detection extensions are not yet supported".to_owned(),
             ));
         }
-        model.task_identification.method = detection.method;
+        let mut policy: serde_json::Map<String, Value> = detection.extra.into_iter().collect();
+        policy.insert(
+            "method".to_owned(),
+            serde_json::to_value(detection.method)
+                .map_err(|_| VaultError::Configuration("invalid detection method".to_owned()))?,
+        );
+        if let Some(name) = &detection.property_name {
+            policy.insert("property_name".to_owned(), Value::from(name.clone()));
+        }
+        if let Some(tag) = &detection.tag {
+            policy.insert("tag".to_owned(), Value::from(tag.clone()));
+        }
+        model.task_identification.method =
+            crate::detection_policy::methods(&Value::Object(policy))?
+                .into_iter()
+                .next()
+                .ok_or_else(|| VaultError::Configuration("detection method missing".to_owned()))?;
         if let Some(value) = detection.tag {
             model.task_identification.tag = value;
         }
@@ -321,7 +336,23 @@ fn apply_portable_presentation(
         }
         model.task_identification.property_value = detection.property_value.unwrap_or_default();
         if let Some(value) = detection.excluded_folders {
-            model.task_identification.excluded_folders = value;
+            model.task_identification.excluded_folders = match value {
+                Value::String(value) => value,
+                Value::Array(values) => values
+                    .iter()
+                    .map(|value| {
+                        value.as_str().ok_or_else(|| {
+                            VaultError::Configuration("excluded folders must be strings".to_owned())
+                        })
+                    })
+                    .collect::<Result<Vec<_>>>()?
+                    .join(","),
+                _ => {
+                    return Err(VaultError::Configuration(
+                        "excluded folders must be a string or list".to_owned(),
+                    ));
+                }
+            };
         }
     }
     if let Some(title) = title {
@@ -347,6 +378,7 @@ fn parse_plugin(bytes: &[u8]) -> Result<PluginSettings> {
     let raw: serde_json::Map<String, Value> = serde_json::from_slice(bytes).map_err(|_| {
         VaultError::Configuration("plugin settings violate their schema".to_owned())
     })?;
+    crate::plugin_boundary::validate(&raw)?;
     for key in [
         "fieldMapping",
         "customStatuses",
@@ -374,6 +406,8 @@ fn parse_plugin(bytes: &[u8]) -> Result<PluginSettings> {
 #[derive(Debug, Clone, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TaskNotesConfiguration {
+    /// Normalized top-level provider selection with documented nested defaults.
+    pub effective: Value,
     /// Provider selected by the explicit precedence chain.
     pub source: ConfigurationSource,
     /// Effective physical field mapping.
@@ -401,6 +435,20 @@ impl TaskNotesConfiguration {
     /// # Errors
     /// Returns a configuration error for invalid providers, mappings, or workflows.
     pub fn resolve(
+        plugin: Option<&[u8]>,
+        portable: Option<&[u8]>,
+        approve_standard: bool,
+    ) -> Result<Self> {
+        let selected = Self::resolve_single(
+            plugin,
+            if plugin.is_some() { None } else { portable },
+            approve_standard,
+        )?;
+        let standard = Self::resolve_single(None, None, true)?;
+        crate::effective::resolve(selected, &standard, plugin, portable)
+    }
+
+    fn resolve_single(
         plugin: Option<&[u8]>,
         portable: Option<&[u8]>,
         approve_standard: bool,
@@ -468,10 +516,16 @@ impl TaskNotesConfiguration {
         };
 
         let mapping = FieldMapping::from_plugin(&model.field_mapping)?;
-        model
-            .statuses
-            .sort_by(|left, right| left.order.total_cmp(&right.order));
+        model.statuses.sort_by(|left, right| {
+            // JS numeric sort treats both signs of zero as a stable tie.
+            if left.order.abs().to_bits() == 0 && right.order.abs().to_bits() == 0 {
+                std::cmp::Ordering::Equal
+            } else {
+                left.order.total_cmp(&right.order)
+            }
+        });
         let result = Self {
+            effective: Value::Null,
             source,
             mapping,
             default_status: model
@@ -573,6 +627,24 @@ impl TaskNotesConfiguration {
             .ok_or_else(|| {
                 VaultError::Document("status is not present in the configured workflow".to_owned())
             })
+    }
+
+    /// Resolve displayed title according to the effective storage policy.
+    /// Filename storage takes precedence over a retained frontmatter mirror.
+    #[must_use]
+    pub fn display_title(
+        &self,
+        frontmatter: &serde_json::Map<String, Value>,
+        path: Option<&str>,
+    ) -> Option<String> {
+        if self.store_title_in_filename
+            && let Some(filename) = path
+                .and_then(|path| path.rsplit('/').next())
+                .filter(|value| !value.is_empty())
+        {
+            return Some(filename.strip_suffix(".md").unwrap_or(filename).to_owned());
+        }
+        self.mapping.display_title(frontmatter, path)
     }
 
     /// Cycle a status using explicit successors and configured order.

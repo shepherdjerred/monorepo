@@ -1,12 +1,12 @@
 [workspace]
 resolver = "3"
-members = ["crates/tasknotes-core", "crates/tasknotes-core-ffi", "crates/tasknotes-vault", "crates/obsidian-sync", "xtask"]
+members = ["crates/tasknotes-core", "crates/tasknotes-core-ffi", "crates/tasknotes-vault", "crates/tasknotes-runtime", "crates/obsidian-sync", "xtask"]
 
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.90"
-license = "MIT"
+license = "GPL-3.0-only"
 publish = false
 
 # ── Dependency pins ────────────────────────────────────────────────────────
@@ -23,9 +23,11 @@ publish = false
 # source order — HashMap iteration order would corrupt vault markdown diffs.
 [workspace.dependencies]
 chrono = { version = "0.4.45", features = ["serde"] }
+chrono-tz = "0.10.4"
+regex = "1.12.4"
 indexmap = { version = "2", features = ["serde"] }
 serde = { version = "1", features = ["derive"] }
-serde_json = { version = "1", features = ["preserve_order"] }
+serde_json = { version = "1", features = ["preserve_order", "arbitrary_precision"] }
 thiserror = "2"
 uniffi = "=0.32.1"
 yaml-edit = { version = "0.3.2", default-features = false }
@@ -39,6 +41,9 @@ unicode-normalization = "0.1.25"
 zeroize = "1.9.0"
 semver = "1.0"
 hex = "0.4.3"
+rusqlite = { version = "0.40.2", features = ["bundled", "blob"] }
+tempfile = "3"
+stats_alloc = "=0.1.10"
 
 # Dev-only. `rand_chacha::ChaCha8Rng` is the only RNG allowed in this
 # workspace (see clippy.toml): `StdRng` is explicitly not reproducible across

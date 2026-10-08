@@ -31,11 +31,11 @@ struct TaskNotesApp: App {
     /// The assembly itself lives in the library rather than here, so this file
     /// stays at entry-point scope and the application target keeps its single
     /// product dependency.
-    @State private var environment = AppEnvironment()
+    @State private var environment = FacetMacEnvironment()
 
     var body: some Scene {
         WindowGroup {
-            RootView(environment: environment)
+            FacetMacRootView(environment: environment)
                 // AppKit invokes the adapted delegate indirectly. This explicit
                 // read keeps that application-lifetime ownership visible to
                 // whole-module static analysis as well.
@@ -57,7 +57,6 @@ struct TaskNotesApp: App {
         // by the definition of done, and one line.
         .defaultSize(width: 1100, height: 720)
         .commands {
-            TaskNotesCommands()
             // File > Quick Add…. A separate conformer rather than more cases
             // inside `TaskNotesCommands`, because it belongs beside the panel
             // it opens.
@@ -67,13 +66,13 @@ struct TaskNotesApp: App {
             // own, from launch and before either has ever been opened. Verified
             // by reading the running app's menu bar — an explicit pair produced
             // `Pomodoro, Time Report, Pomodoro, Time Report`.
-            QuickAddCommands(environment: environment)
+            FacetMacCommands(environment: environment)
         }
 
         // Contributes the standard "Settings…" item at `⌘,` in the app menu,
         // in the correct position. Never declare that shortcut by hand.
         Settings {
-            SettingsView(environment: environment)
+            FacetMacSettingsView(environment: environment)
         }
 
         // The pomodoro timer and the time report, each a single `Window`.
@@ -83,6 +82,5 @@ struct TaskNotesApp: App {
         // non-activating, and appearing without pulling the application forward
         // is the whole point of it. It is owned by `AppEnvironment` instead, so
         // its hotkey is live from launch and survives every window closing.
-        TimingScenes(environment: environment)
     }
 }

@@ -57,6 +57,8 @@ namespace TaskNotes.Windows.App.Views
         internal void Refresh(TaskNotesState state)
         {
             TaskEditorViewModel viewModel = RequireViewModel();
+            if (viewModel.IsDirty)
+                return;
             if (viewModel.TaskId is not string taskId)
             {
                 return;
@@ -78,6 +80,15 @@ namespace TaskNotes.Windows.App.Views
         {
             RequireViewModel().Clear();
             Visibility = Visibility.Collapsed;
+        }
+
+        private void AddReminder_Click(object sender, RoutedEventArgs e) =>
+            RequireViewModel().AddReminder();
+
+        private void RemoveReminder_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement { DataContext: ReminderEditorRow row })
+                RequireViewModel().RemoveReminder(row);
         }
 
         internal async Task<bool> ConfirmDiscardAsync()
@@ -141,6 +152,13 @@ namespace TaskNotes.Windows.App.Views
                     }
                 }
             );
+        }
+
+        private void MoreTimeEntries_Click(object sender, RoutedEventArgs eventArgs)
+        {
+            _ = sender;
+            _ = eventArgs;
+            Run("more-time-entries", () => RequireViewModel().LoadNextTrackingHistoryAsync());
         }
 
         private void ToggleTime_Click(object sender, RoutedEventArgs eventArgs)

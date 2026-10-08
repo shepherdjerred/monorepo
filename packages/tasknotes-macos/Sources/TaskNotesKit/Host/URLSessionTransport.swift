@@ -117,7 +117,7 @@ public final class URLSessionTransport: HttpClient {
     public func send(request: HttpRequest) throws(TransportError) -> HttpResponse {
         guard !Thread.isMainThread else {
             throw TransportError.Other(
-                message: """
+                detail: """
                     \(request.url) was requested on the main thread. HttpClient.send is \
                     synchronous, so this call blocks; drive the engine from a background \
                     executor.
@@ -130,7 +130,7 @@ public final class URLSessionTransport: HttpClient {
         // reported as a transport failure naming the offending string, because
         // the alternative — a force unwrap — would trap inside the user's app.
         guard let url = URL(string: request.url) else {
-            throw TransportError.Other(message: "the core built an unparseable URL: \(request.url)")
+            throw TransportError.Other(detail: "the core built an unparseable URL: \(request.url)")
         }
 
         let slot = Mutex<Result<HttpResponse, TransportError>?>(nil)
@@ -156,7 +156,7 @@ public final class URLSessionTransport: HttpClient {
         }
         guard started else {
             throw TransportError.Other(
-                message: "\(request.url) was not sent: the transport has been closed"
+                detail: "\(request.url) was not sent: the transport has been closed"
             )
         }
         task.resume()
@@ -167,7 +167,7 @@ public final class URLSessionTransport: HttpClient {
 
         guard let result = slot.withLock({ $0 }) else {
             throw TransportError.Other(
-                message: "the URLSession completion handler for \(request.url) produced no outcome"
+                detail: "the URLSession completion handler for \(request.url) produced no outcome"
             )
         }
         switch result {
@@ -256,7 +256,7 @@ public final class URLSessionTransport: HttpClient {
             return .failure(classify(error, url: url))
         }
         guard let http = response as? HTTPURLResponse else {
-            return .failure(.Other(message: "\(url) answered with a non-HTTP response"))
+            return .failure(.Other(detail: "\(url) answered with a non-HTTP response"))
         }
         return .success(
             HttpResponse(
@@ -290,7 +290,7 @@ public final class URLSessionTransport: HttpClient {
     /// every shell. The job here is only to report accurately.
     private static func classify(_ error: any Error, url: String) -> TransportError {
         guard let urlError = error as? URLError else {
-            return .Other(message: "\(url) failed: \(error.localizedDescription)")
+            return .Other(detail: "\(url) failed: \(error.localizedDescription)")
         }
         let described = "\(url) failed: \(urlError.localizedDescription)"
         // Set membership rather than a `switch`, and that is forced rather than
@@ -299,15 +299,15 @@ public final class URLSessionTransport: HttpClient {
         // that it absorbs cases added later. A lookup says the same thing
         // without pretending the remainder was considered.
         if urlError.code == .timedOut {
-            return .Timeout(message: described)
+            return .Timeout(detail: described)
         }
         if offlineCodes.contains(urlError.code) {
-            return .Offline(message: described)
+            return .Offline(detail: described)
         }
         if tlsCodes.contains(urlError.code) {
-            return .Tls(message: described)
+            return .Tls(detail: described)
         }
-        return .Other(message: described)
+        return .Other(detail: described)
     }
 
     /// The codes that mean "there is no route to the server right now".

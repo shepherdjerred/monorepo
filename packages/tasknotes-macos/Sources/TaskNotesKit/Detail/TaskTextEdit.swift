@@ -37,7 +37,7 @@ public enum TaskTextEdit {
         let trimmed = raw.trimmingWhitespace()
         guard !trimmed.isEmpty else {
             return .failure(
-                .Validation(message: "A task needs a title. This one is still “\(task.title)”.")
+                .Validation(detail: "A task needs a title. This one is still “\(task.title)”.")
             )
         }
         guard trimmed != task.title.trimmingWhitespace() else { return .success(nil) }
@@ -95,7 +95,7 @@ public enum TaskTextEdit {
         guard let minutes = UInt32(trimmed) else {
             return .failure(
                 .Validation(
-                    message: "“\(trimmed)” is not a number of minutes. Enter whole minutes, "
+                    detail: "“\(trimmed)” is not a number of minutes. Enter whole minutes, "
                         + "such as 90."
                 )
             )

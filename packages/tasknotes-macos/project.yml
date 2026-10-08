@@ -117,6 +117,12 @@ targets:
           - "*.entitlements"
       - path: Resources/AppIcon.icns
         buildPhase: resources
+      - path: Resources/macos/ThirdPartyNotices.txt
+        buildPhase: resources
+      - path: Resources/macos/FirstPartyLicense.txt
+        buildPhase: resources
+      - path: Resources/macos/native-license-inventory.json
+        buildPhase: resources
 
     dependencies:
       - package: TaskNotesPackage

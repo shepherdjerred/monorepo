@@ -402,7 +402,7 @@ public final class TaskNotesStore {
             Self.performing(engine) { try $0.dispatch(input: input) }
         }
         guard let performed else {
-            lastStoreError = .Invariant(message: "no engine is configured")
+            lastStoreError = .Invariant(detail: "no engine is configured")
             return nil
         }
         // A successful mutation is what retires a reported shell error. Those
@@ -638,7 +638,7 @@ public final class TaskNotesStore {
     /// mistake.
     nonisolated private static func asCoreError(_ error: any Error) -> CoreError {
         guard let coreError = error as? CoreError else {
-            return .Invariant(message: "the core threw an unexpected error: \(error)")
+            return .Invariant(detail: "the core threw an unexpected error: \(error)")
         }
         return coreError
     }

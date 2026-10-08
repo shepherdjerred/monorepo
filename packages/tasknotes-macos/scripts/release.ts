@@ -262,7 +262,11 @@ async function preflight(
       ["xcodebuild", "-version"],
       "install Xcode and run xcode-select",
     ],
-    ["xcodegen", ["xcodegen", "--version"], "brew install xcodegen"],
+    [
+      "xcodegen",
+      ["xcodegen", "--version"],
+      "mise install (shared root toolchain)",
+    ],
     ["notarytool", ["xcrun", "--find", "notarytool"], "ships with Xcode"],
     ["stapler", ["xcrun", "--find", "stapler"], "ships with Xcode"],
     // `xcrun --find` rather than a `--version` probe: `codesign --version` and

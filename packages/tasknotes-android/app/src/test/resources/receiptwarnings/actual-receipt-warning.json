@@ -1,0 +1,19 @@
+{
+  "mutationId": "durable-warning",
+  "applied": true,
+  "cleanupPending": false,
+  "diagnostics": [
+    {
+      "code": "template_missing"
+    },
+    {
+      "code": "filename_shortened"
+    }
+  ],
+  "taskPath": "Tasks/task-muscayo0.md",
+  "paths": [
+    "Tasks/task-muscayo0.md"
+  ],
+  "pendingCount": 0,
+  "schemaVersion": 1
+}

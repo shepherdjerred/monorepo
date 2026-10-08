@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.31)
+project(facet_files LANGUAGES C)
+add_library(facet_files SHARED facet_files.c)
+target_compile_options(facet_files PRIVATE -Wall -Wextra -Werror)
+target_link_options(facet_files PRIVATE "-Wl,-z,max-page-size=16384" "-Wl,-z,common-page-size=16384")

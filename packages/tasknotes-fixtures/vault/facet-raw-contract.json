@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {"id":"version-integral-decimal","definition":"query","valid":true,"raw":"{\"schemaVersion\":1.0,\"offset\":0}"},
+    {"id":"version-integral-exponent","definition":"query","valid":true,"raw":"{\"schemaVersion\":1e0,\"offset\":100e-2}"},
+    {"id":"version-unrounded-fraction","definition":"query","valid":false,"raw":"{\"schemaVersion\":1.0000000000000000001,\"offset\":0}"},
+    {"id":"offset-integral-maximum","definition":"query","valid":true,"raw":"{\"offset\":4294967295.0,\"limit\":0}"},
+    {"id":"offset-above-maximum","definition":"query","valid":false,"raw":"{\"offset\":4294967296,\"limit\":0}"},
+    {"id":"offset-unrounded-fraction","definition":"query","valid":false,"raw":"{\"offset\":1.0000000000000000001,\"limit\":0}"},
+    {"id":"offset-large-exact-exponent","definition":"query","valid":false,"raw":"{\"offset\":9007199254740993e0,\"limit\":0}"}
+  ]
+}

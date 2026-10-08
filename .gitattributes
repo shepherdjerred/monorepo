@@ -31,6 +31,11 @@ packages/webring/src/testdata/rss-*.xml -text
 # Line-ending normalization would silently corrupt them.
 packages/homelab/src/cdk8s/patches/** -text
 
+# Pinned third-party license bytes include upstream trailing whitespace.
+packages/tasknotes-windows/scripts/license-texts/publisher-windows-sdk-buildtools.rtf -text whitespace=-trailing-space,cr-at-eol
+packages/tasknotes-windows/scripts/license-texts/publisher-windows-sdk-buildtools.txt -text whitespace=-trailing-space
+packages/tasknotes-android/licenses/jna-5.18.1/LGPL2.1.txt -text whitespace=-trailing-space
+
 # --- Generated test snapshots: keep out of GitHub language stats / diff noise ---
 **/__snapshots__/** linguist-generated=true
 *.snap              linguist-generated=true

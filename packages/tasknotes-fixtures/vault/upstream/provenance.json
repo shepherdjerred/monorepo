@@ -1,0 +1,78 @@
+{
+  "repository": "callumalpass/tasknotes-spec",
+  "revision": "4c619bf130330e1ca7df2c773800857f731ca8c6",
+  "totalCases": 4980,
+  "files": [
+    {
+      "file": "date.json",
+      "cases": 1601,
+      "sha256": "7c1c0b7d61a27695bd2c1bc0346efb4ee69e13558106713f064a03e4bb15091f"
+    },
+    {
+      "file": "field-mapping.json",
+      "cases": 139,
+      "sha256": "d2e28bd321a17ce94f41681e564883ab83eba22a633999fd0439344141f6ee48"
+    },
+    {
+      "file": "recurrence.json",
+      "cases": 996,
+      "sha256": "ba33d6b676cd4112d81f152bb0976309caf418b555c54042f9aaac5af667de90"
+    },
+    {
+      "file": "create-compat.json",
+      "cases": 322,
+      "sha256": "32bdf61734cb537071445acb359ee9b49058a63df99b43d82acb17e5173ffdbc"
+    },
+    {
+      "file": "conformance.json",
+      "cases": 20,
+      "sha256": "5a122cd4c2b42bde62c8a08590adf3226b45dc319062ac9df4672c4400b032ce"
+    },
+    {
+      "file": "config.json",
+      "cases": 682,
+      "sha256": "9cb0a094906ec9eaeba3febcfcdfa3ffd951f2c14f1d0ba785ffe62b7a0cf8ea"
+    },
+    {
+      "file": "config-schema.json",
+      "cases": 27,
+      "sha256": "f19c20e282057a957b0f04af73e65f9a2aa2795981dc24ea2b099fb4ede65f50"
+    },
+    {
+      "file": "validation.json",
+      "cases": 60,
+      "sha256": "a0e5a47a7fbdbf9ee4deadfaa2e76b75cec7bb9bb4d4c7488b554dd802b754f9"
+    },
+    {
+      "file": "operations.json",
+      "cases": 100,
+      "sha256": "4c3eb29d143a2505c759da5e52feff36d29671bbdf0497f3944b469ed3caf962"
+    },
+    {
+      "file": "templating.json",
+      "cases": 17,
+      "sha256": "0adc60ab16cd156b2c5f72503cad11edd36595f0df63800b4f93697f730d71d0"
+    },
+    {
+      "file": "migrations.json",
+      "cases": 23,
+      "sha256": "11c2074c4338199aec6559b8ca62b718f589f8cc3692a4f8d3541cac7607d4b9"
+    },
+    {
+      "file": "dependencies.json",
+      "cases": 386,
+      "sha256": "b51da64e1245d4aec55a4de76e3c3adb6bff7cfda10f6a9d922351828eeb0085"
+    },
+    {
+      "file": "reminders.json",
+      "cases": 564,
+      "sha256": "f353761ae4bd43a6b83dd2b5465a95a6af7696dde84bd4df02c1ebac966cabb0"
+    },
+    {
+      "file": "links.json",
+      "cases": 43,
+      "sha256": "fbeb1a3a668f9fd5755719b2dc02531a39a2b31bc9b9ff8c0b9a3015e7f68fba"
+    }
+  ],
+  "manifestSha256": "78d8b0735feb7616fb3abf85ebb12584bedcf1516fdd46f85693a97b32b5c535"
+}

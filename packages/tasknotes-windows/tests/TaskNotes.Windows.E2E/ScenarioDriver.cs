@@ -890,7 +890,10 @@ namespace TaskNotes.Windows.E2E
                 "Seeded open task",
                 cancellationToken
             );
-            UiAutomationSession.InvokeDescendantByName(seeded, "Move task to next status");
+            UiAutomationSession.InvokeDescendantByName(
+                seeded,
+                "Move task to next configured status"
+            );
             AutomationElement progressColumn = session.WaitForAutomationId(
                 AutomationIds.BoardColumn("in-progress"),
                 cancellationToken
