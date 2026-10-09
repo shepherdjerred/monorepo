@@ -3,6 +3,7 @@ import {
   loadWorkspaces,
   type WorkspacePackage,
 } from "../selectors/select-image-targets-workspaces.ts";
+import { globalPaths } from "../migration-core.ts";
 
 export type PlaywrightTarget = {
   readonly package: string;
@@ -34,6 +35,9 @@ export const PLAYWRIGHT_TARGETS: readonly PlaywrightTarget[] = [
 ] as const;
 
 const ALL_TARGET_INPUTS = [
+  // Site consumers use the same global inputs. A generator or handoff change
+  // must select their tested artifact producers before deploy requests them.
+  ...globalPaths,
   "ci/ci-playwright/",
   "packages/woodpecker-config-extension/src/pipeline/lanes/playwright.ts",
   "ci/scripts/bun-install.sh",
@@ -100,7 +104,9 @@ export type PlaywrightSelection = {
 };
 
 function matches(path: string, input: string): boolean {
-  return input.endsWith("/") ? path.startsWith(input) : path === input;
+  return (
+    path === input || path.startsWith(input.endsWith("/") ? input : `${input}/`)
+  );
 }
 
 function matchingInput(
