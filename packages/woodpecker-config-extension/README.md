@@ -42,6 +42,20 @@ only supplies a shared path when its declared volume is mounted. Bun's download
 cache and its maintenance-lock volume must be mounted together. Installed
 dependencies remain private to each workflow workspace.
 
+## OpenTofu PR checks
+
+Selection retains the existing per-stack path guards. Selected PR plans and
+validations then run as ordered containers in one `tofu-pr` workflow, sharing
+one checkout and one filtered Bun install. Each container keeps its original
+credentials, mounts, resource bounds and timeout. A failed required container
+fails the workflow and the completion verdict. Main applies stay separate.
+
+The setup and plan containers install only Bun and OpenTofu. Plans retain the
+shared provider-cache lock and use a private temporary `TF_DATA_DIR`, removed
+on success or failure, so backend initialization never persists credentials
+in the shared checkout. Schema-only validation retains its independent data
+directory and does not use the shared provider cache.
+
 ## Agent pools and admission
 
 `routing.ts` assigns Kubernetes workflows to PR, main, review, or completion

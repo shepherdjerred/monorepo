@@ -23,6 +23,7 @@ import {
 } from "#src/pipeline/internal-image-pin-change.ts";
 import { signRemoteCacheSteps } from "#src/pipeline/turbo-cache.ts";
 import { routeSteps } from "#src/pipeline/routing.ts";
+import { groupTofuSteps } from "#src/pipeline/group-tofu.ts";
 import type { SuccessfulWorkflowPipeline } from "#src/woodpecker-api.ts";
 
 export type AppOptions = {
@@ -312,19 +313,21 @@ export function createApp(options: AppOptions): Hono {
       imageReleaseBase: imageReleaseBase?.commit,
       imageReleasePipeline: imageReleaseBase?.pipelineNumber,
     });
-    const selected = signRemoteCacheSteps(
-      selectSteps(
-        await stepsForMainChange({
-          steps,
-          pipeline,
-          defaultBranch: repo.default_branch,
-          changedFiles,
-          changedBase,
-          imageFetcher: options.imageFetcher,
-        }),
-        { ...selectionContext, changedFiles: changedFiles ?? [] },
+    const selected = groupTofuSteps(
+      signRemoteCacheSteps(
+        selectSteps(
+          await stepsForMainChange({
+            steps,
+            pipeline,
+            defaultBranch: repo.default_branch,
+            changedFiles,
+            changedBase,
+            imageFetcher: options.imageFetcher,
+          }),
+          { ...selectionContext, changedFiles: changedFiles ?? [] },
+        ),
+        pipeline.event === "pull_request" ? "pull-request" : "trusted",
       ),
-      pipeline.event === "pull_request" ? "pull-request" : "trusted",
     );
 
     return context.json({

@@ -96,6 +96,8 @@ export type CiStep = {
   readonly agentLabels?: Readonly<Record<string, string>>;
   /** Shell commands, run in order. */
   readonly commands: readonly string[];
+  /** Ordered containers after this workflow's setup, sharing its checkout. */
+  readonly orderedSteps?: readonly CiCommandStep[];
   /** Inner shell for the timeout wrapper; scanner images may only contain sh. */
   readonly shell?: "bash" | "sh";
   /** Plain environment variables. Credentials go through `secrets`, never here. */
@@ -153,3 +155,19 @@ export type CiStep = {
   /** Run after failed dependencies so a final verdict can be reported. */
   readonly runOnFailure?: boolean;
 };
+
+/** Per-container commands and grants; workflow scheduling stays on CiStep. */
+export type CiCommandStep = Pick<
+  CiStep,
+  | "key"
+  | "image"
+  | "commands"
+  | "shell"
+  | "environment"
+  | "timeoutMinutes"
+  | "retries"
+  | "resources"
+  | "secrets"
+  | "volumes"
+  | "allowFailure"
+>;
