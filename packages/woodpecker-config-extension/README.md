@@ -36,6 +36,28 @@ guarantee a dependency-closed set, which the emitter then relies on.
 
 ## Dependency caches
 
+Source caching is controlled by the typed `woodpecker-source-cache-enabled`
+flag (default off). Branches under `ci-canary/` have beta targeting. The
+configuration service uses the `woodpecker` Flipt namespace; unavailable flags
+keep ordinary checkout active and invalid values fail visibly.
+
+When enabled, the deployed digest-pinned service image supplies a trusted
+clone helper. Only that container mounts the main or approved-PR source PVC,
+plus the separate coordination PVC. Unapproved automation uses ordinary
+checkout. Each cache entry contains depth-one Git objects, a shallow boundary,
+and an exact repository/commit/tree manifest. No Git config, hooks, credentials,
+dependencies or build output enter it. The helper checks object integrity,
+copies objects into a private `.git`, and materializes every tracked path with
+its original mode and symlinks. Origin and later history fetches remain usable.
+
+Clones hold a shared GC lock and an exclusive per-commit lock. This collapses
+simultaneous misses and prevents collection during reads. The existing Temporal
+cache maintenance activity evicts entries unused for seven days and then the
+oldest entries above 8 GiB in each 10 GiB data claim. Disabling the flag rolls
+back checkout behavior without deleting claims. `CI_CHECKOUT_DIAGNOSTIC` logs
+cache outcome, source SHA, object bytes downloaded, fetch/materialization time,
+and total helper time; object bytes exclude network protocol overhead.
+
 Shared download caches are paired with explicit tool paths: Bun uses
 `/woodpecker/bun-cache/data`, and uv uses `/woodpecker/uv-cache`. The emitter
 only supplies a shared path when its declared volume is mounted. Bun's download

@@ -71,11 +71,32 @@ function createCacheClaim(
 const BUN_CACHE_GC_SCRIPT = await Bun.file(
   new URL("bun-cache-gc.sh", import.meta.url),
 ).text();
+const SOURCE_CACHE_GC_SCRIPT = await Bun.file(
+  new URL("source-cache-gc.ts", import.meta.url),
+).text();
 if (BUN_CACHE_GC_SCRIPT.length === 0) {
   throw new Error("bun-cache-gc.sh must not be empty");
 }
 
 export function createWoodpeckerCaches(chart: Chart): void {
+  createCacheClaim(
+    chart,
+    "woodpecker-source-main-pvc",
+    "woodpecker-source-main",
+    "10Gi",
+  );
+  createCacheClaim(
+    chart,
+    "woodpecker-source-pr-pvc",
+    "woodpecker-source-pr",
+    "10Gi",
+  );
+  createCacheClaim(
+    chart,
+    "woodpecker-source-control-pvc",
+    "woodpecker-source-control",
+    "1Gi",
+  );
   // Sized to match the Woodpecker bun cache it replaces; the working set is the
   // whole workspace's dependency closure, not one package's.
   createCacheClaim(
@@ -100,7 +121,10 @@ export function createWoodpeckerCaches(chart: Chart): void {
       name: WOODPECKER_BUN_CACHE_GC_CONFIG_MAP,
       namespace: WOODPECKER_CI_NAMESPACE,
     },
-    data: { "bun-cache-gc.sh": BUN_CACHE_GC_SCRIPT },
+    data: {
+      "bun-cache-gc.sh": BUN_CACHE_GC_SCRIPT,
+      "source-cache-gc.ts": SOURCE_CACHE_GC_SCRIPT,
+    },
   });
 
   // uv's artifact cache is safe for concurrent readers and writers, unlike a

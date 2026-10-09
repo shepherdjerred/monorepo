@@ -51,6 +51,17 @@ describe("maintenance command construction", () => {
         BUN_CACHE_LOCK_FILE: "/woodpecker/bun-cache-control/.gc.lock",
       },
     });
+    expect(await buildMaintenanceCommand("ci-source-cache-gc")).toMatchObject({
+      command: [
+        "flock",
+        "-w",
+        "600",
+        "/woodpecker/source-control/gc.lock",
+        "bun",
+        "/woodpecker/maintenance/source-cache-gc.ts",
+      ],
+      secretValues: [],
+    });
     const cacheCommand = await buildMaintenanceCommand("ci-bun-cache-gc");
     expect(cacheCommand.env).not.toHaveProperty("KOMETA_PLEXTOKEN");
     expect(await buildMaintenanceCommand("ci-uv-cache-prune")).toMatchObject({

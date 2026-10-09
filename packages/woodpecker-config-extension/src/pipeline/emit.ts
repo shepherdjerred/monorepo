@@ -1,5 +1,11 @@
 import { stringify } from "yaml";
 import { bunInstallEnvironment } from "#src/pipeline/cache.ts";
+import {
+  SOURCE_CACHE_PATH,
+  SOURCE_CACHE_CONTROL,
+  SOURCE_CACHE_CONTROL_PATH,
+} from "#src/pipeline/source-cache.ts";
+import { LIGHT_TIER } from "#src/pipeline/tiers.ts";
 import type {
   CiCommandStep,
   CiStep,
@@ -256,6 +262,8 @@ function emitCommand(
  * could strand dependents. Only completion runs after a failed prerequisite.
  */
 export function emitWorkflow(step: CiStep, identity: PipelineIdentity): string {
+  if (step.sourceCache !== undefined && !/^[a-f\d]{40}$/u.test(identity.commit))
+    throw new Error("Source cache requires an exact Git commit SHA");
   const commands = [step, ...(step.orderedSteps ?? [])];
   if (
     new Set(commands.map((command) => command.key)).size !== commands.length
@@ -306,6 +314,34 @@ export function emitWorkflow(step: CiStep, identity: PipelineIdentity): string {
       ? {}
       : { depends_on: [...step.dependsOn] }),
     ...(step.skipClone === true ? { skip_clone: true } : {}),
+    ...(step.sourceCache === undefined
+      ? {}
+      : {
+          clone: [
+            {
+              name: "clone",
+              image: step.sourceCache.image,
+              commands: [
+                `mkdir -p ${SOURCE_CACHE_CONTROL_PATH}`,
+                `flock -s ${SOURCE_CACHE_CONTROL_PATH}/gc.lock bash /app/packages/woodpecker-config-extension/src/checkout/checkout.sh ${SOURCE_CACHE_PATH} ${SOURCE_CACHE_CONTROL_PATH} ${identity.commit}`,
+              ],
+              volumes: [
+                `${step.sourceCache.claim}:${SOURCE_CACHE_PATH}`,
+                `${SOURCE_CACHE_CONTROL}:${SOURCE_CACHE_CONTROL_PATH}`,
+              ],
+              backend_options: {
+                kubernetes: {
+                  ...podOptions(step, identity, LIGHT_TIER),
+                  securityContext: {
+                    runAsUser: 0,
+                    runAsGroup: 0,
+                    allowPrivilegeEscalation: false,
+                  },
+                },
+              },
+            },
+          ],
+        }),
     ...(step.runOnFailure === true
       ? { when: [{ status: ["success", "failure"] }] }
       : {}),

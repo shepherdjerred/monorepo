@@ -19,7 +19,11 @@ const ConfigResponseSchema = z.object({
   configs: z.array(z.object({ name: z.string(), data: z.string() })),
 });
 
-function harness(hostedAutomationApproved = false, trustedGateImage?: string) {
+function harness(
+  hostedAutomationApproved = false,
+  trustedGateImage?: string,
+  cacheEnabled = false,
+) {
   const imageFetcher = vi.fn((file: string) =>
     Promise.resolve(
       file.endsWith("catalog.json") ? catalog : `sha256:${"a".repeat(64)}`,
@@ -27,7 +31,9 @@ function harness(hostedAutomationApproved = false, trustedGateImage?: string) {
   );
   const base = vi.fn(() => Promise.resolve(undefined));
   const cancelSupersededPr = vi.fn(() => Promise.resolve());
+  const sourceCacheEnabled = vi.fn(() => Promise.resolve(cacheEnabled));
   const app = createApp({
+    sourceCacheEnabled,
     ...(trustedGateImage === undefined ? {} : { trustedGateImage }),
     publicKey: () => Promise.resolve(publicKey),
     imageFetcher,
@@ -37,7 +43,7 @@ function harness(hostedAutomationApproved = false, trustedGateImage?: string) {
     cancelSupersededPr,
     hostedAutomationApproved: () => Promise.resolve(hostedAutomationApproved),
   });
-  return { app, imageFetcher, base, cancelSupersededPr };
+  return { app, imageFetcher, base, cancelSupersededPr, sourceCacheEnabled };
 }
 
 async function request(overrides: Record<string, unknown> = {}) {
@@ -78,6 +84,56 @@ async function request(overrides: Record<string, unknown> = {}) {
 }
 
 describe("signed Justin pipeline authorization", () => {
+  test("non-work events with no source branch return a no-work verdict", async () => {
+    const { app, sourceCacheEnabled } = harness();
+    const response = await app.request(
+      await request({ event: "tag", branch: "", refspec: "" }),
+    );
+    expect(response.status).toBe(200);
+    expect(sourceCacheEnabled).not.toHaveBeenCalled();
+    const configs = ConfigResponseSchema.parse(await response.json());
+    expect(configs.configs).toHaveLength(1);
+    expect(configs.configs[0]?.data).toContain("ci-noop");
+  });
+  test("source cache canaries use the signed source refspec and keep PR storage separate", async () => {
+    const image = `ghcr.io/shepherdjerred/woodpecker-config-extension@sha256:${"a".repeat(64)}`;
+    const { app, sourceCacheEnabled } = harness(false, image, true);
+    const response = await app.request(
+      await request({ branch: "main", refspec: "ci-canary/source-cache:main" }),
+    );
+    expect(response.status).toBe(200);
+    expect(sourceCacheEnabled).toHaveBeenCalledExactlyOnceWith(
+      "ci-canary/source-cache",
+    );
+    const configs = ConfigResponseSchema.parse(await response.json());
+    const verify = configs.configs.find(
+      (config) => config.name === ".woodpecker/verify.yaml",
+    );
+    expect(verify?.data).toContain(
+      "woodpecker-source-pr:/woodpecker/source-cache",
+    );
+    expect(verify?.data).not.toContain("woodpecker-source-main");
+  });
+
+  test("unapproved hosted automation cannot opt into shared source storage", async () => {
+    const { app, sourceCacheEnabled } = harness(false, TEST_IMAGES.base, true);
+    const response = await app.request(
+      await request({
+        author: "renovate[bot]",
+        sender: "renovate[bot]",
+        refspec: "ci-canary/unapproved:main",
+      }),
+    );
+    expect(response.status).toBe(200);
+    expect(sourceCacheEnabled).not.toHaveBeenCalled();
+    const configs = ConfigResponseSchema.parse(await response.json());
+    expect(
+      configs.configs.every(
+        (config) => !config.data.includes("woodpecker-source-"),
+      ),
+    ).toBe(true);
+  });
+
   test("generates real verification workflows for a same-repository bot PR", async () => {
     const { app, imageFetcher } = harness();
     const response = await app.request(await request());

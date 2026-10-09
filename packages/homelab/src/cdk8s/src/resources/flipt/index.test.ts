@@ -42,7 +42,10 @@ const DeploymentSchema = z
     spec: z.object({
       template: z.object({
         metadata: z
-          .object({ annotations: z.record(z.string(), z.string()) })
+          .object({
+            annotations: z.record(z.string(), z.string()),
+            labels: z.record(z.string(), z.string()),
+          })
           .loose(),
         spec: z
           .object({
@@ -210,6 +213,7 @@ describe("Flipt chart", () => {
     expect(
       deployment.spec.template.spec.containers.map(({ name }) => name),
     ).toEqual(["flipt", "authenticated-gateway"]);
+    expect(deployment.spec.template.metadata.labels["app"]).toBe("flipt");
     const serialized = JSON.stringify(deployment);
     expect(serialized).toContain(
       '"secretKeyRef":{"key":"basic-hash","name":"flipt-auth"}',
@@ -263,7 +267,7 @@ describe("Flipt chart", () => {
       'git -C "$staging" init --initial-branch=main',
     );
     expect(initializationScript).toContain(
-      'git -C "$staging" add -- "justin/features.yaml" "scout/features.yaml"',
+      'git -C "$staging" add -- "woodpecker/features.yaml" "justin/features.yaml" "scout/features.yaml"',
     );
     expect(initializationScript).toContain('if [ -e "$repo" ]');
     expect(initializationScript).not.toContain("data-beta");
@@ -284,6 +288,7 @@ describe("Flipt chart", () => {
       ["beta", "prod"]
         .flatMap((environment) =>
           [
+            "woodpecker",
             "justin",
             "scout",
             "birmel",

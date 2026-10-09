@@ -2,6 +2,11 @@
   "version": 3,
   "namespaces": [
     {
+      "key": "woodpecker",
+      "name": "Woodpecker",
+      "description": "CI runtime rollout controls."
+    },
+    {
       "key": "justin",
       "name": "Justin",
       "description": "Justin autonomous DevEx queue rollout."
@@ -53,6 +58,33 @@
     }
   ],
   "flags": [
+    {
+      "key": "woodpecker-source-cache-enabled",
+      "owner": "platform",
+      "namespace": "woodpecker",
+      "source": "woodpecker-source-cache",
+      "purpose": "Reuse verified shallow Git objects in trusted clone containers on Liskov.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "woodpecker-source-cache-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "stage",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
     {
       "key": "storm-forum-registration-enabled",
       "owner": "storm",

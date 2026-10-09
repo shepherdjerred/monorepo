@@ -2491,6 +2491,8 @@
     "packages/woodpecker-config-extension": {
       "name": "@shepherdjerred/woodpecker-config-extension",
       "dependencies": {
+        "@shepherdjerred/config": "workspace:*",
+        "@shepherdjerred/feature-flags": "workspace:*",
         "@shepherdjerred/version-catalog": "workspace:*",
         "hono": "^4.12.18",
         "http-message-signatures": "^1.0.6",

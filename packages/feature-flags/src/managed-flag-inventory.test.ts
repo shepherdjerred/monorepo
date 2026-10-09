@@ -123,6 +123,7 @@ describe("ManagedFlagInventorySchema", () => {
       ),
     ).toThrow(/unknown managed environment/);
     expect(managedFlagNamespaces).toEqual([
+      "woodpecker",
       "justin",
       "scout",
       "birmel",
