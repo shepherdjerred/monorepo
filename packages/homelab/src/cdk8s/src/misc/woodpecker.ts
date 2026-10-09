@@ -1,48 +1,5 @@
-import { z } from "zod";
+import { PooledAdmissionBudgetSchema } from "@shepherdjerred/root-scripts/lib/ci/admission-budget.ts";
 import rawCiAdmissionBudget from "./ci-admission-budget.json" with { type: "json" };
-
-const QuotaSchema = z
-  .object({
-    cpu: z.string().min(1),
-    memory: z.string().min(1),
-    "ephemeral-storage": z.string().min(1),
-  })
-  .strict();
-
-const PoolSchema = (queue: "default" | "ci-gates") =>
-  z
-    .object({
-      maxWorkflows: z.number().int().positive(),
-      queue: z.literal(queue),
-    })
-    .strict();
-
-const CiAdmissionBudgetSchema = z
-  .object({
-    $comment: z.string(),
-    maxWorkflows: z.number().int().positive(),
-    legacyMaxWorkflows: z.number().int().nonnegative(),
-    maxServicesPerWorkflow: z.number().int().nonnegative(),
-    quota: QuotaSchema,
-    computeQuota: QuotaSchema,
-    gateQuota: QuotaSchema,
-    pools: z
-      .object({
-        pr: PoolSchema("default"),
-        main: PoolSchema("default"),
-        review: PoolSchema("ci-gates"),
-        completion: PoolSchema("ci-gates"),
-      })
-      .strict(),
-    priorities: z
-      .object({
-        main: z.number().int(),
-        ready: z.number().int(),
-        draft: z.number().int(),
-      })
-      .strict(),
-  })
-  .strict();
 
 /**
  * The CI admission budget, from its language-neutral source
@@ -50,7 +7,7 @@ const CiAdmissionBudgetSchema = z
  * reads to prove the generated pipeline fits it.
  */
 export const CI_ADMISSION_BUDGET =
-  CiAdmissionBudgetSchema.parse(rawCiAdmissionBudget);
+  PooledAdmissionBudgetSchema.parse(rawCiAdmissionBudget);
 
 /**
  * The existing agent keeps its exact pod template while dedicated pools are

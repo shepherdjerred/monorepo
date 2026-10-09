@@ -4,10 +4,10 @@ import {
   admissionBudgetViolations,
   parseQuantity,
   pooledAdmissionBudgetViolations,
-  PooledBudgetSchema,
   type AdmissionBudget,
   type AdmissionStep,
 } from "./check-ci-admission-budget.ts";
+import { PooledAdmissionBudgetSchema as PooledBudgetSchema } from "../../lib/ci/admission-budget.ts";
 import rawBudget from "../../../packages/homelab/src/cdk8s/src/misc/ci-admission-budget.json" with { type: "json" };
 
 const BUDGET: AdmissionBudget = {
@@ -134,6 +134,26 @@ describe("CI admission budget", () => {
 
 describe("pooled CI admission budget", () => {
   const budget = PooledBudgetSchema.parse(rawBudget);
+  test("shares strict queue and quantity validation with infrastructure", () => {
+    expect(() =>
+      PooledBudgetSchema.parse({
+        ...budget,
+        quota: { ...budget.quota, cpu: "" },
+      }),
+    ).toThrow();
+    expect(() =>
+      PooledBudgetSchema.parse({
+        ...budget,
+        pools: {
+          ...budget.pools,
+          review: { ...budget.pools.review, queue: "default" },
+        },
+      }),
+    ).toThrow();
+    expect(() =>
+      PooledBudgetSchema.parse({ ...budget, unrecognized: true }),
+    ).toThrow();
+  });
   const gate = step({
     key: "ci-complete",
     skipClone: true,

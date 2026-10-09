@@ -18,6 +18,10 @@
 import path from "node:path";
 import { z } from "zod";
 import { readGeneratedStepJson } from "../../lib/ci/generated-steps.ts";
+import {
+  type AdmissionBudgetSchema,
+  PooledAdmissionBudgetSchema,
+} from "../../lib/ci/admission-budget.ts";
 
 const REPO_ROOT = path.resolve(import.meta.dir, "..", "..", "..");
 const BUDGET_PATH = path.join(
@@ -54,49 +58,9 @@ const StepSchema = z.object({
 
 export type AdmissionStep = z.infer<typeof StepSchema>;
 
-const BudgetSchema = z.object({
-  maxWorkflows: z.number().int().positive(),
-  maxServicesPerWorkflow: z.number().int().nonnegative(),
-  quota: z.object({
-    cpu: z.string(),
-    memory: z.string(),
-    "ephemeral-storage": z.string(),
-  }),
-});
+export type AdmissionBudget = z.infer<typeof AdmissionBudgetSchema>;
 
-export type AdmissionBudget = z.infer<typeof BudgetSchema>;
-
-const PoolSchema = (queue: "default" | "ci-gates") =>
-  z
-    .object({
-      maxWorkflows: z.number().int().positive(),
-      queue: z.literal(queue),
-    })
-    .strict();
-
-export const PooledBudgetSchema = BudgetSchema.extend({
-  $comment: z.string(),
-  legacyMaxWorkflows: z.number().int().nonnegative(),
-  computeQuota: BudgetSchema.shape.quota,
-  gateQuota: BudgetSchema.shape.quota,
-  pools: z
-    .object({
-      pr: PoolSchema("default"),
-      main: PoolSchema("default"),
-      review: PoolSchema("ci-gates"),
-      completion: PoolSchema("ci-gates"),
-    })
-    .strict(),
-  priorities: z
-    .object({
-      main: z.number().int(),
-      ready: z.number().int(),
-      draft: z.number().int(),
-    })
-    .strict(),
-}).strict();
-
-export type PooledAdmissionBudget = z.infer<typeof PooledBudgetSchema>;
+export type PooledAdmissionBudget = z.infer<typeof PooledAdmissionBudgetSchema>;
 
 const SUFFIXES: Readonly<Record<string, number>> = {
   m: 1e-3,
@@ -312,7 +276,9 @@ export function pooledAdmissionBudgetViolations(
 }
 
 async function main(): Promise<void> {
-  const budget = PooledBudgetSchema.parse(await Bun.file(BUDGET_PATH).json());
+  const budget = PooledAdmissionBudgetSchema.parse(
+    await Bun.file(BUDGET_PATH).json(),
+  );
   const steps = z
     .array(StepSchema)
     .parse(await readGeneratedStepJson(REPO_ROOT));
