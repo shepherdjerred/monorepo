@@ -7,17 +7,22 @@
 # `.swift-format` decides indentation, line breaks, and commas, and it is the
 # only thing that does.
 #
-# Two more deliberate absences:
+# Analyzer configuration stays separate:
 #
-#   * **No `baseline:`.** A baseline file is a suppression list with better
-#     branding — it takes today's violations and makes them permanently
-#     invisible. If a rule is worth enabling, its existing violations are worth
-#     fixing; if they are not, the rule is not worth enabling.
 #   * **No `analyzer_rules:` here.** They need a full compiler log, so they live
 #     in `.swiftlint-analyzer.yml` and run through `bun run mac:analyze` — a
 #     separate, slower, macOS-only step.
 
 strict: true
+
+# Exactly four AppKit NSWindowDelegate optional-array signatures are imposed by
+# the external protocol. Returning [] instead of nil changes native full-screen
+# and sharing behavior. Keep their explicit MainActor forwarding, and retain the
+# optional-collection rule everywhere else. The source checker verifies the exact
+# file, rule, declaration context and four entries; this is not a debt baseline.
+# SwiftLint 0.65.1 only offers severity configuration for this rule, so its official
+# baseline format is used for the externally required declarations.
+baseline: .swiftlint-appkit-baseline.json
 
 # The default rules that contradict `swift-format`, disabled with the
 # evidence rather than pre-emptively. These conflicts were found by formatting the tree and

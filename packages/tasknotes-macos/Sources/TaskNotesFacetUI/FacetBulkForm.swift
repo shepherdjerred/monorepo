@@ -10,6 +10,8 @@ struct FacetBulkForm: View {
     @State private var priority = ""
     @State private var scheduled = ""
     @State private var showsDelete = false
+    @State private var showsRecovery = false
+    @State private var draft = FacetBulkDraft()
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -32,64 +34,69 @@ struct FacetBulkForm: View {
                     Button("Set priority") { update("priority", value: .string(priority)) }
                         .disabled(priority.isEmpty)
                     Button("Delete selected notes", role: .destructive) { showsDelete = true }
-                }
+                }.disabled(draft.isSubmitting || draft.hasRetainedSubmission)
                 Section {
                     Text(
                         "These changes are applied together. "
                             + "If any note changed, your selection is retained for review."
                     )
                     .font(.caption)
-                    ForEach(tasks) { Text($0.title) }
-                }
-            }.disabled(store.isSaving)
-                .navigationTitle("Bulk actions")
-                .toolbar { Button("Done") { dismiss() } }
-                .confirmationDialog("Delete all selected task notes?", isPresented: $showsDelete) {
-                    Button("Delete notes", role: .destructive) {
-                        apply(
-                            tasks.map { task in
-                                [
-                                    "kind": .string("delete_checked"), "path": .string(task.path),
-                                    "expectedRevision": .string(task.revision),
-                                    "checkBacklinks": .bool(true), "force": .bool(false),
-                                ]
-                            })
+                    ForEach(tasks, id: \.rowID) { task in
+                        Text(task.title)
+                        if let day = task.occurrenceDate { Text(day).font(.caption) }
                     }
                 }
+                if let error = draft.error {
+                    Section("Action needs attention") {
+                        Text(error).foregroundStyle(.red)
+                    }
+                }
+                if draft.hasRetainedSubmission {
+                    Section("Retained action") {
+                        if let id = draft.admittedMutationID {
+                            Text(id).font(.caption).textSelection(.enabled)
+                        }
+                        Button("Retry original action") {
+                            guard draft.beginRetry() else { return }
+                            submit()
+                        }
+                        Button("Saved actions") { showsRecovery = true }
+                        Button("Check resolution") {
+                            _Concurrency.Task { _ = await draft.releaseResolved() }
+                        }
+                    }.disabled(draft.isSubmitting)
+                }
+            }
+            .navigationTitle("Bulk actions")
+            .toolbar { Button("Done") { dismiss() }.disabled(draft.isSubmitting) }
+            .interactiveDismissDisabled(draft.isSubmitting)
+            .sheet(isPresented: $showsRecovery) { FacetCaptureRecoveryView(store: store) }
+            .confirmationDialog("Delete all selected task notes?", isPresented: $showsDelete) {
+                Button("Delete notes", role: .destructive) {
+                    apply(.delete)
+                }
+            }
         }.frame(minWidth: 340, minHeight: 440)
     }
 
     private func complete() {
-        guard !tasks.contains(where: { $0.isRecurring && $0.occurrenceDate == nil }) else { return }
-        apply(
-            tasks.map { task in
-                var command: [String: FacetValue] = [
-                    "kind": .string("set_completion"), "path": .string(task.path),
-                    "expectedRevision": .string(task.revision), "completed": .bool(true),
-                ]
-                if let day = task.occurrenceDate { command["occurrenceDate"] = .string(day) }
-                return command
-            })
+        apply(.complete)
     }
 
     private func update(_ role: String, value: FacetValue) {
-        apply(
-            tasks.map { task in
-                [
-                    "kind": .string("update"), "path": .string(task.path),
-                    "expectedRevision": .string(task.revision),
-                    "properties": .object([role: value]),
-                ]
-            })
+        apply(.update(role, value))
     }
 
-    private func apply(_ commands: [[String: FacetValue]]) {
+    private func apply(_ action: FacetBulkAction) {
+        guard let operations = store.bulkOperations(profileID: profileID),
+            draft.begin(tasks, action: action, operations: operations)
+        else { return }
+        submit()
+    }
+
+    private func submit() {
         _Concurrency.Task {
-            if await store.perform(
-                [
-                    "kind": .string("batch"), "commands": .array(commands.map(FacetValue.object)),
-                ], profileID: profileID)
-            {
+            if await draft.submit() {
                 applied()
                 dismiss()
             }

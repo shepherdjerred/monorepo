@@ -9,7 +9,7 @@ else
 fi
 
 cd "$facet_repo_root"
-facet_mise="$facet_repo_root/bin/mise"
+facet_mise="$facet_repo_root/packages/tasks-for-obsidian/ios/ci_scripts/mise-native.sh"
 "$facet_mise" trust "$facet_repo_root/.mise.toml"
 "$facet_mise" install --yes bun rust aqua:yonaskolb/XcodeGen
 # Tools are installed explicitly above. Do not let exec provision the rest of

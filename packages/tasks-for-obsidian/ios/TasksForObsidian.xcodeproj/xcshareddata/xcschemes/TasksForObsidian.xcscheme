@@ -50,6 +50,17 @@
                ReferencedContainer = "container:TasksForObsidian.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "349FC8E984C7BC055399DCB1"
+               BuildableName = "FacetPresentationTests.xctest"
+               BlueprintName = "FacetPresentationTests"
+               ReferencedContainer = "container:TasksForObsidian.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
       <CommandLineArguments>
       </CommandLineArguments>

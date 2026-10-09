@@ -31,6 +31,55 @@ belong to Rust. The native host supplies files, transport, lifecycle, and secure
 storage. Generic cloud/document provider write support requires provider-specific
 acceptance; selecting a URL alone does not establish safe write capability.
 
+The standalone desktop uses `FacetNativeWorkspace`: a native split-view sidebar,
+task list or board, inline capture, and a persistent inspector. The iOS shell
+uses Inbox, Today, Upcoming and Browse tabs, with native navigation stacks and
+detented capture/detail sheets. These views adapt the retained clients'
+composition while dispatching through `FacetStore` and `FacetEngine`; they do
+not connect the historical server-backed `TaskNotesStore` to the standalone app.
+Native form values for common recurrence patterns cross a portable Kit adapter,
+with rule parsing and construction performed by the existing Rust functions
+away from the UI actor.
+
+Engine, account and selected-profile ownership is application-wide.
+`FacetWindowState` owns each window's query, search, saved-view constraints,
+selection and pagination. Independent read generations never retire mutation
+publication. Browse vocabulary uses a separate version-consistent all-page read
+so a narrowed task list cannot hide the vault's projects, contexts or tags.
+Group membership and order come from the core. Counts describe loaded pages;
+recurring rows use `(task identity, occurrence date)` presentation identities.
+
+Desktop title fields commit on Return or blur, Markdown commits on Done or blur,
+and controls commit their own field. Navigation, profile changes, close and
+termination drain all owning drafts; failed or newly dirty buffers veto teardown.
+Native window-close delegates restore the previous delegate when detached without
+overwriting a newer owner. A draft retains its selected occurrence across revision
+reads. Once a receipt reports an applied change, a failed revision read is retried
+as observation rather than executing the change again.
+
+An ordered action coordinator admits different-row actions without dropping taps.
+Capture owns a local buffer, captured profile and clock, and an immutable submitted
+command and mutation identity. Pre-admission failures remain editable; uncertain
+durably admitted changes keep their exact recovery identity. Resume/Retire reads
+the durable journal before releasing a retained capture. Other windows and unrelated
+rows remain usable while a capture waits.
+
+Saved views and bulk decisions reserve their immutable action before yielding to
+async work. Recurring completion batches reject duplicate note paths before
+admission; note-level changes deduplicate only matching revisions. Supported saved
+actions may retire only after authoritative absent or parked proof. Pending,
+uncertain and applied work stays protected. Native recovery exposes the original
+vault/action identity, and explicit local-draft discard checks the journal again.
+Mobile success feedback comes from applied receipts; Undo targets that exact
+eligible receipt. Retained sounds use ambient audio and respect native mute policy,
+with a validated local preference. Desktop feedback stays quiet.
+
+Presentation tokens and configured-color policy are validated Swift values from
+the [language-neutral presentation specification](../tasknotes-fixtures/presentation).
+Native semantic colors and Dynamic Type remain authoritative. Configured labels,
+colors and ordering decorate open workflow values; existing values absent from
+settings remain selectable with a diagnostic, preserving their raw metadata.
+
 File callbacks use immutable snapshots and durable replacement stages, with
 chunks capped at 1 MiB. Rust owns the upload/download payloads and their durable
 disposition; native transport passes owned transfer identities instead of whole
@@ -104,10 +153,17 @@ bun run mac:release       # operator-run release lane (scripts/release.ts)
 bun run mac:store -- --dry-run # unsigned Mac App Store archive for inspection
 ```
 
-The standalone gallery renders the app's actual SwiftUI workspace and forms
-offscreen into `.build/snapshots/facet-gallery-*.png`. Its 31 fixture states cover
-vault setup, account verification, Sync selection, task lists and boards, task
-dates and recurrence, reminders, saved views, preferences, retained actions and conflicts.
+Native presentation renders instantiate the actual shared workspace, inspector
+and forms with isolated synthetic state. `FacetNativeCheckpointTests` renders
+AppKit hosting views into `.build/snapshots/`; the iOS `FacetPresentationTests`
+unit target renders UIKit hosting controllers in an active simulator window scene.
+The [reference matrix](../tasknotes-fixtures/presentation/reference-matrix.json)
+maps retained source composition to standalone states and adaptive variants.
+Capture manifests distinguish these fixture renders from app-window captures and
+runtime journeys, and include current source/build fingerprints. Retained-client
+source references are not evidence of an old iOS runtime capture. Offscreen renders
+do not establish interactive gestures, live Sync, signed release acceptance or
+persistence across application relaunch; those remain separate acceptance layers.
 Additional dark and narrow layouts check representative surfaces. These images
 show presentation with a disconnected fixture store; they do not establish
 live Sync, system permissions, simulator interaction or core runtime acceptance.

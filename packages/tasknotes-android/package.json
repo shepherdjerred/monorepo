@@ -14,7 +14,7 @@
     "test": "bun run native:test && bun run android:test",
     "lint": "bun run android:lint",
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
-    "test:report": "bun ../../scripts/ci/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts",
     "android:native": "bun scripts/build-native.ts",
     "native:test": "bun --no-install --bun vitest --config ../../vitest.config.ts run scripts",
     "android:build": "bun run android:native && gradle --console=plain :app:assembleDebug",
@@ -23,6 +23,7 @@
     "android:package": "bun run android:native && gradle --console=plain :app:bundleRelease",
     "android:release": "bun scripts/sign-release.ts",
     "android:runtime": "gradle --console=plain :host:connectedDebugAndroidTest :app:connectedDebugAndroidTest",
+    "android:runtime:acceptance": "bun scripts/verify-runtime.ts",
     "android:verify": "bun run android:build && bun run android:test && bun run android:lint && bun run android:runtime && bun scripts/verify-page-size.ts"
   }
 }
