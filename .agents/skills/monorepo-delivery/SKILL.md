@@ -26,13 +26,23 @@ rebase, or create a feature PR with `gh pr create`.
 Create or update the PR explicitly:
 
 ```bash
-toolkit git-spice branch submit --dry-run --title "type(scope): outcome" --body "..."
-toolkit git-spice branch submit --title "type(scope): outcome" --body "..."
+toolkit git-spice branch submit --draft --dry-run --title "type(scope): outcome" --body "..."
+toolkit git-spice branch submit --draft --title "type(scope): outcome" --body "..."
 toolkit git-spice stack submit --update-only
 ```
 
-Use a draft once the branch has a coherent first commit. Keep the final body
-based on the whole branch, not the latest commit.
+Use a draft once the branch has a coherent first commit. Draft pushes run the
+bounded preflight. When the change and focused checks are ready, trigger full
+verification without another commit:
+
+```bash
+toolkit git-spice branch submit --no-draft
+toolkit ci wait --json
+```
+
+A green draft preflight is not merge evidence. Wait for full verification of
+the current head after marking it ready. Keep the final body based on the whole
+branch, not the latest commit.
 
 ## Prove readiness
 
