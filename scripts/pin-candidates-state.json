@@ -42,10 +42,10 @@
       "buildNumber": 1006485
     },
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
-      "version": "2.0.0-1005566",
-      "digest": "sha256:10130d8c61a5a91dc66c81324b8d74bb5941b3da0efde52c9b0ad5b2ec88eae6",
-      "buildNumber": 1005566,
-      "gitSha": "8b652f160ae791e03b3922aab9e715bb82e9a251"
+      "version": "2.0.0-1007092",
+      "digest": "sha256:86dcff39ce5d8fe111e264dc65979f729fda0c8d4aa162fc0ef64c681a03f71c",
+      "buildNumber": 1007092,
+      "gitSha": "91817ff8f594274b083293c1d5dfd0984a086a51"
     },
     "shepherdjerred/scout-for-lol/beta/workflows/stable": {
       "version": "2.0.0-1003507",
