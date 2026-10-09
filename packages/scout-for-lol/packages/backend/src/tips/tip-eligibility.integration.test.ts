@@ -25,6 +25,7 @@ import { FEATURE_TIPS } from "#src/tips/tip-catalog.ts";
 import { eligibleTips } from "#src/tips/tip-eligibility.ts";
 import {
   claimTip,
+  lastTipShownAt,
   releaseTipClaim,
   shownTipKeys,
 } from "#src/tips/tip-state.ts";
@@ -191,6 +192,68 @@ describe("tip claims", () => {
 });
 
 describe("persisted tip keys", () => {
+  test("preserves retired history separately from active custom nights", async () => {
+    const audience = { serverId: SERVER_ID };
+    const shownAt = new Date("2030-01-09T23:00:00Z");
+    const retired = await db.featureTipImpression.create({
+      data: {
+        serverId: SERVER_ID,
+        audienceId: "",
+        tipKey: "tournament-lobbies",
+        shownAt,
+        claimedAt: null,
+      },
+    });
+    addFlagOverride("custom_nights_enabled", true, { server: SERVER_ID });
+    try {
+      const shown = await shownTipKeys(audience, db);
+      expect(shown).toEqual(new Set(["tournament-lobbies"]));
+      expect(await lastTipShownAt(audience, db)).toEqual(shownAt);
+      const available = await eligibleTips({
+        serverId: SERVER_ID,
+        alreadyShown: shown,
+        db,
+      });
+      expect(available.map(({ key }) => key)).toContain("custom-nights");
+      expect(available.map(({ key }) => key)).not.toContain(
+        "tournament-lobbies",
+      );
+      expect(
+        await db.featureTipImpression.findUnique({ where: { id: retired.id } }),
+      ).toEqual(retired);
+    } finally {
+      resetFlagOverrides("custom_nights_enabled");
+    }
+  });
+
+  test("both retired and active impressions contribute to the latest timestamp", async () => {
+    const audience = { serverId: SERVER_ID };
+    await db.featureTipImpression.createMany({
+      data: [
+        {
+          serverId: SERVER_ID,
+          audienceId: "",
+          tipKey: "custom-nights",
+          shownAt: NOW,
+          claimedAt: null,
+        },
+        {
+          serverId: SERVER_ID,
+          audienceId: "",
+          tipKey: "tournament-lobbies",
+          shownAt: new Date("2030-01-02T00:00:00Z"),
+          claimedAt: null,
+        },
+      ],
+    });
+    expect(await shownTipKeys(audience, db)).toEqual(
+      new Set(["custom-nights", "tournament-lobbies"]),
+    );
+    expect(await lastTipShownAt(audience, db)).toEqual(
+      new Date("2030-01-02T00:00:00Z"),
+    );
+  });
+
   test("a corrupt tipKey fails loudly instead of occupying the shown set", async () => {
     // Malformed persisted data is an internal contract violation, not user
     // input: it must surface rather than silently suppress real tips.
@@ -198,6 +261,9 @@ describe("persisted tip keys", () => {
       data: { serverId: SERVER_ID, audienceId: "", tipKey: "not-a-real-tip" },
     });
     await expect(shownTipKeys({ serverId: SERVER_ID }, db)).rejects.toThrow(
+      /Unknown persisted feature tip key/,
+    );
+    await expect(lastTipShownAt({ serverId: SERVER_ID }, db)).rejects.toThrow(
       /Unknown persisted feature tip key/,
     );
   });

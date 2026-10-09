@@ -1387,6 +1387,20 @@ directly. Two rules come with it:
   `channel.guild.voiceAdapterCreator`, so it keeps the guild-bound fetch; the
   capability table already restricts voice to roles that own a shard.
 
+### Persisted feature-tip history
+
+`tips/tip-catalog.ts` separates active `FeatureTipKey` values from
+`PersistedFeatureTipKey`, which also recognizes explicitly retired keys.
+Impression reads use `parsePersistedTipKey`: a retired `tournament-lobbies`
+impression keeps its original key, audience, and timestamp, still contributes
+to cooldown, and is not relabeled as the distinct `custom-nights` feature.
+Retired keys are never selection candidates. New presentations and claims
+remain active-only; unknown persisted keys still fail loudly.
+
+When removing a tip from the active catalog, retain its key in the explicit
+retired-key list while its impressions can exist. Do not erase historical
+impressions or broaden the parser to arbitrary strings.
+
 ## Runtime roles
 
 The image boots into one of four shapes, selected by `SCOUT_RUNTIME_ROLE`. The
