@@ -188,7 +188,10 @@ final class ArenaWorld {
                 chunk ->
                     world
                         .getChunkAtAsync(chunk.x(), chunk.z(), false)
-                        .thenAcceptAsync(
+                        // Paper completes this future on the server thread. Take the plugin
+                        // ticket before yielding: its temporary load ticket can expire before
+                        // a callback scheduled for another tick runs.
+                        .thenAccept(
                             loaded -> {
                               if (generation != preloadGeneration) {
                                 return;
@@ -199,8 +202,7 @@ final class ArenaWorld {
                               }
                               parts.chunks().keep(world, List.of(chunk));
                               heldChunks.add(chunk);
-                            },
-                            parts.context().mainThread()))
+                            }))
             .toArray(CompletableFuture[]::new);
     var _ =
         CompletableFuture.allOf(loads)
