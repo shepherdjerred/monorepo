@@ -2,21 +2,8 @@ import { mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import type { AskJudge, DimensionScores } from "#build/judge.ts";
+import type { AskJudge } from "#build/judge.ts";
 import { judgeNote } from "#evals/grade/judge-note.ts";
-
-function scores(value: 0 | 1 | 2): DimensionScores {
-  return {
-    silhouette: value,
-    depth: value,
-    palette: value,
-    texture: value,
-    proportion: value,
-    detail: value,
-    siteFit: value,
-    lighting: value,
-  };
-}
 
 /** Prefers whichever image starts with byte `prefer`, in either order. */
 const stubJudge =
@@ -25,9 +12,7 @@ const stubJudge =
     Promise.resolve({
       winner: first.data[0] === prefer ? "first" : "second",
       confidence: 0.7,
-      first: scores(first.data[0] === prefer ? 2 : 1),
-      second: scores(first.data[0] === prefer ? 1 : 2),
-      critique: ["stub"],
+      reasons: ["stub"],
     });
 
 async function pngs(): Promise<{ agent: string; reference: string }> {
@@ -40,22 +25,29 @@ async function pngs(): Promise<{ agent: string; reference: string }> {
 }
 
 describe("judgeNote", () => {
-  it("reports the agreed winner with rubric totals", async () => {
+  it("reports the agreed winner with the judge's reasons", async () => {
     const { agent, reference } = await pngs();
-    const note = await judgeNote({
+    const rubrics: string[] = [];
+    const { note, verdict } = await judgeNote({
       render: agent,
       reference: { slug: "cottage", render: reference },
       model: "stub-model",
-      makeAsk: () => stubJudge(1),
+      rubric: "map",
+      makeAsk: (_model, rubric) => {
+        rubrics.push(rubric);
+        return stubJudge(1);
+      },
     });
+    expect(rubrics).toEqual(["map"]);
     expect(note).toBe(
-      "judge vs library/cottage (stub-model): agent build wins, confidence 0.70; rubric totals agent 16/16, reference 8/16",
+      "judge vs library/cottage (stub-model): agent build wins, confidence 0.70; (a first) stub / (b first) stub",
     );
+    expect(verdict?.winner).toBe("a");
   });
 
   it("skips with the reason when no judge can be built", async () => {
     const { agent, reference } = await pngs();
-    const note = await judgeNote({
+    const { note, verdict } = await judgeNote({
       render: agent,
       reference: { slug: "cottage", render: reference },
       makeAsk: () => {
@@ -63,5 +55,6 @@ describe("judgeNote", () => {
       },
     });
     expect(note).toBe("judge skipped: no anthropic credentials are configured");
+    expect(verdict).toBeNull();
   });
 });

@@ -1,0 +1,37 @@
+{
+  "id": "anchor-nordic-two-story",
+  "task": "anchor",
+  "rubric": "micro",
+  "anchor": true,
+  "weak": true,
+  "head": "",
+  "agent": null,
+  "model": null,
+  "runId": null,
+  "collectedAt": "2026-10-07T06:16:16.268Z",
+  "source": "packages/mc-build/library/nordic-two-story (this repository)",
+  "licence": "repository licence",
+  "seconds": null,
+  "usage": null,
+  "checks": {
+    "passed": 0,
+    "total": 0
+  },
+  "lint": {
+    "errors": 0,
+    "warnings": 0,
+    "codes": []
+  },
+  "gridHash": "6b5c3babe91b75fd9f61499b7e7f780bcc64fc3740f43a70640c5fb2868ca65e",
+  "size": {
+    "x": 18,
+    "y": 15,
+    "z": 18
+  },
+  "blocks": 1242,
+  "repetition": 0,
+  "schematic": {
+    "path": "/root/.toolkit/mc/bench/anchors/nordic-two-story/site.schem",
+    "sha256": "59e051d83dd3de3ee372fb86116e7ce1f8c0e8949b916e3095d3b02443fdd0a2"
+  }
+}

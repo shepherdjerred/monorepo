@@ -79,7 +79,7 @@ describe("parseUsage", () => {
 describe("selectTasks and renderReport", () => {
   it("selects tasks and rejects unknown ids", () => {
     expect(selectTasks("e1, e4").map((task) => task.id)).toEqual(["e1", "e4"]);
-    expect(selectTasks("all")).toHaveLength(12);
+    expect(selectTasks("all")).toHaveLength(15);
     expect(selectTasks("m1,m2").map((task) => task.preamble)).toEqual([
       "natural",
       "natural",
@@ -109,6 +109,7 @@ describe("selectTasks and renderReport", () => {
           checks: [{ name: "wall ring", pass: true, detail: "332/332" }],
           artifacts: [],
           notes: [],
+          judge: null,
           lastMessage: "Built it.",
           taskDir: "/r/e1",
         },
@@ -116,7 +117,7 @@ describe("selectTasks and renderReport", () => {
     });
     expect(markdown).toContain("**1/1 passed.**");
     expect(markdown).toContain(
-      "| e1 | tower | passed | 1/1 | 400 s | 1200k in (1000k cached) / 13k out |",
+      "| e1 | tower | passed | 1/1 | — | 400 s | 1200k in (1000k cached) / 13k out |",
     );
     expect(markdown).toContain("- ✅ wall ring — 332/332");
     expect(markdown).toContain("> Built it.");

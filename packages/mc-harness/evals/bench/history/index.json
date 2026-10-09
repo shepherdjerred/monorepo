@@ -1,0 +1,368 @@
+[
+  {
+    "task": "b1",
+    "rubric": "micro",
+    "judgedAt": null,
+    "model": null,
+    "entries": [
+      {
+        "id": "anchor-nordic-two-story",
+        "anchor": true,
+        "weak": true,
+        "head": "",
+        "agent": null,
+        "rating": null,
+        "absolute": null,
+        "checks": {
+          "passed": 0,
+          "total": 0
+        },
+        "lint": {
+          "errors": 0,
+          "warnings": 0,
+          "codes": []
+        },
+        "repetition": 0,
+        "seconds": null,
+        "usage": null
+      },
+      {
+        "id": "anchor-watchtower",
+        "anchor": true,
+        "weak": true,
+        "head": "",
+        "agent": null,
+        "rating": null,
+        "absolute": null,
+        "checks": {
+          "passed": 0,
+          "total": 0
+        },
+        "lint": {
+          "errors": 0,
+          "warnings": 0,
+          "codes": []
+        },
+        "repetition": 0,
+        "seconds": null,
+        "usage": null
+      }
+    ]
+  },
+  {
+    "task": "b2",
+    "rubric": "micro",
+    "judgedAt": null,
+    "model": null,
+    "entries": [
+      {
+        "id": "anchor-nordic-two-story",
+        "anchor": true,
+        "weak": true,
+        "head": "",
+        "agent": null,
+        "rating": null,
+        "absolute": null,
+        "checks": {
+          "passed": 0,
+          "total": 0
+        },
+        "lint": {
+          "errors": 0,
+          "warnings": 0,
+          "codes": []
+        },
+        "repetition": 0,
+        "seconds": null,
+        "usage": null
+      },
+      {
+        "id": "anchor-watchtower",
+        "anchor": true,
+        "weak": true,
+        "head": "",
+        "agent": null,
+        "rating": null,
+        "absolute": null,
+        "checks": {
+          "passed": 0,
+          "total": 0
+        },
+        "lint": {
+          "errors": 0,
+          "warnings": 0,
+          "codes": []
+        },
+        "repetition": 0,
+        "seconds": null,
+        "usage": null
+      }
+    ]
+  },
+  {
+    "task": "b3",
+    "rubric": "micro",
+    "judgedAt": null,
+    "model": null,
+    "entries": [
+      {
+        "id": "anchor-nordic-two-story",
+        "anchor": true,
+        "weak": true,
+        "head": "",
+        "agent": null,
+        "rating": null,
+        "absolute": null,
+        "checks": {
+          "passed": 0,
+          "total": 0
+        },
+        "lint": {
+          "errors": 0,
+          "warnings": 0,
+          "codes": []
+        },
+        "repetition": 0,
+        "seconds": null,
+        "usage": null
+      },
+      {
+        "id": "anchor-watchtower",
+        "anchor": true,
+        "weak": true,
+        "head": "",
+        "agent": null,
+        "rating": null,
+        "absolute": null,
+        "checks": {
+          "passed": 0,
+          "total": 0
+        },
+        "lint": {
+          "errors": 0,
+          "warnings": 0,
+          "codes": []
+        },
+        "repetition": 0,
+        "seconds": null,
+        "usage": null
+      }
+    ]
+  },
+  {
+    "task": "e2",
+    "rubric": "micro",
+    "judgedAt": null,
+    "model": null,
+    "entries": [
+      {
+        "id": "anchor-nordic-two-story",
+        "anchor": true,
+        "weak": true,
+        "head": "",
+        "agent": null,
+        "rating": null,
+        "absolute": null,
+        "checks": {
+          "passed": 0,
+          "total": 0
+        },
+        "lint": {
+          "errors": 0,
+          "warnings": 0,
+          "codes": []
+        },
+        "repetition": 0,
+        "seconds": null,
+        "usage": null
+      },
+      {
+        "id": "anchor-watchtower",
+        "anchor": true,
+        "weak": true,
+        "head": "",
+        "agent": null,
+        "rating": null,
+        "absolute": null,
+        "checks": {
+          "passed": 0,
+          "total": 0
+        },
+        "lint": {
+          "errors": 0,
+          "warnings": 0,
+          "codes": []
+        },
+        "repetition": 0,
+        "seconds": null,
+        "usage": null
+      }
+    ]
+  },
+  {
+    "task": "e5",
+    "rubric": "micro",
+    "judgedAt": null,
+    "model": null,
+    "entries": [
+      {
+        "id": "anchor-nordic-two-story",
+        "anchor": true,
+        "weak": true,
+        "head": "",
+        "agent": null,
+        "rating": null,
+        "absolute": null,
+        "checks": {
+          "passed": 0,
+          "total": 0
+        },
+        "lint": {
+          "errors": 0,
+          "warnings": 0,
+          "codes": []
+        },
+        "repetition": 0,
+        "seconds": null,
+        "usage": null
+      },
+      {
+        "id": "anchor-watchtower",
+        "anchor": true,
+        "weak": true,
+        "head": "",
+        "agent": null,
+        "rating": null,
+        "absolute": null,
+        "checks": {
+          "passed": 0,
+          "total": 0
+        },
+        "lint": {
+          "errors": 0,
+          "warnings": 0,
+          "codes": []
+        },
+        "repetition": 0,
+        "seconds": null,
+        "usage": null
+      }
+    ]
+  },
+  {
+    "task": "m1",
+    "rubric": "map",
+    "judgedAt": null,
+    "model": null,
+    "entries": [
+      {
+        "id": "anchor-hamlet",
+        "anchor": true,
+        "weak": true,
+        "head": "",
+        "agent": null,
+        "rating": null,
+        "absolute": null,
+        "checks": {
+          "passed": 0,
+          "total": 0
+        },
+        "lint": {
+          "errors": 0,
+          "warnings": 1,
+          "codes": ["W_DARK_INTERIOR"]
+        },
+        "repetition": 0,
+        "seconds": null,
+        "usage": null
+      }
+    ]
+  },
+  {
+    "task": "m2",
+    "rubric": "map",
+    "judgedAt": null,
+    "model": null,
+    "entries": [
+      {
+        "id": "anchor-hamlet",
+        "anchor": true,
+        "weak": true,
+        "head": "",
+        "agent": null,
+        "rating": null,
+        "absolute": null,
+        "checks": {
+          "passed": 0,
+          "total": 0
+        },
+        "lint": {
+          "errors": 0,
+          "warnings": 1,
+          "codes": ["W_DARK_INTERIOR"]
+        },
+        "repetition": 0,
+        "seconds": null,
+        "usage": null
+      }
+    ]
+  },
+  {
+    "task": "m3",
+    "rubric": "map",
+    "judgedAt": null,
+    "model": null,
+    "entries": [
+      {
+        "id": "anchor-hamlet",
+        "anchor": true,
+        "weak": true,
+        "head": "",
+        "agent": null,
+        "rating": null,
+        "absolute": null,
+        "checks": {
+          "passed": 0,
+          "total": 0
+        },
+        "lint": {
+          "errors": 0,
+          "warnings": 1,
+          "codes": ["W_DARK_INTERIOR"]
+        },
+        "repetition": 0,
+        "seconds": null,
+        "usage": null
+      }
+    ]
+  },
+  {
+    "task": "m4",
+    "rubric": "map",
+    "judgedAt": null,
+    "model": null,
+    "entries": [
+      {
+        "id": "anchor-hamlet",
+        "anchor": true,
+        "weak": true,
+        "head": "",
+        "agent": null,
+        "rating": null,
+        "absolute": null,
+        "checks": {
+          "passed": 0,
+          "total": 0
+        },
+        "lint": {
+          "errors": 0,
+          "warnings": 1,
+          "codes": ["W_DARK_INTERIOR"]
+        },
+        "repetition": 0,
+        "seconds": null,
+        "usage": null
+      }
+    ]
+  }
+]

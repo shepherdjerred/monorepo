@@ -34,6 +34,7 @@
     "daemon": "bun run src/daemon/main.ts",
     "gen-registry": "bun run scripts/gen-registry.ts",
     "evals": "bun evals/run.ts",
+    "bench": "bun evals/bench/bench.ts",
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
     "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
   },

@@ -24,6 +24,8 @@ export type Quad = {
   layer: Layer;
   /** Fixed alpha for synthesized translucent faces (water), else 1. */
   alpha: number;
+  /** Outward unit normal in world space; null when the face has no cull direction. */
+  normal: V3 | null;
 };
 
 type LocalFace = {
@@ -399,6 +401,7 @@ function faceQuad(input: {
     color,
     layer,
     alpha: mesh.fluid === "water" ? 0.7 : 1,
+    normal: face.normal === null ? null : NORMALS[face.normal],
   };
 }
 

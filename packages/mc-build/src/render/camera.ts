@@ -87,13 +87,14 @@ export function viewProjector(view: ViewName): (point: V3) => Projected {
 }
 
 /** Scales and centres a projection so a box of `size` fits `width`×`height`. */
-export function fitProjector(
+/** The frame margin `fitProjector` leaves around a grid, in pixels. */
+export const FIT_MARGIN = 24;
+
+/** The box a grid's eight corners project to in a view, at one pixel per block. */
+export function projectedExtent(
   view: ViewName,
   size: V3,
-  frame: { width: number; height: number; margin?: number },
-): { project: (point: V3) => Projected; scale: number } {
-  const { width, height } = frame;
-  const margin = frame.margin ?? 24;
+): { minX: number; maxX: number; minY: number; maxY: number } {
   const raw = viewProjector(view);
   const corners: V3[] = [];
   for (const x of [0, size[0]]) {
@@ -104,10 +105,28 @@ export function fitProjector(
     }
   }
   const points = corners.map((corner) => raw(corner));
-  const minX = Math.min(...points.map((p) => p.x));
-  const maxX = Math.max(...points.map((p) => p.x));
-  const minY = Math.min(...points.map((p) => p.y));
-  const maxY = Math.max(...points.map((p) => p.y));
+  return {
+    minX: Math.min(...points.map((p) => p.x)),
+    maxX: Math.max(...points.map((p) => p.x)),
+    minY: Math.min(...points.map((p) => p.y)),
+    maxY: Math.max(...points.map((p) => p.y)),
+  };
+}
+
+/**
+ * Fits the grid into the frame at a whole-number-friendly scale of at least
+ * one pixel per block (faces thinner than a pixel drop out of the raster).
+ * A grid too large for that is the caller's to oversample: see `renderView`.
+ */
+export function fitProjector(
+  view: ViewName,
+  size: V3,
+  frame: { width: number; height: number; margin?: number },
+): { project: (point: V3) => Projected; scale: number } {
+  const { width, height } = frame;
+  const margin = frame.margin ?? FIT_MARGIN;
+  const raw = viewProjector(view);
+  const { minX, maxX, minY, maxY } = projectedExtent(view, size);
   const scale = Math.max(
     1,
     Math.min(

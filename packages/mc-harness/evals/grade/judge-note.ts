@@ -10,22 +10,27 @@ import {
   llmJudge,
   pngInput,
   type AskJudge,
+  type JudgeVerdict,
 } from "#build/judge.ts";
+import type { JudgeRubric } from "#protocol/build.ts";
 
 export async function judgeNote(options: {
   render: string;
   reference: { slug: string; render: string };
   model?: string;
+  /** Which rubric the pair prompt argues about; micro unless the task is a map. */
+  rubric?: JudgeRubric;
   /** Builds the judge; defaults to the real model (fails without credentials). */
-  makeAsk?: (model: string) => AskJudge;
-}): Promise<string> {
+  makeAsk?: (model: string, rubric: JudgeRubric) => AskJudge;
+}): Promise<{ note: string; verdict: JudgeVerdict | null }> {
   const model = options.model ?? DEFAULT_JUDGE_MODEL;
+  const rubric = options.rubric ?? "micro";
   let ask: AskJudge;
   try {
-    ask = (options.makeAsk ?? llmJudge)(model);
+    ask = (options.makeAsk ?? llmJudge)(model, rubric);
   } catch (error: unknown) {
     const reason = error instanceof Error ? error.message : String(error);
-    return `judge skipped: ${reason}`;
+    return { note: `judge skipped: ${reason}`, verdict: null };
   }
   const verdict = await judgePair(
     await pngInput(options.render),
@@ -39,5 +44,8 @@ export async function judgeNote(options: {
       : verdict.winner === "a"
         ? "agent build wins"
         : `library/${options.reference.slug} wins`;
-  return `judge vs library/${options.reference.slug} (${model}): ${outcome}, confidence ${verdict.confidence.toFixed(2)}; rubric totals agent ${verdict.totals.a.toString()}/16, reference ${verdict.totals.b.toString()}/16${verdict.agreed ? "" : " (orderings disagreed)"}`;
+  return {
+    note: `judge vs library/${options.reference.slug} (${model}): ${outcome}, confidence ${verdict.confidence.toFixed(2)}${verdict.agreed ? "" : " (orderings disagreed)"}; ${verdict.reasons.join(" / ")}`,
+    verdict,
+  };
 }
