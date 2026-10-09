@@ -3,6 +3,7 @@
 import { z } from "zod";
 
 export const MANAGED_NAMESPACES = [
+  "woodpecker",
   "justin",
   "scout",
   "birmel",
@@ -16,6 +17,24 @@ export const MANAGED_NAMESPACES = [
 ] as const;
 
 export type ManagedNamespaceKey = (typeof MANAGED_NAMESPACES)[number];
+
+export const WOODPECKER_FLAG_KEYS = [
+  "woodpecker-source-cache-enabled",
+] as const;
+
+export type WoodpeckerFlagKey = (typeof WOODPECKER_FLAG_KEYS)[number];
+
+export const WOODPECKER_BOOLEAN_FLAG_KEYS = [
+  "woodpecker-source-cache-enabled",
+] as const;
+
+export type WoodpeckerBooleanFlagKey =
+  (typeof WOODPECKER_BOOLEAN_FLAG_KEYS)[number];
+
+export const WOODPECKER_VARIANT_FLAG_KEYS = [] as const;
+
+export type WoodpeckerVariantFlagKey =
+  (typeof WOODPECKER_VARIANT_FLAG_KEYS)[number];
 
 export const JUSTIN_FLAG_KEYS = ["justin_autonomous_devex_enabled"] as const;
 
@@ -418,6 +437,7 @@ export const STORM_VARIANT_FLAG_KEYS = [
 export type StormVariantFlagKey = (typeof STORM_VARIANT_FLAG_KEYS)[number];
 
 export const MANAGED_FLAG_KEYS = [
+  ...WOODPECKER_FLAG_KEYS,
   ...JUSTIN_FLAG_KEYS,
   ...SCOUT_FLAG_KEYS,
   ...BIRMEL_FLAG_KEYS,
@@ -433,6 +453,7 @@ export const MANAGED_FLAG_KEYS = [
 export type ManagedFlagKey = (typeof MANAGED_FLAG_KEYS)[number];
 
 export const MANAGED_BOOLEAN_FLAG_KEYS = [
+  ...WOODPECKER_BOOLEAN_FLAG_KEYS,
   ...JUSTIN_BOOLEAN_FLAG_KEYS,
   ...SCOUT_BOOLEAN_FLAG_KEYS,
   ...BIRMEL_BOOLEAN_FLAG_KEYS,
@@ -448,6 +469,7 @@ export const MANAGED_BOOLEAN_FLAG_KEYS = [
 export type ManagedBooleanFlagKey = (typeof MANAGED_BOOLEAN_FLAG_KEYS)[number];
 
 export const MANAGED_VARIANT_FLAG_KEYS = [
+  ...WOODPECKER_VARIANT_FLAG_KEYS,
   ...JUSTIN_VARIANT_FLAG_KEYS,
   ...SCOUT_VARIANT_FLAG_KEYS,
   ...BIRMEL_VARIANT_FLAG_KEYS,

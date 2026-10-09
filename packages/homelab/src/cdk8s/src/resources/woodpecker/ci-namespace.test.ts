@@ -3,7 +3,10 @@ import { App, Chart } from "cdk8s";
 import { parse as parseYaml } from "yaml";
 import { z } from "zod";
 import { createWoodpeckerChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/woodpecker.ts";
-import { createStorageClasses } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
+import {
+  createStorageClasses,
+  NVME_STORAGE_CLASS_LZ4,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import { escapeHelmGoTemplate } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/shared.ts";
 import {
   CI_BOUNDED_RESOURCES,
@@ -87,6 +90,39 @@ it("maps only ready-event completion onto the required PR context", () => {
       '{{ .context }}/{{ if and (eq .event "pull_request_metadata") (eq .workflow "ci-complete") }}pr{{ else }}{{ .event }}{{ end }}/{{ .workflow }}',
     ),
   );
+});
+
+it("isolates source caches on disposable NVMe claims and mounts them in maintenance", () => {
+  const ClaimSchema = z.object({
+    metadata: z.object({
+      namespace: z.literal("woodpecker-ci"),
+      labels: z.record(z.string(), z.string()),
+    }),
+    spec: z.object({
+      storageClassName: z.string(),
+      resources: z.object({ requests: z.object({ storage: z.string() }) }),
+    }),
+  });
+  for (const kind of ["main", "pr", "control"]) {
+    const claim = ClaimSchema.parse(
+      find("PersistentVolumeClaim", `woodpecker-source-${kind}`),
+    );
+    expect(claim.metadata.labels["velero.io/exclude-from-backup"]).toBe("true");
+    expect(claim.spec.storageClassName).toBe(NVME_STORAGE_CLASS_LZ4);
+    expect(claim.spec.resources.requests.storage).toBe(
+      kind === "control" ? "1Gi" : "10Gi",
+    );
+  }
+  const deployment = JSON.stringify(
+    find("Deployment", "temporal-maintenance-worker"),
+  );
+  for (const kind of ["main", "pr", "control"]) {
+    expect(deployment).toContain(`woodpecker-source-${kind}`);
+    expect(deployment).toContain(`/woodpecker/source-${kind}`);
+  }
+  expect(
+    JSON.stringify(find("ConfigMap", "woodpecker-bun-cache-gc")),
+  ).toContain("source-cache-gc.ts");
 });
 
 it("pins review execution to the deployed configuration policy image", () => {

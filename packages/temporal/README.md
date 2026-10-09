@@ -9,6 +9,11 @@ homelab audit, deterministic PR-opening refresh jobs, and webhook ingress
 Closed PR cleanup matches Woodpecker pull-request refs or source-branch pushes
 at the exact head commit before cancelling active jobs.
 
+The existing five-minute CI cache maintenance schedule also collects the
+separate main and PR source caches on Liskov. Its activity acquires the clone
+helper's exclusive GC lock, retains seven days, and trims each data claim to
+8 GiB. It preserves active readers and emits its own maintenance outcome.
+
 Vacuum start verification reads Home Assistant recorder history after each start
 request. Short cleaning transitions count as starts even when delayed state
 polling sees the vacuum docked again. A witnessed start followed by logbook

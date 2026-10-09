@@ -21,13 +21,14 @@ FROM base AS runtime
 # Both the service and its checkout-free gate use this trusted image. The
 # generated workflow wraps commands with bash and GNU timeout.
 # hadolint ignore=DL3008
-RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends bash coreutils \
+RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends bash coreutils git ca-certificates util-linux \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=prod-deps /app/ /app/
 COPY --from=review-build /review-gate.js /app/review-gate.js
 COPY --parents \
   tsconfig.base.json \
   packages/version-catalog/src \
+  packages/config/src packages/feature-flags/src \
   packages/woodpecker-config-extension \
   ./
 

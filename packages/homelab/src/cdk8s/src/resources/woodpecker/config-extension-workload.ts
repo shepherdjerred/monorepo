@@ -72,6 +72,12 @@ export function createWoodpeckerConfigExtension(chart: Chart): void {
       image: `ghcr.io/shepherdjerred/woodpecker-config-extension:${versions["shepherdjerred/woodpecker-config-extension"]}`,
       ports: [{ name: "http", number: CONFIG_EXTENSION_PORT }],
       envVariables: {
+        FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
+        FLIPT_URL: EnvValue.fromValue(
+          "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
+        ),
+        FLIPT_NAMESPACE: EnvValue.fromValue("woodpecker"),
+        FLIPT_ENVIRONMENT: EnvValue.fromValue("prod"),
         CI_GATE_IMAGE: EnvValue.fromValue(
           `ghcr.io/shepherdjerred/woodpecker-config-extension:${versions["shepherdjerred/woodpecker-config-extension"]}`,
         ),
@@ -127,6 +133,17 @@ export function createWoodpeckerConfigExtension(chart: Chart): void {
         },
       ],
       egress: [
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "flipt" },
+              },
+              podSelector: { matchLabels: { app: "flipt" } },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(8080), protocol: "TCP" }],
+        },
         {
           to: [
             {

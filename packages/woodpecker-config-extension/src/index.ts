@@ -9,6 +9,8 @@ import {
 } from "#src/woodpecker-api.ts";
 import { hasExactHeadApproval } from "#src/github-approval.ts";
 import { cancelSupersededPr } from "#src/superseded-pr.ts";
+import { initFeatureFlags } from "@shepherdjerred/feature-flags";
+import { sourceCacheConfig } from "#src/checkout/config.ts";
 
 function requireEnv(name: string): string {
   const value = Bun.env[name];
@@ -50,7 +52,16 @@ async function publicKey(): Promise<KeyObject> {
   return key;
 }
 
+await initFeatureFlags({
+  onInitializationFailure: () => {
+    console.warn("CI rollout flags unavailable");
+  },
+});
 const app = createApp({
+  sourceCacheEnabled: async (branch) => {
+    const config = await sourceCacheConfig(branch);
+    return config.value;
+  },
   cancelSupersededPr: (repoId, pipeline) =>
     cancelSupersededPr(repoId, pipeline, {
       baseUrl: serverUrl,

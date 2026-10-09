@@ -152,6 +152,8 @@ export type CiStep = {
   readonly allowFailure?: boolean;
   /** The workflow needs no source checkout. */
   readonly skipClone?: boolean;
+  /** Trusted clone helper only; never mounted in repository command containers. */
+  readonly sourceCache?: { readonly image: string; readonly claim: string };
   /** Run after failed dependencies so a final verdict can be reported. */
   readonly runOnFailure?: boolean;
 };

@@ -24,8 +24,10 @@ import { groupTofuSteps } from "#src/pipeline/group-tofu.ts";
 import { isPrVerificationEvent, prStatusEvent } from "#src/pr-event.ts";
 import { limitedPrSteps } from "#src/pipeline/draft.ts";
 import type { SuccessfulWorkflowPipeline } from "#src/woodpecker-api.ts";
+import { cacheSourceSteps } from "#src/pipeline/source-cache.ts";
 
 export type AppOptions = {
+  readonly sourceCacheEnabled?: (branch: string) => Promise<boolean>;
   readonly trustedGateImage?: string;
   /** Resolves Woodpecker's signing key; the caller caches it. */
   readonly publicKey: () => Promise<KeyObject>;
@@ -193,6 +195,50 @@ async function cleanupSupersededPr(
   }
 }
 
+async function pipelineEmitter(
+  options: AppOptions,
+  pipeline: Pipeline,
+  defaultBranch: string,
+  credentialless: boolean,
+) {
+  const context = {
+    event: isPrVerificationEvent(pipeline) ? "pull_request" : pipeline.event,
+    branch: pipeline.branch,
+    defaultBranch,
+    draft: pipeline.pr_draft,
+    changedFiles: pipeline.changed_files,
+  };
+  const sourceBranch =
+    pipeline.refspec === "" ? pipeline.branch : pipeline.refspec.split(":")[0];
+  if (sourceBranch === undefined || sourceBranch === "")
+    throw new Error("Invalid source branch refspec");
+  const enabled =
+    !credentialless &&
+    isWorkEvent(context) &&
+    (await options.sourceCacheEnabled?.(sourceBranch)) === true;
+  const identity = {
+    commit: pipeline.commit,
+    branch: pipeline.branch,
+    linkUrl: pipeline.forge_url,
+  };
+  return (steps: readonly CiStep[]) =>
+    emitWorkflows(
+      routeSteps(
+        cacheSourceSteps(steps, {
+          enabled,
+          credentialless,
+          main:
+            ["push", "manual"].includes(pipeline.event) &&
+            pipeline.branch === defaultBranch,
+          image: options.trustedGateImage,
+        }),
+        context,
+        options.trustedGateImage,
+      ),
+      identity,
+    );
+}
+
 export function createApp(options: AppOptions): Hono {
   const app = new Hono();
   const gateDirectory =
@@ -256,31 +302,23 @@ export function createApp(options: AppOptions): Hono {
       changedFiles: pipeline.changed_files,
     };
     const images = await resolveCiImages(pipeline.commit, options.imageFetcher);
-    const identity = {
-      commit: pipeline.commit,
-      branch: pipeline.branch,
-      linkUrl: pipeline.forge_url,
-    };
-    const emit = (steps: readonly CiStep[]) =>
-      emitWorkflows(
-        routeSteps(
-          steps,
-          { ...selectionContext, draft: pipeline.pr_draft },
-          options.trustedGateImage,
-        ),
-        identity,
-      );
+    const credentiallessAutomation = await needsCredentiallessHostedAutomation(
+      authorization.actorClass,
+      pipeline,
+      options.hostedAutomationApproved,
+    );
+    const emit = await pipelineEmitter(
+      options,
+      pipeline,
+      repo.default_branch,
+      credentiallessAutomation,
+    );
     if (!isWorkEvent(selectionContext)) {
       return context.json({
         configs: emit([noWorkStep(images.base)]),
       });
     }
 
-    const credentiallessAutomation = await needsCredentiallessHostedAutomation(
-      authorization.actorClass,
-      pipeline,
-      options.hostedAutomationApproved,
-    );
     const limited = limitedPrSteps({
       images,
       pipeline,

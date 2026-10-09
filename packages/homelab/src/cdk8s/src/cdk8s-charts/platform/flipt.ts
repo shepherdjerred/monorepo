@@ -39,6 +39,7 @@ const CONSUMER_NAMESPACES = [
   "storm-forum-beta",
   "minecraft-tsmc",
   "woodpecker-ci",
+  "woodpecker",
 ] as const;
 
 export function createFliptChart(app: App) {

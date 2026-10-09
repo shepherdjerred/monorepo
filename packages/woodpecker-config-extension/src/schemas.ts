@@ -16,6 +16,8 @@ export const PipelineSchema = z.looseObject({
   branch: z.string(),
   commit: z.string(),
   ref: z.string(),
+  /** PR source:target branches; branch itself is the target on GitHub PRs. */
+  refspec: z.string().default(""),
   /** Woodpecker's pipeline number, also the boundary for superseding older PRs. */
   number: z.number().int().nonnegative().default(0),
   /** Native review fields are parsed for contract visibility, never trusted. */
