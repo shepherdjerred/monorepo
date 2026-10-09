@@ -243,13 +243,18 @@ describe("artifact producers and consumers line up", () => {
   const consumedBy: { key: string; artifact: string }[] = [];
 
   for (const candidate of allSteps()) {
-    for (const command of candidate.commands) {
-      const put = /ci-artifact\.ts put (?<name>[\w-]+)/u.exec(command);
-      if (put?.groups?.["name"] !== undefined) {
+    const command = candidate.commands.join("\n");
+    for (const put of command.matchAll(
+      /ci-artifact\.ts put (?<name>[\w-]+)/gu,
+    )) {
+      if (put.groups?.["name"] !== undefined) {
         producedBy.set(put.groups["name"], candidate.key);
       }
-      const get = /ci-artifact\.ts get (?<name>[\w-]+)/u.exec(command);
-      if (get?.groups?.["name"] !== undefined) {
+    }
+    for (const get of command.matchAll(
+      /ci-artifact\.ts get (?<name>[\w-]+)/gu,
+    )) {
+      if (get.groups?.["name"] !== undefined) {
         consumedBy.push({ key: candidate.key, artifact: get.groups["name"] });
       }
     }

@@ -187,10 +187,6 @@ async function main(): Promise<number> {
   const selectedPackages = context.selection.targets.map(
     (target) => target.package,
   );
-  if (selectedPackages.length === 0) {
-    console.log("Browser E2E: no affected targets");
-    return 0;
-  }
   console.log(`Browser E2E targets: ${selectedPackages.join(", ")}`);
   await rm(".ci-reports", { recursive: true, force: true });
 
@@ -209,6 +205,13 @@ async function main(): Promise<number> {
     ...[...installFilters].flatMap((name) => ["--filter", name]),
   ]);
   if (installStatus !== 0) return installStatus;
+
+  // The root scripts also publish the selection/timing record on an empty
+  // selection. Install their declared dependencies before that cleanup runs.
+  if (selectedPackages.length === 0) {
+    console.log("Browser E2E: no affected targets");
+    return 0;
+  }
 
   if (selectedPackages.includes("sjer.red")) {
     const sjerStatus = await run([

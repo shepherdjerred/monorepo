@@ -2,6 +2,7 @@ import type { CiImages } from "#src/images.ts";
 import { HANDOFF_KEYS } from "#src/pipeline/lanes/tofu.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
 import { BROWSER_TIER } from "#src/pipeline/tiers.ts";
+import { diagnosticCommands } from "#src/pipeline/diagnostics.ts";
 import { GLOBAL_SELECTOR_INPUTS } from "#src/pipeline/inputs.ts";
 import { BUN_CACHE, BUN_CACHE_CONTROL } from "#src/pipeline/cache.ts";
 import {
@@ -30,7 +31,7 @@ export function playwrightSteps(images: CiImages, changedBase = ""): CiStep[] {
         CI_CHANGED_BASE: changedBase,
         ...TURBO_REMOTE_CACHE_ENVIRONMENT,
       },
-      commands: [
+      commands: diagnosticCommands("playwright-e2e", [
         // Postgres scope: several suites need a live database.
         "MISE_TOOLCHAIN_SCOPE=postgres . ci/scripts/toolchain.sh",
         // A PR compares against its target branch even before main has a
@@ -53,7 +54,7 @@ export function playwrightSteps(images: CiImages, changedBase = ""): CiStep[] {
         // ships exactly what was tested instead of rebuilding.
         "if [ -d packages/sjer.red/dist ]; then bun --no-install scripts/ci/ci-artifact.ts put sjer-red-dist; fi",
         "if [ -d packages/docs/wiki/dist ]; then bun --no-install scripts/ci/ci-artifact.ts put wiki-dist; fi",
-      ],
+      ]),
       dependsOn: ["verify"],
       timeoutMinutes: 30,
       resources: BROWSER_TIER,
