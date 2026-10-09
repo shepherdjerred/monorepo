@@ -68,17 +68,25 @@ server maps only that completion workflow to the existing required
 or ready-event pipeline and rejects draft-only evidence at the same SHA.
 
 Native cancellation can miss ready events and target-branch changes. After
-producing a full PR graph, the extension cancels older PR and ready-event runs
-for that exact PR, including duplicates at the same commit. It revalidates each
+producing an authorized PR configuration, the extension cancels older PR and
+ready-event runs for that exact PR, including duplicates at the same commit.
+It revalidates each
 pipeline immediately before cancellation and never cancels newer runs, main,
 or another PR. Metadata no-ops and unapproved automation do no cleanup.
 The entire best-effort lookup has a three-second deadline; API failure leaves
 the replacement verification intact and emits a bounded warning.
 
-Deploy this compatibility path and its server status-context template before
-enabling cheaper draft checks. The server configuration change requires a
-drained server rollout; observe an actual ready transition through full CI
-before changing draft coverage.
+Draft pushes run a three-minute preflight for formatting, frozen lockfile
+consistency, conflict markers and secrets in the proposed commit history.
+The filtered install includes root formatting plugins and script dependencies,
+with lifecycle scripts disabled.
+They create no merge verdict, browser/Tofu/rehearsal jobs or review poller.
+Hosted automation without exact-head approval keeps a credentialless preflight.
+Ready PRs run the full affected verification graph and automated review.
+
+Deploy the ready-event compatibility path and server status-context template
+before enabling draft preflight. The server change requires a drained rollout;
+observe a real ready transition through full CI before changing draft coverage.
 
 `routing.ts` assigns Kubernetes workflows to PR, main, review, or completion
 agents. A PR targeting the default branch still uses the PR pool; only a push
@@ -92,8 +100,7 @@ image and no checkout or services. Each requests 250m CPU, 512 MiB memory, and
 The generator's exported step model includes the dynamic completion workflow
 in admission and credential checks.
 
-Signed `pr_draft` state selects draft versus ready admission priority. It does
-not reduce verification coverage. Main has the highest admission priority;
+Signed `pr_draft` state selects draft preflight and admission priority. Main has the highest admission priority;
 Kueue preemption remains disabled and production pod priority is unchanged.
 Workflow labels carry admission priority through clone, service, and command
 pods; each agent fixes its queue label.

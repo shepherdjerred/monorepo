@@ -70,10 +70,10 @@ caps. Review and completion share a small resource reserve but have separate
 agents. A backlog of review polls therefore cannot consume the completion slot.
 
 Mandatory agent labels keep a pool from taking unrelated workflows.
-The legacy agent handles configurations without pool labels while those
-configurations drain. The admission proof includes both old and new compute
-caps during coexistence. Its pod backstop also includes their services, so
-partially started workflows cannot fill every slot before a step can run.
+All generated workflows use their assigned pool. The admission proof covers
+eight compute slots and four gate slots. Its pod backstop also includes
+compute services, so partially started workflows cannot fill every slot before
+a step can run. The legacy pool has zero slots and no agent Deployment.
 
 The reserve slightly reduces compute capacity. It buys predictable access for
 short verdict checks without increasing the total CPU, memory, or ephemeral

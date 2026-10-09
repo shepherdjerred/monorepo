@@ -188,9 +188,12 @@ describe("pooled CI admission budget", () => {
         legacyMaxWorkflows: 0,
       }),
     ).toEqual([]);
-    expect(pooledAdmissionBudgetViolations([largeServices], budget)).toEqual([
-      expect.stringContaining("memory:"),
-    ]);
+    expect(
+      pooledAdmissionBudgetViolations([largeServices], {
+        ...budget,
+        legacyMaxWorkflows: 12,
+      }),
+    ).toEqual([expect.stringContaining("memory:")]);
   });
 
   test("rejects budget growth and a mismatched workflow total", () => {

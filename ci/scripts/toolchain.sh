@@ -49,6 +49,10 @@ expose_postgres_tools() {
 }
 
 case "${MISE_TOOLCHAIN_SCOPE:-full}" in
+  preflight)
+    mise_ci install --yes bun gitleaks
+    mise_ci reshim
+    ;;
   runtime)
     # SQLite-only lanes need Bun but must not resolve unrelated tools such as
     # the PostgreSQL binaries, which can exhaust the shared GitHub API quota.

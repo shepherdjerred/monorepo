@@ -5,10 +5,7 @@ import { authorizePipeline } from "#src/authorization.ts";
 import { verifySignedRequest } from "#src/signature.ts";
 import { emitWorkflows } from "#src/pipeline/emit.ts";
 import { isWorkEvent, selectSteps } from "#src/pipeline/select.ts";
-import {
-  buildPipelineSteps,
-  credentiallessHostedAutomationSteps,
-} from "#src/pipeline/steps.ts";
+import { buildPipelineSteps } from "#src/pipeline/steps.ts";
 import {
   PlatformApplyStackSchema,
   type PlatformOperation,
@@ -25,6 +22,7 @@ import { signRemoteCacheSteps } from "#src/pipeline/turbo-cache.ts";
 import { routeSteps } from "#src/pipeline/routing.ts";
 import { groupTofuSteps } from "#src/pipeline/group-tofu.ts";
 import { isPrVerificationEvent, prStatusEvent } from "#src/pr-event.ts";
+import { limitedPrSteps } from "#src/pipeline/draft.ts";
 import type { SuccessfulWorkflowPipeline } from "#src/woodpecker-api.ts";
 
 export type AppOptions = {
@@ -182,8 +180,9 @@ async function cleanupSupersededPr(
   options: AppOptions,
   repoId: number,
   pipeline: Pipeline,
+  credentialless = false,
 ): Promise<void> {
-  if (!isPrVerificationEvent(pipeline)) return;
+  if (credentialless || !isPrVerificationEvent(pipeline)) return;
   try {
     await options.cancelSupersededPr?.(repoId, pipeline);
   } catch {
@@ -277,20 +276,26 @@ export function createApp(options: AppOptions): Hono {
       });
     }
 
-    if (
-      await needsCredentiallessHostedAutomation(
-        authorization.actorClass,
+    const credentiallessAutomation = await needsCredentiallessHostedAutomation(
+      authorization.actorClass,
+      pipeline,
+      options.hostedAutomationApproved,
+    );
+    const limited = limitedPrSteps({
+      images,
+      pipeline,
+      context: selectionContext,
+      credentialless: credentiallessAutomation,
+    });
+    if (limited !== undefined) {
+      const configs = emit(limited);
+      await cleanupSupersededPr(
+        options,
+        repo.id,
         pipeline,
-        options.hostedAutomationApproved,
-      )
-    ) {
-      const credentialless = selectSteps(
-        credentiallessHostedAutomationSteps(images),
-        selectionContext,
+        credentiallessAutomation,
       );
-      return context.json({
-        configs: emit(credentialless),
-      });
+      return context.json({ configs });
     }
 
     if (platformOperation !== undefined && "operation" in platformOperation) {

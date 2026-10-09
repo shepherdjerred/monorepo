@@ -17,6 +17,7 @@ import type { CiImages } from "#src/images.ts";
 import { completionStep } from "#src/pipeline/completion.ts";
 import { routeSteps } from "#src/pipeline/routing.ts";
 import { groupTofuSteps } from "#src/pipeline/group-tofu.ts";
+import { draftPreflightStep } from "#src/pipeline/draft.ts";
 
 const PLACEHOLDER_DIGEST = `sha256:${"0".repeat(64)}`;
 
@@ -47,7 +48,11 @@ const steps = groupTofuSteps(
 
 // Include the dynamically appended verdict in admission and grant checks.
 const routed = routeSteps(
-  [...steps, completionStep(steps, gateImage, "/app")],
+  [
+    ...steps,
+    completionStep(steps, gateImage, "/app"),
+    draftPreflightStep(PLACEHOLDER_IMAGES),
+  ],
   {
     event: "pull_request",
     branch: "main",

@@ -19,3 +19,10 @@ export function prStatusEvent(
     return event;
   throw new Error(`No PR completion context for event ${event}`);
 }
+
+export function isDraftPrEvent(pipeline: {
+  event: string;
+  pr_draft: boolean;
+}): boolean {
+  return pipeline.event === "pull_request" && pipeline.pr_draft;
+}

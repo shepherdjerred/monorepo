@@ -194,10 +194,7 @@ describe("signed workflow routing", () => {
       expect(cancelSupersededPr).not.toHaveBeenCalled();
     },
   );
-  test.each([
-    [false, "ci-ready"],
-    [true, "ci-draft"],
-  ])(
+  test.each([[false, "ci-ready"]])(
     "routes a signed PR with draft=%s through all required pools",
     async (draft, priority) => {
       const { app } = harness(true, gateImage);
@@ -222,6 +219,44 @@ describe("signed workflow routing", () => {
           },
         });
       }
+    },
+  );
+
+  test.each([false, true])(
+    "draft preflight remains bounded and credentialless=%s",
+    async (credentialless) => {
+      const { app, base, cancelSupersededPr } = harness(false, gateImage);
+      const identity = credentialless
+        ? { author: "renovate[bot]", sender: "renovate[bot]" }
+        : {};
+      const response = await app.request(
+        await request({ ...identity, pr_draft: true, changed_files: [] }),
+      );
+      const result = ConfigResponseSchema.parse(await response.json());
+      expect(result.configs.map((entry) => entry.name)).toEqual([
+        ".woodpecker/draft-preflight.yaml",
+      ]);
+      const config = result.configs[0];
+      expect(config?.data).toContain("180s");
+      expect(config?.data).toContain("--ignore-scripts");
+      expect(config?.data.match(/--filter /gu)).toHaveLength(2);
+      expect(config?.data).toContain("@shepherdjerred/monorepo");
+      expect(config?.data).toContain("@shepherdjerred/root-scripts");
+      expect(config?.data).not.toContain("--production");
+      expect(config?.data).not.toContain("TURBO_TOKEN");
+      expect(config?.data).not.toContain("GITHUB_REVIEW_TOKEN");
+      if (credentialless) {
+        expect(config?.data).not.toContain("secrets:");
+        expect(config?.data).not.toContain("volumes:");
+      }
+      expect(parse(config?.data ?? "")).toMatchObject({
+        labels: {
+          "ci-pool": "pr",
+          "kueue.x-k8s.io/priority-class": "ci-draft",
+        },
+      });
+      expect(base).not.toHaveBeenCalled();
+      expect(cancelSupersededPr).toHaveBeenCalledTimes(credentialless ? 0 : 1);
     },
   );
 
