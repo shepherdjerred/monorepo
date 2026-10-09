@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { readdir } from "node:fs/promises";
+import { readdir, rm } from "node:fs/promises";
 import path from "node:path";
 import type { TaskDiagnostics } from "../lib/ci/task-diagnostics.ts";
 
@@ -9,7 +9,15 @@ type Identity = Omit<
 >;
 
 /** Keep this entrypoint dependency-free until the child has installed packages. */
-async function previousSummaries(root: string): Promise<Set<string>> {
+export async function prepareDiagnostics(
+  workflow: Identity["workflow"],
+  root: string,
+): Promise<Set<string>> {
+  if (workflow === "playwright-e2e") {
+    await rm(path.join(root, "playwright-selection-report.json"), {
+      force: true,
+    });
+  }
   try {
     return new Set(await readdir(path.join(root, ".turbo/runs")));
   } catch (error) {
@@ -97,7 +105,7 @@ async function main(args: string[]): Promise<number> {
     );
   }
   const root = process.cwd();
-  const before = await previousSummaries(root);
+  const before = await prepareDiagnostics(workflow, root);
   const startedAt = Date.now();
   const child = Bun.spawn(command, {
     stdin: "inherit",

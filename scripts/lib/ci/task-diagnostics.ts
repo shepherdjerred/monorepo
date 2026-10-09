@@ -111,9 +111,7 @@ export async function collectTaskDiagnostics(
   const selectionPath = path.join(root, "playwright-selection-report.json");
   const selectionFile = Bun.file(selectionPath);
   const browserSelection =
-    identity.workflow === "playwright-e2e" &&
-    (await selectionFile.exists()) &&
-    selectionFile.lastModified >= identity.startedAt
+    identity.workflow === "playwright-e2e" && (await selectionFile.exists())
       ? BrowserSelectionSchema.parse(await readBoundedJson(selectionPath))
       : undefined;
   return TaskDiagnosticsSchema.parse({

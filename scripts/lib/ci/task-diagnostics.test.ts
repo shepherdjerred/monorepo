@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, rm } from "node:fs/promises";
+import { mkdtemp, mkdir, rm, utimes } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, expect, test, vi } from "vitest";
@@ -6,7 +6,10 @@ import {
   collectTaskDiagnostics,
   TurboDiagnosticSchema,
 } from "./task-diagnostics.ts";
-import { retainDiagnostics } from "../../ci/run-with-diagnostics.ts";
+import {
+  prepareDiagnostics,
+  retainDiagnostics,
+} from "../../ci/run-with-diagnostics.ts";
 
 const directories: string[] = [];
 afterEach(async () => {
@@ -128,6 +131,23 @@ test("browser selection strips exception text, paths and arbitrary metadata", as
     targets: [{ package: "@test/browser", cache: "NOT_RUN" }],
   });
   expect(JSON.stringify(report)).not.toContain("sentinel");
+});
+
+test("removes stale browser selection before execution and accepts fresh reports on coarse clocks", async () => {
+  const root = await repository();
+  const selection = path.join(root, "playwright-selection-report.json");
+  await Bun.write(selection, "old report");
+  await prepareDiagnostics("playwright-e2e", root);
+  expect(await Bun.file(selection).exists()).toBe(false);
+  const record = { base: null, mode: "selected", targets: [] };
+  await Bun.write(selection, JSON.stringify(record));
+  await utimes(selection, new Date(0), new Date(0));
+  const report = await collectTaskDiagnostics(
+    { ...identity, workflow: "playwright-e2e" },
+    new Set(),
+    root,
+  );
+  expect(report.browserSelection).toEqual(record);
 });
 
 test.each([0, 42])(
