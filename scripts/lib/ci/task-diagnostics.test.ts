@@ -217,18 +217,9 @@ test("malformed summaries publish explicit failure metadata without parser value
   expect(JSON.stringify(error.mock.calls)).not.toContain("sentinel");
 });
 
-test("wrapper forwards command output and preserves its exit without upload credentials", async () => {
-  const root = await repository();
+async function runWrapper(root: string, entrypoint: string, command: string[]) {
   const child = Bun.spawn(
-    [
-      process.execPath,
-      new URL("../../ci/run-with-diagnostics.ts", import.meta.url).pathname,
-      "verify",
-      "--",
-      process.execPath,
-      "-e",
-      "console.log('child-output'); process.exit(42)",
-    ],
+    [process.execPath, "--no-install", entrypoint, "verify", "--", ...command],
     {
       cwd: root,
       stdout: "pipe",
@@ -241,6 +232,16 @@ test("wrapper forwards command output and preserves its exit without upload cred
     new Response(child.stderr).text(),
     child.exited,
   ]);
+  return { stdout, stderr, exit };
+}
+
+test("wrapper forwards command output and preserves its exit without upload credentials", async () => {
+  const root = await repository();
+  const { stdout, stderr, exit } = await runWrapper(
+    root,
+    new URL("../../ci/run-with-diagnostics.ts", import.meta.url).pathname,
+    [process.execPath, "-e", "console.log('child-output'); process.exit(42)"],
+  );
   expect(stdout).toContain("child-output");
   expect(stderr).toContain("diagnostic publication failed");
   expect(exit).toBe(42);
@@ -280,28 +281,10 @@ test.each([0, 42])(
       await Bun.write(".turbo/runs/child.json", ${JSON.stringify(JSON.stringify(summary()))});
       process.exit(${String(exitCode)});
     `;
-    const child = Bun.spawn(
-      [
-        process.execPath,
-        "--no-install",
-        entrypoint,
-        "verify",
-        "--",
-        process.execPath,
-        "-e",
-        install,
-      ],
-      {
-        cwd: root,
-        stdout: "pipe",
-        stderr: "pipe",
-        env: { CI_PIPELINE_NUMBER: "123", CI_COMMIT_SHA: "a".repeat(40) },
-      },
-    );
-    const [stdout, stderr, exit] = await Promise.all([
-      new Response(child.stdout).text(),
-      new Response(child.stderr).text(),
-      child.exited,
+    const { stdout, stderr, exit } = await runWrapper(root, entrypoint, [
+      process.execPath,
+      "-e",
+      install,
     ]);
     expect(stderr).toBe("");
     expect(stdout).toContain("CI task diagnostics:");
