@@ -59,8 +59,8 @@ await initFeatureFlags({
   },
 });
 const app = createApp({
-  maintenanceEnabled: async () => {
-    const result = await maintenanceConfig();
+  maintenanceEnabled: async (manual) => {
+    const result = await maintenanceConfig(manual);
     return result.value;
   },
   sourceCacheEnabled: async (branch) => {

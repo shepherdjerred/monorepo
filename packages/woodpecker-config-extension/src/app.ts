@@ -32,7 +32,7 @@ import type { SuccessfulWorkflowPipeline } from "#src/woodpecker-api.ts";
 import { cacheSourceSteps } from "#src/pipeline/source-cache.ts";
 
 export type AppOptions = {
-  readonly maintenanceEnabled?: () => Promise<boolean>;
+  readonly maintenanceEnabled?: (manual: boolean) => Promise<boolean>;
   readonly sourceCacheEnabled?: (branch: string) => Promise<boolean>;
   readonly trustedGateImage?: string;
   /** Resolves Woodpecker's signing key; the caller caches it. */

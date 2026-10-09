@@ -32,7 +32,7 @@ export async function maintenanceMode(
   pipeline: Pipeline,
   defaultBranch: string,
   ownerControlled: boolean,
-  enabled: () => Promise<boolean>,
+  enabled: (manual: boolean) => Promise<boolean>,
 ) {
   let kind: MaintenanceKind | undefined;
   try {
@@ -40,7 +40,7 @@ export async function maintenanceMode(
   } catch {
     return { error: "invalid maintenance request", status: 400 } as const;
   }
-  const active = await enabled();
+  const active = await enabled(kind !== undefined);
   return kind !== undefined && (!active || !ownerControlled)
     ? ({
         error: "maintenance lane is not enabled for this request",
