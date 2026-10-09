@@ -137,6 +137,19 @@ graph. Follow the
 [configuration-extension bootstrap procedure](../docs/wiki/src/content/docs/how-to/cut-a-homelab-release.md#bootstrap-a-configuration-extension-graph-change)
 to promote the replacement graph through the repository-owned release path.
 
+## Image build caches
+
+Application image releases export final-image cache layers to the registry
+with `mode=min`. The persistent BuildKit daemon retains intermediate layers
+locally under its existing disk quota and garbage collection policy. This
+reduces release-time cache transfers; recovery after losing the local cache
+must rebuild intermediate stages. Registry imports remain enabled.
+
+Build progress streams immediately. Only a bounded output tail remains in
+memory for transport-failure classification; selectors and manifest queries
+retain their complete machine-readable output. Image digest validation,
+candidate smoke checks and pin promotion still gate publication.
+
 ## Static-site delivery
 
 The sites lane builds selected packages through the repository deploy catalog

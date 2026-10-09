@@ -1,4 +1,5 @@
 import { rm } from "node:fs/promises";
+import { teeOutputTail } from "../reporting/command-output.ts";
 import { asRecord } from "../../../scripts/lib/json.ts";
 import { writeJsonHandoff } from "../../../scripts/lib/ci/ci-handoff.ts";
 import {
@@ -62,13 +63,21 @@ export async function execute(
     stdout: "pipe",
     stderr: "pipe",
   });
+  const buildProgress =
+    command[0] === "docker" && command[1] === "buildx" && command[2] === "bake";
   const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(child.stdout).text(),
-    new Response(child.stderr).text(),
+    buildProgress
+      ? teeOutputTail(child.stdout, async (chunk) => Bun.stdout.write(chunk))
+      : new Response(child.stdout).text(),
+    buildProgress
+      ? teeOutputTail(child.stderr, async (chunk) => Bun.stderr.write(chunk))
+      : new Response(child.stderr).text(),
     child.exited,
   ]);
-  if (stdout.length > 0) await Bun.stdout.write(stdout);
-  if (stderr.length > 0) await Bun.stderr.write(stderr);
+  // Machine-readable commands (selectors, manifests, catalogs) need their full
+  // result. Only build progress is streamed and truncated for retry evidence.
+  if (!buildProgress && stdout.length > 0) await Bun.stdout.write(stdout);
+  if (!buildProgress && stderr.length > 0) await Bun.stderr.write(stderr);
   return { exitCode, stdout, stderr };
 }
 
@@ -243,6 +252,7 @@ export async function runSmoke(
         "docker",
         "buildx",
         "bake",
+        "--progress=plain",
         "--builder",
         "ci",
         ...smokeArguments,
@@ -334,6 +344,7 @@ export async function pushImages(
         "docker",
         "buildx",
         "bake",
+        "--progress=plain",
         "--builder",
         "ci",
         "--push",
