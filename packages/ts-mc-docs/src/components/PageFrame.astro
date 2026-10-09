@@ -16,15 +16,6 @@ const { hasSidebar, toc } = Astro.locals.starlightRoute;
     </main>
     {hasSidebar && (
       <aside class="stormDocsSidebar" aria-label="Documentation navigation">
-        <nav
-          class="stormDocsMobileCommunity stormDocsBlock"
-          aria-label="The Storm community"
-        >
-          <a href={forumUrl}>Home</a>
-          <a href={`${forumUrl}/forums/`}>Forums</a>
-          <a href={`${forumUrl}/whats-new/`}>What's new</a>
-          <a href={`${forumUrl}/members/`}>Members</a>
-        </nav>
         <div class="stormDocsBlock">
           <h2 class="stormDocsBlockHeader">Documentation</h2>
           <div class="stormDocsSidebarContent">
