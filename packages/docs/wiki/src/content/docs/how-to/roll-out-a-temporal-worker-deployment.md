@@ -39,6 +39,23 @@ Set `TEMPORAL_ADDRESS` (and `TEMPORAL_TLS=true` for the private TLS endpoint) in
 the operator shell. The package command uses the existing `toolkit temporal`
 passthrough and never falls back to Kubernetes-only service DNS.
 
+The SDK replay and canary subprocesses also require `TEMPORAL_API_KEY` at the
+external endpoint. Inject the registered credential with the existing
+1Password wrapper when running the commands below. Replace the placeholders
+with the existing toolkit `TEMPORAL_API_KEY` credential reference. From
+`packages/temporal`:
+
+```bash
+TEMPORAL_API_KEY='op://<vault>/<Temporal external auth item>/api-token' \
+  ../../scripts/onepassword/with-service-account.sh op run -- \
+  bun run worker-deployment start --build-id <candidate-image-git-sha>
+```
+
+The value above is a credential reference. The wrapper resolves it only for
+the command and its subprocesses. SDK commands reject empty credentials and
+credentials supplied without `TEMPORAL_TLS=true`. In-cluster workers continue
+to use their private endpoint without this external credential.
+
 During Scout bootstrap, verify that stable and candidate are both capable,
 distinct images and both exact versions have registered pollers. Pass the
 stable image SHA with `--stable-build-id` on the first `start` command.
