@@ -42,6 +42,32 @@ only supplies a shared path when its declared volume is mounted. Bun's download
 cache and its maintenance-lock volume must be mounted together. Installed
 dependencies remain private to each workflow workspace.
 
+## Agent pools and admission
+
+`routing.ts` assigns Kubernetes workflows to PR, main, review, or completion
+agents. A PR targeting the default branch still uses the PR pool; only a push
+or manual run on that branch uses main capacity. Native workflows keep their
+host labels. Metadata no-ops use compute capacity, leaving completion available
+for required verdicts.
+
+Review and completion use their reserved pools only with the trusted policy
+image and no checkout or services. Each requests 250m CPU, 512 MiB memory, and
+1 GiB ephemeral storage, so all four slots fit the gate reserve together.
+The generator's exported step model includes the dynamic completion workflow
+in admission and credential checks.
+
+Signed `pr_draft` state selects draft versus ready admission priority. It does
+not reduce verification coverage. Main has the highest admission priority;
+Kueue preemption remains disabled and production pod priority is unchanged.
+Workflow labels carry admission priority through clone, service, and command
+pods; each agent fixes its queue label.
+
+Deploy mandatory-label agents and their queues before activating routing.
+Before allowing old and new agents to overlap, drain configurations generated
+without the shared Paper smoke concurrency cap. Retain the legacy agent until
+all unlabelled workflows have finished; then remove it through the normal
+declarative release path. Routing labels prevent it from claiming new work.
+
 ## Retained task diagnostics
 
 Credentialed verify and browser workflows publish a sanitized JSON artifact to

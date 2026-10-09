@@ -22,6 +22,7 @@ import {
   isInternalImagePinChange,
 } from "#src/pipeline/internal-image-pin-change.ts";
 import { signRemoteCacheSteps } from "#src/pipeline/turbo-cache.ts";
+import { routeSteps } from "#src/pipeline/routing.ts";
 import type { SuccessfulWorkflowPipeline } from "#src/woodpecker-api.ts";
 
 export type AppOptions = {
@@ -237,9 +238,18 @@ export function createApp(options: AppOptions): Hono {
       branch: pipeline.branch,
       linkUrl: pipeline.forge_url,
     };
+    const emit = (steps: readonly CiStep[]) =>
+      emitWorkflows(
+        routeSteps(
+          steps,
+          { ...selectionContext, draft: pipeline.pr_draft },
+          options.trustedGateImage,
+        ),
+        identity,
+      );
     if (!isWorkEvent(selectionContext)) {
       return context.json({
-        configs: emitWorkflows([noWorkStep(images.base)], identity),
+        configs: emit([noWorkStep(images.base)]),
       });
     }
 
@@ -255,7 +265,7 @@ export function createApp(options: AppOptions): Hono {
         selectionContext,
       );
       return context.json({
-        configs: emitWorkflows(credentialless, identity),
+        configs: emit(credentialless),
       });
     }
 
@@ -274,7 +284,7 @@ export function createApp(options: AppOptions): Hono {
         ...selectionContext,
         changedFiles: [],
       });
-      return context.json({ configs: emitWorkflows(selected, identity) });
+      return context.json({ configs: emit(selected) });
     }
 
     const [changedBase, verifyBase, imageReleaseBase] = await Promise.all([
@@ -318,7 +328,7 @@ export function createApp(options: AppOptions): Hono {
     );
 
     return context.json({
-      configs: emitWorkflows(
+      configs: emit(
         pipeline.event === "pull_request"
           ? [
               ...selected,
@@ -329,7 +339,6 @@ export function createApp(options: AppOptions): Hono {
               ),
             ]
           : selected,
-        identity,
       ),
     });
   });

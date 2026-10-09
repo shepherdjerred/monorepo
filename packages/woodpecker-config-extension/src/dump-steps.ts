@@ -14,6 +14,8 @@
 
 import { buildPipelineSteps } from "#src/pipeline/steps.ts";
 import type { CiImages } from "#src/images.ts";
+import { completionStep } from "#src/pipeline/completion.ts";
+import { routeSteps } from "#src/pipeline/routing.ts";
 
 const PLACEHOLDER_DIGEST = `sha256:${"0".repeat(64)}`;
 
@@ -32,10 +34,23 @@ const PLACEHOLDER_IMAGES: CiImages = {
   },
 };
 
+const gateImage = `ghcr.io/shepherdjerred/woodpecker-config-extension@${PLACEHOLDER_DIGEST}`;
 const steps = buildPipelineSteps({
   images: PLACEHOLDER_IMAGES,
+  trustedGateImage: gateImage,
   changedBase: "",
   imageReleaseBase: "",
 });
 
-process.stdout.write(`${JSON.stringify(steps, null, 2)}\n`);
+// Include the dynamically appended verdict in admission and grant checks.
+const routed = routeSteps(
+  [...steps, completionStep(steps, gateImage, "/app")],
+  {
+    event: "pull_request",
+    branch: "main",
+    defaultBranch: "main",
+    draft: false,
+  },
+  gateImage,
+);
+process.stdout.write(`${JSON.stringify(routed, null, 2)}\n`);

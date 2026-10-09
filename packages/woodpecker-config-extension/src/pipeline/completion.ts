@@ -1,5 +1,5 @@
 import type { CiStep } from "#src/pipeline/model.ts";
-import { LIGHT_TIER } from "#src/pipeline/tiers.ts";
+import { GATE_TIER, LIGHT_TIER } from "#src/pipeline/tiers.ts";
 import { shellQuote } from "#src/pipeline/emit.ts";
 
 /**
@@ -70,7 +70,7 @@ export function completionStep(
     },
     dependsOn: blocking.map((step) => step.key),
     timeoutMinutes: 3,
-    resources: LIGHT_TIER,
+    resources: workingDirectory === "/app" ? GATE_TIER : LIGHT_TIER,
     skipClone: true,
     runOnFailure: true,
     secrets: [

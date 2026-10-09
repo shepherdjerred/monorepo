@@ -1,6 +1,10 @@
 import type { CiImages } from "#src/images.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
-import { MEDIUM_TIER, PR_DRY_RUN_TIER } from "#src/pipeline/tiers.ts";
+import {
+  GATE_TIER,
+  MEDIUM_TIER,
+  PR_DRY_RUN_TIER,
+} from "#src/pipeline/tiers.ts";
 import { GLOBAL_SELECTOR_INPUTS } from "#src/pipeline/inputs.ts";
 import { BUN_CACHE, BUN_CACHE_CONTROL } from "#src/pipeline/cache.ts";
 import {
@@ -126,7 +130,7 @@ export function prGateSteps(
         REVIEW_PROVIDERS: "codex,coderabbit",
       },
       timeoutMinutes: 90,
-      resources: MEDIUM_TIER,
+      resources: trustedGateImage === undefined ? MEDIUM_TIER : GATE_TIER,
       events: ["pull_request"],
       // Codex's auth bundle carries a refresh token, so it must outlive the
       // ephemeral step pod.

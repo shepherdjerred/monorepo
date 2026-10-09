@@ -43,6 +43,8 @@ export const PipelineSchema = z.looseObject({
    * missing, and `authorizePipeline` does not rely on it alone.
    */
   from_fork: z.boolean().default(false),
+  /** Native signed webhook state; omitted by Woodpecker when false. */
+  pr_draft: z.boolean().default(false),
   /**
    * Forge URL for the change being built (the pull request, or the commit on
    * a push). Stamped onto each step pod so a measured pod links back to the

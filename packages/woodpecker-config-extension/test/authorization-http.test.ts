@@ -2,6 +2,7 @@ import { createHash, generateKeyPairSync } from "node:crypto";
 import { createSigner, httpbis } from "http-message-signatures";
 import { describe, expect, test, vi } from "vitest";
 import { z } from "zod";
+import { parse } from "yaml";
 import { createApp } from "#src/app.ts";
 import fixture from "./fixtures/woodpecker-v3.18.1-config-request.json" with { type: "json" };
 import { TEST_IMAGES } from "./identity.ts";
@@ -18,7 +19,7 @@ const ConfigResponseSchema = z.object({
   configs: z.array(z.object({ name: z.string(), data: z.string() })),
 });
 
-function harness(hostedAutomationApproved = false) {
+function harness(hostedAutomationApproved = false, trustedGateImage?: string) {
   const imageFetcher = vi.fn((file: string) =>
     Promise.resolve(
       file.endsWith("catalog.json") ? catalog : `sha256:${"a".repeat(64)}`,
@@ -26,6 +27,7 @@ function harness(hostedAutomationApproved = false) {
   );
   const base = vi.fn(() => Promise.resolve(undefined));
   const app = createApp({
+    ...(trustedGateImage === undefined ? {} : { trustedGateImage }),
     publicKey: () => Promise.resolve(publicKey),
     imageFetcher,
     changedBase: base,
@@ -111,6 +113,51 @@ describe("signed Justin pipeline authorization", () => {
     const response = await app.request(unsigned);
     expect(response.status).toBe(401);
     expect(imageFetcher).not.toHaveBeenCalled();
+  });
+});
+
+describe("signed workflow routing", () => {
+  const gateImage = `ghcr.io/shepherdjerred/woodpecker-config-extension@sha256:${"c".repeat(64)}`;
+  test.each([
+    [false, "ci-ready"],
+    [true, "ci-draft"],
+  ])(
+    "routes a signed PR with draft=%s through all required pools",
+    async (draft, priority) => {
+      const { app } = harness(true, gateImage);
+      const response = await app.request(await request({ pr_draft: draft }));
+      expect(response.status).toBe(200);
+      const result = ConfigResponseSchema.parse(await response.json());
+      for (const [key, pool] of [
+        ["verify", "pr"],
+        ["codex-review-gate", "review"],
+        ["ci-complete", "completion"],
+      ] as const) {
+        const config = result.configs.find(
+          (entry) => entry.name === `.woodpecker/${key}.yaml`,
+        );
+        expect(config).toBeDefined();
+        const workflow: unknown = parse(config?.data ?? "");
+        expect(workflow).toMatchObject({
+          labels: {
+            backend: "kubernetes",
+            "ci-pool": pool,
+            "kueue.x-k8s.io/priority-class": priority,
+          },
+        });
+      }
+    },
+  );
+
+  test("keeps metadata no-ops out of the completion pool", async () => {
+    const { app } = harness(true, gateImage);
+    const response = await app.request(
+      await request({ event: "pull_request_metadata" }),
+    );
+    const result = ConfigResponseSchema.parse(await response.json());
+    expect(result.configs).toHaveLength(1);
+    const workflow: unknown = parse(result.configs[0]?.data ?? "");
+    expect(workflow).toMatchObject({ labels: { "ci-pool": "pr" } });
   });
 });
 

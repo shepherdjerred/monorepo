@@ -42,4 +42,23 @@ describe("Woodpecker v3.18.1 configuration request", () => {
       false,
     );
   });
+
+  test("reads signed draft state and rejects a malformed boolean", () => {
+    expect(ConfigExtensionRequestSchema.parse(request).pipeline.pr_draft).toBe(
+      false,
+    );
+    const draft = {
+      ...request,
+      pipeline: { ...request.pipeline, pr_draft: true },
+    };
+    expect(ConfigExtensionRequestSchema.parse(draft).pipeline.pr_draft).toBe(
+      true,
+    );
+    expect(
+      ConfigExtensionRequestSchema.safeParse({
+        ...draft,
+        pipeline: { ...draft.pipeline, pr_draft: "false" },
+      }).success,
+    ).toBe(false);
+  });
 });
