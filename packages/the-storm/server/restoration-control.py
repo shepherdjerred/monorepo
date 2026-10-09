@@ -1883,8 +1883,9 @@ def repair_private_map(path: Path, journal: JsonObject) -> None:
         (["reload"], "Reloading BlueMap..."),
         (["force-update", "world"], "Creating update-tasks ..."),
     ):
+        arguments = ["-n", NAMESPACE, "exec", SERVER + "-0", "--", "rcon-cli", "bluemap", *command]
+        response = run(arguments, 45)
         for attempt in range(10):
-            response = run(["-n", NAMESPACE, "exec", SERVER + "-0", "--", "rcon-cli", "bluemap", *command], 45)
             response = re.sub(r"\x1b\[[0-9;]*m|§.", "", response).strip()
             if (
                 command != ["force-update", "world"]
@@ -1893,6 +1894,7 @@ def repair_private_map(path: Path, journal: JsonObject) -> None:
             ):
                 break
             threading.Event().wait(1)
+            response = run(arguments, 45)
         if response != expected:
             raise ValueError("BlueMap rejected the private render command: " + response)
         responses[command[0]] = response

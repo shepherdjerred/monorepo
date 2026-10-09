@@ -350,7 +350,7 @@ class RestorationControlTest(unittest.TestCase):
 
     def test_private_map_repair_cannot_retain_verified_proof_after_application_rejection(self):
         original = control.run
-        for rejected in ("reload", "world", "tasks"):
+        for rejected in ("reload", "world", "tasks", "loading"):
             with self.subTest(rejected=rejected):
                 self.cluster = Cluster()
                 self.path.unlink(missing_ok=True)
@@ -362,9 +362,16 @@ class RestorationControlTest(unittest.TestCase):
                     "phase": "VERIFIED", "requestId": REQUEST, "candidateJarSha256": "b" * 64,
                     "worldTicks": 0, "configSha256": "c" * 64,
                 }
-                def command(arguments: list[str], timeout: float = 30, rejected: str = rejected):
+                commands = []
+                def command(
+                    arguments: list[str], timeout: float = 30, rejected: str = rejected,
+                    commands: list[str] = commands,
+                ):
                     if "rcon-cli" not in arguments:
                         return original(arguments, timeout)
+                    commands.append(arguments[-1])
+                    if rejected == "loading" and arguments[-1] == "world":
+                        return "⌛ BlueMap is still loading!\nPlease try again in a few seconds."
                     return "No map found" if arguments[-1] == rejected else {
                         "reload": "Reloading BlueMap...",
                         "world": "Creating update-tasks ...",
@@ -383,6 +390,8 @@ class RestorationControlTest(unittest.TestCase):
                 saved = JsonObject.parse(self.path.read_bytes())
                 self.assertNotIn("privateMapRepair", saved)
                 self.assertNotIn("acceptance", saved)
+                if rejected == "loading":
+                    self.assertEqual(commands.count("world"), 10)
                 control.assert_closed(journal)
 
     def test_incomplete_revision_refuses_private_start_even_with_a_stale_installed_receipt(self):
