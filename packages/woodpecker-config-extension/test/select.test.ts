@@ -442,6 +442,10 @@ describe("Paper smoke lane", () => {
       "paper-smoke-pr",
     ]);
     const paperStep = paperSteps[0];
+    expect(paperStep?.concurrency).toEqual({
+      limit: 6,
+      group: "paper-smoke-pr",
+    });
     expect(paperStep?.timeoutMinutes).toBe(10);
     expect(paperStep?.commands).toContain(
       "bun --no-install run --cwd packages/the-storm build:plugin",

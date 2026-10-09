@@ -42,6 +42,7 @@ const SKIPPED_CRD_KINDS = [
   "ServiceMonitor",
   "TunnelBinding",
   "VolumeSnapshotClass",
+  "WorkloadPriorityClass",
   // Zalando postgres-operator's CRD kind really is lower-case.
   "postgresql",
 ] as const;

@@ -199,6 +199,10 @@ describe("Woodpecker CI namespace", () => {
     ]);
     expect(deploymentsIn("woodpecker")).toEqual([
       "woodpecker-woodpecker-agent",
+      "woodpecker-woodpecker-agent-completion",
+      "woodpecker-woodpecker-agent-main",
+      "woodpecker-woodpecker-agent-pr",
+      "woodpecker-woodpecker-agent-review",
       "woodpecker-woodpecker-config-extension",
       "woodpecker-woodpecker-server",
     ]);

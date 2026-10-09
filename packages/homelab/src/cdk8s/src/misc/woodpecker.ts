@@ -1,16 +1,44 @@
 import { z } from "zod";
 import rawCiAdmissionBudget from "./ci-admission-budget.json" with { type: "json" };
 
+const QuotaSchema = z
+  .object({
+    cpu: z.string().min(1),
+    memory: z.string().min(1),
+    "ephemeral-storage": z.string().min(1),
+  })
+  .strict();
+
+const PoolSchema = (queue: "default" | "ci-gates") =>
+  z
+    .object({
+      maxWorkflows: z.number().int().positive(),
+      queue: z.literal(queue),
+    })
+    .strict();
+
 const CiAdmissionBudgetSchema = z
   .object({
     $comment: z.string(),
     maxWorkflows: z.number().int().positive(),
+    legacyMaxWorkflows: z.number().int().nonnegative(),
     maxServicesPerWorkflow: z.number().int().nonnegative(),
-    quota: z
+    quota: QuotaSchema,
+    computeQuota: QuotaSchema,
+    gateQuota: QuotaSchema,
+    pools: z
       .object({
-        cpu: z.string().min(1),
-        memory: z.string().min(1),
-        "ephemeral-storage": z.string().min(1),
+        pr: PoolSchema("default"),
+        main: PoolSchema("default"),
+        review: PoolSchema("ci-gates"),
+        completion: PoolSchema("ci-gates"),
+      })
+      .strict(),
+    priorities: z
+      .object({
+        main: z.number().int(),
+        ready: z.number().int(),
+        draft: z.number().int(),
       })
       .strict(),
   })
@@ -25,15 +53,21 @@ export const CI_ADMISSION_BUDGET =
   CiAdmissionBudgetSchema.parse(rawCiAdmissionBudget);
 
 /**
- * Cluster-wide cap on concurrently-running CI workflows.
- *
- * Direct successor to Buildkite's max-in-flight cap, sized during the 2026-07 CI
- * freeze incident response. Woodpecker enforces it per agent via
- * `WOODPECKER_MAX_WORKFLOWS` rather than through a controller-side scheduler,
- * so a single agent replica makes this the cluster-wide bound. A count, so it
- * bounds nothing about size: Kueue's resource quota does that.
+ * The existing agent keeps its exact pod template while dedicated pools are
+ * introduced. Remove it only after old, unlabelled workflows have drained.
  */
-export const WOODPECKER_MAX_WORKFLOWS = CI_ADMISSION_BUDGET.maxWorkflows;
+export const WOODPECKER_MAX_WORKFLOWS = CI_ADMISSION_BUDGET.legacyMaxWorkflows;
+
+export type CiAgentPool = keyof typeof CI_ADMISSION_BUDGET.pools;
+
+export const CI_COMPUTE_WORKFLOWS =
+  CI_ADMISSION_BUDGET.legacyMaxWorkflows +
+  CI_ADMISSION_BUDGET.pools.pr.maxWorkflows +
+  CI_ADMISSION_BUDGET.pools.main.maxWorkflows;
+
+export const CI_GATE_WORKFLOWS =
+  CI_ADMISSION_BUDGET.pools.review.maxWorkflows +
+  CI_ADMISSION_BUDGET.pools.completion.maxWorkflows;
 
 /** Public origin GitHub reaches for webhooks and OAuth callbacks. */
 export const WOODPECKER_PUBLIC_HOST = "https://woodpecker.sjer.red";
