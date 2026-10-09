@@ -89,7 +89,8 @@ function selectedSteps(pipeline: WoodpeckerPipeline) {
         (step) =>
           step.state === "success" &&
           step.type !== "service" &&
-          (step.name === "clone" ||
+          (step.type === "clone" ||
+            step.name === "clone" ||
             (step.name === workflow.name &&
               (workflow.name.includes("review") ||
                 ["verify", "draft-preflight", "release-please"].includes(

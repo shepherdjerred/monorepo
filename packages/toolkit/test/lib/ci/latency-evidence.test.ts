@@ -127,8 +127,38 @@ test.each([
   },
 );
 
-test("missing providers, missing header and later gate restarts cannot look fresh", () => {
-  expect(reviewEvidence(lines([signal()]), pipeline).kind).toBe("unknown");
+test("an unfinished OR-gate provider preserves a proven fresh completion", () => {
+  for (const events of [
+    [signal()],
+    [
+      signal(),
+      signal({
+        provider: "coderabbit",
+        decision: "waiting",
+        reviewed_at_head: false,
+        latency_s: null,
+      }),
+    ],
+  ]) {
+    const review = reviewEvidence(lines(events), pipeline);
+    expect(review).toMatchObject({
+      kind: "fresh",
+      providers: [
+        { provider: "codex", kind: "fresh" },
+        { provider: "coderabbit", kind: "unknown" },
+      ],
+    });
+    expect(
+      latencyReport([pipeline], 0, 500, new Map([[1, { review, steps: [] }]]))
+        .freshReadyHeads.count,
+    ).toBe(1);
+  }
+  expect(reviewEvidence(lines([quota("codex")]), pipeline).kind).toBe(
+    "unknown",
+  );
+});
+
+test("missing header and later gate restarts cannot look fresh", () => {
   expect(reviewEvidence([JSON.stringify(signal())], pipeline).kind).toBe(
     "unknown",
   );

@@ -125,6 +125,42 @@ test("missing timestamps remain unknown and secrets are not copied into records"
   expect(JSON.stringify(report)).not.toContain(config.token);
 });
 
+test("custom clone preparation remains part of checkout evidence", () => {
+  const report = latencyReport(
+    [
+      pipeline({
+        workflows: [
+          {
+            name: "verify",
+            state: "success",
+            started: 100,
+            finished: 200,
+            children: [
+              {
+                id: 1,
+                pid: 1,
+                name: "prepare-clone",
+                type: "clone",
+                state: "success",
+                exit_code: 0,
+                started: 100,
+                finished: 105,
+              },
+            ],
+          },
+        ],
+      }),
+    ],
+    50,
+    400,
+  );
+  expect(report.records[0]?.workflows[0]?.phases[0]).toMatchObject({
+    name: "prepare-clone",
+    kind: "checkout",
+    elapsedSeconds: 5,
+  });
+});
+
 test("history paginates, deduplicates shifted pages and bounds concurrent details", async () => {
   let active = 0;
   let maximum = 0;

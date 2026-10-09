@@ -70,7 +70,7 @@ function providerEvidence(
   };
 }
 
-/** A successful gate can pass with one provider while another is quota blocked. */
+/** One proven provider can pass the OR gate while another is still pending. */
 export function reviewEvidence(
   lines: readonly string[],
   pipeline: WoodpeckerPipeline,
@@ -92,11 +92,9 @@ export function reviewEvidence(
   );
   const kinds = new Set(providers.map((provider) => provider.kind));
   let kind: ReviewEvidence["kind"] = "unknown";
-  if (providers.length > 0 && !kinds.has("unknown")) {
-    if (kinds.has("fresh") && kinds.has("reused")) kind = "mixed";
-    else if (kinds.has("fresh")) kind = "fresh";
-    else if (kinds.has("reused")) kind = "reused";
-    else kind = "quota-exempt";
-  }
+  if (kinds.has("fresh") && kinds.has("reused")) kind = "mixed";
+  else if (kinds.has("fresh")) kind = "fresh";
+  else if (kinds.has("reused")) kind = "reused";
+  else if (kinds.size === 1 && kinds.has("quota-exempt")) kind = "quota-exempt";
   return { kind, providers };
 }

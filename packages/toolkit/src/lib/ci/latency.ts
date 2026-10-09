@@ -88,7 +88,10 @@ export function latencyRecord(
       ...workflow,
       phases: workflow.phases.map((phase) => ({
         ...phase,
-        kind: phaseKind(workflow.name, phase.name),
+        kind:
+          phase.kind === "checkout"
+            ? "checkout"
+            : phaseKind(workflow.name, phase.name),
       })),
     })),
   };
