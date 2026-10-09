@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import {
   parseLane,
   type Lane,
@@ -99,7 +100,7 @@ export function lobbyParticipantPuuids(payload: unknown): ReadonlySet<string> {
 
 export function sameRoster(
   observed: ReadonlySet<string>,
-  expected: readonly { readonly puuid: string }[],
+  expected: readonly { readonly puuid: LeaguePuuid }[],
 ): boolean {
   return (
     observed.size === expected.length &&
@@ -136,7 +137,7 @@ function observedLobbyTeams(payload: unknown): {
 export function observedLobbyMatchesCustomTeams(
   payload: unknown,
   expected: readonly {
-    readonly puuid: string;
+    readonly puuid: LeaguePuuid;
     readonly side: string | null;
   }[],
 ): boolean {
@@ -154,8 +155,8 @@ export function observedLobbyMatchesCustomTeams(
 /** Require each duel competitor to remain intact on one opposing lobby side. */
 export function observedLobbyMatchesDuelTeams(
   payload: unknown,
-  competitorOne: readonly { readonly puuid: string }[],
-  competitorTwo: readonly { readonly puuid: string }[],
+  competitorOne: readonly { readonly puuid: LeaguePuuid }[],
+  competitorTwo: readonly { readonly puuid: LeaguePuuid }[],
 ): boolean {
   const observed = observedLobbyTeams(payload);
   return (

@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import { isArenaQueueOrMode } from "@scout-for-lol/data";
 import type { GuildMatchRow } from "#src/reports/duckdb/community/community-lake.ts";
 import { isStandardRiftGame } from "#src/trpc/router/consumer/standard-rift.ts";
@@ -7,7 +8,7 @@ export type CommunityPlayer = {
   alias: string;
   accounts: {
     id: number;
-    puuid: string;
+    puuid: LeaguePuuid;
     riotGameName: string | null;
     riotTagLine: string | null;
     region: string;
@@ -285,7 +286,11 @@ function processMatch(
 
 function accountForms(options: {
   players: CommunityPlayer[];
-  allTimeAccounts: { puuid: string; games: number; last_match_ms: number }[];
+  allTimeAccounts: {
+    puuid: LeaguePuuid;
+    games: number;
+    last_match_ms: number;
+  }[];
   rowsByPuuid: Map<string, GuildMatchRow[]>;
 }) {
   const allTimeByPuuid = new Map(
@@ -331,7 +336,11 @@ function accountForms(options: {
 export function buildCommunityInsights(options: {
   players: CommunityPlayer[];
   rows: GuildMatchRow[];
-  allTimeAccounts: { puuid: string; games: number; last_match_ms: number }[];
+  allTimeAccounts: {
+    puuid: LeaguePuuid;
+    games: number;
+    last_match_ms: number;
+  }[];
   standardOnly: boolean;
 }) {
   const playerByPuuid = new Map(
@@ -396,7 +405,8 @@ export function squadChemistry(options: {
   playerIds: number[];
 }) {
   const selected = new Set(options.playerIds);
-  const ownerByPuuid = new Map(
+  // Keyed by raw puuid: match rows carry every participant, tracked or not.
+  const ownerByPuuid = new Map<string, number>(
     options.players.flatMap((player) =>
       player.accounts.map((account) => [account.puuid, player.id] as const),
     ),

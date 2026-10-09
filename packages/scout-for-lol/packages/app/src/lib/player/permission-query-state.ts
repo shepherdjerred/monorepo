@@ -1,8 +1,9 @@
+import type { DiscordGuildId } from "@scout-for-lol/data";
 export type QueryStatus = "pending" | "success" | "error";
 export type QueryError = { message: string };
 
 export function shouldQueryScopedPermissions(params: {
-  guildId: string | undefined;
+  guildId: DiscordGuildId | undefined;
   listStatus: QueryStatus;
   hasListEntry: boolean;
 }): boolean {

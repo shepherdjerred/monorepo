@@ -1,3 +1,4 @@
+import type { DiscordMessageId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   type APIEmbed,
   type Channel,
@@ -75,7 +76,7 @@ function belongsToGuild(
 
 export type MvpTallyMessageEdit = (input: {
   channelId: DiscordChannelId;
-  messageId: string;
+  messageId: DiscordMessageId;
   options: MessageEditOptions;
 }) => Promise<void>;
 
@@ -116,14 +117,14 @@ function withReplacedTally(
 
 function refKey(ref: {
   channelId: DiscordChannelId;
-  messageId: string;
+  messageId: DiscordMessageId;
 }): string {
   return `${ref.channelId}:${ref.messageId}`;
 }
 
 function targetAlreadyApplied(
   progress: TargetProgress,
-  ref: { channelId: DiscordChannelId; messageId: string },
+  ref: { channelId: DiscordChannelId; messageId: DiscordMessageId },
   input: MvpTallyRefreshInput,
 ): TargetOutcome | null {
   const entry = progress[refKey(ref)];
@@ -134,7 +135,7 @@ function targetAlreadyApplied(
 }
 
 async function checkpointTarget(
-  ref: { channelId: DiscordChannelId; messageId: string },
+  ref: { channelId: DiscordChannelId; messageId: DiscordMessageId },
   input: MvpTallyRefreshInput,
   prismaClient: ExtendedPrismaClient,
   outcome: TargetOutcome,
@@ -185,14 +186,14 @@ async function assertCurrentClaim(
 async function deliveredPostmatchRefs(
   matchId: RiotMatchId,
   prismaClient: ExtendedPrismaClient,
-): Promise<{ channelId: DiscordChannelId; messageId: string }[]> {
+): Promise<{ channelId: DiscordChannelId; messageId: DiscordMessageId }[]> {
   const [intents, contestRefs] = await Promise.all([
     listIntentsForMatch(prismaClient, {
       matchId: matchId,
     }),
     listMatchMvpReportRefs(matchId, prismaClient),
   ]);
-  const refs: { channelId: DiscordChannelId; messageId: string }[] = [
+  const refs: { channelId: DiscordChannelId; messageId: DiscordMessageId }[] = [
     ...contestRefs,
   ];
   const seen = new Set(refs.map((ref) => refKey(ref)));
@@ -220,7 +221,7 @@ async function deliveredPostmatchRefs(
 }
 
 async function unavailableOwnedTarget(
-  ref: { channelId: DiscordChannelId; messageId: string },
+  ref: { channelId: DiscordChannelId; messageId: DiscordMessageId },
   owned: boolean,
   context: { input: MvpTallyRefreshInput; prismaClient: ExtendedPrismaClient },
 ): Promise<TargetOutcome | null> {
@@ -235,7 +236,7 @@ async function unavailableOwnedTarget(
 }
 
 async function editReportTally(
-  ref: { channelId: DiscordChannelId; messageId: string },
+  ref: { channelId: DiscordChannelId; messageId: DiscordMessageId },
   context: {
     input: MvpTallyRefreshInput;
     votes: Awaited<ReturnType<typeof listMatchMvpVotes>>;

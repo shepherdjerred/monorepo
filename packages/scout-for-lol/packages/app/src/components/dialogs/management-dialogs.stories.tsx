@@ -3,6 +3,7 @@ import {
   DiscordAccountIdSchema,
   ExploreConversationSchema,
   type ExploreConversation,
+  DiscordGuildIdSchema,
 } from "@scout-for-lol/data";
 import type { StorySeed } from "#src/lib/storybook/trpc-stub.ts";
 import { ConfirmDeleteDialog } from "./confirm-delete-dialog.tsx";
@@ -135,7 +136,7 @@ export const RenamePlayer: Story = {
     <>
       <Backdrop>Renaming a tracked player across the whole server.</Backdrop>
       <RenamePlayerDialog
-        guildId={GUILD_ID}
+        guildId={DiscordGuildIdSchema.parse(GUILD_ID)}
         currentAlias="Hide on bush"
         open
         onOpenChange={noop}
@@ -158,7 +159,7 @@ export const MergePlayers: Story = {
         Merging folds one player&apos;s accounts into another.
       </Backdrop>
       <MergePlayersDialog
-        guildId={GUILD_ID}
+        guildId={DiscordGuildIdSchema.parse(GUILD_ID)}
         sourceAlias="Hide on bush"
         open
         onOpenChange={noop}

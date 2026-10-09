@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import {
@@ -41,7 +42,7 @@ async function seedContest(input: {
 
 async function seedVote(input: {
   matchId: RiotMatchId;
-  serverId: string;
+  serverId: DiscordGuildId;
   voter: number;
   nomineeIndex: number;
   justification?: string;

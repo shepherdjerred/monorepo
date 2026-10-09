@@ -1,3 +1,4 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { ProgressionAccountSchema } from "#src/model/progression/account.ts";
@@ -122,12 +123,12 @@ export const DuelTimelineInputSchema = z.strictObject({
   completed: z.boolean(),
   timelineComplete: z.boolean(),
   participants: z.array(
-    z.strictObject({ puuid: z.string().min(1), teamId: z.number().int() }),
+    z.strictObject({ puuid: LeaguePuuidSchema, teamId: z.number().int() }),
   ),
   kills: z.array(
     z.strictObject({
       timestampMs: z.number().int().nonnegative(),
-      killerPuuid: z.string().min(1),
+      killerPuuid: LeaguePuuidSchema,
     }),
   ),
   turretKills: z.array(
@@ -141,7 +142,7 @@ export const DuelTimelineInputSchema = z.strictObject({
       timestampMs: z.number().int().nonnegative(),
       participants: z.array(
         z.strictObject({
-          puuid: z.string().min(1),
+          puuid: LeaguePuuidSchema,
           minionsKilled: z.number().int().nonnegative(),
           jungleMinionsKilled: z.number().int().nonnegative(),
         }),

@@ -1,7 +1,8 @@
+import type { DiscordGuildId } from "@scout-for-lol/data";
 type ConsumerGuildAvatarProps = {
   name: string;
   size: "compact" | "large";
-  guildId?: string | null | undefined;
+  guildId?: DiscordGuildId | null | undefined;
   icon?: string | null | undefined;
 };
 

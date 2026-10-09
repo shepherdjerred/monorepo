@@ -9,7 +9,7 @@ type DuelSeriesDecision =
 
 type DecisionSeries = {
   readonly id: string;
-  readonly guildId: string;
+  readonly guildId: DiscordGuildId;
   readonly organizerDiscordId: string;
   readonly seriesState: string;
   readonly eventId: string | null;

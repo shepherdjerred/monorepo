@@ -1,6 +1,9 @@
 import { createHash } from "node:crypto";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
-import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
+import type {
+  DiscordGuildId,
+  DiscordChannelId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 
 /**
  * Notification-intent keys and the attempt nonce the notification pipeline
@@ -71,7 +74,7 @@ export function lateBindingEarningsDeliveryKeyPrefix(
 /** One channel's intent key under a delivery prefix. */
 export function deliveryIntentKey(
   keyPrefix: string,
-  channelId: string,
+  channelId: DiscordChannelId,
 ): string {
   return `${keyPrefix}:${channelId}`;
 }

@@ -3,7 +3,10 @@ import {
   NotificationIntentKeySchema,
   type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
-import { DiscordChannelIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
+import {
+  DiscordChannelIdSchema,
+  type DiscordChannelId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { prisma, type Db } from "#src/database/index.ts";
 import { getChannelsSubscribedToPlayers } from "#src/database/subscribed-channels.ts";
 import {
@@ -93,7 +96,7 @@ export async function mintPrematchIntent(
   db: Db,
   args: {
     matchId: RiotMatchId;
-    channelId: string;
+    channelId: DiscordChannelId;
     createdAt: Date;
     freshnessDeadline: Date;
   },
@@ -149,7 +152,7 @@ export async function mintPrematchIntent(
 function requireIntentMatches(
   standing: MatchNotificationIntentRecord,
   matchId: RiotMatchId,
-  channelId: string,
+  channelId: DiscordChannelId,
 ): void {
   const target = standing.intent.target;
   const sameTarget =

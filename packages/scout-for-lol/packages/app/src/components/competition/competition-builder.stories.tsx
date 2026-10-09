@@ -1,6 +1,11 @@
 import { useState, type ComponentProps } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { PlayerIdSchema } from "@scout-for-lol/data";
+import {
+  PlayerIdSchema,
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+  DiscordAccountIdSchema,
+} from "@scout-for-lol/data";
 import type { StorySeed } from "#src/lib/storybook/trpc-stub.ts";
 import {
   initialCompetitionBuilderState,
@@ -10,11 +15,17 @@ import { CompetitionBuilderBasics } from "./competition-builder-basics.tsx";
 import { CompetitionBuilderEntrants } from "./competition-builder-entrants.tsx";
 import { CompetitionBuilderReview } from "./competition-builder-review.tsx";
 
-const GUILD_ID = "1084396924348997663";
+const GUILD_ID = DiscordGuildIdSchema.parse("1084396924348997663");
 
 const CHANNELS = [
-  { id: "1084396924348997666", name: "league-reports" },
-  { id: "1084396924348997667", name: "ranked-flex" },
+  {
+    id: DiscordChannelIdSchema.parse("1084396924348997666"),
+    name: "league-reports",
+  },
+  {
+    id: DiscordChannelIdSchema.parse("1084396924348997667"),
+    name: "ranked-flex",
+  },
 ];
 
 const noop = () => {
@@ -36,7 +47,7 @@ function builderState(
 ): CompetitionBuilderState {
   return {
     ...initialCompetitionBuilderState({
-      channelId: CHANNELS[0]?.id ?? "",
+      channelId: DiscordChannelIdSchema.parse(CHANNELS[0]?.id ?? ""),
       timezone: "America/Los_Angeles",
       now: new Date("2026-09-13T18:00:00.000Z"),
     }),
@@ -122,9 +133,9 @@ const seedTrackedPlayers: StorySeed = (trpc, queryClient) => {
         {
           id: 11,
           alias: "jerred",
-          discordId: "111",
+          discordId: DiscordAccountIdSchema.parse("837550478469304750"),
           discordUser: {
-            id: "111",
+            id: "837550478469304750",
             username: "jerred",
             displayName: "jerred",
             avatar: null,
@@ -132,14 +143,14 @@ const seedTrackedPlayers: StorySeed = (trpc, queryClient) => {
           updatedTime: "2026-09-12T22:14:00.000Z",
           accountCount: 2,
           subscriptionCount: 1,
-          channelIds: [CHANNELS[0]?.id ?? ""],
+          channelIds: [DiscordChannelIdSchema.parse(CHANNELS[0]?.id ?? "")],
         },
         {
           id: 12,
           alias: "bryan",
-          discordId: "222",
+          discordId: DiscordAccountIdSchema.parse("831241495443650079"),
           discordUser: {
-            id: "222",
+            id: "831241495443650079",
             username: "bryan",
             displayName: "bryan",
             avatar: null,

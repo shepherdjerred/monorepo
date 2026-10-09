@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import { describe, expect, test, vi } from "vitest";
 import { DiscordAccountIdSchema, RiotMatchIdSchema } from "@scout-for-lol/data";
 import {
@@ -17,7 +18,10 @@ const USER_ID = DiscordAccountIdSchema.parse("160509172704739328");
  * `bet-button.integration.test.ts` builds one: the router's parameter type is
  * structural, so a plain object needs no cast and no mock framework.
  */
-function fakeInteraction(customId: string, guildId: string | null = null) {
+function fakeInteraction(
+  customId: string,
+  guildId: DiscordGuildId | null = null,
+) {
   const calls: string[] = [];
   const interaction: RoutableButtonInteraction = {
     customId,

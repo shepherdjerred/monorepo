@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import {
   RiotMatchIdSchema,
   type RiotMatchId,
@@ -67,7 +68,7 @@ function dragon(
 function assist(
   eventId: string,
   participantId: number,
-  puuid: string,
+  puuid: LeaguePuuid,
 ): TimelineEventParticipantLakeRow {
   return {
     event_id: eventId,

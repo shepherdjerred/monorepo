@@ -1,9 +1,10 @@
-import { Link, useParams } from "react-router";
+import { useRouteGuildId } from "#src/lib/routes/route-params.ts";
+import { Link } from "react-router";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { ReportQueryDocs } from "#src/components/report/report-query-docs.tsx";
 
 export function ReportHelp() {
-  const { guildId } = useParams();
+  const guildId = useRouteGuildId();
 
   return (
     <div className="space-y-4">

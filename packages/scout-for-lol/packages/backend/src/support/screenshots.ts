@@ -1,3 +1,4 @@
+import type { DiscordAccountId } from "@scout-for-lol/domain/identity/discord.ts";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import {
@@ -103,7 +104,7 @@ export function validateScreenshot(
 }
 
 export async function uploadScreenshot(
-  discordId: string,
+  discordId: DiscordAccountId,
   input: z.infer<typeof ScreenshotUploadSchema>,
 ) {
   const bytes = Buffer.from(input.base64, "base64");

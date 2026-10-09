@@ -17,11 +17,12 @@
  * shares its match id with a match object that has them.
  */
 
+import type { LeaguePuuidSchema } from "@scout-for-lol/data";
 import { z } from "zod";
 
 /** One appearance of an identity in one archived document. */
 export type Sighting = {
-  puuid: string;
+  puuid: z.input<typeof LeaguePuuidSchema>;
   /** `gameName#tagLine` as the payload recorded it, when it recorded one. */
   riotId: string | null;
   /** Game time in epoch millis; newer sightings win. 0 when undatable. */

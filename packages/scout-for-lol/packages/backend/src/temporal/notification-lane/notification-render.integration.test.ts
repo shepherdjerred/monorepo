@@ -1,3 +1,7 @@
+import type {
+  DiscordGuildId,
+  DiscordChannelId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
@@ -46,7 +50,7 @@ const testDatabase = createTestDatabase("temporal-v2-notification-render");
 Bun.env["DATABASE_URL"] = testDatabase.dbUrl;
 const { prisma } = testDatabase;
 vi.mock("#src/discord/utils/channel.ts", () => ({
-  fetchChannelForDelivery: (channelId: string) =>
+  fetchChannelForDelivery: (channelId: DiscordChannelId) =>
     Promise.resolve(
       world.guilds.has(channelId)
         ? { guildId: world.guilds.get(channelId) }
@@ -54,7 +58,7 @@ vi.mock("#src/discord/utils/channel.ts", () => ({
     ),
 }));
 vi.mock("#src/league/clash/access.ts", () => ({
-  clashSurfaceEnabledForGuild: (guildId: string) =>
+  clashSurfaceEnabledForGuild: (guildId: DiscordGuildId) =>
     Promise.resolve(world.clashGuilds.has(guildId)),
 }));
 

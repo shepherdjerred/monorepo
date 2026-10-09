@@ -1,3 +1,4 @@
+import { DiscordChannelIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { DiscordAPIError } from "discord.js";
 import { describe, expect, test } from "vitest";
 import { ChannelSendError } from "#src/league/discord/channel.ts";
@@ -38,12 +39,22 @@ function discordError(code: number): DiscordAPIError {
 
 /** A failure `send` HANDLED: it knows the message did not go out. */
 function handled(originalError?: unknown): ChannelSendError {
-  return new ChannelSendError("handled", CHANNEL_ID, true, originalError);
+  return new ChannelSendError(
+    "handled",
+    DiscordChannelIdSchema.parse(CHANNEL_ID),
+    true,
+    originalError,
+  );
 }
 
 /** A failure that came out of the send itself, after the request may have left. */
 function unhandled(originalError?: unknown): ChannelSendError {
-  return new ChannelSendError("unhandled", CHANNEL_ID, false, originalError);
+  return new ChannelSendError(
+    "unhandled",
+    DiscordChannelIdSchema.parse(CHANNEL_ID),
+    false,
+    originalError,
+  );
 }
 
 describe("classifying a failed channel send", () => {

@@ -1,3 +1,4 @@
+import { DiscordAccountIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { describe, expect, test } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -236,7 +237,7 @@ describe("Dare SQL compilation", () => {
         {
           ...first,
           key: "T2",
-          discordId: "100000000000000002",
+          discordId: DiscordAccountIdSchema.parse("100000000000000002"),
           playerId: 2,
           alias: "Other target",
         },

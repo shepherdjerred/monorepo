@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/data";
 import { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/query/trpc.ts";
@@ -18,7 +19,7 @@ import { EditAccountFormSchema } from "#src/lib/form-schemas.ts";
  * server-side.
  */
 export function EditAccountDialog(props: {
-  guildId: string;
+  guildId: DiscordGuildId;
   account: { id: number; alias: string; region: string };
   open: boolean;
   onOpenChange: (open: boolean) => void;

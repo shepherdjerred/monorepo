@@ -1,3 +1,4 @@
+import type { DiscordChannelId } from "@scout-for-lol/domain/identity/discord.ts";
 import { EmbedBuilder } from "discord.js";
 import { z } from "zod";
 import type { CustomNightSnapshot } from "@scout-for-lol/data";
@@ -42,7 +43,7 @@ export function customRecruitmentMessage(snapshot: CustomNightSnapshot): {
   };
 }
 
-async function recruitmentChannel(channelId: string) {
+async function recruitmentChannel(channelId: DiscordChannelId) {
   const channel = await fetchChannelForDelivery(channelId);
   if (channel === null || !channel.isTextBased() || channel.isDMBased()) {
     throw new Error("Custom night launch channel is not a guild text channel");

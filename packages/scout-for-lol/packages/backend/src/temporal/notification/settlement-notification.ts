@@ -1,3 +1,4 @@
+import type { DiscordChannelId } from "@scout-for-lol/domain/identity/discord.ts";
 import type { MessageCreateOptions } from "discord.js";
 import {
   DiscordMessageIdSchema,
@@ -79,7 +80,7 @@ export function requireAnnouncement(
  */
 export async function postmatchReplyTarget(
   riotMatchId: RiotMatchId,
-  channelId: string,
+  channelId: DiscordChannelId,
 ): Promise<DiscordMessageId | undefined> {
   const report = await getIntent(prisma, {
     intentKey: NotificationIntentKeySchema.parse(

@@ -115,7 +115,8 @@ describe("the hall record-break message", () => {
       playerAlias: "Long Hall Alias ".repeat(10),
       accountId: 1,
       accountAlias: "Main",
-      puuid: "hall-test-puuid",
+      puuid:
+        "hall-test-puuid000000000000000000000000000000000000000000000000000000000000000",
     };
     const records = COMPETITIVE_PROGRESSION_CATALOG.hall.records.map(
       (record) => ({

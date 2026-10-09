@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import {
   LeaguePuuidSchema,
   type BucksPoolParticipant,
@@ -23,7 +24,7 @@ import {
  */
 export function resolveSubjectTeam(
   loadingScreenData: LoadingScreenData,
-  puuid: string,
+  puuid: LeaguePuuid,
 ): Team {
   const participant = loadingScreenData.participants.find(
     (candidate) => candidate.puuid === puuid,
@@ -34,7 +35,7 @@ export function resolveSubjectTeam(
 /** The champion the subject locked in, for champion-form lookup. */
 export function resolveSubjectChampion(
   loadingScreenData: LoadingScreenData,
-  puuid: string,
+  puuid: LeaguePuuid,
 ): string {
   const participant = loadingScreenData.participants.find(
     (candidate) => candidate.puuid === puuid,

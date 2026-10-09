@@ -1,3 +1,4 @@
+import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import path from "node:path";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
@@ -116,7 +117,7 @@ function harness(
     cancel: () => Promise.resolve(),
   };
   const session = new ScoutVoiceSession({
-    guildId: "100000000000000001",
+    guildId: DiscordGuildIdSchema.parse("100000000000000001"),
     models: fakeLocalVoiceModels(),
     openAiApiKey: "test-key",
     createAssistantAudio: input.createAssistantAudio ?? (() => sink),

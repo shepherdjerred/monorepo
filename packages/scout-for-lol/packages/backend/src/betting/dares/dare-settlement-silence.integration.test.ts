@@ -35,7 +35,8 @@ const { prisma: db } = createTestDatabase("bucks-dare-settlement-silence");
 const SERVER = testGuildId("931");
 const CHANNEL = testChannelId("932");
 const HASH = "b".repeat(64);
-const TARGET_PUUID = "virmel-puuid";
+const TARGET_PUUID =
+  "virmel-puuid000000000000000000000000000000000000000000000000000000000000000000";
 const T0 = new Date("2026-09-01T12:00:00.000Z");
 const MATCH_ID = RiotMatchIdSchema.parse("NA1_7100000001");
 

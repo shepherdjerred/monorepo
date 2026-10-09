@@ -1,3 +1,7 @@
+import {
+  DiscordGuildIdSchema,
+  type DiscordGuildId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { describe, expect, test } from "vitest";
 import {
   ExploreMessageSchema,
@@ -23,7 +27,7 @@ function message(
   id: string,
   role: "user" | "assistant",
   content: string,
-  guildIds: readonly string[] = [],
+  guildIds: readonly DiscordGuildId[] = [],
 ): ExploreMessage {
   return ExploreMessageSchema.parse({
     id,
@@ -69,7 +73,10 @@ function entry(overrides: Partial<ReplayCorpusEntry> = {}): ReplayCorpusEntry {
   });
 }
 
-function runFor(answerId: string, guildIds: readonly string[]): PlanRunRow {
+function runFor(
+  answerId: string,
+  guildIds: readonly DiscordGuildId[],
+): PlanRunRow {
   return {
     resultMessageId: answerId,
     payload: JSON.stringify({
@@ -85,12 +92,14 @@ function runFor(answerId: string, guildIds: readonly string[]): PlanRunRow {
 describe("resolveTurnGuilds", () => {
   test("prefers the answer's own column", () => {
     const resolved = resolveTurnGuilds({
-      answer: message(A0, "assistant", "x", ["from-column"]),
-      runs: [runFor(A0, ["from-run"])],
+      answer: message(A0, "assistant", "x", [
+        DiscordGuildIdSchema.parse("818437101761709978"),
+      ]),
+      runs: [runFor(A0, [DiscordGuildIdSchema.parse("817198403599000798")])],
       soleAllowedGuildId: "from-allowlist",
     });
     expect(resolved).toEqual({
-      guildIds: ["from-column"],
+      guildIds: ["818437101761709978"],
       source: "message-column",
     });
   });
@@ -98,10 +107,18 @@ describe("resolveTurnGuilds", () => {
   test("falls back to the run that produced this exact answer", () => {
     const resolved = resolveTurnGuilds({
       answer: message(A0, "assistant", "x"),
-      runs: [runFor("other-answer", ["wrong"]), runFor(A0, ["right"])],
+      runs: [
+        runFor("other-answer", [
+          DiscordGuildIdSchema.parse("812467455035834917"),
+        ]),
+        runFor(A0, [DiscordGuildIdSchema.parse("818508396130515673")]),
+      ],
       soleAllowedGuildId: null,
     });
-    expect(resolved).toEqual({ guildIds: ["right"], source: "run-payload" });
+    expect(resolved).toEqual({
+      guildIds: ["818508396130515673"],
+      source: "run-payload",
+    });
   });
 
   test("falls back to a stage that admits exactly one guild", () => {
@@ -218,10 +235,13 @@ describe("planConversationTurns", () => {
     const turns = planConversationTurns({
       entry: entry(),
       ...base,
-      runs: [runFor(A0, ["exact"]), runFor(A1, ["exact"])],
+      runs: [
+        runFor(A0, [DiscordGuildIdSchema.parse("811208267326088326")]),
+        runFor(A1, [DiscordGuildIdSchema.parse("811208267326088326")]),
+      ],
       soleAllowedGuildId: null,
     });
     expect(turns[0]?.guildSource).toBe("run-payload");
-    expect(turns[0]?.guildIds).toEqual(["exact"]);
+    expect(turns[0]?.guildIds).toEqual(["811208267326088326"]);
   });
 });

@@ -21,7 +21,8 @@ export function makeTwistedFateMatch(
   const copy = RawMatchSchema.parse(structuredClone(fixture));
   const target = RawParticipantSchema.parse({
     ...copy.info.participants[0],
-    puuid: "virmel-puuid",
+    puuid:
+      "virmel-puuid000000000000000000000000000000000000000000000000000000000000000000",
     championName: "TwistedFate",
     timePlayed: input.timePlayed,
     totalMinionsKilled: input.creepScore,

@@ -7,11 +7,12 @@ import {
   type DiscordGuildId,
 } from "@scout-for-lol/domain/identity/discord.ts";
 import { DiscordMessageIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
-import type {
-  NotificationFailure,
-  NotificationUnsentSuppressionReason,
-  NotificationTarget,
-  NotificationIntentKind,
+import {
+  type NotificationFailure,
+  type NotificationUnsentSuppressionReason,
+  type NotificationTarget,
+  type NotificationIntentKind,
+  ANNOUNCEMENT_INTENT_KINDS,
 } from "@scout-for-lol/domain/notifications/intent.ts";
 import {
   ScoutNotificationDeliveryResultSchema,
@@ -56,7 +57,6 @@ import {
 } from "#src/temporal/notification/pre-send-budget.ts";
 import { resolveNotificationGate } from "#src/temporal/notification/notification-policy.ts";
 import { requireIntentRecord } from "#src/temporal/notification-lane/notification-reads.ts";
-import { ANNOUNCEMENT_INTENT_KINDS } from "@scout-for-lol/domain/notifications/intent.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("scout-v2-notification-delivery");
@@ -135,7 +135,7 @@ export function classifyChannelSendFailure(
  * failure: the send is a REST post on the channel id and does not need one.
  */
 async function resolveDeliveryGuild(
-  channelId: string,
+  channelId: DiscordChannelId,
 ): Promise<DiscordGuildId | undefined> {
   const channel = await fetchChannelForDelivery(channelId);
   if (channel === null) return undefined;
@@ -158,7 +158,7 @@ async function resolveDeliveryGuild(
  */
 async function sendToChannel(args: {
   message: MessageCreateOptions;
-  channelId: string;
+  channelId: DiscordChannelId;
   attemptNonce: string;
   guildId: DiscordGuildId | undefined;
 }): Promise<ScoutNotificationDeliveryResult> {

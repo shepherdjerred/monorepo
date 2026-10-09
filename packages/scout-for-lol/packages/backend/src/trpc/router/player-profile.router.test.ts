@@ -66,7 +66,7 @@ async function seedPlayer(options: {
 
 function matchFact(options: {
   matchId: RiotMatchId;
-  puuid: string;
+  puuid: LeaguePuuid;
   kills: number;
   teamId: number;
   win: boolean;

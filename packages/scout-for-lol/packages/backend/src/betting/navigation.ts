@@ -1,5 +1,10 @@
+import {
+  type Interaction,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+} from "discord.js";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import {
   StoredBucksLedgerContextSchema,
   BucksPoolRosterSchema,
@@ -366,7 +371,7 @@ export function renderBucksHistory(
 
 export type BucksNavigationInteraction = {
   customId: string;
-  guildId: string | null;
+  guildId: Interaction["guildId"];
   user: { id: string };
   deferReply: (options: { ephemeral: true }) => Promise<unknown>;
   deferUpdate: () => Promise<unknown>;

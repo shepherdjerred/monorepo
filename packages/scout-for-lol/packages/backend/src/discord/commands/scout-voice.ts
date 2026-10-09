@@ -1,8 +1,13 @@
 import {
+  type Interaction,
   MessageFlags,
   type InteractionEditReplyOptions,
   type InteractionReplyOptions,
 } from "discord.js";
+import {
+  type DiscordGuildId,
+  DiscordChannelIdSchema,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import {
@@ -24,7 +29,7 @@ const logger = createLogger("scout-voice-command");
  * and tests build a plain object.
  */
 export type ScoutVoiceInteraction = {
-  guildId: string | null;
+  guildId: Interaction["guildId"];
   user: { id: string };
   reply: (options: InteractionReplyOptions) => Promise<unknown>;
   deferReply: (options: { flags: MessageFlags.Ephemeral }) => Promise<unknown>;
@@ -34,7 +39,7 @@ export type ScoutVoiceInteraction = {
 export type ScoutVoiceAction = "join" | "leave";
 
 type ScoutVoiceDependencies = {
-  isVoiceEnabledForGuild: (guildId: string) => Promise<boolean>;
+  isVoiceEnabledForGuild: (guildId: DiscordGuildId) => Promise<boolean>;
   /**
    * Load the pipeline if this deployment can serve one. Called only after the
    * flag says yes, so a deployment nobody has enabled never pays for the
@@ -47,7 +52,7 @@ type ScoutVoiceDependencies = {
   >;
   /** The requester's current voice channel in this guild, if any. */
   memberVoiceChannelId: (
-    guildId: string,
+    guildId: DiscordGuildId,
     userId: string,
   ) => string | null | undefined;
 };
@@ -169,7 +174,11 @@ export async function executeScoutVoice(
     });
     return;
   }
-  const outcome = await manager.join(guildId.data, channelId, joinEpoch);
+  const outcome = await manager.join(
+    guildId.data,
+    DiscordChannelIdSchema.parse(channelId),
+    joinEpoch,
+  );
   if (outcome === "cancelled") {
     // A leave/flag-disable/empty-channel-check/shutdown ended this guild's
     // session (or this very request, still queued) before Scout ever

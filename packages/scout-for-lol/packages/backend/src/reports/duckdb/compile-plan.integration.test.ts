@@ -1,3 +1,4 @@
+import { DiscordAccountIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -58,7 +59,7 @@ beforeAll(async () => {
   const alice = {
     playerId: 1,
     playerAlias: "Alice",
-    discordId: "111111111111111111",
+    discordId: DiscordAccountIdSchema.parse("111111111111111111"),
     puuid: PA,
     surrendered: false,
     deaths: 2,

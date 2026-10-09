@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import { LeaguePuuidSchema } from "@scout-for-lol/data";
@@ -21,7 +22,7 @@ import {
 const PUUID_A = LeaguePuuidSchema.parse("a".repeat(78));
 const PUUID_B = LeaguePuuidSchema.parse("b".repeat(78));
 
-function subject(key: string, puuid: string): ParlaySubject {
+function subject(key: string, puuid: LeaguePuuid): ParlaySubject {
   return { key, puuid: LeaguePuuidSchema.parse(puuid), alias: key };
 }
 

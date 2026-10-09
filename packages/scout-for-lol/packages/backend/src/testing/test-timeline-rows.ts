@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type {
   TimelineEventLakeRow,
@@ -14,7 +15,7 @@ import { lakeMonth, lakeTimestamp } from "#src/report-lake/schema.ts";
 export function testFrameRow(input: {
   readonly matchId: RiotMatchId;
   readonly gameCreationAt: Date;
-  readonly puuid: string;
+  readonly puuid: LeaguePuuid;
   readonly participantId: number;
   readonly minute: number;
   readonly totalGold: number;

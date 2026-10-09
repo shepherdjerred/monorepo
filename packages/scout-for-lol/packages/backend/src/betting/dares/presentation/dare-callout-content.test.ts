@@ -1,3 +1,4 @@
+import type { DiscordAccountId } from "@scout-for-lol/domain/identity/discord.ts";
 import { describe, expect, test } from "vitest";
 import {
   BucksAmountSchema,
@@ -18,7 +19,7 @@ const ACCEPT_DEADLINE = new Date("2026-09-02T12:00:00.000Z");
 function content(input: {
   openingStake: number;
   potTotal: number;
-  pileOns: readonly { discordId: string; amount: number }[];
+  pileOns: readonly { discordId: DiscordAccountId; amount: number }[];
 }) {
   return dareCalloutContent({
     id: 1,
@@ -63,12 +64,17 @@ describe("dareCalloutContent", () => {
     const rendered = content({
       openingStake: 10,
       potTotal: 15,
-      pileOns: [{ discordId: "200", amount: 5 }],
+      pileOns: [
+        {
+          discordId: DiscordAccountIdSchema.parse("200000000000000000"),
+          amount: 5,
+        },
+      ],
     });
 
     expect(rendered).toContain("<@100> put **10 BB** on Virmel.");
     expect(rendered).toContain("Pot: **15 BB**");
-    expect(rendered).toContain("<@200> — **5 BB**");
+    expect(rendered).toContain("<@200000000000000000> — **5 BB**");
     expect(rendered).not.toContain("<@100> — **10 BB**");
   });
 
@@ -77,25 +83,39 @@ describe("dareCalloutContent", () => {
       openingStake: 10,
       potTotal: 25,
       pileOns: [
-        { discordId: "200", amount: 5 },
-        { discordId: "300", amount: 2 },
-        { discordId: "200", amount: 5 },
+        {
+          discordId: DiscordAccountIdSchema.parse("200000000000000000"),
+          amount: 5,
+        },
+        {
+          discordId: DiscordAccountIdSchema.parse("300000000000000000"),
+          amount: 2,
+        },
+        {
+          discordId: DiscordAccountIdSchema.parse("200000000000000000"),
+          amount: 5,
+        },
       ],
     });
 
-    expect(rendered).toContain("<@200> — **10 BB**");
-    expect(rendered).toContain("<@300> — **2 BB**");
-    expect(rendered.indexOf("<@200> — **10 BB**")).toBeLessThan(
-      rendered.indexOf("<@300> — **2 BB**"),
+    expect(rendered).toContain("<@200000000000000000> — **10 BB**");
+    expect(rendered).toContain("<@300000000000000000> — **2 BB**");
+    expect(rendered.indexOf("<@200000000000000000> — **10 BB**")).toBeLessThan(
+      rendered.indexOf("<@300000000000000000> — **2 BB**"),
     );
-    expect(rendered).not.toContain("<@200> — **5 BB**");
+    expect(rendered).not.toContain("<@200000000000000000> — **5 BB**");
   });
 
   test("keeps the opening stake separate from the current pot", () => {
     const rendered = content({
       openingStake: 10,
       potTotal: 20,
-      pileOns: [{ discordId: "200", amount: 10 }],
+      pileOns: [
+        {
+          discordId: DiscordAccountIdSchema.parse("200000000000000000"),
+          amount: 10,
+        },
+      ],
     });
 
     expect(rendered).toContain("put **10 BB**");
@@ -107,7 +127,9 @@ describe("dareCalloutContent", () => {
       openingStake: 10,
       potTotal: 211,
       pileOns: Array.from({ length: 200 }, (_, index) => ({
-        discordId: (index + 200).toString(),
+        discordId: DiscordAccountIdSchema.parse(
+          (200_000_000_000_000_000n + BigInt(index)).toString(),
+        ),
         amount: 1,
       })),
     });

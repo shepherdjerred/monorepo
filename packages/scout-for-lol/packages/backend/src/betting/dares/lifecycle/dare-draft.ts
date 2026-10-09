@@ -1,3 +1,4 @@
+import { DiscordAccountIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import {
   BUCKS_INT32_MAX,
   DarePileOnSchema,
@@ -126,7 +127,12 @@ function worstCaseCalloutLength(input: DareDraftDefinition): number {
     challengerDiscordId: "9".repeat(20),
     openingStake: WIDEST_STAKE,
     potTotal: WIDEST_POT,
-    pileOns: [{ discordId: "9".repeat(20), amount: WIDEST_PILE_ON }],
+    pileOns: [
+      {
+        discordId: DiscordAccountIdSchema.parse("9".repeat(20)),
+        amount: WIDEST_PILE_ON,
+      },
+    ],
     targetAliases: input.targets.map((target) => target.alias),
     revision: BUCKS_INT32_MAX,
     plainLanguage: input.plainLanguage,

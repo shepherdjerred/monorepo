@@ -1,3 +1,4 @@
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { AddAccountDialog } from "./add-account-dialog.tsx";
 import { EditAccountDialog } from "./edit-account-dialog.tsx";
@@ -37,7 +38,7 @@ function Backdrop(props: { readonly children: string }) {
 
 export const AddAccount: Story = {
   args: {
-    guildId: GUILD_ID,
+    guildId: DiscordGuildIdSchema.parse(GUILD_ID),
     playerAlias: "Hide on bush",
     open: true,
     onOpenChange: noop,
@@ -55,7 +56,7 @@ export const AddAccount: Story = {
 
 export const EditAccount: Story = {
   args: {
-    guildId: GUILD_ID,
+    guildId: DiscordGuildIdSchema.parse(GUILD_ID),
     playerAlias: "unused",
     open: true,
     onOpenChange: noop,
@@ -67,7 +68,7 @@ export const EditAccount: Story = {
         Editing an account renames it and re-resolves its region.
       </Backdrop>
       <EditAccountDialog
-        guildId={GUILD_ID}
+        guildId={DiscordGuildIdSchema.parse(GUILD_ID)}
         account={{ id: 412, alias: "Hide on bush", region: "KOREA" }}
         open
         onOpenChange={noop}
@@ -79,7 +80,7 @@ export const EditAccount: Story = {
 
 export const TransferAccount: Story = {
   args: {
-    guildId: GUILD_ID,
+    guildId: DiscordGuildIdSchema.parse(GUILD_ID),
     playerAlias: "unused",
     open: true,
     onOpenChange: noop,
@@ -89,7 +90,7 @@ export const TransferAccount: Story = {
     <>
       <Backdrop>Moving one Riot account from its player to another.</Backdrop>
       <TransferAccountDialog
-        guildId={GUILD_ID}
+        guildId={DiscordGuildIdSchema.parse(GUILD_ID)}
         account={{ riotId: "Hide on bush#KR1", region: "KOREA" }}
         open
         onOpenChange={noop}
@@ -101,7 +102,7 @@ export const TransferAccount: Story = {
 
 export const LinkDiscord: Story = {
   args: {
-    guildId: GUILD_ID,
+    guildId: DiscordGuildIdSchema.parse(GUILD_ID),
     playerAlias: "unused",
     open: true,
     onOpenChange: noop,
@@ -111,7 +112,7 @@ export const LinkDiscord: Story = {
     <>
       <Backdrop>Binding a Discord member to a tracked player.</Backdrop>
       <LinkDiscordDialog
-        guildId={GUILD_ID}
+        guildId={DiscordGuildIdSchema.parse(GUILD_ID)}
         playerAlias="Hide on bush"
         open
         onOpenChange={noop}

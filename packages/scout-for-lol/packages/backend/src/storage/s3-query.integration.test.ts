@@ -7,6 +7,7 @@
  * Environment setup is handled automatically by test-setup.ts (preloaded via bunfig.toml)
  */
 
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import {
@@ -92,18 +93,18 @@ afterEach(() => {
 describe("queryMatchesByDateRange - single day", () => {
   test("returns matches from a single day", async () => {
     const date = new Date("2025-01-15T12:00:00Z");
-    const puuid1 = "PUUID-TEST-1";
-    const puuid2 = "PUUID-TEST-2";
+    const puuid1 = "PUUID-TEST-1".padEnd(78, "0");
+    const puuid2 = "PUUID-TEST-2".padEnd(78, "0");
 
     // Create mock matches
     const match1 = createMockMatch(
       "NA1_9100000000",
-      [puuid1, "PUUID-OTHER-1"],
+      [puuid1, "PUUID-OTHER-1".padEnd(78, "0")],
       date,
     );
     const match2 = createMockMatch(
       "NA1_9100000010",
-      [puuid2, "PUUID-OTHER-2"],
+      [puuid2, "PUUID-OTHER-2".padEnd(78, "0")],
       date,
     );
     const match3 = createMockMatch("NA1_9100000020", [puuid1, puuid2], date);
@@ -147,14 +148,14 @@ describe("queryMatchesByDateRange - single day", () => {
     await expectRangeMatchIds(
       date,
       date,
-      [puuid1, puuid2],
+      [LeaguePuuidSchema.parse(puuid1), LeaguePuuidSchema.parse(puuid2)],
       ["NA1_9100000000", "NA1_9100000010", "NA1_9100000020"],
     );
   });
 
   test("paginates through all S3 list results for a day", async () => {
     const date = new Date("2025-01-15T12:00:00Z");
-    const puuid = "PUUID-PAGINATION";
+    const puuid = "PUUID-PAGINATION".padEnd(78, "0");
     const prefix = "games/2025/01/15/";
     const match1 = createMockMatch("NA1_9100000030", [puuid], date);
     const match2 = createMockMatch("NA1_9100000040", [puuid], date);
@@ -179,7 +180,7 @@ describe("queryMatchesByDateRange - single day", () => {
     const results = await queryMatchesByDateRange(
       new Date("2025-01-15T00:00:00Z"),
       new Date("2025-01-15T23:59:59Z"),
-      [puuid],
+      [LeaguePuuidSchema.parse(puuid)],
       new Map(),
     );
 
@@ -192,7 +193,7 @@ describe("queryMatchesByDateRange - single day", () => {
   test("filters parsed matches by actual game creation time", async () => {
     const requestedDate = new Date("2025-01-15T12:00:00Z");
     const previousDate = new Date("2025-01-14T23:59:59Z");
-    const puuid = "PUUID-ACTUAL-GAME-TIME";
+    const puuid = "PUUID-ACTUAL-GAME-TIME".padEnd(78, "0");
     const prefix = "games/2025/01/15/";
     const inWindowMatch = createMockMatch(
       "NA1_9100000060",
@@ -224,7 +225,7 @@ describe("queryMatchesByDateRange - single day", () => {
     const results = await queryMatchesByDateRange(
       new Date("2025-01-15T00:00:00Z"),
       new Date("2025-01-15T23:59:59Z"),
-      [puuid],
+      [LeaguePuuidSchema.parse(puuid)],
       new Map(),
     );
 
@@ -233,8 +234,8 @@ describe("queryMatchesByDateRange - single day", () => {
 
   test("filters matches by participant PUUID", async () => {
     const date = new Date("2025-01-15T12:00:00Z");
-    const targetPuuid = "PUUID-TARGET";
-    const otherPuuid = "PUUID-OTHER";
+    const targetPuuid = "PUUID-TARGET".padEnd(78, "0");
+    const otherPuuid = "PUUID-OTHER".padEnd(78, "0");
 
     // Create mock matches: 2 with targetPuuid, 1 without
     const match1 = createMockMatch(
@@ -244,12 +245,12 @@ describe("queryMatchesByDateRange - single day", () => {
     );
     const match2 = createMockMatch(
       "NA1_9100000040",
-      [otherPuuid, "PUUID-ANOTHER"],
+      [otherPuuid, "PUUID-ANOTHER".padEnd(78, "0")],
       date,
     );
     const match3 = createMockMatch(
       "NA1_9100000050",
-      [targetPuuid, "PUUID-ANOTHER"],
+      [targetPuuid, "PUUID-ANOTHER".padEnd(78, "0")],
       date,
     );
 
@@ -290,14 +291,14 @@ describe("queryMatchesByDateRange - single day", () => {
     await expectRangeMatchIds(
       date,
       date,
-      [targetPuuid],
+      [LeaguePuuidSchema.parse(targetPuuid)],
       ["NA1_9100000030", "NA1_9100000050"],
     );
   });
 
   test("returns empty array when no matches found", async () => {
     const date = new Date("2025-01-20T12:00:00Z");
-    const puuid = "PUUID-NONEXISTENT";
+    const puuid = "PUUID-NONEXISTENT".padEnd(78, "0");
 
     const prefix = "games/2025/01/20/";
 
@@ -309,7 +310,7 @@ describe("queryMatchesByDateRange - single day", () => {
     const results = await queryMatchesByDateRange(
       date,
       date,
-      [puuid],
+      [LeaguePuuidSchema.parse(puuid)],
       new Map(),
     );
 
@@ -357,7 +358,7 @@ function stubMatchesByDay(
 
 describe("queryMatchesByDateRange - date range", () => {
   test("returns matches across multiple days", async () => {
-    const puuid = "PUUID-MULTIDAY";
+    const puuid = "PUUID-MULTIDAY".padEnd(78, "0");
 
     const date1 = new Date("2025-01-15T12:00:00Z");
     const date2 = new Date("2025-01-16T12:00:00Z");
@@ -377,13 +378,13 @@ describe("queryMatchesByDateRange - date range", () => {
     await expectRangeMatchIds(
       date1,
       date3,
-      [puuid],
+      [LeaguePuuidSchema.parse(puuid)],
       ["NA1_9100000080", "NA1_9100000090", "NA1_9100000100"],
     );
   });
 
   test("handles partial date ranges", async () => {
-    const puuid = "PUUID-PARTIAL";
+    const puuid = "PUUID-PARTIAL".padEnd(78, "0");
 
     const date2 = new Date("2025-01-16T12:00:00Z");
     const date3 = new Date("2025-01-17T12:00:00Z");
@@ -424,13 +425,13 @@ describe("queryMatchesByDateRange - date range", () => {
     await expectRangeMatchIds(
       date2,
       date3,
-      [puuid],
+      [LeaguePuuidSchema.parse(puuid)],
       ["NA1_9100000110", "NA1_9100000120"],
     );
   });
 
   test("handles month boundary crossing", async () => {
-    const puuid = "PUUID-MONTH-CROSS";
+    const puuid = "PUUID-MONTH-CROSS".padEnd(78, "0");
 
     const date1 = new Date("2025-01-31T12:00:00Z");
     const date2 = new Date("2025-02-01T12:00:00Z");
@@ -449,7 +450,7 @@ describe("queryMatchesByDateRange - date range", () => {
     await expectRangeMatchIds(
       date1,
       date3,
-      [puuid],
+      [LeaguePuuidSchema.parse(puuid)],
       ["NA1_9100000130", "NA1_9100000140", "NA1_9100000150"],
     );
   });
@@ -466,7 +467,7 @@ describe("queryMatchesByDateRange - edge cases", () => {
 
   test("handles invalid JSON in S3 gracefully", async () => {
     const date = new Date("2025-01-15T12:00:00Z");
-    const puuid = "PUUID-INVALID-JSON";
+    const puuid = "PUUID-INVALID-JSON".padEnd(78, "0");
 
     // Valid match
     const validMatch = createMockMatch("NA1_9100000160", [puuid], date);
@@ -502,7 +503,7 @@ describe("queryMatchesByDateRange - edge cases", () => {
     const results = await queryMatchesByDateRange(
       date,
       date,
-      [puuid],
+      [LeaguePuuidSchema.parse(puuid)],
       new Map(),
     );
 
@@ -513,9 +514,9 @@ describe("queryMatchesByDateRange - edge cases", () => {
   test("handles multiple participants correctly", async () => {
     const date = new Date("2025-01-15T12:00:00Z");
 
-    const puuid1 = "PUUID-PLAYER-1";
-    const puuid2 = "PUUID-PLAYER-2";
-    const puuid3 = "PUUID-PLAYER-3";
+    const puuid1 = "PUUID-PLAYER-1".padEnd(78, "0");
+    const puuid2 = "PUUID-PLAYER-2".padEnd(78, "0");
+    const puuid3 = "PUUID-PLAYER-3".padEnd(78, "0");
 
     // Match with puuid1 and puuid2
     const match1 = createMockMatch(
@@ -573,14 +574,14 @@ describe("queryMatchesByDateRange - edge cases", () => {
     await expectRangeMatchIds(
       date,
       date,
-      [puuid1, puuid2],
+      [LeaguePuuidSchema.parse(puuid1), LeaguePuuidSchema.parse(puuid2)],
       ["NA1_9100000180", "NA1_9100000190", "NA1_9100000200"],
     );
   });
 
   test("handles S3 GetObject errors gracefully", async () => {
     const date = new Date("2025-01-15T12:00:00Z");
-    const puuid = "PUUID-ERROR-TEST";
+    const puuid = "PUUID-ERROR-TEST".padEnd(78, "0");
 
     const validMatch = createMockMatch("NA1_9100000210", [puuid], date);
 
@@ -615,7 +616,7 @@ describe("queryMatchesByDateRange - edge cases", () => {
     const results = await queryMatchesByDateRange(
       date,
       date,
-      [puuid],
+      [LeaguePuuidSchema.parse(puuid)],
       new Map(),
     );
 
@@ -638,7 +639,7 @@ describe("queryMatchesByDateRange - S3 configuration", () => {
 describe("queryMatchesByDateRange - data verification", () => {
   test("returns complete match data", async () => {
     const date = new Date("2025-01-15T12:00:00Z");
-    const puuid = "PUUID-COMPLETE-DATA";
+    const puuid = "PUUID-COMPLETE-DATA".padEnd(78, "0");
 
     const match = createMockMatch("NA1_9100000230", [puuid, "OTHER"], date);
 
@@ -661,7 +662,7 @@ describe("queryMatchesByDateRange - data verification", () => {
     const results = await queryMatchesByDateRange(
       date,
       date,
-      [puuid],
+      [LeaguePuuidSchema.parse(puuid)],
       new Map(),
     );
 

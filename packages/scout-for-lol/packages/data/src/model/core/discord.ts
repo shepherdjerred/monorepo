@@ -9,6 +9,10 @@ export {
   type DiscordGuildId,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/domain/identity/discord.ts";
+export {
+  type DiscordMessageId,
+  DiscordMessageIdSchema,
+} from "@scout-for-lol/domain/identity/brands.ts";
 
 export type Discord = z.infer<typeof DiscordSchema>;
 export const DiscordSchema = z.strictObject({

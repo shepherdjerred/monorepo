@@ -1,3 +1,4 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import { z } from "zod";
 import {
   DiscordAccountIdSchema,
@@ -12,7 +13,7 @@ import type { ExtendedPrismaClient } from "#src/database/index.ts";
 const DareTargetAccountsSchema = z
   .array(
     z.strictObject({
-      puuid: z.string().min(1),
+      puuid: LeaguePuuidSchema,
       trackingStartedAt: z.iso.datetime(),
     }),
   )
@@ -44,7 +45,7 @@ export const DareShortlistEntrySchema = z.strictObject({
 export type DareShortlistEntry = z.infer<typeof DareShortlistEntrySchema>;
 
 type GroupedTarget = {
-  discordId: string;
+  discordId: DiscordAccountId;
   playerId: number;
   alias: string;
   /** puuid -> trackingStartedAt ISO string; insertion order is playerId asc,

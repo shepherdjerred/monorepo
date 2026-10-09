@@ -1,3 +1,4 @@
+import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterEach, describe, expect, test } from "vitest";
 import { dareDraftComponents } from "#src/betting/dares/presentation/dare-components.ts";
@@ -41,9 +42,9 @@ describe("stage-aware Discord links", () => {
     expect(getExploreMatchUrl(RiotMatchIdSchema.parse("NA1_1234567890"))).toBe(
       "https://beta.scout-for-lol.com/app/explore/matches/NA1_1234567890",
     );
-    expect(getHallOfFameUrl("100000000000000001")).toBe(
-      "https://beta.scout-for-lol.com/app/halls/100000000000000001",
-    );
+    expect(
+      getHallOfFameUrl(DiscordGuildIdSchema.parse("100000000000000001")),
+    ).toBe("https://beta.scout-for-lol.com/app/halls/100000000000000001");
   });
 
   test("keeps Scout and Bryan Bucks conversation buttons slashless", () => {

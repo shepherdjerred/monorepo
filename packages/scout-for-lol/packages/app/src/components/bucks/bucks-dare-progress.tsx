@@ -1,5 +1,9 @@
+import {
+  type DiscordGuildId,
+  type DarePollHealth,
+  type DareProgress,
+} from "@scout-for-lol/data";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import type { DarePollHealth, DareProgress } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { ErrorState } from "@scout-for-lol/design-system/domain/states";
 import { useTRPC } from "#src/lib/query/trpc.ts";
@@ -111,7 +115,7 @@ export function DareActivationHealthPanel(props: {
 }
 
 export function DareEvidencePanel(props: {
-  guildId: string;
+  guildId: DiscordGuildId;
   dareId: number;
   enabled: boolean;
 }) {

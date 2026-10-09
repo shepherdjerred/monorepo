@@ -1,3 +1,4 @@
+import type { DiscordAccountId } from "@scout-for-lol/domain/identity/discord.ts";
 import type { Client } from "discord.js";
 import { z } from "zod";
 import {
@@ -43,7 +44,7 @@ const DareNotificationEventSchema = z.object({
 
 type DeliveryRow = {
   id: number;
-  discordId: string;
+  discordId: DiscordAccountId;
   attemptCount: number;
   event: {
     category: string;

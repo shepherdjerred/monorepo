@@ -1,6 +1,13 @@
+import {
+  STORY_GUILD_ID,
+  STORY_CHANNELS,
+} from "#src/lib/storybook/story-fixtures.ts";
+import {
+  DiscordChannelIdSchema,
+  type SubscriptionFilterSpec,
+} from "@scout-for-lol/data";
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import type { SubscriptionFilterSpec } from "@scout-for-lol/data";
 import {
   SubscriptionFields,
   subscriptionFormOptions,
@@ -18,13 +25,8 @@ function noop(): void {
   // Intentionally empty.
 }
 
-const GUILD_ID = "469558207670419456";
-
-const CHANNELS = [
-  { id: "1069813984308248657", name: "match-reports" },
-  { id: "1069814032311730227", name: "ranked-only" },
-  { id: "1069814077526343710", name: "aram-night" },
-];
+const GUILD_ID = STORY_GUILD_ID;
+const CHANNELS = STORY_CHANNELS;
 
 const RANKED: SubscriptionFilterSpec = {
   version: 1,
@@ -44,7 +46,9 @@ const WIDE: SubscriptionFilterSpec = {
 function SubscriptionFieldsExample() {
   const form = useScoutForm({
     ...subscriptionFormOptions,
-    defaultValues: emptySubscriptionFormValue(CHANNELS[0]?.id ?? ""),
+    defaultValues: emptySubscriptionFormValue(
+      DiscordChannelIdSchema.parse(CHANNELS[0]?.id ?? ""),
+    ),
   });
   return (
     <form.AppForm>

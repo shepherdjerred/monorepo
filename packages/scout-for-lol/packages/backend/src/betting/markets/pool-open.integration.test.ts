@@ -1,4 +1,8 @@
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import { DiscordChannelIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
+import {
+  RiotMatchIdSchema,
+  DiscordMessageIdSchema,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import {
   afterAll,
   afterEach,
@@ -165,7 +169,12 @@ describe("openBettingPoolsForPrematch", () => {
       {
         matchId: RiotMatchIdSchema.parse("NA1_5000000003"),
         serverId: SERVER_ID,
-        refs: [{ channelId: "1337623164146155594", messageId: "prematch" }],
+        refs: [
+          {
+            channelId: DiscordChannelIdSchema.parse("1337623164146155594"),
+            messageId: DiscordMessageIdSchema.parse("842064767694252889"),
+          },
+        ],
         prematchContentBase: "Aaron started a game",
       },
       db,
@@ -181,7 +190,7 @@ describe("openBettingPoolsForPrematch", () => {
     });
     expect(pool.prematchContentBase).toBe("Aaron started a game");
     expect(JSON.parse(pool.messageRefs)).toEqual([
-      { channelId: "1337623164146155594", messageId: "prematch" },
+      { channelId: "1337623164146155594", messageId: "842064767694252889" },
     ]);
   });
 

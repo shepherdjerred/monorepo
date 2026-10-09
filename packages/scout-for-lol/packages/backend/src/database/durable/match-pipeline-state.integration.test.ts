@@ -1,3 +1,7 @@
+import {
+  DiscordChannelIdSchema,
+  type DiscordChannelId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { afterAll, describe, expect, test } from "vitest";
 import {
   IsoInstantSchema,
@@ -53,7 +57,7 @@ async function observe(matchId: RiotMatchId): Promise<void> {
 function intentFor(
   matchId: RiotMatchId,
   key: string,
-  channelId: string,
+  channelId: DiscordChannelId,
 ): Parameters<typeof upsertIntent>[1] {
   return {
     matchId,
@@ -74,11 +78,29 @@ describe("listIntentsForMatch", () => {
   test("returns one match's intents by key, and no other match's", async () => {
     const mine = RiotMatchIdSchema.parse("NA1_7001");
     const other = RiotMatchIdSchema.parse("NA1_7002");
-    await upsertIntent(prisma, intentFor(mine, "b:7001", "300000000000000002"));
-    await upsertIntent(prisma, intentFor(mine, "a:7001", "300000000000000001"));
     await upsertIntent(
       prisma,
-      intentFor(other, "a:7002", "300000000000000003"),
+      intentFor(
+        mine,
+        "b:7001",
+        DiscordChannelIdSchema.parse("300000000000000002"),
+      ),
+    );
+    await upsertIntent(
+      prisma,
+      intentFor(
+        mine,
+        "a:7001",
+        DiscordChannelIdSchema.parse("300000000000000001"),
+      ),
+    );
+    await upsertIntent(
+      prisma,
+      intentFor(
+        other,
+        "a:7002",
+        DiscordChannelIdSchema.parse("300000000000000003"),
+      ),
     );
 
     // Ordered by key rather than by insertion: the order becomes the order
@@ -118,7 +140,11 @@ describe("getMatchPipelineState", () => {
     });
     await upsertIntent(
       prisma,
-      intentFor(matchId, "notify:7101", "300000000000000004"),
+      intentFor(
+        matchId,
+        "notify:7101",
+        DiscordChannelIdSchema.parse("300000000000000004"),
+      ),
     );
     await recordTrackedAccounts(prisma, [
       {

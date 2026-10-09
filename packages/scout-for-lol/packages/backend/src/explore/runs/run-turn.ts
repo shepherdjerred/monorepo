@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import * as Sentry from "@sentry/bun";
 import {
   EXPLORE_ANSWER_MAX_LENGTH,
@@ -43,7 +44,7 @@ export type StartedExploreTurn = {
   model?: string | undefined;
   conversationId: string;
   title: string;
-  messageId: string;
+  messageId: ExploreMessage["id"];
   question: string;
   expectedCurrentLeafId: string | null;
 };
@@ -150,7 +151,7 @@ export async function runPersistedExploreTurn(
     started: StartedExploreTurn;
     history: ExploreMessage[];
     /** The asker's servers; scopes `player('…')` alias resolution. */
-    guildIds: string[];
+    guildIds: DiscordGuildId[];
     /**
      * Which surface is asking. Required rather than defaulted: it decides
      * whether creation tools exist at all, and a silent default would make a

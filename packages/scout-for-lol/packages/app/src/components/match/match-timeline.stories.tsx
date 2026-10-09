@@ -1,4 +1,8 @@
-import { RiotMatchIdSchema } from "@scout-for-lol/data";
+import {
+  type LeaguePuuid,
+  RiotMatchIdSchema,
+  LeaguePuuidSchema,
+} from "@scout-for-lol/data";
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { MatchTimeline } from "./match-timeline.tsx";
@@ -138,7 +142,7 @@ const KEY_EVENTS: TimelineEvent[] = [
 function frame(row: {
   frameIndex: number;
   participantId: number;
-  puuid: string;
+  puuid: LeaguePuuid;
   gold: number;
   xp: number;
 }): TimelineFrame {
@@ -184,42 +188,42 @@ const FRAMES: TimelineFrame[] = [
   frame({
     frameIndex: 1,
     participantId: 1,
-    puuid: PUUID_ONE,
+    puuid: LeaguePuuidSchema.parse(PUUID_ONE),
     gold: 1140,
     xp: 980,
   }),
   frame({
     frameIndex: 2,
     participantId: 1,
-    puuid: PUUID_ONE,
+    puuid: LeaguePuuidSchema.parse(PUUID_ONE),
     gold: 2310,
     xp: 2470,
   }),
   frame({
     frameIndex: 3,
     participantId: 1,
-    puuid: PUUID_ONE,
+    puuid: LeaguePuuidSchema.parse(PUUID_ONE),
     gold: 3690,
     xp: 4180,
   }),
   frame({
     frameIndex: 1,
     participantId: 6,
-    puuid: PUUID_TWO,
+    puuid: LeaguePuuidSchema.parse(PUUID_TWO),
     gold: 1020,
     xp: 910,
   }),
   frame({
     frameIndex: 2,
     participantId: 6,
-    puuid: PUUID_TWO,
+    puuid: LeaguePuuidSchema.parse(PUUID_TWO),
     gold: 2050,
     xp: 2180,
   }),
   frame({
     frameIndex: 3,
     participantId: 6,
-    puuid: PUUID_TWO,
+    puuid: LeaguePuuidSchema.parse(PUUID_TWO),
     gold: 3120,
     xp: 3640,
   }),

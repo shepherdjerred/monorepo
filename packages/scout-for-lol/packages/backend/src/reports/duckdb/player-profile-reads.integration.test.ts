@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import {
   RiotMatchIdSchema,
   type RiotMatchId,
@@ -35,7 +36,7 @@ function at(offsetMinutes: number): Date {
 }
 
 type FactOverrides = {
-  puuid?: string;
+  puuid?: LeaguePuuid;
   win?: boolean;
   kills?: number;
   championId?: number;

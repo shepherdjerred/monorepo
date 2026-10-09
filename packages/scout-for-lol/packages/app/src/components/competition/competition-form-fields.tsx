@@ -5,6 +5,7 @@ import {
   getAllSeasons,
   visibilityDescription,
   visibilityToString,
+  type DiscordChannelId,
 } from "@scout-for-lol/data";
 import {
   ChannelSelectControl,
@@ -65,7 +66,7 @@ const dateFormatter = new Intl.DateTimeFormat(undefined, {
 
 type CompetitionFormFieldsProps = {
   locked: boolean;
-  channels: { id: string; name: string }[] | undefined;
+  channels: { id: DiscordChannelId; name: string }[] | undefined;
   channelAvailability?: ChannelAvailability;
   onRetryChannels?: () => void;
 };

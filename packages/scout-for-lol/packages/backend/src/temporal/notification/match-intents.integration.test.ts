@@ -1,15 +1,21 @@
+import type { z } from "zod";
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   NotificationIntentKeySchema,
   RiotMatchIdSchema,
   type RiotMatchId,
   IsoInstantSchema,
+  DiscordMessageIdSchema,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import { PlatformRouteSchema } from "@scout-for-lol/domain/identity/routes.ts";
 import type * as DatabaseModule from "#src/database/index.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { testGuildId } from "#src/testing/test-ids.ts";
-import { DiscordChannelIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
+import {
+  DiscordChannelIdSchema,
+  DiscordAccountIdSchema,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import {
   deliveryIntentKey,
   lateBindingEarningsDeliveryKeyPrefix,
@@ -43,12 +49,17 @@ vi.mock("#src/database/index.ts", async () => {
   return { ...actual, prisma };
 });
 
+// Hoisted above the imports, so the refs stay raw: the mocked module hands
+// them to code that parses them, as it would rows read back from storage.
 type PreparedStub = {
-  refs: { channelId: string; messageId: string }[];
+  refs: {
+    channelId: z.input<typeof DiscordChannelIdSchema>;
+    messageId: z.input<typeof DiscordMessageIdSchema>;
+  }[];
   kind: "message" | "pool-missing" | "nothing-to-report";
 };
 const prepared: PreparedStub = vi.hoisted(() => ({
-  refs: [{ channelId: "100000000000000031", messageId: "9001" }],
+  refs: [{ channelId: "100000000000000031", messageId: "842011613031739338" }],
   kind: "message",
 }));
 
@@ -297,7 +308,7 @@ describe("what the settlement effect mints", () => {
       earnings: [
         {
           serverId: GUILD,
-          discordId: "100000000000000051",
+          discordId: DiscordAccountIdSchema.parse("100000000000000051"),
           alias: "late player",
           reasons: ["played"],
           total: 1,
@@ -310,12 +321,15 @@ describe("what the settlement effect mints", () => {
     const intents = await listIntentsForMatch(prisma, { matchId: MATCH });
     const keys = intents.map((record) => record.intent.key);
     expect(keys).toContain(
-      deliveryIntentKey(settlementDeliveryKeyPrefix(MATCH), SETTLEMENT_CHANNEL),
+      deliveryIntentKey(
+        settlementDeliveryKeyPrefix(MATCH),
+        DiscordChannelIdSchema.parse(SETTLEMENT_CHANNEL),
+      ),
     );
     expect(keys).toContain(
       deliveryIntentKey(
         lateBindingEarningsDeliveryKeyPrefix(MATCH),
-        SETTLEMENT_CHANNEL,
+        DiscordChannelIdSchema.parse(SETTLEMENT_CHANNEL),
       ),
     );
   });
@@ -359,7 +373,12 @@ describe("what the settlement effect mints", () => {
       }),
     ).toMatchObject({ minted: 0, undeliverable: 1 });
     expect(await listIntentsForMatch(prisma, { matchId: MATCH })).toEqual([]);
-    prepared.refs = [{ channelId: "100000000000000031", messageId: "9001" }];
+    prepared.refs = [
+      {
+        channelId: DiscordChannelIdSchema.parse("100000000000000031"),
+        messageId: DiscordMessageIdSchema.parse("842011613031739338"),
+      },
+    ];
   });
 
   test("withholds the recap entirely for a silent-backfill match", async () => {
@@ -393,7 +412,10 @@ describe("what the post-match fan-out drives", () => {
     // and post "game starting" after the result was already known.
     await observe(MATCH, "live");
     const prematchKey = NotificationIntentKeySchema.parse(
-      deliveryIntentKey(prematchDeliveryKeyPrefix(MATCH), CHANNEL),
+      deliveryIntentKey(
+        prematchDeliveryKeyPrefix(MATCH),
+        DiscordChannelIdSchema.parse(CHANNEL),
+      ),
     );
     await upsertIntent(prisma, {
       matchId: MATCH,
@@ -435,9 +457,9 @@ describe("the fold a recovered settlement announces from", () => {
    * beside it. A recovery that walked the stored items one at a time would
    * announce neither.
    */
-  const SETTLED_GUILD = "guild-settled";
-  const CLOSURE_ONLY_GUILD = "guild-closure-only";
-  const PARLAY_ONLY_GUILD = "guild-parlay-only";
+  const SETTLED_GUILD = DiscordGuildIdSchema.parse("810000000000000436");
+  const CLOSURE_ONLY_GUILD = DiscordGuildIdSchema.parse("810000000000000437");
+  const PARLAY_ONLY_GUILD = DiscordGuildIdSchema.parse("810000000000000438");
 
   function live() {
     return {
@@ -445,7 +467,12 @@ describe("the fold a recovered settlement announces from", () => {
         {
           matchId: MATCH,
           serverId: CLOSURE_ONLY_GUILD,
-          messageRefs: [{ channelId: "c1", messageId: "m1" }],
+          messageRefs: [
+            {
+              channelId: DiscordChannelIdSchema.parse("821710009002416514"),
+              messageId: DiscordMessageIdSchema.parse("844199644073809433"),
+            },
+          ],
           humanMatchedPerSide: 0,
           houseFill: 0,
           totalMatchedPerSide: 0,
@@ -454,7 +481,7 @@ describe("the fold a recovered settlement announces from", () => {
           positions: [
             {
               betId: 1,
-              discordId: "d1",
+              discordId: DiscordAccountIdSchema.parse("838228129524005685"),
               teamId: RiotTeamIdSchema.parse(100),
               submittedStake: 10,
               matchedStake: 0,
@@ -482,14 +509,19 @@ describe("the fold a recovered settlement announces from", () => {
           yesResult: true,
           voidReason: undefined,
           legs: [],
-          messageRefs: [{ channelId: "c2", messageId: "m2" }],
+          messageRefs: [
+            {
+              channelId: DiscordChannelIdSchema.parse("826388813072488010"),
+              messageId: DiscordMessageIdSchema.parse("849211221632282941"),
+            },
+          ],
           bets: [],
         },
       ],
       earnings: [
         {
           serverId: SETTLED_GUILD,
-          discordId: "d9",
+          discordId: DiscordAccountIdSchema.parse("833276935227518118"),
           alias: "nine",
           reasons: ["played" as const],
           total: 3,
@@ -624,7 +656,12 @@ describe("a settlement killed before its receipt", () => {
       yesResult: true,
       voidReason: undefined,
       legs: [],
-      messageRefs: [{ channelId: "c9", messageId: "m9" }],
+      messageRefs: [
+        {
+          channelId: DiscordChannelIdSchema.parse("820533606144457235"),
+          messageId: DiscordMessageIdSchema.parse("841070401639674070"),
+        },
+      ],
       bets: [],
     };
     await prisma.$transaction(async (tx) => {

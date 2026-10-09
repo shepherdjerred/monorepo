@@ -1,3 +1,4 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import {
   RiotMatchIdSchema,
   type RiotMatchId,
@@ -18,14 +19,18 @@ const players = [
     accounts: [
       {
         id: 1,
-        puuid: "main",
+        puuid: LeaguePuuidSchema.parse(
+          "main00000000000000000000000000000000000000000000000000000000000000000000000000",
+        ),
         riotGameName: "Alpha",
         riotTagLine: "NA1",
         region: "NA1",
       },
       {
         id: 2,
-        puuid: "smurf",
+        puuid: LeaguePuuidSchema.parse(
+          "smurf0000000000000000000000000000000000000000000000000000000000000000000000000",
+        ),
         riotGameName: "Alt",
         riotTagLine: "NA1",
         region: "NA1",
@@ -38,7 +43,9 @@ const players = [
     accounts: [
       {
         id: 3,
-        puuid: "beta",
+        puuid: LeaguePuuidSchema.parse(
+          "beta00000000000000000000000000000000000000000000000000000000000000000000000000",
+        ),
         riotGameName: "Beta",
         riotTagLine: "NA1",
         region: "NA1",
@@ -51,7 +58,9 @@ const players = [
     accounts: [
       {
         id: 4,
-        puuid: "gamma",
+        puuid: LeaguePuuidSchema.parse(
+          "gamma0000000000000000000000000000000000000000000000000000000000000000000000000",
+        ),
         riotGameName: "Gamma",
         riotTagLine: "NA1",
         region: "NA1",
@@ -76,9 +85,9 @@ function roster(
       index === 0
         ? firstPuuid
         : index === 1
-          ? "beta"
+          ? "beta00000000000000000000000000000000000000000000000000000000000000000000000000"
           : index === 5
-            ? "gamma"
+            ? "gamma0000000000000000000000000000000000000000000000000000000000000000000000000"
             : `unknown-${index.toString()}`,
     team_id: index < 5 ? 100 : 200,
     player_subteam_id: null,
@@ -98,16 +107,36 @@ function roster(
 
 describe("guild community insights", () => {
   const rows = [
-    ...roster(RiotMatchIdSchema.parse("NA1_9100000020"), 1000, "main"),
-    ...roster(RiotMatchIdSchema.parse("NA1_9100000030"), 2000, "smurf"),
+    ...roster(
+      RiotMatchIdSchema.parse("NA1_9100000020"),
+      1000,
+      "main00000000000000000000000000000000000000000000000000000000000000000000000000",
+    ),
+    ...roster(
+      RiotMatchIdSchema.parse("NA1_9100000030"),
+      2000,
+      "smurf0000000000000000000000000000000000000000000000000000000000000000000000000",
+    ),
   ];
   test("resolves smurfs, teammates, rivals, main account, and squad meetings", () => {
     const insights = buildCommunityInsights({
       players,
       rows,
       allTimeAccounts: [
-        { puuid: "main", games: 10, last_match_ms: 1000 },
-        { puuid: "smurf", games: 5, last_match_ms: 2000 },
+        {
+          puuid: LeaguePuuidSchema.parse(
+            "main00000000000000000000000000000000000000000000000000000000000000000000000000",
+          ),
+          games: 10,
+          last_match_ms: 1000,
+        },
+        {
+          puuid: LeaguePuuidSchema.parse(
+            "smurf0000000000000000000000000000000000000000000000000000000000000000000000000",
+          ),
+          games: 5,
+          last_match_ms: 2000,
+        },
       ],
       standardOnly: true,
     });
@@ -148,7 +177,7 @@ describe("guild community insights", () => {
     const customRows = roster(
       RiotMatchIdSchema.parse("NA1_9100000010"),
       3000,
-      "main",
+      "main00000000000000000000000000000000000000000000000000000000000000000000000000",
     ).map((row) => ({
       ...row,
       queue: "custom",
@@ -173,7 +202,7 @@ describe("guild community insights", () => {
     const arenaRows = roster(
       RiotMatchIdSchema.parse("NA1_9100000000"),
       3000,
-      "main",
+      "main00000000000000000000000000000000000000000000000000000000000000000000000000",
     ).map((row, index) => ({
       ...row,
       queue: "arena",
@@ -181,7 +210,12 @@ describe("guild community insights", () => {
       game_mode: "CHERRY",
       map_id: 30,
       player_subteam_id: Math.floor(index / 2) + 1,
-      puuid: index === 2 ? "gamma" : index === 5 ? "unknown-5" : row.puuid,
+      puuid:
+        index === 2
+          ? "gamma0000000000000000000000000000000000000000000000000000000000000000000000000"
+          : index === 5
+            ? "unknown-5"
+            : row.puuid,
     }));
     const insights = buildCommunityInsights({
       players,

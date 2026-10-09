@@ -5,6 +5,8 @@ import {
   P,
   PlayerIdSchema,
   type Permission,
+  DiscordGuildIdSchema,
+  DiscordAccountIdSchema,
 } from "@scout-for-lol/data";
 import type { StorySeed } from "#src/lib/storybook/trpc-stub.ts";
 import { CompetitionLeaderboardPanel } from "./competition-leaderboard-panel.tsx";
@@ -40,7 +42,7 @@ function seedPermissions(permissions: Permission[]): StorySeed {
       trpc.guild.listManageable.queryOptions().queryKey,
       [
         {
-          id: GUILD_ID,
+          id: DiscordGuildIdSchema.parse(GUILD_ID),
           name: "Summoner's Rift Club",
           icon: null,
           isOwner: false,
@@ -98,17 +100,17 @@ function seedLeaderboard(entries: number): StorySeed {
 const seedParticipantNames: StorySeed = (trpc, queryClient) => {
   queryClient.setQueryData(
     trpc.discord.resolveUsers.queryOptions({
-      ids: ["111", "222"],
+      ids: ["837550478469304750", "831241495443650079"],
     }).queryKey,
     {
-      "111": {
-        id: "111",
+      "837550478469304750": {
+        id: "837550478469304750",
         username: "jerred",
         displayName: "jerred",
         avatar: null,
       },
-      "222": {
-        id: "222",
+      "831241495443650079": {
+        id: "831241495443650079",
         username: "bryan",
         displayName: "bryan",
         avatar: null,
@@ -122,9 +124,9 @@ const PARTICIPANTS = [
     id: 501,
     playerId: 11,
     alias: "jerred",
-    discordId: "111",
+    discordId: DiscordAccountIdSchema.parse("837550478469304750"),
     status: "ACTIVE",
-    invitedBy: "111",
+    invitedBy: "837550478469304750",
     invitedAt: "2026-09-13T16:00:00.000Z",
     joinedAt: "2026-09-13T16:02:00.000Z",
     leftAt: null,
@@ -133,9 +135,9 @@ const PARTICIPANTS = [
     id: 502,
     playerId: 12,
     alias: "bryan",
-    discordId: "222",
+    discordId: DiscordAccountIdSchema.parse("831241495443650079"),
     status: "INVITED",
-    invitedBy: "111",
+    invitedBy: "837550478469304750",
     invitedAt: "2026-09-13T16:05:00.000Z",
     joinedAt: null,
     leftAt: null,
@@ -146,7 +148,7 @@ const PARTICIPANTS = [
     alias: "hunter",
     discordId: null,
     status: "LEFT",
-    invitedBy: "111",
+    invitedBy: "837550478469304750",
     invitedAt: "2026-09-12T18:00:00.000Z",
     joinedAt: "2026-09-12T18:04:00.000Z",
     leftAt: "2026-09-13T09:30:00.000Z",
@@ -168,7 +170,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const LEADERBOARD_ARGS = {
-  guildId: GUILD_ID,
+  guildId: DiscordGuildIdSchema.parse(GUILD_ID),
   competitionId: COMPETITION_ID,
   status: "ACTIVE",
   startDate: "2026-09-01T07:00:00.000Z",
@@ -210,7 +212,7 @@ export const Participants: Story = {
   },
   render: () => (
     <CompetitionParticipantsPanel
-      guildId={GUILD_ID}
+      guildId={DiscordGuildIdSchema.parse(GUILD_ID)}
       competitionId={COMPETITION_ID}
       status="ACTIVE"
       visibility="INVITE_ONLY"
@@ -227,7 +229,7 @@ export const ParticipantsReadOnly: Story = {
   },
   render: () => (
     <CompetitionParticipantsPanel
-      guildId={GUILD_ID}
+      guildId={DiscordGuildIdSchema.parse(GUILD_ID)}
       competitionId={COMPETITION_ID}
       status="ENDED"
       visibility="OPEN"
@@ -242,7 +244,7 @@ export const ParticipantsEmpty: Story = {
   parameters: { seedQueries: [seedPermissions(ORGANIZER_PERMISSIONS)] },
   render: () => (
     <CompetitionParticipantsPanel
-      guildId={GUILD_ID}
+      guildId={DiscordGuildIdSchema.parse(GUILD_ID)}
       competitionId={COMPETITION_ID}
       status="DRAFT"
       visibility="SERVER_WIDE"

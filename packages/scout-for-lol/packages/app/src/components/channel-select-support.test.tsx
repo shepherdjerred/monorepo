@@ -1,3 +1,4 @@
+import { DiscordChannelIdSchema } from "@scout-for-lol/data";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test, vi } from "vitest";
 import {
@@ -7,7 +8,9 @@ import {
   channelSelectOptions,
 } from "#src/components/channel-select-support.tsx";
 
-const channels = [{ id: "general", name: "general" }];
+const channels = [
+  { id: DiscordChannelIdSchema.parse("100000000000000010"), name: "general" },
+];
 
 describe("channel availability", () => {
   test("reports pending, failed, empty, and ready channel queries", () => {
@@ -48,10 +51,10 @@ describe("channel availability", () => {
         label: "Current channel (archived)",
         disabled: true,
       },
-      { value: "general", label: "#general" },
+      { value: "100000000000000010", label: "#general" },
     ]);
-    expect(channelSelectOptions("general", channels)).toEqual([
-      { value: "general", label: "#general" },
+    expect(channelSelectOptions("100000000000000010", channels)).toEqual([
+      { value: "100000000000000010", label: "#general" },
     ]);
   });
 

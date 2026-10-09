@@ -1,3 +1,4 @@
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { describe, expect, test } from "vitest";
 import {
   bucksSectionItems,
@@ -38,16 +39,24 @@ describe("resolveBucksGuildSelection", () => {
   test("auto-selects the single available guild without waiting", () => {
     expect(
       resolveBucksGuildSelection({
-        availableGuilds: [{ id: "1" }],
+        availableGuilds: [
+          { id: DiscordGuildIdSchema.parse("818542720658922315") },
+        ],
         selectedGuildId: null,
       }),
-    ).toEqual({ awaitingGuildChoice: false, guildId: "1" });
+    ).toEqual({
+      awaitingGuildChoice: false,
+      guildId: DiscordGuildIdSchema.parse("818542720658922315"),
+    });
   });
 
   test("stays unresolved — not settled — while a multi-guild pick is pending", () => {
     expect(
       resolveBucksGuildSelection({
-        availableGuilds: [{ id: "1" }, { id: "2" }],
+        availableGuilds: [
+          { id: DiscordGuildIdSchema.parse("818542720658922315") },
+          { id: DiscordGuildIdSchema.parse("818666133331159861") },
+        ],
         selectedGuildId: null,
       }),
     ).toEqual({ awaitingGuildChoice: true, guildId: undefined });
@@ -56,9 +65,15 @@ describe("resolveBucksGuildSelection", () => {
   test("settles once a guild is picked from a multi-guild list", () => {
     expect(
       resolveBucksGuildSelection({
-        availableGuilds: [{ id: "1" }, { id: "2" }],
-        selectedGuildId: "2",
+        availableGuilds: [
+          { id: DiscordGuildIdSchema.parse("818542720658922315") },
+          { id: DiscordGuildIdSchema.parse("818666133331159861") },
+        ],
+        selectedGuildId: "818666133331159861",
       }),
-    ).toEqual({ awaitingGuildChoice: false, guildId: "2" });
+    ).toEqual({
+      awaitingGuildChoice: false,
+      guildId: DiscordGuildIdSchema.parse("818666133331159861"),
+    });
   });
 });

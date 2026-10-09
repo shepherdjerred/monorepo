@@ -1,3 +1,4 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
@@ -38,7 +39,7 @@ const GuildMatchRowSchema = z.object({
 export type GuildMatchRow = z.infer<typeof GuildMatchRowSchema>;
 
 const AccountCountSchema = z.object({
-  puuid: z.string(),
+  puuid: LeaguePuuidSchema,
   games: LakeInt,
   last_match_ms: LakeInt,
 });

@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   BucksAmountSchema,
@@ -31,7 +32,7 @@ import { bettingSettlementConservationFailuresTotal } from "#src/metrics/betting
 
 export type DareContributorRefund = {
   bucksAccountId: number;
-  discordId: string;
+  discordId: DiscordAccountId;
   /** Gross total this contributor had in the pot. */
   contributed: BucksAmount;
   /** House cut withheld (zero on the full-refund paths). */
@@ -42,7 +43,7 @@ export type DareContributorRefund = {
 
 export type DareTargetPayout = {
   bucksAccountId: number;
-  discordId: string;
+  discordId: DiscordAccountId;
   alias: string;
   /** floor(pot / N) before the house cut. */
   grossShare: BucksAmount;
@@ -53,7 +54,7 @@ export type DareTargetPayout = {
 
 export type DareLedgerFacts = {
   dareId: number;
-  serverId: string;
+  serverId: DiscordGuildId;
   potTotal: DarePotTotal;
   targetAliases: readonly string[];
   conditionSummary: string;
@@ -62,7 +63,7 @@ export type DareLedgerFacts = {
 
 type DarePayoutTarget = {
   id: number;
-  discordId: string;
+  discordId: DiscordAccountId;
   alias: string;
   bucksAccountId: number;
 };
@@ -135,7 +136,7 @@ export async function stakeDareContributionInTransaction(
 async function contributionTotals(
   tx: Db,
   facts: DareLedgerFacts,
-): Promise<Map<number, { discordId: string; total: number }>> {
+): Promise<Map<number, { discordId: DiscordAccountId; total: number }>> {
   const rows = await tx.bucksDareContribution.findMany({
     where: { dareId: facts.dareId },
     orderBy: { id: "asc" },
@@ -146,7 +147,10 @@ async function contributionTotals(
     pot === facts.potTotal,
     `Dare ${facts.dareId.toString()} contributions sum to ${pot.toString()} but potTotal is ${facts.potTotal.toString()}.`,
   );
-  const totals = new Map<number, { discordId: string; total: number }>();
+  const totals = new Map<
+    number,
+    { discordId: DiscordAccountId; total: number }
+  >();
   for (const row of rows) {
     const current = totals.get(row.bucksAccountId);
     if (current === undefined) {

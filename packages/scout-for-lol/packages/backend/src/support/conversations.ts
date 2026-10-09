@@ -1,3 +1,4 @@
+import type { DiscordAccountId } from "@scout-for-lol/domain/identity/discord.ts";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
@@ -27,7 +28,7 @@ const StoredSupportContextSchema = SupportContextSchema.extend({
 
 export async function lockSupportSender(
   tx: Db,
-  discordId: string,
+  discordId: DiscordAccountId,
 ): Promise<void> {
   await lockSupportSenderForTx(tx, discordId);
 }
@@ -46,7 +47,7 @@ export const SupportMessageSchema = z
 /** Also adopts records written by an older pod during a rolling upgrade. */
 export async function ensureConversation(
   tx: Db,
-  discordId: string,
+  discordId: DiscordAccountId,
   username?: string,
 ) {
   const conversation = await tx.supportConversation.upsert({
@@ -68,7 +69,7 @@ export async function ensureConversation(
 }
 
 type SupportIntake = {
-  discordId: string;
+  discordId: DiscordAccountId;
   username?: string;
   body: string;
   source: FeedbackSource;

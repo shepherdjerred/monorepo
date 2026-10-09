@@ -1,3 +1,5 @@
+import type { z } from "zod";
+import type { LeaguePuuidSchema } from "@scout-for-lol/data";
 import { afterAll, beforeEach, expect, test } from "vitest";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -1023,7 +1025,12 @@ const workPayload = (puuid: string, opponent?: string): string =>
 /** Queue one Temporal work row in a given state. */
 async function queueWork(
   db: Awaited<ReturnType<typeof openDatabase>>,
-  work: { id: string; state: string; puuid: string; opponent?: string },
+  work: {
+    id: string;
+    state: string;
+    puuid: z.input<typeof LeaguePuuidSchema>;
+    opponent?: string;
+  },
 ): Promise<void> {
   await db.exec(
     `INSERT INTO "ScoutTemporalWork" VALUES (${db.param(1)}, ${db.param(2)}, ${db.param(3)}, ${db.param(4)})`,

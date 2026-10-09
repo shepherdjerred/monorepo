@@ -1,3 +1,8 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
+import type {
+  DiscordChannelId,
+  DiscordAccountId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { z } from "zod";
 import { parseSubscriptionFilters } from "@scout-for-lol/data/index.ts";
 import {
@@ -46,10 +51,10 @@ export function serializePlayerSummary(
   player: {
     id: number;
     alias: string;
-    discordId: string | null;
+    discordId: DiscordAccountId | null;
     updatedTime: Date;
     accounts: { id: number }[];
-    subscriptions: { id: number; channelId: string }[];
+    subscriptions: { id: number; channelId: DiscordChannelId }[];
   },
   names: DiscordNames,
   permissions: PermissionSet,
@@ -76,14 +81,14 @@ export function serializePlayerDetail(
   player: {
     id: number;
     alias: string;
-    discordId: string | null;
+    discordId: DiscordAccountId | null;
     creatorDiscordId: string;
     createdTime: Date;
     updatedTime: Date;
     accounts: {
       id: number;
       alias: string;
-      puuid: string;
+      puuid: LeaguePuuid;
       region: string;
       riotGameName: string | null;
       riotTagLine: string | null;
@@ -92,7 +97,7 @@ export function serializePlayerDetail(
     }[];
     subscriptions: {
       id: number;
-      channelId: string;
+      channelId: DiscordChannelId;
       creatorDiscordId: string;
       createdTime: Date;
       filters: string | null;

@@ -1,3 +1,4 @@
+import type { DiscordChannelId } from "@scout-for-lol/domain/identity/discord.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   BucksDareStateSchema,
@@ -28,8 +29,8 @@ import { parseStoredStatusPhrases } from "#src/betting/dares/presentation/dare-l
 
 type VisibleDareRow = {
   id: number;
-  serverId: string;
-  channelId: string;
+  serverId: DiscordGuildId;
+  channelId: DiscordChannelId;
   originConversationId: string | null;
   challengerDiscordId: string;
   dareState: string;
@@ -63,7 +64,7 @@ type VisibleDareRow = {
   }[];
   targets: {
     targetKey: string;
-    discordId: string;
+    discordId: DiscordAccountId;
     playerId: number;
     alias: string;
     acceptedAt: Date | null;
@@ -84,7 +85,7 @@ type VisibleDareRow = {
     sourceReferences: string;
     evaluationTrace: string;
   }[];
-  contributions: { discordId: string }[];
+  contributions: { discordId: DiscordAccountId }[];
   activation: {
     requestedAt: Date;
     nextAttemptAt: Date;

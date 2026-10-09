@@ -1,3 +1,5 @@
+import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
@@ -77,7 +79,7 @@ function frame(options: {
   index: number;
   timestamp: number;
   participantId: number;
-  puuid: string;
+  puuid: LeaguePuuid;
 }): TimelineParticipantFrameLakeRow {
   return {
     match_id: matchId,
@@ -149,7 +151,7 @@ beforeAll(async () => {
   await resetTestLake(lakeDir);
   const created = new Date("2026-08-20T12:00:00.000Z");
   await writeTestLake(lakeDir, {
-    serverId: "100000000000000041",
+    serverId: DiscordGuildIdSchema.parse("100000000000000041"),
     matchFacts: Array.from({ length: 22 }, (_, index) => ({
       playerId: 1,
       playerAlias: "One",

@@ -9,6 +9,10 @@ import {
 import {
   CustomAuthResponseSchema,
   type CustomAuthResponse,
+  DiscordGuildIdSchema,
+  DiscordChannelIdSchema,
+  type DiscordGuildId,
+  type DiscordChannelId,
 } from "@scout-for-lol/data";
 import { z } from "zod";
 import {
@@ -35,8 +39,8 @@ type ActivitySession = {
   sdk: ActivitySdkAdapter;
   auth: CustomAuthResponse;
   identity: ActivityIdentity;
-  guildId: string;
-  channelId: string;
+  guildId: DiscordGuildId;
+  channelId: DiscordChannelId;
   instanceId: string;
   layoutMode: ActivityLayoutMode;
   connectedParticipantCount: number;
@@ -119,11 +123,13 @@ async function startActivitySession(): Promise<ActivitySession> {
       "Scout Customs must be opened from a Discord guild channel",
     );
   }
+  const guildId = DiscordGuildIdSchema.parse(sdk.guildId);
+  const channelId = DiscordChannelIdSchema.parse(sdk.channelId);
   const code = await sdk.authorize();
   const auth = await authRequest("/api/customs/auth/exchange", {
     code,
-    guildId: sdk.guildId,
-    channelId: sdk.channelId,
+    guildId,
+    channelId,
     instanceId: sdk.instanceId,
   });
   assertContractHash(auth, config.contractHash);
@@ -133,8 +139,8 @@ async function startActivitySession(): Promise<ActivitySession> {
     sdk,
     auth,
     identity,
-    guildId: sdk.guildId,
-    channelId: sdk.channelId,
+    guildId,
+    channelId,
     instanceId: sdk.instanceId,
     layoutMode: -1,
     connectedParticipantCount,

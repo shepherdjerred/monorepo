@@ -7,6 +7,8 @@ import {
   RiotMatchIdSchema,
   PlayerIdSchema,
   ReportIdSchema,
+  DiscordGuildIdSchema,
+  type DiscordGuildId,
 } from "@scout-for-lol/data";
 
 /**
@@ -17,10 +19,10 @@ import {
  * rather than being swallowed by a `?? ""` fallback.
  */
 
-export const GuildParamsSchema = z.object({ guildId: z.string().min(1) });
+export const GuildParamsSchema = z.object({ guildId: DiscordGuildIdSchema });
 
 export const PlayerParamsSchema = z.object({
-  guildId: z.string().min(1),
+  guildId: DiscordGuildIdSchema,
   alias: z.string().min(1),
 });
 
@@ -42,12 +44,12 @@ export const ExploreMatchParamsSchema = z.object({
 });
 
 export const CompetitionParamsSchema = z.object({
-  guildId: z.string().min(1),
+  guildId: DiscordGuildIdSchema,
   competitionId: z.coerce.number().pipe(CompetitionIdSchema),
 });
 
 export const ReportParamsSchema = z.object({
-  guildId: z.string().min(1),
+  guildId: DiscordGuildIdSchema,
   reportId: z.coerce.number().pipe(ReportIdSchema),
 });
 
@@ -56,19 +58,21 @@ export const ExploreParamsSchema = z.object({
   conversationId: ExploreConversationIdSchema.optional(),
 });
 
-export const HallParamsSchema = z.object({ guildId: z.string().min(1) });
+export const HallParamsSchema = z.object({ guildId: DiscordGuildIdSchema });
 export const ChallengeTemplateParamsSchema = z.object({
   templateId: z.uuid(),
 });
 export const ChallengeDraftParamsSchema = z.object({ draftId: z.uuid() });
 export const ChallengeRunParamsSchema = z.object({ runId: z.uuid() });
-export const DuelGuildParamsSchema = z.object({ guildId: z.string().min(1) });
+export const DuelGuildParamsSchema = z.object({
+  guildId: DiscordGuildIdSchema,
+});
 export const DuelEventParamsSchema = z.object({
-  guildId: z.string().min(1),
+  guildId: DiscordGuildIdSchema,
   eventId: z.uuid(),
 });
 export const DuelSeriesParamsSchema = z.object({
-  guildId: z.string().min(1),
+  guildId: DiscordGuildIdSchema,
   seriesId: z.uuid(),
 });
 
@@ -173,4 +177,16 @@ export function useDuelEventParams(): z.infer<typeof DuelEventParamsSchema> {
 
 export function useDuelSeriesParams(): z.infer<typeof DuelSeriesParamsSchema> {
   return parseRouteParams(DuelSeriesParamsSchema, useParams());
+}
+
+/**
+ * The `:guildId` segment, when it is a well-formed Discord snowflake.
+ *
+ * For the workspace shells that render before access resolves: a malformed
+ * segment reads as no guild, which the access check then refuses, rather than
+ * a route error. Pages that need the segment use {@link useGuildParams}.
+ */
+export function useRouteGuildId(): DiscordGuildId | undefined {
+  const parsed = DiscordGuildIdSchema.safeParse(useParams()["guildId"]);
+  return parsed.success ? parsed.data : undefined;
 }

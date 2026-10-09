@@ -451,7 +451,7 @@ export async function getPersonalBucksView(
 
 export type FullLeaderboardRow = {
   accountId: number;
-  discordId: string;
+  discordId: DiscordAccountId;
   balance: number;
 };
 

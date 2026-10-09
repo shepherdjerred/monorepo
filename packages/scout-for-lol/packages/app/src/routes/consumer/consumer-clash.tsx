@@ -1,6 +1,6 @@
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import {
   Card,
   CardContent,

@@ -1,3 +1,4 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import { describe, expect, test } from "vitest";
 import type { RawCurrentGameInfo } from "@scout-for-lol/data";
 import {
@@ -100,7 +101,10 @@ describe("isPrematchRosterComplete", () => {
 describe("prematchRosterCompletion", () => {
   test("names a full roster as listed", async () => {
     await expect(
-      prematchRosterCompletion(gameWith({ participants: 10 }), "p".repeat(78)),
+      prematchRosterCompletion(
+        gameWith({ participants: 10 }),
+        LeaguePuuidSchema.parse("p".repeat(78)),
+      ),
     ).resolves.toBe("listed");
   });
 
@@ -113,7 +117,7 @@ describe("prematchRosterCompletion", () => {
           gameQueueConfigId: 0,
           gameLength: 12,
         }),
-        "p".repeat(78),
+        LeaguePuuidSchema.parse("p".repeat(78)),
       ),
     ).resolves.toBe("custom_roster_final");
   });

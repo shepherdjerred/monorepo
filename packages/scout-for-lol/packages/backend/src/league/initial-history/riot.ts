@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import { z } from "zod";
 import {
   LeaguePuuidSchema,
@@ -24,7 +25,7 @@ import { PermanentImportError } from "#src/league/initial-history/errors.ts";
 export const INITIAL_HISTORY_MATCH_COUNT = 20;
 
 export async function fetchInitialMatchIds(input: {
-  puuid: string;
+  puuid: LeaguePuuid;
   region: Region;
 }): Promise<RiotMatchId[]> {
   const puuid = LeaguePuuidSchema.parse(input.puuid);
@@ -107,7 +108,7 @@ function rankOrUndefined(
 }
 
 export async function fetchCurrentRanks(input: {
-  puuid: string;
+  puuid: LeaguePuuid;
   region: Region;
 }): Promise<Ranks> {
   const puuid = LeaguePuuidSchema.parse(input.puuid);

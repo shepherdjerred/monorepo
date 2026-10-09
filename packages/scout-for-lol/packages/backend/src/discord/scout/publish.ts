@@ -1,8 +1,10 @@
-import type {
-  InteractionEditReplyOptions,
-  InteractionReplyOptions,
+import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
+import {
+  type Interaction,
+  type InteractionEditReplyOptions,
+  type InteractionReplyOptions,
+  MessageFlags,
 } from "discord.js";
-import { MessageFlags } from "discord.js";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { isExploreGuildAllowed } from "#src/explore/access.ts";
@@ -17,7 +19,7 @@ import { exploreVisualizationPayload } from "#src/discord/scout/visualization.ts
 
 export type ScoutPublishButtonInteraction = {
   customId: string;
-  guildId: string | null;
+  guildId: Interaction["guildId"];
   user: { id: string; username: string };
   deferUpdate: () => Promise<unknown>;
   followUp: (options: InteractionReplyOptions) => Promise<{
@@ -43,7 +45,7 @@ export async function handleScoutPublishButton(
   }
   if (
     interaction.guildId === null ||
-    !isExploreGuildAllowed(interaction.guildId)
+    !isExploreGuildAllowed(DiscordGuildIdSchema.parse(interaction.guildId))
   ) {
     await privateFollowUp(
       interaction,

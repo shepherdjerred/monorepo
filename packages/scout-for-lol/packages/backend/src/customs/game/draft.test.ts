@@ -1,3 +1,4 @@
+import { testIndexedAccountId, testPuuid } from "#src/testing/test-ids.ts";
 import { describe, expect, test } from "vitest";
 import type {
   CustomGameParticipant,
@@ -17,7 +18,7 @@ import {
 
 function nightParticipant(index: number): CustomNightParticipant {
   return {
-    discordId: index.toString(),
+    discordId: testIndexedAccountId(index),
     displayName: `Player ${index.toString()}`,
     avatarUrl: null,
     role: "MEMBER",
@@ -32,7 +33,7 @@ function nightParticipant(index: number): CustomNightParticipant {
     accounts: [
       {
         accountId: index + 1,
-        puuid: `puuid-${index.toString()}`,
+        puuid: testPuuid(index.toString()),
         region: "AMERICA_NORTH",
         riotGameName: `Player${index.toString()}`,
         riotTagLine: "NA1",
@@ -44,12 +45,12 @@ function nightParticipant(index: number): CustomNightParticipant {
 
 function gameParticipant(index: number): CustomGameParticipant {
   return {
-    discordId: index.toString(),
+    discordId: testIndexedAccountId(index),
     displayName: `Player ${index.toString()}`,
     playerId: index + 1,
     playerAlias: `p${index.toString()}`,
     accountId: index + 1,
-    puuid: `puuid-${index.toString()}`,
+    puuid: testPuuid(index.toString()),
     riotGameName: null,
     riotTagLine: null,
     rosterOrder: index,
@@ -86,7 +87,18 @@ describe("custom roster selection", () => {
         mode: "FIRST_TEN",
         selectedDiscordIds: [],
       }).map((p) => p.discordId),
-    ).toEqual(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]);
+    ).toEqual([
+      testIndexedAccountId(0),
+      testIndexedAccountId(1),
+      testIndexedAccountId(2),
+      testIndexedAccountId(3),
+      testIndexedAccountId(4),
+      testIndexedAccountId(5),
+      testIndexedAccountId(6),
+      testIndexedAccountId(7),
+      testIndexedAccountId(8),
+      testIndexedAccountId(9),
+    ]);
   });
 
   test("random roster consumes an injected cryptographic selector", () => {
@@ -110,16 +122,16 @@ describe("custom roster selection", () => {
       nightParticipant(index),
     );
     const selectedDiscordIds = [
-      "9",
-      "7",
-      "5",
-      "3",
-      "1",
-      "0",
-      "2",
-      "4",
-      "6",
-      "8",
+      testIndexedAccountId(9),
+      testIndexedAccountId(7),
+      testIndexedAccountId(5),
+      testIndexedAccountId(3),
+      testIndexedAccountId(1),
+      testIndexedAccountId(0),
+      testIndexedAccountId(2),
+      testIndexedAccountId(4),
+      testIndexedAccountId(6),
+      testIndexedAccountId(8),
     ];
     expect(
       selectCustomRoster({
@@ -132,7 +144,18 @@ describe("custom roster selection", () => {
       selectCustomRoster({
         participants,
         mode: "HOST_SELECTED",
-        selectedDiscordIds: ["0", "0", "1", "2", "3", "4", "5", "6", "7", "8"],
+        selectedDiscordIds: [
+          testIndexedAccountId(0),
+          testIndexedAccountId(0),
+          testIndexedAccountId(1),
+          testIndexedAccountId(2),
+          testIndexedAccountId(3),
+          testIndexedAccountId(4),
+          testIndexedAccountId(5),
+          testIndexedAccountId(6),
+          testIndexedAccountId(7),
+          testIndexedAccountId(8),
+        ],
       }),
     ).toThrow("10 distinct players");
   });
@@ -168,7 +191,18 @@ describe("custom roster selection", () => {
         mode: "FIRST_TEN",
         selectedDiscordIds: [],
       }).map((participant) => participant.discordId),
-    ).toEqual(["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]);
+    ).toEqual([
+      testIndexedAccountId(1),
+      testIndexedAccountId(2),
+      testIndexedAccountId(3),
+      testIndexedAccountId(4),
+      testIndexedAccountId(5),
+      testIndexedAccountId(6),
+      testIndexedAccountId(7),
+      testIndexedAccountId(8),
+      testIndexedAccountId(9),
+      testIndexedAccountId(10),
+    ]);
 
     participants[0] = { ...firstParticipant, awayUntil, held: true };
     const heldRoster = selectCustomRoster({
@@ -177,7 +211,7 @@ describe("custom roster selection", () => {
       selectedDiscordIds: [],
     });
     expect(heldRoster.map((participant) => participant.discordId)).toContain(
-      "0",
+      testIndexedAccountId(0),
     );
     expect(() => assertRosterLockable(heldRoster)).toThrow("still away");
   });

@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import {
   RegionSchema,
   regionToPlatformRoute,
@@ -27,7 +28,7 @@ export type ReplayClaimIdentity = {
 };
 
 type OwnerAccount = {
-  readonly puuid: string;
+  readonly puuid: LeaguePuuid;
   readonly region: string;
 };
 

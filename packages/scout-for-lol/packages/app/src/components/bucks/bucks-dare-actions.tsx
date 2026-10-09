@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/data";
 import { useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@scout-for-lol/design-system/components/button";
@@ -27,7 +28,7 @@ function contributionPayload(amount: number | undefined) {
 }
 
 export function BucksDareActions(props: {
-  guildId: string;
+  guildId: DiscordGuildId;
   dareId: number;
   revision: number;
   availableActions: string[];

@@ -1,4 +1,9 @@
 import {
+  DiscordAccountIdSchema,
+  type DiscordAccountId,
+} from "@scout-for-lol/domain/identity/discord.ts";
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
+import {
   RiotMatchIdSchema,
   type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
@@ -42,9 +47,9 @@ function game(input: {
   matchId: RiotMatchId;
   playerId: number;
   alias: string;
-  puuid: string;
+  puuid: LeaguePuuid;
   servers: string[];
-  discordId?: string;
+  discordId?: DiscordAccountId;
   teamId?: number;
 }): TestLakeMatchFact {
   return {
@@ -135,7 +140,7 @@ describe("servers scope", () => {
           alias: "Otto",
           puuid: testPuuid("servers-otto-main"),
           servers: [ALPHA],
-          discordId: "900000000000000021",
+          discordId: DiscordAccountIdSchema.parse("900000000000000021"),
         }),
         game({
           matchId: RiotMatchIdSchema.parse("NA1_2"),
@@ -143,7 +148,7 @@ describe("servers scope", () => {
           alias: "Otto Smurf",
           puuid: testPuuid("servers-otto-smurf"),
           servers: [BETA],
-          discordId: "900000000000000021",
+          discordId: DiscordAccountIdSchema.parse("900000000000000021"),
         }),
       ],
     });

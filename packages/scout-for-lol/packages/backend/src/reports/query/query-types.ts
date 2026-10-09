@@ -1,3 +1,4 @@
+import type { DiscordAccountId } from "@scout-for-lol/domain/identity/discord.ts";
 import type { VisualizationSnapshot } from "@scout-for-lol/data";
 import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
 import type { LakeScalar } from "#src/reports/duckdb/row-schema.ts";
@@ -36,7 +37,7 @@ export type ReportMentionIdentity =
       kind: "player";
       playerId: number | null;
       alias: string;
-      discordId: string | null;
+      discordId: DiscordAccountId | null;
     }
   | {
       kind: "group";

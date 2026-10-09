@@ -1,3 +1,5 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
+import { DiscordChannelIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { z } from "zod";
 import { RegionSchema } from "#src/model/riot/league-account.ts";
 import { AccountIdSchema } from "#src/model/competitions/competition.ts";
@@ -93,7 +95,7 @@ export type CustomVoiceState = z.infer<typeof CustomVoiceStateSchema>;
 
 export const CustomAccountSchema = z.strictObject({
   accountId: z.number().int().positive(),
-  puuid: z.string().min(1),
+  puuid: LeaguePuuidSchema,
   region: RegionSchema,
   riotGameName: z.string().min(1).nullable(),
   riotTagLine: z.string().min(1).nullable(),
@@ -101,7 +103,7 @@ export const CustomAccountSchema = z.strictObject({
 export type CustomAccount = z.infer<typeof CustomAccountSchema>;
 
 export const CustomNightParticipantSchema = z.strictObject({
-  discordId: z.string().min(1),
+  discordId: DiscordAccountIdSchema,
   displayName: z.string().min(1),
   avatarUrl: z.url().nullable(),
   role: CustomRoleSchema,
@@ -121,12 +123,12 @@ export type CustomNightParticipant = z.infer<
 >;
 
 export const CustomGameParticipantSchema = z.strictObject({
-  discordId: z.string().min(1),
+  discordId: DiscordAccountIdSchema,
   displayName: z.string().min(1),
   playerId: z.number().int().positive(),
   playerAlias: z.string().min(1),
   accountId: z.number().int().positive(),
-  puuid: z.string().min(1),
+  puuid: LeaguePuuidSchema,
   riotGameName: z.string().min(1).nullable(),
   riotTagLine: z.string().min(1).nullable(),
   rosterOrder: z.number().int().nonnegative(),
@@ -175,10 +177,10 @@ export const CustomRecruitmentCountsSchema = z.strictObject({
 
 export const CustomNightSnapshotSchema = z.strictObject({
   id: z.uuid(),
-  guildId: z.string().min(1),
+  guildId: DiscordGuildIdSchema,
   guildName: z.string().min(1),
-  launchChannelId: z.string().min(1),
-  voiceLobbyChannelId: z.string().min(1),
+  launchChannelId: DiscordChannelIdSchema,
+  voiceLobbyChannelId: DiscordChannelIdSchema,
   hostDiscordId: z.string().min(1),
   cohostDiscordIds: z.array(z.string().min(1)),
   state: CustomNightStateSchema,
@@ -188,8 +190,8 @@ export const CustomNightSnapshotSchema = z.strictObject({
   currentGame: CustomGameSnapshotSchema.nullable(),
   recruitmentCounts: CustomRecruitmentCountsSchema,
   recruitmentMessageId: z.string().min(1).nullable(),
-  teamAVoiceChannelId: z.string().min(1).nullable(),
-  teamBVoiceChannelId: z.string().min(1).nullable(),
+  teamAVoiceChannelId: DiscordChannelIdSchema.nullable(),
+  teamBVoiceChannelId: DiscordChannelIdSchema.nullable(),
   lastActivityAt: z.iso.datetime(),
   expiresAt: z.iso.datetime(),
   endedAt: z.iso.datetime().nullable(),
@@ -291,8 +293,8 @@ export const CustomHistoryListSchema = z.array(CustomNightSnapshotSchema);
 
 export const CustomActivityClaimsSchema = z.strictObject({
   sub: z.string().min(1),
-  guildId: z.string().min(1),
-  channelId: z.string().min(1),
+  guildId: DiscordGuildIdSchema,
+  channelId: DiscordChannelIdSchema,
   instanceId: z.string().min(1),
   applicationId: z.string().min(1),
   type: z.literal("customs_activity"),
@@ -300,8 +302,8 @@ export const CustomActivityClaimsSchema = z.strictObject({
 export type CustomActivityClaims = z.infer<typeof CustomActivityClaimsSchema>;
 export const CustomAuthExchangeInputSchema = z.strictObject({
   code: z.string().min(1),
-  guildId: z.string().min(1),
-  channelId: z.string().min(1),
+  guildId: DiscordGuildIdSchema,
+  channelId: DiscordChannelIdSchema,
   instanceId: z.string().min(1),
 });
 export const CustomAuthRefreshInputSchema = z.strictObject({

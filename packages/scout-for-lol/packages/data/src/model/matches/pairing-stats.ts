@@ -1,3 +1,5 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
+import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 
@@ -49,7 +51,7 @@ export type PairingStatsEntry = z.infer<typeof PairingStatsEntrySchema>;
  */
 export const ServerPairingStatsSchema = z.object({
   version: z.literal("v1"),
-  serverId: z.string(),
+  serverId: DiscordGuildIdSchema,
   periodStart: z.string(), // ISO 8601
   periodEnd: z.string(), // ISO 8601
   calculatedAt: z.string(), // ISO 8601
@@ -79,7 +81,7 @@ export type ServerPairingStats = z.infer<typeof ServerPairingStatsSchema>;
  */
 export const WeeklyPairingCacheSchema = z.object({
   version: z.literal("v1"),
-  serverId: z.string(),
+  serverId: DiscordGuildIdSchema,
   year: z.number().int().positive(),
   weekNumber: z.number().int().min(1).max(53),
   isComplete: z.boolean(),
@@ -97,7 +99,7 @@ export type WeeklyPairingCache = z.infer<typeof WeeklyPairingCacheSchema>;
  */
 export type PlayerMatchOutcome = {
   alias: string;
-  puuid: string;
+  puuid: LeaguePuuid;
   won: boolean;
   surrendered: boolean;
 };

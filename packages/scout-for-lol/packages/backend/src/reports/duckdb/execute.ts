@@ -1,3 +1,4 @@
+import { DiscordAccountIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import type { DuckDBValue } from "@duckdb/node-api";
 import { scoutQlSourceCatalog } from "@scout-for-lol/data/model/scoutql/catalog/catalog-columns.ts";
@@ -173,7 +174,9 @@ function planRowFrom(
   return {
     label: requireStringField(row, columns.label),
     playerId: optionalNumberField(row, columns.playerId),
-    discordId: optionalStringField(row, columns.discordId),
+    discordId: DiscordAccountIdSchema.nullable().parse(
+      optionalStringField(row, columns.discordId),
+    ),
     keys: columns.groupingKeys.map((key) => requireField(row, key)),
     groupMembers: null,
     outputs: columns.outputs.map((output) => outputValueFrom(row, output)),

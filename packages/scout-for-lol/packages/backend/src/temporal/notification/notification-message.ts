@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import type { MessageCreateOptions } from "discord.js";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
@@ -38,7 +39,7 @@ import { buildSettlementNotificationMessage } from "#src/temporal/notification/s
 export async function buildAttestedMessage(
   record: NotificationIntentRecord,
   abortSignal: AbortSignal,
-  deliveryGuildId?: string,
+  deliveryGuildId?: DiscordGuildId,
 ): Promise<MessageCreateOptions> {
   if ("duelId" in record) {
     return await buildDuelStatusNotificationMessage(record, deliveryGuildId);

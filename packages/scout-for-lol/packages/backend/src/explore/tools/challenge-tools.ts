@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import { tool } from "ai";
 import { z } from "zod";
 import {
@@ -21,7 +22,7 @@ const ChallengeToolResultSchema = z.strictObject({
 });
 
 export async function challengeExploreEnabled(
-  guildIds: readonly string[],
+  guildIds: readonly DiscordGuildId[],
 ): Promise<boolean> {
   const decisions = await Promise.all(
     guildIds.map((guildId) =>

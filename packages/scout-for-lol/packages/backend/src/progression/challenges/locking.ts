@@ -1,9 +1,10 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import { z } from "zod";
 import { prisma, type Db } from "#src/database/index.ts";
 
 const CHALLENGE_PROGRESSION_LOCK_NAMESPACE = "scout-challenge-progression";
 const SelectedAccountPuuidsSchema = z.array(
-  z.object({ puuid: z.string().min(1) }),
+  z.object({ puuid: LeaguePuuidSchema }),
 );
 
 function challengeRunLockKey(runId: string): string {

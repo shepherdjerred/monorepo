@@ -13,6 +13,10 @@
  * render is at most three Discord requests and usually none.
  */
 
+import {
+  DiscordChannelIdSchema,
+  type DiscordChannelId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { ChannelType, PermissionFlagsBits } from "discord.js";
 import type { DiscordGuildId } from "@scout-for-lol/data";
 import { botRest, type BotRestReader } from "#src/lib/discord/bot-rest.ts";
@@ -28,7 +32,7 @@ import { isDevGuildOverrideGuild } from "#src/lib/discord-rest.ts";
 const logger = createLogger("discord-postable-channels");
 
 export type PostableChannel = {
-  id: string;
+  id: DiscordChannelId;
   name: string;
   parentId: string | null;
 };
@@ -169,7 +173,7 @@ export async function listPostableChannels(
   const postable = guild.channels
     .filter((channel) => guild.isPostable(channel))
     .map((channel) => ({
-      id: channel.id,
+      id: DiscordChannelIdSchema.parse(channel.id),
       name: channel.name,
       parentId: channel.parent_id ?? null,
     }));

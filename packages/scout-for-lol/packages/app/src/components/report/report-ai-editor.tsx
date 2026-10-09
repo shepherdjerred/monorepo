@@ -1,7 +1,5 @@
-import { useRef, useState } from "react";
-import { AlertCircle, Check, Square, WandSparkles } from "lucide-react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  type DiscordGuildId,
   DiscordGuildIdSchema,
   type ReportAiEditStatus,
   type ReportAiFinalDraft,
@@ -9,6 +7,9 @@ import {
   type ReportAiQuotaSnapshot,
   type ReportAiStreamEvent,
 } from "@scout-for-lol/data";
+import { useRef, useState } from "react";
+import { AlertCircle, Check, Square, WandSparkles } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Card,
   CardContent,
@@ -39,7 +40,7 @@ type ProgressItem = {
 };
 
 export function ReportAiEditor(props: {
-  guildId: string;
+  guildId: DiscordGuildId;
   state: ReportFormState;
   onApplyDraft: (draft: {
     title: string;

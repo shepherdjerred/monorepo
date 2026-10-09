@@ -386,6 +386,8 @@ const FIELD_TYPE_MAP: Record<string, string> = {
   competitionId: "CompetitionId",
   accountId: "AccountId",
   serverId: "DiscordGuildId",
+  guildId: "DiscordGuildId",
+  messageId: "DiscordMessageId",
   channelId: "DiscordChannelId",
   discordId: "DiscordAccountId",
   ownerId: "DiscordAccountId",

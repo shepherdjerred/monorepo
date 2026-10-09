@@ -1,12 +1,12 @@
+import { type DiscordGuildId, PlayerIdSchema } from "@scout-for-lol/data";
 import { useQuery } from "@tanstack/react-query";
 import { Input } from "@scout-for-lol/design-system/components/forms/field";
 import { Label } from "@scout-for-lol/design-system/components/label";
-import { PlayerIdSchema } from "@scout-for-lol/data";
 import { useState } from "react";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 
 export function CompetitionBuilderEntrants(props: {
-  guildId: string;
+  guildId: DiscordGuildId;
   visibility: "OPEN" | "INVITE_ONLY" | "SERVER_WIDE";
   selected: number[];
   cap: number;

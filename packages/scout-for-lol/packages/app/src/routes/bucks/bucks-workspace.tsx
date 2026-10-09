@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/data";
 import { Loaded } from "@shepherdjerred/loaded";
 import { useDelayedLoading } from "@shepherdjerred/loaded/react.tsx";
 import { useEffect, useState, type ReactNode } from "react";
@@ -24,7 +25,7 @@ import { cn } from "#src/lib/cn.ts";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 
 export type BucksOutletContext = {
-  guildId: string;
+  guildId: DiscordGuildId;
   guildName: string;
   daresAvailable: boolean;
 };
@@ -59,12 +60,12 @@ export type BucksGuildSelection = {
    * entry pageview.
    */
   awaitingGuildChoice: boolean;
-  guildId: string | undefined;
+  guildId: DiscordGuildId | undefined;
 };
 
 /** Pure guild-selection resolution, shared by the analytics gate and the render path. */
 export function resolveBucksGuildSelection(input: {
-  availableGuilds: { id: string }[] | undefined;
+  availableGuilds: { id: DiscordGuildId }[] | undefined;
   selectedGuildId: string | null;
 }): BucksGuildSelection {
   const { availableGuilds, selectedGuildId } = input;

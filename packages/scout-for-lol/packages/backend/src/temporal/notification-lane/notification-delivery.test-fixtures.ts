@@ -1,3 +1,7 @@
+import {
+  type DiscordChannelId,
+  DiscordChannelIdSchema,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { vi } from "vitest";
 import { NotificationIntentKeySchema } from "@scout-for-lol/domain/identity/brands.ts";
 import type * as DiscordChannelModule from "#src/league/discord/channel.ts";
@@ -17,7 +21,7 @@ import type { ScoutIntentAttemptRef } from "@scout-for-lol/temporal/pipeline-con
 export const intentKey = NotificationIntentKeySchema.parse(
   "postmatch-discord:NA1_9301:100000000000000001",
 );
-export const CHANNEL_ID = "100000000000000001";
+export const CHANNEL_ID = DiscordChannelIdSchema.parse("100000000000000001");
 const ACCOUNT_ID = "200000000000000002";
 
 export function attemptRef(): ScoutIntentAttemptRef {
@@ -32,7 +36,7 @@ export function intentRecord(
   target: "channel" | "dm",
   kind: NotificationIntentKind = "postmatch",
   /** Overridden when a suite delivers one match's intent to two channels. */
-  channelId: string = CHANNEL_ID,
+  channelId: DiscordChannelId = CHANNEL_ID,
 ): unknown {
   return {
     matchId: "NA1_9301",

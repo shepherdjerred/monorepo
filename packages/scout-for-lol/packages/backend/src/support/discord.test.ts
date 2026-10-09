@@ -80,7 +80,7 @@ test("a passive action preserves report content and existing controls, and is in
     await withSupportAction(
       message,
       RiotMatchIdSchema.parse("NA1_1234"),
-      "100000000000099111",
+      DiscordGuildIdSchema.parse("100000000000099111"),
     ),
   ).toBe(message);
 });

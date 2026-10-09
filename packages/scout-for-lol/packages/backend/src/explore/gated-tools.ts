@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import type { DiscordAccountId, DiscordChannelId } from "@scout-for-lol/data";
 import {
   createBucksExploreTools,
@@ -33,7 +34,7 @@ export function createGatedExploreTools(input: {
   creationCapability: CreationCapability | null;
   hallCapability: HallExploreCapability | null;
   requesterId: DiscordAccountId;
-  guildIds: readonly string[];
+  guildIds: readonly DiscordGuildId[];
   conversationId: string;
   originChannelId: DiscordChannelId | null;
   track: ToolTracker;

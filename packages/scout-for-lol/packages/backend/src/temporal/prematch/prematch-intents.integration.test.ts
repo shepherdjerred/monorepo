@@ -2,14 +2,17 @@ import { afterAll, describe, expect, test } from "vitest";
 import {
   IsoInstantSchema,
   RiotMatchIdSchema,
+  NotificationIntentKeySchema,
 } from "@scout-for-lol/domain/identity/brands.ts";
-import { DiscordChannelIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
+import {
+  DiscordChannelIdSchema,
+  type DiscordChannelId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import {
   getIntent,
   listIntentsForMatch,
   upsertIntent,
 } from "#src/database/durable/intent-repository.ts";
-import { NotificationIntentKeySchema } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   deliveryIntentKey,
   prematchDeliveryKeyPrefix,
@@ -28,7 +31,7 @@ const CHANNEL = "100000000000000001";
 const OBSERVED_AT = new Date("2026-09-13T00:00:00.000Z");
 const FRESHNESS_DEADLINE = new Date("2026-09-13T03:00:00.000Z");
 
-function mint(channelId: string, createdAt: Date) {
+function mint(channelId: DiscordChannelId, createdAt: Date) {
   return mintPrematchIntent(prisma, {
     matchId: MATCH_ID,
     channelId,
@@ -42,13 +45,18 @@ function mint(channelId: string, createdAt: Date) {
 
 describe("mintPrematchIntent", () => {
   test("mints one pending row under the key v1's recorder would build", async () => {
-    expect(await mint(CHANNEL, OBSERVED_AT)).toBe("minted");
+    expect(await mint(DiscordChannelIdSchema.parse(CHANNEL), OBSERVED_AT)).toBe(
+      "minted",
+    );
 
     // The key format is shared with v1 on purpose: both pipelines mint against
     // the same channel while the rollout runs, and two spellings would mean
     // two rows and one channel told twice.
     const key = NotificationIntentKeySchema.parse(
-      deliveryIntentKey(prematchDeliveryKeyPrefix(MATCH_ID), CHANNEL),
+      deliveryIntentKey(
+        prematchDeliveryKeyPrefix(MATCH_ID),
+        DiscordChannelIdSchema.parse(CHANNEL),
+      ),
     );
     const stored = await getIntent(prisma, { intentKey: key });
     expect(stored?.matchId).toBe(MATCH_ID);
@@ -62,17 +70,24 @@ describe("mintPrematchIntent", () => {
 
   test("finds its own row on a retry instead of conflicting with it", async () => {
     const channel = "100000000000000002";
-    expect(await mint(channel, OBSERVED_AT)).toBe("minted");
+    expect(await mint(DiscordChannelIdSchema.parse(channel), OBSERVED_AT)).toBe(
+      "minted",
+    );
 
     // A retried Activity runs on a later clock. `upsertIntent` compares the
     // WHOLE stored row, so writing again would be answered `intent-differs` —
     // a drift signal raised by the system working correctly. The read-first
     // gate is what keeps an ordinary retry from producing one.
     const laterAttempt = new Date(OBSERVED_AT.getTime() + 45_000);
-    expect(await mint(channel, laterAttempt)).toBe("existing");
+    expect(
+      await mint(DiscordChannelIdSchema.parse(channel), laterAttempt),
+    ).toBe("existing");
 
     const key = NotificationIntentKeySchema.parse(
-      deliveryIntentKey(prematchDeliveryKeyPrefix(MATCH_ID), channel),
+      deliveryIntentKey(
+        prematchDeliveryKeyPrefix(MATCH_ID),
+        DiscordChannelIdSchema.parse(channel),
+      ),
     );
     const stored = await getIntent(prisma, { intentKey: key });
     // The first attempt's row stands, unmoved.
@@ -88,7 +103,10 @@ describe("mintPrematchIntent", () => {
     // channel silently never told. That is a broken contract, and it fails.
     const channel = "100000000000000009";
     const key = NotificationIntentKeySchema.parse(
-      deliveryIntentKey(prematchDeliveryKeyPrefix(MATCH_ID), channel),
+      deliveryIntentKey(
+        prematchDeliveryKeyPrefix(MATCH_ID),
+        DiscordChannelIdSchema.parse(channel),
+      ),
     );
     expect(
       await upsertIntent(prisma, {
@@ -113,16 +131,20 @@ describe("mintPrematchIntent", () => {
       }),
     ).toEqual({ outcome: "applied" });
 
-    await expect(mint(channel, OBSERVED_AT)).rejects.toThrow(
-      /refusing to treat it as this game's instruction/,
-    );
+    await expect(
+      mint(DiscordChannelIdSchema.parse(channel), OBSERVED_AT),
+    ).rejects.toThrow(/refusing to treat it as this game's instruction/);
   });
 
   test("keeps one row per channel for one game", async () => {
     const channels = ["100000000000000003", "100000000000000004"];
     for (const channel of channels) {
-      expect(await mint(channel, OBSERVED_AT)).toBe("minted");
-      expect(await mint(channel, OBSERVED_AT)).toBe("existing");
+      expect(
+        await mint(DiscordChannelIdSchema.parse(channel), OBSERVED_AT),
+      ).toBe("minted");
+      expect(
+        await mint(DiscordChannelIdSchema.parse(channel), OBSERVED_AT),
+      ).toBe("existing");
     }
 
     const prefix = `${prematchDeliveryKeyPrefix(MATCH_ID)}:`;

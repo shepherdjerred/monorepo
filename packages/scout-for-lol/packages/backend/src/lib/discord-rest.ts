@@ -5,6 +5,11 @@
  * an Administrator of.
  */
 
+import {
+  type DiscordGuildId,
+  type DiscordAccountId,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { z } from "zod";
 import { prisma } from "#src/database/index.ts";
 import configuration from "#src/configuration.ts";
@@ -25,7 +30,7 @@ const RefreshResponseSchema = z.object({
 });
 
 const PartialGuildSchema = z.object({
-  id: z.string(),
+  id: DiscordGuildIdSchema,
   name: z.string(),
   icon: z.string().nullable(),
   owner: z.boolean(),
@@ -243,7 +248,7 @@ export function devGuildOverride(input: {
   // they would for a server you actually run; a member-only stand-in would
   // block every management screen this exists to let you reach.
   return ids.map((id, index) => ({
-    id,
+    id: DiscordGuildIdSchema.parse(id),
     // Keep local screenshots representative without reflecting the Discord
     // snowflake back into consumer-facing UI. The id remains authoritative
     // for access checks; the ordinal only distinguishes multiple fixtures.
@@ -264,7 +269,7 @@ export function devGuildOverride(input: {
  * deployed client must continue to use its live cache as the installation
  * signal.
  */
-export function isDevGuildOverrideGuild(guildId: string): boolean {
+export function isDevGuildOverrideGuild(guildId: DiscordGuildId): boolean {
   return (
     devGuildOverride({
       environment: configuration.environment,
@@ -385,7 +390,7 @@ async function fetchUncachedUserGuilds(user: User): Promise<PartialGuild[]> {
  * Invalidate the per-user guild cache. Call when a user re-authenticates
  * or their permissions are known to have changed.
  */
-export function invalidateUserGuildsCache(discordId: string): void {
+export function invalidateUserGuildsCache(discordId: DiscordAccountId): void {
   guildsCache.delete(discordId);
   guildsRequests.delete(discordId);
 }

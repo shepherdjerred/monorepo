@@ -1,3 +1,5 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
+import { DiscordAccountIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { describe, expect, test } from "vitest";
 import { prepareDareDraft } from "#src/betting/dares/lifecycle/dare-draft.ts";
 import { DareDefinitionToolInputSchema } from "#src/explore/tools/dare-tool-schemas.ts";
@@ -46,12 +48,14 @@ describe("Dare tool input schema", () => {
       targets: [
         {
           key: "T1",
-          discordId: "100000000000000001",
+          discordId: DiscordAccountIdSchema.parse("100000000000000001"),
           playerId: 1,
           alias: "Virmel",
           accounts: [
             {
-              puuid: "frozen-puuid",
+              puuid: LeaguePuuidSchema.parse(
+                "frozen-puuid000000000000000000000000000000000000000000000000000000000000000000",
+              ),
               trackingStartedAt: "2026-01-01T00:00:00.000Z",
             },
           ],

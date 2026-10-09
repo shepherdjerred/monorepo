@@ -10,6 +10,7 @@ import {
   type ExploreActiveRun,
   type ExploreRunOutcome,
   type ExploreStreamEvent,
+  type ExploreMessage,
 } from "@scout-for-lol/data";
 import { scoutInteractiveWorkflowId } from "@scout-for-lol/temporal";
 import { requestStopSignal } from "@scout-for-lol/temporal/signals";
@@ -28,7 +29,7 @@ type Subscriber = (event: ExploreStreamEvent) => void;
 type StartedTurn = {
   conversationId: string;
   title: string;
-  messageId: string;
+  messageId: ExploreMessage["id"];
   question: string;
   expectedCurrentLeafId: string | null;
   previousCurrentLeafId: string | null;

@@ -1,14 +1,14 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import * as Sentry from "@sentry/bun";
 import {
   ExploreRunPreviewEventSchema,
   ExploreRunSnapshotEventSchema,
-} from "@scout-for-lol/data";
-import type {
-  ExploreActiveRun,
-  ExploreMessage,
-  ExploreRunOutcome,
-  ExploreStreamEvent,
-  ExploreTurnRequest,
+  type ExploreActiveRun,
+  type ExploreMessage,
+  type ExploreRunOutcome,
+  type ExploreStreamEvent,
+  type ExploreTurnRequest,
+  type DiscordChannelId,
 } from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import type {
@@ -16,7 +16,6 @@ import type {
   ExploreRateLimitTicket,
 } from "#src/explore/rate-limit.ts";
 import type { ExploreSurface } from "#src/explore/surface.ts";
-import type { DiscordChannelId } from "@scout-for-lol/data";
 import {
   ExploreInvalidTurnError,
   resolveRegenerateTarget,
@@ -144,7 +143,7 @@ export function createDeferred(): {
 export function createActiveExploreRun(input: {
   summary: ExploreActiveRun;
   identity: ExploreRateLimitIdentity;
-  guildIds: string[];
+  guildIds: DiscordGuildId[];
   ticket: ExploreRateLimitTicket;
   started: StartedTurn;
   history: ExploreMessage[];

@@ -5,6 +5,7 @@
  * itself — partial-name suggestions come from `summoner-search.ts` instead.
  */
 
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import type { z } from "zod";
 import { RegionSchema, RiotIdSchema } from "@scout-for-lol/data";
 import { resolveRiotIdToPuuid } from "#src/lib/riot/resolve-puuid.ts";
@@ -17,7 +18,7 @@ export const ResolveRiotIdInput = GuildIdInput.extend({
 export type ResolveRiotIdInputData = z.infer<typeof ResolveRiotIdInput>;
 
 export type ResolveRiotIdResult =
-  | { kind: "ok"; puuid: string; gameName: string; tagLine: string }
+  | { kind: "ok"; puuid: LeaguePuuid; gameName: string; tagLine: string }
   | { kind: "not-found"; message: string };
 
 export async function resolveRiotIdExact(

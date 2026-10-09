@@ -4,6 +4,7 @@ import {
   DarePollHealthSchema,
   DareProgressSchema,
   type DareDeadlineSpec,
+  DiscordGuildIdSchema,
 } from "@scout-for-lol/data";
 import { BucksDareActions } from "./bucks-dare-actions.tsx";
 import {
@@ -269,7 +270,7 @@ export const Actions: Story = {
   args: { dares: Loaded.done(DARES), onRetry: noop, onSelect: noop },
   render: () => (
     <BucksDareActions
-      guildId={GUILD_ID}
+      guildId={DiscordGuildIdSchema.parse(GUILD_ID)}
       dareId={91}
       revision={4}
       availableActions={["accept", "decline", "contribute", "cancel"]}
@@ -305,7 +306,7 @@ export const AdvancedEditorTrigger: Story = {
   args: { dares: Loaded.done(DARES), onRetry: noop, onSelect: noop },
   render: () => (
     <BucksDareEditor
-      guildId={GUILD_ID}
+      guildId={DiscordGuildIdSchema.parse(GUILD_ID)}
       dare={{
         id: 91,
         currentRevision: 4,

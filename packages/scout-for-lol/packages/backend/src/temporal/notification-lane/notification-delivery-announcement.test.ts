@@ -1,3 +1,4 @@
+import { DiscordChannelIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { z } from "zod";
 import { NotificationIntentKeySchema } from "@scout-for-lol/domain/identity/brands.ts";
@@ -118,7 +119,7 @@ function replyRefused(): InstanceType<typeof ChannelSendError> {
   return markReplyPermissionError(
     new ChannelSendError(
       "Bot does not have 'Read Message History' permission for this reply",
-      CHANNEL_ID,
+      DiscordChannelIdSchema.parse(CHANNEL_ID),
       true,
     ),
   );
@@ -298,7 +299,8 @@ describe("the hall-shaped path", () => {
             playerAlias: "Alice",
             accountId: 1,
             accountAlias: "Main",
-            puuid: "hall-delivery-puuid",
+            puuid:
+              "hall-delivery-puuid00000000000000000000000000000000000000000000000000000000000",
           },
           queueFamilyId: "retired-anyway",
           recordId: "largest_multikill",

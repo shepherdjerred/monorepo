@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type {
   BucksAmount,
@@ -37,7 +38,7 @@ export type SettlementBet = {
 
 export type SettlementSummary = {
   matchId: RiotMatchId;
-  serverId: string;
+  serverId: DiscordGuildId;
   winningTeamId: number | undefined;
   voidReason: BucksVoidReason | undefined;
   // Pool-level aggregates sum many bettors' Int32 positions, and matching

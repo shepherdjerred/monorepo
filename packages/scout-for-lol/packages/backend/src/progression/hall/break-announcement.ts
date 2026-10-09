@@ -5,6 +5,7 @@ import {
 import {
   DiscordChannelIdSchema,
   type DiscordGuildId,
+  type DiscordChannelId,
 } from "@scout-for-lol/domain/identity/discord.ts";
 import type { Db } from "#src/database/index.ts";
 import {
@@ -64,7 +65,7 @@ export async function announceHallRecordBreak(
   args: {
     guildId: DiscordGuildId;
     matchId: RiotMatchId;
-    channelId: string;
+    channelId: DiscordChannelId;
     records: readonly HallBreakPayload[];
     now: Date;
   },

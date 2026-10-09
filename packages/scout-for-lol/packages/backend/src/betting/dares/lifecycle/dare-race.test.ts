@@ -1,4 +1,8 @@
 import {
+  DiscordGuildIdSchema,
+  DiscordAccountIdSchema,
+} from "@scout-for-lol/domain/identity/discord.ts";
+import {
   RiotMatchIdSchema,
   type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
@@ -209,14 +213,24 @@ describe("Dare races", () => {
     const { payouts, remainder } = allocateDareTargetPayouts({
       facts: {
         dareId: 1,
-        serverId: "guild",
+        serverId: DiscordGuildIdSchema.parse("810135513265406599"),
         potTotal: DarePotTotalSchema.parse(5),
         targetAliases: ["Alpha", "Beta"],
         conditionSummary: "First to win",
       },
       targets: [
-        { id: 10, discordId: "alpha", alias: "Alpha", bucksAccountId: 100 },
-        { id: 20, discordId: "beta", alias: "Beta", bucksAccountId: 200 },
+        {
+          id: 10,
+          discordId: DiscordAccountIdSchema.parse("839393396049847288"),
+          alias: "Alpha",
+          bucksAccountId: 100,
+        },
+        {
+          id: 20,
+          discordId: DiscordAccountIdSchema.parse("836128353107453779"),
+          alias: "Beta",
+          bucksAccountId: 200,
+        },
       ],
       remainderTargetId: 10,
     });

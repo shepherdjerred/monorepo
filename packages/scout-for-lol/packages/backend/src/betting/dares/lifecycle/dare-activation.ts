@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import {
   DareActivationSnapshotSchema,
   DareSqlCompilationSchema,
@@ -118,7 +119,7 @@ async function rankSnapshot(
     if (targetAccounts.length === 0) {
       throw new Error(`Target ${target.key} has no persisted Riot account.`);
     }
-    const ranked: { rank: Rank; puuid: string }[] = [];
+    const ranked: { rank: Rank; puuid: LeaguePuuid }[] = [];
     for (const account of targetAccounts) {
       const result = await dependencies.getRank(
         account.puuid,

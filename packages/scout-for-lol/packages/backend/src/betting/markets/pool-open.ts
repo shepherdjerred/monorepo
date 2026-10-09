@@ -1,4 +1,8 @@
-import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
+import type { DiscordChannelId } from "@scout-for-lol/domain/identity/discord.ts";
+import type {
+  RiotMatchId,
+  DiscordMessageId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import * as Sentry from "@sentry/bun";
 import {
   BucksMessageRefsSchema,
@@ -267,7 +271,10 @@ export async function recordPoolMessageRefs(
   input: {
     matchId: RiotMatchId;
     serverId: DiscordGuildId;
-    refs: readonly { channelId: string; messageId: string }[];
+    refs: readonly {
+      channelId: DiscordChannelId;
+      messageId: DiscordMessageId;
+    }[];
     prematchContentBase: string;
   },
   prismaClient: ExtendedPrismaClient = prisma,

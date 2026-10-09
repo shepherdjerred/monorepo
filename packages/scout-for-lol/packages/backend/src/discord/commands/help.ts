@@ -1,4 +1,10 @@
-import { EmbedBuilder, Colors, SlashCommandBuilder } from "discord.js";
+import {
+  type Interaction,
+  EmbedBuilder,
+  Colors,
+  SlashCommandBuilder,
+} from "discord.js";
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import configuration from "#src/configuration.ts";
 import { createLogger } from "#src/logger.ts";
@@ -10,7 +16,7 @@ import { getFeedbackUrl } from "#src/discord/utils/feedback.ts";
 import { supportContactRow } from "#src/support/discord.ts";
 
 const logger = createLogger("commands-help");
-type HelpInteraction = { guildId: string | null; reply: CommandReply };
+type HelpInteraction = { guildId: Interaction["guildId"]; reply: CommandReply };
 
 export const helpCommand = new SlashCommandBuilder()
   .setName("help")
@@ -36,7 +42,11 @@ export async function executeHelp(interaction: HelpInteraction): Promise<void> {
       },
       {
         name: "Lightweight commands",
-        value: await commandList(interaction.guildId),
+        value: await commandList(
+          interaction.guildId === null
+            ? null
+            : DiscordGuildIdSchema.parse(interaction.guildId),
+        ),
       },
       {
         name: "Use the dashboard for",
@@ -86,7 +96,9 @@ const flagGatedCommands: {
   },
 ];
 
-export async function commandList(guildId: string | null): Promise<string> {
+export async function commandList(
+  guildId: DiscordGuildId | null,
+): Promise<string> {
   const commands = [
     "`/setup` — See the recommended web setup flow",
     "`/track` — Track one player in this channel",

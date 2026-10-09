@@ -51,7 +51,7 @@ export type CreationCapability = {
  */
 export async function resolveCreationCapability(input: {
   surface: ExploreSurface;
-  guildIds: readonly string[];
+  guildIds: readonly DiscordGuildId[];
 }): Promise<CreationCapability | null> {
   if (input.surface !== "web") return null;
   const enabled: DiscordGuildId[] = [];

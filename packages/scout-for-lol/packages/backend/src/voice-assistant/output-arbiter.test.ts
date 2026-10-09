@@ -1,3 +1,4 @@
+import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { describe, expect, test } from "vitest";
 import { VoiceOutputArbiter } from "#src/voice-assistant/output-arbiter.ts";
 
@@ -16,8 +17,12 @@ function settledFlag(promise: Promise<unknown>): () => boolean {
 async function expectAssistantToWaitForAlert(
   arbiter: VoiceOutputArbiter,
 ): Promise<void> {
-  const { release } = await arbiter.playbackGate()(GUILD);
-  const reserved = arbiter.reserveForAssistant(GUILD);
+  const { release } = await arbiter.playbackGate()(
+    DiscordGuildIdSchema.parse(GUILD),
+  );
+  const reserved = arbiter.reserveForAssistant(
+    DiscordGuildIdSchema.parse(GUILD),
+  );
   const isSettled = settledFlag(reserved);
   await Promise.resolve();
   await Promise.resolve();
@@ -31,17 +36,19 @@ describe("VoiceOutputArbiter — alert side", () => {
   test("alerts play at full volume while the assistant is quiet", async () => {
     const arbiter = new VoiceOutputArbiter();
     const gate = arbiter.playbackGate();
-    const result = await gate(GUILD);
+    const result = await gate(DiscordGuildIdSchema.parse(GUILD));
     expect(result.volumeMultiplier).toBe(1);
   });
 
   test("an alert waits for the assistant to fall fully silent, however long that takes", async () => {
     const arbiter = new VoiceOutputArbiter();
-    const duck = arbiter.assistantDuck(GUILD);
+    const duck = arbiter.assistantDuck(DiscordGuildIdSchema.parse(GUILD));
     duck.duckChanged(true);
-    expect(arbiter.isAssistantSpeaking(GUILD)).toBe(true);
+    expect(arbiter.isAssistantSpeaking(DiscordGuildIdSchema.parse(GUILD))).toBe(
+      true,
+    );
     const gate = arbiter.playbackGate();
-    const pending = gate(GUILD);
+    const pending = gate(DiscordGuildIdSchema.parse(GUILD));
     const isSettled = settledFlag(pending);
 
     // Still speaking: the alert must not be released early, regardless of
@@ -54,23 +61,27 @@ describe("VoiceOutputArbiter — alert side", () => {
     duck.duckChanged(false);
     const result = await pending;
     expect(result.volumeMultiplier).toBe(1);
-    expect(arbiter.isAssistantSpeaking(GUILD)).toBe(false);
+    expect(arbiter.isAssistantSpeaking(DiscordGuildIdSchema.parse(GUILD))).toBe(
+      false,
+    );
   });
 
   test("guilds are arbitrated independently", async () => {
     const arbiter = new VoiceOutputArbiter();
-    arbiter.assistantDuck(GUILD).duckChanged(true);
-    const result = await arbiter.playbackGate()("200000000000000002");
+    arbiter.assistantDuck(DiscordGuildIdSchema.parse(GUILD)).duckChanged(true);
+    const result = await arbiter.playbackGate()(
+      DiscordGuildIdSchema.parse("200000000000000002"),
+    );
     expect(result.volumeMultiplier).toBe(1);
   });
 
   test("multiple alerts queued behind one reply are all released together", async () => {
     const arbiter = new VoiceOutputArbiter();
-    const duck = arbiter.assistantDuck(GUILD);
+    const duck = arbiter.assistantDuck(DiscordGuildIdSchema.parse(GUILD));
     duck.duckChanged(true);
     const gate = arbiter.playbackGate();
-    const first = gate(GUILD);
-    const second = gate(GUILD);
+    const first = gate(DiscordGuildIdSchema.parse(GUILD));
+    const second = gate(DiscordGuildIdSchema.parse(GUILD));
     duck.duckChanged(false);
     await expect(first).resolves.toMatchObject({ volumeMultiplier: 1 });
     await expect(second).resolves.toMatchObject({ volumeMultiplier: 1 });
@@ -87,7 +98,9 @@ describe("VoiceOutputArbiter — bidirectional reservation", () => {
 
   test("reserveForAssistant resolves immediately when no alert is in flight", async () => {
     const arbiter = new VoiceOutputArbiter();
-    const isSettled = settledFlag(arbiter.reserveForAssistant(GUILD));
+    const isSettled = settledFlag(
+      arbiter.reserveForAssistant(DiscordGuildIdSchema.parse(GUILD)),
+    );
     await Promise.resolve();
     expect(isSettled()).toBe(true);
   });
@@ -103,9 +116,11 @@ describe("VoiceOutputArbiter — bidirectional reservation", () => {
 
   test("reservations do not cross guilds", async () => {
     const arbiter = new VoiceOutputArbiter();
-    await arbiter.playbackGate()(GUILD);
+    await arbiter.playbackGate()(DiscordGuildIdSchema.parse(GUILD));
     const isSettled = settledFlag(
-      arbiter.reserveForAssistant("200000000000000002"),
+      arbiter.reserveForAssistant(
+        DiscordGuildIdSchema.parse("200000000000000002"),
+      ),
     );
     await Promise.resolve();
     expect(isSettled()).toBe(true);

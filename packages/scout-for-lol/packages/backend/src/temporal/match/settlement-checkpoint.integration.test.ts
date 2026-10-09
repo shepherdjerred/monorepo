@@ -1,3 +1,7 @@
+import {
+  DiscordGuildIdSchema,
+  type DiscordGuildId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import { ApplicationFailure } from "@temporalio/common";
 import {
@@ -191,7 +195,7 @@ async function standingSettlementReceipt(
 
 /** One guild's settled pool, in the shape a checkpoint stores. */
 function settlementPayload(
-  serverId: string,
+  serverId: DiscordGuildId,
   betId: number,
   matchId: RiotMatchId = PARTLY_SETTLED,
 ): unknown {
@@ -234,16 +238,22 @@ describe("a settlement resuming a match another attempt settled part of", () => 
       matchId: PARTLY_SETTLED,
       item: {
         family: "settlement",
-        itemKey: "guild-1",
-        payload: settlementPayload("guild-1", 101),
+        itemKey: "100000000000000001",
+        payload: settlementPayload(
+          DiscordGuildIdSchema.parse("100000000000000001"),
+          101,
+        ),
       },
     });
     settlement.entered = 0;
     settlement.drive = async (sink) => {
       await sink.recordAnnouncementItem(prisma, {
         family: "settlement",
-        itemKey: "guild-2",
-        payload: settlementPayload("guild-2", 202),
+        itemKey: "100000000000000002",
+        payload: settlementPayload(
+          DiscordGuildIdSchema.parse("100000000000000002"),
+          202,
+        ),
       });
     };
 
@@ -256,7 +266,10 @@ describe("a settlement resuming a match another attempt settled part of", () => 
     // And the mint is driven by BOTH attempts' instructions: the dead
     // attempt's recap exists only as its checkpoint, and nothing else can
     // reconstruct it.
-    expect(minted.guilds.toSorted()).toEqual(["guild-1", "guild-2"]);
+    expect(minted.guilds.toSorted()).toEqual([
+      "100000000000000001",
+      "100000000000000002",
+    ]);
   });
 
   test("attests what the match settled, not what the last attempt returned", async () => {
@@ -268,15 +281,21 @@ describe("a settlement resuming a match another attempt settled part of", () => 
       matchId: PARTLY_SETTLED,
       item: {
         family: "settlement",
-        itemKey: "guild-1",
-        payload: settlementPayload("guild-1", 101),
+        itemKey: "100000000000000001",
+        payload: settlementPayload(
+          DiscordGuildIdSchema.parse("100000000000000001"),
+          101,
+        ),
       },
     });
     settlement.drive = async (sink) => {
       await sink.recordAnnouncementItem(prisma, {
         family: "settlement",
-        itemKey: "guild-2",
-        payload: settlementPayload("guild-2", 202),
+        itemKey: "100000000000000002",
+        payload: settlementPayload(
+          DiscordGuildIdSchema.parse("100000000000000002"),
+          202,
+        ),
       });
     };
 
@@ -340,8 +359,12 @@ test("a backfilled match still records what its settlement produced", async () =
   settlement.drive = async (sink) => {
     await sink.recordAnnouncementItem(prisma, {
       family: "settlement",
-      itemKey: "guild-1",
-      payload: settlementPayload("guild-1", 303, BACKFILLED),
+      itemKey: "100000000000000001",
+      payload: settlementPayload(
+        DiscordGuildIdSchema.parse("100000000000000001"),
+        303,
+        BACKFILLED,
+      ),
     });
   };
 
@@ -371,7 +394,11 @@ describe("a settlement whose checkpoint cannot be written", () => {
             },
           },
         }),
-        { family: "settlement", itemKey: "guild-1", payload: { net: 10 } },
+        {
+          family: "settlement",
+          itemKey: "100000000000000001",
+          payload: { net: 10 },
+        },
       );
     };
 
@@ -398,13 +425,13 @@ describe("a settlement whose checkpoint cannot be written", () => {
         matchId: WRITE_CONFLICTS,
         item: {
           family: "settlement",
-          itemKey: "guild-1",
+          itemKey: "100000000000000001",
           payload: { net: 10 },
         },
       });
       await sink.recordAnnouncementItem(prisma, {
         family: "settlement",
-        itemKey: "guild-1",
+        itemKey: "100000000000000001",
         payload: { net: 99 },
       });
     };

@@ -15,8 +15,9 @@ export type ActivityIdentity = {
 export type ActivitySdkAdapter = {
   clientId: string;
   instanceId: string;
-  guildId: string | null;
-  channelId: string | null;
+  /** Raw from the Embedded App SDK; the session parses them once. */
+  guildId: DiscordSDK["guildId"];
+  channelId: DiscordSDK["channelId"];
   ready: () => Promise<void>;
   authorize: () => Promise<string>;
   authenticate: (accessToken: string) => Promise<ActivityIdentity>;

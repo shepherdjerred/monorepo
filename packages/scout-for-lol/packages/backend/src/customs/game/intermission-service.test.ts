@@ -1,3 +1,4 @@
+import { testIndexedAccountId, testPuuid } from "#src/testing/test-ids.ts";
 import { describe, expect, test } from "vitest";
 import type { CustomGameParticipant } from "@scout-for-lol/data";
 import { nextCustomGameParticipants } from "#src/customs/game/intermission-service.ts";
@@ -5,12 +6,12 @@ import { nextCustomGameParticipants } from "#src/customs/game/intermission-servi
 function participant(index: number): CustomGameParticipant {
   const team = index < 5 ? "A" : "B";
   return {
-    discordId: index.toString(),
+    discordId: testIndexedAccountId(index),
     displayName: `Player ${index.toString()}`,
     playerId: index + 1,
     playerAlias: `p${index.toString()}`,
     accountId: index + 1,
-    puuid: `puuid-${index.toString()}`,
+    puuid: testPuuid(index.toString()),
     riotGameName: null,
     riotTagLine: null,
     rosterOrder: index,
@@ -29,8 +30,12 @@ const completed = Array.from({ length: 10 }, (_, index) => participant(index));
 function expectNewCaptains(next: readonly CustomGameParticipant[]): void {
   const newCaptains = next.filter((player) => player.captain);
   expect(newCaptains).toHaveLength(2);
-  expect(newCaptains.some((player) => player.discordId === "0")).toBe(false);
-  expect(newCaptains.some((player) => player.discordId === "5")).toBe(false);
+  expect(
+    newCaptains.some((player) => player.discordId === testIndexedAccountId(0)),
+  ).toBe(false);
+  expect(
+    newCaptains.some((player) => player.discordId === testIndexedAccountId(5)),
+  ).toBe(false);
 }
 
 describe("custom-night intermission choices", () => {
@@ -82,7 +87,7 @@ describe("custom-night intermission choices", () => {
     );
     expect(
       next.filter((player) => player.captain).map((player) => player.discordId),
-    ).toEqual(["0", "5"]);
+    ).toEqual([testIndexedAccountId(0), testIndexedAccountId(5)]);
     expect(
       next
         .filter((player) => !player.captain)

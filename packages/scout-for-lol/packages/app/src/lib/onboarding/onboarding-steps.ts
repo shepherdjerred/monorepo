@@ -1,5 +1,8 @@
+import {
+  type DiscordGuildId,
+  type OnboardingStepKind,
+} from "@scout-for-lol/data";
 import { match } from "ts-pattern";
-import type { OnboardingStepKind } from "@scout-for-lol/data";
 
 /**
  * The guided new-user wizard is a linear flow with one optional branch at
@@ -16,7 +19,7 @@ export type ExtraChoice = "report" | "competition";
 
 export type OnboardingState = {
   step: OnboardingStepKind;
-  selectedGuildId: string | null;
+  selectedGuildId: DiscordGuildId | null;
   // Example preset picked on the "Report or competition?" page, used to
   // seed the build form.
   selectedExampleId: string | null;
@@ -31,7 +34,7 @@ export type OnboardingEvent =
   | { type: "next" }
   | { type: "back" }
   | { type: "goto"; step: OnboardingStepKind }
-  | { type: "select-guild"; guildId: string }
+  | { type: "select-guild"; guildId: DiscordGuildId }
   | { type: "choose"; extra: ExtraChoice; exampleId: string };
 
 export const initialOnboardingState: OnboardingState = {

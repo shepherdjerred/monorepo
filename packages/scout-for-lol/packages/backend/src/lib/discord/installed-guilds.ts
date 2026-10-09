@@ -74,7 +74,7 @@ export type InstalledGuildsDependencies = {
   readonly db: ExtendedPrismaClient;
   readonly rest: BotRestReader;
   /** Local dev-login fixture guilds, which no real Discord answer covers. */
-  readonly isDevOverrideGuild: (guildId: string) => boolean;
+  readonly isDevOverrideGuild: (guildId: DiscordGuildId) => boolean;
 };
 
 export function defaultInstalledGuildsDependencies(): InstalledGuildsDependencies {
@@ -87,7 +87,7 @@ export function defaultInstalledGuildsDependencies(): InstalledGuildsDependencie
 
 async function hasLiveInstallRow(
   db: ExtendedPrismaClient,
-  guildId: string,
+  guildId: DiscordGuildId,
 ): Promise<boolean> {
   const install = await db.guildInstall.findUnique({
     where: { serverId: guildId },
@@ -105,7 +105,7 @@ async function hasLiveInstallRow(
  * never returns `false` because Scout failed to ask.
  */
 export async function isScoutInstalledInGuild(
-  guildId: string,
+  guildId: DiscordGuildId,
   dependencies: InstalledGuildsDependencies = defaultInstalledGuildsDependencies(),
 ): Promise<boolean> {
   if (dependencies.isDevOverrideGuild(guildId)) return true;
@@ -135,9 +135,9 @@ export async function isScoutInstalledInGuild(
  * docblock for why this half does not confirm negatives.
  */
 export async function installedGuildIdsAmong(
-  guildIds: readonly string[],
+  guildIds: readonly DiscordGuildId[],
   dependencies: InstalledGuildsDependencies = defaultInstalledGuildsDependencies(),
-): Promise<Set<string>> {
+): Promise<Set<DiscordGuildId>> {
   const unique = [...new Set(guildIds)];
   const installed = new Set(
     unique.filter((guildId) => dependencies.isDevOverrideGuild(guildId)),

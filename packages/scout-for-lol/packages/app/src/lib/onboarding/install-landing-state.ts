@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/data";
 import type { AnalyticsProps } from "#src/lib/analytics-events.ts";
 
 /**
@@ -15,13 +16,13 @@ export type InstallCompleteResponse =
   | { outcome: "invalid" | "cancelled" }
   | {
       outcome: "attributed" | "already_installed" | "pending";
-      guildId: string;
+      guildId: DiscordGuildId;
       surface: string;
     };
 
 export type InstallLandingResult = {
   outcome: InstallCompleteResponse["outcome"];
-  guildId: string | null;
+  guildId: DiscordGuildId | null;
 };
 
 export function installLandingResult(

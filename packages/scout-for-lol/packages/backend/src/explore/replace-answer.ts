@@ -12,7 +12,7 @@ export async function replaceExploreAnswer(
   prisma: ExtendedPrismaClient,
   input: {
     conversationId: string;
-    messageId: string;
+    messageId: ExploreMessage["id"];
     answer: ExploreAnswer;
     trace: ExploreTraceEntry[];
   },
@@ -50,7 +50,7 @@ export async function discardExploreAnswer(
   prisma: ExtendedPrismaClient,
   input: {
     conversationId: string;
-    messageId: string;
+    messageId: ExploreMessage["id"];
     expectedCurrentLeafId: string | null;
   },
 ): Promise<void> {

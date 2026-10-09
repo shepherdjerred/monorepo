@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import {
@@ -106,7 +107,7 @@ async function createOwnedAccounts() {
   return { first, second };
 }
 
-function matchForParticipant(puuid: string): RawMatch {
+function matchForParticipant(puuid: LeaguePuuid): RawMatch {
   return {
     metadata: {
       dataVersion: "2",

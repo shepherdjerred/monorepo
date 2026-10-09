@@ -1,4 +1,3 @@
-import { z } from "zod";
 import {
   CompetitionDescriptionSchema,
   CompetitionConfigurationSchema,
@@ -26,6 +25,7 @@ import {
   SeasonIdSchema,
   SubscriptionFilterSpecSchema,
 } from "@scout-for-lol/data";
+import { z } from "zod";
 import {
   CompetitionCronSchema,
   CompetitionScheduledUpdatesSchema,

@@ -7,6 +7,7 @@ import {
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   type DiscordGuildId,
+  type DiscordChannelId,
 } from "@scout-for-lol/domain/identity/discord.ts";
 import { ReceiptKindSchema } from "@scout-for-lol/domain/match-processing/states.ts";
 import type { ScoutGuardedEffectResult } from "@scout-for-lol/temporal/activity-contracts";
@@ -114,7 +115,7 @@ export const prematchMarketsEvidenceCodec = defineVersionedCodec({
  * from. A channel whose subscription has since been removed answers `null`.
  */
 export async function prematchGuildOfChannel(
-  channelId: string,
+  channelId: DiscordChannelId,
   database: ExtendedPrismaClient = prisma,
 ): Promise<DiscordGuildId | null> {
   const subscription = await database.subscription.findFirst({
@@ -298,7 +299,7 @@ export async function openPrematchMarkets(input: {
  */
 export async function prematchBetsOpenForChannel(
   riotMatchId: RiotMatchId,
-  channelId: string,
+  channelId: DiscordChannelId,
 ): Promise<boolean> {
   const guildId = await prematchGuildOfChannel(channelId);
   if (guildId === null) return false;

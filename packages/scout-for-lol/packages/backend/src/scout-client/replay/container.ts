@@ -1,5 +1,8 @@
 import { type FileHandle, open } from "node:fs/promises";
-import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
+import {
+  LeaguePuuidSchema,
+  type LeaguePuuid,
+} from "@scout-for-lol/domain/identity/league-account.ts";
 import { z } from "zod";
 
 const FILE_HEADER_BYTES = 15;
@@ -55,7 +58,7 @@ const ReplayParticipantsSchema = z
   .max(20);
 
 export type ReplayParticipantFingerprint = {
-  readonly puuid: string;
+  readonly puuid: LeaguePuuid;
   readonly teamId: number;
   readonly kills: number;
   readonly deaths: number;

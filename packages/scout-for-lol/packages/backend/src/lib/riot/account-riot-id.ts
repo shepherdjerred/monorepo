@@ -11,6 +11,7 @@
  * the background and served from cache. All refreshes are fail-soft.
  */
 
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import {
   type Region,
   RegionSchema,
@@ -33,7 +34,7 @@ export type RiotIdParts = { gameName: string; tagLine: string };
 
 export type AccountRiotRow = {
   id: number;
-  puuid: string;
+  puuid: LeaguePuuid;
   region: string;
   riotGameName: string | null;
   riotTagLine: string | null;
@@ -46,7 +47,7 @@ export type AccountRiotRow = {
  * the cached value or alias.
  */
 export async function getRiotIdByPuuid(
-  puuid: string,
+  puuid: LeaguePuuid,
   region: Region,
 ): Promise<RiotIdParts | null> {
   try {

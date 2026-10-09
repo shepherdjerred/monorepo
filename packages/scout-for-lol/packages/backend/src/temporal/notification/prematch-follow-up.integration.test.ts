@@ -3,13 +3,16 @@ import {
   IsoInstantSchema,
   NotificationIntentKeySchema,
   RiotMatchIdSchema,
+  type DiscordMessageId,
+  DiscordMessageIdSchema,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
+  type DiscordGuildId,
+  type DiscordChannelId,
 } from "@scout-for-lol/domain/identity/discord.ts";
-import { DiscordMessageIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import {
@@ -36,7 +39,10 @@ vi.mock("#src/database/index.ts", async () => await testDatabaseModule(prisma));
 const seen = vi.hoisted(
   (): {
     context: unknown;
-    refreshes: { serverId: string; removeComponents: boolean | undefined }[];
+    refreshes: {
+      serverId: DiscordGuildId;
+      removeComponents: boolean | undefined;
+    }[];
     parlays: number;
     outputs: string[];
   } => ({ context: null, refreshes: [], parlays: 0, outputs: [] }),
@@ -47,7 +53,7 @@ vi.mock("#src/temporal/prematch/prematch-resume.ts", () => ({
 }));
 vi.mock("#src/betting/notify/message-refresh.ts", () => ({
   refreshBucksMessages: (input: {
-    serverId: string;
+    serverId: DiscordGuildId;
     removeComponents?: boolean;
   }) => {
     seen.refreshes.push({
@@ -107,8 +113,8 @@ const MATCH_ID = RiotMatchIdSchema.parse("NA1_8100000001");
 const PLAYER = DiscordAccountIdSchema.parse("16050917270473909");
 
 function delivered(
-  channelId: string,
-  messageId: string,
+  channelId: DiscordChannelId,
+  messageId: DiscordMessageId,
 ): MatchNotificationIntentRecord {
   return {
     matchId: MATCH_ID,
@@ -209,13 +215,21 @@ describe("afterPrematchDelivered", () => {
     if (channel === undefined) throw new Error("channel");
 
     expect(
-      await afterPrematchDelivered(delivered(channel, "900000000000000001")),
+      await afterPrematchDelivered(
+        delivered(
+          DiscordChannelIdSchema.parse(channel),
+          DiscordMessageIdSchema.parse("900000000000000001"),
+        ),
+      ),
     ).toEqual({
       outcome: "completed",
     });
 
     expect(await refsOf()).toEqual([
-      { channelId: channel, messageId: "900000000000000001" },
+      {
+        channelId: channel,
+        messageId: DiscordMessageIdSchema.parse("900000000000000001"),
+      },
     ]);
     expect(seen.refreshes).toEqual([
       { serverId: GUILD, removeComponents: false },
@@ -230,13 +244,34 @@ describe("afterPrematchDelivered", () => {
     if (first === undefined || second === undefined)
       throw new Error("channels");
 
-    await afterPrematchDelivered(delivered(first, "900000000000000001"));
-    await afterPrematchDelivered(delivered(first, "900000000000000001"));
-    await afterPrematchDelivered(delivered(second, "900000000000000002"));
+    await afterPrematchDelivered(
+      delivered(
+        DiscordChannelIdSchema.parse(first),
+        DiscordMessageIdSchema.parse("900000000000000001"),
+      ),
+    );
+    await afterPrematchDelivered(
+      delivered(
+        DiscordChannelIdSchema.parse(first),
+        DiscordMessageIdSchema.parse("900000000000000001"),
+      ),
+    );
+    await afterPrematchDelivered(
+      delivered(
+        DiscordChannelIdSchema.parse(second),
+        DiscordMessageIdSchema.parse("900000000000000002"),
+      ),
+    );
 
     expect(await refsOf()).toEqual([
-      { channelId: first, messageId: "900000000000000001" },
-      { channelId: second, messageId: "900000000000000002" },
+      {
+        channelId: first,
+        messageId: DiscordMessageIdSchema.parse("900000000000000001"),
+      },
+      {
+        channelId: second,
+        messageId: DiscordMessageIdSchema.parse("900000000000000002"),
+      },
     ]);
     expect(seen.parlays).toBe(1);
   });
@@ -246,7 +281,12 @@ describe("afterPrematchDelivered", () => {
     const [channel] = CHANNELS;
     if (channel === undefined) throw new Error("channel");
 
-    await afterPrematchDelivered(delivered(channel, "900000000000000001"));
+    await afterPrematchDelivered(
+      delivered(
+        DiscordChannelIdSchema.parse(channel),
+        DiscordMessageIdSchema.parse("900000000000000001"),
+      ),
+    );
 
     expect(seen.refreshes).toEqual([
       { serverId: GUILD, removeComponents: true },
@@ -258,7 +298,12 @@ describe("afterPrematchDelivered", () => {
     if (channel === undefined) throw new Error("channel");
 
     expect(
-      await afterPrematchDelivered(delivered(channel, "900000000000000001")),
+      await afterPrematchDelivered(
+        delivered(
+          DiscordChannelIdSchema.parse(channel),
+          DiscordMessageIdSchema.parse("900000000000000001"),
+        ),
+      ),
     ).toEqual({
       outcome: "completed",
     });
@@ -271,8 +316,12 @@ describe("afterPrematchDelivered", () => {
 
 describe("appendPoolMessageRef", () => {
   const refs = Array.from({ length: 6 }, (_unused, index) => ({
-    channelId: `80000000000000010${index.toString()}`,
-    messageId: `90000000000000000${index.toString()}`,
+    channelId: DiscordChannelIdSchema.parse(
+      `80000000000000010${index.toString()}`,
+    ),
+    messageId: DiscordMessageIdSchema.parse(
+      `90000000000000000${index.toString()}`,
+    ),
   }));
 
   test("keeps every sibling channel's ref when they record at once", async () => {
@@ -321,8 +370,8 @@ describe("appendPoolMessageRef", () => {
         matchId: MATCH_ID,
         serverId: GUILD,
         ref: {
-          channelId: "800000000000000001",
-          messageId: "900000000000000009",
+          channelId: DiscordChannelIdSchema.parse("800000000000000001"),
+          messageId: DiscordMessageIdSchema.parse("900000000000000009"),
         },
         prematchContentBase: "",
       }),

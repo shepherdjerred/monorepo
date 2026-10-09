@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import type { DiscordAccountId } from "@scout-for-lol/data";
 import { createLeagueReferenceTools } from "#src/explore/tools/league-reference-tools.ts";
 import { createRiotHistoryExploreTools } from "#src/explore/tools/riot-history-tools.ts";
@@ -8,7 +9,7 @@ import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
 /** Compose static League reference tools with policy-gated Riot reads. */
 export function createLeagueExploreTools(input: {
   requesterId: DiscordAccountId;
-  guildIds: string[];
+  guildIds: DiscordGuildId[];
   riotHistoryEnabled: boolean;
   eligibleTimelineMatchIds: () => ReadonlySet<string>;
   track: ToolTracker;

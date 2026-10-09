@@ -1,3 +1,4 @@
+import { LeaguePuuidSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { RiotIdCombobox } from "./riot-id-combobox.tsx";
@@ -12,7 +13,7 @@ function noop(): void {
   // Intentionally empty.
 }
 
-const GUILD_ID = "469558207670419456";
+const GUILD_ID = DiscordGuildIdSchema.parse("469558207670419456");
 const REGION: RegionValue = "AMERICA_NORTH";
 
 const PARTIAL_QUERY = "Bald";
@@ -60,7 +61,7 @@ const seedRiotSuggestions: StorySeed = (trpc, queryClient) => {
 // obviously synthetic rather than looking like a leaked credential.
 const RESOLVED: RouterOutputs["riot"]["resolveRiotId"] = {
   kind: "ok",
-  puuid: "story-puuid-bald-bard-na1".padEnd(78, "-"),
+  puuid: LeaguePuuidSchema.parse("story-puuid-bald-bard-na1".padEnd(78, "-")),
   gameName: "Bald Bard",
   tagLine: "NA1",
 };

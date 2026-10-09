@@ -1,3 +1,4 @@
+import { useRouteGuildId } from "#src/lib/routes/route-params.ts";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Tabs,
@@ -57,7 +58,8 @@ function queryEditorDisclosure(isEdit: boolean, entryMethod: string) {
 
 export function ReportForm() {
   const [entryMethod, setEntryMethod] = useState("preset");
-  const { guildId, reportId: idParam } = useParams();
+  const { reportId: idParam } = useParams();
+  const guildId = useRouteGuildId();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -195,7 +197,7 @@ export function ReportForm() {
 
   return (
     <form.AppForm>
-      {invalidRoute ? (
+      {invalidRoute || guildId === undefined ? (
         <p className="text-sm text-scout-danger">Invalid report route.</p>
       ) : isEditWaitingForData ? (
         <EditRecordQueryState
@@ -254,7 +256,7 @@ export function ReportForm() {
               </TabsContent>
               <TabsContent value="describe">
                 <ReportAiEditor
-                  guildId={safeGuildId}
+                  guildId={guildId}
                   state={state}
                   onApplyDraft={(draft) => {
                     form.setFieldValue("title", draft.title);
@@ -326,7 +328,7 @@ export function ReportForm() {
             </div>
 
             <ReportQueryPreview
-              guildId={safeGuildId}
+              guildId={guildId}
               queryText={state.queryText}
               title={previewTitle(state.title)}
               sourceCompetitionId={existing?.sourceCompetitionId ?? null}
@@ -337,7 +339,7 @@ export function ReportForm() {
               Query reference
             </summary>
             <ReportDataExplorer
-              guildId={safeGuildId}
+              guildId={guildId}
               onInsertIdentifier={(identifier) => {
                 form.setFieldValue("queryText", (current) =>
                   current.trim().length === 0

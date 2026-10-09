@@ -1,5 +1,8 @@
-import { CustomSnapshotEnvelopeSchema } from "@scout-for-lol/data";
-import type { CustomActivityClaims } from "@scout-for-lol/data";
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
+import {
+  CustomSnapshotEnvelopeSchema,
+  type CustomActivityClaims,
+} from "@scout-for-lol/data";
 import {
   assertCustomActivityPolicy,
   isAllowedCustomActivityOrigin,
@@ -50,7 +53,9 @@ function removeSocket(socket: Bun.ServerWebSocket<CustomSocketData>): void {
     socketsByGuild.delete(socket.data.claims.guildId);
 }
 
-async function activeNightId(guildId: string): Promise<string | undefined> {
+async function activeNightId(
+  guildId: DiscordGuildId,
+): Promise<string | undefined> {
   const pointer = await prisma.customActiveNight.findUnique({
     where: { guildId },
     select: { nightId: true },

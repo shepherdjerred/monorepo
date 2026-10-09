@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import type {
   DiscordAccountId,
   DiscordChannelId,
@@ -25,7 +26,7 @@ export type StartedTurn = {
   model?: string | undefined;
   conversationId: string;
   title: string;
-  messageId: string;
+  messageId: ExploreMessage["id"];
   question: string;
   expectedCurrentLeafId: string | null;
   previousCurrentLeafId: string | null;
@@ -52,7 +53,7 @@ export type ExploreRunProgress = {
 export type ActiveRun = {
   summary: ExploreActiveRun;
   identity: ExploreRateLimitIdentity;
-  guildIds: string[];
+  guildIds: DiscordGuildId[];
   surface: ExploreSurface;
   originChannelId: DiscordChannelId | null;
   ticket: ExploreRateLimitTicket;

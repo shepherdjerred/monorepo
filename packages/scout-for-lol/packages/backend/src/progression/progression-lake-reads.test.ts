@@ -1,3 +1,4 @@
+import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import {
   RiotMatchIdSchema,
   type RiotMatchId,
@@ -69,7 +70,7 @@ afterAll(async () => {
 describe("fetchProgressionMatches timeline coverage", () => {
   test("treats a missing match coverage row as false", async () => {
     await writeTestLake(lakeDir, {
-      serverId: "guild-progression",
+      serverId: DiscordGuildIdSchema.parse("815637401011914312"),
       matchFacts: [
         matchFact(
           RiotMatchIdSchema.parse(matchWithoutCoverage),
@@ -92,7 +93,7 @@ describe("fetchProgressionMatches timeline coverage", () => {
 
   test("returns false when the coverage lake is absent", async () => {
     await writeTestLake(lakeDir, {
-      serverId: "guild-progression",
+      serverId: DiscordGuildIdSchema.parse("815637401011914312"),
       matchFacts: [
         matchFact(
           RiotMatchIdSchema.parse(matchWithoutCoverage),
@@ -110,7 +111,7 @@ describe("fetchProgressionMatches timeline coverage", () => {
 
   test("returns true for a complete coverage row", async () => {
     await writeTestLake(lakeDir, {
-      serverId: "guild-progression",
+      serverId: DiscordGuildIdSchema.parse("815637401011914312"),
       matchFacts: [
         matchFact(
           RiotMatchIdSchema.parse(matchWithCoverage),
@@ -129,7 +130,7 @@ describe("fetchProgressionMatches timeline coverage", () => {
 
   test("rejects a malformed present coverage row", async () => {
     await writeTestLake(lakeDir, {
-      serverId: "guild-progression",
+      serverId: DiscordGuildIdSchema.parse("815637401011914312"),
       matchFacts: [
         matchFact(
           RiotMatchIdSchema.parse(matchWithCoverage),

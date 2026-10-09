@@ -1,3 +1,4 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import {
@@ -18,6 +19,11 @@ import {
 const FIRST_ID = "11111111-1111-4111-8111-111111111111";
 const SECOND_ID = "22222222-2222-4222-8222-222222222222";
 
+/** A valid 78-character puuid that still reads as its test label. */
+function puuidOf(label: string) {
+  return LeaguePuuidSchema.parse(label.padEnd(78, "0"));
+}
+
 function competitor(id: string, puuids: string[]): DuelCompetitor {
   return DuelCompetitorSchema.parse({
     id,
@@ -27,7 +33,7 @@ function competitor(id: string, puuids: string[]): DuelCompetitor {
       playerAlias: `${id}-${index.toString()}`,
       accountId: index + (id === FIRST_ID ? 100 : 200),
       accountAlias: puuid,
-      puuid,
+      puuid: puuidOf(puuid),
     })),
     teamName: null,
   });
@@ -42,8 +48,8 @@ function timeline(
     completed: true,
     timelineComplete: true,
     participants: [
-      ...firstPuuids.map((puuid) => ({ puuid, teamId: 100 })),
-      ...secondPuuids.map((puuid) => ({ puuid, teamId: 200 })),
+      ...firstPuuids.map((puuid) => ({ puuid: puuidOf(puuid), teamId: 100 })),
+      ...secondPuuids.map((puuid) => ({ puuid: puuidOf(puuid), teamId: 200 })),
     ],
     kills: [],
     turretKills: [],
@@ -78,8 +84,8 @@ describe("duel rules and evidence", () => {
     ];
     const input = timeline(["first"], ["second"]);
     input.kills = [
-      { timestampMs: 20_000, killerPuuid: "second" },
-      { timestampMs: 30_000, killerPuuid: "first" },
+      { timestampMs: 20_000, killerPuuid: puuidOf("second") },
+      { timestampMs: 30_000, killerPuuid: puuidOf("first") },
     ];
     input.turretKills = [{ timestampMs: 40_000, scoringTeamId: 100 }];
     const result = evaluateDuelGame(
@@ -147,7 +153,7 @@ describe("duel rules and evidence", () => {
       competitor(SECOND_ID, ["second"]),
     ];
     const input = timeline(["first"], ["second"]);
-    input.kills = [{ timestampMs: 30_000, killerPuuid: "second" }];
+    input.kills = [{ timestampMs: 30_000, killerPuuid: puuidOf("second") }];
     input.frames = [
       {
         timestampMs: 20_000,
@@ -161,7 +167,7 @@ describe("duel rules and evidence", () => {
         timestampMs: 60_000,
         participants: input.participants.map((participant) => ({
           puuid: participant.puuid,
-          minionsKilled: participant.puuid === "first" ? 10 : 9,
+          minionsKilled: participant.puuid === puuidOf("first") ? 10 : 9,
           jungleMinionsKilled: 0,
         })),
       },
@@ -204,7 +210,7 @@ describe("duel rules and evidence", () => {
       ),
     ).toMatchObject({ state: "needs_review" });
 
-    input.participants[1] = { puuid: "first-b", teamId: 200 };
+    input.participants[1] = { puuid: puuidOf("first-b"), teamId: 200 };
     expect(
       evaluateDuelGame(
         { version: 1, killTarget: 1, laneCsTarget: null, firstTurret: false },

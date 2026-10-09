@@ -1,8 +1,9 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import { describe, expect, test } from "vitest";
-import { groupClashHistory } from "./history.ts";
-import type {
-  ClashHistoryMembershipRecord,
-  ClashHistorySightingRecord,
+import {
+  groupClashHistory,
+  type ClashHistoryMembershipRecord,
+  type ClashHistorySightingRecord,
 } from "./history.ts";
 
 const PUUID = "p".repeat(78);
@@ -13,7 +14,7 @@ function sighting(
   return {
     platform: "NA1",
     gameId: "1",
-    puuid: PUUID,
+    puuid: LeaguePuuidSchema.parse(PUUID),
     source: "prematch",
     queue: "clash",
     championId: 157,
@@ -30,7 +31,7 @@ describe("groupClashHistory", () => {
   test("numbers lobbies in time order and labels scored leftovers", () => {
     const memberships: ClashHistoryMembershipRecord[] = [
       {
-        puuid: PUUID,
+        puuid: LeaguePuuidSchema.parse(PUUID),
         platform: "NA1",
         teamRiotId: "team-1",
         teamName: "WE LOVE VIRMEL",

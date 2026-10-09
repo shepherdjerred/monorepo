@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import {
   EXPLORE_TIMEOUT_MS,
   type DiscordAccountId,
@@ -100,7 +101,7 @@ export class ExploreRunManager {
   async start(
     identity: ExploreRateLimitIdentity,
     request: ExploreTurnRequest,
-    guildIds: string[],
+    guildIds: DiscordGuildId[],
     context?: {
       surface: ExploreSurface;
       originChannelId?: DiscordChannelId | undefined;
@@ -267,7 +268,7 @@ export class ExploreRunManager {
   async rehydrateTemporalRun(input: {
     summary: ExploreActiveRun;
     identity: ExploreRateLimitIdentity;
-    guildIds: string[];
+    guildIds: DiscordGuildId[];
     started: StartedTurn;
     surface: ExploreSurface;
     originChannelId: DiscordChannelId | null;

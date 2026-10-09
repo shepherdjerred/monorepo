@@ -1,3 +1,4 @@
+import { DiscordMessageIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { createHash } from "node:crypto";
 import { ReportRunIdSchema } from "@scout-for-lol/data";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
@@ -118,7 +119,7 @@ export async function deliverReportChunk(
       where: { ...key, nonce: chunk.nonce, state: "SENDING" },
       data: {
         state: "DELIVERED",
-        messageId: sent.id,
+        messageId: DiscordMessageIdSchema.parse(sent.id),
         deliveredAt: new Date(),
         lastError: null,
       },

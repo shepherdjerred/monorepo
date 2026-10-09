@@ -1,4 +1,4 @@
-import { RiotMatchIdSchema } from "@scout-for-lol/data";
+import { RiotMatchIdSchema, DiscordAccountIdSchema } from "@scout-for-lol/data";
 import type { ComponentProps } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Loaded } from "@shepherdjerred/loaded";
@@ -23,9 +23,9 @@ const noop = () => {
 };
 
 const DISCORD_NAMES: Record<string, string> = {
-  "111": "jerred",
-  "222": "bryan",
-  "333": "hunter",
+  "837550478469304750": "jerred",
+  "831241495443650079": "bryan",
+  "838090828508549143": "hunter",
 };
 
 function nameOf(discordId: string): string {
@@ -42,8 +42,14 @@ const OUTCOME_MARKET: OutcomeMarketView = {
       totalStake: 1200,
       betCount: 2,
       positions: [
-        { discordId: "111", stake: 1000 },
-        { discordId: "222", stake: 200 },
+        {
+          discordId: DiscordAccountIdSchema.parse("837550478469304750"),
+          stake: 1000,
+        },
+        {
+          discordId: DiscordAccountIdSchema.parse("831241495443650079"),
+          stake: 200,
+        },
       ],
     },
     {
@@ -52,7 +58,12 @@ const OUTCOME_MARKET: OutcomeMarketView = {
       trackedPlayers: [],
       totalStake: 350,
       betCount: 1,
-      positions: [{ discordId: "333", stake: 350 }],
+      positions: [
+        {
+          discordId: DiscordAccountIdSchema.parse("838090828508549143"),
+          stake: 350,
+        },
+      ],
     },
   ],
   yourPosition: null,
@@ -76,7 +87,13 @@ const OPEN_MARKETS: BucksOpenMarkets = {
       yesOdds: "2.50",
       noOdds: "1.67",
       yourPosition: null,
-      positions: [{ discordId: "222", side: "YES", stake: 120 }],
+      positions: [
+        {
+          discordId: DiscordAccountIdSchema.parse("831241495443650079"),
+          side: "YES",
+          stake: 120,
+        },
+      ],
     },
   ],
 };

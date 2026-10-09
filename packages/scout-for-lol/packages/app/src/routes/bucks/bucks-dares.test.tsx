@@ -8,7 +8,7 @@ import { Loaded } from "@shepherdjerred/loaded";
 import { describe, expect, test, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router";
-import { DareProgressSchema } from "@scout-for-lol/data";
+import { DareProgressSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 import {
   DareDetail,
   parseBucksDareId,
@@ -388,7 +388,7 @@ describe("DareDetail", () => {
     const html = renderToStaticMarkup(
       <MemoryRouter>
         <DareDetail
-          guildId="100000000000000061"
+          guildId={DiscordGuildIdSchema.parse("100000000000000061")}
           dare={{
             id: 42,
             state: "settled",
@@ -444,7 +444,7 @@ describe("DareDetail", () => {
     const html = renderToStaticMarkup(
       <MemoryRouter>
         <DareDetail
-          guildId="100000000000000061"
+          guildId={DiscordGuildIdSchema.parse("100000000000000061")}
           dare={{
             id: 43,
             state: "active",

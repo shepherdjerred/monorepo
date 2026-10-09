@@ -1,3 +1,4 @@
+import type { DiscordChannelId } from "@scout-for-lol/domain/identity/discord.ts";
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import type {
   CompetitionCriteria,
@@ -14,12 +15,12 @@ import {
 } from "#src/testing/competition-fixtures.ts";
 
 let sendShouldFail = false;
-let sentMessages: { channelId: string; content: string }[] = [];
+let sentMessages: { channelId: DiscordChannelId; content: string }[] = [];
 
 class ChannelSendError extends Error {
   constructor(
     message: string,
-    public readonly channelId: string,
+    public readonly channelId: DiscordChannelId,
     public readonly permissionError: boolean,
     public readonly originalError?: unknown,
   ) {
@@ -29,7 +30,7 @@ class ChannelSendError extends Error {
 }
 
 vi.doMock("../../discord/channel.js", () => ({
-  send: (message: string, channelId: string) => {
+  send: (message: string, channelId: DiscordChannelId) => {
     if (sendShouldFail) {
       return Promise.reject(new Error("temporary discord failure"));
     }

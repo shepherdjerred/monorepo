@@ -74,7 +74,7 @@ function truncateToLength(text: string, maxLength: number): string {
 function hallBreakEmbed(
   records: readonly HallBreakPayload[],
   matchId: RiotMatchId,
-  guildId: string,
+  guildId: DiscordGuildId,
 ): EmbedBuilder | null {
   if (records.length === 0) return null;
   const description = `Match ${escapeMarkdown(matchId)} set new guild records.\n[Open the Hall of Fame](${getHallOfFameUrl(guildId)})`;

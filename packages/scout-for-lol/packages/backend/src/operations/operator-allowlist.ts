@@ -54,7 +54,7 @@ export const SCOUT_OPERATIONS_GUILD: DiscordGuildId =
  * tempted to parse-and-trust somewhere else: an id that is not a well-formed
  * Discord account id is simply not on the list.
  */
-export function isScoutOperator(discordId: string): boolean {
+export function isScoutOperator(discordId: DiscordAccountId): boolean {
   return SCOUT_OPERATORS.has(discordId);
 }
 
@@ -64,7 +64,9 @@ export function isScoutOperator(discordId: string): boolean {
  * Returning the branded id is what lets callers use it as the intent's actor
  * without re-parsing an unvalidated session value.
  */
-export function scoutOperatorId(discordId: string): DiscordAccountId | null {
+export function scoutOperatorId(
+  discordId: DiscordAccountId,
+): DiscordAccountId | null {
   return isScoutOperator(discordId)
     ? DiscordAccountIdSchema.parse(discordId)
     : null;

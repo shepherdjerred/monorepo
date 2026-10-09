@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import {
   RiotMatchIdSchema,
   type RiotMatchId,
@@ -42,7 +43,10 @@ const MATCH_ID = RiotMatchIdSchema.parse("NA1_5000000042");
  * object: the real ButtonInteraction satisfies it, and a test needs no `as`
  * cast and no mock framework to build one.
  */
-function fakeInteraction(customId: string, guildId: string | null = SERVER_ID) {
+function fakeInteraction(
+  customId: string,
+  guildId: DiscordGuildId | null = SERVER_ID,
+) {
   const replies: string[] = [];
   const interaction: BetButtonInteraction = {
     customId,
@@ -68,7 +72,7 @@ function betId(subjectIndex: number, side: "W" | "L", amount: number) {
 }
 
 function recordingRefreshes(
-  calls: { matchId: RiotMatchId; serverId: string }[],
+  calls: { matchId: RiotMatchId; serverId: DiscordGuildId }[],
 ): BetButtonDependencies {
   return {
     refreshMessages: (input) => {
@@ -212,7 +216,7 @@ describe("handleBetButton", () => {
       amount: 0,
     });
     const { interaction, replies } = fakeInteraction(cancelId);
-    const refreshes: { matchId: RiotMatchId; serverId: string }[] = [];
+    const refreshes: { matchId: RiotMatchId; serverId: DiscordGuildId }[] = [];
     await handleBetButton(interaction, db, recordingRefreshes(refreshes));
 
     expect(replies[0]).toContain("Cancelled");
@@ -250,7 +254,7 @@ describe("handleBetButton", () => {
   });
 
   test("refreshes the shared prematch summary after a placement", async () => {
-    const refreshes: { matchId: RiotMatchId; serverId: string }[] = [];
+    const refreshes: { matchId: RiotMatchId; serverId: DiscordGuildId }[] = [];
 
     await handleBetButton(
       fakeInteraction(betId(0, "W", 5)).interaction,
@@ -337,7 +341,7 @@ describe("handleBetButton", () => {
     });
 
     const { interaction, replies } = fakeInteraction(betId(0, "W", 5));
-    const refreshes: { matchId: RiotMatchId; serverId: string }[] = [];
+    const refreshes: { matchId: RiotMatchId; serverId: DiscordGuildId }[] = [];
     await handleBetButton(interaction, db, recordingRefreshes(refreshes));
 
     expect(replies[0]).toContain("Betting has closed");

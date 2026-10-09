@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import {
   EmbedBuilder,
   escapeMarkdown,
@@ -15,7 +16,7 @@ import {
 import { MalformedAnnouncementIntentError } from "#src/temporal/notification/announcement-codecs.ts";
 
 /** The Duel status copy: an embed plus the participants it may mention. */
-function renderDuelStatus(payload: DuelStatusPayload, guildId: string) {
+function renderDuelStatus(payload: DuelStatusPayload, guildId: DiscordGuildId) {
   const path = new URL(
     `duels/${guildId}/series/${payload.seriesId}`,
     getDashboardUrl(),

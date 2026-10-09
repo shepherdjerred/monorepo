@@ -1,4 +1,9 @@
-import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
+import type { DiscordChannelId } from "@scout-for-lol/domain/identity/discord.ts";
+import {
+  type RiotMatchId,
+  type DiscordMessageId,
+  DiscordMessageIdSchema,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import {
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
@@ -53,7 +58,7 @@ async function disablePreparationMessages(
 }
 
 export async function disableParlayPreparationReferences(
-  refs: readonly { channelId: string; messageId: string }[],
+  refs: readonly { channelId: DiscordChannelId; messageId: DiscordMessageId }[],
   matchId: RiotMatchId,
 ): Promise<void> {
   const disabled = await Promise.allSettled(
@@ -93,10 +98,12 @@ export async function disableParlayPreparationReferences(
 }
 
 async function activateMessageReference(input: {
-  ref: { channelId: string; messageId: string };
+  ref: { channelId: DiscordChannelId; messageId: DiscordMessageId };
   matchId: RiotMatchId;
   content: string;
-}): Promise<{ channelId: string; messageId: string } | undefined> {
+}): Promise<
+  { channelId: DiscordChannelId; messageId: DiscordMessageId } | undefined
+> {
   try {
     await observeBucksDelivery(
       {
@@ -139,7 +146,7 @@ async function invalidatePendingPublication(input: {
   prismaClient: ExtendedPrismaClient;
   marketId: number;
   matchId: RiotMatchId;
-  refs: readonly { channelId: string; messageId: string }[];
+  refs: readonly { channelId: DiscordChannelId; messageId: DiscordMessageId }[];
   disableReferences: typeof disableParlayPreparationReferences;
 }): Promise<void> {
   const settledAt = new Date();
@@ -345,7 +352,10 @@ export async function publishParlayDefinition(
       const outcomeRefs = BucksMessageRefsSchema.parse(
         JSON.parse(pool.messageRefs),
       );
-      const refs: { channelId: string; messageId: string }[] = [];
+      const refs: {
+        channelId: DiscordChannelId;
+        messageId: DiscordMessageId;
+      }[] = [];
       const messages: PreparationMessage[] = [];
       for (const outcomeRef of outcomeRefs) {
         signal?.throwIfAborted();
@@ -369,7 +379,10 @@ export async function publishParlayDefinition(
           );
           sentMessages.push(sent);
           messages.push(sent);
-          refs.push({ channelId: outcomeRef.channelId, messageId: sent.id });
+          refs.push({
+            channelId: outcomeRef.channelId,
+            messageId: DiscordMessageIdSchema.parse(sent.id),
+          });
         } catch (error) {
           logger.warn(
             `Could not publish Bryan Bucks parlay ${definition.matchId} in channel ${outcomeRef.channelId}:`,

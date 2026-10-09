@@ -1,3 +1,7 @@
+import type {
+  DiscordGuildId,
+  DiscordChannelId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { NotificationIntentKeySchema } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   DiscordChannelIdSchema,
@@ -25,8 +29,8 @@ export async function mintDuelStatusIntent(
   db: Db,
   args: {
     stage: ScoutStage;
-    guildId: string;
-    channelId: string;
+    guildId: DiscordGuildId;
+    channelId: DiscordChannelId;
     dedupeKey: string;
     payload: DuelStatusPayload;
     createdAt: Date;

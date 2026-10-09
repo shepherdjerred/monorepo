@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import { prisma } from "#src/database/index.ts";
 import {
   getProductAnalytics,
@@ -14,7 +15,7 @@ type MemberBet = {
 type MemberBetKind = "outcome_bet" | "parlay_bet";
 type MemberBetSource = "direct-bet" | "parlay-bet";
 type BackfillCapture = (eventId: string, callback: () => void) => Promise<void>;
-type BucksAccount = { analyticsUserId: string; serverId: string };
+type BucksAccount = { analyticsUserId: string; serverId: DiscordGuildId };
 
 function eventUuid(kind: string, id: number): string {
   return deterministicBucksAnalyticsEventId(kind, id);

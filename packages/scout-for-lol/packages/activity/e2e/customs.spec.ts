@@ -1,20 +1,27 @@
 import { expect, test, type Page, type Route } from "@playwright/test";
-import type {
-  CustomGameParticipant,
-  CustomGameSnapshot,
-  CustomNightParticipant,
-  CustomNightSnapshot,
+import {
+  type CustomGameParticipant,
+  type CustomGameSnapshot,
+  type CustomNightParticipant,
+  type CustomNightSnapshot,
+  DiscordAccountIdSchema,
+  type DiscordAccountId,
+  LeaguePuuidSchema,
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
 } from "@scout-for-lol/data";
 
 const NIGHT_ID = "c83f3ef2-2ef4-4bd2-935b-83f439e771e4";
 const GAME_ID = "e0b71754-09fe-4c1e-9954-6412538bfe35";
-const GUILD_ID = "1337623164146155593";
-const CHANNEL_ID = "1337623164146155594";
-const HOST_ID = "160509172704739328";
+const GUILD_ID = DiscordGuildIdSchema.parse("1337623164146155593");
+const CHANNEL_ID = DiscordChannelIdSchema.parse("1337623164146155594");
+const HOST_ID = DiscordAccountIdSchema.parse("160509172704739328");
 const NOW = "2026-08-29T20:00:00.000Z";
 
-function discordId(index: number): string {
-  return (160_509_172_704_739_328n + BigInt(index)).toString();
+function discordId(index: number): DiscordAccountId {
+  return DiscordAccountIdSchema.parse(
+    (160_509_172_704_739_328n + BigInt(index)).toString(),
+  );
 }
 
 function nightParticipant(index: number): CustomNightParticipant {
@@ -34,7 +41,9 @@ function nightParticipant(index: number): CustomNightParticipant {
     accounts: [
       {
         accountId: index + 1,
-        puuid: `puuid-${index.toString()}`,
+        puuid: LeaguePuuidSchema.parse(
+          `puuid-${index.toString()}`.padEnd(78, "0"),
+        ),
         region: "AMERICA_NORTH",
         riotGameName: `Player${index.toString()}`,
         riotTagLine: "NA1",
@@ -52,7 +61,7 @@ function gameParticipant(index: number): CustomGameParticipant {
     playerId: index + 1,
     playerAlias: `player-${index.toString()}`,
     accountId: index + 1,
-    puuid: `puuid-${index.toString()}`,
+    puuid: LeaguePuuidSchema.parse(`puuid-${index.toString()}`.padEnd(78, "0")),
     riotGameName: `Player${index.toString()}`,
     riotTagLine: "NA1",
     rosterOrder: index,
@@ -113,8 +122,8 @@ function snapshot(game: CustomGameSnapshot | null): CustomNightSnapshot {
       remaining: 0,
     },
     recruitmentMessageId: "1337623164146155598",
-    teamAVoiceChannelId: "1337623164146155596",
-    teamBVoiceChannelId: "1337623164146155597",
+    teamAVoiceChannelId: DiscordChannelIdSchema.parse("1337623164146155596"),
+    teamBVoiceChannelId: DiscordChannelIdSchema.parse("1337623164146155597"),
     lastActivityAt: NOW,
     expiresAt: "2026-08-30T08:00:00.000Z",
     endedAt: null,

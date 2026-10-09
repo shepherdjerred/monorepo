@@ -1,13 +1,14 @@
-import type {
-  ActionRowBuilder,
-  ButtonBuilder,
-  InteractionReplyOptions,
+import {
+  type Interaction,
+  type ActionRowBuilder,
+  type ButtonBuilder,
+  type InteractionReplyOptions,
 } from "discord.js";
 
 /** Structural Discord interaction a Dare button handler needs. */
 export type DareButtonInteractionBase = {
   customId: string;
-  guildId: string | null;
+  guildId: Interaction["guildId"];
   user: { id: string };
   deferReply: (options: { ephemeral: true }) => Promise<unknown>;
   deferUpdate: () => Promise<unknown>;

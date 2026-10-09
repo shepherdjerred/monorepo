@@ -1,11 +1,12 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import {
   ExploreActiveRunSchema,
   type ExploreActiveRun,
   type ExploreMessage,
   type ExploreTurnRequest,
+  type DiscordChannelId,
 } from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
-import type { DiscordChannelId } from "@scout-for-lol/data";
 import type { ExploreSurface } from "#src/explore/surface.ts";
 import {
   type ExploreRateLimitIdentity,
@@ -16,6 +17,7 @@ import {
   ExploreNotFoundError,
   loadExploreTranscript,
   type ExploreTurnStoreClient,
+  ExploreInvalidTurnError,
 } from "#src/explore/store.ts";
 import { startReservedDurableExploreRun } from "#src/explore/runs/durable-runs.ts";
 import {
@@ -35,7 +37,6 @@ import {
   exploreModelPickerEnabled,
   resolveExploreModel,
 } from "#src/config/dynamic.ts";
-import { ExploreInvalidTurnError } from "#src/explore/store.ts";
 
 type PreparedExploreRun = {
   started: StartedTurn;
@@ -123,7 +124,7 @@ export async function startExploreRun(input: {
   client: ExtendedPrismaClient;
   identity: ExploreRateLimitIdentity;
   request: ExploreTurnRequest;
-  guildIds: string[];
+  guildIds: DiscordGuildId[];
   conversationId: string;
   ticket: ExploreRateLimitTicket;
   inlineExecutionForTests: boolean;
@@ -199,7 +200,7 @@ async function prepareDurableExploreRun(input: {
   request: ExploreTurnRequest;
   conversationId: string;
   ticket: ExploreRateLimitTicket;
-  guildIds: string[];
+  guildIds: DiscordGuildId[];
   surface: ExploreSurface;
   originChannelId: DiscordChannelId | null;
   assertAcceptingRuns: () => void;

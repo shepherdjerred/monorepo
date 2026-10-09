@@ -1,6 +1,6 @@
-import { useRef, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
 import {
+  type DiscordGuildId,
+  type DiscordAccountId,
   type CompetitionId,
   type CompetitionStatus,
   type CompetitionVisibility,
@@ -8,6 +8,8 @@ import {
   ParticipantStatusSchema,
   PlayerIdSchema,
 } from "@scout-for-lol/data";
+import { useRef, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import { formatDate } from "#src/lib/format/format.ts";
@@ -44,7 +46,7 @@ type Participant = {
   id: number;
   playerId: number;
   alias: string;
-  discordId: string | null;
+  discordId: DiscordAccountId | null;
   status: string;
   invitedBy: string | null;
   invitedAt: Date | string | null;
@@ -58,7 +60,7 @@ function statusLabel(status: string): string {
 }
 
 export function CompetitionParticipantsPanel(props: {
-  guildId: string;
+  guildId: DiscordGuildId;
   competitionId: CompetitionId;
   status: CompetitionStatus;
   visibility: CompetitionVisibility;

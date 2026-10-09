@@ -1,7 +1,13 @@
+import {
+  DiscordChannelIdSchema,
+  type DiscordChannelId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
   NotificationIntentKeySchema,
   RiotMatchIdSchema,
+  type DiscordMessageId,
+  DiscordMessageIdSchema,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import { NotificationIntentSchema } from "@scout-for-lol/domain/notifications/intent.ts";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
@@ -73,7 +79,7 @@ function settlementRecord(): MatchNotificationIntentRecord {
   };
 }
 
-function deliveredPostmatch(messageId: string | undefined): unknown {
+function deliveredPostmatch(messageId: DiscordMessageId | undefined): unknown {
   return {
     matchId: MATCH_ID,
     intent: {
@@ -105,7 +111,9 @@ describe("the settlement arm", () => {
     // The durable equivalent of v1's postmatchMessageIds: the delivered
     // POSTMATCH intent's message id, looked up by the v1 key for the same
     // (match, channel).
-    stubs.getIntent.mockResolvedValue(deliveredPostmatch("400000000000000777"));
+    stubs.getIntent.mockResolvedValue(
+      deliveredPostmatch(DiscordMessageIdSchema.parse("400000000000000777")),
+    );
 
     const message =
       await buildSettlementNotificationMessage(settlementRecord());
@@ -122,14 +130,29 @@ describe("the settlement arm", () => {
   });
 
   test("stands alone when the report was never delivered or has no id", async () => {
-    expect(await postmatchReplyTarget(MATCH_ID, CHANNEL_ID)).toBeUndefined();
+    expect(
+      await postmatchReplyTarget(
+        MATCH_ID,
+        DiscordChannelIdSchema.parse(CHANNEL_ID),
+      ),
+    ).toBeUndefined();
     stubs.getIntent.mockResolvedValue(deliveredPostmatch(undefined));
-    expect(await postmatchReplyTarget(MATCH_ID, CHANNEL_ID)).toBeUndefined();
+    expect(
+      await postmatchReplyTarget(
+        MATCH_ID,
+        DiscordChannelIdSchema.parse(CHANNEL_ID),
+      ),
+    ).toBeUndefined();
     stubs.getIntent.mockResolvedValue({
       matchId: MATCH_ID,
       intent: { state: { kind: "ready" } },
     });
-    expect(await postmatchReplyTarget(MATCH_ID, CHANNEL_ID)).toBeUndefined();
+    expect(
+      await postmatchReplyTarget(
+        MATCH_ID,
+        DiscordChannelIdSchema.parse(CHANNEL_ID),
+      ),
+    ).toBeUndefined();
 
     const message =
       await buildSettlementNotificationMessage(settlementRecord());
@@ -163,7 +186,7 @@ describe("the settlement arm", () => {
 /** A stored intent as the reply-target read sees it. */
 function intentFor(
   key: string,
-  channelId: string,
+  channelId: DiscordChannelId,
   state: Record<string, unknown>,
 ): unknown {
   return {
@@ -180,14 +203,18 @@ describe("postmatchReplyTargets", () => {
   test("maps each channel to its delivered post-match report", async () => {
     // Read from the delivered POSTMATCH intents.
     stubs.listIntentsForMatch.mockResolvedValue([
-      intentFor(`postmatch-discord:${MATCH_ID}:${CHANNEL_ID}`, CHANNEL_ID, {
-        kind: "delivered",
-        deliveredAt: "2026-09-17T00:05:00.000Z",
-        messageId: "400000000000000777",
-      }),
+      intentFor(
+        `postmatch-discord:${MATCH_ID}:${CHANNEL_ID}`,
+        DiscordChannelIdSchema.parse(CHANNEL_ID),
+        {
+          kind: "delivered",
+          deliveredAt: "2026-09-17T00:05:00.000Z",
+          messageId: "400000000000000777",
+        },
+      ),
       intentFor(
         `postmatch-discord:${MATCH_ID}:300000000000000002`,
-        "300000000000000002",
+        DiscordChannelIdSchema.parse("300000000000000002"),
         {
           kind: "delivered",
           deliveredAt: "2026-09-17T00:05:00.000Z",
@@ -209,18 +236,22 @@ describe("postmatchReplyTargets", () => {
 
   test("skips reports never delivered, delivered without an id, and other kinds", async () => {
     stubs.listIntentsForMatch.mockResolvedValue([
-      intentFor(`postmatch-discord:${MATCH_ID}:${CHANNEL_ID}`, CHANNEL_ID, {
-        kind: "ready",
-      }),
+      intentFor(
+        `postmatch-discord:${MATCH_ID}:${CHANNEL_ID}`,
+        DiscordChannelIdSchema.parse(CHANNEL_ID),
+        {
+          kind: "ready",
+        },
+      ),
       intentFor(
         `postmatch-discord:${MATCH_ID}:300000000000000002`,
-        "300000000000000002",
+        DiscordChannelIdSchema.parse("300000000000000002"),
         { kind: "delivered", deliveredAt: "2026-09-17T00:05:00.000Z" },
       ),
       // The prematch announcement in the same channel is not the report.
       intentFor(
         `prematch-discord:${MATCH_ID}:300000000000000003`,
-        "300000000000000003",
+        DiscordChannelIdSchema.parse("300000000000000003"),
         {
           kind: "delivered",
           deliveredAt: "2026-09-17T00:00:05.000Z",

@@ -1,4 +1,7 @@
-import { championNameToDisplayName } from "@scout-for-lol/data";
+import {
+  type DiscordGuildId,
+  championNameToDisplayName,
+} from "@scout-for-lol/data";
 import {
   Card,
   CardContent,
@@ -21,7 +24,7 @@ export type MatchMvpTallyNominee = {
 };
 
 export type MatchMvpTallyGuild = {
-  guildId: string;
+  guildId: DiscordGuildId;
   guildName: string;
   blue: MatchMvpTallyNominee[];
   red: MatchMvpTallyNominee[];

@@ -2,8 +2,13 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
   NotificationIntentKeySchema,
   RiotMatchIdSchema,
+  DiscordMessageIdSchema,
 } from "@scout-for-lol/domain/identity/brands.ts";
-import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
+import {
+  DiscordGuildIdSchema,
+  type DiscordChannelId,
+  DiscordChannelIdSchema,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import {
   NotificationIntentSchema,
   NotificationIntentStateSchema,
@@ -71,20 +76,20 @@ const { afterPostmatchDelivered } =
   await import("#src/temporal/notification/postmatch-follow-up.ts");
 
 const MATCH_ID = RiotMatchIdSchema.parse("NA1_9301");
-const CHANNEL_ID = "300000000000000001";
-const SIBLING_CHANNEL_ID = "300000000000000002";
+const CHANNEL_ID = DiscordChannelIdSchema.parse("300000000000000001");
+const SIBLING_CHANNEL_ID = DiscordChannelIdSchema.parse("300000000000000002");
 const GUILD_ID = DiscordGuildIdSchema.parse("100000000000000001");
 const CLAIM_KEY = `core-output:postmatch:${MATCH_ID}:${GUILD_ID}`;
 
 const DELIVERED = NotificationIntentStateSchema.parse({
   kind: "delivered",
   deliveredAt: "2026-09-17T00:05:00.000Z",
-  messageId: "400000000000000777",
+  messageId: DiscordMessageIdSchema.parse("400000000000000777"),
 });
 
 function postmatchRecord(
   state: NotificationIntentState,
-  channelId: string = CHANNEL_ID,
+  channelId: DiscordChannelId = CHANNEL_ID,
 ): MatchNotificationIntentRecord {
   return {
     matchId: MATCH_ID,

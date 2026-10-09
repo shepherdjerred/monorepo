@@ -1,18 +1,16 @@
-import type { QueueType } from "@scout-for-lol/data/index.ts";
-import type {
-  RawCurrentGameInfo,
-  RawCurrentGameParticipant,
-  LoadingScreenData,
-  LoadingScreenParticipant,
-  ClassicLoadingScreenParticipant,
-  NonStandardLoadingScreenParticipant,
-  LoadingScreenBan,
-  LoadingScreenLayout,
-  LoadingScreenTeam,
-  Region,
-  StandardLoadingScreenParticipant,
-} from "@scout-for-lol/data/index.ts";
 import {
+  type QueueType,
+  type RawCurrentGameInfo,
+  type RawCurrentGameParticipant,
+  type LoadingScreenData,
+  type LoadingScreenParticipant,
+  type ClassicLoadingScreenParticipant,
+  type NonStandardLoadingScreenParticipant,
+  type LoadingScreenBan,
+  type LoadingScreenLayout,
+  type LoadingScreenTeam,
+  type Region,
+  type StandardLoadingScreenParticipant,
   parseTeam,
   mapIdToName,
   makeQueueDisplayName,
@@ -110,7 +108,10 @@ export async function fetchParticipantRanks(
       : [
           {
             puuid: participant.puuid,
-            request: getRankByPuuid(participant.puuid, region),
+            request: getRankByPuuid(
+              LeaguePuuidSchema.parse(participant.puuid),
+              region,
+            ),
           },
         ],
   );

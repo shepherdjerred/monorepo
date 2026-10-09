@@ -301,8 +301,8 @@ export async function anonymizeCustomParticipant(
 }
 
 export async function anonymizeCustomParticipantFromStrings(input: {
-  readonly guildId: string;
-  readonly discordId: string;
+  readonly guildId: z.input<typeof DiscordGuildIdSchema>;
+  readonly discordId: z.input<typeof DiscordAccountIdSchema>;
   readonly operatorId: string;
 }) {
   return anonymizeCustomParticipant(prisma, {

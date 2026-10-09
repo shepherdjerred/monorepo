@@ -34,7 +34,7 @@ export type MvpVotesExploreCapability = {
  * Explore for anyone shared by two enabled servers.
  */
 export async function resolveMvpVotesCapability(
-  guildIds: readonly string[],
+  guildIds: readonly DiscordGuildId[],
 ): Promise<MvpVotesExploreCapability | null> {
   const enabled: DiscordGuildId[] = [];
   for (const guildId of guildIds) {

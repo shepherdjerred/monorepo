@@ -1,3 +1,4 @@
+import type { DiscordAccountId } from "@scout-for-lol/domain/identity/discord.ts";
 import * as Sentry from "@sentry/bun";
 import type { MessageCreateOptions } from "discord.js";
 import {
@@ -41,7 +42,7 @@ export type RankedLeaderboardRow = FullLeaderboardRow & { rank: number };
 
 /** One member's superlative for the trailing week; `null` when nobody qualifies. */
 export type WeeklyBucksSuperlative = {
-  discordId: string;
+  discordId: DiscordAccountId;
   amount: number;
 };
 
@@ -54,7 +55,7 @@ export type WeeklyBucksStats = {
 
 function pickSuperlative(
   totals: ReadonlyMap<number, number>,
-  discordIdByAccountId: ReadonlyMap<number, string>,
+  discordIdByAccountId: ReadonlyMap<number, DiscordAccountId>,
   direction: "max" | "min",
 ): WeeklyBucksSuperlative | null {
   let best: { accountId: number; amount: number } | null = null;

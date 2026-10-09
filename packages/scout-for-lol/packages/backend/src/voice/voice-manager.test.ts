@@ -1,3 +1,9 @@
+import {
+  DiscordGuildIdSchema,
+  DiscordChannelIdSchema,
+  type DiscordGuildId,
+  type DiscordChannelId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { describe, expect, test } from "vitest";
 import { VoiceConnectionStatus, type AudioPlayer } from "@discordjs/voice";
 import { Client, GatewayIntentBits } from "discord.js";
@@ -34,7 +40,7 @@ class FakeConnection implements VoiceManagerConnection {
   subscribed: AudioPlayer[] = [];
   status: VoiceConnectionStatus = VoiceConnectionStatus.Ready;
   constructor(
-    readonly channelId: string,
+    readonly channelId: DiscordChannelId,
     readonly selfDeaf: boolean,
   ) {}
 
@@ -56,13 +62,13 @@ class FakeConnection implements VoiceManagerConnection {
 type Harness = {
   manager: VoiceManager<FakeConnection>;
   established: FakeConnection[];
-  lost: { guildId: string; mode: string }[];
+  lost: { guildId: DiscordGuildId; mode: string }[];
   loseConnection: (connection: FakeConnection) => void;
 };
 
 function managerHarness(): Harness {
   const established: FakeConnection[] = [];
-  const lost: { guildId: string; mode: string }[] = [];
+  const lost: { guildId: DiscordGuildId; mode: string }[] = [];
   const lostCallbacks = new Map<FakeConnection, () => void>();
   const establish: EstablishVoiceConnection<FakeConnection> = ({
     channelId,
@@ -138,21 +144,39 @@ function doNothing(): void {
 describe("VoiceManager modes", () => {
   test("playback joins deafened, assistant joins undeafened", async () => {
     const h = managerHarness();
-    const playback = await h.manager.joinChannel(GUILD, "alerts");
+    const playback = await h.manager.joinChannel(
+      DiscordGuildIdSchema.parse(GUILD),
+      DiscordChannelIdSchema.parse("821154293094080273"),
+    );
     expect(playback.selfDeaf).toBe(true);
-    expect(h.manager.getConnectionMode(GUILD)).toBe("playback");
+    expect(h.manager.getConnectionMode(DiscordGuildIdSchema.parse(GUILD))).toBe(
+      "playback",
+    );
 
-    const assistant = await h.manager.joinChannel(GUILD, "voice", "assistant");
+    const assistant = await h.manager.joinChannel(
+      DiscordGuildIdSchema.parse(GUILD),
+      DiscordChannelIdSchema.parse("825942084019419946"),
+      "assistant",
+    );
     expect(assistant.selfDeaf).toBe(false);
-    expect(h.manager.getConnectionMode(GUILD)).toBe("assistant");
+    expect(h.manager.getConnectionMode(DiscordGuildIdSchema.parse(GUILD))).toBe(
+      "assistant",
+    );
     // The explicit assistant join replaced the playback connection.
     expect(playback.destroyed).toBe(true);
   });
 
   test("ensureConnected never destroys an active assistant connection", async () => {
     const h = managerHarness();
-    const assistant = await h.manager.joinChannel(GUILD, "voice", "assistant");
-    const forAlert = await h.manager.ensureConnected(GUILD, "other-channel");
+    const assistant = await h.manager.joinChannel(
+      DiscordGuildIdSchema.parse(GUILD),
+      DiscordChannelIdSchema.parse("825942084019419946"),
+      "assistant",
+    );
+    const forAlert = await h.manager.ensureConnected(
+      DiscordGuildIdSchema.parse(GUILD),
+      DiscordChannelIdSchema.parse("822228258897286297"),
+    );
     expect(forAlert).toBe(assistant);
     expect(assistant.destroyed).toBe(false);
     expect(h.established).toHaveLength(1);
@@ -160,8 +184,16 @@ describe("VoiceManager modes", () => {
 
   test("a playback joinChannel bounces off an active assistant connection", async () => {
     const h = managerHarness();
-    const assistant = await h.manager.joinChannel(GUILD, "voice", "assistant");
-    const playback = await h.manager.joinChannel(GUILD, "alerts", "playback");
+    const assistant = await h.manager.joinChannel(
+      DiscordGuildIdSchema.parse(GUILD),
+      DiscordChannelIdSchema.parse("825942084019419946"),
+      "assistant",
+    );
+    const playback = await h.manager.joinChannel(
+      DiscordGuildIdSchema.parse(GUILD),
+      DiscordChannelIdSchema.parse("821154293094080273"),
+      "playback",
+    );
     expect(playback).toBe(assistant);
     expect(assistant.destroyed).toBe(false);
   });
@@ -178,11 +210,14 @@ describe("VoiceManager modes", () => {
     // and each call establish(), with the second silently overwriting (and
     // leaking) whichever the first created.
     const assistantJoin = manager.joinChannel(
-      GUILD,
-      "voice-channel",
+      DiscordGuildIdSchema.parse(GUILD),
+      DiscordChannelIdSchema.parse("824438461415009706"),
       "assistant",
     );
-    const alertConnect = manager.ensureConnected(GUILD, "alert-channel");
+    const alertConnect = manager.ensureConnected(
+      DiscordGuildIdSchema.parse(GUILD),
+      DiscordChannelIdSchema.parse("826727563249461075"),
+    );
 
     // Only the queued (first) attempt has reached establish() so far.
     expect(deferred.calls()).toBe(1);
@@ -193,7 +228,9 @@ describe("VoiceManager modes", () => {
     const alertConnection = await alertConnect;
     expect(deferred.calls()).toBe(1);
     expect(alertConnection).toBe(assistantConnection);
-    expect(manager.getConnectionMode(GUILD)).toBe("assistant");
+    expect(manager.getConnectionMode(DiscordGuildIdSchema.parse(GUILD))).toBe(
+      "assistant",
+    );
   });
 
   test("a playback ensureConnected first still lets a later assistant join take over cleanly", async () => {
@@ -202,10 +239,13 @@ describe("VoiceManager modes", () => {
     const manager = new VoiceManager<FakeConnection>(deferred.establish);
     manager.setClient(new Client({ intents: [GatewayIntentBits.Guilds] }));
 
-    const alertConnect = manager.ensureConnected(GUILD, "alert-channel");
+    const alertConnect = manager.ensureConnected(
+      DiscordGuildIdSchema.parse(GUILD),
+      DiscordChannelIdSchema.parse("826727563249461075"),
+    );
     const assistantJoin = manager.joinChannel(
-      GUILD,
-      "voice-channel",
+      DiscordGuildIdSchema.parse(GUILD),
+      DiscordChannelIdSchema.parse("824438461415009706"),
       "assistant",
     );
 
@@ -223,48 +263,81 @@ describe("VoiceManager modes", () => {
     // /scout join always may move the bot) instead of racing it.
     expect(deferred.calls()).toBe(2);
     expect(playbackConnection.destroyed).toBe(true);
-    expect(manager.getConnection(GUILD)).toBe(assistantConnection);
-    expect(manager.getConnectionMode(GUILD)).toBe("assistant");
+    expect(manager.getConnection(DiscordGuildIdSchema.parse(GUILD))).toBe(
+      assistantConnection,
+    );
+    expect(manager.getConnectionMode(DiscordGuildIdSchema.parse(GUILD))).toBe(
+      "assistant",
+    );
   });
 
   test("leaving clears the mode so the next join is deafened playback", async () => {
     const h = managerHarness();
-    await h.manager.joinChannel(GUILD, "voice", "assistant");
-    h.manager.leaveChannel(GUILD);
-    expect(h.manager.getConnectionMode(GUILD)).toBeUndefined();
-    const next = await h.manager.ensureConnected(GUILD, "alerts");
+    await h.manager.joinChannel(
+      DiscordGuildIdSchema.parse(GUILD),
+      DiscordChannelIdSchema.parse("825942084019419946"),
+      "assistant",
+    );
+    h.manager.leaveChannel(DiscordGuildIdSchema.parse(GUILD));
+    expect(
+      h.manager.getConnectionMode(DiscordGuildIdSchema.parse(GUILD)),
+    ).toBeUndefined();
+    const next = await h.manager.ensureConnected(
+      DiscordGuildIdSchema.parse(GUILD),
+      DiscordChannelIdSchema.parse("821154293094080273"),
+    );
     expect(next.selfDeaf).toBe(true);
-    expect(h.manager.getConnectionMode(GUILD)).toBe("playback");
+    expect(h.manager.getConnectionMode(DiscordGuildIdSchema.parse(GUILD))).toBe(
+      "playback",
+    );
   });
 
   test("ensureConnected reuses a ready playback connection", async () => {
     const h = managerHarness();
-    const first = await h.manager.ensureConnected(GUILD, "alerts");
-    const second = await h.manager.ensureConnected(GUILD, "alerts");
+    const first = await h.manager.ensureConnected(
+      DiscordGuildIdSchema.parse(GUILD),
+      DiscordChannelIdSchema.parse("821154293094080273"),
+    );
+    const second = await h.manager.ensureConnected(
+      DiscordGuildIdSchema.parse(GUILD),
+      DiscordChannelIdSchema.parse("821154293094080273"),
+    );
     expect(second).toBe(first);
     expect(h.established).toHaveLength(1);
   });
 
   test("connection loss reports the mode and forgets the guild", async () => {
     const h = managerHarness();
-    const assistant = await h.manager.joinChannel(GUILD, "voice", "assistant");
+    const assistant = await h.manager.joinChannel(
+      DiscordGuildIdSchema.parse(GUILD),
+      DiscordChannelIdSchema.parse("825942084019419946"),
+      "assistant",
+    );
     h.loseConnection(assistant);
     expect(h.lost).toEqual([{ guildId: GUILD, mode: "assistant" }]);
-    expect(h.manager.getConnection(GUILD)).toBeUndefined();
-    expect(h.manager.getConnectionMode(GUILD)).toBeUndefined();
+    expect(
+      h.manager.getConnection(DiscordGuildIdSchema.parse(GUILD)),
+    ).toBeUndefined();
+    expect(
+      h.manager.getConnectionMode(DiscordGuildIdSchema.parse(GUILD)),
+    ).toBeUndefined();
   });
 
   test("an alert held by the playback gate never plays into a torn-down connection", async () => {
     const h = managerHarness();
-    const assistant = await h.manager.joinChannel(GUILD, "voice", "assistant");
+    const assistant = await h.manager.joinChannel(
+      DiscordGuildIdSchema.parse(GUILD),
+      DiscordChannelIdSchema.parse("825942084019419946"),
+      "assistant",
+    );
     const gate = deferredGate();
     h.manager.setPlaybackGate(() => gate.promise);
-    const alert = h.manager.playSound(GUILD, {
+    const alert = h.manager.playSound(DiscordGuildIdSchema.parse(GUILD), {
       type: "url",
       url: "https://example.invalid/alert.mp3",
     });
     // The session ends while the gate holds the alert.
-    h.manager.leaveChannel(GUILD);
+    h.manager.leaveChannel(DiscordGuildIdSchema.parse(GUILD));
     gate.resolveGate();
     await expect(alert).rejects.toThrow("No voice connection");
     // Nothing was subscribed to the destroyed connection after teardown.
@@ -273,11 +346,21 @@ describe("VoiceManager modes", () => {
 
   test("a stale connection's loss callback cannot forget its replacement", async () => {
     const h = managerHarness();
-    const first = await h.manager.joinChannel(GUILD, "voice", "assistant");
-    const second = await h.manager.joinChannel(GUILD, "voice", "assistant");
+    const first = await h.manager.joinChannel(
+      DiscordGuildIdSchema.parse(GUILD),
+      DiscordChannelIdSchema.parse("825942084019419946"),
+      "assistant",
+    );
+    const second = await h.manager.joinChannel(
+      DiscordGuildIdSchema.parse(GUILD),
+      DiscordChannelIdSchema.parse("825942084019419946"),
+      "assistant",
+    );
     h.loseConnection(first);
     expect(h.lost).toEqual([]);
-    expect(h.manager.getConnection(GUILD)).toBe(second);
+    expect(h.manager.getConnection(DiscordGuildIdSchema.parse(GUILD))).toBe(
+      second,
+    );
   });
 });
 

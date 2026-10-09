@@ -1,5 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { getAllSeasons, PlayerIdSchema } from "@scout-for-lol/data";
+import {
+  getAllSeasons,
+  PlayerIdSchema,
+  DiscordChannelIdSchema,
+} from "@scout-for-lol/data";
 import {
   buildCompetitionSubmission,
   competitionBuilderReducer,
@@ -89,7 +93,7 @@ describe("competition scenario library", () => {
 describe("competition builder reducer and submission", () => {
   test("Highest Solo rank submits HIGHEST_RANK, never MOST_GAMES_PLAYED", () => {
     const state = initialCompetitionBuilderState({
-      channelId: "200000000000000005",
+      channelId: DiscordChannelIdSchema.parse("200000000000000005"),
       timezone: TIMEZONE,
       now: NOW,
       scenarioId: "rank",
@@ -117,7 +121,7 @@ describe("competition builder reducer and submission", () => {
     ]);
     for (const example of examples) {
       const state = initialCompetitionBuilderState({
-        channelId: "200000000000000005",
+        channelId: DiscordChannelIdSchema.parse("200000000000000005"),
         timezone: TIMEZONE,
         now: NOW,
         scenarioId: example.id,
@@ -139,7 +143,7 @@ describe("competition builder reducer and submission", () => {
 
   test("preset switching is atomic and preserves roster and delivery settings", () => {
     const initial = initialCompetitionBuilderState({
-      channelId: "200000000000000005",
+      channelId: DiscordChannelIdSchema.parse("200000000000000005"),
       timezone: TIMEZONE,
       now: NOW,
       scenarioId: "rank",
@@ -182,7 +186,7 @@ describe("competition builder reducer and submission", () => {
 
   test("marks a selected starter customized after a manual edit", () => {
     const initial = initialCompetitionBuilderState({
-      channelId: "channel-a",
+      channelId: DiscordChannelIdSchema.parse("823535246066303710"),
       timezone: TIMEZONE,
       now: NOW,
       scenarioId: "rank",
@@ -197,7 +201,7 @@ describe("competition builder reducer and submission", () => {
 
   test("server-wide submission ignores a manual roster", () => {
     const initial = initialCompetitionBuilderState({
-      channelId: "200000000000000005",
+      channelId: DiscordChannelIdSchema.parse("200000000000000005"),
       timezone: TIMEZONE,
       now: NOW,
       scenarioId: "rank",
@@ -217,7 +221,7 @@ describe("competition builder reducer and submission", () => {
 
   test("review summarizes the actual criterion, queue, roster, dates, and cadence", () => {
     const state = initialCompetitionBuilderState({
-      channelId: "channel-a",
+      channelId: DiscordChannelIdSchema.parse("823535246066303710"),
       timezone: TIMEZONE,
       now: NOW,
       scenarioId: "rank",

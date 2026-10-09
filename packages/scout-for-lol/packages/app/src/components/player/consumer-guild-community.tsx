@@ -1,3 +1,4 @@
+import { type DiscordGuildId, DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { useState } from "react";
 import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -157,7 +158,7 @@ export function PeopleTab(props: {
   );
 }
 
-function LiveTab(props: { guildId: string }) {
+function LiveTab(props: { guildId: DiscordGuildId }) {
   const trpc = useTRPC();
   const live = useQuery(
     trpc.consumerGuild.live.queryOptions(
@@ -219,7 +220,7 @@ function ReadyCommunity(props: {
   guilds: RouterOutputs["consumerGuild"]["list"];
 }) {
   const trpc = useTRPC();
-  const [guildId, setGuildId] = useState<string | null>(null);
+  const [guildId, setGuildId] = useState<DiscordGuildId | null>(null);
   const [windowDays, setWindowDays] = useState<WindowDays>(90);
   const [queuePreset, setQueuePreset] = useState<QueuePreset>("standard");
   const [tab, setTab] = useState<CommunityTab>("people");
@@ -248,7 +249,7 @@ function ReadyCommunity(props: {
             className="ml-1 rounded border border-scout-border bg-scout-surface p-1"
             value={selectedGuild}
             onChange={(event) => {
-              setGuildId(event.target.value);
+              setGuildId(DiscordGuildIdSchema.parse(event.target.value));
             }}
           >
             {props.guilds.map((guild) => (
@@ -317,8 +318,8 @@ function ReadyCommunity(props: {
           </Button>
         ))}
       </div>
-      {tab === "live" ? (
-        <LiveTab guildId={selectedGuild ?? ""} />
+      {tab === "live" && selectedGuild !== undefined ? (
+        <LiveTab guildId={selectedGuild} />
       ) : overview.isPending || overview.isFetching ? (
         <p className="text-sm text-scout-subtle">
           Loading recorded guild games…

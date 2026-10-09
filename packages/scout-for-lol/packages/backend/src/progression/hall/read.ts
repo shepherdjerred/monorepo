@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import {
   COMPETITIVE_PROGRESSION_CATALOG,
   HallRecordEntrySchema,
@@ -11,7 +12,7 @@ import { getHallSettings } from "#src/progression/hall/settings.ts";
 
 export async function getHall(
   db: ExtendedPrismaClient,
-  guildId: string,
+  guildId: DiscordGuildId,
 ): Promise<{
   readonly settings: Awaited<ReturnType<typeof getHallSettings>>;
   readonly entries: HallRecordEntry[];

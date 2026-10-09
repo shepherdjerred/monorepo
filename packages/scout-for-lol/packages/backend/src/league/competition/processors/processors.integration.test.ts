@@ -1,11 +1,10 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import { describe, expect, it } from "vitest";
-import type {
-  RawMatch,
-  RawParticipant,
-  Rank,
-  Ranks,
-} from "@scout-for-lol/data";
 import {
+  type RawMatch,
+  type RawParticipant,
+  type Rank,
+  type Ranks,
   AccountIdSchema,
   ChampionIdSchema,
   LeaguePuuidSchema,
@@ -67,7 +66,7 @@ const testPlayers: PlayerWithAccounts[] = [
  * Create test player from PUUID
  */
 function createTestPlayerFromPuuid(
-  puuid: string,
+  puuid: LeaguePuuid,
   index: number,
 ): PlayerWithAccounts {
   return {
@@ -153,7 +152,7 @@ describe("processCriteria integration tests", () => {
 
     // Create players with actual PUUIDs
     const players: PlayerWithAccounts[] = puuids.map((puuid, index) =>
-      createTestPlayerFromPuuid(puuid, index),
+      createTestPlayerFromPuuid(LeaguePuuidSchema.parse(puuid), index),
     );
 
     // Test MOST_GAMES_PLAYED
@@ -186,7 +185,7 @@ describe("processCriteria integration tests", () => {
       throw new Error("No participants in match fixture");
     }
 
-    const player = createTestPlayerFromPuuid(puuid, 0);
+    const player = createTestPlayerFromPuuid(LeaguePuuidSchema.parse(puuid), 0);
 
     // Test matching queue filter
     // queueId 1700 = ARENA, 420 = SOLO, 440 = FLEX

@@ -1,8 +1,10 @@
+import type { DiscordAccountId } from "@scout-for-lol/domain/identity/discord.ts";
 import {
   RankSchema,
   parseCompetition,
   rankToLeaguePoints,
   rankToString,
+  type CachedLeaderboardEntry,
 } from "@scout-for-lol/data";
 import type {
   ScoutQlOutput,
@@ -11,7 +13,6 @@ import type {
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { calculateLeaderboard } from "#src/league/competition/leaderboard.ts";
 import type { RankedLeaderboardEntry } from "#src/league/competition/leaderboard-types.ts";
-import type { CachedLeaderboardEntry } from "@scout-for-lol/data";
 import { collectAggregateColumnNames } from "#src/reports/duckdb/aggregate-sql.ts";
 import {
   requireGuildScope,
@@ -70,7 +71,7 @@ export type RankReportInput = {
 type RankGroup = {
   label: string;
   playerId: number | null;
-  discordId: string | null;
+  discordId: DiscordAccountId | null;
   keys: LakeScalar[];
   entries: RankedLeaderboardEntry[];
 };

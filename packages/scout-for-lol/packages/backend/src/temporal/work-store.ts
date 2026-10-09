@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import { spectatorGameMatchId } from "#src/durable/match/match-identity.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
@@ -46,7 +47,7 @@ export function parlayTemporalWorkId(matchId: RiotMatchId): string {
 }
 
 export function championMasteryRefreshTemporalWorkId(
-  puuid: string,
+  puuid: LeaguePuuid,
   fetchedAt: Date | undefined,
 ): string {
   return `champion-mastery:${puuid}:${fetchedAt?.getTime().toString() ?? "missing"}`;
@@ -137,7 +138,7 @@ export async function enqueueParlayGeneration(
  */
 export async function enqueueChampionMasteryRefresh(
   input: {
-    puuid: string;
+    puuid: LeaguePuuid;
     region: string;
     fetchedAt: Date | undefined;
   },

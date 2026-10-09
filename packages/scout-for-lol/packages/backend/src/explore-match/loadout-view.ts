@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { ExploreCardSelectionError } from "./card-selection-error.ts";
 import {
@@ -33,7 +34,7 @@ const spellByNumericId = new Map(
 
 export type ExploreLoadoutPair = {
   matchId: RiotMatchId;
-  puuid: string;
+  puuid: LeaguePuuid;
 };
 
 export function exploreLoadoutPairKey(pair: ExploreLoadoutPair): string {

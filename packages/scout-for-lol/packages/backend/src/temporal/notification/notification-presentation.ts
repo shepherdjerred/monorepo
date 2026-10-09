@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import { z } from "zod";
 import {
   ActionRowBuilder,
@@ -181,7 +182,7 @@ export async function prepareNotificationPresentation(
 export async function freezeNotificationMessage(
   record: MatchNotificationIntentRecord,
   message: MessageCreateOptions,
-  serverId: string | undefined,
+  serverId: DiscordGuildId | undefined,
   database: ExtendedPrismaClient = prisma,
 ): Promise<MessageCreateOptions> {
   if (serverId === undefined) return message;

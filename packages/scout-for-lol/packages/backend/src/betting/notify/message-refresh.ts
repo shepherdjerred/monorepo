@@ -1,4 +1,7 @@
-import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
+import type {
+  RiotMatchId,
+  DiscordMessageId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import * as Sentry from "@sentry/bun";
 import type { MessageEditOptions } from "discord.js";
 import {
@@ -31,7 +34,7 @@ const logger = createLogger("betting-message-refresh");
 
 export type BucksMessageEdit = (input: {
   channelId: DiscordChannelId;
-  messageId: string;
+  messageId: DiscordMessageId;
   options: MessageEditOptions;
 }) => Promise<void>;
 
@@ -239,7 +242,7 @@ export async function refreshBucksMessages(
 }
 
 export async function refreshClosedBucksMessages(
-  closed: readonly { matchId: RiotMatchId; serverId: string }[],
+  closed: readonly { matchId: RiotMatchId; serverId: DiscordGuildId }[],
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<void> {
   for (const pool of closed) {

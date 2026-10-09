@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import path from "node:path";
 import { readdir } from "node:fs/promises";
 import { z } from "zod";
@@ -404,7 +405,7 @@ async function loadBaseline(
   runId: string,
   against: {
     readonly stage: ReplayStage;
-    readonly guildId: string;
+    readonly guildId: DiscordGuildId;
     readonly capabilities: ExploreCapabilitySet;
     /** This run's corpus, or null when it replays chips only. */
     readonly corpus: { readonly sha256: string } | null;

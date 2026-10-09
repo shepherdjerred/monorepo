@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import configuration from "#src/configuration.ts";
 
@@ -24,6 +25,6 @@ export function getExploreMatchUrl(matchId: RiotMatchId): string {
   return `${getOrigin()}/app/explore/matches/${matchId}`;
 }
 
-export function getHallOfFameUrl(guildId: string): string {
+export function getHallOfFameUrl(guildId: DiscordGuildId): string {
   return `${getOrigin()}/app/halls/${guildId}`;
 }

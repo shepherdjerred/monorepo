@@ -105,8 +105,8 @@ async function dareManagementAvailable(
  * this runs and are deliberately not captured.
  */
 async function captureWebActivity(
-  serverId: string,
-  discordId: string,
+  serverId: DiscordGuildId,
+  discordId: DiscordAccountId,
   activityKind: BucksMemberActivityKind,
 ): Promise<void> {
   await captureBucksMemberActivity({

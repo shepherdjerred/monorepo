@@ -85,17 +85,29 @@ describe("listPostableChannels", () => {
     const channels = await listPostableChannels(GUILD_ID, {
       rest: reader({
         channels: [
-          channel({ id: "2", name: "zulu", type: ChannelType.GuildText }),
-          channel({ id: "1", name: "alpha", type: ChannelType.GuildText }),
           channel({
-            id: "3",
+            id: "100000000000000002",
+            name: "zulu",
+            type: ChannelType.GuildText,
+          }),
+          channel({
+            id: "100000000000000001",
+            name: "alpha",
+            type: ChannelType.GuildText,
+          }),
+          channel({
+            id: "100000000000000003",
             name: "news",
             type: ChannelType.GuildAnnouncement,
             parentId: "cat",
           }),
-          channel({ id: "4", name: "voice", type: ChannelType.GuildVoice }),
           channel({
-            id: "5",
+            id: "100000000000000004",
+            name: "voice",
+            type: ChannelType.GuildVoice,
+          }),
+          channel({
+            id: "100000000000000005",
             name: "Category",
             type: ChannelType.GuildCategory,
           }),
@@ -103,9 +115,9 @@ describe("listPostableChannels", () => {
       }),
     });
     expect(channels).toEqual([
-      { id: "1", name: "alpha", parentId: null },
-      { id: "3", name: "news", parentId: "cat" },
-      { id: "2", name: "zulu", parentId: null },
+      { id: "100000000000000001", name: "alpha", parentId: null },
+      { id: "100000000000000003", name: "news", parentId: "cat" },
+      { id: "100000000000000002", name: "zulu", parentId: null },
     ]);
   });
 
@@ -113,9 +125,13 @@ describe("listPostableChannels", () => {
     const channels = await listPostableChannels(GUILD_ID, {
       rest: reader({
         channels: [
-          channel({ id: "1", name: "open", type: ChannelType.GuildText }),
           channel({
-            id: "2",
+            id: "100000000000000001",
+            name: "open",
+            type: ChannelType.GuildText,
+          }),
+          channel({
+            id: "100000000000000002",
             name: "locked",
             type: ChannelType.GuildText,
             overwrites: [
@@ -130,14 +146,18 @@ describe("listPostableChannels", () => {
         ],
       }),
     });
-    expect(channels.map((entry) => entry.id)).toEqual(["1"]);
+    expect(channels.map((entry) => entry.id)).toEqual(["100000000000000001"]);
   });
 
   test("returns nothing when the bot lacks Send Messages anywhere", async () => {
     const channels = await listPostableChannels(GUILD_ID, {
       rest: reader({
         channels: [
-          channel({ id: "1", name: "open", type: ChannelType.GuildText }),
+          channel({
+            id: "100000000000000001",
+            name: "open",
+            type: ChannelType.GuildText,
+          }),
         ],
         botRolePermissions: PermissionFlagsBits.ViewChannel.toString(),
       }),

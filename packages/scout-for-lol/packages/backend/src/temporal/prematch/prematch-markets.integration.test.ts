@@ -149,7 +149,7 @@ async function capture(
   for (const channelId of channelIds) {
     await mintPrematchIntent(prisma, {
       matchId: riotMatchId,
-      channelId,
+      channelId: DiscordChannelIdSchema.parse(channelId),
       createdAt: observedAt,
       freshnessDeadline: new Date(observedAt.getTime() + 3_600_000),
     });
@@ -183,8 +183,11 @@ afterAll(async () => {
 describe("openPrematchMarkets — betting pools", () => {
   test("opens one pool per Bucks-enabled announced guild, once, and receipts it", async () => {
     await register(GUILD, CHANNELS);
-    await register(OTHER_GUILD, [OTHER_CHANNEL]);
-    await capture(SOLO_MATCH, 420, [...CHANNELS, OTHER_CHANNEL]);
+    await register(OTHER_GUILD, [DiscordChannelIdSchema.parse(OTHER_CHANNEL)]);
+    await capture(SOLO_MATCH, 420, [
+      ...CHANNELS,
+      DiscordChannelIdSchema.parse(OTHER_CHANNEL),
+    ]);
 
     const first = await openPrematchMarkets({ riotMatchId: SOLO_MATCH });
     const second = await openPrematchMarkets({ riotMatchId: SOLO_MATCH });

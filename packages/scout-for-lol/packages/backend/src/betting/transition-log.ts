@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { createLogger } from "#src/logger.ts";
 import { captureBucksLifecycle } from "#src/analytics/bryan-bucks.ts";
@@ -37,7 +38,7 @@ export type BucksTransitionEvent = Parameters<
 export type BucksTransitionFields = {
   event: BucksTransitionEvent;
   matchId?: RiotMatchId;
-  serverId?: string;
+  serverId?: DiscordGuildId;
   poolId?: number;
   marketId?: number;
   dareId?: number;

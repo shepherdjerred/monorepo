@@ -1,3 +1,4 @@
+import { DiscordAccountIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { describe, expect, test } from "vitest";
 import {
   BUCKS_RULES_HINT,
@@ -68,21 +69,21 @@ describe("bucksPrematchSummary", () => {
       framing: BLUE_ANCHOR,
       positions: [
         {
-          discordId: "1337623164146155591",
+          discordId: DiscordAccountIdSchema.parse("1337623164146155591"),
           teamId: 100,
           offeredStake: 6,
           matchedStake: null,
           unmatchedStake: null,
         },
         {
-          discordId: "1337623164146155592",
+          discordId: DiscordAccountIdSchema.parse("1337623164146155592"),
           teamId: 100,
           offeredStake: 4,
           matchedStake: null,
           unmatchedStake: null,
         },
         {
-          discordId: "1337623164146155593",
+          discordId: DiscordAccountIdSchema.parse("1337623164146155593"),
           teamId: 200,
           offeredStake: 5,
           matchedStake: null,
@@ -107,7 +108,7 @@ describe("bucksPrematchSummary", () => {
       framing: MIXED,
       positions: [
         {
-          discordId: "1337623164146155591",
+          discordId: DiscordAccountIdSchema.parse("1337623164146155591"),
           teamId: 100,
           offeredStake: 6,
           matchedStake: null,
@@ -126,14 +127,14 @@ describe("bucksPrematchSummary", () => {
       framing: BLUE_ANCHOR,
       positions: [
         {
-          discordId: "1337623164146155591",
+          discordId: DiscordAccountIdSchema.parse("1337623164146155591"),
           teamId: 100,
           offeredStake: 10,
           matchedStake: 6,
           unmatchedStake: 4,
         },
         {
-          discordId: "1337623164146155592",
+          discordId: DiscordAccountIdSchema.parse("1337623164146155592"),
           teamId: 200,
           offeredStake: 1,
           matchedStake: 1,
@@ -168,7 +169,9 @@ describe("bucksPrematchSummary", () => {
 
   test("bounds the digest and keeps the complete totals", () => {
     const positions = Array.from({ length: 17 }, (_, index) => ({
-      discordId: `133762316414615${(1000 + index).toString()}`,
+      discordId: DiscordAccountIdSchema.parse(
+        `133762316414615${(1000 + index).toString()}`,
+      ),
       teamId: index % 2 === 0 ? (100 as const) : (200 as const),
       offeredStake: 5,
       matchedStake: 5,
@@ -188,7 +191,9 @@ describe("bucksPrematchSummary", () => {
 
   test("shrinks the digest to fit the budget the base leaves", () => {
     const positions = Array.from({ length: 15 }, (_, index) => ({
-      discordId: `133762316414615${(1000 + index).toString()}`,
+      discordId: DiscordAccountIdSchema.parse(
+        `133762316414615${(1000 + index).toString()}`,
+      ),
       teamId: index % 2 === 0 ? (100 as const) : (200 as const),
       offeredStake: 2_147_483_647,
       matchedStake: 1_073_741_824,

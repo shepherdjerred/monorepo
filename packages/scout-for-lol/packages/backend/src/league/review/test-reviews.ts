@@ -4,6 +4,7 @@
  * Usage: bun run src/league/review/test-reviews.ts [options]
  */
 
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import {
   generateMatchReview,
   selectPlayerIndex,
@@ -121,7 +122,7 @@ async function fetchMatchFromS3(key: string): Promise<RawMatch | null> {
  * Create a minimal player config for testing
  */
 function createMinimalPlayerConfig(
-  puuid: string,
+  puuid: LeaguePuuid,
   name: string,
 ): PlayerConfigEntry {
   return {
@@ -161,7 +162,7 @@ function convertRawMatchToInternalFormat(
       : "Unknown";
 
   const playerConfig = createMinimalPlayerConfig(
-    firstParticipant.puuid,
+    LeaguePuuidSchema.parse(firstParticipant.puuid),
     playerName,
   );
 

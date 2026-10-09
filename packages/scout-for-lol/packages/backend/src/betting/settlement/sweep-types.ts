@@ -1,4 +1,12 @@
-import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
+import type {
+  DiscordGuildId,
+  DiscordChannelId,
+  DiscordAccountId,
+} from "@scout-for-lol/domain/identity/discord.ts";
+import type {
+  RiotMatchId,
+  DiscordMessageId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import type { RiotTeamId } from "@scout-for-lol/data";
 
 /**
@@ -9,7 +17,7 @@ import type { RiotTeamId } from "@scout-for-lol/data";
 
 export type ClosedPosition = {
   betId: number;
-  discordId: string;
+  discordId: DiscordAccountId;
   teamId: RiotTeamId;
   submittedStake: number;
   matchedStake: number;
@@ -18,8 +26,8 @@ export type ClosedPosition = {
 
 export type ClosedPool = {
   matchId: RiotMatchId;
-  serverId: string;
-  messageRefs: { channelId: string; messageId: string }[];
+  serverId: DiscordGuildId;
+  messageRefs: { channelId: DiscordChannelId; messageId: DiscordMessageId }[];
   humanMatchedPerSide: number;
   houseFill: number;
   totalMatchedPerSide: number;

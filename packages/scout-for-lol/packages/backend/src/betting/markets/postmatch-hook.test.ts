@@ -1,4 +1,8 @@
 import {
+  DiscordGuildIdSchema,
+  type DiscordGuildId,
+} from "@scout-for-lol/domain/identity/discord.ts";
+import {
   RiotMatchIdSchema,
   type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
@@ -15,7 +19,7 @@ describe("refreshSettledPoolMessages", () => {
   test("removes straight-bet controls once even when no outcome is announced", async () => {
     const settlement: SettlementSummary = {
       matchId: RiotMatchIdSchema.parse("NA1_123"),
-      serverId: "guild-one",
+      serverId: DiscordGuildIdSchema.parse("813397242200260844"),
       winningTeamId: 100,
       voidReason: undefined,
       winnersPool: BucksPoolTotalSchema.parse(100),
@@ -25,7 +29,7 @@ describe("refreshSettledPoolMessages", () => {
     };
     const refreshed: (readonly {
       matchId: RiotMatchId;
-      serverId: string;
+      serverId: DiscordGuildId;
     }[])[] = [];
 
     await refreshSettledPoolMessages(

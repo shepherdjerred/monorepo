@@ -1,3 +1,4 @@
+import type { z } from "zod";
 import {
   type CompletedMatch,
   DiscordAccountIdSchema,
@@ -56,7 +57,7 @@ const DIAMOND_AFTER: Rank = {
 
 function trackedPlayer(params: {
   alias: string;
-  puuid: string;
+  puuid: z.input<typeof LeaguePuuidSchema>;
   discordId: string;
   outcome: "Victory" | "Defeat" | "Surrender";
   team: "blue" | "red";

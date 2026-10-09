@@ -1,4 +1,8 @@
-import { RiotMatchIdSchema } from "@scout-for-lol/data";
+import {
+  RiotMatchIdSchema,
+  DiscordGuildIdSchema,
+  LeaguePuuidSchema,
+} from "@scout-for-lol/data";
 import { describe, expect, test } from "vitest";
 import type { NotificationStateKind } from "#src/lib/operations/operations-notification-actions.ts";
 import {
@@ -39,7 +43,10 @@ function pipeline(
         {
           kind: "report-delivered",
           version: 2,
-          scope: { kind: "guild", guildId: "1337623164146155593" },
+          scope: {
+            kind: "guild",
+            guildId: DiscordGuildIdSchema.parse("1337623164146155593"),
+          },
           recordedAt: "2026-09-13T09:05:00.000Z",
         },
       ],
@@ -58,7 +65,9 @@ function pipeline(
     })),
     trackedAccounts: [
       {
-        puuid: "puuid-1",
+        puuid: LeaguePuuidSchema.parse(
+          "puuid-100000000000000000000000000000000000000000000000000000000000000000000000",
+        ),
         playerId: 4,
         accountId: null,
         cursorAdvancedAt: null,
@@ -97,9 +106,12 @@ describe("the match summary", () => {
 
   test("receipt scopes read as themselves", () => {
     expect(receiptScopeLabel({ kind: "global" })).toBe("global");
-    expect(receiptScopeLabel({ kind: "guild", guildId: "42" })).toBe(
-      "guild 42",
-    );
+    expect(
+      receiptScopeLabel({
+        kind: "guild",
+        guildId: DiscordGuildIdSchema.parse("814684286053089353"),
+      }),
+    ).toBe("guild 814684286053089353");
     expect(receiptScopeLabel({ kind: "account", accountId: 7 })).toBe(
       "account 7",
     );

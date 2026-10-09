@@ -1,3 +1,4 @@
+import type { DiscordGuildId, DiscordChannelId } from "@scout-for-lol/data";
 import { useState } from "react";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { CompetitionBuilder } from "#src/components/competition/competition-builder.tsx";
@@ -9,8 +10,8 @@ const DESCRIPTION =
   "A competition is a time-boxed race where members rank on one metric. Tweak the example and create.";
 
 export function OnboardingCompetitionStep(props: {
-  guildId: string;
-  channels: { id: string; name: string }[];
+  guildId: DiscordGuildId;
+  channels: { id: DiscordChannelId; name: string }[];
   exampleId: string | null;
   onCreated: (competitionId: number) => void;
   onBack: () => void;

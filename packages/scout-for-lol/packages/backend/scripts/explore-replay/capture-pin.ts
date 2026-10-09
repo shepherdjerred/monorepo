@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import path from "node:path";
 import { z } from "zod";
 import {
@@ -108,7 +109,7 @@ async function startFlags(): Promise<FlagSource> {
  * tallying here is cheaper than teaching a query to index into JSON.
  */
 async function exploreRunFacts(): Promise<
-  readonly { guildId: string; ownerId: string }[]
+  readonly { guildId: DiscordGuildId; ownerId: string }[]
 > {
   const runs = await prisma.scoutInteractiveRun.findMany({
     where: { kind: "explore" },
@@ -137,11 +138,11 @@ async function exploreRunFacts(): Promise<
 async function targetGuilds(
   stage: "beta" | "prod",
   top: number,
-): Promise<readonly { guildId: string; label: string }[]> {
+): Promise<readonly { guildId: DiscordGuildId; label: string }[]> {
   if (stage === "beta") {
     return [{ guildId: MY_SERVER, label: "mine" }];
   }
-  const counts = new Map<string, number>();
+  const counts = new Map<DiscordGuildId, number>();
   for (const fact of await exploreRunFacts()) {
     if (fact.guildId === MY_SERVER || fact.ownerId === ME) continue;
     counts.set(fact.guildId, (counts.get(fact.guildId) ?? 0) + 1);
@@ -163,7 +164,7 @@ async function targetGuilds(
  * history would make several chips answer "nothing here" for reasons that have
  * nothing to do with the model.
  */
-async function busiestRequester(guildId: string): Promise<string> {
+async function busiestRequester(guildId: DiscordGuildId): Promise<string> {
   const counts = new Map<string, number>();
   for (const fact of await exploreRunFacts()) {
     if (fact.guildId !== guildId) continue;

@@ -1,3 +1,8 @@
+import {
+  DiscordChannelIdSchema,
+  type DiscordGuildId,
+  type DiscordChannelId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { describe, expect, test } from "vitest";
 import type {
   InteractionEditReplyOptions,
@@ -27,7 +32,7 @@ function voiceHarness(options: HarnessOptions = {}) {
   const replies: string[] = [];
   /** Interaction lifecycle events, in order: reply / defer / edit / join. */
   const events: string[] = [];
-  const joins: { guildId: string; channelId: string }[] = [];
+  const joins: { guildId: DiscordGuildId; channelId: DiscordChannelId }[] = [];
   const leaves: string[] = [];
   let epoch = 0;
   const interaction = {
@@ -56,14 +61,18 @@ function voiceHarness(options: HarnessOptions = {}) {
     resolveRuntime: () => Promise.resolve(options.runtimeStatus ?? "ready"),
     manager: () => ({
       captureJoinEpoch: () => epoch,
-      join: (guildId: string, channelId: string, expectedEpoch?: number) => {
+      join: (
+        guildId: DiscordGuildId,
+        channelId: DiscordChannelId,
+        expectedEpoch?: number,
+      ) => {
         events.push("join");
         joins.push({ guildId, channelId });
         return expectedEpoch !== undefined && expectedEpoch !== epoch
           ? Promise.resolve("cancelled" as const)
           : Promise.resolve(options.joinOutcome ?? "joined");
       },
-      leave: (guildId: string) => {
+      leave: (guildId: DiscordGuildId) => {
         epoch++;
         leaves.push(guildId);
         return options.leaveResult ?? true;
@@ -101,7 +110,7 @@ describe("/scout join and /scout leave", () => {
     // in a voice channel to begin with.
     const h = voiceHarness({
       runtimeStatus: "unconfigured",
-      memberChannelId: "vc-1",
+      memberChannelId: "823222942003306058",
     });
     await executeScoutVoice(h.interaction, "join", h.dependencies);
     expect(h.replies[0]).toContain("not configured in this deployment");
@@ -116,7 +125,7 @@ describe("/scout join and /scout leave", () => {
   test("defers before loading the runtime, so a slow cold load cannot time out", async () => {
     const h = voiceHarness({
       runtimeStatus: "unconfigured",
-      memberChannelId: "vc-1",
+      memberChannelId: "823222942003306058",
     });
     await executeScoutVoice(h.interaction, "join", h.dependencies);
     expect(h.events).toEqual(["defer", "edit"]);
@@ -128,7 +137,7 @@ describe("/scout join and /scout leave", () => {
   test("distinguishes a failed model load from an unconfigured deployment", async () => {
     const h = voiceHarness({
       runtimeStatus: "failed",
-      memberChannelId: "vc-1",
+      memberChannelId: "823222942003306058",
     });
     await executeScoutVoice(h.interaction, "join", h.dependencies);
     expect(h.replies[0]).toContain("could not start");
@@ -144,9 +153,14 @@ describe("/scout join and /scout leave", () => {
   });
 
   test("join starts a session in the requester's channel", async () => {
-    const h = voiceHarness({ memberChannelId: "vc-1" });
+    const h = voiceHarness({ memberChannelId: "823222942003306058" });
     await executeScoutVoice(h.interaction, "join", h.dependencies);
-    expect(h.joins).toEqual([{ guildId: GUILD, channelId: "vc-1" }]);
+    expect(h.joins).toEqual([
+      {
+        guildId: GUILD,
+        channelId: DiscordChannelIdSchema.parse("823222942003306058"),
+      },
+    ]);
     expect(h.replies[0]).toContain("Hey Scout");
     // The interaction is acknowledged BEFORE the voice join, which can wait
     // up to 30 s for Ready — past Discord's acknowledgement window.
@@ -155,8 +169,8 @@ describe("/scout join and /scout leave", () => {
 
   test("join in the already-active channel does not restart the session", async () => {
     const h = voiceHarness({
-      memberChannelId: "vc-1",
-      activeChannelId: "vc-1",
+      memberChannelId: "823222942003306058",
+      activeChannelId: "823222942003306058",
     });
     await executeScoutVoice(h.interaction, "join", h.dependencies);
     expect(h.joins).toEqual([]);
@@ -168,7 +182,7 @@ describe("/scout join and /scout leave", () => {
     // if that capture happened after instead, this leave's bump would be
     // invisible and the join would proceed as "joined".
     const h = voiceHarness({
-      memberChannelId: "vc-1",
+      memberChannelId: "823222942003306058",
       leaveDuringFlagCheck: true,
     });
     await executeScoutVoice(h.interaction, "join", h.dependencies);
@@ -178,26 +192,36 @@ describe("/scout join and /scout leave", () => {
 
   test("a cancelled join reports failure instead of claiming success", async () => {
     const h = voiceHarness({
-      memberChannelId: "vc-1",
+      memberChannelId: "823222942003306058",
       joinOutcome: "cancelled",
     });
     await executeScoutVoice(h.interaction, "join", h.dependencies);
-    expect(h.joins).toEqual([{ guildId: GUILD, channelId: "vc-1" }]);
+    expect(h.joins).toEqual([
+      {
+        guildId: GUILD,
+        channelId: DiscordChannelIdSchema.parse("823222942003306058"),
+      },
+    ]);
     expect(h.replies[0]).toContain("stopped joining");
     expect(h.replies[0]).not.toContain("Hey Scout");
   });
 
   test("join from another channel moves the session", async () => {
     const h = voiceHarness({
-      memberChannelId: "vc-2",
-      activeChannelId: "vc-1",
+      memberChannelId: "827729896623735913",
+      activeChannelId: "823222942003306058",
     });
     await executeScoutVoice(h.interaction, "join", h.dependencies);
-    expect(h.joins).toEqual([{ guildId: GUILD, channelId: "vc-2" }]);
+    expect(h.joins).toEqual([
+      {
+        guildId: GUILD,
+        channelId: DiscordChannelIdSchema.parse("827729896623735913"),
+      },
+    ]);
   });
 
   test("leave tears the session down", async () => {
-    const h = voiceHarness({ activeChannelId: "vc-1" });
+    const h = voiceHarness({ activeChannelId: "823222942003306058" });
     await executeScoutVoice(h.interaction, "leave", h.dependencies);
     expect(h.leaves).toEqual([GUILD]);
     expect(h.replies[0]).toContain("left the voice channel");
@@ -212,7 +236,10 @@ describe("/scout join and /scout leave", () => {
   test("leave still works after the guild flag is switched off", async () => {
     // Consent control: an operator flipping the flag off (or a client with a
     // cached command) must never strand an active session un-stoppable.
-    const h = voiceHarness({ flagEnabled: false, activeChannelId: "vc-1" });
+    const h = voiceHarness({
+      flagEnabled: false,
+      activeChannelId: "823222942003306058",
+    });
     await executeScoutVoice(h.interaction, "leave", h.dependencies);
     expect(h.leaves).toEqual([GUILD]);
     expect(h.replies[0]).toContain("left the voice channel");

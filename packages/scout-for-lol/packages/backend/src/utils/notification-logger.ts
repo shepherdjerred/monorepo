@@ -1,3 +1,7 @@
+import type {
+  DiscordGuildId,
+  DiscordChannelId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("notification-logger");
@@ -43,8 +47,8 @@ type LogEntry = {
   type: NotificationType;
   competitionId?: number;
   competitionTitle?: string;
-  channelId?: string;
-  serverId?: string;
+  channelId?: DiscordChannelId;
+  serverId?: DiscordGuildId;
   trigger: string;
   message?: string;
 };
@@ -65,8 +69,8 @@ export function logNotification(
   details: {
     competitionId?: number;
     competitionTitle?: string;
-    channelId?: string;
-    serverId?: string;
+    channelId?: DiscordChannelId;
+    serverId?: DiscordGuildId;
     message?: string;
   } = {},
 ): void {

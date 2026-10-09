@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import { z } from "zod";
 import {
   type DiscordAccountId,
@@ -49,7 +50,7 @@ export type ReplayCaseInput = {
    */
   readonly history: readonly ExploreMessage[];
   readonly requesterId: DiscordAccountId;
-  readonly guildIds: readonly string[];
+  readonly guildIds: readonly DiscordGuildId[];
   readonly surface: ExploreSurface;
   readonly originChannelId: DiscordChannelId | null;
 };
@@ -82,7 +83,7 @@ export type ReplayRunnerDependencies = {
    * statically. It is a second call, not a second rule.
    */
   readonly resolveCapabilities: (input: {
-    readonly guildIds: readonly string[];
+    readonly guildIds: readonly DiscordGuildId[];
     readonly surface: ExploreSurface;
   }) => Promise<ExploreCapabilitySet>;
   readonly now: () => number;

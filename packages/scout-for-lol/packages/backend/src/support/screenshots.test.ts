@@ -1,6 +1,10 @@
+import { DiscordAccountIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { afterAll, beforeAll, beforeEach, expect, test, vi } from "vitest";
-import type { GetObjectCommand } from "@aws-sdk/client-s3";
-import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import {
+  type GetObjectCommand,
+  PutObjectCommand,
+  DeleteObjectCommand,
+} from "@aws-sdk/client-s3";
 import {
   initFeatureFlags,
   shutdownFeatureFlags,
@@ -86,7 +90,9 @@ async function imageRequest(id: string, userId?: string) {
   const url = new URL(`http://localhost/api/support/screenshots/${id}`);
   const headers: Record<string, string> = {};
   if (userId !== undefined) {
-    const session = await signSession({ discordId: userId });
+    const session = await signSession({
+      discordId: DiscordAccountIdSchema.parse(userId),
+    });
     headers["Cookie"] = `scout_session=${session.jwt}`;
   }
   const response = await handleSupportScreenshot(

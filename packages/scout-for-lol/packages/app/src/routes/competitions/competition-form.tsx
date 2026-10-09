@@ -1,14 +1,17 @@
-import { Loaded } from "@shepherdjerred/loaded";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useSelector } from "@tanstack/react-form";
-import { Link, useNavigate, useParams } from "react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouteGuildId } from "#src/lib/routes/route-params.ts";
 import {
+  type DiscordGuildId,
+  type DiscordChannelId,
   CompetitionIdSchema,
   type CompetitionCriteria,
   type CompetitionGameVariant,
   type CompetitionVisibility,
 } from "@scout-for-lol/data";
+import { Loaded } from "@shepherdjerred/loaded";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSelector } from "@tanstack/react-form";
+import { Link, useNavigate, useParams } from "react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { FormActions } from "@scout-for-lol/design-system/components/forms/field";
 import { channelAvailabilityForQuery } from "#src/components/channel-select-support.tsx";
@@ -46,7 +49,8 @@ import { CompetitionFormValueSchema } from "#src/lib/form-schemas.ts";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 
 export function CompetitionForm() {
-  const { guildId, competitionId: idParam } = useParams();
+  const { competitionId: idParam } = useParams();
+  const guildId = useRouteGuildId();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -218,7 +222,7 @@ export function CompetitionForm() {
 
   return (
     <form.AppForm>
-      {invalidRoute ? (
+      {invalidRoute || guildId === undefined ? (
         <p className="text-sm text-scout-danger">Invalid competition route.</p>
       ) : isEditWaitingForData ? (
         <EditRecordQueryState
@@ -243,7 +247,7 @@ export function CompetitionForm() {
         </div>
       ) : (
         <CompetitionCreatePage
-          guildId={safeGuildId}
+          guildId={guildId}
           channels={Loaded.fromQuery(channelsQuery, ["listChannels"])}
           onRetryDependencies={() => {
             void channelsQuery.refetch();
@@ -264,14 +268,14 @@ export function CompetitionForm() {
 }
 
 function CompetitionCreatePage(props: {
-  guildId: string;
+  guildId: DiscordGuildId;
   /**
    * One value in place of `channels` / `channelsLoading` / `channelsError`.
    * Those three could disagree, and the page resolved the disagreement by
    * checking loading first, so a channel list that failed while another
    * dependency was still loading reported "Loading builder…" indefinitely.
    */
-  channels: Loaded<{ id: string; name: string }[]>;
+  channels: Loaded<{ id: DiscordChannelId; name: string }[]>;
   onRetryDependencies: () => void;
   onCreated: (competitionId: number) => void;
 }) {
@@ -334,7 +338,7 @@ function CompetitionCreatePage(props: {
 function existingToFormState(existing: {
   title: string;
   description: string;
-  channelId: string;
+  channelId: DiscordChannelId;
   visibility: CompetitionVisibility;
   maxParticipants: number;
   seasonId: string | null;

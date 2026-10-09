@@ -10,6 +10,7 @@
  * holds a gateway connection.
  */
 
+import type { DiscordChannelId } from "@scout-for-lol/domain/identity/discord.ts";
 import { TRPCError } from "@trpc/server";
 import type { User } from "#generated/prisma/client/index.js";
 import type { DiscordGuildId } from "@scout-for-lol/data";
@@ -23,7 +24,7 @@ import {
 
 export async function assertGuildAdmin(params: {
   user: User;
-  guildId: string;
+  guildId: DiscordGuildId;
 }): Promise<void> {
   // Throws UNAUTHORIZED / SERVICE_UNAVAILABLE if Discord can't be reached, so
   // the FORBIDDEN below only ever means a real membership answer.
@@ -69,7 +70,7 @@ export async function assertGuildAdmin(params: {
  */
 export async function assertChannelInGuild(params: {
   guildId: DiscordGuildId;
-  channelId: string;
+  channelId: DiscordChannelId;
 }): Promise<void> {
   const guild = await callDiscordForRequest(() =>
     readGuildChannelPostability(params.guildId),
