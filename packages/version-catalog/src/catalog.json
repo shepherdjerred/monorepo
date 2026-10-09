@@ -3,6 +3,42 @@
   "schemaVersion": 1,
   "entries": [
     {
+      "name": "bluemap/archive-cli",
+      "category": "upstream",
+      "artifactType": "package",
+      "management": {
+        "managed": false
+      },
+      "value": "5.28",
+      "notes": [
+        "Storm archive's static low-resolution viewers. CLI artifact is checksum-pinned in the overview configuration; upgrades require a new immutable viewer release."
+      ]
+    },
+    {
+      "name": "minecraft/archive-upgrader",
+      "category": "upstream",
+      "artifactType": "package",
+      "management": {
+        "managed": false
+      },
+      "value": "1.17.1",
+      "notes": [
+        "One-shot vanilla conversion of disposable legacy archive copies, before the world-height expansion. Original downloads remain unchanged."
+      ]
+    },
+    {
+      "name": "itzg/minecraft-server-java17-archive",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2026.9.1-java17@sha256:38afacde5d0cd46c255d744b582fd4b07524d43989da614f2bc9703c529d0fb9",
+      "notes": [
+        "Java 17 for the one-shot vanilla 1.17.1 archive converter. Changes require a new immutable overview release."
+      ]
+    },
+    {
       "name": "unmined/unmined-cli",
       "category": "upstream",
       "artifactType": "package",

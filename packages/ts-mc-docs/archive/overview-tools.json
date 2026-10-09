@@ -1,0 +1,19 @@
+{
+  "release": "bluemap-5.28-v7",
+  "bluemap": {
+    "version": "5.28",
+    "url": "https://github.com/BlueMap-Minecraft/BlueMap/releases/download/v5.28/bluemap-5.28-cli.jar",
+    "sha256": "c6868465f8f972a64a3f2acc32112cab8560339045747f81359bdea6959f7ac2"
+  },
+  "upgrader": {
+    "version": "1.17.1",
+    "dataVersion": 2730,
+    "url": "https://piston-data.mojang.com/v1/objects/a16d67e5807f57fc4e550299cf20226194497dc2/server.jar",
+    "sha256": "e8c211b41317a9f5a780c98a89592ecb72eb39a6e475d4ac9657e5bc9ffaf55f"
+  },
+  "webapp": {
+    "version": "5.28",
+    "url": "https://codeload.github.com/BlueMap-Minecraft/BlueMap/zip/0f3a9fbfb87ecfafc809d673b11254634e734ae2",
+    "sha256": "02fd4587250dcb48b7241916a5034c5dbdf2da9965b536f7879dc7da3abe4c65"
+  }
+}
