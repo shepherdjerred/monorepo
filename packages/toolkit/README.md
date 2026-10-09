@@ -65,6 +65,12 @@ Common plumbing such as `git`, `bun`, `kubectl`, `helm`, `tofu`, `aws`, `op`,
 
 ### Wait for CI and merge readiness
 
+`toolkit ci maintenance --json` reports recent explicit maintenance runs and
+the durable Temporal coordinator's memo key. It distinguishes release notes, CI
+image refreshes, and superseded source requests from normal main recovery.
+Maintenance success is never merge-readiness evidence. Inspect a failed or
+ambiguous submission and its coordinator state before retrying it.
+
 ```bash
 toolkit ci wait                         # Infer the PR for this branch
 toolkit ci wait 3447 --json             # One final report; progress on stderr

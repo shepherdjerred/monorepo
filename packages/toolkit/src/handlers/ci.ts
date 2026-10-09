@@ -22,10 +22,7 @@ function validateOptions(
     throw new Error("Unexpected positional arguments");
   if (
     positionals.length > 0 &&
-    (action === "main" ||
-      action === "load" ||
-      action === "timings" ||
-      values.main)
+    (["main", "load", "timings", "maintenance"].includes(action) || values.main)
   )
     throw new Error("Unexpected positional arguments");
   if (action !== "explain" && values.main)
@@ -39,10 +36,7 @@ function validateOptions(
     throw new Error("--timeout and --until are wait options");
   if (
     values.head !== undefined &&
-    (action === "main" ||
-      action === "load" ||
-      action === "timings" ||
-      values.main)
+    (["main", "load", "timings", "maintenance"].includes(action) || values.main)
   )
     throw new Error("--head requires a PR wait or explanation");
 }
@@ -67,6 +61,7 @@ export async function handleCiCommand(
   main            Show main's current verification and latest completed verdict
   load            Show Woodpecker/Kueue queues and CPU, memory, disk, I/O pressure
   timings         Report recent latency by actual workflow class and attempt
+  maintenance     Show recent maintenance runs and coordinator inspection details
 
 Options:
   --json                       One final JSON report on stdout
@@ -84,7 +79,7 @@ starting another status poll. Red main: report and await instructions.
       return;
     }
     const action = z
-      .enum(["wait", "explain", "main", "load", "timings"])
+      .enum(["wait", "explain", "main", "load", "timings", "maintenance"])
       .parse(subcommand);
     const { values, positionals } = parseArgs({
       args,

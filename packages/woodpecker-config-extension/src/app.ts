@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import type { KeyObject } from "node:crypto";
 import { ConfigExtensionRequestSchema, type Pipeline } from "#src/schemas.ts";
 import { authorizePipeline } from "#src/authorization.ts";
@@ -23,10 +23,16 @@ import { routeSteps } from "#src/pipeline/routing.ts";
 import { groupTofuSteps } from "#src/pipeline/group-tofu.ts";
 import { isPrVerificationEvent, prStatusEvent } from "#src/pr-event.ts";
 import { limitedPrSteps } from "#src/pipeline/draft.ts";
+import {
+  maintenanceMode,
+  requestedMaintenanceSteps,
+  separateMaintenance,
+} from "#src/pipeline/maintenance.ts";
 import type { SuccessfulWorkflowPipeline } from "#src/woodpecker-api.ts";
 import { cacheSourceSteps } from "#src/pipeline/source-cache.ts";
 
 export type AppOptions = {
+  readonly maintenanceEnabled?: () => Promise<boolean>;
   readonly sourceCacheEnabled?: (branch: string) => Promise<boolean>;
   readonly trustedGateImage?: string;
   /** Resolves Woodpecker's signing key; the caller caches it. */
@@ -206,6 +212,7 @@ async function pipelineEmitter(
     branch: pipeline.branch,
     defaultBranch,
     draft: pipeline.pr_draft,
+    maintenance: pipeline.variables["CI_MAINTENANCE_KIND"] !== undefined,
     changedFiles: pipeline.changed_files,
   };
   let enabled = false;
@@ -241,52 +248,66 @@ async function pipelineEmitter(
     );
 }
 
+async function authenticatedRequest(context: Context, options: AppOptions) {
+  // Verify against the exact bytes that were signed, not a re-serialization
+  // of the parsed object.
+  const body = await context.req.text();
+
+  const headers: Record<string, string> = {};
+  for (const [name, value] of Object.entries(context.req.header())) {
+    headers[name.toLowerCase()] = value;
+  }
+
+  const verified = await verifySignedRequest(
+    { method: context.req.method, url: context.req.url, headers, body },
+    await options.publicKey(),
+  );
+  if (!verified) {
+    // The response becomes an executed pipeline, so an unverified caller
+    // learns nothing about why it was rejected.
+    return context.json({ error: "invalid signature" }, 401);
+  }
+
+  const parsed = ConfigExtensionRequestSchema.safeParse(JSON.parse(body));
+  if (!parsed.success) {
+    return context.json({ error: "malformed request" }, 400);
+  }
+
+  const { repo, pipeline } = parsed.data;
+
+  // Decided before any other work. A refusal must not be the 204 that means
+  // "keep the configuration you already have", and it must not be a 200
+  // carrying an empty set of configs either: this returns an error status so
+  // the server marks the pipeline errored and schedules nothing. Refusing
+  // first also keeps an untrusted commit from driving the forge reads below.
+  const authorization = authorizePipeline(pipeline);
+  if (!authorization.allowed) {
+    console.warn(`refused pipeline for ${repo.name}: ${authorization.reason}`);
+    return context.json({ error: "actor is not permitted to run CI" }, 403);
+  }
+
+  return { repo, pipeline, authorization };
+}
+
 export function createApp(options: AppOptions): Hono {
   const app = new Hono();
+  const maintenanceEnabled =
+    options.maintenanceEnabled ?? (() => Promise.resolve(false));
   const gateDirectory =
     options.trustedGateImage === undefined ? "/workspace" : "/app";
-
   app.get("/healthz", (context) => context.text("ok"));
-
   app.post("/ciconfig", async (context) => {
-    // Verify against the exact bytes that were signed, not a re-serialization
-    // of the parsed object.
-    const body = await context.req.text();
-
-    const headers: Record<string, string> = {};
-    for (const [name, value] of Object.entries(context.req.header())) {
-      headers[name.toLowerCase()] = value;
-    }
-
-    const verified = await verifySignedRequest(
-      { method: context.req.method, url: context.req.url, headers, body },
-      await options.publicKey(),
+    const request = await authenticatedRequest(context, options);
+    if (request instanceof Response) return request;
+    const { repo, pipeline, authorization } = request;
+    const maintenance = await maintenanceMode(
+      pipeline,
+      repo.default_branch,
+      authorization.actorClass === "owner-controlled",
+      maintenanceEnabled,
     );
-    if (!verified) {
-      // The response becomes an executed pipeline, so an unverified caller
-      // learns nothing about why it was rejected.
-      return context.json({ error: "invalid signature" }, 401);
-    }
-
-    const parsed = ConfigExtensionRequestSchema.safeParse(JSON.parse(body));
-    if (!parsed.success) {
-      return context.json({ error: "malformed request" }, 400);
-    }
-
-    const { repo, pipeline } = parsed.data;
-
-    // Decided before any other work. A refusal must not be the 204 that means
-    // "keep the configuration you already have", and it must not be a 200
-    // carrying an empty set of configs either: this returns an error status so
-    // the server marks the pipeline errored and schedules nothing. Refusing
-    // first also keeps an untrusted commit from driving the forge reads below.
-    const authorization = authorizePipeline(pipeline);
-    if (!authorization.allowed) {
-      console.warn(
-        `refused pipeline for ${repo.name}: ${authorization.reason}`,
-      );
-      return context.json({ error: "actor is not permitted to run CI" }, 403);
-    }
+    if ("error" in maintenance)
+      return context.json({ error: maintenance.error }, maintenance.status);
 
     const platformOperation = platformOperationRequest(
       pipeline,
@@ -315,6 +336,13 @@ export function createApp(options: AppOptions): Hono {
       repo.default_branch,
       credentiallessAutomation,
     );
+    if (maintenance.kind !== undefined) {
+      return context.json({
+        configs: emit(
+          requestedMaintenanceSteps(images, maintenance.kind, pipeline),
+        ),
+      });
+    }
     if (!isWorkEvent(selectionContext)) {
       return context.json({
         configs: emit([noWorkStep(images.base)]),
@@ -385,7 +413,7 @@ export function createApp(options: AppOptions): Hono {
       signRemoteCacheSteps(
         selectSteps(
           await stepsForMainChange({
-            steps,
+            steps: maintenance.enabled ? separateMaintenance(steps) : steps,
             pipeline,
             defaultBranch: repo.default_branch,
             changedFiles,

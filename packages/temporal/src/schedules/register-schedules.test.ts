@@ -546,6 +546,8 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runSeaweedFsBackupRetentionAndGcWorkflow",
   // Bounded inventory and log-retention Activities; no Workflow-level sleeps.
   "runWoodpeckerLogRetention",
+  // One bounded signalWithStart Activity; durable coordination is separate.
+  "runCiMaintenanceTick",
   "syncGolinks",
   "runGlitterCorpusDaily",
   "runGlitterContextRefresh",

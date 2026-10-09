@@ -11,6 +11,7 @@ import { hasExactHeadApproval } from "#src/github-approval.ts";
 import { cancelSupersededPr } from "#src/superseded-pr.ts";
 import { initFeatureFlags } from "@shepherdjerred/feature-flags";
 import { sourceCacheConfig } from "#src/checkout/config.ts";
+import { maintenanceConfig } from "#src/maintenance-config.ts";
 
 function requireEnv(name: string): string {
   const value = Bun.env[name];
@@ -58,6 +59,10 @@ await initFeatureFlags({
   },
 });
 const app = createApp({
+  maintenanceEnabled: async () => {
+    const result = await maintenanceConfig();
+    return result.value;
+  },
   sourceCacheEnabled: async (branch) => {
     const config = await sourceCacheConfig(branch);
     return config.value;

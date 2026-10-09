@@ -59,6 +59,30 @@
   ],
   "flags": [
     {
+      "key": "woodpecker-maintenance-lanes-enabled",
+      "owner": "platform",
+      "namespace": "woodpecker",
+      "source": "ci-maintenance",
+      "purpose": "Separate release-note and CI-image maintenance from blocking main deployment.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "ci-maintenance-dispatch-enabled",
+      "owner": "platform",
+      "namespace": "temporal",
+      "source": "ci-maintenance",
+      "purpose": "Dispatch coalesced CI maintenance after Woodpecker maintenance lanes are deployed and enabled.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "woodpecker-source-cache-enabled",
       "owner": "platform",
       "namespace": "woodpecker",

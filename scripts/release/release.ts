@@ -14,7 +14,7 @@
  * envelope when there is no open release PR or nothing to refine.
  *
  * Usage:
- *   bun scripts/release/release.ts [--dry-run]
+ *   bun scripts/release/release.ts [--dry-run] [--phase release-notes|github-release]
  *
  * Env: GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID, GITHUB_APP_PRIVATE_KEY,
  *      OPENAI_API_KEY (refine step)
@@ -31,6 +31,7 @@ import {
 import { runReleaseRefiner } from "../lib/release-refiner.ts";
 import { runMain } from "../lib/transient.ts";
 import { runReleasePlease } from "@shepherdjerred/release-tools/runner";
+import { readMaintenancePr } from "../lib/maintenance-pr.ts";
 
 const MONOREPO_REPO = "shepherdjerred/monorepo";
 
@@ -95,7 +96,9 @@ async function resolveReleaseTarget(
 }
 
 function usage(): never {
-  console.error("Usage: bun scripts/release/release.ts [--dry-run]");
+  console.error(
+    "Usage: bun scripts/release/release.ts [--dry-run] [--phase release-notes|github-release]",
+  );
   process.exit(1);
 }
 
@@ -105,15 +108,20 @@ async function main(): Promise<void> {
     usage();
   }
   const dryRun = argv.has("--dry-run");
+  const phaseIndex = Bun.argv.indexOf("--phase");
+  const phase = phaseIndex === -1 ? "all" : Bun.argv[phaseIndex + 1];
+  if (
+    phase !== "all" &&
+    phase !== "release-notes" &&
+    phase !== "github-release"
+  ) {
+    throw new Error("Expected --phase release-notes or github-release");
+  }
 
   console.log(`--- release-please${dryRun ? " (dry run)" : ""}`);
   if (dryRun) {
     console.log(
-      "DRYRUN: would run `release-please release-pr`, the Codex SDK Luna " +
-        "CHANGELOG refinement on OpenAI (" +
-        "scripts/prompts/refine-release-please.md), then " +
-        "`release-please github-release` against " +
-        `${MONOREPO_REPO} (target-branch=main).`,
+      `DRYRUN: would run phase ${phase} against ${MONOREPO_REPO} (target-branch=main).`,
     );
     return;
   }
@@ -126,59 +134,86 @@ async function main(): Promise<void> {
     // The canonical CI checkout intentionally uses --no-tags. Fetch the
     // authoritative package tags before the fail-closed eligibility preflight.
     await fetchNpmPackageTags(root, env);
-    const releasePrTarget = await resolveReleaseTarget(root, env);
+    const releasePr =
+      phase === "github-release"
+        ? undefined
+        : await readMaintenancePr("release-please--branches--main", env);
+    let maintenanceDeferred = releasePr?.isDraft === false;
+    if (phase !== "github-release" && releasePr?.isDraft === false) {
+      console.log(
+        "Release PR is ready; retaining its head until merge or close",
+      );
+    }
+    if (phase !== "github-release" && releasePr?.isDraft !== false) {
+      const releasePrTarget = await resolveReleaseTarget(root, env);
 
-    // Validate the inference credential before release-please mutates the PR.
-    const openAiApiKey = requireEnv("OPENAI_API_KEY");
-    // Codex runs tool calls through a login shell. Verify that exact boundary,
-    // not only this process's mise-aware PATH, before release-please mutates a PR.
-    await run(["/bin/bash", "-lc", "gh --version"], {
-      cwd: root,
-      capture: true,
-    });
+      // Validate the inference credential before release-please mutates the PR.
+      const openAiApiKey = requireEnv("OPENAI_API_KEY");
+      // Codex runs tool calls through a login shell. Verify that exact boundary,
+      // not only this process's mise-aware PATH, before release-please mutates a PR.
+      await run(["/bin/bash", "-lc", "gh --version"], {
+        cwd: root,
+        capture: true,
+      });
 
-    await runReleasePlease({
-      phase: "release-pr",
-      token: auth.token,
-      repoUrl: `https://github.com/${MONOREPO_REPO}.git`,
-      targetBranch: "main",
-      targetBranchSha: releasePrTarget.targetBranchSha,
-      excludedPaths: releasePrTarget.excludedPaths,
-    });
+      await runReleasePlease({
+        phase: "release-pr",
+        token: auth.token,
+        repoUrl: `https://github.com/${MONOREPO_REPO}.git`,
+        targetBranch: "main",
+        targetBranchSha: releasePrTarget.targetBranchSha,
+        excludedPaths: releasePrTarget.excludedPaths,
+        canUpdateDraft: async () => {
+          const current = await readMaintenancePr(
+            "release-please--branches--main",
+            env,
+          );
+          return current?.isDraft !== false;
+        },
+      });
 
-    // Refine the just-generated CHANGELOGs. The prompt is the source of truth
-    // for the agent's behavior; it exits 0 with a status envelope when there
-    // is no open release PR, no bumped packages, or nothing to refine.
-    // The agent runs arbitrary git/gh commands non-interactively. Its write
-    // access is bounded by the fixed, code-reviewed prompt, the GitHub App
-    // token's repo scope, and the externally isolated ephemeral CI pod.
-    // There is no provider or model fallback.
-    console.log("--- refine CHANGELOGs");
-    const prompt = await Bun.file(
-      new URL("../prompts/refine-release-please.md", import.meta.url).pathname,
-    ).text();
-    const provider = await runReleaseRefiner({
-      root,
-      prompt,
-      // auth.env carries GH_TOKEN + the GIT_ASKPASS helper the agent's
-      // git clone/push needs (the old helper's withAskpass: true).
-      env,
-      openAiApiKey,
-    });
-    console.log(`--- CHANGELOG refinement complete (provider=${provider})`);
+      // Refine the just-generated CHANGELOGs. The prompt is the source of truth
+      // for the agent's behavior; it exits 0 with a status envelope when there
+      // is no open release PR, no bumped packages, or nothing to refine.
+      // The agent runs arbitrary git/gh commands non-interactively. Its write
+      // access is bounded by the fixed, code-reviewed prompt, the GitHub App
+      // token's repo scope, and the externally isolated ephemeral CI pod.
+      // There is no provider or model fallback.
+      console.log("--- refine CHANGELOGs");
+      const prompt = await Bun.file(
+        new URL("../prompts/refine-release-please.md", import.meta.url)
+          .pathname,
+      ).text();
+      const provider = await runReleaseRefiner({
+        root,
+        prompt,
+        // auth.env carries GH_TOKEN + the GIT_ASKPASS helper the agent's
+        // git clone/push needs (the old helper's withAskpass: true).
+        env,
+        openAiApiKey,
+      });
+      console.log(`--- CHANGELOG refinement complete (provider=${provider})`);
+      maintenanceDeferred = provider === "deferred";
+    }
 
     // Re-resolve after refinement: the pin above is now minutes old, and this
     // phase clones and reads main again anyway.
-    const githubReleaseTarget = await resolveReleaseTarget(root, env);
-    await runReleasePlease({
-      phase: "github-release",
-      token: auth.token,
-      repoUrl: `https://github.com/${MONOREPO_REPO}.git`,
-      targetBranch: "main",
-      targetBranchSha: githubReleaseTarget.targetBranchSha,
-      excludedPaths: githubReleaseTarget.excludedPaths,
-    });
+    if (phase !== "release-notes") {
+      const githubReleaseTarget = await resolveReleaseTarget(root, env);
+      await runReleasePlease({
+        phase: "github-release",
+        token: auth.token,
+        repoUrl: `https://github.com/${MONOREPO_REPO}.git`,
+        targetBranch: "main",
+        targetBranchSha: githubReleaseTarget.targetBranchSha,
+        excludedPaths: githubReleaseTarget.excludedPaths,
+      });
+    }
     console.log("--- release-please complete");
+    if (phase === "release-notes")
+      console.log(
+        `CI_MAINTENANCE_RESULT ${JSON.stringify({ status: maintenanceDeferred ? "deferred" : "completed" })}`,
+      );
   } finally {
     await auth.cleanup();
   }

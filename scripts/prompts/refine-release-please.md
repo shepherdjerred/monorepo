@@ -1,15 +1,17 @@
 # Refine release-please CHANGELOGs
 
-You are running inside the shepherdjerred/monorepo CI pipeline immediately after `release-please release-pr` opened or updated the release PR on branch `release-please--branches--main`. Your job is to rewrite the per-package CHANGELOG entries that release-please just generated, replacing the auto-generated noise with a tight, library-consumer-focused view, then push a cleanup commit and update the PR body. This lane runs on every main build, so the PR you are handed is often one you already refined on an earlier build — step 2b detects that and exits successfully without refining again.
+You are running inside the shepherdjerred/monorepo CI maintenance pipeline after `release-please release-pr` opened or updated the release PR on branch `release-please--branches--main`. Rewrite the generated per-package CHANGELOG entries into a library-consumer-focused view. The trusted publisher pushes your cleanup commit and updates the PR body after checking that the PR is still a draft. Step 2b detects an already-refined PR and exits successfully.
 
-A human will review and merge — you do **not** merge.
+A human marks the generated draft ready, reviews, and merges. Never merge or
+mark a draft ready. Once the PR is ready, preserve its head and body and return
+`{"result":{"status":"deferred"}}`.
 
 ## Environment
 
 - You are running through a native coding-agent SDK in a Debian-based container with `git`, `gh`, `bun`, and `release-please` installed.
 - `GH_TOKEN` is set in the environment with write access to the repo (minted from a GitHub App installation token).
 - `GIT_ASKPASS` is configured so `git push` to `https://github.com/shepherdjerred/monorepo.git` authenticates automatically.
-- The monorepo source is mounted at `/workspace` but **without `.git`** (Dagger excludes it). You must clone a fresh copy to do git operations.
+- Record the initial working directory as `ci_root` before cloning. Its `scripts/release/publish-refinement.ts` is the trusted publisher; never edit it. Clone a separate workspace for the release branch.
 - Set `git config user.name` and `git config user.email` in your fresh clone before committing — use `"release-please-refiner[bot]"` and `"release-please-refiner@users.noreply.github.com"`. The bot is the commit author; do not add a model-specific co-author trailer.
 
 ## Procedure
@@ -17,18 +19,21 @@ A human will review and merge — you do **not** merge.
 ### 1. Find the open release PR
 
 ```bash
-gh pr list --repo shepherdjerred/monorepo --base main --label "autorelease: pending" --state open --json number,headRefName,body --limit 1
+gh pr list --repo shepherdjerred/monorepo --base main --label "autorelease: pending" --state open --json number,headRefName,headRefOid,isDraft,body --limit 1
 ```
 
 If no PR is returned, return `{"result":{"status":"no-open-release-pr"}}`. There is nothing to refine until release-please creates one.
 
-Capture `number` (PR number), `headRefName` (release branch — typically `release-please--branches--main`), and `body` (current PR body).
+If `isDraft` is false, return `{"result":{"status":"deferred"}}` without
+writing. Capture `number`, `headRefName`, `headRefOid` (the expected remote
+head for the later lease), and `body`.
 
 ### 2. Clone the repo at the release branch
 
-Do **not** work in `/workspace` — clone fresh so you have full git history:
+Clone separately so the pipeline source and release branch remain independent:
 
 ```bash
+ci_root="$PWD"
 git clone --depth=500 https://github.com/shepherdjerred/monorepo.git /tmp/monorepo
 cd /tmp/monorepo
 git fetch --tags origin
@@ -39,10 +44,8 @@ git config user.email "release-please-refiner@users.noreply.github.com"
 
 ### 2b. Stop early if this release PR is already refined
 
-This lane runs on **every** main build, and a release PR stays open until a
-human merges it — so re-running against an already-refined PR is the normal
-steady state, not an error. Refining twice would stack a second refiner commit
-onto the same release for no reason.
+Maintenance coalesces verified main revisions, and a release PR stays open
+until a human merges it. A repeated candidate can already be refined.
 
 ```bash
 git log -1 --format='%an%n%s' HEAD
@@ -158,7 +161,7 @@ Cite the actual commits that introduced each kept change (resolve via `git log -
 
 …followed by the (typically tiny) list of things that did change for consumers (e.g. a `repository` URL update in `package.json`).
 
-### 7. Commit and push (only if anything changed)
+### 7. Commit locally (only if anything changed)
 
 If `git diff` shows no changes after your edits, do **not** create an empty
 commit and do **not** claim successful refinement. Exit non-zero so the release
@@ -183,7 +186,6 @@ git commit -m "chore(root): refine release notes for <YYYY-MM-DD>
 
 Replace release-please's auto-generated entries with a library-consumer
 view of what actually shipped in each package."
-git push origin <headRefName>
 ```
 
 **Commit message constraints (enforced by the repo's commit-msg hook):**
@@ -191,7 +193,7 @@ git push origin <headRefName>
 - Must use `type(scope): description` conventional form.
 - `chore(root): refine release notes for <date>` is the canonical subject for this task.
 
-### 8. Update the PR body to mirror the refined CHANGELOGs
+### 8. Prepare the body and invoke the trusted publisher
 
 ```bash
 # Build a body that wraps each refined CHANGELOG section in <details>, same shape as release-please's default.
@@ -228,10 +230,16 @@ cat > /tmp/pr-body.md <<'EOF'
 Originally generated with [Release Please](https://github.com/googleapis/release-please); release notes refined automatically in CI by `scripts/prompts/refine-release-please.md`.
 EOF
 
-gh pr edit <pr-number> --repo shepherdjerred/monorepo --body-file /tmp/pr-body.md
+bun "$ci_root/scripts/release/publish-refinement.ts" \
+  --clone /tmp/monorepo --body /tmp/pr-body.md \
+  --expected-head <captured-headRefOid>
 ```
 
 Only include `<details>` blocks for packages that were actually bumped.
+The publisher checks draft status and the expected head immediately before
+push, uses an exact lease, and checks again before editing the body. If it
+returns `deferred`, return `{"result":{"status":"deferred"}}`. Never run
+`git push` or a GitHub write yourself, and never retry an ambiguous write.
 
 ### 9. Return the structured result
 
@@ -243,8 +251,9 @@ without Markdown fences, HTML markers, or a prose summary:
 {"result":{"status":"refined","prNumber":<N>,"packagesRefined":["astro-opengraph-images","webring","helm-types","home-assistant"],"commitSha":"<full 40-char sha>"}}
 ```
 
-The only successful result statuses are `"refined"` (with at least one unique
-package in `"packagesRefined"`) and `"no-open-release-pr"`. Only exit non-zero
+The successful result statuses are `"refined"` (with at least one unique
+package in `"packagesRefined"`), `"no-open-release-pr"`, and `"deferred"` when a
+human has marked the PR ready. Only exit non-zero
 on hard failures (auth error, missing required tool, no verifiable CHANGELOG
 edit, git push rejected, etc.). Never emit a `"hard-failure-*"` status and then
 exit 0; a hard failure must terminate the process non-zero.

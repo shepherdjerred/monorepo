@@ -11,6 +11,7 @@ import { sanitizeText } from "#lib/ci/redaction.ts";
 import { getMainStatus } from "#lib/ci/main.ts";
 import { pipelineHistory } from "#lib/ci/history.ts";
 import { formatLatency, latencyReport } from "#lib/ci/latency.ts";
+import { ciMaintenance } from "#lib/ci/maintenance.ts";
 import {
   mainFailure,
   summarizeMain,
@@ -191,7 +192,7 @@ async function execute(
 }
 
 export async function ciCommand(
-  action: "wait" | "explain" | "load" | "main" | "timings",
+  action: "wait" | "explain" | "load" | "main" | "timings" | "maintenance",
   pr: string | undefined,
   options: CiOptions,
 ): Promise<void> {
@@ -212,6 +213,11 @@ export async function ciCommand(
           secrets,
         ),
       );
+      return;
+    }
+    if (action === "maintenance") {
+      const report = await ciMaintenance(config);
+      console.log(sanitizeText(JSON.stringify(report, null, 2), secrets));
       return;
     }
     if (action === "load") {

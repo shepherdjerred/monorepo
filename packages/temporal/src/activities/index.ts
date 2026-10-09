@@ -59,6 +59,7 @@ import { preparePhotonCommand } from "./agent/photon/prepare.ts";
 import { deliverPhotonResponse } from "./agent/photon/deliver.ts";
 import { waitForPhotonCommand } from "./agent/photon/wait.ts";
 import { woodpeckerRetentionActivities } from "./maintenance/woodpecker-retention.ts";
+import { ciMaintenanceActivities } from "./maintenance/ci-maintenance.ts";
 
 export const homeActivities = {
   ...haActivities,
@@ -104,6 +105,7 @@ export const miningResetWorkerActivities = {
 export const opsWorkerActivities = { ...opsActivities };
 
 export const repoActivities = {
+  ...ciMaintenanceActivities,
   ...fetcherActivities,
   ...depsSummaryActivities,
   ...golinkSyncActivities,

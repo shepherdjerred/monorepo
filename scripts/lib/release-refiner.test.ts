@@ -22,8 +22,21 @@ const refinedEnvelope = JSON.stringify({
 const noOpenReleasePrEnvelope = '{"result":{"status":"no-open-release-pr"}}';
 
 afterEach(() => vi.restoreAllMocks());
+
+test("a human-ready release PR is frozen before invoking the refiner", async () => {
+  const result = harness({
+    preflight: {
+      exitCode: 0,
+      stderr: "",
+      stdout: JSON.stringify([{ number: 1720, isDraft: false }]),
+    },
+  });
+  expect(await runReleaseRefiner(result.input)).toBe("deferred");
+  expect(result.agentCalls).toBe(0);
+  expect(result.calls).toHaveLength(1);
+});
 const pendingReleasePrList: RunResult = {
-  stdout: JSON.stringify([{ number: 1720 }]),
+  stdout: JSON.stringify([{ number: 1720, isDraft: true }]),
   stderr: "",
   exitCode: 0,
 };
