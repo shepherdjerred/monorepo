@@ -68,8 +68,9 @@ server maps only that completion workflow to the existing required
 or ready-event pipeline and rejects draft-only evidence at the same SHA.
 
 Native cancellation can miss ready events and target-branch changes. After
-producing a full PR graph, the extension cancels older PR and ready-event runs
-for that exact PR, including duplicates at the same commit. It revalidates each
+producing an authorized PR configuration, the extension cancels older PR and
+ready-event runs for that exact PR, including duplicates at the same commit.
+It revalidates each
 pipeline immediately before cancellation and never cancels newer runs, main,
 or another PR. Metadata no-ops and unapproved automation do no cleanup.
 The entire best-effort lookup has a three-second deadline; API failure leaves

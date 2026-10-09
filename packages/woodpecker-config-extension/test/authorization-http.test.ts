@@ -225,7 +225,7 @@ describe("signed workflow routing", () => {
   test.each([false, true])(
     "draft preflight remains bounded and credentialless=%s",
     async (credentialless) => {
-      const { app, base } = harness(false, gateImage);
+      const { app, base, cancelSupersededPr } = harness(false, gateImage);
       const identity = credentialless
         ? { author: "renovate[bot]", sender: "renovate[bot]" }
         : {};
@@ -252,6 +252,7 @@ describe("signed workflow routing", () => {
         },
       });
       expect(base).not.toHaveBeenCalled();
+      expect(cancelSupersededPr).toHaveBeenCalledTimes(credentialless ? 0 : 1);
     },
   );
 

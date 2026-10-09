@@ -180,8 +180,9 @@ async function cleanupSupersededPr(
   options: AppOptions,
   repoId: number,
   pipeline: Pipeline,
+  credentialless = false,
 ): Promise<void> {
-  if (!isPrVerificationEvent(pipeline)) return;
+  if (credentialless || !isPrVerificationEvent(pipeline)) return;
   try {
     await options.cancelSupersededPr?.(repoId, pipeline);
   } catch {
@@ -287,9 +288,14 @@ export function createApp(options: AppOptions): Hono {
       credentialless: credentiallessAutomation,
     });
     if (limited !== undefined) {
-      return context.json({
-        configs: emit(limited),
-      });
+      const configs = emit(limited);
+      await cleanupSupersededPr(
+        options,
+        repo.id,
+        pipeline,
+        credentiallessAutomation,
+      );
+      return context.json({ configs });
     }
 
     if (platformOperation !== undefined && "operation" in platformOperation) {
