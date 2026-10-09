@@ -352,6 +352,14 @@
       "entry": ["scripts/*.ts"],
       "project": ["scripts/**/*.ts"]
     },
+    // Native producers consume these workspace packages by Cargo/Gradle paths.
+    // Gradle is a mise-pinned native build tool, not a Bun dependency.
+    "packages/tasknotes-android": {
+      "entry": ["scripts/*.ts"],
+      "project": ["scripts/**/*.ts"],
+      "ignoreDependencies": ["tasknotes-core", "@tasknotes/fixtures"],
+      "ignoreBinaries": ["gradle"]
+    },
     "packages/tasknotes-core": {
       "entry": ["ci/*.ts"],
       "project": ["ci/**/*.ts"]

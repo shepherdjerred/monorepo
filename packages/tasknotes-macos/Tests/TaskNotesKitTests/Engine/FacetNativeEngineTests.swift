@@ -4,6 +4,60 @@ import Testing
 @testable import TaskNotesKit
 
 struct FacetNativeEngineTests {
+    @Test func supportedCaptureRetirementRequiresOriginalOwnerAndNonAppliedProof() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { NativeTestFiles.remove(root) }
+        let vault = root.appendingPathComponent("vault")
+        try FileManager.default.createDirectory(at: vault, withIntermediateDirectories: true)
+        let directory = root.appendingPathComponent("engine")
+        let engine = try await FacetEngine.open(directory: directory)
+        let profile = try await engine.registerLocal(directory: vault, approveStandard: true)
+        _ = try await engine.refresh(profileID: profile.id)
+        let invalidID = UUID().uuidString
+        await #expect(throws: (any Error).self) {
+            try await engine.execute(
+                profileID: profile.id,
+                command: .object([
+                    "kind": .string("create"), "properties": .object(["title": .string("")]),
+                ]),
+                mutationID: invalidID)
+        }
+        let file = directory.appendingPathComponent("action-drafts/" + invalidID + ".json")
+        let bytes = try Data(contentsOf: file)
+        await #expect(throws: FacetDraftError.changedOperation) {
+            try await engine.retireSavedMutation(id: invalidID, expectedProfileID: "another-vault")
+        }
+        #expect(try Data(contentsOf: file) == bytes)
+        let proof = try await engine.features(
+            profileID: profile.id,
+            request: .object([
+                "kind": .string("mutation_receipt"), "mutationId": .string(invalidID),
+            ]))
+        #expect(proof.object?.fields["state"] == .string("absent"))
+        try await engine.retireSavedMutation(id: invalidID, expectedProfileID: profile.id)
+        #expect(try await engine.pendingMutations().isEmpty)
+
+        let appliedID = UUID().uuidString
+        try await engine.execute(
+            profileID: profile.id,
+            command: .object([
+                "kind": .string("create"),
+                "properties": .object(["title": .string("Applied capture")]),
+            ]),
+            mutationID: appliedID)
+        let appliedFile = directory.appendingPathComponent("action-drafts/" + appliedID + ".json")
+        let appliedBytes = try Data(contentsOf: appliedFile)
+        await #expect(throws: FacetDraftError.changedNote) {
+            try await engine.retireSavedMutation(id: appliedID, expectedProfileID: profile.id)
+        }
+        #expect(try Data(contentsOf: appliedFile) == appliedBytes)
+        try await engine.discardObservedMutation(id: appliedID)
+        #expect(try await engine.pendingMutations().isEmpty)
+        #expect(
+            try await engine.snapshot(profileID: profile.id, query: .object([:])).tasks.count == 1)
+        try await engine.close()
+    }
+
     @Test func removedSavedActionCannotResumeAndRetiresOnlyAfterOutcomeCheck() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         let vault = root.appendingPathComponent("vault")

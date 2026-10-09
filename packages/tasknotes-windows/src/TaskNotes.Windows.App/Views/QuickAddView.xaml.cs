@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using TaskNotes.Windows.Presentation;
 
 namespace TaskNotes.Windows.App.Views
@@ -17,6 +18,7 @@ namespace TaskNotes.Windows.App.Views
 
         private UiOperationQueue? _operations;
         private Func<Func<Task>, Task<bool>>? _execute;
+        internal event RoutedEventHandler? SubmitRequested;
 
         /// <summary>Initializes the compiled Quick Add view.</summary>
         public QuickAddView()
@@ -40,6 +42,28 @@ namespace TaskNotes.Windows.App.Views
         internal void FocusInput()
         {
             _ = InputTextBox.Focus(FocusState.Programmatic);
+        }
+
+        private void Input_KeyDown(object sender, KeyRoutedEventArgs args)
+        {
+            _ = sender;
+            if (
+                args.Key == global::Windows.System.VirtualKey.Enter
+                && RequireViewModel().CanSubmit
+                && SubmitRequested is not null
+            )
+            {
+                args.Handled = true;
+                SubmitRequested.Invoke(this, args);
+            }
+        }
+
+        private void Discard_Click(object sender, RoutedEventArgs args)
+        {
+            _ = sender;
+            _ = args;
+            _ = RequireViewModel().DiscardDraft();
+            FocusInput();
         }
 
         private void Input_TextChanged(object sender, TextChangedEventArgs eventArgs)

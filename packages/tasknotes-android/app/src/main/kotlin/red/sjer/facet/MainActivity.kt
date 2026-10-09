@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.content.Intent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.material3.MaterialTheme
 import androidx.lifecycle.ViewModelProvider
 
 class MainActivity : ComponentActivity() {
@@ -13,7 +12,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         model = ViewModelProvider(this)[FacetViewModel::class.java]
         acceptReminder(intent)
-        setContent { MaterialTheme { FacetScreen(model) } }
+        setContent { FacetTheme { FacetScreen(model) } }
     }
     override fun onNewIntent(intent: Intent) { super.onNewIntent(intent); setIntent(intent); acceptReminder(intent) }
     private fun acceptReminder(intent: Intent?) {

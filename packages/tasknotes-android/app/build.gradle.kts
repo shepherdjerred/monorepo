@@ -67,6 +67,7 @@ tasks.register<JavaExec>("dumpReleaseManifest") {
     args("dump", "manifest", "--bundle=${bundle.get()}", "--module=base")
 }
 android {
+    buildToolsVersion = "37.0.0"
     namespace = "red.sjer.facet"
     compileSdk = 37
     ndkVersion = "28.2.13676358"
@@ -98,6 +99,7 @@ val rustNotices = tasks.register<RustNoticeAssets>("generateRustNoticeAssets") {
 }
 androidComponents.onVariants { variant ->
     variant.hostTests.values.forEach { it.sources.resources?.addStaticSourceDirectory("../../tasknotes-fixtures") }
+    variant.sources.assets?.addStaticSourceDirectory("../../tasknotes-fixtures/presentation")
     variant.sources.assets?.addGeneratedSourceDirectory(firstPartyLicense, FirstPartyLicenseAssets::outputDirectory)
     variant.sources.assets?.addGeneratedSourceDirectory(rustNotices, RustNoticeAssets::outputDirectory)
 }
@@ -107,6 +109,7 @@ dependencies {
     implementation(platform("androidx.compose:compose-bom:2026.09.00"))
     implementation("androidx.activity:activity-compose:1.13.0")
     implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.10.0")

@@ -11,7 +11,8 @@
             x:Name="InputTextBox"
             AutomationProperties.AutomationId="TaskNotes.QuickAdd.Input"
             AutomationProperties.Name="Quick Add task description"
-            PlaceholderText="Describe the task naturally"
+            KeyDown="Input_KeyDown"
+            PlaceholderText="Add a task… dates, #tags and @contexts"
             Text="{x:Bind ViewModel.Input, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
             TextChanged="Input_TextChanged" />
         <TextBlock
@@ -20,5 +21,29 @@
             AutomationProperties.Name="Quick Add parsed fields"
             Text="{x:Bind ViewModel.PreviewDescription, Mode=OneWay}"
             TextWrapping="Wrap" />
+        <Button
+            HorizontalAlignment="Left"
+            Click="Discard_Click"
+            Content="Discard draft" />
+        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+            <ItemsControl ItemsSource="{x:Bind ViewModel.PreviewChips, Mode=OneWay}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border
+                            Margin="0,0,6,0"
+                            Padding="8,4"
+                            Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                            CornerRadius="{StaticResource FacetChipRadius}">
+                            <TextBlock FontSize="{StaticResource FacetCaptionSize}" Text="{Binding}" />
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
     </StackPanel>
 </UserControl>

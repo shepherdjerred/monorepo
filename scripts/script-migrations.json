@@ -540,7 +540,7 @@
     {
       "source": "packages/tasks-for-obsidian/ios/ci_scripts/ci_post_clone.sh",
       "disposition": "retain",
-      "reason": "Required Xcode Cloud shell entrypoint installs Bun"
+      "reason": "Required Xcode Cloud shell entrypoint runs the pinned Bun, Rust, and XcodeGen native producer"
     },
     {
       "source": "packages/tasks-for-obsidian/scripts/clean-ios.sh",
@@ -771,6 +771,21 @@
       "source": "packages/tasknotes-windows/scripts/cross-build.sh",
       "disposition": "retain",
       "reason": "Runs inside the windows-cross-compiler-winui image, which ships no Bun; it only sequences locked dotnet restores and builds"
+    },
+    {
+      "source": "ci/scripts/android-sdk.sh",
+      "disposition": "retain",
+      "reason": "Native SDK bootstrap boundary: provisions the pinned Android command-line tools, accepted SDK licenses and Linux x86_64 NDK inventory before Gradle and Rust native builds."
+    },
+    {
+      "source": "ci/scripts/android-sdk.test.sh",
+      "disposition": "retain",
+      "reason": "Isolated shell contract test for the native SDK bootstrap, including license input, exact package inventory and unsupported host rejection without network provisioning."
+    },
+    {
+      "source": "packages/tasks-for-obsidian/ios/ci_scripts/mise-native.sh",
+      "disposition": "retain",
+      "reason": "Checksum-pinned native Apple tool bootstrap runs before Bun is available in fresh Xcode Cloud checkout; isolates pinned tools and verifies both macOS architectures."
     }
   ]
 }

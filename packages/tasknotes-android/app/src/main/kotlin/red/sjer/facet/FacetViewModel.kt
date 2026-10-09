@@ -39,6 +39,12 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
     var resolutionIds by mutableStateOf<List<String>>(emptyList()); private set
     var resolutionHistory by mutableStateOf<JsonObject?>(null); private set
     var undoHead by mutableStateOf<String?>(null); private set
+    var admittedCompletions by mutableStateOf<Set<String>>(emptySet()); private set
+    var completionFailures by mutableStateOf<Map<String, String>>(emptyMap()); private set
+    internal var savedFeedback by mutableStateOf<FacetSavedFeedback?>(null); private set
+    private val feedbackCoordinator = FacetFeedbackCoordinator()
+    var submittedActions by mutableStateOf<Set<String>>(emptySet()); private set
+    private val completionAdmission = FacetCompletionAdmission()
     var remindersEnabled by mutableStateOf(FacetReminders.enabled(application)); private set
     var reminderStatus by mutableStateOf(if (FacetReminders.enabled(application)) "Reminder delivery will refresh when this app is ready." else "Reminders are disabled on this device."); private set
     var pendingReminder by mutableStateOf<FacetReminderRequest?>(null); private set
@@ -54,6 +60,7 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
     private var sessionGeneration = 0L
     private val sessions = mutableMapOf<String, ObsidianReplicaSession>()
     private val preferences = application.getSharedPreferences("facet.presentation", Application.MODE_PRIVATE)
+    internal var feedbackPreferences by mutableStateOf(FacetFeedbackPreferences(preferences.getBoolean("feedback.haptics", true), preferences.getBoolean("feedback.sound", true))); private set
     private val operations = Mutex()
     private var pendingOperations = 0
     private val actionIds = mutableMapOf<String, String>()
@@ -74,7 +81,7 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
     }
     private fun ownsNotice(owner: FacetNoticeOwner): Boolean =
         !cleared && noticeOwner == owner && noticeAuthority.owns(owner, selected?.id)
-    private fun presentSaved(result: AppliedFacetAction, owner: FacetNoticeOwner, saved: () -> Unit = {}) {
+    private suspend fun presentSaved(result: AppliedFacetAction, owner: FacetNoticeOwner, saved: () -> Unit = {}, kind: FacetFeedbackKind = FacetFeedbackKind.SAVED) {
         check(result.profileId == owner.profileId && result.mutationId == owner.mutationId)
         noticeAuthority.publishIfOwned(owner, selected?.id) {
         appliedNoticeOwner = owner
@@ -85,6 +92,29 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
             else -> null
         }
         saved()
+        }
+        if (!cleared && selected?.id == result.profileId) {
+            loadUndoAuthority(result.profileId)
+            if (!cleared && selected?.id == result.profileId) savedFeedback = feedbackCoordinator.publish(result.profileId, result.mutationId, undoHead?.takeIf { it == result.mutationId }, kind)
+        }
+    }
+
+    internal fun consumeSavedFeedback() = feedbackCoordinator.consume(selected?.id)
+    internal fun setFeedbackPreferences(value: FacetFeedbackPreferences) = work {
+        withContext(Dispatchers.IO) { check(preferences.edit().putBoolean("feedback.haptics", value.haptics).putBoolean("feedback.sound", value.sound).commit()) }
+        feedbackPreferences = value
+    }
+    internal fun undoFeedback(event: FacetSavedFeedback) {
+        if (!feedbackCoordinator.mayUndo(event, selected?.id, undoHead)) return
+        val owner = captureNoticeOwner(event.profileId, UUID.randomUUID().toString())
+        work(owner) {
+            val authority = engine.features(event.profileId, buildJsonObject { put("kind", "undo_available") })
+            val head = authority.getValue("receiptId").jsonPrimitive.contentOrNull
+            if (!feedbackCoordinator.mayUndo(event, selected?.id, head)) throw FacetActionError("This saved change is no longer the latest change to undo. Open the owning vault and review its current Undo action.")
+            val command = buildJsonObject { put("kind", "undo"); put("receiptId", requireNotNull(event.undoReceiptId)) }
+            applied(event.profileId, command, owner.mutationId, owner)
+            if (selected?.id == event.profileId) reload()
+            restoreActions()
         }
     }
 
@@ -344,24 +374,45 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
       }
     }
     fun delete(profileId: String, task: VaultTask, saved: () -> Unit) = command(profileId, buildJsonObject { put("kind", "delete"); put("path", task.path); put("expectedRevision", task.revision) }, saved = saved)
-    fun toggle(profileId: String, task: VaultTask) {
-        reserveNoticeRequest()
+    fun toggle(profileId: String, task: VaultTask, saved: () -> Unit = {}) {
         if (task.isRecurring && task.occurrenceDate == null) { error = "Open Today or Agenda to choose a recurring occurrence."; return }
-        command(profileId, completionCommand(task, !task.completed))
+        val intent = completionAdmission.admit(profileId, task) ?: return
+        admittedCompletions = admittedCompletions + intent.key
+        completionFailures = completionFailures - intent.key
+        val owner = captureNoticeOwner(profileId, intent.mutationId)
+        work(owner) {
+            try {
+                check(completionAdmission.owns(intent)) { "This completion is no longer admitted." }
+                applied(intent.profileId, intent.command, intent.mutationId, owner, saved)
+                if (selected?.id == intent.profileId) reload()
+                restoreActions()
+            } catch (failure: Exception) {
+                if (failure !is CancellationException) {
+                    completionFailures = completionFailures + (intent.key to FacetEngineRunner.failureMessage(failure))
+                    try { restoreActions() } catch (recoveryFailure: Exception) { failure.addSuppressed(recoveryFailure) }
+                }
+                throw failure
+            } finally {
+                completionAdmission.release(intent)
+                admittedCompletions = admittedCompletions - intent.key
+            }
+        }
     }
     fun move(profileId: String, task: VaultTask, status: String) = command(profileId, buildJsonObject { put("kind", "set_status"); put("path", task.path); put("expectedRevision", task.revision); put("status", status); task.occurrenceDate?.let { put("occurrenceDate", it) } })
-    fun saveView(name: String, existing: JsonObject? = null) {
-      val viewQuery = savedQuery ?: query.document().let { JsonObject(it - "offset" - "limit" - "today" - "at") }
-      ownerMutationWork { profile, request ->
-        val id = existing?.getValue("id")?.jsonPrimitive?.content ?: UUID.randomUUID().toString()
-        val view = buildJsonObject {
-            existing?.getValue("view")?.jsonObject?.forEach { (key, value) -> put(key, value) }
-            put("schemaVersion", 1); put("name", name); put("query", viewQuery)
+    internal fun viewIntent(existing: JsonObject? = null): FacetSavedViewIntent {
+        val profile = requireNotNull(selected)
+        val viewQuery = savedQuery ?: query.document().let { JsonObject(it - "offset" - "limit" - "today" - "at") }
+        val previous = existing?.getValue("view")?.jsonObject ?: JsonObject(emptyMap())
+        return FacetSavedViewIntent(profile.id, existing?.getValue("id")?.jsonPrimitive?.content ?: UUID.randomUUID().toString(),
+            viewQuery, previous, previous["name"]?.jsonPrimitive?.content.orEmpty())
+    }
+    internal fun saveView(intent: FacetSavedViewIntent, saved: () -> Unit = {}) {
+        if (intent.mutationId in submittedActions || pendingActions.any { it.mutationId == intent.mutationId }) return
+        mutationWork { request ->
+            applied(intent.profileId, intent.command, intent.mutationId, captureNoticeOwner(intent.profileId, intent.mutationId, request), saved)
+            if (selected?.id == intent.profileId) reload()
+            restoreActions()
         }
-        val command = buildJsonObject { put("kind", "save_view"); put("id", id); put("view", view) }
-        val mutationId = actionId(profile.id, command)
-        applied(profile.id, command, mutationId, captureNoticeOwner(profile.id, mutationId, request)); clearAction(profile.id, command); if (selected?.id == profile.id) reload(); restoreActions()
-      }
     }
     fun duplicateView(view: JsonObject) = ownerMutationWork { profile, request ->
         val id = UUID.randomUUID().toString()
@@ -383,17 +434,11 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
         command(profile.id, buildJsonObject { put("kind", "reorder_views"); put("ids", strings(ids)) })
     }
     fun restoreViews() { val profile = requireNotNull(selected); command(profile.id, buildJsonObject { put("kind", "restore_default_views") }) }
-    fun bulk(profileId: String, tasks: List<VaultTask>, action: String, value: String = "") {
-        reserveNoticeRequest()
-        if (tasks.isEmpty()) return
-        if (action == "complete" && tasks.any { it.isRecurring && it.occurrenceDate == null }) { error = "Choose recurring occurrences from Today or Agenda before completing this selection."; return }
-        val commands = tasks.map { task -> when (action) {
-            "complete" -> completionCommand(task, true)
-            "delete" -> buildJsonObject { put("kind", "delete"); put("path", task.path); put("expectedRevision", task.revision) }
-            "schedule", "priority" -> buildJsonObject { put("kind", "update"); put("path", task.path); put("expectedRevision", task.revision); put("properties", buildJsonObject { put(if (action == "schedule") "scheduled" else "priority", value.takeIf { it.isNotBlank() }?.let(::JsonPrimitive) ?: JsonNull) }) }
-            else -> throw IllegalArgumentException("Unknown batch action.")
-        } }
-        command(profileId, buildJsonObject { put("kind", "batch"); put("commands", JsonArray(commands)) })
+    fun bulk(profileId: String, tasks: List<VaultTask>, action: String, value: String = "", saved: () -> Unit = {}) {
+        if (cleared || selected?.id != profileId || tasks.isEmpty()) return
+        val command = try { bulkCommand(tasks, action, value) }
+        catch (failure: FacetBulkSelectionError) { reserveNoticeRequest(); error = failure.message; return }
+        command(profileId, command, saved)
     }
     fun undo() = ownerMutationWork { profile, request ->
         val retained = readPendingActions(profile.id).filter { it.mutation.getValue("command").jsonObject.getValue("kind").jsonPrimitive.content == "undo" }
@@ -433,10 +478,26 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
     private fun clearAction(profileId: String, command: JsonObject) { actionIds.remove("$profileId:$command") }
     private suspend fun applied(profileId: String, command: JsonObject, mutationId: String, owner: FacetNoticeOwner, saved: () -> Unit = {}) {
         // Host verifies the applied receipt. Observe/persist undo before clearing the immutable draft.
-        val result = mutations.submit(profileId, command, mutationId) {
-          reconcileUndo(profileId, mutationId, command)
+        val admitted = java.util.concurrent.atomic.AtomicBoolean(false)
+        val result = try {
+            mutations.submit(profileId, command, mutationId, admitted = { admitted.set(true) }) {
+                reconcileUndo(profileId, mutationId, command)
+            }
+        } catch (failure: Exception) {
+            if (admitted.get() && failure !is CancellationException) {
+                submittedActions = submittedActions + mutationId
+                try { restoreActions() } catch (recoveryFailure: Exception) { failure.addSuppressed(recoveryFailure) }
+            }
+            throw failure
         }
-        presentSaved(result, owner, saved)
+        val kind = when (command.getValue("kind").jsonPrimitive.content) {
+            "create" -> FacetFeedbackKind.CREATED
+            "delete" -> FacetFeedbackKind.DELETED
+            "set_completion" -> if (command.getValue("completed").jsonPrimitive.boolean) FacetFeedbackKind.COMPLETED else FacetFeedbackKind.REOPENED
+            "undo" -> FacetFeedbackKind.UNDONE
+            else -> FacetFeedbackKind.SAVED
+        }
+        presentSaved(result, owner, saved, kind)
     }
     private fun readUndo(profileId: String): FacetUndoHistory {
         val current = preferences.getString("undoHistory.$profileId", null)
@@ -621,6 +682,7 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
     override fun onCleared() {
         val lease = foregroundLease
         cleared = true; foreground = false; generation++; sessionGeneration++
+        completionAdmission.close(); admittedCompletions = emptySet()
         noticeAuthority.close(::clearNoticePresentation)
         sessions.values.forEach { it.requestStop() }
         FacetBackgroundSync.retireForegroundWriter {

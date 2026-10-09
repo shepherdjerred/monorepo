@@ -31,6 +31,10 @@ script_directory="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 package_root="$(dirname -- "${script_directory}")"
 cd "${package_root}"
 
+# Four externally imposed AppKit protocol signatures are the only approved
+# baseline entries. This portable source check prevents baseline debt/growth.
+bun scripts/check-appkit-baseline.ts
+
 # The single target exempt from the authored lint posture, because it re-exports
 # machine-generated bindings. See the long comment in Package.swift.
 exempt_target="TaskNotesUniFFI"

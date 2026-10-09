@@ -1,0 +1,62 @@
+[
+  {
+    "text": "            func customWindowsToEnterFullScreen(for window: NSWindow) -> [NSWindow]? {",
+    "violation": {
+      "ruleName": "Discouraged Optional Collection",
+      "severity": "error",
+      "location": {
+        "line": 102,
+        "file": "Sources\/TaskNotesFacetUI\/Presentation\/FacetWindowCloseGuard.swift",
+        "character": 74
+      },
+      "reason": "Prefer empty collection over optional collection",
+      "ruleDescription": "Prefer empty collection over optional collection",
+      "ruleIdentifier": "discouraged_optional_collection"
+    }
+  },
+  {
+    "text": "                -> [NSWindow]?",
+    "violation": {
+      "ruleName": "Discouraged Optional Collection",
+      "severity": "error",
+      "location": {
+        "line": 106,
+        "file": "Sources\/TaskNotesFacetUI\/Presentation\/FacetWindowCloseGuard.swift",
+        "character": 20
+      },
+      "reason": "Prefer empty collection over optional collection",
+      "ruleDescription": "Prefer empty collection over optional collection",
+      "ruleIdentifier": "discouraged_optional_collection"
+    }
+  },
+  {
+    "text": "            func customWindowsToExitFullScreen(for window: NSWindow) -> [NSWindow]? {",
+    "violation": {
+      "ruleName": "Discouraged Optional Collection",
+      "severity": "error",
+      "location": {
+        "line": 108,
+        "file": "Sources\/TaskNotesFacetUI\/Presentation\/FacetWindowCloseGuard.swift",
+        "character": 73
+      },
+      "reason": "Prefer empty collection over optional collection",
+      "ruleDescription": "Prefer empty collection over optional collection",
+      "ruleIdentifier": "discouraged_optional_collection"
+    }
+  },
+  {
+    "text": "                -> [any NSPreviewRepresentableActivityItem]?",
+    "violation": {
+      "ruleName": "Discouraged Optional Collection",
+      "severity": "error",
+      "location": {
+        "line": 154,
+        "file": "Sources\/TaskNotesFacetUI\/Presentation\/FacetWindowCloseGuard.swift",
+        "character": 20
+      },
+      "reason": "Prefer empty collection over optional collection",
+      "ruleDescription": "Prefer empty collection over optional collection",
+      "ruleIdentifier": "discouraged_optional_collection"
+    }
+  }
+]

@@ -1,4 +1,5 @@
 public import AppKit
+import TaskNotesFacetUI
 
 internal import struct Foundation.UUID
 
@@ -69,11 +70,14 @@ public final class TaskNotesApplicationDelegate: NSObject, NSApplicationDelegate
         _ sender: NSApplication
     ) -> NSApplication.TerminateReply {
         let coordinator = InspectorCommitCoordinator.shared
-        guard !coordinator.isEmpty else { return .terminateNow }
+        guard !coordinator.isEmpty || !FacetDraftCoordinator.shared.isEmpty else {
+            return .terminateNow
+        }
 
         _Concurrency.Task { @MainActor in
             await coordinator.commitAll()
-            sender.reply(toApplicationShouldTerminate: true)
+            let committed = await FacetDraftCoordinator.shared.flushAll()
+            sender.reply(toApplicationShouldTerminate: committed)
         }
         return .terminateLater
     }

@@ -3,7 +3,8 @@ import TaskNotesUniFFI
 
 extension FacetEngine {
     @discardableResult public func execute(
-        profileID: String, command: FacetValue, mutationID: String = UUID().uuidString
+        profileID: String, command: FacetValue, mutationID: String = UUID().uuidString,
+        admission: FacetMutationAdmission? = nil
     ) throws -> FacetMutationReceipt {
         try requireOpen()
         let mutation = try drafts.envelope(
@@ -12,6 +13,7 @@ extension FacetEngine {
                 "today": .string(SystemClock().viewerCalendar().today),
                 "timezone": .string(TimeZone.current.identifier),
             ]))
+        admission?.record(mutationID)
         return try applyMutation(profileID: profileID, mutation: mutation)
     }
 
@@ -31,8 +33,11 @@ extension FacetEngine {
     }
 
     /// The runtime proves the saved outcome before an obsolete private draft is cleared.
-    public func retireSavedMutation(id: String) throws {
+    public func retireSavedMutation(id: String, expectedProfileID: String? = nil) throws {
         let saved = try drafts.read(id: id)
+        guard expectedProfileID == nil || saved.profileID == expectedProfileID else {
+            throw FacetDraftError.changedOperation
+        }
         let outcome = try features(
             profileID: saved.profileID,
             request: .object([

@@ -42,6 +42,7 @@ data class TaskEditorDraft(
     val blockedBy: String,
     val reminders: String = "[]", val attachments: String = "",
     val dateCreated: String = "",
+    val tokenEdits: JsonObject = JsonObject(emptyMap()),
 ) {
     fun command(task: VaultTask): JsonObject {
         val original = from(task)
@@ -53,7 +54,11 @@ data class TaskEditorDraft(
             nullable("recurrence", recurrence, original.recurrence); nullable("recurrenceAnchor", recurrenceAnchor, original.recurrenceAnchor)
             nullable("completedDate", completedDate, original.completedDate)
             nullable("dateCreated", dateCreated, original.dateCreated)
-            fun list(name: String, value: String, before: String) { if (value != before) put(name, strings(splitValues(value))) }
+            fun list(name: String, value: String, before: String) {
+                val edited = tokenEdits[name]
+                if (edited != null) { if (edited != task.properties[name]) put(name, edited) }
+                else if (value != before) put(name, strings(splitValues(value)))
+            }
             list("projects", projects, original.projects); list("contexts", contexts, original.contexts); list("tags", tags, original.tags)
             list("completeInstances", completeInstances, original.completeInstances); list("skippedInstances", skippedInstances, original.skippedInstances); list("blockedBy", blockedBy, original.blockedBy)
             if (reminders != original.reminders) put("reminders", Json.parseToJsonElement(reminders).jsonArray)

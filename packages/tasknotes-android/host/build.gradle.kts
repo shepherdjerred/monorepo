@@ -1,5 +1,6 @@
 plugins { id("com.android.library") }
 android {
+    buildToolsVersion = "37.0.0"
     namespace = "red.sjer.facet.host"
     compileSdk = 37
     defaultConfig {

@@ -22,6 +22,7 @@
     "vitest": "5.0.1"
   },
   "scripts": {
+    "generate": "bun scripts/generate-notices.ts",
     "build": "bun scripts/dotnet.ts build TaskNotes.Windows.Portable.slnx --configuration Release --property:RestoreLockedMode=true",
     "typecheck": "bun scripts/dotnet.ts build TaskNotes.Windows.Portable.slnx --configuration Release --property:RestoreLockedMode=true && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "format": "bun scripts/dotnet.ts tool restore && bun scripts/dotnet.ts csharpier format src tests && bun scripts/xaml-format.ts",
@@ -29,7 +30,7 @@
     "analysis": "bun run typecheck && bun scripts/quality-check.ts && bunx jscpd --config .jscpd.json --silent",
     "lint": "bun run format:check && bun run analysis && bun node_modules/eslint/bin/eslint.js --cache .",
     "test": "bun run test:scripts && bun run test:unit && bun run test:integration",
-    "test:scripts": "bun --no-install --bun vitest --config ../../vitest.config.ts run scripts",
+    "test:scripts": "bun run generate && bun --no-install --bun vitest --config ../../vitest.config.ts run scripts",
     "test:unit": "bun scripts/test.ts unit",
     "test:integration": "bun scripts/test.ts integration",
     "test:winui": "bun scripts/test.ts winui",

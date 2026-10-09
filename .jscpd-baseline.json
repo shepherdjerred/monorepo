@@ -1142,7 +1142,7 @@
     },
     "packages/tasknotes-server/src/__tests__/concurrency.test.ts|packages/tasknotes-server/src/__tests__/v2-routes.test.ts": {
       "clones": 1,
-      "tokens": 81
+      "tokens": 71
     },
     "packages/tasknotes-server/src/__tests__/nlp-parser.test.ts|packages/tasknotes-server/src/__tests__/nlp.test.ts": {
       "clones": 1,
@@ -1182,51 +1182,23 @@
     },
     "packages/tasks-for-obsidian/src/data/sync/__tests__/harness.ts|packages/tasks-for-obsidian/src/data/sync/commands.test.ts": {
       "clones": 1,
-      "tokens": 82
-    },
-    "packages/tasks-for-obsidian/src/data/sync/__tests__/harness.ts|packages/tasks-for-obsidian/src/domain/agenda.test.ts": {
-      "clones": 1,
-      "tokens": 70
-    },
-    "packages/tasks-for-obsidian/src/data/sync/__tests__/harness.ts|packages/tasks-for-obsidian/src/domain/job-search-board.test.ts": {
-      "clones": 1,
-      "tokens": 70
+      "tokens": 73
     },
     "packages/tasks-for-obsidian/src/data/sync/__tests__/harness.ts|packages/tasks-for-obsidian/src/domain/recurrence-timezone.test.ts": {
       "clones": 1,
-      "tokens": 82
-    },
-    "packages/tasks-for-obsidian/src/data/sync/__tests__/harness.ts|packages/tasks-for-obsidian/src/domain/task-presentation.test.ts": {
-      "clones": 1,
-      "tokens": 70
-    },
-    "packages/tasks-for-obsidian/src/domain/agenda.test.ts|packages/tasks-for-obsidian/src/domain/job-search-board.test.ts": {
-      "clones": 1,
-      "tokens": 74
+      "tokens": 73
     },
     "packages/tasks-for-obsidian/src/domain/agenda.test.ts|packages/tasks-for-obsidian/src/domain/saved-view/saved-view-collection.test.ts": {
       "clones": 1,
-      "tokens": 81
-    },
-    "packages/tasks-for-obsidian/src/domain/agenda.test.ts|packages/tasks-for-obsidian/src/domain/task-presentation.test.ts": {
-      "clones": 1,
-      "tokens": 74
+      "tokens": 72
     },
     "packages/tasks-for-obsidian/src/domain/base-schemas.ts|packages/tasks-for-obsidian/src/domain/wire.ts": {
-      "clones": 2,
-      "tokens": 166
-    },
-    "packages/tasks-for-obsidian/src/domain/job-search-board.test.ts|packages/tasks-for-obsidian/src/domain/saved-view/saved-view-collection.test.ts": {
       "clones": 1,
-      "tokens": 71
-    },
-    "packages/tasks-for-obsidian/src/domain/job-search-board.test.ts|packages/tasks-for-obsidian/src/domain/task-presentation.test.ts": {
-      "clones": 1,
-      "tokens": 71
+      "tokens": 94
     },
     "packages/tasks-for-obsidian/src/domain/recurrence-timezone.test.ts|packages/tasks-for-obsidian/src/domain/recurrence.test.ts": {
       "clones": 1,
-      "tokens": 119
+      "tokens": 110
     },
     "packages/tasks-for-obsidian/src/lib/dates.test.ts|packages/tasks-for-obsidian/src/lib/nlp.test.ts": {
       "clones": 1,

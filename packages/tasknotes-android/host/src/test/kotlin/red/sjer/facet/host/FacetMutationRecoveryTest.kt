@@ -8,6 +8,34 @@ import org.junit.Assert.assertThrows
 import org.junit.Test
 
 class FacetMutationRecoveryTest {
+    @Test fun noteScopedBatchJournalPreservesOriginalDistinctPathsRevisionAndOwnerAcrossRestart() {
+        val directory = Files.createTempDirectory("facet-batch-owner").toFile()
+        try {
+            val id = UUID.randomUUID().toString()
+            val command = buildJsonObject {
+                put("kind", "batch")
+                put("commands", JsonArray(listOf("Tasks/repeat.md", "Tasks/other.md").map { path -> buildJsonObject {
+                    put("kind", "update"); put("path", path); put("expectedRevision", "a".repeat(64))
+                    put("properties", buildJsonObject { put("priority", "custom-priority") })
+                } }))
+            }
+            // A persisted fixture exercises the supported JVM recovery path. Initial
+            // atomic replacement requires matching Android JNI; this case covers restart/read.
+            val original = buildJsonObject {
+                put("schemaVersion", 1); put("mutationId", id); put("at", "2026-10-09T12:00:00Z"); put("command", command)
+                put("executionContext", buildJsonObject { put("today", "2026-10-09"); put("timezone", "UTC") })
+            }
+            directory.resolve("$id.json").writeText(buildJsonObject { put("profileId", "original-vault"); put("mutation", original) }.toString())
+            val reopened = FacetMutationDrafts(directory)
+            val retained = reopened.pending().single()
+            assertEquals("original-vault", retained.profileId)
+            assertEquals(original, reopened.envelope(retained.profileId, retained.mutationId, command, "2026-10-10T12:00:00Z"))
+            assertThrows(FacetActionError::class.java) { reopened.envelope("new-vault", id, command, "2026-10-10T12:00:00Z") }
+            val changed = JsonObject(command + ("commands" to JsonArray(emptyList())))
+            assertThrows(FacetActionError::class.java) { reopened.envelope("original-vault", id, changed, "2026-10-10T12:00:00Z") }
+            assertEquals(original, reopened.pending().single().mutation)
+        } finally { directory.deleteRecursively() }
+    }
     @Test fun persistedHistoricalActionsHaveOwnedRetirementDecisionsAndCannotResume() {
         val loader = requireNotNull(javaClass.classLoader)
         val schema = FacetSchema(requireNotNull(loader.getResourceAsStream("schema/facet-engine.schema.json")).bufferedReader().use { it.readText() })

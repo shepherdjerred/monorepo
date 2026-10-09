@@ -185,6 +185,40 @@ editor, Board, and Settings. Native event adapters stay beside their WinUI
 views, while command state and validation remain in portable view models. This
 keeps generated XAML and UI-thread concerns out of the portable test surface.
 
+The desktop list follows the retained macOS client's compact composition: a
+source sidebar, grouped rows with aligned metadata/date columns, native query
+menus and Extended Ctrl/Shift selection, inline capture, and a persistent
+inspector. Narrow windows overlay the inspector over the list. Hover actions
+also appear on keyboard focus, and motion honors Windows animation preferences.
+Dimensions, typography, motion durations, and supported configured colors are
+validated against the shared `tasknotes-fixtures/presentation` contracts; native
+semantic colors remain responsible for theme and high-contrast behavior.
+
+Inspector text commits on Return/blur (body on Done/blur), while native controls
+commit their changed field. Commits retain the owning vault, revision and exact
+journal admission; newer text survives receipt observation, and untouched fields
+refresh from the authoritative result. Navigation and close first flush valid
+drafts. Failed drafts stay available for Retry/Discard; admitted uncertain or
+applied-but-unobserved actions must use existing Settings recovery rather than
+submitting a replacement edit. Token suggestions and Quick Add chips use core
+projections. There is one main workspace window today; auxiliary capture windows
+own their drafts without redirecting the main query, selection, or inspector.
+
+Row actions freeze their rendered vault, path, revision, and recurrence
+occurrence before entering the host queue. Bulk completion supports distinct
+notes; selecting multiple occurrences of one note requires completing those
+occurrences separately because the existing core batch contract requires
+distinct files. The rejected bulk action retains selection and creates no
+journal entry. Note-scoped scheduling, priority, and deletion explicitly
+deduplicate occurrences and reject inconsistent reviewed revisions. Named-view
+creation freezes its owning vault/query and retains the exact admitted action
+through uncertain outcomes; an applied view is observed without creating it again.
+
+Portable checks prove coordinator behavior and projections. XAML source checks
+and cross packaging are separate from native Windows interaction, motion,
+accessibility and screenshot acceptance, which require an interactive Windows
+host.
+
 `FacetTaskNotesStore` exposes the complete task snapshot, fixed and dynamic query
 projections, vocabulary, saved-view metadata, completion undo, pending IDs, sync state, errors, and retained conflicts. A
 single-reader channel executes every FFI call away from the UI thread. Its

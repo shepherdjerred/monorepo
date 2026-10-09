@@ -48,6 +48,8 @@ extension FacetStore {
                 maintenanceError = issue.error
             }
             if ownsPresentation() {
+                appliedFeedback = FacetAppliedFeedback(
+                    profileID: profileID, mutationID: receipt.mutationId)
                 savedNotice = notice
                 if let maintenanceError { error = maintenanceError }
                 await reload()

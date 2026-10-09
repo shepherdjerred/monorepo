@@ -120,6 +120,10 @@ describe("check-ios-native-deps", () => {
 
 const repo = path.resolve(import.meta.dirname, "../../..");
 const bootstrap = {
+  packageJson: readFileSync(
+    path.join(repo, "packages/tasks-for-obsidian/package.json"),
+    "utf8",
+  ),
   miseToml: readFileSync(path.join(repo, ".mise.toml"), "utf8"),
   postCloneScript: readFileSync(
     path.join(
@@ -128,7 +132,13 @@ const bootstrap = {
     ),
     "utf8",
   ),
-  wrapper: readFileSync(path.join(repo, "bin/mise"), "utf8"),
+  wrapper: readFileSync(
+    path.join(
+      repo,
+      "packages/tasks-for-obsidian/ios/ci_scripts/mise-native.sh",
+    ),
+    "utf8",
+  ),
   wrapperExecutable: true,
   project: readFileSync(
     path.join(repo, "packages/tasks-for-obsidian/ios/project.yml"),
@@ -137,6 +147,31 @@ const bootstrap = {
 };
 
 describe("native archive bootstrap", () => {
+  it("rejects an untracked root tool dependency in the supported project generation entry", () => {
+    expect(
+      findNativeBootstrapMessages({
+        ...bootstrap,
+        packageJson: bootstrap.packageJson.replace(
+          "ios/ci_scripts/mise-native.sh exec -- xcodegen",
+          "../../bin/mise exec -- xcodegen",
+        ),
+      }),
+    ).toContain(
+      "Native project generation must use the tracked pinned Apple bootstrap, without untracked root bin tools.",
+    );
+  });
+  it("rejects a missing release UI dependency even when the unit target retains it", () => {
+    const changed = bootstrap.project.replace(
+      "product: TaskNotesFacetUI",
+      "product: LegacyServerClient",
+    );
+    expect(changed).toContain("product: TaskNotesFacetUI");
+    expect(
+      findNativeBootstrapMessages({ ...bootstrap, project: changed }),
+    ).toContain(
+      "Native release project must preserve the registered app, widget and standalone SwiftUI product.",
+    );
+  });
   it("validates the actual shared producer and rejects missing pins, unchecked downloads and legacy bootstrap", () => {
     expect(findNativeBootstrapMessages(bootstrap)).toEqual([]);
     for (const change of [
@@ -169,7 +204,7 @@ describe("native archive bootstrap", () => {
           "",
         ),
       },
-      { wrapper: bootstrap.wrapper.replace('"$(shasum_bin)" -c', "true") },
+      { wrapper: bootstrap.wrapper.replace("shasum -a 256 -c", "true") },
       { wrapperExecutable: false },
       {
         project: bootstrap.project.replace(
@@ -186,16 +221,19 @@ describe("native archive bootstrap", () => {
   it("runs post-clone without a preinstalled mise and installs at root before building both iOS slices", () => {
     const root = mkdtempSync(path.join(tmpdir(), "facet-cloud-bootstrap-"));
     try {
-      mkdirSync(path.join(root, "bin"));
       mkdirSync(path.join(root, "packages/tasknotes-core"), {
         recursive: true,
       });
       mkdirSync(path.join(root, "packages/tasks-for-obsidian/ios"), {
         recursive: true,
       });
+      mkdirSync(path.join(root, "packages/tasks-for-obsidian/ios/ci_scripts"));
       writeFileSync(path.join(root, ".mise.toml"), bootstrap.miseToml);
       writeFileSync(
-        path.join(root, "bin/mise"),
+        path.join(
+          root,
+          "packages/tasks-for-obsidian/ios/ci_scripts/mise-native.sh",
+        ),
         '#!/bin/bash\nif [ "$1" = exec ] && [ "${MISE_EXEC_AUTO_INSTALL:-}" != false ]; then exit 41; fi\nprintf "%s|%s\\n" "$PWD" "$*" >> "$CI_PRIMARY_REPOSITORY_PATH/calls"\n',
         { mode: 0o755 },
       );

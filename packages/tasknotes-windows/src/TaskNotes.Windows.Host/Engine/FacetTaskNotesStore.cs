@@ -13,10 +13,37 @@ public interface IFacetTaskEditorStore
         TaskEditInput input,
         CancellationToken cancellationToken = default
     );
+
+    /// <summary>Capture the exact durable admission identity before an uncertain submitted action can fail.</summary>
+    Task<TaskItem> SaveTaskEditAsync(
+        TaskEditInput input,
+        Action<string> actionAdmitted,
+        CancellationToken cancellationToken = default
+    ) => SaveTaskEditAsync(input, cancellationToken);
 }
 
 /// <summary>Standalone store consumed by every Windows presentation surface.</summary>
-public sealed class FacetTaskNotesStore : ITaskNotesStore, IFacetProfileStore, IFacetTaskEditorStore
+public interface IFacetCaptureStore
+{
+    /// <summary>The owning profile is captured before any preview or queue wait.</summary>
+    string? SelectedProfileId { get; }
+
+    /// <summary>Submit one frozen capture and report its durable journal identity.</summary>
+    Task AddCaptureAsync(
+        string input,
+        TaskListQuery context,
+        string? profile,
+        Action<string> actionAdmitted,
+        CancellationToken cancellationToken = default
+    );
+}
+
+/// <summary>Standalone store consumed by every Windows presentation surface.</summary>
+public sealed partial class FacetTaskNotesStore
+    : ITaskNotesStore,
+        IFacetProfileStore,
+        IFacetTaskEditorStore,
+        IFacetCaptureStore
 {
     private readonly string _directory;
     private readonly FacetProfileCatalog _catalog;
@@ -336,10 +363,32 @@ public sealed class FacetTaskNotesStore : ITaskNotesStore, IFacetProfileStore, I
         string input,
         TaskListQuery context,
         CancellationToken cancellationToken = default
+    ) => AddCaptureCoreAsync(input, context, SelectedProfileId, null, false, cancellationToken);
+
+    /// <inheritdoc/>
+    public Task AddCaptureAsync(
+        string input,
+        TaskListQuery context,
+        string? profile,
+        Action<string> actionAdmitted,
+        CancellationToken cancellationToken = default
+    ) => AddCaptureCoreAsync(input, context, profile, actionAdmitted, true, cancellationToken);
+
+    private Task AddCaptureCoreAsync(
+        string input,
+        TaskListQuery context,
+        string? profile,
+        Action<string>? actionAdmitted,
+        bool requireTaskResult,
+        CancellationToken cancellationToken
     ) =>
         SerializedAsync(
             async () =>
             {
+                if (profile != SelectedProfileId)
+                    throw new ArgumentException(
+                        "The capture's owning vault changed before submission. Review it in its original vault."
+                    );
                 JsonElement preview = await FeatureAsync(
                         new
                         {
@@ -379,7 +428,9 @@ public sealed class FacetTaskNotesStore : ITaskNotesStore, IFacetProfileStore, I
                         },
                         false,
                         cancellationToken,
-                        JsonSerializer.SerializeToElement(new { input, context }).GetRawText()
+                        JsonSerializer.SerializeToElement(new { input, context }).GetRawText(),
+                        requireTaskResult: requireTaskResult,
+                        actionAdmitted: actionAdmitted
                     )
                     .ConfigureAwait(false);
             },
@@ -405,6 +456,13 @@ public sealed class FacetTaskNotesStore : ITaskNotesStore, IFacetProfileStore, I
     /// <inheritdoc/>
     public Task<TaskItem> SaveTaskEditAsync(
         TaskEditInput input,
+        CancellationToken cancellationToken = default
+    ) => SaveTaskEditAsync(input, null, cancellationToken);
+
+    /// <summary>Retains the exact submitted action owner for inspector recovery.</summary>
+    public Task<TaskItem> SaveTaskEditAsync(
+        TaskEditInput input,
+        Action<string>? actionAdmitted,
         CancellationToken cancellationToken = default
     ) =>
         SerializedAsync(
@@ -447,7 +505,8 @@ public sealed class FacetTaskNotesStore : ITaskNotesStore, IFacetProfileStore, I
                         command,
                         false,
                         cancellationToken,
-                        requireTaskResult: true
+                        requireTaskResult: true,
+                        actionAdmitted: actionAdmitted
                     )
                     .ConfigureAwait(false);
                 string taskPath = receipt.GetProperty("taskPath").GetString()!;
@@ -597,33 +656,15 @@ public sealed class FacetTaskNotesStore : ITaskNotesStore, IFacetProfileStore, I
         TaskListQuery query,
         CancellationToken cancellationToken = default
     ) =>
-        SerializedAsync(
-            async () =>
-            {
-                string id = Guid.NewGuid().ToString("N");
-                var view = new
-                {
-                    schemaVersion = 1,
-                    name,
-                    symbol,
-                    tint,
-                    favorite,
-                    order = State.SavedViews.Count,
-                    query = QueryDocument(query, 0),
-                };
-                await MutateAsync(
-                        new
-                        {
-                            kind = "save_view",
-                            id,
-                            view,
-                        },
-                        false,
-                        cancellationToken
-                    )
-                    .ConfigureAwait(false);
-                return State.SavedViews.Single(v => v.Id == id);
-            },
+        CreateOwnedSavedViewAsync(
+            Selected,
+            Guid.NewGuid().ToString("N"),
+            name,
+            symbol,
+            tint,
+            favorite,
+            query,
+            _ => { },
             cancellationToken
         );
 
@@ -1455,11 +1496,21 @@ public sealed class FacetTaskNotesStore : ITaskNotesStore, IFacetProfileStore, I
         Func<object> command,
         bool completion,
         CancellationToken cancellationToken
-    ) =>
-        SerializedAsync(
-            () => MutateAsync(command(), completion, cancellationToken),
+    )
+    {
+        string profile = Selected;
+        return SerializedAsync(
+            () =>
+            {
+                if (Selected != profile)
+                    throw new ArgumentException(
+                        "The owning vault changed before this action could be submitted. Review the task in its original vault."
+                    );
+                return MutateAsync(command(), completion, cancellationToken);
+            },
             cancellationToken
         );
+    }
 
     private Task<JsonElement> BatchPropertiesAsync(
         IReadOnlyList<string> ids,
@@ -1518,10 +1569,12 @@ public sealed class FacetTaskNotesStore : ITaskNotesStore, IFacetProfileStore, I
         CancellationToken cancellationToken,
         string? requestKey = null,
         string? undoReceiptId = null,
-        bool requireTaskResult = false
+        bool requireTaskResult = false,
+        Action<string>? actionAdmitted = null
     )
     {
         var envelope = _journal.Prepare(Selected, command, requestKey);
+        actionAdmitted?.Invoke(envelope.Id);
         State = State with { FacetPendingActions = RetainedActions() };
         Notify();
         return await ApplyMutationAsync(
@@ -2046,6 +2099,10 @@ public sealed class FacetTaskNotesStore : ITaskNotesStore, IFacetProfileStore, I
             ProfileId = Selected,
             VaultPath = PathOf(task),
             ExpectedRevision = Revision(task),
+            EffectiveDate = Text(task, "effectiveDate"),
+            HasCoreEffectiveDate = true,
+            StatusColor = Color(configuration, "statuses", status),
+            PriorityColor = Color(configuration, "priorities", priority),
         };
     }
 
@@ -2090,8 +2147,19 @@ public sealed class FacetTaskNotesStore : ITaskNotesStore, IFacetProfileStore, I
             .Select(choice => new WorkflowChoice(
                 choice.GetProperty("value").GetString()!,
                 Text(choice, "label") ?? choice.GetProperty("value").GetString()!
-            ))
+            )
+            {
+                Color = Text(choice, "color"),
+            })
             .ToArray();
+
+    private static string? Color(JsonElement configuration, string field, string value) =>
+        configuration
+            .GetProperty(field)
+            .EnumerateArray()
+            .Where(choice => Text(choice, "value") == value)
+            .Select(choice => Text(choice, "color"))
+            .FirstOrDefault();
 
     private JsonElement RequireTask(string id) =>
         _tasks.TryGetValue(id, out var task)

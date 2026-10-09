@@ -18,7 +18,7 @@
     "lint:fix": "eslint . --fix",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit -p tsconfig.scripts.json",
     "check:ios-native-deps": "bun scripts/check-ios-native-deps.ts",
-    "ios:native:generate": "../../bin/mise exec -- xcodegen generate --spec ios/project.yml --project ios",
+    "ios:native:generate": "ios/ci_scripts/mise-native.sh exec -- xcodegen generate --spec ios/project.yml --project ios",
     "ios:native:archive": "bun ../tasknotes-macos/scripts/store-release.ts --ios",
     "check:release-bundle": "bun scripts/check-release-bundle.ts",
     "pod-install": "cd ios && pod install",

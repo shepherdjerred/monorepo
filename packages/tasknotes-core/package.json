@@ -18,7 +18,7 @@
     "bindings": "cargo run --package xtask -- generate-bindings",
     "typecheck": "cargo check --workspace --all-targets --all-features",
     "deny": "cargo deny --all-features check",
-    "test:ci": "bun run test:report",
-    "test:report": "bun ../../scripts/ci/run-ci-test.ts"
+    "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
   }
 }

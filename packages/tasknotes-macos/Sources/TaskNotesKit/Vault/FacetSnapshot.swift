@@ -69,7 +69,7 @@ public struct FacetSnapshot: Codable, Sendable {
 
     public func appending(_ page: FacetSnapshot) throws -> FacetSnapshot {
         guard profileId == page.profileId, version == page.version,
-            Set(tasks.map(\.id)).isDisjoint(with: page.tasks.map(\.id))
+            Set(tasks.map(\.rowID)).isDisjoint(with: page.tasks.map(\.rowID))
         else { throw FacetContractError.unsupportedResponse }
         var groups = self.groups
         for group in page.groups {

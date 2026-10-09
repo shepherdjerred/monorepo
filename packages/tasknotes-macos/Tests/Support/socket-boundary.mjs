@@ -8,7 +8,8 @@ const server = Bun.serve({
   websocket: {
     message(socket, request) {
       if (request === "binary") socket.send(new Uint8Array(2_097_152));
-      else if (request === "oversized-binary") socket.send(new Uint8Array(2_097_153));
+      else if (request === "oversized-binary")
+        socket.send(new Uint8Array(2_097_153));
       else socket.close(1008);
     },
   },

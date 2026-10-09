@@ -72,18 +72,52 @@ public struct FacetMacRootView: View {
 }
 
 public struct FacetMacCommands: Commands {
+    @FocusedValue(\.facetWindowCommands) private var window: FacetWindowCommandActions?
     private let environment: FacetMacEnvironment
     public init(environment: FacetMacEnvironment) { self.environment = environment }
     public var body: some Commands {
-        CommandGroup(after: .newItem) {
+        CommandGroup(replacing: .newItem) {
+            Button("New Task") { window?.newTask() }.keyboardShortcut("n")
+                .disabled(window == nil)
             Button("Quick Add…") { environment.toggleQuickAdd() }
                 .keyboardShortcut("n", modifiers: [.command, .shift])
-            Button("Refresh vault") { _Concurrency.Task { await environment.store.refresh() } }
-                .keyboardShortcut("r", modifiers: .command)
+        }
+        CommandGroup(after: .pasteboard) {
+            Divider()
+            Button("Delete") { window?.delete() }.keyboardShortcut(.delete, modifiers: .command)
+                .disabled(window?.hasSelection != true)
+        }
+        CommandGroup(after: .textEditing) {
+            Divider()
+            Button("Find…") { window?.find() }.keyboardShortcut("f").disabled(window == nil)
+        }
+        CommandGroup(after: .undoRedo) {
             Button("Undo last task change") {
                 guard let profileID = environment.store.selectedProfileID else { return }
                 _Concurrency.Task { await environment.store.undoLast(profileID: profileID) }
-            }.keyboardShortcut("z", modifiers: .command)
+            }.keyboardShortcut("z", modifiers: [.command, .option]).disabled(window == nil)
+        }
+        SidebarCommands()
+        ToolbarCommands()
+        CommandGroup(after: .sidebar) {
+            Button(window?.inspectorPresented == true ? "Hide Inspector" : "Show Inspector") {
+                window?.toggleInspector()
+            }
+            .keyboardShortcut("i", modifiers: [.command, .option]).disabled(window == nil)
+            Divider()
+            Button("Inbox") { window?.navigate("inbox") }.keyboardShortcut("1").disabled(
+                window == nil)
+            Button("Today") { window?.navigate("today") }.keyboardShortcut("2").disabled(
+                window == nil)
+            Button("Upcoming") { window?.navigate("upcoming") }.keyboardShortcut("3").disabled(
+                window == nil)
+            Button("All Tasks") { window?.navigate("all") }.keyboardShortcut("4").disabled(
+                window == nil)
+            Button("Refresh") { window?.refresh() }.keyboardShortcut("r").disabled(window == nil)
+        }
+        CommandMenu("Task") {
+            Button("Complete") { window?.complete() }.keyboardShortcut(".", modifiers: .command)
+                .disabled(window?.hasSelection != true)
         }
     }
 }
@@ -112,22 +146,30 @@ internal struct FacetMacSettingsContent: View {
 
 private struct FacetMacQuickCapture: View {
     let environment: FacetMacEnvironment
+    @State private var draft = FacetCaptureDraft()
+    @State private var owningProfileID: String?
     @FocusState private var focused: Bool
     var body: some View {
-        @Bindable var store = environment.store
+        let store = environment.store
         VStack(alignment: .leading, spacing: 8) {
-            TextField("Add a task", text: $store.captureTitle)
+            TextField("Add a task", text: $draft.input)
                 .font(.title3).textFieldStyle(.plain).focused($focused)
-                .disabled(store.selectedProfileID == nil || store.isSaving)
+                .disabled(store.selectedProfileID == nil)
                 .accessibilityIdentifier(AccessibilityIdentifier.QuickAdd.field)
                 .onSubmit {
+                    guard let profileID = owningProfileID,
+                        draft.begin(store: store, profileID: profileID)
+                    else { return }
                     _Concurrency.Task {
-                        await store.createTask()
-                        if store.captureTitle.isEmpty { environment.dismissQuickAdd() }
+                        let applied = await draft.submit(store: store)
+                        if applied && draft.input.isEmpty { environment.dismissQuickAdd() }
                     }
                 }
-            if let error = store.error {
+            if draft.isSubmitting { ProgressView().controlSize(.small) }
+            if let error = draft.error {
                 Text(error).font(.caption).foregroundStyle(.red)
+                Button("Discard draft") { _Concurrency.Task { await draft.discard(store: store) } }
+                    .disabled(draft.isSubmitting)
             } else {
                 Text(
                     store.selectedProfileID == nil
@@ -135,8 +177,24 @@ private struct FacetMacQuickCapture: View {
                         : "Return adds the task · Escape closes"
                 ).font(.caption).foregroundStyle(.secondary)
             }
-        }.padding(20).frame(width: 560, height: 118)
-            .onAppear { focused = true }
+        }.padding(20).frame(width: 560).frame(minHeight: 118)
+            .onAppear {
+                if draft.input.isEmpty, !draft.hasRetainedSubmission {
+                    owningProfileID = store.selectedProfileID
+                }
+                if let owningProfileID {
+                    draft.registerLifecycle(store: store, profileID: owningProfileID)
+                }
+                focused = true
+            }
+            .onChange(of: draft.input) { previous, value in
+                if previous.isEmpty, !value.isEmpty, !draft.hasRetainedSubmission {
+                    owningProfileID = store.selectedProfileID
+                    if let owningProfileID {
+                        draft.registerLifecycle(store: store, profileID: owningProfileID)
+                    }
+                }
+            }
             .onExitCommand { environment.dismissQuickAdd() }
             .accessibilityIdentifier(AccessibilityIdentifier.QuickAdd.panel)
     }

@@ -9,5 +9,17 @@
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <EmbeddedResource
+      Include="../../../tasknotes-fixtures/presentation/color-policy.json"
+      LogicalName="PresentationColorPolicy.json"
+    />
+    <EmbeddedResource
+      Include="../../../tasknotes-fixtures/presentation/tokens.json"
+      LogicalName="PresentationTokens.json"
+    />
+    <EmbeddedResource
+      Include="../../../tasknotes-fixtures/presentation/presentation.schema.json"
+      LogicalName="PresentationSchema.json"
+    />
   </ItemGroup>
 </Project>

@@ -15,6 +15,7 @@ public sealed partial class TaskEditorViewModel
     private string _attachments = string.Empty;
     private IReadOnlyList<WorkflowChoice> _statusChoices = [];
     private IReadOnlyList<WorkflowChoice> _priorityChoices = [];
+    private string _reminderBaseline = "";
 
     /// <summary>Comma-separated dependency identifiers or references.</summary>
     public string BlockedBy
@@ -67,6 +68,7 @@ public sealed partial class TaskEditorViewModel
         var row = new ReminderEditorRow(null);
         Observe(row);
         Reminders.Add(row);
+        _draftGeneration++;
         IsDirty = true;
     }
 
@@ -75,14 +77,20 @@ public sealed partial class TaskEditorViewModel
     {
         ArgumentNullException.ThrowIfNull(row);
         if (Reminders.Remove(row))
+        {
+            _draftGeneration++;
             IsDirty = true;
+        }
     }
 
     private void Observe(ReminderEditorRow row) =>
         row.PropertyChanged += (_, _) =>
         {
             if (!_loading)
+            {
+                _draftGeneration++;
                 IsDirty = true;
+            }
         };
 
     private void LoadAdditionalFields(TaskItem task)
@@ -111,6 +119,7 @@ public sealed partial class TaskEditorViewModel
                 Observe(row);
                 Reminders.Add(row);
             }
+        _reminderBaseline = ReminderFingerprint();
     }
 
     private void ClearAdditionalFields()
@@ -126,7 +135,11 @@ public sealed partial class TaskEditorViewModel
         DateCreated = string.Empty;
     }
 
-    private Dictionary<string, JsonElement> ChangedFields(TaskItem original, string title)
+    private Dictionary<string, JsonElement> ChangedFields(
+        TaskItem original,
+        string title,
+        bool includeReminders = true
+    )
     {
         var fields = new Dictionary<string, JsonElement>(StringComparer.Ordinal);
         void Put(string name, object? value) =>
@@ -166,6 +179,8 @@ public sealed partial class TaskEditorViewModel
                     StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
                 )
             );
+        if (!includeReminders)
+            return fields;
         var currentReminders = Reminders.Select(row => row.Document()).ToArray();
         string beforeReminders =
             original.Properties is JsonElement p
@@ -179,6 +194,122 @@ public sealed partial class TaskEditorViewModel
         )
             Put("reminders", currentReminders);
         return fields;
+    }
+
+    private string ReminderFingerprint() =>
+        JsonSerializer.Serialize(
+            Reminders.Select(row => new
+            {
+                row.Id,
+                row.Type,
+                row.RelatedTo,
+                row.Offset,
+                row.AbsoluteTime,
+            })
+        );
+
+    private Dictionary<string, string?> Buffers() =>
+        new(StringComparer.Ordinal)
+        {
+            ["title"] = Title,
+            ["body"] = Details,
+            ["status"] = Status,
+            ["priority"] = Priority,
+            ["due"] = Due,
+            ["scheduled"] = Scheduled,
+            ["recurrence"] = Recurrence,
+            ["recurrenceAnchor"] = RecurrenceAnchor,
+            ["projects"] = Projects,
+            ["contexts"] = Contexts,
+            ["tags"] = Tags,
+            ["blockedBy"] = BlockedBy,
+            ["completedDate"] = CompletedDate,
+            ["dateCreated"] = DateCreated,
+            ["completeInstances"] = CompleteInstances,
+            ["skippedInstances"] = SkippedInstances,
+            ["attachments"] = Attachments,
+        };
+
+    private static Dictionary<string, string?> Baseline(TaskItem task) =>
+        new(StringComparer.Ordinal)
+        {
+            ["title"] = task.Title,
+            ["body"] = task.Details,
+            ["status"] = task.Status,
+            ["priority"] = task.Priority,
+            ["due"] = task.Due,
+            ["scheduled"] = task.Scheduled,
+            ["recurrence"] = task.Recurrence,
+            ["recurrenceAnchor"] = task.RecurrenceAnchor,
+            ["projects"] = string.Join(", ", task.Projects),
+            ["contexts"] = string.Join(", ", task.Contexts),
+            ["tags"] = string.Join(", ", task.Tags),
+            ["blockedBy"] = List(task, "blockedBy"),
+            ["completedDate"] = Scalar(task, "completedDate"),
+            ["dateCreated"] = Scalar(task, "dateCreated"),
+            ["completeInstances"] = List(task, "completeInstances"),
+            ["skippedInstances"] = List(task, "skippedInstances"),
+            ["attachments"] = List(task, "attachments", "\n"),
+        };
+
+    private void RestoreBuffer(string field, string? value)
+    {
+        switch (field)
+        {
+            case "title":
+                Title = value!;
+                break;
+            case "body":
+                Details = value;
+                break;
+            case "status":
+                Status = value!;
+                break;
+            case "priority":
+                Priority = value!;
+                break;
+            case "due":
+                Due = value;
+                break;
+            case "scheduled":
+                Scheduled = value;
+                break;
+            case "recurrence":
+                Recurrence = value;
+                break;
+            case "recurrenceAnchor":
+                RecurrenceAnchor = value;
+                break;
+            case "projects":
+                Projects = value!;
+                break;
+            case "contexts":
+                Contexts = value!;
+                break;
+            case "tags":
+                Tags = value!;
+                break;
+            case "blockedBy":
+                BlockedBy = value!;
+                break;
+            case "completedDate":
+                CompletedDate = value!;
+                break;
+            case "dateCreated":
+                DateCreated = value!;
+                break;
+            case "completeInstances":
+                CompleteInstances = value!;
+                break;
+            case "skippedInstances":
+                SkippedInstances = value!;
+                break;
+            case "attachments":
+                Attachments = value!;
+                break;
+            default:
+                throw new InvalidOperationException($"Unknown editor buffer {field}.");
+        }
     }
 
     private static string Scalar(TaskItem task, string key, string missing = "") =>
