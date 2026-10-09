@@ -404,3 +404,50 @@ test("fresh SLO samples deduplicate heads and exclude reruns and quota-only gate
   });
   expect(report.cohorts).toHaveLength(3);
 });
+
+test("mixed gates contribute fresh heads without losing cohort or deduplication", () => {
+  const fresh: LatencyEvidence = {
+    review: reviewEvidence(lines([signal(), quota("coderabbit")]), pipeline),
+    steps: [],
+  };
+  const mixed: LatencyEvidence = {
+    review: reviewEvidence(
+      lines([signal(), signal({ provider: "coderabbit", latency_s: 5 })]),
+      pipeline,
+    ),
+    steps: [],
+  };
+  const report = latencyReport(
+    [
+      pipeline,
+      { ...pipeline, number: 2, finished: 450 },
+      { ...pipeline, number: 3, commit: "b".repeat(40), finished: 420 },
+      { ...pipeline, number: 4, commit: "c".repeat(40) },
+      { ...pipeline, number: 5, commit: "d".repeat(40), rerun_count: 1 },
+      { ...pipeline, number: 6, commit: "e".repeat(40), status: "failure" },
+    ],
+    0,
+    500,
+    new Map([
+      [1, fresh],
+      [2, mixed],
+      [3, mixed],
+      [4, { review: { kind: "reused", providers: [] }, steps: [] }],
+      [5, mixed],
+      [6, mixed],
+    ]),
+  );
+  expect(report.freshReadyHeads).toEqual({
+    requiredSamples: 30,
+    enoughSamples: false,
+    count: 2,
+    missing: 0,
+    p50Seconds: 320,
+    p95Seconds: 350,
+  });
+  expect(report.cohorts).toHaveLength(5);
+  expect(report.records[1]).toMatchObject({
+    review: "mixed",
+    reviewProviders: [{ kind: "fresh" }, { kind: "reused" }],
+  });
+});

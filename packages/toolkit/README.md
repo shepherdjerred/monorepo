@@ -145,8 +145,10 @@ passing solely on quota exemptions. Provider details preserve partial quota
 coverage; the existing gate can pass with one completed provider. Rounded
 timestamps at the run boundary remain unknown. Historical full verification of
 drafts also has its own cohort. At least 30 distinct fresh successful ready heads
-are needed to assess the target p95. Reruns are excluded and duplicate heads use
-the slowest eligible success. Sample sufficiency alone does not certify the SLO.
+are needed to assess the target p95. This sample includes `mixed` gates with a
+proven fresh provider while preserving their separate cohort. Reruns are excluded
+and duplicate heads use the slowest eligible success. Sample sufficiency alone
+does not certify the SLO.
 
 Main is checked automatically. Push runs and full manual main runs contribute
 to its verdict. A manual run must include verification, release admission,

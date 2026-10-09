@@ -113,7 +113,7 @@ export function latencyReport(
         record.kind === "ready-pr" &&
         record.status === "success" &&
         record.attempt === 0 &&
-        record.review === "fresh" &&
+        (record.review === "fresh" || record.review === "mixed") &&
         record.elapsedSeconds !== null,
     ),
     (record) => record.commit,
@@ -200,7 +200,7 @@ export function latencyReport(
     records,
     limitations: [
       "History reflects each pipeline's latest attempt, not superseded attempts. Reruns have separate cohorts.",
-      "Review freshness uses final structured gate observations for the exact head: fresh completion during this pipeline, reused completion before it, or a quota exemption. Missing evidence stays unknown. Provider details retain partial quota coverage; one passing provider can satisfy the existing gate.",
+      "Review freshness uses final structured gate observations for the exact head: fresh completion during this pipeline, reused completion before it, or a quota exemption. Missing evidence stays unknown. Fresh-head samples include mixed fresh/reused gates because one fresh passing provider satisfies the existing gate; cohort and provider coverage remain separate.",
       "Phase samples are individual steps, not additive wall time. Native timings include admission and pod startup. Initial queue is only the delay to the first workflow.",
       "Log reads are limited to four concurrent requests and 8 MiB per step. Successful clone, review and selected verification/maintenance command logs provide evidence; missing, malformed or oversized logs stay unavailable. Toolchain measurements exclude dependency installs and overlap command time. Stored Git object bytes are not network bytes.",
       "Canceled, failed, pending, draft, noop, maintenance and successful verification cohorts remain separate. Fewer than 30 fresh ready heads cannot establish the target p95.",
