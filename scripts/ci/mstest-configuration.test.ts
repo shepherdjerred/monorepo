@@ -9,7 +9,7 @@ import {
 import { TestManifestSchema } from "./ci-reporting.ts";
 
 describe("shared MSTest configuration", () => {
-  test("preserves randomization, cooperative timeouts, and strict failures", () => {
+  test("preserves randomization, enforced timeouts, and strict failures", () => {
     expect(
       mstestConfiguration({
         artifacts: "/reports",
@@ -28,7 +28,7 @@ describe("shared MSTest configuration", () => {
           test: 30_000,
           testInitialize: 30_000,
           testCleanup: 30_000,
-          useCooperativeCancellation: true,
+          useCooperativeCancellation: false,
         },
         execution: {
           mapInconclusiveToFailed: true,

@@ -17,7 +17,8 @@ export function mstestConfiguration(options: {
         test: options.timeoutMs,
         testInitialize: options.timeoutMs,
         testCleanup: options.timeoutMs,
-        useCooperativeCancellation: true,
+        // Tests that ignore CancellationToken still need to fail at the limit.
+        useCooperativeCancellation: false,
       },
       execution: {
         mapInconclusiveToFailed: true,
