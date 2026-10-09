@@ -1059,11 +1059,14 @@ Configuration and content live under `server/owned/plugins/TheStorm`:
   to start.
 - `rwf/maps/<id>/map.yml` and `blocks.schem`: a map's teams, spawns, bombs,
   nukes, region and the SHA-256 of its Sponge v3 schematic. The module pastes
-  every map at enable and whenever the world's blocks stop matching the hash,
-  20,000 blocks a tick with admission closed meanwhile. `training-yard` is a
+  the active map and at most one successor when needed, and repairs terrain
+  when the world's blocks stop matching the hash, visiting at most 2,000
+  blocks per tick with admission closed meanwhile. `training-yard` is a
   generated 64x16x64 sample; its generator lives in the module's test sources.
 - `rwf/maps/<id>/nav.rwfnav` and `nav.summary.json`: the map's baked navigation
   data for the bots, produced offline by the `rwfmap` tool (see Maps below).
+- `rwf/maps/<id>/details.json`: required inventories and literal sign text,
+  bound to the terrain hash. Empty maps declare empty lists explicitly.
 - `rwf/lobby/lobby.yml` and `blocks.schem`: the room every player and bot waits
   in before a match, with its region, spawn, team sides, one kit alcove per
   kit, the rules and match-board anchors, the watch balcony and the
@@ -1084,13 +1087,76 @@ fails the bake and must be added to the table, never guessed), bakes the nav
 graph, regions, cover, chokepoints and routes with `rwfbots`' `MapBaker`, and
 writes `nav.rwfnav` plus a `nav.summary.json` of counts for diff review. The
 artifact carries the schematic's `blocksSha256`, so `rwfbots` refuses it when
-the world's blocks change. Commit all four files together.
+the world's blocks change. Commit metadata, terrain, details and navigation together.
 `mise exec -- gradle verifyRwfMaps` (part of `check`, so CI runs it) re-bakes
 every map in memory and fails if a committed `nav.rwfnav` or summary differs
 byte for byte; the bake is deterministic, so a diff means the map, the block
 table or the baker changed and the artifacts must be rebaked. A bake that
 `NavArtifact.validate()` rejects (a spawn inside a wall, a bomb no spawn can
-reach) fails too; fix the map, not the tool.
+reach) fails too; fix the map, not the tool. Navigation generator version 2
+includes surface swimming, ladders, ordinary wooden doors and bounded jumps
+and drops. A successful bake proves graph connectivity; native movement must
+also be checked in the pinned Paper/Citizens runtime.
+
+Legacy Red Warfare ZIPs can be converted without modifying the originals:
+
+```bash
+bun run maps:import --source "$HOME/Downloads/Search and Destroy" --output .cache/rwf-map-import/batch-a
+bun run maps:details --import .cache/rwf-map-import/batch-a --output .cache/rwf-map-details/batch-a
+bun run maps:bake --import .cache/rwf-map-import/batch-a --details .cache/rwf-map-details/batch-a --output .cache/rwf-map-bake/batch-a
+bun run maps:stage --bake .cache/rwf-map-bake/batch-a --details .cache/rwf-map-details/batch-a --output .cache/rwf-map-admission/batch-a
+bun run maps:verify-navigation --output .cache/rwf-map-navigation/batch-a
+bun run maps:verify-runtime --maps .cache/rwf-map-admission/batch-a/maps --output .cache/rwf-map-runtime/batch-a --rotations 3
+```
+
+Output directories must be new. Import preserves each ZIP and its SHA-256,
+extracts only safe archive paths, migrates its world in pinned Paper, and
+exports terrain with stable, nonoverlapping coordinates. `--map <id>` selects
+an archive for a retry while retaining the complete original ordering.
+The bake command accepts repeated `--import` arguments to combine disjoint
+conversion batches from that same ordering. It freezes its producer inputs,
+writes a full-terrain duel scenario, then bakes and freshly verifies each
+navigation artifact. Missing exports and failed maps fail the aggregate
+command and remain visible in `results.json`; successful maps remain available
+for inspection. Neither command installs content into the owned server tree.
+`maps:stage` assembles a private catalog with Training Yard, freshly verifies
+terrain, navigation and payloads, and writes matching duel scenarios. Use
+`--extra <folder>` for an independently repaired and baked original, and
+`--quarantine <id>` only for an unrepaired map that failed the offline bake.
+Unresolved maps and missing payload exports stop staging.
+
+The schematic contains terrain only. The converter also exports inventories
+through Paper's versioned item API and both sign faces as literal visible text,
+including color, glow and wax. Sign actions, command blocks' commands, entities
+and other block-entity payloads are omitted. The source archive and migrated
+world remain intact. `maps:details` can re-export this payload from existing
+conversion batches, one disposable Paper owner at a time. Its checksummed
+provenance states the preservation policy. `rwfmap verify-details <folder>`
+checks positions, materials and terrain binding before runtime admission.
+Metadata repairs use `maps:import --repairs <file>` with the exact original ZIP
+hash and cannot overwrite valid source metadata.
+
+`maps:verify-navigation` uses real Citizens bodies in a disposable Paper server
+to check opening a door, respecting a denied interaction, ladder climbing,
+jumping a gap and swimming to shore. It captures physics and server logs,
+then removes its server. This fixture validates movement primitives; it does
+not certify every route on an imported map.
+
+At startup, map metadata is loaded for the rotation. Terrain and navigation
+are loaded asynchronously for the first map and at most one successor;
+the lobby remains available throughout. Chunk loading, pasting and snapshots
+are batched, and advancing releases the previous map's tickets and artifacts.
+Admission waits for preparation rather than blocking the main thread.
+`maps:verify-runtime` observes these production cache ports while ordinary
+eight-bot showcases rotate. It compares restored item slots and metadata and
+every sign face with the source payload, checks the two-map resource bound,
+waits for inactive chunks to unload, and records heap and tick measurements.
+The report and server log describe that disposable runtime; production
+installation still requires the published candidate and GitOps release.
+The catalog must contain at least three maps to prove that startup leaves
+content unloaded. Repeated `--require-map <id>` arguments require ordinary
+rotation to visit selected maps, up to twelve transitions; use this for the
+largest maps and maps with more than two teams.
 
 The lobby is generated rather than authored: `mise exec -- gradle
 bakeRwfLobby` writes `rwf/lobby/blocks.schem` from `LobbyBuild`, refuses to
@@ -1180,7 +1246,12 @@ this package. It starts a disposable Paper server with one Trooper bot and a
 six-second countdown. Join with `/rwf join`, select `/rwf kit trooper` before
 the start, and play using the real keyboard and mouse. The regular preview
 command keeps the full team setup for other-kit or team recordings. The server's
-owned configuration stays unchanged. Stop with the printed session path:
+owned configuration stays unchanged. Add `--rwf-map <id>` to select a map
+installed in owned content. Its `scenario.json` must match the neutral
+`rwf-map-scenarios.json` registry and bind the schematic hash, full region and
+actual source-team spawns. A disposable duel remaps two selected teams to
+Red/Blue and rebakes their bomb goal fields while retaining the full terrain;
+ordinary preview retains the map's original team count. Stop with the printed session path:
 
 ```bash
 bun run client stop --session .cache/client/<session>/session.json
@@ -1215,10 +1286,13 @@ bun run lint:learning
 bun run typecheck:learning
 ```
 
-The trainer requires dataset export schema 2, which pins the three split files
-by SHA-256. Re-export older datasets from their original human recordings.
+The trainer requires dataset export schema 3, which pins the three split files
+by SHA-256 and binds every match and sequence to its map ID and terrain hash.
+Re-export older datasets from their original human recordings.
 It checks whole-match isolation, fresh observation acknowledgements and
-continuous control sequences before training. The actor receives only the 34
+continuous control sequences before training. Evaluation splits contain new
+matches on known maps; training across every validated map does not measure
+generalization to unseen maps. The actor receives only the 34
 fair observation values, uses a 128-unit LSTM, and produces five categorical
 heads for movement, jump, sneak, sprint and attack. Memory resets at segment
 boundaries and carries across truncated training windows; padding contributes

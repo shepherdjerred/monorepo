@@ -51,6 +51,96 @@ final class NavGraphTest {
   }
 
   @Test
+  void legacyPlatformDescentIsCostlyAndLargerFallsAreRejected() {
+    var terrain =
+        new BlockClassification() {
+          @Override
+          public GridBounds bounds() {
+            return new GridBounds(new BlockPos(0, 0, 0), 3, 10, 1);
+          }
+
+          @Override
+          public BlockShape shape(int x, int y, int z) {
+            var height = x == 0 ? 5 : x == 2 ? 7 : 0;
+            return y <= height ? BlockShape.FULL : BlockShape.PASSABLE;
+          }
+
+          @Override
+          public boolean blocksSight(int x, int y, int z) {
+            return shape(x, y, z).blocksMovement();
+          }
+        };
+    var platforms = NavGraphBuilder.build(terrain);
+    var low = platforms.nodeAt(new BlockPos(1, 1, 0)).orElseThrow();
+    var spawn = platforms.nodeAt(new BlockPos(0, 6, 0)).orElseThrow();
+    var descent = platforms.path(spawn, low).orElseThrow();
+    assertThat(descent.waypoints().getLast().hop()).isEqualTo(Hop.DROP);
+    assertThat(descent.cost()).isEqualTo(14);
+    var high = platforms.nodeAt(new BlockPos(2, 8, 0)).orElseThrow();
+    assertThat(platforms.path(high, low)).isEmpty();
+  }
+
+  @Test
+  void floatingPlatformLeapRequiresAClearFlightCorridor() {
+    for (var blocked : new boolean[] {false, true}) {
+      var terrain =
+          new BlockClassification() {
+            @Override
+            public GridBounds bounds() {
+              return new GridBounds(new BlockPos(0, 0, 0), 4, 10, 1);
+            }
+
+            @Override
+            public BlockShape shape(int x, int y, int z) {
+              return (x == 0 && y <= 5) || (x == 3 && y == 0) || (blocked && x == 1 && y == 8)
+                  ? BlockShape.FULL
+                  : BlockShape.PASSABLE;
+            }
+
+            @Override
+            public boolean blocksSight(int x, int y, int z) {
+              return shape(x, y, z).blocksMovement();
+            }
+          };
+      var platforms = NavGraphBuilder.build(terrain);
+      var from = platforms.nodeAt(new BlockPos(0, 6, 0)).orElseThrow();
+      var to = platforms.nodeAt(new BlockPos(3, 1, 0)).orElseThrow();
+      var path = platforms.path(from, to);
+      if (blocked) assertThat(path).isEmpty();
+      else assertThat(path.orElseThrow().waypoints().getLast().hop()).isEqualTo(Hop.LEAP);
+    }
+  }
+
+  @Test
+  void oceanNavigationUsesTheSwimmableSurfaceAndCanExitOntoTheShore() {
+    var ocean =
+        new BlockClassification() {
+          @Override
+          public GridBounds bounds() {
+            return new GridBounds(new BlockPos(0, 0, 0), 3, 100, 1);
+          }
+
+          @Override
+          public BlockShape shape(int x, int y, int z) {
+            if (y == 0 || (x == 2 && y <= 90)) return BlockShape.FULL;
+            return y <= 90 ? BlockShape.LIQUID : BlockShape.PASSABLE;
+          }
+
+          @Override
+          public boolean blocksSight(int x, int y, int z) {
+            return shape(x, y, z).blocksProjectile();
+          }
+        };
+    var surface = NavGraphBuilder.build(ocean);
+    assertThat(surface.nodeCount()).isEqualTo(3);
+    assertThat(surface.nodeAt(new BlockPos(0, 89, 0))).isEmpty();
+    var from = surface.nodeAt(new BlockPos(0, 90, 0)).orElseThrow();
+    var to = surface.nodeAt(new BlockPos(2, 91, 0)).orElseThrow();
+    assertThat(surface.path(from, to)).isPresent();
+    assertThat(surface.path(to, from)).isPresent();
+  }
+
+  @Test
   void flowFieldAgreesWithAStarCosts() {
     var goal = node(new BlockPos(29, 1, 2));
     var field = FlowField.toward(graph, goal);

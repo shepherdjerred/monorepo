@@ -1,7 +1,6 @@
 {
-  "version": 1,
+  "version": 2,
   "kind": "rwf-native-duel-setup",
-  "map": "training-yard",
   "world": "minecraft:rwf",
   "worldTimes": [0, 15000],
   "kit": "trooper",
@@ -17,6 +16,7 @@
     "mode",
     "opponent",
     "map",
+    "scenario",
     "world",
     "worldTime",
     "worldTick",
@@ -34,9 +34,5 @@
     "pitch",
     "health",
     "heldSlot"
-  ],
-  "spawns": [
-    { "team": "red", "position": [25.5, 65, 8.5], "yaw": -90, "pitch": 0 },
-    { "team": "blue", "position": [37.5, 65, 8.5], "yaw": 90, "pitch": 0 }
   ]
 }

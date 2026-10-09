@@ -7,7 +7,7 @@ import { frozenManifest, root } from "#learning/sandbox.ts";
 /** Build exactly the artifacts that will be fingerprinted and staged in the native owner. */
 export async function buildCaptureInputs(): Promise<void> {
   for (const [directory, tasks] of [
-    ["plugin", [":dist:shadowJar", ":dist:fixturesJar"]],
+    ["plugin", [":dist:shadowJar", ":dist:fixturesJar", ":rwfmap:installDist"]],
     ["client", ["assemble"]],
   ] as const) {
     const build = Bun.spawn(

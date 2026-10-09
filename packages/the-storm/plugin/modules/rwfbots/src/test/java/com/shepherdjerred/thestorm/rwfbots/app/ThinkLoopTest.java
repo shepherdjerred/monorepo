@@ -158,6 +158,24 @@ final class ThinkLoopTest {
   }
 
   @Test
+  void aDoorObservationKeepsRegisteredBodiesAndLifeEpochs() {
+    var loop = loop(new DirectComputePool(), governor(), TraceSink.none());
+    register(loop);
+    loop.publish(snapshot(1));
+    var next =
+        NAV.withGrid(
+            NAV.grid()
+                .withDoorState(
+                    new com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos(3, 1, 3), false));
+    loop.observedNavigation(next);
+    loop.publish(snapshot(2));
+    assertThat(loop.board().tick()).isEqualTo(2);
+    assertThat(loop.board().thoughts()).containsOnlyKeys(RED_1, RED_2);
+    assertThat(loop.board().of(RED_1).orElseThrow().decision().lifeEpoch()).isZero();
+    loop.close();
+  }
+
+  @Test
   void aJobThinksForEveryRegisteredBotAndPublishesTheBoard() {
     var traces = new CountingTraces();
     var loop = loop(new DirectComputePool(), governor(), traces);

@@ -46,7 +46,7 @@ def export_fixture(root: Path) -> Path:
     for index in range(10):
         match = str(UUID(int=index + 1))
         rows = [
-            f"H\t3\t{match}\ttraining-yard\tcontent\t7\trwf-combat-1",
+            f"H\t3\t{match}\ttraining-yard\t" + "a" * 64 + "\t7\trwf-combat-1",
             "R\tp1\tRED\ttrooper\tfalse",
             "R\tp2\tBLUE\ttrooper\ttrue",
         ]
@@ -102,6 +102,20 @@ class TrainerTest(unittest.TestCase):
             manifest["files_sha256"]["train.jsonl"] = digest(path)
             manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "leaked"):
+                Dataset.load(out)
+
+    def test_sequence_cannot_change_its_map_after_export(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            out = export_fixture(Path(folder))
+            path = out / "train.jsonl"
+            rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+            rows[0]["map_id"] = "different-map"
+            path.write_text("\n".join(json.dumps(row) for row in rows) + "\n", encoding="utf-8")
+            manifest_path = out / "manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["files_sha256"][path.name] = digest(path)
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "original match terrain"):
                 Dataset.load(out)
 
     def test_padding_contributes_no_gradient(self) -> None:

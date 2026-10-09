@@ -53,6 +53,9 @@ final class NavGraphBuilder {
       return false;
     }
     var shape = shape(cell);
+    // This controller swims at the surface; it has no dive action. A deep ocean otherwise
+    // creates millions of duplicate horizontal routes at depths the bot cannot follow.
+    if (shape.swim() && shape(cell.up()).swim()) return false;
     return shape.climbable() || shape.swim() || standable(cell.down());
   }
 
@@ -112,6 +115,7 @@ final class NavGraphBuilder {
     int[][] cardinal = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
     for (var d : cardinal) {
       step(cell, d[0], d[1], edges);
+      leap(cell, d[0], d[1], edges);
     }
     int[][] diagonal = {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
     for (var d : diagonal) {
@@ -126,7 +130,7 @@ final class NavGraphBuilder {
     }
   }
 
-  /** Walk level, jump up one, or drop up to three along one cardinal direction. */
+  /** Walk level, jump up one, or descend a bounded fall along one cardinal direction. */
   private void step(BlockPos cell, int dx, int dz, List<Edge> edges) {
     var ahead = cell.offset(dx, 0, dz);
     var level = nodeAt(ahead);
@@ -146,7 +150,8 @@ final class NavGraphBuilder {
       var below = ahead.offset(0, -depth, 0);
       var landing = nodeAt(below);
       if (landing >= 0) {
-        edges.add(new Edge(landing, Hop.DROP, NavGraph.WALK_COST + depth));
+        var fallPenalty = Math.max(0, depth - 3) * 4;
+        edges.add(new Edge(landing, Hop.DROP, NavGraph.WALK_COST + depth + fallPenalty));
         return;
       }
       if (!passable(below)) {
@@ -165,6 +170,39 @@ final class NavGraphBuilder {
     if (below >= 0 && (shape.climbable() || shape(cell.down()).climbable())) {
       edges.add(new Edge(below, Hop.CLIMB, NavGraph.CLIMB_COST));
     }
+  }
+
+  /** Short gaps on the original floating platforms need a sprint jump, sometimes downwards. */
+  private void leap(BlockPos cell, int dx, int dz, List<Edge> edges) {
+    if (!standable(cell.down()) || nodeAt(cell.offset(dx, 0, dz)) >= 0) return;
+    for (var span = 2; span <= 3; span++) {
+      for (var descent = 0; descent <= NavGraph.MAX_DROP; descent++) {
+        var landing = cell.offset(dx * span, -descent, dz * span);
+        var target = nodeAt(landing);
+        if (target >= 0 && standable(landing.down()) && clearLeap(cell, landing)) {
+          edges.add(
+              new Edge(
+                  target,
+                  Hop.LEAP,
+                  NavGraph.JUMP_COST + span + descent + Math.max(0, descent - 3) * 4));
+          break;
+        }
+      }
+    }
+  }
+
+  /** Conservatively clear the whole flight corridor, including headroom and the descent. */
+  private boolean clearLeap(BlockPos from, BlockPos to) {
+    var span = Math.max(Math.abs(to.x() - from.x()), Math.abs(to.z() - from.z()));
+    var dx = Integer.signum(to.x() - from.x());
+    var dz = Integer.signum(to.z() - from.z());
+    for (var step = 0; step <= span; step++) {
+      var lowest = step == 0 ? from.y() : to.y();
+      for (var y = lowest; y <= from.y() + 3; y++) {
+        if (!passable(from.offset(dx * step, y - from.y(), dz * step))) return false;
+      }
+    }
+    return true;
   }
 
   /** Whether a player can be in {@code cell} (it and the cell above are passable). */

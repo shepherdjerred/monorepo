@@ -5,6 +5,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BodyCommand;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Waypoint;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -80,10 +81,9 @@ public final class LobbySteering {
     Optional<Vec3> lookAt;
     if (index < path.size()) {
       var waypoint = path.get(index);
-      commands.add(new BodyCommand.MoveToward(waypoint.pos(), false));
+      commands.add(new BodyCommand.MoveToward(waypoint.pos(), waypoint.hop() == Hop.LEAP));
       var climbing =
-          waypoint.hop() == Hop.JUMP
-              && body.feet().horizontalDistance(waypoint.pos()) <= 1.2
+          jumpApproach(waypoint, body.feet())
               && body.onGround()
               && tick - lastJump > JUMP_COOLDOWN / 2;
       if (climbing) {
@@ -118,6 +118,11 @@ public final class LobbySteering {
 
   /** The sneak state after this tick and the command that gets there, if one is needed. */
   private record Sneak(boolean sneaking, long toggled, Optional<BodyCommand> command) {}
+
+  private static boolean jumpApproach(Waypoint waypoint, Vec3 feet) {
+    return (waypoint.hop() == Hop.JUMP || waypoint.hop() == Hop.LEAP)
+        && feet.horizontalDistance(waypoint.pos()) <= (waypoint.hop() == Hop.LEAP ? 3.2 : 1.2);
+  }
 
   private static Sneak sneak(State state, boolean tapping, long tick) {
     if (tapping && tick - state.lastToggle() >= SNEAK_TOGGLE_TICKS) {

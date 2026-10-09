@@ -12,7 +12,7 @@ def fixture(inputs: list[str]) -> str:
     values[features().index("TARGET_KNOWN")] = 1
     values[features().index("SLOT")] = 1 / 8
     obs = "\t".join(str(value) for value in values)
-    rows = ["H\t3\t00000000-0000-0000-0000-000000000001\tyard\tsha\t42\trules",
+    rows = ["H\t3\t00000000-0000-0000-0000-000000000001\tyard\t" + "a" * 64 + "\t42\trules",
             "R\tp1\tRED\ttrooper\tfalse", "R\tp2\tBLUE\ttrooper\ttrue"]
     for tick in range(12):
         rows.append(f"O\t{tick}\tp1\trwf-combat-v1\t{obs}")
@@ -26,6 +26,20 @@ def human(tick: int, sequence: int | None = None, ack: int | None = None) -> str
 
 
 class DatasetTest(unittest.TestCase):
+    def test_original_map_identity_and_four_team_outcomes_are_preserved(self) -> None:
+        text = fixture([human(0), human(1)]).replace("\tyard\t", "\tcors-path\t")
+        text = text.replace("\tRED\t", "\tPURPLE\t").replace("\tBLUE\t", "\tGREEN\t")
+        record = read(StringIO(text))
+        chunks, _ = sequences(record)
+        self.assertEqual(record.map_id, "cors-path")
+        self.assertEqual(chunks[0]["map_id"], "cors-path")
+        self.assertEqual(chunks[0]["map_sha256"], "a" * 64)
+        self.assertTrue(chunks[0]["won"])
+        for malformed in (text.replace("\tcors-path\t", "\t../cors-path\t"),
+                          text.replace("a" * 64, "unknown")):
+            with self.assertRaises(ValueError):
+                read(StringIO(malformed))
+
     def test_action_coverage_counts_only_accepted_human_samples(self) -> None:
         text = fixture([human(0), human(1), human(2).replace("\tHUMAN", "\tAUTOMATED"),
                         human(3).replace("\t65\t", "\t0\t").replace("\ttrue\tfalse", "\tfalse\tfalse"),

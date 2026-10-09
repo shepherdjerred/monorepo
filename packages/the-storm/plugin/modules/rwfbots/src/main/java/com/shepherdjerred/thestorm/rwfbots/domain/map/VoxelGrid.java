@@ -77,6 +77,33 @@ public record VoxelGrid(GridBounds bounds, BitSet movement, BitSet sight, BitSet
     return blocks(cell, Layer.MOVEMENT);
   }
 
+  /** Actual wooden-door state, captured on Paper and published as a fresh immutable grid. */
+  public VoxelGrid withDoorState(BlockPos lower, boolean open) {
+    if (!bounds.contains(lower)
+        || !bounds.contains(lower.up())
+        || blocksMovement(lower)
+        || blocksMovement(lower.up())) {
+      throw new IllegalArgumentException("door is outside navigable cells: " + lower);
+    }
+    var nextSight = (BitSet) sight.clone();
+    var nextProjectile = (BitSet) projectile.clone();
+    for (var cell : new BlockPos[] {lower, lower.up()}) {
+      var index = bounds.index(cell);
+      nextSight.set(index, !open);
+      nextProjectile.set(index, !open);
+    }
+    return new VoxelGrid(bounds, movement, nextSight, nextProjectile);
+  }
+
+  /** Region culling must allow visibility that becomes possible after a wooden door opens. */
+  public VoxelGrid potentialSight() {
+    var possible = (BitSet) sight.clone();
+    var doors = (BitSet) projectile.clone();
+    doors.andNot(movement);
+    possible.andNot(doors);
+    return new VoxelGrid(bounds, movement, possible, projectile);
+  }
+
   /** Whether a straight line from {@code from} to {@code to} crosses nothing that blocks sight. */
   public boolean canSee(Vec3 from, Vec3 to) {
     return raycast(from, to, Layer.SIGHT).isEmpty();

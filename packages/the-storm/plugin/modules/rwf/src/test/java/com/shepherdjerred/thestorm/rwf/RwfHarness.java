@@ -72,6 +72,7 @@ public final class RwfHarness implements AutoCloseable {
           "rwf/kits.yml",
           "rwf/maps/training-yard/map.yml",
           "rwf/maps/training-yard/blocks.schem",
+          "rwf/maps/training-yard/details.json",
           "rwf/lobby/lobby.yml",
           "rwf/lobby/blocks.schem");
 

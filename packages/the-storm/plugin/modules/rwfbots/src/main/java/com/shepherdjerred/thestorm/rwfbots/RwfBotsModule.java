@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.StormModule;
 import com.shepherdjerred.thestorm.rwfbots.adapter.citizens.CitizensBodies;
 import com.shepherdjerred.thestorm.rwfbots.adapter.content.NavFiles;
+import com.shepherdjerred.thestorm.rwfbots.adapter.content.NavResources;
 import com.shepherdjerred.thestorm.rwfbots.adapter.content.PersonalityFiles;
 import com.shepherdjerred.thestorm.rwfbots.adapter.content.RwfBotsConfig;
 import com.shepherdjerred.thestorm.rwfbots.adapter.db.JooqPersonalityStatsStore;
@@ -61,6 +62,7 @@ public final class RwfBotsModule implements StormModule {
 
   private final Hooks hooks;
   private @Nullable RwfBotsPaper paper;
+  private @Nullable NavResources navResources;
   private @Nullable DiagnosticModels diagnosticModels;
   private @Nullable AcceptedModels acceptedModels;
 
@@ -91,16 +93,13 @@ public final class RwfBotsModule implements StormModule {
     var config = context.loadConfig(CONFIG, RwfBotsConfig.class);
     var personalities = PersonalityFiles.load(context.dataDirectory());
     var nav = new NavCatalog();
-    var loaded = NavFiles.load(context.dataDirectory());
+    context
+        .services()
+        .provide(
+            com.shepherdjerred.thestorm.rwfbots.app.map.NavLoading.class,
+            () -> java.util.Set.copyOf(nav.decoded().keySet()));
     var lobby = NavFiles.loadLobby(context.dataDirectory());
-    loaded.artifacts().values().forEach(nav::add);
-    loaded
-        .problems()
-        .forEach(
-            (mapId, problem) -> {
-              nav.reject(mapId, problem);
-              context.logger().error("rwfbots: map {} runs humans-only: {}", mapId, problem);
-            });
+    navResources = new NavResources(context, nav);
     context.database().migrate(id(), getClass().getClassLoader());
     var store = new JooqPersonalityStatsStore(context.database());
     var stats = new StatsCache();
@@ -160,9 +159,8 @@ public final class RwfBotsModule implements StormModule {
     context
         .logger()
         .info(
-            "rwfbots: {} personalities, {} maps with nav artifacts, traces {}",
+            "rwfbots: {} personalities, navigation follows prepared maps, traces {}",
             personalities.active().size(),
-            loaded.artifacts().size(),
             config.traces().enabled() ? "on" : "off");
     context
         .logger()
@@ -227,6 +225,11 @@ public final class RwfBotsModule implements StormModule {
 
   @Override
   public void disable() {
+    var resources = navResources;
+    if (resources != null) {
+      resources.close();
+      navResources = null;
+    }
     var current = paper;
     if (current != null) {
       current.stop();

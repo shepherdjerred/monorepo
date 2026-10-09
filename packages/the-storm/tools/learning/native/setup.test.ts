@@ -2,6 +2,7 @@ import { expect, test } from "vitest";
 import { validateSetup, pairedSetup } from "./setup.ts";
 import { DuelStateSchema } from "#learning/duels.ts";
 import wire from "#learning-wire";
+import { scenarioFor } from "#learning/maps/scenario.ts";
 
 function fixture(external: boolean) {
   const match = external
@@ -38,7 +39,7 @@ function fixture(external: boolean) {
     fallback: 0,
   });
   const setup = {
-    schema: 1,
+    schema: 2,
     kind: "rwf-native-duel-setup",
     match,
     seed: 17,
@@ -46,6 +47,7 @@ function fixture(external: boolean) {
     mode,
     opponent: "authored",
     map: "training-yard",
+    scenario: scenarioFor("training-yard"),
     world: "minecraft:rwf",
     worldTime: 0,
     worldTick: external ? 50 : 800,
@@ -100,6 +102,10 @@ test("rejects changed candidate identities, duplicate bodies, join order and alt
     throw new Error("Missing unit fighter");
   for (const altered of [
     { ...input.setup, seed: 18 },
+    {
+      ...input.setup,
+      scenario: { ...input.setup.scenario, mapSha256: "b".repeat(64) },
+    },
     { ...input.setup, match: fixture(false).setup.match },
     { ...input.setup, roster: [second, first] },
     { ...input.setup, roster: [first, { ...second, body: first.body }] },

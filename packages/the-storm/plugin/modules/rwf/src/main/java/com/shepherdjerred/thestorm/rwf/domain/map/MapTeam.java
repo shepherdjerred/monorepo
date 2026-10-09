@@ -21,13 +21,16 @@ public record MapTeam(TeamColor color, List<Spawn> spawns) {
   /** Red Warfare's map builder refused to publish a team with more spawns than this. */
   public static final int BUILDER_MAX_SPAWNS = 120;
 
+  /** Saved legacy worlds can exceed the editor's publishing limit (Hemispheres has 163). */
+  public static final int MAX_SAVED_SPAWNS = 1024;
+
   public MapTeam {
     if (spawns.isEmpty()) {
       throw new IllegalArgumentException(color + " needs at least one spawn");
     }
-    if (spawns.size() > BUILDER_MAX_SPAWNS) {
+    if (spawns.size() > MAX_SAVED_SPAWNS) {
       throw new IllegalArgumentException(
-          color + " has too many spawn points: " + spawns.size() + " > " + BUILDER_MAX_SPAWNS);
+          color + " has too many spawn points: " + spawns.size() + " > " + MAX_SAVED_SPAWNS);
     }
     spawns = List.copyOf(spawns);
   }

@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "rwf-map-scenario",
+  "world": "minecraft:rwf",
+  "teamColors": ["RED", "BLUE", "GREEN", "PURPLE", "YELLOW"],
+  "fields": [
+    "schema",
+    "kind",
+    "id",
+    "map",
+    "mapSha256",
+    "world",
+    "region",
+    "sourceTeams",
+    "spawnPolicy",
+    "spawns"
+  ],
+  "spawnFields": ["team", "sourceTeam", "position", "yaw", "pitch"]
+}

@@ -13,7 +13,12 @@ public enum BlockShape {
   PANE(5, true, false, Motion.NONE),
   LIQUID(6, false, false, Motion.SWIM),
   LADDER(7, false, false, Motion.CLIMB),
-  PASSABLE(8, false, false, Motion.NONE);
+  PASSABLE(8, false, false, Motion.NONE),
+  // Occupancy is unsafe even though fire and lava do not obstruct arrows.
+  HAZARD(9, true, false, Motion.NONE),
+  SOLID_HAZARD(10, true, false, Motion.NONE),
+  // Navigation can use an ordinary wooden door; the body must open it before crossing.
+  DOOR(11, false, false, Motion.NONE);
 
   private enum Motion {
     NONE,
@@ -38,7 +43,7 @@ public enum BlockShape {
     return code;
   }
 
-  /** Whether a player cannot occupy this cell. */
+  /** Whether navigation must avoid occupying this cell, for collision or damage. */
   public boolean blocksMovement() {
     return blocksMovement;
   }
@@ -60,7 +65,7 @@ public enum BlockShape {
 
   /** Whether arrows stop in this cell. Thin glass and fences stop arrows; air and water do not. */
   public boolean blocksProjectile() {
-    return blocksMovement;
+    return (blocksMovement && this != HAZARD) || this == DOOR;
   }
 
   /** The shape with code {@code code}; anything else is corrupt data. */

@@ -1,7 +1,7 @@
 {
   "mapId": "lobby",
   "formatVersion": 1,
-  "generatorVersion": 1,
+  "generatorVersion": 2,
   "blocksSha256": "63d4513bab8df532597dbabd5a49abe32ffcbb64f186f1ef14111000c4cf78a3",
   "classificationSha256": "3a325be74030c8f4c3fa7688831db9cc7233b42db8bc76fd257fdff1f1cc9cb3",
   "bounds": {
@@ -89,10 +89,11 @@
     "walkable": 865
   },
   "edges": {
-    "total": 6036,
+    "total": 6112,
     "CLIMB": 0,
-    "DROP": 50,
+    "DROP": 108,
     "JUMP": 46,
+    "LEAP": 18,
     "WALK": 5940
   },
   "regions": 26,
@@ -104,5 +105,5 @@
   },
   "distanceFields": 8,
   "problems": [],
-  "bytes": 17990
+  "bytes": 18565
 }

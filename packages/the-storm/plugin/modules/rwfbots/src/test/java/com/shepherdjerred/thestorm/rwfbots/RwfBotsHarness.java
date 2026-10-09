@@ -11,6 +11,8 @@ import com.shepherdjerred.thestorm.rwf.app.BotRoster;
 import com.shepherdjerred.thestorm.rwf.app.CombatantActions;
 import com.shepherdjerred.thestorm.rwf.app.MatchEvents;
 import com.shepherdjerred.thestorm.rwf.app.MatchView;
+import com.shepherdjerred.thestorm.rwf.app.map.MapResourceRegistry;
+import com.shepherdjerred.thestorm.rwf.app.map.MapResources;
 import com.shepherdjerred.thestorm.rwfbots.adapter.content.NavFiles;
 import com.shepherdjerred.thestorm.rwfbots.adapter.paper.FakeBodies;
 import com.shepherdjerred.thestorm.rwfbots.adapter.paper.RwfBotsPaper;
@@ -81,6 +83,7 @@ public final class RwfBotsHarness implements AutoCloseable {
   public final WorldMock world;
   public final StormDatabase database;
   public final Services services = new Services();
+  public final MapResourceRegistry maps = new MapResourceRegistry();
   public final FakeClock clock = new FakeClock();
   public final FakeMatch match = new FakeMatch(NAV.blocksSha256());
   public final FakeBodies bodies;
@@ -161,6 +164,7 @@ public final class RwfBotsHarness implements AutoCloseable {
     services.provide(MatchView.class, match);
     services.provide(MatchEvents.class, match);
     services.provide(CombatantActions.class, match);
+    services.provide(MapResources.class, maps);
     enabling =
         plugin ->
             module.enable(
@@ -183,8 +187,10 @@ public final class RwfBotsHarness implements AutoCloseable {
       close();
       throw e;
     }
-    // The records load back through the main thread on the next tick.
+    var prepared = maps.prepare(match.map());
+    // The records and navigation load back through the main thread on the next tick.
     tick();
+    assertThat(prepared).isCompletedWithValue(null);
   }
 
   public RwfBotsPaper paper() {

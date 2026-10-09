@@ -2,6 +2,7 @@ import { z } from "zod";
 import wire from "#learning-setup-wire";
 import duel from "#learning-wire";
 import type { DuelState } from "#learning/duels.ts";
+import { MapScenario, scenarioFor } from "#learning/maps/scenario.ts";
 
 const vector = z.tuple([z.number(), z.number(), z.number()]);
 const Fighter = z.strictObject({
@@ -12,20 +13,21 @@ const Fighter = z.strictObject({
   kit: z.literal("trooper"),
   position: vector,
   velocity: vector,
-  yaw: z.number(),
-  pitch: z.number(),
+  yaw: z.number().transform(Math.fround),
+  pitch: z.number().transform(Math.fround),
   health: z.literal(20),
   heldSlot: z.literal(1),
 });
 export const DuelSetup = z.strictObject({
-  schema: z.literal(1),
+  schema: z.literal(2),
   kind: z.literal("rwf-native-duel-setup"),
   match: z.uuid(),
   seed: z.number().int(),
   side: z.enum(["red", "blue"]),
   mode: z.enum(["authored", "external"]),
   opponent: z.enum(duel.opponents),
-  map: z.literal("training-yard"),
+  map: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/u),
+  scenario: MapScenario,
   world: z.literal("minecraft:rwf"),
   worldTime: z.union([z.literal(0), z.literal(15_000)]),
   worldTick: z.number().int().nonnegative(),
@@ -36,9 +38,8 @@ export type DuelSetup = z.infer<typeof DuelSetup>;
 if (
   JSON.stringify(wire) !==
   JSON.stringify({
-    version: 1,
+    version: 2,
     kind: "rwf-native-duel-setup",
-    map: "training-yard",
     world: "minecraft:rwf",
     worldTimes: [0, 15_000],
     kit: "trooper",
@@ -47,16 +48,17 @@ if (
     velocity: [0, 0, 0],
     fields: Object.keys(DuelSetup.shape),
     fighter: Object.keys(Fighter.shape),
-    spawns: [
-      { team: "red", position: [25.5, 65, 8.5], yaw: -90, pitch: 0 },
-      { team: "blue", position: [37.5, 65, 8.5], yaw: 90, pitch: 0 },
-    ],
   })
 )
   throw new Error("Native duel setup differs from its neutral contract");
 
 export function validateSetup(raw: unknown, state: DuelState): DuelSetup {
   const setup = DuelSetup.parse(raw);
+  const scenario = scenarioFor(setup.map);
+  if (JSON.stringify(setup.scenario) !== JSON.stringify(scenario))
+    throw new Error(
+      "Native setup differs from its validated original map scenario",
+    );
   if (
     setup.match !== state.match ||
     setup.seed !== state.seed ||
@@ -73,7 +75,7 @@ export function validateSetup(raw: unknown, state: DuelState): DuelSetup {
       "Original native setup differs from the duel identity or candidate body",
     );
   setup.roster.forEach((fighter, index) => {
-    const spawn = wire.spawns.find((entry) => entry.team === fighter.team);
+    const spawn = scenario.spawns.find((entry) => entry.team === fighter.team);
     if (
       spawn === undefined ||
       fighter.joinIndex !== index ||
@@ -95,6 +97,7 @@ export function pairedSetup(learned: DuelSetup, authored: DuelSetup): void {
     side: setup.side,
     opponent: setup.opponent,
     map: setup.map,
+    scenario: setup.scenario,
     world: setup.world,
     worldTime: setup.worldTime,
     roster: setup.roster.map(({ body: _body, ...fighter }) => fighter),
