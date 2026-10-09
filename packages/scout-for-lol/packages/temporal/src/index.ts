@@ -97,9 +97,6 @@ export {
   SCOUT_PRE_RENAME_WORKFLOW_TYPES,
   scoutRenamedWorkflowType,
   scoutPreRenameActivityType,
-  scoutWorkflowTypesOf,
-  withPreRenameActivityNames,
-  SCOUT_PIPELINE_START_WORKFLOW_TYPES,
 } from "./identifiers.ts";
 export type {
   ScoutRenamedWorkflowName,

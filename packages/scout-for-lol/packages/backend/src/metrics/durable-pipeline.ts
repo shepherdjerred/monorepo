@@ -1,6 +1,6 @@
 import { Counter, Gauge } from "prom-client";
 import { SCOUT_MATCH_RECEIPT_KINDS } from "@scout-for-lol/temporal/match-receipts";
-import { SCOUT_PIPELINE_START_WORKFLOW_TYPES } from "@scout-for-lol/temporal/identifiers";
+import { SCOUT_PIPELINE_WORKFLOW_NAMES } from "@scout-for-lol/temporal/identifiers";
 import type { Db } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { registry } from "#src/metrics/registry.ts";
@@ -310,7 +310,7 @@ export async function collectDurablePipelineMetrics(db: Db): Promise<void> {
       }),
       oldestLiveRecoveryBatchAt(db),
       oldestUnacceptedWorkflowStartAt(db, {
-        workflowTypes: SCOUT_PIPELINE_START_WORKFLOW_TYPES,
+        workflowTypes: SCOUT_PIPELINE_WORKFLOW_NAMES,
       }),
       oldestReadyNotificationIntentAt(db),
       observationLag(db, {

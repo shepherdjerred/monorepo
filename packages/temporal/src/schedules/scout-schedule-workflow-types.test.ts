@@ -11,8 +11,9 @@ import { SCHEDULES } from "./schedule-definitions.ts";
  * embedded poller runs the prod backend image until it is promoted. A type
  * that any of those bundles does not export stops the Schedule in that
  * namespace. `ROUTED_BUNDLE_WORKFLOW_TYPES` is the export list of the oldest
- * build that may still be routed (f06aafe, the v1 deletion that first
- * registered the renamed pipeline types); replace it whenever routing moves.
+ * build that may still be routed: the release that switched issuance to the
+ * renamed pipeline types, which still exported the pre-rename aliases beside
+ * them. Replace it whenever routing moves.
  *
  * That build is a deploy precondition rather than a fact this test can check:
  * the Schedules issue the renamed types, and an older build routed in either

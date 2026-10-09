@@ -218,20 +218,3 @@ export async function scoutSilentPostmatchBackfillWorkflow(
 ): Promise<ScoutSilentPostmatchBackfillResultEnvelope> {
   return await silentPostmatchBackfill(input);
 }
-
-// The pre-rename Workflow types. Nothing issues them for a new execution any
-// more, but open executions run under them and a history recorded before the
-// `scout-generation-rename` patch starts children under them, so the bundle
-// still registers both names; see `SCOUT_PRE_RENAME_WORKFLOW_TYPES`.
-export {
-  scoutPostMatchDiscoveryWorkflow as scoutPostMatchDiscoveryV2Workflow,
-  scoutMatchProcessingWorkflow as scoutMatchProcessingV2Workflow,
-  scoutClientMatchDispatchWorkflow as scoutClientMatchDispatchV2Workflow,
-  scoutPrematchDiscoveryWorkflow as scoutPrematchDiscoveryV2Workflow,
-  scoutPrematchGameWorkflow as scoutPrematchGameV2Workflow,
-  scoutNotificationWorkflow as scoutNotificationV2Workflow,
-  scoutLakeProjectionWorkflow as scoutLakeProjectionV2Workflow,
-  scoutRecoveryBatchWorkflow as scoutRecoveryBatchV2Workflow,
-  scoutPipelineReconciliationWorkflow as scoutPipelineReconciliationV2Workflow,
-  scoutSilentPostmatchBackfillWorkflow as scoutSilentPostmatchBackfillV2Workflow,
-};

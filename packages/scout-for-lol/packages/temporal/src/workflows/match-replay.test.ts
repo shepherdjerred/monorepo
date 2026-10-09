@@ -1,5 +1,4 @@
 import { expect, test } from "vitest";
-import { historyFromJSON } from "@temporalio/common/lib/proto-utils.js";
 import { Worker } from "@temporalio/worker";
 import type { WorkflowHandle } from "@temporalio/client";
 import {
@@ -17,6 +16,7 @@ import {
   scoutPostMatchDiscoveryWorkflow,
   scoutPrematchDiscoveryWorkflow,
 } from "./index.ts";
+import { SCOUT_WORKFLOW_NAMES } from "#src/identifiers.ts";
 import { SCOUT_MATCH_MINT_INTENTS_PATCH } from "./match.ts";
 import {
   SCOUT_POSTMATCH_OWNERSHIP_PATCH,
@@ -31,6 +31,7 @@ import {
   scoutMatchActivityStubs,
   MATCH_ID,
 } from "./match.test-fixtures.ts";
+import { recordedUnderRenamedType } from "./recorded-history.test-fixtures.ts";
 import { useScoutWorkflowHarness } from "./workflow-harness.test-fixtures.ts";
 import { SCOUT_PREMATCH_MAINTENANCE_PATCH } from "./prematch.ts";
 import {
@@ -419,11 +420,18 @@ const OWNERSHIP: PatchedActivity = {
 /**
  * Committed fixtures, for generations the current code can no longer
  * produce: each was recorded by running the older Workflow source against the
- * same Activity stubs these tests use. Closed histories of every generation
- * stay retained for the namespace's 30 days and are replayed before promotion.
+ * same Activity stubs these tests use, under the pre-rename Workflow type, and
+ * is replayed under its renamed type (`recordedUnderRenamedType`). Retained
+ * histories of the generations before the retirement marker all ran under the
+ * pre-rename types, which this bundle no longer registers, so in production
+ * they no longer replay at all; these keep the branches the patches still gate
+ * deterministic until the patches are retired.
  */
-function fixtureHistory(recorded: unknown): History {
-  return historyFromJSON(structuredClone(recorded));
+function discoveryFixture(recorded: unknown): History {
+  return recordedUnderRenamedType(
+    recorded,
+    SCOUT_WORKFLOW_NAMES.postMatchDiscovery,
+  );
 }
 
 function ownershipReads(history: History): number {
@@ -447,7 +455,7 @@ async function replay(history: History): Promise<void> {
 }
 
 test("a discovery recorded while the ownership read existed still replays", async () => {
-  const recorded = fixtureHistory(recordedOwnershipGate);
+  const recorded = discoveryFixture(recordedOwnershipGate);
 
   // The fixture is that generation only if it asked exactly once and never
   // named the retirement.
@@ -463,7 +471,7 @@ test("the ownership fixture fails replay once its recorded read is changed", asy
   // ownership read was recorded would pass the test above for the wrong
   // reason. A bare `deprecatePatch` of the ownership patch is exactly such a
   // change, and fails here the same way.
-  const tampered = historyFromJSON(
+  const tampered = discoveryFixture(
     JSON.parse(
       JSON.stringify(recordedOwnershipGate).replace(
         `"name":"${OWNERSHIP.activityType}"`,
@@ -479,7 +487,7 @@ test("the ownership fixture fails replay once its recorded read is changed", asy
 }, 120_000);
 
 test("a discovery recorded before the ownership read still replays", async () => {
-  const recorded = fixtureHistory(recordedOwnershipGate);
+  const recorded = discoveryFixture(recordedOwnershipGate);
   const preChange = historyWithoutPatchedActivity(recorded, OWNERSHIP);
 
   // The strip removed both the marker and the read; one that matched neither
@@ -494,7 +502,7 @@ test("a discovery recorded before the ownership read still replays", async () =>
 }, 120_000);
 
 test("a discovery that recorded the ownership retirement marker still replays", async () => {
-  const recorded = fixtureHistory(recordedRetiredOwnershipDiscovery);
+  const recorded = discoveryFixture(recordedRetiredOwnershipDiscovery);
 
   expect(markersFor(recorded, SCOUT_POSTMATCH_OWNERSHIP_RETIRED_PATCH)).toBe(1);
 
@@ -558,7 +566,10 @@ test("a prematch discovery recorded before the maintenance tail still replays", 
 }, 120_000);
 
 test("a prematch poll that recorded the maintenance marker still replays", async () => {
-  const recorded = fixtureHistory(recordedMaintenancePoll);
+  const recorded = recordedUnderRenamedType(
+    recordedMaintenancePoll,
+    SCOUT_WORKFLOW_NAMES.prematchDiscovery,
+  );
 
   expect(markersFor(recorded, MAINTENANCE.patchId)).toBe(1);
 

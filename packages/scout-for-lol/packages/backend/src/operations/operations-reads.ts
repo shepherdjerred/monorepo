@@ -5,7 +5,7 @@ import {
 } from "@scout-for-lol/domain/identity/brands.ts";
 import type { NotificationIntentState } from "@scout-for-lol/domain/notifications/intent.ts";
 import { SCOUT_MATCH_RECEIPT_KINDS } from "@scout-for-lol/temporal/match-receipts";
-import { SCOUT_PIPELINE_START_WORKFLOW_TYPES } from "@scout-for-lol/temporal/identifiers";
+import { SCOUT_PIPELINE_WORKFLOW_NAMES } from "@scout-for-lol/temporal/identifiers";
 import { prisma } from "#src/database/index.ts";
 import {
   getMatchPipelineState,
@@ -230,7 +230,7 @@ export async function readOperationsQueues(args: {
       after: cursorFor("liveRecoveryBatches"),
     }),
     listUnacceptedWorkflowStarts(prisma, {
-      workflowTypes: SCOUT_PIPELINE_START_WORKFLOW_TYPES,
+      workflowTypes: SCOUT_PIPELINE_WORKFLOW_NAMES,
       limit,
       after: startsAfter,
     }),

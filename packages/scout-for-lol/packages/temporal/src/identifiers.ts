@@ -68,26 +68,22 @@ export type ScoutPipelineWorkflowName =
   (typeof SCOUT_PIPELINE_WORKFLOW_NAMES)[number];
 
 // ───────────────────────────────────────────────────────────────────────────
-// The generation rename, staged across releases
+// The generation rename, as history
 // ───────────────────────────────────────────────────────────────────────────
 
 /**
  * The Workflow type each pipeline Workflow was issued under before the rename.
  *
- * Temporal resolves a Workflow by its type name, and every worker that can run
- * a Scout Workflow has to know a name before anything issues it: beta's routed
- * Worker Deployment build, prod's embedded poller, and the central Temporal
- * worker that owns the Schedules all update on their own schedules. So the
- * rename lands in steps. The first registered the renamed names beside these
- * while still issuing these. This one issues the renamed names
- * (`SCOUT_WORKFLOW_NAMES`) from Schedules and clients, and from inside a
- * Workflow behind the `scout-generation-rename` patch, because a child or
- * Activity type is checked on replay and an open history recorded these. The
- * bundle still exports each Workflow under this name as an alias, so open
- * executions of it keep running; a later release drops the aliases once none
- * is left running.
+ * Nothing registers these names any more: the bundle exports only the renamed
+ * Workflows, so an execution still running under one of these types could not
+ * make progress, and the release that dropped them waited for none to be left.
+ * They remain for two readers that outlive the rename. `ScoutWorkflowStart`
+ * rows keep the type they were requested under (`scoutRenamedWorkflowType`).
+ * And a history recorded before the `scout-generation-rename` patch named
+ * these types for its children, so replaying one has to issue them again
+ * (`workflows/generation-rename.ts`).
  *
- * The same staging applies to Activities (`scoutPreRenameActivityType`).
+ * The same holds for Activities (`scoutPreRenameActivityType`).
  */
 export const SCOUT_PRE_RENAME_WORKFLOW_TYPES = {
   [SCOUT_WORKFLOW_NAMES.postMatchDiscovery]:
@@ -113,13 +109,6 @@ export const SCOUT_PRE_RENAME_WORKFLOW_TYPES = {
 export type ScoutRenamedWorkflowName =
   keyof typeof SCOUT_PRE_RENAME_WORKFLOW_TYPES;
 
-/** Both names a pipeline Workflow is registered under during the rename. */
-export function scoutWorkflowTypesOf(
-  workflowType: ScoutRenamedWorkflowName,
-): readonly [string, string] {
-  return [workflowType, SCOUT_PRE_RENAME_WORKFLOW_TYPES[workflowType]];
-}
-
 const RENAMED_WORKFLOW_TYPE_OF: ReadonlyMap<string, string> = new Map(
   Object.entries(SCOUT_PRE_RENAME_WORKFLOW_TYPES).map(
     ([renamed, preRename]) => [preRename, renamed],
@@ -131,21 +120,12 @@ const RENAMED_WORKFLOW_TYPE_OF: ReadonlyMap<string, string> = new Map(
  * a pre-rename one, and the type itself for anything else.
  *
  * Durable rows keep the type they were written with, so anything that compares
- * a recorded type with one issued now compares them under this name. Unlike
- * the aliases this outlives the rename's releases: the rows are history and
- * are never rewritten.
+ * a recorded type with one issued now compares them under this name. The rows
+ * are history and are never rewritten, so this outlives the rename.
  */
 export function scoutRenamedWorkflowType(workflowType: string): string {
   return RENAMED_WORKFLOW_TYPE_OF.get(workflowType) ?? workflowType;
 }
-
-/**
- * Every Workflow type a pipeline start row can carry across the rename: rows
- * keep the type they were requested under, so a scan filtered on one name
- * alone would strand the rows written under the other.
- */
-export const SCOUT_PIPELINE_START_WORKFLOW_TYPES: readonly string[] =
-  SCOUT_PIPELINE_WORKFLOW_NAMES.flatMap((name) => scoutWorkflowTypesOf(name));
 
 /**
  * The two pipeline Activities whose names did not change: one never carried
@@ -159,35 +139,15 @@ const UNRENAMED_PIPELINE_ACTIVITIES: ReadonlySet<string> = new Set([
 /**
  * The name an Activity was registered under before the rename: the
  * `V2`-suffixed name for a renamed pipeline Activity, and the name itself for
- * anything else. A Workflow whose history was recorded before the
- * `scout-generation-rename` patch keeps scheduling pipeline Activities under
- * this name, for the reason `SCOUT_PRE_RENAME_WORKFLOW_TYPES` gives, so
- * Activity workers register both.
+ * anything else. A history recorded before the `scout-generation-rename` patch
+ * scheduled pipeline Activities under this name, so replaying one issues it
+ * again. No Activity worker registers it any more.
  */
 export function scoutPreRenameActivityType(name: string): string {
   return Object.hasOwn(SCOUT_PIPELINE_ACTIVITY_QUEUE_CLASSES, name) &&
     !UNRENAMED_PIPELINE_ACTIVITIES.has(name)
     ? `${name}V2`
     : name;
-}
-
-/**
- * Register every renamed pipeline Activity under its pre-rename name as well.
- *
- * New histories schedule pipeline Activities under their renamed names, but a
- * history recorded before the `scout-generation-rename` patch keeps scheduling
- * the old ones, and an Activity task scheduled before the deploy retries
- * against the new worker, so the old names must still resolve.
- */
-export function withPreRenameActivityNames(
-  activities: object,
-): Record<string, unknown> {
-  const registered: Record<string, unknown> = { ...activities };
-  for (const [name, implementation] of Object.entries(activities)) {
-    const preRename = scoutPreRenameActivityType(name);
-    if (preRename !== name) registered[preRename] = implementation;
-  }
-  return registered;
 }
 
 /**

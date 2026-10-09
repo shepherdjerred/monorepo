@@ -24,8 +24,13 @@ import {
  * them. Everything recorded with this patch, including an open execution that
  * reaches its first live Workflow Task after the deploy, issues the renamed
  * types from then on, and a long-lived Workflow continues as new under its
- * renamed type. Retire with `deprecatePatch` once no execution predating it
- * can still replay.
+ * renamed type.
+ *
+ * Nothing registers the pre-rename types any more, so the unpatched branches
+ * below exist only to replay a history recorded before the patch. An
+ * execution still running without the marker would schedule Activities and
+ * start children that no worker accepts. Retire with `deprecatePatch` once
+ * no history predating the patch is retained for replay.
  */
 export const SCOUT_GENERATION_RENAME_PATCH = "scout-generation-rename";
 
@@ -64,9 +69,7 @@ export async function continueAsNewAsRenamed<F extends Workflow>(
  * The patch is consulted when an Activity is called, which is when it is
  * scheduled, rather than when it is looked up, so a proxy destructured early
  * still decides at the command it gates; and only for an Activity whose name
- * changed, so an unrenamed one never needs a marker. Every Activity worker
- * registers both names (`withPreRenameActivityNames`), so either is safe to
- * issue.
+ * changed, so an unrenamed one never needs a marker.
  */
 export function renamedPipelineActivities<
   Activities extends Partial<ScoutPipelineActivities>,
