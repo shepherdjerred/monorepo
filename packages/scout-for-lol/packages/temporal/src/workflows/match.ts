@@ -49,6 +49,7 @@ import {
   processDiscoveredMatchesThroughDispatcher,
 } from "./shared-match-dispatch.ts";
 import { replayRetiredPostmatchOwnershipRead } from "./retired-ownership.ts";
+import { issuedWorkflowType } from "./generation-rename.ts";
 
 /**
  * One discovered match as the loop consumes it: the id always, and the fields
@@ -329,7 +330,7 @@ export async function processMatchAsChild(
 ): Promise<boolean> {
   try {
     const child = await startChild<typeof scoutMatchProcessingWorkflow>(
-      SCOUT_WORKFLOW_NAMES.matchProcessing,
+      issuedWorkflowType(SCOUT_WORKFLOW_NAMES.matchProcessing),
       {
         workflowId: scoutMatchProcessingWorkflowId(stage, match.riotMatchId),
         workflowIdReusePolicy: "ALLOW_DUPLICATE_FAILED_ONLY",
@@ -439,7 +440,7 @@ export async function startMatchFanOutChildren(
   for (const child of children) {
     if (!IMPLEMENTED_FAN_OUT_WORKFLOWS.includes(child.workflowType)) continue;
     try {
-      await startChild(child.workflowType, {
+      await startChild(issuedWorkflowType(child.workflowType), {
         workflowId: child.workflowId,
         workflowIdReusePolicy:
           child.family === "notifications"

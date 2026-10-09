@@ -20,6 +20,7 @@ import {
   scoutRecoveryBatchInputCodec,
 } from "#src/workflow-contracts.ts";
 import { IMPLEMENTED_FAN_OUT_WORKFLOWS } from "./match-fan-out.ts";
+import { issuedWorkflowType } from "./generation-rename.ts";
 
 /**
  * Turning one reconciliation page into child starts.
@@ -162,7 +163,7 @@ async function startReconciliationChild(
 ): Promise<boolean> {
   if (!RECONCILIATION_STARTABLE.has(child.workflowType)) return false;
   try {
-    await startChild(child.workflowType, {
+    await startChild(issuedWorkflowType(child.workflowType), {
       workflowId: child.workflowId,
       workflowIdReusePolicy: child.reuse,
       taskQueue: scoutTaskQueues(stage).workflow,
