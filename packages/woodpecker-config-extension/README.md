@@ -78,6 +78,8 @@ the replacement verification intact and emits a bounded warning.
 
 Draft pushes run a three-minute preflight for formatting, frozen lockfile
 consistency, conflict markers and secrets in the proposed commit history.
+The filtered install includes root formatting plugins and script dependencies,
+with lifecycle scripts disabled.
 They create no merge verdict, browser/Tofu/rehearsal jobs or review poller.
 Hosted automation without exact-head approval keeps a credentialless preflight.
 Ready PRs run the full affected verification graph and automated review.

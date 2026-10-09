@@ -239,6 +239,10 @@ describe("signed workflow routing", () => {
       const config = result.configs[0];
       expect(config?.data).toContain("180s");
       expect(config?.data).toContain("--ignore-scripts");
+      expect(config?.data.match(/--filter /gu)).toHaveLength(2);
+      expect(config?.data).toContain("@shepherdjerred/monorepo");
+      expect(config?.data).toContain("@shepherdjerred/root-scripts");
+      expect(config?.data).not.toContain("--production");
       expect(config?.data).not.toContain("TURBO_TOKEN");
       expect(config?.data).not.toContain("GITHUB_REVIEW_TOKEN");
       if (credentialless) {

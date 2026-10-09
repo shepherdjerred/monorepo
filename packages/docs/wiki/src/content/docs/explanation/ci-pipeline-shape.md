@@ -36,9 +36,11 @@ Three consequences are worth stating plainly:
   `Content-Digest` header it covers — before reading anything.
 
 Feature-branch pushes and ordinary pull-request metadata edits emit one
-clone-free no-op workflow. Marking a draft ready selects full PR verification
-without requiring another commit. The signed ready event preserves the PR's
-credential approval and cache trust. Pull requests select from changed files. Main pushes
+clone-free no-op workflow. Draft PR pushes run a bounded preflight for formatting,
+lockfile consistency, conflict markers and secrets. That feedback emits no merge
+verdict. Marking a draft ready selects full PR verification without requiring
+another commit. The signed ready event preserves the PR's credential approval
+and cache trust. Ready pull requests select from changed files. Main pushes
 compare the head to the last fully green main build, so a failed release's
 changes stay selected on the next push. If that comparison cannot prove the
 complete diff, the extension emits the full graph. The Linux `verify` workflow

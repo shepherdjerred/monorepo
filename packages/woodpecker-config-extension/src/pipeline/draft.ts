@@ -35,7 +35,9 @@ export function draftPreflightStep(
     image: images.base,
     commands: [
       "MISE_TOOLCHAIN_SCOPE=preflight . ci/scripts/toolchain.sh",
-      "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production --ignore-scripts",
+      // Prettier resolves its configured Astro plugin from the workspace root.
+      // Include root tooling while limiting the install to these two packages.
+      "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts' --ignore-scripts",
       'git fetch --no-tags --depth=100 origin "$CI_COMMIT_SHA"',
       'git fetch --no-tags --depth=100 origin "$CI_COMMIT_TARGET_BRANCH"',
       'draft_base="$(git merge-base HEAD FETCH_HEAD)"',
