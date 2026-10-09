@@ -33,8 +33,10 @@ own Paper container.
 `src/protocol/bridge.ts` mirrors MCBridge (`packages/the-storm/plugin/bridge`).
 Routes live under `/v1` and require `Authorization: Bearer <MC_BRIDGE_TOKEN>`;
 schemas are strict so plugin/harness skew fails as a `contract` error instead of
-a misread field. Region reads return a palette plus base64 little-endian uint32
-indices in YZX order.
+a misread field. Event reads are oldest-first and accept at most 500 events per
+page; live log tails paginate those bounded pages to cover the 2,000-event ring
+window. Region reads return a palette plus base64 little-endian uint32 indices
+in YZX order.
 
 ## Sandboxes
 
