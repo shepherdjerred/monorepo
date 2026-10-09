@@ -13,6 +13,7 @@ function validateOptions(
     main: boolean;
     timeout?: string | undefined;
     head?: string | undefined;
+    since?: string | undefined;
     until: string;
   },
   positionals: string[],
@@ -21,11 +22,16 @@ function validateOptions(
     throw new Error("Unexpected positional arguments");
   if (
     positionals.length > 0 &&
-    (action === "main" || action === "load" || values.main)
+    (action === "main" ||
+      action === "load" ||
+      action === "timings" ||
+      values.main)
   )
     throw new Error("Unexpected positional arguments");
   if (action !== "explain" && values.main)
     throw new Error("--main is only valid with ci explain");
+  if (action !== "timings" && values.since !== undefined)
+    throw new Error("--since is only valid with ci timings");
   if (
     action !== "wait" &&
     (values.timeout !== undefined || values.until !== "first-failure")
@@ -33,7 +39,10 @@ function validateOptions(
     throw new Error("--timeout and --until are wait options");
   if (
     values.head !== undefined &&
-    (action === "main" || action === "load" || values.main)
+    (action === "main" ||
+      action === "load" ||
+      action === "timings" ||
+      values.main)
   )
     throw new Error("--head requires a PR wait or explanation");
 }
@@ -57,6 +66,7 @@ export async function handleCiCommand(
   explain [PR]    Print failures, bounded logs, review feedback, and deeper commands
   main            Show main's current verification and latest completed verdict
   load            Show Woodpecker/Kueue queues and CPU, memory, disk, I/O pressure
+  timings         Report recent latency by actual workflow class and attempt
 
 Options:
   --json                       One final JSON report on stdout
@@ -64,6 +74,7 @@ Options:
   --until first-failure|settled Default: first-failure; settled collects blocking results
   --timeout <duration>         Optional deadline (e.g. 2h); default: unlimited
   --main                       explain main's failure without needing a PR
+  --since <duration>           timings history window (default: 72h)
 
 Wait exits: 0 ready, 1 check failure/conflict, 2 upstream/usage error,
 3 human intervention, 4 head changed, 5 main red, 6 timeout, 7 PR closed/merged.
@@ -73,7 +84,7 @@ starting another status poll. Red main: report and await instructions.
       return;
     }
     const action = z
-      .enum(["wait", "explain", "main", "load"])
+      .enum(["wait", "explain", "main", "load", "timings"])
       .parse(subcommand);
     const { values, positionals } = parseArgs({
       args,
@@ -83,6 +94,7 @@ starting another status poll. Red main: report and await instructions.
         head: { type: "string" },
         until: { type: "string", default: "first-failure" },
         timeout: { type: "string" },
+        since: { type: "string" },
         main: { type: "boolean", default: false },
       },
     });
@@ -100,6 +112,7 @@ starting another status poll. Red main: report and await instructions.
         values.timeout === undefined ? undefined : parseTimeout(values.timeout),
       until: z.enum(["first-failure", "settled"]).parse(values.until),
       main: values.main,
+      sinceMs: parseTimeout(values.since ?? "72h", "--since"),
     };
     await resolveCredentials(requiredCredentialsFor("ci", action));
     await ciCommand(action, positionals[0], options);

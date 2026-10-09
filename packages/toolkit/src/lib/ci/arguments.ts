@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export function parseTimeout(value: string): number {
+export function parseTimeout(value: string, option = "--timeout"): number {
   const match = /^(\d+(?:\.\d+)?)(ms|[smh])$/.exec(value);
   const unit = match?.[2];
   const multiplier =
@@ -14,7 +14,7 @@ export function parseTimeout(value: string): number {
             ? 3_600_000
             : null;
   if (match === null || multiplier === null)
-    throw new Error("--timeout requires a duration such as 30m or 2h");
+    throw new Error(`${option} requires a duration such as 30m or 2h`);
   return z
     .number()
     .int()

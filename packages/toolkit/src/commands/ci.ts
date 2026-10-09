@@ -9,6 +9,8 @@ import { ciLoad, formatLoad } from "#lib/ci/load.ts";
 import { pipelineDiagnostics } from "#lib/ci/diagnostics.ts";
 import { sanitizeText } from "#lib/ci/redaction.ts";
 import { getMainStatus } from "#lib/ci/main.ts";
+import { pipelineHistory } from "#lib/ci/history.ts";
+import { formatLatency, latencyReport } from "#lib/ci/latency.ts";
 import {
   mainFailure,
   summarizeMain,
@@ -22,6 +24,7 @@ export type CiOptions = {
   timeoutMs?: number | undefined;
   until: "first-failure" | "settled";
   main: boolean;
+  sinceMs?: number | undefined;
 };
 
 async function reportResult(
@@ -188,7 +191,7 @@ async function execute(
 }
 
 export async function ciCommand(
-  action: "wait" | "explain" | "load" | "main",
+  action: "wait" | "explain" | "load" | "main" | "timings",
   pr: string | undefined,
   options: CiOptions,
 ): Promise<void> {
@@ -196,6 +199,21 @@ export async function ciCommand(
   try {
     const config = await loadWoodpeckerConfig();
     secrets.push(config.token);
+    if (action === "timings") {
+      const until = Date.now() / 1000;
+      const since = until - (options.sinceMs ?? 259_200_000) / 1000;
+      const pipelines = await pipelineHistory(config, since, until);
+      const report = latencyReport(pipelines, since, until);
+      console.log(
+        sanitizeText(
+          options.json
+            ? JSON.stringify(report, null, 2)
+            : formatLatency(report),
+          secrets,
+        ),
+      );
+      return;
+    }
     if (action === "load") {
       await showLoad(config, options.json);
       return;

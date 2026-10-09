@@ -73,6 +73,7 @@ toolkit ci wait 3447 --timeout 2h       # Optional deadline; no default deadline
 toolkit ci explain 3447                # Current blockers and bounded failure logs
 toolkit ci main                        # Current main verification and last completed verdict
 toolkit ci load                        # Queue, compute/gate admission, CPU/memory/disk/I/O
+toolkit ci timings --since 72h --json   # Recent timing cohorts and per-workflow phases
 toolkit pr review list 3447 --json      # Human and provider feedback with full bodies
 ```
 
@@ -116,6 +117,21 @@ overlap and must not be added together to estimate elapsed pipeline time.
 Missing timestamps remain unknown, including activity totals with incomplete
 workflow evidence. Live intervals account for local clock skew. Completion delay
 is a lower bound because the pipeline API does not identify required dependencies.
+
+`timings` reads every pipeline created in the requested window, with four detail
+requests at a time. It groups actual workflow shapes into draft, noop, ready PR,
+main, maintenance, and other work, then separates attempts and outcomes. Each
+cohort reports successful latency sample counts and nearest-rank p50/p95 values;
+failed or canceled runs do not become successful latency samples. Individual
+step distributions expose checkout, review, verification, publication, and
+deployment costs. They overlap and are not additive. Bootstrap embedded inside
+a command is included in that command until separately instrumented.
+
+The native API exposes only the latest attempt and cannot identify reused review
+verdicts. The report marks review freshness unknown rather than treating short
+reruns as fresh verification. Historical full verification of drafts also has
+its own cohort. At least 30 fresh ready heads are needed to assess the target
+p95; this report alone does not certify that SLO.
 
 Main is checked automatically. Push runs and full manual main runs contribute
 to its verdict. A manual run must include verification, release admission,
