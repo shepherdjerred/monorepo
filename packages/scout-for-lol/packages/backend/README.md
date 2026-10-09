@@ -10,7 +10,7 @@ The Scout for LoL backend service. One Bun image that runs:
 
 One image, but not necessarily one process: see [Runtime roles](#runtime-roles).
 
-Application state (subscriptions, competitions, guilds) is PostgreSQL 16
+Application state (subscriptions, competitions, guilds) is PostgreSQL 18
 managed by Prisma (`@prisma/adapter-pg`). Report images are rendered by
 `@scout-for-lol/report`.
 

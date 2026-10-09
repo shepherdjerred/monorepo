@@ -43,7 +43,7 @@ export function createSingleAppPostgreSQL(
       numberOfInstances: 1, // Single node setup for homelab
       teamId: "homelab",
       postgresql: {
-        version: PostgresqlSpecPostgresqlVersion.VALUE_16,
+        version: PostgresqlSpecPostgresqlVersion.VALUE_18,
         parameters: {
           max_connections: "100",
           shared_buffers: "128MB",

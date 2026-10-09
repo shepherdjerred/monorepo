@@ -27,7 +27,7 @@ export function createScoutPostgreSQLDatabase(chart: Chart, stage: Stage) {
       numberOfInstances: 1,
       teamId: "homelab",
       postgresql: {
-        version: PostgresqlSpecPostgresqlVersion.VALUE_16,
+        version: PostgresqlSpecPostgresqlVersion.VALUE_18,
         parameters: {
           max_connections: "100",
           shared_buffers: "128MB",

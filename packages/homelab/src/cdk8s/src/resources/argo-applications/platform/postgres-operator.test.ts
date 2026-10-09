@@ -15,6 +15,9 @@ const PostgresOperatorApplicationSchema = z.object({
             kubernetes_use_configmaps: z.literal(true),
             workers: z.literal(1),
           }),
+          configMajorVersionUpgrade: z.object({
+            major_version_upgrade_mode: z.literal("off"),
+          }),
           configKubernetes: z.object({
             enable_cross_namespace_secret: z.literal(true),
             enable_pod_disruption_budget: z.literal(false),
@@ -46,6 +49,9 @@ describe("Postgres Operator Argo CD application", () => {
     expect(values.configGeneral).toEqual({
       kubernetes_use_configmaps: true,
       workers: 1,
+    });
+    expect(values.configMajorVersionUpgrade).toEqual({
+      major_version_upgrade_mode: "off",
     });
     expect(values.configKubernetes).toEqual(
       expect.objectContaining({
