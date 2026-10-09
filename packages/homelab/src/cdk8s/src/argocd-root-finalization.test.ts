@@ -6,6 +6,7 @@ import { z } from "zod";
 import {
   runArgocdCommand,
   SyncInfoEntrySchema,
+  SyncRequestSchema,
 } from "./argocd-script-support.ts";
 
 const PACKAGE_ROOT = path.resolve(import.meta.dir, "../../..");
@@ -27,23 +28,6 @@ const PRUNE_PHASE_INFO = {
   name: "ci.sjer.red/release-phase",
   value: "prune",
 } as const;
-
-const SyncRequestSchema = z.object({
-  infos: z.array(SyncInfoEntrySchema),
-  manifests: z.array(z.string()).optional(),
-  revision: z.string().optional(),
-  resources: z.array(
-    z.object({
-      group: z.string(),
-      kind: z.string(),
-      name: z.string(),
-      // Modelled because Zod strips unknown keys: without it the fixture
-      // silently dropped the namespace before serving the operation back, so
-      // no test could reach the parsing this file exercises.
-      namespace: z.string().optional(),
-    }),
-  ),
-});
 
 const RootSyncRequestSchema = z.object({
   infos: z.array(SyncInfoEntrySchema),

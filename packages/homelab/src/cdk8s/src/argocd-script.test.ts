@@ -56,6 +56,19 @@ const StagedAdmissionPolicy = JSON.stringify({
   spec: { failurePolicy: "Fail" },
 });
 
+const StagedPriorityClasses = ["draft", "main", "ready"].map((priority) =>
+  JSON.stringify({
+    apiVersion: "kueue.x-k8s.io/v1beta2",
+    kind: "WorkloadPriorityClass",
+    metadata: {
+      name: `ci-${priority}`,
+      namespace: "argocd",
+      annotations: { "argocd.argoproj.io/sync-wave": "1" },
+    },
+    value: 100,
+  }),
+);
+
 const StagedExternalApplication = JSON.stringify({
   apiVersion: "argoproj.io/v1alpha1",
   kind: "Application",
@@ -740,6 +753,11 @@ function expectStagedRootRequests(syncBodies: readonly unknown[]): void {
       kind: "ValidatingAdmissionPolicy",
       name: "pvc-backup-policy.sjer.red",
     },
+    ...["draft", "main", "ready"].map((priority) => ({
+      group: "kueue.x-k8s.io",
+      kind: "WorkloadPriorityClass",
+      name: `ci-${priority}`,
+    })),
   ]);
   expect(JSON.parse(applicationManifests[0] ?? "")).toMatchObject({
     spec: { syncPolicy: { automated: { enabled: false } } },
@@ -804,6 +822,7 @@ describe("Argo CD root release staging", () => {
               StagedRepositoryApplication,
               StagedExternalApplication,
               StagedAdmissionPolicy,
+              ...StagedPriorityClasses,
             ],
           });
         }

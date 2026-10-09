@@ -50,6 +50,9 @@ export const SyncRequestSchema = z.object({
       group: z.string(),
       kind: z.string(),
       name: z.string(),
+      // Preserve selectors exactly so tests catch a namespace on a cluster
+      // resource instead of silently stripping it from the observed request.
+      namespace: z.string().optional(),
     }),
   ),
 });
