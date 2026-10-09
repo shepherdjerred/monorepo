@@ -12,6 +12,7 @@ internal struct FacetNativeInspector: View {
     @State private var completing = false
     @State private var fieldAdmissions = 0
     @State private var fields = FacetActionCoordinator()
+    @Environment(\.facetFeedbackOrigin) private var feedbackOrigin
     private enum Field { case title, markdown }
 
     var body: some View {
@@ -23,8 +24,11 @@ internal struct FacetNativeInspector: View {
                 ) {
                     guard !completing, !draft.isDirty else { return }
                     completing = true
+                    let intent = store.feedbackIntent(origin: feedbackOrigin)
                     _Concurrency.Task {
-                        _ = await draft.setCompletion(store: store, window: window)
+                        _ = await FacetFeedbackContext.$intent.withValue(intent) {
+                            await draft.setCompletion(store: store, window: window)
+                        }
                         completing = false
                     }
                 }.buttonStyle(.plain).disabled(draft.isDirty || completing)
@@ -137,9 +141,10 @@ internal struct FacetNativeInspector: View {
 
     private func admit(_ operation: @escaping @MainActor () async -> Void) {
         fieldAdmissions += 1
+        let intent = store.feedbackIntent(origin: feedbackOrigin)
         _Concurrency.Task {
             _ = await fields.submit {
-                await operation()
+                await FacetFeedbackContext.$intent.withValue(intent) { await operation() }
                 return true
             }
             fieldAdmissions -= 1

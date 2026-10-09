@@ -10,6 +10,14 @@
             HorizontalAlignment="Left"
             Spacing="16">
             <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="Settings" />
+            <ToggleSwitch
+                x:Name="TaskSoundsToggle"
+                AutomationProperties.Name="Task sounds"
+                Header="Task sounds"
+                OffContent="Off"
+                OnContent="On"
+                Toggled="TaskSounds_Toggled" />
+            <TextBlock Text="Subtle sounds for adding, completing, deleting and undoing tasks in the active window. Windows volume and mute apply." TextWrapping="Wrap" />
             <TextBlock
                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                 Text="Connect an existing Obsidian Sync vault. Account tokens and vault keys stay in Windows Credential Locker. Local folders are currently read-only."

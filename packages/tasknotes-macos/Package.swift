@@ -146,6 +146,8 @@ let package = Package(
                 .copy("Presentation/FacetPresentationTokens.json"),
                 .copy("Presentation/FacetPresentationSchema.json"),
                 .copy("Presentation/FacetColorPolicy.json"),
+                .copy("Presentation/FacetFeedbackPolicy.json"),
+                .copy("Presentation/FacetFeedbackSchema.json"),
             ],
             swiftSettings: authoredSwiftSettings + [.defaultIsolation(nil)]
         ),
@@ -157,6 +159,8 @@ let package = Package(
                 .copy("Presentation/Sounds/complete.wav"),
                 .copy("Presentation/Sounds/create.wav"),
                 .copy("Presentation/Sounds/delete.wav"),
+                .copy("Presentation/Sounds/reverse.wav"),
+                .copy("Presentation/Sounds/palette.json"),
             ],
             swiftSettings: authoredSwiftSettings + [.defaultIsolation(MainActor.self)]
         ),

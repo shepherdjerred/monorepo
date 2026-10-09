@@ -10,6 +10,7 @@ import TaskNotesKit
 public final class FacetMacEnvironment {
     public let store = FacetStore()
     @ObservationIgnored private var panel: QuickAddPanel?
+    fileprivate var focusRequest = 0
 
     public init() {
         KeyboardShortcuts.onKeyDown(for: .quickAdd) { [weak self] in
@@ -30,12 +31,21 @@ public final class FacetMacEnvironment {
         guard let panel,
             let screen = QuickAddPanel.preferredScreen(pointerAt: NSEvent.mouseLocation)
         else { return }
+        if focusRequest == 0 { resizeQuickAdd(expanded: false) }
         panel.setFrameOrigin(QuickAddPanel.origin(on: screen))
         panel.orderFrontRegardless()
         panel.makeKey()
+        focusRequest += 1
     }
 
     fileprivate func dismissQuickAdd() { panel?.orderOut(nil) }
+    fileprivate func resizeQuickAdd(expanded: Bool) {
+        guard let panel else { return }
+        let top = panel.frame.maxY
+        let maximum = panel.screen?.visibleFrame.height ?? 800
+        panel.setContentSize(CGSize(width: 560, height: min(expanded ? 660 : 420, maximum - 80)))
+        panel.setFrameOrigin(CGPoint(x: panel.frame.minX, y: top - panel.frame.height))
+    }
 }
 
 public struct FacetMacRootView: View {
@@ -136,66 +146,28 @@ internal struct FacetMacSettingsContent: View {
     var body: some View {
         VStack {
             QuickAddSettingsView()
+            GroupBox("Feedback") { FacetFeedbackSettings().padding(8) }
             Button("Connect Obsidian Sync…") { store.showsAccount = true }
             Button("Sign out of Obsidian") {
                 _Concurrency.Task { await store.signOut() }
             }
-        }.padding().frame(width: 480, height: 320)
+        }.padding().frame(width: 480).frame(minHeight: 420)
     }
 }
 
 private struct FacetMacQuickCapture: View {
     let environment: FacetMacEnvironment
-    @State private var draft = FacetCaptureDraft()
-    @State private var owningProfileID: String?
-    @FocusState private var focused: Bool
     var body: some View {
         let store = environment.store
-        VStack(alignment: .leading, spacing: 8) {
-            TextField("Add a task", text: $draft.input)
-                .font(.title3).textFieldStyle(.plain).focused($focused)
-                .disabled(store.selectedProfileID == nil)
-                .accessibilityIdentifier(AccessibilityIdentifier.QuickAdd.field)
-                .onSubmit {
-                    guard let profileID = owningProfileID,
-                        draft.begin(store: store, profileID: profileID)
-                    else { return }
-                    _Concurrency.Task {
-                        let applied = await draft.submit(store: store)
-                        if applied && draft.input.isEmpty { environment.dismissQuickAdd() }
-                    }
-                }
-            if draft.isSubmitting { ProgressView().controlSize(.small) }
-            if let error = draft.error {
-                Text(error).font(.caption).foregroundStyle(.red)
-                Button("Discard draft") { _Concurrency.Task { await draft.discard(store: store) } }
-                    .disabled(draft.isSubmitting)
-            } else {
-                Text(
-                    store.selectedProfileID == nil
-                        ? "Open a vault in Facet before adding tasks."
-                        : "Return adds the task · Escape closes"
-                ).font(.caption).foregroundStyle(.secondary)
-            }
-        }.padding(20).frame(width: 560).frame(minHeight: 118)
-            .onAppear {
-                if draft.input.isEmpty, !draft.hasRetainedSubmission {
-                    owningProfileID = store.selectedProfileID
-                }
-                if let owningProfileID {
-                    draft.registerLifecycle(store: store, profileID: owningProfileID)
-                }
-                focused = true
-            }
-            .onChange(of: draft.input) { previous, value in
-                if previous.isEmpty, !value.isEmpty, !draft.hasRetainedSubmission {
-                    owningProfileID = store.selectedProfileID
-                    if let owningProfileID {
-                        draft.registerLifecycle(store: store, profileID: owningProfileID)
-                    }
-                }
-            }
-            .onExitCommand { environment.dismissQuickAdd() }
-            .accessibilityIdentifier(AccessibilityIdentifier.QuickAdd.panel)
+        FacetCaptureForm(
+            store: store, focusRequest: environment.focusRequest,
+            retainedPanel: true, close: environment.dismissQuickAdd,
+            expandedChanged: environment.resizeQuickAdd
+        )
+        .onExitCommand { environment.dismissQuickAdd() }
+        .modifier(
+            FacetFeedbackScene(store: store, origin: FacetFeedbackOrigin(surface: .quickAdd))
+        )
+        .accessibilityIdentifier(AccessibilityIdentifier.QuickAdd.panel)
     }
 }

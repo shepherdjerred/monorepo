@@ -82,6 +82,27 @@ enum OffscreenSnapshot {
         highContrast: Bool = false
     ) throws -> RenderedSnapshot {
         let rep = try render(view, size: size, appearance: appearance, highContrast: highContrast)
+        return try save(rep, named: name, size: size, appearance: appearance)
+    }
+
+    /// Actor-backed parser and Undo reads need a real concurrency suspension,
+    /// rather than only synchronous run-loop passes, before native rasterization.
+    static func writeSettled(
+        _ view: some View, named name: String, size: CGSize, appearance: SnapshotAppearance
+    ) async throws -> RenderedSnapshot {
+        let surface = makeSurface(view, size: size, appearance: appearance, highContrast: false)
+        defer { surface.close() }
+        settle(surface.hosting)
+        try await _Concurrency.Task.sleep(for: .milliseconds(350))
+        settle(surface.hosting)
+        let rep = try bitmap(size: size)
+        surface.hosting.cacheDisplay(in: surface.hosting.bounds, to: rep)
+        return try save(rep, named: name, size: size, appearance: appearance)
+    }
+    private static func save(
+        _ rep: NSBitmapImageRep, named name: String, size: CGSize,
+        appearance: SnapshotAppearance
+    ) throws -> RenderedSnapshot {
         guard let png = rep.representation(using: .png, properties: [:]) else {
             throw Failure.pngEncodingRefused(name)
         }
@@ -106,6 +127,28 @@ enum OffscreenSnapshot {
         appearance: SnapshotAppearance,
         highContrast: Bool
     ) throws -> NSBitmapImageRep {
+        let surface = makeSurface(
+            view, size: size, appearance: appearance, highContrast: highContrast)
+        defer { surface.close() }
+        settle(surface.hosting)
+        let rep = try bitmap(size: size)
+        surface.hosting.cacheDisplay(in: surface.hosting.bounds, to: rep)
+        return rep
+    }
+    private struct Surface {
+        let hosting: NSView
+        let window: NSWindow
+        let previousAppearance: NSAppearance?
+        func close() {
+            window.contentView = nil
+            window.close()
+            NSApplication.shared.appearance = previousAppearance
+        }
+    }
+    private static func makeSurface(
+        _ view: some View, size: CGSize,
+        appearance: SnapshotAppearance, highContrast: Bool
+    ) -> Surface {
         prepareApplication()
 
         let appearanceName =
@@ -120,7 +163,6 @@ enum OffscreenSnapshot {
         // native control text in the process's initial light appearance.
         let previousAppearance = NSApplication.shared.appearance
         NSApplication.shared.appearance = nsAppearance
-        defer { NSApplication.shared.appearance = previousAppearance }
         let hosting = NSHostingView(
             rootView:
                 view
@@ -148,13 +190,7 @@ enum OffscreenSnapshot {
         window.appearance = nsAppearance
         window.contentView = hosting
 
-        settle(hosting)
-
-        let rep = try bitmap(size: size)
-        hosting.cacheDisplay(in: hosting.bounds, to: rep)
-        window.contentView = nil
-        window.close()
-        return rep
+        return Surface(hosting: hosting, window: window, previousAppearance: previousAppearance)
     }
 
     /// Give AppKit and SwiftUI the passes they need before the tree is stable.
@@ -166,7 +202,7 @@ enum OffscreenSnapshot {
     ///
     /// A bounded number of turns rather than a sleep: this yields to the main
     /// run loop and returns as soon as it has nothing left to do.
-    private static func settle(_ hosting: NSHostingView<some View>) {
+    private static func settle(_ hosting: NSView) {
         for _ in 0..<8 {
             hosting.layoutSubtreeIfNeeded()
             hosting.displayIfNeeded()

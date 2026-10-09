@@ -67,6 +67,11 @@ internal sealed class AppSettingsService : IFacetSecretStore, IShellPreferencesS
 
     public ShellPreferences LoadShell() => ShellPreferencesCodec.Load(_localSettings.Values);
 
+    internal bool TaskSoundsNeedsRecovery =>
+        _localSettings.Values.TryGetValue("task-sounds", out object? value) && value is not bool;
+
+    internal void SaveTaskSounds(bool enabled) => _localSettings.Values["task-sounds"] = enabled;
+
     public void Save(ShellPreferences preferences) =>
         ShellPreferencesCodec.Save(_localSettings.Values, preferences);
 

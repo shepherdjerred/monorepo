@@ -1,5 +1,5 @@
 public import SwiftUI
-import TaskNotesKit
+public import TaskNotesKit
 import UniformTypeIdentifiers
 
 private struct ReminderProjectionIdentity: Hashable {
@@ -103,6 +103,7 @@ public struct FacetRootView: View {
             } message: {
                 Text(store.savedNotice ?? store.error ?? importFailure ?? "")
             }
+            .modifier(FacetFeedbackScene(store: store))
     }
 
     @State private var importFailure: String?
@@ -128,27 +129,49 @@ public struct FacetRootView: View {
 public struct FacetCaptureForm: View {
     @Bindable private var store: FacetStore
     @State private var draft: FacetCaptureDraft
-    @State private var bodyText = ""
-    @State private var due = ""
-    @State private var scheduled = ""
-    @State private var priority = ""
-    @State private var projects: [String] = []
-    @State private var contexts: [String] = []
-    @State private var tags: [String] = []
+    @State private var bodyOverride: String?
     @State private var overrides: [String: FacetValue] = [:]
     @State private var recovery = false
     @State private var showsDiscard = false
     @State private var lifecycleRegistration = UUID()
     @State private var lifecycleError: String?
     @State private var discarding = false
-    private let profileID: String?
+    @State private var detailsExpanded = false
+    @State private var preview = FacetCapturePreview()
+    @State private var previewRevision = 0
+    @State private var profileID: String?
+    private let focusRequest: Int
+    private let retainedPanel: Bool
+    private let close: (@MainActor () -> Void)?
+    private let expandedChanged: (@MainActor (Bool) -> Void)?
     @FocusState private var focused: Bool
-    public init(store: FacetStore) {
+    @Environment(\.facetFeedbackOrigin) private var feedbackOrigin
+    private struct PreviewIdentity: Hashable {
+        let input: String
+        let revision: Int
+        let profileID: String?
+    }
+    public init(
+        store: FacetStore, draft: FacetCaptureDraft? = nil, preview: FacetCapturePreview? = nil,
+        detailsExpanded: Bool = false, notes: String? = nil,
+        properties: [String: FacetValue] = [:],
+        focusRequest: Int = 0, retainedPanel: Bool = false,
+        close: (@MainActor () -> Void)? = nil,
+        expandedChanged: (@MainActor (Bool) -> Void)? = nil
+    ) {
         self.store = store
-        profileID = store.selectedProfileID
-        let capture = FacetCaptureDraft()
-        capture.input = store.captureTitle
+        _profileID = State(initialValue: store.selectedProfileID)
+        self.focusRequest = focusRequest
+        self.retainedPanel = retainedPanel
+        self.close = close
+        self.expandedChanged = expandedChanged
+        let capture = draft ?? FacetCaptureDraft()
+        if draft == nil { capture.input = store.captureTitle }
         _draft = State(initialValue: capture)
+        _preview = State(initialValue: preview ?? FacetCapturePreview())
+        _detailsExpanded = State(initialValue: detailsExpanded)
+        _bodyOverride = State(initialValue: notes)
+        _overrides = State(initialValue: properties)
     }
 
     public var body: some View {
@@ -158,33 +181,62 @@ public struct FacetCaptureForm: View {
                     TextField("Task title", text: $draft.input, axis: .vertical).font(
                         .title2.weight(.semibold)
                     )
-                    .focused($focused).onSubmit { capture() }
-                    .accessibilityIdentifier("facet.capture.title")
-                    TextEditor(text: $bodyText).frame(minHeight: 100).accessibilityLabel(
-                        "Markdown notes")
+                    .focused($focused).onSubmit { capture(another: false) }
+                    .labelsHidden().accessibilityLabel("Task title")
+                    .accessibilityIdentifier(
+                        retainedPanel
+                            ? AccessibilityIdentifier.QuickAdd.field : "facet.capture.title")
+                    FacetCapturePreviewChips(
+                        preview: preview, priorities: store.priorities,
+                        changed: changeOverride)
+                    if preview.needsTitle(draft.input) {
+                        Label("Add a task title", systemImage: "text.cursor")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                    Text("Try “Pay rent tomorrow p:Home”. Recognised details appear above.")
+                        .font(.caption).foregroundStyle(.secondary)
                 }
-                Section("Plan") {
-                    FacetOptionalDatePicker(
-                        label: "Planned", value: scheduled.isEmpty ? nil : scheduled
-                    ) {
-                        scheduled = $0.text ?? ""
-                        overrides["scheduled"] = $0
-                    }
-                    FacetOptionalDatePicker(label: "Deadline", value: due.isEmpty ? nil : due) {
-                        due = $0.text ?? ""
-                        overrides["due"] = $0
-                    }
-                    Picker("Priority", selection: $priority) {
-                        Text("From capture text").tag("")
-                        ForEach(store.priorities, id: \.value) { Text($0.label).tag($0.value) }
-                    }.onChange(of: priority) {
-                        overrides["priority"] = priority.isEmpty ? nil : .string(priority)
+                Section {
+                    DisclosureGroup("Details", isExpanded: $detailsExpanded) {
+                        TextEditor(
+                            text: Binding(
+                                get: { bodyOverride ?? preview.body }, set: { bodyOverride = $0 })
+                        ).frame(minHeight: 100).accessibilityLabel(
+                            "Markdown notes")
+                        Text("Plan").font(.headline)
+                        FacetOptionalDatePicker(
+                            label: "Planned", value: preview.properties["scheduled"]?.text
+                        ) {
+                            changeOverride("scheduled", $0)
+                        }
+                        FacetOptionalDatePicker(
+                            label: "Deadline", value: preview.properties["due"]?.text
+                        ) {
+                            changeOverride("due", $0)
+                        }
+                        Picker(
+                            "Priority",
+                            selection: Binding(
+                                get: { preview.properties["priority"]?.text ?? "" },
+                                set: {
+                                    changeOverride("priority", $0.isEmpty ? .null : .string($0))
+                                })
+                        ) {
+                            Text("None").tag("")
+                            ForEach(store.priorities, id: \.value) { Text($0.label).tag($0.value) }
+                        }
+                        Text("Organize").font(.headline)
+                        tokens("Projects", key: "projects")
+                        tokens("Contexts", key: "contexts")
+                        tokens("Tags", key: "tags")
                     }
                 }
-                Section("Organize") {
-                    tokens("Projects", key: "projects", values: $projects)
-                    tokens("Contexts", key: "contexts", values: $contexts)
-                    tokens("Tags", key: "tags", values: $tags)
+                if !retainedPanel {
+                    Section {
+                        Button("Add and create another", systemImage: "plus.circle") {
+                            capture(another: true)
+                        }.disabled(!canCapture)
+                    }
                 }
                 if let error = draft.error ?? lifecycleError {
                     Section {
@@ -195,7 +247,7 @@ public struct FacetCaptureForm: View {
                         }
                     }
                 }
-            }.disabled(
+            }.formStyle(.grouped).disabled(
                 draft.isSubmitting || discarding || FacetDraftCoordinator.shared.isTransitioning
             )
             .navigationTitle("Add task")
@@ -205,19 +257,33 @@ public struct FacetCaptureForm: View {
                         if hasChanges {
                             showsDiscard = true
                         } else {
-                            store.showsCapture = false
+                            dismissCapture()
                         }
                     }.disabled(draft.isSubmitting)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Add", action: capture).disabled(
-                        !draft.canSubmit || profileID == nil
+                    Button("Add") { capture(another: false) }.disabled(
+                        !canCapture
                     )
                     .accessibilityIdentifier("facet.capture.submit")
                 }
             }
             .sheet(isPresented: $recovery) { FacetCaptureRecoveryView(store: store) }
-        }.onAppear {
+            .safeAreaInset(edge: .bottom) {
+                if retainedPanel {
+                    HStack {
+                        Button("Cancel") {
+                            if hasChanges { showsDiscard = true } else { dismissCapture() }
+                        }.disabled(draft.isSubmitting)
+                        Spacer()
+                        Button("Add Another") { capture(another: true) }.disabled(!canCapture)
+                        Button("Add") { capture(another: false) }.disabled(!canCapture)
+                            .keyboardShortcut(.defaultAction)
+                    }.padding().background(.regularMaterial)
+                }
+            }
+        }.task(id: focusRequest) {
+            if !hasChanges { profileID = store.selectedProfileID }
             focused = true
             if let profileID {
                 FacetDraftCoordinator.shared.register(
@@ -233,7 +299,18 @@ public struct FacetCaptureForm: View {
                     })
             }
         }
-        .onDisappear { FacetDraftCoordinator.shared.unregister(lifecycleRegistration) }
+        .onDisappear {
+            if !retainedPanel { FacetDraftCoordinator.shared.unregister(lifecycleRegistration) }
+        }
+        .onChange(of: detailsExpanded) { expandedChanged?(detailsExpanded) }
+        .onChange(of: overrides) { previewRevision += 1 }
+        .task(
+            id: PreviewIdentity(
+                input: draft.input, revision: previewRevision, profileID: store.selectedProfileID)
+        ) {
+            await preview.refresh(
+                store: store, profileID: profileID, input: draft.input, overrides: overrides)
+        }
         .confirmationDialog(
             "Discard this capture draft?", isPresented: $showsDiscard, titleVisibility: .visible
         ) {
@@ -242,37 +319,59 @@ public struct FacetCaptureForm: View {
                 _Concurrency.Task {
                     defer { discarding = false }
                     if await draft.discard(store: store), draft.input.isEmpty {
-                        store.showsCapture = false
+                        clearSupplementalDraft()
+                        dismissCapture()
                     }
                 }
             }
             Button("Keep editing", role: .cancel) {}
         }
-        .interactiveDismissDisabled(
-            draft.isSubmitting || !draft.input.isEmpty || draft.hasRetainedSubmission)
+        .interactiveDismissDisabled(draft.isSubmitting || discarding || hasChanges)
     }
     private var hasChanges: Bool {
-        !draft.input.isEmpty || !bodyText.isEmpty || !overrides.isEmpty
-            || draft.hasRetainedSubmission
+        bodyOverride != nil || draft.hasChanges(body: "", properties: overrides)
+    }
+    private var canCapture: Bool {
+        draft.canSubmit && profileID != nil && preview.canSubmit(draft.input)
     }
 
-    private func capture() {
-        guard let profileID,
+    private func capture(another: Bool) {
+        guard canCapture, let profileID,
             draft.begin(
                 store: store, profileID: profileID, properties: overrides,
-                body: bodyText.isEmpty ? nil : bodyText)
+                body: bodyOverride, origin: feedbackOrigin)
         else { return }
+        let capturedSeed = store.captureTitle
         _Concurrency.Task {
-            if await draft.submit(store: store), draft.input.isEmpty { store.showsCapture = false }
+            if await draft.submit(store: store), draft.input.isEmpty {
+                if store.captureTitle == capturedSeed { store.captureTitle = "" }
+                if another {
+                    clearSupplementalDraft()
+                    focused = true
+                } else {
+                    dismissCapture()
+                }
+            }
         }
     }
-    private func tokens(_ label: String, key: String, values: Binding<[String]>) -> some View {
+    private func changeOverride(_ role: String, _ value: FacetValue) {
+        overrides[role] = value
+        preview.override(role, value: value)
+    }
+    private func dismissCapture() {
+        if let close { close() } else { store.showsCapture = false }
+    }
+    private func clearSupplementalDraft() {
+        bodyOverride = nil
+        overrides = [:]
+        detailsExpanded = false
+    }
+    private func tokens(_ label: String, key: String) -> some View {
         FacetNativeTokenField(
-            label: label, values: values.wrappedValue,
+            label: label, values: FacetTaskPresentation.tokens(preview.properties[key]),
             vocabulary: FacetWindowState.vocabulary(store.snapshot?.tasks ?? [])[key] ?? []
         ) { selected in
-            values.wrappedValue = selected
-            overrides[key] = .array(selected.map(FacetValue.string))
+            changeOverride(key, .array(selected.map(FacetValue.string)))
             return true
         }
     }
