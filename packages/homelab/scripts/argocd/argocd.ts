@@ -67,6 +67,10 @@ import {
 } from "./argocd-manifest-overrides.ts";
 import { autoSyncPolicyDivergences } from "./argocd-auto-sync-policy.ts";
 import { childSyncTimeoutSeconds } from "./argocd-child-sync-timeout.ts";
+import {
+  reconcileInWaves,
+  releasePollDelayMs,
+} from "./argocd-release-scheduling.ts";
 import { TEMPORAL_CHILD_SYNC_TIMEOUT_SECONDS } from "../../src/cdk8s/src/temporal-release-budgets.ts";
 import { SCOUT_CHILD_SYNC_TIMEOUT_FLOORS } from "../../src/cdk8s/src/scout-release-budgets.ts";
 import {
@@ -2258,17 +2262,23 @@ function operationStartedAfter(
   );
 }
 
-function operationPollIntervalMs(): number {
+function operationPollIntervalMs(elapsedMs = 0): number {
   const configured = optionalEnv("ARGOCD_POLL_INTERVAL_MS");
   return configured === null
-    ? POLL_INTERVAL_MS
+    ? releasePollDelayMs(elapsedMs, Number.POSITIVE_INFINITY)
     : PollIntervalSchema.parse(configured);
 }
 
-async function sleepUntilNextOperationPoll(deadline: number): Promise<void> {
-  const remaining = deadline - Date.now();
+async function sleepUntilNextOperationPoll(
+  deadline: number,
+  startedAt: number,
+): Promise<void> {
+  const now = Date.now();
+  const remaining = deadline - now;
   if (remaining > 0) {
-    await Bun.sleep(Math.min(operationPollIntervalMs(), remaining));
+    await Bun.sleep(
+      Math.min(operationPollIntervalMs(now - startedAt), remaining),
+    );
   }
 }
 
@@ -2453,7 +2463,10 @@ async function waitForIdentifiedOperation({
         return;
       }
     }
-    await sleepUntilNextOperationPoll(deadline);
+    await sleepUntilNextOperationPoll(
+      deadline,
+      deadline - timeoutSeconds * 1000,
+    );
   }
   throw new Error(
     `Timeout: sync operation for ${appName} did not complete within ${timeoutSeconds.toString()}s`,
@@ -2500,7 +2513,10 @@ async function waitForOperationToClear(
       current.phase,
       lastTerminationRejection,
     );
-    await sleepUntilNextOperationPoll(deadline);
+    await sleepUntilNextOperationPoll(
+      deadline,
+      deadline - timeoutSeconds * 1000,
+    );
   }
   throw new Error(
     `Timeout: ${appName} operation for request ${requestId} did not clear within ${timeoutSeconds.toString()}s` +
@@ -2771,7 +2787,10 @@ async function finalizeAsyncSync(
       );
       return;
     }
-    await sleepUntilNextOperationPoll(deadline);
+    await sleepUntilNextOperationPoll(
+      deadline,
+      deadline - timeoutSeconds * 1000,
+    );
     elapsed = Math.floor(
       (timeoutSeconds * 1000 - (deadline - Date.now())) / 1000,
     );
@@ -2993,9 +3012,9 @@ async function reconcileRelease(
   // The release step handles the root Application with the subsequent atomic
   // sync. Waiting for it here would make every release depend on unrelated
   // child Application health.
-  for (const wanted of targets) {
+  await reconcileInWaves(targets, async (wanted) => {
     if (deferredApps.has(wanted.name)) {
-      continue;
+      return;
     }
     const current = ReconcileApplicationSchema.parse(
       await getApplication(wanted.name, token),
@@ -3029,7 +3048,7 @@ async function reconcileRelease(
       (!wanted.prune || syncStatus === "Synced") &&
       !failedCurrentOperation;
     if (deployedExpectedRepositoryRelease || deployedExpectedExternalSource) {
-      continue;
+      return;
     }
     await assertApplySafe(wanted.name, token, wanted.revision);
     await sync(
@@ -3048,7 +3067,7 @@ async function reconcileRelease(
           : { requestId: exactRequestId, releasePhase: "child" }),
       },
     );
-  }
+  });
   if (waitForHealth) {
     await releaseHealthWait(expectedPath, timeoutSeconds, false);
   }
@@ -3094,7 +3113,10 @@ async function releaseHealthWait(
     for (const failure of latestFailures) {
       console.log(`not ready: ${failure}`);
     }
-    await Bun.sleep(POLL_INTERVAL_MS);
+    await sleepUntilNextOperationPoll(
+      deadline,
+      deadline - timeoutSeconds * 1000,
+    );
   }
   throw new Error(
     `Release tree did not become ready: ${latestFailures.join("; ")}`,
@@ -3141,9 +3163,8 @@ async function activeRootReleasePhase(
  * slightly later — a freeze that went unreported for ~1.5h before this check
  * existed.
  *
- * Still a small fixed count rather than the release timeout, so a broken tree
- * surfaces in about a minute at the default 10s poll interval instead of
- * burning the whole release budget on a tree already known to be broken.
+ * The one-minute settling budget is independent of the adaptive poll cadence.
+ * A test override preserves the equivalent number of short observations.
  */
 const AUTO_SYNC_SETTLE_ATTEMPTS = 7;
 
@@ -3178,10 +3199,12 @@ async function assertLiveAutoSyncMatchesRelease(
     token,
   );
   let divergences: readonly string[] = [];
-  for (let attempt = 0; attempt < AUTO_SYNC_SETTLE_ATTEMPTS; attempt += 1) {
-    if (attempt > 0) {
-      await Bun.sleep(operationPollIntervalMs());
-    }
+  const startedAt = Date.now();
+  const configured = optionalEnv("ARGOCD_POLL_INTERVAL_MS");
+  const settleBudget = (AUTO_SYNC_SETTLE_ATTEMPTS - 1) * POLL_INTERVAL_MS;
+  const deadline = startedAt + settleBudget;
+  let attempts = 0;
+  while (true) {
     divergences = autoSyncPolicyDivergences(
       manifests,
       await getApplications(token),
@@ -3189,6 +3212,14 @@ async function assertLiveAutoSyncMatchesRelease(
     if (divergences.length === 0) {
       console.log("live auto-sync policy matches the rendered revision");
       return;
+    }
+    attempts += 1;
+    if (configured === null) {
+      if (Date.now() >= deadline) break;
+      await sleepUntilNextOperationPoll(deadline, startedAt);
+    } else {
+      if (attempts >= AUTO_SYNC_SETTLE_ATTEMPTS) break;
+      await Bun.sleep(PollIntervalSchema.parse(configured));
     }
   }
   throw new Error(

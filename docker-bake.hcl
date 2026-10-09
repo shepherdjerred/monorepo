@@ -34,8 +34,10 @@ variable "CONTRACT_HASH" {
   default = "dev"
 }
 
-# "true" on main: export per-target registry cache (mode=max). PRs and local
-# builds read cache but never write it.
+# "true" on main: export final-image cache layers (mode=min). The persistent
+# BuildKit daemon retains intermediate layers locally. Exporting those layers
+# to the registry dominated release latency; a lost local cache costs a colder
+# rebuild instead. PRs and local builds read cache but never write it.
 variable "PUSH_CACHE" {
   default = "false"
 }
@@ -56,7 +58,7 @@ function "cachefrom" {
 
 function "cacheto" {
   params = [name]
-  result = equal(PUSH_CACHE, "true") ? ["type=registry,ref=${REGISTRY}/${name}:buildcache,mode=max,image-manifest=true"] : []
+  result = equal(PUSH_CACHE, "true") ? ["type=registry,ref=${REGISTRY}/${name}:buildcache,mode=min,image-manifest=true"] : []
 }
 function "imagetags" {
   params = [name]

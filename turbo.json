@@ -237,6 +237,7 @@
       // halves this check compares; a change to either must re-run it.
       "inputs": [
         "scripts/checks/ci/check-ci-admission-budget.ts",
+        "scripts/lib/ci/admission-budget.ts",
         "scripts/lib/ci/generated-steps.ts",
         "packages/homelab/src/cdk8s/src/misc/ci-admission-budget.json",
         "packages/woodpecker-config-extension/src/**"

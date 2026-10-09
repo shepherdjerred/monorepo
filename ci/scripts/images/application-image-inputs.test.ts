@@ -7,6 +7,16 @@ async function read(path: string): Promise<string> {
 }
 
 describe("application image inputs", () => {
+  test("exports final-image registry cache while keeping cache imports", async () => {
+    const bake = await read("docker-bake.hcl");
+    expect(bake).toContain(
+      'equal(PUSH_CACHE, "true") ? ["type=registry,ref=${REGISTRY}/${name}:buildcache,mode=min,image-manifest=true"] : []',
+    );
+    expect(bake).toContain(
+      'result = ["type=registry,ref=${REGISTRY}/${name}:buildcache"]',
+    );
+    expect(bake).not.toContain("mode=max");
+  });
   test("publishes immutable candidate tags without mutable latest aliases", async () => {
     const bake = await read("docker-bake.hcl");
     expect(bake).toContain('"${REGISTRY}/${name}:candidate-${GIT_SHA}"');

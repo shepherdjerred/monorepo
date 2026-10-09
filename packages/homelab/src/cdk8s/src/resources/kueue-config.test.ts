@@ -4,12 +4,18 @@ import { parse as parseYaml } from "yaml";
 import { z } from "zod";
 import {
   CI_CLUSTER_QUEUE,
+  CI_GATE_CLUSTER_QUEUE,
+  CI_GATE_LOCAL_QUEUE,
   CI_MAINTENANCE_CLUSTER_QUEUE,
   CI_MAINTENANCE_LOCAL_QUEUE,
   createKueueConfig,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/kueue-config.ts";
 import { createKueueApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/kueue.ts";
-import { CI_ADMISSION_BUDGET } from "@shepherdjerred/homelab/cdk8s/src/misc/woodpecker.ts";
+import {
+  CI_ADMISSION_BUDGET,
+  CI_COMPUTE_WORKFLOWS,
+  CI_GATE_WORKFLOWS,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/woodpecker.ts";
 
 const ClusterQueueSchema = z.object({
   apiVersion: z.literal("kueue.x-k8s.io/v1beta2"),
@@ -145,7 +151,11 @@ describe("kueue-config", () => {
     // workload requesting a resource its ClusterQueue does not cover: if this
     // drifts, every build sits gated forever. Regression guard for the
     // 2026-07-24 freeze.
-    for (const name of [CI_CLUSTER_QUEUE, CI_MAINTENANCE_CLUSTER_QUEUE]) {
+    for (const name of [
+      CI_CLUSTER_QUEUE,
+      CI_GATE_CLUSTER_QUEUE,
+      CI_MAINTENANCE_CLUSTER_QUEUE,
+    ]) {
       expect(
         clusterQueue(name).spec.resourceGroups[0]?.coveredResources,
       ).toEqual(["cpu", "memory", "pods", "ephemeral-storage"]);
@@ -153,9 +163,12 @@ describe("kueue-config", () => {
   });
 
   it("takes the CI budget from its language-neutral source", () => {
-    expect(quota(CI_CLUSTER_QUEUE, "cpu")).toBe("24");
-    expect(quota(CI_CLUSTER_QUEUE, "memory")).toBe("80Gi");
-    expect(quota(CI_CLUSTER_QUEUE, "ephemeral-storage")).toBe("60Gi");
+    expect(quota(CI_CLUSTER_QUEUE, "cpu")).toBe("23");
+    expect(quota(CI_CLUSTER_QUEUE, "memory")).toBe("78Gi");
+    expect(quota(CI_CLUSTER_QUEUE, "ephemeral-storage")).toBe("56Gi");
+    expect(quota(CI_GATE_CLUSTER_QUEUE, "cpu")).toBe("1");
+    expect(quota(CI_GATE_CLUSTER_QUEUE, "memory")).toBe("2Gi");
+    expect(quota(CI_GATE_CLUSTER_QUEUE, "ephemeral-storage")).toBe("4Gi");
     expect(CI_ADMISSION_BUDGET.quota).toEqual({
       cpu: "24",
       memory: "80Gi",
@@ -171,12 +184,21 @@ describe("kueue-config", () => {
   it("sizes the pods backstop from the workflow cap and services", () => {
     const perWorkflow = 1 + CI_ADMISSION_BUDGET.maxServicesPerWorkflow;
     expect(quota(CI_CLUSTER_QUEUE, "pods")).toBe(
-      String(CI_ADMISSION_BUDGET.maxWorkflows * perWorkflow),
+      String(CI_COMPUTE_WORKFLOWS * perWorkflow),
     );
+    expect(quota(CI_GATE_CLUSTER_QUEUE, "pods")).toBe(
+      String(CI_GATE_WORKFLOWS),
+    );
+    expect(CI_COMPUTE_WORKFLOWS).toBe(20);
+    expect(CI_GATE_WORKFLOWS).toBe(4);
   });
 
   it("admits only the CI namespace, and never preempts", () => {
-    for (const name of [CI_CLUSTER_QUEUE, CI_MAINTENANCE_CLUSTER_QUEUE]) {
+    for (const name of [
+      CI_CLUSTER_QUEUE,
+      CI_GATE_CLUSTER_QUEUE,
+      CI_MAINTENANCE_CLUSTER_QUEUE,
+    ]) {
       const { spec } = clusterQueue(name);
       expect(spec.namespaceSelector.matchLabels).toEqual({
         "kubernetes.io/metadata.name": "woodpecker-ci",
@@ -204,11 +226,32 @@ describe("kueue-config", () => {
       ]),
     ).toEqual([
       ["woodpecker-ci", "default", CI_CLUSTER_QUEUE],
+      ["woodpecker-ci", CI_GATE_LOCAL_QUEUE, CI_GATE_CLUSTER_QUEUE],
       [
         "woodpecker-ci",
         CI_MAINTENANCE_LOCAL_QUEUE,
         CI_MAINTENANCE_CLUSTER_QUEUE,
       ],
+    ]);
+  });
+});
+
+describe("Kueue priority and controller integration", () => {
+  it("defines independent admission priorities for main, ready PRs and drafts", () => {
+    const PrioritySchema = z.object({
+      kind: z.literal("WorkloadPriorityClass"),
+      apiVersion: z.literal("kueue.x-k8s.io/v1beta2"),
+      metadata: z.object({ name: z.string() }),
+      value: z.number(),
+    });
+    const priorities = synthDocuments(createKueueConfig)
+      .map((document) => PrioritySchema.safeParse(document))
+      .filter((result) => result.success)
+      .map((result) => [result.data.metadata.name, result.data.value]);
+    expect(priorities).toEqual([
+      ["ci-main", 300],
+      ["ci-ready", 200],
+      ["ci-draft", 100],
     ]);
   });
 

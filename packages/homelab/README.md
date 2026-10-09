@@ -12,6 +12,21 @@ See the [homelab overview](../docs/wiki/src/content/docs/explanation/homelab/ove
 for topology and the wiki how-to guides for operator workflows.
 [AGENTS.md](AGENTS.md) contains only always-on package constraints.
 
+## Release scheduling
+
+The root release workflow reconciles at most three child Applications at once
+within a sync wave. Every child in that wave must finish before the next wave
+starts. A failed child stops new work; already-started children are observed to
+completion before the error propagates. Each sync keeps its exact revision,
+request ownership checks, apply-safety preflight, and workload-specific timeout
+floor. Root staging, exact resource batches, and final pruning remain sequential.
+
+Release operations are observed immediately, then every second for ten seconds,
+every two seconds through thirty seconds, and every five seconds thereafter.
+The cadence preserves operation deadlines and the one-minute auto-sync policy
+settling budget. A release still requires restored auto-sync and its scoped
+health checks before writing an applied-and-verified receipt.
+
 ## Layout
 
 | Directory        | Contents                                                                                                      |

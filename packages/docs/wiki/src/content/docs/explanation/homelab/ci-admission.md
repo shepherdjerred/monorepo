@@ -5,24 +5,31 @@ sidebar:
   order: 5
 ---
 
-CI runs on the dedicated `liskov` worker. Kueue holds every CI pod until its
-resource requests fit a budget below the node's capacity. Woodpecker's
-workflow cap is only a backstop.
+Kueue holds CI pods until their requests fit liskov's budget, with a separate
+reserve for review and completion gates.
+
+The [admission budget](https://raw.githubusercontent.com/shepherdjerred/monorepo/refs/heads/main/packages/homelab/src/cdk8s/src/misc/ci-admission-budget.json)
+divides the existing capacity between computation and gates. Woodpecker's
+workflow caps limit concurrency within each pool.
 
 ```mermaid
-flowchart LR
+flowchart TB
   accTitle: CI resource admission
-  accDescr: The Woodpecker agent creates clone, service, and step pods in the woodpecker-ci namespace. Each is held behind a scheduling gate until the Kueue ClusterQueue has room, then scheduled onto liskov. The control plane lives in a separate namespace Kueue never touches.
+  accDescr: Woodpecker agents create pods in the woodpecker-ci namespace. Compute pods use the default queue, while review and completion pools use a separate gate reserve. Both queues admit pods onto liskov. The control plane lives in a namespace Kueue never touches.
 
   subgraph CP[woodpecker namespace]
-    WP[Woodpecker agent]
+    WP[Woodpecker agent pools]
   end
   subgraph CI[woodpecker-ci namespace]
-    POD[Clone, service, and step pods]
+    POD[Compute pods]
+    GATE[Review and completion pods]
   end
   WP -->|creates| POD
+  WP -->|creates| GATE
   POD -->|gated| CQ[ClusterQueue woodpecker]
+  GATE -->|gated| GQ[ClusterQueue woodpecker-gates]
   CQ -->|admitted| NODE[liskov]
+  GQ -->|admitted| NODE
   CQ -.->|waits when full| POD
 ```
 
@@ -38,10 +45,10 @@ rather than a capacity problem.
 
 ## Admitting by resources instead
 
-Kueue meters CPU, memory, and ephemeral storage against the `woodpecker`
-ClusterQueue. The budget sits below liskov's 29 CPU and roughly 91.5Gi of
-allocatable memory. It is a guard, not permission to consume the node to zero.
-The numbers live in one file, `misc/ci-admission-budget.json`.
+Kueue meters CPU, memory, and ephemeral storage across two CI queues.
+Their combined budget stays below liskov's allocatable capacity.
+The [queue definitions](https://raw.githubusercontent.com/shepherdjerred/monorepo/refs/heads/main/packages/homelab/src/cdk8s/src/resources/kueue-config.ts)
+derive both reserves from the admission budget.
 
 A pod that does not fit is held behind a scheduling gate. It exists, but the
 scheduler and the kubelet ignore it. There is no churn, and nothing to evict.
@@ -50,6 +57,35 @@ It waits until other CI work finishes.
 Ephemeral storage is in the budget deliberately. A build that fills the node's
 disk makes the kubelet evict _other_ pods. Metering it makes disk a scheduling
 constraint instead of an afterthought.
+
+## Why gates have reserved capacity
+
+A review poller can occupy a workflow slot while waiting for an external
+provider. A completion check can then queue behind work from newer PRs.
+The developer waits even after the expensive checks have finished.
+
+The [agent pools](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/woodpecker/agent.ts)
+give PR execution, main releases, reviews, and completion separate workflow
+caps. Review and completion share a small resource reserve but have separate
+agents. A backlog of review polls therefore cannot consume the completion slot.
+
+Mandatory agent labels keep a pool from taking unrelated workflows.
+The legacy agent handles configurations without pool labels while those
+configurations drain. The admission proof includes both old and new compute
+caps during coexistence. Its pod backstop also includes their services, so
+partially started workflows cannot fill every slot before a step can run.
+
+The reserve slightly reduces compute capacity. It buys predictable access for
+short verdict checks without increasing the total CPU, memory, or ephemeral
+storage budget. Gate workflows need no checkout or services, so their workspace
+claims are smaller too.
+
+## Admission priority does not preempt production
+
+The queues define workload priorities for main releases, ready PRs, and drafts,
+in that order. These priorities order waiting work inside Kueue.
+They leave every CI pod at the existing Kubernetes `batch-low` priority.
+Preemption remains disabled, so priority never cancels an admitted CI pod.
 
 ## Why CI has its own namespace
 
@@ -76,7 +112,9 @@ workflows could hold everything, with no step able to start.
 
 A root check, `check-ci-admission-budget.ts`, rules that out. It proves that
 every in-flight workflow's services plus the largest step always fit the
-budget. Keeping services on the small `SERVICE_TIER` is what makes it hold.
+budget. Most services use the small `SERVICE_TIER`. Paper needs a larger
+reservation, so its workflow has a shared concurrency cap across agents and
+PRs. The proof accounts for that cap without reducing the smoke checks.
 
 Kueue never preempts CI. It stops a plain pod by deleting it, and Woodpecker
 reports a pod that vanishes mid-step as a success.

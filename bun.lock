@@ -870,6 +870,7 @@
         "@shepherdjerred/feature-flags": "workspace:*",
         "@shepherdjerred/helm-types": "workspace:*",
         "@shepherdjerred/ops-model": "workspace:*",
+        "@shepherdjerred/root-scripts": "workspace:*",
         "@shepherdjerred/version-catalog": "workspace:*",
         "cdk8s": "^2.70.58",
         "cdk8s-plus-31": "^2.6.43",

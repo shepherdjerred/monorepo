@@ -37,6 +37,7 @@
     "audit:1password": "bun run scripts/onepassword/audit-vault.ts"
   },
   "dependencies": {
+    "@shepherdjerred/root-scripts": "workspace:*",
     "cdk8s": "^2.70.58",
     "cdk8s-plus-31": "^2.6.43",
     "constructs": "^10.6.0",

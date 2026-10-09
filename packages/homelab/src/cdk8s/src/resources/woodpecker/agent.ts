@@ -30,6 +30,8 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import {
   WOODPECKER_GRPC_PORT,
   WOODPECKER_MAX_WORKFLOWS,
+  CI_ADMISSION_BUDGET,
+  type CiAgentPool,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/woodpecker.ts";
 import {
   WOODPECKER_CI_NAMESPACE,
@@ -95,7 +97,29 @@ export function createWoodpeckerAgent(chart: Chart) {
     "woodpecker-server-credentials",
   );
 
-  const deployment = new Deployment(chart, "woodpecker-agent", {
+  const deployment = createAgentDeployment(
+    chart,
+    serviceAccount,
+    serverSecretRef,
+  );
+  const pools: readonly CiAgentPool[] = ["pr", "main", "review", "completion"];
+  const poolDeployments = pools.map((pool) =>
+    createAgentDeployment(chart, serviceAccount, serverSecretRef, pool),
+  );
+  return { deployment, serviceAccount, poolDeployments };
+}
+
+function createAgentDeployment(
+  chart: Chart,
+  serviceAccount: KubeServiceAccount,
+  serverSecretRef: ReturnType<typeof Secret.fromSecretName>,
+  pool?: CiAgentPool,
+) {
+  const id =
+    pool === undefined ? "woodpecker-agent" : `woodpecker-agent-${pool}`;
+  const config =
+    pool === undefined ? undefined : CI_ADMISSION_BUDGET.pools[pool];
+  const deployment = new Deployment(chart, id, {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
     // The Kubernetes backend drives the API with this pod's own service
@@ -105,7 +129,7 @@ export function createWoodpeckerAgent(chart: Chart) {
     podMetadata: { labels: { app: "woodpecker-agent" } },
     serviceAccount: ServiceAccount.fromServiceAccountName(
       chart,
-      "woodpecker-agent-sa-ref",
+      `${id}-sa-ref`,
       serviceAccount.name,
     ),
   });
@@ -138,8 +162,21 @@ export function createWoodpeckerAgent(chart: Chart) {
         // Cluster-wide concurrency bound; successor to the agent stack's
         // count-based max-in-flight cap.
         WOODPECKER_MAX_WORKFLOWS: EnvValue.fromValue(
-          WOODPECKER_MAX_WORKFLOWS.toString(),
+          (config?.maxWorkflows ?? WOODPECKER_MAX_WORKFLOWS).toString(),
         ),
+        // Mandatory labels keep these agents idle until the generator starts
+        // routing workflows. The priority wildcard also permits its workflow
+        // label to reach clone, service and step pods in Woodpecker 3.19.
+        ...(pool === undefined || config === undefined
+          ? {}
+          : {
+              WOODPECKER_AGENT_LABELS: EnvValue.fromValue(
+                `!ci-pool=${pool},kueue.x-k8s.io/priority-class=*`,
+              ),
+              WOODPECKER_BACKEND_K8S_POD_LABELS: EnvValue.fromValue(
+                JSON.stringify({ "kueue.x-k8s.io/queue-name": config.queue }),
+              ),
+            }),
 
         // Steps reference existing Kubernetes Secrets by exact key through
         // `backend_options.kubernetes.secrets`. This preserves the per-step
@@ -189,7 +226,9 @@ export function createWoodpeckerAgent(chart: Chart) {
           CI_WORKSPACE_STORAGE_CLASS,
         ),
         WOODPECKER_BACKEND_K8S_STORAGE_RWX: EnvValue.fromValue("true"),
-        WOODPECKER_BACKEND_K8S_VOLUME_SIZE: EnvValue.fromValue("16G"),
+        WOODPECKER_BACKEND_K8S_VOLUME_SIZE: EnvValue.fromValue(
+          config?.queue === "ci-gates" ? "1G" : "16G",
+        ),
       },
       securityContext: {
         ensureNonRoot: false,
@@ -205,5 +244,5 @@ export function createWoodpeckerAgent(chart: Chart) {
 
   setRevisionHistoryLimit(deployment);
 
-  return { deployment, serviceAccount };
+  return deployment;
 }

@@ -3,9 +3,12 @@ import { describe, expect, test } from "vitest";
 import {
   admissionBudgetViolations,
   parseQuantity,
+  pooledAdmissionBudgetViolations,
   type AdmissionBudget,
   type AdmissionStep,
 } from "./check-ci-admission-budget.ts";
+import { PooledAdmissionBudgetSchema as PooledBudgetSchema } from "../../lib/ci/admission-budget.ts";
+import rawBudget from "../../../packages/homelab/src/cdk8s/src/misc/ci-admission-budget.json" with { type: "json" };
 
 const BUDGET: AdmissionBudget = {
   maxWorkflows: 4,
@@ -80,6 +83,43 @@ describe("CI admission budget", () => {
     ).toEqual([expect.stringContaining("cpu:")]);
   });
 
+  test("respects a literal shared concurrency cap on expensive services", () => {
+    const heavy = step({
+      key: "heavy",
+      services: [{ name: "db", resources: TIER }],
+      concurrency: { limit: 1, group: "heavy" },
+    });
+    expect(admissionBudgetViolations([step(), heavy], BUDGET)).toEqual([]);
+    expect(
+      admissionBudgetViolations(
+        [
+          step(),
+          {
+            ...heavy,
+            concurrency: { limit: 1, group: "heavy-${CI_COMMIT_SHA}" },
+          },
+        ],
+        BUDGET,
+      ),
+    ).toEqual([expect.stringContaining("memory:")]);
+  });
+
+  test("shared groups use the largest resource cost and largest declared limit", () => {
+    const heavy = step({
+      key: "heavy",
+      services: [{ name: "db", resources: TIER }],
+      concurrency: { limit: 1, group: "shared" },
+    });
+    const other = step({
+      key: "other",
+      services: [{ name: "db", resources: SMALL }],
+      concurrency: { limit: 4, group: "shared" },
+    });
+    expect(admissionBudgetViolations([heavy, other], BUDGET)).toEqual([
+      expect.stringContaining("memory:"),
+    ]);
+  });
+
   /** macOS lanes run on the Mac with no pod: nothing for Kueue to admit. */
   test("ignores local-backend steps", () => {
     const huge = { ...TIER, memoryRequest: "1Ti" };
@@ -89,5 +129,111 @@ describe("CI admission budget", () => {
         BUDGET,
       ),
     ).toEqual([]);
+  });
+});
+
+describe("pooled CI admission budget", () => {
+  const budget = PooledBudgetSchema.parse(rawBudget);
+  test("shares strict queue and quantity validation with infrastructure", () => {
+    expect(() =>
+      PooledBudgetSchema.parse({
+        ...budget,
+        quota: { ...budget.quota, cpu: "" },
+      }),
+    ).toThrow();
+    expect(() =>
+      PooledBudgetSchema.parse({
+        ...budget,
+        pools: {
+          ...budget.pools,
+          review: { ...budget.pools.review, queue: "default" },
+        },
+      }),
+    ).toThrow();
+    expect(() =>
+      PooledBudgetSchema.parse({ ...budget, unrecognized: true }),
+    ).toThrow();
+  });
+  const gate = step({
+    key: "ci-complete",
+    skipClone: true,
+    agentLabels: { "ci-pool": "completion" },
+    resources: SMALL,
+  });
+  const compute = step({
+    services: [
+      { name: "a", resources: SMALL },
+      { name: "b", resources: SMALL },
+    ],
+  });
+
+  test("keeps scalar quotas fixed while legacy and new agents overlap", () => {
+    expect(pooledAdmissionBudgetViolations([compute, gate], budget)).toEqual(
+      [],
+    );
+    expect(budget.quota).toEqual({
+      cpu: "24",
+      memory: "80Gi",
+      "ephemeral-storage": "60Gi",
+    });
+  });
+
+  test("checks the overlap rather than only the new workflow cap", () => {
+    const largeServices = step({
+      services: [{ name: "db", resources: { ...SMALL, memoryRequest: "4Gi" } }],
+    });
+    expect(
+      pooledAdmissionBudgetViolations([largeServices], {
+        ...budget,
+        legacyMaxWorkflows: 0,
+      }),
+    ).toEqual([]);
+    expect(pooledAdmissionBudgetViolations([largeServices], budget)).toEqual([
+      expect.stringContaining("memory:"),
+    ]);
+  });
+
+  test("rejects budget growth and a mismatched workflow total", () => {
+    expect(
+      pooledAdmissionBudgetViolations([compute], {
+        ...budget,
+        maxWorkflows: 13,
+        gateQuota: { ...budget.gateQuota, cpu: "2" },
+      }),
+    ).toEqual([
+      expect.stringContaining("workflow caps"),
+      expect.stringContaining("aggregate budget"),
+    ]);
+  });
+
+  test("requires all gates to fit and forbids clones and services", () => {
+    expect(
+      pooledAdmissionBudgetViolations(
+        [
+          compute,
+          {
+            ...gate,
+            resources: TIER,
+            skipClone: false,
+            services: [{ name: "db", resources: SMALL }],
+          },
+        ],
+        budget,
+      ),
+    ).toEqual([
+      expect.stringContaining("checkout-free"),
+      expect.stringContaining("cpu reserve"),
+      expect.stringContaining("memory reserve"),
+      expect.stringContaining("ephemeral-storage reserve"),
+    ]);
+  });
+
+  test("keeps draft admission below ready PRs and main", () => {
+    expect(
+      pooledAdmissionBudgetViolations([compute], {
+        ...budget,
+        priorities: { main: 300, ready: 100, draft: 200 },
+      }),
+    ).toEqual([expect.stringContaining("priority")]);
   });
 });

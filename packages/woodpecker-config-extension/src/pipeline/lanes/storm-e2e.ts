@@ -64,6 +64,9 @@ function stormSmokeStep(images: CiImages): CiStep {
       STORM_E2E_BRAIN_TOKEN: BRAIN_TOKEN,
     },
     timeoutMinutes: 10,
+    // The Paper and brain services hold admission quota before their test
+    // step starts. Keep their aggregate bounded across all agents and PRs.
+    concurrency: { limit: 6, group: "paper-smoke-pr" },
     resources: MEDIUM_TIER,
     secrets: [GITHUB_DOWNLOAD],
     services: [

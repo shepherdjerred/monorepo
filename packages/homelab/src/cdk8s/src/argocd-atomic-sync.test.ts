@@ -1037,6 +1037,33 @@ test("atomic Argo sync uses the default poll interval when its operation never b
   }
 });
 
+test("atomic Argo sync observes a quick operation before a five-second deadline", async () => {
+  const lifecycle = serveLifecycle([
+    { status: {} },
+    { status: {} },
+    { status: {} },
+    applicationOperation({
+      phase: "Succeeded",
+      requestId: CURRENT_REQUEST_ID,
+      resources: [{ status: "Synced" }],
+    }),
+  ]);
+  try {
+    const result = await runArgocd(
+      [...atomicArgs().slice(0, -1), "5"],
+      lifecycle.server.url.origin,
+      { pollIntervalMs: null },
+    );
+    expect(result.exitCode).toBe(0);
+    expect(result.stderr).toBe("");
+    expect(lifecycle.observations.syncPosts).toBe(1);
+    expect(lifecycle.observations.statusGets).toBeGreaterThanOrEqual(4);
+    expect(lifecycle.observations.deleteRequests).toBe(0);
+  } finally {
+    await lifecycle.server.stop(true);
+  }
+});
+
 test("atomic Argo sync accepts termination when live state clears before status", async () => {
   const lifecycle = serveLifecycle(
     [
