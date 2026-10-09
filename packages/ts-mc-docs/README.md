@@ -51,6 +51,10 @@ bun run typecheck
 bun run lint
 ```
 
+The `astro check` steps in `build` and `lint` use process-specific Vite
+dependency caches so they can run at the same time as each other or as the dev
+server. The dev server continues to use the standard Astro configuration.
+
 Deploys via `bun run deploy` (SeaweedFS `ts-mc-docs` bucket) and the
 `sites` CI lane on `main`.
 
