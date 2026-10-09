@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, rm, utimes } from "node:fs/promises";
+import { cp, mkdtemp, mkdir, rm, utimes } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, expect, test, vi } from "vitest";
@@ -245,3 +245,76 @@ test("wrapper forwards command output and preserves its exit without upload cred
   expect(stderr).toContain("diagnostic publication failed");
   expect(exit).toBe(42);
 });
+
+test.each([0, 42])(
+  "collects in a fresh process after the child installs dependencies and exits %i",
+  async (exitCode) => {
+    const root = await repository();
+    const entrypoint = path.join(root, "scripts/ci/run-with-diagnostics.ts");
+    const library = path.join(root, "scripts/lib/ci");
+    await mkdir(path.dirname(entrypoint), { recursive: true });
+    await mkdir(library, { recursive: true });
+    await cp(
+      new URL("../../ci/run-with-diagnostics.ts", import.meta.url),
+      entrypoint,
+    );
+    await cp(
+      new URL("task-diagnostics.ts", import.meta.url),
+      path.join(library, "task-diagnostics.ts"),
+    );
+    // Fake only the object-store boundary; the wrapper and collector run as
+    // real subprocesses from a checkout with no installed dependencies.
+    await Bun.write(
+      path.join(library, "ci-handoff.ts"),
+      'export async function writeJsonHandoff(key, report) { await Bun.write("published.json", JSON.stringify(report)); }',
+    );
+    await Bun.write(
+      path.join(library, "ci-object-store-retry.ts"),
+      "export class CiObjectStoreHttpError extends Error {}\nexport async function withCiObjectStoreRetry(operation) { return operation(); }",
+    );
+    const dependencies = new URL("../../node_modules", import.meta.url)
+      .pathname;
+    const install = `
+      import { symlink } from "node:fs/promises";
+      await symlink(${JSON.stringify(dependencies)}, "scripts/node_modules");
+      await Bun.write(".turbo/runs/child.json", ${JSON.stringify(JSON.stringify(summary()))});
+      process.exit(${String(exitCode)});
+    `;
+    const child = Bun.spawn(
+      [
+        process.execPath,
+        "--no-install",
+        entrypoint,
+        "verify",
+        "--",
+        process.execPath,
+        "-e",
+        install,
+      ],
+      {
+        cwd: root,
+        stdout: "pipe",
+        stderr: "pipe",
+        env: { CI_PIPELINE_NUMBER: "123", CI_COMMIT_SHA: "a".repeat(40) },
+      },
+    );
+    const [stdout, stderr, exit] = await Promise.all([
+      new Response(child.stdout).text(),
+      new Response(child.stderr).text(),
+      child.exited,
+    ]);
+    expect(stderr).toBe("");
+    expect(stdout).toContain("CI task diagnostics:");
+    expect(exit).toBe(exitCode);
+    const report: unknown = await Bun.file(
+      path.join(root, "published.json"),
+    ).json();
+    expect(report).toMatchObject({
+      pipeline: "123",
+      exitCode,
+      collectionFailed: false,
+      turbo: [{ id: "run-one" }],
+    });
+    expect(JSON.stringify(report)).not.toContain("sentinel");
+  },
+);
