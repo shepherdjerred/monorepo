@@ -55,9 +55,9 @@ function environment(
 }
 
 describe("dedicated CI agent pools", () => {
-  it("adds four mandatory-label pools without changing the legacy agent cap", () => {
+  it("uses only the four mandatory-label pools after the legacy drain", () => {
     const deployments = agents();
-    expect(deployments).toHaveLength(5);
+    expect(deployments).toHaveLength(4);
     for (const [pool, cap, queue, volume] of [
       ["pr", "6", "default", "16G"],
       ["main", "2", "default", "16G"],
@@ -82,12 +82,7 @@ describe("dedicated CI agent pools", () => {
     const legacy = deployments.find(
       (entry) => entry.metadata.name === "woodpecker-woodpecker-agent",
     );
-    if (legacy === undefined) throw new Error("missing legacy agent");
-    const env = environment(legacy);
-    expect(env.get("WOODPECKER_MAX_WORKFLOWS")).toBe("12");
-    expect(env.has("WOODPECKER_AGENT_LABELS")).toBe(false);
-    expect(env.has("WOODPECKER_BACKEND_K8S_POD_LABELS")).toBe(false);
-    expect(env.get("WOODPECKER_BACKEND_K8S_VOLUME_SIZE")).toBe("16G");
+    expect(legacy).toBeUndefined();
   });
 
   it("keeps every agent on liskov with the existing native-secret and pod guards", () => {

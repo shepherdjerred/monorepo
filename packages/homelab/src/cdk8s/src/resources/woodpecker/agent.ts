@@ -97,11 +97,10 @@ export function createWoodpeckerAgent(chart: Chart) {
     "woodpecker-server-credentials",
   );
 
-  const deployment = createAgentDeployment(
-    chart,
-    serviceAccount,
-    serverSecretRef,
-  );
+  const deployment =
+    CI_ADMISSION_BUDGET.legacyMaxWorkflows > 0
+      ? createAgentDeployment(chart, serviceAccount, serverSecretRef)
+      : undefined;
   const pools: readonly CiAgentPool[] = ["pr", "main", "review", "completion"];
   const poolDeployments = pools.map((pool) =>
     createAgentDeployment(chart, serviceAccount, serverSecretRef, pool),
