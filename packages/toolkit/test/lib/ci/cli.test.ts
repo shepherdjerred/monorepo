@@ -31,6 +31,10 @@ test("bad flags emit a single parseable JSON error and exit 2 before authenticat
     ["wait", "99", "--until", "anything"],
     ["wait", "99", "--timeout", "0s"],
     ["load", "--head", "a".repeat(40)],
+    ["timings", "99"],
+    ["timings", "--head", "a".repeat(40)],
+    ["timings", "--since", "0h"],
+    ["main", "--since", "1h"],
   ]) {
     const child = Bun.spawn(
       [process.execPath, "run", entry, "ci", ...args, "--json"],

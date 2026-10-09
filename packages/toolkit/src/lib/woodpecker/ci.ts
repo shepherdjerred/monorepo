@@ -24,7 +24,7 @@ const WorkflowSchema = z.object({
   finished: z.number().optional(),
   children: z.array(StepSchema).optional(),
 });
-const SummarySchema = z.object({
+export const WoodpeckerSummarySchema = z.object({
   number: z.number().int().positive(),
   commit: z.string(),
   status: z.string(),
@@ -38,7 +38,7 @@ const SummarySchema = z.object({
   started: z.number().optional(),
   finished: z.number().optional(),
 });
-export const WoodpeckerPipelineSchema = SummarySchema.extend({
+export const WoodpeckerPipelineSchema = WoodpeckerSummarySchema.extend({
   workflows: z.array(WorkflowSchema).default([]),
   errors: z.array(z.unknown()).nullish(),
 });
@@ -123,21 +123,25 @@ export async function listPipelines(
     event: PipelineEvent | readonly PipelineEvent[];
     prNumber?: number;
     branch?: string;
-    stopWhen?: (pipelines: readonly z.infer<typeof SummarySchema>[]) => boolean;
+    stopWhen?: (
+      pipelines: readonly z.infer<typeof WoodpeckerSummarySchema>[],
+    ) => boolean;
   },
   signal?: AbortSignal,
-): Promise<z.infer<typeof SummarySchema>[]> {
+): Promise<z.infer<typeof WoodpeckerSummarySchema>[]> {
   const events: readonly string[] =
     typeof filter.event === "string" ? [filter.event] : filter.event;
   const query = new URLSearchParams({ event: events.join(","), perPage: "50" });
   if (filter.prNumber !== undefined)
     query.set("ref", `refs/pull/${String(filter.prNumber)}/`);
   if (filter.branch !== undefined) query.set("branch", filter.branch);
-  const pipelines: z.infer<typeof SummarySchema>[] = [];
+  const pipelines: z.infer<typeof WoodpeckerSummarySchema>[] = [];
   for (let page = 1; ; page++) {
     query.set("page", String(page));
     const entries = z
-      .array(SummarySchema.extend({ event: z.string(), ref: z.string() }))
+      .array(
+        WoodpeckerSummarySchema.extend({ event: z.string(), ref: z.string() }),
+      )
       .parse(
         await woodpeckerJson(
           `/api/repos/${String(config.repoId)}/pipelines?${query.toString()}`,
