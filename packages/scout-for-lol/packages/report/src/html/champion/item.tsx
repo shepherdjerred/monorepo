@@ -19,6 +19,7 @@ function renderItem(item: number) {
     return (
       <div
         style={{
+          boxSizing: "border-box",
           width: dimension,
           height: dimension,
           display: "flex",
@@ -45,6 +46,7 @@ function renderItem(item: number) {
           src={iconUrl}
           alt=""
           style={{
+            boxSizing: "border-box",
             backgroundColor: palette.blue[5],
             border: isPrismatic
               ? `.15rem solid transparent`
@@ -61,6 +63,7 @@ function renderItem(item: number) {
         {isPrismatic && (
           <div
             style={{
+              boxSizing: "border-box",
               display: "block",
               position: "absolute",
               top: "-.15rem",

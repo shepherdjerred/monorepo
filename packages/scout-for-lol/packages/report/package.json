@@ -33,7 +33,7 @@
     "echarts": "^6.0.0",
     "react": "19.3.0",
     "remeda": "^2.21.2",
-    "satori": "^0.37.1",
+    "satori": "^0.44.0",
     "ts-pattern": "^5.7.0",
     "yoga-wasm-web": "^0.3.3",
     "zod": "^4.4.3"

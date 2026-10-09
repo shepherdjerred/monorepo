@@ -50,6 +50,7 @@ export function renderChampion(
           src={getSpellImage(spellData.image.full)}
           alt=""
           style={{
+            boxSizing: "border-box",
             backgroundColor: palette.blue[5],
             border: `.01rem solid ${palette.gold.bright}`,
             objectFit: "contain",

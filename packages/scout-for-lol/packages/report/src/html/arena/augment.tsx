@@ -30,6 +30,7 @@ export function AugmentRow({ augment }: { augment: Augment }) {
             width={ICON_SIZE}
             height={ICON_SIZE}
             style={{
+              boxSizing: "border-box",
               width: ICON_SIZE,
               height: ICON_SIZE,
               border: `1px solid rgba(155, 90, 200, 0.55)`,
@@ -39,6 +40,7 @@ export function AugmentRow({ augment }: { augment: Augment }) {
         ) : (
           <div
             style={{
+              boxSizing: "border-box",
               width: ICON_SIZE,
               height: ICON_SIZE,
               border: `1px solid ${palette.grey[3]}`,
@@ -76,6 +78,7 @@ export function AugmentRow({ augment }: { augment: Augment }) {
     >
       <div
         style={{
+          boxSizing: "border-box",
           width: ICON_SIZE,
           height: ICON_SIZE,
           border: `1px solid ${palette.grey[3]}`,

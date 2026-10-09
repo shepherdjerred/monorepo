@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "@shepherdjerred/sentry-config": "workspace:*",
-    "@sentry/bun": "^11.5.0",
+    "@sentry/bun": "^11.6.0",
     "@shepherdjerred/config": "workspace:*",
     "@shepherdjerred/feature-flags": "workspace:*",
     "@shepherdjerred/home-assistant": "workspace:*",

@@ -33,6 +33,7 @@ function ClassicSpell({ spellId }: { spellId: number }) {
       width={52}
       height={52}
       style={{
+        boxSizing: "border-box",
         width: 52,
         height: 52,
         border: `2px solid ${classicPalette.gold.shadow}`,
@@ -54,6 +55,7 @@ function ClassicCard({
   return (
     <div
       style={{
+        boxSizing: "border-box",
         display: "flex",
         flexDirection: "column",
         width: CARD_WIDTH,
@@ -82,6 +84,7 @@ function ClassicCard({
       />
       <div
         style={{
+          boxSizing: "border-box",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -104,6 +107,7 @@ function ClassicCard({
       </div>
       <div
         style={{
+          boxSizing: "border-box",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -128,6 +132,7 @@ function ClassicCard({
       </div>
       <div
         style={{
+          boxSizing: "border-box",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -219,6 +224,7 @@ export function ClassicLoadingScreen({
   return (
     <div
       style={{
+        boxSizing: "border-box",
         display: "flex",
         flexDirection: "column",
         position: "relative",

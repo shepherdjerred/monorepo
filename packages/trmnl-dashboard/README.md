@@ -101,7 +101,7 @@ From the repository root, validate all four layouts for all three plugins:
 ```bash
 docker run --rm --entrypoint sh \
   -v "$(pwd):/workspace" -w /workspace \
-  trmnl/trmnlp:v0.22.1@sha256:62512c46a431a018ca7360cc5451efe83b9f627516f39d82ca3f9fc487ae3e5d \
+  trmnl/trmnlp:v0.24.0@sha256:4d3c217a054513613447aaa918e6e2a5550ef94553bc1eeee9b3e18d384bc8c1 \
   packages/trmnl-dashboard/scripts/trmnlp-ci.sh validate
 ```
 
@@ -110,7 +110,7 @@ Preview one plugin at `http://localhost:4567`:
 ```bash
 docker run --rm --entrypoint sh -p 4567:4567 \
   -v "$(pwd):/workspace" -w /workspace \
-  trmnl/trmnlp:v0.22.1@sha256:62512c46a431a018ca7360cc5451efe83b9f627516f39d82ca3f9fc487ae3e5d \
+  trmnl/trmnlp:v0.24.0@sha256:4d3c217a054513613447aaa918e6e2a5550ef94553bc1eeee9b3e18d384bc8c1 \
   packages/trmnl-dashboard/scripts/trmnlp-ci.sh serve pets
 ```
 

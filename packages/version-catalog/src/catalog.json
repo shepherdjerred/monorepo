@@ -36,7 +36,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "v0.22.1@sha256:62512c46a431a018ca7360cc5451efe83b9f627516f39d82ca3f9fc487ae3e5d"
+      "value": "v0.24.0@sha256:4d3c217a054513613447aaa918e6e2a5550ef94553bc1eeee9b3e18d384bc8c1"
     },
     {
       "name": "connect",
@@ -60,7 +60,7 @@
         "registryUrl": "https://argoproj.github.io/argo-helm",
         "versioning": "semver"
       },
-      "value": "10.10.0"
+      "value": "10.10.1"
     },
     {
       "name": "cert-manager",
@@ -108,7 +108,7 @@
         "registryUrl": "https://prometheus-community.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "92.0.0"
+      "value": "92.2.0"
     },
     {
       "name": "prometheus-adapter",
@@ -243,7 +243,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "docker"
       },
-      "value": "2.18.2@sha256:bfcd2f3f6f89d2171d161ac1780723d1633f8de3c4c993d0dc52aa9edb729e16"
+      "value": "2.18.2@sha256:d3c53deb09f6b8fffd1476c7154da538394193955d1e909f3b126068102fb7cf"
     },
     {
       "name": "linuxserver/bazarr",
@@ -609,7 +609,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "3.2.6-alpine@sha256:3a819392f5a6af2a9203d1c63ff0feba74f0c940623a558511be06d7d85e361c"
+      "value": "3.4.3-alpine@sha256:fb87fc81943143b9acaea7442973e6ba654035fff76ffe7af6829dd1bcb0f7a5"
     },
     {
       "name": "jorenn92/maintainerr",
@@ -669,7 +669,7 @@
         "registryUrl": "https://grafana.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "2.3.1"
+      "value": "2.3.2"
     },
     {
       "name": "alloy",
@@ -681,7 +681,7 @@
         "registryUrl": "https://grafana.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "1.13.0"
+      "value": "1.13.1"
     },
     {
       "name": "grafana/grafana-image-renderer",
@@ -740,7 +740,7 @@
         "versioning": "semver",
         "packageName": "shepherdjerred/scout-for-lol"
       },
-      "value": "2.0.0-1006547@sha256:bbdee5d457e646650dabdb0f1174f2c5e4f21e1cc747bd21cfc20fe1cfa6953f",
+      "value": "2.0.0-1006898@sha256:badce741372f1947e374f779db215b1c10abb9aa2bea112e0e60b52ca139f6f5",
       "notes": [
         "Prod promotion = merging a reviewed PR for this pin (normally Renovate). Each 2.0.0-<n>",
         "tag is minted by the scout-tag-release CI step only after site version",
@@ -824,7 +824,7 @@
         "versioning": "semver",
         "packageName": "shepherdjerred/starlight-karma-bot"
       },
-      "value": "2.0.0-1006547@sha256:1f11be5bd05d655cb6faf8cf1253372bbed1f5536511e063e6cf92418c5ca564"
+      "value": "2.0.0-1006867@sha256:837f9bde663a0debe599e5f7bab072c960c8d1f9a10e4d18d4fdd1d84d026114"
     },
     {
       "name": "shepherdjerred/birmel",
@@ -1067,7 +1067,7 @@
         "versioning": "semver",
         "packageName": "kueue/charts/kueue"
       },
-      "value": "0.20.0@sha256:61857945f1109da052dcc01baf79ea912a6c2a5ffeb087f3dfe270c9ea198c9c"
+      "value": "0.20.1@sha256:909f655fee23166bfe112b2e0fd18193d10e463e1f7287ff99c285060da87981"
     },
     {
       "name": "tonistiigi/binfmt",
@@ -1136,7 +1136,7 @@
         "registryUrl": "https://vmware-tanzu.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "12.2.0"
+      "value": "12.2.1"
     },
     {
       "name": "velero/velero-plugin-for-aws",
@@ -1382,7 +1382,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "latest@sha256:4960928f55c4d2d587310776e5b2cf1b5def4aebd87b93e4baa5546d95bab256"
+      "value": "latest@sha256:389ccc1a8661857e34770432c9c737b1cc59351d13be91b93df03db817d0a7db"
     },
     {
       "name": "postalserver/postal",
@@ -1546,7 +1546,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "regex:^version-(?<major>[0-9]+)[.](?<minor>[0-9]+)[.](?<patch>[0-9]+)-nonroot$"
       },
-      "value": "version-20.19.0-nonroot@sha256:f2109e09662e2bd9570af155e707fab8cf92eab79911727d183d8e667d9411c9",
+      "value": "version-20.20.0-nonroot@sha256:2ac6874a4f743a626060adb6988b6dbd558530a0e06685334f63f8a779aaabb5",
       "notes": [
         "Phoenix publishes semver releases only under version-X.Y.Z tags; the nonroot",
         "variant runs as UID 65532 and is the one the upstream Helm chart deploys."
@@ -1640,7 +1640,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "1.32.0@sha256:c3e752127759616bb1615e0f9ba0e21635aeb5fdeb922de4f371c350955f46ae"
+      "value": "1.32.1@sha256:acecbab5b0b8ae9cf4012b508866ca97feda3709577bf157b537239f40029049"
     },
     {
       "name": "temporalio/ui",
@@ -1664,7 +1664,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "1.32.0@sha256:a9f84fb9a374b2374fe2e67c8efc0468ff3f1c66c8a0b14597ec86e349e62bca"
+      "value": "1.32.1@sha256:9ef0dc5b063bf4ffd5c1512de72e0e73e225bd2c7006a18ce69bd592a8862a83"
     },
     {
       "name": "shepherdjerred/temporal-worker",

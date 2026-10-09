@@ -17,6 +17,7 @@ function BanIcon({ ban }: { ban: LoadingScreenBan }) {
   return (
     <div
       style={{
+        boxSizing: "border-box",
         width: "48px",
         height: "48px",
         display: "flex",
@@ -85,6 +86,7 @@ function EmptyBanSlot({ team }: { team: "blue" | "red" }) {
   return (
     <div
       style={{
+        boxSizing: "border-box",
         width: "48px",
         height: "48px",
         display: "flex",

@@ -16,10 +16,10 @@
     "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
-    "@sentry/core": "11.5.0"
+    "@sentry/core": "11.6.0"
   },
   "devDependencies": {
-    "@sentry/bun": "11.5.0",
+    "@sentry/bun": "11.6.0",
     "@shepherdjerred/eslint-config": "workspace:*",
     "@tsconfig/node-lts": "^24.0.0",
     "@tsconfig/recommended": "^1.0.13",

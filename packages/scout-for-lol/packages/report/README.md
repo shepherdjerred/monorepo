@@ -1,7 +1,7 @@
 # Scout for League of Legends Report
 
 Generates League of Legends match report images from match data. React
-components are rendered to SVG with Satori and Yoga, then converted to PNG
+components are rendered to SVG with Satori, then converted to PNG
 with resvg. The package can also be consumed as a set of React components
 (`./browser` export).
 
@@ -20,6 +20,12 @@ with resvg. The package can also be consumed as a set of React components
   screenshot renderers live alongside them under `src/html/`.
 
 ## Snapshots
+
+Satori styles with padding or borders explicitly use `boxSizing: "border-box"`
+so dimensions include those edges. Satori's content-box default can otherwise
+expand cards beyond the report canvas. After a renderer upgrade, inspect
+representative PNGs before updating SVG hashes or the visual contract; include
+full and partial rosters, long names, ranked designs, Arena and CJK text.
 
 Rendering is deterministic, so the test suites commit SVG and hash snapshot
 artifacts (`src/html/**/__snapshots__/`). The ranked banner/square suites are

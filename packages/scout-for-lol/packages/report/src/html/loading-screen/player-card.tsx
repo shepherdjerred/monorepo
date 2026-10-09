@@ -165,6 +165,7 @@ function SummonerSpells({
           src={spell1Img}
           alt=""
           style={{
+            boxSizing: "border-box",
             width: `${iconSize.toString()}px`,
             height: `${iconSize.toString()}px`,
             borderRadius: "2px",
@@ -177,6 +178,7 @@ function SummonerSpells({
           src={spell2Img}
           alt=""
           style={{
+            boxSizing: "border-box",
             width: `${iconSize.toString()}px`,
             height: `${iconSize.toString()}px`,
             borderRadius: "2px",
@@ -211,6 +213,7 @@ function RuneIcons({
           src={getRuneIconUrl(keystoneInfo.icon)}
           alt=""
           style={{
+            boxSizing: "border-box",
             width: `${runeSize.toString()}px`,
             height: `${runeSize.toString()}px`,
             borderRadius: "50%",
@@ -264,6 +267,7 @@ export function PlayerCard({
   return (
     <div
       style={{
+        boxSizing: "border-box",
         width: `${sizing.width.toString()}px`,
         height: `${sizing.height.toString()}px`,
         display: "flex",
@@ -306,6 +310,7 @@ export function PlayerCard({
       {/* Bottom overlay with all player info */}
       <div
         style={{
+          boxSizing: "border-box",
           position: "absolute",
           bottom: 0,
           left: 0,

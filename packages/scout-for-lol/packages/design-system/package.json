@@ -79,13 +79,13 @@
     "react-dom": "19.3.0",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
-    "satori": "^0.37.1",
+    "satori": "^0.44.0",
     "tailwind-merge": "^3.4.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",
-    "@playwright/test": "1.63.0",
+    "@playwright/test": "1.64.0",
     "@storybook/addon-a11y": "^10.6.0",
     "@storybook/addon-docs": "^10.6.0",
     "@storybook/react-vite": "^10.6.0",

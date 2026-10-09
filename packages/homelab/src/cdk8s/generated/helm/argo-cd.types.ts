@@ -1752,7 +1752,7 @@ export type ArgocdHelmValuesDex = {
   /**
    * Dex image
    *
-   * @default {"repository":"ghcr.io/dexidp/dex","tag":"v2.45.1","imagePullPolicy":""}
+   * @default {"repository":"ghcr.io/dexidp/dex","tag":"v2.46.0","imagePullPolicy":""}
    */
   image?: ArgocdHelmValuesDexImage;
   imagePullSecrets?: unknown[];
@@ -2186,7 +2186,7 @@ export type ArgocdHelmValuesDexImage = {
   /**
    * Dex image tag
    *
-   * @default "v2.45.1"
+   * @default "v2.46.0"
    */
   tag?: string;
   /**
