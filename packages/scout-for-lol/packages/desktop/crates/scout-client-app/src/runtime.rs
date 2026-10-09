@@ -1883,17 +1883,20 @@ fn out_of_budget(deadline: Instant, diagnostics: &Diagnostics) -> bool {
     spent
 }
 
-/// The most rosters, brackets or tournaments one pass reads by ID.
-const MAX_CLASH_DETAIL_READS: usize = 4;
-
-/// The Clash resources only an ID reaches — the player's roster, its record,
-/// its bracket, and the tournaments in play — read with IDs from the Clash
-/// payloads the pass just read.
+/// The Clash resources only an ID reaches: the player's own roster, its
+/// record, its bracket, and its tournament.
 ///
-/// Built from the League client's field names as best known
-/// (`rosterId`, `bracketId`, `tournamentId`/`id`). A name that never appears
-/// reads nothing, and every read is best-effort: each failure is recorded and
-/// the rest still run. A failure to keep what was read is returned.
+/// Only the player's own roster is followed. Ingress keeps one snapshot per
+/// player and resource, so a second roster (an invitation, say) read into the
+/// same slot would replace it. For the same reason the bracket and tournament
+/// IDs come from the roster payload just read, never from the cache, which can
+/// hold an earlier roster; the player payload stands in for a bracket the
+/// roster doesn't name.
+///
+/// Built from the League client's field names as best known (`rosterId`,
+/// `bracketId`, `tournamentId`). A name that never appears reads nothing, and
+/// every read is best-effort: each failure is recorded and the rest still
+/// run. A failure to keep what was read is returned.
 async fn collect_clash_details(
     client: &LcuClient,
     outbox: &ObservationOutbox,
@@ -1901,91 +1904,74 @@ async fn collect_clash_details(
     observer: (Option<&str>, &Diagnostics),
     deadline: Instant,
 ) -> Result<(), String> {
-    let rosters = ids_from(
-        payloads,
-        &["clash_player", "clash_invited_rosters", "clash_summary"],
-        &["rosterId"],
-    )
-    .into_iter()
-    .filter_map(|id| ClashRosterId::parse(&id))
-    .take(MAX_CLASH_DETAIL_READS)
-    .collect::<Vec<_>>();
-    let tournaments = ids_from(
-        payloads,
-        &["clash_current_tournament_ids", "clash_tournament_state"],
-        &["tournamentId", "id"],
-    )
-    .into_iter()
-    .filter_map(|id| ClashTournamentId::parse(&id))
-    .take(MAX_CLASH_DETAIL_READS)
-    .collect::<Vec<_>>();
-    let mut reads = Vec::new();
-    for roster in rosters {
-        reads.push((LcuResource::ClashRoster(roster), "clash_roster"));
-        reads.push((LcuResource::ClashRosterStats(roster), "clash_roster_stats"));
+    let diagnostics = observer.1;
+    let Some(roster) = ids_from(payloads, &["clash_player"], &["rosterId"])
+        .iter()
+        .find_map(|id| ClashRosterId::parse(id))
+    else {
+        return Ok(());
+    };
+    if out_of_budget(deadline, diagnostics) {
+        return Ok(());
     }
-    for tournament in tournaments {
+    let read = (LcuResource::ClashRoster(roster), "clash_roster");
+    let roster_payload = observe_clash_resource(client, outbox, payloads, read, observer).await?;
+    let from_roster = |key: &str| {
+        roster_payload
+            .as_ref()
+            .and_then(|value| first_value(value, key))
+    };
+    let mut reads = vec![(LcuResource::ClashRosterStats(roster), "clash_roster_stats")];
+    let bracket = from_roster("bracketId")
+        .into_iter()
+        .chain(ids_from(payloads, &["clash_player"], &["bracketId"]))
+        .find_map(|id| ClashBracketId::parse(&id));
+    if let Some(bracket) = bracket {
+        reads.push((LcuResource::ClashBracket(bracket), "clash_bracket"));
+    }
+    if let Some(tournament) =
+        from_roster("tournamentId").and_then(|id| ClashTournamentId::parse(&id))
+    {
         reads.push((LcuResource::ClashTournament(tournament), "clash_tournament"));
     }
-    for (resource, name) in reads {
-        if out_of_budget(deadline, observer.1) {
+    for read in reads {
+        if out_of_budget(deadline, diagnostics) {
             return Ok(());
         }
-        observe_clash_resource(client, outbox, payloads, (resource, name), observer).await?;
-    }
-    // Any Clash payload may name the bracket once it is drawn, the roster
-    // just read included.
-    let brackets = ids_from(
-        payloads,
-        &[
-            "clash_roster",
-            "clash_player",
-            "clash_summary",
-            "clash_tournament_state",
-        ],
-        &["bracketId"],
-    )
-    .into_iter()
-    .filter_map(|id| ClashBracketId::parse(&id))
-    .take(MAX_CLASH_DETAIL_READS)
-    .collect::<Vec<_>>();
-    for bracket in brackets {
-        if out_of_budget(deadline, observer.1) {
-            return Ok(());
-        }
-        let read = (LcuResource::ClashBracket(bracket), "clash_bracket");
         observe_clash_resource(client, outbox, payloads, read, observer).await?;
     }
     Ok(())
 }
 
-/// Read one ID-addressed Clash resource into its own slot, keyed by its path
-/// so each roster or bracket is compared with its own last copy. A failed
-/// read is recorded, under the resource name rather than its ID, and skipped.
+/// Read one ID-addressed Clash resource into its slot, returning what was
+/// read. A failed read is recorded, under the resource name rather than its
+/// ID, and reads as nothing.
 async fn observe_clash_resource(
     client: &LcuClient,
     outbox: &ObservationOutbox,
     payloads: &mut HashMap<String, Vec<u8>>,
     (resource, name): (LcuResource, &str),
     (local_puuid, diagnostics): (Option<&str>, &Diagnostics),
-) -> Result<(), String> {
+) -> Result<Option<Value>, String> {
     let Ok(payload) = noted_lcu_read(client.get_resource(resource).await, diagnostics, name) else {
-        return Ok(());
-    };
-    let cache_key = format!("{name}:{}", resource.path());
-    let slot = ObservationSlot {
-        cache_key: &cache_key,
-        resource: name,
-        kind: ObservationKind::Clash,
+        return Ok(None);
     };
     record_endpoint_payload(
         outbox,
         payloads,
-        slot,
+        ObservationSlot::named(name, ObservationKind::Clash),
         payload.as_ref(),
         local_puuid,
         diagnostics,
-    )
+    )?;
+    Ok(payload)
+}
+
+/// The first non-empty value of `key` in `value`, searched depth-first.
+fn first_value(value: &Value, key: &str) -> Option<String> {
+    let mut found = Vec::new();
+    collect_values(value, &[key], &mut found);
+    found.into_iter().next()
 }
 
 /// Every value of `keys` in the cached payloads named `sources`, plus any
@@ -1994,16 +1980,16 @@ async fn observe_clash_resource(
 fn ids_from(payloads: &HashMap<String, Vec<u8>>, sources: &[&str], keys: &[&str]) -> Vec<String> {
     let mut found = Vec::new();
     for source in sources {
-        let cached = payloads
-            .iter()
-            .filter(|(key, _)| key.as_str() == *source || key.starts_with(&format!("{source}:")))
-            .filter_map(|(_, body)| serde_json::from_slice::<Value>(body).ok());
-        for value in cached {
-            if let Value::Array(items) = &value {
-                found.extend(items.iter().filter_map(scalar_id));
-            }
-            collect_values(&value, keys, &mut found);
+        let Some(value) = payloads
+            .get(*source)
+            .and_then(|body| serde_json::from_slice::<Value>(body).ok())
+        else {
+            continue;
+        };
+        if let Value::Array(items) = &value {
+            found.extend(items.iter().filter_map(scalar_id));
         }
+        collect_values(&value, keys, &mut found);
     }
     let mut seen = std::collections::HashSet::new();
     found.retain(|id| seen.insert(id.clone()));
@@ -2645,7 +2631,7 @@ mod tests {
             serde_json::to_vec(&json!([3021, 3022, 3021]))?,
         );
         payloads.insert(
-            "clash_roster:/lol-clash/v1/roster/f1c2a7d0-4b9e-4a17-9c3e-2d8f6a5b1c0e".to_owned(),
+            "clash_roster".to_owned(),
             serde_json::to_vec(&json!({ "members": [], "bracketId": 18276 }))?,
         );
         payloads.insert(

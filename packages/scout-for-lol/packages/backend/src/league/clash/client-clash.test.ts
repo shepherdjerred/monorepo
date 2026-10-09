@@ -52,12 +52,16 @@ describe("a Clash roster the Scout Client saw", () => {
       matches: [
         {
           round: 1,
-          opponent: { name: "Dragon Pit", abbreviation: "Dragon Pit" },
+          opponent: {
+            kind: "team",
+            name: "Dragon Pit",
+            abbreviation: "Dragon Pit",
+          },
           result: "won",
         },
         {
           round: 2,
-          opponent: { name: "ELD", abbreviation: "ELD" },
+          opponent: { kind: "team", name: "ELD", abbreviation: "ELD" },
           result: "pending",
         },
       ],
@@ -69,7 +73,7 @@ describe("a Clash roster the Scout Client saw", () => {
     });
   });
 
-  test("reads a loss, a bye, and a roster with no bracket yet", () => {
+  test("tells an unnamed opponent from a bye, and reads a loss", () => {
     const lost = projectClientClashTeam({
       roster,
       bracket: LcuClashBracketSchema.parse({
@@ -81,8 +85,9 @@ describe("a Clash roster the Scout Client saw", () => {
       capturedAt: CAPTURED_AT,
     });
     expect(lost?.matches).toEqual([
-      { round: 1, opponent: null, result: "lost" },
-      { round: 2, opponent: null, result: "pending" },
+      // The bracket lists r2 in a match but never names it.
+      { round: 1, opponent: { kind: "unknown" }, result: "lost" },
+      { round: 2, opponent: { kind: "bye" }, result: "pending" },
     ]);
     expect(
       projectClientClashTeam({ roster, bracket: null, capturedAt: CAPTURED_AT })

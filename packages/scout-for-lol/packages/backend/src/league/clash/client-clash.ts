@@ -27,10 +27,18 @@ export type ClientClashLabels = {
   readonly abbreviation: string;
 };
 
+/**
+ * Who a bracket match is against: a named team, a roster the bracket lists
+ * without a name, or nobody (a bye).
+ */
+export type ClientClashOpponent =
+  | ({ readonly kind: "team" } & ClientClashLabels)
+  | { readonly kind: "unknown" }
+  | { readonly kind: "bye" };
+
 export type ClientClashMatch = {
   readonly round: number | null;
-  /** Null for a bye, or a roster the bracket doesn't name. */
-  readonly opponent: ClientClashLabels | null;
+  readonly opponent: ClientClashOpponent;
   readonly result: "won" | "lost" | "pending";
 };
 
@@ -72,18 +80,28 @@ function bracketMatches(
     .flatMap((match) => {
       const sides = [match.rosterId1, match.rosterId2];
       if (!sides.includes(rosterId)) return [];
-      // A bye has no second roster, and so no opponent to name.
-      const opponentId = sides.find((side) => side !== rosterId);
       return [
         {
           round: match.roundId ?? null,
-          opponent:
-            opponentId === undefined ? null : (labels.get(opponentId) ?? null),
+          opponent: opponentOf(
+            sides.find((side) => side !== rosterId),
+            labels,
+          ),
           result: matchResult(rosterId, match.winnerId),
         },
       ];
     })
     .toSorted((left, right) => (left.round ?? 0) - (right.round ?? 0));
+}
+
+/** A bye has no second roster; a second roster may still go unnamed. */
+function opponentOf(
+  opponentId: string | undefined,
+  labels: ReadonlyMap<string, ClientClashLabels>,
+): ClientClashOpponent {
+  if (opponentId === undefined) return { kind: "bye" };
+  const named = labels.get(opponentId);
+  return named === undefined ? { kind: "unknown" } : { kind: "team", ...named };
 }
 
 function matchResult(
@@ -135,13 +153,16 @@ export function projectClientClashTeam(input: {
   };
 }
 
-/** The opponent in the roster's undecided bracket match, if it has one. */
+/** The named team in the roster's undecided bracket match, if there is one. */
 export function currentClientClashOpponent(
   team: ClientClashTeam,
 ): ClientClashLabels | null {
-  return (
-    team.matches.find((match) => match.result === "pending")?.opponent ?? null
-  );
+  const opponent = team.matches.find(
+    (match) => match.result === "pending",
+  )?.opponent;
+  return opponent?.kind === "team"
+    ? { name: opponent.name, abbreviation: opponent.abbreviation }
+    : null;
 }
 
 /**

@@ -199,6 +199,21 @@ function ClashRosterSection(props: {
 
 const RESULT_LABEL = { won: "Won", lost: "Lost", pending: "Up next" } as const;
 
+type ClashBracketOpponent =
+  RouterOutputs["clash"]["roster"]["brackets"][number]["matches"][number]["opponent"];
+
+/** A bye has no opponent; a listed but unnamed one is still an opponent. */
+function opponentLabel(opponent: ClashBracketOpponent): string {
+  switch (opponent.kind) {
+    case "team":
+      return `vs ${opponent.name}`;
+    case "unknown":
+      return "vs an unnamed team";
+    case "bye":
+      return "Bye";
+  }
+}
+
 function ClashBracketSection(props: {
   brackets: RouterOutputs["clash"]["roster"]["brackets"];
 }) {
@@ -234,14 +249,14 @@ function ClashBracketSection(props: {
               ) : null}
               {bracket.matches.map((match, index) => (
                 <div
-                  key={`${String(match.round ?? index)}:${match.opponent?.name ?? ""}`}
+                  key={`${String(match.round ?? index)}:${opponentLabel(match.opponent)}`}
                   className="flex flex-wrap items-center justify-between gap-2"
                 >
                   <span>
                     {match.round === null
                       ? ""
                       : `Round ${String(match.round)} · `}
-                    vs {match.opponent?.name ?? "Bye"}
+                    {opponentLabel(match.opponent)}
                   </span>
                   <Badge
                     variant={

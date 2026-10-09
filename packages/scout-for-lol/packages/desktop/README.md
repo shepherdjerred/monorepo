@@ -48,9 +48,11 @@ returns nothing), or when the outbox can't keep what was read. Reads share a
 20-second budget, so a stalled League client can't hold the pass for every
 read's timeout. Reads past the budget wait for the next pass and record a
 `profile_pass` diagnostic. After the
-fixed Clash endpoints, the pass follows their IDs to the resources only an ID
-reaches: the player's roster and its record, the roster's bracket, and the
-tournaments in play (`collect_clash_details`, at most four of each per pass).
+fixed Clash endpoints, the pass follows the player's own roster ID to the
+resources only an ID reaches: that roster, its record, its bracket, and its
+tournament (`collect_clash_details`). Invited rosters are not followed. The
+server keeps one snapshot per player and resource, so a second roster would
+replace the player's own.
 The field names those IDs come from are the best available description of the
 League client's Clash payloads, written before a Clash window could confirm
 them. A name that never appears reads nothing. Every ID is parsed to its own
