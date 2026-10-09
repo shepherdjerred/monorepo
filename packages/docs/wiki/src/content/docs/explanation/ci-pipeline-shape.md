@@ -35,8 +35,10 @@ Three consequences are worth stating plainly:
   ed25519 signature — and recomputes the body digest rather than trusting the
   `Content-Digest` header it covers — before reading anything.
 
-Feature-branch pushes and pull-request metadata events emit one clone-free
-no-op workflow. Pull requests select from their changed files. Main pushes
+Feature-branch pushes and ordinary pull-request metadata edits emit one
+clone-free no-op workflow. Marking a draft ready selects full PR verification
+without requiring another commit. The signed ready event preserves the PR's
+credential approval and cache trust. Pull requests select from changed files. Main pushes
 compare the head to the last fully green main build, so a failed release's
 changes stay selected on the next push. If that comparison cannot prove the
 complete diff, the extension emits the full graph. The Linux `verify` workflow
@@ -67,16 +69,27 @@ commit-back, and Scout's image-driven release consumers. An uncertain catalog
 comparison selects the full main graph.
 
 The verify and Playwright workflows use the private Turbo cache over the
-tailnet, with the `monorepo` team and a Kubernetes Secret for its token. This
-lets independent workflow checkouts reuse unchanged task outputs. Developer
-shells default to local caching because their network connection is less
-predictable.
+tailnet. [Separate teams and signing keys](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/turbo-cache.ts)
+keep trusted main output separate from PR output. Independent workflow
+checkouts can reuse unchanged tasks within their trust domain. Developer
+shells default to local caching because their network connection is less predictable.
 
 Woodpecker reports a GitHub status per workflow. A final, clone-free PR
 workflow checks the selected blocking workflows at the same pipeline URL and
 reports the single required `ci/woodpecker/pr/ci-complete` status. This avoids a
 ruleset that names a status Woodpecker never emits. The cluster's CI admission
 quota also bounds concurrent workflow pods and their aggregate storage request.
+
+Review and completion use reserved agent slots and admission capacity, so long
+builds cannot occupy every place that can report a merge verdict. Their code
+comes from the deployed policy image, with no PR checkout. PR and main work
+have separate agent pools; main receives the highest admission priority.
+[Admission limits](/explanation/homelab/ci-admission/) still bound the combined
+resource requests, without preempting production workloads.
+
+New verification replaces older work for the same PR, including ready events
+and target-branch changes. The extension checks pipeline identity again before
+canceling an older run. Newer runs, main and other PRs remain independent.
 
 ## CI runs only for the owner's own accounts
 
@@ -123,6 +136,13 @@ compares PRs against their target branch. Its
 runs affected projects. When the base is unavailable, it runs all projects to
 preserve coverage.
 
+Browser checks run alongside verification because their graph includes the
+builds they need. Completion and site publication wait for both lanes. Static
+wiki output has direct artifact checks, while browsers still exercise navigation
+and rendered behavior. The [portable Windows test graph](https://github.com/shepherdjerred/monorepo/blob/main/packages/tasknotes-windows/turbo.json)
+produces test and coverage evidence in one execution; the coverage thresholds
+remain unchanged.
+
 - **Browser E2E** covers the shipped Playwright consumers: `sjer.red`, the docs
   wiki, the alert dashboard, and Scout's public/docs/app design
   audit. The browser matrix comes from the pinned `ci-playwright` image, so the
@@ -139,11 +159,11 @@ preserve coverage.
   than a service. This lane is the only one needing a whole trace pipeline,
   where a failure means the exporter/collector/object-store path broke rather
   than a query.
-- **OpenTofu** has one plan and apply job for each SeaweedFS, Tailscale, ARR,
-  GitHub, and Cloudflare stack. Each job receives the state identity plus only
-  that stack's provider identity. The dependency chain preserves release
-  ordering while the job boundary prevents one provider's configuration from
-  running with another provider's credential. OpenAI, Anthropic, Discord,
+- **OpenTofu** groups selected PR checks into one workflow with a shared
+  checkout and dependency install. Ordered containers each receive only their
+  own credentials, resource limits and timeout. Main applies remain separate
+  for SeaweedFS, Tailscale, ARR, GitHub and Cloudflare. Their dependency chain
+  preserves release ordering and provider boundaries. OpenAI, Anthropic, Discord,
   and Cloudflare token management add a second serialized group: PRs
   validate them without credentials or a backend, while main gives each
   no-retry job only its platform credential and unique state passphrase.
