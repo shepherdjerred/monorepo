@@ -95,7 +95,7 @@ export function releaseChainSteps(
         ...admissionGate(
           "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
         ),
-        ". ci/scripts/toolchain.sh",
+        "MISE_TOOLCHAIN_SCOPE=automation . ci/scripts/toolchain.sh",
         "bun --no-install ci/scripts/reporting/buildkit-env.ts",
         // The Caddyfile is an input to the in-image smoke test. verify builds
         // it; it travels through the handoff store because each Woodpecker
@@ -124,7 +124,7 @@ export function releaseChainSteps(
           "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter homelab --filter '@homelab/cdk8s' --production",
         ),
         ...releaseRequestedGate(),
-        ". ci/scripts/toolchain.sh",
+        "MISE_TOOLCHAIN_SCOPE=deployment . ci/scripts/toolchain.sh",
         'export ARGOCD_TOKEN="$ARGOCD_AUTH_TOKEN"',
         // Auto-sync is suspended for the whole rollout so ArgoCD cannot
         // reconcile a half-published set of charts.
@@ -168,7 +168,7 @@ export function releaseChainSteps(
           "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter homelab --filter '@homelab/cdk8s' --production",
         ),
         ...releaseRequestedGate(),
-        ". ci/scripts/toolchain.sh",
+        "MISE_TOOLCHAIN_SCOPE=deployment . ci/scripts/toolchain.sh",
         'export ARGOCD_TOKEN="$ARGOCD_AUTH_TOKEN"',
         "bun --no-install scripts/ci/read-ci-handoff.ts argocd-release-expected > argocd-release-expected.json",
         // release-root owns the exact-revision, lifecycle, immutable-field and
@@ -220,7 +220,7 @@ function chainedApplyCommands(stack: string): string[] {
     '  echo "invalid homelab release admission outcome: $release_admission" >&2',
     "  exit 1",
     "fi",
-    ". ci/scripts/toolchain.sh",
+    "MISE_TOOLCHAIN_SCOPE=tofu . ci/scripts/toolchain.sh",
     `export TF_PLUGIN_CACHE_DIR=${TOFU_PLUGIN_CACHE.path}`,
     `flock -x ${TOFU_PLUGIN_CACHE.path}/.lock bun --no-install packages/homelab/scripts/tofu/tofu-stack.ts ${stack} apply`,
   ];

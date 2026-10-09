@@ -192,7 +192,7 @@ const TOFU_CHANGED = {
 
 function tofuCommands(stack: string, action: "plan" | "apply"): string[] {
   return [
-    ". ci/scripts/toolchain.sh",
+    "MISE_TOOLCHAIN_SCOPE=tofu . ci/scripts/toolchain.sh",
     "ci/scripts/bun-install.sh --frozen-lockfile --filter homelab --production",
     `export TF_PLUGIN_CACHE_DIR=${TOFU_PLUGIN_CACHE.path}`,
     // The plugin cache protocol has no concurrent-writer support, so take an
@@ -216,7 +216,7 @@ function tofuValidateSteps(images: CiImages): CiStep[] {
       label: "tofu validate platforms",
       image: images.base,
       commands: [
-        ". ci/scripts/toolchain.sh",
+        "MISE_TOOLCHAIN_SCOPE=tofu . ci/scripts/toolchain.sh",
         "ci/scripts/bun-install.sh --frozen-lockfile --filter homelab --production",
         `export TF_PLUGIN_CACHE_DIR=${TOFU_PLUGIN_CACHE.path}`,
         `for stack in ${PLATFORM_STACKS.join(" ")}; do`,
@@ -235,7 +235,7 @@ function tofuValidateSteps(images: CiImages): CiStep[] {
       label: "tofu validate posthog",
       image: images.base,
       commands: [
-        ". ci/scripts/toolchain.sh",
+        "MISE_TOOLCHAIN_SCOPE=tofu . ci/scripts/toolchain.sh",
         "ci/scripts/bun-install.sh --frozen-lockfile --filter homelab --production",
         `export TF_PLUGIN_CACHE_DIR=${TOFU_PLUGIN_CACHE.path}`,
         `flock -x ${TOFU_PLUGIN_CACHE.path}/.lock bun --no-install packages/homelab/scripts/tofu/tofu-stack.ts posthog validate`,

@@ -140,6 +140,16 @@ A pod killed before cleanup or an install failure that leaves reporting dependen
 unavailable may have no artifact. Missing diagnostics never mean a cache hit or a
 successful run. Credentialless automation does not gain publication credentials.
 
+## Toolchain scopes
+
+Exhaustive verification keeps the complete repository toolchain. Image and
+repository automation use the `automation` scope (Bun, GitHub CLI, jq), while
+Helm/GitOps publication uses `deployment` (Bun, Node, GitHub CLI, jq, Helm,
+ArgoCD, AWS CLI). OpenTofu containers use `tofu` (Bun and OpenTofu). These
+profiles resolve the checked-out `.mise.toml` pins even when the base image is
+older. Docker/buildx and Git remain prerequisites supplied by that image.
+Adding a command to a lane also requires checking its toolchain profile.
+
 ## Pipeline authorization
 
 `src/authorization.ts` admits only the owner's named accounts and bots. Justin

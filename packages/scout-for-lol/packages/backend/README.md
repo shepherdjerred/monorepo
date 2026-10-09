@@ -183,6 +183,14 @@ bun run temporal:requeue-work -- \
 `db:generate` must run after schema changes and before typecheck/test; from the
 Scout root, `mise run generate` does the same thing.
 
+Turbo caches this generation from the Prisma schema/configuration, branding
+script and logger, package/TypeScript configuration, and global toolchain inputs.
+Application source edits do not require regenerating the client. Branding writes
+type imports without loading application packages; consuming builds still build
+their dependencies. Generation stays serialized after Birmel to protect Prisma's
+shared engine cache. Generated files are uncommitted machine output and are not
+passed through Prettier; the branded type checks remain required.
+
 ## Explore agent skills
 
 The Explore agent's system prompt is a lean core — corpus honesty, answer
