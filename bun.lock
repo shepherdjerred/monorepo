@@ -2516,7 +2516,7 @@
     "scripts": {
       "name": "@shepherdjerred/root-scripts",
       "dependencies": {
-        "@openai/codex-sdk": "0.162.0",
+        "@openai/codex-sdk": "0.162.1",
         "@shepherdjerred/code-review": "workspace:*",
         "@shepherdjerred/llm-runtime": "workspace:*",
         "@shepherdjerred/release-tools": "workspace:*",
@@ -9095,8 +9095,6 @@
 
     "@shepherdjerred/mc-harness/vitest": ["vitest@5.0.1", "", { "dependencies": { "@types/chai": "^5.2.2", "@vitest/mocker": "5.0.1", "chai": "^6.2.2", "es-module-lexer": "^2.3.2", "expect-type": "^1.4.0", "magic-string": "^1.2.3", "obug": "^2.1.4", "picomatch": "^4.0.7", "std-env": "^4.2.0", "tinybench": "6.1.4", "tinyexec": "1.3.0", "tinyglobby": "^0.2.17", "why-is-node-running": "^2.3.0" }, "peerDependencies": { "@edge-runtime/vm": "*", "@opentelemetry/api": "^1.9.0", "@types/node": "^22.0.0 || >=24.0.0", "@vitest/browser-playwright": "5.0.1", "@vitest/browser-preview": "5.0.1", "@vitest/browser-webdriverio": "^5.0.0-beta.5 || >=5.0.0", "@vitest/coverage-istanbul": "5.0.1", "@vitest/coverage-v8": "5.0.1", "@vitest/ui": "5.0.1", "happy-dom": "*", "jsdom": "*", "vite": "^6.4.0 || ^7.0.0 || ^8.0.0" }, "optionalPeers": ["@edge-runtime/vm", "@opentelemetry/api", "@types/node", "@vitest/browser-playwright", "@vitest/browser-preview", "@vitest/browser-webdriverio", "@vitest/coverage-istanbul", "@vitest/coverage-v8", "@vitest/ui", "happy-dom", "jsdom"], "bin": { "vitest": "./vitest.mjs" } }, "sha512-iA95lQbKEkvrtTkdAgnWbXfbipWiiWe/hDl2P5tMi6WFwD76G0NxXAGp/M9EOcYupeGJRr6wppMc7CoA41TQjg=="],
 
-    "@shepherdjerred/root-scripts/@openai/codex-sdk": ["@openai/codex-sdk@0.162.0", "", { "dependencies": { "@openai/codex": "0.162.0" } }, "sha512-SAe7x2td4hDlOm1wilgnFqfYZTJsewGQ9gTOsFnn3963ZuLhQNiuR7q7YecLhUNJ5pYra8DSH+JWpTD2+ZD6IA=="],
-
     "@shepherdjerred/storm-brain/@vitest/coverage-istanbul": ["@vitest/coverage-istanbul@5.0.1", "", { "dependencies": { "@jridgewell/gen-mapping": "^0.3.13", "@jridgewell/trace-mapping": "0.3.31", "@vitest/istanbul-lib-coverage": "^1.0.0", "@vitest/istanbul-lib-instrument": "^1.0.0", "@vitest/istanbul-lib-report": "^1.0.0", "@vitest/istanbul-lib-source-maps": "^1.0.0", "magicast": "^0.5.4", "obug": "^2.1.4", "tinyrainbow": "^3.1.1" }, "peerDependencies": { "vitest": "5.0.1" } }, "sha512-JROeZ7Yy4xOMXQALW6CHT3O165LlUCB55F0aQ1LBRuFOCPCnSM1vDx8YxZTs8uPIBW9lcEftfNfOvIj4IJ1i9g=="],
 
     "@shepherdjerred/storm-brain/vitest": ["vitest@5.0.1", "", { "dependencies": { "@types/chai": "^5.2.2", "@vitest/mocker": "5.0.1", "chai": "^6.2.2", "es-module-lexer": "^2.3.2", "expect-type": "^1.4.0", "magic-string": "^1.2.3", "obug": "^2.1.4", "picomatch": "^4.0.7", "std-env": "^4.2.0", "tinybench": "6.1.4", "tinyexec": "1.3.0", "tinyglobby": "^0.2.17", "why-is-node-running": "^2.3.0" }, "peerDependencies": { "@edge-runtime/vm": "*", "@opentelemetry/api": "^1.9.0", "@types/node": "^22.0.0 || >=24.0.0", "@vitest/browser-playwright": "5.0.1", "@vitest/browser-preview": "5.0.1", "@vitest/browser-webdriverio": "^5.0.0-beta.5 || >=5.0.0", "@vitest/coverage-istanbul": "5.0.1", "@vitest/coverage-v8": "5.0.1", "@vitest/ui": "5.0.1", "happy-dom": "*", "jsdom": "*", "vite": "^6.4.0 || ^7.0.0 || ^8.0.0" }, "optionalPeers": ["@edge-runtime/vm", "@opentelemetry/api", "@types/node", "@vitest/browser-playwright", "@vitest/browser-preview", "@vitest/browser-webdriverio", "@vitest/coverage-istanbul", "@vitest/coverage-v8", "@vitest/ui", "happy-dom", "jsdom"], "bin": { "vitest": "./vitest.mjs" } }, "sha512-iA95lQbKEkvrtTkdAgnWbXfbipWiiWe/hDl2P5tMi6WFwD76G0NxXAGp/M9EOcYupeGJRr6wppMc7CoA41TQjg=="],
@@ -10953,8 +10951,6 @@
 
     "@shepherdjerred/mc-harness/vitest/why-is-node-running": ["why-is-node-running@2.3.0", "", { "dependencies": { "siginfo": "^2.0.0", "stackback": "0.0.2" }, "bin": { "why-is-node-running": "cli.js" } }, "sha512-hUrmaWBdVDcxvYqnyh09zunKzROWjbZTiNy8dBEjkS7ehEDQibXJ7XvlmtbwuTclUiIyN+CyXQD4Vmko8fNm8w=="],
 
-    "@shepherdjerred/root-scripts/@openai/codex-sdk/@openai/codex": ["@openai/codex@0.162.0", "", { "optionalDependencies": { "@openai/codex-darwin-arm64": "npm:@openai/codex@0.162.0-darwin-arm64", "@openai/codex-darwin-x64": "npm:@openai/codex@0.162.0-darwin-x64", "@openai/codex-linux-arm64": "npm:@openai/codex@0.162.0-linux-arm64", "@openai/codex-linux-x64": "npm:@openai/codex@0.162.0-linux-x64", "@openai/codex-win32-arm64": "npm:@openai/codex@0.162.0-win32-arm64", "@openai/codex-win32-x64": "npm:@openai/codex@0.162.0-win32-x64" }, "bin": { "codex": "bin/codex.js" } }, "sha512-qWWckMfknyVym1lD5y2rTwPJA2sgHkzePF2l/Uevss4hVpqbt23rMIHKNTrqECdnv82denylHWEzrAmDnCYNIw=="],
-
     "@shepherdjerred/storm-brain/vitest/@vitest/mocker": ["@vitest/mocker@5.0.1", "", { "dependencies": { "@jridgewell/trace-mapping": "0.3.31", "@vitest/spy": "5.0.1", "estree-walker": "^3.0.3", "magic-string": "^1.2.3" }, "peerDependencies": { "msw": "^2.4.9", "vite": "^6.0.0 || ^7.0.0 || ^8.0.0" }, "optionalPeers": ["msw", "vite"] }, "sha512-6K1DoBNAPGvuOcSsGA4D6x+5zEEff/KmOOP3uetT2TrGpVfI+HRHRnJJfKi5ib/g1vx8IYHQD8s0pbJz8WQI7Q=="],
 
     "@shepherdjerred/storm-brain/vitest/tinyexec": ["tinyexec@1.3.0", "", {}, "sha512-QKAl9m8gWWGHV8jZcPeym6j+XULi6tOf1mT83WYJ4Lk2ytW/uwAWkrP0uFsdoYMdueVJ0qs26wZ+23xeB4ibNQ=="],
@@ -12670,18 +12666,6 @@
     "@shepherdjerred/mc-build/vitest/@vitest/mocker/@vitest/spy": ["@vitest/spy@5.0.1", "", {}, "sha512-rbto/mF/SGERxEgYOek7Xm6B9b+y+mVoo+f4b2LymYO8zM1b7uB5nHuhVMTP2hxdzgxvGiZYGxGIaMvL5y180Q=="],
 
     "@shepherdjerred/mc-harness/vitest/@vitest/mocker/@vitest/spy": ["@vitest/spy@5.0.1", "", {}, "sha512-rbto/mF/SGERxEgYOek7Xm6B9b+y+mVoo+f4b2LymYO8zM1b7uB5nHuhVMTP2hxdzgxvGiZYGxGIaMvL5y180Q=="],
-
-    "@shepherdjerred/root-scripts/@openai/codex-sdk/@openai/codex/@openai/codex-darwin-arm64": ["@openai/codex@0.162.0-darwin-arm64", "", { "os": "darwin", "cpu": "arm64" }, "sha512-hyiGlMCbZog7IY2TcSWzXbsmtUnynT93QA4utqGlVmFlmz8TurADk3LV28zqUIdgh9GLOzumDIdHQbYieo9Nqw=="],
-
-    "@shepherdjerred/root-scripts/@openai/codex-sdk/@openai/codex/@openai/codex-darwin-x64": ["@openai/codex@0.162.0-darwin-x64", "", { "os": "darwin", "cpu": "x64" }, "sha512-4XzCUJgEDDdme6VWDEKvbWDA6f+470d4xhhorYUgNBZwY8Dq5NYqvWkO33rnc1vjxkqSj+SwkymHxRMxL6h1CA=="],
-
-    "@shepherdjerred/root-scripts/@openai/codex-sdk/@openai/codex/@openai/codex-linux-arm64": ["@openai/codex@0.162.0-linux-arm64", "", { "os": "linux", "cpu": "arm64" }, "sha512-6NYWwy09FsZ+/0Dz/bvV/yz3aFhkNzj86fSiux9Ax9VMBOID5nPdwd51OySm7fy8TMRud4fgJFELSi3Enc1s7Q=="],
-
-    "@shepherdjerred/root-scripts/@openai/codex-sdk/@openai/codex/@openai/codex-linux-x64": ["@openai/codex@0.162.0-linux-x64", "", { "os": "linux", "cpu": "x64" }, "sha512-qHWp6oKpf456PqjberGN8avs8zChv2oS+UuDiqVFYAuDOhq6vBc1drh8jEsnR7dBX+zcw03PN5VLtePGlMcC3w=="],
-
-    "@shepherdjerred/root-scripts/@openai/codex-sdk/@openai/codex/@openai/codex-win32-arm64": ["@openai/codex@0.162.0-win32-arm64", "", { "os": "win32", "cpu": "arm64" }, "sha512-scdBHlUz4AfLOUWT4r4kwe3GFvjbBbWxreLDGoLSyMFf566e7sHSJvlJuV7uha2S7uRoQnMmWwmqYMJuT322UQ=="],
-
-    "@shepherdjerred/root-scripts/@openai/codex-sdk/@openai/codex/@openai/codex-win32-x64": ["@openai/codex@0.162.0-win32-x64", "", { "os": "win32", "cpu": "x64" }, "sha512-W8kqHaqpW0qPz71E0rRT5dq+socGz1BbJyYN7o3SP1TWQt8Zl6ML74R9Hvt/xn1NNLVlDTRfXqNmaMkte6yEMQ=="],
 
     "@shepherdjerred/storm-brain/vitest/@vitest/mocker/@vitest/spy": ["@vitest/spy@5.0.1", "", {}, "sha512-rbto/mF/SGERxEgYOek7Xm6B9b+y+mVoo+f4b2LymYO8zM1b7uB5nHuhVMTP2hxdzgxvGiZYGxGIaMvL5y180Q=="],
 
