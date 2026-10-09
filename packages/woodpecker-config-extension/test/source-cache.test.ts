@@ -15,7 +15,10 @@ import { z } from "zod";
 import { parse } from "yaml";
 import { git } from "#src/checkout/git.ts";
 import { checkoutSource } from "#src/checkout/snapshot.ts";
-import { cacheSourceSteps } from "#src/pipeline/source-cache.ts";
+import {
+  cacheSourceSteps,
+  SOURCE_CACHE_PREPARATION_IMAGE,
+} from "#src/pipeline/source-cache.ts";
 import { emitWorkflow } from "#src/pipeline/emit.ts";
 import { TEST_IDENTITY, testPipelineSteps } from "./identity.ts";
 const { join } = path;
@@ -134,6 +137,7 @@ test("unapproved work and local jobs cannot mount caches; trusted jobs mount onl
       .object({
         clone: z.array(
           z.object({
+            name: z.string(),
             image: z.string(),
             volumes: z.array(z.string()),
             commands: z.array(z.string()),
@@ -147,21 +151,33 @@ test("unapproved work and local jobs cannot mount caches; trusted jobs mount onl
         steps: z.array(z.object({ volumes: z.array(z.string()).optional() })),
       })
       .parse(parse(emitWorkflow(verify, TEST_IDENTITY)));
-    expect(config.clone[0]?.image).toBe(image);
-    expect(config.clone[0]?.backend_options.kubernetes.securityContext).toEqual(
-      {
-        runAsUser: 1000,
-        runAsGroup: 1000,
-        runAsNonRoot: true,
-        fsGroup: 1000,
-        fsGroupChangePolicy: "OnRootMismatch",
-        allowPrivilegeEscalation: false,
-      },
-    );
-    expect(config.clone[0]?.volumes).toContain(
+    const prepare = config.clone[0];
+    const clone = config.clone[1];
+    expect(config.clone).toHaveLength(2);
+    expect(prepare?.name).toBe("prepare-clone");
+    expect(prepare?.image).toBe(SOURCE_CACHE_PREPARATION_IMAGE);
+    expect(prepare?.image).toMatch(/^busybox:.*@sha256:[a-f\d]{64}$/u);
+    expect(prepare?.commands).toEqual([
+      "chown 1000:1000 . /woodpecker/source-cache /woodpecker/source-control",
+    ]);
+    expect(prepare?.backend_options.kubernetes.securityContext).toEqual({
+      allowPrivilegeEscalation: false,
+    });
+    expect(clone?.name).toBe("clone");
+    expect(clone?.image).toBe(image);
+    expect(clone?.backend_options.kubernetes.securityContext).toEqual({
+      runAsUser: 1000,
+      runAsGroup: 1000,
+      runAsNonRoot: true,
+      fsGroup: 1000,
+      fsGroupChangePolicy: "OnRootMismatch",
+      allowPrivilegeEscalation: false,
+    });
+    expect(clone?.volumes).toContain(
       `woodpecker-source-${main ? "main" : "pr"}:/woodpecker/source-cache`,
     );
-    expect(config.clone[0]?.commands.join("\n")).toContain("flock -s");
+    expect(prepare?.volumes).toEqual(clone?.volumes);
+    expect(clone?.commands.join("\n")).toContain("flock -s");
     expect(
       config.steps
         .flatMap((step) => step.volumes ?? [])

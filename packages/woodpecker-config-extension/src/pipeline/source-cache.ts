@@ -1,4 +1,21 @@
 import type { CiStep } from "./model.ts";
+import {
+  parseVersionCatalog,
+  versionCatalogMap,
+} from "@shepherdjerred/version-catalog";
+import catalog from "@shepherdjerred/version-catalog/catalog.json" with { type: "json" };
+
+// Like the helper code, this image comes from the deployed extension's catalog,
+// never from the unverified commit requesting a checkout.
+const preparationVersion = versionCatalogMap(parseVersionCatalog(catalog))[
+  "library/busybox"
+];
+if (
+  preparationVersion === undefined ||
+  !/@sha256:[a-f\d]{64}$/u.test(preparationVersion)
+)
+  throw new Error("Source cache preparation requires a pinned BusyBox image");
+export const SOURCE_CACHE_PREPARATION_IMAGE = `busybox:${preparationVersion}`;
 
 export const SOURCE_CACHE_MAIN = "woodpecker-source-main";
 export const SOURCE_CACHE_PR = "woodpecker-source-pr";
