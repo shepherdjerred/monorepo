@@ -36,7 +36,9 @@ async function runCommand(command: Command, cwd: string): Promise<void> {
   });
   const exitCode = await subprocess.exited;
   if (exitCode !== 0) {
-    throw new Error(`Command failed (${exitCode.toString()}): ${command.join(" ")}`);
+    throw new Error(
+      `Command failed (${exitCode.toString()}): ${command.join(" ")}`,
+    );
   }
 }
 
