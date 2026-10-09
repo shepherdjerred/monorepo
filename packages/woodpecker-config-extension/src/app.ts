@@ -24,6 +24,7 @@ import {
 import { signRemoteCacheSteps } from "#src/pipeline/turbo-cache.ts";
 import { routeSteps } from "#src/pipeline/routing.ts";
 import { groupTofuSteps } from "#src/pipeline/group-tofu.ts";
+import { isPrVerificationEvent, prStatusEvent } from "#src/pr-event.ts";
 import type { SuccessfulWorkflowPipeline } from "#src/woodpecker-api.ts";
 
 export type AppOptions = {
@@ -140,7 +141,7 @@ async function needsCredentiallessHostedAutomation(
   pipeline: Pipeline,
   approvalCheck: AppOptions["hostedAutomationApproved"],
 ): Promise<boolean> {
-  if (actorClass !== "hosted-automation" || pipeline.event !== "pull_request") {
+  if (actorClass !== "hosted-automation" || !isPrVerificationEvent(pipeline)) {
     return false;
   }
   try {
@@ -227,8 +228,9 @@ export function createApp(options: AppOptions): Hono {
       return context.json({ error: "invalid platform operation request" }, 400);
     }
 
+    const prVerification = isPrVerificationEvent(pipeline);
     const selectionContext = {
-      event: pipeline.event,
+      event: prVerification ? "pull_request" : pipeline.event,
       branch: pipeline.branch,
       defaultBranch: repo.default_branch,
       changedFiles: pipeline.changed_files,
@@ -326,19 +328,20 @@ export function createApp(options: AppOptions): Hono {
           }),
           { ...selectionContext, changedFiles: changedFiles ?? [] },
         ),
-        pipeline.event === "pull_request" ? "pull-request" : "trusted",
+        prVerification ? "pull-request" : "trusted",
       ),
     );
 
     return context.json({
       configs: emit(
-        pipeline.event === "pull_request"
+        prVerification
           ? [
               ...selected,
               completionStep(
                 selected,
                 options.trustedGateImage ?? images.base,
                 gateDirectory,
+                prStatusEvent(pipeline.event),
               ),
             ]
           : selected,

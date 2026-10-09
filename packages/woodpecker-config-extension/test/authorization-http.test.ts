@@ -118,6 +118,67 @@ describe("signed Justin pipeline authorization", () => {
 
 describe("signed workflow routing", () => {
   const gateImage = `ghcr.io/shepherdjerred/woodpecker-config-extension@sha256:${"c".repeat(64)}`;
+  test("ready-for-review runs the full PR graph with PR cache trust and native status contexts", async () => {
+    const { app } = harness(true, gateImage);
+    const changes = { changed_files: [] };
+    const normalResponse = await app.request(await request(changes));
+    const normal = ConfigResponseSchema.parse(await normalResponse.json());
+    const readyResponse = await app.request(
+      await request({
+        ...changes,
+        event: "pull_request_metadata",
+        event_reason: ["ready_for_review"],
+        pr_draft: false,
+      }),
+    );
+    const ready = ConfigResponseSchema.parse(await readyResponse.json());
+    expect(ready.configs.map((entry) => entry.name)).toEqual(
+      normal.configs.map((entry) => entry.name),
+    );
+    expect(ready.configs.some((entry) => entry.name.includes("tofu-pr"))).toBe(
+      true,
+    );
+    expect(
+      ready.configs.some((entry) => entry.name.includes("playwright-e2e")),
+    ).toBe(true);
+    const completion = ready.configs.find((entry) =>
+      entry.name.endsWith("/ci-complete.yaml"),
+    );
+    expect(completion?.data).toContain(
+      "ci/woodpecker/pull_request_metadata/verify",
+    );
+    expect(completion?.data).not.toContain("ci/woodpecker/pr/verify");
+    const verify = ready.configs.find((entry) =>
+      entry.name.endsWith("/verify.yaml"),
+    );
+    const normalVerify = normal.configs.find((entry) =>
+      entry.name.endsWith("/verify.yaml"),
+    );
+    expect(verify?.data).toBe(normalVerify?.data);
+    expect(ready.configs.map((entry) => entry.data).join("\n")).not.toContain(
+      "SEAWEEDFS_SITES_ACCESS_KEY_ID",
+    );
+  });
+
+  test.each([
+    { event_reason: ["edited"] },
+    { event_reason: ["label_updated"] },
+    { event_reason: null },
+    { event_reason: ["converted_to_draft"], pr_draft: true },
+    { event_reason: ["ready_for_review"], pr_draft: true },
+  ])(
+    "keeps other metadata from producing merge evidence: %j",
+    async (metadata) => {
+      const { app } = harness(true, gateImage);
+      const response = await app.request(
+        await request({ event: "pull_request_metadata", ...metadata }),
+      );
+      const result = ConfigResponseSchema.parse(await response.json());
+      expect(result.configs.map((entry) => entry.name)).toEqual([
+        ".woodpecker/ci-noop.yaml",
+      ]);
+    },
+  );
   test.each([
     [false, "ci-ready"],
     [true, "ci-draft"],
@@ -167,6 +228,27 @@ describe("hosted Renovate pipeline authorization", () => {
     sender: "renovate[bot]",
     changed_files: ["package.json", "bun.lock"],
   };
+
+  test("ready metadata preserves the exact-head approval boundary", async () => {
+    const { app } = harness(false);
+    const response = await app.request(
+      await request({
+        ...renovate,
+        event: "pull_request_metadata",
+        event_reason: ["ready_for_review"],
+        pr_draft: false,
+      }),
+    );
+    const result = ConfigResponseSchema.parse(await response.json());
+    expect(result.configs.map((entry) => entry.name).sort()).toEqual([
+      ".woodpecker/semgrep.yaml",
+      ".woodpecker/trivy.yaml",
+      ".woodpecker/verify.yaml",
+    ]);
+    expect(result.configs.map((entry) => entry.data).join("\n")).not.toContain(
+      "secrets:",
+    );
+  });
 
   test("emits only credentialless verification before exact-head approval", async () => {
     const { app, base } = harness(false);

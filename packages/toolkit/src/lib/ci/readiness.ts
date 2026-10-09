@@ -62,7 +62,16 @@ export function pipelineState(
   const completion = pipeline.workflows.find(
     (workflow) => workflow.name === "ci-complete",
   );
+  // A cheap draft run can be green at the same SHA later marked ready. It
+  // never substitutes for the full ready-event pipeline, even if an old
+  // completion status is still visible on GitHub.
+  if (
+    pipeline.pr_draft === true ||
+    pipeline.workflows.some((workflow) => workflow.name === "draft-preflight")
+  )
+    return "pending";
   if (completion?.state === "success") return "pass";
+  if (pipeline.event === "pull_request_metadata") return "pending";
   return overall === "HEALTHY" ? "pass" : "pending";
 }
 

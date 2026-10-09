@@ -39,7 +39,7 @@ export function playwrightSteps(images: CiImages, changedBase = ""): CiStep[] {
         "MISE_TOOLCHAIN_SCOPE=postgres . ci/scripts/toolchain.sh",
         // A PR compares against its target branch even before main has a
         // successful Woodpecker pipeline to supply a changed-file base.
-        'if [ "$CI_PIPELINE_EVENT" = "pull_request" ]; then',
+        'if [ "$CI_PIPELINE_EVENT" = "pull_request" ] || [ "$CI_PIPELINE_EVENT" = "pull_request_metadata" ]; then',
         '  if git fetch --no-tags --depth=100 origin "$CI_COMMIT_SHA" && git fetch --no-tags --depth=100 origin "$CI_COMMIT_TARGET_BRANCH"; then',
         '    if ! CI_CHANGED_BASE="$(git merge-base HEAD FETCH_HEAD)"; then CI_CHANGED_BASE=""; fi',
         "  else",

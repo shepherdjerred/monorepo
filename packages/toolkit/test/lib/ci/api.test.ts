@@ -81,6 +81,8 @@ test("Woodpecker paginates and verifies PR identity, ignoring same-SHA push buil
       requests.push(url);
       if (url.pathname.endsWith("/pipelines/7"))
         return json({ ...summary, workflows: [] });
+      if (url.searchParams.get("event") === "pull_request_metadata")
+        return json([]);
       if (url.searchParams.get("page") === "1")
         return json(
           Array.from({ length: 50 }, (_, index) => ({
@@ -95,9 +97,71 @@ test("Woodpecker paginates and verifies PR identity, ignoring same-SHA push buil
   );
   const pipeline = await getWoodpeckerPipelineForCommit(CI_HEAD, config, 99);
   expect(pipeline?.number).toBe(7);
-  expect(requests).toHaveLength(3);
+  expect(requests).toHaveLength(4);
   expect(requests[0]?.searchParams.get("event")).toBe("pull_request");
   expect(requests[0]?.searchParams.get("ref")).toBe("refs/pull/99/");
+  expect(
+    requests.some(
+      (url) => url.searchParams.get("event") === "pull_request_metadata",
+    ),
+  ).toBe(true);
+});
+
+test("ready metadata supersedes an earlier draft on the same SHA without accepting unrelated metadata", async () => {
+  const base = { commit: CI_HEAD, status: "success", ref: "refs/pull/99/head" };
+  const draft = { ...base, number: 7, event: "pull_request", pr_draft: true };
+  const ready = {
+    ...base,
+    number: 8,
+    event: "pull_request_metadata",
+    event_reason: ["ready_for_review"],
+  };
+  const titleEdit = { ...ready, number: 9, event_reason: ["edited"] };
+  const contradictory = { ...ready, number: 10, pr_draft: true };
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: URL) => {
+      if (url.pathname.endsWith("/pipelines/8"))
+        return json({
+          ...ready,
+          workflows: [{ name: "ci-complete", state: "success" }],
+        });
+      return json(
+        url.searchParams.get("event") === "pull_request"
+          ? [draft]
+          : [contradictory, titleEdit, ready],
+      );
+    }),
+  );
+  const result = await getWoodpeckerPipelineForCommit(CI_HEAD, config, 99);
+  expect(result?.number).toBe(8);
+  expect(result?.event).toBe("pull_request_metadata");
+});
+
+test("a newer draft push prevents falling back to older ready-event success", async () => {
+  const base = { commit: CI_HEAD, status: "success", ref: "refs/pull/99/head" };
+  const draft = { ...base, number: 9, event: "pull_request", pr_draft: true };
+  const ready = {
+    ...base,
+    number: 8,
+    event: "pull_request_metadata",
+    event_reason: ["ready_for_review"],
+  };
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: URL) => {
+      if (url.pathname.endsWith("/pipelines/9"))
+        return json({
+          ...draft,
+          workflows: [{ name: "draft-preflight", state: "success" }],
+        });
+      return json(
+        url.searchParams.get("event") === "pull_request" ? [draft] : [ready],
+      );
+    }),
+  );
+  const observed = await getWoodpeckerPipelineForCommit(CI_HEAD, config, 99);
+  expect(observed?.number).toBe(9);
 });
 
 test("a pipeline detail response for another head is a contract error", async () => {

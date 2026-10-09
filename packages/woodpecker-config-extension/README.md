@@ -58,6 +58,20 @@ directory and does not use the shared provider cache.
 
 ## Agent pools and admission
 
+Marking a draft ready emits Woodpecker's signed `pull_request_metadata` event
+with reason `ready_for_review`. It selects the full PR graph without another
+commit. Title, label and other metadata changes emit only a no-op. Ready events
+retain PR credential approval and cache namespaces, and use the PR merge base.
+Completion checks the native metadata statuses from its own pipeline. The
+server maps only that completion workflow to the existing required
+`ci/woodpecker/pr/ci-complete` status. Toolkit selects the newest matching PR
+or ready-event pipeline and rejects draft-only evidence at the same SHA.
+
+Deploy this compatibility path and its server status-context template before
+enabling cheaper draft checks. The server configuration change requires a
+drained server rollout; observe an actual ready transition through full CI
+before changing draft coverage.
+
 `routing.ts` assigns Kubernetes workflows to PR, main, review, or completion
 agents. A PR targeting the default branch still uses the PR pool; only a push
 or manual run on that branch uses main capacity. Native workflows keep their

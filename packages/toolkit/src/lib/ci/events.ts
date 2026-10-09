@@ -2,6 +2,7 @@ import { z } from "zod";
 import { setTimeout as delay } from "node:timers/promises";
 import {
   WoodpeckerHttpError,
+  isPrVerificationPipeline,
   type WoodpeckerConfig,
 } from "#lib/woodpecker/ci.ts";
 
@@ -11,6 +12,8 @@ const EventSchema = z.object({
     number: z.number(),
     commit: z.string(),
     event: z.string(),
+    event_reason: z.array(z.string()).nullish(),
+    pr_draft: z.boolean().optional(),
     ref: z.string(),
     branch: z.string(),
   }),
@@ -112,7 +115,7 @@ async function consumeEvents(
     const event = EventSchema.parse(JSON.parse(frame));
     if (event.repo.id !== config.repoId) continue;
     const relevantPr =
-      event.pipeline.event === "pull_request" &&
+      isPrVerificationPipeline(event.pipeline) &&
       event.pipeline.ref.startsWith(`refs/pull/${String(watch.prNumber)}/`);
     const relevantMain =
       event.pipeline.event === "push" && event.pipeline.branch === "main";

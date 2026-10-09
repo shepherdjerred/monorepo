@@ -8,6 +8,31 @@ import { mainVerdict } from "#lib/ci/main.ts";
 import { ciFixture, pendingCi, CI_HEAD } from "./fixtures.ts";
 
 describe("merge readiness", () => {
+  test("a green draft cannot satisfy readiness after the PR becomes ready", () => {
+    const snapshot = ciFixture();
+    if (snapshot.pipeline === null) throw new Error("Missing fixture");
+    snapshot.pipeline.pr_draft = true;
+    expect(evaluateReadiness(snapshot, CI_HEAD).outcome).toBe("waiting");
+    snapshot.pipeline.pr_draft = false;
+    snapshot.pipeline.workflows.push({
+      name: "draft-preflight",
+      state: "success",
+    });
+    expect(evaluateReadiness(snapshot, CI_HEAD).outcome).toBe("waiting");
+  });
+
+  test("ready-event completion still requires a status from that exact pipeline", () => {
+    const snapshot = ciFixture();
+    if (snapshot.pipeline === null) throw new Error("Missing fixture");
+    snapshot.pipeline.event = "pull_request_metadata";
+    snapshot.pipeline.event_reason = ["ready_for_review"];
+    expect(evaluateReadiness(snapshot, CI_HEAD).outcome).toBe("ready");
+    snapshot.pipeline.number = 8;
+    snapshot.pipelineUrl = "https://woodpecker.sjer.red/repos/1/pipeline/8";
+    expect(evaluateReadiness(snapshot, CI_HEAD).outcome).toBe("waiting");
+    snapshot.pipeline.workflows = [{ name: "ci-noop", state: "success" }];
+    expect(pipelineState(snapshot.pipeline)).toBe("pending");
+  });
   test("approval-free rules allow an empty review decision and non-strict behind branch", () => {
     const snapshot = ciFixture();
     snapshot.pr.mergeable_state = "behind";

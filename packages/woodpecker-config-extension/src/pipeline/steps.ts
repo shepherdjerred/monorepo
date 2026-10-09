@@ -55,7 +55,7 @@ function verifyCommands(options: {
     // for the initial main predecessor and the PR coverage fallback.
     'git fetch --no-tags --depth=100 origin "$CI_REPO_DEFAULT_BRANCH"',
     'git update-ref "refs/remotes/origin/$CI_REPO_DEFAULT_BRANCH" FETCH_HEAD',
-    'if [ "$CI_PIPELINE_EVENT" = "pull_request" ]; then',
+    'if [ "$CI_PIPELINE_EVENT" = "pull_request" ] || [ "$CI_PIPELINE_EVENT" = "pull_request_metadata" ]; then',
     // Deepen the PR head separately, then fetch its target last so FETCH_HEAD
     // unambiguously names the target branch for the merge-base calculation.
     '  if git fetch --no-tags --depth=100 origin "$CI_COMMIT_SHA" && git fetch --no-tags --depth=100 origin "$CI_COMMIT_TARGET_BRANCH"; then',
@@ -70,7 +70,7 @@ function verifyCommands(options: {
     // of the just-fetched origin/main, which may already equal HEAD.
     'if [ -n "$CI_CHANGED_BASE" ]; then',
     '  export TURBO_SCM_BASE="$CI_CHANGED_BASE" TASKNOTES_COVERAGE_BASE="$CI_CHANGED_BASE"',
-    'elif [ "$CI_PIPELINE_EVENT" = "pull_request" ]; then',
+    'elif [ "$CI_PIPELINE_EVENT" = "pull_request" ] || [ "$CI_PIPELINE_EVENT" = "pull_request_metadata" ]; then',
     '  export TASKNOTES_COVERAGE_BASE="origin/$CI_REPO_DEFAULT_BRANCH"',
     "else",
     '  export TASKNOTES_COVERAGE_BASE="$(git rev-parse --verify HEAD^)"',

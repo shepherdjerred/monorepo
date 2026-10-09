@@ -88,6 +88,11 @@ candidate gets a fresh check of head, base, pipeline attempt, rules, and main.
 `--until settled` waits for the remaining blocking results after a CI failure;
 head changes and structural blockers still return immediately.
 
+PR observation considers both normal PR pipelines and signed ready-for-review
+metadata pipelines for the exact head. Title and label changes cannot replace
+verification evidence. A green draft preflight cannot make a ready PR mergeable;
+the full pipeline and its own published completion verdict must pass.
+
 Woodpecker workflow results and the `ci-complete` gate determine hard CI
 failures. Failed service cleanup children inside successful workflows do not
 block a merge. Required GitHub checks must also publish success for the current

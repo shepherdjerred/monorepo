@@ -11,6 +11,8 @@ import { z } from "zod";
  */
 export const PipelineSchema = z.looseObject({
   event: z.string(),
+  /** Native Go slices encode absent reasons as null. */
+  event_reason: z.array(z.string()).nullish(),
   branch: z.string(),
   commit: z.string(),
   ref: z.string(),

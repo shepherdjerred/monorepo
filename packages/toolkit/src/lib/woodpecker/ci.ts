@@ -29,6 +29,8 @@ const SummarySchema = z.object({
   commit: z.string(),
   status: z.string(),
   event: z.string().optional(),
+  event_reason: z.array(z.string()).nullish(),
+  pr_draft: z.boolean().optional(),
   ref: z.string().optional(),
   branch: z.string().optional(),
   rerun_count: z.number().int().optional(),
@@ -111,11 +113,11 @@ export async function woodpeckerJson(
   return response.json();
 }
 
-/** Filter and paginate by event AND PR ref: metadata builds cannot replace a PR build. */
+/** Filter and paginate by event AND PR ref. */
 export async function listPipelines(
   config: WoodpeckerConfig,
   filter: {
-    event: "pull_request" | "push";
+    event: "pull_request" | "pull_request_metadata" | "push";
     prNumber?: number;
     branch?: string;
     stopWhen?: (pipelines: readonly z.infer<typeof SummarySchema>[]) => boolean;
@@ -169,27 +171,54 @@ export async function getPipeline(
   return pipeline;
 }
 
+export function isPrVerificationPipeline(pipeline: {
+  readonly event?: string | undefined;
+  readonly event_reason?: readonly string[] | null | undefined;
+  readonly pr_draft?: boolean | undefined;
+}): boolean {
+  return (
+    pipeline.event === "pull_request" ||
+    (pipeline.event === "pull_request_metadata" &&
+      pipeline.pr_draft !== true &&
+      pipeline.event_reason?.includes("ready_for_review") === true)
+  );
+}
+
 export async function getWoodpeckerPipelineForCommit(
   headSha: string,
   config: WoodpeckerConfig = woodpeckerConfigFromEnv(),
   prNumber?: number,
   signal?: AbortSignal,
 ): Promise<WoodpeckerPipeline | null> {
-  const listed = await listPipelines(
-    config,
-    {
-      event: "pull_request",
-      ...(prNumber === undefined ? {} : { prNumber }),
-      stopWhen: (entries) => entries.some((entry) => entry.commit === headSha),
-    },
-    signal,
+  const lists = await Promise.all(
+    (["pull_request", "pull_request_metadata"] as const).map((event) =>
+      listPipelines(
+        config,
+        {
+          event,
+          ...(prNumber === undefined ? {} : { prNumber }),
+          stopWhen: (entries) =>
+            entries.some(
+              (entry) =>
+                entry.commit === headSha && isPrVerificationPipeline(entry),
+            ),
+        },
+        signal,
+      ),
+    ),
   );
-  const newest = listed.find((pipeline) => pipeline.commit === headSha);
+  const newest = lists
+    .flat()
+    .filter(
+      (pipeline) =>
+        pipeline.commit === headSha && isPrVerificationPipeline(pipeline),
+    )
+    .toSorted((a, b) => b.number - a.number)[0];
   if (newest === undefined) return null;
   const pipeline = await getPipeline(newest.number, config, signal);
   if (
     pipeline.commit !== headSha ||
-    pipeline.event !== "pull_request" ||
+    !isPrVerificationPipeline(pipeline) ||
     (prNumber !== undefined &&
       pipeline.ref?.startsWith(`refs/pull/${String(prNumber)}/`) !== true)
   ) {

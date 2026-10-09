@@ -48,6 +48,7 @@ export function completionStep(
   selected: readonly CiStep[],
   image: string,
   workingDirectory: "/workspace" | "/app" = "/workspace",
+  event: "pull_request" | "pull_request_metadata" = "pull_request",
 ): CiStep {
   const blocking = selected.filter((step) => step.allowFailure !== true);
   if (blocking.length === 0) {
@@ -65,7 +66,10 @@ export function completionStep(
     ],
     environment: {
       CI_EXPECTED_CONTEXTS: JSON.stringify(
-        blocking.map((step) => `ci/woodpecker/pr/${step.key}`),
+        blocking.map(
+          (step) =>
+            `ci/woodpecker/${event === "pull_request" ? "pr" : event}/${step.key}`,
+        ),
       ),
     },
     dependsOn: blocking.map((step) => step.key),
