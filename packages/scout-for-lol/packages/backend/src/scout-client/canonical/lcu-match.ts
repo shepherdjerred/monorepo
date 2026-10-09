@@ -1,5 +1,9 @@
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
-import { RawMatchSchema, type RawMatch } from "@scout-for-lol/data";
+import {
+  RawMatchSchema,
+  SCOUT_CLIENT_DATA_VERSION,
+  type RawMatch,
+} from "@scout-for-lol/data";
 import { convertParticipant } from "./lcu-participant.ts";
 import { firstObjectiveTeam } from "./lcu-team.ts";
 import {
@@ -113,7 +117,7 @@ export function convertLcuMatchBundle(
 
   const converted = RawMatchSchema.safeParse({
     metadata: {
-      dataVersion: "local-1",
+      dataVersion: SCOUT_CLIENT_DATA_VERSION,
       matchId: riotMatchId,
       participants: participants.map((participant) => participant.puuid),
     },

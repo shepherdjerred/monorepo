@@ -8,10 +8,28 @@ import {
 
 /**
  * The raw capture assets stored for a match: the MatchV5 payload, its
- * timeline, and the pre-game spectator snapshot.
+ * timeline, the pre-game spectator snapshot, and — for a match whose result
+ * came from the Scout Client — the client's own post-game bundle, kept
+ * exactly as the League client reported it so the converted match can be
+ * rebuilt from it.
  */
 export type ArtifactKind = z.infer<typeof ArtifactKindSchema>;
-export const ArtifactKindSchema = z.enum(["match", "timeline", "prematch"]);
+export const ArtifactKindSchema = z.enum([
+  "match",
+  "timeline",
+  "prematch",
+  "client_bundle",
+]);
+
+/**
+ * The artifacts the report lake projects. A client bundle is evidence only:
+ * the lake reads the match converted from it, never the bundle itself, so it
+ * owes the lake nothing and must not count as lake backlog.
+ */
+export type LakeArtifactKind = z.infer<typeof LakeArtifactKindSchema>;
+export const LakeArtifactKindSchema = ArtifactKindSchema.exclude([
+  "client_bundle",
+]);
 
 /**
  * Descriptor for one stored artifact: where it lives, what exactly was

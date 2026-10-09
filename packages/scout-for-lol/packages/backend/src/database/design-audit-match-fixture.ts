@@ -9,7 +9,7 @@ import {
   type TimelineCoverageLakeRow,
   type TimelineEventParticipantLakeRow,
 } from "@scout-for-lol/data";
-import type { TestLakeMatchFact } from "#src/testing/test-report-lake.ts";
+import type { TestLakeMatchFact } from "#src/testing/report-lake/rows.ts";
 
 type Common = { match_id: string; month: string; observed_at: string };
 

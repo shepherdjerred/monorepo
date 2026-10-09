@@ -2,6 +2,7 @@ import { ApplicationFailure } from "@temporalio/common";
 import {
   RawInfoSchema,
   RawMatchSchema,
+  SCOUT_CLIENT_DATA_VERSION,
   riotWithholdsMatchResult,
   type RawMatch,
   type RawTimeline,
@@ -74,7 +75,7 @@ export function parseLocalCanonicalMatch(
     infoOnly?.success === true
       ? RawMatchSchema.safeParse({
           metadata: {
-            dataVersion: "2",
+            dataVersion: SCOUT_CLIENT_DATA_VERSION,
             matchId: riotMatchId,
             participants: infoOnly.data.participants.map(
               (participant) => participant.puuid,
@@ -98,7 +99,15 @@ export function parseLocalCanonicalMatch(
       (puuid) => puuid.length !== RIOT_PUUID_LENGTH,
     )
     ? null
-    : match;
+    : // Whatever version a client's payload claims, it is the client's: the
+      // stored bytes are what carry provenance downstream.
+      {
+        ...match,
+        metadata: {
+          ...match.metadata,
+          dataVersion: SCOUT_CLIENT_DATA_VERSION,
+        },
+      };
 }
 
 /** The aliases a stored candidate needs before it can be parsed. */

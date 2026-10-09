@@ -1,4 +1,4 @@
-import { ArtifactKindSchema } from "@scout-for-lol/domain/artifacts/descriptors.ts";
+import { LakeArtifactKindSchema } from "@scout-for-lol/domain/artifacts/descriptors.ts";
 import { prisma, type Db } from "#src/database/index.ts";
 import { oldestUnprojectedArchiveAt } from "#src/database/durable/pipeline-backlog.ts";
 import { createLogger } from "#src/logger.ts";
@@ -41,7 +41,7 @@ export async function collectLakeStagingLagMetrics(db: Db): Promise<void> {
   const now = Date.now();
   try {
     await Promise.all(
-      ArtifactKindSchema.options.map(async (artifact) => {
+      LakeArtifactKindSchema.options.map(async (artifact) => {
         const archivedAt = await oldestUnprojectedArchiveAt(db, {
           archiveReceiptKind: rawArchiveReceiptKind(artifact),
           stagingReceiptKind: lakeStagingReceiptKind(artifact),
@@ -55,7 +55,7 @@ export async function collectLakeStagingLagMetrics(db: Db): Promise<void> {
       }),
     );
   } catch (error) {
-    for (const artifact of ArtifactKindSchema.options) {
+    for (const artifact of LakeArtifactKindSchema.options) {
       scoutDurableLakeStagingLag.set({ artifact_kind: artifact }, -1);
     }
     logger.error("Failed to update lake staging lag metrics", { error });

@@ -8,10 +8,8 @@ import { LOADOUT_COLUMNS } from "@scout-for-lol/data/model/reports/lake-columns.
 import type { LakeFiles } from "#src/reports/duckdb/lake.ts";
 import { guildScope } from "#src/reports/duckdb/scope.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
-import {
-  writeTempTestLake,
-  type TestLakeMatchFact,
-} from "#src/testing/test-report-lake.ts";
+import { writeTempTestLake } from "#src/testing/test-report-lake.ts";
+import type { TestLakeMatchFact } from "#src/testing/report-lake/rows.ts";
 import { testGuildId, testPuuid } from "#src/testing/test-ids.ts";
 import {
   avgOf,

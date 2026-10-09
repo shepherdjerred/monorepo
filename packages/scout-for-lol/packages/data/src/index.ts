@@ -115,6 +115,7 @@ export type {
 } from "./review/prompt-variables.ts";
 
 export * from "./model/riot/puuid-key-map.ts";
+export * from "./league/data-source.ts";
 export * from "./league/raw-match.schema.ts";
 export * from "./league/raw-clash.schema.ts";
 export * from "./league/raw-participant.schema.ts";

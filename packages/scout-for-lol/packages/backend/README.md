@@ -664,6 +664,25 @@ The LCU shapes (`data/src/scout-client/lcu-clash.schema.ts`) were written
 before a Clash window could confirm them. Every field is optional, and an
 unrecognised payload projects to nothing rather than failing.
 
+### Provenance
+
+A client-sourced match is read like a Riot one everywhere; where it came from
+travels with the bytes. Every match and timeline built from client data has
+`metadata.dataVersion` `SCOUT_CLIENT_DATA_VERSION` (`local-1`; Riot's is `2`),
+stamped by the converters and by `parseLocalCanonicalMatch` whatever a payload
+claimed. `matchDataSourceOf` (data package) derives `RIOT | SCOUT_CLIENT` from
+it, so the S3 object metadata (`source`) and the lake's `matches.data_source`
+column agree with the stored match and rebuild from it. In the database,
+`MatchObservation.matchDataSource` records the same source, set from the
+selection row (`ScoutClientCanonicalMatch`) when the observation commits.
+
+The client bundle a match was converted from is archived beside it as
+`client-bundle.json` (artifact kind `client_bundle`, receipt
+`raw-archive-client-bundle`) by the match pipeline's archive step, gated by its
+own receipt so a retry still archives it. It is evidence, not lake input:
+`LakeArtifactKind` excludes it, so it has no staging receipt and is never
+reported as lake backlog.
+
 ## The prematch path
 
 The `prematch-*` modules serve `scoutPrematchDiscoveryWorkflow` and

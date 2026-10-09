@@ -4,6 +4,7 @@ import type {
   RawTimeline,
   RawCurrentGameInfo,
 } from "@scout-for-lol/data/index.ts";
+import { matchDataSourceOf } from "@scout-for-lol/data/index.ts";
 import { saveToS3 } from "#src/storage/s3-helpers.ts";
 import type { StoredObject } from "#src/storage/object-integrity.ts";
 import {
@@ -97,6 +98,7 @@ export async function archiveMatchToS3(
       result: match.info.endOfGameResult ?? "unknown",
       map: match.info.mapId.toString(),
       dataVersion: match.metadata.dataVersion,
+      source: matchDataSourceOf(match.metadata),
       gameType: match.info.gameType,
       ...trackedPlayerCountMetadata(trackedPlayerAliases),
     },
@@ -353,6 +355,7 @@ export async function archiveTimelineToS3(
       frameCount: timeline.info.frames.length.toString(),
       frameInterval: timeline.info.frameInterval.toString(),
       dataVersion: timeline.metadata.dataVersion,
+      source: matchDataSourceOf(timeline.metadata),
       ...trackedPlayerCountMetadata(trackedPlayerAliases),
     },
     logEmoji: "📊",
@@ -368,4 +371,43 @@ export async function archiveTimelineToS3(
   return stored === undefined
     ? { status: "skipped_no_bucket" }
     : archived("timeline", stored);
+}
+
+/**
+ * Archive the Scout Client's post-game bundle a match's result came from,
+ * as the client sent it minus credentials (the stored observation payload).
+ *
+ * It sits beside the converted `match.json` under the same game prefix, so
+ * the match can be re-converted from its own evidence. Keyed by the match's
+ * creation time, like the match itself.
+ */
+export async function archiveClientBundleToS3(
+  args: {
+    readonly matchId: RiotMatchId;
+    readonly payload: unknown;
+    readonly gameCreatedAt: Date;
+    readonly observationId: string;
+  },
+  abortSignal?: AbortSignal,
+): Promise<RawArchiveResult> {
+  const stored = await saveToS3({
+    matchId: args.matchId,
+    assetType: "client-bundle",
+    extension: "json",
+    body: JSON.stringify(args.payload, null, 2),
+    contentType: "application/json",
+    metadata: {
+      matchId: args.matchId,
+      source: "SCOUT_CLIENT",
+      observationId: args.observationId,
+    },
+    logEmoji: "🧾",
+    logMessage: "Saving Scout Client post-game bundle to S3",
+    errorContext: "client bundle",
+    keyDate: args.gameCreatedAt,
+    ...(abortSignal === undefined ? {} : { abortSignal }),
+  });
+  return stored === undefined
+    ? { status: "skipped_no_bucket" }
+    : archived("client_bundle", stored);
 }

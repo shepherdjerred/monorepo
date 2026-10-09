@@ -29,6 +29,7 @@ import {
   type ReceiptRecordOutcome,
 } from "#src/report-lake/durable-receipts.ts";
 import {
+  archiveClientBundleToS3,
   archiveMatchToS3,
   archiveTimelineToS3,
   savePrematchDataToS3,
@@ -619,6 +620,36 @@ export async function archivePrematchReceipted(
         abortSignal,
         parse: (value) => RawCurrentGameInfoSchema.safeParse(value),
         expected: "a spectator payload",
+      }),
+  });
+}
+
+/**
+ * Archive the Scout Client post-game bundle a match's result was converted
+ * from, at most once per match, through the same fenced door as the match.
+ */
+export async function archiveClientBundleReceipted(
+  bundle: {
+    readonly matchId: RiotMatchId;
+    readonly payload: unknown;
+    readonly gameCreatedAt: Date;
+    readonly observationId: string;
+  },
+  options: ReceiptOptions = {},
+): Promise<ReceiptedArchiveResult<unknown>> {
+  return await archiveUnderFence({
+    matchId: bundle.matchId,
+    artifactKind: "client_bundle",
+    options,
+    put: async (abortSignal) =>
+      await archiveClientBundleToS3(bundle, abortSignal),
+    readCanonical: async (descriptor, abortSignal) =>
+      await readArchivedPayload({
+        descriptor,
+        matchId: bundle.matchId,
+        abortSignal,
+        parse: (value) => z.json().safeParse(value),
+        expected: "a Scout Client post-game bundle",
       }),
   });
 }

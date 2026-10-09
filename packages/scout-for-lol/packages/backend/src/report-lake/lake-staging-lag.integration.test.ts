@@ -3,7 +3,7 @@ import {
   type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
-import { ArtifactKindSchema } from "@scout-for-lol/domain/artifacts/descriptors.ts";
+import { LakeArtifactKindSchema } from "@scout-for-lol/domain/artifacts/descriptors.ts";
 import { scoutDurableLakeStagingLag } from "#src/metrics/durable-pipeline.ts";
 import { collectLakeStagingLagMetrics } from "#src/report-lake/lake-staging-lag.ts";
 import {
@@ -95,7 +95,9 @@ describe("lake staging lag sweep against Postgres", () => {
         artifact_kind: "prematch",
       }),
     ).toBe(0);
-    expect(ArtifactKindSchema.options).toHaveLength(3);
+    // The lake's kinds only: a client bundle is archived but never staged, so
+    // it is no lake's backlog.
+    expect(LakeArtifactKindSchema.options).toHaveLength(3);
   });
 
   test("takes the oldest unstaged archive when several are waiting", async () => {
