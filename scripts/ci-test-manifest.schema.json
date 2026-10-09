@@ -28,6 +28,7 @@
             "minItems": 1,
             "items": { "type": "string", "minLength": 1 }
           },
+          "coverageAlways": { "type": "boolean" },
           "defaultEnv": {
             "type": "object",
             "additionalProperties": { "type": "string" }
@@ -110,6 +111,15 @@
                     "coverageConfig": {
                       "type": "string",
                       "minLength": 1
+                    },
+                    "mstest": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["parallel", "timeoutMs"],
+                      "properties": {
+                        "parallel": { "type": "boolean" },
+                        "timeoutMs": { "type": "integer", "minimum": 1 }
+                      }
                     }
                   }
                 },

@@ -82,6 +82,10 @@
       "outputs": []
     },
     "test:ci": {
+      // The portable coverage ratchet always consumes fresh reports. This run
+      // supplies both JUnit and coverage, with no second test invocation.
+      "cache": false,
+      "env": ["NODE_ENV", "TASKNOTES_TEST_SEED"],
       "dependsOn": ["lint", "^build", "generate"],
       "passThroughEnv": [
         "APPDATA",
@@ -111,11 +115,9 @@
       ],
       "outputs": []
     },
-    // Ordered after test:ci rather than beside it: both execute the same test
-    // assemblies, and the coverage-instrumented run collides with a concurrent
-    // plain run of those binaries, killing one host with SIGBUS. Two plain runs
-    // overlap safely, so only the coverage pass needs the exclusive turn.
-    "coverage:portable": {
+    // Check the two fresh instrumented reports produced by test:ci. Keep the
+    // Git diff and baseline comparison uncached as the target branch moves.
+    "coverage:portable:check": {
       "dependsOn": ["lint", "^build", "generate", "test:ci"],
       "cache": false,
       "passThroughEnv": [

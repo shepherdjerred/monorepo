@@ -32,6 +32,7 @@
     "test:winui": "bun scripts/test.ts winui",
     "coverage": "bun scripts/test.ts unit --coverage && bun scripts/test.ts integration --coverage && bun scripts/test.ts winui --coverage && bun scripts/coverage-ratchet.ts",
     "coverage:portable": "bun scripts/test.ts unit --coverage && bun scripts/test.ts integration --coverage && bun scripts/coverage-ratchet.ts --portable",
+    "coverage:portable:check": "bun scripts/coverage-ratchet.ts --portable --ci",
     "coverage:check": "bun scripts/coverage-ratchet.ts",
     "quality:source": "bun scripts/quality-check.ts",
     "quality:duplicates": "bunx jscpd --config .jscpd.json --silent",

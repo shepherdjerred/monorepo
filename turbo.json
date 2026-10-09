@@ -8,6 +8,7 @@
     "bunfig.toml",
     "patches/**",
     "scripts/ci/ci-reporting.ts",
+    "scripts/ci/mstest-configuration.ts",
     "scripts/ci/coverage-cobertura.ts",
     "scripts/ci/gradle-junit.ts",
     "scripts/ci-test-manifest.json",

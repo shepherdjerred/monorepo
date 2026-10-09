@@ -6,6 +6,9 @@ const packageRoot = path.resolve(import.meta.dir, "..");
 const repositoryRoot = path.resolve(packageRoot, "..", "..");
 const baselinePath = path.join(packageRoot, "coverage-baseline.json");
 const portableOnly = Bun.argv.includes("--portable");
+const ciReports = Bun.argv.includes("--ci");
+if (ciReports && !portableOnly)
+  throw new Error("CI coverage reports only cover portable suites.");
 const BaselineSchema = z.object({
   schemaVersion: z.literal(1),
   components: z.record(
@@ -69,15 +72,27 @@ function branchReading(raw: string | undefined): {
 const requiredSuites = portableOnly
   ? ["unit", "integration"]
   : ["unit", "integration", "winui"];
-const coverageFiles = requiredSuites.map((suite) =>
-  path.join(
-    packageRoot,
-    "artifacts",
-    "test-results",
-    suite,
-    "coverage.cobertura.xml",
-  ),
-);
+const coverageFiles = ciReports
+  ? ["unit", "integration"].map((suite) =>
+      path.join(
+        repositoryRoot,
+        ".ci-reports",
+        "coverage",
+        "raw",
+        "tasknotes-windows",
+        suite,
+        "coverage.cobertura.xml",
+      ),
+    )
+  : requiredSuites.map((suite) =>
+      path.join(
+        packageRoot,
+        "artifacts",
+        "test-results",
+        suite,
+        "coverage.cobertura.xml",
+      ),
+    );
 const parser = new XMLParser({ ignoreAttributes: false });
 const suiteComponents: ReadonlyMap<string, Map<string, LineReading>>[] = [];
 for (const coverageFile of coverageFiles) {

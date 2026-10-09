@@ -4,7 +4,7 @@ const turboTasks = [
   "build",
   "typecheck",
   "test:ci",
-  "coverage:portable",
+  "coverage:portable:check",
   "lint",
   "check-suppressions",
   "check-agent-guidance",
