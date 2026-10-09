@@ -46,6 +46,7 @@ from world_archive import (
     REPO,
     WorldFiles,
     aws,
+    listed_worlds,
     load_catalog,
     require_space,
     retained_path,
@@ -696,7 +697,7 @@ def validate_publication(state: OverviewPublication, *, complete: bool = False) 
         raise ValueError("Overview publication belongs to another release")
     if state["tools"] != tools:
         raise ValueError("Overview publication tool pins changed")
-    ids = {world["id"] for world in catalog["worlds"]}
+    ids = {world["id"] for world in listed_worlds(catalog)}
     if not set(state["worlds"]) <= ids or (complete and set(state["worlds"]) != ids):
         raise ValueError("Overview publication does not contain the required worlds")
     downloads: ArchivePublication = json.loads((PACKAGE / "archive/published.json").read_text())
@@ -767,7 +768,7 @@ def run_locked(args: argparse.Namespace) -> None:
     source, scratch = args.source.resolve(), args.scratch.resolve()
     if scratch.is_relative_to(source) or source.is_relative_to(scratch) or scratch.is_relative_to(REPO):
         raise ValueError("Scratch must be outside the repository and source directory")
-    worlds = [world for world in catalog["worlds"] if not args.only or world["id"] == args.only]
+    worlds = [world for world in listed_worlds(catalog) if not args.only or world["id"] == args.only]
     archive: ArchivePublication = json.loads((PACKAGE / "archive/published.json").read_text())
     downloads = archive["worlds"]
     render_workers = args.render_workers or args.workers
@@ -924,7 +925,7 @@ def main() -> None:
     publish = commands.add_parser("run")
     publish.add_argument("--source", type=Path, required=True)
     publish.add_argument("--scratch", type=Path, required=True)
-    publish.add_argument("--only", choices=[world["id"] for world in load_catalog()["worlds"]])
+    publish.add_argument("--only", choices=[world["id"] for world in listed_worlds(load_catalog())])
     publish.add_argument("--workers", type=int, choices=range(1, 6), default=2)
     publish.add_argument(
         "--render-workers",

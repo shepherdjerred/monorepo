@@ -75,34 +75,6 @@ Credit: The Storm community.
 
 </details>
 
-### Main Map 1 — upgraded copy
-
-A later copy of Main Map 1 saved in Minecraft 1.14.4; not the 2022–23 revival world.
-
-**Snapshot:** 2023-06-18 · **Minecraft:** 1.14.4 · **Download:** 1.68 GiB
-
-[Download ZIP](https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/main-map1-upgraded-2023-06-18.zip)
-
-Credit: The Storm community.
-
-<div class="archive-previews">
-<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/main-map1-upgraded-2023-06-18/overview.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/main-map1-upgraded-2023-06-18/overview.png" width="2048" height="2048" loading="lazy" alt="Main Map 1 — upgraded copy: around spawn from above" /></a>
-<figcaption>Around spawn · 2,048-block selection · north is up</figcaption></figure>
-
-<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/main-map1-upgraded-2023-06-18/closeup.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/main-map1-upgraded-2023-06-18/closeup.png" width="1024" height="1024" loading="lazy" alt="Main Map 1 — upgraded copy: close-up from above" /></a>
-<figcaption>Close-up · 512-block selection · north is up</figcaption></figure>
-
-</div>
-
-<details>
-<summary>SHA-256 checksum</summary>
-
-```text
-072872775ab4296ba08f707f59659a5793974b275cfa7070152b3dbb3ce1d41e
-```
-
-</details>
-
 ### Skylands Map 2
 
 The later Skylands survival world.

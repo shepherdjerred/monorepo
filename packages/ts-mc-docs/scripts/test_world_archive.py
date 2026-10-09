@@ -1,15 +1,29 @@
 """Archive contract tests using disposable, deliberately nested world ZIPs."""
 
+import json
 import tempfile
 import unittest
 import zipfile
 from pathlib import Path
 from unittest.mock import patch
 
-from world_archive import prepare, retained_path
+from world_archive import CATALOG, listed_worlds, load_catalog, prepare, retained_path
 
 
 class ArchiveTests(unittest.TestCase):
+    def test_listing_defaults_to_visible_and_rejects_non_boolean_metadata(self):
+        catalog = json.loads(CATALOG.read_text())
+        self.assertEqual(len(listed_worlds(catalog)), 8)
+        self.assertEqual(len(catalog["worlds"]), 9)
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "catalog.json"
+            for value in ("false", 0, None):
+                with self.subTest(listed=value):
+                    catalog["worlds"][0]["listed"] = value
+                    path.write_text(json.dumps(catalog))
+                    with patch("world_archive.CATALOG", path), self.assertRaisesRegex(ValueError, "boolean"):
+                        load_catalog()
+
     def test_normalized_zip_preserves_world_and_player_bytes(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

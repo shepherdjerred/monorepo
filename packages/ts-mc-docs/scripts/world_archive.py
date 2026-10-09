@@ -24,7 +24,7 @@ import time
 import urllib.request
 import zipfile
 from pathlib import Path, PurePosixPath
-from typing import Protocol, TypedDict
+from typing import NotRequired, Protocol, TypedDict
 
 from world_previews import PreviewArea, level_metadata, png_dimensions, preview_areas
 
@@ -40,6 +40,7 @@ class WorldFiles(TypedDict):
 
 
 class World(WorldFiles):
+    listed: NotRequired[bool]
     title: str
     date: str
     minecraft: str
@@ -137,11 +138,18 @@ def load_catalog() -> Catalog:
     for world in catalog["worlds"]:
         if not re.fullmatch(r"[a-z0-9-]+", world["id"]):
             raise ValueError("Invalid world ID")
+        if "listed" in world and type(world["listed"]) is not bool:
+            raise ValueError("World listing must be a boolean")
         safe_parts(world["root"])
     for entry in catalog["worlds"] + catalog["schematics"]:
         if len(safe_parts(entry["file"])) != 1:
             raise ValueError("Archive source must be a top-level filename")
     return catalog
+
+
+def listed_worlds(catalog: Catalog) -> list[World]:
+    """Keep historical certificates while selecting public downloads and overviews."""
+    return [world for world in catalog["worlds"] if world.get("listed", True)]
 
 
 def safe_parts(name: str) -> tuple[str, ...]:
@@ -589,7 +597,7 @@ def document(state_path: Path, overview_path: Path | None = None) -> None:
             "ZIP downloads retain their original Minecraft formats.",
             "",
         ]
-    for world in catalog["worlds"]:
+    for world in listed_worlds(catalog):
         entry = state["worlds"][world["id"]]
         download_link = f"[Download ZIP]({entry['download']})"
         if overviews is not None:

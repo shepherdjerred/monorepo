@@ -17,7 +17,7 @@ from unittest.mock import Mock, patch
 
 from overview_types import OverviewPublication, PublishedOverview
 from test_world_previews import level
-from world_archive import ORIGIN, PACKAGE, document, sha256
+from world_archive import ORIGIN, PACKAGE, document, listed_worlds, load_catalog, sha256
 from world_overviews import (
     asset_inventory,
     certify_render_states,
@@ -51,7 +51,9 @@ def publication() -> OverviewPublication:
     tools = tool_config()
     downloads = json.loads((PACKAGE / "archive/published.json").read_text())
     worlds: dict[str, PublishedOverview] = {}
-    for identifier, entry in downloads["worlds"].items():
+    for world in listed_worlds(load_catalog()):
+        identifier = world["id"]
+        entry = downloads["worlds"][identifier]
         worlds[identifier] = {
             "sourceSha256": entry["sourceSha256"],
             "url": (
@@ -333,6 +335,10 @@ class OverviewTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "required worlds"):
             validate_publication(state, complete=True)
         state = publication()
+        state["worlds"]["main-map1-upgraded-2023-06-18"] = state["worlds"][identifier]
+        with self.assertRaisesRegex(ValueError, "required worlds"):
+            validate_publication(state, complete=True)
+        state = publication()
         state["worlds"][identifier]["sourceSha256"] = "different"
         with self.assertRaisesRegex(ValueError, "certified archive"):
             validate_publication(state, complete=True)
@@ -352,7 +358,12 @@ class OverviewTests(unittest.TestCase):
                 document(PACKAGE / "archive/published.json")
             page = (package / "src/content/docs/world_downloads.md").read_text()
             self.assertEqual(page, explicit)
-            self.assertEqual(page.count("[Explore map]"), 9)
+            self.assertEqual(page.count("[Explore map]"), 8)
+            self.assertEqual(page.count("[Download ZIP]"), 8)
+            self.assertNotIn("Main Map 1 — upgraded copy", page)
+            retained = json.loads((package / "archive/published.json").read_text())
+            self.assertEqual(retained, archive)
+            self.assertIn("main-map1-upgraded-2023-06-18", retained["worlds"])
             for identifier, world in state["worlds"].items():
                 self.assertIn(
                     f"[Download ZIP]({archive['worlds'][identifier]['download']}) · [Explore map]({world['url']})", page
