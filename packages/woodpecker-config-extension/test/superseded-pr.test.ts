@@ -53,8 +53,8 @@ function harness(
   };
 }
 
-describe("ready-event supersession", () => {
-  test("a new PR commit cancels only older ready events for its exact PR", async () => {
+describe("PR supersession", () => {
+  test("a new PR run cancels only older verification for its exact PR", async () => {
     const { options, calls } = harness([
       older,
       { ...older, number: 98, ref: "refs/pull/42/head" },
@@ -67,7 +67,7 @@ describe("ready-event supersession", () => {
       { ...older, number: 100 },
       { ...older, number: 92, event: "push" },
     ]);
-    expect(await cancelSupersededPr(7, current, options)).toEqual([99, 98]);
+    expect(await cancelSupersededPr(7, current, options)).toEqual([99, 98, 95]);
     expect(
       calls
         .filter((call) => call.method === "POST")
@@ -75,11 +75,28 @@ describe("ready-event supersession", () => {
     ).toEqual([
       "/api/repos/7/pipelines/99/cancel",
       "/api/repos/7/pipelines/98/cancel",
+      "/api/repos/7/pipelines/95/cancel",
     ]);
     expect(calls[0]?.url.searchParams.get("event")).toBe(
-      "pull_request_metadata",
+      "pull_request,pull_request_metadata",
     );
     expect(new Set(calls.map((call) => call.signal)).size).toBe(1);
+  });
+
+  test("retargeting supersedes the older run even at the same commit", async () => {
+    const oldTarget = {
+      ...older,
+      event: "pull_request",
+      branch: "old-base",
+      commit: "a".repeat(40),
+    };
+    const { options } = harness([oldTarget]);
+    const newTarget = {
+      ...current,
+      branch: "new-base",
+      commit: oldTarget.commit,
+    };
+    expect(await cancelSupersededPr(7, newTarget, options)).toEqual([99]);
   });
 
   test("ready transition supersedes both old PR work and old ready work", async () => {

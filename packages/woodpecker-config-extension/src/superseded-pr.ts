@@ -55,8 +55,7 @@ function superseded(
     pipeline.number < current.number &&
     prNumber(pipeline.ref) === pr &&
     ["pending", "running"].includes(pipeline.status) &&
-    isPrVerificationEvent(pipeline) &&
-    !(current.event === "pull_request" && pipeline.event === "pull_request")
+    isPrVerificationEvent(pipeline)
   );
 }
 
@@ -67,15 +66,11 @@ async function candidatesForPr(
   pr: string,
 ): Promise<ActivePipeline[]> {
   const candidates = new Map<number, ActivePipeline>();
-  const event =
-    current.event === "pull_request"
-      ? "pull_request_metadata"
-      : "pull_request,pull_request_metadata";
   // Collect before mutating: cancellation changes the filtered pagination.
   for (const status of ["running", "pending"]) {
     for (let page = 1; page <= 5; page++) {
       const query = new URLSearchParams({
-        event,
+        event: "pull_request,pull_request_metadata",
         ref: `refs/pull/${pr}/`,
         status,
         perPage: "50",
@@ -132,7 +127,7 @@ async function cancelCandidate(
   return false;
 }
 
-/** Native supersession only compares equal event types. Bridge ready events. */
+/** Supersede by PR identity across ready events and target-branch changes. */
 export async function cancelSupersededPr(
   repoId: number,
   current: CurrentPipeline,
