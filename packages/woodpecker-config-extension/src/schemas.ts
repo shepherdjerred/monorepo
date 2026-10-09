@@ -11,10 +11,12 @@ import { z } from "zod";
  */
 export const PipelineSchema = z.looseObject({
   event: z.string(),
+  /** Native Go slices encode absent reasons as null. */
+  event_reason: z.array(z.string()).nullish(),
   branch: z.string(),
   commit: z.string(),
   ref: z.string(),
-  /** Woodpecker's pipeline number, used only for audit context. */
+  /** Woodpecker's pipeline number, also the boundary for superseding older PRs. */
   number: z.number().int().nonnegative().default(0),
   /** Native review fields are parsed for contract visibility, never trusted. */
   reviewed: z.number().int().nonnegative().default(0),
@@ -43,6 +45,8 @@ export const PipelineSchema = z.looseObject({
    * missing, and `authorizePipeline` does not rely on it alone.
    */
   from_fork: z.boolean().default(false),
+  /** Native signed webhook state; omitted by Woodpecker when false. */
+  pr_draft: z.boolean().default(false),
   /**
    * Forge URL for the change being built (the pull request, or the commit on
    * a push). Stamped onto each step pod so a measured pod links back to the

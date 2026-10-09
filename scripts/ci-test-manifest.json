@@ -750,6 +750,7 @@
     {
       "package": "tasknotes-windows",
       "directory": "packages/tasknotes-windows",
+      "coverageAlways": true,
       "excludedSuites": [
         {
           "path": "tests/TaskNotes.Windows.App.Tests/TaskNotes.Windows.App.Tests.csproj",
@@ -769,7 +770,9 @@
             "Release",
             "--property:RestoreLockedMode=true"
           ],
-          "coverageConfig": "coverage.settings.xml"
+          "coverageConfig": "coverage.settings.xml",
+          "name": "unit",
+          "mstest": { "parallel": true, "timeoutMs": 30000 }
         },
         {
           "runner": "dotnet",
@@ -779,7 +782,9 @@
             "Release",
             "--property:RestoreLockedMode=true"
           ],
-          "coverageConfig": "coverage.settings.xml"
+          "coverageConfig": "coverage.settings.xml",
+          "name": "integration",
+          "mstest": { "parallel": true, "timeoutMs": 120000 }
         }
       ]
     },

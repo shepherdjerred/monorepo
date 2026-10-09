@@ -42,6 +42,68 @@ only supplies a shared path when its declared volume is mounted. Bun's download
 cache and its maintenance-lock volume must be mounted together. Installed
 dependencies remain private to each workflow workspace.
 
+## OpenTofu PR checks
+
+Selection retains the existing per-stack path guards. Selected PR plans and
+validations then run as ordered containers in one `tofu-pr` workflow, sharing
+one checkout and one filtered Bun install. Each container keeps its original
+credentials, mounts, resource bounds and timeout. A failed required container
+fails the workflow and the completion verdict. Main applies stay separate.
+
+The setup and plan containers install only Bun and OpenTofu. Plans retain the
+shared provider-cache lock and use a private temporary `TF_DATA_DIR`, removed
+on success or failure, so backend initialization never persists credentials
+in the shared checkout. Schema-only validation retains its independent data
+directory and does not use the shared provider cache.
+
+## Agent pools and admission
+
+Marking a draft ready emits Woodpecker's signed `pull_request_metadata` event
+with reason `ready_for_review`. It selects the full PR graph without another
+commit. Title, label and other metadata changes emit only a no-op. Ready events
+retain PR credential approval and cache namespaces, and use the PR merge base.
+Completion checks the native metadata statuses from its own pipeline. The
+server maps only that completion workflow to the existing required
+`ci/woodpecker/pr/ci-complete` status. Toolkit selects the newest matching PR
+or ready-event pipeline and rejects draft-only evidence at the same SHA.
+
+Native cancellation can miss ready events and target-branch changes. After
+producing a full PR graph, the extension cancels older PR and ready-event runs
+for that exact PR, including duplicates at the same commit. It revalidates each
+pipeline immediately before cancellation and never cancels newer runs, main,
+or another PR. Metadata no-ops and unapproved automation do no cleanup.
+The entire best-effort lookup has a three-second deadline; API failure leaves
+the replacement verification intact and emits a bounded warning.
+
+Deploy this compatibility path and its server status-context template before
+enabling cheaper draft checks. The server configuration change requires a
+drained server rollout; observe an actual ready transition through full CI
+before changing draft coverage.
+
+`routing.ts` assigns Kubernetes workflows to PR, main, review, or completion
+agents. A PR targeting the default branch still uses the PR pool; only a push
+or manual run on that branch uses main capacity. Native workflows keep their
+host labels. Metadata no-ops use compute capacity, leaving completion available
+for required verdicts.
+
+Review and completion use their reserved pools only with the trusted policy
+image and no checkout or services. Each requests 250m CPU, 512 MiB memory, and
+1 GiB ephemeral storage, so all four slots fit the gate reserve together.
+The generator's exported step model includes the dynamic completion workflow
+in admission and credential checks.
+
+Signed `pr_draft` state selects draft versus ready admission priority. It does
+not reduce verification coverage. Main has the highest admission priority;
+Kueue preemption remains disabled and production pod priority is unchanged.
+Workflow labels carry admission priority through clone, service, and command
+pods; each agent fixes its queue label.
+
+Deploy mandatory-label agents and their queues before activating routing.
+Before allowing old and new agents to overlap, drain configurations generated
+without the shared Paper smoke concurrency cap. Retain the legacy agent until
+all unlabelled workflows have finished; then remove it through the normal
+declarative release path. Routing labels prevent it from claiming new work.
+
 ## Retained task diagnostics
 
 Credentialed verify and browser workflows publish a sanitized JSON artifact to
@@ -151,6 +213,12 @@ retain their complete machine-readable output. Image digest validation,
 candidate smoke checks and pin promotion still gate publication.
 
 ## Static-site delivery
+
+Browser checks can start alongside verification. Their workflow installs and
+builds its own selected Turbo prerequisites with concurrency two in its own
+workspace. The required completion verdict and site deployment both wait for
+verification and browser success. Site deployment consumes the exact tested
+artifact from the pipeline handoff bucket.
 
 The sites lane builds selected packages through the repository deploy catalog
 after OpenTofu creates their SeaweedFS buckets. Cloudflare DNS apply waits for

@@ -8,6 +8,7 @@ import {
   lastSuccessfulCommit,
 } from "#src/woodpecker-api.ts";
 import { hasExactHeadApproval } from "#src/github-approval.ts";
+import { cancelSupersededPr } from "#src/superseded-pr.ts";
 
 function requireEnv(name: string): string {
   const value = Bun.env[name];
@@ -50,6 +51,11 @@ async function publicKey(): Promise<KeyObject> {
 }
 
 const app = createApp({
+  cancelSupersededPr: (repoId, pipeline) =>
+    cancelSupersededPr(repoId, pipeline, {
+      baseUrl: serverUrl,
+      token: apiToken,
+    }),
   trustedGateImage,
   publicKey,
   imageFetcher: createRawFetcher(repoSlug),

@@ -109,6 +109,15 @@ export function createTurboCacheDeployment(chart: Chart) {
         STORAGE_PROVIDER: EnvValue.fromValue("local"),
         STORAGE_PATH: EnvValue.fromValue("/cache"),
         STORAGE_PATH_USE_TMP_FOLDER: EnvValue.fromValue("false"),
+        // In pinned ducktors 2.14.3 this is a truthy switch: PUT stores the
+        // client's x-artifact-tag and GET returns it unchanged. The server
+        // never signs or verifies artifacts. Keep actual main/PR signing keys
+        // exclusively on their clients; a shared server must not re-sign PR
+        // output with a trusted key. Without this switch every signed hit is
+        // rejected by Turbo because its response has no signature header.
+        TURBO_REMOTE_CACHE_SIGNATURE_KEY: EnvValue.fromValue(
+          "preserve-client-signatures",
+        ),
         // The upstream default is 100 MiB (104857600), which the Scout
         // frontend and design-system build artifacts exceed — every verify
         // run logged `413 Payload Too Large` for exactly those two uploads,

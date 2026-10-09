@@ -97,7 +97,7 @@ async function metric(
 
 export async function ciLoad(config: WoodpeckerConfig, signal?: AbortSignal) {
   const secrets = [config.token];
-  const [queue, admission, cpu, memory, disk, ioPressure, pods] =
+  const [queue, admission, gateAdmission, cpu, memory, disk, ioPressure, pods] =
     await Promise.all([
       section(
         async () =>
@@ -110,6 +110,22 @@ export async function ciLoad(config: WoodpeckerConfig, signal?: AbortSignal) {
         () =>
           captureJson(
             ["kubectl", "get", "clusterqueue", "woodpecker", "-o", "json"],
+            AdmissionSchema,
+            signal,
+          ),
+        secrets,
+      ),
+      section(
+        () =>
+          captureJson(
+            [
+              "kubectl",
+              "get",
+              "clusterqueue",
+              "woodpecker-gates",
+              "-o",
+              "json",
+            ],
             AdmissionSchema,
             signal,
           ),
@@ -154,6 +170,7 @@ export async function ciLoad(config: WoodpeckerConfig, signal?: AbortSignal) {
     node: "liskov",
     queue,
     admission,
+    gateAdmission,
     cpu,
     memory,
     disk,
@@ -166,12 +183,15 @@ export async function ciLoad(config: WoodpeckerConfig, signal?: AbortSignal) {
 
 type LoadReport = Awaited<ReturnType<typeof ciLoad>>;
 
-function formatAdmission(admission: LoadReport["admission"]): string[] {
+function formatAdmission(
+  admission: LoadReport["admission"],
+  queueName: string,
+): string[] {
   if (!admission.available)
-    return [`Admission unavailable: ${admission.error}`];
+    return [`Kueue ${queueName} unavailable: ${admission.error}`];
   const data = admission.data;
   const lines = [
-    `Kueue: ${String(data.status.pendingWorkloads)} pending, ${String(data.status.admittedWorkloads)} admitted`,
+    `Kueue ${queueName}: ${String(data.status.pendingWorkloads)} pending, ${String(data.status.admittedWorkloads)} admitted`,
   ];
   const flavors = data.spec.resourceGroups.flatMap((group) => group.flavors);
   for (const flavor of flavors) {
@@ -206,7 +226,8 @@ export function formatLoad(report: LoadReport): string {
   } else lines.push(`Queue unavailable: ${report.queue.error}`);
   return [
     ...lines,
-    ...formatAdmission(report.admission),
+    ...formatAdmission(report.admission, "woodpecker"),
+    ...formatAdmission(report.gateAdmission, "woodpecker-gates"),
     ...formatMetric("CPU percent", report.cpu),
     ...formatMetric("Memory bytes", report.memory),
     ...formatMetric("Disk bytes (/var)", report.disk),

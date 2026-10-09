@@ -435,15 +435,28 @@ async function main(): Promise<void> {
   if (definition.platform !== undefined) {
     await addDesiredStateEnvironment(stackDir, definition.platform, env);
   }
+  if (action === "plan") {
+    // Grouped PR containers share the checkout. Backend initialization belongs
+    // to this plan alone and must not leave credentials for a later container.
+    const dataRoot = await temporaryDirectory("tofu-plan", env);
+    env["TF_DATA_DIR"] = dataRoot;
+    try {
+      const options = isolatedOptions(env, root);
+      await run(
+        ["tofu", `-chdir=${STACKS_REL}/${stack}`, "init", "-input=false"],
+        options,
+      );
+      await plan(stack, definition, options);
+    } finally {
+      await removeTemporaryDirectory(dataRoot);
+    }
+    return;
+  }
   const options = isolatedOptions(env, root);
   await run(
     ["tofu", `-chdir=${STACKS_REL}/${stack}`, "init", "-input=false"],
     options,
   );
-  if (action === "plan") {
-    await plan(stack, definition, options);
-    return;
-  }
   if (action === "prepare" || action === "apply-saved") {
     await reviewedPlatformOperation({
       stack,

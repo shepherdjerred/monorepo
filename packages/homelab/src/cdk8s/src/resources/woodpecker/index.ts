@@ -28,6 +28,7 @@ import {
   WOODPECKER_PUBLIC_HOST,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/woodpecker.ts";
 import { CONFIG_EXTENSION_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/config-extension.ts";
+import { escapeHelmGoTemplate } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/shared.ts";
 
 /**
  * Compose the Postgres DSN from parts.
@@ -102,6 +103,14 @@ export function createWoodpeckerServer(chart: Chart) {
         ...dbEnv,
         WOODPECKER_DATABASE_DRIVER: EnvValue.fromValue("postgres"),
         WOODPECKER_HOST: EnvValue.fromValue(WOODPECKER_PUBLIC_HOST),
+        // Ready-for-review is a metadata event. Its completion verdict must
+        // satisfy the existing required check; other metadata contexts remain
+        // distinct so title/label updates cannot overwrite full PR evidence.
+        WOODPECKER_STATUS_CONTEXT_FORMAT: EnvValue.fromValue(
+          escapeHelmGoTemplate(
+            '{{ .context }}/{{ if and (eq .event "pull_request_metadata") (eq .workflow "ci-complete") }}pr{{ else }}{{ .event }}{{ end }}/{{ .workflow }}',
+          ),
+        ),
         // Registration is closed; the forge supplies identity and only the
         // listed admin may administer the instance. The repository is public,
         // so an open instance would let any GitHub account sign in.

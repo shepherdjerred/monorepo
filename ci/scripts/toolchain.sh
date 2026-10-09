@@ -55,6 +55,12 @@ case "${MISE_TOOLCHAIN_SCOPE:-full}" in
     mise_ci install --yes bun
     mise_ci reshim
     ;;
+  tofu)
+    # Grouped PR plan containers share installed workspace dependencies, but
+    # each container still resolves its own pinned runtime from the CI image.
+    mise_ci install --yes bun opentofu
+    mise_ci reshim
+    ;;
   postgres)
     # The Playwright image carries browsers and Bun, but its refresh is
     # main-only: a PR that bumps .mise.toml would otherwise run E2E under a

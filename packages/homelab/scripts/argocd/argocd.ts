@@ -174,6 +174,7 @@ const CLUSTER_SCOPED_ROOT_RESOURCE_KINDS = new Set([
   "admissionregistration.k8s.io/ValidatingAdmissionPolicyBinding",
   "kueue.x-k8s.io/ClusterQueue",
   "kueue.x-k8s.io/ResourceFlavor",
+  "kueue.x-k8s.io/WorkloadPriorityClass",
   "rbac.authorization.k8s.io/ClusterRole",
   "rbac.authorization.k8s.io/ClusterRoleBinding",
   "scheduling.k8s.io/PriorityClass",

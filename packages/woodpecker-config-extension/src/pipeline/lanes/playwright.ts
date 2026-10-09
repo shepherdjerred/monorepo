@@ -29,6 +29,9 @@ export function playwrightSteps(images: CiImages, changedBase = ""): CiStep[] {
       image: images.playwright,
       environment: {
         CI_CHANGED_BASE: changedBase,
+        // Browser suites already hash this input; supply the actual pinned
+        // image so a browser/toolchain change cannot reuse an older result.
+        CI_PLAYWRIGHT_IMAGE: images.playwright,
         ...TURBO_REMOTE_CACHE_ENVIRONMENT,
       },
       commands: diagnosticCommands("playwright-e2e", [
@@ -36,7 +39,7 @@ export function playwrightSteps(images: CiImages, changedBase = ""): CiStep[] {
         "MISE_TOOLCHAIN_SCOPE=postgres . ci/scripts/toolchain.sh",
         // A PR compares against its target branch even before main has a
         // successful Woodpecker pipeline to supply a changed-file base.
-        'if [ "$CI_PIPELINE_EVENT" = "pull_request" ]; then',
+        'if [ "$CI_PIPELINE_EVENT" = "pull_request" ] || [ "$CI_PIPELINE_EVENT" = "pull_request_metadata" ]; then',
         '  if git fetch --no-tags --depth=100 origin "$CI_COMMIT_SHA" && git fetch --no-tags --depth=100 origin "$CI_COMMIT_TARGET_BRANCH"; then',
         '    if ! CI_CHANGED_BASE="$(git merge-base HEAD FETCH_HEAD)"; then CI_CHANGED_BASE=""; fi',
         "  else",
@@ -55,7 +58,8 @@ export function playwrightSteps(images: CiImages, changedBase = ""): CiStep[] {
         "if [ -d packages/sjer.red/dist ]; then bun --no-install scripts/ci/ci-artifact.ts put sjer-red-dist; fi",
         "if [ -d packages/docs/wiki/dist ]; then bun --no-install scripts/ci/ci-artifact.ts put wiki-dist; fi",
       ]),
-      dependsOn: ["verify"],
+      // This workflow builds its own Turbo prerequisites in its own workspace.
+      // Completion and deployment still wait for both verification and E2E.
       timeoutMinutes: 30,
       resources: BROWSER_TIER,
       volumes: [BUN_CACHE, BUN_CACHE_CONTROL],

@@ -604,12 +604,15 @@ describe("selected lane contracts", () => {
     );
   });
 
-  test("playwright depends on verify and uses the browser image", () => {
+  test("playwright can start alongside verify and uses the browser image", () => {
     const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
     const playwright = steps.find((s) => s.key === "playwright-e2e");
-    expect(playwright?.dependsOn).toEqual(["verify"]);
+    expect(playwright?.dependsOn).toBeUndefined();
     expect(playwright?.image).toBe(IMAGES.playwright);
-    // Selecting it must pull verify in, or it could never become runnable.
+    expect(playwright?.environment?.["CI_PLAYWRIGHT_IMAGE"]).toBe(
+      IMAGES.playwright,
+    );
+    // Removing serialization must not remove verification from the PR graph.
     expect(keysFor(["packages/sjer.red/src/pages/index.astro"])).toEqual(
       expect.arrayContaining(["verify", "playwright-e2e"]),
     );

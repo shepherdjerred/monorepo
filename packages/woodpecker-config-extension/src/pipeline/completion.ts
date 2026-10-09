@@ -1,5 +1,5 @@
 import type { CiStep } from "#src/pipeline/model.ts";
-import { LIGHT_TIER } from "#src/pipeline/tiers.ts";
+import { GATE_TIER, LIGHT_TIER } from "#src/pipeline/tiers.ts";
 import { shellQuote } from "#src/pipeline/emit.ts";
 
 /**
@@ -48,6 +48,7 @@ export function completionStep(
   selected: readonly CiStep[],
   image: string,
   workingDirectory: "/workspace" | "/app" = "/workspace",
+  event: "pull_request" | "pull_request_metadata" = "pull_request",
 ): CiStep {
   const blocking = selected.filter((step) => step.allowFailure !== true);
   if (blocking.length === 0) {
@@ -65,12 +66,15 @@ export function completionStep(
     ],
     environment: {
       CI_EXPECTED_CONTEXTS: JSON.stringify(
-        blocking.map((step) => `ci/woodpecker/pr/${step.key}`),
+        blocking.map(
+          (step) =>
+            `ci/woodpecker/${event === "pull_request" ? "pr" : event}/${step.key}`,
+        ),
       ),
     },
     dependsOn: blocking.map((step) => step.key),
     timeoutMinutes: 3,
-    resources: LIGHT_TIER,
+    resources: workingDirectory === "/app" ? GATE_TIER : LIGHT_TIER,
     skipClone: true,
     runOnFailure: true,
     secrets: [

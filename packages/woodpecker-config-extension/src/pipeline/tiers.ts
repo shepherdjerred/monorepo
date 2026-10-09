@@ -70,6 +70,16 @@ export const LIGHT_TIER: ResourceTier = {
   ephemeralStorageLimit: "20Gi",
 };
 
+/** Four trusted, checkout-free gate slots fit in the dedicated Kueue reserve. */
+export const GATE_TIER: ResourceTier = {
+  cpuRequest: "250m",
+  cpuLimit: "1",
+  memoryRequest: "512Mi",
+  memoryLimit: "1Gi",
+  ephemeralStorageRequest: "1Gi",
+  ephemeralStorageLimit: "2Gi",
+};
+
 /**
  * Medium steps: a single package's build and test on a cold cache.
  *

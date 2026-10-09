@@ -72,7 +72,7 @@ toolkit ci wait 3447 --until settled    # Collect all blocking check results
 toolkit ci wait 3447 --timeout 2h       # Optional deadline; no default deadline
 toolkit ci explain 3447                # Current blockers and bounded failure logs
 toolkit ci main                        # Current main push and last completed verdict
-toolkit ci load                        # Queue, Kueue admission, CPU/memory/disk/I/O
+toolkit ci load                        # Queue, compute/gate admission, CPU/memory/disk/I/O
 toolkit pr review list 3447 --json      # Human and provider feedback with full bodies
 ```
 
@@ -87,6 +87,11 @@ appear, human intervention is needed, or all merge requirements pass. A ready
 candidate gets a fresh check of head, base, pipeline attempt, rules, and main.
 `--until settled` waits for the remaining blocking results after a CI failure;
 head changes and structural blockers still return immediately.
+
+PR observation considers both normal PR pipelines and signed ready-for-review
+metadata pipelines for the exact head. Title and label changes cannot replace
+verification evidence. A green draft preflight cannot make a ready PR mergeable;
+the full pipeline and its own published completion verdict must pass.
 
 Woodpecker workflow results and the `ci-complete` gate determine hard CI
 failures. Failed service cleanup children inside successful workflows do not

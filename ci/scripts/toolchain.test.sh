@@ -13,6 +13,11 @@ MAC_CI_BOOTSTRAP="${SCRIPT_DIR}/../../packages/homelab/mac-ci/bootstrap.sh"
 MAC_CI_PROVISIONER="${SCRIPT_DIR}/../../packages/homelab/mac-ci/provision-host.sh"
 MACOS_LANES="${SCRIPT_DIR}/../../packages/woodpecker-config-extension/src/pipeline/lanes/macos.ts"
 
+if ! rg -Fq 'mise_ci install --yes bun opentofu' "$TOOLCHAIN"; then
+  echo "OpenTofu containers must install only the Bun and OpenTofu toolchain" >&2
+  exit 1
+fi
+
 if ! awk '
   $0 ~ /^[[:space:]]*mise_ci install --yes[[:space:]]*$/ { install_line = NR }
   $0 ~ /^[[:space:]]*mise_ci reshim[[:space:]]*$/ { reshim_line = NR }

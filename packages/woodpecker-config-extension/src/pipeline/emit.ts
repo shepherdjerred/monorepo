@@ -1,6 +1,10 @@
 import { stringify } from "yaml";
 import { bunInstallEnvironment } from "#src/pipeline/cache.ts";
-import type { CiStep, ResourceTier } from "#src/pipeline/model.ts";
+import type {
+  CiCommandStep,
+  CiStep,
+  ResourceTier,
+} from "#src/pipeline/model.ts";
 
 /**
  * Node the CI step pods run on, and the taint they must tolerate to get there.
@@ -212,23 +216,60 @@ function backendOptions(
   };
 }
 
+/** Emit one container with only its own credentials and resource bounds. */
+function emitCommand(
+  command: CiCommandStep,
+  backend: CiStep["backend"],
+  identity: PipelineIdentity,
+): Record<string, unknown> {
+  const step: CiStep = {
+    ...command,
+    label: command.key,
+    ...(backend === undefined ? {} : { backend }),
+  };
+  return {
+    name: step.key,
+    image: step.image,
+    commands: wrapCommands(step),
+    environment: {
+      ...step.environment,
+      ...bunInstallEnvironment(step.volumes),
+    },
+    ...(step.volumes === undefined || step.volumes.length === 0
+      ? {}
+      : {
+          volumes: step.volumes.map(
+            (volume) => `${volume.claim}:${volume.path}`,
+          ),
+        }),
+    ...(step.allowFailure === true ? { failure: "ignore" } : {}),
+    ...(step.backend === "local"
+      ? {}
+      : { backend_options: backendOptions(step, identity) }),
+  };
+}
+
 /**
- * Render one step as a complete Woodpecker workflow.
- *
- * One workflow per step rather than one workflow containing many: Buildkite
- * steps were independent pods with their own checkout, and Woodpecker
- * workflows are the unit that gets its own workspace — and the unit
- * `concurrency` applies to, which the serialized lanes depend on.
- *
- * Deliberately emits no path filter. The selector has already decided which
- * steps run and guarantees the result is dependency-closed. A second path
- * filter could strand a dependent. The completion workflow alone carries a
- * status condition so it runs after a failed prerequisite.
- *
- * The rendered text is escaped for Woodpecker's variable substitution; see
- * `escapeSubstitution`.
+ * Render a selected workflow, optionally with sequential command containers
+ * sharing one checkout. No container receives another container's grants.
+ * Selection has already closed dependencies; adding path conditions here
+ * could strand dependents. Only completion runs after a failed prerequisite.
  */
 export function emitWorkflow(step: CiStep, identity: PipelineIdentity): string {
+  const commands = [step, ...(step.orderedSteps ?? [])];
+  if (
+    new Set(commands.map((command) => command.key)).size !== commands.length
+  ) {
+    throw new Error(`Duplicate container names in workflow ${step.key}`);
+  }
+  const commandBudget = commands.reduce(
+    (total, command) =>
+      total + (command.timeoutMinutes + 0.5) * (command.retries ?? 1),
+    0,
+  );
+  if (commandBudget + 5 > WORKFLOW_TIMEOUT_MINUTES) {
+    throw new Error(`Command timeouts exceed workflow budget for ${step.key}`);
+  }
   const workflow: Record<string, unknown> = {
     // Checkout-free workflows run trusted code from their image. Woodpecker's
     // startup script still creates its working directory before our commands.
@@ -237,31 +278,9 @@ export function emitWorkflow(step: CiStep, identity: PipelineIdentity): string {
     ...(step.skipClone === true
       ? { workspace: { base: "/woodpecker", path: "." } }
       : {}),
-    steps: [
-      {
-        name: step.key,
-        image: step.image,
-        commands: wrapCommands(step),
-        environment: {
-          ...step.environment,
-          ...bunInstallEnvironment(step.volumes),
-        },
-        ...(step.volumes === undefined || step.volumes.length === 0
-          ? {}
-          : {
-              volumes: step.volumes.map(
-                (volume) => `${volume.claim}:${volume.path}`,
-              ),
-            }),
-        ...(step.allowFailure === true ? { failure: "ignore" } : {}),
-        // A local-backend step runs on a host with no pod around it, so a pod
-        // spec would be meaningless -- and Kubernetes secret grants would
-        // silently deliver nothing.
-        ...(step.backend === "local"
-          ? {}
-          : { backend_options: backendOptions(step, identity) }),
-      },
-    ],
+    steps: commands.map((command) =>
+      emitCommand(command, step.backend, identity),
+    ),
     ...(step.services === undefined || step.services.length === 0
       ? {}
       : {

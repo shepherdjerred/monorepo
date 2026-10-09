@@ -22,6 +22,9 @@ import {
   isInternalImagePinChange,
 } from "#src/pipeline/internal-image-pin-change.ts";
 import { signRemoteCacheSteps } from "#src/pipeline/turbo-cache.ts";
+import { routeSteps } from "#src/pipeline/routing.ts";
+import { groupTofuSteps } from "#src/pipeline/group-tofu.ts";
+import { isPrVerificationEvent, prStatusEvent } from "#src/pr-event.ts";
 import type { SuccessfulWorkflowPipeline } from "#src/woodpecker-api.ts";
 
 export type AppOptions = {
@@ -50,6 +53,11 @@ export type AppOptions = {
   readonly compareChangedFiles?: typeof changedFilesSince;
   /** Checks an exact hosted-automation head against forge review state. */
   readonly hostedAutomationApproved?: (pipeline: Pipeline) => Promise<boolean>;
+  /** Best-effort capacity cleanup; never substitutes for current-head gates. */
+  readonly cancelSupersededPr?: (
+    repoId: number,
+    pipeline: Pipeline,
+  ) => Promise<unknown>;
 };
 
 function platformOperationRequest(
@@ -138,7 +146,7 @@ async function needsCredentiallessHostedAutomation(
   pipeline: Pipeline,
   approvalCheck: AppOptions["hostedAutomationApproved"],
 ): Promise<boolean> {
-  if (actorClass !== "hosted-automation" || pipeline.event !== "pull_request") {
+  if (actorClass !== "hosted-automation" || !isPrVerificationEvent(pipeline)) {
     return false;
   }
   try {
@@ -168,6 +176,22 @@ async function resolveChangedFiles({
   return changedBase === undefined
     ? undefined
     : compare(`shepherdjerred/${repoName}`, changedBase, pipeline.commit);
+}
+
+async function cleanupSupersededPr(
+  options: AppOptions,
+  repoId: number,
+  pipeline: Pipeline,
+): Promise<void> {
+  if (!isPrVerificationEvent(pipeline)) return;
+  try {
+    await options.cancelSupersededPr?.(repoId, pipeline);
+  } catch {
+    // An external cleanup failure must not suppress the replacement run.
+    console.warn(
+      "PR supersession cleanup failed; preserving full verification",
+    );
+  }
 }
 
 export function createApp(options: AppOptions): Hono {
@@ -225,8 +249,9 @@ export function createApp(options: AppOptions): Hono {
       return context.json({ error: "invalid platform operation request" }, 400);
     }
 
+    const prVerification = isPrVerificationEvent(pipeline);
     const selectionContext = {
-      event: pipeline.event,
+      event: prVerification ? "pull_request" : pipeline.event,
       branch: pipeline.branch,
       defaultBranch: repo.default_branch,
       changedFiles: pipeline.changed_files,
@@ -237,9 +262,18 @@ export function createApp(options: AppOptions): Hono {
       branch: pipeline.branch,
       linkUrl: pipeline.forge_url,
     };
+    const emit = (steps: readonly CiStep[]) =>
+      emitWorkflows(
+        routeSteps(
+          steps,
+          { ...selectionContext, draft: pipeline.pr_draft },
+          options.trustedGateImage,
+        ),
+        identity,
+      );
     if (!isWorkEvent(selectionContext)) {
       return context.json({
-        configs: emitWorkflows([noWorkStep(images.base)], identity),
+        configs: emit([noWorkStep(images.base)]),
       });
     }
 
@@ -255,7 +289,7 @@ export function createApp(options: AppOptions): Hono {
         selectionContext,
       );
       return context.json({
-        configs: emitWorkflows(credentialless, identity),
+        configs: emit(credentialless),
       });
     }
 
@@ -274,7 +308,7 @@ export function createApp(options: AppOptions): Hono {
         ...selectionContext,
         changedFiles: [],
       });
-      return context.json({ configs: emitWorkflows(selected, identity) });
+      return context.json({ configs: emit(selected) });
     }
 
     const [changedBase, verifyBase, imageReleaseBase] = await Promise.all([
@@ -302,36 +336,38 @@ export function createApp(options: AppOptions): Hono {
       imageReleaseBase: imageReleaseBase?.commit,
       imageReleasePipeline: imageReleaseBase?.pipelineNumber,
     });
-    const selected = signRemoteCacheSteps(
-      selectSteps(
-        await stepsForMainChange({
-          steps,
-          pipeline,
-          defaultBranch: repo.default_branch,
-          changedFiles,
-          changedBase,
-          imageFetcher: options.imageFetcher,
-        }),
-        { ...selectionContext, changedFiles: changedFiles ?? [] },
+    const selected = groupTofuSteps(
+      signRemoteCacheSteps(
+        selectSteps(
+          await stepsForMainChange({
+            steps,
+            pipeline,
+            defaultBranch: repo.default_branch,
+            changedFiles,
+            changedBase,
+            imageFetcher: options.imageFetcher,
+          }),
+          { ...selectionContext, changedFiles: changedFiles ?? [] },
+        ),
+        prVerification ? "pull-request" : "trusted",
       ),
-      pipeline.event === "pull_request" ? "pull-request" : "trusted",
     );
 
-    return context.json({
-      configs: emitWorkflows(
-        pipeline.event === "pull_request"
-          ? [
-              ...selected,
-              completionStep(
-                selected,
-                options.trustedGateImage ?? images.base,
-                gateDirectory,
-              ),
-            ]
-          : selected,
-        identity,
-      ),
-    });
+    const configs = emit(
+      prVerification
+        ? [
+            ...selected,
+            completionStep(
+              selected,
+              options.trustedGateImage ?? images.base,
+              gateDirectory,
+              prStatusEvent(pipeline.event),
+            ),
+          ]
+        : selected,
+    );
+    await cleanupSupersededPr(options, repo.id, pipeline);
+    return context.json({ configs });
   });
 
   return app;

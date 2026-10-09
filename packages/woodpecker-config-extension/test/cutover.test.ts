@@ -79,6 +79,34 @@ describe("cutover event selection", () => {
 });
 
 describe("complete PR status", () => {
+  test("browser work runs independently but completion and sites wait for both gates", () => {
+    const steps = testPipelineSteps();
+    const selected = selectSteps(steps, {
+      event: "pull_request",
+      branch: "main",
+      defaultBranch: "main",
+      changedFiles: ["packages/sjer.red/src/pages/index.astro"],
+    });
+    const browser = selected.find((step) => step.key === "playwright-e2e");
+    expect(browser).toBeDefined();
+    expect(browser?.dependsOn).toBeUndefined();
+    const complete = completionStep(selected, TEST_IMAGES.base);
+    expect(complete.dependsOn).toEqual(
+      expect.arrayContaining(["verify", "playwright-e2e"]),
+    );
+    expect(
+      JSON.parse(complete.environment?.["CI_EXPECTED_CONTEXTS"] ?? "[]"),
+    ).toEqual(
+      expect.arrayContaining([
+        "ci/woodpecker/pr/verify",
+        "ci/woodpecker/pr/playwright-e2e",
+      ]),
+    );
+    expect(steps.find((step) => step.key === "sites")?.dependsOn).toEqual(
+      expect.arrayContaining(["verify", "playwright-e2e"]),
+    );
+  });
+
   test("waits for exactly the selected blocking workflows", () => {
     const selected = testPipelineSteps().filter((step) =>
       ["verify", "pr-dryrun"].includes(step.key),

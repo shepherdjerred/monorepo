@@ -4,6 +4,7 @@ import { parse as parseYaml } from "yaml";
 import { z } from "zod";
 import { createWoodpeckerChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/woodpecker.ts";
 import { createStorageClasses } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
+import { escapeHelmGoTemplate } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/shared.ts";
 import {
   CI_BOUNDED_RESOURCES,
   CI_POD_GUARD_POLICY,
@@ -55,7 +56,9 @@ const EnvSchema = z.array(
   z.object({ name: z.string(), value: z.string().optional() }).loose(),
 );
 
-function agentEnvironment(): Map<string, string | undefined> {
+function agentEnvironment(
+  name = "woodpecker-woodpecker-agent",
+): Map<string, string | undefined> {
   const deployment = z
     .object({
       spec: z.object({
@@ -66,11 +69,23 @@ function agentEnvironment(): Map<string, string | undefined> {
         }),
       }),
     })
-    .parse(find("Deployment", "woodpecker-woodpecker-agent"));
+    .parse(find("Deployment", name));
   const container = deployment.spec.template.spec.containers[0];
   if (container === undefined) throw new Error("agent has no container");
   return new Map(container.env.map((entry) => [entry.name, entry.value]));
 }
+
+it("maps only ready-event completion onto the required PR context", () => {
+  expect(
+    agentEnvironment("woodpecker-woodpecker-server").get(
+      "WOODPECKER_STATUS_CONTEXT_FORMAT",
+    ),
+  ).toBe(
+    escapeHelmGoTemplate(
+      '{{ .context }}/{{ if and (eq .event "pull_request_metadata") (eq .workflow "ci-complete") }}pr{{ else }}{{ .event }}{{ end }}/{{ .workflow }}',
+    ),
+  );
+});
 
 it("pins review execution to the deployed configuration policy image", () => {
   const deployment = z

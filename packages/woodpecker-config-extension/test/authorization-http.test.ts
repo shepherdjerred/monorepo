@@ -2,6 +2,7 @@ import { createHash, generateKeyPairSync } from "node:crypto";
 import { createSigner, httpbis } from "http-message-signatures";
 import { describe, expect, test, vi } from "vitest";
 import { z } from "zod";
+import { parse } from "yaml";
 import { createApp } from "#src/app.ts";
 import fixture from "./fixtures/woodpecker-v3.18.1-config-request.json" with { type: "json" };
 import { TEST_IMAGES } from "./identity.ts";
@@ -18,22 +19,25 @@ const ConfigResponseSchema = z.object({
   configs: z.array(z.object({ name: z.string(), data: z.string() })),
 });
 
-function harness(hostedAutomationApproved = false) {
+function harness(hostedAutomationApproved = false, trustedGateImage?: string) {
   const imageFetcher = vi.fn((file: string) =>
     Promise.resolve(
       file.endsWith("catalog.json") ? catalog : `sha256:${"a".repeat(64)}`,
     ),
   );
   const base = vi.fn(() => Promise.resolve(undefined));
+  const cancelSupersededPr = vi.fn(() => Promise.resolve());
   const app = createApp({
+    ...(trustedGateImage === undefined ? {} : { trustedGateImage }),
     publicKey: () => Promise.resolve(publicKey),
     imageFetcher,
     changedBase: base,
     verifyBase: base,
     imageReleaseBase: base,
+    cancelSupersededPr,
     hostedAutomationApproved: () => Promise.resolve(hostedAutomationApproved),
   });
-  return { app, imageFetcher, base };
+  return { app, imageFetcher, base, cancelSupersededPr };
 }
 
 async function request(overrides: Record<string, unknown> = {}) {
@@ -93,7 +97,7 @@ describe("signed Justin pipeline authorization", () => {
     { from_fork: true },
     { author: "app/justin-principal-engineer" },
   ])("refuses %j before reading forge data", async (overrides) => {
-    const { app, imageFetcher, base } = harness();
+    const { app, imageFetcher, base, cancelSupersededPr } = harness();
     const response = await app.request(await request(overrides));
     expect(response.status).toBe(403);
     expect(await response.json()).toEqual({
@@ -101,6 +105,7 @@ describe("signed Justin pipeline authorization", () => {
     });
     expect(imageFetcher).not.toHaveBeenCalled();
     expect(base).not.toHaveBeenCalled();
+    expect(cancelSupersededPr).not.toHaveBeenCalled();
   });
 
   test("a trusted bot name cannot admit an unsigned request", async () => {
@@ -114,12 +119,151 @@ describe("signed Justin pipeline authorization", () => {
   });
 });
 
+describe("signed workflow routing", () => {
+  const gateImage = `ghcr.io/shepherdjerred/woodpecker-config-extension@sha256:${"c".repeat(64)}`;
+  test("cleanup failures preserve the full replacement verification graph", async () => {
+    const { app, cancelSupersededPr } = harness(true, gateImage);
+    cancelSupersededPr.mockRejectedValue(new Error("cleanup failed"));
+    const response = await app.request(await request());
+    expect(response.status).toBe(200);
+    const result = ConfigResponseSchema.parse(await response.json());
+    expect(
+      result.configs.some((entry) => entry.name.endsWith("/ci-complete.yaml")),
+    ).toBe(true);
+    expect(cancelSupersededPr).toHaveBeenCalledTimes(1);
+  });
+  test("ready-for-review runs the full PR graph with PR cache trust and native status contexts", async () => {
+    const { app } = harness(true, gateImage);
+    const changes = { changed_files: [] };
+    const normalResponse = await app.request(await request(changes));
+    const normal = ConfigResponseSchema.parse(await normalResponse.json());
+    const readyResponse = await app.request(
+      await request({
+        ...changes,
+        event: "pull_request_metadata",
+        event_reason: ["ready_for_review"],
+        pr_draft: false,
+      }),
+    );
+    const ready = ConfigResponseSchema.parse(await readyResponse.json());
+    expect(ready.configs.map((entry) => entry.name)).toEqual(
+      normal.configs.map((entry) => entry.name),
+    );
+    expect(ready.configs.some((entry) => entry.name.includes("tofu-pr"))).toBe(
+      true,
+    );
+    expect(
+      ready.configs.some((entry) => entry.name.includes("playwright-e2e")),
+    ).toBe(true);
+    const completion = ready.configs.find((entry) =>
+      entry.name.endsWith("/ci-complete.yaml"),
+    );
+    expect(completion?.data).toContain(
+      "ci/woodpecker/pull_request_metadata/verify",
+    );
+    expect(completion?.data).not.toContain("ci/woodpecker/pr/verify");
+    const verify = ready.configs.find((entry) =>
+      entry.name.endsWith("/verify.yaml"),
+    );
+    const normalVerify = normal.configs.find((entry) =>
+      entry.name.endsWith("/verify.yaml"),
+    );
+    expect(verify?.data).toBe(normalVerify?.data);
+    expect(ready.configs.map((entry) => entry.data).join("\n")).not.toContain(
+      "SEAWEEDFS_SITES_ACCESS_KEY_ID",
+    );
+  });
+
+  test.each([
+    { event_reason: ["edited"] },
+    { event_reason: ["label_updated"] },
+    { event_reason: null },
+    { event_reason: ["converted_to_draft"], pr_draft: true },
+    { event_reason: ["ready_for_review"], pr_draft: true },
+  ])(
+    "keeps other metadata from producing merge evidence: %j",
+    async (metadata) => {
+      const { app, cancelSupersededPr } = harness(true, gateImage);
+      const response = await app.request(
+        await request({ event: "pull_request_metadata", ...metadata }),
+      );
+      const result = ConfigResponseSchema.parse(await response.json());
+      expect(result.configs.map((entry) => entry.name)).toEqual([
+        ".woodpecker/ci-noop.yaml",
+      ]);
+      expect(cancelSupersededPr).not.toHaveBeenCalled();
+    },
+  );
+  test.each([
+    [false, "ci-ready"],
+    [true, "ci-draft"],
+  ])(
+    "routes a signed PR with draft=%s through all required pools",
+    async (draft, priority) => {
+      const { app } = harness(true, gateImage);
+      const response = await app.request(await request({ pr_draft: draft }));
+      expect(response.status).toBe(200);
+      const result = ConfigResponseSchema.parse(await response.json());
+      for (const [key, pool] of [
+        ["verify", "pr"],
+        ["codex-review-gate", "review"],
+        ["ci-complete", "completion"],
+      ] as const) {
+        const config = result.configs.find(
+          (entry) => entry.name === `.woodpecker/${key}.yaml`,
+        );
+        expect(config).toBeDefined();
+        const workflow: unknown = parse(config?.data ?? "");
+        expect(workflow).toMatchObject({
+          labels: {
+            backend: "kubernetes",
+            "ci-pool": pool,
+            "kueue.x-k8s.io/priority-class": priority,
+          },
+        });
+      }
+    },
+  );
+
+  test("keeps metadata no-ops out of the completion pool", async () => {
+    const { app } = harness(true, gateImage);
+    const response = await app.request(
+      await request({ event: "pull_request_metadata" }),
+    );
+    const result = ConfigResponseSchema.parse(await response.json());
+    expect(result.configs).toHaveLength(1);
+    const workflow: unknown = parse(result.configs[0]?.data ?? "");
+    expect(workflow).toMatchObject({ labels: { "ci-pool": "pr" } });
+  });
+});
+
 describe("hosted Renovate pipeline authorization", () => {
   const renovate = {
     author: "renovate[bot]",
     sender: "renovate[bot]",
     changed_files: ["package.json", "bun.lock"],
   };
+
+  test("ready metadata preserves the exact-head approval boundary", async () => {
+    const { app } = harness(false);
+    const response = await app.request(
+      await request({
+        ...renovate,
+        event: "pull_request_metadata",
+        event_reason: ["ready_for_review"],
+        pr_draft: false,
+      }),
+    );
+    const result = ConfigResponseSchema.parse(await response.json());
+    expect(result.configs.map((entry) => entry.name).sort()).toEqual([
+      ".woodpecker/semgrep.yaml",
+      ".woodpecker/trivy.yaml",
+      ".woodpecker/verify.yaml",
+    ]);
+    expect(result.configs.map((entry) => entry.data).join("\n")).not.toContain(
+      "secrets:",
+    );
+  });
 
   test("emits only credentialless verification before exact-head approval", async () => {
     const { app, base } = harness(false);
