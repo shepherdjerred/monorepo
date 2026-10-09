@@ -5,7 +5,7 @@ use std::io::Read as _;
 use std::path::Path;
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
-use std::time::{Duration, UNIX_EPOCH};
+use std::time::{Duration, Instant, UNIX_EPOCH};
 
 use directories::ProjectDirs;
 use scout_client_core::backend::{
@@ -1822,34 +1822,65 @@ async fn collect_profile_snapshots(
     local_puuid: Option<&str>,
     diagnostics: &Diagnostics,
 ) -> Result<(), String> {
+    let deadline = Instant::now() + PROFILE_PASS_BUDGET;
     let mut first_failure = None;
-    let mut any_read = false;
+    let mut any_payload = false;
     for &(endpoint, key, kind) in PROFILE_SNAPSHOT_ENDPOINTS {
+        if out_of_budget(deadline, diagnostics) {
+            return first_failure.filter(|_| !any_payload).map_or(Ok(()), Err);
+        }
         // One endpoint failing — Clash's are off outside a tournament window —
-        // must not cost the rest. Each failure is already recorded.
-        let read = observe_endpoint(
-            client,
-            outbox,
-            payloads,
-            endpoint,
-            ObservationSlot::named(key, kind),
-            local_puuid,
-            diagnostics,
-        )
-        .await;
-        match read {
-            Ok(_) => any_read = true,
+        // must not cost the rest. Failing to keep what was read is another
+        // matter, and ends the pass.
+        match noted_lcu_read(client.get(endpoint).await, diagnostics, key) {
+            Ok(payload) => {
+                any_payload |= payload.is_some();
+                record_endpoint_payload(
+                    outbox,
+                    payloads,
+                    ObservationSlot::named(key, kind),
+                    payload.as_ref(),
+                    local_puuid,
+                    diagnostics,
+                )?;
+            }
             Err(error) => {
-                first_failure.get_or_insert(error);
+                first_failure.get_or_insert(error.to_string());
             }
         }
     }
-    collect_clash_details(client, outbox, payloads, (local_puuid, diagnostics)).await;
-    // Only a pass where nothing could be read is a failed tick.
-    match first_failure {
-        Some(error) if !any_read => Err(error),
-        _ => Ok(()),
+    collect_clash_details(
+        client,
+        outbox,
+        payloads,
+        (local_puuid, diagnostics),
+        deadline,
+    )
+    .await?;
+    // Only a pass where nothing was read is a failed tick; a 404 is no read.
+    first_failure.filter(|_| !any_payload).map_or(Ok(()), Err)
+}
+
+/// How long one profile pass may spend reading. A League client that stalls
+/// rather than refusing costs each read its full five-second timeout; past
+/// this budget the remaining reads wait for the next pass.
+const PROFILE_PASS_BUDGET: Duration = Duration::from_secs(20);
+
+/// Whether the pass's read budget is spent, recording it when it is.
+fn out_of_budget(deadline: Instant, diagnostics: &Diagnostics) -> bool {
+    let spent = Instant::now() >= deadline;
+    if spent {
+        diagnostics.record(
+            DiagnosticEvent::new(
+                DiagnosticLevel::Warn,
+                DiagnosticCategory::Lcu,
+                "profile_pass",
+                DiagnosticOutcome::Deferred,
+            )
+            .with_detail("read budget spent; remaining reads wait for the next pass"),
+        );
     }
+    spent
 }
 
 /// The most rosters, brackets or tournaments one pass reads by ID.
@@ -1862,13 +1893,14 @@ const MAX_CLASH_DETAIL_READS: usize = 4;
 /// Built from the League client's field names as best known
 /// (`rosterId`, `bracketId`, `tournamentId`/`id`). A name that never appears
 /// reads nothing, and every read is best-effort: each failure is recorded and
-/// the rest still run.
+/// the rest still run. A failure to keep what was read is returned.
 async fn collect_clash_details(
     client: &LcuClient,
     outbox: &ObservationOutbox,
     payloads: &mut HashMap<String, Vec<u8>>,
     observer: (Option<&str>, &Diagnostics),
-) {
+    deadline: Instant,
+) -> Result<(), String> {
     let rosters = ids_from(
         payloads,
         &["clash_player", "clash_invited_rosters", "clash_summary"],
@@ -1896,30 +1928,64 @@ async fn collect_clash_details(
         reads.push((LcuResource::ClashTournament(tournament), "clash_tournament"));
     }
     for (resource, name) in reads {
-        let cache_key = format!("{name}:{}", resource.path());
-        let slot = ObservationSlot {
-            cache_key: &cache_key,
-            resource: name,
-            kind: ObservationKind::Clash,
-        };
-        let _ = observe_resource(client, outbox, payloads, resource, slot, observer).await;
+        if out_of_budget(deadline, observer.1) {
+            return Ok(());
+        }
+        observe_clash_resource(client, outbox, payloads, (resource, name), observer).await?;
     }
-    // A roster names its bracket once it has one.
-    let brackets = ids_from(payloads, &["clash_roster"], &["bracketId"])
-        .into_iter()
-        .filter_map(|id| ClashBracketId::parse(&id))
-        .take(MAX_CLASH_DETAIL_READS)
-        .collect::<Vec<_>>();
+    // Any Clash payload may name the bracket once it is drawn, the roster
+    // just read included.
+    let brackets = ids_from(
+        payloads,
+        &[
+            "clash_roster",
+            "clash_player",
+            "clash_summary",
+            "clash_tournament_state",
+        ],
+        &["bracketId"],
+    )
+    .into_iter()
+    .filter_map(|id| ClashBracketId::parse(&id))
+    .take(MAX_CLASH_DETAIL_READS)
+    .collect::<Vec<_>>();
     for bracket in brackets {
-        let resource = LcuResource::ClashBracket(bracket);
-        let cache_key = format!("clash_bracket:{}", resource.path());
-        let slot = ObservationSlot {
-            cache_key: &cache_key,
-            resource: "clash_bracket",
-            kind: ObservationKind::Clash,
-        };
-        let _ = observe_resource(client, outbox, payloads, resource, slot, observer).await;
+        if out_of_budget(deadline, observer.1) {
+            return Ok(());
+        }
+        let read = (LcuResource::ClashBracket(bracket), "clash_bracket");
+        observe_clash_resource(client, outbox, payloads, read, observer).await?;
     }
+    Ok(())
+}
+
+/// Read one ID-addressed Clash resource into its own slot, keyed by its path
+/// so each roster or bracket is compared with its own last copy. A failed
+/// read is recorded, under the resource name rather than its ID, and skipped.
+async fn observe_clash_resource(
+    client: &LcuClient,
+    outbox: &ObservationOutbox,
+    payloads: &mut HashMap<String, Vec<u8>>,
+    (resource, name): (LcuResource, &str),
+    (local_puuid, diagnostics): (Option<&str>, &Diagnostics),
+) -> Result<(), String> {
+    let Ok(payload) = noted_lcu_read(client.get_resource(resource).await, diagnostics, name) else {
+        return Ok(());
+    };
+    let cache_key = format!("{name}:{}", resource.path());
+    let slot = ObservationSlot {
+        cache_key: &cache_key,
+        resource: name,
+        kind: ObservationKind::Clash,
+    };
+    record_endpoint_payload(
+        outbox,
+        payloads,
+        slot,
+        payload.as_ref(),
+        local_puuid,
+        diagnostics,
+    )
 }
 
 /// Every value of `keys` in the cached payloads named `sources`, plus any
@@ -2179,13 +2245,8 @@ async fn observe_endpoint(
     local_puuid: Option<&str>,
     diagnostics: &Diagnostics,
 ) -> Result<Option<Value>, String> {
-    let payload = match client.get(endpoint).await {
-        Ok(payload) => payload,
-        Err(error) => {
-            record_lcu_read_failure(diagnostics, slot.cache_key, &error);
-            return Err(error.to_string());
-        }
-    };
+    let payload = noted_lcu_read(client.get(endpoint).await, diagnostics, slot.cache_key)
+        .map_err(|error| error.to_string())?;
     record_endpoint_payload(
         outbox,
         payloads,
@@ -2197,33 +2258,16 @@ async fn observe_endpoint(
     Ok(payload)
 }
 
-/// [`observe_endpoint`] for a resource addressed by an ID from another
-/// payload. The ID stays out of diagnostics; the resource name stands in.
-async fn observe_resource(
-    client: &LcuClient,
-    outbox: &ObservationOutbox,
-    payloads: &mut HashMap<String, Vec<u8>>,
-    resource: LcuResource,
-    slot: ObservationSlot<'_>,
-    observer: (Option<&str>, &Diagnostics),
-) -> Result<Option<Value>, String> {
-    let (local_puuid, diagnostics) = observer;
-    let payload = match client.get_resource(resource).await {
-        Ok(payload) => payload,
-        Err(error) => {
-            record_lcu_read_failure(diagnostics, slot.resource, &error);
-            return Err(error.to_string());
-        }
-    };
-    record_endpoint_payload(
-        outbox,
-        payloads,
-        slot,
-        payload.as_ref(),
-        local_puuid,
-        diagnostics,
-    )?;
-    Ok(payload)
+/// `read`, with a failure recorded under `name`.
+fn noted_lcu_read<T>(
+    read: Result<T, LcuError>,
+    diagnostics: &Diagnostics,
+    name: &str,
+) -> Result<T, LcuError> {
+    if let Err(error) = &read {
+        record_lcu_read_failure(diagnostics, name, error);
+    }
+    read
 }
 
 /// Record a League client read that failed.

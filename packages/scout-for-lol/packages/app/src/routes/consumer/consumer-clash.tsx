@@ -20,7 +20,7 @@ import {
 import { ClashHistorySection } from "#src/routes/consumer/consumer-clash-history.tsx";
 
 const RESULTS_NOTE =
-  "Current Clash games are pre-match only. Riot does not publish results, so Scout cannot score them.";
+  "Riot does not publish Clash brackets or results. Scout shows them only when a tracked player's Scout Client saw them.";
 
 const PLACEHOLDER_GUILD = DiscordGuildIdSchema.parse("1".repeat(17));
 

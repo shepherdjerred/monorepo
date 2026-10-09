@@ -49,7 +49,7 @@ export const clashRouter = router({
       teams: await readClashRosterForGuild(input.guildId),
       brackets: await readClientClashBracketsForGuild(input.guildId),
       resultsNote:
-        "Roster is who is registered this weekend among tracked players. There is no bracket or win/loss.",
+        "Roster is who Riot lists as registered this weekend among tracked players. A bracket and its results appear only when a tracked player's Scout Client saw them.",
     };
   }),
   history: webProcedure

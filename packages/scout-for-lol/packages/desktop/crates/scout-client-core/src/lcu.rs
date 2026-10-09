@@ -247,15 +247,22 @@ impl LcuClient {
             .header("Accept", "application/json")
             .send()
             .await
-            .map_err(LcuError::Request)?;
+            .map_err(request_error)?;
         if response.status() == StatusCode::NOT_FOUND {
             return Ok(None);
         }
         if !response.status().is_success() {
             return Err(LcuError::Status(response.status()));
         }
-        response.json().await.map(Some).map_err(LcuError::Request)
+        response.json().await.map(Some).map_err(request_error)
     }
+}
+
+/// A failed LCU request, without its URL: a request error's text names the
+/// URL, whose path can carry a roster or game ID, and the text is what
+/// diagnostics record.
+fn request_error(error: reqwest::Error) -> LcuError {
+    LcuError::Request(error.without_url())
 }
 
 /// Curated read-only LCU resources.
@@ -501,6 +508,23 @@ mod tests {
         for invalid in ["", "0", "-1", "12/../34", "12?x=1", " 12", "1e3"] {
             assert_eq!(GameId::parse(invalid), None, "{invalid:?}");
         }
+    }
+
+    #[tokio::test]
+    async fn a_failed_request_never_names_the_resource_it_addressed()
+    -> Result<(), Box<dyn std::error::Error>> {
+        // Nothing listens on port 1, so the request fails before any response.
+        let lockfile = super::LeagueLockfile::parse("LeagueClient:1:1:secret:https")?;
+        let client = super::LcuClient::new(&lockfile)?;
+        let roster = super::ClashRosterId::parse("f1c2a7d0-4b9e-4a17-9c3e-2d8f6a5b1c0e")
+            .ok_or("valid roster id")?;
+        let Err(error) = client.get_resource(LcuResource::ClashRoster(roster)).await else {
+            return Err("a request to a closed port must fail".into());
+        };
+        let text = error.to_string();
+        assert!(!text.contains("f1c2a7d0"), "{text}");
+        assert!(!text.contains("/lol-clash/"), "{text}");
+        Ok(())
     }
 
     #[test]

@@ -43,7 +43,11 @@ history; mastery capture preserves the client's season-milestone fields.
 
 Each profile endpoint is read on its own: one that fails, as the Clash
 endpoints do outside a tournament window, records its `lcu_read` diagnostic
-and the rest still run. A pass fails only when nothing could be read. After the
+and the rest still run. A pass fails when no endpoint returned anything (a 404
+returns nothing), or when the outbox can't keep what was read. Reads share a
+20-second budget, so a stalled League client can't hold the pass for every
+read's timeout. Reads past the budget wait for the next pass and record a
+`profile_pass` diagnostic. After the
 fixed Clash endpoints, the pass follows their IDs to the resources only an ID
 reaches: the player's roster and its record, the roster's bracket, and the
 tournaments in play (`collect_clash_details`, at most four of each per pass).
