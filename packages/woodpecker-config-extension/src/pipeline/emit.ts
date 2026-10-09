@@ -333,8 +333,13 @@ export function emitWorkflow(step: CiStep, identity: PipelineIdentity): string {
                 kubernetes: {
                   ...podOptions(step, identity, LIGHT_TIER),
                   securityContext: {
-                    runAsUser: 0,
-                    runAsGroup: 0,
+                    // Match the helper image and make fresh PVCs writable.
+                    // Woodpecker ignores root IDs on unprivileged steps.
+                    runAsUser: 1000,
+                    runAsGroup: 1000,
+                    runAsNonRoot: true,
+                    fsGroup: 1000,
+                    fsGroupChangePolicy: "OnRootMismatch",
                     allowPrivilegeEscalation: false,
                   },
                 },

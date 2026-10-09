@@ -137,12 +137,27 @@ test("unapproved work and local jobs cannot mount caches; trusted jobs mount onl
             image: z.string(),
             volumes: z.array(z.string()),
             commands: z.array(z.string()),
+            backend_options: z.object({
+              kubernetes: z.object({
+                securityContext: z.record(z.string(), z.unknown()),
+              }),
+            }),
           }),
         ),
         steps: z.array(z.object({ volumes: z.array(z.string()).optional() })),
       })
       .parse(parse(emitWorkflow(verify, TEST_IDENTITY)));
     expect(config.clone[0]?.image).toBe(image);
+    expect(config.clone[0]?.backend_options.kubernetes.securityContext).toEqual(
+      {
+        runAsUser: 1000,
+        runAsGroup: 1000,
+        runAsNonRoot: true,
+        fsGroup: 1000,
+        fsGroupChangePolicy: "OnRootMismatch",
+        allowPrivilegeEscalation: false,
+      },
+    );
     expect(config.clone[0]?.volumes).toContain(
       `woodpecker-source-${main ? "main" : "pr"}:/woodpecker/source-cache`,
     );
