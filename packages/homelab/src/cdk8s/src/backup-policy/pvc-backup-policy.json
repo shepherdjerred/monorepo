@@ -73,6 +73,24 @@
   },
   {
     "namespace": "woodpecker-ci",
+    "name": "woodpecker-source-main",
+    "backup": "disabled",
+    "reason": "Disposable verified Git objects for main - recoverable from GitHub"
+  },
+  {
+    "namespace": "woodpecker-ci",
+    "name": "woodpecker-source-pr",
+    "backup": "disabled",
+    "reason": "Disposable verified Git objects for approved PRs - recoverable from GitHub"
+  },
+  {
+    "namespace": "woodpecker-ci",
+    "name": "woodpecker-source-control",
+    "backup": "disabled",
+    "reason": "Lock files only - coordination for source cache readers and collection"
+  },
+  {
+    "namespace": "woodpecker-ci",
     "name": "woodpecker-bun-cache-control",
     "backup": "disabled",
     "reason": "Lock file only - coordination state for the bun cache collector"

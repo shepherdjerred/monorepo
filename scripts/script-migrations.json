@@ -3,6 +3,11 @@
   "version": 1,
   "scripts": [
     {
+      "source": "packages/woodpecker-config-extension/src/checkout/checkout.sh",
+      "disposition": "retain",
+      "reason": "Linux clone-container entrypoint owns inherited flock descriptors across exec; Git validation and checkout logic live in the typed Bun helper."
+    },
+    {
       "source": "ci/scripts/annotate-build-summary.sh",
       "disposition": "delete",
       "reason": "Retired with the Buildkite cutover: its only output was a build annotation, and Woodpecker has no annotation surface."

@@ -84,6 +84,17 @@ async function request(overrides: Record<string, unknown> = {}) {
 }
 
 describe("signed Justin pipeline authorization", () => {
+  test("non-work events with no source branch return a no-work verdict", async () => {
+    const { app, sourceCacheEnabled } = harness();
+    const response = await app.request(
+      await request({ event: "tag", branch: "", refspec: "" }),
+    );
+    expect(response.status).toBe(200);
+    expect(sourceCacheEnabled).not.toHaveBeenCalled();
+    const configs = ConfigResponseSchema.parse(await response.json());
+    expect(configs.configs).toHaveLength(1);
+    expect(configs.configs[0]?.data).toContain("ci-noop");
+  });
   test("source cache canaries use the signed source refspec and keep PR storage separate", async () => {
     const image = `ghcr.io/shepherdjerred/woodpecker-config-extension@sha256:${"a".repeat(64)}`;
     const { app, sourceCacheEnabled } = harness(false, image, true);

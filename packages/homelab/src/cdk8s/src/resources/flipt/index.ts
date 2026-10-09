@@ -329,6 +329,7 @@ export function createFliptDeployment(chart: Chart) {
     authItem.name,
   );
 
+  deployment.podMetadata.addLabel("app", "flipt");
   deployment.podMetadata.addAnnotation(
     "config-hash",
     new Bun.CryptoHasher("sha256")

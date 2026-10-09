@@ -208,14 +208,16 @@ async function pipelineEmitter(
     draft: pipeline.pr_draft,
     changedFiles: pipeline.changed_files,
   };
-  const sourceBranch =
-    pipeline.refspec === "" ? pipeline.branch : pipeline.refspec.split(":")[0];
-  if (sourceBranch === undefined || sourceBranch === "")
-    throw new Error("Invalid source branch refspec");
-  const enabled =
-    !credentialless &&
-    isWorkEvent(context) &&
-    (await options.sourceCacheEnabled?.(sourceBranch)) === true;
+  let enabled = false;
+  if (!credentialless && isWorkEvent(context)) {
+    const sourceBranch =
+      pipeline.refspec === ""
+        ? pipeline.branch
+        : pipeline.refspec.split(":")[0];
+    if (sourceBranch === undefined || sourceBranch === "")
+      throw new Error("Invalid source branch refspec");
+    enabled = (await options.sourceCacheEnabled?.(sourceBranch)) === true;
+  }
   const identity = {
     commit: pipeline.commit,
     branch: pipeline.branch,

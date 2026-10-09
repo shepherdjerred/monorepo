@@ -78,18 +78,18 @@ afterEach(async () => {
 });
 
 describe("PVC backup policy", () => {
-  it("classifies 53 included and 35 excluded PVCs without duplicates", () => {
+  it("classifies 53 included and 38 excluded PVCs without duplicates", () => {
     const keys = PVC_BACKUP_POLICY.map((entry) =>
       pvcBackupPolicyKey(entry.namespace, entry.name),
     );
-    expect(keys).toHaveLength(88);
-    expect(new Set(keys).size).toBe(88);
+    expect(keys).toHaveLength(91);
+    expect(new Set(keys).size).toBe(91);
     expect(
       PVC_BACKUP_POLICY.filter((entry) => entry.backup === "enabled"),
     ).toHaveLength(53);
     expect(
       PVC_BACKUP_POLICY.filter((entry) => entry.backup === "disabled"),
-    ).toHaveLength(35);
+    ).toHaveLength(38);
     expect(
       getPvcBackupPolicy("minecraft-tsmc-restore", "datadir-minecraft-tsmc-0")
         .backup,

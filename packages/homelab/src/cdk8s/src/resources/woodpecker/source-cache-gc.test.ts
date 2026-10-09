@@ -7,9 +7,9 @@ const { join } = nodePath;
 
 const roots: string[] = [];
 afterEach(async () => {
-  await Promise.all(
-    roots.splice(0).map((root) => rm(root, { recursive: true })),
-  );
+  for (const root of roots.splice(0)) {
+    await rm(root, { recursive: true });
+  }
 });
 async function fixture() {
   const root = await mkdtemp(join(tmpdir(), "ci-source-gc-test-"));

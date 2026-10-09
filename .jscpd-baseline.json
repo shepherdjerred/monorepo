@@ -600,10 +600,6 @@
       "clones": 2,
       "tokens": 206
     },
-    "packages/homelab/src/cdk8s/src/resources/phoenix/index.ts|packages/homelab/src/cdk8s/src/resources/woodpecker/config-extension-workload.ts": {
-      "clones": 1,
-      "tokens": 85
-    },
     "packages/homelab/src/cdk8s/src/resources/phoenix/index.ts|packages/homelab/src/cdk8s/src/resources/woodpecker/index.ts": {
       "clones": 1,
       "tokens": 93
