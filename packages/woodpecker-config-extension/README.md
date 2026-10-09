@@ -178,6 +178,12 @@ candidate smoke checks and pin promotion still gate publication.
 
 ## Static-site delivery
 
+Browser checks can start alongside verification. Their workflow installs and
+builds its own selected Turbo prerequisites with concurrency two in its own
+workspace. The required completion verdict and site deployment both wait for
+verification and browser success. Site deployment consumes the exact tested
+artifact from the pipeline handoff bucket.
+
 The sites lane builds selected packages through the repository deploy catalog
 after OpenTofu creates their SeaweedFS buckets. Cloudflare DNS apply waits for
 both site publication and ArgoCD reconciliation, so a new hostname has content

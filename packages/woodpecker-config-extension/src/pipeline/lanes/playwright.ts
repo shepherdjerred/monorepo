@@ -55,7 +55,8 @@ export function playwrightSteps(images: CiImages, changedBase = ""): CiStep[] {
         "if [ -d packages/sjer.red/dist ]; then bun --no-install scripts/ci/ci-artifact.ts put sjer-red-dist; fi",
         "if [ -d packages/docs/wiki/dist ]; then bun --no-install scripts/ci/ci-artifact.ts put wiki-dist; fi",
       ]),
-      dependsOn: ["verify"],
+      // This workflow builds its own Turbo prerequisites in its own workspace.
+      // Completion and deployment still wait for both verification and E2E.
       timeoutMinutes: 30,
       resources: BROWSER_TIER,
       volumes: [BUN_CACHE, BUN_CACHE_CONTROL],
