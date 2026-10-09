@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.20.4](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.20.3...astro-opengraph-images-v1.20.4) (2026-10-09)
+
+
+### Bug Fixes
+
+* **deps:** close version-pinning and Renovate-coverage gaps ([#3125](https://github.com/shepherdjerred/monorepo/issues/3125)) ([b9e04c8](https://github.com/shepherdjerred/monorepo/commit/b9e04c850fa7677c6ce9ce8bf2e162859555cf6c))
+
 ## [1.20.3](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.20.2...astro-opengraph-images-v1.20.3) (2026-09-23)
 
 

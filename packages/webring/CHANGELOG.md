@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.0](https://github.com/shepherdjerred/monorepo/compare/webring-v1.11.0...webring-v1.12.0) (2026-10-09)
+
+
+### Features
+
+* **statically-typed:** prepare anchor site build and CI ([#3372](https://github.com/shepherdjerred/monorepo/issues/3372)) ([d61ec29](https://github.com/shepherdjerred/monorepo/commit/d61ec29583be3a3711d34e69a340d3beb6614b60))
+
+
+### Bug Fixes
+
+* **deps:** close version-pinning and Renovate-coverage gaps ([#3125](https://github.com/shepherdjerred/monorepo/issues/3125)) ([b9e04c8](https://github.com/shepherdjerred/monorepo/commit/b9e04c850fa7677c6ce9ce8bf2e162859555cf6c))
+
 ## [1.11.0](https://github.com/shepherdjerred/monorepo/compare/webring-v1.10.1...webring-v1.11.0) (2026-09-23)
 
 
