@@ -399,6 +399,8 @@ html[data-storm-surface="docs"] .stormDocsMain {
   max-width: calc(100vw - 24px);
 }
 .stormDocsMenuToggle,
+.stormDocsSmallLogo,
+.stormDocsQuickNew,
 .stormDocsMore {
   display: none !important;
 }
@@ -453,7 +455,19 @@ html[data-storm-surface="docs"] .stormDocsMain {
     grid-row: 1;
   }
   .stormDocsMenuToggle {
+    flex: 0 0 47px;
     display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 47px;
+    height: calc(1.4em + 16px);
+    padding: 0;
+    margin-right: 5px;
+    border: 0;
+    border-radius: 3px;
+    color: var(--storm-chrome-text-color);
+    background: #0000001f;
+    cursor: pointer;
   }
   .stormDocsMobileCommunity {
     display: flex;
@@ -478,8 +492,12 @@ html[data-storm-surface="docs"] .stormDocsMain {
     min-height: 45px;
     align-items: center;
   }
+  .stormDocsMenuToggle {
+    height: 40px;
+  }
   .stormDocsTop > a {
     max-width: 90%;
+    align-self: flex-start;
   }
   .stormDocsServer {
     margin: 8px 0 0;
@@ -487,19 +505,35 @@ html[data-storm-surface="docs"] .stormDocsMain {
     text-align: center;
   }
   .stormDocsNavInner {
-    padding-inline: 10px;
+    padding-inline: 4px;
+    gap: 0;
   }
-  .stormDocsNav > a:not([aria-current="page"]),
-  .stormDocsNav > details {
+  .stormDocsHeader .stormDocsNav {
     display: none !important;
   }
+  .stormDocsSmallLogo {
+    display: block !important;
+    width: 100px;
+    flex: 0 1 100px;
+    min-width: 0;
+  }
+  .stormDocsSmallLogo img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .stormDocsQuickNew {
+    display: flex !important;
+  }
   .stormDocsActions {
-    gap: 6px;
+    flex: 0 0 auto;
+    gap: 0;
+    margin-left: auto;
   }
   .stormDocsActions a,
   .stormDocsActions summary,
   .stormDocsActions button {
-    padding-inline: 8px;
+    padding-inline: 12px;
   }
   .stormDocsHeader button[data-open-modal] {
     font-size: 0;

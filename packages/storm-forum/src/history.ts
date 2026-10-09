@@ -1,5 +1,50 @@
 import { z } from "zod";
 
+export const HistoryEraSchema = z.enum([
+  "original",
+  "revival2016",
+  "revival2022",
+]);
+export function historicalKey(
+  era: z.infer<typeof HistoryEraSchema>,
+  id: number,
+): string {
+  return era === "original" ? String(id) : `${era}:${String(id)}`;
+}
+const CaptureSchema = z
+  .object({ captured: z.string().regex(/^\d{14}$/), source: z.url() })
+  .strict();
+const RatingsSchema = CaptureSchema.extend({
+  counts: z.partialRecord(
+    z.enum([
+      "like",
+      "agree",
+      "disagree",
+      "funny",
+      "winner",
+      "informative",
+      "useful",
+      "optimistic",
+      "friendly",
+      "creative",
+    ]),
+    z.number().int().nonnegative(),
+  ),
+});
+const PollSchema = CaptureSchema.extend({
+  question: z.string().min(1),
+  options: z
+    .array(
+      z
+        .object({
+          text: z.string().min(1),
+          votes: z.number().int().nonnegative(),
+        })
+        .strict(),
+    )
+    .min(2),
+});
+
 const HistoricalPostSchema = z
   .object({
     key: z.string().regex(/^\d+:\d+$/),
@@ -17,7 +62,20 @@ export const LegacyHistorySchema = z
           originalId: z.number().int().positive(),
           slug: z.string().min(1),
           title: z.string().min(1).max(150),
-          node: z.enum(["news", "general", "feedback", "bugs", "games"]),
+          node: z.enum([
+            "news",
+            "general",
+            "feedback",
+            "bugs",
+            "games",
+            "chaos",
+            "towns",
+            "marketplace",
+            "voting",
+            "lysergia",
+            "boomerville",
+            "keystone",
+          ]),
           reconstructed: z.boolean(),
           sources: z.array(z.url()).min(1),
           posts: z.array(HistoricalPostSchema).min(1),
@@ -68,8 +126,13 @@ const UserSchema = z
 export const HistorySchema = z
   .object({
     ...LegacyHistorySchema.shape,
-    version: z.literal(2),
-    users: z.array(UserSchema),
+    version: z.union([z.literal(2), z.literal(3)]),
+    users: z.array(
+      UserSchema.extend({
+        era: HistoryEraSchema.optional(),
+        canonicalOriginalId: z.literal(1).optional(),
+      }),
+    ),
     attachments: z.array(
       z
         .object({
@@ -78,6 +141,7 @@ export const HistorySchema = z
           filename: z.string().min(1),
           file: z.string().regex(/^attachment-\d+\.(jpg|png|gif)$/),
           sha256: z.string().regex(/^[a-f0-9]{64}$/),
+          era: HistoryEraSchema.optional(),
         })
         .strict(),
     ),
@@ -86,6 +150,8 @@ export const HistorySchema = z
     ),
     threads: z.array(
       LegacyHistorySchema.shape.threads.element.extend({
+        era: HistoryEraSchema.optional(),
+        poll: PollSchema.optional(),
         posts: z
           .array(
             HistoricalPostSchema.extend({
@@ -93,6 +159,7 @@ export const HistorySchema = z
               originalPostId: z.number().int().positive().nullable(),
               previousMessageHash: z.string().regex(/^[a-f0-9]{64}$/),
               attachments: z.array(z.number().int().positive()),
+              ratings: RatingsSchema.optional(),
             }),
           )
           .min(1),
@@ -101,8 +168,31 @@ export const HistorySchema = z
   })
   .strict()
   .superRefine((history, ctx) => {
-    const threadIds = new Set(history.threads.map((t) => t.originalId)),
-      postIds = history.threads.flatMap((t) => t.posts.map((p) => p.key));
+    for (const user of history.users) {
+      if (
+        user.canonicalOriginalId !== undefined &&
+        ((user.era ?? "original") === "original" ||
+          user.username !== "RiotShielder" ||
+          !history.users.some(
+            (candidate) =>
+              (candidate.era ?? "original") === "original" &&
+              candidate.originalId === user.canonicalOriginalId,
+          ))
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Unreviewed cross-era identity mapping",
+        });
+      }
+    }
+    const threadIds = new Set(
+        history.threads.map((t) =>
+          historicalKey(t.era ?? "original", t.originalId),
+        ),
+      ),
+      postIds = history.threads.flatMap((t) =>
+        t.posts.map((p) => `${t.era ?? "original"}:${p.key}`),
+      );
     if (
       threadIds.size !== history.threads.length ||
       new Set(postIds).size !== postIds.length
@@ -111,10 +201,22 @@ export const HistorySchema = z
         code: "custom",
         message: "Duplicate historical thread or post",
       });
-    const users = new Set(history.users.map((u) => u.originalId)),
-      attachments = new Set(history.attachments.map((a) => a.originalId));
+    const users = new Set(
+        history.users.map((u) =>
+          historicalKey(u.era ?? "original", u.originalId),
+        ),
+      ),
+      attachments = new Set(
+        history.attachments.map((a) =>
+          historicalKey(a.era ?? "original", a.originalId),
+        ),
+      );
     const ownedAttachments = history.threads.flatMap((thread) =>
-      thread.posts.flatMap((post) => post.attachments),
+      thread.posts.flatMap((post) =>
+        post.attachments.map((id) =>
+          historicalKey(thread.era ?? "original", id),
+        ),
+      ),
     );
     if (new Set(ownedAttachments).size !== ownedAttachments.length)
       ctx.addIssue({
@@ -140,8 +242,13 @@ export const HistorySchema = z
         });
       for (const post of thread.posts) {
         if (
-          !users.has(post.originalUserId) ||
-          post.attachments.some((id) => !attachments.has(id))
+          !users.has(
+            historicalKey(thread.era ?? "original", post.originalUserId),
+          ) ||
+          post.attachments.some(
+            (id) =>
+              !attachments.has(historicalKey(thread.era ?? "original", id)),
+          )
         )
           ctx.addIssue({
             code: "custom",

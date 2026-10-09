@@ -201,6 +201,6 @@ html[data-storm-surface="docs"] .stormDocsHeader {
   html[data-storm-surface="docs"] body {
     background-image:
       linear-gradient(#00000059, #00000059), var(--storm-scenery-mobile);
-    background-attachment: scroll;
+    background-attachment: fixed;
   }
 }

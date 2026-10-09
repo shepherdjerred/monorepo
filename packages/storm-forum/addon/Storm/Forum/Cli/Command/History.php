@@ -17,19 +17,22 @@ final class History extends \XF\Cli\Command\AbstractCommand
     {
         $app = \XF::app(); $db = $app->db();
         $history = json_decode(file_get_contents('/opt/storm-forum/config/history.json'), true, 512, JSON_THROW_ON_ERROR);
-        if ($history['version'] !== 2) { throw new \RuntimeException('Unknown history corpus version'); }
+        if (!in_array($history['version'], [2, 3], true)) { throw new \RuntimeException('Unknown history corpus version'); }
         self::assertUniqueAttachmentOwnership($history);
         $nodes = $app->registry()->get('stormForumMap');
         $read = static fn(string $key) => (new \XF\DataRegistry($db))->get($key) ?: [];
         if ($read('stormForumHistoricalMerge')) { throw new \RuntimeException('Finish the pending historical account merge before importing.'); }
         $map = $read('stormForumHistory'); $users = $read('stormForumHistoricalUsers');
         self::assertMappedPostsRetained($history, $map);
-        $assets = array_column($history['attachments'], null, 'originalId');
-        $identities = array_column($history['users'], null, 'originalId');
+        $assets = self::index($history['attachments']);
+        $identities = self::index($history['users']);
         foreach ($identities as $id=>$item) {
+            if (isset($item['canonicalOriginalId']) && (($item['era'] ?? 'original') === 'original' || $item['canonicalOriginalId'] !== 1 || $item['username'] !== 'RiotShielder')) {
+                throw new \RuntimeException('Unreviewed cross-era identity mapping');
+            }
             if (isset($users[$id])) {
                 if (!$app->em()->find('XF:User', $users[$id]['userId'])) { throw new \RuntimeException('Historical profile missing'); }
-            } elseif ($app->finder('XF:User')->where('username', $item['aliases'])->fetchOne()) {
+            } elseif (!isset($item['canonicalOriginalId']) && $app->finder('XF:User')->where('username', $item['aliases'])->fetchOne()) {
                 throw new \RuntimeException('Historical username collision requires an explicit identity mapping: ' . $item['username']);
             }
             if ($item['avatar'] !== null && (!preg_match('/^avatar-\d+\.(jpg|png)$/D', $item['avatar']) || !getimagesize('/opt/storm-forum/assets/history/' . $item['avatar']))) {
@@ -43,19 +46,24 @@ final class History extends \XF\Cli\Command\AbstractCommand
         }
         self::assertMappedMetadataUnchanged($history, $map, $users);
         foreach ($history['threads'] as $record) {
-            if (!in_array($record['node'], ['news','general','feedback','bugs','games'], true)
+            if (!in_array($record['node'], ['news','general','feedback','bugs','games','chaos','towns','marketplace','voting','lysergia','boomerville','keystone'], true)
                 || !$app->em()->find('XF:Forum', $nodes['node:' . $record['node']] ?? 0) || !$record['posts']) {
                 throw new \RuntimeException('Historical discussion targets an invalid public forum');
             }
-            $entry = $map[$record['originalId']] ?? null;
+            $entry = $map[self::key($record)] ?? null;
             if ($entry && !$app->em()->find('XF:Thread', $entry['threadId'])) { throw new \RuntimeException('Imported discussion missing'); }
             if (($entry['version'] ?? null) === 2 && $entry['hash'] !== self::hash($record) && !$input->getOption('migrate')) { throw new \RuntimeException('Imported corpus changed; explicit migration required'); }
             foreach ($record['posts'] as $post) {
-                if (!isset($identities[$post['originalUserId']]) || !in_array($post['author'], $identities[$post['originalUserId']]['aliases'], true)
+                $userKey = self::key($record, $post['originalUserId']);
+                if (!isset($identities[$userKey]) || !in_array($post['author'], $identities[$userKey]['aliases'], true)
                     || !array_key_exists('originalPostId', $post) || ($post['originalPostId'] !== null && (!is_int($post['originalPostId']) || $post['originalPostId'] <= 0))
                     || !is_int($post['date']) || $post['date'] <= 0 || $post['date'] >= time() || trim($post['message']) === ''
-                    || array_diff($post['attachments'], array_keys($assets))) { throw new \RuntimeException('Invalid historical post metadata'); }
+                    || array_diff(array_map(static fn($id) => self::key($record, $id), $post['attachments']), array_keys($assets))) { throw new \RuntimeException('Invalid historical post metadata'); }
                 if ($entry) {
+                    if (!isset($entry['posts'][$post['key']])) {
+                        if (!$input->getOption('migrate')) { throw new \RuntimeException('Additional captured replies require explicit migration'); }
+                        continue;
+                    }
                     $native = $app->em()->find('XF:Post', $entry['posts'][$post['key']] ?? 0);
                     if (!$native || $native->thread_id !== $entry['threadId'] || $native->post_date !== $post['date'] || $native->username !== $post['author']) {
                         throw new \RuntimeException('Historical post identity/date mapping changed');
@@ -75,6 +83,13 @@ final class History extends \XF\Cli\Command\AbstractCommand
                 if (isset($users[$id])) { continue; }
                 $db->beginTransaction();
                 try {
+                    if (isset($item['canonicalOriginalId'])) {
+                        $canonical = $users[$item['canonicalOriginalId']] ?? null;
+                        if (!$canonical || !$app->em()->find('XF:User', $canonical['userId'])) { throw new \RuntimeException('Explicit canonical identity is missing'); }
+                        $users[$id] = ['userId'=>$canonical['userId'], 'slugs'=>$item['slugs'], 'aliases'=>$item['aliases'], 'metadataHash'=>self::profileHash($item), 'claimed'=>!empty($canonical['claimed'])];
+                        $app->registry()->set('stormForumHistoricalUsers', $users); $db->commit();
+                        continue;
+                    }
                     if ($app->finder('XF:User')->where('username', $item['aliases'])->fetchOne()) { throw new \RuntimeException('Historical username collision'); }
                     $user = $app->repository('XF:User')->setupBaseUser();
                     $user->setOption('admin_edit', true);
@@ -93,18 +108,18 @@ final class History extends \XF\Cli\Command\AbstractCommand
             }
             // Reserve all native IDs before rewriting cross-discussion links.
             foreach ($history['threads'] as $record) {
-                $id = $record['originalId']; if (isset($map[$id])) { continue; }
+                $id = self::key($record); if (isset($map[$id])) { continue; }
                 $db->beginTransaction();
                 try {
                     $first = $record['posts'][0]; $forum = $app->em()->find('XF:Forum', $nodes['node:' . $record['node']]);
                     $thread = $app->em()->create('XF:Thread'); $thread->setOption('log_moderator', false);
-                    $thread->bulkSet(['node_id'=>$forum->node_id, 'title'=>$record['title'], 'user_id'=>$users[$first['originalUserId']]['userId'],
+                    $thread->bulkSet(['node_id'=>$forum->node_id, 'title'=>$record['title'], 'user_id'=>$users[self::key($record, $first['originalUserId'])]['userId'],
                         'username'=>$first['author'], 'post_date'=>$first['date'], 'discussion_open'=>true, 'discussion_state'=>'visible',
                         'discussion_type'=>$forum->TypeHandler->getDefaultThreadType($forum)]); $thread->save();
                     $posts = []; $hashes = [];
                     foreach ($record['posts'] as $position=>$item) {
                         $post = $app->em()->create('XF:Post'); $post->setOption('log_moderator', false);
-                        $post->bulkSet(['thread_id'=>$thread->thread_id, 'user_id'=>$users[$item['originalUserId']]['userId'], 'username'=>$item['author'],
+                        $post->bulkSet(['thread_id'=>$thread->thread_id, 'user_id'=>$users[self::key($record, $item['originalUserId'])]['userId'], 'username'=>$item['author'],
                             'post_date'=>$item['date'], 'message'=>$item['message'], 'message_state'=>'visible', 'position'=>$position]); $post->save();
                         if ($position === 0) { $thread->first_post_id = $post->post_id; $thread->save(); }
                         $posts[$item['key']] = $post->post_id; $hashes[$item['key']] = hash('sha256', $item['message']);
@@ -116,16 +131,34 @@ final class History extends \XF\Cli\Command\AbstractCommand
                 $app->em()->clearEntityCache();
             }
             // Reserve recovered attachment IDs before any cross-post URL is rewritten.
+            // Reserve newly recovered replies too. Native IDs, staff edits and later replies remain intact.
             foreach ($history['threads'] as $record) {
-                $id = $record['originalId']; $entry = $map[$id];
+                $id = self::key($record); $entry = $map[$id];
+                $db->beginTransaction();
+                try {
+                    foreach ($record['posts'] as $item) {
+                        if (isset($entry['posts'][$item['key']])) { continue; }
+                        if (!$input->getOption('migrate')) { throw new \RuntimeException('Additional captured replies require explicit migration'); }
+                        $post = $app->em()->create('XF:Post'); $post->setOption('log_moderator', false);
+                        $post->bulkSet(['thread_id'=>$entry['threadId'], 'user_id'=>$users[self::key($record, $item['originalUserId'])]['userId'], 'username'=>$item['author'],
+                            'post_date'=>$item['date'], 'message'=>$item['message'], 'message_state'=>'visible', 'position'=>0]);
+                        $post->save(); $entry['posts'][$item['key']] = $post->post_id;
+                        $entry['messageHashes'][$item['key']] = hash('sha256', $item['message']);
+                    }
+                    $map[$id] = $entry; $app->registry()->set('stormForumHistory', $map); $db->commit();
+                } catch (\Throwable $error) { $db->rollback(); throw $error; }
+                $app->em()->clearEntityCache();
+            }
+            foreach ($history['threads'] as $record) {
+                $id = self::key($record); $entry = $map[$id];
                 $db->beginTransaction();
                 try {
                     foreach ($record['posts'] as $item) {
                         foreach ($item['attachments'] as $assetId) {
                             if (isset($entry['attachments'][$item['key']][$assetId])) { continue; }
-                            $asset = $assets[$assetId];
+                            $asset = $assets[self::key($record, $assetId)];
                             $preparer = $app->service('XF:Attachment\Preparer');
-                            $data = $preparer->insertDataFromFile(new \XF\FileWrapper('/opt/storm-forum/assets/history/' . $asset['file'], $asset['filename']), $users[$item['originalUserId']]['userId'], ['upload_date'=>$item['date']]);
+                            $data = $preparer->insertDataFromFile(new \XF\FileWrapper('/opt/storm-forum/assets/history/' . $asset['file'], $asset['filename']), $users[self::key($record, $item['originalUserId'])]['userId'], ['upload_date'=>$item['date']]);
                             $attachment = $app->em()->create('XF:Attachment');
                             $attachment->bulkSet(['data_id'=>$data->data_id, 'content_type'=>'post', 'content_id'=>$entry['posts'][$item['key']], 'attach_date'=>$item['date'], 'unassociated'=>false]);
                             $attachment->save(); $entry['attachments'][$item['key']][$assetId] = $attachment->attachment_id;
@@ -137,11 +170,12 @@ final class History extends \XF\Cli\Command\AbstractCommand
                 $app->em()->clearEntityCache();
             }
             $attachmentLinks = [];
-            foreach ($map as $entry) {
+            foreach ($map as $id=>$entry) {
                 foreach ($entry['attachments'] ?? [] as $attachments) {
                     foreach ($attachments as $original=>$native) {
-                        if (isset($attachmentLinks[$original]) && $attachmentLinks[$original] !== $native) { throw new \RuntimeException('Ambiguous historical attachment mapping'); }
-                        $attachmentLinks[$original] = $native;
+                        $key = self::key(['era'=>self::eraFromKey($id)], $original);
+                        if (isset($attachmentLinks[$key]) && $attachmentLinks[$key] !== $native) { throw new \RuntimeException('Ambiguous historical attachment mapping'); }
+                        $attachmentLinks[$key] = $native;
                     }
                 }
             }
@@ -149,8 +183,8 @@ final class History extends \XF\Cli\Command\AbstractCommand
             foreach ($history['threads'] as $record) {
                 foreach ($record['posts'] as $post) {
                     if ($post['originalPostId'] === null) { continue; }
-                    $original = $post['originalPostId']; $native = $map[$record['originalId']]['posts'][$post['key']];
-                    $map[$record['originalId']]['originalPosts'][$original] = $native;
+                    $original = self::key($record, $post['originalPostId']); $native = $map[self::key($record)]['posts'][$post['key']];
+                    $map[self::key($record)]['originalPosts'][$post['originalPostId']] = $native;
                     // Different archive eras can reuse post IDs. Only unambiguous direct links can be rewritten.
                     if (isset($postLinks[$original])) { $ambiguousPosts[$original] = true; }
                     $postLinks[$original] = $native;
@@ -158,7 +192,7 @@ final class History extends \XF\Cli\Command\AbstractCommand
             }
             foreach ($ambiguousPosts as $original=>$_) { unset($postLinks[$original]); }
             foreach ($history['threads'] as $record) {
-                $id = $record['originalId']; $entry = $map[$id];
+                $id = self::key($record); $entry = $map[$id];
                 if (($entry['version'] ?? null) === 2) {
                     if ($entry['hash'] === self::hash($record)) { continue; }
                     if (!$input->getOption('migrate')) { throw new \RuntimeException('Imported corpus changed; explicit migration required'); }
@@ -169,12 +203,12 @@ final class History extends \XF\Cli\Command\AbstractCommand
                         $postId = $entry['posts'][$item['key']];
                         $current = $db->fetchOne('SELECT message FROM xf_post WHERE post_id = ? FOR UPDATE', $postId);
                         $post = $app->em()->find('XF:Post', $postId); $post->setOption('log_moderator', false);
-                        $userId = $users[$item['originalUserId']]['userId'];
+                        $userId = $users[self::key($record, $item['originalUserId'])]['userId'];
                         if ($post->user_id && $post->user_id !== $userId) { throw new \RuntimeException('Historical post has conflicting account ownership'); }
                         $post->user_id = $userId;
                         $expected = $entry['messageHashes'][$item['key']] ?? $item['previousMessageHash'];
                         if (hash('sha256', $current) === $expected) {
-                            $message = self::rewriteLinks($item['message'], $app, $map, $users, $postLinks, $attachmentLinks);
+                            $message = self::rewriteLinks($item['message'], $app, $map, $users, $postLinks, $attachmentLinks, $record['era'] ?? 'original');
                             $message = preg_replace_callback('/\[ATTACH\](\d+)\[\/ATTACH\]/', static function ($match) use ($entry, $item) {
                                 $native = $entry['attachments'][$item['key']][(int)$match[1]] ?? null;
                                 if (!$native) { throw new \RuntimeException('Missing native attachment mapping'); }
@@ -187,14 +221,26 @@ final class History extends \XF\Cli\Command\AbstractCommand
                     }
                     $first = $record['posts'][0];
                     $thread = $app->em()->find('XF:Thread', $entry['threadId'], ['Forum']); $thread->setOption('log_moderator', false);
-                    $thread->bulkSet(['title'=>$record['title'], 'node_id'=>$nodes['node:' . $record['node']], 'user_id'=>$users[$first['originalUserId']]['userId'], 'username'=>$first['author']]);
+                    $thread->bulkSet(['title'=>$record['title'], 'node_id'=>$nodes['node:' . $record['node']], 'user_id'=>$users[self::key($record, $first['originalUserId'])]['userId'], 'username'=>$first['author']]);
                     $thread->save(); $entry['slug'] = $record['slug'];
                     $app->repository('XF:Thread')->rebuildThreadUserPostCounters($entry['threadId']);
+                    $app->repository('XF:Thread')->rebuildThreadPostPositions($entry['threadId']);
                     $entry['version'] = 2; $entry['hash'] = self::hash($record); $map[$id] = $entry;
                     $app->registry()->set('stormForumHistory', $map); $db->commit();
                 } catch (\Throwable $error) { $db->rollback(); throw $error; }
                 $app->em()->clearEntityCache();
             }
+            $ratings = []; $polls = [];
+            foreach ($history['threads'] as $record) {
+                $entry = $map[self::key($record)];
+                if (isset($record['poll'])) { $polls[$entry['threadId']] = $record['poll']; }
+                foreach ($record['posts'] as $post) {
+                    if (isset($post['ratings'])) { $ratings[$entry['posts'][$post['key']]] = $post['ratings']; }
+                }
+            }
+            // Snapshot totals are evidence, never native votes, voters or reputation.
+            $app->registry()->set('stormHistoryRatings', $ratings);
+            $app->registry()->set('stormHistoryPolls', $polls);
             foreach ($users as $item) {
                 $db->query('UPDATE xf_user SET message_count = (SELECT COUNT(*) FROM xf_post p INNER JOIN xf_thread t ON t.thread_id = p.thread_id INNER JOIN xf_forum f ON f.node_id = t.node_id WHERE p.user_id = ? AND p.message_state = ? AND t.discussion_state = ? AND f.count_messages = 1) WHERE user_id = ?', [$item['userId'], 'visible', 'visible', $item['userId']]);
             }
@@ -211,7 +257,7 @@ final class History extends \XF\Cli\Command\AbstractCommand
 
     private static function assertMappedPostsRetained(array $history, array $map): void
     {
-        $threads = array_column($history['threads'], null, 'originalId');
+        $threads = self::index($history['threads']);
         foreach ($map as $id=>$entry) {
             if (!isset($threads[$id]) || array_diff(array_keys($entry['posts']), array_column($threads[$id]['posts'], 'key'))) {
                 throw new \RuntimeException('Corpus revision removes mapped historical posts; use native moderation without dropping import mappings.');
@@ -220,6 +266,26 @@ final class History extends \XF\Cli\Command\AbstractCommand
     }
 
     private static function hash(array $record): string { return hash('sha256', json_encode($record, JSON_THROW_ON_ERROR)); }
+
+    private static function key(array $record, ?int $id = null): string
+    {
+        $era = $record['era'] ?? 'original';
+        if (!in_array($era, ['original', 'revival2016', 'revival2022'], true)) { throw new \RuntimeException('Unknown historical era'); }
+        return ($era === 'original' ? '' : $era . ':') . ($id ?? $record['originalId']);
+    }
+
+    private static function eraFromKey($key): string { return str_contains((string)$key, ':') ? explode(':', (string)$key)[0] : 'original'; }
+
+    private static function index(array $records): array
+    {
+        $result = [];
+        foreach ($records as $record) {
+            $key = self::key($record);
+            if (isset($result[$key])) { throw new \RuntimeException('Duplicate historical era/ID'); }
+            $result[$key] = $record;
+        }
+        return $result;
+    }
 
     private static function profileHash(array $identity): string
     {
@@ -232,8 +298,9 @@ final class History extends \XF\Cli\Command\AbstractCommand
         foreach ($history['threads'] as $thread) {
             foreach ($thread['posts'] as $post) {
                 foreach ($post['attachments'] as $id) {
-                    if (isset($owners[$id])) { throw new \RuntimeException('Duplicate historical attachment ownership'); }
-                    $owners[$id] = $post['key'];
+                    $key = self::key($thread, $id);
+                    if (isset($owners[$key])) { throw new \RuntimeException('Duplicate historical attachment ownership'); }
+                    $owners[$key] = $post['key'];
                 }
             }
         }
@@ -241,20 +308,21 @@ final class History extends \XF\Cli\Command\AbstractCommand
 
     private static function assertMappedMetadataUnchanged(array $history, array $map, array $users): void
     {
-        $identities = array_column($history['users'], null, 'originalId');
+        $identities = self::index($history['users']);
         foreach ($users as $id=>$entry) {
             if (!isset($identities[$id]) || ($entry['metadataHash'] ?? null) !== self::profileHash($identities[$id])) {
                 throw new \RuntimeException('Imported profile metadata changed or lacks a checkpoint; explicit native moderation is required before revising identities.');
             }
         }
-        $threads = array_column($history['threads'], null, 'originalId');
-        $assets = array_column($history['attachments'], null, 'originalId');
+        $threads = self::index($history['threads']);
+        $assets = self::index($history['attachments']);
         foreach ($map as $id=>$entry) {
             $posts = array_column($threads[$id]['posts'], null, 'key');
             foreach ($entry['attachments'] ?? [] as $key=>$attachments) {
                 foreach ($attachments as $original=>$_) {
-                    if (!in_array($original, $posts[$key]['attachments'], true) || !isset($assets[$original])
-                        || ($entry['attachmentHashes'][$original] ?? null) !== self::hash($assets[$original])) {
+                    $assetKey = self::key($threads[$id], $original);
+                    if (!in_array($original, $posts[$key]['attachments'], true) || !isset($assets[$assetKey])
+                        || ($entry['attachmentHashes'][$original] ?? null) !== self::hash($assets[$assetKey])) {
                         throw new \RuntimeException('Imported attachment membership or metadata changed or lacks a checkpoint; use native moderation without advancing stale media mappings.');
                     }
                 }
@@ -262,10 +330,17 @@ final class History extends \XF\Cli\Command\AbstractCommand
         }
     }
 
-    private static function rewriteLinks(string $message, \XF\App $app, array $threads, array $users, array $posts, array $attachments): string
+    private static function rewriteLinks(string $message, \XF\App $app, array $threads, array $users, array $posts, array $attachments, string $era): string
     {
-        return preg_replace_callback('/\[URL=(https?:\/\/ts-mc\.net(?::80)?\/[^\]]+)\]/i', static function ($match) use ($app, $threads, $users, $posts, $attachments) {
-            $url = $match[1]; $path = parse_url($url, PHP_URL_PATH); $native = null;
+        foreach (['threads', 'users', 'posts', 'attachments'] as $collection) {
+            $scoped = [];
+            foreach ($$collection as $key=>$value) {
+                if (self::eraFromKey($key) === $era) { $scoped[str_contains((string)$key, ':') ? explode(':', (string)$key)[1] : $key] = $value; }
+            }
+            $$collection = $scoped;
+        }
+        return preg_replace_callback('/\[URL=(https?:\/\/(?:(?:www|forums?)\.)?ts-mc\.net(?::80)?\/[^\]]+)\]/i', static function ($match) use ($app, $threads, $users, $posts, $attachments) {
+            $url = $match[1]; $path = preg_replace('#^/xf/#', '/', parse_url($url, PHP_URL_PATH)); $native = null;
             if (preg_match('#^/threads/(?:[^/]+\.)?(\d+)(?:/|$)#', $path, $id) && isset($threads[(int)$id[1]])) {
                 $thread = $app->em()->find('XF:Thread', $threads[(int)$id[1]]['threadId']);
                 $native = $app->router('public')->buildLink('canonical:threads', $thread);

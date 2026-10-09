@@ -12,11 +12,16 @@ $check = static function (bool $condition, string $message): void {
     if (!$condition) { throw new RuntimeException($message); }
 };
 $map = $app->registry()->get('stormForumMap');
-$check(count(array_filter(array_keys($map), fn($key) => str_starts_with($key, 'node:'))) === 14, 'Managed node count incorrect');
+$check(count(array_filter(array_keys($map), fn($key) => str_starts_with($key, 'node:'))) === 22, 'Managed node count incorrect');
 $before = $app->db()->fetchOne('SELECT COUNT(*) FROM xf_node');
 $app->service('Storm\Forum:Configuration')->apply(json_decode(file_get_contents('/opt/storm-forum/config/forum.json'), true, 512, JSON_THROW_ON_ERROR), 'beta');
 $check($before == $app->db()->fetchOne('SELECT COUNT(*) FROM xf_node'), 'Repeat configuration created duplicate nodes');
 $check($map === $app->registry()->get('stormForumMap'), 'Repeat configuration changed stable IDs');
+$reactions = $app->finder('XF:Reaction')->where('active', true)->order('display_order')->fetch();
+$check(count($reactions) === 10, 'Classic reaction choices differ');
+$check(array_map(fn($reaction) => (string)$reaction->title, array_values($reactions->toArray())) === ['Like','Agree','Disagree','Funny','Winner','Informative','Useful','Optimistic','Friendly','Creative'], 'Classic reaction titles/order differ');
+$check($map['reaction:like'] === 1, 'Native Like ID changed');
+$check($app->em()->find('XF:Reaction', $map['reaction:disagree'])->reaction_score === 0, 'Disagree should not punish reputation');
 $check($app->options()->registrationSetup['enabled'] === false, 'Registration must begin closed');
 foreach (['POSTAL_SMTP_PASSWORD', 'TURNSTILE_SECRET_KEY'] as $key) {
     $check(!str_contains($app->db()->fetchOne('SELECT GROUP_CONCAT(option_value) FROM xf_option'), getenv($key)), 'Credential leaked into options');
@@ -55,7 +60,9 @@ foreach ([[$guest, false], [$author, true], [$other, false], [$staff, true]] as 
 $staffForum = $app->em()->find('XF:Forum', $map['node:staff']);
 $check(!XF::asVisitor($author, fn() => $staffForum->canView()), 'Member can view staff forum');
 $check(XF::asVisitor($staff, fn() => $staffForum->canView()), 'Staff cannot view staff forum');
-$check(!XF::asVisitor($author, fn() => $app->em()->find('XF:Forum', $map['node:news'])->canCreateThread()), 'Member can create an announcement');
+foreach (['news','rules','general','feedback','bugs','voting','towns','lysergia','boomerville','keystone','marketplace','chaos','games'] as $public) {
+    $check(XF::asVisitor($author, fn() => $app->em()->find('XF:Forum', $map['node:' . $public])->canCreateThread()), 'Restored public forum is not open for members: ' . $public);
+}
 $check(!$author->hasPermission('general', 'submitWithoutApproval'), 'New account can bypass approval');
 $check(!$author->hasPermission('conversation', 'start'), 'New account can start messages');
 $promotion = $app->em()->find('XF:UserGroupPromotion', $map['promotion:trusted']);

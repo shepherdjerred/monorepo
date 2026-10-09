@@ -30,6 +30,43 @@
     "timerSeconds": 10
   },
   "attachmentLimitKiB": 5120,
+  "reactions": [
+    { "key": "like", "title": "Like", "emoji": ":thumbsup:", "score": 1 },
+    {
+      "key": "agree",
+      "title": "Agree",
+      "emoji": ":white_check_mark:",
+      "score": 1
+    },
+    {
+      "key": "disagree",
+      "title": "Disagree",
+      "emoji": ":thumbsdown:",
+      "score": 0
+    },
+    { "key": "funny", "title": "Funny", "emoji": ":laughing:", "score": 1 },
+    { "key": "winner", "title": "Winner", "emoji": ":trophy:", "score": 1 },
+    {
+      "key": "informative",
+      "title": "Informative",
+      "emoji": ":information_source:",
+      "score": 1
+    },
+    { "key": "useful", "title": "Useful", "emoji": ":wrench:", "score": 1 },
+    {
+      "key": "optimistic",
+      "title": "Optimistic",
+      "emoji": ":rainbow:",
+      "score": 1
+    },
+    {
+      "key": "friendly",
+      "title": "Friendly",
+      "emoji": ":handshake:",
+      "score": 1
+    },
+    { "key": "creative", "title": "Creative", "emoji": ":art:", "score": 1 }
+  ],
   "nodes": [
     { "key": "official", "title": "Official", "type": "Category" },
     {
@@ -37,7 +74,7 @@
       "title": "News & Announcements",
       "parent": "official",
       "type": "Forum",
-      "access": "announcements",
+      "access": "public",
       "article": true
     },
     {
@@ -45,7 +82,7 @@
       "title": "Rules & Getting Started",
       "parent": "official",
       "type": "Forum",
-      "access": "announcements"
+      "access": "public"
     },
     { "key": "community", "title": "Community", "type": "Category" },
     {
@@ -57,22 +94,73 @@
     },
     {
       "key": "feedback",
-      "title": "Feedback",
+      "title": "Suggestions & Feedback",
       "parent": "community",
+      "type": "Forum",
+      "access": "public"
+    },
+    {
+      "key": "voting",
+      "title": "Community Voting",
+      "parent": "feedback",
       "type": "Forum",
       "access": "public"
     },
     {
       "key": "bugs",
       "title": "Bug Reports",
+      "parent": "feedback",
+      "type": "Forum",
+      "access": "public"
+    },
+    {
+      "key": "towns",
+      "title": "Towns",
       "parent": "community",
       "type": "Forum",
       "access": "public"
     },
     {
+      "key": "lysergia",
+      "title": "Lysergia",
+      "parent": "towns",
+      "type": "Forum",
+      "access": "public"
+    },
+    {
+      "key": "boomerville",
+      "title": "Boomerville",
+      "parent": "towns",
+      "type": "Forum",
+      "access": "public"
+    },
+    {
+      "key": "keystone",
+      "title": "Keystone",
+      "parent": "towns",
+      "type": "Forum",
+      "access": "public"
+    },
+    {
+      "key": "marketplace",
+      "title": "Marketplace",
+      "parent": "community",
+      "type": "Forum",
+      "access": "public"
+    },
+    { "key": "offtopic", "title": "Off Topic", "type": "Category" },
+    {
+      "key": "chaos",
+      "title": "Chaos",
+      "parent": "offtopic",
+      "type": "Forum",
+      "access": "public",
+      "countMessages": false
+    },
+    {
       "key": "games",
       "title": "Forum Games",
-      "parent": "community",
+      "parent": "offtopic",
       "type": "Forum",
       "access": "public",
       "countMessages": false

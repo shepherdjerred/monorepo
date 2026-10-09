@@ -53,6 +53,18 @@ export const ManifestSchema = z
       })
       .strict(),
     attachmentLimitKiB: z.literal(5120),
+    reactions: z
+      .array(
+        z
+          .object({
+            key: z.string().regex(/^[a-z]+$/),
+            title: z.string().min(1),
+            emoji: z.string().min(1),
+            score: z.number().int().min(-1).max(1),
+          })
+          .strict(),
+      )
+      .min(1),
     nodes: z.array(NodeSchema).min(1),
     vendorDependencies: z.array(
       z.discriminatedUnion("kind", [
@@ -92,6 +104,16 @@ export const ManifestSchema = z
       });
     }
     const keys = new Set<string>();
+    if (
+      new Set(value.reactions.map((reaction) => reaction.key)).size !==
+        value.reactions.length ||
+      value.reactions[0]?.key !== "like"
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "Reaction keys must be unique with Like first",
+      });
+    }
     for (const node of value.nodes) {
       if (
         keys.has(node.key) ||

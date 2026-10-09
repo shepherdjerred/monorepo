@@ -13,8 +13,10 @@ final class Configuration extends \XF\Service\AbstractService
         try {
             $this->groups($manifest);
             $this->nodes($manifest);
+            $this->hideEmptyInstallerForums();
+            $this->reactions($manifest);
             $this->options($manifest, $stage);
-            $this->widgets();
+            $this->widgets($manifest);
             $this->navigation();
             $this->app->registry()->set('stormForumMap', $this->map);
             $this->app->registry()->set('stormForumConfigured', $manifest['schemaVersion']);
@@ -122,6 +124,11 @@ final class Configuration extends \XF\Service\AbstractService
             if (in_array($access, ['public', 'announcements'], true)) {
                 $this->permissions(1, ['forum' => ['viewAttachment' => 'content_allow']], $id);
             }
+            if ($access === 'public') {
+                foreach ([2, $this->map['group:trusted']] as $groupId) {
+                    $this->permissions($groupId, ['forum'=>['postThread'=>'content_allow', 'postReply'=>'content_allow']], $id);
+                }
+            }
             if ($access === 'author-staff') {
                 // The native viewOthers gate protects thread queries, search and attachments.
                 // Reset inherited grants at this node; staff can explicitly grant them back.
@@ -149,6 +156,18 @@ final class Configuration extends \XF\Service\AbstractService
         }
     }
 
+    private function hideEmptyInstallerForums(): void
+    {
+        $category = $this->em()->find('XF:Node', 1);
+        $forum = $this->em()->find('XF:Node', 2);
+        if (!$category || !$forum || $category->title !== 'Main category' || $forum->title !== 'Main forum'
+            || $category->node_type_id !== 'Category' || $forum->node_type_id !== 'Forum' || $forum->parent_node_id !== 1
+            || $this->db()->fetchOne('SELECT COUNT(*) FROM xf_thread WHERE node_id = 2')
+            || $this->db()->fetchOne('SELECT COUNT(*) FROM xf_node WHERE parent_node_id IN (1, 2) AND node_id <> 2')) { return; }
+        $category->display_in_list = false; $category->save();
+        $forum->display_in_list = false; $forum->save();
+    }
+
     private function options(array $manifest, string $stage): void
     {
         $url = $manifest['stages'][$stage]['url'];
@@ -174,12 +193,35 @@ final class Configuration extends \XF\Service\AbstractService
         }
     }
 
-    private function widgets(): void
+    private function reactions(array $manifest): void
+    {
+        // Keep native Like's ID and existing votes. Other classic types receive stable managed IDs.
+        foreach ($manifest['reactions'] as $order => $definition) {
+            $key = 'reaction:' . $definition['key'];
+            $reaction = $definition['key'] === 'like' ? $this->em()->find('XF:Reaction', 1) : $this->managed($key, 'XF:Reaction');
+            if (!$reaction) { throw new \RuntimeException('Native Like reaction missing'); }
+            $reaction->bulkSet(['emoji_shortname'=>$definition['emoji'], 'image_url'=>'', 'image_url_2x'=>'', 'sprite_mode'=>false,
+                'reaction_score'=>$definition['score'], 'display_order'=>($order + 1) * 10, 'active'=>true]);
+            $reaction->save();
+            $phrase = $reaction->getMasterPhrase(); $phrase->phrase_text = $definition['title']; $phrase->save();
+            $this->remember($key, $reaction);
+        }
+        // Retire the five stock extras, retaining their IDs, labels and existing votes.
+        // Leave independently installed/customized reactions untouched.
+        foreach ([2=>':heart_eyes:', 3=>':rofl:', 4=>':astonished:', 5=>':slight_frown:', 6=>':rage:'] as $id=>$emoji) {
+            $reaction = $this->em()->find('XF:Reaction', $id);
+            if ($reaction && $reaction->emoji_shortname === $emoji && $reaction->active) { $reaction->active = false; $reaction->save(); }
+        }
+        $this->repository('XF:Reaction')->rebuildReactionCache();
+        $this->repository('XF:Reaction')->rebuildReactionSpriteCache();
+    }
+
+    private function widgets(array $manifest): void
     {
         $widget = $this->managed('widget:recent', 'XF:Widget');
         $widget->widget_key = 'storm_recent_threads';
         $widget->definition_id = 'new_threads';
-        $widget->options = ['limit' => 5, 'node_ids' => array_map(fn($key) => $this->map['node:' . $key], ['news', 'rules', 'general', 'feedback', 'bugs', 'games'])];
+        $widget->options = ['limit' => 5, 'node_ids' => array_values(array_map(fn($node) => $this->map['node:' . $node['key']], array_filter($manifest['nodes'], fn($node) => $node['type'] === 'Forum' && in_array($node['access'], ['public','announcements'], true))))];
         $widget->save();
         $phrase = $widget->getMasterPhrase();
         $phrase->phrase_text = 'Recent discussions';

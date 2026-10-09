@@ -23,6 +23,8 @@ if (
 }
 const suffix = randomBytes(4).toString("hex");
 const preview = Bun.argv.includes("--preview");
+const keepOnFailure = Bun.argv.includes("--keep-on-failure");
+let succeeded = false;
 const network = `storm-forum-test-${suffix}`;
 const db = `${network}-db`;
 const app = `${network}-app`;
@@ -116,6 +118,8 @@ try {
       db,
       "--network",
       network,
+      "--tmpfs",
+      "/var/lib/mysql",
       "-e",
       "MARIADB_USER",
       "-e",
@@ -434,13 +438,20 @@ try {
       process.once("SIGINT", done);
     });
   }
+  succeeded = true;
 } finally {
-  for (const container of [web, app, db]) {
-    const cleanup = Bun.spawn(["docker", "rm", "-f", "-v", container], {
-      stdout: "ignore",
-      stderr: "ignore",
-    });
-    await cleanup.exited;
+  if (!succeeded && keepOnFailure) {
+    process.stdout.write(
+      `Disposable fixture retained for diagnosis: ${app}, ${db}, ${network}. Remove these exact containers and network after verification.\n`,
+    );
+  } else {
+    for (const container of [web, app, db]) {
+      const cleanup = Bun.spawn(["docker", "rm", "-f", "-v", container], {
+        stdout: "ignore",
+        stderr: "ignore",
+      });
+      await cleanup.exited;
+    }
+    await run(["network", "rm", network]);
   }
-  await run(["network", "rm", network]);
 }

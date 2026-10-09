@@ -60,8 +60,17 @@ threads and records their permanent retirement. It never recreates them or delet
 unrelated content. Private support is readable by its author and staff. The portal and
 recent-thread widget query only public forums.
 
+The managed classic reactions use XenForo's native reaction entities and picker:
+Like, Agree, Disagree, Funny, Winner, Informative, Useful, Optimistic, Friendly,
+and Creative. Like keeps native ID 1; additional types retain registry-backed IDs.
+Disagree is neutral. Stock extras are disabled without deleting existing votes;
+independently customized reactions remain untouched. Captured aggregate ratings
+are not imported as individual votes because the voters are not recoverable.
+The public `/admin.php` uses XenForo authentication and required administrator
+TFA; installer, source, internal data and CLI paths remain blocked by nginx.
+
 `storm:history` imports the reviewed `config/history.json` corpus with native
-profile-only identities keyed by original member ID, original post names and
+profile-only identities keyed by forum era and original member ID, original post names and
 dates, recovered avatars, formatting, and native attachments. Profiles have
 empty email addresses, native NoPassword authentication, and no restored staff
 privileges. Transactional checkpoints preserve IDs, edits,
@@ -74,6 +83,19 @@ are checkpointed; unsupported revisions reject before writes, including dry runs
 `scripts/enrich-history.ts` reads an
 explicit archive directory without modifying it; optional `--public-archives`
 recovery copies verified public images into this package.
+`scripts/expand-history.ts <archive directory>` adds captured short announcements
+and image-only public replies while preserving existing identity/media checkpoints
+and reviewed reconstructed endings. It restores the captured Chaos, Towns/town
+subforums and Community Voting destinations. Deployment's explicit migration adds
+new replies without replacing native post IDs, edits or later replies. Missing
+image bytes retain original source links; recovered public imagery is served locally.
+`scripts/recover-captures.ts <archive directory> <repo-local recovery directory>`
+adds corroborated 2016/2022 captures and historical ratings/poll summaries. Original
+registry keys remain unchanged; revival keys use an era prefix. Only the explicitly
+identified owner shares a profile across eras. Snapshot totals are displayed with
+their capture sources and do not create native votes or change reputation. The
+release applies its reviewed corpus with `--migrate`, including earlier first posts
+while retaining previous native posts and later replies.
 
 For already imported profiles, run
 `bun packages/storm-forum/scripts/restore-avatars.ts` from the repository root

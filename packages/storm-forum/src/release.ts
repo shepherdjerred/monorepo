@@ -204,7 +204,12 @@ export async function releaseForum(stage: Stage): Promise<void> {
       "50",
     ]);
     await runPhp(["cmd.php", "storm:seed"]);
-    await runPhp(["cmd.php", "storm:history"], "/app/forum", 5 * 60_000);
+    // This release's corpus is reviewed with the image; retain native IDs and edits.
+    await runPhp(
+      ["cmd.php", "storm:history", "--migrate"],
+      "/app/forum",
+      5 * 60_000,
+    );
     await runPhp(
       ["cmd.php", "storm:accounts", "--stage", stage],
       "/app/forum",
