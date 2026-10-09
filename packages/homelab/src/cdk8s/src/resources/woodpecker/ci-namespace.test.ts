@@ -56,9 +56,11 @@ const EnvSchema = z.array(
   z.object({ name: z.string(), value: z.string().optional() }).loose(),
 );
 
-function agentEnvironment(
-  name = "woodpecker-woodpecker-agent",
-): Map<string, string | undefined> {
+const AGENT_DEPLOYMENTS = ["completion", "main", "pr", "review"].map(
+  (pool) => `woodpecker-woodpecker-agent-${pool}`,
+);
+
+function agentEnvironment(name: string): Map<string, string | undefined> {
   const deployment = z
     .object({
       spec: z.object({
@@ -213,11 +215,7 @@ describe("Woodpecker CI namespace", () => {
       "temporal-maintenance-worker",
     ]);
     expect(deploymentsIn("woodpecker")).toEqual([
-      "woodpecker-woodpecker-agent",
-      "woodpecker-woodpecker-agent-completion",
-      "woodpecker-woodpecker-agent-main",
-      "woodpecker-woodpecker-agent-pr",
-      "woodpecker-woodpecker-agent-review",
+      ...AGENT_DEPLOYMENTS,
       "woodpecker-woodpecker-config-extension",
       "woodpecker-woodpecker-server",
     ]);
@@ -293,25 +291,30 @@ describe("Woodpecker CI namespace", () => {
    * selector the clone lands on the production node and the workspace claim
    * binds there with it.
    */
-  it("sends every agent-created pod to liskov at batch priority", () => {
-    const env = agentEnvironment();
-    expect(env.get("WOODPECKER_BACKEND_K8S_NAMESPACE")).toBe("woodpecker-ci");
-    expect(
-      JSON.parse(env.get("WOODPECKER_BACKEND_K8S_POD_NODE_SELECTOR") ?? ""),
-    ).toEqual({ "kubernetes.io/hostname": "liskov" });
-    expect(
-      JSON.parse(env.get("WOODPECKER_BACKEND_K8S_POD_TOLERATIONS") ?? ""),
-    ).toEqual([
-      { key: "ci", operator: "Equal", value: "only", effect: "NoSchedule" },
-    ]);
-    expect(env.get("WOODPECKER_BACKEND_K8S_PRIORITY_CLASS")).toBe("batch-low");
-    expect(env.get("WOODPECKER_BACKEND_K8S_STORAGE_CLASS")).toBe(
-      "ci-workspace",
-    );
-  });
+  it.each(AGENT_DEPLOYMENTS)(
+    "%s sends every pod to liskov at batch priority",
+    (name) => {
+      const env = agentEnvironment(name);
+      expect(env.get("WOODPECKER_BACKEND_K8S_NAMESPACE")).toBe("woodpecker-ci");
+      expect(
+        JSON.parse(env.get("WOODPECKER_BACKEND_K8S_POD_NODE_SELECTOR") ?? ""),
+      ).toEqual({ "kubernetes.io/hostname": "liskov" });
+      expect(
+        JSON.parse(env.get("WOODPECKER_BACKEND_K8S_POD_TOLERATIONS") ?? ""),
+      ).toEqual([
+        { key: "ci", operator: "Equal", value: "only", effect: "NoSchedule" },
+      ]);
+      expect(env.get("WOODPECKER_BACKEND_K8S_PRIORITY_CLASS")).toBe(
+        "batch-low",
+      );
+      expect(env.get("WOODPECKER_BACKEND_K8S_STORAGE_CLASS")).toBe(
+        "ci-workspace",
+      );
+    },
+  );
 
   /** The backend authenticates to the API with the agent pod's own token. */
-  it("mounts the agent's service account token", () => {
+  it.each(AGENT_DEPLOYMENTS)("%s mounts its service account token", (name) => {
     const deployment = z
       .object({
         spec: z.object({
@@ -323,7 +326,7 @@ describe("Woodpecker CI namespace", () => {
           }),
         }),
       })
-      .parse(find("Deployment", "woodpecker-woodpecker-agent"));
+      .parse(find("Deployment", name));
     expect(deployment.spec.template.spec).toMatchObject({
       serviceAccountName: "woodpecker-agent",
       automountServiceAccountToken: true,

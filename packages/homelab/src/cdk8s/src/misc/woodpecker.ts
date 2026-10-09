@@ -10,8 +10,8 @@ export const CI_ADMISSION_BUDGET =
   PooledAdmissionBudgetSchema.parse(rawCiAdmissionBudget);
 
 /**
- * The existing agent keeps its exact pod template while dedicated pools are
- * introduced. Remove it only after old, unlabelled workflows have drained.
+ * Zero omits the legacy agent. Any enabled legacy capacity also counts toward
+ * compute admission; reducing it requires draining its unlabelled workflows.
  */
 export const WOODPECKER_MAX_WORKFLOWS = CI_ADMISSION_BUDGET.legacyMaxWorkflows;
 
