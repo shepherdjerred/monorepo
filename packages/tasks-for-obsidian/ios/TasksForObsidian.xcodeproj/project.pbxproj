@@ -26,6 +26,7 @@
 		90203752117D2A4D09AB1816 /* TaskShortcutsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 723F2DEE626C06A660A4022D /* TaskShortcutsProvider.swift */; };
 		96EBFAA80520FA6A14F9B2B8 /* FacetApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E2F39573B7D1B833BA08ACD /* FacetApp.swift */; };
 		A6F3F9F4DDCF4D154097C4A4 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9AA2B4C15E18713C3F2425A2 /* Images.xcassets */; };
+		B362A546A501D1EFBD21179F /* FacetAccountRenderFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7846D25C474ABAC2ABD134CF /* FacetAccountRenderFixture.swift */; };
 		BA193902757571848D61269F /* TodayTasksWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8E83C6DA31E3B637A745D46 /* TodayTasksWidget.swift */; };
 		C67365CB821A80210909E7DE /* TaskNotesKit in Frameworks */ = {isa = PBXBuildFile; productRef = 6ED2E69C5C7F08C7894ED288 /* TaskNotesKit */; };
 		CA2C3018BB6189460AB63160 /* ComponentKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D62E6AFDB17C7FB87674C26 /* ComponentKeys.swift */; };
@@ -88,6 +89,7 @@
 		5D62E6AFDB17C7FB87674C26 /* ComponentKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComponentKeys.swift; sourceTree = "<group>"; };
 		626B3A877EB679DAB5B584C9 /* FacetNativeGalleryFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacetNativeGalleryFixtures.swift; sourceTree = "<group>"; };
 		723F2DEE626C06A660A4022D /* TaskShortcutsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskShortcutsProvider.swift; sourceTree = "<group>"; };
+		7846D25C474ABAC2ABD134CF /* FacetAccountRenderFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacetAccountRenderFixture.swift; sourceTree = "<group>"; };
 		79DE99B929CC788F441D435B /* FacetSurfaceFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacetSurfaceFixtures.swift; sourceTree = "<group>"; };
 		8CDC691E8EC7FF52D91BE422 /* native-license-inventory.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "native-license-inventory.json"; sourceTree = "<group>"; };
 		948471B3C8F8B0172CDCBCD5 /* tasknotes-macos */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "tasknotes-macos"; path = "../../tasknotes-macos"; sourceTree = SOURCE_ROOT; };
@@ -222,6 +224,7 @@
 			isa = PBXGroup;
 			children = (
 				5D62E6AFDB17C7FB87674C26 /* ComponentKeys.swift */,
+				7846D25C474ABAC2ABD134CF /* FacetAccountRenderFixture.swift */,
 				EC73F7B09BE57D9707A6260B /* FacetDelightGalleryFixtures.swift */,
 				626B3A877EB679DAB5B584C9 /* FacetNativeGalleryFixtures.swift */,
 				79DE99B929CC788F441D435B /* FacetSurfaceFixtures.swift */,
@@ -436,6 +439,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				CA2C3018BB6189460AB63160 /* ComponentKeys.swift in Sources */,
+				B362A546A501D1EFBD21179F /* FacetAccountRenderFixture.swift in Sources */,
 				E69FC13BAD3F31D581B981EC /* FacetDelightGalleryFixtures.swift in Sources */,
 				EFD1F47D87968383F5256030 /* FacetNativeGalleryFixtures.swift in Sources */,
 				64907EA8AEB3D46D7849F719 /* FacetSurfaceFixtures.swift in Sources */,

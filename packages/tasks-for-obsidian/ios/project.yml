@@ -118,6 +118,7 @@ targets:
       - path: ../../tasknotes-macos/Tests/TaskNotesMacTests/Support/FacetSurfaceFixtures.swift
       - path: ../../tasknotes-macos/Tests/TaskNotesMacTests/Support/FacetNativeGalleryFixtures.swift
       - path: ../../tasknotes-macos/Tests/TaskNotesMacTests/Support/FacetDelightGalleryFixtures.swift
+      - path: ../../tasknotes-macos/Tests/TaskNotesMacTests/Support/FacetAccountRenderFixture.swift
       - path: ../../tasknotes-macos/Tests/TaskNotesMacTests/Support/ComponentKeys.swift
     dependencies:
       - target: TasksForObsidian

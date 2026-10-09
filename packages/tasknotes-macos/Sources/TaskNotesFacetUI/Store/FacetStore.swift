@@ -59,6 +59,7 @@ public final class FacetStore {
     public var showsConflicts = false
     public var showsAccount = false
     public internal(set) var accountNeedsCode = false
+    internal var accountPresentation = FacetAccountPresentation()
     public internal(set) var remoteVaults: [FacetRemoteVault] = []
     public internal(set) var vaultConnections: [FacetVaultConnection] = []
     public internal(set) var syncStates: [String: String] = [:]
@@ -160,24 +161,28 @@ public final class FacetStore {
     #endif
 
     public func start() async {
+        await start {
+            let support = try FileManager.default.url(
+                for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil,
+                create: true)
+            return try await FacetStartupState.open(
+                directory: support.appendingPathComponent("Facet"))
+        }
+    }
+
+    internal func start(prepare: () async throws -> FacetStartupState) async {
         guard engine == nil, !isLoading else { return }
         isLoading = true
         defer { isLoading = false }
         do {
-            let support = try FileManager.default.url(
-                for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil,
-                create: true)
-            let opened = try await FacetEngine.open(
-                directory: support.appendingPathComponent("Facet"))
-            engine = opened
-            let imports = try FacetVaultImporter(
-                directory: support.appendingPathComponent("Facet/imports"))
-            importer = imports
-            pendingImports = try await imports.pending()
-            account = try await FacetObsidianAccount.open(
-                directory: support.appendingPathComponent("Facet/accounts"))
-            profiles = try await opened.profiles()
-            pendingActions = try await opened.pendingMutations()
+            let ready = try await prepare()
+            error = nil
+            engine = ready.engine
+            importer = ready.importer
+            account = ready.account
+            pendingImports = ready.pendingImports
+            profiles = ready.profiles
+            pendingActions = ready.pendingActions
             let saved = UserDefaults.standard.string(forKey: "Facet.selectedProfile")
             selectedProfileID = profiles.first(where: { $0.id == saved })?.id ?? profiles.first?.id
             await refresh()
