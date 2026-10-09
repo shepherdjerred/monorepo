@@ -9,7 +9,7 @@ import { chmod, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { paper, type PluginPin } from "#src/pins.ts";
 
-/** File name the itzg image looks for before downloading Paper itself. */
+/** The pinned Paper jar as seeded into `/data`; `basePaperEnv("seeded")` points the image at it. */
 export const paperJarName = `paper-${paper.version}-${paper.build.toString()}.jar`;
 
 /**
@@ -57,7 +57,10 @@ export async function stagePinnedPlugins(
   pins: readonly Pick<PluginPin, "name" | "version" | "url" | "sha256">[],
 ): Promise<void> {
   await mkdir(downloadsDir, { recursive: true });
-  await mkdir(pluginsDir, { recursive: true, mode: 0o700 });
+  // The plugins tree is bind-mounted at /plugins and read by the image's
+  // unprivileged user (uid 1000), so it must be world-traversable; it holds
+  // jars and config only. The sandbox dir above it keeps the 0700 record.
+  await mkdir(pluginsDir, { recursive: true, mode: 0o755 });
   for (const pin of pins) {
     const jar = `${pin.name}-${pin.version}.jar`;
     await ensureArtifact(path.join(downloadsDir, jar), pin);

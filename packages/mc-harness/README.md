@@ -40,7 +40,13 @@ indices in YZX order.
 
 The `paper` profile boots the pinned image with Paper 26.2, WorldEdit, Citizens
 (test actors), and the repo-built `MCBridge.jar` (build it with
-`mise exec -- gradle -p packages/the-storm/plugin :bridge:assemble`). Worlds are
+`mise exec -- gradle -p packages/the-storm/plugin :bridge:assemble`). The pinned
+Paper jar and plugin jars are downloaded once on the host (sha256-verified)
+and seeded into the container, which runs the jar as `TYPE=CUSTOM`; the
+`PAPER` type would call the PaperMC API on every boot. Once Paperclip's warm
+cache under `~/.toolkit/mc/cache/paperclip` holds the patched Mojang jar,
+server bootstrap needs no downloads. Plugins such as Citizens may still
+download their declared runtime libraries. Worlds are
 `flat` or `void`. Game (25565), RCON (25575), and bridge (25580) ports are
 published on `127.0.0.1` only. The per-sandbox bridge token and RCON password
 are generated at create time and stored only in

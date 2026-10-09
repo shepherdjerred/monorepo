@@ -255,19 +255,21 @@ export async function stagePlugins(
 // Instead they ride in through /plugins and are copied back out after boot.
 const luckPermsLibs = path.join("LuckPerms", "libs");
 
-function serverEnv(
-  rconPassword: string,
-  brainToken: string,
-  extra: Record<string, string>,
-  heap: string,
-): Record<string, string> {
+function serverEnv(server: {
+  rconPassword: string;
+  brainToken: string;
+  extra: Record<string, string>;
+  heap: string;
+  /** A warm run seeds the pinned jar into /data; a cold run lets the image download it. */
+  warmCache: boolean;
+}): Record<string, string> {
   return {
-    ...basePaperEnv(),
+    ...basePaperEnv(server.warmCache ? "seeded" : "download"),
     ENABLE_RCON: "true",
-    RCON_PASSWORD: rconPassword,
-    STORM_BRAIN_BEARER_TOKEN: brainToken,
-    ...extra,
-    MEMORY: heap,
+    RCON_PASSWORD: server.rconPassword,
+    STORM_BRAIN_BEARER_TOKEN: server.brainToken,
+    ...server.extra,
+    MEMORY: server.heap,
   };
 }
 
@@ -347,12 +349,13 @@ export async function startServer(
           `--memory=${options.resources.memoryLimit}`,
         ]),
     ...envArgs(
-      serverEnv(
+      serverEnv({
         rconPassword,
-        options.brain.token,
-        options.env,
-        options.resources?.heap ?? "1G",
-      ),
+        brainToken: options.brain.token,
+        extra: options.env,
+        heap: options.resources?.heap ?? "1G",
+        warmCache: options.warmCache,
+      }),
     ),
     serverImage,
   ]);

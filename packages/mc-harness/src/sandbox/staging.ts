@@ -92,7 +92,7 @@ export async function stageEntries(
   for (const entry of entries) {
     const source = path.join(repoRoot, entry.source);
     const target = path.join(pluginsDir, entry.target);
-    await mkdir(path.dirname(target), { recursive: true });
+    await mkdir(path.dirname(target), { recursive: true, mode: 0o755 });
     switch (entry.kind) {
       case "repo-file": {
         await Bun.write(target, Bun.file(source));

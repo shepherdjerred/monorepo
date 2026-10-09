@@ -110,7 +110,7 @@ function serverEnv(
   secrets: Secrets,
 ): Record<string, string> {
   return {
-    ...basePaperEnv(),
+    ...basePaperEnv("seeded"),
     ...(world === "void" ? { GENERATOR_SETTINGS: VOID_GENERATOR } : {}),
     ...bridgeAndRconEnv(secrets),
   };
