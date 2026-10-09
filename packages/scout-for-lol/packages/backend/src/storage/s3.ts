@@ -383,7 +383,7 @@ export async function archiveTimelineToS3(
  */
 export async function archiveClientBundleToS3(
   args: {
-    readonly matchId: MatchId;
+    readonly matchId: RiotMatchId;
     readonly payload: unknown;
     readonly gameCreatedAt: Date;
     readonly observationId: string;

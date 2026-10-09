@@ -1,6 +1,5 @@
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { MatchIdSchema } from "@scout-for-lol/data";
 import {
   loadRawMatchFixture,
   rawCurrentGameInfoFixture,
@@ -232,7 +231,7 @@ describe("receipted timeline archival", () => {
 describe("receipted client bundle archival", () => {
   test("stores the bundle beside the match it was converted from", async () => {
     const match = await loadRawMatchFixture();
-    const matchId = MatchIdSchema.parse(match.metadata.matchId);
+    const matchId = match.metadata.matchId;
     const payload = { resource: "post_game", data: { matchHistory: {} } };
     mockSuccessfulPut();
 

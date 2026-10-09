@@ -36,7 +36,6 @@ import {
   type ReceiptedArchiveResult,
 } from "#src/report-lake/receipted-archive.ts";
 import { readSelectedLocalCanonicalMatch } from "#src/scout-client/canonical-match.ts";
-import { MatchIdSchema } from "@scout-for-lol/data";
 import { durableCommit } from "#src/temporal/match/match-commits.ts";
 import {
   resolveScoutMatchContext,
@@ -185,7 +184,7 @@ async function archiveClientBundleArtifact(
   if (match === null) return null;
   return archivedArtifactFrom(
     await archiveClientBundleReceipted({
-      matchId: MatchIdSchema.parse(riotMatchId),
+      matchId: riotMatchId,
       payload: selected.sourceObservation.payload,
       gameCreatedAt: new Date(match.info.gameCreation),
       observationId: selected.sourceObservationId,

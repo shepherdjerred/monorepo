@@ -4,7 +4,6 @@ import {
   RawCurrentGameInfoSchema,
   RawMatchSchema,
   RawTimelineSchema,
-  type MatchId,
   type RawCurrentGameInfo,
   type RawMatch,
   type RawTimeline,
@@ -631,7 +630,7 @@ export async function archivePrematchReceipted(
  */
 export async function archiveClientBundleReceipted(
   bundle: {
-    readonly matchId: MatchId;
+    readonly matchId: RiotMatchId;
     readonly payload: unknown;
     readonly gameCreatedAt: Date;
     readonly observationId: string;
