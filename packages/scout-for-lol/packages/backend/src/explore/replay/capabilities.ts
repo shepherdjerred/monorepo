@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import { resolveBucksCapability } from "#src/explore/tools/bucks-tools.ts";
 import { dareExploreEnabled } from "#src/explore/tools/dare-tool-context.ts";
 import { challengeExploreEnabled } from "#src/explore/tools/challenge-tools.ts";
@@ -24,7 +25,7 @@ import type { ExploreCapabilitySet } from "#src/explore/replay/profiles.ts";
  * static flags.
  */
 export async function resolveReplayCapabilities(input: {
-  readonly guildIds: readonly string[];
+  readonly guildIds: readonly DiscordGuildId[];
   readonly surface: ExploreSurface;
 }): Promise<ExploreCapabilitySet> {
   const guildIds = [...input.guildIds];

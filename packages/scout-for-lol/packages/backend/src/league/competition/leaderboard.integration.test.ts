@@ -1,3 +1,7 @@
+import {
+  DiscordAccountIdSchema,
+  type DiscordAccountId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test, afterAll, beforeEach } from "vitest";
 import { z } from "zod";
@@ -68,24 +72,35 @@ function getActiveCompetitionDates(): { startDate: Date; endDate: Date } {
 
 // Helper to create a test player with account
 async function createTestPlayer(
-  discordId: string,
+  discordId: DiscordAccountId,
   alias: string,
   serverId: DiscordGuildId,
-  puuid: string,
+  /** Identifier handed to `testPuuid`, not a puuid. */
+  puuidIdentifier: string,
 ) {
   return createCompetitionPlayerFixture(prisma, {
     discordId: testAccountId(discordId),
     alias,
     serverId,
     creatorDiscordId: testAccountId(discordId),
-    puuid: testPuuid(puuid),
+    puuid: testPuuid(puuidIdentifier),
   });
 }
 
 async function createLeaderboardPlayers() {
   const serverId = testGuildId("000000");
-  const player1 = await createTestPlayer("100000000", "Player1", serverId, "1");
-  const player2 = await createTestPlayer("200000000", "Player2", serverId, "2");
+  const player1 = await createTestPlayer(
+    DiscordAccountIdSchema.parse("833376669284105972"),
+    "Player1",
+    serverId,
+    "1",
+  );
+  const player2 = await createTestPlayer(
+    DiscordAccountIdSchema.parse("832052712307771253"),
+    "Player2",
+    serverId,
+    "2",
+  );
   return { player1, player2 };
 }
 
@@ -234,13 +249,13 @@ describe("calculateLeaderboard - HIGHEST_RANK Criteria", () => {
   test("should handle HIGHEST_RANK criteria with END snapshots (ended competition)", async () => {
     // Create players using helper
     const player1 = await createTestPlayer(
-      "300000000",
+      DiscordAccountIdSchema.parse("831670835700752646"),
       "Player3",
       testGuildId("000000"),
       "3",
     );
     const player2 = await createTestPlayer(
-      "400000000",
+      DiscordAccountIdSchema.parse("830252861939619820"),
       "Player4",
       testGuildId("000000"),
       "4",
@@ -460,7 +475,7 @@ describe("calculateLeaderboard integration tests - rank history", () => {
     const serverId = testGuildId("000000");
     const puuid = testPuuid("rh1");
     const player = await createTestPlayer(
-      "400000000",
+      DiscordAccountIdSchema.parse("830252861939619820"),
       "RankHistoryPlayer",
       serverId,
       "rh1",
@@ -532,7 +547,7 @@ describe("calculateLeaderboard integration tests - Filters", () => {
   test("should include ever-joined participants and exclude invited-never-joined players", async () => {
     const { player1, player2 } = await createLeaderboardPlayers();
     const player3 = await createTestPlayer(
-      "300000000",
+      DiscordAccountIdSchema.parse("831670835700752646"),
       "Player3",
       testGuildId("000000"),
       "3",

@@ -171,6 +171,30 @@ const config = [
       ],
     },
   },
+  // Scout's ids are branded. A raw `string` on one of these property names is
+  // an id that skipped its parse; a value that is genuinely raw (an operator's
+  // input, an external payload) says so with `z.input<typeof XSchema>` or the
+  // external type it came from. Provenance is `MatchDataSource`, not a
+  // hand-written union.
+  {
+    files: ["**/*.ts", "**/*.tsx"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "TSPropertySignature[key.name=/^(serverId|guildId|channelId|matchId|puuid|messageId)$/] TSStringKeyword",
+          message:
+            "Use the id's brand (DiscordGuildId, DiscordChannelId, RiotMatchId, LeaguePuuid, DiscordMessageId); type a raw input as z.input<typeof XSchema>.",
+        },
+        {
+          selector: 'TSUnionType > TSLiteralType[literal.value="SCOUT_CLIENT"]',
+          message:
+            "Use MatchDataSource from @scout-for-lol/domain/match-processing/states.ts.",
+        },
+      ],
+    },
+  },
   // Satori best practices for report components
   {
     files: ["packages/report/**/*.tsx", "packages/report/**/*.ts"],

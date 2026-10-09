@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   BUCKS_INT32_MAX,
@@ -71,7 +72,7 @@ export type ApplyBucksDeltaInput = {
 
 export type RefundableBucksAccount = {
   id: number;
-  serverId: string;
+  serverId: DiscordGuildId;
   isHouse: boolean;
 };
 

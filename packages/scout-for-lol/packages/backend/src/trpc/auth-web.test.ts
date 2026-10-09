@@ -283,7 +283,13 @@ async function guildReauthFixture(
 }
 
 const preLoginGuilds = [
-  { id: "old-guild", name: "Old", icon: null, owner: true, permissions: "8" },
+  {
+    id: "100000000000000286",
+    name: "Old",
+    icon: null,
+    owner: true,
+    permissions: "8",
+  },
 ];
 
 describe("handleDiscordCallback membership ownership", () => {

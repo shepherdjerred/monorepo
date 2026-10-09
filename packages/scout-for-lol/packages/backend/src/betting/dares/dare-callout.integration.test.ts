@@ -1,6 +1,8 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import {
   RiotMatchIdSchema,
   type RiotMatchId,
+  DiscordMessageIdSchema,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   afterAll,
@@ -72,7 +74,12 @@ const TARGET_BINDING: DareTargetBinding = {
   playerId: 1,
   alias: "Virmel",
   accounts: [
-    { puuid: "virmel-puuid", trackingStartedAt: "2026-01-01T00:00:00.000Z" },
+    {
+      puuid: LeaguePuuidSchema.parse(
+        "virmel-puuid000000000000000000000000000000000000000000000000000000000000000000",
+      ),
+      trackingStartedAt: "2026-01-01T00:00:00.000Z",
+    },
   ],
 };
 
@@ -125,7 +132,7 @@ describe("Dare callout delivery", () => {
     const dareId = await makeDraft();
     await fund(dareId, "fund-callout");
     const sendMessage = vi.fn(() =>
-      Promise.resolve({ channelId: CHANNEL, id: "callout-message" }),
+      Promise.resolve({ channelId: CHANNEL, id: "845308994376438227" }),
     );
     const calloutDependencies = {
       prismaClient: db,
@@ -156,7 +163,7 @@ describe("Dare callout delivery", () => {
     });
     expect(JSON.parse(dare.messageRef ?? "null")).toEqual({
       channelId: CHANNEL,
-      messageId: "callout-message",
+      messageId: DiscordMessageIdSchema.parse("845308994376438227"),
     });
     expect(dare.calloutClaimId).toBeNull();
     expect(dare.calloutClaimedAt).toBeNull();
@@ -171,7 +178,7 @@ describe("Dare callout retries", () => {
     const dependencies = {
       prismaClient: db,
       sendMessage: vi.fn(() =>
-        Promise.resolve({ channelId: CHANNEL, id: "callout-edit-message" }),
+        Promise.resolve({ channelId: CHANNEL, id: "845308994376438301" }),
       ),
       editMessage: vi.fn(() =>
         Promise.reject(new Error("Discord edit failed")),
@@ -219,7 +226,7 @@ describe("Dare callout retries", () => {
     const dependencies = {
       prismaClient: db,
       sendMessage: vi.fn(() =>
-        Promise.resolve({ channelId: CHANNEL, id: "concurrent-edit-message" }),
+        Promise.resolve({ channelId: CHANNEL, id: "845308994376438302" }),
       ),
       editMessage: vi.fn(async () => {
         await db.bucksDare.update({
@@ -273,7 +280,7 @@ describe("Dare callout retries", () => {
     ).toEqual({ calloutRefreshPending: true, messageRef: null });
 
     const retrySender = vi.fn(() =>
-      Promise.resolve({ channelId: CHANNEL, id: "retried-callout-message" }),
+      Promise.resolve({ channelId: CHANNEL, id: "845679748751241622" }),
     );
     await expect(
       refreshPendingDareCallouts({
@@ -291,7 +298,7 @@ describe("Dare callout retries", () => {
       calloutRefreshPending: false,
       messageRef: JSON.stringify({
         channelId: CHANNEL,
-        messageId: "retried-callout-message",
+        messageId: DiscordMessageIdSchema.parse("845679748751241622"),
       }),
     });
   });
@@ -306,7 +313,7 @@ describe("Dare callout contributor delivery", () => {
     const sendMessage = vi.fn(() =>
       Promise.resolve({
         channelId: CHANNEL,
-        id: "contributor-callout-message",
+        id: "847487629709666664",
       }),
     );
     const editMessage = vi.fn(() => Promise.resolve());
@@ -334,7 +341,7 @@ describe("Dare callout contributor delivery", () => {
 
     expect(editMessage).toHaveBeenCalledWith({
       channelId: CHANNEL,
-      messageId: "contributor-callout-message",
+      messageId: DiscordMessageIdSchema.parse("847487629709666664"),
       options: expect.objectContaining({
         content: expect.stringContaining(`<@${CONTRIBUTOR}> — **10 BB**`),
         allowedMentions: {
@@ -347,6 +354,11 @@ describe("Dare callout contributor delivery", () => {
 });
 
 /** An achieved Dare whose public callout exists and still shows it live. */
+const CALLOUT_MESSAGE_IDS = {
+  owed: "845308994376438401",
+  suppressed: "845308994376438402",
+};
+
 const CALLOUT_MATCH_IDS = {
   owed: RiotMatchIdSchema.parse("NA1_810011"),
   suppressed: RiotMatchIdSchema.parse("NA1_810012"),
@@ -359,7 +371,7 @@ async function resolvedWithPublicCallout(key: keyof typeof CALLOUT_MATCH_IDS) {
   const dependencies = {
     prismaClient: db,
     sendMessage: vi.fn(() =>
-      Promise.resolve({ channelId: CHANNEL, id: `callout-${key}` }),
+      Promise.resolve({ channelId: CHANNEL, id: CALLOUT_MESSAGE_IDS[key] }),
     ),
     editMessage,
   };

@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import type { DuckObserver } from "@shepherdjerred/voice-assistant";
 import type { PlaybackGate } from "#src/voice/voice-manager.ts";
 
@@ -37,14 +38,17 @@ export class VoiceOutputArbiter {
   private readonly playingAlertGuilds = new Set<string>();
   /** Alerts waiting for the assistant to fall silent. */
   private readonly waitersForAssistantSilence = new Map<
-    string,
+    DiscordGuildId,
     (() => void)[]
   >();
   /** The assistant waiting for an in-flight alert to release the connection. */
-  private readonly waitersForAlertRelease = new Map<string, (() => void)[]>();
+  private readonly waitersForAlertRelease = new Map<
+    DiscordGuildId,
+    (() => void)[]
+  >();
 
   /** The duck observer for one guild's assistant reply sender. */
-  assistantDuck(guildId: string): DuckObserver {
+  assistantDuck(guildId: DiscordGuildId): DuckObserver {
     return {
       duckChanged: (ducked) => {
         if (ducked) {
@@ -57,7 +61,7 @@ export class VoiceOutputArbiter {
     };
   }
 
-  isAssistantSpeaking(guildId: string): boolean {
+  isAssistantSpeaking(guildId: DiscordGuildId): boolean {
     return this.speakingGuilds.has(guildId);
   }
 
@@ -66,7 +70,7 @@ export class VoiceOutputArbiter {
    * before any reply packet is sent. Resolves immediately when no alert is
    * reserved; otherwise waits for that alert's `release()`.
    */
-  async reserveForAssistant(guildId: string): Promise<void> {
+  async reserveForAssistant(guildId: DiscordGuildId): Promise<void> {
     if (!this.playingAlertGuilds.has(guildId)) return;
     await this.waitFor(this.waitersForAlertRelease, guildId);
   }
@@ -93,8 +97,8 @@ export class VoiceOutputArbiter {
   }
 
   private waitFor(
-    waiters: Map<string, (() => void)[]>,
-    guildId: string,
+    waiters: Map<DiscordGuildId, (() => void)[]>,
+    guildId: DiscordGuildId,
   ): Promise<void> {
     return new Promise<void>((resolve) => {
       const pending = waiters.get(guildId) ?? [];
@@ -103,7 +107,10 @@ export class VoiceOutputArbiter {
     });
   }
 
-  private wake(waiters: Map<string, (() => void)[]>, guildId: string): void {
+  private wake(
+    waiters: Map<DiscordGuildId, (() => void)[]>,
+    guildId: DiscordGuildId,
+  ): void {
     const pending = waiters.get(guildId) ?? [];
     waiters.delete(guildId);
     for (const settle of pending) settle();

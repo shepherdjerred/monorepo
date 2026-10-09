@@ -1,8 +1,10 @@
-import type {
-  InteractionEditReplyOptions,
-  InteractionReplyOptions,
+import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
+import {
+  type Interaction,
+  type InteractionEditReplyOptions,
+  type InteractionReplyOptions,
+  MessageFlags,
 } from "discord.js";
-import { MessageFlags } from "discord.js";
 import {
   DiscordAccountIdSchema,
   EXPLORE_QUESTION_MAX_LENGTH,
@@ -25,7 +27,7 @@ import { exploreVisualizationPayload } from "#src/discord/scout/visualization.ts
 import { scoutExploreTurnsTotal } from "#src/metrics/explore.ts";
 
 export type ScoutAskInteraction = {
-  guildId: string | null;
+  guildId: Interaction["guildId"];
   user: { id: string; username: string; avatar: string | null };
   options: {
     getSubcommand: () => string;
@@ -65,7 +67,8 @@ export async function executeScout(
     });
     return;
   }
-  if (!isExploreGuildAllowed(interaction.guildId)) {
+  const guildId = DiscordGuildIdSchema.parse(interaction.guildId);
+  if (!isExploreGuildAllowed(guildId)) {
     await interaction.reply({
       content: "Scout Explore is not enabled in this server.",
       flags: MessageFlags.Ephemeral,
@@ -144,7 +147,7 @@ export async function executeScout(
       identity,
       // Discord asks always carry a guild context (global in production,
       // guild-scoped in beta), so the invoking server is the whole alias scope.
-      guildIds: [interaction.guildId],
+      guildIds: [guildId],
       // `/scout ask` is one-shot with no confirmation UI, and the user upserted
       // above deliberately has no OAuth token, so creation tools stay absent.
       surface: "discord",

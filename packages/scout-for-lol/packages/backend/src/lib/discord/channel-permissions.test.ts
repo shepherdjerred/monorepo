@@ -1,3 +1,4 @@
+import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { describe, expect, test } from "vitest";
 import { PermissionFlagsBits, PermissionsBitField } from "discord.js";
 import {
@@ -5,7 +6,7 @@ import {
   hasPermission,
 } from "#src/lib/discord/channel-permissions.ts";
 
-const GUILD = "100";
+const GUILD = DiscordGuildIdSchema.parse("100000000000000100");
 const MEMBER = "200";
 const ROLE = "300";
 const OTHER_ROLE = "400";

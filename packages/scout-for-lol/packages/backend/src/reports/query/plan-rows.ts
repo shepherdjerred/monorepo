@@ -1,3 +1,4 @@
+import type { DiscordAccountId } from "@scout-for-lol/domain/identity/discord.ts";
 import type { LakeScalar } from "#src/reports/duckdb/row-schema.ts";
 
 /**
@@ -31,7 +32,7 @@ export type PlanAggregateRow = {
   /** The joined dimension label (' • ' between groupings, 'All' for none). */
   label: string;
   playerId: number | null;
-  discordId: string | null;
+  discordId: DiscordAccountId | null;
   /**
    * The typed grouping keys, aligned with `plan.groupings`. These — not the
    * rendered label — are what the temporal comparison and the histogram

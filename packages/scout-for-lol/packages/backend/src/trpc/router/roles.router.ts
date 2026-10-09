@@ -53,7 +53,7 @@ async function lockGuildRoleMutations(
       ...values: unknown[]
     ) => Promise<number>;
   },
-  guildId: string,
+  guildId: DiscordGuildId,
 ): Promise<void> {
   // $executeRaw, not $queryRaw: the adapter cannot deserialize the void
   // column the lock function returns.

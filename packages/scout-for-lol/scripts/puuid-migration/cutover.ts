@@ -8,6 +8,8 @@
  * so they live in one place with the reasoning attached.
  */
 
+import type { z } from "zod";
+import type { LeaguePuuidSchema } from "@scout-for-lol/data";
 import type { Db } from "./db.ts";
 import { readTrackedPuuids } from "./discovery.ts";
 import { composePuuidRemap } from "@scout-for-lol/backend/report-lake/puuid-remap.ts";
@@ -209,12 +211,13 @@ export async function strayIdentities(db: Db): Promise<string[]> {
 async function sightingsFrom(
   db: Db,
   source: (typeof TRACKED_SOURCES)[number],
-): Promise<{ puuid: string; at: number }[]> {
+): Promise<{ puuid: z.input<typeof LeaguePuuidSchema>; at: number }[]> {
   const filter = source.where === undefined ? "" : ` AND ${source.where}`;
   const rows = await db.query(
     `SELECT "${source.column}" AS v, "${source.createdColumn}" AS t FROM "${source.table}" WHERE "${source.createdColumn}" IS NOT NULL${filter}`,
   );
-  const sightings: { puuid: string; at: number }[] = [];
+  const sightings: { puuid: z.input<typeof LeaguePuuidSchema>; at: number }[] =
+    [];
   for (const row of rows) {
     const value = asOptionalString(row["v"]);
     const stamp = row["t"];

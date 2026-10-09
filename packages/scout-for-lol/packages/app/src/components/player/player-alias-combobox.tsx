@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/data";
 import { useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/query/trpc.ts";
@@ -13,7 +14,7 @@ type PlayerSummary = { id: number; alias: string };
  * free-text, so a not-yet-listed alias can still be typed).
  */
 export function PlayerAliasCombobox(props: {
-  guildId: string;
+  guildId: DiscordGuildId;
   value: string;
   onChange: (alias: string) => void;
   disabled?: boolean;

@@ -1,4 +1,8 @@
-import type { Permission } from "@scout-for-lol/data";
+import {
+  type DiscordGuildId,
+  type Permission,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data";
 
 export type ConsumerNavigationAvailability = {
   exploreAvailable: boolean;
@@ -194,8 +198,13 @@ export function resolveAppShellMode(
     : "workspace";
 }
 
-export function guildIdFromAppPath(pathname: string): string | undefined {
-  return /^\/g\/([^/]+)/.exec(pathname)?.[1];
+export function guildIdFromAppPath(
+  pathname: string,
+): DiscordGuildId | undefined {
+  const parsed = DiscordGuildIdSchema.safeParse(
+    /^\/g\/([^/]+)/.exec(pathname)?.[1],
+  );
+  return parsed.success ? parsed.data : undefined;
 }
 
 export function isExplorePath(pathname: string): boolean {

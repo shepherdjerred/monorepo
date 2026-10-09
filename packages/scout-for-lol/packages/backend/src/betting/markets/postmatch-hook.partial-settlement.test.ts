@@ -1,3 +1,7 @@
+import {
+  DiscordGuildIdSchema,
+  DiscordChannelIdSchema,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { RawMatchSchema, type RawMatch } from "@scout-for-lol/data";
@@ -116,8 +120,8 @@ const MATCH: RawMatch = RawMatchSchema.parse({
 function summary(dareId: number): DareSettlementSummary {
   return {
     dareId,
-    serverId: "guild-one",
-    channelId: "channel-one",
+    serverId: DiscordGuildIdSchema.parse("813397242200260844"),
+    channelId: DiscordChannelIdSchema.parse("825208359990580364"),
     matchId: RiotMatchIdSchema.parse("NA1_7001"),
     resolution: "achieved",
     value: true,
@@ -219,7 +223,7 @@ describe("the settlement and parlay paths", () => {
   test("still receive each family's summaries", async () => {
     const settlement = {
       matchId: "NA1_7001",
-      serverId: "guild-one",
+      serverId: "813397242200260844",
     };
     const parlay = { matchId: "NA1_7001", serverId: "guild-two" };
     stubs.closeAndSettleBettingForMatch.mockResolvedValueOnce({

@@ -159,7 +159,7 @@ async function seedEnabledReport(title: string): Promise<void> {
   });
 }
 
-function caller(discordId: string = ACTOR) {
+function caller(discordId: DiscordAccountId = ACTOR) {
   return trpc.authedCaller(discordId);
 }
 

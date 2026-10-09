@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/data";
 import { useQuery } from "@tanstack/react-query";
 import { NavLink, useLocation, useNavigate } from "react-router";
 import {
@@ -182,7 +183,7 @@ function ChatsSection(props: {
 }
 
 function ServerManagementSection(props: {
-  guildId: string;
+  guildId: DiscordGuildId;
   guildName: string | undefined;
   guildItems: readonly GuildNavigationItem[];
 }) {
@@ -216,7 +217,7 @@ function ServerManagementSection(props: {
 }
 
 function ManageScoutSection(props: {
-  guildId: string | undefined;
+  guildId: DiscordGuildId | undefined;
   manageableGuilds: readonly { id: string; name: string }[] | undefined;
 }) {
   const navigate = useNavigate();

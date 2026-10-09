@@ -1,3 +1,4 @@
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import type { StorySeed } from "#src/lib/storybook/trpc-stub.ts";
@@ -267,7 +268,7 @@ function ExplorerHarness() {
   return (
     <div className="space-y-3">
       <ReportDataExplorer
-        guildId={GUILD_ID}
+        guildId={DiscordGuildIdSchema.parse(GUILD_ID)}
         onInsertIdentifier={(identifier) => {
           setInserted((current) => [...current, identifier]);
         }}
@@ -286,7 +287,7 @@ function AiEditorHarness() {
   return (
     <div className="space-y-3">
       <ReportAiEditor
-        guildId={GUILD_ID}
+        guildId={DiscordGuildIdSchema.parse(GUILD_ID)}
         state={{
           ...EMPTY_REPORT_STATE,
           title: PREVIEW_TITLE,
@@ -339,7 +340,7 @@ export const QueryPreview: Story = {
   parameters: { seedQueries: [seedPreview] },
   render: () => (
     <ReportQueryPreview
-      guildId={GUILD_ID}
+      guildId={DiscordGuildIdSchema.parse(GUILD_ID)}
       queryText={STARTER_REPORT_QUERY}
       title={PREVIEW_TITLE}
       sourceCompetitionId={null}
@@ -351,7 +352,7 @@ export const QueryPreviewEmptyQuery: Story = {
   args: { queryText: STARTER_REPORT_QUERY },
   render: () => (
     <ReportQueryPreview
-      guildId={GUILD_ID}
+      guildId={DiscordGuildIdSchema.parse(GUILD_ID)}
       queryText=""
       title={PREVIEW_TITLE}
       sourceCompetitionId={null}

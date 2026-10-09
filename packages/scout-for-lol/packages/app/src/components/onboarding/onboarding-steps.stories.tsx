@@ -1,5 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { P } from "@scout-for-lol/data";
+import {
+  P,
+  DiscordGuildIdSchema,
+  LeaguePuuidSchema,
+  DiscordChannelIdSchema,
+} from "@scout-for-lol/data";
 import type { StorySeed } from "#src/lib/storybook/trpc-stub.ts";
 import type { RouterOutputs } from "#src/lib/query/trpc.ts";
 import { OnboardingConceptsStep } from "./onboarding-concepts-step.tsx";
@@ -11,15 +16,15 @@ import { OnboardingPickGuildStep } from "./onboarding-pick-guild-step.tsx";
 import { OnboardingReportStep } from "./onboarding-report-step.tsx";
 import { OnboardingSubscribeStep } from "./onboarding-subscribe-step.tsx";
 
-const GUILD_ID = "377554990325301252";
+const GUILD_ID = DiscordGuildIdSchema.parse("377554990325301252");
 
-const REPORTS_CHANNEL = "1102938475610293847";
-const RANKED_CHANNEL = "1102938475610293848";
+const REPORTS_CHANNEL = DiscordChannelIdSchema.parse("1102938475610293847");
+const RANKED_CHANNEL = DiscordChannelIdSchema.parse("1102938475610293848");
 
 const CHANNELS = [
   { id: REPORTS_CHANNEL, name: "match-reports" },
   { id: RANKED_CHANNEL, name: "ranked-grind" },
-  { id: "1102938475610293849", name: "general" },
+  { id: DiscordChannelIdSchema.parse("1102938475610293849"), name: "general" },
 ];
 
 const GUILDS = [
@@ -30,7 +35,7 @@ const GUILDS = [
     isOwner: true,
   },
   {
-    id: "377554990325301253",
+    id: DiscordGuildIdSchema.parse("377554990325301253"),
     name: "Howling Abyss Regulars",
     icon: null,
     isOwner: false,
@@ -170,7 +175,9 @@ const seedTeammates: StorySeed = (trpc, queryClient) => {
     kind: "ok",
     suggestions: [
       {
-        puuid: "duo-puuid",
+        puuid: LeaguePuuidSchema.parse(
+          "duo-puuid000000000000000000000000000000000000000000000000000000000000000000000",
+        ),
         gameName: "DuoQueue",
         tagLine: "NA1",
         riotId: "DuoQueue#NA1",
@@ -179,7 +186,9 @@ const seedTeammates: StorySeed = (trpc, queryClient) => {
         lastPlayedMs: 1_771_000_000_000,
       },
       {
-        puuid: "flex-puuid",
+        puuid: LeaguePuuidSchema.parse(
+          "flex-puuid00000000000000000000000000000000000000000000000000000000000000000000",
+        ),
         gameName: "FlexFriend",
         tagLine: "EUW",
         riotId: "FlexFriend#EUW",

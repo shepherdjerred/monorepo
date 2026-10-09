@@ -1,5 +1,5 @@
-import type { PlayerIdSchema } from "@scout-for-lol/data";
 import {
+  type PlayerIdSchema,
   DUEL_DISCLOSURE_VERSION,
   DiscordAccountIdSchema,
   DuelBestOfSchema,
@@ -243,7 +243,7 @@ export async function currentParticipantDiscordIds(
   guildId: DiscordGuildId,
   participants: readonly {
     readonly playerId: number;
-    readonly discordId: string;
+    readonly discordId: DiscordAccountId;
   }[],
 ): Promise<ReadonlyMap<number, string | null>> {
   const players = await db.player.findMany({
@@ -279,7 +279,10 @@ export async function currentDisclosureKeys(
 
 export function effectiveParticipantDiscordId(
   current: ReadonlyMap<number, string | null>,
-  participant: { readonly playerId: number; readonly discordId: string },
+  participant: {
+    readonly playerId: number;
+    readonly discordId: DiscordAccountId;
+  },
 ): string | null | undefined {
   return current.has(participant.playerId)
     ? current.get(participant.playerId)
@@ -292,7 +295,7 @@ export function duelSeriesVisibleTo(
     readonly organizerDiscordId: string;
     readonly participants: readonly {
       readonly playerId: number;
-      readonly discordId: string;
+      readonly discordId: DiscordAccountId;
       readonly acceptedAt: Date | null;
     }[];
   },

@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   RiotMatchIdSchema,
   type RiotMatchId,
+  type DiscordMessageId,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   NotificationIntentSchema,
@@ -82,7 +83,7 @@ export type NotificationIntentStateColumns = {
   attemptNonce: string | null;
   sendStartedAt: Date | null;
   deliveredAt: Date | null;
-  messageId: string | null;
+  messageId: DiscordMessageId | null;
   suppressedReason: string | null;
   unknownObservedAt: Date | null;
   lastFailureClassification: string | null;

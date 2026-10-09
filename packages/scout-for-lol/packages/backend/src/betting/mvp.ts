@@ -35,7 +35,8 @@ export type MvpComponents = {
 };
 
 export type MvpScore = {
-  puuid: string;
+  /** Straight from the Riot participant, which may be a bot's. */
+  puuid: RawParticipant["puuid"];
   role: MvpRole;
   score: number;
   components: MvpComponents;

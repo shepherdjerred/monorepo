@@ -1,5 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ReportIdSchema, type ReportResultColumn } from "@scout-for-lol/data";
+import {
+  ReportIdSchema,
+  type ReportResultColumn,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data";
 import { ReportResultTable } from "./report-result-table.tsx";
 import { ReportRunHistory } from "./report-run-history.tsx";
 import { ReportQueryDocs } from "./report-query-docs.tsx";
@@ -216,14 +220,22 @@ export const ResultTableDrillDown: Story = {
 export const RunHistory: Story = {
   args: { columns: COLUMNS, rows: [] },
   render: () => (
-    <ReportRunHistory guildId={GUILD_ID} reportId={REPORT_ID} runs={RUNS} />
+    <ReportRunHistory
+      guildId={DiscordGuildIdSchema.parse(GUILD_ID)}
+      reportId={REPORT_ID}
+      runs={RUNS}
+    />
   ),
 };
 
 export const RunHistoryEmpty: Story = {
   args: { columns: COLUMNS, rows: [] },
   render: () => (
-    <ReportRunHistory guildId={GUILD_ID} reportId={REPORT_ID} runs={[]} />
+    <ReportRunHistory
+      guildId={DiscordGuildIdSchema.parse(GUILD_ID)}
+      reportId={REPORT_ID}
+      runs={[]}
+    />
   ),
 };
 

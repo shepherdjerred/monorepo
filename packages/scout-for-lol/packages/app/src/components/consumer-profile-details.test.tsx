@@ -1,7 +1,11 @@
 import { describe, expect, test, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router";
-import { MatchLoadoutSchema, RiotMatchIdSchema } from "@scout-for-lol/data";
+import {
+  MatchLoadoutSchema,
+  RiotMatchIdSchema,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data";
 import { ChampionComparisonTable } from "#src/components/match/champion-comparison-table.tsx";
 import {
   MatchScoreboards,
@@ -159,7 +163,10 @@ describe("champion comparison and match timeline", () => {
             {
               playerId: 4,
               alias: "Me",
-              guild: { guildId: "guild", name: "Friends" },
+              guild: {
+                guildId: DiscordGuildIdSchema.parse("810135513265406599"),
+                name: "Friends",
+              },
               viewerLinked: true,
               games: 20,
               wins: 12,

@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import * as Sentry from "@sentry/bun";
 import {
@@ -150,7 +151,7 @@ export async function closeAndSettleBettingForMatch(
 
 function reportPoolSettlementFailure(
   error: unknown,
-  pool: { id: number; serverId: string },
+  pool: { id: number; serverId: DiscordGuildId },
   matchId: RiotMatchId,
 ): void {
   if (error instanceof BucksCorruptIdentityError) {

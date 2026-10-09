@@ -1,10 +1,11 @@
-import { useRef, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { z } from "zod";
 import {
+  type DiscordGuildId,
   DareDeadlineSpecSchema,
   type DareDeadlineSpec,
 } from "@scout-for-lol/data";
+import { useRef, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { z } from "zod";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Dialog,
@@ -66,7 +67,10 @@ function ReadableSummaryField(props: {
   );
 }
 
-export function BucksDareEditor(props: { dare: EditorDare; guildId: string }) {
+export function BucksDareEditor(props: {
+  dare: EditorDare;
+  guildId: DiscordGuildId;
+}) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);

@@ -4,6 +4,7 @@ import {
   type RiotMatchId,
   type RawMatch,
   type Region,
+  type RawParticipant,
 } from "@scout-for-lol/data";
 import { aggregateTeammates } from "#src/lib/teammates/suggest.ts";
 
@@ -24,7 +25,7 @@ async function baseMatch(): Promise<RawMatch> {
 }
 
 type Row = {
-  puuid: string;
+  puuid: RawParticipant["puuid"];
   team: number;
   name?: string;
   tag?: string;

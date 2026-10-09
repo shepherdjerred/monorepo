@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 export type BucksLifecycleTransition =
   | "bucks.pool.opened"
   | "bucks.pool.closed"
@@ -39,12 +40,12 @@ export type BucksLifecycleTransition =
 type BucksPendingOutcome = {
   stake: number;
   matchedStake: number | null;
-  bucksAccount: { serverId: string };
+  bucksAccount: { serverId: DiscordGuildId };
 };
 
 type BucksPendingStake = {
   stake: number;
-  bucksAccount: { serverId: string };
+  bucksAccount: { serverId: DiscordGuildId };
 };
 
 export function aggregateBucksPendingStakes(
@@ -70,14 +71,14 @@ export function aggregateBucksPendingStakes(
 
 function addStake(
   pendingByServer: Map<string, number>,
-  serverId: string,
+  serverId: DiscordGuildId,
   stake: number,
 ): void {
   pendingByServer.set(serverId, (pendingByServer.get(serverId) ?? 0) + stake);
 }
 
 export function countBucksOpenMarkets(
-  pools: readonly { serverId: string }[],
+  pools: readonly { serverId: DiscordGuildId }[],
 ): Map<string, number> {
   const openMarketsByServer = new Map<string, number>();
   for (const pool of pools) {

@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/data";
 import { Loaded } from "@shepherdjerred/loaded";
 import { useEffect, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
@@ -8,7 +9,7 @@ import { InteractiveVisualization } from "#src/components/scoutql/interactive-vi
 const DEBOUNCE_MS = 500;
 
 export function ReportQueryPreview(props: {
-  guildId: string;
+  guildId: DiscordGuildId;
   queryText: string;
   title: string;
   sourceCompetitionId: number | null;

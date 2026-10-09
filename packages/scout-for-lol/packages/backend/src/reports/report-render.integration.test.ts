@@ -1,3 +1,4 @@
+import type { DiscordAccountId } from "@scout-for-lol/domain/identity/discord.ts";
 import {
   RiotMatchIdSchema,
   type RiotMatchId,
@@ -58,7 +59,7 @@ function fact(input: {
   alias: string;
   matchId: RiotMatchId;
   win: boolean;
-  discordId?: string | null;
+  discordId?: DiscordAccountId | null;
   championId?: number;
   championName?: string;
   items?: number[];

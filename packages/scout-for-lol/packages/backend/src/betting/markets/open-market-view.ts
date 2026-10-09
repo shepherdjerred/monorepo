@@ -44,7 +44,7 @@ export type OpenOutcomeMarketSide = {
   trackedPlayers: string[];
   totalStake: number;
   betCount: number;
-  positions: { discordId: string; stake: number }[];
+  positions: { discordId: DiscordAccountId; stake: number }[];
 };
 
 export type OpenOutcomeMarketView = {
@@ -67,7 +67,11 @@ export type OpenParlayMarketView = {
   yesProbabilityBps: number;
   yesOdds: string;
   noOdds: string;
-  positions: { discordId: string; side: BucksParlaySide; stake: number }[];
+  positions: {
+    discordId: DiscordAccountId;
+    side: BucksParlaySide;
+    stake: number;
+  }[];
   yourPosition: { side: BucksParlaySide; stake: number } | null;
 };
 

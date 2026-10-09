@@ -8,6 +8,7 @@
  * would start to matter for an authorization check.
  */
 
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import { TRPCError } from "@trpc/server";
 import {
   DiscordAccountIdSchema,
@@ -44,7 +45,7 @@ export function confirmationNotFound(): TRPCError {
  */
 export async function requireExploreUserAndGuilds(
   user: User,
-): Promise<{ userId: DiscordAccountId; guildIds: string[] }> {
+): Promise<{ userId: DiscordAccountId; guildIds: DiscordGuildId[] }> {
   const guildIds = await assertExploreAccess(user);
   return {
     userId: DiscordAccountIdSchema.parse(user.discordId),
@@ -60,16 +61,13 @@ export async function requireExploreUserAndGuilds(
  */
 export async function requireGuildIntent(
   intentId: string,
-  guildIds: string[],
+  guildIds: DiscordGuildId[],
 ): Promise<ConfirmationIntent> {
   const intent = await prisma.confirmationIntent.findUnique({
     where: { id: intentId },
   });
-  if (!guildIds.includes(intent?.serverId ?? "")) {
+  if (intent === null || !guildIds.includes(intent.serverId)) {
     throw confirmationNotFound();
-  }
-  if (intent === null) {
-    throw new Error("A visible confirmation unexpectedly disappeared.");
   }
   return intent;
 }
@@ -80,7 +78,7 @@ export async function requireGuildIntent(
  */
 export async function requireActorIntent(params: {
   intentId: string;
-  guildIds: string[];
+  guildIds: DiscordGuildId[];
   userId: DiscordAccountId;
 }): Promise<ConfirmationIntent> {
   const intent = await requireGuildIntent(params.intentId, params.guildIds);

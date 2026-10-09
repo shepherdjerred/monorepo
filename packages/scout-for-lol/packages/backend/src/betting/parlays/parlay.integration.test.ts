@@ -1,3 +1,4 @@
+import type { DiscordChannelId } from "@scout-for-lol/domain/identity/discord.ts";
 import {
   afterAll,
   afterEach,
@@ -29,7 +30,10 @@ import {
 } from "#src/betting/notify/announcement-sink.ts";
 import { checkpointFailingSink } from "#src/betting/notify/announcement-sink.test-fixtures.ts";
 import { recordSettlementAnnouncementItem } from "#src/database/durable/settlement-announcement-repository.ts";
-import { type RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  type RiotMatchId,
+  type DiscordMessageId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import {
   closeExpiredParlayWindows,
   voidStaleParlayMarkets,
@@ -732,7 +736,7 @@ describe("Bryan Bucks parlay publication lifecycle", () => {
       data: {
         marketState: "publishing",
         messageRefs: JSON.stringify([
-          { channelId: "channel", messageId: "message" },
+          { channelId: "849544355644694999", messageId: "849544355644695000" },
         ]),
       },
     });
@@ -760,7 +764,7 @@ describe("Bryan Bucks parlay publication lifecycle", () => {
       where: { id: market.id },
       data: {
         messageRefs: JSON.stringify([
-          { channelId: "channel", messageId: "message" },
+          { channelId: "849544355644694999", messageId: "849544355644695000" },
         ]),
       },
     });
@@ -789,7 +793,7 @@ describe("Bryan Bucks parlay publication lifecycle", () => {
       data: {
         marketState: "publishing",
         messageRefs: JSON.stringify([
-          { channelId: "channel", messageId: "message" },
+          { channelId: "849544355644694999", messageId: "849544355644695000" },
         ]),
       },
     });
@@ -816,7 +820,7 @@ describe("Bryan Bucks parlay publication lifecycle", () => {
       data: {
         marketState: "publishing",
         messageRefs: JSON.stringify([
-          { channelId: "channel", messageId: "message" },
+          { channelId: "849544355644694999", messageId: "849544355644695000" },
         ]),
       },
     });
@@ -849,7 +853,7 @@ describe("Bryan Bucks parlay publication lifecycle", () => {
       data: {
         marketState: "publishing",
         messageRefs: JSON.stringify([
-          { channelId: "channel", messageId: "message" },
+          { channelId: "849544355644694999", messageId: "849544355644695000" },
         ]),
       },
     });
@@ -860,7 +864,7 @@ describe("Bryan Bucks parlay publication lifecycle", () => {
       activateReference: async ({
         ref,
       }: {
-        ref: { channelId: string; messageId: string };
+        ref: { channelId: DiscordChannelId; messageId: DiscordMessageId };
       }) => {
         activationCalls += 1;
         if (activationCalls === 2) barrier.resolve(undefined);
@@ -909,8 +913,8 @@ async function marketWithMessages(): Promise<void> {
     where: { id: market.id },
     data: {
       messageRefs: JSON.stringify([
-        { channelId: "1337623164146155594", messageId: "parlay-one" },
-        { channelId: "1337623164146155595", messageId: "parlay-two" },
+        { channelId: "1337623164146155594", messageId: "849544355644695001" },
+        { channelId: "1337623164146155595", messageId: "849544355644695002" },
       ]),
     },
   });
@@ -918,7 +922,7 @@ async function marketWithMessages(): Promise<void> {
 
 describe("Bryan Bucks parlay message refresh", () => {
   type RecordedEdit = {
-    messageId: string;
+    messageId: DiscordMessageId;
     content: string;
     removedComponents: boolean;
   };
@@ -960,8 +964,8 @@ describe("Bryan Bucks parlay message refresh", () => {
     );
 
     expect(edits.map((edit) => edit.messageId)).toEqual([
-      "parlay-one",
-      "parlay-two",
+      "849544355644695001",
+      "849544355644695002",
     ]);
     expect(edits[0]?.content).toContain(`**YES** <@${BETTOR}> 5`);
     expect(edits[0]?.content).toContain("every leg must hit for YES");

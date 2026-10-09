@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import type { Db } from "#src/database/index.ts";
 
 export function duelRecordSubjectKeys(competitor: {
@@ -21,7 +22,7 @@ function nextStreak(previous: number | null, won: boolean): number {
 async function updateRecord(
   tx: Db,
   options: {
-    readonly guildId: string;
+    readonly guildId: DiscordGuildId;
     readonly scope: string;
     readonly subjectKey: string;
     readonly opponentKey: string;
@@ -76,7 +77,7 @@ async function updateRecord(
 async function updateStructuredSeries(
   tx: Db,
   options: {
-    readonly guildId: string;
+    readonly guildId: DiscordGuildId;
     readonly scope: string;
     readonly subjectKey: string;
     readonly won: boolean;
@@ -110,7 +111,7 @@ async function updateStructuredSeries(
 export async function recordDuelSide(
   tx: Db,
   options: {
-    readonly guildId: string;
+    readonly guildId: DiscordGuildId;
     readonly own: ReturnType<typeof duelRecordSubjectKeys>;
     readonly opponent: ReturnType<typeof duelRecordSubjectKeys>;
     readonly gameResult: "won" | "lost" | null;
@@ -178,7 +179,7 @@ export async function recordDuelSide(
 export async function recordCommitteeSeriesOutcome(
   tx: Db,
   options: {
-    readonly guildId: string;
+    readonly guildId: DiscordGuildId;
     readonly winner: Parameters<typeof duelRecordSubjectKeys>[0];
     readonly loser: Parameters<typeof duelRecordSubjectKeys>[0];
     readonly structured: boolean;

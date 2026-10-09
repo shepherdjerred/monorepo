@@ -1,11 +1,11 @@
+import { useRouteGuildId } from "#src/lib/routes/route-params.ts";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "react-router";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 
 export function CustomsHistory() {
-  const { guildId } = useParams();
+  const guildId = useRouteGuildId();
   const trpc = useTRPC();
   const [selectedNightId, setSelectedNightId] = useState<string | null>(null);
   const parsedGuild = DiscordGuildIdSchema.safeParse(guildId);

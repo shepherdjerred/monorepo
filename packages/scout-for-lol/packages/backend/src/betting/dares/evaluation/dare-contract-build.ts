@@ -1,3 +1,7 @@
+import type {
+  DiscordGuildId,
+  DiscordChannelId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import {
   DARE_CONTRACT_VERSION,
   DARE_SQL_EVALUATOR_VERSION,
@@ -13,8 +17,8 @@ import {
 
 export function buildDareContract(input: {
   dare: {
-    serverId: string;
-    channelId: string;
+    serverId: DiscordGuildId;
+    channelId: DiscordChannelId;
   };
   revision: {
     revision: number;

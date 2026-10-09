@@ -1,5 +1,6 @@
-import type { AccountIdSchema } from "@scout-for-lol/data";
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import {
+  type AccountIdSchema,
   DUEL_DISCLOSURE_VERSION,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
@@ -105,7 +106,7 @@ export function duelSeriesParticipantsCreateData(
     readonly competitor: {
       readonly members: readonly {
         readonly playerId: number;
-        readonly discordId: string;
+        readonly discordId: DiscordAccountId;
       }[];
     };
   }[],
@@ -123,7 +124,7 @@ export function duelSeriesParticipantsCreateData(
 
 export function parseDuelCompetitor(row: {
   readonly id: string;
-  readonly guildId: string;
+  readonly guildId: DiscordGuildId;
   readonly kind: string;
   readonly teamName: string | null;
   readonly members: readonly {
@@ -131,7 +132,7 @@ export function parseDuelCompetitor(row: {
     readonly playerAlias: string;
     readonly accountId: number;
     readonly accountAlias: string;
-    readonly puuid: string;
+    readonly puuid: LeaguePuuid;
     readonly position: number;
   }[];
 }): DuelCompetitor {

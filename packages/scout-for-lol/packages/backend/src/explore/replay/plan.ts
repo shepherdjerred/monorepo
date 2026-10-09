@@ -1,3 +1,7 @@
+import {
+  DiscordGuildIdSchema,
+  type DiscordGuildId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import type { ExploreMessage, ExploreTranscript } from "@scout-for-lol/data";
 import { z } from "zod";
 import type {
@@ -28,7 +32,7 @@ export type PlannedTurn = {
   readonly history: readonly ExploreMessage[];
   /** The stored answer this replay is measured against. */
   readonly baseline: ExploreMessage;
-  readonly guildIds: readonly string[];
+  readonly guildIds: readonly DiscordGuildId[];
   readonly guildSource: ReplayGuildSource | "message-column";
 };
 
@@ -66,13 +70,13 @@ export class ReplayPlanError extends Error {}
  * nothing to do with the guild. One field, validated.
  */
 const RunGuildsSchema = z.looseObject({
-  guildIds: z.array(z.string().min(1)),
+  guildIds: z.array(DiscordGuildIdSchema),
 });
 
 function guildsFromRun(
   runs: readonly PlanRunRow[],
   answerMessageId: string,
-): readonly string[] | null {
+): readonly DiscordGuildId[] | null {
   for (const run of runs) {
     if (run.resultMessageId !== answerMessageId) continue;
     let raw: unknown;
@@ -109,7 +113,7 @@ export function resolveTurnGuilds(input: {
   readonly runs: readonly PlanRunRow[];
   readonly soleAllowedGuildId: string | null;
 }): {
-  readonly guildIds: readonly string[];
+  readonly guildIds: readonly DiscordGuildId[];
   readonly source: ReplayGuildSource | "message-column";
 } {
   if (input.answer.guildIds.length > 0) {
@@ -121,7 +125,7 @@ export function resolveTurnGuilds(input: {
   }
   if (input.soleAllowedGuildId !== null) {
     return {
-      guildIds: [input.soleAllowedGuildId],
+      guildIds: [DiscordGuildIdSchema.parse(input.soleAllowedGuildId)],
       source: "beta-allowlist",
     };
   }

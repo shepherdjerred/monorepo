@@ -1,10 +1,14 @@
+import type { DiscordMessageId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   resolveQueueTypeFromGame,
   DiscordGuildIdSchema,
   type LoadingScreenData,
 } from "@scout-for-lol/data";
 import type { ScoutNotificationFollowUpResult } from "@scout-for-lol/temporal/activity-contracts";
-import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
+import type {
+  DiscordGuildId,
+  DiscordChannelId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { recordCoreOutputsDelivered } from "#src/analytics/guild-lifecycle.ts";
 import { appendPoolMessageRef } from "#src/betting/markets/pool-open.ts";
 import { refreshBucksMessages } from "#src/betting/notify/message-refresh.ts";
@@ -103,7 +107,7 @@ async function recordPoolMessage(
   record: MatchNotificationIntentRecord,
   context: ScoutPrematchContext,
   guildId: DiscordGuildId,
-  ref: { channelId: string; messageId: string },
+  ref: { channelId: DiscordChannelId; messageId: DiscordMessageId },
 ): Promise<void> {
   const presentation = await prisma.notificationPresentation.findUnique({
     where: { intentKey: record.intent.key },

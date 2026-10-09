@@ -1,9 +1,12 @@
+import {
+  type DiscordChannelId,
+  DEFAULT_REPORT_CRON,
+} from "@scout-for-lol/data";
 import { lazy, Suspense } from "react";
 import { formOptions } from "@tanstack/react-form";
 import type { z } from "zod";
 import { Link } from "react-router";
 import { ChevronDown } from "lucide-react";
-import { DEFAULT_REPORT_CRON } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   ChannelSelectControl,
@@ -66,7 +69,7 @@ export const reportFormOptions = formOptions({
 export type ReportPayload = {
   title: string;
   description: string | null;
-  channelId: string;
+  channelId: DiscordChannelId;
   queryText: string;
   cronExpression: string;
   scheduleTimezone: string;
@@ -103,7 +106,7 @@ export function buildReportPayload(
 }
 
 type ReportFormFieldsProps = {
-  channels: { id: string; name: string }[] | undefined;
+  channels: { id: DiscordChannelId; name: string }[] | undefined;
   channelAvailability?: ChannelAvailability;
   onRetryChannels?: () => void;
   // When provided, renders a "Full reference" link next to the Query label

@@ -1,3 +1,4 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import { expect, test } from "vitest";
 import type { ScoutClientObservation } from "@scout-for-lol/data";
 import {
@@ -30,11 +31,20 @@ function observation(
 test("lobbyParticipantPuuids collects only participant identity fields", () => {
   expect(
     lobbyParticipantPuuids({
-      localMember: { puuid: "one" },
+      localMember: {
+        puuid: LeaguePuuidSchema.parse(
+          "one000000000000000000000000000000000000000000000000000000000000000000000000000",
+        ),
+      },
       members: [{ summonerPuuid: "two" }, { displayName: "ignored" }],
       unrelated: { accountId: "not-a-puuid" },
     }),
-  ).toEqual(new Set(["one", "two"]));
+  ).toEqual(
+    new Set([
+      "one000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "two",
+    ]),
+  );
 });
 
 test("observedGameState maps only explicit live lifecycle evidence", () => {
@@ -139,20 +149,60 @@ function twoSidedLobby(blueTeamId: number, redTeamId: number) {
     resource: "lobby",
     data: {
       members: [
-        { puuid: "blue-one", teamId: blueTeamId },
-        { puuid: "blue-two", teamId: blueTeamId },
-        { puuid: "red-one", teamId: redTeamId },
-        { puuid: "red-two", teamId: redTeamId },
+        {
+          puuid: LeaguePuuidSchema.parse(
+            "blue-one0000000000000000000000000000000000000000000000000000000000000000000000",
+          ),
+          teamId: blueTeamId,
+        },
+        {
+          puuid: LeaguePuuidSchema.parse(
+            "blue-two0000000000000000000000000000000000000000000000000000000000000000000000",
+          ),
+          teamId: blueTeamId,
+        },
+        {
+          puuid: LeaguePuuidSchema.parse(
+            "red-one00000000000000000000000000000000000000000000000000000000000000000000000",
+          ),
+          teamId: redTeamId,
+        },
+        {
+          puuid: LeaguePuuidSchema.parse(
+            "red-two00000000000000000000000000000000000000000000000000000000000000000000000",
+          ),
+          teamId: redTeamId,
+        },
       ],
     },
   };
 }
 
 const twoSidedLobbySides = [
-  { puuid: "blue-one", side: "BLUE" },
-  { puuid: "blue-two", side: "BLUE" },
-  { puuid: "red-one", side: "RED" },
-  { puuid: "red-two", side: "RED" },
+  {
+    puuid: LeaguePuuidSchema.parse(
+      "blue-one0000000000000000000000000000000000000000000000000000000000000000000000",
+    ),
+    side: "BLUE",
+  },
+  {
+    puuid: LeaguePuuidSchema.parse(
+      "blue-two0000000000000000000000000000000000000000000000000000000000000000000000",
+    ),
+    side: "BLUE",
+  },
+  {
+    puuid: LeaguePuuidSchema.parse(
+      "red-one00000000000000000000000000000000000000000000000000000000000000000000000",
+    ),
+    side: "RED",
+  },
+  {
+    puuid: LeaguePuuidSchema.parse(
+      "red-two00000000000000000000000000000000000000000000000000000000000000000000000",
+    ),
+    side: "RED",
+  },
 ];
 
 test("observed lobby teams preserve Custom side assignments", () => {
@@ -163,7 +213,12 @@ test("observed lobby teams preserve Custom side assignments", () => {
   expect(
     observedLobbyMatchesCustomTeams(payload, [
       ...expected.slice(0, 1),
-      { puuid: "blue-two", side: "RED" },
+      {
+        puuid: LeaguePuuidSchema.parse(
+          "blue-two0000000000000000000000000000000000000000000000000000000000000000000000",
+        ),
+        side: "RED",
+      },
       ...expected.slice(2),
     ]),
   ).toBe(false);
@@ -188,22 +243,68 @@ test("observed lobby teams keep duel competitors intact on opposing sides", () =
     resource: "lobby",
     data: {
       members: [
-        { summonerPuuid: "one-a", teamId: 100 },
-        { summonerPuuid: "one-b", teamId: 100 },
-        { summonerPuuid: "two-a", teamId: 200 },
-        { summonerPuuid: "two-b", teamId: 200 },
+        {
+          summonerPuuid:
+            "one-a0000000000000000000000000000000000000000000000000000000000000000000000000",
+          teamId: 100,
+        },
+        {
+          summonerPuuid:
+            "one-b0000000000000000000000000000000000000000000000000000000000000000000000000",
+          teamId: 100,
+        },
+        {
+          summonerPuuid:
+            "two-a0000000000000000000000000000000000000000000000000000000000000000000000000",
+          teamId: 200,
+        },
+        {
+          summonerPuuid:
+            "two-b0000000000000000000000000000000000000000000000000000000000000000000000000",
+          teamId: 200,
+        },
       ],
     },
   };
-  const one = [{ puuid: "one-a" }, { puuid: "one-b" }];
-  const two = [{ puuid: "two-a" }, { puuid: "two-b" }];
+  const one = [
+    {
+      puuid: LeaguePuuidSchema.parse(
+        "one-a0000000000000000000000000000000000000000000000000000000000000000000000000",
+      ),
+    },
+    {
+      puuid: LeaguePuuidSchema.parse(
+        "one-b0000000000000000000000000000000000000000000000000000000000000000000000000",
+      ),
+    },
+  ];
+  const two = [
+    {
+      puuid: LeaguePuuidSchema.parse(
+        "two-a0000000000000000000000000000000000000000000000000000000000000000000000000",
+      ),
+    },
+    {
+      puuid: LeaguePuuidSchema.parse(
+        "two-b0000000000000000000000000000000000000000000000000000000000000000000000000",
+      ),
+    },
+  ];
 
   expect(observedLobbyMatchesDuelTeams(payload, one, two)).toBe(true);
   expect(observedLobbyMatchesDuelTeams(payload, two, one)).toBe(true);
   expect(
     observedLobbyMatchesDuelTeams(payload, one, [
-      { puuid: "one-b" },
-      { puuid: "two-b" },
+      {
+        puuid: LeaguePuuidSchema.parse(
+          "one-b0000000000000000000000000000000000000000000000000000000000000000000000000",
+        ),
+      },
+      {
+        puuid: LeaguePuuidSchema.parse(
+          "two-b0000000000000000000000000000000000000000000000000000000000000000000000000",
+        ),
+      },
     ]),
   ).toBe(false);
 });

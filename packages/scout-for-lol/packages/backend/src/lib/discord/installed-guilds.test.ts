@@ -39,7 +39,7 @@ function unused(): never {
 }
 
 function restStub(
-  guildExists: (guildId: string) => Promise<boolean>,
+  guildExists: (guildId: DiscordGuildId) => Promise<boolean>,
 ): RestStub {
   const calls: string[] = [];
   return {

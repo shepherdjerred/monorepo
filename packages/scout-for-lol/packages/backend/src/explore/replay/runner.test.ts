@@ -1,6 +1,7 @@
+import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { describe, expect, test } from "vitest";
-import type { ExploreTraceEntry } from "@scout-for-lol/data";
 import {
+  type ExploreTraceEntry,
   DiscordAccountIdSchema,
   ExploreAnswerSchema,
   ExploreMessageSchema,
@@ -90,7 +91,9 @@ function caseInput(overrides: Partial<ReplayCaseInput> = {}): ReplayCaseInput {
     question: overrides.question ?? "Which champion wins most?",
     history: overrides.history ?? [],
     requesterId: overrides.requesterId ?? REQUESTER,
-    guildIds: overrides.guildIds ?? ["222222222222222222"],
+    guildIds: overrides.guildIds ?? [
+      DiscordGuildIdSchema.parse("222222222222222222"),
+    ],
     surface: overrides.surface ?? "web",
     originChannelId: overrides.originChannelId ?? null,
   };

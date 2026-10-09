@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import { ApplicationFailure } from "@temporalio/common";
 import {
   isArenaQueueOrMode,
@@ -80,7 +81,7 @@ export type PrematchRosterCompletion =
  */
 export async function prematchRosterCompletion(
   gameInfo: RawCurrentGameInfo,
-  puuid: string,
+  puuid: LeaguePuuid,
 ): Promise<PrematchRosterCompletion | null> {
   if (
     isArenaQueueOrMode(gameInfo.gameQueueConfigId, gameInfo.gameMode) ||
@@ -100,7 +101,7 @@ export async function prematchRosterCompletion(
  */
 export async function isPrematchRosterReady(
   gameInfo: RawCurrentGameInfo,
-  puuid: string,
+  puuid: LeaguePuuid,
 ): Promise<boolean> {
   return (await prematchRosterCompletion(gameInfo, puuid)) !== null;
 }

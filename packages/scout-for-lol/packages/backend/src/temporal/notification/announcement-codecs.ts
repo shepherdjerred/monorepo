@@ -13,10 +13,12 @@ import { defineVersionedCodec } from "@scout-for-lol/domain/codec/versioned.ts";
 import {
   RiotMatchIdSchema,
   type RiotMatchId,
+  DiscordMessageIdSchema,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   DiscordGuildIdSchema,
   type DiscordGuildId,
+  DiscordChannelIdSchema,
 } from "@scout-for-lol/domain/identity/discord.ts";
 import {
   HallBreakRecordsSchema,
@@ -75,8 +77,8 @@ const EarnedAwardReasonSchema = z.enum([
 ]) satisfies z.ZodType<EarnedAwardReason>;
 
 export const EarnedAwardSchema = z.strictObject({
-  serverId: z.string().min(1),
-  discordId: z.string().min(1),
+  serverId: DiscordGuildIdSchema,
+  discordId: DiscordAccountIdSchema,
   alias: z.string(),
   reasons: z.array(EarnedAwardReasonSchema),
   total: z.number().int(),
@@ -102,7 +104,7 @@ const SettlementBetSchema = z.strictObject({
 
 export const SettlementSummarySchema = z.strictObject({
   matchId: RiotMatchIdSchema,
-  serverId: z.string().min(1),
+  serverId: DiscordGuildIdSchema,
   winningTeamId: z.number().int().optional(),
   voidReason: BucksVoidReasonSchema.optional(),
   winnersPool: BucksPoolTotalSchema,
@@ -112,7 +114,7 @@ export const SettlementSummarySchema = z.strictObject({
 });
 
 const ParlaySettlementBetSchema = z.strictObject({
-  discordId: z.string().min(1),
+  discordId: DiscordAccountIdSchema,
   side: BucksParlaySideSchema,
   stake: z.number().int(),
   grossPayout: z.number().int(),
@@ -121,13 +123,13 @@ const ParlaySettlementBetSchema = z.strictObject({
 }) satisfies z.ZodType<ParlaySettlementBet>;
 
 const MessageRefSchema = z.strictObject({
-  channelId: z.string().min(1),
-  messageId: z.string().min(1),
+  channelId: DiscordChannelIdSchema,
+  messageId: DiscordMessageIdSchema,
 });
 
 export const ParlaySettlementSummarySchema = z.strictObject({
   matchId: RiotMatchIdSchema,
-  serverId: z.string().min(1),
+  serverId: DiscordGuildIdSchema,
   yesResult: z.boolean().optional(),
   voidReason: BucksParlayVoidReasonSchema.optional(),
   legs: z.array(ParlayLegResultSchema),

@@ -32,7 +32,7 @@ function unused(): never {
 }
 
 function dependencies(
-  guildExists: (guildId: string) => Promise<boolean>,
+  guildExists: (guildId: DiscordGuildId) => Promise<boolean>,
 ): InstalledGuildsDependencies {
   const reader: BotRestReader = {
     guildExists,

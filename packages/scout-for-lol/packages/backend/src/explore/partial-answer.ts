@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import {
   EXPLORE_ANSWER_MAX_LENGTH,
   EXPLORE_INTERRUPTED_CAVEAT,
@@ -25,7 +26,7 @@ export async function persistPartialAnswer(
     text: string;
     trace: ExploreTraceEntry[];
     /** Same per-turn guild context the full answer records. */
-    guildIds: readonly string[];
+    guildIds: readonly DiscordGuildId[];
     existingMessageId: string | null;
   },
 ): Promise<ExploreMessage | null> {

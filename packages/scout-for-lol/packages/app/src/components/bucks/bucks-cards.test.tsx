@@ -1,4 +1,4 @@
-import { RiotMatchIdSchema } from "@scout-for-lol/data";
+import { RiotMatchIdSchema, DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 import { BucksCountdown } from "#src/components/bucks/bucks-countdown.tsx";
@@ -54,7 +54,12 @@ describe("BucksMarketCard", () => {
         trackedPlayers: ["jerred"],
         totalStake: 1200,
         betCount: 2,
-        positions: [{ discordId: "111", stake: 1000 }],
+        positions: [
+          {
+            discordId: DiscordAccountIdSchema.parse("837550478469304750"),
+            stake: 1000,
+          },
+        ],
       },
       {
         teamId: 200,
@@ -84,7 +89,7 @@ describe("BucksMarketCard", () => {
     );
     expect(html).toContain("WIN");
     expect(html).toContain("LOSE");
-    expect(html).toContain("user-111");
+    expect(html).toContain("user-837550478469304750");
     expect(html).toContain("1,000");
     expect(html).toContain("Closes in 01:30");
     expect(html).not.toContain("%");

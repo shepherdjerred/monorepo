@@ -16,6 +16,7 @@
  * https://discord.com/developers/docs/topics/permissions#permission-overwrites
  */
 
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import { PermissionFlagsBits, PermissionsBitField } from "discord.js";
 import type { DiscordOverwrite } from "#src/lib/discord/bot-rest-schemas.ts";
 
@@ -28,7 +29,7 @@ const OVERWRITE_TYPE_MEMBER = 1;
  * guild id) unioned with every role they hold.
  */
 function basePermissions(input: {
-  guildId: string;
+  guildId: DiscordGuildId;
   memberRoleIds: readonly string[];
   rolePermissions: ReadonlyMap<string, string>;
 }): bigint {
@@ -61,7 +62,7 @@ function applyOverwrite(
  * the owner. Callers get it from `BotRestReader#guild`.
  */
 export function computeChannelPermissions(input: {
-  guildId: string;
+  guildId: DiscordGuildId;
   guildOwnerId: string | null;
   memberId: string;
   memberRoleIds: readonly string[];

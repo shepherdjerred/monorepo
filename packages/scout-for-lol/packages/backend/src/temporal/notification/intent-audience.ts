@@ -1,3 +1,8 @@
+import {
+  type DiscordGuildId,
+  type DiscordChannelId,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import type { NotificationRetirementReason } from "@scout-for-lol/domain/notifications/intent.ts";
 import type { NotificationTransitionResult } from "@scout-for-lol/domain/notifications/intent-transitions.ts";
 import type { Db } from "#src/database/index.ts";
@@ -54,9 +59,11 @@ const logger = createLogger("scout-v2-intent-audience");
 /** The two Discord questions, injectable so tests never reach Discord. */
 export type AudienceDiscordPort = {
   /** `null` is Discord's Unknown Channel; a throw means Scout could not ask. */
-  readonly readChannel: (channelId: string) => Promise<DiscordChannel | null>;
+  readonly readChannel: (
+    channelId: DiscordChannelId,
+  ) => Promise<DiscordChannel | null>;
   /** Confirmed against Discord; throws rather than guessing `false`. */
-  readonly isInstalled: (guildId: string) => Promise<boolean>;
+  readonly isInstalled: (guildId: DiscordGuildId) => Promise<boolean>;
 };
 
 export function defaultAudienceDiscordPort(): AudienceDiscordPort {
@@ -88,7 +95,7 @@ async function askDiscord<Answer>(
 }
 
 async function discordRetirementOf(
-  channelId: string,
+  channelId: DiscordChannelId,
   discord: AudienceDiscordPort,
 ): Promise<NotificationRetirementReason | undefined> {
   const channel = await askDiscord(
@@ -101,7 +108,7 @@ async function discordRetirementOf(
   if (guildId === null || guildId === undefined) return undefined;
   const installed = await askDiscord(
     `whether Scout is in guild ${guildId}`,
-    async () => await discord.isInstalled(guildId),
+    async () => await discord.isInstalled(DiscordGuildIdSchema.parse(guildId)),
   );
   return installed.answered && !installed.answer ? "guild-left" : undefined;
 }

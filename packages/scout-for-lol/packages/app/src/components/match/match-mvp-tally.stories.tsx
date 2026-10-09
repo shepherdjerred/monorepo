@@ -1,3 +1,4 @@
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { MatchMvpTally } from "./match-mvp-tally.tsx";
 
@@ -16,7 +17,7 @@ export const Community: Story = {
       showGuildNames: false,
       guilds: [
         {
-          guildId: "1337623164146155593",
+          guildId: DiscordGuildIdSchema.parse("1337623164146155593"),
           guildName: "Scout Test Server",
           blue: [
             {

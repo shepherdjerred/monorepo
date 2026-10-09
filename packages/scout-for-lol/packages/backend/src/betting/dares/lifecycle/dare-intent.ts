@@ -45,7 +45,7 @@ function actorAuthorized(
   actor: DiscordAccountId,
   dare: {
     challengerDiscordId: string;
-    targets: readonly { discordId: string }[];
+    targets: readonly { discordId: DiscordAccountId }[];
   },
 ): boolean {
   const target = dare.targets.some((row) => row.discordId === actor);

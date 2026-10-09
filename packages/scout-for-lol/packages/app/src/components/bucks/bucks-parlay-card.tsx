@@ -1,4 +1,4 @@
-import { formatInteger } from "@scout-for-lol/data";
+import { type DiscordAccountId, formatInteger } from "@scout-for-lol/data";
 import {
   Card,
   CardContent,
@@ -21,7 +21,7 @@ export type ParlayCardMarket = {
   noOdds: string;
   yourPosition: { side: string; stake: number } | null;
   /** Named positions (match parlays); aggregate-only markets omit these. */
-  positions?: { discordId: string; side: string; stake: number }[];
+  positions?: { discordId: DiscordAccountId; side: string; stake: number }[];
   aggregate?: { bettorCount: number; totalStaked: number };
 };
 

@@ -27,7 +27,7 @@ export type HallExploreCapability = {
  * the only other thing the web route requires.
  */
 export async function resolveHallCapability(
-  guildIds: readonly string[],
+  guildIds: readonly DiscordGuildId[],
 ): Promise<HallExploreCapability | null> {
   const enabled: DiscordGuildId[] = [];
   for (const raw of guildIds) {
@@ -62,7 +62,7 @@ const HallCellSchema = z.strictObject({
  */
 export async function serverNames(
   db: ExtendedPrismaClient,
-  guildIds: readonly string[],
+  guildIds: readonly DiscordGuildId[],
 ): Promise<Map<string, string>> {
   const rows = await db.guildInstall.findMany({
     where: { serverId: { in: [...guildIds] } },

@@ -1,4 +1,5 @@
 import {
+  type Interaction,
   type ChatInputCommandInteraction,
   PermissionFlagsBits,
   SlashCommandBuilder,
@@ -18,13 +19,13 @@ import {
   resolveSubscriptionPuuid,
   runBackfillAfterCommit,
 } from "#src/lib/subscription/add.ts";
-import { replyError } from "#src/discord/commands/define-command.ts";
+import {
+  replyError,
+  type CommandEditReply,
+  type CommandReply,
+} from "#src/discord/commands/define-command.ts";
 import { recordAudit } from "#src/lib/audit/index.ts";
 import { captureFirstSubscriptionCreated } from "#src/analytics/guild-lifecycle.ts";
-import type {
-  CommandEditReply,
-  CommandReply,
-} from "#src/discord/commands/define-command.ts";
 import { getDashboardUrl } from "#src/discord/commands/links.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 
@@ -69,8 +70,8 @@ const ArgsSchema = z.object({
   creatorDiscordId: DiscordAccountIdSchema,
 });
 type TrackInteraction = {
-  guildId: string | null;
-  channelId: string;
+  guildId: Interaction["guildId"];
+  channelId: Interaction["channelId"];
   user: { id: string };
   options: Pick<ChatInputCommandInteraction["options"], "getString">;
   replied: boolean;

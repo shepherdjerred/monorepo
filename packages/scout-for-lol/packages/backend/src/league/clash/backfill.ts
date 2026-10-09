@@ -47,7 +47,8 @@ type LakeClashRow = z.infer<typeof LakeClashRowSchema>;
 export function clashLakeSightingKey(row: {
   platform: string;
   gameId: string;
-  puuid: string;
+  /** Lake rows carry every participant's raw puuid, not only tracked ones. */
+  puuid: LakeClashRow["puuid"];
 }): string {
   return `${row.platform}:${row.gameId}:${row.puuid}`;
 }
@@ -57,7 +58,7 @@ export function clashLakeRowsMissingFromSightings(
   existing: readonly {
     platform: string;
     gameId: string;
-    puuid: string;
+    puuid: LakeClashRow["puuid"];
     source: string;
   }[],
 ): LakeClashRow[] {

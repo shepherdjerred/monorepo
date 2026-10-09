@@ -52,6 +52,10 @@
  * keystroke anyway.
  */
 
+import type {
+  DiscordGuildId,
+  DiscordChannelId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { CDN, REST, Routes } from "discord.js";
 import { z } from "zod";
 import configuration from "#src/configuration.ts";
@@ -267,20 +271,26 @@ export type BotRestReader = {
    * permission implicitly, with no role carrying it, so any permission answer
    * computed from roles alone is wrong for exactly one member per guild.
    */
-  readonly guild: (guildId: string) => Promise<DiscordGuildSummary | null>;
+  readonly guild: (
+    guildId: DiscordGuildId,
+  ) => Promise<DiscordGuildSummary | null>;
   /** Whether Scout is a member of the guild. Shares {@link guild}'s cache. */
-  readonly guildExists: (guildId: string) => Promise<boolean>;
+  readonly guildExists: (guildId: DiscordGuildId) => Promise<boolean>;
   /** `null` when Scout is not in the guild. */
   readonly guildChannels: (
-    guildId: string,
+    guildId: DiscordGuildId,
   ) => Promise<DiscordGuildChannel[] | null>;
   /** `null` when Scout is not in the guild. */
-  readonly guildRoles: (guildId: string) => Promise<DiscordRole[] | null>;
+  readonly guildRoles: (
+    guildId: DiscordGuildId,
+  ) => Promise<DiscordRole[] | null>;
   /** Scout's own member row, for channel permission checks. */
-  readonly botMember: (guildId: string) => Promise<DiscordGuildMember | null>;
+  readonly botMember: (
+    guildId: DiscordGuildId,
+  ) => Promise<DiscordGuildMember | null>;
   /** `null` when the user is not a member (or Scout is not in the guild). */
   readonly guildMember: (
-    guildId: string,
+    guildId: DiscordGuildId,
     userId: string,
   ) => Promise<DiscordGuildMember | null>;
   /**
@@ -299,12 +309,12 @@ export type BotRestReader = {
    * always reads fresh anyway.
    */
   readonly freshGuildMember: (
-    guildId: string,
+    guildId: DiscordGuildId,
     userId: string,
   ) => Promise<DiscordGuildMember | null>;
   /** Prefix search over usernames and nicknames. Empty when Scout is absent. */
   readonly searchGuildMembers: (input: {
-    guildId: string;
+    guildId: DiscordGuildId;
     query: string;
     limit: number;
   }) => Promise<DiscordGuildMember[]>;
@@ -315,7 +325,9 @@ export type BotRestReader = {
    * Discord Activity launch) rather than from a list Scout offered, so a
    * seconds-old channel must resolve rather than wait out a cache TTL.
    */
-  readonly channel: (channelId: string) => Promise<DiscordChannel | null>;
+  readonly channel: (
+    channelId: DiscordChannelId,
+  ) => Promise<DiscordChannel | null>;
   /** Drop every cached answer. Test-only; the caches are process singletons. */
   readonly clearCaches: () => void;
 };
@@ -362,7 +374,7 @@ export function createBotRestReader(
 
   const botUserId = () => options.botUserId ?? configuration.applicationId;
 
-  const readMember = async (guildId: string, userId: string) =>
+  const readMember = async (guildId: DiscordGuildId, userId: string) =>
     await read(get, {
       route: Routes.guildMember(guildId, userId),
       schema: DiscordGuildMemberSchema,
@@ -370,7 +382,7 @@ export function createBotRestReader(
       absentCodes: [UNKNOWN_GUILD, UNKNOWN_MEMBER],
     });
 
-  const readBotMember = async (guildId: string) =>
+  const readBotMember = async (guildId: DiscordGuildId) =>
     await read(get, {
       route: Routes.guildMember(guildId, botUserId()),
       schema: DiscordGuildMemberSchema,
@@ -379,7 +391,7 @@ export function createBotRestReader(
       absentCodes: [UNKNOWN_GUILD, UNKNOWN_MEMBER],
     });
 
-  const readGuild = async (guildId: string) =>
+  const readGuild = async (guildId: DiscordGuildId) =>
     await cachePositiveOnly(
       guildCache,
       guildId,
@@ -486,7 +498,7 @@ export function botRest(): BotRestReader {
 
 /** The bot's current guild membership, bypassing the ordinary member cache. */
 export async function freshBotMember(
-  guildId: string,
+  guildId: DiscordGuildId,
 ): Promise<DiscordGuildMember | null> {
   return await botRest().freshGuildMember(guildId, configuration.applicationId);
 }
@@ -501,7 +513,7 @@ export function memberDisplayName(member: DiscordGuildMember): string {
 /** The avatar Discord would show for a user, honouring a per-guild override. */
 export function memberAvatarUrl(
   member: DiscordGuildMember,
-  guildId: string,
+  guildId: DiscordGuildId,
 ): string {
   return member.avatar !== null && member.avatar !== undefined
     ? cdn.guildMemberAvatar(guildId, member.user.id, member.avatar)

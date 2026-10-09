@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
@@ -37,7 +38,7 @@ async function loadOwnedDraft(input: {
   dareId: number;
   expectedRevision: number;
   userId: DiscordAccountId;
-  guildIds: string[];
+  guildIds: DiscordGuildId[];
 }) {
   const dare = await prisma.bucksDare.findFirst({
     where: {
@@ -109,7 +110,7 @@ function contractDefinition(
 export async function validateDareDraftEditor(
   input: EditorInput,
   userId: DiscordAccountId,
-  guildIds: string[],
+  guildIds: DiscordGuildId[],
 ) {
   const owned = await loadOwnedDraft({
     dareId: input.dareId,
@@ -135,7 +136,7 @@ export async function validateDareDraftEditor(
 export async function previewDareDraftEditor(
   input: z.infer<typeof DareDraftPreviewInputSchema>,
   userId: DiscordAccountId,
-  guildIds: string[],
+  guildIds: DiscordGuildId[],
 ) {
   const ownedDraft = await loadOwnedDraft({
     dareId: input.dareId,
@@ -163,7 +164,7 @@ export async function previewDareDraftEditor(
 export async function reviseDareDraftEditor(
   input: EditorInput,
   userId: DiscordAccountId,
-  guildIds: string[],
+  guildIds: DiscordGuildId[],
 ) {
   const ownedDraft = await loadOwnedDraft({
     dareId: input.dareId,

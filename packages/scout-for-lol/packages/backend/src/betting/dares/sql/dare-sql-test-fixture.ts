@@ -1,3 +1,5 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
+import { DiscordAccountIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import {
   RawMatchSchema,
   RawTimelineSchema,
@@ -24,12 +26,12 @@ export function dareSqlTargetForMatch(match: RawMatch): DareTargetBinding {
   if (participant === undefined) throw new Error("fixture participant missing");
   return {
     key: "T1",
-    discordId: "100000000000000001",
+    discordId: DiscordAccountIdSchema.parse("100000000000000001"),
     playerId: 1,
     alias: "Target",
     accounts: [
       {
-        puuid: participant.puuid,
+        puuid: LeaguePuuidSchema.parse(participant.puuid),
         trackingStartedAt: new Date(
           match.info.gameStartTimestamp - 1000,
         ).toISOString(),

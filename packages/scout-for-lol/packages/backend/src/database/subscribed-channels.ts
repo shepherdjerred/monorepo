@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import {
   type DiscordChannelId,
   type LeaguePuuid,
@@ -23,7 +24,7 @@ export type SubscribedChannelSubscription = {
 };
 export type SubscribedChannel = {
   channel: DiscordChannelId;
-  serverId: string;
+  serverId: DiscordGuildId;
   subscriptions: SubscribedChannelSubscription[];
 };
 
@@ -65,7 +66,7 @@ export async function getChannelsSubscribedToPlayers(
     const byChannel = new Map<
       DiscordChannelId,
       {
-        serverId: string;
+        serverId: DiscordGuildId;
         subscriptions: Map<number, SubscribedChannelSubscription>;
       }
     >();

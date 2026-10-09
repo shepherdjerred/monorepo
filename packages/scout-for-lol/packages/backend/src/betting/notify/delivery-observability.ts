@@ -1,3 +1,7 @@
+import type {
+  DiscordGuildId,
+  DiscordChannelId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   bettingMessageOperationDurationSeconds,
@@ -80,8 +84,8 @@ export async function observeBucksDelivery<T>(
     surface: BucksMessageSurface;
     operation: BucksMessageOperation;
     matchId?: RiotMatchId;
-    serverId?: string;
-    channelId?: string;
+    serverId?: DiscordGuildId;
+    channelId?: DiscordChannelId;
   },
   run: () => Promise<T>,
 ): Promise<T> {
@@ -125,7 +129,7 @@ export function recordBucksDeliverySkip(input: {
   operation: BucksMessageOperation;
   reason: BucksMessageSkipReason;
   matchId: RiotMatchId;
-  serverId: string;
+  serverId: DiscordGuildId;
 }): void {
   bettingMessageOperationsTotal.inc({
     surface: input.surface,

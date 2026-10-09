@@ -2,6 +2,7 @@ import {
   CompetitionVisibilitySchema,
   visibilityDescription,
   visibilityToString,
+  type DiscordChannelId,
 } from "@scout-for-lol/data";
 import {
   Input,
@@ -16,7 +17,7 @@ import type { CompetitionBuilderState } from "#src/lib/bucks/competition-builder
 
 export function CompetitionBuilderBasics(props: {
   state: CompetitionBuilderState;
-  channels: { id: string; name: string }[];
+  channels: { id: DiscordChannelId; name: string }[];
   onChange: (changes: Partial<CompetitionBuilderState>) => void;
   errors: Record<
     "title" | "description" | "channelId" | "maxParticipants" | "visibility",

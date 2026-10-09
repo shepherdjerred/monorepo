@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { testGuildId, testPuuid } from "#src/testing/test-ids.ts";
@@ -40,7 +41,7 @@ const OTHER_PLAYER = testPuuid("other-player");
 function fact(
   overrides: Partial<TestLakeMatchFact> & {
     matchId: RiotMatchId;
-    puuid: string;
+    puuid: LeaguePuuid;
     playerId: number;
     playerAlias: string;
   },

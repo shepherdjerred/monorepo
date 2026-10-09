@@ -117,7 +117,13 @@ describe("fetchUserGuilds", () => {
     await fetchUserGuilds(user);
     response.resolve(
       Response.json([
-        { id: "old", name: "Old", icon: null, owner: true, permissions: "8" },
+        {
+          id: "100000000000000120",
+          name: "Old",
+          icon: null,
+          owner: true,
+          permissions: "8",
+        },
       ]),
     );
     expect(await oldRequest).toHaveLength(1);
@@ -128,14 +134,20 @@ describe("fetchUserGuilds", () => {
   it("returns the parsed list when Discord answers", async () => {
     respondWith(
       JSON.stringify([
-        { id: "1", name: "G", icon: null, owner: true, permissions: "8" },
+        {
+          id: "100000000000000131",
+          name: "G",
+          icon: null,
+          owner: true,
+          permissions: "8",
+        },
       ]),
       { status: 200, headers: { "Content-Type": "application/json" } },
     );
 
     const guilds = await fetchUserGuilds(testUser());
     expect(guilds).toHaveLength(1);
-    expect(guilds[0]?.id).toBe("1");
+    expect(guilds[0]?.id).toBe("100000000000000131");
   });
 
   it("returns [] for a genuine empty membership list", async () => {
@@ -288,8 +300,11 @@ describe("devGuildOverride", () => {
     const guilds = devGuildOverride({
       environment: "dev",
       enableDevLogin: true,
-      guildIds: [" 111 ", "", "222"],
+      guildIds: [" 111111111111111111 ", "", "222222222222222222"],
     });
-    expect(guilds?.map((guild) => guild.id)).toEqual(["111", "222"]);
+    expect(guilds?.map((guild) => guild.id)).toEqual([
+      "111111111111111111",
+      "222222222222222222",
+    ]);
   });
 });

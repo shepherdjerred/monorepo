@@ -1,7 +1,3 @@
-import {
-  RiotMatchIdSchema,
-  type RiotMatchId,
-} from "@scout-for-lol/domain/identity/brands.ts";
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -19,6 +15,11 @@ import {
   type TimelineEventParticipantLakeRow,
   type TimelineEventLakeRow,
   type TimelineParticipantFrameLakeRow,
+  RiotMatchIdSchema,
+  type DiscordAccountId,
+  type DiscordGuildId,
+  type LeaguePuuid,
+  type RiotMatchId,
 } from "@scout-for-lol/data";
 import {
   duckDbColumnsSpec,
@@ -63,9 +64,9 @@ export type TestLakeMatchFact = {
   accountServerIds?: string[];
   /** Account-specific alias; defaults to the owning player's Scout alias. */
   accountAlias?: string;
-  discordId?: string | null;
+  discordId?: DiscordAccountId | null;
   matchId: RiotMatchId;
-  puuid: string;
+  puuid: LeaguePuuid;
   queue: string | null;
   queueId?: number;
   gameMode?: string;
@@ -120,9 +121,9 @@ export type TestLakePrematchFact = {
    * write's primary and also-tracked servers. */
   accountServerIds?: string[];
   accountAlias?: string;
-  discordId?: string | null;
+  discordId?: DiscordAccountId | null;
   dedupeKey: string;
-  puuid: string;
+  puuid: LeaguePuuid;
   queue: string | null;
   championId?: number;
   observedAt: Date;
@@ -316,7 +317,7 @@ export async function resetTestLake(lakeDir: string): Promise<void> {
 }
 
 type TestLakeInput = {
-  serverId: string;
+  serverId: DiscordGuildId;
   matchFacts?: TestLakeMatchFact[];
   prematchFacts?: TestLakePrematchFact[];
   /** Additional servers that also track every account above. */

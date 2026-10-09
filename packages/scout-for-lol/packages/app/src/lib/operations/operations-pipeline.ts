@@ -1,4 +1,8 @@
-import type { RiotMatchId } from "@scout-for-lol/data";
+import {
+  type LeaguePuuid,
+  type DiscordGuildId,
+  type RiotMatchId,
+} from "@scout-for-lol/data";
 import {
   notificationActions,
   type NotificationBlocked,
@@ -33,7 +37,7 @@ export type MatchPipelineData = {
       readonly version: number;
       readonly scope:
         | { readonly kind: "global" }
-        | { readonly kind: "guild"; readonly guildId: string }
+        | { readonly kind: "guild"; readonly guildId: DiscordGuildId }
         | { readonly kind: "account"; readonly accountId: number };
       readonly recordedAt: string;
     }[];
@@ -51,7 +55,7 @@ export type MatchPipelineData = {
     };
   }[];
   readonly trackedAccounts: readonly {
-    readonly puuid: string;
+    readonly puuid: LeaguePuuid;
     readonly playerId: number | null;
     readonly accountId: number | null;
     readonly cursorAdvancedAt: string | null;

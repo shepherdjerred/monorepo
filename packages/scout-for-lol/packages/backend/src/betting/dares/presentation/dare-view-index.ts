@@ -21,12 +21,12 @@ export type VisibleDareIndexRow = {
     targetsJson: string;
   }[];
   targets: {
-    discordId: string;
+    discordId: DiscordAccountId;
     alias: string;
     acceptedAt: Date | null;
     declinedAt: Date | null;
   }[];
-  contributions: { discordId: string }[];
+  contributions: { discordId: DiscordAccountId }[];
 };
 
 export type VisibleDareIndexItem = {

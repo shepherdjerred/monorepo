@@ -155,7 +155,7 @@ async function decorateHistoryRows(
   const rankByMatchAndPuuid = new Map(
     rankRows.map((row) => [`${row.matchId}:${row.puuid}`, row]),
   );
-  const accountByPuuid = new Map(
+  const accountByPuuid = new Map<string, (typeof accounts)[number]>(
     accounts.map((account) => [account.puuid, account]),
   );
 

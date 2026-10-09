@@ -103,13 +103,20 @@ describe("track-more-players", () => {
     // Subscriptions are unique per (server, player, channel), so counting rows
     // would read a single player in two channels as a populated guild and
     // suppress the tip forever.
-    await trackPlayer("jerred", ["100000000000000010", "100000000000000011"]);
+    await trackPlayer("jerred", [
+      DiscordChannelIdSchema.parse("100000000000000010"),
+      DiscordChannelIdSchema.parse("100000000000000011"),
+    ]);
     expect(await keys()).toContain("track-more-players");
   });
 
   test("two distinct players suppress it", async () => {
-    await trackPlayer("jerred", ["100000000000000010"]);
-    await trackPlayer("bryan", ["100000000000000010"]);
+    await trackPlayer("jerred", [
+      DiscordChannelIdSchema.parse("100000000000000010"),
+    ]);
+    await trackPlayer("bryan", [
+      DiscordChannelIdSchema.parse("100000000000000010"),
+    ]);
     expect(await keys()).not.toContain("track-more-players");
   });
 });

@@ -1,3 +1,4 @@
+import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { describe, expect, test, vi } from "vitest";
 import type { ModalBuilder } from "discord.js";
 import { RiotMatchIdSchema } from "@scout-for-lol/data";
@@ -50,7 +51,7 @@ describe("handleMvpVoteSelect", () => {
         category: "enemy",
         matchId,
       }),
-      guildId: "1337623164146155593",
+      guildId: DiscordGuildIdSchema.parse("1337623164146155593"),
       user: { id: "160509172704739328" },
       values: ["7"],
       deferred: false,

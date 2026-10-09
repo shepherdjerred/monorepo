@@ -1,4 +1,8 @@
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  RiotMatchIdSchema,
+  type DiscordMessageId,
+  DiscordMessageIdSchema,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import type { MessageCreateOptions } from "discord.js";
 import {
@@ -30,6 +34,8 @@ import {
 import { registry } from "#src/metrics/registry.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 
+const PREMATCH_ONE = DiscordMessageIdSchema.parse("849544355644694328");
+
 const { prisma: db } = createTestDatabase("bucks-message-refresh");
 const SERVER_ID = DiscordGuildIdSchema.parse("1337623164146155593");
 const MATCH_ID = RiotMatchIdSchema.parse("NA1_5000000042");
@@ -38,7 +44,7 @@ const CHANNEL_TWO = DiscordChannelIdSchema.parse("1337623164146155595");
 
 type RecordedEdit = {
   channelId: DiscordChannelId;
-  messageId: string;
+  messageId: DiscordMessageId;
   content: string;
   removedComponents: boolean;
   suppressedMentions: boolean;
@@ -71,7 +77,10 @@ async function clearAll(): Promise<void> {
 
 async function createPool(input?: {
   prematchContentBase?: string | null;
-  refs?: readonly { channelId: string; messageId: string }[];
+  refs?: readonly {
+    channelId: DiscordChannelId;
+    messageId: DiscordMessageId;
+  }[];
 }) {
   return await db.bucksMatchPool.create({
     data: {
@@ -83,8 +92,8 @@ async function createPool(input?: {
       roster: JSON.stringify({ participants: bucksTestRoster() }),
       messageRefs: JSON.stringify(
         input?.refs ?? [
-          { channelId: CHANNEL_ONE, messageId: "prematch-one" },
-          { channelId: CHANNEL_TWO, messageId: "prematch-two" },
+          { channelId: CHANNEL_ONE, messageId: "849544355644694328" },
+          { channelId: CHANNEL_TWO, messageId: "849544355644694329" },
         ],
       ),
       prematchContentBase:
@@ -286,8 +295,8 @@ describe("refreshBucksMessages", () => {
 
     expect(edits).toHaveLength(2);
     expect(edits.map((edit) => edit.messageId)).toEqual([
-      "prematch-one",
-      "prematch-two",
+      "849544355644694328",
+      "849544355644694329",
     ]);
     expect(edits.every((edit) => edit.suppressedMentions)).toBe(true);
     expect(edits.every((edit) => !edit.removedComponents)).toBe(true);
@@ -348,7 +357,7 @@ describe("refreshBucksMessages", () => {
       {
         matchId: MATCH_ID,
         serverId: SERVER_ID,
-        refs: [{ channelId: CHANNEL_ONE, messageId: "prematch-one" }],
+        refs: [{ channelId: CHANNEL_ONE, messageId: PREMATCH_ONE }],
         prematchContentBase: "Aaron started a game",
       },
       db,
@@ -424,7 +433,7 @@ describe("refreshBucksMessages", () => {
 
   test("serializes refreshes so the final edit reads the newest positions", async () => {
     const pool = await createPool({
-      refs: [{ channelId: CHANNEL_ONE, messageId: "prematch-one" }],
+      refs: [{ channelId: CHANNEL_ONE, messageId: PREMATCH_ONE }],
     });
     await addPosition({
       poolId: pool.id,
@@ -485,7 +494,7 @@ describe("announceSettlements", () => {
     await announcePass(
       {
         settlements: [decidedSettlement()],
-        postmatchMessageIds: new Map([[CHANNEL_ONE, "postmatch-one"]]),
+        postmatchMessageIds: new Map([[CHANNEL_ONE, "849544355644694330"]]),
       },
       (options, channelId) => {
         sends.push({ channelId, options });
@@ -496,7 +505,7 @@ describe("announceSettlements", () => {
     expect(sends).toHaveLength(2);
     expect(sends[0]?.channelId).toBe(CHANNEL_ONE);
     expect(sends[0]?.options.reply).toEqual({
-      messageReference: "postmatch-one",
+      messageReference: "849544355644694330",
       failIfNotExists: false,
     });
     expect(sends[1]?.channelId).toBe(CHANNEL_TWO);

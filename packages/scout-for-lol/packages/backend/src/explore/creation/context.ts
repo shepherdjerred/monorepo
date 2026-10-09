@@ -7,6 +7,7 @@
  * the model calls first, and never at all on a turn that calls none.
  */
 
+import type { DiscordChannelId } from "@scout-for-lol/domain/identity/discord.ts";
 import type {
   DiscordAccountId,
   DiscordGuildId,
@@ -143,7 +144,7 @@ export async function lookupPostableChannels(
 /** The channel must be one Scout can actually post the entity's output into. */
 export async function requirePostableChannel(
   context: CreationToolContext,
-  input: { guildId: DiscordGuildId; channelId: string },
+  input: { guildId: DiscordGuildId; channelId: DiscordChannelId },
 ): Promise<CreationPrepareResult | null> {
   const lookup = await lookupPostableChannels(context, input.guildId);
   if (lookup.kind === "unavailable") {
@@ -169,7 +170,7 @@ export async function requirePostableChannel(
 export async function postableChannelName(
   context: CreationToolContext,
   guildId: DiscordGuildId,
-  channelId: string,
+  channelId: DiscordChannelId,
 ): Promise<string> {
   const lookup = await lookupPostableChannels(context, guildId);
   if (lookup.kind === "unavailable") return channelId;

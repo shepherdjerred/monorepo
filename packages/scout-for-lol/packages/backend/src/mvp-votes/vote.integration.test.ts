@@ -258,7 +258,7 @@ describe("Match MVP report references", () => {
           matchId: MATCH_ID,
         }),
         guildId: SERVER_ID,
-        channelId: "1337623164146155594",
+        channelId: DiscordChannelIdSchema.parse("1337623164146155594"),
         message: { id: "100000000000000001" },
         user: { id: VOTER },
         deferReply: () => Promise.resolve(undefined),

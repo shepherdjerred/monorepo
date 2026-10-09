@@ -1,5 +1,13 @@
+import {
+  DiscordMessageIdSchema,
+  type DiscordMessageId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import * as Sentry from "@sentry/bun";
-import type { MessageCreateOptions, MessageEditOptions } from "discord.js";
+import type {
+  Message,
+  MessageCreateOptions,
+  MessageEditOptions,
+} from "discord.js";
 import {
   BucksDareStateSchema,
   BucksMessageRefSchema,
@@ -32,11 +40,11 @@ export type DareMessageSender = (
   options: MessageCreateOptions,
   channelId: DiscordChannelId,
   serverId: DiscordGuildId,
-) => Promise<{ channelId: string; id: string }>;
+) => Promise<Pick<Message, "channelId" | "id">>;
 
 export type DareMessageEditor = (input: {
   channelId: DiscordChannelId;
-  messageId: string;
+  messageId: DiscordMessageId;
   options: MessageEditOptions;
 }) => Promise<void>;
 
@@ -83,8 +91,8 @@ export const defaultDareCalloutDependencies: DareCalloutDependencies = {
 
 export type DareCalloutState = {
   id: number;
-  serverId: string;
-  channelId: string;
+  serverId: DiscordGuildId;
+  channelId: DiscordChannelId;
   messageRef: string | null;
   calloutRefreshVersion: number;
   state: BucksDareState;
@@ -195,7 +203,7 @@ export async function persistDareMessageRef(
     dareId: number;
     claimId: string;
     calloutRefreshVersion: number;
-    ref: { channelId: string; messageId: string };
+    ref: { channelId: DiscordChannelId; messageId: DiscordMessageId };
   },
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<void> {
@@ -221,8 +229,8 @@ export async function persistDareMessageRef(
 }
 
 export type DareCalloutPostResult =
-  | { kind: "posted"; channelId: string; id: string }
-  | { kind: "existing"; channelId: string; id: string }
+  | { kind: "posted"; channelId: DiscordChannelId; id: string }
+  | { kind: "existing"; channelId: DiscordChannelId; id: string }
   | { kind: "in_progress" };
 
 export async function postDareCallout(
@@ -311,11 +319,18 @@ export async function postDareCallout(
             dareId,
             claimId,
             calloutRefreshVersion: state.calloutRefreshVersion,
-            ref: { channelId: message.channelId, messageId: message.id },
+            ref: {
+              channelId: DiscordChannelIdSchema.parse(message.channelId),
+              messageId: DiscordMessageIdSchema.parse(message.id),
+            },
           },
           dependencies.prismaClient,
         );
-        return { kind: "posted", channelId: message.channelId, id: message.id };
+        return {
+          kind: "posted",
+          channelId: DiscordChannelIdSchema.parse(message.channelId),
+          id: message.id,
+        };
       } catch (error) {
         await dependencies.prismaClient.bucksDare.updateMany({
           where: { id: dareId, calloutClaimId: claimId, messageRef: null },

@@ -1,3 +1,4 @@
+import type { DiscordAccountId } from "@scout-for-lol/domain/identity/discord.ts";
 import {
   addPileOns,
   formatInteger,
@@ -33,7 +34,7 @@ type DareCalloutTarget = {
 
 /** One pile-on, or one contributor's pile-ons summed for display. */
 export type DareCalloutPileOn = {
-  discordId: string;
+  discordId: DiscordAccountId;
   amount: DarePileOn;
 };
 
@@ -41,7 +42,7 @@ function pileOnsByContributor(
   pileOns: readonly DareCalloutPileOn[],
 ): DareCalloutPileOn[] {
   const totals = new Map<string, DarePileOn>();
-  const order: string[] = [];
+  const order: DiscordAccountId[] = [];
   for (const pileOn of pileOns) {
     const current = totals.get(pileOn.discordId);
     if (current === undefined) order.push(pileOn.discordId);
@@ -232,7 +233,7 @@ const VOID_REASON_COPY: Readonly<Record<string, string>> = {
   version_retired: "This dare's contract version was retired.",
 };
 
-type ResultLine = { text: string; discordId: string };
+type ResultLine = { text: string; discordId: DiscordAccountId };
 
 function resultHeader(
   dareId: number,

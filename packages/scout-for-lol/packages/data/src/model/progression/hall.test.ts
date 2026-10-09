@@ -1,3 +1,4 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import type { MatchLakeRow } from "#src/model/reports/lake-columns.ts";
@@ -151,7 +152,9 @@ const holderOne: HallRecordHolder = {
   playerAlias: "One",
   accountId: 10,
   accountAlias: "One#NA1",
-  puuid: "puuid-one",
+  puuid: LeaguePuuidSchema.parse(
+    "puuid-one000000000000000000000000000000000000000000000000000000000000000000000",
+  ),
 };
 
 const holderTwo: HallRecordHolder = {
@@ -159,7 +162,9 @@ const holderTwo: HallRecordHolder = {
   playerAlias: "Two",
   accountId: 20,
   accountAlias: "Two#NA1",
-  puuid: "puuid-two",
+  puuid: LeaguePuuidSchema.parse(
+    "puuid-two000000000000000000000000000000000000000000000000000000000000000000000",
+  ),
 };
 
 function candidate(holder: HallRecordHolder, value: number): HallCandidate {

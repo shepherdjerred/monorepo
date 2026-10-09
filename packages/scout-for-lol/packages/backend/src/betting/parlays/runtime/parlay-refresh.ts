@@ -215,7 +215,7 @@ export async function refreshParlayMessages(
 
 /** Re-render closed, settled, or voided markets with their controls removed. */
 export async function refreshClosedParlayMessages(
-  closed: readonly { matchId: RiotMatchId; serverId: string }[],
+  closed: readonly { matchId: RiotMatchId; serverId: DiscordGuildId }[],
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<void> {
   for (const market of closed) {

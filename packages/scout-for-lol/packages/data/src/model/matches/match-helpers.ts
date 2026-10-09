@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import { filter, first, map, pipe } from "remeda";
 import { match } from "ts-pattern";
 import type { RawParticipant } from "#src/league/raw-participant.schema.ts";
@@ -31,7 +32,7 @@ export function computeKda(stats: {
  * Finds a participant in a match by their PUUID
  */
 export function findParticipant(
-  puuid: string,
+  puuid: LeaguePuuid,
   participants: RawParticipant[],
 ): RawParticipant | undefined {
   return pipe(

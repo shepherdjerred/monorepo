@@ -133,8 +133,8 @@ export async function sendSettlementMessage(
   input: {
     message: MessageCreateOptions;
     matchId: RiotMatchId;
-    channelId: string;
-    guildId: string;
+    channelId: DiscordChannelId;
+    guildId: DiscordGuildId;
     kind: "outcome" | "parlay" | "earnings";
     postmatchMessageId?: string;
   },
@@ -249,7 +249,7 @@ const EMPTY_POOL = sumToPoolTotal([]);
 /** A settled-but-empty pool, used as the carrier for closures and parlays. */
 function zeroSummary(
   matchId: RiotMatchId,
-  serverId: string,
+  serverId: DiscordGuildId,
 ): SettlementSummary {
   return {
     matchId,

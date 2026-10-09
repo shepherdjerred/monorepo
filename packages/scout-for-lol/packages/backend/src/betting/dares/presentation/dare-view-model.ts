@@ -1,4 +1,8 @@
 import {
+  DiscordGuildIdSchema,
+  DiscordChannelIdSchema,
+} from "@scout-for-lol/domain/identity/discord.ts";
+import {
   BucksAmountSchema,
   BucksDareStateSchema,
   DareChallengerStakeSchema,
@@ -38,7 +42,7 @@ export const DareAvailableActionSchema = z.enum([
 
 export const DareListItemSchema = z.strictObject({
   id: z.number().int().positive(),
-  serverId: z.string().min(1),
+  serverId: DiscordGuildIdSchema,
   state: BucksDareStateSchema,
   currentRevision: z.number().int().positive(),
   fundedRevision: z.number().int().positive().nullable(),
@@ -72,7 +76,7 @@ export const DareListPageSchema = z.strictObject({
 export type DareListPage = z.infer<typeof DareListPageSchema>;
 
 export const DareInspectionSchema = DareListItemSchema.extend({
-  channelId: z.string().min(1),
+  channelId: DiscordChannelIdSchema,
   originConversationId: z.string().min(1).nullable(),
   canonicalScoutQl: z.string().min(1),
   plan: DareSqlCompilationSchema,

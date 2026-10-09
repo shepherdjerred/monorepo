@@ -1,3 +1,4 @@
+import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { describe, expect, test } from "vitest";
 import { DiscordChannelIdSchema } from "@scout-for-lol/data";
 import type {
@@ -25,7 +26,7 @@ function channel(
 ): SubscribedChannel {
   return {
     channel: DiscordChannelIdSchema.parse("200000000000000009"),
-    serverId: "100000000000000009",
+    serverId: DiscordGuildIdSchema.parse("100000000000000009"),
     subscriptions,
   };
 }

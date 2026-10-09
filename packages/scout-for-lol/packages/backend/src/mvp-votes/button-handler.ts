@@ -1,10 +1,11 @@
+import { DiscordMessageIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import { type Interaction, type InteractionEditReplyOptions } from "discord.js";
 import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   type RiotMatchId,
 } from "@scout-for-lol/data";
-import type { InteractionEditReplyOptions } from "discord.js";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { parseVoteCustomId } from "#src/mvp-votes/custom-id.ts";
 import {
@@ -31,8 +32,8 @@ export type VoteButtonEditReplyOptions = {
 
 export type VoteButtonInteraction = {
   customId: string;
-  guildId: string | null;
-  channelId?: string | null;
+  guildId: Interaction["guildId"];
+  channelId?: Interaction["channelId"];
   message?: { id: string } | null;
   user: { id: string };
   deferReply: (options: { ephemeral: true }) => Promise<unknown>;
@@ -71,10 +72,15 @@ export async function handleMvpVoteButton(
     return;
   }
   const channelId = DiscordChannelIdSchema.safeParse(interaction.channelId);
-  const messageId = interaction.message?.id;
-  if (messageId !== undefined && messageId.length > 0 && channelId.success) {
+  const messageId = DiscordMessageIdSchema.safeParse(interaction.message?.id);
+  if (messageId.success && channelId.success) {
     await recordMatchMvpOwnedReportRef(
-      { matchId, serverId, channelId: channelId.data, messageId },
+      {
+        matchId,
+        serverId,
+        channelId: channelId.data,
+        messageId: messageId.data,
+      },
       prismaClient,
     );
   }

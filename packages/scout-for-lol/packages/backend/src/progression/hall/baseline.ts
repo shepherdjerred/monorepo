@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import {
   DiscordGuildIdSchema,
   HallQueueFamilyIdSchema,
@@ -26,7 +27,7 @@ const PAGE_SIZE = 10_000;
 
 export async function lockHallRecords(
   tx: Pick<Db, "$executeRaw">,
-  guildId: string,
+  guildId: DiscordGuildId,
 ): Promise<void> {
   await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('scout-hall-records'), hashtext(${guildId}))`;
 }
@@ -34,7 +35,7 @@ export async function lockHallRecords(
 type TrackedAccount = {
   readonly id: number;
   readonly alias: string;
-  readonly puuid: string;
+  readonly puuid: LeaguePuuid;
   readonly createdTime: Date;
   readonly player: { readonly id: number; readonly alias: string };
 };

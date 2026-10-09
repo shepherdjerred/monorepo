@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/data";
 import { useState } from "react";
 import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -11,7 +12,7 @@ import {
 import { useTRPC } from "#src/lib/query/trpc.ts";
 
 export function ConsumerPlayerCommunity(props: {
-  guildId: string;
+  guildId: DiscordGuildId;
   playerId: number;
 }) {
   const [windowDays, setWindowDays] = useState<30 | 90 | "all">(90);

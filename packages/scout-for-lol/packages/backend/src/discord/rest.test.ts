@@ -1,3 +1,4 @@
+import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 import { listGuildsWithFlagEnabled } from "#src/configuration/flags.ts";
@@ -59,7 +60,9 @@ describe("Discord command reconciliation", () => {
     Bun.env["EXPLORE_GUILD_ALLOWLIST"] = guildId;
     resetConfigurationForTests();
 
-    const payload = await guildCommandPayload(guildId);
+    const payload = await guildCommandPayload(
+      DiscordGuildIdSchema.parse(guildId),
+    );
     expect(payload.map((command) => command.name)).toEqual(["bb", "scout"]);
   });
 

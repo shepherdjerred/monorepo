@@ -1,3 +1,4 @@
+import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { z } from "zod";
 import type { SuggestionCondition } from "@scout-for-lol/data";
 import type { FlagName } from "#src/configuration/flags.ts";
@@ -58,7 +59,7 @@ export const CapturedGuildConfigSchema = z
      * is in scope (`bucks-tools.ts:79-84`), so one guild per config makes that
      * failure structurally impossible rather than a thing to remember.
      */
-    guildId: z.string().min(1),
+    guildId: DiscordGuildIdSchema,
     /** How this guild is referred to in a bundle: "mine", "prod-top-1", … */
     label: z.string().min(1),
     /** Whose turn it is; the guild's own most-active Explore user. */

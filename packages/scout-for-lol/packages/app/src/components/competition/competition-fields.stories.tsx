@@ -1,9 +1,10 @@
+import {
+  DiscordChannelIdSchema,
+  type CompetitionGameVariant,
+  type CompetitionQueueType,
+} from "@scout-for-lol/data";
 import { useState, type ComponentProps } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import type {
-  CompetitionGameVariant,
-  CompetitionQueueType,
-} from "@scout-for-lol/data";
 import {
   handleFormSubmit,
   submitThenChangeValidation,
@@ -41,8 +42,14 @@ const NO_CRITERIA_ERRORS: CriteriaErrors = {
 };
 
 const CHANNELS = [
-  { id: "1084396924348997666", name: "league-reports" },
-  { id: "1084396924348997667", name: "ranked-flex" },
+  {
+    id: DiscordChannelIdSchema.parse("1084396924348997666"),
+    name: "league-reports",
+  },
+  {
+    id: DiscordChannelIdSchema.parse("1084396924348997667"),
+    name: "ranked-flex",
+  },
 ];
 
 const noop = () => {

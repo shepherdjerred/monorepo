@@ -1,4 +1,11 @@
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  DiscordGuildIdSchema,
+  DiscordChannelIdSchema,
+} from "@scout-for-lol/domain/identity/discord.ts";
+import {
+  RiotMatchIdSchema,
+  DiscordMessageIdSchema,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import {
   BucksAmountSchema,
@@ -35,7 +42,7 @@ function settlementInput(): SettlementAnnouncementInput {
   return {
     summary: {
       matchId: RiotMatchIdSchema.parse("NA1_9301"),
-      serverId: "100000000000000001",
+      serverId: DiscordGuildIdSchema.parse("100000000000000001"),
       winningTeamId: 100,
       voidReason: undefined,
       winnersPool: BucksPoolTotalSchema.parse(30),
@@ -64,16 +71,19 @@ function settlementInput(): SettlementAnnouncementInput {
     includeOutcome: true,
     parlay: {
       matchId: RiotMatchIdSchema.parse("NA1_9301"),
-      serverId: "100000000000000001",
+      serverId: DiscordGuildIdSchema.parse("100000000000000001"),
       yesResult: false,
       voidReason: undefined,
       legs: [],
       messageRefs: [
-        { channelId: "300000000000000001", messageId: "400000000000000001" },
+        {
+          channelId: DiscordChannelIdSchema.parse("300000000000000001"),
+          messageId: DiscordMessageIdSchema.parse("400000000000000001"),
+        },
       ],
       bets: [
         {
-          discordId: "200000000000000002",
+          discordId: DiscordAccountIdSchema.parse("200000000000000002"),
           side: "YES",
           stake: 5,
           grossPayout: 0,
@@ -84,8 +94,8 @@ function settlementInput(): SettlementAnnouncementInput {
     },
     earnings: [
       {
-        serverId: "100000000000000001",
-        discordId: "200000000000000002",
+        serverId: DiscordGuildIdSchema.parse("100000000000000001"),
+        discordId: DiscordAccountIdSchema.parse("200000000000000002"),
         alias: "Alice",
         reasons: ["played", "win"],
         total: 2,

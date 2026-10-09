@@ -31,7 +31,8 @@ const CHALLENGER = DiscordAccountIdSchema.parse("100000000000000940");
 const TARGET = DiscordAccountIdSchema.parse("100000000000000941");
 const PILE_ON = DiscordAccountIdSchema.parse("100000000000000943");
 const HASH = "c".repeat(64);
-const TARGET_PUUID = "virmel-puuid";
+const TARGET_PUUID =
+  "virmel-puuid000000000000000000000000000000000000000000000000000000000000000000";
 const T0 = new Date("2026-09-01T12:00:00.000Z");
 const MATCH_ID = RiotMatchIdSchema.parse("NA1_7100000041");
 

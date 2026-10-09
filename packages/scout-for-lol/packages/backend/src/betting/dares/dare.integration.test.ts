@@ -1,3 +1,4 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import {
   RiotMatchIdSchema,
   type RiotMatchId,
@@ -103,7 +104,9 @@ const TARGET_BINDING: DareTargetBinding = {
   alias: "Virmel",
   accounts: [
     {
-      puuid: "virmel-puuid",
+      puuid: LeaguePuuidSchema.parse(
+        "virmel-puuid000000000000000000000000000000000000000000000000000000000000000000",
+      ),
       trackingStartedAt: "2026-01-01T00:00:00.000Z",
     },
   ],
@@ -116,7 +119,9 @@ const SECOND_TARGET_BINDING: DareTargetBinding = {
   alias: "Bryan",
   accounts: [
     {
-      puuid: "bryan-puuid",
+      puuid: LeaguePuuidSchema.parse(
+        "bryan-puuid0000000000000000000000000000000000000000000000000000000000000000000",
+      ),
       trackingStartedAt: "2026-01-01T00:00:00.000Z",
     },
   ],
@@ -369,7 +374,10 @@ describe("Dare draft and lifecycle", () => {
         db,
       ),
     ).resolves.toHaveLength(1);
-    for (const hiddenSearch of ["Virmel", "virmel-puuid"] as const) {
+    for (const hiddenSearch of [
+      "Virmel",
+      "virmel-puuid000000000000000000000000000000000000000000000000000000000000000000",
+    ] as const) {
       await expect(
         listVisibleDares(
           {

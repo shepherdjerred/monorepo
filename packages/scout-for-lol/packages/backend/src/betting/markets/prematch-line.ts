@@ -1,7 +1,14 @@
-import { formatInteger } from "@scout-for-lol/data";
-import type { BucksPoolState, RiotTeamId } from "@scout-for-lol/data";
-import { BETTING_TEAM_IDS, outcomeLabel } from "#src/betting/team.ts";
-import type { OutcomeFraming } from "#src/betting/team.ts";
+import type { DiscordAccountId } from "@scout-for-lol/domain/identity/discord.ts";
+import {
+  formatInteger,
+  type BucksPoolState,
+  type RiotTeamId,
+} from "@scout-for-lol/data";
+import {
+  BETTING_TEAM_IDS,
+  outcomeLabel,
+  type OutcomeFraming,
+} from "#src/betting/team.ts";
 
 /**
  * The Bryan Bucks lines appended to a prematch message.
@@ -23,7 +30,7 @@ const MAX_VISIBLE_POSITIONS = 15;
 export const BUCKS_RULES_HINT = "`/bb rules`";
 
 export type BucksPrematchPosition = {
-  discordId: string;
+  discordId: DiscordAccountId;
   teamId: RiotTeamId;
   offeredStake: number;
   matchedStake: number | null;

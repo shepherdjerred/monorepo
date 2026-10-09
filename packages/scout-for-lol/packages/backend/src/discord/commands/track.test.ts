@@ -1,3 +1,5 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
+import { DiscordChannelIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { describe, expect, test, vi } from "vitest";
 import type { ChatInputCommandInteraction } from "discord.js";
 import type { AddSubscriptionResult } from "#src/lib/subscription/types.ts";
@@ -24,7 +26,7 @@ describe("/track", () => {
     );
     const interaction: TrackInteraction = {
       guildId: null,
-      channelId: "312300000000000001",
+      channelId: DiscordChannelIdSchema.parse("312300000000000001"),
       user: { id: "312300000000000002" },
       options: { getString: () => "Faker#KR1" },
       reply: replyMock,
@@ -48,7 +50,14 @@ describe("/track", () => {
     const result: AddSubscriptionResult = {
       kind: "created",
       subscription: { id: 1 },
-      account: { id: 2, puuid: "p", region: "na1", alias: "Faker" },
+      account: {
+        id: 2,
+        puuid: LeaguePuuidSchema.parse(
+          "p00000000000000000000000000000000000000000000000000000000000000000000000000000",
+        ),
+        region: "na1",
+        alias: "Faker",
+      },
       player: { id: 3, alias: "faker", accounts: [] },
       isAddingToExistingPlayer: false,
       isFirstSubscription: true,

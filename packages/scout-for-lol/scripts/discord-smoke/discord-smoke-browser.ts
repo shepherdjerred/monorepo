@@ -1,3 +1,8 @@
+import type {
+  DiscordGuildIdSchema,
+  DiscordChannelIdSchema,
+  DiscordMessageIdSchema,
+} from "@scout-for-lol/data";
 import { z } from "zod";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
@@ -99,9 +104,9 @@ export async function verifyPinchTabProfile(
 
 export async function captureDiscordMessage(input: {
   readonly profileName: string;
-  readonly guildId: string;
-  readonly channelId: string;
-  readonly messageId: string;
+  readonly guildId: z.input<typeof DiscordGuildIdSchema>;
+  readonly channelId: z.input<typeof DiscordChannelIdSchema>;
+  readonly messageId: z.input<typeof DiscordMessageIdSchema>;
   readonly expectedVisibleFragments: readonly string[];
   readonly outputPath: string;
 }): Promise<void> {

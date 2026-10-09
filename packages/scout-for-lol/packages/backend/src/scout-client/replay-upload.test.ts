@@ -1,3 +1,7 @@
+import {
+  LeaguePuuidSchema,
+  type LeaguePuuid,
+} from "@scout-for-lol/domain/identity/league-account.ts";
 import { beforeEach, expect, test, vi } from "vitest";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import type { AuthenticatedScoutClient } from "./authentication.ts";
@@ -274,7 +278,7 @@ test("keeps a replay retryable until its post-game observation arrives", async (
  * match. The archive reader is mocked, so the rest of `RawMatch` never has to
  * exist for this path.
  */
-function archivedMatchFor(puuid: string) {
+function archivedMatchFor(puuid: LeaguePuuid) {
   return {
     metadata: { dataVersion: "2", matchId: "NA1_123", participants: [puuid] },
     info: {
@@ -318,9 +322,11 @@ function archivedMatchFor(puuid: string) {
 const LOCAL_LCU_UUID = "1b2c3d4e-5f60-4718-8a9b-0c1d2e3f4a5b";
 
 /** Answer alias lookups by UUID and by PUUID, as Prisma would. */
-function aliasesFor(rows: readonly { lcuUuid: string; puuid: string }[]) {
+function aliasesFor(rows: readonly { lcuUuid: string; puuid: LeaguePuuid }[]) {
   mocks.aliasFindMany.mockImplementation(
-    async (query: { where: { lcuUuid?: { in: string[] }; puuid?: string } }) =>
+    async (query: {
+      where: { lcuUuid?: { in: string[] }; puuid?: LeaguePuuid };
+    }) =>
       rows.filter((row) =>
         query.where.puuid === undefined
           ? (query.where.lcuUuid?.in.includes(row.lcuUuid) ?? false)
@@ -332,7 +338,9 @@ function aliasesFor(rows: readonly { lcuUuid: string; puuid: string }[]) {
 test("accepts a replay that names its player by League-client UUID once aliased", async () => {
   // Every real replay is like this. The observation stores the translated
   // PUUID as its observer while its payload, like the replay, keeps the UUID.
-  aliasesFor([{ lcuUuid: LOCAL_LCU_UUID, puuid: LOCAL_PUUID }]);
+  aliasesFor([
+    { lcuUuid: LOCAL_LCU_UUID, puuid: LeaguePuuidSchema.parse(LOCAL_PUUID) },
+  ]);
   mocks.findMany.mockResolvedValue([
     {
       localPuuid: LOCAL_PUUID,
@@ -361,7 +369,9 @@ test("refuses a UUID-named replay whose player has no alias", async () => {
   // container check must stay exactly as strict as before.
   mocks.findMany.mockResolvedValue([]);
   mocks.archiveDescriptor.mockResolvedValue({ key: "raw/NA1_123.json" });
-  mocks.archivedMatch.mockResolvedValue(archivedMatchFor(LOCAL_PUUID));
+  mocks.archivedMatch.mockResolvedValue(
+    archivedMatchFor(LeaguePuuidSchema.parse(LOCAL_PUUID)),
+  );
 
   await expect(
     uploadReplay(replayRequest(replayFixture(LOCAL_LCU_UUID)), "123", DEVICE),
@@ -374,7 +384,9 @@ test("accepts a replay vouched for by Riot when no client observed the game", as
   // archived the match from Riot and that is enough to vouch for the file.
   mocks.findMany.mockResolvedValue([]);
   mocks.archiveDescriptor.mockResolvedValue({ key: "raw/NA1_123.json" });
-  mocks.archivedMatch.mockResolvedValue(archivedMatchFor(LOCAL_PUUID));
+  mocks.archivedMatch.mockResolvedValue(
+    archivedMatchFor(LeaguePuuidSchema.parse(LOCAL_PUUID)),
+  );
   const body = replayFixture();
   const digest = new Bun.CryptoHasher("sha256").update(body).digest("hex");
 
@@ -405,7 +417,9 @@ test("accepts evidence from another device belonging to the same owner", async (
 test("refuses a Riot match none of the owner's accounts played", async () => {
   mocks.findMany.mockResolvedValue([]);
   mocks.archiveDescriptor.mockResolvedValue({ key: "raw/NA1_123.json" });
-  mocks.archivedMatch.mockResolvedValue(archivedMatchFor("q".repeat(78)));
+  mocks.archivedMatch.mockResolvedValue(
+    archivedMatchFor(LeaguePuuidSchema.parse("q".repeat(78))),
+  );
 
   await expect(
     uploadReplay(replayRequest(replayFixture()), "123", DEVICE),

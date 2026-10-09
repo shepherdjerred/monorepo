@@ -1,3 +1,4 @@
+import type { DiscordChannelId } from "@scout-for-lol/domain/identity/discord.ts";
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import { PlatformRouteSchema } from "@scout-for-lol/domain/identity/routes.ts";
 import {
@@ -74,7 +75,7 @@ async function observedMatch(
 function announce(
   matchId: RiotMatchId,
   overrides: Partial<{
-    channelId: string;
+    channelId: DiscordChannelId;
     records: ReturnType<typeof hallBreakRecords>;
   }> = {},
 ) {

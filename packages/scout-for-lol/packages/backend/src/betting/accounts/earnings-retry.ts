@@ -1,3 +1,8 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
+import {
+  DiscordAccountIdSchema,
+  type DiscordGuildId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import * as Sentry from "@sentry/bun";
 import {
@@ -27,9 +32,9 @@ const logger = createLogger("betting-earnings-retry");
 
 const EarnTargetSnapshotSchema = z.array(
   z.object({
-    discordId: z.string(),
+    discordId: DiscordAccountIdSchema,
     alias: z.string(),
-    puuid: z.string(),
+    puuid: LeaguePuuidSchema,
   }),
 );
 
@@ -41,7 +46,7 @@ type PendingEarningMatchLoader = (
 
 type PendingEarningMarker = {
   matchId: RiotMatchId;
-  serverId: string;
+  serverId: DiscordGuildId;
   awardedAt: Date;
   targetSnapshotJson: string;
   matchCreatedAt: Date;
@@ -53,7 +58,7 @@ function queueTypeOf(matchData: RawMatch): QueueType | undefined {
 
 function targetsFromSnapshot(
   matchData: RawMatch,
-  serverId: string,
+  serverId: DiscordGuildId,
   serialized: string,
 ): EarnTarget[] {
   const snapshots = EarnTargetSnapshotSchema.parse(JSON.parse(serialized));

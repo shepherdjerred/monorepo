@@ -1,7 +1,11 @@
+import {
+  type DiscordGuildId,
+  getAllSeasons,
+  type DiscordChannelId,
+} from "@scout-for-lol/data";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
-import { getAllSeasons } from "@scout-for-lol/data";
 import {
   DEFAULT_COMPETITION_CRON,
   DEFAULT_SCHEDULE_TIMEZONE,
@@ -50,8 +54,8 @@ import { CompetitionBuilderFormValueSchema } from "#src/lib/form-schemas.ts";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 
 export function CompetitionBuilder(props: {
-  guildId: string;
-  channels: { id: string; name: string }[];
+  guildId: DiscordGuildId;
+  channels: { id: DiscordChannelId; name: string }[];
   initialScenarioId?: string;
   onCreated: (competitionId: number) => void;
   onDirtyChange?: (dirty: boolean) => void;
@@ -72,8 +76,8 @@ export function CompetitionBuilder(props: {
 }
 
 function CompetitionBuilderReady(props: {
-  guildId: string;
-  channels: { id: string; name: string }[];
+  guildId: DiscordGuildId;
+  channels: { id: DiscordChannelId; name: string }[];
   initialScenarioId?: string;
   onCreated: (competitionId: number) => void;
   onDirtyChange?: (dirty: boolean) => void;

@@ -1,3 +1,4 @@
+import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { z } from "zod";
 import { ReportQueryTextSchema } from "#src/model/reports/report.ts";
 import { VisualizationSnapshotSchema } from "#src/model/reports/temporal-analysis.ts";
@@ -327,7 +328,7 @@ export const ExploreMessageSchema = z
      * Defaulted so every row written before the column existed still parses,
      * and so the user turn — which carries none — is not a special case.
      */
-    guildIds: z.array(z.string()).default([]),
+    guildIds: z.array(DiscordGuildIdSchema).default([]),
     trace: z.array(ExploreTraceEntrySchema).default([]),
     createdAt: z.iso.datetime(),
   })

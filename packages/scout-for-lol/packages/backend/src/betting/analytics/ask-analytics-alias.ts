@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import type { BucksAskAnalyticsDataset } from "#src/betting/analytics/ask-analytics.ts";
 
 export function normalizeBucksAlias(alias: string): string {
@@ -62,7 +63,7 @@ export function uniqueBucksAliases(aliases: readonly string[]): string[] {
 
 export function disambiguatedBucksSubjectLabel(
   alias: string,
-  puuid: string,
+  puuid: LeaguePuuid,
   owners: ReadonlyMap<string, ReadonlySet<string>>,
 ): string {
   const aliasOwners = owners.get(normalizeBucksAlias(alias));

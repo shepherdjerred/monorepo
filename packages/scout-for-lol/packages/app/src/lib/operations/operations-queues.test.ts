@@ -47,7 +47,7 @@ const QUEUES: OperationsQueuesData = {
   unknownDeliveries: [
     {
       intentKey: UNKNOWN_INTENT_KEY,
-      matchId: RiotMatchIdSchema.parse(MATCH_B),
+      matchId: MATCH_B,
       attemptCount: 2,
       attemptNonce: "attempt-3",
       state: "unknown-delivery",

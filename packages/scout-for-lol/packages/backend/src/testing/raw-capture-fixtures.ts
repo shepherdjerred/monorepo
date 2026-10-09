@@ -68,7 +68,8 @@ export function rawCurrentGameInfoFixture(): RawCurrentGameInfo {
     participants: [
       {
         championId: 157,
-        puuid: "test-puuid",
+        puuid:
+          "test-puuid00000000000000000000000000000000000000000000000000000000000000000000",
         teamId: 100,
         riotId: "Player#NA1",
         spell1Id: 4,

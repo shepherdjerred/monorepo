@@ -1,3 +1,7 @@
+import {
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import {
@@ -53,7 +57,11 @@ describe("observeBucksDelivery", () => {
       result: "permission_error",
     };
     const before = await countOf(labels);
-    const thrown = new ChannelSendError("no perms", "channel-1", true);
+    const thrown = new ChannelSendError(
+      "no perms",
+      DiscordChannelIdSchema.parse("825170104822457205"),
+      true,
+    );
 
     await expect(
       observeBucksDelivery({ surface: "settlement", operation: "send" }, () =>
@@ -98,7 +106,7 @@ describe("recordBucksDeliverySkip", () => {
       operation: "edit",
       reason: "skipped_no_refs",
       matchId: RiotMatchIdSchema.parse("NA1_1"),
-      serverId: "1337623164146155593",
+      serverId: DiscordGuildIdSchema.parse("1337623164146155593"),
     });
 
     expect(await countOf(labels)).toBe(before + 1);
@@ -117,7 +125,7 @@ describe("recordBucksDeliverySkip", () => {
       operation: "edit",
       reason: "skipped_no_base",
       matchId: RiotMatchIdSchema.parse("NA1_1"),
-      serverId: "1337623164146155593",
+      serverId: DiscordGuildIdSchema.parse("1337623164146155593"),
     });
 
     expect(await countOf(labels)).toBe(before + 1);

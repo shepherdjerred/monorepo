@@ -1,8 +1,11 @@
+import type { z } from "zod";
 import {
+  type DiscordChannelId,
   OperationsIntentPayloadSchema,
   type OperationsIntentKind,
   type OperationsIntentPayload,
   type RiotMatchId,
+  type DiscordMessageIdSchema,
 } from "@scout-for-lol/data";
 import type { ConfirmationCardState } from "#src/lib/explore/explore-intent-cards.ts";
 
@@ -27,11 +30,11 @@ export type OperationsRequestDraft =
   | {
       readonly kind: "ops_resolve_report_delivery";
       readonly runId: number;
-      readonly channelId: string;
+      readonly channelId: DiscordChannelId;
       readonly chunkIndex: number;
       readonly attemptNonce: string;
       readonly outcome: OperationsDeliveryOutcome;
-      readonly messageId: string;
+      readonly messageId: z.input<typeof DiscordMessageIdSchema>;
       readonly deliveredAt: string;
     }
   | { readonly kind: "ops_reconcile_pipeline" }
@@ -46,7 +49,7 @@ export type OperationsRequestDraft =
       readonly intentKey: string;
       readonly attemptNonce: string;
       readonly outcome: OperationsDeliveryOutcome;
-      readonly messageId: string;
+      readonly messageId: z.input<typeof DiscordMessageIdSchema>;
       readonly deliveredAt: string;
     }
   | {

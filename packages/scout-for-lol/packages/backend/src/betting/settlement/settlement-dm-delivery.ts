@@ -1,3 +1,4 @@
+import type { DiscordAccountId } from "@scout-for-lol/domain/identity/discord.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import * as Sentry from "@sentry/bun";
 import type { Client } from "discord.js";
@@ -159,7 +160,7 @@ async function playerRecipientsForRoster(input: {
     },
     include: { player: { select: { discordId: true } } },
   });
-  const discordIdByPuuid = new Map<string, string>();
+  const discordIdByPuuid = new Map<string, DiscordAccountId>();
   for (const account of accounts) {
     if (account.player.discordId !== null) {
       discordIdByPuuid.set(account.puuid, account.player.discordId);
@@ -337,7 +338,7 @@ export async function deliverSettlementDms(
     { serverId: guildId, discordIds: [...new Set(preferenceRecipientIds)] },
     prismaClient,
   );
-  const preferenceFor = (discordId: string) =>
+  const preferenceFor = (discordId: DiscordAccountId) =>
     preferences.get(discordId) ?? {
       ownBetSettlementDms: true,
       betsOnPlayerSettlementDms: true,
@@ -453,7 +454,10 @@ export async function deliverSettlementDms(
       if (hintRecipientIds.has(message.recipientId)) {
         try {
           await dependencies.markNotificationHintShown(
-            { serverId: guildId, discordId: message.recipientId },
+            {
+              serverId: guildId,
+              discordId: DiscordAccountIdSchema.parse(message.recipientId),
+            },
             prismaClient,
           );
         } catch (error) {

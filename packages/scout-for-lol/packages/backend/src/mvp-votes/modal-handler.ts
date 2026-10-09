@@ -1,3 +1,4 @@
+import type { Interaction } from "discord.js";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
@@ -27,7 +28,7 @@ import {
 
 export type VoteModalInteraction = {
   customId: string;
-  guildId: string | null;
+  guildId: Interaction["guildId"];
   user: { id: string };
   fields: { getTextInputValue: (customId: string) => string };
   deferred: boolean;

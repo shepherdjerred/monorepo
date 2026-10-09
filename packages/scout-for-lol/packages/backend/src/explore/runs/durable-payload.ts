@@ -1,3 +1,4 @@
+import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { z } from "zod";
 import { DiscordChannelIdSchema } from "@scout-for-lol/data";
 import { ExploreSurfaceSchema } from "#src/explore/surface.ts";
@@ -23,7 +24,7 @@ export const ExploreDurablePayloadSchema = z.strictObject({
     createdConversation: z.boolean(),
     createdQuestion: z.boolean(),
   }),
-  guildIds: z.array(z.string()),
+  guildIds: z.array(DiscordGuildIdSchema),
   /**
    * Rows written before this field existed carry no surface. Durable Explore
    * runs were previously enqueued only by the web surface, so `"web"` restores

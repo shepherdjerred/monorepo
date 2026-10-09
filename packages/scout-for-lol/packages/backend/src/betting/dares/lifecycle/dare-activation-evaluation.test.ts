@@ -32,20 +32,21 @@ function contract(
     targets: [
       {
         key: "T1",
-        discordId: "discord-1",
+        discordId: "100000000000000001",
         playerId: 1,
         alias: "Player",
         accounts: [
           {
-            puuid: "puuid-1",
+            puuid:
+              "puuid-100000000000000000000000000000000000000000000000000000000000000000000000",
             trackingStartedAt: "2026-01-01T00:00:00.000Z",
           },
         ],
       },
     ],
     openingStake: 10,
-    serverId: "guild-1",
-    channelId: "channel-1",
+    serverId: "200000000000000001",
+    channelId: "300000000000000001",
     revision: 1,
     activationAt: "2026-02-01T00:00:00.000Z",
     deadlineAt: "2026-02-08T00:00:00.000Z",
@@ -198,7 +199,8 @@ describe("Dare rank and improvement evaluation", () => {
             kind: "rank",
             targetKey: "T1",
             queue: "solo",
-            sourcePuuid: "puuid-1",
+            sourcePuuid:
+              "puuid-100000000000000000000000000000000000000000000000000000000000000000000000",
             baseline: BASELINE,
           },
         ],
@@ -239,7 +241,8 @@ describe("Dare rank and improvement evaluation", () => {
             kind: "rank",
             targetKey: "T1",
             queue: "flex",
-            sourcePuuid: "puuid-1",
+            sourcePuuid:
+              "puuid-100000000000000000000000000000000000000000000000000000000000000000000000",
             baseline: BASELINE,
           },
         ],
@@ -360,7 +363,8 @@ test("treats every Master-plus tier as above lower tiers regardless of LP", () =
           kind: "rank",
           targetKey: "T1",
           queue: "solo",
-          sourcePuuid: "puuid-1",
+          sourcePuuid:
+            "puuid-100000000000000000000000000000000000000000000000000000000000000000000000",
           baseline: BASELINE,
         },
       ],

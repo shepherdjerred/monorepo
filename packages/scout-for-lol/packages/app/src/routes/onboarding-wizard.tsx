@@ -10,7 +10,11 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { match } from "ts-pattern";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 import { SESSION_QUERY_OPTIONS } from "#src/lib/query/session-query.ts";
-import type { OnboardingOutcome } from "@scout-for-lol/data";
+import {
+  type OnboardingOutcome,
+  type DiscordGuildId,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data";
 import {
   reportOnboardingOutcome,
   reportOnboardingStep,
@@ -40,7 +44,7 @@ export function OnboardingWizard() {
   // install + pick-guild steps and lands on concepts (step 2).
   const [state, dispatch] = useReducer(
     onboardingReducer,
-    searchParams.get("guild"),
+    DiscordGuildIdSchema.safeParse(searchParams.get("guild")).data ?? null,
     (guild): OnboardingState =>
       guild === null
         ? initialOnboardingState
@@ -123,7 +127,9 @@ export function OnboardingWizard() {
     finish("completed");
   }
 
-  function requireGuild(render: (gid: string) => ReactElement): ReactElement {
+  function requireGuild(
+    render: (gid: DiscordGuildId) => ReactElement,
+  ): ReactElement {
     if (guildId === null) {
       return (
         <div className="mx-auto max-w-2xl space-y-3 py-8">

@@ -1,3 +1,4 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { PlayerConfigEntrySchema } from "@scout-for-lol/data/index.ts";
 import { RiotHttpError } from "#src/league/api/client/errors.ts";
@@ -37,7 +38,9 @@ describe("getRankByPuuid", () => {
   ])("returns error for %s", async (_name, error) => {
     byPuuid.mockRejectedValueOnce(error);
 
-    await expect(getRankByPuuid(puuid, "AMERICA_NORTH")).resolves.toEqual({
+    await expect(
+      getRankByPuuid(LeaguePuuidSchema.parse(puuid), "AMERICA_NORTH"),
+    ).resolves.toEqual({
       status: "error",
     });
   });
@@ -70,7 +73,10 @@ describe("getRankByPuuid", () => {
       },
     ]);
 
-    const result = await getRankByPuuid(puuid, "AMERICA_NORTH");
+    const result = await getRankByPuuid(
+      LeaguePuuidSchema.parse(puuid),
+      "AMERICA_NORTH",
+    );
 
     expect(result).toEqual({
       status: "available",
@@ -103,7 +109,9 @@ describe("getRankByPuuid", () => {
   test("treats a successful empty response as available and unranked", async () => {
     byPuuid.mockResolvedValueOnce([]);
 
-    await expect(getRankByPuuid(puuid, "AMERICA_NORTH")).resolves.toEqual({
+    await expect(
+      getRankByPuuid(LeaguePuuidSchema.parse(puuid), "AMERICA_NORTH"),
+    ).resolves.toEqual({
       status: "available",
       ranks: { solo: undefined, flex: undefined, ranked5s: undefined },
     });
@@ -118,7 +126,10 @@ describe("getRankByPuuid", () => {
       },
     ]);
 
-    const result = await getRankByPuuid(puuid, "AMERICA_NORTH");
+    const result = await getRankByPuuid(
+      LeaguePuuidSchema.parse(puuid),
+      "AMERICA_NORTH",
+    );
 
     expect(result).toEqual({
       status: "available",
@@ -155,7 +166,10 @@ describe("getRankByPuuid", () => {
       },
     ]);
 
-    const result = await getRankByPuuid(puuid, "AMERICA_NORTH");
+    const result = await getRankByPuuid(
+      LeaguePuuidSchema.parse(puuid),
+      "AMERICA_NORTH",
+    );
 
     expect(result.status).toBe("available");
     if (result.status === "available") {
@@ -172,7 +186,9 @@ describe("getRankByPuuid", () => {
   ])("returns error for malformed relevant entry: %o", async (fields) => {
     byPuuid.mockResolvedValueOnce([{ queueType: "RANKED_FLEX_SR", ...fields }]);
 
-    await expect(getRankByPuuid(puuid, "AMERICA_NORTH")).resolves.toEqual({
+    await expect(
+      getRankByPuuid(LeaguePuuidSchema.parse(puuid), "AMERICA_NORTH"),
+    ).resolves.toEqual({
       status: "error",
     });
   });

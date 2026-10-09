@@ -1,3 +1,5 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import {
@@ -47,7 +49,7 @@ const ComparisonInput = z.object({
 type ComparisonRow = {
   playerId: number;
   alias: string;
-  guild: { guildId: string; name: string };
+  guild: { guildId: DiscordGuildId; name: string };
   viewerLinked: boolean;
   games: number;
   wins: number;
@@ -63,7 +65,7 @@ type ComparisonRow = {
 type MasteryRow = {
   playerId: number;
   alias: string;
-  guild: { guildId: string; name: string };
+  guild: { guildId: DiscordGuildId; name: string };
   viewerLinked: boolean;
   account: { gameName: string | null; tagLine: string | null; region: string };
   level: number;
@@ -87,7 +89,7 @@ const ScopedPlayerSelect = {
   },
 } as const;
 
-async function findScopedPlayers(guildIds: readonly string[]) {
+async function findScopedPlayers(guildIds: readonly DiscordGuildId[]) {
   return await prisma.player.findMany({
     where: { serverId: { in: [...guildIds] } },
     select: ScopedPlayerSelect,
@@ -96,7 +98,7 @@ async function findScopedPlayers(guildIds: readonly string[]) {
 
 async function getScopedChampionPlayers(
   user: Parameters<typeof assertConsumerPlayerScope>[0],
-  requestedGuildIds: readonly string[] | undefined,
+  requestedGuildIds: readonly DiscordGuildId[] | undefined,
 ) {
   const accessibleGuilds = await assertConsumerPlayerScope(user);
   const accessibleIds = new Set(accessibleGuilds.map((guild) => guild.id));
@@ -182,7 +184,7 @@ export const consumerChampionRouter = router({
       });
       const refreshesByPuuid = new Map<
         string,
-        { puuid: string; region: string; fetchedAt: Date | undefined }
+        { puuid: LeaguePuuid; region: string; fetchedAt: Date | undefined }
       >();
       for (const player of players) {
         for (const account of player.accounts) {

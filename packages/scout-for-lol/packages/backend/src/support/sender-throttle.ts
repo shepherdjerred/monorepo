@@ -1,3 +1,4 @@
+import type { DiscordAccountId } from "@scout-for-lol/domain/identity/discord.ts";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { TRPCError } from "@trpc/server";
 import type { Db, ExtendedPrismaClient } from "#src/database/index.ts";
@@ -37,14 +38,14 @@ const EMPTY_THROTTLE: SupportSenderThrottleState = {
 
 export async function lockSupportSender(
   tx: Db,
-  discordId: string,
+  discordId: DiscordAccountId,
 ): Promise<void> {
   await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`support:${discordId}`}))`;
 }
 
 export async function readSupportSenderThrottle(
   tx: Db,
-  discordId: string,
+  discordId: DiscordAccountId,
 ): Promise<SupportSenderThrottleState> {
   const state = await tx.supportSenderThrottle.findUnique({
     where: { discordId: DiscordAccountIdSchema.parse(discordId) },
@@ -61,7 +62,7 @@ export async function readSupportSenderThrottle(
 
 export async function writeSupportSenderThrottle(
   tx: Db,
-  discordId: string,
+  discordId: DiscordAccountId,
   state: SupportSenderThrottleState,
 ): Promise<void> {
   const id = DiscordAccountIdSchema.parse(discordId);
@@ -74,7 +75,7 @@ export async function writeSupportSenderThrottle(
 
 export async function claimSupportFailureNotice(
   db: ExtendedPrismaClient,
-  discordId: string,
+  discordId: DiscordAccountId,
   now = new Date(),
 ): Promise<boolean> {
   return await db.$transaction(async (tx) => {

@@ -1,3 +1,8 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
+import {
+  type DiscordGuildId,
+  DiscordAccountIdSchema,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { z } from "zod";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
@@ -43,10 +48,10 @@ export type ResolvedIdentity = {
 
 export const AccountRowSchema = z.object({
   server_id: z.string(),
-  puuid: z.string(),
+  puuid: LeaguePuuidSchema,
   player_id: z.union([z.bigint(), z.number()]).transform(Number),
   player_alias: z.string(),
-  discord_id: z.string().nullable(),
+  discord_id: DiscordAccountIdSchema.nullable(),
 });
 
 const IdentityRowSchema = z.object({
@@ -134,7 +139,7 @@ function nameComparison(
 
 async function lookupTrackedAccounts(
   accountsParquet: string | undefined,
-  guildIds: string[],
+  guildIds: DiscordGuildId[],
   options: {
     needle: string;
     match: PlayerMatchMode;
@@ -183,7 +188,7 @@ async function lookupTrackedAccounts(
  */
 async function lookupAccountsByPuuids(
   accountsParquet: string | undefined,
-  guildIds: string[],
+  guildIds: DiscordGuildId[],
   puuids: string[],
   abortSignal?: AbortSignal,
 ): Promise<z.infer<typeof AccountRowSchema>[]> {
@@ -341,7 +346,7 @@ function summarise(
 export async function resolvePlayerIdentities(input: {
   query: string;
   /** The asker's Discord servers. Empty means Riot-ID lookup only. */
-  guildIds: string[];
+  guildIds: DiscordGuildId[];
   lakeDir?: string | undefined;
   /** Stops each account and match-history scan when the Explore turn stops. */
   abortSignal?: AbortSignal | undefined;
@@ -466,7 +471,7 @@ export async function resolvePlayerIdentities(input: {
  */
 export async function resolvePlayerRefPuuids(input: {
   playerRefs: string[];
-  guildIds: string[];
+  guildIds: DiscordGuildId[];
   /** False when the caller has no asker, e.g. a scheduled report. */
   aliasScopeAvailable?: boolean;
   lakeDir?: string | undefined;

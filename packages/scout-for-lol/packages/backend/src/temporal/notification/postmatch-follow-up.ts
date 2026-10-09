@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { recordCoreOutputsDelivered } from "#src/analytics/guild-lifecycle.ts";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
@@ -15,7 +16,7 @@ const POSTMATCH_CORE_OUTPUT_EFFECT_KIND = "core-output-postmatch";
 
 function postmatchCoreOutputEffectKey(
   riotMatchId: RiotMatchId,
-  guildId: string,
+  guildId: DiscordGuildId,
 ): string {
   return `core-output:postmatch:${riotMatchId}:${guildId}`;
 }

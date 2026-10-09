@@ -1,3 +1,7 @@
+import type {
+  DiscordChannelId,
+  DiscordAccountId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import {
   DUEL_DISCLOSURE_VERSION,
   DiscordAccountIdSchema,
@@ -102,7 +106,7 @@ async function participantsHaveCurrentConsent(
   guildId: DiscordGuildId,
   participants: readonly {
     readonly playerId: number;
-    readonly discordId: string;
+    readonly discordId: DiscordAccountId;
   }[],
 ): Promise<boolean> {
   const playerIds = participants.map((participant) =>
@@ -171,8 +175,8 @@ async function readyGameForObservedLobby(options: {
   readonly seriesId: string;
   readonly currentState: string;
   readonly gameNumber: number;
-  readonly guildId: string;
-  readonly channelId: string;
+  readonly guildId: DiscordGuildId;
+  readonly channelId: DiscordChannelId;
 }): Promise<boolean> {
   return await prisma.$transaction(async (tx) => {
     const transitioned = await tx.duelSeries.updateMany({

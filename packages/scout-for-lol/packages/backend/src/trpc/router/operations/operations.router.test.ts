@@ -1,3 +1,4 @@
+import type { DiscordAccountId } from "@scout-for-lol/domain/identity/discord.ts";
 import {
   afterAll,
   beforeAll,
@@ -81,7 +82,7 @@ const MATCH_ID = RiotMatchIdSchema.parse("NA1_5312279829");
 const trpc = await createOfflineTrpcHarness("operations-router-test");
 const db = trpc.prisma;
 
-function caller(discordId: string = OPERATOR) {
+function caller(discordId: DiscordAccountId = OPERATOR) {
   return trpc.authedCaller(discordId);
 }
 

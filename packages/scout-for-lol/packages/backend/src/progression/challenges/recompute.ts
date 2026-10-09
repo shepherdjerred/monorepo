@@ -281,6 +281,7 @@ export async function recomputeChallengeRunPage(
             cursor: {
               ...input.cursor,
               matchId: RiotMatchIdSchema.parse(input.cursor.matchId),
+              puuid: LeaguePuuidSchema.parse(input.cursor.puuid),
             },
           }),
       limit: PAGE_SIZE,

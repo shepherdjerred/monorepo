@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import { describe, expect, test } from "vitest";
 import {
   LoadingScreenDataSchema,
@@ -293,7 +294,7 @@ function makePuuid(suffix: string) {
   return LeaguePuuidSchema.parse(`${samplePuuid}${suffix}`.slice(0, 78));
 }
 
-function makeNonStandardParticipant(puuid: string, team: "blue" | "red") {
+function makeNonStandardParticipant(puuid: LeaguePuuid, team: "blue" | "red") {
   return {
     puuid: LeaguePuuidSchema.parse(puuid),
     summonerName: `Player-${puuid.slice(0, 4)}`,
@@ -308,7 +309,7 @@ function makeNonStandardParticipant(puuid: string, team: "blue" | "red") {
   };
 }
 
-function makeClassicParticipant(puuid: string, team: "blue" | "red") {
+function makeClassicParticipant(puuid: LeaguePuuid, team: "blue" | "red") {
   const { rankState: _rankState, ...participant } = makeNonStandardParticipant(
     puuid,
     team,
@@ -317,7 +318,7 @@ function makeClassicParticipant(puuid: string, team: "blue" | "red") {
 }
 
 function makeParticipant(
-  puuid: string,
+  puuid: LeaguePuuid,
   team: "blue" | "red",
   lane: "top" | "jungle" | "middle" | "adc" | "support",
 ) {

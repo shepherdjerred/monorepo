@@ -1,3 +1,4 @@
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { describe, expect, test } from "vitest";
 import {
   installCompletedEventProps,
@@ -13,7 +14,7 @@ describe("installLandingResult", () => {
     expect(
       installLandingResult({
         outcome: "attributed",
-        guildId: GUILD,
+        guildId: DiscordGuildIdSchema.parse(GUILD),
         surface: "guild_picker",
       }),
     ).toEqual({ outcome: "attributed", guildId: GUILD });
@@ -38,7 +39,7 @@ describe("installCompletedEventProps", () => {
       expect(
         installCompletedEventProps({
           outcome,
-          guildId: GUILD,
+          guildId: DiscordGuildIdSchema.parse(GUILD),
           surface: "onboarding_wizard",
         }),
       ).toEqual({
@@ -53,7 +54,7 @@ describe("installCompletedEventProps", () => {
     expect(
       installCompletedEventProps({
         outcome: "already_installed",
-        guildId: GUILD,
+        guildId: DiscordGuildIdSchema.parse(GUILD),
         surface: "guild_picker",
       }),
     ).toBeNull();
@@ -65,10 +66,16 @@ describe("installCompletedEventProps", () => {
 describe("installLandingCopy", () => {
   test("confirms the install only for attributed and pending", () => {
     expect(
-      installLandingCopy({ outcome: "attributed", guildId: GUILD }).title,
+      installLandingCopy({
+        outcome: "attributed",
+        guildId: DiscordGuildIdSchema.parse(GUILD),
+      }).title,
     ).toBe("Scout added 🎉");
     expect(
-      installLandingCopy({ outcome: "pending", guildId: GUILD }).title,
+      installLandingCopy({
+        outcome: "pending",
+        guildId: DiscordGuildIdSchema.parse(GUILD),
+      }).title,
     ).toBe("Scout added 🎉");
     expect(
       installLandingCopy({ outcome: "invalid", guildId: null }).title,
@@ -81,7 +88,7 @@ describe("installLandingCopy", () => {
   test("names the already-installed case without claiming a new install", () => {
     const copy = installLandingCopy({
       outcome: "already_installed",
-      guildId: GUILD,
+      guildId: DiscordGuildIdSchema.parse(GUILD),
     });
     expect(copy.title).toBe("Finish setup");
     expect(copy.description).toContain("already");
@@ -95,7 +102,10 @@ describe("installLandingCopy", () => {
 describe("installContinueTarget", () => {
   test("deep-links the wizard into the installed guild", () => {
     expect(
-      installContinueTarget({ outcome: "attributed", guildId: GUILD }),
+      installContinueTarget({
+        outcome: "attributed",
+        guildId: DiscordGuildIdSchema.parse(GUILD),
+      }),
     ).toBe(`/welcome?guild=${GUILD}`);
   });
 

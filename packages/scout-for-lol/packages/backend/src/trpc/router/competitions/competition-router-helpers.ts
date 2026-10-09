@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import { TRPCError } from "@trpc/server";
 import type {
   CompetitionId,
@@ -14,7 +15,7 @@ export function asCompetitionBadRequest(error: unknown): never {
 
 export async function loadGuildCompetitionOr404(
   competitionId: CompetitionId,
-  guildId: string,
+  guildId: DiscordGuildId,
 ): Promise<CompetitionWithCriteria> {
   const competition = await getCompetitionById(prisma, competitionId);
   if (competition?.serverId !== guildId) {

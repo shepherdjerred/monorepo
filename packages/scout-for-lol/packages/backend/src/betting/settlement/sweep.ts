@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import * as Sentry from "@sentry/bun";
 import {
@@ -312,7 +313,11 @@ async function matchPoolAtClose(input: {
  */
 function parsedMessageRefs(
   poolId: number,
-  draft: { messageRefsJson: string; matchId: RiotMatchId; serverId: string },
+  draft: {
+    messageRefsJson: string;
+    matchId: RiotMatchId;
+    serverId: DiscordGuildId;
+  },
 ): ClosedPool["messageRefs"] {
   try {
     return BucksMessageRefsSchema.parse(JSON.parse(draft.messageRefsJson)).map(

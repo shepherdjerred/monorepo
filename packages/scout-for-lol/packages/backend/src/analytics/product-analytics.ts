@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import { PostHog } from "posthog-node";
 import type { BucksLedgerKind } from "@scout-for-lol/data";
 import configuration, {
@@ -196,7 +197,7 @@ export type AnalyticsInstallation = {
    * server behave over its whole history". Both are needed, and they are not
    * interchangeable.
    */
-  serverId: string;
+  serverId: DiscordGuildId;
 };
 
 type CaptureProperties = Record<string, string | number | boolean>;
@@ -221,12 +222,12 @@ export type ProductAnalytics = {
     options?: ProductAnalyticsEventOptions,
   ) => void;
   captureBucksMember: (
-    member: { analyticsUserId: string; serverId: string },
+    member: { analyticsUserId: string; serverId: DiscordGuildId },
     event: BucksMemberAnalyticsEvent,
     options?: ProductAnalyticsEventOptions,
   ) => void;
   captureBucksSystem: (
-    serverId: string,
+    serverId: DiscordGuildId,
     event: BucksSystemAnalyticsEvent,
     options?: ProductAnalyticsEventOptions,
   ) => boolean;
@@ -238,7 +239,7 @@ type CapturePropertyValue = string | number | boolean | undefined;
 
 type CaptureInput = {
   distinctId: string;
-  serverId: string;
+  serverId: DiscordGuildId;
   event: ProductAnalyticsEvent;
   eventOptions?: ProductAnalyticsEventOptions | undefined;
   additionalProperties?: Record<string, CapturePropertyValue>;

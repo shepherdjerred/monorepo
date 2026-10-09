@@ -11,6 +11,7 @@
  * `subscription.add` flow before anything is stored.
  */
 
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import { z } from "zod";
 import {
   DiscordGuildIdSchema,
@@ -238,7 +239,7 @@ type SelfAccount = { puuid: LeaguePuuid; region: Region };
  * Returns null when the alias is not tracked in this guild.
  */
 async function loadSelfAccounts(
-  guildId: string,
+  guildId: DiscordGuildId,
   alias: string,
 ): Promise<SelfAccount[] | null> {
   const player = await prisma.player.findUnique({

@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import type { ScoutStage } from "@scout-for-lol/temporal";
 import type { Db } from "#src/database/index.ts";
 import { requestConfiguredFullHallBaseline } from "#src/progression/hall/settings.ts";
@@ -9,7 +10,7 @@ import { requestConfiguredFullHallBaseline } from "#src/progression/hall/setting
  * the mutation transaction.
  */
 export async function queueHallRosterRebaseline(options: {
-  readonly guildId: string;
+  readonly guildId: DiscordGuildId;
   readonly actorDiscordId: string;
   readonly stage: ScoutStage;
   readonly db: Db;

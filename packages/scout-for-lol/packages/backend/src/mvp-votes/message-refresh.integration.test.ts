@@ -1,3 +1,8 @@
+import {
+  DiscordMessageIdSchema,
+  type DiscordMessageId,
+} from "@scout-for-lol/domain/identity/brands.ts";
+import type { DiscordChannelId } from "@scout-for-lol/domain/identity/discord.ts";
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   DiscordAccountIdSchema,
@@ -57,7 +62,7 @@ beforeEach(async () => {
       matchId,
       serverId,
       channelId: firstChannel,
-      messageId: "400000000000000001",
+      messageId: DiscordMessageIdSchema.parse("400000000000000001"),
     },
     db,
   );
@@ -66,7 +71,7 @@ beforeEach(async () => {
       matchId,
       serverId,
       channelId: secondChannel,
-      messageId: "400000000000000002",
+      messageId: DiscordMessageIdSchema.parse("400000000000000002"),
     },
     db,
   );
@@ -98,7 +103,7 @@ describe("MVP terminal report targets", () => {
         matchId,
         serverId,
         channelId: firstChannel,
-        messageId: "400000000000000001",
+        messageId: DiscordMessageIdSchema.parse("400000000000000001"),
       },
       db,
     );
@@ -141,7 +146,7 @@ describe("MVP terminal report targets", () => {
         matchId,
         serverId,
         channelId: newChannel,
-        messageId: "400000000000000003",
+        messageId: DiscordMessageIdSchema.parse("400000000000000003"),
       },
       db,
     );
@@ -149,7 +154,7 @@ describe("MVP terminal report targets", () => {
       db.matchMvpTallyRefresh.findUniqueOrThrow({ where }),
     ).resolves.toMatchObject({ pending: true, requeueGeneration: 1 });
     stubs.fetchChannelForDelivery.mockImplementation(
-      async (channelId: string) =>
+      async (channelId: DiscordChannelId) =>
         channelId === newChannel
           ? {
               guildId: serverId,
@@ -191,7 +196,7 @@ describe("MVP terminal report targets", () => {
         matchId,
         serverId: DiscordGuildIdSchema.parse("1337623164146155594"),
         channelId: firstChannel,
-        messageId: "400000000000000001",
+        messageId: DiscordMessageIdSchema.parse("400000000000000001"),
       },
       db,
     );
@@ -216,7 +221,7 @@ describe("MVP message refresh", () => {
         matchId,
         serverId,
         channelId: firstChannel,
-        messageId: latestMessageId,
+        messageId: DiscordMessageIdSchema.parse(latestMessageId),
       },
       db,
     );
@@ -224,7 +229,7 @@ describe("MVP message refresh", () => {
       guildId: serverId,
       isTextBased: () => true,
       messages: {
-        fetch: async (messageId: string) => {
+        fetch: async (messageId: DiscordMessageId) => {
           if (messageId === "400000000000000001") {
             throw Object.assign(new Error("Unknown Message"), { code: 10_008 });
           }
@@ -257,7 +262,7 @@ describe("MVP message refresh", () => {
     "updates live reports when another target is deleted (%s)",
     async (missingMode) => {
       stubs.fetchChannelForDelivery.mockImplementation(
-        async (channelId: string) => {
+        async (channelId: DiscordChannelId) => {
           if (channelId === firstChannel) {
             if (missingMode === "missing response") return null;
             if (missingMode === "unknown channel error") {

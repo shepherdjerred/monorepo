@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/data";
 import { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/query/trpc.ts";
@@ -18,7 +19,7 @@ export type SubscriptionChannelAction =
   | { kind: "move"; alias: string; fromChannelId: string };
 
 type Props = {
-  guildId: string;
+  guildId: DiscordGuildId;
   channels: Channel[];
   action: SubscriptionChannelAction | null;
   onOpenChange: (open: boolean) => void;

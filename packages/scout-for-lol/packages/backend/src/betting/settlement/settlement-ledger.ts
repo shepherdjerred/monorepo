@@ -1,3 +1,5 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   DiscordGuildIdSchema,
@@ -20,7 +22,7 @@ import type { Db } from "#src/database/index.ts";
 type CreditBetInput = {
   bet: SettlementBet;
   matchId: RiotMatchId;
-  serverId: string;
+  serverId: DiscordGuildId;
   roster: readonly BucksPoolParticipant[];
   winningTeamId: number | undefined;
   voidReason: BucksVoidReason | undefined;
@@ -44,7 +46,7 @@ function aliasesForTeam(
 
 function subjectAlias(
   roster: readonly BucksPoolParticipant[],
-  puuid: string,
+  puuid: LeaguePuuid,
 ): string {
   const found = roster.find((participant) => participant.puuid === puuid);
   return found?.trackedAlias ?? "a tracked player";

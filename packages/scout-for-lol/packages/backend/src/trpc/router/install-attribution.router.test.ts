@@ -1,3 +1,7 @@
+import {
+  DiscordAccountIdSchema,
+  type DiscordAccountId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import { testAccountId, testGuildId } from "#src/testing/test-ids.ts";
@@ -13,7 +17,7 @@ const { resetInstallAttributionRateLimitForTests } =
   await import("#src/trpc/router/install-attribution.router.ts");
 
 const SERVER_ID = testGuildId("760");
-const ACTOR = testAccountId("761");
+const ACTOR = testAccountId("838473329290374341");
 
 async function seedInstall() {
   return trpc.prisma.guildInstall.create({
@@ -28,7 +32,7 @@ async function seedInstall() {
   });
 }
 
-async function mintFor(discordId: string) {
+async function mintFor(discordId: DiscordAccountId) {
   return mintInstallAttributionToken(
     {
       discordId: testAccountId(discordId),
@@ -52,7 +56,9 @@ afterAll(async () => {
 describe("installAttribution.complete", () => {
   test("attributes a fresh install for the session user", async () => {
     await seedInstall();
-    const token = await mintFor("761");
+    const token = await mintFor(
+      DiscordAccountIdSchema.parse("838473329290374341"),
+    );
 
     const result = await trpc
       .authedCaller(ACTOR)
@@ -71,7 +77,9 @@ describe("installAttribution.complete", () => {
 
   test("returns invalid for a token minted for another user", async () => {
     await seedInstall();
-    const token = await mintFor("762");
+    const token = await mintFor(
+      DiscordAccountIdSchema.parse("836243441791312048"),
+    );
 
     const result = await trpc
       .authedCaller(ACTOR)
@@ -83,7 +91,9 @@ describe("installAttribution.complete", () => {
   test("returns invalid when the session cannot administer the guild", async () => {
     trpc.setMembership([]);
     await seedInstall();
-    const token = await mintFor("761");
+    const token = await mintFor(
+      DiscordAccountIdSchema.parse("838473329290374341"),
+    );
 
     const result = await trpc
       .authedCaller(ACTOR)
@@ -98,7 +108,9 @@ describe("installAttribution.complete", () => {
   });
 
   test("rejects anonymous callers", async () => {
-    const token = await mintFor("761");
+    const token = await mintFor(
+      DiscordAccountIdSchema.parse("838473329290374341"),
+    );
 
     await expect(
       trpc
@@ -115,7 +127,9 @@ describe("installAttribution.complete", () => {
     }
 
     await seedInstall();
-    const token = await mintFor("761");
+    const token = await mintFor(
+      DiscordAccountIdSchema.parse("838473329290374341"),
+    );
     const limited = await caller.installAttribution.complete({
       state: token,
       guildId: SERVER_ID,

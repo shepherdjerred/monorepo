@@ -1,3 +1,8 @@
+import {
+  DiscordGuildIdSchema,
+  type DiscordGuildId,
+  type DiscordAccountId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import {
@@ -38,7 +43,7 @@ const framing = { anchorTeamId: 100, mixedTeams: true } as const;
 
 function bet(input: {
   id: number;
-  discordId: string;
+  discordId: DiscordAccountId;
   teamId: 100 | 200;
   won?: boolean;
   refunded?: boolean;
@@ -69,7 +74,7 @@ function bet(input: {
 
 function summary(
   bets: SettlementBet[],
-  serverId: string,
+  serverId: DiscordGuildId,
   voidReason?: SettlementSummary["voidReason"],
 ): SettlementSummary {
   return {
@@ -95,7 +100,11 @@ function build(input: {
   voidReason?: SettlementSummary["voidReason"];
 }) {
   return buildSettlementDmMessages({
-    summary: summary(input.bets, "server-1", input.voidReason),
+    summary: summary(
+      input.bets,
+      DiscordGuildIdSchema.parse("816472318947668766"),
+      input.voidReason,
+    ),
     includeOutcome: true,
     parlay: input.parlay,
     unmatchedPositions: input.unmatchedPositions ?? [],
@@ -251,7 +260,7 @@ describe("Bryan Bucks settlement DMs", () => {
   test("excludes house bets and parlays from player-facing notices", () => {
     const parlay: ParlaySettlementSummary = {
       matchId: RiotMatchIdSchema.parse("NA1_9100000000"),
-      serverId: "server-1",
+      serverId: DiscordGuildIdSchema.parse("816472318947668766"),
       yesResult: true,
       voidReason: undefined,
       legs: [],
@@ -333,7 +342,7 @@ describe("Bryan Bucks settlement DM embeds", () => {
     const messages = buildSettlementDmMessages({
       summary: summary(
         [bet({ id: 1, discordId: blueBettor, teamId: 100, won: true })],
-        "server-1",
+        DiscordGuildIdSchema.parse("816472318947668766"),
       ),
       includeOutcome: true,
       parlay: undefined,
@@ -585,7 +594,7 @@ describe("Bryan Bucks settlement DM preferences", () => {
           bet({ id: 1, discordId: blueBettor, teamId: 100, won: true }),
           bet({ id: 2, discordId: redBettor, teamId: 200 }),
         ],
-        "server-1",
+        DiscordGuildIdSchema.parse("816472318947668766"),
       ),
       includeOutcome: true,
       parlay: undefined,
@@ -617,7 +626,7 @@ describe("Bryan Bucks settlement DM preferences", () => {
     const messages = buildSettlementDmMessages({
       summary: summary(
         [bet({ id: 1, discordId: blueBettor, teamId: 100, won: true })],
-        "server-1",
+        DiscordGuildIdSchema.parse("816472318947668766"),
       ),
       includeOutcome: true,
       parlay: undefined,

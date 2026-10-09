@@ -1,3 +1,4 @@
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { afterEach, describe, expect, test } from "vitest";
 import type { CaptureOptions } from "posthog-js";
 import {
@@ -302,7 +303,10 @@ describe("identity", () => {
   // outlive the visit in localStorage and mis-attribute the next one.
   test("scopes the guild super property to the session", () => {
     installClient();
-    resolveGuildContext("/g/123456789012345678", "123456789012345678");
+    resolveGuildContext(
+      "/g/123456789012345678",
+      DiscordGuildIdSchema.parse("123456789012345678"),
+    );
     clearGuildContext();
     expect(identityCalls).toEqual([
       {
@@ -360,7 +364,10 @@ describe("identity", () => {
     identityCalls = [];
     identifyUser(ANALYTICS_USER_ID);
     resetIdentity();
-    resolveGuildContext("/g/123456789012345678", "123456789012345678");
+    resolveGuildContext(
+      "/g/123456789012345678",
+      DiscordGuildIdSchema.parse("123456789012345678"),
+    );
     startAnalyticsCapture();
     expect(identityCalls).toEqual([]);
   });
@@ -482,7 +489,10 @@ describe("route analytics context", () => {
     installClient();
     expect(resolvedAnalyticsContextRoute()).toBeUndefined();
 
-    resolveGuildContext("/g/123", "123");
+    resolveGuildContext(
+      "/g/123",
+      DiscordGuildIdSchema.parse("818851787542395619"),
+    );
     expect(resolvedAnalyticsContextRoute()).toBe("/g/123");
 
     clearGuildContext();

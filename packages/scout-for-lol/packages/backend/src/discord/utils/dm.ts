@@ -173,7 +173,7 @@ async function recordDmAudit(
   row: {
     recipientId: string;
     recipientTag: string | undefined;
-    guildId: string | undefined;
+    guildId: DiscordGuildId | undefined;
     kind: DmKind;
     content: string;
     status: DmStatus;
@@ -246,7 +246,7 @@ async function reserveDeliveryRow(
   row: {
     recipientId: string;
     recipientTag: string | undefined;
-    guildId: string | undefined;
+    guildId: DiscordGuildId | undefined;
     kind: DmKind;
     content: string;
     ladderStage: number | undefined;
@@ -406,7 +406,7 @@ async function recordSendOutcome(
     reservedRowId: number | null;
     recipientId: string;
     recipientTag: string | undefined;
-    guildId: string | undefined;
+    guildId: DiscordGuildId | undefined;
     kind: DmKind;
     content: string;
     status: DmStatus;

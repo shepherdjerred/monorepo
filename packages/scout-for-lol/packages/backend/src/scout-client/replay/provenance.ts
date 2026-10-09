@@ -1,3 +1,4 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import { z } from "zod";
 import type { RawMatch } from "@scout-for-lol/data";
 import type {
@@ -67,7 +68,7 @@ function participantFingerprint(
   if (participant === undefined) return null;
   const stats = participant.stats;
   return {
-    puuid: identity.player.puuid,
+    puuid: LeaguePuuidSchema.parse(identity.player.puuid),
     teamId: participant.teamId,
     kills: stats.kills,
     deaths: stats.deaths,
@@ -122,7 +123,7 @@ export function replayProvenanceFromMatch(
     leaguePatch: match.info.gameVersion,
     gameDurationSeconds: match.info.gameDuration,
     participant: {
-      puuid: participant.puuid,
+      puuid: LeaguePuuidSchema.parse(participant.puuid),
       teamId: participant.teamId,
       kills: participant.kills,
       deaths: participant.deaths,

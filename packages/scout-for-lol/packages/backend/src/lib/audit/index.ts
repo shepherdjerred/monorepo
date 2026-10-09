@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import { z } from "zod";
 import {
   DiscordAccountIdSchema,
@@ -57,7 +58,7 @@ export type AuditAction = z.infer<typeof AuditActionSchema>;
 export type RecordAuditInput = {
   action: AuditAction;
   actorDiscordId: string;
-  serverId: string;
+  serverId: DiscordGuildId;
   targetChannelId?: string | null;
   targetPlayerId?: number | null;
   targetAccountId?: number | null;

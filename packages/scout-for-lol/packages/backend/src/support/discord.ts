@@ -1,3 +1,7 @@
+import {
+  type DiscordGuildId,
+  DiscordAccountIdSchema,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   ActionRowBuilder,
@@ -40,7 +44,7 @@ export function supportContactRow(matchId?: RiotMatchId) {
 export async function withSupportAction(
   message: MessageCreateOptions,
   matchId: RiotMatchId,
-  serverId: string,
+  serverId: DiscordGuildId,
 ): Promise<MessageCreateOptions> {
   if (
     !(await isPolicyEnabled("scout_support_conversations_enabled")) ||
@@ -81,7 +85,9 @@ async function showSupportModal(
   matchId: RiotMatchId | undefined,
 ): Promise<void> {
   await interaction.showModal(buildSupportModal(matchId));
-  if (isScoutOperator(interaction.user.id)) return;
+  if (isScoutOperator(DiscordAccountIdSchema.parse(interaction.user.id))) {
+    return;
+  }
   try {
     await recordSupportTouchpoint(
       `opened:${interaction.id}`,
@@ -106,7 +112,7 @@ async function submitSupportModal(
         message: "Write a message of up to 4,000 characters.",
       });
     await acceptSupportMessage({
-      discordId: interaction.user.id,
+      discordId: DiscordAccountIdSchema.parse(interaction.user.id),
       username: interaction.user.username,
       body,
       source: "DISCORD_MODAL",

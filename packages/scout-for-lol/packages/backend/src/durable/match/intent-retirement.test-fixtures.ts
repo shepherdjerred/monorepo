@@ -135,7 +135,7 @@ export async function seedChannelIntent(
   args: {
     name: string;
     matchId: RiotMatchId;
-    channelId: string;
+    channelId: DiscordChannelId;
     state: "pending" | "ready";
     kind?: NotificationIntentKind;
     freshnessDeadline?: string;

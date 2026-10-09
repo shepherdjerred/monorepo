@@ -1,9 +1,10 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import { describe, expect, test } from "vitest";
 import { RankSchema, type Rank } from "#src/model/riot/rank.ts";
 import { buildPlayerRankHistory } from "#src/model/riot/player-rank-history.ts";
 
-const MAIN = "main-puuid";
-const SMURF = "smurf-puuid";
+const MAIN = LeaguePuuidSchema.parse("main-puuid".padEnd(78, "0"));
+const SMURF = LeaguePuuidSchema.parse("smurf-puuid".padEnd(78, "0"));
 
 function rank(
   tier: Rank["tier"],

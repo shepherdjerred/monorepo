@@ -40,7 +40,7 @@ const logger = createLogger("discord-channel");
 export class ChannelSendError extends Error {
   constructor(
     message: string,
-    public readonly channelId: string,
+    public readonly channelId: DiscordChannelId,
     public readonly permissionError: boolean,
     public readonly originalError?: unknown,
   ) {

@@ -1,3 +1,4 @@
+import { DiscordChannelIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { AttachmentBuilder } from "discord.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { z } from "zod";
@@ -488,7 +489,11 @@ describe("what the send assembles", () => {
     const deliveries = [];
     for (const channelId of ["100000000000000001", "100000000000000002"]) {
       stubs.requireIntentRecord.mockResolvedValue(
-        intentRecord("channel", "postmatch", channelId),
+        intentRecord(
+          "channel",
+          "postmatch",
+          DiscordChannelIdSchema.parse(channelId),
+        ),
       );
       deliveries.push(await deliverNotification(attemptRef()));
     }

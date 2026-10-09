@@ -1,5 +1,5 @@
+import { type DiscordGuildId, RiotIdSchema } from "@scout-for-lol/data";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { RiotIdSchema } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 import { regionLabel, type RegionValue } from "#src/lib/regions.ts";
 import { useDebouncedValue } from "#src/hooks/use-debounced-value.ts";
@@ -29,7 +29,7 @@ function itemRiotId(item: RiotItem): string {
  * Every pick is still Riot-verified by the add flow before it's stored.
  */
 export function RiotIdCombobox(props: {
-  guildId: string;
+  guildId: DiscordGuildId;
   region: RegionValue;
   value: string;
   onValueChange: (value: string) => void;

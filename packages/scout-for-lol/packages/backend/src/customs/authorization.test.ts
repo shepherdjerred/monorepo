@@ -1,3 +1,9 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
+import {
+  DiscordAccountIdSchema,
+  DiscordGuildIdSchema,
+  DiscordChannelIdSchema,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { describe, expect, test } from "vitest";
 import type {
   CustomGameParticipant,
@@ -9,14 +15,17 @@ import {
   customRoleFor,
 } from "#src/customs/authorization.ts";
 
+const HOST_ACCOUNT = DiscordAccountIdSchema.parse("832206143528653125");
+const COHOST_ACCOUNT = DiscordAccountIdSchema.parse("837655022129967818");
+
 const SNAPSHOT: CustomNightSnapshot = {
   id: "018f173a-6f4a-7d19-b731-963d62a2e1bd",
-  guildId: "guild",
+  guildId: DiscordGuildIdSchema.parse("810135513265406599"),
   guildName: "Guild",
-  launchChannelId: "launch",
-  voiceLobbyChannelId: "voice",
-  hostDiscordId: "host",
-  cohostDiscordIds: ["cohost"],
+  launchChannelId: DiscordChannelIdSchema.parse("829863532286967615"),
+  voiceLobbyChannelId: DiscordChannelIdSchema.parse("825942084019419946"),
+  hostDiscordId: HOST_ACCOUNT,
+  cohostDiscordIds: [COHOST_ACCOUNT],
   state: "RECRUITING",
   revision: 0,
   viewerRole: "HOST",
@@ -32,12 +41,14 @@ const SNAPSHOT: CustomNightSnapshot = {
 };
 
 const CAPTAIN: CustomGameParticipant = {
-  discordId: "captain",
+  discordId: DiscordAccountIdSchema.parse("837826744103031196"),
   displayName: "Captain",
   playerId: 1,
-  playerAlias: "captain",
+  playerAlias: "837826744103031196",
   accountId: 1,
-  puuid: "puuid",
+  puuid: LeaguePuuidSchema.parse(
+    "puuid0000000000000000000000000000000000000000000000000000000000000000000000000",
+  ),
   riotGameName: null,
   riotTagLine: null,
   rosterOrder: 0,
@@ -52,23 +63,39 @@ const CAPTAIN: CustomGameParticipant = {
 
 describe("custom authorization", () => {
   test("host, cohost, and administrator can manage", () => {
-    expect(canManageCustomNight(customRoleFor(SNAPSHOT, "host", false))).toBe(
-      true,
-    );
-    expect(canManageCustomNight(customRoleFor(SNAPSHOT, "cohost", false))).toBe(
-      true,
-    );
     expect(
-      canManageCustomNight(customRoleFor(SNAPSHOT, "outsider", true)),
+      canManageCustomNight(customRoleFor(SNAPSHOT, HOST_ACCOUNT, false)),
     ).toBe(true);
-    expect(canManageCustomNight(customRoleFor(SNAPSHOT, "member", false))).toBe(
-      false,
-    );
+    expect(
+      canManageCustomNight(customRoleFor(SNAPSHOT, COHOST_ACCOUNT, false)),
+    ).toBe(true);
+    expect(
+      canManageCustomNight(
+        customRoleFor(
+          SNAPSHOT,
+          DiscordAccountIdSchema.parse("830693552597407107"),
+          true,
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      canManageCustomNight(
+        customRoleFor(
+          SNAPSHOT,
+          DiscordAccountIdSchema.parse("837614830854307492"),
+          false,
+        ),
+      ),
+    ).toBe(false);
   });
 
   test("captains draft only for their active team", () => {
-    expect(canDraftForTeam("CAPTAIN", "captain", [CAPTAIN], "A")).toBe(true);
-    expect(canDraftForTeam("CAPTAIN", "captain", [CAPTAIN], "B")).toBe(false);
-    expect(canDraftForTeam("HOST", "host", [CAPTAIN], "B")).toBe(true);
+    expect(
+      canDraftForTeam("CAPTAIN", "837826744103031196", [CAPTAIN], "A"),
+    ).toBe(true);
+    expect(
+      canDraftForTeam("CAPTAIN", "837826744103031196", [CAPTAIN], "B"),
+    ).toBe(false);
+    expect(canDraftForTeam("HOST", HOST_ACCOUNT, [CAPTAIN], "B")).toBe(true);
   });
 });

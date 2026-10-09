@@ -1,4 +1,8 @@
 import {
+  type LeaguePuuid,
+  LeaguePuuidSchema,
+} from "@scout-for-lol/domain/identity/league-account.ts";
+import {
   RiotMatchIdSchema,
   type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
@@ -32,7 +36,7 @@ const ProgressionMatchRowSchema = z.strictObject({
   queue: QueueTypeSchema,
   end_of_game_result: z.string().nullable(),
   early_surrendered: z.boolean(),
-  puuid: z.string(),
+  puuid: LeaguePuuidSchema,
   champion_id: LakeIntSchema,
   champion_name: z.string(),
   team_position: z.string(),
@@ -65,7 +69,7 @@ export type ProgressionMatchRow = z.infer<typeof ProgressionMatchRowSchema> &
 export type ProgressionMatchCursor = {
   readonly gameEndMs: number;
   readonly matchId: RiotMatchId;
-  readonly puuid: string;
+  readonly puuid: LeaguePuuid;
 };
 
 const MATCH_COLUMNS = [
@@ -124,7 +128,7 @@ function cursorPredicate(cursor: ProgressionMatchCursor | undefined): {
 
 const TimelineEventCountRowSchema = z.strictObject({
   match_id: RiotMatchIdSchema,
-  puuid: z.string(),
+  puuid: LeaguePuuidSchema,
   event_type: z.string(),
   role: TimelineEventParticipantRoleSchema,
   event_count: LakeIntSchema,
@@ -133,7 +137,7 @@ const TimelineEventCountRowSchema = z.strictObject({
 export async function fetchTimelineEventCounts(options: {
   readonly matchPuuids: readonly {
     readonly matchId: RiotMatchId;
-    readonly puuid: string;
+    readonly puuid: LeaguePuuid;
   }[];
   readonly lakeDir?: string;
 }): Promise<

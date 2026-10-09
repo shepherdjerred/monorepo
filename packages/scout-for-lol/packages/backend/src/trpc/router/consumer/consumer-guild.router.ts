@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
@@ -37,7 +38,7 @@ const STANDARD_QUEUES = [
   "custom",
 ];
 
-async function authorizedGuild(user: User, guildId: string) {
+async function authorizedGuild(user: User, guildId: DiscordGuildId) {
   const guilds = await assertConsumerPlayerScope(user);
   const guild = guilds.find((candidate) => candidate.id === guildId);
   if (guild === undefined)

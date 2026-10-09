@@ -1,3 +1,9 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
+import {
+  DiscordGuildIdSchema,
+  DiscordChannelIdSchema,
+  DiscordAccountIdSchema,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { StorableDareChallengerStakeSchema } from "#src/model/bucks/bryan-bucks-money.ts";
@@ -37,13 +43,13 @@ export type BucksDareState = z.infer<typeof BucksDareStateSchema>;
 
 export const DareTargetBindingSchema = z.strictObject({
   key: z.string().min(1).max(40),
-  discordId: z.string().min(1),
+  discordId: DiscordAccountIdSchema,
   playerId: z.number().int().positive(),
   alias: z.string().min(1),
   accounts: z
     .array(
       z.strictObject({
-        puuid: z.string().min(1),
+        puuid: LeaguePuuidSchema,
         trackingStartedAt: z.iso.datetime(),
       }),
     )
@@ -67,8 +73,8 @@ export type DareDeadlineSpec = z.infer<typeof DareDeadlineSpecSchema>;
 export const DareContractRuntimeSchema = z.strictObject({
   targets: z.array(DareTargetBindingSchema).min(1).max(DARE_MAX_TARGETS),
   openingStake: StorableDareChallengerStakeSchema,
-  serverId: z.string().min(1),
-  channelId: z.string().min(1),
+  serverId: DiscordGuildIdSchema,
+  channelId: DiscordChannelIdSchema,
   revision: z.number().int().positive(),
   activationAt: z.iso.datetime(),
   deadlineAt: z.iso.datetime(),

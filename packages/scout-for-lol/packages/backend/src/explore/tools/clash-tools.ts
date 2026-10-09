@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import { tool } from "ai";
 import { z } from "zod";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
@@ -16,7 +17,7 @@ const ClashToolResultSchema = z.strictObject({
 });
 
 export function createClashExploreTools(options: {
-  readonly guildIds: readonly string[];
+  readonly guildIds: readonly DiscordGuildId[];
   readonly track: ToolTracker;
 }) {
   return {

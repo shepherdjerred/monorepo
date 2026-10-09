@@ -1,3 +1,4 @@
+import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { afterAll, beforeEach, expect, test, vi } from "vitest";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { createTestDatabase } from "#src/testing/test-database.ts";
@@ -47,7 +48,7 @@ async function input() {
   return {
     ticket: ticket(),
     identity: { userId },
-    guildIds: ["200000000000000002"],
+    guildIds: [DiscordGuildIdSchema.parse("200000000000000002")],
     surface: "discord" as const,
     started: { ...created, question },
     history: [],

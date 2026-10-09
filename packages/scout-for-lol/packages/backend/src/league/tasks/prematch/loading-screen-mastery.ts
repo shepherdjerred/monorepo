@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import {
   LeaguePuuidSchema,
   type RawCurrentGameInfo,
@@ -45,7 +46,7 @@ export async function fetchParticipantMasteries(
 }
 
 export function withSelectedChampionMastery(
-  puuid: string | null,
+  puuid: LeaguePuuid | null,
   championId: number,
   masteries: ParticipantMasteries,
 ) {

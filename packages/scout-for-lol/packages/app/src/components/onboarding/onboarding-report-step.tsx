@@ -1,3 +1,4 @@
+import type { DiscordGuildId, DiscordChannelId } from "@scout-for-lol/data";
 import { useEffect, useRef, useState } from "react";
 import { useSelector } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
@@ -40,8 +41,8 @@ function initialState(exampleId: string, channelId: string): ReportFormState {
 }
 
 export function OnboardingReportStep(props: {
-  guildId: string;
-  channels: { id: string; name: string }[];
+  guildId: DiscordGuildId;
+  channels: { id: DiscordChannelId; name: string }[];
   exampleId: string | null;
   onCreated: (reportId: number) => void;
   onBack: () => void;

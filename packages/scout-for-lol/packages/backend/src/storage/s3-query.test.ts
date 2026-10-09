@@ -36,9 +36,7 @@ function generateDatePrefixes(startDate: Date, endDate: Date): string[] {
  * Check if a match includes any of the specified participant PUUIDs
  */
 function matchIncludesParticipant(match: RawMatch, puuids: string[]): boolean {
-  return match.metadata.participants.some((puuid: string) =>
-    puuids.includes(puuid),
-  );
+  return match.metadata.participants.some((puuid) => puuids.includes(puuid));
 }
 
 // ============================================================================

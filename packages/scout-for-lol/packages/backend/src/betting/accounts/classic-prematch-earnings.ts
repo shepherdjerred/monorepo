@@ -1,3 +1,7 @@
+import type {
+  DiscordGuildId,
+  DiscordAccountId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import * as Sentry from "@sentry/bun";
 import {
@@ -26,8 +30,8 @@ const logger = createLogger("betting-classic-prematch-earnings");
 const CLASSIC_PLAYED_REWARD = { kind: "earn_game", amount: 1 } as const;
 
 type ClassicPrematchEarnTarget = {
-  serverId: string;
-  discordId: string;
+  serverId: DiscordGuildId;
+  discordId: DiscordAccountId;
   alias: string;
   participant: Pick<
     RawCurrentGameParticipant,
@@ -37,9 +41,9 @@ type ClassicPrematchEarnTarget = {
 
 const ClassicPrematchTargetSnapshotSchema = z.array(
   z.object({
-    discordId: z.string(),
+    discordId: DiscordAccountIdSchema,
     alias: z.string(),
-    puuid: z.string(),
+    puuid: LeaguePuuidSchema,
     championId: z.number().int(),
     teamId: z.number().int(),
   }),
@@ -106,7 +110,7 @@ async function findClassicPrematchEarnTargets(input: {
 }
 
 function classicPrematchTargetsFromSnapshot(
-  serverId: string,
+  serverId: DiscordGuildId,
   serialized: string,
 ): ClassicPrematchEarnTarget[] {
   const snapshots = ClassicPrematchTargetSnapshotSchema.parse(
@@ -158,7 +162,7 @@ async function awardClassicPrematchForGameUnsafe(
     trackedAliasByPuuid: input.trackedAliasByPuuid,
     prismaClient,
   });
-  const byGuild = new Map<string, ClassicPrematchEarnTarget[]>();
+  const byGuild = new Map<DiscordGuildId, ClassicPrematchEarnTarget[]>();
   for (const target of targets) {
     byGuild.set(target.serverId, [
       ...(byGuild.get(target.serverId) ?? []),
@@ -188,7 +192,7 @@ async function awardClassicPrematchForGameUnsafe(
 async function awardClassicPrematchForGuild(input: {
   prismaClient: ExtendedPrismaClient;
   matchId: RiotMatchId;
-  serverId: string;
+  serverId: DiscordGuildId;
   matchCreatedAt: Date;
   targets?: readonly ClassicPrematchEarnTarget[];
 }): Promise<EarnedAward[]> {

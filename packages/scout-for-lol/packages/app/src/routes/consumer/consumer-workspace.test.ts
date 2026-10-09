@@ -1,3 +1,4 @@
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { describe, expect, test } from "vitest";
 import {
   consumerNavigationItems,
@@ -200,13 +201,15 @@ describe("guild navigation", () => {
   });
 
   test("selecting a server targets its permission-aware index route", () => {
-    expect(guildWorkspacePath("discord-123")).toBe("/g/discord-123");
+    expect(
+      guildWorkspacePath(DiscordGuildIdSchema.parse("810014215985566547")),
+    ).toBe("/g/810014215985566547");
   });
 
   test("uses a direct Manage Scout target for zero or one server", () => {
     expect(resolveManageScoutTarget([])).toBe("/manage");
-    expect(resolveManageScoutTarget([{ id: "discord-123" }])).toBe(
-      "/g/discord-123",
+    expect(resolveManageScoutTarget([{ id: "810014215985566547" }])).toBe(
+      "/g/810014215985566547",
     );
     expect(
       resolveManageScoutTarget([{ id: "one" }, { id: "two" }]),

@@ -1,3 +1,5 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import { tool } from "ai";
 import { z } from "zod";
 import {
@@ -32,7 +34,7 @@ export const RankedHistoryTargetSchema = z.discriminatedUnion("kind", [
 ]);
 
 export async function riotHistoryExploreEnabled(
-  guildIds: string[],
+  guildIds: DiscordGuildId[],
 ): Promise<boolean> {
   const decisions = await Promise.all(
     guildIds.map(
@@ -48,11 +50,11 @@ export async function riotHistoryExploreEnabled(
 export async function resolveRiotPlayerTarget(
   target: z.infer<typeof RankedHistoryTargetSchema>,
   requesterId: DiscordAccountId,
-  guildIds: string[],
+  guildIds: DiscordGuildId[],
 ): Promise<
   | {
       kind: "ok";
-      puuid: string;
+      puuid: LeaguePuuid;
       region: z.infer<typeof RegionSchema>;
       label: string;
       lane: string | null;
@@ -99,7 +101,7 @@ export async function resolveRiotPlayerTarget(
 
 export function createRiotHistoryExploreTools(input: {
   requesterId: DiscordAccountId;
-  guildIds: string[];
+  guildIds: DiscordGuildId[];
   track: ToolTracker;
 }) {
   return {

@@ -1,3 +1,8 @@
+import type {
+  DiscordGuildId,
+  DiscordChannelId,
+  DiscordAccountId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import {
   ChannelType,
   PermissionFlagsBits,
@@ -65,13 +70,13 @@ async function customGuild(actor: CustomActivityActor): Promise<Guild> {
  * same way either way. (Everything this module then does with the Guild —
  * creating, editing and deleting channels, moving members — is REST too.)
  */
-async function customGuildById(guildId: string): Promise<Guild> {
+async function customGuildById(guildId: DiscordGuildId): Promise<Guild> {
   return await discordClient.guilds.fetch(guildId);
 }
 
 async function voiceChannel(
   guild: Guild,
-  channelId: string,
+  channelId: DiscordChannelId,
 ): Promise<VoiceChannel> {
   const channel = await guild.channels.fetch(channelId);
   if (channel?.type !== ChannelType.GuildVoice) {
@@ -116,7 +121,7 @@ async function createTeamChannel(
 
 async function moveMember(
   guild: Guild,
-  discordId: string,
+  discordId: DiscordAccountId,
   sourceIds: ReadonlySet<string>,
   destination: VoiceChannel,
 ): Promise<void> {
@@ -374,7 +379,7 @@ export async function arrangeCustomVoice(
 }
 
 async function returnPlayersAndDelete(
-  guildId: string,
+  guildId: DiscordGuildId,
   snapshot: CustomNightSnapshot,
 ): Promise<void> {
   const guild = await customGuildById(guildId);

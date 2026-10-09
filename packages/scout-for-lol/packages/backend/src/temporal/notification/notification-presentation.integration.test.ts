@@ -80,7 +80,7 @@ test("report support action is frozen across flag changes and delivered metrics 
     const first = await freezeNotificationMessage(
       target,
       { content: "Report" },
-      guildId,
+      DiscordGuildIdSchema.parse(guildId),
       prisma,
     );
     expect(JSON.stringify(first)).toContain("support:contact:NA1_9401");
@@ -90,7 +90,7 @@ test("report support action is frozen across flag changes and delivered metrics 
     const retry = await freezeNotificationMessage(
       target,
       { content: "Changed report" },
-      guildId,
+      DiscordGuildIdSchema.parse(guildId),
       prisma,
     );
     expect(JSON.stringify(retry)).toBe(JSON.stringify(first));
@@ -117,7 +117,7 @@ test.each(["prematch", "postmatch"] as const)(
         content: "Original content",
         embeds: [new EmbedBuilder().setDescription("Original embed")],
       },
-      guildId,
+      DiscordGuildIdSchema.parse(guildId),
       prisma,
     );
     const retry = await freezeNotificationMessage(
@@ -126,7 +126,7 @@ test.each(["prematch", "postmatch"] as const)(
         content: "Changed content",
         embeds: [new EmbedBuilder().setDescription("Changed embed")],
       },
-      guildId,
+      DiscordGuildIdSchema.parse(guildId),
       prisma,
     );
     expect(JSON.stringify(retry)).toBe(JSON.stringify(first));
@@ -150,7 +150,7 @@ test("simultaneous targets claim a guild tip once", async () => {
         await freezeNotificationMessage(
           record("postmatch", suffix),
           { embeds: [new EmbedBuilder().setDescription("Match")] },
-          guildId,
+          DiscordGuildIdSchema.parse(guildId),
           prisma,
         ),
     ),
@@ -173,7 +173,7 @@ test("a failed snapshot validation rolls back both the claim and presentation", 
           { description: "Match", provider: { name: "unsupported furniture" } },
         ],
       },
-      guildId,
+      DiscordGuildIdSchema.parse(guildId),
       prisma,
     ),
   ).rejects.toThrow();
@@ -186,7 +186,7 @@ test("unknown attempts keep their claim; suppression releases it exactly once", 
   await freezeNotificationMessage(
     target,
     { embeds: [new EmbedBuilder().setDescription("Match")] },
-    guildId,
+    DiscordGuildIdSchema.parse(guildId),
     prisma,
   );
   const unknown = NotificationIntentSchema.parse({
@@ -230,7 +230,7 @@ test("the terminal sweep repairs a tip claim after an expiry committed independe
   await freezeNotificationMessage(
     target,
     { embeds: [new EmbedBuilder().setDescription("Match")] },
-    guildId,
+    DiscordGuildIdSchema.parse(guildId),
     prisma,
   );
   await transitionIntent(prisma, {

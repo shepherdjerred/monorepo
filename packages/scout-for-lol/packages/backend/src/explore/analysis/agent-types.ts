@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import type {
   DiscordAccountId,
   DiscordChannelId,
@@ -24,7 +25,7 @@ export type ExploreAgentParams = {
    * The asker's Discord servers. Alias resolution, profile links and
    * server-specific tools stay bounded to servers this person belongs to.
    */
-  guildIds: string[];
+  guildIds: DiscordGuildId[];
   /**
    * The asker, used for requester-scoped tools, spending and authorization.
    */

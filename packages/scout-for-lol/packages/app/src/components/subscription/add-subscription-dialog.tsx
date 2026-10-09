@@ -1,3 +1,4 @@
+import type { DiscordGuildId, DiscordChannelId } from "@scout-for-lol/data";
 import { useEffect, useRef } from "react";
 import {
   SubscriptionFields,
@@ -28,14 +29,14 @@ import {
 } from "#src/components/dialog-form.tsx";
 import { channelAvailabilityForQuery } from "#src/components/channel-select-support.tsx";
 
-type Channel = { id: string; name: string };
+type Channel = { id: DiscordChannelId; name: string };
 
 type ChannelListQuery = Parameters<typeof channelAvailabilityForQuery>[0] & {
   refetch: () => Promise<unknown>;
 };
 
 type Props = {
-  guildId: string;
+  guildId: DiscordGuildId;
   channels: Channel[];
   channelAvailability: {
     status: "loading" | "error" | "empty" | "ready";
@@ -139,7 +140,7 @@ export function AddSubscriptionDialog(props: Props) {
 }
 
 export function AddSubscriptionDialogFromQuery(props: {
-  guildId: string;
+  guildId: DiscordGuildId;
   channelsQuery: ChannelListQuery;
   open: boolean;
   onOpenChange: (open: boolean) => void;

@@ -1,8 +1,13 @@
+import {
+  type DiscordGuildId,
+  DuelBestOfSchema,
+  DuelRulesetV1Schema,
+  type DiscordChannelId,
+} from "@scout-for-lol/data";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import { useRef, useState, type SyntheticEvent } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
-import { DuelBestOfSchema, DuelRulesetV1Schema } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   DuelOptionSelectField,
@@ -121,9 +126,9 @@ function AccountField(props: {
 }
 
 export function DirectDuelForm(props: {
-  guildId: string;
+  guildId: DiscordGuildId;
   accounts: readonly Account[];
-  channels: readonly { id: string; name: string }[];
+  channels: readonly { id: DiscordChannelId; name: string }[];
   onCreated: (seriesId: string) => void;
 }) {
   const trpc = useTRPC();

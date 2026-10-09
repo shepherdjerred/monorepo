@@ -1,10 +1,11 @@
+import type { DiscordGuildId } from "@scout-for-lol/data";
 import { useEffect } from "react";
 import { clearGuildContext, resolveGuildContext } from "#src/lib/analytics.ts";
 
 export function useGuildAnalyticsContext(input: {
   contextRoute: string | undefined;
   loading: boolean;
-  guildId: string | undefined;
+  guildId: DiscordGuildId | undefined;
 }): void {
   useEffect(() => {
     if (input.contextRoute === undefined || input.loading) return;

@@ -1,3 +1,8 @@
+import { DiscordMessageIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  DiscordChannelIdSchema,
+  DiscordAccountIdSchema,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { z } from "zod";
 import {
   BUCKS_INT32_MAX,
@@ -483,8 +488,8 @@ export const StoredBucksLedgerContextSchema = z.discriminatedUnion("type", [
  * channel-to-guild mapping. */
 export type BucksMessageRef = z.infer<typeof BucksMessageRefSchema>;
 export const BucksMessageRefSchema = z.strictObject({
-  channelId: z.string(),
-  messageId: z.string(),
+  channelId: DiscordChannelIdSchema,
+  messageId: DiscordMessageIdSchema,
 });
 
 export type BucksMessageRefs = z.infer<typeof BucksMessageRefsSchema>;
@@ -501,7 +506,7 @@ export type BucksWeeklyLeaderboardEntry = z.infer<
 >;
 export const BucksWeeklyLeaderboardEntrySchema = z.strictObject({
   rank: z.number().int().positive(),
-  discordId: z.string(),
+  discordId: DiscordAccountIdSchema,
   balance: z.number().int(),
 });
 

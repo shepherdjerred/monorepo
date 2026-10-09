@@ -1,3 +1,7 @@
+import {
+  type DiscordMessageId,
+  DiscordMessageIdSchema,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import {
   DiscordAccountIdSchema,
@@ -180,7 +184,7 @@ const ReportMessageIdsSchema = z.record(z.string(), z.string().min(1));
 
 export type MatchMvpReportRef = {
   channelId: DiscordChannelId;
-  messageId: string;
+  messageId: DiscordMessageId;
 };
 
 function parseReportMessageIds(value: unknown): Record<string, string> {
@@ -257,7 +261,7 @@ export async function listMatchMvpReportRefs(
   return Object.entries(parseReportMessageIds(row.reportMessageIds)).map(
     ([channelId, messageId]) => ({
       channelId: DiscordChannelIdSchema.parse(channelId),
-      messageId,
+      messageId: DiscordMessageIdSchema.parse(messageId),
     }),
   );
 }

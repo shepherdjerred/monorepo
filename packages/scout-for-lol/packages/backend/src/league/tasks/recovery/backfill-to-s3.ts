@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import { riotClient } from "#src/league/api/api.ts";
 import { getAccountsWithState } from "#src/database/player-accounts.ts";
 import { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
@@ -33,7 +34,7 @@ export type BackfillResult = {
 };
 
 export type MatchHistoryTimeRangeQuery = {
-  puuid: string;
+  puuid: LeaguePuuid;
   region: Region;
   startTimeEpochSeconds: number;
   endTimeEpochSeconds: number;

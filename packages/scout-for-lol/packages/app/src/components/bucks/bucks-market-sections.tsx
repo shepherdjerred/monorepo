@@ -1,4 +1,4 @@
-import type { RiotMatchId } from "@scout-for-lol/data";
+import { type DiscordAccountId, type RiotMatchId } from "@scout-for-lol/data";
 import { Loaded } from "@shepherdjerred/loaded";
 import {
   ErrorState,
@@ -22,7 +22,11 @@ export type BucksMatchParlayRow = {
   yesOdds: string;
   noOdds: string;
   yourPosition: { side: "YES" | "NO"; stake: number } | null;
-  positions: { discordId: string; side: "YES" | "NO"; stake: number }[];
+  positions: {
+    discordId: DiscordAccountId;
+    side: "YES" | "NO";
+    stake: number;
+  }[];
 };
 
 /** The `bucks.openMarkets` payload, structurally — the minimal shape this route consumes. */

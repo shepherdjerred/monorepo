@@ -1,3 +1,4 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import {
   RiotMatchIdSchema,
   type RiotMatchId,
@@ -54,7 +55,7 @@ function extraPlayers(game: number, matchId: RiotMatchId): TestLakeMatchFact[] {
           ? "A deliberately long player name"
           : `Player ${(i + 1).toString()}`,
       matchId,
-      puuid: `audit-${i.toString()}`.padEnd(78, "x"),
+      puuid: LeaguePuuidSchema.parse(`audit-${i.toString()}`.padEnd(78, "x")),
       queue: game % 2 === 0 ? "flex" : "solo",
       win: i < 4 === game < 3,
       surrendered: false,

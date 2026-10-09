@@ -1,3 +1,4 @@
+import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import {
   REST,
   Routes,
@@ -96,7 +97,9 @@ export async function reconcileGuildScopedCommands(
   options: ReconcileGuildCommandOptions = {},
 ): Promise<void> {
   for (const guildId of new Set(guildIds)) {
-    const payload = await guildCommandPayload(guildId);
+    const payload = await guildCommandPayload(
+      DiscordGuildIdSchema.parse(guildId),
+    );
     const names = payload.map((command) => command.name).join(", ");
     const serialized = JSON.stringify(payload);
     if (

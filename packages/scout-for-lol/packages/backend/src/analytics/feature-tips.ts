@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { captureWithGuildInstallation } from "#src/analytics/capture-with-installation.ts";
 import type {
@@ -15,7 +16,7 @@ import type {
  */
 export async function captureFeatureTipShown(
   input: {
-    guildId: string;
+    guildId: DiscordGuildId;
     tipKey: FeatureTipKey;
     surface: FeatureTipSurface;
   },

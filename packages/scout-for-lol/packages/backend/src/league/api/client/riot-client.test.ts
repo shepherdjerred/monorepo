@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import { describe, test, expect, vi } from "vitest";
 import { RiotClient, type FetchFunction } from "./riot-client.ts";
 import { RiotHttpError } from "./errors.ts";
@@ -8,7 +9,7 @@ function getUrlString(input: string | URL | Request): string {
   return "url" in input ? input.url : input.href;
 }
 
-function championMasteryResponse(puuid: string): Response {
+function championMasteryResponse(puuid: LeaguePuuid): Response {
   return Response.json([
     {
       puuid,
@@ -23,7 +24,7 @@ function championMasteryResponse(puuid: string): Response {
   ]);
 }
 
-function championMasteryFetch(puuid: string) {
+function championMasteryFetch(puuid: LeaguePuuid) {
   let capturedUrl = "";
   const fetchFn: FetchFunction = vi.fn(
     async (input: string | URL | Request): Promise<Response> => {

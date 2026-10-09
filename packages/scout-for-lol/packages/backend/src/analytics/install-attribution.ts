@@ -117,7 +117,7 @@ type AttributeResult = "attributed" | "already_installed" | "missing";
 async function tryAttributeInstall(params: {
   db: ExtendedPrismaClient;
   analytics: ProductAnalytics;
-  serverId: string;
+  serverId: DiscordGuildId;
   tokenConsumedAt: Date;
   tokenCreatedAt: Date;
   surface: AttributionSurface;

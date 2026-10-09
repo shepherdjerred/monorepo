@@ -106,7 +106,7 @@ async function seedPlayer(options: {
 
 function matchFact(options: {
   matchId: RiotMatchId;
-  puuid: string;
+  puuid: LeaguePuuid;
   playerId: number;
   queue?: string | null;
   gameCreationAt?: Date;
@@ -263,7 +263,12 @@ describe("consumerPlayer.status", () => {
     enableProfiles(guildId);
     await expect(trpc.anonCaller().consumerPlayer.status()).rejects.toThrow();
 
-    trpc.setMembership([{ guildId: "100000000000000099", asAdmin: false }]);
+    trpc.setMembership([
+      {
+        guildId: DiscordGuildIdSchema.parse("100000000000000099"),
+        asAdmin: false,
+      },
+    ]);
     await expect(trpc.authedCaller().consumerPlayer.status()).resolves.toEqual({
       state: "no_shared_guild",
     });

@@ -1,3 +1,4 @@
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import {
   RiotMatchIdSchema,
   type RiotMatchId,
@@ -79,7 +80,12 @@ const TARGET_BINDING: DareTargetBinding = {
   playerId: 1,
   alias: "Virmel",
   accounts: [
-    { puuid: "virmel-puuid", trackingStartedAt: "2026-01-01T00:00:00.000Z" },
+    {
+      puuid: LeaguePuuidSchema.parse(
+        "virmel-puuid000000000000000000000000000000000000000000000000000000000000000000",
+      ),
+      trackingStartedAt: "2026-01-01T00:00:00.000Z",
+    },
   ],
 };
 

@@ -1,3 +1,7 @@
+import {
+  DiscordGuildIdSchema,
+  DiscordAccountIdSchema,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import { BucksPoolTotalSchema } from "@scout-for-lol/data";
@@ -15,7 +19,11 @@ import type { ParlaySettlementSummary } from "#src/betting/parlays/runtime/parla
 const subjects = ParlaySubjectsSchema.parse([
   {
     key: "P1",
-    puuid: "test-puuid".padEnd(78, "x"),
+    puuid:
+      "test-puuid00000000000000000000000000000000000000000000000000000000000000000000".padEnd(
+        78,
+        "x",
+      ),
     alias: "Bryan",
   },
 ]);
@@ -49,7 +57,7 @@ function largeSettlementSummary(
   );
   return {
     matchId: RiotMatchIdSchema.parse("NA1_42"),
-    serverId: "1337623164146155593",
+    serverId: DiscordGuildIdSchema.parse("1337623164146155593"),
     yesResult: true,
     voidReason: undefined,
     messageRefs,
@@ -60,7 +68,9 @@ function largeSettlementSummary(
       passed: true,
     })),
     bets: Array.from({ length: 15 }, (_, index) => ({
-      discordId: (1_000_000_000_000_000_000n + BigInt(index)).toString(),
+      discordId: DiscordAccountIdSchema.parse(
+        (99_999_999_999_999_999_900n + BigInt(index)).toString(),
+      ),
       side: "YES",
       stake: 2_147_483_647,
       grossPayout: 2_147_483_647,
@@ -76,7 +86,7 @@ function parlayEmbed(
   const message = buildSettlementMessage({
     summary: {
       matchId: RiotMatchIdSchema.parse("NA1_42"),
-      serverId: "1337623164146155593",
+      serverId: DiscordGuildIdSchema.parse("1337623164146155593"),
       winningTeamId: undefined,
       voidReason: undefined,
       winnersPool: BucksPoolTotalSchema.parse(0),
@@ -126,7 +136,11 @@ describe("parlay Discord experience", () => {
     const longSubjects = ParlaySubjectsSchema.parse([
       {
         key: "P1",
-        puuid: "test-puuid".padEnd(78, "x"),
+        puuid:
+          "test-puuid00000000000000000000000000000000000000000000000000000000000000000000".padEnd(
+            78,
+            "x",
+          ),
         alias: "a".repeat(PARLAY_SUBJECT_ALIAS_MAX_LENGTH),
       },
     ]);
@@ -166,7 +180,11 @@ describe("parlay Discord experience", () => {
       ParlaySubjectsSchema.parse([
         {
           key: "P1",
-          puuid: "test-puuid".padEnd(78, "x"),
+          puuid:
+            "test-puuid00000000000000000000000000000000000000000000000000000000000000000000".padEnd(
+              78,
+              "x",
+            ),
           alias: "a".repeat(PARLAY_SUBJECT_ALIAS_MAX_LENGTH + 1),
         },
       ]),
@@ -178,7 +196,7 @@ describe("parlay Discord experience", () => {
   test("renders leg actuals plus winner profit and loser stake", () => {
     const rendered = parlayEmbed({
       matchId: RiotMatchIdSchema.parse("NA1_42"),
-      serverId: "1337623164146155593",
+      serverId: DiscordGuildIdSchema.parse("1337623164146155593"),
       yesResult: false,
       voidReason: undefined,
       messageRefs: [],
@@ -198,7 +216,7 @@ describe("parlay Discord experience", () => {
       ],
       bets: [
         {
-          discordId: "test-discord-account",
+          discordId: DiscordAccountIdSchema.parse("834768025445881531"),
           side: "NO",
           stake: 25,
           grossPayout: 42,
@@ -206,7 +224,7 @@ describe("parlay Discord experience", () => {
           outcome: "won",
         },
         {
-          discordId: "losing-discord-account",
+          discordId: DiscordAccountIdSchema.parse("832945128978492180"),
           side: "YES",
           stake: 30,
           grossPayout: 50,
@@ -219,23 +237,23 @@ describe("parlay Discord experience", () => {
     expect(rendered).toContain("Bryan gets at least 5 kills — 4");
     expect(rendered).toContain("Their team gets first baron — true");
     expect(rendered).toContain("PARLAY WINNERS");
-    expect(rendered).toContain("<@test-discord-account> bet 25BB, won 17BB");
+    expect(rendered).toContain("<@834768025445881531> bet 25BB, won 17BB");
     expect(rendered).toContain("PARLAY LOSERS");
-    expect(rendered).toContain("<@losing-discord-account> bet 30BB, lost 30BB");
+    expect(rendered).toContain("<@832945128978492180> bet 30BB, lost 30BB");
     expect(rendered).not.toContain("NO 25");
   });
 
   test("names a void in prose rather than leaking the enum", () => {
     const rendered = parlayEmbed({
       matchId: RiotMatchIdSchema.parse("NA1_42"),
-      serverId: "1337623164146155593",
+      serverId: DiscordGuildIdSchema.parse("1337623164146155593"),
       yesResult: undefined,
       voidReason: "expired",
       messageRefs: [],
       legs: [],
       bets: [
         {
-          discordId: "refunded-discord-account",
+          discordId: DiscordAccountIdSchema.parse("832146773020659730"),
           side: "YES",
           stake: 3000,
           grossPayout: 5000,
@@ -248,7 +266,7 @@ describe("parlay Discord experience", () => {
     expect(rendered).toContain(
       "PARLAY REFUNDS: **3,000BB** across 1 parlay (the game never resolved).",
     );
-    expect(rendered).not.toContain("refunded-discord-account");
+    expect(rendered).not.toContain("832146773020659730");
     expect(rendered).not.toContain("expired");
   });
 
@@ -262,7 +280,7 @@ describe("parlay Discord experience", () => {
     });
     const rendered = parlayEmbed({
       matchId: RiotMatchIdSchema.parse("NA1_42"),
-      serverId: "1337623164146155593",
+      serverId: DiscordGuildIdSchema.parse("1337623164146155593"),
       yesResult: true,
       voidReason: undefined,
       messageRefs: [],

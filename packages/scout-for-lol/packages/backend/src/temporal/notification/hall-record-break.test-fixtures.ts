@@ -29,14 +29,16 @@ export function hallBreakRecords(
     playerAlias: "Alice *the* Great",
     accountId: 11,
     accountAlias: "Main",
-    puuid: "hall-fixture-puuid-a",
+    puuid:
+      "hall-fixture-puuid-a0000000000000000000000000000000000000000000000000000000000",
   };
   const tiedHolder = {
     playerId: 2,
     playerAlias: "Bob_",
     accountId: 12,
     accountAlias: "Smurf",
-    puuid: "hall-fixture-puuid-b",
+    puuid:
+      "hall-fixture-puuid-b0000000000000000000000000000000000000000000000000000000000",
   };
   return COMPETITIVE_PROGRESSION_CATALOG.hall.records
     .slice(0, count)

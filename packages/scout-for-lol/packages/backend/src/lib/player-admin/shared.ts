@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import {
@@ -49,7 +50,7 @@ export const playerDetailInclude = {
 } satisfies Prisma.PlayerInclude;
 
 export async function getPlayerOrThrow(input: {
-  guildId: string;
+  guildId: DiscordGuildId;
   alias: string;
 }) {
   const player = await prisma.player.findUnique({

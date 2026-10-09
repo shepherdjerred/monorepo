@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import { z } from "zod";
 import { RanksSchema } from "#src/model/riot/rank.ts";
 import {
@@ -137,7 +138,7 @@ export type LoadingScreenMastery = z.infer<typeof LoadingScreenMasterySchema>;
  */
 function validateSpellVisibility(
   participant: {
-    puuid: string | null;
+    puuid: LeaguePuuid | null;
     spell1Id?: number | undefined;
     spell2Id?: number | undefined;
   },
@@ -157,7 +158,7 @@ function validateSpellVisibility(
 
 function validateRankVisibility(
   participant: {
-    puuid: string | null;
+    puuid: LeaguePuuid | null;
     rankState: LoadingScreenRankState;
   },
   context: z.RefinementCtx,

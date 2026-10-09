@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   HallRecordEvidenceSchema,
@@ -27,9 +28,9 @@ import {
 type TrackedAccount = {
   readonly id: number;
   readonly alias: string;
-  readonly puuid: string;
+  readonly puuid: LeaguePuuid;
   readonly createdTime: Date;
-  readonly serverId: string;
+  readonly serverId: DiscordGuildId;
   readonly player: { readonly id: number; readonly alias: string };
 };
 
@@ -46,7 +47,7 @@ function holderFor(account: TrackedAccount): HallRecordHolder {
 async function evaluateCandidate(
   tx: Db,
   options: {
-    readonly guildId: string;
+    readonly guildId: DiscordGuildId;
     readonly match: ProgressionMatchRow;
     readonly account: TrackedAccount;
     readonly enabledRecords: ReadonlySet<string>;

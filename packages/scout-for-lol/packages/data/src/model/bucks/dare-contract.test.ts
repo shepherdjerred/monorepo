@@ -30,7 +30,10 @@ const CONTRACT = {
       playerId: 1,
       alias: "Virmel",
       accounts: [
-        { puuid: "puuid-1", trackingStartedAt: "2026-01-01T00:00:00.000Z" },
+        {
+          puuid: "puuid-1".padEnd(78, "0"),
+          trackingStartedAt: "2026-01-01T00:00:00.000Z",
+        },
       ],
     },
   ],

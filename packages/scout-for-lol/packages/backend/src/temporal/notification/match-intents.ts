@@ -7,8 +7,15 @@ import {
   NotificationIntentKeySchema,
   type RiotMatchId,
   RiotMatchIdSchema,
+  DiscordMessageIdSchema,
 } from "@scout-for-lol/domain/identity/brands.ts";
-import { DiscordChannelIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
+import {
+  DiscordChannelIdSchema,
+  type DiscordChannelId,
+  DiscordGuildIdSchema,
+  DiscordAccountIdSchema,
+  type DiscordGuildId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import type { OpaqueVersionedEnvelope } from "@scout-for-lol/domain/codec/versioned.ts";
 import type { NotificationIntentKind } from "@scout-for-lol/domain/notifications/intent.ts";
@@ -165,7 +172,7 @@ export async function matchMayAnnounce(
 function requireIntentMatches(
   standing: MatchNotificationIntentRecord,
   matchId: RiotMatchId,
-  channelId: string,
+  channelId: DiscordChannelId,
 ): void {
   const target = standing.intent.target;
   const sameTarget =
@@ -189,7 +196,7 @@ async function mintMatchIntent(
     matchId: RiotMatchId;
     key: string;
     kind: NotificationIntentKind;
-    channelId: string;
+    channelId: DiscordChannelId;
     createdAt: Date;
     freshnessDeadline: Date;
     announcement?: OpaqueVersionedEnvelope | undefined;
@@ -318,7 +325,7 @@ export function settlementAnnouncementInputs(input: {
  */
 const ClosedPositionSchema = z.strictObject({
   betId: z.number().int(),
-  discordId: z.string().min(1),
+  discordId: DiscordAccountIdSchema,
   teamId: RiotTeamIdSchema,
   submittedStake: z.number().int(),
   matchedStake: z.number().int(),
@@ -327,11 +334,11 @@ const ClosedPositionSchema = z.strictObject({
 
 const ClosedPoolSchema = z.strictObject({
   matchId: RiotMatchIdSchema,
-  serverId: z.string().min(1),
+  serverId: DiscordGuildIdSchema,
   messageRefs: z.array(
     z.strictObject({
-      channelId: z.string().min(1),
-      messageId: z.string().min(1),
+      channelId: DiscordChannelIdSchema,
+      messageId: DiscordMessageIdSchema,
     }),
   ),
   humanMatchedPerSide: z.number().int(),
@@ -419,7 +426,7 @@ export function lateBindingEarningAnnouncementInputs(input: {
   matchId: RiotMatchId;
   earnings: readonly EarnedAward[];
 }): readonly SettlementAnnouncementInput[] {
-  const byGuild = new Map<string, EarnedAward[]>();
+  const byGuild = new Map<DiscordGuildId, EarnedAward[]>();
   for (const award of input.earnings) {
     byGuild.set(award.serverId, [
       ...(byGuild.get(award.serverId) ?? []),

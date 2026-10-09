@@ -1,7 +1,11 @@
+import {
+  type DiscordAccountId,
+  formatInteger,
+  type RiotMatchId,
+} from "@scout-for-lol/data";
 import { Loaded } from "@shepherdjerred/loaded";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { formatInteger, type RiotMatchId } from "@scout-for-lol/data";
 import {
   ErrorState,
   StaleState,
@@ -144,8 +148,10 @@ export function WalletPanel(props: {
 function usePositionNames(
   markets:
     | {
-        outcome: { sides: { positions: { discordId: string }[] }[] }[];
-        parlays: { positions: { discordId: string }[] }[];
+        outcome: {
+          sides: { positions: { discordId: DiscordAccountId }[] }[];
+        }[];
+        parlays: { positions: { discordId: DiscordAccountId }[] }[];
       }
     | undefined,
 ): (discordId: string) => string {

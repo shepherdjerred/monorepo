@@ -1,3 +1,4 @@
+import type { DiscordChannelId } from "@scout-for-lol/domain/identity/discord.ts";
 import { describe, expect, test, vi } from "vitest";
 import {
   DiscordAccountIdSchema,
@@ -17,7 +18,7 @@ const EXPLORE_REFUSAL = "Scout Explore is not enabled in this server.";
 
 function fakeInteraction(input?: {
   amount?: number;
-  channelId?: string | null;
+  channelId?: DiscordChannelId | null;
 }): BbCommandInteraction {
   return {
     id: "bb-dare-test",

@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  type DiscordGuildId,
   type CompetitionId,
   type CompetitionStatus,
   type CompetitionAnalysisPreset,
@@ -11,6 +10,8 @@ import {
   QueueTypeSchema,
   queueTypeToDisplayString,
 } from "@scout-for-lol/data";
+import { useEffect, useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import { competitionAnalysisDateInput } from "#src/lib/bucks/competition-analysis-date.ts";
@@ -80,7 +81,7 @@ function formatOfficialScore(
 }
 
 export function CompetitionLeaderboardPanel(props: {
-  guildId: string;
+  guildId: DiscordGuildId;
   competitionId: CompetitionId;
   status: CompetitionStatus;
   startDate: Date | string | null;

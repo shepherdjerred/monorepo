@@ -1,3 +1,7 @@
+import type {
+  DiscordGuildId,
+  DiscordAccountId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import * as Sentry from "@sentry/bun";
 import {
@@ -49,8 +53,8 @@ const logger = createLogger("betting-earnings");
  */
 
 export type EarnTarget = {
-  serverId: string;
-  discordId: string;
+  serverId: DiscordGuildId;
+  discordId: DiscordAccountId;
   alias: string;
   participant: RawParticipant;
 };
@@ -119,8 +123,8 @@ export const EARNED_REWARDS = {
 } satisfies Record<EarnedAwardReason, EarnedReward>;
 
 export type EarnedAward = {
-  serverId: string;
-  discordId: string;
+  serverId: DiscordGuildId;
+  discordId: DiscordAccountId;
   alias: string;
   /** Which rewards fired, in ledger order. */
   reasons: EarnedAwardReason[];
@@ -139,15 +143,15 @@ function targetSnapshotJson(targets: readonly EarnTarget[]): string {
 
 const EarnTargetSnapshotSchema = z.array(
   z.object({
-    discordId: z.string(),
+    discordId: DiscordAccountIdSchema,
     alias: z.string(),
-    puuid: z.string(),
+    puuid: LeaguePuuidSchema,
   }),
 );
 
 function targetsFromSnapshot(
   participants: readonly RawParticipant[],
-  serverId: string,
+  serverId: DiscordGuildId,
   serialized: string,
 ): EarnTarget[] {
   const snapshots = EarnTargetSnapshotSchema.parse(JSON.parse(serialized));
@@ -211,7 +215,7 @@ export async function awardBucksForMatch(
     }
 
     const mvp = computeMvp(matchData.info.participants);
-    const byGuild = new Map<string, EarnTarget[]>();
+    const byGuild = new Map<DiscordGuildId, EarnTarget[]>();
     for (const target of targets) {
       byGuild.set(target.serverId, [
         ...(byGuild.get(target.serverId) ?? []),
@@ -253,7 +257,7 @@ export async function awardBucksForMatch(
 export async function awardForGuild(input: {
   prismaClient: ExtendedPrismaClient;
   matchId: RiotMatchId;
-  serverId: string;
+  serverId: DiscordGuildId;
   matchCreatedAt: Date;
   targets: readonly EarnTarget[];
   participants: readonly RawParticipant[];

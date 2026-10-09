@@ -1,3 +1,4 @@
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import {
   ClashPositionSchema,
   ClashRoleSchema,
@@ -88,7 +89,7 @@ export type ClashHistorySighting = {
 };
 
 export type ClashHistoryPlayer = {
-  puuid: string;
+  puuid: LeaguePuuid;
   playerAlias: string;
   teamName: string | undefined;
   teamAbbreviation: string | undefined;
@@ -107,7 +108,7 @@ export type ClashHistoryCup = {
 export type ClashHistorySightingRecord = {
   platform: string;
   gameId: string;
-  puuid: string;
+  puuid: LeaguePuuid;
   source: string;
   queue: string;
   championId: number;
@@ -119,7 +120,7 @@ export type ClashHistorySightingRecord = {
 };
 
 export type ClashHistoryMembershipRecord = {
-  puuid: string;
+  puuid: LeaguePuuid;
   platform: string;
   teamRiotId: string;
   teamName: string;
@@ -132,7 +133,7 @@ type MembershipRow = ClashHistoryMembershipRecord;
 type SightingRow = ClashHistorySightingRecord;
 
 export async function readClashHistoryForGuild(
-  guildId: string,
+  guildId: DiscordGuildId,
 ): Promise<ClashHistoryCup[]> {
   const accounts = await prisma.account.findMany({
     where: { serverId: DiscordGuildIdSchema.parse(guildId) },
@@ -230,7 +231,7 @@ function cupForSighting(
 
 function playerOnCup(
   cup: ClashHistoryCup,
-  puuid: string,
+  puuid: LeaguePuuid,
   playerAlias: string,
 ): ClashHistoryPlayer {
   const existing = cup.players.find((player) => player.puuid === puuid);

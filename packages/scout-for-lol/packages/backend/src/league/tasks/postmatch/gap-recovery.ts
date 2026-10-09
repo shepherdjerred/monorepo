@@ -1,3 +1,4 @@
+import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import type {
   RiotMatchId,
   PlayerConfigEntry,
@@ -17,7 +18,7 @@ export function recoveryStartAt(input: {
   requiredForActiveDare: boolean;
   lastProcessedMatchTime: Date | undefined;
   lastSuccessfulPollAt: Date | undefined;
-  puuid: string;
+  puuid: LeaguePuuid;
 }): Date | undefined {
   if (input.requiredForActiveDare) {
     if (input.lastProcessedMatchTime === undefined) {

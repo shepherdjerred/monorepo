@@ -1,4 +1,8 @@
-import type { ReportId, VisualizationSnapshot } from "@scout-for-lol/data";
+import {
+  type DiscordGuildId,
+  type ReportId,
+  type VisualizationSnapshot,
+} from "@scout-for-lol/data";
 import { formatDate } from "#src/lib/format/format.ts";
 import { ChartImage } from "#src/components/scoutql/chart-image.tsx";
 import { Section } from "#src/components/chrome/section.tsx";
@@ -23,7 +27,7 @@ type Run = {
 };
 
 export function ReportRunHistory(props: {
-  guildId: string;
+  guildId: DiscordGuildId;
   reportId: ReportId;
   runs: Run[];
 }) {

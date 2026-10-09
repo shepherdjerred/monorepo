@@ -1,3 +1,4 @@
+import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { appendFile, mkdir, stat, readdir, chmod } from "node:fs/promises";
 import path from "node:path";
 import { homedir } from "node:os";
@@ -154,7 +155,7 @@ export const ReplayManifestSchema = z
      */
     profile: z.string().min(1),
     /** The guild this bundle actually ran as. The identity `profile` is not. */
-    guildId: z.string().min(1),
+    guildId: DiscordGuildIdSchema,
     /** What the profile promised, as resolved and asserted per case. */
     expectedCapabilities: z.record(z.string(), z.boolean()),
     lake: z

@@ -75,7 +75,7 @@ async function player(options: {
 function fact(options: {
   playerId: number;
   alias: string;
-  puuid: string;
+  puuid: LeaguePuuid;
   matchId: RiotMatchId;
   win: boolean;
   championId?: number;
