@@ -14,7 +14,7 @@ auto-launch = "0.6.0"
 base64 = "0.23.1"
 chrono = { version = "0.4.42", default-features = false, features = ["clock", "serde"] }
 directories = "6.0.0"
-eframe = { version = "0.36.2", default-features = false, features = ["accesskit", "default_fonts", "glow", "persistence", "wayland", "wgpu", "x11"] }
+eframe = { version = "0.36.2", default-features = false, features = ["accesskit", "default_fonts", "glow", "persistence", "wayland", "x11"] }
 egui = "0.36.2"
 futures-util = "0.3.31"
 hex = "0.4.3"

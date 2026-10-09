@@ -87,7 +87,7 @@ pub struct ClientRuntime {
     _reporting: Option<ReportingGuard>,
     commands: mpsc::UnboundedSender<RuntimeCommand>,
     shutdown: watch::Sender<bool>,
-    _thread: std::thread::JoinHandle<()>,
+    thread: std::thread::JoinHandle<()>,
 }
 
 impl ClientRuntime {
@@ -147,7 +147,7 @@ impl ClientRuntime {
             _reporting: reporting,
             commands,
             shutdown,
-            _thread: thread,
+            thread,
         }
     }
 
@@ -192,6 +192,15 @@ impl ClientRuntime {
     pub fn shutdown(&self) {
         if self.shutdown.send(true).is_err() {
             info!("Scout Client collector had already stopped");
+        }
+    }
+
+    /// Shut the collector down and wait for its thread to finish, so another
+    /// collector can take over the outbox.
+    pub fn stop(self) {
+        self.shutdown();
+        if self.thread.join().is_err() {
+            info!("Scout Client collector thread had panicked");
         }
     }
 }
