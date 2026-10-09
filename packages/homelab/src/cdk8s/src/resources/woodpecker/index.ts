@@ -28,6 +28,7 @@ import {
   WOODPECKER_PUBLIC_HOST,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/woodpecker.ts";
 import { CONFIG_EXTENSION_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/config-extension.ts";
+import { escapeHelmGoTemplate } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/shared.ts";
 
 /**
  * Compose the Postgres DSN from parts.
@@ -106,7 +107,9 @@ export function createWoodpeckerServer(chart: Chart) {
         // satisfy the existing required check; other metadata contexts remain
         // distinct so title/label updates cannot overwrite full PR evidence.
         WOODPECKER_STATUS_CONTEXT_FORMAT: EnvValue.fromValue(
-          '{{ .context }}/{{ if and (eq .event "pull_request_metadata") (eq .workflow "ci-complete") }}pr{{ else }}{{ .event }}{{ end }}/{{ .workflow }}',
+          escapeHelmGoTemplate(
+            '{{ .context }}/{{ if and (eq .event "pull_request_metadata") (eq .workflow "ci-complete") }}pr{{ else }}{{ .event }}{{ end }}/{{ .workflow }}',
+          ),
         ),
         // Registration is closed; the forge supplies identity and only the
         // listed admin may administer the instance. The repository is public,

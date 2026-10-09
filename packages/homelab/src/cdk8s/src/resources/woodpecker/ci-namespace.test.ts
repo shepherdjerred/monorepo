@@ -4,6 +4,7 @@ import { parse as parseYaml } from "yaml";
 import { z } from "zod";
 import { createWoodpeckerChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/woodpecker.ts";
 import { createStorageClasses } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
+import { escapeHelmGoTemplate } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/shared.ts";
 import {
   CI_BOUNDED_RESOURCES,
   CI_POD_GUARD_POLICY,
@@ -80,7 +81,9 @@ it("maps only ready-event completion onto the required PR context", () => {
       "WOODPECKER_STATUS_CONTEXT_FORMAT",
     ),
   ).toBe(
-    '{{ .context }}/{{ if and (eq .event "pull_request_metadata") (eq .workflow "ci-complete") }}pr{{ else }}{{ .event }}{{ end }}/{{ .workflow }}',
+    escapeHelmGoTemplate(
+      '{{ .context }}/{{ if and (eq .event "pull_request_metadata") (eq .workflow "ci-complete") }}pr{{ else }}{{ .event }}{{ end }}/{{ .workflow }}',
+    ),
   );
 });
 
