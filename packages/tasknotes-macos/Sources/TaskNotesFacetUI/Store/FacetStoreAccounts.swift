@@ -72,6 +72,12 @@ extension FacetStore {
     }
 
     public func signOut() async {
+        _ = await FacetDraftCoordinator.shared.transition(owner: self) {
+            await self.signOutAfterDrafts()
+        }
+    }
+
+    private func signOutAfterDrafts() async {
         guard let account, !accountTransition else { return }
         accountTransition = true
         defer { accountTransition = false }

@@ -27,6 +27,7 @@ namespace TaskNotes.Windows.App
         public App()
         {
             InitializeComponent();
+            PresentationResources.Install(Resources);
             string localFolder = ApplicationData.Current.LocalFolder.Path;
             JsonLineLoggerProvider diagnostics = new(Path.Combine(localFolder, "Logs"));
             _host = new HostBuilder()

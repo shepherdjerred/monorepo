@@ -2,6 +2,8 @@ package red.sjer.facet
 
 import java.io.IOException
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.*
 import org.junit.Assert.*
@@ -35,9 +37,67 @@ class FacetMutationControllerTest {
         var failure: Exception? = null
         var cleanup: Exception? = null
         var receipt = appliedReceipt()
-        override suspend fun execute(profileId: String, command: JsonObject, mutationId: String): JsonObject { calls.add("execute:$profileId:$mutationId"); failure?.let { throw it }; return receipt }
+        var persistenceFailure: Exception? = null
+        var afterAdmission: suspend () -> Unit = {}
+        override suspend fun execute(profileId: String, command: JsonObject, mutationId: String, admitted: () -> Unit): JsonObject { calls.add("execute:$profileId:$mutationId"); persistenceFailure?.let { throw it }; admitted(); afterAdmission(); failure?.let { throw it }; return receipt }
         override suspend fun retry(mutationId: String): JsonObject { calls.add("retry:$mutationId"); failure?.let { throw it }; return receipt }
         override suspend fun discardObserved(mutationId: String) { calls.add("discard:$mutationId"); cleanup?.let { throw it } }
+    }
+    @Test fun bulkSelectionRemainsUntilMatchingAppliedReceiptAndFailedReceiptCannotDismissIt() = runTest {
+        val reached = CompletableDeferred<Unit>()
+        val reply = CompletableDeferred<Unit>()
+        val port = Port().apply { afterAdmission = { reached.complete(Unit); reply.await() } }
+        val command = buildJsonObject { put("kind", "batch"); put("commands", JsonArray(listOf(completion))) }
+        var selection = setOf("Tasks/a.md:2026-10-03")
+        val operation = async {
+            val result = controller(port).submit("original-vault", command, "decision")
+            if (result.profileId == "original-vault" && result.receipt.getValue("applied").jsonPrimitive.boolean) selection = emptySet()
+        }
+        reached.await()
+        assertEquals(setOf("Tasks/a.md:2026-10-03"), selection)
+        reply.complete(Unit); operation.await()
+        assertTrue(selection.isEmpty())
+        selection = setOf("Tasks/a.md:2026-10-03")
+        val failed = Port().apply { receipt = appliedReceipt(applied = false) }
+        try {
+            controller(failed).submit("original-vault", command, "decision")
+            selection = emptySet()
+            fail("A non-applied response must not dismiss the reviewed selection")
+        } catch (_: FacetReceiptContractException) {}
+        assertEquals(setOf("Tasks/a.md:2026-10-03"), selection)
+    }
+    @Test fun savedViewSuspendedAdmissionFailureRetainsExactOwnerViewAndQueryForRecovery() = runTest {
+        val query = Json.parseToJsonElement("""{"scope":"all","sort":"title","vendor":{"precise":9007199254740993}}""").jsonObject
+        val intent = FacetSavedViewIntent("original-vault", "original-view", query, JsonObject(emptyMap()), "My view", "decision")
+        val admitted = CompletableDeferred<Unit>()
+        val failure = CompletableDeferred<Unit>()
+        var submitted = false
+        val port = Port().apply { afterAdmission = { admitted.complete(Unit); failure.await(); throw IOException("Outcome unknown") } }
+        val result = async { runCatching { controller(port).submit(intent.profileId, intent.command, intent.mutationId, admitted = { submitted = true }) } }
+        admitted.await()
+        assertTrue(submitted)
+        val restored = FacetSavedViewIntent.restore(intent.saved())
+        assertEquals(intent, restored)
+        assertEquals(query.toString(), restored.command.getValue("view").jsonObject.getValue("query").toString())
+        failure.complete(Unit)
+        assertTrue(result.await().exceptionOrNull() is IOException)
+        val action = PendingFacetMutation(restored.profileId, buildJsonObject {
+            put("mutationId", restored.mutationId); put("at", "2026-10-03T10:00:00Z"); put("command", restored.command)
+            put("executionContext", buildJsonObject { put("today", "2026-10-03"); put("timezone", "Europe/Paris") })
+        })
+        controller(port).resume(action)
+        assertEquals(listOf("execute:original-vault:decision", "retry:decision", "discard:decision"), port.calls)
+        assertEquals("original-view", action.mutation.getValue("command").jsonObject.getValue("id").jsonPrimitive.content)
+    }
+    @Test fun admissionDistinguishesEditablePersistenceFailureFromSubmittedExecutionFailure() = runTest {
+        var admitted = false
+        val before = Port().apply { persistenceFailure = IOException("Cannot persist") }
+        try { controller(before).submit("original-vault", completion, "decision", admitted = { admitted = true }); fail() } catch (_: IOException) {}
+        assertFalse(admitted)
+        val after = Port().apply { failure = IOException("Unknown execution outcome") }
+        try { controller(after).submit("original-vault", completion, "decision", admitted = { admitted = true }); fail() } catch (_: IOException) {}
+        assertTrue(admitted)
+        assertEquals(listOf("execute:original-vault:decision"), after.calls)
     }
     @Test fun resumeRetainsOwnerAndObservesBeforeDiscard() = runTest {
         val port = Port()

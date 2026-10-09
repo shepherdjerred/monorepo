@@ -36,6 +36,7 @@
                                 AutomationProperties.AutomationId="{x:Bind AutomationId}"
                                 AutomationProperties.Name="{x:Bind Label}"
                                 CanDragItems="True"
+                                DragItemsCompleted="Board_DragItemsCompleted"
                                 DragItemsStarting="Board_DragItemsStarting"
                                 Drop="Board_Drop"
                                 ItemsSource="{x:Bind Tasks}"
@@ -57,7 +58,7 @@
                                                 AutomationProperties.Name="Move task to next configured status"
                                                 Click="AdvanceBoardTask_Click"
                                                 Content="Move next"
-                                                Tag="{x:Bind Id}" />
+                                                Tag="{x:Bind}" />
                                         </Grid>
                                     </DataTemplate>
                                 </ListView.ItemTemplate>

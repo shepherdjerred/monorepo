@@ -3,24 +3,27 @@
     x:Class="TaskNotes.Windows.App.Views.TaskListWorkspaceView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:host="using:TaskNotes.Windows.Host"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:presentation="using:TaskNotes.Windows.Presentation"
     xmlns:views="using:TaskNotes.Windows.App.Views"
-    mc:Ignorable="d">
-    <Grid>
+    SizeChanged="Workspace_SizeChanged">
+    <UserControl.Resources>
+        <CollectionViewSource
+            x:Name="GroupedTasks"
+            IsSourceGrouped="True"
+            Source="{x:Bind ViewModel.TaskGroups, Mode=OneWay}" />
+    </UserControl.Resources>
+    <Grid x:Name="WorkspaceGrid" ColumnSpacing="16">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" MinWidth="420" />
-            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition x:Name="ListColumn" Width="*" />
+            <ColumnDefinition x:Name="InspectorColumn" Width="Auto" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-
         <Grid ColumnSpacing="12">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
@@ -35,121 +38,177 @@
                 <TextBlock
                     x:Name="DestinationSubtitle"
                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                    Text="Cached first, synchronized in the background" />
+                    Text="{x:Bind ViewModel.TaskCountLabel, Mode=OneWay}" />
             </StackPanel>
             <StackPanel
                 Grid.Column="1"
                 Orientation="Horizontal"
-                Spacing="8">
+                Spacing="4">
                 <Button
                     AutomationProperties.Name="Refresh tasks"
                     Click="Refresh_Click"
-                    Content="Refresh" />
+                    ToolTipService.ToolTip="Refresh (Ctrl+R)">
+                    <SymbolIcon Symbol="Refresh" />
+                </Button>
+                <Button
+                    AutomationProperties.Name="Toggle task inspector"
+                    Click="Inspector_Click"
+                    ToolTipService.ToolTip="Task inspector">
+                    <SymbolIcon Symbol="Edit" />
+                </Button>
             </StackPanel>
         </Grid>
-
         <Grid
             Grid.Row="1"
-            Margin="0,18,0,10"
+            Margin="0,12,0,8"
             ColumnSpacing="8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="180" />
-                <ColumnDefinition Width="160" />
-                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" MaxWidth="320" />
             </Grid.ColumnDefinitions>
             <AutoSuggestBox
                 x:Name="SearchBox"
                 AutomationProperties.AutomationId="TaskNotes.Search"
                 AutomationProperties.Name="Search tasks"
-                PlaceholderText="Search tasks"
+                PlaceholderText="Search tasks (Ctrl+F)"
+                QueryIcon="Find"
                 QuerySubmitted="SearchBox_QuerySubmitted"
                 TextChanged="SearchBox_TextChanged" />
-            <ComboBox
-                x:Name="SortComboBox"
+            <ScrollViewer
                 Grid.Column="1"
-                AutomationProperties.Name="Sort tasks"
-                Header="Sort"
-                SelectionChanged="SortComboBox_SelectionChanged">
-                <ComboBoxItem Content="Synchronized" Tag="AsSynchronized" />
-                <ComboBoxItem Content="Effective date" Tag="EffectiveDate" />
-                <ComboBoxItem Content="Due date" Tag="DueDate" />
-                <ComboBoxItem Content="Priority" Tag="Priority" />
-                <ComboBoxItem Content="Title" Tag="Title" />
-            </ComboBox>
-            <ComboBox
-                x:Name="GroupComboBox"
-                Grid.Column="2"
-                AutomationProperties.Name="Group tasks"
-                Header="Group"
-                SelectionChanged="GroupComboBox_SelectionChanged">
-                <ComboBoxItem Content="None" Tag="None" />
-                <ComboBoxItem Content="Date" Tag="Date" />
-                <ComboBoxItem Content="Status" Tag="Status" />
-                <ComboBoxItem Content="Priority" Tag="Priority" />
-                <ComboBoxItem Content="Project" Tag="Project" />
-            </ComboBox>
-            <Button
-                Grid.Column="3"
-                VerticalAlignment="Bottom"
-                AutomationProperties.Name="Save current query"
-                Click="SaveView_Click"
-                Content="Save view" />
+                HorizontalScrollBarVisibility="Auto"
+                VerticalScrollBarVisibility="Disabled">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <DropDownButton AutomationProperties.Name="Filter tasks" Content="Filter">
+                        <DropDownButton.Flyout>
+                            <MenuFlyout x:Name="FilterMenu" Opening="FilterMenu_Opening" />
+                        </DropDownButton.Flyout>
+                    </DropDownButton>
+                    <DropDownButton AutomationProperties.Name="Sort tasks" Content="Sort">
+                        <DropDownButton.Flyout>
+                            <MenuFlyout x:Name="SortMenu">
+                                <RadioMenuFlyoutItem
+                                    Click="SortMenu_Click"
+                                    GroupName="Sort"
+                                    IsChecked="True"
+                                    Tag="AsSynchronized"
+                                    Text="Synchronized" />
+                                <RadioMenuFlyoutItem
+                                    Click="SortMenu_Click"
+                                    GroupName="Sort"
+                                    Tag="EffectiveDate"
+                                    Text="Effective date" />
+                                <RadioMenuFlyoutItem
+                                    Click="SortMenu_Click"
+                                    GroupName="Sort"
+                                    Tag="DueDate"
+                                    Text="Due date" />
+                                <RadioMenuFlyoutItem
+                                    Click="SortMenu_Click"
+                                    GroupName="Sort"
+                                    Tag="Priority"
+                                    Text="Priority" />
+                                <RadioMenuFlyoutItem
+                                    Click="SortMenu_Click"
+                                    GroupName="Sort"
+                                    Tag="Title"
+                                    Text="Title" />
+                                <MenuFlyoutSeparator />
+                                <ToggleMenuFlyoutItem
+                                    x:Name="DescendingMenuItem"
+                                    Click="Descending_Click"
+                                    Text="Descending" />
+                            </MenuFlyout>
+                        </DropDownButton.Flyout>
+                    </DropDownButton>
+                    <DropDownButton AutomationProperties.Name="Group tasks" Content="Group">
+                        <DropDownButton.Flyout>
+                            <MenuFlyout x:Name="GroupMenu">
+                                <RadioMenuFlyoutItem
+                                    Click="GroupMenu_Click"
+                                    GroupName="Group"
+                                    IsChecked="True"
+                                    Tag="None"
+                                    Text="None" />
+                                <RadioMenuFlyoutItem
+                                    Click="GroupMenu_Click"
+                                    GroupName="Group"
+                                    Tag="Date"
+                                    Text="Date" />
+                                <RadioMenuFlyoutItem
+                                    Click="GroupMenu_Click"
+                                    GroupName="Group"
+                                    Tag="Status"
+                                    Text="Status" />
+                                <RadioMenuFlyoutItem
+                                    Click="GroupMenu_Click"
+                                    GroupName="Group"
+                                    Tag="Priority"
+                                    Text="Priority" />
+                                <RadioMenuFlyoutItem
+                                    Click="GroupMenu_Click"
+                                    GroupName="Group"
+                                    Tag="Project"
+                                    Text="Project" />
+                            </MenuFlyout>
+                        </DropDownButton.Flyout>
+                    </DropDownButton>
+                    <Button
+                        AutomationProperties.Name="Save current query"
+                        Click="SaveView_Click"
+                        Content="Save view" />
+                </StackPanel>
+            </ScrollViewer>
         </Grid>
-
-        <CommandBar Grid.Row="2" DefaultLabelPosition="Right">
-            <AppBarButton
-                AutomationProperties.Name="New task"
-                Click="NewTask_Click"
-                Icon="Add"
-                Label="New" />
-            <AppBarButton
-                x:Name="CompleteSelectedButton"
-                AutomationProperties.Name="Complete selected tasks"
-                Click="CompleteSelected_Click"
-                Icon="Accept"
-                IsEnabled="False"
-                Label="Complete" />
-            <AppBarButton
-                x:Name="ScheduleSelectedButton"
-                AutomationProperties.Name="Schedule selected tasks"
-                Click="ScheduleSelected_Click"
-                Icon="Calendar"
-                IsEnabled="False"
-                Label="Schedule" />
-            <AppBarButton
-                x:Name="PrioritizeSelectedButton"
-                AutomationProperties.Name="Prioritize selected tasks"
-                Click="PrioritizeSelected_Click"
-                Icon="Flag"
-                IsEnabled="False"
-                Label="Priority" />
-            <AppBarButton
-                x:Name="DeleteSelectedButton"
-                AutomationProperties.Name="Delete selected tasks"
-                Click="DeleteSelected_Click"
-                Icon="Delete"
-                IsEnabled="False"
-                Label="Delete" />
-            <AppBarSeparator />
-            <AppBarButton
-                x:Name="UndoButton"
-                AutomationProperties.Name="Undo last saved change"
-                Click="Undo_Click"
-                Icon="Undo"
-                IsEnabled="False"
-                Label="Undo" />
-            <AppBarButton
-                AutomationProperties.Name="Toggle task inspector"
-                Click="Inspector_Click"
-                Icon="Edit"
-                Label="Inspector" />
-        </CommandBar>
-
-        <StackPanel Grid.Row="3" Spacing="6">
+        <StackPanel Grid.Row="2" Spacing="4">
+            <CommandBar
+                Background="Transparent"
+                DefaultLabelPosition="Right"
+                IsOpen="False">
+                <AppBarButton
+                    AutomationProperties.Name="New task"
+                    Click="NewTask_Click"
+                    Icon="Add"
+                    Label="New" />
+                <AppBarButton
+                    x:Name="CompleteSelectedButton"
+                    AutomationProperties.Name="Complete selected tasks"
+                    Click="CompleteSelected_Click"
+                    Icon="Accept"
+                    IsEnabled="False"
+                    Label="Complete" />
+                <AppBarButton
+                    x:Name="ScheduleSelectedButton"
+                    AutomationProperties.Name="Schedule selected tasks"
+                    Click="ScheduleSelected_Click"
+                    Icon="Calendar"
+                    IsEnabled="False"
+                    Label="Schedule" />
+                <AppBarButton
+                    x:Name="PrioritizeSelectedButton"
+                    AutomationProperties.Name="Prioritize selected tasks"
+                    Click="PrioritizeSelected_Click"
+                    Icon="Flag"
+                    IsEnabled="False"
+                    Label="Priority" />
+                <AppBarButton
+                    x:Name="DeleteSelectedButton"
+                    AutomationProperties.Name="Delete selected tasks"
+                    Click="DeleteSelected_Click"
+                    Icon="Delete"
+                    IsEnabled="False"
+                    Label="Delete" />
+                <AppBarSeparator />
+                <AppBarButton
+                    x:Name="UndoButton"
+                    AutomationProperties.Name="Undo last saved change"
+                    Click="Undo_Click"
+                    Icon="Undo"
+                    IsEnabled="False"
+                    Label="Undo" />
+            </CommandBar>
             <InfoBar
                 x:Name="StatusBar"
-                Margin="0,0,0,10"
                 IsClosable="False"
                 IsOpen="True"
                 Severity="Informational">
@@ -157,7 +216,8 @@
                     x:Name="StatusText"
                     AutomationProperties.AutomationId="TaskNotes.SyncStatus"
                     AutomationProperties.LiveSetting="Polite"
-                    Text="Loading cached tasks…" />
+                    Text="Loading cached tasks…"
+                    TextWrapping="Wrap" />
             </InfoBar>
             <InfoBar
                 x:Name="SavedBar"
@@ -172,77 +232,196 @@
                     TextWrapping="Wrap" />
             </InfoBar>
         </StackPanel>
-
-        <ListView
-            x:Name="TaskList"
-            Grid.Row="4"
-            AutomationProperties.AutomationId="TaskNotes.TaskList"
-            AutomationProperties.Name="Tasks"
-            IsItemClickEnabled="True"
-            ItemClick="TaskList_ItemClick"
-            ItemsSource="{x:Bind ViewModel.VisibleTasks, Mode=OneWay}"
-            SelectionChanged="TaskList_SelectionChanged"
-            SelectionMode="Multiple">
-            <ListView.ItemTemplate>
-                <DataTemplate x:DataType="host:TaskItem">
-                    <Grid
-                        Padding="6,10"
-                        AutomationProperties.AutomationId="{x:Bind AutomationId}"
-                        AutomationProperties.Name="{x:Bind Title}"
-                        ColumnSpacing="12">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <CheckBox
-                            AutomationProperties.Name="{x:Bind Title}"
-                            Click="Completion_Click"
-                            IsChecked="{x:Bind IsCompleted}"
-                            Tag="{x:Bind Id}" />
-                        <StackPanel Grid.Column="1" Spacing="2">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
+        <Grid Grid.Row="3">
+            <StackPanel
+                x:Name="EmptyState"
+                MaxWidth="360"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Spacing="8">
+                <SymbolIcon HorizontalAlignment="Center" Symbol="Accept" />
+                <TextBlock
+                    Style="{StaticResource SubtitleTextBlockStyle}"
+                    Text="{x:Bind ViewModel.EmptyTitle, Mode=OneWay}"
+                    TextAlignment="Center" />
+                <TextBlock
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Text="{x:Bind ViewModel.EmptyDescription, Mode=OneWay}"
+                    TextAlignment="Center"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+            <ListView
+                x:Name="TaskList"
+                AutomationProperties.AutomationId="TaskNotes.TaskList"
+                AutomationProperties.Name="Tasks"
+                IsItemClickEnabled="True"
+                ItemClick="TaskList_ItemClick"
+                ItemsSource="{x:Bind GroupedTasks.View, Mode=OneWay}"
+                SelectionChanged="TaskList_SelectionChanged"
+                SelectionMode="Extended">
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        <Setter Property="Padding" Value="0" />
+                        <Setter Property="MinHeight" Value="{StaticResource FacetRowHeight}" />
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListView.GroupStyle>
+                    <GroupStyle HidesIfEmpty="True">
+                        <GroupStyle.HeaderTemplate>
+                            <DataTemplate>
                                 <TextBlock
+                                    Margin="8,12,0,4"
                                     FontWeight="SemiBold"
-                                    Text="{x:Bind Title}"
-                                    TextWrapping="Wrap" />
-                                <TextBlock Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" Text="{x:Bind PendingLabel}" />
-                            </StackPanel>
+                                    Text="{Binding Header}" />
+                            </DataTemplate>
+                        </GroupStyle.HeaderTemplate>
+                    </GroupStyle>
+                </ListView.GroupStyle>
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="presentation:TaskRowPresentation">
+                        <Grid
+                            Padding="{StaticResource FacetRowPadding}"
+                            AutomationProperties.AutomationId="{x:Bind Task.AutomationId}"
+                            AutomationProperties.Name="{x:Bind AccessibleLabel}"
+                            ColumnSpacing="8"
+                            GotFocus="Row_GotFocus"
+                            LostFocus="Row_LostFocus"
+                            PointerEntered="Row_PointerEntered"
+                            PointerExited="Row_PointerExited">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="2*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="80" />
+                                <ColumnDefinition Width="20" />
+                                <ColumnDefinition Width="52" />
+                                <ColumnDefinition Width="74" MinWidth="{StaticResource FacetDateColumn}" />
+                                <ColumnDefinition Width="64" />
+                            </Grid.ColumnDefinitions>
+                            <CheckBox
+                                MinWidth="{StaticResource FacetHitTarget}"
+                                Padding="0"
+                                VerticalAlignment="Center"
+                                AutomationProperties.Name="{x:Bind AccessibleLabel}"
+                                Click="Completion_Click"
+                                IsChecked="{x:Bind Task.IsCompleted}"
+                                Tag="{x:Bind Task}" />
                             <TextBlock
-                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                Text="{x:Bind TaxonomyLabel}"
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                FontSize="{StaticResource FacetBodySize}"
+                                Text="{x:Bind Task.Title}"
+                                TextTrimming="CharacterEllipsis"
+                                ToolTipService.ToolTip="{x:Bind Task.Title}" />
+                            <TextBlock
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                FontSize="{StaticResource FacetCaptionSize}"
+                                Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                Text="{x:Bind Metadata}"
                                 TextTrimming="CharacterEllipsis" />
-                            <StackPanel Orientation="Horizontal" Spacing="10">
-                                <TextBlock Text="{x:Bind StatusLabel}" />
-                                <TextBlock Text="{x:Bind PriorityLabel}" />
-                                <TextBlock Text="{x:Bind DateLabel}" />
-                                <TextBlock Text="{x:Bind GroupLabel}" />
+                            <TextBlock
+                                Grid.Column="3"
+                                VerticalAlignment="Center"
+                                FontSize="{StaticResource FacetCaptionSize}"
+                                Foreground="{Binding Task.PriorityColor, Converter={StaticResource ConfiguredColorConverter}}"
+                                Text="{x:Bind Priority}"
+                                TextTrimming="CharacterEllipsis"
+                                ToolTipService.ToolTip="{x:Bind ColorWarning}" />
+                            <TextBlock
+                                Grid.Column="4"
+                                VerticalAlignment="Center"
+                                Text="{x:Bind RecurrenceMark}"
+                                ToolTipService.ToolTip="Repeats" />
+                            <TextBlock
+                                Grid.Column="5"
+                                VerticalAlignment="Center"
+                                FontSize="{StaticResource FacetCaptionSize}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Text="{x:Bind Task.PendingLabel}" />
+                            <TextBlock
+                                Grid.Column="6"
+                                VerticalAlignment="Center"
+                                FontSize="{StaticResource FacetCaptionSize}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Text="{x:Bind Date}"
+                                TextTrimming="CharacterEllipsis"
+                                ToolTipService.ToolTip="{x:Bind DateDescription}" />
+                            <StackPanel
+                                x:Name="RowActions"
+                                Grid.Column="7"
+                                Opacity="0"
+                                Orientation="Horizontal"
+                                Spacing="4">
+                                <Button
+                                    Width="{StaticResource FacetHitTarget}"
+                                    Height="{StaticResource FacetHitTarget}"
+                                    Padding="0"
+                                    AutomationProperties.Name="Schedule task"
+                                    Click="ScheduleTask_Click"
+                                    Tag="{x:Bind Task}"
+                                    ToolTipService.ToolTip="Schedule">
+                                    <SymbolIcon Symbol="Calendar" />
+                                </Button>
+                                <Button
+                                    Width="{StaticResource FacetHitTarget}"
+                                    Height="{StaticResource FacetHitTarget}"
+                                    Padding="0"
+                                    AutomationProperties.Name="Delete task"
+                                    Click="DeleteTask_Click"
+                                    Tag="{x:Bind Task}"
+                                    ToolTipService.ToolTip="Delete">
+                                    <SymbolIcon Symbol="Delete" />
+                                </Button>
                             </StackPanel>
-                        </StackPanel>
-                        <Button
-                            Grid.Column="2"
-                            AutomationProperties.Name="Edit task"
-                            Click="EditTask_Click"
-                            Content="Edit"
-                            Tag="{x:Bind Id}" />
-                        <Grid.ContextFlyout>
-                            <MenuFlyout>
-                                <MenuFlyoutItem Click="EditTask_Click" Text="Edit" />
-                                <MenuFlyoutItem Click="MoveStatus_Click" Text="Move to status…" />
-                                <MenuFlyoutSeparator />
-                                <MenuFlyoutItem Click="DeleteTask_Click" Text="Delete" />
-                            </MenuFlyout>
-                        </Grid.ContextFlyout>
-                    </Grid>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
-
+                            <Grid.ContextFlyout>
+                                <MenuFlyout>
+                                    <MenuFlyoutItem
+                                        Click="EditTask_Click"
+                                        Tag="{x:Bind Task}"
+                                        Text="Open inspector" />
+                                    <MenuFlyoutItem
+                                        Click="ScheduleTask_Click"
+                                        Tag="{x:Bind Task}"
+                                        Text="Schedule…" />
+                                    <MenuFlyoutItem
+                                        Click="MoveStatus_Click"
+                                        Tag="{x:Bind Task}"
+                                        Text="Move to status…" />
+                                    <MenuFlyoutSeparator />
+                                    <MenuFlyoutItem
+                                        Click="DeleteTask_Click"
+                                        Tag="{x:Bind Task}"
+                                        Text="Delete" />
+                                </MenuFlyout>
+                            </Grid.ContextFlyout>
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </Grid>
+        <Grid
+            Grid.Row="4"
+            Margin="0,12,0,0"
+            ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <views:QuickAddView x:Name="InlineComposer" ViewModel="{x:Bind QuickAddViewModel, Mode=OneWay}" />
+            <Button
+                Grid.Column="1"
+                VerticalAlignment="Top"
+                AutomationProperties.Name="Add task"
+                Click="InlineAdd_Click"
+                Content="Add"
+                IsEnabled="{x:Bind QuickAddViewModel.CanSubmit, Mode=OneWay}" />
+        </Grid>
         <views:TaskEditorView
             x:Name="InspectorPane"
             Grid.RowSpan="5"
             Grid.Column="1"
-            ViewModel="{x:Bind EditorViewModel, Mode=OneWay}"
-            Visibility="Collapsed" />
+            ViewModel="{x:Bind EditorViewModel, Mode=OneWay}" />
     </Grid>
 </UserControl>

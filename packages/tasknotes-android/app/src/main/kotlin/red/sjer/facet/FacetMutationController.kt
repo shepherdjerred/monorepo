@@ -13,13 +13,13 @@ import red.sjer.facet.host.FacetReceiptContractException
 
 /** The native boundary retains envelopes and verifies applied receipts before returning. */
 interface FacetMutationPort {
-    suspend fun execute(profileId: String, command: JsonObject, mutationId: String): JsonObject
+    suspend fun execute(profileId: String, command: JsonObject, mutationId: String, admitted: () -> Unit): JsonObject
     suspend fun retry(mutationId: String): JsonObject
     suspend fun discardObserved(mutationId: String)
 }
 
 class NativeFacetMutationPort(private val engine: FacetEngineRunner) : FacetMutationPort {
-    override suspend fun execute(profileId: String, command: JsonObject, mutationId: String) = engine.execute(profileId, command, mutationId)
+    override suspend fun execute(profileId: String, command: JsonObject, mutationId: String, admitted: () -> Unit) = engine.execute(profileId, command, mutationId, admitted)
     override suspend fun retry(mutationId: String) = engine.retryMutation(mutationId)
     override suspend fun discardObserved(mutationId: String) = engine.discardObservedMutation(mutationId)
 }
@@ -28,8 +28,8 @@ data class AppliedFacetAction(val profileId: String, val mutationId: String, val
 
 /** Presentation never substitutes selection for a saved action's owning vault. */
 class FacetMutationController(private val port: FacetMutationPort, private val schema: FacetSchema) {
-    suspend fun submit(profileId: String, command: JsonObject, mutationId: String, observed: suspend (JsonObject) -> Unit = {}): AppliedFacetAction =
-        finish(profileId, mutationId, port.execute(profileId, command, mutationId), observed)
+    suspend fun submit(profileId: String, command: JsonObject, mutationId: String, admitted: () -> Unit = {}, observed: suspend (JsonObject) -> Unit = {}): AppliedFacetAction =
+        finish(profileId, mutationId, port.execute(profileId, command, mutationId, admitted), observed)
 
     suspend fun resume(action: PendingFacetMutation, observed: suspend (JsonObject) -> Unit = {}): AppliedFacetAction =
         finish(action.profileId, action.mutationId, port.retry(action.mutationId), observed)
