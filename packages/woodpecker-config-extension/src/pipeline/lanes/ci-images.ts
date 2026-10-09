@@ -1,4 +1,5 @@
 import type { CiImages } from "#src/images.ts";
+import { admissionGate } from "#src/pipeline/lanes/release.ts";
 import type { CiStep, SecretGrant } from "#src/pipeline/model.ts";
 import { IMAGE_ORCHESTRATION_TIER, MEDIUM_TIER } from "#src/pipeline/tiers.ts";
 import {
@@ -71,8 +72,10 @@ export function ciImageSteps(images: CiImages): CiStep[] {
       label: "commit back image pins",
       image: images.base,
       commands: [
+        ...admissionGate(
+          "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
+        ),
         "MISE_TOOLCHAIN_SCOPE=automation . ci/scripts/toolchain.sh",
-        "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
         'bun --no-install scripts/release/update-versions.ts --commit-back --candidates "$(bun --no-install scripts/ci/read-ci-handoff.ts pin-candidates)"',
       ],
       // A pin commit creates a new main pipeline. Wait until this build's

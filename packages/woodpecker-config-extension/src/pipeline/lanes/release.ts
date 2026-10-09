@@ -37,7 +37,7 @@ const RELEASE_GROUP = { limit: 1, group: "homelab-release" } as const;
  * verdict is a hard failure, since continuing would mutate infrastructure
  * without knowing whether this build was entitled to.
  */
-function admissionGate(installCommand: string): string[] {
+export function admissionGate(installCommand: string): string[] {
   return [
     installCommand,
     'release_admission="$(bun --no-install scripts/ci/homelab-release-admission.ts consume)"',

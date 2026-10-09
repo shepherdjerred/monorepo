@@ -320,6 +320,11 @@ The dispatcher retains later candidates and selects the newest verified main
 revision after the ready PR closes. Automated review remains required; bot
 seat provisioning is independent of lane separation.
 
+Scout release and image pin commit-back steps consume the same release
+admission verdict as their artifact producers. Superseded releases exit before
+reading absent handoffs or mutating state. An admitted release still fails on
+a missing required handoff.
+
 ## Port status
 
 Woodpecker owns verification, images, OpenTofu, Playwright, and releases. The
