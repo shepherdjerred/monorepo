@@ -50,6 +50,9 @@ const REPOSITORY_CHART_URLS = new Set([
 // woodpecker retires the drained legacy agent after the four dedicated pools
 // take over. The release must remove its absent Deployment; all database and
 // cache resources remain declared in the exact chart inventory.
+// storm-forum replaces its completed, uniquely named release Job on upgrades.
+// Its database and attachment PVCs remain declared. Without pruning, obsolete
+// completed Jobs keep the healthy forum OutOfSync and fail the release gate.
 const PRUNED_RELEASE_CHARTS = new Set([
   "birmel",
   "freshrss",
@@ -58,6 +61,7 @@ const PRUNED_RELEASE_CHARTS = new Set([
   "scout-beta",
   "scout-prod",
   "service-probes",
+  "storm-forum",
   "temporal",
   "trmnl-dashboard",
   "turbo-cache",
