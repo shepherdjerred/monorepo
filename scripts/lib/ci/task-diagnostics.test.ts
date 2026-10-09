@@ -217,14 +217,28 @@ test("malformed summaries publish explicit failure metadata without parser value
   expect(JSON.stringify(error.mock.calls)).not.toContain("sentinel");
 });
 
-async function runWrapper(root: string, entrypoint: string, command: string[]) {
+async function runWrapper(
+  root: string,
+  entrypoint: string,
+  command: string[],
+  options?: { mode: string[]; env: Record<string, string> },
+) {
   const child = Bun.spawn(
-    [process.execPath, "--no-install", entrypoint, "verify", "--", ...command],
+    [
+      process.execPath,
+      "--no-install",
+      entrypoint,
+      ...(options?.mode ?? ["verify", "--"]),
+      ...command,
+    ],
     {
       cwd: root,
       stdout: "pipe",
       stderr: "pipe",
-      env: { CI_PIPELINE_NUMBER: "123", CI_COMMIT_SHA: "a".repeat(40) },
+      env: options?.env ?? {
+        CI_PIPELINE_NUMBER: "123",
+        CI_COMMIT_SHA: "a".repeat(40),
+      },
     },
   );
   const [stdout, stderr, exit] = await Promise.all([
@@ -234,6 +248,31 @@ async function runWrapper(root: string, entrypoint: string, command: string[]) {
   ]);
   return { stdout, stderr, exit };
 }
+
+test.each([
+  { mode: ["invalid"], message: "Usage: run-with-diagnostics.ts" },
+  {
+    mode: ["verify", "--", "unused"],
+    message: "require a pipeline number and full commit SHA",
+  },
+  {
+    mode: ["--retain", '{"pipeline":"sentinel-secret"}', "[]"],
+    message: "CI task diagnostic process failed",
+  },
+])(
+  "reports safe wrapper errors and hides rejected values: $message",
+  async ({ mode, message }) => {
+    const { stderr, exit } = await runWrapper(
+      await repository(),
+      new URL("../../ci/run-with-diagnostics.ts", import.meta.url).pathname,
+      [],
+      { mode, env: { CI_PIPELINE_NUMBER: "", CI_COMMIT_SHA: "" } },
+    );
+    expect(exit).toBe(1);
+    expect(stderr).toContain(message);
+    expect(stderr).not.toContain("sentinel-secret");
+  },
+);
 
 test("wrapper forwards command output and preserves its exit without upload credentials", async () => {
   const root = await repository();

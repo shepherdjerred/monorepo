@@ -88,17 +88,24 @@ export async function retainDiagnostics(
 
 async function main(args: string[]): Promise<number> {
   if (args[0] === "--retain") {
-    const { z } = await import("zod");
-    const { TaskDiagnosticsSchema } =
-      await import("../lib/ci/task-diagnostics.ts");
-    const identity: unknown = JSON.parse(args[1] ?? "null");
-    const previous = z.array(z.string()).parse(JSON.parse(args[2] ?? "null"));
-    const parsed = TaskDiagnosticsSchema.omit({
-      turbo: true,
-      browserSelection: true,
-      collectionFailed: true,
-    }).parse(identity);
-    return retainDiagnostics(parsed, new Set(previous), process.cwd());
+    try {
+      const { z } = await import("zod");
+      const { TaskDiagnosticsSchema } =
+        await import("../lib/ci/task-diagnostics.ts");
+      const identity: unknown = JSON.parse(args[1] ?? "null");
+      const previous = z.array(z.string()).parse(JSON.parse(args[2] ?? "null"));
+      const parsed = TaskDiagnosticsSchema.omit({
+        turbo: true,
+        browserSelection: true,
+        collectionFailed: true,
+      }).parse(identity);
+      return await retainDiagnostics(parsed, new Set(previous), process.cwd());
+    } catch {
+      // Bootstrap or schema errors may include rejected values. Keep them out
+      // of CI logs, just like collection and upload errors above.
+      console.error("CI task diagnostic process failed");
+      return 1;
+    }
   }
   const [workflow, separator, ...command] = args;
   if (
@@ -170,13 +177,4 @@ async function main(args: string[]): Promise<number> {
   }
 }
 
-if (import.meta.main) {
-  try {
-    process.exitCode = await main(Bun.argv.slice(2));
-  } catch {
-    // Bootstrap or schema errors may include rejected values. Keep them out of
-    // CI logs, just like collection and upload errors above.
-    console.error("CI task diagnostic process failed");
-    process.exitCode = 1;
-  }
-}
+if (import.meta.main) process.exitCode = await main(Bun.argv.slice(2));
