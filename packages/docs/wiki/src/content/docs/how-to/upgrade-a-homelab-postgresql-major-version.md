@@ -90,8 +90,6 @@ focused checks and exact-head Woodpecker CI. Publish and reconcile through
 ## 4. Upgrade and accept one database
 
 Stop the selected database's writers through their approved maintenance path.
-Take a final consistent independent backup. Confirm its pod's `PGVERSION`
-matches the new source pin and that both toolchains are present.
 
 For an application using a dedicated non-superuser database role, record its
 current connection limit, set `ALTER ROLE <role> CONNECTION LIMIT 0`, and
@@ -102,6 +100,10 @@ connections during maintenance; it does not restrict superusers or background
 workers. Restore the exact original limit after the database checks pass, then
 verify the application's read/write flow. Retain the recorded limit for recovery
 if the upgrade fails.
+
+After the writer-quiescence checks and `CHECKPOINT`, take the final consistent
+independent backup. Confirm the pod's `PGVERSION` matches the new source pin and
+that both toolchains are present.
 
 For a single-member cluster, invoke the documented Spilo entrypoint:
 
