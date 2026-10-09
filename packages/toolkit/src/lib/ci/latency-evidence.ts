@@ -101,6 +101,18 @@ function selectedSteps(pipeline: WoodpeckerPipeline) {
   );
 }
 
+function retainedReviewEvidence(
+  lines: readonly string[],
+  pipeline: WoodpeckerPipeline,
+): ReviewEvidence {
+  try {
+    return reviewEvidence(lines, pipeline);
+  } catch {
+    // Invalid review evidence does not invalidate typed measurements.
+    return { kind: "unknown", providers: [] };
+  }
+}
+
 /** Four log reads at a time, independent of history size. */
 export async function latencyEvidence(
   pipelines: readonly WoodpeckerPipeline[],
@@ -131,22 +143,31 @@ export async function latencyEvidence(
           checkout: null,
           bootstrap: [],
         };
+        let lines: string[];
         try {
-          const lines = await boundedLogs(
+          lines = await boundedLogs(
             `/api/repos/${String(config.repoId)}/logs/${String(item.pipeline.number)}/${String(item.step.id)}`,
             config,
             signal,
           );
-          const parsed = stepEvidence(lines, item.pipeline);
-          if (
-            item.workflow.includes("review") &&
-            item.step.name === item.workflow
-          )
-            record.review = reviewEvidence(lines, item.pipeline);
-          Object.assign(evidence, parsed, { available: true });
         } catch (error) {
           if (signal?.aborted === true) throw error;
-          // Missing/oversized/malformed retained logs cannot become zero timings.
+          // Missing/oversized retained logs cannot become zero timings.
+          record.steps.push(evidence);
+          continue;
+        }
+        try {
+          Object.assign(evidence, stepEvidence(lines, item.pipeline), {
+            available: true,
+          });
+        } catch {
+          // Invalid measurements do not invalidate independent review evidence.
+        }
+        if (
+          item.workflow.includes("review") &&
+          item.step.name === item.workflow
+        ) {
+          record.review = retainedReviewEvidence(lines, item.pipeline);
         }
         record.steps.push(evidence);
       }

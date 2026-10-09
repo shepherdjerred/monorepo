@@ -249,6 +249,88 @@ test("unavailable and malformed evidence remains unknown while aborts propagate"
   ).rejects.toThrow("aborted");
 });
 
+test("malformed measurements preserve valid review evidence", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () =>
+      Response.json(
+        encoded([
+          "CI_BOOTSTRAP_DIAGNOSTIC malformed",
+          ...lines([signal(), quota("coderabbit")]),
+        ]),
+      ),
+    ),
+  );
+  const records = await latencyEvidence([pipeline], config);
+  const record = records.get(1);
+  expect(record?.review.kind).toBe("fresh");
+  expect(record?.steps.every((step) => !step.available)).toBe(true);
+});
+
+test("malformed review evidence preserves valid measurements", async () => {
+  const bootstrap = {
+    schemaVersion: 1,
+    sourceSha: head,
+    scope: "automation",
+    elapsedSeconds: 2,
+  };
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () =>
+      Response.json(
+        encoded([
+          `CI_BOOTSTRAP_DIAGNOSTIC ${JSON.stringify(bootstrap)}`,
+          '{"schema":"review-signal/v1"}',
+        ]),
+      ),
+    ),
+  );
+  const records = await latencyEvidence([pipeline], config);
+  const record = records.get(1);
+  expect(record?.review.kind).toBe("unknown");
+  expect(record?.steps.every((step) => step.available)).toBe(true);
+  expect(
+    record?.steps.find((step) => step.workflow.includes("review")),
+  ).toMatchObject({ bootstrap: [bootstrap] });
+});
+
+test("successful log reads release the lock without cancelling the stream", async () => {
+  const cancel = vi.fn(() => Promise.reject(new Error("cancel failed")));
+  const body = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(
+        new TextEncoder().encode(JSON.stringify(encoded(["ok"]))),
+      );
+      controller.close();
+    },
+    cancel,
+  });
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => new Response(body)),
+  );
+  await expect(boundedLogs("/logs", config)).resolves.toEqual(["ok"]);
+  expect(cancel).not.toHaveBeenCalled();
+  expect(body.locked).toBe(false);
+});
+
+test("failed cancellation preserves the original failure and releases the lock", async () => {
+  const cancel = vi.fn(() => Promise.reject(new Error("cancel failed")));
+  const body = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(new Uint8Array(8 * 1024 * 1024 + 1));
+    },
+    cancel,
+  });
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => new Response(body)),
+  );
+  await expect(boundedLogs("/logs", config)).rejects.toThrow("exceeds limit");
+  expect(cancel).toHaveBeenCalledOnce();
+  expect(body.locked).toBe(false);
+});
+
 test("oversized log responses stop at the byte limit", async () => {
   vi.stubGlobal(
     "fetch",

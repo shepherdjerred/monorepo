@@ -44,8 +44,13 @@ export async function boundedLogs(
       chunks.push(chunk);
     }
     return decodeLogs(JSON.parse(Buffer.concat(chunks).toString("utf8")));
+  } catch (error) {
+    // A failed cancellation must not replace the original read/parse failure.
+    await reader.cancel().catch(() => {
+      // Preserve the original failure even if the source rejects cancellation.
+    });
+    throw error;
   } finally {
-    await reader.cancel();
     reader.releaseLock();
   }
 }
