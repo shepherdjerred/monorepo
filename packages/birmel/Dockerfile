@@ -109,10 +109,12 @@ COPY --chmod=0444 \
 # source edit doesn't re-push this layer.
 # Apply the existing access policy while materializing each layer. Recursively
 # changing a copied tree later forces expensive overlay filesystem copy-up.
-COPY --from=prod-deps --chown=0:1000 --chmod=o-rwx,g+rX /app/ /app/
+# Assign group permissions instead of adding them: CI checkouts may be writable
+# by group, but the runtime uid must never be able to edit application files.
+COPY --from=prod-deps --chown=0:1000 --chmod=o-rwx,g=rX /app/ /app/
 
 # Scoped source closure + the generated Prisma client from the build stage.
-COPY --parents --chown=0:1000 --chmod=o-rwx,g+rX \
+COPY --parents --chown=0:1000 --chmod=o-rwx,g=rX \
   tsconfig.base.json \
   packages/birmel \
   packages/config \
@@ -123,15 +125,15 @@ COPY --parents --chown=0:1000 --chmod=o-rwx,g+rX \
   packages/s3-signed-request \
   packages/llm-runtime \
   ./
-COPY --from=build --chown=0:1000 --chmod=o-rwx,g+rX /app/packages/birmel/generated packages/birmel/generated
-COPY --from=build --chown=0:1000 --chmod=o-rwx,g+rX /app/packages/glitter-context/dist packages/glitter-context/dist
-COPY --from=build --chown=0:1000 --chmod=o-rwx,g+rX /app/packages/llm-models/dist packages/llm-models/dist
+COPY --from=build --chown=0:1000 --chmod=o-rwx,g=rX /app/packages/birmel/generated packages/birmel/generated
+COPY --from=build --chown=0:1000 --chmod=o-rwx,g=rX /app/packages/glitter-context/dist packages/glitter-context/dist
+COPY --from=build --chown=0:1000 --chmod=o-rwx,g=rX /app/packages/llm-models/dist packages/llm-models/dist
 
 # COPY applies modes to contents, not its destination root or parent scaffold.
 # Normalize those directories without rewriting the copied files.
 # Keep filesystem work before release metadata to reuse it across revisions.
 RUN chown 0:1000 /app /app/packages && \
-    chmod o-rwx,g+rX /app /app/packages \
+    chmod o-rwx,g=rX /app /app/packages \
       /app/packages/birmel/generated \
       /app/packages/glitter-context/dist \
       /app/packages/llm-models/dist && \
