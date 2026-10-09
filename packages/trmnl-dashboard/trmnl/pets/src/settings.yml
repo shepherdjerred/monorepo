@@ -32,6 +32,11 @@ oauth_expiry_field_name: ''
 oauth_expiry_strategy: ''
 oauth_fixed_expiry_ms: ''
 custom_fields:
+- keyname: author_bio
+  field_type: author_bio
+  name: About This Plugin
+  description: Pet-care status and daily activity.
+  github_url: https://github.com/shepherdjerred
 - keyname: api_key
   field_type: password
   name: API Key
