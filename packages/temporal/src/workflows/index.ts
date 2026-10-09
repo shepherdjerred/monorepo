@@ -2,7 +2,6 @@
 import * as stormForum from "./homelab/storm-forum.ts";
 import * as seaweedBackup from "./homelab/seaweedfs-backup.ts";
 import type { ForumStage } from "@shepherdjerred/storm-forum/contracts";
-
 export const maintainStormForumWorkflow = (stage: ForumStage) =>
   stormForum.maintainStormForumWorkflow(stage);
 export const backupStormForumWorkflow = (stage: ForumStage) =>
@@ -13,13 +12,14 @@ export const runSeaweedFsBackupWorkflow = (
 export const runSeaweedFsBackupRetentionAndGcWorkflow = () =>
   seaweedBackup.runSeaweedFsBackupRetentionAndGcWorkflow();
 import { runWoodpeckerLogRetention as _runWoodpeckerLogRetention } from "./ci/woodpecker-retention.ts";
+import * as ciMaintenance from "./ci/maintenance.ts";
+export const runCiMaintenanceTick = ciMaintenance.runCiMaintenanceTick;
+export const runCiMaintenanceCoordinator =
+  ciMaintenance.runCiMaintenanceCoordinator;
 import { fetchSkillCappedManifest as _fetchSkillCappedManifest } from "./homelab/fetcher.ts";
-
-export async function runWoodpeckerLogRetention(
+export const runWoodpeckerLogRetention = (
   input: Parameters<typeof _runWoodpeckerLogRetention>[0] = {},
-) {
-  return await _runWoodpeckerLogRetention(input);
-}
+) => _runWoodpeckerLogRetention(input);
 import { generateDependencySummary as _generateDependencySummary } from "./deps-summary.ts";
 import { runDnsAudit as _runDnsAudit } from "./homelab/dns-audit.ts";
 import { syncGolinks as _syncGolinks } from "./homelab/golink-sync.ts";

@@ -42,6 +42,7 @@ const ReleaseRefinerResultSchema = z.discriminatedUnion("status", [
     })
     .strict(),
   z.object({ status: z.literal("no-open-release-pr") }).strict(),
+  z.object({ status: z.literal("deferred") }).strict(),
 ]);
 // Structured Outputs requires an object at the root, so keep the status union
 // under result. The same Zod contract validates the final SDK response.
@@ -60,7 +61,9 @@ const ReleasePrSchema = z
   })
   .loose();
 const OpenReleasePrSchema = z.array(
-  z.object({ number: z.number().int().positive() }).loose(),
+  z
+    .object({ number: z.number().int().positive(), isDraft: z.boolean() })
+    .loose(),
 );
 const RefinerCommitSchema = z
   .object({
@@ -78,7 +81,7 @@ const RefinerCommitSchema = z
   })
   .loose();
 
-export type RefinerProvider = "codex" | "none";
+export type RefinerProvider = "codex" | "none" | "deferred";
 
 export type RefinerCommandRunner = (
   command: string[],
@@ -288,7 +291,7 @@ async function listOpenReleasePrs(
     "--state",
     "open",
     "--json",
-    "number",
+    "number,isDraft",
     "--limit",
     "1",
   ]);
@@ -301,6 +304,12 @@ async function verifyReleaseRefinerResult(
   result: z.infer<typeof ReleaseRefinerResultSchema>,
   execute: RefinerCommandRunner,
 ): Promise<void> {
+  if (result.status === "deferred") {
+    const prs = await listOpenReleasePrs(input, execute);
+    if (!prs.some((pr) => !pr.isDraft))
+      throw new Error("Refiner deferred without a ready PR");
+    return;
+  }
   if (result.status === "no-open-release-pr") {
     const openReleasePrs = await listOpenReleasePrs(input, execute);
     if (openReleasePrs.length > 0) {
@@ -368,9 +377,10 @@ export async function runReleaseRefiner(
   if (openReleasePrs.length === 0) {
     return "none";
   }
+  if (openReleasePrs.some((pr) => !pr.isDraft)) return "deferred";
 
   const codex = await (input.runCodex ?? runCodexSdk)(input);
   const result = requireSuccessfulResult("Codex", codex.output);
   await verifyReleaseRefinerResult(input, result, execute);
-  return "codex";
+  return result.status === "deferred" ? "deferred" : "codex";
 }

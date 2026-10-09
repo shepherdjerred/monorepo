@@ -8,6 +8,11 @@ import { run, runAllowExit, tmpBase } from "../../../scripts/lib/run.ts";
 import { TransientError } from "../../../scripts/lib/transient-error.ts";
 import { runMain } from "../../../scripts/lib/transient.ts";
 import {
+  readMaintenancePr,
+  assertDraftUnchanged,
+  deferReadyMaintenancePr,
+} from "../../../scripts/lib/maintenance-pr.ts";
+import {
   ciImageDefinition,
   ciImageSourceFingerprint,
   type CiImageDefinition,
@@ -287,6 +292,9 @@ async function promote(candidatePath: string, dryRun: boolean): Promise<void> {
   const auth = await setupGitAuth(root);
   const cloneDir = `${tmpBase()}/monorepo-${definition.name}-pin-${Date.now().toString()}`;
   try {
+    const openPr = await readMaintenancePr(definition.branch, auth.env);
+    if (deferReadyMaintenancePr(openPr)) return;
+    assertDraftUnchanged(openPr);
     await run(["git", "clone", MONOREPO_WRITE_URL, cloneDir], {
       env: auth.env,
     });

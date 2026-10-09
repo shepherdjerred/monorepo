@@ -14,6 +14,43 @@ separate main and PR source caches on Liskov. Its activity acquires the clone
 helper's exclusive GC lock, retains seven days, and trims each data claim to
 8 GiB. It preserves active readers and emits its own maintenance outcome.
 
+### CI maintenance dispatch
+
+The `ci-maintenance-dispatch` schedule runs every five minutes in `prod` with
+SKIP overlap and a five-minute catchup window. Its bounded tick wakes the
+durable `ci-maintenance-coordinator` on `monorepo-workflows`. All GitHub and
+Woodpecker I/O runs on `repo-automation`. The dispatcher is disabled by the
+default-off `ci-maintenance-dispatch-enabled` flag until its worker and the
+configuration extension are deployed. Registration also creates this schedule
+paused because older stable workers do not register `runCiMaintenanceTick`.
+After candidate promotion and both manual maintenance canaries pass, enable the
+dispatch flag and unpause this exact schedule. Reconciliation preserves the
+operator's subsequent pause state.
+
+Describe the workflow and read its `ciMaintenance` memo for the pending request ID, pipeline receipt,
+completed fingerprints, and blocked streams. The coordinator allows one
+submission at a time, coalesces repeated ticks, and retains fingerprints
+across worker replacement and continue-as-new. The memo is refreshed after
+each tick; Workflow history records in-flight writes before that snapshot.
+CI image fingerprints cover
+the tool manifest and Dockerfiles. Ready generated PRs freeze their stream.
+
+Writes have one activity attempt. After a lost response, subsequent ticks
+search for the recorded request ID; they never repeat the POST blindly.
+Read failures preserve state. A failed pipeline blocks that stream until an
+operator inspects it and sends `maintenanceRetry` with its exact `kind` and
+`requestId`. The other stream may continue. An absent submission requires an
+API/history audit first: send `maintenanceConfirmAbsent` with its exact
+`requestId` and a non-secret `evidence` explanation, then explicitly retry.
+That signal cannot clear a request with a known pipeline receipt. Never
+confirm absence while the original request or pipeline could still settle.
+
+`toolkit ci maintenance --json` lists recent maintenance receipts separately
+from verification. A successful maintenance run must emit one structured
+result, either completed or deferred for a ready PR. Deferred work does not
+advance its completed fingerprint. Main verification requires the complete
+release graph and cannot be cleared by a maintenance-only manual run.
+
 Vacuum start verification reads Home Assistant recorder history after each start
 request. Short cleaning transitions count as starts even when delayed state
 polling sees the vacuum docked again. A witnessed start followed by logbook

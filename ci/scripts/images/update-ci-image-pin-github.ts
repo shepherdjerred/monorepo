@@ -1,6 +1,11 @@
 import { run } from "../../../scripts/lib/run.ts";
 import type { CiImageDefinition } from "./build-ci-image-core.ts";
 import type { CiImagePinState } from "./update-ci-image-pin-core.ts";
+import {
+  readMaintenancePr,
+  assertDraftUnchanged,
+  deferReadyMaintenancePr,
+} from "../../../scripts/lib/maintenance-pr.ts";
 
 export const MONOREPO_REPO = "shepherdjerred/monorepo";
 
@@ -12,6 +17,9 @@ export async function openOrUpdatePullRequest(options: {
   readonly expectedRemoteSha: string | undefined;
 }): Promise<void> {
   const { cloneDir, definition, state, env, expectedRemoteSha = "" } = options;
+  const currentPr = await readMaintenancePr(definition.branch, env);
+  if (deferReadyMaintenancePr(currentPr)) return;
+  assertDraftUnchanged(currentPr, expectedRemoteSha || undefined);
   await run(
     [
       "git",
@@ -50,6 +58,7 @@ export async function openOrUpdatePullRequest(options: {
         "gh",
         "pr",
         "create",
+        "--draft",
         "--repo",
         MONOREPO_REPO,
         "--base",
@@ -62,7 +71,7 @@ export async function openOrUpdatePullRequest(options: {
         [
           `Promotes ${definition.name} build ${state.buildNumber.toString()} by immutable digest.`,
           "",
-          "The PR CI lanes consume this candidate digest before auto-merge.",
+          "Mark this draft ready to run full CI and review the candidate digest. Maintenance preserves a ready PR head until it is merged or closed.",
         ].join("\n"),
       ],
       { env },
@@ -87,19 +96,6 @@ export async function openOrUpdatePullRequest(options: {
   if (!/^\d+$/.test(prNumber)) {
     throw new Error("CI image pin PR number is invalid");
   }
-  await run(
-    [
-      "gh",
-      "pr",
-      "merge",
-      "--repo",
-      MONOREPO_REPO,
-      prNumber,
-      "--auto",
-      "--squash",
-    ],
-    { env },
-  );
 }
 
 /**
@@ -117,6 +113,9 @@ export async function retireStalePromotion(options: {
   readonly env: Record<string, string>;
 }): Promise<void> {
   const { cloneDir, definition, env } = options;
+  const currentPr = await readMaintenancePr(definition.branch, env);
+  if (deferReadyMaintenancePr(currentPr)) return;
+  assertDraftUnchanged(currentPr);
   const listed = await run(
     [
       "gh",

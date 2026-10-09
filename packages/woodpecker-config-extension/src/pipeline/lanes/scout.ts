@@ -153,3 +153,19 @@ export function scoutSteps(images: CiImages): CiStep[] {
     },
   ];
 }
+
+/** Publication has no inference credential when refinement runs separately. */
+export function githubReleaseStep(step: CiStep): CiStep {
+  if (step.key !== "release-please") throw new Error("Expected release lane");
+  return {
+    ...step,
+    label: "publish GitHub releases",
+    commands: step.commands.map((command) =>
+      command === "bun --no-install scripts/release/release.ts"
+        ? `${command} --phase github-release`
+        : command,
+    ),
+    secrets:
+      step.secrets?.filter((secret) => secret.env !== "OPENAI_API_KEY") ?? [],
+  };
+}

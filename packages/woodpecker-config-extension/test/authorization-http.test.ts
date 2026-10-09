@@ -23,6 +23,7 @@ function harness(
   hostedAutomationApproved = false,
   trustedGateImage?: string,
   cacheEnabled = false,
+  maintenanceEnabled = false,
 ) {
   const imageFetcher = vi.fn((file: string) =>
     Promise.resolve(
@@ -33,6 +34,7 @@ function harness(
   const cancelSupersededPr = vi.fn(() => Promise.resolve());
   const sourceCacheEnabled = vi.fn(() => Promise.resolve(cacheEnabled));
   const app = createApp({
+    maintenanceEnabled: () => Promise.resolve(maintenanceEnabled),
     sourceCacheEnabled,
     ...(trustedGateImage === undefined ? {} : { trustedGateImage }),
     publicKey: () => Promise.resolve(publicKey),
@@ -172,6 +174,68 @@ describe("signed Justin pipeline authorization", () => {
     const response = await app.request(unsigned);
     expect(response.status).toBe(401);
     expect(imageFetcher).not.toHaveBeenCalled();
+  });
+});
+
+describe("signed maintenance routing", () => {
+  const manual = {
+    event: "manual",
+    branch: "main",
+    ref: "refs/heads/main",
+    variables: { CI_MAINTENANCE_KIND: "release-notes" },
+  };
+  test("disabled maintenance refuses a signed request", async () => {
+    const response = await harness().app.request(await request(manual));
+    expect(response.status).toBe(403);
+  });
+  test.each([
+    { event: "push" },
+    { event: "pull_request" },
+    { branch: "feature" },
+    {
+      variables: {
+        CI_MAINTENANCE_KIND: "release-notes",
+        TOFU_PLATFORM_PLAN: "openai",
+      },
+    },
+    { variables: { CI_MAINTENANCE_KIND: "unknown" } },
+  ])("refuses a forged maintenance scope %j", async (change) => {
+    const { app } = harness(false, undefined, false, true);
+    const response = await app.request(await request({ ...manual, ...change }));
+    expect(response.status).toBe(400);
+  });
+  test.each(["release-notes", "ci-images"])(
+    "emits one %s workflow in the PR pool below ready priority",
+    async (kind) => {
+      const { app, base } = harness(false, undefined, false, true);
+      const response = await app.request(
+        await request({ ...manual, variables: { CI_MAINTENANCE_KIND: kind } }),
+      );
+      const body = ConfigResponseSchema.parse(await response.json());
+      expect(body.configs.map((config) => config.name)).toEqual([
+        `.woodpecker/maintenance-${kind}.yaml`,
+      ]);
+      expect(body.configs[0]?.data).toContain("ci-pool: pr");
+      expect(body.configs[0]?.data).toContain("priority-class: ci-draft");
+      expect(body.configs[0]?.data).toContain("group: ci-maintenance");
+      expect(base).not.toHaveBeenCalled();
+    },
+  );
+  test("main moving during submission emits no maintenance writes", async () => {
+    const { app } = harness(false, undefined, false, true);
+    const response = await app.request(
+      await request({
+        ...manual,
+        variables: {
+          ...manual.variables,
+          CI_MAINTENANCE_SOURCE: "b".repeat(40),
+        },
+      }),
+    );
+    const body = ConfigResponseSchema.parse(await response.json());
+    expect(body.configs.map((config) => config.name)).toEqual([
+      ".woodpecker/maintenance-superseded.yaml",
+    ]);
   });
 });
 

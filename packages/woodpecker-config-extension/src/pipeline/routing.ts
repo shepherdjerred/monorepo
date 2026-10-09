@@ -5,6 +5,7 @@ export type RoutingContext = {
   readonly branch: string;
   readonly defaultBranch: string;
   readonly draft: boolean;
+  readonly maintenance?: boolean;
 };
 
 /** Agent pools and Kueue priority are separate from production pod priority. */
@@ -14,9 +15,14 @@ export function routeSteps(
   trustedGateImage?: string,
 ): CiStep[] {
   const main =
+    context.maintenance !== true &&
     (context.event === "push" || context.event === "manual") &&
     context.branch === context.defaultBranch;
-  const priority = main ? "ci-main" : context.draft ? "ci-draft" : "ci-ready";
+  const priority = main
+    ? "ci-main"
+    : context.draft || context.maintenance === true
+      ? "ci-draft"
+      : "ci-ready";
   return steps.map((step) => {
     if (step.backend === "local") return step;
     const gate =
