@@ -7,11 +7,12 @@ class AstroCheckConfigTests(unittest.TestCase):
     def test_concurrent_check_processes_get_different_vite_caches(self):
         result = subprocess.run(
             [
-                "bun",
+                "node",
+                "--input-type=module",
                 "-e",
-                "const { getAstroCheckCacheDir } = await import('./src/astro-check.config.mjs');"
-                " console.log(JSON.stringify([getAstroCheckCacheDir('/docs', 101),"
-                " getAstroCheckCacheDir('/docs', 202)])); process.exit(0);",
+                "const { getAstroCacheDir } = await import('./src/astro-cache.mjs');"
+                " console.log(JSON.stringify([getAstroCacheDir('/docs', 101),"
+                " getAstroCacheDir('/docs', 202)]));",
             ],
             check=True,
             capture_output=True,
@@ -20,8 +21,8 @@ class AstroCheckConfigTests(unittest.TestCase):
         )
         first, second = json.loads(result.stdout.strip().splitlines()[-1])
 
-        self.assertEqual(first, "/docs/node_modules/.vite/astro-check-101")
-        self.assertEqual(second, "/docs/node_modules/.vite/astro-check-202")
+        self.assertEqual(first, "/docs/node_modules/.vite/astro-101")
+        self.assertEqual(second, "/docs/node_modules/.vite/astro-202")
         self.assertNotEqual(first, second)
 
 

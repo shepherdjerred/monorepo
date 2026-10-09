@@ -4,8 +4,10 @@ import { defineConfig } from "astro/config";
 import { writeFile } from "node:fs/promises";
 import { resolveTheme } from "@shepherdjerred/storm-theme";
 import { renderCard } from "@shepherdjerred/storm-theme/render";
+import { getAstroCacheDir } from "./src/astro-cache.mjs";
 
 export default defineConfig({
+  vite: { cacheDir: getAstroCacheDir() },
   devToolbar: { enabled: false },
   server: { host: "127.0.0.1", port: 18797, strictPort: true },
   build: {

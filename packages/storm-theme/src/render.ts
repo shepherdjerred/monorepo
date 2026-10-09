@@ -20,14 +20,16 @@ async function dataImage(path: string, type: string) {
   return `data:${type};base64,${bytes.toString("base64")}`;
 }
 const font = readFile(
-  import.meta
-    .resolve("@fontsource/roboto/files/roboto-latin-400-normal.woff")
-    .replace("file://", ""),
+  new URL(
+    import.meta
+      .resolve("@fontsource/roboto/files/roboto-latin-400-normal.woff"),
+  ),
 );
 const bold = readFile(
-  import.meta
-    .resolve("@fontsource/roboto/files/roboto-latin-700-normal.woff")
-    .replace("file://", ""),
+  new URL(
+    import.meta
+      .resolve("@fontsource/roboto/files/roboto-latin-700-normal.woff"),
+  ),
 );
 const element = (type: string, props: Record<string, unknown>) => ({
   type,
