@@ -41,6 +41,23 @@ gameplay data.
 Clash capture includes check-in, invitations, tournament state, rewards, and
 history; mastery capture preserves the client's season-milestone fields.
 
+Each profile endpoint is read on its own: one that fails, as the Clash
+endpoints do outside a tournament window, records its `lcu_read` diagnostic
+and the rest still run. A pass fails when no endpoint returned anything (a 404
+returns nothing), or when the outbox can't keep what was read. Reads share a
+20-second budget, so a stalled League client can't hold the pass for every
+read's timeout. Reads past the budget wait for the next pass and record a
+`profile_pass` diagnostic. After the
+fixed Clash endpoints, the pass follows the player's own roster ID to the
+resources only an ID reaches: that roster, its record, its bracket, and its
+tournament (`collect_clash_details`). Invited rosters are not followed. The
+server keeps one snapshot per player and resource, so a second roster would
+replace the player's own.
+The field names those IDs come from are the best available description of the
+League client's Clash payloads, written before a Clash window could confirm
+them. A name that never appears reads nothing. Every ID is parsed to its own
+shape before it reaches a path, as a game ID is.
+
 ## Player identity
 
 Every player ID the client reads is a League-client UUID, not the Riot API

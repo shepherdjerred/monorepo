@@ -643,6 +643,27 @@ A gameflow session that names the game's teams is checked for its observer like
 a lobby, since it binds customs and duels just as surely. A bare phase and a
 live game frame are exempt; the Live Client API names players by Riot ID only.
 
+### Clash brackets from the client
+
+Riot's Clash-V1 API publishes schedules, teams and registrations but never a
+bracket or a result. The `clash-snapshot` schedule owns `ClashTournament`,
+`ClashTeam` and `ClashRegistration`, and replaces them wholesale on each run,
+so client data is never projected into them. `league/clash/client-clash.ts`
+reads each tracked player's latest `clash_roster` and `clash_bracket`
+snapshots at query time instead. Only snapshots from the last three days count,
+so last weekend's cup doesn't read as this one's.
+
+The projection fills two gaps:
+
+- the Clash page's bracket section (`clash.roster` returns `brackets`);
+- the prematch banner, for a side Riot has no registration for. Its team comes
+  from the client's roster, and the opposing team from the roster's undecided
+  bracket match.
+
+The LCU shapes (`data/src/scout-client/lcu-clash.schema.ts`) were written
+before a Clash window could confirm them. Every field is optional, and an
+unrecognised payload projects to nothing rather than failing.
+
 ## The prematch path
 
 The `prematch-*` modules serve `scoutPrematchDiscoveryWorkflow` and
