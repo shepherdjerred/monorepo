@@ -1,4 +1,4 @@
-import { cp, mkdtemp, mkdir, rm, utimes } from "node:fs/promises";
+import { cp, mkdtemp, mkdir, rm, truncate, utimes } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, expect, test, vi } from "vitest";
@@ -100,6 +100,32 @@ test("collects new summaries, excludes earlier runs, and binds identity", async 
   );
   expect(report).toMatchObject({ ...identity, collectionFailed: false });
   expect(report.turbo).toHaveLength(1);
+});
+
+test("accepts large repository summaries while stripping their input payload", async () => {
+  const root = await repository();
+  await Bun.write(
+    path.join(root, ".turbo/runs/large.json"),
+    JSON.stringify({
+      ...summary(),
+      ignoredInputs: "x".repeat(21 * 1024 * 1024),
+    }),
+  );
+  const report = await collectTaskDiagnostics(identity, new Set(), root);
+  expect(report.collectionFailed).toBe(false);
+  expect(report.turbo).toHaveLength(1);
+  expect(JSON.stringify(report)).not.toContain("ignoredInputs");
+  expect(JSON.stringify(report).length).toBeLessThan(2000);
+});
+
+test("rejects oversized summaries before parsing or allocating their payload", async () => {
+  const root = await repository();
+  const file = path.join(root, ".turbo/runs/oversized.json");
+  await Bun.write(file, "{}");
+  await truncate(file, 128 * 1024 * 1024 + 1);
+  await expect(
+    collectTaskDiagnostics(identity, new Set(), root),
+  ).rejects.toThrow("Diagnostic input exceeds its size limit");
 });
 
 test("browser selection strips exception text, paths and arbitrary metadata", async () => {

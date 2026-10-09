@@ -82,10 +82,13 @@ export async function summaryFiles(root: string): Promise<string[]> {
   }
 }
 
-async function readBoundedJson(filename: string): Promise<unknown> {
+async function readBoundedJson(
+  filename: string,
+  maxBytes = 20 * 1024 * 1024,
+): Promise<unknown> {
   const file = Bun.file(filename);
-  if (file.size > 20 * 1024 * 1024)
-    throw new Error("Diagnostic input exceeds 20 MiB");
+  if (file.size > maxBytes)
+    throw new Error("Diagnostic input exceeds its size limit");
   return file.json();
 }
 
@@ -104,7 +107,12 @@ export async function collectTaskDiagnostics(
       .sort()
       .map(async (name) =>
         TurboDiagnosticSchema.parse(
-          await readBoundedJson(path.join(root, ".turbo/runs", name)),
+          // Full-repository summaries repeat each task's input hashes. The
+          // measured graph is about 60 MiB before this allowlist strips inputs.
+          await readBoundedJson(
+            path.join(root, ".turbo/runs", name),
+            128 * 1024 * 1024,
+          ),
         ),
       ),
   );
