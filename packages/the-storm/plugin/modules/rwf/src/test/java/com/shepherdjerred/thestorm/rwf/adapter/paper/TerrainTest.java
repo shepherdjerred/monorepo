@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
+import com.shepherdjerred.thestorm.core.world.AuditedBlockChanges;
 import com.shepherdjerred.thestorm.rwf.RwfHarness.CountingChunks;
 import com.shepherdjerred.thestorm.rwf.adapter.content.MapBlocks;
 import com.shepherdjerred.thestorm.rwf.adapter.content.Schematic;
@@ -47,7 +48,8 @@ final class TerrainTest {
                 new DirectComputePool(),
                 InstantSource.fixed(Instant.EPOCH),
                 RandomGenerator.of("L64X128MixRandom"),
-                world));
+                world,
+                new AuditedBlockChanges(_ -> {})));
     var terrain =
         new Terrain(
             context, new Terrain.Source("test", blocks, schematic.sha256()), new CountingChunks());
