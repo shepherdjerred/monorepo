@@ -12,7 +12,8 @@ import zipfile
 import zlib
 from argparse import Namespace
 from pathlib import Path
-from unittest.mock import patch
+from typing import TextIO
+from unittest.mock import Mock, patch
 
 from overview_types import OverviewPublication, PublishedOverview
 from test_world_previews import level
@@ -27,6 +28,7 @@ from world_overviews import (
     run,
     tool_config,
     upgrade_regions,
+    upgrade_world,
     validate_publication,
     world_format,
     write_configs,
@@ -71,6 +73,31 @@ def publication() -> OverviewPublication:
 
 
 class OverviewTests(unittest.TestCase):
+    def test_offline_converter_requires_completion_and_rejects_server_startup(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            work = Path(temporary)
+            for text, error in (
+                ("STORM_ARCHIVE_CONVERSION_COMPLETE\n", None),
+                ("World optimizaton finished\n", "Upgrade failed"),
+                ("STORM_ARCHIVE_CONVERSION_COMPLETE\nDone (1.0s)!\n", "unexpectedly started"),
+                ("STORM_ARCHIVE_CONVERSION_COMPLETE\nERROR unreadable chunk\n", "conversion failure"),
+            ):
+                with self.subTest(log=text):
+
+                    def process(
+                        _command: list[str], *, stdout: TextIO, log_text: str = text, **_options: object
+                    ) -> Mock:
+                        stdout.write(log_text)
+                        stdout.flush()
+                        return Mock(returncode=0, poll=lambda: 0)
+
+                    with patch("world_overviews.subprocess.Popen", side_effect=process):
+                        if error is None:
+                            upgrade_world(work, Path("server.jar"), "image")
+                        else:
+                            with self.assertRaisesRegex(RuntimeError, error):
+                                upgrade_world(work, Path("server.jar"), "image")
+
     def test_anvil_storage_metadata_distinguishes_obsolete_mcregion_files(self):
         raw = gzip.decompress(level(0, 0))
         tag = b"\x03\0\x07version" + struct.pack(">i", 19133)
@@ -206,13 +233,19 @@ class OverviewTests(unittest.TestCase):
             root = Path(temporary)
             path = root / "maps/test/rstate/x0/z0.tiles.dat"
             path.parent.mkdir(parents=True)
-            for state in ("rendered", "missing-light", "render-error", "chunk-error"):
+            for state in ("rendered", "not-generated", "missing-light", "render-error", "chunk-error"):
                 payload = b"\x0a\0\0\x0a" + string("tile-states")
                 payload += b"\x09" + string("palette") + b"\x08" + struct.pack(">i", 1)
                 payload += string(f"bluemap:{state}")
                 payload += b"\x07" + string("data") + struct.pack(">i", 1024) + b"\0" * 1024 + b"\0\0"
                 path.write_bytes(gzip.compress(payload))
-                if state == "rendered":
+                if state == "not-generated":
+                    # A completed scan is insufficient when the renderer skipped
+                    # an allocated chunk that can still contain saved blocks.
+                    certify_render_states(root)
+                    with self.assertRaisesRegex(ValueError, "no rendered overview tile"):
+                        certify_render_states(root, {"r.0.0.mca": [0]})
+                elif state == "rendered":
                     certify_render_states(root)
                     (root / "maps/test/settings.json").write_text(
                         json.dumps(
@@ -227,7 +260,7 @@ class OverviewTests(unittest.TestCase):
                     distant.write_bytes(gzip.compress(payload))
                     x, z = -199, -204
                     certify_render_states(root, {f"r.{2 * x}.{2 * z}.mca": [0, 1023]})
-                    with self.assertRaisesRegex(ValueError, "no processed overview tile"):
+                    with self.assertRaisesRegex(ValueError, "no rendered overview tile"):
                         certify_render_states(root, {"r.2.0.mca": [0]})
                 else:
                     with self.assertRaisesRegex(ValueError, "omitted or failed"):

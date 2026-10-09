@@ -68,6 +68,7 @@ TOOLS_PATH = PACKAGE / "archive/overview-tools.json"
 PUBLICATION_PATH = PACKAGE / "archive/overviews.json"
 REGION = re.compile(r"r\.(-?\d+)\.(-?\d+)\.mca")
 UPLOAD_WORKERS = 8
+CONVERSION_COMPLETE = "STORM_ARCHIVE_CONVERSION_COMPLETE"
 
 
 def tool_config() -> ToolConfig:
@@ -83,6 +84,7 @@ def tool_config() -> ToolConfig:
         raise ValueError("Invalid overview release")
     config["javaImage"] = f"itzg/minecraft-server:{pins['itzg/minecraft-server-java17-archive']}"
     config["upgraderPatchSha256"] = sha256(PACKAGE / "scripts/PatchUpgrader.java")
+    config["rendererPatchSha256"] = sha256(PACKAGE / "scripts/PatchRenderer.java")
     return config
 
 
@@ -328,7 +330,6 @@ def upgrade_world(work: Path, jar: Path, image: str) -> None:
         "docker",
         "run",
         "--rm",
-        "--interactive",
         "--name",
         name,
         "--hostname",
@@ -361,41 +362,32 @@ def upgrade_world(work: Path, jar: Path, image: str) -> None:
     ]
     log_path = work / f"upgrade-{len(list(work.glob('upgrade*.log'))) + 1}.log"
     with log_path.open("w") as log:
-        process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=log, stderr=subprocess.STDOUT, text=True)
-        stopped = False
-        started = time.monotonic()
-        reported = started
+        process = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT, text=True)
+        reported = time.monotonic()
         try:
             while process.poll() is None:
                 require_space(work)
                 text = log_path.read_text(errors="replace")
                 if re.search(r"\b(?:ERROR|FATAL)\b|Failed to (?:upgrade|load|read)", text):
                     raise RuntimeError(f"Upgrade logged a conversion failure; see {log_path}")
+                if re.search(r"Preparing start region|Done \([\d.,]+s\)!", text):
+                    raise RuntimeError(f"Offline converter unexpectedly started the server; see {log_path}")
                 if time.monotonic() - reported >= 60:
                     progress = re.findall(r"\d+% completed \([\d /]+chunks\)", text)
                     if progress:
                         print(f"Converting {work.name}: {progress[-1]}", flush=True)
                     reported = time.monotonic()
-                if not stopped and re.search(r"Done \([\d.,]+s\)!", text):
-                    if process.stdin is None:
-                        raise RuntimeError("Upgrade console pipe is missing")
-                    process.stdin.write("stop\n")
-                    process.stdin.flush()
-                    stopped = True
-                    started = time.monotonic()
-                if stopped and time.monotonic() - started > 180:
-                    raise TimeoutError(f"Upgrade did not stop gracefully; see {log_path}")
                 time.sleep(1)
-            if process.returncode != 0 or not stopped:
+            if process.returncode != 0 or CONVERSION_COMPLETE not in log_path.read_text():
                 raise RuntimeError(f"Upgrade failed ({process.returncode}); see {log_path}")
             if re.search(r"\b(?:ERROR|FATAL)\b|Failed to (?:upgrade|load|read)", log_path.read_text()):
                 raise RuntimeError(f"Upgrade logged a conversion failure; see {log_path}")
+            if re.search(r"Preparing start region|Done \([\d.,]+s\)!", log_path.read_text()):
+                raise RuntimeError(f"Offline converter unexpectedly started the server; see {log_path}")
         finally:
             if process.poll() is None:
                 subprocess.run(["docker", "stop", "--time", "180", name], check=True, capture_output=True)
                 process.wait(timeout=190)
-            if process.stdin is not None:
-                process.stdin.close()
 
 
 def upgrade_regions(work: Path, jar: Path, image: str, workers: int) -> int:
@@ -501,8 +493,9 @@ def render_world(work: Path, jar: Path, version: str, workers: int) -> None:
                 java,
                 f"-XX:ActiveProcessorCount={workers}",
                 f"-Xmx{8 if workers > 4 else 4}G",
-                "-jar",
-                str(jar),
+                "-cp",
+                f"{jar.parent / 'renderer-patch'}{os.pathsep}{jar}",
+                "de.bluecolored.bluemap.cli.BlueMapCLI",
                 "-c",
                 "config",
                 "-v",
@@ -597,7 +590,7 @@ def certify_render_states(root: Path, inventory: TerrainInventory | None = None)
         coordinate = int(position[1]), int(position[2])
         if coordinate in processed:
             raise ValueError("Duplicate render-state region coordinate")
-        processed[coordinate] = bytes(palette[index] != "bluemap:unknown" for index in data)
+        processed[coordinate] = bytes(palette[index] == "bluemap:rendered" for index in data)
     if rendered == 0:
         raise ValueError("Overview contains no rendered terrain")
     if inventory is not None:
@@ -607,8 +600,8 @@ def certify_render_states(root: Path, inventory: TerrainInventory | None = None)
         grid = json.loads(settings[0].read_text())["hires"]
         if grid != {"tileSize": [32, 32], "scale": [1, 1], "translate": [2, 2]}:
             raise ValueError("Pinned renderer tile grid changed")
-        # Certify the tile containing each saved chunk's center. Non-generated
-        # proto-chunks are processed too; unknown or absent tiles are incomplete.
+        # Every saved chunk must have a rendered tile, including terrain whose
+        # old population or lighting metadata claims it was never generated.
         for name, indices in inventory.items():
             region = REGION.fullmatch(name)
             if region is None:
@@ -619,7 +612,7 @@ def certify_render_states(root: Path, inventory: TerrainInventory | None = None)
                 z = (16 * (rz * 32 + index // 32) + 8 - 2) // 32
                 states = processed.get((x // 32, z // 32))
                 if states is None or not states[(z % 32) * 32 + x % 32]:
-                    raise ValueError(f"Saved chunk has no processed overview tile: {name}:{index}")
+                    raise ValueError(f"Saved chunk has no rendered overview tile: {name}:{index}")
 
 
 def asset_inventory(root: Path) -> list[Asset]:
@@ -809,6 +802,17 @@ def run_locked(args: argparse.Namespace) -> None:
             str(PACKAGE / "scripts/PatchUpgrader.java"),
             str(upgrader),
             str(upgrader.parent / "upgrader-patch"),
+        ],
+        check=True,
+    )
+    subprocess.run(
+        [
+            "java",
+            "-cp",
+            str(bluemap),
+            str(PACKAGE / "scripts/PatchRenderer.java"),
+            str(bluemap),
+            str(bluemap.parent / "renderer-patch"),
         ],
         check=True,
     )

@@ -163,11 +163,12 @@ are converted to vanilla 1.17.1 in a disposable, network-isolated Java 17
 container using the catalogue's pinned image. The 1.14.4 archive includes
 distant chunks that were never upgraded, so its render copy also needs a full
 conversion. The 1.19.2 save renders directly from a copy. Conversion checks
-every original chunk and excludes any
-terrain generated during server startup. Original ZIPs, downloads and preview
+every original chunk and exits before server startup, so spawn loading cannot
+regenerate saved terrain whose old generation flags are incomplete.
+Original ZIPs, downloads and preview
 images remain unchanged. No converted saves are published.
-The overview renders saved chunk edges without requiring neighboring light
-data. This keeps the archive's saved terrain visible and renders it fully lit;
+The overview renders every on-disk chunk without requiring generation-complete
+metadata or neighboring light data. This keeps saved terrain visible and renders it fully lit;
 the viewer's night mode does not reproduce historical lighting.
 Kargeth's Anvil metadata selects its `.mca` terrain; obsolete `.mcr` backups
 in that ZIP remain in the download and are excluded from the render copy.
@@ -175,11 +176,20 @@ The converter remains before the world-height expansion. `PatchUpgrader.java`
 uses Java 25's class-file API to add a synchronous flush before vanilla 1.17.1's
 IOWorker closes its asynchronous write queue. Without this flush the converter
 can silently discard its final chunk write. The official checksum-pinned JAR
-remains unchanged; only the patched IOWorker class takes precedence on the
-disposable converter's classpath. Its source checksum is part of the publication
+remains unchanged; patched IOWorker and Main classes take precedence on the
+disposable converter's classpath. Main exits after the vanilla offline upgrader
+has closed and persisted every chunk store. The publisher requires its completion
+marker and rejects server-startup output. The patch source checksum is part of the publication
 certificate. Every original chunk must pass format certification after conversion.
-BlueMap's render-state files must contain no failed or omitted-light tiles and
-must show a processed tile at every original saved chunk's center.
+`PatchRenderer.java` makes BlueMap's three on-disk chunk readers eligible to
+render regardless of their generation-status metadata. Older chunks can contain
+complete terrain while vanilla conversion marks their status `empty` because
+lighting was unfinished. Missing and errored chunk sentinels remain unchanged.
+The checksum-pinned BlueMap JAR and world data remain unchanged; patched reader
+classes take precedence on the renderer's classpath, and the patch source hash
+is part of the certificate. BlueMap's render-state files must contain no failed
+or omitted-light tiles and must show a **rendered** tile at every original saved
+chunk's center. A `not-generated` result cannot satisfy that check.
 
 Rendering uses the checksum-pinned BlueMap CLI in `archive/overview-tools.json`.
 The viewer is built from checksum-pinned matching upstream sources and their

@@ -21,6 +21,7 @@ class ToolConfig(TypedDict):
     webapp: ToolPin
     javaImage: str
     upgraderPatchSha256: str
+    rendererPatchSha256: str
 
 
 class VersionedWorld(TypedDict):
