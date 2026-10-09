@@ -1,5 +1,6 @@
 //! Minimal egui status and diagnostics surface.
 
+use std::rc::Rc;
 use std::sync::mpsc::{self, Receiver};
 
 use eframe::egui;
@@ -24,7 +25,7 @@ enum TrayCommand {
 
 /// Native Scout Client egui application.
 pub struct ScoutApp {
-    runtime: ClientRuntime,
+    runtime: Rc<ClientRuntime>,
     page: Page,
     quitting: bool,
     tray_commands: Receiver<TrayCommand>,
@@ -33,7 +34,7 @@ pub struct ScoutApp {
 
 impl ScoutApp {
     /// Create the egui app and native tray on the UI thread.
-    pub fn new(context: &eframe::CreationContext<'_>, runtime: ClientRuntime) -> Self {
+    pub fn new(context: &eframe::CreationContext<'_>, runtime: Rc<ClientRuntime>) -> Self {
         context.egui_ctx.set_theme(egui::Theme::Dark);
         let (tray, tray_commands) = create_tray(&context.egui_ctx);
         if should_reveal_after_tray_creation(tray.is_some()) {

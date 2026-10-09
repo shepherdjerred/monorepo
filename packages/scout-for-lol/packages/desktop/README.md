@@ -122,10 +122,16 @@ duration, size, and a bounded `detail` — so a credential, PUUID or filesystem
 path is not representable in one rather than merely filtered out of it. Adding
 a field is the only way to widen what a record can hold.
 
-The window renders with wgpu. The glow renderer unwraps `make_current` every
-frame on Windows and panicked when the GL context was invalidated by
-sleep/resume, a driver reset, or a display change. If wgpu can't start, the
-window falls back to glow and records a `start_renderer` warning.
+The window renders with glow. On Windows both of egui's renderers panic when
+the GPU context is lost: glow when sleep/resume, a driver reset or a display
+change invalidates it, and wgpu when it can no longer write a buffer, which
+happened within a minute on a hybrid-GPU machine. So the window is not trusted
+to stay up. `main` owns the collector and catches a window panic. It then stops
+the collector and waits for it, so only one client ever reads the outbox, and
+relaunches the client with the same arguments. Nothing is lost, because the
+outbox is on disk. A `window_crash` diagnostic records each crash. After three
+crashes, each within ten minutes of its start, the client stops relaunching
+(`--quick-crashes` carries the count).
 
 Errors and crashes are also reported to Bugsink once a DSN is configured in
 `scout_client_core::reporting`; until then the reporter is not installed and
