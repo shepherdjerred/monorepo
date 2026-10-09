@@ -6,6 +6,7 @@ import {
   WorkflowIdReusePolicy,
 } from "@temporalio/client";
 import { z } from "zod";
+import { temporalOperatorConnectionOptions } from "@shepherdjerred/root-scripts/temporal-replay.ts";
 import {
   SCOUT_WORKFLOW_NAMES,
   ScoutQueueCanaryProbeResultSchema,
@@ -14,7 +15,6 @@ import {
   scoutTaskQueues,
 } from "@scout-for-lol/temporal";
 
-const TemporalTlsSchema = z.enum(["true", "false"]).optional();
 const CANARY_TIMEOUT_MS = 60_000;
 
 class CanaryTimeoutError extends Error {
@@ -83,11 +83,12 @@ const buildId = options["build-id"];
 if ((deploymentName === undefined) !== (buildId === undefined)) {
   throw new Error("--deployment-name and --build-id must be supplied together");
 }
-const temporalTls = TemporalTlsSchema.parse(process.env["TEMPORAL_TLS"]);
-const connection = await Connection.connect({
-  address: options.address,
-  ...(temporalTls === "true" ? { tls: true } : {}),
-});
+const connection = await Connection.connect(
+  temporalOperatorConnectionOptions({
+    ...process.env,
+    TEMPORAL_ADDRESS: options.address,
+  }),
+);
 try {
   const client = new Client({ connection, namespace });
   const handle = await client.workflow.start(SCOUT_WORKFLOW_NAMES.queueCanary, {

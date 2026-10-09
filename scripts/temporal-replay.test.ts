@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   TemporalReplayNamespaceSchema,
-  temporalReplayConnectionOptions,
+  temporalOperatorConnectionOptions,
 } from "./temporal-replay.ts";
 
 describe("Temporal replay namespace", () => {
@@ -17,7 +17,7 @@ describe("Temporal replay namespace", () => {
 describe("Temporal replay connection", () => {
   it("uses the configured internal endpoint without a credential", () => {
     expect(
-      temporalReplayConnectionOptions({
+      temporalOperatorConnectionOptions({
         TEMPORAL_ADDRESS: "temporal.example:7233",
       }),
     ).toEqual({ address: "temporal.example:7233" });
@@ -25,7 +25,7 @@ describe("Temporal replay connection", () => {
 
   it("passes the external API credential to the SDK over TLS", () => {
     expect(
-      temporalReplayConnectionOptions({
+      temporalOperatorConnectionOptions({
         TEMPORAL_ADDRESS: "temporal.example:443",
         TEMPORAL_TLS: "true",
         TEMPORAL_API_KEY: "test-only",
@@ -41,7 +41,7 @@ describe("Temporal replay connection", () => {
     "rejects credentials without TLS (%s)",
     (tls) => {
       expect(() =>
-        temporalReplayConnectionOptions({
+        temporalOperatorConnectionOptions({
           TEMPORAL_ADDRESS: "temporal.example:443",
           TEMPORAL_TLS: tls,
           TEMPORAL_API_KEY: "test-only",
@@ -52,14 +52,14 @@ describe("Temporal replay connection", () => {
 
   it("rejects empty credentials and ambiguous TLS", () => {
     expect(() =>
-      temporalReplayConnectionOptions({
+      temporalOperatorConnectionOptions({
         TEMPORAL_ADDRESS: "temporal.example:443",
         TEMPORAL_TLS: "true",
         TEMPORAL_API_KEY: "",
       }),
     ).toThrow("nonempty TEMPORAL_API_KEY");
     expect(() =>
-      temporalReplayConnectionOptions({
+      temporalOperatorConnectionOptions({
         TEMPORAL_ADDRESS: "temporal.example:443",
         TEMPORAL_TLS: "yes",
       }),
@@ -70,7 +70,7 @@ describe("Temporal replay connection", () => {
     "requires an explicit nonempty address (%s)",
     (address) => {
       expect(() =>
-        temporalReplayConnectionOptions({ TEMPORAL_ADDRESS: address }),
+        temporalOperatorConnectionOptions({ TEMPORAL_ADDRESS: address }),
       ).toThrow("TEMPORAL_ADDRESS is required");
     },
   );

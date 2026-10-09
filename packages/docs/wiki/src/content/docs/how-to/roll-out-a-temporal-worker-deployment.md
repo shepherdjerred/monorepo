@@ -46,7 +46,7 @@ with the existing toolkit `TEMPORAL_API_KEY` credential reference. From
 `packages/temporal`:
 
 ```bash
-TEMPORAL_API_KEY='op://<vault>/<Temporal external auth item>/api-token' \
+TEMPORAL_TLS=true TEMPORAL_API_KEY='op://<vault>/<Temporal external auth item>/api-token' \
   ../../scripts/onepassword/with-service-account.sh op run -- \
   bun run worker-deployment start --build-id <candidate-image-git-sha>
 ```

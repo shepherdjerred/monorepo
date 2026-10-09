@@ -4,7 +4,7 @@ import { z } from "zod";
 
 export const TemporalReplayNamespaceSchema = z.enum(["dev", "beta", "prod"]);
 
-export function temporalReplayConnectionOptions(
+export function temporalOperatorConnectionOptions(
   environment: Readonly<Record<string, string | undefined>>,
 ): ConnectionOptions {
   const address = environment["TEMPORAL_ADDRESS"];
@@ -40,7 +40,7 @@ export async function replayTemporalHistories(input: {
     environment["TEMPORAL_NAMESPACE"],
   );
   const connection = await Connection.connect(
-    temporalReplayConnectionOptions(environment),
+    temporalOperatorConnectionOptions(environment),
   );
   try {
     const client = new Client({
