@@ -16,10 +16,6 @@
       "clones": 1,
       "tokens": 119
     },
-    "packages/astro-opengraph-images/src/presets/custom-property.tsx|packages/astro-opengraph-images/src/presets/simple-blog.tsx": {
-      "clones": 1,
-      "tokens": 71
-    },
     "packages/better-skill-capped/src/lib/local-store.test.ts|packages/better-skill-capped/src/lib/safe-storage.test.ts": {
       "clones": 1,
       "tokens": 114
