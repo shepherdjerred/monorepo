@@ -29,6 +29,9 @@ export function playwrightSteps(images: CiImages, changedBase = ""): CiStep[] {
       image: images.playwright,
       environment: {
         CI_CHANGED_BASE: changedBase,
+        // Browser suites already hash this input; supply the actual pinned
+        // image so a browser/toolchain change cannot reuse an older result.
+        CI_PLAYWRIGHT_IMAGE: images.playwright,
         ...TURBO_REMOTE_CACHE_ENVIRONMENT,
       },
       commands: diagnosticCommands("playwright-e2e", [

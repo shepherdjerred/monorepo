@@ -609,6 +609,9 @@ describe("selected lane contracts", () => {
     const playwright = steps.find((s) => s.key === "playwright-e2e");
     expect(playwright?.dependsOn).toBeUndefined();
     expect(playwright?.image).toBe(IMAGES.playwright);
+    expect(playwright?.environment?.["CI_PLAYWRIGHT_IMAGE"]).toBe(
+      IMAGES.playwright,
+    );
     // Removing serialization must not remove verification from the PR graph.
     expect(keysFor(["packages/sjer.red/src/pages/index.astro"])).toEqual(
       expect.arrayContaining(["verify", "playwright-e2e"]),
