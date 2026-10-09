@@ -113,11 +113,11 @@ installation revision and rollback rules.
 Converted historical chunks have their old lighting invalidated. BlueMap's
 generated map configuration normally omits chunks without native light data.
 Under the private restoration lease, `repair-private-map` changes only the
-main map's `ignore-missing-light-data` setting, journals its original bytes,
+main map's `ignore-missing-light-data` and ambient lighting settings, journals its original bytes,
 reloads BlueMap and queues a forced full render. It loads no gameplay chunks
 and survives restarts because the generated map file is runtime state. BlueMap
-renders unlit chunks at full brightness and cannot use their lighting to hide
-caves or reproduce night mode. See the
+uses full ambient brightness so converted chunks with zeroed light arrays remain
+readable too. It cannot use missing lighting to hide caves or reproduce night mode. See the
 [BlueMap map configuration](https://bluemap.bluecolored.de/wiki/configs/Maps.html).
 
 Prevent admissions and mc-router wake-ups during the cutover. Preserve the old

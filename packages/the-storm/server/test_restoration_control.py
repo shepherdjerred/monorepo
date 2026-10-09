@@ -316,6 +316,8 @@ class RestorationControlTest(unittest.TestCase):
                 commands.append(arguments[-2:])
                 if arguments[-1] == "tasks" and commands.count(["bluemap", "tasks"]) == 1:
                     return "BlueMap Tasks >\n"
+                if arguments[-1] == "world" and commands.count(["force-update", "world"]) == 1:
+                    return "⌛ BlueMap is still loading!\nPlease try again in a few seconds."
                 return {
                     "reload": "\x1b[32mReloading BlueMap...\x1b[0m\n",
                     "world": "Creating update-tasks ...\n",
@@ -338,7 +340,10 @@ class RestorationControlTest(unittest.TestCase):
         self.assertEqual(journal.object("privateMapRepair")["renderTaskReadback"], "updating map 'world' ...")
         self.assertNotIn("acceptance", journal)
         self.assertEqual(
-            commands, [["bluemap", "reload"], ["force-update", "world"], ["bluemap", "tasks"], ["bluemap", "tasks"]]
+            commands, [
+                ["bluemap", "reload"], ["force-update", "world"], ["force-update", "world"],
+                ["bluemap", "tasks"], ["bluemap", "tasks"],
+            ]
         )
         self.assertEqual(subprocess_result.returncode, 0)
         control.assert_closed(journal)

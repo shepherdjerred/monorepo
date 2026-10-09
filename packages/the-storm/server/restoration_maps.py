@@ -46,10 +46,17 @@ def render_unlit(data: Path, request: str, jar_sha: str) -> JsonObject:
         text.splitlines().count('world: "world"') != 1
         or text.splitlines().count('dimension: "minecraft:overworld"') != 1
         or text.splitlines().count("ignore-missing-light-data: false") != 1
+        or text.splitlines().count("ambient-light: 0.1") != 1
     ):
         raise ValueError("Map rendering requires the generated main-overworld configuration")
-    updated = text.replace("\nignore-missing-light-data: false\n", "\nignore-missing-light-data: true\n").encode()
-    if updated == original or current not in (original, updated):
+    missing_light_repair = text.replace(
+        "\nignore-missing-light-data: false\n", "\nignore-missing-light-data: true\n"
+    ).encode()
+    # Converted chunks can contain present but zeroed light arrays. The
+    # missing-data option alone does not brighten those already rendered tiles.
+    # Ambient lighting is a viewer setting and requires no terrain relighting.
+    updated = missing_light_repair.replace(b"\nambient-light: 0.1\n", b"\nambient-light: 1\n")
+    if updated == original or current not in (original, updated, missing_light_repair):
         raise ValueError("Map configuration changed outside the bounded lighting repair")
     storage.save(receipt_path, receipt)
     if current != updated:

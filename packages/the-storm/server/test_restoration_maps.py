@@ -25,7 +25,7 @@ class RestorationMapsTest(unittest.TestCase):
         self.config.parent.mkdir(parents=True)
         self.config.write_text(
             'world: "world"\ndimension: "minecraft:overworld"\n'
-            "ignore-missing-light-data: false\nmin-inhabited-time: 0\n"
+            "ignore-missing-light-data: false\nmin-inhabited-time: 0\nambient-light: 0.1\n"
         )
         self.before = storage.files(self.data, exclude_workspace=True)
 
@@ -41,6 +41,26 @@ class RestorationMapsTest(unittest.TestCase):
             [name for name in self.before if self.before[name] != after[name]], ["plugins/BlueMap/maps/world.conf"]
         )
         self.assertEqual(self.repair(), result)
+        self.assertIn("ambient-light: 1\n", self.config.read_text())
+
+    def test_previous_missing_light_repair_upgrades_from_recorded_original(self):
+        original = self.config.read_text()
+        self.config.write_text(original.replace("ignore-missing-light-data: false", "ignore-missing-light-data: true"))
+        storage.save(self.data / storage.WORKSPACE / self.request / "bluemap-render.json", {
+            "requestId": self.request, "candidateJarSha256": self.sha, "original": original,
+            "phase": "VERIFIED", "configSha256": storage.digest(self.config), "worldTicks": 0,
+        })
+        result = self.repair()
+        self.assertEqual(result["configSha256"], storage.digest(self.config))
+        self.assertIn("ambient-light: 1\n", self.config.read_text())
+        self.assertEqual(self.repair(), result)
+
+    def test_unrecognized_original_ambient_light_refused(self):
+        original = self.config.read_text().replace("ambient-light: 0.1", "ambient-light: 0.4")
+        self.config.write_text(original)
+        with self.assertRaisesRegex(ValueError, "main-overworld"):
+            self.repair()
+        self.assertEqual(self.config.read_text(), original)
 
     def test_atomic_replacement_interruption_resumes_from_recorded_original(self):
         replace = Path.replace
