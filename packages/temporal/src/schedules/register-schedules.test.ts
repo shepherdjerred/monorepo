@@ -103,7 +103,7 @@ test.each(["beta", "prod"] as const)(
   "the %s post-match schedule keeps its ID while routing through V2 dispatch",
   (stage) => {
     const schedule = findScheduleById(`scout-${stage}-postmatch-discovery`);
-    expect(schedule.workflowType).toBe("scoutPostMatchDiscoveryV2Workflow");
+    expect(schedule.workflowType).toBe("scoutPostMatchDiscoveryWorkflow");
     expect(schedule.args).toEqual([
       scoutPostMatchDiscoveryInputCodec.serialize({
         stage,
@@ -556,10 +556,10 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // Scout's schedule entrypoints delegate immediately to queue-specific
   // activities or child workflows. Their activity retry budgets are bounded
   // independently; none sleeps inside Workflow code.
-  "scoutPrematchDiscoveryV2Workflow",
-  "scoutPostMatchDiscoveryV2Workflow",
+  "scoutPrematchDiscoveryWorkflow",
+  "scoutPostMatchDiscoveryWorkflow",
   "scoutIngestionReconciliationWorkflow",
-  "scoutPipelineReconciliationV2Workflow",
+  "scoutPipelineReconciliationWorkflow",
   "scoutBackgroundJobWorkflow",
   "scoutReportScheduleReconcilerWorkflow",
   "scoutReportLakeWorkflow",
