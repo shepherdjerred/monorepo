@@ -42,8 +42,13 @@ configuration service uses the `woodpecker` Flipt namespace; unavailable flags
 keep ordinary checkout active and invalid values fail visibly.
 
 When enabled, the deployed digest-pinned service image supplies a trusted
-clone helper. Only that container mounts the main or approved-PR source PVC,
-plus the separate coordination PVC. Unapproved automation uses ordinary
+clone helper. Its preparation and checkout containers alone mount the main or
+approved-PR source PVC, plus the separate coordination PVC. A pinned BusyBox
+image from the deployed extension's catalog prepares ownership of the empty
+workspace and cache mount roots without traversing cached objects. This is
+required because the ZFS driver's ownership policy excludes RWX claims.
+The helper then runs as UID/GID 1000. Both containers use the tokenless CI
+service account and disable privilege escalation. Unapproved automation uses ordinary
 checkout. Each cache entry contains depth-one Git objects, a shallow boundary,
 and an exact repository/commit/tree manifest. No Git config, hooks, credentials,
 dependencies or build output enter it. The helper checks object integrity,

@@ -1,12 +1,32 @@
-import { z } from "zod";
+import { asRecord } from "./json.ts";
 import { run } from "./run.ts";
 
-export const MaintenancePrSchema = z.object({
-  number: z.number().int().positive(),
-  isDraft: z.boolean(),
-  headRefOid: z.string().regex(/^[a-f0-9]{40}$/u),
-});
-export type MaintenancePr = z.infer<typeof MaintenancePrSchema>;
+export type MaintenancePr = {
+  number: number;
+  isDraft: boolean;
+  headRefOid: string;
+};
+
+/** Image promotion runs before workspace dependencies are installed. */
+export function parseMaintenancePr(value: unknown): MaintenancePr {
+  const record = asRecord(value);
+  if (record === null) throw new TypeError("Invalid maintenance PR object");
+  const { number, isDraft, headRefOid } = record;
+  if (
+    typeof number !== "number" ||
+    number <= 0 ||
+    !Number.isSafeInteger(number)
+  ) {
+    throw new TypeError("Invalid maintenance PR number");
+  }
+  if (typeof isDraft !== "boolean") {
+    throw new TypeError("Invalid maintenance PR draft status");
+  }
+  if (typeof headRefOid !== "string" || !/^[a-f0-9]{40}$/u.test(headRefOid)) {
+    throw new TypeError("Invalid maintenance PR head SHA");
+  }
+  return { number, isDraft, headRefOid };
+}
 
 export function deferReadyMaintenancePr(
   pr: MaintenancePr | undefined,
@@ -39,7 +59,10 @@ export async function readMaintenancePr(
     ],
     { env, capture: true },
   );
-  const matches = z.array(MaintenancePrSchema).parse(JSON.parse(result.stdout));
+  const response: unknown = JSON.parse(result.stdout);
+  if (!Array.isArray(response))
+    throw new TypeError("Maintenance PR response must be an array");
+  const matches = response.map((value: unknown) => parseMaintenancePr(value));
   if (matches.length > 1)
     throw new Error(`Multiple maintenance PRs for ${branch}`);
   return matches[0];

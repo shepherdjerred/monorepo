@@ -4,6 +4,7 @@ import {
   SOURCE_CACHE_PATH,
   SOURCE_CACHE_CONTROL,
   SOURCE_CACHE_CONTROL_PATH,
+  SOURCE_CACHE_PREPARATION_IMAGE,
 } from "#src/pipeline/source-cache.ts";
 import { LIGHT_TIER } from "#src/pipeline/tiers.ts";
 import type {
@@ -319,6 +320,28 @@ export function emitWorkflow(step: CiStep, identity: PipelineIdentity): string {
       : {
           clone: [
             {
+              name: "prepare-clone",
+              image: SOURCE_CACHE_PREPARATION_IMAGE,
+              // The ZFS driver does not apply fsGroup to RWX claims. Only the
+              // empty workspace and mounted cache roots need ownership setup;
+              // traversing cached objects would serialize every warm checkout.
+              commands: [
+                `chown 1000:1000 . ${SOURCE_CACHE_PATH} ${SOURCE_CACHE_CONTROL_PATH}`,
+              ],
+              volumes: [
+                `${step.sourceCache.claim}:${SOURCE_CACHE_PATH}`,
+                `${SOURCE_CACHE_CONTROL}:${SOURCE_CACHE_CONTROL_PATH}`,
+              ],
+              backend_options: {
+                kubernetes: {
+                  ...podOptions(step, identity, LIGHT_TIER),
+                  // BusyBox's image user initializes fresh root-owned volumes.
+                  // This pod executes no repository code and has no API token.
+                  securityContext: { allowPrivilegeEscalation: false },
+                },
+              },
+            },
+            {
               name: "clone",
               image: step.sourceCache.image,
               commands: [
@@ -333,8 +356,12 @@ export function emitWorkflow(step: CiStep, identity: PipelineIdentity): string {
                 kubernetes: {
                   ...podOptions(step, identity, LIGHT_TIER),
                   securityContext: {
-                    runAsUser: 0,
-                    runAsGroup: 0,
+                    // Ownership was prepared before the non-root helper starts.
+                    runAsUser: 1000,
+                    runAsGroup: 1000,
+                    runAsNonRoot: true,
+                    fsGroup: 1000,
+                    fsGroupChangePolicy: "OnRootMismatch",
                     allowPrivilegeEscalation: false,
                   },
                 },
