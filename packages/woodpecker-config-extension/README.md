@@ -62,6 +62,9 @@ The deployed extension image also contains the bundled review poller at
 `/app/review-gate.js`. Its `CI_GATE_IMAGE` bootstrap value is the same digest
 as the running extension, supplied by the homelab chart. Review and completion
 therefore use trusted policy without cloning a PR or installing dependencies.
+Both steps declare `/app` as their Woodpecker `directory`: the runner creates
+and enters this directory before executing commands. A shell `cd` is too late
+to prevent a non-root image from attempting to create the absent checkout path.
 The poller prints its baked `GIT_SHA` policy revision. Findings, timeouts, and
 API errors fail; only the existing unanimous provider-quota exception passes
 with an explicit message that no review ran.

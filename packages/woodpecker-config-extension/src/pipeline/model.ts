@@ -96,6 +96,8 @@ export type CiStep = {
   readonly agentLabels?: Readonly<Record<string, string>>;
   /** Shell commands, run in order. */
   readonly commands: readonly string[];
+  /** Directory prepared by the runner before executing any commands. */
+  readonly workingDirectory?: string;
   /** Inner shell for the timeout wrapper; scanner images may only contain sh. */
   readonly shell?: "bash" | "sh";
   /** Plain environment variables. Credentials go through `secrets`, never here. */

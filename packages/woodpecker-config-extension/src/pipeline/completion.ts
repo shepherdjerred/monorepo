@@ -57,12 +57,11 @@ export function completionStep(
     key: "ci-complete",
     label: "complete required PR checks",
     image,
-    // skip_clone leaves Woodpecker's workspace without the repo's .mise.toml.
-    // The CI image keeps that pinned toolchain at /workspace.
-    commands: [
-      `cd ${workingDirectory}`,
-      `bun -e ${shellQuote(CHECK_STATUSES)}`,
-    ],
+    // Woodpecker creates its working directory before running commands. A
+    // rootless image with skip_clone cannot create the default repo path.
+    // Use the baked policy directory, or the CI image's pinned toolchain.
+    workingDirectory,
+    commands: [`bun -e ${shellQuote(CHECK_STATUSES)}`],
     environment: {
       CI_EXPECTED_CONTEXTS: JSON.stringify(
         blocking.map((step) => `ci/woodpecker/pr/${step.key}`),

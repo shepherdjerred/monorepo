@@ -234,6 +234,9 @@ export function emitWorkflow(step: CiStep, identity: PipelineIdentity): string {
       {
         name: step.key,
         image: step.image,
+        ...(step.workingDirectory === undefined
+          ? {}
+          : { directory: step.workingDirectory }),
         commands: wrapCommands(step),
         environment: {
           ...step.environment,

@@ -114,8 +114,10 @@ export function prGateSteps(
       commands:
         trustedGateImage === undefined
           ? [". ci/scripts/toolchain.sh", "ci/scripts/review-gate.sh"]
-          : ["cd /app", "bun /app/review-gate.js"],
-      ...(trustedGateImage === undefined ? {} : { skipClone: true }),
+          : ["bun /app/review-gate.js"],
+      ...(trustedGateImage === undefined
+        ? {}
+        : { skipClone: true, workingDirectory: "/app" }),
       // Multi-provider OR gate: one clean review from any enabled provider
       // passes, a P0 from any of them vetoes, and unanimous quota blocks
       // stay advisory. Only providers confirmed reviewing in production
