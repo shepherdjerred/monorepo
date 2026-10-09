@@ -179,51 +179,55 @@ function frame(row: {
   };
 }
 
-// Readable stand-ins rather than random-looking Riot PUUIDs: the frame table
-// prints the column verbatim and nothing here parses it.
-const PUUID_ONE = "story-puuid-blue-top-aatrox";
-const PUUID_TWO = "story-puuid-red-top-wukong";
+// Keep readable prefixes while satisfying the same identity boundary as live
+// timeline rows. Every story loads these fixtures, including the empty states.
+const PUUID_ONE = LeaguePuuidSchema.parse(
+  "story-puuid-blue-top-aatrox".padEnd(78, "a"),
+);
+const PUUID_TWO = LeaguePuuidSchema.parse(
+  "story-puuid-red-top-wukong".padEnd(78, "b"),
+);
 
 const FRAMES: TimelineFrame[] = [
   frame({
     frameIndex: 1,
     participantId: 1,
-    puuid: LeaguePuuidSchema.parse(PUUID_ONE),
+    puuid: PUUID_ONE,
     gold: 1140,
     xp: 980,
   }),
   frame({
     frameIndex: 2,
     participantId: 1,
-    puuid: LeaguePuuidSchema.parse(PUUID_ONE),
+    puuid: PUUID_ONE,
     gold: 2310,
     xp: 2470,
   }),
   frame({
     frameIndex: 3,
     participantId: 1,
-    puuid: LeaguePuuidSchema.parse(PUUID_ONE),
+    puuid: PUUID_ONE,
     gold: 3690,
     xp: 4180,
   }),
   frame({
     frameIndex: 1,
     participantId: 6,
-    puuid: LeaguePuuidSchema.parse(PUUID_TWO),
+    puuid: PUUID_TWO,
     gold: 1020,
     xp: 910,
   }),
   frame({
     frameIndex: 2,
     participantId: 6,
-    puuid: LeaguePuuidSchema.parse(PUUID_TWO),
+    puuid: PUUID_TWO,
     gold: 2050,
     xp: 2180,
   }),
   frame({
     frameIndex: 3,
     participantId: 6,
-    puuid: LeaguePuuidSchema.parse(PUUID_TWO),
+    puuid: PUUID_TWO,
     gold: 3120,
     xp: 3640,
   }),
