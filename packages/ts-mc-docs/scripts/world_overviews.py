@@ -485,9 +485,8 @@ def write_configs(work: Path, world: NamedWorld, spawn: tuple[int, int], workers
         (config / relative).write_text(text, encoding="utf-8")
 
 
-def render_world(work: Path, jar: Path, version: str, workers: int) -> None:
+def render_world(work: Path, jar: Path, version: str, workers: int, *, java: str) -> None:
     log_path = work / f"render-{len(list(work.glob('render*.log'))) + 1}.log"
-    java = subprocess.check_output(["mise", "which", "java"], cwd=REPO, text=True).strip()
     with log_path.open("w") as log:
         process = subprocess.Popen(
             [
@@ -793,12 +792,13 @@ def run_locked(args: argparse.Namespace) -> None:
         raise ValueError("Scratch belongs to another source, tool pin, or overview release")
     write_json(marker, owner)
     require_space(scratch)
+    java = subprocess.check_output(["mise", "which", "java"], cwd=REPO, text=True).strip()
     aws(args.profile, ["s3api", "head-bucket", "--bucket", BUCKET])
     bluemap = fetch_tool(scratch, "bluemap", tools["bluemap"])
     upgrader = fetch_tool(scratch, "upgrader", tools["upgrader"])
     subprocess.run(
         [
-            "java",
+            java,
             "-cp",
             str(upgrader),
             str(PACKAGE / "scripts/PatchUpgrader.java"),
@@ -809,7 +809,7 @@ def run_locked(args: argparse.Namespace) -> None:
     )
     subprocess.run(
         [
-            "java",
+            java,
             "-cp",
             str(bluemap),
             str(PACKAGE / "scripts/PatchRenderer.java"),
@@ -879,7 +879,7 @@ def run_locked(args: argparse.Namespace) -> None:
             write_configs(work, world, (checkpoint["spawn"][0], checkpoint["spawn"][1]), render_workers)
             version = native_version(world) or tools["upgrader"]["version"]
             print(f"Rendering low-resolution {identifier} ({checkpoint['chunks']:,} saved chunks)", flush=True)
-            render_world(work, bluemap, version, render_workers)
+            render_world(work, bluemap, version, render_workers, java=java)
             install_viewer(viewer, work / "web")
             assets = asset_inventory(work / "web")
             checkpoint.update(phase="rendered", assets=assets)

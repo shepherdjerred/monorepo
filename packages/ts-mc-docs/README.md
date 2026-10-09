@@ -141,8 +141,12 @@ navigation. `enable-hires` is disabled; close-up 3D models are not generated.
 the existing SeaweedFS bucket through `docs.ts-mc.net`.
 
 Requirements: the repo's Java 25 toolchain, Docker, `uv`, AWS CLI, the configured
-`seaweedfs` AWS profile, and the original archive directory. Run from this
-package and choose an empty scratch directory outside the repository and source:
+`seaweedfs` AWS profile, and the original archive directory.
+
+The publisher resolves Java through `mise` once and uses that binary for both
+classpath patch tools and the native renderer, independently of the shell's `PATH`.
+Run from this package and choose an empty scratch directory outside the repository
+and source:
 
 ```bash
 bun run overviews run --source "$HOME/Sync/Sync/The Storm/Worlds" \
