@@ -2,6 +2,7 @@ package red.sjer.facet
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -10,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import kotlinx.serialization.json.*
 
@@ -70,8 +72,14 @@ internal fun FacetSettings(model: FacetViewModel) {
                 SettingsRow("Vault health", "Sync, preserved conflicts and configuration", Icons.Default.HealthAndSafety) { section = "Vault health" }
                 Spacer(Modifier.height(8.dp)); Text("Appearance", style = MaterialTheme.typography.titleMedium)
                 Text("Follows your Android light or dark theme, text size and reduced motion preferences. Controls keep native touch targets.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Text("Haptic feedback"); Switch(model.feedbackPreferences.haptics, { model.setFeedbackPreferences(model.feedbackPreferences.copy(haptics = it)) }, enabled = !model.busy) }
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Text("Completion sound"); Switch(model.feedbackPreferences.sound, { model.setFeedbackPreferences(model.feedbackPreferences.copy(sound = it)) }, enabled = !model.busy) }
+                model.feedbackPreferenceError?.let { message ->
+                    Text(message, color = MaterialTheme.colorScheme.error)
+                    TextButton(onClick = { model.setFeedbackPreferences(FacetFeedbackPreferences()) }, enabled = !model.busy) { Text("Reset task feedback") }
+                }
+                FeedbackToggle("Haptic feedback", model.feedbackPreferences.haptics, !model.busy && model.feedbackPreferenceError == null) { model.setFeedbackPreferences(model.feedbackPreferences.copy(haptics = it)) }
+                FeedbackToggle("Task sounds", model.feedbackPreferences.sound, !model.busy && model.feedbackPreferenceError == null) { model.setFeedbackPreferences(model.feedbackPreferences.copy(sound = it)) }
+                Text("Subtle feedback for adding, completing, deleting and undoing tasks. Respects device sound and haptic settings.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                model.feedbackDiagnostic?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
                 Text("Facet · Markdown tasks in your vault", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
@@ -79,6 +87,15 @@ internal fun FacetSettings(model: FacetViewModel) {
     if (signOut) Confirmation("Sign out?", "Synchronization stops before credentials are removed. Vault copies and pending actions remain on this device.", "Sign out", { signOut = false }) { model.signOut(); signOut = false }
     remove?.let { profile -> Confirmation("Remove ${profile.name}?", "Facet stops synchronization and removes this vault's settled app state and access key. Files remain intact. Pending uploads, conflicts or saved actions must be resolved first.", "Remove vault", { remove = null }) { model.removeProfile(profile); remove = null } }
     retire?.let { action -> Confirmation("Retire saved action?", if (action.canResume) "The native engine must confirm this action is absent or parked. Pending and applied actions stay retained. No preserved conflict versions are removed." else "Facet checks the original saved outcome before clearing this private draft. Pending work remains retained; applied changes and preserved vault versions remain intact.", "Check and retire", { retire = null }) { model.retireRejected(action); retire = null } }
+}
+
+@Composable
+private fun FeedbackToggle(label: String, value: Boolean, enabled: Boolean, change: (Boolean) -> Unit) {
+    Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).toggleable(value, enabled = enabled, role = Role.Switch, onValueChange = change),
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+        Text(label, Modifier.weight(1f))
+        Switch(value, onCheckedChange = null, enabled = enabled)
+    }
 }
 
 @Composable

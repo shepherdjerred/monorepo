@@ -20,7 +20,8 @@ extension FacetStore {
     internal func runSavedAction(
         action: (mutationID: String, profileID: String), ownsEngine: @escaping () -> Bool,
         apply: () async throws -> FacetMutationReceipt,
-        cleanup: () async throws -> Void, reload: () async -> Void
+        cleanup: () async throws -> Void, reload: () async -> Void,
+        verified: ((FacetMutationReceipt, Bool) -> Void)? = nil
     ) async -> Bool {
         let (mutationID, profileID) = action
         guard activeMutationID == nil else {
@@ -28,6 +29,8 @@ extension FacetStore {
             return false
         }
         let ownsPresentation = presentationOwner(profileID: profileID, ownsEngine: ownsEngine)
+        let ownsAction = presentationOwner(
+            profileID: profileID, tracksRequest: false, ownsEngine: ownsEngine)
         activeMutationID = mutationID
         isSaving = true
         defer {
@@ -39,6 +42,7 @@ extension FacetStore {
             guard receipt.applied, receipt.mutationId == mutationID else {
                 throw FacetContractError.unsupportedResponse
             }
+            verified?(receipt, ownsAction())
             var notice = receipt.savedMessage
             var maintenanceError: String?
             do { try await cleanup() } catch {
@@ -48,8 +52,6 @@ extension FacetStore {
                 maintenanceError = issue.error
             }
             if ownsPresentation() {
-                appliedFeedback = FacetAppliedFeedback(
-                    profileID: profileID, mutationID: receipt.mutationId)
                 savedNotice = notice
                 if let maintenanceError { error = maintenanceError }
                 await reload()

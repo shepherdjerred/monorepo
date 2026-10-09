@@ -10,6 +10,7 @@ struct FacetTaskEditor: View {
     private let statuses: [(value: String, label: String)]
     private let priorities: [(value: String, label: String)]
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.facetFeedbackOrigin) private var feedbackOrigin
     @State private var title: String
     @State private var status: String
     @State private var priority: String
@@ -209,7 +210,12 @@ extension FacetTaskEditor {
         guard !isSaving else { return }
         isSaving = true
         submitted = envelope
-        _Concurrency.Task { await executeSubmission(envelope) }
+        let intent = store.feedbackIntent(origin: feedbackOrigin)
+        _Concurrency.Task {
+            await FacetFeedbackContext.$intent.withValue(intent) {
+                await executeSubmission(envelope)
+            }
+        }
     }
     private func executeSubmission(_ envelope: (id: String, command: [String: FacetValue])) async {
         defer { isSaving = false }

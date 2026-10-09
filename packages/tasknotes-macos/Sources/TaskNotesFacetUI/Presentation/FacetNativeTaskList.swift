@@ -14,12 +14,12 @@ internal struct FacetNativeTaskList: View {
     @State private var bulkSelection: FacetReviewedSelection?
     @State private var savedViews = false
     @Environment(\.accessibilityReduceMotion) private var reducedMotion
+    @Environment(\.facetFeedbackOrigin) private var feedbackOrigin
 
     var body: some View {
         Group {
             if window.board { board } else { list }
         }
-        .animation(reducedMotion ? nil : FacetNativeStyle.rowAnimation, value: snapshot.version)
         .confirmationDialog(
             "Delete this task note?",
             isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })
@@ -53,11 +53,9 @@ internal struct FacetNativeTaskList: View {
                 }
             }
         }
-        #if os(iOS)
-            .safeAreaInset(edge: .bottom) {
-                FacetAppliedFeedbackView(store: store, profileID: snapshot.profileId)
-            }
-        #endif
+        .safeAreaInset(edge: .bottom) {
+            FacetAppliedFeedbackView(store: store, profileID: snapshot.profileId)
+        }
         .sheet(item: $bulkSelection) { selection in
             FacetBulkForm(
                 store: store, profileID: selection.profileID,
@@ -152,6 +150,7 @@ internal struct FacetNativeTaskList: View {
         case .success(let presentation):
             FacetTaskRow(
                 task: task, presentation: presentation, desktop: desktop, stacked: stacked,
+                completionReceipt: completionReceipt(for: task),
                 complete: { toggle(task) }, open: { open(task) }, schedule: { open(task) },
                 delete: { deleting = task }
             )
@@ -264,7 +263,9 @@ extension FacetNativeTaskList {
         }.padding(.vertical, 8)
     }
     private func capture() {
-        guard captureDraft.begin(store: store, profileID: snapshot.profileId) else { return }
+        guard
+            captureDraft.begin(store: store, profileID: snapshot.profileId, origin: feedbackOrigin)
+        else { return }
         _Concurrency.Task {
             await captureDraft.submit(store: store)
             await window.reload(store: store)
@@ -275,11 +276,20 @@ extension FacetNativeTaskList {
     }
     private func action(_ task: FacetTask, operation: @escaping @MainActor () async -> Void) {
         guard admitted.insert(task.rowID).inserted else { return }
+        let intent = store.feedbackIntent(origin: feedbackOrigin)
         _Concurrency.Task {
-            await operation()
+            await FacetFeedbackContext.$intent.withValue(intent) { await operation() }
             await window.reload(store: store)
             admitted.remove(task.rowID)
         }
+    }
+    private func completionReceipt(for task: FacetTask) -> String? {
+        guard let event = store.appliedFeedback?.event, event.origin == feedbackOrigin,
+            event.profileID == snapshot.profileId, event.path == task.path,
+            event.occurrenceDate == task.occurrenceDate,
+            event.action == .completed || event.action == .reopened
+        else { return nil }
+        return event.mutationID
     }
     private var statusChoices: [FacetConfiguredChoice] {
         do {

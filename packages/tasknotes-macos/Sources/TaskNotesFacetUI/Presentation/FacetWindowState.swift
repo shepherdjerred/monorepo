@@ -27,6 +27,9 @@ public final class FacetWindowState {
     }
     public private(set) var selectionGeneration: UInt64 = 0
     public var inspectorPresented = true
+    internal var feedbackOrigin: FacetFeedbackOrigin?
+    internal var reducedMotion = false
+    private var animatedMutationID: String?
     public internal(set) var snapshot: FacetSnapshot?
     public internal(set) var displayedQuery: FacetValue?
     public internal(set) var error: String?
@@ -83,6 +86,18 @@ public final class FacetWindowState {
             let query = try query()
             await load(profileID: profileID, query: query) {
                 try await store.readWindowSnapshot(profileID: profileID, query: query)
+            } publish: { update in
+                if let feedback = store.appliedFeedback,
+                    feedback.event?.origin == self.feedbackOrigin,
+                    feedback.profileID == profileID, feedback.mutationID != self.animatedMutationID,
+                    feedback.event?.action != .saved, feedback.event?.noOp == false,
+                    !self.reducedMotion
+                {
+                    self.animatedMutationID = feedback.mutationID
+                    withAnimation(FacetNativeStyle.rowAnimation, update)
+                } else {
+                    update()
+                }
             }
             if let version = snapshot?.version,
                 vocabularyVersion != version || vocabularyProfile != profileID
@@ -94,7 +109,8 @@ public final class FacetWindowState {
 
     internal func load(
         profileID: String, query: FacetValue,
-        read: () async throws -> FacetSnapshot?
+        read: () async throws -> FacetSnapshot?,
+        publish: ((() -> Void) -> Void)? = nil
     ) async {
         generation += 1
         let request = generation
@@ -105,7 +121,7 @@ public final class FacetWindowState {
             guard result.profileId == profileID else {
                 throw FacetContractError.unsupportedResponse
             }
-            snapshot = result
+            if let publish { publish { snapshot = result } } else { snapshot = result }
             displayedQuery = query
             error = nil
             selectedTaskIDs.formIntersection(Set(result.tasks.map(\.rowID)))

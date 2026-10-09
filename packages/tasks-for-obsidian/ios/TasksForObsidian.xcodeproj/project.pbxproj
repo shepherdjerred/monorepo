@@ -28,9 +28,11 @@
 		A6F3F9F4DDCF4D154097C4A4 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9AA2B4C15E18713C3F2425A2 /* Images.xcassets */; };
 		BA193902757571848D61269F /* TodayTasksWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8E83C6DA31E3B637A745D46 /* TodayTasksWidget.swift */; };
 		C67365CB821A80210909E7DE /* TaskNotesKit in Frameworks */ = {isa = PBXBuildFile; productRef = 6ED2E69C5C7F08C7894ED288 /* TaskNotesKit */; };
+		CA2C3018BB6189460AB63160 /* ComponentKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D62E6AFDB17C7FB87674C26 /* ComponentKeys.swift */; };
 		CC2B1A38C105224F135EE31D /* NativeCheckpointTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D86DDC74750E83E474D98304 /* NativeCheckpointTests.swift */; };
 		E3D436BA38277C0B7D67D49C /* ThirdPartyNotices.txt in Resources */ = {isa = PBXBuildFile; fileRef = F8C245C44AB0D651366FB161 /* ThirdPartyNotices.txt */; };
 		E5749667862993D2E64EBB46 /* TaskNotesKit in Frameworks */ = {isa = PBXBuildFile; productRef = EF3123F128552877ED5CD5F8 /* TaskNotesKit */; };
+		E69FC13BAD3F31D581B981EC /* FacetDelightGalleryFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC73F7B09BE57D9707A6260B /* FacetDelightGalleryFixtures.swift */; };
 		ED6889804A3E2E9123972097 /* FirstPartyLicense.txt in Resources */ = {isa = PBXBuildFile; fileRef = B3597F195C7228F52ACBCDA6 /* FirstPartyLicense.txt */; };
 		EF814BFF430D1C983C5BC731 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 198212E9090D23DE654809E2 /* PrivacyInfo.xcprivacy */; };
 		EFD1F47D87968383F5256030 /* FacetNativeGalleryFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 626B3A877EB679DAB5B584C9 /* FacetNativeGalleryFixtures.swift */; };
@@ -83,6 +85,7 @@
 		32DC94CF5EEA15A26B6B524F /* TasksForObsidianUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TasksForObsidianUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4C1FE2E1714BD10C069C8089 /* StandaloneTaskTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StandaloneTaskTests.swift; sourceTree = "<group>"; };
 		53407DF630BC00824148CE26 /* QuickAddControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickAddControl.swift; sourceTree = "<group>"; };
+		5D62E6AFDB17C7FB87674C26 /* ComponentKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComponentKeys.swift; sourceTree = "<group>"; };
 		626B3A877EB679DAB5B584C9 /* FacetNativeGalleryFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacetNativeGalleryFixtures.swift; sourceTree = "<group>"; };
 		723F2DEE626C06A660A4022D /* TaskShortcutsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskShortcutsProvider.swift; sourceTree = "<group>"; };
 		79DE99B929CC788F441D435B /* FacetSurfaceFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacetSurfaceFixtures.swift; sourceTree = "<group>"; };
@@ -102,6 +105,7 @@
 		D86DDC74750E83E474D98304 /* NativeCheckpointTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeCheckpointTests.swift; sourceTree = "<group>"; };
 		DDA151A27A535E9FA36866B7 /* WidgetTaskData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetTaskData.swift; sourceTree = "<group>"; };
 		EAC0D0E1DE43BD5AD7367A49 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		EC73F7B09BE57D9707A6260B /* FacetDelightGalleryFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacetDelightGalleryFixtures.swift; sourceTree = "<group>"; };
 		EC8628C61F82B35854041D56 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		F8C245C44AB0D651366FB161 /* ThirdPartyNotices.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = ThirdPartyNotices.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -217,6 +221,8 @@
 		A4E4217B6C583D05C0BACA13 /* Support */ = {
 			isa = PBXGroup;
 			children = (
+				5D62E6AFDB17C7FB87674C26 /* ComponentKeys.swift */,
+				EC73F7B09BE57D9707A6260B /* FacetDelightGalleryFixtures.swift */,
 				626B3A877EB679DAB5B584C9 /* FacetNativeGalleryFixtures.swift */,
 				79DE99B929CC788F441D435B /* FacetSurfaceFixtures.swift */,
 			);
@@ -429,6 +435,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CA2C3018BB6189460AB63160 /* ComponentKeys.swift in Sources */,
+				E69FC13BAD3F31D581B981EC /* FacetDelightGalleryFixtures.swift in Sources */,
 				EFD1F47D87968383F5256030 /* FacetNativeGalleryFixtures.swift in Sources */,
 				64907EA8AEB3D46D7849F719 /* FacetSurfaceFixtures.swift in Sources */,
 				CC2B1A38C105224F135EE31D /* NativeCheckpointTests.swift in Sources */,

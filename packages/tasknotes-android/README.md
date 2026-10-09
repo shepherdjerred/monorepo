@@ -31,6 +31,31 @@ raw value and expose a per-choice diagnostic with native neutral rendering.
 Appearance and motion follow Android settings; haptic and sound preferences are
 stored on this device.
 
+Task sounds use the shared first-party create, complete, delete and reverse
+palette through a cached Android SoundPool with UI sonification attributes.
+Playback respects system UI sounds, ringer mode and system-stream mute/volume;
+it does not request audio focus or replay unloaded samples.
+Rapid physical cues are consumed during the current sample rather than stacked
+or replayed later, and background ownership loss stops playback. Saved snackbars
+remain until dismissed or replaced, preserve input focus, and fence their exact
+Undo receipt rather than expiring before assistive technology can reach it.
+Sounds and haptics default on independently, preserve explicit choices, and require an explicit
+Settings reset if stored preferences are malformed. Physical-device listening
+and tactile acceptance remain separate from emulator visual evidence.
+
+Feedback belongs to the verified applied receipt, engine, vault and foreground
+session. Duplicate, no-op, background and historical recovery observations stay
+silent; a batch produces one aggregate effect and ordinary edits stay quiet.
+Undo is offered after the exact current receipt is read. A brief readonly
+completion confirmation can outlive a filtered row without delaying the serial
+engine queue. Decorative motion follows the system animation preference.
+
+Capture starts with a focused title and live Rust-parsed chips. Optional Details
+adds Markdown notes, dates, configured priority and taxonomy overrides without
+reimplementing parsing. The complete payload and vault owner freeze at admission;
+failures retain the draft and submitted actions route to existing recovery.
+Add Another clears and refocuses only after an applied receipt.
+
 Completion admission is per vault, note path and occurrence. Different rows can
 queue independently while each submitted action retains its original revision
 and mutation ID. A failed editor or capture becomes read-only after durable

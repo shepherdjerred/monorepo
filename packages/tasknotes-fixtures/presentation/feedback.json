@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "defaults": {
+    "sounds": true,
+    "mobileHaptics": true,
+    "desktopHaptics": false
+  },
+  "delivery": {
+    "identity": ["engineSessionID", "profileID", "mutationID"],
+    "required": [
+      "local-user-intent",
+      "applied-receipt",
+      "changed-paths",
+      "owning-engine-session",
+      "owning-foreground-scene"
+    ],
+    "suppressed": [
+      "startup",
+      "remote-sync",
+      "hydration",
+      "no-op",
+      "background",
+      "duplicate",
+      "lost-owner",
+      "historical-recovery"
+    ],
+    "consumeSuppressed": true,
+    "logicalEvent": "once-per-receipt",
+    "physicalDelivery": "at-most-once-attempt",
+    "maintenanceFailure": "keep-applied-success-and-show-maintenance-separately"
+  },
+  "events": {
+    "created": { "sound": "create", "haptic": "success" },
+    "completed": { "sound": "complete", "haptic": "success" },
+    "deleted": { "sound": "delete", "haptic": "light" },
+    "reopened": { "sound": "reverse", "haptic": "light" },
+    "undone": { "sound": "reverse", "haptic": "light" },
+    "saved": { "sound": null, "haptic": "none" }
+  },
+  "interactions": {
+    "custom-press": "visual-only",
+    "selection": "selection",
+    "swipe-threshold": "selection",
+    "explicit-validation-rejection": "error",
+    "native-control": "system-only",
+    "autosave-error": "visual-only"
+  },
+  "undo": "exact-authoritative-current-receipt-no-presentation-stack",
+  "bulk": "one-aggregate-cue-per-applied-batch-no-per-task-replay",
+  "audio": "bundled-ambient-no-focus-no-background-replay-respect-system-mute",
+  "motion": "system-reduce-motion-suppresses-decorative-motion-retains-outcome",
+  "migration": "preserve-explicit-independent-values-combined-value-migrates-to-both-missing-uses-defaults-malformed-requires-recovery"
+}

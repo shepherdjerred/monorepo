@@ -4,11 +4,12 @@ using TaskNotes.Windows.Host;
 namespace TaskNotes.Windows.Presentation
 {
     /// <summary>Portable Quick Add input, preview, and submission state.</summary>
-    public sealed class QuickAddViewModel : ObservableObject
+    public sealed partial class QuickAddViewModel : ObservableObject
     {
         private readonly ITaskNotesStore _store;
         private string _input = string.Empty;
         private QuickAddPreview? _preview;
+        private long _previewGeneration;
         private string? _validationError;
         private TaskListQuery _context = TaskListQuery.Today;
         private long _inputGeneration;
@@ -24,7 +25,10 @@ namespace TaskNotes.Windows.Presentation
             private set
             {
                 if (SetProperty(ref _recoveryActionId, value))
+                {
                     OnPropertyChanged(nameof(CanSubmit));
+                    OnPropertyChanged(nameof(PreviewDescription));
+                }
             }
         }
 
@@ -35,7 +39,10 @@ namespace TaskNotes.Windows.Presentation
             private set
             {
                 if (SetProperty(ref _needsObservation, value))
+                {
                     OnPropertyChanged(nameof(CanSubmit));
+                    OnPropertyChanged(nameof(PreviewDescription));
+                }
             }
         }
 
@@ -51,10 +58,14 @@ namespace TaskNotes.Windows.Presentation
             get => _input;
             set
             {
+                ResetEmptyDraftOwner();
                 if (SetProperty(ref _input, value))
                 {
+                    if (!string.IsNullOrWhiteSpace(value))
+                        _ = OwningProfile;
                     _inputGeneration++;
                     OnPropertyChanged(nameof(CanSubmit));
+                    OnPropertyChanged(nameof(HasDraft));
                 }
             }
         }
@@ -76,6 +87,11 @@ namespace TaskNotes.Windows.Presentation
             && RecoveryActionId is null
             && !NeedsObservation
             && _confirmedGeneration != _inputGeneration
+            && (
+                _previewGeneration != _inputGeneration
+                || Preview is null
+                || !string.IsNullOrWhiteSpace(Preview.Title)
+            )
             && !string.IsNullOrWhiteSpace(Input);
 
         /// <summary>Clear a reviewed draft only after its exact retained action leaves recovery.</summary>
@@ -94,6 +110,7 @@ namespace TaskNotes.Windows.Presentation
             RecoveryActionId = null;
             NeedsObservation = false;
             Input = "";
+            ClearDetails();
             Preview = null;
             ValidationError = null;
             return true;
@@ -106,6 +123,11 @@ namespace TaskNotes.Windows.Presentation
                 :
                 [
                     .. (preview.Due is null ? Array.Empty<string>() : [$"Due {preview.Due}"]),
+                    .. (
+                        preview.Scheduled is null
+                            ? Array.Empty<string>()
+                            : [$"Scheduled {preview.Scheduled}"]
+                    ),
                     preview.Priority,
                     .. preview.Projects,
                     .. preview.Contexts.Select(value => $"@{value}"),
@@ -119,10 +141,13 @@ namespace TaskNotes.Windows.Presentation
             get => _preview;
             private set
             {
+                _previewGeneration = _inputGeneration;
                 if (SetProperty(ref _preview, value))
                 {
                     OnPropertyChanged(nameof(PreviewDescription));
                     OnPropertyChanged(nameof(PreviewChips));
+                    OnPropertyChanged(nameof(CaptureChips));
+                    OnPropertyChanged(nameof(CanSubmit));
                 }
             }
         }
@@ -145,6 +170,10 @@ namespace TaskNotes.Windows.Presentation
         {
             get
             {
+                if (NeedsObservation)
+                    return "Task saved. Refresh or review its exact action in Settings recovery; this capture will not be created again.";
+                if (RecoveryActionId is not null)
+                    return $"Submitted action {RecoveryActionId} needs review in Settings recovery. Keep this draft, then Resume or Retire that exact action.";
                 if (ValidationError is not null)
                 {
                     return ValidationError;
@@ -168,26 +197,47 @@ namespace TaskNotes.Windows.Presentation
         /// <summary>Sets contextual defaults for subsequent previews and submissions.</summary>
         public void SetContext(TaskListQuery context)
         {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
+            ArgumentNullException.ThrowIfNull(context);
+            ResetEmptyDraftOwner();
+            if (_context != context)
+                _inputGeneration++;
+            _context = context;
         }
 
         /// <summary>Refreshes the natural-language preview.</summary>
         public async Task<bool> PreviewAsync(CancellationToken cancellationToken = default)
         {
+            if (RecoveryActionId is not null || NeedsObservation)
+                return false;
             long generation = _inputGeneration;
             string input = Input;
+            string? profile = OwningProfile;
+            TaskListQuery context = _context;
+            FacetCaptureOptions options = CaptureOptions();
             if (string.IsNullOrWhiteSpace(Input))
             {
                 Preview = null;
                 ValidationError = "Enter a task before previewing it.";
                 return false;
             }
-            var preview = await _store.PreviewQuickAddAsync(input, cancellationToken);
-            if (generation != _inputGeneration)
+            var preview = _store is IFacetDetailedCaptureStore detailed
+                ? await detailed.PreviewCaptureAsync(
+                    input,
+                    context,
+                    profile,
+                    options,
+                    cancellationToken
+                )
+                : await _store.PreviewQuickAddAsync(input, cancellationToken);
+            if (
+                generation != _inputGeneration
+                || profile != (_store as IFacetCaptureStore)?.SelectedProfileId
+                || context != _context
+            )
                 return false;
             Preview = preview;
-            ValidationError = null;
-            return true;
+            ValidationError = string.IsNullOrWhiteSpace(preview.Title) ? "Add a task title." : null;
+            return ValidationError is null;
         }
 
         /// <summary>Saves input and optionally resets for another task.</summary>
@@ -200,7 +250,8 @@ namespace TaskNotes.Windows.Presentation
             long generation = _inputGeneration;
             TaskListQuery context = _context;
             var capture = _store as IFacetCaptureStore;
-            string? profile = capture?.SelectedProfileId;
+            string? profile = OwningProfile;
+            FacetCaptureOptions options = CaptureOptions();
             if (string.IsNullOrWhiteSpace(input))
             {
                 ValidationError = "Enter a task before saving it.";
@@ -209,17 +260,43 @@ namespace TaskNotes.Windows.Presentation
             if (!CanSubmit)
                 return false;
             IsSubmitting = true;
+            options = options with
+            {
+                FeedbackLease = (_store as IFacetDetailedCaptureStore)?.CaptureFeedbackLease(),
+            };
             string? admitted = null;
             try
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                var preview = await _store.PreviewQuickAddAsync(input, cancellationToken);
+                var prepared = _store is IFacetDetailedCaptureStore detailedPreview
+                    ? await detailedPreview.PrepareCaptureAsync(
+                        input,
+                        context,
+                        profile,
+                        options,
+                        cancellationToken
+                    )
+                    : null;
+                var preview =
+                    prepared?.Preview
+                    ?? await _store.PreviewQuickAddAsync(input, cancellationToken);
                 if (generation == _inputGeneration)
                 {
                     Preview = preview;
                     ValidationError = null;
                 }
-                if (capture is not null)
+                if (string.IsNullOrWhiteSpace(preview.Title))
+                {
+                    ValidationError = "Add a task title.";
+                    return false;
+                }
+                if (capture is IFacetDetailedCaptureStore detailedCapture && prepared is not null)
+                    await detailedCapture.SubmitPreparedCaptureAsync(
+                        prepared,
+                        id => admitted = id,
+                        cancellationToken
+                    );
+                else if (capture is not null)
                     await capture.AddCaptureAsync(
                         input,
                         context,
@@ -233,6 +310,7 @@ namespace TaskNotes.Windows.Presentation
                 if (addAnother && generation == _inputGeneration)
                 {
                     Input = string.Empty;
+                    ClearDetails();
                     Preview = null;
                 }
                 return true;
@@ -245,8 +323,9 @@ namespace TaskNotes.Windows.Presentation
                     "The capture was applied but could not be observed. Refresh or review its exact action in Settings recovery; it will not be created again.";
                 return false;
             }
-            catch
+            catch (Exception error)
             {
+                ValidationError = TaskNotesExceptionPolicy.UserFacingMessage(error);
                 if (admitted is not null)
                 {
                     RecoveryActionId = admitted;

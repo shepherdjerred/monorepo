@@ -46,6 +46,23 @@ namespace TaskNotes.Windows.App.Views
         }
 
         internal event RoutedEventHandler? SaveRequested;
+        internal event Action<bool>? TaskSoundsChanged;
+        private bool _settingTaskSounds;
+
+        internal void SetTaskSounds(bool enabled)
+        {
+            _settingTaskSounds = true;
+            TaskSoundsToggle.IsOn = enabled;
+            _settingTaskSounds = false;
+        }
+
+        private void TaskSounds_Toggled(object sender, RoutedEventArgs args)
+        {
+            _ = sender;
+            _ = args;
+            if (!_settingTaskSounds)
+                TaskSoundsChanged?.Invoke(TaskSoundsToggle.IsOn);
+        }
 
         internal void SetBackgroundStatus(string status) => BackgroundSyncStatusText.Text = status;
 

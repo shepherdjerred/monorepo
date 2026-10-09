@@ -24,6 +24,7 @@ namespace TaskNotes.Windows.App.Views
         public QuickAddView()
         {
             InitializeComponent();
+            Loaded += (_, _) => FocusInput();
         }
 
         /// <summary>Gets or sets portable Quick Add state.</summary>
@@ -71,6 +72,66 @@ namespace TaskNotes.Windows.App.Views
             _ = eventArgs;
             QuickAddViewModel viewModel = RequireViewModel();
             viewModel.Input = ((TextBox)sender).Text;
+            QueuePreview();
+        }
+
+        internal void CommitTokens()
+        {
+            foreach (var input in new[] { ProjectsInput, ContextsInput, TagsInput })
+            {
+                if (!string.IsNullOrWhiteSpace(input.Text))
+                    RequireViewModel().AddToken((string)input.Tag, input.Text);
+                input.Text = "";
+            }
+        }
+
+        private void Token_QuerySubmitted(
+            AutoSuggestBox sender,
+            AutoSuggestBoxQuerySubmittedEventArgs args
+        )
+        {
+            RequireViewModel()
+                .AddToken((string)sender.Tag, args.ChosenSuggestion as string ?? args.QueryText);
+            sender.Text = "";
+            QueuePreview();
+        }
+
+        private void RemoveChip_Click(object sender, RoutedEventArgs args)
+        {
+            _ = args;
+            RequireViewModel().RemoveChip((CaptureChip)((Button)sender).Tag);
+            QueuePreview();
+        }
+
+        private void ClearBody_Click(object sender, RoutedEventArgs args)
+        {
+            _ = sender;
+            _ = args;
+            RequireViewModel().ClearBody();
+        }
+
+        private void DetailsDate_Changed(
+            CalendarDatePicker sender,
+            CalendarDatePickerDateChangedEventArgs args
+        )
+        {
+            _ = sender;
+            _ = args;
+            if (IsLoaded)
+                QueuePreview();
+        }
+
+        private void DetailsPriority_Changed(object sender, SelectionChangedEventArgs args)
+        {
+            _ = sender;
+            _ = args;
+            if (IsLoaded)
+                QueuePreview();
+        }
+
+        private void QueuePreview()
+        {
+            QuickAddViewModel viewModel = RequireViewModel();
             UiOperationQueue operations =
                 _operations
                 ?? throw new InvalidOperationException("Initialize the Quick Add operation queue.");

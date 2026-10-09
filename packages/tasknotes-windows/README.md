@@ -15,6 +15,41 @@ the saved outcome and original action available, with separate maintenance text.
 The editor retains its draft until it can load the authoritative resulting task;
 late results cannot replace a newer draft. Invalid receipts fail the contract.
 
+Local applied receipts drive task-added, completed, deleted, reopened and Undo
+feedback before fallible refresh or cleanup. Feedback has an independent
+engine/profile/mutation identity and an originating-window activation lease;
+searches and other task actions do not invalidate it. Leaving the foreground
+invalidates a pending cue permanently. Startup, remote updates, recovery replay,
+no-ops and ordinary field edits are silent. Bulk completion emits one aggregate
+cue. The native player consumes each eligible effect once and drops overlapping
+attempts using a monotonic duration gate at playback, without queuing audio.
+The four bundled first-party WAVs and shared feedback JSON are strictly validated.
+Task sounds default on; explicit choices persist independently of other settings.
+Malformed sound preferences require an explicit repair choice.
+
+Quick Add opens as a compact native dialog with immediate input focus, Rust-parsed
+removable chips and optional Details for notes, Planned/Due dates, configured
+priority and exact taxonomy tokens. Commas inside names remain part of a token.
+Clearing a parsed chip means a deliberate null or empty-array override. Metadata
+without a core-parsed title is rejected before journal admission. Button deferrals
+retain the dialog during submission and after failure; reopening preserves an
+owned draft. Add & add another resets only after a confirmed receipt, and newer
+typing survives an older result. Uncertain captures retain their exact recovery
+action. The app currently has one main window; protocol and global capture
+activations redirect to that window's dialog, with a separate inline draft.
+Submission uses one opaque, core-produced payload frozen with its original
+engine and profile; relative dates and defaults are not parsed again after
+preview. Once admitted, it can only be reviewed through its exact saved action.
+
+Applied confirmations remain visible for at least six seconds, pause expiration
+while focused or hovered, honor a longer native accessibility message duration,
+and offer Undo only for that exact authoritative current receipt.
+Ctrl+Z remains native text Undo inside text/password editors. Task receipt motion
+uses the shared duration and respects Windows animation settings. Native playback,
+dialog focus, motion, high contrast and MSIX resource installation still require
+an interactive Windows host; portable tests and source checks do not establish
+those runtime behaviors.
+
 Settings provides independent background Sync and Windows reminder preferences.
 The packaged app requests Windows background access for opted-in work when it
 closes. Windows schedules the owned task every 15 minutes when its execution

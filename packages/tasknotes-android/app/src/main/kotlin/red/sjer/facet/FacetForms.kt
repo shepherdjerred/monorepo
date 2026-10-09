@@ -3,11 +3,17 @@ package red.sjer.facet
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
@@ -52,8 +58,9 @@ internal fun TaskEditor(profileId: String, task: VaultTask, model: FacetViewMode
     val submitted = mutationId in model.submittedActions || model.pendingActions.any { it.mutationId == mutationId }
     val blocked = model.busy || submitted
     fun close() { if (!submitted && draft != original) discard = true else dismiss() }
-    FacetSheet("Task details", { if (!model.busy) close() }, "Save", !blocked && draft.title.isNotBlank(),
+    FacetSheet("Task details", { if (!model.busy) close() }, "Save", !blocked && draft.title.isNotBlank() && draft != original,
         save = { model.update(profileId, basis, draft, mutationId, dismiss) }) {
+            model.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
             if (submitted) Text("This action was submitted. Your original draft is retained; review Saved actions in Settings to resume its exact action or check its outcome.", color = MaterialTheme.colorScheme.error)
             Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainer) {
                 Column {
@@ -71,7 +78,7 @@ internal fun TaskEditor(profileId: String, task: VaultTask, model: FacetViewMode
             Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainer) {
                 Column {
                     Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                        FacetTaskCheckbox(basis, model.snapshot?.configuration, !blocked && draft == original && (!basis.isRecurring || basis.occurrenceDate != null)) { model.toggle(profileId, basis, dismiss) }
+                        FacetTaskCheckbox(basis, model.snapshot?.configuration, !blocked && draft == original && (!basis.isRecurring || basis.occurrenceDate != null)) { model.toggle(profileId, basis, saved = dismiss) }
                         Text(if (basis.completed) "Completed" else "Mark complete", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
                         if (basis.isRecurring) Icon(Icons.Default.Repeat, "Repeating task", Modifier.size(20.dp))
                     }
@@ -135,48 +142,88 @@ private fun DraftField(label: String, value: String, busy: Boolean, change: (Str
 
 @Composable
 internal fun CaptureForm(profileId: String, model: FacetViewModel, dismiss: () -> Unit) {
-    var input by rememberSaveable(profileId) { mutableStateOf("") }
+    val saver = remember { listSaver<FacetCaptureDraft, String>(save = { it.saved() }, restore = { FacetCaptureDraft.restore(it) }) }
+    var draft by rememberSaveable(profileId, stateSaver = saver) { mutableStateOf(FacetCaptureDraft()) }
     var discard by remember { mutableStateOf(false) }
+    var details by rememberSaveable(profileId) { mutableStateOf(false) }
     var another by rememberSaveable(profileId) { mutableStateOf(false) }
     var saving by rememberSaveable(profileId) { mutableStateOf(false) }
+    var focusSequence by rememberSaveable(profileId) { mutableIntStateOf(0) }
+    val focus = remember { FocusRequester() }
+    val input = draft.input
     val preview = model.capturePreview.takeIf { model.capturePreviewOwner == profileId && model.capturePreviewInput == input }
-    val mutationId = rememberSaveable(profileId, input) { UUID.randomUUID().toString() }
+    val payload = preview?.let(draft::payload)
+    val hasTaskTitle = preview?.let(draft::hasTaskTitle) == true
+    val mutationId = rememberSaveable(profileId, draft) { UUID.randomUUID().toString() }
     LaunchedEffect(profileId, input) { if (input.isNotBlank()) { kotlinx.coroutines.delay(200); model.preview(profileId, input) } }
     val submitted = mutationId in model.submittedActions || model.pendingActions.any { it.mutationId == mutationId }
     LaunchedEffect(model.busy) { if (!model.busy) saving = false }
     val blocked = saving || submitted
-    fun close() { if (!submitted && input.isNotBlank()) discard = true else dismiss() }
-    FacetSheet("Add task", { if (!saving) close() }, "Add", !blocked && input.isNotBlank() && preview != null && model.capturePreviewInput == input,
-        save = { preview?.let { saving = true; model.create(profileId, it, mutationId) { saving = false; if (another) input = "" else dismiss() } } }, large = true) {
+    fun finish() { model.dismissError(); dismiss() }
+    fun close() { if (!submitted && draft != FacetCaptureDraft()) discard = true else finish() }
+    FacetSheet("Add task", { if (!saving) close() }, "Add", !blocked && input.isNotBlank() && hasTaskTitle && model.capturePreviewInput == input,
+        save = { payload?.takeIf { hasTaskTitle && !blocked }?.let { frozen -> val frozenDraft = draft; val addAnother = another; saving = true; model.dismissError(); model.create(profileId, frozen, mutationId) {
+            saving = false
+            if (draft == frozenDraft) { if (addAnother) { draft = FacetCaptureDraft(); details = false; focusSequence++ } else finish() }
+        } } }, large = false, initialFocus = focus, focusKey = profileId to focusSequence) {
             if (submitted) Text("This action was submitted. Review Saved actions in Settings before creating another version of this task.", color = MaterialTheme.colorScheme.error)
-            OutlinedTextField(input, { input = it }, label = { Text("What needs doing?") }, placeholder = { Text("Ship tomorrow !high p:Work @desktop #release") }, minLines = 3, enabled = !blocked, modifier = Modifier.fillMaxWidth())
-            Text("Add dates, priority, projects, contexts and tags naturally.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-            preview?.let {
+            model.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+            if (input.isNotBlank() && preview != null && !hasTaskTitle) Text("Add a task title", color = MaterialTheme.colorScheme.error)
+            OutlinedTextField(input, { draft = draft.copy(input = it) }, label = { Text("What needs doing?") }, placeholder = { Text("Ship tomorrow !high p:Work @desktop #release") }, maxLines = 3, enabled = !blocked, modifier = Modifier.fillMaxWidth().focusRequester(focus))
+            payload?.let {
                 val properties = it.getValue("properties").jsonObject
-                Surface(modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainer) {
-                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("Preview", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Parsed task", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                         properties["title"]?.jsonPrimitive?.contentOrNull?.let { title -> Text(title, style = MaterialTheme.typography.titleMedium) }
-                        properties.filterKeys { key -> key != "title" }.forEach { (key, value) ->
-                            val text = when (value) { JsonNull -> null; is JsonArray -> value.joinToString(" · ") { item -> (item as? JsonPrimitive)?.content ?: item.toString() }; is JsonPrimitive -> value.content; else -> value.toString() }
-                            if (!text.isNullOrEmpty()) {
-                                val display = when (key) {
-                                    "status" -> workflowLabel(model.snapshot?.configuration, "statuses", text)
-                                    "priority" -> workflowLabel(model.snapshot?.configuration, "priorities", text)
-                                    "due", "scheduled" -> displayDate(text, java.time.LocalDate.now())
-                                    else -> text
-                                }
-                                Text(key.replaceFirstChar { char -> char.uppercase() } + ": " + display, style = MaterialTheme.typography.bodyMedium)
-                            }
+                        CaptureChips(properties, model, !blocked) { key, raw ->
+                            val value = properties.getValue(key)
+                            draft = if (value is JsonArray) draft.tokens(key, value.map { it.jsonPrimitive.content }.filterNot { it == raw }) else draft.field(key, "")
                         }
-                    }
                 }
             }
-            Row(Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                Text("Add another", modifier = Modifier.weight(1f)); Switch(another, { another = it }, enabled = !blocked)
+            TextButton(onClick = { details = !details }, enabled = !blocked) { Icon(if (details) Icons.Default.ExpandLess else Icons.Default.Add, null); Spacer(Modifier.width(8.dp)); Text(if (details) "Hide details" else "Details") }
+            if (details) {
+                val properties = payload?.getValue("properties")?.jsonObject ?: draft.overrides
+                fun text(key: String) = properties[key]?.jsonPrimitive?.contentOrNull.orEmpty()
+                OutlinedTextField(draft.notes ?: preview?.get("body")?.jsonPrimitive?.contentOrNull.orEmpty(), { draft = draft.copy(notes = it) }, label = { Text("Notes · Markdown supported") }, minLines = 2, enabled = !blocked, modifier = Modifier.fillMaxWidth())
+                FacetDateField("Planned", text("scheduled"), !blocked) { draft = draft.field("scheduled", it) }
+                FacetDateField("Deadline", text("due"), !blocked) { draft = draft.field("due", it) }
+                ChoiceField("Priority", text("priority"), workflow(model.snapshot?.configuration, "priorities"), !blocked) { draft = draft.field("priority", it) }
+                listOf("projects", "contexts", "tags").forEach { field ->
+                    val values = properties[field]?.let { if (it is JsonArray) it.map { item -> item.jsonPrimitive.content } else emptyList() }.orEmpty()
+                    val suggestions = model.allSnapshot?.tasks.orEmpty().flatMap { taskValues(it, field) }.distinct().sorted()
+                    FacetTokenField(field.replaceFirstChar(Char::uppercase), values, suggestions, !blocked) { draft = draft.tokens(field, it) }
+                }
+            }
+            Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).toggleable(value = another, enabled = !blocked,
+                role = Role.Switch, onValueChange = { another = it }), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                Text("Add another", modifier = Modifier.weight(1f)); Switch(another, onCheckedChange = null, enabled = !blocked)
             }
     }
-    if (discard) AlertDialog(onDismissRequest = { discard = false }, title = { Text("Discard this task draft?") }, confirmButton = { TextButton(onClick = dismiss) { Text("Discard") } }, dismissButton = { TextButton(onClick = { discard = false }) { Text("Keep editing") } })
+    if (discard) AlertDialog(onDismissRequest = { discard = false }, title = { Text("Discard this task draft?") }, confirmButton = { TextButton(onClick = ::finish) { Text("Discard") } }, dismissButton = { TextButton(onClick = { discard = false }) { Text("Keep editing") } })
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun CaptureChips(properties: JsonObject, model: FacetViewModel, enabled: Boolean, remove: (String, String) -> Unit) {
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        listOf("scheduled", "due", "priority", "recurrence", "projects", "contexts", "tags").forEach { key ->
+            val value = properties[key]
+            val values = if (value is JsonArray) value.map { it.jsonPrimitive.content } else listOfNotNull((value as? JsonPrimitive)?.contentOrNull?.takeIf(String::isNotEmpty))
+            values.forEach { raw ->
+                val label = when (key) {
+                    "scheduled" -> "Planned " + displayDate(raw, java.time.LocalDate.now())
+                    "due" -> "Due " + displayDate(raw, java.time.LocalDate.now())
+                    "priority" -> workflowLabel(model.snapshot?.configuration, "priorities", raw)
+                    "recurrence" -> when (raw) { "FREQ=DAILY" -> "Repeats daily"; "FREQ=WEEKLY" -> "Repeats weekly"; "FREQ=MONTHLY" -> "Repeats monthly"; "FREQ=YEARLY" -> "Repeats yearly"; else -> "Repeats · $raw" }
+                    "contexts" -> "@$raw"; "tags" -> "#$raw"; else -> raw
+                }
+                InputChip(selected = true, onClick = { remove(key, raw) }, enabled = enabled,
+                    label = { Text(label) }, trailingIcon = { Icon(Icons.Default.Close, null, Modifier.size(16.dp)) },
+                    modifier = Modifier.heightIn(min = 48.dp).semantics { contentDescription = "Remove $key: $label" })
+            }
+        }
+    }
 }
 
 @Composable

@@ -346,7 +346,11 @@ namespace TaskNotes.Windows.Host
         IReadOnlyList<string> Contexts,
         IReadOnlyList<string> Tags,
         string? Recurrence
-    );
+    )
+    {
+        /// <summary>Scheduled value returned by the core's contextual capture preview.</summary>
+        public string? Scheduled { get; init; }
+    }
 
     /// <summary>A device-local saved view whose filter and sort documents are core-owned.</summary>
     public sealed record SavedViewDefinition

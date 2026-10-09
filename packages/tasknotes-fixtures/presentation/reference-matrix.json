@@ -326,7 +326,7 @@
       ],
       "mobileSources": ["tasks-for-obsidian/src/screens/SettingsScreen.tsx"],
       "composition": [
-        "native settings sections, mobile feedback controls, quiet desktop default"
+        "native settings sections, independent sound and mobile haptic controls; sounds enabled by default on every platform while preserving explicit choices"
       ],
       "standaloneOnly": false,
       "acceptanceIDs": [],

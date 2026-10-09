@@ -9,7 +9,8 @@ namespace TaskNotes.Windows.Presentation
         bool InspectorVisible,
         string QuickAddHotkey,
         double WindowWidth,
-        double WindowHeight
+        double WindowHeight,
+        bool TaskSounds = true
     );
 
     /// <summary>Loads and saves server configuration through platform-secure storage.</summary>

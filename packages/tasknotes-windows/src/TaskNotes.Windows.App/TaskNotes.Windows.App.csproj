@@ -70,6 +70,12 @@
     </ItemGroup>
   </Target>
   <ItemGroup>
+    <Content
+      Include="../../../tasknotes-fixtures/presentation/audio/*.wav"
+      Link="Assets/Feedback/%(Filename)%(Extension)"
+      CopyToOutputDirectory="PreserveNewest"
+      CopyToPublishDirectory="PreserveNewest"
+    />
     <ProjectReference Include="../TaskNotes.Windows.Host/TaskNotes.Windows.Host.csproj" />
     <ProjectReference Include="../TaskNotes.Windows.Presentation/TaskNotes.Windows.Presentation.csproj" />
   </ItemGroup>
