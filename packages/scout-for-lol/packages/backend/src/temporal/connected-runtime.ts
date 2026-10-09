@@ -7,10 +7,7 @@ import {
   Worker,
 } from "@temporalio/worker";
 import type { ScoutStage } from "@scout-for-lol/temporal";
-import {
-  scoutTaskQueues,
-  withPreRenameActivityNames,
-} from "@scout-for-lol/temporal";
+import { scoutTaskQueues } from "@scout-for-lol/temporal";
 import type { ScoutTemporalQueueClass } from "#src/configuration/runtime-role.ts";
 import type { ScoutTemporalActivities } from "@scout-for-lol/temporal/activities";
 import type { ScoutMatchActivities } from "#src/temporal/match/match-activity-surface.ts";
@@ -20,7 +17,6 @@ import type {
   ScoutNotificationActivities,
 } from "#src/temporal/durable-activity-surface.ts";
 import { createLogger } from "#src/logger.ts";
-import { RETIRED_REALTIME_ACTIVITIES } from "#src/temporal/retired-activities.ts";
 import {
   createTemporalClientTracingInterceptor,
   createTemporalWorkerTracing,
@@ -30,24 +26,6 @@ import { sanitizeTemporalLogFields } from "@shepherdjerred/temporal-observabilit
 import { getTracingRuntime } from "#src/observability/tracing.ts";
 
 const logger = createLogger("temporal-supervisor");
-
-/**
- * What each embedded Activity worker registers: its group, every renamed
- * pipeline Activity under its pre-rename name too, and on `realtime` the
- * Activities a still-routed pre-rename bundle can schedule. See
- * `withPreRenameActivityNames` and `RETIRED_REALTIME_ACTIVITIES`.
- */
-export function registeredActivities(groups: ScoutTemporalActivityGroups) {
-  return {
-    interactive: groups.interactive,
-    lake: withPreRenameActivityNames(groups.lake),
-    realtime: {
-      ...withPreRenameActivityNames(groups.realtime),
-      ...RETIRED_REALTIME_ACTIVITIES,
-    },
-    background: withPreRenameActivityNames(groups.background),
-  };
-}
 
 const RECONNECT_DELAY_MS = 5000;
 const RECONNECT_DELAY_MAX_MS = 60_000;
@@ -284,7 +262,6 @@ export async function createConnectedRuntime(
         ? await Connection.connect()
         : await Connection.connect({ address: options.address });
     const queues = scoutTaskQueues(options.stage);
-    const registered = registeredActivities(options.activities);
     const tracing = createScoutTemporalTracing(options.callGraphTracing);
     const commonOptions = {
       connection: nativeConnection,
@@ -315,7 +292,7 @@ export async function createConnectedRuntime(
         await Worker.create({
           ...commonOptions,
           taskQueue: queues.interactive,
-          activities: registered.interactive,
+          activities: options.activities.interactive,
           maxConcurrentActivityTaskExecutions: 2,
         }),
       );
@@ -325,7 +302,7 @@ export async function createConnectedRuntime(
         await Worker.create({
           ...commonOptions,
           taskQueue: queues.lake,
-          activities: registered.lake,
+          activities: options.activities.lake,
           maxConcurrentActivityTaskExecutions: 1,
         }),
       );
@@ -335,7 +312,7 @@ export async function createConnectedRuntime(
         await Worker.create({
           ...commonOptions,
           taskQueue: queues.realtime,
-          activities: registered.realtime,
+          activities: options.activities.realtime,
           maxConcurrentActivityTaskExecutions: 4,
         }),
       );
@@ -345,7 +322,7 @@ export async function createConnectedRuntime(
         await Worker.create({
           ...commonOptions,
           taskQueue: queues.background,
-          activities: registered.background,
+          activities: options.activities.background,
           maxConcurrentActivityTaskExecutions: 1,
         }),
       );

@@ -9,11 +9,11 @@ import {
 } from "./pipeline-contracts.ts";
 import {
   SCOUT_PIPELINE_ACTIVITY_QUEUE_CLASSES,
-  SCOUT_PIPELINE_START_WORKFLOW_TYPES,
   SCOUT_PIPELINE_WORKFLOW_NAMES,
   SCOUT_PRE_RENAME_WORKFLOW_TYPES,
   SCOUT_WORKFLOW_NAMES,
   scoutRenamedWorkflowType,
+  scoutPreRenameActivityType,
   scoutChallengeRunRecomputeWorkflowId,
   scoutDuelSeriesWorkflowId,
   scoutHallBaselineWorkflowId,
@@ -205,15 +205,18 @@ describe("the generation rename", () => {
     );
   });
 
-  test("filters start rows on both names of every pipeline type", () => {
-    expect(SCOUT_PIPELINE_START_WORKFLOW_TYPES).toHaveLength(
-      SCOUT_PIPELINE_WORKFLOW_NAMES.length * 2,
+  test("names the Activity a pre-patch history scheduled", () => {
+    expect(scoutPreRenameActivityType("commitMatchObservation")).toBe(
+      "commitMatchObservationV2",
     );
-    expect(SCOUT_PIPELINE_START_WORKFLOW_TYPES).toEqual(
-      expect.arrayContaining([
-        "scoutNotificationWorkflow",
-        "scoutNotificationV2Workflow",
-      ]),
+    // Kept their names across the rename, so a history names them as is.
+    expect(scoutPreRenameActivityType("readLegacyMatchCompletionV2")).toBe(
+      "readLegacyMatchCompletionV2",
     );
+    expect(scoutPreRenameActivityType("runPrematchMaintenance")).toBe(
+      "runPrematchMaintenance",
+    );
+    // Not a pipeline Activity, so never renamed.
+    expect(scoutPreRenameActivityType("runReport")).toBe("runReport");
   });
 });

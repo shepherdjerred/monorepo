@@ -180,8 +180,6 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
   runScoutBryanBucksAnalyticsWorkflow: "scout",
   runScoutQueueWindowsWatch: "scout",
   runScoutImageGcWorkflow: "scout",
-  // The pipeline Schedule types under both names the rename registers.
-  scoutPostMatchDiscoveryV2Workflow: "scout",
   scoutPostMatchDiscoveryWorkflow: "scout",
   scoutIngestionReconciliationWorkflow: "scout",
   scoutBackgroundJobWorkflow: "scout",

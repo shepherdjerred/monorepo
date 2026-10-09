@@ -49,8 +49,8 @@ type RetiredOwnershipActivities = {
  *   the read.
  * - A run recorded while the ownership read existed replays it. The flag that
  *   answered it was on in every environment, so the recorded answer is
- *   `run-v2` and the run continues into discovery as it did then. The realtime
- *   worker still answers a retried read with `run-v2`.
+ *   `run-v2` and the run continues into discovery as it did then. No worker
+ *   registers the read any more, so only a recorded answer is ever replayed.
  * - A run recorded before the read existed records neither marker and goes
  *   straight to discovery.
  *

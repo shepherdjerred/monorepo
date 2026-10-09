@@ -3,7 +3,6 @@ import { WorkflowFailedError, type Client } from "@temporalio/client";
 import { ApplicationFailure, type Duration } from "@temporalio/common";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
-import { withPreRenameActivityNames } from "#src/identifiers.ts";
 import { createScoutWorkerPool } from "./worker-pool.test-fixtures.ts";
 
 /**
@@ -88,9 +87,7 @@ export function useScoutWorkflowHarness(): ScoutWorkflowHarness {
         await Worker.create({
           connection: live.nativeConnection,
           taskQueue: "scout-dev-realtime",
-          // As the production Activity worker does: both names, because a
-          // history recorded before the rename patch schedules the old ones.
-          activities: withPreRenameActivityNames(activities),
+          activities,
           maxConcurrentActivityTaskExecutions: 4,
         }),
       );

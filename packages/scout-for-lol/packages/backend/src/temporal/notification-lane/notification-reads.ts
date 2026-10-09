@@ -6,7 +6,6 @@ import {
 import {
   SCOUT_WORKFLOW_NAMES,
   scoutNotificationWorkflowId,
-  scoutWorkflowTypesOf,
   type ScoutStage,
 } from "@scout-for-lol/temporal";
 import type { NotificationIntent } from "@scout-for-lol/domain/notifications/intent.ts";
@@ -100,13 +99,9 @@ export async function acceptNotificationStart(
   });
   if (request === null) return;
   if (request.acceptance !== null) return;
-  // A request written before the generation rename carries the old type.
-  const notificationTypes = scoutWorkflowTypesOf(
-    SCOUT_WORKFLOW_NAMES.notification,
-  );
   if (
-    !notificationTypes.includes(request.workflowType) ||
-    !notificationTypes.includes(request.inputPayload.kind) ||
+    request.workflowType !== SCOUT_WORKFLOW_NAMES.notification ||
+    request.inputPayload.kind !== SCOUT_WORKFLOW_NAMES.notification ||
     !Bun.deepEquals(request.inputPayload.data, input, true)
   ) {
     throw new Error(
