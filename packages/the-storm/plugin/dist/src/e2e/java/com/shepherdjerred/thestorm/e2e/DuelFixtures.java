@@ -179,8 +179,9 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
     var current = storm().service(MatchView.class).current().map(MatchState::of).orElseThrow();
     if (current.phase() != MatchState.Phase.LOBBY
         || !current.combatants().isEmpty()
-        || !current.mapId().orElseThrow().equals("training-yard"))
-      throw new IllegalStateException("need an empty training-yard lobby");
+        || !current.teams().equals(List.of("red", "blue")))
+      throw new IllegalStateException("need an empty controlled two-team duel lobby");
+    DuelMapScenario.forMap(current.mapId().orElseThrow());
     capture.requireReady(nextSeed);
     cancel();
     side = args[2];
@@ -234,7 +235,10 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
       throw new IllegalStateException("duel roster changed");
     for (var fighter : current.combatants()) {
       var player = body(fighter.uuid());
-      var at = DuelSetup.spawn(fighter.team().orElseThrow()).location(player.getWorld());
+      var at =
+          DuelMapScenario.forMap(current.mapId().orElseThrow())
+              .spawn(fighter.team().orElseThrow())
+              .location(player.getWorld());
       if (!player.teleport(at)) throw new IllegalStateException("duel teleport refused");
       player.setVelocity(new Vector());
       player.getInventory().setHeldItemSlot(1);

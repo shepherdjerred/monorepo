@@ -40,6 +40,7 @@ final class ContentFilesTest {
     copy("rwf/kits.yml");
     copy("rwf/maps/training-yard/map.yml");
     copy("rwf/maps/training-yard/blocks.schem");
+    copy("rwf/maps/training-yard/details.json");
     copy("rwf/lobby/lobby.yml");
     copy("rwf/lobby/blocks.schem");
     return directory;
@@ -72,6 +73,42 @@ final class ContentFilesTest {
     var content = ContentFiles.load(shippedCopy(), PARSER);
 
     assertThat(content.maps()).extracting(LoadedMap::id).containsExactly("training-yard");
+  }
+
+  @Test
+  void runtimeCatalogDefersTerrainDecodingButStillRejectsItBeforePlay() throws IOException {
+    shippedCopy();
+    Files.write(directory.resolve("rwf/maps/training-yard/blocks.schem"), new byte[] {1, 2, 3});
+    var catalog = ContentFiles.catalog(directory, PARSER);
+    assertThat(catalog.maps()).extracting(MapSource::id).containsExactly("training-yard");
+    assertThatThrownBy(() -> catalog.maps().getFirst().load()).hasMessageContaining("blocks.schem");
+  }
+
+  @Test
+  void runtimeCatalogDefersDetailsAndRejectsMissingOrCorruptPayloadsBeforePlay()
+      throws IOException {
+    shippedCopy();
+    var details = directory.resolve("rwf/maps/training-yard/details.json");
+    Files.writeString(details, "{\"version\":1,\"unexpected\":true}");
+    var catalog = ContentFiles.catalog(directory, PARSER);
+    assertThatThrownBy(() -> catalog.maps().getFirst().load()).hasMessageContaining("details.json");
+    Files.delete(details);
+    assertThatThrownBy(() -> ContentFiles.catalog(directory, PARSER))
+        .hasMessageContaining("details.json")
+        .hasMessageContaining("is missing");
+  }
+
+  @Test
+  void runtimeCatalogRequiresEveryTerrainFileAndRejectsMetadataChanges() throws IOException {
+    shippedCopy();
+    var catalog = ContentFiles.catalog(directory, PARSER);
+    edit("rwf/maps/training-yard/map.yml", "name: Training Yard", "name: Changed Yard");
+    assertThatThrownBy(() -> catalog.maps().getFirst().load())
+        .hasMessageContaining("changed after the catalog was loaded");
+    Files.delete(directory.resolve("rwf/maps/training-yard/blocks.schem"));
+    assertThatThrownBy(() -> ContentFiles.catalog(directory, PARSER))
+        .hasMessageContaining("blocks.schem")
+        .hasMessageContaining("is missing");
   }
 
   @Test

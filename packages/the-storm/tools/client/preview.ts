@@ -19,6 +19,7 @@ import { smoke, tour } from "./scripts.ts";
 import { verifyDuelClock } from "./verify-duel-clock.ts";
 import { verifyDuelVideo } from "./verify-duel-video.ts";
 import { startClient } from "./process.ts";
+import { stageMap } from "#learning/maps/stage.ts";
 
 const packageRoot = path.resolve(import.meta.dirname, "../..");
 
@@ -44,6 +45,7 @@ async function build(directory: string, tasks: string[]): Promise<void> {
 
 type PreviewOptions = {
   world?: string;
+  rwfMap?: string;
   vanilla: boolean;
   verify: boolean;
   rwfDuel: boolean;
@@ -54,6 +56,17 @@ type PreviewOptions = {
 function validateOptions(options: PreviewOptions): void {
   if (options.vanilla && options.rwfDuel)
     throw new Error("--rwf-duel requires Storm modules");
+  if (options.vanilla && options.rwfMap !== undefined)
+    throw new Error("--rwf-map requires Storm modules");
+  if (
+    (options.verifyDuelClock || options.verifyDuelVideo) &&
+    options.rwfMap !== undefined &&
+    options.rwfMap !== "training-yard"
+  ) {
+    throw new Error(
+      "The existing clock and video regression fixtures require Training Yard",
+    );
+  }
   if (options.verifyDuelClock && (!options.rwfDuel || options.verify))
     throw new Error(
       "--verify-duel-clock requires --rwf-duel and its own verification run",
@@ -74,7 +87,12 @@ export async function preview(options: PreviewOptions): Promise<void> {
     path.join(packageRoot, "plugin"),
     options.vanilla
       ? [":dist:shadowJar"]
-      : [":dist:shadowJar", ":dist:fixturesJar", ":companions:e2eJar"],
+      : [
+          ":dist:shadowJar",
+          ":dist:fixturesJar",
+          ":companions:e2eJar",
+          ":rwfmap:installDist",
+        ],
   );
   const privateDir = await mkdtemp(path.join(os.tmpdir(), "storm-client-"));
   await chmod(privateDir, 0o700);
@@ -129,6 +147,7 @@ type Run = {
 async function run(
   options: {
     world?: string;
+    rwfMap?: string;
     vanilla: boolean;
     verify: boolean;
     rwfDuel: boolean;
@@ -142,10 +161,22 @@ async function run(
   runState.cleanup.push(async () => {
     await brain.stop();
   });
-  const ownedConfigDir = path.join(
-    packageRoot,
-    "server/owned/plugins/TheStorm",
-  );
+  let ownedConfigDir = path.join(packageRoot, "server/owned/plugins/TheStorm");
+  if (options.rwfDuel || options.rwfMap !== undefined) {
+    const staged = await stageMap(
+      ownedConfigDir,
+      path.join(runState.privateDir, "map-content"),
+      options.rwfMap ?? "training-yard",
+      {
+        duel: options.rwfDuel,
+        mapTool: path.join(
+          packageRoot,
+          "plugin/tools/rwfmap/build/install/rwfmap/bin/rwfmap",
+        ),
+      },
+    );
+    ownedConfigDir = staged.content;
+  }
   const configs = options.vanilla
     ? {
         stormConfig: stormModuleConfig(

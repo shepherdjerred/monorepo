@@ -36,12 +36,31 @@ public final class BlockTable {
   private static final Classified LIQUID = new Classified(BlockShape.LIQUID, false);
   private static final Classified LADDER = new Classified(BlockShape.LADDER, false);
   private static final Classified PASSABLE = new Classified(BlockShape.PASSABLE, false);
+  private static final Classified HAZARD = new Classified(BlockShape.HAZARD, false);
+  private static final Classified SOLID_HAZARD = new Classified(BlockShape.SOLID_HAZARD, true);
+  private static final Classified DOOR = new Classified(BlockShape.DOOR, true);
+  private static final Set<String> WOODEN_DOORS =
+      Set.of(
+          "oak_door",
+          "spruce_door",
+          "birch_door",
+          "jungle_door",
+          "acacia_door",
+          "dark_oak_door",
+          "mangrove_door",
+          "cherry_door",
+          "bamboo_door",
+          "crimson_door",
+          "warped_door",
+          "pale_oak_door");
 
   private static final Set<String> PASSABLE_IDS =
       Set.of(
           "air",
           "cave_air",
           "void_air",
+          "nether_portal",
+          "end_portal",
           "light",
           "structure_void",
           "torch",
@@ -153,15 +172,46 @@ public final class BlockTable {
           "cave_vines",
           "cave_vines_plant");
 
-  private static final Set<String> LIQUID_IDS = Set.of("water", "lava", "bubble_column");
+  private static final Set<String> LIQUID_IDS = Set.of("water", "bubble_column");
+  private static final Set<String> HAZARD_IDS = Set.of("fire", "soul_fire", "lava");
 
   private static final Set<String> PANE_IDS = Set.of("glass_pane", "iron_bars", "chain");
 
-  private static final Set<String> CLEAR_FULL_IDS = Set.of("glass", "barrier");
+  // Partial legacy furniture is conservatively a full-cell obstacle. It must not
+  // create a passable corridor through an actual collision box.
+  private static final Set<String> CLEAR_FULL_IDS = Set.of("glass", "barrier", "beacon");
+  private static final Set<String> SOLID_HAZARD_IDS = Set.of("cactus", "magma_block");
 
   private static final Set<String> FULL_IDS =
       Set.of(
           "stone",
+          "bricks",
+          "chest",
+          "trapped_chest",
+          "ender_chest",
+          "furnace",
+          "blast_furnace",
+          "smoker",
+          "dropper",
+          "dispenser",
+          "jukebox",
+          "hopper",
+          "cauldron",
+          "water_cauldron",
+          "lava_cauldron",
+          "powder_snow_cauldron",
+          "brewing_stand",
+          "enchanting_table",
+          "cake",
+          "dragon_egg",
+          "flower_pot",
+          "anvil",
+          "chipped_anvil",
+          "damaged_anvil",
+          "piston",
+          "sticky_piston",
+          "piston_head",
+          "end_portal_frame",
           "cobblestone",
           "mossy_cobblestone",
           "smooth_stone",
@@ -291,6 +341,7 @@ public final class BlockTable {
   private static final List<String> FULL_SUFFIXES =
       List.of(
           "_planks",
+          "_bed",
           "_log",
           "_wood",
           "_hyphae",
@@ -330,6 +381,7 @@ public final class BlockTable {
   private static final List<Function<BlockState, Optional<Classified>>> RULES =
       List.of(
           BlockTable::flat,
+          BlockTable::hazard,
           BlockTable::climbable,
           BlockTable::liquid,
           BlockTable::snow,
@@ -370,6 +422,11 @@ public final class BlockTable {
     return LADDER_IDS.contains(state.id()) ? Optional.of(LADDER) : Optional.empty();
   }
 
+  private static Optional<Classified> hazard(BlockState state) {
+    if (SOLID_HAZARD_IDS.contains(state.id())) return Optional.of(SOLID_HAZARD);
+    return HAZARD_IDS.contains(state.id()) ? Optional.of(HAZARD) : Optional.empty();
+  }
+
   private static Optional<Classified> liquid(BlockState state) {
     return LIQUID_IDS.contains(state.id()) ? Optional.of(LIQUID) : Optional.empty();
   }
@@ -406,7 +463,7 @@ public final class BlockTable {
     if (!state.idEndsWith("_door")) {
       return Optional.empty();
     }
-    return Optional.of(open(state) ? PASSABLE : FULL);
+    return Optional.of(open(state) ? PASSABLE : WOODEN_DOORS.contains(state.id()) ? DOOR : FULL);
   }
 
   private static Optional<Classified> trapdoor(BlockState state) {
@@ -453,7 +510,9 @@ public final class BlockTable {
   }
 
   private static Optional<Classified> full(BlockState state) {
-    if (FULL_IDS.contains(state.id()) || FULL_SUFFIXES.stream().anyMatch(state::idEndsWith)) {
+    if (FULL_IDS.contains(state.id())
+        || state.id().startsWith("potted_")
+        || FULL_SUFFIXES.stream().anyMatch(state::idEndsWith)) {
       return Optional.of(FULL);
     }
     return Optional.empty();

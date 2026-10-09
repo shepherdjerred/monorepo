@@ -122,7 +122,8 @@ final class TeamPlayTest {
    * output: a deliberate change to how bots play moves it, and the new value is pasted here in the
    * same change; an accidental one fails here.
    */
-  private static final String PINNED_YARD_HASH = "0bc46c7587a92b82";
+  // Generator 2 routes to a reachable, visible bomb interaction position rather than the TNT cell.
+  private static final String PINNED_YARD_HASH = "6ca5e1177651be6d";
 
   @Test
   void aTrainingYardMatchReplaysToItsPinnedHash() {

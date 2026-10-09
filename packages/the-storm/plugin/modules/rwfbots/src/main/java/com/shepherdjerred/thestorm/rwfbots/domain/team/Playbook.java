@@ -336,7 +336,11 @@ public final class Playbook {
     }
 
     private Vec3 approach(BombView bomb) {
-      var node = graph.nearestNodeWithin(bomb.pos().plus(0, -0.5, 0), SNAP);
+      var node =
+          setup
+              .nav()
+              .bombApproach(
+                  com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos.of(bomb.pos()));
       return node.isPresent() ? graph.feet(node.getAsInt()) : bomb.pos();
     }
 

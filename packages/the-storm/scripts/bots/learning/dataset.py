@@ -12,6 +12,7 @@ import hashlib
 import json
 import math
 import random
+import re
 import struct
 from collections import Counter
 from dataclasses import dataclass, field
@@ -45,6 +46,8 @@ class Sample(TypedDict):
 
 class CombatSequence(TypedDict):
     match: str
+    map_id: str
+    map_sha256: str
     actor: str
     won: bool
     reason: str
@@ -108,6 +111,8 @@ class Controls:
 @dataclass
 class Recording:
     match: str
+    map_id: str
+    map_sha256: str
     roster: dict[str, tuple[str, str, bool]] = field(default_factory=dict)
     inputs: list[Controls] = field(default_factory=list)
     observations: dict[tuple[str, int], tuple[float, ...]] = field(default_factory=dict)
@@ -127,11 +132,19 @@ def read(stream: TextIO) -> Recording:
             if tag == "H":
                 if record is not None or len(row) != 7 or row[1] != "3":
                     raise ValueError("training requires exactly one schema 3 header")
-                record = Recording(str(UUID(row[2])))
+                if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", row[3]):
+                    raise ValueError("invalid map identity")
+                if not re.fullmatch(r"[a-f0-9]{64}", row[4]):
+                    raise ValueError("invalid map terrain digest")
+                int(row[5])
+                if not row[6]:
+                    raise ValueError("missing combat rules identity")
+                record = Recording(str(UUID(row[2])), row[3], row[4])
             elif record is None:
                 raise ValueError("row before header")
             elif tag == "R":
-                if len(row) != 5 or row[1] in record.roster or row[2] not in ("RED", "BLUE"):
+                if (len(row) != 5 or row[1] in record.roster
+                        or row[2] not in ("RED", "BLUE", "GREEN", "YELLOW", "PURPLE")):
                     raise ValueError("invalid or duplicate roster row")
                 record.roster[row[1]] = (row[2], row[3], boolean(row[4]))
             elif tag == "N":
@@ -152,7 +165,9 @@ def read(stream: TextIO) -> Recording:
                     raise ValueError("invalid or duplicate frame")
                 record.frames[key] = (yaw, health)
             elif tag == "X":
-                if ended or len(row) != 4 or row[2] not in ("RED", "BLUE", "-") or int(row[1]) < 0:
+                if (ended or len(row) != 4
+                        or row[2] not in ("RED", "BLUE", "GREEN", "YELLOW", "PURPLE", "-")
+                        or int(row[1]) < 0):
                     raise ValueError("invalid or duplicate end row")
                 record.winner, record.reason = row[2], row[3]
                 ended = True
@@ -212,7 +227,8 @@ def sequences(record: Recording, *, combatants: int = 2) -> tuple[list[CombatSeq
     def finish(actor: str) -> None:
         samples = current.pop(actor, [])
         if len(samples) >= 2:
-            chunks.append({"match": record.match, "actor": actor,
+            chunks.append({"match": record.match, "map_id": record.map_id,
+                           "map_sha256": record.map_sha256, "actor": actor,
                            "won": record.roster[actor][0] == record.winner,
                            "reason": record.reason, "samples": samples})
             counts["accepted"] += len(samples)
@@ -304,6 +320,7 @@ def main() -> None:
     totals: Counter[str] = Counter()
     matches: set[str] = set()
     sources: dict[str, str] = {}
+    maps: dict[str, dict[str, str]] = {}
     for path in paths:
         with gzip.open(path, "rt", encoding="utf-8") as stream:
             record = read(stream)
@@ -314,6 +331,7 @@ def main() -> None:
         all_chunks.extend(chunks)
         totals.update(counts)
         sources[record.match] = hashlib.sha256(path.read_bytes()).hexdigest()
+        maps[record.match] = {"id": record.map_id, "sha256": record.map_sha256}
     usable = sorted({str(chunk["match"]) for chunk in all_chunks})
     report = {"matches": len(matches), "usable_matches": len(usable),
               "segments": len(all_chunks), "counts": dict(totals),
@@ -332,12 +350,13 @@ def main() -> None:
                 for chunk in all_chunks:
                     if split[str(chunk["match"])] == name:
                         stream.write(json.dumps(chunk, allow_nan=False) + "\n")
-        manifest = {"schema": 2, "contract": CONTRACT_ID,
+        manifest = {"schema": 3, "contract": CONTRACT_ID,
                     "contract_sha256": hashlib.sha256(CONTRACT.read_bytes()).hexdigest(),
                     "features": features(), "tick_hz": 20, "max_ack_age_ticks": 2,
                     "action": {"move": 9, "jump": 2, "sneak": 2, "sprint": 2, "attack": 2},
                     "kit": "trooper", "sword_slot": SWORD_SLOT, "combatants": args.combatants,
                     "seed": args.seed, "split": split, "sources_sha256": sources,
+                    "maps": maps, "evaluation_scope": "new-matches-on-known-maps",
                     "provenance": "human-control-schema-3",
                     "files_sha256": {f"{name}.jsonl": hashlib.sha256(
                         (args.output / f"{name}.jsonl").read_bytes()).hexdigest()

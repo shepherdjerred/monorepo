@@ -635,7 +635,8 @@ public final class Planner {
   }
 
   private static Vec3 approach(NavArtifact nav, BombView bomb) {
-    var node = nav.graph().nearestNode(bomb.pos().plus(0, -0.5, 0));
+    var node =
+        nav.bombApproach(com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos.of(bomb.pos()));
     return node.isPresent() ? nav.graph().feet(node.getAsInt()) : bomb.pos();
   }
 

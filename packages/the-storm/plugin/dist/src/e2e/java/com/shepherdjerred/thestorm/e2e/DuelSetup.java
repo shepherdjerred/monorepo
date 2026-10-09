@@ -9,8 +9,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
-import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.entity.Player;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.json.JsonMapper;
@@ -25,6 +23,7 @@ record DuelSetup(
     String mode,
     String opponent,
     String map,
+    DuelMapScenario scenario,
     String world,
     long worldTime,
     long worldTick,
@@ -51,16 +50,9 @@ record DuelSetup(
     }
   }
 
-  record Spawn(String team, List<Double> position, float yaw, float pitch) {
-    Location location(World world) {
-      return new Location(world, position.get(0), position.get(1), position.get(2), yaw, pitch);
-    }
-  }
-
   private record Spec(
       int version,
       String kind,
-      String map,
       String world,
       List<Long> worldTimes,
       String kit,
@@ -68,14 +60,14 @@ record DuelSetup(
       int heldSlot,
       List<Double> velocity,
       List<String> fields,
-      List<String> fighter,
-      List<Spawn> spawns) {}
+      List<String> fighter) {}
 
   DuelSetup {
     roster = List.copyOf(roster);
     if (schema != SPEC.version()
         || !kind.equals(SPEC.kind())
-        || !map.equals(SPEC.map())
+        || !map.equals(scenario.map())
+        || !scenario.equals(DuelMapScenario.forMap(map))
         || !world.equals(SPEC.world())
         || !SPEC.worldTimes().contains(worldTime)
         || worldTick < 0
@@ -86,7 +78,7 @@ record DuelSetup(
       throw new IllegalStateException("Native duel setup differs from its contract");
     for (int index = 0; index < roster.size(); index++) {
       var fighter = roster.get(index);
-      var spawn = spawn(fighter.team());
+      var spawn = scenario.spawn(fighter.team());
       if (fighter.joinIndex() != index
           || fighter.personality().isBlank()
           || !fighter.kit().equals(SPEC.kit())
@@ -98,13 +90,6 @@ record DuelSetup(
           || fighter.heldSlot() != SPEC.heldSlot())
         throw new IllegalStateException("Native duel fighter setup changed");
     }
-  }
-
-  static Spawn spawn(String team) {
-    return SPEC.spawns().stream()
-        .filter(spawn -> spawn.team().equals(team))
-        .findFirst()
-        .orElseThrow();
   }
 
   static DuelSetup capture(MatchState match, Selection selection, Function<UUID, Player> bodies) {
@@ -141,6 +126,7 @@ record DuelSetup(
         selection.mode(),
         selection.opponent(),
         match.mapId().orElseThrow(),
+        DuelMapScenario.forMap(match.mapId().orElseThrow()),
         world.getKey().asString(),
         world.getTime(),
         world.getGameTime(),
@@ -156,11 +142,10 @@ record DuelSetup(
     try (var source = CombatHarness.class.getResourceAsStream("/rwf-duel-setup.json")) {
       if (source == null) throw new IllegalStateException("Native duel setup contract missing");
       var spec = json.readValue(source, Spec.class);
-      if (spec.version() != 1
+      if (spec.version() != 2
           || !spec.kind().equals("rwf-native-duel-setup")
           || !spec.fields().equals(names(DuelSetup.class))
-          || !spec.fighter().equals(names(Fighter.class))
-          || !spec.spawns().stream().map(Spawn::team).toList().equals(List.of("red", "blue")))
+          || !spec.fighter().equals(names(Fighter.class)))
         throw new IllegalStateException("Native duel setup contract is incompatible");
       return spec;
     } catch (IOException failure) {

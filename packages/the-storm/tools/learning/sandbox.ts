@@ -7,6 +7,7 @@ import { thirdPartyPlugins } from "#e2e/harness/pins.ts";
 import { startFakeBrain } from "#e2e/harness/fake-brain.ts";
 import { startServer } from "#e2e/harness/server.ts";
 import { RconClient } from "#e2e/harness/rcon.ts";
+import { eventually, status } from "#e2e/harness/rwf-match.ts";
 import {
   rwfTestSettings,
   rwfRecordingSalt,
@@ -21,6 +22,7 @@ import {
   serverLogs,
 } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 import { openNativeObserver } from "#learning/native/observer.ts";
+import { stageMap } from "#learning/maps/stage.ts";
 
 export const root = path.resolve(import.meta.dirname, "../..");
 const content = path.join(root, "server/owned/plugins/TheStorm");
@@ -32,25 +34,47 @@ const fixturesJar = path.join(
 
 export async function frozenManifest() {
   const learning = path.join(root, "tools/learning");
-  const [listing, preference, promotion, native, personalities] =
-    await Promise.all([
-      readdir(learning),
-      readdir(path.join(learning, "preference")),
-      readdir(path.join(learning, "promotion")),
-      readdir(path.join(learning, "native"), { recursive: true }),
-      readdir(path.join(content, "rwfbots/personalities")),
-    ]);
+  const [
+    listing,
+    preference,
+    promotion,
+    native,
+    personalities,
+    maps,
+    mapSources,
+    baker,
+  ] = await Promise.all([
+    readdir(learning),
+    readdir(path.join(learning, "preference")),
+    readdir(path.join(learning, "promotion")),
+    readdir(path.join(learning, "native"), { recursive: true }),
+    readdir(path.join(content, "rwfbots/personalities")),
+    readdir(path.join(content, "rwf/maps"), {
+      recursive: true,
+      withFileTypes: true,
+    }),
+    readdir(path.join(learning, "maps")),
+    readdir(path.join(root, "plugin/tools/rwfmap/build/install/rwfmap"), {
+      recursive: true,
+      withFileTypes: true,
+    }),
+  ]);
   const sources = [
     ...listing,
     ...preference.map((file) => `preference/${file}`),
     ...promotion.map((file) => `promotion/${file}`),
     ...native.map((file) => `native/${file}`),
+    ...mapSources.map((file) => `maps/${file}`),
   ]
     .filter((file) => /\.(?:py|ts|toml|lock|json)$/u.test(file))
     .sort();
   const files = [
     stormJar,
     fixturesJar,
+    ...baker
+      .filter((entry) => entry.isFile())
+      .map((entry) => path.join(entry.parentPath, entry.name))
+      .sort(),
     ...[
       "bot.ts",
       "rcon.ts",
@@ -59,6 +83,8 @@ export async function frozenManifest() {
       "storm-data.ts",
       "rcon-output.ts",
       "rwf-settings.ts",
+      "rwf-match.ts",
+      "paths.ts",
     ].map((file) => path.join(root, "tests/e2e/harness", file)),
     path.join(root, "scripts/bots/learning/dataset.py"),
     path.join(root, "scripts/bots/learning/preference_recording.py"),
@@ -69,9 +95,18 @@ export async function frozenManifest() {
       .sort()
       .map((file) => path.join(content, "rwfbots/personalities", file)),
     path.join(content, "rwf/kits.yml"),
-    path.join(content, "rwf/maps/training-yard/map.yml"),
-    path.join(content, "rwf/maps/training-yard/blocks.schem"),
-    path.join(content, "rwf/maps/training-yard/nav.rwfnav"),
+    ...maps
+      .filter((entry) => entry.isFile())
+      .map((entry) => path.join(entry.parentPath, entry.name))
+      .sort(),
+    path.join(
+      root,
+      "plugin/modules/rwfbots/src/main/resources/rwf-map-scenario.json",
+    ),
+    path.join(
+      root,
+      "plugin/modules/rwfbots/src/main/resources/rwf-map-scenarios.json",
+    ),
     path.join(
       root,
       "plugin/modules/rwfbots/src/main/resources/rwf-combat-v1.tsv",
@@ -140,7 +175,13 @@ export async function openPaperDuels(
   output: string,
   learningModelDir?: string,
   profile: "duel" | "load" | "regression" | "regression-player" = "duel",
+  mapId = "training-yard",
 ) {
+  if (profile !== "duel" && mapId !== "training-yard") {
+    throw new Error(
+      "Existing regression and load profiles require Training Yard",
+    );
+  }
   const token = randomBytes(24).toString("hex");
   const brain = startFakeBrain(token);
   const brainUrl = `http://host.docker.internal:${brain.port.toString()}`;
@@ -179,6 +220,18 @@ export async function openPaperDuels(
       throw new AggregateError(failures, "Paper duel owner cleanup failed");
   };
   try {
+    const staged = await stageMap(
+      content,
+      path.join(output, "map-content"),
+      mapId,
+      {
+        duel: profile === "duel",
+        mapTool: path.join(
+          root,
+          "plugin/tools/rwfmap/build/install/rwfmap/bin/rwfmap",
+        ),
+      },
+    );
     server = await startServer({
       cacheDir: path.join(root, ".cache/e2e/learning"),
       bootTimeoutMs: 180_000,
@@ -186,7 +239,7 @@ export async function openPaperDuels(
       stormJar,
       fixturesJar,
       ...(learningModelDir === undefined ? {} : { learningModelDir }),
-      ownedConfigDir: content,
+      ownedConfigDir: staged.content,
       stormConfig: stormModuleConfig(
         await Bun.file(path.join(content, "config.yml")).text(),
         ["economy", "mail", "tracks", "rwf", "rwfbots"],
@@ -258,6 +311,20 @@ export async function openPaperDuels(
       password: server.info.rconPassword,
     });
     const observerConsole = rcon;
+    await eventually(
+      `map ${mapId} to admit players`,
+      async () => {
+        const current = await status(observerConsole);
+        return (
+          current.ready &&
+          current.map === mapId &&
+          current.phase === "Lobby" &&
+          current.humans === 0 &&
+          current.bots === 0
+        );
+      },
+      600_000,
+    );
     const nativeServer = server;
     const address = `127.0.0.1:${server.info.gamePort.toString()}`;
     return {

@@ -31,8 +31,8 @@ public final class NavGraph {
   /** The cost of climbing one block of ladder. */
   public static final float CLIMB_COST = 1.5f;
 
-  /** The deepest drop a path may take. */
-  public static final int MAX_DROP = 3;
+  /** Legacy spawn platforms require five-block descents; reject larger, costly falls. */
+  public static final int MAX_DROP = 6;
 
   private static final float INF = Float.POSITIVE_INFINITY;
 

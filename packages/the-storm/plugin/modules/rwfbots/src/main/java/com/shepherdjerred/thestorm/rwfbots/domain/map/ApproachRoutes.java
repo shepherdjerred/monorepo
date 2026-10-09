@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.rwfbots.domain.map;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -41,16 +42,17 @@ public record ApproachRoutes(List<Route> routes) {
   }
 
   /** Routes from every spawn to every bomb of {@code sites} through {@code graph}. */
-  public static ApproachRoutes build(NavGraph graph, NavSites sites) {
+  public static ApproachRoutes build(
+      NavGraph graph, NavSites sites, Map<String, Integer> approaches) {
     var routes = new ArrayList<Route>();
     for (var spawn : sites.spawns()) {
       for (var bomb : sites.bombs()) {
         var from = graph.nearestNode(spawn.cell().feet());
-        var to = graph.nearestNode(bomb.cell().feet());
-        if (from.isEmpty() || to.isEmpty()) {
+        var to = approaches.get(bomb.name());
+        if (from.isEmpty() || to == null) {
           continue;
         }
-        routes.addAll(alternatives(graph, new Leg(spawn, bomb, from.getAsInt(), to.getAsInt())));
+        routes.addAll(alternatives(graph, new Leg(spawn, bomb, from.getAsInt(), to)));
       }
     }
     return new ApproachRoutes(routes);

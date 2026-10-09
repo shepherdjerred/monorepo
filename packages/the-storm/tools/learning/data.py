@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from uuid import UUID
@@ -31,7 +32,7 @@ class Dataset:
         manifest_path = root / "manifest.json"
         manifest = mapping(json.loads(manifest_path.read_text(encoding="utf-8")))
         for key, expected in {
-            "schema": 2,
+            "schema": 3,
             "contract": CONTRACT,
             "contract_sha256": digest(RESOURCE),
             "features": list(FEATURES),
@@ -53,6 +54,9 @@ class Dataset:
         if set(assignments.values()) != {"train", "validation", "test"}:
             raise ValueError("dataset requires ten matches and three nonempty splits")
         sources = mapping(manifest["sources_sha256"])
+        maps = mapping(manifest["maps"])
+        if manifest.get("evaluation_scope") != "new-matches-on-known-maps":
+            raise ValueError("dataset map evaluation scope mismatch")
         for match, split in assignments.items():
             if str(UUID(match)) != match or split not in ("train", "validation", "test"):
                 raise ValueError("invalid match split")
@@ -63,6 +67,15 @@ class Dataset:
                 or any(c not in "0123456789abcdef" for c in source)
             ):
                 raise ValueError("missing source recording digest")
+            terrain = mapping(maps[match])
+            map_id, map_sha256 = terrain.get("id"), terrain.get("sha256")
+            if (
+                not isinstance(map_id, str)
+                or re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", map_id) is None
+                or not isinstance(map_sha256, str)
+                or re.fullmatch(r"[a-f0-9]{64}", map_sha256) is None
+            ):
+                raise ValueError("missing map identity or terrain digest")
         files = mapping(manifest["files_sha256"])
         result: dict[str, list[Sequence]] = {}
         seen: set[str] = set()
@@ -76,6 +89,9 @@ class Dataset:
                 match = row["match"]
                 if not isinstance(match, str) or assignments.get(match) != split:
                     raise ValueError("match leaked across dataset splits")
+                terrain = mapping(maps[match])
+                if row.get("map_id") != terrain["id"] or row.get("map_sha256") != terrain["sha256"]:
+                    raise ValueError("sequence map differs from its original match terrain")
                 seen.add(match)
                 samples = array(row["samples"])
                 if len(samples) < 2:

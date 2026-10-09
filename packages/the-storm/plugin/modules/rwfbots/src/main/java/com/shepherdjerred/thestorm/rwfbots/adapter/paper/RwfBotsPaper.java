@@ -41,6 +41,7 @@ public final class RwfBotsPaper {
   private final ThinkLoop loop;
   private final MatchBridge bridge;
   private final StimulusCollector stimuli;
+  private final DoorVisibility doors;
   private final Cancellable clock;
   private final RwfBotsCommand command;
   private final Optional<GzipTraceFiles> traces;
@@ -54,6 +55,7 @@ public final class RwfBotsPaper {
     this.loop = parts.loop();
     this.bridge = parts.bridge();
     this.stimuli = parts.stimuli();
+    this.doors = parts.doors();
     this.clock = parts.clock();
     this.command = parts.command();
     this.traces = parts.traces();
@@ -68,6 +70,7 @@ public final class RwfBotsPaper {
       ThinkLoop loop,
       MatchBridge bridge,
       StimulusCollector stimuli,
+      DoorVisibility doors,
       Cancellable clock,
       RwfBotsCommand command,
       Optional<GzipTraceFiles> traces,
@@ -193,6 +196,10 @@ public final class RwfBotsPaper {
                 observations,
                 app.learning()));
     module.plugin().getServer().getPluginManager().registerEvents(stimuli, module.plugin());
+    var doors =
+        new DoorVisibility(
+            new DoorVisibility.Parts(app.world(), module.scheduler(), roster, loop, app.nav()));
+    module.plugin().getServer().getPluginManager().registerEvents(doors, module.plugin());
     bridge.subscribe(events);
     var command =
         new RwfBotsCommand(
@@ -242,6 +249,7 @@ public final class RwfBotsPaper {
             loop,
             bridge,
             stimuli,
+            doors,
             clock,
             command,
             traces,
@@ -279,6 +287,7 @@ public final class RwfBotsPaper {
     heard.ifPresent(HandlerList::unregisterAll);
     chat.ifPresent(BotChat::close);
     HandlerList.unregisterAll(stimuli);
+    doors.close();
     command.unregisterPermission(context.plugin().getServer().getPluginManager());
     loop.close();
     roster.clear();

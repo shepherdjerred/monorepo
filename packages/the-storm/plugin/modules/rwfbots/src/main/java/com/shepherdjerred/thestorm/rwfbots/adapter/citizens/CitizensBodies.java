@@ -20,6 +20,7 @@ import net.citizensnpcs.api.event.NPCSpawnEvent;
 import net.citizensnpcs.api.event.SpawnReason;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.npc.NPCRegistry;
+import net.citizensnpcs.trait.AttributeTrait;
 import net.citizensnpcs.trait.SkinTrait;
 import org.bukkit.Location;
 import org.bukkit.attribute.Attribute;
@@ -88,7 +89,11 @@ public final class CitizensBodies implements Bodies, Listener {
     npc.setProtected(false);
     npc.setUseMinecraftAI(false);
     npc.data().set(NPC.Metadata.KNOCKBACK, true);
+    npc.data().set(NPC.Metadata.SWIM, true);
     npc.data().set(NPC.Metadata.NAMEPLATE_VISIBLE, true);
+    // Citizens applies its one-block default after NPCSpawnEvent unless an attribute trait owns
+    // the value. Retain the ordinary player step across initial spawn and skin replacement.
+    npc.getOrAddTrait(AttributeTrait.class).setAttributeValue(Attribute.STEP_HEIGHT, 0.6);
     npc.getOrAddTrait(SkinTrait.class)
         .setSkinPersistent(personality.id(), personality.skinSignature(), personality.skinValue());
     // A player NPC's entity carries Citizens' version-2 "Minecraft" UUID, not the NPC's own: rwf
@@ -155,7 +160,11 @@ public final class CitizensBodies implements Bodies, Listener {
             player -> {
               org.bukkit.entity.Entity body = player;
               var heading = target.toVector().subtract(body.getLocation().toVector());
+              DoorUse.ahead(player, heading);
               steer(player, new Vec3(heading.getX(), 0, heading.getZ()), sprint);
+              if (heading.getY() > 0.1 && player.isClimbing()) {
+                player.setVelocity(player.getVelocity().setY(0.2));
+              }
             });
   }
 

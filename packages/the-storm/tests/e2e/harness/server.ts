@@ -75,6 +75,8 @@ export type StartServerOptions = {
   mechanicsE2eJar?: string;
   mechanicsConfig?: string;
   fixturesJar?: string;
+  /** Audited saved-chunk coordinates for the disposable legacy map converter. */
+  mapSourceChunks?: string;
   /** Explicit unaccepted ONNX export copied only into a disposable fixture server. */
   learningModelDir?: string;
   companionsE2eJar?: string;
@@ -149,6 +151,24 @@ async function stageLearningModel(
   }
 }
 
+async function stageMapSources(
+  pluginsDir: string,
+  options: Pick<
+    StartServerOptions,
+    "mapSourceChunks" | "fixturesJar" | "worldDir"
+  >,
+): Promise<void> {
+  if (options.mapSourceChunks === undefined) return;
+  if (options.fixturesJar === undefined || options.worldDir === undefined)
+    throw new Error(
+      "Map source chunks require fixtures and an explicit copied world",
+    );
+  await Bun.write(
+    path.join(pluginsDir, "TheStormFixtures", "source-chunks.json"),
+    Bun.file(options.mapSourceChunks),
+  );
+}
+
 /**
  * Builds this run's /plugins mount: the pinned third-party jars, the plugin
  * under test and its repository-owned config directory.
@@ -163,6 +183,7 @@ export async function stagePlugins(
     | "mechanicsE2eJar"
     | "mechanicsConfig"
     | "fixturesJar"
+    | "mapSourceChunks"
     | "learningModelDir"
     | "companionsE2eJar"
     | "rwf"
@@ -214,6 +235,7 @@ export async function stagePlugins(
       .join("\n");
     await Bun.write(parcels, (await Bun.file(parcels).text()) + entries);
   }
+  await stageMapSources(pluginsDir, options);
   await stageLearningModel(
     pluginsDir,
     options.learningModelDir,

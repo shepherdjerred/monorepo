@@ -428,17 +428,17 @@ public final class Reflex {
       var waypoint = waypoints.get(index);
       var destination = waypoint.pos();
       var sprint = sprintOverride.orElseGet(this::sprintsByStance);
+      if (waypoint.hop() == Hop.LEAP) sprint = true;
       var crowded = allyAhead(destination);
-      if (crowded) {
+      if (crowded && waypoint.hop() != Hop.LEAP) {
         sprint = false;
         destination = sidestep(destination);
       }
       // Near the end of the path the bot walks straight in: bending there makes it circle the spot.
-      if (index < waypoints.size() - FINAL_STRAIGHT
-          || self.pos().horizontalDistance(destination) > SEPARATION) {
+      if (shouldBend(waypoint, index, waypoints.size(), destination)) {
         destination = bend(destination, walkingApart());
       }
-      if (yields(destination)) {
+      if (waypoint.hop() != Hop.LEAP && yields(destination)) {
         // Waiting for the teammate ahead: make room for the others while it clears.
         var push = walkingApart();
         commands.add(
@@ -449,12 +449,22 @@ public final class Reflex {
       }
       commands.add(new BodyCommand.MoveToward(destination, sprint));
       jumpIfNeeded(waypoint);
+      lookAhead(destination);
+    }
+
+    private void lookAhead(Vec3 destination) {
       var ahead = destination.plus(0, CombatantView.EYE_HEIGHT, 0);
       if (!ahead.minus(self.eye()).isZero()) {
         state =
             state.withAim(
                 AimController.steer(state.aim(), Facing.looking(self.eye(), ahead), levers()));
       }
+    }
+
+    private boolean shouldBend(Waypoint waypoint, int index, int count, Vec3 destination) {
+      return waypoint.hop() != Hop.LEAP
+          && (index < count - FINAL_STRAIGHT
+              || self.pos().horizontalDistance(destination) > SEPARATION);
     }
 
     private int advanceWaypoint(List<Waypoint> waypoints, int index) {
@@ -596,8 +606,9 @@ public final class Reflex {
 
     private void jumpIfNeeded(Waypoint waypoint) {
       var needsJump =
-          waypoint.hop() == Hop.JUMP
-              && self.pos().horizontalDistance(waypoint.pos()) <= 1.2
+          (waypoint.hop() == Hop.JUMP || waypoint.hop() == Hop.LEAP)
+              && self.pos().horizontalDistance(waypoint.pos())
+                  <= (waypoint.hop() == Hop.LEAP ? 3.2 : 1.2)
               && self.onGround()
               && now - state.lastJumpTick() > JUMP_COOLDOWN;
       if (needsJump) {

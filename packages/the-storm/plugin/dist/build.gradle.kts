@@ -91,4 +91,6 @@ val libs = the<VersionCatalogsExtension>().named("libs")
 dependencies {
   testImplementation(libs.findLibrary("archunit").get())
   compileOnly(libs.findLibrary("coreprotect").get()) { isTransitive = false }
+  add(e2e.compileOnlyConfigurationName, libs.findLibrary("worldedit-core").get())
+  add(e2e.compileOnlyConfigurationName, libs.findLibrary("worldedit-bukkit").get())
 }

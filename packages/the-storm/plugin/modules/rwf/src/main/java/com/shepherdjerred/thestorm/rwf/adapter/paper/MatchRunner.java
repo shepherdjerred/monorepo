@@ -8,6 +8,7 @@ import com.shepherdjerred.thestorm.rwf.app.MatchNotification;
 import com.shepherdjerred.thestorm.rwf.app.MatchView;
 import com.shepherdjerred.thestorm.rwf.app.PayoutService;
 import com.shepherdjerred.thestorm.rwf.app.ShowcaseStart;
+import com.shepherdjerred.thestorm.rwf.app.map.MapRotation;
 import com.shepherdjerred.thestorm.rwf.app.store.MatchStore;
 import com.shepherdjerred.thestorm.rwf.domain.combat.AttackType;
 import com.shepherdjerred.thestorm.rwf.domain.combat.CombatRules;
@@ -131,6 +132,7 @@ final class MatchRunner implements MatchView, MatchEvents {
   }
 
   private final Parts parts;
+  private final MapRotation<MapWorld> rotation;
   private final Effects effects = new Effects();
   private final ArrayDeque<MatchEvent> waiting = new ArrayDeque<>();
   private final List<Consumer<MatchNotification>> listeners = new ArrayList<>();
@@ -155,6 +157,7 @@ final class MatchRunner implements MatchView, MatchEvents {
 
   MatchRunner(Parts parts) {
     this.parts = parts;
+    this.rotation = new MapRotation<>(parts.maps(), parts.context().random());
     this.match =
         RwfMatch.open(
             parts.config().matchSettings(), UUID.randomUUID(), parts.context().random().nextLong());
@@ -283,6 +286,20 @@ final class MatchRunner implements MatchView, MatchEvents {
   void open(MapWorld first) {
     ready = true;
     choose(first);
+    rotation.prefetch(first);
+  }
+
+  /** Keep the resetting phase until the following terrain and navigation are both ready. */
+  private void whenNextMapReady(Runnable done) {
+    rotation.whenReady(
+        done,
+        failure -> {
+          ready = false;
+          parts
+              .context()
+              .logger()
+              .error("The next map is unavailable; admission stays closed", failure);
+        });
   }
 
   private void choose(MapWorld map) {
@@ -605,8 +622,9 @@ final class MatchRunner implements MatchView, MatchEvents {
     match =
         RwfMatch.open(
             parts.config().matchSettings(), UUID.randomUUID(), parts.context().random().nextLong());
-    var maps = parts.maps();
-    choose(maps.get(parts.context().random().nextInt(maps.size())));
+    var next = rotation.take(currentMap());
+    choose(next);
+    rotation.prefetch(next);
   }
 
   private Instant liveAtOr(Instant fallback) {
@@ -692,6 +710,7 @@ final class MatchRunner implements MatchView, MatchEvents {
 
   /** The match is stopping for good (disable): restore everyone, despawn bots. */
   void stop() {
+    rotation.close();
     if (!(match.phase() instanceof Phase.Resetting)) {
       handle(new MatchEvent.Stop());
     }
@@ -1338,6 +1357,11 @@ final class MatchRunner implements MatchView, MatchEvents {
       var map = currentMap();
       map.revertCraters();
       parts.bombs().clear();
+      if (parts.maps().size() > 1) {
+        // The inactive map is verified and repaired on its next preparation.
+        whenNextMapReady(() -> handle(new MatchEvent.ResetDone()));
+        return;
+      }
       map.verifyAndRepair(
           ok -> {
             if (!ok) {
@@ -1348,7 +1372,7 @@ final class MatchRunner implements MatchView, MatchEvents {
               ready = false;
               return;
             }
-            handle(new MatchEvent.ResetDone());
+            whenNextMapReady(() -> handle(new MatchEvent.ResetDone()));
           });
     }
   }
