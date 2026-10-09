@@ -3,26 +3,50 @@
     x:Class="TaskNotes.Windows.App.Views.TaskEditorView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <DataTemplate x:Key="WorkflowChoiceTemplate">
+            <TextBlock Foreground="{Binding Color, Converter={StaticResource ConfiguredColorConverter}}" Text="{Binding Label}" />
+        </DataTemplate>
+    </UserControl.Resources>
     <Border
-        Width="360"
-        Margin="18,0,0,0"
-        Padding="18"
+        Margin="0"
+        Padding="{StaticResource FacetInspectorPadding}"
         Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
         CornerRadius="8">
         <ScrollViewer>
-            <StackPanel Spacing="12">
+            <StackPanel x:Name="EditorFields" Spacing="12">
+                <TextBlock
+                    x:Name="EmptyInspector"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Text="Select a task to view its details."
+                    TextWrapping="Wrap" />
+                <ProgressBar IsIndeterminate="{x:Bind ViewModel.IsCommitting, Mode=OneWay}" />
+                <TextBlock
+                    AutomationProperties.LiveSetting="Polite"
+                    Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                    Text="{x:Bind ViewModel.CommitError, Mode=OneWay}"
+                    TextWrapping="Wrap" />
                 <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="Task inspector" />
                 <TextBox
                     AutomationProperties.AutomationId="TaskNotes.Editor.Title"
                     Header="Title"
+                    KeyDown="Title_KeyDown"
+                    LostFocus="Field_Blur"
+                    Tag="title"
                     Text="{x:Bind ViewModel.Title, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                 <TextBox
                     Height="120"
                     AcceptsReturn="True"
                     AutomationProperties.AutomationId="TaskNotes.Editor.Details"
                     Header="Markdown details"
+                    LostFocus="Field_Blur"
+                    Tag="body"
                     Text="{x:Bind ViewModel.Details, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                     TextWrapping="Wrap" />
+                <Button
+                    HorizontalAlignment="Right"
+                    Click="BodyDone_Click"
+                    Content="Done editing details" />
                 <Grid ColumnSpacing="8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -30,83 +54,275 @@
                     </Grid.ColumnDefinitions>
                     <ComboBox
                         AutomationProperties.AutomationId="TaskNotes.Editor.Status"
-                        DisplayMemberPath="Label"
                         Header="Status"
+                        ItemTemplate="{StaticResource WorkflowChoiceTemplate}"
                         ItemsSource="{x:Bind ViewModel.StatusChoices, Mode=OneWay}"
                         SelectedValue="{x:Bind ViewModel.Status, Mode=TwoWay}"
-                        SelectedValuePath="Value" />
+                        SelectedValuePath="Value"
+                        SelectionChanged="Control_SelectionChanged"
+                        Tag="status" />
                     <ComboBox
                         Grid.Column="1"
                         AutomationProperties.AutomationId="TaskNotes.Editor.Priority"
-                        DisplayMemberPath="Label"
                         Header="Priority"
+                        ItemTemplate="{StaticResource WorkflowChoiceTemplate}"
                         ItemsSource="{x:Bind ViewModel.PriorityChoices, Mode=OneWay}"
                         SelectedValue="{x:Bind ViewModel.Priority, Mode=TwoWay}"
-                        SelectedValuePath="Value" />
+                        SelectedValuePath="Value"
+                        SelectionChanged="Control_SelectionChanged"
+                        Tag="priority" />
                 </Grid>
+                <TextBlock
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Text="{x:Bind ViewModel.StatusColorWarning, Mode=OneWay}"
+                    TextWrapping="Wrap" />
+                <TextBlock
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Text="{x:Bind ViewModel.PriorityColorWarning, Mode=OneWay}"
+                    TextWrapping="Wrap" />
+                <CalendarDatePicker
+                    x:Name="ScheduledPicker"
+                    DateChanged="Date_Changed"
+                    Header="Scheduled"
+                    PlaceholderText="Choose a date"
+                    Tag="scheduled" />
                 <TextBox
                     AutomationProperties.AutomationId="TaskNotes.Editor.Scheduled"
-                    Header="Planned / scheduled"
+                    Header="Scheduled date or timestamp"
+                    LostFocus="Field_Blur"
                     PlaceholderText="YYYY-MM-DD"
+                    Tag="scheduled"
                     Text="{x:Bind ViewModel.Scheduled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <CalendarDatePicker
+                    x:Name="DuePicker"
+                    DateChanged="Date_Changed"
+                    Header="Due"
+                    PlaceholderText="Choose a date"
+                    Tag="due" />
                 <TextBox
                     AutomationProperties.AutomationId="TaskNotes.Editor.Due"
-                    Header="Deadline / due"
+                    Header="Due date or timestamp"
+                    LostFocus="Field_Blur"
                     PlaceholderText="YYYY-MM-DD"
+                    Tag="due"
                     Text="{x:Bind ViewModel.Due, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <Expander HorizontalAlignment="Stretch" Header="Repeat">
+                    <StackPanel Spacing="8">
+                        <ComboBox
+                            x:Name="RecurrenceFrequency"
+                            Header="Frequency"
+                            SelectedIndex="0">
+                            <ComboBoxItem Content="Does not repeat" Tag="" />
+                            <ComboBoxItem Content="Daily" Tag="DAILY" />
+                            <ComboBoxItem Content="Weekly" Tag="WEEKLY" />
+                            <ComboBoxItem Content="Monthly" Tag="MONTHLY" />
+                            <ComboBoxItem Content="Yearly" Tag="YEARLY" />
+                        </ComboBox>
+                        <NumberBox
+                            x:Name="RecurrenceInterval"
+                            Header="Every"
+                            Maximum="999"
+                            Minimum="1"
+                            SmallChange="1"
+                            SpinButtonPlacementMode="Compact"
+                            Value="1" />
+                        <Grid x:Name="RecurrenceDays" ColumnSpacing="2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <CheckBox
+                                Grid.Column="0"
+                                MinWidth="28"
+                                AutomationProperties.Name="Monday"
+                                Content="M"
+                                Tag="MO" />
+                            <CheckBox
+                                Grid.Column="1"
+                                MinWidth="28"
+                                AutomationProperties.Name="Tuesday"
+                                Content="T"
+                                Tag="TU" />
+                            <CheckBox
+                                Grid.Column="2"
+                                MinWidth="28"
+                                AutomationProperties.Name="Wednesday"
+                                Content="W"
+                                Tag="WE" />
+                            <CheckBox
+                                Grid.Column="3"
+                                MinWidth="28"
+                                AutomationProperties.Name="Thursday"
+                                Content="T"
+                                Tag="TH" />
+                            <CheckBox
+                                Grid.Column="4"
+                                MinWidth="28"
+                                AutomationProperties.Name="Friday"
+                                Content="F"
+                                Tag="FR" />
+                            <CheckBox
+                                Grid.Column="5"
+                                MinWidth="28"
+                                AutomationProperties.Name="Saturday"
+                                Content="S"
+                                Tag="SA" />
+                            <CheckBox
+                                Grid.Column="6"
+                                MinWidth="28"
+                                AutomationProperties.Name="Sunday"
+                                Content="S"
+                                Tag="SU" />
+                        </Grid>
+                        <Button Click="RecurrenceApply_Click" Content="Apply repeat schedule" />
+                    </StackPanel>
+                </Expander>
                 <TextBox
                     AutomationProperties.AutomationId="TaskNotes.Editor.Recurrence"
                     Header="Recurrence"
+                    LostFocus="Field_Blur"
                     PlaceholderText="RRULE or natural recurrence"
+                    Tag="recurrence"
                     Text="{x:Bind ViewModel.Recurrence, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                 <ComboBox
                     AutomationProperties.AutomationId="TaskNotes.Editor.RecurrenceAnchor"
                     Header="Recurrence anchor"
                     SelectedValue="{x:Bind ViewModel.RecurrenceAnchor, Mode=TwoWay}"
-                    SelectedValuePath="Tag">
+                    SelectedValuePath="Tag"
+                    SelectionChanged="Control_SelectionChanged"
+                    Tag="recurrenceAnchor">
                     <ComboBoxItem Content="Default" Tag="" />
                     <ComboBoxItem Content="Scheduled" Tag="scheduled" />
                     <ComboBoxItem Content="Completion" Tag="completion" />
                 </ComboBox>
-                <TextBox
+                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                    <ItemsControl ItemsSource="{x:Bind ViewModel.ProjectsTokens, Mode=OneWay}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button
+                                    Margin="0,0,4,0"
+                                    Padding="8,4"
+                                    Click="RemoveProjects_Click"
+                                    Content="{Binding}"
+                                    Tag="{Binding}"
+                                    ToolTipService.ToolTip="Remove token" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+                <AutoSuggestBox
                     AutomationProperties.AutomationId="TaskNotes.Editor.Projects"
                     Header="Projects"
+                    LostFocus="Field_Blur"
                     PlaceholderText="Comma separated"
-                    Text="{x:Bind ViewModel.Projects, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                <TextBox
+                    QuerySubmitted="Token_QuerySubmitted"
+                    Tag="projects"
+                    Text="{x:Bind ViewModel.Projects, Mode=TwoWay}"
+                    TextChanged="Token_TextChanged" />
+                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                    <ItemsControl ItemsSource="{x:Bind ViewModel.ContextsTokens, Mode=OneWay}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button
+                                    Margin="0,0,4,0"
+                                    Padding="8,4"
+                                    Click="RemoveContexts_Click"
+                                    Content="{Binding}"
+                                    Tag="{Binding}"
+                                    ToolTipService.ToolTip="Remove token" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+                <AutoSuggestBox
                     AutomationProperties.AutomationId="TaskNotes.Editor.Contexts"
                     Header="Contexts"
+                    LostFocus="Field_Blur"
                     PlaceholderText="Comma separated"
-                    Text="{x:Bind ViewModel.Contexts, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                <TextBox
+                    QuerySubmitted="Token_QuerySubmitted"
+                    Tag="contexts"
+                    Text="{x:Bind ViewModel.Contexts, Mode=TwoWay}"
+                    TextChanged="Token_TextChanged" />
+                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                    <ItemsControl ItemsSource="{x:Bind ViewModel.TagsTokens, Mode=OneWay}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button
+                                    Margin="0,0,4,0"
+                                    Padding="8,4"
+                                    Click="RemoveTags_Click"
+                                    Content="{Binding}"
+                                    Tag="{Binding}"
+                                    ToolTipService.ToolTip="Remove token" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+                <AutoSuggestBox
                     AutomationProperties.AutomationId="TaskNotes.Editor.Tags"
                     Header="Tags"
+                    LostFocus="Field_Blur"
                     PlaceholderText="Comma separated"
-                    Text="{x:Bind ViewModel.Tags, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    QuerySubmitted="Token_QuerySubmitted"
+                    Tag="tags"
+                    Text="{x:Bind ViewModel.Tags, Mode=TwoWay}"
+                    TextChanged="Token_TextChanged" />
                 <TextBox
                     Header="Dependencies"
+                    LostFocus="Field_Blur"
                     PlaceholderText="Comma separated task IDs or references"
+                    Tag="blockedBy"
                     Text="{x:Bind ViewModel.BlockedBy, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                 <TextBox
                     Header="Completed date"
+                    LostFocus="Field_Blur"
                     PlaceholderText="YYYY-MM-DD"
+                    Tag="completedDate"
                     Text="{x:Bind ViewModel.CompletedDate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                 <TextBox
                     Header="Completed occurrences"
+                    LostFocus="Field_Blur"
                     PlaceholderText="Comma separated YYYY-MM-DD dates"
+                    Tag="completeInstances"
                     Text="{x:Bind ViewModel.CompleteInstances, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                 <TextBox
                     Header="Skipped occurrences"
+                    LostFocus="Field_Blur"
                     PlaceholderText="Comma separated YYYY-MM-DD dates"
+                    Tag="skippedInstances"
                     Text="{x:Bind ViewModel.SkippedInstances, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                 <TextBox
                     AcceptsReturn="True"
                     Header="Attachment references"
+                    LostFocus="Field_Blur"
                     PlaceholderText="One vault reference per line"
+                    Tag="attachments"
                     Text="{x:Bind ViewModel.Attachments, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                 <TextBox
                     Header="Created time"
+                    LostFocus="Field_Blur"
                     PlaceholderText="Explicit RFC3339 timestamp for missing metadata"
+                    Tag="dateCreated"
                     Text="{x:Bind ViewModel.DateCreated, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                 <TextBlock Text="Reminders" />
                 <ItemsControl ItemsSource="{x:Bind ViewModel.Reminders, Mode=OneWay}">
@@ -120,23 +336,31 @@
                                     IsEnabled="{Binding IsEditable}"
                                     ItemsSource="{Binding TypeChoices}"
                                     SelectedValue="{Binding Type, Mode=TwoWay}"
-                                    SelectedValuePath="Value" />
+                                    SelectedValuePath="Value"
+                                    SelectionChanged="Control_SelectionChanged"
+                                    Tag="reminders" />
                                 <ComboBox
                                     DisplayMemberPath="Label"
                                     Header="Relative to"
                                     IsEnabled="{Binding IsEditable}"
                                     ItemsSource="{Binding RelatedToChoices}"
                                     SelectedValue="{Binding RelatedTo, Mode=TwoWay}"
-                                    SelectedValuePath="Value" />
+                                    SelectedValuePath="Value"
+                                    SelectionChanged="Control_SelectionChanged"
+                                    Tag="reminders" />
                                 <TextBox
                                     Header="Relative offset"
                                     IsEnabled="{Binding IsEditable}"
+                                    LostFocus="Field_Blur"
                                     PlaceholderText="-PT15M"
+                                    Tag="reminders"
                                     Text="{Binding Offset, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                 <TextBox
                                     Header="Absolute time"
                                     IsEnabled="{Binding IsEditable}"
+                                    LostFocus="Field_Blur"
                                     PlaceholderText="2026-10-03T09:00:00-07:00"
+                                    Tag="reminders"
                                     Text="{Binding AbsoluteTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                 <Button
                                     Click="RemoveReminder_Click"
@@ -151,11 +375,12 @@
                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                     Text="{x:Bind ViewModel.DependencyLabel, Mode=OneWay}"
                     TextWrapping="Wrap" />
+                <Button Click="Discard_Click" Content="Discard retained draft" />
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <Button
                         AutomationProperties.AutomationId="TaskNotes.Editor.Save"
                         Click="Save_Click"
-                        Content="Save" />
+                        Content="Retry / save remaining edits" />
                     <Button
                         AutomationProperties.AutomationId="TaskNotes.Editor.Delete"
                         Click="Delete_Click"

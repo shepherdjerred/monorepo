@@ -110,6 +110,24 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: org.reactjs.native.example.TasksForObsidian.UITests
         GENERATE_INFOPLIST_FILE: YES
+  FacetPresentationTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: FacetPresentationTests
+      - path: ../../tasknotes-macos/Tests/TaskNotesMacTests/Support/FacetSurfaceFixtures.swift
+      - path: ../../tasknotes-macos/Tests/TaskNotesMacTests/Support/FacetNativeGalleryFixtures.swift
+    dependencies:
+      - target: TasksForObsidian
+      - package: FacetApple
+        product: TaskNotesFacetUI
+      - package: FacetApple
+        product: TaskNotesKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: red.sjer.facet.presentation.tests
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_STRICT_MEMORY_SAFETY: YES
 schemes:
   TasksForObsidian:
     build:
@@ -123,3 +141,4 @@ schemes:
       config: Debug
       targets:
         - TasksForObsidianUITests
+        - FacetPresentationTests

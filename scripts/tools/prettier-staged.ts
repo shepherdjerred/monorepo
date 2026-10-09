@@ -19,13 +19,16 @@ export async function formattingFiles(
     .map(({ path }) => path);
 }
 
-export async function checkStagedFormatting(paths: string[]): Promise<void> {
+export async function checkStagedFormatting(
+  paths: string[],
+  runner: typeof run = run,
+): Promise<void> {
   const files = await formattingFiles(paths);
   if (files.length === 0) {
     console.log("prettier-staged: no existing staged files to check");
     return;
   }
-  await run(["bunx", "prettier", "--check", ...files]);
+  await runner(["bunx", "prettier", "--check", ...files]);
 }
 
 if (import.meta.main) {

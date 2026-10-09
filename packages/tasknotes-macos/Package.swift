@@ -141,13 +141,23 @@ let package = Package(
         .target(
             name: "TaskNotesKit",
             dependencies: ["TaskNotesUniFFI"],
-            resources: [.copy("Vault/FacetContractSchema.json")],
+            resources: [
+                .copy("Vault/FacetContractSchema.json"),
+                .copy("Presentation/FacetPresentationTokens.json"),
+                .copy("Presentation/FacetPresentationSchema.json"),
+                .copy("Presentation/FacetColorPolicy.json"),
+            ],
             swiftSettings: authoredSwiftSettings + [.defaultIsolation(nil)]
         ),
 
         .target(
             name: "TaskNotesFacetUI",
             dependencies: ["TaskNotesKit"],
+            resources: [
+                .copy("Presentation/Sounds/complete.wav"),
+                .copy("Presentation/Sounds/create.wav"),
+                .copy("Presentation/Sounds/delete.wav"),
+            ],
             swiftSettings: authoredSwiftSettings + [.defaultIsolation(MainActor.self)]
         ),
 

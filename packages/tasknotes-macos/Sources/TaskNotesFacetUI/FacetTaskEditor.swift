@@ -6,6 +6,7 @@ struct FacetTaskEditor: View {
     let store: FacetStore
     let task: FacetTask
     private let profileID: String
+    private let owningEngine: FacetEngine?
     private let statuses: [(value: String, label: String)]
     private let priorities: [(value: String, label: String)]
     @Environment(\.dismiss) private var dismiss
@@ -24,6 +25,11 @@ struct FacetTaskEditor: View {
     @State private var mutationID = UUID().uuidString
     @State private var archiveMutationID = UUID().uuidString
     @State private var deleteMutationID = UUID().uuidString
+    @State private var submitted: (id: String, command: [String: FacetValue])?
+    @State private var admittedMutationID: String?
+    @State private var failure: String?
+    @State private var lifecycleRegistration = UUID()
+    @State private var showsRecovery = false
 
     init(
         store: FacetStore, task: FacetTask, profileID: String,
@@ -32,8 +38,13 @@ struct FacetTaskEditor: View {
         self.store = store
         self.task = task
         self.profileID = profileID
-        self.statuses = statuses
-        self.priorities = priorities
+        owningEngine = store.engine
+        self.statuses =
+            statuses.contains(where: { $0.value == task.status })
+            ? statuses : statuses + [(task.status, task.status + " (existing value)")]
+        self.priorities =
+            priorities.contains(where: { $0.value == task.priority })
+            ? priorities : priorities + [(task.priority, task.priority + " (existing value)")]
         _title = State(initialValue: task.title)
         _status = State(initialValue: task.status)
         _priority = State(initialValue: task.priority)
@@ -48,44 +59,95 @@ struct FacetTaskEditor: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Task") {
-                    TextField("Title", text: $title).accessibilityIdentifier("facet.editor.title")
+                Section {
+                    TextField("Task title", text: $title, axis: .vertical)
+                        .font(.title2.weight(.semibold)).accessibilityIdentifier(
+                            "facet.editor.title")
+                    TextEditor(text: $bodyText).frame(minHeight: 100)
+                        .accessibilityLabel("Markdown notes")
+                }
+                Section {
+                    Button(
+                        task.completed ? "Completed" : "Complete task",
+                        systemImage: task.completed ? "checkmark.circle.fill" : "circle"
+                    ) {
+                        complete()
+                    }.disabled(hasChanges || submitted != nil)
                     Picker("Status", selection: $status) {
                         ForEach(statuses, id: \.value) { Text($0.label).tag($0.value) }
+                    }
+                }
+                Section("Plan") {
+                    FacetOptionalDatePicker(
+                        label: "Planned", value: scheduled.isEmpty ? nil : scheduled
+                    ) { scheduled = $0.text ?? "" }
+                    FacetOptionalDatePicker(label: "Deadline", value: due.isEmpty ? nil : due) {
+                        due = $0.text ?? ""
                     }
                     Picker("Priority", selection: $priority) {
                         ForEach(priorities, id: \.value) { Text($0.label).tag($0.value) }
                     }
-                    TextField("Due date or date-time", text: $due)
-                    TextField("Scheduled date or date-time", text: $scheduled)
                 }
-                Section("Organization") {
-                    TextField("Projects, one per line", text: $projects, axis: .vertical)
-                    TextField("Contexts, one per line", text: $contexts, axis: .vertical)
+                Section("Repeat") {
+                    FacetRecurrenceField(
+                        rule: $extras.recurrence, scheduled: $scheduled,
+                        anchor: $extras.recurrenceAnchor, dateCreated: extras.dateCreated)
                 }
-                FacetTaskExtrasFields(draft: $extras)
-                Section("Markdown") { TextEditor(text: $bodyText).frame(minHeight: 180) }
+                Section("Organize") {
+                    tokens("Projects", key: "projects", value: $projects)
+                    tokens("Contexts", key: "contexts", value: $contexts)
+                    tokens("Tags", key: "tags", value: $extras.tags)
+                }
+                FacetRelationshipsSection(
+                    dependencies: $extras.dependencies, reminders: $extras.reminders)
+                Section("Additional note fields") {
+                    DisclosureGroup("Attachments, skipped dates and creation date") {
+                        TextField(
+                            "Attachment vault paths, one per line", text: $extras.attachments,
+                            axis: .vertical)
+                        TextField(
+                            "Skipped occurrence dates, one per line", text: $extras.skipped,
+                            axis: .vertical)
+                        TextField("Created date-time", text: $extras.dateCreated)
+                    }
+                }
                 Section {
                     Text(task.path).font(.caption).foregroundStyle(.secondary).textSelection(
                         .enabled)
-                    Button("Archive task") {
-                        _Concurrency.Task { await archive() }
-                    }
+                    Button("Archive task", action: archive).disabled(hasChanges || submitted != nil)
                     NavigationLink("Move task note…") {
                         FacetMoveTaskForm(
                             store: store, task: task, profileID: profileID, moved: { dismiss() })
                     }.disabled(hasChanges)
-                    Button("Delete task", role: .destructive) { showsDelete = true }
+                    Button("Delete task", role: .destructive) { showsDelete = true }.disabled(
+                        submitted != nil)
+                }
+                if let failure {
+                    Section {
+                        Label(failure, systemImage: "exclamationmark.triangle")
+                        if let admittedMutationID {
+                            Text("Saved action: \(admittedMutationID)").font(.caption)
+                                .textSelection(.enabled)
+                            Text(
+                                "Retry uses the original request. "
+                                    + "Resolve this saved action before submitting newer edits."
+                            ).font(.caption).foregroundStyle(.secondary)
+                            Button("Recovery options…") { showsRecovery = true }
+                        }
+                        Button("Retry saved action", action: save)
+                    }
                 }
             }
-            .disabled(isSaving || store.isSaving)
-            .navigationTitle("Edit task")
+            .disabled(isSaving || FacetDraftCoordinator.shared.isTransitioning)
+            .navigationTitle("Task details")
             .toolbar {
                 ToolbarItemGroup {
-                    Button("Cancel") { if hasChanges { showsDiscard = true } else { dismiss() } }
-                        .disabled(isSaving)
-                    Button("Save") { _Concurrency.Task { await save() } }.disabled(
-                        isSaving || title.isEmpty
+                    Button("Cancel") {
+                        if hasChanges || submitted != nil { showsDiscard = true } else { dismiss() }
+                    }
+                    .disabled(isSaving)
+                    Button(submitted == nil ? "Save" : "Retry", action: save).disabled(
+                        isSaving || title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                     )
                     .accessibilityIdentifier("facet.editor.save")
                 }
@@ -94,32 +156,104 @@ struct FacetTaskEditor: View {
                 "Delete this task note?", isPresented: $showsDelete, titleVisibility: .visible
             ) {
                 Button("Delete", role: .destructive) {
-                    _Concurrency.Task { await delete() }
+                    delete()
                 }
             }
         }
-        .interactiveDismissDisabled(hasChanges || isSaving)
+        .interactiveDismissDisabled(hasChanges || isSaving || submitted != nil)
+        .sheet(isPresented: $showsRecovery) {
+            if let admittedMutationID {
+                FacetRetainedDraftRecovery(
+                    store: store, profileID: profileID,
+                    mutationID: admittedMutationID, engine: owningEngine,
+                    discardLocalDraft: { dismiss() })
+            }
+        }
+        .onAppear {
+            FacetDraftCoordinator.shared.register(
+                lifecycleRegistration, owner: store, profileID: profileID,
+                isDirty: { hasChanges || submitted != nil },
+                flush: {
+                    guard !hasChanges, submitted == nil, !isSaving else {
+                        failure =
+                            "Save or discard this task's draft before switching vaults or closing the app."
+                        return false
+                    }
+                    return true
+                })
+        }
+        .onDisappear { FacetDraftCoordinator.shared.unregister(lifecycleRegistration) }
         .confirmationDialog(
             "Discard your unsaved changes?", isPresented: $showsDiscard, titleVisibility: .visible
         ) {
-            Button("Discard changes", role: .destructive) { dismiss() }
+            if submitted == nil { Button("Discard changes", role: .destructive) { dismiss() } }
             Button("Keep editing", role: .cancel) {}
         }
         .onChange(of: [
             title, status, priority, due, scheduled, bodyText, projects, contexts,
         ]) {
-            if !isSaving { mutationID = UUID().uuidString }
+            if !isSaving, submitted == nil { mutationID = UUID().uuidString }
         }
-        .onChange(of: extras) { if !isSaving { mutationID = UUID().uuidString } }
-        .frame(minWidth: 340, minHeight: 520)
+        .onChange(of: extras) { if !isSaving, submitted == nil { mutationID = UUID().uuidString } }
+        .frame(minWidth: FacetNativeStyle.formMinimumWidth, minHeight: 520)
+    }
+}
+
+extension FacetTaskEditor {
+    private func save() {
+        guard !isSaving else { return }
+        submit(submitted ?? (id: mutationID, command: editCommand()))
     }
 
-    private func save() async {
+    private func submit(_ envelope: (id: String, command: [String: FacetValue])) {
         guard !isSaving else { return }
         isSaving = true
+        submitted = envelope
+        _Concurrency.Task { await executeSubmission(envelope) }
+    }
+    private func executeSubmission(_ envelope: (id: String, command: [String: FacetValue])) async {
         defer { isSaving = false }
-        if await store.execute(editCommand(), mutationID: mutationID, profileID: profileID) {
+        guard store.engine === owningEngine, store.selectedProfileID == profileID else {
+            failure = "Return to this task’s original vault before retrying the saved change."
+            return
+        }
+        let admission = FacetMutationAdmission()
+        if await store.execute(
+            envelope.command, mutationID: envelope.id, profileID: profileID, admission: admission)
+        {
+            submitted = nil
+            admittedMutationID = nil
             dismiss()
+        } else {
+            admittedMutationID = admission.mutationID ?? admittedMutationID
+            if admittedMutationID == nil { submitted = nil }
+            failure = store.error ?? "The task could not be saved. Your draft is retained."
+        }
+    }
+    private func complete() {
+        guard !hasChanges, submitted == nil, !isSaving else { return }
+        guard !task.isRecurring || task.occurrenceDate != nil else {
+            failure =
+                "Choose this recurring task in Today or Upcoming "
+                + "before completing a specific occurrence."
+            return
+        }
+        var command: [String: FacetValue] = [
+            "kind": .string("set_completion"),
+            "path": .string(task.path), "expectedRevision": .string(task.revision),
+            "completed": .bool(!task.completed),
+        ]
+        if let day = task.occurrenceDate { command["occurrenceDate"] = .string(day) }
+        submit((id: UUID().uuidString, command: command))
+    }
+
+    private func tokens(_ label: String, key: String, value: Binding<String>) -> some View {
+        FacetNativeTokenField(
+            label: label, values: value.wrappedValue.split(separator: "\n").map(String.init),
+            vocabulary: FacetWindowState.vocabulary(store.snapshot?.tasks ?? [])[key] ?? []
+        ) { edited in
+            value.wrappedValue = edited.joined(separator: "\n")
+            return true
         }
     }
 
@@ -151,33 +285,31 @@ struct FacetTaskEditor: View {
         return changes
     }
 
-    private func archive() async {
+    private func archive() {
         guard !isSaving else { return }
-        isSaving = true
-        defer { isSaving = false }
-        if await store.execute(
-            [
-                "kind": .string("archive"), "path": .string(task.path),
-                "expectedRevision": .string(task.revision), "archived": .bool(true),
-            ], mutationID: archiveMutationID, profileID: profileID)
-        {
-            dismiss()
-        }
+        guard submitted == nil else { return }
+        submit(
+            (
+                id: archiveMutationID,
+                command: [
+                    "kind": .string("archive"), "path": .string(task.path),
+                    "expectedRevision": .string(task.revision), "archived": .bool(true),
+                ]
+            ))
     }
 
-    private func delete() async {
+    private func delete() {
         guard !isSaving else { return }
-        isSaving = true
-        defer { isSaving = false }
-        if await store.execute(
-            [
-                "kind": .string("delete_checked"), "path": .string(task.path),
-                "expectedRevision": .string(task.revision),
-                "checkBacklinks": .bool(true), "force": .bool(false),
-            ], mutationID: deleteMutationID, profileID: profileID)
-        {
-            dismiss()
-        }
+        guard submitted == nil else { return }
+        submit(
+            (
+                id: deleteMutationID,
+                command: [
+                    "kind": .string("delete_checked"), "path": .string(task.path),
+                    "expectedRevision": .string(task.revision),
+                    "checkBacklinks": .bool(true), "force": .bool(false),
+                ]
+            ))
     }
 
     private var hasChanges: Bool {

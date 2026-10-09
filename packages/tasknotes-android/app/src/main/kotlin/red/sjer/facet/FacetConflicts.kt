@@ -1,6 +1,9 @@
 package red.sjer.facet
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -19,12 +22,17 @@ internal fun ConflictScreen(model: FacetViewModel) {
     var reviewing by remember(profile.id) { mutableStateOf<JsonObject?>(null) }
     LaunchedEffect(profile.id) { model.readConflicts() }
     LazyColumn(Modifier.padding(12.dp), contentPadding = PaddingValues(bottom = 88.dp)) {
-        item { Text("Preserved conflicting versions", style = MaterialTheme.typography.titleLarge); Text("Review each immutable version before choosing a resolution.") }
+        item { Text("Preserved versions", style = MaterialTheme.typography.titleLarge); Text("Review each version before choosing a resolution.", color = MaterialTheme.colorScheme.onSurfaceVariant) }
         items(model.conflicts, key = { it.getValue("id").jsonPrimitive.content }) { conflict ->
-            TextButton(onClick = { reviewing = conflict }) { Text(conflict.getValue("path").jsonPrimitive.content) }
+            ListItem(headlineContent = { Text(conflict.getValue("path").jsonPrimitive.content) }, supportingContent = { Text("Review local, remote and base versions") },
+                leadingContent = { Icon(Icons.Default.Difference, null, tint = MaterialTheme.colorScheme.primary) },
+                trailingContent = { Icon(Icons.Default.ChevronRight, null) }, modifier = Modifier.clickable { reviewing = conflict })
         }
         if (model.conflictCursor != null) item { TextButton(onClick = { model.readConflicts(more = true) }, enabled = !model.busy) { Text("Load more conflicts") } }
-        if (model.conflicts.isEmpty() && !model.busy) item { Text("No conflicts in the current page.") }
+        if (model.conflicts.isEmpty() && !model.busy) item { Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainer) {
+            ListItem(headlineContent = { Text("No conflicts to review") }, supportingContent = { Text("No preserved conflicts were returned for the current page.") },
+                leadingContent = { Icon(Icons.Default.CheckCircleOutline, null) }, colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer))
+        } }
         item { Text("Resolution history", style = MaterialTheme.typography.titleLarge) }
         items(model.resolutionIds, key = { "history:$it" }) { id ->
             TextButton(onClick = { model.readResolution(id) }, enabled = !model.busy) { Text("Inspect resolution $id") }
@@ -49,8 +57,8 @@ private fun ConflictReview(profileId: String, conflict: JsonObject, model: Facet
     var confirm by remember { mutableStateOf(false) }
     val mutationId = rememberSaveable(profileId, conflict.getValue("id").toString(), choice, newPath, replacement, deleteFile) { UUID.randomUUID().toString() }
     val markdown = conflict.getValue("path").jsonPrimitive.content.endsWith(".md", ignoreCase = true)
-    AlertDialog(onDismissRequest = { if (!model.busy) dismiss() }, title = { Text(conflict.getValue("path").jsonPrimitive.content) }, text = {
-        Column(Modifier.heightIn(max = 520.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    FacetSheet("Review conflict", { if (!model.busy) dismiss() }, "Resolve", !model.busy && (choice != "keep_both" || newPath.isNotBlank()), save = { confirm = true }) {
+            Text(conflict.getValue("path").jsonPrimitive.content, style = MaterialTheme.typography.titleMedium)
             listOf("base", "local", "remote").forEach { version ->
                 val metadata = conflict.getValue(version)
                 Text("$version: ${if (metadata == JsonNull) "deleted" else metadata.jsonObject.getValue("size").jsonPrimitive.content + " bytes"}")
@@ -64,7 +72,6 @@ private fun ConflictReview(profileId: String, conflict: JsonObject, model: Facet
                 OutlinedTextField(replacement, { replacement = it }, label = { Text("Complete replacement Markdown") }, minLines = 5, enabled = !model.busy && !deleteFile)
                 Row { Checkbox(deleteFile, { deleteFile = it }); Text("Resolve as deleted file", Modifier.padding(top = 12.dp)) }
             }
-        }
-    }, confirmButton = { TextButton(onClick = { confirm = true }, enabled = !model.busy && (choice != "keep_both" || newPath.isNotBlank())) { Text("Resolve") } }, dismissButton = { TextButton(onClick = dismiss, enabled = !model.busy) { Text("Close") } })
+    }
     if (confirm) AlertDialog(onDismissRequest = { confirm = false }, title = { Text("Apply this resolution?") }, text = { Text("Rust will verify all four version revisions before changing the vault. Preserved versions remain recoverable through resolution history.") }, confirmButton = { TextButton(onClick = { model.resolveConflict(profileId, conflict, choice, newPath, if (deleteFile) null else replacement, mutationId) { confirm = false; dismiss() } }, enabled = !model.busy) { Text("Apply resolution") } }, dismissButton = { TextButton(onClick = { confirm = false }) { Text("Review again") } })
 }

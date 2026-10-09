@@ -18,6 +18,7 @@ public final class FacetStore {
     public internal(set) var snapshot: FacetSnapshot?
     public internal(set) var error: String?
     public internal(set) var savedNotice: String?
+    internal var appliedFeedback: FacetAppliedFeedback?
     public internal(set) var isLoading = false
     public internal(set) var conflicts: [FacetConflict] = []
     public internal(set) var conflictCursor: String?
@@ -89,6 +90,7 @@ public final class FacetStore {
     }
     @ObservationIgnored internal var selectionGeneration: UInt64 = 0
     @ObservationIgnored internal let clock: SystemClock
+    @ObservationIgnored internal let actionCoordinator = FacetActionCoordinator()
     @ObservationIgnored internal var displayedQuery: FacetValue?
     @ObservationIgnored internal var captureMutationID = UUID().uuidString
     @ObservationIgnored internal var captureCommand: FacetValue?
@@ -225,6 +227,12 @@ public final class FacetStore {
     }
 
     public func removeProfile(_ profile: FacetProfile) async {
+        _ = await FacetDraftCoordinator.shared.transition(owner: self, profileID: profile.id) {
+            await self.removeProfileAfterDrafts(profile)
+        }
+    }
+
+    private func removeProfileAfterDrafts(_ profile: FacetProfile) async {
         guard let engine else { return }
         let capturedAccount = account
         await removeProfileWithOperations(
@@ -242,9 +250,14 @@ public final class FacetStore {
                 ownsEngine: { self.engine === engine },
                 reconcile: { if self.foreground { await self.resumeSync() } }))
     }
+}
 
+extension FacetStore {
     public func clearError() { error = nil }
-    public func clearSavedNotice() { savedNotice = nil }
+    public func clearSavedNotice() {
+        savedNotice = nil
+        appliedFeedback = nil
+    }
 
     public func handleURL(_ url: URL) {
         if url.host == "today" {

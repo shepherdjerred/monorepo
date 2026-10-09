@@ -372,7 +372,7 @@ Creation reads the effective task folder and title policy. Filename title
 storage uses the semantic title; frontmatter title storage supports title,
 slug, custom, and clock-derived names. Zettel/timestamp names use local
 `yyyyMMddHHmmss` from the explicit execution timezone. Generated collisions use
-the first unused numeric suffix, beginning with ` (2)`. Enabled body templates
+the first unused numeric suffix, beginning with a space followed by `(2)`. Enabled body templates
 expand portable task/date variables and merge template fields with explicit
 creation/default/system values taking precedence. Archive supports a mapped
 field or tag and an optional configured destination folder.

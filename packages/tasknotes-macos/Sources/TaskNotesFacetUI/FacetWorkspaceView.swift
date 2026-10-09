@@ -8,6 +8,14 @@ internal struct FacetWorkspaceView: View {
     @Binding var board: Bool
 
     var body: some View {
+        if store.profiles.isEmpty {
+            onboardingWorkspace
+        } else {
+            FacetNativeWorkspace(store: store, importsFolder: $importsFolder)
+        }
+    }
+
+    private var onboardingWorkspace: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 ForEach(store.pendingImports) { imported in

@@ -137,6 +137,18 @@ namespace TaskNotes.Windows.Host
         /// <summary>Exact Markdown revision loaded by the editor.</summary>
         public string? ExpectedRevision { get; init; }
 
+        /// <summary>The authoritative date chosen by the standalone core query.</summary>
+        public string? EffectiveDate { get; init; }
+
+        /// <summary>Distinguishes a core null effective date from a legacy projection.</summary>
+        public bool HasCoreEffectiveDate { get; init; }
+
+        /// <summary>Exact configured workflow color for native decoration.</summary>
+        public string? StatusColor { get; init; }
+
+        /// <summary>Exact configured priority color for native decoration.</summary>
+        public string? PriorityColor { get; init; }
+
         /// <summary>Initializes a projected task.</summary>
         public TaskItem(
             string id,
@@ -243,7 +255,7 @@ namespace TaskNotes.Windows.Host
         public bool IsPending { get; }
 
         /// <summary>Gets the recurring occurrence represented by the row.</summary>
-        public string? OccurrenceDate { get; }
+        public string? OccurrenceDate { get; init; }
 
         /// <summary>Gets the presentation group label.</summary>
         public string GroupLabel { get; }
@@ -258,7 +270,10 @@ namespace TaskNotes.Windows.Host
         // The projected occurrence identifies the row the checkbox acts on, so it has to
         // win: a later recurrence shown with its persisted date would complete a
         // different day from the one the user is reading.
-        public string DateLabel => OccurrenceDate ?? Due ?? Scheduled ?? string.Empty;
+        public string DateLabel =>
+            HasCoreEffectiveDate
+                ? EffectiveDate ?? string.Empty
+                : OccurrenceDate ?? Due ?? Scheduled ?? string.Empty;
 
         /// <summary>Gets a compact taxonomy label.</summary>
         public string TaxonomyLabel => string.Join("  ", Projects.Concat(Contexts).Concat(Tags));

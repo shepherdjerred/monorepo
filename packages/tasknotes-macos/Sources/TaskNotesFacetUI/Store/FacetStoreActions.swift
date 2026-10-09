@@ -4,17 +4,44 @@ public import TaskNotesKit
 extension FacetStore {
     public func execute(
         _ command: [String: FacetValue], mutationID: String = UUID().uuidString,
-        profileID owningProfile: String? = nil
+        profileID owningProfile: String? = nil, admission: FacetMutationAdmission? = nil
     ) async -> Bool {
         guard let engine, let profileID = owningProfile ?? selectedProfileID else { return false }
-        return await runSavedAction(
+        return await actionCoordinator.submit {
+            await self.executeDirect(
+                command, mutationID: mutationID, profileID: profileID, engine: engine,
+                admission: admission)
+        }
+    }
+
+    internal func executeDirect(
+        _ command: [String: FacetValue], mutationID: String, profileID: String,
+        engine: FacetEngine, admission: FacetMutationAdmission? = nil
+    ) async -> Bool {
+        guard self.engine === engine, selectedProfileID == profileID,
+            !removingProfileIDs.contains(profileID)
+        else {
+            error =
+                "This action still belongs to its original vault. Return to that vault to retry."
+            return false
+        }
+        let applied = await runSavedAction(
             action: (mutationID: mutationID, profileID: profileID),
             ownsEngine: { self.engine === engine },
             apply: {
                 try await engine.execute(
-                    profileID: profileID, command: .object(command), mutationID: mutationID)
+                    profileID: profileID, command: .object(command), mutationID: mutationID,
+                    admission: admission)
             }, cleanup: { try await engine.discardObservedMutation(id: mutationID) },
             reload: { await self.reloadQuery(preservingSavedNotice: true) })
+        if applied {
+            FacetNativeFeedback.shared.applied(command)
+        } else if admission?.mutationID != nil {
+            await refreshSavedActions(
+                ownsPresentation: { self.engine === engine },
+                load: { try await engine.pendingMutations() })
+        }
+        return applied
     }
 
     public func createTask() async {
@@ -118,16 +145,16 @@ extension FacetStore {
         ])
     }
 
-    public func toggle(_ task: FacetTask, profileID: String) async {
-        guard !isSaving, let engine else { return }
+    @discardableResult public func toggle(_ task: FacetTask, profileID: String) async -> Bool {
+        guard let engine else { return false }
         let current = presentationOwner(
             profileID: profileID, ownsEngine: { self.engine === engine })
-        guard current() else { return }
+        guard current() else { return false }
         clearSavedNotice()
         if task.isRecurring, task.occurrenceDate == nil {
             error =
                 "Open Agenda or another dated view to choose the recurring occurrence to complete."
-            return
+            return false
         }
         var command: [String: FacetValue] = [
             "kind": .string("set_completion"), "completed": .bool(!task.completed),
@@ -135,7 +162,7 @@ extension FacetStore {
             "expectedRevision": .string(task.revision),
         ]
         if let day = task.occurrenceDate { command["occurrenceDate"] = .string(day) }
-        _ = await perform(command, profileID: profileID)
+        return await perform(command, profileID: profileID)
     }
 
     public func setStatus(_ task: FacetTask, status: String, profileID: String) async {
@@ -148,25 +175,26 @@ extension FacetStore {
     }
 
     public func perform(_ command: [String: FacetValue], profileID: String) async -> Bool {
-        guard let engine, !isSaving else { return false }
-        let ownsPresentation = presentationOwner(
-            profileID: profileID, ownsEngine: { self.engine === engine })
-        guard ownsPresentation() else { return false }
-        isSaving = true
-        defer { isSaving = false }
-        do {
-            let existing = try await engine.savedMutationID(
-                profileID: profileID, command: .object(command))
-            guard ownsPresentation() else { return false }
-            return await execute(
-                command, mutationID: existing ?? UUID().uuidString, profileID: profileID)
-        } catch {
-            if ownsPresentation() { self.error = error.localizedDescription }
-            return false
+        guard let engine else { return false }
+        return await actionCoordinator.submit {
+            do {
+                guard self.engine === engine, self.selectedProfileID == profileID else {
+                    self.error = "Return to the action's original vault to retry it."
+                    return false
+                }
+                let existing = try await engine.savedMutationID(
+                    profileID: profileID, command: .object(command))
+                return await self.executeDirect(
+                    command, mutationID: existing ?? UUID().uuidString,
+                    profileID: profileID, engine: engine)
+            } catch {
+                self.reportNativeFailure(error)
+                return false
+            }
         }
     }
     public func retireSavedAction(_ action: FacetPendingMutation) async {
-        guard let engine, !isSaving, !action.canResume,
+        guard let engine, !isSaving,
             selectedProfileID == action.profileID
         else { return }
         let ownsPresentation = presentationOwner(
@@ -174,7 +202,7 @@ extension FacetStore {
         isSaving = true
         defer { isSaving = false }
         do {
-            try await engine.retireSavedMutation(id: action.id)
+            try await engine.retireSavedMutation(id: action.id, expectedProfileID: action.profileID)
             await refreshSavedActions(
                 ownsPresentation: ownsPresentation, load: { try await engine.pendingMutations() })
         } catch {

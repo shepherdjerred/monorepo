@@ -2,12 +2,14 @@
 <Application
     x:Class="TaskNotes.Windows.App.App"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:app="using:TaskNotes.Windows.App">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
             </ResourceDictionary.MergedDictionaries>
+            <app:ConfiguredColorConverter x:Key="ConfiguredColorConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

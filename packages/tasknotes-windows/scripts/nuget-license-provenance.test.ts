@@ -2,6 +2,7 @@ import path from "node:path";
 import { tmpdir } from "node:os";
 import { mkdir, mkdtemp, copyFile } from "node:fs/promises";
 import { describe, expect, test } from "vitest";
+import { z } from "zod";
 import {
   NuGetLicenseProvenance,
   publisherLicenseFor,
@@ -35,6 +36,47 @@ async function noticeItem(kind: string, file: string): Promise<string> {
 }
 
 describe("exact publisher URL package provenance", () => {
+  test("the cached producer hashes every prepared-notice source input", async () => {
+    const repositoryRoot = path.resolve(import.meta.dir, "../../..");
+    const packageConfig = z
+      .object({
+        tasks: z.object({
+          generate: z.object({
+            inputs: z.array(z.string()),
+            outputs: z.array(z.string()),
+          }),
+        }),
+      })
+      .parse(
+        Bun.JSONC.parse(
+          await Bun.file(path.join(import.meta.dir, "../turbo.json")).text(),
+        ),
+      );
+    const rootConfig = z
+      .object({ globalDependencies: z.array(z.string()) })
+      .parse(
+        Bun.JSONC.parse(
+          await Bun.file(path.join(repositoryRoot, "turbo.json")).text(),
+        ),
+      );
+    const patterns = [
+      ...rootConfig.globalDependencies,
+      ...packageConfig.tasks.generate.inputs.map((input) =>
+        input.startsWith("$TURBO_ROOT$/")
+          ? input.slice("$TURBO_ROOT$/".length)
+          : `packages/tasknotes-windows/${input}`,
+      ),
+    ].map((input) => new Bun.Glob(input));
+    for (const input of await preparedNoticeInputs(repositoryRoot))
+      expect(
+        patterns.some((pattern) => pattern.match(input)),
+        input,
+      ).toBe(true);
+    expect(packageConfig.tasks.generate.outputs).toEqual([
+      "generated/notices/**",
+    ]);
+  });
+
   test("binds the captured license only to the exact locked package", async () => {
     expect(source()).toEqual(pinned);
     const bytes = await Bun.file(
@@ -143,7 +185,9 @@ describe("exact publisher URL package provenance", () => {
       }),
     ).toThrow();
   });
+});
 
+describe("prepared-notice production input verification", () => {
   test("the real prepared-notice MSBuild gate rejects a changed production helper", async () => {
     const repositoryRoot = path.resolve(import.meta.dir, "../../..");
     const fixtureRoot = await mkdtemp(

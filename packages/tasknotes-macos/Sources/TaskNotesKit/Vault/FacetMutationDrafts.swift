@@ -160,11 +160,17 @@ internal enum FacetRetainedActions {
     ) throws {
         try schema.validate(saved.mutation, definition: "retainedMutation")
         try schema.validate(outcome, definition: "mutationReceipt")
-        guard !saved.canResume,
-            outcome.object?.fields["mutationId"] == .string(saved.id)
+        guard outcome.object?.fields["mutationId"] == .string(saved.id)
         else { throw FacetContractError.unsupportedResponse }
         let state = outcome.object?.fields["state"]?.text
+        if let receipt = outcome.object?.fields["receipt"]?.object?.fields {
+            guard receipt["mutationId"] == .string(saved.id) else {
+                throw FacetContractError.unsupportedResponse
+            }
+        }
         if state == "applied" {
+            // Supported applied actions must be observed/resumed, never silently discarded.
+            guard !saved.canResume else { throw FacetDraftError.changedNote }
             guard let receipt = outcome.object?.fields["receipt"]?.object?.fields,
                 receipt["mutationId"] == .string(saved.id), receipt["applied"] == .bool(true)
             else { throw FacetContractError.unsupportedResponse }

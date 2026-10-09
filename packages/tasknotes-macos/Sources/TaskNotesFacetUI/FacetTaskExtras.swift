@@ -5,6 +5,7 @@ import TaskNotesKit
 struct FacetTaskExtras: Equatable {
     var tags: String
     var recurrence: String
+    var recurrenceAnchor: String
     var skipped: String
     var attachments: String
     var reminders: FacetValue
@@ -14,6 +15,7 @@ struct FacetTaskExtras: Equatable {
     init(properties: [String: FacetValue]) {
         tags = Self.tokens(properties["tags"])
         recurrence = properties["recurrence"]?.text ?? ""
+        recurrenceAnchor = properties["recurrenceAnchor"]?.text ?? "scheduled"
         skipped = Self.tokens(properties["skippedInstances"])
         attachments = Self.tokens(properties["attachments"])
 
@@ -33,6 +35,9 @@ struct FacetTaskExtras: Equatable {
         }
         if recurrence != previous.recurrence {
             changes["recurrence"] = recurrence.isEmpty ? .null : .string(recurrence)
+        }
+        if recurrenceAnchor != previous.recurrenceAnchor {
+            changes["recurrenceAnchor"] = .string(recurrenceAnchor)
         }
         if reminders != previous.reminders { changes["reminders"] = reminders }
         if dependencies != previous.dependencies { changes["blockedBy"] = dependencies }

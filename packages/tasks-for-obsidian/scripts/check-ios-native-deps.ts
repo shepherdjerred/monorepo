@@ -63,15 +63,25 @@ export function findNativeBootstrapMessages(options: {
   wrapper: string;
   project: string;
   wrapperExecutable: boolean;
+  packageJson: string;
 }): string[] {
   const messages = findToolchainMessages(options);
   messages.push(
     ...findWrapperMessages(options.wrapper, options.wrapperExecutable),
   );
+  if (
+    !/"ios:native:generate"\s*:\s*"ios\/ci_scripts\/mise-native\.sh exec -- xcodegen generate --spec ios\/project\.yml --project ios"/.test(
+      options.packageJson,
+    )
+  ) {
+    messages.push(
+      "Native project generation must use the tracked pinned Apple bootstrap, without untracked root bin tools.",
+    );
+  }
   const requirements = [
     [
-      'facet_mise="$facet_repo_root/bin/mise"',
-      "Post-clone must bootstrap the shared repository mise wrapper.",
+      'facet_mise="$facet_repo_root/packages/tasks-for-obsidian/ios/ci_scripts/mise-native.sh"',
+      "Post-clone must bootstrap the tracked native Apple mise wrapper.",
     ],
     [
       '"$facet_mise" install --yes bun rust aqua:yonaskolb/XcodeGen',
@@ -118,10 +128,14 @@ export function findNativeBootstrapMessages(options: {
       "Post-clone contains a separate tool pin or legacy React Native bootstrap.",
     );
   }
+  const appTarget = options.project
+    .split("\n  TasksForObsidian:")[1]
+    ?.split(/\n {2}[\w-]+:/i)[0];
   if (
-    !options.project.includes("product: TaskNotesFacetUI") ||
-    !options.project.includes("path: Facet") ||
-    !options.project.includes(
+    appTarget === undefined ||
+    !appTarget.includes("product: TaskNotesFacetUI") ||
+    !appTarget.includes("path: Facet") ||
+    !appTarget.includes(
       "PRODUCT_BUNDLE_IDENTIFIER: org.reactjs.native.example.TasksForObsidian",
     ) ||
     !options.project.includes(
@@ -173,9 +187,9 @@ function findWrapperMessages(wrapper: string, executable: boolean): string[] {
       "Shared mise wrapper must be executable in a fresh checkout.",
     );
   if (
-    !/mise_version="\$\{MISE_VERSION:-\d+\.\d+\.\d+\}"/.test(wrapper) ||
+    !/mise_version="\d+\.\d+\.\d+"/.test(wrapper) ||
     !wrapper.includes('export MISE_DATA_DIR="$localized_dir"') ||
-    !wrapper.includes('"$(shasum_bin)" -c')
+    !wrapper.includes("shasum -a 256 -c")
   ) {
     messages.push(
       "Shared mise wrapper must pin, localize and verify its bootstrap download.",
@@ -308,10 +322,17 @@ function main(): void {
           path.join(rootDir, "ios", "ci_scripts", "ci_post_clone.sh"),
           "utf8",
         ),
-        wrapper: readFileSync(path.join(repoRoot, "bin", "mise"), "utf8"),
+        wrapper: readFileSync(
+          path.join(rootDir, "ios", "ci_scripts", "mise-native.sh"),
+          "utf8",
+        ),
         wrapperExecutable:
-          (statSync(path.join(repoRoot, "bin", "mise")).mode & 0o111) !== 0,
+          (statSync(path.join(rootDir, "ios", "ci_scripts", "mise-native.sh"))
+            .mode &
+            0o111) !==
+          0,
         project: readFileSync(path.join(rootDir, "ios", "project.yml"), "utf8"),
+        packageJson: readFileSync(path.join(rootDir, "package.json"), "utf8"),
       }),
     );
   }

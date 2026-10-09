@@ -217,5 +217,9 @@ namespace TaskNotes.Windows.Host
     }
 
     /// <summary>A configured wire value and its display label.</summary>
-    public sealed record WorkflowChoice(string Value, string Label);
+    public sealed record WorkflowChoice(string Value, string Label)
+    {
+        /// <summary>Exact configured presentation color, preserved independently from workflow meaning.</summary>
+        public string? Color { get; init; }
+    }
 }

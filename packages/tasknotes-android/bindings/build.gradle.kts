@@ -1,5 +1,6 @@
 plugins { id("com.android.library") }
 android {
+    buildToolsVersion = "37.0.0"
     namespace = "red.sjer.facet.bindings"
     compileSdk = 37
     defaultConfig { minSdk = 29; ndk { abiFilters += listOf("arm64-v8a", "x86_64") } }

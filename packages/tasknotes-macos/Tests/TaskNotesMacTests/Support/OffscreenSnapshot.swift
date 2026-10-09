@@ -70,6 +70,7 @@ enum OffscreenSnapshot {
     ///   - size: the render size, in points.
     ///   - appearance: light or dark. Set on the window, the hosting view, and
     ///     the SwiftUI environment.
+    ///   - highContrast: use the system high-contrast AppKit appearance.
     /// - Returns: what was written, including the check that it is not blank.
     /// - Throws: ``Failure`` when the bitmap or the PNG encoding is refused, or
     ///   when the file cannot be written.
@@ -77,9 +78,10 @@ enum OffscreenSnapshot {
         _ view: some View,
         named name: String,
         size: CGSize,
-        appearance: SnapshotAppearance
+        appearance: SnapshotAppearance,
+        highContrast: Bool = false
     ) throws -> RenderedSnapshot {
-        let rep = try render(view, size: size, appearance: appearance)
+        let rep = try render(view, size: size, appearance: appearance, highContrast: highContrast)
         guard let png = rep.representation(using: .png, properties: [:]) else {
             throw Failure.pngEncodingRefused(name)
         }
@@ -101,11 +103,24 @@ enum OffscreenSnapshot {
     private static func render(
         _ view: some View,
         size: CGSize,
-        appearance: SnapshotAppearance
+        appearance: SnapshotAppearance,
+        highContrast: Bool
     ) throws -> NSBitmapImageRep {
         prepareApplication()
 
-        let nsAppearance = NSAppearance(named: appearance.appearanceName)
+        let appearanceName =
+            highContrast
+            ? (appearance == .dark
+                ? NSAppearance.Name.accessibilityHighContrastDarkAqua
+                : NSAppearance.Name.accessibilityHighContrastAqua)
+            : appearance.appearanceName
+        let nsAppearance = NSAppearance(named: appearanceName)
+        // Bridged sidebar labels use the test application's semantic appearance.
+        // Scope it to this native render; setting only the hosting window leaves
+        // native control text in the process's initial light appearance.
+        let previousAppearance = NSApplication.shared.appearance
+        NSApplication.shared.appearance = nsAppearance
+        defer { NSApplication.shared.appearance = previousAppearance }
         let hosting = NSHostingView(
             rootView:
                 view

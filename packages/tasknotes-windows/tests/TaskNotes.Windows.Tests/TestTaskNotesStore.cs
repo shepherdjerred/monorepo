@@ -2,7 +2,7 @@ using TaskNotes.Windows.Host;
 
 namespace TaskNotes.Windows.Tests
 {
-    internal sealed class TestTaskNotesStore : ITaskNotesStore
+    internal class TestTaskNotesStore : ITaskNotesStore
     {
         internal int AddCount { get; private set; }
         internal int DeleteCount { get; private set; }
@@ -24,6 +24,12 @@ namespace TaskNotes.Windows.Tests
         internal QuickAddPreview Preview { get; set; } =
             new("Preview", null, "normal", [], [], [], null);
         internal Func<string?, string?, CancellationToken, Task>? Reconfigure { get; set; }
+        internal Func<
+            string,
+            CancellationToken,
+            Task<QuickAddPreview>
+        >? PreviewOperation { get; set; }
+        internal Func<string, TaskListQuery, CancellationToken, Task>? AddOperation { get; set; }
 
         public event EventHandler? StateChanged;
 
@@ -68,7 +74,7 @@ namespace TaskNotes.Windows.Tests
         public Task<QuickAddPreview> PreviewQuickAddAsync(
             string input,
             CancellationToken cancellationToken = default
-        ) => Task.FromResult(Preview);
+        ) => PreviewOperation?.Invoke(input, cancellationToken) ?? Task.FromResult(Preview);
 
         public Task AddAsync(
             string input,
@@ -79,7 +85,7 @@ namespace TaskNotes.Windows.Tests
             AddCount++;
             LastAddedInput = input;
             LastAddContext = context;
-            return Task.CompletedTask;
+            return AddOperation?.Invoke(input, context, cancellationToken) ?? Task.CompletedTask;
         }
 
         public Task UpdateTaskAsync(

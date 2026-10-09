@@ -75,8 +75,9 @@ class FacetEngineRunner private constructor(context: Context) {
     suspend fun cachedSnapshot(id: String, query: JsonObject): VaultSnapshot? = try { snapshot(id, query) }
     catch (_: uniffi.TaskNotesCore.FacetEngineException.Configuration) { null }
 
-    suspend fun execute(id: String, command: JsonObject, mutationId: String = UUID.randomUUID().toString()) = call {
+    suspend fun execute(id: String, command: JsonObject, mutationId: String = UUID.randomUUID().toString(), admitted: () -> Unit = {}) = call {
         val request = drafts.envelope(id, mutationId, command, Instant.now().toString())
+        admitted()
         applyMutation(id, request)
     }
 

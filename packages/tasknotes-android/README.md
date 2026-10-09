@@ -23,6 +23,21 @@ SQLite/vault storage, Keystore credentials, account HTTP, and the serial
 WebSocket executor. `app` supplies Compose workflows and lifecycle. Task,
 configuration and Sync policy stay in Rust. No TaskNotes server is required.
 
+The Compose app uses Inbox, Today, Upcoming and Browse navigation, grouped core
+pages, and native task/capture/filter sheets. Presentation tokens and configured
+color interpretation are validated from `tasknotes-fixtures/presentation`.
+Unknown workflow values retain their vault labels; unsupported colors keep the
+raw value and expose a per-choice diagnostic with native neutral rendering.
+Appearance and motion follow Android settings; haptic and sound preferences are
+stored on this device.
+
+Completion admission is per vault, note path and occurrence. Different rows can
+queue independently while each submitted action retains its original revision
+and mutation ID. A failed editor or capture becomes read-only after durable
+admission and routes recovery through Saved actions. Saved feedback is consumed
+once per ViewModel lifetime, and snackbar Undo retains its owning vault and exact
+receipt while rechecking the engine's current head before execution.
+
 Existing duration and time-entry metadata remains untouched in vault notes.
 
 The host validates the complete raw mutation receipt before presenting template

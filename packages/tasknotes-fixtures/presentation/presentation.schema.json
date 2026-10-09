@@ -1,0 +1,443 @@
+{
+  "title": "Facet native presentation tokens",
+  "description": "Strict shared values and semantic roles. Native controls/fonts/colors retain platform accessibility behavior.",
+  "$ref": "#/$defs/tokens",
+  "$defs": {
+    "tokens": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "colorRoles",
+        "spacing",
+        "radii",
+        "typography",
+        "hitTargets",
+        "motion",
+        "desktop",
+        "mobile"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "type": "integer",
+          "const": 1
+        },
+        "colorRoles": {
+          "type": "array",
+          "const": [
+            "brand",
+            "background",
+            "surface",
+            "surfaceElevated",
+            "text",
+            "textSecondary",
+            "textTertiary",
+            "separator",
+            "success",
+            "warning",
+            "error"
+          ]
+        },
+        "spacing": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["xxs", "xs", "sm", "md", "lg", "xl", "xxl", "xxxl"],
+          "properties": {
+            "xxs": {
+              "type": "integer",
+              "const": 2
+            },
+            "xs": {
+              "type": "integer",
+              "const": 4
+            },
+            "sm": {
+              "type": "integer",
+              "const": 8
+            },
+            "md": {
+              "type": "integer",
+              "const": 12
+            },
+            "lg": {
+              "type": "integer",
+              "const": 16
+            },
+            "xl": {
+              "type": "integer",
+              "const": 20
+            },
+            "xxl": {
+              "type": "integer",
+              "const": 24
+            },
+            "xxxl": {
+              "type": "integer",
+              "const": 32
+            }
+          }
+        },
+        "radii": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["small", "medium", "large", "capsule"],
+          "properties": {
+            "small": {
+              "type": "integer",
+              "const": 6
+            },
+            "medium": {
+              "type": "integer",
+              "const": 10
+            },
+            "large": {
+              "type": "integer",
+              "const": 14
+            },
+            "capsule": {
+              "type": "integer",
+              "const": 999
+            }
+          }
+        },
+        "typography": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "title",
+            "heading",
+            "subheading",
+            "body",
+            "bodySmall",
+            "caption",
+            "label"
+          ],
+          "properties": {
+            "title": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["size", "weight", "lineHeight"],
+              "properties": {
+                "size": {
+                  "type": "integer",
+                  "const": 28
+                },
+                "weight": {
+                  "type": "integer",
+                  "const": 700
+                },
+                "lineHeight": {
+                  "type": "integer",
+                  "const": 34
+                }
+              }
+            },
+            "heading": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["size", "weight", "lineHeight"],
+              "properties": {
+                "size": {
+                  "type": "integer",
+                  "const": 22
+                },
+                "weight": {
+                  "type": "integer",
+                  "const": 600
+                },
+                "lineHeight": {
+                  "type": "integer",
+                  "const": 28
+                }
+              }
+            },
+            "subheading": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["size", "weight", "lineHeight"],
+              "properties": {
+                "size": {
+                  "type": "integer",
+                  "const": 17
+                },
+                "weight": {
+                  "type": "integer",
+                  "const": 600
+                },
+                "lineHeight": {
+                  "type": "integer",
+                  "const": 22
+                }
+              }
+            },
+            "body": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["size", "weight", "lineHeight"],
+              "properties": {
+                "size": {
+                  "type": "integer",
+                  "const": 17
+                },
+                "weight": {
+                  "type": "integer",
+                  "const": 400
+                },
+                "lineHeight": {
+                  "type": "integer",
+                  "const": 22
+                }
+              }
+            },
+            "bodySmall": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["size", "weight", "lineHeight"],
+              "properties": {
+                "size": {
+                  "type": "integer",
+                  "const": 15
+                },
+                "weight": {
+                  "type": "integer",
+                  "const": 400
+                },
+                "lineHeight": {
+                  "type": "integer",
+                  "const": 20
+                }
+              }
+            },
+            "caption": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["size", "weight", "lineHeight"],
+              "properties": {
+                "size": {
+                  "type": "integer",
+                  "const": 12
+                },
+                "weight": {
+                  "type": "integer",
+                  "const": 500
+                },
+                "lineHeight": {
+                  "type": "integer",
+                  "const": 16
+                }
+              }
+            },
+            "label": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["size", "weight", "lineHeight"],
+              "properties": {
+                "size": {
+                  "type": "integer",
+                  "const": 13
+                },
+                "weight": {
+                  "type": "integer",
+                  "const": 600
+                },
+                "lineHeight": {
+                  "type": "integer",
+                  "const": 18
+                }
+              }
+            }
+          }
+        },
+        "hitTargets": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["desktop", "mobile", "android"],
+          "properties": {
+            "desktop": {
+              "type": "integer",
+              "const": 28
+            },
+            "mobile": {
+              "type": "integer",
+              "const": 44
+            },
+            "android": {
+              "type": "integer",
+              "const": 48
+            }
+          }
+        },
+        "motion": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["milliseconds", "checkboxSpring"],
+          "properties": {
+            "milliseconds": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "rowChange",
+                "hover",
+                "toastEnter",
+                "toastExit",
+                "fieldHint",
+                "checkboxFill"
+              ],
+              "properties": {
+                "rowChange": {
+                  "type": "integer",
+                  "const": 200
+                },
+                "hover": {
+                  "type": "integer",
+                  "const": 120
+                },
+                "toastEnter": {
+                  "type": "integer",
+                  "const": 180
+                },
+                "toastExit": {
+                  "type": "integer",
+                  "const": 140
+                },
+                "fieldHint": {
+                  "type": "integer",
+                  "const": 120
+                },
+                "checkboxFill": {
+                  "type": "integer",
+                  "const": 80
+                }
+              }
+            },
+            "checkboxSpring": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["peakScale", "damping", "stiffness"],
+              "properties": {
+                "peakScale": {
+                  "type": "number",
+                  "const": 1.2
+                },
+                "damping": {
+                  "type": "integer",
+                  "const": 12
+                },
+                "stiffness": {
+                  "type": "integer",
+                  "const": 600
+                }
+              }
+            }
+          }
+        },
+        "desktop": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sidebar",
+            "inspector",
+            "dateColumnMin",
+            "rowVerticalPadding"
+          ],
+          "properties": {
+            "sidebar": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["min", "ideal", "max"],
+              "properties": {
+                "min": {
+                  "type": "integer",
+                  "const": 180
+                },
+                "ideal": {
+                  "type": "integer",
+                  "const": 220
+                },
+                "max": {
+                  "type": "integer",
+                  "const": 320
+                }
+              }
+            },
+            "inspector": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["min", "ideal", "max"],
+              "properties": {
+                "min": {
+                  "type": "integer",
+                  "const": 300
+                },
+                "ideal": {
+                  "type": "integer",
+                  "const": 340
+                },
+                "max": {
+                  "type": "integer",
+                  "const": 520
+                }
+              }
+            },
+            "dateColumnMin": {
+              "type": "integer",
+              "const": 74
+            },
+            "rowVerticalPadding": {
+              "type": "integer",
+              "const": 4
+            }
+          }
+        },
+        "mobile": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["checkboxSize", "rowVerticalPadding", "detailDetents"],
+          "properties": {
+            "checkboxSize": {
+              "type": "integer",
+              "const": 22
+            },
+            "rowVerticalPadding": {
+              "type": "integer",
+              "const": 8
+            },
+            "detailDetents": {
+              "type": "array",
+              "const": [0.75, 1]
+            }
+          }
+        }
+      }
+    },
+    "colorPolicy": {
+      "type": "object",
+      "const": {
+        "schemaVersion": 1,
+        "hexFormats": ["#RGB", "#RGBA", "#RRGGBB", "#RRGGBBAA"],
+        "hexOrder": "rgba",
+        "normalization": "trim-whitespace-and-lowercase",
+        "namedColors": {
+          "black": "#000000",
+          "silver": "#c0c0c0",
+          "gray": "#808080",
+          "white": "#ffffff",
+          "maroon": "#800000",
+          "red": "#ff0000",
+          "purple": "#800080",
+          "fuchsia": "#ff00ff",
+          "green": "#008000",
+          "lime": "#00ff00",
+          "olive": "#808000",
+          "yellow": "#ffff00",
+          "navy": "#000080",
+          "blue": "#0000ff",
+          "teal": "#008080",
+          "aqua": "#00ffff",
+          "transparent": "#00000000"
+        },
+        "unsupportedValue": "preserve-raw-value-show-per-choice-diagnostic-use-native-semantic-neutral"
+      }
+    }
+  }
+}

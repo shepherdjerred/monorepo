@@ -11,6 +11,7 @@ export async function preparedNoticeInputs(
     "packages/tasknotes-windows/Directory.Build.targets",
     "packages/tasknotes-windows/scripts/cross-build.sh",
     "packages/tasknotes-windows/scripts/prepare-notices.ts",
+    "packages/tasknotes-windows/scripts/generate-notices.ts",
     "packages/tasknotes-windows/scripts/prepared-notice-inputs.ts",
     "packages/tasknotes-windows/scripts/generate-nuget-notices.ts",
     "packages/tasknotes-windows/scripts/nuget-license-provenance.ts",

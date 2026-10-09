@@ -12,6 +12,238 @@ namespace TaskNotes.Windows.Tests;
 [TestClass]
 public sealed class FacetStoreTests
 {
+    /// <summary>Retained ID-based consumers still support their existing bulk command/undo contract.</summary>
+    [TestMethod]
+    public async Task RetainedFacadeBulkCommandsRemainCompatible()
+    {
+        using Fixture fixture = new();
+        await using var store = fixture.Open();
+        await store.InitializeAsync(null, null, TestContext.CancellationToken);
+        await store.AddAsync(
+            "First compatibility task",
+            TaskListQuery.Today,
+            TestContext.CancellationToken
+        );
+        await store.AddAsync(
+            "Second compatibility task",
+            TaskListQuery.Today,
+            TestContext.CancellationToken
+        );
+        string[] ids = store.State.AllTasks.Select(task => task.Id).ToArray();
+        await store.CompleteTasksAsync(ids, TestContext.CancellationToken);
+        Assert.IsTrue(store.State.AllTasks.All(task => task.IsCompleted));
+        await store.UndoCompletionAsync(TestContext.CancellationToken);
+        await store.ScheduleTasksAsync(ids, "2026-10-12", TestContext.CancellationToken);
+        await store.PrioritizeTasksAsync(ids, "high", TestContext.CancellationToken);
+        Assert.IsTrue(
+            store.State.AllTasks.All(task =>
+                !task.IsCompleted && task.Scheduled == "2026-10-12" && task.Priority == "high"
+            )
+        );
+        await store.SetStatusAsync(ids[0], "done", TestContext.CancellationToken);
+        Assert.IsTrue(store.State.AllTasks.Single(task => task.Id == ids[0]).IsCompleted);
+        await store.DeleteTasksAsync(ids, TestContext.CancellationToken);
+        Assert.IsEmpty(store.State.AllTasks);
+    }
+
+    /// <summary>Named-view dialogs freeze the original query/profile and expose the exact durable submission.</summary>
+    [TestMethod]
+    public async Task SavedViewOwnerAndQueryAreFrozenBeforeTheHostQueue()
+    {
+        using Fixture fixture = new();
+        fixture.AddSecondProfile();
+        await using var store = fixture.Open();
+        await store.InitializeAsync(null, null, TestContext.CancellationToken);
+        var query = new TaskListQuery(TaskListKind.Project, "Reviewed project");
+        bool admitted = false;
+        Task switching = store.SelectProfileAsync("q", TestContext.CancellationToken);
+        Task request = store.CreateOwnedSavedViewAsync(
+            "p",
+            "original-view",
+            "Original",
+            "Filter",
+            "Accent",
+            false,
+            query,
+            _ => admitted = true,
+            TestContext.CancellationToken
+        );
+        await switching;
+        _ = await Assert.ThrowsExactlyAsync<ArgumentException>(async () =>
+            await request.WaitAsync(TestContext.CancellationToken)
+        );
+        Assert.IsFalse(admitted);
+        Assert.IsEmpty(new FacetMutationJournal(fixture.StatePath).PendingEntries);
+        await store.SelectProfileAsync("p", TestContext.CancellationToken);
+        SavedViewDefinition saved = await store.CreateOwnedSavedViewAsync(
+            "p",
+            "owned-view",
+            "Reviewed",
+            "Filter",
+            "Accent",
+            true,
+            query,
+            id =>
+            {
+                admitted = true;
+                var entry = new FacetMutationJournal(fixture.StatePath).PendingEntries.Single();
+                Assert.AreEqual(id, entry.Id);
+                Assert.AreEqual("p", entry.Profile);
+                using var envelope = JsonDocument.Parse(entry.Document);
+                var command = envelope.RootElement.GetProperty("command");
+                Assert.AreEqual("owned-view", command.GetProperty("id").GetString());
+                Assert.AreEqual(
+                    "Reviewed",
+                    command.GetProperty("view").GetProperty("name").GetString()
+                );
+            },
+            TestContext.CancellationToken
+        );
+        Assert.IsTrue(admitted);
+        Assert.AreEqual("owned-view", saved.Id);
+        Assert.AreEqual("Reviewed", saved.Name);
+        Assert.IsTrue(saved.IsFavorite);
+        StringAssert.Contains(saved.FilterJson, "Reviewed project", StringComparison.Ordinal);
+        Assert.IsEmpty(new FacetMutationJournal(fixture.StatePath).PendingEntries);
+    }
+
+    /// <summary>Recurring row membership is immutable; note-scoped edits explicitly collapse occurrences only.</summary>
+    [TestMethod]
+    public async Task RenderedRowsFreezeOccurrencesRevisionsAndOwningVault()
+    {
+        using Fixture fixture = new();
+        fixture.AddSecondProfile();
+        fixture.Seed(
+            "repeat.md",
+            "---\ntitle: Repeating\nstatus: open\npriority: normal\ntags: [task]\ndateCreated: '2026-10-03T12:00:00Z'\nscheduled: '2026-10-08'\nrecurrence: 'DTSTART:20261008;FREQ=DAILY'\n---\n"
+        );
+        await using var store = fixture.Open();
+        await store.InitializeAsync(null, null, TestContext.CancellationToken);
+        var original = store.State.AllTasks.Single();
+        var first = RowOccurrence(original, "2026-10-08");
+        var second = RowOccurrence(original, "2026-10-09");
+        TaskItem[] rows = [first, second];
+        var frozen = FacetRowCommands.Freeze(rows);
+        rows[0] = first with { ExpectedRevision = "changed-after-admission" };
+        Assert.HasCount(2, frozen);
+        Assert.AreSequenceEqual(
+            ["2026-10-08", "2026-10-09"],
+            frozen.Select(row => row.Occurrence).ToArray()
+        );
+        Assert.IsTrue(frozen.All(row => row.Revision == original.ExpectedRevision));
+        Assert.HasCount(1, FacetRowCommands.Notes(frozen));
+        _ = Assert.ThrowsExactly<ArgumentException>(() =>
+            store.CompleteRowsAsync([first, second], TestContext.CancellationToken)
+        );
+        Assert.IsEmpty(new FacetMutationJournal(fixture.StatePath).PendingEntries);
+        _ = Assert.ThrowsExactly<ArgumentException>(() =>
+            FacetRowCommands.Freeze([first, second with { ProfileId = "q" }])
+        );
+        _ = Assert.ThrowsExactly<ArgumentException>(() =>
+            FacetRowCommands.Notes(
+                FacetRowCommands.Freeze([
+                    first,
+                    second with
+                    {
+                        ExpectedRevision = "other-revision",
+                    },
+                ])
+            )
+        );
+
+        // A later query replaces the facade projection, but the clicked occurrence remains exact.
+        await store.SetQueryAsync(
+            new TaskListQuery(TaskListKind.Browse),
+            TestContext.CancellationToken
+        );
+        await store.SetRowCompletionAsync(first, true, TestContext.CancellationToken);
+        string contents = await File.ReadAllTextAsync(
+            Path.Combine(fixture.Root, "repeat.md"),
+            TestContext.CancellationToken
+        );
+        StringAssert.Contains(contents, "2026-10-08", StringComparison.Ordinal);
+        using var read = JsonDocument.Parse(
+            store.State.AllTasks.Single().Properties!.Value.GetRawText()
+        );
+        Assert.AreSequenceEqual(
+            ["2026-10-08"],
+            read.RootElement.GetProperty("completeInstances")
+                .EnumerateArray()
+                .Select(value => value.GetString())
+                .ToArray()
+        );
+
+        // A stale reviewed row is rejected rather than silently rebased to the mutable current projection.
+        _ = await Assert.ThrowsExactlyAsync<Core.FacetEngineException.Conflict>(() =>
+            store.SetRowCompletionAsync(second, true, TestContext.CancellationToken)
+        );
+        var retained = new FacetMutationJournal(fixture.StatePath).PendingEntries.Single();
+        using var envelope = JsonDocument.Parse(retained.Document);
+        var command = envelope.RootElement.GetProperty("command");
+        Assert.AreEqual("2026-10-09", command.GetProperty("occurrenceDate").GetString());
+        Assert.AreEqual(
+            original.ExpectedRevision,
+            command.GetProperty("expectedRevision").GetString()
+        );
+
+        // Queue a profile switch ahead of the action: the frozen owner fence runs inside serialization.
+        Task switching = store.SelectProfileAsync("q", TestContext.CancellationToken);
+        Task wrongOwner = store.SetRowStatusAsync(second, "done", TestContext.CancellationToken);
+        await switching;
+        _ = await Assert.ThrowsExactlyAsync<ArgumentException>(async () =>
+            await wrongOwner.WaitAsync(TestContext.CancellationToken)
+        );
+        Assert.HasCount(1, new FacetMutationJournal(fixture.StatePath).PendingEntries);
+        Assert.IsEmpty(store.State.AllTasks);
+    }
+
+    private static TaskItem RowOccurrence(TaskItem task, string occurrence) =>
+        task with
+        {
+            OccurrenceDate = occurrence,
+        };
+
+    /// <summary>Frozen capture owners are checked inside the host queue; admission exposes only an already durable envelope.</summary>
+    [TestMethod]
+    public async Task CaptureOwnerFenceAndAdmissionUseTheDurableJournal()
+    {
+        using Fixture fixture = new();
+        fixture.AddSecondProfile();
+        await using var store = fixture.Open();
+        await store.InitializeAsync(null, null, TestContext.CancellationToken);
+        await store.SelectProfileAsync("q", TestContext.CancellationToken);
+        bool admitted = false;
+        _ = await Assert.ThrowsExactlyAsync<ArgumentException>(() =>
+            store.AddCaptureAsync(
+                "Wrong vault",
+                TaskListQuery.Today,
+                "p",
+                _ => admitted = true,
+                TestContext.CancellationToken
+            )
+        );
+        Assert.IsFalse(admitted);
+        Assert.IsEmpty(store.State.AllTasks);
+        Assert.IsEmpty(new FacetMutationJournal(fixture.StatePath).PendingEntries);
+        string? identity = null;
+        await store.AddCaptureAsync(
+            "Owned capture",
+            TaskListQuery.Today,
+            "q",
+            id =>
+            {
+                identity = id;
+                var entry = new FacetMutationJournal(fixture.StatePath).PendingEntries.Single();
+                Assert.AreEqual(id, entry.Id);
+                Assert.AreEqual("q", entry.Profile);
+            },
+            TestContext.CancellationToken
+        );
+        Assert.IsNotNull(identity);
+        Assert.AreEqual("Owned capture", store.State.AllTasks.Single().Title);
+        Assert.AreEqual("q", store.State.AllTasks.Single().ProfileId);
+    }
+
     /// <summary>Existing private drafts survive startup without exposing retired execution; native absence permits only explicit owned cleanup.</summary>
     [TestMethod]
     public async Task HistoricalActionsRemainReadableAndRetireAfterNativeObservation()
@@ -1166,19 +1398,22 @@ public sealed class FacetStoreTests
             );
             Assert.HasCount(1, store.State.VisibleTasks);
             Assert.HasCount(1, store.State.TodayTasks);
-            await store.CompleteTasksAsync([first.Id, second.Id], TestContext.CancellationToken);
+            await store.CompleteRowsAsync(
+                store.State.AllTasks.ToArray(),
+                TestContext.CancellationToken
+            );
             Assert.IsTrue(store.State.AllTasks.All(t => t.IsCompleted));
             Assert.AreEqual(1, store.State.CompletionUndoDepth);
             await store.UndoCompletionAsync(TestContext.CancellationToken);
             Assert.IsFalse(store.State.AllTasks.Any(t => t.IsCompleted));
             Assert.AreEqual(0, store.State.CompletionUndoDepth);
-            await store.ScheduleTasksAsync(
-                [first.Id, second.Id],
+            await store.ScheduleRowsAsync(
+                store.State.AllTasks.ToArray(),
                 today,
                 TestContext.CancellationToken
             );
-            await store.PrioritizeTasksAsync(
-                [first.Id, second.Id],
+            await store.PrioritizeRowsAsync(
+                store.State.AllTasks.ToArray(),
                 "low",
                 TestContext.CancellationToken
             );
@@ -1188,7 +1423,11 @@ public sealed class FacetStoreTests
                 )
             );
             Assert.HasCount(2, store.State.PendingIds);
-            await store.SetCompletionAsync(first.Id, true, TestContext.CancellationToken);
+            await store.SetRowCompletionAsync(
+                store.State.AllTasks.Single(task => task.Id == first.Id),
+                true,
+                TestContext.CancellationToken
+            );
         }
         await using (var restored = fixture.Open())
         {
@@ -1197,8 +1436,8 @@ public sealed class FacetStoreTests
             Assert.AreEqual(1, restored.State.CompletionUndoDepth);
             await restored.UndoCompletionAsync(TestContext.CancellationToken);
             Assert.IsFalse(restored.State.AllTasks.Any(t => t.IsCompleted));
-            await restored.DeleteTasksAsync(
-                restored.State.AllTasks.Select(t => t.Id).ToArray(),
+            await restored.DeleteRowsAsync(
+                restored.State.AllTasks.ToArray(),
                 TestContext.CancellationToken
             );
             Assert.IsEmpty(restored.State.AllTasks);
