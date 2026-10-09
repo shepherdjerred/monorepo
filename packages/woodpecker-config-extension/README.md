@@ -42,6 +42,35 @@ only supplies a shared path when its declared volume is mounted. Bun's download
 cache and its maintenance-lock volume must be mounted together. Installed
 dependencies remain private to each workflow workspace.
 
+## Retained task diagnostics
+
+Credentialed verify and browser workflows publish a sanitized JSON artifact to
+the private `ci-handoff` bucket after their commands finish, including failures.
+Retrieve it using the existing authenticated SeaweedFS AWS profile:
+
+```bash
+aws --profile seaweedfs s3 cp s3://ci-handoff/6920/diagnostics-verify.json -
+aws --profile seaweedfs s3 cp s3://ci-handoff/6920/diagnostics-playwright-e2e.json -
+```
+
+Replace the pipeline number with the run under investigation. Records include
+the commit, workflow, invocation timestamps, original exit code, selected browser
+packages, and fresh Turbo task hashes, cache results, dependencies and timings.
+They exclude raw summaries, commands, logs, inputs and environment values.
+Retries replace that workflow's record; check its timestamp before interpreting
+it as evidence for a running retry. Queue and pod startup times remain available
+from `toolkit ci explain`; the retained interval begins after toolchain bootstrap
+and includes dependency installation. Turbo intervals identify execution within
+that interval and can overlap.
+
+Publication uses a 20-second request deadline and bounded retry backoff.
+A publication or collection failure fails
+an otherwise successful command; an existing command failure keeps its original
+exit code. A collection failure publishes metadata with `collectionFailed: true`.
+A pod killed before cleanup or an install failure that leaves reporting dependencies
+unavailable may have no artifact. Missing diagnostics never mean a cache hit or a
+successful run. Credentialless automation does not gain publication credentials.
+
 ## Pipeline authorization
 
 `src/authorization.ts` admits only the owner's named accounts and bots. Justin

@@ -2,6 +2,7 @@ import type { CiImages } from "#src/images.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
 import { BUN_CACHE, BUN_CACHE_CONTROL, UV_CACHE } from "#src/pipeline/cache.ts";
 import { TURBO_VERIFY_TIER } from "#src/pipeline/tiers.ts";
+import { diagnosticCommands } from "#src/pipeline/diagnostics.ts";
 import { scannerSteps } from "#src/pipeline/lanes/scanners.ts";
 import { alertDashboardSteps } from "#src/pipeline/lanes/alert-dashboard.ts";
 import { resumeSteps } from "#src/pipeline/lanes/resume.ts";
@@ -89,7 +90,9 @@ function verifyCommands(options: {
       "jq -Rs . < caddyfile.generated | bun --no-install scripts/ci/write-ci-handoff.ts caddyfile",
     );
   }
-  return commands;
+  return options.publishHandoff
+    ? diagnosticCommands("verify", commands)
+    : commands;
 }
 
 export type PipelineInputs = {
