@@ -145,6 +145,41 @@ TEST_ROOT=$(mktemp -d)
 trap 'rm -rf "$TEST_ROOT"' EXIT
 mkdir -p "$TEST_ROOT/bin" "$TEST_ROOT/cache/data" "$TEST_ROOT/control"
 
+# Execute each narrow profile with recorded external commands. This catches
+# accidental fallthrough to the full toolchain without downloading anything.
+mkdir -p "$TEST_ROOT/profiles"
+cat >"$TEST_ROOT/profiles/mise" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >>"$CI_PROFILE_COMMAND_LOG"
+if [ "$1" = which ]; then printf '/test/tools/gh\n'; fi
+EOF
+cat >"$TEST_ROOT/profiles/id" <<'EOF'
+#!/usr/bin/env bash
+printf '1000\n'
+EOF
+cat >"$TEST_ROOT/profiles/ln" <<'EOF'
+#!/usr/bin/env bash
+printf 'ln %s\n' "$*" >>"$CI_PROFILE_COMMAND_LOG"
+EOF
+chmod +x "$TEST_ROOT/profiles/"*
+for profile in automation deployment tofu; do
+  profile_log="$TEST_ROOT/$profile.log"
+  PATH="$TEST_ROOT/profiles:$PATH" CI_PROFILE_COMMAND_LOG="$profile_log" \
+    MISE_TOOLCHAIN_SCOPE="$profile" bash -c '. "$1"' _ "$TOOLCHAIN"
+  case "$profile" in
+    automation) expected_tools='install --yes bun gh jq' ;;
+    deployment) expected_tools='install --yes bun node gh jq helm argocd awscli' ;;
+    tofu) expected_tools='install --yes bun opentofu' ;;
+  esac
+  actual_tools=$(rg '^install ' "$profile_log")
+  if [ "$actual_tools" != "$expected_tools" ]; then
+    echo "unexpected tools for $profile: $actual_tools" >&2
+    exit 1
+  fi
+  rg -Fxq reshim "$profile_log"
+done
+rg -Fxq 'ln -sf /test/tools/gh /usr/local/bin/gh' "$TEST_ROOT/automation.log"
+
 cat >"$TEST_ROOT/bin/df" <<'EOF'
 #!/usr/bin/env bash
 printf 'Filesystem 1024-blocks Used Available Capacity Mounted on\n'

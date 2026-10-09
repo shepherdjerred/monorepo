@@ -4,7 +4,7 @@ import { MEDIUM_TIER } from "#src/pipeline/tiers.ts";
 import { BUN_CACHE, BUN_CACHE_CONTROL } from "#src/pipeline/cache.ts";
 
 const SETUP = [
-  ". ci/scripts/toolchain.sh",
+  "MISE_TOOLCHAIN_SCOPE=tofu . ci/scripts/toolchain.sh",
   "ci/scripts/bun-install.sh --frozen-lockfile --filter homelab --production",
 ] as const;
 const GROUP_KEYS = new Set([

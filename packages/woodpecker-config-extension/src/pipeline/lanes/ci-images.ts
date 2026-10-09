@@ -46,7 +46,7 @@ function refreshStep(
     image: images.base,
     commands: [
       `if ! bun --no-install ci/scripts/selectors/ci-changed.ts ${lane}; then exit 0; fi`,
-      ". ci/scripts/toolchain.sh",
+      "MISE_TOOLCHAIN_SCOPE=automation . ci/scripts/toolchain.sh",
       "bun --no-install ci/scripts/reporting/buildkit-env.ts",
       ...names.flatMap((name) => [
         `bun --no-install ci/scripts/images/build-ci-image.ts --image ${name} --candidate-out ${name}-candidate.json`,
@@ -71,7 +71,7 @@ export function ciImageSteps(images: CiImages): CiStep[] {
       label: "commit back image pins",
       image: images.base,
       commands: [
-        ". ci/scripts/toolchain.sh",
+        "MISE_TOOLCHAIN_SCOPE=automation . ci/scripts/toolchain.sh",
         "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
         'bun --no-install scripts/release/update-versions.ts --commit-back --candidates "$(bun --no-install scripts/ci/read-ci-handoff.ts pin-candidates)"',
       ],

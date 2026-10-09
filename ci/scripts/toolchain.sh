@@ -65,6 +65,20 @@ case "${MISE_TOOLCHAIN_SCOPE:-full}" in
     mise_ci install --yes bun opentofu
     mise_ci reshim
     ;;
+  automation)
+    # Repository automation and remote image orchestration use these CLIs;
+    # Docker/buildx and git are supplied by the pinned base image.
+    mise_ci install --yes bun gh jq
+    mise_ci reshim
+    # Release-note refinement invokes gh from a login shell.
+    GH_EXECUTABLE=$(mise_ci which gh)
+    ln -sf "$GH_EXECUTABLE" /usr/local/bin/gh
+    ;;
+  deployment)
+    # Helm/GitOps and site publication do not run the exhaustive test graph.
+    mise_ci install --yes bun node gh jq helm argocd awscli
+    mise_ci reshim
+    ;;
   postgres)
     # The Playwright image carries browsers and Bun, but its refresh is
     # main-only: a PR that bumps .mise.toml would otherwise run E2E under a

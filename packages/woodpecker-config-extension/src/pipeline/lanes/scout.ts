@@ -133,7 +133,7 @@ export function scoutSteps(images: CiImages): CiStep[] {
       label: "release please",
       image: images.base,
       commands: [
-        ". ci/scripts/toolchain.sh",
+        "MISE_TOOLCHAIN_SCOPE=automation . ci/scripts/toolchain.sh",
         "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --filter '@shepherdjerred/llm-models' --production",
         "bun --no-install run --cwd packages/llm-models build:runtime",
         "bun --no-install scripts/release/release.ts",

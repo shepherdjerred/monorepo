@@ -24,6 +24,31 @@ const step = (key: string) => allSteps().find((s) => s.key === key);
 const secretEnvs = (key: string) =>
   (allSteps().find((s) => s.key === key)?.secrets ?? []).map((g) => g.env);
 
+test("release orchestration resolves only the tools it executes", () => {
+  for (const key of [
+    "images",
+    "ci-base-refresh",
+    "ci-playwright-refresh",
+    "version-commit-back",
+    "release-please",
+  ]) {
+    expect(step(key)?.commands).toContain(
+      "MISE_TOOLCHAIN_SCOPE=automation . ci/scripts/toolchain.sh",
+    );
+  }
+  for (const key of ["helm-push", "argocd-sync"]) {
+    expect(step(key)?.commands).toContain(
+      "MISE_TOOLCHAIN_SCOPE=deployment . ci/scripts/toolchain.sh",
+    );
+  }
+  for (const candidate of allSteps().filter((s) => s.key.startsWith("tofu-"))) {
+    expect(candidate.commands).toContain(
+      "MISE_TOOLCHAIN_SCOPE=tofu . ci/scripts/toolchain.sh",
+    );
+  }
+  expect(step("verify")?.commands).toContain(". ci/scripts/toolchain.sh");
+});
+
 function keysFor(changedFiles: string[], branch = "feature"): string[] {
   return selectSteps(allSteps(), {
     event: branch === "main" ? "push" : "pull_request",
