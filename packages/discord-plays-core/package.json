@@ -29,7 +29,7 @@
     "@opentelemetry/sdk-node": "^0.223.0",
     "@opentelemetry/sdk-trace-base": "^2.12.0",
     "@opentelemetry/semantic-conventions": "^1.40.0",
-    "@sentry/bun": "^11.5.0",
+    "@sentry/bun": "^11.6.0",
     "@shepherdjerred/discord-stream-lifecycle": "workspace:*",
     "@shepherdjerred/discord-video-stream": "workspace:*",
     "cors": "^2.8.5",

@@ -7,6 +7,7 @@ export function blackAndWhite({
   return (
     <div
       style={{
+        boxSizing: "border-box",
         height: "100%",
         width: "100%",
         display: "flex",

@@ -24,7 +24,7 @@
 # time. No binaries are committed — the build is reproducible from source.
 # Pinned Emscripten 6 toolchain for the legacy SDL2/GLES2 core.
 # ---------------------------------------------------------------------------
-FROM emscripten/emsdk:6.0.11@sha256:cdefec943f04fd4b2b2fe23b0a1a346be9fc560ef5784a83faa27dd351381372 AS wasm-builder
+FROM emscripten/emsdk:6.0.12@sha256:77638e6c215a65f25a704c0c831d5c2463a8c0468a58c6cb82489dbe621dfa05 AS wasm-builder
 
 WORKDIR /src
 # Copy only the vendored wasm source tree (patches + the pristine `code/` tree).

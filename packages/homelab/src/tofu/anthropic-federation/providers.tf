@@ -4,7 +4,7 @@ terraform {
   required_providers {
     anthropic = {
       source  = "registry.terraform.io/ippontech/anthropic"
-      version = "1.54.1"
+      version = "1.60.0"
     }
     onepassword = {
       source  = "1Password/onepassword"

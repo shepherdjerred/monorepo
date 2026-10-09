@@ -45,7 +45,7 @@ shellcheck = "0.11"
 # renovate: datasource=github-releases depName=hadolint/hadolint
 hadolint = "2.15.1"
 # Native-family shims
-go = "1.27.1"
+go = "1.27.2"
 golangci-lint = "2"
 # Release automation (cooklang publish, release commit-backs) shells out to gh
 gh = "2"

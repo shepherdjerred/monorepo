@@ -12,6 +12,7 @@ function ItemSlot({ itemId }: { itemId: number }) {
     return (
       <div
         style={{
+          boxSizing: "border-box",
           width: ITEM_SIZE,
           height: ITEM_SIZE,
           display: "flex",
@@ -38,6 +39,7 @@ function ItemSlot({ itemId }: { itemId: number }) {
         width={ITEM_SIZE}
         height={ITEM_SIZE}
         style={{
+          boxSizing: "border-box",
           width: ITEM_SIZE,
           height: ITEM_SIZE,
           border: prismatic
@@ -48,6 +50,7 @@ function ItemSlot({ itemId }: { itemId: number }) {
       {prismatic && (
         <div
           style={{
+            boxSizing: "border-box",
             position: "absolute",
             top: -2,
             left: -2,

@@ -134,7 +134,7 @@ ARG TEMPORAL_CLI_VERSION=1.7.3
 # renovate: datasource=github-releases depName=grafana/gcx
 ARG GCX_VERSION=1.0.0
 # renovate: datasource=pypi depName=uv
-ARG UV_VERSION=0.12.23
+ARG UV_VERSION=0.12.24
 # renovate: datasource=github-releases depName=aquasecurity/trivy
 ARG TRIVY_VERSION=0.72.0
 # lychee tags carry a `lychee-v` prefix, so the pinned value is the full tag.

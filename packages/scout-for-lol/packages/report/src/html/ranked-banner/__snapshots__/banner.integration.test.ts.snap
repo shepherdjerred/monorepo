@@ -1,15 +1,15 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`banner — 3-player squad with public champion name 1`] = `"8c1570d78d22aa8d025e8a956b313df0e0fed7422ea1e070d1f76a579bf9688c"`;
+exports[`banner — 3-player squad with public champion name 1`] = `"db05e83881e2b62a2ad8bb4c2369a97883558e45952538269d1e50da124b8eaf"`;
 
-exports[`banner — 5-player squad 1`] = `"d9a3206b69bab7d53664cc339a628af8c28ed43c651dc2a8205b4e24f3d26bf3"`;
+exports[`banner — 5-player squad 1`] = `"ac82d2efaa41bc9a5068cfc59fab9d628cec679796258d004146dcb23954ac1e"`;
 
-exports[`banner — 6-player squad 1`] = `"e305647d32713276484321543a9f9226da81e2ab140b329bfe4a1dcabd78af71"`;
+exports[`banner — 6-player squad 1`] = `"6034e929c9a14b7094091df28c9a7f89ab8c17f13a49b3d8efd4e2327f4c1a86"`;
 
-exports[`banner — 10-player squad 1`] = `"13026f44e87909c61e82072e45a7e26d7470edb172cd8040a6de77d3eab705f4"`;
+exports[`banner — 10-player squad 1`] = `"e2f6dc2b17b36601d374d1e880d85a20f344f23af8627613a25f341e1a090599"`;
 
-exports[`banner — 11-player squad spans three groups 1`] = `"8183f96dec6846ce5578346e56a57114078ae1fd97ac76d4b145dc18b64df69d"`;
+exports[`banner — 11-player squad spans three groups 1`] = `"46fd5baeff50758f0a7fcdd6d567273f78e8c07d72c05731978be2df1c4dbf75"`;
 
-exports[`banner — solo defeat (ranked flex) 1`] = `"982dcda95a4901ebb10dd6ebc58561de639d91c29e6121a40dd15344a779b7ca"`;
+exports[`banner — solo defeat (ranked flex) 1`] = `"5df71d88aed299b0c4aea27f13eab06a9594e6de3f374110a85aacfed6545969"`;
 
-exports[`banner — solo victory 1`] = `"10cf3e332a331f803c61c4018ef09c52305a0fe0756e717543d6e4c6e2eb2598"`;
+exports[`banner — solo victory 1`] = `"955b47b730ecaff9685440b454ca20f999c37fd3d7a2dff487a31323db0cc68a"`;

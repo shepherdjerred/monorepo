@@ -18,6 +18,7 @@ export function PlacementBadge({ placement }: { placement: ArenaPlacement }) {
     >
       <div
         style={{
+          boxSizing: "border-box",
           position: "absolute",
           top: 0,
           left: 0,

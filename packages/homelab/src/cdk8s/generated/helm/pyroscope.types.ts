@@ -30,6 +30,9 @@ export type PyroscopeHelmValuesPyroscope = {
    */
   extraArgs?: PyroscopeHelmValuesPyroscopeExtraArgs;
   /**
+   * Labels added to every pyroscope pod. A component can set its own
+   * `extraLabels` under `pyroscope.components.<name>` to add or override labels.
+   *
    * @default {}
    */
   extraLabels?: PyroscopeHelmValuesPyroscopeExtraLabels;
@@ -1091,7 +1094,7 @@ export type PyroscopeHelmValuesAlloy = {
    */
   enabled?: boolean;
   /**
-   * @default {"type":"statefulset","replicas":1,"podAnnotations":{"profiles.grafana.com/memory.scrape":"true","profiles.grafana.com/memory.port_name":"http-metrics","profiles.grafana.com/cpu.scrape":"true","profiles.grafana.com/cpu.port_name":"http-metrics","profiles.grafana.com/goroutine.scrape":"true","profiles.grafana.com/goroutine.port_name":"http-metrics","profiles.grafana.com/service_repository":"https://github.com/grafana/alloy","profiles.grafana.com/service_git_ref":"v1.8.1"}}
+   * @default {"type":"statefulset","replicas":1,"podAnnotations":{"profiles.grafana.com/memory.scrape":"true","profiles.grafana.com/memory.port_name":"http-metrics","profiles.grafana.com/cpu.scrape":"true","profiles.grafana.com/cpu.port_name":"http-metrics","profiles.grafana.com/goroutine.scrape":"true","profiles.grafana.com/goroutine.port_name":"http-metrics","profiles.grafana.com/service_repository":"https://github.com/grafana/alloy","profiles.grafana.com/service_git_ref":"v1.19.2"}}
    */
   controller?: PyroscopeHelmValuesAlloyController;
   /**
@@ -1145,7 +1148,7 @@ export type PyroscopeHelmValuesAlloyControllerPodAnnotations = {
    */
   "profiles.grafana.com/service_repository"?: string;
   /**
-   * @default "v1.8.1"
+   * @default "v1.19.2"
    */
   "profiles.grafana.com/service_git_ref"?: string;
 };
@@ -1277,6 +1280,14 @@ export type PyroscopeHelmValuesMinio = {
    */
   enabled?: boolean;
   /**
+   * @default {"repository":"pgsty/silo","tag":"RELEASE.2026-09-16T00-00-00Z"}
+   */
+  image?: PyroscopeHelmValuesMinioImage;
+  /**
+   * @default {"repository":"pgsty/mc","tag":"RELEASE.2026-09-16T00-00-00Z"}
+   */
+  mcImage?: PyroscopeHelmValuesMinioMcImage;
+  /**
    * @default 1
    */
   replicas?: number;
@@ -1312,6 +1323,28 @@ export type PyroscopeHelmValuesMinio = {
    * @default {}
    */
   podAnnotations?: PyroscopeHelmValuesMinioPodAnnotations;
+};
+
+export type PyroscopeHelmValuesMinioImage = {
+  /**
+   * @default "pgsty/silo"
+   */
+  repository?: string;
+  /**
+   * @default "RELEASE.2026-09-16T00-00-00Z"
+   */
+  tag?: string;
+};
+
+export type PyroscopeHelmValuesMinioMcImage = {
+  /**
+   * @default "pgsty/mc"
+   */
+  repository?: string;
+  /**
+   * @default "RELEASE.2026-09-16T00-00-00Z"
+   */
+  tag?: string;
 };
 
 export type PyroscopeHelmValuesMinioBucketsElement = {
@@ -1525,7 +1558,7 @@ export type PyroscopeHelmValues = {
   /**
    * Configuration for `alloy` child chart
    *
-   * @default {"enabled":true,"controller":{"type":"statefulset","replicas":1,"podAnnotations":{"profiles.grafana.com/memory.scrape":"true","profiles.grafana.com/memory.port_name":"http-metrics","profiles.grafana.com/cpu.scrape":"true","profiles.grafana.com/cpu.port_name":"http-metrics","profiles.grafana.com/goroutine.scrape":"true","profiles.grafana.com/goroutine.port_name":"http-metrics","profiles.grafana.com/service_repository":"https://github.com/grafana/alloy","profiles.grafana.com/service_git_ref":"v1.8.1"}},"alloy":{"stabilityLevel":"public-preview","configMap":{"create":false,"name":"alloy-config-pyroscope"},"clustering":{"enabled":true}}}
+   * @default {"enabled":true,"controller":{"type":"statefulset","replicas":1,"podAnnotations":{"profiles.grafana.com/memory.scrape":"true","profiles.grafana.com/memory.port_name":"http-metrics","profiles.grafana.com/cpu.scrape":"true","profiles.grafana.com/cpu.port_name":"http-metrics","profiles.grafana.com/goroutine.scrape":"true","profiles.grafana.com/goroutine.port_name":"http-metrics","profiles.grafana.com/service_repository":"https://github.com/grafana/alloy","profiles.grafana.com/service_git_ref":"v1.19.2"}},"alloy":{"stabilityLevel":"public-preview","configMap":{"create":false,"name":"alloy-config-pyroscope"},"clustering":{"enabled":true}}}
    */
   alloy?: PyroscopeHelmValuesAlloy;
   /**
@@ -1537,7 +1570,7 @@ export type PyroscopeHelmValues = {
   /**
    * Configuration for `minio` child chart
    *
-   * @default {...} (9 keys)
+   * @default {...} (11 keys)
    */
   minio?: PyroscopeHelmValuesMinio;
   /**
@@ -1715,6 +1748,10 @@ export type PyroscopeHelmParameters = {
   "agent.agent.configMap.name"?: string;
   "agent.agent.clustering.enabled"?: string;
   "minio.enabled"?: string;
+  "minio.image.repository"?: string;
+  "minio.image.tag"?: string;
+  "minio.mcImage.repository"?: string;
+  "minio.mcImage.tag"?: string;
   "minio.replicas"?: string;
   "minio.drivesPerNode"?: string;
   "minio.rootUser"?: string;

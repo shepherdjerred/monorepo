@@ -48,6 +48,7 @@ export function PlayerColumn({
   return (
     <div
       style={{
+        boxSizing: "border-box",
         flexGrow: highlight ? TRACKED_WEIGHT : 1,
         flexShrink: 1,
         flexBasis: 0,
@@ -66,6 +67,7 @@ export function PlayerColumn({
     >
       <div
         style={{
+          boxSizing: "border-box",
           width: "100%",
           height: SPLASH_HEIGHT,
           display: "flex",
@@ -150,6 +152,7 @@ export function PlayerColumn({
 
       <div
         style={{
+          boxSizing: "border-box",
           display: "flex",
           flex: 1,
           flexDirection: "column",

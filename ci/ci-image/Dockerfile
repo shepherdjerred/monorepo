@@ -22,7 +22,7 @@ RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Docker CLI + buildx for image-build steps (BuildKit runs in-pod)
-COPY --from=docker:29-cli@sha256:35cfcf893c20f2931f4909151b5407aaaeab711277de7ce8b8f521f095d54c32 /usr/local/bin/docker /usr/local/bin/docker
+COPY --from=docker:29-cli@sha256:1a4c7cb63513f349bdad01fcc6e0f3f2f67d37b9da86f14dc0d4a0942eecda00 /usr/local/bin/docker /usr/local/bin/docker
 COPY --from=docker/buildx-bin:0.38.0@sha256:abcf2315937f37bdb52615d1698a4696e3952e88c440a07e7552cbefbc72b1b6 /buildx /usr/local/lib/docker/cli-plugins/docker-buildx
 
 # swiftlint from the official release zip: the -static build is
@@ -64,13 +64,16 @@ RUN case "${TARGETARCH}" in \
 
 COPY .mise.toml /workspace/.mise.toml
 WORKDIR /workspace
-RUN mise trust .mise.toml && mise install && mise reshim \
+# mise resolves signed GitHub releases during install. The download credential
+# is available only to this build step and is never stored in an image layer.
+RUN --mount=type=secret,id=github-download-token,env=GITHUB_TOKEN,required=true \
+    mise trust .mise.toml && mise install && mise reshim \
     && ln -sf "$(mise which gh)" /usr/local/bin/gh \
     && gh --version
 
 # uv/uvx for the python checks (ruff via uvx, pyright bootstraps a venv)
 # renovate: datasource=pypi depName=uv
-ARG UV_VERSION=0.12.23
+ARG UV_VERSION=0.12.24
 RUN curl -LsSf "https://astral.sh/uv/${UV_VERSION}/install.sh" | sh
 
 # The bun download cache is NOT baked into this image anymore. The old

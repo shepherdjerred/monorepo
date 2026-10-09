@@ -44,6 +44,7 @@ export function Runes({ runes }: { runes: Rune[] }) {
             src={getRuneIconUrl(keystoneInfo.icon)}
             alt={keystoneInfo.name}
             style={{
+              boxSizing: "border-box",
               width: keystoneSize,
               height: keystoneSize,
               borderRadius: "50%",
@@ -61,6 +62,7 @@ export function Runes({ runes }: { runes: Rune[] }) {
             src={getRuneIconUrl(secondaryTree.treeIcon)}
             alt={secondaryTree.treeName}
             style={{
+              boxSizing: "border-box",
               width: keystoneSize,
               height: keystoneSize,
               borderRadius: "50%",

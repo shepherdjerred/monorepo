@@ -13,6 +13,7 @@ function CompIcons({ team }: { team: CompletedMatch["teams"]["blue"] }) {
         <div
           key={champion.riotIdGameName + idx.toString()}
           style={{
+            boxSizing: "border-box",
             width: `${ICON_REM.toString()}rem`,
             height: `${ICON_REM.toString()}rem`,
             display: "flex",
@@ -48,6 +49,7 @@ export function ScoreBar({
   return (
     <div
       style={{
+        boxSizing: "border-box",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
@@ -78,6 +80,7 @@ export function ScoreBar({
 
       <div
         style={{
+          boxSizing: "border-box",
           display: "flex",
           alignItems: "center",
           gap: "3rem",

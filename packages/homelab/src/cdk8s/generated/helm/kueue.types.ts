@@ -77,7 +77,7 @@ export type KueueHelmValuesControllerManagerStrategy = object;
 export type KueueHelmValuesControllerManagerManager = {
   priorityClassName?: unknown;
   /**
-   * @default {"repository":"registry.k8s.io/kueue/kueue","tag":"v0.20.0","pullPolicy":"IfNotPresent"}
+   * @default {"repository":"registry.k8s.io/kueue/kueue","tag":"v0.20.1","pullPolicy":"IfNotPresent"}
    */
   image?: KueueHelmValuesControllerManagerManagerImage;
   /**
@@ -121,7 +121,7 @@ export type KueueHelmValuesControllerManagerManagerImage = {
   /**
    * ControllerManager's image tag
    *
-   * @default "v0.20.0"
+   * @default "v0.20.1"
    */
   tag?: string;
   /**
@@ -471,7 +471,7 @@ export type KueueHelmValuesKueueVizBackend = {
    */
   auth?: KueueHelmValuesKueueVizBackendAuth;
   /**
-   * @default {"repository":"registry.k8s.io/kueue/kueueviz-backend","tag":"v0.20.0","pullPolicy":"IfNotPresent"}
+   * @default {"repository":"registry.k8s.io/kueue/kueueviz-backend","tag":"v0.20.1","pullPolicy":"IfNotPresent"}
    */
   image?: KueueHelmValuesKueueVizBackendImage;
 };
@@ -614,7 +614,7 @@ export type KueueHelmValuesKueueVizBackendImage = {
   /**
    * KueueViz dashboard backend image tag
    *
-   * @default "v0.20.0"
+   * @default "v0.20.1"
    */
   tag?: string;
   /**
@@ -662,7 +662,7 @@ export type KueueHelmValuesKueueVizFrontend = {
    */
   ingress?: KueueHelmValuesKueueVizFrontendIngress;
   /**
-   * @default {"repository":"registry.k8s.io/kueue/kueueviz-frontend","tag":"v0.20.0","pullPolicy":"IfNotPresent"}
+   * @default {"repository":"registry.k8s.io/kueue/kueueviz-frontend","tag":"v0.20.1","pullPolicy":"IfNotPresent"}
    */
   image?: KueueHelmValuesKueueVizFrontendImage;
 };
@@ -762,7 +762,7 @@ export type KueueHelmValuesKueueVizFrontendImage = {
   /**
    * KueueViz dashboard frontend image tag
    *
-   * @default "v0.20.0"
+   * @default "v0.20.1"
    */
   tag?: string;
   /**
@@ -890,7 +890,7 @@ export type KueueHelmValues = {
    */
   mutatingWebhook?: KueueHelmValuesMutatingWebhook;
   /**
-   * @default {"ingress":{"enabled":false,"annotations":{},"ingressClassName":null,"host":"kueueviz.local","tlsEnabled":null,"tlsSecretName":""},"backend":{"nodeSelector":{},"tolerations":[],"imagePullSecrets":[],"priorityClassName":null,"resources":{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"500m","memory":"512Mi"}},"podSecurityContext":{"runAsNonRoot":true,"seccompProfile":{"type":"RuntimeDefault"}},"containerSecurityContext":{"readOnlyRootFilesystem":true,"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}},"env":[{"name":"KUEUEVIZ_ALLOWED_ORIGINS","value":"https://frontend.kueueviz.local"}],"ingress":{"enabled":true,"annotations":{"nginx.ingress.kubernetes.io/rewrite-target":"/","nginx.ingress.kubernetes.io/ssl-redirect":"true"},"ingressClassName":null,"host":"backend.kueueviz.local","tlsEnabled":null,"tlsSecretName":"kueueviz-backend-tls"},"auth":{"mode":"Disabled","tokenReviewConfig":{"audiences":"","cacheTTL":"60s","negativeCacheTTL":"5s"}},"image":{"repository":"registry.k8s.io/kueue/kueueviz-backend","tag":"v0.20.0","pullPolicy":"IfNotPresent"}},"frontend":{"nodeSelector":{},"tolerations":[],"imagePullSecrets":[],"priorityClassName":null,"resources":{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"500m","memory":"512Mi"}},"podSecurityContext":{"runAsNonRoot":true,"runAsUser":1000,"seccompProfile":{"type":"RuntimeDefault"}},"containerSecurityContext":{"readOnlyRootFilesystem":true,"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}},"env":[],"ingress":{"enabled":true,"annotations":{"nginx.ingress.kubernetes.io/rewrite-target":"/","nginx.ingress.kubernetes.io/ssl-redirect":"true"},"ingressClassName":null,"host":"frontend.kueueviz.local","tlsEnabled":null,"tlsSecretName":"kueueviz-frontend-tls"},"image":{"repository":"registry.k8s.io/kueue/kueueviz-frontend","tag":"v0.20.0","pullPolicy":"IfNotPresent"}}}
+   * @default {"ingress":{"enabled":false,"annotations":{},"ingressClassName":null,"host":"kueueviz.local","tlsEnabled":null,"tlsSecretName":""},"backend":{"nodeSelector":{},"tolerations":[],"imagePullSecrets":[],"priorityClassName":null,"resources":{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"500m","memory":"512Mi"}},"podSecurityContext":{"runAsNonRoot":true,"seccompProfile":{"type":"RuntimeDefault"}},"containerSecurityContext":{"readOnlyRootFilesystem":true,"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}},"env":[{"name":"KUEUEVIZ_ALLOWED_ORIGINS","value":"https://frontend.kueueviz.local"}],"ingress":{"enabled":true,"annotations":{"nginx.ingress.kubernetes.io/rewrite-target":"/","nginx.ingress.kubernetes.io/ssl-redirect":"true"},"ingressClassName":null,"host":"backend.kueueviz.local","tlsEnabled":null,"tlsSecretName":"kueueviz-backend-tls"},"auth":{"mode":"Disabled","tokenReviewConfig":{"audiences":"","cacheTTL":"60s","negativeCacheTTL":"5s"}},"image":{"repository":"registry.k8s.io/kueue/kueueviz-backend","tag":"v0.20.1","pullPolicy":"IfNotPresent"}},"frontend":{"nodeSelector":{},"tolerations":[],"imagePullSecrets":[],"priorityClassName":null,"resources":{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"500m","memory":"512Mi"}},"podSecurityContext":{"runAsNonRoot":true,"runAsUser":1000,"seccompProfile":{"type":"RuntimeDefault"}},"containerSecurityContext":{"readOnlyRootFilesystem":true,"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}},"env":[],"ingress":{"enabled":true,"annotations":{"nginx.ingress.kubernetes.io/rewrite-target":"/","nginx.ingress.kubernetes.io/ssl-redirect":"true"},"ingressClassName":null,"host":"frontend.kueueviz.local","tlsEnabled":null,"tlsSecretName":"kueueviz-frontend-tls"},"image":{"repository":"registry.k8s.io/kueue/kueueviz-frontend","tag":"v0.20.1","pullPolicy":"IfNotPresent"}}}
    */
   kueueViz?: KueueHelmValuesKueueViz;
   /**

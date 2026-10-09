@@ -29,6 +29,7 @@ export function Report({ match }: { match: CompletedMatch }) {
     >
       <div
         style={{
+          boxSizing: "border-box",
           display: "flex",
           padding: "5rem",
           color: palette.grey[1],
@@ -108,6 +109,7 @@ export function Report({ match }: { match: CompletedMatch }) {
           {match.queueType === "clash" || match.queueType === "aram clash" ? (
             <div
               style={{
+                boxSizing: "border-box",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",

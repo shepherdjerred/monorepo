@@ -164,6 +164,12 @@ export function ciImageBuildCommand(
     dockerfile,
     ...(target === undefined ? [] : ["--target", target]),
     ...(platform === undefined ? [] : ["--platform", platform]),
+    ...(definition.name === "ci-base"
+      ? [
+          "--secret",
+          ["id=github-download-token", "env=GITHUB_DOWNLOAD_TOKEN"].join(","),
+        ]
+      : []),
     "--cache-from",
     `type=registry,ref=${image}:buildcache`,
     "--cache-to",

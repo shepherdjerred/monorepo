@@ -29,6 +29,7 @@ export function PlayerCard({
   return (
     <div
       style={{
+        boxSizing: "border-box",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -43,6 +44,7 @@ export function PlayerCard({
     >
       <div
         style={{
+          boxSizing: "border-box",
           width: `${ICON_REM.toString()}rem`,
           height: `${ICON_REM.toString()}rem`,
           display: "flex",
@@ -105,6 +107,7 @@ export function PlayerCard({
       {isMvp && (
         <span
           style={{
+            boxSizing: "border-box",
             fontSize: "2rem",
             color: palette.blue[2],
             background: "rgba(10, 200, 185, 0.15)",
