@@ -118,6 +118,7 @@ export const EXTRA_JSON_COLUMNS: readonly {
   { table: "DuelGame", column: "evidenceJson" },
   { table: "ExploreMessage", column: "preview" },
   { table: "ExploreMessage", column: "trace" },
+  { table: "ExploreToolPayload", column: "payload" },
   { table: "HallRecordCell", column: "holdersJson" },
   { table: "HallRecordCell", column: "evidenceJson" },
   { table: "MatchNotificationIntent", column: "payload" },
@@ -220,8 +221,19 @@ export const ARCHIVE_COLUMNS: readonly { table: string; column: string }[] = [
   // Stored query results, which can name any participant a query returned.
   { table: "ExploreMessage", column: "preview" },
   { table: "ExploreMessage", column: "trace" },
+  // On-demand inspection captures and full query datasets. These are never
+  // replayed as instructions; they can include arbitrary observed participants.
+  { table: "ExploreToolPayload", column: "payload" },
   { table: "ScoutInteractiveRun", column: "trace" },
 ];
+
+/** Inspection-only archives also embed identities in prompts and query text.
+ * Do not apply token substitution to actionable contracts or durable work IDs. */
+export const EMBEDDED_PUUID_ARCHIVE_COLUMNS = [
+  { table: "ExploreMessage", column: "trace" },
+  { table: "ScoutInteractiveRun", column: "trace" },
+  { table: "ExploreToolPayload", column: "payload" },
+] as const;
 
 /**
  * Where a tracked identity can live, and how to read and date it.

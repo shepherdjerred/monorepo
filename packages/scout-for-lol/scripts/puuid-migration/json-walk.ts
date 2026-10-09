@@ -19,6 +19,7 @@
  */
 
 import { z } from "zod";
+import { EMBEDDED_PUUID_ARCHIVE_COLUMNS } from "./support.ts";
 
 export type Json =
   string | number | boolean | null | Json[] | { [key: string]: Json };
@@ -86,11 +87,18 @@ export function translateJsonValue(
   value: Json,
   map: ReadonlyMap<string, string>,
 ): Json {
+  return translateStrings(value, (text) => map.get(text) ?? text);
+}
+
+function translateStrings(
+  value: Json,
+  translate: (text: string) => string,
+): Json {
   if (typeof value === "string") {
-    return map.get(value) ?? value;
+    return translate(value);
   }
   if (Array.isArray(value)) {
-    return value.map((item) => translateJsonValue(item, map));
+    return value.map((item) => translateStrings(item, translate));
   }
   if (value === null || typeof value !== "object") {
     return value;
@@ -98,9 +106,29 @@ export function translateJsonValue(
   return Object.fromEntries(
     Object.entries(value).map(([key, child]) => [
       key,
-      translateJsonValue(child, map),
+      translateStrings(child, translate),
     ]),
   );
+}
+
+/** Translate known tokens within inspection text, only for explicit archives. */
+export function translateJsonColumnValue(
+  value: Json,
+  map: ReadonlyMap<string, string>,
+  source: { table: string; column: string },
+): Json {
+  const rewriteEmbedded = EMBEDDED_PUUID_ARCHIVE_COLUMNS.some(
+    (archive) =>
+      archive.table === source.table && archive.column === source.column,
+  );
+  return rewriteEmbedded
+    ? translateStrings(value, (text) =>
+        text.replaceAll(
+          /(?<![\w-])[\w-]{70,90}(?![\w-])/gu,
+          (token) => map.get(token) ?? token,
+        ),
+      )
+    : translateJsonValue(value, map);
 }
 
 /**

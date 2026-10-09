@@ -100,6 +100,7 @@ test("discovery registers current mastery and durable payload columns", async ()
     `CREATE TABLE "ScoutWorkflowStart" ("requestId" TEXT PRIMARY KEY, "requestedWorkflowId" TEXT, "inputPayload" TEXT)`,
     `CREATE TABLE "MatchNotificationIntent" ("intentKey" TEXT PRIMARY KEY, "payload" TEXT)`,
     `CREATE TABLE "MatchSettlementAnnouncement" ("riotMatchId" TEXT, "family" TEXT, "itemKey" TEXT, "payload" TEXT, PRIMARY KEY ("riotMatchId", "family", "itemKey"))`,
+    `CREATE TABLE "ExploreToolPayload" ("id" TEXT PRIMARY KEY, "payload" TEXT)`,
   ]);
   const { discoverColumns } = await import("./discovery.ts");
   const columns = await discoverColumns(db);
@@ -119,6 +120,10 @@ test("discovery registers current mastery and durable payload columns", async ()
       }),
       expect.objectContaining({
         table: "MatchSettlementAnnouncement",
+        column: "payload",
+      }),
+      expect.objectContaining({
+        table: "ExploreToolPayload",
         column: "payload",
       }),
     ]),

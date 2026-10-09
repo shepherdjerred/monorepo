@@ -809,6 +809,98 @@ test("collect maps an identity frozen in a Dare after its account is removed", a
   await db.close();
 });
 
+test("inspection payloads rewrite known identities without collecting query participants", async () => {
+  const unrelated = "u".repeat(78);
+  const db = await seed({
+    accounts: [OLD_A],
+    map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
+  });
+  try {
+    await db.exec(
+      `CREATE TABLE "ExploreToolPayload" ("id" TEXT PRIMARY KEY, "direction" TEXT, "payload" TEXT, "createdAt" INTEGER)`,
+    );
+    const values = [
+      {
+        puuid: OLD_A,
+        nested: { player_puuid: unrelated },
+        prompt: `Find (${OLD_A}), not (${unrelated}).`,
+        value: 3,
+      },
+      { data: [{ puuid: unrelated }, { sourcePuuid: OLD_A }] },
+      [OLD_A, unrelated, null, { name: "preserved" }],
+    ];
+    for (const [index, direction] of ["input", "output", "dataset"].entries()) {
+      await db.exec(
+        `INSERT INTO "ExploreToolPayload" VALUES (${db.param(1)}, ${db.param(2)}, ${db.param(3)}, ${db.param(4)})`,
+        [index.toString(), direction, JSON.stringify(values[index]), 1],
+      );
+    }
+    for (const table of ["ExploreMessage", "ScoutInteractiveRun"]) {
+      await db.exec(
+        `CREATE TABLE "${table}" ("id" TEXT PRIMARY KEY, "trace" TEXT)`,
+      );
+      await db.exec(
+        `INSERT INTO "${table}" VALUES ('kept-id', ${db.param(1)})`,
+        [JSON.stringify({ query: `SELECT '${OLD_A}'`, observed: unrelated })],
+      );
+    }
+    const { collect, apply } = await import("./phases.ts");
+    const { verify } = await import("./verify.ts");
+    await collect(db);
+    const collected = await db.query('SELECT "oldPuuid" FROM "PuuidKeyMap"');
+    expect(collected.map((row) => row["oldPuuid"])).toEqual([OLD_A]);
+    await apply(db, false);
+    await verify(db);
+    expect(
+      await db.query('SELECT * FROM "ExploreToolPayload" ORDER BY "id"'),
+    ).toEqual([
+      {
+        id: "0",
+        direction: "input",
+        payload: JSON.stringify({
+          puuid: NEW_A,
+          nested: { player_puuid: unrelated },
+          prompt: `Find (${NEW_A}), not (${unrelated}).`,
+          value: 3,
+        }),
+        createdAt: 1,
+      },
+      {
+        id: "1",
+        direction: "output",
+        payload: JSON.stringify({
+          data: [{ puuid: unrelated }, { sourcePuuid: NEW_A }],
+        }),
+        createdAt: 1,
+      },
+      {
+        id: "2",
+        direction: "dataset",
+        payload: JSON.stringify([
+          NEW_A,
+          unrelated,
+          null,
+          { name: "preserved" },
+        ]),
+        createdAt: 1,
+      },
+    ]);
+    for (const table of ["ExploreMessage", "ScoutInteractiveRun"]) {
+      expect(await db.query(`SELECT * FROM "${table}"`)).toEqual([
+        {
+          id: "kept-id",
+          trace: JSON.stringify({
+            query: `SELECT '${NEW_A}'`,
+            observed: unrelated,
+          }),
+        },
+      ]);
+    }
+  } finally {
+    await db.close();
+  }
+});
+
 test("collect classifies current payload columns and collects only actionable rows", async () => {
   const db = await seed({ accounts: [] });
   const archived = `ARCH_${"h".repeat(70)}`;
