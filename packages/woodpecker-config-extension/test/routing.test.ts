@@ -87,6 +87,11 @@ describe("agent pool routing", () => {
       changedBase: "",
     }).find((step) => step.key === "codex-review-gate");
     if (fallback === undefined) throw new Error("missing fallback review");
+    expect(fallback.commands).toEqual([
+      ". ci/scripts/toolchain.sh",
+      "ci/scripts/review-gate.sh",
+    ]);
+    expect(fallback.skipClone).not.toBe(true);
     const routed = routeSteps(
       [fallback, noWorkStep(TEST_IMAGES.base)],
       context,
