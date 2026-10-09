@@ -6,8 +6,10 @@
       "outputs": ["dist/**"]
     },
     "typecheck": {},
-    "test": {},
-    "test:ci": {},
+    // Static metadata and redirect assertions inspect the actual built files.
+    "test": { "dependsOn": ["build", "^build", "generate"] },
+    "test:ci": { "dependsOn": ["build", "^build", "generate"] },
+    "test:report": { "dependsOn": ["build", "^build", "generate"] },
     "test:e2e": {
       "dependsOn": ["build", "^build"],
       "cache": true,
