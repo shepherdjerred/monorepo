@@ -72,7 +72,7 @@ toolkit ci wait 3447 --until settled    # Collect all blocking check results
 toolkit ci wait 3447 --timeout 2h       # Optional deadline; no default deadline
 toolkit ci explain 3447                # Current blockers and bounded failure logs
 toolkit ci main                        # Current main push and last completed verdict
-toolkit ci load                        # Queue, Kueue admission, CPU/memory/disk/I/O
+toolkit ci load                        # Queue, compute/gate admission, CPU/memory/disk/I/O
 toolkit pr review list 3447 --json      # Human and provider feedback with full bodies
 ```
 
