@@ -7,6 +7,18 @@ import XCTest
 @testable import TaskNotesFacetUI
 
 final class NativeCheckpointTests: XCTestCase {
+  @MainActor func testAccountSignInPresentationStates() async throws {
+    for state in FacetAccountRenderState.allCases {
+      let fixture = FacetAccountRenderFixture(state)
+      try await render(
+        fixture.view, named: "facet-account-ios-\(state.rawValue)", appearance: .light)
+    }
+    let failure = FacetAccountRenderFixture(.failure)
+    try await render(
+      failure.view.environment(\.dynamicTypeSize, .accessibility3),
+      named: "facet-account-ios-failure-large-type", appearance: .light)
+  }
+
   @MainActor func testDelightNativeComponents() async throws {
     for state in FacetDelightGalleryState.allCases {
       for appearance in [UIUserInterfaceStyle.light, .dark] {

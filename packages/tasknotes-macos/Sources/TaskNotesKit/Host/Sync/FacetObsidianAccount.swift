@@ -136,6 +136,8 @@ public actor FacetObsidianAccount {
         choices = []
         let response = try await perform(
             account.signIn(email: email, password: password, mfa: code), generation: attempt)
+        try _Concurrency.Task.checkCancellation()
+        guard attempt == generation else { throw FacetSyncError.cancelled }
         switch response {
         case .mfaRequired: return .needsCode
         case .mfaRejected: return .rejectedCode
@@ -149,6 +151,8 @@ public actor FacetObsidianAccount {
             activeOwner = owner
             try persist()
             let listed = try await perform(account.listVaults(token: token), generation: attempt)
+            try _Concurrency.Task.checkCancellation()
+            guard attempt == generation else { throw FacetSyncError.cancelled }
             guard case .vaults(let vaults) = listed else {
                 throw FacetContractError.unsupportedResponse
             }
@@ -167,6 +171,8 @@ public actor FacetObsidianAccount {
         let owner = authorization.owner
         let prepared = authorization.prepared
         let attempt = authorization.attempt
+        try _Concurrency.Task.checkCancellation()
+        guard attempt == generation else { throw FacetSyncError.cancelled }
         let profileID = UUID().uuidString
         let identity = FacetSyncIdentity(owner: owner, vault: FacetRemoteVault(prepared.vault))
         try secrets.write("vault.\(profileID).key", bytes: prepared.keyBytes)
@@ -278,31 +284,17 @@ public actor FacetObsidianAccount {
         -> ObsidianAccountResponse
     {
         do {
-            guard let url = URL(string: request.url), url.scheme == "https" else {
-                throw FacetSyncError.transport
-            }
-            if request.preflight {
-                var preflight = URLRequest(url: url)
-                preflight.httpMethod = "OPTIONS"
-                for header in request.headers where header.name.lowercased() == "origin" {
-                    preflight.setValue(header.value, forHTTPHeaderField: header.name)
-                }
-                _ = try await response(preflight)
-            }
-            var native = URLRequest(url: url)
-            native.httpMethod = "POST"
-            native.httpBody = Data(request.body.utf8)
-            for header in request.headers {
-                native.setValue(header.value, forHTTPHeaderField: header.name)
-            }
-            let (status, bytes) = try await response(native)
+            let (status, bytes) = try await FacetAccountHTTP.perform(
+                request, ownsAttempt: { self.accessEpoch.withLock { $0 == attempt } },
+                send: { try await self.response($0) })
+            try _Concurrency.Task.checkCancellation()
             guard attempt == generation else { throw FacetSyncError.cancelled }
             guard let body = String(data: bytes, encoding: .utf8) else {
                 throw FacetSyncError.transport
             }
             return try account.response(requestId: request.requestId, status: status, body: body)
         } catch {
-            // Cancel may report consumed request after a decode failure; preserve the original boundary error.
+            // Request disposal is idempotent, including after a decode consumed it.
             try account.cancelRequest(requestId: request.requestId)
             throw error
         }
@@ -372,6 +364,8 @@ extension FacetObsidianAccount {
             })
         else { throw FacetSyncError.signedOut }
         let authorization = try await authorizeVault(vaultID: vaultID, password: password)
+        try _Concurrency.Task.checkCancellation()
+        guard authorization.attempt == generation else { throw FacetSyncError.cancelled }
         let owner = authorization.owner
         let prepared = authorization.prepared
         let previousKey = try secrets.read("vault.\(profileID).key")

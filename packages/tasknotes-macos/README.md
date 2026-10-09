@@ -42,6 +42,11 @@ with rule parsing and construction performed by the existing Rust functions
 away from the UI actor.
 
 Engine, account and selected-profile ownership is application-wide.
+Startup publishes the engine, importer and account together after their initial
+reads succeed. A failed preparation closes its unpublished engine and permits a
+fresh startup attempt. Account requests check cancellation and their original
+session generation before and after each HTTP operation, including between the
+OPTIONS preflight and the credential POST, then again before decoding a response.
 `FacetWindowState` owns each window's query, search, saved-view constraints,
 selection and pagination. Independent read generations never retire mutation
 publication. Browse vocabulary uses a separate version-consistent all-page read
@@ -135,6 +140,12 @@ entries survive unreadable or changing plans. Reminder notification routes keep
 their owning profile and wait behind an unsaved editor. Native background
 failures use bounded diagnostic classifications that exclude vault contents and
 account responses.
+
+The Obsidian account sheet owns visible progress, verification guidance and
+redacted errors. A successful account with no Sync vaults has an explicit empty
+state. Dismissal cancels only that sheet's request and fences late replies;
+credentials remain transient and clear after success or dismissal. Startup
+publishes the engine and account together, so failed initialization can retry.
 
 The Xcode application target (`project.yml`, XcodeGen — the `.xcodeproj` is
 generated and gitignored) links `TaskNotesMac` and supplies only the `@main`
