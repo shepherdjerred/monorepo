@@ -16,7 +16,7 @@ export const PipelineSchema = z.looseObject({
   branch: z.string(),
   commit: z.string(),
   ref: z.string(),
-  /** Woodpecker's pipeline number, used only for audit context. */
+  /** Woodpecker's pipeline number, also the boundary for superseding older PRs. */
   number: z.number().int().nonnegative().default(0),
   /** Native review fields are parsed for contract visibility, never trusted. */
   reviewed: z.number().int().nonnegative().default(0),

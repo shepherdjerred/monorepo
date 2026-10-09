@@ -53,6 +53,11 @@ export type AppOptions = {
   readonly compareChangedFiles?: typeof changedFilesSince;
   /** Checks an exact hosted-automation head against forge review state. */
   readonly hostedAutomationApproved?: (pipeline: Pipeline) => Promise<boolean>;
+  /** Best-effort capacity cleanup; never substitutes for current-head gates. */
+  readonly cancelSupersededPr?: (
+    repoId: number,
+    pipeline: Pipeline,
+  ) => Promise<unknown>;
 };
 
 function platformOperationRequest(
@@ -171,6 +176,22 @@ async function resolveChangedFiles({
   return changedBase === undefined
     ? undefined
     : compare(`shepherdjerred/${repoName}`, changedBase, pipeline.commit);
+}
+
+async function cleanupSupersededPr(
+  options: AppOptions,
+  repoId: number,
+  pipeline: Pipeline,
+): Promise<void> {
+  if (!isPrVerificationEvent(pipeline)) return;
+  try {
+    await options.cancelSupersededPr?.(repoId, pipeline);
+  } catch {
+    // An external cleanup failure must not suppress the replacement run.
+    console.warn(
+      "PR supersession cleanup failed; preserving full verification",
+    );
+  }
 }
 
 export function createApp(options: AppOptions): Hono {
@@ -332,21 +353,21 @@ export function createApp(options: AppOptions): Hono {
       ),
     );
 
-    return context.json({
-      configs: emit(
-        prVerification
-          ? [
-              ...selected,
-              completionStep(
-                selected,
-                options.trustedGateImage ?? images.base,
-                gateDirectory,
-                prStatusEvent(pipeline.event),
-              ),
-            ]
-          : selected,
-      ),
-    });
+    const configs = emit(
+      prVerification
+        ? [
+            ...selected,
+            completionStep(
+              selected,
+              options.trustedGateImage ?? images.base,
+              gateDirectory,
+              prStatusEvent(pipeline.event),
+            ),
+          ]
+        : selected,
+    );
+    await cleanupSupersededPr(options, repo.id, pipeline);
+    return context.json({ configs });
   });
 
   return app;

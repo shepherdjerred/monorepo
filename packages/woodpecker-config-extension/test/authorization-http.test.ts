@@ -26,6 +26,7 @@ function harness(hostedAutomationApproved = false, trustedGateImage?: string) {
     ),
   );
   const base = vi.fn(() => Promise.resolve(undefined));
+  const cancelSupersededPr = vi.fn(() => Promise.resolve());
   const app = createApp({
     ...(trustedGateImage === undefined ? {} : { trustedGateImage }),
     publicKey: () => Promise.resolve(publicKey),
@@ -33,9 +34,10 @@ function harness(hostedAutomationApproved = false, trustedGateImage?: string) {
     changedBase: base,
     verifyBase: base,
     imageReleaseBase: base,
+    cancelSupersededPr,
     hostedAutomationApproved: () => Promise.resolve(hostedAutomationApproved),
   });
-  return { app, imageFetcher, base };
+  return { app, imageFetcher, base, cancelSupersededPr };
 }
 
 async function request(overrides: Record<string, unknown> = {}) {
@@ -95,7 +97,7 @@ describe("signed Justin pipeline authorization", () => {
     { from_fork: true },
     { author: "app/justin-principal-engineer" },
   ])("refuses %j before reading forge data", async (overrides) => {
-    const { app, imageFetcher, base } = harness();
+    const { app, imageFetcher, base, cancelSupersededPr } = harness();
     const response = await app.request(await request(overrides));
     expect(response.status).toBe(403);
     expect(await response.json()).toEqual({
@@ -103,6 +105,7 @@ describe("signed Justin pipeline authorization", () => {
     });
     expect(imageFetcher).not.toHaveBeenCalled();
     expect(base).not.toHaveBeenCalled();
+    expect(cancelSupersededPr).not.toHaveBeenCalled();
   });
 
   test("a trusted bot name cannot admit an unsigned request", async () => {
@@ -118,6 +121,17 @@ describe("signed Justin pipeline authorization", () => {
 
 describe("signed workflow routing", () => {
   const gateImage = `ghcr.io/shepherdjerred/woodpecker-config-extension@sha256:${"c".repeat(64)}`;
+  test("cleanup failures preserve the full replacement verification graph", async () => {
+    const { app, cancelSupersededPr } = harness(true, gateImage);
+    cancelSupersededPr.mockRejectedValue(new Error("cleanup failed"));
+    const response = await app.request(await request());
+    expect(response.status).toBe(200);
+    const result = ConfigResponseSchema.parse(await response.json());
+    expect(
+      result.configs.some((entry) => entry.name.endsWith("/ci-complete.yaml")),
+    ).toBe(true);
+    expect(cancelSupersededPr).toHaveBeenCalledTimes(1);
+  });
   test("ready-for-review runs the full PR graph with PR cache trust and native status contexts", async () => {
     const { app } = harness(true, gateImage);
     const changes = { changed_files: [] };
@@ -169,7 +183,7 @@ describe("signed workflow routing", () => {
   ])(
     "keeps other metadata from producing merge evidence: %j",
     async (metadata) => {
-      const { app } = harness(true, gateImage);
+      const { app, cancelSupersededPr } = harness(true, gateImage);
       const response = await app.request(
         await request({ event: "pull_request_metadata", ...metadata }),
       );
@@ -177,6 +191,7 @@ describe("signed workflow routing", () => {
       expect(result.configs.map((entry) => entry.name)).toEqual([
         ".woodpecker/ci-noop.yaml",
       ]);
+      expect(cancelSupersededPr).not.toHaveBeenCalled();
     },
   );
   test.each([

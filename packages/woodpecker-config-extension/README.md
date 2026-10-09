@@ -67,6 +67,14 @@ server maps only that completion workflow to the existing required
 `ci/woodpecker/pr/ci-complete` status. Toolkit selects the newest matching PR
 or ready-event pipeline and rejects draft-only evidence at the same SHA.
 
+Native cancellation compares equal event types. After producing a full PR
+graph, the extension also cancels older ready-event runs for that exact PR;
+a ready transition supersedes older normal PR runs too. It revalidates each
+pipeline immediately before cancellation and never cancels newer runs, main,
+or another PR. Metadata no-ops and unapproved automation do no cleanup.
+The entire best-effort lookup has a three-second deadline; API failure leaves
+the replacement verification intact and emits a bounded warning.
+
 Deploy this compatibility path and its server status-context template before
 enabling cheaper draft checks. The server configuration change requires a
 drained server rollout; observe an actual ready transition through full CI
