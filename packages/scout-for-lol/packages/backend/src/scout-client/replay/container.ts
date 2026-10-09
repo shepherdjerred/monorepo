@@ -14,6 +14,29 @@ const MAX_CHUNK_BYTES = 64 * 1024 * 1024;
 const MAX_DURATION_DRIFT_MS = 5000;
 const ZSTD_MAGIC = Buffer.from([0x28, 0xb5, 0x2f, 0xfd]);
 const VersionSchema = z.string().regex(/^\d{1,2}\.\d{1,2}\.\d{1,8}\.\d{1,8}$/);
+/**
+ * Whether two four-part game versions name the same build. Compared part by
+ * part as numbers: a replay header zero-pads the revision ("16.19.823.0722")
+ * where the match and the League client state it bare ("16.19.823.722").
+ * Any part that isn't a number makes the versions unequal.
+ */
+export function sameGameBuild(left: string, right: string): boolean {
+  const leftParts = left.split(".");
+  const rightParts = right.split(".");
+  return (
+    leftParts.length === rightParts.length &&
+    leftParts.every((part, index) => {
+      const other = rightParts[index];
+      return (
+        other !== undefined &&
+        /^\d+$/.test(part) &&
+        /^\d+$/.test(other) &&
+        Number(part) === Number(other)
+      );
+    })
+  );
+}
+
 const ReplayIntegerSchema = z
   .string()
   .regex(/^\d+$/)
@@ -272,7 +295,7 @@ export async function validateReplayContainer(
     }
     if (
       provenance.leaguePatch !== null &&
-      version.data !== provenance.leaguePatch
+      !sameGameBuild(version.data, provenance.leaguePatch)
     ) {
       throw new ReplayContainerError(
         "Replay patch does not match the observed match",

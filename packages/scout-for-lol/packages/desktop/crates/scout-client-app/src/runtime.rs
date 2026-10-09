@@ -1512,7 +1512,7 @@ async fn collect_match_state(
         outbox,
         payloads,
         LcuEndpoint::EndOfGame,
-        ObservationSlot::named("post_game", ObservationKind::PostGame),
+        END_OF_GAME_SLOT,
         local_puuid,
         diagnostics,
     )
@@ -1526,7 +1526,7 @@ async fn collect_match_state(
         outbox,
         payloads,
         LcuEndpoint::GameClientEndOfGame,
-        ObservationSlot::named("post_game", ObservationKind::PostGame),
+        GAME_CLIENT_END_OF_GAME_SLOT,
         local_puuid,
         diagnostics,
     )
@@ -1986,6 +1986,26 @@ fn record_post_game_read(diagnostics: &Diagnostics, outcome: DiagnosticOutcome, 
     );
 }
 
+/// The League client's end-of-game block.
+///
+/// It and the game client's block both travel as `post_game`, but each needs
+/// its own change-detection key. With one shared key, every pass where this
+/// block was absent cleared the key and the game client's block looked new,
+/// so it was sent again every two seconds — 366 copies of one Arena game.
+const END_OF_GAME_SLOT: ObservationSlot<'static> = ObservationSlot {
+    cache_key: "post_game_end_of_game",
+    resource: "post_game",
+    kind: ObservationKind::PostGame,
+};
+
+/// The game client's own end-of-game block, read when the League client's
+/// is absent. See [`END_OF_GAME_SLOT`].
+const GAME_CLIENT_END_OF_GAME_SLOT: ObservationSlot<'static> = ObservationSlot {
+    cache_key: "post_game_game_client",
+    resource: "post_game",
+    kind: ObservationKind::PostGame,
+};
+
 /// What a collected payload is filed as.
 ///
 /// These three always travel together — the loops below already group them as
@@ -2043,12 +2063,40 @@ async fn observe_endpoint(
             return Err(error.to_string());
         }
     };
-    if let Some(value) = &payload {
-        enqueue_resource_if_changed(outbox, payloads, slot, value, local_puuid, diagnostics)?;
-    } else {
-        payloads.remove(key);
-    }
+    record_endpoint_payload(
+        outbox,
+        payloads,
+        slot,
+        payload.as_ref(),
+        local_puuid,
+        diagnostics,
+    )?;
     Ok(payload)
+}
+
+/// File one endpoint read: queue the payload if it changed since this slot
+/// last saw it, or forget the slot when the endpoint has nothing, so a payload
+/// that comes back is sent again.
+fn record_endpoint_payload(
+    outbox: &ObservationOutbox,
+    payloads: &mut HashMap<String, Vec<u8>>,
+    slot: ObservationSlot<'_>,
+    payload: Option<&Value>,
+    local_puuid: Option<&str>,
+    diagnostics: &Diagnostics,
+) -> Result<(), String> {
+    if let Some(value) = payload {
+        return enqueue_resource_if_changed(
+            outbox,
+            payloads,
+            slot,
+            value,
+            local_puuid,
+            diagnostics,
+        );
+    }
+    payloads.remove(slot.cache_key);
+    Ok(())
 }
 
 fn enqueue_if_changed(
@@ -2341,8 +2389,9 @@ mod tests {
     };
 
     use super::{
-        RuntimeState, apply_observation_receipt, bind_observed_lobby, clear_replay_error,
-        clear_runtime_error, find_string, game_start_evidence, optional_lockfile, outbox_file_name,
+        END_OF_GAME_SLOT, GAME_CLIENT_END_OF_GAME_SLOT, RuntimeState, apply_observation_receipt,
+        bind_observed_lobby, clear_replay_error, clear_runtime_error, find_string,
+        game_start_evidence, optional_lockfile, outbox_file_name, record_endpoint_payload,
         replay_platform_id, replay_sha256, set_error, set_replay_error,
         should_emit_live_game_frame, should_refresh_lobby, update_state,
     };
@@ -2362,6 +2411,46 @@ mod tests {
             "phase": "InProgress",
             "gameData": { "gameId": 5_653_248_720_u64 },
         }))
+    }
+
+    #[test]
+    fn an_unchanged_game_client_end_of_game_block_is_sent_once()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let path = std::env::temp_dir().join(format!("scout-runtime-{}.db", Uuid::new_v4()));
+        let outbox = ObservationOutbox::open(&path)?;
+        let diagnostics = Diagnostics::in_memory();
+        let mut payloads = HashMap::new();
+        let block = json!({ "gameId": 5_654_767_039_u64, "queueType": "CHERRY" });
+
+        // Each pass after an Arena game: the League client has no end-of-game
+        // block, so the game client's is read instead — and it doesn't change.
+        for _ in 0..3 {
+            record_endpoint_payload(
+                &outbox,
+                &mut payloads,
+                END_OF_GAME_SLOT,
+                None,
+                Some("puuid"),
+                &diagnostics,
+            )?;
+            record_endpoint_payload(
+                &outbox,
+                &mut payloads,
+                GAME_CLIENT_END_OF_GAME_SLOT,
+                Some(&block),
+                Some("puuid"),
+                &diagnostics,
+            )?;
+        }
+
+        let pending = outbox.pending(100)?;
+        assert_eq!(pending.len(), 1, "an unchanged block is sent once");
+        let sent: ObservationEnvelope = serde_json::from_slice(&pending[0].body)?;
+        assert_eq!(sent.kind, ObservationKind::PostGame);
+        assert_eq!(sent.payload["resource"], "post_game");
+
+        let _ = std::fs::remove_file(&path);
+        Ok(())
     }
 
     #[test]

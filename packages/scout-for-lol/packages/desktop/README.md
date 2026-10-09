@@ -105,6 +105,11 @@ duration, size, and a bounded `detail` — so a credential, PUUID or filesystem
 path is not representable in one rather than merely filtered out of it. Adding
 a field is the only way to widen what a record can hold.
 
+The window renders with wgpu. The glow renderer unwraps `make_current` every
+frame on Windows and panicked when the GL context was invalidated by
+sleep/resume, a driver reset, or a display change. If wgpu can't start, the
+window falls back to glow and records a `start_renderer` warning.
+
 Errors and crashes are also reported to Bugsink once a DSN is configured in
 `scout_client_core::reporting`; until then the reporter is not installed and
 everything stays on the machine. Only `Error` and `Critical` records are sent,
