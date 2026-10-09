@@ -537,8 +537,10 @@ def run(args: argparse.Namespace) -> None:
     print(f"Downloads: {ORIGIN}/world_downloads/", flush=True)
 
 
-def document(state_path: Path) -> None:
+def document(state_path: Path, overview_path: Path | None = None) -> None:
     catalog = load_catalog()
+    if overview_path is None and (PACKAGE / "archive/overviews.json").exists():
+        overview_path = PACKAGE / "archive/overviews.json"
     state: Publication = json.loads(state_path.read_text(encoding="utf-8"))
     if (
         state["release"] != catalog["release"]
@@ -546,6 +548,12 @@ def document(state_path: Path) -> None:
         or set(state["schematics"]) != {s["file"] for s in catalog["schematics"]}
     ):
         raise ValueError("Refusing to document an incomplete/different archive release")
+    overviews = None
+    if overview_path is not None:
+        from world_overviews import validate_publication
+
+        overviews = json.loads(overview_path.read_text(encoding="utf-8"))
+        validate_publication(overviews, complete=True)
     lines = [
         "---",
         "title: World Downloads",
@@ -574,8 +582,18 @@ def document(state_path: Path) -> None:
         "## Archived worlds",
         "",
     ]
+    if overviews is not None:
+        intro = lines.index("## Play a world")
+        lines[intro:intro] = [
+            "Explore map opens an interactive, low-resolution overview of each world's saved terrain. "
+            "ZIP downloads retain their original Minecraft formats.",
+            "",
+        ]
     for world in catalog["worlds"]:
         entry = state["worlds"][world["id"]]
+        download_link = f"[Download ZIP]({entry['download']})"
+        if overviews is not None:
+            download_link += f" · [Explore map]({overviews['worlds'][world['id']]['url']})"
         lines += [
             f"### {world['title']}",
             "",
@@ -584,7 +602,7 @@ def document(state_path: Path) -> None:
             f"**Snapshot:** {world['date']} · **Minecraft:** {world['minecraft']} · "
             f"**Download:** {download_size(entry['bytes'])}",
             "",
-            f"[Download ZIP]({entry['download']})",
+            download_link,
             "",
             f"Credit: {world['credit']}.",
             "",
@@ -656,13 +674,14 @@ def main() -> None:
     publish.add_argument("--dry-run", action="store_true")
     docs = subparsers.add_parser("document")
     docs.add_argument("--state", type=Path, required=True)
+    docs.add_argument("--overviews", type=Path)
     acceptance = subparsers.add_parser("verify")
     acceptance.add_argument("--state", type=Path, required=True)
     args = parser.parse_args()
     if args.command == "run":
         run(args)
     elif args.command == "document":
-        document(args.state)
+        document(args.state, args.overviews)
     else:
         verify(args.state)
 

@@ -18,7 +18,8 @@ survival section. Accuracy fixes applied during the port:
   dropped.
 - World downloads are generated from the verified archive catalogue. The
   original formats and player saves are preserved. Bounded 2D previews show
-  selected areas around spawn without converting the saves.
+  selected areas around spawn without converting the saves. Static BlueMap
+  overviews cover all saved terrain using disposable render copies.
 - The empty `legacy.md` stub was dropped.
 
 The `world_downloads.md` filename is intentionally underscore-delimited:
@@ -130,3 +131,92 @@ aws --profile seaweedfs --endpoint-url https://seaweedfs-s3.tailnet-1a49.ts.net 
 The snapshot gallery is at `/world-archive/<release>/site/world_downloads/`.
 Inspect the rendered gallery and its full-size images after uploading. Snapshot
 uploads use no deleting sync and do not include local world data.
+
+## Static world overviews
+
+`bun run overviews` publishes an independent BlueMap viewer for each archived
+world. The viewers contain low-resolution PNG tiles and support flat-view
+navigation. `enable-hires` is disabled; close-up 3D models are not generated.
+`client-decompression` lets the viewer load compressed assets directly from
+the existing SeaweedFS bucket through `docs.ts-mc.net`.
+
+Requirements: the repo's Java 25 toolchain, Docker, `uv`, AWS CLI, the configured
+`seaweedfs` AWS profile, and the original archive directory. Run from this
+package and choose an empty scratch directory outside the repository and source:
+
+```bash
+bun run overviews run --source "$HOME/Sync/Sync/The Storm/Worlds" \
+  --scratch /path/to/overview-scratch --dry-run
+bun run overviews run --source "$HOME/Sync/Sync/The Storm/Worlds" \
+  --scratch /path/to/overview-scratch --only asterism-2016-02
+bun run overviews run --source "$HOME/Sync/Sync/The Storm/Worlds" \
+  --scratch /path/to/overview-scratch --workers 4 --render-workers 12
+bun run overviews verify --state /path/to/overview-scratch/overviews.json --readback
+bun run overviews document --state /path/to/overview-scratch/overviews.json
+bun run test
+bun run build
+```
+
+The catalogue's original archive hashes must match the certified downloads.
+Extraction copies only terrain and required metadata. The eight older worlds
+are converted to vanilla 1.17.1 in a disposable, network-isolated Java 17
+container using the catalogue's pinned image. The 1.14.4 archive includes
+distant chunks that were never upgraded, so its render copy also needs a full
+conversion. The 1.19.2 save renders directly from a copy. Conversion checks
+every original chunk and excludes any
+terrain generated during server startup. Original ZIPs, downloads and preview
+images remain unchanged. No converted saves are published.
+The overview renders saved chunk edges without requiring neighboring light
+data. This keeps the archive's saved terrain visible and renders it fully lit;
+the viewer's night mode does not reproduce historical lighting.
+Kargeth's Anvil metadata selects its `.mca` terrain; obsolete `.mcr` backups
+in that ZIP remain in the download and are excluded from the render copy.
+The converter remains before the world-height expansion. `PatchUpgrader.java`
+uses Java 25's class-file API to add a synchronous flush before vanilla 1.17.1's
+IOWorker closes its asynchronous write queue. Without this flush the converter
+can silently discard its final chunk write. The official checksum-pinned JAR
+remains unchanged; only the patched IOWorker class takes precedence on the
+disposable converter's classpath. Its source checksum is part of the publication
+certificate. Every original chunk must pass format certification after conversion.
+BlueMap's render-state files must contain no failed or omitted-light tiles and
+must show a processed tile at every original saved chunk's center.
+
+Rendering uses the checksum-pinned BlueMap CLI in `archive/overview-tools.json`.
+The viewer is built from checksum-pinned matching upstream sources and their
+dependency lock using Bun. Vue I18n's JIT compilation handles translations
+within the docs site's existing Content Security Policy.
+Renderer and viewer versions must agree with the version catalogue. One world
+is processed at a time with one to five workers and a 15 GiB free-space reserve.
+Conversion partitions disjoint region files across isolated vanilla processes,
+then certifies each partition and the merged original chunk inventory. Resume
+conversion with the original worker count. Each process has a 5 GiB memory limit;
+Docker must have two CPUs per worker and an additional 2 GiB memory margin.
+The default is two workers. Extraction
+additionally reserves twice the selected terrain's size. Conversion and render
+failures retain checkpoints and numbered logs in that world's scratch directory.
+`--render-workers` selects independent native rendering parallelism (up to 12
+threads, bounded by the host's CPU count). Rendering uses a 4 GiB Java heap with
+up to four threads and 8 GiB with more; allow additional host memory headroom.
+BlueMap resumes unchanged completed tiles after an interrupted render.
+Rerunning resumes completed stages; interrupted extraction requires inspecting
+and removing only that exact pipeline-owned world directory before retrying.
+
+Payloads live below `world-archive/<archive-release>/overviews/<overview-release>/`.
+Each object is hashed, read back from S3 and checked through its public URL.
+Existing objects must match their certificate before a retry skips them.
+Changed tools, rendering policy or payload bytes require a new overview release.
+Publication never deletes remote objects; the normal site deploy continues to
+exclude the entire `world-archive/` prefix.
+
+`document` requires certified overviews for every catalogue world, records
+`archive/overviews.json`, and regenerates the downloads page with Explore map
+links. Later archive documentation updates automatically preserve the checked-in
+overview certificate. An explicit certificate can also be selected:
+
+```bash
+bun run archive document --state archive/published.json --overviews archive/overviews.json
+```
+
+Inspect all hosted viewers and pan beyond spawn before releasing page links.
+Keep visual proof with the source change. `verify --readback` checks every asset
+through both S3 metadata and public bytes; it complements browser acceptance.
