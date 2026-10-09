@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { HistorySchema, historicalDate, restoreMessage } from "#src/history.ts";
+import {
+  HistorySchema,
+  historicalDate,
+  historicalKey,
+  restoreMessage,
+} from "#src/history.ts";
 import corpus from "#config/history.json";
 import { parseDocument } from "htmlparser2";
 import { archiveBBCode, findAll, originalUrl } from "#src/archive-html.ts";
@@ -7,8 +12,8 @@ import { archiveBBCode, findAll, originalUrl } from "#src/archive-html.ts";
 describe("reviewed history corpus", () => {
   it("contains substantial public discussions with unique identities", () => {
     const history = HistorySchema.parse(corpus);
-    expect(history.threads).toHaveLength(120);
-    expect(history.users).toHaveLength(73);
+    expect(history.threads).toHaveLength(131);
+    expect(history.users).toHaveLength(79);
     expect(history.users.filter((user) => user.avatar !== null)).toHaveLength(
       17,
     );
@@ -17,7 +22,7 @@ describe("reviewed history corpus", () => {
       history.threads
         .flatMap((thread) => thread.posts)
         .filter((post) => post.originalPostId === null),
-    ).toHaveLength(17);
+    ).toHaveLength(27);
     expect(
       history.threads.find((thread) => thread.originalId === 33)?.posts[0]
         ?.message,
@@ -31,7 +36,7 @@ describe("reviewed history corpus", () => {
     ).toEqual(expect.arrayContaining(["XMrMoiXx", "yolksoup"]));
     expect(
       history.threads.reduce((total, thread) => total + thread.posts.length, 0),
-    ).toBe(1148);
+    ).toBe(1164);
     expect(
       history.threads.filter((thread) => thread.reconstructed),
     ).toHaveLength(9);
@@ -40,8 +45,64 @@ describe("reviewed history corpus", () => {
     ).toBe(true);
     expect(
       history.threads.every((thread) =>
-        thread.posts.every((post) => post.date < Date.UTC(2017, 0, 1) / 1000),
+        thread.posts.every((post) => post.date < Date.UTC(2023, 0, 1) / 1000),
       ),
+    ).toBe(true);
+  });
+  it("keeps reset IDs separate and captured totals independent of native voters", () => {
+    const history = HistorySchema.parse(corpus);
+    expect(historicalKey("original", 1)).toBe("1");
+    expect(historicalKey("revival2022", 1)).toBe("revival2022:1");
+    expect(history.users.filter((user) => user.originalId === 1)).toHaveLength(
+      3,
+    );
+    expect(
+      history.threads.find((thread) => thread.era === "revival2022")?.posts[0]
+        ?.message,
+    ).toBe("Hello!");
+    expect(
+      history.threads.filter((thread) => thread.poll !== undefined),
+    ).toHaveLength(8);
+    expect(
+      history.threads
+        .flatMap((thread) => thread.posts)
+        .filter((post) => post.ratings !== undefined),
+    ).toHaveLength(248);
+    const duplicate = structuredClone(history);
+    const revival = duplicate.threads.find(
+      (thread) => thread.era === "revival2022",
+    );
+    if (revival === undefined) throw new Error("Missing revival fixture");
+    const collision = structuredClone(revival);
+    delete collision.era;
+    duplicate.threads.push(collision);
+    expect(() => HistorySchema.parse(duplicate)).not.toThrow();
+    duplicate.threads.push(structuredClone(revival));
+    expect(() => HistorySchema.parse(duplicate)).toThrow(
+      /Duplicate historical/,
+    );
+  });
+  it("includes short original announcements and image-only replies in their historical sections", () => {
+    const history = HistorySchema.parse(corpus);
+    for (const id of [22, 35, 76, 91, 331, 353, 432, 454, 607]) {
+      expect(
+        history.threads.find((thread) => thread.originalId === id)?.node,
+      ).toBe("news");
+      expect(history.omitted.some((thread) => thread.originalId === id)).toBe(
+        false,
+      );
+    }
+    const rainThread = history.threads.find(
+      (thread) => thread.originalId === 470,
+    );
+    expect(rainThread?.node).toBe("chaos");
+    expect(
+      rainThread?.posts.find((post) => post.originalPostId === 3977)?.message,
+    ).toContain("[IMG]/data/storm-history/giphy-MsZ7S2k8UVLr2.gif[/IMG]");
+    expect(
+      history.threads
+        .find((thread) => thread.originalId === 297)
+        ?.posts.some((post) => post.originalPostId === 2057),
     ).toBe(true);
   });
   it("recovers native formatting, links, attachments, and supported media while discarding executable HTML", () => {

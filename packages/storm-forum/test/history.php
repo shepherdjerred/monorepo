@@ -13,11 +13,49 @@ $run = static function (array $options = []) use ($console): void {
     stormConsoleCleanup();
 };
 $users = $app->db()->fetchOne('SELECT COUNT(*) FROM xf_user');
+$corpus = json_decode(file_get_contents('/opt/storm-forum/config/history.json'), true, 512, JSON_THROW_ON_ERROR);
+$historyKey = static fn(array $record, ?int $id = null) => (($record['era'] ?? 'original') === 'original' ? '' : $record['era'] . ':') . ($id ?? $record['originalId']);
+$baseline = $corpus;
+$addedAnnouncements = [22,35,76,91,331,353,432,454,607];
+$addedReplies = [2057,3859,3977,4007,4137];
+$baseline['threads'] = array_values(array_filter($baseline['threads'], fn($record) => !isset($record['era']) && !in_array($record['originalId'], $addedAnnouncements, true)));
+$baseline['users'] = array_values(array_filter($baseline['users'], fn($record) => !isset($record['era']) && !in_array($record['originalId'], [5,7,9,13], true)));
+foreach ($baseline['threads'] as &$record) {
+    unset($record['poll']);
+    $record['posts'] = array_values(array_filter($record['posts'], fn($post) => !in_array($post['originalPostId'], $addedReplies, true)));
+    foreach ($record['posts'] as &$post) { unset($post['ratings']); } unset($post);
+    if (in_array($record['node'], ['chaos','voting','towns','lysergia','boomerville','keystone'], true)) { $record['node'] = 'general'; }
+}
+unset($record);
+$GLOBALS['stormFixtureHistory'] = $baseline;
 $run();
+$baselineMap = $app->registry()->get('stormForumHistory');
+$baselinePostCount = $app->db()->fetchOne('SELECT COUNT(*) FROM xf_post');
+unset($GLOBALS['stormFixtureHistory']);
+try {
+    $rejected = false;
+    try { $run(); } catch (RuntimeException $error) { $rejected = str_contains($error->getMessage(), 'explicit migration'); }
+    $check($rejected, 'Additional captured content was imported without explicit migration');
+    $run(['--migrate'=>true, '--dry-run'=>true]);
+    $check($app->db()->fetchOne('SELECT COUNT(*) FROM xf_post') == $baselinePostCount, 'Recovery dry run changed native posts');
+    $run(['--migrate'=>true]);
+    $expandedMap = $app->registry()->get('stormForumHistory');
+    $check($app->db()->fetchOne('SELECT COUNT(*) FROM xf_post') == $baselinePostCount + 16, 'Recovered announcements/image-only replies and revival posts were not imported exactly once');
+    foreach ($baselineMap as $id=>$entry) {
+        $check($expandedMap[$id]['threadId'] === $entry['threadId'], 'Recovery changed an existing thread ID');
+        foreach ($entry['posts'] as $key=>$native) { $check($expandedMap[$id]['posts'][$key] === $native, 'Recovery changed an existing post ID'); }
+    }
+    $run();
+    $check($expandedMap === $app->registry()->get('stormForumHistory'), 'Recovery repeat import changed stable checkpoints');
+} finally { unset($GLOBALS['stormFixtureHistory']); }
 $map = $app->registry()->get('stormForumHistory');
-$check(count($map) === 120, 'Restored thread count differs from reviewed corpus');
+$check(count($map) === 131, 'Restored thread count differs from reviewed corpus');
 $identities = $app->registry()->get('stormForumHistoricalUsers');
-$check(count($identities) === 73, 'Historical aliases were not merged by original member ID');
+$check(count($identities) === 79, 'Historical aliases were not scoped by era/member ID');
+$check($identities['revival2016:1']['userId'] === $identities[1]['userId'] && $identities['revival2022:1']['userId'] === $identities[1]['userId'], 'Explicit owner mapping duplicated the owner across eras');
+$check(isset($map['revival2022:1']) && !isset($map[1]), 'A revival thread ID leaked into original-era redirect mappings');
+$check(count($app->registry()->get('stormHistoryRatings')) === 248 && count($app->registry()->get('stormHistoryPolls')) === 8, 'Captured historical totals missing');
+$check($app->db()->fetchOne('SELECT COUNT(*) FROM xf_reaction_content') == 0 && $app->db()->fetchOne('SELECT COUNT(*) FROM xf_poll_vote') == 0, 'Snapshot totals created fictional native voters');
 $afterUsers = $app->db()->fetchOne('SELECT COUNT(*) FROM xf_user');
 $run();
 $check($afterUsers == $app->db()->fetchOne('SELECT COUNT(*) FROM xf_user'), 'Repeat history import created duplicate profiles');
@@ -157,26 +195,29 @@ try {
     $app->em()->clearEntityCache();
 }
 foreach ($corpus['users'] as $item) {
-    $user = $app->em()->find('XF:User', $identities[$item['originalId']]['userId'], ['Auth','Privacy']);
+    $user = $app->em()->find('XF:User', $identities[$historyKey($item)]['userId'], ['Auth','Privacy']);
     $check($user->username === $item['username'] && $user->email === '', 'Historical identity was fabricated or merged by name');
     $check(!$user->Auth->authenticate('invalid-test-password') && !$user->Auth->getAuthenticationHandler()->hasPassword(), 'Historical profile can authenticate');
     $check(!$user->is_staff && !$user->is_admin && !$user->is_moderator && $user->last_activity === 0, 'Historical profile has restored staff privileges or fake activity');
     $check(XF::asVisitor($guest, fn() => $user->canViewFullProfile()), 'Historical profile is not publicly visible');
-    $check($user->message_count > 0, 'Historical profile post count missing');
+    $expectedCount = $app->db()->fetchOne('SELECT COUNT(*) FROM xf_post p JOIN xf_thread t ON t.thread_id = p.thread_id JOIN xf_forum f ON f.node_id = t.node_id WHERE p.user_id = ? AND p.message_state = ? AND t.discussion_state = ? AND f.count_messages = 1', [$user->user_id, 'visible', 'visible']);
+    $check($user->message_count == $expectedCount, 'Historical profile native post count differs, including empty recovered profiles');
     if ($item['avatar']) { $check($user->avatar_date > 0, 'Recovered avatar missing'); }
 }
 $attachmentLinks = [];
 foreach ($map as $entry) { foreach ($entry['attachments'] ?? [] as $attachments) { foreach ($attachments as $original=>$native) { $attachmentLinks[$original] = $native; } } }
 $memberLinks = 0; $crossPostLinks = 0;
 foreach ($corpus['threads'] as $record) {
-    $thread = $app->em()->find('XF:Thread', $map[$record['originalId']]['threadId']);
-    $check($thread->discussion_open && $thread->user_id === $identities[$record['posts'][0]['originalUserId']]['userId'], 'Restored discussion has incorrect native ownership');
+    $recordKey = $historyKey($record);
+    $thread = $app->em()->find('XF:Thread', $map[$recordKey]['threadId']);
+    $check($thread->discussion_open && $thread->user_id === $identities[$historyKey($record, $record['posts'][0]['originalUserId'])]['userId'], 'Restored discussion has incorrect native ownership');
+    $check($thread->first_post_id === $map[$recordKey]['posts'][$record['posts'][0]['key']], 'Recovered original first post did not become the native first post');
     $check(XF::asVisitor($guest, fn() => $thread->canView()), 'Restored public discussion is not guest-visible');
     $check(XF::asVisitor($member, fn() => $thread->canReply()), 'Members cannot reply to a restored discussion');
     $check($thread->reply_count === count($record['posts']) - 1, 'Historical reply count is incorrect');
     foreach ($record['posts'] as $position=>$item) {
-        $post = $app->em()->find('XF:Post', $map[$record['originalId']]['posts'][$item['key']]);
-        $check($post->user_id === $identities[$item['originalUserId']]['userId'] && $post->username === $item['author'] && $post->post_date === $item['date'], 'Original attribution/date changed');
+        $post = $app->em()->find('XF:Post', $map[$recordKey]['posts'][$item['key']]);
+        $check($post->user_id === $identities[$historyKey($record, $item['originalUserId'])]['userId'] && $post->username === $item['author'] && $post->post_date === $item['date'], 'Original attribution/date changed');
         $check($post->position === $position, 'Historical post ordering changed');
         preg_match_all('#\[URL=https?://ts-mc\.net(?::80)?/(members|attachments)/(?:[^/\]]+\.)?(\d+)(?:/[^\]]*)?\]#i', $item['message'], $links, PREG_SET_ORDER);
         foreach ($links as $link) {
@@ -192,7 +233,7 @@ foreach ($corpus['threads'] as $record) {
             }
         }
         foreach ($item['attachments'] as $original) {
-            $native = $map[$record['originalId']]['attachments'][$item['key']][$original];
+            $native = $map[$recordKey]['attachments'][$item['key']][$original];
             $attachment = $app->em()->find('XF:Attachment', $native, ['Data']);
             $check($attachment->content_type === 'post' && $attachment->content_id === $post->post_id && !$attachment->unassociated, 'Recovered attachment has no native post association');
             $check($attachment->Data->width > 0 && $attachment->Data->thumbnail_width > 0, 'Recovered attachment image/thumbnail missing');
@@ -201,6 +242,19 @@ foreach ($corpus['threads'] as $record) {
     }
 }
 $check($memberLinks > 0 && $crossPostLinks > 0, 'Corpus link regressions did not exercise numeric members and cross-post attachments');
+$reactionPost = $app->em()->find('XF:Post', $map[42]['posts'][$corpus['threads'][array_search(42, array_column($corpus['threads'], 'originalId'))]['posts'][0]['key']]);
+$reactor = $app->finder('XF:User')->where('username', 'LocalOther')->fetchOne();
+$reactionRepository = $app->repository('XF:Reaction');
+foreach (['like','agree','disagree','funny','winner','informative','useful','optimistic','friendly','creative'] as $type) {
+    $reactionId = $nodes['reaction:' . $type];
+    $reactionRepository->reactToContent($reactionId, 'post', $reactionPost->post_id, $reactor, false);
+    $app->em()->clearEntityCache();
+    $freshPost = $app->em()->find('XF:Post', $reactionPost->post_id);
+    $check(array_sum($freshPost->reactions) === 1 && $freshPost->reaction_score === ($type === 'disagree' ? 0 : 1), 'Native reaction count/score differs for ' . $type);
+    $reactionRepository->reactToContent($reactionId, 'post', $reactionPost->post_id, $reactor, false);
+    $app->em()->clearEntityCache();
+}
+$check($app->db()->fetchOne('SELECT COUNT(*) FROM xf_reaction_content') == 0, 'Native reaction fixture did not remove its votes');
 $before = $app->db()->fetchOne('SELECT COUNT(*) FROM xf_post');
 $thread = $app->em()->find('XF:Thread', $map[42]['threadId'], ['FirstPost']);
 $original = $thread->FirstPost->message;
@@ -217,7 +271,7 @@ try {
     $omittedPost[42]['posts']['t42:p99999999'] = $reply->post_id;
     $omittedPost[42]['messageHashes']['t42:p99999999'] = hash('sha256', $reply->message);
     $omittedPost[42]['hash'] = str_repeat('0', 64);
-    $omittedThread = $map; $omittedThread[max(array_keys($map)) + 1] = $map[42];
+    $omittedThread = $map; $omittedThread[99999999] = $map[42];
     $nativeBefore = $app->db()->fetchAll('SELECT post_id, user_id, username, post_date, message, message_state FROM xf_post WHERE thread_id = ? ORDER BY post_id', $thread->thread_id);
     foreach ([$omittedPost, $omittedThread] as $revisionMap) {
         try {
@@ -239,4 +293,4 @@ try {
     if ($reply) { $reply->delete(); }
     $post = $app->em()->find('XF:Post', $thread->first_post_id); $post->message = $original; $post->save();
 }
-echo "73 public profile-only identities, 17 avatars, native attachments, original names/dates, 120 public discussions, 1,148 posts, v1 migration, explicit revision/removal guards, replies, repeat import, and later edits passed.\n";
+echo "79 era-scoped identities, 77 native profiles, 17 checkpointed avatars, 131 public discussions, 1,164 posts, eight captured polls, 248 ratings summaries, ten native reactions, migration/removal guards, replies, and edit preservation passed.\n";

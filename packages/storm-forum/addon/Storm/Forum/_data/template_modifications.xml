@@ -1,5 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <template_modifications>
+  <modification type="public" template="PAGE_CONTAINER" modification_key="storm_classic_reactions_css" description="Classic ratings styling on native forum pages" execution_order="10" enabled="1" action="str_replace">
+    <find><![CDATA[<xf:set var="$cssUrls" value="{{ ['public:normalize.css', 'public:fa.css'] }}" />]]></find>
+    <replace><![CDATA[$0<xf:css src="storm_forum.less" />]]></replace>
+  </modification>
+  <modification type="public" template="post_macros" modification_key="storm_historical_ratings" description="Display captured ratings separately from current native reactions" execution_order="10" enabled="1" action="str_replace">
+    <find><![CDATA[<xf:macro id="post_last_edit" arg-post="{$post}" />]]></find>
+    <replace><![CDATA[$0<xf:include template="storm_historical_ratings" />]]></replace>
+  </modification>
+  <modification type="public" template="thread_view" modification_key="storm_historical_poll" description="Display captured closed poll results without inventing voters" execution_order="10" enabled="1" action="str_replace">
+    <find><![CDATA[<xf:extension id="content_top"></xf:extension>]]></find>
+    <replace><![CDATA[$0<xf:include template="storm_historical_poll" />]]></replace>
+  </modification>
   <modification type="public" template="message_macros" modification_key="storm_historical_display_name" description="Keep the post's original author label linked to its native profile" execution_order="10" enabled="1" action="str_replace">
     <find><![CDATA[<xf:username user="$user" rich="true" defaultname="{$fallbackName}"]]></find>
     <replace><![CDATA[<xf:username user="$user" rich="true" defaultname="{$fallbackName}" username="{{ ($user.storm_historical && $fallbackName) ? $fallbackName : null }}"]]></replace>

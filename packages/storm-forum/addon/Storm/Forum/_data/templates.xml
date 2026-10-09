@@ -1,5 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <templates>
+  <template type="public" title="storm_historical_ratings" version_id="4010170" version_string="4.1.1"><![CDATA[
+<xf:if is="$post.storm_historical_ratings">
+  <div class="stormHistoricalRatings" aria-label="Historical ratings">
+    <xf:foreach loop="$post.storm_historical_ratings.items" value="$rating"><span title="{$rating.title}"><span aria-hidden="true">{{ short_to_emoji($rating.emoji, 'native') }}</span> {$rating.title} × <strong>{$rating.count|number}</strong></span></xf:foreach>
+    <small><a href="{$post.storm_historical_ratings.source}" rel="nofollow">Archived ratings</a> · separate from current reactions</small>
+  </div>
+</xf:if>
+  ]]></template>
+  <template type="public" title="storm_historical_poll" version_id="4010170" version_string="4.1.1"><![CDATA[
+<xf:if is="$thread.storm_historical_poll && $page == 1">
+  <section class="block stormHistoricalPoll"><div class="block-container">
+    <h2 class="block-header">{$thread.storm_historical_poll.question}</h2>
+    <div class="block-body"><xf:foreach loop="$thread.storm_historical_poll.options" value="$option"><div class="block-row"><span>{$option.text}</span><strong>{$option.votes|number} votes</strong></div></xf:foreach></div>
+    <div class="block-footer"><a href="{$thread.storm_historical_poll.source}" rel="nofollow">Archived poll results</a> · voting closed</div>
+  </div></section>
+</xf:if>
+  ]]></template>
   <template type="public" title="storm_style_chooser" version_id="2000070" version_string="2.0.0"><![CDATA[
 <xf:title>Appearance and theme</xf:title>
 <xf:head option="metaNoindex"><meta name="robots" content="noindex" /></xf:head>
@@ -42,7 +59,7 @@
   </div></div></div>
 </xf:if>
   ]]></template>
-  <template type="public" title="storm_portal" version_id="4010070" version_string="4.1.0"><![CDATA[
+  <template type="public" title="storm_portal" version_id="4010170" version_string="4.1.1"><![CDATA[
 <xf:title>The Storm</xf:title>
 <xf:h1 hidden="true" />
 <xf:css src="storm_forum.less" />
@@ -55,10 +72,12 @@
 </section>
 <xf:foreach loop="$news" value="$thread">
   <article class="block stormArticle"><div class="block-container">
-    <time class="stormArticleDate" datetime="{{ date($thread.post_date, 'Y-m-d') }}"><span>{{ date($thread.post_date, 'M') }}</span><strong>{{ date($thread.post_date, 'j') }}</strong></time>
     <h2 class="block-header"><a href="{{ link('threads', $thread) }}">{$thread.title}</a></h2>
-    <div class="stormArticleByline"><span>by <xf:username user="$thread.User" username="{$thread.username}" /> · <xf:date time="$thread.post_date" /> · {$thread.view_count|number} views · {$thread.FirstPost.reaction_score|number} reactions</span><a href="{{ link('threads', $thread) }}">{$thread.reply_count|number} comments</a></div>
+    <div class="stormArticleContent">
+    <time class="stormArticleDate" datetime="{{ date($thread.post_date, 'Y-m-d') }}"><span>{{ date($thread.post_date, 'M') }}</span><strong>{{ date($thread.post_date, 'd') }}</strong></time>
+    <div class="stormArticleByline"><span>by <xf:username user="$thread.User" username="{$thread.username}" /> · <xf:date time="$thread.post_date" /> · {$thread.view_count|number} views · {{ array_sum($thread.FirstPost.reactions)|number }} reactions<xf:if is="$thread.FirstPost.storm_historical_ratings"> · {$thread.FirstPost.storm_historical_ratings.total|number} archived ratings</xf:if></span><a href="{{ link('threads', $thread) }}">{$thread.reply_count|number} comments</a></div>
     <div class="stormArticleBody"><div class="stormArticleSnippet">{{ bb_code_snippet($thread.FirstPost.message, 'post', $thread.FirstPost, 750) }}</div><xf:avatar user="$thread.User" size="m" /></div>
+    </div>
     <div class="block-footer"><a class="stormArticleContinue" href="{{ link('threads', $thread) }}">Continue reading →</a></div>
   </div></article>
 </xf:foreach>
@@ -77,21 +96,25 @@
   <xf:widget key="storm_recent_threads" />
 </xf:sidebar>
   ]]></template>
-  <template type="public" title="storm_forum.less" version_id="4010070" version_string="4.1.0"><![CDATA[
+  <template type="public" title="storm_forum.less" version_id="4010170" version_string="4.1.1"><![CDATA[
 .stormWelcome {display:flex;gap:2rem;align-items:center;padding:2rem;margin-bottom:2rem;border-radius:12px;background:fade(@xf-paletteColor2, 14%);}
 .stormWelcome h1 {margin:0 0 .5rem;font-size:2rem;}
 .stormWelcome .button {margin:.5rem .5rem 0 0;}
-.stormArticle {position:relative;margin-left:12px;}
-.stormArticle .block-header {font-size:15px;font-weight:normal;padding:8px 12px;}
-.stormArticleDate {position:absolute;top:36px;left:-13px;width:38px;text-align:center;background:@xf-contentAltBg;border:1px solid @xf-borderColor;border-radius:4px;overflow:hidden;box-shadow:0 1px 3px fade(#000,10%);}
-.stormArticleDate span {display:block;background:@xf-linkColor;color:@xf-contentBg;font-size:10px;font-weight:bold;text-transform:uppercase;padding:4px;}
-.stormArticleDate strong {display:block;font-size:21px;padding:4px;}
-.stormArticleByline {display:flex;justify-content:space-between;gap:10px;padding:8px 12px 8px 34px;color:@xf-textColorDimmed;font-size:11px;}
-.stormArticleBody {display:flex;gap:20px;padding:4px 12px 14px 34px;align-items:flex-start;}
+.stormArticle {margin-left:20px;}
+.stormArticle .block-header {font-size:15px;font-weight:normal;padding:8px 12px 8px 36px;}
+.stormArticleContent {position:relative;}
+.stormArticleDate {position:absolute;top:8px;left:-21px;width:48px;text-align:center;background:@xf-contentAltBg;border:1px solid @xf-borderColor;border-radius:3px;overflow:hidden;box-shadow:0 1px 3px fade(#000,10%);line-height:1.1;}
+.stormArticleDate span {display:block;background:@xf-linkColor;color:@xf-contentBg;font-size:11px;font-weight:bold;text-transform:uppercase;padding:5px 2px;}
+.stormArticleDate strong {display:block;font-size:26px;padding:6px 2px;font-weight:normal;font-variant-numeric:tabular-nums;}
+.stormArticleByline {display:flex;justify-content:space-between;gap:10px;padding:8px 12px 8px 36px;color:@xf-textColorDimmed;font-size:11px;}
+.stormArticleBody {display:flex;gap:20px;padding:4px 12px 14px 36px;align-items:flex-start;}
 .stormArticleSnippet {flex:1;min-width:0;line-height:1.5;}
 .stormArticleSnippet img {max-width:100%;height:auto;}
 .stormArticleBody .avatar {flex-shrink:0;border:4px solid @xf-contentAltBg;box-shadow:0 0 0 1px @xf-borderColor;border-radius:50%;}
 .stormArticleContinue {display:block;text-align:right;font-size:12px;font-weight:bold;}
+.stormHistoricalRatings {display:flex;flex-wrap:wrap;gap:6px 12px;padding:8px 10px;margin-top:12px;border:1px solid @xf-borderColor;border-radius:3px;background:@xf-contentAltBg;font-size:12px;}
+.stormHistoricalRatings small {flex-basis:100%;color:@xf-textColorDimmed;}
+.stormHistoricalPoll .block-row {display:flex;justify-content:space-between;gap:12px;}
 .stormJoinAddress {display:flex;align-items:center;justify-content:space-between;gap:6px;}
 .stormJoinAddress strong {font-size:18px;}
 .stormJoin .button {font-size:11px;padding:5px 8px;}
@@ -99,6 +122,12 @@
 .stormJoinBadge {display:inline-block;padding:3px 7px;border-radius:20px;background:@xf-contentHighlightBg;color:@xf-textColor;font-size:11px;font-weight:bold;border:1px solid @xf-borderColor;}
 .stormJoinBadge--online {border-color:@xf-linkColor;}
 .stormJoin small {display:block;margin-top:6px;font-size:11px;}
+.message .reactionsBar {border-radius:3px;font-size:12px;}
+.message .reactionSummary {gap:4px;}
+.reaction--small img {width:16px;height:16px;}
+.reactionSelect {max-width:calc(100vw - 24px);}
+.reactionSelect .reactionSelect-reaction {padding:7px;}
+@media(max-width:650px) {.reactionSelect {flex-wrap:wrap;} .reactionSelect .reactionSelect-reaction {padding:6px;}}
 @media(max-width:450px) {.stormArticleBody .avatar {display:none;} .stormArticleByline {flex-wrap:wrap;}}
 @media(max-width:650px) {.stormWelcome {flex-direction:column;text-align:center;padding:1.5rem;} .stormWelcome h1 {font-size:1.6rem;}}
   ]]></template>

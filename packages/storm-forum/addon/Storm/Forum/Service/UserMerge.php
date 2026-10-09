@@ -49,16 +49,18 @@ class UserMerge extends XFCP_UserMerge
                 $forums = [];
                 $this->app->em()->clearEntityCache();
                 foreach ($history['threads'] as $record) {
+                    $prefix = ($record['era'] ?? 'original') === 'original' ? '' : $record['era'] . ':';
+                    $threadKey = $prefix . $record['originalId'];
                     $changed = false;
                     foreach ($record['posts'] as $post) {
-                        if (!isset($identities[$post['originalUserId']])) { continue; }
-                        $postId = $map[$record['originalId']]['posts'][$post['key']] ?? null;
+                        if (!isset($identities[$prefix . $post['originalUserId']])) { continue; }
+                        $postId = $map[$threadKey]['posts'][$post['key']] ?? null;
                         if (!$postId) { throw new \RuntimeException('Historical merge has a missing post mapping.'); }
                         $db->query('UPDATE xf_post SET username = ? WHERE post_id = ? AND user_id = ?', [$post['author'], $postId, $target->user_id]);
                         $changed = true;
                     }
                     if (!$changed) { continue; }
-                    $thread = $this->app->em()->find('XF:Thread', $map[$record['originalId']]['threadId'], ['Forum']);
+                    $thread = $this->app->em()->find('XF:Thread', $map[$threadKey]['threadId'], ['Forum']);
                     if (!$thread) { throw new \RuntimeException('Historical merge has a missing discussion.'); }
                     $thread->rebuildCounters(); $thread->save();
                     $forums[$thread->node_id] = $thread->Forum;

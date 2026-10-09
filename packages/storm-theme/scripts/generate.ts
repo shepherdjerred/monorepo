@@ -46,6 +46,16 @@ await output("src/layout.css", geometry);
 await output("assets/layout.css", geometry);
 const themes = [];
 for (const theme of seed.themes) {
+  if (theme.decoration !== null) {
+    const relative = `assets/${theme.decoration}`;
+    const decoration = await Bun.file(new URL(relative, root)).text();
+    const sized = decoration.replace(
+      /<svg([^>]*)>/,
+      (_, attributes: string) =>
+        `<svg${attributes.replaceAll(/\s(?:width|height)="[^"]*"/g, "")} width="480" height="96">`,
+    );
+    await output(relative, sized);
+  }
   const palettes = { light: {}, dark: {} };
   for (const mode of ["light", "dark"] as const) {
     const base = theme.palettes[mode],

@@ -8,7 +8,7 @@ if ($app->options()->boardUrl !== 'https://storm-forum-beta.tailnet-1a49.ts.net'
 $styles = $app->registry()->get('stormForumStyles');
 if (!is_array($styles) || $app->options()->defaultStyleId != $styles['system:normal']) { throw new RuntimeException('Recovery did not select the configured normal System style'); }
 $map = $app->registry()->get('stormForumMap');
-if (count(array_filter(array_keys($map), fn($key) => str_starts_with($key, 'node:'))) !== 14) { throw new RuntimeException('Restored forum tree differs'); }
+if (count(array_filter(array_keys($map), fn($key) => str_starts_with($key, 'node:'))) !== 22) { throw new RuntimeException('Restored forum tree differs'); }
 foreach (['data' => "storm-owned-attachment\n", 'internal_data' => "storm-private-attachment\n"] as $directory => $expected) {
     if (file_get_contents('/var/lib/storm-forum/' . $directory . '/restore-sentinel.txt') !== $expected) { throw new RuntimeException('Attachment content differs after restore'); }
 }

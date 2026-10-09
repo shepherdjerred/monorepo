@@ -41,6 +41,35 @@ const api = forumActive ? `${forum}/storm-theme/` : undefined;
   </div>
   <div class="stormDocsNavigation">
     <div class="stormDocsNavInner stormDocsInner">
+      <button
+        class="stormDocsMenuToggle"
+        type="button"
+        aria-label="Open navigation"
+        aria-expanded="false"
+        aria-controls="storm-docs-navigation"
+      >
+        <svg width="23" height="23" viewBox="0 0 23 23" aria-hidden="true">
+          <path
+            d="M1 4h21M1 11.5h21M1 19h21"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          />
+        </svg>
+      </button>
+      <a
+        class="stormDocsSmallLogo"
+        href={forum}
+        aria-label="The Storm community"
+      >
+        <img
+          data-storm-logo
+          src={`/storm/${theme.logos.light}`}
+          width="100"
+          height="31"
+          alt="The Storm"
+        />
+      </a>
       <nav class="stormDocsNav" aria-label="The Storm">
         <a href={forum}>Home</a>
         <a href="https://bluemap.ts-mc.net">LiveMap</a>
@@ -88,36 +117,91 @@ const api = forumActive ? `${forum}/storm-theme/` : undefined;
             <a href={`${forum}/register/`}>Register</a>
           </div>
         )}
+        {forumActive && (
+          <a
+            class="stormDocsQuickNew"
+            href={`${forum}/whats-new/`}
+            aria-label="What's new"
+          >
+            <svg width="14" height="14" viewBox="0 0 20 20" aria-hidden="true">
+              <path
+                d="M11 1 3 11h6l-1 8 9-11h-6z"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              />
+            </svg>
+          </a>
+        )}
         <Search />
-        <button
-          class="stormDocsMenuToggle"
-          type="button"
-          aria-label="Open navigation"
-          aria-expanded="false"
-          aria-controls="storm-docs-navigation"
-        >
-          ☰
-        </button>
       </div>
     </div>
   </div>
   <div class="stormDocsSubNav" aria-hidden="true"></div>
+  <dialog
+    class="stormDocsDrawer"
+    id="storm-docs-navigation"
+    aria-labelledby="storm-docs-menu-title"
+  >
+    <div class="stormDocsDrawerHeader">
+      <span id="storm-docs-menu-title">Menu</span>
+      <button type="button" aria-label="Close navigation" data-storm-menu-close>
+        <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+          <path
+            d="m2 2 10 10M12 2 2 12"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          />
+        </svg>
+      </button>
+    </div>
+    <div class="stormDocsDrawerAccount" data-storm-drawer-account></div>
+    <nav class="stormDocsDrawerNav" aria-label="The Storm community">
+      <a href={forum}>Home</a>
+      <a href="https://bluemap.ts-mc.net">LiveMap</a>
+      <a href="/" aria-current="page">
+        Docs
+      </a>
+      {forumActive && (
+        <>
+          <details>
+            <summary>Forums</summary>
+            <a href={`${forum}/forums/`}>Forum list</a>
+            <a href={`${forum}/whats-new/posts/`}>New posts</a>
+          </details>
+          <details>
+            <summary>What's new</summary>
+            <a href={`${forum}/whats-new/`}>What's new</a>
+            <a href={`${forum}/whats-new/posts/`}>New posts</a>
+          </details>
+          <details>
+            <summary>Members</summary>
+            <a href={`${forum}/members/`}>Members</a>
+            <a href={`${forum}/online/`}>Current visitors</a>
+          </details>
+        </>
+      )}
+    </nav>
+    <div data-storm-drawer-sidebar></div>
+  </dialog>
 </div>
 <script>
   import "@shepherdjerred/storm-theme/browser";
   const header = document.getElementById("storm-theme-root");
   if (!header) throw new Error("Missing Storm header");
   new ResizeObserver(() => {
+    const masthead = header.querySelector<HTMLElement>(".stormDocsTop");
+    if (!masthead) throw new Error("Missing Storm masthead");
+    const mastheadHeight = masthead.getBoundingClientRect().height + 3;
+    document.documentElement.style.setProperty(
+      "--storm-masthead-height",
+      `${mastheadHeight}px`,
+    );
     document.documentElement.style.setProperty(
       "--sl-nav-height",
-      `${header.getBoundingClientRect().height}px`,
+      `${header.getBoundingClientRect().height - mastheadHeight}px`,
     );
-    const actions = header.querySelector(".stormDocsActions");
-    if (actions)
-      document.documentElement.style.setProperty(
-        "--storm-mobile-menu-top",
-        `${actions.getBoundingClientRect().top}px`,
-      );
   }).observe(header);
   header.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
@@ -143,24 +227,89 @@ const api = forumActive ? `${forum}/storm-theme/` : undefined;
     ".stormDocsMenuToggle",
   );
   const sidebar = document.querySelector<HTMLElement>(".stormDocsSidebar");
-  if (toggle && sidebar) {
-    sidebar.id = "storm-docs-navigation";
-    toggle.addEventListener("click", () => {
-      const open = toggle.getAttribute("aria-expanded") !== "true";
-      toggle.setAttribute("aria-expanded", String(open));
-      toggle.setAttribute(
-        "aria-label",
-        open ? "Close navigation" : "Open navigation",
+  const drawer = header.querySelector<HTMLDialogElement>(".stormDocsDrawer");
+  const drawerHost = header.querySelector<HTMLElement>(
+    "[data-storm-drawer-sidebar]",
+  );
+  const close = header.querySelector<HTMLButtonElement>(
+    "[data-storm-menu-close]",
+  );
+  if (!toggle || !drawer || !drawerHost || !close)
+    throw new Error("Missing Storm mobile navigation");
+  const sidebarPosition = document.createComment("Documentation sidebar");
+  if (sidebar) sidebar.before(sidebarPosition);
+  const compact = matchMedia("(max-width: 800px)");
+  const restoreSidebar = () => {
+    if (drawer.open) return;
+    if (sidebar) sidebarPosition.after(sidebar);
+    document.documentElement.removeAttribute("data-storm-menu-open");
+    toggle.setAttribute("aria-expanded", "false");
+    toggle.focus();
+  };
+  const closeDrawer = () => {
+    drawer.close();
+    restoreSidebar();
+  };
+  toggle.addEventListener("click", () => {
+    if (!compact.matches) return;
+    const account = header.querySelector("[data-storm-account]");
+    const drawerAccount = drawer.querySelector("[data-storm-drawer-account]");
+    if (drawerAccount)
+      drawerAccount.replaceChildren(
+        ...Array.from(account?.querySelectorAll("a") ?? [], (link) =>
+          link.cloneNode(true),
+        ),
       );
-      document.documentElement.toggleAttribute("data-storm-menu-open", open);
-      if (open) sidebar.querySelector<HTMLElement>("a")?.focus();
-    });
-    sidebar.addEventListener("keydown", (event) => {
-      if (event.key !== "Escape") return;
-      document.documentElement.removeAttribute("data-storm-menu-open");
-      toggle.setAttribute("aria-expanded", "false");
-      toggle.setAttribute("aria-label", "Open navigation");
-      toggle.focus();
-    });
-  }
+    if (sidebar) drawerHost.append(sidebar);
+    drawer.showModal();
+    drawer.scrollTop = 0;
+    toggle.setAttribute("aria-expanded", "true");
+    document.documentElement.setAttribute("data-storm-menu-open", "");
+  });
+  close.addEventListener("click", closeDrawer);
+  drawer.addEventListener("close", restoreSidebar);
+  drawer.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    closeDrawer();
+  });
+  drawer.addEventListener("click", (event) => {
+    if (event.target instanceof Element && event.target.closest("a[href]")) {
+      closeDrawer();
+      return;
+    }
+    if (event.target !== drawer) return;
+    const bounds = drawer.getBoundingClientRect();
+    if (
+      event.clientX < bounds.left ||
+      event.clientX > bounds.right ||
+      event.clientY < bounds.top ||
+      event.clientY > bounds.bottom
+    )
+      closeDrawer();
+  });
+  drawer.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      // Close the drawer even when focus is in a nested navigation disclosure.
+      event.stopPropagation();
+    }
+    if (event.key === "Tab") {
+      const controls = Array.from(
+        drawer.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), summary, [tabindex="0"]',
+        ),
+      ).filter((element) => element.getClientRects().length > 0);
+      const first = controls[0];
+      const last = controls.at(-1);
+      if (event.shiftKey && document.activeElement === first && last) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last && first) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+  });
+  compact.addEventListener("change", () => {
+    if (!compact.matches && drawer.open) closeDrawer();
+  });
 </script>
