@@ -38,7 +38,9 @@ test("stream wakes only the target PR and main in the configured repository", as
             branch: "feature",
           }) +
           frame(1, "pull_request", "refs/pull/99/head", { branch: "feature" }) +
-          frame(1, "push", "refs/heads/main", { branch: "main" }),
+          frame(1, "push", "refs/heads/main", { branch: "main" }) +
+          frame(1, "manual", "refs/heads/feature", { branch: "main" }) +
+          frame(1, "manual", "refs/heads/main", { branch: "main" }),
         { headers: { "content-type": "text/event-stream" } },
       ),
   );
@@ -52,11 +54,11 @@ test("stream wakes only the target PR and main in the configured repository", as
       fatal: vi.fn(),
       wake: () => {
         wakes++;
-        if (wakes === 3) controller.abort();
+        if (wakes === 4) controller.abort();
       },
     },
   );
-  expect(wakes).toBe(4); // initial snapshot + two relevant events + disconnected refresh
+  expect(wakes).toBe(5); // initial snapshot + three relevant events + disconnected refresh
 });
 
 test("authentication and malformed frames are terminal rather than endless retries", async () => {

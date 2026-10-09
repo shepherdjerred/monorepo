@@ -55,7 +55,7 @@ export async function handleCiCommand(
 
   wait [PR]       Wait for merge readiness; return on the first actionable blocker
   explain [PR]    Print failures, bounded logs, review feedback, and deeper commands
-  main            Show main's current push build and latest completed verdict
+  main            Show main's current verification and latest completed verdict
   load            Show Woodpecker/Kueue queues and CPU, memory, disk, I/O pressure
 
 Options:

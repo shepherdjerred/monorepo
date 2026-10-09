@@ -113,18 +113,23 @@ export async function woodpeckerJson(
   return response.json();
 }
 
+type PipelineEvent =
+  "pull_request" | "pull_request_metadata" | "push" | "manual";
+
 /** Filter and paginate by event AND PR ref. */
 export async function listPipelines(
   config: WoodpeckerConfig,
   filter: {
-    event: "pull_request" | "pull_request_metadata" | "push";
+    event: PipelineEvent | readonly PipelineEvent[];
     prNumber?: number;
     branch?: string;
     stopWhen?: (pipelines: readonly z.infer<typeof SummarySchema>[]) => boolean;
   },
   signal?: AbortSignal,
 ): Promise<z.infer<typeof SummarySchema>[]> {
-  const query = new URLSearchParams({ event: filter.event, perPage: "50" });
+  const events: readonly string[] =
+    typeof filter.event === "string" ? [filter.event] : filter.event;
+  const query = new URLSearchParams({ event: events.join(","), perPage: "50" });
   if (filter.prNumber !== undefined)
     query.set("ref", `refs/pull/${String(filter.prNumber)}/`);
   if (filter.branch !== undefined) query.set("branch", filter.branch);
@@ -143,7 +148,7 @@ export async function listPipelines(
     pipelines.push(
       ...entries.filter(
         (entry) =>
-          entry.event === filter.event &&
+          events.includes(entry.event) &&
           (filter.prNumber === undefined ||
             entry.ref.startsWith(`refs/pull/${String(filter.prNumber)}/`)) &&
           (filter.branch === undefined || entry.branch === filter.branch),
