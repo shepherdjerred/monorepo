@@ -4,11 +4,10 @@ All notable changes to this package are documented in this file.
 
 ## [0.1.1](https://github.com/shepherdjerred/monorepo/compare/home-assistant-v0.1.0...home-assistant-v0.1.1) (2026-10-09)
 
+New typed REST coverage and clearer WebSocket connection health for consumers.
 
-### Bug Fixes
-
-* **deps:** close version-pinning and Renovate-coverage gaps ([#3125](https://github.com/shepherdjerred/monorepo/issues/3125)) ([b9e04c8](https://github.com/shepherdjerred/monorepo/commit/b9e04c850fa7677c6ce9ce8bf2e162859555cf6c))
-* **homelab:** recover application automation and workflow delivery ([#3375](https://github.com/shepherdjerred/monorepo/issues/3375)) ([3a1af73](https://github.com/shepherdjerred/monorepo/commit/3a1af73ea4b5fe0df2a47f798c1844ced1fef418))
+- Added a schema-validated `getLogbook` REST method and exported `LogbookEntry` type ([3a1af73](https://github.com/shepherdjerred/monorepo/commit/3a1af73ea4b5fe0df2a47f798c1844ced1fef418))
+- WebSocket clients now report `ready` only after subscriptions are restored, distinguish consumer handler failures with `handler-error`, and serialize reconnect attempts while retrying failed restorations ([3a1af73](https://github.com/shepherdjerred/monorepo/commit/3a1af73ea4b5fe0df2a47f798c1844ced1fef418))
 
 ## 0.1.0 (2026-09-07)
 

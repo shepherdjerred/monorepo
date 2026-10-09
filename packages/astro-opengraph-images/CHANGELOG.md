@@ -2,10 +2,10 @@
 
 ## [1.20.4](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.20.3...astro-opengraph-images-v1.20.4) (2026-10-09)
 
+Small rendering compatibility and dependency improvements for the built-in presets.
 
-### Bug Fixes
-
-* **deps:** close version-pinning and Renovate-coverage gaps ([#3125](https://github.com/shepherdjerred/monorepo/issues/3125)) ([b9e04c8](https://github.com/shepherdjerred/monorepo/commit/b9e04c850fa7677c6ce9ce8bf2e162859555cf6c))
+- Runtime dep `satori` bumped to `^0.44.0` (was `^0.33.0`) ([33a4ea5](https://github.com/shepherdjerred/monorepo/commit/33a4ea5cadb0f4379f3451f3b968152cec15de9d))
+- Built-in presets now apply explicit box sizing and border styles required by the newer Satori renderer; descriptions default to an empty string, and `custom-property` reuses the `simple-blog` layout ([4bac2ae](https://github.com/shepherdjerred/monorepo/commit/4bac2aea52a21988561a8611915ccde85a7433d6), [33a4ea5](https://github.com/shepherdjerred/monorepo/commit/33a4ea5cadb0f4379f3451f3b968152cec15de9d))
 
 ## [1.20.3](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.20.2...astro-opengraph-images-v1.20.3) (2026-09-23)
 
