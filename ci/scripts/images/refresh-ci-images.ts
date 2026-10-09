@@ -38,6 +38,7 @@ try {
         "bash",
         "-c",
         [
+          "set -euo pipefail",
           "MISE_TOOLCHAIN_SCOPE=automation . ci/scripts/toolchain.sh",
           "bun --no-install ci/scripts/reporting/buildkit-env.ts",
           `bun --no-install ci/scripts/images/build-ci-image.ts --image ${name} --candidate-out ${name}-candidate.json`,

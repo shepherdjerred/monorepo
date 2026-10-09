@@ -12,5 +12,7 @@ export const CI_MAINTENANCE_SCHEDULE: ScheduleDefinition = {
   overlap: ScheduleOverlapPolicy.SKIP,
   workflowExecutionTimeout: "5 minutes",
   catchupWindow: "5 minutes",
+  initialPauseNote:
+    "Awaiting 100% candidate traffic and maintenance canary acceptance; stable workers do not register this Workflow",
   memo: "Coalesce verified-main maintenance into one lower-priority CI workflow; dispatch flag defaults off",
 };

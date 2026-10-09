@@ -296,10 +296,12 @@ Maintenance runs in the PR pool at draft priority, sharing one concurrency
 group across both kinds. It leaves the main and ready-PR reservations intact.
 
 The separate `ci-maintenance-dispatch-enabled` Temporal flag defaults off.
-Its beta segment permits explicit signed maintenance canaries while ordinary
+The extension flag's beta segment permits explicit signed maintenance canaries while ordinary
 main pipelines retain the combined graph. Reconcile the new extension image,
 run both manual kinds, then enable the extension flag for production and
-enable dispatch after the matching Temporal Worker Deployment is promoted. Disable
+enable dispatch and unpause `ci-maintenance-dispatch` after the matching
+Temporal Worker Deployment is promoted. The schedule is initially paused so
+older stable workers cannot receive its new Workflow type. Disable
 dispatch first when stopping new work; disable the extension flag to restore
 the combined main graph. Already generated pipelines retain their own graph.
 

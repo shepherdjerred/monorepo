@@ -338,6 +338,24 @@ test("billed LLM cost reconciles hourly on the shared Workflow queue", () => {
   });
 });
 
+test("CI maintenance starts paused until its new Workflow is deployed", () => {
+  const schedule = findScheduleById("ci-maintenance-dispatch");
+  expect(schedule.initialPauseNote).toContain("100% candidate traffic");
+  expect(buildScheduleState(schedule, {})).toEqual({
+    paused: true,
+    note: schedule.initialPauseNote,
+  });
+  expect(
+    buildScheduleState(
+      schedule,
+      {},
+      { paused: false, note: "Canary accepted" },
+    ),
+  ).toEqual({
+    paused: false,
+  });
+});
+
 test("billed LLM cost remains paused until the candidate receives all Workflow traffic", () => {
   // Stable workers do not register this Workflow, so its schedule must remain
   // paused until the candidate receives 100% of traffic.

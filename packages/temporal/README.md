@@ -21,7 +21,11 @@ SKIP overlap and a five-minute catchup window. Its bounded tick wakes the
 durable `ci-maintenance-coordinator` on `monorepo-workflows`. All GitHub and
 Woodpecker I/O runs on `repo-automation`. The dispatcher is disabled by the
 default-off `ci-maintenance-dispatch-enabled` flag until its worker and the
-configuration extension are deployed.
+configuration extension are deployed. Registration also creates this schedule
+paused because older stable workers do not register `runCiMaintenanceTick`.
+After candidate promotion and both manual maintenance canaries pass, enable the
+dispatch flag and unpause this exact schedule. Reconciliation preserves the
+operator's subsequent pause state.
 
 Describe the workflow and read its `ciMaintenance` memo for the pending request ID, pipeline receipt,
 completed fingerprints, and blocked streams. The coordinator allows one
