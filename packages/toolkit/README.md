@@ -71,7 +71,7 @@ toolkit ci wait 3447 --json             # One final report; progress on stderr
 toolkit ci wait 3447 --until settled    # Collect all blocking check results
 toolkit ci wait 3447 --timeout 2h       # Optional deadline; no default deadline
 toolkit ci explain 3447                # Current blockers and bounded failure logs
-toolkit ci main                        # Current main push and last completed verdict
+toolkit ci main                        # Current main verification and last completed verdict
 toolkit ci load                        # Queue, compute/gate admission, CPU/memory/disk/I/O
 toolkit pr review list 3447 --json      # Human and provider feedback with full bodies
 ```
@@ -117,8 +117,11 @@ Missing timestamps remain unknown, including activity totals with incomplete
 workflow evidence. Live intervals account for local clock skew. Completion delay
 is a lower bound because the pipeline API does not identify required dependencies.
 
-Main is checked automatically. A failed last completed push keeps main red
-while its recovery build is pending. When main is red, report its evidence and
+Main is checked automatically. Push runs and full manual main runs contribute
+to its verdict. A manual run must include verification, release admission,
+image publication, chart publication and ArgoCD reconciliation without skipped
+workflows; partial manual jobs cannot clear a failure. A failed last completed
+run keeps main red while its recovery build is pending. When main is red, report its evidence and
 await instructions; do not independently fix it. `ci explain --main` is an
 alias for `ci main`.
 

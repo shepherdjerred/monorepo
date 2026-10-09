@@ -118,7 +118,9 @@ async function consumeEvents(
       isPrVerificationPipeline(event.pipeline) &&
       event.pipeline.ref.startsWith(`refs/pull/${String(watch.prNumber)}/`);
     const relevantMain =
-      event.pipeline.event === "push" && event.pipeline.branch === "main";
+      (event.pipeline.event === "push" || event.pipeline.event === "manual") &&
+      event.pipeline.branch === "main" &&
+      event.pipeline.ref === "refs/heads/main";
     if (relevantPr || relevantMain) watch.wake();
   }
 }
