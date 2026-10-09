@@ -155,7 +155,13 @@ function stormDevProfile(
 ): ResolvedProfile {
   return {
     image: serverImage,
-    env: serverEnv(world, secrets),
+    env: {
+      ...serverEnv(world, secrets),
+      // TheStorm requires bootstrap Flipt settings even when rollout checks
+      // are intentionally inert in a disposable local sandbox.
+      FLIPT_URL: "http://127.0.0.1:9",
+      FLIPT_ENVIRONMENT: "beta",
+    },
     plugins: [worldEdit, citizens, coreProtect, luckPerms, multiverseCore],
     staged: [
       bridgeJar,
