@@ -320,8 +320,7 @@ final class Terrain {
       var expected = blocks.atIndex(i);
       if (!block.getBlockData().equals(expected)) {
         updates.add(
-            new com.shepherdjerred.thestorm.core.world.BlockChanges.Update(
-                block, expected, false));
+            new com.shepherdjerred.thestorm.core.world.BlockChanges.Update(block, expected, false));
       }
     }
     context.blocks().prepare("#storm-rwf-paste", updates).apply();

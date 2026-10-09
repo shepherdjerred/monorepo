@@ -232,11 +232,7 @@ final class MapWorld implements MapRotation.Entry {
     for (var pos : cratered) {
       context
           .blocks()
-          .set(
-              "#storm-rwf-restore",
-              Places.block(context.world(), pos),
-              blocks().at(pos),
-              false);
+          .set("#storm-rwf-restore", Places.block(context.world(), pos), blocks().at(pos), false);
     }
     cratered.clear();
   }

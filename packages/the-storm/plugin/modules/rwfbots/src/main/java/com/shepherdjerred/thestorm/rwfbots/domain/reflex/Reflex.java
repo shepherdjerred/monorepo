@@ -403,7 +403,7 @@ public final class Reflex {
       }
       var radial = away.normalized();
       var side = new Vec3(-radial.z(), 0, radial.x()).scale(state.strafeDir());
-      var move = side.plus(radial.scale(0.6)).plus(apart(SEPARATION));
+      var move = side.plus(radial.scale(0.6)).plus(apart(SEPARATION, 0));
       commands.add(
           new BodyCommand.MoveToward(
               self.pos().plus(move.isZero() ? radial : move.normalized()), false));
