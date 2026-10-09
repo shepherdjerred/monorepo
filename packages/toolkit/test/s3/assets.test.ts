@@ -38,6 +38,14 @@ describe("contentTypeForFile", () => {
     expect(contentTypeForFile("./out/report.PDF")).toBe("application/pdf");
   });
 
+  test("serves native feedback audition WAVs with an audio content type", () => {
+    expect(contentTypeForFile("create.wav")).toBe("audio/wav");
+    expect(contentTypeForFile("./audition/COMPLETE.WAV")).toBe("audio/wav");
+    expect(markdownForAsset("create.wav", "/create.wav")).toBe(
+      "[create.wav](/create.wav)",
+    );
+  });
+
   test("falls back to octet-stream for unknown extensions", () => {
     expect(contentTypeForFile("mystery.xyz")).toBe("application/octet-stream");
     expect(contentTypeForFile("noext")).toBe("application/octet-stream");

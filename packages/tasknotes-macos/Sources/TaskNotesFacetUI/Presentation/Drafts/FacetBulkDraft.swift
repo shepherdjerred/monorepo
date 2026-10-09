@@ -162,6 +162,8 @@ internal func facetBulkCommand(_ tasks: [FacetTask], action: FacetBulkAction) th
 extension FacetStore {
     internal func bulkOperations(profileID: String) -> FacetBulkOperations? {
         guard let engine, selectedProfileID == profileID else { return nil }
+        let intent =
+            FacetFeedbackContext.intent ?? feedbackIntent(origin: FacetFeedbackContext.origin)
         let ownsProfile = {
             self.engine === engine && self.selectedProfileID == profileID
                 && !self.removingProfileIDs.contains(profileID)
@@ -173,7 +175,8 @@ extension FacetStore {
                     guard ownsProfile() else { return false }
                     return await self.executeDirect(
                         command, mutationID: id, profileID: profileID, engine: engine,
-                        admission: admission)
+                        admission: admission, origin: intent.origin,
+                        activationID: intent.activationID)
                 }
             },
             isResolved: { id in

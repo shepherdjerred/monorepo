@@ -81,6 +81,24 @@ public sealed partial class FacetTaskNotesStore
     private readonly FacetNoticeAuthority _noticeAuthority = new();
     private FacetNoticeAdmission? _operationNoticeAdmission;
     private FacetNoticeOwner? _updateNoticeOwner;
+    private readonly string _feedbackSessionId = Guid.NewGuid().ToString("N");
+    private long _feedbackGeneration;
+    private long _operationFeedbackGeneration;
+    private FacetFeedbackLease? _operationFeedbackLease;
+
+    /// <summary>The owning native window supplies its activation lifetime, without platform APIs in Host.</summary>
+    public FacetFeedbackScene? FeedbackScene { get; set; }
+
+    /// <summary>Local applied outcomes are emitted before observation or journal cleanup.</summary>
+    public event Action<FacetAppliedFeedback>? AppliedFeedback;
+
+    /// <summary>Recheck the original receipt owner on the native presentation dispatcher.</summary>
+    public bool OwnsFeedback(FacetAppliedFeedback feedback) =>
+        feedback.EngineSessionId == _feedbackSessionId
+        && !_disposed
+        && feedback.LifecycleGeneration == Interlocked.Read(ref _feedbackGeneration)
+        && feedback.Owner.ProfileId == SelectedProfileId
+        && feedback.Origin?.IsCurrent != false;
 
     private bool OwnsNotice(FacetNoticeOwner owner) =>
         !_disposed && owner == _noticeOwner && _noticeAuthority.Owns(owner, SelectedProfileId);
@@ -380,7 +398,8 @@ public sealed partial class FacetTaskNotesStore
         string? profile,
         Action<string>? actionAdmitted,
         bool requireTaskResult,
-        CancellationToken cancellationToken
+        CancellationToken cancellationToken,
+        FacetCaptureOptions? options = null
     ) =>
         SerializedAsync(
             async () =>
@@ -397,21 +416,10 @@ public sealed partial class FacetTaskNotesStore
                             input,
                             at = Timestamp(),
                             today = Today(),
-                            context = new
-                            {
-                                projects = context.Kind == TaskListKind.Project
-                                && context.Scope is not null
-                                    ? new[] { context.Scope }
-                                    : null,
-                                contexts = context.Kind == TaskListKind.Context
-                                && context.Scope is not null
-                                    ? new[] { context.Scope }
-                                    : null,
-                                tags = context.Kind == TaskListKind.Tag && context.Scope is not null
-                                    ? new[] { context.Scope }
-                                    : null,
-                                scheduled = context.Kind == TaskListKind.Today ? Today() : null,
-                            },
+                            context = CaptureContext(
+                                context,
+                                context.Kind == TaskListKind.Today ? Today() : null
+                            ),
                         },
                         cancellationToken
                     )
@@ -419,16 +427,32 @@ public sealed partial class FacetTaskNotesStore
                 var properties = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(
                     preview.GetProperty("properties").GetRawText()
                 )!;
+                options?.Apply(properties);
+                if (options?.FeedbackLease is { } lease)
+                    _operationFeedbackLease = lease;
                 await MutateAsync(
                         new
                         {
                             kind = "create",
                             properties,
-                            body = preview.GetProperty("body").GetString(),
+                            body = options?.Body?.Value ?? preview.GetProperty("body").GetString(),
                         },
                         false,
                         cancellationToken,
-                        JsonSerializer.SerializeToElement(new { input, context }).GetRawText(),
+                        options?.HasOverrides == true
+                            ? JsonSerializer
+                                .SerializeToElement(
+                                    new
+                                    {
+                                        input,
+                                        context,
+                                        options,
+                                    }
+                                )
+                                .GetRawText()
+                            : JsonSerializer
+                                .SerializeToElement(new { input, context })
+                                .GetRawText(),
                         requireTaskResult: requireTaskResult,
                         actionAdmitted: actionAdmitted
                     )
@@ -1021,8 +1045,10 @@ public sealed partial class FacetTaskNotesStore
         );
 
     /// <inheritdoc/>
-    public Task SelectProfileAsync(string id, CancellationToken cancellationToken = default) =>
-        SerializedAsync(
+    public Task SelectProfileAsync(string id, CancellationToken cancellationToken = default)
+    {
+        Interlocked.Increment(ref _feedbackGeneration);
+        return SerializedAsync(
             async () =>
             {
                 _catalog.Select(id);
@@ -1030,10 +1056,12 @@ public sealed partial class FacetTaskNotesStore
             },
             cancellationToken
         );
+    }
 
     /// <inheritdoc/>
     public async Task RemoveProfileAsync(string id, CancellationToken cancellationToken = default)
     {
+        Interlocked.Increment(ref _feedbackGeneration);
         _ = BeginNoticeRequest();
         Interlocked.Increment(ref _sessionGeneration);
         if (_retainedSessions.TryGetValue(id, out var opening))
@@ -1473,6 +1501,7 @@ public sealed partial class FacetTaskNotesStore
 
     private async Task StopSessionsAsync()
     {
+        Interlocked.Increment(ref _feedbackGeneration);
         Interlocked.Increment(ref _sessionGeneration);
         foreach (var retained in _retainedSessions.Values)
             retained.RequestStop();
@@ -1573,6 +1602,8 @@ public sealed partial class FacetTaskNotesStore
         Action<string>? actionAdmitted = null
     )
     {
+        bool retainedRetry =
+            requestKey is not null && _journal.Pending(Selected, requestKey) is not null;
         var envelope = _journal.Prepare(Selected, command, requestKey);
         actionAdmitted?.Invoke(envelope.Id);
         State = State with { FacetPendingActions = RetainedActions() };
@@ -1582,7 +1613,8 @@ public sealed partial class FacetTaskNotesStore
                 completion,
                 cancellationToken,
                 undoReceiptId,
-                requireTaskResult
+                requireTaskResult,
+                localFeedback: !retainedRetry
             )
             .ConfigureAwait(false);
     }
@@ -1592,7 +1624,8 @@ public sealed partial class FacetTaskNotesStore
         bool completion,
         CancellationToken cancellationToken,
         string? undoReceiptId = null,
-        bool requireTaskResult = false
+        bool requireTaskResult = false,
+        bool localFeedback = false
     )
     {
         if (envelope.Profile != Selected)
@@ -1632,6 +1665,29 @@ public sealed partial class FacetTaskNotesStore
             throw new InvalidOperationException(
                 "The mutation has not been applied. Its original envelope remains retained."
             );
+        if (localFeedback)
+        {
+            using var submitted = JsonDocument.Parse(envelope.Document);
+            AppliedFeedback?.Invoke(
+                new(
+                    _feedbackSessionId,
+                    owner,
+                    FacetFeedbackEvents.Classify(submitted.RootElement.GetProperty("command")),
+                    receipt.RootElement.GetProperty("paths").GetArrayLength() > 0,
+                    !_disposed
+                        && owner.ProfileId == SelectedProfileId
+                        && _operationFeedbackGeneration
+                            == Interlocked.Read(ref _feedbackGeneration),
+                    _operationFeedbackGeneration,
+                    _operationFeedbackLease,
+                    receipt
+                        .RootElement.GetProperty("paths")
+                        .EnumerateArray()
+                        .Select(path => path.GetString()!)
+                        .ToArray()
+                )
+            );
+        }
         bool savedPublished = _noticeAuthority.PublishIfOwned(
             owner,
             SelectedProfileId,
@@ -2222,6 +2278,8 @@ public sealed partial class FacetTaskNotesStore
 
     private async Task SerializedAsync(Func<Task> action, CancellationToken cancellationToken)
     {
+        long feedbackGeneration = Interlocked.Read(ref _feedbackGeneration);
+        var feedbackLease = FeedbackScene?.Capture();
         var admission = BeginNoticeRequest();
         RetainOperation();
         try
@@ -2230,6 +2288,8 @@ public sealed partial class FacetTaskNotesStore
             try
             {
                 _operationNoticeAdmission = admission;
+                _operationFeedbackGeneration = feedbackGeneration;
+                _operationFeedbackLease = feedbackLease;
                 await action().ConfigureAwait(false);
             }
             finally
@@ -2248,6 +2308,8 @@ public sealed partial class FacetTaskNotesStore
         CancellationToken cancellationToken
     )
     {
+        long feedbackGeneration = Interlocked.Read(ref _feedbackGeneration);
+        var feedbackLease = FeedbackScene?.Capture();
         var admission = BeginNoticeRequest();
         RetainOperation();
         try
@@ -2256,6 +2318,8 @@ public sealed partial class FacetTaskNotesStore
             try
             {
                 _operationNoticeAdmission = admission;
+                _operationFeedbackGeneration = feedbackGeneration;
+                _operationFeedbackLease = feedbackLease;
                 return await action().ConfigureAwait(false);
             }
             finally

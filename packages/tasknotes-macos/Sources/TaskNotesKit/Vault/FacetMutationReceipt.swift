@@ -6,6 +6,7 @@ public struct FacetMutationReceipt: Decodable, Sendable {
     public let applied: Bool
     public let taskPath: String?
     public let cleanupPending: Bool
+    public let paths: [String]
     public let diagnostics: [Diagnostic]
 
     public enum Diagnostic: String, Sendable {

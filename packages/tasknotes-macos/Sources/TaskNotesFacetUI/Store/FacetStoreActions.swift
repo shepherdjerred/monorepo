@@ -7,16 +7,19 @@ extension FacetStore {
         profileID owningProfile: String? = nil, admission: FacetMutationAdmission? = nil
     ) async -> Bool {
         guard let engine, let profileID = owningProfile ?? selectedProfileID else { return false }
+        let intent =
+            FacetFeedbackContext.intent ?? feedbackIntent(origin: FacetFeedbackContext.origin)
         return await actionCoordinator.submit {
             await self.executeDirect(
                 command, mutationID: mutationID, profileID: profileID, engine: engine,
-                admission: admission)
+                admission: admission, origin: intent.origin, activationID: intent.activationID)
         }
     }
 
     internal func executeDirect(
         _ command: [String: FacetValue], mutationID: String, profileID: String,
-        engine: FacetEngine, admission: FacetMutationAdmission? = nil
+        engine: FacetEngine, admission: FacetMutationAdmission? = nil,
+        origin explicitOrigin: FacetFeedbackOrigin? = nil, activationID: UUID? = nil
     ) async -> Bool {
         guard self.engine === engine, selectedProfileID == profileID,
             !removingProfileIDs.contains(profileID)
@@ -25,6 +28,25 @@ extension FacetStore {
                 "This action still belongs to its original vault. Return to that vault to retry."
             return false
         }
+        let origin = explicitOrigin ?? FacetFeedbackContext.origin ?? feedbackOrigin
+        let session = feedbackSessionID
+        let ownsIntent = presentationOwner(
+            profileID: profileID, tracksRequest: false,
+            ownsEngine: { self.engine === engine })
+        let wasApplied: Bool
+        do {
+            let previous = try await engine.features(
+                profileID: profileID,
+                request: .object([
+                    "kind": .string("mutation_receipt"), "mutationId": .string(mutationID),
+                ]))
+            wasApplied = previous.object?.fields["state"] == .string("applied")
+        } catch {
+            reportNativeFailure(error)
+            return false
+        }
+        guard ownsIntent() else { return false }
+        feedback.prepare()
         let applied = await runSavedAction(
             action: (mutationID: mutationID, profileID: profileID),
             ownsEngine: { self.engine === engine },
@@ -33,10 +55,16 @@ extension FacetStore {
                     profileID: profileID, command: .object(command), mutationID: mutationID,
                     admission: admission)
             }, cleanup: { try await engine.discardObservedMutation(id: mutationID) },
-            reload: { await self.reloadQuery(preservingSavedNotice: true) })
-        if applied {
-            FacetNativeFeedback.shared.applied(command)
-        } else if admission?.mutationID != nil {
+            reload: { await self.reloadQuery(preservingSavedNotice: true) },
+            verified: { receipt, ownsAction in
+                let event = FacetFeedbackEvent(
+                    sessionID: session, profileID: profileID,
+                    receipt: receipt, command: command, origin: origin, activationID: activationID)
+                if self.feedback.applied(event, ownsPresentation: ownsAction && !wasApplied) {
+                    self.appliedFeedback = FacetAppliedFeedback(event: event)
+                }
+            })
+        if !applied, admission?.mutationID != nil {
             await refreshSavedActions(
                 ownsPresentation: { self.engine === engine },
                 load: { try await engine.pendingMutations() })
@@ -176,6 +204,8 @@ extension FacetStore {
 
     public func perform(_ command: [String: FacetValue], profileID: String) async -> Bool {
         guard let engine else { return false }
+        let intent =
+            FacetFeedbackContext.intent ?? feedbackIntent(origin: FacetFeedbackContext.origin)
         return await actionCoordinator.submit {
             do {
                 guard self.engine === engine, self.selectedProfileID == profileID else {
@@ -186,7 +216,8 @@ extension FacetStore {
                     profileID: profileID, command: .object(command))
                 return await self.executeDirect(
                     command, mutationID: existing ?? UUID().uuidString,
-                    profileID: profileID, engine: engine)
+                    profileID: profileID, engine: engine, origin: intent.origin,
+                    activationID: intent.activationID)
             } catch {
                 self.reportNativeFailure(error)
                 return false

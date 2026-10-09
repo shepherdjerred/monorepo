@@ -9,22 +9,27 @@ internal struct FacetCaptureIntent {
     let request: FacetValue
     let properties: [String: FacetValue]
     let body: String?
+    let origin: FacetFeedbackOrigin?
+    let activationID: UUID?
 }
 
 extension FacetStore {
     internal func prepareNativeCapture(
-        _ input: String, profileID: String, properties: [String: FacetValue], body: String?
+        _ input: String, profileID: String, properties: [String: FacetValue], body: String?,
+        origin: FacetFeedbackOrigin? = nil
     ) -> FacetCaptureIntent? {
         guard let engine, selectedProfileID == profileID,
             !removingProfileIDs.contains(profileID)
         else { return nil }
         let calendar = clock.viewerCalendar()
+        let intent = feedbackIntent(origin: origin)
         return FacetCaptureIntent(
             engine: engine, profileID: profileID, mutationID: UUID().uuidString,
             request: .object([
                 "kind": .string("capture_preview"), "input": .string(input),
                 "at": .string(calendar.instant.ISO8601Format()), "today": .string(calendar.today),
-            ]), properties: properties, body: body)
+            ]), properties: properties, body: body, origin: intent.origin,
+            activationID: intent.activationID)
     }
 
     internal func submitNativeCapture(
@@ -44,13 +49,21 @@ extension FacetStore {
                 guard let fields = preview.object?.fields,
                     var properties = fields["properties"]?.object?.fields
                 else { throw FacetContractError.unsupportedResponse }
+                guard let title = properties["title"]?.text,
+                    !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                else {
+                    self.error =
+                        "Add a task title. Recognised dates and projects can stay in the capture."
+                    return false
+                }
                 properties.merge(intent.properties) { _, replacement in replacement }
                 return await self.executeDirect(
                     [
                         "kind": .string("create"), "properties": .object(properties),
                         "body": intent.body.map(FacetValue.string) ?? fields["body"] ?? .string(""),
                     ], mutationID: intent.mutationID, profileID: intent.profileID,
-                    engine: intent.engine, admission: admission)
+                    engine: intent.engine, admission: admission, origin: intent.origin,
+                    activationID: intent.activationID)
             } catch {
                 self.reportNativeFailure(error)
                 return false

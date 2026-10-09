@@ -40,9 +40,15 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
     var resolutionHistory by mutableStateOf<JsonObject?>(null); private set
     var undoHead by mutableStateOf<String?>(null); private set
     var admittedCompletions by mutableStateOf<Set<String>>(emptySet()); private set
+    internal var completionPresentation by mutableStateOf<FacetCompletionPresentation?>(null); private set
+    internal fun clearCompletionPresentation(event: FacetCompletionPresentation) { if (completionPresentation == event) completionPresentation = null }
+    internal fun ownsCompletionPresentation(event: FacetCompletionPresentation) = !cleared && foreground && selected?.id == event.profileId && sessionGeneration == event.foregroundGeneration && feedbackEngineGeneration == event.engineGeneration
     var completionFailures by mutableStateOf<Map<String, String>>(emptyMap()); private set
     internal var savedFeedback by mutableStateOf<FacetSavedFeedback?>(null); private set
     private val feedbackCoordinator = FacetFeedbackCoordinator()
+    private val feedbackOwners = mutableMapOf<String, Long>()
+    private var feedbackEngineGeneration = 1L
+    internal var feedbackActive by mutableStateOf(false); private set
     var submittedActions by mutableStateOf<Set<String>>(emptySet()); private set
     private val completionAdmission = FacetCompletionAdmission()
     var remindersEnabled by mutableStateOf(FacetReminders.enabled(application)); private set
@@ -60,7 +66,12 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
     private var sessionGeneration = 0L
     private val sessions = mutableMapOf<String, ObsidianReplicaSession>()
     private val preferences = application.getSharedPreferences("facet.presentation", Application.MODE_PRIVATE)
-    internal var feedbackPreferences by mutableStateOf(FacetFeedbackPreferences(preferences.getBoolean("feedback.haptics", true), preferences.getBoolean("feedback.sound", true))); private set
+    internal var feedbackPreferenceError by mutableStateOf<String?>(null); private set
+    internal var feedbackPreferences by mutableStateOf(try { FacetFeedbackPreferences.read(preferences.all) } catch (failure: IllegalArgumentException) {
+        feedbackPreferenceError = failure.message; FacetFeedbackPreferences(haptics = false, sound = false)
+    }); private set
+    internal var feedbackDiagnostic by mutableStateOf<String?>(null); private set
+    internal fun reportFeedbackDiagnostic(value: String?) { feedbackDiagnostic = value }
     private val operations = Mutex()
     private var pendingOperations = 0
     private val actionIds = mutableMapOf<String, String>()
@@ -76,14 +87,23 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
     private fun reserveNoticeRequest(): FacetNoticeAdmission = noticeAuthority.begin(::clearNoticePresentation)
     private fun captureNoticeOwner(profileId: String, mutationId: String, request: FacetNoticeAdmission = reserveNoticeRequest()): FacetNoticeOwner {
         val owner = noticeAuthority.capture(request, profileId, mutationId)
+        feedbackEngineGeneration = owner.engineGeneration
+        feedbackOwners.putIfAbsent(mutationId, if (foreground) sessionGeneration else -1L)
         noticeAuthority.publishIfOwned(owner, selected?.id) { noticeOwner = owner }
         return owner
     }
     private fun ownsNotice(owner: FacetNoticeOwner): Boolean =
         !cleared && noticeOwner == owner && noticeAuthority.owns(owner, selected?.id)
-    private suspend fun presentSaved(result: AppliedFacetAction, owner: FacetNoticeOwner, saved: () -> Unit = {}, kind: FacetFeedbackKind = FacetFeedbackKind.SAVED) {
+    private suspend fun presentSaved(result: AppliedFacetAction, owner: FacetNoticeOwner, saved: () -> Unit = {}, kind: FacetFeedbackKind = FacetFeedbackKind.SAVED, announce: Boolean = true) {
         check(result.profileId == owner.profileId && result.mutationId == owner.mutationId)
-        noticeAuthority.publishIfOwned(owner, selected?.id) {
+        val epoch = feedbackOwners.remove(result.mutationId)
+        val event = feedbackCoordinator.publish(result.profileId, result.mutationId, null, kind,
+            owner.engineGeneration, epoch ?: -1L, eligible = announce && !cleared && foreground && epoch == sessionGeneration && selected?.id == result.profileId && result.receipt.getValue("paths").jsonArray.isNotEmpty(), noticeReady = false)
+        if (event != null) {
+            if (completionPresentation?.mutationId != result.mutationId) completionPresentation = null
+            savedFeedback = event
+        }
+        try { noticeAuthority.publishIfOwned(owner, selected?.id) {
         appliedNoticeOwner = owner
         savedNotice = result.warningMessages.takeIf { it.isNotEmpty() }?.let { FacetSavedNotice(owner, it) }
         savedMaintenance = when {
@@ -92,17 +112,22 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
             else -> null
         }
         saved()
-        }
+        } } catch (_: java.io.IOException) { if (ownsNotice(owner)) savedMaintenance = "Saved. Draft cleanup could not finish; your original action remains available." }
         if (!cleared && selected?.id == result.profileId) {
-            loadUndoAuthority(result.profileId)
-            if (!cleared && selected?.id == result.profileId) savedFeedback = feedbackCoordinator.publish(result.profileId, result.mutationId, undoHead?.takeIf { it == result.mutationId }, kind)
+            try { loadUndoAuthority(result.profileId) }
+            catch (_: java.io.IOException) { if (ownsNotice(owner)) savedMaintenance = "Saved. Undo availability could not be refreshed yet." }
+            if (event != null && !cleared && foreground && epoch == sessionGeneration && selected?.id == result.profileId)
+                feedbackCoordinator.authorizeNotice(event, undoHead?.takeIf { it == result.mutationId })?.let { savedFeedback = it }
         }
     }
 
-    internal fun consumeSavedFeedback() = feedbackCoordinator.consume(selected?.id)
+    internal fun consumeSavedFeedback() = feedbackCoordinator.consume(selected?.id, sessionGeneration, foreground, feedbackEngineGeneration)
+    internal fun consumeSavedNotice() = feedbackCoordinator.consumeNotice(selected?.id, sessionGeneration, foreground, feedbackEngineGeneration)
+    internal fun ownsFeedback(event: FacetSavedFeedback) = !cleared && foreground && selected?.id == event.profileId && feedbackEngineGeneration == event.engineGeneration && sessionGeneration == event.foregroundGeneration
     internal fun setFeedbackPreferences(value: FacetFeedbackPreferences) = work {
-        withContext(Dispatchers.IO) { check(preferences.edit().putBoolean("feedback.haptics", value.haptics).putBoolean("feedback.sound", value.sound).commit()) }
+        withContext(Dispatchers.IO) { check(preferences.edit().remove("feedback.enabled").putBoolean("feedback.haptics", value.haptics).putBoolean("feedback.sound", value.sound).commit()) }
         feedbackPreferences = value
+        feedbackPreferenceError = null
     }
     internal fun undoFeedback(event: FacetSavedFeedback) {
         if (!feedbackCoordinator.mayUndo(event, selected?.id, undoHead)) return
@@ -141,7 +166,7 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
     }
     private fun resetSelection(profile: VaultProfile) {
         reserveNoticeRequest()
-        generation++; visibleQuery = null; selected = profile; snapshot = null; allSnapshot = null; syncState = ""; needsStandardConsent = false
+        generation++; visibleQuery = null; selected = profile; snapshot = null; allSnapshot = null; syncState = ""; needsStandardConsent = false; completionPresentation = null
         query = FacetQuery(); savedQuery = null; conflicts = emptyList(); conflictCursor = null; conflictPreview = null
         capturePreview = null; capturePreviewOwner = null; capturePreviewInput = ""; previewGeneration++
     }
@@ -383,7 +408,10 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
         work(owner) {
             try {
                 check(completionAdmission.owns(intent)) { "This completion is no longer admitted." }
-                applied(intent.profileId, intent.command, intent.mutationId, owner, saved)
+                applied(intent.profileId, intent.command, intent.mutationId, owner, saved) { result ->
+                    if (result.receipt.getValue("paths").jsonArray.isNotEmpty() && foreground && feedbackOwners[intent.mutationId] == sessionGeneration && selected?.id == intent.profileId)
+                        completionPresentation = FacetCompletionPresentation(intent.profileId, intent.mutationId, task, !task.completed, sessionGeneration, owner.engineGeneration)
+                }
                 if (selected?.id == intent.profileId) reload()
                 restoreActions()
             } catch (failure: Exception) {
@@ -447,7 +475,7 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
             val action = retained.single()
             val owner = captureNoticeOwner(action.profileId, action.mutationId, request)
             val result = mutations.resume(action) { reconcileUndo(action.profileId, action.mutationId, action.mutation.getValue("command").jsonObject) }
-            presentSaved(result, owner)
+            presentSaved(result, owner, announce = false)
             if (selected?.id == profile.id) reload(); restoreActions(); return@ownerMutationWork
         }
         val available = engine.features(profile.id, buildJsonObject { put("kind", "undo_available") })
@@ -461,7 +489,7 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
       val owner = captureNoticeOwner(action.profileId, action.mutationId)
       work(owner) {
         val result = mutations.resume(action) { reconcileUndo(action.profileId, action.mutationId, action.mutation.getValue("command").jsonObject) }
-        presentSaved(result, owner)
+        presentSaved(result, owner, announce = false)
         if (selected?.id == result.profileId) reload()
         restoreActions()
       }
@@ -476,7 +504,7 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
     }
     private fun actionId(profileId: String, command: JsonObject) = actionIds.getOrPut("$profileId:$command") { UUID.randomUUID().toString() }
     private fun clearAction(profileId: String, command: JsonObject) { actionIds.remove("$profileId:$command") }
-    private suspend fun applied(profileId: String, command: JsonObject, mutationId: String, owner: FacetNoticeOwner, saved: () -> Unit = {}) {
+    private suspend fun applied(profileId: String, command: JsonObject, mutationId: String, owner: FacetNoticeOwner, saved: () -> Unit = {}, receiptPresentation: (AppliedFacetAction) -> Unit = {}) {
         // Host verifies the applied receipt. Observe/persist undo before clearing the immutable draft.
         val admitted = java.util.concurrent.atomic.AtomicBoolean(false)
         val result = try {
@@ -490,13 +518,8 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
             }
             throw failure
         }
-        val kind = when (command.getValue("kind").jsonPrimitive.content) {
-            "create" -> FacetFeedbackKind.CREATED
-            "delete" -> FacetFeedbackKind.DELETED
-            "set_completion" -> if (command.getValue("completed").jsonPrimitive.boolean) FacetFeedbackKind.COMPLETED else FacetFeedbackKind.REOPENED
-            "undo" -> FacetFeedbackKind.UNDONE
-            else -> FacetFeedbackKind.SAVED
-        }
+        receiptPresentation(result)
+        val kind = feedbackKind(command)
         presentSaved(result, owner, saved, kind)
     }
     private fun readUndo(profileId: String): FacetUndoHistory {
@@ -589,6 +612,7 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
         val admission = reserveNoticeRequest()
         foregroundLease = FacetBackgroundSync.resumeForeground()
         foreground = true
+        feedbackActive = true
         sessionGeneration++
         if (::account.isInitialized) work(admission = admission) { startSessions(); requestReminderRefresh() }
     }
@@ -597,6 +621,8 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
         val admission = reserveNoticeRequest()
         val lease = foregroundLease
         foreground = false
+        feedbackActive = false
+        completionPresentation = null
         sessionGeneration++
         sessions.values.forEach { it.requestStop() }
         work(admission = admission) {
@@ -681,7 +707,7 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
 
     override fun onCleared() {
         val lease = foregroundLease
-        cleared = true; foreground = false; generation++; sessionGeneration++
+        cleared = true; foreground = false; feedbackActive = false; generation++; sessionGeneration++
         completionAdmission.close(); admittedCompletions = emptySet()
         noticeAuthority.close(::clearNoticePresentation)
         sessions.values.forEach { it.requestStop() }

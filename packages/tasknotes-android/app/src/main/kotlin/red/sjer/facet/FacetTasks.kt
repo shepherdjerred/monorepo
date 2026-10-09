@@ -16,6 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -33,6 +34,7 @@ import kotlinx.serialization.json.*
 @Composable
 internal fun FacetTaskList(model: FacetViewModel, title: String, edit: (VaultTask) -> Unit, create: () -> Unit) {
     val profile = requireNotNull(model.selected)
+    val view = LocalView.current
     val snapshot = model.snapshot
     var selected by remember(profile.id, model.query) { mutableStateOf<Set<String>>(emptySet()) }
     var selecting by remember(profile.id, model.query) { mutableStateOf(false) }
@@ -44,6 +46,7 @@ internal fun FacetTaskList(model: FacetViewModel, title: String, edit: (VaultTas
     val today = remember(snapshot?.version) { LocalDate.now() }
     val sections = remember(snapshot, model.query.group) { snapshot?.let { taskSections(it, model.query.group) }.orEmpty() }
     val motion = LocalFacetMotion.current
+    val rowChange = LocalFacetTokens.current.document.getValue("motion").jsonObject.getValue("milliseconds").jsonObject.getValue("rowChange").jsonPrimitive.int
     val selection = snapshot?.tasks.orEmpty().filter { taskRowKey(it) in selected }
     val selectionQuery = model.query
     fun selectRows(keys: Set<String>, active: Boolean = true) {
@@ -100,6 +103,10 @@ internal fun FacetTaskList(model: FacetViewModel, title: String, edit: (VaultTas
                     var actions by remember { mutableStateOf(false) }
                     val scope = rememberCoroutineScope()
                     val swipe = rememberSwipeToDismissBoxState()
+                    LaunchedEffect(swipe.targetValue) {
+                        if (swipe.targetValue != SwipeToDismissBoxValue.Settled && model.feedbackActive && model.feedbackPreferences.haptics)
+                            view.performHapticFeedback(android.view.HapticFeedbackConstants.CLOCK_TICK)
+                    }
                     LaunchedEffect(swipe.currentValue) {
                         when (swipe.currentValue) {
                             SwipeToDismissBoxValue.StartToEnd -> { model.toggle(profile.id, task); scope.launch { if (motion) swipe.reset() else swipe.snapTo(SwipeToDismissBoxValue.Settled) } }
@@ -107,7 +114,7 @@ internal fun FacetTaskList(model: FacetViewModel, title: String, edit: (VaultTas
                             SwipeToDismissBoxValue.Settled -> Unit
                         }
                     }
-                    SwipeToDismissBox(state = swipe, modifier = Modifier.animateItem(fadeInSpec = if (motion) tween(200) else null, placementSpec = if (motion) spring() else null, fadeOutSpec = if (motion) tween(200) else null),
+                    SwipeToDismissBox(state = swipe, modifier = Modifier.animateItem(fadeInSpec = if (motion) tween(rowChange) else null, placementSpec = if (motion) tween(rowChange) else null, fadeOutSpec = if (motion) tween(rowChange) else null),
                         enableDismissFromStartToEnd = !selecting && !pending, enableDismissFromEndToStart = !selecting && !pending,
                         backgroundContent = {
                             Box(Modifier.fillMaxSize().padding(horizontal = 24.dp),
@@ -214,6 +221,27 @@ internal fun FacetTaskCheckbox(task: VaultTask, configuration: kotlinx.serializa
     }
 }
 
+/** Receipt-owned confirmation survives a filtered row disappearing; it never holds the engine queue. */
+@Composable
+internal fun FacetCompletionConfirmation(model: FacetViewModel) {
+    val event = model.completionPresentation?.takeIf(model::ownsCompletionPresentation) ?: return
+    val motion = LocalFacetMotion.current
+    val duration = LocalFacetTokens.current.document.getValue("motion").jsonObject.getValue("milliseconds").jsonObject.getValue("rowChange").jsonPrimitive.int
+    var filled by remember(event.mutationId) { mutableStateOf(event.task.completed) }
+    LaunchedEffect(event, motion) {
+        withFrameNanos { }
+        filled = event.completed
+        kotlinx.coroutines.delay(if (motion) duration.toLong() else 0L)
+        model.clearCompletionPresentation(event)
+    }
+    Surface(color = MaterialTheme.colorScheme.surfaceContainer, modifier = Modifier.fillMaxWidth()) {
+        Row(Modifier.padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            FacetTaskCheckbox(event.task.copy(completed = filled), model.snapshot?.configuration, false) { }
+            Text((if (event.completed) "Completed · " else "Reopened · ") + event.task.title, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(vertical = 12.dp))
+        }
+    }
+}
+
 @Composable
 private fun FacetEmptyTasks(model: FacetViewModel, title: String, create: () -> Unit) {
     val filtered = model.query.text.isNotBlank() || listOf(model.query.statuses, model.query.priorities, model.query.projects, model.query.contexts, model.query.tags).any { it.isNotEmpty() }
@@ -222,7 +250,7 @@ private fun FacetEmptyTasks(model: FacetViewModel, title: String, create: () -> 
         Spacer(Modifier.height(16.dp))
         Text(if (filtered) "No matching tasks" else if (title == "Today") "Nothing planned for today" else title + " is empty", style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.height(8.dp))
-        Text(if (filtered) "Try a different search or clear your filters." else "Your tasks will appear here when they belong to this view.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(if (filtered) "Try a different search or clear your filters." else if (title == "Today") "Take a breath, or plan what’s next." else "Add a task when you’re ready.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(20.dp))
         if (filtered) OutlinedButton(onClick = { model.changeQuery(FacetQuery(scope = model.query.scope)); }) { Text("Clear filters and search") }
         else Button(onClick = create) { Text("Add task") }

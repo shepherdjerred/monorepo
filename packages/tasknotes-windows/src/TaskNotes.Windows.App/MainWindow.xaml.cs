@@ -64,6 +64,7 @@ namespace TaskNotes.Windows.App
             _globalHotkey = globalHotkey ?? throw new ArgumentNullException(nameof(globalHotkey));
             _reminders = new FacetReminderDelivery(Store);
             InitializeComponent();
+            InitializeFeedback();
             TaskWorkspace.QuickAddViewModel = _inlineQuickAdd;
             TaskWorkspace.Composer.Initialize(_uiOperations, RunUiOperationAsync);
             BoardDestination.Initialize(_uiOperations, RunUiOperationAsync);
@@ -136,7 +137,30 @@ namespace TaskNotes.Windows.App
         /// <summary>Gets the portable shell presentation model.</summary>
         public ShellViewModel ViewModel { get; }
 
-        internal Task<bool> ConfirmCloseAsync() => TaskWorkspace.Editor.ConfirmDiscardAsync();
+        internal async Task<bool> ConfirmCloseAsync()
+        {
+            if (
+                _quickAdd.IsSubmitting
+                || _inlineQuickAdd.IsSubmitting
+                || _quickAdd.RecoveryActionId is not null
+                || _inlineQuickAdd.RecoveryActionId is not null
+                || _quickAdd.NeedsObservation
+                || _inlineQuickAdd.NeedsObservation
+            )
+            {
+                ShowValidationMessage(
+                    "Finish or review the exact submitted capture in Settings recovery before closing."
+                );
+                return false;
+            }
+            if (!await TaskWorkspace.Editor.ConfirmDiscardAsync())
+                return false;
+            if (!_quickAdd.HasDraft && !_inlineQuickAdd.HasDraft)
+                return true;
+            if (!await ConfirmAsync("Discard unsaved capture drafts and close?"))
+                return false;
+            return _quickAdd.DiscardDraft() && _inlineQuickAdd.DiscardDraft();
+        }
 
         /// <summary>Fence and drain owned reminder effects before the store and writer lease close.</summary>
         public async ValueTask DisposeAsync()
@@ -291,7 +315,17 @@ namespace TaskNotes.Windows.App
 
         private async Task InitializeMainWindowAsync()
         {
-            ShellPreferences shell = _settings.LoadShell();
+            ShellPreferences? shell = await LoadShellWithRecoveryAsync();
+            if (shell is null)
+            {
+                _initialized.Set();
+                Close();
+                return;
+            }
+            _taskSounds = shell.TaskSounds;
+            SettingsDestination.SetTaskSounds(_taskSounds);
+            if (_taskSounds)
+                PrepareNativeFeedback();
             AppWindow.Resize(
                 new SizeInt32(
                     checked((int)Math.Clamp(shell.WindowWidth, 800, 3840)),
@@ -323,7 +357,8 @@ namespace TaskNotes.Windows.App
                     TaskWorkspace.InspectorVisible,
                     SettingsDestination.Hotkey.Trim(),
                     AppWindow.Size.Width,
-                    AppWindow.Size.Height
+                    AppWindow.Size.Height,
+                    _taskSounds
                 )
             );
             ReleaseResources();
@@ -413,7 +448,8 @@ namespace TaskNotes.Windows.App
         private async Task ApplyQueryAsync(TaskListQuery query)
         {
             _query = query;
-            _inlineQuickAdd.SetContext(query);
+            if (!_inlineQuickAdd.HasDraft)
+                _inlineQuickAdd.SetContext(query);
             TaskWorkspace.SetQueryControls(query);
             _ = await RunUiOperationAsync(() => ViewModel.ApplyQueryAsync(query));
         }
@@ -471,53 +507,6 @@ namespace TaskNotes.Windows.App
             _ = sender;
             _ = e;
             _uiOperations.Run("open-quick-add", () => ShowQuickAddAsync(string.Empty));
-        }
-
-        private async Task ShowQuickAddAsync(string initialText)
-        {
-            _quickAdd.SetContext(_query);
-            _quickAdd.Input = initialText;
-            bool addAnother;
-            do
-            {
-                QuickAddView content = new() { ViewModel = _quickAdd };
-                content.Initialize(_uiOperations, RunUiOperationAsync);
-                ContentDialog dialog = new()
-                {
-                    XamlRoot = RootGrid.XamlRoot,
-                    Title = "Quick Add",
-                    Content = content,
-                    PrimaryButtonText = "Save",
-                    SecondaryButtonText = "Save & Add Another",
-                    CloseButtonText = "Cancel",
-                    DefaultButton = ContentDialogButton.Primary,
-                };
-                AutomationProperties.SetAutomationId(dialog, "TaskNotes.QuickAdd.Dialog");
-                dialog.Opened += (_, _) => content.FocusInput();
-                ContentDialogResult result = await dialog.ShowAsync();
-                addAnother = result == ContentDialogResult.Secondary;
-                if (result is ContentDialogResult.Primary or ContentDialogResult.Secondary)
-                {
-                    bool modelSaved = false;
-                    if (
-                        !await RunUiOperationAsync(async () =>
-                        {
-                            modelSaved = await _quickAdd.SaveAsync(addAnother);
-                        })
-                    )
-                    {
-                        return;
-                    }
-                    if (!modelSaved)
-                    {
-                        ShowValidationMessage(
-                            _quickAdd.ValidationError
-                                ?? "Quick Add validation failed without a message."
-                        );
-                        return;
-                    }
-                }
-            } while (addAnother);
         }
 
         private void Completion_Click(object sender, RoutedEventArgs e)
@@ -647,7 +636,7 @@ namespace TaskNotes.Windows.App
                         rows.Length > 0
                         && await ConfirmAsync(
                             "Delete tasks?",
-                            $"Delete {rows.Select(row => row.VaultPath).Distinct(StringComparer.Ordinal).Count()} selected note(s)? This cannot be undone."
+                            $"Delete {rows.Select(row => row.VaultPath).Distinct(StringComparer.Ordinal).Count()} selected note(s)? You can undo this change while it remains the current Undo receipt."
                         )
                     )
                     {
@@ -665,7 +654,10 @@ namespace TaskNotes.Windows.App
             _ = e;
             _uiOperations.Run(
                 "undo-completion",
-                () => RunUiOperationAsync(() => Store.UndoCompletionAsync())
+                () =>
+                    RunUiOperationAsync(() =>
+                        Store.UndoCurrentSavedAsync((sender as FrameworkElement)?.Tag as string)
+                    )
             );
         }
 
@@ -723,6 +715,7 @@ namespace TaskNotes.Windows.App
                 {
                     _ = await RunUiOperationAsync(async () =>
                     {
+                        TaskWorkspace.Composer.CommitTokens();
                         if (!await _inlineQuickAdd.SaveAsync(true))
                             ShowValidationMessage(
                                 _inlineQuickAdd.ValidationError ?? "Enter a task to add it."
@@ -1541,10 +1534,18 @@ namespace TaskNotes.Windows.App
         )
         {
             _ = sender;
+            DependencyObject? focused =
+                FocusManager.GetFocusedElement(RootGrid.XamlRoot) as DependencyObject;
+            while (focused is not null)
+            {
+                if (focused is TextBox or RichEditBox or PasswordBox)
+                    return;
+                focused = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetParent(focused);
+            }
             args.Handled = true;
             _uiOperations.Run(
                 "undo-accelerator",
-                () => RunUiOperationAsync(() => ViewModel.UndoCompletionCommand.ExecuteAsync(null))
+                () => RunUiOperationAsync(() => Store.UndoCurrentSavedAsync())
             );
         }
 
@@ -1592,6 +1593,7 @@ namespace TaskNotes.Windows.App
 
         private void ReleaseResources()
         {
+            ReleaseFeedback();
             SearchCancellation?.Cancel();
             SearchCancellation?.Dispose();
             SearchCancellation = null;

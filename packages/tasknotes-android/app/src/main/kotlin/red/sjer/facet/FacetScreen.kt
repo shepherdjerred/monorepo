@@ -1,7 +1,5 @@
 package red.sjer.facet
 
-import android.os.Build
-import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -15,6 +13,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import red.sjer.facet.host.VaultTask
@@ -38,17 +39,35 @@ fun FacetScreen(model: FacetViewModel) {
     val reminder = model.pendingReminder
     val snackbar = remember { SnackbarHostState() }
     val view = LocalView.current
+    val context = LocalContext.current
+    val nativeFeedback = remember(context) { FacetNativeFeedback(context) }
+    val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
+    DisposableEffect(nativeFeedback, lifecycle) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event -> if (event == androidx.lifecycle.Lifecycle.Event.ON_STOP) nativeFeedback.stop() }
+        lifecycle.addObserver(observer)
+        onDispose { lifecycle.removeObserver(observer) }
+    }
+    DisposableEffect(nativeFeedback) { onDispose { nativeFeedback.close() } }
+    LaunchedEffect(model.feedbackActive, profile?.id) { nativeFeedback.stop() }
+    LaunchedEffect(nativeFeedback) { kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { nativeFeedback.preload() } }
+    val searchFocus = remember { FocusRequester() }
+    LaunchedEffect(searching) { if (searching) searchFocus.requestFocus() }
     val mainRoutes = listOf("Inbox", "Today", "Upcoming", "Browse")
     val taskRoute = destination in listOf("Inbox", "Today", "Upcoming", "Tasks")
     val title = if (destination == "Tasks") taskTitle else destination
     LaunchedEffect(searchText, searching) {
         if (searching) { delay(250); if (searchText != model.query.text) model.changeQuery(model.query.copy(text = searchText)) }
     }
-    LaunchedEffect(model.savedFeedback, profile?.id) {
-        val event = model.consumeSavedFeedback() ?: return@LaunchedEffect
-        if (model.feedbackPreferences.haptics) view.performHapticFeedback(if (event.kind == FacetFeedbackKind.COMPLETED) HapticFeedbackConstants.LONG_PRESS else if (Build.VERSION.SDK_INT >= 30) HapticFeedbackConstants.CONFIRM else HapticFeedbackConstants.KEYBOARD_TAP)
-        if (model.feedbackPreferences.sound) view.playSoundEffect(android.view.SoundEffectConstants.CLICK)
-        val answer = snackbar.showSnackbar(event.kind.message, if (event.undoReceiptId != null) "Undo" else null)
+    LaunchedEffect(model.savedFeedback?.sequence, profile?.id, model.feedbackActive) {
+        while (true) {
+            val event = model.consumeSavedFeedback() ?: break
+            nativeFeedback.applied(event, model.feedbackPreferences, view) { model.ownsFeedback(event) }
+        }
+        model.reportFeedbackDiagnostic(nativeFeedback.diagnostic)
+    }
+    LaunchedEffect(model.savedFeedback?.sequence, model.savedFeedback?.noticeReady, profile?.id, model.feedbackActive) {
+        val event = model.consumeSavedNotice() ?: return@LaunchedEffect
+        val answer = snackbar.showSnackbar(event.kind.message, if (event.undoReceiptId != null) "Undo" else null, withDismissAction = true, duration = SnackbarDuration.Indefinite)
         if (answer == SnackbarResult.ActionPerformed) model.undoFeedback(event)
     }
     LaunchedEffect(reminder, editor, captureOwner) {
@@ -110,6 +129,7 @@ fun FacetScreen(model: FacetViewModel) {
                 } else FacetWelcome(model) { destination = "Settings" }
             } else {
                 FacetSyncSummary(model)
+                FacetCompletionConfirmation(model)
                 if (model.savedNotice != null || model.savedMaintenance != null) Surface(color = MaterialTheme.colorScheme.surfaceContainer, modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         model.savedNotice?.messages?.forEach { Text(it, style = MaterialTheme.typography.bodyMedium) }
@@ -117,7 +137,7 @@ fun FacetScreen(model: FacetViewModel) {
                     }
                 }
                 if (searching && taskRoute) OutlinedTextField(searchText, { searchText = it }, label = { Text("Search tasks") },
-                    singleLine = true, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    singleLine = true, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).focusRequester(searchFocus),
                     trailingIcon = { IconButton(onClick = { searchText = ""; model.changeQuery(model.query.copy(text = "")); searching = false }) { Icon(Icons.Default.Close, "Clear search") } })
                 if (model.snapshot?.configuration == null && destination != "Settings") {
                     Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -144,7 +164,7 @@ fun FacetScreen(model: FacetViewModel) {
         "Open this reminder?", "Continuing discards the unsaved draft and opens the task in the reminder's vault.",
         "Discard draft and open", { model.dismissReminder(reminder) }
     ) { editor = null; captureOwner = null; model.openReminder(reminder) { owner, task -> destination = "Tasks"; editor = owner to task } }
-    model.error?.let { message ->
+    model.error?.takeIf { captureOwner == null && editor == null }?.let { message ->
         AlertDialog(onDismissRequest = model::dismissError, icon = { Icon(Icons.Default.ErrorOutline, null) },
             title = { Text("This action needs attention") }, text = { Text(message) },
             confirmButton = { TextButton(onClick = model::dismissError) { Text("OK") } })
