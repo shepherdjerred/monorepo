@@ -3,8 +3,11 @@
 
 provider "registry.terraform.io/ippontech/anthropic" {
   version     = "1.60.0"
-  constraints = "1.54.1"
+  constraints = "1.60.0"
   hashes = [
+    "h1:7IdbGvLvD659usUaSXih739rKHvbm0jvYoRqqI789Zc=",
+    "h1:BM9m8AoVNOofA2tsBkmNP8A2vSQdIOeqSvpQC1cXDwg=",
+    "h1:D+saz1yw6Wi6NLUthdgNeE7wik49qMPFWYtPwVD7eGg=",
     "h1:r2MEosfHRP96jdpd4DeOqOwgV1LvLQKAs1N4XEBCTYU=",
     "zh:07f512645dc65b554abee523a7c84b657949c9203a1539482baa929a9453665a",
     "zh:2e320e2f916496d86c6868d77d050e98450921d776cd395bb24d104e79e51025",
