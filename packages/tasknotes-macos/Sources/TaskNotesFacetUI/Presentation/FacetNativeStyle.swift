@@ -57,11 +57,13 @@ internal struct FacetTaskRow: View {
     let presentation: FacetTaskPresentation
     let desktop: Bool
     var stacked = false
+    var completionReceipt: String?
     let complete: () -> Void
     let open: () -> Void
     let schedule: () -> Void
     let delete: () -> Void
     @State private var hovering = false
+    @State private var completionPulse: String?
     @Environment(\.accessibilityReduceMotion) private var reducedMotion
     @Environment(\.dynamicTypeSize) private var dynamicType
     @ScaledMetric(relativeTo: .body) private var checkboxSize = CGFloat(
@@ -78,7 +80,7 @@ internal struct FacetTaskRow: View {
                 } else {
                     checkbox.phaseAnimator(
                         [1.0, FacetNativeStyle.tokens.motion.checkboxSpring.peakScale, 1.0],
-                        trigger: task.completed
+                        trigger: completionPulse
                     ) { content, phase in
                         content.scaleEffect(phase)
                     } animation: { _ in
@@ -146,6 +148,9 @@ internal struct FacetTaskRow: View {
                     : FacetNativeStyle.tokens.mobile.rowVerticalPadding)
         )
         .onHover { hovering = $0 }
+        .onChange(of: task.completed) {
+            if let completionReceipt { completionPulse = completionReceipt }
+        }
         .contentShape(Rectangle())
         .contextMenu {
             Button(task.completed ? "Uncomplete" : "Complete", action: complete)
@@ -193,7 +198,7 @@ internal struct FacetTaskRow: View {
                     ? FacetNativeStyle.secondaryText : FacetNativeStyle.tint(presentation.priority)
             )
             .animation(
-                reducedMotion
+                reducedMotion || completionReceipt == nil
                     ? nil
                     : .linear(
                         duration: FacetNativeStyle.tokens.motion.milliseconds.checkboxFill / 1000),

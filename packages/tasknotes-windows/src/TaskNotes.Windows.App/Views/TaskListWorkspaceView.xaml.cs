@@ -154,13 +154,9 @@ public sealed partial class TaskListWorkspaceView : UserControl
 
     internal void SetSavedNotice(FacetSavedNotice? notice, string? maintenance)
     {
-        SavedText.Text = string.Join(
-            Environment.NewLine,
-            (notice?.Messages ?? []).Concat(maintenance is null ? [] : [maintenance])
-        );
-        SavedBar.IsOpen = notice is not null || maintenance is not null;
-        if (SavedBar.IsOpen)
-            RaiseLiveRegionChanged(SavedText);
+        _savedWarnings = notice?.Messages ?? [];
+        _savedMaintenance = maintenance;
+        RenderOutcomeNotice();
     }
 
     internal void FocusSearch(FocusState state) => _ = SearchBox.Focus(state);

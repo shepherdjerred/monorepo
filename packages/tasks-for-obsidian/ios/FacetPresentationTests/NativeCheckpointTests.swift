@@ -7,6 +7,38 @@ import XCTest
 @testable import TaskNotesFacetUI
 
 final class NativeCheckpointTests: XCTestCase {
+  @MainActor func testDelightNativeComponents() async throws {
+    for state in FacetDelightGalleryState.allCases {
+      for appearance in [UIUserInterfaceStyle.light, .dark] {
+        let fixture = try await FacetDelightGalleryFixture.open(state)
+        try await render(
+          FacetDelightGalleryFrame(fixture: fixture),
+          named: "facet-delight-ios-\(state.rawValue)", appearance: appearance,
+          size: state.size,
+          settling: .milliseconds(350),
+          expectedTitle: state.isCapture ? fixture.draft.input : nil,
+          ready: state.isCapture ? { fixture.previewIsCurrent } : nil)
+        try await fixture.close()
+      }
+    }
+  }
+
+  @MainActor func testDelightAdaptiveComponents() async throws {
+    for state in [
+      FacetDelightGalleryState.captureParsed, .captureDetails, .settingsRecovery, .completed,
+    ] {
+      let fixture = try await FacetDelightGalleryFixture.open(state)
+      try await render(
+        FacetDelightGalleryFrame(fixture: fixture).environment(
+          \.dynamicTypeSize, .accessibility3),
+        named: "facet-delight-ios-\(state.rawValue)-large-type", appearance: .light,
+        size: state.size,
+        settling: .milliseconds(350),
+        ready: state.isCapture ? { fixture.previewIsCurrent } : nil)
+      try await fixture.close()
+    }
+  }
+
   @MainActor func testCanonicalNativeGalleryLightAndDark() async throws {
     for state in FacetNativeGalleryState.allCases {
       for appearance in [UIUserInterfaceStyle.light, .dark] {
@@ -56,7 +88,9 @@ final class NativeCheckpointTests: XCTestCase {
 
   @MainActor private func render(
     _ content: some View, named: String, appearance: UIUserInterfaceStyle,
-    size: CGSize = CGSize(width: 390, height: 844), highContrast: Bool = false
+    size: CGSize = CGSize(width: 390, height: 844), highContrast: Bool = false,
+    settling: Duration = .milliseconds(150), expectedTitle: String? = nil,
+    ready: (() -> Bool)? = nil
   ) async throws {
     let frame = CGRect(origin: .zero, size: size)
     let hosting = UIHostingController(
@@ -76,8 +110,19 @@ final class NativeCheckpointTests: XCTestCase {
     hosting.view.frame = frame
     hosting.view.setNeedsLayout()
     hosting.view.layoutIfNeeded()
-    try await _Concurrency.Task.sleep(for: .milliseconds(150))
+    try await _Concurrency.Task.sleep(for: settling)
+    if let ready {
+      let deadline = ContinuousClock.now.advanced(by: .seconds(3))
+      while !ready(), ContinuousClock.now < deadline {
+        try await _Concurrency.Task.sleep(for: .milliseconds(10))
+      }
+      guard ready() else {
+        XCTFail("Native capture preview did not settle for its current title")
+        throw FacetContractError.unsupportedResponse
+      }
+    }
     hosting.view.layoutIfNeeded()
+    if let expectedTitle { XCTAssertEqual(focusedText(in: hosting.view), expectedTitle) }
     let format = UIGraphicsImageRendererFormat()
     format.scale = 2
     format.opaque = true
@@ -96,6 +141,15 @@ final class NativeCheckpointTests: XCTestCase {
     attachment.name = named + (appearance == .dark ? ".dark" : ".light")
     attachment.lifetime = .keepAlways
     add(attachment)
+  }
+
+  @MainActor private func focusedText(in view: UIView) -> String? {
+    if let editor = view as? UITextView, editor.isFirstResponder { return editor.text }
+    if let field = view as? UITextField, field.isFirstResponder { return field.text }
+    for child in view.subviews {
+      if let text = focusedText(in: child) { return text }
+    }
+    return nil
   }
 
   @MainActor private func assertNonuniform(_ image: UIImage) throws {

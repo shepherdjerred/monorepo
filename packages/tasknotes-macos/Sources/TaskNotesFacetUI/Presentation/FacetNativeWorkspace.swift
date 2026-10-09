@@ -14,6 +14,7 @@ internal struct FacetNativeWorkspace: View {
     @State private var selectionAction = FacetBulkDraft()
     @State private var commitRegistration = UUID()
     @Environment(\.accessibilityReduceMotion) private var reducedMotion
+    @Environment(\.facetFeedbackOrigin) private var feedbackOrigin
 
     init(
         store: FacetStore, importsFolder: Binding<Bool>, window: FacetWindowState? = nil,
@@ -31,7 +32,16 @@ internal struct FacetNativeWorkspace: View {
 
     var body: some View {
         platformWorkspace
-            .onAppear { registerDraft() }
+            .onAppear {
+                registerDraft()
+                window.feedbackOrigin = feedbackOrigin
+                window.reducedMotion = reducedMotion
+            }
+            .onChange(of: reducedMotion) { window.reducedMotion = reducedMotion }
+            .onChange(of: feedbackOrigin) { window.feedbackOrigin = feedbackOrigin }
+            .onChange(of: store.appliedFeedback) {
+                _Concurrency.Task { await window.reload(store: store) }
+            }
             .onChange(of: draft?.rowID) { registerDraft() }
             .onDisappear { FacetDraftCoordinator.shared.unregister(commitRegistration) }
             .disabled(FacetDraftCoordinator.shared.isTransitioning)

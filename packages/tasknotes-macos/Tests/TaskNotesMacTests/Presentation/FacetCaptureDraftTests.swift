@@ -61,6 +61,45 @@ struct FacetCaptureDraftTests {
         try await context.close()
     }
 
+    @Test func explicitEmptyNotesAndParsedMetadataRemovalFreezeAtAdmission() async throws {
+        let context = try await StoreContext.open()
+        let profile = try await registerVault(context)
+        let draft = FacetCaptureDraft()
+        draft.input = "Reviewed tomorrow p:Home #work"
+        var overrides: [String: FacetValue] = [
+            "title": .string(""), "due": .null, "projects": .array([]), "tags": .array([]),
+        ]
+        #expect(
+            draft.begin(
+                store: context.store, profileID: profile.id, properties: overrides, body: ""))
+        overrides["due"] = .string("2027-01-01")
+        draft.input = "Newer notes and tomorrow p:Work"
+        #expect(!(await draft.submit(store: context.store)))
+        let pending = try #require(await context.first.pendingMutations().first)
+        let command = try #require(pending.mutation.object?.fields["command"]?.object?.fields)
+        let properties = try #require(command["properties"]?.object?.fields)
+        #expect(command["body"] == .string(""))
+        #expect(properties["due"] == .null)
+        #expect(properties["projects"] == .array([]) && properties["tags"] == .array([]))
+        #expect(draft.input == "Newer notes and tomorrow p:Work")
+        #expect(draft.admittedMutationID == pending.id)
+        try await context.close()
+    }
+
+    @Test func metadataOnlyInputStaysEditableWithoutDurableAdmission() async throws {
+        let context = try await StoreContext.open()
+        let profile = try await registerVault(context)
+        let draft = FacetCaptureDraft()
+        draft.input = "tomorrow p:Work"
+        #expect(draft.begin(store: context.store, profileID: profile.id))
+        #expect(!(await draft.submit(store: context.store)))
+        #expect(draft.admittedMutationID == nil && !draft.hasRetainedSubmission)
+        #expect(draft.input == "tomorrow p:Work" && draft.canSubmit)
+        #expect(try await context.first.pendingMutations().isEmpty)
+        #expect(try await snapshot(context.first, profileID: profile.id).tasks.isEmpty)
+        try await context.close()
+    }
+
     @Test func admittedRejectedCreateKeepsExactEnvelopeAndRequiresOwnedRecovery() async throws {
         let context = try await StoreContext.open()
         let profile = try await registerVault(context)

@@ -83,6 +83,7 @@ android {
     buildFeatures { compose = true }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
     packaging { jniLibs { useLegacyPackaging = false } }
+    androidResources { noCompress += "wav" }
     buildTypes { release { isDebuggable = false; isMinifyEnabled = true; isShrinkResources = true; proguardFiles("proguard-rules.pro") } }
 }
 kotlin { compilerOptions { allWarningsAsErrors.set(true) } }

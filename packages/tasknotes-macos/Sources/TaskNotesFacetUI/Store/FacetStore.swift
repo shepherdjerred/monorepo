@@ -19,6 +19,9 @@ public final class FacetStore {
     public internal(set) var error: String?
     public internal(set) var savedNotice: String?
     internal var appliedFeedback: FacetAppliedFeedback?
+    @ObservationIgnored internal var feedbackSessionID = UUID()
+    @ObservationIgnored internal var feedbackOrigin: FacetFeedbackOrigin?
+    @ObservationIgnored internal var feedback = FacetNativeFeedback.shared
     public internal(set) var isLoading = false
     public internal(set) var conflicts: [FacetConflict] = []
     public internal(set) var conflictCursor: String?
@@ -67,7 +70,12 @@ public final class FacetStore {
     internal var reminderEditor: FacetReminderEditorSelection?
     @ObservationIgnored internal let reminders = FacetReminders()
     @ObservationIgnored internal var engine: FacetEngine? {
-        didSet { if engine !== oldValue { clearSavedNotice() } }
+        didSet {
+            if engine !== oldValue {
+                feedbackSessionID = UUID()
+                clearSavedNotice()
+            }
+        }
     }
     @ObservationIgnored internal var account: FacetObsidianAccount?
     @ObservationIgnored internal var importer: FacetVaultImporter?
@@ -86,7 +94,7 @@ public final class FacetStore {
         }
     }
     @ObservationIgnored internal var requestGeneration: UInt64 = 0 {
-        didSet { if requestGeneration != oldValue { clearSavedNotice() } }
+        didSet { if requestGeneration != oldValue { savedNotice = nil } }
     }
     @ObservationIgnored internal var selectionGeneration: UInt64 = 0
     @ObservationIgnored internal let clock: SystemClock
@@ -253,6 +261,19 @@ public final class FacetStore {
 }
 
 extension FacetStore {
+    public func feedbackIntent(origin: FacetFeedbackOrigin?) -> FacetFeedbackIntent {
+        let owner = origin ?? feedbackOrigin
+        return FacetFeedbackIntent(origin: owner, activationID: feedback.activation(for: owner))
+    }
+    public func setFeedbackScene(_ origin: FacetFeedbackOrigin, active: Bool) {
+        feedback.setScene(origin, active: active)
+        if active {
+            feedbackOrigin = origin
+        } else if feedbackOrigin == origin {
+            feedbackOrigin = nil
+        }
+    }
+
     public func clearError() { error = nil }
     public func clearSavedNotice() {
         savedNotice = nil

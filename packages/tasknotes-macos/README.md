@@ -70,9 +70,30 @@ admission; note-level changes deduplicate only matching revisions. Supported sav
 actions may retire only after authoritative absent or parked proof. Pending,
 uncertain and applied work stays protected. Native recovery exposes the original
 vault/action identity, and explicit local-draft discard checks the journal again.
-Mobile success feedback comes from applied receipts; Undo targets that exact
-eligible receipt. Retained sounds use ambient audio and respect native mute policy,
-with a validated local preference. Desktop feedback stays quiet.
+Local success feedback comes from verified applied receipts before maintenance
+and refresh. Its session, vault, action and originating window activation are
+captured before queue admission: losing focus consumes the old cue even if the
+window returns before the result arrives. Startup, remote changes, no-ops and
+duplicate receipts stay silent. Bulk actions produce one aggregate cue. Ordinary
+edits receive quiet visual acknowledgement, and Undo targets the exact eligible
+core receipt with a six-second banner that pauses while focused or hovered.
+
+Task Sounds defaults on across Apple platforms; mobile Haptics defaults on.
+The independent local choices preserve both explicit legacy values, and malformed
+preferences require visible reset. The shared first-party four-cue palette is
+validated against its neutral contract. Individual SwiftPM copies turn source
+symlinks into regular bundled files, checked byte-for-byte against that palette.
+iOS ambient playback respects Silent Mode and mixes with other audio. Foreground
+loss and interruptions release players; overlapping physical attempts are dropped
+without replay. Device audio audibility and physical haptic feel require hardware
+acceptance; simulator view renders establish neither.
+
+Compact capture focuses its title and projects the existing Rust parser into
+removable chips. Details expands notes, dates, priority and taxonomy controls;
+explicit empty notes, cleared dates and removed tokens remain submitted overrides.
+Add Another preserves the panel/sheet for repeated capture. Notes-only and
+structured-only drafts veto dismissal. The reusable nonactivating macOS panel
+keeps hidden drafts and restores title focus on each explicit opening.
 
 Presentation tokens and configured-color policy are validated Swift values from
 the [language-neutral presentation specification](../tasknotes-fixtures/presentation).

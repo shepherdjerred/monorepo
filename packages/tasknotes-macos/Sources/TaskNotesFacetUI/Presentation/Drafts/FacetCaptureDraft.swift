@@ -40,6 +40,9 @@ public import TaskNotesKit
             })
     }
     public var hasRetainedSubmission: Bool { submission != nil }
+    public func hasChanges(body: String, properties: [String: FacetValue]) -> Bool {
+        !input.isEmpty || !body.isEmpty || !properties.isEmpty || hasRetainedSubmission
+    }
     public var canSubmit: Bool {
         !isSubmitting && submission == nil
             && !input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -48,12 +51,13 @@ public import TaskNotesKit
     /// Reserve synchronously before creating a Task; queued work cannot duplicate this capture.
     public func begin(
         store: FacetStore, profileID: String,
-        properties: [String: FacetValue] = [:], body: String? = nil
+        properties: [String: FacetValue] = [:], body: String? = nil,
+        origin: FacetFeedbackOrigin? = nil
     ) -> Bool {
         guard canSubmit else { return false }
         guard
             let intent = store.prepareNativeCapture(
-                input, profileID: profileID, properties: properties, body: body)
+                input, profileID: profileID, properties: properties, body: body, origin: origin)
         else {
             error = "Open the capture's owning vault before adding a task."
             return false

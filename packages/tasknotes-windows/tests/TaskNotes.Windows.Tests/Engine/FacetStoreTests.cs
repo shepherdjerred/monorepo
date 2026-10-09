@@ -10,7 +10,7 @@ namespace TaskNotes.Windows.Tests;
 
 /// <summary>Production standalone facade through real SQLite, native Rust and Markdown files.</summary>
 [TestClass]
-public sealed class FacetStoreTests
+public sealed partial class FacetStoreTests
 {
     /// <summary>Retained ID-based consumers still support their existing bulk command/undo contract.</summary>
     [TestMethod]

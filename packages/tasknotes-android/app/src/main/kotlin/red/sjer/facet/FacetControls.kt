@@ -13,6 +13,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.focus.FocusRequester
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -20,10 +23,23 @@ import java.time.ZoneOffset
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun FacetSheet(title: String, dismiss: () -> Unit, action: String? = null, enabled: Boolean = true,
-    save: () -> Unit = {}, large: Boolean = false, content: @Composable ColumnScope.() -> Unit) {
-    ModalBottomSheet(onDismissRequest = dismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+    save: () -> Unit = {}, large: Boolean = false, initialFocus: FocusRequester? = null, focusKey: Any? = null,
+    content: @Composable ColumnScope.() -> Unit) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ModalBottomSheet(onDismissRequest = dismiss, sheetState = sheetState,
         modifier = if (large) Modifier.fillMaxHeight(0.9f) else Modifier,
         containerColor = MaterialTheme.colorScheme.surface, sheetMaxWidth = 720.dp) {
+        val windowFocused = LocalWindowInfo.current.isWindowFocused
+        val keyboard = LocalSoftwareKeyboardController.current
+        var deliveredFocusKey by remember { mutableStateOf<Any?>(null) }
+        LaunchedEffect(initialFocus, focusKey, windowFocused, sheetState.currentValue, sheetState.isAnimationRunning) {
+            if (initialFocus != null && focusKey != deliveredFocusKey && windowFocused &&
+                sheetState.currentValue == SheetValue.Expanded && !sheetState.isAnimationRunning) {
+                initialFocus.requestFocus()
+                keyboard?.show()
+                deliveredFocusKey = focusKey
+            }
+        }
         Column(Modifier.fillMaxWidth().imePadding().navigationBarsPadding()) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                 TextButton(onClick = dismiss) { Text("Cancel") }

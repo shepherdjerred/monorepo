@@ -38,21 +38,9 @@ internal struct FacetNativeSettings: View {
                             }
                         }))
             }
-            #if os(iOS)
-                Section("Feedback") {
-                    Toggle(
-                        "Haptics and sounds",
-                        isOn: Binding(
-                            get: { FacetNativeFeedback.shared.enabled },
-                            set: { FacetNativeFeedback.shared.setEnabled($0) }))
-                    if let error = FacetNativeFeedback.shared.error {
-                        Label(error, systemImage: "exclamationmark.triangle")
-                        Button("Reset feedback preference") {
-                            FacetNativeFeedback.shared.setEnabled(true)
-                        }
-                    }
-                }
-            #endif
+            Section("Feedback") {
+                FacetFeedbackSettings()
+            }
             Section("Sync and recovery") {
                 Button("Refresh vault", systemImage: "arrow.clockwise") {
                     _Concurrency.Task { await store.refresh() }

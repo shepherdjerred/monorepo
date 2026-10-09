@@ -9,6 +9,10 @@
     <MSTestParallelizeWorkers>0</MSTestParallelizeWorkers>
   </PropertyGroup>
   <ItemGroup>
+    <Compile
+      Include="../../src/TaskNotes.Windows.App/ShellPreferencesCodec.cs"
+      Link="Adapters/ShellPreferencesCodec.cs"
+    />
     <EmbeddedResource
       Include="../../../tasknotes-fixtures/vault/facet-retained-actions.json"
       LogicalName="FacetRetainedActionCases.json"

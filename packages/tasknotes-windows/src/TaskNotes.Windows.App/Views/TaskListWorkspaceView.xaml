@@ -225,6 +225,14 @@
                 IsClosable="False"
                 IsOpen="False"
                 Severity="Informational">
+                <InfoBar.ActionButton>
+                    <Button
+                        x:Name="SavedUndoButton"
+                        AutomationProperties.Name="Undo this saved change"
+                        Click="Undo_Click"
+                        Content="Undo"
+                        Visibility="Collapsed" />
+                </InfoBar.ActionButton>
                 <TextBlock
                     x:Name="SavedText"
                     AutomationProperties.AutomationId="TaskNotes.SavedWarnings"
