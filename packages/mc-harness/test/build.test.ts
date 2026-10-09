@@ -1,16 +1,25 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, readdir, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
 import { BlockGrid } from "@shepherdjerred/mc-build/core/grid.ts";
 import { writeSchematic } from "@shepherdjerred/mc-build/core/schem.ts";
+import { loadRegistry } from "@shepherdjerred/mc-build/registry/registry.ts";
 import { compileBuild, initBuild, regionInSite } from "#build/commands.ts";
 import { DaemonClient } from "#build/daemon-client.ts";
+import { compiledGrid } from "#build/sources.ts";
+import { flatSiteBuild } from "./fixtures/flat-site.ts";
 import { Journal, type JournalEntry } from "#build/journal.ts";
 import { diffGrids, runOps } from "#build/ops.ts";
 import { BuildWorkspace } from "#build/workspace.ts";
 import type { WeOp } from "#protocol/bridge.ts";
-import { appendOp, OpLogSchema, readOpLog, type Op } from "#protocol/build.ts";
+import {
+  appendOp,
+  BUILD_FILES,
+  OpLogSchema,
+  readOpLog,
+  type Op,
+} from "#protocol/build.ts";
 
 const temp = await mkdtemp(path.join(os.tmpdir(), "mc-harness-build-"));
 afterAll(async () => {
@@ -201,6 +210,45 @@ describe("compileBuild", () => {
       1,
     );
   });
+
+  it("keeps a snapshot per program text, even when the blocks come out the same", async () => {
+    const dir = path.join(temp, "snapshots");
+    await initBuild(dir, {
+      name: "snapshots",
+      world: "world",
+      anchor: { x: 100, y: -60, z: 200 },
+      seed: 42,
+    });
+    const program = path.join(dir, "build.ts");
+    await Bun.write(program, Bun.file(COTTAGE));
+    await compileBuild(dir);
+    const digestOf = async (): Promise<string> => {
+      const log = await readOpLog(dir);
+      const source = log.ops.find((op) => op.source.startsWith("program:"));
+      if (source === undefined) throw new Error("no program op");
+      return source.source.slice("program:".length);
+    };
+    const first = await digestOf();
+    const text = await Bun.file(program).text();
+    await Bun.write(program, `${text}\n// a comment: same blocks, new text\n`);
+    await compileBuild(dir);
+    const second = await digestOf();
+    expect(second).not.toBe(first);
+    const schematics = await readdir(path.join(dir, "schematics"));
+    expect(
+      schematics.filter((file) => file.endsWith(".build.ts")),
+    ).toHaveLength(2);
+    expect(
+      await Bun.file(
+        path.join(dir, "schematics", `program-${first}.build.ts`),
+      ).text(),
+    ).not.toContain("same blocks, new text");
+    expect(
+      await Bun.file(
+        path.join(dir, "schematics", `program-${second}.build.ts`),
+      ).text(),
+    ).toContain("same blocks, new text");
+  }, 120_000);
 });
 
 function journalEntry(
@@ -257,6 +305,64 @@ describe("diffGrids", () => {
         },
       ],
     });
+  });
+});
+
+describe("compiled source", () => {
+  it("applies unrotated paste ops to the captured site offline and lists the rest", async () => {
+    const workspace = await flatSiteBuild(
+      path.join(temp, "compiled"),
+      "compiled",
+    );
+    const registry = await loadRegistry();
+    const part = new BlockGrid({ x: 2, y: 2, z: 2 });
+    part.set(0, 0, 0, "minecraft:stone");
+    part.set(1, 1, 1, "minecraft:oak_planks");
+    await Bun.write(
+      workspace.file(path.join(BUILD_FILES.schematicsDir, "part.schem")),
+      writeSchematic(part, registry.dataVersion),
+    );
+    await workspace.writeOplog({
+      version: 1,
+      ops: [
+        {
+          kind: "paste",
+          world: "world",
+          schematic: path.join(BUILD_FILES.schematicsDir, "part.schem"),
+          at: { x: 103, y: 65, z: 103 },
+          rotate: 0,
+          ignoreAir: true,
+          source: "program:abc",
+        },
+        {
+          kind: "we",
+          world: "world",
+          command: "//set stone",
+          source: "manual",
+        },
+        {
+          kind: "we",
+          world: "world",
+          command: "//set air",
+          pos1: { x: 100, y: 64, z: 100 },
+          pos2: { x: 101, y: 64, z: 101 },
+          source: "program:abc",
+        },
+      ],
+    });
+    const { grid, skipped } = await compiledGrid(
+      workspace,
+      await workspace.manifest(),
+    );
+    // The compiler's clear box applies offline; the grass under it is gone.
+    expect(grid.get(0, 0, 0)).toBe("minecraft:air");
+    expect(grid.get(2, 0, 2)).toBe("minecraft:grass_block[snowy=false]");
+    expect(grid.get(3, 1, 3)).toBe("minecraft:stone");
+    expect(grid.get(4, 2, 4)).toBe("minecraft:oak_planks");
+    // ignoreAir left the site's grass where the part had air.
+    expect(grid.get(4, 0, 4)).toBe("minecraft:grass_block[snowy=false]");
+    expect(skipped).toHaveLength(1);
+    expect(skipped[0]).toContain("we");
   });
 });
 

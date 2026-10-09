@@ -1,4 +1,4 @@
-import { mkdir } from "node:fs/promises";
+import { cp, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { compileProgram } from "@shepherdjerred/mc-build/compile/runner.ts";
 import {
@@ -18,8 +18,16 @@ import {
 import { loadRegistry } from "@shepherdjerred/mc-build/registry/registry.ts";
 import type { BlockPos, Box } from "#protocol/bridge.ts";
 import { BUILD_FILES, type Op } from "#protocol/build.ts";
+import { appendLog } from "./build-log.ts";
+import { checkName, producingProgram, programSnapshot } from "./sidecar.ts";
+import {
+  alignedRender,
+  gridFor,
+  isPlainLook,
+  type RenderSource,
+} from "./sources.ts";
 import { DEFAULT_SANDBOX_TTL_SECONDS } from "#protocol/paths.ts";
-import { readGrid, resetToSite, runOps } from "./ops.ts";
+import { resetToSite, runOps } from "./ops.ts";
 import { boxSize, cropGrid, emptyGrid, placeGrid, tileBox } from "./tiles.ts";
 import { BuildWorkspace, type FrozenPart } from "./workspace.ts";
 import {
@@ -30,8 +38,13 @@ import {
   context,
   canvasOf,
   renderGrid,
+  readRenderProvenance,
+  recordRender,
+  relativeFiles,
   renderHero,
+  renderLooks,
   seededSandbox,
+  type LookOptions,
 } from "./helpers.ts";
 
 export async function initBuild(
@@ -199,13 +212,25 @@ export async function compileBuild(dir: string): Promise<{
   });
   const registry = await loadRegistry();
   const bytes = writeSchematic(compiled.grid, registry.dataVersion);
-  const digest = sha(bytes, 12);
+  // Keyed by the program text as well as its output: two texts that compile
+  // to the same blocks keep separate snapshots, so `program-<digest>.build.ts`
+  // is always the text that produced that digest, never a later edit.
+  const programBytes = await Bun.file(
+    workspace.file(BUILD_FILES.program),
+  ).bytes();
+  const digest = sha(`${sha(programBytes)}\n${sha(bytes)}`, 12);
   const schematic = path.join(
     BUILD_FILES.schematicsDir,
     `program-${digest}.schem`,
   );
   await mkdir(workspace.file(BUILD_FILES.schematicsDir), { recursive: true });
   await Bun.write(workspace.file(schematic), bytes);
+  // The program as compiled, kept with its output so a render can say
+  // which text produced the blocks even after build.ts is edited again.
+  await cp(
+    workspace.file(BUILD_FILES.program),
+    workspace.file(programSnapshot(digest)),
+  );
   const source = `program:${digest}`;
   const at = plus(manifest.anchor, compiled.min);
   const pastes = await programPastes(workspace, compiled.grid, {
@@ -297,6 +322,12 @@ export async function runBuild(
     await snapshotFrozen(env, target, box, `expected:${manifest.name}`),
   );
   await workspace.writeExpected(await env.client.regionRead(target, box));
+  await appendLog(dir, {
+    kind: "run",
+    target,
+    ops: ops.length,
+    program: await producingProgram(workspace, ops),
+  });
   return { target, ops: ops.length };
 }
 
@@ -329,47 +360,128 @@ function fmtPos(pos: BlockPos): string {
   return `${pos.x.toString()},${pos.y.toString()},${pos.z.toString()}`;
 }
 
+/**
+ * `--floor` and `--section` are given in build-local coordinates (relative
+ * to the anchor, as in build.ts); the cut itself runs on the site grid.
+ */
+function localCuts(
+  look: LookOptions,
+  anchor: BlockPos,
+  min: BlockPos,
+): LookOptions {
+  if (look.floor !== undefined) look.floor += anchor.y - min.y;
+  if (look.section !== undefined) look.section += anchor.z - min.z;
+  return look;
+}
+
 export async function renderBuild(
   env: Env,
   dir: string,
   options: {
     target?: string;
+    source?: RenderSource;
+    /** Same as `source: "expected"`; kept for older callers. */
     expected?: boolean;
     name?: string;
     /** A close-up inside the site box (maps: one district at a time). */
     region?: { min: BlockPos; max: BlockPos };
+    look?: LookOptions;
+    /** Name of an earlier render whose `.schem` sidecar to compare against. */
+    compare?: string;
   },
-): Promise<{ render: string; hero: string | null }> {
+): Promise<{
+  render: string;
+  hero: string | null;
+  files: Record<string, string>;
+  skipped: string[];
+}> {
   const workspace = new BuildWorkspace(dir);
   const manifest = await workspace.manifest();
   const site = workspace.siteBox(manifest);
-  if (options.region !== undefined && options.expected === true) {
-    throw new Error("render a region from the canvas, not --expected");
-  }
+  const source: RenderSource =
+    options.source ?? (options.expected === true ? "expected" : "canvas");
   const box =
     options.region === undefined ? site : regionInSite(site, options.region);
-  const grid =
-    options.expected === true
-      ? await workspace.expected()
-      : await readGrid(env.client, canvasOf(manifest, options.target), box);
-  const name = options.name ?? `render-${Date.now().toString(36)}`;
+  const { grid, skipped } = await gridFor(env, workspace, manifest, {
+    source,
+    box,
+    ...(options.target === undefined ? {} : { target: options.target }),
+  });
+  const name = checkName(
+    "render",
+    options.name ?? `render-${Date.now().toString(36)}`,
+  );
+  const look: LookOptions = localCuts(
+    { ...options.look },
+    manifest.anchor,
+    box.min,
+  );
+  const covered = { min: box.min, max: box.max };
+  if (options.compare !== undefined) {
+    look.compareWith = await alignedRender(workspace, options.compare, covered);
+  }
+  look.source = source;
+  look.box = covered;
+  if (isPlainLook(look)) {
+    const provenance = await readRenderProvenance(workspace, source);
+    const render = await renderGrid(workspace, grid, name, manifest.name);
+    const hero = await renderHero(workspace, grid, name);
+    const files = { sheet: render, ...(hero === null ? {} : { hero }) };
+    await recordRender(workspace, grid, {
+      name,
+      files,
+      source,
+      provenance,
+      box: covered,
+    });
+    await appendLog(dir, {
+      kind: "render",
+      name,
+      source,
+      files: Object.values(relativeFiles(workspace, files)),
+    });
+    return { render, hero, files, skipped };
+  }
+  const files = await renderLooks(workspace, grid, name, look);
+  await appendLog(dir, {
+    kind: "render",
+    name,
+    source,
+    files: Object.values(relativeFiles(workspace, files)),
+  });
   return {
-    render: await renderGrid(workspace, grid, name, manifest.name),
-    hero: await renderHero(workspace, grid, name),
+    render:
+      files["sheet"] ?? files["elevations"] ?? Object.values(files)[0] ?? "",
+    hero: files["hero"] ?? null,
+    files,
+    skipped,
   };
 }
 
 export async function lintBuild(
   env: Env,
   dir: string,
-  options: { target?: string; expected?: boolean },
-): Promise<LintReport> {
+  options: { target?: string; source?: RenderSource; expected?: boolean },
+): Promise<LintReport & { skipped: string[] }> {
   const workspace = new BuildWorkspace(dir);
   const manifest = await workspace.manifest();
   const box = workspace.siteBox(manifest);
-  const grid =
-    options.expected === true
-      ? await workspace.expected()
-      : await readGrid(env.client, canvasOf(manifest, options.target), box);
-  return lintGrid(grid, { registry: await loadRegistry(), origin: box.min });
+  const source: RenderSource =
+    options.source ?? (options.expected === true ? "expected" : "canvas");
+  const { grid, skipped } = await gridFor(env, workspace, manifest, {
+    source,
+    box,
+    ...(options.target === undefined ? {} : { target: options.target }),
+  });
+  const report = lintGrid(grid, {
+    registry: await loadRegistry(),
+    origin: box.min,
+  });
+  await appendLog(dir, {
+    kind: "lint",
+    source,
+    errors: report.errors,
+    warnings: report.warnings,
+  });
+  return { ...report, skipped };
 }

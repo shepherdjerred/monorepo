@@ -35,6 +35,7 @@ import type {
   RunReport,
   TaskReport,
   TaskStatus,
+  Trajectory,
 } from "#evals/lib/types.ts";
 
 const USAGE =
@@ -224,6 +225,7 @@ type Graded = {
   artifacts: string[];
   notes: string[];
   judge?: JudgeSummary | null;
+  trajectory?: Trajectory | null;
   error: string | null;
 };
 
@@ -295,6 +297,7 @@ async function runTask(task: TaskDef): Promise<TaskReport> {
       artifacts: graded.artifacts,
       notes: graded.notes,
       judge: graded.judge ?? null,
+      trajectory: graded.trajectory ?? null,
       lastMessage: agentRun.lastMessage,
       taskDir: prepared.taskDir,
     };
@@ -329,6 +332,7 @@ function setupFailure(task: TaskDef, error: unknown): TaskReport {
     artifacts: [],
     notes: [`setup error: ${message}`],
     judge: null,
+    trajectory: null,
     lastMessage: "",
     taskDir: path.join(runDir, task.id),
   };

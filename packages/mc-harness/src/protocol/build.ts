@@ -25,10 +25,157 @@ export const BUILD_FILES = {
   rendersDir: "renders",
   /** Persisted judge verdicts: `judge/pair-<ts>.json`, `judge/absolute-<ts>.json`. */
   judgeDir: "judge",
+  /** Append-only record of what happened to the build, one JSON entry per line. */
+  journal: "journal.jsonl",
+  /** The agent's own observations, read back as observations, not instructions. */
+  notes: "notes.md",
+  /** Saved versions of the program and op log: `candidates/<name>/`. */
+  candidatesDir: "candidates",
+  /** A throwaway pad beside the site for trying a wall or a roof. */
+  scratchDir: "scratch",
 } as const;
+
+const Iso = z.string().min(1);
+const Iteration = z.number().int().min(0);
 
 export const JudgeRubricSchema = z.enum(["micro", "map"]);
 export type JudgeRubric = z.infer<typeof JudgeRubricSchema>;
+
+/** One line of `journal.jsonl`: what happened, when, in which iteration. */
+export const BuildLogEntrySchema = z.discriminatedUnion("kind", [
+  z.strictObject({
+    kind: z.literal("note"),
+    at: Iso,
+    iteration: Iteration,
+    text: z.string().min(1),
+  }),
+  z.strictObject({
+    kind: z.literal("compile"),
+    at: Iso,
+    iteration: Iteration,
+    program: z.string(),
+    ops: z.number().int(),
+    lintErrors: z.number().int(),
+    lintWarnings: z.number().int(),
+  }),
+  z.strictObject({
+    kind: z.literal("run"),
+    at: Iso,
+    iteration: Iteration,
+    target: z.string(),
+    ops: z.number().int(),
+    /** The program snapshot every op that ran came from, or null when the log mixed sources. */
+    program: z.string().nullable(),
+  }),
+  z.strictObject({
+    kind: z.literal("render"),
+    at: Iso,
+    iteration: Iteration,
+    name: z.string(),
+    source: z.string(),
+    files: z.array(z.string()),
+  }),
+  z.strictObject({
+    kind: z.literal("lint"),
+    at: Iso,
+    iteration: Iteration,
+    source: z.string(),
+    errors: z.number().int(),
+    warnings: z.number().int(),
+  }),
+  z.strictObject({
+    kind: z.literal("critique"),
+    at: Iso,
+    iteration: Iteration,
+    render: z.string(),
+    /** The grid that was critiqued; a render name can be reused, a hash cannot. */
+    gridHash: z.string(),
+    /** The rubric the total is on; totals of different rubrics never compare. */
+    rubric: JudgeRubricSchema,
+    file: z.string(),
+    total: z.number().int(),
+    max: z.number().int(),
+    lowest: z.string(),
+  }),
+  z.strictObject({
+    kind: z.literal("judge"),
+    at: Iso,
+    iteration: Iteration,
+    file: z.string(),
+    winner: z.string(),
+    confidence: z.number(),
+  }),
+  z.strictObject({
+    kind: z.literal("candidate"),
+    at: Iso,
+    iteration: Iteration,
+    action: z.enum(["save", "pick"]),
+    name: z.string(),
+  }),
+  z.strictObject({
+    kind: z.literal("accept"),
+    at: Iso,
+    iteration: Iteration,
+    candidate: z.string(),
+    versus: z.string().nullable(),
+    file: z.string().nullable(),
+    /** The rubric the knockout ran on; `score` is a total on it. */
+    rubric: JudgeRubricSchema,
+    /** The accepted candidate's latest critique total on `rubric`, when its grid was critiqued on it. */
+    score: z.number().int().nullable(),
+  }),
+  z.strictObject({
+    kind: z.literal("reject"),
+    at: Iso,
+    iteration: Iteration,
+    candidate: z.string(),
+    versus: z.string(),
+    file: z.string().nullable(),
+    rubric: JudgeRubricSchema,
+    score: z.number().int().nullable(),
+  }),
+  z.strictObject({
+    kind: z.literal("promote"),
+    at: Iso,
+    iteration: Iteration,
+    target: z.string(),
+    applyId: z.string(),
+  }),
+  z.strictObject({ kind: z.literal("resume"), at: Iso, iteration: Iteration }),
+]);
+export type BuildLogEntry = z.infer<typeof BuildLogEntrySchema>;
+
+/** `renders/<name>.json`: what a render was of and what the checks said about it. */
+export const RenderSidecarSchema = z.strictObject({
+  name: z.string().min(1),
+  at: Iso,
+  iteration: Iteration,
+  source: z.string(),
+  files: z.record(z.string(), z.string()),
+  gridHash: z.string(),
+  size: BlockPosSchema,
+  /** World box the grid covers (a region render covers part of the site); set by `build render`. */
+  box: z.strictObject({ min: BlockPosSchema, max: BlockPosSchema }).optional(),
+  blocks: z.number().int(),
+  /** The program that produced this render, copied beside it (`renders/<name>.build.ts`), or null. */
+  program: z.string().nullable(),
+  lint: z.strictObject({
+    errors: z.number().int(),
+    warnings: z.number().int(),
+    codes: z.array(z.string()),
+  }),
+  /** Filled by `build critique`. */
+  scores: z
+    .strictObject({
+      rubric: z.enum(["micro", "map"]),
+      total: z.number().int(),
+      max: z.number().int(),
+      axes: z.record(z.string(), z.number().int()),
+      overallAesthetic: z.number().int(),
+    })
+    .optional(),
+});
+export type RenderSidecar = z.infer<typeof RenderSidecarSchema>;
 
 const judgeScore = z.number().int().min(0).max(5);
 
@@ -64,11 +211,62 @@ export const JudgeAbsoluteRecordSchema = z.strictObject({
   notes: z.array(z.string()),
 });
 
+/** One ranked change proposed by `build critique --stage code`. */
+export const CodeSuggestionSchema = z.strictObject({
+  axis: z.string().min(1),
+  change: z.string().min(1),
+  where: z.string().min(1),
+});
+export type CodeSuggestion = z.infer<typeof CodeSuggestionSchema>;
+
+/** One `build critique`: absolute scores on a render plus, with the program, ranked changes. */
+export const JudgeCritiqueRecordSchema = z.strictObject({
+  kind: z.literal("critique"),
+  at: z.string().min(1),
+  model: z.string().min(1),
+  rubric: JudgeRubricSchema,
+  /** The render's name (`renders/<name>`), not a file. */
+  render: z.string().min(1),
+  /** The judge sheet the critic saw, relative to the build directory. */
+  sheet: z.string().min(1),
+  gridHash: z.string(),
+  axes: z.record(z.string(), judgeScore),
+  overallAesthetic: judgeScore,
+  total: z.number().int().min(0),
+  max: z.number().int().min(0),
+  lowest: z.string().min(1),
+  notes: z.array(z.string()),
+  suggestions: z.array(CodeSuggestionSchema),
+});
+
 export const JudgeRecordSchema = z.discriminatedUnion("kind", [
   JudgePairRecordSchema,
   JudgeAbsoluteRecordSchema,
+  JudgeCritiqueRecordSchema,
 ]);
 export type JudgeRecord = z.infer<typeof JudgeRecordSchema>;
+
+/** `candidates/<name>/candidate.json`: a saved version of the program and op log. */
+export const CandidateSchema = z.strictObject({
+  name: z.string().min(1),
+  at: Iso,
+  iteration: Iteration,
+  gridHash: z.string(),
+  size: BlockPosSchema,
+  blocks: z.number().int(),
+  /** Whether the candidate carries a build.ts. */
+  program: z.boolean(),
+  ops: z.number().int(),
+  /** The latest critique of this exact grid at save time, with its rubric, when one exists. */
+  score: z
+    .strictObject({ rubric: JudgeRubricSchema, total: z.number().int() })
+    .nullable(),
+});
+export type Candidate = z.infer<typeof CandidateSchema>;
+export const CANDIDATE_FILES = {
+  info: "candidate.json",
+  grid: "candidate.schem",
+} as const;
 
 export const WeOpLogSchema = z.strictObject({
   kind: z.literal("we"),
@@ -125,6 +323,16 @@ export const BuildManifestSchema = z.strictObject({
     .optional(),
   /** Sandbox id of the canvas seeded from the site. */
   canvas: z.string().optional(),
+  /** The incumbent: the best candidate so far, kept by `build candidate knockout`. */
+  best: z
+    .strictObject({
+      candidate: z.string().min(1),
+      gridHash: z.string(),
+      /** The rubric the knockout ran on; `score` is a total on it. */
+      rubric: JudgeRubricSchema,
+      score: z.number().nullable(),
+    })
+    .optional(),
 });
 export type BuildManifest = z.infer<typeof BuildManifestSchema>;
 

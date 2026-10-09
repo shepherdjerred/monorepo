@@ -393,6 +393,11 @@ function checkMonotone(lint: LintGrid): Finding[] {
     : [];
 }
 
+/** Block light per cell (0–15) from the grid's own light sources; the renderer's `light` mode uses it. */
+export function blockLightLevels(grid: BlockGrid): Int8Array {
+  return blockLight(new LintGrid(grid, { x: 0, y: 0, z: 0 }));
+}
+
 function blockLight(lint: LintGrid): Int8Array {
   const light = new Int8Array(lint.grid.volume);
   const queue: Vec3[] = [];

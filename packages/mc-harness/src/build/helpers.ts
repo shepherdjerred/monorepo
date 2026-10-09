@@ -5,14 +5,34 @@ import {
   type BlockGrid,
   type Vec3,
 } from "@shepherdjerred/mc-build/core/grid.ts";
+import { writeSchematic } from "@shepherdjerred/mc-build/core/schem.ts";
+import { gridHash } from "@shepherdjerred/mc-build/core/site.ts";
+import { lintGrid } from "@shepherdjerred/mc-build/lint/lint.ts";
+import { loadRegistry } from "@shepherdjerred/mc-build/registry/registry.ts";
 import { ensureAssets } from "@shepherdjerred/mc-build/render/assets.ts";
 import {
+  cropGrid as cropBox,
+  cutGrid,
+  namedCrop,
+  type CropName,
+} from "@shepherdjerred/mc-build/render/cut.ts";
+import {
+  assertTexturesPresent,
   encodePng,
   Renderer,
   wantsHero,
 } from "@shepherdjerred/mc-build/render/index.ts";
+import type { Image } from "@shepherdjerred/mc-build/render/raster.ts";
+import type { RenderMode } from "@shepherdjerred/mc-build/render/sheet.ts";
 import type { BlockPos } from "#protocol/bridge.ts";
-import { BUILD_FILES, type BuildManifest } from "#protocol/build.ts";
+import {
+  BUILD_FILES,
+  type BuildLogEntry,
+  type BuildManifest,
+  type RenderSidecar,
+} from "#protocol/build.ts";
+import { iterationOf, readLog } from "./build-log.ts";
+import { programBehind, writeSidecar } from "./sidecar.ts";
 import type { DaemonClient } from "./daemon-client.ts";
 import type { Journal } from "./journal.ts";
 import { resetToSite, type RunContext } from "./ops.ts";
@@ -89,10 +109,305 @@ export async function renderGrid(
     }),
   );
   const image = await renderer.sheet(grid, { title, subtitle: name });
+  assertTexturesPresent(renderer, `render ${name}`);
   await mkdir(workspace.file(BUILD_FILES.rendersDir), { recursive: true });
   const out = workspace.file(path.join(BUILD_FILES.rendersDir, `${name}.png`));
   await Bun.write(out, await encodePng(image));
   return out;
+}
+
+export type LookView = "sheet" | "elevations" | "hero" | "pov" | "survey";
+
+/** Everything `build render` can be asked to look at beyond the default sheet. */
+export type LookOptions = {
+  mode?: RenderMode;
+  views?: readonly LookView[];
+  /** Coordinate lines every n blocks on plans and elevations. */
+  grid?: number;
+  /** Floor plan: keep cells at or below this local y. */
+  floor?: number;
+  /** Section: keep cells at or behind this local z (the front, +z, half is removed). */
+  section?: number;
+  crop?: CropName;
+  /** An earlier render's grid (its `.schem` sidecar) to show beside this one. */
+  compareWith?: BlockGrid;
+  /** Recorded in the sidecar: canvas, expected or compiled. */
+  source?: string;
+  /** World box the grid covers, recorded in the sidecar so a later `--compare` can align to it. */
+  box?: { min: BlockPos; max: BlockPos };
+};
+
+async function writeLook(
+  workspace: BuildWorkspace,
+  file: string,
+  image: Image,
+): Promise<string> {
+  const out = workspace.file(path.join(BUILD_FILES.rendersDir, file));
+  await Bun.write(out, await encodePng(image));
+  return out;
+}
+
+/**
+ * The grid a look is drawn from, cropped and cut as asked, and the grid it
+ * is lit by: the crop before any cut, so a floor plan or section inside a
+ * close-up is still lit by the roof and walls the cut removed.
+ */
+function subjectOf(
+  grid: BlockGrid,
+  options: LookOptions,
+): { subject: BlockGrid; lightFrom: BlockGrid } {
+  let subject = grid;
+  // A crop re-bases coordinates to its own corner; the cuts below are given
+  // in the uncropped grid's coordinates, so they move with it.
+  let origin = { y: 0, z: 0 };
+  if (options.crop !== undefined) {
+    const box = namedCrop(subject, options.crop);
+    subject = cropBox(subject, box);
+    // cropGrid clamps a window that starts before the grid; the cuts move by the same amount.
+    origin = { y: Math.max(0, box.min.y), z: Math.max(0, box.min.z) };
+  }
+  const lightFrom = subject;
+  if (options.floor !== undefined || options.section !== undefined) {
+    subject = cutGrid(subject, {
+      ...(options.floor === undefined
+        ? {}
+        : { belowY: options.floor - origin.y }),
+      ...(options.section === undefined
+        ? {}
+        : { behindZ: options.section - origin.z }),
+    });
+  }
+  return { subject, lightFrom };
+}
+
+type LookContext = {
+  renderer: Renderer;
+  subject: BlockGrid;
+  whole: BlockGrid;
+  name: string;
+  mode: RenderMode;
+  grid: number | undefined;
+  /** The whole build lights a cut subject; a crop is lit by itself. */
+  /** What the subject is lit by in light mode: the crop before any cut, else the whole build. */
+  lightFrom: BlockGrid;
+};
+
+type LookRenderer = (ctx: LookContext) => Promise<[string, string, Image][]>;
+
+const LOOKS: Record<LookView, LookRenderer> = {
+  sheet: async (ctx) => [
+    [
+      "sheet",
+      `${ctx.name}.png`,
+      await ctx.renderer.sheet(ctx.subject, {
+        title: ctx.name,
+        subtitle:
+          ctx.mode === "textured" ? ctx.name : `${ctx.name} - ${ctx.mode}`,
+        mode: ctx.mode,
+        ...(ctx.grid === undefined ? {} : { grid: ctx.grid }),
+        lightFrom: ctx.lightFrom,
+      }),
+    ],
+  ],
+  elevations: async (ctx) => [
+    [
+      "elevations",
+      `${ctx.name}-elevations.png`,
+      await ctx.renderer.elevations(ctx.subject, {
+        mode: ctx.mode,
+        grid: ctx.grid ?? 8,
+        lightFrom: ctx.lightFrom,
+      }),
+    ],
+  ],
+  hero: async (ctx) => [
+    [
+      "hero",
+      `${ctx.name}-hero.png`,
+      await ctx.renderer.view(ctx.subject, "iso-front-right", 1400, {
+        mode: ctx.mode,
+        ...(ctx.grid === undefined ? {} : { grid: ctx.grid }),
+        lightFrom: ctx.lightFrom,
+      }),
+    ],
+  ],
+  pov: async (ctx) => [
+    [
+      "pov",
+      `${ctx.name}-pov.png`,
+      await ctx.renderer.pov(ctx.subject, {
+        mode: ctx.mode,
+        lightFrom: ctx.lightFrom,
+      }),
+    ],
+  ],
+  survey: async (ctx) => {
+    const survey = await ctx.renderer.survey(ctx.subject, {
+      mode: ctx.mode,
+      lightFrom: ctx.lightFrom,
+    });
+    return [
+      ["survey-index", `${ctx.name}-survey-index.png`, survey.index],
+      ...survey.tiles.map((tile): [string, string, Image] => [
+        `survey-${tile.name}`,
+        `${ctx.name}-survey-${tile.name}.png`,
+        tile.image,
+      ]),
+    ];
+  },
+};
+
+/**
+ * Renders the looks asked for and returns each file by view name, then
+ * records the render (`recordRender`). Cuts and crops apply to every view;
+ * `light` reads the whole build so a cut interior is not lit as open sky.
+ */
+export async function renderLooks(
+  workspace: BuildWorkspace,
+  grid: BlockGrid,
+  name: string,
+  options: LookOptions,
+): Promise<Record<string, string>> {
+  const source = options.source ?? "canvas";
+  const provenance = await readRenderProvenance(workspace, source);
+  const renderer = new Renderer(await ensureAssets());
+  await mkdir(workspace.file(BUILD_FILES.rendersDir), { recursive: true });
+  const { subject, lightFrom } = subjectOf(grid, options);
+  const ctx: LookContext = {
+    renderer,
+    subject,
+    whole: grid,
+    name,
+    mode: options.mode ?? "textured",
+    grid: options.grid,
+    lightFrom,
+  };
+  const views = options.views ?? [
+    "sheet",
+    ...(wantsHero(subject) ? ["hero" as const] : []),
+  ];
+  const files: Record<string, string> = {};
+  const looks: [string, string, Image][] = [];
+  for (const view of views) {
+    looks.push(...(await LOOKS[view](ctx)));
+  }
+  if (options.compareWith !== undefined) {
+    // The same crop and cuts as the other looks, so the change plan covers
+    // what the panels show and nothing that was cut away.
+    const image = await renderer.compare(
+      subjectOf(options.compareWith, options).subject,
+      subject,
+    );
+    looks.push(["compare", `${name}-compare.png`, image]);
+  }
+  assertTexturesPresent(renderer, `render ${name}`);
+  for (const [key, file, image] of looks) {
+    files[key] = await writeLook(workspace, file, image);
+  }
+  await recordRender(workspace, grid, {
+    name,
+    files,
+    source,
+    provenance,
+    ...(options.box === undefined ? {} : { box: options.box }),
+  });
+  return files;
+}
+
+type RenderProvenance = {
+  journal: BuildLogEntry[];
+  programText: string | null;
+};
+
+/** Read all required program evidence before replacing any render artifact. */
+export async function readRenderProvenance(
+  workspace: BuildWorkspace,
+  source: string,
+): Promise<RenderProvenance> {
+  const journal = await readLog(workspace.dir);
+  const oplog = await workspace.oplog();
+  const producer = await programBehind(workspace, {
+    source,
+    ops: oplog.ops,
+    journal,
+  });
+  return {
+    journal,
+    programText:
+      producer === null
+        ? null
+        : await Bun.file(workspace.file(producer)).text(),
+  };
+}
+
+/**
+ * Keeps what a render was of: the grid itself as `renders/<name>.schem` (so
+ * a later render can compare against it and a critique can re-render it),
+ * the program that produced it as `renders/<name>.build.ts` (the snapshot
+ * `compile` kept, chosen for the source by `programBehind`, so a critique
+ * reviews the code behind the picture and never a later compile), and
+ * the sidecar `renders/<name>.json` with the files, lint summary and grid
+ * hash, paths relative to the build directory.
+ */
+export async function recordRender(
+  workspace: BuildWorkspace,
+  grid: BlockGrid,
+  input: {
+    name: string;
+    files: Record<string, string>;
+    source: string;
+    provenance: RenderProvenance;
+    box?: { min: BlockPos; max: BlockPos };
+  },
+): Promise<void> {
+  const registry = await loadRegistry();
+  await mkdir(workspace.file(BUILD_FILES.rendersDir), { recursive: true });
+  await Bun.write(
+    workspace.file(path.join(BUILD_FILES.rendersDir, `${input.name}.schem`)),
+    writeSchematic(grid, registry.dataVersion),
+  );
+  const lint = lintGrid(grid, { registry });
+  const { journal, programText } = input.provenance;
+  const programCopy = path.join(
+    BUILD_FILES.rendersDir,
+    `${input.name}.build.ts`,
+  );
+  if (programText !== null) {
+    await Bun.write(workspace.file(programCopy), programText);
+  }
+  const sidecar: RenderSidecar = {
+    name: input.name,
+    at: new Date().toISOString(),
+    iteration: iterationOf(journal) + 1,
+    source: input.source,
+    files: relativeFiles(workspace, input.files),
+    gridHash: gridHash(grid),
+    size: grid.size,
+    ...(input.box === undefined ? {} : { box: input.box }),
+    blocks: lint.stats.blocks,
+    program: programText === null ? null : programCopy,
+    lint: {
+      errors: lint.errors,
+      warnings: lint.warnings,
+      codes: [
+        ...new Set(lint.findings.map((finding) => finding.code)),
+      ].toSorted(),
+    },
+  };
+  await writeSidecar(workspace, sidecar);
+}
+
+/** The same file map with paths relative to the build directory. */
+export function relativeFiles(
+  workspace: BuildWorkspace,
+  files: Record<string, string>,
+): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(files).map(([key, file]) => [
+      key,
+      path.relative(workspace.dir, file),
+    ]),
+  );
 }
 
 /** The large isometric view of a map-scale grid, or null for small builds. */
@@ -108,7 +423,9 @@ export async function renderHero(
   const out = workspace.file(
     path.join(BUILD_FILES.rendersDir, `${name}-hero.png`),
   );
-  await Bun.write(out, await encodePng(await renderer.hero(grid)));
+  const image = await renderer.hero(grid);
+  assertTexturesPresent(renderer, `hero ${name}`);
+  await Bun.write(out, await encodePng(image));
   return out;
 }
 

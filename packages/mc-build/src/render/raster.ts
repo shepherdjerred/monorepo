@@ -95,7 +95,13 @@ export class Image {
   }
 }
 
-export type Projected = { x: number; y: number; depth: number };
+export type Projected = {
+  x: number;
+  y: number;
+  depth: number;
+  /** Behind a perspective camera's near plane; the quad is dropped. */
+  clip?: boolean;
+};
 export type Projector = (point: V3) => Projected;
 
 type Triangle = {
@@ -111,6 +117,9 @@ function edge(a: Projected, b: Projected, px: number, py: number): number {
 /** Splits a projected quad into its two front-facing triangles. */
 function triangles(quad: Quad, corners: readonly Projected[]): Triangle[] {
   const out: Triangle[] = [];
+  if (corners.some((corner) => corner.clip === true)) {
+    return out;
+  }
   for (const [i0, i1, i2] of [
     [0, 1, 2],
     [0, 2, 3],

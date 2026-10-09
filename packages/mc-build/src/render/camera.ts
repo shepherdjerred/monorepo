@@ -86,6 +86,41 @@ export function viewProjector(view: ViewName): (point: V3) => Projected {
   });
 }
 
+/**
+ * A pinhole camera at `eye` looking at `target`, for player-eye views.
+ * Screen x right, y down; depth is distance along the view axis, and points
+ * behind the near plane are marked `clip` so the rasterizer drops them.
+ */
+export function perspectiveProjector(options: {
+  eye: V3;
+  target: V3;
+  fovDegrees?: number;
+  frame: { width: number; height: number };
+}): (point: V3) => Projected {
+  const { eye, target, frame } = options;
+  const fov = ((options.fovDegrees ?? 70) * Math.PI) / 180;
+  const back = normalize([
+    eye[0] - target[0],
+    eye[1] - target[1],
+    eye[2] - target[2],
+  ]);
+  const right = normalize(cross([0, 1, 0], back));
+  const up = cross(back, right);
+  const focal = frame.height / 2 / Math.tan(fov / 2);
+  const near = 0.05;
+  return (point) => {
+    const d: V3 = [point[0] - eye[0], point[1] - eye[1], point[2] - eye[2]];
+    const depth = -dot(d, back);
+    const safe = Math.max(near, depth);
+    return {
+      x: frame.width / 2 + (focal * dot(d, right)) / safe,
+      y: frame.height / 2 - (focal * dot(d, up)) / safe,
+      depth,
+      clip: depth < near,
+    };
+  };
+}
+
 /** Scales and centres a projection so a box of `size` fits `width`×`height`. */
 /** The frame margin `fitProjector` leaves around a grid, in pixels. */
 export const FIT_MARGIN = 24;

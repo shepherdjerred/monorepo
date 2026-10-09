@@ -211,9 +211,65 @@ WorldEdit, paste and console ops, each with explicit coordinates and a
 - **Canvas** is a void sandbox with the site pasted at its real coordinates;
   **run** resets it to the site, replays every op, and freezes the result as
   `expected.schem` + `expected.json`.
-- **Render** draws a contact sheet of the canvas site, or of a region inside
-  it (`render <dir> <x1,y1,z1> <x2,y2,z2>`) so map-scale builds can be
-  reviewed one district at a time.
+- **Render** draws a contact sheet of the site, or of a region inside it
+  (`render <dir> <x1,y1,z1> <x2,y2,z2>`, from any source) so map-scale builds can be
+  reviewed one district at a time. `--source canvas|expected|compiled`
+  picks where the blocks come from; `compiled` applies the op log's paste
+  ops and the compiler's clear boxes to the captured site offline, so a DSL
+  build's `compile → render → lint` loop needs no server (other WorldEdit
+  and console ops, and rotated pastes, are listed as "not in this
+  picture"). Looks beyond the default sheet: `--mode
+value|normal|squint|relief|light`, `--views sheet,elevations,hero,pov,
+survey`, `--grid n` coordinate lines, `--floor y` and `--section z` cuts
+  (build-local, anchor-relative), `--crop front-door|centre|nw|…` close-ups,
+  and `--compare <name>` (before, after, and a plan of changed columns
+  against an earlier render of the same region, or of a region containing
+  it). Every render keeps its grid as `renders/<name>.schem` and a sidecar
+  `renders/<name>.json` (source, files, grid hash, the world box it covers,
+  lint summary, critique scores once scored). When one program produced the
+  render, its snapshot is kept too as `renders/<name>.build.ts` (the copy
+  `compile` keeps beside its schematic): for `--source compiled` every op in
+  the log must come from that one compile, for `expected` it is the program
+  the last `run` ran, and for the canvas both must agree. A log with manual
+  or imported ops has no single program, so those renders keep none.
+  A missing referenced compile snapshot is an error; it is never treated as
+  a programless render or candidate. Missing textures fail before images or
+  sidecars are written. Invalid sidecars also fail instead of selecting an
+  older render, and critique verifies the saved schematic against its hash
+  before scoring or updating the journal.
+- **Journal.** Every command that changes or looks at the build appends a
+  line to `journal.jsonl` (compile, run, render, lint, critique, candidate,
+  accept/reject, promote, resume) with the iteration it belongs to (one per
+  render). `note <dir> "<text>"` records an observation; `log <dir>
+[--tail n]` prints the journal; `resume <dir>` assembles what a fresh
+  context needs — the brief, `notes.md` (shown as observations, not
+  instructions), the journal verbatim, the live state and the clock — and
+  deliberately sets no next steps.
+- **Critique** (`critique <dir> [--render name] [--rubric micro|map]
+[--stage visual|code|both] [--model id]`) renders the judge sheet of a
+  saved render, has a vision model score it blind 0–5 per rubric axis with
+  up to five notes, then (with `build.ts`) a second call reviews the
+  program against those scores and lint and returns up to five ranked
+  changes starting from the lowest axis. The result is written as
+  `judge/critique-<ts>.{png,json}`, logged, and copied into the render's
+  sidecar. Without a model credential, `--scores "axis=n,…,aesthetic=n"
+[--note "…"]` records scores given by eye under the model name `by-eye`
+  (visual stage only), so the journal still shows the critique.
+- **Candidates** (`candidate <dir> save --name n [--force] | ls | show n |
+pick n | knockout [--among a,b] [--rubric] [--model]`) keep versions of
+  the program and op log, compiled offline, under `candidates/<n>/` (a log
+  with ops the offline compiler cannot apply, such as WorldEdit commands
+  other than `//set air`, cannot be saved: the candidate would not be the
+  build).
+  `knockout` is a keep-best tournament: the incumbent (`build.json`
+  `best`) meets each challenger on anonymised judge sheets, order-swapped;
+  a tie keeps the incumbent, every bout is written under `judge/` and
+  logged as an accept and a reject, and the winner becomes `best`. `pick`
+  restores a candidate as the working version.
+- **Scratch** (`scratch <dir> [--size n]`) makes `<dir>/scratch/`, an
+  ordinary build directory beside the site (flat grass over dirt up to the
+  anchor, air above) for trying a wall, a roof or a tree with the offline
+  loop before it goes in the real program.
 - **Import** turns a `.litematic`, `.schem` or OBJ mesh into a schematic
   under `schematics/`, appends a paste op (`source` `import:<sha>`), lints it
   and renders a preview.

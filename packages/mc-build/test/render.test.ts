@@ -5,7 +5,9 @@ import path from "node:path";
 import sharp from "sharp";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { BlockGrid } from "#src/core/grid.ts";
-import { viewProjector } from "#src/render/camera.ts";
+import { perspectiveProjector, viewProjector } from "#src/render/camera.ts";
+import { changedColumns } from "#src/render/compare.ts";
+import { cropGrid, cutGrid, namedCrop } from "#src/render/cut.ts";
 import { encodeJpeg, encodePng, Renderer } from "#src/render/index.ts";
 
 /**
@@ -220,6 +222,23 @@ describe("renderer", () => {
     expect(top([0, 1, 0]).depth).toBeLessThan(top([0, 0, 0]).depth);
   });
 
+  test("perspective puts the target at the frame centre and clips behind the eye", () => {
+    const project = perspectiveProjector({
+      eye: [5, 2, 20],
+      target: [5, 2, 5],
+      frame: { width: 200, height: 100 },
+    });
+    const centre = project([5, 2, 5]);
+    expect(centre.x).toBeCloseTo(100);
+    expect(centre.y).toBeCloseTo(50);
+    expect(centre.clip).toBe(false);
+    // Nearer points spread further from the centre than far ones.
+    expect(Math.abs(project([7, 2, 15]).x - 100)).toBeGreaterThan(
+      Math.abs(project([7, 2, 5]).x - 100),
+    );
+    expect(project([5, 2, 25]).clip).toBe(true);
+  });
+
   test("renders deterministically and matches the golden hashes", async () => {
     const renderer = new Renderer(root);
     const iso = await renderer.view(scene(), "iso-front-right", 160);
@@ -273,6 +292,51 @@ describe("renderer", () => {
         "judgeMicro": "dce453d357a248f553c488ed6b4aa8e83d3cffa0c38890b15408b6a48b2202fe",
       }
     `);
+    // Every other look the critique loop can ask for, each pinned.
+    const looks: Record<string, string> = {};
+    for (const mode of ["squint", "relief", "light"] as const) {
+      const image = await renderer.view(scene(), "iso-front-right", 160, {
+        mode,
+      });
+      looks[mode] = pixelHash(image.pixels);
+    }
+    const frontGrid = await renderer.view(scene(), "front", 160, { grid: 2 });
+    looks["frontGrid"] = pixelHash(frontGrid.pixels);
+    const elevations = await renderer.elevations(scene(), {
+      tile: 96,
+      grid: 2,
+    });
+    looks["elevations"] = pixelHash(elevations.pixels);
+    const pov = await renderer.pov(scene(), { size: 160 });
+    looks["pov"] = pixelHash(pov.pixels);
+    const floor = cutGrid(scene(), { belowY: 1 });
+    const floorLight = await renderer.view(floor, "top", 160, {
+      mode: "light",
+      lightFrom: scene(),
+    });
+    looks["floorLight"] = pixelHash(floorLight.pixels);
+    const changed = scene();
+    changed.set(0, 2, 0, "minecraft:stone");
+    const compare = await renderer.compare(scene(), changed, { tile: 96 });
+    looks["compare"] = pixelHash(compare.pixels);
+    expect(looks).toMatchInlineSnapshot(`
+      {
+        "compare": "06bf50be9f5010c0b2a17072a395237832f8a6247cfe1a410434b1e7ea74c84d",
+        "elevations": "c0f891b52051ca40ae90b9891b4a91f26d13e32cd60b8855450eae4f69cdd692",
+        "floorLight": "be5ddf70e95a211a4f72dff5171a7055630ee41adaccca5128b233cf922e955d",
+        "frontGrid": "56c282eca91516261b49a4529294e0ef5c6733f974ec41287ff102563ebdb8f1",
+        "light": "b3e38aa34f3d50ae7c924e589a782fba9d8e9cad43b6f407190ddf6ba1503a7d",
+        "pov": "7f384178258124426d26b81efe7f57e76c0f1b388995b7261f1d7ee0988e1a4a",
+        "relief": "49a0d0e2850c533f15df72f989993c3858c56f4eaeecf2e002a097ecfb670259",
+        "squint": "97bfb2635a9a0d5a0b2852ff93931c64e09a993ef1bd51542cebae5a23040fc8",
+      }
+    `);
+    // The compare marks exactly the changed column.
+    expect([...changedColumns(scene(), changed)]).toEqual(["0,0"]);
+    // Cuts keep the grid size and drop what is outside the cut.
+    expect(floor.size).toEqual(scene().size);
+    expect(floor.isAirAt(3, 2, 3)).toBe(true);
+    expect(namedCrop(scene(), "front-door").min.z).toBe(scene().size.z - 12);
     // A judge sheet at the default tile fits vision-model input without resizing.
     const full = await renderer.judgeSheet(scene(), {
       kind: "map",
@@ -305,18 +369,183 @@ describe("renderer", () => {
       grass.pixels[center] ?? 0,
     );
   });
+
+  test("modes reach elevations, pov and survey, and the default stays textured", async () => {
+    const renderer = new Renderer(root);
+    const grid = scene();
+    const plain = await renderer.elevations(grid, { tile: 60 });
+    const value = await renderer.elevations(grid, { tile: 60, mode: "value" });
+    const normal = await renderer.elevations(grid, {
+      tile: 60,
+      mode: "normal",
+    });
+    expect(pixelHash(value.pixels)).not.toBe(pixelHash(plain.pixels));
+    expect(pixelHash(normal.pixels)).not.toBe(pixelHash(plain.pixels));
+    const pov = await renderer.pov(grid, { size: 120 });
+    const povValue = await renderer.pov(grid, { size: 120, mode: "value" });
+    const povNormal = await renderer.pov(grid, { size: 120, mode: "normal" });
+    expect(pixelHash(povValue.pixels)).not.toBe(pixelHash(pov.pixels));
+    expect(pixelHash(povNormal.pixels)).not.toBe(pixelHash(pov.pixels));
+    const survey = await renderer.survey(grid, { blocksPerTile: 8, tile: 60 });
+    const surveyValue = await renderer.survey(grid, {
+      blocksPerTile: 8,
+      tile: 60,
+      mode: "value",
+    });
+    const first = survey.tiles[0];
+    const firstValue = surveyValue.tiles[0];
+    expect(first !== undefined && firstValue !== undefined).toBe(true);
+    if (first !== undefined && firstValue !== undefined) {
+      expect(pixelHash(firstValue.image.pixels)).not.toBe(
+        pixelHash(first.image.pixels),
+      );
+    }
+  });
 });
 
-describe("large grids", () => {
-  test("a view keeps the whole grid in frame instead of clipping its corners", async () => {
+describe("survey", () => {
+  test("tiles are shaded by the whole grid, not in isolation", async () => {
     const renderer = new Renderer(root);
-    // A 300-block plane projects to ~424 px isometrically: wider than the tile.
-    const grid = new BlockGrid({ x: 300, y: 2, z: 300 });
-    for (let x = 0; x < 300; x += 1) {
-      for (let z = 0; z < 300; z += 1) {
+    // A stone floor with a tall wall along the east edge of the first tile:
+    // the relief sun (north-west) throws its shadow east, into the second tile.
+    const grid = new BlockGrid({ x: 16, y: 12, z: 8 });
+    for (let x = 0; x < 16; x += 1) {
+      for (let z = 0; z < 8; z += 1) {
         grid.set(x, 0, z, "minecraft:stone");
       }
     }
+    for (let y = 1; y <= 10; y += 1) {
+      for (let z = 0; z < 8; z += 1) {
+        grid.set(7, y, z, "minecraft:stone");
+      }
+    }
+    const east = { min: { x: 8, y: 0, z: 0 }, max: { x: 15, y: 11, z: 7 } };
+    const whole = await renderer.survey(grid, {
+      blocksPerTile: 8,
+      tile: 60,
+      mode: "relief",
+    });
+    const alone = await renderer.survey(cropGrid(grid, east), {
+      blocksPerTile: 8,
+      tile: 60,
+      mode: "relief",
+    });
+    expect(whole.tiles.map((tile) => tile.name)).toEqual(["A1", "A2"]);
+    const shadowed = whole.tiles[1];
+    const unshadowed = alone.tiles[0];
+    expect(shadowed !== undefined && unshadowed !== undefined).toBe(true);
+    if (shadowed !== undefined && unshadowed !== undefined) {
+      expect(pixelHash(shadowed.image.pixels)).not.toBe(
+        pixelHash(unshadowed.image.pixels),
+      );
+    }
+  });
+});
+
+/** A `side`×`side` stone floor, two blocks tall so a block can sit on it. */
+function stonePlane(side: number): BlockGrid {
+  const grid = new BlockGrid({ x: side, y: 2, z: side });
+  for (let x = 0; x < side; x += 1) {
+    for (let z = 0; z < side; z += 1) {
+      grid.set(x, 0, z, "minecraft:stone");
+    }
+  }
+  return grid;
+}
+
+describe("skylight", () => {
+  test("every air variant lets the sky through", async () => {
+    const renderer = new Renderer(root);
+    const open = new BlockGrid({ x: 3, y: 4, z: 3 });
+    const caved = new BlockGrid({ x: 3, y: 4, z: 3 });
+    for (const grid of [open, caved]) {
+      for (let x = 0; x < 3; x += 1) {
+        for (let z = 0; z < 3; z += 1) grid.set(x, 0, z, "minecraft:stone");
+      }
+    }
+    caved.set(1, 3, 1, "minecraft:cave_air");
+    const lit = await renderer.view(open, "top", 32, { mode: "light" });
+    const cave = await renderer.view(caved, "top", 32, { mode: "light" });
+    expect(pixelHash(cave.pixels)).toBe(pixelHash(lit.pixels));
+  });
+});
+
+describe("section cut", () => {
+  test("keeps the back half so the front views look into the interior", () => {
+    const grid = new BlockGrid({ x: 3, y: 1, z: 6 });
+    for (let z = 0; z < 6; z += 1) grid.set(1, 0, z, "minecraft:stone");
+    const cut = cutGrid(grid, { behindZ: 2 });
+    expect([0, 1, 2].map((z) => cut.isAirAt(1, 0, z))).toEqual([
+      false,
+      false,
+      false,
+    ]);
+    expect([3, 4, 5].map((z) => cut.isAirAt(1, 0, z))).toEqual([
+      true,
+      true,
+      true,
+    ]);
+  });
+});
+
+describe("survey light", () => {
+  test("a cut survey is lit by the whole build when asked", async () => {
+    const renderer = new Renderer(root);
+    // A roofed stone room: cut below the roof, its floor is dark only when
+    // the roof it lost still counts.
+    const whole = new BlockGrid({ x: 8, y: 5, z: 8 });
+    for (let x = 0; x < 8; x += 1) {
+      for (let z = 0; z < 8; z += 1) {
+        whole.set(x, 0, z, "minecraft:stone");
+        whole.set(x, 4, z, "minecraft:stone");
+      }
+    }
+    const cut = cutGrid(whole, { belowY: 2 });
+    const alone = await renderer.survey(cut, {
+      blocksPerTile: 8,
+      tile: 60,
+      mode: "light",
+    });
+    const lit = await renderer.survey(cut, {
+      blocksPerTile: 8,
+      tile: 60,
+      mode: "light",
+      lightFrom: whole,
+    });
+    const a = alone.tiles[0];
+    const b = lit.tiles[0];
+    expect(a !== undefined && b !== undefined).toBe(true);
+    if (a !== undefined && b !== undefined) {
+      expect(pixelHash(a.image.pixels)).not.toBe(pixelHash(b.image.pixels));
+    }
+  });
+});
+
+describe("large grids", () => {
+  test("compare marks a changed corner of a map wider than its tile", async () => {
+    const renderer = new Renderer(root);
+    // 600 blocks across: the plan is drawn oversampled and shrunk, and the
+    // marker for the far corner has to land inside it.
+    const before = stonePlane(600);
+    const after = stonePlane(600);
+    after.set(599, 1, 599, "minecraft:oak_planks");
+    const tile = 120;
+    const sheet = await renderer.compare(before, after, { tile });
+    let marked = 0;
+    for (let y = tile / 2; y < tile; y += 1) {
+      for (let x = 2 * tile + tile / 2; x < 3 * tile; x += 1) {
+        const index = (y * sheet.width + x) * 4;
+        const [r = 0, g = 0, b = 0] = sheet.pixels.subarray(index, index + 3);
+        if (r > 150 && r > g + 60 && r > b + 60) marked += 1;
+      }
+    }
+    expect(marked).toBeGreaterThan(0);
+  }, 120_000);
+
+  test("a view keeps the whole grid in frame instead of clipping its corners", async () => {
+    const renderer = new Renderer(root);
+    // A 300-block plane projects to ~424 px isometrically: wider than the tile.
+    const grid = stonePlane(300);
     const size = 160;
     const iso = await renderer.view(grid, "iso-front-right", size);
     expect([iso.width, iso.height]).toEqual([size, size]);

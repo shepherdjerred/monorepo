@@ -44,11 +44,20 @@ export type JudgeSummary = {
   model: string;
 };
 
+/** What the build's journal recorded: renders, critique totals in order, knockout outcomes. */
+export type Trajectory = {
+  iterations: number;
+  critiques: number[];
+  accepted: number;
+  rejected: number;
+};
+
 export type Grader = (ctx: GradeContext) => Promise<{
   checks: GradeCheck[];
   artifacts: string[];
   notes: string[];
   judge?: JudgeSummary | null;
+  trajectory?: Trajectory | null;
 }>;
 
 export type TaskStatus = "passed" | "failed" | "timeout" | "error";
@@ -64,6 +73,7 @@ export type TaskReport = {
   artifacts: string[];
   notes: string[];
   judge: JudgeSummary | null;
+  trajectory: Trajectory | null;
   lastMessage: string;
   taskDir: string;
 };

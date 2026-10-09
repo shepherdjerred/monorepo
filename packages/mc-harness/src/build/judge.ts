@@ -32,6 +32,7 @@ import {
   providerCredentialsFromEnv,
   requireCredentialsFor,
   type LlmImageInput,
+  type LlmRuntime,
 } from "@shepherdjerred/llm-runtime";
 import { z } from "zod";
 import {
@@ -273,7 +274,8 @@ export async function scoreAbsolute(
   };
 }
 
-function runtimeFor(model: string) {
+/** The llm-runtime a judge or critic call goes through; fails fast without the provider's credentials. */
+export function judgeRuntime(model: string): LlmRuntime {
   const credentials = providerCredentialsFromEnv();
   requireCredentialsFor(model, credentials);
   return createLlmRuntime({
@@ -288,7 +290,7 @@ export function llmJudge(
   model: string,
   rubric: JudgeRubric = "micro",
 ): AskJudge {
-  const runtime = runtimeFor(model);
+  const runtime = judgeRuntime(model);
   const prompt = pairPrompt(rubric);
   return async (first, second) => {
     const result = await generateValidatedObject(runtime, {
@@ -305,7 +307,7 @@ export function llmJudge(
 
 /** A real model behind `AskScore`; fails fast without the provider's credentials. */
 export function llmScorer(model: string, rubric: JudgeRubric): AskScore {
-  const runtime = runtimeFor(model);
+  const runtime = judgeRuntime(model);
   const prompt = absolutePrompt(rubric);
   const schema = absoluteSchema(rubric);
   return async (image) => {

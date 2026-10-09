@@ -231,6 +231,8 @@ describe("persisted verdicts", () => {
         expect(record.b).toBe(verdict.renders.b);
         expect(await Bun.file(record.b).bytes()).toEqual(new Uint8Array([2]));
       }
+      if (record.kind === "critique")
+        throw new Error("unexpected critique record in judge test");
       // Each record names the judge that produced it, so a changed prompt
       // never passes for the one that wrote the history.
       expect(record.judge).toBe(
@@ -244,10 +246,20 @@ describe("persisted verdicts", () => {
 
 describe("build CLI loading", () => {
   it("imports the judge lazily so other commands work without the built model catalog", async () => {
-    const source = await Bun.file(
-      path.join(import.meta.dir, "..", "src", "build", "cli.ts"),
+    const dir = path.join(import.meta.dirname, "..", "src", "build");
+    for (const name of [
+      "cli.ts",
+      "studio/judge-commands.ts",
+      "studio/candidate-commands.ts",
+    ]) {
+      const source = await Bun.file(path.join(dir, name)).text();
+      expect(source).not.toMatch(
+        /^import (?!type )[^;]*from "(#build|(?:\.{1,2}\/)*\.{1,2})\/judge\.ts";/mu,
+      );
+    }
+    const commands = await Bun.file(
+      path.join(dir, "studio", "judge-commands.ts"),
     ).text();
-    expect(source).not.toMatch(/^import (?!type )[^;]*from "\.\/judge\.ts";/mu);
-    expect(source).toContain('await import("./judge.ts")');
+    expect(commands).toContain('await import("#build/judge.ts")');
   });
 });

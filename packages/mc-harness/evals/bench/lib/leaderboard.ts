@@ -6,6 +6,7 @@ import {
 import {
   scoreBy,
   type Entry,
+  type EntryMeta,
   type ScoreRecord,
   type TournamentFile,
 } from "#evals/bench/lib/entries.ts";
@@ -160,6 +161,17 @@ function sortedEntries(board: TaskBoard): Entry[] {
   });
 }
 
+/** Iterations, with the critique totals when the journal recorded any. */
+function iterationsCell(meta: EntryMeta): string {
+  const trajectory = meta.trajectory;
+  if (trajectory === undefined) return "—";
+  const critiques =
+    trajectory.critiques.length === 0
+      ? ""
+      : ` (${trajectory.critiques.join("→")})`;
+  return `${trajectory.iterations.toString()}${critiques}`;
+}
+
 export function renderTaskBoard(board: TaskBoard): string {
   const axes = rubricAxisIds(board.rubric).join(" ");
   const rows = sortedEntries(board).map((entry) => {
@@ -167,7 +179,7 @@ export function renderTaskBoard(board: TaskBoard): string {
     const name = meta.anchor
       ? `**${meta.id}**${meta.weak ? " (weak)" : ""}`
       : meta.id;
-    return `| ${name} | ${ratingCell(board, entry)} | ${scoreCell(board, entry)} | ${axesCell(board, entry)} | ${meta.checks.passed.toString()}/${meta.checks.total.toString()} | ${meta.lint.warnings.toString()} | ${meta.repetition.toFixed(2)} | ${meta.seconds === null ? "—" : `${meta.seconds.toString()} s`} | ${usageCell(entry)} |`;
+    return `| ${name} | ${ratingCell(board, entry)} | ${scoreCell(board, entry)} | ${axesCell(board, entry)} | ${meta.checks.passed.toString()}/${meta.checks.total.toString()} | ${meta.lint.warnings.toString()} | ${meta.repetition.toFixed(2)} | ${iterationsCell(meta)} | ${meta.seconds === null ? "—" : `${meta.seconds.toString()} s`} | ${usageCell(entry)} |`;
   });
   const judged =
     board.tournament === null
@@ -176,9 +188,9 @@ export function renderTaskBoard(board: TaskBoard): string {
   return [
     `## ${board.task} (${board.rubric}) — ${judged}`,
     "",
-    `| Entry | Rating [90% CI] (wins/games) | Absolute | ${axes} | Checks | Lint warn | Repeat | Time | Tokens in/out |`,
-    "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
-    ...(rows.length > 0 ? rows : ["| (no entries) | | | | | | | | |"]),
+    `| Entry | Rating [90% CI] (wins/games) | Absolute | ${axes} | Checks | Lint warn | Repeat | Iters | Time | Tokens in/out |`,
+    "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+    ...(rows.length > 0 ? rows : ["| (no entries) | | | | | | | | | |"]),
     "",
   ].join("\n");
 }

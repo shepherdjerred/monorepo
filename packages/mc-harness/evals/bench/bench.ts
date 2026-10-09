@@ -11,7 +11,7 @@
  * `judge` spends model calls only on pairs and entries it has not judged
  * before (cached by sheet hash). `report` is offline.
  */
-import { mkdir, rename } from "node:fs/promises";
+import { cp, mkdir, readdir, rename } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { parseArgs } from "node:util";
@@ -103,10 +103,41 @@ const RunReportSchema = z.object({
       usage: UsageSchema.nullable(),
       checks: z.array(z.object({ pass: z.boolean() })),
       taskDir: z.string(),
+      trajectory: z
+        .object({
+          iterations: z.number().int(),
+          critiques: z.array(z.number().int()),
+          accepted: z.number().int(),
+          rejected: z.number().int(),
+        })
+        .nullable()
+        .optional(),
     }),
   ),
 });
 
+/** Copies the task's journal and judge records (kept there by the grader) into the entry. */
+async function keepRecord(taskDir: string, entryDir: string): Promise<void> {
+  const journal = path.join(taskDir, "journal.jsonl");
+  if (await Bun.file(journal).exists()) {
+    await cp(journal, path.join(entryDir, "journal.jsonl"));
+  }
+  let records: string[];
+  try {
+    records = await readdir(path.join(taskDir, "judge"));
+  } catch {
+    return;
+  }
+  const wanted = records.filter((entry) => entry.endsWith(".json"));
+  if (wanted.length === 0) return;
+  await mkdir(path.join(entryDir, "judge"), { recursive: true });
+  for (const name of wanted) {
+    await cp(
+      path.join(taskDir, "judge", name),
+      path.join(entryDir, "judge", name),
+    );
+  }
+}
 async function collect(): Promise<void> {
   const run = values.run ?? usage();
   const runDir = (await Bun.file(path.join(run, "report.json")).exists())
@@ -167,8 +198,12 @@ async function collect(): Promise<void> {
           passed: result.checks.filter((check) => check.pass).length,
           total: result.checks.length,
         },
+        ...(result.trajectory === null || result.trajectory === undefined
+          ? {}
+          : { trajectory: result.trajectory }),
       },
     });
+    await keepRecord(result.taskDir, path.join(taskHistoryDir(task.id), id));
     collected += 1;
     log(
       `${task.id}: ${id} — ${meta.blocks.toString()} blocks, lint ${meta.lint.errors.toString()}/${meta.lint.warnings.toString()}, repetition ${meta.repetition.toString()}`,

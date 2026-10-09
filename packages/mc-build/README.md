@@ -64,9 +64,23 @@ bun run typecheck && bun run test && bun run lint
 ```
 
 Every view can be drawn `textured` (default), in `value` (grays: tonal
-massing and silhouette) or in `normal` (each face coloured by its facing, so
-a flat wall is one flat colour and relief shows as colour changes):
-`renderer.view(grid, "iso-front-right", 512, { mode: "value" })`. The
+massing and silhouette), `normal` (each face coloured by its facing, so a
+flat wall is one flat colour and relief shows as colour changes), `squint`
+(box-blurred: only massing survives), `relief` (a low sun marched through
+the grid for long shadows, plus corner occlusion) or `light` (cells coloured
+by block light with sky light propagated in; level 0 is red), for example
+`renderer.view(grid, "iso-front-right", 512, { mode: "relief" })`.
+Ordinary and stained glass, including panes, transmit skylight; tinted glass
+and solid blocks obstruct it. The skylight pass is an approximation within
+the captured grid. Beyond
+the contact sheet: `renderer.elevations(grid, { grid: 8 })` (front, right,
+back, left and top with coordinate lines), `renderer.pov(grid)` (a
+perspective eye-level view from in front of the build, `camera.ts`
+`perspectiveProjector`), `renderer.compare(before, after)` (side by side
+plus a plan of changed columns), `renderer.survey(grid)` (a map tiled at
+readable scale with an index), `drawGridOverlay`, and `render/cut.ts`
+(`cutGrid` for floor plans and sections, `namedCrop` for fixed close-ups).
+`scripts/render-modes.ts` draws every look of one program on one page. The
 **judge sheet** (`src/render/judge-sheet.ts`) is the fixed, anonymised
 layout vision judges see — hero, plan, value and normal views plus close-ups
 at twice the scale, titled only with a letter — in a `micro` (one building)

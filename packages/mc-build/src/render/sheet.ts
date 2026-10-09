@@ -9,7 +9,8 @@ import {
 } from "./camera.ts";
 import { drawText, textWidth } from "./font.ts";
 import type { Quad, V3 } from "./mesh.ts";
-import { Image, rasterize } from "./raster.ts";
+import { drawGridOverlay } from "./overlay.ts";
+import { Image, rasterize, type Projected } from "./raster.ts";
 
 const BACKGROUND = [222, 228, 236, 255] as const;
 const PANEL = [36, 40, 48, 255] as const;
@@ -85,7 +86,74 @@ const WHITE: Quad["texture"] = {
  * its outward normal, so flat walls read as one flat colour and relief shows
  * as colour changes.
  */
-export type RenderMode = "textured" | "value" | "normal";
+export type RenderMode =
+  "textured" | "value" | "normal" | "squint" | "relief" | "light";
+
+/** Separable box blur, in place: the "half-closed eyes" test of massing. */
+/** Mean of a channel over `radius` pixels either side of `i` along one line. */
+function boxMean(
+  source: Uint8Array,
+  line: { base: number; stride: number; length: number },
+  i: number,
+  radius: number,
+): [number, number, number] {
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  let count = 0;
+  for (let k = -radius; k <= radius; k += 1) {
+    const j = i + k;
+    if (j < 0 || j >= line.length) continue;
+    const at = (line.base + j * line.stride) * 4;
+    r += source[at] ?? 0;
+    g += source[at + 1] ?? 0;
+    b += source[at + 2] ?? 0;
+    count += 1;
+  }
+  return [r / count, g / count, b / count];
+}
+
+function blurPass(
+  source: Uint8Array,
+  target: Uint8Array,
+  layout: { lines: number; length: number; stride: number; lineStride: number },
+  radius: number,
+): void {
+  for (let line = 0; line < layout.lines; line += 1) {
+    const base = line * layout.lineStride;
+    for (let i = 0; i < layout.length; i += 1) {
+      const mean = boxMean(
+        source,
+        { base, stride: layout.stride, length: layout.length },
+        i,
+        radius,
+      );
+      const at = (base + i * layout.stride) * 4;
+      target[at] = Math.round(mean[0]);
+      target[at + 1] = Math.round(mean[1]);
+      target[at + 2] = Math.round(mean[2]);
+      target[at + 3] = source[at + 3] ?? 255;
+    }
+  }
+}
+
+export function squint(image: Image, radius: number): void {
+  if (radius < 1) return;
+  const { width, height, pixels } = image;
+  const temp = new Uint8Array(pixels.length);
+  blurPass(
+    pixels,
+    temp,
+    { lines: height, length: width, stride: 1, lineStride: width },
+    radius,
+  );
+  blurPass(
+    temp,
+    pixels,
+    { lines: width, length: height, stride: width, lineStride: 1 },
+    radius,
+  );
+}
 
 function faceNormal(quad: Quad): V3 {
   if (quad.normal !== null) {
@@ -159,11 +227,56 @@ function oversample(view: ViewName, box: V3, size: number): number {
 }
 
 /** Renders one orthographic view of the quads into a `size`×`size` tile. */
+/** The quads a mode draws: `normal` recolours every face by its facing. */
+export function modeQuads(
+  quads: readonly Quad[],
+  mode: RenderMode,
+): readonly Quad[] {
+  return mode === "normal" ? normalQuads(quads) : quads;
+}
+
+/** The post-pass a mode applies to a rendered image (`value` and `squint`). */
+export function finishMode(image: Image, mode: RenderMode): void {
+  if (mode === "value") toValue(image);
+  if (mode === "squint") {
+    squint(
+      image,
+      Math.max(1, Math.round(Math.max(image.width, image.height) / 60)),
+    );
+  }
+}
+
+/**
+ * The projector `renderView` draws a `size`×`size` tile of this grid with,
+ * oversampling included, so an overlay (the compare plan's change markers)
+ * lands on the same pixels as the blocks.
+ */
+export function viewProjection(
+  view: ViewName,
+  gridSize: V3,
+  size: number,
+): { project: (point: V3) => Projected; scale: number } {
+  const box = viewBox(view, gridSize);
+  const over = oversample(view, box, size);
+  const fitted = fitProjector(view, box, {
+    width: size * over,
+    height: size * over,
+  });
+  const shift = view === "front" ? 2 : 0;
+  return {
+    scale: fitted.scale / over,
+    project: (point) => {
+      const p = fitted.project([point[0] + shift, point[1], point[2]]);
+      return { x: p.x / over, y: p.y / over, depth: p.depth };
+    },
+  };
+}
+
 export function renderView(
   quads: readonly Quad[],
   gridSize: V3,
   view: ViewName,
-  options: { size: number; mode?: RenderMode },
+  options: { size: number; mode?: RenderMode; grid?: number },
 ): Image {
   const { size } = options;
   const box = viewBox(view, gridSize);
@@ -175,9 +288,7 @@ export function renderView(
     }).shrink(over);
   }
   const mode = options.mode ?? "textured";
-  if (mode === "normal") {
-    quads = normalQuads(quads);
-  }
+  quads = modeQuads(quads, mode);
   const tile = new Image(size, size, BACKGROUND);
   const withPlayer =
     view === "front"
@@ -198,8 +309,14 @@ export function renderView(
       ? (point: V3) => project([point[0] + 2, point[1], point[2]])
       : project;
   rasterize(tile, withPlayer, shifted);
-  if (mode === "value") {
-    toValue(tile);
+  finishMode(tile, mode);
+  if (options.grid !== undefined) {
+    drawGridOverlay(tile, {
+      project: shifted,
+      gridSize,
+      view,
+      every: options.grid,
+    });
   }
   return tile;
 }
@@ -211,7 +328,13 @@ export function renderView(
 export function renderSheet(
   quads: readonly Quad[],
   grid: BlockGrid,
-  options: { title: string; subtitle?: string; tile?: number },
+  options: {
+    title: string;
+    subtitle?: string;
+    tile?: number;
+    mode?: RenderMode;
+    grid?: number;
+  },
 ): Image {
   const tile = options.tile ?? 440;
   const label = 26;
@@ -238,7 +361,15 @@ export function renderSheet(
     const row = Math.floor(index / columns);
     const x = column * tile;
     const y = header + row * (tile + label);
-    sheet.blit(renderView(quads, gridSize, view, { size: tile }), x, y + label);
+    sheet.blit(
+      renderView(quads, gridSize, view, {
+        size: tile,
+        ...(options.mode === undefined ? {} : { mode: options.mode }),
+        ...(options.grid === undefined ? {} : { grid: options.grid }),
+      }),
+      x,
+      y + label,
+    );
     drawText(sheet, VIEW_LABELS[view], {
       x: x + 8,
       y: y + 7,
