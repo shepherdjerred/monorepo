@@ -74,6 +74,11 @@ keep trusted main output separate from PR output. Independent workflow
 checkouts can reuse unchanged tasks within their trust domain. Developer
 shells default to local caching because their network connection is less predictable.
 
+The [cache server](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/turbo-cache.ts)
+stores and returns each client's artifact signature unchanged. Signing keys
+stay with their respective clients. Turbo rejects missing or invalid signatures,
+so a successful artifact download alone does not prove a cache hit.
+
 Woodpecker reports a GitHub status per workflow. A final, clone-free PR
 workflow checks the selected blocking workflows at the same pipeline URL and
 reports the single required `ci/woodpecker/pr/ci-complete` status. This avoids a
