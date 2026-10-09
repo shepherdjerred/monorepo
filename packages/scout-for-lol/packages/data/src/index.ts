@@ -181,6 +181,7 @@ export {
   arenaAugmentCache,
   getCachedArenaAugmentById,
 } from "./data-dragon/arena-augments.ts";
+export { getCachedAugmentNameById } from "./data-dragon/augment-names.ts";
 
 // Sound pack exports
 export {

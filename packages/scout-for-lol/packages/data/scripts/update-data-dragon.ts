@@ -34,6 +34,8 @@ import {
 } from "./riot-patch.ts";
 import { generateAbilityFactsAssets } from "./ability-facts.ts";
 import { downloadAbilityIcons } from "./ability-icons.ts";
+import { buildAugmentNameCatalog } from "./augment-names.ts";
+import type { AugmentNameCatalog } from "#src/data-dragon/augment-names-schema.ts";
 import { analyzePatch, fetchOfficialPatchNotes } from "./patch-analysis.ts";
 import {
   PatchChangesetHistorySchema,
@@ -62,6 +64,9 @@ const CLASSIC_BACKGROUND_PATH = `${IMG_DIR}/background/classic-jade.png`;
 // the current catalog. Keep their original names and icons in the pinned cache.
 const HISTORICAL_ARENA_AUGMENT_VERSION = "15.23";
 const HISTORICAL_ARENA_AUGMENT_IDS = [71, 250] as const;
+// This client snapshot includes historical and cross-mode recorded IDs that
+// the detailed Arena API omits. Retain it when the current patch advances.
+const RETAINED_AUGMENT_NAMES_VERSION = "16.19";
 // Match-V5 can retain runes after Riot removes them from the current patch.
 const HISTORICAL_RUNE_VERSION = "14.24.1";
 const HISTORICAL_RUNE_IDS = [8138] as const;
@@ -95,6 +100,10 @@ function getCommunityDragonPositionsUrl(cdVersion: string): string {
 
 function getArenaAugmentsUrl(cdVersion: string): string {
   return `https://raw.communitydragon.org/${cdVersion}/cdragon/arena/en_us.json`;
+}
+
+export function getCDragonAugmentNamesUrl(cdVersion: string): string {
+  return getCDragonLolGameDataBase(cdVersion) + "/v1/cherry-augments.json";
 }
 
 function getCDragonLolGameDataBase(cdVersion: string): string {
@@ -1338,13 +1347,46 @@ async function downloadLaneImages(positionsUrl: string): Promise<number> {
   return laneImages.length;
 }
 
-async function fetchAndSaveArenaAugments(arenaAugmentsUrl: string): Promise<{
+async function fetchAugmentNames(
+  cdVersion: string,
+): Promise<AugmentNameCatalog> {
+  const versions = [...new Set([RETAINED_AUGMENT_NAMES_VERSION, cdVersion])];
+  const snapshots: { version: string; data: unknown }[] = [];
+  for (const version of versions) {
+    const response = await fetchWithRetry(getCDragonAugmentNamesUrl(version));
+    if (!response.ok) {
+      throw new Error(
+        "Failed to fetch augment names for " +
+          version +
+          ": HTTP " +
+          response.status.toString(),
+      );
+    }
+    const data: unknown = await response.json();
+    snapshots.push({ version, data });
+  }
+  return buildAugmentNameCatalog(snapshots);
+}
+
+async function saveAugmentNames(catalog: AugmentNameCatalog): Promise<void> {
+  await Bun.write(
+    ASSETS_DIR + "/augment-names.json",
+    JSON.stringify(catalog, null, 2),
+  );
+  console.log(
+    "✓ Written augment-names.json (" +
+      Object.keys(catalog.augments).length.toString() +
+      " augments)",
+  );
+}
+
+async function fetchAndSaveArenaAugments(cdVersion: string): Promise<{
   iconPaths: Set<string>;
   count: number;
 }> {
   console.log("\nFetching Arena augments from CommunityDragon...");
 
-  const response = await fetchWithRetry(arenaAugmentsUrl);
+  const response = await fetchWithRetry(getArenaAugmentsUrl(cdVersion));
   if (!response.ok) {
     throw new Error(
       `Failed to fetch Arena augments: ${String(response.status)} ${response.statusText}`,
@@ -1396,6 +1438,9 @@ async function fetchAndSaveArenaAugments(arenaAugmentsUrl: string): Promise<{
     };
   }
 
+  // Validate all upstream name snapshots before replacing either cache.
+  const augmentNames = await fetchAugmentNames(cdVersion);
+
   // Write arena-augments.json
   await Bun.write(
     `${ASSETS_DIR}/arena-augments.json`,
@@ -1405,16 +1450,18 @@ async function fetchAndSaveArenaAugments(arenaAugmentsUrl: string): Promise<{
     `✓ Written arena-augments.json (${String(Object.keys(cache).length)} augments)`,
   );
 
+  await saveAugmentNames(augmentNames);
+
   return { iconPaths, count: Object.keys(cache).length };
 }
 
 async function downloadAugmentImages(
   communityDragonUrl: string,
-  arenaAugmentsUrl: string,
+  cdVersion: string,
 ): Promise<number> {
   console.log("\nDownloading augment icons from CommunityDragon...");
 
-  const { iconPaths } = await fetchAndSaveArenaAugments(arenaAugmentsUrl);
+  const { iconPaths } = await fetchAndSaveArenaAugments(cdVersion);
 
   const augmentImages = [...iconPaths].map((iconPath) => {
     const filename = iconPath.split("/").pop() ?? "unknown.png";
@@ -1599,6 +1646,21 @@ async function main(): Promise<void> {
     const requestedVersion = process.argv.find((argument) =>
       /^\d+\.\d+\.\d+$/.test(argument),
     );
+    if (process.argv.includes("--augment-names-only")) {
+      const previousVersion = await readPreviousVersion();
+      if (previousVersion === undefined) {
+        throw new Error("--augment-names-only requires a committed version");
+      }
+      assertPinnedVersion(
+        "--augment-names-only",
+        requestedVersion,
+        previousVersion,
+      );
+      await saveAugmentNames(
+        await fetchAugmentNames(getCommunityDragonVersion(previousVersion)),
+      );
+      return;
+    }
     if (process.argv.includes("--arena-augments-only")) {
       const previousVersion = await readPreviousVersion();
       if (previousVersion === undefined) {
@@ -1610,7 +1672,7 @@ async function main(): Promise<void> {
         previousVersion,
       );
       await fetchAndSaveArenaAugments(
-        getArenaAugmentsUrl(getCommunityDragonVersion(previousVersion)),
+        getCommunityDragonVersion(previousVersion),
       );
       return;
     }
@@ -1691,7 +1753,6 @@ async function main(): Promise<void> {
     const communityDragonUrl = getCommunityDragonUrl(cdVersion);
     const communityDragonPositionsUrl =
       getCommunityDragonPositionsUrl(cdVersion);
-    const arenaAugmentsUrl = getArenaAugmentsUrl(cdVersion);
     console.log(
       `\nUsing Data Dragon version: ${version} (CommunityDragon: ${cdVersion})\n`,
     );
@@ -1747,7 +1808,7 @@ async function main(): Promise<void> {
     const historicalRuneImagesCount = await downloadHistoricalRuneAssets();
     const augmentImagesCount = await downloadAugmentImages(
       communityDragonUrl,
-      arenaAugmentsUrl,
+      cdVersion,
     );
     const laneImagesCount = await downloadLaneImages(
       communityDragonPositionsUrl,

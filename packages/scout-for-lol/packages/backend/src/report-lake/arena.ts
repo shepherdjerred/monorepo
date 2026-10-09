@@ -1,5 +1,5 @@
 import {
-  getCachedArenaAugmentById,
+  getCachedAugmentNameById,
   type MatchLakeRow,
   type RawParticipant,
 } from "@scout-for-lol/data";
@@ -51,8 +51,8 @@ export function arenaAugmentsFromLakeRow(row: AugmentLakeFields) {
   ]
     .filter((id) => id !== null)
     .map((id) => {
-      const augment = getCachedArenaAugmentById(id);
-      if (augment === undefined) throw new UnknownArenaAugmentError(id);
-      return { id, name: augment.name };
+      const name = getCachedAugmentNameById(id);
+      if (name === undefined) throw new UnknownArenaAugmentError(id);
+      return { id, name };
     });
 }
