@@ -1,5 +1,9 @@
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { createTestScoutClientDevice } from "#src/testing/scout-client-device.ts";
 import { readPrematchCoverage } from "./prematch-coverage.ts";
@@ -47,7 +51,7 @@ async function observeInProgress(
 }
 
 /** What Scout records when Spectator supplied the game's prematch. */
-async function archivePrematch(riotMatchId: string): Promise<void> {
+async function archivePrematch(riotMatchId: RiotMatchId): Promise<void> {
   await prisma.matchProcessingReceipt.create({
     data: {
       riotMatchId,
@@ -81,7 +85,7 @@ describe("readPrematchCoverage", () => {
     await observeInProgress("1001", { custom: true, receivedAt: inWindow });
     // A ranked game Spectator did return.
     await observeInProgress("1002", { custom: false, receivedAt: inWindow });
-    await archivePrematch("NA1_1002");
+    await archivePrematch(RiotMatchIdSchema.parse("NA1_1002"));
     // Still inside the grace period: not counted yet.
     await observeInProgress("1003", {
       custom: false,
