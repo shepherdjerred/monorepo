@@ -1275,7 +1275,7 @@
       "format": "png",
       "width": 576,
       "height": 1090,
-      "sha256": "d64443f6fce05f0d0553c150c166c66ed25f610f7facbe1f58371c8e5e5ee3ea",
+      "sha256": "3c3551225cd87ffc5272eef60a17b162e6a7984bf1b644366225eb8a5bbed847",
       "referencedAssetSha256s": []
     },
     {
@@ -1285,7 +1285,7 @@
       "format": "svg",
       "width": 576,
       "height": 1090,
-      "sha256": "f46986dba228b199e253fefe774c2579cace9ba3fce44820777e42ac6ad5c558",
+      "sha256": "f9dc8f3706e5f2925dd8a2b297d783bf48273c5e09c21df714d87b2bee02cfb1",
       "referencedAssetSha256s": [
         "0b3f48f8d8403d35359478d840d0b5fde89511f97e01f415a9776032a08a2ac2",
         "198d21bcabed9a13af1f074422ee1b76f3d37a4802eb9b908943e0de26859772",
@@ -1318,7 +1318,7 @@
       "format": "png",
       "width": 576,
       "height": 1090,
-      "sha256": "8d05e82c0564d24db76ea51670fa087f13c4166b4a571ebce49ebdb4654cc27a",
+      "sha256": "a755b12b3765070fe33bc725221b0a9fc31c7edf9d8c4c44cd74ece4ce9d6341",
       "referencedAssetSha256s": []
     },
     {
@@ -1328,7 +1328,7 @@
       "format": "svg",
       "width": 576,
       "height": 1090,
-      "sha256": "b5c9ddce7d2f473f45dc3fc4cc917b1966d9883c5a844773c2db729ee9a076cd",
+      "sha256": "619129b0ae3a7f6085bb37909ed8afdd69fbfa2af4227dff988f7eee2ffa5e08",
       "referencedAssetSha256s": [
         "13bc8bc396c39aea71a0dd228fde6ce744e218ae1f2bbabbce7a0d0d65b60bb2",
         "14707450dbf56ba342aa0795b41dc204b5ebcd951978d8fcae39b3a09b84db98",
@@ -1445,7 +1445,7 @@
       "format": "png",
       "width": 1600,
       "height": 1350,
-      "sha256": "f961c38bbb34fca6692b45b37f6ce4a9cdcc440bfdd923bdfef90e476a7bc8a0",
+      "sha256": "7c7cd0fe8e239d4251239e8acd3e8ef4966085ecf57659077e2e89afeadddf28",
       "referencedAssetSha256s": []
     },
     {
@@ -1455,7 +1455,7 @@
       "format": "svg",
       "width": 1600,
       "height": 1350,
-      "sha256": "cd674966e9d14708ce52ec080897f887be9d198ac47ad12d5228201af49729de",
+      "sha256": "da96e29b032a8a0da03aba39763d9bbf4189907830d65e7eb195a063c47f72fc",
       "referencedAssetSha256s": [
         "02c2b5b0160ad3e38383d9fc76b4c449b5e17b9a6155077bc5109acac31e3de9",
         "02d2df15ece1fcabbdeb52de1ab744e213651d2c50fe814c3c5d3d36076f06e6",

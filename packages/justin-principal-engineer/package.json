@@ -23,7 +23,7 @@
   "dependencies": {
     "@shepherdjerred/config": "workspace:*",
     "@shepherdjerred/feature-flags": "workspace:*",
-    "@openai/codex-sdk": "0.162.0",
+    "@openai/codex-sdk": "0.162.1",
     "@shepherdjerred/llm-runtime": "workspace:*",
     "zod": "^4.4.3"
   },

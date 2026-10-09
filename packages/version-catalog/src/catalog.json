@@ -72,7 +72,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "v0.24.0@sha256:4d3c217a054513613447aaa918e6e2a5550ef94553bc1eeee9b3e18d384bc8c1"
+      "value": "v0.26.0@sha256:dacc7cb7039db091bbc336959724af93f6d75a1d628a66fe3a96973879c59dc9"
     },
     {
       "name": "connect",
@@ -96,7 +96,7 @@
         "registryUrl": "https://argoproj.github.io/argo-helm",
         "versioning": "semver"
       },
-      "value": "10.10.1"
+      "value": "10.10.2"
     },
     {
       "name": "cert-manager",
@@ -451,7 +451,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "11.24.2@sha256:717f9d2609021b001d3543ec7144c4fc3ba0e31b61dbcd616383b93613b22f89"
+      "value": "11.24.3@sha256:3fef66d575ea0ea9d50aad3e05c36619228557cfa888557eac2035215a29a321"
     },
     {
       "name": "koush/scrypted",
@@ -496,7 +496,7 @@
         "datasource": "github-releases",
         "versioning": "semver"
       },
-      "value": "v1.11.9"
+      "value": "v1.11.10"
     },
     {
       "name": "magico13/ha-emporia-vue",
@@ -645,7 +645,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "3.4.3-alpine@sha256:fb87fc81943143b9acaea7442973e6ba654035fff76ffe7af6829dd1bcb0f7a5"
+      "value": "3.4.6-alpine@sha256:7af8255207ee9964ccb4eec8ce4b7a40b777769665e3ae83897fb01b24d8a43a"
     },
     {
       "name": "jorenn92/maintainerr",
@@ -705,7 +705,7 @@
         "registryUrl": "https://grafana.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "2.3.2"
+      "value": "2.4.0"
     },
     {
       "name": "alloy",
@@ -729,7 +729,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "v5.12.5@sha256:76542ccc4c045e5ff9f80f87b25de6fcc71b31222172de5031a8ceba33772ee1"
+      "value": "v5.12.6@sha256:4b3d29a66c1dd11d513f8378907953b3c2c0c0535cbf5cf8fe83f7f398ae8b4c"
     },
     {
       "name": "openebs",
@@ -776,7 +776,7 @@
         "versioning": "semver",
         "packageName": "shepherdjerred/scout-for-lol"
       },
-      "value": "2.0.0-1006898@sha256:badce741372f1947e374f779db215b1c10abb9aa2bea112e0e60b52ca139f6f5",
+      "value": "2.0.0-1007344@sha256:6dc8ca7b12f248d145ea6c013b5602d80f4258c3a13057477a4759b819acfb5a",
       "notes": [
         "Prod promotion = merging a reviewed PR for this pin (normally Renovate). Each 2.0.0-<n>",
         "tag is minted by the scout-tag-release CI step only after site version",
@@ -860,7 +860,7 @@
         "versioning": "semver",
         "packageName": "shepherdjerred/starlight-karma-bot"
       },
-      "value": "2.0.0-1006867@sha256:837f9bde663a0debe599e5f7bab072c960c8d1f9a10e4d18d4fdd1d84d026114"
+      "value": "2.0.0-1007344@sha256:ee7862a0f9652cec406e518db41ce328a8334831c9d89f111265761e60be7460"
     },
     {
       "name": "shepherdjerred/birmel",
