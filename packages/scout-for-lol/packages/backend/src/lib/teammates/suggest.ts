@@ -356,10 +356,10 @@ export async function suggestTeammates(
  * One entry per match, keeping the first — Riot's copy, when a match reached
  * both Riot's history and the player's Scout Client.
  */
-export function withoutRepeatedMatches<T extends { readonly matchId: string }>(
-  rounds: readonly T[],
-): T[] {
-  const seen = new Set<string>();
+export function withoutRepeatedMatches<
+  T extends { readonly matchId: RiotMatchId },
+>(rounds: readonly T[]): T[] {
+  const seen = new Set<RiotMatchId>();
   return rounds.filter((round) => {
     if (seen.has(round.matchId)) return false;
     seen.add(round.matchId);

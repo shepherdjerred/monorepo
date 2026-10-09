@@ -1,18 +1,15 @@
+import type { LeaguePuuid, RawMatch, Region } from "@scout-for-lol/data";
 import {
-  MatchIdSchema,
-  type LeaguePuuid,
-  type MatchId,
-  type RawMatch,
-  type Region,
-} from "@scout-for-lol/data";
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { prisma } from "#src/database/index.ts";
 import { readSelectedLocalCanonicalMatch } from "#src/scout-client/canonical-match.ts";
 
 export type ClientRound = {
   readonly match: RawMatch;
   readonly region: Region;
-  readonly matchId: MatchId;
+  readonly matchId: RiotMatchId;
 };
 
 /**
@@ -42,15 +39,10 @@ export async function recentClientRounds(
   const rounds: ClientRound[] = [];
   for (const row of selected) {
     const region = regionOf.get(row.sourceObservation.localPuuid ?? "");
-    const match = await readSelectedLocalCanonicalMatch(
-      RiotMatchIdSchema.parse(row.riotMatchId),
-    );
+    const matchId = RiotMatchIdSchema.parse(row.riotMatchId);
+    const match = await readSelectedLocalCanonicalMatch(matchId);
     if (region === undefined || match === null) continue;
-    rounds.push({
-      match,
-      region,
-      matchId: MatchIdSchema.parse(row.riotMatchId),
-    });
+    rounds.push({ match, region, matchId });
   }
   return rounds;
 }
