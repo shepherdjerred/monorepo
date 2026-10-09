@@ -29,6 +29,7 @@ test("release pruning is limited to charts with intentional resource removal", (
       "temporal",
       "trmnl-dashboard",
       "turbo-cache",
+      "woodpecker",
     ].filter(releasePrunesChart),
   ).toEqual([
     "birmel",
@@ -41,6 +42,7 @@ test("release pruning is limited to charts with intentional resource removal", (
     "temporal",
     "trmnl-dashboard",
     "turbo-cache",
+    "woodpecker",
   ]);
   expect(releasePrunesChart("apps")).toBe(false);
   // Pruning stays opt-in: a chart that never intentionally removes a resource

@@ -47,6 +47,9 @@ const REPOSITORY_CHART_URLS = new Set([
 // s3-static-sites retires hostname bindings and probes when ownership moves to
 // an application such as the forum. Its bindings disable DNS updates; static
 // buckets and DNS records are owned outside this chart.
+// woodpecker retires the drained legacy agent after the four dedicated pools
+// take over. The release must remove its absent Deployment; all database and
+// cache resources remain declared in the exact chart inventory.
 const PRUNED_RELEASE_CHARTS = new Set([
   "birmel",
   "freshrss",
@@ -58,6 +61,7 @@ const PRUNED_RELEASE_CHARTS = new Set([
   "temporal",
   "trmnl-dashboard",
   "turbo-cache",
+  "woodpecker",
 ]);
 
 const ChartMuseumEntrySchema = z.object({
