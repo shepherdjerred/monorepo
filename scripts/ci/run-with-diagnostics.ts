@@ -87,6 +87,26 @@ export async function retainDiagnostics(
 }
 
 async function main(args: string[]): Promise<number> {
+  if (args[0] === "--retain") {
+    try {
+      const { z } = await import("zod");
+      const { TaskDiagnosticsSchema } =
+        await import("../lib/ci/task-diagnostics.ts");
+      const identity: unknown = JSON.parse(args[1] ?? "null");
+      const previous = z.array(z.string()).parse(JSON.parse(args[2] ?? "null"));
+      const parsed = TaskDiagnosticsSchema.omit({
+        turbo: true,
+        browserSelection: true,
+        collectionFailed: true,
+      }).parse(identity);
+      return await retainDiagnostics(parsed, new Set(previous), process.cwd());
+    } catch {
+      // Bootstrap or schema errors may include rejected values. Keep them out
+      // of CI logs, just like collection and upload errors above.
+      console.error("CI task diagnostic process failed");
+      return 1;
+    }
+  }
   const [workflow, separator, ...command] = args;
   if (
     separator !== "--" ||
@@ -107,7 +127,7 @@ async function main(args: string[]): Promise<number> {
   const root = process.cwd();
   const before = await prepareDiagnostics(workflow, root);
   const startedAt = Date.now();
-  const child = Bun.spawn(command, {
+  let child = Bun.spawn(command, {
     stdin: "inherit",
     stdout: "inherit",
     stderr: "inherit",
@@ -123,19 +143,34 @@ async function main(args: string[]): Promise<number> {
   process.on("SIGTERM", terminate);
   try {
     const exitCode = await child.exited;
-    return await retainDiagnostics(
+    // Bun caches missing package resolution before the child installs the
+    // workspace. A fresh process can resolve those newly installed packages.
+    child = Bun.spawn(
+      [
+        process.execPath,
+        "--no-install",
+        import.meta.path,
+        "--retain",
+        JSON.stringify({
+          version: 1,
+          workflow,
+          pipeline,
+          commit,
+          startedAt,
+          finishedAt: Date.now(),
+          exitCode,
+        } satisfies Identity),
+        JSON.stringify([...before]),
+      ],
       {
-        version: 1,
-        workflow,
-        pipeline,
-        commit,
-        startedAt,
-        finishedAt: Date.now(),
-        exitCode,
+        stdin: "inherit",
+        stdout: "inherit",
+        stderr: "inherit",
+        env: { ...Bun.env },
       },
-      before,
-      root,
     );
+    const diagnosticExit = await child.exited;
+    return exitCode === 0 ? diagnosticExit : exitCode;
   } finally {
     process.removeListener("SIGINT", interrupt);
     process.removeListener("SIGTERM", terminate);

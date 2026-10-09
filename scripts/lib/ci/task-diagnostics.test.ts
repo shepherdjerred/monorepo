@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, rm, utimes } from "node:fs/promises";
+import { cp, mkdtemp, mkdir, rm, truncate, utimes } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, expect, test, vi } from "vitest";
@@ -100,6 +100,32 @@ test("collects new summaries, excludes earlier runs, and binds identity", async 
   );
   expect(report).toMatchObject({ ...identity, collectionFailed: false });
   expect(report.turbo).toHaveLength(1);
+});
+
+test("accepts large repository summaries while stripping their input payload", async () => {
+  const root = await repository();
+  await Bun.write(
+    path.join(root, ".turbo/runs/large.json"),
+    JSON.stringify({
+      ...summary(),
+      ignoredInputs: "x".repeat(21 * 1024 * 1024),
+    }),
+  );
+  const report = await collectTaskDiagnostics(identity, new Set(), root);
+  expect(report.collectionFailed).toBe(false);
+  expect(report.turbo).toHaveLength(1);
+  expect(JSON.stringify(report)).not.toContain("ignoredInputs");
+  expect(JSON.stringify(report).length).toBeLessThan(2000);
+});
+
+test("rejects oversized summaries before parsing or allocating their payload", async () => {
+  const root = await repository();
+  const file = path.join(root, ".turbo/runs/oversized.json");
+  await Bun.write(file, "{}");
+  await truncate(file, 128 * 1024 * 1024 + 1);
+  await expect(
+    collectTaskDiagnostics(identity, new Set(), root),
+  ).rejects.toThrow("Diagnostic input exceeds its size limit");
 });
 
 test("browser selection strips exception text, paths and arbitrary metadata", async () => {
@@ -217,23 +243,28 @@ test("malformed summaries publish explicit failure metadata without parser value
   expect(JSON.stringify(error.mock.calls)).not.toContain("sentinel");
 });
 
-test("wrapper forwards command output and preserves its exit without upload credentials", async () => {
-  const root = await repository();
+async function runWrapper(
+  root: string,
+  entrypoint: string,
+  command: string[],
+  options?: { mode: string[]; env: Record<string, string> },
+) {
   const child = Bun.spawn(
     [
       process.execPath,
-      new URL("../../ci/run-with-diagnostics.ts", import.meta.url).pathname,
-      "verify",
-      "--",
-      process.execPath,
-      "-e",
-      "console.log('child-output'); process.exit(42)",
+      "--no-install",
+      entrypoint,
+      ...(options?.mode ?? ["verify", "--"]),
+      ...command,
     ],
     {
       cwd: root,
       stdout: "pipe",
       stderr: "pipe",
-      env: { CI_PIPELINE_NUMBER: "123", CI_COMMIT_SHA: "a".repeat(40) },
+      env: options?.env ?? {
+        CI_PIPELINE_NUMBER: "123",
+        CI_COMMIT_SHA: "a".repeat(40),
+      },
     },
   );
   const [stdout, stderr, exit] = await Promise.all([
@@ -241,7 +272,97 @@ test("wrapper forwards command output and preserves its exit without upload cred
     new Response(child.stderr).text(),
     child.exited,
   ]);
+  return { stdout, stderr, exit };
+}
+
+test.each([
+  { mode: ["invalid"], message: "Usage: run-with-diagnostics.ts" },
+  {
+    mode: ["verify", "--", "unused"],
+    message: "require a pipeline number and full commit SHA",
+  },
+  {
+    mode: ["--retain", '{"pipeline":"sentinel-secret"}', "[]"],
+    message: "CI task diagnostic process failed",
+  },
+])(
+  "reports safe wrapper errors and hides rejected values: $message",
+  async ({ mode, message }) => {
+    const { stderr, exit } = await runWrapper(
+      await repository(),
+      new URL("../../ci/run-with-diagnostics.ts", import.meta.url).pathname,
+      [],
+      { mode, env: { CI_PIPELINE_NUMBER: "", CI_COMMIT_SHA: "" } },
+    );
+    expect(exit).toBe(1);
+    expect(stderr).toContain(message);
+    expect(stderr).not.toContain("sentinel-secret");
+  },
+);
+
+test("wrapper forwards command output and preserves its exit without upload credentials", async () => {
+  const root = await repository();
+  const { stdout, stderr, exit } = await runWrapper(
+    root,
+    new URL("../../ci/run-with-diagnostics.ts", import.meta.url).pathname,
+    [process.execPath, "-e", "console.log('child-output'); process.exit(42)"],
+  );
   expect(stdout).toContain("child-output");
   expect(stderr).toContain("diagnostic publication failed");
   expect(exit).toBe(42);
 });
+
+test.each([0, 42])(
+  "collects in a fresh process after the child installs dependencies and exits %i",
+  async (exitCode) => {
+    const root = await repository();
+    const entrypoint = path.join(root, "scripts/ci/run-with-diagnostics.ts");
+    const library = path.join(root, "scripts/lib/ci");
+    await mkdir(path.dirname(entrypoint), { recursive: true });
+    await mkdir(library, { recursive: true });
+    await cp(
+      new URL("../../ci/run-with-diagnostics.ts", import.meta.url),
+      entrypoint,
+    );
+    await cp(
+      new URL("task-diagnostics.ts", import.meta.url),
+      path.join(library, "task-diagnostics.ts"),
+    );
+    // Fake only the object-store boundary; the wrapper and collector run as
+    // real subprocesses from a checkout with no installed dependencies.
+    await Bun.write(
+      path.join(library, "ci-handoff.ts"),
+      'export async function writeJsonHandoff(key, report) { await Bun.write("published.json", JSON.stringify(report)); }',
+    );
+    await Bun.write(
+      path.join(library, "ci-object-store-retry.ts"),
+      "export class CiObjectStoreHttpError extends Error {}\nexport async function withCiObjectStoreRetry(operation) { return operation(); }",
+    );
+    const dependencies = new URL("../../node_modules", import.meta.url)
+      .pathname;
+    const install = `
+      import { symlink } from "node:fs/promises";
+      await symlink(${JSON.stringify(dependencies)}, "scripts/node_modules");
+      await Bun.write(".turbo/runs/child.json", ${JSON.stringify(JSON.stringify(summary()))});
+      process.exit(${String(exitCode)});
+    `;
+    const { stdout, stderr, exit } = await runWrapper(root, entrypoint, [
+      process.execPath,
+      "-e",
+      install,
+    ]);
+    expect(stderr).toBe("");
+    expect(stdout).toContain("CI task diagnostics:");
+    expect(exit).toBe(exitCode);
+    const report: unknown = await Bun.file(
+      path.join(root, "published.json"),
+    ).json();
+    expect(report).toMatchObject({
+      pipeline: "123",
+      exitCode,
+      collectionFailed: false,
+      turbo: [{ id: "run-one" }],
+    });
+    expect(JSON.stringify(report)).not.toContain("sentinel");
+  },
+);
