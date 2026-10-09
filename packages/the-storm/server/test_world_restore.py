@@ -63,6 +63,108 @@ class RestoreTest(unittest.TestCase):
             restore.prepare(archive, destination)
         self.assertFalse(destination.exists())
 
+    def test_resource_preparation_rejects_overlapping_roots_before_any_backup_write(self):
+        for relationship in ("same", "staging-inside", "backup-inside", "ancestor-link"):
+            with self.subTest(relationship=relationship):
+                root = self.root / relationship
+                root.mkdir()
+                modern = root / "modern"
+                modern.mkdir()
+                if relationship == "same":
+                    staging = modern
+                elif relationship in ("staging-inside", "ancestor-link"):
+                    staging = modern / "staging"
+                    staging.mkdir()
+                    if relationship == "ancestor-link":
+                        (root / "alias").symlink_to(modern, target_is_directory=True)
+                        staging = root / "alias/staging"
+                else:
+                    staging = root
+                paper, candidate, proof = (root / name for name in ("paper.jar", "candidate.jar", "proof.json"))
+                for path in (paper, candidate, proof):
+                    path.write_bytes(b"fixture")
+                bootstrap = root / "bootstrap"
+                bootstrap.mkdir()
+                (modern / "world.dat").write_bytes(b"verified recovery bytes")
+                before = restore.fingerprint(modern)
+                with (
+                    patch.object(restore.subprocess, "run") as java,
+                    self.assertRaisesRegex(ValueError, "independent staging"),
+                ):
+                    restore.prepare_resources(staging, paper, bootstrap, candidate, modern, proof)
+                java.assert_not_called()
+                self.assertEqual(restore.fingerprint(modern), before)
+                self.assertFalse((staging / "resource-bootstrap").exists())
+
+    def test_database_preparation_locks_the_historical_data_root(self):
+        staging = self.root / "staging"
+        historical = staging / "heritage-preserved-layout/world"
+        historical.mkdir(parents=True)
+        (historical / "level.dat").write_bytes(b"historical")
+        (historical / "session.lock").write_bytes(b"lock")
+        modern = self.root / "modern"
+        (modern / "world").mkdir(parents=True)
+        (modern / "world/level.dat").write_bytes(b"modern")
+        (modern / "world/session.lock").write_bytes(b"lock")
+        paper, candidate, backup = (self.root / name for name in ("paper.jar", "TheStorm.jar", "backup.json"))
+        for path in (paper, candidate, backup):
+            path.write_bytes(b"fixture")
+        bootstrap = self.root / "bootstrap"
+        bootstrap.mkdir()
+        restore.save_json(staging / "heritage-preserved-layout-files.json", restore.fingerprint(historical))
+        restore.save_json(
+            staging / restore.JOURNAL,
+            {
+                "phase": "ARENAS_PRESERVED",
+                "archiveSha256": restore.ARCHIVE_SHA256,
+                "arenaTransplantInputs": {
+                    backup.name: restore.digest(backup),
+                    candidate.name: restore.digest(candidate),
+                },
+            },
+        )
+        with (
+            patch.object(restore, "conversion_classpath", return_value="fixture"),
+            patch.object(restore, "verified_backup", side_effect=ValueError("backup verification reached")) as verify,
+            self.assertRaisesRegex(ValueError, "backup verification reached"),
+        ):
+            restore.prepare_database(staging, paper, bootstrap, candidate, modern, backup)
+        verify.assert_called_once_with(modern.resolve(), backup.resolve())
+        self.assertFalse((staging / "restoration-database").exists())
+
+    def test_resource_preparation_rejects_native_tool_changed_during_generation(self):
+        staging, paper, bootstrap, candidate, modern, proof = self.activation_fixture()
+        tool_root = self.root / "operator"
+        (tool_root / "conversion").mkdir(parents=True)
+        tool = tool_root / "conversion/NativeResourceBootstrap.java"
+        tool.write_bytes(b"original source")
+        restore.save_json(proof, {"schemaVersion": 2, "requestId": "fixture-request"})
+        receipt = staging / "activation-layout-receipt.json"
+        restore.save_json(
+            receipt,
+            {"candidateJarSha256": restore.digest(candidate), "backupProofSha256": restore.digest(proof)},
+        )
+        restore.save_json(
+            staging / restore.JOURNAL,
+            {
+                "phase": "ACTIVATION_LAYOUT_READY",
+                "requestId": "fixture-request",
+                "activationReceiptSha256": restore.digest(receipt),
+            },
+        )
+        before = restore.fingerprint(modern)
+        with (
+            patch.object(restore, "__file__", str(tool_root / "world-restore.py")),
+            patch.object(restore, "conversion_classpath", return_value="fixture"),
+            patch.object(restore, "verified_backup", return_value=before),
+            patch.object(restore.subprocess, "run", side_effect=lambda *a, **kw: tool.write_bytes(b"changed source")),
+            self.assertRaisesRegex(ValueError, "tool changed"),
+        ):
+            restore.prepare_resources(staging, paper, bootstrap, candidate, modern, proof)
+        self.assertEqual(restore.fingerprint(modern), before)
+        self.assertFalse((staging / "resource-bootstrap/receipt.json").exists())
+        self.assertNotIn("resourceReceiptSha256", json.loads((staging / restore.JOURNAL).read_text()))
+
     def test_headers_preserve_negative_coordinates_and_reject_overlap(self):
         region = self.root / "region"
         region.mkdir()

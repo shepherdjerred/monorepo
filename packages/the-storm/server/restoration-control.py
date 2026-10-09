@@ -22,6 +22,7 @@ from typing import IO
 
 import restoration_activation
 import restoration_files
+import restoration_resources
 from restoration_json import JsonObject
 
 CONTEXT = "admin@torvalds"
@@ -1225,10 +1226,14 @@ def create_writer(path: Path, journal: JsonObject) -> JsonObject:
     return pod
 
 
-def upload_installation(journal: JsonObject, plan: JsonObject) -> None:
+def upload_installation(journal: JsonObject, plan: JsonObject, *, resources: bool = False) -> None:
     """Stream only approved world/identity files and operator code into bounded scratch storage."""
     name = writer_manifest(journal).object("metadata").string("name")
-    expected = restoration_files.installation_manifest(plan.strings("installationFiles"))
+    expected = (
+        restoration_resources.validate_files(plan.strings("installationFiles"))
+        if resources
+        else restoration_files.installation_manifest(plan.strings("installationFiles"))
+    )
     layout = Path(plan.string("layout"))
     owned = Path(__file__).resolve().parent
     process = subprocess.Popen(
@@ -1268,6 +1273,7 @@ def upload_installation(journal: JsonObject, plan: JsonObject) -> None:
                 "restoration_files.py",
                 "restoration_revision.py",
                 "restoration_json.py",
+                "restoration_resources.py",
             ):
                 source = owned / script
                 if source.is_symlink() or not source.is_file():
@@ -1295,6 +1301,8 @@ def revise_installation(path: Path, journal: JsonObject, staging: Path, candidat
         raise ValueError("Revision requires an immutable replacement image")
     if journal.get("privateStartup") is not None or journal.get("acceptance") is not None:
         raise ValueError("An installation that has started requires whole-volume rollback")
+    if "resourceBootstrapOperation" in journal or "resourceBootstrap" in journal:
+        raise ValueError("A resource-bootstrapped installation requires whole-volume rollback before revision")
     revision = journal.object("installationRevision", {})
     if not revision:
         require_offline(journal)
@@ -1659,6 +1667,97 @@ def whole_rollback(path: Path, journal: JsonObject) -> None:
     save(path, journal)
 
 
+def bootstrap_resources(path: Path, journal: JsonObject, staging: Path, candidate: Path) -> None:
+    """Add only fresh resource metadata to an installed, stopped volume; retain historical data."""
+    recover_writer_identity(path, journal)
+    require_offline(journal, writer=journal.get("writerRemoved") is not True)
+    require_restore(journal)
+    prepared = restoration_resources.plan(staging, journal, candidate)
+    operation = journal.object("resourceBootstrapOperation", {})
+    if not operation:
+        if journal.object("installation").get("phase") != "INSTALLED" or journal.get("writerRemoved") is not True:
+            raise ValueError("Resource bootstrap requires verified installation and removed writer")
+        operation = JsonObject(
+            {
+                "plan": prepared,
+                "installation": JsonObject.parse(json.dumps(journal.object("installation"))),
+            }
+        )
+        journal["resourceBootstrapOperation"] = operation
+        save(path, journal)
+    if operation.object("plan") != prepared:
+        raise ValueError("Fresh resource bootstrap inputs changed")
+    create_writer(path, journal)
+    upload_installation(journal, JsonObject({**prepared, "layout": prepared.string("payload")}), resources=True)
+    require_offline(journal, writer=True)
+    name = writer_manifest(journal).object("metadata").string("name")
+    result = JsonObject.parse(
+        run(
+            [
+                "-n",
+                NAMESPACE,
+                "exec",
+                name,
+                "-c",
+                "writer",
+                "--",
+                "python3",
+                "/scratch/operator/restoration_resources.py",
+                "--plan",
+                "/scratch/plan.json",
+            ],
+            1800,
+        )
+    )
+    if (
+        result.get("phase") != "VERIFIED"
+        or any(result.get(key) != prepared.get(key) for key in ("requestId", "candidateJarSha256", "receiptSha256"))
+        or result.get("files") != 9
+    ):
+        raise ValueError("Stopped resource bootstrap returned mismatched evidence")
+    require_offline(journal, writer=True)
+    journal["installation"] = JsonObject.parse(json.dumps(operation.object("installation")))
+    journal["resourceBootstrap"] = result
+    save(path, journal)
+
+
+def repair_private_probes(path: Path, journal: JsonObject) -> None:
+    """Repair the ignored mc-health arguments under closed, request-owned private admission."""
+    assert_closed(journal)
+    server = read("statefulset", SERVER)
+    assert_owner(server, journal)
+    if annotations(server).get(PHASE) != "VALIDATING" or server_image(server) != journal.string("candidateImage"):
+        raise ValueError("Probe repair requires this private candidate")
+    command = ["mc-monitor", "status", "--use-proxy", "--timeout", "2s"]
+    container = server.object("spec").object("template").object("spec").objects("containers")[0]
+    before = {name: container.object(name) for name in ("livenessProbe", "readinessProbe")}
+    if any(
+        probe.object("exec").get("command") not in (["mc-health", "--use-proxy"], command) for probe in before.values()
+    ):
+        raise ValueError("Private probes changed outside the known mc-health repair")
+    status = run(["-n", NAMESPACE, "exec", SERVER + "-0", "--", *command], 10)
+    if "version=Paper 26.2 " not in status:
+        raise ValueError("Proxy-aware probe did not report the expected running Paper")
+    if "privateProbeRepair" not in journal:
+        journal["privateProbeRepair"] = {"phase": "PREPARED", "before": before, "command": command}
+        save(path, journal)
+    for key in ("acceptance", "stoppingIncarnation", "stoppedIncarnation"):
+        journal.pop(key, None)
+    edits = []
+    for name in before:
+        prefix = "/spec/template/spec/containers/0/" + name
+        edits.extend(
+            [
+                {"op": "replace", "path": prefix + "/exec/command", "value": command},
+                {"op": "add", "path": prefix + "/timeoutSeconds", "value": 5},
+            ]
+        )
+    assert_closed(journal)
+    patch("statefulset", SERVER, server, edits)
+    journal.object("privateProbeRepair")["phase"] = "APPLIED"
+    save(path, journal)
+
+
 def private_start(path: Path, journal: JsonObject) -> None:
     if (
         journal.get("privateStartup") == "ROLLED_BACK"
@@ -1672,6 +1771,14 @@ def private_start(path: Path, journal: JsonObject) -> None:
     assert_owner(server, journal)
     if journal.object("installation").get("phase") != "INSTALLED" or journal.get("writerRemoved") is not True:
         raise ValueError("Private startup requires verified installation and writer cleanup")
+    resources = journal.object("resourceBootstrap", {})
+    if (
+        resources.get("phase") != "VERIFIED"
+        or resources.get("requestId") != journal.string("requestId")
+        or resources.get("candidateJarSha256") != journal.object("installation").get("candidateJarSha256")
+        or resources.get("files") != 9
+    ):
+        raise ValueError("Private startup requires verified fresh resource metadata")
     if annotations(server).get(PHASE) == "OFFLINE":
         require_offline(journal)
         for key in ("acceptance", "stoppingIncarnation", "stoppedIncarnation", "rollbackVerification"):
@@ -1706,6 +1813,105 @@ def private_start(path: Path, journal: JsonObject) -> None:
         current = run(["-n", NAMESPACE, "get", "pod", SERVER + "-0", "--ignore-not-found", "-o", "json"]).strip()
         invalidate_changed_incarnation(journal, pod_incarnation(JsonObject.parse(current)) if current else {})
     journal["privateStartup"] = "VALIDATING"
+    save(path, journal)
+
+
+def repair_private_map(path: Path, journal: JsonObject) -> None:
+    """Repair the generated renderer configuration while public routes stay closed."""
+    assert_closed(journal)
+    server = read("statefulset", SERVER)
+    assert_owner(server, journal)
+    if annotations(server).get(PHASE) != "VALIDATING" or server_image(server) != journal.string("candidateImage"):
+        raise ValueError("Map rendering repair requires this private candidate")
+    if journal.get("privateStartup") != "VALIDATING" or journal.object("installation").get("phase") != "INSTALLED":
+        raise ValueError("Map rendering repair requires a verified private installation")
+    owned = Path(__file__).resolve().parent
+    files = {
+        name: (owned / name).read_text()
+        for name in ("restoration_maps.py", "restoration_files.py", "restoration_json.py")
+    }
+    # Transfer only operator source into a unique temporary directory. No
+    # credentials, gameplay JARs or world data cross this stream.
+    loader = (
+        "import json,runpy,sys,tempfile\nfrom pathlib import Path\n"
+        f"files=json.loads({json.dumps(json.dumps(files))})\n"
+        "with tempfile.TemporaryDirectory(prefix='storm-map-operator-') as directory:\n"
+        " root=Path(directory)\n"
+        " for name,source in files.items(): (root/name).write_text(source)\n"
+        " sys.path.insert(0,directory)\n"
+        " runpy.run_path(str(root/'restoration_maps.py'),run_name='__main__')\n"
+    )
+    for key in ("acceptance", "stoppingIncarnation", "stoppedIncarnation", "privateMapRepair"):
+        journal.pop(key, None)
+    save(path, journal)
+    result = subprocess.run(
+        [
+            "kubectl",
+            "--context",
+            CONTEXT,
+            "-n",
+            NAMESPACE,
+            "exec",
+            "-i",
+            SERVER + "-0",
+            "--",
+            "python3",
+            "-",
+            "--request",
+            journal.string("requestId"),
+            "--jar-sha",
+            journal.object("installation").string("candidateJarSha256"),
+        ],
+        input=loader,
+        text=True,
+        capture_output=True,
+        timeout=60,
+    )
+    if result.returncode:
+        raise RuntimeError("Private map repair failed: " + result.stderr.strip())
+    evidence = JsonObject.parse(result.stdout)
+    if (
+        evidence.get("phase") != "VERIFIED"
+        or evidence.get("requestId") != journal.string("requestId")
+        or evidence.get("candidateJarSha256") != journal.object("installation").get("candidateJarSha256")
+        or evidence.get("worldTicks") != 0
+        or re.fullmatch(r"[a-f0-9]{64}", evidence.string("configSha256")) is None
+    ):
+        raise ValueError("Private map repair returned different evidence")
+    responses = {}
+    for command, expected in (
+        (["reload"], "Reloading BlueMap..."),
+        (["force-update", "world"], "Creating update-tasks ..."),
+    ):
+        arguments = ["-n", NAMESPACE, "exec", SERVER + "-0", "--", "rcon-cli", "bluemap", *command]
+        response = run(arguments, 45)
+        for attempt in range(10):
+            response = re.sub(r"\x1b\[[0-9;]*m|§.", "", response).strip()
+            if (
+                command != ["force-update", "world"]
+                or response != "⌛ BlueMap is still loading!\nPlease try again in a few seconds."
+                or attempt == 9
+            ):
+                break
+            threading.Event().wait(1)
+            response = run(arguments, 45)
+        if response != expected:
+            raise ValueError("BlueMap rejected the private render command: " + response)
+        responses[command[0]] = response
+    # Reload/task creation is asynchronous even after RCON acknowledges it.
+    for attempt in range(10):
+        tasks = run(["-n", NAMESPACE, "exec", SERVER + "-0", "--", "rcon-cli", "bluemap", "tasks"], 5)
+        tasks = re.sub(r"\x1b\[[0-9;]*m|§.", "", tasks)
+        if re.search(r"(?:preparing map 'world' update|updating map 'world')", tasks):
+            break
+        if attempt < 9:
+            threading.Event().wait(1)
+    else:
+        raise ValueError("BlueMap did not report the required world render task")
+    evidence["renderCommands"] = responses
+    evidence["renderTaskReadback"] = tasks.strip()
+    assert_closed(journal)
+    journal["privateMapRepair"] = evidence
     save(path, journal)
 
 
@@ -2153,8 +2359,11 @@ def main() -> None:
             "plan-install",
             "install",
             "revise-installation",
+            "bootstrap-resources",
             "remove-writer",
             "private-start",
+            "repair-private-probes",
+            "repair-private-map",
             "private-stop",
             "accept",
             "release",
@@ -2175,7 +2384,7 @@ def main() -> None:
     arguments = parser.parse_args()
     if arguments.operation == "export-backup" and (arguments.export_dir is None or arguments.export_proof is None):
         parser.error("export-backup requires --export-dir and --export-proof")
-    if arguments.operation in ("plan-install", "install", "revise-installation") and (
+    if arguments.operation in ("plan-install", "install", "revise-installation", "bootstrap-resources") and (
         arguments.staging is None or arguments.candidate is None
     ):
         parser.error("Installation requires --staging and --candidate")
@@ -2211,8 +2420,14 @@ def main() -> None:
             revise_installation(arguments.journal, journal, arguments.staging, arguments.candidate, arguments.image)
         elif arguments.operation == "remove-writer":
             remove_writer(arguments.journal, journal)
+        elif arguments.operation == "bootstrap-resources":
+            bootstrap_resources(arguments.journal, journal, arguments.staging, arguments.candidate)
         elif arguments.operation == "private-start":
             private_start(arguments.journal, journal)
+        elif arguments.operation == "repair-private-probes":
+            repair_private_probes(arguments.journal, journal)
+        elif arguments.operation == "repair-private-map":
+            repair_private_map(arguments.journal, journal)
         elif arguments.operation == "private-stop":
             private_stop(arguments.journal, journal)
         elif arguments.operation == "accept":

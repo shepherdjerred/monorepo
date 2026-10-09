@@ -94,6 +94,32 @@ listing all modules alone does not prove these asynchronous checks succeeded.
 
 ## Preparing an existing volume
 
+Historical restoration recreates the resource dimensions without retaining
+their old terrain. After `prepare-activation`, run `world-restore.py
+prepare-resources` with the same staging, pinned Paper/bootstrap, candidate,
+verified modern export and backup proof. This produces only native generator,
+identity and fresh level metadata for `wilds`, `peaks` and `mining`.
+The preparation journal seals the receipt hash before installation; changing
+metadata and its receipt together invalidates the native preparation proof.
+
+After installation, use `restoration-control.py bootstrap-resources` under the
+existing stopped lease, then `remove-writer` before `private-start`. The bounded
+transaction refuses existing resource terrain, retains a complete hash manifest
+of all other volume data, and requires byte-identical readback. Private startup
+requires this proof. It can also complete after a failed private startup has
+been stopped; it does not reinstall the historical world or bypass the
+installation revision and rollback rules.
+
+Converted historical chunks have their old lighting invalidated. BlueMap's
+generated map configuration normally omits chunks without native light data.
+Under the private restoration lease, `repair-private-map` changes only the
+main map's `ignore-missing-light-data` and ambient lighting settings, journals its original bytes,
+reloads BlueMap and queues a forced full render. It loads no gameplay chunks
+and survives restarts because the generated map file is runtime state. BlueMap
+uses full ambient brightness so converted chunks with zeroed light arrays remain
+readable too. It cannot use missing lighting to hide caves or reproduce night mode. See the
+[BlueMap map configuration](https://bluemap.bluecolored.de/wiki/configs/Maps.html).
+
 Prevent admissions and mc-router wake-ups during the cutover. Preserve the old
 image digest and relevant Flipt values. Require exact-head checks and published
 image verification before activation.
@@ -361,7 +387,7 @@ before rebinding the image. The volume transaction retains the original
 rollback archive and the superseded world/database, verifies unrelated files,
 and resumes interrupted staging or renames using its sealed revision journal.
 It reuses the existing independently verified backup. Any attempted Paper
-startup, changed storage identity, changed input or foreign helper refuses the
+startup, recorded resource bootstrap, changed storage identity, changed input or foreign helper refuses the
 revision; after startup, use whole-volume rollback instead.
 
 The controller's dormant writer template uses the exact candidate image and

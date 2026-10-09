@@ -124,10 +124,11 @@ class Cluster:
             raise RuntimeError("resourceVersion test failed")
         for operation in operations[1:]:
             keys = [key.replace("~1", "/").replace("~0", "~") for key in operation.string("path").split("/")[1:]]
-            if keys == ["spec", "template", "spec", "containers", "0", "image"]:
-                resource.object("spec").object("template").object("spec").objects("containers")[0]["image"] = operation[
-                    "value"
-                ]
+            if keys[:5] == ["spec", "template", "spec", "containers", "0"]:
+                parent = resource.object("spec").object("template").object("spec").objects("containers")[0]
+                for key in keys[5:-1]:
+                    parent = parent.object(key)
+                parent[keys[-1]] = operation["value"]
                 continue
             parent = resource
             for key in keys[:-1]:
@@ -201,6 +202,12 @@ class RestorationControlTest(unittest.TestCase):
         control.acquire(self.path, journal)
         journal["installation"] = {"phase": "INSTALLED", "candidateJarSha256": "b" * 64}
         journal["writerRemoved"] = True
+        journal["resourceBootstrap"] = {
+            "phase": "VERIFIED",
+            "requestId": journal.string("requestId"),
+            "candidateJarSha256": "b" * 64,
+            "files": 9,
+        }
         self.cluster.objects["pod", control.SERVER + "-0"] = JsonObject(
             {
                 "metadata": {
@@ -223,8 +230,44 @@ class RestorationControlTest(unittest.TestCase):
         )
         return journal
 
+    def test_private_start_refuses_missing_or_stale_resource_bootstrap(self):
+        journal = self.installation_fixture()
+        for evidence in ({}, {"phase": "VERIFIED", "requestId": "other-request"}):
+            journal["resourceBootstrap"] = evidence
+            with self.assertRaisesRegex(ValueError, "fresh resource metadata"):
+                control.private_start(self.path, journal)
+
+    def test_private_probe_repair_requires_real_status_and_preserves_other_probe_fields(self):
+        journal = self.installation_fixture()
+        container = self.cluster.server.object("spec").object("template").object("spec").objects("containers")[0]
+        for name in ("livenessProbe", "readinessProbe"):
+            container[name] = {"exec": {"command": ["mc-health", "--use-proxy"]}, "failureThreshold": 20}
+        control.private_start(self.path, journal)
+        mutations = len(self.cluster.mutations)
+        with self.assertRaisesRegex(ValueError, "expected running Paper"):
+            control.repair_private_probes(self.path, journal)
+        self.assertEqual(len(self.cluster.mutations), mutations)
+        run = self.cluster.run
+
+        def healthy(arguments: list[str], timeout: float = 30) -> str:
+            if "mc-monitor" in arguments:
+                return "localhost:25565 : version=Paper 26.2 online=0 max=20"
+            return run(arguments, timeout)
+
+        with patch.object(control, "run", side_effect=healthy):
+            control.repair_private_probes(self.path, journal)
+        self.assertEqual(journal.object("privateProbeRepair").get("phase"), "APPLIED")
+        for name in ("livenessProbe", "readinessProbe"):
+            probe = container.object(name)
+            self.assertEqual(probe.get("failureThreshold"), 20)
+            self.assertEqual(probe.get("timeoutSeconds"), 5)
+            self.assertEqual(
+                probe.object("exec").get("command"), ["mc-monitor", "status", "--use-proxy", "--timeout", "2s"]
+            )
+
     def test_revision_rebinds_only_an_unstarted_closed_installation_and_revokes_start_first(self):
         journal = self.installation_fixture()
+        journal.pop("resourceBootstrap")
         old = JsonObject(
             {
                 "candidateImage": IMAGE,
@@ -254,6 +297,103 @@ class RestorationControlTest(unittest.TestCase):
         self.assertEqual(self.cluster.server.object("spec")["replicas"], 0)
         control.assert_closed(journal)
 
+    def test_private_map_repair_requires_closed_candidate_and_invalidates_acceptance(self):
+        journal = self.installation_fixture()
+        control.private_start(self.path, journal)
+        journal["acceptance"] = {"status": "VERIFIED"}
+        evidence = {
+            "phase": "VERIFIED",
+            "requestId": REQUEST,
+            "candidateJarSha256": "b" * 64,
+            "worldTicks": 0,
+            "configSha256": "c" * 64,
+        }
+        original = control.run
+        commands = []
+
+        def commands_only(arguments: list[str], timeout: float = 30):
+            if "rcon-cli" in arguments:
+                commands.append(arguments[-2:])
+                if arguments[-1] == "tasks" and commands.count(["bluemap", "tasks"]) == 1:
+                    return "BlueMap Tasks >\n"
+                if arguments[-1] == "world" and commands.count(["force-update", "world"]) == 1:
+                    return "⌛ BlueMap is still loading!\nPlease try again in a few seconds."
+                return {
+                    "reload": "\x1b[32mReloading BlueMap...\x1b[0m\n",
+                    "world": "Creating update-tasks ...\n",
+                    "tasks": "updating map 'world' ...\n",
+                }[arguments[-1]]
+            return original(arguments, timeout)
+
+        subprocess_result = MagicMock(returncode=0, stdout=json.dumps(evidence))
+        with (
+            patch.object(control.subprocess, "run", return_value=subprocess_result),
+            patch.object(control, "run", side_effect=commands_only),
+            patch.object(control.threading, "Event"),
+        ):
+            control.repair_private_map(self.path, journal)
+        self.assertEqual(journal.object("privateMapRepair")["configSha256"], evidence["configSha256"])
+        self.assertEqual(
+            journal.object("privateMapRepair").object("renderCommands"),
+            {"reload": "Reloading BlueMap...", "force-update": "Creating update-tasks ..."},
+        )
+        self.assertEqual(journal.object("privateMapRepair")["renderTaskReadback"], "updating map 'world' ...")
+        self.assertNotIn("acceptance", journal)
+        self.assertEqual(
+            commands, [
+                ["bluemap", "reload"], ["force-update", "world"], ["force-update", "world"],
+                ["bluemap", "tasks"], ["bluemap", "tasks"],
+            ]
+        )
+        self.assertEqual(subprocess_result.returncode, 0)
+        control.assert_closed(journal)
+
+    def test_private_map_repair_cannot_retain_verified_proof_after_application_rejection(self):
+        original = control.run
+        for rejected in ("reload", "world", "tasks", "loading"):
+            with self.subTest(rejected=rejected):
+                self.cluster = Cluster()
+                self.path.unlink(missing_ok=True)
+                journal = self.installation_fixture()
+                control.private_start(self.path, journal)
+                journal["acceptance"] = {"status": "VERIFIED"}
+                journal["privateMapRepair"] = {"phase": "VERIFIED"}
+                evidence = {
+                    "phase": "VERIFIED", "requestId": REQUEST, "candidateJarSha256": "b" * 64,
+                    "worldTicks": 0, "configSha256": "c" * 64,
+                }
+                commands = []
+                def command(
+                    arguments: list[str], timeout: float = 30, rejected: str = rejected,
+                    commands: list[str] = commands,
+                ):
+                    if "rcon-cli" not in arguments:
+                        return original(arguments, timeout)
+                    commands.append(arguments[-1])
+                    if rejected == "loading" and arguments[-1] == "world":
+                        return "⌛ BlueMap is still loading!\nPlease try again in a few seconds."
+                    return "No map found" if arguments[-1] == rejected else {
+                        "reload": "Reloading BlueMap...",
+                        "world": "Creating update-tasks ...",
+                        "tasks": "updating map 'world' ...",
+                    }[arguments[-1]]
+
+                with (
+                    patch.object(
+                        control.subprocess, "run", return_value=MagicMock(returncode=0, stdout=json.dumps(evidence))
+                    ),
+                    patch.object(control, "run", side_effect=command),
+                    patch.object(control.threading, "Event"),
+                    self.assertRaisesRegex(ValueError, "BlueMap"),
+                ):
+                    control.repair_private_map(self.path, journal)
+                saved = JsonObject.parse(self.path.read_bytes())
+                self.assertNotIn("privateMapRepair", saved)
+                self.assertNotIn("acceptance", saved)
+                if rejected == "loading":
+                    self.assertEqual(commands.count("world"), 10)
+                control.assert_closed(journal)
+
     def test_incomplete_revision_refuses_private_start_even_with_a_stale_installed_receipt(self):
         journal = self.installation_fixture()
         journal["installationRevision"] = {"phase": "PREPARED"}
@@ -270,8 +410,19 @@ class RestorationControlTest(unittest.TestCase):
             control.revise_installation(self.path, journal, self.path.parent, self.path, IMAGE)
         self.assertEqual(len(self.cluster.mutations), before)
 
+    def test_revision_refuses_recorded_resource_bootstrap_before_any_mutation(self):
+        for key in ("resourceBootstrapOperation", "resourceBootstrap"):
+            with self.subTest(key=key):
+                journal = self.installation_fixture()
+                journal[key] = {"phase": "PREPARED"}
+                before = len(self.cluster.mutations)
+                with self.assertRaisesRegex(ValueError, "resource-bootstrapped"):
+                    control.revise_installation(self.path, journal, self.path.parent, self.path, IMAGE)
+                self.assertEqual(len(self.cluster.mutations), before)
+
     def test_revision_resumes_an_image_patch_that_completed_before_local_save(self):
         journal = self.installation_fixture()
+        journal.pop("resourceBootstrap")
         old = JsonObject(
             {
                 "candidateImage": IMAGE,
