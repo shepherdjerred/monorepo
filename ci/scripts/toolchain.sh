@@ -10,6 +10,7 @@ set -eu
 # agent image's default shell until the step-shell controller fix is
 # deployed). Enable it when the shell is bash; plain sh proceeds without.
 case "${BASH_VERSION:-}" in "") ;; *) set -o pipefail ;; esac
+CI_TOOLCHAIN_STARTED=$(date +%s)
 
 command -v mise >/dev/null || curl -fsSL https://mise.run | sh
 if [ "$(id -u)" -eq 0 ]; then
@@ -144,5 +145,18 @@ case "${MISE_TOOLCHAIN_SCOPE:-full}" in
   *)
     echo "Unknown MISE_TOOLCHAIN_SCOPE: ${MISE_TOOLCHAIN_SCOPE}" >&2
     false
+    ;;
+esac
+
+# Emit only fixed-schema measurements. Local shells without a CI commit do not
+# produce pipeline evidence; malformed commit identifiers are never interpolated.
+case "${CI_COMMIT_SHA:-}" in
+  ''|*[!0-9a-f]*) ;;
+  *)
+    if [ "${#CI_COMMIT_SHA}" -eq 40 ]; then
+      CI_TOOLCHAIN_FINISHED=$(date +%s)
+      printf 'CI_BOOTSTRAP_DIAGNOSTIC {"schemaVersion":1,"sourceSha":"%s","scope":"%s","elapsedSeconds":%s}\n' \
+        "$CI_COMMIT_SHA" "${MISE_TOOLCHAIN_SCOPE:-full}" "$((CI_TOOLCHAIN_FINISHED - CI_TOOLCHAIN_STARTED))"
+    fi
     ;;
 esac

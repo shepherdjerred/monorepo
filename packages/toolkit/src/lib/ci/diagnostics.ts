@@ -1,4 +1,3 @@
-import { z } from "zod";
 import {
   woodpeckerJson,
   pipelineUrl,
@@ -7,10 +6,7 @@ import {
 } from "#lib/woodpecker/ci.ts";
 import { isFailure } from "./status.ts";
 import { sanitizeText } from "./redaction.ts";
-
-const LogsSchema = z.array(
-  z.object({ data: z.string().nullable(), line: z.number(), type: z.number() }),
-);
+import { decodeLogs } from "./native-logs.ts";
 export type Diagnostic = {
   workflow: string;
   step: string | null;
@@ -28,19 +24,7 @@ export function logExcerpt(
   secrets: readonly string[],
   maxCharacters = 4000,
 ): { logs: string; truncated: boolean } {
-  const entries = LogsSchema.parse(raw).toSorted((a, b) => a.line - b.line);
-  const decoded = entries
-    .map((entry) => {
-      if (entry.data === null) return "";
-      if (
-        !/^(?:[A-Z\d+/]{4})*(?:[A-Z\d+/]{2}==|[A-Z\d+/]{3}=)?$/i.test(
-          entry.data,
-        )
-      )
-        throw new Error("Invalid base64 in Woodpecker logs");
-      return Buffer.from(entry.data, "base64").toString("utf8");
-    })
-    .join("\n");
+  const decoded = decodeLogs(raw).join("\n");
   const safe = sanitizeText(decoded, secrets);
   const lines = safe.split(/\r?\n/);
   const tail = lines.slice(-60).join("\n");
