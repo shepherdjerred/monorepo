@@ -105,12 +105,16 @@ After the writer-quiescence checks and `CHECKPOINT`, take the final consistent
 independent backup. Confirm the pod's `PGVERSION` matches the new source pin and
 that both toolchains are present.
 
-For a single-member cluster, invoke the documented Spilo entrypoint:
+For a single-member cluster, invoke the Spilo entrypoint as the PostgreSQL
+operating-system user. The container defaults to root, which `initdb` rejects.
 
 ```bash
 kubectl exec -n temporal temporal-postgresql-0 -c postgres -- \
-  python3 /scripts/inplace_upgrade.py 1
+  su postgres -c 'python3 /scripts/inplace_upgrade.py 1'
 ```
+
+Wait for the entrypoint to finish its statistics rebuild and post-bootstrap
+steps. It recreates monitoring extensions during post-bootstrap.
 
 Verify the actual server version, Patroni leader state, checksums, extensions,
 database sizes, and required table counts. Resume writers and exercise the
