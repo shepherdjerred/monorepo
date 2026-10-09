@@ -22,6 +22,7 @@ import { registerLakeStagingLagSweep } from "#src/report-lake/lake-staging-lag.t
 import type { ScoutRuntimeDependencies } from "#src/runtime/boot.ts";
 import type { ScoutTemporalSupervisor } from "#src/temporal/supervisor.ts";
 import { registerPostmatchMintGapSweep } from "#src/temporal/notification/postmatch-mint-gap.ts";
+import { registerPrematchCoverageSweep } from "#src/scout-client/prematch-coverage.ts";
 
 const logger = createLogger("runtime-subsystems");
 
@@ -59,10 +60,12 @@ export function scoutRuntimeSubsystems(
       // here keeps "which role computes it" beside every other role decision
       // rather than making it a consequence of who imported what.
       // The post-match mint gap is registered for the same reason: its
-      // render-receipt vocabulary belongs to the V2 notification lane.
+      // render-receipt vocabulary belongs to the V2 notification lane, and the
+      // client prematch coverage because it reads the prematch receipt kind.
       if (enabled) {
         registerLakeStagingLagSweep();
         registerPostmatchMintGapSweep();
+        registerPrematchCoverageSweep();
       }
     },
 
