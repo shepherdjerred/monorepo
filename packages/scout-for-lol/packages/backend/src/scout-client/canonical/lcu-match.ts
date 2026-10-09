@@ -13,6 +13,19 @@ import {
 
 export const LOCAL_MATCH_TIMING_DRIFT_MS = 30_000;
 
+/**
+ * A finished game has players on at least two sides — a 1v1 custom has
+ * exactly two. A match-history list row names only the local player, so it
+ * fields one side and is refused rather than published as a one-player match.
+ * Counted from the players, not `teams`: an Arena game lists teams 100 and 0
+ * while its players sit on 100 and 200.
+ */
+const MIN_FIELDED_SIDES = 2;
+
+function fieldedSides(participants: readonly { teamId: number }[]): number {
+  return new Set(participants.map((participant) => participant.teamId)).size;
+}
+
 function stringFrom(record: ValueRecord, ...keys: string[]) {
   for (const key of keys) {
     const value = record[key];
@@ -90,7 +103,8 @@ export function convertLcuMatchBundle(
   });
   if (
     participants.length !== game.participants.length ||
-    participants.length !== game.participantIdentities.length
+    participants.length !== game.participantIdentities.length ||
+    fieldedSides(participants) < MIN_FIELDED_SIDES
   ) {
     return null;
   }

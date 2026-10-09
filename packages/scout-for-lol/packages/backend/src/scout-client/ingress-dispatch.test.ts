@@ -93,6 +93,30 @@ describe("native match dispatch selection", () => {
     ).toMatchObject([{ deliveryMode: "live" }]);
   });
 
+  test("makes a custom ready at once instead of waiting for Riot", () => {
+    const custom = RawMatchSchema.parse({
+      ...fixture,
+      info: { ...fixture.info, gameType: "CUSTOM_GAME" },
+    });
+    const completed = observation({
+      observationId: "00000000-0000-4000-8000-000000000009",
+      sequence: 9,
+      resource: "post_game",
+      payload: custom,
+    });
+    const batch = ScoutClientObservationBatchSchema.parse({
+      observations: [completed],
+    });
+
+    expect(
+      acceptedClientMatchDispatches(
+        batch,
+        [accepted(completed.observationId)],
+        now,
+      ),
+    ).toMatchObject([{ readyAt: now.toISOString() }]);
+  });
+
   test("does not dispatch partial or quarantined evidence", () => {
     const partial = observation({
       observationId: "00000000-0000-4000-8000-000000000004",

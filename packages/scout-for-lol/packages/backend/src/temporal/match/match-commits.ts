@@ -1,3 +1,4 @@
+import { riotWithholdsMatchResult } from "@scout-for-lol/data";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { ReceiptKind } from "@scout-for-lol/domain/match-processing/states.ts";
 import type {
@@ -32,6 +33,7 @@ import {
 import { dateFromIsoInstant } from "#src/database/durable/row-values.ts";
 import { buildMatchReceipt } from "#src/durable/match/receipt-evidence.ts";
 import { toIsoInstant } from "#src/durable/match/match-identity.ts";
+import { readSelectedLocalCanonicalMatch } from "#src/scout-client/canonical-match.ts";
 
 /**
  * The V2 core's attestation and cursor steps, plus the one translation every
@@ -226,9 +228,26 @@ export async function advanceMatchCursor(input: {
     matchId: input.riotMatchId,
   });
   const advancedAt = toIsoInstant(new Date());
+  // The account cursor anchors the next Riot poll in Riot's own match list.
+  // A game Riot withholds — a custom, or a queue it never publishes — will
+  // never appear there, so as an anchor it would read as a gap on every
+  // poll: its step finishes without moving any Riot cursor, and counts as
+  // neither. A client payload for any other queue was only Riot being slow
+  // past the two-minute window; Riot will list it, so its cursor advances.
+  const clientMatch = await readSelectedLocalCanonicalMatch(input.riotMatchId);
+  const fromClient =
+    clientMatch !== null && riotWithholdsMatchResult(clientMatch.info);
   let advanced = 0;
   let alreadyAdvanced = 0;
   for (const association of tracked) {
+    if (fromClient) {
+      await markTrackedAccountCursorAdvanced(prisma, {
+        matchId: input.riotMatchId,
+        puuid: association.puuid,
+        advancedAt,
+      });
+      continue;
+    }
     const cursor = await advanceAccountCursor(prisma, {
       puuid: association.puuid,
       matchId,

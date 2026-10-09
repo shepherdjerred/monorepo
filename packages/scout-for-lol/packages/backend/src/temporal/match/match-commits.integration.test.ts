@@ -1,4 +1,5 @@
 import { afterAll, describe, expect, test, vi } from "vitest";
+import { RawMatchSchema } from "@scout-for-lol/data";
 import {
   IsoInstantSchema,
   RiotMatchIdSchema,
@@ -13,6 +14,12 @@ import {
 } from "@scout-for-lol/temporal/match-receipts";
 import type * as DatabaseModule from "#src/database/index.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
+import { createTestScoutClientDevice } from "#src/testing/scout-client-device.ts";
+import {
+  testAccountId,
+  testGuildId,
+  testPuuid,
+} from "#src/testing/test-ids.ts";
 
 /**
  * The stage-receipt attestation against real receipt rows.
@@ -33,8 +40,10 @@ vi.mock("#src/database/index.ts", async () => {
   return { ...actual, prisma };
 });
 
-const { recordClientMatchTerminal, recordMatchReceipts } =
+const { advanceMatchCursor, recordClientMatchTerminal, recordMatchReceipts } =
   await import("#src/temporal/match/match-commits.ts");
+const { listTrackedAccounts, recordTrackedAccounts } =
+  await import("#src/database/durable/tracked-account-repository.ts");
 const { readMatchPipelineState } =
   await import("#src/temporal/match/match-reads.ts");
 const { listReceipts, recordReceipt } =
@@ -210,6 +219,141 @@ describe("recordClientMatchTerminal", () => {
       SCOUT_CLIENT_MATCH_TERMINAL_RECEIPT_KIND,
       (evidence) => scoutClientMatchTerminalEvidenceCodec.parse(evidence),
     );
+  });
+});
+
+describe("advanceMatchCursor", () => {
+  const PUUID = testPuuid("cursor-source");
+  const GUILD = testGuildId("8301");
+  const OWNER = testAccountId("8301");
+
+  async function seedTrackedAccount(matchId: RiotMatchId): Promise<void> {
+    await prisma.account.deleteMany({ where: { puuid: PUUID } });
+    await prisma.player.deleteMany({ where: { serverId: GUILD } });
+    const player = await prisma.player.create({
+      data: {
+        alias: "cursor-source",
+        serverId: GUILD,
+        creatorDiscordId: OWNER,
+        createdTime: new Date(RECORDED_AT),
+        updatedTime: new Date(RECORDED_AT),
+      },
+    });
+    await prisma.account.create({
+      data: {
+        alias: "cursor-source",
+        puuid: PUUID,
+        region: "AMERICA_NORTH",
+        playerId: player.id,
+        serverId: GUILD,
+        creatorDiscordId: OWNER,
+        createdTime: new Date(RECORDED_AT),
+        updatedTime: new Date(RECORDED_AT),
+      },
+    });
+    await seedObservation(matchId);
+    await recordTrackedAccounts(prisma, [
+      {
+        matchId,
+        puuid: PUUID,
+        playerId: null,
+        accountId: null,
+        cursorAdvancedAt: null,
+      },
+    ]);
+  }
+
+  /**
+   * What the client dispatcher leaves behind when it selects a client's
+   * payload for matchId: a real match, of gameType.
+   */
+  async function selectClientPayload(
+    matchId: RiotMatchId,
+    gameType: string,
+  ): Promise<void> {
+    const fixture = RawMatchSchema.parse(
+      await Bun.file(
+        new URL("../../../../../testdata/rift.json", import.meta.url),
+      ).json(),
+    );
+    const gameId = Number(matchId.slice(matchId.indexOf("_") + 1));
+    const match = {
+      ...fixture,
+      metadata: { ...fixture.metadata, matchId },
+      info: { ...fixture.info, gameId, platformId: "NA1", gameType },
+    };
+    const deviceId = await createTestScoutClientDevice(prisma, OWNER);
+    const observation = await prisma.scoutClientObservation.create({
+      data: {
+        observationId: crypto.randomUUID(),
+        deviceId,
+        sequence: 1n,
+        capturedAt: new Date(RECORDED_AT),
+        protocolVersion: 1,
+        schemaVersion: 1,
+        appVersion: "0.1.0",
+        kind: "post_game",
+        platformId: "NA1",
+        gameId: gameId.toString(),
+        localPuuid: fixture.metadata.participants[0] ?? null,
+        payload: { resource: "post_game", data: match },
+        bodyDigest: crypto.randomUUID(),
+        disposition: "ACCEPTED",
+      },
+    });
+    await prisma.scoutClientCanonicalMatch.create({
+      data: {
+        riotMatchId: matchId,
+        sourceObservationId: observation.observationId,
+        payloadDigest: observation.bodyDigest,
+        selectedAt: new Date(RECORDED_AT),
+      },
+    });
+  }
+
+  async function storedCursor() {
+    return prisma.account.findFirstOrThrow({
+      where: { puuid: PUUID },
+      select: { lastProcessedMatchId: true },
+    });
+  }
+
+  test("moves the Riot polling cursor for a Riot match", async () => {
+    const matchId = RiotMatchIdSchema.parse("NA1_8301");
+    await seedTrackedAccount(matchId);
+
+    await expect(advanceMatchCursor({ riotMatchId: matchId })).resolves.toEqual(
+      { advanced: 1, alreadyAdvanced: 0 },
+    );
+    expect(await storedCursor()).toEqual({ lastProcessedMatchId: matchId });
+  });
+
+  test("never anchors the Riot poll on a game Riot withholds", async () => {
+    // A custom will never appear in Riot's match list, so as the cursor it
+    // would read as a gap on every poll.
+    const matchId = RiotMatchIdSchema.parse("NA1_8302");
+    await seedTrackedAccount(matchId);
+    await selectClientPayload(matchId, "CUSTOM_GAME");
+
+    await expect(advanceMatchCursor({ riotMatchId: matchId })).resolves.toEqual(
+      { advanced: 0, alreadyAdvanced: 0 },
+    );
+    expect(await storedCursor()).toEqual({ lastProcessedMatchId: null });
+    const [association] = await listTrackedAccounts(prisma, { matchId });
+    expect(association?.cursorAdvancedAt).toEqual(expect.any(String));
+  });
+
+  test("still moves the cursor for a client payload Riot will publish", async () => {
+    // A matchmade game selected from the client only because Riot was slow
+    // past the two-minute window: Riot will list it, so it anchors the poll.
+    const matchId = RiotMatchIdSchema.parse("NA1_8303");
+    await seedTrackedAccount(matchId);
+    await selectClientPayload(matchId, "MATCHED_GAME");
+
+    await expect(advanceMatchCursor({ riotMatchId: matchId })).resolves.toEqual(
+      { advanced: 1, alreadyAdvanced: 0 },
+    );
+    expect(await storedCursor()).toEqual({ lastProcessedMatchId: matchId });
   });
 });
 

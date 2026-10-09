@@ -4,6 +4,7 @@ import {
   type ScoutClientObservation,
   type ScoutClientObservationBatch,
   type ScoutClientObservationQuarantineReason,
+  riotWithholdsMatchResult,
   withoutScoutClientCredentials,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
@@ -135,6 +136,40 @@ function payloadContainsPuuid(payload: unknown, puuid: string): boolean {
         );
 }
 
+/**
+ * The lists a gameflow session names players in. Their entries aren't
+ * validated here: a bot carries no PUUID, and whether the session names
+ * anyone must not depend on whether every entry is well-formed.
+ */
+const GameflowRosterSchema = z.object({
+  data: z.object({
+    gameData: z.object({
+      teamOne: z.array(z.unknown()).optional(),
+      teamTwo: z.array(z.unknown()).optional(),
+      playerChampionSelections: z.array(z.unknown()).optional(),
+    }),
+  }),
+});
+
+/**
+ * A gameflow session naming the game's players, which binds a custom or a
+ * duel to its game as surely as a lobby does, so it must name its observer
+ * too — in its teams or its champion selections, whichever it carries. A bare
+ * phase, or a session before anyone is listed, names nobody and is exempt. A
+ * live game frame stays exempt: the Live Client API names players by Riot ID
+ * only, never by PUUID, so it can't be checked this way.
+ */
+function gameflowCarriesRoster(observation: ScoutClientObservation): boolean {
+  if (observation.kind !== "gameflow") return false;
+  const roster = GameflowRosterSchema.safeParse(observation.payload);
+  if (!roster.success) return false;
+  const { teamOne, teamTwo, playerChampionSelections } =
+    roster.data.data.gameData;
+  return [teamOne, teamTwo, playerChampionSelections].some(
+    (players) => players !== undefined && players.length > 0,
+  );
+}
+
 export function observationQuarantineReason(
   observation: ScoutClientObservation,
   verifiedPuuids: ReadonlySet<string>,
@@ -157,7 +192,10 @@ export function observationQuarantineReason(
     return "unverified_local_puuid";
   }
   const participantKinds = new Set(["lobby", "champ_select", "post_game"]);
-  if (participantKinds.has(observation.kind)) {
+  if (
+    participantKinds.has(observation.kind) ||
+    gameflowCarriesRoster(observation)
+  ) {
     if (observation.localPuuid === undefined) {
       return "missing_observer_puuid";
     }
@@ -369,9 +407,12 @@ export function acceptedClientMatchDispatches(
       .filter((receipt) => receipt.outcome !== "quarantined")
       .map((receipt) => receipt.observationId),
   );
-  const readyAt = IsoInstantSchema.parse(
+  // Riot gets first refusal for two minutes — except on a game it will never
+  // publish, a custom or a never-published queue, which is ready at once.
+  const riotFirstReadyAt = IsoInstantSchema.parse(
     new Date(now.getTime() + LOCAL_CANONICAL_DELAY_MS).toISOString(),
   );
+  const immediatelyReadyAt = IsoInstantSchema.parse(now.toISOString());
   const starts = new Map<string, ScoutClientMatchDispatchItem>();
   for (const raw of batch.observations) {
     const observation = translateObservation(raw, identities);
@@ -408,7 +449,9 @@ export function acceptedClientMatchDispatches(
       sourcePuuid,
       deliveryMode,
       gameEndTimestamp: match.info.gameEndTimestamp,
-      readyAt,
+      readyAt: riotWithholdsMatchResult(match.info)
+        ? immediatelyReadyAt
+        : riotFirstReadyAt,
       completionTargets: [],
     };
     const existing = starts.get(parsed.data);

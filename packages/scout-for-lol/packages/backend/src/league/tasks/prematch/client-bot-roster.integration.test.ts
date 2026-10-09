@@ -4,6 +4,7 @@ import {
   RawCurrentGameInfoSchema,
 } from "@scout-for-lol/data";
 import { createTestDatabase } from "#src/testing/test-database.ts";
+import { createTestScoutClientDevice } from "#src/testing/scout-client-device.ts";
 
 const { prisma } = createTestDatabase("client-bot-roster");
 
@@ -135,29 +136,7 @@ beforeEach(async () => {
   await prisma.scoutClientDevice.deleteMany();
   await prisma.scoutClientPairing.deleteMany();
   await prisma.user.deleteMany();
-  const device = await prisma.scoutClientDevice.create({
-    data: {
-      owner: { create: { discordId: OWNER_ID, discordUsername: "owner" } },
-      pairing: {
-        create: {
-          secretDigest: crypto.randomUUID(),
-          deviceName: "desktop",
-          platform: "windows",
-          architecture: "x86_64",
-          appVersion: "0.1.0",
-          protocolVersion: 1,
-          expiresAt: new Date(Date.now() + 60_000),
-        },
-      },
-      tokenDigest: crypto.randomUUID(),
-      deviceName: "desktop",
-      platform: "windows",
-      architecture: "x86_64",
-      appVersion: "0.1.0",
-      protocolVersion: 1,
-    },
-  });
-  deviceId = device.id;
+  deviceId = await createTestScoutClientDevice(prisma, OWNER_ID);
 });
 
 afterAll(async () => {

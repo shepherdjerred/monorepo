@@ -4,6 +4,7 @@ import {
   queueHasPostMatchData,
   queuePostMatchNote,
   queuesWithoutPostMatchData,
+  riotWithholdsMatchResult,
 } from "#src/model/competitions/queue-post-match.ts";
 import { QueueTypeSchema } from "#src/model/core/state.ts";
 
@@ -45,5 +46,47 @@ describe("QUEUE_POST_MATCH_DATA", () => {
     expect(queuePostMatchNote("clash")).toBeUndefined();
     expect(queuePostMatchNote("aram")).toBeUndefined();
     expect(queuePostMatchNote("solo")).toBeUndefined();
+  });
+});
+
+describe("riotWithholdsMatchResult", () => {
+  test("a custom of any size, including live Clash, isn't waited for", () => {
+    expect(
+      riotWithholdsMatchResult({
+        queueId: 0,
+        gameMode: "CLASSIC",
+        gameType: "CUSTOM_GAME",
+      }),
+    ).toBe(true);
+    // Live Clash arrives as a custom on queue 700.
+    expect(
+      riotWithholdsMatchResult({
+        queueId: 700,
+        gameMode: "CLASSIC",
+        gameType: "CUSTOM",
+      }),
+    ).toBe(true);
+  });
+
+  test("a queue Riot never publishes isn't waited for", () => {
+    expect(
+      riotWithholdsMatchResult({
+        queueId: 2400,
+        gameMode: "KIWI",
+        gameType: "MATCHED_GAME",
+      }),
+    ).toBe(true);
+  });
+
+  test("ranked and Arena wait for Riot to go first", () => {
+    for (const queueId of [420, 1700]) {
+      expect(
+        riotWithholdsMatchResult({
+          queueId,
+          gameMode: queueId === 1700 ? "CHERRY" : "CLASSIC",
+          gameType: "MATCHED_GAME",
+        }),
+      ).toBe(false);
+    }
   });
 });
