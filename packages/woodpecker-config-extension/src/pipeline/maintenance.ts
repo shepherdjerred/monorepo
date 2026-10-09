@@ -94,7 +94,7 @@ export function maintenanceSteps(
                 : command,
             )
           : [
-              ". ci/scripts/toolchain.sh automation",
+              "MISE_TOOLCHAIN_SCOPE=automation . ci/scripts/toolchain.sh",
               "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
               "bun --no-install ci/scripts/images/refresh-ci-images.ts",
             ],

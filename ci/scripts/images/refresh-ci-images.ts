@@ -38,7 +38,7 @@ try {
         "bash",
         "-c",
         [
-          ". ci/scripts/toolchain.sh automation",
+          "MISE_TOOLCHAIN_SCOPE=automation . ci/scripts/toolchain.sh",
           "bun --no-install ci/scripts/reporting/buildkit-env.ts",
           `bun --no-install ci/scripts/images/build-ci-image.ts --image ${name} --candidate-out ${name}-candidate.json`,
           `bun --no-install ci/scripts/images/update-ci-image-pin.ts --candidate ${name}-candidate.json`,
