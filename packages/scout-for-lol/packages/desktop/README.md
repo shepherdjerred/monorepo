@@ -131,7 +131,7 @@ the collector and waits for it, so only one client ever reads the outbox, and
 relaunches the client with the same arguments. Nothing is lost, because the
 outbox is on disk. A `window_crash` diagnostic records each crash. After three
 crashes, each within ten minutes of its start, the client stops relaunching
-(`--quick-restarts` carries the count).
+(`--quick-crashes` carries the count).
 
 Errors and crashes are also reported to Bugsink once a DSN is configured in
 `scout_client_core::reporting`; until then the reporter is not installed and

@@ -102,17 +102,17 @@ fn main() -> eframe::Result {
             "the crashed window still held the collector".to_owned(),
         ));
     }
-    let quick_restarts = quick_restarts(&arguments);
-    let Some(next) = next_quick_restarts(quick_restarts, started.elapsed()) else {
+    let crashes = quick_crashes_now(quick_crashes(&arguments), started.elapsed());
+    if crashes >= MAX_QUICK_CRASHES {
         diagnostics.record(window_crash_event(
             DiagnosticOutcome::Failed,
-            format!("not restarting after {quick_restarts} quick window crashes"),
+            format!("not restarting after {crashes} quick window crashes"),
         ));
         std::process::exit(1);
-    };
+    }
     let relaunch = std::env::current_exe().and_then(|executable| {
         std::process::Command::new(executable)
-            .args(relaunch_arguments(&arguments, next))
+            .args(relaunch_arguments(&arguments, crashes))
             .spawn()
     });
     diagnostics.record(match relaunch {
@@ -128,34 +128,38 @@ fn main() -> eframe::Result {
     std::process::exit(1);
 }
 
-/// How many times in a row the window has crashed soon after starting.
-const QUICK_RESTARTS_ARGUMENT: &str = "--quick-restarts=";
+/// How many times in a row the window had crashed soon after starting, as the
+/// crashed client passes it to the one it relaunches.
+const QUICK_CRASHES_ARGUMENT: &str = "--quick-crashes=";
 /// A crash after this long is a fresh incident, not part of a crash loop.
 const STABLE_RUN: Duration = Duration::from_mins(10);
-/// Consecutive quick crashes after which the client stops relaunching.
-const MAX_QUICK_RESTARTS: u32 = 3;
+/// The quick crash on which the client stops relaunching.
+const MAX_QUICK_CRASHES: u32 = 3;
 
-fn quick_restarts(arguments: &[String]) -> u32 {
+fn quick_crashes(arguments: &[String]) -> u32 {
     arguments
         .iter()
-        .find_map(|argument| argument.strip_prefix(QUICK_RESTARTS_ARGUMENT))
+        .find_map(|argument| argument.strip_prefix(QUICK_CRASHES_ARGUMENT))
         .and_then(|count| count.parse().ok())
         .unwrap_or(0)
 }
 
-/// The quick-crash count to relaunch with, or `None` to stop relaunching.
-fn next_quick_restarts(previous: u32, ran_for: Duration) -> Option<u32> {
-    let previous = if ran_for >= STABLE_RUN { 0 } else { previous };
-    (previous < MAX_QUICK_RESTARTS).then_some(previous + 1)
+/// The quick crashes in a row, counting the one that just happened.
+fn quick_crashes_now(before: u32, ran_for: Duration) -> u32 {
+    if ran_for >= STABLE_RUN {
+        1
+    } else {
+        before.saturating_add(1)
+    }
 }
 
 /// The same arguments, with the quick-crash count replaced.
-fn relaunch_arguments(arguments: &[String], quick_restarts: u32) -> Vec<String> {
+fn relaunch_arguments(arguments: &[String], quick_crashes: u32) -> Vec<String> {
     arguments
         .iter()
-        .filter(|argument| !argument.starts_with(QUICK_RESTARTS_ARGUMENT))
+        .filter(|argument| !argument.starts_with(QUICK_CRASHES_ARGUMENT))
         .cloned()
-        .chain([format!("{QUICK_RESTARTS_ARGUMENT}{quick_restarts}")])
+        .chain([format!("{QUICK_CRASHES_ARGUMENT}{quick_crashes}")])
         .collect()
 }
 
@@ -195,43 +199,44 @@ mod tests {
     use std::time::Duration;
 
     use super::{
-        DEFAULT_BACKEND_ORIGIN, MAX_QUICK_RESTARTS, STABLE_RUN, backend_origin,
-        next_quick_restarts, quick_restarts, relaunch_arguments,
+        DEFAULT_BACKEND_ORIGIN, MAX_QUICK_CRASHES, STABLE_RUN, backend_origin, quick_crashes,
+        quick_crashes_now, relaunch_arguments,
     };
 
     #[test]
-    fn a_crash_loop_stops_relaunching() {
+    fn the_third_quick_crash_is_the_last() {
+        // A client started without a count crashes, relaunches, crashes,
+        // relaunches, and stops on its third crash.
         let soon = Duration::from_secs(30);
-        assert_eq!(next_quick_restarts(0, soon), Some(1));
-        assert_eq!(
-            next_quick_restarts(MAX_QUICK_RESTARTS - 1, soon),
-            Some(MAX_QUICK_RESTARTS)
-        );
-        assert_eq!(next_quick_restarts(MAX_QUICK_RESTARTS, soon), None);
+        let first = quick_crashes_now(0, soon);
+        let second = quick_crashes_now(first, soon);
+        let third = quick_crashes_now(second, soon);
+        assert_eq!([first, second, third], [1, 2, MAX_QUICK_CRASHES]);
+        assert!(second < MAX_QUICK_CRASHES);
     }
 
     #[test]
     fn a_crash_after_a_stable_run_starts_the_count_over() {
-        assert_eq!(next_quick_restarts(MAX_QUICK_RESTARTS, STABLE_RUN), Some(1));
+        assert_eq!(quick_crashes_now(MAX_QUICK_CRASHES - 1, STABLE_RUN), 1);
     }
 
     #[test]
     fn a_relaunch_keeps_its_arguments_and_replaces_the_count() {
         let arguments = [
             "--background".to_owned(),
-            "--quick-restarts=1".to_owned(),
+            "--quick-crashes=1".to_owned(),
             "--server=https://beta.scout-for-lol.com".to_owned(),
         ];
-        assert_eq!(quick_restarts(&arguments), 1);
+        assert_eq!(quick_crashes(&arguments), 1);
         assert_eq!(
             relaunch_arguments(&arguments, 2),
             [
                 "--background",
                 "--server=https://beta.scout-for-lol.com",
-                "--quick-restarts=2",
+                "--quick-crashes=2",
             ]
         );
-        assert_eq!(quick_restarts(&["--background".to_owned()]), 0);
+        assert_eq!(quick_crashes(&["--background".to_owned()]), 0);
     }
 
     #[test]
