@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 
 // ============================================================================
@@ -105,7 +106,7 @@ export type PlayerMatchOutcome = {
  * Simplified match data for pairing calculation
  */
 export type SimplifiedMatch = {
-  matchId: string;
+  matchId: RiotMatchId;
   durationSeconds: number;
   queueType: "solo" | "flex" | "ranked 5s" | undefined;
   trackedPlayers: PlayerMatchOutcome[];

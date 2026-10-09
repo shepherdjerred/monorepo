@@ -144,7 +144,7 @@ export async function listArchivedMatchPage(
     select: { riotMatchId: true, recordedAt: true },
   });
   return rows.map((row) => ({
-    riotMatchId: RiotMatchIdSchema.parse(row.riotMatchId),
+    riotMatchId: row.riotMatchId,
     recordedAt: row.recordedAt,
   }));
 }
@@ -171,7 +171,7 @@ export async function listObservedMatches(
     take: args.riotMatchIds.length,
     select: { riotMatchId: true },
   });
-  return rows.map((row) => RiotMatchIdSchema.parse(row.riotMatchId));
+  return rows.map((row) => row.riotMatchId);
 }
 
 /**

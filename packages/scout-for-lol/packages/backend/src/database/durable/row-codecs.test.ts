@@ -43,7 +43,7 @@ import {
  * to UTC milliseconds, so fixtures use `.000Z` instants.
  */
 
-const MATCH_ID = "NA1_5312279829";
+const MATCH_ID = RiotMatchIdSchema.parse("NA1_5312279829");
 const GUILD_ID = "100000000000000001";
 const CHANNEL_ID = "300000000000000001";
 const ACCOUNT_DISCORD_ID = "200000000000000001";
@@ -76,6 +76,7 @@ describe("MatchObservation codec", () => {
     gameCreatedAt: AT,
     observedAt: LATER,
     deliveryMode: "live",
+    matchDataSource: "RIOT",
     matchObjectKey: null,
     matchDigest: null,
     timelineObjectKey: null,
@@ -102,6 +103,10 @@ describe("MatchObservation codec", () => {
       { ...baseRow, processingPolicy: "FULL", pipelineOwner: "TEMPORAL_V2" },
     ],
     ["silent backfill", { ...baseRow, deliveryMode: "silent-backfill" }],
+    [
+      "scout-client provenance",
+      { ...baseRow, matchDataSource: "SCOUT_CLIENT" },
+    ],
   ] as const;
 
   test.each(variants)("round-trips %s", (_name, row) => {
@@ -119,6 +124,12 @@ describe("MatchObservation codec", () => {
     ).toThrow(/deliveryMode/);
   });
 
+  test("rejects a payload provenance outside the domain enum", () => {
+    expect(() =>
+      matchObservationRowToRecord({ ...baseRow, matchDataSource: "riot" }),
+    ).toThrow(/matchDataSource/);
+  });
+
   function observationRecord(artifacts: {
     match: { key: string; digest: string } | null;
     timeline: { key: string; digest: string } | null;
@@ -132,6 +143,7 @@ describe("MatchObservation codec", () => {
       gameCreatedAt: AT_ISO,
       observedAt: LATER_ISO,
       deliveryMode: "live",
+      matchDataSource: "RIOT",
       artifacts,
     });
   }
@@ -259,7 +271,7 @@ describe("MatchNotificationIntent codec", () => {
     });
   }
 
-  const intentMatchId = RiotMatchIdSchema.parse(MATCH_ID);
+  const intentMatchId = MATCH_ID;
 
   function record(value: NotificationIntent): MatchNotificationIntentRecord {
     return { matchId: intentMatchId, intent: value };
@@ -449,7 +461,7 @@ describe("MatchNotificationIntent codec", () => {
 
 describe("MatchNotificationIntent subject codec", () => {
   const original: MatchNotificationIntentRecord = {
-    matchId: RiotMatchIdSchema.parse(MATCH_ID),
+    matchId: MATCH_ID,
     intent: NotificationIntentSchema.parse({
       key: "intent-NA1_5312279829-post-match",
       kind: "postmatch",

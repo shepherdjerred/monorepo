@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import {
   ChallengeContractV1Schema,
@@ -109,7 +110,7 @@ function matchForParticipant(puuid: string): RawMatch {
   return {
     metadata: {
       dataVersion: "2",
-      matchId: "NA1_9876543210",
+      matchId: RiotMatchIdSchema.parse("NA1_9876543210"),
       participants: [puuid],
     },
     info: {

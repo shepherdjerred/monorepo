@@ -1,4 +1,8 @@
 import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
+import {
   afterAll,
   beforeAll,
   beforeEach,
@@ -87,7 +91,7 @@ async function makeMonotone(dareId: number): Promise<void> {
   await freezeDareAsMonotone(db, dareId);
 }
 
-function matchAt(matchId: string): RawMatch {
+function matchAt(matchId: RiotMatchId): RawMatch {
   return targetMatchAt(
     matchFixture,
     matchId,
@@ -343,7 +347,12 @@ describe("Dare callout contributor delivery", () => {
 });
 
 /** An achieved Dare whose public callout exists and still shows it live. */
-async function resolvedWithPublicCallout(key: string) {
+const CALLOUT_MATCH_IDS = {
+  owed: RiotMatchIdSchema.parse("NA1_810011"),
+  suppressed: RiotMatchIdSchema.parse("NA1_810012"),
+};
+
+async function resolvedWithPublicCallout(key: keyof typeof CALLOUT_MATCH_IDS) {
   const dareId = await makeDraft();
   await activate(dareId, key);
   const editMessage = vi.fn(() => Promise.resolve());
@@ -356,7 +365,7 @@ async function resolvedWithPublicCallout(key: string) {
   };
   await postDareCallout(dareId, dependencies);
   await makeMonotone(dareId);
-  const match = matchAt(`NA1_DARE_RESULT_${key.toUpperCase()}`);
+  const match = matchAt(CALLOUT_MATCH_IDS[key]);
   lake.achieved = true;
   lake.sourceMatchIds = [match.metadata.matchId];
   await expect(settleDaresForMatch(match, db)).resolves.toMatchObject([

@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { generateText, Output, stepCountIs, ToolLoopAgent } from "ai";
 import { createToolPayloadCapture } from "#src/explore/inspection/tool-payloads.ts";
 import { withExploreSpend } from "#src/explore/spending/model.ts";
@@ -304,7 +305,7 @@ export type ExploreModelMessage =
 type MatchCardReplayContext = {
   size: string;
   match: {
-    matchId: string;
+    matchId: RiotMatchId;
     teams: readonly { teamId: number; win: boolean; kills: number }[];
   };
 };

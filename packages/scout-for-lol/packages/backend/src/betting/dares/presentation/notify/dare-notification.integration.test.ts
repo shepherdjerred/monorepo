@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   DiscordChannelIdSchema,
@@ -65,7 +66,7 @@ async function enqueue(
       revision: 1,
       category: "progress",
       kind: "advanced",
-      matchId: "NA1_NOTIFICATION",
+      matchId: RiotMatchIdSchema.parse("NA1_9100000000"),
       summary,
       deduplicationKey: `test:${dareId.toString()}:advance`,
       occurredAt: NOW,
@@ -81,7 +82,7 @@ async function seedLegacy(dareId: number): Promise<void> {
       revision: 1,
       category: "progress",
       kind: "advanced",
-      matchId: "NA1_NOTIFICATION",
+      matchId: RiotMatchIdSchema.parse("NA1_9100000000"),
       payload: JSON.stringify({
         serverId: SERVER,
         summary: "One win remains.",

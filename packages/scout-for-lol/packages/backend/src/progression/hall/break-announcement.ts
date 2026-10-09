@@ -1,6 +1,5 @@
 import {
   NotificationIntentKeySchema,
-  RiotMatchIdSchema,
   type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import {
@@ -64,13 +63,13 @@ export async function announceHallRecordBreak(
   tx: Db,
   args: {
     guildId: DiscordGuildId;
-    matchId: string;
+    matchId: RiotMatchId;
     channelId: string;
     records: readonly HallBreakPayload[];
     now: Date;
   },
 ): Promise<HallBreakAnnouncementPath> {
-  const riotMatchId = RiotMatchIdSchema.parse(args.matchId);
+  const riotMatchId = args.matchId;
   if (!(await matchMayAnnounce(tx, riotMatchId))) return "silent";
 
   const key = NotificationIntentKeySchema.parse(

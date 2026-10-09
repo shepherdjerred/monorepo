@@ -1,3 +1,7 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import {
   DiscordAccountIdSchema,
@@ -72,7 +76,7 @@ function fact(options: {
   playerId: number;
   alias: string;
   puuid: string;
-  matchId: string;
+  matchId: RiotMatchId;
   win: boolean;
   championId?: number;
   championName?: string;
@@ -139,7 +143,7 @@ describe("consumerMatch.reviewTimeline", () => {
           playerId: launch.id,
           alias: launch.alias,
           puuid,
-          matchId: "design-audit-match-1",
+          matchId: RiotMatchIdSchema.parse("NA1_9200000001"),
           win: true,
         }),
       ],
@@ -151,7 +155,7 @@ describe("consumerMatch.reviewTimeline", () => {
     const caller = trpc.authedCaller();
     const result = await caller.consumerMatch.reviewTimeline({
       playerId: launch.id,
-      matchId: "design-audit-match-1",
+      matchId: RiotMatchIdSchema.parse("NA1_9200000001"),
     });
     expect(result.events).toHaveLength(60);
     expect(result.frames).toHaveLength(310);
@@ -161,14 +165,14 @@ describe("consumerMatch.reviewTimeline", () => {
     await expect(
       caller.consumerMatch.reviewTimeline({
         playerId: launch.id,
-        matchId: "design-audit-match-2",
+        matchId: RiotMatchIdSchema.parse("NA1_9200000002"),
       }),
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
     trpc.setMembership([]);
     await expect(
       caller.consumerMatch.reviewTimeline({
         playerId: launch.id,
-        matchId: "design-audit-match-1",
+        matchId: RiotMatchIdSchema.parse("NA1_9200000001"),
       }),
     ).rejects.toBeDefined();
   });
@@ -201,7 +205,7 @@ describe("consumerChampion.compare", () => {
           playerId: one.id,
           alias: one.alias,
           puuid: onePuuid,
-          matchId: `NA1_champion_one_${index.toString()}`,
+          matchId: RiotMatchIdSchema.parse(`NA1_81001${index.toString()}`),
           win: index < 7,
           index,
         }),
@@ -211,7 +215,7 @@ describe("consumerChampion.compare", () => {
           playerId: two.id,
           alias: two.alias,
           puuid: twoPuuid,
-          matchId: `NA1_champion_two_${index.toString()}`,
+          matchId: RiotMatchIdSchema.parse(`NA1_81003${index.toString()}`),
           win: index < 6,
           index,
         }),
@@ -221,7 +225,7 @@ describe("consumerChampion.compare", () => {
           playerId: small.id,
           alias: small.alias,
           puuid: smallPuuid,
-          matchId: `NA1_champion_small_${index.toString()}`,
+          matchId: RiotMatchIdSchema.parse(`NA1_81002${index.toString()}`),
           win: true,
           index,
         }),
@@ -280,7 +284,9 @@ describe("consumerChampion.compare", () => {
             playerId: entry.id,
             alias: entry.alias,
             puuid,
-            matchId: `NA1_page_${index.toString()}_${gameIndex.toString()}`,
+            matchId: RiotMatchIdSchema.parse(
+              `NA1_81009${index.toString().padStart(3, "0")}${gameIndex.toString().padStart(3, "0")}`,
+            ),
             win: gameIndex < 5,
             index: gameIndex,
           }),
@@ -334,14 +340,14 @@ describe("consumerMatch", () => {
           playerId: launch.id,
           alias: launch.alias,
           puuid: launchPuuid,
-          matchId: "NA1_detail",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000010"),
           win: true,
         }),
         fact({
           playerId: teammate.id,
           alias: teammate.alias,
           puuid: teammatePuuid,
-          matchId: "NA1_detail",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000010"),
           win: false,
           championId: 86,
           championName: "Garen",
@@ -352,7 +358,7 @@ describe("consumerMatch", () => {
 
     const detail = await trpc.authedCaller().consumerMatch.detail({
       playerId: launch.id,
-      matchId: "NA1_detail",
+      matchId: RiotMatchIdSchema.parse("NA1_9100000010"),
     });
     expect(detail.match.teams).toHaveLength(2);
     expect(detail.match.teams.flatMap((team) => team.participants)).toEqual(
@@ -396,7 +402,7 @@ describe("consumerMatch", () => {
           playerId: other.id,
           alias: other.alias,
           puuid: testPuuid("match-denied-other"),
-          matchId: "NA1_not_yours",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000020"),
           win: true,
         }),
       ],
@@ -404,7 +410,7 @@ describe("consumerMatch", () => {
     await expect(
       trpc.authedCaller().consumerMatch.detail({
         playerId: launch.id,
-        matchId: "NA1_not_yours",
+        matchId: RiotMatchIdSchema.parse("NA1_9100000020"),
       }),
     ).rejects.toThrow("Match was not found");
   });
@@ -419,7 +425,7 @@ describe("consumerMatch", () => {
           playerId: launch.id,
           alias: launch.alias,
           puuid,
-          matchId: "NA1_arena_no_subteam",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000000"),
           win: false,
           queue: "arena",
           queueId: 1700,
@@ -430,7 +436,7 @@ describe("consumerMatch", () => {
     await expect(
       trpc.authedCaller().consumerMatch.detail({
         playerId: launch.id,
-        matchId: "NA1_arena_no_subteam",
+        matchId: RiotMatchIdSchema.parse("NA1_9100000000"),
       }),
     ).rejects.toThrow("missing a participant subteam ID");
   });
@@ -465,7 +471,7 @@ function matchupParticipant(options: {
   position: string;
 }): LakeMatchParticipantRow {
   return {
-    match_id: "NA1_role_pairing",
+    match_id: RiotMatchIdSchema.parse("NA1_9100000030"),
     game_creation_ms: created.getTime(),
     game_duration_seconds: 1800,
     queue: "solo",

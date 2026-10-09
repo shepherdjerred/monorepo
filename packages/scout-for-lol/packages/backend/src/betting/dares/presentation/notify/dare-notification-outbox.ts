@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { Db } from "#src/database/index.ts";
 import {
   mintDareResultIntent,
@@ -38,7 +39,7 @@ export async function enqueueDareResultPostInTransaction(
     dareId: number;
     revision: number;
     result: DareResultAnnouncement;
-    matchId?: string | undefined;
+    matchId?: RiotMatchId | undefined;
     occurredAt: Date;
   },
 ): Promise<void> {

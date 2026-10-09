@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { createHash } from "node:crypto";
 import {
   RawDocumentLakeRowSchema,
@@ -8,7 +9,7 @@ import type { StagingSource } from "#src/report-lake/staging/generations.ts";
 
 export function rawDocumentRow(input: {
   kind: RawDocumentLakeRow["kind"];
-  matchId: string;
+  matchId: RiotMatchId;
   document: unknown;
   capturedAt: Date;
   source?: StagingSource;

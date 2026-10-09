@@ -1,4 +1,8 @@
 import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
+import {
   DareSqlCompilationSchema,
   DareSqlEvidenceSchema,
   type DareSqlCompilation,
@@ -6,6 +10,10 @@ import {
 } from "@scout-for-lol/data";
 import { describe, expect, test } from "vitest";
 import { deriveDareProgress } from "#src/betting/dares/presentation/dare-progress.ts";
+
+const MATCH_NA1_9100000000 = RiotMatchIdSchema.parse("NA1_9100000000");
+const MATCH_NA1_9100000010 = RiotMatchIdSchema.parse("NA1_9100000010");
+const MATCH_NA1_9100000040 = RiotMatchIdSchema.parse("NA1_9100000040");
 
 const QUERY_HASH = "a".repeat(64);
 
@@ -44,7 +52,7 @@ function compilation(
 }
 
 function result(
-  matchId: string,
+  matchId: RiotMatchId,
   gameEndAt: string,
   matched: boolean,
   gameSet: string,
@@ -60,7 +68,7 @@ function result(
 }
 
 function evidence(input: {
-  matchId: string;
+  matchId: RiotMatchId;
   gameEndAt: string;
   results: DareSqlEvidence["results"];
   achieved?: boolean;
@@ -98,7 +106,7 @@ const GOLD_II = {
 
 function rankProgress(
   goal: Extract<DareSqlCompilation["activation"], { kind: "rank" }>["goal"],
-  matchId: string,
+  matchId: RiotMatchId,
 ) {
   return deriveDareProgress({
     compilation: compilation("solo_games", {
@@ -151,14 +159,18 @@ describe("Dare progress", () => {
   test("does not report an eligible miss as material SQL progress", () => {
     const firstAt = "2026-09-01T00:00:00.000Z";
     const secondAt = "2026-09-02T00:00:00.000Z";
-    const first = result("first", firstAt, true, "wins");
-    const miss = result("miss", secondAt, false, "wins");
+    const first = result(MATCH_NA1_9100000000, firstAt, true, "wins");
+    const miss = result(MATCH_NA1_9100000010, secondAt, false, "wins");
     const progress = deriveDareProgress({
       compilation: compilation("wins"),
       evidence: [
-        evidence({ matchId: "first", gameEndAt: firstAt, results: [first] }),
         evidence({
-          matchId: "miss",
+          matchId: MATCH_NA1_9100000000,
+          gameEndAt: firstAt,
+          results: [first],
+        }),
+        evidence({
+          matchId: MATCH_NA1_9100000010,
           gameEndAt: secondAt,
           results: [first, miss],
         }),
@@ -174,14 +186,23 @@ describe("Dare progress", () => {
   test("shows an eligible streak miss as a regression", () => {
     const firstAt = "2026-09-01T00:00:00.000Z";
     const secondAt = "2026-09-02T00:00:00.000Z";
-    const first = result("first", firstAt, true, "winning_streak");
-    const miss = result("miss", secondAt, false, "winning_streak");
+    const first = result(MATCH_NA1_9100000000, firstAt, true, "winning_streak");
+    const miss = result(
+      MATCH_NA1_9100000010,
+      secondAt,
+      false,
+      "winning_streak",
+    );
     const progress = deriveDareProgress({
       compilation: compilation("winning_streak"),
       evidence: [
-        evidence({ matchId: "first", gameEndAt: firstAt, results: [first] }),
         evidence({
-          matchId: "miss",
+          matchId: MATCH_NA1_9100000000,
+          gameEndAt: firstAt,
+          results: [first],
+        }),
+        evidence({
+          matchId: MATCH_NA1_9100000010,
           gameEndAt: secondAt,
           results: [first, miss],
         }),
@@ -196,7 +217,7 @@ describe("Dare progress", () => {
     });
     expect(progress.latestMaterialChange).toMatchObject({
       kind: "regression",
-      matchId: "miss",
+      matchId: MATCH_NA1_9100000010,
     });
   });
 
@@ -220,21 +241,21 @@ describe("Dare progress", () => {
       bestAttempt: 12,
       targetValue: 10,
       sampleCount: 1,
-      sourceMatchIds: ["first"],
+      sourceMatchIds: [MATCH_NA1_9100000000],
       goalMet: true,
     };
     const progress = deriveDareProgress({
       compilation: compilation("attempts", activation),
       evidence: [
         evidence({
-          matchId: "first",
+          matchId: MATCH_NA1_9100000000,
           gameEndAt: firstAt,
           results: [],
           achieved: true,
           improvement: firstImprovement,
         }),
         evidence({
-          matchId: "second",
+          matchId: MATCH_NA1_9100000040,
           gameEndAt: secondAt,
           results: [],
           achieved: true,
@@ -242,7 +263,7 @@ describe("Dare progress", () => {
             ...firstImprovement,
             currentValue: 11,
             sampleCount: 2,
-            sourceMatchIds: ["first", "second"],
+            sourceMatchIds: [MATCH_NA1_9100000000, MATCH_NA1_9100000040],
           },
         }),
       ],
@@ -257,7 +278,7 @@ describe("Dare progress", () => {
     expect(
       rankProgress(
         { kind: "reach", tier: "diamond", division: 4 },
-        "rank-check",
+        RiotMatchIdSchema.parse("NA1_9100000020"),
       ).conditions,
     ).toEqual(
       expect.arrayContaining([
@@ -274,7 +295,7 @@ describe("Dare progress", () => {
     expect(
       rankProgress(
         { kind: "reach", tier: "gold", division: 3, lp: 50 },
-        "rank-lp",
+        RiotMatchIdSchema.parse("NA1_9100000030"),
       ).conditions,
     ).toEqual(
       expect.arrayContaining([

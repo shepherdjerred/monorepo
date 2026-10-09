@@ -1,4 +1,8 @@
 import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
+import {
   type PlayerProfileGameWindow,
   type QueueType,
 } from "@scout-for-lol/data";
@@ -47,7 +51,7 @@ export function bindParams(
 }
 
 const HistoryGameRowSchema = z.object({
-  match_id: z.string(),
+  match_id: RiotMatchIdSchema,
   game_creation_ms: z.union([z.bigint(), z.number()]).transform(Number),
   champion_name: z.string(),
   team_position: z.string(),
@@ -159,7 +163,7 @@ export async function fetchRecentQueueGamesForPuuids(options: {
 }
 
 const TeamRowSchema = z.object({
-  match_id: z.string(),
+  match_id: RiotMatchIdSchema,
   team_id: z.union([z.bigint(), z.number()]).transform(Number),
   win: z.boolean(),
   puuid: z.string(),
@@ -173,7 +177,7 @@ export type LakeTeamRow = z.infer<typeof TeamRowSchema>;
  * reviewed player). Team filtering happens in the caller.
  */
 export async function fetchTeamRowsForMatches(options: {
-  matchIds: string[];
+  matchIds: RiotMatchId[];
   puuids: string[];
   excludePuuid: string;
   lakeDir?: string;
@@ -272,7 +276,7 @@ function playerPredicate(options: {
  */
 const PlayerMatchHistoryRowSchema = z
   .object({
-    match_id: z.string(),
+    match_id: RiotMatchIdSchema,
     puuid: z.string(),
     game_creation_ms: LakeIntSchema,
     game_duration_seconds: LakeIntSchema,
@@ -314,7 +318,7 @@ const DEDUPE_TO_ONE_ROW_PER_MATCH =
 
 export type MatchHistoryCursor = {
   gameCreationMs: number;
-  matchId: string;
+  matchId: RiotMatchId;
   consumed?: number | undefined;
 };
 
@@ -465,7 +469,7 @@ export async function fetchPlayerChampionPool(options: {
 }
 
 const TeamTotalsRowSchema = z.object({
-  match_id: z.string(),
+  match_id: RiotMatchIdSchema,
   team_id: LakeIntSchema,
   team_kills: LakeIntSchema,
   team_damage_to_champions: LakeIntSchema,
@@ -478,7 +482,7 @@ export type LakeTeamTotalsRow = z.infer<typeof TeamTotalsRowSchema>;
  * otherwise every one-player team has a false participation of 100%.
  */
 export async function fetchTeamTotalsForMatches(options: {
-  matchIds: string[];
+  matchIds: RiotMatchId[];
   lakeDir?: string;
 }): Promise<LakeTeamTotalsRow[]> {
   if (options.matchIds.length === 0) {

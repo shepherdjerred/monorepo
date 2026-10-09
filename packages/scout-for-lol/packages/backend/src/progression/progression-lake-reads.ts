@@ -1,3 +1,7 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import {
   QueueTypeSchema,
@@ -21,7 +25,7 @@ import {
 const LakeIntSchema = z.union([z.bigint(), z.number()]).transform(Number);
 
 const ProgressionMatchRowSchema = z.strictObject({
-  match_id: z.string(),
+  match_id: RiotMatchIdSchema,
   game_end_at: z.string(),
   game_end_ms: LakeIntSchema,
   game_duration_seconds: LakeIntSchema,
@@ -60,7 +64,7 @@ export type ProgressionMatchRow = z.infer<typeof ProgressionMatchRowSchema> &
 
 export type ProgressionMatchCursor = {
   readonly gameEndMs: number;
-  readonly matchId: string;
+  readonly matchId: RiotMatchId;
   readonly puuid: string;
 };
 
@@ -119,7 +123,7 @@ function cursorPredicate(cursor: ProgressionMatchCursor | undefined): {
 }
 
 const TimelineEventCountRowSchema = z.strictObject({
-  match_id: z.string(),
+  match_id: RiotMatchIdSchema,
   puuid: z.string(),
   event_type: z.string(),
   role: TimelineEventParticipantRoleSchema,
@@ -128,7 +132,7 @@ const TimelineEventCountRowSchema = z.strictObject({
 
 export async function fetchTimelineEventCounts(options: {
   readonly matchPuuids: readonly {
-    readonly matchId: string;
+    readonly matchId: RiotMatchId;
     readonly puuid: string;
   }[];
   readonly lakeDir?: string;
@@ -199,7 +203,7 @@ export async function fetchProgressionMatches(options: {
   readonly puuids: string[];
   readonly startAt: Date;
   readonly endAt?: Date;
-  readonly matchId?: string;
+  readonly matchId?: RiotMatchId;
   readonly cursor?: ProgressionMatchCursor;
   readonly limit?: number;
   readonly lakeDir?: string;

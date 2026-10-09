@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { StorableDareChallengerStakeSchema } from "#src/model/bucks/bryan-bucks-money.ts";
 import { DivisionSchema } from "#src/model/riot/division.ts";
@@ -167,7 +168,7 @@ const DareActivationTargetSnapshotSchema = z.discriminatedUnion("kind", [
       start: z.iso.datetime(),
       end: z.iso.datetime(),
     }),
-    sourceMatchIds: z.array(z.string().min(1)).min(1),
+    sourceMatchIds: z.array(RiotMatchIdSchema).min(1),
   }),
 ]);
 
@@ -243,7 +244,7 @@ export const DareSqlEvidenceSchema = z.strictObject({
   results: z.array(
     z.strictObject({
       gameSet: z.string().min(1),
-      matchId: z.string().min(1),
+      matchId: RiotMatchIdSchema,
       gameEndAt: z.iso.datetime(),
       matched: z.boolean().nullable(),
       projections: z.record(z.string(), z.number().nullable()),
@@ -252,13 +253,13 @@ export const DareSqlEvidenceSchema = z.strictObject({
   ),
   targetDependencies: z.array(z.string().regex(/^T[1-5]$/u)),
   coverage: z.enum(["complete", "missing_timeline", "not_required"]),
-  sourceMatchIds: z.array(z.string()),
+  sourceMatchIds: z.array(RiotMatchIdSchema),
   queryHash: z.string().regex(/^[a-f\d]{64}$/u),
   timelineEvents: z
     .array(
       z.strictObject({
         eventId: z.string().min(1),
-        matchId: z.string().min(1),
+        matchId: RiotMatchIdSchema,
         targetKey: z.string().regex(/^T[1-5]$/u),
         timestampMs: z.number().int().nonnegative(),
         frameIndex: z.number().int().nonnegative(),
@@ -299,7 +300,7 @@ export const DareSqlEvidenceSchema = z.strictObject({
       bestAttempt: z.number().nullable(),
       targetValue: z.number(),
       sampleCount: z.number().int().nonnegative(),
-      sourceMatchIds: z.array(z.string()),
+      sourceMatchIds: z.array(RiotMatchIdSchema),
       goalMet: z.boolean(),
     })
     .nullable()

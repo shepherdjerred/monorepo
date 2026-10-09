@@ -1,6 +1,5 @@
 import { z } from "zod";
-import type { Db } from "#src/database/index.ts";
-import { prisma } from "#src/database/index.ts";
+import { type Db, prisma } from "#src/database/index.ts";
 import {
   listReceipts,
   recordReceipt,
@@ -243,13 +242,9 @@ export function rawArchiveDescriptorOf(
 export function prematchReceiptMatchId(
   gameInfo: RawCurrentGameInfo,
 ): RiotMatchId {
-  return receiptMatchId(
+  return RiotMatchIdSchema.parse(
     prematchObjectResourceId(gameInfo.platformId, gameInfo.gameId),
   );
-}
-
-export function receiptMatchId(matchId: string): RiotMatchId {
-  return RiotMatchIdSchema.parse(matchId);
 }
 
 /**

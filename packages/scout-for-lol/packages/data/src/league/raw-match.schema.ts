@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { preserveRawJson } from "./preserve-raw-json.ts";
 import { RawParticipantSchema } from "./raw-participant.schema.ts";
@@ -20,7 +21,7 @@ import { RawTeamSchema } from "./raw-team.schema.ts";
 export const RawMetadataSchema = z
   .object({
     dataVersion: z.string(),
-    matchId: z.string(),
+    matchId: RiotMatchIdSchema,
     participants: z.array(z.string()),
   })
   .strict();

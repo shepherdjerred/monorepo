@@ -55,7 +55,7 @@ const settlement = vi.hoisted(
 vi.mock("#src/database/index.ts", async () => await testDatabaseModule(prisma));
 
 vi.mock("#src/temporal/match/match-context.ts", () => ({
-  resolveScoutObservedMatchContext: (riotMatchId: string) =>
+  resolveScoutObservedMatchContext: (riotMatchId: RiotMatchId) =>
     Promise.resolve({
       matchId: riotMatchId,
       riotMatchId,
@@ -149,6 +149,7 @@ beforeEach(async () => {
     policy: "FULL",
     // Owed no public delivery, which is the whole point of this case.
     deliveryMode: "silent-backfill",
+    matchDataSource: "RIOT",
     owner: { kind: "temporal-v2" },
     promotion: null,
     gameCreatedAt: IsoInstantSchema.parse("2026-09-18T09:00:00.000Z"),
@@ -169,6 +170,7 @@ beforeEach(async () => {
       platformRoute: "NA1",
       policy: "FULL",
       deliveryMode: "live",
+      matchDataSource: "RIOT",
       owner: { kind: "temporal-v2" },
       promotion: null,
       gameCreatedAt: IsoInstantSchema.parse("2026-09-18T09:00:00.000Z"),
@@ -191,7 +193,7 @@ async function standingSettlementReceipt(
 function settlementPayload(
   serverId: string,
   betId: number,
-  matchId: string = PARTLY_SETTLED,
+  matchId: RiotMatchId = PARTLY_SETTLED,
 ): unknown {
   return {
     matchId,

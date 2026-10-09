@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   BUCKS_INT32_MAX,
   BucksLedgerContextSchema,
@@ -55,7 +56,7 @@ export type ApplyBucksDeltaInput = {
   delta: BucksDelta;
   kind: BucksLedgerKind;
   context: BucksLedgerContext;
-  matchId?: string | undefined;
+  matchId?: RiotMatchId | undefined;
   betId?: number | undefined;
   parlayBetId?: number | undefined;
   predictedTeamId?: number | undefined;

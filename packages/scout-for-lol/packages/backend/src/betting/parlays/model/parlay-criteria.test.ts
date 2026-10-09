@@ -1,3 +1,7 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import { LeaguePuuidSchema, RawMatchSchema } from "@scout-for-lol/data";
 import { z } from "zod";
@@ -24,7 +28,7 @@ const fixture = RawMatchSchema.parse(
   ).json(),
 );
 
-function shortlistForOne(matchId: string) {
+function shortlistForOne(matchId: RiotMatchId) {
   return buildParlayShortlist({
     matchId,
     subjects: [{ key: "P1", lane: "adc", tags: ["Assassin"] }],
@@ -433,7 +437,7 @@ describe("opponent ping conditions", () => {
     ]);
     const result = parlayProposalSchemaFor(
       subjects,
-      shortlistForOne("NA1_subject-pings"),
+      shortlistForOne(RiotMatchIdSchema.parse("NA1_9100000010")),
     ).safeParse({
       version: 1,
       conditions: [
@@ -562,7 +566,7 @@ describe("proposal grounding", () => {
   const subjects = ParlaySubjectsSchema.parse([
     { key: "P1", puuid: fixture.info.participants[0]?.puuid, alias: "one" },
   ]);
-  const shortlist = shortlistForOne("NA1_proposal-grounding");
+  const shortlist = shortlistForOne(RiotMatchIdSchema.parse("NA1_9100000000"));
   const ProposalSchema = parlayProposalSchemaFor(subjects, shortlist);
   const base = {
     subject: null,

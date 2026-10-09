@@ -1,5 +1,5 @@
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
-import { MatchIdSchema } from "@scout-for-lol/data";
+
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import {
   IsoInstantSchema,
@@ -7,13 +7,16 @@ import {
   RiotMatchIdSchema,
   S3ObjectKeySchema,
   type NotificationIntentKey,
+  type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   NotificationIntentSchema,
   type NotificationIntentKind,
 } from "@scout-for-lol/domain/notifications/intent.ts";
-import type { StoredObject } from "#src/storage/object-integrity.ts";
-import { computeSha256Digest } from "#src/storage/object-integrity.ts";
+import {
+  type StoredObject,
+  computeSha256Digest,
+} from "#src/storage/object-integrity.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { testChannelId } from "#src/testing/test-ids.ts";
 import {
@@ -70,7 +73,7 @@ const world = vi.hoisted(() => ({
 }));
 
 vi.mock("#src/temporal/match/match-context.ts", () => ({
-  resolveScoutObservedMatchContext: (riotMatchId: string) =>
+  resolveScoutObservedMatchContext: (riotMatchId: RiotMatchId) =>
     Promise.resolve({
       matchId: riotMatchId,
       riotMatchId,
@@ -82,7 +85,9 @@ vi.mock("#src/temporal/match/match-context.ts", () => ({
     }),
 }));
 vi.mock("#src/league/tasks/postmatch/match-report-generator.ts", () => ({
-  generateMatchReport: async (matchData: { metadata: { matchId: string } }) => {
+  generateMatchReport: async (matchData: {
+    metadata: { matchId: RiotMatchId };
+  }) => {
     // Built with v1's own furniture, so the render's disassembly is exercised
     // against the message shape it must survive rather than one written here.
     const { attachReportImage } =
@@ -92,7 +97,7 @@ vi.mock("#src/league/tasks/postmatch/match-report-generator.ts", () => ({
     await new Promise((done) => setTimeout(done, world.renderDelayMs));
     const [attachment, embed] = attachReportImage(
       image,
-      MatchIdSchema.parse(matchData.metadata.matchId),
+      matchData.metadata.matchId,
     );
     return {
       content: "someone finished a game",
@@ -110,7 +115,7 @@ vi.mock("#src/temporal/notification/prematch-notification.ts", () => ({
 }));
 vi.mock("#src/storage/s3-helpers.ts", () => ({
   saveToS3: (config: {
-    matchId: string;
+    matchId: RiotMatchId;
     assetType: string;
     body: Uint8Array;
   }) => {
@@ -146,7 +151,7 @@ const STAGE = "dev" as const;
 let matchSequence = 9400;
 
 async function seedIntent(
-  matchId: string,
+  matchId: RiotMatchId,
   kind: NotificationIntentKind,
   channel: string,
 ): Promise<NotificationIntentKey> {
@@ -155,7 +160,7 @@ async function seedIntent(
   );
   expect(
     await upsertIntent(prisma, {
-      matchId: RiotMatchIdSchema.parse(matchId),
+      matchId: matchId,
       intent: NotificationIntentSchema.parse({
         key,
         kind,
@@ -203,8 +208,16 @@ async function expectStatusWithoutMatchRender(
 describe("render receipts are keyed by kind", () => {
   test("mixed guilds receive separately attested Clash and ordinary screens with frozen decisions", async () => {
     const matchId = nextMatch();
-    const first = await seedIntent(matchId, "prematch", "9451");
-    const second = await seedIntent(matchId, "prematch", "9452");
+    const first = await seedIntent(
+      RiotMatchIdSchema.parse(matchId),
+      "prematch",
+      "9451",
+    );
+    const second = await seedIntent(
+      RiotMatchIdSchema.parse(matchId),
+      "prematch",
+      "9452",
+    );
     const firstGuild = DiscordGuildIdSchema.parse("100000000000009451");
     const secondGuild = DiscordGuildIdSchema.parse("100000000000009452");
     world.guilds.set(testChannelId("9451"), firstGuild);
@@ -292,8 +305,16 @@ describe("render receipts are keyed by kind", () => {
   });
   test("a standing prematch receipt does not satisfy a postmatch render", async () => {
     const matchId = nextMatch();
-    const prematch = await seedIntent(matchId, "prematch", "9401");
-    const postmatch = await seedIntent(matchId, "postmatch", "9402");
+    const prematch = await seedIntent(
+      RiotMatchIdSchema.parse(matchId),
+      "prematch",
+      "9401",
+    );
+    const postmatch = await seedIntent(
+      RiotMatchIdSchema.parse(matchId),
+      "postmatch",
+      "9402",
+    );
 
     expect(
       await renderNotificationArtifact({ stage: STAGE, intentKey: prematch }),
@@ -324,8 +345,16 @@ describe("render receipts are keyed by kind", () => {
 
   test("a standing postmatch receipt does not satisfy a prematch render", async () => {
     const matchId = nextMatch();
-    const postmatch = await seedIntent(matchId, "postmatch", "9403");
-    const prematch = await seedIntent(matchId, "prematch", "9404");
+    const postmatch = await seedIntent(
+      RiotMatchIdSchema.parse(matchId),
+      "postmatch",
+      "9403",
+    );
+    const prematch = await seedIntent(
+      RiotMatchIdSchema.parse(matchId),
+      "prematch",
+      "9404",
+    );
 
     await renderNotificationArtifact({ stage: STAGE, intentKey: postmatch });
     expect(
@@ -336,8 +365,16 @@ describe("render receipts are keyed by kind", () => {
 
   test("a second child of the same kind reuses the standing artifact", async () => {
     const matchId = nextMatch();
-    const first = await seedIntent(matchId, "postmatch", "9405");
-    const second = await seedIntent(matchId, "postmatch", "9406");
+    const first = await seedIntent(
+      RiotMatchIdSchema.parse(matchId),
+      "postmatch",
+      "9405",
+    );
+    const second = await seedIntent(
+      RiotMatchIdSchema.parse(matchId),
+      "postmatch",
+      "9406",
+    );
 
     await renderNotificationArtifact({ stage: STAGE, intentKey: first });
     expect(
@@ -355,8 +392,16 @@ describe("concurrent renders for one match and kind", () => {
     // render, both PUT the same key, and the receipt describes the loser's
     // overwritten bytes.
     const matchId = nextMatch();
-    const a = await seedIntent(matchId, "postmatch", "9407");
-    const b = await seedIntent(matchId, "postmatch", "9408");
+    const a = await seedIntent(
+      RiotMatchIdSchema.parse(matchId),
+      "postmatch",
+      "9407",
+    );
+    const b = await seedIntent(
+      RiotMatchIdSchema.parse(matchId),
+      "postmatch",
+      "9408",
+    );
     world.renderDelayMs = 300;
 
     const [first, second] = await Promise.all([

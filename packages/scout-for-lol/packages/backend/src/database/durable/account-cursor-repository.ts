@@ -1,4 +1,4 @@
-import type { MatchId } from "@scout-for-lol/data";
+import type { RiotMatchId } from "@scout-for-lol/data";
 import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import type { Db } from "#src/database/index.ts";
 
@@ -36,7 +36,7 @@ export type AdvanceAccountCursorResult =
 
 export async function advanceAccountCursor(
   db: Db,
-  args: { puuid: LeaguePuuid; matchId: MatchId; matchTime: Date },
+  args: { puuid: LeaguePuuid; matchId: RiotMatchId; matchTime: Date },
 ): Promise<AdvanceAccountCursorResult> {
   // `updateMany` by puuid alone, exactly as the v1 write does: one PUUID can
   // be registered in several guilds and each has its own row, and all of them

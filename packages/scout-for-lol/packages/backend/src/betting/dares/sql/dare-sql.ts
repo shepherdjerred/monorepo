@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { dareSqlDomainIssues } from "#src/betting/dares/sql/dare-sql-domains.ts";
 import {
@@ -31,7 +32,7 @@ import { relevantDareTimelineEvents } from "#src/betting/dares/sql/dare-sql-evid
 import { dareSqlCteTargetDependencies } from "#src/betting/dares/sql/dare-sql-lineage.ts";
 
 const RootRowSchema = z.strictObject({ achieved: z.boolean().nullable() });
-const MatchIdRowSchema = z.strictObject({ match_id: z.string() });
+const MatchIdRowSchema = z.strictObject({ match_id: RiotMatchIdSchema });
 const CoverageRowSchema = z.strictObject({
   missing: z.bigint().or(z.number()),
 });
@@ -39,7 +40,7 @@ const SqlRowSchema = z.strictObject({ sql: z.string() });
 const AstTextRowSchema = z.strictObject({ ast: z.string() });
 const GameSetRowSchema = z
   .object({
-    match_id: z.string(),
+    match_id: RiotMatchIdSchema,
     game_end_at: z.coerce.date(),
     matched: z.boolean().nullable(),
   })

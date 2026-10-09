@@ -1,3 +1,7 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -60,7 +64,7 @@ export type TestLakeMatchFact = {
   /** Account-specific alias; defaults to the owning player's Scout alias. */
   accountAlias?: string;
   discordId?: string | null;
-  matchId: string;
+  matchId: RiotMatchId;
   puuid: string;
   queue: string | null;
   queueId?: number;
@@ -243,7 +247,7 @@ function matchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
 }
 
 function teamRowFromFacts(
-  matchId: string,
+  matchId: RiotMatchId,
   teamId: number,
   facts: readonly TestLakeMatchFact[],
 ): MatchTeamLakeRow {
@@ -394,7 +398,7 @@ async function writeTestMatches(
   }
   for (const [matchId, rows] of byMatch) {
     await Bun.write(
-      matchStagingFilePath(lakeDir, matchId),
+      matchStagingFilePath(lakeDir, RiotMatchIdSchema.parse(matchId)),
       rows.map((row) => JSON.stringify(row)).join("\n") + "\n",
     );
   }
@@ -419,9 +423,11 @@ async function writeTestMatchTeams(
   for (const [matchId, teams] of byMatch) {
     const rows = [...teams.entries()]
       .toSorted(([left], [right]) => left - right)
-      .map(([teamId, facts]) => teamRowFromFacts(matchId, teamId, facts));
+      .map(([teamId, facts]) =>
+        teamRowFromFacts(RiotMatchIdSchema.parse(matchId), teamId, facts),
+      );
     await Bun.write(
-      matchTeamStagingFilePath(lakeDir, matchId),
+      matchTeamStagingFilePath(lakeDir, RiotMatchIdSchema.parse(matchId)),
       rows.map((row) => JSON.stringify(row)).join("\n") + "\n",
     );
   }
@@ -462,7 +468,7 @@ async function writeTestTimelineRows(
   }
   for (const [matchId, matchRows] of rowsByMatch) {
     await Bun.write(
-      timelineStagingFilePath(lakeDir, table, matchId),
+      timelineStagingFilePath(lakeDir, table, RiotMatchIdSchema.parse(matchId)),
       matchRows.map((row) => JSON.stringify(row)).join("\n") + "\n",
     );
   }
@@ -480,7 +486,7 @@ async function writeTestMatchTeamBans(
   }
   for (const [matchId, rows] of byMatch) {
     await Bun.write(
-      matchTeamBanStagingFilePath(lakeDir, matchId),
+      matchTeamBanStagingFilePath(lakeDir, RiotMatchIdSchema.parse(matchId)),
       rows.map((row) => JSON.stringify(row)).join("\n") + "\n",
     );
   }

@@ -1,4 +1,9 @@
-import { formatInteger } from "@scout-for-lol/data";
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  formatInteger,
+  type BucksPoolParticipant,
+  type RiotTeamId,
+} from "@scout-for-lol/data";
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -6,7 +11,6 @@ import {
   type APIActionRowComponent,
   type APIComponentInMessageActionRow,
 } from "discord.js";
-import type { BucksPoolParticipant, RiotTeamId } from "@scout-for-lol/data";
 import { BLUE_TEAM_ID, BUTTON_STAKES } from "#src/betting/constants.ts";
 import { formatBucksCustomId } from "#src/betting/custom-id.ts";
 import {
@@ -75,7 +79,7 @@ function buttonStyleFor(
 }
 
 function buildRow(input: {
-  matchId: string;
+  matchId: RiotMatchId;
   anchor: BettableSubject;
   /** Rendered greyed out once the window has closed. */
   disabled: boolean;
@@ -130,7 +134,7 @@ function buildRow(input: {
  * it into a message payload unconditionally.
  */
 export function buildBettingRows(input: {
-  matchId: string;
+  matchId: RiotMatchId;
   roster: readonly BucksPoolParticipant[];
   disabled?: boolean;
 }): ActionRowBuilder<ButtonBuilder>[] {

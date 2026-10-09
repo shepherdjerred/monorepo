@@ -1,5 +1,5 @@
 import type {
-  MatchId,
+  RiotMatchId,
   PlayerConfigEntry,
   Region,
 } from "@scout-for-lol/data/index.ts";
@@ -7,7 +7,7 @@ import type { PlayerWithMatchIds } from "#src/league/tasks/postmatch/match-histo
 
 /** One completed match discovery found, and the account that surfaced it. */
 export type DiscoveredMatchIntent = {
-  matchId: string;
+  matchId: RiotMatchId;
   sourcePuuid: string;
   region: Region;
   delivery: "live" | "silent-backfill";
@@ -84,7 +84,7 @@ export async function orderMatchIntentsByCompletion(
 export function deduplicateMatchIntents(
   playersWithMatches: PlayerWithMatchIds[],
 ): DiscoveredMatchIntent[] {
-  const intents = new Map<MatchId, DiscoveredMatchIntent>();
+  const intents = new Map<RiotMatchId, DiscoveredMatchIntent>();
   for (const { player, backfillMatchIds } of playersWithMatches) {
     for (const matchId of backfillMatchIds) {
       intents.set(matchId, {

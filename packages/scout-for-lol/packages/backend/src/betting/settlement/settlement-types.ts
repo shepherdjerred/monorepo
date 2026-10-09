@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type {
   BucksAmount,
   BucksPoolTotal,
@@ -35,7 +36,7 @@ export type SettlementBet = {
 };
 
 export type SettlementSummary = {
-  matchId: string;
+  matchId: RiotMatchId;
   serverId: string;
   winningTeamId: number | undefined;
   voidReason: BucksVoidReason | undefined;

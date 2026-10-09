@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { Prisma } from "#generated/prisma/client/index.js";
 import {
   announceOrWithholdDare,
@@ -39,7 +40,7 @@ export async function voidDareWithFullRefund(
      */
     notify?: DareNotificationDisposition;
     /** The match whose settlement voided it, if a match's did. */
-    matchId?: string | undefined;
+    matchId?: RiotMatchId | undefined;
   } = {},
 ): Promise<boolean> {
   const now = options.now ?? new Date();

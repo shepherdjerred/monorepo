@@ -1,3 +1,7 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { RAW_DOCUMENT_LAKE_COLUMNS } from "@scout-for-lol/data/model/reports/raw-document-lake-columns.ts";
 import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
@@ -9,7 +13,7 @@ import { buildUnionSource, listParam } from "#src/reports/duckdb/lake.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 
 const RowSchema = z.looseObject({
-  match_id: z.string(),
+  match_id: RiotMatchIdSchema,
   kind: z.enum(["match", "prematch", "timeline"]),
   source_key: z.string().nullable(),
   source_digest: z.string(),
@@ -19,7 +23,7 @@ const RowSchema = z.looseObject({
 });
 
 export async function readRawDocuments(input: {
-  matchIds: string[];
+  matchIds: RiotMatchId[];
   kinds: string[];
   signal: AbortSignal;
   lakeDir?: string;
@@ -50,7 +54,7 @@ export async function readRawDocuments(input: {
 }
 
 async function readCapturedDocuments(
-  input: { matchIds: string[]; kinds: string[]; signal: AbortSignal },
+  input: { matchIds: RiotMatchId[]; kinds: string[]; signal: AbortSignal },
   lakeDir: string,
   captured: Awaited<ReturnType<typeof captureAnalysisGeneration>>,
   paths: string[],

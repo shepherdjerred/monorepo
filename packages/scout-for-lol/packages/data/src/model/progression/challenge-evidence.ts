@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { QueueTypeSchema } from "#src/model/core/state.ts";
 import { TimelineEventParticipantRoleSchema } from "#src/model/reports/timeline-lake-columns.ts";
@@ -75,7 +76,7 @@ export const ChallengeProgressSchema: z.ZodType<ChallengeProgress> = z.lazy(
 );
 
 export const ChallengeEvidenceMatchSchema = z.strictObject({
-  matchId: z.string().min(1),
+  matchId: RiotMatchIdSchema,
   gameEndAt: z.iso.datetime(),
   queue: QueueTypeSchema,
   championId: z.number().int().positive(),

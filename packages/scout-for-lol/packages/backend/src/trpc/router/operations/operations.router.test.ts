@@ -751,6 +751,7 @@ describe("operations reads", () => {
         gameCreatedAt: instant(-90 * 60_000),
         observedAt: instant(-30_000),
         deliveryMode: "live",
+        matchDataSource: "RIOT",
         artifacts: { match: null, timeline: null },
       }),
     ).toEqual({ outcome: "applied" });

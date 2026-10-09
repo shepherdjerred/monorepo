@@ -30,7 +30,7 @@ export function deliveryAttemptNonce(effectKey: string): string {
  * same key or the same channel gets two intent rows and a user gets told
  * twice, so the format lives here rather than in any one caller.
  */
-export function prematchDeliveryKeyPrefix(matchId: string): string {
+export function prematchDeliveryKeyPrefix(matchId: RiotMatchId): string {
   return `prematch-discord:${matchId}`;
 }
 
@@ -40,7 +40,7 @@ export function prematchDeliveryKeyPrefix(matchId: string): string {
  * `messageId` is what a later settlement announcement replies to — the key the
  * settlement arm looks that message up by.
  */
-export function postmatchDeliveryKeyPrefix(matchId: string): string {
+export function postmatchDeliveryKeyPrefix(matchId: RiotMatchId): string {
   return `postmatch-discord:${matchId}`;
 }
 
@@ -54,7 +54,7 @@ export function postmatchDeliveryKeyPrefix(matchId: string): string {
  * settled twice for one match is a contradiction the key makes unrepresentable
  * rather than two recaps a user would receive.
  */
-export function settlementDeliveryKeyPrefix(matchId: string): string {
+export function settlementDeliveryKeyPrefix(matchId: RiotMatchId): string {
   return `settlement-discord:${matchId}`;
 }
 
@@ -62,7 +62,9 @@ export function settlementDeliveryKeyPrefix(matchId: string): string {
  * A late binding's earnings-only recap is a separate delivery decision from
  * the settlement recap the completed match pipeline may already have sent.
  */
-export function lateBindingEarningsDeliveryKeyPrefix(matchId: string): string {
+export function lateBindingEarningsDeliveryKeyPrefix(
+  matchId: RiotMatchId,
+): string {
   return `late-earnings-discord:${matchId}`;
 }
 

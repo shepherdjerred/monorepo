@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import {
   formatParlayCustomId,
@@ -9,7 +10,7 @@ describe("parlay custom IDs", () => {
   test("round trips the versioned format", () => {
     const input = {
       action: "b" as const,
-      matchId: "NA1_123",
+      matchId: RiotMatchIdSchema.parse("NA1_123"),
       side: "NO" as const,
       amount: 5,
     };

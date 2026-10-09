@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import type { MessageCreateOptions } from "discord.js";
 import {
@@ -31,7 +32,7 @@ import { createTestDatabase } from "#src/testing/test-database.ts";
 
 const { prisma: db } = createTestDatabase("bucks-message-refresh");
 const SERVER_ID = DiscordGuildIdSchema.parse("1337623164146155593");
-const MATCH_ID = "NA1_5000000042";
+const MATCH_ID = RiotMatchIdSchema.parse("NA1_5000000042");
 const CHANNEL_ONE = DiscordChannelIdSchema.parse("1337623164146155594");
 const CHANNEL_TWO = DiscordChannelIdSchema.parse("1337623164146155595");
 
@@ -396,7 +397,11 @@ describe("refreshBucksMessages", () => {
     const edits: RecordedEdit[] = [];
 
     await refreshBucksMessages(
-      { matchId: MATCH_ID, serverId: SERVER_ID, removeComponents: true },
+      {
+        matchId: MATCH_ID,
+        serverId: SERVER_ID,
+        removeComponents: true,
+      },
       db,
       recordingEditor(edits),
     );
@@ -745,7 +750,10 @@ describe("refreshBucksMessages observability", () => {
 
     const before = await skipCount("skipped_no_pool");
     await refreshBucksMessages(
-      { matchId: "NA1_does-not-exist", serverId: SERVER_ID },
+      {
+        matchId: RiotMatchIdSchema.parse("NA1_9100000000"),
+        serverId: SERVER_ID,
+      },
       db,
       recordingEditor([]),
     );

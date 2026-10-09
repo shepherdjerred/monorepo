@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterEach, expect, test } from "vitest";
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
@@ -59,7 +60,7 @@ test("returns complete raw JSON and identity provenance beyond flattened timelin
   };
   const row = rawDocumentRow({
     kind: "timeline",
-    matchId: "NA1_42",
+    matchId: RiotMatchIdSchema.parse("NA1_42"),
     document,
     capturedAt: new Date("2026-10-03T00:00:00Z"),
     identityMap: new Map([
@@ -91,7 +92,7 @@ test("returns complete raw JSON and identity provenance beyond flattened timelin
   });
   const result = await readRawDocuments({
     lakeDir,
-    matchIds: ["NA1_42"],
+    matchIds: [RiotMatchIdSchema.parse("NA1_42")],
     kinds: ["timeline"],
     signal: new AbortController().signal,
   });
@@ -108,7 +109,7 @@ test("returns complete raw JSON and identity provenance beyond flattened timelin
 test("does not replicate spectator credentials into analytical data", () => {
   const row = rawDocumentRow({
     kind: "prematch",
-    matchId: "NA1_42",
+    matchId: RiotMatchIdSchema.parse("NA1_42"),
     document: {
       observers: { encryptionKey: "fixture-credential" },
       future: { values: [null, 1] },

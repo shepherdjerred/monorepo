@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import {
   buildMatchesSource,
@@ -8,7 +9,7 @@ import {
 
 /** Callers authorize and bound the match IDs before reading their lake rows. */
 export async function withMatchIdsSource<T>(
-  matchIds: string[],
+  matchIds: RiotMatchId[],
   lakeDir: string | undefined,
   query: (source: SqlFragment | undefined) => Promise<T>,
 ): Promise<T> {

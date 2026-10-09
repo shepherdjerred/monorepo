@@ -2,7 +2,7 @@ import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
-  MatchIdSchema,
+  RiotMatchIdSchema,
 } from "@scout-for-lol/data";
 import {
   addFlagOverride,
@@ -22,7 +22,7 @@ const { prisma: db } = trpc;
 const guildId = DiscordGuildIdSchema.parse("100000000000000071");
 const otherGuildId = DiscordGuildIdSchema.parse("100000000000000072");
 const actor = DiscordAccountIdSchema.parse("300000000000000071");
-const MATCH_ID = MatchIdSchema.parse("NA1_5000000103");
+const MATCH_ID = RiotMatchIdSchema.parse("NA1_5000000103");
 
 function caller() {
   return trpc.authedCaller(actor);

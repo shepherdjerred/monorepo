@@ -1,6 +1,5 @@
 import { prisma } from "#src/database/index.ts";
 import { getAccountsWithState } from "#src/database/player-accounts.ts";
-import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
 import { getActiveServerIds } from "#src/discord/utils/guild-membership.ts";
 import { MAX_PLAYERS_PER_RUN } from "@scout-for-lol/data/polling-config.ts";
 import { createLogger } from "#src/logger.ts";
@@ -130,10 +129,7 @@ async function collectMatchDiscovery(): Promise<MatchDiscovery> {
     intents,
     currentTime.getTime(),
     async (intent) => {
-      const match = await fetchMatchData(
-        MatchIdSchema.parse(intent.matchId),
-        intent.region,
-      );
+      const match = await fetchMatchData(intent.matchId, intent.region);
       return match?.info.gameEndTimestamp;
     },
   );

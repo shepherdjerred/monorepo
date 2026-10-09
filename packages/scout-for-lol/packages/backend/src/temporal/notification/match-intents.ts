@@ -1,7 +1,12 @@
-import { resolveQueueTypeFromGame, sumToPoolTotal } from "@scout-for-lol/data";
+import {
+  resolveQueueTypeFromGame,
+  sumToPoolTotal,
+  RiotTeamIdSchema,
+} from "@scout-for-lol/data";
 import {
   NotificationIntentKeySchema,
   type RiotMatchId,
+  RiotMatchIdSchema,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import { DiscordChannelIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
@@ -35,7 +40,6 @@ import { VOID_GRACE_MS } from "#src/betting/constants.ts";
 import { createLogger } from "#src/logger.ts";
 import { durableCommit } from "#src/temporal/match/match-commits.ts";
 import { z } from "zod";
-import { RiotTeamIdSchema } from "@scout-for-lol/data";
 import type {
   ClosedPool,
   ClosedPosition,
@@ -322,7 +326,7 @@ const ClosedPositionSchema = z.strictObject({
 }) satisfies z.ZodType<ClosedPosition>;
 
 const ClosedPoolSchema = z.strictObject({
-  matchId: z.string().min(1),
+  matchId: RiotMatchIdSchema,
   serverId: z.string().min(1),
   messageRefs: z.array(
     z.strictObject({

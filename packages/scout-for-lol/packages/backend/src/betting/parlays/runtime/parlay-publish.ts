@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
@@ -27,7 +28,7 @@ type PreparationMessage = Awaited<ReturnType<typeof send>>;
 
 async function disablePreparationMessages(
   messages: readonly PreparationMessage[],
-  matchId: string,
+  matchId: RiotMatchId,
 ): Promise<void> {
   const disabled = await Promise.allSettled(
     messages.map((message) =>
@@ -53,7 +54,7 @@ async function disablePreparationMessages(
 
 export async function disableParlayPreparationReferences(
   refs: readonly { channelId: string; messageId: string }[],
-  matchId: string,
+  matchId: RiotMatchId,
 ): Promise<void> {
   const disabled = await Promise.allSettled(
     refs.map((ref) =>
@@ -93,7 +94,7 @@ export async function disableParlayPreparationReferences(
 
 async function activateMessageReference(input: {
   ref: { channelId: string; messageId: string };
-  matchId: string;
+  matchId: RiotMatchId;
   content: string;
 }): Promise<{ channelId: string; messageId: string } | undefined> {
   try {
@@ -137,7 +138,7 @@ type ParlayPublicationDependencies = {
 async function invalidatePendingPublication(input: {
   prismaClient: ExtendedPrismaClient;
   marketId: number;
-  matchId: string;
+  matchId: RiotMatchId;
   refs: readonly { channelId: string; messageId: string }[];
   disableReferences: typeof disableParlayPreparationReferences;
 }): Promise<void> {
@@ -163,7 +164,7 @@ async function invalidatePendingPublication(input: {
  */
 export async function activatePendingParlayMarkets(
   prismaClient: ExtendedPrismaClient = prisma,
-  matchId?: string,
+  matchId?: RiotMatchId,
   dependencies: ParlayPublicationDependencies = {},
 ): Promise<number> {
   const activateReference =
@@ -329,7 +330,7 @@ export async function publishParlayDefinition(
   const markets: {
     definitionId: number;
     outcomePoolId: number;
-    matchId: string;
+    matchId: RiotMatchId;
     serverId: DiscordGuildId;
     messageRefs: string;
     messages: PreparationMessage[];

@@ -913,8 +913,8 @@
       "tokens": 75
     },
     "packages/scout-for-lol/packages/backend/src/league/tasks/postmatch/get-image.test.ts|packages/scout-for-lol/packages/backend/src/league/tasks/postmatch/get-image.test.ts": {
-      "clones": 3,
-      "tokens": 245
+      "clones": 1,
+      "tokens": 90
     },
     "packages/scout-for-lol/packages/backend/src/league/tasks/postmatch/match-report-classic.test.ts|packages/scout-for-lol/packages/backend/src/league/tasks/postmatch/match-report-classic.test.ts": {
       "clones": 1,

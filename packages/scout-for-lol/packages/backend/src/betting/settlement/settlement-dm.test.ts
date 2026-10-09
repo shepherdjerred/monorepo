@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import {
   BucksAmountSchema,
@@ -16,8 +17,10 @@ import {
   SETTLEMENT_DM_HINT_EVERY,
   type SettlementDmDeliveryDependencies,
 } from "#src/betting/settlement/settlement-dm-delivery.ts";
-import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
-import type { SettlementBet } from "#src/betting/settlement/settlement-types.ts";
+import {
+  type SettlementSummary,
+  type SettlementBet,
+} from "#src/betting/settlement/settlement-types.ts";
 import type { ClosedPosition } from "#src/betting/settlement/sweep-types.ts";
 import {
   bucksTestDiscordId,
@@ -70,7 +73,7 @@ function summary(
   voidReason?: SettlementSummary["voidReason"],
 ): SettlementSummary {
   return {
-    matchId: "match-1",
+    matchId: RiotMatchIdSchema.parse("NA1_9100000000"),
     serverId,
     winningTeamId: 100,
     voidReason,
@@ -247,7 +250,7 @@ describe("Bryan Bucks settlement DMs", () => {
 
   test("excludes house bets and parlays from player-facing notices", () => {
     const parlay: ParlaySettlementSummary = {
-      matchId: "match-1",
+      matchId: RiotMatchIdSchema.parse("NA1_9100000000"),
       serverId: "server-1",
       yesResult: true,
       voidReason: undefined,

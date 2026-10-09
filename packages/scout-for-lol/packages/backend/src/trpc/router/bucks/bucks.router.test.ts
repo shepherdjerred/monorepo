@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   afterAll,
   beforeAll,
@@ -45,7 +46,7 @@ const otherGuildId = DiscordGuildIdSchema.parse("100000000000000062");
 const actor = DiscordAccountIdSchema.parse("300000000000000061");
 const rival = bucksTestDiscordId(7);
 const DARE_CHANNEL_ID = DiscordChannelIdSchema.parse("200000000000000061");
-const MATCH_ID = "NA1_5000009101";
+const MATCH_ID = RiotMatchIdSchema.parse("NA1_5000009101");
 
 function caller() {
   return trpc.authedCaller(actor);
@@ -483,7 +484,7 @@ describe("bucks mutations", () => {
   test("placeOutcomeBet answers no_pool for an unknown match", async () => {
     const result = await caller().bucks.placeOutcomeBet({
       guildId,
-      matchId: "NA1_missing",
+      matchId: "NA1_9400000000",
       teamId: 100,
       stake: 1,
     });

@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import { BucksPoolTotalSchema } from "@scout-for-lol/data";
 import {
@@ -47,7 +48,7 @@ function largeSettlementSummary(
       `${"a".repeat(PARLAY_SUBJECT_ALIAS_MAX_LENGTH)} ${"resolves a deliberately verbose canonical result ".repeat(4)}leg ${(index + 1).toString()}`,
   );
   return {
-    matchId: "NA1_42",
+    matchId: RiotMatchIdSchema.parse("NA1_42"),
     serverId: "1337623164146155593",
     yesResult: true,
     voidReason: undefined,
@@ -74,7 +75,7 @@ function parlayEmbed(
 ) {
   const message = buildSettlementMessage({
     summary: {
-      matchId: "NA1_42",
+      matchId: RiotMatchIdSchema.parse("NA1_42"),
       serverId: "1337623164146155593",
       winningTeamId: undefined,
       voidReason: undefined,
@@ -111,7 +112,9 @@ describe("parlay Discord experience", () => {
     expect(content).toContain("live in-play market");
     expect(content).toContain("<t:1787054700:R>");
 
-    const row = buildParlayButtons({ matchId: "NA1_42" }).toJSON();
+    const row = buildParlayButtons({
+      matchId: RiotMatchIdSchema.parse("NA1_42"),
+    }).toJSON();
     expect(
       row.components.map((component) =>
         "label" in component ? component.label : undefined,
@@ -174,7 +177,7 @@ describe("parlay Discord experience", () => {
   // own message, so these assert the embed's parlay fields.
   test("renders leg actuals plus winner profit and loser stake", () => {
     const rendered = parlayEmbed({
-      matchId: "NA1_42",
+      matchId: RiotMatchIdSchema.parse("NA1_42"),
       serverId: "1337623164146155593",
       yesResult: false,
       voidReason: undefined,
@@ -224,7 +227,7 @@ describe("parlay Discord experience", () => {
 
   test("names a void in prose rather than leaking the enum", () => {
     const rendered = parlayEmbed({
-      matchId: "NA1_42",
+      matchId: RiotMatchIdSchema.parse("NA1_42"),
       serverId: "1337623164146155593",
       yesResult: undefined,
       voidReason: "expired",
@@ -258,7 +261,7 @@ describe("parlay Discord experience", () => {
       threshold: 3661,
     });
     const rendered = parlayEmbed({
-      matchId: "NA1_42",
+      matchId: RiotMatchIdSchema.parse("NA1_42"),
       serverId: "1337623164146155593",
       yesResult: true,
       voidReason: undefined,

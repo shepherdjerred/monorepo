@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   GetObjectCommand,
   ListObjectsV2Command,
@@ -6,11 +7,7 @@ import {
 import { createS3Client } from "#src/storage/s3-client.ts";
 import configuration from "#src/configuration.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
-import {
-  MatchIdSchema,
-  RawMatchSchema,
-  type RawMatch,
-} from "@scout-for-lol/data/index.ts";
+import { RawMatchSchema, type RawMatch } from "@scout-for-lol/data/index.ts";
 import { eachDayOfInterval, format, startOfDay, endOfDay } from "date-fns";
 import { createLogger } from "#src/logger.ts";
 import { generateS3Key } from "#src/storage/s3-helpers.ts";
@@ -299,7 +296,7 @@ async function listMatchJsonKeysForPrefix(
  * handles a midnight boundary without scanning the entire raw store.
  */
 export async function queryMatchById(
-  matchId: string,
+  matchId: RiotMatchId,
   matchCreatedAt: Date,
   puuidRemap: ReadonlyMap<string, string>,
 ): Promise<RawMatch | undefined> {
@@ -315,7 +312,7 @@ export async function queryMatchById(
   const startDate = new Date(matchCreatedAt.getTime() - day);
   const endDate = new Date(matchCreatedAt.getTime() + day);
   const client = createS3Client();
-  const parsedMatchId = MatchIdSchema.parse(matchId);
+  const parsedMatchId = matchId;
 
   for (const date of generateMatchDates(startDate, endDate)) {
     const key = generateS3Key(parsedMatchId, "match", "json", date);

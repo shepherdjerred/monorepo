@@ -1,17 +1,13 @@
 import { z } from "zod";
-import type {
-  PlayerConfigEntry,
-  MatchId,
-  QueueType,
-  RawMatch,
-  RawTimeline,
-  Rank,
-  DiscordGuildId,
-  Player,
-} from "@scout-for-lol/data/index.ts";
-import type { PostmatchRankChanges } from "#src/betting/dares/lifecycle/dare-rank-capture.ts";
 import {
-  MatchIdSchema,
+  type PlayerConfigEntry,
+  type RiotMatchId,
+  type QueueType,
+  type RawMatch,
+  type RawTimeline,
+  type Rank,
+  type DiscordGuildId,
+  type Player,
   queueTypeToDisplayString,
   resolveQueueTypeFromGame,
   isArenaQueueOrMode,
@@ -19,9 +15,13 @@ import {
   isClassicAssetMode,
   rankForQueue,
 } from "@scout-for-lol/data/index.ts";
+import type { PostmatchRankChanges } from "#src/betting/dares/lifecycle/dare-rank-capture.ts";
 import { getPlayer } from "#src/league/model/player.ts";
-import type { MessageCreateOptions } from "discord.js";
-import type { AttachmentBuilder, EmbedBuilder } from "discord.js";
+import {
+  type MessageCreateOptions,
+  type AttachmentBuilder,
+  type EmbedBuilder,
+} from "discord.js";
 import { matchLinkComponents } from "./match-report-components.ts";
 import { setItemMissHandler } from "@scout-for-lol/report";
 import { aiReviewAttachment, createMatchImage } from "./match-report-image.ts";
@@ -93,7 +93,7 @@ function formatGameCompletionMessage(
 
 async function processClassicMatch(
   matchData: RawMatch,
-  matchId: MatchId,
+  matchId: RiotMatchId,
   playersInMatch: PlayerConfigEntry[],
   prerenderedImage: Uint8Array | undefined,
 ): Promise<MessageCreateOptions | undefined> {
@@ -145,7 +145,7 @@ async function processClassicMatch(
 type ArenaMatchContext = {
   players: Awaited<ReturnType<typeof getPlayer>>[];
   matchData: RawMatch;
-  matchId: MatchId;
+  matchId: RiotMatchId;
   playersInMatch: PlayerConfigEntry[];
   prerenderedImage: Uint8Array | undefined;
 };
@@ -191,7 +191,7 @@ async function processArenaMatch(
 type StandardMatchContext = {
   players: Awaited<ReturnType<typeof getPlayer>>[];
   matchData: RawMatch;
-  matchId: MatchId;
+  matchId: RiotMatchId;
   playersInMatch: PlayerConfigEntry[];
   timelineData: RawTimeline | undefined;
   /** Guild IDs that will receive this match report - used for feature flag checks */
@@ -398,7 +398,7 @@ export async function generateMatchReport(
   options: GenerateMatchReportOptions,
   dependencies: GenerateMatchReportDependencies = defaultGenerateMatchReportDependencies,
 ): Promise<MessageCreateOptions | undefined> {
-  const matchId = MatchIdSchema.parse(matchData.metadata.matchId);
+  const matchId = matchData.metadata.matchId;
   logger.info(
     `[generateMatchReport] 🎮 Generating report for match ${matchId}`,
   );

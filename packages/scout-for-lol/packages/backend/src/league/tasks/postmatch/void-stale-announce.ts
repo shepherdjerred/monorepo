@@ -1,4 +1,4 @@
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { announceSettlements } from "#src/betting/notify/announce.ts";
 import { refreshClosedBucksMessages } from "#src/betting/notify/message-refresh.ts";
 import {
@@ -24,20 +24,20 @@ import { postmatchReplyTargets } from "#src/temporal/notification/settlement-not
  * together at the end, naming the matches, so a corrupt contract still fails
  * the maintenance step loudly and is retried.
  *
- * A pool keyed by something other than a Riot match id has no post-match
- * report to reply to, so its recap stands alone. The reply targets are the
- * delivered post-match intents, which every pipeline records.
+ * A pool whose match has no delivered post-match report has no reply target,
+ * so its recap stands alone. The reply targets are the delivered post-match
+ * intents, which every pipeline records.
  */
 export async function voidStaleAndAnnounce(): Promise<void> {
   const now = new Date();
-  const byMatch = new Map<string, StaleBettingPool[]>();
+  const byMatch = new Map<RiotMatchId, StaleBettingPool[]>();
   for (const pool of await listStaleBettingPools(undefined, now)) {
     const group = byMatch.get(pool.matchId) ?? [];
     group.push(pool);
     byMatch.set(pool.matchId, group);
   }
 
-  const failures: { matchId: string; error: unknown }[] = [];
+  const failures: { matchId: RiotMatchId; error: unknown }[] = [];
   for (const [matchId, pools] of byMatch) {
     try {
       await voidAndAnnounceMatch(matchId, pools, now);
@@ -54,14 +54,12 @@ export async function voidStaleAndAnnounce(): Promise<void> {
 }
 
 async function voidAndAnnounceMatch(
-  matchId: string,
+  matchId: RiotMatchId,
   pools: readonly StaleBettingPool[],
   now: Date,
 ): Promise<void> {
-  const parsed = RiotMatchIdSchema.safeParse(matchId);
-  const postmatchMessageIds: ReadonlyMap<string, string> = parsed.success
-    ? await postmatchReplyTargets(parsed.data)
-    : new Map();
+  const postmatchMessageIds: ReadonlyMap<string, string> =
+    await postmatchReplyTargets(matchId);
 
   const staleBucks = await voidStaleBettingPools(undefined, now, pools);
   const closures = staleBucks.closures.filter(

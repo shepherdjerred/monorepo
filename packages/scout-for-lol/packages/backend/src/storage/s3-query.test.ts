@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import type { RawMatch } from "@scout-for-lol/data";
 
@@ -148,7 +149,7 @@ function createMockMatch(participantPuuids: string[]): RawMatch {
   return {
     metadata: {
       dataVersion: "2",
-      matchId: "TEST_MATCH",
+      matchId: RiotMatchIdSchema.parse("NA1_9100000000"),
       participants: participantPuuids,
     },
     info: {

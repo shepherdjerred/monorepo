@@ -363,6 +363,7 @@ export async function commitMatchObservation(
     platformRoute: platformRouteOf(input.riotMatchId),
     policy: "FULL",
     deliveryMode,
+    matchDataSource: context.matchDataSource,
     owner: { kind: "temporal-v2" },
     promotion: null,
     gameCreatedAt: isoInstantFromEpochMs(context.matchData.info.gameCreation),

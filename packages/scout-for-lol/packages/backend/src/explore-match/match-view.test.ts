@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import {
   ExploreMatchCardRequestSchema,
@@ -88,7 +89,10 @@ describe("matchIdsInPreview", () => {
 
   test("excludes Arena ids before exposing card choices to the model", async () => {
     const supported = await supportedExploreMatchIds({
-      matchIds: new Set(["NA1_5635906026", "NA1_5635906027"]),
+      matchIds: new Set([
+        RiotMatchIdSchema.parse("NA1_5635906026"),
+        RiotMatchIdSchema.parse("NA1_5635906027"),
+      ]),
       lookup: async (matchId) => [
         {
           queue_id: matchId === "NA1_5635906026" ? 1700 : 420,
@@ -105,7 +109,7 @@ describe("matchIdsInPreview", () => {
       assertEligibleExploreMatchCardRequests({
         requests: [
           ExploreMatchCardRequestSchema.parse({
-            matchId: "NA1_5635906026",
+            matchId: RiotMatchIdSchema.parse("NA1_5635906026"),
             size: "S",
           }),
         ],

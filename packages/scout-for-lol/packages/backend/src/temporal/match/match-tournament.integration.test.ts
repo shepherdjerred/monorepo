@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import type { RawMatch } from "@scout-for-lol/data";
 import type * as DatabaseModule from "#src/database/index.ts";
@@ -44,7 +45,7 @@ const CHANNEL = testChannelId("7401");
 const HOST = testAccountId("7401");
 
 /** A managed custom game an accepted observation already bound and verified. */
-async function seedVerifiedObservedGame(matchId: string): Promise<string> {
+async function seedVerifiedObservedGame(matchId: RiotMatchId): Promise<string> {
   const now = new Date("2026-09-14T00:00:00.000Z");
   const night = await prisma.customNight.create({
     data: {

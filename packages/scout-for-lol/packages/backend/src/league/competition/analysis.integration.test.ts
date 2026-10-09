@@ -1,3 +1,7 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import {
   ChampionIdSchema,
@@ -114,7 +118,7 @@ describe("competition selected-period analysis", () => {
         fact({
           playerId: alpha.id,
           playerAlias: "Alpha",
-          matchId: "rank-position-selected-match",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000110"),
           queue: "solo",
           win: true,
           championId: targetChampionId,
@@ -155,7 +159,7 @@ describe("competition preset date bounds", () => {
         fact({
           playerId: alpha.id,
           playerAlias: "Alpha",
-          matchId: "rank-before-competition",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000090"),
           queue: "solo",
           win: true,
           championId: targetChampionId,
@@ -164,7 +168,7 @@ describe("competition preset date bounds", () => {
         fact({
           playerId: alpha.id,
           playerAlias: "Alpha",
-          matchId: "rank-competition-match",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000100"),
           queue: "solo",
           win: true,
           championId: targetChampionId,
@@ -173,7 +177,7 @@ describe("competition preset date bounds", () => {
         fact({
           playerId: alpha.id,
           playerAlias: "Alpha",
-          matchId: "rank-after-competition",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000080"),
           queue: "solo",
           win: true,
           championId: targetChampionId,
@@ -233,7 +237,7 @@ describe("competition preset date bounds", () => {
         fact({
           playerId: alpha.id,
           playerAlias: "Alpha",
-          matchId: "match-before-competition",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000060"),
           queue: "solo",
           win: true,
           championId: targetChampionId,
@@ -242,7 +246,7 @@ describe("competition preset date bounds", () => {
         fact({
           playerId: alpha.id,
           playerAlias: "Alpha",
-          matchId: "match-in-competition",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000070"),
           queue: "solo",
           win: true,
           championId: targetChampionId,
@@ -251,7 +255,7 @@ describe("competition preset date bounds", () => {
         fact({
           playerId: alpha.id,
           playerAlias: "Alpha",
-          matchId: "match-after-competition",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000050"),
           queue: "solo",
           win: true,
           championId: targetChampionId,
@@ -403,7 +407,7 @@ async function runMatchAnalysis(criteria: CompetitionCriteria) {
       fact({
         playerId: alpha.id,
         playerAlias: "Alpha",
-        matchId: "alpha-1",
+        matchId: RiotMatchIdSchema.parse("NA1_9100000000"),
         queue: "solo",
         win: true,
         championId: targetChampionId,
@@ -412,7 +416,7 @@ async function runMatchAnalysis(criteria: CompetitionCriteria) {
       fact({
         playerId: alpha.id,
         playerAlias: "Alpha",
-        matchId: "alpha-2",
+        matchId: RiotMatchIdSchema.parse("NA1_9100000010"),
         queue: "solo",
         win: true,
         championId: targetChampionId,
@@ -421,7 +425,7 @@ async function runMatchAnalysis(criteria: CompetitionCriteria) {
       fact({
         playerId: alpha.id,
         playerAlias: "Alpha",
-        matchId: "alpha-flex",
+        matchId: RiotMatchIdSchema.parse("NA1_9100000020"),
         queue: "flex",
         win: true,
         championId: targetChampionId,
@@ -430,7 +434,7 @@ async function runMatchAnalysis(criteria: CompetitionCriteria) {
       fact({
         playerId: alpha.id,
         playerAlias: "Alpha",
-        matchId: "alpha-old",
+        matchId: RiotMatchIdSchema.parse("NA1_9100000030"),
         queue: "solo",
         win: true,
         championId: targetChampionId,
@@ -439,7 +443,7 @@ async function runMatchAnalysis(criteria: CompetitionCriteria) {
       fact({
         playerId: beta.id,
         playerAlias: "Beta",
-        matchId: "beta-1",
+        matchId: RiotMatchIdSchema.parse("NA1_9100000040"),
         queue: "solo",
         win: false,
         championId: ChampionIdSchema.parse(22),
@@ -546,7 +550,7 @@ function createPlayer(key: string, alias: string) {
 function fact(input: {
   playerId: number;
   playerAlias: string;
-  matchId: string;
+  matchId: RiotMatchId;
   queue: string;
   win: boolean;
   championId: number;

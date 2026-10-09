@@ -2,7 +2,7 @@ import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
-  type MatchId,
+  type RiotMatchId,
 } from "@scout-for-lol/data";
 import type { InteractionEditReplyOptions } from "discord.js";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
@@ -60,7 +60,7 @@ export async function handleMvpVoteButton(
     return;
   }
   const serverId = DiscordGuildIdSchema.parse(interaction.guildId);
-  const matchId: MatchId = parsed.matchId;
+  const matchId: RiotMatchId = parsed.matchId;
   if (!(await isMvpVotesEnabledForGuild(serverId))) {
     await refuse(interaction, MVP_VOTE_NOT_ENABLED);
     return;

@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import * as Sentry from "@sentry/bun";
 import {
   BucksMessageRefsSchema,
@@ -115,7 +116,7 @@ export async function bettingEnabledGuilds(
 }
 
 export type OpenPoolsInput = {
-  matchId: string;
+  matchId: RiotMatchId;
   gameInfo: RawCurrentGameInfo;
   queueType: QueueType | undefined;
   guildIds: readonly DiscordGuildId[];
@@ -264,7 +265,7 @@ const MESSAGE_REF_BACKOFF_MS = 250;
  */
 export async function recordPoolMessageRefs(
   input: {
-    matchId: string;
+    matchId: RiotMatchId;
     serverId: DiscordGuildId;
     refs: readonly { channelId: string; messageId: string }[];
     prematchContentBase: string;
@@ -340,7 +341,7 @@ export type AppendPoolMessageRefOutcome =
  */
 export async function appendPoolMessageRef(
   input: {
-    matchId: string;
+    matchId: RiotMatchId;
     serverId: DiscordGuildId;
     ref: BucksMessageRef;
     prematchContentBase: string;

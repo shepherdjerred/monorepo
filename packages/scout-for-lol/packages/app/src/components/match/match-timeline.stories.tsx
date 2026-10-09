@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/data";
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { MatchTimeline } from "./match-timeline.tsx";
@@ -20,7 +21,7 @@ type ChartPoint =
   RouterOutputs["consumerMatch"]["chartSeries"]["points"][number];
 
 const PLAYER_ID = 42;
-const MATCH_ID = "NA1_4912837465";
+const MATCH_ID = RiotMatchIdSchema.parse("NA1_4912837465");
 
 const COVERAGE: Coverage = {
   coverage_state: "complete",

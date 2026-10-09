@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   EmbedBuilder,
   escapeMarkdown,
@@ -72,7 +73,7 @@ function truncateToLength(text: string, maxLength: number): string {
  */
 function hallBreakEmbed(
   records: readonly HallBreakPayload[],
-  matchId: string,
+  matchId: RiotMatchId,
   guildId: string,
 ): EmbedBuilder | null {
   if (records.length === 0) return null;

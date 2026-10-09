@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
 import type { ModalBuilder } from "discord.js";
-import { MatchIdSchema } from "@scout-for-lol/data";
+import { RiotMatchIdSchema } from "@scout-for-lol/data";
 import {
   handleMvpVoteSelect,
   type VoteSelectInteraction,
@@ -18,7 +18,7 @@ describe("handleMvpVoteSelect", () => {
     const interaction: VoteSelectInteraction = {
       customId: formatVoteSelectCustomId({
         category: "ally",
-        matchId: MatchIdSchema.parse("NA1_5000000042"),
+        matchId: RiotMatchIdSchema.parse("NA1_5000000042"),
       }),
       guildId: null,
       user: { id: "160509172704739328" },
@@ -38,7 +38,7 @@ describe("handleMvpVoteSelect", () => {
   });
 
   test("shows the reason modal before any persistence", async () => {
-    const matchId = MatchIdSchema.parse("NA1_5000000042");
+    const matchId = RiotMatchIdSchema.parse("NA1_5000000042");
     const reply = vi.fn(() => Promise.resolve(undefined));
     let shown: ModalBuilder | undefined;
     const showModal = vi.fn((modal: ModalBuilder) => {

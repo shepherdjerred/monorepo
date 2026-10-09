@@ -20,7 +20,7 @@ import {
   RiotIdSchema,
   isCustomMatchPayload,
   type LeaguePuuid,
-  type MatchId,
+  type RiotMatchId,
   type RawMatch,
   type Region,
 } from "@scout-for-lol/data";
@@ -83,7 +83,7 @@ export type SuggestTeammatesResult = z.infer<
   typeof SuggestTeammatesResultSchema
 >;
 
-type Round = { match: RawMatch; region: Region; matchId: MatchId };
+type Round = { match: RawMatch; region: Region; matchId: RiotMatchId };
 
 type Tally = {
   gameName: string;
@@ -91,7 +91,7 @@ type Tally = {
   region: Region;
   gamesTogether: number;
   lastPlayedMs: number;
-  lastMatchId: MatchId;
+  lastMatchId: RiotMatchId;
 };
 
 function isSuggestible(
@@ -267,7 +267,7 @@ async function collectMatchRounds(
   accounts: SelfAccount[],
   alias: string,
   matchCount: number,
-): Promise<{ matchId: MatchId; region: Region }[] | undefined> {
+): Promise<{ matchId: RiotMatchId; region: Region }[] | undefined> {
   // The shared matchCount budget is split across accounts so multi-account
   // players stay within a single run's Riot cost.
   const idsPerAccount = Math.max(1, Math.ceil(matchCount / accounts.length));
@@ -290,7 +290,7 @@ async function collectMatchRounds(
     ids: [...(idLists[index] ?? [])],
     region: account.region,
   }));
-  const interleaved: { matchId: MatchId; region: Region }[] = [];
+  const interleaved: { matchId: RiotMatchId; region: Region }[] = [];
   let progressed = true;
   while (progressed) {
     progressed = false;
@@ -312,7 +312,7 @@ async function collectMatchRounds(
 }
 
 async function fetchRoundMatches(
-  rounds: { matchId: MatchId; region: Region }[],
+  rounds: { matchId: RiotMatchId; region: Region }[],
 ): Promise<Round[]> {
   const fetched: Round[] = [];
   for (let index = 0; index < rounds.length; index += MATCH_FETCH_CONCURRENCY) {

@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import {
   BUCKS_INT32_MAX,
@@ -348,7 +349,7 @@ describe("transferBucks policy and transaction safety", () => {
     });
     const pool = await db.bucksMatchPool.create({
       data: {
-        matchId: "NA1_5000009082",
+        matchId: RiotMatchIdSchema.parse("NA1_5000009082"),
         serverId: SERVER,
         detectedAt: new Date(Date.now() - 60_000),
         peekAvailableAt: new Date(Date.now() + 60_000),

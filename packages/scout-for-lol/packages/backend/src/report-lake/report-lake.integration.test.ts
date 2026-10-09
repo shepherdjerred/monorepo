@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -648,7 +649,10 @@ describe("compactor", () => {
   test("rebuild skips malformed rawJson but still publishes", async () => {
     seedS3Matches([
       {
-        key: matchObjectKey("NA1_BROKEN", new Date("2026-07-01T00:00:00Z")),
+        key: matchObjectKey(
+          RiotMatchIdSchema.parse("NA1_9100000000"),
+          new Date("2026-07-01T00:00:00Z"),
+        ),
         body: JSON.stringify({ not: "a match" }),
       },
     ]);

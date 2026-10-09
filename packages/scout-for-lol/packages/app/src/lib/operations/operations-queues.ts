@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/data";
 import {
   notificationActions,
   type NotificationBlocked,
@@ -27,14 +28,14 @@ import {
  */
 
 export type OperationsQueuesData = {
-  readonly stalledMatchProcessing: readonly string[];
+  readonly stalledMatchProcessing: readonly RiotMatchId[];
   readonly stalledNotifications: readonly ({
     readonly intentKey: string;
     readonly state: string;
     readonly freshnessDeadline: string;
     readonly attemptCount: number;
   } & (
-    | { readonly matchId: string }
+    | { readonly matchId: RiotMatchId }
     | { readonly duelId: string }
     | { readonly dareId: number }
   ))[];
@@ -50,11 +51,11 @@ export type OperationsQueuesData = {
     readonly attemptNonce: string;
     readonly state: string;
   } & (
-    | { readonly matchId: string }
+    | { readonly matchId: RiotMatchId }
     | { readonly duelId: string }
     | { readonly dareId: number }
   ))[];
-  readonly unprojectedMatches: readonly string[];
+  readonly unprojectedMatches: readonly RiotMatchId[];
   readonly liveRecoveryBatches: readonly string[];
   readonly unacceptedWorkflowStarts: readonly {
     readonly requestedWorkflowId: string;
@@ -103,7 +104,7 @@ export type OperationsQueueRow = {
   /** Why this row offers nothing, and how loudly to say it. */
   readonly blocked: NotificationBlocked | null;
   /** The match to open in the pipeline inspector, when the row names one. */
-  readonly inspectMatchId: string | null;
+  readonly inspectMatchId: RiotMatchId | null;
   /** Operations this row can prepare directly, already filled in. */
   readonly drafts: readonly OperationsRequestDraft[];
 };

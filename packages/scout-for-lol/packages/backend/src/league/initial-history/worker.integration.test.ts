@@ -1,8 +1,8 @@
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import {
-  MatchIdSchema,
+  RiotMatchIdSchema,
   RawMatchSchema,
-  type MatchId,
+  type RiotMatchId,
   type RawMatch,
 } from "@scout-for-lol/data";
 import {
@@ -20,7 +20,7 @@ import { filterNewMatches } from "#src/league/api/match-history.ts";
 const { prisma } = createTestDatabase("initial-history-worker");
 const importedPuuid = testPuuid("initial-worker");
 const matchIds = Array.from({ length: 20 }, (_, index) =>
-  MatchIdSchema.parse(`NA1_${(20 - index).toString()}`),
+  RiotMatchIdSchema.parse(`NA1_${(20 - index).toString()}`),
 );
 const rawFixture = RawMatchSchema.parse(
   await Bun.file(
@@ -31,7 +31,7 @@ const rawFixture = RawMatchSchema.parse(
   ).json(),
 );
 
-function matchForId(matchId: MatchId) {
+function matchForId(matchId: RiotMatchId) {
   return RawMatchSchema.parse({
     ...rawFixture,
     metadata: { ...rawFixture.metadata, matchId },
@@ -40,7 +40,7 @@ function matchForId(matchId: MatchId) {
 
 const fetchInitialMatchIds = vi.fn(() => Promise.resolve(matchIds));
 const fetchInitialMatch = vi.fn(
-  (input: { matchId: MatchId }): Promise<RawMatch | null> =>
+  (input: { matchId: RiotMatchId }): Promise<RawMatch | null> =>
     Promise.resolve(matchForId(input.matchId)),
 );
 const fetchCurrentRanks = vi.fn(() =>
@@ -249,7 +249,7 @@ describe("initial history worker", () => {
       errorCode: null,
     });
     expect(account.lastProcessedMatchId).toBe(matchIds[0]);
-    const completedDuringImport = MatchIdSchema.parse("NA1_21");
+    const completedDuringImport = RiotMatchIdSchema.parse("NA1_21");
     expect(
       filterNewMatches(
         [completedDuringImport, ...matchIds],

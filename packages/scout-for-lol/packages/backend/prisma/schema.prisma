@@ -2685,6 +2685,7 @@ model MatchObservation {
   platformRoute    String
   processingPolicy String // MatchProcessingPolicy: ARCHIVE_ONLY | FULL
   deliveryMode     String // MatchDeliveryMode: live | silent-backfill; decided at discovery, never derivable later
+  matchDataSource  String    @default("RIOT") // MatchDataSource: RIOT | SCOUT_CLIENT; canonical payload provenance, fixed at commit
   pipelineOwner    String? // LEGACY_V1 | TEMPORAL_V2; NULL = unowned
   promotedAt       DateTime?
   gameCreatedAt    DateTime

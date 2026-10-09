@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { MatchIdSchema } from "@scout-for-lol/data";
+
 import {
   buildMatchArtifactObjectKey,
   buildPrematchArtifactObjectKey,
@@ -24,12 +24,12 @@ import { generateS3Key } from "#src/storage/s3-helpers.ts";
  * arithmetically instead of relying on the runner's zone.
  */
 
-const MATCH_ID = "NA1_5370969615";
+const MATCH_ID = RiotMatchIdSchema.parse("NA1_5370969615");
 const CAPTURED_AT = "2026-03-10T02:30:00.000Z";
 
 function domainMatchKey(assetName: string, extension: string): string {
   return buildMatchArtifactObjectKey({
-    matchId: RiotMatchIdSchema.parse(MATCH_ID),
+    matchId: MATCH_ID,
     assetName,
     extension,
     capturedAt: IsoInstantSchema.parse(CAPTURED_AT),
@@ -44,40 +44,23 @@ describe("write-path and domain key builders agree", () => {
     ["report", "svg"],
   ])("agree for %s.%s", (assetName, extension) => {
     expect(
-      generateS3Key(
-        MatchIdSchema.parse(MATCH_ID),
-        assetName,
-        extension,
-        new Date(CAPTURED_AT),
-      ),
+      generateS3Key(MATCH_ID, assetName, extension, new Date(CAPTURED_AT)),
     ).toBe(domainMatchKey(assetName, extension));
   });
 
   test("both pad single-digit months and days", () => {
     const capturedAt = "2026-01-05T08:15:30.000Z";
 
-    expect(
-      generateS3Key(
-        MatchIdSchema.parse(MATCH_ID),
-        "match",
-        "json",
-        new Date(capturedAt),
-      ),
-    ).toBe(
+    expect(generateS3Key(MATCH_ID, "match", "json", new Date(capturedAt))).toBe(
       buildMatchArtifactObjectKey({
-        matchId: RiotMatchIdSchema.parse(MATCH_ID),
+        matchId: MATCH_ID,
         assetName: "match",
         extension: "json",
         capturedAt: IsoInstantSchema.parse(capturedAt),
       }),
     );
     expect(
-      generateS3Key(
-        MatchIdSchema.parse(MATCH_ID),
-        "match",
-        "json",
-        new Date(capturedAt),
-      ),
+      generateS3Key(MATCH_ID, "match", "json", new Date(capturedAt)),
     ).toContain("/2026/01/05/");
   });
 
@@ -101,7 +84,7 @@ describe("the local-versus-UTC divergence this layout still carries", () => {
     // zone says, which under TZ=America/Los_Angeles is the 9th.
     const pacificEvening = new Date(CAPTURED_AT);
     const writePathKey = generateS3Key(
-      MatchIdSchema.parse(MATCH_ID),
+      MATCH_ID,
       "match",
       "json",
       pacificEvening,

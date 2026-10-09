@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import * as Sentry from "@sentry/bun";
 import {
   announcingSettlementSink,
@@ -150,7 +151,7 @@ export async function closeAndSettleBettingForMatch(
 function reportPoolSettlementFailure(
   error: unknown,
   pool: { id: number; serverId: string },
-  matchId: string,
+  matchId: RiotMatchId,
 ): void {
   if (error instanceof BucksCorruptIdentityError) {
     // Deliberately not retried into the refund path: crediting a row whose

@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { BUCKS_INT32_MAX, BucksParlaySideSchema } from "@scout-for-lol/data";
 import { MAX_CUSTOM_ID_LENGTH } from "#src/betting/custom-id.ts";
@@ -9,7 +10,7 @@ const ParlayActionSchema = z.enum(["b", "x"]);
 
 export const ParlayCustomIdSchema = z.strictObject({
   action: ParlayActionSchema,
-  matchId: z.string().min(1),
+  matchId: RiotMatchIdSchema,
   side: BucksParlaySideSchema,
   amount: z.number().int().nonnegative().max(BUCKS_INT32_MAX),
 });

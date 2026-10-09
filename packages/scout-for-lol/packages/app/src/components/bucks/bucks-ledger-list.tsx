@@ -1,4 +1,4 @@
-import { formatInteger } from "@scout-for-lol/data";
+import { formatInteger, type RiotMatchId } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Table,
@@ -16,7 +16,7 @@ export type BucksLedgerEntryView = {
   delta: number;
   balanceAfter: number;
   label: string;
-  matchId: string | null;
+  matchId: RiotMatchId | null;
   createdAt: Date | string;
 };
 

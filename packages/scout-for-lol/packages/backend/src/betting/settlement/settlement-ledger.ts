@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   DiscordGuildIdSchema,
   amountToStake,
@@ -18,7 +19,7 @@ import type { Db } from "#src/database/index.ts";
 
 type CreditBetInput = {
   bet: SettlementBet;
-  matchId: string;
+  matchId: RiotMatchId;
   serverId: string;
   roster: readonly BucksPoolParticipant[];
   winningTeamId: number | undefined;

@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type {
   RawTimeline,
   RawTimelineEvent,
@@ -20,14 +21,18 @@ function nullable<T>(value: T | null | undefined = null): T | null {
   return value;
 }
 
-function eventId(matchId: string, frameIndex: number, index: number): string {
+function eventId(
+  matchId: RiotMatchId,
+  frameIndex: number,
+  index: number,
+): string {
   return `${matchId}:${frameIndex.toString()}:${index.toString()}`;
 }
 
 function flattenEvent(options: {
   event: RawTimelineEvent;
   id: string;
-  matchId: string;
+  matchId: RiotMatchId;
   month: string;
   observedAt: string;
   frameIndex: number;
@@ -77,7 +82,7 @@ function flattenEvent(options: {
 function eventParticipantRows(options: {
   event: RawTimelineEvent;
   id: string;
-  matchId: string;
+  matchId: RiotMatchId;
   month: string;
   observedAt: string;
   puuidByParticipant: Map<number, string>;
@@ -165,7 +170,7 @@ function participantFrameRow(options: {
   frame: RawTimelineParticipantFrame;
   frameIndex: number;
   frameTimestampMs: number;
-  matchId: string;
+  matchId: RiotMatchId;
   month: string;
   observedAt: string;
   puuidByParticipant: ReadonlyMap<number, string>;

@@ -1,7 +1,9 @@
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
-import { MatchDeliveryModeSchema } from "@scout-for-lol/domain/match-processing/states.ts";
+import { type RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  MatchDeliveryModeSchema,
+  type ReceiptKind,
+} from "@scout-for-lol/domain/match-processing/states.ts";
 import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
-import type { ReceiptKind } from "@scout-for-lol/domain/match-processing/states.ts";
 import {
   ScoutFanOutResultSchema,
   ScoutMatchPipelineStateResultSchema,
@@ -104,7 +106,7 @@ export async function discoverPostMatchIds(options?: {
         );
       }
       return {
-        riotMatchId: RiotMatchIdSchema.parse(intent.matchId),
+        riotMatchId: intent.matchId,
         sourcePuuid: LeaguePuuidSchema.parse(intent.sourcePuuid),
         // The discovery pass's own per-match call, carried rather than
         // re-derived: a match it surfaced while filling a gap announces
@@ -160,9 +162,9 @@ function intentSummary(
  * the distinction stays recoverable where it matters.
  */
 export async function readMatchPipelineState(input: {
-  riotMatchId: string;
+  riotMatchId: RiotMatchId;
 }): Promise<ScoutMatchPipelineStateResult> {
-  const matchId = RiotMatchIdSchema.parse(input.riotMatchId);
+  const matchId = input.riotMatchId;
   const aggregate = await getMatchPipelineState(prisma, { matchId });
   if (aggregate === null) {
     const receipts = await listReceipts(prisma, { matchId });
@@ -214,9 +216,9 @@ export async function readMatchPipelineState(input: {
  * that object is known to exist — not when a match merely has rows.
  */
 export async function planMatchFanOut(input: {
-  riotMatchId: string;
+  riotMatchId: RiotMatchId;
 }): Promise<ScoutFanOutResult> {
-  const matchId = RiotMatchIdSchema.parse(input.riotMatchId);
+  const matchId = input.riotMatchId;
   const [intents, observation] = await Promise.all([
     listIntentsForMatch(prisma, { matchId }),
     getObservation(prisma, { matchId }),

@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import * as Sentry from "@sentry/bun";
 import type { Client } from "discord.js";
 import {
@@ -108,7 +109,7 @@ async function handleSettlementDmDeliveryError(input: {
   status: DmStatus | undefined;
   tipped: TippedSettlementDm | undefined;
   recipientKind: "bettor" | "player";
-  matchId: string;
+  matchId: RiotMatchId;
   recipientId: string;
 }): Promise<void> {
   if (input.status !== "sent") await input.tipped?.release();

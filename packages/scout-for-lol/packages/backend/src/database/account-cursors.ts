@@ -1,8 +1,4 @@
-import {
-  type LeaguePuuid,
-  MatchIdSchema,
-  type MatchId,
-} from "@scout-for-lol/data";
+import { type LeaguePuuid, type RiotMatchId } from "@scout-for-lol/data";
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "#src/logger.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
@@ -23,7 +19,7 @@ const logger = createLogger("database");
  */
 export async function updateLastProcessedMatch(
   puuid: LeaguePuuid,
-  matchId: MatchId,
+  matchId: RiotMatchId,
   prismaClient: ExtendedPrismaClient = prisma,
   matchTime?: Date,
 ): Promise<void> {
@@ -63,7 +59,7 @@ export async function updateLastProcessedMatch(
 export async function getLastProcessedMatch(
   puuid: LeaguePuuid,
   prismaClient: ExtendedPrismaClient = prisma,
-): Promise<MatchId | null> {
+): Promise<RiotMatchId | null> {
   try {
     const account = await prismaClient.account.findFirst({
       where: {
@@ -74,9 +70,7 @@ export async function getLastProcessedMatch(
       },
     });
 
-    return account?.lastProcessedMatchId
-      ? MatchIdSchema.parse(account.lastProcessedMatchId)
-      : null;
+    return account?.lastProcessedMatchId ?? null;
   } catch (error) {
     logger.error("❌ Error getting lastProcessedMatchId:", error);
     Sentry.captureException(error, {

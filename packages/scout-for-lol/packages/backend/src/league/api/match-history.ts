@@ -1,8 +1,8 @@
 import { riotClient } from "#src/league/api/api.ts";
 import {
   type PlayerConfigEntry,
-  type MatchId,
-  MatchIdSchema,
+  type RiotMatchId,
+  RiotMatchIdSchema,
   platformToRegionalRoute,
 } from "@scout-for-lol/data";
 import { z } from "zod";
@@ -18,7 +18,7 @@ const logger = createLogger("api-match-history");
 export async function getRecentMatchIds(
   player: PlayerConfigEntry,
   count = 5,
-): Promise<MatchId[] | undefined> {
+): Promise<RiotMatchId[] | undefined> {
   const playerAlias = player.alias;
   const playerPuuid = player.league.leagueAccount.puuid;
   const playerRegion = player.league.leagueAccount.region;
@@ -32,7 +32,7 @@ export async function getRecentMatchIds(
   return callRiotOrUndefined(
     {
       source: "match-history",
-      schema: z.array(MatchIdSchema),
+      schema: z.array(RiotMatchIdSchema),
       context: { playerAlias, region: playerRegion },
       sentry: true,
     },
@@ -41,7 +41,7 @@ export async function getRecentMatchIds(
 }
 
 export type FilterResult = {
-  matchIds: MatchId[];
+  matchIds: RiotMatchId[];
   gapDetected: boolean;
 };
 
@@ -51,8 +51,8 @@ export type FilterResult = {
  * When lastProcessedMatchId is not found in recent history, sets gapDetected: true
  */
 export function filterNewMatches(
-  matchIds: MatchId[],
-  lastProcessedMatchId?: MatchId | null,
+  matchIds: RiotMatchId[],
+  lastProcessedMatchId?: RiotMatchId | null,
 ): FilterResult {
   if (matchIds.length === 0) {
     return { matchIds: [], gapDetected: false };

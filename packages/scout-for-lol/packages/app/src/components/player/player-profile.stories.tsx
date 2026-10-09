@@ -5,6 +5,7 @@ import {
   RankSchema,
   ROLE_CATALOG,
   createPermissionSet,
+  RiotMatchIdSchema,
 } from "@scout-for-lol/data";
 import type { PlayerProfileFilters } from "#src/lib/player/player-profile-filters.ts";
 import { ChampionPoolTable } from "./champion-pool-table.tsx";
@@ -120,7 +121,7 @@ const CHAMPION_POOL = [
 
 const MATCH_ENTRIES = [
   {
-    matchId: "NA1_5182736451",
+    matchId: RiotMatchIdSchema.parse("NA1_5182736451"),
     gameCreationMs: Date.now() - 3_600_000,
     gameDurationSeconds: 1942,
     queue: "Ranked Solo/Duo",
@@ -137,7 +138,7 @@ const MATCH_ENTRIES = [
     account: { gameName: "sjerred", tagLine: "NA1", region: "NA" },
   },
   {
-    matchId: "NA1_5182719038",
+    matchId: RiotMatchIdSchema.parse("NA1_5182719038"),
     gameCreationMs: Date.now() - 90_000_000,
     gameDurationSeconds: 2411,
     queue: "Ranked Flex",
@@ -377,7 +378,7 @@ export const CombinedPerformanceLoaded: Story = {
         entries={MATCH_ENTRIES}
         nextCursor={{
           gameCreationMs: MATCH_ENTRIES[1]?.gameCreationMs ?? 0,
-          matchId: "NA1_5182719038",
+          matchId: RiotMatchIdSchema.parse("NA1_5182719038"),
         }}
         historyPage={0}
         playerId={PLAYER_ID}

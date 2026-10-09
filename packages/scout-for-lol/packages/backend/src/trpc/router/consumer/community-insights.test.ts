@@ -1,3 +1,7 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import { balanceGuildTeams } from "#src/trpc/router/consumer/community-balancer.ts";
 import {
@@ -57,7 +61,7 @@ const players = [
 ];
 
 function roster(
-  matchId: string,
+  matchId: RiotMatchId,
   at: number,
   firstPuuid: string,
 ): GuildMatchRow[] {
@@ -94,8 +98,8 @@ function roster(
 
 describe("guild community insights", () => {
   const rows = [
-    ...roster("NA1_first", 1000, "main"),
-    ...roster("NA1_second", 2000, "smurf"),
+    ...roster(RiotMatchIdSchema.parse("NA1_9100000020"), 1000, "main"),
+    ...roster(RiotMatchIdSchema.parse("NA1_9100000030"), 2000, "smurf"),
   ];
   test("resolves smurfs, teammates, rivals, main account, and squad meetings", () => {
     const insights = buildCommunityInsights({
@@ -141,7 +145,11 @@ describe("guild community insights", () => {
   });
 
   test("keeps custom Rift games in standard guild aggregates", () => {
-    const customRows = roster("NA1_custom", 3000, "main").map((row) => ({
+    const customRows = roster(
+      RiotMatchIdSchema.parse("NA1_9100000010"),
+      3000,
+      "main",
+    ).map((row) => ({
       ...row,
       queue: "custom",
       queue_id: 0,
@@ -162,7 +170,11 @@ describe("guild community insights", () => {
   });
 
   test("uses Arena subteams for teammates, rivals, and pair chemistry", () => {
-    const arenaRows = roster("NA1_arena", 3000, "main").map((row, index) => ({
+    const arenaRows = roster(
+      RiotMatchIdSchema.parse("NA1_9100000000"),
+      3000,
+      "main",
+    ).map((row, index) => ({
       ...row,
       queue: "arena",
       queue_id: 1750,

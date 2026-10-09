@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   RawTimelineSchema,
   type RawTimeline,
@@ -154,7 +155,7 @@ function convertEvent(
  * frames, or frames that aren't a minute apart.
  */
 export function convertLcuTimeline(
-  riotMatchId: string,
+  riotMatchId: RiotMatchId,
   gamePayload: unknown,
   timelinePayload: unknown,
 ): RawTimeline | null {

@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { type Rank } from "@scout-for-lol/data";
 import { createCompetition } from "#src/database/competition/queries.ts";
@@ -35,7 +36,8 @@ function valuesOf(row: ReportResultRow | undefined) {
   }));
 }
 
-function temporalMatch(matchId: string, date: string, win: boolean) {
+function temporalMatch(matchIdValue: string, date: string, win: boolean) {
+  const matchId = RiotMatchIdSchema.parse(matchIdValue);
   return {
     playerId: 1,
     playerAlias: "Temporal Player",
@@ -65,7 +67,7 @@ describe("executeReportQuery cancellation", () => {
   test("passes caller abort through to DuckDB before it starts work", async () => {
     await writeTestLake(lakeDir, {
       serverId,
-      matchFacts: [temporalMatch("NA1_ABORT", now.toISOString(), false)],
+      matchFacts: [temporalMatch("NA1_9100000000", now.toISOString(), false)],
     });
     const controller = new AbortController();
     controller.abort();
@@ -93,9 +95,7 @@ describe("executeReportQuery cancellation", () => {
     await writeTestLake(lakeDir, {
       serverId,
       alsoTrackedBy: [secondServerId],
-      matchFacts: [
-        temporalMatch("NA1_ABORT_SERVERS", now.toISOString(), false),
-      ],
+      matchFacts: [temporalMatch("NA1_9100000020", now.toISOString(), false)],
     });
     const controller = new AbortController();
     controller.abort();
@@ -121,9 +121,7 @@ describe("executeReportQuery cancellation", () => {
   test("aborts player-reference identity resolution", async () => {
     await writeTestLake(lakeDir, {
       serverId,
-      matchFacts: [
-        temporalMatch("NA1_ABORT_PLAYER_REF", now.toISOString(), false),
-      ],
+      matchFacts: [temporalMatch("NA1_9100000010", now.toISOString(), false)],
     });
     const controller = new AbortController();
     controller.abort();
@@ -153,7 +151,7 @@ describe("executeReportQuery row budget", () => {
       matchFacts: Array.from({ length: 60 }, (_, index) => ({
         playerId: index + 1,
         playerAlias: `Player ${index.toString().padStart(2, "0")}`,
-        matchId: `NA1_LIMIT_${index.toString()}`,
+        matchId: RiotMatchIdSchema.parse(`NA1_81001${index.toString()}`),
         puuid: testPuuid(`query-limit-${index.toString()}`),
         queue: "solo",
         win: true,
@@ -193,7 +191,7 @@ describe("executeReportQuery", () => {
         {
           playerId: 1,
           playerAlias: "First Player",
-          matchId: "NA1_1",
+          matchId: RiotMatchIdSchema.parse("NA1_1"),
           puuid: testPuuid("report-query-1"),
           queue: "solo",
           win: false,
@@ -206,7 +204,7 @@ describe("executeReportQuery", () => {
         {
           playerId: 1,
           playerAlias: "First Player",
-          matchId: "NA1_2",
+          matchId: RiotMatchIdSchema.parse("NA1_2"),
           puuid: testPuuid("report-query-1"),
           queue: "solo",
           win: true,
@@ -219,7 +217,7 @@ describe("executeReportQuery", () => {
         {
           playerId: 2,
           playerAlias: "Second Player",
-          matchId: "NA1_3",
+          matchId: RiotMatchIdSchema.parse("NA1_3"),
           puuid: testPuuid("report-query-2"),
           queue: "solo",
           win: true,
@@ -275,7 +273,7 @@ describe("executeReportQuery", () => {
         {
           playerId: 1,
           playerAlias: "First Player",
-          matchId: "NA1_4",
+          matchId: RiotMatchIdSchema.parse("NA1_4"),
           puuid: testPuuid("report-query-3"),
           queue: "arena",
           win: true,
@@ -288,7 +286,7 @@ describe("executeReportQuery", () => {
         {
           playerId: 2,
           playerAlias: "Second Player",
-          matchId: "NA1_5",
+          matchId: RiotMatchIdSchema.parse("NA1_5"),
           puuid: testPuuid("report-query-4"),
           queue: "arena",
           win: true,
@@ -318,7 +316,7 @@ describe("executeReportQuery", () => {
       matchFacts: [2, 3, 7, 12, 20].map((kills, index) => ({
         playerId: 1,
         playerAlias: "First Player",
-        matchId: `NA1_dist_${index.toString()}`,
+        matchId: RiotMatchIdSchema.parse(`NA1_81003${index.toString()}`),
         puuid: testPuuid("report-dist"),
         queue: "solo",
         win: true,
@@ -381,8 +379,8 @@ describe("executeReportQuery", () => {
     await writeTestLake(lakeDir, {
       serverId,
       matchFacts: [
-        temporalMatch("NA1_ancient", "2019-01-01T12:00:00.000Z", true),
-        temporalMatch("NA1_recent", "2026-05-16T12:00:00.000Z", true),
+        temporalMatch("NA1_9100000030", "2019-01-01T12:00:00.000Z", true),
+        temporalMatch("NA1_9100000120", "2026-05-16T12:00:00.000Z", true),
       ],
     });
 
@@ -438,12 +436,12 @@ describe("executeReportQuery temporal buckets", () => {
       serverId,
       matchFacts: [
         {
-          ...temporalMatch("NA1_ratio_1", "2026-05-16T12:00:00.000Z", true),
+          ...temporalMatch("NA1_9100000100", "2026-05-16T12:00:00.000Z", true),
           kills: 10,
           deaths: 1,
         },
         {
-          ...temporalMatch("NA1_ratio_2", "2026-05-17T12:00:00.000Z", false),
+          ...temporalMatch("NA1_9100000110", "2026-05-17T12:00:00.000Z", false),
           kills: 10,
           deaths: 10,
         },
@@ -473,7 +471,7 @@ describe("executeReportQuery temporal buckets", () => {
     await writeTestLake(lakeDir, {
       serverId,
       matchFacts: [
-        temporalMatch("NA1_signed_ratio", "2026-05-16T12:00:00.000Z", false),
+        temporalMatch("NA1_9100000130", "2026-05-16T12:00:00.000Z", false),
       ],
     });
 
@@ -502,9 +500,9 @@ describe("executeReportQuery compare = previous_period", () => {
     await writeTestLake(lakeDir, {
       serverId,
       matchFacts: [
-        temporalMatch("NA1_baseline", "2026-05-15T12:00:00.000Z", true),
-        temporalMatch("NA1_current_1", "2026-05-16T12:00:00.000Z", false),
-        temporalMatch("NA1_current_2", "2026-05-17T12:00:00.000Z", true),
+        temporalMatch("NA1_9100000040", "2026-05-15T12:00:00.000Z", true),
+        temporalMatch("NA1_9100000050", "2026-05-16T12:00:00.000Z", false),
+        temporalMatch("NA1_9100000060", "2026-05-17T12:00:00.000Z", true),
       ],
     });
 
@@ -572,7 +570,7 @@ describe("executeReportQuery distribution renders", () => {
       matchFacts: [400, 500, 700, 1300].map((duration, index) => ({
         playerId: 1,
         playerAlias: "First Player",
-        matchId: `NA1_hist_${index.toString()}`,
+        matchId: RiotMatchIdSchema.parse(`NA1_81004${index.toString()}`),
         puuid: testPuuid("report-hist"),
         queue: "solo",
         win: true,
@@ -615,7 +613,7 @@ describe("executeReportQuery distribution renders", () => {
       matchFacts: [0, 2, 4, 7, 12].map((kills, index) => ({
         playerId: 1,
         playerAlias: "First Player",
-        matchId: `NA1_box_${index.toString()}`,
+        matchId: RiotMatchIdSchema.parse(`NA1_81002${index.toString()}`),
         puuid: testPuuid("report-box"),
         queue: "solo",
         win: true,
@@ -662,7 +660,7 @@ describe("executeReportQuery player groups", () => {
         {
           playerId: 1,
           playerAlias: "First Player",
-          matchId: "NA1_group_eq",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000080"),
           puuid: testPuuid("report-group-1"),
           queue: "solo",
           win: true,
@@ -676,7 +674,7 @@ describe("executeReportQuery player groups", () => {
         {
           playerId: 2,
           playerAlias: "Second Player",
-          matchId: "NA1_group_eq",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000080"),
           puuid: testPuuid("report-group-2"),
           queue: "solo",
           win: true,
@@ -721,7 +719,7 @@ describe("executeReportQuery player groups", () => {
     const trio = [1, 2, 3].map((playerId) => ({
       playerId,
       playerAlias: `Player ${playerId.toString()}`,
-      matchId: "NA1_group_trio",
+      matchId: RiotMatchIdSchema.parse("NA1_9100000090"),
       puuid: testPuuid(`report-trio-${playerId.toString()}`),
       queue: "solo",
       win: true,
@@ -770,7 +768,7 @@ describe("executeReportQuery player groups", () => {
     ].map(({ playerId, subteam }) => ({
       playerId,
       playerAlias: `Arena ${playerId.toString()}`,
-      matchId: "NA1_group_arena",
+      matchId: RiotMatchIdSchema.parse("NA1_9100000070"),
       puuid: testPuuid(`report-arena-${playerId.toString()}`),
       queue: "arena",
       win: subteam === 1,

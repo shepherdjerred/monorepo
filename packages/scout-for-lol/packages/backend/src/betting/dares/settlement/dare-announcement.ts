@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { withholdDareCallout } from "#src/betting/dares/presentation/dare-callout-refresh-state.ts";
 import { enqueueTerminalDareNotification } from "#src/betting/dares/presentation/notify/dare-notification-production.ts";
 import {
@@ -61,7 +62,7 @@ export async function recordTerminalDareAnnouncement(
   input: {
     dare: { id: number; challengerDiscordId: string };
     contract: { revision: number; plainLanguage: string };
-    matchId?: string | undefined;
+    matchId?: RiotMatchId | undefined;
     now: Date;
     notify: DareNotificationDisposition;
   },

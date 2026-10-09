@@ -1,7 +1,7 @@
 import {
   isArenaQueueOrMode,
   type PlayerConfigEntry,
-  type MatchId,
+  type RiotMatchId,
   type RawMatch,
   type RawTimeline,
 } from "@scout-for-lol/data/index.ts";
@@ -10,7 +10,6 @@ import { createLogger } from "#src/logger.ts";
 import * as Sentry from "@sentry/bun";
 import { recordTimelineForReportStore } from "#src/report-store/live-ingest.ts";
 import { readTimelineSelection } from "#src/scout-client/canonical-match.ts";
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 
 const logger = createLogger("postmatch-match-report-standard");
 
@@ -19,7 +18,7 @@ type TimelinePersistence = "best_effort" | "required" | "required_if_available";
 function requireTimelineStaging(
   persistence: TimelinePersistence,
   staged: boolean,
-  matchId: MatchId,
+  matchId: RiotMatchId,
 ): void {
   if (staged || persistence === "best_effort") return;
   throw new Error(
@@ -34,7 +33,7 @@ function requireTimelineStaging(
  */
 export async function fetchTimelineIfStandardMatch(
   matchData: RawMatch,
-  matchId: MatchId,
+  matchId: RiotMatchId,
   playersInMatch: PlayerConfigEntry[],
 ): Promise<RawTimeline | undefined> {
   return await fetchAndRecordTimeline({
@@ -48,7 +47,7 @@ export async function fetchTimelineIfStandardMatch(
 /** Timeline capture required by a funded contract; persistence failure retries the match. */
 export async function fetchTimelineForDare(
   matchData: RawMatch,
-  matchId: MatchId,
+  matchId: RiotMatchId,
   playersInMatch: PlayerConfigEntry[],
 ): Promise<RawTimeline | undefined> {
   return await fetchAndRecordTimeline({
@@ -62,7 +61,7 @@ export async function fetchTimelineForDare(
 /** Timeline capture required by active challenge or duel evidence. */
 export async function fetchTimelineForProgression(
   matchData: RawMatch,
-  matchId: MatchId,
+  matchId: RiotMatchId,
   playersInMatch: PlayerConfigEntry[],
 ): Promise<RawTimeline | undefined> {
   return await fetchAndRecordTimeline({
@@ -77,7 +76,7 @@ export async function fetchTimelineForProgression(
 /** Duel evidence is durable when Riot supplies it; missing evidence enters organizer review. */
 export async function fetchTimelineForDuelProgression(
   matchData: RawMatch,
-  matchId: MatchId,
+  matchId: RiotMatchId,
   playersInMatch: PlayerConfigEntry[],
 ): Promise<RawTimeline | undefined> {
   return await fetchAndRecordTimeline({
@@ -93,7 +92,7 @@ export async function fetchTimelineForDuelProgression(
 export async function persistTimelineForProgression(
   timeline: RawTimeline,
   playersInMatch: PlayerConfigEntry[],
-  matchId: MatchId,
+  matchId: RiotMatchId,
   matchData: RawMatch,
 ): Promise<void> {
   const staged = await recordTimelineForReportStore({
@@ -118,7 +117,7 @@ async function recordClientTimeline(
   options: {
     readonly persistence: TimelinePersistence;
     readonly playersInMatch: PlayerConfigEntry[];
-    readonly matchId: MatchId;
+    readonly matchId: RiotMatchId;
     readonly matchData: RawMatch;
   },
   timeline: RawTimeline | null,
@@ -138,7 +137,7 @@ async function recordClientTimeline(
 
 function requireAvailableTimeline(options: {
   readonly persistence: TimelinePersistence;
-  readonly matchId: MatchId;
+  readonly matchId: RiotMatchId;
 }): void {
   if (options.persistence === "required") {
     requireTimelineStaging(options.persistence, false, options.matchId);
@@ -150,7 +149,7 @@ async function stageFetchedTimeline(
     readonly persistence: TimelinePersistence;
     readonly source?: "timeline_progression" | "timeline_scout_client";
     readonly playersInMatch: PlayerConfigEntry[];
-    readonly matchId: MatchId;
+    readonly matchId: RiotMatchId;
     readonly matchData: RawMatch;
   },
   timeline: RawTimeline,
@@ -184,16 +183,14 @@ async function stageFetchedTimeline(
 
 async function fetchAndRecordTimeline(options: {
   matchData: RawMatch;
-  matchId: MatchId;
+  matchId: RiotMatchId;
   playersInMatch: PlayerConfigEntry[];
   persistence: TimelinePersistence;
   source?: "timeline_progression";
 }): Promise<RawTimeline | undefined> {
   // Ahead of the Arena exit: the League client records Arena timelines too,
   // and a client match never waits on Riot either way.
-  const selection = await readTimelineSelection(
-    RiotMatchIdSchema.parse(options.matchId),
-  );
+  const selection = await readTimelineSelection(options.matchId);
   if (selection.source === "SCOUT_CLIENT") {
     return await recordClientTimeline(options, selection.timeline);
   }

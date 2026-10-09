@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -107,7 +108,7 @@ beforeAll(async () => {
     matchFacts: [
       {
         ...alice,
-        matchId: "NA1_100",
+        matchId: RiotMatchIdSchema.parse("NA1_100"),
         queue: "solo",
         win: true,
         kills: 2,
@@ -116,7 +117,7 @@ beforeAll(async () => {
       },
       {
         ...bob,
-        matchId: "NA1_100",
+        matchId: RiotMatchIdSchema.parse("NA1_100"),
         queue: "solo",
         win: false,
         kills: 3,
@@ -124,7 +125,7 @@ beforeAll(async () => {
       },
       {
         ...alice,
-        matchId: "NA1_101",
+        matchId: RiotMatchIdSchema.parse("NA1_101"),
         queue: "solo",
         win: true,
         kills: 7,
@@ -135,7 +136,7 @@ beforeAll(async () => {
       },
       {
         ...alice,
-        matchId: "NA1_102",
+        matchId: RiotMatchIdSchema.parse("NA1_102"),
         queue: "solo",
         win: false,
         kills: 12,
@@ -143,7 +144,7 @@ beforeAll(async () => {
       },
       {
         ...alice,
-        matchId: "NA1_103",
+        matchId: RiotMatchIdSchema.parse("NA1_103"),
         queue: "flex",
         win: true,
         kills: 20,
@@ -155,7 +156,7 @@ beforeAll(async () => {
         playerId: 8,
         playerAlias: "Derek",
         puuid: PD,
-        matchId: "NA1_100",
+        matchId: RiotMatchIdSchema.parse("NA1_100"),
         queue: "solo",
         win: true,
         surrendered: false,
@@ -169,7 +170,7 @@ beforeAll(async () => {
         playerAlias: "Charlie",
         riotIdGameName: "OldName",
         puuid: PC,
-        matchId: "NA1_300",
+        matchId: RiotMatchIdSchema.parse("NA1_300"),
         queue: "solo",
         win: false,
         surrendered: false,
@@ -183,7 +184,7 @@ beforeAll(async () => {
         playerAlias: "Charlie",
         riotIdGameName: "NewName",
         puuid: PC,
-        matchId: "NA1_301",
+        matchId: RiotMatchIdSchema.parse("NA1_301"),
         queue: "solo",
         win: true,
         surrendered: false,

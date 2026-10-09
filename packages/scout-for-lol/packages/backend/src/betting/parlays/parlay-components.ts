@@ -1,10 +1,11 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { formatInteger } from "@scout-for-lol/data";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import { BUTTON_STAKES } from "#src/betting/constants.ts";
 import { formatParlayCustomId } from "#src/betting/parlays/parlay-custom-id.ts";
 
 export function buildParlayButtons(input: {
-  matchId: string;
+  matchId: RiotMatchId;
   disabled?: boolean;
 }): ActionRowBuilder<ButtonBuilder> {
   const disabled = input.disabled ?? false;

@@ -1,4 +1,8 @@
 import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
+import {
   afterAll,
   beforeAll,
   beforeEach,
@@ -145,7 +149,7 @@ async function makeMonotone(dareId: number): Promise<void> {
   await freezeDareAsMonotone(db, dareId);
 }
 
-function matchAt(matchId: string, minutesAfterActivation = 60): RawMatch {
+function matchAt(matchId: RiotMatchId, minutesAfterActivation = 60): RawMatch {
   return targetMatchAt(
     matchFixture,
     matchId,
@@ -657,7 +661,7 @@ describe("Dare partial settlement", () => {
     await makeMonotone(firstDareId);
     await makeMonotone(secondDareId);
     lake.achieved = true;
-    const match = matchAt("NA1_DARE_PARTIAL");
+    const match = matchAt(RiotMatchIdSchema.parse("NA1_9100000060"));
     lake.sourceMatchIds = [match.metadata.matchId];
     const partiallyFailingClient = clientFailingSecondTransaction(
       "simulated second Dare failure",
@@ -844,7 +848,7 @@ describe("Dare evidence and settlement", () => {
     const dareId = await makeDraft();
     await activate(dareId, "achieved-replay");
     await makeMonotone(dareId);
-    const match = matchAt("NA1_DARE_ACHIEVED");
+    const match = matchAt(RiotMatchIdSchema.parse("NA1_9100000000"));
     lake.achieved = true;
     lake.sourceMatchIds = [match.metadata.matchId];
 
@@ -898,8 +902,14 @@ describe("Dare evidence and settlement", () => {
     lake.achieved = false;
 
     await Promise.all([
-      settleDaresForMatch(matchAt("NA1_DARE_MISS_A", 60), db),
-      settleDaresForMatch(matchAt("NA1_DARE_MISS_B", 120), db),
+      settleDaresForMatch(
+        matchAt(RiotMatchIdSchema.parse("NA1_9100000020"), 60),
+        db,
+      ),
+      settleDaresForMatch(
+        matchAt(RiotMatchIdSchema.parse("NA1_9100000030"), 120),
+        db,
+      ),
     ]);
     expect(await db.bucksDareEvidence.count({ where: { dareId } })).toBe(2);
     const deadlineAt = await activeDareDeadline(dareId);
@@ -935,7 +945,7 @@ describe("Dare evidence and settlement", () => {
     await activate(dareId, "unknowable");
     lake.achieved = null;
     const captured = await settleDaresForMatch(
-      matchAt("NA1_DARE_UNKNOWABLE"),
+      matchAt(RiotMatchIdSchema.parse("NA1_9100000070")),
       db,
     );
     expect(captured).toMatchObject([
@@ -973,7 +983,10 @@ describe("Dare evidence and settlement", () => {
     });
 
     await expect(
-      settleDaresForMatch(matchAt("NA1_DARE_INVALID_CONTRACT"), db),
+      settleDaresForMatch(
+        matchAt(RiotMatchIdSchema.parse("NA1_9100000010")),
+        db,
+      ),
     ).resolves.toMatchObject([{ dareId, resolution: "voided", value: null }]);
     const dare = await db.bucksDare.findUniqueOrThrow({
       where: { id: dareId },
@@ -989,7 +1002,7 @@ describe("Dare payout storage overflow", () => {
     await activate(dareId, "overflow-match");
     await makeMonotone(dareId);
     await fillTargetWallet(dareId);
-    const match = matchAt("NA1_DARE_OVERFLOW_MATCH");
+    const match = matchAt(RiotMatchIdSchema.parse("NA1_9100000050"));
     lake.achieved = true;
     lake.sourceMatchIds = [match.metadata.matchId];
 
@@ -1011,7 +1024,7 @@ describe("Dare payout storage overflow", () => {
     const dareId = await makeDraft();
     await activate(dareId, "overflow-deadline");
     await fillTargetWallet(dareId);
-    const match = matchAt("NA1_DARE_OVERFLOW_DEADLINE");
+    const match = matchAt(RiotMatchIdSchema.parse("NA1_9100000040"));
     lake.achieved = true;
     lake.sourceMatchIds = [match.metadata.matchId];
     await expect(settleDaresForMatch(match, db)).resolves.toMatchObject([

@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { beforeAll, describe, expect, test } from "vitest";
 import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
 import type { PlanQueryInput } from "#src/reports/duckdb/compile-plan.ts";
@@ -34,7 +35,7 @@ let files: LakeFiles;
 
 beforeAll(async () => {
   const base = {
-    matchId: "NA1_500",
+    matchId: RiotMatchIdSchema.parse("NA1_500"),
     queue: "solo",
     surrendered: false,
     kills: 0,
@@ -83,7 +84,7 @@ beforeAll(async () => {
     ],
     timelineFrames: [
       testFrameRow({
-        matchId: "NA1_500",
+        matchId: RiotMatchIdSchema.parse("NA1_500"),
         gameCreationAt: GAME,
         puuid: MIRA,
         participantId: 3,
@@ -93,7 +94,7 @@ beforeAll(async () => {
         jungle: 0,
       }),
       testFrameRow({
-        matchId: "NA1_500",
+        matchId: RiotMatchIdSchema.parse("NA1_500"),
         gameCreationAt: GAME,
         puuid: MIRA,
         participantId: 3,
@@ -103,7 +104,7 @@ beforeAll(async () => {
         jungle: 4,
       }),
       testFrameRow({
-        matchId: "NA1_500",
+        matchId: RiotMatchIdSchema.parse("NA1_500"),
         gameCreationAt: GAME,
         puuid: MIRA,
         participantId: 3,
@@ -113,7 +114,7 @@ beforeAll(async () => {
         jungle: 4,
       }),
       testFrameRow({
-        matchId: "NA1_500",
+        matchId: RiotMatchIdSchema.parse("NA1_500"),
         gameCreationAt: GAME,
         puuid: JAX,
         participantId: 2,
@@ -123,7 +124,7 @@ beforeAll(async () => {
         jungle: 0,
       }),
       testFrameRow({
-        matchId: "NA1_500",
+        matchId: RiotMatchIdSchema.parse("NA1_500"),
         gameCreationAt: GAME,
         puuid: JAX,
         participantId: 2,
@@ -133,7 +134,7 @@ beforeAll(async () => {
         jungle: 50,
       }),
       testFrameRow({
-        matchId: "NA1_500",
+        matchId: RiotMatchIdSchema.parse("NA1_500"),
         gameCreationAt: GAME,
         puuid: JAX,
         participantId: 2,
@@ -143,7 +144,7 @@ beforeAll(async () => {
         jungle: 70,
       }),
       testFrameRow({
-        matchId: "NA1_500",
+        matchId: RiotMatchIdSchema.parse("NA1_500"),
         gameCreationAt: GAME,
         puuid: OTTO,
         participantId: 8,
@@ -153,7 +154,7 @@ beforeAll(async () => {
         jungle: 0,
       }),
       testFrameRow({
-        matchId: "NA1_500",
+        matchId: RiotMatchIdSchema.parse("NA1_500"),
         gameCreationAt: GAME,
         puuid: OTTO,
         participantId: 8,
@@ -163,7 +164,7 @@ beforeAll(async () => {
         jungle: 0,
       }),
       testFrameRow({
-        matchId: "NA1_500",
+        matchId: RiotMatchIdSchema.parse("NA1_500"),
         gameCreationAt: GAME,
         puuid: OTTO,
         participantId: 8,

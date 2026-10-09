@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import * as Sentry from "@sentry/bun";
 import type { MessageCreateOptions } from "discord.js";
 import {
@@ -70,7 +71,7 @@ const defaultSettlementDeliveryDependencies: SettlementDeliveryDependencies = {
  * and `enforceNonce` would silently drop a one-shot parlay settlement.
  */
 function settlementNonce(
-  matchId: string,
+  matchId: RiotMatchId,
   channelId: DiscordChannelId,
   kind: "outcome" | "parlay" | "earnings",
 ): string {
@@ -131,7 +132,7 @@ async function sendSettlementWithRetries(
 export async function sendSettlementMessage(
   input: {
     message: MessageCreateOptions;
-    matchId: string;
+    matchId: RiotMatchId;
     channelId: string;
     guildId: string;
     kind: "outcome" | "parlay" | "earnings";
@@ -246,7 +247,10 @@ type Announcement = {
 const EMPTY_POOL = sumToPoolTotal([]);
 
 /** A settled-but-empty pool, used as the carrier for closures and parlays. */
-function zeroSummary(matchId: string, serverId: string): SettlementSummary {
+function zeroSummary(
+  matchId: RiotMatchId,
+  serverId: string,
+): SettlementSummary {
   return {
     matchId,
     serverId,
@@ -362,7 +366,7 @@ export function buildAnnouncements(input: {
  */
 export async function announceSettlements(
   input: {
-    matchId: string;
+    matchId: RiotMatchId;
     closures: readonly ClosedPool[];
     settlements: readonly SettlementSummary[];
     parlaySettlements: readonly ParlaySettlementSummary[];
@@ -468,7 +472,7 @@ export async function announceSettlements(
  */
 export async function announceEarnedAwards(
   input: {
-    matchId: string;
+    matchId: RiotMatchId;
     earnings: readonly EarnedAward[];
     postmatchMessageIds: ReadonlyMap<string, string>;
   },

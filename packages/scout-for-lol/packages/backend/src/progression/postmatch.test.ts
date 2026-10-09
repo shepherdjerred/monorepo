@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { RawMatch } from "@scout-for-lol/data";
 import { testPuuid } from "#src/testing/test-ids.ts";
@@ -60,7 +61,7 @@ function matchFixture(): RawMatch {
   return {
     metadata: {
       dataVersion: "2",
-      matchId: "NA1_1234567890",
+      matchId: RiotMatchIdSchema.parse("NA1_1234567890"),
       participants: [testPuuid("timeline-participant")],
     },
     info: {

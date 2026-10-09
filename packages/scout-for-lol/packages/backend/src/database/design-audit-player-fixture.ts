@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import type { PrismaClient } from "#generated/prisma/client/index.js";
 import type {
   DiscordAccountId,
@@ -66,7 +67,7 @@ export async function seedDesignAuditPlayerProfile(input: {
   await input.prisma.matchRankHistory.createMany({
     data: [
       {
-        matchId: "design-audit-match-1",
+        matchId: RiotMatchIdSchema.parse("NA1_9200000001"),
         puuid: input.puuid,
         queueType: "solo",
         rankBefore: JSON.stringify({
@@ -88,7 +89,7 @@ export async function seedDesignAuditPlayerProfile(input: {
         capturedAt: input.now,
       },
       {
-        matchId: "design-audit-match-2",
+        matchId: RiotMatchIdSchema.parse("NA1_9200000002"),
         puuid: input.secondaryPuuid,
         queueType: "flex",
         rankBefore: JSON.stringify({

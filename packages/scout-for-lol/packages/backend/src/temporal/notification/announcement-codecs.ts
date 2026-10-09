@@ -33,8 +33,10 @@ import type {
   ParlaySettlementBet,
   ParlaySettlementSummary,
 } from "#src/betting/parlays/runtime/parlay-settlement-types.ts";
-import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
-import type { SettlementBet } from "#src/betting/settlement/settlement-types.ts";
+import {
+  type SettlementSummary,
+  type SettlementBet,
+} from "#src/betting/settlement/settlement-types.ts";
 
 /**
  * The wire shape of what a `settlement` or `hall-record-break` intent
@@ -99,7 +101,7 @@ const SettlementBetSchema = z.strictObject({
 }) satisfies z.ZodType<SettlementBet>;
 
 export const SettlementSummarySchema = z.strictObject({
-  matchId: z.string().min(1),
+  matchId: RiotMatchIdSchema,
   serverId: z.string().min(1),
   winningTeamId: z.number().int().optional(),
   voidReason: BucksVoidReasonSchema.optional(),
@@ -124,7 +126,7 @@ const MessageRefSchema = z.strictObject({
 });
 
 export const ParlaySettlementSummarySchema = z.strictObject({
-  matchId: z.string().min(1),
+  matchId: RiotMatchIdSchema,
   serverId: z.string().min(1),
   yesResult: z.boolean().optional(),
   voidReason: BucksParlayVoidReasonSchema.optional(),

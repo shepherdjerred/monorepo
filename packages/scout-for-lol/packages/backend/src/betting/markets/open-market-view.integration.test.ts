@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import {
   DiscordGuildIdSchema,
@@ -17,7 +18,7 @@ const { prisma: db } = createTestDatabase("bucks-open-market-view");
 const SERVER_ID = DiscordGuildIdSchema.parse("100000000000000071");
 const VIEWER = bucksTestDiscordId(1);
 const BETTOR = bucksTestDiscordId(2);
-const MATCH_ID = "NA1_5000009201";
+const MATCH_ID = RiotMatchIdSchema.parse("NA1_5000009201");
 
 /** A roster tracked on one side only, so WIN/LOSE framing applies. */
 function singleSideRoster(): BucksPoolParticipant[] {

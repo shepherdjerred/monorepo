@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterEach, describe, expect, test } from "vitest";
 import { dareDraftComponents } from "#src/betting/dares/presentation/dare-components.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
@@ -37,7 +38,7 @@ describe("stage-aware Discord links", () => {
     expect(getExploreConversationUrl("conversation-id")).toBe(
       "https://beta.scout-for-lol.com/app/explore/conversation-id",
     );
-    expect(getExploreMatchUrl("NA1_1234567890")).toBe(
+    expect(getExploreMatchUrl(RiotMatchIdSchema.parse("NA1_1234567890"))).toBe(
       "https://beta.scout-for-lol.com/app/explore/matches/NA1_1234567890",
     );
     expect(getHallOfFameUrl("100000000000000001")).toBe(

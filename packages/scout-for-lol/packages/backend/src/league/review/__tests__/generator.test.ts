@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
-  MatchIdSchema,
+  RiotMatchIdSchema,
   RawMatchSchema,
   RawTimelineSchema,
   type ArenaMatch,
@@ -51,7 +51,7 @@ vi.doMock("../player-history.ts", () => ({
 }));
 
 // Test match ID for all tests
-const TEST_MATCH_ID = MatchIdSchema.parse("NA1_1234567890");
+const TEST_MATCH_ID = RiotMatchIdSchema.parse("NA1_1234567890");
 
 // Minimal raw match fixture for testing (function returns early when API keys are not configured)
 const MINIMAL_RAW_MATCH: RawMatch = RawMatchSchema.parse({

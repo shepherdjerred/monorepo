@@ -113,7 +113,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.readState.mockResolvedValue({ kind: "absent" });
   mocks.resolveContext.mockResolvedValue({
-    matchId: riotMatchId,
+    riotMatchId,
     matchData,
     matchDataSource: "SCOUT_CLIENT",
     trackedPlayers: [],

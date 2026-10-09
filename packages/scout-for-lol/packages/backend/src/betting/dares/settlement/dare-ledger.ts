@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   BucksAmountSchema,
   BucksStakeSchema,
@@ -56,7 +57,7 @@ export type DareLedgerFacts = {
   potTotal: DarePotTotal;
   targetAliases: readonly string[];
   conditionSummary: string;
-  matchId?: string | undefined;
+  matchId?: RiotMatchId | undefined;
 };
 
 type DarePayoutTarget = {

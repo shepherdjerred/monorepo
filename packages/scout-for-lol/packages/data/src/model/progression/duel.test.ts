@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import {
   DuelCompetitorSchema,
@@ -37,7 +38,7 @@ function timeline(
   secondPuuids: string[],
 ): DuelTimelineInput {
   return {
-    matchId: "NA1_1",
+    matchId: RiotMatchIdSchema.parse("NA1_1"),
     completed: true,
     timelineComplete: true,
     participants: [

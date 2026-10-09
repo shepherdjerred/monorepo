@@ -1,5 +1,5 @@
 import { ApplicationFailure } from "@temporalio/common";
-import { MatchIdSchema, resolveQueueTypeFromGame } from "@scout-for-lol/data";
+import { resolveQueueTypeFromGame } from "@scout-for-lol/data";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { ScoutMatchRef } from "@scout-for-lol/temporal/pipeline-contracts";
 import { SCOUT_MATCH_RECEIPT_KINDS } from "@scout-for-lol/temporal/match-receipts";
@@ -120,11 +120,7 @@ async function recordedRankChanges(
   const ranked =
     queueType === "solo" || queueType === "flex" || queueType === "ranked 5s";
   return ranked
-    ? await getRecordedRankChangesForMatch(
-        MatchIdSchema.parse(riotMatchId),
-        queueType,
-        prisma,
-      )
+    ? await getRecordedRankChangesForMatch(riotMatchId, queueType, prisma)
     : new Map();
 }
 

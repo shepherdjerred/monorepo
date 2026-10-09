@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/data";
 import { describe, expect, test } from "vitest";
 import {
   appendOperationsPage,
@@ -8,8 +9,8 @@ import {
   type OperationsQueuesData,
 } from "#src/lib/operations/operations-queues.ts";
 
-const MATCH_A = "NA1_1111111111";
-const MATCH_B = "EUW1_2222222222";
+const MATCH_A = RiotMatchIdSchema.parse("NA1_1111111111");
+const MATCH_B = RiotMatchIdSchema.parse("EUW1_2222222222");
 const UNKNOWN_INTENT_KEY = "match:EUW1_2222222222/dm:42";
 
 /** The moment the fixture rows were read. */
@@ -46,7 +47,7 @@ const QUEUES: OperationsQueuesData = {
   unknownDeliveries: [
     {
       intentKey: UNKNOWN_INTENT_KEY,
-      matchId: MATCH_B,
+      matchId: RiotMatchIdSchema.parse(MATCH_B),
       attemptCount: 2,
       attemptNonce: "attempt-3",
       state: "unknown-delivery",
@@ -257,7 +258,7 @@ describe("paging", () => {
     const next: OperationsQueuesData = {
       ...QUEUES,
       // A cursored request still re-reads every other queue's first page.
-      stalledMatchProcessing: ["NA1_9999999999"],
+      stalledMatchProcessing: [RiotMatchIdSchema.parse("NA1_9999999999")],
       stalledNotifications: [notification("intent-page-2", "ready", FUTURE)],
       pages: NO_PAGES,
     };

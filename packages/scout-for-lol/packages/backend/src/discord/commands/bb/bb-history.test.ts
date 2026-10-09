@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import { BucksLedgerKindSchema } from "@scout-for-lol/data/index.ts";
 import {
@@ -37,7 +38,7 @@ describe("/bb history labels", () => {
           delta: -3000,
           balanceAfter: 12_345,
           kind: BucksLedgerKindSchema.parse("cancel_fee"),
-          matchId: "NA1_1",
+          matchId: RiotMatchIdSchema.parse("NA1_1"),
           context: "{}",
           createdAt: new Date(0),
         },
@@ -46,7 +47,7 @@ describe("/bb history labels", () => {
           delta: -2,
           balanceAfter: 10,
           kind: BucksLedgerKindSchema.parse("house_rake"),
-          matchId: "NA1_1",
+          matchId: RiotMatchIdSchema.parse("NA1_1"),
           context: "{}",
           createdAt: new Date(0),
         },
@@ -79,7 +80,7 @@ describe("/bb history labels", () => {
             delta: 5,
             balanceAfter: 30,
             kind: BucksLedgerKindSchema.parse("bet_payout"),
-            matchId: "NA1_777",
+            matchId: RiotMatchIdSchema.parse("NA1_777"),
             context: "{}",
             createdAt: new Date(0),
           },
@@ -88,7 +89,7 @@ describe("/bb history labels", () => {
             delta: 1,
             balanceAfter: 25,
             kind: BucksLedgerKindSchema.parse("earn_game"),
-            matchId: "NA1_778",
+            matchId: RiotMatchIdSchema.parse("NA1_778"),
             context: "{}",
             createdAt: new Date(0),
           },
@@ -119,7 +120,7 @@ describe("/bb history labels", () => {
       delta: 1,
       balanceAfter: index + 1,
       kind: BucksLedgerKindSchema.parse("earn_game"),
-      matchId: `NA1_${index.toString()}`,
+      matchId: RiotMatchIdSchema.parse(`NA1_${index.toString()}`),
       context: "{}",
       createdAt: new Date(0),
     }));

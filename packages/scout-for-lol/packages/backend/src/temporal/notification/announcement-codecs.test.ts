@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import {
   BucksAmountSchema,
@@ -33,7 +34,7 @@ const amount = (value: number) => BucksAmountSchema.parse(value);
 function settlementInput(): SettlementAnnouncementInput {
   return {
     summary: {
-      matchId: "NA1_9301",
+      matchId: RiotMatchIdSchema.parse("NA1_9301"),
       serverId: "100000000000000001",
       winningTeamId: 100,
       voidReason: undefined,
@@ -62,7 +63,7 @@ function settlementInput(): SettlementAnnouncementInput {
     },
     includeOutcome: true,
     parlay: {
-      matchId: "NA1_9301",
+      matchId: RiotMatchIdSchema.parse("NA1_9301"),
       serverId: "100000000000000001",
       yesResult: false,
       voidReason: undefined,

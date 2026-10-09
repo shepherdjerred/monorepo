@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test, vi } from "vitest";
 import {
   ExploreLoadoutCardRequestSchema,
@@ -32,7 +33,7 @@ vi.mock("#src/reports/duckdb/consumer/profile-lake-reads.ts", () => ({
 
 const PUUID = "0192af5b-0c88-7c3a-a17f-858c0a170001";
 const LOADOUT_ROW: LakeMatchLoadoutRow = {
-  match_id: "NA1_12345",
+  match_id: RiotMatchIdSchema.parse("NA1_12345"),
   game_duration_seconds: 1800,
   puuid: PUUID,
   participant_id: 1,
@@ -330,7 +331,7 @@ describe("Explore loadout card hydration", () => {
   test("maps participant fields and asset filenames without retaining the PUUID", () => {
     const card = buildExploreLoadoutCard({
       request: ExploreLoadoutCardRequestSchema.parse({
-        matchId: "NA1_12345",
+        matchId: RiotMatchIdSchema.parse("NA1_12345"),
         puuid: PUUID,
         size: "L",
       }),
@@ -339,7 +340,7 @@ describe("Explore loadout card hydration", () => {
     });
 
     expect(card).toMatchObject({
-      matchId: "NA1_12345",
+      matchId: RiotMatchIdSchema.parse("NA1_12345"),
       championName: "Ahri",
       finalItems: [
         { slot: 0, itemId: 1056, name: "Doran's Ring" },
@@ -379,7 +380,7 @@ describe("Explore loadout card hydration", () => {
   test("marks rune IDs outside the pinned catalog as unknown", () => {
     const card = buildExploreLoadoutCard({
       request: ExploreLoadoutCardRequestSchema.parse({
-        matchId: "NA1_12345",
+        matchId: RiotMatchIdSchema.parse("NA1_12345"),
         puuid: PUUID,
         size: "L",
       }),

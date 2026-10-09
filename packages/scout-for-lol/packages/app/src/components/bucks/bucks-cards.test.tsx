@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/data";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 import { BucksCountdown } from "#src/components/bucks/bucks-countdown.tsx";
@@ -45,7 +46,7 @@ describe("BucksWalletCard", () => {
 
 describe("BucksMarketCard", () => {
   const market = {
-    matchId: "NA1_123",
+    matchId: RiotMatchIdSchema.parse("NA1_123"),
     sides: [
       {
         teamId: 100,
@@ -160,7 +161,7 @@ describe("BucksPendingPositions", () => {
         positions={[
           {
             marketType: "outcome",
-            matchId: "NA1_1",
+            matchId: RiotMatchIdSchema.parse("NA1_1"),
             gameAlias: "jerred",
             sideLabel: "WIN",
             offeredStake: 10,
@@ -170,7 +171,7 @@ describe("BucksPendingPositions", () => {
           },
           {
             marketType: "outcome",
-            matchId: "NA1_2",
+            matchId: RiotMatchIdSchema.parse("NA1_2"),
             gameAlias: "bryan",
             sideLabel: "LOSE",
             offeredStake: 5,
@@ -183,7 +184,7 @@ describe("BucksPendingPositions", () => {
             // yet — cancelBet would refuse with window_closed, so no fee is
             // quoted and Cancel must not appear despite poolState still open.
             marketType: "outcome",
-            matchId: "NA1_3",
+            matchId: RiotMatchIdSchema.parse("NA1_3"),
             gameAlias: "jerred",
             sideLabel: "WIN",
             offeredStake: 8,
@@ -234,7 +235,7 @@ describe("BucksLedgerList", () => {
             delta: 1500,
             balanceAfter: 1525,
             label: "Bet settled",
-            matchId: "NA1_9",
+            matchId: RiotMatchIdSchema.parse("NA1_9"),
             createdAt: "2026-08-28T12:00:00.000Z",
           },
           {

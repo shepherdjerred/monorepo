@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import * as Sentry from "@sentry/bun";
 import type { RawMatch } from "@scout-for-lol/data";
 import {
@@ -47,14 +48,14 @@ export async function refreshPendingDareV2CalloutsWithoutBlocking(
 }
 
 export async function refreshSettledPoolMessages(
-  straightPools: readonly { matchId: string; serverId: string }[],
+  straightPools: readonly { matchId: RiotMatchId; serverId: string }[],
   parlaySettlements: readonly ParlaySettlementSummary[],
   refreshStraightPools: typeof refreshClosedBucksMessages = refreshClosedBucksMessages,
   disableParlayPools: typeof refreshClosedParlayMessages = refreshClosedParlayMessages,
 ): Promise<void> {
   const uniqueStraightPools = new Map<
     string,
-    { matchId: string; serverId: string }
+    { matchId: RiotMatchId; serverId: string }
   >();
   for (const pool of straightPools) {
     uniqueStraightPools.set(`${pool.serverId}:${pool.matchId}`, pool);

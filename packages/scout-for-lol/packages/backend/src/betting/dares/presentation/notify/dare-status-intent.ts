@@ -1,4 +1,7 @@
-import { NotificationIntentKeySchema } from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  NotificationIntentKeySchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
@@ -181,7 +184,7 @@ export async function mintDareResultIntent(
     dareId: number;
     revision: number;
     result: DareResultAnnouncement;
-    matchId?: string | undefined;
+    matchId?: RiotMatchId | undefined;
     occurredAt: Date;
   },
 ): Promise<void> {

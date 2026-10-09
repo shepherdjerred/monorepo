@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { createLogger } from "#src/logger.ts";
 import { captureBucksLifecycle } from "#src/analytics/bryan-bucks.ts";
 
@@ -35,7 +36,7 @@ export type BucksTransitionEvent = Parameters<
 
 export type BucksTransitionFields = {
   event: BucksTransitionEvent;
-  matchId?: string;
+  matchId?: RiotMatchId;
   serverId?: string;
   poolId?: number;
   marketId?: number;

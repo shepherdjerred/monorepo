@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import type { MatchLakeRow } from "#src/model/reports/lake-columns.ts";
 import {
@@ -168,7 +169,9 @@ function candidate(holder: HallRecordHolder, value: number): HallCandidate {
     value,
     holder,
     evidence: {
-      matchId: `match-${holder.playerId.toString()}`,
+      matchId: RiotMatchIdSchema.parse(
+        `NA1_${(9_800_000_000 + holder.playerId).toString()}`,
+      ),
       gameEndAt: "2026-01-01T00:30:00.000Z",
       value,
       holder,
@@ -278,7 +281,7 @@ describe("Hall of Fame domain", () => {
       value: 0,
       holder: holderOne,
       evidence: {
-        matchId: "match-penta-0",
+        matchId: RiotMatchIdSchema.parse("NA1_9100000000"),
         gameEndAt: "2026-01-01T00:30:00.000Z",
         value: 0,
         holder: holderOne,

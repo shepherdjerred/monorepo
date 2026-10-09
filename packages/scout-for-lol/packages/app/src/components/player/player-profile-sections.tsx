@@ -4,6 +4,7 @@ import {
   divisionToString,
   type MatchLoadout,
   type Rank,
+  type RiotMatchId,
 } from "@scout-for-lol/data";
 import { SCOUT_RANKS } from "@scout-for-lol/design-system/assets";
 import { Link } from "react-router";
@@ -225,7 +226,7 @@ export function PlayerSummaryCards(props: {
 }
 
 type MatchEntry = {
-  matchId: string;
+  matchId: RiotMatchId;
   gameCreationMs: number;
   gameDurationSeconds: number;
   queue: string | null;

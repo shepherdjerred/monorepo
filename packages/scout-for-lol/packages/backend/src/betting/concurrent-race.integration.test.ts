@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import {
   DiscordAccountIdSchema,
@@ -30,7 +31,7 @@ const { prisma: db } = createTestDatabase("bucks-concurrent-race");
 
 const SERVER_ID = DiscordGuildIdSchema.parse("1337623164146155593");
 const BETTOR = DiscordAccountIdSchema.parse("160509172704739328");
-const MATCH_ID = "NA1_5000009001";
+const MATCH_ID = RiotMatchIdSchema.parse("NA1_5000009001");
 const SUBJECT_PUUID = bucksTestPuuid(0);
 
 async function clearAll() {
@@ -135,7 +136,11 @@ describe("betting under real concurrency", () => {
     const results = await Promise.all(
       Array.from({ length: 6 }, () =>
         cancelBet(
-          { matchId: MATCH_ID, serverId: SERVER_ID, discordId: BETTOR },
+          {
+            matchId: MATCH_ID,
+            serverId: SERVER_ID,
+            discordId: BETTOR,
+          },
           db,
         ),
       ),

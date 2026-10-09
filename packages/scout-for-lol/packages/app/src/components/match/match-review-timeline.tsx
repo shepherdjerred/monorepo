@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/data";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Loaded } from "@shepherdjerred/loaded";
@@ -28,7 +29,7 @@ export type ReviewSource =
   { kind: "consumer"; playerId: number } | { kind: "explore" };
 type Props = {
   source: ReviewSource;
-  matchId: string;
+  matchId: RiotMatchId;
   teams: MatchTeam[];
   showRiftMap: boolean;
   compareLanes: boolean;

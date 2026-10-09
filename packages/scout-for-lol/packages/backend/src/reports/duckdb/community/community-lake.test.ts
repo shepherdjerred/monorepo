@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -18,7 +19,10 @@ const puuids = Array.from({ length: 10 }, (_, index) =>
   testPuuid(`community-${index.toString()}`),
 );
 
-function fact(index: number, matchId = "NA1_standard") {
+function fact(
+  index: number,
+  matchId = RiotMatchIdSchema.parse("NA1_9100000100"),
+) {
   return {
     playerId: index + 1,
     playerAlias: `Player ${index.toString()}`,
@@ -45,7 +49,7 @@ beforeAll(async () => {
     matchFacts: [
       ...Array.from({ length: 10 }, (_, index) => fact(index)),
       {
-        ...fact(0, "NA1_arena"),
+        ...fact(0, RiotMatchIdSchema.parse("NA1_9100000000")),
         queue: "arena",
         queueId: 1700,
         gameMode: "CHERRY",
@@ -72,7 +76,7 @@ describe("community lake reads", () => {
     });
     expect(rows).toHaveLength(10);
     expect(new Set(rows.map((row) => row.match_id))).toEqual(
-      new Set(["NA1_standard"]),
+      new Set(["NA1_9100000100"]),
     );
     expect(
       await fetchGuildMatchRows({ puuids: [testPuuid("outsider")], lakeDir }),
@@ -86,7 +90,10 @@ describe("community lake reads", () => {
       lakeDir,
     });
     expect(guildRows[0]?.player_subteam_id).toBe(1);
-    const detail = await fetchFullMatch({ matchId: "NA1_arena", lakeDir });
+    const detail = await fetchFullMatch({
+      matchId: RiotMatchIdSchema.parse("NA1_9100000000"),
+      lakeDir,
+    });
     expect(detail[0]).toMatchObject({
       player_subteam_id: 1,
       placement: 2,

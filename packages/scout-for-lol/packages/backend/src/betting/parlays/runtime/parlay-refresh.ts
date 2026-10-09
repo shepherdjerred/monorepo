@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import * as Sentry from "@sentry/bun";
 import {
   BucksMessageRefsSchema,
@@ -39,13 +40,13 @@ const defaultEditMessage: BucksMessageEdit = async (input) => {
   await channel.messages.edit(input.messageId, input.options);
 };
 
-function refreshKey(matchId: string, serverId: DiscordGuildId): string {
+function refreshKey(matchId: RiotMatchId, serverId: DiscordGuildId): string {
   return `parlay:${serverId}:${matchId}`;
 }
 
 async function refreshOnce(
   input: {
-    matchId: string;
+    matchId: RiotMatchId;
     serverId: DiscordGuildId;
     removeComponents: boolean;
   },
@@ -178,7 +179,7 @@ async function refreshOnce(
  */
 export async function refreshParlayMessages(
   input: {
-    matchId: string;
+    matchId: RiotMatchId;
     serverId: DiscordGuildId;
     removeComponents?: boolean;
   },
@@ -214,7 +215,7 @@ export async function refreshParlayMessages(
 
 /** Re-render closed, settled, or voided markets with their controls removed. */
 export async function refreshClosedParlayMessages(
-  closed: readonly { matchId: string; serverId: string }[],
+  closed: readonly { matchId: RiotMatchId; serverId: string }[],
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<void> {
   for (const market of closed) {

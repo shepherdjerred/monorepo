@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import * as Sentry from "@sentry/bun";
 import {
   BucksDeltaSchema,
@@ -133,7 +134,7 @@ function classicPrematchTargetsFromSnapshot(
  */
 export async function awardClassicPrematchForGame(
   input: {
-    matchId: string;
+    matchId: RiotMatchId;
     gameInfo: RawCurrentGameInfo;
     trackedAliasByPuuid: ReadonlyMap<string, string>;
     detectedAt: Date;
@@ -145,7 +146,7 @@ export async function awardClassicPrematchForGame(
 
 async function awardClassicPrematchForGameUnsafe(
   input: {
-    matchId: string;
+    matchId: RiotMatchId;
     gameInfo: RawCurrentGameInfo;
     trackedAliasByPuuid: ReadonlyMap<string, string>;
     detectedAt: Date;
@@ -186,7 +187,7 @@ async function awardClassicPrematchForGameUnsafe(
 
 async function awardClassicPrematchForGuild(input: {
   prismaClient: ExtendedPrismaClient;
-  matchId: string;
+  matchId: RiotMatchId;
   serverId: string;
   matchCreatedAt: Date;
   targets?: readonly ClassicPrematchEarnTarget[];

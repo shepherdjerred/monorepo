@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { BUCKS_INT32_MAX } from "@scout-for-lol/data";
 import { z } from "zod";
 
@@ -35,7 +36,7 @@ export type BucksCustomId = z.infer<typeof BucksCustomIdSchema>;
 export const BucksCustomIdSchema = z.strictObject({
   /** `b` places a bet; `x` cancels the sender's position. */
   action: BucksActionSchema,
-  matchId: z.string().min(1),
+  matchId: RiotMatchIdSchema,
   /** Index into `BucksMatchPool.roster.participants`. */
   subjectIndex: z.number().int().min(0).max(9),
   /** Whether the selected team matches the anchor's team. */

@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   BucksDeltaSchema,
   BucksParlaySideSchema,
@@ -28,7 +29,7 @@ export async function settlePosition(
     position: PlannedPosition;
     houseId: number;
     houseRefundableHeldAfterSettlement: bigint;
-    matchId: string;
+    matchId: RiotMatchId;
     voidReason: BucksParlayVoidReason | undefined;
     yesResult: boolean | undefined;
   },

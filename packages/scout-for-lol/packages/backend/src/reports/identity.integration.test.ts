@@ -10,6 +10,10 @@ import {
 import { executeReportQuery } from "#src/reports/query/query-engine.ts";
 import { GLOBAL_SCOPE, guildScope } from "#src/reports/duckdb/scope.ts";
 import { resolvePlayerIdentities } from "#src/reports/identity.ts";
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { formatScoutQl } from "@scout-for-lol/data/model/scoutql/editor/format.ts";
 
 /**
@@ -35,7 +39,7 @@ const OTHER_PLAYER = testPuuid("other-player");
 
 function fact(
   overrides: Partial<TestLakeMatchFact> & {
-    matchId: string;
+    matchId: RiotMatchId;
     puuid: string;
     playerId: number;
     playerAlias: string;
@@ -56,7 +60,7 @@ function fact(
 const matchFacts: TestLakeMatchFact[] = [
   // Aaron's main, renamed part-way through: two Riot IDs, one PUUID.
   fact({
-    matchId: "NA1_A1",
+    matchId: RiotMatchIdSchema.parse("NA1_9100000000"),
     puuid: AARON_MAIN,
     playerId: 1,
     playerAlias: "Aaron",
@@ -65,7 +69,7 @@ const matchFacts: TestLakeMatchFact[] = [
     gameCreationAt: new Date(Date.UTC(2026, 3, 1)),
   }),
   fact({
-    matchId: "NA1_A2",
+    matchId: RiotMatchIdSchema.parse("NA1_9100000010"),
     puuid: AARON_MAIN,
     playerId: 1,
     playerAlias: "Aaron",
@@ -75,7 +79,7 @@ const matchFacts: TestLakeMatchFact[] = [
   }),
   // Aaron's second account: a third Riot ID, a second PUUID.
   fact({
-    matchId: "NA1_A3",
+    matchId: RiotMatchIdSchema.parse("NA1_9100000020"),
     puuid: AARON_SMURF,
     playerId: 1,
     playerAlias: "Aaron",
@@ -87,7 +91,7 @@ const matchFacts: TestLakeMatchFact[] = [
   // resolver must expand the first match, claim both PUUIDs, and not return a
   // duplicate identity for the second.
   fact({
-    matchId: "NA1_A4",
+    matchId: RiotMatchIdSchema.parse("NA1_9100000030"),
     puuid: AARON_MAIN,
     playerId: 1,
     playerAlias: "Aaron",
@@ -97,7 +101,7 @@ const matchFacts: TestLakeMatchFact[] = [
     gameCreationAt: new Date(Date.UTC(2026, 2, 1)),
   }),
   fact({
-    matchId: "NA1_A5",
+    matchId: RiotMatchIdSchema.parse("NA1_9100000040"),
     puuid: AARON_SMURF,
     playerId: 1,
     playerAlias: "Aaron",
@@ -108,7 +112,7 @@ const matchFacts: TestLakeMatchFact[] = [
   }),
   // Edward, whose old name starts with the word "Long".
   fact({
-    matchId: "NA1_E1",
+    matchId: RiotMatchIdSchema.parse("NA1_9100000050"),
     puuid: EDWARD,
     playerId: 2,
     playerAlias: "Edward",
@@ -119,7 +123,7 @@ const matchFacts: TestLakeMatchFact[] = [
   // deliberately collides with Aaron's id and must not join to him when the
   // asker belongs to both servers.
   fact({
-    matchId: "NA1_O1",
+    matchId: RiotMatchIdSchema.parse("NA1_9100000060"),
     puuid: OTHER_PLAYER,
     playerId: 1,
     playerAlias: "Other",

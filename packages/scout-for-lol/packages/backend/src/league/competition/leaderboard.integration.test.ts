@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test, afterAll, beforeEach } from "vitest";
 import { z } from "zod";
 import { calculateLeaderboard } from "#src/league/competition/leaderboard.ts";
@@ -508,7 +509,7 @@ describe("calculateLeaderboard integration tests - rank history", () => {
     };
     await prisma.matchRankHistory.create({
       data: {
-        matchId: "NA1_999999999",
+        matchId: RiotMatchIdSchema.parse("NA1_999999999"),
         puuid,
         queueType: "solo",
         rankBefore: JSON.stringify(lowerRank),

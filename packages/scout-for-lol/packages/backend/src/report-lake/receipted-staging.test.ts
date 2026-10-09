@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -281,7 +282,9 @@ describe("receipted match staging", () => {
 
 describe("receipted timeline staging", () => {
   test("counts the full raw timeline and all four projection tables", async () => {
-    const timeline = rawTimelineFixture("NA1_5370969615");
+    const timeline = rawTimelineFixture(
+      RiotMatchIdSchema.parse("NA1_5370969615"),
+    );
     const source = artifactDescriptorFixture("timeline");
 
     const result = await stageTimelineReceipted(

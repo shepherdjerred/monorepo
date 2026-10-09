@@ -28,7 +28,7 @@ const {
 const fixture = RawMatchSchema.parse(
   await Bun.file("../../testdata/rift.json").json(),
 );
-const riotMatchId = RiotMatchIdSchema.parse(fixture.metadata.matchId);
+const riotMatchId = fixture.metadata.matchId;
 const observer = LeaguePuuidSchema.parse(fixture.metadata.participants[0]);
 const LOCAL_GAME_START = 1_780_000_015_000;
 const LOCAL_GAME_END = LOCAL_GAME_START + 1_451_000;

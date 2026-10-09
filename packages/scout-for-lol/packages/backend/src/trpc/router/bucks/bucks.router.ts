@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
@@ -53,7 +54,7 @@ import { bucksNotificationProcedures } from "#src/trpc/router/bucks/bucks-notifi
 
 const GuildInput = z.object({ guildId: DiscordGuildIdSchema });
 const MatchInput = GuildInput.extend({
-  matchId: z.string().min(1).max(64),
+  matchId: RiotMatchIdSchema,
 });
 const DareListInput = GuildInput.extend({
   scope: z.enum(["mine", "guild", "needs_action"]),

@@ -1,3 +1,7 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -31,7 +35,7 @@ const NEW_LAYOUT_KEY = "games/2026/09/12/NA1_2222222222/timeline.json";
 
 let tempDir: string;
 
-function timelineFixture(matchId: string, gameId: number): RawTimeline {
+function timelineFixture(matchId: RiotMatchId, gameId: number): RawTimeline {
   return RawTimelineSchema.parse({
     metadata: { dataVersion: "2", matchId, participants: ["puuid-1"] },
     info: {
@@ -127,7 +131,12 @@ describe("timeline rebuild across both partition layouts", () => {
     seedTimelines([
       {
         key: OLD_LAYOUT_KEY,
-        body: JSON.stringify(timelineFixture("NA1_1111111111", 1_111_111_111)),
+        body: JSON.stringify(
+          timelineFixture(
+            RiotMatchIdSchema.parse("NA1_1111111111"),
+            1_111_111_111,
+          ),
+        ),
       },
     ]);
 
@@ -140,7 +149,12 @@ describe("timeline rebuild across both partition layouts", () => {
     seedTimelines([
       {
         key: NEW_LAYOUT_KEY,
-        body: JSON.stringify(timelineFixture("NA1_2222222222", 2_222_222_222)),
+        body: JSON.stringify(
+          timelineFixture(
+            RiotMatchIdSchema.parse("NA1_2222222222"),
+            2_222_222_222,
+          ),
+        ),
       },
     ]);
 
@@ -153,11 +167,21 @@ describe("timeline rebuild across both partition layouts", () => {
     seedTimelines([
       {
         key: OLD_LAYOUT_KEY,
-        body: JSON.stringify(timelineFixture("NA1_1111111111", 1_111_111_111)),
+        body: JSON.stringify(
+          timelineFixture(
+            RiotMatchIdSchema.parse("NA1_1111111111"),
+            1_111_111_111,
+          ),
+        ),
       },
       {
         key: NEW_LAYOUT_KEY,
-        body: JSON.stringify(timelineFixture("NA1_2222222222", 2_222_222_222)),
+        body: JSON.stringify(
+          timelineFixture(
+            RiotMatchIdSchema.parse("NA1_2222222222"),
+            2_222_222_222,
+          ),
+        ),
       },
     ]);
 
@@ -176,7 +200,12 @@ describe("timeline rebuild across both partition layouts", () => {
     seedTimelines([
       {
         key: "games/1999/12/31/NA1_9999999999/timeline.json",
-        body: JSON.stringify(timelineFixture("NA1_2222222222", 2_222_222_222)),
+        body: JSON.stringify(
+          timelineFixture(
+            RiotMatchIdSchema.parse("NA1_2222222222"),
+            2_222_222_222,
+          ),
+        ),
       },
     ]);
 
@@ -190,7 +219,7 @@ describe("timeline rebuild across both partition layouts", () => {
     // upload day, then retried post-cutover under its game day. Both parse, so
     // replaying both would emit two sets of rows for one match.
     const body = JSON.stringify(
-      timelineFixture("NA1_3333333333", 3_333_333_333),
+      timelineFixture(RiotMatchIdSchema.parse("NA1_3333333333"), 3_333_333_333),
     );
     seedTimelines([
       {
@@ -215,9 +244,15 @@ describe("timeline rebuild across both partition layouts", () => {
     // Same pair, recency reversed: the OLD-layout object is the newer write, so
     // it must win. The tie-break is LastModified, never the layout and never
     // the listing order.
-    const newer = timelineFixture("NA1_4444444444", 4_444_444_444);
+    const newer = timelineFixture(
+      RiotMatchIdSchema.parse("NA1_4444444444"),
+      4_444_444_444,
+    );
     newer.info.frameInterval = 15_000;
-    const older = timelineFixture("NA1_4444444444", 4_444_444_444);
+    const older = timelineFixture(
+      RiotMatchIdSchema.parse("NA1_4444444444"),
+      4_444_444_444,
+    );
     older.info.frameInterval = 60_000;
     seedTimelines([
       {
@@ -243,7 +278,7 @@ describe("timeline rebuild across both partition layouts", () => {
     // Two objects under different key match ids that both parse to the same
     // match. Key-level grouping cannot catch this, so the payload guard must.
     const body = JSON.stringify(
-      timelineFixture("NA1_2222222222", 2_222_222_222),
+      timelineFixture(RiotMatchIdSchema.parse("NA1_2222222222"), 2_222_222_222),
     );
     seedTimelines([
       {
@@ -268,7 +303,12 @@ describe("timeline rebuild across both partition layouts", () => {
     seedTimelines([
       {
         key: NEW_LAYOUT_KEY,
-        body: JSON.stringify(timelineFixture("NA1_2222222222", 2_222_222_222)),
+        body: JSON.stringify(
+          timelineFixture(
+            RiotMatchIdSchema.parse("NA1_2222222222"),
+            2_222_222_222,
+          ),
+        ),
         lastModified: new Date("2026-09-13T08:00:00.000Z"),
       },
     ]);

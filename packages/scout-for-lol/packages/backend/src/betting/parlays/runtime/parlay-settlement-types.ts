@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type {
   BucksParlaySide,
   BucksParlayVoidReason,
@@ -25,7 +26,7 @@ export type ParlaySettlementBet = {
 };
 
 export type ParlaySettlementSummary = {
-  matchId: string;
+  matchId: RiotMatchId;
   serverId: string;
   yesResult: boolean | undefined;
   voidReason: BucksParlayVoidReason | undefined;

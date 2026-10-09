@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import * as Sentry from "@sentry/bun";
 import {
   DiscordAccountIdSchema,
@@ -158,7 +159,7 @@ export async function settleOnePool(input: {
   prismaClient: ExtendedPrismaClient;
   poolId: number;
   serverId: string;
-  matchId: string;
+  matchId: RiotMatchId;
   roster: readonly BucksPoolParticipant[];
   winningTeamId: number | undefined;
   voidReason: BucksVoidReason | undefined;

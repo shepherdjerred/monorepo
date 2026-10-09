@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -42,7 +43,7 @@ function game(
     playerId: 1,
     playerAlias: "Mira",
     puuid: testPuuid("loadout-mira"),
-    matchId: `NA1_L${hour.toString()}`,
+    matchId: RiotMatchIdSchema.parse(`NA1_81001${hour.toString()}`),
     queue: "solo",
     win: false,
     surrendered: false,

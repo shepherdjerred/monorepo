@@ -238,6 +238,7 @@ const config = [
       "packages/data/src/model/riot/league-account.ts",
       "packages/data/src/model/core/routes.ts",
       "packages/data/src/model/bucks/bryan-bucks-money.ts",
+      "packages/data/src/model/matches/match-id.ts",
     ],
     rules: { "custom-rules/no-re-exports": "off" },
   },

@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import {
@@ -36,7 +37,7 @@ const FilterInput = z.object({
 
 const MatchHistoryCursorSchema = z.object({
   gameCreationMs: z.number().int(),
-  matchId: z.string().min(1),
+  matchId: RiotMatchIdSchema,
   consumed: z.number().int().nonnegative().optional(),
 });
 

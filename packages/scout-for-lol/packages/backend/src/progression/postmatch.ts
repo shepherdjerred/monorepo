@@ -1,5 +1,5 @@
+import type { MatchDataSource } from "@scout-for-lol/domain/match-processing/states.ts";
 import {
-  MatchIdSchema,
   type PlayerConfigEntry,
   type RawMatch,
   type RawTimeline,
@@ -28,7 +28,7 @@ import {
  */
 export async function processCompetitiveProgressionMatch(input: {
   readonly match: RawMatch;
-  readonly matchDataSource: "RIOT" | "SCOUT_CLIENT";
+  readonly matchDataSource: MatchDataSource;
   readonly timeline: RawTimeline | null | undefined;
   readonly trackedPlayers: PlayerConfigEntry[];
 }): Promise<void> {
@@ -46,7 +46,7 @@ export async function processCompetitiveProgressionMatch(input: {
     return prepared;
   }
   let timelineHandled = false;
-  const matchId = MatchIdSchema.parse(input.match.metadata.matchId);
+  const matchId = input.match.metadata.matchId;
   let timeline = input.timeline;
   async function ensureProgressionTimeline(required: boolean): Promise<void> {
     if (timelineHandled) return;

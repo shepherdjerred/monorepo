@@ -1,7 +1,7 @@
 import {
+  type RiotMatchIdSchema,
   ChallengeContractV1Schema,
   LeaguePuuidSchema,
-  MatchIdSchema,
   challengeNeedsTimeline,
   type LeaguePuuid,
   type RawMatch,
@@ -134,7 +134,7 @@ async function createMatchRevision(
   db: ExtendedPrismaClient,
   options: {
     readonly runId: string;
-    readonly matchId: ReturnType<typeof MatchIdSchema.parse>;
+    readonly matchId: ReturnType<typeof RiotMatchIdSchema.parse>;
     readonly stage: ScoutStage;
     readonly participantPuuids: readonly LeaguePuuid[];
   },
@@ -245,7 +245,7 @@ export async function prepareChallengeRunsForMatch(
   stage: ScoutStage,
   db: ExtendedPrismaClient = prisma,
 ): Promise<readonly PreparedChallengeRun[]> {
-  const matchId = MatchIdSchema.parse(match.metadata.matchId);
+  const matchId = match.metadata.matchId;
   const participantPuuids = match.metadata.participants.map((puuid) =>
     LeaguePuuidSchema.parse(puuid),
   );

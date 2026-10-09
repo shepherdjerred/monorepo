@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { expect, test, vi } from "vitest";
 import { createHash } from "node:crypto";
 import { rawDocumentRow } from "#src/report-lake/staging/raw-documents.ts";
@@ -12,7 +13,7 @@ test("records only identities present in nested values and keys without rewritin
   };
   const row = rawDocumentRow({
     kind: "match",
-    matchId: "NA1_42",
+    matchId: RiotMatchIdSchema.parse("NA1_42"),
     capturedAt,
     document,
     identityMap: new Map([
@@ -40,7 +41,7 @@ test("collects mappings after spectator credential removal and JSON conversion",
   };
   const row = rawDocumentRow({
     kind: "prematch",
-    matchId: "NA1_42",
+    matchId: RiotMatchIdSchema.parse("NA1_42"),
     capturedAt,
     document,
     source: {
@@ -70,7 +71,7 @@ test("handles escaped identities and an omitted identity map", () => {
   const document = { participant: String.raw`old-"player\雪` };
   const input = {
     kind: "timeline" as const,
-    matchId: "NA1_42",
+    matchId: RiotMatchIdSchema.parse("NA1_42"),
     capturedAt,
     document,
   };
@@ -95,7 +96,7 @@ test("a large migration map requires lookups only for document strings", () => {
   const iterate = vi.spyOn(identities, Symbol.iterator);
   const row = rawDocumentRow({
     kind: "match",
-    matchId: "NA1_42",
+    matchId: RiotMatchIdSchema.parse("NA1_42"),
     capturedAt,
     document: { participants: ["old-12", "old-284000"] },
     identityMap: identities,

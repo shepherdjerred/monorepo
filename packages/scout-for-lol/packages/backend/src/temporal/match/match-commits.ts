@@ -1,4 +1,3 @@
-import { MatchIdSchema } from "@scout-for-lol/data";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { ReceiptKind } from "@scout-for-lol/domain/match-processing/states.ts";
 import type {
@@ -222,7 +221,7 @@ export async function advanceMatchCursor(input: {
     );
   }
   const matchTime = dateFromIsoInstant(observation.gameCreatedAt);
-  const matchId = MatchIdSchema.parse(input.riotMatchId);
+  const matchId = input.riotMatchId;
   const tracked = await listTrackedAccounts(prisma, {
     matchId: input.riotMatchId,
   });

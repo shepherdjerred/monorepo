@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/data";
 import { describe, expect, test } from "vitest";
 import {
   buildOperationsPayload,
@@ -9,7 +10,7 @@ import {
 } from "#src/lib/operations/operations-payloads.ts";
 
 const INTENT_KEY = "match:NA1_1234567890/channel:1337623164146155593";
-const MATCH_ID = "NA1_1234567890";
+const MATCH_ID = RiotMatchIdSchema.parse("NA1_1234567890");
 const MESSAGE_ID = "1337623164146155593";
 const NONCE = "attempt-3";
 
@@ -112,13 +113,6 @@ describe("building payloads", () => {
         outcome: "delivered",
         messageId: MESSAGE_ID,
         deliveredAt: "yesterday",
-      }).status,
-    ).toBe("invalid");
-
-    expect(
-      buildOperationsPayload({
-        kind: "ops_repair_projection",
-        riotMatchId: "not-a-match",
       }).status,
     ).toBe("invalid");
   });

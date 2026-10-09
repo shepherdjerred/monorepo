@@ -1,7 +1,8 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import {
   LeaguePuuidSchema,
-  MatchIdSchema,
+  RiotMatchIdSchema,
   platformToRegionalRoute,
 } from "@scout-for-lol/data";
 import {
@@ -26,9 +27,11 @@ import { runSettledWorkers } from "#src/league/explore-history/worker-pool.ts";
 
 const MAX_PARALLEL_MATCH_READS = 5;
 
-const KnownMatchRowSchema = z.object({ match_id: MatchIdSchema });
+const KnownMatchRowSchema = z.object({ match_id: RiotMatchIdSchema });
 
-async function fetchKnownMatchIds(matchIds: string[]): Promise<Set<string>> {
+async function fetchKnownMatchIds(
+  matchIds: RiotMatchId[],
+): Promise<Set<string>> {
   if (matchIds.length === 0) return new Set();
   return await withLakeQueryRetry(resolveLakeDir(), async (files) => {
     const source = buildMatchesSource(files, {
@@ -50,12 +53,12 @@ async function fetchKnownMatchIds(matchIds: string[]): Promise<Set<string>> {
 
 async function fetchRankedMatchIds(
   input: ScoutExploreHistoryInput,
-): Promise<string[]> {
+): Promise<RiotMatchId[]> {
   const puuid = LeaguePuuidSchema.parse(input.puuid);
   return await callRiotOrThrow(
     {
       source: "explore-on-demand-list",
-      schema: z.array(MatchIdSchema).max(input.requestedMatches),
+      schema: z.array(RiotMatchIdSchema).max(input.requestedMatches),
       context: { region: input.region },
       sentry: true,
     },
@@ -96,7 +99,7 @@ export async function importExploreRankedHistory(
       const matchId = missingMatchIds[index];
       if (matchId === undefined) return;
       const match = await fetchInitialMatch({
-        matchId: MatchIdSchema.parse(matchId),
+        matchId: matchId,
         region: input.region,
       });
       if (match === null) {

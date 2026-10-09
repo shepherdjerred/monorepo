@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import * as Sentry from "@sentry/bun";
 import {
   announcingSettlementSink,
@@ -311,7 +312,7 @@ async function matchPoolAtClose(input: {
  */
 function parsedMessageRefs(
   poolId: number,
-  draft: { messageRefsJson: string; matchId: string; serverId: string },
+  draft: { messageRefsJson: string; matchId: RiotMatchId; serverId: string },
 ): ClosedPool["messageRefs"] {
   try {
     return BucksMessageRefsSchema.parse(JSON.parse(draft.messageRefsJson)).map(
@@ -383,7 +384,7 @@ export async function closeExpiredBettingWindows(
 
 /** Force any still-open pool for a completed match through matching first. */
 export async function closeBettingWindowsForMatch(
-  matchId: string,
+  matchId: RiotMatchId,
   prismaClient: ExtendedPrismaClient = prisma,
   now: Date = new Date(),
   /** Who may announce these closures; v1's behaviour by default. */

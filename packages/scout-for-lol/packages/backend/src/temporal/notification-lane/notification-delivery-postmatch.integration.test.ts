@@ -1,15 +1,12 @@
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
-import {
-  MatchIdSchema,
-  RankSchema,
-  LeaguePuuidSchema,
-} from "@scout-for-lol/data";
+import { RankSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
 import {
   NotificationIntentKeySchema,
   RiotMatchIdSchema,
   S3ObjectKeySchema,
   Sha256DigestSchema,
   type NotificationIntentKey,
+  type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   NotificationAttemptNonceSchema,
@@ -45,7 +42,7 @@ const testDatabase = createTestDatabase("temporal-v2-notification-delivery");
 Bun.env["DATABASE_URL"] = testDatabase.dbUrl;
 const { prisma } = testDatabase;
 
-const MATCH = "NA1_9501";
+const MATCH = RiotMatchIdSchema.parse("NA1_9501");
 const PUUID = LeaguePuuidSchema.parse("p".repeat(78));
 const IMAGE = new Uint8Array([137, 80, 78, 71, 5, 5]);
 const CONTENT = "jerred finished a solo game";
@@ -78,7 +75,7 @@ const stubs = vi.hoisted(() => ({
 // read it did is not available here, and its absence would fail the test for
 // the wrong reason. The fixed delivery never calls it, which is asserted.
 vi.mock("#src/temporal/match/match-context.ts", () => ({
-  resolveScoutObservedMatchContext: (riotMatchId: string) => {
+  resolveScoutObservedMatchContext: (riotMatchId: RiotMatchId) => {
     stubs.matchContextReads += 1;
     return Promise.resolve({
       matchId: riotMatchId,
@@ -119,7 +116,7 @@ vi.mock("#src/league/tasks/postmatch/match-report-generator.ts", () => ({
       await import("#src/league/model/rank-history.ts");
     stubs.generatorRuns += 1;
     await saveMatchRankHistory({
-      matchId: MatchIdSchema.parse(MATCH),
+      matchId: MATCH,
       puuid: PUUID,
       queueType: "solo",
       rankBefore: RANK_AT_RENDER,
@@ -146,7 +143,7 @@ afterAll(async () => {
   await activityPrisma.$disconnect();
 });
 
-const RIOT_MATCH = RiotMatchIdSchema.parse(MATCH);
+const RIOT_MATCH = MATCH;
 
 async function seedRenderedReport(): Promise<void> {
   expect(
@@ -202,7 +199,7 @@ async function seedRankHistory(): Promise<void> {
   const { saveMatchRankHistory } =
     await import("#src/league/model/rank-history.ts");
   await saveMatchRankHistory({
-    matchId: MatchIdSchema.parse(MATCH),
+    matchId: MATCH,
     puuid: PUUID,
     queueType: "solo",
     rankBefore: undefined,
@@ -215,7 +212,7 @@ async function seedRankHistory(): Promise<void> {
 
 async function storedRankHistory(): Promise<unknown> {
   return await prisma.matchRankHistory.findMany({
-    where: { matchId: MatchIdSchema.parse(MATCH) },
+    where: { matchId: MATCH },
     select: { puuid: true, queueType: true, rankBefore: true, rankAfter: true },
   });
 }

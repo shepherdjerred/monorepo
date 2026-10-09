@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import type {
   LakeMatchParticipantRow,
@@ -8,7 +9,7 @@ import { resetConfigurationForTests } from "#src/configuration.ts";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import { testGuildId } from "#src/testing/test-ids.ts";
 
-const MATCH_ID = "EUW1_7988647427";
+const MATCH_ID = RiotMatchIdSchema.parse("EUW1_7988647427");
 
 function matchRow(
   participantId: number,

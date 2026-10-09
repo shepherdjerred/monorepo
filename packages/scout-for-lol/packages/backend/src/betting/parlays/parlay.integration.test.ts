@@ -29,7 +29,7 @@ import {
 } from "#src/betting/notify/announcement-sink.ts";
 import { checkpointFailingSink } from "#src/betting/notify/announcement-sink.test-fixtures.ts";
 import { recordSettlementAnnouncementItem } from "#src/database/durable/settlement-announcement-repository.ts";
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import { type RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   closeExpiredParlayWindows,
   voidStaleParlayMarkets,
@@ -648,7 +648,7 @@ describe("the announcement instruction a parlay settlement records", () => {
       ...announcingSettlementSink,
       recordAnnouncementItem: async (handle, item) => {
         await recordSettlementAnnouncementItem(handle, {
-          matchId: RiotMatchIdSchema.parse(MATCH_ID),
+          matchId: MATCH_ID,
           item,
         });
         throw new Error("the settlement failed after recording");
@@ -706,7 +706,7 @@ describe("the announcement instruction a parlay settlement records", () => {
       ...announcingSettlementSink,
       recordAnnouncementItem: async (handle, item) => {
         await recordSettlementAnnouncementItem(handle, {
-          matchId: RiotMatchIdSchema.parse(MATCH_ID),
+          matchId: MATCH_ID,
           item,
         });
       },
@@ -867,7 +867,10 @@ describe("Bryan Bucks parlay publication lifecycle", () => {
         if (activationCalls <= 2) await barrier.promise;
         return { ...ref };
       },
-      disableReferences: async (_refs: readonly unknown[], matchId: string) => {
+      disableReferences: async (
+        _refs: readonly unknown[],
+        matchId: RiotMatchId,
+      ) => {
         disabled.push(matchId);
       },
     };

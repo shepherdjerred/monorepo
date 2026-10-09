@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import {
@@ -16,7 +17,7 @@ describe("logBucksTransition", () => {
     expect(() => {
       logBucksTransition({
         event: "bucks.bet.placed",
-        matchId: "NA1_1",
+        matchId: RiotMatchIdSchema.parse("NA1_1"),
         serverId: "1337623164146155593",
         poolId: 1,
         betId: 2,

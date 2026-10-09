@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { recordCoreOutputsDelivered } from "#src/analytics/guild-lifecycle.ts";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { createLogger } from "#src/logger.ts";
@@ -13,7 +14,7 @@ const logger = createLogger("scout-v2-postmatch-follow-up");
 const POSTMATCH_CORE_OUTPUT_EFFECT_KIND = "core-output-postmatch";
 
 function postmatchCoreOutputEffectKey(
-  riotMatchId: string,
+  riotMatchId: RiotMatchId,
   guildId: string,
 ): string {
   return `core-output:postmatch:${riotMatchId}:${guildId}`;

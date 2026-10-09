@@ -442,7 +442,7 @@ export function acceptedClientBindingMatchIds(
   for (const observation of batch.observations) {
     if (!accepted.has(observation.observationId)) continue;
     const matchId = observedPostGameMatchId(observation);
-    if (matchId !== null) matchIds.add(RiotMatchIdSchema.parse(matchId));
+    if (matchId !== null) matchIds.add(matchId);
   }
   return [...matchIds].sort((left, right) => left.localeCompare(right));
 }

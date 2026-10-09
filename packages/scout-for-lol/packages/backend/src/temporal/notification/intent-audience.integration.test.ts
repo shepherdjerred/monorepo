@@ -3,8 +3,8 @@ import {
   RiotMatchIdSchema,
   type NotificationIntentKey,
 } from "@scout-for-lol/domain/identity/brands.ts";
-import { NotificationIntentSchema } from "@scout-for-lol/domain/notifications/intent.ts";
 import {
+  NotificationIntentSchema,
   NotificationAttemptNonceSchema,
   type NotificationAttemptNonce,
 } from "@scout-for-lol/domain/notifications/intent.ts";
@@ -121,7 +121,7 @@ afterAll(async () => {
   await activityPrisma.$disconnect();
 });
 
-const MATCH = "NA1_9400";
+const MATCH = RiotMatchIdSchema.parse("NA1_9400");
 const CHANNEL = testChannelId("9400");
 const GUILD = testGuildId("9400");
 const PUUID = testPuuid("9400");
@@ -146,7 +146,10 @@ async function seedLiveAudience(): Promise<number> {
     puuid: PUUID,
     alias: "audience",
   });
-  await seedTrackedAccount(prisma, { matchId: MATCH, puuid: PUUID });
+  await seedTrackedAccount(prisma, {
+    matchId: MATCH,
+    puuid: PUUID,
+  });
   return subscriptionId;
 }
 

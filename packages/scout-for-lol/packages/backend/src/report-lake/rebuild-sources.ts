@@ -1,3 +1,5 @@
+import { spectatorGameMatchId } from "#src/durable/match/match-identity.ts";
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { S3Client } from "@aws-sdk/client-s3";
 import { createHash } from "node:crypto";
 import { rawDocumentRow } from "#src/report-lake/staging/raw-documents.ts";
@@ -48,7 +50,7 @@ function sourceKey(key: string, rawText: string): string {
 
 function s3RawDocumentRow(input: {
   kind: "match" | "timeline" | "prematch";
-  matchId: string;
+  matchId: RiotMatchId;
   key: string;
   rawText: string;
   capturedAt: Date;
@@ -443,7 +445,7 @@ export async function populatePrematchFromS3(
           source: sourceKey(item.key, rawText),
           raw: s3RawDocumentRow({
             kind: "prematch",
-            matchId: `${parsed.data.platformId}_${String(parsed.data.gameId)}`,
+            matchId: spectatorGameMatchId(parsed.data),
             key: item.key,
             rawText,
             capturedAt: item.observedAt,

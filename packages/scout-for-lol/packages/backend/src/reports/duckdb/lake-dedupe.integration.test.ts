@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -33,7 +34,7 @@ function frame(
   totalGold: number,
 ): TimelineParticipantFrameLakeRow {
   return testFrameRow({
-    matchId: "NA1_900",
+    matchId: RiotMatchIdSchema.parse("NA1_900"),
     gameCreationAt: GAME,
     puuid: MIRA,
     participantId: 3,

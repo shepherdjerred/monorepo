@@ -1,10 +1,12 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
   DareContractSchema,
   type DareContract,
   type RawMatch,
+  DiscordAccountIdSchema,
+  PlayerIdSchema,
 } from "@scout-for-lol/data";
-import { DiscordAccountIdSchema, PlayerIdSchema } from "@scout-for-lol/data";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { testChannelId, testGuildId } from "#src/testing/test-ids.ts";
 import {
@@ -35,14 +37,17 @@ const CHANNEL = testChannelId("932");
 const HASH = "b".repeat(64);
 const TARGET_PUUID = "virmel-puuid";
 const T0 = new Date("2026-09-01T12:00:00.000Z");
-const MATCH_ID = "NA1_7100000001";
+const MATCH_ID = RiotMatchIdSchema.parse("NA1_7100000001");
 
 // Every execution resolves the Dare unachieved on this match: the one-game
 // cap is reached.
 vi.mock("#src/betting/dares/sql/dare-sql.ts", async () => {
   const { finalUnachievedDareSqlModule } =
     await import("#src/betting/dares/dare-test-fixtures.ts");
-  return finalUnachievedDareSqlModule({ matchId: MATCH_ID, queryHash: HASH });
+  return finalUnachievedDareSqlModule({
+    matchId: MATCH_ID,
+    queryHash: HASH,
+  });
 });
 
 const { captureDareSqlForMatch } =

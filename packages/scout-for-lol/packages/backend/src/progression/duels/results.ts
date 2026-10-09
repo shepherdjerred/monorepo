@@ -1,7 +1,6 @@
 import {
   DuelRulesetV1Schema,
   DuelTimelineInputSchema,
-  MatchIdSchema,
   evaluateDuelGame,
   type DuelResultEvidence,
   type RawMatch,
@@ -34,7 +33,7 @@ const duelGameInclude = {
 
 /** The Duel game an accepted observation bound to this exact match. */
 async function findObservedDuelGame(match: RawMatch) {
-  const matchId = MatchIdSchema.parse(match.metadata.matchId);
+  const matchId = match.metadata.matchId;
   return await prisma.duelGame.findFirst({
     where: { matchId },
     include: duelGameInclude,
@@ -178,7 +177,7 @@ async function recordVerifiedResult(
     await tx.duelGame.update({
       where: { id: game.id },
       data: {
-        matchId: MatchIdSchema.parse(evidence.matchId),
+        matchId: evidence.matchId,
         gameState: "completed",
         resultState: "verified",
         winnerCompetitorId: evidence.winnerCompetitorId,
@@ -311,7 +310,7 @@ export async function processDuelResult(
       await tx.duelGame.update({
         where: { id: game.id },
         data: {
-          matchId: MatchIdSchema.parse(match.metadata.matchId),
+          matchId: match.metadata.matchId,
           gameState: "needs_review",
           resultState: "needs_review",
           evidenceJson: JSON.stringify(evidence),

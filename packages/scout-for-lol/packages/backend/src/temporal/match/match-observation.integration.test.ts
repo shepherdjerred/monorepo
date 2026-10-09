@@ -1,7 +1,11 @@
 import { afterAll, describe, expect, test, vi } from "vitest";
 import { ApplicationFailure } from "@temporalio/common";
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
+import type { MatchDataSource } from "@scout-for-lol/domain/match-processing/states.ts";
 import {
   createTestDatabase,
   testDatabaseModule,
@@ -23,19 +27,26 @@ const SOURCE = LeaguePuuidSchema.parse("s".repeat(78));
 const OTHER_TRACKED = LeaguePuuidSchema.parse("t".repeat(78));
 const DEREGISTERED = LeaguePuuidSchema.parse("d".repeat(78));
 
-const riot = vi.hoisted(() => ({
-  gameCreation: Date.parse("2026-09-16T09:00:00.000Z"),
-  trackedPuuids: ["s".repeat(78), "t".repeat(78)],
-}));
+const riot = vi.hoisted(
+  (): {
+    gameCreation: number;
+    trackedPuuids: string[];
+    matchDataSource: MatchDataSource;
+  } => ({
+    gameCreation: Date.parse("2026-09-16T09:00:00.000Z"),
+    trackedPuuids: ["s".repeat(78), "t".repeat(78)],
+    matchDataSource: "RIOT",
+  }),
+);
 
 vi.mock("#src/database/index.ts", async () => await testDatabaseModule(prisma));
 
 vi.mock("#src/temporal/match/match-context.ts", () => ({
-  resolveScoutMatchContext: (riotMatchId: string) =>
+  resolveScoutMatchContext: (riotMatchId: RiotMatchId) =>
     Promise.resolve({
-      matchId: riotMatchId,
       riotMatchId,
       matchData: { info: { gameCreation: riot.gameCreation } },
+      matchDataSource: riot.matchDataSource,
       trackedPlayers: riot.trackedPuuids.map((puuid) => ({
         alias: puuid.slice(0, 4),
         league: { leagueAccount: { puuid } },
@@ -192,5 +203,35 @@ describe("the delivery mode the V2 observation commits", () => {
     expect(settled).toBeInstanceOf(ApplicationFailure);
     const stored = await getObservation(prisma, { matchId });
     expect(stored?.deliveryMode).toBe("silent-backfill");
+  });
+});
+
+describe("the payload provenance the V2 observation commits", () => {
+  test("records a Riot-sourced match as RIOT", async () => {
+    const matchId = RiotMatchIdSchema.parse("NA1_8120");
+
+    await commitMatchObservation({
+      riotMatchId: matchId,
+      deliveryMode: "live",
+    });
+
+    const stored = await getObservation(prisma, { matchId });
+    expect(stored?.matchDataSource).toBe("RIOT");
+  });
+
+  test("records a client-captured match as SCOUT_CLIENT", async () => {
+    const matchId = RiotMatchIdSchema.parse("NA1_8121");
+    riot.matchDataSource = "SCOUT_CLIENT";
+    try {
+      await commitMatchObservation({
+        riotMatchId: matchId,
+        deliveryMode: "live",
+      });
+    } finally {
+      riot.matchDataSource = "RIOT";
+    }
+
+    const stored = await getObservation(prisma, { matchId });
+    expect(stored?.matchDataSource).toBe("SCOUT_CLIENT");
   });
 });

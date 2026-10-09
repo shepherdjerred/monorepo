@@ -1,6 +1,9 @@
 import { describe, expect, test, vi } from "vitest";
 import { ArtifactDescriptorSchema } from "@scout-for-lol/domain/artifacts/descriptors.ts";
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { recordReceipt } from "#src/database/durable/receipt-repository.ts";
 import { rawArchiveReceiptRecord } from "#src/report-lake/durable-receipts.ts";
 import {
@@ -31,7 +34,10 @@ vi.mock("#src/report-lake/receipted-archive.ts", async () => {
   );
   return {
     ...actual,
-    readArchivedPrematchSnapshot: (_descriptor: unknown, matchId: string) => {
+    readArchivedPrematchSnapshot: (
+      _descriptor: unknown,
+      matchId: RiotMatchId,
+    ) => {
       const snapshot = archivedSnapshots.get(matchId);
       if (snapshot === undefined) {
         throw new Error(`No archived snapshot stubbed for ${matchId}`);
@@ -99,7 +105,7 @@ async function seedPlayer(options: {
 }
 
 function matchFact(options: {
-  matchId: string;
+  matchId: RiotMatchId;
   puuid: string;
   playerId: number;
   queue?: string | null;
@@ -552,9 +558,13 @@ describe("consumerPlayer combined profile", () => {
     await writeTestLake(lakeDir, {
       serverId: guildId,
       matchFacts: [
-        matchFact({ matchId: "NA1_main", puuid: MAIN, playerId: player.id }),
         matchFact({
-          matchId: "NA1_alt",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000010"),
+          puuid: MAIN,
+          playerId: player.id,
+        }),
+        matchFact({
+          matchId: RiotMatchIdSchema.parse("NA1_9100000000"),
           puuid: ALT,
           playerId: player.id,
           queue: "flex",
@@ -564,7 +574,7 @@ describe("consumerPlayer combined profile", () => {
     await testPrisma.matchRankHistory.createMany({
       data: [
         {
-          matchId: "NA1_main",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000010"),
           puuid: MAIN,
           queueType: "solo",
           rankAfter: JSON.stringify({
@@ -577,7 +587,7 @@ describe("consumerPlayer combined profile", () => {
           capturedAt: gameCreatedAt,
         },
         {
-          matchId: "NA1_alt",
+          matchId: RiotMatchIdSchema.parse("NA1_9100000000"),
           puuid: ALT,
           queueType: "flex",
           rankAfter: JSON.stringify({
@@ -621,7 +631,7 @@ describe("consumerPlayer combined profile", () => {
       queues: ["flex"],
     });
     expect(flexHistory.entries.map((entry) => entry.matchId)).toEqual([
-      "NA1_alt",
+      "NA1_9100000000",
     ]);
   });
 
@@ -634,7 +644,9 @@ describe("consumerPlayer combined profile", () => {
     });
     const facts = Array.from({ length: 55 }, (_, index) =>
       matchFact({
-        matchId: `NA1_window_${index.toString().padStart(2, "0")}`,
+        matchId: RiotMatchIdSchema.parse(
+          `NA1_81001${index.toString().padStart(2, "0")}`,
+        ),
         puuid: MAIN,
         playerId: player.id,
         queue: index === 54 ? null : index % 2 === 0 ? "solo" : "flex",

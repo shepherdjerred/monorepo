@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -24,7 +25,7 @@ import { testPuuid } from "#src/testing/test-ids.ts";
 const lakeDir = await mkdtemp(path.join(tmpdir(), "scout-consumer-lake-"));
 const playerOne = testPuuid("comparison-one");
 const playerTwo = testPuuid("comparison-two");
-const matchId = "NA1_timeline_detail";
+const matchId = RiotMatchIdSchema.parse("NA1_9100000010");
 
 function event(options: {
   id: string;
@@ -152,7 +153,10 @@ beforeAll(async () => {
     matchFacts: Array.from({ length: 22 }, (_, index) => ({
       playerId: 1,
       playerAlias: "One",
-      matchId: index === 0 ? matchId : `NA1_one_${index.toString()}`,
+      matchId:
+        index === 0
+          ? matchId
+          : RiotMatchIdSchema.parse(`NA1_81001${index.toString()}`),
       puuid: playerOne,
       queue: index === 21 ? null : index % 2 === 0 ? "solo" : "flex",
       win: index % 2 === 0,
@@ -179,7 +183,7 @@ beforeAll(async () => {
       {
         playerId: 2,
         playerAlias: "Two",
-        matchId,
+        matchId: matchId,
         puuid: playerTwo,
         queue: "solo",
         win: false,
@@ -259,7 +263,7 @@ describe("consumer profile lake reads", () => {
   });
 
   test("returns the complete stored scoreboard", async () => {
-    const rows = await fetchFullMatch({ matchId, lakeDir });
+    const rows = await fetchFullMatch({ matchId: matchId, lakeDir });
     expect(rows.map((row) => row.champion_name)).toEqual(["Ashe", "Garen"]);
     expect(rows[0]).toMatchObject({
       item0: 1056,
@@ -290,7 +294,7 @@ describe("consumer profile lake reads", () => {
   });
 
   test("reads the seven final items, spells, and rune selections for a match", async () => {
-    const rows = await fetchMatchLoadoutRows({ matchId, lakeDir });
+    const rows = await fetchMatchLoadoutRows({ matchId: matchId, lakeDir });
     expect(rows).toHaveLength(2);
     expect(rows[0]).toMatchObject({
       puuid: playerOne,
@@ -307,12 +311,14 @@ describe("consumer profile lake reads", () => {
   });
 
   test("keeps chronological event and frame pages, filters, and unknown event fields", async () => {
-    expect(await fetchTimelineCoverage({ matchId, lakeDir })).toMatchObject({
+    expect(
+      await fetchTimelineCoverage({ matchId: matchId, lakeDir }),
+    ).toMatchObject({
       event_count: 3,
       frame_count: 2,
     });
     const events = await fetchTimelineEventPage({
-      matchId,
+      matchId: matchId,
       offset: 0,
       limit: 2,
       lakeDir,
@@ -323,14 +329,14 @@ describe("consumer profile lake reads", () => {
       gold_gain: 17,
     });
     const laterEvents = await fetchTimelineEventPage({
-      matchId,
+      matchId: matchId,
       offset: 2,
       limit: 2,
       lakeDir,
     });
     expect(laterEvents.map((row) => row.event_id)).toEqual(["late"]);
     const filtered = await fetchTimelineEventPage({
-      matchId,
+      matchId: matchId,
       offset: 0,
       limit: 100,
       participantIds: [1],
@@ -338,14 +344,14 @@ describe("consumer profile lake reads", () => {
     });
     expect(filtered.map((row) => row.event_id)).toEqual(["early", "unknown"]);
     const frames = await fetchTimelineFramePage({
-      matchId,
+      matchId: matchId,
       offset: 0,
       limit: 1,
       lakeDir,
     });
     expect(frames.map((row) => row.participant_id)).toEqual([1]);
     const laterFrames = await fetchTimelineFramePage({
-      matchId,
+      matchId: matchId,
       offset: 1,
       limit: 1,
       lakeDir,
@@ -356,7 +362,7 @@ describe("consumer profile lake reads", () => {
   test("selects the minute-15 frame despite Riot timestamp jitter", async () => {
     expect(
       await fetchTimelineFramesAtIndex({
-        matchId,
+        matchId: matchId,
         frameIndex: 15,
         lakeDir,
       }),
@@ -367,7 +373,10 @@ describe("consumer profile lake reads", () => {
 
   test("returns null when Scout never retained timeline coverage", async () => {
     expect(
-      await fetchTimelineCoverage({ matchId: "NA1_missing", lakeDir }),
+      await fetchTimelineCoverage({
+        matchId: RiotMatchIdSchema.parse("NA1_9100000000"),
+        lakeDir,
+      }),
     ).toBeNull();
   });
 });

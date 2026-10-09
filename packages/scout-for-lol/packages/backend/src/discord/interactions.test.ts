@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from "vitest";
-import { DiscordAccountIdSchema, MatchIdSchema } from "@scout-for-lol/data";
+import { DiscordAccountIdSchema, RiotMatchIdSchema } from "@scout-for-lol/data";
 import {
   routeButton,
   type RoutableButtonInteraction,
@@ -103,7 +103,7 @@ describe("routeButton", () => {
     const { interaction, calls } = fakeInteraction(
       formatBucksCustomId({
         action: "b",
-        matchId: "NA1_5000000042",
+        matchId: RiotMatchIdSchema.parse("NA1_5000000042"),
         subjectIndex: 0,
         side: "W",
         amount: 10,
@@ -154,7 +154,7 @@ describe("routeButton", () => {
     const valid = fakeInteraction(
       formatParlayCustomId({
         action: "b",
-        matchId: "NA1_5000000042",
+        matchId: RiotMatchIdSchema.parse("NA1_5000000042"),
         side: "YES",
         amount: 5,
       }),
@@ -171,7 +171,7 @@ describe("routeButton", () => {
     const valid = fakeInteraction(
       formatVoteButtonCustomId({
         category: "ally",
-        matchId: MatchIdSchema.parse("NA1_5000000042"),
+        matchId: RiotMatchIdSchema.parse("NA1_5000000042"),
       }),
     );
     await routeButton(valid.interaction);

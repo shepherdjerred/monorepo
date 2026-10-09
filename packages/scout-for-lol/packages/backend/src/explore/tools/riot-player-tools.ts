@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { tool } from "ai";
 import { z } from "zod";
 import {
@@ -35,7 +36,7 @@ const CoverageRowSchema = z.object({
   last_game_ms: LakeCountSchema.nullable(),
 });
 const TimelineCountRowSchema = z.object({ timelines: LakeCountSchema });
-const MatchIdRowSchema = z.object({ match_id: z.string() });
+const MatchIdRowSchema = z.object({ match_id: RiotMatchIdSchema });
 const LOCAL_MASTERY_FRESHNESS_MS = 24 * 60 * 60 * 1000;
 
 async function inspectCoverage(puuid: string): Promise<{

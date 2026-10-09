@@ -14,7 +14,7 @@ import {
   type RawTimeline,
   type ArenaMatch,
   type CompletedMatch,
-  type MatchId,
+  type RiotMatchId,
   type Lane,
   type DiscordGuildId,
   generateFullMatchReview,
@@ -135,7 +135,7 @@ function requireSelectedReviewPlayer(
 async function buildDynamicReviewContext(parameters: {
   match: CompletedMatch | ArenaMatch;
   selectedPlayer: SelectedReviewPlayer;
-  matchId: MatchId;
+  matchId: RiotMatchId;
   targetServerIds?: DiscordGuildId[];
 }): Promise<{ playerHistory: string; patchNotes: string }> {
   const { match, selectedPlayer, matchId, targetServerIds } = parameters;
@@ -185,7 +185,7 @@ async function buildDynamicReviewContext(parameters: {
 function didReportLlmProviderIssue(
   error: unknown,
   context: {
-    matchId: MatchId;
+    matchId: RiotMatchId;
   },
 ): boolean {
   const providerIssueKind = classifyLlmProviderIssue(error);
@@ -234,7 +234,7 @@ function resolveLlmProviderIssues(): void {
  */
 export type GenerateMatchReviewOptions = {
   match: CompletedMatch | ArenaMatch;
-  matchId: MatchId;
+  matchId: RiotMatchId;
   playerIndex: number;
   rawMatchData: RawMatch;
   timelineData: RawTimeline;

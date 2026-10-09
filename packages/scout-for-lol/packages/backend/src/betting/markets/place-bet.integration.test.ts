@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   afterAll,
   afterEach,
@@ -38,7 +39,7 @@ const { prisma: db } = createTestDatabase("bucks-place-bet");
 const SERVER_ID = DiscordGuildIdSchema.parse("1337623164146155593");
 const BETTOR = DiscordAccountIdSchema.parse("160509172704739328");
 const STRANGER = DiscordAccountIdSchema.parse("160509172704739399");
-const MATCH_ID = "NA1_5000000001";
+const MATCH_ID = RiotMatchIdSchema.parse("NA1_5000000001");
 
 const SUBJECT_PUUID = bucksTestPuuid(0);
 const ENEMY_PUUID = bucksTestPuuid(5);
@@ -211,7 +212,11 @@ describe("cancelBet — returning a position", () => {
     await bet({ stake: 5 });
 
     const result = await cancelBet(
-      { matchId: MATCH_ID, serverId: SERVER_ID, discordId: BETTOR },
+      {
+        matchId: MATCH_ID,
+        serverId: SERVER_ID,
+        discordId: BETTOR,
+      },
       db,
     );
     expect(result).toEqual({
@@ -310,7 +315,11 @@ describe("cancelBet — returning a position", () => {
     await bet({ stake: 1 });
 
     const result = await cancelBet(
-      { matchId: MATCH_ID, serverId: SERVER_ID, discordId: BETTOR },
+      {
+        matchId: MATCH_ID,
+        serverId: SERVER_ID,
+        discordId: BETTOR,
+      },
       db,
     );
     expect(result).toEqual({
@@ -337,7 +346,11 @@ describe("cancelBet — returning a position", () => {
   test("reconciliation recomputes the cancellation fee from the offer", async () => {
     await bet({ stake: 3 });
     await cancelBet(
-      { matchId: MATCH_ID, serverId: SERVER_ID, discordId: BETTOR },
+      {
+        matchId: MATCH_ID,
+        serverId: SERVER_ID,
+        discordId: BETTOR,
+      },
       db,
     );
     const cancelled = await db.bucksBet.findFirstOrThrow({
@@ -416,7 +429,11 @@ describe("placeBet — refusing a position", () => {
     });
 
     const result = await cancelBet(
-      { matchId: MATCH_ID, serverId: SERVER_ID, discordId: BETTOR },
+      {
+        matchId: MATCH_ID,
+        serverId: SERVER_ID,
+        discordId: BETTOR,
+      },
       db,
     );
     expect(result.kind).toBe("window_closed");
@@ -435,7 +452,11 @@ describe("placeBet — refusing a position", () => {
     await db.bucksMatchPool.updateMany({ data: { poolState: "settled" } });
 
     const result = await cancelBet(
-      { matchId: MATCH_ID, serverId: SERVER_ID, discordId: BETTOR },
+      {
+        matchId: MATCH_ID,
+        serverId: SERVER_ID,
+        discordId: BETTOR,
+      },
       db,
     );
     if (result.kind !== "already_resolved") {
@@ -449,7 +470,11 @@ describe("placeBet — refusing a position", () => {
     await db.bucksMatchPool.updateMany({ data: { poolState: "voided" } });
 
     const result = await cancelBet(
-      { matchId: MATCH_ID, serverId: SERVER_ID, discordId: BETTOR },
+      {
+        matchId: MATCH_ID,
+        serverId: SERVER_ID,
+        discordId: BETTOR,
+      },
       db,
     );
     if (result.kind !== "already_resolved") {
@@ -469,7 +494,11 @@ describe("placeBet — refusing a position", () => {
     });
 
     const result = await cancelBet(
-      { matchId: MATCH_ID, serverId: SERVER_ID, discordId: BETTOR },
+      {
+        matchId: MATCH_ID,
+        serverId: SERVER_ID,
+        discordId: BETTOR,
+      },
       db,
     );
     expect(result.kind).toBe("no_bet");

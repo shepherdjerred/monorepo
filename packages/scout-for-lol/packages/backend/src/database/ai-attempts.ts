@@ -1,4 +1,4 @@
-import { type MatchId } from "@scout-for-lol/data";
+import { type RiotMatchId } from "@scout-for-lol/data";
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "#src/logger.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
@@ -11,7 +11,7 @@ const logger = createLogger("database");
  * never burns LLM tokens twice.
  */
 export async function hasAiBeenAttempted(
-  matchId: MatchId,
+  matchId: RiotMatchId,
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<boolean> {
   const row = await prismaClient.matchAiAttempt.findUnique({
@@ -27,7 +27,7 @@ export async function hasAiBeenAttempted(
  * via upsert in case of races.
  */
 export async function markAiAttempted(
-  matchId: MatchId,
+  matchId: RiotMatchId,
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<void> {
   try {

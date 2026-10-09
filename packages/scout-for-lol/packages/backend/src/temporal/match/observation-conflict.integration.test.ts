@@ -90,6 +90,7 @@ function observationOf(
     gameCreatedAt: CREATED_AT,
     observedAt: OBSERVED_AT,
     deliveryMode: "live",
+    matchDataSource: "RIOT",
     artifacts: { match: null, timeline: null },
     ...overrides,
   };

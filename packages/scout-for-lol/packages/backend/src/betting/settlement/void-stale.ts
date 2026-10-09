@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import * as Sentry from "@sentry/bun";
 import {
   BucksPoolRosterSchema,
@@ -16,8 +17,10 @@ import {
   parseStoredIdentity,
   reportCorruptBucksRow,
 } from "#src/betting/settlement/corrupt-identity.ts";
-import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
-import type { SettlementBet } from "#src/betting/settlement/settlement-types.ts";
+import {
+  type SettlementSummary,
+  type SettlementBet,
+} from "#src/betting/settlement/settlement-types.ts";
 import { closeBettingPoolById } from "#src/betting/settlement/sweep.ts";
 import {
   aliasesForTeam,
@@ -80,7 +83,7 @@ const EMPTY_POOL = sumToPoolTotal([]);
 async function refundMatchedPool(
   prismaClient: ExtendedPrismaClient,
   poolId: number,
-  matchId: string,
+  matchId: RiotMatchId,
   now: Date,
 ): Promise<SettlementSummary | undefined> {
   return await prismaClient.$transaction(async (tx) => {
@@ -190,7 +193,7 @@ export type StaleBettingResult = {
 
 async function closeStalePool(input: {
   prismaClient: ExtendedPrismaClient;
-  pool: { id: number; matchId: string; matchedAt: Date | null };
+  pool: { id: number; matchId: RiotMatchId; matchedAt: Date | null };
   now: Date;
 }): Promise<ClosedPool | undefined> {
   return input.pool.matchedAt === null
@@ -199,7 +202,7 @@ async function closeStalePool(input: {
 }
 
 function reportStalePoolError(
-  pool: { id: number; matchId: string },
+  pool: { id: number; matchId: RiotMatchId },
   stage: "close" | "refund",
   error: unknown,
 ): void {
@@ -226,7 +229,7 @@ function reportStalePoolError(
 
 export type StaleBettingPool = {
   id: number;
-  matchId: string;
+  matchId: RiotMatchId;
   matchedAt: Date | null;
 };
 

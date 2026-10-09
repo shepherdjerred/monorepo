@@ -1,3 +1,7 @@
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { beforeEach, describe, expect, test } from "vitest";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import { resetTestLake, writeTestLake } from "#src/testing/test-report-lake.ts";
@@ -42,7 +46,7 @@ type FactOverrides = {
   teamPosition?: string;
 };
 
-function fact(matchId: string, when: Date, overrides: FactOverrides = {}) {
+function fact(matchId: RiotMatchId, when: Date, overrides: FactOverrides = {}) {
   return {
     playerId: overrides.playerId ?? 1,
     playerAlias: "Profile Player",
@@ -75,10 +79,13 @@ describe("fetchPlayerMatchHistory", () => {
     await writeTestLake(lakeDir, {
       serverId,
       matchFacts: [
-        fact("NA1_ashe_old", at(0)),
-        fact("NA1_ahri", at(60), { championName: "Ahri", championId: 103 }),
-        fact("NA1_ashe_new", at(120)),
-        fact("NA1_ashe_new", at(120), {
+        fact(RiotMatchIdSchema.parse("NA1_9100000030"), at(0)),
+        fact(RiotMatchIdSchema.parse("NA1_9100000000"), at(60), {
+          championName: "Ahri",
+          championId: 103,
+        }),
+        fact(RiotMatchIdSchema.parse("NA1_9100000020"), at(120)),
+        fact(RiotMatchIdSchema.parse("NA1_9100000020"), at(120), {
           puuid: SMURF,
           playerId: 2,
           teamId: 200,
@@ -93,20 +100,20 @@ describe("fetchPlayerMatchHistory", () => {
       limit: 1,
       lakeDir,
     });
-    expect(rows.map((row) => row.match_id)).toEqual(["NA1_ashe_new"]);
+    expect(rows.map((row) => row.match_id)).toEqual(["NA1_9100000020"]);
     const next = await fetchPlayerMatchHistory({
       puuids: [MAIN],
       championSearch: "ash",
       limit: 1,
       cursor: {
         gameCreationMs: rows[0]?.game_creation_ms ?? 0,
-        matchId: rows[0]?.match_id ?? "",
+        matchId: RiotMatchIdSchema.parse(rows[0]?.match_id ?? ""),
       },
       lakeDir,
     });
-    expect(next.map((row) => row.match_id)).toEqual(["NA1_ashe_old"]);
+    expect(next.map((row) => row.match_id)).toEqual(["NA1_9100000030"]);
     const roster = await fetchHistoryRosters({
-      matchIds: ["NA1_ashe_new"],
+      matchIds: [RiotMatchIdSchema.parse("NA1_9100000020")],
       lakeDir,
     });
     expect(roster.map((row) => row.champion_name)).toEqual(["Ashe", "Jinx"]);
@@ -116,9 +123,9 @@ describe("fetchPlayerMatchHistory", () => {
     await writeTestLake(lakeDir, {
       serverId,
       matchFacts: [
-        fact("NA1_1", at(0)),
-        fact("NA1_2", at(60)),
-        fact("NA1_3", at(120)),
+        fact(RiotMatchIdSchema.parse("NA1_1"), at(0)),
+        fact(RiotMatchIdSchema.parse("NA1_2"), at(60)),
+        fact(RiotMatchIdSchema.parse("NA1_3"), at(120)),
       ],
     });
 
@@ -145,8 +152,10 @@ describe("fetchPlayerMatchHistory", () => {
     await writeTestLake(lakeDir, {
       serverId,
       matchFacts: [
-        fact("NA1_main", at(0)),
-        fact("NA1_smurf", at(60), { puuid: SMURF }),
+        fact(RiotMatchIdSchema.parse("NA1_9100000040"), at(0)),
+        fact(RiotMatchIdSchema.parse("NA1_9100000090"), at(60), {
+          puuid: SMURF,
+        }),
       ],
     });
 
@@ -162,12 +171,12 @@ describe("fetchPlayerMatchHistory", () => {
     });
 
     expect(bothAccounts.map((row) => row.match_id)).toEqual([
-      "NA1_smurf",
-      "NA1_main",
+      "NA1_9100000090",
+      "NA1_9100000040",
     ]);
     // Passing fewer puuids must narrow the result — this is the whole
     // authorization surface, so it has to actually filter.
-    expect(mainOnly.map((row) => row.match_id)).toEqual(["NA1_main"]);
+    expect(mainOnly.map((row) => row.match_id)).toEqual(["NA1_9100000040"]);
   });
 
   test("lists a match once when two of the player's puuids appear in it", async () => {
@@ -175,8 +184,15 @@ describe("fetchPlayerMatchHistory", () => {
     await writeTestLake(lakeDir, {
       serverId,
       matchFacts: [
-        fact("NA1_merged", at(0), { puuid: MAIN, teamId: 100 }),
-        fact("NA1_merged", at(0), { puuid: SMURF, teamId: 200, win: false }),
+        fact(RiotMatchIdSchema.parse("NA1_9100000050"), at(0), {
+          puuid: MAIN,
+          teamId: 100,
+        }),
+        fact(RiotMatchIdSchema.parse("NA1_9100000050"), at(0), {
+          puuid: SMURF,
+          teamId: 200,
+          win: false,
+        }),
       ],
     });
 
@@ -193,10 +209,10 @@ describe("fetchPlayerMatchHistory", () => {
     await writeTestLake(lakeDir, {
       serverId,
       matchFacts: [
-        fact("NA1_1", at(0)),
-        fact("NA1_2", at(60)),
-        fact("NA1_3", at(120)),
-        fact("NA1_4", at(180)),
+        fact(RiotMatchIdSchema.parse("NA1_1"), at(0)),
+        fact(RiotMatchIdSchema.parse("NA1_2"), at(60)),
+        fact(RiotMatchIdSchema.parse("NA1_3"), at(120)),
+        fact(RiotMatchIdSchema.parse("NA1_4"), at(180)),
       ],
     });
 
@@ -223,8 +239,11 @@ describe("fetchPlayerMatchHistory", () => {
     await writeTestLake(lakeDir, {
       serverId,
       matchFacts: [
-        fact("NA1_solo", at(0)),
-        { ...fact("NA1_aram", at(60)), queue: "aram" },
+        fact(RiotMatchIdSchema.parse("NA1_9100000100"), at(0)),
+        {
+          ...fact(RiotMatchIdSchema.parse("NA1_9100000010"), at(60)),
+          queue: "aram",
+        },
       ],
     });
 
@@ -235,13 +254,13 @@ describe("fetchPlayerMatchHistory", () => {
       lakeDir,
     });
 
-    expect(rows.map((row) => row.match_id)).toEqual(["NA1_aram"]);
+    expect(rows.map((row) => row.match_id)).toEqual(["NA1_9100000010"]);
   });
 
   test("returns nothing for an empty puuid list rather than everything", async () => {
     await writeTestLake(lakeDir, {
       serverId,
-      matchFacts: [fact("NA1_1", at(0))],
+      matchFacts: [fact(RiotMatchIdSchema.parse("NA1_1"), at(0))],
     });
 
     expect(
@@ -255,18 +274,24 @@ describe("fetchPlayerChampionPool", () => {
     await writeTestLake(lakeDir, {
       serverId,
       matchFacts: [
-        fact("NA1_1", at(0), { championId: 22, championName: "Ashe" }),
-        fact("NA1_2", at(60), {
+        fact(RiotMatchIdSchema.parse("NA1_1"), at(0), {
+          championId: 22,
+          championName: "Ashe",
+        }),
+        fact(RiotMatchIdSchema.parse("NA1_2"), at(60), {
           championId: 22,
           championName: "Ashe",
           win: false,
         }),
-        fact("NA1_3", at(120), {
+        fact(RiotMatchIdSchema.parse("NA1_3"), at(120), {
           puuid: SMURF,
           championId: 22,
           championName: "Ashe",
         }),
-        fact("NA1_4", at(180), { championId: 64, championName: "LeeSin" }),
+        fact(RiotMatchIdSchema.parse("NA1_4"), at(180), {
+          championId: 64,
+          championName: "LeeSin",
+        }),
       ],
     });
 
@@ -291,17 +316,17 @@ describe("fetchPlayerChampionPool", () => {
     await writeTestLake(lakeDir, {
       serverId,
       matchFacts: [
-        fact("NA1_pos_1", at(0), {
+        fact(RiotMatchIdSchema.parse("NA1_9100000060"), at(0), {
           championId: 22,
           championName: "Ashe",
           teamPosition: "INVALID",
         }),
-        fact("NA1_pos_2", at(60), {
+        fact(RiotMatchIdSchema.parse("NA1_9100000070"), at(60), {
           championId: 22,
           championName: "Ashe",
           teamPosition: "INVALID",
         }),
-        fact("NA1_pos_3", at(120), {
+        fact(RiotMatchIdSchema.parse("NA1_9100000080"), at(120), {
           championId: 22,
           championName: "Ashe",
           teamPosition: "BOTTOM",
@@ -327,28 +352,28 @@ describe("fetchTeamTotalsForMatches", () => {
     await writeTestLake(lakeDir, {
       serverId,
       matchFacts: [
-        fact("NA1_team", at(0), {
+        fact(RiotMatchIdSchema.parse("NA1_9100000110"), at(0), {
           kills: 5,
           teamId: 100,
           totalDamageDealtToChampions: 10_000,
         }),
       ],
       untrackedMatchFacts: [
-        fact("NA1_team", at(0), {
+        fact(RiotMatchIdSchema.parse("NA1_9100000110"), at(0), {
           playerId: 91,
           puuid: testPuuid("ally-a"),
           kills: 3,
           teamId: 100,
           totalDamageDealtToChampions: 5000,
         }),
-        fact("NA1_team", at(0), {
+        fact(RiotMatchIdSchema.parse("NA1_9100000110"), at(0), {
           playerId: 92,
           puuid: testPuuid("ally-b"),
           kills: 2,
           teamId: 100,
           totalDamageDealtToChampions: 5000,
         }),
-        fact("NA1_team", at(0), {
+        fact(RiotMatchIdSchema.parse("NA1_9100000110"), at(0), {
           playerId: 93,
           puuid: testPuuid("enemy-a"),
           kills: 7,
@@ -360,7 +385,7 @@ describe("fetchTeamTotalsForMatches", () => {
     });
 
     const totals = await fetchTeamTotalsForMatches({
-      matchIds: ["NA1_team"],
+      matchIds: [RiotMatchIdSchema.parse("NA1_9100000110")],
       lakeDir,
     });
 

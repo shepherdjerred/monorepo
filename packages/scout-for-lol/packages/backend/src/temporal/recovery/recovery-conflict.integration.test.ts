@@ -39,7 +39,7 @@ const riot = vi.hoisted(() => ({
 }));
 
 vi.mock("#src/temporal/match/match-context.ts", () => ({
-  resolveScoutMatchContext: (riotMatchId: string) =>
+  resolveScoutMatchContext: (riotMatchId: RiotMatchId) =>
     Promise.resolve({
       matchId: riotMatchId,
       riotMatchId,

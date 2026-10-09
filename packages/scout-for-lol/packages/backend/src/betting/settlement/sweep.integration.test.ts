@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import {
   BucksDeltaSchema,
@@ -23,7 +24,7 @@ import {
 
 const { prisma: db } = createTestDatabase("bucks-close-match");
 const SERVER_ID = DiscordGuildIdSchema.parse("1337623164146155593");
-const MATCH_ID = "NA1_5000000999";
+const MATCH_ID = RiotMatchIdSchema.parse("NA1_5000000999");
 const NOW = new Date("2030-01-01T00:11:00Z");
 
 async function makePool() {

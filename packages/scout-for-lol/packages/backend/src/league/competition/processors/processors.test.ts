@@ -1,13 +1,12 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, it } from "vitest";
-import type {
-  ChampionId,
-  CompetitionCriteria,
-  LeaguePuuid,
-  RawMatch,
-  Rank,
-  Ranks,
-} from "@scout-for-lol/data";
 import {
+  type ChampionId,
+  type CompetitionCriteria,
+  type LeaguePuuid,
+  type RawMatch,
+  type Rank,
+  type Ranks,
   AccountIdSchema,
   ChampionIdSchema,
   PlayerIdSchema,
@@ -92,6 +91,8 @@ function matchParticipant(
   };
 }
 
+let nextMatchNumber = 9_500_000_000;
+
 function createMatch(
   queueId: number,
   participants: MatchParticipant[],
@@ -99,7 +100,7 @@ function createMatch(
   return {
     metadata: {
       dataVersion: "2",
-      matchId: `TEST_${crypto.randomUUID()}`,
+      matchId: RiotMatchIdSchema.parse(`NA1_${String(nextMatchNumber++)}`),
       participants: participants.map((participant) => participant.puuid),
     },
     info: {

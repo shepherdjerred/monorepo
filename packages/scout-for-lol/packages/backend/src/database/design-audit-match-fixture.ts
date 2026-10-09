@@ -1,4 +1,8 @@
 import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
+import {
   TimelineEventLakeRowSchema,
   TimelineParticipantFrameLakeRowSchema,
   type TimelineCoverageLakeRow,
@@ -16,7 +20,9 @@ export function designAuditHistoryFixtures(
 ): TestLakeMatchFact[] {
   return Array.from({ length: 21 }, (_, index) => ({
     ...player,
-    matchId: `design-audit-history-${index.toString()}`,
+    matchId: RiotMatchIdSchema.parse(
+      `NA1_${(9_300_000_000 + index).toString()}`,
+    ),
     queue: "solo",
     win: index % 2 === 0,
     surrendered: false,
@@ -28,7 +34,7 @@ export function designAuditHistoryFixtures(
     gameCreationAt: new Date(Date.UTC(2025, 11, 27 - index, 12)),
   }));
 }
-function extraPlayers(game: number, matchId: string): TestLakeMatchFact[] {
+function extraPlayers(game: number, matchId: RiotMatchId): TestLakeMatchFact[] {
   const roles = ["TOP", "JUNGLE", "MIDDLE", "UTILITY"];
   const champions = [
     { id: 86, name: "Garen" },
@@ -113,7 +119,9 @@ export function designAuditMatchFixtures(playerId: number) {
   const timelineCoverage: TimelineCoverageLakeRow[] = [];
   const timelineEventParticipants: TimelineEventParticipantLakeRow[] = [];
   for (let game = 1; game <= 4; game++) {
-    const matchId = `design-audit-match-${game.toString()}`;
+    const matchId = RiotMatchIdSchema.parse(
+      `NA1_${(9_200_000_000 + game).toString()}`,
+    );
     extra.push(...extraPlayers(game, matchId));
     if (game > 2) continue;
     const minutes = game === 2 ? 10 : 30;

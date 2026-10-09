@@ -1,4 +1,8 @@
 import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
+import {
   DareProgressSchema,
   DareSqlEvidenceSchema,
   rankToSimpleString,
@@ -12,12 +16,12 @@ import { z } from "zod";
 const SourceReferenceSchema = z.array(
   z.union([
     z.string().min(1),
-    z.object({ matchId: z.string().min(1) }).transform((row) => row.matchId),
+    z.object({ matchId: RiotMatchIdSchema }).transform((row) => row.matchId),
   ]),
 );
 
 type StoredDareEvidence = {
-  matchId: string;
+  matchId: RiotMatchId;
   gameEndAt: Date;
   evaluationOutput: string;
   sourceReferences: string;
@@ -28,7 +32,7 @@ function parseEvidence(row: StoredDareEvidence) {
   return DareSqlEvidenceSchema.parse(JSON.parse(row.evaluationOutput));
 }
 
-function distinctMatchCount(matchIds: readonly string[]): number {
+function distinctMatchCount(matchIds: readonly RiotMatchId[]): number {
   return new Set(matchIds).size;
 }
 

@@ -1,3 +1,4 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import {
   testAccountId,
@@ -23,7 +24,7 @@ const SERVER_ID = testGuildId("1");
 const CREATOR_ID = testAccountId("1");
 
 export type OwedMatch = {
-  matchId: string;
+  matchId: RiotMatchId;
   observedAt: Date;
   /** Last cursor advance; null leaves the match's one account unadvanced. */
   completedAt: Date | null;
@@ -107,7 +108,7 @@ export async function seedIntent(
   prisma: ExtendedPrismaClient,
   args: {
     key: string;
-    matchId: string;
+    matchId: RiotMatchId;
     state: "pending" | "ready";
     createdAt: Date;
     kind?: "postmatch" | "prematch";
@@ -155,7 +156,7 @@ export async function seedRecoveryBatch(
 
 export async function seedReceipt(
   prisma: ExtendedPrismaClient,
-  args: { matchId: string; kind: string },
+  args: { matchId: RiotMatchId; kind: string },
 ): Promise<void> {
   await prisma.matchProcessingReceipt.create({
     data: {

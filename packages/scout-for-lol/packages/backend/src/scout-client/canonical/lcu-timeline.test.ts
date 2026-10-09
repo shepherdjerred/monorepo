@@ -1,3 +1,4 @@
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
@@ -35,7 +36,11 @@ async function converted(mode: string) {
   return {
     game,
     rawTimeline: await fixture(`lcu-timeline-${mode}`),
-    result: convertLcuTimeline("NA1_1", game, timeline),
+    result: convertLcuTimeline(
+      RiotMatchIdSchema.parse("NA1_1"),
+      game,
+      timeline,
+    ),
   };
 }
 
@@ -112,7 +117,7 @@ describe("convertLcuTimeline", () => {
     // UUID in it would join to nothing, or to the wrong rows.
     expect(
       convertLcuTimeline(
-        "NA1_1",
+        RiotMatchIdSchema.parse("NA1_1"),
         await fixture("lcu-game-ranked-solo"),
         await fixture("lcu-timeline-ranked-solo"),
       ),

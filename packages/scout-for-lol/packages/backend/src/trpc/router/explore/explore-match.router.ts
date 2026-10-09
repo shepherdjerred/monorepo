@@ -1,7 +1,8 @@
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import {
-  MatchIdSchema,
+  RiotMatchIdSchema,
   TimelineCursorSchema,
   TimelineEventFilterSchema,
 } from "@scout-for-lol/data";
@@ -29,7 +30,7 @@ import { protectedProcedure, router } from "#src/trpc/trpc.ts";
 import { matchLoadoutFromLakeRow } from "#src/report-lake/loadout.ts";
 import { buildRoleMatchups } from "#src/trpc/router/consumer/consumer-match-role-matchups.ts";
 
-const MatchInput = z.object({ matchId: MatchIdSchema });
+const MatchInput = z.object({ matchId: RiotMatchIdSchema });
 const TimelinePageInput = MatchInput.extend({
   participantIds: TimelineEventFilterSchema.shape.participantIds,
   cursor: TimelineCursorSchema.optional(),
@@ -40,7 +41,7 @@ const TimelineEventPageInput = TimelinePageInput.extend({
 
 async function assertExploreMatch(
   user: Parameters<typeof assertExploreAccess>[0],
-  matchId: string,
+  matchId: RiotMatchId,
 ) {
   await assertExploreAccess(user);
   const rows = await fetchFullMatch({ matchId });
