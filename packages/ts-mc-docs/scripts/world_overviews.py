@@ -740,8 +740,9 @@ def verify(state: OverviewPublication, profile: str, *, readback: bool = False) 
                     raise ValueError(f"Public readback mismatch: {url}")
 
     with ThreadPoolExecutor(max_workers=UPLOAD_WORKERS) as pool:
-        for _ in pool.map(check, tasks):
-            pass
+        for count, _ in enumerate(pool.map(check, tasks), start=1):
+            if count % 250 == 0:
+                print(f"Verifying public overview assets: {count}/{len(tasks)}", flush=True)
     print(f"Verified {len(tasks)} public overview assets", flush=True)
 
 
@@ -939,8 +940,7 @@ def main() -> None:
         child = commands.add_parser(command)
         child.add_argument("--state", type=Path, required=True)
         child.add_argument("--profile", default="seaweedfs")
-        if command == "verify":
-            child.add_argument("--readback", action="store_true")
+        child.add_argument("--readback", action="store_true", help="Also verify every asset's public bytes")
     args = parser.parse_args()
     if args.command == "run":
         run(args)
@@ -950,7 +950,7 @@ def main() -> None:
             verify(state, args.profile, readback=args.readback)
         else:
             validate_publication(state, complete=True)
-            verify(state, args.profile)
+            verify(state, args.profile, readback=args.readback)
             write_json(PUBLICATION_PATH, state)
             document_archive(PACKAGE / "archive/published.json", PUBLICATION_PATH)
 

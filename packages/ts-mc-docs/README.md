@@ -151,8 +151,7 @@ bun run overviews run --source "$HOME/Sync/Sync/The Storm/Worlds" \
   --scratch /path/to/overview-scratch --only asterism-2016-02
 bun run overviews run --source "$HOME/Sync/Sync/The Storm/Worlds" \
   --scratch /path/to/overview-scratch --workers 4 --render-workers 12
-bun run overviews verify --state /path/to/overview-scratch/overviews.json --readback
-bun run overviews document --state /path/to/overview-scratch/overviews.json
+bun run overviews document --state /path/to/overview-scratch/overviews.json --readback
 bun run test
 bun run build
 ```
@@ -233,5 +232,7 @@ bun run archive document --state archive/published.json --overviews archive/over
 ```
 
 Inspect all hosted viewers and pan beyond spawn before releasing page links.
-Keep visual proof with the source change. `verify --readback` checks every asset
-through both S3 metadata and public bytes; it complements browser acceptance.
+Keep visual proof with the source change. `document --readback` checks every asset
+through both S3 metadata and public bytes before writing page links; it complements
+browser acceptance. Use `verify --readback` to repeat that verification without
+rewriting the page or its certificate.

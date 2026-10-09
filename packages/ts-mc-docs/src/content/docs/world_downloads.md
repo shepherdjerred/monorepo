@@ -5,6 +5,8 @@ description: Explore and download the preserved worlds and builds of The Storm.
 
 Browse previews of the preserved worlds, or download a copy to play locally.
 
+Explore map opens an interactive, low-resolution overview of each world's saved overworld terrain. ZIP downloads retain their original Minecraft formats.
+
 ## Play a world
 
 1. Download and extract its ZIP. Each ZIP contains one world folder with `level.dat` directly inside.
@@ -25,7 +27,7 @@ The later survival main world.
 
 **Snapshot:** 2016-01-10 · **Minecraft:** 1.8-era (use 1.8.9) · **Download:** 5.52 GiB
 
-[Download ZIP](https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/main-map2-2016-01-10.zip)
+[Download ZIP](https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/main-map2-2016-01-10.zip) · [Explore map](https://docs.ts-mc.net/world-archive/2026-10-04-v1/overviews/bluemap-5.28-v7/main-map2-2016-01-10/index.html)
 
 Credit: The Storm community.
 
@@ -53,7 +55,7 @@ The original first survival main-world snapshot.
 
 **Snapshot:** 2015-07-09 · **Minecraft:** 1.8-era (use 1.8.9) · **Download:** 1.68 GiB
 
-[Download ZIP](https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/main-map1-2015-07-09.zip)
+[Download ZIP](https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/main-map1-2015-07-09.zip) · [Explore map](https://docs.ts-mc.net/world-archive/2026-10-04-v1/overviews/bluemap-5.28-v7/main-map1-2015-07-09/index.html)
 
 Credit: The Storm community.
 
@@ -81,7 +83,7 @@ The later Skylands survival world.
 
 **Snapshot:** 2016-01-10 · **Minecraft:** 1.8-era (use 1.8.9) · **Download:** 449.4 MiB
 
-[Download ZIP](https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/skylands-map2-2016-01-10.zip)
+[Download ZIP](https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/skylands-map2-2016-01-10.zip) · [Explore map](https://docs.ts-mc.net/world-archive/2026-10-04-v1/overviews/bluemap-5.28-v7/skylands-map2-2016-01-10/index.html)
 
 Credit: The Storm community.
 
@@ -109,7 +111,7 @@ The original Skylands snapshot.
 
 **Snapshot:** 2015-07-09 · **Minecraft:** 1.8-era (use 1.8.9) · **Download:** 201.6 MiB
 
-[Download ZIP](https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/skylands-map1-2015-07-09.zip)
+[Download ZIP](https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/skylands-map1-2015-07-09.zip) · [Explore map](https://docs.ts-mc.net/world-archive/2026-10-04-v1/overviews/bluemap-5.28-v7/skylands-map1-2015-07-09/index.html)
 
 Credit: The Storm community.
 
@@ -137,7 +139,7 @@ The creative server's plot world.
 
 **Snapshot:** 2016-01-10 · **Minecraft:** 1.8-era (use 1.8.9) · **Download:** 39.7 MiB
 
-[Download ZIP](https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/creative-2016-01-10.zip)
+[Download ZIP](https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/creative-2016-01-10.zip) · [Explore map](https://docs.ts-mc.net/world-archive/2026-10-04-v1/overviews/bluemap-5.28-v7/creative-2016-01-10/index.html)
 
 Credit: The Storm community.
 
@@ -165,7 +167,7 @@ A recovered town export from the survival world.
 
 **Snapshot:** 2016-02 · **Minecraft:** 1.8-era (use 1.8.9) · **Download:** 3.6 MiB
 
-[Download ZIP](https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/asterism-2016-02.zip)
+[Download ZIP](https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/asterism-2016-02.zip) · [Explore map](https://docs.ts-mc.net/world-archive/2026-10-04-v1/overviews/bluemap-5.28-v7/asterism-2016-02/index.html)
 
 Credit: WinterSolstice8 / BlueAsterismSolstice.
 
@@ -193,7 +195,7 @@ The original city used for The Storm's 2014 harbour spawn, without The Storm's l
 
 **Snapshot:** 2012-09-11 · **Minecraft:** 2012 Anvil format (use 1.3.2) · **Download:** 698.5 MiB
 
-[Download ZIP](https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/kargeth-2012-09-11.zip)
+[Download ZIP](https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/kargeth-2012-09-11.zip) · [Explore map](https://docs.ts-mc.net/world-archive/2026-10-04-v1/overviews/bluemap-5.28-v7/kargeth-2012-09-11/index.html)
 
 Credit: Madnes64; additional settlements by TheCreeperWorld, Flashy, Seppel1097, Killxzone, Tijn1117 and Mattykingsam.
 
@@ -221,7 +223,7 @@ A brief single-player test used to choose the revival seed; not a server snapsho
 
 **Snapshot:** 2022-11-20 · **Minecraft:** 1.19.2 · **Download:** 29.0 MiB
 
-[Download ZIP](https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/new-world-test-2022-11-20.zip)
+[Download ZIP](https://docs.ts-mc.net/world-archive/2026-10-04-v1/downloads/new-world-test-2022-11-20.zip) · [Explore map](https://docs.ts-mc.net/world-archive/2026-10-04-v1/overviews/bluemap-5.28-v7/new-world-test-2022-11-20/index.html)
 
 Credit: The Storm.
 

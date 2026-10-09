@@ -593,7 +593,7 @@ def document(state_path: Path, overview_path: Path | None = None) -> None:
     if overviews is not None:
         intro = lines.index("## Play a world")
         lines[intro:intro] = [
-            "Explore map opens an interactive, low-resolution overview of each world's saved terrain. "
+            "Explore map opens an interactive, low-resolution overview of each world's saved overworld terrain. "
             "ZIP downloads retain their original Minecraft formats.",
             "",
         ]
