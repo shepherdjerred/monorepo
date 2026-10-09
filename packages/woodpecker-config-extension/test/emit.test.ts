@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import path from "node:path";
 import { parse } from "yaml";
 import { z } from "zod";
 import { BUN_CACHE, BUN_CACHE_CONTROL } from "#src/pipeline/cache.ts";
@@ -16,6 +17,24 @@ function substitute(yaml: string): string {
 
 const EmittedCommands = z.object({
   steps: z.tuple([z.object({ commands: z.array(z.string()) })]),
+});
+
+test("checkout-free startup uses the existing workspace mount instead of creating a checkout", () => {
+  const step = testPipelineSteps().find(
+    (candidate) => candidate.key === "codex-review-gate",
+  );
+  if (step === undefined) throw new Error("Review gate fixture missing");
+  const emitted = z
+    .object({
+      workspace: z.object({ base: z.string(), path: z.string() }),
+      skip_clone: z.literal(true),
+    })
+    .parse(parse(emitWorkflow({ ...step, skipClone: true }, TEST_IDENTITY)));
+  // Woodpecker joins these fields before its startup mkdir/cd. A fresh RWX
+  // volume permits a non-root process to enter its root but not create children.
+  expect(path.posix.join(emitted.workspace.base, emitted.workspace.path)).toBe(
+    emitted.workspace.base,
+  );
 });
 
 describe("variable substitution", () => {

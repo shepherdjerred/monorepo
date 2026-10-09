@@ -230,6 +230,13 @@ function backendOptions(
  */
 export function emitWorkflow(step: CiStep, identity: PipelineIdentity): string {
   const workflow: Record<string, unknown> = {
+    // Checkout-free workflows run trusted code from their image. Woodpecker's
+    // startup script still creates its working directory before our commands.
+    // Use the existing mount root so a non-root image need not create a checkout
+    // directory on the fresh, root-owned RWX workspace volume.
+    ...(step.skipClone === true
+      ? { workspace: { base: "/woodpecker", path: "." } }
+      : {}),
     steps: [
       {
         name: step.key,
