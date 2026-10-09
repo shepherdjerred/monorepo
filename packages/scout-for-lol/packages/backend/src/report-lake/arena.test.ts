@@ -45,4 +45,18 @@ describe("Arena augment lake read", () => {
       UnknownArenaAugmentError,
     );
   });
+
+  test("resolves names recorded by Arena, Mayhem, and Classic modes", () => {
+    expect(
+      arenaAugmentsFromLakeRow({
+        ...row(374),
+        augment_2_id: 2008,
+        augment_3_id: 7001,
+      }),
+    ).toEqual([
+      { id: 374, name: "Rice and Chicken" },
+      { id: 2008, name: "Weighted Popoffs" },
+      { id: 7001, name: "Upgrade: Zz'Rot Portal" },
+    ]);
+  });
 });
