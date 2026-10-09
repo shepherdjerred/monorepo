@@ -8,6 +8,7 @@
   },
   "imports": {
     "#architecture": "./architecture.config.ts",
+    "#build": "./src/build.ts",
     "#lib/*": "./src/lib/*",
     "#commands/*": "./src/commands/*"
   },
@@ -16,7 +17,7 @@
     "brim": "./src/brim.ts"
   },
   "scripts": {
-    "build": "bun build ./src/index.ts --compile --external ffmpeg-static --outfile=dist/toolkit",
+    "build": "bun run src/build.ts",
     "test": "bun run test:unit",
     "test:coverage": "bun --no-install --bun vitest --config ../../vitest.config.ts run --coverage.reporter=text --coverage.reporter=lcovonly --coverage.reportsDirectory=coverage --coverage scripts/install.test.ts --coverage.thresholds.lines=90 --coverage.thresholds.functions=90 --coverage.thresholds.statements=90",
     "test:unit": "bun --no-install --bun vitest --config ../../vitest.config.ts run test/lib test/bugsink test/s3 test/deployed test/screenshot test/history test/discord test/mc scripts",

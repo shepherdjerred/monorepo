@@ -14,7 +14,7 @@ See [AGENTS.md](AGENTS.md) for implementation invariants and contributor notes.
 # Run from source
 bun run src/index.ts pr health
 
-# Compile a standalone binary to dist/toolkit
+# Compile a standalone binary to dist/toolkit (ad-hoc signed on macOS)
 bun run build
 
 # Install globally to ~/.local/bin/toolkit
