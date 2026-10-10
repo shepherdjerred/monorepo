@@ -12,10 +12,41 @@ import {
   type Op,
   type RenderSidecar,
 } from "#protocol/build.ts";
-import { currentRun, lastOf } from "./build-log.ts";
+import { currentRun, lastOf, readLog } from "./build-log.ts";
 import type { BuildWorkspace } from "./workspace.ts";
 
 const NAME = /^[a-z0-9][a-z0-9-]{0,31}$/u;
+
+export type RenderProvenance = {
+  journal: BuildLogEntry[];
+  programText: string | null;
+};
+
+/** Read all required program evidence before replacing any render artifact. */
+export async function readRenderProvenance(
+  workspace: BuildWorkspace,
+  source: string,
+  target?: string,
+): Promise<RenderProvenance> {
+  const journal = await readLog(workspace.dir);
+  const oplog = await workspace.oplog();
+  let renderedTarget = target;
+  if (source === "canvas" && renderedTarget === undefined) {
+    const manifest = await workspace.manifest();
+    renderedTarget = manifest.canvas;
+  }
+  const producer = await programBehind(workspace, {
+    source,
+    ...(renderedTarget === undefined ? {} : { target: renderedTarget }),
+    ops: oplog.ops,
+    journal,
+  });
+  return {
+    journal,
+    programText:
+      producer === null ? null : await readProgramText(workspace, producer),
+  };
+}
 
 /**
  * Render and candidate names become file names under the build directory,

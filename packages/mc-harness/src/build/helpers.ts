@@ -29,16 +29,20 @@ import type { RenderMode } from "@shepherdjerred/mc-build/render/sheet.ts";
 import type { BlockPos } from "#protocol/bridge.ts";
 import {
   BUILD_FILES,
-  type BuildLogEntry,
   type BuildManifest,
   type RenderSidecar,
 } from "#protocol/build.ts";
-import { iterationOf, readLog } from "./build-log.ts";
-import { programBehind, readProgramText, writeSidecar } from "./sidecar.ts";
+import { iterationOf } from "./build-log.ts";
+import {
+  readRenderProvenance,
+  writeSidecar,
+  type RenderProvenance,
+} from "./sidecar.ts";
 import type { DaemonClient } from "./daemon-client.ts";
 import type { Journal } from "./journal.ts";
 import { resetToSite, type RunContext } from "./ops.ts";
 import { BuildWorkspace } from "./workspace.ts";
+import { writeRenderContext, type RegionContext } from "./render-context.ts";
 
 export const PROGRAM_TEMPLATE = `import type { BuildProgram } from "@shepherdjerred/mc-build/dsl/context.ts";
 
@@ -140,7 +144,8 @@ export type LookOptions = {
   /** World box the grid covers, recorded in the sidecar so a later `--compare` can align to it. */
   box?: { min: BlockPos; max: BlockPos };
   /** Whole-site geometry and the requested region's origin within it. */
-  regionContext?: { grid: BlockGrid; origin: Vec3 };
+  regionContext?: RegionContext;
+  compareContext?: RegionContext;
 };
 
 async function writeLook(
@@ -369,7 +374,12 @@ export async function renderLooks(
     // The same crop and cuts as the other looks, so the change plan covers
     // what the panels show and nothing that was cut away.
     const { regionContext: _regionContext, ...beforeOptions } = options;
-    const before = subjectOf(options.compareWith, beforeOptions);
+    const before = subjectOf(options.compareWith, {
+      ...beforeOptions,
+      ...(options.compareContext === undefined
+        ? {}
+        : { regionContext: options.compareContext }),
+    });
     const image = await renderer.compare(before.subject, subject, {
       mode: ctx.mode,
       beforeContext: before,
@@ -391,39 +401,11 @@ export async function renderLooks(
     source,
     provenance,
     ...(options.box === undefined ? {} : { box: options.box }),
+    ...(options.regionContext === undefined
+      ? {}
+      : { regionContext: options.regionContext }),
   });
   return files;
-}
-
-type RenderProvenance = {
-  journal: BuildLogEntry[];
-  programText: string | null;
-};
-
-/** Read all required program evidence before replacing any render artifact. */
-export async function readRenderProvenance(
-  workspace: BuildWorkspace,
-  source: string,
-  target?: string,
-): Promise<RenderProvenance> {
-  const journal = await readLog(workspace.dir);
-  const oplog = await workspace.oplog();
-  let renderedTarget = target;
-  if (source === "canvas" && renderedTarget === undefined) {
-    const manifest = await workspace.manifest();
-    renderedTarget = manifest.canvas;
-  }
-  const producer = await programBehind(workspace, {
-    source,
-    ...(renderedTarget === undefined ? {} : { target: renderedTarget }),
-    ops: oplog.ops,
-    journal,
-  });
-  return {
-    journal,
-    programText:
-      producer === null ? null : await readProgramText(workspace, producer),
-  };
 }
 
 /**
@@ -444,9 +426,16 @@ export async function recordRender(
     source: string;
     provenance: RenderProvenance;
     box?: { min: BlockPos; max: BlockPos };
+    regionContext?: RegionContext;
   },
 ): Promise<void> {
   const registry = await loadRegistry();
+  const renderContext = await writeRenderContext(
+    workspace,
+    input.name,
+    input.regionContext,
+    registry.dataVersion,
+  );
   await mkdir(workspace.file(BUILD_FILES.rendersDir), { recursive: true });
   await Bun.write(
     workspace.file(path.join(BUILD_FILES.rendersDir, `${input.name}.schem`)),
@@ -470,6 +459,7 @@ export async function recordRender(
     gridHash: gridHash(grid),
     size: grid.size,
     ...(input.box === undefined ? {} : { box: input.box }),
+    ...(renderContext === undefined ? {} : { context: renderContext }),
     blocks: lint.stats.blocks,
     program: programText === null ? null : programCopy,
     lint: {

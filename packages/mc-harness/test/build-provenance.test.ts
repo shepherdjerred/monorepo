@@ -12,10 +12,14 @@ import { RegionReadSchema } from "@shepherdjerred/mc-build/core/region-read.ts";
 import { appendLog, readLog } from "#build/build-log.ts";
 import { renderBuild, runBuild } from "#build/commands.ts";
 import { DaemonClient } from "#build/daemon-client.ts";
-import { readRenderProvenance, renderLooks } from "#build/helpers.ts";
+import { renderLooks } from "#build/helpers.ts";
 import { Journal } from "#build/journal.ts";
 import { rubricAxisIds } from "#build/judge.ts";
-import { latestRenderName, programSnapshot } from "#build/sidecar.ts";
+import {
+  latestRenderName,
+  programSnapshot,
+  readRenderProvenance,
+} from "#build/sidecar.ts";
 import {
   listCandidates,
   pickCandidate,

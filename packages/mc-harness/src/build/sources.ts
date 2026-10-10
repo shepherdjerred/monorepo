@@ -14,6 +14,7 @@ import { readGrid } from "./ops.ts";
 import { buildArtifactPath, readSidecar } from "./sidecar.ts";
 import { cropGrid } from "./tiles.ts";
 import type { BuildWorkspace } from "./workspace.ts";
+import { readRenderContext } from "./render-context.ts";
 
 /**
  * Where a render or lint reads its blocks: the live canvas (default), the
@@ -279,6 +280,58 @@ export async function alignedRender(
     (axis) => offset[axis] === 0 && size[axis] === saved.size[axis],
   );
   return same ? saved : cropGrid(saved, offset, size);
+}
+
+/** Align both the selected blocks and the archived shading origin. */
+export async function alignedComparison(
+  workspace: BuildWorkspace,
+  name: string,
+  box: { min: BlockPos; max: BlockPos },
+) {
+  const grid = await alignedRender(workspace, name, box);
+  const sidecar = await readSidecar(workspace, name);
+  const context = await readRenderContext(
+    workspace,
+    sidecar,
+    await savedRender(workspace, name),
+  );
+  if (sidecar.box === undefined) throw new Error("missing comparison box");
+  return {
+    grid,
+    context: {
+      grid: context.grid,
+      origin: {
+        x: context.origin.x + box.min.x - sidecar.box.min.x,
+        y: context.origin.y + box.min.y - sidecar.box.min.y,
+        z: context.origin.z + box.min.z - sidecar.box.min.z,
+      },
+    },
+  };
+}
+
+export function regionInSite(
+  site: Box,
+  region: { min: BlockPos; max: BlockPos },
+): Box {
+  const min = {
+    x: Math.min(region.min.x, region.max.x),
+    y: Math.min(region.min.y, region.max.y),
+    z: Math.min(region.min.z, region.max.z),
+  };
+  const max = {
+    x: Math.max(region.min.x, region.max.x),
+    y: Math.max(region.min.y, region.max.y),
+    z: Math.max(region.min.z, region.max.z),
+  };
+  if (
+    (["x", "y", "z"] as const).some(
+      (axis) => min[axis] < site.min[axis] || max[axis] > site.max[axis],
+    )
+  )
+    throw new Error(
+      `render region ${fmtBox({ min, max })} is outside the site ${fmtBox(site)}`,
+    );
+  return { world: site.world, min, max };
 }
 
 function fmtBox(box: { min: BlockPos; max: BlockPos }): string {

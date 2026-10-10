@@ -168,6 +168,13 @@ export const RenderSidecarSchema = z.strictObject({
   size: BlockPosSchema,
   /** World box the grid covers (a region render covers part of the site); set by `build render`. */
   box: z.strictObject({ min: BlockPosSchema, max: BlockPosSchema }).optional(),
+  /** Whole-site surroundings saved separately for positional-region comparisons. */
+  context: z
+    .strictObject({
+      gridHash: z.string().regex(/^[a-f0-9]{64}$/u),
+      origin: BlockPosSchema,
+    })
+    .optional(),
   blocks: z.number().int(),
   /** The program that produced this render, copied beside it (`renders/<name>.build.ts`), or null. */
   program: z.string().nullable(),

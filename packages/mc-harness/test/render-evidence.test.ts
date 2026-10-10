@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, symlink } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterAll, describe, expect, it, vi } from "vitest";
@@ -21,6 +21,7 @@ import { renderBuild } from "#build/commands.ts";
 import { DaemonClient } from "#build/daemon-client.ts";
 import { Journal } from "#build/journal.ts";
 import { readSidecar } from "#build/sidecar.ts";
+import { alignedComparison } from "#build/sources.ts";
 import { readLog } from "#build/build-log.ts";
 import {
   readCandidate,
@@ -38,6 +39,15 @@ const temp = await mkdtemp(path.join(os.tmpdir(), "mc-render-evidence-"));
 afterAll(async () => {
   await rm(temp, { recursive: true, force: true });
 });
+function enclosedRoom(): BlockGrid {
+  const whole = new BlockGrid({ x: 10, y: 10, z: 10 }, "minecraft:stone");
+  for (let x = 1; x < 9; x += 1)
+    for (let y = 1; y < 6; y += 1)
+      for (let z = 1; z < 9; z += 1) whole.set(x, y, z, "minecraft:air");
+  whole.set(3, 1, 5, "minecraft:lantern");
+  return whole;
+}
+
 describe("positional region evidence", () => {
   it.each(
     (["compiled", "expected", "canvas"] as const).flatMap((source) =>
@@ -53,11 +63,7 @@ describe("positional region evidence", () => {
         path.join(temp, `region-${source}-${mode}`),
         "region",
       );
-      const whole = new BlockGrid({ x: 10, y: 10, z: 10 }, "minecraft:stone");
-      for (let x = 1; x < 9; x += 1)
-        for (let y = 1; y < 6; y += 1)
-          for (let z = 1; z < 9; z += 1) whole.set(x, y, z, "minecraft:air");
-      whole.set(3, 1, 5, "minecraft:lantern");
+      const whole = enclosedRoom();
       const manifest = await workspace.manifest();
       if (manifest.site === undefined) throw new Error("missing site");
       await workspace.writeManifest({
@@ -139,8 +145,226 @@ describe("positional region evidence", () => {
           min: manifest.site.min,
           max: manifest.site.max,
         });
+      const compared = await renderBuild(
+        { client, journal: new Journal(workspace.file("audit")), log: vi.fn() },
+        workspace.dir,
+        {
+          source,
+          target: "sbx-000001",
+          name: "compared",
+          region,
+          compare: "region",
+          look: { mode, views: [] },
+        },
+      );
+      const context = {
+        lightFrom: whole,
+        lightOrigin: origin,
+        cropFrom: { grid: whole, box: localBox },
+      };
+      const expectedCompare = await renderer.compare(grid, grid, {
+        mode,
+        beforeContext: context,
+        afterContext: context,
+      });
+      const compareFile = compared.files["compare"];
+      if (compareFile === undefined) throw new Error("missing comparison");
+      expect(await Bun.file(compareFile).bytes()).toEqual(
+        new Uint8Array(await encodePng(expectedCompare)),
+      );
+      if (source === "canvas" && mode === "light") {
+        const earlierSchematic = await readSchematic(bytes);
+        const earlierWhole = earlierSchematic.grid;
+        whole.set(3, 1, 5, "minecraft:air");
+        whole.data.forEach((value, index) =>
+          blocks.writeUInt32LE(value, index * 4),
+        );
+        read.mockResolvedValue({
+          ...captured,
+          palette: whole.palette,
+          blocks: blocks.toString("base64"),
+        });
+        const changed = await renderBuild(
+          {
+            client,
+            journal: new Journal(workspace.file("audit")),
+            log: vi.fn(),
+          },
+          workspace.dir,
+          {
+            source,
+            target: "sbx-000001",
+            name: "outside-changed",
+            region,
+            compare: "region",
+            look: { mode, views: [] },
+          },
+        );
+        const historical = {
+          lightFrom: earlierWhole,
+          lightOrigin: origin,
+          cropFrom: { grid: earlierWhole, box: localBox },
+        };
+        const expectedHistory = await renderer.compare(grid, grid, {
+          mode,
+          beforeContext: historical,
+          afterContext: context,
+        });
+        const wrongHistory = await renderer.compare(grid, grid, {
+          mode,
+          beforeContext: context,
+          afterContext: context,
+        });
+        const changedFile = changed.files["compare"];
+        if (changedFile === undefined)
+          throw new Error("missing changed comparison");
+        const changedBytes = Buffer.from(await Bun.file(changedFile).bytes());
+        expect(changedBytes.equals(await encodePng(expectedHistory))).toBe(
+          true,
+        );
+        expect(changedBytes.equals(await encodePng(wrongHistory))).toBe(false);
+      }
     },
     60_000,
+  );
+});
+
+describe("archived regional comparison context", () => {
+  it("aligns a smaller region within archived surroundings", async () => {
+    const workspace = await flatSiteBuild(
+      path.join(temp, "context-subregion"),
+      "subregion",
+    );
+    await workspace.writeOplog({ version: 1, ops: [] });
+    const whole = enclosedRoom();
+    const originalHash = gridHash(whole);
+    const origin = { x: 2, y: 0, z: 2 };
+    const selected = cropGrid(whole, {
+      min: origin,
+      max: { x: 7, y: 5, z: 7 },
+    });
+    await renderLooks(workspace, selected, "before", {
+      source: "compiled",
+      views: [],
+      box: { min: { x: 102, y: 64, z: 102 }, max: { x: 107, y: 69, z: 107 } },
+      regionContext: { grid: whole, origin },
+    });
+    whole.set(3, 1, 5, "minecraft:air");
+    const earlier = await alignedComparison(workspace, "before", {
+      min: { x: 104, y: 65, z: 104 },
+      max: { x: 106, y: 67, z: 106 },
+    });
+    expect(earlier.context.origin).toEqual({ x: 4, y: 1, z: 4 });
+    expect(gridHash(earlier.context.grid)).toBe(originalHash);
+    expect(gridHash(earlier.grid)).toBe(
+      gridHash(
+        cropGrid(earlier.context.grid, {
+          min: earlier.context.origin,
+          max: { x: 6, y: 3, z: 6 },
+        }),
+      ),
+    );
+  });
+  it.each(["missing", "hash", "origin", "region", "legacy", "escape"])(
+    "rejects %s context before writing comparison evidence",
+    async (failure) => {
+      const workspace = await flatSiteBuild(
+        path.join(temp, `context-${failure}`),
+        "context",
+      );
+      await workspace.writeOplog({ version: 1, ops: [] });
+      const whole = new BlockGrid({ x: 10, y: 10, z: 10 }, "minecraft:stone");
+      const origin = { x: 2, y: 2, z: 2 };
+      const grid = cropGrid(whole, { min: origin, max: { x: 4, y: 4, z: 4 } });
+      const box = {
+        min: { x: 102, y: 66, z: 102 },
+        max: { x: 104, y: 68, z: 104 },
+      };
+      await renderLooks(workspace, grid, "before", {
+        source: "compiled",
+        views: [],
+        box,
+        regionContext: { grid: whole, origin },
+      });
+      const sidecar = await readSidecar(workspace, "before");
+      const file = workspace.file("renders/context/before.schem");
+      switch (failure) {
+        case "missing":
+          await rm(file);
+          break;
+        case "hash":
+          await Bun.write(
+            file,
+            writeSchematic(new BlockGrid(whole.size), 3955),
+          );
+          break;
+        case "origin":
+          await Bun.write(
+            workspace.file("renders/before.json"),
+            JSON.stringify({
+              ...sidecar,
+              context: {
+                gridHash: gridHash(whole),
+                origin: { x: 9, y: 9, z: 9 },
+              },
+            }),
+          );
+          break;
+        case "region":
+          whole.set(2, 2, 2, "minecraft:air");
+          await Bun.write(file, writeSchematic(whole, 3955));
+          await Bun.write(
+            workspace.file("renders/before.json"),
+            JSON.stringify({
+              ...sidecar,
+              context: { gridHash: gridHash(whole), origin },
+            }),
+          );
+          break;
+        case "legacy": {
+          const { context: _context, ...legacy } = sidecar;
+          await Bun.write(
+            workspace.file("renders/before.json"),
+            JSON.stringify(legacy),
+          );
+          break;
+        }
+        case "escape": {
+          const outside = path.join(temp, "outside.schem");
+          await Bun.write(outside, writeSchematic(whole, 3955));
+          await rm(file);
+          await symlink(outside, file);
+          break;
+        }
+        default:
+          throw new Error("unknown fixture");
+      }
+      await expect(
+        alignedComparison(workspace, "before", box),
+      ).rejects.toThrow();
+      const journal = await readLog(workspace.dir);
+      await expect(
+        renderBuild(
+          {
+            client: new DaemonClient(),
+            journal: new Journal(workspace.file("audit")),
+            log: vi.fn(),
+          },
+          workspace.dir,
+          {
+            source: "compiled",
+            name: "after",
+            region: box,
+            compare: "before",
+            look: { views: [] },
+          },
+        ),
+      ).rejects.toThrow();
+      expect(
+        await Bun.file(workspace.file("renders/after.json")).exists(),
+      ).toBe(false);
+      expect(await readLog(workspace.dir)).toEqual(journal);
+    },
   );
 });
 

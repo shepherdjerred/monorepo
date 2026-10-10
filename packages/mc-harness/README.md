@@ -259,6 +259,10 @@ survey`, `--grid n` coordinate lines, `--floor y` and `--section z` cuts
   capture, while named historical renders remain available. Expected render
   provenance validates the program of the frozen run independently of later
   compile artifacts.
+  Positional renders also save hashed surroundings under `renders/context/`.
+  Comparisons restore each panel's own context and validate it against its
+  selected-region schematic. Older regional renders without context must be
+  rendered again before comparison.
   Invalid sidecars also fail instead of selecting an
   older render, and critique verifies the saved schematic against its hash
   before scoring or updating the journal. Code-only critique also validates

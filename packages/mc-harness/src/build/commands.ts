@@ -19,12 +19,18 @@ import { loadRegistry } from "@shepherdjerred/mc-build/registry/registry.ts";
 import type { BlockPos, Box } from "#protocol/bridge.ts";
 import { BUILD_FILES, type Op } from "#protocol/build.ts";
 import { appendLog } from "./build-log.ts";
-import { checkName, producingProgram, programSnapshot } from "./sidecar.ts";
 import {
-  alignedRender,
+  checkName,
+  producingProgram,
+  programSnapshot,
+  readRenderProvenance,
+} from "./sidecar.ts";
+import {
+  alignedComparison,
   cropToBox,
   gridFor,
   isPlainLook,
+  regionInSite,
   type RenderSource,
 } from "./sources.ts";
 import { DEFAULT_SANDBOX_TTL_SECONDS } from "#protocol/paths.ts";
@@ -41,7 +47,6 @@ import {
   canvasOf,
   renderGrid,
   localCuts,
-  readRenderProvenance,
   recordRender,
   relativeFiles,
   renderHero,
@@ -354,35 +359,6 @@ export async function runBuild(
   return { target, ops: ops.length };
 }
 
-export function regionInSite(
-  site: Box,
-  region: { min: BlockPos; max: BlockPos },
-): Box {
-  const min = {
-    x: Math.min(region.min.x, region.max.x),
-    y: Math.min(region.min.y, region.max.y),
-    z: Math.min(region.min.z, region.max.z),
-  };
-  const max = {
-    x: Math.max(region.min.x, region.max.x),
-    y: Math.max(region.min.y, region.max.y),
-    z: Math.max(region.min.z, region.max.z),
-  };
-  const inside = (["x", "y", "z"] as const).every(
-    (axis) => min[axis] >= site.min[axis] && max[axis] <= site.max[axis],
-  );
-  if (!inside) {
-    throw new Error(
-      `render region ${fmtPos(min)} → ${fmtPos(max)} is outside the site ${fmtPos(site.min)} → ${fmtPos(site.max)}`,
-    );
-  }
-  return { world: site.world, min, max };
-}
-
-function fmtPos(pos: BlockPos): string {
-  return `${pos.x.toString()},${pos.y.toString()},${pos.z.toString()}`;
-}
-
 export async function renderBuild(
   env: Env,
   dir: string,
@@ -433,7 +409,13 @@ export async function renderBuild(
   );
   const covered = { min: box.min, max: box.max };
   if (options.compare !== undefined) {
-    look.compareWith = await alignedRender(workspace, options.compare, covered);
+    const earlier = await alignedComparison(
+      workspace,
+      options.compare,
+      covered,
+    );
+    look.compareWith = earlier.grid;
+    look.compareContext = earlier.context;
   }
   look.source = source;
   if (options.target !== undefined) look.target = options.target;
