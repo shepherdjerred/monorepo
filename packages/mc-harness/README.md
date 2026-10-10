@@ -312,7 +312,12 @@ pick n | knockout [--among a,b] [--rubric] [--model]`) keep versions of
   before rendering or model calls; accepted and rejected scores use that same
   validated snapshot. Every bout is written under `judge/` and
   logged as an accept and a reject, and the winner becomes `best` after each
-  completed bout, even if a later model call fails. The pair record
+  completed bout, even if a later model call fails. Each tournament attempt
+  checkpoints its identity before judging and persists the validated verdict
+  before publishing the paired outcomes and checkpoint together. Failed
+  publication rolls both files back; retry reuses that verdict without another
+  model call and deduplicates outcomes if a process exit left a lagging checkpoint.
+  A damaged saved verdict fails before judging. The pair record
   records both candidate grid hashes. Each scored outcome references its exact
   grid and critique record; grading revalidates those references and totals.
   `pick`

@@ -7,7 +7,7 @@
  * versions were kept and why.
  */
 import path from "node:path";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { ensureAssets } from "@shepherdjerred/mc-build/render/assets.ts";
 import {
   assertTexturesPresent,
@@ -15,7 +15,6 @@ import {
   Renderer,
 } from "@shepherdjerred/mc-build/render/index.ts";
 import type { BuildManifest, JudgeRubric } from "#protocol/build.ts";
-import { appendLog } from "#build/build-log.ts";
 import {
   candidateGrid,
   candidateMatchesCapture,
@@ -28,11 +27,12 @@ import {
   judgeFingerprint,
   judgePair,
   llmJudge,
-  writeJudgeRecord,
   type AskJudge,
 } from "#build/judge.ts";
 import { BuildWorkspace } from "#build/workspace.ts";
 import { defaultPool } from "./default-pool.ts";
+import { boutVerdict } from "./bout-verdict.ts";
+import { publishBoutState, type OutcomeInput } from "./bout-publication.ts";
 
 export type Bout = {
   incumbent: string;
@@ -125,6 +125,7 @@ async function persistBest(
     rubric: JudgeRubric;
     score: number | null;
     progress?: NonNullable<BuildManifest["knockout"]>;
+    outcomes?: readonly OutcomeInput[];
   },
 ): Promise<NonNullable<BuildManifest["best"]>> {
   const { rubric, progress } = options;
@@ -142,10 +143,14 @@ async function persistBest(
     manifest.best.score === best.score;
   if (progress === undefined && unchanged && manifest.best !== undefined)
     return manifest.best;
-  await workspace.writeManifest({
+  const next = {
     ...manifest,
     best,
     ...(progress === undefined ? {} : { knockout: progress }),
+  };
+  await publishBoutState(workspace, {
+    manifest: next,
+    outcomes: options.outcomes ?? [],
   });
   return best;
 }
@@ -156,66 +161,80 @@ async function bout(
   options: {
     rubric: JudgeRubric;
     model: string;
-    ask: AskJudge;
+    ask?: AskJudge;
     scores: Scores;
+    attempt: string;
   },
-): Promise<Bout> {
+): Promise<{ result: Bout; outcomes: OutcomeInput[] }> {
   const { incumbent, challenger } = pair;
-  const verdict = await judgePair(
-    sheetOf(pair.sheets, incumbent),
-    sheetOf(pair.sheets, challenger),
-    options.ask,
-    options.model,
-  );
-  const recordFile = await writeJudgeRecord(dir, {
-    kind: "pair",
-    at: new Date().toISOString(),
-    model: options.model,
-    rubric: options.rubric,
-    judge: judgeFingerprint(options.rubric),
-    a: path.relative(path.resolve(dir), sheetOf(pair.sheets, incumbent).file),
-    b: path.relative(path.resolve(dir), sheetOf(pair.sheets, challenger).file),
-    grids: {
-      a: scoreOf(options.scores, incumbent).gridHash,
-      b: scoreOf(options.scores, challenger).gridHash,
+  const { record: verdict, file } = await boutVerdict(
+    new BuildWorkspace(dir),
+    {
+      attempt: options.attempt,
+      incumbent,
+      challenger,
+      pair: {
+        model: options.model,
+        rubric: options.rubric,
+        judge: judgeFingerprint(options.rubric),
+        a: path.relative(
+          path.resolve(dir),
+          sheetOf(pair.sheets, incumbent).file,
+        ),
+        b: path.relative(
+          path.resolve(dir),
+          sheetOf(pair.sheets, challenger).file,
+        ),
+        grids: {
+          a: scoreOf(options.scores, incumbent).gridHash,
+          b: scoreOf(options.scores, challenger).gridHash,
+        },
+      },
     },
-    winner: verdict.winner,
-    confidence: verdict.confidence,
-    agreed: verdict.agreed,
-    reasons: verdict.reasons,
-  });
-  const file = path.relative(path.resolve(dir), recordFile);
+    () =>
+      judgePair(
+        sheetOf(pair.sheets, incumbent),
+        sheetOf(pair.sheets, challenger),
+        options.ask ?? llmJudge(options.model, options.rubric),
+        options.model,
+      ),
+  );
   const challengerWins = verdict.winner === "b";
   const [kept, dropped] = challengerWins
     ? [challenger, incumbent]
     : [incumbent, challenger];
-  await appendLog(dir, {
-    kind: "accept",
-    candidate: kept,
-    versus: dropped,
-    file,
-    rubric: options.rubric,
-    ...scoreOf(options.scores, kept),
-  });
-  await appendLog(dir, {
-    kind: "reject",
-    candidate: dropped,
-    versus: kept,
-    file,
-    rubric: options.rubric,
-    ...scoreOf(options.scores, dropped),
-  });
+  const outcomes: OutcomeInput[] = [
+    {
+      kind: "accept",
+      candidate: kept,
+      versus: dropped,
+      file,
+      rubric: options.rubric,
+      ...scoreOf(options.scores, kept),
+    },
+    {
+      kind: "reject",
+      candidate: dropped,
+      versus: kept,
+      file,
+      rubric: options.rubric,
+      ...scoreOf(options.scores, dropped),
+    },
+  ];
   return {
-    incumbent,
-    challenger,
-    winner:
-      verdict.winner === "tie"
-        ? "tie"
-        : challengerWins
-          ? "challenger"
-          : "incumbent",
-    confidence: verdict.confidence,
-    record: file,
+    outcomes,
+    result: {
+      incumbent,
+      challenger,
+      winner:
+        verdict.winner === "tie"
+          ? "tie"
+          : challengerWins
+            ? "challenger"
+            : "incumbent",
+      confidence: verdict.confidence,
+      record: file,
+    },
   };
 }
 
@@ -283,6 +302,7 @@ export async function knockout(
       )
       .digest("hex");
   const previous = matchingCheckpoint(manifest.knockout, fingerprintFor);
+  const attempt = previous?.attempt ?? randomUUID();
   const initial = seeding(
     pool,
     options.among === undefined ? pool : current,
@@ -306,32 +326,32 @@ export async function knockout(
     [seeds.incumbent, ...seeds.challengers],
     options.rubric,
   );
-  let ask = options.ask;
   const bouts: Bout[] = [];
   let incumbent = seeds.incumbent;
   if (seeds.challengers.length > 0) {
     manifest = {
       ...manifest,
       knockout: {
+        attempt,
         fingerprint,
         participants,
         incumbent,
         pending: seeds.challengers,
       },
     };
-    await workspace.writeManifest(manifest);
+    await publishBoutState(workspace, { manifest, outcomes: [] });
   }
   for (const [index, challenger] of seeds.challengers.entries()) {
-    ask ??= llmJudge(options.model, options.rubric);
-    const result = await bout(
+    const { result, outcomes } = await bout(
       dir,
       { incumbent, challenger, sheets },
-      { ...options, ask, scores },
+      { ...options, scores, attempt },
     );
     bouts.push(result);
     incumbent = result.winner === "challenger" ? challenger : incumbent;
     // A later model failure must retry from the winner already recorded in the journal.
     const progress = {
+      attempt,
       fingerprint,
       participants,
       incumbent,
@@ -341,6 +361,7 @@ export async function knockout(
       rubric: options.rubric,
       score: scoreOf(scores, incumbent).score,
       progress,
+      outcomes,
     });
     manifest = {
       ...manifest,
@@ -351,21 +372,26 @@ export async function knockout(
   const best = await persistBest(workspace, manifest, incumbent, {
     rubric: options.rubric,
     score: scoreOf(scores, incumbent).score,
+    outcomes:
+      seeds.challengers.length === 0
+        ? [
+            {
+              kind: "accept",
+              candidate: incumbent,
+              versus: null,
+              file: null,
+              rubric: options.rubric,
+              ...scoreOf(scores, incumbent),
+            },
+          ]
+        : [],
   });
-  if (seeds.challengers.length === 0 && manifest.best !== best) {
-    // No bout produces an accept entry when the pool contains only the incumbent.
-    await appendLog(dir, {
-      kind: "accept",
-      candidate: incumbent,
-      versus: null,
-      file: null,
-      rubric: options.rubric,
-      ...scoreOf(scores, incumbent),
-    });
-  }
   if (manifest.knockout !== undefined) {
     const { knockout: _knockout, ...completed } = manifest;
-    await workspace.writeManifest({ ...completed, best });
+    await publishBoutState(workspace, {
+      manifest: { ...completed, best },
+      outcomes: [],
+    });
   }
   return { best: incumbent, score: best.score, bouts };
 }

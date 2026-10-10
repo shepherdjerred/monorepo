@@ -360,6 +360,8 @@ export const BuildManifestSchema = z.strictObject({
   /** Remaining bouts of an interrupted tournament, bound to its inputs and judge policy. */
   knockout: z
     .strictObject({
+      /** Unique tournament attempt; retries reuse verdicts, explicit rematches start a new one. */
+      attempt: z.uuid().optional(),
       fingerprint: z.string().min(1),
       /** Original pool plus its starting incumbent, retained across winner changes. */
       participants: z.array(z.string().min(1)),

@@ -1,4 +1,5 @@
-import { mkdtemp, readdir, rm } from "node:fs/promises";
+import { mkdtemp, readdir, rm, symlink } from "node:fs/promises";
+import type * as FileSystem from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
 import { afterAll, describe, expect, it, vi } from "vitest";
@@ -15,6 +16,32 @@ import { readLog } from "#build/build-log.ts";
 import { BUILD_FILES, type BuildLogEntry } from "#protocol/build.ts";
 import { readJournal, trajectoryChecks } from "#evals/grade/trajectory.ts";
 import { keepBuildRecord } from "#evals/lib/build-record.ts";
+
+const boutFailure = vi.hoisted(() => ({ file: "" }));
+vi.mock("node:fs/promises", async (importOriginal) => {
+  const original = await importOriginal<typeof FileSystem>();
+  return {
+    ...original,
+    rename: async (...args: Parameters<typeof original.rename>) => {
+      const from = String(args[0]);
+      if (
+        boutFailure.file !== "" &&
+        from.includes(".bout-") &&
+        from.endsWith(`/${boutFailure.file}`) &&
+        ((await Bun.file(
+          path.join(path.dirname(from), BUILD_FILES.journal),
+        ).exists()) ||
+          (await Bun.file(
+            path.join(path.dirname(from), `previous-${BUILD_FILES.journal}`),
+          ).exists()))
+      ) {
+        boutFailure.file = "";
+        throw new Error("simulated bout publication failure");
+      }
+      return original.rename(...args);
+    },
+  };
+});
 
 vi.mock("@shepherdjerred/mc-build/render/assets.ts", async () => {
   const { renderAssets } = await import("#test/fixtures/render-assets.ts");
@@ -75,6 +102,130 @@ async function twoVersions(name: string) {
   const second = await saveVersion(workspace, "v2", 2);
   return { workspace, first, second };
 }
+
+describe("recoverable bout publication", () => {
+  it("keeps verdict references portable through a symlinked build directory", async () => {
+    const { workspace } = await twoVersions("bout-portable");
+    const alias = path.join(root, "bout-portable-alias");
+    await symlink(workspace.dir, alias, "dir");
+    await knockout(alias, { rubric: "micro", model: "stub", ask: judge() });
+    const archive = path.join(root, "bout-portable-archive");
+    await keepBuildRecord(alias, archive);
+    expect(await readJournal(archive)).toHaveProperty("entries");
+  });
+
+  it("publishes a singleton acceptance and its incumbent together", async () => {
+    const workspace = await flatSiteBuild(
+      path.join(root, "singleton-publication"),
+      "singleton-publication",
+    );
+    await saveVersion(workspace, "v1", 1);
+    const journal = await readLog(workspace.dir);
+    const options = { rubric: "micro" as const, model: "stub" };
+    boutFailure.file = BUILD_FILES.manifest;
+    await expect(knockout(workspace.dir, options)).rejects.toThrow(
+      /publication failure/u,
+    );
+    const interrupted = await workspace.manifest();
+    expect(interrupted.best).toBeUndefined();
+    expect(await readLog(workspace.dir)).toEqual(journal);
+    expect(await knockout(workspace.dir, options)).toMatchObject({
+      best: "v1",
+      bouts: [],
+    });
+    const completed = await readLog(workspace.dir);
+    expect(completed.filter((entry) => entry.kind === "accept")).toHaveLength(
+      1,
+    );
+    await workspace.writeManifest(interrupted);
+    await knockout(workspace.dir, options);
+    expect(await readLog(workspace.dir)).toEqual(completed);
+  });
+
+  it.each([BUILD_FILES.journal, BUILD_FILES.manifest])(
+    "reuses the paid verdict after %s publication fails",
+    async (file) => {
+      const { workspace } = await twoVersions(
+        `bout-failure-${file.replaceAll(".", "-")}`,
+      );
+      const journal = await readLog(workspace.dir);
+      const ask = judge(true);
+      boutFailure.file = file;
+      await expect(
+        knockout(workspace.dir, { rubric: "micro", model: "stub", ask }),
+      ).rejects.toThrow(/bout publication failure/u);
+      expect(ask).toHaveBeenCalledTimes(2);
+      expect(await readLog(workspace.dir)).toEqual(journal);
+      const interrupted = await workspace.manifest();
+      expect(interrupted.best).toBeUndefined();
+      const retryAsk = vi.fn(() =>
+        Promise.reject(new Error("must reuse persisted verdict")),
+      );
+      const retried = await knockout(workspace.dir, {
+        rubric: "micro",
+        model: "stub",
+        ask: retryAsk,
+      });
+      expect(retried.best).toBe("v2");
+      expect(retryAsk).not.toHaveBeenCalled();
+      const completedJournal = await readLog(workspace.dir);
+      const outcomes = completedJournal.filter(
+        (entry) => entry.kind === "accept" || entry.kind === "reject",
+      );
+      expect(outcomes.map((entry) => [entry.kind, entry.candidate])).toEqual([
+        ["accept", "v2"],
+        ["reject", "v1"],
+      ]);
+      const completed = await workspace.manifest();
+      expect(completed.knockout).toBeUndefined();
+    },
+  );
+
+  it("deduplicates persisted outcomes when an explicit checkpoint lags after process exit", async () => {
+    const { workspace } = await twoVersions("bout-crash-recovery");
+    let checkpoint = await workspace.manifest();
+    const askJudge = judge(true);
+    const ask = vi.fn(async () => {
+      checkpoint = await workspace.manifest();
+      return askJudge();
+    });
+    const options = {
+      among: ["v1", "v2"],
+      rubric: "micro" as const,
+      model: "stub",
+    };
+    await knockout(workspace.dir, { ...options, ask });
+    const journal = await readLog(workspace.dir);
+    await workspace.writeManifest(checkpoint);
+    // The cached verdict also needs no provider credentials on retry.
+    const result = await knockout(workspace.dir, options);
+    expect(result.best).toBe("v2");
+    expect(await readLog(workspace.dir)).toEqual(journal);
+    const completed = await workspace.manifest();
+    expect(completed.knockout).toBeUndefined();
+  });
+
+  it("rejects a damaged durable verdict before another judge call", async () => {
+    const { workspace } = await twoVersions("bout-damaged-verdict");
+    const options = { rubric: "micro" as const, model: "stub" };
+    boutFailure.file = BUILD_FILES.journal;
+    await expect(
+      knockout(workspace.dir, { ...options, ask: judge() }),
+    ).rejects.toThrow(/publication failure/u);
+    const files = await readdir(workspace.file(BUILD_FILES.judgeDir));
+    const verdict = files.find((file) => file.startsWith("pair-bout-"));
+    if (verdict === undefined) throw new Error("missing durable verdict");
+    await Bun.write(
+      workspace.file(path.join(BUILD_FILES.judgeDir, verdict)),
+      "truncated",
+    );
+    const ask = judge();
+    await expect(
+      knockout(workspace.dir, { ...options, ask }),
+    ).rejects.toThrow();
+    expect(ask).not.toHaveBeenCalled();
+  });
+});
 
 describe("winning-grid aliases", () => {
   it("prefers the incumbent alias and requires a bout for a genuinely new grid", async () => {

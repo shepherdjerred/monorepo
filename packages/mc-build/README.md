@@ -84,7 +84,8 @@ by block light with sky light propagated in; level 0 is red). Invisible
 skylight and casting no relief shadows, for example
 `renderer.view(grid, "iso-front-right", 512, { mode: "relief" })`.
 Relief sun and corner rays intersect the same model quads and UV opacity as
-the textured renderer. Partial shapes cast their actual silhouettes; transparent
+the textured renderer. Rotated faces use their geometric normal and an
+orthogonal tangent basis for lighting and corner rays. Partial shapes cast their actual silhouettes; transparent
 and translucent pixels do not cast binary opaque shadows. Sun rays extend up
 to 32 blocks; the existing large-mesh guard skips them above two million quads.
 Block-light emission uses the complete Paper state registry. Both block light

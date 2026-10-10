@@ -7,6 +7,7 @@
 import type { BlockGrid, Vec3 } from "#src/core/grid.ts";
 import type { Quad, V3 } from "./mesh.ts";
 import { ShadowIndex } from "./shadow.ts";
+import { surfaceNormal, surfaceTangents } from "./surface.ts";
 
 /** The relief sun: low in the north-west (yaw 300°), 25° above the horizon. */
 export const RELIEF_SUN = { yaw: 300, pitch: 25 } as const;
@@ -43,29 +44,6 @@ function centreOf(quad: Quad): V3 {
   ];
 }
 
-/** The two unit axes tangent to a face normal. */
-function tangents(normal: V3): [V3, V3] {
-  const ax = Math.abs(normal[0]);
-  const ay = Math.abs(normal[1]);
-  const az = Math.abs(normal[2]);
-  if (ay >= ax && ay >= az) {
-    return [
-      [1, 0, 0],
-      [0, 0, 1],
-    ];
-  }
-  if (ax >= az) {
-    return [
-      [0, 1, 0],
-      [0, 0, 1],
-    ];
-  }
-  return [
-    [1, 0, 0],
-    [0, 1, 0],
-  ];
-}
-
 /** `base + sa·a + sb·b` for two scaled tangent steps. */
 function offset(base: V3, along: [V3, number], across: [V3, number]): V3 {
   const [a, sa] = along;
@@ -79,7 +57,7 @@ function offset(base: V3, along: [V3, number], across: [V3, number]): V3 {
 
 /** 1 for an open face, down to 0.5 when neighbours crowd its outside cell. */
 function occlusion(shadows: ShadowIndex, outside: V3, normal: V3): number {
-  const [u, v] = tangents(normal);
+  const [u, v] = surfaceTangents(normal);
   let edges = 0;
   let corners = 0;
   for (const su of [-1, 1]) {
@@ -125,7 +103,8 @@ export function shadeRelief(
   const march = options.force === true || quads.length <= RELIEF_MAX_QUADS;
   return quads.map((quad) => {
     if (quad.normal === null) return quad;
-    const normal = quad.normal;
+    const normal = surfaceNormal(quad.corners);
+    if (normal === null) return quad;
     const facing = Math.max(
       0,
       normal[0] * sun[0] + normal[1] * sun[1] + normal[2] * sun[2],
