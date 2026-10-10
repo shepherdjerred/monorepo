@@ -1,4 +1,7 @@
-import { ALL_IMAGE_TARGETS } from "./images/image-targets.ts";
+import {
+  ALL_IMAGE_TARGETS,
+  INFRASTRUCTURE_IMAGE_TARGETS,
+} from "./images/image-targets.ts";
 import { nativeLanePaths } from "./macos/macos-native-selection.ts";
 import {
   deployScripts,
@@ -9,12 +12,6 @@ import {
   legacyTofuPaths,
   platformTofuPaths,
 } from "./selectors/tofu-lane-paths.ts";
-const infrastructureTargets = [
-  "caddy-s3proxy",
-  "obsidian-headless",
-  "redlib",
-  "the-storm-server",
-] as const;
 // Keep full-image and fallback builds on the same target universe as the
 // closure selector. A second hand-maintained list previously omitted
 // a newly added image, so fixed-corpus recovery could never publish it.
@@ -86,7 +83,7 @@ export function parseBakeArguments(rawArguments: readonly string[]): {
 }
 export function expandTargets(selected: readonly string[]): string[] {
   const targets = [...selected].filter((target) => target !== "infra");
-  if (selected.includes("infra")) targets.push(...infrastructureTargets);
+  if (selected.includes("infra")) targets.push(...INFRASTRUCTURE_IMAGE_TARGETS);
   return targets;
 }
 export function parseStringArray(

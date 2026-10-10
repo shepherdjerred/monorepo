@@ -340,6 +340,7 @@ async function main(): Promise<void> {
     { label: "caddy-s3proxy", fn: smokeCaddyS3Proxy },
     { label: "obsidian-headless", fn: smokeObsidianHeadless },
     { label: "redlib", fn: smokeRedlib },
+    { label: "velero-plugin", fn: smokeVeleroPlugin },
   ];
 
   const results: SmokeResult[] = [];
@@ -369,3 +370,24 @@ async function main(): Promise<void> {
 }
 
 await main();
+
+async function smokeVeleroPlugin(): Promise<SmokeResult> {
+  const image = "velero-plugin:dev";
+  // Match the root-owned Kubernetes EmptyDir without retaining local storage.
+  const result = await run([
+    "docker",
+    "run",
+    "--rm",
+    "--tmpfs",
+    "/target",
+    image,
+  ]);
+  return {
+    image,
+    ok: result.exitCode === 0,
+    detail:
+      result.exitCode === 0
+        ? "plugin installed into the root-owned /target volume"
+        : result.stderr,
+  };
+}

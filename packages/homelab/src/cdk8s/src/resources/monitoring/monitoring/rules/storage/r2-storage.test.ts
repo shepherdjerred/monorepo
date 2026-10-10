@@ -89,8 +89,9 @@ describe("Velero R2 orphan alerts", () => {
         rule.for ?? "",
       ]),
     ).toEqual([
-      ["VeleroR2OrphanPrefixes", "warning", "24h"],
-      ["VeleroR2OrphanBytesExcessive", "warning", "24h"],
+      ["VeleroZfsBackupChainIncomplete", "critical", "5m"],
+      ["VeleroR2OrphanPrefixes", "warning", "15m"],
+      ["VeleroR2OrphanBytesExcessive", "warning", "15m"],
       ["VeleroR2OrphanAuditNotRunning", "warning", "1h"],
     ]);
   });

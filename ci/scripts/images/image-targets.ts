@@ -75,4 +75,12 @@ export function requiresPublicGhcrVisibility(packageName: string): boolean {
 export const APPLICATION_IMAGE_TARGETS =
   Object.keys(IMAGE_TARGET_OWNERS).sort();
 
+export const INFRASTRUCTURE_IMAGE_TARGETS: readonly string[] = [
+  "caddy-s3proxy",
+  "obsidian-headless",
+  "redlib",
+  "the-storm-server",
+  "velero-plugin",
+];
+
 export const ALL_IMAGE_TARGETS = [...APPLICATION_IMAGE_TARGETS, "infra"].sort();

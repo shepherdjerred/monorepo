@@ -1,4 +1,11 @@
 import { z } from "zod";
+import {
+  VeleroRestoreSchema,
+  ZfsVolumeSchema,
+  type VeleroRestoreStatus,
+  type DeletingZfsVolume,
+  toVeleroRestoreStatus,
+} from "./kubernetes-storage.ts";
 import { BACKUP_MONITORING_ANNOTATIONS } from "@shepherdjerred/ops-model/backup-policy.ts";
 import {
   bearer,
@@ -463,5 +470,36 @@ export class KubernetesClient {
       completedAt: status?.completionTimestamp ?? undefined,
       phase: status?.phase,
     }));
+  }
+
+  async listVeleroRestores(
+    namespace = "velero",
+  ): Promise<VeleroRestoreStatus[]> {
+    const restores = await this.#list(
+      `/apis/velero.io/v1/namespaces/${encodeURIComponent(namespace)}/restores`,
+      VeleroRestoreSchema,
+    );
+    return restores.map((restore) => toVeleroRestoreStatus(restore));
+  }
+
+  async listDeletingZfsVolumes(
+    namespace = "openebs",
+  ): Promise<DeletingZfsVolume[]> {
+    const volumes = await this.#list(
+      `/apis/zfs.openebs.io/v1/namespaces/${encodeURIComponent(namespace)}/zfsvolumes`,
+      ZfsVolumeSchema,
+    );
+    return volumes.flatMap(({ metadata, spec }) =>
+      metadata.deletionTimestamp === undefined
+        ? []
+        : [
+            {
+              name: metadata.name,
+              node: spec.ownerNodeID,
+              dataset: `${spec.poolName}/${metadata.name}`,
+              deletedAt: metadata.deletionTimestamp,
+            },
+          ],
+    );
   }
 }

@@ -26,9 +26,9 @@ RUN git init /tmp/caddy-s3-proxy \
   && git -C /tmp/caddy-s3-proxy remote add origin https://github.com/shepherdjerred/caddy-s3-proxy.git \
   && git -C /tmp/caddy-s3-proxy fetch --depth 1 origin 2333a6ed263df951a2a017ef248af8c97fbf8b42 \
   && git -C /tmp/caddy-s3-proxy checkout --detach FETCH_HEAD \
-  && git -C /tmp/caddy-s3-proxy apply /tmp/caddy-s3proxy-header-flush.patch \
+  && git -C /tmp/caddy-s3-proxy apply --unidiff-zero /tmp/caddy-s3proxy-header-flush.patch \
   && cp /tmp/get_object_test.go /tmp/caddy-s3-proxy/archive_get_object_test.go \
-  && go -C /tmp/caddy-s3-proxy test -run '^TestArchiveResponseLength$' ./... \
+  && go -C /tmp/caddy-s3-proxy test -run '^Test(ArchiveResponseLength|ConditionalResponse)$' ./... \
   && xcaddy build --with github.com/lindenlab/caddy-s3-proxy=/tmp/caddy-s3-proxy
 
 # renovate: datasource=docker depName=caddy

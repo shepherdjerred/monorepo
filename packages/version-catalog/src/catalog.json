@@ -1602,6 +1602,16 @@
       ]
     },
     {
+      "name": "shepherdjerred/velero-plugin",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": { "managed": false },
+      "value": "0.0.0@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "notes": [
+        "First-publication marker; must be replaced by the CI-built digest before deployment. OpenEBS 3.6.0 with tested GUID ancestry and full rotation fixes."
+      ]
+    },
+    {
       "name": "shepherdjerred/caddy-s3proxy",
       "category": "internal-image",
       "artifactType": "image",
