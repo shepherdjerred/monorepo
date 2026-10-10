@@ -111,6 +111,11 @@ const STORM_IMAGE_CONFIGS: Readonly<
     moduleKeys: STORM_IMAGE_MODULE_KEYS,
     enabledModules: STORM_IMAGE_ENABLED_MODULES,
   },
+  // Read /plugins/TheStorm/config.yml from this exact digest before retaining its pin.
+  "8d71ceb5287d1230d6be361eb25ea4f8613d66607486a0287f9c664d9f3006f4": {
+    moduleKeys: STORM_IMAGE_MODULE_KEYS,
+    enabledModules: STORM_IMAGE_ENABLED_MODULES,
+  },
 };
 
 export function stormImageConfig(image: string): {
