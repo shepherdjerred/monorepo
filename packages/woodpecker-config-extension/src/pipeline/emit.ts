@@ -367,6 +367,25 @@ export function emitWorkflow(step: CiStep, identity: PipelineIdentity): string {
                 },
               },
             },
+            {
+              name: "finalize-clone",
+              image: SOURCE_CACHE_PREPARATION_IMAGE,
+              // Build images run as root. Git checks the owners of both the
+              // worktree and its Git directory before allowing later fetches.
+              // Transfer only those private roots; cached objects stay under
+              // UID 1000 and this container cannot mount the source cache.
+              commands: ["test -d .git", "test ! -L .git", "chown 0:0 . .git"],
+              backend_options: {
+                kubernetes: {
+                  ...podOptions(step, identity, LIGHT_TIER),
+                  securityContext: {
+                    runAsUser: 0,
+                    runAsGroup: 0,
+                    allowPrivilegeEscalation: false,
+                  },
+                },
+              },
+            },
           ],
         }),
     ...(step.runOnFailure === true
