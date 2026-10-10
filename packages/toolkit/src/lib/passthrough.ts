@@ -173,6 +173,18 @@ export function isCredentialFreePassthrough(
   if (!PASSTHROUGH_REGISTRY.has(command)) {
     return false;
   }
+  // ArgoCD's Cobra help is local at every command depth. Restrict this to
+  // bare command paths so payload values and `--` retain normal credentials.
+  if (command === "argocd") {
+    const helpFlag = args.at(-1);
+    const commandPath = args.slice(0, -1);
+    if (
+      (helpFlag === "--help" || helpFlag === "-h") &&
+      commandPath.every((part) => /^[a-z][a-z0-9-]*$/u.test(part))
+    ) {
+      return true;
+    }
+  }
   // Inspect the entire invocation: flags in a command payload or after `--`
   // must not turn an operational command into a credential-free dispatch.
   if (args.length === 1) {

@@ -223,7 +223,15 @@ async function runToolkit(
 }
 
 describe("passthrough subprocess", () => {
-  test.each([["--help"], ["-h"], ["--version"], ["version", "--client"]])(
+  test.each([
+    ["--help"],
+    ["-h"],
+    ["--version"],
+    ["version", "--client"],
+    ["app", "--help"],
+    ["app", "rollback", "--help"],
+    ["account", "generate-token", "-h"],
+  ])(
     "does not forward an ArgoCD token to metadata command %s",
     async (...args) => {
       const directory = await fakePath();

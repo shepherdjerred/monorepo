@@ -103,6 +103,14 @@ describe("native metadata credential boundary", () => {
       ["argocd", "version", "--client"],
       ["--grpc-web", "version", "--client"],
     ],
+    [
+      ["argocd", "app", "rollback", "--help"],
+      ["--grpc-web", "app", "rollback", "--help"],
+    ],
+    [
+      ["argocd", "account", "generate-token", "-h"],
+      ["--grpc-web", "account", "generate-token", "-h"],
+    ],
   ])("forwards %j without invoking the resolver", async (args, nativeArgs) => {
     const result = await invokeWithCredentialSentinel(args);
     expect(result.code).toBe(23);
@@ -125,6 +133,11 @@ describe("native metadata credential boundary", () => {
     [["argocd", "version", "--client=false"], "ARGOCD_AUTH_TOKEN"],
     [["argocd", "version", "--", "--client"], "ARGOCD_AUTH_TOKEN"],
     [["argocd", "app", "list", "--client"], "ARGOCD_AUTH_TOKEN"],
+    [["argocd", "app", "list", "--", "--help"], "ARGOCD_AUTH_TOKEN"],
+    [
+      ["argocd", "app", "set", "example", "--parameter", "--help"],
+      "ARGOCD_AUTH_TOKEN",
+    ],
     [["pr", "--help"], "WOODPECKER_TOKEN"],
   ])("retains credential resolution for %j", async (args, credential) => {
     const result = await invokeWithCredentialSentinel(args);
