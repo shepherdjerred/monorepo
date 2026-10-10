@@ -46,9 +46,12 @@ pair.
 
 ## 3. Create missing declared keys
 
-Create inventory keys that Flipt does not yet have. Management writes require
-`FLIPT_OPERATOR_TOKEN`, even though evaluation snapshot reads are credentialless.
-Inject the existing `operator-token` field from the `flipt-auth` 1Password item
+Create inventory keys that Flipt does not yet have. The
+[operator fetcher](https://github.com/shepherdjerred/monorepo/blob/a8b39ec58e8833c5e7dde9037e1b36e83a4e83de/packages/feature-flags/src/flipt-operator-fetcher.ts)
+requires `FLIPT_OPERATOR_TOKEN` for management writes. The
+[Flipt authentication configuration](https://github.com/shepherdjerred/monorepo/blob/a8b39ec58e8833c5e7dde9037e1b36e83a4e83de/packages/homelab/src/cdk8s/src/resources/flipt/index.ts)
+keeps evaluation snapshot reads credentialless and declares the operator secret.
+Inject its existing `operator-token` field from the `flipt-auth` 1Password item
 into the process environment; never paste its value into a command or file.
 For example, substitute the item's vault name in this secret reference:
 
