@@ -1443,7 +1443,7 @@ AFK-adjusted playtime and successful feature interactions. Gameplay modules
 receive it through `ModuleContext`; tests explicitly use the disabled port or
 a recording test implementation. Keep event properties bounded and free of
 chat, arguments, locations and credentials. Minecraft UUID and player name are
-the intentionally named identity disclosed in the player docs.
+the intentionally named identity.
 
 Collection is boot-scoped behind the default-off managed flag
 `the-storm-analytics-enabled` (`the-storm` namespace, beta override enabled).
