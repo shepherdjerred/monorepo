@@ -47,8 +47,11 @@ approved-PR source PVC, plus the separate coordination PVC. A pinned BusyBox
 image from the deployed extension's catalog prepares ownership of the empty
 workspace and cache mount roots without traversing cached objects. This is
 required because the ZFS driver's ownership policy excludes RWX claims.
-The helper then runs as UID/GID 1000. Both containers use the tokenless CI
-service account and disable privilege escalation. Unapproved automation uses ordinary
+The helper then runs as UID/GID 1000. A final trusted container transfers only
+the private workspace and `.git` directory roots to the root build user so later
+Git commands pass ownership checks. It does not mount the source cache or
+traverse objects. All three containers use the tokenless CI service account and
+disable privilege escalation. Unapproved automation uses ordinary
 checkout. Each cache entry contains depth-one Git objects, a shallow boundary,
 and an exact repository/commit/tree manifest. No Git config, hooks, credentials,
 dependencies or build output enter it. The helper checks object integrity,

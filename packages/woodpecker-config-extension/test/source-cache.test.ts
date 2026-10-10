@@ -139,7 +139,7 @@ test("unapproved work and local jobs cannot mount caches; trusted jobs mount onl
           z.object({
             name: z.string(),
             image: z.string(),
-            volumes: z.array(z.string()),
+            volumes: z.array(z.string()).optional(),
             commands: z.array(z.string()),
             backend_options: z.object({
               kubernetes: z.object({
@@ -153,7 +153,9 @@ test("unapproved work and local jobs cannot mount caches; trusted jobs mount onl
       .parse(parse(emitWorkflow(verify, TEST_IDENTITY)));
     const prepare = config.clone[0];
     const clone = config.clone[1];
-    expect(config.clone).toHaveLength(2);
+    const finalize = config.clone[2];
+    if (finalize === undefined) throw new Error("Missing clone finalizer");
+    expect(config.clone).toHaveLength(3);
     expect(prepare?.name).toBe("prepare-clone");
     expect(prepare?.image).toBe(SOURCE_CACHE_PREPARATION_IMAGE);
     expect(prepare?.image).toMatch(/^busybox:.*@sha256:[a-f\d]{64}$/u);
@@ -177,6 +179,19 @@ test("unapproved work and local jobs cannot mount caches; trusted jobs mount onl
       `woodpecker-source-${main ? "main" : "pr"}:/woodpecker/source-cache`,
     );
     expect(prepare?.volumes).toEqual(clone?.volumes);
+    expect(finalize.name).toBe("finalize-clone");
+    expect(finalize.image).toBe(SOURCE_CACHE_PREPARATION_IMAGE);
+    expect(finalize.volumes).toBeUndefined();
+    expect(finalize.commands).toEqual([
+      "test -d .git",
+      "test ! -L .git",
+      "chown 0:0 . .git",
+    ]);
+    expect(finalize.backend_options.kubernetes.securityContext).toEqual({
+      runAsUser: 0,
+      runAsGroup: 0,
+      allowPrivilegeEscalation: false,
+    });
     expect(clone?.commands.join("\n")).toContain("flock -s");
     expect(
       config.steps
