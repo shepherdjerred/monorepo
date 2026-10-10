@@ -104,6 +104,19 @@ describe("lint", () => {
     expect(report.findings).toEqual([]);
   });
 
+  test.each(["redstone_torch", "sea_pickle"])(
+    "%s prevents a false dark-interior warning across a fence",
+    (source) => {
+      const grid = new BlockGrid({ x: 5, y: 3, z: 3 }, "minecraft:stone");
+      grid.set(1, 1, 1, `minecraft:${source}`);
+      grid.set(2, 1, 1, "minecraft:oak_fence");
+      grid.set(3, 1, 1, "minecraft:air");
+      expect(codes(grid)).not.toContain("W_DARK_INTERIOR");
+      grid.set(2, 1, 1, "minecraft:tinted_glass");
+      expect(codes(grid)).toContain("W_DARK_INTERIOR");
+    },
+  );
+
   test("the hip-roof house has no errors", async () => {
     const compiled = await compileProgram({
       program: path.join(import.meta.dirname, "fixtures", "hip-house.build.ts"),

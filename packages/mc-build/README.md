@@ -49,6 +49,13 @@ toolkit mc registry --out /tmp/registry.json      # against a running sandbox
 bun run --cwd packages/mc-harness gen-registry /tmp/registry.json
 ```
 
+The export enumerates every Paper block state, recording emission and cell-level
+light transmission as defaults plus state overrides. Generation validates the
+state count and canonical override keys. Lint uses this metadata, including
+state-dependent sources such as redstone torches, sea pickles and charged anchors.
+Its transmission approximation obstructs opaque states with six full support
+faces, plus tinted glass; fences, bars and partial slabs transmit light.
+
 ## Renderer assets
 
 Block models and textures come from Mojang's 26.2 client jar, downloaded from
@@ -76,9 +83,10 @@ by block light with sky light propagated in; level 0 is red). Invisible
 `minecraft:light` blocks emit their `level` (0–15, default 15) while transmitting
 skylight and casting no relief shadows, for example
 `renderer.view(grid, "iso-front-right", 512, { mode: "relief" })`.
-Skylight transmission uses model geometry and texture opacity: partial models
+Block-light emission uses the complete Paper state registry. Both block light
+and skylight transmission use model geometry and texture opacity: partial models
 and cutout or translucent textures transmit it, including torches, plants and
-glass. Tinted glass and opaque full cubes obstruct it. The skylight pass is an approximation within
+glass. Tinted glass and opaque full cubes obstruct it. These passes approximate lighting within
 the captured grid. For cut or cropped light views, pass `lightFrom: whole`
 and `lightOrigin: { x, y, z }` (the cropped grid's origin in `whole`) so
 surrounding roofs, walls, lamps and openings still determine illumination.

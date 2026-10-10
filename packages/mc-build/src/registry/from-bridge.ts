@@ -1,6 +1,8 @@
-import { parseBlockState } from "#src/core/block-state.ts";
+import { normalizeBlockState, parseBlockState } from "#src/core/block-state.ts";
+import type { BlockLighting } from "./lighting.ts";
 import {
   RegistryFileSchema,
+  BlockRegistry,
   type RegistryFile,
 } from "#src/registry/registry.ts";
 
@@ -12,6 +14,7 @@ export type BridgeRegistry = {
     readonly id: string;
     readonly defaultState: string;
     readonly properties: Readonly<Record<string, readonly string[]>>;
+    readonly lighting: BlockLighting;
   }[];
 };
 
@@ -26,11 +29,39 @@ export function registryFileFromBridge(response: BridgeRegistry): RegistryFile {
     for (const key of Object.keys(block.properties).toSorted()) {
       properties[key] = [...(block.properties[key] ?? [])];
     }
-    blocks[block.id] = { properties, defaults: { ...defaults } };
+    const count = Object.values(properties).reduce(
+      (total, values) => total * values.length,
+      1,
+    );
+    if (block.lighting.states !== count)
+      throw new Error(
+        `${block.id} lighting covers ${block.lighting.states.toString()} states, expected ${count.toString()}`,
+      );
+    const overrides = Object.fromEntries(
+      Object.entries(block.lighting.overrides).map(([state, lighting]) => [
+        normalizeBlockState(state),
+        lighting,
+      ]),
+    );
+    blocks[block.id] = {
+      properties,
+      defaults: { ...defaults },
+      lighting: { ...block.lighting, overrides },
+    };
   }
-  return RegistryFileSchema.parse({
+  const file = RegistryFileSchema.parse({
     minecraftVersion: response.minecraftVersion,
     dataVersion: response.dataVersion,
     blocks,
   });
+  const registry = new BlockRegistry(file);
+  for (const [id, block] of Object.entries(file.blocks)) {
+    for (const state of Object.keys(block.lighting.overrides)) {
+      if (parseBlockState(state).id !== id || registry.resolve(state) !== state)
+        throw new Error(
+          `${id} lighting override is not a complete canonical state: ${state}`,
+        );
+    }
+  }
+  return file;
 }

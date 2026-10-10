@@ -61,54 +61,12 @@ export function supportOf(
   return null;
 }
 
-const FULL_LIGHT =
-  /^(?:glowstone|sea_lantern|jack_o_lantern|shroomlight|beacon|conduit|lava|fire|end_gateway|respawn_anchor|ochre_froglight|verdant_froglight|pearlescent_froglight|lantern|campfire)$/u;
-const SOUL_LIGHT =
-  /^(?:soul_lantern|soul_torch|soul_wall_torch|soul_campfire|soul_fire)$/u;
-
-/** Block light emitted (0–15), for the dark-interior check. */
-export function lightOf(
-  id: string,
-  properties: Readonly<Record<string, string>>,
-): number {
-  const name = id.replace(/^minecraft:/u, "");
-  const lit = properties["lit"];
-  if (name === "light") return Number(properties["level"] ?? "15");
-  if (FULL_LIGHT.test(name)) {
-    return lit === "false" ? 0 : 15;
-  }
-  if (name === "torch" || name === "wall_torch" || name === "end_rod") {
-    return 14;
-  }
-  if (SOUL_LIGHT.test(name)) {
-    return lit === "false" ? 0 : 10;
-  }
-  if (name === "redstone_lamp") {
-    return lit === "true" ? 15 : 0;
-  }
-  return lit === "true" && name.endsWith("candle")
-    ? 3 * Number(properties["candles"] ?? "1")
-    : 0;
-}
-
 const PASSABLE =
   /(?:^air|^cave_air|^void_air|_carpet|_pressure_plate|^torch|_torch|^lantern|_lantern|_sign|_banner|^short_grass|^tall_grass|^fern|_sapling|^rail|_rail|^redstone_wire|^light|^snow)$/u;
 
 /** Blocks mobs pass through for enclosure purposes (not walls). */
 export function isPassable(id: string): boolean {
   return PASSABLE.test(id.replace(/^minecraft:/u, ""));
-}
-
-/** Block light crosses ordinary/stained glass and panes, but not tinted glass. */
-export function transmitsBlockLight(id: string): boolean {
-  const name = id.replace(/^minecraft:/u, "");
-  return (
-    isPassable(id) ||
-    name === "glass" ||
-    name === "glass_pane" ||
-    name.endsWith("_stained_glass") ||
-    name.endsWith("_stained_glass_pane")
-  );
 }
 
 export function isLeaves(id: string): boolean {

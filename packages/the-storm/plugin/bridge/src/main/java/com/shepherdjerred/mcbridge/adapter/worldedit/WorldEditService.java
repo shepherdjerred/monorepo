@@ -274,6 +274,7 @@ public final class WorldEditService {
       block.addProperty("id", type.id());
       block.addProperty("defaultState", type.getDefaultState().getAsString());
       block.add("properties", properties);
+      block.add("lighting", BlockLighting.collect(type));
       blocks.add(block);
     }
     return blocks;

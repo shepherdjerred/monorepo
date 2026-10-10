@@ -9,10 +9,9 @@ import {
   isLeaves,
   isLog,
   isPassable,
-  lightOf,
   supportOf,
-  transmitsBlockLight,
 } from "./physics.ts";
+import { blockLightLevels } from "./block-light.ts";
 
 export type Severity = "error" | "warn" | "info";
 
@@ -394,39 +393,7 @@ function checkMonotone(lint: LintGrid): Finding[] {
     : [];
 }
 
-/** Block light per cell (0–15) from the grid's own light sources; the renderer's `light` mode uses it. */
-export function blockLightLevels(grid: BlockGrid): Int8Array {
-  return blockLight(new LintGrid(grid, { x: 0, y: 0, z: 0 }));
-}
-
-function blockLight(lint: LintGrid): Int8Array {
-  const light = new Int8Array(lint.grid.volume);
-  const queue: Vec3[] = [];
-  for (const p of lint.where((cell) => lightOf(cell.id, cell.props) > 0)) {
-    const cell = lint.at(p.x, p.y, p.z);
-    light[lint.grid.index(p.x, p.y, p.z)] =
-      cell === null ? 0 : lightOf(cell.id, cell.props);
-    queue.push(p);
-  }
-  for (const p of queue) {
-    const level = light[lint.grid.index(p.x, p.y, p.z)] ?? 0;
-    for (const n of FACE_NEIGHBORS) {
-      const q = { x: p.x + n.x, y: p.y + n.y, z: p.z + n.z };
-      const cell = lint.at(q.x, q.y, q.z);
-      if (
-        cell !== null &&
-        transmitsBlockLight(cell.id) &&
-        (light[lint.grid.index(q.x, q.y, q.z)] ?? 0) < level - 1
-      ) {
-        light[lint.grid.index(q.x, q.y, q.z)] = level - 1;
-        queue.push(q);
-      }
-    }
-  }
-  return light;
-}
-
-function checkDarkInterior(lint: LintGrid): Finding[] {
+function checkDarkInterior(lint: LintGrid, registry: BlockRegistry): Finding[] {
   const { x: sx, y: sy, z: sz } = lint.grid.size;
   const outside = new Uint8Array(lint.grid.volume);
   const boundary = lint.where(
@@ -440,7 +407,7 @@ function checkDarkInterior(lint: LintGrid): Finding[] {
       lint.open(p.x, p.y, p.z),
   );
   lint.flood(boundary, (p) => lint.open(p.x, p.y, p.z), outside);
-  const light = blockLight(lint);
+  const light = blockLightLevels(lint.grid, { registry });
   const dark = lint.where((cell, p) => {
     const index = lint.grid.index(p.x, p.y, p.z);
     return (
@@ -471,14 +438,15 @@ function checkDarkInterior(lint: LintGrid): Finding[] {
  */
 export function lintGrid(grid: BlockGrid, options: LintOptions): LintReport {
   const lint = new LintGrid(grid, options.origin ?? { x: 0, y: 0, z: 0 });
+  const states = checkStates(lint, options.registry);
   const findings = [
-    ...checkStates(lint, options.registry),
+    ...states,
     ...checkFloating(lint, options.groundedAtBottom ?? true),
     ...checkSupport(lint),
     ...checkLeaves(lint),
     ...checkFacades(lint),
     ...checkMonotone(lint),
-    ...checkDarkInterior(lint),
+    ...(states.length === 0 ? checkDarkInterior(lint, options.registry) : []),
   ];
   const errors = findings.filter(
     (finding) => finding.severity === "error",

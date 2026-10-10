@@ -1,6 +1,7 @@
 import sharp from "sharp";
 import { BlockGrid, type Vec3 } from "#src/core/grid.ts";
-import { blockLightLevels } from "#src/lint/lint.ts";
+import { blockLightLevels } from "#src/lint/block-light.ts";
+import { loadRegistry } from "#src/registry/registry.ts";
 import { perspectiveProjector, type ViewName } from "./camera.ts";
 import { renderCompare } from "./compare.ts";
 import { cropQuads, occupiedHeight, type GridBox } from "./cut.ts";
@@ -157,16 +158,15 @@ export class Renderer {
       // A cut grid (floor plan, section) is lit by the whole build it came
       // from, or its interior would count as open sky.
       const source = options.lightFrom ?? grid;
+      const transmission = await this.mesher.lightTransmission(source);
+      const registry = await loadRegistry();
       return {
         quads: shadeLight(
           quads,
           source,
           {
-            block: blockLightLevels(source),
-            sky: skyLightLevels(
-              source,
-              await this.mesher.lightTransmission(source),
-            ),
+            block: blockLightLevels(source, { registry, transmission }),
+            sky: skyLightLevels(source, transmission),
           },
           options.lightOrigin,
         ),

@@ -174,6 +174,10 @@ beforeAll(async () => {
   for (const [block, model] of [
     ["torch", "test_torch"],
     ["lantern", "test_torch"],
+    ["redstone_torch", "test_torch"],
+    ["sea_pickle", "test_torch"],
+    ["oak_fence", "test_torch"],
+    ["iron_bars", "test_torch"],
     ["oak_slab", "test_step"],
     ["short_grass", "test_window"],
     ["tinted_glass", "test_window"],
@@ -697,6 +701,37 @@ describe("section cut", () => {
 });
 
 describe("survey light", () => {
+  test.each(["redstone_torch", "sea_pickle"])(
+    "a cropped floor receives %s light through partial blocks",
+    async (source) => {
+      const renderer = new Renderer(root);
+      const floor = new BlockGrid({ x: 1, y: 1, z: 1 }, "minecraft:stone");
+      const whole = new BlockGrid({ x: 5, y: 3, z: 3 }, "minecraft:stone");
+      whole.set(1, 1, 1, `minecraft:${source}`);
+      whole.set(3, 1, 1, "minecraft:air");
+      const hashes = new Map<string, string>();
+      for (const partition of [
+        "air",
+        "oak_fence",
+        "iron_bars",
+        "tinted_glass",
+        "stone",
+      ]) {
+        whole.set(2, 1, 1, `minecraft:${partition}`);
+        const view = await renderer.view(floor, "top", 32, {
+          mode: "light",
+          lightFrom: whole,
+          lightOrigin: { x: 3, y: 0, z: 1 },
+        });
+        hashes.set(partition, pixelHash(view.pixels));
+      }
+      expect(hashes.get("oak_fence")).toBe(hashes.get("air"));
+      expect(hashes.get("iron_bars")).toBe(hashes.get("air"));
+      expect(hashes.get("tinted_glass")).toBe(hashes.get("stone"));
+      expect(hashes.get("air")).not.toBe(hashes.get("stone"));
+    },
+  );
+
   test.each(["dark", "lamp", "opening"] as const)(
     "samples cropped light from the whole %s room",
     async (kind) => {
