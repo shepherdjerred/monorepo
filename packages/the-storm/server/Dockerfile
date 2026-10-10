@@ -35,6 +35,12 @@ RUN --mount=type=cache,id=the-storm-gradle,target=/home/gradle/.gradle/caches \
 FROM itzg/minecraft-server:2026.9.1-java25@sha256:e8640538dac5d54c2838d57fa9641e735ad0cf2b71fb0e8a68da3b542a315749 AS fetch
 COPY server/plugins.json server/fetch.sh /build/
 RUN bash /build/fetch.sh /build/plugins.json /out
+COPY server/build-livemap.sh /build/
+COPY server/livemap/ /build/livemap/
+# Use the verified jar's matching frontend without changing the plugin artifact.
+RUN bash /build/build-livemap.sh \
+  "/out/plugins/$(jq -r '.plugins[] | select(.name == "BlueMap") | .file' /build/plugins.json)" \
+  /out/livemap
 # Pre-extract Paperclip (Mojang server jar download, patch, libraries) at build
 # time so a wake needs no network. Paper reads it back via -DbundlerRepoDir.
 WORKDIR /out/paper
@@ -48,6 +54,7 @@ FROM itzg/minecraft-server:2026.9.1-java25@sha256:e8640538dac5d54c2838d57fa9641e
 COPY --from=fetch /out/paper/ /opt/paper/
 COPY --from=fetch /out/paper-defaults/ /opt/paper-defaults/
 COPY --from=fetch /out/plugins/ /plugins/
+COPY --from=fetch /out/livemap/ /opt/the-storm/livemap/
 COPY --from=plugin --chmod=0644 /src/plugin/dist/build/libs/TheStorm.jar /plugins/
 # MCBridge: the mc-harness agent bridge (HTTP on MC_BRIDGE_PORT, default 25580,
 # reached only by kubectl port-forward). It disables itself without
@@ -108,6 +115,7 @@ RUN set -eu; \
   test -f "$PAPER_CUSTOM_JAR"; \
   test -f /opt/paper/versions/26.2/paper-26.2.jar; \
   test -f /plugins/TheStorm/config.yml; \
+  grep -q '<title>LiveMap</title>' /opt/the-storm/livemap/index.html; \
   for patch in /bundle/patches/*.json; do \
     jq -e '(.file | startswith("/data/")) and (.ops | length > 0) and all(.ops[]; keys == ["$put"])' \
       "$patch" > /dev/null || { echo "patch $patch must be /data-targeted \$put ops only"; exit 1; }; \

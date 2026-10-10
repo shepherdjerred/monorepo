@@ -107,7 +107,7 @@
       "mode": "excluded",
       "cadences": [],
       "excludeSuffixes": [],
-      "reason": "Rebuildable static site"
+      "reason": "Retired portal; rebuildable from GitHub history; objects expire after 90 days"
     },
     {
       "name": "ts-mc-docs",

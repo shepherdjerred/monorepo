@@ -2,8 +2,9 @@
 
 `spawn.jpg` is the archived April 2016 screenshot of The Storm's own Minecraft
 spawn, recovered from `The Storm/Assets/site/tsmc_bg_20160418.jpg` in the local
-archive. The logo is copied from the owned `packages/ts-mc/public/logo.svg` during
-the public image build. The custom styles contain independently authored LESS.
+archive. The owned logo and its seasonal variants come from
+`packages/storm-theme/assets/` in the public image build. The custom styles
+contain independently authored LESS.
 
 `scenery/` contains desktop JPEGs and 960px mobile editions generated with the
 built-in imagegen tool from that owned spawn reference. Spring was the reference

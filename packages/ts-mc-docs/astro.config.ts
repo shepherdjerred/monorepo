@@ -43,10 +43,6 @@ export default defineConfig({
         TwoColumnContent: "./src/components/TwoColumnContent.astro",
       },
       description: "Documentation for The Storm Minecraft server.",
-      editLink: {
-        baseUrl:
-          "https://github.com/shepherdjerred/monorepo/edit/main/packages/ts-mc-docs/",
-      },
       favicon: "/favicon.svg",
       head: [
         {

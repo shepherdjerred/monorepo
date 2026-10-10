@@ -54,7 +54,6 @@ hold only scoped invariants that agents must keep in context.
 | [cooklang-rich-preview](cooklang-rich-preview/) | Marketing site for the Cooklang Rich Preview Obsidian plugin   |
 | [glitter](glitter/)                             | Glitter Boys friend-group site                                 |
 | [cross-compilers-site](cross-compilers-site/)   | Marketing site for the macOS and Windows cross-compiler images |
-| [ts-mc](ts-mc/)                                 | The Storm Minecraft server portal (Astro)                      |
 | [ts-mc-docs](ts-mc-docs/)                       | The Storm player documentation (Starlight)                     |
 
 ## Libraries
