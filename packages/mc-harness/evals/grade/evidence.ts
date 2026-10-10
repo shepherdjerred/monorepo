@@ -7,7 +7,7 @@ import type { GradeCheck, GradeContext } from "#evals/lib/types.ts";
 /** Invalid evidence fails the grade without publishing a partial benchmark archive. */
 export async function gradeEvidence(
   source: string,
-  ctx: Pick<GradeContext, "taskDir" | "worktree">,
+  ctx: Pick<GradeContext, "taskDir">,
 ): Promise<{ check: GradeCheck; artifacts: string[] }> {
   const name = "build evidence can be archived with validated judge inputs";
   let artifacts: string[] = [];
@@ -16,7 +16,7 @@ export async function gradeEvidence(
       prefix: ".build-record-",
       stage: async (pending) => {
         const kept = await keepBuildRecord(source, pending, {
-          allowedRoot: ctx.worktree,
+          allowedRoot: ctx.taskDir,
         });
         artifacts = kept.map((file) =>
           path.join(ctx.taskDir, path.relative(pending, file)),

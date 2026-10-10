@@ -374,7 +374,8 @@ pick n | knockout [--among a,b] [--rubric] [--model]`) keep versions of
   still fails. Pair records reference archived, content-addressed judge
   images, so replacing a candidate never changes earlier judgment evidence.
   Eval archival permits cross-build judge inputs only inside the declared
-  worktree root, resolves symlinks before reads, and defaults subsequent archive
+  task root (including its `repo` and `out` directories), resolves symlinks
+  before reads, and defaults subsequent archive
   copies to their own source directory.
   Standalone pair and absolute records carry the SHA-256 of every image sent
   to the model, as tournament and critique records do. Every archive copy

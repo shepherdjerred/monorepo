@@ -1,4 +1,4 @@
-import { mkdtemp, readdir, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, describe, expect, it, vi } from "vitest";
@@ -41,8 +41,8 @@ function context(buildDir: string, taskDir: string): GradeContext {
     taskId: "fixture",
     taskDir,
     outDir: path.join(taskDir, "out"),
-    home: root,
-    worktree: root,
+    home: path.join(taskDir, "home"),
+    worktree: path.join(taskDir, "repo"),
     result: { sourceSandbox: "sbx-000001", buildDir, applyId: "fixture" },
     daemon,
     toolkit: (args) =>
@@ -61,11 +61,23 @@ function context(buildDir: string, taskDir: string): GradeContext {
 }
 
 describe("build grader evidence failures", () => {
-  it.each(["current-record", "current-image", "historical-record", "valid"])(
+  it.each([
+    "current-record",
+    "current-image",
+    "historical-record",
+    "valid-out",
+    "valid-repo",
+    "outside",
+  ])(
     "returns a grade for %s evidence without a partial archive",
     async (failure) => {
       const dir = path.join(root, failure);
-      const workspace = await flatSiteBuild(path.join(dir, "build"), failure);
+      await mkdir(path.join(dir, "repo"), { recursive: true });
+      const buildDir =
+        failure === "outside"
+          ? path.join(root, "foreign-build")
+          : path.join(dir, failure === "valid-repo" ? "repo" : "out", "build");
+      const workspace = await flatSiteBuild(buildDir, failure);
       await renderBuild(
         {
           client: new BuildClient(),
@@ -96,7 +108,7 @@ describe("build grader evidence failures", () => {
       expect(journal).toHaveProperty(
         failure.startsWith("current-") ? "error" : "entries",
       );
-      const taskDir = path.join(dir, "task");
+      const taskDir = dir;
       const grade = await buildGrader({
         reference: "fixture",
         rubric: "micro",
@@ -104,12 +116,15 @@ describe("build grader evidence failures", () => {
       const archiveCheck = grade.checks.find((check) =>
         check.name.startsWith("build evidence can be archived"),
       );
-      expect(archiveCheck?.pass).toBe(failure === "valid");
+      const valid = failure.startsWith("valid-");
+      expect(archiveCheck?.pass).toBe(valid);
+      if (failure === "outside")
+        expect(archiveCheck?.detail).toMatch(/outside allowed root/u);
       const taskFiles = await readdir(taskDir);
       expect(taskFiles.some((name) => name.startsWith(".build-record-"))).toBe(
         false,
       );
-      if (failure === "valid") {
+      if (valid) {
         expect(grade.artifacts).toContain(path.join(taskDir, "journal.jsonl"));
         expect(await readJournal(taskDir)).toHaveProperty("entries");
         expect(

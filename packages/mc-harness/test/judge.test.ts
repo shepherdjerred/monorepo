@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
@@ -265,9 +265,7 @@ describe("persisted verdicts", () => {
           "render" in verdict
             ? verdict.render
             : verdict.renders[kind === "pair-a" ? "a" : "b"];
-        const taskDir = path.join(dir, "task");
-        await mkdir(taskDir);
-        const ctx = { taskDir, worktree: dir };
+        const ctx = { taskDir: dir };
         const valid = await gradeEvidence(dir, ctx);
         expect(valid.check.pass).toBe(true);
         await writeFile(input, "truncated after judging");
