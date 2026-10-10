@@ -173,6 +173,9 @@ export async function knockout(
   const candidates = await listCandidates(dir);
   const saved = candidates.map((candidate) => candidate.name);
   const pool = options.among ?? saved;
+  if (new Set(pool).size !== pool.length) {
+    throw new Error("knockout candidate names must be unique");
+  }
   for (const name of pool) {
     if (!saved.includes(name)) {
       throw new Error(`no candidate "${name}" saved in ${workspace.dir}`);

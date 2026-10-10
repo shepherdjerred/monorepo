@@ -93,9 +93,21 @@ export function lightOf(
 const PASSABLE =
   /(?:^air|^cave_air|^void_air|_carpet|_pressure_plate|^torch|_torch|^lantern|_lantern|_sign|_banner|^short_grass|^tall_grass|^fern|_sapling|^rail|_rail|^redstone_wire|^light|^snow)$/u;
 
-/** Blocks light and mobs pass through for enclosure purposes (not walls). */
+/** Blocks mobs pass through for enclosure purposes (not walls). */
 export function isPassable(id: string): boolean {
   return PASSABLE.test(id.replace(/^minecraft:/u, ""));
+}
+
+/** Block light crosses ordinary/stained glass and panes, but not tinted glass. */
+export function transmitsBlockLight(id: string): boolean {
+  const name = id.replace(/^minecraft:/u, "");
+  return (
+    isPassable(id) ||
+    name === "glass" ||
+    name === "glass_pane" ||
+    name.endsWith("_stained_glass") ||
+    name.endsWith("_stained_glass_pane")
+  );
 }
 
 export function isLeaves(id: string): boolean {

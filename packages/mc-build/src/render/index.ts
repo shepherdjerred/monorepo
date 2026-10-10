@@ -21,7 +21,7 @@ import { TextureCache } from "./textures.ts";
 
 const SKY = [196, 214, 236, 255] as const;
 
-/** The highest y that is solid across most of the ground plane: where a player stands. */
+/** The most common first-air y across columns: the level where a player stands. */
 function groundLevel(grid: BlockGrid): number {
   const counts = new Map<number, number>();
   for (let x = 0; x < grid.size.x; x += 1) {

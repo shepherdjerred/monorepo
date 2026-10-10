@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { BlockGrid } from "#src/core/grid.ts";
+import { blockLightLevels } from "#src/lint/lint.ts";
+import { isPassable } from "#src/lint/physics.ts";
 import { skyLightLevels } from "#src/render/shading.ts";
 
 describe("glass skylight", () => {
@@ -31,4 +33,24 @@ describe("glass skylight", () => {
       );
     },
   );
+});
+
+describe("block light through glazed partitions", () => {
+  it.each([
+    "glass",
+    "glass_pane",
+    "white_stained_glass",
+    "blue_stained_glass_pane",
+    "tinted_glass",
+    "stone",
+  ])("handles %s without making it passable", (block) => {
+    const grid = new BlockGrid({ x: 5, y: 3, z: 3 }, "minecraft:stone");
+    grid.set(1, 1, 1, "minecraft:lantern");
+    grid.set(2, 1, 1, `minecraft:${block}`);
+    grid.set(3, 1, 1, "minecraft:air");
+    expect(blockLightLevels(grid)[grid.index(3, 1, 1)]).toBe(
+      block === "stone" || block === "tinted_glass" ? 0 : 13,
+    );
+    expect(isPassable(`minecraft:${block}`)).toBe(false);
+  });
 });

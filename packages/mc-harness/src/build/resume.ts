@@ -6,15 +6,14 @@
  * claude-paint's compaction hands a painter its own journal back.
  */
 import { readdir } from "node:fs/promises";
-import path from "node:path";
 import {
   BUILD_FILES,
-  RenderSidecarSchema,
   type BuildLogEntry,
   type BuildManifest,
   type RenderSidecar,
 } from "#protocol/build.ts";
 import { allOf, lastOf, readLog } from "./build-log.ts";
+import { readSidecar } from "./sidecar.ts";
 import { BuildWorkspace } from "./workspace.ts";
 
 export type ResumeState = {
@@ -39,13 +38,7 @@ async function latestSidecar(
   journal: readonly BuildLogEntry[],
 ): Promise<RenderSidecar | null> {
   const last = lastOf(journal, "render");
-  if (last?.kind !== "render") return null;
-  const file = Bun.file(
-    workspace.file(path.join(BUILD_FILES.rendersDir, `${last.name}.json`)),
-  );
-  return (await file.exists())
-    ? RenderSidecarSchema.parse(await file.json())
-    : null;
+  return last?.kind === "render" ? readSidecar(workspace, last.name) : null;
 }
 
 async function candidateNames(workspace: BuildWorkspace): Promise<string[]> {

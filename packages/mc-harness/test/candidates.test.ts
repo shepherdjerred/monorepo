@@ -733,6 +733,27 @@ const biased: AskJudge = () =>
   Promise.resolve({ winner: "first", confidence: 0.7, reasons: ["position"] });
 
 describe("candidates and knockout", () => {
+  it("rejects repeated challengers before judging or changing the record", async () => {
+    const workspace = await makeBuild("knockout-duplicates");
+    await pastePart(workspace, 2);
+    await saveCandidate(workspace.dir, "a");
+    await pastePart(workspace, 4);
+    await saveCandidate(workspace.dir, "b");
+    const before = await readLog(workspace.dir);
+    const manifest = await workspace.manifest();
+    const ask = vi.fn(prefersWide);
+    await expect(
+      knockout(workspace.dir, {
+        among: ["a", "b", "b"],
+        rubric: "micro",
+        model: "stub",
+        ask,
+      }),
+    ).rejects.toThrow(/names must be unique/u);
+    expect(ask).not.toHaveBeenCalled();
+    expect(await readLog(workspace.dir)).toEqual(before);
+    expect(await workspace.manifest()).toEqual(manifest);
+  });
   it("saves versions, lets a blind judge pick, and restores the winner", async () => {
     const workspace = await makeBuild("knockout");
     await pastePart(workspace, 2);
@@ -879,6 +900,20 @@ describe("candidates and knockout", () => {
 });
 
 describe("scratch and resume", () => {
+  it("distinguishes an unrendered build from missing recorded evidence", async () => {
+    const workspace = await makeBuild("resume-missing-render");
+    const unrendered = await resumeState(workspace.dir);
+    expect(unrendered.latestRender).toBeNull();
+    await appendLog(workspace.dir, {
+      kind: "render",
+      name: "lost",
+      source: "compiled",
+      files: ["renders/lost.png"],
+    });
+    await expect(resumeState(workspace.dir)).rejects.toThrow(
+      /renders\/lost\.json/u,
+    );
+  });
   it("creates a void pad beside the site and resumes from the record", async () => {
     const workspace = await makeBuild("scratch");
     const pad = await createScratch(workspace.dir, { size: 8 });

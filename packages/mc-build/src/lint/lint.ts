@@ -11,6 +11,7 @@ import {
   isPassable,
   lightOf,
   supportOf,
+  transmitsBlockLight,
 } from "./physics.ts";
 
 export type Severity = "error" | "warn" | "info";
@@ -411,8 +412,10 @@ function blockLight(lint: LintGrid): Int8Array {
     const level = light[lint.grid.index(p.x, p.y, p.z)] ?? 0;
     for (const n of FACE_NEIGHBORS) {
       const q = { x: p.x + n.x, y: p.y + n.y, z: p.z + n.z };
+      const cell = lint.at(q.x, q.y, q.z);
       if (
-        lint.open(q.x, q.y, q.z) &&
+        cell !== null &&
+        transmitsBlockLight(cell.id) &&
         (light[lint.grid.index(q.x, q.y, q.z)] ?? 0) < level - 1
       ) {
         light[lint.grid.index(q.x, q.y, q.z)] = level - 1;
