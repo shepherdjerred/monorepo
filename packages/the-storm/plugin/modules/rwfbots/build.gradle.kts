@@ -12,6 +12,16 @@ dependencies {
   testCompileOnly(libs.citizens) { isTransitive = false }
 }
 
+// Bundle the single neutral contracts consumed by Python/TypeScript and Java promotion.
+tasks.processResources {
+  from(rootProject.file("../tools/learning/evaluation.json")) {
+    rename { "rwf-strength-evaluation.json" }
+  }
+  from(rootProject.file("../tools/learning/maps/protocol.json")) {
+    rename { "rwf-training-maps.json" }
+  }
+}
+
 // The Java Flipt identifiers of the chat flag must agree with the shared managed flag inventory.
 val verifyManagedChatFlag =
     tasks.register<VerifyManagedFlag>("verifyManagedChatFlag") {
@@ -66,7 +76,7 @@ tasks.test {
 val prepareActorParity = tasks.register<Exec>("prepareActorParity") {
   val learning = rootProject.file("../tools/learning")
   val output = layout.buildDirectory.dir("actor-parity")
-  inputs.files(fileTree(learning) { include("*.py", "*.json", "*.toml", "*.lock", "promotion/*.py") })
+  inputs.files(fileTree(learning) { include("*.py", "*.json", "*.toml", "*.lock", "promotion/*.py", "map_selection/*.py", "maps/*.json") })
       .withPropertyName("pythonActorTools").withPathSensitivity(PathSensitivity.RELATIVE)
   inputs.files("src/main/resources/rwf-combat-v1.tsv", "src/main/resources/rwf-duel.json", "src/main/resources/rwf-actor-parity.json")
       .withPropertyName("actorContracts").withPathSensitivity(PathSensitivity.RELATIVE)

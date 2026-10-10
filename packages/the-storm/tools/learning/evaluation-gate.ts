@@ -64,6 +64,17 @@ export const EvaluationReport = z
   })
   .strict();
 
+if (
+  !isDeepStrictEqual(
+    contract.reportFields,
+    Object.keys(EvaluationReport.shape),
+  ) ||
+  !isDeepStrictEqual(contract.gameFields, Object.keys(EvaluationGame.shape))
+)
+  throw new Error(
+    "Strength validators differ from their neutral field inventory",
+  );
+
 export function evaluationSchedule(
   matches: number,
   firstSeed: number,

@@ -41,11 +41,16 @@ final class PromotionEvidence {
         nativeHash(inputs.path("native")).equals(proof.native_sha256()), "frozen native runtime");
     nativeFiles(files, inputs.path("native"));
     dataset(files, proof, inputs.path("dataset"));
-    strengthPlan(files, proof);
-    for (var seed : proof.pilot().seeds()) seed(files, proof, seed, source);
+    var maps = PromotionMaps.catalog(inputs.path("maps"));
+    strengthPlan(files, proof, inputs.path("maps"));
+    for (var seed : proof.pilot().seeds()) {
+      seed(files, proof, seed, source);
+      PromotionMaps.training(files.json(seed.checkpoint_manifest_sha256()).path("training"), maps);
+    }
   }
 
-  private static void strengthPlan(PromotionFiles files, PromotionProof proof) throws IOException {
+  private static void strengthPlan(PromotionFiles files, PromotionProof proof, JsonNode maps)
+      throws IOException {
     var plan = files.json(proof.pilot().strength_plan_sha256());
     var claim = files.json(proof.pilot().strength_claim_sha256());
     expect(
@@ -53,7 +58,8 @@ final class PromotionEvidence {
         "planSha256",
         ActorManifest.sha256(
             PromotionContract.JSON.writeValueAsString(plan).getBytes(StandardCharsets.UTF_8)));
-    expect(plan, "version", 1);
+    expect(plan, "version", 2);
+    expect(plan, "maps", maps);
     expect(plan, "mode", "pilot");
     expect(plan, "acceptance", "unaccepted");
     expect(plan, "matchesPerOpponent", 200);

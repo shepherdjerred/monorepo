@@ -7,7 +7,7 @@ import unittest
 
 import torch
 
-from evaluate import Matchup, run_duel, schedule, validate_training
+from evaluate import Matchup, run_duel, schedule, validate_fields, validate_training
 from map_selection.plan import MapBinding
 from paper import Discontinuity
 from policy import Policy
@@ -77,6 +77,12 @@ class EvaluationTest(unittest.TestCase):
         self.assertEqual(report["blocksSha256"], "a" * 64)
         self.assertEqual(report["scenarioSha256"], "b" * 64)
         self.assertEqual(report["engine"], "Paper")
+        with self.assertRaisesRegex(ValueError, "neutral contract"):
+            validate_fields({**report, "extra": True}, "gameFields")
+        with self.assertRaisesRegex(ValueError, "neutral contract"):
+            validate_fields(
+                {key: value for key, value in report.items() if key != "map"}, "gameFields"
+            )
         self.assertEqual(report["missed_ticks"], 2)
         self.assertEqual(report["memory_resets"], 1)
         self.assertEqual(report["authored_fallbacks"], 3)

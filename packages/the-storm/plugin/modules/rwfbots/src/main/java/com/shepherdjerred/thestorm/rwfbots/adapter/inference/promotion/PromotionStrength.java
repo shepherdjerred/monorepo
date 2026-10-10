@@ -15,9 +15,13 @@ final class PromotionStrength {
 
   static void validate(PromotionFiles files, PromotionProof proof) throws IOException {
     var matches = new HashSet<String>();
+    var maps = PromotionMaps.catalog(files.json(proof.pilot().inputs_sha256()).path("maps"));
+    var schedule = PromotionMaps.schedule(maps);
     for (var seed : proof.pilot().seeds()) {
       var report = files.json(seed.strength_sha256());
-      expect(report, "version", 1);
+      PromotionMaps.reportFields(report, false);
+      expect(report, "version", 2);
+      expect(report, "maps", maps);
       expect(report, "engine", "Paper");
       expect(report, "mode", "pilot");
       expect(report, "acceptance", "unaccepted");
@@ -30,15 +34,18 @@ final class PromotionStrength {
       expect(report, "pilot_acceptance_checked", false);
       var games = report.path("games");
       require(
-          games.isArray() && games.size() == seed.matches_per_opponent() * 2,
+          games.isArray()
+              && games.size() == schedule.size()
+              && games.size() == seed.matches_per_opponent() * 2,
           "complete strength schedule");
       int authored = 0;
       int basic = 0;
       for (int index = 0; index < games.size(); index++) {
         var game = games.get(index);
-        game(game, index, matches);
+        var expected = schedule.get(index);
+        game(game, expected, matches);
         if (game.path("result").asString().equals("win")) {
-          if (index < 200) authored++;
+          if (expected.opponent().equals("authored")) authored++;
           else basic++;
         }
       }
@@ -48,10 +55,15 @@ final class PromotionStrength {
     }
   }
 
-  private static void game(JsonNode game, int index, Set<String> matches) {
-    expect(game, "opponent", index < 200 ? "authored" : "basic");
-    expect(game, "seed", 500_000_000 + index % 200 / 2);
-    expect(game, "side", index % 2 == 0 ? "red" : "blue");
+  private static void game(JsonNode game, PromotionMaps.Matchup expected, Set<String> matches) {
+    PromotionMaps.reportFields(game, true);
+    expect(game, "engine", "Paper");
+    expect(game, "map", expected.binding().map());
+    expect(game, "blocksSha256", expected.binding().blocksSha256());
+    expect(game, "scenarioSha256", expected.binding().scenarioSha256());
+    expect(game, "opponent", expected.opponent());
+    expect(game, "seed", expected.seed());
+    expect(game, "side", expected.side());
     var match = game.path("match").asString();
     require(
         UUID.fromString(match).toString().equals(match) && matches.add(match),
