@@ -455,12 +455,30 @@ credentials before dispatch. Each credential uses the first available source:
 
 Native passthroughs invoked with exactly `--help`, `-h`, or `--version`, plus
 the exact invocation `toolkit argocd version --client`, run without credential
-resolution. Their arguments, native output, and exit status are preserved.
+resolution. ArgoCD also supports a bare subcommand path ending in `--help` or
+`-h`, such as `toolkit argocd app rollback --help`, and the equivalent
+`toolkit argocd help app rollback` form (including root `argocd help`). The help
+subcommand remains credential-free with global options and `--` operands;
+option values and application names equal to `help` retain authentication.
+Inherited options are recognized before, within and after the command path,
+including after the help flag. Repeated help booleans retain native ordering.
+Their arguments, native output, and exit status are preserved.
 These ArgoCD invocations also remove `ARGOCD_AUTH_TOKEN` from the child
 environment because native help prints its default value. Server commands
 continue to inherit the configured token.
 Other invocations still resolve credentials, including `argocd version` and
 commands carrying metadata flags as arguments or after `--`.
+
+Every ArgoCD invocation sets an empty native `--auth-token` help default through
+`ARGOCD_OPTS`. The API client still reads `ARGOCD_AUTH_TOKEN`, and explicit
+command-line flags retain precedence. Native help and usage therefore cannot
+print the registered environment token. Streams remain inherited, preserving
+terminal detection, confirmation prompts, exit codes and signals.
+`ARGOCD_OPTS` must not set `--auth-token`: use `ARGOCD_AUTH_TOKEN` for that
+credential instead. Other `ARGOCD_OPTS` settings are preserved. Toolkit rejects
+the unsafe setting without printing its value, including for help commands.
+Option names are checked after ArgoCD-compatible quote and escape parsing;
+header values and root paths containing the same text are preserved.
 
 | Commands                                                                                                | Registered backend        |
 | ------------------------------------------------------------------------------------------------------- | ------------------------- |

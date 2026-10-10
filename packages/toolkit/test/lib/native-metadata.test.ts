@@ -103,6 +103,66 @@ describe("native metadata credential boundary", () => {
       ["argocd", "version", "--client"],
       ["--grpc-web", "version", "--client"],
     ],
+    [
+      ["argocd", "help"],
+      ["--grpc-web", "help"],
+    ],
+    [
+      ["argocd", "help", "app", "rollback"],
+      ["--grpc-web", "help", "app", "rollback"],
+    ],
+    [
+      ["argocd", "app", "rollback", "--help"],
+      ["--grpc-web", "app", "rollback", "--help"],
+    ],
+    [
+      ["argocd", "account", "generate-token", "-h"],
+      ["--grpc-web", "account", "generate-token", "-h"],
+    ],
+    [
+      ["argocd", "help", "app", "--loglevel", "debug"],
+      ["--grpc-web", "help", "app", "--loglevel", "debug"],
+    ],
+    [
+      ["argocd", "help", "--", "app"],
+      ["--grpc-web", "help", "--", "app"],
+    ],
+    [
+      ["argocd", "--grpc-web", "--loglevel", "debug", "help", "app"],
+      ["--grpc-web", "--loglevel", "debug", "help", "app"],
+    ],
+    [
+      ["argocd", "--grpc-web=false", "-H", "example: value", "help", "app"],
+      ["--grpc-web=false", "-H", "example: value", "help", "app"],
+    ],
+    [
+      ["argocd", "-Hexample:value", "help", "app"],
+      ["--grpc-web", "-Hexample:value", "help", "app"],
+    ],
+    [
+      ["argocd", "--", "help", "app"],
+      ["--grpc-web", "--", "help", "app"],
+    ],
+    [
+      ["argocd", "--loglevel", "debug", "app", "rollback", "--help"],
+      ["--grpc-web", "--loglevel", "debug", "app", "rollback", "--help"],
+    ],
+    [
+      ["argocd", "app", "rollback", "--help", "--loglevel", "debug"],
+      ["--grpc-web", "app", "rollback", "--help", "--loglevel", "debug"],
+    ],
+    [
+      ["argocd", "app", "--loglevel", "debug", "rollback", "--help"],
+      ["--grpc-web", "app", "--loglevel", "debug", "rollback", "--help"],
+    ],
+    [
+      ["argocd", "app", "get", "my-app", "--help", "--timeout", "5"],
+      ["--grpc-web", "app", "get", "my-app", "--help", "--timeout", "5"],
+    ],
+    [
+      ["argocd", "app", "get", "my-app", "--help", "--refresh"],
+      ["--grpc-web", "app", "get", "my-app", "--help", "--refresh"],
+    ],
   ])("forwards %j without invoking the resolver", async (args, nativeArgs) => {
     const result = await invokeWithCredentialSentinel(args);
     expect(result.code).toBe(23);
@@ -122,9 +182,38 @@ describe("native metadata credential boundary", () => {
     [["loki", "query", "--help"], "GRAFANA_API_KEY"],
     [["tempo", "query", "--version"], "GRAFANA_API_KEY"],
     [["argocd", "version"], "ARGOCD_AUTH_TOKEN"],
+    [["argocd", "app", "list", "--help=false"], "ARGOCD_AUTH_TOKEN"],
+    [["argocd", "app", "list", "-h=0"], "ARGOCD_AUTH_TOKEN"],
+    [
+      [
+        "argocd",
+        "app",
+        "get",
+        "my-app",
+        "--help",
+        "--timeout",
+        "5",
+        "--help=false",
+      ],
+      "ARGOCD_AUTH_TOKEN",
+    ],
     [["argocd", "version", "--client=false"], "ARGOCD_AUTH_TOKEN"],
     [["argocd", "version", "--", "--client"], "ARGOCD_AUTH_TOKEN"],
     [["argocd", "app", "list", "--client"], "ARGOCD_AUTH_TOKEN"],
+    [["argocd", "app", "get", "--", "help"], "ARGOCD_AUTH_TOKEN"],
+    [["argocd", "--server", "help", "app", "list"], "ARGOCD_AUTH_TOKEN"],
+    [
+      ["argocd", "--argocd-context", "help", "app", "list"],
+      "ARGOCD_AUTH_TOKEN",
+    ],
+    [["argocd", "-H", "help", "app", "list"], "ARGOCD_AUTH_TOKEN"],
+    [["argocd", "app", "get", "help"], "ARGOCD_AUTH_TOKEN"],
+    [["argocd", "--grpc-web", "app", "list"], "ARGOCD_AUTH_TOKEN"],
+    [["argocd", "app", "list", "--", "--help"], "ARGOCD_AUTH_TOKEN"],
+    [
+      ["argocd", "app", "set", "example", "--parameter", "--help"],
+      "ARGOCD_AUTH_TOKEN",
+    ],
     [["pr", "--help"], "WOODPECKER_TOKEN"],
   ])("retains credential resolution for %j", async (args, credential) => {
     const result = await invokeWithCredentialSentinel(args);
