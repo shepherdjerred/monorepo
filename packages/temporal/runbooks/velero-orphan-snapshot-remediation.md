@@ -123,8 +123,7 @@ Output groups orphans by dataset. Save it to a file (`/tmp/orphans-local.txt`) a
 Generate a reviewed manifest with the operator-only cleanup tool:
 
 ```bash
-cd packages/homelab/src/cdk8s
-op run -- bun run r2:orphans -- inspect \
+scripts/onepassword/with-service-account.sh op run -- bun run --cwd packages/homelab/src/cdk8s r2:orphans -- inspect \
   --manifest /tmp/r2-orphans.json \
   --hold-backup 6hourly-backup-20260728001550
 ```
@@ -204,8 +203,7 @@ kubectl -n openebs exec -i $NODE_POD -c openebs-zfs-plugin -- sh -c '
 Apply exactly the reviewed manifest:
 
 ```bash
-cd packages/homelab/src/cdk8s
-op run -- bun run r2:orphans -- apply \
+scripts/onepassword/with-service-account.sh op run -- bun run --cwd packages/homelab/src/cdk8s r2:orphans -- apply \
   --manifest /tmp/r2-orphans.json \
   --hold-backup 6hourly-backup-20260728001550 \
   --apply
@@ -222,10 +220,10 @@ complete the bulk cleanup first, then create and apply a single-prefix
 manifest:
 
 ```bash
-op run -- bun run r2:orphans -- inspect \
+scripts/onepassword/with-service-account.sh op run -- bun run --cwd packages/homelab/src/cdk8s r2:orphans -- inspect \
   --manifest /tmp/r2-held.json \
   --only-backup 6hourly-backup-20260728001550
-op run -- bun run r2:orphans -- apply \
+scripts/onepassword/with-service-account.sh op run -- bun run --cwd packages/homelab/src/cdk8s r2:orphans -- apply \
   --manifest /tmp/r2-held.json \
   --only-backup 6hourly-backup-20260728001550 \
   --apply \
@@ -267,8 +265,7 @@ kubectl -n openebs exec -i $NODE_POD -c openebs-zfs-plugin -- sh -c '
 ' -- "$LIVE"
 
 # R2: verify reviewed deletions are absent and protected histories remain
-cd packages/homelab/src/cdk8s
-op run -- bun run r2:orphans -- inspect --manifest /tmp/r2-postcheck.json
+scripts/onepassword/with-service-account.sh op run -- bun run --cwd packages/homelab/src/cdk8s r2:orphans -- inspect --manifest /tmp/r2-postcheck.json
 ```
 
 Confirm that the reviewed deletions are absent and protected histories remain.
