@@ -5,6 +5,8 @@ import {
   assertRemoteBranchIsOurs,
   changedFilesInPaths,
   runCommand,
+  fetchGeneratedRemoteBranch,
+  pushGeneratedBranch,
 } from "./scout-season-refresh-git.ts";
 
 // These tests drive `changedFilesInPaths` against a REAL git repository rather
@@ -129,38 +131,105 @@ async function commitAs(
   );
 }
 
+async function assertConcurrentUpdateIsPreserved(
+  repoDir: string,
+  remoteDir: string,
+  branch: string,
+  bot: string,
+): Promise<void> {
+  const expectedRemoteSha = await fetchGeneratedRemoteBranch({
+    repoDir,
+    branch,
+    gitEnv: {},
+  });
+  expect(expectedRemoteSha).toMatch(/^[0-9a-f]{40}$/);
+  await commitAs(repoDir, bot, "catalog.json", "regenerated");
+  const concurrentClone = await mkdtemp(`${tmpdir()}/branch-guard-race-`);
+  try {
+    await runCommand(
+      ["git", "clone", "-q", "--branch", branch, remoteDir, "."],
+      { cwd: concurrentClone },
+    );
+    await commitAs(concurrentClone, bot, "catalog.json", "concurrent proposal");
+    await runCommand(["git", "push", "origin", branch], {
+      cwd: concurrentClone,
+    });
+    await fetchGeneratedRemoteBranch({ repoDir, branch, gitEnv: {} });
+    await expect(
+      pushGeneratedBranch({ repoDir, branch, gitEnv: {}, expectedRemoteSha }),
+    ).rejects.toThrow(/remote-lease-rejected/);
+    expect(
+      await runCommand(["git", "show", `origin/${branch}:catalog.json`], {
+        cwd: repoDir,
+      }),
+    ).toBe("concurrent proposal");
+  } finally {
+    await rm(concurrentClone, { recursive: true, force: true });
+  }
+}
+
+async function publishOperatorChangeAndExpectRefusal({
+  repoDir,
+  branch,
+  bot,
+  operatorClone,
+  force,
+}: {
+  repoDir: string;
+  branch: string;
+  bot: string;
+  operatorClone: string;
+  force: boolean;
+}): Promise<void> {
+  const pushFlag = force ? "-qf" : "-q";
+  await runCommand(["git", "push", pushFlag, "origin", branch], {
+    cwd: operatorClone,
+  });
+  await rm(operatorClone, { recursive: true, force: true });
+  await runCommand(
+    [
+      "git",
+      "fetch",
+      "-q",
+      "origin",
+      `refs/heads/${branch}:refs/remotes/origin/${branch}`,
+      "--force",
+    ],
+    { cwd: repoDir },
+  );
+  await commitAs(repoDir, bot, "catalog.json", "bot proposal");
+
+  await expect(assertRemoteBranchIsOurs({ repoDir, branch })).rejects.toThrow(
+    /jerred@sjer\.red/,
+  );
+}
+
+async function seedGeneratedRemote(
+  remoteDir: string,
+  branch: string,
+  bot: string,
+): Promise<void> {
+  const seed = await mkdtemp(`${tmpdir()}/branch-guard-seed-`);
+  try {
+    await runCommand(["git", "clone", "-q", remoteDir, "."], { cwd: seed });
+    await commitAs(seed, bot, "catalog.json", "original");
+    await commitAs(seed, "jerred@sjer.red", "readme.md", "main history");
+    await commitAs(seed, "jerred@sjer.red", "readme.md", "new main history");
+    await runCommand(["git", "branch", "-M", "main"], { cwd: seed });
+    await runCommand(["git", "push", "-q", "origin", "main"], { cwd: seed });
+    await runCommand(["git", "checkout", "-qB", branch], { cwd: seed });
+    await commitAs(seed, bot, "catalog.json", "bot proposal");
+    await runCommand(["git", "push", "-q", "origin", branch], { cwd: seed });
+  } finally {
+    await rm(seed, { recursive: true, force: true });
+  }
+}
+
 describe("assertRemoteBranchIsOurs (real remote)", () => {
   const BOT = "ci@sjer.red";
   const BRANCH = "chore/proposal";
   let remoteDir: string;
   let repoDir: string;
-
-  async function publishOperatorChangeAndExpectRefusal(
-    operatorClone: string,
-    force: boolean,
-  ): Promise<void> {
-    const pushFlag = force ? "-qf" : "-q";
-    await runCommand(["git", "push", pushFlag, "origin", BRANCH], {
-      cwd: operatorClone,
-    });
-    await rm(operatorClone, { recursive: true, force: true });
-    await runCommand(
-      [
-        "git",
-        "fetch",
-        "-q",
-        "origin",
-        `refs/heads/${BRANCH}:refs/remotes/origin/${BRANCH}`,
-        "--force",
-      ],
-      { cwd: repoDir },
-    );
-    await commitAs(repoDir, BOT, "catalog.json", "bot proposal");
-
-    await expect(
-      assertRemoteBranchIsOurs({ repoDir, branch: BRANCH }),
-    ).rejects.toThrow(/jerred@sjer\.red/);
-  }
 
   beforeEach(async () => {
     remoteDir = await mkdtemp(`${tmpdir()}/branch-guard-remote-`);
@@ -168,15 +237,7 @@ describe("assertRemoteBranchIsOurs (real remote)", () => {
 
     // A seed clone stands in for the previous run: it publishes main and the
     // bot's proposal branch.
-    const seed = await mkdtemp(`${tmpdir()}/branch-guard-seed-`);
-    await runCommand(["git", "clone", "-q", remoteDir, "."], { cwd: seed });
-    await commitAs(seed, BOT, "catalog.json", "original");
-    await runCommand(["git", "branch", "-M", "main"], { cwd: seed });
-    await runCommand(["git", "push", "-q", "origin", "main"], { cwd: seed });
-    await runCommand(["git", "checkout", "-qB", BRANCH], { cwd: seed });
-    await commitAs(seed, BOT, "catalog.json", "bot proposal");
-    await runCommand(["git", "push", "-q", "origin", BRANCH], { cwd: seed });
-    await rm(seed, { recursive: true, force: true });
+    await seedGeneratedRemote(remoteDir, BRANCH, BOT);
 
     // The bot's own working clone: main only, exactly as the activities clone it.
     repoDir = await mkdtemp(`${tmpdir()}/branch-guard-bot-`);
@@ -188,21 +249,14 @@ describe("assertRemoteBranchIsOurs (real remote)", () => {
         "--branch",
         "main",
         "--single-branch",
-        remoteDir,
+        "--depth",
+        "1",
+        `file://${remoteDir}`,
         ".",
       ],
       { cwd: repoDir },
     );
-    await runCommand(
-      [
-        "git",
-        "fetch",
-        "-q",
-        "origin",
-        `refs/heads/${BRANCH}:refs/remotes/origin/${BRANCH}`,
-      ],
-      { cwd: repoDir },
-    );
+    await fetchGeneratedRemoteBranch({ repoDir, branch: BRANCH, gitEnv: {} });
     await runCommand(["git", "checkout", "-qB", BRANCH], { cwd: repoDir });
   });
 
@@ -218,6 +272,27 @@ describe("assertRemoteBranchIsOurs (real remote)", () => {
     await commitAs(repoDir, BOT, "catalog.json", "regenerated, different");
 
     await assertRemoteBranchIsOurs({ repoDir, branch: BRANCH });
+  });
+
+  test("discovers a branch without a PR and protects the observed SHA after a tracking-ref refresh", async () => {
+    await assertConcurrentUpdateIsPreserved(repoDir, remoteDir, BRANCH, BOT);
+  });
+
+  test("an absent branch lease refuses a concurrently created branch", async () => {
+    const branch = "chore/new-proposal";
+    const expectedRemoteSha = await fetchGeneratedRemoteBranch({
+      repoDir,
+      branch,
+      gitEnv: {},
+    });
+    expect(expectedRemoteSha).toBeUndefined();
+    await runCommand(["git", "push", "origin", `HEAD:refs/heads/${branch}`], {
+      cwd: repoDir,
+    });
+    await commitAs(repoDir, BOT, "catalog.json", "new proposal");
+    await expect(
+      pushGeneratedBranch({ repoDir, branch, gitEnv: {}, expectedRemoteSha }),
+    ).rejects.toThrow(/remote-lease-rejected/);
   });
 
   test("permits an unchanged regeneration", async () => {
@@ -249,7 +324,35 @@ describe("assertRemoteBranchIsOurs (real remote)", () => {
       "human adjudication",
     );
     // The bot re-fetches and regenerates, as the next scheduled run would.
-    await publishOperatorChangeAndExpectRefusal(operatorClone, false);
+    await publishOperatorChangeAndExpectRefusal({
+      repoDir,
+      branch: BRANCH,
+      bot: BOT,
+      operatorClone,
+      force: false,
+    });
+  });
+
+  test("refuses human edits beneath a later bot-authored tip", async () => {
+    const operatorClone = await mkdtemp(`${tmpdir()}/branch-guard-mixed-`);
+    await runCommand(
+      ["git", "clone", "-q", "--branch", BRANCH, remoteDir, "."],
+      { cwd: operatorClone },
+    );
+    await commitAs(
+      operatorClone,
+      "jerred@sjer.red",
+      "catalog.json",
+      "human adjudication",
+    );
+    await commitAs(operatorClone, BOT, "catalog.json", "later bot commit");
+    await publishOperatorChangeAndExpectRefusal({
+      repoDir,
+      branch: BRANCH,
+      bot: BOT,
+      operatorClone,
+      force: false,
+    });
   });
 
   test("refuses an amended commit, where the bot is still the author", async () => {
@@ -296,7 +399,13 @@ describe("assertRemoteBranchIsOurs (real remote)", () => {
       { cwd: operatorClone },
     );
     expect(author).toBe(BOT);
-    await publishOperatorChangeAndExpectRefusal(operatorClone, true);
+    await publishOperatorChangeAndExpectRefusal({
+      repoDir,
+      branch: BRANCH,
+      bot: BOT,
+      operatorClone,
+      force: true,
+    });
   });
 
   test("recognises itself when GIT_AUTHOR_EMAIL overrides the repo config", async () => {
@@ -307,25 +416,21 @@ describe("assertRemoteBranchIsOurs (real remote)", () => {
     const deployBot = "deploy-bot@sjer.red";
     const seed = await mkdtemp(`${tmpdir()}/branch-guard-seed2-`);
     await runCommand(
-      [
-        "git",
-        "clone",
-        "-q",
-        "--branch",
-        BRANCH,
-        "--single-branch",
-        remoteDir,
-        ".",
-      ],
+      ["git", "clone", "-q", "--branch", "main", remoteDir, "."],
       { cwd: seed },
     );
+    // Publish a proposal generated from main under the overridden identity;
+    // mixed ownership in unmerged history is deliberately refused above.
+    await runCommand(["git", "checkout", "-qB", BRANCH, "origin/main"], {
+      cwd: seed,
+    });
     await commitAs(
       seed,
       deployBot,
       "catalog.json",
       "earlier run under env identity",
     );
-    await runCommand(["git", "push", "-q", "origin", BRANCH], { cwd: seed });
+    await runCommand(["git", "push", "-qf", "origin", BRANCH], { cwd: seed });
     await rm(seed, { recursive: true, force: true });
 
     await runCommand(

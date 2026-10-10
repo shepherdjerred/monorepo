@@ -32,7 +32,11 @@ import {
   ensureGeneratedPrAutoMerge,
   getOpenDataDragonPrState,
 } from "./data-dragon-pr.ts";
-import { assertRemoteBranchIsOurs } from "#activities/scout/scout-season-refresh-git.ts";
+import {
+  assertRemoteBranchIsOurs,
+  fetchGeneratedRemoteBranch,
+  pushGeneratedBranch,
+} from "#activities/scout/scout-season-refresh-git.ts";
 import { runCommand } from "./data-dragon-shell.ts";
 import {
   branchName,
@@ -215,7 +219,7 @@ export const dataDragonActivities = {
         });
       const existingPrNeedsRefresh =
         existingPrState !== undefined &&
-        existingPrState.baseRefOid !== existingPrState.mainRefOid;
+        existingPrState.mergeBaseRefOid !== existingPrState.mainRefOid;
       if (existingPrUrl !== undefined && !existingPrNeedsRefresh) {
         // The prior attempt may have died between `gh pr create` and `gh pr
         // merge --auto`, leaving this PR open with auto-merge never enabled.
@@ -291,17 +295,13 @@ export const dataDragonActivities = {
 
       const branch =
         existingPrState?.headRefName ?? branchName(input.latestVersion);
-      if (existingPrNeedsRefresh) {
-        await runCommand(
-          [
-            "git",
-            "fetch",
-            "origin",
-            `refs/heads/${branch}:refs/remotes/origin/${branch}`,
-          ],
-          { cwd: repoDir, env: gitEnv, redactOutput: true },
-        );
-      }
+      // A prior attempt can push successfully and die before PR creation.
+      // Discover the branch independently of the PR, including that retry case.
+      const expectedRemoteSha = await fetchGeneratedRemoteBranch({
+        repoDir,
+        branch,
+        gitEnv,
+      });
 
       // Installs the root workspace once without hooks, then builds the shared
       // producers Scout imports. Without the llm-models build, the updater's
@@ -405,12 +405,18 @@ export const dataDragonActivities = {
 
       const title = dataDragonPrTitle(input.latestVersion);
       const body = [
-        "Automated Scout Data Dragon refresh from Temporal.",
+        "## Why",
+        "Keep Scout's game data aligned with the published Data Dragon version.",
+        "",
+        "## What",
         "",
         `Current version: ${input.currentVersion}`,
         `Latest version: ${input.latestVersion}`,
         `Mode: ${input.mode}`,
         `Changed files: ${String(formattedFiles.length)}`,
+        "",
+        "## Verification",
+        "Ran the Data Dragon updater and generated-file preflight; staged only allowlisted output. Full CI and automated review must pass before merge. Live report acceptance has not run.",
       ].join("\n");
 
       await runCommand(["git", "config", "user.email", "ci@sjer.red"], {
@@ -428,20 +434,13 @@ export const dataDragonActivities = {
       // activity stays safe if one is ever added.
       await disarmGitHooks(repoDir);
       await runCommand(["git", "commit", "-m", title], { cwd: repoDir });
-      if (existingPrNeedsRefresh) {
+      if (expectedRemoteSha !== undefined) {
         await assertRemoteBranchIsOurs({ repoDir, branch });
       }
       const commitHash = await runCommand(["git", "rev-parse", "HEAD"], {
         cwd: repoDir,
       });
-      await runCommand(
-        ["git", "push", "--force-with-lease", "origin", branch],
-        {
-          cwd: repoDir,
-          env: gitEnv,
-          redactOutput: true,
-        },
-      );
+      await pushGeneratedBranch({ repoDir, branch, gitEnv, expectedRemoteSha });
       // `recovered` means a concurrent retry attempt already opened this
       // version's PR on the same deterministic branch — GitHub refused our
       // duplicate create for that head, so we finish auto-merge on the existing

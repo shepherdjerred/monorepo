@@ -89,13 +89,15 @@ describe("isPrBasedOnCurrentMain", () => {
               headRefOid: "def",
               headRefName: ARGS.branch,
             })
-          : JSON.stringify({ object: { sha: "abc" } }),
+          : command[2]?.includes("/compare/")
+            ? JSON.stringify({ merge_base_commit: { sha: "abc" } })
+            : JSON.stringify({ object: { sha: "abc" } }),
     });
 
     expect(result).toBe(true);
   });
 
-  test("detects a stale base", async () => {
+  test("detects a stale head even when GitHub baseRefOid already equals current main", async () => {
     const result = await isPrBasedOnCurrentMain({
       repoSlug: ARGS.repoSlug,
       prUrl: "https://github.com/shepherdjerred/monorepo/pull/9",
@@ -103,11 +105,13 @@ describe("isPrBasedOnCurrentMain", () => {
       run: async (command) =>
         command[1] === "pr"
           ? JSON.stringify({
-              baseRefOid: "old",
+              baseRefOid: "new",
               headRefOid: "def",
               headRefName: ARGS.branch,
             })
-          : JSON.stringify({ object: { sha: "new" } }),
+          : command[2]?.includes("/compare/")
+            ? JSON.stringify({ merge_base_commit: { sha: "old" } })
+            : JSON.stringify({ object: { sha: "new" } }),
     });
 
     expect(result).toBe(false);
@@ -125,7 +129,9 @@ describe("isPrBasedOnCurrentMain", () => {
               headRefOid: "head",
               headRefName: ARGS.branch,
             })
-          : JSON.stringify({ object: { sha: "main" } }),
+          : command[2]?.includes("/compare/")
+            ? JSON.stringify({ merge_base_commit: { sha: "ancestor" } })
+            : JSON.stringify({ object: { sha: "main" } }),
     });
 
     expect(result).toEqual({
@@ -133,6 +139,7 @@ describe("isPrBasedOnCurrentMain", () => {
       headRefOid: "head",
       headRefName: ARGS.branch,
       mainRefOid: "main",
+      mergeBaseRefOid: "ancestor",
     });
   });
 });

@@ -1,4 +1,4 @@
-import { unlink } from "node:fs/promises";
+import { rm } from "node:fs/promises";
 import path from "node:path";
 import type { S3Client } from "@aws-sdk/client-s3";
 import type { DuckDbColumnType } from "@scout-for-lol/data";
@@ -20,7 +20,10 @@ type TimelineWriter = {
   columns: Record<string, DuckDbColumnType>;
 };
 
-function timelineWriters(buildDir: string): {
+function timelineWriters(
+  buildDir: string,
+  abortSignal: AbortSignal,
+): {
   entries: TimelineWriter[];
   events: NdjsonFileWriter;
   eventParticipants: NdjsonFileWriter;
@@ -44,7 +47,7 @@ function timelineWriters(buildDir: string): {
     return {
       ...spec,
       path: filePath,
-      writer: new NdjsonFileWriter(filePath),
+      writer: new NdjsonFileWriter(filePath, undefined, abortSignal),
     };
   });
   const events = entries.at(0)?.writer;
@@ -88,29 +91,32 @@ export async function rebuildTimelineParquet(options: {
     skipped: number;
   }) => void;
 }): Promise<TimelineCompactionResult> {
-  const writers = timelineWriters(options.buildDir);
+  options.abortSignal.throwIfAborted();
+  const writers = timelineWriters(options.buildDir, options.abortSignal);
   const foldedIds = new Set<string>();
-  const skipped = await populateTimelinesFromS3({
-    client: options.client,
-    bucket: options.bucket,
-    writers: {
-      ...writers,
-      ...(options.rawWriter === undefined
-        ? {}
-        : { rawWriter: options.rawWriter }),
-    },
-    foldedIds,
-    ...(options.foldedSources === undefined
-      ? {}
-      : { foldedSources: options.foldedSources }),
-    puuidRemap: options.puuidRemap,
-    abortSignal: options.abortSignal,
-    ...(options.onProgress === undefined
-      ? {}
-      : { onProgress: options.onProgress }),
-  });
-  await Promise.all(writers.entries.map(async (entry) => entry.writer.close()));
   try {
+    const skipped = await populateTimelinesFromS3({
+      client: options.client,
+      bucket: options.bucket,
+      writers: {
+        ...writers,
+        ...(options.rawWriter === undefined
+          ? {}
+          : { rawWriter: options.rawWriter }),
+      },
+      foldedIds,
+      ...(options.foldedSources === undefined
+        ? {}
+        : { foldedSources: options.foldedSources }),
+      puuidRemap: options.puuidRemap,
+      abortSignal: options.abortSignal,
+      ...(options.onProgress === undefined
+        ? {}
+        : { onProgress: options.onProgress }),
+    });
+    await Promise.all(
+      writers.entries.map(async (entry) => entry.writer.close()),
+    );
     await withDuckDBConnection(
       async (session) => {
         for (const entry of writers.entries) {
@@ -123,17 +129,22 @@ export async function rebuildTimelineParquet(options: {
           });
         }
       },
-      { timeoutMs: options.timeoutMs },
+      { timeoutMs: options.timeoutMs, abortSignal: options.abortSignal },
     );
+    return {
+      eventRows: writers.events.rows,
+      eventParticipantRows: writers.eventParticipants.rows,
+      participantFrameRows: writers.participantFrames.rows,
+      coverageRows: writers.coverage.rows,
+      skipped,
+      foldedIds,
+    };
   } finally {
-    await Promise.all(writers.entries.map(async (entry) => unlink(entry.path)));
+    await Promise.all(
+      writers.entries.map(async (entry) => {
+        await entry.writer.abort();
+        await rm(entry.path, { force: true });
+      }),
+    );
   }
-  return {
-    eventRows: writers.events.rows,
-    eventParticipantRows: writers.eventParticipants.rows,
-    participantFrameRows: writers.participantFrames.rows,
-    coverageRows: writers.coverage.rows,
-    skipped,
-    foldedIds,
-  };
 }

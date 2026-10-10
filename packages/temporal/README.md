@@ -276,6 +276,26 @@ Prompts are limited to 4,000 characters. New chats snapshot
 
 ## Report mail configuration
 
+The homelab audit preserves informational and suppressed alerts, merges matching
+Prometheus and ledger conditions with both evidence references, and distinguishes
+recovered failures from failures without proven recovery. A long-running Workflow
+needs a stale pending task or repeated Workflow-task failures to become a stall;
+quiet waits and recent Activity heartbeats remain informational.
+
+Ops digest Activity results retain the dashboard's `periodKey`, `status`
+(`sent` or `skipped`), and `duplicate` outcome in Workflow history and results.
+`sent` means the dashboard's mailer accepted the message; it does not establish
+inbox delivery. Histories recorded by older workers contain only `kind` and
+remain replay-compatible; no additional Workflow command is introduced.
+
+The infra worker persists each successful R2 orphan observation in SeaweedFS
+at `llm-archive/monitoring/velero-r2-orphan-audit/latest.json` before publishing
+its gauges. Startup restores the original observation time and values; other
+roles publish no initialized zero inventory. Conditional writes prevent an
+older concurrent scan from replacing a newer observation. The R2 audit
+credential remains read-only. Missing state or an observation older than
+36 hours is unknown and raises the audit freshness alert.
+
 The reports worker resolves `temporal-email-recipient` and
 `temporal-email-sender` through typed configuration for each delivery activity.
 Defaults preserve the existing homelab routing during a flag-provider outage.

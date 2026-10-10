@@ -445,7 +445,7 @@ async function main(): Promise<void> {
   if (roleContract.restoresSeaweedFsBackupMetrics) {
     void restoreSeaweedFsMetricsAfterWorkerStart(() => shutdownStarted);
   }
-  if (role === "infra" || role === "all") {
+  if (roleContract.restoresVeleroR2AuditMetrics) {
     void restoreVeleroR2MetricsAfterWorkerStart(() => shutdownStarted);
   }
   if (workerRuns.length === 0) {

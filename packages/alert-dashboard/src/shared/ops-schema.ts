@@ -1,4 +1,5 @@
 import { ServiceSchema } from "@shepherdjerred/ops-model/catalog.ts";
+import { DigestKindSchema } from "@shepherdjerred/ops-model/digest.ts";
 import { SeveritySchema } from "@shepherdjerred/ops-model/severity.ts";
 import {
   ChangeEventSchema,
@@ -109,9 +110,6 @@ export const SeriesResponseSchema = z.object({
 });
 export type SeriesResponse = z.infer<typeof SeriesResponseSchema>;
 
-export const DigestKindSchema = z.enum(["daily", "weekly"]);
-export type DigestKind = z.infer<typeof DigestKindSchema>;
-
 export const TrendSchema = z.object({
   id: z.string(),
   label: z.string(),
@@ -153,15 +151,6 @@ export const DigestReportSchema = z.object({
   trends: z.array(TrendSchema),
 });
 export type DigestReport = z.infer<typeof DigestReportSchema>;
-
-export const DigestRunResponseSchema = z.object({
-  kind: DigestKindSchema,
-  periodKey: z.string(),
-  status: z.enum(["sent", "skipped"]),
-  /** True when this period was already handled by an earlier request. */
-  duplicate: z.boolean(),
-});
-export type DigestRunResponse = z.infer<typeof DigestRunResponseSchema>;
 
 export const OpsErrorSchema = z.object({
   error: z.string(),

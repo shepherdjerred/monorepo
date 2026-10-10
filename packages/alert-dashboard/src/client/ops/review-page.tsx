@@ -3,6 +3,10 @@ import { LoadingBlock } from "@shepherdjerred/loaded/react.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowDownRightIcon, ArrowUpRightIcon, MinusIcon } from "lucide-react";
 import { useSearchParams } from "react-router";
+import {
+  DigestKindSchema,
+  type DigestKind,
+} from "@shepherdjerred/ops-model/digest.ts";
 
 import { reviewQuery } from "./ops-api.ts";
 import {
@@ -15,12 +19,7 @@ import { SeriesChart } from "#client/charts/series-chart.tsx";
 import { StaleNotice } from "#client/stale-notice.tsx";
 import { formatInstant } from "#client/time.ts";
 import { formatDelta, formatValue, trendDelta } from "#shared/ops-format";
-import {
-  DigestKindSchema,
-  type DigestKind,
-  type DigestReport,
-  type Trend,
-} from "#shared/ops-schema";
+import { type DigestReport, type Trend } from "#shared/ops-schema";
 
 function TrendRow({ trend }: { readonly trend: Trend }): React.JSX.Element {
   const delta = trendDelta(trend);

@@ -1,6 +1,7 @@
 import type { Context, Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
+import { DigestKindSchema } from "@shepherdjerred/ops-model/digest.ts";
 
 import {
   DigestInProgressError,
@@ -18,7 +19,6 @@ import type { Metrics } from "#server/metrics";
 import { JsonTextSchema } from "#shared/json-text";
 import {
   ChangeListInputSchema,
-  DigestKindSchema,
   SeriesInputSchema,
   SnapshotQuerySchema,
   type OpsError,

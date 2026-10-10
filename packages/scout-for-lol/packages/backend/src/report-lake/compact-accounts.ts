@@ -15,10 +15,12 @@ const COMPACTION_TIMEOUT_MS = 30 * 60 * 1000;
 export async function writeAccountsParquet(
   prisma: ExtendedPrismaClient,
   buildDir: string,
+  abortSignal?: AbortSignal,
 ): Promise<number> {
   const accounts = await prisma.account.findMany({ include: { player: true } });
   const tmpPath = path.join(buildDir, "accounts.ndjson.tmp");
-  const writer = new NdjsonFileWriter(tmpPath);
+  abortSignal?.throwIfAborted();
+  const writer = new NdjsonFileWriter(tmpPath, undefined, abortSignal);
   for (const account of accounts) await writer.write(accountToLakeRow(account));
   await writer.close();
 
@@ -39,7 +41,10 @@ export async function writeAccountsParquet(
             [tmpPath],
           );
         },
-        { timeoutMs: COMPACTION_TIMEOUT_MS },
+        {
+          timeoutMs: COMPACTION_TIMEOUT_MS,
+          ...(abortSignal === undefined ? {} : { abortSignal }),
+        },
       );
     }
   } finally {

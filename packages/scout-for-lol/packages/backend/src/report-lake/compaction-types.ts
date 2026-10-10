@@ -13,4 +13,5 @@ export type CompactionOptions = {
   prisma?: ExtendedPrismaClient;
   lakeDir?: string;
   onProgress?: (progress: ReportLakeProgress) => void;
+  abortSignal?: AbortSignal;
 };
