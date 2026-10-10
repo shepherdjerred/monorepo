@@ -1,3 +1,4 @@
+import { rethrowReportDeliveryFailure } from "#workflows/scout/report-delivery.ts";
 import { proxyActivities } from "@temporalio/workflow";
 import type {
   CiIoObservabilityActivities,
@@ -175,6 +176,7 @@ export async function runCiIoTelemetry(): Promise<void> {
       ciIoTelemetryReport(startedAt, new Date().toISOString(), results),
     );
   } catch (error) {
+    rethrowReportDeliveryFailure(error);
     await deliverActivityReport(failureReport(startedAt, error));
     throw error;
   }

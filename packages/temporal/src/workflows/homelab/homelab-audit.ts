@@ -1,3 +1,4 @@
+import { rethrowReportDeliveryFailure } from "#workflows/scout/report-delivery.ts";
 import { patched, proxyActivities } from "@temporalio/workflow";
 import type {
   HomelabAuditActivities,
@@ -145,6 +146,7 @@ export async function runHomelabAuditWorkflow(
     setWorkflowPhase("**Phase:** delivering the homelab audit report");
     await deliverActivityReport(buildHomelabAuditReport(collection, synthesis));
   } catch (error) {
+    rethrowReportDeliveryFailure(error);
     await deliverActivityReport(failureReport(startedAt, error));
     throw error;
   }

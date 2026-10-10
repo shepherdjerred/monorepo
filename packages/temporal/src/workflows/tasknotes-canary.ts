@@ -1,3 +1,4 @@
+import { rethrowReportDeliveryFailure } from "#workflows/scout/report-delivery.ts";
 import {
   REPORT_DELIVERY_ACTIVITY_RETRY,
   REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
@@ -202,6 +203,7 @@ export async function runTasknotesCanary(): Promise<void> {
     const result = await activities.collectTasknotesCanary();
     await deliverActivityReport(tasknotesReport(startedAt, result));
   } catch (error) {
+    rethrowReportDeliveryFailure(error);
     await deliverActivityReport(failureReport(startedAt, error));
     throw error;
   }

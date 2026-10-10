@@ -1,3 +1,4 @@
+import { rethrowReportDeliveryFailure } from "#workflows/scout/report-delivery.ts";
 import {
   REPORT_DELIVERY_ACTIVITY_RETRY,
   REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
@@ -272,6 +273,7 @@ export async function runScoutSeasonRefreshWorkflow(
     await deliverActivityReport(scoutSeasonReport(startedAt, result));
     return result;
   } catch (error) {
+    rethrowReportDeliveryFailure(error);
     await deliverActivityReport(failureReport(startedAt, error));
     throw error;
   }

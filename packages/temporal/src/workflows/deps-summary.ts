@@ -1,3 +1,4 @@
+import { rethrowReportDeliveryFailure } from "#workflows/scout/report-delivery.ts";
 import {
   REPORT_DELIVERY_ACTIVITY_RETRY,
   REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
@@ -259,6 +260,7 @@ export async function generateDependencySummary(
       acceptedAt: delivery.acceptedAt,
     });
   } catch (error) {
+    rethrowReportDeliveryFailure(error);
     await deliverActivityReport(failureReport(startedAt, error));
     throw error;
   }
