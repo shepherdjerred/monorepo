@@ -272,10 +272,15 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun signIn(email: String, password: String, code: String) {
-        fenceAccountSessions()
+        fenceAccountSessions(preserveAccountResources = true)
         work {
         stopSessions()
-        when (val response = account.signIn(email, password, code)) {
+        val response = withAccountSessionRecovery(
+            attempt = { account.signIn(email, password, code) },
+            shouldResume = { foreground && !cleared },
+            resume = { startSessions(account.authorizedProfileIds()) },
+        )
+        when (response) {
             AccountSignIn.NeedsCode -> needsCode = true
             AccountSignIn.CodeRejected -> { needsCode = true; error = "The verification code was rejected. Enter a new code." }
             is AccountSignIn.Vaults -> { needsCode = false; remoteChoices = response.choices }
@@ -630,10 +635,12 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
             if (!foreground && !cleared) FacetBackgroundSync.pauseForeground(getApplication(), lease)
         }
     }
-    private fun fenceAccountSessions() {
+    private fun fenceAccountSessions(preserveAccountResources: Boolean = false) {
         reserveNoticeRequest()
-        FacetReminders.fence()
-        FacetBackgroundSync.cancel(getApplication())
+        if (!preserveAccountResources) {
+            FacetReminders.fence()
+            FacetBackgroundSync.cancel(getApplication())
+        }
         sessionGeneration++
         sessions.values.forEach { it.requestStop() }
     }
@@ -643,12 +650,12 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
         withContext(NonCancellable) { affected.forEach { try { it.stop() } catch (error: Exception) { if (failure == null) failure = error } } }
         failure?.let { throw it }
     }
-    private suspend fun startSessions() {
+    private suspend fun startSessions(authorizedProfiles: Set<String>? = null) {
         if (cleared || !foreground) return
         FacetBackgroundSync.awaitBackgroundDrain()
         if (cleared || !foreground) return
         val ownerGeneration = sessionGeneration
-        for (profile in profiles.filter { it.kind == "obsidian_sync" }) {
+        for (profile in profiles.filter { it.kind == "obsidian_sync" && (authorizedProfiles == null || it.id in authorizedProfiles) }) {
             if (cleared || !foreground || ownerGeneration != sessionGeneration) break
             if (sessions.containsKey(profile.id)) continue
             var retained: ObsidianReplicaSession? = null

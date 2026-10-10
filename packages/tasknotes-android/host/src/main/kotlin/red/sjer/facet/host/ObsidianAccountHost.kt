@@ -6,6 +6,7 @@ import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.security.MessageDigest
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -36,6 +37,7 @@ class ObsidianAccountHost(context: Context, private val engine: FacetEngineRunne
     private val preferences = context.getSharedPreferences("facet.remote-vaults", Context.MODE_PRIVATE)
     private val client = OkHttpClient.Builder().followRedirects(false).build()
     private val mutex = Mutex()
+    private val signInTransition = FacetAccountSignInTransition()
     private var choices: List<ObsidianRemoteVault> = emptyList()
     @Volatile internal var generation = 0L; private set
 
@@ -46,22 +48,38 @@ class ObsidianAccountHost(context: Context, private val engine: FacetEngineRunne
     }
 
     suspend fun signIn(email: String, password: String, code: String): AccountSignIn = withContext(Dispatchers.IO) { mutex.withLock {
-        FacetReminders.cancelProfiles(applicationContext, ownedProfileIds())
-        FacetBackgroundSync.disableAuthorization(applicationContext)
-        FacetBackgroundSync.awaitBackgroundDrain()
-        choices = emptyList()
-        generation++
-        clearActiveAccount()
-        when (val response = perform(account.signIn(email, password, code))) {
-            is ObsidianAccountResponse.MfaRequired -> AccountSignIn.NeedsCode
-            is ObsidianAccountResponse.MfaRejected -> AccountSignIn.CodeRejected
-            is ObsidianAccountResponse.SignedIn -> {
-                val owner = owner(response.email)
-                secrets.put("account.$owner.token", response.token.toByteArray(Charsets.UTF_8))
-                check(preferences.edit().putString("activeOwner", owner).commit())
-                discover(response.token)
-            }
-            else -> error("Unexpected account sign-in response.")
+        val previousProfiles = ownedProfileIds()
+        var backgroundSuspension: Long? = null
+        try {
+            signInTransition.run(
+                prepare = {
+                    generation++
+                    backgroundSuspension = FacetBackgroundSync.suspendAccountTransition()
+                    FacetBackgroundSync.awaitBackgroundDrain()
+                    choices = emptyList()
+                },
+                authenticate = { perform(account.signIn(email, password, code)) },
+                discover = { token ->
+                    val response = perform(account.listVaults(token))
+                    check(response is ObsidianAccountResponse.Vaults)
+                    response.vaults
+                },
+                activeOwner = { preferences.getString("activeOwner", null) },
+                identity = ::owner,
+                storeToken = { owner, token ->
+                    val bytes = token.toByteArray(Charsets.UTF_8)
+                    try { secrets.put("account.$owner.token", bytes) } finally { bytes.fill(0) }
+                },
+                selectOwner = { owner -> check(preferences.edit().putString("activeOwner", owner).commit()) },
+                retireOwner = { owner -> withContext(NonCancellable) {
+                    FacetBackgroundSync.revokeAccountAuthorization(applicationContext, requireNotNull(backgroundSuspension))
+                    FacetReminders.cancelProfiles(applicationContext, previousProfiles)
+                    clearAccountCredentials(owner)
+                } },
+                publish = { choices = it },
+            )
+        } finally {
+            backgroundSuspension?.let { FacetBackgroundSync.finishAccountTransition(it) }
         }
     } }
 
@@ -116,6 +134,7 @@ class ObsidianAccountHost(context: Context, private val engine: FacetEngineRunne
 
     internal fun sessionMetadata(profileId: String): JsonObject = Json.parseToJsonElement(preferences.getString(profileId, null) ?: throw FacetActionError("Reconnect this vault to Obsidian Sync to resume synchronization.")).jsonObject
     internal fun belongsToActiveAccount(profileId: String): Boolean {
+        if (signInTransition.pending) return false
         val owner = preferences.getString("activeOwner", null) ?: return false
         val raw = preferences.getString(profileId, null) ?: return false
         return Json.parseToJsonElement(raw).jsonObject.getValue("owner").jsonPrimitive.content == owner
@@ -151,6 +170,7 @@ class ObsidianAccountHost(context: Context, private val engine: FacetEngineRunne
         } finally { token.fill(0) }
     } }
     internal fun sessionSecrets(profileId: String): Pair<ByteArray, ByteArray> {
+        check(belongsToActiveAccount(profileId)) { "The owning account is unavailable or changing. Reconnect this vault after sign-in finishes." }
         val owner = sessionMetadata(profileId).getValue("owner").jsonPrimitive.content
         return requireNotNull(secrets.get("account.$owner.token")) to requireNotNull(secrets.get("vault.$profileId.key"))
     }
@@ -168,13 +188,17 @@ class ObsidianAccountHost(context: Context, private val engine: FacetEngineRunne
 
     private fun clearActiveAccount() {
         val owner = preferences.getString("activeOwner", null) ?: return
+        clearAccountCredentials(owner)
+        check(preferences.edit().remove("activeOwner").commit())
+    }
+
+    private fun clearAccountCredentials(owner: String) {
         secrets.remove("account.$owner.token")
         preferences.all.filterKeys { it != "activeOwner" }.forEach { (profileId, raw) ->
             require(raw is String)
             val metadata = Json.parseToJsonElement(raw).jsonObject
             if (metadata.getValue("owner").jsonPrimitive.content == owner) secrets.remove("vault.$profileId.key")
         }
-        check(preferences.edit().remove("activeOwner").commit())
     }
 
     private fun ownedProfileIds(): Set<String> {

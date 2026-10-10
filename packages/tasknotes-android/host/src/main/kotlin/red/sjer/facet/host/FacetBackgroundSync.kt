@@ -38,6 +38,13 @@ object FacetBackgroundSync {
 
     fun resumeForeground(): Long = ownership.resumeForeground()
     suspend fun awaitBackgroundDrain() { ownership.awaitDrain() }
+    internal fun suspendAccountTransition(): Long = ownership.suspendAccountTransition()
+    internal fun finishAccountTransition(token: Long) { ownership.finishAccountTransition(token) }
+    internal fun revokeAccountAuthorization(context: Context, token: Long) {
+        ownership.revokeAccountAuthorization(token)
+        WorkManager.getInstance(context.applicationContext).cancelUniqueWork(WORK)
+        check(context.getSharedPreferences("facet.background", Context.MODE_PRIVATE).edit().putBoolean("authorized", false).commit())
+    }
 
     /** Register writer cleanup before it starts; new foreground/background writers must await the exact owner drain. */
     fun retireForegroundWriter(cleanup: suspend () -> Unit) {
@@ -93,6 +100,8 @@ internal class FacetSyncOwnership {
     private var foreground = false
     private var generation = 0L
     private var authorized = true
+    private var nextSuspension = 0L
+    private val accountSuspensions = mutableSetOf<Long>()
     private var job: Job? = null
     private val stopSessions = mutableListOf<() -> Unit>()
     private val retired = mutableSetOf<Job>()
@@ -116,8 +125,25 @@ internal class FacetSyncOwnership {
     }
     @Synchronized fun authorize() { authorized = true }
     @Synchronized fun disable() { resumeForeground(); authorized = false }
+    /** Preserve OS scheduling and the foreground lease while authentication is unproven. */
+    @Synchronized fun suspendAccountTransition(): Long {
+        val token = ++nextSuspension
+        accountSuspensions.add(token)
+        job?.let { retired.add(it); it.cancel() }
+        job = null
+        stopSessions.forEach { it() }
+        stopSessions.clear()
+        return token
+    }
+    @Synchronized fun finishAccountTransition(token: Long) {
+        check(accountSuspensions.remove(token)) { "The account transition suspension is no longer owned." }
+    }
+    @Synchronized fun revokeAccountAuthorization(token: Long) {
+        check(token in accountSuspensions) { "Account authorization may only be revoked by an active transition." }
+        authorized = false
+    }
     @Synchronized fun begin(owner: Job): Long? {
-        if (foreground || !authorized || job != null || retired.any { !it.isCompleted }) return null
+        if (foreground || !authorized || accountSuspensions.isNotEmpty() || job != null || retired.any { !it.isCompleted }) return null
         generation++
         job = owner
         owner.invokeOnCompletion { synchronized(this) { retired.remove(owner) } }
