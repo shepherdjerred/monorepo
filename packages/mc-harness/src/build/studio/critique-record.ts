@@ -17,6 +17,7 @@ export async function readCritiqueRecord(
     await Bun.file(await buildArtifactPath(workspace, entry.file)).json(),
   );
   if (
+    record.iteration !== entry.iteration ||
     record.render !== entry.render ||
     record.gridHash !== entry.gridHash ||
     record.rubric !== entry.rubric ||

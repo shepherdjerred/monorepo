@@ -313,6 +313,7 @@ async function reuseVisual(
     if (
       entry?.kind !== "critique" ||
       entry.render !== input.name ||
+      entry.iteration !== input.sidecar.iteration ||
       entry.gridHash !== input.sidecar.gridHash ||
       entry.rubric !== input.rubric
     ) {
@@ -397,6 +398,7 @@ export async function critiqueBuild(
   const recordFile = await writeJudgeRecord(workspace.dir, {
     kind: "critique",
     at,
+    iteration: sidecar.iteration,
     model: stage === "code" ? options.model : model,
     visualModel: model,
     rubric: options.rubric,

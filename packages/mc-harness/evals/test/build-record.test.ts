@@ -189,6 +189,7 @@ it.each(["a", "b", "render", "sheet"] as const)(
               : {
                   ...score,
                   kind: "critique",
+                  iteration: 1,
                   render: "look",
                   sheet: file,
                   sheetHash: createHash("sha256")

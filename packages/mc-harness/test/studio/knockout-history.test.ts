@@ -9,6 +9,7 @@ import { knockout } from "#build/studio/knockout.ts";
 import { renderBuild } from "#build/commands.ts";
 import { DaemonClient } from "#build/daemon-client.ts";
 import { Journal } from "#build/journal.ts";
+import { programSnapshot } from "#build/sidecar.ts";
 import { rubricAxisIds } from "#build/judge.ts";
 import { readLog } from "#build/build-log.ts";
 import { BUILD_FILES, type BuildLogEntry } from "#protocol/build.ts";
@@ -76,6 +77,60 @@ async function twoVersions(name: string) {
 }
 
 describe("default knockout iteration", () => {
+  it("requires a new visual critique when a render name is reused", async () => {
+    const workspace = await flatSiteBuild(
+      path.join(root, "render-reused"),
+      "render-reused",
+    );
+    await workspace.writeOplog({
+      version: 1,
+      ops: [{ ...clearFloorOp(1), source: "program:abcd" }],
+    });
+    await Bun.write(
+      workspace.file(programSnapshot("abcd")),
+      "// fixture program\n",
+    );
+    const env = {
+      client: new DaemonClient(),
+      journal: new Journal(workspace.file("audit")),
+      log: vi.fn(),
+    };
+    await renderBuild(env, workspace.dir, { source: "compiled", name: "v1" });
+    await critiqueBuild(workspace.dir, {
+      render: "v1",
+      rubric: "micro",
+      model: "stub",
+      stage: "visual",
+      byEye: {
+        axes: Object.fromEntries(
+          rubricAxisIds("micro").map((axis) => [axis, 3]),
+        ),
+        overallAesthetic: 3,
+        notes: [],
+      },
+    });
+    await renderBuild(
+      {
+        client: new DaemonClient(),
+        journal: new Journal(workspace.file("audit")),
+        log: vi.fn(),
+      },
+      workspace.dir,
+      { source: "compiled", name: "v1" },
+    );
+    const askCode = vi.fn(() => Promise.resolve({ suggestions: [] }));
+    await expect(
+      critiqueBuild(workspace.dir, {
+        render: "v1",
+        rubric: "micro",
+        model: "stub",
+        stage: "code",
+        askCode,
+      }),
+    ).rejects.toThrow(/no visual critique/u);
+    expect(askCode).not.toHaveBeenCalled();
+  });
+
   it("judges only new candidates and reuses completed decisions", async () => {
     const { workspace } = await twoVersions("incremental");
     const ask = judge();

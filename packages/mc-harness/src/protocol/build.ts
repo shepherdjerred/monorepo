@@ -243,6 +243,8 @@ export type CodeSuggestion = z.infer<typeof CodeSuggestionSchema>;
 export const JudgeCritiqueRecordSchema = z.strictObject({
   kind: z.literal("critique"),
   at: z.string().min(1),
+  /** The iteration of the render actually evaluated. */
+  iteration: z.number().int().min(0),
   model: z.string().min(1),
   /** Visual scorer when the code-review model differs; absent in older records. */
   visualModel: z.string().min(1).optional(),

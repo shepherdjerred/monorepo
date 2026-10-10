@@ -80,6 +80,7 @@ async function writeEvidence(dir: string, entry: BuildLogEntry) {
   const record = {
     kind: "critique",
     at,
+    iteration: entry.iteration,
     model: "stub",
     render: entry.render,
     rubric: entry.rubric,
@@ -110,6 +111,7 @@ describe("trajectory record validation", () => {
   it.each([
     "missing",
     "render",
+    "iteration",
     "gridHash",
     "rubric",
     "total",
@@ -169,14 +171,13 @@ describe("trajectory record validation", () => {
           break;
         }
         default: {
-          const value =
-            field === "total"
-              ? 21
-              : field === "max"
-                ? 41
-                : field === "rubric"
-                  ? "map"
-                  : "mismatch";
+          const values: Record<string, string | number> = {
+            iteration: 2,
+            total: 21,
+            max: 41,
+            rubric: "map",
+          };
+          const value = values[field] ?? "mismatch";
           await Bun.write(file, JSON.stringify({ ...record, [field]: value }));
         }
       }
@@ -187,6 +188,25 @@ describe("trajectory record validation", () => {
       ).toBe(true);
     },
   );
+  it("does not count a copied critique as evaluating another rendered iteration", async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), "trajectory-copied-"));
+    temps.push(dir);
+    const original = critique(1, 20);
+    const copied = { ...original, iteration: 2 };
+    const entries = [render(1), original, render(2), copied];
+    await writeEvidence(dir, original);
+    await Bun.write(
+      path.join(dir, "journal.jsonl"),
+      entries.map((entry) => JSON.stringify(entry)).join("\n"),
+    );
+    expect(critiquedIterations(entries, "micro")).toBe(1);
+    expect(checksOf(entries)[1]?.pass).toBe(false);
+    const journal = await readJournal(dir);
+    expect(journal).toHaveProperty("error");
+    expect(
+      trajectoryChecks(journal, "micro").every((check) => !check.pass),
+    ).toBe(true);
+  });
 });
 
 describe("trajectory", () => {

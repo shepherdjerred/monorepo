@@ -266,7 +266,8 @@ survey`, `--grid n` coordinate lines, `--floor y` and `--section z` cuts
   Invalid sidecars also fail instead of selecting an
   older render, and critique verifies the saved schematic against its hash
   before scoring or updating the journal. Code-only critique also validates
-  the reused record's render, grid, rubric and score against its journal entry.
+  the reused record's render, iteration, grid, rubric and score against its journal entry.
+  Rendering the same name again requires a fresh visual critique before code-only reuse.
   Saved critique evidence must contain exactly the rubric's axes, their summed
   total and maximum, and the first lowest axis in rubric order.
   Critique images carry the checksum of the bytes scored by the visual model;
@@ -325,7 +326,7 @@ pick n | knockout [--among a,b] [--rubric] [--model]`) keep versions of
   Saving candidates outside an explicit `--among` pool does not reset its checkpoint; the
   original incumbent remains part of its fingerprint even after defeat.
   Legacy scored outcomes without critique identity and critique records without
-  image checksums cannot prove their scores; start a new capture and critique
+  image checksums or render iterations cannot prove their scores; start a new capture and critique
   before using them as graded evidence. Unbound legacy tournament decisions
   require an explicit `--among` rematch.
   Incomplete candidate directories and metadata names that disagree with their

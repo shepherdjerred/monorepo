@@ -102,14 +102,14 @@ export function critiquedIterations(
   entries: readonly BuildLogEntry[],
   rubric: JudgeRubric,
 ): number {
-  const rendered = new Set<number>();
+  const rendered = new Map<string, number>();
   const critiqued = new Set<number>();
   for (const entry of currentCapture(entries)) {
-    if (entry.kind === "render") rendered.add(entry.iteration);
+    if (entry.kind === "render") rendered.set(entry.name, entry.iteration);
     if (
       entry.kind === "critique" &&
       entry.rubric === rubric &&
-      rendered.has(entry.iteration)
+      rendered.get(entry.render) === entry.iteration
     ) {
       critiqued.add(entry.iteration);
     }
