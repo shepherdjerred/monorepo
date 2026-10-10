@@ -2,6 +2,7 @@ import { createTemporalClient } from "#client";
 import { ciMaintenanceEnabled } from "#config/ci-maintenance.ts";
 import {
   CI_MAINTENANCE_ID,
+  isActiveMaintenanceStatus,
   type MaintenanceObservation,
   type MaintenanceRequest,
 } from "#shared/ci-maintenance.ts";
@@ -41,7 +42,7 @@ export const ciMaintenanceActivities = {
     const busy = manual.some(
       (pipeline) =>
         pipeline.message.includes("ci-maintenance/") &&
-        ["pending", "running", "blocked"].includes(pipeline.status),
+        isActiveMaintenanceStatus(pipeline.status),
     );
     if (!enabled || busy || pending !== null)
       return { enabled, candidates: [], pending: receipt, busy };

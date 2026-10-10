@@ -8,6 +8,7 @@ import type {
 } from "#shared/ci-maintenance.ts";
 
 const StatusSchema = z.enum([
+  "created",
   "pending",
   "running",
   "blocked",
@@ -15,6 +16,7 @@ const StatusSchema = z.enum([
   "failure",
   "error",
   "killed",
+  "canceled",
   "declined",
   "skipped",
 ]);
