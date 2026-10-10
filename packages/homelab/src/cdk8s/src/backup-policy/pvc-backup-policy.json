@@ -1,5 +1,11 @@
 [
   {
+    "namespace": "ops-restore-rehearsal",
+    "name": "pgdata-temporal-postgresql-0",
+    "backup": "disabled",
+    "reason": "Network-isolated disposable Temporal database restore rehearsal; original offsite archives remain protected"
+  },
+  {
     "namespace": "storm-brain",
     "name": "storm-brain-budget",
     "backup": "enabled",

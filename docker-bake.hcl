@@ -215,7 +215,15 @@ target "storm-forum" {
 
 # ── Homelab infra images: self-contained contexts ────────────────────────────
 group "infra" {
-  targets = ["caddy-s3proxy", "obsidian-headless", "redlib", "the-storm-server"]
+  targets = ["caddy-s3proxy", "obsidian-headless", "redlib", "the-storm-server", "velero-plugin"]
+}
+
+target "velero-plugin" {
+  context    = "packages/homelab/images/velero-plugin"
+  target     = "image"
+  tags       = imagetags("velero-plugin")
+  cache-from = cachefrom("velero-plugin")
+  cache-to   = cacheto("velero-plugin")
 }
 
 target "caddy-s3proxy" {

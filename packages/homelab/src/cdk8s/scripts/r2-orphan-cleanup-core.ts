@@ -16,10 +16,18 @@ const CandidateSchema = z.object({
   bytes: z.number().int().nonnegative(),
   objects: z.number().int().positive(),
   newest: z.iso.datetime(),
+  objectInventory: z.array(
+    z.object({
+      key: z.string(),
+      size: z.number().int().nonnegative(),
+      lastModified: z.string(),
+      etag: z.string().nullable(),
+    }),
+  ),
 });
 
 export const R2OrphanManifestSchema = z.object({
-  contractVersion: z.literal(2),
+  contractVersion: z.literal(3),
   observedAt: z.iso.datetime(),
   minimumAgeHours: z.literal(R2_ORPHAN_MINIMUM_AGE_HOURS),
   storage: z.object({
@@ -29,6 +37,7 @@ export const R2OrphanManifestSchema = z.object({
   heldBackupNames: z.array(z.string().min(1)),
   onlyBackupName: z.string().min(1).nullable(),
   protectedBackupNames: z.array(z.string().min(1)),
+  incompleteChainRoots: z.array(z.string()),
   candidates: z.array(CandidateSchema),
 });
 
@@ -68,6 +77,10 @@ export function buildR2OrphanManifest(input: {
   metadataBackupNames: readonly string[];
   heldBackupNames?: readonly string[];
   onlyBackupName?: string;
+  chainProtection: {
+    protectedBackupNames: readonly string[];
+    incompleteRoots: readonly string[];
+  };
 }): R2OrphanManifest {
   const observedAt = Date.parse(input.observedAt);
   if (!Number.isFinite(observedAt)) {
@@ -129,6 +142,7 @@ export function buildR2OrphanManifest(input: {
       ...input.liveBackupNames,
       ...input.metadataBackupNames,
       ...heldBackupNames,
+      ...input.chainProtection.protectedBackupNames,
     ]),
   ].toSorted();
   const protectedSet = new Set(protectedBackupNames);
@@ -144,6 +158,12 @@ export function buildR2OrphanManifest(input: {
     .map((group) => ({
       prefix: `${R2_ZFS_PREFIX}${group.backupName}/`,
       ...group,
+      objectInventory: input.zfsObjects
+        .filter((object) =>
+          object.key.startsWith(`${R2_ZFS_PREFIX}${group.backupName}/`),
+        )
+        .map((object) => ({ ...object, etag: object.etag ?? null }))
+        .toSorted((a, b) => a.key.localeCompare(b.key)),
     }))
     .toSorted((left, right) => left.prefix.localeCompare(right.prefix));
   if (
@@ -158,13 +178,14 @@ export function buildR2OrphanManifest(input: {
   }
 
   return R2OrphanManifestSchema.parse({
-    contractVersion: 2,
+    contractVersion: 3,
     observedAt: new Date(observedAt).toISOString(),
     minimumAgeHours: R2_ORPHAN_MINIMUM_AGE_HOURS,
     storage: input.storage,
     heldBackupNames,
     onlyBackupName: input.onlyBackupName ?? null,
     protectedBackupNames,
+    incompleteChainRoots: input.chainProtection.incompleteRoots,
     candidates,
   });
 }
@@ -173,6 +194,14 @@ export function assertManifestRevalidated(
   approved: R2OrphanManifest,
   current: R2OrphanManifest,
 ): void {
+  if (
+    approved.incompleteChainRoots.length > 0 ||
+    current.incompleteChainRoots.length > 0
+  ) {
+    throw new Error(
+      "R2 cleanup blocked: retained ZFS backup chains are incomplete; prove recovery and retire affected recovery points before deletion",
+    );
+  }
   if (JSON.stringify(approved) !== JSON.stringify(current)) {
     throw new Error(
       "R2 cleanup manifest no longer matches current Velero and object state; run inspect again",

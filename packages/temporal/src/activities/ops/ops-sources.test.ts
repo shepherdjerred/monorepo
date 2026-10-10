@@ -60,11 +60,16 @@ describe("ops source collectors", () => {
       {
         listVeleroSchedules: () => Promise.resolve([]),
         listVeleroBackups: () => Promise.resolve([]),
+        listVeleroRestores: () => Promise.resolve([]),
+        listDeletingZfsVolumes: () => Promise.resolve([]),
       },
       new Date("2026-10-01T12:00:00Z"),
     );
     expect(queries.toSorted()).toEqual(
-      Object.values(MAINTENANCE_QUERIES).toSorted(),
+      [
+        ...Object.values(MAINTENANCE_QUERIES),
+        "max by (node,dataset_name) (zfs_dataset_referenced_bytes)",
+      ].toSorted(),
     );
     expect(result.signals).toHaveLength(3);
     expect(
@@ -143,6 +148,8 @@ describe("ops source collectors", () => {
           listVeleroSchedules: () => Promise.resolve([]),
           listVeleroBackups: () =>
             Promise.reject(new Error("inventory unavailable")),
+          listVeleroRestores: () => Promise.resolve([]),
+          listDeletingZfsVolumes: () => Promise.resolve([]),
         },
         new Date("2026-10-01T13:00:00Z"),
       ),

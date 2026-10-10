@@ -56,6 +56,11 @@ import { mapRenovate } from "./renovate.ts";
 import { mapTalos, parseMachineStatuses, parseServices } from "./talos.ts";
 import { mapTraces, TRACE_WINDOW_MS } from "./traces.ts";
 import { veleroOutcomes } from "./velero-outcomes.ts";
+import { veleroRestoreSignals } from "./storage/velero-restores.ts";
+import {
+  zfsDeletionSignals,
+  ZFS_DELETION_BYTES_QUERY,
+} from "./storage/zfs-deletion.ts";
 import { recordVeleroOutcomes } from "#observability/metrics-velero.ts";
 
 // Each collector does the I/O for one source, updates that source's gauges,
@@ -273,7 +278,10 @@ export async function collectMaintenance(
   prometheus: PrometheusClient,
   kubernetes: Pick<
     KubernetesClient,
-    "listVeleroSchedules" | "listVeleroBackups"
+    | "listVeleroSchedules"
+    | "listVeleroBackups"
+    | "listVeleroRestores"
+    | "listDeletingZfsVolumes"
   >,
   now: Date,
 ): Promise<OpsCollection> {
@@ -290,6 +298,9 @@ export async function collectMaintenance(
     memory,
     schedules,
     backupResources,
+    restoreResources,
+    deletingVolumes,
+    referencedBytes,
   ] = await Promise.all([
     run("certificates"),
     run("probeCertificates"),
@@ -301,6 +312,9 @@ export async function collectMaintenance(
     run("memory"),
     kubernetes.listVeleroSchedules(),
     kubernetes.listVeleroBackups(),
+    kubernetes.listVeleroRestores(),
+    kubernetes.listDeletingZfsVolumes(),
+    prometheus.query(ZFS_DELETION_BYTES_QUERY),
   ]);
   const collection = mapMaintenance(
     {
@@ -321,7 +335,14 @@ export async function collectMaintenance(
     veleroOutcomes(backupResources, schedules).observations,
     now,
   );
-  return collection;
+  return {
+    ...collection,
+    signals: [
+      ...collection.signals,
+      ...veleroRestoreSignals(restoreResources),
+      ...zfsDeletionSignals(deletingVolumes, referencedBytes, now),
+    ],
+  };
 }
 
 export async function collectAi(

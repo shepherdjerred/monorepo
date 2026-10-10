@@ -1,10 +1,25 @@
 import * as Sentry from "@sentry/bun";
 import { restoreGlitterCorpusSnapshotMetrics } from "#activities/glitter/corpus/glitter-corpus-snapshot.ts";
 import { restoreSeaweedFsBackupMetrics } from "#activities/homelab/seaweedfs-backup.ts";
+import { restoreVeleroR2AuditMetrics } from "#activities/homelab/velero-r2-audit-state.ts";
+
 import { formatError } from "#shared/format-error.ts";
 import { isTransientStorageError } from "#shared/infra/s3.ts";
 import { retryUntilReady } from "#shared/startup-retry.ts";
 import { log as jsonLog } from "#observability/log.ts";
+
+export async function restoreVeleroR2MetricsAfterWorkerStart(): Promise<void> {
+  try {
+    await restoreVeleroR2AuditMetrics();
+  } catch (error: unknown) {
+    Sentry.captureException(error);
+    jsonLog(
+      "error",
+      "R2 audit metric restoration failed; freshness alert remains active",
+      { error: formatError(error) },
+    );
+  }
+}
 
 export async function restoreGlitterCorpusMetricsAfterWorkerStart(
   isClosed: () => boolean,

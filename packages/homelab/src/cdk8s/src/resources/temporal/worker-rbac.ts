@@ -269,7 +269,7 @@ export function createTemporalWorkerMaintenanceRbac(
     rules: [
       {
         apiGroups: ["zfs.openebs.io"],
-        resources: ["zfsbackups"],
+        resources: ["zfsbackups", "zfsvolumes"],
         verbs: ["get", "list"],
       },
     ],

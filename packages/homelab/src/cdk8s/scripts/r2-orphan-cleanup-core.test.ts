@@ -31,6 +31,7 @@ describe("R2 orphan cleanup manifest", () => {
       },
     ];
     const manifest = buildR2OrphanManifest({
+      chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
       observedAt,
       storage,
       zfsObjects: objects,
@@ -47,6 +48,7 @@ describe("R2 orphan cleanup manifest", () => {
 
   test("excludes prefixes newer than the 24 hour safety fence", () => {
     const manifest = buildR2OrphanManifest({
+      chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
       observedAt,
       storage,
       zfsObjects: [
@@ -67,6 +69,7 @@ describe("R2 orphan cleanup manifest", () => {
   test("refuses to propose deletions when metadata is empty but ZFS data exists", () => {
     expect(() =>
       buildR2OrphanManifest({
+        chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
         observedAt,
         storage,
         zfsObjects: [
@@ -84,6 +87,7 @@ describe("R2 orphan cleanup manifest", () => {
 
   test("allows an empty observation when there is no ZFS data at all", () => {
     const manifest = buildR2OrphanManifest({
+      chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
       observedAt,
       storage,
       zfsObjects: [],
@@ -154,6 +158,7 @@ describe("R2 orphan cleanup manifest", () => {
       },
     ]);
     const manifest = buildR2OrphanManifest({
+      chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
       observedAt,
       storage,
       zfsObjects: [
@@ -172,6 +177,7 @@ describe("R2 orphan cleanup manifest", () => {
 
   test("rejects apply when object or protection state drifts", () => {
     const approved = buildR2OrphanManifest({
+      chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
       observedAt,
       storage,
       zfsObjects: [
@@ -185,6 +191,7 @@ describe("R2 orphan cleanup manifest", () => {
       metadataBackupNames: ["unrelated"],
     });
     const drifted = buildR2OrphanManifest({
+      chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
       observedAt,
       storage,
       zfsObjects: [
@@ -204,8 +211,70 @@ describe("R2 orphan cleanup manifest", () => {
 });
 
 describe("R2 orphan cleanup safety options", () => {
+  test("protects expired ancestors and refuses incomplete retained chains", () => {
+    const input = {
+      observedAt,
+      storage,
+      zfsObjects: [
+        {
+          key: "zfspv-incr/backups/expired-full/stream",
+          size: 10,
+          lastModified: "2026-08-09T00:00:00.000Z",
+          etag: '"original"',
+        },
+      ],
+      liveBackupNames: ["retained"],
+      metadataBackupNames: ["retained"],
+      chainProtection: {
+        protectedBackupNames: ["expired-full"],
+        incompleteRoots: [],
+      },
+    };
+    expect(buildR2OrphanManifest(input).candidates).toEqual([]);
+    const incomplete = buildR2OrphanManifest({
+      ...input,
+      chainProtection: {
+        protectedBackupNames: [],
+        incompleteRoots: ["retained"],
+      },
+    });
+    expect(() => assertManifestRevalidated(incomplete, incomplete)).toThrow(
+      "chains are incomplete",
+    );
+  });
+
+  test("rejects same-size object replacement using the reviewed ETag", () => {
+    const input = {
+      observedAt,
+      storage,
+      zfsObjects: [
+        {
+          key: "zfspv-incr/backups/orphan/stream",
+          size: 10,
+          lastModified: "2026-08-09T00:00:00.000Z",
+          etag: '"original"',
+        },
+      ],
+      liveBackupNames: [],
+      metadataBackupNames: ["retained"],
+      chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
+    };
+    const approved = buildR2OrphanManifest(input);
+    const replaced = buildR2OrphanManifest({
+      ...input,
+      zfsObjects: input.zfsObjects.map((object) => ({
+        ...object,
+        etag: '"replacement"',
+      })),
+    });
+    expect(() => assertManifestRevalidated(approved, replaced)).toThrow(
+      "no longer matches",
+    );
+  });
+
   test("holds an existing prefix out of the deletion manifest", () => {
     const manifest = buildR2OrphanManifest({
+      chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
       observedAt,
       storage,
       zfsObjects: [
@@ -235,6 +304,7 @@ describe("R2 orphan cleanup safety options", () => {
   test("rejects a missing hold", () => {
     expect(() =>
       buildR2OrphanManifest({
+        chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
         observedAt,
         storage,
         zfsObjects: [],
@@ -247,6 +317,7 @@ describe("R2 orphan cleanup safety options", () => {
 
   test("selects exactly one eligible backup prefix", () => {
     const manifest = buildR2OrphanManifest({
+      chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
       observedAt,
       storage,
       zfsObjects: [

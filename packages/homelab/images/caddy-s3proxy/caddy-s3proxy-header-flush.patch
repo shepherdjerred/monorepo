@@ -1,16 +1,8 @@
 diff --git a/s3proxy.go b/s3proxy.go
-index 7407b42..e351455 100644
+index 7407b42..53329ad 100644
 --- a/s3proxy.go
 +++ b/s3proxy.go
-@@ -329,27 +329,36 @@ func (p S3Proxy) writeResponseFromGetObject(w http.ResponseWriter, obj *s3.GetOb
- 		setStrHeader(w, key, value)
- 	}
- 
- 	// S3 supports byte-range requests and we forward Range headers through,
- 	// so advertise that to clients. Safari in particular refuses to play
- 	// video from origins that do not support ranges.
- 	w.Header().Set("Accept-Ranges", "bytes")
- 
+@@ -336,0 +337,7 @@ func (p S3Proxy) writeResponseFromGetObject(w http.ResponseWriter, obj *s3.GetOb
 +	// Preserve the authoritative object (or range) length before flushing.
 +	// io.Copy does not infer this for streamed bodies; Cloudflare needs it
 +	// to serve byte ranges for large archive downloads.
@@ -18,26 +10,26 @@ index 7407b42..e351455 100644
 +		w.Header().Set("Content-Length", strconv.FormatInt(*obj.ContentLength, 10))
 +	}
 +
- 	// When S3 served a partial object (Range request honored), the response
- 	// status must be 206 with the Content-Range header set above. This must
- 	// happen after all header writes: WriteHeader flushes the header set.
- 	if obj.ContentRange != nil && *obj.ContentRange != "" {
- 		w.WriteHeader(http.StatusPartialContent)
+@@ -341,0 +349,4 @@ func (p S3Proxy) writeResponseFromGetObject(w http.ResponseWriter, obj *s3.GetOb
 +	} else {
 +		// io.Copy may use ResponseWriter.ReadFrom, which bypasses Caddy's
 +		// deferred response-header flush unless the status is written first.
 +		w.WriteHeader(http.StatusOK)
- 	}
- 
- 	var err error
- 	if obj.Body != nil {
+@@ -346,2 +356,0 @@ func (p S3Proxy) writeResponseFromGetObject(w http.ResponseWriter, obj *s3.GetOb
 -		// io.Copy will set Content-Length
 -		w.Header().Del("Content-Length")
- 		_, err = io.Copy(w, obj.Body)
- 	}
- 
- 	return err
- }
- 
- func (p S3Proxy) serveErrorPage(w http.ResponseWriter, s3Key string) error {
- 	obj, err := p.getS3Object(p.Bucket, s3Key, nil)
+@@ -396,0 +406,4 @@ func (p S3Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhtt
++	if caddyErr.StatusCode == http.StatusNotModified {
++		w.WriteHeader(http.StatusNotModified)
++		return nil
++	}
+@@ -408,2 +421 @@ func (p S3Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhtt
+-	if caddyErr.StatusCode == http.StatusNotModified ||
+-		caddyErr.StatusCode == http.StatusPreconditionFailed ||
++	if caddyErr.StatusCode == http.StatusPreconditionFailed ||
+@@ -524 +536 @@ func (p S3Proxy) GetHandler(w http.ResponseWriter, r *http.Request, fullPath str
+-		} else {
++		} else if caddyErr.StatusCode != http.StatusNotModified {
+@@ -597 +609 @@ func (p S3Proxy) HeadHandler(w http.ResponseWriter, r *http.Request, fullPath st
+-		} else {
++		} else if caddyErr.StatusCode != http.StatusNotModified {
