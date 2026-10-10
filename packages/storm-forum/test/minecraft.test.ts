@@ -59,6 +59,40 @@ describe("Minecraft public status", () => {
     expect(MinecraftStatusSchema.parse(fixture)).toEqual(fixture);
   });
   it.each([
+    { character: "😀", count: 32, valid: true },
+    { character: "😀", count: 33, valid: true },
+    { character: "😀", count: 64, valid: true },
+    { character: "😀", count: 65, valid: false },
+    { character: "é", count: 64, valid: true },
+    { character: "é", count: 65, valid: false },
+  ])(
+    "validates $count copies of $character using Unicode code-point name length",
+    ({ character, count, valid }) => {
+      expect(
+        MinecraftStatusSchema.safeParse({
+          ...fixture,
+          players: { maximum: 20, names: [character.repeat(count)] },
+        }).success,
+      ).toBe(valid);
+    },
+  );
+  it.each([
+    { character: "é", length: 100 },
+    { character: "é", length: 101 },
+    { character: "😀", length: 100 },
+    { character: "😀", length: 101 },
+  ])(
+    "validates a $length-code-point $character version",
+    ({ character, length }) => {
+      expect(
+        MinecraftStatusSchema.safeParse({
+          ...fixture,
+          java: { ...fixture.java, version: character.repeat(length) },
+        }).success,
+      ).toBe(length <= 100);
+    },
+  );
+  it.each([
     { desired: 0, ready: 0, state: "sleeping" },
     { desired: 1, ready: 0, state: "starting" },
   ])("never probes a $state server", async ({ state, ...workload }) => {

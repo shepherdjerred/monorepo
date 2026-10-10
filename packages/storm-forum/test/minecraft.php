@@ -12,6 +12,7 @@ try {
     $check(!str_contains(json_encode($status), 'svc.cluster.local'), 'Public response exposed internal metadata');
     $stale = MinecraftStatus::read($path, 1181);
     $check($stale['state'] === 'unavailable' && $stale['players'] === null && $stale['java']['state'] === 'unavailable' && $stale['java']['version'] === '26.2', 'Stale cache exposed live players or lost verified versions');
+    $check(MinecraftStatus::read($path, 1180)['players'] === null, 'Roster survived its exact stale deadline');
     $check(MinecraftStatus::read($path, 900)['players'] === null, 'Future cache exposed players');
     file_put_contents($path, '{"state":"online","checkedAt":1000,"online":3,"maximum":20}');
     $check(MinecraftStatus::read($path, 1005)['players'] === null, 'Legacy unfiltered cache exposed a roster');
@@ -59,6 +60,20 @@ try {
     $numericNames = $source; $numericNames['players']['names'] = ['123', '0123', '1e3', '1000'];
     file_put_contents($path, json_encode($numericNames));
     $check(MinecraftStatus::read($path, 1005)['players']['names'] === $numericNames['players']['names'], 'Distinct numeric player names were collapsed');
+    foreach (['😀', 'é'] as $character) {
+        $name = str_repeat($character, 64);
+        $unicode = $source; $unicode['players']['names'] = [$name]; $unicode['java']['version'] = str_repeat($character, 100);
+        file_put_contents($path, json_encode($unicode));
+        $check(MinecraftStatus::read($path, 1005)['players']['names'] === [$name], 'Valid Unicode code-point length boundary was rejected');
+    }
+    foreach (['name', 'version'] as $field) {
+        $unicode = $source;
+        if ($field === 'name') { $unicode['players']['names'] = [str_repeat('😀', 65)]; } else { $unicode['java']['version'] = str_repeat('😀', 101); }
+        file_put_contents($path, json_encode($unicode));
+        $failed = false;
+        try { MinecraftStatus::read($path, 1005); } catch (RuntimeException $error) { $failed = true; }
+        $check($failed, 'Unicode code-point length overflow was accepted for ' . $field);
+    }
     unlink($path);
     $check(MinecraftStatus::read($path)['state'] === 'unavailable', 'Missing initial cache was not unavailable');
 } finally { if (is_file($path)) { unlink($path); } }

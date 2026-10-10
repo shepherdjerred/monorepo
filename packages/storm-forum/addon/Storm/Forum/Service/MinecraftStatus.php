@@ -35,7 +35,7 @@ final class MinecraftStatus
         self::checkKeys($data, ['schemaVersion', 'state', 'checkedAt', 'java', 'bedrock', 'players']);
         if (($data['schemaVersion'] ?? null) !== 2 || !in_array($data['state'] ?? null, self::STATES, true)
             || !is_int($data['checkedAt'] ?? null) || $data['checkedAt'] < 0) { throw new \RuntimeException('Invalid Minecraft status cache'); }
-        $fresh = $data['checkedAt'] <= $now + 5 && $now - $data['checkedAt'] <= $mc['staleAfterSeconds'];
+        $fresh = $data['checkedAt'] <= $now + 5 && $now - $data['checkedAt'] < $mc['staleAfterSeconds'];
         $result['checkedAt'] = $data['checkedAt'];
         $result['state'] = $fresh ? $data['state'] : 'unavailable';
         foreach (['java', 'bedrock'] as $edition) {
@@ -49,7 +49,7 @@ final class MinecraftStatus
                 throw new \RuntimeException('Minecraft edition is missing its verified version');
             }
             if ($hasVersion) {
-                if (!is_string($value['version']) || $value['version'] === '' || strlen($value['version']) > 100
+                if (!is_string($value['version']) || $value['version'] === '' || mb_strlen($value['version'], 'UTF-8') > 100
                     || !is_int($value['verifiedAt'] ?? null) || $value['verifiedAt'] < 0) { throw new \RuntimeException('Invalid Minecraft version'); }
                 $result[$edition]['version'] = $value['version'];
                 $result[$edition]['verifiedAt'] = $value['verifiedAt'];

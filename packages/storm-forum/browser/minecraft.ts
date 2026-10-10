@@ -15,8 +15,9 @@ if (card) {
   let checkedAt = Number(card.dataset["checkedAt"]);
   const staleAfter = Number(card.dataset["staleAfter"]);
   let pending = false;
+  let expirationTimer: number | undefined;
   function expire() {
-    if (checkedAt > 0 && Date.now() / 1000 - checkedAt <= staleAfter) return;
+    if (checkedAt > 0 && Date.now() < (checkedAt + staleAfter) * 1000) return;
     const badge = live?.querySelector<HTMLElement>("[data-minecraft-state]");
     if (badge) {
       badge.textContent = "Status unavailable";
@@ -38,6 +39,12 @@ if (card) {
     if (instruction)
       instruction.textContent =
         "The status check is unavailable. You can still try joining.";
+  }
+  function scheduleExpiration() {
+    clearTimeout(expirationTimer);
+    const remaining = (checkedAt + staleAfter) * 1000 - Date.now();
+    if (checkedAt <= 0 || remaining <= 0) expire();
+    else expirationTimer = setTimeout(expire, remaining);
   }
   async function refresh() {
     if (pending || document.hidden) return;
@@ -62,15 +69,18 @@ if (card) {
       );
     } finally {
       pending = false;
-      expire();
+      scheduleExpiration();
     }
   }
   document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) void refresh();
+    if (!document.hidden) {
+      expire();
+      void refresh();
+    }
   });
   setInterval(() => {
     void refresh();
   }, 60_000);
-  expire();
+  scheduleExpiration();
   void refresh();
 }
