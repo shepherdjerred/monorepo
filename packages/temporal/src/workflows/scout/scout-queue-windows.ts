@@ -1,3 +1,4 @@
+import { rethrowReportDeliveryFailure } from "#workflows/scout/report-delivery.ts";
 import { proxyActivities } from "@temporalio/workflow";
 import type {
   ScoutQueueWindowsActivities,
@@ -270,6 +271,7 @@ export async function runScoutQueueWindowsWatch(): Promise<ScoutQueueWindowsResu
     await deliverActivityReport(scoutQueueWindowsReport(startedAt, result));
     return result;
   } catch (error) {
+    rethrowReportDeliveryFailure(error);
     await deliverActivityReport(failureReport(startedAt, error));
     throw error;
   }

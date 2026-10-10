@@ -329,7 +329,10 @@ pending sends use their existing delivery lease and accepted receipt. The latest
 completed observation also advances on a skip, so a delayed older condition
 cannot replace a newer quiet recovery. Report delivery proxies use the shared
 lease-aware retry policy so an immediate failure cannot exhaust retries
-inside the claim's takeover window. Skips have explicit records and no Postal
+inside the claim's takeover window. An exhausted delivery fails the Workflow
+without creating a synthetic collection-failure report; actual collector
+failures retain their failure report. A patch marker preserves older recorded
+failure paths during replay. Skips have explicit records and no Postal
 message ID or acceptance time. The freshness monitor counts completed skips
 separately from mail acceptance, using the report's original observation time.
 Each family has a conditional latest-heartbeat index beside its immutable

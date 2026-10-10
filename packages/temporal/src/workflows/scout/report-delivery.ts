@@ -1,4 +1,5 @@
-import { proxyActivities } from "@temporalio/workflow";
+import { ActivityFailure } from "@temporalio/common";
+import { patched, proxyActivities } from "@temporalio/workflow";
 import type {
   ReportDeliveryActivities,
   ReportDeliveryResult,
@@ -27,4 +28,15 @@ export async function deliverReportWorkflow(
   report: ReportEnvelopeV1,
 ): Promise<ReportDeliveryResult> {
   return reportDeliveryActivities.deliverReport(report);
+}
+
+/** Keep a delivery outage from becoming a second, false collection report. */
+export function rethrowReportDeliveryFailure(error: unknown): void {
+  if (
+    error instanceof ActivityFailure &&
+    error.activityType === "deliverActivityReport" &&
+    patched("report-delivery-error-is-not-collection-failure-v1")
+  ) {
+    throw error;
+  }
 }
