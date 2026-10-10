@@ -44,6 +44,7 @@ export type FakeBrainMode = "ok" | "down";
 
 type BrainState = {
   mode: FakeBrainMode;
+  analytics: unknown[];
   /** Players the Flipt double answers `the-storm-rwf-enabled: false` for. */
   rwfDenied: Set<string>;
 };
@@ -170,6 +171,7 @@ function expansionEvaluation(
         "the-storm-identity-enabled",
         "the-storm-letters-enabled",
         "the-storm-ip-enforcement-enabled",
+        "the-storm-analytics-enabled",
       ]),
       entity_id: z.uuid(),
       context: z.strictObject({}),
@@ -244,12 +246,28 @@ async function evaluateFlag(
 }
 
 export function startFakeBrain(token: string, port = 0): FakeBrain {
-  const state: BrainState = { mode: "ok", rwfDenied: new Set() };
+  const state: BrainState = { mode: "ok", rwfDenied: new Set(), analytics: [] };
   const server = Bun.serve({
     hostname: "0.0.0.0",
     port,
     fetch: async (request) => {
       const url = new URL(request.url);
+      if (url.pathname === "/batch/" && request.method === "POST") {
+        const batch = z
+          .strictObject({
+            api_key: z.literal("phc_test"),
+            batch: z.array(z.record(z.string(), z.unknown())),
+          })
+          .parse(await request.json());
+        state.analytics.push(...batch.batch);
+        return Response.json({ status: 1 });
+      }
+      if (
+        url.pathname === "/v1/__control/analytics" &&
+        request.method === "GET"
+      ) {
+        return Response.json(state.analytics);
+      }
       if (
         url.pathname === "/evaluate/v1/boolean" &&
         request.method === "POST"

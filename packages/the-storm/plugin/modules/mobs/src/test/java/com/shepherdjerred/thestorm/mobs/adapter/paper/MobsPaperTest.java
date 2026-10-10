@@ -147,7 +147,8 @@ final class MobsPaperTest {
                   directory,
                   InstantSource.system(),
                   random,
-                  plugin.getComponentLogger());
+                  plugin.getComponentLogger(),
+                  com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
           var config = ConfigFiles.load(directory.resolve("mobs.yml"), MobsConfig.class);
           started =
               MobsPaper.start(
@@ -464,7 +465,8 @@ final class MobsPaperTest {
             directory,
             InstantSource.system(),
             FixedRandom.highest(),
-            plugin.getComponentLogger());
+            plugin.getComponentLogger(),
+            com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
 
     assertThatThrownBy(() -> new MobsModule().enable(context)).hasMessageContaining("wardenn");
   }

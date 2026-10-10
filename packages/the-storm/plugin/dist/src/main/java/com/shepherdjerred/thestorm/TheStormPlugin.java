@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm;
 
+import com.shepherdjerred.thestorm.core.analytics.AnalyticsRuntime;
 import com.shepherdjerred.thestorm.core.compute.ComputePool;
 import com.shepherdjerred.thestorm.core.compute.PlatformComputePool;
 import com.shepherdjerred.thestorm.core.config.Problem;
@@ -36,6 +37,7 @@ public final class TheStormPlugin extends JavaPlugin {
   private final Services services = new Services();
   private @Nullable StormDatabase database;
   private @Nullable ComputePool compute;
+  private @Nullable AnalyticsPaper analytics;
   private com.shepherdjerred.thestorm.core.expansion.@Nullable ManagedGameplay gameplay;
 
   /**
@@ -85,6 +87,7 @@ public final class TheStormPlugin extends JavaPlugin {
         .registerEvents(
             new PlayerDirectoryListener(players, InstantSource.system(), getComponentLogger()),
             this);
+    var productAnalytics = new AnalyticsRuntime(db, InstantSource.system(), getComponentLogger());
     var context =
         new ModuleContext(
             this,
@@ -96,7 +99,10 @@ public final class TheStormPlugin extends JavaPlugin {
             getDataPath(),
             InstantSource.system(),
             RandomGenerator.getDefault(),
-            getComponentLogger());
+            getComponentLogger(),
+            productAnalytics);
+    var analyticsPaper = new AnalyticsPaper(context, productAnalytics);
+    analytics = analyticsPaper;
     var rollout =
         com.shepherdjerred.thestorm.core.expansion.ManagedGameplay.remote(
             requiredEnvironment("FLIPT_URL"), requiredEnvironment("FLIPT_ENVIRONMENT"));
@@ -110,6 +116,7 @@ public final class TheStormPlugin extends JavaPlugin {
       module.enable(context);
       enabled.add(module);
     }
+    analyticsPaper.start(rollout);
     getComponentLogger().info("Enabled modules: {}", ModuleRegistry.ids(selected));
   }
 
@@ -119,6 +126,10 @@ public final class TheStormPlugin extends JavaPlugin {
       module.disable();
     }
     enabled.clear();
+    if (analytics != null) {
+      analytics.close();
+      analytics = null;
+    }
     services.clear();
     if (gameplay != null) {
       gameplay.close();

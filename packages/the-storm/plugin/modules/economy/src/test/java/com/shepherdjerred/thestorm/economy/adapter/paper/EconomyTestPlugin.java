@@ -61,7 +61,8 @@ public class EconomyTestPlugin extends JavaPlugin {
             directory,
             InstantSource.system(),
             RandomGenerator.getDefault(),
-            getComponentLogger());
+            getComponentLogger(),
+            com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
     new EconomyModule().enable(context);
   }
 

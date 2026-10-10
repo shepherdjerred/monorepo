@@ -12,6 +12,7 @@ import com.shepherdjerred.thestorm.companions.app.CompanionStore;
 import com.shepherdjerred.thestorm.companions.app.ConversationService;
 import com.shepherdjerred.thestorm.companions.domain.Availability;
 import com.shepherdjerred.thestorm.companions.domain.CompanionsConfig;
+import com.shepherdjerred.thestorm.core.analytics.ProductAnalytics;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.players.Humans;
 import com.shepherdjerred.thestorm.core.protection.Protection;
@@ -482,6 +483,9 @@ public final class CompanionsPaper implements Listener, AutoCloseable {
             > 1024) return;
     chatting.add(identity.id());
     nextChat.put(identity.id(), context.time().instant().plusSeconds(30));
+    context
+        .analytics()
+        .interaction(human.getUniqueId(), ProductAnalytics.Action.COMPANION_REQUESTED);
     var facts =
         "Health="
             + player.getHealth()
@@ -514,6 +518,9 @@ public final class CompanionsPaper implements Listener, AutoCloseable {
                       .services()
                       .require(GlobalChat.class)
                       .broadcastExternal("NPC", identity.name(), reply.get());
+                  context
+                      .analytics()
+                      .interaction(human.getUniqueId(), ProductAnalytics.Action.COMPANION_REPLIED);
                 },
                 context.scheduler().mainThread());
   }

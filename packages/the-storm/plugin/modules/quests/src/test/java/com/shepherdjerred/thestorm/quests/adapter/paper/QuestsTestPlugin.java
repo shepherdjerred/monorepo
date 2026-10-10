@@ -157,7 +157,8 @@ public class QuestsTestPlugin extends JavaPlugin {
             data,
             InstantSource.system(),
             RandomGenerator.getDefault(),
-            getComponentLogger());
+            getComponentLogger(),
+            com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
     var paper =
         new QuestsPaper(
             context,
@@ -194,7 +195,8 @@ public class QuestsTestPlugin extends JavaPlugin {
                 context.scheduler().mainThread(),
                 InstantSource.system(),
                 RandomGenerator.getDefault(),
-                getComponentLogger()));
+                getComponentLogger(),
+                com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled()));
     service = built;
     tick = paper.install(built, (player, view) -> journals.add(view));
   }

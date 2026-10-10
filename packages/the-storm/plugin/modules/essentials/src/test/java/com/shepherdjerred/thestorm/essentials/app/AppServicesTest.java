@@ -211,7 +211,11 @@ final class AppServicesTest {
 
   @Test
   void afkTrackingFollowsActivityAndTimeouts() {
-    var afk = new AfkTracker(clock, Duration.ofMinutes(5));
+    var afk =
+        new AfkTracker(
+            clock,
+            Duration.ofMinutes(5),
+            com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
     afk.joined(ALICE);
     afk.joined(BOB);
 
@@ -229,7 +233,11 @@ final class AppServicesTest {
 
   @Test
   void afkToggleAndLeaving() {
-    var afk = new AfkTracker(clock, Duration.ofMinutes(5));
+    var afk =
+        new AfkTracker(
+            clock,
+            Duration.ofMinutes(5),
+            com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
     afk.joined(ALICE);
 
     assertThat(afk.toggle(ALICE)).isTrue();

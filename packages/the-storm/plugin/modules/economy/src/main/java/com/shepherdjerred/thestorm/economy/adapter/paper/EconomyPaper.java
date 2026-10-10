@@ -25,7 +25,10 @@ public final class EconomyPaper {
             format,
             config.baltopSize(),
             new EconomyCommands.Paper(
-                server, replies, context.services().require(PlayerDirectory.class)));
+                server,
+                replies,
+                context.services().require(PlayerDirectory.class),
+                context.analytics()));
     context
         .lifecycle()
         .registerEventHandler(

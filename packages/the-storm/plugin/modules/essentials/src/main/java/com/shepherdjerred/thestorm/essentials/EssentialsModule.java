@@ -56,7 +56,7 @@ public final class EssentialsModule implements StormModule {
     var sealed = context.services().require(SealedWorlds.class);
 
     var guards = new GuardRegistry();
-    var afk = new AfkTracker(context.time(), config.afkTimeout());
+    var afk = new AfkTracker(context.time(), config.afkTimeout(), context.analytics());
     context.services().provide(TeleportGuards.class, guards);
     context.services().provide(AfkStatus.class, afk);
 

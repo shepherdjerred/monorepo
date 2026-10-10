@@ -79,7 +79,9 @@ public final class SpellsPaper {
             context.services().require(SealedWorlds.class),
             changes);
     var items = new SpellItems(context.plugin(), config);
-    var flow = new CastFlow(Spells.create(config.spells(), tools), config.spells(), tools);
+    var flow =
+        new CastFlow(
+            Spells.create(config.spells(), tools), config.spells(), tools, context.analytics());
     var binder = new Binder(items, state, config.spells(), new Binder.Storage(store, async));
     var plugins = server.getPluginManager();
     plugins.registerEvents(new CastListener(items, state, flow, say), context.plugin());

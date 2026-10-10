@@ -61,7 +61,8 @@ final class TownsModuleTest {
         directory,
         InstantSource.system(),
         RandomGenerator.getDefault(),
-        plugin.getComponentLogger());
+        plugin.getComponentLogger(),
+        com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
   }
 
   @Test

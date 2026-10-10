@@ -1,10 +1,12 @@
 package com.shepherdjerred.thestorm.shops.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.analytics.ProductAnalytics;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.shops.app.ChestShops;
 import com.shepherdjerred.thestorm.shops.app.Customer;
 import com.shepherdjerred.thestorm.shops.app.Holdings;
 import com.shepherdjerred.thestorm.shops.app.ShopTexts;
+import com.shepherdjerred.thestorm.shops.app.TradeOutcome;
 import com.shepherdjerred.thestorm.shops.domain.config.ChestShopSettings;
 import com.shepherdjerred.thestorm.shops.domain.shop.CreationProblem;
 import com.shepherdjerred.thestorm.shops.domain.shop.ItemFingerprint;
@@ -37,6 +39,7 @@ final class ShopClickListener implements Listener {
   private final ShopBlocks blocks;
   private final ItemTemplates templates;
   private final Replies replies;
+  private final ProductAnalytics analytics;
 
   ShopClickListener(ChestShopSettings settings, ChestShops shops, PaperTools tools) {
     this.settings = settings;
@@ -44,6 +47,7 @@ final class ShopClickListener implements Listener {
     this.blocks = tools.blocks();
     this.templates = tools.templates();
     this.replies = tools.replies();
+    this.analytics = tools.analytics();
   }
 
   @EventHandler(priority = EventPriority.MONITOR)
@@ -155,12 +159,19 @@ final class ShopClickListener implements Listener {
     replies.whenDone(
         shops.trade(visit),
         player.getUniqueId(),
-        outcome ->
-            replies.outcome(
-                player,
-                outcome,
-                name(item),
-                paid -> replies.texts().completed(direction, goods, paid, shopName(shop))));
+        outcome -> {
+          replies.outcome(
+              player,
+              outcome,
+              name(item),
+              paid -> replies.texts().completed(direction, goods, paid, shopName(shop)));
+          if (outcome instanceof TradeOutcome.Completed)
+            analytics.interaction(
+                player.getUniqueId(),
+                direction == Direction.BUY
+                    ? ProductAnalytics.Action.SHOP_BOUGHT
+                    : ProductAnalytics.Action.SHOP_SOLD);
+        });
   }
 
   private Holdings containerHoldings(SignShop shop, ItemFingerprint item) {
