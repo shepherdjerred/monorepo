@@ -27,6 +27,11 @@ Runtime files live under
 `~/Library/Application Support/justin-principal-engineer`. The configuration
 contract is in `config.example.json`.
 
+New task checkouts live in `tasks.noindex` so macOS Spotlight excludes their
+source files and build output. Existing tasks retain their saved checkout paths
+under `tasks`; the runner does not move active checkouts. Keep that legacy
+directory in Spotlight Search Privacy while those tasks remain in use.
+
 Configure Woodpecker's `apiToken` as an `op://` reference and its `baseUrl` and
 numeric `repoId` for the intended CI repository. Dev and launchd pass all three
 connection details to PR health; missing connection details fail configuration

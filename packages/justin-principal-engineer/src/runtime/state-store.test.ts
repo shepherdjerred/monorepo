@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
@@ -6,6 +6,7 @@ import { afterEach, describe, expect, test } from "vitest";
 import { TaskStateSchema, type TaskState } from "#src/domain/schemas.ts";
 import { runtimePaths } from "#src/runtime/paths.ts";
 import { StateStore } from "#src/runtime/state-store.ts";
+import { createTaskState } from "#src/host/task-state.ts";
 
 const temporaryDirectories: string[] = [];
 
@@ -65,6 +66,36 @@ describe("StateStore", () => {
     const subject = await store();
     await subject.save(state());
     expect(await subject.list()).toEqual([state()]);
+  });
+
+  test("creates an excluded task root while preserving legacy checkouts", async () => {
+    const home = await mkdtemp(path.join(os.tmpdir(), "jpe-state-"));
+    temporaryDirectories.push(home);
+    const paths = runtimePaths(home);
+    const legacy = {
+      ...state(),
+      checkoutPath: path.join(paths.root, "tasks", "sj-1"),
+    };
+    await mkdir(legacy.checkoutPath, { recursive: true });
+    const sentinel = path.join(legacy.checkoutPath, "work-in-progress.txt");
+    await Bun.write(sentinel, "unfinished work");
+    const subject = new StateStore(paths);
+    await subject.save(legacy);
+
+    const next = createTaskState({
+      issue: { ...legacy.issue, id: "next-issue", identifier: "SJ-2" },
+      provider: "codex",
+      paths,
+    });
+    await subject.save(next);
+
+    expect(next.checkoutPath).toBe(
+      path.join(paths.root, "tasks.noindex", "sj-2"),
+    );
+    const taskRoot = await stat(path.dirname(next.checkoutPath));
+    expect(taskRoot.isDirectory()).toBe(true);
+    expect(await subject.list()).toEqual([legacy, next]);
+    expect(await Bun.file(sentinel).text()).toBe("unfinished work");
   });
 
   test("allows only one concurrent reconciler", async () => {
