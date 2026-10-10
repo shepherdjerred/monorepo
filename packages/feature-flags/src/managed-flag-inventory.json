@@ -2474,6 +2474,30 @@
       "key": "prod",
       "overrides": [
         {
+          "key": "woodpecker-source-cache-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "woodpecker-maintenance-lanes-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "ci-maintenance-dispatch-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
           "key": "storm-forum-registration-enabled",
           "type": "boolean",
           "default": false,
