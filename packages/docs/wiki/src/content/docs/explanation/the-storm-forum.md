@@ -63,8 +63,12 @@ settings from exposing the test installation.
 
 ## Status preserves Minecraft hibernation
 
-The forum reads the server's desired state and pings its backend directly.
+The forum reads the server's desired state and queries its backend directly.
 Contacting the player-facing router would wake the server just to refresh a widget.
 The [status activity](https://github.com/shepherdjerred/monorepo/blob/f79b0cdaf5e1ec8e08ecd71fecc1e390f3493ddf/packages/storm-forum/src/minecraft.ts)
 distinguishes sleeping, starting, online, and unavailable states. Its public cache
-contains player counts without player names.
+contains only public player names and counts. The Minecraft plugin removes
+vanished staff and NPCs before answering. A shared response identifier prevents
+older, unfiltered server releases from supplying the roster. Java and Bedrock
+checks remain independent, so a bridge outage cannot hide a working Java server.
+Browser refreshes read the cache and cannot wake the game server.

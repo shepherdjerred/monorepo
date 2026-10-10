@@ -12,15 +12,16 @@
     "./contracts": "./src/contracts.ts"
   },
   "scripts": {
-    "build": "bun --no-install build src/cli.ts --outdir dist --target bun --packages external",
+    "build": "bun --no-install build src/cli.ts --outdir dist --target bun --packages external && bun --no-install build browser/minecraft.ts --target browser --minify --outfile dist/minecraft.js",
     "lint": "bunx eslint --cache . --max-warnings=0",
-    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit -p browser/tsconfig.json",
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run test",
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
     "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts",
     "start": "bun src/cli.ts"
   },
   "dependencies": {
+    "@shepherdjerred/the-storm": "workspace:*",
     "@shepherdjerred/storm-theme": "workspace:*",
     "@shepherdjerred/config": "workspace:*",
     "@shepherdjerred/feature-flags": "workspace:*",

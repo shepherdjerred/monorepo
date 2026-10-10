@@ -107,6 +107,23 @@ function forumEgress() {
     {
       to: [
         {
+          ...namespace("minecraft-tsmc"),
+          podSelector: {
+            matchLabels: {
+              "app.kubernetes.io/instance": "minecraft-tsmc",
+              "app.kubernetes.io/name": "minecraft",
+            },
+          },
+        },
+      ],
+      ports: [25_565, 19_132].map((number) => ({
+        port: IntOrString.fromNumber(number),
+        protocol: "UDP",
+      })),
+    },
+    {
+      to: [
+        {
           podSelector: {
             matchLabels: { app: "storm-forum", component: "database" },
           },
@@ -119,7 +136,6 @@ function forumEgress() {
       ["postal", 25],
       ["temporal", 7233],
       ["flipt", 8080],
-      ["minecraft-tsmc", 25_565],
     ].map(([name, number]) => ({
       to: [namespace(String(name))],
       ports: [port(Number(number))],

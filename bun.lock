@@ -1917,6 +1917,7 @@
         "@shepherdjerred/config": "workspace:*",
         "@shepherdjerred/feature-flags": "workspace:*",
         "@shepherdjerred/storm-theme": "workspace:*",
+        "@shepherdjerred/the-storm": "workspace:*",
         "@temporalio/activity": "1.24.0",
         "@temporalio/worker": "1.24.0",
         "htmlparser2": "^12.0.0",
