@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.quests.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.analytics.ProductAnalytics;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.players.PlayerDirectory;
 import com.shepherdjerred.thestorm.core.protection.Protection;
@@ -89,7 +90,13 @@ public final class QuestsPaper {
         new QuestCommands(
             new QuestCommands.Wiring(
                 service,
-                journal,
+                (player, view) -> {
+                  journal.accept(player, view);
+                  context
+                      .analytics()
+                      .interaction(
+                          player.getUniqueId(), ProductAnalytics.Action.QUEST_JOURNAL_OPENED);
+                },
                 ports.players(),
                 context.scheduler().mainThread(),
                 context.logger(),

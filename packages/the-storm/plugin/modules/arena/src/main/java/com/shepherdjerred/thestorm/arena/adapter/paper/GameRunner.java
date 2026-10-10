@@ -139,10 +139,12 @@ final class GameRunner implements ArenaRunner {
         switch (game.on(event)) {
           case Result.Err<ArenaGame.Step, GameError>(var error) -> Optional.of(error);
           case Result.Ok<ArenaGame.Step, GameError>(var step) -> {
+            var previous = game;
             game = step.game();
             applying = true;
             try {
               step.effects().forEach(this::apply);
+              recordActivity(previous);
             } finally {
               applying = false;
             }
@@ -293,6 +295,28 @@ final class GameRunner implements ArenaRunner {
   @Override
   public void announce(Notice notice) {
     online(audience()).forEach(player -> services.texts().notice(player, notice));
+  }
+
+  private void recordActivity(ArenaGame previous) {
+    var activity = services.context().activity();
+    game.members().stream()
+        .filter(member -> !(member instanceof Member.Pending))
+        .filter(
+            member ->
+                previous
+                    .member(member.id())
+                    .filter(old -> !(old instanceof Member.Pending))
+                    .isEmpty())
+        .forEach(member -> activity.joined(member.id()));
+    if (!previous.phase().running() && game.phase().running()) {
+      activity.started(game.fighters().stream().map(Member::id).toList());
+    }
+    if (previous.phase().running() && !game.phase().running()) {
+      activity.completed(previous.members().stream().map(Member::id).toList());
+    }
+    previous.members().stream()
+        .filter(member -> game.member(member.id()).isEmpty())
+        .forEach(member -> activity.left(member.id()));
   }
 
   private void apply(GameEffect effect) {

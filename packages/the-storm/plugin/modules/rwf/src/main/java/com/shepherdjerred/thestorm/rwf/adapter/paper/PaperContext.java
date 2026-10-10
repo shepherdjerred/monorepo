@@ -23,6 +23,7 @@ final class PaperContext {
   private final RandomGenerator random;
   private final World world;
   private final BlockChanges blocks;
+  private final com.shepherdjerred.thestorm.core.analytics.GameActivity activity;
 
   /**
    * What the context is made of.
@@ -41,7 +42,8 @@ final class PaperContext {
       InstantSource time,
       RandomGenerator random,
       World world,
-      BlockChanges blocks) {}
+      BlockChanges blocks,
+      com.shepherdjerred.thestorm.core.analytics.ProductAnalytics analytics) {}
 
   PaperContext(Parts parts) {
     this.plugin = parts.plugin();
@@ -51,6 +53,10 @@ final class PaperContext {
     this.random = parts.random();
     this.world = parts.world();
     this.blocks = parts.blocks();
+    this.activity =
+        new com.shepherdjerred.thestorm.core.analytics.GameActivity(
+            parts.analytics(),
+            com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.Mode.SEARCH_AND_DESTROY);
   }
 
   Plugin plugin() {
@@ -88,6 +94,10 @@ final class PaperContext {
 
   BlockChanges blocks() {
     return blocks;
+  }
+
+  com.shepherdjerred.thestorm.core.analytics.GameActivity activity() {
+    return activity;
   }
 
   ComponentLogger logger() {

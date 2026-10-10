@@ -134,6 +134,8 @@ async function run(
     env: {
       FLIPT_URL: `http://host.docker.internal:${brain.port.toString()}`,
       FLIPT_ENVIRONMENT: "prod",
+      POSTHOG_API_HOST: `http://host.docker.internal:${brain.port.toString()}`,
+      POSTHOG_PROJECT_TOKEN: "phc_test",
       RWF_RECORDING_SALT: rwfRecordingSalt,
       DISCORD_BOT_TOKEN: "invalid-storm-fixture-token",
       DISCORD_CHANNEL_ID: "1",

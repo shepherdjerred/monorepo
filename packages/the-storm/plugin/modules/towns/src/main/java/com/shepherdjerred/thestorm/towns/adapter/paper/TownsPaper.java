@@ -198,7 +198,8 @@ public final class TownsPaper {
             new LockGuard.Parts(
                 loaded.locks().book(), new LockAccess(state), kinds, notices, state, sealed));
     var placers = new Placers(new NamespacedKey(plugin, "placed_by"));
-    var runtime = new TownCommands.Services(context.scheduler(), context.logger());
+    var runtime =
+        new TownCommands.Services(context.scheduler(), context.logger(), context.analytics());
     var memberCommands = new MemberCommands(members, towns, names, runtime);
     List<Listener> listeners =
         List.of(

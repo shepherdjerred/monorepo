@@ -148,7 +148,8 @@ public final class ShopsPaper {
                 settings.buyClick())),
         plugin);
     events.registerEvents(
-        new ShopClickListener(settings, chestShops, new PaperTools(blocks, templates, replies)),
+        new ShopClickListener(
+            settings, chestShops, new PaperTools(blocks, templates, replies, context.analytics())),
         plugin);
     events.registerEvents(new ShopGuardListener(locks, blocks, chestShops), plugin);
     events.registerEvents(notices, plugin);
@@ -164,7 +165,10 @@ public final class ShopsPaper {
         new CatalogTrades(state.catalogs(), wiring, usage, config.catalogs().maxLots());
     var dialogs =
         new DialogServerShops(
-            catalogTrades, replies, context.scheduler(), config.catalogs().maxDistance());
+            catalogTrades,
+            replies,
+            new DialogServerShops.Controls(context.scheduler(), context.analytics()),
+            config.catalogs().maxDistance());
     var serverShops = new ReadyServerShops(dialogs, state.registry());
     var command = new ShopCommand(serverShops, state.registry(), settings.limits());
     context

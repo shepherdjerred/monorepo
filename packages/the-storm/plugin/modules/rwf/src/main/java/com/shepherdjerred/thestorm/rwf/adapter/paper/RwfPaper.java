@@ -115,7 +115,8 @@ public final class RwfPaper {
                 world,
                 module
                     .services()
-                    .require(com.shepherdjerred.thestorm.core.world.BlockChanges.class)));
+                    .require(com.shepherdjerred.thestorm.core.world.BlockChanges.class),
+                module.analytics()));
     var keys = new Keys(module.plugin());
     var kits = KitFactory.build(keys, content.kits());
     var snapshots = new Snapshots(context, app.snapshots());
@@ -157,6 +158,8 @@ public final class RwfPaper {
             new PaperCombatantActions.Parts(runner, tracker, recordings, keys, app.hooks()));
     var watchers = new Watchers(runner, snapshots, boards, context);
     var _ = runner.subscribe(watchers::onTransition);
+    var metrics = new MatchAnalytics(context.activity());
+    var _ = runner.subscribe(metrics::accept);
     var guard = new ItemGuard(runner, keys);
     List<Listener> listeners =
         List.of(

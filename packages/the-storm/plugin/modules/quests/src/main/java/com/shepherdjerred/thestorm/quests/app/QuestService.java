@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.quests.app;
 
+import com.shepherdjerred.thestorm.core.analytics.ProductAnalytics;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.quests.app.QuestStore.PendingWorld;
 import com.shepherdjerred.thestorm.quests.app.QuestStore.Status;
@@ -78,7 +79,8 @@ public final class QuestService implements QuestHooks, QuestProgress {
       Executor mainThread,
       InstantSource time,
       RandomGenerator random,
-      ComponentLogger logger) {}
+      ComponentLogger logger,
+      ProductAnalytics analytics) {}
 
   private final Wiring wiring;
   private final Notices notices;
@@ -204,7 +206,8 @@ public final class QuestService implements QuestHooks, QuestProgress {
 
   private record DeferredNotices(Outcome outcome, Catalog catalog) {}
 
-  private record PendingCommit(Outcome outcome, List<PendingWorld> pending, Catalog catalog) {}
+  private record PendingCommit(
+      Outcome outcome, List<PendingWorld> pending, Catalog catalog, boolean measured) {}
 
   private static Set<UUID> handins(List<PendingWorld> pending) {
     var ids = new HashSet<UUID>();
@@ -630,7 +633,7 @@ public final class QuestService implements QuestHooks, QuestProgress {
     }
     return switch (step.apply(state, context.get())) {
       case Result.Ok<Outcome, Refusal>(var outcome) -> {
-        commit(player, state, outcome, context.get().catalog());
+        commit(player, state, new Save(outcome, context.get().catalog(), null, false));
         yield Result.ok(done + quest);
       }
       case Result.Err<Outcome, Refusal>(var refusal) -> Result.err(refusal(refusal));
@@ -836,7 +839,12 @@ public final class QuestService implements QuestHooks, QuestProgress {
     commit(player, before, new Save(outcome, catalog, null));
   }
 
-  private record Save(Outcome outcome, Catalog catalog, @Nullable Runnable afterSave) {}
+  private record Save(
+      Outcome outcome, Catalog catalog, @Nullable Runnable afterSave, boolean measured) {
+    Save(Outcome outcome, Catalog catalog, @Nullable Runnable afterSave) {
+      this(outcome, catalog, afterSave, true);
+    }
+  }
 
   private void commit(UUID player, PlayerQuests before, Save save) {
     var outcome = save.outcome();
@@ -856,6 +864,7 @@ public final class QuestService implements QuestHooks, QuestProgress {
                         effect.action()))
             .toList();
     if (after.equals(before) && pending.isEmpty()) {
+      if (save.measured()) measure(player, outcome);
       effects(player, outcome, catalog);
       present(player, after);
       if (afterSave != null) {
@@ -875,7 +884,10 @@ public final class QuestService implements QuestHooks, QuestProgress {
                   var persisted = false;
                   try {
                     persisted = failure == null;
-                    saved(player, new PendingCommit(outcome, pending, catalog), failure);
+                    saved(
+                        player,
+                        new PendingCommit(outcome, pending, catalog, save.measured()),
+                        failure);
                   } finally {
                     saving.remove(player, barrier);
                     if (persisted && afterSave != null) {
@@ -908,6 +920,7 @@ public final class QuestService implements QuestHooks, QuestProgress {
     if (sessions.containsKey(player)) {
       sessions.put(player, committed.outcome().state());
     }
+    if (committed.measured()) measure(player, committed.outcome());
     if (handoverPending(player)) {
       deferredNotices.put(player, new DeferredNotices(committed.outcome(), committed.catalog()));
     } else {
@@ -916,6 +929,20 @@ public final class QuestService implements QuestHooks, QuestProgress {
     deliverPending(player);
     if (!handoverPending(player)) {
       present(player, committed.outcome().state());
+    }
+  }
+
+  private void measure(UUID player, Outcome outcome) {
+    for (var effect : outcome.effects()) {
+      switch (effect) {
+        case Effect.Accepted _ ->
+            wiring.analytics().interaction(player, ProductAnalytics.Action.QUEST_STARTED);
+        case Effect.Completed _ ->
+            wiring.analytics().interaction(player, ProductAnalytics.Action.QUEST_COMPLETED);
+        default -> {
+          /* Progress ticks and automatic rewards are not product interactions. */
+        }
+      }
     }
   }
 

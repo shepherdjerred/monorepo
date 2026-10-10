@@ -158,7 +158,8 @@ public final class RwfBotsHarness implements AutoCloseable {
                     directory,
                     clock,
                     RandomGenerator.of("L64X128MixRandom"),
-                    plugin.getComponentLogger()));
+                    plugin.getComponentLogger(),
+                    com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled()));
     try {
       MockBukkit.loadWith(
           HarnessPlugin.class,

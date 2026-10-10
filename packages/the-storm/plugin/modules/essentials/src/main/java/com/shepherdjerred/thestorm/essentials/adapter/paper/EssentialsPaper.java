@@ -83,7 +83,9 @@ public final class EssentialsPaper {
    */
   public static EssentialsPaper start(ModuleContext context, EssentialsConfig config, App app) {
     var server = context.plugin().getServer();
-    var runtime = new PaperRuntime(server, context.scheduler(), context.time(), context.logger());
+    var runtime =
+        new PaperRuntime(
+            server, context.scheduler(), context.time(), context.logger(), context.analytics());
     var spawnPreparation = SpawnPreparation.start(context, config);
     var kitItems = KitItems.build(config.kits());
     context

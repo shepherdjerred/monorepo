@@ -209,6 +209,12 @@ class DatabaseRestoreTest(unittest.TestCase):
         player = "00000000-0000-0000-0000-000000000001"
         with closing(sqlite3.connect(original)) as connection:
             connection.execute("INSERT INTO core_player VALUES (?, 'Alice', 123)", (player,))
+            connection.execute("INSERT INTO core_analytics_player VALUES (?, 'prod', 123)", (player,))
+            connection.execute(
+                "INSERT INTO core_analytics_session VALUES ('session', 'prod', ?, 'Alice', 123, 124, 1, 1, 1)",
+                (player,),
+            )
+            connection.execute("INSERT INTO core_analytics_outbox VALUES ('event', 'prod', 123, '{}')")
             connection.execute("INSERT INTO economy_player_seen VALUES (?, 100, 'Alice', 123)", (player,))
             connection.execute("INSERT INTO economy_account VALUES ('player', ?, 500)", (player,))
             connection.execute(
@@ -223,6 +229,9 @@ class DatabaseRestoreTest(unittest.TestCase):
         self.assertEqual(before, hashlib.sha256(original.read_bytes()).hexdigest())
         with closing(sqlite3.connect(candidate)) as connection:
             self.assertEqual(connection.execute("SELECT * FROM core_player").fetchall(), [(player, "Alice", 123)])
+            self.assertEqual(connection.execute("SELECT * FROM core_analytics_player").fetchall(), [(player, "prod", 123)])
+            self.assertEqual(connection.execute("SELECT session_id FROM core_analytics_session").fetchall(), [("session",)])
+            self.assertEqual(connection.execute("SELECT event_id FROM core_analytics_outbox").fetchall(), [("event",)])
             for table in economy_tables:
                 self.assertEqual(connection.execute(f'SELECT * FROM "{table}"').fetchall(), [])
 

@@ -82,6 +82,7 @@ final class Watchers {
   private void stored(Player player, boolean stored) {
     var id = player.getUniqueId();
     saving.remove(id);
+    if (stored && watching.contains(id)) context.activity().joined(id);
     if (stored || !watching.remove(id)) {
       return;
     }
@@ -129,6 +130,7 @@ final class Watchers {
       var player = context.server().getPlayer(id);
       if (player == null) {
         watching.remove(id);
+        context.activity().left(id);
       } else {
         restore(player);
       }
@@ -137,6 +139,7 @@ final class Watchers {
 
   private void restore(Player player) {
     var id = player.getUniqueId();
+    context.activity().left(id);
     watching.remove(id);
     unfollow(player);
     boards.hide(player);

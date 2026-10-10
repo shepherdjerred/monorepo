@@ -140,7 +140,8 @@ final class QuestServiceTest {
             Runnable::run,
             clock,
             new SplittableRandom(4),
-            ComponentLogger.logger("test"));
+            ComponentLogger.logger("test"),
+            com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
     service = new QuestService(wiring);
   }
 
