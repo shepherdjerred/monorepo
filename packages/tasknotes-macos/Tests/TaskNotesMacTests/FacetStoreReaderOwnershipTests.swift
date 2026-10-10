@@ -1,9 +1,93 @@
+import Foundation
 import Testing
 
 @testable import TaskNotesFacetUI
 @testable import TaskNotesKit
 
 extension FacetStoreOwnershipTests {
+    @Test func emptyIntentPollCannotRetireInitialRefresh() async throws {
+        for stage in ["cached", "discovery"] {
+            let context = try await StoreContext.open()
+            let queue = try FacetIntentQueue(
+                directory: context.directory.appendingPathComponent("intent-queue"))
+            let suspension = Suspension()
+            var calls: [String] = []
+            let step: (String) async -> Void = { name in
+                calls.append(name)
+                if name == stage { await suspension.pause() }
+            }
+            let refresh = _Concurrency.Task {
+                await context.store.refreshWithOperations(
+                    profileID: "A", logicalQuery: context.store.query(),
+                    operations: FacetRefreshOperations(
+                        cached: {
+                            await step("cached")
+                            return nil
+                        },
+                        discovery: {
+                            await step("discovery")
+                            return .object(["configurationAvailable": .bool(true)])
+                        }, refresh: { await step("refresh") },
+                        snapshot: {
+                            await step("snapshot")
+                            return try emptySnapshot(version: 9)
+                        }, ownsEngine: { context.store.engine === context.first }))
+            }
+            await suspension.waitUntilEntered()
+            let generation = context.store.requestGeneration
+            context.store.savedNotice = "Keep this notice"
+            await context.store.processIntentCaptures(queue)
+            #expect(context.store.requestGeneration == generation)
+            #expect(context.store.savedNotice == "Keep this notice")
+            #expect(!context.store.isSaving)
+            #expect(context.store.activeMutationID == nil)
+            suspension.resume()
+            await refresh.value
+            #expect(calls == ["cached", "discovery", "refresh", "snapshot"])
+            #expect(context.store.snapshot?.version == 9)
+            #expect(context.store.error == nil)
+            try await context.close()
+        }
+    }
+
+    @Test func nonemptyIntentPollAppliesAcknowledgesAndScansExistingVault() async throws {
+        let context = try await StoreContext.open()
+        let vault = context.directory.appendingPathComponent("vault")
+        try FileManager.default.createDirectory(at: vault, withIntermediateDirectories: true)
+        try Data("title:\n  storage: frontmatter\n".utf8)
+            .write(to: vault.appendingPathComponent("tasknotes.yaml"))
+        let existing = Data(
+            """
+            ---
+            title: Existing synthetic task
+            tags: [task]
+            status: open
+            ---
+            Keep this Markdown body unchanged.
+            """.utf8)
+        let note = vault.appendingPathComponent("Existing.md")
+        try existing.write(to: note)
+        let profile = try await context.first.registerLocal(directory: vault, approveStandard: true)
+        context.store.selectProfilePresentation(profile.id)
+        let queue = try FacetIntentQueue(
+            directory: context.directory.appendingPathComponent("intent-queue"))
+        try queue.selectProfile(profile.id)
+        let capture = try queue.enqueue(title: "Synthetic queued task")
+        let generation = context.store.requestGeneration
+        await context.store.processIntentCaptures(queue)
+        #expect(try queue.pending().isEmpty)
+        #expect(context.store.requestGeneration > generation)
+        #expect(
+            Set(context.store.snapshot?.tasks.map(\.title) ?? [])
+                == [capture.title, "Existing synthetic task"])
+        #expect(try Data(contentsOf: note) == existing)
+        #expect(context.store.pendingActions.isEmpty)
+        #expect(!context.store.isSaving)
+        #expect(context.store.activeMutationID == nil)
+        #expect(context.store.error == nil)
+        try await context.close()
+    }
+
     @Test func everyDelayedRefreshStageStopsBeforeAnotherReadOrPresentation() async throws {
         let stages = ["cached", "discovery", "refresh", "snapshot"]
         for stage in stages {
