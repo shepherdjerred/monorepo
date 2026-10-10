@@ -141,8 +141,7 @@ from the website's browser identity. Only human connections create sessions;
 Citizens NPCs and RWF bots are excluded. Captures contain bounded feature and
 action names, mode, timestamps and durations, never chat, conversation text,
 command arguments, coordinates, IP addresses or replay. GeoIP enrichment is
-disabled. The player-facing disclosure lives in the Storm docs' Transparency
-page.
+disabled.
 
 The core analytics port receives successful gameplay actions and Essentials AFK
 transitions. Connected time includes AFK; active time excludes it. Accepted game
