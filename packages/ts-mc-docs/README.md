@@ -51,6 +51,12 @@ bun run typecheck
 bun run lint
 ```
 
+Astro checks, builds, and dev servers use process-specific Vite dependency
+caches so concurrent commands do not write to the same cache. All commands
+load the standard `astro.config.ts` through Astro's configuration loader.
+Caches are removed on normal process exit. The next command also reclaims
+caches left by terminated processes while preserving caches owned by live processes.
+
 Deploys via `bun run deploy` (SeaweedFS `ts-mc-docs` bucket) and the
 `sites` CI lane on `main`.
 
