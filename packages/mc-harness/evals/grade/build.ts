@@ -4,7 +4,7 @@ import { z } from "zod";
 import { type Box, RegionReadResponseSchema } from "#protocol/bridge.ts";
 import { BuildManifestSchema, type JudgeRubric } from "#protocol/build.ts";
 import type { GradeCheck, Grader, JudgeSummary } from "#evals/lib/types.ts";
-import { keepBuildRecord } from "#evals/lib/build-record.ts";
+import { gradeEvidence } from "#evals/grade/evidence.ts";
 import { deliveredChecks, type DeliveredSpec } from "#evals/grade/delivered.ts";
 import { judgeNote } from "#evals/grade/judge-note.ts";
 import { sandboxFrom } from "#evals/grade/tower.ts";
@@ -389,11 +389,9 @@ export const buildGrader =
     );
     const journal = await readJournal(buildDir);
     checks.push(...trajectoryChecks(journal, options.rubric));
-    artifacts.push(
-      ...(await keepBuildRecord(buildDir, ctx.taskDir, {
-        allowedRoot: ctx.worktree,
-      })),
-    );
+    const evidence = await gradeEvidence(buildDir, ctx);
+    checks.push(evidence.check);
+    artifacts.push(...evidence.artifacts);
     const trajectory =
       journal !== null && "entries" in journal
         ? trajectoryOf(journal.entries, options.rubric)

@@ -26,7 +26,10 @@ export async function readPairRecord(
   entry: Extract<BuildLogEntry, { kind: "accept" | "reject" }>,
 ) {
   await readOutcomeScore(workspace, entry);
-  if (entry.file === null) return null;
+  if (entry.file === null) {
+    if (entry.kind === "accept" && entry.versus === null) return null;
+    throw new Error("paired outcomes require a verdict file");
+  }
   const record = JudgePairRecordSchema.parse(
     await Bun.file(await buildArtifactPath(workspace, entry.file)).json(),
   );

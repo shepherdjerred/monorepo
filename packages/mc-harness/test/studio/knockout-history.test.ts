@@ -534,6 +534,37 @@ describe("default knockout iteration", () => {
 });
 
 describe("outcome score evidence", () => {
+  it.each(["accept", "reject"] as const)(
+    "requires a pair verdict for a scored %s outcome",
+    async (kind) => {
+      const { workspace } = await twoVersions(`null-pair-${kind}`);
+      await knockout(workspace.dir, {
+        rubric: "micro",
+        model: "stub",
+        ask: judge(),
+      });
+      const entries = await readLog(workspace.dir);
+      const outcome = entries.find((entry) => entry.kind === kind);
+      if (outcome === undefined) throw new Error("missing paired outcome");
+      await Bun.write(
+        workspace.file(BUILD_FILES.journal),
+        entries
+          .map((entry) =>
+            JSON.stringify(
+              entry === outcome ? { ...entry, file: null } : entry,
+            ),
+          )
+          .join("\n"),
+      );
+      expect(await readJournal(workspace.dir)).toHaveProperty("error");
+      const ask = judge();
+      await expect(
+        knockout(workspace.dir, { rubric: "micro", model: "stub", ask }),
+      ).rejects.toThrow(/verdict file/u);
+      expect(ask).not.toHaveBeenCalled();
+    },
+  );
+
   it.each(["score", "grid", "critique", "rubric", "copied", "legacy"])(
     "rejects %s corruption before grading or more judging",
     async (failure) => {
