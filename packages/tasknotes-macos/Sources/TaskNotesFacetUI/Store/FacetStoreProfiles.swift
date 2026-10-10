@@ -4,25 +4,29 @@ public import TaskNotesKit
 extension FacetStore {
     public func processIntentCaptures(_ queue: FacetIntentQueue) async {
         guard let engine, !isSaving else { return }
-        activeMutationID = "intent-queue"
-        isSaving = true
-        defer {
-            activeMutationID = nil
-            isSaving = false
-        }
         do {
-            var cursor: String?
+            var page = try queue.pending()
+            // Widget publication also polls this queue during initial refresh.
+            // An empty poll must not retire that refresh or its presentation.
+            guard !page.isEmpty else { return }
+            activeMutationID = "intent-queue"
+            isSaving = true
+            defer {
+                activeMutationID = nil
+                isSaving = false
+            }
             while true {
-                let page = try queue.pending(afterID: cursor)
                 for capture in page {
                     try await engine.applyIntentCapture(capture)
                     try queue.acknowledge(id: capture.id)
                 }
                 guard page.count == 128, let last = page.last else { break }
-                cursor = last.id
+                page = try queue.pending(afterID: last.id)
             }
             pendingActions = try await engine.pendingMutations()
-            await reloadQuery()
+            // Processing can supersede the initial refresh. Scan the vault as
+            // well as observing the capture so existing files remain visible.
+            await refresh()
         } catch { self.error = error.localizedDescription }
     }
 
