@@ -1,6 +1,7 @@
 import { readdir } from "node:fs/promises";
 import path from "node:path";
-import { parseArgs } from "node:util";
+import { diagnosticPaths } from "#learning/native/diagnostics/options.ts";
+import { verifyOwned } from "#learning/native/regression/files.ts";
 import { gunzipSync } from "node:zlib";
 import { z } from "zod";
 import { captureRegression, type Capture } from "./capture.ts";
@@ -9,12 +10,7 @@ import { lastHumanAbort, AbortSettlement } from "./abort-gate.ts";
 import { querySqlite } from "#e2e/harness/storm-data.ts";
 import { digestFile, jsonText, seal } from "#learning/preference/ledger.ts";
 
-const args = parseArgs({
-  options: { model: { type: "string" }, output: { type: "string" } },
-  strict: true,
-});
-const model = path.resolve(z.string().min(1).parse(args.values.model));
-const output = path.resolve(z.string().min(1).parse(args.values.output));
+const { model, output } = diagnosticPaths();
 const ownership = { created: false };
 
 async function checkpoint({ paper, fixture }: Capture, ids: string[]) {
@@ -192,25 +188,7 @@ async function verify() {
   );
 }
 
-try {
-  await verify();
-} catch (error) {
-  if (
-    ownership.created &&
-    !(await Bun.file(path.join(output, "failure.json")).exists())
-  )
-    await seal(
-      path.join(output, "failure.json"),
-      jsonText({
-        schema: 1,
-        acceptance: "unaccepted",
-        diagnostic: true,
-        retries: 0,
-        error: error instanceof Error ? error.message : String(error),
-      }),
-    );
-  throw error;
-}
+await verifyOwned(output, ownership, verify);
 console.warn(
   `Verified native last-human disconnect and unpaid teardown: ${output}`,
 );

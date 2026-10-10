@@ -1,18 +1,12 @@
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
-import { parseArgs } from "node:util";
-import { z } from "zod";
+import { diagnosticPaths } from "#learning/native/diagnostics/options.ts";
 import { simulationGradle, simulationInputs } from "./inputs.ts";
 import { simulationFloors } from "./replay.ts";
 import { buildCaptureInputs, captureInputs } from "#learning/native/inputs.ts";
 import { jsonText, seal, digestFile } from "#learning/preference/ledger.ts";
 
-const args = parseArgs({
-  options: { model: { type: "string" }, output: { type: "string" } },
-  strict: true,
-});
-const model = path.resolve(z.string().min(1).parse(args.values.model));
-const output = path.resolve(z.string().min(1).parse(args.values.output));
+const { model, output } = diagnosticPaths();
 await mkdir(path.dirname(output), { recursive: true });
 await mkdir(output, { recursive: false, mode: 0o700 });
 const save = (file: string, value: unknown) =>

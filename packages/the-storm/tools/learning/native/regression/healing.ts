@@ -1,7 +1,9 @@
-import { readdir } from "node:fs/promises";
 import path from "node:path";
-import { parseArgs } from "node:util";
-import { gunzipSync } from "node:zlib";
+import { diagnosticPaths } from "#learning/native/diagnostics/options.ts";
+import {
+  regressionEvidence,
+  verifyOwned,
+} from "#learning/native/regression/files.ts";
 import { z } from "zod";
 import { captureRegression, type Capture } from "./capture.ts";
 import { openNativeConsole } from "./console.ts";
@@ -16,12 +18,7 @@ import { root } from "#learning/sandbox.ts";
 import { digestFile, jsonText, seal } from "#learning/preference/ledger.ts";
 import type { RegressionSample } from "#learning/native/regression-client.ts";
 
-const args = parseArgs({
-  options: { model: { type: "string" }, output: { type: "string" } },
-  strict: true,
-});
-const model = path.resolve(z.string().min(1).parse(args.values.model));
-const output = path.resolve(z.string().min(1).parse(args.values.output));
+const { model, output } = diagnosticPaths();
 const ownership = { created: false };
 
 async function originalPersonalities(ids: string[]) {
@@ -119,14 +116,6 @@ async function scenario(capture: Capture) {
   await paper.exportRegressionNpcSave(path.join(output, "npc-save"));
 }
 
-async function readLines(name: string): Promise<unknown[]> {
-  const text = await Bun.file(path.join(output, name)).text();
-  return text
-    .trim()
-    .split("\n")
-    .map((row): unknown => JSON.parse(row));
-}
-
 async function verify() {
   const { inputs } = await captureRegression(
     {
@@ -149,23 +138,14 @@ async function verify() {
     throw new Error(
       "Original healing habits differ from frozen personality content",
     );
-  const files = await readdir(path.join(output, "recordings"), {
-    recursive: true,
-  });
-  const originals = files.filter((file) =>
-    file.endsWith(`/${identity.match}.rwfrec.gz`),
+  const { file: recording, ...evidence } = await regressionEvidence(
+    output,
+    identity.match,
   );
-  if (originals.length !== 1 || originals[0] === undefined)
-    throw new Error("Original healing recording missing or duplicated");
-  const recording = path.join(output, "recordings", originals[0]);
   const npcSave = path.join(output, "npc-save/citizens-saves.yml");
   const { measured, healing } = healingLifecycle({
-    commands: await readLines("commands.jsonl"),
-    native: await readLines("native-commands.jsonl"),
+    ...evidence,
     identity,
-    recording: gunzipSync(await Bun.file(recording).arrayBuffer()).toString(
-      "utf8",
-    ),
     npcSave: await Bun.file(npcSave).text(),
   });
   await seal(
@@ -204,25 +184,7 @@ async function verify() {
   );
 }
 
-try {
-  await verify();
-} catch (error) {
-  if (
-    ownership.created &&
-    !(await Bun.file(path.join(output, "failure.json")).exists())
-  )
-    await seal(
-      path.join(output, "failure.json"),
-      jsonText({
-        schema: 1,
-        acceptance: "unaccepted",
-        diagnostic: true,
-        retries: 0,
-        error: error instanceof Error ? error.message : String(error),
-      }),
-    );
-  throw error;
-}
+await verifyOwned(output, ownership, verify);
 console.warn(
   `Verified native healing, authored item use and NPC teardown: ${output}`,
 );

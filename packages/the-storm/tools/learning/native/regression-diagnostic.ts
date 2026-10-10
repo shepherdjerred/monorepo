@@ -1,8 +1,9 @@
-import { readdir } from "node:fs/promises";
 import path from "node:path";
-import { parseArgs } from "node:util";
-import { gunzipSync } from "node:zlib";
-import { z } from "zod";
+import { diagnosticPaths } from "#learning/native/diagnostics/options.ts";
+import {
+  regressionEvidence,
+  verifyOwned,
+} from "#learning/native/regression/files.ts";
 import {
   captureRegression,
   drained,
@@ -12,12 +13,7 @@ import { openNativeConsole } from "./regression/console.ts";
 import { nativeTeam, teamRequests } from "./regression/team-gate.ts";
 import { digestFile, jsonText, seal } from "#learning/preference/ledger.ts";
 
-const args = parseArgs({
-  options: { model: { type: "string" }, output: { type: "string" } },
-  strict: true,
-});
-const model = path.resolve(z.string().min(1).parse(args.values.model));
-const output = path.resolve(z.string().min(1).parse(args.values.output));
+const { model, output } = diagnosticPaths();
 const ownership = { created: false };
 
 async function scenario(capture: Capture) {
@@ -48,14 +44,6 @@ async function scenario(capture: Capture) {
   await run(2);
 }
 
-async function readLines(name: string): Promise<unknown[]> {
-  const text = await Bun.file(path.join(output, name)).text();
-  return text
-    .trim()
-    .split("\n")
-    .map((row): unknown => JSON.parse(row));
-}
-
 async function verify() {
   const { inputs, measured: original } = await captureRegression(
     {
@@ -67,21 +55,12 @@ async function verify() {
     },
     scenario,
   );
-  const files = await readdir(path.join(output, "recordings"), {
-    recursive: true,
-  });
-  const originals = files.filter((file) =>
-    file.endsWith(`/${original.match}.rwfrec.gz`),
+  const { file: recording, ...evidence } = await regressionEvidence(
+    output,
+    original.match,
   );
-  if (originals.length !== 1 || originals[0] === undefined)
-    throw new Error("Original team recording missing or duplicated");
-  const recording = path.join(output, "recordings", originals[0]);
   const { measured, movement } = nativeTeam({
-    commands: await readLines("commands.jsonl"),
-    native: await readLines("native-commands.jsonl"),
-    recording: gunzipSync(await Bun.file(recording).arrayBuffer()).toString(
-      "utf8",
-    ),
+    ...evidence,
   });
   await seal(
     path.join(output, "verification.json"),
@@ -120,25 +99,7 @@ async function verify() {
   );
 }
 
-try {
-  await verify();
-} catch (error) {
-  if (
-    ownership.created &&
-    !(await Bun.file(path.join(output, "failure.json")).exists())
-  )
-    await seal(
-      path.join(output, "failure.json"),
-      jsonText({
-        schema: 1,
-        acceptance: "unaccepted",
-        diagnostic: true,
-        retries: 0,
-        error: error instanceof Error ? error.message : String(error),
-      }),
-    );
-  throw error;
-}
+await verifyOwned(output, ownership, verify);
 console.warn(
   `Verified original native team movement and unchanged floors: ${output}`,
 );

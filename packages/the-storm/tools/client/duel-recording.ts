@@ -1,5 +1,6 @@
 import type { DuelClient, DuelState } from "#learning/duels.ts";
 import { validateDuelClock } from "./duel-clock.ts";
+import { verifyDuelClockBinding } from "./duel-clock-binding.ts";
 import { validateDuelFrames } from "./duel-video.ts";
 import type { DuelFrameReceipt } from "./duel-video.ts";
 import { request, waitFor } from "./protocol.ts";
@@ -106,19 +107,5 @@ export function verifyDuelOutcome(
     last.tick !== terminal.sampleTick
   )
     throw new Error("Original native clock differs from its captured outcome");
-  const fullStart = clock.entries[1]?.receivedElapsedNanos;
-  if (fullStart === undefined)
-    throw new Error("Native model clock has no live anchor");
-  frames.duel.clock.entries.forEach((entry, index) => {
-    const full = clock.entries[index];
-    if (
-      full === undefined ||
-      JSON.stringify(entry.marker) !== JSON.stringify(full.marker) ||
-      entry.receivedElapsedNanos - frames.duel.startedElapsedNanos !==
-        full.receivedElapsedNanos - fullStart
-    )
-      throw new Error(
-        "Native model clip differs from the separate original clock",
-      );
-  });
+  verifyDuelClockBinding(frames, clock);
 }

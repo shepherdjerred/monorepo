@@ -1,7 +1,6 @@
 import { mkdir, readdir } from "node:fs/promises";
 import path from "node:path";
-import { parseArgs } from "node:util";
-import { z } from "zod";
+import { diagnosticPaths } from "#learning/native/diagnostics/options.ts";
 import { frozenManifest, openPaperDuels, root } from "./sandbox.ts";
 import type { LoadSample, LoadTick } from "./load-client.ts";
 import {
@@ -11,17 +10,13 @@ import {
   percentile,
 } from "./load-gate.ts";
 import { recomputeLoadEvidence } from "./promotion/load-evidence.ts";
+import {
+  actorHashes,
+  diagnosticManifest,
+} from "#learning/native/diagnostics/actor.ts";
+import { digestFile as digest } from "./preference/ledger.ts";
 
-const args = parseArgs({
-  options: { model: { type: "string" }, output: { type: "string" } },
-  strict: true,
-});
-const model = path.resolve(z.string().min(1).parse(args.values.model));
-const output = path.resolve(z.string().min(1).parse(args.values.output));
-const digest = async (file: string) =>
-  new Bun.CryptoHasher("sha256")
-    .update(await Bun.file(file).arrayBuffer())
-    .digest("hex");
+const { model, output } = diagnosticPaths();
 
 async function inputs() {
   const owned = path.join(root, "server/owned");
@@ -53,10 +48,7 @@ async function inputs() {
         sha256: await digest(file),
       })),
     ),
-    artifacts: {
-      manifest: await digest(path.join(model, "manifest.json")),
-      actor: await digest(path.join(model, "actor.onnx")),
-    },
+    artifacts: await actorHashes(model),
     protocol: loadProtocol,
     acceptance: "unaccepted",
     pilotAcceptanceChecked: false,
@@ -64,17 +56,7 @@ async function inputs() {
   };
 }
 
-const manifest: unknown = await Bun.file(
-  path.join(model, "manifest.json"),
-).json();
-const checked = z
-  .object({
-    schema: z.literal(1),
-    kind: z.literal("rwf-trooper-ppo"),
-    acceptance: z.literal("unaccepted"),
-    onnx_sha256: z.string().regex(/^[a-f0-9]{64}$/u),
-  })
-  .parse(manifest);
+const checked = await diagnosticManifest(model);
 const frozen = await inputs();
 if (checked.onnx_sha256 !== frozen.artifacts.actor)
   throw new Error("load actor digest differs");

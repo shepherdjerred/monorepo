@@ -3,13 +3,12 @@ import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { z } from "zod";
-import { stormModuleConfig } from "@shepherdjerred/mc-harness/sandbox/storm.ts";
 import { serverLogs } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 import { startFakeBrain } from "#e2e/harness/fake-brain.ts";
 import { startServer } from "#e2e/harness/server.ts";
 import { RconClient } from "#e2e/harness/rcon.ts";
 import { freezeInputs } from "./inputs.ts";
-import { root } from "./paper.ts";
+import { root, mapServerConfig } from "./paper.ts";
 
 const args = parseArgs({
   strict: true,
@@ -73,20 +72,7 @@ try {
     cacheDir: path.join(root, ".cache/e2e/map-navigation"),
     bootTimeoutMs: 600_000,
     warmCache: true,
-    stormJar: inputs.stormJar,
-    fixturesJar: inputs.fixturesJar,
-    ownedConfigDir: inputs.content,
-    stormConfig: stormModuleConfig(
-      await Bun.file(path.join(inputs.content, "config.yml")).text(),
-      [],
-    ),
-    sweep: {
-      intervalMinutes: 1,
-      redriveAfterMinutes: 0,
-      redriveBackoffMinutes: 0,
-      slaAfterMinutes: 10_080,
-    },
-    agent: { mode: "shadow", reviewSamplePercent: 100 },
+    ...(await mapServerConfig(inputs)),
     brain: {
       baseUrl: `http://host.docker.internal:${brain.port.toString()}`,
       token,

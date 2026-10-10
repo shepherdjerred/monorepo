@@ -1,7 +1,6 @@
 import { randomBytes } from "node:crypto";
 import path from "node:path";
 import { z } from "zod";
-import { stormModuleConfig } from "@shepherdjerred/mc-harness/sandbox/storm.ts";
 import {
   docker,
   serverLogs,
@@ -11,7 +10,7 @@ import { startServer } from "#e2e/harness/server.ts";
 import { RconClient } from "#e2e/harness/rcon.ts";
 import type { MapContent } from "#learning/maps/scenario.ts";
 import type { ConversionInputs } from "./inputs.ts";
-import { root } from "./paper.ts";
+import { root, mapServerConfig } from "./paper.ts";
 
 const State = z.discriminatedUnion("state", [
   z.strictObject({ state: z.enum(["idle", "reading", "encoding"]) }),
@@ -43,20 +42,7 @@ export async function exportDetails(
       warmCache: true,
       worldDir: path.join(source, "converted-world"),
       mapSourceChunks: path.join(source, "source-chunks.json"),
-      stormJar: inputs.stormJar,
-      fixturesJar: inputs.fixturesJar,
-      ownedConfigDir: inputs.content,
-      stormConfig: stormModuleConfig(
-        await Bun.file(path.join(inputs.content, "config.yml")).text(),
-        [],
-      ),
-      sweep: {
-        intervalMinutes: 1,
-        redriveAfterMinutes: 0,
-        redriveBackoffMinutes: 0,
-        slaAfterMinutes: 10_080,
-      },
-      agent: { mode: "shadow", reviewSamplePercent: 100 },
+      ...(await mapServerConfig(inputs)),
       brain: { baseUrl: brainUrl, token },
       env: { ENABLE_COMMAND_BLOCK: "FALSE" },
       resources: { cpus: 4, heap: "8G", memoryLimit: "10g" },

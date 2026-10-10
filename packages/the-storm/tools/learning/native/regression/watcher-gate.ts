@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { botRecording } from "./recording.ts";
 import { type NativeCommand, nativeCommands } from "./console.ts";
 import {
   RegressionCommand,
@@ -225,24 +226,12 @@ function positiveControl(
 }
 
 function originalRecording(recording: string, measured: Journal) {
-  const rows = recording
-    .trim()
-    .split("\n")
-    .map((row) => row.split("\t"));
-  const header = rows[0];
-  const members = rows.filter((row) => row[0] === "R");
-  const endings = rows.filter((row) => row[0] === "X");
+  const { members, endings } = botRecording(recording, measured.match);
   const ending = endings[0];
   const ended = measured.transitions.find((row) => row.phase === "ENDED");
   if (
     ended === undefined ||
-    header?.[0] !== "H" ||
-    header[1] !== "3" ||
-    header[2] !== measured.match ||
-    header[3] !== "training-yard" ||
-    members.length !== 16 ||
     members.some((row) => row[4] !== "true") ||
-    rows.some((row) => row[0] === "N") ||
     endings.length !== 1 ||
     ending?.[2] !== (ended.winner === "" ? "-" : ended.winner.toUpperCase()) ||
     ending[3] !== (ended.winner === "" ? "DRAW" : "LAST_TEAM_STANDING")

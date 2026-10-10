@@ -1680,7 +1680,7 @@ disposable fixture server:
 ```bash
 uv run --project tools/learning --locked python tools/learning/java_parity.py --checkpoint .cache/rwf-ppo/diagnostic/learning/final --output .cache/rwf-java-parity/diagnostic
 mise exec -- gradle -p plugin :rwfbots:actorParity -PactorParityDirectory="$PWD/.cache/rwf-java-parity/diagnostic"
-bun tools/learning/java-run.ts --model .cache/rwf-java-parity/diagnostic/onnx --output .cache/rwf-java-native/diagnostic
+bun run bots:verify-java --model .cache/rwf-java-parity/diagnostic/onnx --output .cache/rwf-java-native/diagnostic
 ```
 
 The parity command independently carries Java hidden and cell state through
@@ -1938,7 +1938,7 @@ four-CPU cap, 8G heap setting and 10Gi memory limit:
 
 ```bash
 mise exec -- gradle -p plugin :dist:shadowJar :dist:fixturesJar :companions:e2eJar
-bun tools/learning/load-run.ts --model .cache/rwf-java-parity/diagnostic/onnx --output .cache/rwf-java-load/diagnostic
+bun run bots:verify-java-load --model .cache/rwf-java-parity/diagnostic/onnx --output .cache/rwf-java-load/diagnostic
 ```
 
 The fixture's versioned wire contract is `rwf-inference-load.json` in the rwfbots

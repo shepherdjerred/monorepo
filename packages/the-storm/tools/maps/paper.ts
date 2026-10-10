@@ -13,6 +13,26 @@ import type { ConversionInputs } from "./inputs.ts";
 
 export const root = path.resolve(import.meta.dirname, "../..");
 
+/** Shared module and agent configuration for disposable map fixture servers. */
+export async function mapServerConfig(inputs: ConversionInputs) {
+  return {
+    stormJar: inputs.stormJar,
+    fixturesJar: inputs.fixturesJar,
+    ownedConfigDir: inputs.content,
+    stormConfig: stormModuleConfig(
+      await Bun.file(path.join(inputs.content, "config.yml")).text(),
+      [],
+    ),
+    sweep: {
+      intervalMinutes: 1,
+      redriveAfterMinutes: 0,
+      redriveBackoffMinutes: 0,
+      slaAfterMinutes: 10_080,
+    },
+    agent: { mode: "shadow" as const, reviewSamplePercent: 100 },
+  };
+}
+
 /** Every import gets its own world copy and Paper owner; no production connection. */
 export async function exportTerrain(
   output: string,

@@ -1,10 +1,17 @@
-import { readdir } from "node:fs/promises";
 import path from "node:path";
-import { parseArgs } from "node:util";
-import { gunzipSync } from "node:zlib";
-import { z } from "zod";
-import { captureRegression, drained, type Capture } from "./capture.ts";
+import { diagnosticPaths } from "#learning/native/diagnostics/options.ts";
+import {
+  regressionEvidence,
+  verifyOwned,
+} from "#learning/native/regression/files.ts";
+import {
+  captureRegression,
+  drained,
+  waitForPhase,
+  type Capture,
+} from "./capture.ts";
 import { openNativeConsole } from "./console.ts";
+import { liveOpponents } from "./roster.ts";
 import {
   WatcherIdentity,
   watcherRequests,
@@ -13,12 +20,7 @@ import {
 import { connectBot, disconnectBot } from "#e2e/harness/bot.ts";
 import { digestFile, jsonText, seal } from "#learning/preference/ledger.ts";
 
-const args = parseArgs({
-  options: { model: { type: "string" }, output: { type: "string" } },
-  strict: true,
-});
-const model = path.resolve(z.string().min(1).parse(args.values.model));
-const output = path.resolve(z.string().min(1).parse(args.values.output));
+const { model, output } = diagnosticPaths();
 const ownership = { created: false };
 
 async function scenario(capture: Capture) {
@@ -49,22 +51,13 @@ async function scenario(capture: Capture) {
     await Bun.sleep(100);
   }
   await native("showcase", "rwf admin showcase 16");
-  let state = await fixture.command("sample");
-  while (state.phase !== "LIVE") {
-    if (Date.now() >= deadline)
-      throw new Error("Original spectator showcase did not start");
-    await Bun.sleep(100);
-    state = await fixture.command("sample");
-  }
-  const first = state.transitions.find((row) => row.phase === "LIVE");
-  const attacker = first?.fighters.find(
-    (row) => row.bot && row.alive && row.kit === "trooper",
+  let state = await waitForPhase(
+    fixture,
+    "LIVE",
+    deadline,
+    "Original spectator showcase did not start",
   );
-  const victim = first?.fighters.find(
-    (row) => row.bot && row.alive && row.team !== attacker?.team,
-  );
-  if (first === undefined || attacker === undefined || victim === undefined)
-    throw new Error("Original spectator positive-control fighters missing");
+  const { first, attacker, victim } = liveOpponents(state, "any");
   const identity = WatcherIdentity.parse({
     schema: 1,
     source: "automated-regression-client",
@@ -91,14 +84,6 @@ async function scenario(capture: Capture) {
   for (const [key, command] of requests.slice(15)) await native(key, command);
 }
 
-async function readLines(name: string): Promise<unknown[]> {
-  const text = await Bun.file(path.join(output, name)).text();
-  return text
-    .trim()
-    .split("\n")
-    .map((row): unknown => JSON.parse(row));
-}
-
 async function verify() {
   const { inputs } = await captureRegression(
     {
@@ -113,22 +98,13 @@ async function verify() {
   const identity = WatcherIdentity.parse(
     await Bun.file(path.join(output, "watcher.json")).json(),
   );
-  const files = await readdir(path.join(output, "recordings"), {
-    recursive: true,
-  });
-  const originals = files.filter((file) =>
-    file.endsWith(`/${identity.match}.rwfrec.gz`),
+  const { file: recording, ...evidence } = await regressionEvidence(
+    output,
+    identity.match,
   );
-  if (originals.length !== 1 || originals[0] === undefined)
-    throw new Error("Original spectator recording missing or duplicated");
-  const recording = path.join(output, "recordings", originals[0]);
   const { measured, spectator } = spectatorImmunity({
-    commands: await readLines("commands.jsonl"),
-    native: await readLines("native-commands.jsonl"),
+    ...evidence,
     identity,
-    recording: gunzipSync(await Bun.file(recording).arrayBuffer()).toString(
-      "utf8",
-    ),
   });
   await seal(
     path.join(output, "verification.json"),
@@ -165,25 +141,7 @@ async function verify() {
   );
 }
 
-try {
-  await verify();
-} catch (error) {
-  if (
-    ownership.created &&
-    !(await Bun.file(path.join(output, "failure.json")).exists())
-  )
-    await seal(
-      path.join(output, "failure.json"),
-      jsonText({
-        schema: 1,
-        acceptance: "unaccepted",
-        diagnostic: true,
-        retries: 0,
-        error: error instanceof Error ? error.message : String(error),
-      }),
-    );
-  throw error;
-}
+await verifyOwned(output, ownership, verify);
 console.warn(
   `Verified native spectator immunity and positive fighter damage: ${output}`,
 );
