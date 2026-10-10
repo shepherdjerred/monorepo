@@ -13,13 +13,15 @@ from pathlib import Path
 
 import torch
 
+from map_selection.plan import MapBinding, read_maps, validate_maps
 from paper import Console, Discontinuity, OwnerConsole, State, wait
 from policy import FEATURES, Policy, array, device, digest, integer, load_checkpoint, mapping
 from ppo import sample
 
 CONTRACT = mapping(json.loads(Path(__file__).with_name("evaluation.json").read_text()))
 if CONTRACT != {
-    "version": 1,
+    "version": 2,
+    "mapSelection": "balanced-contiguous-pairs",
     "matchesPerOpponent": 200,
     "firstSeed": 500000000,
     "opponents": ["authored", "basic"],
@@ -34,20 +36,27 @@ class Matchup:
     opponent: str
     seed: int
     side: str
+    map: MapBinding
 
 
-def schedule(matches: int, first_seed: int) -> list[Matchup]:
+def schedule(matches: int, first_seed: int, raw_maps: list[MapBinding]) -> list[Matchup]:
     integer(matches, 2, 200)
     integer(first_seed, 0, 1_000_000_000)
     if matches % 2:
         raise ValueError("evaluation must pair both sides")
     # The same environment seeds and sides are used for every learned seed
     # and opponent. Controller randomness is private to each exact matchup.
+    maps = validate_maps([entry.report() for entry in raw_maps])
+    pairs = matches // 2
+    if pairs < len(maps):
+        raise ValueError("evaluation cannot cover every admitted map on both sides")
     return [
-        Matchup(opponent, first_seed + index // 2, side)
+        Matchup(opponent, first_seed + index, side, binding)
+        for map_index, binding in enumerate(maps)
         for opponent in ("authored", "basic")
-        for index in range(matches)
-        for side in (("red", "blue")[index % 2],)
+        for index in range(pairs)
+        if index * len(maps) // pairs == map_index
+        for side in ("red", "blue")
     ]
 
 
@@ -55,6 +64,13 @@ def validate_training(
     manifest: dict[str, object], seed: int, diagnostic: bool, matchups: list[Matchup]
 ) -> None:
     training = mapping(manifest["training"])
+    trained_maps = validate_maps(training.get("maps"))
+    evaluated_maps = list(dict.fromkeys(matchup.map for matchup in matchups))
+    if diagnostic:
+        if any(binding not in trained_maps for binding in evaluated_maps):
+            raise ValueError("diagnostic maps differ from training terrain or scenarios")
+    elif trained_maps != evaluated_maps or training.get("map_coverage_complete") is not True:
+        raise ValueError("evaluation maps differ from the complete trained catalog")
     if manifest["kind"] != "rwf-trooper-ppo" or training.get("seed") != seed:
         raise ValueError("evaluation needs the frozen PPO actor for this seed")
     dataset_sha = training.get("dataset_sha256")
@@ -155,6 +171,8 @@ def run_duel(
         if state.result not in ("win", "loss", "draw", "timeout") or terminal is None:
             raise ValueError("evaluation duel interrupted; do not retry or discard its outcome")
         return {
+            **matchup.map.report(),
+            "engine": "Paper",
             "opponent": matchup.opponent,
             "seed": matchup.seed,
             "side": matchup.side,
@@ -187,6 +205,7 @@ def main() -> None:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--device", choices=("cpu", "mps"), required=True)
     parser.add_argument("--seed", type=int, required=True)
+    parser.add_argument("--maps", type=Path, required=True)
     parser.add_argument("--matches", type=int, required=True)
     parser.add_argument("--first-seed", type=int, required=True)
     parser.add_argument("--deadline-ms", type=float, required=True)
@@ -202,7 +221,8 @@ def main() -> None:
         or (not args.diagnostic and args.first_seed != CONTRACT["firstSeed"])
     ):
         parser.error("invalid frozen evaluation settings or existing output")
-    matchups = schedule(args.matches, args.first_seed)
+    maps = read_maps(args.maps)
+    matchups = schedule(args.matches, args.first_seed, maps)
     deadline = time.monotonic() + args.deadline_ms / 1000 - time.time() - 15
     torch.set_num_threads(1)
     actor, manifest = load_checkpoint(args.checkpoint)
@@ -222,8 +242,20 @@ def main() -> None:
     emit("ready", {"mode": "frozen-evaluation", "weights_sha256": weights_sha})
     console = OwnerConsole()
     games: list[dict[str, object]] = []
+    selected: MapBinding | None = None
     with (args.output / "games.jsonl").open("x", encoding="utf-8") as stream:
         for matchup in matchups:
+            if matchup.map != selected:
+                wait(
+                    console,
+                    lambda state: state.phase == "LOBBY",
+                    min(deadline, time.monotonic() + 30),
+                )
+                if MapBinding.parse(console.command(f"map {matchup.map.map}")) != matchup.map:
+                    raise ValueError("Paper selected a different evaluation map")
+                selected = matchup.map
+            if time.monotonic() >= deadline:
+                raise TimeoutError("evaluation deadline expired while preparing a map")
             game = run_duel(console, actor, matchup, args.seed, where, deadline)
             games.append(game)
             stream.write(json.dumps(game, allow_nan=False) + "\n")
@@ -236,13 +268,14 @@ def main() -> None:
     ):
         raise ValueError("frozen checkpoint changed during evaluation")
     report: dict[str, object] = {
-        "version": 1,
+        "version": 2,
         "engine": "Paper",
         "mode": "diagnostic" if args.diagnostic else "pilot",
         "acceptance": "unaccepted",
         "actor_seed": args.seed,
         "weights_sha256": weights_sha,
         "manifest_sha256": manifest_sha,
+        "maps": [entry.report() for entry in maps],
         "games": games,
         "optimized": False,
         "retried_duels": 0,

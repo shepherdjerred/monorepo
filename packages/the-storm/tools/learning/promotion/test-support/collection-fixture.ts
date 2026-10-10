@@ -2,6 +2,7 @@ import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { PilotLedger } from "#learning/pilot-ledger.ts";
 import { evaluationSchedule } from "#learning/evaluation-gate.ts";
+import { unitMaps } from "#learning/maps/test-support.ts";
 import { reviewEligibility } from "#learning/preference/eligibility.ts";
 import {
   PreferenceLedger,
@@ -70,6 +71,7 @@ export async function collectionFixture(directory: string, votes = 15) {
   };
   const inputs = {
     native,
+    maps: unitMaps,
     dataset: sources,
     bunVersion: "unit",
     platform: "darwin",
@@ -108,6 +110,8 @@ export async function collectionFixture(directory: string, votes = 15) {
         test_used_for_selection: false,
         pilot_acceptance_checked: false,
         curriculum: { complete: true },
+        maps: unitMaps.maps,
+        map_coverage_complete: true,
         games: [],
       },
     };
@@ -135,7 +139,8 @@ export async function collectionFixture(directory: string, votes = 15) {
     await writeFile(
       path.join(output, "report.json"),
       jsonText({
-        version: 1,
+        version: 2,
+        maps: unitMaps.maps,
         engine: "Paper",
         mode: "pilot",
         acceptance: "unaccepted",
@@ -146,31 +151,35 @@ export async function collectionFixture(directory: string, votes = 15) {
         retried_duels: 0,
         blind_preference_checked: false,
         pilot_acceptance_checked: false,
-        games: evaluationSchedule(200, 500_000_000).map((match, game) => ({
-          ...match,
-          match: `00000000-0000-4000-8000-${(index * 400 + game).toString().padStart(12, "0")}`,
-          result:
-            game % 200 < (match.opponent === "authored" ? 120 : 160)
-              ? "win"
-              : "timeout",
-          frames: 10,
-          submitted_controls: 10,
-          confirmed_controls: 10,
-          applied_controls: 10,
-          authored_fallbacks: 0,
-          missed_ticks: 0,
-          rejected_actions: 0,
-          memory_resets: 0,
-          dealt: 1,
-          received: 1,
-          seconds: 1,
-          max_inference_ms: 1,
-        })),
+        games: evaluationSchedule(200, 500_000_000, unitMaps.maps).map(
+          (match, game) => ({
+            ...match,
+            engine: "Paper",
+            match: `00000000-0000-4000-8000-${(index * 400 + game).toString().padStart(12, "0")}`,
+            result:
+              game % 200 < (match.opponent === "authored" ? 120 : 160)
+                ? "win"
+                : "timeout",
+            frames: 10,
+            submitted_controls: 10,
+            confirmed_controls: 10,
+            applied_controls: 10,
+            authored_fallbacks: 0,
+            missed_ticks: 0,
+            rejected_actions: 0,
+            memory_resets: 0,
+            dealt: 1,
+            received: 1,
+            seconds: 1,
+            max_inference_ms: 1,
+          }),
+        ),
       }),
     );
   }
   const plan = {
-    version: 1,
+    version: 2,
+    maps: unitMaps,
     mode: "pilot",
     acceptance: "unaccepted",
     native,

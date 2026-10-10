@@ -12,6 +12,7 @@ import {
   measurementsFile,
 } from "#learning/native/evidence/verify.ts";
 import { root } from "#learning/sandbox.ts";
+import { TrainingMaps, type MapBinding } from "#learning/maps/plan.ts";
 
 export type Request = {
   pilot: string;
@@ -38,9 +39,10 @@ const Export = z.object({
 async function seed(
   snapshot: Snapshot,
   request: Request,
-  pilot: PilotLedger,
   index: number,
+  context: { pilot: PilotLedger; maps: MapBinding[] },
 ) {
+  const { pilot, maps } = context;
   const state = await pilot.state(index);
   if (state.status !== "frozen")
     throw new Error("promotion requires all original sealed pilot seeds");
@@ -52,6 +54,7 @@ async function seed(
     await snapshot.json(reportFile),
     200,
     500_000_000,
+    maps,
   );
   if (!strength.passed)
     throw new Error(
@@ -93,6 +96,7 @@ export async function collectTraining(snapshot: Snapshot, request: Request) {
   const pilot = await PilotLedger.read(request.pilot);
   const inputs = z
     .object({
+      maps: TrainingMaps,
       native: z.object({
         hashes: z.array(z.object({ file: z.string(), sha256: Digest })),
       }),
@@ -105,7 +109,9 @@ export async function collectTraining(snapshot: Snapshot, request: Request) {
   );
   const seeds = [];
   for (let index = 0; index < 3; index++)
-    seeds.push(await seed(snapshot, request, pilot, index));
+    seeds.push(
+      await seed(snapshot, request, index, { pilot, maps: inputs.maps.maps }),
+    );
   const first = seeds[0];
   if (first === undefined) throw new Error("first sealed candidate is missing");
   if (

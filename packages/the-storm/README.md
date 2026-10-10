@@ -1348,7 +1348,7 @@ exits with status 1 after exporting evidence and removing the server. Short
 runs are diagnostics.
 
 `rwflearn begin <seed> <red|blue> <authored|external> [opponent]`
-requires an empty training-yard lobby. The optional opponent defaults to the
+requires an empty lobby on the fixture's admitted map. The optional opponent defaults to the
 frozen basic controller. Stationary does not move or attack; chase closes and
 attacks without strafing; authored uses its normal combat and healing.
 `authored-pressure` closes to 2.5 blocks and `authored-patient` prefers a
@@ -1403,8 +1403,18 @@ stopped before a new one opens. All map staging, boot and transitions consume
 the same original seed deadline. A pilot cannot freeze until confirmed actor
 controls from both sides of every admitted map have contributed to completed
 optimizer steps. Diagnostics select Training Yard only.
-The strength evaluator still requires a single-map catalog; its multi-map
-schedule remains a separate prerequisite before evaluating an expanded pilot.
+
+Strength evaluation freezes the same catalog as the pilot and distributes the
+fixed 200 games per opponent across every admitted map. Each environment seed
+is paired across red and blue against both opponents. Maps receive either the
+same number of pairs or one additional pair; the catalog must fit within the
+100 available pairs. All trials on one map run together before the sandbox
+changes. Version-2 reports bind every game to its terrain and scenario hashes;
+the owner saves and verifies the original Paper setup for every evaluation
+duel. An omitted map, changed hash, reordered game or repeated match invalidates
+the run. This evaluates admitted training maps with fresh environment seeds;
+it does not measure performance on unseen maps. The existing win thresholds,
+one-shot evaluation claim, deadlines and no-retry rule apply across the catalog.
 
 Damage rewards use cumulative Paper damage sampled before any body acts, with
 `(damage dealt - damage received) / 20`, a `0.001` decision cost, and a `+1/-1`

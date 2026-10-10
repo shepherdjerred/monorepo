@@ -1,8 +1,11 @@
 import { z } from "zod";
 import contract from "./evaluation.json";
+import { MapBinding, MapCatalog } from "./maps/plan.ts";
+import { isDeepStrictEqual } from "node:util";
 
 if (
-  contract.version !== 1 ||
+  contract.version !== 2 ||
+  contract.mapSelection !== "balanced-contiguous-pairs" ||
   contract.matchesPerOpponent !== 200 ||
   contract.firstSeed !== 500_000_000 ||
   JSON.stringify(contract.opponents) !== '["authored","basic"]' ||
@@ -17,6 +20,8 @@ const Count = z.number().int().nonnegative();
 const Metric = z.number().nonnegative();
 export const EvaluationGame = z
   .object({
+    ...MapBinding.shape,
+    engine: z.literal("Paper"),
     opponent: z.enum(["authored", "basic"]),
     seed: z.number().int().min(0).max(1_000_000_100),
     side: z.enum(["red", "blue"]),
@@ -43,13 +48,14 @@ export const EvaluationGame = z
   );
 export const EvaluationReport = z
   .object({
-    version: z.literal(1),
+    version: z.literal(2),
     engine: z.literal("Paper"),
     mode: z.enum(["pilot", "diagnostic"]),
     acceptance: z.literal("unaccepted"),
     actor_seed: z.number().int().min(0).max(1_000_000_000),
     weights_sha256: Digest,
     manifest_sha256: Digest,
+    maps: MapCatalog,
     games: z.array(EvaluationGame),
     optimized: z.literal(false),
     retried_duels: z.literal(0),
@@ -58,18 +64,35 @@ export const EvaluationReport = z
   })
   .strict();
 
-export function evaluationSchedule(matches: number, firstSeed: number) {
+export function evaluationSchedule(
+  matches: number,
+  firstSeed: number,
+  rawMaps: MapBinding[],
+) {
   if (!Number.isInteger(matches) || matches < 2 || matches > 200 || matches % 2)
     throw new Error(
       "evaluation needs paired sides and at most 200 games per opponent",
     );
   z.number().int().min(0).max(1_000_000_000).parse(firstSeed);
-  return ["authored", "basic"].flatMap((opponent) =>
-    Array.from({ length: matches }, (_, index) => ({
-      opponent,
-      seed: firstSeed + Math.floor(index / 2),
-      side: index % 2 === 0 ? "red" : "blue",
-    })),
+  const maps = MapCatalog.parse(rawMaps);
+  const pairs = matches / 2;
+  if (pairs < maps.length)
+    throw new Error("Evaluation cannot cover every admitted map on both sides");
+  return maps.flatMap((binding, mapIndex) =>
+    (["authored", "basic"] as const).flatMap((opponent) =>
+      Array.from({ length: pairs }, (_, index) => index)
+        .filter(
+          (index) => Math.floor((index * maps.length) / pairs) === mapIndex,
+        )
+        .flatMap((index) =>
+          (["red", "blue"] as const).map((side) => ({
+            ...binding,
+            opponent,
+            seed: firstSeed + index,
+            side,
+          })),
+        ),
+    ),
   );
 }
 
@@ -78,10 +101,12 @@ export function strengthResult(
   raw: unknown,
   matches: number,
   firstSeed: number,
+  maps: MapBinding[],
 ) {
   const report = EvaluationReport.parse(raw);
-  const schedule = evaluationSchedule(matches, firstSeed);
+  const schedule = evaluationSchedule(matches, firstSeed, maps);
   if (
+    !isDeepStrictEqual(report.maps, maps) ||
     report.games.length !== schedule.length ||
     new Set(report.games.map((game) => game.match)).size !== schedule.length ||
     report.games.some((game, index) => {
@@ -89,7 +114,10 @@ export function strengthResult(
       return (
         game.seed !== expected?.seed ||
         game.side !== expected.side ||
-        game.opponent !== expected.opponent
+        game.opponent !== expected.opponent ||
+        game.map !== expected.map ||
+        game.blocksSha256 !== expected.blocksSha256 ||
+        game.scenarioSha256 !== expected.scenarioSha256
       );
     })
   )
