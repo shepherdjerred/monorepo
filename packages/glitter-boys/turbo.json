@@ -1,0 +1,10 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "typecheck": { "dependsOn": ["build"] },
+    "lint": { "dependsOn": ["build"] },
+    "test": { "dependsOn": ["build"] },
+    "test:ci": { "dependsOn": ["build"] },
+    "test:report": { "dependsOn": ["build"] }
+  }
+}

@@ -255,6 +255,28 @@
       ]
     },
     {
+      "package": "@shepherdjerred/glitter-boys-launcher",
+      "directory": "packages/glitter-boys-launcher",
+      "steps": [
+        { "runner": "cargo", "args": ["--workspace", "--locked"] },
+        {
+          "runner": "command",
+          "name": "release-profile",
+          "command": ["bun", "test", "scripts"]
+        }
+      ]
+    },
+    {
+      "package": "@shepherdjerred/glitter-boys",
+      "directory": "packages/glitter-boys",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["test"]
+        }
+      ]
+    },
+    {
       "package": "@shepherdjerred/glitter-context",
       "directory": "packages/glitter-context",
       "steps": [

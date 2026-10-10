@@ -1,0 +1,95 @@
+---
+title: Black Ops III — Steam crossplay
+description: Install Steam Black Ops III and T7Patch on Windows amd64 for multiplayer and Zombies.
+---
+
+import Screenshot from "../../../../../components/Screenshot.astro";
+import windowsRelease from "../../../../../assets/guides/t7patch-download.png";
+import verify from "../../../../../assets/guides/steam-verify-files.png";
+
+Use **Steam Black Ops III + T7Patch on Windows amd64** for multiplayer and
+Zombies. This is the Windows client for the group's Steam crossplay route.
+Mac players have a separate [Apple silicon setup page](/docs/crossplay/macos/#black-ops-iii).
+
+Compatibility with BOIII is unverified for that route. This walkthrough uses
+the Steam game with T7Patch.
+
+## Before you start
+
+- Own a **Steam copy of Black Ops III** with the requested mode. The Multiplayer Starter Pack excludes Zombies.
+- Agree on the map and DLC. Start with a base-game map before adding Workshop content.
+- Keep Steam signed in and use Steam friends for invitations.
+- Reserve the space Steam requests for the game, DLC, and subscribed maps. The old Windows split archive is outside this Steam-based setup.
+
+## 1. Install the Steam game
+
+Install **Call of Duty: Black Ops III** in Steam. Enable both Multiplayer and
+Zombies in the game's content/DLC settings. Let downloads finish before adding
+the patch.
+
+If base-game files are missing, use **Properties → Installed Files → Verify
+integrity of game files**, then let Steam finish any downloads.
+
+<Screenshot
+  src={verify}
+  alt="Steam Installed Files settings showing the Verify integrity of game files button"
+  caption="The Steam verification control is the same across games. This example recording shows MW2; select Black Ops III in your library."
+  sourceHref="https://docs.iw4x.io/get-started/quickstart/"
+  sourceName="IW4x quickstart recording (Steam UI example)"
+/>
+
+## 2. Install T7Patch
+
+1. Open [T7Patch's current release](https://github.com/shiversoftdev/t7patch/releases/tag/Current).
+2. Download the **Windows Only ZIP**. At the time of writing it is named `t7patch_2.04.Windows.Only.zip`; use the current Windows release.
+3. Extract the entire ZIP into a normal folder, keeping its files together.
+4. Follow the Windows tutorial linked on the release page to run T7Patch alongside Steam BO3.
+5. Set the **Network Password** in T7Patch to the group's exact passcode. Use a game-specific value rather than an account password.
+
+<Screenshot
+  src={windowsRelease}
+  alt="T7Patch's current GitHub release page with Windows Installation Tutorial and release notes"
+  caption="Use the Windows Installation Tutorial and Windows Only ZIP on this release page. The displayed version is an example, not a pinned requirement."
+  sourceHref="https://github.com/shiversoftdev/t7patch/releases/tag/Current"
+  sourceName="T7Patch release page"
+/>
+
+Keep the patch running when playing. Confirm its instructions and password
+before joining the group.
+
+## 3. Check the game and join
+
+**Checkpoint:** load a base map with T7Patch running before trying invitations.
+Check Multiplayer and Zombies independently.
+
+Continue to [Play together — Black Ops III](/docs/crossplay/play-together/#black-ops-iii)
+for Steam friends, private lobby invitations, and the mixed-platform checks.
+
+## 4. Add custom Zombies maps
+
+Subscribe to the agreed **Steam Workshop map and mods**, and wait for downloads
+to finish before joining. T7Patch's release notes say the host selecting a map
+does not automatically install it for guests. Start with one map and matching
+mod versions after the base-map session works.
+
+## Fix common problems
+
+| What you see                       | What to check                                                                                                   |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Friends cannot join                | Match the network password exactly, restart the game, and confirm Steam friends, mode, map, and patch versions. |
+| Someone is using BOIII             | Use Steam BO3 with T7Patch for this group setup; compatibility with BOIII is unverified.                        |
+| A Workshop map fails               | Confirm subscriptions, downloads, and map/mod versions. Retry a base map.                                       |
+| Patch setup differs from the image | Use the current release's Windows tutorial and full ZIP contents.                                               |
+
+## Before the next session
+
+Keep Steam and T7Patch updated. Confirm the shared password, host, mode, and
+map. Retest multiplayer and Zombies independently after updates.
+
+## Sources and screenshots
+
+Client instructions checked on **8 October 2026** against
+[T7Patch documentation](https://github.com/shiversoftdev/t7patch).
+Screenshots show the upstream release website and an explicitly labelled Steam
+UI example. Installation and gameplay have not been tested here on a local
+Mac/Windows pair.

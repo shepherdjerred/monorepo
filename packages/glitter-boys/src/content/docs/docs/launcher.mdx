@@ -1,0 +1,119 @@
+---
+title: Windows launcher
+description: Install a game and get ready to play with the Glitter Boys.
+---
+
+import Screenshot from "../../../components/Screenshot.astro";
+import launcherInstalled from "../../../assets/guides/launcher-friendly-library.jpg";
+
+The Glitter Boys launcher handles downloading, unpacking, and client setup for
+**Windows x64**. Choose a game, let it install, then choose **Play**.
+
+:::note[Preview]
+Get the preview installer directly from Jerred. There is no public signed
+download yet. This unsigned preview has automatic updates disabled until release signing is configured.
+:::
+
+## 1. Install Glitter Boys
+
+Open the `glitter-boys_0.1.0_x64-setup.exe` installer supplied by Jerred and follow
+its steps. Open **Glitter Boys** from your Start menu or desktop shortcut.
+
+If Windows blocks the installer, send Jerred the message you see so the release
+can be fixed. The preview is not yet signed.
+
+## 2. Choose where games go
+
+Open **Settings** to see your game folder and available space. Use
+**Change game folder** before starting if you want games on another drive. The
+launcher creates a `GlitterBoys` folder inside the folder you select.
+
+The launcher checks space for both downloaded ZIPs and unpacked files before
+starting. BO3 needs about **255 GB free** during setup. Successful
+installs remove their large downloaded archives afterward.
+
+Existing game folders are preserved. This preview creates its own installations;
+it does not import Steam games or move their saves.
+
+## 3. Install a game
+
+Choose **Install** on a game card. You can install more games at the same time.
+The launcher handles downloading, checking files, and setting up each game.
+A waiting game starts when another installation makes room.
+
+The card shows the current step and an estimate such as **About 4 minutes left
+to download**. This is time left in that step, not the entire installation.
+Choose **Details** if you want to see elapsed time, speed, or download sizes.
+
+| Game                    | Client    | Modes                   |
+| ----------------------- | --------- | ----------------------- |
+| Modern Warfare 2 (2009) | IW4x      | Multiplayer             |
+| Black Ops               | Plutonium | Multiplayer and Zombies |
+| Black Ops II            | Plutonium | Multiplayer and Zombies |
+| Black Ops III           | BOIII     | Multiplayer and Zombies |
+
+Keep the launcher open while it checks and unpacks files. **Pause** on a card or **Pause all**
+keeps downloaded bytes for later. After closing and reopening the launcher,
+choose **Resume** to continue, or **Try again** if an error occurred. Unpacking starts again if interrupted;
+the downloaded ZIP does not need to be fetched again if it passed verification.
+Large games can take a while to set up, especially on a hard drive or external drive.
+
+## 4. Play
+
+<Screenshot
+  src={launcherInstalled}
+  alt="The Glitter Boys library with clear Play buttons and Settings and Help below the four games."
+  caption="Earlier preview. BO1 and BO2 now have separate Play Multiplayer and Play Zombies buttons."
+  sourceName="Our Windows launcher, captured October 9, 2026"
+/>
+
+For BO1 and BO2, choose **Play Multiplayer** or **Play Zombies**. For MW2,
+choose **Play**. For BO3, choose **Play**, then select your mode in the game menu.
+
+Play checks the game’s required Microsoft components. Only missing or outdated
+components open an installer; installed components are skipped. It may also need a
+client update, a Windows restart, or a Plutonium login. Sign in through the
+official Plutonium window; Glitter Boys never asks for your password.
+
+If Plutonium is already open and the launcher asks you to close it, close it and
+choose **Try again** so it can set the game folder. Keep using **Play** for
+future sessions so the official client can check for updates.
+
+Once everyone is in the game, join the same server or arrange a private lobby
+with your friends. Everyone needs the same client and the map being played.
+Reaching the main menu alone does not verify that a multiplayer session works.
+
+If other installations are running, choose **Pause all** before **Play**.
+
+## Help, reports, and updates
+
+**Settings → Share error and performance reports** sends limited error and timing
+reports automatically when our reporting service is available. You can turn it off anytime. Reports
+contain the game, launcher version, operation, outcome, duration, and byte count.
+They exclude account details, passwords, usernames, file paths, and chat. Local
+logs remain available through **Help → Show advanced tools → Open logs**.
+Use **Help → Save support report** to save a file you can send to Jerred.
+Saving the file does not send it anywhere.
+
+Signed releases will check for launcher updates automatically. A verified update
+is staged in the background and activated when you close the launcher after its
+tasks stop. The previous version is retained for recovery. The unsigned preview
+cannot accept updates; **Settings** explains its status.
+
+## If something stops
+
+Choose **Get help** on the affected game for an explanation and a next step.
+You can copy error details or save a support report from that screen.
+
+- **Download interrupted:** check your connection and choose **Try again**.
+- **Not enough space:** free space on your game drive and try again. To change drives, pause all
+  installations, open **Settings**, and choose **Remove paused installations from
+  the list**, then **Change game folder**. Saved downloads stay in the original folder.
+- **Game already running:** switch to its window or close it before launching again.
+- **Still stuck:** choose **Help → Save support report** and send the file and the visible
+  error to Jerred. The export contains launcher events, not Plutonium credentials.
+
+The [manual Windows guides](/docs/) cover client-specific troubleshooting.
+For a Mac, use the [Apple silicon guide](/docs/crossplay/macos/) and
+[crossplay compatibility reference](/docs/crossplay/). The Windows BOIII route
+does not establish compatibility with the Mac version of BO3.

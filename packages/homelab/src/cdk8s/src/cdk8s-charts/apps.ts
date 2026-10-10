@@ -1,3 +1,4 @@
+import { createGlitterBoysLauncherApp } from "../resources/argo-applications/apps/glitter-boys-launcher.ts";
 import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
 import { createOnePasswordApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/1password.ts";
@@ -185,6 +186,7 @@ export async function createAppsChart(app: App) {
   createGolinkApp(chart);
   createFreshrssApp(chart);
   createPinchtabApp(chart);
+  createGlitterBoysLauncherApp(chart);
   createFliptApp(chart);
   createPokemonApp(chart);
   createMarioKartApp(chart);

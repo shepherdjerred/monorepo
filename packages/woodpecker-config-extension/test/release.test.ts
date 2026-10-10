@@ -500,6 +500,7 @@ test("the sites lane deploys active sites when their paths change", () => {
       "statically-typed",
       "@shepherdjerred/statically-typed",
     ],
+    ["site-glitter-boys", "glitter-boys", "@shepherdjerred/glitter-boys"],
     ["site-ts-mc-docs", "ts-mc-docs", "@shepherdjerred/ts-mc-docs"],
   ] as const) {
     expect(commands).toContain(`ci/scripts/selectors/ci-changed.ts ${lane}`);

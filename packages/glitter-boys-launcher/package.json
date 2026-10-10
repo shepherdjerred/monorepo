@@ -1,0 +1,15 @@
+{
+  "name": "@shepherdjerred/glitter-boys-launcher",
+  "private": true,
+  "description": "Native Rust and egui Windows game installer and launcher",
+  "scripts": {
+    "dev": "mise exec rust -- cargo run --locked --package glitter-boys-app",
+    "build": "mise exec rust -- cargo build --workspace --all-targets --locked",
+    "typecheck": "mise exec rust -- cargo check --workspace --all-targets --locked",
+    "test": "mise exec rust -- cargo test --workspace --locked && bun test scripts",
+    "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
+    "lint": "mise exec rust -- cargo fmt --all -- --check && mise exec rust -- cargo clippy --workspace --all-targets --locked -- -D warnings",
+    "package": "mise exec rust cargo:cargo-packager -- cargo packager --release --packages glitter-boys-app",
+    "release": "mise exec rust cargo:cargo-packager bun -- bun scripts/release.ts"
+  }
+}

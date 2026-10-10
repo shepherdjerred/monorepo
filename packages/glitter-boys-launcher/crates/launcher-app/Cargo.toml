@@ -1,0 +1,42 @@
+[package]
+name = "glitter-boys-app"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+description = "Install and play with the Glitter Boys"
+
+[[bin]]
+name = "glitter-boys"
+path = "src/main.rs"
+
+[package.metadata.packager]
+product-name = "Glitter Boys"
+identifier = "com.glitter-boys.launcher"
+before-packaging-command = "bun ../../scripts/prepare-package.ts"
+out-dir = "../../dist"
+formats = ["nsis"]
+publisher = "Glitter Boys"
+resources = [
+  { src = "../../target/package-layout/current.json", target = "current.json" },
+  { src = "../../target/package-layout/versions", target = "versions" },
+  { src = "../../assets/*LICENSE.txt", target = "licenses" },
+  { src = "../../../../LICENSE", target = "licenses/Glitter-Boys-GPL-3.0.txt" },
+]
+
+[package.metadata.packager.nsis]
+installer-mode = "currentUser"
+
+[dependencies]
+eframe.workspace = true
+glitter-boys-core = { path = "../launcher-core" }
+open.workspace = true
+rfd.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+
+[lints]
+workspace = true
