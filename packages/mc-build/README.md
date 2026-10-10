@@ -77,12 +77,16 @@ bun run typecheck && bun run test && bun run lint
 Every view can be drawn `textured` (default), in `value` (grays: tonal
 massing and silhouette), `normal` (each face coloured by its facing, so a
 flat wall is one flat colour and relief shows as colour changes), `squint`
-(box-blurred: only massing survives), `relief` (a low sun marched through
-the grid for long shadows, plus corner occlusion) or `light` (cells coloured
+(box-blurred: only massing survives), `relief` (a low sun traced against
+resolved model surfaces for long shadows, plus corner occlusion) or `light` (cells coloured
 by block light with sky light propagated in; level 0 is red). Invisible
 `minecraft:light` blocks emit their `level` (0–15, default 15) while transmitting
 skylight and casting no relief shadows, for example
 `renderer.view(grid, "iso-front-right", 512, { mode: "relief" })`.
+Relief sun and corner rays intersect the same model quads and UV opacity as
+the textured renderer. Partial shapes cast their actual silhouettes; transparent
+and translucent pixels do not cast binary opaque shadows. Sun rays extend up
+to 32 blocks; the existing large-mesh guard skips them above two million quads.
 Block-light emission uses the complete Paper state registry. Both block light
 and skylight transmission use model geometry and texture opacity: partial models
 and cutout or translucent textures transmit it, including torches, plants and

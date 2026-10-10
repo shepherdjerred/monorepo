@@ -38,6 +38,7 @@ import { resetToSite, runOps } from "./ops.ts";
 import { boxSize, cropGrid, emptyGrid, placeGrid, tileBox } from "./tiles.ts";
 import { BuildWorkspace } from "./workspace.ts";
 import { validateFrozenExpected, type FrozenPart } from "./frozen-expected.ts";
+import { publishFiles } from "./file-transaction.ts";
 import {
   PROGRAM_TEMPLATE,
   type Env,
@@ -348,13 +349,25 @@ export async function runBuild(
   );
   const region = await env.client.regionRead(target, box);
   await validateFrozenExpected(box, region, frozen);
-  await workspace.writeFrozen("expected", frozen);
-  await workspace.writeExpected(region);
-  await appendLog(dir, {
-    kind: "run",
-    target,
-    ops: ops.length,
-    program,
+  await publishFiles(workspace, {
+    prefix: ".run-",
+    stage: async (staged) => {
+      const pending = new BuildWorkspace(staged);
+      await pending.writeFrozen("expected", frozen);
+      await pending.writeExpected(region);
+      return [
+        BUILD_FILES.expected,
+        BUILD_FILES.expectedSchematic,
+        BUILD_FILES.expectedParts,
+      ];
+    },
+    commit: () =>
+      appendLog(dir, {
+        kind: "run",
+        target,
+        ops: ops.length,
+        program,
+      }),
   });
   return { target, ops: ops.length };
 }

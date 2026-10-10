@@ -5,13 +5,12 @@
  * corners and unlit doors show).
  */
 import type { BlockGrid, Vec3 } from "#src/core/grid.ts";
-import { blockId, isAir } from "#src/core/block-state.ts";
 import type { Quad, V3 } from "./mesh.ts";
+import { ShadowIndex } from "./shadow.ts";
 
 /** The relief sun: low in the north-west (yaw 300°), 25° above the horizon. */
 export const RELIEF_SUN = { yaw: 300, pitch: 25 } as const;
 const SHADOW = 0.45;
-const MARCH_STEPS = 64;
 const ZERO_ORIGIN: Vec3 = { x: 0, y: 0, z: 0 };
 /** Above this many quads the sun march is skipped unless asked for explicitly. */
 export const RELIEF_MAX_QUADS = 2_000_000;
@@ -42,29 +41,6 @@ function centreOf(quad: Quad): V3 {
     (a[1] + b[1] + c[1] + d[1]) / 4,
     (a[2] + b[2] + c[2] + d[2]) / 4,
   ];
-}
-
-function solid(grid: BlockGrid, x: number, y: number, z: number): boolean {
-  const cx = Math.floor(x);
-  const cy = Math.floor(y);
-  const cz = Math.floor(z);
-  if (!grid.inBounds(cx, cy, cz)) return false;
-  const state = grid.get(cx, cy, cz);
-  return !isAir(state) && blockId(state) !== "minecraft:light";
-}
-
-/** True when a ray from `from` toward the sun hits a block within the march. */
-function inShadow(grid: BlockGrid, from: V3, sun: V3): boolean {
-  const step = 0.5;
-  for (let i = 1; i <= MARCH_STEPS; i += 1) {
-    const t = i * step;
-    const x = from[0] + sun[0] * t;
-    const y = from[1] + sun[1] * t;
-    const z = from[2] + sun[2] * t;
-    if (y >= grid.size.y) return false;
-    if (solid(grid, x, y, z)) return true;
-  }
-  return false;
 }
 
 /** The two unit axes tangent to a face normal. */
@@ -102,30 +78,30 @@ function offset(base: V3, along: [V3, number], across: [V3, number]): V3 {
 }
 
 /** 1 for an open face, down to 0.5 when neighbours crowd its outside cell. */
-function occlusion(grid: BlockGrid, outside: V3, normal: V3): number {
+function occlusion(shadows: ShadowIndex, outside: V3, normal: V3): number {
   const [u, v] = tangents(normal);
   let edges = 0;
   let corners = 0;
   for (const su of [-1, 1]) {
     for (const sv of [-1, 1]) {
       const corner = offset(outside, [u, su], [v, sv]);
-      if (solid(grid, corner[0], corner[1], corner[2])) corners += 1;
+      if (shadows.between(outside, corner)) corners += 1;
     }
     const alongU = offset(outside, [u, su], [v, 0]);
     const alongV = offset(outside, [u, 0], [v, su]);
-    if (solid(grid, alongU[0], alongU[1], alongU[2])) edges += 1;
-    if (solid(grid, alongV[0], alongV[1], alongV[2])) edges += 1;
+    if (shadows.between(outside, alongU)) edges += 1;
+    if (shadows.between(outside, alongV)) edges += 1;
   }
   return Math.max(0.5, 1 - 0.1 * edges - 0.04 * corners);
 }
 
 /** The cell just outside a quad, at its centre, pushed half a block along its normal. */
-function outsidePoint(quad: Quad, normal: V3): V3 {
+function outsidePoint(quad: Quad, normal: V3, distance = 0.5): V3 {
   const centre = centreOf(quad);
   return [
-    centre[0] + normal[0] * 0.5,
-    centre[1] + normal[1] * 0.5,
-    centre[2] + normal[2] * 0.5,
+    centre[0] + normal[0] * distance,
+    centre[1] + normal[1] * distance,
+    centre[2] + normal[2] * distance,
   ];
 }
 
@@ -142,10 +118,10 @@ function scaled(quad: Quad, factor: V3): Quad {
 
 export function shadeRelief(
   quads: readonly Quad[],
-  grid: BlockGrid,
   options: { sun?: { yaw: number; pitch: number }; force?: boolean } = {},
 ): Quad[] {
   const sun = sunDirection(options.sun ?? RELIEF_SUN);
+  const shadows = new ShadowIndex(quads);
   const march = options.force === true || quads.length <= RELIEF_MAX_QUADS;
   return quads.map((quad) => {
     if (quad.normal === null) return quad;
@@ -154,9 +130,9 @@ export function shadeRelief(
       0,
       normal[0] * sun[0] + normal[1] * sun[1] + normal[2] * sun[2],
     );
-    const outside = outsidePoint(quad, normal);
-    let factor = (0.55 + 0.45 * facing) * occlusion(grid, outside, normal);
-    if (march && facing > 0 && inShadow(grid, outside, sun)) {
+    const outside = outsidePoint(quad, normal, 0.001);
+    let factor = (0.55 + 0.45 * facing) * occlusion(shadows, outside, normal);
+    if (march && facing > 0 && shadows.hit(outside, sun, 32)) {
       factor *= SHADOW;
     }
     return scaled(quad, [factor, factor, factor]);

@@ -152,7 +152,7 @@ export class Renderer {
     }
     const quads = await this.mesher.quads(grid);
     if (mode === "relief") {
-      return { quads: shadeRelief(quads, grid), viewMode: "textured" };
+      return { quads: shadeRelief(quads), viewMode: "textured" };
     }
     if (mode === "light") {
       // A cut grid (floor plan, section) is lit by the whole build it came

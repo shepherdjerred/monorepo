@@ -1,4 +1,5 @@
 import { mkdtemp, rm } from "node:fs/promises";
+import type * as FileSystem from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterAll, describe, expect, it, vi } from "vitest";
@@ -16,6 +17,19 @@ import { readLog } from "#build/build-log.ts";
 import { DaemonClient } from "#build/daemon-client.ts";
 import { Journal } from "#build/journal.ts";
 import { flatSiteBuild } from "./fixtures/flat-site.ts";
+
+const journalFailure = vi.hoisted(() => ({ file: "" }));
+vi.mock("node:fs/promises", async (importOriginal) => {
+  const original = await importOriginal<typeof FileSystem>();
+  return {
+    ...original,
+    appendFile: async (...args: Parameters<typeof original.appendFile>) => {
+      if (args[0] === journalFailure.file)
+        throw new Error("simulated journal append failure");
+      return original.appendFile(...args);
+    },
+  };
+});
 
 const root = await mkdtemp(path.join(os.tmpdir(), "mc-expected-evidence-"));
 afterAll(async () => rm(root, { recursive: true }));
@@ -55,6 +69,75 @@ async function build(name: string) {
 }
 
 describe("frozen expected evidence", () => {
+  it.each(["single", "tiled"])(
+    "restores the previous %s run when journaling a changed run fails",
+    async (kind) => {
+      const { workspace, site, region } = await build(`journal-${kind}`);
+      const client = new DaemonClient();
+      vi.spyOn(client, "paste").mockResolvedValue({
+        changed: 0,
+        min: region.min,
+        max: region.max,
+        historySize: 0,
+      });
+      const snapshots = vi.spyOn(client, "snapshotParts").mockResolvedValue({
+        id: "original",
+        parts: [{ id: "original", box: region }],
+      });
+      const bytes = vi
+        .spyOn(client, "snapshotBytes")
+        .mockResolvedValue(writeSchematic(site.grid, site.dataVersion));
+      const reads = vi.spyOn(client, "regionRead").mockResolvedValue(region);
+      const env = {
+        client,
+        journal: new Journal(workspace.file("audit")),
+        log: vi.fn(),
+      };
+      await runBuild(env, workspace.dir, { target: "sbx-000001" });
+      if (kind === "tiled") {
+        const tiles = [0, 5].map((x) => {
+          const grid = new BlockGrid({ x: 5, y: 10, z: 10 });
+          grid.forEach((cx, y, z) =>
+            grid.set(cx, y, z, site.grid.get(cx + x, y, z)),
+          );
+          return {
+            at: { ...region.min, x: region.min.x + x },
+            bytes: writeSchematic(grid, site.dataVersion),
+          };
+        });
+        await workspace.writeFrozen("expected", tiles);
+      }
+      const before = await workspace.expected();
+      const partsBefore = await workspace.frozenParts("expected", region);
+      const journal = await readLog(workspace.dir);
+      const changed = new BlockGrid(site.grid.size, "minecraft:stone");
+      snapshots.mockResolvedValue({
+        id: "changed",
+        parts: [{ id: "changed", box: region }],
+      });
+      bytes.mockResolvedValue(writeSchematic(changed, site.dataVersion));
+      reads.mockResolvedValue(regionOf(changed));
+      journalFailure.file = workspace.file(BUILD_FILES.journal);
+      try {
+        await expect(
+          runBuild(env, workspace.dir, { target: "sbx-000001" }),
+        ).rejects.toThrow(/journal append failure/u);
+      } finally {
+        journalFailure.file = "";
+      }
+      expect(await readLog(workspace.dir)).toEqual(journal);
+      const restored = await workspace.expected();
+      expect(restored.diff(before).count).toBe(0);
+      expect(await workspace.frozenParts("expected", region)).toEqual(
+        partsBefore,
+      );
+      await runBuild(env, workspace.dir, { target: "sbx-000001" });
+      const retried = await workspace.expected();
+      expect(retried.diff(changed).count).toBe(0);
+      expect(await readLog(workspace.dir)).toHaveLength(journal.length + 1);
+    },
+  );
+
   it.each(["json", "schematic", "world", "placement", "missing"])(
     "rejects mismatched %s before rendering or promotion mutation",
     async (failure) => {

@@ -171,6 +171,13 @@ beforeAll(async () => {
       to: [9, 10, 9],
     })),
   });
+  await writeJson("models/block/test_slab.json", {
+    textures: { all: "block/test_wood" },
+    elements: cube("#all").elements.map((element) => ({
+      ...element,
+      to: [16, 8, 16],
+    })),
+  });
   for (const [block, model] of [
     ["torch", "test_torch"],
     ["lantern", "test_torch"],
@@ -178,7 +185,7 @@ beforeAll(async () => {
     ["sea_pickle", "test_torch"],
     ["oak_fence", "test_torch"],
     ["iron_bars", "test_torch"],
-    ["oak_slab", "test_step"],
+    ["oak_slab", "test_slab"],
     ["short_grass", "test_window"],
     ["tinted_glass", "test_window"],
   ] as const) {
@@ -350,7 +357,7 @@ describe("renderer", () => {
         "frontGrid": "56c282eca91516261b49a4529294e0ef5c6733f974ec41287ff102563ebdb8f1",
         "light": "6fab03b4cc2e18a0d8cf4eebfd1ac4aa3d9fda37a98c0d52ac9ce1c488b38a30",
         "pov": "7f384178258124426d26b81efe7f57e76c0f1b388995b7261f1d7ee0988e1a4a",
-        "relief": "49a0d0e2850c533f15df72f989993c3858c56f4eaeecf2e002a097ecfb670259",
+        "relief": "6a88576c1cf33ea8dc918a706d888e434c13c366f7a5ef3fbce34a2d411c3eea",
         "squint": "97bfb2635a9a0d5a0b2852ff93931c64e09a993ef1bd51542cebae5a23040fc8",
       }
     `);
@@ -680,6 +687,35 @@ describe("skylight", () => {
     const cave = await renderer.view(caved, "top", 32, { mode: "light" });
     expect(pixelHash(cave.pixels)).toBe(pixelHash(lit.pixels));
   });
+});
+
+describe("relief geometry", () => {
+  test.each(["torch", "oak_slab", "oak_fence", "glass"])(
+    "sun rays pass through the empty or transparent part of %s",
+    async (block) => {
+      const renderer = new Renderer(root);
+      const grid = new BlockGrid({ x: 6, y: 4, z: 6 });
+      grid.set(3, 0, 3, "minecraft:stone");
+      const topColor = async () => {
+        const { quads } = await renderer.quadsFor(grid, "relief");
+        const face = quads.find(
+          (quad) =>
+            quad.normal?.[1] === 1 &&
+            quad.corners.every(
+              (p) =>
+                p[1] === 1 && p[0] >= 3 && p[0] <= 4 && p[2] >= 3 && p[2] <= 4,
+            ),
+        );
+        if (face === undefined) throw new Error("missing test floor face");
+        return face.color;
+      };
+      const open = await topColor();
+      grid.set(1, 1, 4, `minecraft:${block}`);
+      expect(await topColor()).toEqual(open);
+      grid.set(1, 1, 4, "minecraft:stone");
+      expect(await topColor()).not.toEqual(open);
+    },
+  );
 });
 
 describe("section cut", () => {

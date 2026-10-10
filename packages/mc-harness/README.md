@@ -210,7 +210,9 @@ WorldEdit, paste and console ops, each with explicit coordinates and a
   (heightmap, water/vegetation masks, `siteHash`).
 - **Canvas** is a void sandbox with the site pasted at its real coordinates;
   **run** resets it to the site, replays every op, and freezes the result as
-  `expected.schem` + `expected.json`.
+  `expected.schem` + `expected.json`. Publication stages the JSON and all frozen
+  schematic parts together and rolls them back if installation or journaling
+  fails, preserving the preceding successful run and its program provenance.
   The snapshot and region read must cover identical blocks before a run is
   published. Expected renders and promotion recheck both artifacts, including
   complete tile coverage, before accepting evidence or mutating a target.
