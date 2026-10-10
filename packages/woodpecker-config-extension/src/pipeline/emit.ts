@@ -272,6 +272,7 @@ function ordinaryCloneConfiguration(
         image: ORDINARY_CLONE_IMAGE,
         settings: {
           depth: 0,
+          partial: false,
           ...(identity.event === "tag" ? { tags: true } : {}),
         },
         backend_options: {
