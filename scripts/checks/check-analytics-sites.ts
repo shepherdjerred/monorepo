@@ -70,13 +70,6 @@ const staticTrackers = [
     wiring: /<script[^>]+\bsrc=["']\.\/posthog\.js["']/,
   },
   {
-    path: "packages/ts-mc/public/posthog.js",
-    entrypoint: "packages/ts-mc/src/layouts/BaseLayout.astro",
-    hostname: "ts-mc.net",
-    masksAllText: false,
-    wiring: /<script[^>]+\bsrc=["']\/posthog\.js["']/,
-  },
-  {
     path: "packages/ts-mc-docs/public/posthog.js",
     entrypoint: "packages/ts-mc-docs/astro.config.ts",
     hostname: "docs.ts-mc.net",
@@ -137,7 +130,6 @@ const expectedHostnames = new Set([
   "pokebot.sjer.red",
   "scout-for-lol.com",
   "beta.scout-for-lol.com",
-  "ts-mc.net",
   "docs.ts-mc.net",
   "ppl.glitter-boys.com",
   "cook.sjer.red",
@@ -150,7 +142,7 @@ if (
   [...expectedHostnames].some((hostname) => !actualHostnames.has(hostname))
 ) {
   throw new Error(
-    "Analytics registry must contain exactly the fourteen portfolio hosts",
+    "Analytics registry must contain exactly the configured portfolio hosts",
   );
 }
 

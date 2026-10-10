@@ -32,6 +32,8 @@ class LiveMapTests(unittest.TestCase):
             web.writestr(
                 "index.html",
                 '<title>BlueMap</title><meta name="og:title" content="BlueMap">'
+                '<meta name="og:image" content="https://avatars.githubusercontent.com/u/42522657?s=200&v=4">'
+                '<link rel="icon" href="./assets/favicon-original.png">'
                 '<script src="./assets/index-original.js"></script>'
                 '<link rel="manifest" href="./assets/manifest-original.webmanifest">',
             )
@@ -55,14 +57,14 @@ class LiveMapTests(unittest.TestCase):
             capture_output=True, text=True, timeout=10,
         )
 
-    def install(self, target, ownership=None):
+    def install(self, target, volume=None, **identity):
         # Load the real entrypoint functions without running its production main.
         definitions = (SERVER / "storm-entrypoint.sh").read_text().split("\nrequire_progression_preparation\n")[0]
-        uid, gid = ownership if ownership is not None else (os.getuid(), os.getgid())
+        metadata = (volume or self.root).stat()
         return subprocess.run(
             ["bash", "-c", definitions + '\ninstall_livemap "$1" "$2" "$3" "$4"',
-             "test", str(self.output), str(target), str(uid), str(gid)],
-            capture_output=True, text=True, timeout=10,
+             "test", str(self.output), str(target), str(metadata.st_uid), str(metadata.st_gid)],
+            capture_output=True, text=True, timeout=10, **identity,
         )
 
     def test_brands_static_assets_preserving_plugin_api_and_attribution(self):
@@ -72,6 +74,13 @@ class LiveMapTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         html = (self.output / "index.html").read_text()
         self.assertNotIn("BlueMap", html)
+        self.assertNotIn("avatars.githubusercontent.com", html)
+        icon = next((self.output / "assets").glob("livemap-icon-*.svg"))
+        preview = next((self.output / "assets").glob("livemap-preview-*.png"))
+        self.assertIn(icon.name, html)
+        self.assertIn(preview.name, html)
+        self.assertEqual(icon.read_bytes(), (SERVER / "livemap/favicon.svg").read_bytes())
+        self.assertEqual(preview.read_bytes(), (SERVER / "livemap/social.png").read_bytes())
         entry = next((self.output / "assets").glob("livemap-*.js"))
         self.assertIn(entry.name, html)
         self.assertIn("window.BlueMap={}", entry.read_text())
@@ -85,6 +94,9 @@ class LiveMapTests(unittest.TestCase):
             self.assertIn("Generated using BlueMap", text)
         manifest = next((self.output / "assets").glob("*.webmanifest"))
         self.assertEqual(json.loads(manifest.read_text())["name"], "LiveMap")
+        self.assertEqual(json.loads(manifest.read_text())["icons"], [
+            {"src": icon.name, "sizes": "any", "type": "image/svg+xml"},
+        ])
         self.assertIn(manifest.name, html)
         for path in ("sql.php", "settings.json", "maps"):
             self.assertFalse((self.output / path).exists())
@@ -119,11 +131,36 @@ class LiveMapTests(unittest.TestCase):
         target = self.root / "bluemap" / "web"
         # Root-run Linux CI also exercises a different Minecraft/data owner.
         ownership = (1000, 1000) if os.getuid() == 0 else (os.getuid(), os.getgid())
-        result = self.install(target, ownership)
+        if os.getuid() == 0:
+            os.chown(self.root, *ownership)
+        result = self.install(target)
         self.assertEqual(result.returncode, 0, result.stderr)
         for path in (target.parent, target, *target.rglob("*")):
             stat = path.stat()
             self.assertEqual((stat.st_uid, stat.st_gid), ownership)
+            self.assertEqual(stat.st_mode & 0o7777, 0o2775 if path.is_dir() else 0o664)
+
+    @unittest.skipUnless(os.getuid() == 0, "requires root to model a Kubernetes fsGroup mount")
+    def test_nonroot_install_on_root_owned_group_writable_volume(self):
+        self.fixture()
+        result = self.build()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.root.chmod(0o755)
+        # The Docker fetch stage makes its final /out tree readable by runtime
+        # users; zipfile's synthetic entries otherwise extract with mode 0600.
+        for path in self.output.rglob("*"):
+            path.chmod(0o755 if path.is_dir() else 0o644)
+        volume = self.root / "volume"
+        volume.mkdir()
+        os.chown(volume, 0, 2000)
+        volume.chmod(0o2770)
+        target = volume / "bluemap" / "web"
+        result = self.install(target, volume, user=1000, group=1000, extra_groups=[2000])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(volume.stat().st_uid, 0)
+        for path in (target.parent, target, *target.rglob("*")):
+            stat = path.stat()
+            self.assertEqual((stat.st_uid, stat.st_gid), (1000, 2000))
             self.assertEqual(stat.st_mode & 0o7777, 0o2775 if path.is_dir() else 0o664)
 
     def test_install_preserves_live_settings_maps_and_cached_assets_across_boots(self):

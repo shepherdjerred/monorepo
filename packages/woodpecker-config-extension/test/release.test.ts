@@ -487,7 +487,7 @@ test("the sites lane installs and pre-builds the Storybook catalogs", () => {
   expect(commands).not.toContain("turbo run");
 });
 
-test("the sites lane deploys new sites when their paths change", () => {
+test("the sites lane deploys active sites when their paths change", () => {
   const sites = step("sites");
   const dryRun = step("pr-dryrun");
   if (sites === undefined || dryRun === undefined) {
@@ -500,7 +500,6 @@ test("the sites lane deploys new sites when their paths change", () => {
       "statically-typed",
       "@shepherdjerred/statically-typed",
     ],
-    ["site-ts-mc", "ts-mc", "@shepherdjerred/ts-mc"],
     ["site-ts-mc-docs", "ts-mc-docs", "@shepherdjerred/ts-mc-docs"],
   ] as const) {
     expect(commands).toContain(`ci/scripts/selectors/ci-changed.ts ${lane}`);

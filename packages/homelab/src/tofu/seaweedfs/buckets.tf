@@ -48,6 +48,7 @@ resource "aws_s3_bucket" "sjer_red" {
 }
 
 resource "aws_s3_bucket" "ts_mc" {
+  # Retained assets from the retired Astro portal; no active site deploys here.
   bucket = "ts-mc"
 }
 

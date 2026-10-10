@@ -50,11 +50,6 @@
       "sessionReplay": true
     },
     {
-      "key": "ts-mc",
-      "hostname": "ts-mc.net",
-      "sessionReplay": true
-    },
-    {
       "key": "ts-mc-docs",
       "hostname": "docs.ts-mc.net",
       "sessionReplay": true

@@ -107,7 +107,7 @@
       "mode": "excluded",
       "cadences": [],
       "excludeSuffixes": [],
-      "reason": "Rebuildable static site"
+      "reason": "Retired static portal; bucket contents retained"
     },
     {
       "name": "ts-mc-docs",

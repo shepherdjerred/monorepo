@@ -287,10 +287,6 @@
       "entry": ["src/**/*.astro"],
       "project": ["src/**/*.{ts,astro,css}", "*.ts"]
     },
-    "packages/ts-mc": {
-      "entry": ["src/**/*.astro"],
-      "project": ["src/**/*.{ts,astro,css}", "*.ts"]
-    },
     "packages/ts-mc-docs": {
       "project": ["src/**/*.{ts,astro,mdx}", "*.ts"]
     },
