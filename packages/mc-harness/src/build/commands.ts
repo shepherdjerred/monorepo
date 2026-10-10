@@ -430,9 +430,14 @@ export async function renderBuild(
     look.compareWith = await alignedRender(workspace, options.compare, covered);
   }
   look.source = source;
+  if (options.target !== undefined) look.target = options.target;
   look.box = covered;
   if (isPlainLook(look)) {
-    const provenance = await readRenderProvenance(workspace, source);
+    const provenance = await readRenderProvenance(
+      workspace,
+      source,
+      options.target,
+    );
     const render = await renderGrid(workspace, grid, name, manifest.name);
     const hero = await renderHero(workspace, grid, name);
     const files = { sheet: render, ...(hero === null ? {} : { hero }) };

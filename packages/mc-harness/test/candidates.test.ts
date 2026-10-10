@@ -658,7 +658,11 @@ describe("by-eye critique and compare alignment", () => {
     if (ran === null) throw new Error("expected one program behind the ops");
     const { grid } = await compiledGrid(workspace, await workspace.manifest());
     const look = (name: string, source: "canvas" | "expected" | "compiled") =>
-      renderLooks(workspace, grid, name, { source, views: ["sheet"] });
+      renderLooks(workspace, grid, name, {
+        source,
+        target: "canvas",
+        views: ["sheet"],
+      });
     // Nothing has run yet: the canvas and the frozen result are not this program's.
     await look("unrun", "expected");
     expect(await programOf(workspace, "unrun")).toBeNull();
@@ -691,7 +695,74 @@ describe("by-eye critique and compare alignment", () => {
       "second program",
     );
   }, 60_000);
+});
 
+describe("canvas render provenance", () => {
+  it.each(["plain", "looks"] as const)(
+    "binds %s canvas provenance to the sandbox actually rendered",
+    async (kind) => {
+      const workspace = await makeBuild(`canvas-target-${kind}`);
+      await pastePart(workspace, 3);
+      const manifest = await workspace.manifest();
+      const ops = await opsOf(workspace);
+      const program = await producingProgram(workspace, ops);
+      await appendLog(workspace.dir, {
+        kind: "run",
+        target: "sbx-000001",
+        ops: ops.length,
+        program,
+      });
+      // Creating a replacement canvas changes the manifest identity, but
+      // leaves the compiled ops and the old run intact.
+      await workspace.writeManifest({ ...manifest, canvas: "sbx-000002" });
+      const client = new DaemonClient();
+      const region = vi.spyOn(client, "regionRead").mockResolvedValue({
+        ...workspace.siteBox(manifest),
+        size: { x: 10, y: 10, z: 10 },
+        palette: ["minecraft:stone"],
+        blocks: Buffer.alloc(4000).toString("base64"),
+        blockEntities: [],
+      });
+      const env = {
+        client,
+        journal: new Journal(workspace.file("audit")),
+        log: vi.fn(),
+      };
+      const look = kind === "plain" ? {} : { views: ["sheet"] as const };
+      await renderBuild(env, workspace.dir, { name: "replacement", look });
+      expect(region).toHaveBeenLastCalledWith(
+        "sbx-000002",
+        workspace.siteBox(manifest),
+      );
+      expect(await programOf(workspace, "replacement")).toBeNull();
+      await renderBuild(env, workspace.dir, {
+        name: "original",
+        target: "sbx-000001",
+        look,
+      });
+      expect(region).toHaveBeenLastCalledWith(
+        "sbx-000001",
+        workspace.siteBox(manifest),
+      );
+      expect(await programOf(workspace, "original")).toBe(
+        "renders/original.build.ts",
+      );
+      await appendLog(workspace.dir, {
+        kind: "run",
+        target: "sbx-000002",
+        ops: ops.length,
+        program,
+      });
+      await renderBuild(env, workspace.dir, { name: "rerun", look });
+      expect(await programOf(workspace, "rerun")).toBe(
+        "renders/rerun.build.ts",
+      );
+    },
+    60_000,
+  );
+});
+
+describe("render region alignment", () => {
   it("cuts a site-sized grid to a district for any source", () => {
     const site = {
       min: { x: 100, y: 64, z: 100 },

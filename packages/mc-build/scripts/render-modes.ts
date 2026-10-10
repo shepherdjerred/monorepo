@@ -8,7 +8,11 @@ import { ensureAssets } from "#src/render/assets.ts";
 import { loadGrid } from "./load-grid.ts";
 import { cutGrid } from "#src/render/cut.ts";
 import { drawText } from "#src/render/font.ts";
-import { encodePng, Renderer } from "#src/render/index.ts";
+import {
+  assertTexturesPresent,
+  encodePng,
+  Renderer,
+} from "#src/render/index.ts";
 import { Image } from "#src/render/raster.ts";
 import type { RenderMode } from "#src/render/sheet.ts";
 
@@ -90,6 +94,7 @@ drawText(sheet, "POV (player eye, perspective)", {
   scale: 2,
   color: [236, 240, 245, 255],
 });
+assertTexturesPresent(renderer, `modes render of ${path.basename(input)}`);
 await Bun.write(out, await encodePng(sheet));
 process.stdout.write(
   `wrote ${out} (${sheet.width.toString()}×${sheet.height.toString()}) for ${path.basename(input)}\n`,

@@ -150,12 +150,13 @@ export async function producingProgram(
  * as it stands. The frozen `expected` result is the last `run`, whose entry
  * names the program it ran, whatever has been compiled since. The canvas
  * is that run plus anything recorded after it, so it has a program only
- * while the op log still says the same one as the run.
+ * while the op log still says the same one as a run on that exact sandbox.
  */
 export async function programBehind(
   workspace: BuildWorkspace,
   input: {
     source: string;
+    target?: string;
     ops: readonly Op[];
     journal: readonly BuildLogEntry[];
   },
@@ -165,6 +166,12 @@ export async function programBehind(
   const run = lastOf(input.journal, "run");
   const ran = run?.kind === "run" ? run.program : null;
   if (input.source === "expected") return ran;
-  if (input.source === "canvas") return ran === compiled ? ran : null;
+  if (input.source === "canvas") {
+    return ran === compiled &&
+      run?.kind === "run" &&
+      run.target === input.target
+      ? ran
+      : null;
+  }
   throw new Error(`unknown render source "${input.source}"`);
 }

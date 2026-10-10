@@ -230,7 +230,9 @@ survey`, `--grid n` coordinate lines, `--floor y` and `--section z` cuts
   render, its snapshot is kept too as `renders/<name>.build.ts` (the copy
   `compile` keeps beside its schematic): for `--source compiled` every op in
   the log must come from that one compile, for `expected` it is the program
-  the last `run` ran, and for the canvas both must agree. A log with manual
+  the last `run` ran, and for the canvas both must agree and that run must
+  target the exact sandbox being rendered. A replacement canvas needs a new
+  run before its renders can carry program provenance. A log with manual
   or imported ops has no single program, so those renders keep none.
   A missing referenced compile snapshot is an error; it is never treated as
   a programless render or candidate. Missing textures fail before images or

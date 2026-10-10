@@ -133,6 +133,8 @@ export type LookOptions = {
   compareWith?: BlockGrid;
   /** Recorded in the sidecar: canvas, expected or compiled. */
   source?: string;
+  /** Exact sandbox read for a canvas render; defaults to the manifest canvas. */
+  target?: string;
   /** World box the grid covers, recorded in the sidecar so a later `--compare` can align to it. */
   box?: { min: BlockPos; max: BlockPos };
 };
@@ -269,7 +271,11 @@ export async function renderLooks(
   options: LookOptions,
 ): Promise<Record<string, string>> {
   const source = options.source ?? "canvas";
-  const provenance = await readRenderProvenance(workspace, source);
+  const provenance = await readRenderProvenance(
+    workspace,
+    source,
+    options.target,
+  );
   const renderer = new Renderer(await ensureAssets());
   await mkdir(workspace.file(BUILD_FILES.rendersDir), { recursive: true });
   const { subject, lightFrom } = subjectOf(grid, options);
@@ -323,11 +329,18 @@ type RenderProvenance = {
 export async function readRenderProvenance(
   workspace: BuildWorkspace,
   source: string,
+  target?: string,
 ): Promise<RenderProvenance> {
   const journal = await readLog(workspace.dir);
   const oplog = await workspace.oplog();
+  let renderedTarget = target;
+  if (source === "canvas" && renderedTarget === undefined) {
+    const manifest = await workspace.manifest();
+    renderedTarget = manifest.canvas;
+  }
   const producer = await programBehind(workspace, {
     source,
+    ...(renderedTarget === undefined ? {} : { target: renderedTarget }),
     ops: oplog.ops,
     journal,
   });
