@@ -1,5 +1,6 @@
 {
-  "version": 1,
+  "version": 2,
+  "mapSelection": "balanced-contiguous-pairs",
   "matchesPerOpponent": 200,
   "firstSeed": 500000000,
   "opponents": ["authored", "basic"],

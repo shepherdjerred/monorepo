@@ -8,9 +8,12 @@ import unittest
 import torch
 
 from evaluate import Matchup, run_duel, schedule, validate_training
+from map_selection.plan import MapBinding
 from paper import Discontinuity
 from policy import Policy
 from ppo_test import frame
+
+UNIT_MAPS = [MapBinding("unit-map", "a" * 64, "b" * 64)]
 
 
 class EvaluationConsole:
@@ -64,12 +67,16 @@ class EvaluationTest(unittest.TestCase):
         report = run_duel(
             console,
             actor,
-            Matchup("basic", 3, "red"),
+            Matchup("basic", 3, "red", UNIT_MAPS[0]),
             17,
             torch.device("cpu"),
             time.monotonic() + 30,
         )
         self.assertEqual(report["result"], "loss")
+        self.assertEqual(report["map"], "unit-map")
+        self.assertEqual(report["blocksSha256"], "a" * 64)
+        self.assertEqual(report["scenarioSha256"], "b" * 64)
+        self.assertEqual(report["engine"], "Paper")
         self.assertEqual(report["missed_ticks"], 2)
         self.assertEqual(report["memory_resets"], 1)
         self.assertEqual(report["authored_fallbacks"], 3)
@@ -87,7 +94,7 @@ class EvaluationTest(unittest.TestCase):
         report = run_duel(
             console,
             Policy().eval().requires_grad_(False),
-            Matchup("basic", 3, "red"),
+            Matchup("basic", 3, "red", UNIT_MAPS[0]),
             17,
             torch.device("cpu"),
             time.monotonic() + 30,
@@ -103,7 +110,7 @@ class EvaluationTest(unittest.TestCase):
             run_duel(
                 console,
                 Policy(),
-                Matchup("basic", 3, "red"),
+                Matchup("basic", 3, "red", UNIT_MAPS[0]),
                 17,
                 torch.device("cpu"),
                 time.monotonic() + 30,
@@ -112,17 +119,48 @@ class EvaluationTest(unittest.TestCase):
         self.assertEqual(sum(command.startswith("begin ") for command in console.commands), 1)
 
     def test_schedule_uses_both_sides_and_opponents_once(self) -> None:
-        matches = schedule(200, 500000000)
+        matches = schedule(200, 500000000, UNIT_MAPS)
         self.assertEqual(len(matches), 400)
         self.assertEqual(len(set(matches)), 400)
         self.assertEqual(
             matches[:2],
-            [Matchup("authored", 500000000, "red"), Matchup("authored", 500000000, "blue")],
+            [Matchup("authored", 500000000, side, UNIT_MAPS[0]) for side in ("red", "blue")],
         )
-        self.assertEqual(matches[200], Matchup("basic", 500000000, "red"))
+        self.assertEqual(matches[200], Matchup("basic", 500000000, "red", UNIT_MAPS[0]))
         for count in (1, 3, 201, 202):
             with self.assertRaises(ValueError):
-                schedule(count, 0)
+                schedule(count, 0, UNIT_MAPS)
+
+    def test_multimap_pairs_cover_all_maps_equally_without_adding_games(self) -> None:
+        maps = [MapBinding(f"map-{index:02d}", "a" * 64, "b" * 64) for index in range(32)]
+        matches = schedule(200, 500000000, maps)
+        self.assertEqual(len(matches), 400)
+        self.assertEqual(len(set(matches)), 400)
+        self.assertEqual(list(dict.fromkeys(game.map for game in matches)), maps)
+        self.assertEqual(
+            matches[:8],
+            [
+                Matchup("authored", 500000000 + index, side, maps[0])
+                for index in range(4)
+                for side in ("red", "blue")
+            ],
+        )
+        for binding in maps:
+            authored = [
+                game for game in matches if game.map == binding and game.opponent == "authored"
+            ]
+            basic = [game for game in matches if game.map == binding and game.opponent == "basic"]
+            self.assertIn(len(authored), (6, 8))
+            self.assertEqual(
+                [(game.seed, game.side) for game in authored],
+                [(game.seed, game.side) for game in basic],
+            )
+            self.assertEqual(sum(game.side == "red" for game in authored), len(authored) // 2)
+        for rejected in ([], maps[::-1], [maps[0], maps[0]]):
+            with self.assertRaises(ValueError):
+                schedule(200, 0, rejected)
+        with self.assertRaisesRegex(ValueError, "cover every admitted map"):
+            schedule(2, 0, maps)
 
     def test_pilot_rejects_diagnostic_provenance_selection_and_training_seed_overlap(self) -> None:
         # Contract-only metadata fixture, never a recording or training input.
@@ -133,10 +171,12 @@ class EvaluationTest(unittest.TestCase):
             "test_used_for_selection": False,
             "pilot_acceptance_checked": False,
             "curriculum": {"complete": True},
+            "maps": [binding.report() for binding in UNIT_MAPS],
+            "map_coverage_complete": True,
             "games": [{"seed": 17}],
         }
         manifest: dict[str, object] = {"kind": "rwf-trooper-ppo", "training": training}
-        matchups = schedule(200, 500000000)
+        matchups = schedule(200, 500000000, UNIT_MAPS)
         validate_training(manifest, 17, False, matchups)
         for changed in (
             {"provenance": "diagnostic-paper-pipeline"},
@@ -144,6 +184,9 @@ class EvaluationTest(unittest.TestCase):
             {"test_used_for_selection": True},
             {"curriculum": {"complete": False}},
             {"games": [{"seed": 500000000}]},
+            {"map_coverage_complete": False},
+            {"maps": [MapBinding("other-map", "a" * 64, "b" * 64).report()]},
+            {"maps": [MapBinding("unit-map", "c" * 64, "b" * 64).report()]},
         ):
             with self.subTest(changed=changed), self.assertRaises(ValueError):
                 validate_training(

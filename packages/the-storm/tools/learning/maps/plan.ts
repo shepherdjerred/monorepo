@@ -17,14 +17,11 @@ export const MapBinding = z.strictObject({
   scenarioSha256: digest,
 });
 export type MapBinding = z.infer<typeof MapBinding>;
-export const TrainingMaps = z
-  .strictObject({
-    schema: z.literal(1),
-    kind: z.literal("rwf-training-maps"),
-    maps: z.array(MapBinding).min(1),
-  })
-  .superRefine((plan, context) => {
-    const ids = plan.maps.map((entry) => entry.map);
+export const MapCatalog = z
+  .array(MapBinding)
+  .min(1)
+  .superRefine((maps, context) => {
+    const ids = maps.map((entry) => entry.map);
     if (
       new Set(ids).size !== ids.length ||
       !isDeepStrictEqual(ids, [...ids].sort())
@@ -34,6 +31,11 @@ export const TrainingMaps = z
         message: "Training maps must be unique and sorted",
       });
   });
+export const TrainingMaps = z.strictObject({
+  schema: z.literal(1),
+  kind: z.literal("rwf-training-maps"),
+  maps: MapCatalog,
+});
 export type TrainingMaps = z.infer<typeof TrainingMaps>;
 if (
   contract.schema !== 1 ||

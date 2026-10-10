@@ -7,6 +7,12 @@ import { Digest, preferenceSchedule } from "./gate.ts";
 import { digestFile, readJson, sha } from "./ledger.ts";
 import { run } from "./media.ts";
 import { root } from "#learning/sandbox.ts";
+import {
+  MapCatalog,
+  TrainingMaps,
+  type MapBinding,
+} from "#learning/maps/plan.ts";
+import { isDeepStrictEqual } from "node:util";
 
 const Native = z
   .object({
@@ -20,6 +26,7 @@ const Native = z
 const Inputs = z
   .object({
     native: Native,
+    maps: TrainingMaps,
     dataset: z
       .array(
         z
@@ -47,6 +54,8 @@ const Training = z.object({
   test_used_for_selection: z.literal(false),
   pilot_acceptance_checked: z.literal(false),
   curriculum: z.object({ complete: z.literal(true) }),
+  maps: MapCatalog,
+  map_coverage_complete: z.literal(true),
   games: z.array(z.object({ seed: z.number().int() })),
 });
 const Checkpoint = z.object({
@@ -91,6 +100,7 @@ async function validateStrengthActor(
     datasetSha: string;
     snapshot: Snapshot;
     matches: Set<string>;
+    maps: MapBinding[];
   },
 ) {
   const { pilot, evaluationPath, datasetSha, snapshot, matches } = context;
@@ -114,6 +124,7 @@ async function validateStrengthActor(
   );
   if (
     actor.training.seed !== state.claim.seed ||
+    !isDeepStrictEqual(actor.training.maps, context.maps) ||
     actor.training.dataset_sha256 !== datasetSha ||
     actor.weights_sha256 !== state.weightsSha256 ||
     declared?.checkpoint !== checkpoint ||
@@ -136,6 +147,7 @@ async function validateStrengthActor(
     await readJson(reportFile),
     200,
     evaluation.firstSeed,
+    context.maps,
   );
   if (
     !strength.passed ||
@@ -160,8 +172,9 @@ async function validateCandidate(
   first: Frozen,
   model: string,
   datasetSha: string,
-  snapshot: Snapshot,
+  context: { snapshot: Snapshot; maps: MapBinding[] },
 ) {
+  const { snapshot, maps } = context;
   const manifestFile = path.join(model, "manifest.json");
   await snapshot(manifestFile);
   const exported = z
@@ -177,6 +190,7 @@ async function validateCandidate(
     .parse(await readJson(manifestFile));
   if (
     exported.weights_sha256 !== first.weightsSha256 ||
+    !isDeepStrictEqual(exported.training.maps, maps) ||
     exported.checkpoint_manifest_sha256 !== first.manifestSha256 ||
     exported.training.seed !== first.claim.seed ||
     exported.training.dataset_sha256 !== datasetSha
@@ -248,10 +262,11 @@ export async function reviewEligibility(
   );
   const plan = z
     .object({
-      version: z.literal(1),
+      version: z.literal(2),
       mode: z.literal("pilot"),
       acceptance: z.literal("unaccepted"),
       native: Native,
+      maps: TrainingMaps,
       actors: z.array(EvaluationActor).length(3),
       matchesPerOpponent: z.literal(evaluation.matchesPerOpponent),
       firstSeed: z.literal(evaluation.firstSeed),
@@ -268,6 +283,7 @@ export async function reviewEligibility(
     .strict()
     .parse(await readJson(claimFile));
   if (
+    !isDeepStrictEqual(plan.maps, inputs.maps) ||
     claim.output !== evaluationPath ||
     claim.planSha256 !== sha(JSON.stringify(rawEvaluation))
   )
@@ -293,6 +309,7 @@ export async function reviewEligibility(
         datasetSha: dataset.dataset_sha256,
         snapshot,
         matches,
+        maps: inputs.maps.maps,
       }),
     );
   const first = states[0];
@@ -301,7 +318,7 @@ export async function reviewEligibility(
     first,
     model,
     dataset.dataset_sha256,
-    snapshot,
+    { snapshot, maps: inputs.maps.maps },
   );
   for (const file of [
     "package.json",

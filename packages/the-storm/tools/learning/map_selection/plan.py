@@ -56,7 +56,11 @@ def read_maps(file: Path) -> list[MapBinding]:
     if set(value) != set(array(CONTRACT["fields"])) or value["kind"] != CONTRACT["kind"]:
         raise ValueError("invalid frozen training map plan")
     integer(value["schema"], 1, 1)
-    maps = [MapBinding.parse(item) for item in array(value["maps"])]
+    return validate_maps(value["maps"])
+
+
+def validate_maps(raw: object) -> list[MapBinding]:
+    maps = [MapBinding.parse(item) for item in array(raw)]
     ids = [item.map for item in maps]
     if not maps or ids != sorted(set(ids)):
         raise ValueError("training maps must be nonempty, unique and sorted")

@@ -86,9 +86,6 @@ export async function runPaperWorker(options: WorkerOptions) {
   const maps = await frozenTrainingMaps(options.diagnostic);
   const firstMap = maps.maps[0];
   if (firstMap === undefined) throw new Error("Training has no admitted maps");
-  // Evaluation stays on its frozen single-map protocol until its map schedule is upgraded.
-  if (options.evaluation !== undefined && maps.maps.length !== 1)
-    throw new Error("Multi-map strength evaluation is not yet implemented");
   await Bun.write(
     path.join(output, "training-maps.json"),
     JSON.stringify(maps, null, 2) + "\n",
@@ -115,7 +112,6 @@ export async function runPaperWorker(options: WorkerOptions) {
     completed: false,
     lastId: 0,
     firstMap: firstMap.map,
-    training: options.evaluation === undefined,
     maps: new PaperMapOwner(maps, output, (directory, map) =>
       openPaperDuels(directory, undefined, "duel", map),
     ),
@@ -162,8 +158,6 @@ function spawnWorker(options: WorkerOptions) {
           options.episodes.toString(),
           "--opponent",
           options.opponent,
-          "--maps",
-          path.join(output, "training-maps.json"),
           ...(options.dataset === undefined
             ? []
             : ["--dataset", options.dataset]),
@@ -196,6 +190,8 @@ function spawnWorker(options: WorkerOptions) {
       options.seed.toString(),
       "--deadline-ms",
       deadlineMs.toString(),
+      "--maps",
+      path.join(output, "training-maps.json"),
       ...operation,
       ...(options.checkpoint === undefined
         ? []
@@ -216,7 +212,6 @@ type Session = {
   maps: PaperMapOwner<Awaited<ReturnType<typeof openPaperDuels>>>;
   ready?: true;
   firstMap: string;
-  training: boolean;
   completed: boolean;
   lastId: number;
 };
@@ -277,7 +272,6 @@ async function handleReport(
       break;
     }
     case "episode": {
-      if (!session.training) break;
       const setup = await verifyEpisode(session, message.report);
       const directory = path.join(output, "native-setups");
       await mkdir(directory, { recursive: true, mode: 0o700 });
@@ -301,7 +295,7 @@ async function verifyEpisode(
   report: Record<string, unknown>,
 ) {
   if (report["engine"] !== "Paper")
-    throw new Error("PPO rollout must come from Paper");
+    throw new Error("Rollout must come from Paper");
   const binding = MapBinding.parse({
     map: report["map"],
     blocksSha256: report["blocksSha256"],
@@ -320,7 +314,7 @@ async function verifyEpisode(
     setup.opponent !== report["opponent"] ||
     setup.mode !== "external"
   )
-    throw new Error("PPO rollout differs from its actual native map setup");
+    throw new Error("Rollout differs from its actual native map setup");
   return setup;
 }
 

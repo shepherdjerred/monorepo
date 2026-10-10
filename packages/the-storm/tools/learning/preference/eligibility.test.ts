@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { evaluationSchedule } from "#learning/evaluation-gate.ts";
+import { unitMaps } from "#learning/maps/test-support.ts";
 import { reviewEligibility } from "./eligibility.ts";
 import { PilotLedger } from "#learning/pilot-ledger.ts";
 import { digestFile, jsonText, sha } from "./ledger.ts";
@@ -32,6 +33,7 @@ type Changes = {
   reusedMatches?: boolean;
   wrongRuntime?: boolean;
   overlap?: boolean;
+  wrongMaps?: boolean;
 };
 async function fixture(changes: Changes = {}) {
   const pilot = path.join(directory, "pilot");
@@ -64,6 +66,7 @@ async function fixture(changes: Changes = {}) {
   };
   const inputs = {
     native,
+    maps: unitMaps,
     dataset: datasetFiles,
     bunVersion: "unit",
     platform: "darwin",
@@ -101,6 +104,8 @@ async function fixture(changes: Changes = {}) {
         test_used_for_selection: false,
         pilot_acceptance_checked: false,
         curriculum: { complete: true },
+        maps: unitMaps.maps,
+        map_coverage_complete: true,
         games:
           index === 0 && changes.overlap === true
             ? [{ seed: 600_100_000 }]
@@ -132,7 +137,8 @@ async function fixture(changes: Changes = {}) {
     await writeFile(
       path.join(reportDir, "report.json"),
       jsonText({
-        version: 1,
+        version: 2,
+        maps: unitMaps.maps,
         engine: "Paper",
         mode: "pilot",
         acceptance: "unaccepted",
@@ -143,36 +149,49 @@ async function fixture(changes: Changes = {}) {
         retried_duels: 0,
         blind_preference_checked: false,
         pilot_acceptance_checked: false,
-        games: evaluationSchedule(200, 500_000_000).map((match, game) => ({
-          ...match,
-          match: `00000000-0000-4000-8000-${(game + (changes.reusedMatches === true ? 0 : index * 400)).toString().padStart(12, "0")}`,
-          result:
-            game % 200 <
-            (match.opponent === "basic"
-              ? 160
-              : changes.failSeed === index
-                ? 119
-                : 120)
-              ? "win"
-              : "timeout",
-          frames: 100,
-          submitted_controls: 98,
-          confirmed_controls: 95,
-          applied_controls: 95,
-          authored_fallbacks: 5,
-          missed_ticks: 1,
-          rejected_actions: 0,
-          memory_resets: 1,
-          dealt: 20,
-          received: 8,
-          seconds: 5,
-          max_inference_ms: 2,
-        })),
+        games: evaluationSchedule(200, 500_000_000, unitMaps.maps).map(
+          (match, game) => ({
+            ...match,
+            engine: "Paper",
+            match: `00000000-0000-4000-8000-${(game + (changes.reusedMatches === true ? 0 : index * 400)).toString().padStart(12, "0")}`,
+            result:
+              game % 200 <
+              (match.opponent === "basic"
+                ? 160
+                : changes.failSeed === index
+                  ? 119
+                  : 120)
+                ? "win"
+                : "timeout",
+            frames: 100,
+            submitted_controls: 98,
+            confirmed_controls: 95,
+            applied_controls: 95,
+            authored_fallbacks: 5,
+            missed_ticks: 1,
+            rejected_actions: 0,
+            memory_resets: 1,
+            dealt: 20,
+            received: 8,
+            seconds: 5,
+            max_inference_ms: 2,
+          }),
+        ),
       }),
     );
   }
   const plan = {
-    version: 1,
+    version: 2,
+    maps:
+      changes.wrongMaps === true
+        ? {
+            ...unitMaps,
+            maps: unitMaps.maps.map((binding) => ({
+              ...binding,
+              blocksSha256: "c".repeat(64),
+            })),
+          }
+        : unitMaps,
     mode: "pilot",
     acceptance: "unaccepted",
     native:
@@ -246,6 +265,7 @@ describe("pilot eligibility for blind review", () => {
     { reusedMatches: true },
     { wrongRuntime: true },
     { overlap: true },
+    { wrongMaps: true },
   ])("rejects changed selection or provenance: %j", async (changes) => {
     const input = await fixture(changes);
     await expect(

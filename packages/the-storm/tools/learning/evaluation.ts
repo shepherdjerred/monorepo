@@ -1,12 +1,13 @@
 import { mkdir, open } from "node:fs/promises";
 import path from "node:path";
-import { parseArgs } from "node:util";
+import { isDeepStrictEqual, parseArgs } from "node:util";
 import { z } from "zod";
 import contract from "./evaluation.json";
-import { strengthResult } from "./evaluation-gate.ts";
+import { evaluationSchedule, strengthResult } from "./evaluation-gate.ts";
 import { PilotLedger } from "./pilot-ledger.ts";
 import { runPaperWorker } from "./owner.ts";
-import { frozenManifest } from "./sandbox.ts";
+import { frozenManifest, frozenTrainingMaps } from "./sandbox.ts";
+import { MapCatalog, TrainingMaps } from "./maps/plan.ts";
 
 const args = parseArgs({
   options: {
@@ -57,7 +58,11 @@ const Checkpoint = z.object({
   kind: z.literal("rwf-trooper-ppo"),
   acceptance: z.literal("unaccepted"),
   weights_sha256: z.string().regex(/^[a-f0-9]{64}$/u),
-  training: z.object({ seed: z.number().int().min(0).max(1_000_000_000) }),
+  training: z.object({
+    seed: z.number().int().min(0).max(1_000_000_000),
+    maps: MapCatalog,
+    map_coverage_complete: z.boolean(),
+  }),
 });
 type FrozenActor = {
   checkpoint: string;
@@ -67,6 +72,8 @@ type FrozenActor = {
 };
 const actors: FrozenActor[] = [];
 const native = await frozenManifest();
+const maps = await frozenTrainingMaps(diagnostic);
+evaluationSchedule(matches, contract.firstSeed, maps.maps);
 let pilot: PilotLedger | undefined;
 let datasetFiles: { file: string; sha256: string }[] = [];
 if (diagnostic) {
@@ -93,6 +100,7 @@ if (diagnostic) {
   if (sha(inputText) !== pilot.config.inputSha256)
     throw new Error("pilot inputs were altered");
   const Inputs = z.object({
+    maps: TrainingMaps,
     native: z.object({
       hashes: z.array(
         z.object({ file: z.string(), sha256: z.string() }).strict(),
@@ -121,6 +129,8 @@ if (diagnostic) {
   });
   const rawInputs: unknown = JSON.parse(inputText);
   const frozen = Inputs.parse(rawInputs);
+  if (!isDeepStrictEqual(frozen.maps, maps))
+    throw new Error("Evaluation catalog differs from the pilot's frozen maps");
   datasetFiles = frozen.dataset;
   // Training tooling can evolve, but the frozen authored opponent, content,
   // observation contract and native runtime must be the same for this gate.
@@ -164,6 +174,30 @@ if (diagnostic) {
     actors.push({ checkpoint, seed: state.claim.seed, ...hashes });
   }
 }
+// Validate the catalog before the one-shot evaluation claim. Native workers
+// revalidate it after launch and every episode is checked against its setup.
+for (const actor of actors) {
+  const raw: unknown = await Bun.file(
+    path.join(actor.checkpoint, "manifest.json"),
+  ).json();
+  const manifest = Checkpoint.parse(raw);
+  if (
+    manifest.training.seed !== actor.seed ||
+    manifest.weights_sha256 !== actor.weightsSha256 ||
+    (diagnostic
+      ? maps.maps.some(
+          (binding) =>
+            !manifest.training.maps.some((trained) =>
+              isDeepStrictEqual(binding, trained),
+            ),
+        )
+      : !isDeepStrictEqual(manifest.training.maps, maps.maps) ||
+        !manifest.training.map_coverage_complete)
+  )
+    throw new Error(
+      "Frozen actor differs from the evaluation map catalog or seed",
+    );
+}
 const frozenText = JSON.stringify(native);
 async function verifyInputs() {
   if (JSON.stringify(await frozenManifest()) !== frozenText)
@@ -196,10 +230,11 @@ async function verifyInputs() {
 await mkdir(path.dirname(output), { recursive: true });
 await mkdir(output, { recursive: false });
 const plan = {
-  version: 1,
+  version: 2,
   mode: diagnostic ? "diagnostic" : "pilot",
   acceptance: "unaccepted",
   native,
+  maps,
   actors,
   matchesPerOpponent: matches,
   firstSeed: contract.firstSeed,
@@ -253,7 +288,7 @@ for (const [index, actor] of actors.entries()) {
   const raw: unknown = await Bun.file(
     path.join(seedOutput, "learning/report.json"),
   ).json();
-  const result = strengthResult(raw, matches, contract.firstSeed);
+  const result = strengthResult(raw, matches, contract.firstSeed, maps.maps);
   if (
     result.report.actor_seed !== actor.seed ||
     result.report.weights_sha256 !== actor.weightsSha256 ||
