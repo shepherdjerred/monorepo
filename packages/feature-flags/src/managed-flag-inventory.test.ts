@@ -430,6 +430,28 @@ describe("Red Warfare Search and Destroy rollout", () => {
 
     verifyRwfEnabledEnvironments(key);
   });
+
+  test("enables accepted Trooper control in beta while keeping production and fallback off", () => {
+    const key = "the-storm-rwfbots-learning-enabled";
+    expect(
+      managedFlagInventory.flags.find((flag) => flag.key === key),
+    ).toMatchObject({
+      namespace: "the-storm",
+      source: "the-storm-rwfbots-learning",
+      type: "boolean",
+      default: false,
+      rollouts: [],
+    });
+    for (const environment of ["beta", "prod"]) {
+      const flag = materializeManagedNamespaceEnvironment(
+        managedFlagInventory,
+        environment,
+        "the-storm",
+      ).find((candidate) => candidate.key === key);
+      expect(flag?.default).toBe(environment === "beta");
+      expect(flag?.rollouts).toEqual([]);
+    }
+  });
 });
 
 describe("durable iMessage ingress rollout", () => {

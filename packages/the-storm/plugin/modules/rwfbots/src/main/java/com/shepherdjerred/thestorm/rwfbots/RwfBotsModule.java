@@ -4,15 +4,22 @@ import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.StormModule;
 import com.shepherdjerred.thestorm.rwfbots.adapter.citizens.CitizensBodies;
 import com.shepherdjerred.thestorm.rwfbots.adapter.content.NavFiles;
+import com.shepherdjerred.thestorm.rwfbots.adapter.content.NavResources;
 import com.shepherdjerred.thestorm.rwfbots.adapter.content.PersonalityFiles;
 import com.shepherdjerred.thestorm.rwfbots.adapter.content.RwfBotsConfig;
 import com.shepherdjerred.thestorm.rwfbots.adapter.db.JooqPersonalityStatsStore;
+import com.shepherdjerred.thestorm.rwfbots.adapter.inference.AcceptedModels;
+import com.shepherdjerred.thestorm.rwfbots.adapter.inference.DiagnosticModels;
 import com.shepherdjerred.thestorm.rwfbots.adapter.paper.Bodies;
 import com.shepherdjerred.thestorm.rwfbots.adapter.paper.RwfBotsPaper;
 import com.shepherdjerred.thestorm.rwfbots.adapter.remote.FliptChatGate;
+import com.shepherdjerred.thestorm.rwfbots.adapter.remote.FliptLearningGate;
 import com.shepherdjerred.thestorm.rwfbots.app.ChatGate;
 import com.shepherdjerred.thestorm.rwfbots.app.NavCatalog;
 import com.shepherdjerred.thestorm.rwfbots.app.StatsCache;
+import com.shepherdjerred.thestorm.rwfbots.app.learning.DiagnosticInference;
+import com.shepherdjerred.thestorm.rwfbots.app.learning.LearningGate;
+import com.shepherdjerred.thestorm.rwfbots.app.learning.MatchLearning;
 import java.net.URI;
 import java.util.Optional;
 import java.util.function.Function;
@@ -44,15 +51,20 @@ public final class RwfBotsModule implements StormModule {
       Optional<Function<ModuleContext, Bodies>> bodies,
       Optional<World> world,
       Optional<Supplier<long[]>> tickTimes,
-      Optional<ChatGate> chatGate) {
+      Optional<ChatGate> chatGate,
+      Optional<LearningGate> learningGate) {
 
     public static Hooks production() {
-      return new Hooks(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+      return new Hooks(
+          Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
     }
   }
 
   private final Hooks hooks;
   private @Nullable RwfBotsPaper paper;
+  private @Nullable NavResources navResources;
+  private @Nullable DiagnosticModels diagnosticModels;
+  private @Nullable AcceptedModels acceptedModels;
 
   public RwfBotsModule() {
     this(Hooks.production());
@@ -69,19 +81,25 @@ public final class RwfBotsModule implements StormModule {
 
   @Override
   public void enable(ModuleContext context) {
+    var models =
+        new DiagnosticModels(
+            new DiagnosticModels.Parts(
+                context.dataDirectory().resolve("rwfbots/learning/diagnostic"),
+                context.compute(),
+                context.random(),
+                System::nanoTime));
+    diagnosticModels = models;
+    context.services().provide(DiagnosticInference.class, models);
     var config = context.loadConfig(CONFIG, RwfBotsConfig.class);
     var personalities = PersonalityFiles.load(context.dataDirectory());
     var nav = new NavCatalog();
-    var loaded = NavFiles.load(context.dataDirectory());
+    context
+        .services()
+        .provide(
+            com.shepherdjerred.thestorm.rwfbots.app.map.NavLoading.class,
+            () -> java.util.Set.copyOf(nav.decoded().keySet()));
     var lobby = NavFiles.loadLobby(context.dataDirectory());
-    loaded.artifacts().values().forEach(nav::add);
-    loaded
-        .problems()
-        .forEach(
-            (mapId, problem) -> {
-              nav.reject(mapId, problem);
-              context.logger().error("rwfbots: map {} runs humans-only: {}", mapId, problem);
-            });
+    navResources = new NavResources(context, nav);
     context.database().migrate(id(), getClass().getClassLoader());
     var store = new JooqPersonalityStatsStore(context.database());
     var stats = new StatsCache();
@@ -100,6 +118,27 @@ public final class RwfBotsModule implements StormModule {
                 context.scheduler().mainThread());
     var bodies = hooks.bodies().map(make -> make.apply(context)).orElseGet(() -> citizens(context));
     var world = hooks.world().orElseGet(() -> rwfWorld(context));
+    var accepted =
+        new AcceptedModels(
+            new AcceptedModels.Parts(
+                context.dataDirectory().resolve("rwfbots/learning/accepted/trooper"),
+                context.compute(),
+                context.random(),
+                System::nanoTime));
+    acceptedModels = accepted;
+    var learning =
+        new MatchLearning(
+            new MatchLearning.Parts(
+                hooks.learningGate().orElseGet(() -> fliptLearningGate(context)),
+                accepted,
+                decision -> {
+                  if (decision.source() == LearningGate.Source.UNAVAILABLE)
+                    context
+                        .logger()
+                        .warn("rwfbots: learning flag unavailable; this match stays authored");
+                },
+                failure ->
+                    context.logger().error("rwfbots: learning failed for this match", failure)));
     var chatGate =
         config.chat().enabled()
             ? hooks.chatGate().orElseGet(() -> fliptChatGate(context, world))
@@ -117,13 +156,13 @@ public final class RwfBotsModule implements StormModule {
                 world,
                 hooks.tickTimes().orElseGet(() -> context.plugin().getServer()::getTickTimes),
                 chatGate,
-                lobby));
+                lobby,
+                learning));
     context
         .logger()
         .info(
-            "rwfbots: {} personalities, {} maps with nav artifacts, traces {}",
+            "rwfbots: {} personalities, navigation follows prepared maps, traces {}",
             personalities.active().size(),
-            loaded.artifacts().size(),
             config.traces().enabled() ? "on" : "off");
     context
         .logger()
@@ -157,6 +196,19 @@ public final class RwfBotsModule implements StormModule {
         URI.create(base.orElseThrow()), environment.orElseThrow(), world.getName());
   }
 
+  private static LearningGate fliptLearningGate(ModuleContext context) {
+    var base = Optional.ofNullable(System.getenv("FLIPT_URL")).filter(v -> !v.isBlank());
+    var environment =
+        Optional.ofNullable(System.getenv("FLIPT_ENVIRONMENT")).filter(v -> !v.isBlank());
+    if (base.isEmpty() || environment.isEmpty()) {
+      context
+          .logger()
+          .info("rwfbots: learning flag bootstrap absent; ordinary matches stay authored");
+      return LearningGate.absent();
+    }
+    return new FliptLearningGate(URI.create(base.orElseThrow()), environment.orElseThrow());
+  }
+
   /** The world rwf runs in, as its config names it. */
   private static World rwfWorld(ModuleContext context) {
     var config = context.loadConfig("rwf.yml", RwfWorldName.class);
@@ -175,10 +227,25 @@ public final class RwfBotsModule implements StormModule {
 
   @Override
   public void disable() {
+    var resources = navResources;
+    if (resources != null) {
+      resources.close();
+      navResources = null;
+    }
     var current = paper;
     if (current != null) {
       current.stop();
       paper = null;
+    }
+    var models = diagnosticModels;
+    if (models != null) {
+      models.close();
+      diagnosticModels = null;
+    }
+    var accepted = acceptedModels;
+    if (accepted != null) {
+      accepted.close();
+      acceptedModels = null;
     }
   }
 }

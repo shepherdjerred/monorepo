@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.rwf.adapter.content;
 
 import com.shepherdjerred.thestorm.core.config.ConfigFiles;
+import com.shepherdjerred.thestorm.rwf.adapter.content.details.MapDetails;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitBook;
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,10 +25,31 @@ public final class ContentFiles {
   static final String MAPS = "rwf/maps";
   static final String MAP_FILE = "map.yml";
   static final String BLOCKS_FILE = "blocks.schem";
+  static final String DETAILS_FILE = "details.json";
   static final String LOBBY = "rwf/lobby";
   static final String LOBBY_FILE = "lobby.yml";
 
   private ContentFiles() {}
+
+  /** Loads required metadata, not every map's decoded terrain, for the live runtime. */
+  public static RwfCatalog catalog(Path directory, Function<String, BlockData> blockData) {
+    var config = ConfigFiles.load(directory.resolve(SETTINGS), RwfConfig.class);
+    var kits = ConfigFiles.load(directory.resolve(KITS), KitsFile.class);
+    kits.mustMatch(KitBook.MILESTONE_ONE);
+    var sources = new ArrayList<MapSource>();
+    for (var folder : mapFolders(directory.resolve(MAPS))) {
+      var file = mapFile(folder);
+      if (!Files.isRegularFile(folder.resolve(BLOCKS_FILE)))
+        throw new IllegalStateException(
+            "Required file " + folder.resolve(BLOCKS_FILE) + " is missing");
+      if (!Files.isRegularFile(folder.resolve(DETAILS_FILE)))
+        throw new IllegalStateException(
+            "Required file " + folder.resolve(DETAILS_FILE) + " is missing");
+      sources.add(new MapSource(file.toDefinition(), folder, blockData));
+    }
+    return new RwfCatalog(
+        config, KitBook.MILESTONE_ONE, sources, lobby(directory.resolve(LOBBY), blockData));
+  }
 
   /**
    * Loads and cross-checks everything under {@code directory}; {@code blockData} parses palette
@@ -47,6 +69,12 @@ public final class ContentFiles {
   }
 
   private static List<LoadedMap> maps(Path folder, Function<String, BlockData> blockData) {
+    var maps = new ArrayList<LoadedMap>();
+    for (var mapFolder : mapFolders(folder)) maps.add(map(mapFolder, blockData));
+    return List.copyOf(maps);
+  }
+
+  private static List<Path> mapFolders(Path folder) {
     List<Path> folders;
     try (var listing = Files.list(folder)) {
       folders = listing.filter(Files::isDirectory).sorted().toList();
@@ -56,11 +84,7 @@ public final class ContentFiles {
     if (folders.isEmpty()) {
       throw new IllegalStateException(folder + " has no maps; add at least one <id>/map.yml");
     }
-    var maps = new ArrayList<LoadedMap>();
-    for (var mapFolder : folders) {
-      maps.add(map(mapFolder, blockData));
-    }
-    return List.copyOf(maps);
+    return folders;
   }
 
   /** Loads the {@code rwf/lobby/} folder: {@code lobby.yml} and its {@code blocks.schem}. */
@@ -78,20 +102,26 @@ public final class ContentFiles {
 
   /** Loads one {@code rwf/maps/<id>/} folder. */
   public static LoadedMap map(Path folder, Function<String, BlockData> blockData) {
+    var file = mapFile(folder);
+    var definition = file.toDefinition();
+    var schematic = schematic(folder.resolve(BLOCKS_FILE));
+    try {
+      var blocks = MapBlocks.resolve(schematic, definition.border(), blockData);
+      return new LoadedMap(
+          definition, blocks, ConfigFiles.load(folder.resolve(DETAILS_FILE), MapDetails.class));
+    } catch (IllegalArgumentException e) {
+      throw new IllegalStateException("Invalid " + folder + ": " + e.getMessage(), e);
+    }
+  }
+
+  private static MapFile mapFile(Path folder) {
     var file = ConfigFiles.load(folder.resolve(MAP_FILE), MapFile.class);
     var expected = file.id();
     if (!folder.getFileName().toString().equals(expected)) {
       throw new IllegalStateException(
           folder + " defines map " + expected + "; name it " + expected);
     }
-    var definition = file.toDefinition();
-    var schematic = schematic(folder.resolve(BLOCKS_FILE));
-    try {
-      var blocks = MapBlocks.resolve(schematic, definition.border(), blockData);
-      return new LoadedMap(definition, blocks);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalStateException("Invalid " + folder + ": " + e.getMessage(), e);
-    }
+    return file;
   }
 
   private static Schematic schematic(Path blocksFile) {

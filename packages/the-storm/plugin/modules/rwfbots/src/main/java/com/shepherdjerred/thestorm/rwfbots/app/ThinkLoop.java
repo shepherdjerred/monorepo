@@ -99,7 +99,7 @@ public final class ThinkLoop {
   }
 
   /** The match the loop thinks for. */
-  private record Match(int generation, long seed, NavArtifact nav) {}
+  private record Match(int generation, long seed, long navigationRevision, NavArtifact nav) {}
 
   // ---- main thread -----------------------------------------------------------------------------
 
@@ -109,7 +109,16 @@ public final class ThinkLoop {
     epochs.clear();
     replans.clear();
     outbox.set(DecisionBoard.EMPTY);
-    match = new Match(generation.incrementAndGet(), seed, nav);
+    match = new Match(generation.incrementAndGet(), seed, 0, nav);
+  }
+
+  /** Publishes fresh door occlusion, preserving plans, memory, life epochs and random seeds. */
+  public void observedNavigation(NavArtifact nav) {
+    var current = match;
+    if (current == null || !current.nav().graph().equals(nav.graph())) {
+      throw new IllegalArgumentException("navigation observation is not from the current match");
+    }
+    match = new Match(current.generation(), current.seed(), current.navigationRevision() + 1, nav);
   }
 
   /** Stops thinking; publishes are ignored until the next match begins. */
@@ -223,8 +232,9 @@ public final class ThinkLoop {
   /** The per-bot state the job alone touches. */
   private static final class Mind {
     final BotProfile profile;
-    final Perception perception;
-    final TacticsContext tacticsContext;
+    Perception perception;
+    TacticsContext tacticsContext;
+    long navigationRevision;
     int epoch;
     PerceptionState perceptionState = PerceptionState.EMPTY;
     TacticsState tacticsState;
@@ -235,6 +245,7 @@ public final class ThinkLoop {
 
     Mind(BotProfile profile, Match match, int epoch) {
       var nav = match.nav();
+      this.navigationRevision = match.navigationRevision();
       this.profile = profile;
       this.epoch = epoch;
       this.perception =
@@ -250,6 +261,27 @@ public final class ThinkLoop {
               profile.quirks(),
               seed(match.seed(), profile.id().value(), ROUTE_SALT));
       this.tacticsState = TacticsState.fresh(epoch);
+    }
+
+    void observeNavigation(Match match) {
+      var before = tacticsContext;
+      if (navigationRevision == match.navigationRevision()) return;
+      var nav = match.nav();
+      navigationRevision = match.navigationRevision();
+      perception =
+          new Perception(
+              new SenseContext(nav.grid(), nav.graph(), nav.regions(), profile.levers()));
+      tacticsContext =
+          new TacticsContext(
+              nav,
+              before.levers(),
+              before.style(),
+              before.kit(),
+              before.archetype(),
+              before.quirks(),
+              before.seed());
+      lastPerceived = NEVER;
+      lastThought = NEVER;
     }
 
     /**
@@ -325,7 +357,9 @@ public final class ThinkLoop {
       var plans = new HashMap<TeamId, TeamPlan>();
       teams.forEach((id, team) -> plans.put(id, team.board.plan()));
       var live = match;
-      if (live != null && live.generation() == current.generation()) {
+      if (live != null
+          && live.generation() == current.generation()
+          && live.navigationRevision() == current.navigationRevision()) {
         outbox.set(
             new DecisionBoard(
                 snapshot.tick(),
@@ -355,6 +389,7 @@ public final class ThinkLoop {
         } else if (mind.epoch != epoch) {
           mind.newLife(epoch);
         }
+        mind.observeNavigation(current);
         team(current, profile.team());
         active.add(mind);
       }

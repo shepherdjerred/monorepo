@@ -11,6 +11,8 @@ import com.shepherdjerred.thestorm.rwf.app.BotRoster;
 import com.shepherdjerred.thestorm.rwf.app.CombatantActions;
 import com.shepherdjerred.thestorm.rwf.app.MatchEvents;
 import com.shepherdjerred.thestorm.rwf.app.MatchView;
+import com.shepherdjerred.thestorm.rwf.app.map.MapResourceRegistry;
+import com.shepherdjerred.thestorm.rwf.app.map.MapResources;
 import com.shepherdjerred.thestorm.rwfbots.adapter.content.NavFiles;
 import com.shepherdjerred.thestorm.rwfbots.adapter.paper.FakeBodies;
 import com.shepherdjerred.thestorm.rwfbots.adapter.paper.RwfBotsPaper;
@@ -28,6 +30,7 @@ import java.time.InstantSource;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 import java.util.random.RandomGenerator;
@@ -80,6 +83,7 @@ public final class RwfBotsHarness implements AutoCloseable {
   public final WorldMock world;
   public final StormDatabase database;
   public final Services services = new Services();
+  public final MapResourceRegistry maps = new MapResourceRegistry();
   public final FakeClock clock = new FakeClock();
   public final FakeMatch match = new FakeMatch(NAV.blocksSha256());
   public final FakeBodies bodies;
@@ -90,6 +94,9 @@ public final class RwfBotsHarness implements AutoCloseable {
 
   /** What the managed chat flag answers; read each time chat refreshes it. */
   public final AtomicBoolean chatFlag = new AtomicBoolean(true);
+
+  public final AtomicBoolean learningFlag = new AtomicBoolean(false);
+  public final AtomicInteger learningEvaluations = new AtomicInteger();
 
   private RwfBotsHarness(ServerMock server, WorldMock world, StormDatabase database) {
     this.server = server;
@@ -107,6 +114,18 @@ public final class RwfBotsHarness implements AutoCloseable {
                       @Override
                       public CompletableFuture<Boolean> enabled() {
                         return CompletableFuture.completedFuture(chatFlag.get());
+                      }
+
+                      @Override
+                      public void close() {}
+                    }),
+                Optional.of(
+                    new com.shepherdjerred.thestorm.rwfbots.app.learning.LearningGate() {
+                      @Override
+                      public CompletableFuture<Decision> evaluate(Context context) {
+                        learningEvaluations.incrementAndGet();
+                        return CompletableFuture.completedFuture(
+                            new Decision(learningFlag.get(), Source.FLIPT));
                       }
 
                       @Override
@@ -145,6 +164,7 @@ public final class RwfBotsHarness implements AutoCloseable {
     services.provide(MatchView.class, match);
     services.provide(MatchEvents.class, match);
     services.provide(CombatantActions.class, match);
+    services.provide(MapResources.class, maps);
     enabling =
         plugin ->
             module.enable(
@@ -167,8 +187,10 @@ public final class RwfBotsHarness implements AutoCloseable {
       close();
       throw e;
     }
-    // The records load back through the main thread on the next tick.
+    var prepared = maps.prepare(match.map());
+    // The records and navigation load back through the main thread on the next tick.
     tick();
+    assertThat(prepared).isCompletedWithValue(null);
   }
 
   public RwfBotsPaper paper() {

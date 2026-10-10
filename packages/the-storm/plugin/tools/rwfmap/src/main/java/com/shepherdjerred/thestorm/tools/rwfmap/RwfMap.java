@@ -31,6 +31,8 @@ public final class RwfMap {
       usage:
         rwfmap bake <mapDir> [--out <file>]   bake nav.rwfnav and nav.summary.json
         rwfmap verify <mapDir>                 fail if the committed nav files are stale
+        rwfmap verify-details <mapDir>         validate allowed payloads against terrain
+        rwfmap close-starts <mapDir>           find grounded close-combat starts on original terrain
         rwfmap bake-lobby <lobbyDir>           write the generated lobby and bake its nav files
         rwfmap verify-lobby <lobbyDir>         fail if the committed lobby files are stale
       """;
@@ -52,6 +54,8 @@ public final class RwfMap {
       return switch (args[0]) {
         case "bake" -> bake(Path.of(args[1]), rest, out, err);
         case "verify" -> rest.isEmpty() ? verify(Path.of(args[1]), out, err) : usage(err);
+        case "verify-details" -> rest.isEmpty() ? verifyDetails(Path.of(args[1]), out) : usage(err);
+        case "close-starts" -> rest.isEmpty() ? closeStarts(Path.of(args[1]), out) : usage(err);
         case "bake-lobby" -> rest.isEmpty() ? bakeLobby(Path.of(args[1]), out, err) : usage(err);
         case "verify-lobby" ->
             rest.isEmpty() ? verifyLobby(Path.of(args[1]), out, err) : usage(err);
@@ -66,6 +70,30 @@ public final class RwfMap {
   private static int usage(PrintStream err) {
     err.print(USAGE_TEXT);
     return USAGE;
+  }
+
+  private static int verifyDetails(Path folder, PrintStream out) {
+    var map = MapFolder.load(folder);
+    var details =
+        com.shepherdjerred.thestorm.core.config.ConfigFiles.load(
+            folder.resolve("details.json"),
+            com.shepherdjerred.thestorm.rwf.adapter.content.details.MapDetails.class);
+    details.validate(map.schematic());
+    out.println(
+        "verified allowed payloads for "
+            + map.id()
+            + ": "
+            + details.containers().size()
+            + " inventories, "
+            + details.signs().size()
+            + " signs");
+    return OK;
+  }
+
+  private static int closeStarts(Path folder, PrintStream out) {
+    var map = MapFolder.load(folder);
+    out.println(CloseStartReport.of(map, CloseStarts.select(map, Baker.bake(map))).json());
+    return OK;
   }
 
   private static int bake(Path folder, List<String> options, PrintStream out, PrintStream err) {

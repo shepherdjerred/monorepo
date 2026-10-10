@@ -7,6 +7,7 @@ import com.shepherdjerred.thestorm.rwf.app.RecordingSummary;
 import com.shepherdjerred.thestorm.rwf.domain.record.Frame;
 import com.shepherdjerred.thestorm.rwf.domain.record.InputFrame;
 import com.shepherdjerred.thestorm.rwf.domain.record.Intent;
+import com.shepherdjerred.thestorm.rwf.domain.record.ObservationFrame;
 import com.shepherdjerred.thestorm.rwf.domain.record.RecordCodec;
 import com.shepherdjerred.thestorm.rwf.domain.record.RecordEnd;
 import com.shepherdjerred.thestorm.rwf.domain.record.RecordEvent;
@@ -131,6 +132,11 @@ public final class GzipRecorder implements Recorder {
     @Override
     public void input(InputFrame input) {
       sample(RecordCodec.input(input));
+    }
+
+    @Override
+    public void observation(ObservationFrame observation) {
+      sample(RecordCodec.observation(observation));
     }
 
     private void sample(String row) {

@@ -18,7 +18,7 @@ final class RecordCodecTest {
   private static MatchRecord tinyMatch() {
     var header =
         new RecordHeader(
-            MatchRecord.SCHEMA_VERSION,
+            2,
             Samples.MATCH,
             "harbour",
             Samples.SHA,
@@ -60,15 +60,17 @@ final class RecordCodecTest {
             new Frame(20, "p1", -944, 2048, 16, 128, 0, 72, 0, Frame.SNEAKING | Frame.ON_FIRE));
     var inputs =
         List.of(
-            new InputFrame(0, "p1", InputFrame.NONE, 0, 0),
+            new InputFrame(new InputFrame.Legacy(0, "p1", InputFrame.NONE, 0, 0)),
             new InputFrame(
-                1,
-                "p1",
-                InputFrame.FORWARD | InputFrame.SPRINT,
-                InputFrame.quantizeYaw(-90.5f),
-                InputFrame.quantizePitch(12.25f)),
+                new InputFrame.Legacy(
+                    1,
+                    "p1",
+                    InputFrame.FORWARD | InputFrame.SPRINT,
+                    InputFrame.quantizeYaw(-90.5f),
+                    InputFrame.quantizePitch(12.25f))),
             new InputFrame(
-                2, "p1", InputFrame.LEFT | InputFrame.JUMP | InputFrame.SNEAK, 0, -9000));
+                new InputFrame.Legacy(
+                    2, "p1", InputFrame.LEFT | InputFrame.JUMP | InputFrame.SNEAK, 0, -9000)));
     var intents =
         List.of(new Intent(10, "p2", "arm", "red-1"), new Intent(30, "p2", "retreat", ""));
     var end =
@@ -77,7 +79,7 @@ final class RecordCodecTest {
             Optional.of(TeamColor.RED),
             RecordEnd.Reason.LAST_TEAM_STANDING,
             Map.of("p1", 3L));
-    return new MatchRecord(header, events, frames, inputs, intents, end);
+    return new MatchRecord(header, events, frames, inputs, List.of(), intents, end);
   }
 
   /**
@@ -117,7 +119,44 @@ final class RecordCodecTest {
     var older = RecordCodec.encode(tinyMatch()).replaceFirst("^H\t2\t", "H\t1\t");
 
     assertThat(RecordCodec.decode(older).fold(ok -> "", RecordCodec.Problem::message))
-        .isEqualTo("record schema 1 is not 2");
+        .isEqualTo("unsupported record schema 1");
+  }
+
+  @Test
+  void versionThreePreservesFullControlsAndTheirProvenance() {
+    var legacy = tinyMatch();
+    var head = legacy.header();
+    var record =
+        new MatchRecord(
+            new RecordHeader(
+                3,
+                head.matchId(),
+                head.mapId(),
+                head.mapBlocksSha256(),
+                head.seed(),
+                head.roster(),
+                head.combatRulesVersion()),
+            legacy.events(),
+            legacy.frames(),
+            List.of(
+                new InputFrame(
+                    0, "p1", 65, 26950, -1225, true, false, 6, 42, -1, InputFrame.Source.HUMAN),
+                new InputFrame(
+                    1, "p1", 0, 0, 0, false, true, 1, 43, -1, InputFrame.Source.AUTOMATED),
+                new InputFrame(new InputFrame.Legacy(2, "p1", 0, 0, 0))),
+            List.of(new ObservationFrame(0, "p1", "rwf-combat-v1", List.of(0.25, -0.75))),
+            legacy.intents(),
+            legacy.end());
+    var text = RecordCodec.encode(record);
+    assertThat(text).contains("N\t0\tp1\t65\t26950\t-1225\ttrue\tfalse\t6\t42\t-1\tHUMAN\n");
+    assertThat(text).contains("O\t0\tp1\trwf-combat-v1\t0.25\t-0.75\n");
+    assertThat(RecordCodec.decode(text)).isEqualTo(Result.ok(record));
+    assertThat(legacy.inputs()).allMatch(input -> input.source() == InputFrame.Source.MISSING);
+    assertThat(RecordCodec.decode(text.replace("\tHUMAN", "\tALIEN")).isOk()).isFalse();
+    assertThat(RecordCodec.decode(text.replace("\t0.25\t", "\tNaN\t")).isOk()).isFalse();
+    assertThat(RecordCodec.decode(text.replace("\t65\t26950\t", "\t4294967361\t26950\t")).isOk())
+        .isFalse();
+    assertThat(RecordCodec.decode("O\t0\tp1\trwf-combat-v1\t0.25\n").isOk()).isFalse();
   }
 
   @Test
@@ -135,9 +174,9 @@ final class RecordCodecTest {
     assertThat(InputFrame.quantizeYaw(719.5f)).isEqualTo(35_950);
     assertThat(InputFrame.quantizePitch(95)).isEqualTo(9000);
     assertThat(InputFrame.quantizePitch(-12.25f)).isEqualTo(-1225);
-    assertThatThrownBy(() -> new InputFrame(0, "p1", 128, 0, 0))
+    assertThatThrownBy(() -> new InputFrame(new InputFrame.Legacy(0, "p1", 128, 0, 0)))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> new InputFrame(0, "p1", 0, 36_000, 0))
+    assertThatThrownBy(() -> new InputFrame(new InputFrame.Legacy(0, "p1", 0, 36_000, 0)))
         .isInstanceOf(IllegalArgumentException.class);
   }
 
@@ -193,6 +232,7 @@ final class RecordCodecTest {
                 new MatchRecord(
                     header,
                     List.of(new RecordEvent(5, "a", "b", ""), new RecordEvent(4, "a", "b", "")),
+                    List.of(),
                     List.of(),
                     List.of(),
                     List.of(),

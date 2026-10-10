@@ -77,6 +77,54 @@ the first-arrival dialog. Named viewpoints live in `tools/client/viewpoints.json
 lobby, market, mystery box, and foundry. This tool supplies scripted inputs and
 inspection; it does not implement autonomous navigation or a full-match player.
 
+## Record rendered footage
+
+Place a spectator observer at the desired viewpoint in the owned sandbox's
+visible windowed preview, close
+all screens, and release scripted inputs. Arm the camera before starting the
+event to be recorded:
+
+```sh
+bun run client video-arm --session <session.json> --args '{"name":"duel-red","frames":900,"fov":70}'
+bun run client video-status --session <session.json>
+bun run client video-start --session <session.json>
+bun run client video-status --session <session.json>
+```
+
+Wait for `READY` before `video-start`, then for `COMPLETE` before encoding. The
+camera stays at the observer's current position and orientation. Capture hides
+the HUD, entity nameplates and below-name scores, and restores the previous HUD,
+FOV, view bobbing, camera settings and window size when it finishes. The owned
+window is sized using its measured pixel scale so high-DPI displays also render
+exactly 1280×720 pixels. Ordinary clients without
+a preview session leave these render hooks inactive. Camera control requests
+are rejected while a capture owns the observer; `video-cancel` or `release`
+cancels it.
+
+The recorder samples actual 1280×720 framebuffer images at 30 fps. A 900-frame
+run yields a 30-second clip; the limit is 1800 frames. It fails if a live sampling
+slot is missed, the bounded image writer overloads, the camera or world changes,
+or a screen or HUD becomes visible. Each original PNG has an index, monotonic
+sampling time, observed camera, world tick and SHA-256 in `frames.json`. Names
+must be unique: the frame directory and receipt use exclusive creation, and a
+cancelled or failed recording remains explicitly incomplete.
+
+```sh
+bun run client video-encode --args '{"receipt":"/absolute/path/to/duel-red/frames.json"}'
+```
+
+Encoding requires `ffmpeg` and `ffprobe`. It validates every original frame and
+sampling slot, checks all hashes before and after encoding, and verifies the
+video's dimensions, rate, frame count, duration and lack of audio. It retains
+the PNGs and writes `clip.mp4`, an exclusive encoding claim, and a `video.json`
+receipt binding the video to the original frame receipt. These are unaccepted
+capture artifacts. Binding the first 600 live duel ticks, retaining an early
+terminal frame, and assembling the full pilot review schedule belong to the
+preference collector.
+
+The language-neutral capture inventory is `src/main/resources/storm-video.json`;
+Java record checks and Bun boundary validation enforce it.
+
 ## Verify the helper
 
 The pinned Loom build merges the verified Minecraft inputs into a local dependency.
@@ -101,9 +149,13 @@ bun run client preview --vanilla --verify
 
 The first two commands run Java quality checks and Java/Bun unit tests.
 `test:client-native` uses Fabric's real-client framework to inspect a loaded
-world and capture its inventory screen. `preview --vanilla --verify` checks
+world, capture its inventory screen, record an actual frame, and verify
+capture cancellation, HUD restoration and rejection of missed sampling slots.
+GameTest renders once per 20 Hz tick; the full 900-frame, 30 fps recording check
+runs in the ordinary client through `preview --vanilla --verify`, which checks
 movement, input cancellation, hotbar selection, barrel interaction, item transfer, stale clicks, melee attacks, and
-screenshots through the actual socket bridge, then closes the preview.
+screenshots and an encoded 30-second recording through the actual socket bridge,
+then closes the preview.
 `preview --verify` also captures the four Settlement viewpoints.
 
 The wire contract is versioned newline-delimited JSON. Requests contain

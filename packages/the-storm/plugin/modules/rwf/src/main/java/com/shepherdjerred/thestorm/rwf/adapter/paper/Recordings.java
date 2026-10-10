@@ -11,14 +11,12 @@ import com.shepherdjerred.thestorm.rwf.domain.map.MapDefinition;
 import com.shepherdjerred.thestorm.rwf.domain.match.Combatant;
 import com.shepherdjerred.thestorm.rwf.domain.match.RwfMatch;
 import com.shepherdjerred.thestorm.rwf.domain.record.Frame;
-import com.shepherdjerred.thestorm.rwf.domain.record.InputFrame;
 import com.shepherdjerred.thestorm.rwf.domain.record.Intent;
 import com.shepherdjerred.thestorm.rwf.domain.record.MatchRecord;
 import com.shepherdjerred.thestorm.rwf.domain.record.RecordEnd;
 import com.shepherdjerred.thestorm.rwf.domain.record.RecordEvent;
 import com.shepherdjerred.thestorm.rwf.domain.record.RecordHeader;
 import com.shepherdjerred.thestorm.rwf.domain.record.RosterEntry;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Map;
@@ -34,21 +32,27 @@ import org.jspecify.annotations.Nullable;
  */
 final class Recordings {
 
-  /** Ticks since the match went live, at the server's 50 ms tick. */
-  static long tick(Instant liveAt, Instant now) {
-    return Math.max(0, Duration.between(liveAt, now).toMillis() / 50);
-  }
-
   private final Recorder recorder;
   private final Optional<Pseudonyms> pseudonyms;
   private final Inputs inputs;
+  private final com.shepherdjerred.thestorm.core.module.Services services;
+  private final org.bukkit.plugin.Plugin plugin;
+  private long liveTick;
   private @Nullable MatchRecording recording;
-  private @Nullable Instant liveAt;
 
-  Recordings(Recorder recorder, Optional<Pseudonyms> pseudonyms, Inputs inputs) {
-    this.recorder = recorder;
-    this.pseudonyms = pseudonyms;
-    this.inputs = inputs;
+  record Parts(
+      Recorder recorder,
+      Optional<Pseudonyms> pseudonyms,
+      Inputs inputs,
+      com.shepherdjerred.thestorm.core.module.Services services,
+      org.bukkit.plugin.Plugin plugin) {}
+
+  Recordings(Parts parts) {
+    this.recorder = parts.recorder();
+    this.pseudonyms = parts.pseudonyms();
+    this.inputs = parts.inputs();
+    this.services = parts.services();
+    this.plugin = parts.plugin();
   }
 
   boolean enabled() {
@@ -78,7 +82,7 @@ final class Recordings {
               member.kit().orElseThrow(),
               member.id().isBot()));
     }
-    liveAt = now;
+    liveTick = plugin.getServer().getCurrentTick();
     recording =
         recorder.begin(
             new RecordHeader(
@@ -91,9 +95,8 @@ final class Recordings {
                 CombatRules.COMBAT_RULES_VERSION));
   }
 
-  private long tick(Instant now) {
-    var live = liveAt;
-    return live == null ? 0 : tick(live, now);
+  private long tick() {
+    return Math.max(0, plugin.getServer().getCurrentTick() - liveTick);
   }
 
   void event(Instant now, String kind, CombatantId subject, String detail) {
@@ -103,7 +106,7 @@ final class Recordings {
   void event(Instant now, String kind, String subject, String detail) {
     var current = recording;
     if (current != null && !subject.isEmpty()) {
-      current.event(new RecordEvent(tick(now), kind, subject, detail));
+      current.event(new RecordEvent(tick(), kind, subject, detail));
     }
   }
 
@@ -120,7 +123,7 @@ final class Recordings {
     if (!Frame.due(bot, serverTick)) {
       return;
     }
-    var tick = tick(now);
+    var tick = tick();
     var pseudonym = pseudonym(member.id()).orElseThrow();
     var location = Places.at(player);
     var flags =
@@ -141,20 +144,28 @@ final class Recordings {
             player.getInventory().getHeldItemSlot(),
             flags));
     if (!bot) {
-      current.input(
-          new InputFrame(
-              tick,
-              pseudonym,
-              inputs.keys(player.getUniqueId()),
-              InputFrame.quantizeYaw(location.getYaw()),
-              InputFrame.quantizePitch(location.getPitch())));
+      current.input(inputs.frame(tick, pseudonym, player, liveTick));
+      services
+          .find(com.shepherdjerred.thestorm.rwf.app.ObservationSource.class)
+          .flatMap(source -> source.capture(player.getUniqueId()))
+          .ifPresent(
+              sample -> {
+                current.observation(
+                    new com.shepherdjerred.thestorm.rwf.domain.record.ObservationFrame(
+                        tick, pseudonym, sample.contract(), sample.values()));
+                player.sendPluginMessage(
+                    plugin,
+                    com.shepherdjerred.thestorm.rwf.domain.record.ObservationPacket.CHANNEL,
+                    com.shepherdjerred.thestorm.rwf.domain.record.ObservationPacket.encode(
+                        plugin.getServer().getCurrentTick(), sample.values()));
+              });
     }
   }
 
   void intent(Instant now, CombatantId who, String kind, String target) {
     var current = recording;
     if (current != null) {
-      current.intent(new Intent(tick(now), pseudonym(who).orElseThrow(), kind, target));
+      current.intent(new Intent(tick(), pseudonym(who).orElseThrow(), kind, target));
     }
   }
 
@@ -168,10 +179,10 @@ final class Recordings {
     if (current == null) {
       return Optional.empty();
     }
+    var endedAt = tick();
     recording = null;
-    liveAt = null;
     var byPseudonym = new TreeMap<String, Long>();
     payouts.forEach((id, credits) -> byPseudonym.put(pseudonym(id).orElseThrow(), credits));
-    return Optional.of(current.end(new RecordEnd(tick(now), winner, reason, byPseudonym)));
+    return Optional.of(current.end(new RecordEnd(endedAt, winner, reason, byPseudonym)));
   }
 }

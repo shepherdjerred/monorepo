@@ -11,12 +11,15 @@ class InputLeaseTest {
   @Test
   void heldMovementEndsAtItsTickBudget() {
     var lease = new InputLease();
+    assertThat(lease.active()).isFalse();
     var result = lease.start(UUID.randomUUID(), Set.of("forward"), 2);
+    assertThat(lease.active()).isTrue();
     lease.tick();
     assertThat(result).isNotDone();
     lease.tick();
     assertThat(result).isCompletedWithValue("Input completed");
     assertThat(lease.buttons()).isEmpty();
+    assertThat(lease.active()).isFalse();
   }
 
   @Test

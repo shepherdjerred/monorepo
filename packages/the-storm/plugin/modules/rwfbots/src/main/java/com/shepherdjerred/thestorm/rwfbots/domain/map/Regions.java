@@ -43,6 +43,9 @@ public final class Regions {
         throw new IllegalArgumentException("node region out of range: " + region);
       }
     }
+    if ((long) count * count > Integer.MAX_VALUE) {
+      throw new IllegalArgumentException("too many regions for the visibility table: " + count);
+    }
     if (this.visibility.length() > (long) count * count) {
       throw new IllegalArgumentException("visibility table larger than region count squared");
     }
@@ -123,6 +126,7 @@ public final class Regions {
   private static BitSet sampleVisibility(
       NavGraph graph, VoxelGrid grid, List<List<Integer>> members) {
     var count = members.size();
+    var tableSize = Math.toIntExact((long) count * count);
     var eyes = new ArrayList<List<Vec3>>(count);
     for (var nodes : members) {
       var samples = new ArrayList<Vec3>();
@@ -132,7 +136,7 @@ public final class Regions {
       }
       eyes.add(samples);
     }
-    var visibility = new BitSet(count * count);
+    var visibility = new BitSet(tableSize);
     for (var a = 0; a < count; a++) {
       visibility.set(a * count + a);
       for (var b = a + 1; b < count; b++) {

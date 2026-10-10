@@ -26,6 +26,10 @@ public final class StormFixtures extends JavaPlugin {
 
   private File content;
   private World world;
+  private com.shepherdjerred.thestorm.e2e.maps.MapExportFixtures mapExporter;
+  private com.shepherdjerred.thestorm.e2e.maps.NavigationFixtures navigation;
+  private com.shepherdjerred.thestorm.e2e.maps.CloseStartFixtures closeStarts;
+  private com.shepherdjerred.thestorm.e2e.maps.DetailsExportFixtures detailsExporter;
 
   @Override
   public void onEnable() {
@@ -68,6 +72,26 @@ public final class StormFixtures extends JavaPlugin {
     }
     getLogger().info("Prepared synthetic fixtures for Storm modules " + prepared);
     new PlotFixtures(this).register();
+    new DuelFixtures(this).register();
+    new InferenceLoadFixtures(this).register();
+    new RegressionFixtures(this).register();
+    mapExporter = new com.shepherdjerred.thestorm.e2e.maps.MapExportFixtures(this, world);
+    mapExporter.register();
+    navigation = new com.shepherdjerred.thestorm.e2e.maps.NavigationFixtures(this, world);
+    navigation.register();
+    closeStarts = new com.shepherdjerred.thestorm.e2e.maps.CloseStartFixtures(this);
+    closeStarts.register();
+    detailsExporter = new com.shepherdjerred.thestorm.e2e.maps.DetailsExportFixtures(this, world);
+    detailsExporter.register();
+    new com.shepherdjerred.thestorm.e2e.maps.MapLifecycleFixtures(this).register();
+  }
+
+  @Override
+  public void onDisable() {
+    if (mapExporter != null) mapExporter.close();
+    if (navigation != null) navigation.close();
+    if (closeStarts != null) closeStarts.close();
+    if (detailsExporter != null) detailsExporter.close();
   }
 
   /** Whether {@code module} is switched on; a config that omits it is a staging bug. */

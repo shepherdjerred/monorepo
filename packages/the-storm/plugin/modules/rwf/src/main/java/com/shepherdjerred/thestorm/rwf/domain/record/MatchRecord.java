@@ -18,24 +18,42 @@ public record MatchRecord(
     List<RecordEvent> events,
     List<Frame> frames,
     List<InputFrame> inputs,
+    List<ObservationFrame> observations,
     List<Intent> intents,
     RecordEnd end) {
 
   /** The current record format. Bump it whenever any record type gains or changes a field. */
-  public static final int SCHEMA_VERSION = 2;
+  public static final int SCHEMA_VERSION = 3;
 
   public MatchRecord {
     events = List.copyOf(events);
     frames = List.copyOf(frames);
     inputs = List.copyOf(inputs);
+    observations = List.copyOf(observations);
     intents = List.copyOf(intents);
-    if (header.schemaVersion() != SCHEMA_VERSION) {
+    if (header.schemaVersion() != 2 && header.schemaVersion() != SCHEMA_VERSION) {
+      throw new IllegalArgumentException("unsupported record schema " + header.schemaVersion());
+    }
+    if (header.schemaVersion() == 2
+        && (!observations.isEmpty()
+            || inputs.stream()
+                .anyMatch(
+                    input ->
+                        !input.equals(
+                            new InputFrame(
+                                new InputFrame.Legacy(
+                                    input.tick(),
+                                    input.pseudonym(),
+                                    input.keys(),
+                                    input.yaw(),
+                                    input.pitch())))))) {
       throw new IllegalArgumentException(
-          "record schema " + header.schemaVersion() + " is not " + SCHEMA_VERSION);
+          "schema 2 cannot encode observations or complete controls");
     }
     checkOrdered(events.stream().mapToLong(RecordEvent::tick).toArray(), "events");
     checkOrdered(frames.stream().mapToLong(Frame::tick).toArray(), "frames");
     checkOrdered(inputs.stream().mapToLong(InputFrame::tick).toArray(), "inputs");
+    checkOrdered(observations.stream().mapToLong(ObservationFrame::tick).toArray(), "observations");
     checkOrdered(intents.stream().mapToLong(Intent::tick).toArray(), "intents");
   }
 

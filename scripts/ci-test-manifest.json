@@ -1053,6 +1053,31 @@
           "runner": "vitest",
           "name": "client-controller",
           "args": ["tools/client"]
+        },
+        {
+          "runner": "command",
+          "name": "rwf-learning-python",
+          "command": ["bun", "run", "test:learning-python"]
+        },
+        {
+          "runner": "vitest",
+          "name": "rwf-learning",
+          "args": ["tools/learning", "--exclude", "**/.cache/**"]
+        },
+        {
+          "runner": "command",
+          "name": "rwf-maps-python",
+          "command": ["bun", "run", "test:maps-python"]
+        },
+        {
+          "runner": "vitest",
+          "name": "rwf-maps",
+          "args": ["tools/maps", "--exclude", "**/.cache/**"]
+        },
+        {
+          "runner": "vitest",
+          "name": "preference-media",
+          "args": ["tests/media"]
         }
       ],
       "excludedSuites": [

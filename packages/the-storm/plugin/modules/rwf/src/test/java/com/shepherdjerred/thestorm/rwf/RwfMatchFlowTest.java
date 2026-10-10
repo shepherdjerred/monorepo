@@ -173,6 +173,7 @@ final class RwfMatchFlowTest {
     var attacker = botOn(enemyOf(teamOf(alice)));
     alice.teleport(new Location(harness.rwf, 31.5, 65, 20.5));
     attacker.entity().teleport(new Location(harness.rwf, 31.5, 65, 22.5));
+    attacker.entity().setRotation(180, 0);
     alice.setHealth(20);
 
     // The server reports a hit for its own amount; the listener cancels it and applies the rules'.
@@ -192,6 +193,21 @@ final class RwfMatchFlowTest {
     farAway.entity().teleport(new Location(harness.rwf, 60.5, 65, 60.5));
     assertThat(harness.actions().melee(farAway.id(), new CombatantId.Human(alice.getUniqueId())))
         .contains(ActionRefusal.OUT_OF_REACH);
+  }
+
+  @Test
+  void meleeReachesTheHitboxEdgeAndRequiresFacingTheTarget() {
+    var harness = start();
+    var alice = harness.loadedPlayer("Alice");
+    harness.goLive(alice);
+    var attacker = botOn(enemyOf(teamOf(alice)));
+    alice.teleport(new Location(harness.rwf, 31.5, 65, 19.3));
+    attacker.entity().teleport(new Location(harness.rwf, 31.5, 65, 22.5, 180, 0));
+    var human = new CombatantId.Human(alice.getUniqueId());
+    assertThat(harness.actions().melee(attacker.id(), human)).isEmpty();
+    assertThat(alice.getHealth()).isLessThan(20);
+    attacker.entity().setRotation(0, 0);
+    assertThat(harness.actions().melee(attacker.id(), human)).contains(ActionRefusal.OUT_OF_REACH);
   }
 
   @Test
@@ -371,6 +387,9 @@ final class RwfMatchFlowTest {
     }
 
     assertThat(counts).isSorted();
+    assertThat(counts.get(44))
+        .as("all bots arrive in the first half of the countdown")
+        .isEqualTo(7);
     assertThat(counts.getLast()).isEqualTo(7);
     assertThat(counts.stream().distinct().count())
         .as("they arrive at several different moments")

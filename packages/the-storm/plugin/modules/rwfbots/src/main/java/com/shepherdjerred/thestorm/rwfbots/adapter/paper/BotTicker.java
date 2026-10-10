@@ -9,7 +9,9 @@ import com.shepherdjerred.thestorm.rwfbots.app.DecisionGate;
 import com.shepherdjerred.thestorm.rwfbots.app.Governor;
 import com.shepherdjerred.thestorm.rwfbots.app.ThinkLoop;
 import com.shepherdjerred.thestorm.rwfbots.app.ThinkStats;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.VoxelGrid;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.Percept;
+import com.shepherdjerred.thestorm.rwfbots.domain.perception.Perception;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.PerceptionState;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.Reflex;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.ReflexContext;
@@ -44,6 +46,8 @@ public final class BotTicker {
   private final Supplier<long[]> tickTimes;
   private final LongSupplier nanoClock;
   private final LobbyTicker lobby;
+  private final com.shepherdjerred.thestorm.rwf.app.ObservationSource observations;
+  private final com.shepherdjerred.thestorm.rwfbots.app.learning.MatchLearning learning;
   private boolean inLobby;
   private final ThinkStats staleness = new ThinkStats();
   private final ThinkStats sections = new ThinkStats();
@@ -71,7 +75,9 @@ public final class BotTicker {
       MatchView view,
       Supplier<long[]> tickTimes,
       LongSupplier nanoClock,
-      LobbyTicker lobby) {}
+      LobbyTicker lobby,
+      com.shepherdjerred.thestorm.rwf.app.ObservationSource observations,
+      com.shepherdjerred.thestorm.rwfbots.app.learning.MatchLearning learning) {}
 
   public BotTicker(Parts parts) {
     this.roster = parts.roster();
@@ -83,6 +89,8 @@ public final class BotTicker {
     this.tickTimes = parts.tickTimes();
     this.nanoClock = parts.nanoClock();
     this.lobby = parts.lobby();
+    this.observations = parts.observations();
+    this.learning = parts.learning();
   }
 
   /** The ticks run so far; the snapshot clock. */
@@ -100,9 +108,14 @@ public final class BotTicker {
     return sections.percentileMillis(0.95);
   }
 
+  public com.shepherdjerred.thestorm.rwfbots.app.learning.MatchLearning.Metrics learningMetrics() {
+    return learning.metrics();
+  }
+
   /** One server tick. */
   public void run() {
     tick++;
+    learning.startTick(tick);
     if (lobbyTick()) {
       return;
     }
@@ -117,6 +130,7 @@ public final class BotTicker {
     }
     var match = session.orElseThrow();
     var snapshot = match.capture().capture(tick, state.orElseThrow());
+    roster.harness().captureTick(match.matchId(), tick);
     loop.publish(snapshot);
     var frame = new Frame(match, snapshot, loop.board());
     for (var bot : roster.live()) {
@@ -126,6 +140,10 @@ public final class BotTicker {
         break;
       }
       bot.profile().ifPresent(profile -> drive(bot, profile, frame));
+    }
+    if (sameMatch(match)) {
+      roster.harness().finishTick(match.matchId(), tick);
+      learning.finishTick(match.matchId(), tick);
     }
     var elapsed = nanoClock.getAsLong() - started;
     sections.record(elapsed);
@@ -161,13 +179,19 @@ public final class BotTicker {
   private record Frame(MatchSession match, WorldSnapshot snapshot, DecisionBoard board) {}
 
   private void drive(BotBody bot, BotProfile profile, Frame frame) {
+    if (!view.isFighting(frame.match().matchId(), bot.uuid())) {
+      return;
+    }
     var snapshot = frame.snapshot();
+    if (bot.takeRecoveryRequest()) {
+      loop.requestReplan(profile.id());
+    }
     var thought = frame.board().of(profile.id());
     var self = snapshot.combatant(profile.id());
     if (self.isEmpty() || !self.orElseThrow().alive()) {
       return;
     }
-    if (thinned(bot, profile, snapshot)) {
+    if (!roster.harness().controlled(frame.match().matchId()) && thinned(bot, profile, snapshot)) {
       return;
     }
     var epoch = loop.epoch(profile.id());
@@ -184,27 +208,49 @@ public final class BotTicker {
             .orElseGet(() -> new Percept(PerceptionState.EMPTY, List.of(), tick));
     var input =
         ReflexInput.of(self.orElseThrow(), snapshot, decision, percept).withGapples(gapples(bot));
-    input = freshTarget(input);
     var match = frame.match();
+    input = freshTarget(input, match.nav().grid());
+    input = roster.harness().input(match.matchId(), input, match.nav());
     var context =
         new ReflexContext(
             match.nav().grid(),
             profile.levers(),
             bot.loadout(),
-            ReflexContext.Habits.of(profile.archetype(), profile.quirks()));
+            roster.harness().controlled(match.matchId())
+                ? ReflexContext.Habits.NONE
+                : ReflexContext.Habits.of(profile.archetype(), profile.quirks()));
     var step = Reflex.tick(bot.reflex(), input, context, bot.random());
     bot.reflex(step.state());
-    driver.apply(bot, step.commands(), match.ids(), tick);
+    var controls =
+        new com.shepherdjerred.thestorm.rwfbots.app.CombatHarness.Frame(
+            match.matchId(),
+            bot.uuid(),
+            epoch,
+            input,
+            input.target().map(target -> match.ids().uuid(target.id()).orElseThrow()),
+            step,
+            roster.harness().active(match.matchId())
+                    || (learning.active(match.matchId())
+                        && input.self().kit()
+                            == com.shepherdjerred.thestorm.rwfbots.domain.world.Kit.TROOPER)
+                ? observations.capture(bot.uuid())
+                : java.util.Optional.empty());
+    var commands =
+        roster.harness().active(match.matchId())
+            ? roster.harness().commands(controls)
+            : learning.commands(controls);
+    driver.apply(bot, commands, match.ids(), tick);
   }
 
-  /** The target resolves to this tick's view of the enemy, not the percept's older one. */
-  static ReflexInput freshTarget(ReflexInput input) {
+  /** Refreshes a previously visible target only while the current sight line remains clear. */
+  static ReflexInput freshTarget(ReflexInput input, VoxelGrid grid) {
     var target =
         input
             .target()
             .map(CombatantView::id)
             .flatMap(input.snapshot()::combatant)
-            .filter(CombatantView::alive);
+            .filter(CombatantView::alive)
+            .filter(enemy -> Perception.hasLineOfSight(grid, input.self().eye(), enemy));
     return new ReflexInput(
         input.self(), input.snapshot(), input.decision(), target, input.gapplesLeft());
   }

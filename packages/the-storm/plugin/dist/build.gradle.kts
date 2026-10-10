@@ -38,6 +38,8 @@ tasks.assemble { dependsOn(tasks.shadowJar) }
 // Disposable world fixtures for the full-module real-Paper suite. This jar is
 // separate from TheStorm.jar and is never copied into the production image.
 val e2e = sourceSets.create("e2e") {
+  // One pure-JDK codec is compiled into both local tools. It never enters TheStorm.jar.
+  java.srcDir(rootProject.file("../client/src/main/java/com/shepherdjerred/thestorm/client/wire"))
   compileClasspath += configurations.compileClasspath.get() + sourceSets.main.get().output
   runtimeClasspath += output + compileClasspath
 }
@@ -49,13 +51,14 @@ val fixturesJar = tasks.register<Jar>("fixturesJar") {
 }
 tasks.assemble { dependsOn(fixturesJar) }
 
+val testPython = listOf("uv", "run", "--project", rootProject.file("../tools/learning").absolutePath, "--locked", "python")
 val archiveTest = tasks.register<Exec>("archiveTest") {
   workingDir(rootProject.file("../server"))
-  commandLine("python3", "-m", "unittest", "-v", "test_archive_progression.py")
+  commandLine(testPython + listOf("-m", "unittest", "-v", "test_archive_progression.py"))
 }
 val worldRestoreTest = tasks.register<Exec>("worldRestoreTest") {
   workingDir(rootProject.file("../server"))
-  commandLine("python3", "-m", "unittest", "-v", "test_world_restore.py", "test_database_restore.py", "test_restoration_control.py", "test_restoration_json.py", "test_restoration_files.py", "test_restoration_activation.py", "test_restoration_install.py")
+  commandLine(testPython + listOf("-m", "unittest", "-v", "test_world_restore.py", "test_database_restore.py", "test_restoration_control.py", "test_restoration_json.py", "test_restoration_files.py", "test_restoration_activation.py", "test_restoration_install.py"))
 }
 tasks.test {
   dependsOn(archiveTest, worldRestoreTest)
@@ -89,4 +92,6 @@ val libs = the<VersionCatalogsExtension>().named("libs")
 dependencies {
   testImplementation(libs.findLibrary("archunit").get())
   compileOnly(libs.findLibrary("coreprotect").get()) { isTransitive = false }
+  add(e2e.compileOnlyConfigurationName, libs.findLibrary("worldedit-core").get())
+  add(e2e.compileOnlyConfigurationName, libs.findLibrary("worldedit-bukkit").get())
 }

@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "training-yard-trooper-duel-v1",
+  "map": "training-yard",
+  "mapSha256": "03f6daeb430aa9da0dfdcb472bfdab7b7b5a69741841d7a93444efbd53a85171",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": { "x": 0, "y": 64, "z": 0 },
+    "max": { "x": 63, "y": 79, "z": 63 }
+  },
+  "sourceTeams": ["RED", "BLUE"],
+  "spawnPolicy": "authored",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [25.5, 65, 8.5],
+      "yaw": -90,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [37.5, 65, 8.5],
+      "yaw": 90,
+      "pitch": 0
+    }
+  ]
+}

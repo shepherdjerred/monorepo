@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.rwf.adapter.db.JooqMatchStore;
 import com.shepherdjerred.thestorm.rwf.adapter.record.Retention;
+import com.shepherdjerred.thestorm.rwf.app.ShowcaseControl;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
 import com.shepherdjerred.thestorm.rwf.domain.match.Outcome;
@@ -21,6 +22,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.zip.GZIPInputStream;
 import org.bukkit.GameMode;
 import org.jspecify.annotations.Nullable;
@@ -86,6 +88,44 @@ final class RwfShowcaseTest {
 
     assertThat(answer(operator(), "rwf admin showcase 4", "Players are in the match")).isNotEmpty();
     assertThat(harness().snapshot().combatants()).hasSize(8);
+  }
+
+  @Test
+  void seededShowcasesRefuseStaleIdsInvalidSizesAndOccupiedLobbiesWithoutChangingTheWorld() {
+    running = RwfHarness.start(directory);
+    var control = harness().services.require(ShowcaseControl.class);
+    var before = harness().snapshot();
+    harness().rwf.setTime(1234);
+
+    assertThat(control.startSeeded(UUID.randomUUID(), 2, 1)).isPresent();
+    assertThat(control.startSeeded(before.matchId(), 1, 1)).isPresent();
+    assertThat(harness().snapshot()).isEqualTo(before);
+    assertThat(harness().rwf.getTime()).isEqualTo(1234);
+
+    harness().enter(harness().loadedPlayer("Alice"));
+    var occupied = harness().snapshot();
+    var occupiedTime = harness().rwf.getTime();
+    assertThat(control.startSeeded(occupied.matchId(), 2, 1)).isPresent();
+    assertThat(harness().snapshot()).isEqualTo(occupied);
+    assertThat(harness().rwf.getTime()).isEqualTo(occupiedTime);
+  }
+
+  @Test
+  void aSeededShowcaseKeepsTheLobbyIdAndSettlesItsLightingBeforeCountdown() {
+    running = RwfHarness.start(directory);
+    var before = harness().snapshot();
+    var seed = 600_090_001L;
+    var expected = 0L;
+    var control = harness().services.require(ShowcaseControl.class);
+
+    assertThat(control.startSeeded(before.matchId(), 2, seed)).isEmpty();
+    assertThat(harness().snapshot().matchId()).isEqualTo(before.matchId());
+    assertThat(harness().snapshot().combatants()).hasSize(2);
+    assertThat(harness().rwf.getTime()).isEqualTo(expected);
+    var started = harness().snapshot();
+    assertThat(control.startSeeded(before.matchId(), 2, seed + 1)).isPresent();
+    assertThat(harness().snapshot()).isEqualTo(started);
+    assertThat(harness().rwf.getTime()).isEqualTo(expected);
   }
 
   @Test

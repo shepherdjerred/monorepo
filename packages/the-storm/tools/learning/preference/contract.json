@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "pairs": 20,
+  "minimumLearnedVotes": 15,
+  "firstSeed": 600100000,
+  "candidate": "first-sealed-pilot-seed",
+  "map": "training-yard",
+  "opponent": "authored",
+  "sides": ["red", "blue"],
+  "video": { "width": 1280, "height": 720, "fps": 30, "seconds": 30 },
+  "window": "first-600-live-ticks-hold-terminal-frame",
+  "choices": ["A", "B", "tie"]
+}

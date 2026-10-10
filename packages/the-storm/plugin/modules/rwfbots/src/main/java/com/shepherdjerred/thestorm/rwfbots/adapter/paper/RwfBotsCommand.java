@@ -83,6 +83,9 @@ public final class RwfBotsCommand {
                 .executes(ctx -> overview(ctx.getSource().getSender()))
                 .then(Commands.literal("slots").executes(ctx -> slots(ctx.getSource().getSender())))
                 .then(
+                    Commands.literal("learning")
+                        .executes(ctx -> learning(ctx.getSource().getSender())))
+                .then(
                     Commands.argument("bot", StringArgumentType.word())
                         .suggests(
                             (ctx, builder) -> {
@@ -131,6 +134,41 @@ public final class RwfBotsCommand {
     for (var bot : bots) {
       info(to, line(bot));
     }
+    return OK;
+  }
+
+  private int learning(Audience to) {
+    var metrics = ticker.learningMetrics();
+    info(
+        to,
+        String.format(
+            Locale.ROOT,
+            "learning %s; applied %d; unavailable %d; authored-only %d; pending ticks %d; flag outages %d; model load rejects %d",
+            metrics.state(),
+            metrics.applied(),
+            metrics.unavailable(),
+            metrics.ineligible(),
+            metrics.pendingTicks(),
+            metrics.gateUnavailable(),
+            metrics.modelRejected()));
+    metrics
+        .inference()
+        .ifPresent(
+            inference ->
+                info(
+                    to,
+                    String.format(
+                        Locale.ROOT,
+                        "inference submitted %d; skipped %d; rejected %d; deadline met %d; missed %d; expired %d; context drops %d; resets %d; max batch %d",
+                        inference.submitted(),
+                        inference.skipped(),
+                        inference.rejected(),
+                        inference.deadlineMet(),
+                        inference.deadlineMissed(),
+                        inference.expired(),
+                        inference.contextDrops(),
+                        inference.resets(),
+                        inference.maximumBatch())));
     return OK;
   }
 

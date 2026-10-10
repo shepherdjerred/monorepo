@@ -2094,6 +2094,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "the-storm-rwfbots-learning-enabled",
+      "owner": "the-storm",
+      "namespace": "the-storm",
+      "source": "the-storm-rwfbots-learning",
+      "purpose": "Gates accepted Trooper combat movement and attack timing once per Red Warfare match",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "voice_assistant_enabled",
       "owner": "scout",
       "namespace": "scout",
@@ -2462,6 +2474,14 @@
         },
         {
           "key": "the-storm-rwfbots-chat-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-rwfbots-learning-enabled",
           "type": "boolean",
           "default": true,
           "rollouts": [],

@@ -89,7 +89,11 @@ public final class RwfModule implements StormModule {
 
   @Override
   public void enable(ModuleContext context) {
-    var content = ContentFiles.load(context.dataDirectory(), Bukkit::createBlockData);
+    var content = ContentFiles.catalog(context.dataDirectory(), Bukkit::createBlockData);
+    var resources = new com.shepherdjerred.thestorm.rwf.app.map.MapResourceRegistry();
+    context
+        .services()
+        .provide(com.shepherdjerred.thestorm.rwf.app.map.MapResources.class, resources);
     var config = content.config();
     context.database().migrate(id(), getClass().getClassLoader());
     var matches = new JooqMatchStore(context.database());
@@ -107,6 +111,7 @@ public final class RwfModule implements StormModule {
         RwfPaper.start(
             context,
             content,
+            resources,
             new RwfPaper.App(
                 new JooqSnapshotStore(context.database()),
                 matches,
@@ -121,9 +126,15 @@ public final class RwfModule implements StormModule {
                             ServerHooks.production(
                                 context.services().require(ChunkTickets.class)))));
     paper = started;
+    context
+        .services()
+        .provide(com.shepherdjerred.thestorm.rwf.app.map.MapLoading.class, started.loading());
     context.services().provide(MatchView.class, started.view());
     context.services().provide(MatchEvents.class, started.events());
     context.services().provide(CombatantActions.class, started.actions());
+    context
+        .services()
+        .provide(com.shepherdjerred.thestorm.rwf.app.ShowcaseControl.class, started.showcases());
     context
         .logger()
         .info(
@@ -261,6 +272,10 @@ public final class RwfModule implements StormModule {
 
         @Override
         public void input(InputFrame input) {}
+
+        @Override
+        public void observation(
+            com.shepherdjerred.thestorm.rwf.domain.record.ObservationFrame observation) {}
 
         @Override
         public void intent(Intent intent) {}

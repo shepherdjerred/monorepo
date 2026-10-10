@@ -1,12 +1,25 @@
+import java.nio.file.Path
+
 plugins { id("storm.jooq-conventions") }
 
 dependencies {
   // Bots fill rwf matches through its app ports (BotBodies, BotActions, MatchView, MatchEvents).
   implementation(project(":rwf"))
+  implementation(libs.onnxruntime)
   // Citizens is a runtime plugin (server/plugins.json); only rwfbots.adapter.citizens
   // may use it here (architecture tests). Non-transitive: the plugin jar is the API.
   compileOnly(libs.citizens) { isTransitive = false }
   testCompileOnly(libs.citizens) { isTransitive = false }
+}
+
+// Bundle the single neutral contracts consumed by Python/TypeScript and Java promotion.
+tasks.processResources {
+  from(rootProject.file("../tools/learning/evaluation.json")) {
+    rename { "rwf-strength-evaluation.json" }
+  }
+  from(rootProject.file("../tools/learning/maps/protocol.json")) {
+    rename { "rwf-training-maps.json" }
+  }
 }
 
 // The Java Flipt identifiers of the chat flag must agree with the shared managed flag inventory.
@@ -22,6 +35,15 @@ val verifyManagedChatFlag =
 
 tasks.named("compileJava") { dependsOn(verifyManagedChatFlag) }
 
+val verifyManagedLearningFlag =
+    tasks.register<VerifyManagedFlag>("verifyManagedLearningFlag") {
+      inventory = layout.projectDirectory.file("../../../../feature-flags/src/managed-flag-inventory.json")
+      source = layout.projectDirectory.file(
+          "src/main/java/com/shepherdjerred/thestorm/rwfbots/adapter/remote/FliptLearningGate.java")
+      flagSource = "the-storm-rwfbots-learning"
+    }
+tasks.named("compileJava") { dependsOn(verifyManagedLearningFlag) }
+
 // The shipped personality files and rwfbots.yml are parsed by tests, so they are test inputs.
 val shippedPersonalities = file("../../../server/owned/plugins/TheStorm/rwfbots/personalities")
 val shippedConfig = file("../../../server/owned/plugins/TheStorm/rwfbots.yml")
@@ -30,6 +52,9 @@ val trainingYardNav =
     file("../../../server/owned/plugins/TheStorm/rwf/maps/training-yard/nav.rwfnav")
 
 tasks.test {
+  dependsOn("prepareActorParity")
+  inputs.dir(layout.buildDirectory.dir("actor-parity"))
+      .withPropertyName("actorParity").withPathSensitivity(PathSensitivity.RELATIVE)
   inputs
       .dir(shippedPersonalities)
       .withPropertyName("shippedPersonalities")
@@ -45,4 +70,71 @@ tasks.test {
       .withPathSensitivity(PathSensitivity.RELATIVE)
   systemProperty("thestorm.rwfbots.config", shippedConfig.absolutePath)
   systemProperty("thestorm.rwfbots.trainingYardNav", trainingYardNav.absolutePath)
+  systemProperty("thestorm.rwfbots.actorParity", layout.buildDirectory.dir("actor-parity").get().asFile.absolutePath)
+}
+
+val prepareActorParity = tasks.register<Exec>("prepareActorParity") {
+  val learning = rootProject.file("../tools/learning")
+  val output = layout.buildDirectory.dir("actor-parity")
+  inputs.files(fileTree(learning) { include("*.py", "*.json", "*.toml", "*.lock", "promotion/*.py", "map_selection/*.py", "maps/*.json") })
+      .withPropertyName("pythonActorTools").withPathSensitivity(PathSensitivity.RELATIVE)
+  inputs.files("src/main/resources/rwf-combat-v1.tsv", "src/main/resources/rwf-duel.json", "src/main/resources/rwf-actor-parity.json")
+      .withPropertyName("actorContracts").withPathSensitivity(PathSensitivity.RELATIVE)
+  outputs.dir(output)
+  doFirst {
+    val generated = output.get().asFile
+    check(!generated.exists() || generated.deleteRecursively()) { "Could not clear generated actor parity fixture" }
+  }
+  commandLine("uv", "run", "--project", learning, "--locked", "python", learning.resolve("java_parity.py"), "--output", output.get().asFile)
+}
+
+tasks.register<JavaExec>("actorParity") {
+  classpath = sourceSets.main.get().runtimeClasspath
+  mainClass.set("com.shepherdjerred.thestorm.rwfbots.adapter.inference.ActorParity")
+  val directory = providers.gradleProperty("actorParityDirectory")
+  val receipt = providers.gradleProperty("actorParityReceipt")
+  doFirst {
+    val samples = Path.of(directory.get())
+    args(samples.resolve("onnx").toString(), samples.resolve("samples.json").toString())
+    receipt.orNull?.let { args(it) }
+  }
+}
+
+// Exclusive offline promotion; never enables ordinary-match inference or publishes the artifact.
+tasks.register<JavaExec>("actorPromotion") {
+  classpath = sourceSets.main.get().runtimeClasspath
+  mainClass.set("com.shepherdjerred.thestorm.rwfbots.adapter.inference.promotion.PromotionBundle")
+  val directory = providers.gradleProperty("actorPromotionDirectory")
+  val source = providers.gradleProperty("actorPromotionSource")
+  doFirst { args(directory.get(), source.get()) }
+}
+
+// Original authored simulation regression data is generated explicitly, never used for training.
+val simulationClasspath = sourceSets.test.get().runtimeClasspath
+val simulationClasspathFile = layout.buildDirectory.file("simulation-classpath.json")
+val simulationCaptureInputs = tasks.register("simulationCaptureInputs") {
+  val runtimeFiles = simulationClasspath
+  val outputFile = simulationClasspathFile
+  dependsOn(tasks.named("testClasses"))
+  inputs.files(simulationClasspath).withPropertyName("simulationClasspath").withPathSensitivity(PathSensitivity.RELATIVE)
+  inputs.property("simulationRuntimePaths", runtimeFiles.elements.map { locations ->
+    locations.map { it.asFile.absolutePath }
+  })
+  outputs.file(simulationClasspathFile)
+  doLast {
+    outputFile.get().asFile.writeText(
+        groovy.json.JsonOutput.toJson(runtimeFiles.files.map { it.absolutePath }) + "\n")
+  }
+}
+tasks.register<JavaExec>("simulationCapture") {
+  dependsOn(simulationCaptureInputs)
+  classpath = simulationClasspath
+  mainClass.set("com.shepherdjerred.thestorm.rwfbots.sim.SimulationCapture")
+  systemProperty("thestorm.rwfbots.trainingYardNav", trainingYardNav.absolutePath)
+  val output = providers.gradleProperty("simulationCaptureFile")
+  inputs.property("simulationCaptureFile", output)
+  inputs.file(trainingYardNav).withPropertyName("trainingYardNav").withPathSensitivity(PathSensitivity.RELATIVE)
+  outputs.file(output)
+  outputs.upToDateWhen { false }
+  doFirst { args(output.get()) }
 }

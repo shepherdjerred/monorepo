@@ -7,10 +7,10 @@ import java.util.Optional;
 import java.util.TreeMap;
 
 /**
- * The decoded nav artifacts, released for play one map at a time. An artifact is decoded and
- * validated at enable, but it is only usable once the match has chosen its map and the map's block
- * hash has been seen to equal the hash the artifact was baked from; a stale or missing artifact
- * leaves the map humans-only and says why. Main thread only.
+ * Navigation retained only for the active and following prepared map. An artifact is decoded and
+ * validated off the main thread during preparation, and is usable once the match has chosen its map
+ * and the map's block hash has been seen to equal the hash the artifact was baked from; a stale or
+ * missing artifact leaves the map humans-only and says why. Main thread only.
  */
 public final class NavCatalog implements NavArtifacts {
 
@@ -29,6 +29,13 @@ public final class NavCatalog implements NavArtifacts {
     decoded.remove(mapId);
     confirmed.remove(mapId);
     problems.put(mapId, problem);
+  }
+
+  /** Releases every reference to an inactive map's navigation and its load problem. */
+  public void evict(String mapId) {
+    decoded.remove(mapId);
+    confirmed.remove(mapId);
+    problems.remove(mapId);
   }
 
   /**
@@ -61,6 +68,17 @@ public final class NavCatalog implements NavArtifacts {
   @Override
   public Optional<NavArtifact> forMap(String mapId) {
     return Optional.ofNullable(confirmed.get(mapId));
+  }
+
+  /** Publishes a door observation without modifying the decoded reset baseline. */
+  public void observed(NavArtifact artifact) {
+    var previous = confirmed.get(artifact.mapId());
+    if (previous == null
+        || !previous.graph().equals(artifact.graph())
+        || !previous.blocksSha256().equals(artifact.blocksSha256())) {
+      throw new IllegalArgumentException("door observation is not from the confirmed map");
+    }
+    confirmed.put(artifact.mapId(), artifact);
   }
 
   /** Every map that was decoded, whether or not confirmed yet. */

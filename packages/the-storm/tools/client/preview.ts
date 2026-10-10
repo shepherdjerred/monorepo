@@ -2,22 +2,24 @@ import { chmod, mkdir, mkdtemp, rm } from "node:fs/promises";
 import { randomBytes } from "node:crypto";
 import os from "node:os";
 import path from "node:path";
+import { z } from "zod";
 import { RconClient } from "#e2e/harness/rcon.ts";
 import { startFakeBrain } from "#e2e/harness/fake-brain.ts";
 import { serverLogs } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 import { startServer } from "#e2e/harness/server.ts";
 import { stormModuleConfig } from "@shepherdjerred/mc-harness/sandbox/storm.ts";
 import { gameplayFixtures } from "#e2e/gameplay-fixtures.ts";
-import { rwfRecordingSalt } from "#e2e/harness/rwf-settings.ts";
-import { startControl, ViewpointsSchema } from "./control.ts";
 import {
-  request,
-  socketReady,
-  StatusSchema,
-  waitFor,
-  type Session,
-} from "./protocol.ts";
+  rwfRecordingSalt,
+  rwfTestSettings,
+} from "#e2e/harness/rwf-settings.ts";
+import { startControl, ViewpointsSchema } from "./control.ts";
+import { request, StatusSchema, waitFor, type Session } from "./protocol.ts";
 import { smoke, tour } from "./scripts.ts";
+import { verifyDuelClock } from "./verify-duel-clock.ts";
+import { verifyDuelVideo } from "./verify-duel-video.ts";
+import { startClient } from "./process.ts";
+import { stageMap } from "#learning/maps/stage.ts";
 
 const packageRoot = path.resolve(import.meta.dirname, "../..");
 
@@ -41,17 +43,56 @@ async function build(directory: string, tasks: string[]): Promise<void> {
   if ((await child.exited) !== 0) throw new Error(`Build failed: ${directory}`);
 }
 
-export async function preview(options: {
+type PreviewOptions = {
   world?: string;
+  rwfMap?: string;
   vanilla: boolean;
   verify: boolean;
-}): Promise<void> {
+  rwfDuel: boolean;
+  verifyDuelClock: boolean;
+  verifyDuelVideo: boolean;
+};
+
+function validateOptions(options: PreviewOptions): void {
+  if (options.vanilla && options.rwfDuel)
+    throw new Error("--rwf-duel requires Storm modules");
+  if (options.vanilla && options.rwfMap !== undefined)
+    throw new Error("--rwf-map requires Storm modules");
+  if (
+    (options.verifyDuelClock || options.verifyDuelVideo) &&
+    options.rwfMap !== undefined &&
+    options.rwfMap !== "training-yard"
+  ) {
+    throw new Error(
+      "The existing clock and video regression fixtures require Training Yard",
+    );
+  }
+  if (options.verifyDuelClock && (!options.rwfDuel || options.verify))
+    throw new Error(
+      "--verify-duel-clock requires --rwf-duel and its own verification run",
+    );
+  if (
+    options.verifyDuelVideo &&
+    (!options.rwfDuel || options.verify || options.verifyDuelClock)
+  )
+    throw new Error(
+      "--verify-duel-video requires --rwf-duel and its own verification run",
+    );
+}
+
+export async function preview(options: PreviewOptions): Promise<void> {
+  validateOptions(options);
   await build(path.join(packageRoot, "client"), ["assemble"]);
   await build(
     path.join(packageRoot, "plugin"),
     options.vanilla
       ? [":dist:shadowJar"]
-      : [":dist:shadowJar", ":dist:fixturesJar", ":companions:e2eJar"],
+      : [
+          ":dist:shadowJar",
+          ":dist:fixturesJar",
+          ":companions:e2eJar",
+          ":rwfmap:installDist",
+        ],
   );
   const privateDir = await mkdtemp(path.join(os.tmpdir(), "storm-client-"));
   await chmod(privateDir, 0o700);
@@ -104,7 +145,15 @@ type Run = {
 };
 
 async function run(
-  options: { world?: string; vanilla: boolean; verify: boolean },
+  options: {
+    world?: string;
+    rwfMap?: string;
+    vanilla: boolean;
+    verify: boolean;
+    rwfDuel: boolean;
+    verifyDuelClock: boolean;
+    verifyDuelVideo: boolean;
+  },
   runState: Run,
 ): Promise<void> {
   const brainToken = randomBytes(24).toString("hex");
@@ -112,10 +161,22 @@ async function run(
   runState.cleanup.push(async () => {
     await brain.stop();
   });
-  const ownedConfigDir = path.join(
-    packageRoot,
-    "server/owned/plugins/TheStorm",
-  );
+  let ownedConfigDir = path.join(packageRoot, "server/owned/plugins/TheStorm");
+  if (options.rwfDuel || options.rwfMap !== undefined) {
+    const staged = await stageMap(
+      ownedConfigDir,
+      path.join(runState.privateDir, "map-content"),
+      options.rwfMap ?? "training-yard",
+      {
+        duel: options.rwfDuel,
+        mapTool: path.join(
+          packageRoot,
+          "plugin/tools/rwfmap/build/install/rwfmap/bin/rwfmap",
+        ),
+      },
+    );
+    ownedConfigDir = staged.content;
+  }
   const configs = options.vanilla
     ? {
         stormConfig: stormModuleConfig(
@@ -130,6 +191,15 @@ async function run(
     warmCache: true,
     stormJar: path.join(packageRoot, "plugin/dist/build/libs/TheStorm.jar"),
     ...configs,
+    ...(options.rwfDuel
+      ? {
+          rwf: { ...rwfTestSettings, targetCombatants: 2, maxCombatants: 2 },
+          rwfbotsConfig: await duelBotsConfig(ownedConfigDir),
+        }
+      : {}),
+    ...(options.vanilla
+      ? {}
+      : { exportRecordingsDir: path.join(runState.artifacts, "recordings") }),
     ownedConfigDir,
     env: {
       FLIPT_URL: `http://host.docker.internal:${brain.port.toString()}`,
@@ -188,7 +258,13 @@ async function run(
     stop: runState.finish,
   });
   runState.cleanup.push(control);
-  await launch(session, runState);
+  const client = await startClient({
+    session,
+    privateDir: runState.privateDir,
+    packageRoot,
+    onExit: runState.finish,
+  });
+  runState.cleanup.push(client.stop);
   await rcon.command("op StormPreview");
   await rcon.command("gamemode creative StormPreview");
   await rcon.command("gamerule minecraft:advance_time false");
@@ -216,73 +292,26 @@ async function run(
     if (!options.vanilla) await tour(session);
     runState.finish();
   }
+  if (options.verifyDuelClock) {
+    await verifyDuelClock(session, rcon);
+    runState.finish();
+  }
+  if (options.verifyDuelVideo) {
+    await verifyDuelVideo(session, rcon);
+    runState.finish();
+  }
   await runState.stopped;
 }
 
-async function launch(session: Session, runState: Run): Promise<void> {
-  const bootstrap = path.join(runState.privateDir, "bootstrap.json");
-  const { control: _control, ...config } = session;
-  await Bun.write(bootstrap, JSON.stringify(config));
-  await chmod(bootstrap, 0o600);
-  const log = Bun.file(path.join(runState.artifacts, "client.log"));
-  const child = Bun.spawn(
-    [
-      "mise",
-      "exec",
-      "--",
-      "gradle",
-      "-p",
-      path.join(packageRoot, "client"),
-      "runClient",
-      `-PpreviewSession=${bootstrap}`,
-      `-PpreviewGameDir=${path.join(runState.privateDir, "game")}`,
-      "--console=plain",
-      "--no-daemon",
-    ],
-    { stdout: log, stderr: log },
-  );
-  runState.cleanup.push(async () => {
-    if (child.exitCode === null) {
-      await request(session, "shutdown").catch(() => {
-        child.kill("SIGTERM");
-      });
-      const ended = await waitExit(child);
-      if (ended === null) {
-        child.kill("SIGKILL");
-        await child.exited;
-      }
-    }
+async function duelBotsConfig(ownedConfigDir: string): Promise<string> {
+  const schema = z.looseObject({
+    draft: z.looseObject({ kits: z.array(z.string()).min(1) }),
   });
-  void watch(child, runState.finish);
-  await waitFor(
-    "real client to join",
-    async () => {
-      if (child.exitCode !== null)
-        throw new Error(
-          `Client exited (${child.exitCode.toString()}); inspect ${log.name ?? "client.log"}`,
-        );
-      return (await socketReady(session.socket))
-        ? StatusSchema.parse(await request(session, "status")).connected
-        : false;
-    },
-    (connected) => connected,
-    180_000,
+  const config = schema.parse(
+    Bun.YAML.parse(
+      await Bun.file(path.join(ownedConfigDir, "rwfbots.yml")).text(),
+    ),
   );
-}
-
-async function watch(child: Bun.Subprocess, finish: () => void): Promise<void> {
-  await child.exited;
-  finish();
-}
-
-async function waitExit(child: Bun.Subprocess): Promise<number | null> {
-  const { promise, resolve } = Promise.withResolvers<null>();
-  const timer = setTimeout(() => {
-    resolve(null);
-  }, 30_000);
-  try {
-    return await Promise.race([child.exited, promise]);
-  } finally {
-    clearTimeout(timer);
-  }
+  config.draft.kits = ["trooper"];
+  return Bun.YAML.stringify(config);
 }

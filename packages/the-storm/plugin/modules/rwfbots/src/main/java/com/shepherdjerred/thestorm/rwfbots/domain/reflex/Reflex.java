@@ -60,7 +60,7 @@ public final class Reflex {
   private static final double ALLY_SPACING = 0.9;
 
   /** Teammates closer than this push each other apart while fighting. */
-  static final double SEPARATION = 2.5;
+  static final double SEPARATION = 3.0;
 
   /** Moving formations leave another half block for teammates closing the gap. */
   static final double WALK_SEPARATION = 3.0;
@@ -71,7 +71,7 @@ public final class Reflex {
   /** How hard crowding teammates bend a walking bot's heading. */
   static final double SEPARATION_WEIGHT = 1.2;
 
-  /** A bot waits for a moving teammate with a lower id this close ahead of it. */
+  /** A bot waits for a moving teammate this close ahead of it. */
   static final double YIELD = 2.2;
 
   /** A push from teammates stronger than this means the fight is crowded. */
@@ -80,11 +80,11 @@ public final class Reflex {
   /** Slower than this per tick, a teammate counts as standing. */
   static final double MOVING = 0.05;
 
-  private static final double BOW_AIM_TOLERANCE = 2.5;
+  private static final double BOW_AIM_TOLERANCE = 5.0;
+  private static final int MAX_BOW_HOLD_TICKS = 32;
   private static final double CLICK_GAP_LOG_MEAN = 0.1;
   private static final double CLICK_GAP_LOG_SIGMA = 0.25;
   private static final double FUSE_SLIP_SCALE = 6;
-  private static final double JUMP_CRIT_CHANCE = 0.15;
   private static final int JUMP_COOLDOWN = 10;
   private static final long CROUCH_BURST_TICKS = 30;
   private static final long CROUCH_TAP_TICKS = 3;
@@ -297,7 +297,15 @@ public final class Reflex {
       var yaw = Facing.looking(self.eye(), aimPoint).yaw();
       var desired = new Facing(yaw, pitch.getAsDouble());
       state = state.withAim(AimController.aim(state.aim(), desired, levers(), random));
-      standApart();
+      var aim = state.aim();
+      if (state.waypointIndex() < input.decision().waypoints().size()) {
+        walk(Optional.of(false));
+        state = state.withAim(aim);
+      } else if (self.lastHurtTick() >= 0 && now - self.lastHurtTick() <= 20) {
+        evade(target);
+      } else {
+        standApart();
+      }
       if (!state.isDrawing()) {
         commands.add(new BodyCommand.SelectSlot(context.loadout().bowSlot()));
         commands.add(new BodyCommand.StartUse());
@@ -305,7 +313,9 @@ public final class Reflex {
         return;
       }
       var drawn = now - state.drawStart() >= BowSolver.FULL_DRAW_TICKS;
-      if (drawn && state.aim().look().differenceTo(desired) <= BOW_AIM_TOLERANCE) {
+      var aligned = state.aim().look().differenceTo(desired) <= BOW_AIM_TOLERANCE;
+      var heldLongEnough = now - state.drawStart() >= MAX_BOW_HOLD_TICKS;
+      if (drawn && (aligned || heldLongEnough)) {
         commands.add(new BodyCommand.ReleaseUse());
         state = state.withDrawStart(-1);
       }
@@ -327,7 +337,13 @@ public final class Reflex {
       if (self.heldSlot() != context.loadout().swordSlot()) {
         commands.add(new BodyCommand.SelectSlot(context.loadout().swordSlot()));
       }
-      var lead = target.vel().scale(levers().reactionTicks() * levers().predictionQuality());
+      // The oldest of N buffered facings is N-1 ticks old. Compensate relative motion:
+      // ignoring the attacker's motion makes a strafing bot aim behind its moving target.
+      var lead =
+          target
+              .vel()
+              .minus(self.vel())
+              .scale((levers().reactionTicks() - 1) * levers().predictionQuality());
       var aimPoint = target.pos().plus(lead).plus(0, 1.3, 0);
       state =
           state.withAim(
@@ -339,10 +355,14 @@ public final class Reflex {
     }
 
     private void click(CombatantView target, double distance) {
-      if (now < state.nextClickAt() || distance > REACH + 1.5) {
+      if (now < state.nextClickAt()) {
         return;
       }
       var landed = hitTest(context.grid(), self, state.aim().look(), target);
+      // Save the next swing for contact rather than spending its cooldown during pursuit.
+      if (!landed && distance > REACH + 0.3) {
+        return;
+      }
       commands.add(landed ? new BodyCommand.Attack(target.id()) : new BodyCommand.Swing());
       var wTap = state.wTapUntil();
       if (landed && random.nextDouble() < levers().technique()) {
@@ -364,15 +384,29 @@ public final class Reflex {
       var side = new Vec3(-radial.z(), 0, radial.x()).scale(state.strafeDir());
       var apart = apart(SEPARATION, 0);
       var closing = closing(distance, apart);
-      var move = side.plus(radial.scale(closing)).plus(apart.scale(2.5));
+      // Outside contact range, pursue rather than spending most acceleration circling.
+      var strafeWeight = distance > REACH + 0.5 ? 0.25 : 1.0;
+      var move = side.scale(strafeWeight).plus(radial.scale(closing)).plus(apart.scale(2.5));
       var point = self.pos().plus(move.isZero() ? radial : move.normalized());
       var sprint = now >= state.wTapUntil() && closing > 0;
       commands.add(new BodyCommand.MoveToward(point, sprint));
-      var critWindow = distance >= 2.5 && distance <= 3.5 && self.onGround();
-      if (critWindow && random.nextDouble() < levers().technique() * JUMP_CRIT_CHANCE) {
-        commands.add(new BodyCommand.Jump());
-        state = state.withLastJump(now);
+      // RWF's melee rules have no airborne critical-hit bonus. Stay grounded for control;
+      // navigation still jumps over terrain, and external combat actions can request a jump.
+    }
+
+    /** Keeps a threatened archer moving while its aim remains on the opponent. */
+    private void evade(CombatantView target) {
+      var away = self.pos().minus(target.pos()).horizontal();
+      if (away.isZero()) {
+        commands.add(new BodyCommand.Stop());
+        return;
       }
+      var radial = away.normalized();
+      var side = new Vec3(-radial.z(), 0, radial.x()).scale(state.strafeDir());
+      var move = side.plus(radial.scale(0.6)).plus(apart(SEPARATION, 0));
+      commands.add(
+          new BodyCommand.MoveToward(
+              self.pos().plus(move.isZero() ? radial : move.normalized()), false));
     }
 
     /** Follows the decision's waypoints; {@code sprintOverride} forces walking when present. */
@@ -394,16 +428,17 @@ public final class Reflex {
       var waypoint = waypoints.get(index);
       var destination = waypoint.pos();
       var sprint = sprintOverride.orElseGet(this::sprintsByStance);
+      if (waypoint.hop() == Hop.LEAP) sprint = true;
       var crowded = allyAhead(destination);
-      if (crowded) {
+      if (crowded && waypoint.hop() != Hop.LEAP) {
         sprint = false;
         destination = sidestep(destination);
       }
       // Near the end of the path the bot walks straight in: bending there makes it circle the spot.
-      if (index < waypoints.size() - FINAL_STRAIGHT) {
+      if (shouldBend(waypoint, index, waypoints.size(), destination)) {
         destination = bend(destination, walkingApart());
       }
-      if (yields(destination)) {
+      if (waypoint.hop() != Hop.LEAP && yields(destination)) {
         // Waiting for the teammate ahead: make room for the others while it clears.
         var push = walkingApart();
         commands.add(
@@ -414,12 +449,22 @@ public final class Reflex {
       }
       commands.add(new BodyCommand.MoveToward(destination, sprint));
       jumpIfNeeded(waypoint);
+      lookAhead(destination);
+    }
+
+    private void lookAhead(Vec3 destination) {
       var ahead = destination.plus(0, CombatantView.EYE_HEIGHT, 0);
       if (!ahead.minus(self.eye()).isZero()) {
         state =
             state.withAim(
                 AimController.steer(state.aim(), Facing.looking(self.eye(), ahead), levers()));
       }
+    }
+
+    private boolean shouldBend(Waypoint waypoint, int index, int count, Vec3 destination) {
+      return waypoint.hop() != Hop.LEAP
+          && (index < count - FINAL_STRAIGHT
+              || self.pos().horizontalDistance(destination) > SEPARATION);
     }
 
     private int advanceWaypoint(List<Waypoint> waypoints, int index) {
@@ -561,8 +606,9 @@ public final class Reflex {
 
     private void jumpIfNeeded(Waypoint waypoint) {
       var needsJump =
-          waypoint.hop() == Hop.JUMP
-              && self.pos().horizontalDistance(waypoint.pos()) <= 1.2
+          (waypoint.hop() == Hop.JUMP || waypoint.hop() == Hop.LEAP)
+              && self.pos().horizontalDistance(waypoint.pos())
+                  <= (waypoint.hop() == Hop.LEAP ? 3.2 : 1.2)
               && self.onGround()
               && now - state.lastJumpTick() > JUMP_COOLDOWN;
       if (needsJump) {

@@ -1,0 +1,163 @@
+{
+  "version": 1,
+  "kind": "rwf-trooper-promotion-v1",
+  "seeds": 3,
+  "seedSeconds": 28800,
+  "matchesPerOpponent": 200,
+  "minimumAuthoredWins": 120,
+  "minimumBasicWins": 160,
+  "preferencePairs": 20,
+  "minimumLearnedVotes": 15,
+  "parityBatches": [1, 3, 20, 100],
+  "paritySteps": 16,
+  "rtol": 0.0001,
+  "atol": 0.00001,
+  "loadPopulations": [20, 50, 100],
+  "baselineTicks": 1800,
+  "liveTicks": 3000,
+  "fullRosterTicks": 200,
+  "serverP95Milliseconds": 50,
+  "deadlineFraction": 0.99,
+  "cpus": 4,
+  "heap": "8G",
+  "memoryLimitBytes": 10737418240,
+  "regressionCases": [
+    "human-combat",
+    "spectator-immunity",
+    "last-human-abort",
+    "healing-and-lifecycle",
+    "native-team-advancement",
+    "native-los-and-knockback",
+    "simulation-floors"
+  ],
+  "nativeFloors": {
+    "spacing": 2.5,
+    "width": 16,
+    "forward": 0.25,
+    "winding": 2.5
+  },
+  "simulationFloors": {
+    "width": 15,
+    "medianWidth": 24,
+    "forward": 0.45,
+    "winding": 2.5
+  },
+  "recordFields": {
+    "File": ["file", "sha256"],
+    "Pilot": [
+      "ledger_sha256",
+      "inputs_sha256",
+      "strength_claim_sha256",
+      "strength_plan_sha256",
+      "seeds"
+    ],
+    "Seed": [
+      "seed",
+      "started_ms",
+      "deadline_ms",
+      "completed_ms",
+      "claim_sha256",
+      "result_sha256",
+      "checkpoint_manifest_sha256",
+      "weights_sha256",
+      "matches_per_opponent",
+      "authored_wins",
+      "basic_wins",
+      "strength_sha256"
+    ],
+    "Preference": [
+      "candidate_seed",
+      "pairs",
+      "learned_votes",
+      "authored_votes",
+      "ties",
+      "source",
+      "claim_sha256",
+      "plan_sha256",
+      "review_sha256",
+      "key_sha256",
+      "ballot_sha256",
+      "result_sha256"
+    ],
+    "Parity": [
+      "receipt_sha256",
+      "samples_sha256",
+      "batches",
+      "steps",
+      "rtol",
+      "atol"
+    ],
+    "Load": [
+      "inputs_sha256",
+      "phases_sha256",
+      "log_sha256",
+      "result_sha256",
+      "cpus",
+      "heap",
+      "memory_limit_bytes",
+      "baseline_ticks",
+      "baseline_p95",
+      "phases"
+    ],
+    "Population": [
+      "bots",
+      "ticks",
+      "live_ticks",
+      "full_roster_ticks",
+      "submitted",
+      "skipped",
+      "rejected",
+      "deadline_met",
+      "deadline_missed",
+      "maximum_batch",
+      "p95",
+      "live_p95",
+      "full_roster_p95",
+      "applied",
+      "damage",
+      "damage_events"
+    ],
+    "Regressions": [
+      "evidence_sha256",
+      "actor_sha256",
+      "native_sha256",
+      "cases",
+      "native_floors",
+      "simulation_floors"
+    ],
+    "Case": ["name", "checks", "failures", "skipped"],
+    "NativeFloors": [
+      "bots",
+      "minimum_spacing",
+      "minimum_width_at_8",
+      "minimum_width_at_contact",
+      "minimum_forward",
+      "maximum_winding"
+    ],
+    "SimulationFloors": [
+      "strategy_pairs",
+      "contacts",
+      "minimum_width",
+      "median_width",
+      "mean_forward",
+      "maximum_winding"
+    ]
+  },
+  "proofFields": [
+    "schema",
+    "kind",
+    "promotion_contract_sha256",
+    "actor_sha256",
+    "source_manifest_sha256",
+    "checkpoint_manifest_sha256",
+    "weights_sha256",
+    "dataset_sha256",
+    "native_sha256",
+    "pilot",
+    "preference",
+    "parity",
+    "load",
+    "regressions",
+    "files"
+  ]
+}

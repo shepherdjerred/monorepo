@@ -4,7 +4,7 @@ import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.schedule.Cancellable;
 import com.shepherdjerred.thestorm.core.snapshot.SnapshotStore;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
-import com.shepherdjerred.thestorm.rwf.adapter.content.RwfContent;
+import com.shepherdjerred.thestorm.rwf.adapter.content.RwfCatalog;
 import com.shepherdjerred.thestorm.rwf.app.CombatantActions;
 import com.shepherdjerred.thestorm.rwf.app.JoinGate;
 import com.shepherdjerred.thestorm.rwf.app.MatchEvents;
@@ -12,6 +12,7 @@ import com.shepherdjerred.thestorm.rwf.app.MatchView;
 import com.shepherdjerred.thestorm.rwf.app.PayoutService;
 import com.shepherdjerred.thestorm.rwf.app.Pseudonyms;
 import com.shepherdjerred.thestorm.rwf.app.Recorder;
+import com.shepherdjerred.thestorm.rwf.app.map.MapResourceRegistry;
 import com.shepherdjerred.thestorm.rwf.app.store.MatchStore;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import java.time.Duration;
@@ -25,12 +26,35 @@ import org.bukkit.event.Listener;
 
 /**
  * Wires Search and Destroy into Paper: the sealed world and its game rules, the maps, the runner,
- * listeners, commands, permissions and the 20 Hz clock. Admission opens once every map is pasted
- * and verified.
+ * listeners, commands, permissions and the 20 Hz clock. Admission opens once the lobby and first
+ * map are pasted and verified; at most one following map is prepared.
  */
 public final class RwfPaper {
 
   private static final Duration TICK = Duration.ofMillis(50);
+
+  public com.shepherdjerred.thestorm.rwf.app.map.MapLoading loading() {
+    return () -> maps.stream().map(MapWorld::loadingState).toList();
+  }
+
+  public com.shepherdjerred.thestorm.rwf.app.ShowcaseControl showcases() {
+    return new com.shepherdjerred.thestorm.rwf.app.ShowcaseControl() {
+      @Override
+      public Optional<String> start(int combatants) {
+        return runner.startShowcase(combatants);
+      }
+
+      @Override
+      public Optional<String> startSeeded(java.util.UUID lobbyId, int combatants, long seed) {
+        return runner.startSeededShowcase(lobbyId, combatants, seed);
+      }
+
+      @Override
+      public Optional<String> stop(java.util.UUID matchId) {
+        return runner.stopShowcase(matchId);
+      }
+    };
+  }
 
   private final PaperContext context;
   private final MatchRunner runner;
@@ -92,7 +116,8 @@ public final class RwfPaper {
       ServerHooks hooks) {}
 
   /** Starts the module's Paper side. The configured world must be loaded already. */
-  public static RwfPaper start(ModuleContext module, RwfContent content, App app) {
+  public static RwfPaper start(
+      ModuleContext module, RwfCatalog content, MapResourceRegistry resources, App app) {
     var config = content.config();
     var world = module.plugin().getServer().getWorld(config.world());
     if (world == null) {
@@ -123,7 +148,7 @@ public final class RwfPaper {
     var bombs = new BombMarkers(context, keys, app.hooks().displayStyle());
     var maps = new ArrayList<MapWorld>();
     for (var map : content.maps()) {
-      maps.add(new MapWorld(context, map, app.hooks().chunks()));
+      maps.add(new MapWorld(context, map, app.hooks().chunks(), resources));
     }
     var lobby = new LobbyRoom(context, content.lobby(), app.hooks().chunks());
     var displays =
@@ -132,7 +157,23 @@ public final class RwfPaper {
     var bots = new Bots(module.services());
     var tracker = new CombatTracker();
     var inputs = new Inputs();
-    var recordings = new Recordings(app.recorder(), app.pseudonyms(), inputs);
+    context
+        .server()
+        .getMessenger()
+        .registerIncomingPluginChannel(
+            module.plugin(),
+            com.shepherdjerred.thestorm.rwf.domain.record.ControlPacket.CHANNEL,
+            inputs);
+    context
+        .server()
+        .getMessenger()
+        .registerOutgoingPluginChannel(
+            module.plugin(),
+            com.shepherdjerred.thestorm.rwf.domain.record.ObservationPacket.CHANNEL);
+    var recordings =
+        new Recordings(
+            new Recordings.Parts(
+                app.recorder(), app.pseudonyms(), inputs, module.services(), module.plugin()));
     var runner =
         new MatchRunner(
             new MatchRunner.Parts(
@@ -206,6 +247,7 @@ public final class RwfPaper {
     world.setGameRule(GameRules.FIRE_SPREAD_RADIUS_AROUND_PLAYER, 0);
     world.setGameRule(GameRules.ADVANCE_TIME, false);
     world.setGameRule(GameRules.ADVANCE_WEATHER, false);
+    world.setGameRule(GameRules.RANDOM_TICK_SPEED, 0);
     world.setGameRule(GameRules.SHOW_DEATH_MESSAGES, false);
     world.setGameRule(GameRules.IMMEDIATE_RESPAWN, true);
     world.setGameRule(GameRules.SHOW_ADVANCEMENT_MESSAGES, false);
@@ -214,10 +256,7 @@ public final class RwfPaper {
     world.setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, true);
   }
 
-  /**
-   * Pastes or verifies the lobby room, then every map in turn, then dresses the lobby and opens it
-   * on the first map.
-   */
+  /** Prepares the lobby and first map. The runner prepares at most one following map. */
   private void prepareMaps() {
     lobby.prepare(
         ok -> {
@@ -225,27 +264,25 @@ public final class RwfPaper {
             context.logger().error("rwf: the lobby could not be prepared; admission stays closed");
             return;
           }
-          prepare(0);
+          prepareFirstMap();
         });
   }
 
-  private void prepare(int index) {
-    if (index >= maps.size()) {
-      context.logger().info("rwf: the lobby and {} maps are ready; the lobby is open", maps.size());
-      displays.open();
-      runner.open(maps.getFirst());
-      return;
-    }
-    var map = maps.get(index);
+  private void prepareFirstMap() {
+    var map = maps.getFirst();
     map.prepare(
         ok -> {
           if (!ok) {
             context
                 .logger()
-                .error("rwf: map {} could not be prepared; admission stays closed", map.map().id());
+                .error("rwf: map {} could not be prepared; admission stays closed", map.id());
             return;
           }
-          prepare(index + 1);
+          context
+              .logger()
+              .info("rwf: lobby and map {} are ready; {} maps in rotation", map.id(), maps.size());
+          displays.open();
+          runner.open(map);
         });
   }
 
@@ -270,6 +307,17 @@ public final class RwfPaper {
     runner.stop();
     clock.cancel();
     listeners.forEach(HandlerList::unregisterAll);
+    context
+        .server()
+        .getMessenger()
+        .unregisterIncomingPluginChannel(
+            context.plugin(), com.shepherdjerred.thestorm.rwf.domain.record.ControlPacket.CHANNEL);
+    context
+        .server()
+        .getMessenger()
+        .unregisterOutgoingPluginChannel(
+            context.plugin(),
+            com.shepherdjerred.thestorm.rwf.domain.record.ObservationPacket.CHANNEL);
     permissions.unregister();
     maps.forEach(MapWorld::release);
     displays.clear();

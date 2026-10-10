@@ -1,0 +1,7 @@
+{
+  "schema": 1,
+  "kind": "rwf-training-maps",
+  "fields": ["schema", "kind", "maps"],
+  "mapFields": ["map", "blocksSha256", "scenarioSha256"],
+  "selection": "paired-round-robin"
+}

@@ -84,13 +84,13 @@ final class BodyDriverTest {
 
     assertThat(bodies.orders())
         .containsExactly(
+            "look Ash_42",
             "move Ash_42 sprint",
             "jump Ash_42",
             "sneak Ash_42 true",
             "slot Ash_42 2",
             "swing Ash_42",
-            "stop Ash_42",
-            "look Ash_42");
+            "stop Ash_42");
     var player = bodies.player(bot.uuid());
     assertThat(player.getLocation().getX()).isCloseTo(5 + FakeBodies.STEP, within(1e-9));
     assertThat(player.getLocation().getYaw()).isEqualTo(90f);
@@ -133,7 +133,7 @@ final class BodyDriverTest {
 
     apply(30, new BodyCommand.ReleaseUse(), new BodyCommand.Look(0, -45));
 
-    assertThat(bodies.orders()).containsExactly("release Ash_42", "look Ash_42");
+    assertThat(bodies.orders()).containsExactly("look Ash_42", "release Ash_42");
     assertThat(actions.calls()).containsExactly("shoot 0.00,0.71,0.71 force 1.000");
     assertThat(bot.drawStart()).isEqualTo(-1);
     assertThat(stimuli.drain()).hasSize(1);

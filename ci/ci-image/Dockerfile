@@ -17,8 +17,9 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # hadolint ignore=DL3008
 RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
     ca-certificates curl git minisign unzip xz-utils zstd python3 ripgrep rsync \
-    build-essential pkg-config libssl-dev libxml2 util-linux \
+    build-essential pkg-config libssl-dev libxml2 util-linux ffmpeg \
     && flock --version \
+    && ffmpeg -version && ffprobe -version \
     && rm -rf /var/lib/apt/lists/*
 
 # Docker CLI + buildx for image-build steps (BuildKit runs in-pod)

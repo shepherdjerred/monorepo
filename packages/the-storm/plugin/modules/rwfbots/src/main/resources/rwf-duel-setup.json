@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "kind": "rwf-native-duel-setup",
+  "world": "minecraft:rwf",
+  "worldTimes": [0, 15000],
+  "kit": "trooper",
+  "health": 20,
+  "heldSlot": 1,
+  "velocity": [0, 0, 0],
+  "fields": [
+    "schema",
+    "kind",
+    "match",
+    "seed",
+    "side",
+    "mode",
+    "opponent",
+    "map",
+    "scenario",
+    "world",
+    "worldTime",
+    "worldTick",
+    "roster"
+  ],
+  "fighter": [
+    "joinIndex",
+    "body",
+    "personality",
+    "team",
+    "kit",
+    "position",
+    "velocity",
+    "yaw",
+    "pitch",
+    "health",
+    "heldSlot"
+  ]
+}

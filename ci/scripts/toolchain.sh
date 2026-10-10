@@ -126,6 +126,13 @@ case "${MISE_TOOLCHAIN_SCOPE:-full}" in
     if ! command -v rsync >/dev/null; then
       apt-get update -qq && apt-get install -y -qq --no-install-recommends rsync
     fi
+    # RWF blind-review media tests exercise real encoding and metadata removal.
+    # Install both executables on older images before the test manifest runs.
+    if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+      apt-get update -qq && apt-get install -y -qq --no-install-recommends ffmpeg
+    fi
+    ffmpeg -version >/dev/null
+    ffprobe -version >/dev/null
     if ! ldconfig -p | grep -Fq 'libxml2.so.2'; then
       apt-get update -qq && apt-get install -y -qq --no-install-recommends libxml2
     fi

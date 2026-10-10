@@ -2,7 +2,9 @@ import { parseArgs } from "node:util";
 import { z } from "zod";
 import { preview } from "./preview.ts";
 import { readSession, request } from "./protocol.ts";
-import { smoke, tour, viewpoint } from "./scripts.ts";
+import { smoke, tour } from "./scripts.ts";
+import { viewpoint } from "./viewpoint.ts";
+import { encodeVideo } from "./video.ts";
 
 const parsed = parseArgs({
   args: Bun.argv.slice(2),
@@ -14,6 +16,10 @@ const parsed = parseArgs({
     world: { type: "string" },
     vanilla: { type: "boolean", default: false },
     verify: { type: "boolean", default: false },
+    "rwf-duel": { type: "boolean", default: false },
+    "rwf-map": { type: "string" },
+    "verify-duel-clock": { type: "boolean", default: false },
+    "verify-duel-video": { type: "boolean", default: false },
     help: { type: "boolean", default: false },
   },
 });
@@ -22,7 +28,7 @@ async function main(): Promise<void> {
   const action = parsed.positionals[0];
   if (action === undefined || parsed.values.help) {
     process.stdout.write(
-      "client preview [--world <directory>] [--vanilla] [--verify]\nclient <status|look|input|attack|use|hotbar|inventory|close|click|command|capture|release|viewpoint|tour|smoke|stop> --session <session.json> [--args '<JSON object>']\n",
+      "client preview [--world <directory>] [--vanilla] [--verify] [--rwf-duel] [--rwf-map <map-id>] [--verify-duel-clock|--verify-duel-video]\nclient video-encode --args '{\"receipt\":\"/path/to/frames.json\"}'\nclient <status|look|input|attack|use|hotbar|inventory|close|click|command|capture|video-ready|video-arm|video-duel-arm|video-start|video-status|video-cancel|duel-arm|duel-status|duel-seal|duel-cancel|release|viewpoint|tour|smoke|stop> --session <session.json> [--args '<JSON object>']\n",
     );
     return;
   }
@@ -30,18 +36,31 @@ async function main(): Promise<void> {
     await preview({
       vanilla: parsed.values.vanilla,
       verify: parsed.values.verify,
+      rwfDuel: parsed.values["rwf-duel"],
+      verifyDuelClock: parsed.values["verify-duel-clock"],
+      verifyDuelVideo: parsed.values["verify-duel-video"],
       ...(parsed.values.world === undefined
         ? {}
         : { world: parsed.values.world }),
+      ...(parsed.values["rwf-map"] === undefined
+        ? {}
+        : { rwfMap: parsed.values["rwf-map"] }),
     });
+    return;
+  }
+  const args = z
+    .record(z.string(), z.unknown())
+    .parse(JSON.parse(parsed.values.args ?? "{}"));
+  if (action === "video-encode") {
+    const input = z.strictObject({ receipt: z.string().min(1) }).parse(args);
+    process.stdout.write(
+      `${JSON.stringify(await encodeVideo(input.receipt), null, 2)}\n`,
+    );
     return;
   }
   const session = await readSession(
     z.string().min(1).parse(parsed.values.session),
   );
-  const args = z
-    .record(z.string(), z.unknown())
-    .parse(JSON.parse(parsed.values.args ?? "{}"));
   if (action === "tour") {
     await tour(session);
     return;

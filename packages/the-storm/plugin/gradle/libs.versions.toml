@@ -32,6 +32,7 @@ worldedit = "7.4.5"
 citizens = "2.0.44-b4256"
 coreprotect = "24.1"
 log4j = "2.26.1"
+onnxruntime = "1.30.0"
 
 [libraries]
 errorprone-annotations = { module = "com.google.errorprone:error_prone_annotations", version.ref = "errorprone" }
@@ -70,6 +71,7 @@ citizens = { module = "net.citizensnpcs:citizens-main", version.ref = "citizens"
 coreprotect = { module = "net.coreprotect:coreprotect", version.ref = "coreprotect" }
 worldedit-core = { module = "com.sk89q.worldedit:worldedit-core", version.ref = "worldedit" }
 log4j-core = { module = "org.apache.logging.log4j:log4j-core", version.ref = "log4j" }
+onnxruntime = { module = "com.microsoft.onnxruntime:onnxruntime", version.ref = "onnxruntime" }
 
 [plugins]
 fabric-loom = { id = "net.fabricmc.fabric-loom", version.ref = "fabric-loom" }

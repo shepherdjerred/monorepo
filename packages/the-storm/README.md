@@ -1059,11 +1059,14 @@ Configuration and content live under `server/owned/plugins/TheStorm`:
   to start.
 - `rwf/maps/<id>/map.yml` and `blocks.schem`: a map's teams, spawns, bombs,
   nukes, region and the SHA-256 of its Sponge v3 schematic. The module pastes
-  every map at enable and whenever the world's blocks stop matching the hash,
-  20,000 blocks a tick with admission closed meanwhile. `training-yard` is a
+  the active map and at most one successor when needed, and repairs terrain
+  when the world's blocks stop matching the hash, visiting at most 2,000
+  blocks per tick with admission closed meanwhile. `training-yard` is a
   generated 64x16x64 sample; its generator lives in the module's test sources.
 - `rwf/maps/<id>/nav.rwfnav` and `nav.summary.json`: the map's baked navigation
   data for the bots, produced offline by the `rwfmap` tool (see Maps below).
+- `rwf/maps/<id>/details.json`: required inventories and literal sign text,
+  bound to the terrain hash. Empty maps declare empty lists explicitly.
 - `rwf/lobby/lobby.yml` and `blocks.schem`: the room every player and bot waits
   in before a match, with its region, spawn, team sides, one kit alcove per
   kit, the rules and match-board anchors, the watch balcony and the
@@ -1084,13 +1087,104 @@ fails the bake and must be added to the table, never guessed), bakes the nav
 graph, regions, cover, chokepoints and routes with `rwfbots`' `MapBaker`, and
 writes `nav.rwfnav` plus a `nav.summary.json` of counts for diff review. The
 artifact carries the schematic's `blocksSha256`, so `rwfbots` refuses it when
-the world's blocks change. Commit all four files together.
+the world's blocks change. Commit metadata, terrain, details and navigation together.
 `mise exec -- gradle verifyRwfMaps` (part of `check`, so CI runs it) re-bakes
 every map in memory and fails if a committed `nav.rwfnav` or summary differs
 byte for byte; the bake is deterministic, so a diff means the map, the block
 table or the baker changed and the artifacts must be rebaked. A bake that
 `NavArtifact.validate()` rejects (a spawn inside a wall, a bomb no spawn can
-reach) fails too; fix the map, not the tool.
+reach) fails too; fix the map, not the tool. Navigation generator version 2
+includes surface swimming, ladders, ordinary wooden doors and bounded jumps
+and drops. A successful bake proves graph connectivity; native movement must
+also be checked in the pinned Paper/Citizens runtime.
+
+Legacy Red Warfare ZIPs can be converted without modifying the originals:
+
+```bash
+bun run maps:import --source "$HOME/Downloads/Search and Destroy" --output .cache/rwf-map-import/batch-a
+bun run maps:details --import .cache/rwf-map-import/batch-a --output .cache/rwf-map-details/batch-a
+bun run maps:bake --import .cache/rwf-map-import/batch-a --details .cache/rwf-map-details/batch-a --output .cache/rwf-map-bake/batch-a
+bun run maps:stage --bake .cache/rwf-map-bake/batch-a --details .cache/rwf-map-details/batch-a --output .cache/rwf-map-admission/batch-a
+bun run maps:close-starts --maps .cache/rwf-map-admission/batch-a/maps --output .cache/rwf-close-starts/batch-a
+bun run maps:verify-close-starts --maps .cache/rwf-close-starts/batch-a/maps --output .cache/rwf-close-starts-native/batch-a
+bun run maps:verify-navigation --output .cache/rwf-map-navigation/batch-a
+bun run maps:verify-runtime --maps .cache/rwf-map-admission/batch-a/maps --output .cache/rwf-map-runtime/batch-a --rotations 3
+```
+
+Output directories must be new. Import preserves each ZIP and its SHA-256,
+extracts only safe archive paths, migrates its world in pinned Paper, and
+exports terrain with stable, nonoverlapping coordinates. `--map <id>` selects
+an archive for a retry while retaining the complete original ordering.
+The bake command accepts repeated `--import` arguments to combine disjoint
+conversion batches from that same ordering. It freezes its producer inputs,
+writes a full-terrain duel scenario, then bakes and freshly verifies each
+navigation artifact. Missing exports and failed maps fail the aggregate
+command and remain visible in `results.json`; successful maps remain available
+for inspection. Neither command installs content into the owned server tree.
+`maps:stage` assembles a private catalog with Training Yard, freshly verifies
+terrain, navigation and payloads, and writes matching duel scenarios. Use
+`--extra <folder>` for an independently repaired and baked original, and
+`--quarantine <id>` only for an unrepaired map that failed the offline bake.
+Unresolved maps and missing payload exports stop staging.
+
+`maps:close-starts` authors private close-combat candidates from the full original
+terrain. It freshly bakes navigation and deterministically selects two positions
+8–16 blocks apart, facing each other on the same floor height. Each position
+needs a flat 3×3 patch with two blocks of actual air, a supported walking corridor,
+a clear eye-level sightline and short paths in both directions. Both positions
+must be reachable from every original spawn. Exact schematic states exclude
+partial floors and special movement surfaces that coarse navigation shapes could misclassify.
+The output preserves original metadata, terrain, loot, signs and navigation;
+only the private duel scenario changes. Every failure remains in `results.json`
+and makes the catalog command fail. Candidates are not installed or admitted to
+the training registry.
+
+`maps:verify-close-starts` checks those candidates in disposable pinned Paper
+using the production Citizens motor. It checks native floor height, player-sized
+clearance and sightlines, then walks a round trip from each start without editing
+terrain. Ordinary showcases rotate the maps, while the fixture checks the
+two-map cache bound. Repeated `--map <id>` selects a diagnostic subset of at least
+three maps; omit it to request the whole candidate catalog. Retained reports bind
+each result to its terrain hash and exact positions, and include physics samples,
+producer hashes and server logs. Geometry and traversal evidence still require
+separate learning admission and gameplay acceptance.
+
+The schematic contains terrain only. The converter also exports inventories
+through Paper's versioned item API and both sign faces as literal visible text,
+including color, glow and wax. Sign actions, command blocks' commands, entities
+and other block-entity payloads are omitted. The source archive and migrated
+world remain intact. `maps:details` can re-export this payload from existing
+conversion batches, one disposable Paper owner at a time. Its checksummed
+provenance states the preservation policy. `rwfmap verify-details <folder>`
+checks positions, materials and terrain binding before runtime admission.
+Runtime restoration decodes inventory payloads on the bounded compute pool.
+Main-thread writes apply at most eight details per batch, with a 64 KiB encoded
+inventory budget; a larger permitted inventory receives its own batch. Each
+batch rechecks map ownership before accessing world state.
+Metadata repairs use `maps:import --repairs <file>` with the exact original ZIP
+hash and cannot overwrite valid source metadata.
+
+`maps:verify-navigation` uses real Citizens bodies in a disposable Paper server
+to check opening a door, respecting a denied interaction, ladder climbing,
+jumping a gap and swimming to shore. It captures physics and server logs,
+then removes its server. This fixture validates movement primitives; it does
+not certify every route on an imported map.
+
+At startup, map metadata is loaded for the rotation. Terrain and navigation
+are loaded asynchronously for the first map and at most one successor;
+the lobby remains available throughout. Chunk loading, pasting and snapshots
+are batched, and advancing releases the previous map's tickets and artifacts.
+Admission waits for preparation rather than blocking the main thread.
+`maps:verify-runtime` observes these production cache ports while ordinary
+eight-bot showcases rotate. It compares restored item slots and metadata and
+every sign face with the source payload, checks the two-map resource bound,
+waits for inactive chunks to unload, and records heap and tick measurements.
+The report and server log describe that disposable runtime; production
+installation still requires the published candidate and GitOps release.
+The catalog must contain at least three maps to prove that startup leaves
+content unloaded. Repeated `--require-map <id>` arguments require ordinary
+rotation to visit selected maps, up to twelve transitions; use this for the
+largest maps and maps with more than two teams.
 
 The lobby is generated rather than authored: `mise exec -- gradle
 bakeRwfLobby` writes `rwf/lobby/blocks.schem` from `LobbyBuild`, refuses to
@@ -1137,27 +1231,851 @@ HMAC-SHA256 over the salt in `RWF_RECORDING_SALT`, which must be set when
 `recording.enabled` is true. Recordings are pruned by age and size at enable.
 
 A recording is gzipped UTF-8 text, one tab-separated row per line, written by
-`RecordCodec` (format version 2; `RecordCodecTest` holds a golden copy). Tabs,
+`RecordCodec` (format version 3; `RecordCodecTest` also preserves the version 2 golden copy). Tabs,
 newlines and backslashes inside a field are escaped with a backslash. Ticks
 count from the moment the match went live, at 50 ms each.
 
-| Tag | Row                                                                                                                                                          | When                                                     |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------- |
-| `H` | version, match id, map id, map block SHA-256, seed, rules version                                                                                            | once, first                                              |
-| `R` | pseudonym, team, kit, bot (`true`/`false`)                                                                                                                   | once per combatant, after `H`                            |
-| `E` | tick, kind, subject, detail                                                                                                                                  | each match event                                         |
-| `F` | tick, pseudonym, x, y, z (1/32 block), yaw (0-255), pitch (-64..64), health (1/4 point), held slot, flags (sneak 1, sprint 2, fire 4, block 8)               | humans every tick (20 Hz), bots every other tick (10 Hz) |
-| `N` | tick, pseudonym, keys (forward 1, back 2, left 4, right 8, jump 16, sneak 32, sprint 64), yaw (0-35999), pitch (-9000..9000), both in hundredths of a degree | humans only, every tick                                  |
-| `I` | tick, pseudonym, kind, target                                                                                                                                | each bot intent                                          |
-| `X` | tick, winner or `-`, reason                                                                                                                                  | once, at the end                                         |
-| `P` | pseudonym, credits                                                                                                                                           | once per paid human, after `X`                           |
+| Tag | Row                                                                                                                                                                                                                                                                                            | When                                                         |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `H` | version, match id, map id, map block SHA-256, seed, rules version                                                                                                                                                                                                                              | once, first                                                  |
+| `R` | pseudonym, team, kit, bot (`true`/`false`)                                                                                                                                                                                                                                                     | once per combatant, after `H`                                |
+| `E` | tick, kind, subject, detail                                                                                                                                                                                                                                                                    | each match event                                             |
+| `F` | tick, pseudonym, x, y, z (1/32 block), yaw (0-255), pitch (-64..64), health (1/4 point), held slot, flags (sneak 1, sprint 2, fire 4, block 8)                                                                                                                                                 | humans every tick (20 Hz), bots every other tick (10 Hz)     |
+| `N` | tick, pseudonym, keys (forward 1, back 2, left 4, right 8, jump 16, sneak 32, sprint 64), yaw (0-35999), pitch (-9000..9000), attack, use, hotbar slot (0-8), client sequence, acknowledged observation tick or -1, source (`HUMAN`, `AUTOMATED`, `MISSING`); angles in hundredths of a degree | humans only, every tick                                      |
+| `O` | tick, pseudonym, observation contract id, normalized float values in contract order                                                                                                                                                                                                            | humans every tick when rwfbots provides its observation port |
+| `I` | tick, pseudonym, kind, target                                                                                                                                                                                                                                                                  | each bot intent                                              |
+| `X` | tick, winner or `-`, reason                                                                                                                                                                                                                                                                    | once, at the end                                             |
+| `P` | pseudonym, credits                                                                                                                                                                                                                                                                             | once per paid human, after `X`                               |
 
-`N` keys are the movement keys the client last reported through Paper's
-`PlayerInputEvent`; a player who has reported nothing since logging in holds
-nothing. `F` and `N` rows are per-tick samples: when the writer falls more
+The dedicated Fabric preview client sends complete `N` controls at 20 Hz through
+`thestorm:rwf_input`. Its sequence and acknowledgement of
+`thestorm:rwf_observation` connect each action to the server observation the
+client received. Tick offsets use Paper's tick counter. Ordinary clients, missing
+packets and already-consumed packets produce `MISSING` diagnostic rows using
+Paper's movement input and server rotation; missing attack/use labels are never
+treated as human demonstrations. Preview automation marks controls `AUTOMATED`.
+Recording leaves manual keyboard and mouse input under the player's control.
+Attack and use callbacks retain clicks released before the end-of-tick sample.
+
+`O` uses `plugin/modules/rwfbots/src/main/resources/rwf-combat-v1.tsv` as the
+language-neutral order and normalization contract. It contains own state,
+visible targets, decaying last-seen sightings and local terrain rays. Current
+hidden enemy positions and enemy health are absent. Roster and outcome rows
+remain evaluation metadata, separate from actor observations.
+
+`F`, `N` and `O` rows are per-tick samples: when the writer falls more
 than 20,000 samples behind, new ones are dropped and counted in
 `rwf_match.dropped_frames`. Every other row is always written. A reader
-refuses any version other than its own instead of guessing at old rows.
+reads versions 2 and 3 explicitly; version 2 lacks complete controls and is
+excluded from training. Unknown versions and corrupt contracts fail validation.
+
+For local human demonstrations, run `bun run client preview --rwf-duel` from
+this package. It starts a disposable Paper server with one Trooper bot and a
+six-second countdown. Join with `/rwf join`, select `/rwf kit trooper` before
+the start, and play using the real keyboard and mouse. The regular preview
+command keeps the full team setup for other-kit or team recordings. The server's
+owned configuration stays unchanged. Add `--rwf-map <id>` to select a map
+installed in owned content. Its `scenario.json` must match the neutral
+`rwf-map-scenarios.json` registry and bind the schematic hash, full region and
+source-team mapping and starts. A disposable duel gives Red/Blue exactly the
+two declared scenario positions and facings, including authored starts, and
+rebakes their bomb goal fields while retaining the full terrain;
+ordinary preview retains the map's original team count. Stop with the printed session path:
+
+```bash
+bun run client stop --session .cache/client/<session>/session.json
+bun run bots:dataset inspect .cache/client/<session>/recordings
+bun run bots:dataset export .cache/client/<session>/recordings --output .cache/rwf-dataset
+bun run test:learning
+```
+
+The launcher gracefully stops Paper and exports recordings into the session's
+artifact directory before removing its container. The dataset exporter accepts
+only human Trooper combat in two-combatant matches, sword selected, without an
+authored item action, and with an acknowledged observation no older than two
+ticks. Gaps and automated input break recurrent sequences; they are never
+interpolated. Movement labels use the acknowledged observation's facing basis.
+Pass multiple recording directories to combine sessions. At least ten usable
+matches are required for a seeded 80/10/10 split, keeping all actors and segments
+of each match together. Inspection reports action histograms; export rejects
+captures without attacks or movement. The manifest pins the observation contract and recording
+hashes. `--combatants 8` can inspect team captures; the default Trooper pilot
+export remains restricted to duels. These commands prepare data; they do not
+train or enable a learned controller.
+
+The Trooper behavior-cloning tools live in `tools/learning`, with dependencies
+pinned by `uv.lock`. Run these commands from this package:
+
+Package Python commands, Gradle's archive/restore tests, map import and recording
+validation all use this locked environment explicitly. They require `uv` and do
+not depend on the host's `python3` selection. Server runtime scripts use the
+Python supplied by the server image.
+
+```bash
+uv sync --project tools/learning --locked
+uv run --project tools/learning --locked python tools/learning/train.py .cache/rwf-dataset --output .cache/rwf-models/seed-17 --device mps --seed 17 --max-seconds 3600
+uv run --project tools/learning --locked python tools/learning/export.py .cache/rwf-models/seed-17 --output .cache/rwf-models/seed-17-onnx
+bun run test:learning
+bun run lint:learning
+bun run typecheck:learning
+```
+
+The trainer requires dataset export schema 3, which pins the three split files
+by SHA-256 and binds every match and sequence to its map ID and terrain hash.
+Re-export older datasets from their original human recordings.
+It checks whole-match isolation, fresh observation acknowledgements and
+continuous control sequences before training. Evaluation splits contain new
+matches on known maps; training across every validated map does not measure
+generalization to unseen maps. The actor receives only the 34
+fair observation values, uses a 128-unit LSTM, and produces five categorical
+heads for movement, jump, sneak, sprint and attack. Memory resets at segment
+boundaries and carries across truncated training windows; padding contributes
+no loss. Validation selects the best checkpoint; test matches stay out of
+optimization and checkpoint selection.
+
+Choose `--device cpu` or `--device mps` explicitly. An unavailable MPS device
+fails. Each BC invocation has a cooperative wall-clock limit (at most eight
+hours), checked between training and validation windows. Reserve this time
+within the pilot's per-seed budget. The Paper PPO runner described below includes
+BC initialization in its cooperative invocation budget; the three-seed pilot's
+durable total budget requires separate orchestration. Checkpoint and export directories must be new.
+Their manifests pin weights, feature order and the observation contract and
+remain `unaccepted`. ONNX export checks CPU parity for 16 recurrent steps at
+batch sizes 1, 3, 20 and 100; Java inference and combat acceptance require
+separate verification.
+
+For an accelerator and export check without human recordings:
+
+```bash
+uv run --project tools/learning --locked python tools/learning/verify.py --device mps --output .cache/rwf-training/mps-check
+```
+
+This command uses synthetic data and writes an explicitly unaccepted diagnostic
+checkpoint, ONNX actor and `verification.json`. It verifies training mechanics
+and numerical agreement, without measuring combat strength or human likeness.
+
+The disposable fixture plugin also exposes `rwflearn` through authenticated
+console/RCON. It runs two skill-1 Troopers on Paper with equal kit statistics;
+the candidate keeps authored aim and healing, and the basic opponent sprints,
+strafes and clicks its sword. The fixture command is absent from `TheStorm.jar`.
+Build the jars and run the benchmark from this package:
+
+```bash
+mise exec -- gradle -p plugin :dist:assemble
+bun run bots:benchmark --matches 4 --probe
+bun run bots:benchmark --matches 100
+```
+
+Each run owns and removes its disposable server, exports the recordings, and
+writes a manifest, per-match results and a report under `.cache/rwf-benchmark`.
+The manifest freezes plugin, fixture, kit, map and observation-contract hashes
+and records the pinned Paper build, server image and third-party plugins before
+trials begin. Trials pair each controller seed across red and blue;
+Paper scheduling and physical knockback still introduce runtime variation.
+Only a completed 100-trial run with at least 80 wins passes the strength gate.
+Draws, stops and 60-second timeouts count as non-wins. A failed 100-trial gate
+exits with status 1 after exporting evidence and removing the server. Short
+runs are diagnostics.
+
+`rwflearn begin <seed> <red|blue> <authored|external> [opponent]`
+requires an empty lobby on the fixture's admitted map. The optional opponent defaults to the
+frozen basic controller. Stationary does not move or attack; chase closes and
+attacks without strafing; authored uses its normal combat and healing.
+`authored-pressure` closes to 2.5 blocks and `authored-patient` prefers a
+2.7–3.0-block spacing band; both keep authored aim, click timing and healing.
+These movement variants are confined to the disposable fixture. The `historical`
+opponent requires external mode and controls the second body with a frozen actor.
+`rwflearn state` returns a version-3 JSON envelope, defined with its action
+layout in `plugin/modules/rwfbots/src/main/resources/rwf-duel.json`. Actor
+input is exclusively its 34-value `observation` vector, ordered by the same TSV
+as human recordings; damage totals and outcomes are separate evaluation data.
+The context fields `tick`, `elapsed` and `hp` describe the last captured frame
+before commands were applied; terminal `hp` is not the final health after a hit.
+`rwflearn act <match> <body> <life> <tick> <move> <jump> <sneak> <sprint> <attack>`
+uses the dataset's nine movement labels and 0/1 button values. The server checks
+match, body, life, monotonically acknowledged ticks and a maximum age of two
+ticks, and retains the acknowledged facing for movement. Item use, aim and
+noncombat actions stay authored. Missing or expired actions restore authored
+control. `rwflearn cancel` stops only the exact bots-only experiment; experiments
+do not update personality ratings and cannot control the successor match.
+`tools/learning/duels.ts` provides the validated asynchronous RCON client.
+Historical duels additionally expose `opponentFrame` with that body's own fair
+observation, body/life/tick and applied-control acknowledgements. `rwflearn acts`
+accepts two consecutive nine-field action contexts, with distinct bodies and the
+same tick. It validates both before accepting either. Each body has independent
+action clocks, facing contexts and fallback accounting.
+
+The PPO runner owns a disposable Paper server and a Python worker. RCON
+credentials stay in the server owner; the worker receives only validated
+observations and sends control requests over its private process pipes. From
+this package, after building the fixture and plugin jars:
+
+```bash
+bun run bots:ppo --dataset .cache/rwf-dataset --checkpoint .cache/rwf-models/seed-17 --device mps --seed 17 --seconds 3600 --opponent basic --output .cache/rwf-ppo/seed-17
+uv run --project tools/learning --locked python tools/learning/export.py .cache/rwf-ppo/seed-17/learning/final --output .cache/rwf-ppo/seed-17/onnx
+bun run bots:ppo --diagnostic --updates 1 --episodes 2 --seconds 240 --device mps --output .cache/rwf-ppo/diagnostic
+```
+
+Outside diagnostic mode, a genuine human dataset is required. An optional BC
+checkpoint must pin that dataset; otherwise BC initializes the actor within
+the same invocation. PPO uses four epochs, 64-tick recurrent windows, clipped
+policy and value objectives, and imitation from the human training split.
+It recomputes recurrent prefixes with the current weights for every window.
+Validation and test matches do not enter PPO optimization or checkpoint selection.
+
+PPO freezes every installed map's admitted scenario, terrain hash and scenario
+hash in `training-maps.json`. Installed folders must match the neutral scenario
+registry exactly. Collection pairs red and blue on each map before advancing
+through the sorted catalog, then repeats the catalog. Each successful rollout
+records these identities, and the owner checks them against the fixture's
+original native setup. Map changes require an empty lobby; the old sandbox is
+stopped before a new one opens. All map staging, boot and transitions consume
+the same original seed deadline. A pilot cannot freeze until confirmed actor
+controls from both sides of every admitted map have contributed to completed
+optimizer steps. Diagnostics select Training Yard only.
+
+Strength evaluation freezes the same catalog as the pilot and distributes the
+fixed 200 games per opponent across every admitted map. Each environment seed
+is paired across red and blue against both opponents. Maps receive either the
+same number of pairs or one additional pair; the catalog must fit within the
+100 available pairs. All trials on one map run together before the sandbox
+changes. Version-2 reports bind every game to its terrain and scenario hashes;
+the owner saves and verifies the original Paper setup for every evaluation
+duel. An omitted map, changed hash, reordered game or repeated match invalidates
+the run. This evaluates admitted training maps with fresh environment seeds;
+it does not measure performance on unseen maps. The existing win thresholds,
+one-shot evaluation claim, deadlines and no-retry rule apply across the catalog.
+
+Damage rewards use cumulative Paper damage sampled before any body acts, with
+`(damage dealt - damage received) / 20`, a `0.001` decision cost, and a `+1/-1`
+terminal win/loss bonus. Aim, item use, healing and navigation remain authored.
+Paper confirms which submitted decisions actually controlled a body; only
+those receive actor loss. Unapplied decisions still train the value function.
+Skipped 20 Hz observations or expired contexts discard the whole episode;
+an action that races with the duel ending does the same, using the fixture's
+explicit `duel no longer live` response. Malformed requests still fail loudly;
+three consecutive discarded episodes stop collection for repair. Budget
+expiry during an optimizer update restores its starting weights.
+
+Each run freezes the runtime inputs and writes automated rollouts, reports and
+an `unaccepted` actor checkpoint. Diagnostic initialization is synthetic and
+cannot pass a pilot quality gate. The owner starts its deadline before launching
+uv/Python, charges imports, BC, device warmup and Paper boot to the same window,
+and kills the worker's private process group at that deadline, including Python
+children of uv. The running watchdog uses a monotonic timer; SIGINT/SIGTERM
+also cancel that owned group. The worker reserves 15 seconds within
+the window to serialize its final actor; server cleanup may finish afterward.
+Every owned Paper session retains `server.log` in its map output before removing
+the container, including headless diagnostic failures. A failed command stops
+the worker; retained logs are for investigation and do not authorize a retry.
+
+The three-seed pilot initializes BC independently from the same human dataset
+and runs each seed for at most eight hours, sequentially. It freezes the trainer
+sources, uv lock, curriculum, runtime and all dataset split hashes. Run from this
+package with freshly built plugin and fixture jars:
+
+```bash
+bun run bots:pilot --dataset .cache/rwf-dataset --device mps --seeds 17,18,19 --output .cache/rwf-pilot/trooper
+bun run bots:pilot --resume --output .cache/rwf-pilot/trooper
+bun run bots:pilot --diagnostic --device cpu --seeds 17000,17001,17002 --output .cache/rwf-pilot/diagnostic
+```
+
+The curriculum in `tools/learning/curriculum.json` allocates the remaining PPO
+window to stationary targets (10%), chase/strafe (15%), authored styles (35%),
+then historical opponents (40%). Each phase must complete its minimum updates
+before advancing, so slow boot or training cannot skip a phase. A snapshot is
+frozen at BC initialization, each phase transition and every 25 updates.
+Historical matches sample the BC anchor plus the latest fifteen snapshots,
+using the same frozen opponent for each red/blue pair. Its weights are loaded
+with strict hash checks and disabled gradients; its memory resets each duel.
+Both policies receive only their own 34 fair features. Skipped observations
+continue to censor the entire duel.
+
+Immutable, fsynced seed claims and results record the original deadline and
+final actor hashes. Concurrent owners cannot claim the same seed. `--resume`
+continues only pending seeds after orderly frozen results, using the exact
+recorded inputs; it verifies previously frozen artifacts and never renews a
+claimed seed's window. A running, interrupted or failed seed stops the pilot
+for repair. Failure does not automatically retry training or start more seeds.
+The diagnostic preset instead allows three 300-second windows and seven updates
+per seed, exercising every opponent and phase with synthetic initialization.
+
+Finishing training only freezes candidates. The runner reports `unaccepted`
+and `pilotAcceptanceChecked: false`; frozen combat gates and blind human
+comparisons are separate acceptance work. It does not enable learned control
+in ordinary matches.
+
+Frozen strength evaluation runs every sealed pilot actor against the same
+native runtime and frozen authored/basic opponents:
+
+```bash
+bun run bots:evaluate --pilot .cache/rwf-pilot/trooper --device cpu --output .cache/rwf-evaluation/trooper
+bun run bots:evaluate --diagnostic --checkpoint .cache/rwf-ppo/diagnostic/learning/final --device cpu --output .cache/rwf-evaluation/diagnostic
+```
+
+`tools/learning/evaluation.json` fixes 200 games per opponent for each of the
+three seeds, paired red/blue at 100 fresh environment seeds. Each actor needs
+120 wins against authored and 160 against basic; draws and 60-second timeouts
+count as non-wins. Checkpoint hashes, original dataset hashes and native runtime
+must match the sealed pilot. Evaluation freezes its own tooling and verifies
+those inputs before and after each actor. Evaluation seeds cannot overlap that
+actor's training games. There are no optimizer steps or outcome-dependent
+retries. A fsynced claim prevents automatic repetition of an interrupted or
+failed pilot evaluation. Investigate such a run before any recovery.
+
+Unlike PPO collection, the evaluator keeps a duel's result when ticks are
+missed. It resets memory at observation gaps, records rejected actions and
+authored fallback counts, and fails the run on an interrupted duel instead of
+selecting a replacement. `games.jsonl` is flushed and fsynced after each result;
+native recordings are exported beside each seed's report. Each evaluation
+worker has an eight-hour hard window including startup; diagnostics have five
+minutes and only two games per opponent (`--matches 4` allows four). Diagnostic
+results cannot pass the gates. A completed failed real strength gate exits 1
+after cleanup and report export. Passing strength leaves the model unaccepted:
+blind preference, Java inference parity and production-shape load verification
+are separate requirements. No evaluation command enables ordinary learned play.
+Console-transport results include authored fallbacks, so inspect their counts
+when assessing the controller; they do not establish sustained Java inference
+or its two-tick delivery gate.
+
+Blind preference reviews use a separate fixed capture schedule and a sealed
+ballot. They compare the first sealed pilot seed against authored combat;
+all three pilot seeds must first pass both strength gates. No seed is selected
+by evaluation score. Genuine dataset files, checkpoint hashes, the original
+claimed strength run and native runtime inputs are verified before preparation.
+
+```bash
+bun run bots:preference schedule --pilot .cache/rwf-pilot/trooper --evaluation .cache/rwf-evaluation/trooper --model .cache/rwf-pilot/trooper/seed-0/onnx
+bun run bots:collect-preference --pilot .cache/rwf-pilot/trooper --evaluation .cache/rwf-evaluation/trooper --model .cache/rwf-pilot/trooper/seed-0/onnx --output .cache/rwf-preference/capture
+bun run bots:preference prepare --pilot .cache/rwf-pilot/trooper --evaluation .cache/rwf-evaluation/trooper --model .cache/rwf-pilot/trooper/seed-0/onnx --clips .cache/rwf-preference/capture/captures.json --output .cache/rwf-preference/review
+bun run bots:preference score --pilot .cache/rwf-pilot/trooper --output .cache/rwf-preference/review --answers .cache/rwf-preference/review/public/answers.json
+bun run bots:preference verify --pilot .cache/rwf-pilot/trooper --output .cache/rwf-preference/review
+bun run test:preference-media
+```
+
+`schedule` prints the exact twenty paired red/blue matchups at fresh environment
+seeds and the candidate/runtime fingerprints. `collect-preference` verifies genuine
+pilot eligibility, builds and fingerprints the native inputs, and seals one
+exclusive capture claim in the pilot before allocating a disposable server.
+Diagnostic pilots are refused. An interrupted or failed collection keeps its
+claim and original evidence; the command has no resume or reroll option.
+
+The collector stages and warms the exact actor through `rwfinfer load`, attaches
+one native spectator, and records each scheduled learned/authored matchup once
+against the authored opponent. All forty matches use the same camera, FOV and
+resolution, with HUD and nameplates hidden. Each 1280x720, 30-fps clip covers the
+first 600 live ticks, holding the original terminal render if combat ends early.
+Losses and early endings remain. The recorder waits for the lobby between matches
+and retains the full terminal outcome even when it occurs after the clip.
+
+Before either fighter acts, the fixture samples an original setup receipt from
+Paper: roster join order, personalities, fresh body identities, team, kit, spawn,
+facing, velocity, health, held slot and world lighting. The neutral
+`rwf-duel-setup.json` contract fixes the spawn and equipment requirements; paired
+receipts must agree except for fresh identities and absolute world ticks. Each
+completed match envelope is sealed before the next match starts. After shutdown,
+the collector validates every exported schema-3 recording's actual domain seed
+against its scheduled controller seed, checks that model/runtime/renderer inputs
+stayed unchanged, and seals `captures.json` and `verification.json`.
+
+Preparation requires this claimed collection and rechecks the setup receipts,
+separate full-match clocks, every original PNG, encoded streams, recordings,
+delivery accounting and frozen inputs before creating the blind pack. Hand-written
+capture declarations or diagnostic pair outputs cannot substitute for it.
+
+The Java-model sandbox can own a native spectator and record a diagnostic pair:
+
+```bash
+bun run bots:java-video --model .cache/rwf-pilot/trooper/seed-0/onnx --output .cache/rwf-java-video/trooper
+bun run bots:java-video --model .cache/rwf-pilot/trooper/seed-0/onnx --opponent authored --output .cache/rwf-java-video/trooper-authored
+```
+
+This command stages and warms that exact unaccepted export, attaches one native
+client to the same disposable Paper instance, and runs a separate warm-up duel
+before recording one Java-controlled and one authored match against the basic
+opponent (or `--opponent authored`) at a common controller and domain seed. It
+uses the same pair recorder and setup checks as the twenty-pair collector.
+The guarded seeded showcase port
+requires the exact empty lobby, preserves its identity and map, and settles the
+seeded world time before countdown. This also fixes team tie-breaks for the stable
+bot join order. Wall-clock timing and asynchronous inference can still change the
+combat trajectory. Every match runs once. Losses and early terminal
+frames remain in the evidence. `inputs.json` hashes the actor, model manifest,
+native environment, renderer sources, compiled client classes, resources and
+client artifact before capture; the command checks those inputs again afterward.
+Each schema-3 native frame uses the latest received Paper marker for its world
+tick and retains the sampled client game clock separately as `clientWorldTick`.
+Client clock corrections therefore remain visible without being mistaken for
+a reversed authoritative duel clock. Frame clocks must exactly equal their
+received markers; native monotonicity, missing-tick, pixel and camera gates remain.
+Older schema-2 native receipts are rejected by the current encoder.
+Each clip retains its frame receipt, separate full-match clock, original terminal
+state and Java delivery metrics. After graceful shutdown, it validates and hashes
+the original complete schema-3 bot-only Trooper recordings, including checking
+that each header's domain seed equals its requested controller seed. The native
+fingerprint includes the shipped personality YAML as well as map and kit inputs.
+Observer cleanup runs
+before Paper stops and exports recordings, including when capture fails.
+
+`verification.json` is model-specific diagnostic evidence. It does not establish
+genuine pilot eligibility or collect the twenty authored-opponent review pairs,
+score a human ballot, accept the model or enable ordinary learned play. The same
+owned observer and recorder are available to the fixed-schedule collector.
+
+The native timing bridge is exercised independently of training or voting:
+
+```bash
+bun run client preview --rwf-duel --verify-duel-clock
+```
+
+To verify a full window that remains live through tick 599:
+
+```bash
+bun run bots:verify-live-window --output .cache/rwf-native-window/full-live
+```
+
+This diagnostic exports a fixed, unaccepted jump-in-place actor with attack
+disabled, verifies recurrent CPU ONNX parity, and stages it in Java against the
+fixture's stationary opponent. No training or demonstration data is used. After
+a separate warm-up match, the command records 900 native live frames with zero
+held frames, waits for the ordinary 1200-tick fixture timeout, and checks that
+the separate full clock extends the recorded prefix. It requires sustained Java
+action application, zero damage and changing original pixels. Setup, model,
+runtime and renderer digests, frame/full-clock receipts, delivery metrics, the
+encoded stream and complete original recording remain in the exclusive output.
+`verification.json` records the measured live/terminal bounds. Failures preserve
+the output and a failure receipt; no automatic retry occurs. This verifies the
+timing and recording component, with a diagnostic actor that cannot establish
+pilot strength, human preference or model acceptance.
+
+The disposable fixture's console-only `rwfcapture observe <uuid>` admits a
+connected native spectator outside the duel roster. `rwflearn` sends a begin
+marker, one marker before bot actions each live tick, and a terminal marker
+even when combat ends midway through a tick. The shared pure Java codec lives
+in the client's `wire` package and is compiled into the fixture jar; it is
+absent from `TheStorm.jar`. `storm-duel-clock.json` fixes its byte layout,
+enums, bounds, receipt fields and golden packet.
+
+The session actions `duel-arm`, `duel-status`, `duel-seal` and `duel-cancel`
+retain a bounded clock journal. Arm with `name`, `seed`, `side`, `mode` and
+`opponent` before starting the duel. Sealing writes an exclusive JSON receipt
+off the client thread. Missing ticks, stale match identities, reversed clocks
+or an invalid observer invalidate the journal. A lost observer does not stop
+the bots. Verification retains native outcomes, cancellation and invalidation
+receipts plus a live screenshot in the session artifact directory. Clock
+receipts remain unaccepted evidence. The framebuffer recorder binds pixels to
+the clock with `video-duel-arm`. Its arguments are `name`, `fov`, `seed`, `side`,
+`mode` and `opponent`; the native window always contains 900 frames. Wait for
+`video-ready` before arming, then for `video-status` to report `READY` before
+starting the server duel. The first live payload anchors frame zero;
+`video-start` is refused for native captures. Readiness includes the client
+overlay and render rate, since entering a world can leave an overlay active
+after the position and screen status have updated.
+
+```bash
+bun run client preview --rwf-duel --verify-duel-video
+```
+
+Schema-3 `rwf-rendered-duel-frames` receipts retain the original camera, frame
+timestamps, pixel hashes, received native clock and each frame's current
+marker and source-image index. Every live slot uses a separate framebuffer
+readback. After an early native terminal event, one original terminal render
+is copied for subsequent slots, with identical hashes and explicit source
+indices. Missing slots, interrupted duels, stale markers, late first frames
+and windows that fail to reach native tick 599 fail validation. A full window
+may finish before the match; its clock prefix does not prove a terminal
+outcome. The separate complete duel journal retains that outcome.
+
+`video-encode` verifies both receipt versions, original PNG hashes and the
+encoded 1280x720, 30-fps, silent stream without overwriting evidence. The
+recorder uses a private lossless PNG writer with fast Deflate compression;
+channel order, alpha and rows are preserved, and the eight-image backlog limit
+still fails on overload. It does not change Minecraft's global encoder settings.
+The native video check first runs a separate unrecorded warm-up duel to initialize Paper
+combat code and client entity rendering, then records one authored/basic duel.
+It retains the warm-up identity, the recorded match's separate clock and
+an early terminal hold in a 30-second clip. Its output remains diagnostic,
+unaccepted footage; it does not establish candidate strength or human
+preference, train a policy, or enable learned play.
+
+The strict `CaptureSet` schema in `tools/learning/preference/gate.ts` defines
+`captures.json`: candidate/runtime digests, zero retries, the shared camera and
+twenty ordered pairs. Each pair's `learned` and `authored` entries have video and
+recording paths plus the terminal `rwflearn state` reply. Learned entries also
+include the `rwfinfer metrics` reply's `metrics` object; authored entries use
+`metrics: null`. Paths resolve relative to `captures.json`. Learned delivery
+counts must match the terminal state. Complete schema-3 bot-only Trooper duels,
+unique match identities, common terrain and recorded outcomes are checked.
+The original recording header's domain seed must equal the controller's fixture
+seed; preparation checks both independently.
+
+Preparation claims the pilot once, freezes all source artifacts and review tools,
+and seals randomized A/B labels before publishing footage. `ffmpeg` and `ffprobe`
+must be installed, including H.264 encoding support. The pack re-encodes videos,
+removes audio, tags, chapters and extra streams, and validates frame count and
+format. Reused normalized clips fail. Give the reviewer only `public/`, keeping
+plans, native evidence and the answer key private. The reviewer watches A and B
+for the indicated red or blue fighter and fills every choice with `A`, `B` or
+`tie`, with optional reasons, without reading the private key.
+
+Scoring verifies all frozen inputs and public clip hashes, then seals one
+completed manual ballot. Fifteen of twenty votes must prefer learned behavior;
+ties and authored votes stay in the denominator. Partial, repeated or reordered
+ballots fail. An interrupted pack or completed review cannot automatically be
+rerolled. `preference-result.json` binds the result to the actor, pack, plan,
+answer key and ballot. This measures a preference for humanlike behavior,
+not indistinguishability from a human. Passing leaves the actor `unaccepted`
+with ordinary learned control disabled; promotion and the other gates remain
+separate.
+
+`verify` rereads the original sealed ballot and recomputes every vote. It checks
+the frozen source files, pack, answer key, labels, all forty public clips and the
+exact stored result, retaining their hashes for promotion. Repeated verification
+does not write or consume evidence. A complete failed review still exits with
+status 1; missing, interrupted or changed evidence fails explicitly.
+
+Java inference diagnostics load a frozen, unaccepted ONNX export only in the
+disposable fixture server:
+
+```bash
+uv run --project tools/learning --locked python tools/learning/java_parity.py --checkpoint .cache/rwf-ppo/diagnostic/learning/final --output .cache/rwf-java-parity/diagnostic
+mise exec -- gradle -p plugin :rwfbots:actorParity -PactorParityDirectory="$PWD/.cache/rwf-java-parity/diagnostic"
+bun run bots:verify-java --model .cache/rwf-java-parity/diagnostic/onnx --output .cache/rwf-java-native/diagnostic
+```
+
+The parity command independently carries Java hidden and cell state through
+16 steps at batch sizes 1, 3, 20 and 100 against Python expectations. For an
+existing candidate, verify its exact ONNX bytes without re-exporting:
+
+```bash
+uv run --directory tools/learning --locked python -m promotion.parity --checkpoint "$PWD/.cache/rwf-ppo/diagnostic/learning/final" --actor "$PWD/.cache/rwf-java-parity/diagnostic/onnx" --output "$PWD/.cache/rwf-java-parity/exact-candidate"
+mise exec -- gradle -p plugin :rwfbots:actorParity -PactorParityDirectory="$PWD/.cache/rwf-java-parity/exact-candidate" -PactorParityReceipt="$PWD/.cache/rwf-java-parity/exact-candidate/java-receipt.json"
+```
+
+Preparation copies the candidate bytes, checks the full export metadata against
+the checkpoint, and compares Python and CPU ONNX Runtime with independent
+recurrent state. Java rejects mismatched artifact bindings, missing cases,
+unknown fields and inaccurate outputs. The versioned `rwf-actor-parity.json`
+contract fixes the replay batches, steps and elementwise tolerances. The
+exclusive receipt binds the actor, export manifest, checkpoint, weights,
+observation contract and sample file by SHA-256. It leaves the model unaccepted;
+strength, blind preference, native load and regression gates are still required.
+
+Accepted Java loading requires an additional `promotion_sha256` field and its
+matching `promotion.json`. The versioned `rwf-actor-promotion.json` resource fixes
+the gate thresholds and proof field inventory. `source-manifest.json` retains
+the original unaccepted export bytes; the accepted manifest may change only its
+acceptance label and add the promotion fingerprint. All evidence is portable:
+each catalogue entry has the relative name `evidence/<sha256>.blob`. Loading
+checks every checksum, requires every referenced artifact, and rejects symlinks,
+unknown proof fields and missing evidence before opening a native session.
+
+The runtime checks all three original eight-hour seed budgets, the first sealed
+candidate, 200 matches against each opponent, the sealed twenty-pair human
+ballot, the exact Java parity receipt, the 20/50/100-body load windows, and the
+required regression inventory and advancement floors. It recounts strength
+outcomes and blind votes and rebuilds load coverage, timing and delivery from
+the original command stream. Evidence remains unaccepted until assembled into
+a complete bundle. These checks protect artifact integrity and enforce the
+fixed gates; genuine human recordings and votes must come from the recording
+and review workflows above.
+
+Java promotion bundles the neutral training-map and strength-evaluation
+contracts from `tools/learning`. It requires version-2 strength evidence and
+the same sorted map identities, terrain hashes and scenario hashes in the
+pilot inputs, every trained checkpoint, the evaluation plan and every duel.
+Every admitted map must fit the paired 200-game schedule; omitted maps and
+changed, repeated or reordered games fail validation. Report fields are checked
+against the neutral inventory before native actor allocation. Java's schedule
+is tested against independently generated Python expectations across 32 maps.
+
+`bots:promote` assembles the original passing evidence into a new local bundle:
+
+```bash
+bun run bots:promote --pilot .cache/rwf-pilot/trooper --evaluation .cache/rwf-evaluation/trooper --model .cache/rwf-pilot/trooper/seed-0/onnx --review .cache/rwf-preference/review --parity .cache/rwf-java-parity/exact-candidate --receipt .cache/rwf-java-parity/exact-candidate/java-receipt.json --load .cache/rwf-java-load/trooper --regressions .cache/rwf-regressions/trooper/regressions.json --output .cache/rwf-accepted/trooper
+```
+
+Collect the required regression inventory into one fresh directory:
+
+```bash
+bun run bots:collect-regressions --model .cache/rwf-pilot/trooper/seed-0/onnx --output .cache/rwf-regressions/trooper
+```
+
+This runs all seven fixed cases sequentially on the same frozen actor, native,
+renderer and Java simulation inputs. Each native case owns a disposable Paper
+server and original recording. The collector retains failed attempts and stops
+at the first failure; it never retries or borrows a successful case from another
+attempt. The output stays unaccepted and leaves learned control disabled.
+
+`--regressions` must name the collector's original `regressions.json` suite.
+Promotion replays every original native command, recording and simulation tick,
+checks abort settlement against the saved SQLite database, checks healing against
+authored personality content, and reapplies the unchanged advancement floors.
+It verifies receipt and runtime hashes and archives the original evidence. The
+separate `measured-regressions.json` contains independently derived aggregates in
+the existing neutral Java promotion format; aggregate-only input cannot pass.
+The suite supplies one check per complete case with no failures or skipped cases.
+Unit fixtures and diagnostic pilots cannot establish model acceptance.
+
+Disposable regression fixtures can bind a controller with
+`CombatHarness.attachAuthored(botSlots, controller)`. This binds the next exact
+draft once and leaves ordinary personality selection, kit plans, difficulty,
+match-derived randomness, late arrivals, healing habits, governor thinning and
+rating settlement in place. Reflex inputs remain authored; the attachment owns
+the body-command hook and receives fair observations. Its successor match is
+unaffected. Ordinary accepted-model inference does not start while a fixture
+owns that hook. Controlled duel and load attachments retain their fixed Trooper
+rosters and experiment seeds. An attachment alone supplies no regression proof;
+acceptance still requires the complete measured evidence above.
+
+To exercise the authored attachment's native journal with an unaccepted export:
+
+```bash
+bun run bots:verify-regression-capture --model .cache/rwf-java-parity/exact-candidate/onnx --output .cache/rwf-regression-capture/diagnostic
+```
+
+One disposable Paper server loads and warms that exact Java actor, arms the
+`native-team-advancement` case once, and runs a normal sixteen-bot showcase to its
+original ending. Only eligible Trooper sword controls use the actor; other kits,
+aim and item actions remain authored. The console-only fixture retains every
+selected command and action context, native tick/batch, match transition and
+actual before/after damage measurement in a bounded journal. Sampling drains
+are fsynced to `commands.jsonl` before the next request. The verifier recounts
+every row, checks body/life/kit/tick eligibility and two-tick action age, rebuilds
+the selected controls with their original authored target identity, and checks
+authored fallbacks and original batch totals.
+
+The original console requests are bracketed by journal checkpoints. The complete
+recording must match every native body's test pseudonym, team and kit, keep each
+living body's two-tick frame cadence, and match the native normal ending. Both
+teams must meet the existing spacing, width at eight seconds and contact,
+ten-second advancement, and winding floors. The verifier rejects incomplete
+trajectories and fails on any missed floor.
+
+The ticker checks the rules' current fighting roster before each body acts. A
+body killed by an earlier command in the same tick cannot act from the old world
+snapshot, even when the match continues for its teammates.
+
+The exclusive output keeps model/runtime/renderer fingerprints, the complete
+schema-3 recording and measured team trajectories. Failure preserves the attempt;
+there is no automatic retry. `verification.json` explicitly records diagnostic
+scope and supplies no seven-case regression pass or promotion input. Acceptance
+requires the full regression inventory, native combat checks and simulation
+floors above; this command does not train, accept a model or enable rollout.
+
+The authored simulation advancement regression has its own original-evidence
+capture:
+
+```bash
+bun run bots:verify-simulation-floors --model .cache/rwf-java-parity/exact-candidate/onnx --output .cache/rwf-regression-capture/simulation-floors
+```
+
+The offline Java producer runs the same 16 strategy pairings, fixed seeds and
+measurement windows as `AdvanceTest` on the shipped training yard. Its exclusive,
+fsynced `simulation.jsonl` retains every tick's body identity, kit, position,
+liveness, attack targets and slot, plus the original Java measurements. The
+TypeScript verifier replays those ticks independently, requires agreement with
+Java, and applies the unchanged simulation width, attacking-team advancement and
+winding floors. It preserves anchor exclusions and the existing median convention.
+Missing ticks, changed pairings or seeds, incomplete cases and aggregate-only
+claims cannot pass. Actor/native inputs, the actual Java classpath and producer
+sources are fingerprinted before and after capture; failures retain the attempt
+without an automatic retry. These authored simulation records are regression
+evidence only. They supply no demonstrations, training data, native combat proof
+or model acceptance; training continues to use real Paper interactions.
+
+To verify Java-controlled sword damage against a player entering through
+`/rwf join`, use a separate fresh diagnostic directory:
+
+```bash
+bun run bots:verify-human-combat --model .cache/rwf-java-parity/exact-candidate/onnx --output .cache/rwf-regression-capture/human-combat
+```
+
+The automated network player joins normally. The fixture picks Trooper kits
+through the lobby API during a five-second countdown and offers the player to a
+living enemy at 1.75 blocks. It retains native game mode, immunity, health and
+contact probes. A pass requires actual health loss from an applied Java sword
+command targeting that exact player in the same native tick. It keeps the player
+connected through the original match ending, drains inference and replays the
+whole journal. The version-2 journal includes target UUIDs and player probes;
+older journals fail its contract check. The original schema-3 recording must
+contain one player and incomplete (`MISSING`) control provenance from this
+automated client, so it cannot supply human demonstrations. This command covers
+the player-damage diagnostic only and produces no accepted model or rollout.
+
+To verify the last joined player disconnecting, use another fresh directory:
+
+```bash
+bun run bots:verify-last-human-abort --model .cache/rwf-java-parity/exact-candidate/onnx --output .cache/rwf-regression-capture/last-human-abort
+```
+
+The automated player starts the same ordinary eight-Trooper match and disconnects
+after Java controls have been applied. Original transitions must show the last
+player leaving and a winnerless Stop within 120 native ticks; the original log
+must confirm the configured five-second grace period. Native entity queries are bracketed by journal
+checkpoints: all eight bodies must exist before disconnect and be absent after
+the lobby returns. The output retains the original server log, complete stopped
+recording, and a private SQLite snapshot. Requerying that database must show a
+STOPPED player with no credits owed or paid. This diagnostic supplies no human
+demonstrations, complete regression acceptance or rollout.
+
+To challenge a real spectator client in a normal sixteen-bot showcase:
+
+```bash
+bun run bots:verify-spectator-immunity --model .cache/rwf-java-parity/exact-candidate/onnx --output .cache/rwf-regression-capture/spectator-immunity
+```
+
+The automated client uses `/rwf spectate` and is placed next to a living Trooper.
+Three native player-attack damage requests must leave its full health unchanged.
+A positive control against an opposing fighter must lose health through the same
+native damage path, with the exact original damage event inside the command's
+journal checkpoints. Minecraft's damage command can report invulnerability even
+when Red Warfare cancels vanilla damage and applies its own damage; the verifier
+therefore requires measured health and events. It retains raw console responses,
+checks that bots never target the watcher, and verifies native spectator mode
+and full health through the original normal match ending. The original recording
+must contain only the sixteen bots and no human inputs. This diagnostic neither
+supplies demonstrations nor establishes the complete regression acceptance gate.
+
+To verify authored healing and ephemeral bot cleanup in another original showcase:
+
+```bash
+bun run bots:verify-healing-lifecycle --model .cache/rwf-java-parity/exact-candidate/onnx --output .cache/rwf-regression-capture/healing-lifecycle
+```
+
+The producer selects the first eligible Trooper from the ordinary sixteen-bot
+draft and its frozen personality content, respecting `never_eats` and
+`gapple_hoarder`. Native damage must reduce its health from twenty to eight;
+authored item use must consume one of three apples, restore health and grant
+four absorption points. Original controls must preserve the full eating interval
+without a learned action replacing item use. After Java controls have applied,
+the console-only fixture stops that exact match through the existing match API.
+Every original body must disappear after the lobby returns. Forced Citizens saves,
+registry queries and the retained empty `saves.yml` prove that ephemeral bots did
+not enter the persistent NPC registry. The verifier retains and replays the
+original journal and stopped all-bot recording. This diagnostic supplies no human
+demonstrations, complete regression acceptance or rollout.
+
+To verify native line-of-sight rejection and knockback:
+
+```bash
+bun run bots:verify-native-melee --model .cache/rwf-java-parity/exact-candidate/onnx --output .cache/rwf-regression-capture/native-melee
+```
+
+The producer selects two opposing Troopers from an ordinary sixteen-bot draft.
+Two console-only trials place those same original bodies in melee reach. A
+temporary two-block stone wall must produce `NO_LINE_OF_SIGHT` with unchanged
+health and velocity. With that wall removed, the actual melee API must reduce
+health and apply the rules' horizontal and upward knockback. Each trial restores
+the original air blocks before returning, retains native body snapshots and is
+bracketed by the original journal. The replay matches the clear hit's exact
+damage event and velocity, then independently requires a landed applied Java
+sword command with native knockback outside either direct trial. It preserves the
+original normal ending and all-bot recording. The shared melee probe contract has
+Java and TypeScript validators and enters the frozen input fingerprint. This is
+an automated diagnostic; it produces no human demonstrations, accepted policy or
+complete regression acceptance.
+
+The producer verifies the sealed pilot and human ballot, recounts the original
+strength outcomes, recomputes the full raw load stream, and replays the original
+parity samples against the frozen Python weights and exact CPU ONNX export.
+Java then checks the portable bundle and repeats the original JNI receipt before
+exclusively writing the accepted `manifest.json` and `promotion-result.json`.
+`source-manifest.json` retains the unaccepted export; `collection.json` records
+the original paths and hashes. Evidence blobs are streamed and deduplicated by
+checksum. Source changes, missing evidence, failed gates and existing output
+directories fail explicitly. A failed assembly can leave a draft for inspection;
+use a new output directory after correcting the cause.
+
+This command only assembles local artifacts. It keeps learned control disabled
+and does not publish, deploy, train, collect new votes or extend a pilot budget.
+For a read-only numerical recheck of existing sealed samples, use
+`promotion.parity --verify-samples <samples.json>` with the original
+`--checkpoint` and `--actor` directories instead of `--output`.
+
+The native
+diagnostic runs both sides against authored and basic opponents with no Python
+action transport. It freezes artifact and runtime hashes, retains every result,
+exports native recordings and checks action accounting. Its counters distinguish
+unavailable actions from authored-only behavior such as healing.
+Expired results and results for retired match/body contexts have separate
+counters. Deadline counters include every observed completion, including retired
+contexts, so a lifecycle rejection cannot conceal a missed deadline.
+
+Native inference load diagnostics use every shipped module and verify Docker's
+four-CPU cap, 8G heap setting and 10Gi memory limit:
+
+```bash
+mise exec -- gradle -p plugin :dist:shadowJar :dist:fixturesJar :companions:e2eJar
+bun run bots:verify-java-load --model .cache/rwf-java-parity/diagnostic/onnx --output .cache/rwf-java-load/diagnostic
+```
+
+The fixture's versioned wire contract is `rwf-inference-load.json` in the rwfbots
+resources. Java validates its record fields and each reply; TypeScript validates
+the same field inventory and parses replies strictly. A missing or incompatible
+contract stops the diagnostics.
+
+The frozen protocol in `tools/learning/load-gate.ts` measures a 90-second baseline,
+then 20, 50 and 100 real Troopers for at least 3,000 live ticks per phase. Each
+phase also requires 200 ticks with the entire roster alive and observed. Normal
+deaths and match endings remain active; successor matches restore the roster
+within a fixed budget, and every measured tick and match is retained. Authored
+navigation, aim, healing and abilities continue to run; eligible sword controls
+use Java inference. The diagnostic harness drives all bodies at 20 Hz without
+governor thinning or habit perturbations, so this is a capacity check for that
+controller rather than a normal-match rollout test.
+
+Paper tick-end events supply individual server durations. The overall, live and
+full-roster populations must each have p95 below 50 ms. At least 99% of attempted
+body inferences must be observed within two ticks; skipped, rejected and final
+pending requests count against that fraction. Action age, full-batch size and
+native damage are also checked. `samples.jsonl`, `phases.json`, recordings and
+`verification.json` retain the evidence and input hashes. These bars supplement
+the existing authored load tests and gameplay floors; they do not replace them.
+
+Before writing its final report, the load runner reconstructs baseline and phase
+windows from every raw command reply. The declared tick arrays, match schedules
+and before/after counters must match that complete stream. Missing or duplicated
+ticks, foreign or oversized body populations, counter resets and pending work at
+the start of a window fail. Slow ticks, deaths, skipped requests and requests
+pending at the final boundary stay in their original denominators. This checks
+the load evidence; it does not accept an actor or establish normal-match behavior.
+
+The compute pool loads and warms native sessions and processes at most one
+immutable observation batch in flight. Busy ticks are skipped rather than queued.
+Main-thread delivery checks match, body, life, kit and a maximum two-tick age;
+observation gaps and identity changes reset recurrent memory. Shutdown closes
+native sessions after pending inference without submitting new work after the
+pool closes. Corrupt metadata and model failures surface as errors. Ordinary
+matches use authored control by default; these diagnostics do not accept a model
+or establish the human preference gate. The separate load command checks runtime capacity without
+accepting the model or enabling ordinary learned play.
+
+Ordinary matches evaluate `the-storm-rwfbots-learning-enabled` once at the live
+transition, with the match UUID as entity and the match, map and world as context.
+The managed declaration and production default off; beta enables the rollout
+path, which still requires a bundle accepted after the human pilot and all
+promotion gates pass. Missing Flipt
+bootstrap and transport outages keep that match authored. A successful false
+answer is final for the match; malformed values, missing declared flags and
+authorization failures surface as errors.
+
+When enabled, the module loads one accepted bundle from
+`rwfbots/learning/accepted/trooper` beneath TheStorm's data folder and validates
+and warms it on the compute pool. Loading remains asynchronous; late flag and
+load completions cannot enable a finished match or its successor. Only Trooper
+combat movement and attack timing use the learned actions. Normal drafting,
+difficulty levers, habits, kits, healing, abilities, navigation, objectives,
+governor thinning and personality ratings retain their authored paths. Skipped
+body ticks reset recurrent memory; idle ticks drain retired inference completions.
+Diagnostic attachments remain separate and never evaluate this rollout flag.
+An enabled flag requires the accepted asset. Exceptional or cancelled flag/model
+futures report their cause once and leave learning in `FAILED` for that match.
+The failed future is retired so subsequent authored bot ticks continue; the
+match does not retry the load. `/rwfbots debug learning` reports match state, action availability,
+authored-only ticks, pending startup, flag outages, load rejections and inference
+deadline, lifecycle and batch counters. The flag change does not publish or
+install an artifact.
 
 Payouts go through an outbox in `rwf_match_player` and the economy's keyed
 transfers (`rwf:<matchId>:<uuid>`), so a crash between the match ending and
@@ -1278,7 +2196,7 @@ each a kit from its weights over `draft.kits`; a personality whose weights
 name none of those kits (its favourites ship later) still drafts and plays one
 of them, chosen uniformly. The draft happens when the countdown starts, but
 rwf walks the drafted bots into the lobby one by one, a seeded 1 to 8 seconds
-apart (`rwf.domain.lobby.Arrivals`, squeezed into the first 60% of the
+apart (`rwf.domain.lobby.Arrivals`, squeezed into the first half of the
 countdown so all are in before the start; personalities with the
 `late_to_everything` quirk come last), each with the usual join message;
 bots still on their way are released if the countdown stops. Ratings are
@@ -1401,14 +2319,19 @@ what spreads a team on an open map such as the training yard. The strategy
 names the objective, so the nuke is played for, not walked into because it
 is nearest. Slots go to bots by the Hungarian algorithm over archetype, role
 and kit fit, path distance and a bonus for the slot already held, so
-assignments stick. Tactics then take and hold the slot (ARM is for the plant
-slot, a bot beside an unwatched bomb or the last survivor). A bot at its
-slot stands and watches its angle rather than circling it. Once an enemy the
-bot saw itself is within 24 blocks it moves up from cover to cover, and
+assignments stick. Tactics then take and hold the slot (ARM targets an unlit
+bomb for the plant slot, a bot beside an unwatched bomb or the last survivor).
+Unfinished lane and flank assignments stay committed through distant sightings,
+cover stops and the gaps between movement bounds. Close contact, recent damage,
+survival and defusing can interrupt them; an established fight continues, and
+reaching the slot or becoming the last survivor releases the assignment.
+A bot at its slot watches its angle and makes room for nearby teammates.
+Once an enemy the bot saw itself is within 24 blocks it moves up from cover to cover, and
 within 12 pairs alternate mover and holder; it holds its slot from cover,
 claiming cover on the blackboard so teammates do not share it. At most two
 bots chase one enemy unless it is nearly dead; bows keep their kit's band
-(longbow and snipers 15 to 30 blocks) and shoot from the edge of cover; the
+(longbow and snipers 15 to 30 blocks), reach their assigned team position along
+its lane when that position fits the band, then shoot from the edge of cover; the
 Rewind kit uses its clock only when a model of rwf's Rewinder says it is
 ready and lands away from the threat. Every path a bot walks pays a per-bot
 penalty: seeded noise over patches of the map, a toll on teammates' current

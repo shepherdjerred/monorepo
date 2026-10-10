@@ -75,9 +75,17 @@ export type StartServerOptions = {
   mechanicsE2eJar?: string;
   mechanicsConfig?: string;
   fixturesJar?: string;
+  /** Audited saved-chunk coordinates for the disposable legacy map converter. */
+  mapSourceChunks?: string;
+  /** Explicit unaccepted ONNX export copied only into a disposable fixture server. */
+  learningModelDir?: string;
   companionsE2eJar?: string;
   /** Overrides for the staged rwf.yml when the suite plays Search and Destroy. */
   rwf?: RwfOverlay;
+  /** Disposable rwfbots.yml contents; production-owned configuration stays untouched. */
+  rwfbotsConfig?: string;
+  /** Preserve recordings after a graceful Paper shutdown, before removing its container. */
+  exportRecordingsDir?: string;
   survivalConfig?: string;
   /** Optional local world copy for terrain acceptance; copied into the disposable server. */
   worldDir?: string;
@@ -122,6 +130,45 @@ export type ServerResources = {
   memoryLimit: string;
 };
 
+async function stageLearningModel(
+  pluginsDir: string,
+  source: string | undefined,
+  fixturesJar: string | undefined,
+): Promise<void> {
+  if (source === undefined) return;
+  if (fixturesJar === undefined)
+    throw new Error("diagnostic learning model needs fixture jar");
+  const modelDir = path.join(
+    pluginsDir,
+    "TheStorm",
+    "rwfbots",
+    "learning",
+    "diagnostic",
+  );
+  await mkdir(modelDir, { recursive: true });
+  for (const file of ["manifest.json", "actor.onnx"]) {
+    await cp(path.join(source, file), path.join(modelDir, file));
+  }
+}
+
+async function stageMapSources(
+  pluginsDir: string,
+  options: Pick<
+    StartServerOptions,
+    "mapSourceChunks" | "fixturesJar" | "worldDir"
+  >,
+): Promise<void> {
+  if (options.mapSourceChunks === undefined) return;
+  if (options.fixturesJar === undefined || options.worldDir === undefined)
+    throw new Error(
+      "Map source chunks require fixtures and an explicit copied world",
+    );
+  await Bun.write(
+    path.join(pluginsDir, "TheStormFixtures", "source-chunks.json"),
+    Bun.file(options.mapSourceChunks),
+  );
+}
+
 /**
  * Builds this run's /plugins mount: the pinned third-party jars, the plugin
  * under test and its repository-owned config directory.
@@ -136,8 +183,11 @@ export async function stagePlugins(
     | "mechanicsE2eJar"
     | "mechanicsConfig"
     | "fixturesJar"
+    | "mapSourceChunks"
+    | "learningModelDir"
     | "companionsE2eJar"
     | "rwf"
+    | "rwfbotsConfig"
     | "survivalConfig"
     | "worldDir"
     | "exportWorldDir"
@@ -185,6 +235,12 @@ export async function stagePlugins(
       .join("\n");
     await Bun.write(parcels, (await Bun.file(parcels).text()) + entries);
   }
+  await stageMapSources(pluginsDir, options);
+  await stageLearningModel(
+    pluginsDir,
+    options.learningModelDir,
+    options.fixturesJar,
+  );
   if (options.companionsE2eJar !== undefined) {
     await stageCompanionsE2e(pluginsDir, options.companionsE2eJar);
   }
@@ -200,6 +256,12 @@ export async function stagePlugins(
   );
   if (options.rwf !== undefined) {
     await overlayRwf(path.join(pluginsDir, "TheStorm", "rwf.yml"), options.rwf);
+  }
+  if (options.rwfbotsConfig !== undefined) {
+    await Bun.write(
+      path.join(pluginsDir, "TheStorm", "rwfbots.yml"),
+      options.rwfbotsConfig,
+    );
   }
   if (
     options.mechanicsE2eJar !== undefined ||
@@ -360,14 +422,16 @@ export async function startServer(
     serverImage,
   ]);
   const id = containerId.trim();
+  let booted = false;
   const stop = async () => {
-    if (options.exportWorldDir !== undefined) {
-      await docker(["stop", "--time", "30", id]);
-      await mkdir(options.exportWorldDir, { recursive: true });
-      await docker(["cp", `${id}:/data/world/.`, options.exportWorldDir]);
+    try {
+      // Failed boots have no recording directory yet. Export only a booted
+      // server, and always remove our container even if an export fails.
+      if (booted) await exportStoppedServer(id, options);
+    } finally {
+      await docker(["rm", "-f", "-v", id]);
+      await rm(stagingDir, { recursive: true, force: true });
     }
-    await docker(["rm", "-f", "-v", id]);
-    await rm(stagingDir, { recursive: true, force: true });
   };
   try {
     if (options.worldDir !== undefined) {
@@ -382,6 +446,29 @@ export async function startServer(
       rconPassword,
       started + options.bootTimeoutMs,
     );
+    if (options.exportRecordingsDir !== undefined) {
+      const { stdout: owner } = await docker([
+        "exec",
+        id,
+        "stat",
+        "-c",
+        "%u:%g",
+        "/data/plugins/TheStorm",
+      ]);
+      const user = z
+        .string()
+        .regex(/^\d+:\d+$/u)
+        .parse(owner.trim());
+      await docker([
+        "exec",
+        "--user",
+        user,
+        id,
+        "mkdir",
+        "-p",
+        "/data/plugins/TheStorm/rwf-recordings",
+      ]);
+    }
     if (options.warmCache) {
       await docker([
         "cp",
@@ -393,6 +480,7 @@ export async function startServer(
       ...connection,
       bootMs: Date.now() - started,
     });
+    booted = true;
     return { info, stop };
   } catch (error) {
     const { stdout, stderr } = await docker(["logs", id]);
@@ -402,5 +490,28 @@ export async function startServer(
     );
     await stop();
     throw error;
+  }
+}
+
+async function exportStoppedServer(
+  id: string,
+  options: StartServerOptions,
+): Promise<void> {
+  if (
+    options.exportWorldDir !== undefined ||
+    options.exportRecordingsDir !== undefined
+  )
+    await docker(["stop", "--time", "30", id]);
+  if (options.exportRecordingsDir !== undefined) {
+    await mkdir(options.exportRecordingsDir, { recursive: true });
+    await docker([
+      "cp",
+      `${id}:/data/plugins/TheStorm/rwf-recordings/.`,
+      options.exportRecordingsDir,
+    ]);
+  }
+  if (options.exportWorldDir !== undefined) {
+    await mkdir(options.exportWorldDir, { recursive: true });
+    await docker(["cp", `${id}:/data/world/.`, options.exportWorldDir]);
   }
 }

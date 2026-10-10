@@ -1,36 +1,7 @@
-import { z } from "zod";
-import { request, StatusSchema, waitFor, type Session } from "./protocol.ts";
+import { request, waitFor, type Session } from "./protocol.ts";
 import { verifyInputCancellation } from "./verify-input.ts";
-
-export async function status(session: Session) {
-  return StatusSchema.parse(await request(session, "status"));
-}
-
-export async function viewpoint(session: Session, name: string): Promise<void> {
-  const view = z
-    .object({
-      position: z.tuple([z.number(), z.number(), z.number()]),
-      yaw: z.number(),
-      pitch: z.number(),
-    })
-    .parse(await request(session, "viewpoint", { name }));
-  await waitFor(
-    "viewpoint arrival",
-    () => status(session),
-    (state) =>
-      state.connected &&
-      state.position.every(
-        (n, i) => Math.abs(n - (view.position[i] ?? Infinity)) < 0.8,
-      ),
-  );
-  await request(session, "look", { yaw: view.yaw, pitch: view.pitch });
-  await waitFor(
-    "rendered viewpoint",
-    () => status(session),
-    (state) => state.connected && state.fps > 0,
-  );
-  await Bun.sleep(1500);
-}
+import { verifyRenderedVideo } from "./verify-video.ts";
+import { status, viewpoint } from "./viewpoint.ts";
 
 export async function tour(session: Session): Promise<void> {
   await request(session, "close");
@@ -132,5 +103,6 @@ export async function smoke(session: Session): Promise<void> {
   );
   await request(session, "release");
   await request(session, "capture", { name: "client-world" });
+  await verifyRenderedVideo(session);
   console.warn(`Real client smoke passed. Artifacts: ${session.artifacts}`);
 }

@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.rwf.adapter.content;
 
+import com.shepherdjerred.thestorm.rwf.adapter.content.details.MapDetails;
 import com.shepherdjerred.thestorm.rwf.domain.map.MapDefinition;
 
 /**
@@ -8,7 +9,11 @@ import com.shepherdjerred.thestorm.rwf.domain.map.MapDefinition;
  * @param definition the rules' view of the map
  * @param blocks its terrain
  */
-public record LoadedMap(MapDefinition definition, MapBlocks blocks) {
+public record LoadedMap(MapDefinition definition, MapBlocks blocks, MapDetails details) {
+
+  public LoadedMap(MapDefinition definition, MapBlocks blocks) {
+    this(definition, blocks, MapDetails.empty(definition.blocksSha256()));
+  }
 
   public LoadedMap {
     if (!definition.blocksSha256().equals(blocks.schematic().sha256())) {
@@ -36,6 +41,7 @@ public record LoadedMap(MapDefinition definition, MapBlocks blocks) {
                 + ", not TNT");
       }
     }
+    details.validate(blocks.schematic());
   }
 
   /** TNT as the server writes it: every property, even the default. */

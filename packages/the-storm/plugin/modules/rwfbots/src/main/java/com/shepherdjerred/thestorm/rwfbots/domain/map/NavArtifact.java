@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.map;
 
+import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -58,9 +59,41 @@ public record NavArtifact(
     }
   }
 
+  /** Replaces observed door occlusion while retaining the validated terrain and graph identity. */
+  public NavArtifact withGrid(VoxelGrid next) {
+    if (!grid.bounds().equals(next.bounds()))
+      throw new IllegalArgumentException("grid bounds changed");
+    return new NavArtifact(
+        formatVersion,
+        generatorVersion,
+        mapId,
+        blocksSha256,
+        sites,
+        next,
+        graph,
+        regions,
+        cover,
+        chokepoints,
+        routes,
+        distanceFields);
+  }
+
   /** The nav node a player uses to stand at or next to {@code site}. */
   public OptionalInt approachNode(NavSites.Site site) {
+    if (sites.bombs().contains(site)) {
+      var field = distanceFields.get(site.name());
+      return field == null ? OptionalInt.empty() : ApproachNodes.baked(graph, site.cell(), field);
+    }
     return graph.nearestNode(site.cell().feet());
+  }
+
+  /** The validated interaction position for the bomb at {@code cell}. */
+  public OptionalInt bombApproach(BlockPos cell) {
+    return sites.bombs().stream()
+        .filter(site -> site.cell().equals(cell))
+        .map(this::approachNode)
+        .findFirst()
+        .orElseGet(OptionalInt::empty);
   }
 
   /** The distance field towards {@code siteName}, which must exist. */

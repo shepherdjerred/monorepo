@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "contract": "rwf-inference-load-v1",
+  "results": ["idle", "waiting", "live", "ended", "stopped", "cancelled"],
+  "phases": ["LOBBY", "COUNTDOWN", "LIVE", "ENDED", "RESETTING"],
+  "required": [
+    "protocol",
+    "contract",
+    "ready",
+    "result",
+    "phase",
+    "match",
+    "seed",
+    "bots",
+    "ticks",
+    "ages",
+    "damageEvents",
+    "damage"
+  ],
+  "optional": ["inference"],
+  "tickFields": [
+    "serverTick",
+    "milliseconds",
+    "match",
+    "botTick",
+    "alive",
+    "observed",
+    "applied",
+    "unavailable",
+    "ineligible",
+    "live"
+  ],
+  "inferenceFields": [
+    "submitted",
+    "skipped",
+    "timely",
+    "stale",
+    "expired",
+    "contextDrops",
+    "deadlineMet",
+    "deadlineMissed",
+    "resets",
+    "rejected",
+    "hits",
+    "misses",
+    "maximumNanos",
+    "maximumBatch"
+  ]
+}

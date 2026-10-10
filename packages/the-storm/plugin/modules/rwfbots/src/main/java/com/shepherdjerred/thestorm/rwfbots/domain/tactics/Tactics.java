@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.rwfbots.domain.tactics;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.Lever;
 import com.shepherdjerred.thestorm.rwfbots.domain.record.DecisionTrace;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.Role;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.TeamNote;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Decision;
@@ -25,6 +26,9 @@ public final class Tactics {
 
   /** Added to the score of the option whose plan is in progress, so bots do not dither. */
   public static final double COMMIT_BONUS = 0.25;
+
+  /** An urgent alternative must be meaningfully better to interrupt a young valid plan. */
+  public static final double PREEMPT_MARGIN = 0.35;
 
   /** A plan younger than this is kept against anything but an urgent option, in ticks (1.5 s). */
   public static final long MIN_COMMIT_TICKS = 30;
@@ -75,7 +79,7 @@ public final class Tactics {
         Lever.DECISION_TEMPERATURE.clamp(
             context.levers().decisionTemperature() * context.bias().temperature());
     var pick = Softmax.select(candidates, temperature, random);
-    var choice = choose(pick.choice(), current, now);
+    var choice = choose(pick.choice(), current, situation, scores);
     if (state.lifeEpoch() == 0 && now - born < context.lateStartTicks()) {
       choice = Option.HOLD_ANGLE;
     }
@@ -112,12 +116,59 @@ public final class Tactics {
   }
 
   /** The softmax's pick, unless a young plan is under way and the pick is not urgent. */
-  private static Option choose(Option picked, Optional<Plan> current, long now) {
-    if (current.isEmpty() || current.orElseThrow().option() == picked || URGENT.contains(picked)) {
+  static Option choose(
+      Option picked, Optional<Plan> current, Situation situation, Map<Option, Double> scores) {
+    var now = situation.now();
+    if (current.map(plan -> plan.option() == Option.TAKE_SLOT).orElse(true)
+        && keepsLane(picked, situation)) {
+      return Option.TAKE_SLOT;
+    }
+    if (current.isEmpty() || current.orElseThrow().option() == picked) {
       return picked;
     }
     var plan = current.orElseThrow();
+    var combatSwitch = combatOption(picked) && combatOption(plan.option());
+    if (URGENT.contains(picked) && !combatSwitch) {
+      return picked;
+    }
+    if (URGENT.contains(picked)
+        && scores.getOrDefault(picked, Utilities.FLOOR)
+            > scores.getOrDefault(plan.option(), Utilities.FLOOR) + PREEMPT_MARGIN) {
+      return picked;
+    }
     return now - plan.startedTick() < MIN_COMMIT_TICKS ? plan.option() : picked;
+  }
+
+  /** An unfinished lane or flank survives distant sightings, including gaps between bounds. */
+  private static boolean keepsLane(Option picked, Situation situation) {
+    var detour =
+        picked == Option.HUNT
+            || picked == Option.ENGAGE
+            || picked == Option.ARM
+            || picked == Option.HELP_ARM;
+    var hurt =
+        situation.self().lastHurtTick() >= 0
+            && situation.now() - situation.self().lastHurtTick() <= 20;
+    var close =
+        situation
+            .nearestEnemy()
+            .filter(enemy -> enemy.pos().distance(situation.self().pos()) <= Planner.CLOSE_FIGHT)
+            .isPresent();
+    return detour
+        && !hurt
+        && !close
+        && !situation.isLastAlive()
+        && situation.role() == Role.ROTATE
+        && situation
+            .slot()
+            .filter(
+                slot ->
+                    slot.pos().horizontalDistance(situation.self().pos()) > Features.SLOT_RADIUS)
+            .isPresent();
+  }
+
+  private static boolean combatOption(Option option) {
+    return option == Option.ENGAGE || option == Option.RETREAT || option == Option.HEAL;
   }
 
   /**
@@ -167,7 +218,31 @@ public final class Tactics {
   }
 
   private static boolean alive(Plan plan, Situation situation) {
-    return !plan.done() && situation.now() - plan.startedTick() < PLAN_TTL_TICKS;
+    if (plan.done() || situation.now() - plan.startedTick() >= PLAN_TTL_TICKS) {
+      return false;
+    }
+    var arm =
+        plan.current() instanceof PlanStep.Arm current
+            ? Optional.of(current)
+            : plan.upcoming(PlanStep.Arm.class);
+    if (arm.isPresent()
+        && situation
+            .snapshot()
+            .bomb(arm.orElseThrow().bomb())
+            .filter(bomb -> bomb.armableBy(situation.self().team()) && !bomb.state().isLit())
+            .isEmpty()) {
+      return false;
+    }
+    var defuse =
+        plan.current() instanceof PlanStep.Defuse current
+            ? Optional.of(current)
+            : plan.upcoming(PlanStep.Defuse.class);
+    return defuse.isEmpty()
+        || situation
+            .snapshot()
+            .bomb(defuse.orElseThrow().bomb())
+            .filter(bomb -> bomb.state().isLit())
+            .isPresent();
   }
 
   private static Map<Option, Double> aboveFloor(EnumMap<Option, Double> scores) {
