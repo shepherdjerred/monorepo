@@ -93,3 +93,43 @@ test("rejects stale terrain bindings, invented source positions, repeated teams 
     }),
   ).toThrow("outside");
 });
+
+test.each(["source", "authored"] as const)(
+  "%s duel staging uses exactly the declared starts, preserving original spawn metadata",
+  (spawnPolicy) => {
+    const map = fourTeamMap();
+    const red = map.teams.find((team) => team.color === "RED");
+    if (red === undefined) throw new Error("Missing test team");
+    const alternate = { x: 1055.5, y: 35, z: 2060.5, yaw: 270, pitch: 0 };
+    red.spawns.push(alternate);
+    const original = JSON.stringify(map);
+    const scenario = sourceScenario(map);
+    const first = scenario.spawns[0];
+    if (first === undefined) throw new Error("Missing test scenario start");
+    const selected = MapScenario.parse({
+      ...scenario,
+      spawnPolicy,
+      spawns: [
+        {
+          ...first,
+          position: [
+            alternate.x + (spawnPolicy === "authored" ? 1 : 0),
+            alternate.y,
+            alternate.z,
+          ],
+          yaw: spawnPolicy === "authored" ? -90 : alternate.yaw,
+          pitch: alternate.pitch,
+        },
+        scenario.spawns[1],
+      ],
+    });
+    const duel = controlledMap(map, selected);
+    expect(duel.teams.map((team) => team.spawns)).toEqual([
+      [{ ...alternate, x: selected.spawns[0]?.position[0] }],
+      map.teams.find((team) => team.color === "BLUE")?.spawns,
+    ]);
+    expect(duel.region).toEqual(map.region);
+    expect(duel.blocksSha256).toBe(map.blocksSha256);
+    expect(JSON.stringify(map)).toBe(original);
+  },
+);

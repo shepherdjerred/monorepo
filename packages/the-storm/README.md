@@ -1253,8 +1253,9 @@ command keeps the full team setup for other-kit or team recordings. The server's
 owned configuration stays unchanged. Add `--rwf-map <id>` to select a map
 installed in owned content. Its `scenario.json` must match the neutral
 `rwf-map-scenarios.json` registry and bind the schematic hash, full region and
-actual source-team spawns. A disposable duel remaps two selected teams to
-Red/Blue and rebakes their bomb goal fields while retaining the full terrain;
+source-team mapping and starts. A disposable duel gives Red/Blue exactly the
+two declared scenario positions and facings, including authored starts, and
+rebakes their bomb goal fields while retaining the full terrain;
 ordinary preview retains the map's original team count. Stop with the printed session path:
 
 ```bash
