@@ -73,7 +73,7 @@ final class AnalyticsDeliveryTest {
     var player = UUID.randomUUID();
     book.joined(player, "Player");
     time.advance(60);
-    book.checkpoint();
+    book.interaction(player, ProductAnalytics.Action.SPELL_CAST);
     try (var database = StormDatabase.open(file)) {
       database.migrate("core", getClass().getClassLoader());
       var store = new AnalyticsStore(database, "beta");
@@ -88,7 +88,7 @@ final class AnalyticsDeliveryTest {
       store.recover().get(5, TimeUnit.SECONDS);
       store.recover().get(5, TimeUnit.SECONDS);
       var pending = store.pending().get(5, TimeUnit.SECONDS);
-      assertThat(pending).hasSize(4); // start, two midnight-split intervals, one recovered end
+      assertThat(pending).hasSize(5); // start, two midnight intervals, interaction, recovered end
       var json = JsonMapper.builder().build();
       var ends =
           pending.stream()

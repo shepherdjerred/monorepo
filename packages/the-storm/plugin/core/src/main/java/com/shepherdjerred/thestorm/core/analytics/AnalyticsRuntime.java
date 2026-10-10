@@ -39,9 +39,7 @@ public final class AnalyticsRuntime implements ProductAnalytics, AutoCloseable {
             done -> {
               if (stopped) return;
               exporter = new AnalyticsExporter(store, new PostHogTransport(bootstrap));
-              book =
-                  new SessionBook(
-                      time, UUID::randomUUID, write -> observe(store.save(write), "persist"));
+              book = new SessionBook(time, UUID::randomUUID, write -> persist(store, write));
               flush();
               logger.info("Product analytics enabled for {}", bootstrap.stage());
             },
@@ -60,20 +58,17 @@ public final class AnalyticsRuntime implements ProductAnalytics, AutoCloseable {
   public void left(UUID player) {
     var current = book;
     if (current != null) current.left(player, "disconnect");
-    flush();
     modes.remove(player);
     away.remove(player);
-  }
-
-  public void heartbeat() {
-    var current = book;
-    if (current != null) current.checkpoint();
-    flush();
   }
 
   private void flush() {
     var current = exporter;
     if (current != null) observe(current.flush(), "deliver; queued events will retry");
+  }
+
+  private void persist(AnalyticsStore store, AnalyticsWrite write) {
+    observe(store.save(write).thenRun(this::flush), "persist");
   }
 
   @Override

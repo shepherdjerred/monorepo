@@ -79,14 +79,6 @@ final class SessionBook implements ProductAnalytics {
     persist.accept(new AnalyticsWrite(session.snapshot(true), events));
   }
 
-  synchronized void checkpoint() {
-    var now = now();
-    for (var session : sessions.values()) {
-      var events = advance(session, now);
-      persist.accept(new AnalyticsWrite(session.snapshot(false), events));
-    }
-  }
-
   synchronized void stop() {
     for (var player : List.copyOf(sessions.keySet())) left(player, "shutdown");
   }
@@ -95,13 +87,13 @@ final class SessionBook implements ProductAnalytics {
   public synchronized void interaction(UUID player, Action action) {
     var session = sessions.get(player);
     if (session == null) return;
+    var at = now();
+    var events = advance(session, at);
     var properties =
         Map.<String, Object>of(
             "feature", action.feature(), "action", action.action(), "mode", modeName(session.mode));
-    persist.accept(
-        new AnalyticsWrite(
-            session.snapshot(false),
-            List.of(event("storm_feature_interacted", now(), properties))));
+    events.add(event("storm_feature_interacted", at, properties));
+    persist.accept(new AnalyticsWrite(session.snapshot(false), events));
   }
 
   @Override

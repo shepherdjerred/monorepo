@@ -7,6 +7,8 @@ import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.players.Humans;
 import com.shepherdjerred.thestorm.core.schedule.Cancellable;
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import org.bukkit.event.EventHandler;
@@ -20,18 +22,13 @@ import org.bukkit.event.player.PlayerQuitEvent;
 final class AnalyticsPaper implements Listener, AutoCloseable {
   private final ModuleContext context;
   private final AnalyticsRuntime analytics;
-  private final Cancellable heartbeat;
+  private final Map<UUID, Cancellable> pendingClosures = new HashMap<>();
   private boolean stopped;
 
   AnalyticsPaper(ModuleContext context, AnalyticsRuntime analytics) {
     this.context = context;
     this.analytics = analytics;
     context.plugin().getServer().getPluginManager().registerEvents(this, context.plugin());
-    heartbeat =
-        context
-            .scheduler()
-            .repeatOnMainThread(
-                Duration.ofSeconds(60), Duration.ofSeconds(60), analytics::heartbeat);
   }
 
   void start(ManagedGameplay rollout) {
@@ -67,18 +64,36 @@ final class AnalyticsPaper implements Listener, AutoCloseable {
   @EventHandler(priority = EventPriority.MONITOR)
   void joined(PlayerJoinEvent event) {
     var player = event.getPlayer();
-    if (Humans.isHuman(player)) analytics.joined(player.getUniqueId(), player.getName());
+    if (!Humans.isHuman(player)) return;
+    var id = player.getUniqueId();
+    var pending = pendingClosures.remove(id);
+    if (pending != null) pending.cancel();
+    analytics.joined(id, player.getName());
   }
 
   @EventHandler(priority = EventPriority.MONITOR)
   void left(PlayerQuitEvent event) {
-    if (Humans.isHuman(event.getPlayer())) analytics.left(event.getPlayer().getUniqueId());
+    if (!Humans.isHuman(event.getPlayer())) return;
+    var id = event.getPlayer().getUniqueId();
+    var previous = pendingClosures.remove(id);
+    if (previous != null) previous.cancel();
+    var pending =
+        context
+            .scheduler()
+            .runOnMainThreadLater(
+                Duration.ofMillis(50),
+                () -> {
+                  pendingClosures.remove(id);
+                  if (!stopped) analytics.left(id);
+                });
+    pendingClosures.put(id, pending);
   }
 
   @Override
   public void close() {
     stopped = true;
-    heartbeat.cancel();
+    pendingClosures.values().forEach(Cancellable::cancel);
+    pendingClosures.clear();
     HandlerList.unregisterAll(this);
     analytics.close();
   }

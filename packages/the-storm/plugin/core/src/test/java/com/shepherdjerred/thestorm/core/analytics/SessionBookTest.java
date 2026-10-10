@@ -31,7 +31,6 @@ final class SessionBookTest {
     book.joined(player, "Player");
     book.joined(player, "Player");
     time.advance(45);
-    book.checkpoint();
     book.afk(player, true);
     time.advance(15);
     book.mode(player, ProductAnalytics.Mode.ARENA);
@@ -41,7 +40,6 @@ final class SessionBookTest {
     book.interaction(player, ProductAnalytics.Action.SHOP_BOUGHT);
     book.left(player, "disconnect");
     book.left(player, "disconnect");
-    book.checkpoint();
 
     var events = writes.stream().flatMap(write -> write.events().stream()).toList();
     assertThat(events.stream().filter(event -> event.event().equals("storm_session_started")))
@@ -107,9 +105,10 @@ final class SessionBookTest {
     time.now = Instant.parse("2026-11-01T07:00:00Z");
     var writes = new ArrayList<AnalyticsWrite>();
     var book = new SessionBook(time, UUID::randomUUID, writes::add);
-    book.joined(UUID.randomUUID(), "Player");
+    var player = UUID.randomUUID();
+    book.joined(player, "Player");
     time.advance(25 * 3600L + 60);
-    book.checkpoint();
+    book.mode(player, ProductAnalytics.Mode.ARENA);
     var intervals = writes.getLast().events();
     assertThat(intervals).hasSize(2);
     assertThat(intervals.getFirst().properties()).containsEntry("connected_ms", 90000000L);

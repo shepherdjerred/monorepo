@@ -1450,9 +1450,11 @@ Collection is boot-scoped behind the default-off managed flag
 Bootstrap uses `POSTHOG_API_HOST`, `POSTHOG_PROJECT_TOKEN` and
 `FLIPT_ENVIRONMENT`, supplied from the analytics registry by homelab CDK8s.
 Missing or invalid bootstrap and failed flag evaluation leave collection off.
-SQLite owns session checkpoints and the outgoing event queue. Delivery uses
-asynchronous HTTP; network failure cannot block gameplay, and shutdown leaves
-unsent events durable for the next enabled boot.
+SQLite owns event-driven session checkpoints and the outgoing event queue.
+Gameplay transitions and interactions advance playtime and trigger delivery;
+disconnect closure runs after gameplay quit handlers. Delivery uses asynchronous
+HTTP; network failure cannot block gameplay, and shutdown leaves unsent events
+durable for the next enabled boot.
 
 The private dashboard is declared in
 `packages/homelab/src/tofu/posthog/storm-product-metrics.tf`. Interval events
