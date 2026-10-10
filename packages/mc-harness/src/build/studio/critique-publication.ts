@@ -3,38 +3,24 @@ import { copyFile, lstat, mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
-import { z } from "zod";
 import {
   BUILD_FILES,
   JudgeCritiqueRecordSchema,
   type RenderSidecar,
   type JudgeRubric,
+  type JudgeRecord,
 } from "#protocol/build.ts";
 import { BuildWorkspace } from "#build/workspace.ts";
 import { writeJudgeRecord } from "#build/judge.ts";
-import { writeSidecar } from "#build/sidecar.ts";
 import { publishFiles } from "#build/file-transaction.ts";
-import {
-  stagedFiles,
-  stageJournal,
-} from "#build/storage/evidence-publication.ts";
+import { stageJournal } from "#build/storage/evidence-publication.ts";
 import { readCritiqueRecord } from "./critique-record.ts";
+import {
+  PreparedCritique,
+  prepareCritiqueBundle,
+} from "./critique-preparation.ts";
 
-const artifact = z
-  .string()
-  .refine(
-    (file) =>
-      !path.isAbsolute(file) &&
-      path.normalize(file) === file &&
-      (file.startsWith("judge/") || file.startsWith("renders/")),
-  );
-
-const Prepared = z.strictObject({
-  record: artifact,
-  verdict: JudgeCritiqueRecordSchema,
-  files: z.record(artifact, z.string().regex(/^[a-f0-9]{64}$/u)),
-});
-type Verdict = z.infer<typeof JudgeCritiqueRecordSchema>;
+type Verdict = Extract<JudgeRecord, { kind: "critique" }>;
 
 export function critiqueRequestKey(input: Record<string, unknown>): string {
   return createHash("sha256").update(JSON.stringify(input)).digest("hex");
@@ -65,7 +51,10 @@ export async function publishCritique(
   const dir = workspace.file(`.critique-${input.key}`);
   const pending = new BuildWorkspace(dir);
   const marker = pending.file("prepared.json");
-  if (!(await present(dir))) {
+  if (await present(dir)) {
+    await buildArtifactPath(workspace, path.relative(workspace.dir, dir));
+    if (!(await present(marker))) await prepareCritiqueBundle(pending, input);
+  } else {
     await mkdir(dir);
     let verdict: Verdict;
     try {
@@ -76,29 +65,10 @@ export async function publishCritique(
     }
     const recordFile = await writeJudgeRecord(dir, verdict);
     const record = path.relative(dir, recordFile);
-    if (input.visual)
-      await writeSidecar(pending, {
-        ...input.sidecar,
-        scores: {
-          rubric: verdict.rubric,
-          total: verdict.total,
-          max: verdict.max,
-          axes: verdict.axes,
-          overallAesthetic: verdict.overallAesthetic,
-        },
-      });
-    const files: Record<string, string> = {};
-    for (const file of await stagedFiles(dir))
-      files[file] = createHash("sha256")
-        .update(await Bun.file(pending.file(file)).bytes())
-        .digest("hex");
-    await Bun.write(
-      marker,
-      `${JSON.stringify(Prepared.parse({ record, verdict, files }))}\n`,
-    );
+    await prepareCritiqueBundle(pending, input, record);
   }
   // An incomplete or damaged bundle fails loudly rather than paying again.
-  const prepared = Prepared.parse(
+  const prepared = PreparedCritique.parse(
     await Bun.file(
       await buildArtifactPath(workspace, path.relative(workspace.dir, marker)),
     ).json(),

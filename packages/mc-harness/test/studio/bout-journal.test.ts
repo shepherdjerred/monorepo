@@ -3,12 +3,19 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, expect, it, vi } from "vitest";
 import type * as FileTransaction from "#build/file-transaction.ts";
+import { renderBuild } from "#build/commands.ts";
+import { DaemonClient } from "#build/daemon-client.ts";
+import { Journal } from "#build/journal.ts";
+import { readSidecar } from "#build/sidecar.ts";
+import { rubricAxisIds } from "#build/judge.ts";
+import { critiqueBuild } from "#build/studio/critique.ts";
+import { critiquedIterations } from "#evals/grade/trajectory.ts";
 import { appendLog, readLog } from "#build/build-log.ts";
 import {
   publishBoutState,
   type OutcomeInput,
 } from "#build/studio/bout-publication.ts";
-import { flatSiteBuild } from "#test/fixtures/flat-site.ts";
+import { flatSiteBuild, clearFloorOp } from "#test/fixtures/flat-site.ts";
 
 const beforeLock = vi.hoisted(() => {
   const state: { action: (() => Promise<void>) | null } = { action: null };
@@ -25,6 +32,10 @@ vi.mock("#build/file-transaction.ts", async (importOriginal) => {
       return original.publishFiles(...args);
     },
   };
+});
+vi.mock("@shepherdjerred/mc-build/render/assets.ts", async () => {
+  const { renderAssets } = await import("#test/fixtures/render-assets.ts");
+  return { ensureAssets: renderAssets };
 });
 const root = await mkdtemp(path.join(tmpdir(), "mc-bout-journal-"));
 afterAll(async () => rm(root, { recursive: true }));
@@ -58,4 +69,44 @@ it("retains an intervening render and stamps the bout from the locked journal", 
   const journal = await readLog(workspace.dir);
   await publishBoutState(workspace, { manifest, outcomes: [outcome] });
   expect(await readLog(workspace.dir)).toEqual(journal);
+});
+
+it("reads the grid and provenance after an intervening render and grades both iterations", async () => {
+  const workspace = await flatSiteBuild(path.join(root, "render"), "render");
+  await workspace.writeOplog({ version: 1, ops: [clearFloorOp(1)] });
+  const env = {
+    client: new DaemonClient(),
+    journal: new Journal(workspace.file("audit")),
+    log: vi.fn(),
+  };
+  beforeLock.action = async () => {
+    await renderBuild(env, workspace.dir, { source: "compiled", name: "one" });
+    await workspace.writeOplog({ version: 1, ops: [clearFloorOp(2)] });
+  };
+  await renderBuild(env, workspace.dir, { source: "compiled", name: "two" });
+  const one = await readSidecar(workspace, "one");
+  const two = await readSidecar(workspace, "two");
+  expect([one.iteration, two.iteration]).toEqual([1, 2]);
+  expect(one.gridHash).not.toBe(two.gridHash);
+  for (const render of ["one", "two"])
+    await critiqueBuild(workspace.dir, {
+      render,
+      rubric: "micro",
+      model: "stub",
+      stage: "visual",
+      byEye: {
+        axes: Object.fromEntries(
+          rubricAxisIds("micro").map((axis) => [axis, 3]),
+        ),
+        overallAesthetic: 3,
+        notes: [],
+      },
+    });
+  const journal = await readLog(workspace.dir);
+  expect(
+    journal
+      .filter((entry) => entry.kind === "render")
+      .map((entry) => entry.iteration),
+  ).toEqual([1, 2]);
+  expect(critiquedIterations(journal, "micro")).toBe(2);
 });

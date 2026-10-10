@@ -1,8 +1,9 @@
-import { cp, mkdtemp, readdir, rm } from "node:fs/promises";
+import { cp, mkdtemp, readdir, rm, symlink } from "node:fs/promises";
 import type * as FileSystem from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
 import { afterAll, describe, expect, it, vi } from "vitest";
+import { z } from "zod";
 import { flatSiteBuild, clearFloorOp } from "#test/fixtures/flat-site.ts";
 import { renderBuild, captureSite } from "#build/commands.ts";
 import { promoteBuild } from "#build/apply.ts";
@@ -17,9 +18,13 @@ import { writeProgramFixture } from "#test/fixtures/program-evidence.ts";
 import { rubricAxisIds } from "#build/judge.ts";
 import { DaemonClient } from "#build/daemon-client.ts";
 import { Journal } from "#build/journal.ts";
-import { BUILD_FILES } from "#protocol/build.ts";
+import { BUILD_FILES, JudgeCritiqueRecordSchema } from "#protocol/build.ts";
 
-const failure = vi.hoisted(() => ({ kind: "", install: "" }));
+const failure = vi.hoisted(() => ({
+  kind: "",
+  install: "",
+  preparation: false,
+}));
 vi.mock("node:fs/promises", async (importOriginal) => {
   const original = await importOriginal<typeof FileSystem>();
   return {
@@ -37,6 +42,10 @@ vi.mock("node:fs/promises", async (importOriginal) => {
     },
     rename: async (...args: Parameters<typeof original.rename>) => {
       const from = String(args[0]);
+      if (failure.preparation && from.endsWith("/.prepared.pending")) {
+        failure.preparation = false;
+        throw new Error("simulated preparation marker failure");
+      }
       if (
         failure.install !== "" &&
         (from.includes(".capture-") ||
@@ -259,6 +268,115 @@ describe("render evidence publication", () => {
       expect(await evidence(workspace.dir)).not.toEqual(before);
     },
   );
+});
+
+describe("markerless critique preparation", () => {
+  it.each([
+    "valid",
+    "record",
+    "sheet",
+    "grid",
+    "missing-record",
+    "ambiguous",
+    "escape",
+  ])("recovers only complete markerless critique bundles: %s", async (mode) => {
+    const { workspace, env } = await fixture(`markerless-${mode}`);
+    await renderBuild(env, workspace.dir, {
+      name: "inspect",
+      source: "compiled",
+    });
+    const ask = vi.fn(() =>
+      Promise.resolve({
+        axes: Object.fromEntries(
+          rubricAxisIds("micro").map((axis) => [axis, 4]),
+        ),
+        overallAesthetic: 4,
+        notes: [],
+      }),
+    );
+    const askCode = vi.fn(() =>
+      Promise.resolve({
+        suggestions: [{ axis: "mass", change: "add a window", where: "wall" }],
+      }),
+    );
+    const options = {
+      render: "inspect",
+      rubric: "micro" as const,
+      model: "stub",
+      stage: "both" as const,
+      ask,
+      askCode,
+    };
+    failure.preparation = true;
+    await expect(critiqueBuild(workspace.dir, options)).rejects.toThrow(
+      /preparation marker failure/u,
+    );
+    const names = await readdir(workspace.dir);
+    const bundle = names.find((name) =>
+      /^\.critique-[a-f0-9]{64}$/u.test(name),
+    );
+    if (bundle === undefined) throw new Error("missing critique bundle");
+    const dir = workspace.file(bundle);
+    const pending = await Bun.file(path.join(dir, ".prepared.pending")).json();
+    const manifest = z
+      .object({ record: z.string(), verdict: JudgeCritiqueRecordSchema })
+      .parse(pending);
+    await rm(path.join(dir, "renders/inspect.json"));
+    await Bun.write(
+      path.join(dir, ".prepared.pending"),
+      "interrupted metadata",
+    );
+    switch (mode) {
+      case "record":
+        await Bun.write(
+          path.join(dir, manifest.record),
+          JSON.stringify({ ...manifest.verdict, model: "changed" }),
+        );
+        break;
+      case "sheet":
+        await Bun.write(
+          path.join(dir, manifest.verdict.sheet),
+          "damaged sheet",
+        );
+        break;
+      case "grid":
+        await Bun.write(path.join(dir, manifest.verdict.grid), "damaged grid");
+        break;
+      case "missing-record":
+        await rm(path.join(dir, manifest.record));
+        break;
+      case "ambiguous":
+        await cp(
+          path.join(dir, manifest.record),
+          path.join(dir, "judge/extra.json"),
+        );
+        break;
+      case "escape": {
+        const outside = path.join(root, "outside-preparation");
+        await cp(dir, outside, { recursive: true });
+        await rm(dir, { recursive: true });
+        await symlink(outside, dir, "dir");
+        break;
+      }
+    }
+    if (mode === "valid") {
+      const result = await critiqueBuild(workspace.dir, options);
+      expect(result.scores.total).toBe(32);
+      expect(result.reviewedProgram).toBe(true);
+    } else {
+      await expect(critiqueBuild(workspace.dir, options)).rejects.toThrow();
+    }
+    const journal = await readLog(workspace.dir);
+    expect(journal.filter((entry) => entry.kind === "critique")).toHaveLength(
+      mode === "valid" ? 1 : 0,
+    );
+    if (mode === "escape")
+      expect(
+        await Bun.file(path.join(dir, "renders/inspect.json")).exists(),
+      ).toBe(false);
+    expect(ask).toHaveBeenCalledTimes(1);
+    expect(askCode).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe("critique evidence publication", () => {

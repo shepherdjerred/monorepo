@@ -249,7 +249,9 @@ survey`, `--grid n` coordinate lines, `--floor y` and `--section z` cuts
   `renders/<name>.json` (source, files, grid hash, the world box it covers,
   lint summary, critique scores once scored). The render's files and journal
   entry are staged together; failed publication
-  restores the preceding evidence even when reusing a render name. When one program produced the
+  restores the preceding evidence even when reusing a render name. Render inputs,
+  program provenance and iteration stamping are read under the same publication
+  lock, keeping sidecars and journal iterations consistent. When one program produced the
   render, its snapshot is kept too as `renders/<name>.build.ts` (the copy
   `compile` keeps beside its schematic): for `--source compiled` every op in
   the log must come from that one compile, for `expected` it is the program
@@ -314,7 +316,10 @@ survey`, `--grid n` coordinate lines, `--floor y` and `--section z` cuts
   `judge/critique-<ts>-<hash>.{png,json}`, logged, and copied into the render's
   sidecar through a transaction. Completed critiques remain in a validated
   pending bundle until publication succeeds; retrying the same request reuses
-  both visual and code results. Corrupt pending evidence fails before model calls.
+  both visual and code results. If preparation metadata is missing, retry validates
+  the content-addressed verdict, sheet, grid and rubric before rebuilding it.
+  Preparation markers publish by atomic rename. Incomplete, ambiguous or corrupt
+  pending evidence fails before model calls.
   Without a model credential, `--scores "axis=n,…,aesthetic=n"
 [--note "…"]` records scores given by eye under the model name `by-eye`
   (visual stage only), so the journal still shows the critique.

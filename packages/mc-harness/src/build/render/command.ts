@@ -47,64 +47,69 @@ export async function renderBuildCommand(
   skipped: string[];
 }> {
   const workspace = new BuildWorkspace(dir);
-  const manifest = await workspace.manifest();
-  const site = workspace.siteBox(manifest);
-  const source: RenderSource =
-    options.source ?? (options.expected === true ? "expected" : "canvas");
-  const box =
-    options.region === undefined ? site : regionInSite(site, options.region);
-  const { grid: whole, skipped } = await gridFor(env, workspace, manifest, {
-    source,
-    box: site,
-    ...(options.target === undefined ? {} : { target: options.target }),
-  });
-  const grid = cropToBox(whole, site, box);
-  if (skipped.length > 0) {
-    throw new Error(
-      `cannot render incomplete compiled evidence: ${skipped.join("; ")}; run the build and render --source expected or --source canvas`,
-    );
-  }
-  const name = checkName(
-    "render",
-    options.name ?? `render-${Date.now().toString(36)}`,
-  );
-  const look: LookOptions = localCuts(
-    { ...options.look },
-    manifest.anchor,
-    box.min,
-  );
-  const covered = { min: box.min, max: box.max };
-  if (options.compare !== undefined) {
-    const earlier = await alignedComparison(
-      workspace,
-      options.compare,
-      covered,
-    );
-    look.compareWith = earlier.grid;
-    look.compareContext = earlier.context;
-  }
-  look.source = source;
-  if (options.target !== undefined) look.target = options.target;
-  look.box = covered;
-  if (options.region !== undefined) {
-    look.regionContext = {
-      grid: whole,
-      origin: {
-        x: box.min.x - site.min.x,
-        y: box.min.y - site.min.y,
-        z: box.min.z - site.min.z,
-      },
-    };
-  }
-  const provenance = await readRenderProvenance(
-    workspace,
-    source,
-    options.target,
-  );
   let files: Record<string, string> = {};
+  let skipped: string[] = [];
   await publishFiles(workspace, {
     prefix: ".render-",
     stage: async (staged) => {
+      const manifest = await workspace.manifest();
+      const site = workspace.siteBox(manifest);
+      const source: RenderSource =
+        options.source ?? (options.expected === true ? "expected" : "canvas");
+      const box =
+        options.region === undefined
+          ? site
+          : regionInSite(site, options.region);
+      const resolved = await gridFor(env, workspace, manifest, {
+        source,
+        box: site,
+        ...(options.target === undefined ? {} : { target: options.target }),
+      });
+      const { grid: whole } = resolved;
+      skipped = resolved.skipped;
+      const grid = cropToBox(whole, site, box);
+      if (skipped.length > 0) {
+        throw new Error(
+          `cannot render incomplete compiled evidence: ${skipped.join("; ")}; run the build and render --source expected or --source canvas`,
+        );
+      }
+      const name = checkName(
+        "render",
+        options.name ?? `render-${Date.now().toString(36)}`,
+      );
+      const look: LookOptions = localCuts(
+        { ...options.look },
+        manifest.anchor,
+        box.min,
+      );
+      const covered = { min: box.min, max: box.max };
+      if (options.compare !== undefined) {
+        const earlier = await alignedComparison(
+          workspace,
+          options.compare,
+          covered,
+        );
+        look.compareWith = earlier.grid;
+        look.compareContext = earlier.context;
+      }
+      look.source = source;
+      if (options.target !== undefined) look.target = options.target;
+      look.box = covered;
+      if (options.region !== undefined) {
+        look.regionContext = {
+          grid: whole,
+          origin: {
+            x: box.min.x - site.min.x,
+            y: box.min.y - site.min.y,
+            z: box.min.z - site.min.z,
+          },
+        };
+      }
+      const provenance = await readRenderProvenance(
+        workspace,
+        source,
+        options.target,
+      );
       const pending = new BuildWorkspace(staged);
       let generated: Record<string, string>;
       if (isPlainLook(look) && options.region === undefined) {
