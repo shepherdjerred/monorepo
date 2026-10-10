@@ -170,7 +170,32 @@ function dependencies(
   };
 }
 
+const DATASET_FAILURE_STUB: AgentStub = async (params) => {
+  await params.captureToolPayload?.({
+    toolCallId: "dataset:games",
+    toolName: "dataset",
+    direction: "dataset",
+    value: [{ wins: 12 }],
+  });
+  throw new Error("final output failed");
+};
+
 describe("runReplayCase", () => {
+  test("retains complete dataset evidence locally even when the turn fails", async () => {
+    const observation = await runReplayCase(
+      caseInput(),
+      dependencies({ executeAgent: DATASET_FAILURE_STUB }),
+    );
+    expect(observation.status).toBe("error");
+    expect(observation.payloads).toEqual([
+      {
+        toolCallId: "dataset:games",
+        toolName: "dataset",
+        direction: "dataset",
+        value: [{ wins: 12 }],
+      },
+    ]);
+  });
   test("returns the agent's answer and the resolved capabilities", async () => {
     const observation = await runReplayCase(caseInput(), dependencies());
     expect(observation.status).toBe("ok");

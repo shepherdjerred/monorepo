@@ -24,7 +24,10 @@ export const EXPLORE_QUESTION_MAX_LENGTH = 2000;
 export const EXPLORE_MAX_STEPS = 30;
 export const EXPLORE_MAX_TOOL_CALLS = 60;
 export const EXPLORE_MAX_PREVIEW_CALLS = 20;
-export const EXPLORE_MAX_OUTPUT_TOKENS = 4000;
+// The provider counts hidden reasoning against this allowance too. At high
+// reasoning, GPT-6 Luna can consume 4,000 tokens before emitting an answer.
+// Each call still reserves against the per-question and monthly spend policies.
+export const EXPLORE_MAX_OUTPUT_TOKENS = 8000;
 export const EXPLORE_TIMEOUT_MS = 180_000;
 /**
  * How many prior turns are replayed to the model. The transcript is stored in

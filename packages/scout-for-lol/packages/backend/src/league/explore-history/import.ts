@@ -51,7 +51,7 @@ async function fetchKnownMatchIds(
   });
 }
 
-async function fetchRankedMatchIds(
+async function fetchMatchIds(
   input: ScoutExploreHistoryInput,
 ): Promise<RiotMatchId[]> {
   const puuid = LeaguePuuidSchema.parse(input.puuid);
@@ -66,14 +66,14 @@ async function fetchRankedMatchIds(
       riotClient.match.list(
         puuid,
         platformToRegionalRoute(input.region),
-        { count: input.requestedMatches, type: "ranked" },
+        { count: input.requestedMatches, type: input.matchType ?? "ranked" },
         { maxRetries: 0 },
       ),
   );
 }
 
 /**
- * Fetch and permanently ingest the newest ranked games for one account.
+ * Fetch and permanently ingest the newest requested games for one account.
  *
  * The shared Riot client owns rate limiting. This extra five-worker bound
  * prevents one Explore question from consuming every available in-process
@@ -83,7 +83,7 @@ export async function importExploreRankedHistory(
   rawInput: ScoutExploreHistoryInput,
 ): Promise<ScoutExploreHistoryResult> {
   const input = ScoutExploreHistoryInputSchema.parse(rawInput);
-  const matchIds = await fetchRankedMatchIds(input);
+  const matchIds = await fetchMatchIds(input);
   const knownMatchIds = await fetchKnownMatchIds(matchIds);
   const missingMatchIds = matchIds.filter(
     (matchId) => !knownMatchIds.has(matchId),

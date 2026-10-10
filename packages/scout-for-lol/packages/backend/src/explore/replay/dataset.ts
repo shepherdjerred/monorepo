@@ -33,6 +33,8 @@ export const REPLAY_WRITABLE_TABLES = [
   // `draft_challenge_contract` writes a ChallengeDraft — a run is what a
   // confirmed contract produces, and a replay never confirms one.
   "ChallengeDraft",
+  "ExploreSpend",
+  "ExploreSandboxLease",
 ] as const;
 
 export const ReplayStageSchema = z.enum(["beta", "prod"]);
@@ -40,13 +42,18 @@ export type ReplayStage = z.infer<typeof ReplayStageSchema>;
 
 export const StageDatasetPinSchema = z
   .object({
-    schemaVersion: z.literal(1),
+    schemaVersion: z.literal(2),
+    runtime: z.strictObject({
+      analysisEnabled: z.boolean(),
+      model: z.string().min(1),
+    }),
     stage: ReplayStageSchema,
     createdAt: z.iso.datetime(),
     lake: z
       .object({
         dir: z.string().min(1),
         buildId: z.string().min(1),
+        schemaFingerprint: z.string().min(1),
         /** Recorded at pull time; re-checked before every run. */
         puuidRemapFingerprint: z.string().min(1),
         pulledAt: z.iso.datetime(),
@@ -118,6 +125,25 @@ export const StageDatasetPinSchema = z
   .strict();
 
 export type StageDatasetPin = z.infer<typeof StageDatasetPinSchema>;
+
+/** Schema mismatch is a fixture failure, before any paid model calls. */
+export function lakeSchemaIssues(input: {
+  published: string | undefined;
+  pinned: string;
+  current: string;
+}): string[] {
+  if (input.published === undefined)
+    return [
+      "The lake has no recorded schema fingerprint; rebuild it before replaying.",
+    ];
+  if (input.published !== input.pinned)
+    return ["The published lake schema differs from the pin; re-capture it."];
+  if (input.published !== input.current)
+    return [
+      "The lake schema differs from this checkout; rebuild it before replaying.",
+    ];
+  return [];
+}
 
 /**
  * The lake was pulled before the database, so the database is the later of the

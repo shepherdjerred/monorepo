@@ -73,6 +73,9 @@ export const ScoutExploreHistoryInputSchema = z.strictObject({
   /** Ten-minute UTC bucket: coalesces simultaneous asks but permits refreshes. */
   acquisitionBucket: z.number().int().nonnegative(),
   requestedMatches: z.number().int().min(1).max(100).default(100),
+  // Omitted on legacy ranked executions: do not add a default that changes
+  // their recorded Activity arguments during Workflow replay.
+  matchType: z.enum(["ranked", "normal"]).optional(),
 });
 export type ScoutExploreHistoryInput = z.infer<
   typeof ScoutExploreHistoryInputSchema

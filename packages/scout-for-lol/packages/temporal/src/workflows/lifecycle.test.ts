@@ -108,47 +108,63 @@ test("routes the queue canary through every workload queue", async () => {
   );
 });
 
-test("imports Explore history before folding the report lake", async () => {
-  const phases: string[] = [];
-  await startExploreAcquisitionWorkers(phases, {
-    importExploreHistory: () => {
-      phases.push("import");
-      return {
-        requested: 100,
-        found: 87,
-        alreadyAvailable: 50,
-        ingested: 36,
-        skipped: 1,
-      };
-    },
-  });
+test.each([undefined, "normal"] as const)(
+  "imports Explore %s history before folding the report lake",
+  async (matchType) => {
+    const phases: string[] = [];
+    const activityInputs: unknown[] = [];
+    await startExploreAcquisitionWorkers(phases, {
+      importExploreHistory: (input: unknown) => {
+        activityInputs.push(input);
+        phases.push("import");
+        return {
+          requested: 100,
+          found: 87,
+          alreadyAvailable: 50,
+          ingested: 36,
+          skipped: 1,
+        };
+      },
+    });
 
-  const result = await environment.client.workflow.execute(
-    scoutExploreHistoryWorkflow,
-    {
-      taskQueue: "scout-dev",
-      workflowId: "explore-history",
-      args: [
-        {
-          stage: "dev",
-          puuid: "puuid_123",
-          region: "AMERICA_NORTH",
-          acquisitionBucket: 123,
-          requestedMatches: 100,
-        },
-      ],
-    },
-  );
+    const result = await environment.client.workflow.execute(
+      scoutExploreHistoryWorkflow,
+      {
+        taskQueue: "scout-dev",
+        workflowId: "explore-history",
+        args: [
+          {
+            stage: "dev",
+            puuid: "puuid_123",
+            region: "AMERICA_NORTH",
+            acquisitionBucket: 123,
+            requestedMatches: 100,
+            ...(matchType === undefined ? {} : { matchType }),
+          },
+        ],
+      },
+    );
 
-  expect(result).toEqual({
-    requested: 100,
-    found: 87,
-    alreadyAvailable: 50,
-    ingested: 36,
-    skipped: 1,
-  });
-  expect(phases).toEqual(["import", "fold"]);
-});
+    expect(result).toEqual({
+      requested: 100,
+      found: 87,
+      alreadyAvailable: 50,
+      ingested: 36,
+      skipped: 1,
+    });
+    expect(phases).toEqual(["import", "fold"]);
+    expect(activityInputs).toEqual([
+      {
+        stage: "dev",
+        puuid: "puuid_123",
+        region: "AMERICA_NORTH",
+        acquisitionBucket: 123,
+        requestedMatches: 100,
+        ...(matchType === undefined ? {} : { matchType }),
+      },
+    ]);
+  },
+);
 
 test("imports Explore timelines before folding the report lake", async () => {
   const phases: string[] = [];

@@ -4,7 +4,7 @@ import { prisma } from "#src/database/index.ts";
 export type ToolPayloadCapture = (input: {
   toolCallId: string;
   toolName: string;
-  direction: "input" | "output";
+  direction: "input" | "output" | "dataset";
   value: z.infer<ReturnType<typeof z.json>>;
 }) => Promise<void>;
 

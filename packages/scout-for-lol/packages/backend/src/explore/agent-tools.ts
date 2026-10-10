@@ -367,6 +367,7 @@ export function createExploreTools(options: ExploreToolsOptions) {
     run_report_query: runReportQuery,
     format_report_query: createFormatTool(track),
     ...createLeagueExploreTools({
+      abortSignal: params.abortSignal,
       requesterId: params.requesterId,
       guildIds: params.guildIds,
       riotHistoryEnabled,

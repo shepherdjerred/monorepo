@@ -1,8 +1,28 @@
 {
-  "version": 1,
+  "version": 2,
   "stage": "prod",
   "capturedAt": "2026-09-21T04:19:56.909Z",
   "conversations": [
+    {
+      "conversationId": "507d822f-8f23-4e8f-bcca-0cd5284f5428",
+      "leafId": "75303d89-5b69-4553-8d3c-f4a4b2d72df4",
+      "kind": "question",
+      "surface": "web",
+      "guildSource": "run-payload",
+      "turns": [
+        {
+          "index": 1,
+          "questionMessageId": "6f159263-736e-4d13-83f3-a57d9bf267b7",
+          "answerMessageId": "bbc7b356-dfa7-487b-8a1e-db084054c20d"
+        },
+        {
+          "index": 2,
+          "questionMessageId": "29fdf307-52c4-458e-8b92-eb536f20eee5",
+          "answerMessageId": "75303d89-5b69-4553-8d3c-f4a4b2d72df4"
+        }
+      ],
+      "note": "Coverage and detailed game-review regressions; initial turn has no durable surface evidence and remains history only."
+    },
     {
       "conversationId": "2b839cef-1297-4dd1-a3b0-6453a63fa1f3",
       "leafId": "45f3847f-05e4-4a82-87c9-46c0f77e5152",
