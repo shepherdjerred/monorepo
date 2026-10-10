@@ -34,7 +34,7 @@ import {
   type RenderSidecar,
 } from "#protocol/build.ts";
 import { iterationOf, readLog } from "./build-log.ts";
-import { programBehind, writeSidecar } from "./sidecar.ts";
+import { programBehind, readProgramText, writeSidecar } from "./sidecar.ts";
 import type { DaemonClient } from "./daemon-client.ts";
 import type { Journal } from "./journal.ts";
 import { resetToSite, type RunContext } from "./ops.ts";
@@ -399,9 +399,7 @@ export async function readRenderProvenance(
   return {
     journal,
     programText:
-      producer === null
-        ? null
-        : await Bun.file(workspace.file(producer)).text(),
+      producer === null ? null : await readProgramText(workspace, producer),
   };
 }
 

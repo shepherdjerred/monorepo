@@ -37,7 +37,8 @@ async function latestSidecar(
   workspace: BuildWorkspace,
   journal: readonly BuildLogEntry[],
 ): Promise<RenderSidecar | null> {
-  const last = lastOf(journal, "render");
+  const capture = journal.findLastIndex((entry) => entry.kind === "capture");
+  const last = lastOf(journal.slice(capture + 1), "render");
   return last?.kind === "render" ? readSidecar(workspace, last.name) : null;
 }
 

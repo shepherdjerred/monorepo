@@ -4,6 +4,7 @@
  */
 import type { BlockGrid } from "#src/core/grid.ts";
 import type { ViewName } from "./camera.ts";
+import { occupiedHeight } from "./cut.ts";
 import { drawText } from "./font.ts";
 import type { Quad, V3 } from "./mesh.ts";
 import { Image } from "./raster.ts";
@@ -54,7 +55,11 @@ export function renderCompare(
   const view = options.view ?? "iso-front-right";
   const tile = options.tile ?? 480;
   const sheet = new Image(3 * tile, tile + LABEL, PANEL);
-  const size = (grid: BlockGrid): V3 => [grid.size.x, grid.size.y, grid.size.z];
+  const height = Math.max(
+    occupiedHeight(input.before.grid),
+    occupiedHeight(input.after.grid),
+  );
+  const size = (grid: BlockGrid): V3 => [grid.size.x, height, grid.size.z];
   sheet.blit(
     renderView(input.before.quads, size(input.before.grid), view, {
       size: tile,
@@ -80,7 +85,7 @@ export function renderCompare(
   const radius = Math.max(1, Math.round(scale / 2));
   for (const column of changedColumns(input.before.grid, input.after.grid)) {
     const [x = 0, z = 0] = column.split(",").map(Number);
-    const centre = project([x + 0.5, input.after.grid.size.y, z + 0.5]);
+    const centre = project([x + 0.5, height, z + 0.5]);
     for (let dy = -radius; dy <= radius; dy += 1) {
       for (let dx = -radius; dx <= radius; dx += 1) {
         const px = Math.round(centre.x + dx);

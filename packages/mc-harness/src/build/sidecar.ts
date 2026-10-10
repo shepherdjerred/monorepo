@@ -3,7 +3,7 @@
  * (lint, then a critique) said about it. Written by `build render`, read by
  * `critique`, `candidate` and `resume`.
  */
-import { readdir, stat } from "node:fs/promises";
+import { readdir, realpath, stat } from "node:fs/promises";
 import path from "node:path";
 import {
   BUILD_FILES,
@@ -128,7 +128,41 @@ export async function latestRenderName(
 
 /** `schematics/program-<digest>.build.ts`: the program text as it was when `compile` produced that digest. */
 export function programSnapshot(digest: string): string {
+  if (!/^[a-f0-9]+$/u.test(digest))
+    throw new Error("program snapshot digest must be lowercase hexadecimal");
   return path.join(BUILD_FILES.schematicsDir, `program-${digest}.build.ts`);
+}
+
+/** Program artifacts may never dereference a symlink outside their build. */
+export async function readProgramText(
+  workspace: BuildWorkspace,
+  file: string,
+): Promise<string> {
+  const root = await realpath(workspace.dir);
+  const absolute = await realpath(workspace.file(file));
+  const relative = path.relative(root, absolute);
+  if (
+    relative === ".." ||
+    relative.startsWith(`..${path.sep}`) ||
+    path.isAbsolute(relative)
+  ) {
+    throw new Error(`program artifact is outside its build: ${file}`);
+  }
+  return Bun.file(absolute).text();
+}
+
+async function checkedSnapshot(
+  workspace: BuildWorkspace,
+  file: string,
+): Promise<string> {
+  if (
+    path.dirname(file) !== BUILD_FILES.schematicsDir ||
+    !/^program-[a-f0-9]+\.build\.ts$/u.test(path.basename(file))
+  ) {
+    throw new Error(`invalid producing program snapshot path: ${file}`);
+  }
+  await readProgramText(workspace, file);
+  return file;
 }
 
 /**
@@ -154,7 +188,7 @@ export async function producingProgram(
       `missing producing program snapshot ${workspace.file(snapshot)}`,
     );
   }
-  return snapshot;
+  return checkedSnapshot(workspace, snapshot);
 }
 
 /**
@@ -177,7 +211,8 @@ export async function programBehind(
   if (input.source === "compiled") return compiled;
   const run = currentRun(input.journal);
   const ran = run?.kind === "run" ? run.program : null;
-  if (input.source === "expected") return ran;
+  if (input.source === "expected")
+    return ran === null ? null : checkedSnapshot(workspace, ran);
   if (input.source === "canvas") {
     return ran === compiled &&
       run?.kind === "run" &&

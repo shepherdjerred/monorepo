@@ -1,4 +1,4 @@
-import { mkdtemp, readdir, rm } from "node:fs/promises";
+import { mkdtemp, readdir, rm, symlink } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterAll, describe, expect, it, vi } from "vitest";
@@ -17,6 +17,7 @@ import {
   saveCandidate,
 } from "#build/studio/candidates.ts";
 import { critiqueBuild } from "#build/studio/critique.ts";
+import { resumeState } from "#build/resume.ts";
 import { BUILD_FILES, JudgeCritiqueRecordSchema } from "#protocol/build.ts";
 import { flatSiteBuild } from "./fixtures/flat-site.ts";
 
@@ -78,6 +79,9 @@ describe("capture and run provenance", () => {
       box: workspace.siteBox(await workspace.manifest()),
     });
     const journal = await readLog(workspace.dir);
+    const resumed = await resumeState(workspace.dir);
+    expect(resumed.latestRender).toBeNull();
+    expect(resumed.journal).toEqual(journal);
     const ask = vi.fn(() => Promise.reject(new Error("unexpected judge")));
     await expect(
       critiqueBuild(workspace.dir, {
@@ -102,6 +106,8 @@ describe("capture and run provenance", () => {
     expect(
       await latestRenderName(workspace, await readLog(workspace.dir)),
     ).toBe("current");
+    const current = await resumeState(workspace.dir);
+    expect(current.latestRender?.name).toBe("current");
     expect(await Bun.file(workspace.file("renders/old.json")).exists()).toBe(
       true,
     );
@@ -202,7 +208,7 @@ describe("capture and run provenance", () => {
     await workspace.writeOplog({
       version: 1,
       ops: [
-        { kind: "command", command: "say changed", source: "program:missing" },
+        { kind: "command", command: "say changed", source: "program:deadbeef" },
       ],
     });
     await Bun.write(
@@ -240,6 +246,95 @@ describe("capture and run provenance", () => {
 });
 
 describe("reused critique identity", () => {
+  it.each(["traversal", "absolute", "symlink", "other"] as const)(
+    "rejects %s run program paths before replacing render evidence",
+    async (kind) => {
+      const workspace = await programBuild(`journal-${kind}`);
+      const grid = new BlockGrid({ x: 2, y: 2, z: 2 }, "minecraft:stone");
+      await renderLooks(workspace, grid, "look", {
+        source: "compiled",
+        views: ["sheet"],
+      });
+      const files = [
+        "renders/look.png",
+        "renders/look.json",
+        "renders/look.build.ts",
+      ];
+      const before = await Promise.all(
+        files.map((file) => Bun.file(workspace.file(file)).bytes()),
+      );
+      const outside = path.join(temp, `outside-${kind}.ts`);
+      await Bun.write(outside, "private fixture outside build");
+      const program =
+        kind === "traversal"
+          ? path.relative(workspace.dir, outside)
+          : kind === "absolute"
+            ? outside
+            : kind === "other"
+              ? "renders/look.build.ts"
+              : programSnapshot("abc");
+      if (kind === "symlink") {
+        await rm(workspace.file(program));
+        await symlink(outside, workspace.file(program));
+      }
+      await appendLog(workspace.dir, {
+        kind: "run",
+        target: "sbx-000001",
+        ops: 1,
+        program,
+      });
+      const journal = await readLog(workspace.dir);
+      await expect(
+        renderLooks(workspace, grid, "look", {
+          source: "expected",
+          views: ["sheet"],
+        }),
+      ).rejects.toThrow(
+        /invalid producing program snapshot path|outside its build/u,
+      );
+      expect(await readLog(workspace.dir)).toEqual(journal);
+      expect(
+        await Promise.all(
+          files.map((file) => Bun.file(workspace.file(file)).bytes()),
+        ),
+      ).toEqual(before);
+    },
+    60_000,
+  );
+
+  it("rejects a render program symlink outside the build before model calls", async () => {
+    const workspace = await programBuild("render-program-link");
+    await renderLooks(
+      workspace,
+      new BlockGrid({ x: 2, y: 2, z: 2 }, "minecraft:stone"),
+      "look",
+      { source: "compiled", views: ["sheet"] },
+    );
+    const outside = path.join(temp, "outside-render.ts");
+    await Bun.write(outside, "private fixture outside build");
+    const program = workspace.file("renders/look.build.ts");
+    await rm(program);
+    await symlink(outside, program);
+    const journal = await readLog(workspace.dir);
+    const ask = vi.fn(() =>
+      Promise.reject(new Error("unexpected visual call")),
+    );
+    const askCode = vi.fn(() => Promise.resolve({ suggestions: [] }));
+    await expect(
+      critiqueBuild(workspace.dir, {
+        render: "look",
+        rubric: "micro",
+        model: "stub",
+        stage: "both",
+        ask,
+        askCode,
+      }),
+    ).rejects.toThrow(/outside its build/u);
+    expect(ask).not.toHaveBeenCalled();
+    expect(askCode).not.toHaveBeenCalled();
+    expect(await readLog(workspace.dir)).toEqual(journal);
+  }, 60_000);
+
   it.each(["../../outside.ts", "/tmp/outside.ts", "renders/other.build.ts"])(
     "rejects program path %s before reading or reviewing it",
     async (program) => {

@@ -40,7 +40,12 @@ import {
   type AbsoluteScores,
   type AskScore,
 } from "#build/judge.ts";
-import { latestRenderName, readSidecar, writeSidecar } from "#build/sidecar.ts";
+import {
+  latestRenderName,
+  readProgramText,
+  readSidecar,
+  writeSidecar,
+} from "#build/sidecar.ts";
 import { savedRender } from "#build/sources.ts";
 import { BuildWorkspace } from "#build/workspace.ts";
 
@@ -231,7 +236,7 @@ async function programFor(
   sidecar: RenderSidecar,
 ): Promise<string | null> {
   if (sidecar.program === null) return null;
-  const text = await Bun.file(workspace.file(sidecar.program)).text();
+  const text = await readProgramText(workspace, sidecar.program);
   return text.length > PROGRAM_LIMIT
     ? `${text.slice(0, PROGRAM_LIMIT)}\n// … truncated at ${PROGRAM_LIMIT.toString()} bytes`
     : text;

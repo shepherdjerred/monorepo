@@ -8,6 +8,18 @@ import type { Quad, V3 } from "./mesh.ts";
 
 export type GridBox = { min: Vec3; max: Vec3 };
 
+/** Height through the highest occupied layer, retaining at least one layer. */
+export function occupiedHeight(grid: BlockGrid): number {
+  for (let y = grid.size.y - 1; y > 0; y -= 1) {
+    for (let x = 0; x < grid.size.x; x += 1) {
+      for (let z = 0; z < grid.size.z; z += 1) {
+        if (!grid.isAirAt(x, y, z)) return y + 1;
+      }
+    }
+  }
+  return 1;
+}
+
 function clampBox(grid: BlockGrid, box: GridBox): GridBox {
   return {
     min: {

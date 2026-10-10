@@ -253,6 +253,9 @@ survey`, `--grid n` coordinate lines, `--floor y` and `--section z` cuts
   before scoring or updating the journal. Code-only critique also validates
   the reused record's render, grid, rubric and score against its journal entry.
   A sidecar may reference only its own `renders/<name>.build.ts` program artifact.
+  Run journals may reference only `schematics/program-<hex-digest>.build.ts`;
+  program reads reject symlinks outside the build. Resume's latest render also
+  belongs to the current capture, while its journal retains historical entries.
 - **Journal.** Every command that changes or looks at the build appends a
   line to `journal.jsonl` (compile, run, render, lint, critique, candidate,
   accept/reject, promote, resume) with the iteration it belongs to (one per

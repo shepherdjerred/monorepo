@@ -423,6 +423,27 @@ describe("POV framing", () => {
 });
 
 describe("survey", () => {
+  test("comparison panels share occupied height and ignore empty capture headroom", async () => {
+    const renderer = new Renderer(root);
+    const before = new BlockGrid({ x: 8, y: 6, z: 8 });
+    const after = new BlockGrid(before.size);
+    const paddedBefore = new BlockGrid({ ...before.size, y: 128 });
+    const paddedAfter = new BlockGrid(paddedBefore.size);
+    for (let x = 0; x < 8; x += 1)
+      for (let z = 0; z < 8; z += 1) {
+        before.set(x, 0, z, "minecraft:stone");
+        after.set(x, 0, z, "minecraft:stone");
+      }
+    for (let y = 1; y < 6; y += 1) after.set(4, y, 4, "minecraft:stone");
+    before.forEach((x, y, z, state) => paddedBefore.set(x, y, z, state));
+    after.forEach((x, y, z, state) => paddedAfter.set(x, y, z, state));
+    const compact = await renderer.compare(before, after, { tile: 96 });
+    const padded = await renderer.compare(paddedBefore, paddedAfter, {
+      tile: 96,
+    });
+    expect(pixelHash(padded.pixels)).toBe(pixelHash(compact.pixels));
+  });
+
   test.each([
     "textured",
     "value",

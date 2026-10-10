@@ -3,7 +3,7 @@ import { BlockGrid, type Vec3 } from "#src/core/grid.ts";
 import { blockLightLevels } from "#src/lint/lint.ts";
 import { perspectiveProjector, type ViewName } from "./camera.ts";
 import { renderCompare } from "./compare.ts";
-import { cropQuads, type GridBox } from "./cut.ts";
+import { cropQuads, occupiedHeight, type GridBox } from "./cut.ts";
 import { renderElevationSheet } from "./elevations.ts";
 import { renderJudgeSheet, type JudgeSheetKind } from "./judge-sheet.ts";
 import { Mesher, type Quad, type V3 } from "./mesh.ts";
@@ -59,25 +59,6 @@ export const HERO_SIZE = 1400;
 
 export function wantsHero(grid: BlockGrid): boolean {
   return Math.max(grid.size.x, grid.size.z) >= HERO_MIN_SPAN;
-}
-
-function layerHasBlock(grid: BlockGrid, y: number): boolean {
-  for (let x = 0; x < grid.size.x; x += 1) {
-    for (let z = 0; z < grid.size.z; z += 1) {
-      if (!grid.isAirAt(x, y, z)) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
-function occupiedHeight(grid: BlockGrid): number {
-  let top = grid.size.y - 1;
-  while (top > 0 && !layerHasBlock(grid, top)) {
-    top -= 1;
-  }
-  return top + 1;
 }
 
 /** Drops empty layers above the highest block so the view frames the build. */
