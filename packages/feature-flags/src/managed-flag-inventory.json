@@ -2530,7 +2530,7 @@
         {
           "key": "the-storm-rwfbots-learning-enabled",
           "type": "boolean",
-          "default": false,
+          "default": true,
           "rollouts": [],
           "rules": [],
           "thresholdRollouts": []

@@ -2029,8 +2029,9 @@ accepting the model or enabling ordinary learned play.
 
 Ordinary matches evaluate `the-storm-rwfbots-learning-enabled` once at the live
 transition, with the match UUID as entity and the match, map and world as context.
-The managed declaration defaults off, including its initial beta override;
-enable it only after the human pilot and all promotion gates pass. Missing Flipt
+The managed declaration and production default off; beta enables the rollout
+path, which still requires a bundle accepted after the human pilot and all
+promotion gates pass. Missing Flipt
 bootstrap and transport outages keep that match authored. A successful false
 answer is final for the match; malformed values, missing declared flags and
 authorization failures surface as errors.
