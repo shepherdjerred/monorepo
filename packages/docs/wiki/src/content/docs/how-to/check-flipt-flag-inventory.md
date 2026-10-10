@@ -46,10 +46,16 @@ pair.
 
 ## 3. Create missing declared keys
 
-Create inventory keys that Flipt does not yet have:
+Create inventory keys that Flipt does not yet have. Management writes require
+`FLIPT_OPERATOR_TOKEN`, even though evaluation snapshot reads are credentialless.
+Inject the existing `operator-token` field from the `flipt-auth` 1Password item
+into the process environment; never paste its value into a command or file.
+For example, substitute the item's vault name in this secret reference:
 
 ```bash
-bun run check-flipt-flag-inventory -- --apply-missing
+FLIPT_OPERATOR_TOKEN='op://<vault>/flipt-auth/operator-token' \
+  scripts/onepassword/with-service-account.sh \
+  op run -- bun run check-flipt-flag-inventory -- --apply-missing
 ```
 
 This creates absent namespaces, segments, and flags from the inventory

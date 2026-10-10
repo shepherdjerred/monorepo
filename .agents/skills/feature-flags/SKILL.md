@@ -31,5 +31,7 @@ Do not make `@shepherdjerred/config` depend on the Flipt client; the flags
 package injects the source. Never label metrics by unbounded targeting keys or
 log sensitive values. A Flipt evaluation of `false` is an answer, not an outage.
 
-Flipt has no authentication. Network reachability is authorization, so update
-its consumer NetworkPolicy when a new workload needs access.
+Flipt evaluation and operator management use different access paths. Keep
+consumer NetworkPolicies aligned with evaluation access. Management writes
+require the existing 1Password-backed operator credential; follow the flag
+inventory operator how-to and never put credentials in consumer configuration.
