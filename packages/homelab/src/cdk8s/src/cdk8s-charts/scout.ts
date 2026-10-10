@@ -1,4 +1,4 @@
-import { ApiObject, Chart, JsonPatch } from "cdk8s";
+import { Chart } from "cdk8s";
 import type { App } from "cdk8s";
 import { createScoutDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/index.ts";
 import { createScoutPostgreSQLDatabase } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/scout-db.ts";
@@ -331,16 +331,5 @@ export function createScoutChart(
         ],
       },
     });
-  }
-
-  // Fence every Prod writer for the recovered-PUUID archive cutover. Keep
-  // PostgreSQL available and Beta online; removing this block resumes Prod
-  // through the same source-owned GitOps release path.
-  if (stage === "prod") {
-    for (const resource of chart.node.findAll()) {
-      if (resource instanceof ApiObject && resource.kind === "Deployment") {
-        resource.addJsonPatch(JsonPatch.replace("/spec/replicas", 0));
-      }
-    }
   }
 }
