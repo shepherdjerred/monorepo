@@ -49,6 +49,35 @@ bun run ios:native:generate         # root mise XcodeGen pin
 # bun run ios opens that generated project; bun run android builds tasknotes-android.
 ```
 
+Run the simulator app through Xcode with its configured App Group entitlements,
+or use the normal ad hoc simulator producer from this package:
+
+```bash
+xcodebuild -project ios/TasksForObsidian.xcodeproj \
+  -scheme TasksForObsidian -configuration Debug \
+  -destination 'platform=iOS Simulator,id=YOUR_SIMULATOR_UDID' \
+  -derivedDataPath .build/ios-native \
+  CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- build
+```
+
+Unsigned builds (`CODE_SIGNING_ALLOWED=NO`) prove compilation and isolated view
+rendering only. Running the standalone engine also requires the simulator's
+normal signing and entitlement processing for App Groups and Keychain.
+
+The existing Debug launch argument `--facet-native-acceptance` opens the app's
+`Documents/Native acceptance` vault. It does not generate sample tasks or their
+configuration. Seed real Markdown notes and a canonical `tasknotes.yaml` there
+before launching; configure title storage and task detection to match the notes.
+For example, frontmatter titles with `tags: [task]` use:
+
+```yaml
+title:
+  storage: frontmatter
+task_detection:
+  method: tag
+  tag: task
+```
+
 ## Testing
 
 ```bash
