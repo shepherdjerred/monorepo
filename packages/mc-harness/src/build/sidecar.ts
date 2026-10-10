@@ -18,6 +18,7 @@ import type { BuildWorkspace } from "./workspace.ts";
 import {
   programSnapshot,
   readProgramSnapshot,
+  verifyProgramOps,
 } from "./storage/program-evidence.ts";
 
 const NAME = /^[a-z0-9][a-z0-9-]{0,31}$/u;
@@ -208,6 +209,7 @@ export async function producingProgram(
       `missing producing program snapshot ${workspace.file(snapshot)}`,
     );
   }
+  await verifyProgramOps(workspace, snapshot, ops);
   return checkedSnapshot(workspace, snapshot);
 }
 

@@ -85,4 +85,22 @@ describe("compile-bound producing programs", () => {
       ).toBe(false);
     },
   );
+
+  it("rejects program operations that no longer match their compile evidence", async () => {
+    const { workspace } = await fixture("changed-ops");
+    const { ops } = await workspace.oplog();
+    let changed = false;
+    const edited = ops.map((op) => {
+      if (!changed && op.kind === "paste") {
+        changed = true;
+        return { ...op, at: { ...op.at, x: op.at.x + 1 } };
+      }
+      return op;
+    });
+    expect(changed).toBe(true);
+    await workspace.writeOplog({ version: 1, ops: edited });
+    await expect(producingProgram(workspace, edited)).rejects.toThrow(
+      /operation set does not match/u,
+    );
+  });
 });

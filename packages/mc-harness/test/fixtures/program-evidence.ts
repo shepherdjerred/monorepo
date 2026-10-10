@@ -20,13 +20,11 @@ export async function writeProgramFixture(
     await Bun.file(workspace.file(BUILD_FILES.siteSchematic)).bytes(),
   );
   const { ops } = await workspace.oplog();
+  const programOps = ops.filter((op) => op.source === `program:${digest}`);
   await recordProgramEvidence(
     workspace,
     digest,
-    ops.flatMap((op) =>
-      op.kind === "paste" && op.source === `program:${digest}`
-        ? [op.schematic]
-        : [],
-    ),
+    programOps.flatMap((op) => (op.kind === "paste" ? [op.schematic] : [])),
+    programOps,
   );
 }

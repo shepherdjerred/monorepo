@@ -362,11 +362,16 @@ export async function pickCandidate(
   name: string,
 ): Promise<Candidate> {
   const workspace = new BuildWorkspace(dir);
-  const { candidate, program, oplog } = await validateCandidate(dir, name);
-  await installWorkingFiles(workspace, {
-    program,
-    oplog: `${JSON.stringify(oplog, null, 2)}\n`,
-    pick: name,
+  let candidate: Candidate | undefined;
+  await installWorkingFiles(workspace, async () => {
+    const validated = await validateCandidate(dir, name);
+    candidate = validated.candidate;
+    return {
+      program: validated.program,
+      oplog: `${JSON.stringify(validated.oplog, null, 2)}\n`,
+      pick: name,
+    };
   });
+  if (candidate === undefined) throw new Error("candidate pick was not staged");
   return candidate;
 }

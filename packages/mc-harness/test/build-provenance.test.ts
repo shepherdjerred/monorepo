@@ -669,7 +669,6 @@ describe("tournament restoration preflight", () => {
         "restore",
       );
       const source = "program:abc";
-      await writeProgramFixture(workspace, "abc", "saved program");
       const site = await readSchematic(
         await Bun.file(workspace.file(BUILD_FILES.siteSchematic)).bytes(),
       );
@@ -694,6 +693,7 @@ describe("tournament restoration preflight", () => {
           },
         ],
       });
+      await writeProgramFixture(workspace, "abc", "saved program");
       for (const name of ["a", "b", "c"])
         await saveCandidate(workspace.dir, name);
       await workspace.writeOplog({ version: 1, ops: [] });

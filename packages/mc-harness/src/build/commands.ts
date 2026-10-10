@@ -309,11 +309,6 @@ export async function compileBuild(dir: string): Promise<CompileResult> {
         world: manifest.world,
         dataVersion: registry.dataVersion,
       });
-      await recordProgramEvidence(
-        pending,
-        digest,
-        pastes.map((paste) => paste.schematic),
-      );
       const programOps: Op[] = [
         ...compiled.clears.map((box): Op => ({
           kind: "we",
@@ -337,6 +332,12 @@ export async function compileBuild(dir: string): Promise<CompileResult> {
           source,
         })),
       ];
+      await recordProgramEvidence(
+        pending,
+        digest,
+        pastes.map((paste) => paste.schematic),
+        programOps,
+      );
       const log = await workspace.oplog();
       const firstProgram = log.ops.findIndex((op) =>
         op.source.startsWith("program:"),

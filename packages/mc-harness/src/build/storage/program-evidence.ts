@@ -1,13 +1,15 @@
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { z } from "zod";
+import type { Op } from "#protocol/build.ts";
 import { BUILD_FILES } from "#protocol/build.ts";
 import { buildArtifactPath, type ArtifactWorkspace } from "./artifact-path.ts";
 
 const HashSchema = z.string().regex(/^[a-f0-9]{64}$/u);
 const EvidenceSchema = z.strictObject({
-  version: z.literal(1),
+  version: z.literal(2),
   programHash: HashSchema,
+  opsHash: HashSchema,
   outputs: z.record(z.string(), HashSchema),
 });
 const checksum = (bytes: Uint8Array) =>
@@ -35,6 +37,7 @@ export async function recordProgramEvidence(
   workspace: ArtifactWorkspace,
   digest: string,
   outputs: readonly string[],
+  ops: readonly Op[],
 ): Promise<void> {
   const snapshot = programSnapshot(digest);
   const paths = evidencePaths(snapshot);
@@ -47,13 +50,30 @@ export async function recordProgramEvidence(
   await Bun.write(
     workspace.file(paths.record),
     JSON.stringify({
-      version: 1,
+      version: 2,
       programHash: checksum(
         await Bun.file(await buildArtifactPath(workspace, snapshot)).bytes(),
       ),
+      opsHash: checksum(new TextEncoder().encode(JSON.stringify(ops))),
       outputs: hashes,
     }),
   );
+}
+
+/** Verify that the current program-sourced operations are the compiled set. */
+export async function verifyProgramOps(
+  workspace: ArtifactWorkspace,
+  file: string,
+  ops: readonly Op[],
+): Promise<void> {
+  const paths = evidencePaths(file);
+  const record = EvidenceSchema.parse(
+    await Bun.file(await buildArtifactPath(workspace, paths.record)).json(),
+  );
+  if (
+    checksum(new TextEncoder().encode(JSON.stringify(ops))) !== record.opsHash
+  )
+    throw new Error(`producing program operation set does not match: ${file}`);
 }
 
 /** Return only the verified bytes that callers will copy or review. */
