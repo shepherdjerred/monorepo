@@ -133,8 +133,8 @@ export function programSnapshot(digest: string): string {
   return path.join(BUILD_FILES.schematicsDir, `program-${digest}.build.ts`);
 }
 
-/** Program artifacts may never dereference a symlink outside their build. */
-export async function readProgramText(
+/** Resolve evidence only within its build, including through symlinks. */
+export async function buildArtifactPath(
   workspace: BuildWorkspace,
   file: string,
 ): Promise<string> {
@@ -146,9 +146,16 @@ export async function readProgramText(
     relative.startsWith(`..${path.sep}`) ||
     path.isAbsolute(relative)
   ) {
-    throw new Error(`program artifact is outside its build: ${file}`);
+    throw new Error(`build artifact is outside its build: ${file}`);
   }
-  return Bun.file(absolute).text();
+  return absolute;
+}
+
+export async function readProgramText(
+  workspace: BuildWorkspace,
+  file: string,
+): Promise<string> {
+  return Bun.file(await buildArtifactPath(workspace, file)).text();
 }
 
 async function checkedSnapshot(
@@ -207,12 +214,12 @@ export async function programBehind(
     journal: readonly BuildLogEntry[];
   },
 ): Promise<string | null> {
-  const compiled = await producingProgram(workspace, input.ops);
-  if (input.source === "compiled") return compiled;
   const run = currentRun(input.journal);
   const ran = run?.kind === "run" ? run.program : null;
   if (input.source === "expected")
     return ran === null ? null : checkedSnapshot(workspace, ran);
+  const compiled = await producingProgram(workspace, input.ops);
+  if (input.source === "compiled") return compiled;
   if (input.source === "canvas") {
     return ran === compiled &&
       run?.kind === "run" &&

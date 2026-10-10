@@ -1,4 +1,5 @@
 import { mkdtemp, readdir, rm, symlink } from "node:fs/promises";
+import type * as FileSystem from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterAll, describe, expect, it, vi } from "vitest";
@@ -13,6 +14,7 @@ import { rubricAxisIds } from "#build/judge.ts";
 import { latestRenderName, programSnapshot } from "#build/sidecar.ts";
 import {
   listCandidates,
+  pickCandidate,
   readCandidate,
   saveCandidate,
 } from "#build/studio/candidates.ts";
@@ -31,6 +33,26 @@ vi.mock("@shepherdjerred/mc-build/render/assets.ts", async () => {
 });
 
 const temp = await mkdtemp(path.join(os.tmpdir(), "mc-build-provenance-"));
+const restoreFailure = vi.hoisted(() => ({ enabled: false }));
+vi.mock("node:fs/promises", async (importOriginal) => {
+  const original = await importOriginal<typeof FileSystem>();
+  return {
+    ...original,
+    rename: async (...args: Parameters<typeof original.rename>) => {
+      const [from, to] = args.map(String);
+      if (
+        restoreFailure.enabled &&
+        from?.includes(".pick-") === true &&
+        from.endsWith(`/${BUILD_FILES.oplog}`) &&
+        to?.endsWith(`/${BUILD_FILES.oplog}`) === true
+      ) {
+        restoreFailure.enabled = false;
+        throw new Error("simulated install failure");
+      }
+      return original.rename(...args);
+    },
+  };
+});
 afterAll(async () => {
   await rm(temp, { recursive: true, force: true });
 });
@@ -149,6 +171,34 @@ describe("complete compiled render evidence", () => {
       expect(await readLog(workspace.dir)).toEqual(journal);
     },
   );
+});
+
+describe("frozen run provenance", () => {
+  it("renders a frozen run without depending on a later compile snapshot", async () => {
+    const workspace = await programBuild("expected-independent");
+    await workspace.writeOplog({
+      version: 1,
+      ops: [{ kind: "command", command: "say later", source: "program:def" }],
+    });
+    const env = {
+      client: new DaemonClient(),
+      journal: new Journal(workspace.file("audit")),
+      log: vi.fn(),
+    };
+    await renderBuild(env, workspace.dir, {
+      source: "expected",
+      name: "frozen",
+    });
+    expect(
+      await Bun.file(workspace.file("renders/frozen.build.ts")).text(),
+    ).toBe(await Bun.file(workspace.file(programSnapshot("abc"))).text());
+    await expect(readRenderProvenance(workspace, "compiled")).rejects.toThrow(
+      /missing producing program snapshot/u,
+    );
+    await expect(
+      readRenderProvenance(workspace, "canvas", "sbx-000001"),
+    ).rejects.toThrow(/missing producing program snapshot/u);
+  });
 });
 
 describe("capture and run provenance", () => {
@@ -335,6 +385,85 @@ describe("capture and run provenance", () => {
     ).toBe("old frozen snapshot");
     expect(await readLog(workspace.dir)).toEqual(journal);
   });
+});
+
+describe("candidate restore transactions", () => {
+  it.each(
+    [false, true].flatMap((program) =>
+      [
+        "missing-oplog",
+        "invalid-oplog",
+        "grid",
+        "stage-write",
+        "install",
+        ...(program ? ["missing-program"] : []),
+      ].map((failure) => ({ program, failure })),
+    ),
+  )(
+    "preserves the working version on $failure with saved program $program",
+    async ({ program, failure }) => {
+      const workspace = await flatSiteBuild(
+        path.join(temp, `pick-${program.toString()}-${failure}`),
+        "pick",
+      );
+      await workspace.writeOplog({
+        version: 1,
+        ops: [
+          {
+            kind: "we",
+            command: "//set air",
+            world: "world",
+            pos1: { x: 100, y: 64, z: 100 },
+            pos2: { x: 100, y: 64, z: 100 },
+            source: program ? "program:abc" : "manual",
+          },
+        ],
+      });
+      if (program)
+        await Bun.write(
+          workspace.file(programSnapshot("abc")),
+          "saved program",
+        );
+      await saveCandidate(workspace.dir, "saved");
+      await Bun.write(workspace.file(BUILD_FILES.program), "working program");
+      await workspace.writeOplog({ version: 1, ops: [] });
+      const working = [BUILD_FILES.program, BUILD_FILES.oplog].map((file) =>
+        Bun.file(workspace.file(file)),
+      );
+      const before = await Promise.all(working.map((file) => file.bytes()));
+      const journal = await readLog(workspace.dir);
+      const saved = (file: string) =>
+        workspace.file(`candidates/saved/${file}`);
+      if (failure === "missing-oplog") await rm(saved(BUILD_FILES.oplog));
+      if (failure === "invalid-oplog")
+        await Bun.write(
+          saved(BUILD_FILES.oplog),
+          '{"version":1,"ops":[{"kind":"invalid"}]}',
+        );
+      if (failure === "grid")
+        await Bun.write(saved("candidate.schem"), "corrupt grid");
+      if (failure === "missing-program") await rm(saved(BUILD_FILES.program));
+      const write =
+        failure === "stage-write"
+          ? vi
+              .spyOn(Bun, "write")
+              .mockRejectedValueOnce(new Error("simulated staging failure"))
+          : null;
+      restoreFailure.enabled = failure === "install";
+      try {
+        await expect(pickCandidate(workspace.dir, "saved")).rejects.toThrow();
+      } finally {
+        restoreFailure.enabled = false;
+        write?.mockRestore();
+      }
+      expect(await Promise.all(working.map((file) => file.bytes()))).toEqual(
+        before,
+      );
+      expect(await readLog(workspace.dir)).toEqual(journal);
+      const names = await readdir(workspace.dir);
+      expect(names.some((name) => name.startsWith(".pick-"))).toBe(false);
+    },
+  );
 });
 
 describe("reused critique identity", () => {

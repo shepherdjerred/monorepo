@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
@@ -10,6 +10,7 @@ import {
   trajectoryOf,
 } from "#evals/grade/trajectory.ts";
 import type { BuildLogEntry, JudgeRubric } from "#protocol/build.ts";
+import { rubricAxisIds } from "#build/judge.ts";
 
 const at = "2026-10-07T00:00:00.000Z";
 const render = (iteration: number): BuildLogEntry => ({
@@ -31,7 +32,7 @@ const critique = (
   render: `iter-${iteration.toString()}`,
   gridHash: `grid-${iteration.toString()}`,
   rubric,
-  file: "judge/critique.json",
+  file: `judge/critique-${iteration.toString()}.json`,
   total,
   max: 40,
   lowest: "depth",
@@ -66,6 +67,104 @@ const checksOf = (entries: BuildLogEntry[]) =>
 const temps: string[] = [];
 afterAll(async () => {
   await Promise.all(temps.map((dir) => rm(dir, { recursive: true })));
+});
+
+async function writeEvidence(dir: string, entry: BuildLogEntry) {
+  if (entry.kind !== "critique") throw new Error("expected critique fixture");
+  const sheet = `judge/critique-${entry.iteration.toString()}.png`;
+  const base = Math.floor(entry.total / 8);
+  const record = {
+    kind: "critique",
+    at,
+    model: "stub",
+    render: entry.render,
+    rubric: entry.rubric,
+    gridHash: entry.gridHash,
+    total: entry.total,
+    max: entry.max,
+    lowest: entry.lowest,
+    sheet,
+    axes: Object.fromEntries(
+      rubricAxisIds(entry.rubric).map((id, index) => [
+        id,
+        base + (index > 0 && index <= entry.total % 8 ? 1 : 0),
+      ]),
+    ),
+    overallAesthetic: base,
+    notes: [],
+    suggestions: [],
+  };
+  await Bun.write(path.join(dir, entry.file), JSON.stringify(record));
+  await Bun.write(path.join(dir, sheet), new Uint8Array([1, 2, 3]));
+  return record;
+}
+
+describe("trajectory record validation", () => {
+  it.each([
+    "missing",
+    "render",
+    "gridHash",
+    "rubric",
+    "total",
+    "max",
+    "lowest",
+    "sheet",
+    "escape",
+  ])(
+    "rejects %s critique evidence before grading or publishing totals",
+    async (field) => {
+      const dir = await mkdtemp(path.join(tmpdir(), "trajectory-record-"));
+      temps.push(dir);
+      const entries = [render(1), critique(1, 20), render(2), critique(2, 26)];
+      const first = entries[1];
+      const second = entries[3];
+      if (first?.kind !== "critique" || second?.kind !== "critique")
+        throw new Error("missing fixtures");
+      const record = await writeEvidence(dir, first);
+      await writeEvidence(dir, second);
+      await Bun.write(
+        path.join(dir, "journal.jsonl"),
+        entries.map((entry) => JSON.stringify(entry)).join("\n"),
+      );
+      expect(await readJournal(dir)).toEqual({ entries });
+      const file = path.join(dir, first.file);
+      switch (field) {
+        case "missing":
+          await rm(file);
+          break;
+        case "sheet":
+          await rm(path.join(dir, record.sheet));
+          break;
+        case "escape": {
+          const outside = await mkdtemp(
+            path.join(tmpdir(), "trajectory-outside-"),
+          );
+          temps.push(outside);
+          const target = path.join(outside, "record.json");
+          await Bun.write(target, JSON.stringify(record));
+          await rm(file);
+          await symlink(target, file);
+          break;
+        }
+        default: {
+          const value =
+            field === "total"
+              ? 21
+              : field === "max"
+                ? 41
+                : field === "rubric"
+                  ? "map"
+                  : "mismatch";
+          await Bun.write(file, JSON.stringify({ ...record, [field]: value }));
+        }
+      }
+      const journal = await readJournal(dir);
+      expect(journal).toHaveProperty("error");
+      expect(
+        trajectoryChecks(journal, "micro").every((check) => !check.pass),
+      ).toBe(true);
+    },
+  );
 });
 
 describe("trajectory", () => {
@@ -232,6 +331,7 @@ describe("trajectory", () => {
       path.join(dir, "journal.jsonl"),
       `${JSON.stringify(render(1))}\n${JSON.stringify(critique(1, 20))}\n`,
     );
+    await writeEvidence(dir, critique(1, 20));
     expect(await readJournal(dir)).toEqual({
       entries: [render(1), critique(1, 20)],
     });

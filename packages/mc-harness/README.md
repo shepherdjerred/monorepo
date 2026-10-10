@@ -249,7 +249,9 @@ survey`, `--grid n` coordinate lines, `--floor y` and `--section z` cuts
   Mojang-asset acceptance runs separately from CI.
   Close-ups crop whole-build faces and shading; only deliberate floor/section
   cuts expose new surfaces. Implicit critique requires a render of the current
-  capture, while named historical renders remain available.
+  capture, while named historical renders remain available. Expected render
+  provenance validates the program of the frozen run independently of later
+  compile artifacts.
   Invalid sidecars also fail instead of selecting an
   older render, and critique verifies the saved schematic against its hash
   before scoring or updating the journal. Code-only critique also validates
@@ -287,7 +289,9 @@ pick n | knockout [--among a,b] [--rubric] [--model]`) keep versions of
   a tie keeps the incumbent, every bout is written under `judge/` and
   logged as an accept and a reject, and the winner becomes `best` after each
   completed bout, even if a later model call fails. `pick`
-  restores a candidate as the working version.
+  validates the saved grid, op log and program before staging the working
+  version. Failed staging or installation restores both prior working files;
+  if rollback itself fails, the error identifies retained recovery files.
   Retrying an interrupted tournament with the same pool, candidate versions,
   rubric and model resumes its remaining challengers without rejudging earlier
   bouts. Changing those inputs starts a new tournament. Saving candidates

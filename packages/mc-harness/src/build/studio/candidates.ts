@@ -18,14 +18,21 @@ import {
   BUILD_FILES,
   CANDIDATE_FILES,
   CandidateSchema,
+  OpLogSchema,
   type Candidate,
   type BuildManifest,
   type JudgeRubric,
 } from "#protocol/build.ts";
 import { appendLog, iterationOf, readLog } from "#build/build-log.ts";
-import { checkName, producingProgram } from "#build/sidecar.ts";
+import {
+  buildArtifactPath,
+  checkName,
+  producingProgram,
+} from "#build/sidecar.ts";
 import { compiledGrid } from "#build/sources.ts";
 import { BuildWorkspace } from "#build/workspace.ts";
+import { readCritiqueRecord } from "./critique-record.ts";
+import { installWorkingFiles } from "./working-files.ts";
 
 export function candidateDir(workspace: BuildWorkspace, name: string): string {
   return workspace.file(
@@ -90,6 +97,7 @@ async function latestCritique(
       entry.gridHash === hash &&
       (rubric === undefined || entry.rubric === rubric)
     ) {
+      await readCritiqueRecord(new BuildWorkspace(dir), entry);
       return { rubric: entry.rubric, total: entry.total };
     }
   }
@@ -242,7 +250,10 @@ export async function candidateGrid(
 ): Promise<BlockGrid> {
   const workspace = new BuildWorkspace(dir);
   const candidate = await readCandidate(dir, name);
-  const file = path.join(candidateDir(workspace, name), CANDIDATE_FILES.grid);
+  const file = await buildArtifactPath(
+    workspace,
+    path.join(BUILD_FILES.candidatesDir, name, CANDIDATE_FILES.grid),
+  );
   const schematic = await readSchematic(
     new Uint8Array(await Bun.file(file).arrayBuffer()),
   );
@@ -281,20 +292,27 @@ export async function pickCandidate(
 ): Promise<Candidate> {
   const workspace = new BuildWorkspace(dir);
   const candidate = await readCandidate(dir, name);
-  const source = candidateDir(workspace, name);
-  if (candidate.program) {
-    await cp(
-      path.join(source, BUILD_FILES.program),
-      workspace.file(BUILD_FILES.program),
+  const artifact = (file: string) =>
+    buildArtifactPath(
+      workspace,
+      path.join(BUILD_FILES.candidatesDir, name, file),
     );
-  } else {
-    // The candidate had no program; a stale build.ts would recompile over its op log.
-    await rm(workspace.file(BUILD_FILES.program), { force: true });
-  }
-  await cp(
-    path.join(source, BUILD_FILES.oplog),
-    workspace.file(BUILD_FILES.oplog),
+  await candidateGrid(dir, name);
+  const oplog = OpLogSchema.parse(
+    await Bun.file(await artifact(BUILD_FILES.oplog)).json(),
   );
+  if (oplog.ops.length !== candidate.ops) {
+    throw new Error(
+      `candidate "${name}" op count does not match its saved metadata`,
+    );
+  }
+  const program = candidate.program
+    ? await Bun.file(await artifact(BUILD_FILES.program)).bytes()
+    : null;
+  await installWorkingFiles(workspace, {
+    program,
+    oplog: `${JSON.stringify(oplog, null, 2)}\n`,
+  });
   await appendLog(dir, { kind: "candidate", action: "pick", name });
   return candidate;
 }

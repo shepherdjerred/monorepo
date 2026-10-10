@@ -81,6 +81,11 @@ records (`judge/*.json`) are copied into the task directory, and the report
 prints the trajectory (iterations, critique totals in order, accepted and
 rejected candidates).
 
+Before counting current-capture critique entries or publishing their totals,
+grading validates each referenced record against its journal identity and score
+and requires a readable judge image within the build. Missing, mismatched or
+escaped evidence fails the process check and produces no trajectory summary.
+
 ## Bench
 
 The bench turns promoted builds into a leaderboard that moves when the

@@ -7,6 +7,8 @@
  */
 import path from "node:path";
 import { readLog } from "#build/build-log.ts";
+import { BuildWorkspace } from "#build/workspace.ts";
+import { readCritiqueRecord } from "#build/studio/critique-record.ts";
 import {
   BUILD_FILES,
   type BuildLogEntry,
@@ -27,7 +29,12 @@ export async function readJournal(buildDir: string): Promise<JournalRead> {
   const file = Bun.file(path.join(buildDir, BUILD_FILES.journal));
   if (!(await file.exists())) return null;
   try {
-    return { entries: await readLog(buildDir) };
+    const entries = await readLog(buildDir);
+    const workspace = new BuildWorkspace(buildDir);
+    for (const entry of currentCapture(entries)) {
+      if (entry.kind === "critique") await readCritiqueRecord(workspace, entry);
+    }
+    return { entries };
   } catch (error) {
     return { error: error instanceof Error ? error.message : String(error) };
   }
@@ -121,7 +128,7 @@ export function trajectoryChecks(
       {
         name: JOURNAL_CHECK,
         pass: false,
-        detail: `journal.jsonl does not parse: ${journal.error}`,
+        detail: `journal.jsonl does not parse or its critique evidence is invalid: ${journal.error}`,
       },
     ];
   }

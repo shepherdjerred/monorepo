@@ -23,7 +23,6 @@ import {
 } from "@shepherdjerred/mc-build/render/index.ts";
 import {
   BUILD_FILES,
-  JudgeCritiqueRecordSchema,
   type BuildLogEntry,
   type CodeSuggestion,
   type JudgeRubric,
@@ -48,6 +47,7 @@ import {
 } from "#build/sidecar.ts";
 import { savedRender } from "#build/sources.ts";
 import { BuildWorkspace } from "#build/workspace.ts";
+import { readCritiqueRecord } from "./critique-record.ts";
 
 /** What the code stage is given: the visual verdict and the program. */
 export type CodeInput = {
@@ -320,20 +320,7 @@ async function reuseVisual(
     ) {
       continue;
     }
-    const record = JudgeCritiqueRecordSchema.parse(
-      await Bun.file(workspace.file(entry.file)).json(),
-    );
-    if (
-      record.render !== entry.render ||
-      record.gridHash !== entry.gridHash ||
-      record.rubric !== entry.rubric ||
-      record.total !== entry.total ||
-      record.max !== entry.max
-    ) {
-      throw new Error(
-        `critique record ${entry.file} does not match its journal entry`,
-      );
-    }
+    const record = await readCritiqueRecord(workspace, entry);
     return {
       sheet: record.sheet,
       scores: {
