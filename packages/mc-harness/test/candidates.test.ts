@@ -732,6 +732,82 @@ const prefersWide: AskJudge = (first, second) =>
 const biased: AskJudge = () =>
   Promise.resolve({ winner: "first", confidence: 0.7, reasons: ["position"] });
 
+describe("candidate capture and judgment evidence", () => {
+  it.each(["contents", "placement", "world"])(
+    "rejects a candidate after capture %s changes before side effects",
+    async (change) => {
+      const workspace = await makeBuild(`capture-${change}`);
+      await pastePart(workspace, 2);
+      await saveCandidate(workspace.dir, "old");
+      const manifest = await workspace.manifest();
+      if (manifest.site === undefined) throw new Error("fixture has no site");
+      await workspace.writeManifest({
+        ...manifest,
+        world: change === "world" ? "another-world" : manifest.world,
+        site: {
+          ...manifest.site,
+          siteHash: change === "contents" ? "new-site" : manifest.site.siteHash,
+          min: {
+            ...manifest.site.min,
+            x: manifest.site.min.x + (change === "placement" ? 1 : 0),
+          },
+        },
+      });
+      const before = await readLog(workspace.dir);
+      const ops = await workspace.oplog();
+      const program = await Bun.file(
+        workspace.file(BUILD_FILES.program),
+      ).text();
+      await expect(pickCandidate(workspace.dir, "old")).rejects.toThrow(
+        /different capture/u,
+      );
+      const ask = vi.fn(prefersWide);
+      await expect(
+        knockout(workspace.dir, { rubric: "micro", model: "stub", ask }),
+      ).rejects.toThrow(/different capture/u);
+      expect(ask).not.toHaveBeenCalled();
+      expect(await readLog(workspace.dir)).toEqual(before);
+      expect(await workspace.oplog()).toEqual(ops);
+      expect(await Bun.file(workspace.file(BUILD_FILES.program)).text()).toBe(
+        program,
+      );
+    },
+  );
+
+  it("preserves the exact knockout inputs after replacing a losing candidate", async () => {
+    const workspace = await makeBuild("knockout-archive");
+    await pastePart(workspace, 2);
+    await saveCandidate(workspace.dir, "narrow");
+    await pastePart(workspace, 6);
+    await saveCandidate(workspace.dir, "wide");
+    const inputs: Uint8Array[] = [];
+    const ask: AskJudge = (first, second) => {
+      if (inputs.length === 0)
+        inputs.push(new Uint8Array(first.data), new Uint8Array(second.data));
+      return prefersWide(first, second);
+    };
+    const result = await knockout(workspace.dir, {
+      rubric: "micro",
+      model: "stub",
+      ask,
+    });
+    const record = JudgeRecordSchema.parse(
+      await Bun.file(
+        workspace.file(result.bouts[0]?.record ?? "missing-record"),
+      ).json(),
+    );
+    if (record.kind !== "pair") throw new Error("expected pair record");
+    await pastePart(workspace, 4);
+    await saveCandidate(workspace.dir, "narrow", { force: true });
+    for (const [index, file] of [record.a, record.b].entries()) {
+      expect(file).toMatch(/candidate-.*-[a-f0-9]{64}\.png$/u);
+      expect(new Uint8Array(await Bun.file(file).arrayBuffer())).toEqual(
+        inputs[index],
+      );
+    }
+  });
+});
+
 describe("candidates and knockout", () => {
   it("rejects repeated challengers before judging or changing the record", async () => {
     const workspace = await makeBuild("knockout-duplicates");

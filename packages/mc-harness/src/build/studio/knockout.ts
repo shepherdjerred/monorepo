@@ -7,6 +7,7 @@
  * versions were kept and why.
  */
 import path from "node:path";
+import { createHash } from "node:crypto";
 import { ensureAssets } from "@shepherdjerred/mc-build/render/assets.ts";
 import {
   assertTexturesPresent,
@@ -44,7 +45,7 @@ export type KnockoutResult = {
   bouts: Bout[];
 };
 
-type Sheet = { data: Uint8Array; mediaType: "image/png" };
+type Sheet = { data: Uint8Array; mediaType: "image/png"; file: string };
 
 async function sheetsFor(
   dir: string,
@@ -54,15 +55,25 @@ async function sheetsFor(
   const renderer = new Renderer(await ensureAssets());
   const sheets = new Map<string, Sheet>();
   for (const name of names) {
-    const image = await renderer.judgeSheet(await candidateGrid(dir, name), {
+    const grid = await candidateGrid(dir, name);
+    const image = await renderer.judgeSheet(grid, {
       kind: rubric,
       label: "X",
     });
     // A missing texture would show the fallback checker to the judge.
     assertTexturesPresent(renderer, `knockout sheet for candidate "${name}"`);
+    const data = new Uint8Array(await encodePng(image));
+    const hash = createHash("sha256").update(data).digest("hex");
+    const file = path.join(
+      path.resolve(dir),
+      "judge",
+      `candidate-${name}-${hash}.png`,
+    );
+    await Bun.write(file, data);
     sheets.set(name, {
-      data: new Uint8Array(await encodePng(image)),
+      data,
       mediaType: "image/png",
+      file,
     });
   }
   return sheets;
@@ -112,8 +123,8 @@ async function bout(
     model: options.model,
     rubric: options.rubric,
     judge: judgeFingerprint(options.rubric),
-    a: `candidate:${incumbent}`,
-    b: `candidate:${challenger}`,
+    a: sheetOf(pair.sheets, incumbent).file,
+    b: sheetOf(pair.sheets, challenger).file,
     winner: verdict.winner,
     confidence: verdict.confidence,
     agreed: verdict.agreed,

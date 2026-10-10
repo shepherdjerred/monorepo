@@ -266,6 +266,11 @@ pick n | knockout [--among a,b] [--rubric] [--model]`) keep versions of
   a tie keeps the incumbent, every bout is written under `judge/` and
   logged as an accept and a reject, and the winner becomes `best`. `pick`
   restores a candidate as the working version.
+  Candidates record the captured site's hash, world and bounds; picking or
+  judging one against another capture fails. Recapturing clears the incumbent
+  and preserves old candidates; use `--among` to select candidates saved for
+  the new capture. Pair records reference archived, content-addressed judge
+  images, so replacing a candidate never changes earlier judgment evidence.
 - **Scratch** (`scratch <dir> [--size n]`) makes `<dir>/scratch/`, an
   ordinary build directory beside the site (flat grass over dirt up to the
   anchor, air above) for trying a wall, a roof or a tree with the offline

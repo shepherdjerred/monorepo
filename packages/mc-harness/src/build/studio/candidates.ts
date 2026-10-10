@@ -6,6 +6,7 @@
  */
 import { cp, mkdir, readdir, rm } from "node:fs/promises";
 import path from "node:path";
+import { isDeepStrictEqual } from "node:util";
 import { gridHash } from "@shepherdjerred/mc-build/core/site.ts";
 import {
   readSchematic,
@@ -79,6 +80,9 @@ export async function saveCandidate(
 ): Promise<Candidate> {
   const workspace = new BuildWorkspace(dir);
   const manifest = await workspace.manifest();
+  if (manifest.site === undefined) {
+    throw new Error("candidate save requires a captured site");
+  }
   const target = candidateDir(workspace, name);
   const exists = await Bun.file(
     path.join(target, CANDIDATE_FILES.info),
@@ -131,6 +135,10 @@ export async function saveCandidate(
     at: new Date().toISOString(),
     iteration: iterationOf(journal),
     gridHash: hash,
+    capture: {
+      siteHash: manifest.site.siteHash,
+      box: workspace.siteBox(manifest),
+    },
     size: grid.size,
     blocks,
     program,
@@ -158,7 +166,20 @@ export async function readCandidate(
       `no candidate "${name}" in ${workspace.dir}; toolkit mc build candidate ${dir} ls`,
     );
   }
-  return CandidateSchema.parse(await file.json());
+  const candidate = CandidateSchema.parse(await file.json());
+  const manifest = await workspace.manifest();
+  if (
+    manifest.site === undefined ||
+    !isDeepStrictEqual(candidate.capture, {
+      siteHash: manifest.site.siteHash,
+      box: workspace.siteBox(manifest),
+    })
+  ) {
+    throw new Error(
+      `candidate "${name}" belongs to a different capture; save a candidate for the current site before picking or judging it`,
+    );
+  }
+  return candidate;
 }
 
 export async function candidateGrid(
@@ -166,10 +187,14 @@ export async function candidateGrid(
   name: string,
 ): Promise<BlockGrid> {
   const workspace = new BuildWorkspace(dir);
+  const candidate = await readCandidate(dir, name);
   const file = path.join(candidateDir(workspace, name), CANDIDATE_FILES.grid);
   const schematic = await readSchematic(
     new Uint8Array(await Bun.file(file).arrayBuffer()),
   );
+  if (gridHash(schematic.grid) !== candidate.gridHash) {
+    throw new Error(`candidate "${name}" grid does not match its saved hash`);
+  }
   return schematic.grid;
 }
 

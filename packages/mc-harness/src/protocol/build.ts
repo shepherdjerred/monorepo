@@ -6,7 +6,12 @@
  */
 import path from "node:path";
 import { z } from "zod";
-import { BlockPosSchema, RotationSchema, SessionNameSchema } from "./bridge.ts";
+import {
+  BlockPosSchema,
+  BoxSchema,
+  RotationSchema,
+  SessionNameSchema,
+} from "./bridge.ts";
 
 export const BUILD_FILES = {
   manifest: "build.json",
@@ -252,6 +257,8 @@ export const CandidateSchema = z.strictObject({
   at: Iso,
   iteration: Iteration,
   gridHash: z.string(),
+  /** Baseline contents and placement that the saved op log was judged against. */
+  capture: z.strictObject({ siteHash: z.string(), box: BoxSchema }),
   size: BlockPosSchema,
   blocks: z.number().int(),
   /** Whether the candidate carries a build.ts. */

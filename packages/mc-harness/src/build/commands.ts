@@ -112,8 +112,10 @@ export async function captureSite(
     workspace.file(BUILD_FILES.siteInfo),
     `${JSON.stringify(info)}\n`,
   );
+  // A new capture starts a new competition; retain old candidates for inspection.
+  const { best: _best, ...capturedManifest } = manifest;
   await workspace.writeManifest({
-    ...manifest,
+    ...capturedManifest,
     world: options.box.world,
     site: { min: region.min, max: region.max, siteHash: info.siteHash },
   });
