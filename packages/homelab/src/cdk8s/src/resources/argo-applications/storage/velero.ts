@@ -20,7 +20,7 @@ export function createVeleroApp(chart: Chart) {
     new ApiObject(chart, `${namespace}-isolation`, {
       apiVersion: "networking.k8s.io/v1",
       kind: "NetworkPolicy",
-      metadata: { name: "isolate-restore", namespace },
+      metadata: { name: `${namespace}-isolate`, namespace },
       spec: {
         podSelector: {},
         policyTypes: ["Ingress", "Egress"],
