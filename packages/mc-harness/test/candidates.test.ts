@@ -706,6 +706,19 @@ describe("by-eye critique and compare alignment", () => {
     await expect(alignedRender(workspace, "unplaced", site)).rejects.toThrow(
       /does not record the region/u,
     );
+    // A failed rerender can leave a newer schematic beside the earlier sidecar.
+    grid.set(0, 2, 0, "minecraft:stone");
+    const registry = await loadRegistry();
+    await Bun.write(
+      workspace.file("renders/whole.schem"),
+      writeSchematic(grid, registry.dataVersion),
+    );
+    await expect(alignedRender(workspace, "whole", site)).rejects.toThrow(
+      /hash does not match/u,
+    );
+    await expect(alignedRender(workspace, "whole", part)).rejects.toThrow(
+      /hash does not match/u,
+    );
   }, 60_000);
 
   it("names the first lowest axis in rubric order", () => {

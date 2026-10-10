@@ -64,18 +64,23 @@ function layerHasBlock(grid: BlockGrid, y: number): boolean {
   return false;
 }
 
-/** Drops empty layers above the highest block so the view frames the build. */
-export function withoutSky(grid: BlockGrid): BlockGrid {
+function occupiedHeight(grid: BlockGrid): number {
   let top = grid.size.y - 1;
   while (top > 0 && !layerHasBlock(grid, top)) {
     top -= 1;
   }
-  if (top === grid.size.y - 1) {
+  return top + 1;
+}
+
+/** Drops empty layers above the highest block so the view frames the build. */
+export function withoutSky(grid: BlockGrid): BlockGrid {
+  const height = occupiedHeight(grid);
+  if (height === grid.size.y) {
     return grid;
   }
-  const out = new BlockGrid({ x: grid.size.x, y: top + 1, z: grid.size.z });
+  const out = new BlockGrid({ x: grid.size.x, y: height, z: grid.size.z });
   for (let x = 0; x < grid.size.x; x += 1) {
-    for (let y = 0; y <= top; y += 1) {
+    for (let y = 0; y < height; y += 1) {
       for (let z = 0; z < grid.size.z; z += 1) {
         out.set(x, y, z, grid.get(x, y, z));
       }
@@ -200,8 +205,8 @@ export class Renderer {
   }
 
   /**
-   * A player-eye view: by default standing 1.5× the build's width in front
-   * of its front-centre, eyes 1.62 blocks up, looking at the roof's middle.
+   * A player-eye view from the front-centre, eyes 1.62 blocks above ground.
+   * Standoff and aim use occupied height, ignoring empty capture headroom.
    */
   async pov(
     grid: BlockGrid,
@@ -216,7 +221,8 @@ export class Renderer {
   ): Promise<Image> {
     const size = options.size ?? 960;
     const frame = { width: size, height: Math.round(size * 0.625) };
-    const { x: sx, y: sy, z: sz } = grid.size;
+    const { x: sx, z: sz } = grid.size;
+    const sy = occupiedHeight(grid);
     const ground = groundLevel(grid);
     const eye = options.eye ?? [
       sx / 2,

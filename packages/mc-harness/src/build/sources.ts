@@ -6,6 +6,7 @@
 import path from "node:path";
 import { AIR, type BlockGrid } from "@shepherdjerred/mc-build/core/grid.ts";
 import { readSchematic } from "@shepherdjerred/mc-build/core/schem.ts";
+import { gridHash } from "@shepherdjerred/mc-build/core/site.ts";
 import type { BlockPos, Box } from "#protocol/bridge.ts";
 import { BUILD_FILES, type BuildManifest, type Op } from "#protocol/build.ts";
 import { canvasOf, type Env, type LookOptions } from "./helpers.ts";
@@ -234,6 +235,11 @@ export async function alignedRender(
 ): Promise<BlockGrid> {
   const sidecar = await readSidecar(workspace, name);
   const saved = await savedRender(workspace, name);
+  if (gridHash(saved) !== sidecar.gridHash) {
+    throw new Error(
+      `render "${name}" schematic hash does not match its sidecar; render it again before comparing`,
+    );
+  }
   const covered = sidecar.box;
   if (covered === undefined) {
     throw new Error(

@@ -403,6 +403,25 @@ describe("renderer", () => {
   });
 });
 
+describe("POV framing", () => {
+  test.each(["textured", "light", "relief"] as const)(
+    "ignores empty capture headroom in %s mode",
+    async (mode) => {
+      const renderer = new Renderer(root);
+      const compact = scene();
+      const padded = new BlockGrid({ ...compact.size, y: 128 });
+      compact.forEach((x, y, z, state) => padded.set(x, y, z, state));
+      const original = await renderer.pov(compact, { size: 160, mode });
+      const headroom = await renderer.pov(padded, { size: 160, mode });
+      expect(pixelHash(headroom.pixels)).toBe(pixelHash(original.pixels));
+      const skyOnly = new Uint8Array(original.pixels.length);
+      for (let index = 0; index < skyOnly.length; index += 4)
+        skyOnly.set([196, 214, 236, 255], index);
+      expect(pixelHash(original.pixels)).not.toBe(pixelHash(skyOnly));
+    },
+  );
+});
+
 describe("survey", () => {
   test("tiles are shaded by the whole grid, not in isolation", async () => {
     const renderer = new Renderer(root);
