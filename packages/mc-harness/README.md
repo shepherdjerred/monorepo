@@ -286,11 +286,14 @@ pick n | knockout [--among a,b] [--rubric] [--model]`) keep versions of
   build).
   `knockout` is a keep-best tournament: the incumbent (`build.json`
   `best`) meets each challenger on anonymised judge sheets, order-swapped;
-  a tie keeps the incumbent, every bout is written under `judge/` and
+  a tie keeps the incumbent. Every participant's critique evidence is validated
+  before rendering or model calls; accepted and rejected scores use that same
+  validated snapshot. Every bout is written under `judge/` and
   logged as an accept and a reject, and the winner becomes `best` after each
   completed bout, even if a later model call fails. `pick`
   validates the saved grid, op log and program before staging the working
-  version. Failed staging or installation restores both prior working files;
+  version, including replaying referenced schematics and matching the saved
+  grid hash. Failed staging or installation restores both prior working files;
   if rollback itself fails, the error identifies retained recovery files.
   Retrying an interrupted tournament with the same pool, candidate versions,
   rubric and model resumes its remaining challengers without rejudging earlier

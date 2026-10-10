@@ -11,7 +11,7 @@ import type { BlockPos, Box } from "#protocol/bridge.ts";
 import { BUILD_FILES, type BuildManifest, type Op } from "#protocol/build.ts";
 import { canvasOf, type Env, type LookOptions } from "./helpers.ts";
 import { readGrid } from "./ops.ts";
-import { readSidecar } from "./sidecar.ts";
+import { buildArtifactPath, readSidecar } from "./sidecar.ts";
 import { cropGrid } from "./tiles.ts";
 import type { BuildWorkspace } from "./workspace.ts";
 
@@ -105,7 +105,9 @@ async function applyOffline(
   if (op.rotate !== 0)
     return `rotated ${op.rotate.toString()}°, not applied offline`;
   const bytes = new Uint8Array(
-    await Bun.file(workspace.file(op.schematic)).arrayBuffer(),
+    await Bun.file(
+      await buildArtifactPath(workspace, op.schematic),
+    ).arrayBuffer(),
   );
   const schematic = await readSchematic(bytes);
   pasteInto(
@@ -128,10 +130,12 @@ async function applyOffline(
 export async function compiledGrid(
   workspace: BuildWorkspace,
   manifest: BuildManifest,
+  savedOps?: readonly Op[],
 ): Promise<{ grid: BlockGrid; skipped: string[] }> {
   const site = workspace.siteBox(manifest);
   const grid = await workspace.siteGrid();
-  const oplog = await workspace.oplog();
+  const oplog =
+    savedOps === undefined ? await workspace.oplog() : { ops: savedOps };
   const skipped: string[] = [];
   for (const [index, op] of oplog.ops.entries()) {
     const reason = await applyOffline(workspace, grid, site, op);

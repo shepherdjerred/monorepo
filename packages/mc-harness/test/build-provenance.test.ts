@@ -4,6 +4,10 @@ import os from "node:os";
 import path from "node:path";
 import { afterAll, describe, expect, it, vi } from "vitest";
 import { BlockGrid } from "@shepherdjerred/mc-build/core/grid.ts";
+import {
+  readSchematic,
+  writeSchematic,
+} from "@shepherdjerred/mc-build/core/schem.ts";
 import { RegionReadSchema } from "@shepherdjerred/mc-build/core/region-read.ts";
 import { appendLog, readLog } from "#build/build-log.ts";
 import { renderBuild, runBuild } from "#build/commands.ts";
@@ -19,6 +23,7 @@ import {
   saveCandidate,
 } from "#build/studio/candidates.ts";
 import { critiqueBuild } from "#build/studio/critique.ts";
+import { knockout } from "#build/studio/knockout.ts";
 import { resumeState } from "#build/resume.ts";
 import {
   BUILD_FILES,
@@ -462,6 +467,159 @@ describe("candidate restore transactions", () => {
       expect(await readLog(workspace.dir)).toEqual(journal);
       const names = await readdir(workspace.dir);
       expect(names.some((name) => name.startsWith(".pick-"))).toBe(false);
+    },
+  );
+});
+
+describe("candidate input validation", () => {
+  it.each(["missing", "replaced"])(
+    "rejects a %s referenced schematic before picking",
+    async (failure) => {
+      const workspace = await flatSiteBuild(
+        path.join(temp, `pick-schematic-${failure}`),
+        "pick",
+      );
+      const site = await readSchematic(
+        await Bun.file(workspace.file(BUILD_FILES.siteSchematic)).bytes(),
+      );
+      const input = workspace.file("schematics/part.schem");
+      const bytes = writeSchematic(
+        new BlockGrid({ x: 2, y: 2, z: 2 }, "minecraft:stone"),
+        site.dataVersion,
+      );
+      await Bun.write(input, bytes);
+      const ops: Op[] = [
+        {
+          kind: "paste",
+          schematic: "schematics/part.schem",
+          world: "world",
+          at: { x: 100, y: 64, z: 100 },
+          rotate: 0,
+          ignoreAir: false,
+          source: "manual",
+        },
+      ];
+      await workspace.writeOplog({ version: 1, ops });
+      await saveCandidate(workspace.dir, "saved");
+      await workspace.writeOplog({ version: 1, ops: [] });
+      await Bun.write(workspace.file(BUILD_FILES.program), "working program");
+      const before = await Bun.file(workspace.file(BUILD_FILES.oplog)).bytes();
+      const journal = await readLog(workspace.dir);
+      if (failure === "missing") await rm(input);
+      else
+        await Bun.write(
+          input,
+          writeSchematic(
+            new BlockGrid({ x: 2, y: 2, z: 2 }, "minecraft:dirt"),
+            site.dataVersion,
+          ),
+        );
+      await expect(pickCandidate(workspace.dir, "saved")).rejects.toThrow();
+      expect(await Bun.file(workspace.file(BUILD_FILES.program)).text()).toBe(
+        "working program",
+      );
+      expect(await Bun.file(workspace.file(BUILD_FILES.oplog)).bytes()).toEqual(
+        before,
+      );
+      expect(await readLog(workspace.dir)).toEqual(journal);
+      await Bun.write(input, bytes);
+      await pickCandidate(workspace.dir, "saved");
+      const restored = await workspace.oplog();
+      expect(restored.ops).toEqual(ops);
+    },
+  );
+});
+
+describe("tournament score preflight", () => {
+  it.each(
+    ["a", "c"].flatMap((candidate) =>
+      ["record", "image", "corrupt"].map((failure) => ({ candidate, failure })),
+    ),
+  )(
+    "rejects $failure evidence for $candidate before any bout",
+    async ({ candidate, failure }) => {
+      const workspace = await flatSiteBuild(
+        path.join(temp, `score-${candidate}-${failure}`),
+        "score",
+      );
+      const env = {
+        client: new DaemonClient(),
+        journal: new Journal(workspace.file("audit")),
+        log: vi.fn(),
+      };
+      let record = "";
+      let sheet = "";
+      for (const [index, name] of ["a", "b", "c"].entries()) {
+        await workspace.writeOplog({
+          version: 1,
+          ops: [
+            {
+              kind: "we",
+              command: "//set air",
+              world: "world",
+              pos1: { x: 100 + index, y: 64, z: 100 },
+              pos2: { x: 100 + index, y: 64, z: 100 },
+              source: "manual",
+            },
+          ],
+        });
+        await saveCandidate(workspace.dir, name);
+        if (name === candidate) {
+          await renderBuild(env, workspace.dir, { source: "compiled", name });
+          const critique = await critiqueBuild(workspace.dir, {
+            render: name,
+            rubric: "micro",
+            model: "stub",
+            stage: "visual",
+            byEye: {
+              axes: Object.fromEntries(
+                rubricAxisIds("micro").map((axis) => [axis, 3]),
+              ),
+              overallAesthetic: 3,
+              notes: [],
+            },
+          });
+          record = workspace.file(critique.record);
+          sheet = workspace.file(critique.sheet);
+        }
+      }
+      if (record === "" || sheet === "")
+        throw new Error("missing fixture evidence");
+      if (failure === "record") await rm(record);
+      if (failure === "image") await rm(sheet);
+      if (failure === "corrupt") {
+        const content = JudgeCritiqueRecordSchema.parse(
+          await Bun.file(record).json(),
+        );
+        await Bun.write(
+          record,
+          JSON.stringify({ ...content, total: content.total + 1 }),
+        );
+      }
+      const journal = await readLog(workspace.dir);
+      const manifest = await Bun.file(
+        workspace.file(BUILD_FILES.manifest),
+      ).bytes();
+      const files = await readdir(workspace.file(BUILD_FILES.judgeDir));
+      const ask = vi.fn(() =>
+        Promise.reject(new Error("unexpected judge call")),
+      );
+      await expect(
+        knockout(workspace.dir, {
+          among: ["a", "b", "c"],
+          rubric: "micro",
+          model: "stub",
+          ask,
+        }),
+      ).rejects.toThrow();
+      expect(ask).not.toHaveBeenCalled();
+      expect(await readLog(workspace.dir)).toEqual(journal);
+      expect(
+        await Bun.file(workspace.file(BUILD_FILES.manifest)).bytes(),
+      ).toEqual(manifest);
+      expect(await readdir(workspace.file(BUILD_FILES.judgeDir))).toEqual(
+        files,
+      );
     },
   );
 });

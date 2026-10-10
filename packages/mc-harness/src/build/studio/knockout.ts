@@ -47,6 +47,14 @@ export type KnockoutResult = {
 };
 
 type Sheet = { data: Uint8Array; mediaType: "image/png"; file: string };
+type Scores = ReadonlyMap<string, number | null>;
+
+function scoreOf(scores: Scores, name: string): number | null {
+  const score = scores.get(name);
+  if (score === undefined)
+    throw new Error(`candidate score was not validated: ${name}`);
+  return score;
+}
 
 async function sheetsFor(
   dir: string,
@@ -112,6 +120,7 @@ async function persistBest(
   incumbent: string,
   options: {
     rubric: JudgeRubric;
+    score: number | null;
     progress?: NonNullable<BuildManifest["knockout"]>;
   },
 ): Promise<NonNullable<BuildManifest["best"]>> {
@@ -121,7 +130,7 @@ async function persistBest(
     candidate: incumbent,
     gridHash: candidate.gridHash,
     rubric,
-    score: await candidateScore(workspace.dir, incumbent, rubric),
+    score: options.score,
   };
   const unchanged =
     manifest.best?.candidate === best.candidate &&
@@ -141,7 +150,12 @@ async function persistBest(
 async function bout(
   dir: string,
   pair: { incumbent: string; challenger: string; sheets: Map<string, Sheet> },
-  options: { rubric: JudgeRubric; model: string; ask: AskJudge },
+  options: {
+    rubric: JudgeRubric;
+    model: string;
+    ask: AskJudge;
+    scores: Scores;
+  },
 ): Promise<Bout> {
   const { incumbent, challenger } = pair;
   const verdict = await judgePair(
@@ -174,7 +188,7 @@ async function bout(
     versus: dropped,
     file,
     rubric: options.rubric,
-    score: await candidateScore(dir, kept, options.rubric),
+    score: scoreOf(options.scores, kept),
   });
   await appendLog(dir, {
     kind: "reject",
@@ -182,7 +196,7 @@ async function bout(
     versus: kept,
     file,
     rubric: options.rubric,
-    score: await candidateScore(dir, dropped, options.rubric),
+    score: scoreOf(options.scores, dropped),
   });
   return {
     incumbent,
@@ -271,6 +285,10 @@ export async function knockout(
     previous === undefined
       ? initial
       : { incumbent: previous.incumbent, challengers: previous.pending };
+  const scores = new Map<string, number | null>();
+  for (const name of participants) {
+    scores.set(name, await candidateScore(dir, name, options.rubric));
+  }
   const sheets = await sheetsFor(
     dir,
     [seeds.incumbent, ...seeds.challengers],
@@ -295,7 +313,7 @@ export async function knockout(
     const result = await bout(
       dir,
       { incumbent, challenger, sheets },
-      { ...options, ask },
+      { ...options, ask, scores },
     );
     bouts.push(result);
     incumbent = result.winner === "challenger" ? challenger : incumbent;
@@ -308,6 +326,7 @@ export async function knockout(
     };
     const best = await persistBest(workspace, manifest, incumbent, {
       rubric: options.rubric,
+      score: scoreOf(scores, incumbent),
       progress,
     });
     manifest = {
@@ -318,6 +337,7 @@ export async function knockout(
   }
   const best = await persistBest(workspace, manifest, incumbent, {
     rubric: options.rubric,
+    score: scoreOf(scores, incumbent),
   });
   if (seeds.challengers.length === 0 && manifest.best !== best) {
     // No bout produces an accept entry when the pool contains only the incumbent.

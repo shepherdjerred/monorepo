@@ -306,6 +306,19 @@ export async function pickCandidate(
       `candidate "${name}" op count does not match its saved metadata`,
     );
   }
+  const reproduced = await compiledGrid(
+    workspace,
+    await workspace.manifest(),
+    oplog.ops,
+  );
+  if (
+    reproduced.skipped.length > 0 ||
+    gridHash(reproduced.grid) !== candidate.gridHash
+  ) {
+    throw new Error(
+      `candidate "${name}" op log does not reproduce its saved grid`,
+    );
+  }
   const program = candidate.program
     ? await Bun.file(await artifact(BUILD_FILES.program)).bytes()
     : null;
