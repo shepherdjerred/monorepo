@@ -73,6 +73,7 @@ export function lightOf(
 ): number {
   const name = id.replace(/^minecraft:/u, "");
   const lit = properties["lit"];
+  if (name === "light") return Number(properties["level"] ?? "15");
   if (FULL_LIGHT.test(name)) {
     return lit === "false" ? 0 : 15;
   }

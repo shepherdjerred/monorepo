@@ -70,7 +70,8 @@ massing and silhouette), `normal` (each face coloured by its facing, so a
 flat wall is one flat colour and relief shows as colour changes), `squint`
 (box-blurred: only massing survives), `relief` (a low sun marched through
 the grid for long shadows, plus corner occlusion) or `light` (cells coloured
-by block light with sky light propagated in; level 0 is red), for example
+by block light with sky light propagated in; level 0 is red). Invisible
+`minecraft:light` blocks emit their `level` (0–15, default 15), for example
 `renderer.view(grid, "iso-front-right", 512, { mode: "relief" })`.
 Ordinary and stained glass, including panes, transmit skylight; tinted glass
 and solid blocks obstruct it. The skylight pass is an approximation within

@@ -404,6 +404,31 @@ describe("renderer", () => {
 });
 
 describe("POV framing", () => {
+  test("light views distinguish invisible light levels without drawing the source", async () => {
+    const renderer = new Renderer(root);
+    const hashes: string[] = [];
+    for (const state of [
+      "minecraft:air",
+      "minecraft:light[level=0]",
+      "minecraft:light[level=7]",
+      "minecraft:light[level=15]",
+    ]) {
+      const whole = new BlockGrid({ x: 7, y: 6, z: 7 }, "minecraft:stone");
+      for (let x = 1; x < 6; x += 1)
+        for (let y = 1; y < 5; y += 1)
+          for (let z = 1; z < 6; z += 1) whole.set(x, y, z, "minecraft:air");
+      whole.set(3, 2, 3, state);
+      const image = await renderer.view(
+        cutGrid(whole, { belowY: 3, behindZ: 3 }),
+        "iso-front-right",
+        160,
+        { mode: "light", lightFrom: whole },
+      );
+      hashes.push(pixelHash(image.pixels));
+    }
+    expect(hashes[0]).toBe(hashes[1]);
+    expect(new Set(hashes.slice(1)).size).toBe(3);
+  });
   test.each(["textured", "light", "relief"] as const)(
     "ignores empty capture headroom in %s mode",
     async (mode) => {

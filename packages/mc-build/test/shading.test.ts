@@ -54,3 +54,23 @@ describe("block light through glazed partitions", () => {
     expect(isPassable(`minecraft:${block}`)).toBe(false);
   });
 });
+
+describe("invisible light blocks", () => {
+  it.each([
+    { state: "minecraft:light", level: 15 },
+    ...Array.from({ length: 16 }, (_, level) => ({
+      state: `minecraft:light[level=${level.toString()}]`,
+      level,
+    })),
+  ])("propagates $state at its emitted level", ({ state, level }) => {
+    const grid = new BlockGrid({ x: 7, y: 3, z: 3 }, "minecraft:stone");
+    for (let x = 1; x < 6; x += 1) grid.set(x, 1, 1, "minecraft:air");
+    grid.set(1, 1, 1, state);
+    const light = blockLightLevels(grid);
+    for (let offset = 0; offset < 5; offset += 1) {
+      expect(light[grid.index(1 + offset, 1, 1)]).toBe(
+        Math.max(0, level - offset),
+      );
+    }
+  });
+});
