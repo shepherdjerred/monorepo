@@ -42,8 +42,8 @@ RUN bun install --frozen-lockfile \
   --filter '@shepherdjerred/toolkit'
 
 # ── build: gitignored artifacts (shared dist + compiled toolkit) ────────────
-# Toolkit needs the shared daemon helpers and MC protocol exports at compile
-# time; their workspace manifests are already present in the deps stage.
+# Toolkit needs the shared daemon helpers, MC protocol exports, and their
+# shared lighting schema at compile time. Workspace manifests are in deps.
 FROM deps AS build
 COPY --parents \
   tsconfig.base.json \
@@ -63,6 +63,7 @@ COPY --parents \
   packages/toolkit \
   packages/unix-socket-daemon/src \
   packages/mc-harness/src/protocol \
+  packages/mc-build/src/registry/lighting.ts \
   packages/config \
   packages/sentry-config \
   packages/ops-model \
