@@ -150,7 +150,7 @@ test("suppressed and recovered findings preserve the clear condition", () => {
   }
 });
 
-test("unknown findings keep their detail and partial failures keep error text", () => {
+test("unknown findings keep detail and partial failures keep only failed check text", () => {
   const first = report(1);
   first.findings = first.findings.map((finding) => ({
     ...finding,
@@ -166,14 +166,38 @@ test("unknown findings keep their detail and partial failures keep error text", 
   expect(notificationCondition(changed).fingerprint).not.toBe(
     notificationCondition(first).fingerprint,
   );
-  const partial = { ...first, execution: "partial" as const };
+  const partial = {
+    ...first,
+    execution: "partial" as const,
+    checks: [
+      { ...first.checks[0]!, id: "temporal-health", summary: "24 failures" },
+      {
+        ...first.checks[0]!,
+        id: "collector",
+        status: "failed" as const,
+        summary: "Network timeout",
+      },
+    ],
+  };
+  const changingPassedSummary = {
+    ...partial,
+    checks: partial.checks.map((check) =>
+      check.id === "temporal-health"
+        ? { ...check, summary: "25 failures" }
+        : check,
+    ),
+  };
+  expect(notificationCondition(changingPassedSummary).fingerprint).toBe(
+    notificationCondition(partial).fingerprint,
+  );
   expect(
     notificationCondition({
       ...partial,
-      checks: partial.checks.map((check) => ({
-        ...check,
-        summary: "Different collector error",
-      })),
+      checks: partial.checks.map((check) =>
+        check.id === "collector"
+          ? { ...check, summary: "Different collector error" }
+          : check,
+      ),
     }).fingerprint,
   ).not.toBe(notificationCondition(partial).fingerprint);
 });

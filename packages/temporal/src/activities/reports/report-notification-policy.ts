@@ -140,7 +140,9 @@ export function notificationCondition(report: ReportEnvelopeV1): {
         required: check.required,
         // Collector failures have no stable finding identity. Preserve their
         // error text so a different failure cannot be hidden by the same ID.
-        ...(report.execution === "complete" ? {} : { summary: check.summary }),
+        ...(report.execution === "partial" && check.status !== "passed"
+          ? { summary: check.summary }
+          : {}),
       }))
       .sort((a, b) => a.id.localeCompare(b.id)),
     findings: findings

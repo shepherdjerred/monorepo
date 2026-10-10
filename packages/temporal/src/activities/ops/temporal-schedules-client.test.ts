@@ -1,6 +1,11 @@
-import { describe, expect, test } from "vitest";
+import {
+  TypedSearchAttributes,
+  defineSearchAttributeKey,
+} from "@temporalio/common";
+import { describe, expect, test, vi } from "vitest";
 import {
   inspectScheduleHealth,
+  listCompletedScheduleActions,
   type ScheduleHealthReader,
   type ScheduleExecutionObservation,
 } from "./temporal-schedules-client.ts";
@@ -51,6 +56,13 @@ function reader(status: ScheduleExecutionObservation["status"]): {
         status: id === "recent" ? "COMPLETED" : status,
       });
     },
+    listCompletedActions: () =>
+      Promise.resolve([
+        {
+          scheduledAt: new Date(now.getTime() - 60 * 60 * 1000).toISOString(),
+          workflowId: "older-completed",
+        },
+      ]),
   };
   return { client, reads };
 }
@@ -62,6 +74,12 @@ describe("Temporal Schedule SDK boundary", () => {
     expect(result[0]).toMatchObject({
       running: false,
       actions: [{ status: "COMPLETED", scheduledAt: now.toISOString() }],
+      completedActions: [
+        {
+          scheduledAt: new Date(now.getTime() - 60 * 60 * 1000).toISOString(),
+          workflowId: "older-completed",
+        },
+      ],
     });
     expect(reads).toEqual(["recent:first-recent", "older:first-older"]);
   });
@@ -88,5 +106,42 @@ describe("Temporal Schedule SDK boundary", () => {
     await expect(inspectScheduleHealth(client, "prod", now)).rejects.toThrow(
       "permission denied",
     );
+  });
+  test("lists successful schedule executions by durable schedule and scheduled time", async () => {
+    const scheduledAt = new Date(now.getTime() - 60 * 60 * 1000);
+    const list = vi.fn(() =>
+      (async function* () {
+        yield {
+          workflowId: "backup-older-action",
+          closeTime: scheduledAt,
+          typedSearchAttributes: new TypedSearchAttributes([
+            {
+              key: defineSearchAttributeKey(
+                "TemporalScheduledStartTime",
+                "DATETIME",
+              ),
+              value: scheduledAt,
+            },
+          ]),
+        };
+      })(),
+    );
+    const result = await listCompletedScheduleActions(
+      list,
+      "backup",
+      new Date(now.getTime() - 24 * 60 * 60 * 1000),
+    );
+    expect(list).toHaveBeenCalledWith({
+      pageSize: 100,
+      query:
+        'TemporalScheduledById = "backup" AND TemporalScheduledStartTime > "2026-09-30T12:00:00.000Z" AND ExecutionStatus = "Completed"',
+    });
+    expect(result).toEqual([
+      {
+        scheduledAt: scheduledAt.toISOString(),
+        workflowId: "backup-older-action",
+        closedAt: scheduledAt.toISOString(),
+      },
+    ]);
   });
 });

@@ -19,6 +19,7 @@ const failed: AuditTemporalExecution = {
   runId: "failed-run",
   firstRunId: "first-run",
   workflowType: "report",
+  scheduleId: "audit",
   startedAt: "2026-10-09T01:00:00Z",
 };
 const latest: Parameters<typeof temporalFailureRecovery>[1] = {
@@ -34,6 +35,7 @@ const schedule: ScheduleHealthObservation = {
   paused: false,
   observedAt: now.toISOString(),
   running: false,
+  completedActions: [],
   actions: [
     {
       scheduledAt: failed.startedAt,
@@ -147,6 +149,49 @@ describe("Temporal audit recovery evidence", () => {
         now,
       ),
     ).toContain("completed a later action");
+  });
+  test("completed actions outside the recent ring recover their schedule-owned failure", () => {
+    expect(
+      temporalFailureRecovery(
+        failed,
+        { ...latest, status: running },
+        [
+          {
+            ...schedule,
+            actions: [],
+            completedActions: [
+              {
+                scheduledAt: "2026-10-09T02:00:00Z",
+                workflowId: "scheduled-action-older-than-ring",
+              },
+            ],
+          },
+        ],
+        now,
+      ),
+    ).toContain("scheduled-action-older-than-ring");
+  });
+  test("completed history from another schedule cannot recover a failure", () => {
+    expect(
+      temporalFailureRecovery(
+        failed,
+        { ...latest, status: running },
+        [
+          {
+            ...schedule,
+            scheduleId: "unrelated",
+            actions: [],
+            completedActions: [
+              {
+                scheduledAt: "2026-10-09T02:00:00Z",
+                workflowId: "unrelated-success",
+              },
+            ],
+          },
+        ],
+        now,
+      ),
+    ).toBeUndefined();
   });
   test("running or unknown successors do not fabricate recovery", () => {
     const [first] = schedule.actions;

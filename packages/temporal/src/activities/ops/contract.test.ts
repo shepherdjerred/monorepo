@@ -304,6 +304,7 @@ const COLLECTIONS: Record<SourceId, OpsCollection> = {
         paused: false,
         observedAt: now.toISOString(),
         running: false,
+        completedActions: [],
         actions: [
           {
             scheduledAt: ago(2),

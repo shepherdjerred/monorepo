@@ -3,7 +3,9 @@ import {
   type Client,
   type ScheduleDescription,
   type WorkflowExecutionStatusName,
+  type WorkflowExecutionInfo,
 } from "@temporalio/client";
+import { defineSearchAttributeKey } from "@temporalio/common";
 import { createTemporalReadClient } from "#client";
 import {
   temporalNamespacesForMonitoring,
@@ -18,6 +20,16 @@ export type ScheduleExecutionObservation = {
   closedAt?: string;
 };
 
+export type ScheduleCompletedExecutionObservation = {
+  scheduledAt: string;
+  workflowId: string;
+  closedAt?: string;
+};
+type CompletedScheduleWorkflowExecution = Pick<
+  WorkflowExecutionInfo,
+  "workflowId" | "closeTime" | "typedSearchAttributes"
+>;
+
 export type ScheduleHealthObservation = {
   namespace: TemporalNamespace;
   scheduleId: string;
@@ -30,6 +42,8 @@ export type ScheduleHealthObservation = {
   /** null means a cached running action could not be described. */
   running: boolean | null;
   actions: ScheduleExecutionObservation[];
+  /** Successful scheduled executions retained across the full audit window. */
+  completedActions: ScheduleCompletedExecutionObservation[];
 };
 
 /** An injectable read-only adapter keeps SDK/protobuf data out of the mapper. */
@@ -45,7 +59,54 @@ export type ScheduleHealthReader = {
     status: WorkflowExecutionStatusName | "MISSING";
     closedAt?: string;
   }>;
+  listCompletedActions: (
+    scheduleId: string,
+    since: Date,
+  ) => Promise<ScheduleCompletedExecutionObservation[]>;
 };
+
+export const TEMPORAL_SCHEDULED_BY_ID = defineSearchAttributeKey(
+  "TemporalScheduledById",
+  "KEYWORD",
+);
+const SCHEDULED_START_TIME = defineSearchAttributeKey(
+  "TemporalScheduledStartTime",
+  "DATETIME",
+);
+const SCHEDULE_AUDIT_LOOKBACK_MS = 24 * 60 * 60 * 1000;
+
+export async function listCompletedScheduleActions(
+  list: (options: {
+    query: string;
+    pageSize: number;
+  }) => AsyncIterable<CompletedScheduleWorkflowExecution>,
+  scheduleId: string,
+  since: Date,
+): Promise<ScheduleCompletedExecutionObservation[]> {
+  const query = [
+    `${TEMPORAL_SCHEDULED_BY_ID.name} = ${JSON.stringify(scheduleId)}`,
+    `TemporalScheduledStartTime > ${JSON.stringify(since.toISOString())}`,
+    'ExecutionStatus = "Completed"',
+  ].join(" AND ");
+  const actions: ScheduleCompletedExecutionObservation[] = [];
+  for await (const execution of list({ query, pageSize: 100 })) {
+    const scheduledAt =
+      execution.typedSearchAttributes.get(SCHEDULED_START_TIME);
+    if (scheduledAt === undefined) {
+      throw new Error(
+        `Scheduled execution ${execution.workflowId} is missing TemporalScheduledStartTime`,
+      );
+    }
+    actions.push({
+      scheduledAt: scheduledAt.toISOString(),
+      workflowId: execution.workflowId,
+      ...(execution.closeTime === undefined
+        ? {}
+        : { closedAt: execution.closeTime.toISOString() }),
+    });
+  }
+  return actions;
+}
 
 export function scheduleHealthReader(client: Client): ScheduleHealthReader {
   return {
@@ -79,6 +140,12 @@ export function scheduleHealthReader(client: Client): ScheduleHealthReader {
         throw error;
       }
     },
+    listCompletedActions: (scheduleId, since) =>
+      listCompletedScheduleActions(
+        (options) => client.workflow.list(options),
+        scheduleId,
+        since,
+      ),
   };
 }
 
@@ -117,6 +184,10 @@ export async function inspectScheduleHealth(
                 };
               },
             ),
+          );
+          const completedActions = await reader.listCompletedActions(
+            scheduleId,
+            new Date(now.getTime() - SCHEDULE_AUDIT_LOOKBACK_MS),
           );
           const describedIds = new Set(
             actions.map((action) => action.workflowId),
@@ -161,6 +232,7 @@ export async function inspectScheduleHealth(
                 }),
             observedAt: now.toISOString(),
             actions,
+            completedActions,
             running,
           };
         }),

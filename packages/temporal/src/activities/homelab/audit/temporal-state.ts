@@ -14,6 +14,7 @@ export type AuditTemporalExecution = {
   namespace: TemporalNamespace;
   workflowId: string;
   runId: string;
+  scheduleId?: string;
   firstRunId?: string;
   workflowType: string;
   startedAt: string;
@@ -98,12 +99,27 @@ export function temporalFailureRecovery(
     return `completed retry/continue-as-new chain run ${latest.runId}`;
 
   for (const schedule of schedules) {
+    const containsFailedAction = schedule.actions.some(
+      (action) => action.workflowId === failed.workflowId,
+    );
     if (
-      !schedule.actions.some(
-        (action) => action.workflowId === failed.workflowId,
-      )
+      failed.scheduleId === undefined
+        ? !containsFailedAction
+        : schedule.scheduleId !== failed.scheduleId
     )
       continue;
+    const recoveredAction = schedule.completedActions
+      .filter(
+        (action) =>
+          Date.parse(action.scheduledAt) > Date.parse(failed.startedAt),
+      )
+      .toSorted(
+        (left, right) =>
+          Date.parse(right.scheduledAt) - Date.parse(left.scheduledAt),
+      )[0];
+    if (recoveredAction !== undefined)
+      return `schedule ${schedule.scheduleId} completed a later action ${recoveredAction.workflowId}`;
+    if (!containsFailedAction) continue;
     const outcome = scheduleOutcome(schedule, now);
     if (
       !outcome.unknown &&

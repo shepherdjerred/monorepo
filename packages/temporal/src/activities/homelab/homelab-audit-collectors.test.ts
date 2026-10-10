@@ -4,8 +4,8 @@ import {
   interpretArgoApplications,
   prometheusCount,
   PrometheusResultSchema,
-  temporalHealthQueries,
 } from "./homelab-audit-collectors.ts";
+import { temporalHealthQueries } from "./audit/temporal-queries.ts";
 import { interpretKubernetesWorkloads } from "./homelab-audit-kubernetes.ts";
 import { buildHomelabAuditReport } from "#activities/homelab/homelab-audit-report.ts";
 

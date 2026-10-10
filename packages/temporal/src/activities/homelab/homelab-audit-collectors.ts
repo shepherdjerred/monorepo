@@ -22,9 +22,11 @@ import {
   temporalStallReasons,
   type AuditTemporalExecution,
 } from "./audit/temporal-state.ts";
+import { temporalHealthQueries } from "./audit/temporal-queries.ts";
 import {
   inspectScheduleHealth,
   scheduleHealthReader,
+  TEMPORAL_SCHEDULED_BY_ID,
 } from "#activities/ops/temporal-schedules-client.ts";
 import {
   AuditAlertOccurrenceSchema,
@@ -233,20 +235,6 @@ export function interpretArgoApplications(
   };
 }
 
-export function temporalHealthQueries(now: Date): {
-  failed: string;
-  stalled: string;
-} {
-  const since = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
-  const stalledSince = new Date(
-    now.getTime() - 6 * 60 * 60 * 1000,
-  ).toISOString();
-  return {
-    failed: `ExecutionStatus IN ("Failed", "TimedOut") AND CloseTime > "${since}"`,
-    stalled: `ExecutionStatus = "Running" AND StartTime < "${stalledSince}"`,
-  };
-}
-
 type TemporalNamespaceHealth = {
   namespace: TemporalNamespace;
   failed: AuditTemporalExecution[];
@@ -266,10 +254,14 @@ async function collectTemporalNamespace(
     destination: AuditTemporalExecution[],
   ): Promise<void> => {
     for await (const workflow of client.workflow.list({ query })) {
+      const scheduleId = workflow.typedSearchAttributes.get(
+        TEMPORAL_SCHEDULED_BY_ID,
+      );
       destination.push({
         namespace,
         workflowId: workflow.workflowId,
         runId: workflow.runId,
+        ...(scheduleId === undefined ? {} : { scheduleId }),
         ...(workflow.raw.firstRunId !== undefined &&
         workflow.raw.firstRunId !== null &&
         workflow.raw.firstRunId !== ""
