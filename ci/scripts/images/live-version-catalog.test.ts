@@ -443,6 +443,7 @@ test("uses the validated baseline for both target selection and retained pins", 
   expect(commands).toEqual([
     "git fetch --no-tags --depth=100 origin main",
     "git show origin/main:packages/version-catalog/src/catalog.json",
+    "git show current:packages/version-catalog/src/catalog.json",
     "git cat-file -e published-source^{commit}",
     "git merge-base --is-ancestor published-source current",
     "git show origin/main:scripts/pin-candidates-state.json",
@@ -466,8 +467,100 @@ test("does not reuse pins or narrow builds from a release outside current ancest
       throw new Error(`must not read unrelated pipeline ${pipeline}`);
     },
   );
-  expect(release).toEqual({ catalog: main, baseCommit: undefined });
+  expect(release.baseCommit).toBeUndefined();
+  expect(entries(release.catalog)).toEqual(entries(main));
 });
+
+test("keeps upstream versions and metadata tied to the build while advancing image pins", async () => {
+  const source = catalog([["worker", pin(100)]], "1.11.9", "build source");
+  const live = catalog(
+    [
+      ["worker", pin(200)],
+      ["future", pin(200)],
+    ],
+    "1.11.10",
+    "future source",
+  );
+  const release = await resolveImageReleaseCatalog(
+    "current",
+    async (command) =>
+      commandResult(
+        0,
+        command[1] === "show"
+          ? command[2]?.startsWith("current:")
+            ? source
+            : live
+          : "",
+      ),
+    {},
+  );
+  expect(entries(release.catalog)).toEqual(
+    entries(catalog([["worker", pin(200)]], "1.11.9", "build source")),
+  );
+});
+
+test("validates withdrawals against live main even when the build predates a new key", async () => {
+  const source = catalog([["worker", pin(100)]], "1.11.9");
+  const live = catalog(
+    [
+      ["worker", pin(200)],
+      ["future/workflows/candidate", pin(100)],
+    ],
+    "1.11.10",
+  );
+  const release = await resolveImageReleaseCatalog(
+    "current",
+    async (command) => {
+      if (command[2] === "origin/main:scripts/pin-candidates-state.json")
+        return commandResult(
+          0,
+          JSON.stringify({
+            schema: "pin-candidates-state/v1",
+            pins: {},
+            withdrawnCandidates: { "future/workflows/candidate": 200 },
+          }),
+        );
+      return commandResult(
+        0,
+        command[1] === "show"
+          ? command[2]?.startsWith("current:")
+            ? source
+            : live
+          : "",
+      );
+    },
+    {
+      CI_LAST_IMAGE_RELEASE_COMMIT: "published-source",
+      CI_LAST_IMAGE_RELEASE_PIPELINE: "300",
+    },
+    async (key) =>
+      key === "version-catalog" ? live : candidates(300, ["worker"]),
+  );
+  expect(entries(release.catalog)).toEqual(
+    entries(catalog([["worker", pin(300, "b")]], "1.11.9")),
+  );
+});
+
+test.each(["missing", "invalid"])(
+  "rejects a %s build source catalog",
+  async (mode) => {
+    await expect(
+      resolveImageReleaseCatalog(
+        "current",
+        async (command) => {
+          if (command[2]?.startsWith("current:"))
+            return commandResult(mode === "missing" ? 1 : 0, "{}");
+          return commandResult(0, command[1] === "show" ? catalog([]) : "");
+        },
+        {},
+      ),
+    ).rejects.toThrow(
+      mode === "missing"
+        ? "Unable to read the build source version catalog"
+        : "Invalid input",
+    );
+  },
+);
 
 test("reads the required published artifacts through the configured S3 handoff store", async () => {
   const main = catalog([["worker", pin(100)]]);

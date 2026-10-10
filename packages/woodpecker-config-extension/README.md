@@ -231,10 +231,12 @@ no-target run, atomically records its commit, pipeline number and both catalog
 and candidate handoffs there. Queued pipelines therefore see images published
 while they were waiting, even while pin commit-back remains pending.
 
-The publication reader retains those image pins in the live main catalog.
-Newer main pins, upstream versions, metadata, retirements and reviewed candidate
-withdrawals remain authoritative. Equal release numbers with different digests
-fail. An older or conflicting publication cannot overwrite a newer record.
+The publication reader starts with the build's exact source catalog. Upstream
+versions, entry membership and metadata stay paired with that checkout's
+checksums and configuration. Only internal image values advance from live main
+and completed publications; reviewed candidate withdrawals are validated against
+live main before retention. Equal release numbers with different digests fail.
+An older or conflicting publication cannot overwrite a newer record.
 Recover an already published image pipeline with a new full manual main run;
 do not reuse its release number for different artifacts.
 

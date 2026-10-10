@@ -32,8 +32,8 @@ function releaseNumber(value: string): bigint {
 
 /**
  * Reconstruct a completed release, then retain its published pins in current
- * main. Commit-back may still be pending in a PR. Current catalog metadata,
- * retirements, upstream versions and newer image pins remain authoritative.
+ * the build catalog. Commit-back may still be pending in a PR. Build catalog
+ * metadata, upstream versions and newer image pins remain authoritative.
  * A no-target release writes this catalog back to the handoff, so retention
  * survives any number of consecutive no-target or partial-image builds.
  */
@@ -169,7 +169,38 @@ export async function resolveImageReleaseCatalog(
   readHandoff?: (key: string, pipelineNumber: string) => Promise<string>,
 ): Promise<{ catalog: string; baseCommit: string | undefined }> {
   // Fetch first so both catalog selection and ancestry use current origin/main.
-  const current = await readLiveVersionCatalogSource(executor);
+  const live = await readLiveVersionCatalogSource(executor);
+  const source = await executor([
+    "git",
+    "show",
+    `${currentCommit}:${VERSION_CATALOG_PATH}`,
+  ]);
+  if (source.exitCode !== 0) {
+    throw new Error("Unable to read the build source version catalog");
+  }
+  const buildCatalog = parseVersionCatalogText(source.stdout);
+  const liveCatalog = parseVersionCatalogText(live);
+  const liveImages = new Map(
+    liveCatalog.entries
+      .filter(
+        (entry) =>
+          entry.category === "internal-image" && entry.artifactType === "image",
+      )
+      .map((entry) => [entry.name, entry.value]),
+  );
+  // Upstream versions can have matching checksums or configuration in this
+  // checkout. Only internal image values may advance independently of source.
+  const current = serializeVersionCatalog({
+    ...buildCatalog,
+    entries: buildCatalog.entries.map((entry) => {
+      const value = liveImages.get(entry.name);
+      return value !== undefined &&
+        entry.category === "internal-image" &&
+        entry.artifactType === "image"
+        ? { ...entry, value }
+        : entry;
+    }),
+  });
   const base = await imageReleaseBase(currentCommit, executor, environment);
   let withdrawnCandidates: Readonly<Record<string, number>> = {};
   if (base !== undefined) {
@@ -184,12 +215,7 @@ export async function resolveImageReleaseCatalog(
     const parsed = parsePinCandidatesState(state.stdout);
     validateStateAgainstVersions(
       parsed,
-      new Map(
-        parseVersionCatalogText(current).entries.map((entry) => [
-          entry.name,
-          entry.value,
-        ]),
-      ),
+      new Map(liveCatalog.entries.map((entry) => [entry.name, entry.value])),
     );
     withdrawnCandidates = parsed.withdrawnCandidates ?? {};
   }
