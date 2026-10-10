@@ -61,15 +61,16 @@ const PARTIAL_WORKSPACE_SOURCE_INPUTS: Readonly<
   },
 };
 
+export const pathMatchesPrefix = (path: string, prefix: string): boolean =>
+  prefix.endsWith("/") ? path.startsWith(prefix) : path === prefix;
+
 function workspaceSourceMatches(
   target: string,
   dir: string,
   path: string,
 ): boolean {
   const inputs = PARTIAL_WORKSPACE_SOURCE_INPUTS[target]?.[dir] ?? [`${dir}/`];
-  return inputs.some((prefix) =>
-    prefix.endsWith("/") ? path.startsWith(prefix) : path === prefix,
-  );
+  return inputs.some((prefix) => pathMatchesPrefix(path, prefix));
 }
 
 export function workspaceSourceChanges(

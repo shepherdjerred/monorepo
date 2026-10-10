@@ -20,6 +20,14 @@ try {
     $failed = false;
     try { MinecraftStatus::read($path, 1005); } catch (RuntimeException $error) { $failed = true; }
     $check($failed, 'Corrupt names did not fail validation');
+    $offline = $source; $offline['state'] = 'unavailable'; $offline['java']['state'] = 'unavailable'; unset($offline['players']);
+    file_put_contents($path, json_encode($offline));
+    $check(MinecraftStatus::read($path, 1005)['players'] === null, 'Absent offline roster was rejected');
+    $offline['players'] = null;
+    file_put_contents($path, json_encode($offline));
+    $failed = false;
+    try { MinecraftStatus::read($path, 1005); } catch (RuntimeException $error) { $failed = true; }
+    $check($failed, 'Explicit null roster did not fail validation');
     foreach (['java', 'bedrock'] as $edition) {
         foreach (['version', 'verifiedAt'] as $field) {
             $invalid = $source; unset($invalid[$edition][$field]);

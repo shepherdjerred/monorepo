@@ -22,6 +22,7 @@ import type {
 
 import {
   loadWorkspaces,
+  pathMatchesPrefix,
   targetClosureDirs,
   workspaceSourceChanges,
 } from "./select-image-targets-workspaces.ts";
@@ -119,9 +120,6 @@ export const TARGET_PATH_PREFIXES: Readonly<Record<string, readonly string[]>> =
       "packages/storm-brain/contracts/companion-chat.json",
     ],
   };
-
-const pathMatchesPrefix = (path: string, prefix: string): boolean =>
-  prefix.endsWith("/") ? path.startsWith(prefix) : path === prefix;
 
 /** Optional changed-file contents the selector attributes precisely. */
 export type SelectorInputs = {

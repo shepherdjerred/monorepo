@@ -39,7 +39,8 @@ final class MinecraftStatus
                 $result[$edition]['verifiedAt'] = $value['verifiedAt'];
             }
         }
-        if (isset($data['players'])) {
+        $hasPlayers = array_key_exists('players', $data);
+        if ($hasPlayers) {
             $players = $data['players'];
             if (!is_array($players) || !is_int($players['maximum'] ?? null) || $players['maximum'] < 0 || $players['maximum'] > 100000
                 || !is_array($players['names'] ?? null) || !array_is_list($players['names']) || count($players['names']) > $players['maximum']
@@ -50,7 +51,7 @@ final class MinecraftStatus
             if ($data['java']['state'] !== 'online') { throw new \RuntimeException('Player roster requires a successful Query check'); }
             if ($fresh) { $result['players'] = ['maximum'=>$players['maximum'], 'names'=>$players['names']]; }
         }
-        if ($data['java']['state'] === 'online' && !isset($data['players'])) { throw new \RuntimeException('Online Query response is missing its roster'); }
+        if ($data['java']['state'] === 'online' && !$hasPlayers) { throw new \RuntimeException('Online Query response is missing its roster'); }
         return $result;
     }
 }
