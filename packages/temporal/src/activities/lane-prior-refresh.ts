@@ -3,9 +3,8 @@ import { simpleGit } from "simple-git";
 import { z } from "zod/v4";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import {
-  assertRemoteBranchIsOurs,
   fetchGeneratedRemoteBranch,
-  pushGeneratedBranch,
+  pushOwnedGeneratedCommit,
   writeGitAskpass,
 } from "./scout/scout-season-refresh-git.ts";
 import {
@@ -277,13 +276,12 @@ export const lanePriorActivities = {
       );
       await disarmGitHooks(repoDir);
       await runCommand(["git", "commit", "-m", title], { cwd: repoDir });
-      if (expectedRemoteSha !== undefined) {
-        await assertRemoteBranchIsOurs({ repoDir, branch, expectedRemoteSha });
-      }
-      const commitHash = await runCommand(["git", "rev-parse", "HEAD"], {
-        cwd: repoDir,
+      const commitHash = await pushOwnedGeneratedCommit({
+        repoDir,
+        branch,
+        gitEnv,
+        expectedRemoteSha,
       });
-      await pushGeneratedBranch({ repoDir, branch, gitEnv, expectedRemoteSha });
       const body = [
         "## Why",
         "Keep Scout lane priors aligned with current match observations.",

@@ -46,3 +46,26 @@ export const QueueWindowsReportSchema = z.object({
 });
 
 export type QueueWindowsReport = z.infer<typeof QueueWindowsReportSchema>;
+
+/** Observation totals and ages belong in the message, not the identity. */
+export function queueWarningFinding(
+  warning: QueueWindowsReport["warnings"][number],
+): { id?: string; summary: string } {
+  const known = [
+    "unknown-queue-id",
+    "no-volume-baseline",
+    "window-too-young",
+    "sparse-no-close",
+  ].includes(warning.kind);
+  if (known && warning.queue === undefined && warning.queueId === undefined) {
+    throw new Error(`Queue warning ${warning.kind} has no queue identity`);
+  }
+  return {
+    ...(known
+      ? {
+          id: `queue-warning:${JSON.stringify([warning.kind, warning.queue ?? null, warning.queueId ?? null])}`,
+        }
+      : {}),
+    summary: `${warning.kind}: ${warning.message}`,
+  };
+}

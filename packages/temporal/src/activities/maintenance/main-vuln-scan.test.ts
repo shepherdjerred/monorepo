@@ -209,6 +209,25 @@ describe("buildMainVulnScanReport", () => {
     ).toBe(1);
     expect(countCriticalVulnerabilities(scanResult([]))).toBe(0);
   });
+
+  test("groups repeated lockfile findings while preserving every target and installed version", () => {
+    const [critical] = parseTrivyReport(TRIVY_FIXTURE);
+    if (critical === undefined) throw new Error("Missing critical fixture");
+    const result = scanResult([
+      { ...critical, target: "plugin/core/gradle.lockfile" },
+      { ...critical, target: "plugin/dist/gradle.lockfile" },
+      { ...critical, installedVersion: "1.2.0", target: "bun.lock" },
+    ]);
+    const report = buildMainVulnScanReport("2026-08-23T11:55:00.000Z", result);
+    expect(report.findings).toHaveLength(2);
+    expect(report.findings[0]?.detail).toContain(
+      "Targets (2): plugin/core/gradle.lockfile, plugin/dist/gradle.lockfile",
+    );
+    expect(report.findings[1]?.summary).toContain("left-pad@1.2.0");
+    expect(report.headline).toContain("2 CRITICAL and 0 HIGH");
+    expect(report.headline).toContain("3 affected package/target rows");
+    expect(countCriticalVulnerabilities(result)).toBe(2);
+  });
 });
 
 describe("buildMainVulnScanFailureReport", () => {

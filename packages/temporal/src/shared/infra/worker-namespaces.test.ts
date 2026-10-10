@@ -17,14 +17,14 @@ describe("workerNamespaces", () => {
     );
   });
 
-  test("polls the active namespace for owned queues", () => {
+  test("makes reports delivery available to the beta notification canary", () => {
     expect(
       workerNamespaces({
         queueRole: "reports",
         taskQueue: "reports",
         activeNamespace: "prod",
       }),
-    ).toEqual(["prod"]);
+    ).toEqual(["prod", "beta"]);
   });
 
   test("keeps the existing central Scout queue available to beta-owned schedules", () => {

@@ -10,6 +10,7 @@ const DAILY_NOTIFICATION_FAMILIES: Readonly<Record<string, string>> = {
   "homelab-audit-daily": "homelab-audit",
   "ci-io-telemetry-daily": "ci-io-telemetry",
   "scout-queue-windows-daily": "scout-queue-windows",
+  "daily-notification-policy-canary": "daily-notification-policy-canary",
 };
 const REMINDER_MS = 7 * 24 * 60 * 60 * 1000;
 

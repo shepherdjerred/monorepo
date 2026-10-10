@@ -33,9 +33,8 @@ import {
   getOpenDataDragonPrState,
 } from "./data-dragon-pr.ts";
 import {
-  assertRemoteBranchIsOurs,
   fetchGeneratedRemoteBranch,
-  pushGeneratedBranch,
+  pushOwnedGeneratedCommit,
 } from "#activities/scout/scout-season-refresh-git.ts";
 import { runCommand } from "./data-dragon-shell.ts";
 import {
@@ -434,13 +433,12 @@ export const dataDragonActivities = {
       // activity stays safe if one is ever added.
       await disarmGitHooks(repoDir);
       await runCommand(["git", "commit", "-m", title], { cwd: repoDir });
-      if (expectedRemoteSha !== undefined) {
-        await assertRemoteBranchIsOurs({ repoDir, branch, expectedRemoteSha });
-      }
-      const commitHash = await runCommand(["git", "rev-parse", "HEAD"], {
-        cwd: repoDir,
+      const commitHash = await pushOwnedGeneratedCommit({
+        repoDir,
+        branch,
+        gitEnv,
+        expectedRemoteSha,
       });
-      await pushGeneratedBranch({ repoDir, branch, gitEnv, expectedRemoteSha });
       // `recovered` means a concurrent retry attempt already opened this
       // version's PR on the same deterministic branch — GitHub refused our
       // duplicate create for that head, so we finish auto-merge on the existing

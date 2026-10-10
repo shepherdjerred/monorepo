@@ -20,6 +20,8 @@ export function workerNamespaces(input: {
   activeNamespace: TemporalNamespace;
 }): readonly TemporalNamespace[] {
   return (input.queueRole === "scout" ||
+    (input.queueRole === "reports" &&
+      input.taskQueue === TASK_QUEUES.REPORTS) ||
     (input.queueRole === "workflows" &&
       input.taskQueue === TASK_QUEUES.WORKFLOWS)) &&
     input.activeNamespace === "prod"

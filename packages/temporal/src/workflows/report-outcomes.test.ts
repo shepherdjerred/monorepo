@@ -4,6 +4,8 @@ import type {
   DataDragonVersionState,
 } from "#shared/data-dragon-types.ts";
 import type { ScoutQueueWindowsResult } from "#activities/scout/scout-queue-windows.ts";
+import { queueWarningFinding } from "#activities/scout/scout-queue-windows-report.ts";
+import { notificationCondition } from "#activities/reports/report-notification-policy.ts";
 import type { ScoutSeasonRefreshResult } from "#activities/scout/scout-season-refresh.ts";
 import type { TasknotesCanaryResult } from "#activities/maintenance/tasknotes-canary.ts";
 import type { ActivityReportInput } from "#activities/reports/report-delivery.ts";
@@ -215,5 +217,34 @@ describe("deterministic maintenance report outcomes", () => {
       verdict: "attention",
     });
     expect(report.findings[0]?.detail).toContain("consecutiveRuns=4");
+    expect(report.findings[0]?.id).toBeUndefined();
+
+    const observation = (total: number) => {
+      const finding = queueWarningFinding({
+        kind: "unknown-queue-id",
+        queueId: "9999",
+        total,
+        message: `${String(total)} matches for unknown queue 9999`,
+      });
+      return ReportEnvelopeV1Schema.parse({
+        ...scoutQueueWindowsReport(STARTED_AT, {
+          ...result,
+          warningSummaries: [finding.summary],
+          warningFindings: [finding],
+          warningConsecutiveRuns: total,
+        }),
+        schemaVersion: 1,
+        reportRunId: `queue:test-${String(total)}`,
+        completedAt: OBSERVED_AT,
+        provenance: {
+          workflowId: "queue-test",
+          runId: `test-${String(total)}`,
+        },
+      });
+    };
+    const first = observation(10);
+    const later = observation(20);
+    expect(first.findings).not.toEqual(later.findings);
+    expect(notificationCondition(first)).toEqual(notificationCondition(later));
   });
 });
