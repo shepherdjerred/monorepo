@@ -60,6 +60,7 @@ import {
 import { runTournament, type Contestant } from "#evals/bench/lib/tournament.ts";
 import { BENCH_TASKS, benchTask } from "#evals/bench/tasks.ts";
 import { UsageSchema } from "#evals/bench/lib/entries.ts";
+import { keepBuildRecord } from "#evals/lib/build-record.ts";
 
 const { positionals, values } = parseArgs({
   args: Bun.argv.slice(2),
@@ -103,6 +104,15 @@ const RunReportSchema = z.object({
       usage: UsageSchema.nullable(),
       checks: z.array(z.object({ pass: z.boolean() })),
       taskDir: z.string(),
+      trajectory: z
+        .object({
+          iterations: z.number().int(),
+          critiques: z.array(z.number().int()),
+          accepted: z.number().int(),
+          rejected: z.number().int(),
+        })
+        .nullable()
+        .optional(),
     }),
   ),
 });
@@ -141,6 +151,10 @@ async function collect(): Promise<void> {
       continue;
     }
     renderSheet ??= await assetSheetRenderer();
+    await keepBuildRecord(
+      result.taskDir,
+      path.join(taskHistoryDir(task.id), id),
+    );
     const meta = await collectEntry({
       schematic: new Uint8Array(await Bun.file(schematicFile).arrayBuffer()),
       site: new Uint8Array(await siteFile.arrayBuffer()),
@@ -167,6 +181,9 @@ async function collect(): Promise<void> {
           passed: result.checks.filter((check) => check.pass).length,
           total: result.checks.length,
         },
+        ...(result.trajectory === null || result.trajectory === undefined
+          ? {}
+          : { trajectory: result.trajectory }),
       },
     });
     collected += 1;

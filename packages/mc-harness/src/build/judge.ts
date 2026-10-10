@@ -32,6 +32,7 @@ import {
   providerCredentialsFromEnv,
   requireCredentialsFor,
   type LlmImageInput,
+  type LlmRuntime,
 } from "@shepherdjerred/llm-runtime";
 import { z } from "zod";
 import {
@@ -256,6 +257,19 @@ ${axes.map((axis) => `- ${axis.id}: ${axis.text}`).join("\n")}
 Only after all axes are scored, answer overallAesthetic 0–5: would a player screenshot this? Then list up to five short notes naming the most costly defect first, each with the panel that shows it.`;
 }
 
+/** The lowest-scoring axis, first in rubric order on a tie. */
+export function lowestAxis(
+  rubric: JudgeRubric,
+  axes: Record<string, number>,
+): string {
+  const [first, ...others] = rubricAxisIds(rubric);
+  if (first === undefined) throw new Error(`rubric ${rubric} has no axes`);
+  return others.reduce(
+    (lowest, id) => ((axes[id] ?? 0) < (axes[lowest] ?? 0) ? id : lowest),
+    first,
+  );
+}
+
 export async function scoreAbsolute(
   image: LlmImageInput,
   ask: AskScore,
@@ -273,7 +287,8 @@ export async function scoreAbsolute(
   };
 }
 
-function runtimeFor(model: string) {
+/** The llm-runtime a judge or critic call goes through; fails fast without the provider's credentials. */
+export function judgeRuntime(model: string): LlmRuntime {
   const credentials = providerCredentialsFromEnv();
   requireCredentialsFor(model, credentials);
   return createLlmRuntime({
@@ -288,7 +303,7 @@ export function llmJudge(
   model: string,
   rubric: JudgeRubric = "micro",
 ): AskJudge {
-  const runtime = runtimeFor(model);
+  const runtime = judgeRuntime(model);
   const prompt = pairPrompt(rubric);
   return async (first, second) => {
     const result = await generateValidatedObject(runtime, {
@@ -305,7 +320,7 @@ export function llmJudge(
 
 /** A real model behind `AskScore`; fails fast without the provider's credentials. */
 export function llmScorer(model: string, rubric: JudgeRubric): AskScore {
-  const runtime = runtimeFor(model);
+  const runtime = judgeRuntime(model);
   const prompt = absolutePrompt(rubric);
   const schema = absoluteSchema(rubric);
   return async (image) => {
@@ -439,8 +454,10 @@ export async function writeJudgeRecord(
   const judgeDir = path.join(dir, BUILD_FILES.judgeDir);
   await mkdir(judgeDir, { recursive: true });
   const stamp = record.at.replaceAll(/[:.]/gu, "-");
-  const file = path.join(judgeDir, `${record.kind}-${stamp}.json`);
-  await Bun.write(file, `${JSON.stringify(record, null, 2)}\n`);
+  const content = `${JSON.stringify(record, null, 2)}\n`;
+  const hash = createHash("sha256").update(content).digest("hex");
+  const file = path.join(judgeDir, `${record.kind}-${stamp}-${hash}.json`);
+  await Bun.write(file, content);
   return file;
 }
 
@@ -492,6 +509,10 @@ export async function judgeRenders(
         judge: judgeFingerprint(rubric),
         a: renders.a,
         b: renders.b,
+        hashes: {
+          a: createHash("sha256").update(images.a.data).digest("hex"),
+          b: createHash("sha256").update(images.b.data).digest("hex"),
+        },
         winner: verdict.winner,
         confidence: verdict.confidence,
         agreed: verdict.agreed,
@@ -519,7 +540,8 @@ export async function scoreRender(
     ...(options.sheet === undefined ? {} : { sheet: options.sheet }),
   });
   const ask = options.ask ?? llmScorer(options.model, options.rubric);
-  const scores = await scoreAbsolute(await pngInput(render), ask, options);
+  const image = await pngInput(render);
+  const scores = await scoreAbsolute(image, ask, options);
   const record = (await isBuildDir(target))
     ? await writeJudgeRecord(target, {
         kind: "absolute",
@@ -528,6 +550,7 @@ export async function scoreRender(
         rubric: options.rubric,
         judge: scoreFingerprint(options.rubric),
         render,
+        renderHash: createHash("sha256").update(image.data).digest("hex"),
         axes: scores.axes,
         overallAesthetic: scores.overallAesthetic,
         total: scores.total,

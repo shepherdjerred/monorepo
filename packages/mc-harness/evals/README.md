@@ -73,7 +73,24 @@ terrain edge) and a repetition ceiling, so a map task cannot pass with a
 cottage or with flat, unlit boxes.
 The grader renders the promoted site's contact sheet, hero and **judge
 sheet** (`promoted-judge.png`); looks are rated by the bench below, never by
-pass/fail.
+pass/fail. Process is graded from the build's own journal
+(`evals/grade/trajectory.ts`): the build must keep a `journal.jsonl`, show
+at least two critiqued iterations with distinct grid hashes, and never accept a candidate that was
+not critiqued or whose critique total is below the last accepted one. The journal and the judge
+records (`judge/*.json`) are copied into the task directory. Cross-build judge
+images use content-addressed paths under `judge/inputs/`, separate from copied
+source filenames, and remain portable through benchmark archives. The report
+prints the trajectory (iterations, critique totals in order, accepted and
+rejected candidates).
+
+Before counting current-capture critique entries or publishing their totals,
+grading validates each referenced record against its journal identity and score
+and requires a readable judge image within the build. Missing, mismatched or
+escaped evidence fails the process check and produces no trajectory summary.
+Current-capture accept/reject entries with a verdict file also require a valid
+pair record on the same rubric. The recorded winner (or incumbent on a tie),
+both candidate identities and both content-addressed image inputs must match;
+missing verdicts or altered image bytes fail grading before outcomes are counted.
 
 ## Bench
 
@@ -99,8 +116,11 @@ bun packages/mc-harness/evals/bench/bench.ts anchor <slug> <file.schem> --rubric
 ```
 
 `collect` writes `bench/history/<task>/<head>-<agent>-<runId>/{meta.json,
-sheet.jpg}` (lint, grid hash, repetition, checks, time and tokens; the
-schematic itself goes to `~/.toolkit/mc/bench/` with its sha recorded).
+sheet.jpg}` (lint, grid hash, repetition, checks, time, tokens and the
+trajectory from the journal; the schematic itself goes to
+`~/.toolkit/mc/bench/` with its sha recorded) and copies the task's
+`journal.jsonl` and `judge/*.json` beside them. The leaderboard's `Iters`
+column shows iterations and critique totals per entry.
 `judge` runs the round-robin for one task, caching every verdict by the two
 sheets' hashes in `pair-cache.json`, scores entries that have no
 `scores.json` for that model, and writes `tournaments/<timestamp>.json`.

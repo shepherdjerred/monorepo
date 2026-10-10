@@ -210,13 +210,231 @@ WorldEdit, paste and console ops, each with explicit coordinates and a
 `source` of `manual` or `program:<sha>`), `build.ts`, `site/` and `renders/`.
 
 - **Capture** snapshots the site box (bridge `.schem`) and analyzes it
-  (heightmap, water/vegetation masks, `siteHash`).
+  (heightmap, water/vegetation masks, `siteHash`). It stages the site, manifest,
+  preview and capture journal boundary together, restoring the preceding capture
+  if publication fails. Installing the boundary first invalidates old expected
+  results even if the process exits during a recapture.
+  New captures bind the site directory, manifest and journal with a shared UUID
+  and a digest of every captured artifact. Every site reader rejects a missing,
+  changed or interrupted capture, including a same-box, same-block recapture.
+  Run capture explicitly again to repair it.
 - **Canvas** is a void sandbox with the site pasted at its real coordinates;
   **run** resets it to the site, replays every op, and freezes the result as
-  `expected.schem` + `expected.json`.
-- **Render** draws a contact sheet of the canvas site, or of a region inside
-  it (`render <dir> <x1,y1,z1> <x2,y2,z2>`) so map-scale builds can be
-  reviewed one district at a time.
+  `expected.schem` + `expected.json`. Publication stages the JSON and all frozen
+  schematic parts together and rolls them back if installation or journaling
+  fails, preserving the preceding successful run and its program provenance.
+  Each new run installs `expected.run.json` before replacing frozen bytes and
+  records the same identity in its journal entry. Expected reads, rendering and
+  promotion validate that identity and the complete file hashes, rejecting mixed
+  generations after interruption. Rerun the build to replace an interrupted run.
+  The snapshot and region read must cover identical blocks and block-entity
+  positions/holder blocks before a run is published. Expected renders and
+  promotion recheck both artifacts, including
+  complete tile coverage, before accepting evidence or mutating a target.
+  Region reads expose block-entity holders, not NBT types or contents; inventory
+  and sign-text equality across the read and snapshot is outside that contract.
+  The run identity still binds the complete frozen schematic bytes.
+- **Compile** stages its schematic, program snapshot, checksum record, op log
+  and compile journal entry under one publication lock. Failed staging or
+  installation restores the preceding compile and journal. The op log installs
+  last, after its referenced artifacts and journal entry.
+- **Render** draws a contact sheet of the site, or of a region inside it
+  (`render <dir> <x1,y1,z1> <x2,y2,z2>`, from any source) so map-scale builds can be
+  reviewed one district at a time. `--source canvas|expected|compiled`
+  picks where the blocks come from; `compiled` applies the op log's paste
+  ops and the compiler's clear boxes to the captured site offline, so a DSL
+  build's `compile → render → lint` loop needs no server. Compiled renders
+  and candidate saves verify the captured schematic against `build.json`'s
+  site hash before applying operations; recapture if the snapshot changed.
+  Compiled renders
+  reject unsupported WorldEdit or console ops, rotated pastes, and ops for
+  another world before saving evidence; run the build and render its expected
+  result or canvas instead. Offline lint still reports skipped operations.
+  Looks beyond the default sheet: `--mode
+value|normal|squint|relief|light`, `--views sheet,elevations,hero,pov,
+survey`, `--grid n` coordinate lines, `--floor y` and `--section z` cuts
+  (build-local, anchor-relative), `--crop front-door|centre|nw|…` close-ups,
+  and `--compare <name>` (before, after, and a plan of changed columns
+  against an earlier render of the same region, or of a region containing
+  it, using the selected mode on all three panels). Every render keeps its grid as `renders/<name>.schem` and a sidecar
+  `renders/<name>.json` (source, files, grid hash, the world box it covers,
+  lint summary, critique scores once scored). The render's files and journal
+  entry are staged together; failed publication
+  restores the preceding evidence even when reusing a render name. Render inputs,
+  program provenance and iteration stamping are read under the same publication
+  lock; compilation and imports hold that lock while changing their artifacts
+  and op log, keeping grids, sidecars and journal iterations consistent. When one program produced the
+  render, its snapshot is kept too as `renders/<name>.build.ts` (the copy
+  `compile` keeps beside its schematic): for `--source compiled` every op in
+  the log must come from that one compile, for `expected` it is the program
+  the last `run` ran, and for the canvas both must agree and that run must
+  target the exact sandbox being rendered. A replacement canvas needs a new
+  run before its renders can carry program provenance. A log with manual
+  or imported ops has no single program, so those renders keep none.
+  Run provenance belongs to the current capture. Recapturing clears the default
+  canvas and blocks old expected snapshots until a new run completes; archived
+  renders remain available. `run` validates its program snapshot before changing
+  the sandbox or expected files.
+  Each compile stores original SHA-256 checksums for its program, whole schematic,
+  and paste tiles. Reusing its program verifies those artifacts before copying
+  or reviewing the saved text. A changed or missing referenced compile snapshot
+  is an error; it is never treated as
+  a programless render or candidate. Missing textures fail before images or
+  sidecars are written. Cropped light views retain the whole build's light
+  field and crop origin, including lamps and openings outside the window.
+  Explicit hero views trim empty headroom while keeping that lighting context.
+  Rendering unit tests use an authored asset pack and the real renderer; full
+  Mojang-asset acceptance runs separately from CI.
+  Named close-ups and positional region boxes crop whole-site faces and shading;
+  region sidecars still contain only the selected world box. Only deliberate floor/section
+  cuts expose new surfaces. Implicit critique requires a render of the current
+  capture, while named historical renders remain available. Expected render
+  provenance validates the program of the frozen run independently of later
+  compile artifacts.
+  Positional renders also save hashed surroundings under `renders/context/`.
+  Comparisons restore each panel's own context and validate it against its
+  selected-region schematic. Older regional renders without context must be
+  rendered again before comparison.
+  Invalid sidecars also fail instead of selecting an
+  older render, and critique verifies the saved schematic against its hash
+  before scoring or updating the journal. Code-only critique also validates
+  the reused record's render, iteration, grid, rubric and score against its journal entry.
+  Rendering the same name again requires a fresh visual critique before code-only reuse.
+  Saved critique evidence must contain exactly the rubric's axes, their summed
+  total and maximum, and the first lowest axis in rubric order.
+  Critique images carry the checksum of the bytes scored by the visual model;
+  code-only reuse, grading and archival reject changed images.
+  Every critique keeps its own schematic under `judge/grids/`; reuse, grading and
+  archival verify its grid hash independently of the journal and record. Reusing
+  a render name cannot replace that earlier evidence.
+  A sidecar may reference only its own `renders/<name>.build.ts` program artifact.
+  Run journals may reference only `schematics/program-<hex-digest>.build.ts`;
+  program reads reject symlinks outside the build. Resume's latest render also
+  belongs to the current capture, while its journal retains historical entries.
+- **Journal.** Every command that changes or looks at the build appends a
+  line to `journal.jsonl` (compile, run, render, lint, critique, candidate,
+  accept/reject, promote, resume) with the iteration it belongs to (one per
+  render). `note <dir> "<text>"` records an observation; `log <dir>
+[--tail n]` prints the journal; `resume <dir>` assembles what a fresh
+  context needs — the brief, `notes.md` (shown as observations, not
+  instructions), the journal verbatim, the live state and the clock — and
+  deliberately sets no next steps.
+- **Critique** (`critique <dir> [--render name] [--rubric micro|map]
+[--stage visual|code|both] [--model id]`) renders the judge sheet of a
+  saved render, has a vision model score it blind 0–5 per rubric axis with
+  up to five notes, then (with `build.ts`) a second call reviews the
+  program against those scores and lint and returns up to five ranked
+  changes starting from the lowest axis. The result is written as
+  `judge/critique-<ts>-<hash>.{png,json}`, logged, and copied into the render's
+  sidecar through a transaction. Completed critiques remain in a validated
+  pending bundle until publication succeeds; retrying the same request reuses
+  both visual and code results. If preparation metadata is missing, retry validates
+  the content-addressed verdict, sheet, grid and rubric before rebuilding it.
+  Preparation markers publish by atomic rename. Incomplete, ambiguous or corrupt
+  pending evidence fails before model calls.
+  Critique snapshots its inputs under the publication lock and revalidates the
+  render identity and schematic before publishing. Replacing the same render name
+  during model calls rejects the stale critique, preserves the newer render and
+  retains the completed pending result; critique the current render again.
+  Without a model credential, `--scores "axis=n,…,aesthetic=n"
+[--note "…"]` records scores given by eye under the model name `by-eye`
+  (visual stage only), so the journal still shows the critique.
+- **Candidates** (`candidate <dir> save --name n [--force] | ls | show n |
+pick n | knockout [--among a,b] [--rubric] [--model]`) keep versions of
+  the program and op log, compiled offline, under `candidates/<n>/` (a log
+  with ops the offline compiler cannot apply, such as WorldEdit commands
+  other than `//set air`, cannot be saved: the candidate would not be the
+  build).
+  `knockout` is a keep-best tournament: the incumbent (`build.json`
+  `best`) meets each challenger on anonymised judge sheets, order-swapped;
+  a tie keeps the incumbent. Every participant's restore files and offline
+  replay are validated before rendering or model calls. Critique evidence is validated
+  before rendering or model calls; accepted and rejected scores use that same
+  validated snapshot. Participant metadata, scores and judge sheets are captured
+  under the publication lock. Each checkpoint and winner publication revalidates
+  those exact candidate versions under the lock; a force-save during judging
+  rejects the stale result before publishing best or outcomes. Every bout is written under `judge/` and
+  logged as an accept and a reject, and the winner becomes `best` after each
+  completed bout, even if a later model call fails. Each tournament attempt
+  checkpoints its identity before judging and persists the validated verdict
+  before publishing the paired outcomes and checkpoint together. Failed
+  publication rolls both files back; retry reuses that verdict without another
+  model call and deduplicates outcomes if a process exit left a lagging checkpoint.
+  One process-wide tournament lock spans snapshotting, judging and publication,
+  so a second invocation fails before it can make duplicate model calls.
+  A damaged saved verdict fails before judging. The pair record
+  records both candidate grid hashes. Each scored outcome references its exact
+  grid and critique record; grading revalidates those references and totals.
+  `pick`
+  validates the saved grid, op log and program before staging the working
+  version, including replaying referenced schematics and matching the saved
+  grid hash. Saved programs carry their own checksum, so removing a compile
+  snapshot does not prevent restoration and changed program bytes fail.
+  Failed staging or installation restores both prior working files;
+  candidate picks stage their journal entry with those files, so malformed or
+  unwritable journals cannot leave an unrecorded selection active.
+  If rollback itself fails, the error identifies retained recovery files.
+  Retrying an interrupted tournament with the same pool, candidate versions,
+  rubric and model resumes its remaining challengers without rejudging earlier
+  bouts. Changing those inputs starts a new tournament. The default iteration
+  loop challenges only grids not already eliminated
+  by the same model, rubric and judging policy, regardless of candidate names.
+  Default pools contain one name per grid hash and prefer the incumbent's name.
+  Explicit comparisons of identical grids cannot eliminate their shared hash. Replacing a loser's grid makes
+  it eligible again; `--among` requests explicit rematches.
+  Saving candidates outside an explicit `--among` pool does not reset its checkpoint; the
+  original incumbent remains part of its fingerprint even after defeat.
+  Legacy scored outcomes without critique identity and critique records without
+  image checksums, render iterations or saved grid schematics cannot prove their scores; start a new capture and critique
+  before using them as graded evidence. Unbound legacy tournament decisions
+  require an explicit `--among` rematch.
+  Incomplete candidate directories and metadata names that disagree with their
+  directory fail listing, resume and judging.
+  Saving also rejects existing candidate directories with missing or invalid metadata,
+  including with `--force`, and preserves their remaining artifacts.
+  Saves read all working evidence under the publication lock and serialize the
+  same op-log snapshot used for the candidate's grid, program and metadata.
+  Saves stage every artifact and the save journal entry before publication;
+  failed staging or installation preserves the preceding candidate and journal.
+  The journal publishes first so an installed candidate already has its save entry.
+  Publication holds a workspace-wide SQLite exclusive lock across staging,
+  installation and rollback. Direct journal appends use the same lock, and bout
+  publication reads and stamps its outcomes while holding it. Run journals are
+  staged with the frozen artifacts. A competing publisher fails before changing any
+  files; the operating system releases the lock when its process exits. A small
+  transaction record lets the next publisher restore the prior files after a
+  process exits mid-install, or finish cleanup after a completed install.
+  Run holds that lock from reading its op log and program through resetting,
+  replaying, snapshotting and publishing, so a recorded edit cannot slip into a
+  frozen result attributed to an earlier program. Canvas creation also holds it.
+  Toolkit's recorded canvas commands use the standalone protocol lock from
+  before the server write through op-log recording, so a render cannot attribute
+  an intervening manual edit to a program. The thin client imports no build or daemon implementation.
+  The persistent `.publication-lock.sqlite` file must stay in place, including
+  while idle, so every publisher locks the same inode.
+  `.knockout-lock.sqlite` likewise stays in place while a tournament is active
+  and serializes the full model-call sequence independently of short publishes.
+  Candidates record the captured site's hash, world and bounds; picking or
+  judging one against another capture fails. Recapturing clears the incumbent
+  and preserves old candidates for inspection. The default tournament selects
+  only candidates for the current capture; explicitly naming an old candidate
+  still fails. Pair records reference archived, content-addressed judge
+  images, so replacing a candidate never changes earlier judgment evidence.
+  Eval archival permits cross-build judge inputs only inside the declared
+  task root (including its `repo` and `out` directories), resolves symlinks
+  before reads, and defaults subsequent archive
+  copies to their own source directory.
+  Standalone pair and absolute records carry the SHA-256 of every image sent
+  to the model, as tournament and critique records do. Every archive copy
+  verifies these bytes; records without checksums cannot serve as evidence.
+  Invalid current or historical judge evidence fails grading with a reason
+  and is never published as a partial benchmark archive.
+  Each capture also marks the append-only journal; trajectory grading counts
+  only renders, critiques and decisions after the latest capture.
+- **Scratch** (`scratch <dir> [--size n]`) makes `<dir>/scratch/`, an
+  ordinary build directory beside the site (flat grass over dirt up to the
+  anchor, air above) for trying a wall, a roof or a tree with the offline
+  loop before it goes in the real program.
 - **Import** turns a `.litematic`, `.schem` or OBJ mesh into a schematic
   under `schematics/`, appends a paste op (`source` `import:<sha>`), lints it
   and renders a preview.

@@ -32,30 +32,18 @@ import {
   runBuild,
 } from "./commands.ts";
 import type { Env } from "./helpers.ts";
-import type * as JudgeModule from "./judge.ts";
+import { appendLog } from "./build-log.ts";
+import {
+  CANDIDATE_HANDLERS,
+  CANDIDATE_USAGE,
+} from "./studio/candidate-commands.ts";
+import { JUDGE_HANDLERS, JUDGE_USAGE } from "./studio/judge-commands.ts";
+import { LOG_HANDLERS, LOG_USAGE } from "./log-commands.ts";
+import { parseLook, parseSource } from "./look-args.ts";
 import { importBuild } from "./import-build.ts";
 import { componentCommand, libraryCommand } from "./catalog-cli.ts";
 import { DaemonClient } from "./daemon-client.ts";
 import { Journal } from "./journal.ts";
-
-/**
- * The judge pulls in llm-runtime and the built model catalog; load it only for
- * `judge` so every other build command works in a fresh checkout.
- */
-async function loadJudge(): Promise<typeof JudgeModule> {
-  try {
-    return await import("./judge.ts");
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
-    if (message.includes("@shepherdjerred/llm-models")) {
-      throw new Error(
-        "toolkit mc build judge needs the built model catalog; run `bunx turbo run build --filter=@shepherdjerred/llm-models` once, then retry",
-        { cause: error },
-      );
-    }
-    throw error;
-  }
-}
 
 function buildName(raw: string): string {
   const parsed = SessionNameSchema.safeParse(raw);
@@ -79,13 +67,19 @@ toolkit mc build — WorldEdit-first build workflow (op log + canvas + promote)
   import <dir> <model.obj> --height <n> [--solid] [--palette default|wool|concrete|terracotta]
                                         OBJ mesh (MTL colors/textures) → voxels → nearest blocks
   run <dir> [--target id]               Reset canvas to the site, replay all ops, record expected
-  render <dir> [x1,y1,z1 x2,y2,z2] [--target id | --expected] [--name n]
-  lint <dir> [--target id | --expected]
+  render <dir> [x1,y1,z1 x2,y2,z2] [--target id | --source canvas|expected|compiled] [--name n]
+         [--mode value|normal|squint|relief|light] [--views sheet,elevations,hero,pov,survey]
+         [--grid n] [--floor y] [--section z] [--crop front-door|centre|nw|ne|sw|se] [--compare <name>]
+         (floor and section are build-local, anchor-relative, as in build.ts)
+  lint <dir> [--target id | --source canvas|expected|compiled]
   replay <dir> [--target id] [--keep]   Fresh seeded sandbox: replay ops and diff against expected
   promote <dir> --target <id> [--confirm <planHash>]   Dry run, then snapshot + apply + verify
   verify <applyId>
   undo <applyId>                        Restore the pre-apply snapshot (last-in-first-out)
   status <dir>
+${LOG_USAGE}
+${JUDGE_USAGE}
+${CANDIDATE_USAGE}
   library ls|search [--tag t]… [--text s] | show <slug> | use <slug> <dir> [--force]
                                         Curated programs to start from (mc-build library/)
   component ls|search [--tag t]… [--text s] | show <name> | render <name>
@@ -121,6 +115,21 @@ const OPTIONS = {
   model: { type: "string" },
   rubric: { type: "string" },
   absolute: { type: "boolean", default: false },
+  render: { type: "string" },
+  stage: { type: "string" },
+  scores: { type: "string" },
+  note: { type: "string", multiple: true },
+  among: { type: "string" },
+  size: { type: "string" },
+  tail: { type: "string" },
+  source: { type: "string" },
+  mode: { type: "string" },
+  views: { type: "string" },
+  grid: { type: "string" },
+  compare: { type: "string" },
+  floor: { type: "string" },
+  section: { type: "string" },
+  crop: { type: "string" },
   tag: { type: "string", multiple: true },
   text: { type: "string" },
   description: { type: "string" },
@@ -141,7 +150,6 @@ const FIRST_POSITIONAL: Record<string, string> = {
   component: "<ls|search|show|render|propose>",
 };
 const PaletteNameSchema = z.enum(PALETTE_NAMES);
-
 type Values = ReturnType<
   typeof parseArgs<{ options: typeof OPTIONS; allowPositionals: true }>
 >["values"];
@@ -180,6 +188,9 @@ type Handler = (
 ) => Promise<number>;
 
 const HANDLERS: Record<string, Handler> = {
+  ...LOG_HANDLERS,
+  ...JUDGE_HANDLERS,
+  ...CANDIDATE_HANDLERS,
   init: async (_env, dir, values) => {
     const result = await initBuild(dir, {
       name: buildName(required(values.name, "--name")),
@@ -285,23 +296,37 @@ const HANDLERS: Record<string, Handler> = {
               max: parseBlockPos(required(b, "<x2,y2,z2>")),
             },
           }),
-      expected: values.expected,
+      ...(values.compare === undefined ? {} : { compare: values.compare }),
+      source: parseSource(values),
+      look: parseLook(values),
     });
+    const lines = Object.entries(result.files).map(
+      ([view, file]) => `  ${view.padEnd(14)} ${file}`,
+    );
     print(
       values.json,
       result,
-      result.hero === null
-        ? `render: ${result.render}`
-        : `render: ${result.render}\n  hero:   ${result.hero}`,
+      [
+        `render: ${result.render}`,
+        ...lines.filter((line) => !line.includes(result.render)),
+        ...result.skipped.map((line) => `  not in this picture: ${line}`),
+      ].join("\n"),
     );
     return 0;
   },
   lint: async (env, dir, values) => {
     const report = await lintBuild(env, dir, {
       ...(values.target === undefined ? {} : { target: values.target }),
-      expected: values.expected,
+      source: parseSource(values),
     });
-    print(values.json, report, lintSummary(report));
+    print(
+      values.json,
+      report,
+      [
+        lintSummary(report),
+        ...report.skipped.map((line) => `  not linted: ${line}`),
+      ].join("\n"),
+    );
     return report.ok ? 0 : 2;
   },
   replay: async (env, dir, values) => {
@@ -331,6 +356,11 @@ const HANDLERS: Record<string, Handler> = {
       );
       return 0;
     }
+    await appendLog(dir, {
+      kind: "promote",
+      target: result.target,
+      applyId: result.applied.applyId,
+    });
     print(
       values.json,
       result,
@@ -365,47 +395,6 @@ const HANDLERS: Record<string, Handler> = {
       values,
       rest,
     ),
-  judge: async (_env, a, values, rest) => {
-    const judge = await loadJudge();
-    const model = values.model ?? judge.DEFAULT_JUDGE_MODEL;
-    const rubric = judge.parseRubric(values.rubric);
-    if (values.absolute) {
-      const scores = await judge.scoreRender(a, { model, rubric });
-      print(
-        values.json,
-        scores,
-        [
-          `score (${scores.model}, ${scores.rubric}): ${scores.total.toString()}/${scores.max.toString()}, aesthetic ${scores.overallAesthetic.toString()}/5`,
-          `  render = ${scores.render}`,
-          ...judge
-            .rubricAxisIds(rubric)
-            .map(
-              (id) =>
-                `  ${id.padEnd(13)} ${(scores.axes[id] ?? 0).toString()}/5`,
-            ),
-          ...scores.notes.map((line) => `  - ${line}`),
-          ...(scores.record === null ? [] : [`  record = ${scores.record}`]),
-        ].join("\n"),
-      );
-      return 0;
-    }
-    const verdict = await judge.judgeRenders(a, required(rest[0], "<b>"), {
-      model,
-      rubric,
-    });
-    print(
-      values.json,
-      verdict,
-      [
-        `judge (${verdict.model}, ${rubric}): ${verdict.winner === "tie" ? "tie" : `${verdict.winner} wins`} — confidence ${verdict.confidence.toFixed(2)}${verdict.agreed ? "" : " (orderings disagreed)"}`,
-        `  a = ${verdict.renders.a}`,
-        `  b = ${verdict.renders.b}`,
-        ...verdict.reasons.map((line) => `  - ${line}`),
-        ...(verdict.record === null ? [] : [`  record = ${verdict.record}`]),
-      ].join("\n"),
-    );
-    return 0;
-  },
   status: async (env, dir, values) => {
     const result = await buildStatus(env, dir);
     const site = result.manifest.site;

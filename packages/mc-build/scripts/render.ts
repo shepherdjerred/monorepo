@@ -4,15 +4,13 @@
  */
 import path from "node:path";
 import { parseArgs } from "node:util";
-import { compileProgram } from "#src/compile/runner.ts";
-import type { BlockGrid } from "#src/core/grid.ts";
-import { readSchematic } from "#src/core/schem.ts";
 import { ensureAssets } from "#src/render/assets.ts";
 import {
   assertTexturesPresent,
   encodePng,
   Renderer,
 } from "#src/render/index.ts";
+import { loadGrid } from "./load-grid.ts";
 
 const { positionals, values } = parseArgs({
   args: Bun.argv.slice(2),
@@ -38,22 +36,7 @@ if (
   process.exit(1);
 }
 
-async function load(file: string): Promise<BlockGrid> {
-  if (file.endsWith(".schem")) {
-    const bytes = new Uint8Array(await Bun.file(file).arrayBuffer());
-    const schematic = await readSchematic(bytes);
-    return schematic.grid;
-  }
-  const compiled = await compileProgram({
-    program: file,
-    seed: Number(values.seed),
-    anchor: { x: 0, y: 0, z: 0 },
-    site: null,
-  });
-  return compiled.grid;
-}
-
-const grid = await load(input);
+const grid = await loadGrid(input, Number(values.seed));
 const renderer = new Renderer(await ensureAssets());
 const started = performance.now();
 const image = await renderer.sheet(grid, {

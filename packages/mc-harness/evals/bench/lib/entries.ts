@@ -73,6 +73,15 @@ export const EntryMetaSchema = z.strictObject({
   schematic: z
     .strictObject({ path: z.string().min(1), sha256: z.string().min(1) })
     .nullable(),
+  /** From the build's journal (eval runs only): renders, critique totals, knockout outcomes. */
+  trajectory: z
+    .strictObject({
+      iterations: z.number().int(),
+      critiques: z.array(z.number().int()),
+      accepted: z.number().int(),
+      rejected: z.number().int(),
+    })
+    .optional(),
 });
 export type EntryMeta = z.infer<typeof EntryMetaSchema>;
 

@@ -28,6 +28,15 @@ function judgeCell(task: TaskReport): string {
   return `${outcome} (${judge.confidence.toFixed(2)}${judge.agreed ? "" : ", disagreed"})`;
 }
 
+function trajectoryLine(task: TaskReport): string[] {
+  const trajectory = task.trajectory;
+  if (trajectory === null) return [];
+  return [
+    "",
+    `Trajectory: ${trajectory.iterations.toString()} iteration(s); critiques ${trajectory.critiques.length === 0 ? "none" : trajectory.critiques.join(" → ")}; ${trajectory.accepted.toString()} accepted, ${trajectory.rejected.toString()} rejected.`,
+  ];
+}
+
 function taskSection(task: TaskReport): string {
   const checks = task.checks.map(
     (check) => `- ${check.pass ? "✅" : "❌"} ${check.name} — ${check.detail}`,
@@ -39,6 +48,7 @@ function taskSection(task: TaskReport): string {
     `## ${task.id} — ${task.title}: ${task.status}`,
     "",
     `Agent exit ${String(task.agentExitCode)}, ${String(task.seconds)} s, ${usageCell(task.usage)}. Files: \`${task.taskDir}\``,
+    ...trajectoryLine(task),
     "",
     "### Checks",
     ...(checks.length > 0 ? checks : ["- (none)"]),

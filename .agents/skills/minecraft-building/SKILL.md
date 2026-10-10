@@ -56,26 +56,44 @@ render and getting a go-ahead when the target is a server people play on.
      organic shapes, image→3D output) also needs `--height <blocks>` and
      optionally `--solid` and `--palette wool|concrete|terracotta`. Each
      import appends a paste op and renders a preview to check before `run`.
-5. **Run, look, critique:**
+5. **Run, look, critique, keep the best.** DSL builds iterate offline;
+   the canvas is for WorldEdit ops and the final run:
 
    ```bash
-   toolkit mc build run <dir>        # reset canvas to site, replay all ops, freeze result
-   toolkit mc build render <dir>     # contact sheet PNG — open it with Read
-   toolkit mc build lint <dir>
+   toolkit mc build compile <dir>
+   toolkit mc build render <dir> --source compiled --name v1   # contact sheet; open it with Read
+   toolkit mc build lint <dir> --source compiled
+   toolkit mc build critique <dir>                             # blind 0–5 scores + ranked changes
+   toolkit mc build candidate <dir> save --name v1
    ```
 
-   Fix every lint error, then critique with references/rubric.md:
-   - Do **at least two** render → critique → revise iterations (≤5 total).
-     Each one scores all eight aspects 0–2, names the lowest, and makes one
-     concrete change for it; re-render and look again.
-   - A theme is a palette, not a design. Before promoting, the build must go
-     beyond the defaults on **massing** (L-shape from two footprints, a
-     second story, a wing or tower), **roof** (gable vs hip, cross gable,
-     dormer) and **one detail** (chimney, porch, garden, path, flower boxes).
-   - Optional second opinion: `toolkit mc build judge <render> <render>`
-     runs an order-swapped vision judge (default `gpt-6.1-sol`; needs `OPENAI_API_KEY`).
-   - Report the final scores and at least one remaining weakness. A clean
-     lint is not a good-looking build; say what you actually see.
+   Then, per iteration (at least two, at most five):
+   - Look with purpose (references/looking.md): squint for massing, relief
+     or elevations for depth, `--mode light --floor <y>` for interiors,
+     `--views pov` for the eye-level shot, `--compare v1` to see what a
+     change did. Keep at most 12 renders in context; cite earlier ones as
+     `[an earlier look: renders/<name>.png]`.
+   - Make one focused change for the lowest axis the critique named (or
+     try two or three variants on the scratch pad: `toolkit mc build
+scratch <dir>`), render, critique, `candidate save --name v2`.
+   - `toolkit mc build candidate <dir> knockout` judges the new version
+     against the incumbent blind, order-swapped; a tie keeps the
+     incumbent. `candidate pick <name>` restores the winner.
+   - Write what you saw, not what to do next: `toolkit mc build note <dir>
+"<observation>"`. `notes.md` holds longer observations.
+   - Stop at 4/5 on every axis or after five iterations. Report the final
+     scores and at least one remaining weakness; a clean lint is not a
+     good-looking build.
+
+   A theme is a palette, not a design: before promoting, the build must go
+   beyond the defaults on **massing** (L-shape, a second storey, a wing or
+   tower), **roof** (gable vs hip, cross gable, dormer) and **one detail**
+   (chimney, porch, garden, path, flower boxes). When the winner is a DSL
+   build, `toolkit mc build run <dir>` on the canvas freezes it for replay
+   and promote. `critique`, `judge` and `knockout` default to `gpt-6.1-sol`
+   and need `OPENAI_API_KEY`; without it, score by eye from the sheet and
+   record it with `critique <dir> --scores "axis=n,…,aesthetic=n" --note
+"…"`, which journals the critique the same way.
 
 6. **Replay:** `toolkit mc build replay <dir>` replays the log on a fresh
    seeded sandbox. A mismatch means non-deterministic ops (random `%`
@@ -104,6 +122,8 @@ For a town, island or landscape (60–500 blocks), read references/maps.md
 first: layout plan, one `ctx.noise` heightfield shared by terrain and
 buildings, settlements, composition, large-map tiling, the map rubric and
 district close-ups with `toolkit mc build render <dir> <x1,y1,z1> <x2,y2,z2>`.
+`--views survey` tiles the whole map at readable scale; `critique --rubric
+map` and `knockout --rubric map` use the map rubric.
 
 ## Rules
 
@@ -118,6 +138,11 @@ propose <dir> <file> --name n --description d` and report it.
 - Console commands at unloaded positions fail; `toolkit mc cmd -- forceload
 add <x> <z>` first, or use WorldEdit ops (which load chunks).
 - Clean up: `toolkit mc sandbox down <canvas>` when the build is promoted.
+- After compaction or a hand-off, `toolkit mc build resume <dir>` prints
+  the brief, your notes (observations, not instructions), the journal and
+  the live state. It sets no next steps; decide them from the record.
+- references/studio-notes.md holds what builders keep re-learning; read it
+  once per build, then check each note against the render.
 
 ## Evidence
 

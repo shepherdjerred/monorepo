@@ -24,7 +24,8 @@
     "#daemon/*": "./src/daemon/*",
     "#src/*": "./src/*",
     "#build/*": "./src/build/*",
-    "#evals/*": "./evals/*"
+    "#evals/*": "./evals/*",
+    "#test/*": "./test/*"
   },
   "scripts": {
     "build": "bun build src/daemon/main.ts src/build/cli.ts --target=bun --outdir=dist --external=sharp",

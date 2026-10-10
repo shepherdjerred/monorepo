@@ -4,9 +4,15 @@ import { z } from "zod";
 import { type Box, RegionReadResponseSchema } from "#protocol/bridge.ts";
 import { BuildManifestSchema, type JudgeRubric } from "#protocol/build.ts";
 import type { GradeCheck, Grader, JudgeSummary } from "#evals/lib/types.ts";
+import { gradeEvidence } from "#evals/grade/evidence.ts";
 import { deliveredChecks, type DeliveredSpec } from "#evals/grade/delivered.ts";
 import { judgeNote } from "#evals/grade/judge-note.ts";
 import { sandboxFrom } from "#evals/grade/tower.ts";
+import {
+  readJournal,
+  trajectoryChecks,
+  trajectoryOf,
+} from "#evals/grade/trajectory.ts";
 import { mergeRegionReads, tileBox } from "#build/tiles.ts";
 import { BuildWorkspace } from "#build/workspace.ts";
 import {
@@ -171,6 +177,20 @@ async function renderPromoted(
   };
 }
 
+/** The sandbox, build directory and apply id the agent reported, or null when any is missing. */
+function resultHandles(
+  ctx: Parameters<Grader>[0],
+): { sandbox: string; buildDir: string; applyId: string } | null {
+  const sandbox = sandboxFrom(ctx, "sourceSandbox");
+  const buildDirValue = ctx.result?.["buildDir"];
+  const applyId = ctx.result?.["applyId"];
+  return sandbox === null ||
+    typeof buildDirValue !== "string" ||
+    typeof applyId !== "string"
+    ? null
+    : { sandbox, buildDir: path.resolve(ctx.worktree, buildDirValue), applyId };
+}
+
 /**
  * The captured site (`site/site.schem`) the delivered checks measure against,
  * so untouched ground is neither built nor repetition. A missing or
@@ -253,9 +273,11 @@ async function deliveredSection(
  * lint clean on the source world, and deliver what the task asked for
  * (`expect`: scale, features, warning and repetition limits). The grader
  * renders the promoted site itself, including the judge sheet the bench
- * rates. When a vision credential is configured, the pairwise judge also
- * compares the render with a library reference and records the verdict;
- * looks never decide pass/fail here — the bench does that.
+ * rates. The build's journal decides the process checks (two critiqued
+ * iterations, accepted candidates never scoring lower) and is kept with
+ * the judge records as artifacts. When a vision credential is configured,
+ * the pairwise judge also compares the render with a library reference and
+ * records the verdict; looks never decide pass/fail here — the bench does.
  */
 export const buildGrader =
   (options: {
@@ -268,14 +290,8 @@ export const buildGrader =
     const checks: GradeCheck[] = [];
     const artifacts: string[] = [];
     const notes: string[] = [];
-    const sandbox = sandboxFrom(ctx, "sourceSandbox");
-    const buildDirValue = ctx.result?.["buildDir"];
-    const applyId = ctx.result?.["applyId"];
-    if (
-      sandbox === null ||
-      typeof buildDirValue !== "string" ||
-      typeof applyId !== "string"
-    ) {
+    const handles = resultHandles(ctx);
+    if (handles === null) {
       return {
         checks: [
           {
@@ -288,7 +304,7 @@ export const buildGrader =
         notes,
       };
     }
-    const buildDir = path.resolve(ctx.worktree, buildDirValue);
+    const { sandbox, buildDir, applyId } = handles;
     const finalPng = path.join(ctx.outDir, "final.png");
     checks.push({
       name: "agent delivered OUT/final.png",
@@ -371,6 +387,15 @@ export const buildGrader =
         taskDir: ctx.taskDir,
       })),
     );
+    const journal = await readJournal(buildDir);
+    checks.push(...trajectoryChecks(journal, options.rubric));
+    const evidence = await gradeEvidence(buildDir, ctx);
+    checks.push(evidence.check);
+    artifacts.push(...evidence.artifacts);
+    const trajectory =
+      journal !== null && "entries" in journal
+        ? trajectoryOf(journal.entries, options.rubric)
+        : null;
     const critique = ctx.result?.["selfCritique"];
     if (typeof critique === "string") {
       notes.push(`self-critique: ${critique}`);
@@ -386,5 +411,5 @@ export const buildGrader =
     );
     artifacts.push(...judged.artifacts);
     notes.push(...judged.notes);
-    return { checks, artifacts, notes, judge: judged.judge };
+    return { checks, artifacts, notes, judge: judged.judge, trajectory };
   };
