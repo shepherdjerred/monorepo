@@ -11,6 +11,7 @@ import Testing
     ) async {
         await store.signInWithOperations(
             prepare: {}, signIn: result, connections: { [] }, ownsAccount: { true },
+            resume: {},
             requestID: requestID)
     }
 
@@ -58,7 +59,7 @@ import Testing
                 authenticated += 1
                 return .vaults([])
             },
-            connections: { [] }, ownsAccount: { true })
+            connections: { [] }, ownsAccount: { true }, resume: {})
         #expect(prepared == 0 && authenticated == 0 && store.isLoading)
         store.isLoading = false
         let gate = Suspension()
@@ -70,7 +71,7 @@ import Testing
                     authenticated += 1
                     return .vaults([])
                 },
-                connections: { [] }, ownsAccount: { true })
+                connections: { [] }, ownsAccount: { true }, resume: {})
         }
         await gate.waitUntilEntered()
         cancelled.cancel()
@@ -112,7 +113,163 @@ import Testing
         #expect(store.accountPresentation.error?.contains("credentials") == false)
         #expect(store.error == nil && !store.isLoading)
     }
+}
 
+@Suite @MainActor struct FacetAccountSessionResumptionTests {
+    private enum SettledSignIn: CaseIterable {
+        case challenge, rejection, networkFailure, success
+
+        func result() throws -> FacetAccountSignIn {
+            switch self {
+            case .challenge: return .needsCode
+            case .rejection: return .rejectedCode
+            case .networkFailure: throw URLError(.notConnectedToInternet)
+            case .success: return .vaults([])
+            }
+        }
+    }
+
+    @Test(arguments: SettledSignIn.allCases)
+    private func settledSignInResumesOnlyAfterAuthenticationAndTransitionDrain(
+        outcome: SettledSignIn
+    ) async {
+        let store = FacetStore()
+        let gate = Suspension()
+        let profile = FacetProfile(
+            id: "preserved", name: "Preserved", kind: "obsidian_sync", approveStandard: false)
+        store.profiles = [profile]
+        let oldGeneration = store.syncGeneration
+        var resumes = 0
+        let pending = _Concurrency.Task {
+            await store.signInWithOperations(
+                prepare: {},
+                signIn: {
+                    await gate.pause()
+                    return try outcome.result()
+                },
+                connections: { [] }, ownsAccount: { true },
+                resume: {
+                    resumes += 1
+                    #expect(!store.accountTransition && !store.isLoading)
+                    #expect(store.accountPresentation.requestID == nil)
+                    #expect(
+                        store.canRetainSession(
+                            profileID: profile.id, generation: store.syncGeneration))
+                    #expect(
+                        !store.canRetainSession(profileID: profile.id, generation: oldGeneration))
+                })
+        }
+        await gate.waitUntilEntered()
+        #expect(store.accountTransition && resumes == 0)
+        gate.resume()
+        await pending.value
+        #expect(resumes == 1)
+    }
+
+    @Test func cancelledSignInDrainsAndResumesWithoutPublishingItsLateResponse() async {
+        let store = FacetStore()
+        let gate = Suspension()
+        let identity = UUID()
+        var resumes = 0
+        let pending = _Concurrency.Task {
+            await store.signInWithOperations(
+                prepare: {},
+                signIn: {
+                    await gate.pause()
+                    return .vaults([])
+                },
+                connections: { [] }, ownsAccount: { true },
+                resume: {
+                    resumes += 1
+                    #expect(!store.accountTransition && !store.isLoading)
+                }, requestID: identity)
+        }
+        await gate.waitUntilEntered()
+        store.cancelAccountRequest(id: identity)
+        pending.cancel()
+        #expect(resumes == 0 && store.accountTransition)
+        gate.resume()
+        await pending.value
+        #expect(resumes == 1 && store.accountPresentation.stage == .credentials)
+        #expect(store.accountPresentation.cancelled && store.remoteVaults.isEmpty)
+    }
+
+    @Test func cancelledParentRecoversThroughAnUncancelledTask() async {
+        let store = FacetStore()
+        let gate = Suspension()
+        var resumed = false
+        var parentWasCancelled = false
+        let pending = _Concurrency.Task {
+            await store.signInWithOperations(
+                prepare: {},
+                signIn: {
+                    await gate.pause()
+                    try _Concurrency.Task.checkCancellation()
+                    return .needsCode
+                },
+                connections: { [] }, ownsAccount: { true },
+                resume: {
+                    do {
+                        try _Concurrency.Task.checkCancellation()
+                        resumed = true
+                    } catch { Issue.record("Session recovery inherited the sheet's cancellation.") }
+                    #expect(!store.accountTransition && store.accountPresentation.requestID == nil)
+                })
+            parentWasCancelled = _Concurrency.Task.isCancelled
+        }
+        await gate.waitUntilEntered()
+        pending.cancel()
+        gate.resume()
+        await pending.value
+        #expect(parentWasCancelled && resumed)
+    }
+
+    @Test func suspendedSignInSettlesWithoutRestartingForegroundSessions() async {
+        let store = FacetStore()
+        await store.signInWithOperations(
+            prepare: {},
+            signIn: {
+                await store.pauseSync()
+                return .needsCode
+            },
+            connections: { [] }, ownsAccount: { true },
+            resume: { Issue.record("Suspended authentication must not reopen sessions.") })
+        #expect(!store.foreground && !store.accountTransition && !store.isLoading)
+        #expect(store.accountPresentation.stage == .credentials)
+    }
+
+    @Test func replacedAccountCannotResumeThePreviousOwnersSessions() async {
+        let store = FacetStore()
+        var ownsAccount = true
+        await store.signInWithOperations(
+            prepare: {},
+            signIn: {
+                ownsAccount = false
+                return .needsCode
+            },
+            connections: { [] }, ownsAccount: { ownsAccount },
+            resume: { Issue.record("A replaced account cannot restart the old owner.") })
+        #expect(!store.accountTransition && !store.isLoading)
+        #expect(store.accountPresentation.stage == .credentials)
+    }
+
+    @Test func replacedRequestKeepsItsOwnTransitionAndCannotResumeThePreviousRequest() async {
+        let store = FacetStore()
+        let replacement = UUID()
+        await store.signInWithOperations(
+            prepare: {},
+            signIn: {
+                store.accountPresentation.requestID = replacement
+                return .needsCode
+            },
+            connections: { [] }, ownsAccount: { true },
+            resume: { Issue.record("A replaced request cannot restart or clear the new owner.") })
+        #expect(store.accountPresentation.requestID == replacement)
+        #expect(store.accountTransition && store.isLoading)
+    }
+}
+
+extension FacetAccountPresentationTests {
     @Test func successfulConnectRetiresOwnershipBeforeAutomaticDismissal() async {
         let store = FacetStore()
         let identity = UUID()
