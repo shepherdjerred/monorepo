@@ -73,7 +73,7 @@ RUN --mount=type=secret,id=github-download-token,env=GITHUB_TOKEN,required=true 
 
 # uv/uvx for the python checks (ruff via uvx, pyright bootstraps a venv)
 # renovate: datasource=pypi depName=uv
-ARG UV_VERSION=0.12.24
+ARG UV_VERSION=0.13.0
 RUN curl -LsSf "https://astral.sh/uv/${UV_VERSION}/install.sh" | sh
 
 # The bun download cache is NOT baked into this image anymore. The old

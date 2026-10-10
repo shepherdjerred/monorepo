@@ -3,6 +3,9 @@ import { z } from "zod";
 
 export const VersionMapSchema = z
   .object({
+    "bluemap/archive-cli": z.string(),
+    "minecraft/archive-upgrader": z.string(),
+    "itzg/minecraft-server-java17-archive": z.string(),
     "unmined/unmined-cli": z.string(),
     "stashapp/stash": z.string(),
     "trmnl/trmnlp": z.string(),

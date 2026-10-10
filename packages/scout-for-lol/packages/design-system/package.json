@@ -79,7 +79,7 @@
     "react-dom": "19.3.0",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
-    "satori": "^0.44.0",
+    "satori": "^0.47.0",
     "tailwind-merge": "^3.4.0",
     "zod": "^4.4.3"
   },

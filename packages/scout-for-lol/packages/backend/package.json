@@ -87,7 +87,7 @@
     "@temporalio/common": "1.24.0",
     "@temporalio/worker": "1.24.0",
     "@trpc/server": "11",
-    "ai": "^7.0.136",
+    "ai": "^7.0.137",
     "cron-parser": "^5.5.0",
     "date-fns": "^4.1.0",
     "discord.js": "^14.26.4",

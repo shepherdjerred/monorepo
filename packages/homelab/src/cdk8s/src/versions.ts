@@ -58,7 +58,7 @@ export const ADAPTIVE_LIGHTING_TARBALL_SHA256 =
  *   curl -fSL "https://codeload.github.com/JeffSteinbok/hass-dreo/tar.gz/refs/tags/$VERSION" | sha256sum
  */
 export const DREO_TARBALL_SHA256 =
-  "aa0bd0a653c06d838412a119e8e70f678555a8ff2d04cd866b558ffa9814d5b2";
+  "55d528f26a8e91feb614cabab1c2a3b8520e918f4cf2e5ed9e7aacdef303b373";
 
 /**
  * SHA-256 of the GitHub release tarball for `magico13/ha-emporia-vue`,
