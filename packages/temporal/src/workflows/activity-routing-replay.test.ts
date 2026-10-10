@@ -17,7 +17,7 @@ describe("central Activity routing replay compatibility", () => {
     await environment.teardown();
   });
 
-  it("replays an implicit-queue history after adding a domain queue", async () => {
+  it("replays an implicit-queue history after adding a domain queue and lease-aware retries", async () => {
     if (environment === undefined) {
       throw new Error("Temporal test environment is unavailable");
     }

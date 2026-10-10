@@ -9,6 +9,10 @@ import type {
 } from "#activities/reports/report-delivery.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { reportActivityTaskQueue } from "#workflows/scout/report-activity-queue.ts";
+import {
+  REPORT_DELIVERY_ACTIVITY_RETRY,
+  REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
+} from "#shared/reports/report-delivery-policy.ts";
 
 /**
  * Daily health check on the CI I/O telemetry pipeline itself.
@@ -161,8 +165,8 @@ function failureReport(startedAt: string, error: unknown): ActivityReportInput {
 export async function runCiIoTelemetry(): Promise<void> {
   const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
     taskQueue: reportActivityTaskQueue(),
-    startToCloseTimeout: "2 minutes",
-    retry: { maximumAttempts: 3 },
+    startToCloseTimeout: REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
+    retry: REPORT_DELIVERY_ACTIVITY_RETRY,
   });
   const startedAt = new Date().toISOString();
   try {

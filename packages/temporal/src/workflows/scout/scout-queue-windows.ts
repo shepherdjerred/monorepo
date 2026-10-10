@@ -10,6 +10,10 @@ import type {
 import { SCOUT_QUEUE_WINDOWS_LOOKBACK_DAYS } from "#shared/scout-queue-windows-lookback.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { reportActivityTaskQueue } from "./report-activity-queue.ts";
+import {
+  REPORT_DELIVERY_ACTIVITY_RETRY,
+  REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
+} from "#shared/reports/report-delivery-policy.ts";
 
 const { refreshScoutQueueWindows } =
   proxyActivities<ScoutQueueWindowsActivities>({
@@ -257,8 +261,8 @@ export function scoutQueueWindowsReport(
 export async function runScoutQueueWindowsWatch(): Promise<ScoutQueueWindowsResult> {
   const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
     taskQueue: reportActivityTaskQueue(),
-    startToCloseTimeout: "2 minutes",
-    retry: { maximumAttempts: 3 },
+    startToCloseTimeout: REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
+    retry: REPORT_DELIVERY_ACTIVITY_RETRY,
   });
   const startedAt = new Date().toISOString();
   try {
