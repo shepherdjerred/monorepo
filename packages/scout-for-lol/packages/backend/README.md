@@ -102,6 +102,44 @@ bun run smoke            # Smoke-test the built image
 bun run compact:report-lake  # Manually fold/rebuild the DuckDB report lake
 ```
 
+### Explore recovery evaluation
+
+Replay pins and bundles use schema version 2. Capture records the resolved model
+and analysis capability as well as guild policies. `test:explore:replay` uses
+those values by default; `--analysis on|off` and `--model <id>` explicitly select
+a candidate and are recorded in its manifest. Capture and replay reject a lake
+whose schema fingerprint differs from the checkout before model calls. A
+provider capture requires a reachable Flipt provider.
+
+Bundles retain full tool inputs, outputs, and materialized datasets in private
+case files. `explore:judge` reads the captured analysis outputs alongside the
+bounded trace. Harness integrity, model grading, and independent factual checks
+are separate results. From this package, check the curated streak and Ezreal
+regressions against independent SQL over the pinned lake with:
+
+```bash
+bun scripts/explore-replay/check-recovery.ts <dataset.json> <streak-bundle> <ezreal-bundle>
+```
+
+Load the usual `dev-web.env.tpl` with the existing 1Password wrapper, then apply
+the pin's loopback `DATABASE_URL`, `REPORT_LAKE_DIR`, and disabled feature flag
+provider after `op run` so the template's database default cannot replace them.
+The check writes private `recovery-checks.json` reports and exits
+nonzero on missing evidence, numerical disagreement, an incorrect named-death
+timestamp, or a friendly champion
+misidentified as a killer. Unrecognised numerical wording requires review.
+Restore the same complete redacted database dump between sweeps: spend rows,
+sandbox leases, drafts, and confirmation intents can change during a replay.
+
+On-demand history remains a separate integration acceptance path because frozen
+replays disable live Riot acquisition. `acquire_match_history` accepts ranked or
+normal history, reuses available matches, and waits at most two minutes before
+returning `pending` with its durable workflow ID and no completion counts. An
+aborted turn leaves that workflow running. The legacy ranked tool and older
+workflow inputs retain ranked behavior and their original workflow identity.
+
+### Report-lake resources
+
 Hosted application and activity-worker pods reserve the report-lake baseline.
 Activity workers reserve 2 GiB; the gateway reserves 3 GiB because it also owns
 the voice runtime. Each role has an 8 GiB process limit and its own DuckDB
@@ -222,7 +260,8 @@ Two invariants worth knowing before editing a skill:
 ### Complete datasets and isolated analysis
 
 `scout-explore-analysis-enabled` gates the data-analysis skill and tools.
-`materialize_query_dataset` retains every selected row (up to 50,000);
+`materialize_query_dataset` retains every selected row (up to 50,000), with
+canonical grouping keys and separate `__group_labels` display names;
 `materialize_raw_documents` reads captured match, prematch and timeline JSON
 for those match IDs. Raw documents preserve unknown fields, nested arrays,
 nulls and original identities with a separate remap. Spectator credentials
@@ -233,8 +272,20 @@ Datasets belong to one run, have immutable names, and share a 64 MiB turn
 limit. Their generation identifies both the published build and committed
 staging snapshot; a change requires repeating the selection. Schema discovery
 and validated JSON paths expose nested fields without evaluating expressions.
+Schema discovery returns 25 paths per page. Model-facing analysis replies are
+limited to 8 KiB; larger computed results remain in a named dataset for selective
+retrieval. Value pages advance by their actual returned count and reject an
+individual value above 8 KiB with an instruction to select child fields.
+Full results remain in private inspection payloads.
+For a routine game review, `summarize_match_timeline` joins raw match participants
+to named death and objective events without model-written JavaScript. Pages hold
+at most ten events within 8 KiB and provide formatted game times and bounty
+fields. Missing documents have null coverage counts; short frame ranges, missing
+frames or participants, or a mismatch with postmatch deaths report partial coverage.
+Gold context uses a preceding frame and does not establish causation. A gold lead
+alone does not establish a shutdown. Raw documents remain available for deeper analysis.
 The JavaScript tool runs QuickJS in WebAssembly inside a terminated Bun worker:
-10 seconds, 256 MiB, 64 KiB output, four executions per turn, and two global
+10 seconds, 256 MiB, a 64 KiB sandbox output ceiling, four executions per turn, and two global
 leases in PostgreSQL. It exposes datasets and synchronous JSON results; no
 host functions, imports, filesystem, network or credentials are installed.
 

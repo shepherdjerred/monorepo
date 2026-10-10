@@ -286,7 +286,7 @@ export type JudgeCaseInput = {
 
 /** Tools that answer from their own data rather than through ScoutQL. */
 const CAPABILITY_TOOL_PATTERN =
-  /^(?:get_bucks|query_bucks|list_dares|inspect_dare|query_mvp|list_challenge|list_my_challenge|preview_challenge|challenge_leaderboard|get_clash|get_hall|list_competitions|get_competition)/;
+  /^(?:run_report_query|get_bucks|query_bucks|list_dares|inspect_dare|query_mvp|list_challenge|list_my_challenge|preview_challenge|challenge_leaderboard|get_clash|get_hall|list_competitions|get_competition|resolve_player|inspect_player_coverage|materialize_query_dataset|materialize_raw_documents|analyze_javascript|select_dataset_values|summarize_match_timeline)/;
 
 /**
  * How much of one tool result the judge is shown.
@@ -297,6 +297,23 @@ const CAPABILITY_TOOL_PATTERN =
  */
 const TOOL_RESULT_MAX_LENGTH = 500;
 
+function toolResultSummary(
+  rawOutput: unknown,
+  toolName: string,
+): string | null {
+  const output = TraceRawOutputSchema.safeParse(rawOutput);
+  if (!output.success || output.data?.kind !== "value") return null;
+  return JSON.stringify(output.data.value).slice(
+    0,
+    toolName === "analyze_javascript" || toolName === "run_report_query"
+      ? 65_536
+      : toolName === "select_dataset_values" ||
+          toolName === "summarize_match_timeline"
+        ? 8192
+        : TOOL_RESULT_MAX_LENGTH,
+  );
+}
+
 /**
  * The evidence a stored trace holds, in the shape the judge is shown.
  *
@@ -305,12 +322,18 @@ const TOOL_RESULT_MAX_LENGTH = 500;
  */
 export function judgeEvidenceFromTrace(
   trace: readonly {
+    readonly toolCallId?: string;
     readonly toolName: string;
     readonly status: string;
     readonly details?: unknown;
     readonly rawInput?: unknown;
     readonly rawOutput?: unknown;
   }[],
+  payloads: readonly {
+    readonly toolCallId: string;
+    readonly direction: string;
+    readonly value: unknown;
+  }[] = [],
 ): Pick<JudgeCaseInput, "queries" | "toolResults"> {
   const queries: JudgeCaseInput["queries"][number][] = [];
   const toolResults: { toolName: string; summary: string }[] = [];
@@ -320,22 +343,52 @@ export function judgeEvidenceFromTrace(
     if (entry.toolName === "run_report_query") {
       const query = queryEvidence(entry);
       if (query !== null) queries.push(query);
-      continue;
     }
     if (!CAPABILITY_TOOL_PATTERN.test(entry.toolName)) continue;
-    const output = TraceRawOutputSchema.safeParse(entry.rawOutput);
-    if (!output.success || output.data === null) continue;
-    if (output.data.kind !== "value") continue;
+    const complete = payloads.find(
+      (payload) =>
+        payload.direction === "output" &&
+        payload.toolCallId === entry.toolCallId,
+    );
+    const summary = toolResultSummary(
+      judgeToolOutput(entry, complete, payloads),
+      entry.toolName,
+    );
+    if (summary === null) continue;
     toolResults.push({
       toolName: entry.toolName,
-      summary: JSON.stringify(output.data.value).slice(
-        0,
-        TOOL_RESULT_MAX_LENGTH,
-      ),
+      summary,
     });
   }
 
   return { queries, toolResults };
+}
+
+/** A stored analysis result is evidence, even when its chat reply only names it. */
+function judgeToolOutput(
+  entry: { toolName: string; toolCallId?: string; rawOutput?: unknown },
+  complete: { value: unknown } | undefined,
+  payloads: readonly {
+    toolCallId: string;
+    direction: string;
+    value: unknown;
+  }[],
+): unknown {
+  if (complete === undefined) return entry.rawOutput;
+  if (
+    entry.toolName === "analyze_javascript" &&
+    z
+      .object({ ok: z.literal(true), dataset: z.string() })
+      .safeParse(complete.value).success
+  ) {
+    const stored = payloads.find(
+      (payload) =>
+        payload.direction === "dataset" &&
+        payload.toolCallId === entry.toolCallId,
+    );
+    if (stored !== undefined) return { kind: "value", value: stored.value };
+  }
+  return { kind: "value", value: complete.value };
 }
 
 /** One executed query as the judge sees it, or null if the trace lacks it. */
@@ -379,7 +432,7 @@ const JUDGE_SYSTEM_PROMPT = [
   "",
   "2. grounded — could the evidence shown have produced the figures at all?",
   "   Evidence is the queries it ran AND what its feature tools returned. A figure a feature tool returned is grounded exactly as one a query returned.",
-  "   You are shown how many rows each query returned, not the rows, and a truncated excerpt of each tool result.",
+  "   You are shown each query and its row count, plus captured result rows when available and bounded excerpts of tool results.",
   "   So do not mark an answer unsupported merely because you cannot check a specific name or number against data you cannot see — that is a limit of this evidence, not a fault in the answer.",
   "   Only FINDINGS count: figures the answer reports as true about the data. These are not findings, and never make an answer unsupported:",
   "     - a number the user wrote in the question and the answer repeats (listed below as FIGURES THE QUESTION CONTAINS);",

@@ -64,6 +64,16 @@ describe("parseReplayArgs guilds", () => {
 });
 
 describe("parseReplayArgs values", () => {
+  test("runtime overrides are explicit and reject invalid analysis values", () => {
+    expect(options([]).analysisOverride).toBeNull();
+    expect(options([]).modelOverride).toBeNull();
+    expect(
+      options(["--analysis", "on", "--model", "gpt-6-luna"]).analysisOverride,
+    ).toBe(true);
+    expect(options(["--analysis", "off"]).analysisOverride).toBe(false);
+    expect(options(["--model", "gpt-6-luna"]).modelOverride).toBe("gpt-6-luna");
+    expect(() => options(["--analysis", "yes"])).toThrow(/on or off/);
+  });
   test("accepts prod", () => {
     expect(options(["--stage", "prod"]).stage).toBe("prod");
   });

@@ -12,6 +12,7 @@ import {
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { streamExploreAgent } from "#src/explore/agent.ts";
 import { ExploreBudgetError } from "#src/explore/spending/ledger.ts";
+import { ExploreCardSelectionError } from "#src/explore-match/card-selection-error.ts";
 import { durableExploreQuotaStatus } from "#src/temporal/durable-quota.ts";
 import {
   ExploreConversationBusyError,
@@ -99,6 +100,19 @@ function storedProvenance(model: string | undefined) {
     ? {}
     : { generation: { model, reasoningEffort: "high" as const } };
 }
+/** Durable diagnostics contain categories, never provider/SQL/user payloads. */
+export function exploreFailureCode(
+  outcome: ExploreTurnOutcome,
+  error: unknown,
+): string {
+  if (outcome === "stopped") return "explore:stopped";
+  if (outcome === "interrupted") return "explore:interrupted";
+  if (error instanceof ExploreBudgetError) return "explore:budget_exceeded";
+  return error instanceof ExploreCardSelectionError
+    ? `explore:invalid_${error.cardType}_card`
+    : "explore:execution_failed";
+}
+
 function visibleError(outcome: ExploreTurnOutcome, error: unknown): string {
   if (outcome === "stopped")
     return "This question was stopped before an answer was produced.";
@@ -336,6 +350,10 @@ export async function runPersistedExploreTurn(
       dependencies,
       input.ticket.durable === true,
     );
+    await dependencies.client.scoutInteractiveRun.updateMany({
+      where: { id: input.ticket.runId },
+      data: { lastError: exploreFailureCode(outcome, error) },
+    });
     const terminal: ExploreTurnTerminalEvent =
       salvaged === null
         ? {

@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   StageDatasetPinSchema,
   datasetCoherenceIssues,
+  lakeSchemaIssues,
   datasetRepairHint,
   replayEnvironmentIssues,
   type DatasetCoherenceFacts,
@@ -9,12 +10,14 @@ import {
 } from "./dataset.ts";
 
 const PIN: StageDatasetPin = StageDatasetPinSchema.parse({
-  schemaVersion: 1,
+  schemaVersion: 2,
+  runtime: { analysisEnabled: false, model: "gpt-5.6-luna" },
   stage: "beta",
   createdAt: "2026-09-19T00:00:00.000Z",
   lake: {
     dir: "/data/stage-dataset/beta/report-lake",
     buildId: "build-123",
+    schemaFingerprint: "schema-1",
     puuidRemapFingerprint: "abc123",
     pulledAt: "2026-09-19T00:00:00.000Z",
     sourcePod: "scout-beta-0",
@@ -101,6 +104,20 @@ describe("StageDatasetPinSchema", () => {
 });
 
 describe("datasetCoherenceIssues", () => {
+  test("rejects absent, changed and checkout-incompatible lake schemas", () => {
+    expect(
+      lakeSchemaIssues({ published: "a", pinned: "a", current: "a" }),
+    ).toEqual([]);
+    expect(
+      lakeSchemaIssues({ published: undefined, pinned: "a", current: "a" }),
+    ).toHaveLength(1);
+    expect(
+      lakeSchemaIssues({ published: "b", pinned: "a", current: "b" })[0],
+    ).toContain("differs from the pin");
+    expect(
+      lakeSchemaIssues({ published: "a", pinned: "a", current: "b" })[0],
+    ).toContain("differs from this checkout");
+  });
   test("accepts a matching pair", () => {
     expect(datasetCoherenceIssues(facts())).toEqual([]);
   });

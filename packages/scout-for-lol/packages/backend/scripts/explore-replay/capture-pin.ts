@@ -1,17 +1,26 @@
 import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import path from "node:path";
 import { z } from "zod";
+import { refreshFlagSnapshot } from "@shepherdjerred/feature-flags";
+import configuration from "#src/configuration.ts";
 import {
-  initFeatureFlags,
-  shutdownFeatureFlags,
-} from "@shepherdjerred/feature-flags";
+  initializeDynamicConfig,
+  shutdownDynamicConfig,
+  exploreAnalysisEnabled,
+  resolveExploreModel,
+  refreshDynamicConfig,
+} from "#src/config/dynamic.ts";
 import { prisma } from "#src/database/index.ts";
 import { databaseSnapshotId } from "./snapshot-identity.ts";
 import { writableRowCounts } from "./writable-rows.ts";
 import { ME, MY_SERVER } from "#src/configuration/flags.ts";
 import { useStageFlagSemantics } from "./stage-flag-semantics.ts";
 import { buildDirPath } from "#src/report-lake/paths.ts";
-import { readBuildPuuidRemapFingerprint } from "#src/report-lake/build-manifest.ts";
+import {
+  readBuildPuuidRemapFingerprint,
+  readBuildFingerprint,
+} from "#src/report-lake/build-manifest.ts";
+import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
 import {
   closeDuckDB,
   withDuckDBConnection,
@@ -88,12 +97,31 @@ type FlagSource = "static" | "provider";
 
 async function startFlags(): Promise<FlagSource> {
   const mode = Bun.env["FEATURE_FLAGS_MODE"];
+  await initializeDynamicConfig({
+    environment:
+      mode === "flipt" ? Bun.env : { FEATURE_FLAGS_MODE: "disabled" },
+    seed: {
+      exploreGuildAllowlist: configuration.exploreGuildAllowlist,
+      exploreQuotaLimits: configuration.exploreQuotaLimits,
+      llmHourlyTokenBudget: configuration.llmHourlyTokenBudget,
+      llmDailyTokenBudget: configuration.llmDailyTokenBudget,
+      exploreModel: configuration.exploreModel,
+      featureTipPercent: configuration.featureTipPercent,
+      featureTipCooldownHours: configuration.featureTipCooldownHours,
+      reportAiModel: configuration.reportAiModel ?? "gpt-5.6-sol",
+      bettingParlayAiModel: configuration.bettingParlayAiModel ?? "gpt-5.6-sol",
+      temporalCallGraphTracing: false,
+    },
+    startPolling: false,
+  });
   if (mode === "flipt") {
-    await initFeatureFlags({ environment: Bun.env });
-    return "provider";
+    if (!(await refreshFlagSnapshot()))
+      throw new Error(
+        "Live flag capture requires a reachable Flipt provider; refusing to label defaults as provider decisions.",
+      );
+    await refreshDynamicConfig();
   }
-  await initFeatureFlags({ environment: { FEATURE_FLAGS_MODE: "disabled" } });
-  return "static";
+  return mode === "flipt" ? "provider" : "static";
 }
 
 /**
@@ -189,6 +217,14 @@ export async function capturePinForStage(input: {
   const flagSource = await startFlags();
   useStageFlagSemantics(input.stage);
   const buildId = await publishedBuild(input.lakeDir);
+  const schemaFingerprint = await readBuildFingerprint(
+    buildDirPath(input.lakeDir, buildId),
+  );
+  if (schemaFingerprint !== lakeSchemaFingerprint()) {
+    throw new Error(
+      "The pulled lake schema differs from this checkout; rebuild it before capturing the pin.",
+    );
+  }
   const fingerprint = await readBuildPuuidRemapFingerprint(
     buildDirPath(input.lakeDir, buildId),
   );
@@ -233,12 +269,17 @@ export async function capturePinForStage(input: {
 
   const now = new Date().toISOString();
   const pin = StageDatasetPinSchema.parse({
-    schemaVersion: 1,
+    schemaVersion: 2,
+    runtime: {
+      analysisEnabled: exploreAnalysisEnabled(),
+      model: resolveExploreModel(),
+    },
     stage: input.stage,
     createdAt: now,
     lake: {
       dir: input.lakeDir,
       buildId,
+      schemaFingerprint,
       puuidRemapFingerprint: fingerprint,
       pulledAt: now,
       sourcePod: "dev:lake-pull",
@@ -260,7 +301,7 @@ export async function capturePinForStage(input: {
   // singleton the server is meant to keep, and a CLI that leaves it to
   // finalization pays a few seconds of dead time on exit.
   await prisma.$disconnect();
-  await shutdownFeatureFlags();
+  await shutdownDynamicConfig();
   await closeDuckDB();
   return pin;
 }

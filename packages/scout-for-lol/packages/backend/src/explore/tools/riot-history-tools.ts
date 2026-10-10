@@ -20,7 +20,62 @@ import { startScoutExploreHistory } from "#src/temporal/starts.ts";
 import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
 
 const ACQUISITION_BUCKET_MS = 10 * 60 * 1000;
-const RANKED_MATCH_COUNT = 100;
+const HISTORY_MATCH_COUNT = 100;
+const HISTORY_WAIT_MS = 120_000;
+
+const MatchTypeSchema = z.enum(["ranked", "normal"]);
+const HistoryContextSchema = z.object({
+  player: z.string().nullable(),
+  lane: z.string().nullable(),
+  matchType: MatchTypeSchema,
+  message: z.string(),
+});
+const HistoryOutputSchema = z.discriminatedUnion("status", [
+  HistoryContextSchema.extend({
+    status: z.literal("ready"),
+    ok: z.literal(true),
+    ...ScoutExploreHistoryResultSchema.shape,
+  }).strict(),
+  HistoryContextSchema.extend({
+    status: z.literal("pending"),
+    ok: z.literal(true),
+    requested: z.number().int(),
+    workflowId: z.string(),
+  }).strict(),
+  HistoryContextSchema.extend({
+    status: z.literal("error"),
+    ok: z.literal(false),
+  }).strict(),
+]);
+
+/** A bounded turn wait never cancels the durable import. */
+export async function waitForExploreHistory<T>(
+  result: Promise<T>,
+  signal: AbortSignal | undefined,
+  timeoutMs = HISTORY_WAIT_MS,
+): Promise<{ status: "ready"; result: T } | { status: "pending" }> {
+  signal?.throwIfAborted();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let abort: (() => void) | undefined;
+  try {
+    return await Promise.race([
+      result.then((value) => ({ status: "ready" as const, result: value })),
+      new Promise<{ status: "pending" }>((resolve, reject) => {
+        timer = setTimeout(() => {
+          resolve({ status: "pending" });
+        }, timeoutMs);
+        abort = () => {
+          reject(new Error("History wait aborted", { cause: signal?.reason }));
+        };
+        signal?.addEventListener("abort", abort, { once: true });
+        if (signal?.aborted === true) abort();
+      }),
+    ]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+    if (abort !== undefined) signal?.removeEventListener("abort", abort);
+  }
+}
 
 export const RankedHistoryTargetSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("current_lane_opponent") }).strict(),
@@ -103,61 +158,95 @@ export function createRiotHistoryExploreTools(input: {
   requesterId: DiscordAccountId;
   guildIds: DiscordGuildId[];
   track: ToolTracker;
+  abortSignal?: AbortSignal | undefined;
 }) {
-  return {
-    acquire_ranked_history: tool({
-      description:
-        "Ensure Scout's report lake covers the newest 100 ranked games for a full Riot ID or the asker's current lane opponent. Known games are reused and only missing games are fetched. Use before ScoutQL when existing data does not cover that player. Load riot-history first.",
-      inputSchema: z.object({ target: RankedHistoryTargetSchema }).strict(),
-      outputSchema: ScoutExploreHistoryResultSchema.extend({
-        ok: z.boolean(),
-        player: z.string().nullable(),
-        lane: z.string().nullable(),
-        message: z.string(),
-      }).strict(),
-      execute: ({ target }) =>
-        input.track("acquire_ranked_history", async () => {
-          const resolved = await resolveRiotPlayerTarget(
-            target,
-            input.requesterId,
-            input.guildIds,
-          );
-          if (resolved.kind === "error") {
-            return {
-              ok: false,
-              player: null,
-              lane: null,
-              requested: 0,
-              found: 0,
-              alreadyAvailable: 0,
-              ingested: 0,
-              skipped: 0,
-              message: resolved.message,
-            };
-          }
-          const supervisor = currentScoutTemporalSupervisor();
-          if (supervisor === undefined) {
-            throw new Error(
-              "Temporal is unavailable for Riot history acquisition",
-            );
-          }
-          const handle = await startScoutExploreHistory(supervisor.client(), {
-            stage: configuration.environment,
-            puuid: LeaguePuuidSchema.parse(resolved.puuid),
-            region: resolved.region,
-            acquisitionBucket: Math.floor(Date.now() / ACQUISITION_BUCKET_MS),
-            requestedMatches: RANKED_MATCH_COUNT,
-          });
-          const workflowResult = await handle.result();
-          const result = ScoutExploreHistoryResultSchema.parse(workflowResult);
+  const acquire = (
+    toolName: string,
+    target: z.infer<typeof RankedHistoryTargetSchema>,
+    matchType: z.infer<typeof MatchTypeSchema>,
+    legacy = false,
+  ) =>
+    input.track(
+      toolName,
+      async (): Promise<z.infer<typeof HistoryOutputSchema>> => {
+        const resolved = await resolveRiotPlayerTarget(
+          target,
+          input.requesterId,
+          input.guildIds,
+        );
+        if (resolved.kind === "error") {
           return {
+            ok: false,
+            player: null,
+            lane: null,
+            status: "error",
+            matchType,
+            message: resolved.message,
+          };
+        }
+        const supervisor = currentScoutTemporalSupervisor();
+        if (supervisor === undefined) {
+          throw new Error(
+            "Temporal is unavailable for Riot history acquisition",
+          );
+        }
+        const handle = await startScoutExploreHistory(supervisor.client(), {
+          stage: configuration.environment,
+          puuid: LeaguePuuidSchema.parse(resolved.puuid),
+          region: resolved.region,
+          acquisitionBucket: Math.floor(Date.now() / ACQUISITION_BUCKET_MS),
+          requestedMatches: HISTORY_MATCH_COUNT,
+          ...(legacy ? {} : { matchType }),
+        });
+        const waited = await waitForExploreHistory(
+          handle.result(),
+          input.abortSignal,
+        );
+        if (waited.status === "pending") {
+          return {
+            status: "pending",
             ok: true,
             player: resolved.label,
             lane: resolved.lane,
-            ...result,
-            message: `${(result.alreadyAvailable + result.ingested).toString()} of ${result.found.toString()} recent ranked games for ${resolved.label} are now ready in Scout's report lake (${result.alreadyAvailable.toString()} already present, ${result.ingested.toString()} newly fetched). Query them with ScoutQL and state the actual game count returned.`,
+            matchType,
+            requested: HISTORY_MATCH_COUNT,
+            workflowId: handle.workflowId,
+            message: `The recent ${matchType} history import for ${resolved.label} is still running. No completed coverage count is available yet. It continues in the background; ask again after it finishes. Do not claim these games are ready or that Scout has no games.`,
           };
-        }),
+        }
+        const result = ScoutExploreHistoryResultSchema.parse(waited.result);
+        return {
+          status: "ready",
+          ok: true,
+          player: resolved.label,
+          lane: resolved.lane,
+          matchType,
+          ...result,
+          message: `${(result.alreadyAvailable + result.ingested).toString()} of ${result.found.toString()} recent ${matchType} games returned by Riot for ${resolved.label} are now ready in Scout's report lake (${result.alreadyAvailable.toString()} already present, ${result.ingested.toString()} newly fetched, ${result.skipped.toString()} unavailable). Query them with ScoutQL and state the actual game count and date bounds returned. This does not establish lifetime coverage.`,
+        };
+      },
+    );
+  return {
+    acquire_ranked_history: tool({
+      description:
+        "Import up to the newest 100 ranked games for a full Riot ID or current lane opponent. Use only for requested recent ranked history. Load riot-history first.",
+      inputSchema: z.object({ target: RankedHistoryTargetSchema }).strict(),
+      outputSchema: HistoryOutputSchema,
+      execute: ({ target }) =>
+        acquire("acquire_ranked_history", target, "ranked", true),
+    }),
+    acquire_match_history: tool({
+      description:
+        "Import up to the newest 100 ranked or normal games for a full Riot ID or current lane opponent. Choose the requested match type explicitly. Use only when the user requests fetching more history; existing missing coverage alone is not permission. Known matches are reused. Load riot-history first. May return pending while the durable import continues.",
+      inputSchema: z
+        .object({
+          target: RankedHistoryTargetSchema,
+          matchType: MatchTypeSchema,
+        })
+        .strict(),
+      outputSchema: HistoryOutputSchema,
+      execute: ({ target, matchType }) =>
+        acquire("acquire_match_history", target, matchType),
     }),
   };
 }

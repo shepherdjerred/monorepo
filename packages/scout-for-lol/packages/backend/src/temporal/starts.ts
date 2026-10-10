@@ -149,6 +149,7 @@ export async function startScoutExploreHistory(
     input.stage,
     input.puuid,
     input.acquisitionBucket,
+    input.matchType,
   );
   return await startOrReuseWorkflow<
     WorkflowHandle<typeof scoutExploreHistoryWorkflow>
@@ -162,8 +163,8 @@ export async function startScoutExploreHistory(
         ...startMetadata(
           input.stage,
           "api",
-          "Import ranked history for Explore",
-          "Fetches recent ranked matches on demand, stores them permanently, and folds them into Scout's report lake.",
+          `Import ${input.matchType ?? "ranked"} history for Explore`,
+          "Fetches recent matches on demand, stores them permanently, and folds them into Scout's report lake.",
         ),
       }),
     () =>

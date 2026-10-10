@@ -7,8 +7,11 @@ import type {
 } from "@scout-for-lol/data";
 import type { LlmSubject } from "@shepherdjerred/llm-observability/subject";
 import type { ExploreSurface } from "#src/explore/surface.ts";
+import type { ToolPayloadCapture } from "#src/explore/inspection/tool-payloads.ts";
 
 export type ExploreAgentParams = {
+  /** Replays retain complete evidence locally; hosted turns use the database sink. */
+  captureToolPayload?: ToolPayloadCapture;
   model?: string;
   runId: string;
   conversationId: string;

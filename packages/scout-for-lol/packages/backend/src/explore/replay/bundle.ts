@@ -141,7 +141,9 @@ export async function appendBundleLine(
 
 export const ReplayManifestSchema = z
   .object({
-    schemaVersion: z.literal(1),
+    schemaVersion: z.literal(2),
+    analysisEnabled: z.boolean(),
+    capturedAnalysisEnabled: z.boolean(),
     runId: z.string().min(1),
     startedAt: z.iso.datetime(),
     stage: z.enum(["beta", "prod"]),

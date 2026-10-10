@@ -291,8 +291,10 @@ export function scoutExploreHistoryWorkflowId(
   stage: ScoutStage,
   puuid: string,
   acquisitionBucket: number,
+  matchType?: "ranked" | "normal",
 ): string {
-  return `scout-${stage}-explore-history-${puuid}-${acquisitionBucket.toString()}`;
+  const legacyId = `scout-${stage}-explore-history-${puuid}-${acquisitionBucket.toString()}`;
+  return matchType === "normal" ? `${legacyId}-normal` : legacyId;
 }
 
 export function scoutExploreTimelineWorkflowId(

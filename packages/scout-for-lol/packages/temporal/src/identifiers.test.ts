@@ -49,6 +49,12 @@ describe("Scout Temporal identifiers", () => {
   });
 
   test("uses stable product identifiers without random suffixes", () => {
+    expect(
+      scoutExploreHistoryWorkflowId("beta", "puuid_123", 456, "ranked"),
+    ).toBe(scoutExploreHistoryWorkflowId("beta", "puuid_123", 456));
+    expect(
+      scoutExploreHistoryWorkflowId("beta", "puuid_123", 456, "normal"),
+    ).toBe("scout-beta-explore-history-puuid_123-456-normal");
     expect(scoutInitialHistoryWorkflowId("beta", "puuid_123")).toBe(
       "scout-beta-history-puuid_123",
     );

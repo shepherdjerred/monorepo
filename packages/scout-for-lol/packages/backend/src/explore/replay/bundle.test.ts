@@ -369,7 +369,9 @@ describe("bundlePaths", () => {
 describe("ReplayManifestSchema", () => {
   test("rejects unknown fields", () => {
     const manifest = {
-      schemaVersion: 1,
+      schemaVersion: 2,
+      analysisEnabled: false,
+      capturedAnalysisEnabled: false,
       runId: "run-1",
       startedAt: "2026-09-19T00:00:00.000Z",
       stage: "beta",

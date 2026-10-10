@@ -2,13 +2,19 @@ import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import path from "node:path";
 import { readdir } from "node:fs/promises";
 import { z } from "zod";
+import { ReplayRuntimeProvider } from "#src/explore/replay/runtime-provider.ts";
+import configuration from "#src/configuration.ts";
 import {
-  initFeatureFlags,
-  shutdownFeatureFlags,
-} from "@shepherdjerred/feature-flags";
+  initializeDynamicConfig,
+  shutdownDynamicConfig,
+  exploreAnalysisEnabled,
+} from "#src/config/dynamic.ts";
 import { prisma } from "#src/database/index.ts";
 import { databaseSnapshotId } from "./snapshot-identity.ts";
 import { writableRowCounts } from "./writable-rows.ts";
+import { readBuildFingerprint } from "#src/report-lake/build-manifest.ts";
+import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
+import { lakeSchemaIssues } from "#src/explore/replay/dataset.ts";
 import {
   MY_SERVER,
   addFlagOverride,
@@ -154,6 +160,12 @@ async function lakeAccountFacts(pin: StageDatasetPin): Promise<{
 
 async function verifyDataset(pin: StageDatasetPin): Promise<void> {
   const buildDir = buildDirPath(pin.lake.dir, pin.lake.buildId);
+  const schemaIssues = lakeSchemaIssues({
+    published: await readBuildFingerprint(buildDir),
+    pinned: pin.lake.schemaFingerprint,
+    current: lakeSchemaFingerprint(),
+  });
+  if (schemaIssues.length > 0) throw new Error(schemaIssues.join("\n"));
   const [
     lakeFingerprint,
     remap,
@@ -275,6 +287,10 @@ function manifestDifferences(
   current: ReplayManifest,
 ): readonly string[] {
   const differences: string[] = [];
+  if (existing.analysisEnabled !== current.analysisEnabled)
+    differences.push("analysis setting changed");
+  if (existing.capturedAnalysisEnabled !== current.capturedAnalysisEnabled)
+    differences.push("captured analysis setting changed");
   const compare = (label: string, before: string, now: string): void => {
     if (before !== now) differences.push(`${label}: was ${before}, now ${now}`);
   };
@@ -412,6 +428,8 @@ async function loadBaseline(
     /** The data this run reads, so a baseline from other data is refused. */
     readonly lake: { readonly buildId: string; readonly fingerprint: string };
     readonly snapshotId: string;
+    readonly analysisEnabled: boolean;
+    readonly model: string;
   },
 ): Promise<ReadonlyMap<string, ReplayBaseline>> {
   const runDir = path.join(replayBundleRoot(Bun.env), runId);
@@ -434,6 +452,9 @@ async function loadBaseline(
   }
   const manifest = ReplayManifestSchema.parse(baselineManifest);
   const conflicts: string[] = [];
+  if (manifest.analysisEnabled !== against.analysisEnabled)
+    conflicts.push("analysis capability differs");
+  if (manifest.model !== against.model) conflicts.push("model differs");
   if (manifest.stage !== against.stage) {
     conflicts.push(`stage ${manifest.stage}, not ${against.stage}`);
   }
@@ -849,7 +870,9 @@ async function runGuild(input: {
 
     const model = exploreModel();
     const manifest = ReplayManifestSchema.parse({
-      schemaVersion: 1,
+      schemaVersion: 2,
+      analysisEnabled: exploreAnalysisEnabled(),
+      capturedAnalysisEnabled: pin.runtime.analysisEnabled,
       runId,
       startedAt: new Date().toISOString(),
       stage: pin.stage,
@@ -870,6 +893,7 @@ async function runGuild(input: {
       corpusVersion: conversations.corpus?.version ?? null,
       promptSha256: sha256Hex(
         exploreAgentInstructions({
+          analysis: exploreAnalysisEnabled(),
           bucks: config.capabilities.bucks ? { currentTime: "pinned" } : null,
           dares: config.capabilities.dares,
           challenges: config.capabilities.challenges,
@@ -956,6 +980,8 @@ async function runGuild(input: {
           fingerprint: pin.lake.puuidRemapFingerprint,
         },
         snapshotId: pin.database.snapshotId,
+        analysisEnabled: exploreAnalysisEnabled(),
+        model,
       });
       for (const [caseId, entry] of baselineEntries) {
         baseline.set(caseId, entry);
@@ -969,7 +995,7 @@ async function runGuild(input: {
         executeAgent: streamExploreAgent,
         resolveCapabilities: resolveReplayCapabilities,
         now: () => Date.now(),
-        timeoutMs: 120_000,
+        timeoutMs: 180_000,
         newRunId: () => globalThis.crypto.randomUUID(),
       },
       {
@@ -1020,6 +1046,7 @@ async function runGuild(input: {
                       ? null
                       : chipExpectation(config.capabilities, chip.condition),
                   capabilities: observation.capabilities,
+                  analysisEnabled: exploreAnalysisEnabled(),
                   capabilityMismatches: mismatches,
                   durationMs: observation.durationMs,
                   lakeBuildId: pin.lake.buildId,
@@ -1032,6 +1059,7 @@ async function runGuild(input: {
                 candidate,
                 diff,
                 trace: observation.trace,
+                payloads: observation.payloads,
                 signals,
                 signalWeight: replaySignalWeight(signals),
                 error: observation.error,
@@ -1099,7 +1127,27 @@ export async function runReplay(input: {
   // client that never becomes ready and the first capability resolution hangs
   // forever. "disabled" registers none, so evaluations fall through to the
   // registry defaults the guild overrides are applied to.
-  await initFeatureFlags({ environment: { FEATURE_FLAGS_MODE: "disabled" } });
+  await initializeDynamicConfig({
+    environment: { ...Bun.env, FEATURE_FLAGS_MODE: "disabled" },
+    provider: new ReplayRuntimeProvider({
+      analysisEnabled:
+        input.options.analysisOverride ?? input.pin.runtime.analysisEnabled,
+      model: input.options.modelOverride ?? input.pin.runtime.model,
+    }),
+    seed: {
+      exploreGuildAllowlist: configuration.exploreGuildAllowlist,
+      exploreQuotaLimits: configuration.exploreQuotaLimits,
+      llmHourlyTokenBudget: configuration.llmHourlyTokenBudget,
+      llmDailyTokenBudget: configuration.llmDailyTokenBudget,
+      exploreModel: configuration.exploreModel,
+      featureTipPercent: configuration.featureTipPercent,
+      featureTipCooldownHours: configuration.featureTipCooldownHours,
+      reportAiModel: configuration.reportAiModel ?? "gpt-5.6-sol",
+      bettingParlayAiModel: configuration.bettingParlayAiModel ?? "gpt-5.6-sol",
+      temporalCallGraphTracing: false,
+    },
+    startPolling: false,
+  });
   await verifyDataset(input.pin);
 
   const stamp = new Date().toISOString().replaceAll(/[:.]/g, "-");
@@ -1164,7 +1212,7 @@ export async function runReplay(input: {
   // singleton the server is meant to keep, and a CLI that leaves it to
   // finalization pays a few seconds of dead time on exit.
   await prisma.$disconnect();
-  await shutdownFeatureFlags();
+  await shutdownDynamicConfig();
   await closeDuckDB();
   return { passed, runDirectories: directories };
 }

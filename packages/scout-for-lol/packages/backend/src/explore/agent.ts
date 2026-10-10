@@ -48,6 +48,13 @@ import { scoutExploreTokensUsedTotal } from "#src/metrics/explore.ts";
 
 const logger = createLogger("explore-agent");
 
+function captureForTurn(params: ExploreAgentParams) {
+  return (
+    params.captureToolPayload ??
+    createToolPayloadCapture(params.conversationId, params.runId)
+  );
+}
+
 export type ExploreAgentResult = {
   inlineEntities?: NonNullable<ExploreMessage["inlineEntities"]>;
   answer: ExploreAnswer;
@@ -181,7 +188,7 @@ async function streamExploreAgentInternal(
   const streamState = await drainExploreStreams(
     stream,
     params.emit,
-    createToolPayloadCapture(params.conversationId, params.runId),
+    captureForTurn(params),
   );
 
   // Charge generation even if output validation or artifact hydration fails.

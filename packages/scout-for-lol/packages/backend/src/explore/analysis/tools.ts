@@ -5,6 +5,7 @@ import {
 import { tool } from "ai";
 import { z } from "zod";
 import { prisma } from "#src/database/index.ts";
+import { createToolPayloadCapture } from "#src/explore/inspection/tool-payloads.ts";
 import type { ExploreAgentParams } from "#src/explore/analysis/agent-types.ts";
 import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
 import { executeReportQuery } from "#src/reports/query/query-engine.ts";
@@ -23,6 +24,12 @@ import {
   JsonPathSchema,
   selectJsonValues,
 } from "#src/explore/analysis/json-selection.ts";
+import {
+  analysisOutputForModel,
+  jsonValuePage,
+  queryDatasetRows,
+} from "#src/explore/analysis/model-output.ts";
+import { summarizeRecordedMatch } from "#src/explore/analysis/match-review.ts";
 
 type Json = z.infer<ReturnType<typeof z.json>>;
 type Dataset = {
@@ -54,6 +61,9 @@ export function createAnalysisTools(
   params: ExploreAgentParams,
   track: ToolTracker,
 ) {
+  const capturePayload =
+    params.captureToolPayload ??
+    createToolPayloadCapture(params.conversationId, params.runId);
   const datasets = new Map<string, Dataset>();
   let executions = 0;
   let queries = 0;
@@ -85,15 +95,11 @@ export function createAnalysisTools(
         "Datasets exceed the turn's 64 MiB limit. Narrow the query.",
       );
     datasets.set(name, { ...dataset, bytes });
-    await prisma.exploreToolPayload.create({
-      data: {
-        conversationId: params.conversationId,
-        runId: params.runId,
-        toolCallId,
-        toolName,
-        direction: "dataset",
-        payload: JSON.stringify(dataset.data),
-      },
+    await capturePayload({
+      toolCallId,
+      toolName,
+      direction: "dataset",
+      value: dataset.data,
     });
     return {
       dataset: name,
@@ -106,6 +112,32 @@ export function createAnalysisTools(
     };
   };
   return {
+    summarize_match_timeline: tool({
+      description:
+        "Extract deterministic facts for one player from a named raw-documents dataset: match stats and roster, complete/partial/missing timeline coverage, named deaths and objective events, gameTime labels, bounty data, and preceding team-gold snapshots. Use this first for a game review instead of writing JavaScript. Query participant_id to identify the reviewed player. Events page at most 10 at a time within 8 KiB; follow nextOffset. No Riot acquisition or model-generated calculations.",
+      inputSchema: z.strictObject({
+        dataset: NameSchema,
+        matchId: RiotMatchIdSchema,
+        participantId: z.number().int().positive(),
+        offset: z.number().int().nonnegative(),
+      }),
+      outputSchema: z.json(),
+      execute: (input) =>
+        track("summarize_match_timeline", () =>
+          Promise.resolve(
+            z
+              .json()
+              .parse(
+                summarizeRecordedMatch(
+                  requireDataset(input.dataset).data,
+                  input.matchId,
+                  input.participantId,
+                  input.offset,
+                ),
+              ),
+          ),
+        ),
+    }),
     select_dataset_values: tool({
       description:
         "Select JSON fields with a validated path: strings name properties, integers name array indexes, {arrayElements:true} expands arrays. Pages complete observations, distinguishing absent fields from explicit null. Scalar type mismatches are reported without coercion. Use schema discovery for field names.",
@@ -134,17 +166,13 @@ export function createAnalysisTools(
             requireDataset(input.dataset).data,
             input.path,
           );
-          const values = all.slice(input.offset, input.offset + 100);
-          if (
-            new TextEncoder().encode(JSON.stringify(values)).byteLength > 65_536
-          )
-            throw new Error(
-              "Selected values exceed 64 KiB. Select a scalar child path or analyze the dataset in JavaScript.",
-            );
+          const values = jsonValuePage(all, input.offset);
           return Promise.resolve({
             total: all.length,
             nextOffset:
-              input.offset + 100 < all.length ? input.offset + 100 : null,
+              input.offset + values.length < all.length
+                ? input.offset + values.length
+                : null,
             values,
             mismatches:
               input.type === "json"
@@ -160,7 +188,7 @@ export function createAnalysisTools(
     }),
     materialize_query_dataset: tool({
       description:
-        "Run validated ScoutQL into a named complete dataset (up to 50,000 selected rows, 64 MiB per turn). Load data-analysis first. Group by match_id to select complete raw match/timeline documents. Choose an explicit LIMIT and deterministic ORDER BY. Preview rows are a sample, not the dataset.",
+        "Run validated ScoutQL into a named complete dataset (up to 50,000 selected rows, 64 MiB per turn). Load data-analysis first. Group by match_id to select complete raw match/timeline documents. Grouping fields retain canonical keys; __group_labels maps grouping names to display labels, including player names. Never resolve numeric player keys as Riot names. Choose an explicit LIMIT and deterministic ORDER BY. Preview rows are a sample, not the dataset.",
       inputSchema: z.strictObject({
         name: NameSchema,
         queryText: ReportQueryTextSchema,
@@ -187,17 +215,10 @@ export function createAnalysisTools(
               "Select at most 50,000 rows with an explicit LIMIT; narrow or aggregate this query.",
             );
           const data = z.json().parse(
-            result.rows.map((row) => ({
-              ...Object.fromEntries(
-                result.plan.groupings.map((group, index) => [
-                  group.name,
-                  row.keys[index],
-                ]),
-              ),
-              ...Object.fromEntries(
-                row.values.map((value) => [value.column, value.value]),
-              ),
-            })),
+            queryDatasetRows(
+              result.plan.groupings.map((group) => group.name),
+              result.rows,
+            ),
           );
           const idGrouping = result.plan.groupings.findIndex(
             (group) =>
@@ -353,9 +374,9 @@ export function createAnalysisTools(
           return Promise.resolve({
             total: all.length,
             nextOffset:
-              input.offset + 100 < all.length ? input.offset + 100 : null,
+              input.offset + 25 < all.length ? input.offset + 25 : null,
             paths: all
-              .slice(input.offset, input.offset + 100)
+              .slice(input.offset, input.offset + 25)
               .map(([key, value]) => ({
                 path: key,
                 types: [...value.types].toSorted(),
@@ -367,13 +388,16 @@ export function createAnalysisTools(
     }),
     analyze_javascript: tool({
       description:
-        "Analyze named datasets with synchronous JavaScript. Code is a function body receiving datasets (an object keyed by name); return JSON. Use joins, ordered streaks, array expansion and nested damage analysis. No process, filesystem, network, secrets or imports. 10 seconds, 256 MiB, 64 KiB output, four executions per turn.",
+        "Analyze named datasets with synchronous JavaScript. Code is a function body receiving datasets (an object keyed by name); return compact JSON aggregates and selected events. Results above 8 KiB are stored in a new named dataset: use select_dataset_values on that dataset to retrieve specific facts without recomputing. Include display names from __group_labels when reporting grouped players. Use joins, ordered streaks, array expansion and nested damage analysis. No process, filesystem, network, secrets or imports. 10 seconds, 256 MiB, 64 KiB computation output, four executions per turn.",
       inputSchema: z.strictObject({
         datasets: z.array(NameSchema).min(1).max(8),
         code: z.string().min(1).max(32_768),
       }),
-      outputSchema: SandboxResultSchema,
-      execute: (input) =>
+      outputSchema: z.union([
+        SandboxResultSchema,
+        DescriptionSchema.extend({ ok: z.literal(true) }),
+      ]),
+      execute: (input, { toolCallId }) =>
         track("analyze_javascript", async () => {
           if (++executions > 4)
             return {
@@ -383,11 +407,43 @@ export function createAnalysisTools(
           const selected = Object.fromEntries(
             input.datasets.map((name) => [name, requireDataset(name).data]),
           );
-          return await analyzeJavaScript({
+          const result = await analyzeJavaScript({
             code: input.code,
             datasets: JSON.stringify(selected),
             signal: params.abortSignal,
           });
+          const bounded = analysisOutputForModel(result);
+          if (result.ok && !bounded.ok) {
+            const source = requireDataset(input.datasets[0] ?? "");
+            const name = `analysis_result_${globalThis.crypto.randomUUID().slice(0, 8)}`;
+            const description = await put(
+              name,
+              {
+                data: result.value,
+                generation: source.generation,
+                scope: source.scope,
+                matchIds: [],
+              },
+              {
+                rows: Array.isArray(result.value) ? result.value.length : 1,
+                preview: { stored: true },
+              },
+              { toolCallId, toolName: "analyze_javascript" },
+            );
+            return {
+              ok: true as const,
+              ...description,
+              message:
+                "The complete calculation result exceeds 8 KiB and is stored in this named dataset. Use select_dataset_values with specific scalar or event paths; do not repeat the calculation or dump entire frames.",
+            };
+          }
+          await capturePayload({
+            toolCallId,
+            toolName: "analyze_javascript",
+            direction: "dataset",
+            value: result,
+          });
+          return bounded;
         }),
     }),
   };

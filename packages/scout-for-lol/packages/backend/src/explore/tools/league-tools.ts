@@ -13,6 +13,7 @@ export function createLeagueExploreTools(input: {
   riotHistoryEnabled: boolean;
   eligibleTimelineMatchIds: () => ReadonlySet<string>;
   track: ToolTracker;
+  abortSignal?: AbortSignal | undefined;
 }) {
   return {
     ...createLeagueReferenceTools(input.track),
