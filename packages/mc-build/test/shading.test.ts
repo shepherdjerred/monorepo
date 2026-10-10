@@ -12,6 +12,11 @@ describe("glass skylight", () => {
     { block: "blue_stained_glass_pane", expected: 15 },
     { block: "cave_air", expected: 15 },
     { block: "void_air", expected: 15 },
+    { block: "light", expected: 15 },
+    ...Array.from({ length: 16 }, (_, level) => ({
+      block: `light[level=${level.toString()}]`,
+      expected: 15,
+    })),
     { block: "tinted_glass", expected: 0 },
     { block: "stone", expected: 0 },
   ])("vertical skylight through $block", ({ block, expected }) => {
@@ -21,18 +26,21 @@ describe("glass skylight", () => {
     grid.set(1, 3, 1, `minecraft:${block}`);
     expect(skyLightLevels(grid)[grid.index(1, 1, 1)]).toBe(expected);
   });
-  it.each(["glass", "red_stained_glass_pane", "tinted_glass", "stone"])(
-    "handles sideways transmission through %s",
-    (block) => {
-      const grid = new BlockGrid({ x: 5, y: 5, z: 5 }, "minecraft:stone");
-      for (let y = 1; y < 5; y += 1) grid.set(0, y, 2, "minecraft:air");
-      grid.set(1, 2, 2, `minecraft:${block}`);
-      grid.set(2, 2, 2, "minecraft:air");
-      expect(skyLightLevels(grid)[grid.index(2, 2, 2)]).toBe(
-        block === "stone" || block === "tinted_glass" ? 0 : 13,
-      );
-    },
-  );
+  it.each([
+    "glass",
+    "red_stained_glass_pane",
+    "light[level=0]",
+    "tinted_glass",
+    "stone",
+  ])("handles sideways transmission through %s", (block) => {
+    const grid = new BlockGrid({ x: 5, y: 5, z: 5 }, "minecraft:stone");
+    for (let y = 1; y < 5; y += 1) grid.set(0, y, 2, "minecraft:air");
+    grid.set(1, 2, 2, `minecraft:${block}`);
+    grid.set(2, 2, 2, "minecraft:air");
+    expect(skyLightLevels(grid)[grid.index(2, 2, 2)]).toBe(
+      block === "stone" || block === "tinted_glass" ? 0 : 13,
+    );
+  });
 });
 
 describe("block light through glazed partitions", () => {

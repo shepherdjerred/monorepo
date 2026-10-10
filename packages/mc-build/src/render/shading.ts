@@ -161,11 +161,12 @@ export function shadeRelief(
   });
 }
 
-/** Skylight crosses ordinary/stained glass and panes; tinted glass blocks it. */
+/** Skylight crosses invisible light, ordinary/stained glass and panes. */
 function transmitsSky(state: string): boolean {
   const id = blockId(state).replace(/^minecraft:/u, "");
   return (
     isAir(state) ||
+    id === "light" ||
     id === "glass" ||
     id === "glass_pane" ||
     id.endsWith("_stained_glass") ||
