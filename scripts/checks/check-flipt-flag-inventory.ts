@@ -1,4 +1,5 @@
 import { applyMissingManagedFlags } from "../../packages/feature-flags/src/flipt-missing-flag-apply.ts";
+import { createFliptOperatorFetcher } from "../../packages/feature-flags/src/flipt-operator-fetcher.ts";
 import {
   compareManagedFlagInventory,
   fetchFliptSnapshot,
@@ -115,6 +116,7 @@ async function main(): Promise<void> {
   if (Bun.argv.includes("--apply-missing")) {
     const created = await applyMissingManagedFlags({
       url,
+      fetcher: createFliptOperatorFetcher(url, Bun.env["FLIPT_OPERATOR_TOKEN"]),
       ...(environmentFilter === undefined ? {} : { environmentFilter }),
       ...(namespaceFilter === undefined ? {} : { namespaceFilter }),
     });
