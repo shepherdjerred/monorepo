@@ -3,7 +3,6 @@ import path from "node:path";
 import { readdir } from "node:fs/promises";
 import { z } from "zod";
 import { ReplayRuntimeProvider } from "#src/explore/replay/runtime-provider.ts";
-import configuration from "#src/configuration.ts";
 import {
   initializeDynamicConfig,
   shutdownDynamicConfig,
@@ -27,6 +26,7 @@ import {
 } from "@scout-for-lol/data";
 import { parseReplayCorpus } from "#src/explore/replay/corpus.ts";
 import { useStageFlagSemantics } from "./stage-flag-semantics.ts";
+import { replayDynamicConfigSeed } from "./config-seed.ts";
 import { planConversationTurns } from "#src/explore/replay/plan.ts";
 import { buildTranscript } from "#src/explore/store-mappers.ts";
 import { exploreModel } from "#src/config/dynamic.ts";
@@ -1134,18 +1134,7 @@ export async function runReplay(input: {
         input.options.analysisOverride ?? input.pin.runtime.analysisEnabled,
       model: input.options.modelOverride ?? input.pin.runtime.model,
     }),
-    seed: {
-      exploreGuildAllowlist: configuration.exploreGuildAllowlist,
-      exploreQuotaLimits: configuration.exploreQuotaLimits,
-      llmHourlyTokenBudget: configuration.llmHourlyTokenBudget,
-      llmDailyTokenBudget: configuration.llmDailyTokenBudget,
-      exploreModel: configuration.exploreModel,
-      featureTipPercent: configuration.featureTipPercent,
-      featureTipCooldownHours: configuration.featureTipCooldownHours,
-      reportAiModel: configuration.reportAiModel ?? "gpt-5.6-sol",
-      bettingParlayAiModel: configuration.bettingParlayAiModel ?? "gpt-5.6-sol",
-      temporalCallGraphTracing: false,
-    },
+    seed: replayDynamicConfigSeed(),
     startPolling: false,
   });
   await verifyDataset(input.pin);

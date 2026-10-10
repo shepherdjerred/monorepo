@@ -2,7 +2,6 @@ import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import path from "node:path";
 import { z } from "zod";
 import { refreshFlagSnapshot } from "@shepherdjerred/feature-flags";
-import configuration from "#src/configuration.ts";
 import {
   initializeDynamicConfig,
   shutdownDynamicConfig,
@@ -15,6 +14,7 @@ import { databaseSnapshotId } from "./snapshot-identity.ts";
 import { writableRowCounts } from "./writable-rows.ts";
 import { ME, MY_SERVER } from "#src/configuration/flags.ts";
 import { useStageFlagSemantics } from "./stage-flag-semantics.ts";
+import { replayDynamicConfigSeed } from "./config-seed.ts";
 import { buildDirPath } from "#src/report-lake/paths.ts";
 import {
   readBuildPuuidRemapFingerprint,
@@ -100,18 +100,7 @@ async function startFlags(): Promise<FlagSource> {
   await initializeDynamicConfig({
     environment:
       mode === "flipt" ? Bun.env : { FEATURE_FLAGS_MODE: "disabled" },
-    seed: {
-      exploreGuildAllowlist: configuration.exploreGuildAllowlist,
-      exploreQuotaLimits: configuration.exploreQuotaLimits,
-      llmHourlyTokenBudget: configuration.llmHourlyTokenBudget,
-      llmDailyTokenBudget: configuration.llmDailyTokenBudget,
-      exploreModel: configuration.exploreModel,
-      featureTipPercent: configuration.featureTipPercent,
-      featureTipCooldownHours: configuration.featureTipCooldownHours,
-      reportAiModel: configuration.reportAiModel ?? "gpt-5.6-sol",
-      bettingParlayAiModel: configuration.bettingParlayAiModel ?? "gpt-5.6-sol",
-      temporalCallGraphTracing: false,
-    },
+    seed: replayDynamicConfigSeed(),
     startPolling: false,
   });
   if (mode === "flipt") {
