@@ -5,6 +5,7 @@ import {
   mkdtemp,
   readdir,
   readlink,
+  rename,
   rm,
   stat,
   symlink,
@@ -103,6 +104,69 @@ test("cache identity corruption fails visibly instead of silently fetching again
   await expect(checkoutSource({ ...input, workspace: warm })).rejects.toThrow(
     "tree mismatch",
   );
+});
+
+test("a warm checkout is complete without access to its origin", async () => {
+  const input = await fixture();
+  const cold = join(input.root, "cold");
+  await mkdir(cold);
+  await checkoutSource({ ...input, workspace: cold });
+  await rename(input.repository, join(input.root, "unavailable-origin"));
+  const warm = join(input.root, "warm");
+  await mkdir(warm);
+  const result = await checkoutSource({ ...input, workspace: warm });
+  expect(result.cache).toBe("hit");
+  expect(result.downloadedObjectBytes).toBe(0);
+  expect(await git(warm, ["rev-parse", "HEAD"])).toBe(input.commit);
+  expect(await Bun.file(join(warm, "run.sh")).text()).toBe(
+    "#!/bin/sh\necho checked\n",
+  );
+  await git(warm, ["fsck", "--full"]);
+});
+
+test("workspace edits and Git object corruption cannot alter a later checkout", async () => {
+  const input = await fixture();
+  const cold = join(input.root, "cold");
+  await mkdir(cold);
+  await checkoutSource({ ...input, workspace: cold });
+  await Bun.write(join(cold, "run.sh"), "locally changed\n");
+  const localObject = join(
+    cold,
+    ".git",
+    "objects",
+    input.commit.slice(0, 2),
+    input.commit.slice(2),
+  );
+  await chmod(localObject, 0o600);
+  await Bun.write(localObject, "corrupt local object");
+  await git(cold, ["config", "user.name", "Local checkout only"]);
+  const warm = join(input.root, "warm");
+  await mkdir(warm);
+  const result = await checkoutSource({ ...input, workspace: warm });
+  expect(result.cache).toBe("hit");
+  expect(await Bun.file(join(warm, "run.sh")).text()).toBe(
+    "#!/bin/sh\necho checked\n",
+  );
+  expect(await Bun.file(join(warm, ".git", "config")).text()).not.toContain(
+    "Local checkout only",
+  );
+  expect(await git(warm, ["status", "--porcelain"])).toBe("");
+  await git(warm, ["fsck", "--full"]);
+});
+
+test("refusing an existing checkout preserves its dirty worktree", async () => {
+  const input = await fixture();
+  const workspace = join(input.root, "workspace");
+  await mkdir(workspace);
+  await checkoutSource({ ...input, workspace });
+  await Bun.write(join(workspace, "run.sh"), "uncommitted work\n");
+  await expect(checkoutSource({ ...input, workspace })).rejects.toThrow(
+    "already has Git metadata",
+  );
+  expect(await Bun.file(join(workspace, "run.sh")).text()).toBe(
+    "uncommitted work\n",
+  );
+  expect(await git(workspace, ["rev-parse", "HEAD"])).toBe(input.commit);
 });
 
 test("unapproved work and local jobs cannot mount caches; trusted jobs mount only in clone", () => {
