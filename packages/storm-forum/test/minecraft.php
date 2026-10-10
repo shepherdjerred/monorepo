@@ -20,6 +20,23 @@ try {
     $failed = false;
     try { MinecraftStatus::read($path, 1005); } catch (RuntimeException $error) { $failed = true; }
     $check($failed, 'Corrupt names did not fail validation');
+    foreach (['java', 'bedrock'] as $edition) {
+        foreach (['version', 'verifiedAt'] as $field) {
+            $invalid = $source; unset($invalid[$edition][$field]);
+            file_put_contents($path, json_encode($invalid));
+            $failed = false;
+            try { MinecraftStatus::read($path, 1005); } catch (RuntimeException $error) { $failed = true; }
+            $check($failed, 'Incomplete edition metadata did not fail validation');
+        }
+        $invalid = $source; unset($invalid[$edition]['version'], $invalid[$edition]['verifiedAt']);
+        file_put_contents($path, json_encode($invalid));
+        $failed = false;
+        try { MinecraftStatus::read($path, 1005); } catch (RuntimeException $error) { $failed = true; }
+        $check($failed, 'Online edition without metadata did not fail validation');
+    }
+    $numericNames = $source; $numericNames['players']['names'] = ['123', '0123', '1e3', '1000'];
+    file_put_contents($path, json_encode($numericNames));
+    $check(MinecraftStatus::read($path, 1005)['players']['names'] === $numericNames['players']['names'], 'Distinct numeric player names were collapsed');
     unlink($path);
     $check(MinecraftStatus::read($path)['state'] === 'unavailable', 'Missing initial cache was not unavailable');
 } finally { if (is_file($path)) { unlink($path); } }

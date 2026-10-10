@@ -93,6 +93,13 @@ test("selects infra for an unpublished maintained plugin", async () => {
   );
 });
 
+test("rebuilds both consumers of The Storm's public status contract", async () => {
+  expect(await select(["packages/the-storm/public-status.json"])).toEqual([
+    "infra",
+    "storm-forum",
+  ]);
+});
+
 describe("selectImageTargets", () => {
   test("selects a standalone application image", async () => {
     expect(await select(["packages/tasknotes-server/src/index.ts"])).toEqual([
@@ -169,6 +176,7 @@ describe("selectImageTargets", () => {
       ]),
     ).toEqual(["infra", "temporal-worker"]);
     expect(await select(["packages/the-storm/package.json"])).toEqual([
+      "storm-forum",
       "temporal-worker",
     ]);
   });
