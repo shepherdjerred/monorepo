@@ -1,4 +1,5 @@
 import { protectArgoTokenDefault } from "./argocd-options.ts";
+import { isArgoHelpCommand } from "./argocd-metadata.ts";
 
 export const PASSTHROUGH_COMMANDS = [
   "gh",
@@ -165,50 +166,6 @@ export const PASSTHROUGH_REGISTRY: ReadonlyMap<string, PassthroughSpec> =
 function argsBeforeBoundary(args: readonly string[]): readonly string[] {
   const boundary = args.indexOf("--");
   return boundary === -1 ? args : args.slice(0, boundary);
-}
-
-// ArgoCD root options without a required value. Other root options consume
-// one value (or use --option=value); -H is its value-taking short option.
-const ARGOCD_BOOLEAN_OPTIONS = new Set([
-  "--core",
-  "--grpc-web",
-  "--insecure",
-  "--plaintext",
-  "--port-forward",
-  "--prompts-enabled",
-]);
-
-function isArgoHelpFlag(argument: string | undefined): boolean {
-  return (
-    argument !== undefined &&
-    /^(?:--help|-h)(?:=(?:[1tT]|true|TRUE|True))?$/u.test(argument)
-  );
-}
-
-function isArgoHelpCommand(args: readonly string[]): boolean {
-  for (let index = 0; index < args.length; index += 1) {
-    const argument = args[index];
-    if (argument === undefined) return false;
-    // Once Cobra selects `help`, its operands and flags are local metadata.
-    if (argument === "--") return args[index + 1] === "help";
-    if (!argument.startsWith("-")) {
-      const commandPath = args.slice(index);
-      return (
-        argument === "help" ||
-        (isArgoHelpFlag(commandPath.at(-1)) &&
-          commandPath
-            .slice(0, -1)
-            .every((part) => /^[a-z][a-z0-9-]*$/u.test(part)))
-      );
-    }
-    if (isArgoHelpFlag(argument)) return true;
-    if (argument.includes("=") || ARGOCD_BOOLEAN_OPTIONS.has(argument))
-      continue;
-    if (argument.startsWith("-H") && argument.length > 2) continue;
-    // Do not mistake an option value such as --server help for a command.
-    index += 1;
-  }
-  return false;
 }
 
 /** Exact native metadata invocations that never need brokered credentials. */

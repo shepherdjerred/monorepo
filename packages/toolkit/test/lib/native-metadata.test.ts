@@ -147,6 +147,14 @@ describe("native metadata credential boundary", () => {
       ["argocd", "--loglevel", "debug", "app", "rollback", "--help"],
       ["--grpc-web", "--loglevel", "debug", "app", "rollback", "--help"],
     ],
+    [
+      ["argocd", "app", "rollback", "--help", "--loglevel", "debug"],
+      ["--grpc-web", "app", "rollback", "--help", "--loglevel", "debug"],
+    ],
+    [
+      ["argocd", "app", "--loglevel", "debug", "rollback", "--help"],
+      ["--grpc-web", "app", "--loglevel", "debug", "rollback", "--help"],
+    ],
   ])("forwards %j without invoking the resolver", async (args, nativeArgs) => {
     const result = await invokeWithCredentialSentinel(args);
     expect(result.code).toBe(23);

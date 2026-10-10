@@ -460,6 +460,8 @@ resolution. ArgoCD also supports a bare subcommand path ending in `--help` or
 `toolkit argocd help app rollback` form (including root `argocd help`). The help
 subcommand remains credential-free with global options and `--` operands;
 option values and application names equal to `help` retain authentication.
+Inherited options are recognized before, within and after the command path,
+including after the help flag. Repeated help booleans retain native ordering.
 Their arguments, native output, and exit status are preserved.
 These ArgoCD invocations also remove `ARGOCD_AUTH_TOKEN` from the child
 environment because native help prints its default value. Server commands
