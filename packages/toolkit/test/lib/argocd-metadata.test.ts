@@ -28,6 +28,9 @@ test.each([
   ["app", "--help", "rollback"],
   ["app", "list", "--help=false", "--help"],
   ["app", "--help", "--", "--help=false"],
+  ["app", "get", "my-app", "--help", "--timeout", "5"],
+  ["app", "get", "my-app", "--help", "--refresh"],
+  ["app", "get", "my-app", "-h", "--output=json"],
 ])("recognizes explicit help before the payload boundary: %j", (...args) => {
   expect(isArgoHelpCommand(args)).toBe(true);
 });
@@ -39,6 +42,10 @@ test.each([
   ["app", "set", "example", "--parameter", "--help"],
   ["app", "--", "--help", "--loglevel", "debug"],
   ["app", "get", "help", "--loglevel=debug"],
+  ["app", "get", "my-app", "--help", "--timeout", "5", "--help=false"],
+  ["app", "get", "my-app", "--help", "--refresh", "-h=0"],
+  ["app", "set", "my-app", "--help", "--parameter", "--server", "--help=false"],
+  ["app", "set", "my-app", "--help", "--parameter", "--", "--help=false"],
 ])(
   "preserves authentication for values, false help and payloads: %j",
   (...args) => {

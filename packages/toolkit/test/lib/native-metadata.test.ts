@@ -155,6 +155,14 @@ describe("native metadata credential boundary", () => {
       ["argocd", "app", "--loglevel", "debug", "rollback", "--help"],
       ["--grpc-web", "app", "--loglevel", "debug", "rollback", "--help"],
     ],
+    [
+      ["argocd", "app", "get", "my-app", "--help", "--timeout", "5"],
+      ["--grpc-web", "app", "get", "my-app", "--help", "--timeout", "5"],
+    ],
+    [
+      ["argocd", "app", "get", "my-app", "--help", "--refresh"],
+      ["--grpc-web", "app", "get", "my-app", "--help", "--refresh"],
+    ],
   ])("forwards %j without invoking the resolver", async (args, nativeArgs) => {
     const result = await invokeWithCredentialSentinel(args);
     expect(result.code).toBe(23);
@@ -176,6 +184,19 @@ describe("native metadata credential boundary", () => {
     [["argocd", "version"], "ARGOCD_AUTH_TOKEN"],
     [["argocd", "app", "list", "--help=false"], "ARGOCD_AUTH_TOKEN"],
     [["argocd", "app", "list", "-h=0"], "ARGOCD_AUTH_TOKEN"],
+    [
+      [
+        "argocd",
+        "app",
+        "get",
+        "my-app",
+        "--help",
+        "--timeout",
+        "5",
+        "--help=false",
+      ],
+      "ARGOCD_AUTH_TOKEN",
+    ],
     [["argocd", "version", "--client=false"], "ARGOCD_AUTH_TOKEN"],
     [["argocd", "version", "--", "--client"], "ARGOCD_AUTH_TOKEN"],
     [["argocd", "app", "list", "--client"], "ARGOCD_AUTH_TOKEN"],

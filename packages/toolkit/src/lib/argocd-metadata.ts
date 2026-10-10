@@ -29,6 +29,7 @@ const VALUE_OPTIONS = new Set([
   "--redis-compress",
   "--kube-context",
 ]);
+const DISABLED_HELP = /^(?:--help|-h)=(?:[0fF]|false|FALSE|False)$/u;
 
 /** Remove inherited options and their values, respecting the payload boundary. */
 function commandArguments(args: readonly string[]): string[] {
@@ -61,11 +62,14 @@ export function isArgoHelpCommand(args: readonly string[]): boolean {
     if (argument === "--") break;
     if (/^(?:--help|-h)(?:=(?:[1tT]|true|TRUE|True))?$/u.test(argument)) {
       help = true;
-    } else if (/^(?:--help|-h)=(?:[0fF]|false|FALSE|False)$/u.test(argument)) {
+    } else if (DISABLED_HELP.test(argument)) {
       help = false;
     } else if (argument.startsWith("-")) {
-      // Unknown command-specific flags may consume a following --help value.
-      return false;
+      // A later option cannot consume an already parsed help flag. Without
+      // command-specific option arities, any disabling switch in the original
+      // arguments remains ambiguous: an option could consume an inherited
+      // option name or `--`, changing which later tokens Cobra parses.
+      return help && !args.some((value) => DISABLED_HELP.test(value));
     }
   }
   return help;
