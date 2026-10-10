@@ -22,7 +22,8 @@
 
 import type { S3Client } from "@aws-sdk/client-s3";
 import { putContentAddressedObject } from "@scout-for-lol/backend/storage/object-integrity.ts";
-import { listRawObjects, scanObjects, type FetchedObject } from "./scan.ts";
+import { listRawObjects, scanObjects } from "./scan.ts";
+import type { FetchedObject } from "./fetch-object.ts";
 import { computeSha256Digest } from "@scout-for-lol/backend/storage/object-integrity.ts";
 
 /** Marks a body whose identifiers were moved between key domains. */
