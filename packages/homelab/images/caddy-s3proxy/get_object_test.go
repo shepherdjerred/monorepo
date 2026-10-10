@@ -20,6 +20,8 @@ import (
 
 func TestConditionalResponse(t *testing.T) {
 	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("ETag", "\"cached\"")
+		w.Header().Set("Cache-Control", "public, max-age=60")
 		w.WriteHeader(http.StatusNotModified)
 	}))
 	defer backend.Close()
@@ -36,6 +38,9 @@ func TestConditionalResponse(t *testing.T) {
 				err := proxy.ServeHTTP(writer, req, caddyhttp.HandlerFunc(func(http.ResponseWriter, *http.Request) error { t.Fatal("unexpected next handler"); return nil }))
 				if err != nil || writer.Code != http.StatusNotModified || writer.Body.Len() != 0 || logs.FilterLevelExact(zap.ErrorLevel).Len() != 0 {
 					t.Fatalf("status=%d bytes=%d err=%v errorLogs=%v", writer.Code, writer.Body.Len(), err, logs.All())
+				}
+				if writer.Header().Get("ETag") != "\"cached\"" || writer.Header().Get("Cache-Control") != "public, max-age=60" {
+					t.Fatalf("conditional response lost cache validators: %v", writer.Header())
 				}
 			})
 		}

@@ -446,7 +446,7 @@ async function main(): Promise<void> {
     void restoreSeaweedFsMetricsAfterWorkerStart(() => shutdownStarted);
   }
   if (role === "infra" || role === "all") {
-    void restoreVeleroR2MetricsAfterWorkerStart();
+    void restoreVeleroR2MetricsAfterWorkerStart(() => shutdownStarted);
   }
   if (workerRuns.length === 0) {
     await controlLifecycle;

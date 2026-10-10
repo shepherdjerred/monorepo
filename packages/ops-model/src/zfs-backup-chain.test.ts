@@ -36,18 +36,44 @@ describe("ZFS backup ancestry", () => {
       toGuid: "2",
       fromGuid: "1",
     };
-    expect(protectZfsBackupChains([base, root], ["live"])).toEqual({
+    expect(protectZfsBackupChains([base, root], ["live"], [])).toEqual({
       protectedBackupNames: ["expired", "live"],
       incompleteRoots: [],
     });
-    expect(protectZfsBackupChains([root], ["live"]).incompleteRoots).toEqual([
-      "root",
-    ]);
-    expect(() => protectZfsBackupChains([base, base], ["live"])).toThrow(
+    expect(
+      protectZfsBackupChains([root], ["live"], []).incompleteRoots,
+    ).toEqual(["root"]);
+    expect(() => protectZfsBackupChains([base, base], ["live"], [])).toThrow(
       /Ambiguous/,
     );
     expect(() =>
-      protectZfsBackupChains([{ ...base, fromGuid: "2" }, root], ["live"]),
+      protectZfsBackupChains([{ ...base, fromGuid: "2" }, root], ["live"], []),
     ).toThrow(/Cyclic/);
+  });
+  test("marker-only retained roots remain incomplete while expired markers do not block cleanup", () => {
+    const live = "zfs/backups/live/pvc-123/snapshot";
+    const expired = "zfs/backups/expired/pvc-123/snapshot";
+    expect(
+      protectZfsBackupChains(
+        [],
+        ["live"],
+        [`${live}.zfsvol`, `${live}.chain.json`, `${expired}.zfsvol`],
+      ),
+    ).toEqual({ protectedBackupNames: ["live"], incompleteRoots: [live] });
+    expect(
+      protectZfsBackupChains(
+        [
+          {
+            key: live,
+            backupName: "live",
+            volume: "pvc-123",
+            toGuid: "1",
+            fromGuid: "0",
+          },
+        ],
+        ["live"],
+        [`${live}.zfsvol`],
+      ).incompleteRoots,
+    ).toEqual([]);
   });
 });

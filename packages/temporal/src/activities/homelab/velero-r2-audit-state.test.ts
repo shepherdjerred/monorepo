@@ -1,12 +1,77 @@
 import { expect, test } from "vitest";
 import { register } from "#observability/metrics.ts";
+import { retryUntilReady } from "#shared/startup-retry.ts";
 import {
+  isTransientR2AuditStateError,
   publishVeleroR2AuditState,
   recordVeleroR2AuditState,
   restoreVeleroR2AuditMetrics,
   type AuditStateStore,
 } from "./velero-r2-audit-state.ts";
 import type { V1ConfigMap } from "@kubernetes/client-node";
+
+test.each([408, 429, 500, 502, 503, 504])(
+  "retries Kubernetes status %s",
+  (code) => {
+    expect(
+      isTransientR2AuditStateError(Object.assign(new Error("API"), { code })),
+    ).toBe(true);
+  },
+);
+
+test.each([400, 401, 403, 404, 409, 422, 600])(
+  "does not retry Kubernetes status %s",
+  (code) => {
+    expect(
+      isTransientR2AuditStateError(Object.assign(new Error("API"), { code })),
+    ).toBe(false);
+  },
+);
+
+test("recovers a transient read without refreshing the saved observation", async () => {
+  let reads = 0;
+  const state = {
+    version: 1,
+    bucket: "test-retry",
+    observedAt: 1000,
+    orphanPrefixCount: 79,
+    orphanBytes: 12_345,
+    incompleteChainCount: 5,
+  };
+  const store: AuditStateStore = {
+    read: () => {
+      reads += 1;
+      return reads === 1
+        ? Promise.reject(
+            new Error("wrapped", {
+              cause: Object.assign(new Error("unavailable"), { code: 503 }),
+            }),
+          )
+        : Promise.resolve({ data: { "audit.json": JSON.stringify(state) } });
+    },
+    replace: () => Promise.reject(new Error("unexpected write")),
+  };
+  expect(
+    await retryUntilReady({
+      operation: () => restoreVeleroR2AuditMetrics(store),
+      shouldRetry: isTransientR2AuditStateError,
+      isClosed: () => false,
+      sleep: () => Promise.resolve(),
+    }),
+  ).toBe("succeeded");
+  expect(reads).toBe(2);
+  expect(await register.metrics()).toContain(
+    'bucket="test-retry",component="temporal-worker"} 1000',
+  );
+  expect(isTransientR2AuditStateError(new SyntaxError("invalid JSON"))).toBe(
+    false,
+  );
+  expect(
+    isTransientR2AuditStateError(
+      Object.assign(new Error("socket"), { code: "ECONNRESET" }),
+    ),
+  ).toBe(true);
+});
 
 test("restores observations across restart without refreshing time or permitting older writes", async () => {
   let value: V1ConfigMap = { metadata: { resourceVersion: "1" }, data: {} };

@@ -51,6 +51,9 @@ export async function scoutQueueCanaryWorkflow(
   }
   return results.map((result) => ({
     ...result,
-    backgroundJobKinds: input.backgroundJobKinds,
+    backgroundJobKinds:
+      input.backgroundJobKinds === undefined
+        ? undefined
+        : ScoutBackgroundJobInputSchema.shape.kind.options,
   }));
 }

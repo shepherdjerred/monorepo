@@ -14,12 +14,13 @@ ZFSBackup CRs, whose TTL can remove the records needed by count-based rotation.
 The new per-cadence snapshot locations define their incremental counts; the
 legacy location retains its original configuration for historical restores.
 
-The init-container entrypoint copies the plugin into `/target`. It retains the
-upstream root identity because Velero's plugins EmptyDir is root-owned.
+The init-container entrypoint atomically installs the plugin into `/target`.
+It runs as UID/GID 65532; Velero's pod sets `fsGroup: 65532` so its plugins
+EmptyDir is group-writable without granting the init container root access.
 
 ```bash
 docker buildx build --load -t velero-plugin:dev packages/homelab/images/velero-plugin
-docker run --rm --tmpfs /target velero-plugin:dev
+docker run --rm --tmpfs /target:uid=0,gid=65532,mode=2775 velero-plugin:dev
 ```
 
 The build runs header, object-storage, rotation, manifest-publication and

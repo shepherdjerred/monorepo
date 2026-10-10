@@ -30,10 +30,30 @@ export type ZfsBackupStream = {
   fromGuid: string;
 };
 
+function missingRetainedStreams(
+  streams: readonly ZfsBackupStream[],
+  retained: ReadonlySet<string>,
+  objectKeys: readonly string[],
+): string[] {
+  const present = new Set(streams.map((stream) => stream.key));
+  const missing = new Set<string>();
+  for (const key of objectKeys) {
+    const streamKey = key.replace(/\.(?:zfsvol|chain\.json)$/, "");
+    if (streamKey === key) continue;
+    const backupName = streamKey.split("/backups/")[1]?.split("/")[0];
+    if (backupName === undefined || backupName === "")
+      throw new Error(`Unrecognized ZFS marker key: ${key}`);
+    if (retained.has(backupName) && !present.has(streamKey))
+      missing.add(streamKey);
+  }
+  return [...missing];
+}
+
 /** Protect ancestors even when their Velero metadata and ZFSBackup CR expired. */
 export function protectZfsBackupChains(
   streams: readonly ZfsBackupStream[],
   retainedBackupNames: readonly string[],
+  objectKeys: readonly string[],
 ): { protectedBackupNames: string[]; incompleteRoots: string[] } {
   const byGuid = new Map<string, ZfsBackupStream>();
   for (const stream of streams) {
@@ -43,7 +63,7 @@ export function protectZfsBackupChains(
   }
   const retained = new Set(retainedBackupNames);
   const protectedNames = new Set(retained);
-  const incompleteRoots: string[] = [];
+  const incompleteRoots = missingRetainedStreams(streams, retained, objectKeys);
   for (const root of streams.filter((stream) =>
     retained.has(stream.backupName),
   )) {

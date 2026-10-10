@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  VeleroMetadataSchema,
   VeleroRestoreSchema,
   ZfsVolumeSchema,
   type VeleroRestoreStatus,
@@ -256,12 +257,7 @@ function toArgoApplication(
 const PAGE_SIZE = 500;
 
 const VeleroScheduleSchema = z.object({
-  metadata: z.object({
-    name: z.string(),
-    namespace: z.string(),
-    creationTimestamp: z.iso.datetime({ offset: true }),
-    annotations: z.record(z.string(), z.string()).default({}),
-  }),
+  metadata: VeleroMetadataSchema,
   spec: z.object({
     schedule: z.string().min(1),
     paused: z.boolean().default(false),

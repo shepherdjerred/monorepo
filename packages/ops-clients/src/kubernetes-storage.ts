@@ -1,12 +1,14 @@
 import { z } from "zod";
 
+export const VeleroMetadataSchema = z.object({
+  name: z.string(),
+  namespace: z.string(),
+  creationTimestamp: z.iso.datetime({ offset: true }),
+  annotations: z.record(z.string(), z.string()).default({}),
+});
+
 export const VeleroRestoreSchema = z.object({
-  metadata: z.object({
-    name: z.string(),
-    namespace: z.string(),
-    creationTimestamp: z.iso.datetime({ offset: true }),
-    annotations: z.record(z.string(), z.string()).default({}),
-  }),
+  metadata: VeleroMetadataSchema,
   spec: z.object({ backupName: z.string().optional() }),
   status: z
     .object({

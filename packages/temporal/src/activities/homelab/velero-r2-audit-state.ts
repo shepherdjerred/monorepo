@@ -1,5 +1,6 @@
 import { CoreV1Api, KubeConfig, V1ConfigMap } from "@kubernetes/client-node";
 import { z } from "zod";
+import { isTransientStorageError } from "#shared/infra/s3.ts";
 import {
   veleroOrphanR2BytesTotal,
   veleroOrphanR2PrefixesTotal,
@@ -19,6 +20,23 @@ export const VeleroR2AuditStateSchema = z.object({
   incompleteChainCount: z.number().int().nonnegative(),
 });
 type State = z.infer<typeof VeleroR2AuditStateSchema>;
+const KubernetesErrorSchema = z.object({ code: z.number().int() });
+export function isTransientR2AuditStateError(error: unknown): boolean {
+  if (isTransientStorageError(error)) return true;
+  const seen = new Set<unknown>();
+  let current = error;
+  while (current !== undefined && current !== null && !seen.has(current)) {
+    seen.add(current);
+    const parsed = KubernetesErrorSchema.safeParse(current);
+    if (parsed.success) {
+      const status = parsed.data.code;
+      if (status === 408 || status === 429 || (status >= 500 && status < 600))
+        return true;
+    }
+    current = current instanceof Error ? current.cause : undefined;
+  }
+  return false;
+}
 export type AuditStateStore = {
   read: () => Promise<V1ConfigMap>;
   replace: (value: V1ConfigMap) => Promise<void>;

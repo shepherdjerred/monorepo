@@ -16,7 +16,7 @@ FROM builder AS smoke
 RUN test -x /out/velero-blockstore-openebs && test -x /out/copy-plugin
 FROM scratch AS image
 COPY --from=builder /out/ /
-# Match the upstream init container: the plugins EmptyDir is root-owned.
-USER 0:0
+# Velero's plugins EmptyDir uses fsGroup 65532 so this init can write as non-root.
+USER 65532:65532
 ENTRYPOINT ["/copy-plugin"]
 LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"

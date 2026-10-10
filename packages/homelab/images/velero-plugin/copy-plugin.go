@@ -7,11 +7,33 @@ import (
 )
 
 func main() {
+	if err := installPlugin(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func installPlugin() error {
 	data, err := os.ReadFile("/velero-blockstore-openebs")
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
-	if err := os.WriteFile("/target/velero-blockstore-openebs", data, 0755); err != nil {
-		log.Fatal(err)
+	file, err := os.CreateTemp("/target", ".velero-blockstore-openebs-*")
+	if err != nil {
+		return err
 	}
+	defer os.Remove(file.Name())
+	defer file.Close()
+	if err := file.Chmod(0755); err != nil {
+		return err
+	}
+	if _, err := file.Write(data); err != nil {
+		return err
+	}
+	if err := file.Sync(); err != nil {
+		return err
+	}
+	if err := file.Close(); err != nil {
+		return err
+	}
+	return os.Rename(file.Name(), "/target/velero-blockstore-openebs")
 }

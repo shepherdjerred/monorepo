@@ -105,8 +105,13 @@ velero backup get | grep -v Completed || true
 Approve the exact version-3 manifest only after recovery evidence is available.
 It records every candidate key, size, modification time and ETag. Apply
 revalidates the complete ancestry and protection set, then conditionally HEADs
-each reviewed key before deleting that exact key. It never recursively deletes
-a prefix. Keep backup names immutable; HEAD followed by DELETE is not atomic.
+and DELETEs each reviewed key using its approved ETag. It never recursively
+deletes a prefix. Before deleting backup data, apply creates an empty, uniquely
+named object under `ops-cleanup-precondition-probes/` and requires the provider
+to reject a mismatched DELETE ETag with `PreconditionFailed`. It removes that
+probe with its correct ETag. Unsupported, ignored, or unauthorized conditional
+deletes stop cleanup. A failed probe may leave this empty diagnostic object;
+it is outside backup data. Keep backup names immutable.
 
 ## Step 3: Verify post-remediation state
 

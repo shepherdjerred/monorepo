@@ -194,6 +194,7 @@ export function createVeleroApp(chart: Chart) {
           versions["bitnamilegacy/kubectl"],
       },
     },
+    podSecurityContext: { fsGroup: 65_532 },
     initContainers: [
       {
         name: "velero-plugin-for-aws",
@@ -208,6 +209,13 @@ export function createVeleroApp(chart: Chart) {
       {
         name: "velero-plugin-openebs",
         image: `ghcr.io/shepherdjerred/velero-plugin:${versions["shepherdjerred/velero-plugin"]}`,
+        securityContext: {
+          runAsNonRoot: true,
+          runAsUser: 65_532,
+          runAsGroup: 65_532,
+          allowPrivilegeEscalation: false,
+          capabilities: { drop: ["ALL"] },
+        },
         volumeMounts: [
           {
             mountPath: "/target",

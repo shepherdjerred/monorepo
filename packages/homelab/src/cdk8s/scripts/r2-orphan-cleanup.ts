@@ -10,6 +10,7 @@ import {
 } from "./r2-orphan-cleanup-core.ts";
 import { listR2Objects, r2Configuration } from "./r2-prefix-inventory.ts";
 import { inspectR2ZfsChains } from "./r2-zfs-chains.ts";
+import { verifyConditionalDelete } from "./r2/conditional-delete.ts";
 
 const KubectlBackupListSchema = z.object({
   items: z.array(z.object({ metadata: z.object({ name: z.string().min(1) }) })),
@@ -247,8 +248,64 @@ async function removePrefix(
       throw new Error(`Object changed before deletion: ${object.key}`);
     // Exact reviewed keys only. Never let recursive prefix deletion consume a
     // newly uploaded object that was absent from the approved inventory.
-    await run(["aws", "s3api", "delete-object", ...target], env);
+    await run(
+      ["aws", "s3api", "delete-object", ...target, "--if-match", object.etag],
+      env,
+    );
   }
+}
+
+async function verifyR2DeletePrecondition(): Promise<void> {
+  const config = r2Configuration();
+  const env = {
+    AWS_ACCESS_KEY_ID: config.accessKeyId,
+    AWS_SECRET_ACCESS_KEY: config.secretAccessKey,
+  };
+  const target = [
+    "--bucket",
+    config.bucket,
+    "--endpoint-url",
+    config.endpoint,
+    "--region",
+    "auto",
+  ];
+  await verifyConditionalDelete({
+    create: async (key) =>
+      z
+        .object({ ETag: z.string().min(1) })
+        .parse(
+          JSON.parse(
+            await run(
+              [
+                "aws",
+                "s3api",
+                "put-object",
+                ...target,
+                "--key",
+                key,
+                "--body",
+                "/dev/null",
+              ],
+              env,
+            ),
+          ),
+        ).ETag,
+    remove: async (key, etag) => {
+      await run(
+        [
+          "aws",
+          "s3api",
+          "delete-object",
+          ...target,
+          "--key",
+          key,
+          "--if-match",
+          etag,
+        ],
+        env,
+      );
+    },
+  });
 }
 
 async function inspect(options: Options): Promise<void> {
@@ -304,6 +361,7 @@ async function applyCleanup(options: Options): Promise<void> {
     }
   }
 
+  await verifyR2DeletePrecondition();
   let expected = approved;
   for (const candidate of approved.candidates) {
     const latest = await observe(

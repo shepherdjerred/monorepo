@@ -265,7 +265,11 @@ export const veleroR2OrphanAuditActivities = {
           return name === undefined ? [] : [name];
         }),
       ];
-      const protection = protectZfsBackupChains(streams, retained);
+      const protection = protectZfsBackupChains(
+        streams,
+        retained,
+        zfsObjects.map((object) => object.key),
+      );
 
       const { zfsPrefixCount, orphanPrefixCount, orphanBytes } =
         computeR2Orphans({

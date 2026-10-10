@@ -37,5 +37,9 @@ export async function inspectR2ZfsChains(
       )),
     );
   }
-  return protectZfsBackupChains(streams, retainedBackupNames);
+  return protectZfsBackupChains(
+    streams,
+    retainedBackupNames,
+    objects.map((object) => object.key),
+  );
 }

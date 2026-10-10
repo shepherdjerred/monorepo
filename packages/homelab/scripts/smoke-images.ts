@@ -373,13 +373,13 @@ await main();
 
 async function smokeVeleroPlugin(): Promise<SmokeResult> {
   const image = "velero-plugin:dev";
-  // Match the root-owned Kubernetes EmptyDir without retaining local storage.
+  // Match Kubernetes' root-owned, fsGroup-writable EmptyDir without retaining storage.
   const result = await run([
     "docker",
     "run",
     "--rm",
     "--tmpfs",
-    "/target",
+    "/target:uid=0,gid=65532,mode=2775",
     image,
   ]);
   return {
@@ -387,7 +387,7 @@ async function smokeVeleroPlugin(): Promise<SmokeResult> {
     ok: result.exitCode === 0,
     detail:
       result.exitCode === 0
-        ? "plugin installed into the root-owned /target volume"
+        ? "plugin installed as non-root into the fsGroup-writable /target volume"
         : result.stderr,
   };
 }

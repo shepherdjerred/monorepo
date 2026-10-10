@@ -1,8 +1,28 @@
 diff --git a/s3proxy.go b/s3proxy.go
-index 7407b42..53329ad 100644
+index 7407b42..76369a5 100644
 --- a/s3proxy.go
 +++ b/s3proxy.go
-@@ -336,0 +337,7 @@ func (p S3Proxy) writeResponseFromGetObject(w http.ResponseWriter, obj *s3.GetOb
+@@ -176 +176 @@ func (p *S3Proxy) Provision(ctx caddy.Context) (err error) {
+-func (p S3Proxy) getS3Object(bucket string, path string, headers http.Header) (*s3.GetObjectOutput, error) {
++func (p S3Proxy) getS3Object(bucket string, path string, headers, responseHeaders http.Header) (*s3.GetObjectOutput, error) {
+@@ -211 +211,15 @@ func (p S3Proxy) getS3Object(bucket string, path string, headers http.Header) (*
+-	return p.client.GetObject(oi)
++	req, obj := p.client.GetObjectRequest(oi)
++	err := req.Send()
++	copyConditionalHeaders(responseHeaders, req.HTTPResponse)
++	return obj, err
++}
++
++func copyConditionalHeaders(dst http.Header, response *http.Response) {
++	if response == nil || response.StatusCode != http.StatusNotModified {
++		return
++	}
++	for _, name := range []string{"ETag", "Cache-Control", "Date", "Expires", "Vary", "Content-Location", "Last-Modified"} {
++		for _, value := range response.Header.Values(name) {
++			dst.Add(name, value)
++		}
++	}
+@@ -336,0 +351,7 @@ func (p S3Proxy) writeResponseFromGetObject(w http.ResponseWriter, obj *s3.GetOb
 +	// Preserve the authoritative object (or range) length before flushing.
 +	// io.Copy does not infer this for streamed bodies; Cloudflare needs it
 +	// to serve byte ranges for large archive downloads.
@@ -10,26 +30,50 @@ index 7407b42..53329ad 100644
 +		w.Header().Set("Content-Length", strconv.FormatInt(*obj.ContentLength, 10))
 +	}
 +
-@@ -341,0 +349,4 @@ func (p S3Proxy) writeResponseFromGetObject(w http.ResponseWriter, obj *s3.GetOb
+@@ -341,0 +363,4 @@ func (p S3Proxy) writeResponseFromGetObject(w http.ResponseWriter, obj *s3.GetOb
 +	} else {
 +		// io.Copy may use ResponseWriter.ReadFrom, which bypasses Caddy's
 +		// deferred response-header flush unless the status is written first.
 +		w.WriteHeader(http.StatusOK)
-@@ -346,2 +356,0 @@ func (p S3Proxy) writeResponseFromGetObject(w http.ResponseWriter, obj *s3.GetOb
+@@ -346,2 +370,0 @@ func (p S3Proxy) writeResponseFromGetObject(w http.ResponseWriter, obj *s3.GetOb
 -		// io.Copy will set Content-Length
 -		w.Header().Del("Content-Length")
-@@ -396,0 +406,4 @@ func (p S3Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhtt
+@@ -355 +378 @@ func (p S3Proxy) serveErrorPage(w http.ResponseWriter, s3Key string) error {
+-	obj, err := p.getS3Object(p.Bucket, s3Key, nil)
++	obj, err := p.getS3Object(p.Bucket, s3Key, nil, w.Header())
+@@ -396,0 +420,4 @@ func (p S3Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhtt
 +	if caddyErr.StatusCode == http.StatusNotModified {
 +		w.WriteHeader(http.StatusNotModified)
 +		return nil
 +	}
-@@ -408,2 +421 @@ func (p S3Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhtt
+@@ -408,2 +435 @@ func (p S3Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhtt
 -	if caddyErr.StatusCode == http.StatusNotModified ||
 -		caddyErr.StatusCode == http.StatusPreconditionFailed ||
 +	if caddyErr.StatusCode == http.StatusPreconditionFailed ||
-@@ -524 +536 @@ func (p S3Proxy) GetHandler(w http.ResponseWriter, r *http.Request, fullPath str
+@@ -468 +494 @@ func (p S3Proxy) GetHandler(w http.ResponseWriter, r *http.Request, fullPath str
+-			obj, err = p.getS3Object(p.Bucket, indexPath, r.Header)
++			obj, err = p.getS3Object(p.Bucket, indexPath, r.Header, w.Header())
+@@ -513 +539 @@ func (p S3Proxy) GetHandler(w http.ResponseWriter, r *http.Request, fullPath str
+-		obj, err = p.getS3Object(p.Bucket, fullPath, r.Header)
++		obj, err = p.getS3Object(p.Bucket, fullPath, r.Header, w.Header())
+@@ -524 +550 @@ func (p S3Proxy) GetHandler(w http.ResponseWriter, r *http.Request, fullPath str
 -		} else {
 +		} else if caddyErr.StatusCode != http.StatusNotModified {
-@@ -597 +609 @@ func (p S3Proxy) HeadHandler(w http.ResponseWriter, r *http.Request, fullPath st
+@@ -554 +580 @@ func (p S3Proxy) HeadHandler(w http.ResponseWriter, r *http.Request, fullPath st
+-			head, err = p.headS3Object(p.Bucket, indexPath, r.Header)
++			head, err = p.headS3Object(p.Bucket, indexPath, r.Header, w.Header())
+@@ -587 +613 @@ func (p S3Proxy) HeadHandler(w http.ResponseWriter, r *http.Request, fullPath st
+-		head, err = p.headS3Object(p.Bucket, fullPath, r.Header)
++		head, err = p.headS3Object(p.Bucket, fullPath, r.Header, w.Header())
+@@ -597 +623 @@ func (p S3Proxy) HeadHandler(w http.ResponseWriter, r *http.Request, fullPath st
 -		} else {
 +		} else if caddyErr.StatusCode != http.StatusNotModified {
+@@ -610 +636 @@ func (p S3Proxy) HeadHandler(w http.ResponseWriter, r *http.Request, fullPath st
+-func (p S3Proxy) headS3Object(bucket, key string, headers http.Header) (*s3.HeadObjectOutput, error) {
++func (p S3Proxy) headS3Object(bucket, key string, headers, responseHeaders http.Header) (*s3.HeadObjectOutput, error) {
+@@ -638 +664,4 @@ func (p S3Proxy) headS3Object(bucket, key string, headers http.Header) (*s3.Head
+-	return p.client.HeadObject(in)
++	req, obj := p.client.HeadObjectRequest(in)
++	err := req.Send()
++	copyConditionalHeaders(responseHeaders, req.HTTPResponse)
++	return obj, err
