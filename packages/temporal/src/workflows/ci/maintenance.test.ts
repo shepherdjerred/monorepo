@@ -94,6 +94,21 @@ test.each(["receipt", "absent"])(
               observation.pending = {
                 number: 41,
                 source: first.source,
+                status: "created",
+              };
+              await handle.signal("maintenanceTick");
+              await vi.waitFor(async () => {
+                expect(await state()).toMatchObject({
+                  pending: { requestId: first.requestId, pipeline: 41 },
+                  blocked: {},
+                  completed: {},
+                  observation: "Pipeline 41 is created",
+                });
+              });
+              expect(submitted).toHaveLength(1);
+              observation.pending = {
+                number: 41,
+                source: first.source,
                 status: "failure",
               };
               await handle.signal("maintenanceTick");

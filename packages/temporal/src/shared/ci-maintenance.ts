@@ -42,6 +42,10 @@ export type MaintenanceObservation = {
   busy: boolean;
 };
 
+export function isActiveMaintenanceStatus(status: string): boolean {
+  return ["created", "pending", "running", "blocked"].includes(status);
+}
+
 export function nextMaintenanceCandidate(
   state: MaintenanceState,
   candidates: readonly MaintenanceCandidate[],
@@ -71,7 +75,7 @@ export function recordMaintenanceObservation(
     return;
   }
   request.pipeline = receipt.number;
-  if (["pending", "running", "blocked"].includes(receipt.status)) {
+  if (isActiveMaintenanceStatus(receipt.status)) {
     state.observation = `Pipeline ${receipt.number.toString()} is ${receipt.status}`;
     return;
   }
