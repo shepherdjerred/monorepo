@@ -4,8 +4,53 @@ using TaskNotes.Windows.Host;
 namespace TaskNotes.Windows.Presentation
 {
     /// <summary>Portable editable task state with validation and dirty tracking.</summary>
-    public sealed class TaskEditorViewModel : ObservableObject, IDisposable
+    public sealed partial class TaskEditorViewModel : ObservableObject, IDisposable
     {
+        /// <summary>Configured open workflow values from the selected vault.</summary>
+        public IReadOnlyList<WorkflowChoice> StatusChoices =>
+            _original is null ? _store.State.StatusChoices : _statusChoices;
+
+        /// <summary>Configured open priority values from the selected vault.</summary>
+        public IReadOnlyList<WorkflowChoice> PriorityChoices =>
+            _original is null ? _store.State.PriorityChoices : _priorityChoices;
+
+        /// <summary>Unsupported colors are reported per choice without changing its raw workflow value.</summary>
+        public string StatusColorWarning =>
+            ConfiguredColor.Diagnostic(
+                StatusChoices.SingleOrDefault(choice => choice.Value == Status)?.Color
+            );
+
+        /// <summary>Unsupported priority colors use the native neutral foreground.</summary>
+        public string PriorityColorWarning =>
+            ConfiguredColor.Diagnostic(
+                PriorityChoices.SingleOrDefault(choice => choice.Value == Priority)?.Color
+            );
+
+        /// <summary>Native token suggestions come from the current core projection, never a second taxonomy store.</summary>
+        public IReadOnlyList<string> TokenSuggestions(string field, string text)
+        {
+            var options = field switch
+            {
+                "projects" => _store.State.Projects,
+                "contexts" => _store.State.Contexts,
+                "tags" => _store.State.Tags,
+                _ => throw new ArgumentOutOfRangeException(nameof(field)),
+            };
+            string[] tokens = text.Split(',');
+            string prefix = tokens[^1].Trim();
+            var existing = tokens
+                .SkipLast(1)
+                .Select(value => value.Trim())
+                .ToHashSet(StringComparer.Ordinal);
+            return options
+                .Where(value =>
+                    !existing.Contains(value)
+                    && value.Contains(prefix, StringComparison.OrdinalIgnoreCase)
+                )
+                .Take(20)
+                .ToArray();
+        }
+
         private readonly ITaskNotesStore _store;
         private readonly IUiDispatcher _dispatcher;
         private TaskItem? _original;
@@ -20,11 +65,46 @@ namespace TaskNotes.Windows.Presentation
         private string _projects = string.Empty;
         private string _contexts = string.Empty;
         private string _tags = string.Empty;
-        private uint? _timeEstimate;
         private string? _validationError;
         private bool _isDirty;
         private bool _loading;
         private bool _disposed;
+        private long _draftGeneration;
+        private readonly SemaphoreSlim _commits = new(1, 1);
+        private long _ownerGeneration;
+        private bool _isCommitting;
+        private string? _commitError;
+        private bool _needsObservation;
+        private string? _recoveryActionId;
+        private readonly Dictionary<(string? Profile, string Task), string> _retainedEdits = [];
+
+        /// <summary>Exact submitted envelope; Resume/Retire remains owned by the existing recovery surface.</summary>
+        public string? RecoveryActionId
+        {
+            get => _recoveryActionId;
+            private set => SetProperty(ref _recoveryActionId, value);
+        }
+
+        /// <summary>Only this inspector's serialized commit is busy; other task actions remain available.</summary>
+        public bool IsCommitting
+        {
+            get => _isCommitting;
+            private set => SetProperty(ref _isCommitting, value);
+        }
+
+        /// <summary>A failed draft remains visible until Retry or Discard.</summary>
+        public string? CommitError
+        {
+            get => _commitError;
+            private set => SetProperty(ref _commitError, value);
+        }
+
+        /// <summary>An applied receipt whose projection failed must be observed, never resubmitted.</summary>
+        public bool NeedsObservation
+        {
+            get => _needsObservation;
+            private set => SetProperty(ref _needsObservation, value);
+        }
 
         /// <summary>Initializes the task editor over the store facade.</summary>
         public TaskEditorViewModel(ITaskNotesStore store, IUiDispatcher dispatcher)
@@ -39,6 +119,9 @@ namespace TaskNotes.Windows.Presentation
 
         /// <summary>Gets the edited task identifier.</summary>
         public string? TaskId => _original?.Id;
+
+        /// <summary>Vault owner is retained with the draft, never inferred from current selection.</summary>
+        public string? ProfileId => _original?.ProfileId;
 
         /// <summary>Gets or sets the title.</summary>
         public string Title
@@ -117,55 +200,20 @@ namespace TaskNotes.Windows.Presentation
             set => SetEditorProperty(ref _tags, value);
         }
 
-        /// <summary>Gets or sets the estimate in minutes.</summary>
-        public uint? TimeEstimate
-        {
-            get => _timeEstimate;
-            set
-            {
-                if (SetEditorProperty(ref _timeEstimate, value))
-                {
-                    OnPropertyChanged(nameof(EstimateValue));
-                }
-            }
-        }
+        /// <summary>Editable taxonomy chips retain exact case-sensitive wire tokens.</summary>
+        public IReadOnlyList<string> ProjectsTokens => SplitValues(Projects);
 
-        /// <summary>Gets or sets the estimate as a NumberBox-compatible value.</summary>
-        public double EstimateValue
-        {
-            get => TimeEstimate is uint estimate ? estimate : double.NaN;
-            set => TimeEstimate = double.IsNaN(value) ? null : checked((uint)Math.Round(value));
-        }
+        /// <summary>Context chips.</summary>
+        public IReadOnlyList<string> ContextsTokens => SplitValues(Contexts);
+
+        /// <summary>Tag chips.</summary>
+        public IReadOnlyList<string> TagsTokens => SplitValues(Tags);
 
         /// <summary>Gets dependency warnings for the loaded task.</summary>
         public string DependencyLabel =>
             _original is { IsBlocked: true } ? "Blocked by another task"
             : _original is { IsBlocking: true } ? "Blocking another task"
             : "No dependency warnings";
-
-        /// <summary>Gets tracked minutes for the loaded task.</summary>
-        public string TrackedTimeLabel =>
-            _original is null ? string.Empty : $"Tracked: {_original.TotalTrackedTime} minutes";
-
-        /// <summary>Gets the current timing command label.</summary>
-        public string TimerLabel => IsTimerActive ? "Stop timer" : "Start timer";
-
-        /// <summary>Gets whether the loaded task has a live timing session.</summary>
-        public bool IsTimerActive
-        {
-            get
-            {
-                if (TaskId is not string taskId)
-                {
-                    return false;
-                }
-                return
-                    _store.State.TaskTime is { } live
-                    && string.Equals(live.TaskId, taskId, StringComparison.Ordinal)
-                    ? live.HasActiveSession
-                    : _original?.HasActiveTimeSession == true;
-            }
-        }
 
         /// <summary>Gets the current validation message.</summary>
         public string? ValidationError
@@ -182,8 +230,13 @@ namespace TaskNotes.Windows.Presentation
         }
 
         /// <summary>Loads one immutable task snapshot.</summary>
-        public void Load(TaskItem task)
+        public void Load(TaskItem task) => LoadSnapshot(task, true);
+
+        private void LoadSnapshot(TaskItem task, bool fence)
         {
+            if (fence)
+                _ownerGeneration++;
+            _draftGeneration++;
             ArgumentNullException.ThrowIfNull(task);
             _loading = true;
             try
@@ -200,15 +253,33 @@ namespace TaskNotes.Windows.Presentation
                 Projects = string.Join(", ", task.Projects);
                 Contexts = string.Join(", ", task.Contexts);
                 Tags = string.Join(", ", task.Tags);
-                TimeEstimate = task.TimeEstimate;
+                LoadAdditionalFields(task);
                 ValidationError = null;
+                CommitError = null;
+                NeedsObservation = false;
+                RecoveryActionId = null;
+                if (
+                    fence && _retainedEdits.TryGetValue((task.ProfileId, task.Id), out var retained)
+                )
+                {
+                    if (
+                        _store.State.FacetPendingActions.Any(action =>
+                            action.Id == retained && action.ProfileId == task.ProfileId
+                        )
+                    )
+                    {
+                        RecoveryActionId = retained;
+                        CommitError =
+                            "This submitted action is retained. Resume or retire it in Settings before offering another edit.";
+                    }
+                    else
+                        _retainedEdits.Remove((task.ProfileId, task.Id));
+                }
                 IsDirty = false;
                 OnPropertyChanged(nameof(IsLoaded));
                 OnPropertyChanged(nameof(TaskId));
-                OnPropertyChanged(nameof(EstimateValue));
                 OnPropertyChanged(nameof(DependencyLabel));
-                OnPropertyChanged(nameof(TrackedTimeLabel));
-                NotifyTimingChanged();
+                NotifyWorkflowChoicesChanged();
             }
             finally
             {
@@ -217,39 +288,250 @@ namespace TaskNotes.Windows.Presentation
         }
 
         /// <summary>Saves the complete edit through the core-backed store.</summary>
-        public async Task<bool> SaveAsync(CancellationToken cancellationToken = default)
+        public async Task<bool> SaveAsync(CancellationToken cancellationToken = default) =>
+            await CommitAsync(null, cancellationToken);
+
+        /// <summary>Offer one field on Return, blur or control change without saving unrelated text buffers.</summary>
+        public Task<bool> CommitFieldAsync(
+            string field,
+            CancellationToken cancellationToken = default
+        )
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(field);
+            if (field != "reminders" && !Buffers().ContainsKey(field))
+                throw new ArgumentOutOfRangeException(
+                    nameof(field),
+                    field,
+                    "Unknown editor field."
+                );
+            return CommitAsync(field, cancellationToken);
+        }
+
+        private async Task<bool> CommitAsync(string? field, CancellationToken cancellationToken)
+        {
+            long owner = _ownerGeneration;
+            await _commits.WaitAsync(cancellationToken);
+            try
+            {
+                if (_disposed || owner != _ownerGeneration)
+                    return false;
+                ReconcileResolvedRecovery();
+                if (NeedsObservation || RecoveryActionId is not null)
+                    return false;
+                IsCommitting = true;
+                CommitError = null;
+                return await SaveCoreAsync(field, owner, cancellationToken);
+            }
+            catch (Exception error)
+            {
+                string? message = TaskNotesExceptionPolicy.UserFacingMessage(error);
+                if (message is null)
+                    throw;
+                if (!_disposed && owner == _ownerGeneration && RecoveryActionId is null)
+                    CommitError = message;
+                throw;
+            }
+            finally
+            {
+                IsCommitting = false;
+                _commits.Release();
+            }
+        }
+
+        private async Task<bool> SaveCoreAsync(
+            string? field,
+            long owner,
+            CancellationToken cancellationToken
+        )
         {
             TaskItem original =
                 _original
                 ?? throw new InvalidOperationException("Load a task before saving the editor.");
             string title = Title.Trim();
-            if (title.Length == 0)
+            if (title.Length == 0 && field is null or "title")
             {
                 ValidationError = "A task title is required.";
                 return false;
             }
             ValidationError = null;
-            await _store.UpdateTaskAsync(
-                new TaskEditInput
+            long draftGeneration = _draftGeneration;
+            var submittedBuffers = Buffers();
+            string submittedReminders = ReminderFingerprint();
+            var changes = ChangedFields(original, title, field is null or "reminders");
+            bool bodyChanged = !string.Equals(Details, original.Details, StringComparison.Ordinal);
+            if (field is not null)
+            {
+                changes = changes
+                    .Where(pair => pair.Key == field)
+                    .ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
+                bodyChanged &= field == "body";
+            }
+            if (changes.Count == 0 && !bodyChanged)
+            {
+                if (field is null)
+                    IsDirty = false;
+                return true;
+            }
+            TaskEditInput input = new()
+            {
+                Id = original.Id,
+                ProfileId = original.ProfileId,
+                ExpectedRevision = original.ExpectedRevision,
+                OccurrenceDate = original.OccurrenceDate,
+                Title = title,
+                Details = BlankAsNull(Details),
+                Status = Status,
+                Priority = Priority,
+                Due = BlankAsNull(Due),
+                Scheduled = BlankAsNull(Scheduled),
+                Recurrence = BlankAsNull(Recurrence),
+                RecurrenceAnchor = BlankAsNull(RecurrenceAnchor),
+                Projects = SplitValues(Projects),
+                Contexts = SplitValues(Contexts),
+                Tags = SplitValues(Tags),
+                ChangedProperties = changes,
+                BodyChanged = bodyChanged,
+            };
+            string? admittedAction = null;
+            try
+            {
+                if (_store is IFacetTaskEditorStore standalone)
                 {
-                    Id = original.Id,
-                    Title = title,
-                    Details = BlankAsNull(Details),
-                    Status = Status,
-                    Priority = Priority,
-                    Due = BlankAsNull(Due),
-                    Scheduled = BlankAsNull(Scheduled),
-                    Recurrence = BlankAsNull(Recurrence),
-                    RecurrenceAnchor = BlankAsNull(RecurrenceAnchor),
-                    Projects = SplitValues(Projects),
-                    Contexts = SplitValues(Contexts),
-                    Tags = SplitValues(Tags),
-                    TimeEstimate = TimeEstimate,
-                },
-                cancellationToken
-            );
-            IsDirty = false;
+                    TaskItem saved = await standalone.SaveTaskEditAsync(
+                        input,
+                        id => admittedAction = id,
+                        cancellationToken
+                    );
+                    if (_disposed || owner != _ownerGeneration)
+                        return true;
+                    AcceptSaved(original, saved, field, submittedBuffers, submittedReminders);
+                }
+                else
+                {
+                    await _store.UpdateTaskAsync(input, cancellationToken);
+                    if (_disposed || owner != _ownerGeneration)
+                        return true;
+                    TaskItem? saved = _store.State.AllTasks.SingleOrDefault(task =>
+                        task.Id == original.Id && task.ProfileId == original.ProfileId
+                    );
+                    if (saved is not null)
+                        AcceptSaved(original, saved, field, submittedBuffers, submittedReminders);
+                }
+            }
+            catch (FacetSavedObservationException)
+            {
+                // Applied is authoritative; retain the draft until a fresh projection is available.
+                if (!_disposed && owner == _ownerGeneration)
+                {
+                    NeedsObservation = true;
+                    RecoveryActionId = admittedAction;
+                    if (admittedAction is not null)
+                        _retainedEdits[(original.ProfileId, original.Id)] = admittedAction;
+                    CommitError =
+                        "Saved; refresh to observe the result before editing again. Review recovery in Settings if needed.";
+                }
+                return true;
+            }
+            catch
+            {
+                if (
+                    !_disposed
+                    && owner == _ownerGeneration
+                    && admittedAction is not null
+                    && _store.State.FacetPendingActions.Any(action =>
+                        action.Id == admittedAction && action.ProfileId == original.ProfileId
+                    )
+                )
+                {
+                    RecoveryActionId = admittedAction;
+                    _retainedEdits[(original.ProfileId, original.Id)] = admittedAction;
+                    CommitError =
+                        "This submitted action is retained. Resume or retire it in Settings before offering another edit.";
+                }
+                throw;
+            }
+            if (
+                field is null
+                && draftGeneration == _draftGeneration
+                && _store is not IFacetTaskEditorStore
+            )
+                IsDirty = false;
             return true;
+        }
+
+        private void AcceptSaved(
+            TaskItem original,
+            TaskItem saved,
+            string? field,
+            Dictionary<string, string?> submitted,
+            string submittedReminders,
+            bool acknowledged = true
+        )
+        {
+            var before = Baseline(original);
+            var retained = Buffers()
+                .Where(pair =>
+                    pair.Value != before[pair.Key]
+                    && (
+                        !acknowledged
+                        || !(
+                            (field is null || field == pair.Key)
+                            && pair.Value == submitted[pair.Key]
+                        )
+                    )
+                )
+                .ToArray();
+            string currentReminders = ReminderFingerprint();
+            bool retainReminders =
+                currentReminders != _reminderBaseline
+                && (
+                    !acknowledged
+                    || !((field is null or "reminders") && currentReminders == submittedReminders)
+                );
+            var reminderRows = Reminders.ToArray();
+            // Refresh untouched fields from the authoritative resulting task. Preserve only
+            // unsent or newer buffers, so an external update cannot become a false local edit.
+            LoadSnapshot(saved, false);
+            foreach (var pair in retained)
+                RestoreBuffer(pair.Key, pair.Value);
+            if (retainReminders)
+            {
+                Reminders.Clear();
+                foreach (var row in reminderRows)
+                    Reminders.Add(row);
+                IsDirty = true;
+            }
+            var baseline = Baseline(saved);
+            IsDirty =
+                Buffers().Any(pair => pair.Value != baseline[pair.Key])
+                || ReminderFingerprint() != _reminderBaseline;
+        }
+
+        private void ReconcileResolvedRecovery()
+        {
+            if (
+                RecoveryActionId is not string id
+                || _original is not { } original
+                || IsCommitting
+                || _store.State.FacetPendingActions.Any(action => action.Id == id)
+            )
+                return;
+            var current = _store.State.AllTasks.SingleOrDefault(task =>
+                task.Id == original.Id && task.ProfileId == original.ProfileId
+            );
+            if (current is null)
+                return;
+            _retainedEdits.Remove((original.ProfileId, original.Id));
+            // Exact recovery has removed the journal envelope. Rebase against its fresh
+            // projection while preserving genuinely dirty buffers, never resubmitting old bytes.
+            AcceptSaved(
+                original,
+                current,
+                null,
+                Buffers(),
+                ReminderFingerprint(),
+                acknowledged: false
+            );
         }
 
         /// <summary>Deletes the loaded task.</summary>
@@ -260,44 +542,31 @@ namespace TaskNotes.Windows.Presentation
             return _store.DeleteTaskAsync(taskId, cancellationToken);
         }
 
-        /// <summary>Starts or stops live server-backed timing for the loaded task.</summary>
-        public Task ToggleTimeAsync(CancellationToken cancellationToken = default)
-        {
-            string taskId =
-                TaskId ?? throw new InvalidOperationException("Load a task before timing it.");
-            return IsTimerActive
-                ? _store.StopTimeTrackingAsync(taskId, cancellationToken)
-                : _store.StartTimeTrackingAsync(taskId, cancellationToken);
-        }
-
-        /// <summary>Loads live timing details for the current task.</summary>
-        public Task LoadTimeAsync(CancellationToken cancellationToken = default)
-        {
-            string taskId =
-                TaskId ?? throw new InvalidOperationException("Load a task before reading timing.");
-            return _store.LoadTaskTimeAsync(taskId, cancellationToken);
-        }
-
         /// <summary>Restores the original values without persisting.</summary>
         public void Discard()
         {
-            Load(
+            var original =
                 _original
-                    ?? throw new InvalidOperationException("Load a task before discarding edits.")
+                ?? throw new InvalidOperationException("Load a task before discarding edits.");
+            var current = _store.State.AllTasks.SingleOrDefault(task =>
+                task.Id == original.Id && task.ProfileId == original.ProfileId
             );
+            Load(current ?? original);
         }
 
         /// <summary>Clears the editor.</summary>
         public void Clear()
         {
+            _ownerGeneration++;
+            _draftGeneration++;
             _original = null;
             _loading = true;
             try
             {
                 Title = string.Empty;
                 Details = null;
-                Status = "open";
-                Priority = "normal";
+                Status = string.Empty;
+                Priority = string.Empty;
                 Due = null;
                 Scheduled = null;
                 Recurrence = null;
@@ -305,15 +574,16 @@ namespace TaskNotes.Windows.Presentation
                 Projects = string.Empty;
                 Contexts = string.Empty;
                 Tags = string.Empty;
-                TimeEstimate = null;
+                ClearAdditionalFields();
                 ValidationError = null;
+                CommitError = null;
+                NeedsObservation = false;
+                RecoveryActionId = null;
                 IsDirty = false;
                 OnPropertyChanged(nameof(IsLoaded));
                 OnPropertyChanged(nameof(TaskId));
-                OnPropertyChanged(nameof(EstimateValue));
                 OnPropertyChanged(nameof(DependencyLabel));
-                OnPropertyChanged(nameof(TrackedTimeLabel));
-                NotifyTimingChanged();
+                NotifyWorkflowChoicesChanged();
             }
             finally
             {
@@ -321,7 +591,7 @@ namespace TaskNotes.Windows.Presentation
             }
         }
 
-        /// <summary>Stops observing live timing state.</summary>
+        /// <summary>Stops observing store state and fences late commits.</summary>
         public void Dispose()
         {
             if (_disposed)
@@ -329,6 +599,8 @@ namespace TaskNotes.Windows.Presentation
                 return;
             }
             _disposed = true;
+            _ownerGeneration++;
+            _draftGeneration++;
             _store.StateChanged -= StoreStateChanged;
         }
 
@@ -339,8 +611,13 @@ namespace TaskNotes.Windows.Presentation
         )
         {
             bool changed = SetProperty(ref field, value, name);
+            if (changed && name is nameof(Projects) or nameof(Contexts) or nameof(Tags))
+                OnPropertyChanged(name + "Tokens");
+            if (changed && name is nameof(Status) or nameof(Priority))
+                OnPropertyChanged(name + "ColorWarning");
             if (changed && !_loading)
             {
+                _draftGeneration++;
                 IsDirty = true;
             }
             return changed;
@@ -352,18 +629,23 @@ namespace TaskNotes.Windows.Presentation
             _ = eventArgs;
             if (_dispatcher.HasThreadAccess)
             {
-                NotifyTimingChanged();
+                NotifyWorkflowChoicesChanged();
             }
             else
             {
-                _dispatcher.Enqueue(NotifyTimingChanged);
+                _dispatcher.Enqueue(NotifyWorkflowChoicesChanged);
             }
         }
 
-        private void NotifyTimingChanged()
+        private void NotifyWorkflowChoicesChanged()
         {
-            OnPropertyChanged(nameof(IsTimerActive));
-            OnPropertyChanged(nameof(TimerLabel));
+            if (_disposed)
+                return;
+            ReconcileResolvedRecovery();
+            OnPropertyChanged(nameof(StatusChoices));
+            OnPropertyChanged(nameof(PriorityChoices));
+            OnPropertyChanged(nameof(StatusColorWarning));
+            OnPropertyChanged(nameof(PriorityColorWarning));
         }
 
         private static string? BlankAsNull(string? value)

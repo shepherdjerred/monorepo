@@ -118,6 +118,50 @@ packages/sjer.red/src/content/blog/drafts/homelab-2.mdx
 packages/webring/README.md
 
 # Test fixtures are content under test, not code to format.
+# Unmodified pinned upstream corpus; its source SHA-256 is part of provenance.
+packages/tasknotes-fixtures/vault/upstream/field-mapping.json
+# Pinned official TaskNotes captures: their raw SHA-256 values are validated by
+# upstream/provenance.json and must survive checkouts without reserialization.
+packages/tasknotes-fixtures/vault/upstream/config-schema.json
+packages/tasknotes-fixtures/vault/upstream/config.json
+packages/tasknotes-fixtures/vault/upstream/conformance.json
+packages/tasknotes-fixtures/vault/upstream/create-compat.json
+packages/tasknotes-fixtures/vault/upstream/date.json
+packages/tasknotes-fixtures/vault/upstream/dependencies.json
+packages/tasknotes-fixtures/vault/upstream/links.json
+packages/tasknotes-fixtures/vault/upstream/manifest.json
+packages/tasknotes-fixtures/vault/upstream/migrations.json
+packages/tasknotes-fixtures/vault/upstream/obsidian-crypto.json
+packages/tasknotes-fixtures/vault/upstream/operations.json
+packages/tasknotes-fixtures/vault/upstream/provenance.json
+packages/tasknotes-fixtures/vault/upstream/recurrence.json
+packages/tasknotes-fixtures/vault/upstream/reminders.json
+packages/tasknotes-fixtures/vault/upstream/templating.json
+packages/tasknotes-fixtures/vault/upstream/validation.json
+
+# Byte-identified standalone contracts are bundled verbatim by native hosts.
+# Native metadata checks compare their exact hashes with the shared producer.
+packages/tasknotes-fixtures/schema/facet-engine.schema.json
+packages/tasknotes-fixtures/schema/obsidian-sync.schema.json
+packages/tasknotes-fixtures/vault/facet-contract.json
+packages/tasknotes-fixtures/vault/facet-raw-contract.json
+
+# Exact protocol, numeric/time and mutation-receipt captures exercise raw JSON
+# boundaries; keep the captured spelling/precision rather than reprint JSON.
+packages/tasknotes-core/crates/obsidian-sync/tests/reference/protocol.json
+packages/tasknotes-android/app/src/test/resources/receiptwarnings/actual-receipt-warning.json
+packages/tasknotes-android/app/src/test/resources/receiptwarnings/strict-raw-receipts.json
+packages/tasknotes-android/host/src/test/resources/tracking-capture-unicode.json
+packages/tasknotes-android/host/src/test/resources/tracking-capture-v2.json
+packages/tasknotes-macos/Tests/TaskNotesKitTests/Fixtures/tracking-native64-capture.json
+packages/tasknotes-macos/Tests/TaskNotesKitTests/Fixtures/tracking-sqlite-capture.json
+packages/tasknotes-macos/Tests/TaskNotesKitTests/Fixtures/tracking-unicode-capture.json
+packages/tasknotes-macos/Tests/TaskNotesKitTests/Fixtures/warning-cases.json
+packages/tasknotes-macos/Tests/TaskNotesMacTests/Fixtures/tracking-native64-capture.json
+packages/tasknotes-macos/Tests/TaskNotesMacTests/Fixtures/tracking-sqlite-capture.json
+packages/tasknotes-macos/Tests/TaskNotesMacTests/Fixtures/tracking-unicode-capture.json
+packages/tasknotes-windows/tests/TaskNotes.Windows.Tests/TrackingCaptureUnicode.json
+packages/tasknotes-windows/tests/TaskNotes.Windows.Tests/TrackingCaptureV2.json
 **/__tests__/fixtures/**
 **/e2e/fixtures/**
 

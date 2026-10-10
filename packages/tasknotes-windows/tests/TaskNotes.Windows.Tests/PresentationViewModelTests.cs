@@ -8,6 +8,225 @@ namespace TaskNotes.Windows.Tests
     [TestClass]
     public sealed class PresentationViewModelTests
     {
+        /// <summary>Actual shell presentation excludes foreign owners and drops already queued callbacks after disposal.</summary>
+        [TestMethod]
+        public void SavedWarningPresentationUsesCompleteOwnerFence()
+        {
+            TestTaskNotesStore store = new();
+            TestDispatcher dispatcher = new() { HasThreadAccess = false };
+            using var shell = new ShellViewModel(
+                store,
+                dispatcher,
+                NullLogger<ShellViewModel>.Instance
+            );
+            var owner = new FacetNoticeOwner("p", "id", 7, 9);
+            var notice = new FacetSavedNotice(
+                owner,
+                ["The task was saved without the configured template."]
+            );
+            var reading = TaskNotesState.Unconfigured with
+            {
+                SavedNotice = notice,
+                SavedNoticeOwner = owner,
+                SavedMaintenance = "Saved. Local cleanup is still pending.",
+            };
+            store.Publish(reading);
+            dispatcher.RunPending();
+            Assert.AreSame(notice, shell.SavedNotice);
+            Assert.AreEqual(reading.SavedMaintenance, shell.SavedMaintenance);
+            foreach (
+                var foreign in new[]
+                {
+                    owner with
+                    {
+                        ProfileId = "q",
+                    },
+                    owner with
+                    {
+                        MutationId = "other",
+                    },
+                    owner with
+                    {
+                        RequestGeneration = 8,
+                    },
+                    owner with
+                    {
+                        EngineGeneration = 8,
+                    },
+                }
+            )
+            {
+                store.Publish(reading with { SavedNoticeOwner = foreign });
+                dispatcher.RunPending();
+                Assert.IsNull(shell.SavedNotice);
+            }
+            store.Publish(reading with { SavedNoticeOwner = null });
+            dispatcher.RunPending();
+            Assert.IsNull(shell.SavedNotice);
+            var beforeClose = shell.State;
+            store.Publish(reading);
+            shell.Dispose();
+            dispatcher.RunPending();
+            Assert.AreSame(beforeClose, shell.State);
+        }
+
+        /// <summary>Actual editor await completion cannot replace a newer draft, and own applied observation failure retains it.</summary>
+        [TestMethod]
+        public async Task NewDraftAndDisposalFenceLateSaveAndSavedObservation()
+        {
+            foreach (string action in new[] { "new-task", "new-draft", "dispose" })
+            {
+                TestTaskNotesStore store = new();
+                var completion = new TaskCompletionSource(
+                    TaskCreationOptions.RunContinuationsAsynchronously
+                );
+                store.Update = (_, cancellationToken) =>
+                    completion.Task.WaitAsync(cancellationToken);
+                using var editor = new TaskEditorViewModel(store, new TestDispatcher());
+                editor.Load(CreateTask("old", "open"));
+                editor.Title = "Submitted";
+                var saving = editor.SaveAsync(TestContext.CancellationToken);
+                if (action == "new-task")
+                    editor.Load(CreateTask("new", "open"));
+                else if (action == "new-draft")
+                    editor.Title = "New draft";
+                else
+                    editor.Dispose();
+                completion.SetResult();
+                Assert.IsTrue(await saving);
+                Assert.AreEqual(action == "new-task" ? "new" : "old", editor.TaskId);
+                if (action == "new-draft")
+                {
+                    Assert.AreEqual("New draft", editor.Title);
+                    Assert.IsTrue(editor.IsDirty);
+                }
+            }
+            TestTaskNotesStore failed = new()
+            {
+                Update = (_, _) => Task.FromException(new FacetSavedObservationException()),
+            };
+            using var retained = new TaskEditorViewModel(failed, new TestDispatcher());
+            retained.Load(CreateTask("retained", "open"));
+            retained.Title = "Already saved";
+            Assert.IsTrue(await retained.SaveAsync(TestContext.CancellationToken));
+            Assert.IsTrue(retained.IsDirty);
+            Assert.AreEqual("Already saved", retained.Title);
+        }
+
+        /// <summary>Typed field controls retain exact values and extensions, freeze workflows, and validate reminder drafts.</summary>
+        [TestMethod]
+        public async Task TypedEditorFieldsPreserveExtensionsAndValidateOnlyChanges()
+        {
+            TestTaskNotesStore store = new();
+            store.Publish(
+                TaskNotesState.Unconfigured with
+                {
+                    StatusChoices = [new("open", "Original label")],
+                    PriorityChoices = [new("normal", "Original priority")],
+                }
+            );
+            var properties =
+                System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(
+                    """
+                    {"timeEstimate":31.625,"completedDate":"2026-10-03","blockedBy":["one"],"completeInstances":["2026-10-03"],"skippedInstances":["2026-10-04"],"attachments":["[[a.pdf]]"],"reminders":[{"id":"original","type":"relative","relatedTo":"due","offset":"-PT15M","vendor":{"exact":9007199254740993}}]}
+                    """
+                );
+            TaskItem task = CreateTask("task", "open") with
+            {
+                Properties = properties,
+                ProfileId = "owner",
+                ExpectedRevision = new string('a', 64),
+            };
+            using TaskEditorViewModel editor = new(store, new TestDispatcher());
+            editor.Load(task);
+            Assert.AreEqual("one", editor.BlockedBy);
+            Assert.AreEqual("2026-10-03", editor.CompletedDate);
+            Assert.AreEqual("2026-10-03", editor.CompleteInstances);
+            Assert.AreEqual("2026-10-04", editor.SkippedInstances);
+            Assert.AreEqual("[[a.pdf]]", editor.Attachments);
+            Assert.IsTrue(editor.Reminders.Single().IsEditable);
+            Assert.AreEqual("", editor.Reminders.Single().ExistingValueWarning);
+            Assert.HasCount(2, editor.Reminders.Single().TypeChoices);
+            Assert.HasCount(2, editor.Reminders.Single().RelatedToChoices);
+            store.Publish(
+                store.State with
+                {
+                    StatusChoices = [new("other", "New label")],
+                    PriorityChoices = [new("other", "New priority")],
+                }
+            );
+            Assert.AreEqual("Original label", editor.StatusChoices.Single().Label);
+            Assert.AreEqual("Original priority", editor.PriorityChoices.Single().Label);
+            editor.Details = "Body only";
+            Assert.IsTrue(await editor.SaveAsync(TestContext.CancellationToken));
+            Assert.IsEmpty(store.LastEdit!.ChangedProperties!);
+            Assert.AreEqual("owner", store.LastEdit.ProfileId);
+            Assert.AreEqual(task.ExpectedRevision, store.LastEdit.ExpectedRevision);
+            editor.Discard();
+            Assert.AreEqual(task.Details, editor.Details);
+            editor.BlockedBy = "two, three";
+            editor.CompletedDate = "";
+            editor.DateCreated = "2026-10-03T10:00:00Z";
+            editor.CompleteInstances = "2026-10-05";
+            editor.SkippedInstances = "";
+            editor.Attachments = "[[a.pdf]]\n[[b.pdf]]";
+            var originalRow = editor.Reminders.Single();
+            Assert.AreEqual("relative", originalRow.Type);
+            originalRow.RelatedTo = "scheduled";
+            originalRow.Offset = "-PT30M";
+            editor.AddReminder();
+            var added = editor.Reminders.Last();
+            added.Type = "absolute";
+            added.AbsoluteTime = "2026-10-05T10:00:00Z";
+            Assert.IsTrue(editor.IsDirty);
+            Assert.IsTrue(await editor.SaveAsync(TestContext.CancellationToken));
+            var changed = store.LastEdit!.ChangedProperties!;
+            Assert.AreEqual(
+                System.Text.Json.JsonValueKind.Null,
+                changed["completedDate"].ValueKind
+            );
+            Assert.AreEqual("2026-10-03T10:00:00Z", changed["dateCreated"].GetString());
+            Assert.AreEqual("three", changed["blockedBy"][1].GetString());
+            Assert.AreEqual(
+                "scheduled",
+                changed["reminders"][0].GetProperty("relatedTo").GetString()
+            );
+            Assert.AreEqual(
+                "9007199254740993",
+                changed["reminders"][0].GetProperty("vendor").GetProperty("exact").GetRawText()
+            );
+            Assert.AreEqual(added.Id, changed["reminders"][1].GetProperty("id").GetString());
+            editor.RemoveReminder(added);
+            Assert.HasCount(1, editor.Reminders);
+            Assert.IsTrue(editor.IsDirty);
+            editor.RemoveReminder(added);
+            editor.Reminders.Single().Type = "unsupported";
+            _ = await Assert.ThrowsExactlyAsync<ArgumentException>(() =>
+                editor.SaveAsync(TestContext.CancellationToken)
+            );
+            editor.Discard();
+            editor.Clear();
+            Assert.AreEqual("", editor.Attachments);
+            Assert.AreEqual("", editor.CompleteInstances);
+            Assert.IsEmpty(editor.Reminders);
+            Assert.AreEqual("New label", editor.StatusChoices.Single().Label);
+            var opaque = new ReminderEditorRow(
+                System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>("42")
+            );
+            Assert.IsFalse(opaque.IsEditable);
+            Assert.AreEqual(
+                "Unsupported existing reminder is preserved.",
+                opaque.ExistingValueWarning
+            );
+            var unknown = new ReminderEditorRow(
+                System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(
+                    "{\"type\":\"vendor\",\"relatedTo\":\"custom\"}"
+                )
+            );
+            Assert.AreEqual("vendor", unknown.TypeChoices[^1].Value);
+            Assert.AreEqual("custom", unknown.RelatedToChoices[^1].Value);
+        }
+
         /// <summary>Checks fixed, scoped, decoded, and rejected routes.</summary>
         [TestMethod]
         public void NavigationAndActivationRoutesAreStrictAndDecoded()
@@ -88,7 +307,6 @@ namespace TaskNotes.Windows.Tests
             editor.Scheduled = "2026-08-11";
             editor.Recurrence = "FREQ=DAILY";
             editor.RecurrenceAnchor = "scheduled";
-            editor.TimeEstimate = 30;
             Assert.IsTrue(await editor.SaveAsync(TestContext.CancellationToken));
 
             TaskEditInput edit =
@@ -212,16 +430,13 @@ namespace TaskNotes.Windows.Tests
                 [],
                 [],
                 [],
-                null,
-                0,
                 false,
                 false,
                 status == "done",
                 false,
                 false,
                 null,
-                string.Empty,
-                false
+                string.Empty
             );
         }
 

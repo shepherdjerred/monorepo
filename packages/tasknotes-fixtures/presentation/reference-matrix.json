@@ -1,0 +1,398 @@
+{
+  "schemaVersion": 1,
+  "families": {
+    "desktop": {
+      "platforms": ["macos", "windows"],
+      "referenceSources": [
+        "tasknotes-macos/Sources/TaskNotesMac/RootView.swift",
+        "tasknotes-macos/Sources/TaskNotesMac/Lists",
+        "tasknotes-macos/Sources/TaskNotesMac/Detail",
+        "tasknotes-macos/Sources/TaskNotesMac/Kanban",
+        "tasknotes-macos/Sources/TaskNotesMac/QuickAdd"
+      ],
+      "navigation": "sidebar-detail-inspector",
+      "editing": "commit-fields-on-submit-or-blur",
+      "priority": "neutral-checkbox-with-configured-trailing-indicator"
+    },
+    "mobile": {
+      "platforms": ["ios", "android"],
+      "referenceSources": [
+        "tasks-for-obsidian/src/navigation/AppNavigator.tsx",
+        "tasks-for-obsidian/src/components/task",
+        "tasks-for-obsidian/src/components/task-detail",
+        "tasks-for-obsidian/src/components/input",
+        "tasks-for-obsidian/src/styles"
+      ],
+      "navigation": ["inbox", "today", "upcoming", "browse"],
+      "editing": "detented-detail-sheet",
+      "priority": "configured-checkbox-tint"
+    }
+  },
+  "contracts": {
+    "runtime": "standalone",
+    "nativeControls": true,
+    "workflowValues": "configuration-defined",
+    "timingFeatures": false,
+    "queryOwnership": "window-local",
+    "profileOwnership": "application",
+    "mutationResult": "applied-receipt",
+    "failedDrafts": "retain-and-retry-or-explicit-discard",
+    "reducedMotion": "system-preference",
+    "sounds": "user-controlled"
+  },
+  "referenceStates": [
+    "setup",
+    "setup-loading",
+    "account-sign-in",
+    "account-verification",
+    "vault-selection",
+    "inbox",
+    "today",
+    "upcoming",
+    "browse",
+    "empty",
+    "search",
+    "board",
+    "saved-views",
+    "task-detail",
+    "dates-recurrence",
+    "relationships-reminders",
+    "inline-compose",
+    "capture",
+    "preferences",
+    "sync-connected",
+    "sync-offline",
+    "conflicts",
+    "conflict-resolution",
+    "failed-action"
+  ],
+  "adaptiveVariants": [
+    "narrow-list",
+    "wide-list",
+    "large-type-list",
+    "large-type-detail",
+    "large-type-setup",
+    "reduced-motion-feedback",
+    "high-contrast",
+    "long-localized-labels"
+  ],
+  "stateReferences": {
+    "setup": {
+      "desktopSources": ["tasknotes-macos/Sources/TaskNotesMac/RootView.swift"],
+      "mobileSources": ["tasks-for-obsidian/src/screens/SettingsScreen.tsx"],
+      "composition": [
+        "native centered welcome, vault actions and explanatory copy"
+      ],
+      "standaloneOnly": true,
+      "acceptanceIDs": ["facet.onboarding.local", "facet.onboarding.sync"],
+      "referenceEvidence": "retained-source; historical macOS captures optional; no historical iOS runtime captures claimed"
+    },
+    "setup-loading": {
+      "desktopSources": ["tasknotes-macos/Sources/TaskNotesMac/RootView.swift"],
+      "mobileSources": ["tasks-for-obsidian/src/screens/SettingsScreen.tsx"],
+      "composition": [
+        "same welcome hierarchy with native progress and unavailable actions"
+      ],
+      "standaloneOnly": true,
+      "acceptanceIDs": [],
+      "referenceEvidence": "retained-source; historical macOS captures optional; no historical iOS runtime captures claimed"
+    },
+    "account-sign-in": {
+      "desktopSources": [
+        "tasknotes-macos/Sources/TaskNotesMac/SettingsView.swift"
+      ],
+      "mobileSources": ["tasks-for-obsidian/src/screens/SettingsScreen.tsx"],
+      "composition": [
+        "native grouped account form, secure password and one primary action"
+      ],
+      "standaloneOnly": true,
+      "acceptanceIDs": [],
+      "referenceEvidence": "retained-source; historical macOS captures optional; no historical iOS runtime captures claimed"
+    },
+    "account-verification": {
+      "desktopSources": [
+        "tasknotes-macos/Sources/TaskNotesMac/SettingsView.swift"
+      ],
+      "mobileSources": ["tasks-for-obsidian/src/screens/SettingsScreen.tsx"],
+      "composition": [
+        "native grouped verification form and contextual explanation"
+      ],
+      "standaloneOnly": true,
+      "acceptanceIDs": [],
+      "referenceEvidence": "retained-source; historical macOS captures optional; no historical iOS runtime captures claimed"
+    },
+    "vault-selection": {
+      "desktopSources": [
+        "tasknotes-macos/Sources/TaskNotesMac/SettingsView.swift"
+      ],
+      "mobileSources": ["tasks-for-obsidian/src/screens/SettingsScreen.tsx"],
+      "composition": ["native vault selection rows and sync setup actions"],
+      "standaloneOnly": true,
+      "acceptanceIDs": [],
+      "referenceEvidence": "retained-source; historical macOS captures optional; no historical iOS runtime captures claimed"
+    },
+    "inbox": {
+      "desktopSources": [
+        "tasknotes-macos/Sources/TaskNotesMac/RootView.swift",
+        "tasknotes-macos/Sources/TaskNotesMac/Entities/SidebarList.swift",
+        "tasknotes-macos/Sources/TaskNotesMac/Lists/TaskRowView.swift"
+      ],
+      "mobileSources": [
+        "tasks-for-obsidian/src/navigation/AppNavigator.tsx",
+        "tasks-for-obsidian/src/screens/InboxScreen.tsx",
+        "tasks-for-obsidian/src/components/task/TaskRow.tsx"
+      ],
+      "composition": [
+        "desktop sidebar-list-inspector; mobile four tabs and Search/Settings header; native task rows"
+      ],
+      "standaloneOnly": false,
+      "acceptanceIDs": ["facet.task.{path}"],
+      "referenceEvidence": "retained-source; historical macOS captures optional; no historical iOS runtime captures claimed"
+    },
+    "today": {
+      "desktopSources": [
+        "tasknotes-macos/Sources/TaskNotesMac/Lists/TaskListView.swift",
+        "tasknotes-macos/Sources/TaskNotesMac/Lists/TaskRowView.swift"
+      ],
+      "mobileSources": [
+        "tasks-for-obsidian/src/screens/TodayScreen.tsx",
+        "tasks-for-obsidian/src/components/task/TaskRow.tsx"
+      ],
+      "composition": ["clock-explicit task projection, native rows and dates"],
+      "standaloneOnly": false,
+      "acceptanceIDs": ["facet.task.{path}"],
+      "referenceEvidence": "retained-source; historical macOS captures optional; no historical iOS runtime captures claimed"
+    },
+    "upcoming": {
+      "desktopSources": [
+        "tasknotes-macos/Sources/TaskNotesMac/Lists/TaskListView.swift"
+      ],
+      "mobileSources": ["tasks-for-obsidian/src/screens/UpcomingScreen.tsx"],
+      "composition": [
+        "core date groups, row occurrence identity and native section headers"
+      ],
+      "standaloneOnly": false,
+      "acceptanceIDs": [],
+      "referenceEvidence": "retained-source; historical macOS captures optional; no historical iOS runtime captures claimed"
+    },
+    "browse": {
+      "desktopSources": [
+        "tasknotes-macos/Sources/TaskNotesMac/Entities/SidebarList.swift"
+      ],
+      "mobileSources": [
+        "tasks-for-obsidian/src/screens/BrowseScreen.tsx",
+        "tasks-for-obsidian/src/components/saved-view/BrowseRow.tsx"
+      ],
+      "composition": [
+        "complete vault vocabulary, saved views and grouped navigation"
+      ],
+      "standaloneOnly": false,
+      "acceptanceIDs": [],
+      "referenceEvidence": "retained-source; historical macOS captures optional; no historical iOS runtime captures claimed"
+    },
+    "empty": {
+      "desktopSources": [
+        "tasknotes-macos/Sources/TaskNotesMac/Lists/TaskListScreenParts.swift"
+      ],
+      "mobileSources": ["tasks-for-obsidian/src/screens/InboxScreen.tsx"],
+      "composition": [
+        "native empty-state illustration, concise copy and capture affordance"
+      ],
+      "standaloneOnly": false,
+      "acceptanceIDs": [],
+      "referenceEvidence": "retained-source; historical macOS captures optional; no historical iOS runtime captures claimed"
+    },
+    "search": {
+      "desktopSources": [
+        "tasknotes-macos/Sources/TaskNotesMac/Lists/SearchField.swift",
+        "tasknotes-macos/Sources/TaskNotesMac/Lists/TaskListView.swift"
+      ],
+      "mobileSources": ["tasks-for-obsidian/src/screens/SearchScreen.tsx"],
+      "composition": ["native search field, result rows and empty results"],
+      "standaloneOnly": false,
+      "acceptanceIDs": [],
+      "referenceEvidence": "retained-source; historical macOS captures optional; no historical iOS runtime captures claimed"
+    },
+    "board": {
+      "desktopSources": [
+        "tasknotes-macos/Sources/TaskNotesMac/Kanban/KanbanBoardView.swift",
+        "tasknotes-macos/Sources/TaskNotesMac/Kanban/KanbanCardView.swift"
+      ],
+      "mobileSources": [
+        "tasks-for-obsidian/src/screens/JobSearchKanbanScreen.tsx"
+      ],
+      "composition": [
+        "configured status columns, native cards and controlled moves; loaded-page counts"
+      ],
+      "standaloneOnly": false,
+      "acceptanceIDs": [],
+      "referenceEvidence": "retained-source; historical macOS captures optional; no historical iOS runtime captures claimed"
+    },
+    "saved-views": {
+      "desktopSources": [
+        "tasknotes-macos/Sources/TaskNotesMac/Entities/SidebarList.swift",
+        "tasknotes-macos/Sources/TaskNotesMac/Lists/TaskQueryMenus.swift"
+      ],
+      "mobileSources": [
+        "tasks-for-obsidian/src/components/saved-view/SavedViewEditorModal.tsx",
+        "tasks-for-obsidian/src/screens/SavedViewScreen.tsx"
+      ],
+      "composition": [
+        "window-owned saved query, named view rows and native editing"
+      ],
+      "standaloneOnly": false,
+      "acceptanceIDs": [],
+      "referenceEvidence": "retained-source; historical macOS captures optional; no historical iOS runtime captures claimed"
+    },
+    "task-detail": {
+      "desktopSources": [
+        "tasknotes-macos/Sources/TaskNotesMac/Detail/TaskInspectorForm.swift",
+        "tasknotes-macos/Sources/TaskNotesMac/Detail/MarkdownBodyView.swift"
+      ],
+      "mobileSources": [
+        "tasks-for-obsidian/src/components/task-detail/TaskDetailEditor.tsx"
+      ],
+      "composition": [
+        "desktop persistent field-commit inspector; mobile single-scroll title/Markdown, completion, Plan, Repeat, Organize, dependencies, delete"
+      ],
+      "standaloneOnly": false,
+      "acceptanceIDs": ["facet.inspector.title", "facet.editor.title"],
+      "referenceEvidence": "retained-source; historical macOS captures optional; no historical iOS runtime captures claimed"
+    },
+    "dates-recurrence": {
+      "desktopSources": [
+        "tasknotes-macos/Sources/TaskNotesMac/Detail/InspectorRows.swift",
+        "tasknotes-macos/Sources/TaskNotesMac/Detail/RecurrenceEditor.swift"
+      ],
+      "mobileSources": [
+        "tasks-for-obsidian/src/components/task-detail/TaskDetailEditor.tsx",
+        "tasks-for-obsidian/src/components/input/ScheduleSheet.tsx"
+      ],
+      "composition": [
+        "native civil-date pickers and recurrence controls; preserve advanced rule text"
+      ],
+      "standaloneOnly": false,
+      "acceptanceIDs": [],
+      "referenceEvidence": "retained-source; historical macOS captures optional; no historical iOS runtime captures claimed"
+    },
+    "relationships-reminders": {
+      "desktopSources": [
+        "tasknotes-macos/Sources/TaskNotesMac/Detail/TaskInspectorForm.swift"
+      ],
+      "mobileSources": [
+        "tasks-for-obsidian/src/components/task-detail/TaskDetailEditor.tsx"
+      ],
+      "composition": [
+        "relationship rows below organization; standalone reminder controls retain native grouped treatment"
+      ],
+      "standaloneOnly": true,
+      "acceptanceIDs": [],
+      "referenceEvidence": "retained-source; historical macOS captures optional; no historical iOS runtime captures claimed"
+    },
+    "inline-compose": {
+      "desktopSources": [
+        "tasknotes-macos/Sources/TaskNotesMac/Lists/PlainTextField.swift",
+        "tasknotes-macos/Sources/TaskNotesMac/Lists/TaskListView.swift"
+      ],
+      "mobileSources": [
+        "tasks-for-obsidian/src/components/input/NaturalLanguageInput.tsx"
+      ],
+      "composition": [
+        "desktop inline task composer; mobile native capture input and parsed hints"
+      ],
+      "standaloneOnly": false,
+      "acceptanceIDs": ["facet.inline-compose.title"],
+      "referenceEvidence": "retained-source; historical macOS captures optional; no historical iOS runtime captures claimed"
+    },
+    "capture": {
+      "desktopSources": [
+        "tasknotes-macos/Sources/TaskNotesMac/QuickAdd/QuickAddPanelView.swift"
+      ],
+      "mobileSources": [
+        "tasks-for-obsidian/src/screens/QuickAddScreen.tsx",
+        "tasks-for-obsidian/src/components/input/NaturalLanguageInput.tsx"
+      ],
+      "composition": [
+        "desktop native quick-add panel; mobile detented capture sheet with input hints and parsed values"
+      ],
+      "standaloneOnly": false,
+      "acceptanceIDs": ["facet.capture.title", "facet.capture.submit"],
+      "referenceEvidence": "retained-source; historical macOS captures optional; no historical iOS runtime captures claimed"
+    },
+    "preferences": {
+      "desktopSources": [
+        "tasknotes-macos/Sources/TaskNotesMac/SettingsView.swift",
+        "tasknotes-macos/Sources/TaskNotesMac/QuickAdd/QuickAddSettingsView.swift"
+      ],
+      "mobileSources": ["tasks-for-obsidian/src/screens/SettingsScreen.tsx"],
+      "composition": [
+        "native settings sections, independent sound and mobile haptic controls; sounds enabled by default on every platform while preserving explicit choices"
+      ],
+      "standaloneOnly": false,
+      "acceptanceIDs": [],
+      "referenceEvidence": "retained-source; historical macOS captures optional; no historical iOS runtime captures claimed"
+    },
+    "sync-connected": {
+      "desktopSources": [
+        "tasknotes-macos/Sources/TaskNotesMac/Lists/SyncBannerView.swift"
+      ],
+      "mobileSources": ["tasks-for-obsidian/src/screens/SettingsScreen.tsx"],
+      "composition": [
+        "compact native sync status adjacent to existing navigation"
+      ],
+      "standaloneOnly": true,
+      "acceptanceIDs": [],
+      "referenceEvidence": "retained-source; historical macOS captures optional; no historical iOS runtime captures claimed"
+    },
+    "sync-offline": {
+      "desktopSources": [
+        "tasknotes-macos/Sources/TaskNotesMac/Lists/SyncBannerView.swift"
+      ],
+      "mobileSources": ["tasks-for-obsidian/src/screens/SettingsScreen.tsx"],
+      "composition": ["compact status retains accessible local task list"],
+      "standaloneOnly": true,
+      "acceptanceIDs": [],
+      "referenceEvidence": "retained-source; historical macOS captures optional; no historical iOS runtime captures claimed"
+    },
+    "conflicts": {
+      "desktopSources": [
+        "tasknotes-macos/Sources/TaskNotesMac/Lists/SyncBannerView.swift"
+      ],
+      "mobileSources": ["tasks-for-obsidian/src/screens/SettingsScreen.tsx"],
+      "composition": [
+        "native conflict inbox with retained version metadata; no historical identical workflow"
+      ],
+      "standaloneOnly": true,
+      "acceptanceIDs": ["facet.conflicts.open"],
+      "referenceEvidence": "retained-source; historical macOS captures optional; no historical iOS runtime captures claimed"
+    },
+    "conflict-resolution": {
+      "desktopSources": [
+        "tasknotes-macos/Sources/TaskNotesMac/Detail/MarkdownSourceEditor.swift"
+      ],
+      "mobileSources": [
+        "tasks-for-obsidian/src/components/task-detail/TaskDetailEditor.tsx"
+      ],
+      "composition": [
+        "native version comparison and Markdown editing; retain conflict diagnostics"
+      ],
+      "standaloneOnly": true,
+      "acceptanceIDs": [],
+      "referenceEvidence": "retained-source; historical macOS captures optional; no historical iOS runtime captures claimed"
+    },
+    "failed-action": {
+      "desktopSources": [
+        "tasknotes-macos/Sources/TaskNotesMac/Lists/SyncBannerView.swift"
+      ],
+      "mobileSources": [
+        "tasks-for-obsidian/src/components/common/UndoToast.tsx"
+      ],
+      "composition": [
+        "receipt-owned feedback; failed buffers and original admitted action identity remain available"
+      ],
+      "standaloneOnly": true,
+      "acceptanceIDs": [],
+      "referenceEvidence": "retained-source; historical macOS captures optional; no historical iOS runtime captures claimed"
+    }
+  }
+}

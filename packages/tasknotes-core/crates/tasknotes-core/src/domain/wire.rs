@@ -40,15 +40,12 @@ use super::{
     priority::Priority,
     query::FilterOptions,
     report::{
-        ApiResponse, CalendarEvent, NlpParseResult, Pagination, QueryResponse, TaskList, TaskTime,
-        TimeSummary, TopTask, VaultInfo,
+        ApiResponse, CalendarEvent, NlpParseResult, Pagination, QueryResponse, TaskList, VaultInfo,
     },
     request::{CreateTaskRequest, UpdateTaskRequest},
     serde_ext::present_only,
     status::TaskStatus,
-    task::{
-        BlockedByEntry, ExtraFields, InlineTimeEntry, RecurrenceAnchor, Reminder, ReminderKind,
-    },
+    task::{BlockedByEntry, ExtraFields, RecurrenceAnchor, Reminder, ReminderKind},
 };
 use crate::{Error, Result};
 
@@ -210,16 +207,6 @@ pub struct WireTask {
         skip_serializing_if = "Option::is_none"
     )]
     pub date_modified: Option<String>,
-    /// The estimate in whole minutes.
-    #[serde(
-        default,
-        deserialize_with = "present_only",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub time_estimate: Option<u32>,
-    /// Tracked work intervals.
-    #[serde(default)]
-    pub time_entries: Vec<WireTimeEntry>,
     /// Dependency edges.
     #[serde(default)]
     pub blocked_by: Vec<WireDependency>,
@@ -229,9 +216,6 @@ pub struct WireTask {
     /// Whether the task is archived.
     #[serde(default)]
     pub archived: bool,
-    /// Total tracked minutes, as the server computed them.
-    #[serde(default)]
-    pub total_tracked_time: u32,
     /// Whether something else blocks this task.
     #[serde(default)]
     pub is_blocked: bool,
@@ -248,28 +232,6 @@ pub struct WireTask {
         skip_serializing_if = "Option::is_none"
     )]
     pub details: Option<String>,
-}
-
-/// A tracked work interval as the wire spells it.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct WireTimeEntry {
-    /// When tracking started.
-    pub start_time: String,
-    /// When tracking stopped.
-    #[serde(
-        default,
-        deserialize_with = "present_only",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub end_time: Option<String>,
-    /// The interval's length in whole minutes.
-    #[serde(
-        default,
-        deserialize_with = "present_only",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub duration: Option<u32>,
 }
 
 /// A dependency edge as the wire spells it.
@@ -381,16 +343,6 @@ impl TryFrom<WireTask> for super::task::Task {
             completed_date: raw.completed_date,
             date_created: raw.date_created,
             date_modified: raw.date_modified,
-            time_estimate: raw.time_estimate,
-            time_entries: raw
-                .time_entries
-                .into_iter()
-                .map(|entry| InlineTimeEntry {
-                    start_time: entry.start_time,
-                    end_time: entry.end_time,
-                    duration: entry.duration,
-                })
-                .collect(),
             blocked_by: raw
                 .blocked_by
                 .into_iter()
@@ -411,7 +363,6 @@ impl TryFrom<WireTask> for super::task::Task {
                 })
                 .collect(),
             archived: raw.archived,
-            total_tracked_time: raw.total_tracked_time,
             is_blocked: raw.is_blocked,
             is_blocking: raw.is_blocking,
             extra_fields: ExtraFields::new(raw.custom_properties),
@@ -551,87 +502,6 @@ impl From<WireFilterOptions> for FilterOptions {
     }
 }
 
-/// The nested totals block the time endpoints wrap their numbers in.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct WireTimeTotals {
-    /// Whole minutes tracked.
-    pub total_minutes: u32,
-}
-
-/// One leaderboard row on the wire.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub struct WireTopTask {
-    /// The task's vault path. Spelled `task`, not `taskId`.
-    pub task: String,
-    /// The task's title at report time.
-    pub title: String,
-    /// Whole minutes tracked in the period.
-    pub minutes: u32,
-}
-
-/// `GET /api/time/summary` on the wire.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct WireTimeSummary {
-    /// Which period the report covers.
-    pub period: String,
-    /// The period's totals.
-    pub summary: WireTimeTotals,
-    /// The most-tracked tasks.
-    pub top_tasks: Vec<WireTopTask>,
-}
-
-impl TryFrom<WireTimeSummary> for TimeSummary {
-    type Error = Error;
-
-    /// # Errors
-    ///
-    /// Propagates the first leaderboard row whose task path fails to parse.
-    fn try_from(raw: WireTimeSummary) -> Result<Self> {
-        Ok(Self {
-            total_time: raw.summary.total_minutes,
-            top_tasks: raw
-                .top_tasks
-                .into_iter()
-                .map(|row| {
-                    Ok(TopTask {
-                        task_id: TaskId::parse(row.task)?,
-                        title: row.title,
-                        minutes: row.minutes,
-                    })
-                })
-                .collect::<Result<Vec<_>>>()?,
-        })
-    }
-}
-
-/// The nested totals block for a single task's tracked time.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct WireTaskTimeTotals {
-    /// Whole minutes tracked against the task, ever.
-    pub total_minutes: u32,
-    /// How many sessions are running right now.
-    pub active_sessions: u32,
-}
-
-/// `GET /api/tasks/:id/time` on the wire.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub struct WireTaskTime {
-    /// The task's totals.
-    pub summary: WireTaskTimeTotals,
-}
-
-impl From<WireTaskTime> for TaskTime {
-    fn from(raw: WireTaskTime) -> Self {
-        Self {
-            total_time: raw.summary.total_minutes,
-            has_active_session: raw.summary.active_sessions > 0,
-        }
-    }
-}
-
 /// `POST /api/nlp/parse` → `{ parsed, taskData }`; the app wants `parsed`.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct WireNlpParse {
@@ -745,14 +615,14 @@ mod tests {
     use serde_json::{Value, json};
 
     use super::{
-        WIRE_FIELD_RENAMES, WireCalendarEvents, WireFilterOptions, WireTask, WireTaskTime,
-        WireTimeSummary, create_task_body, to_wire_task_fields, unwrap_envelope, update_task_body,
+        WIRE_FIELD_RENAMES, WireCalendarEvents, WireFilterOptions, WireTask, create_task_body,
+        to_wire_task_fields, unwrap_envelope, update_task_body,
     };
     use crate::domain::{
         ids::TaskId,
         priority::Priority,
         query::FilterOptions,
-        report::{CalendarEvent, TaskTime, TimeSummary},
+        report::CalendarEvent,
         request::{CreateTaskRequest, TaskTitle, UpdateTaskRequest},
         serde_ext::FieldUpdate,
         status::TaskStatus,
@@ -947,42 +817,6 @@ mod tests {
         // the picker: these are opaque strings, not `TaskStatus`.
         assert_eq!(options.statuses, ["open", "custom-vault-status"]);
         assert_eq!(options.priorities, ["normal"]);
-    }
-
-    #[test]
-    fn the_time_summary_is_reshaped_out_of_its_nested_block() {
-        let wire: WireTimeSummary = serde_json::from_value(json!({
-            "period": "week",
-            "summary": { "totalMinutes": 120 },
-            "topTasks": [{ "task": "Tasks/a.md", "title": "A", "minutes": 90 }],
-        }))
-        .unwrap();
-
-        let summary = TimeSummary::try_from(wire).unwrap();
-        assert_eq!(summary.total_time, 120);
-        assert_eq!(summary.top_tasks[0].task_id.as_str(), "Tasks/a.md");
-        assert_eq!(summary.top_tasks[0].minutes, 90);
-    }
-
-    #[test]
-    fn an_active_session_is_derived_from_the_session_count() {
-        let running: WireTaskTime = serde_json::from_value(
-            json!({ "summary": { "totalMinutes": 5, "activeSessions": 1 } }),
-        )
-        .unwrap();
-        assert_eq!(
-            TaskTime::from(running),
-            TaskTime {
-                total_time: 5,
-                has_active_session: true
-            }
-        );
-
-        let idle: WireTaskTime = serde_json::from_value(
-            json!({ "summary": { "totalMinutes": 5, "activeSessions": 0 } }),
-        )
-        .unwrap();
-        assert!(!TaskTime::from(idle).has_active_session);
     }
 
     #[test]

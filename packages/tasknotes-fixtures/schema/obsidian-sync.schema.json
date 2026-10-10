@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Facet Obsidian Sync durable boundary version 1",
+  "description": "Language-neutral non-secret runtime contracts. Account tokens, managed passwords, encryption keys and transport payloads must never enter these envelopes.",
+  "$defs": {
+    "transportLimits": {"type":"object","properties":{"textMessageBytes":{"const":4194304},"binaryMessageBytes":{"const":2097152},"defaultFileBytes":{"const":208666624}},"required":["textMessageBytes","binaryMessageBytes","defaultFileBytes"],"additionalProperties":false},
+    "remoteFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "uid",
+        "path",
+        "related_path",
+        "size",
+        "hash",
+        "ctime",
+        "mtime",
+        "folder",
+        "deleted",
+        "device",
+        "user",
+        "initial",
+        "local_operation_id",
+        "selected"
+      ],
+      "properties": {
+        "uid": { "type": "integer", "minimum": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "related_path": { "type": ["string", "null"] },
+        "size": { "type": "integer", "minimum": 0 },
+        "hash": { "type": "string", "pattern": "^(?:[0-9a-fA-F]{64})?$" },
+        "ctime": { "type": "integer", "minimum": 0 },
+        "mtime": { "type": "integer", "minimum": 0 },
+        "folder": { "type": "boolean" },
+        "deleted": { "type": "boolean" },
+        "device": { "type": ["string", "null"] },
+        "user": {},
+        "initial": { "type": "boolean" },
+        "local_operation_id": { "type": ["string", "null"] },
+        "selected": { "type": "boolean" }
+      }
+    },
+    "checkpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "cursor", "initial", "pending"],
+      "properties": {
+        "schema_version": { "const": 1 },
+        "cursor": { "type": "integer", "minimum": 0 },
+        "initial": { "type": "boolean" },
+        "pending": {
+          "type": "object",
+          "maxProperties": 65536,
+          "propertyNames": { "pattern": "^[1-9][0-9]*$" },
+          "additionalProperties": { "$ref": "#/$defs/remoteFile" }
+        }
+      }
+    },
+    "checkpointDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "cursor",
+        "initial",
+        "pending_upsert",
+        "pending_remove"
+      ],
+      "properties": {
+        "schema_version": { "const": 1 },
+        "cursor": { "type": "integer", "minimum": 0 },
+        "initial": { "type": "boolean" },
+        "pending_upsert": {
+          "oneOf": [{ "$ref": "#/$defs/remoteFile" }, { "type": "null" }]
+        },
+        "pending_remove": { "type": ["integer", "null"], "minimum": 1 }
+      }
+    },
+    "filter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "configuration_directory",
+        "attachment_categories",
+        "configuration_categories",
+        "excluded_folders"
+      ],
+      "properties": {
+        "configuration_directory": { "type": "string", "minLength": 1 },
+        "attachment_categories": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "enum": ["image", "audio", "video", "pdf", "unsupported"] }
+        },
+        "configuration_categories": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "app",
+              "appearance",
+              "appearance-data",
+              "hotkey",
+              "core-plugin",
+              "core-plugin-data",
+              "community-plugin",
+              "community-plugin-data"
+            ]
+          }
+        },
+        "excluded_folders": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

@@ -1,7 +1,5 @@
 public import TaskNotesUniFFI
 
-public import struct Foundation.Locale
-
 /// One task, as the inspector shows it.
 ///
 /// ## Derived from the row, not from the task
@@ -43,9 +41,6 @@ public struct TaskDetail: Sendable, Equatable, Identifiable {
     /// The priority, as the core spells it.
     public let priorityText: String
 
-    /// The time estimate in words, or `nil` when there is none.
-    public let timeEstimateText: String?
-
     public var task: CoreTask { row.task }
     public var id: TaskId { row.id }
 
@@ -64,8 +59,7 @@ public struct TaskDetail: Sendable, Equatable, Identifiable {
     public static func build(
         row: TaskRowState,
         calendar: ViewerCalendar,
-        text: TaskDateText = TaskDateText(),
-        duration: TaskDurationText = TaskDurationText()
+        text: TaskDateText = TaskDateText()
     ) throws(CoreError) -> TaskDetail {
         let subject = row.task
         return TaskDetail(
@@ -75,12 +69,11 @@ public struct TaskDetail: Sendable, Equatable, Identifiable {
             recurrence: try RecurrenceSummary.of(task: subject, calendar: calendar, text: text),
             body: try MarkdownBody.of(source: subject.details ?? ""),
             statusText: taskStatusLabel(status: subject.status),
-            priorityText: priorityLabel(priority: subject.priority),
-            timeEstimateText: subject.timeEstimate.map { duration.minutes($0) }
+            priorityText: priorityLabel(priority: subject.priority)
         )
     }
 
-    /// ``build(row:calendar:text:duration:)``, as a `Result`.
+    /// ``build(row:calendar:text:)``, as a `Result`.
     ///
     /// A SwiftUI `body` cannot `try`, and a closure written inside a
     /// `@MainActor` view infers `any Error` as its thrown type, which no longer
@@ -89,48 +82,10 @@ public struct TaskDetail: Sendable, Equatable, Identifiable {
     public static func of(
         row: TaskRowState,
         calendar: ViewerCalendar,
-        text: TaskDateText = TaskDateText(),
-        duration: TaskDurationText = TaskDurationText()
+        text: TaskDateText = TaskDateText()
     ) -> Result<TaskDetail, CoreError> {
         CoreErrors.capturing { () throws(CoreError) -> TaskDetail in
-            try build(row: row, calendar: calendar, text: text, duration: duration)
+            try build(row: row, calendar: calendar, text: text)
         }
-    }
-}
-
-/// A duration in words, in the viewer's locale.
-///
-/// ## Why not the core's `elapsedFormat`
-///
-/// The core has one, and it is the wrong one. `elapsedFormat` produces
-/// `H:MM:SS` — it exists for a *running timer*, where a fixed-width clock
-/// reading that ticks is exactly right. An estimate is not a clock: `1:30:00`
-/// for "an hour and a half of work" reads as a video length, and `00:45` reads
-/// as forty-five seconds. Reusing it here would be sharing a function rather
-/// than sharing a meaning.
-///
-/// It is also the same rule the plan already applies to dates. Deciding things
-/// about a duration belongs in the core; **spelling** one is locale-bound and
-/// therefore the shell's — "1 hr 30 min" is not what a German user should read.
-public struct TaskDurationText: Sendable {
-    private let style: Duration.UnitsFormatStyle
-
-    /// A formatter for a locale, defaulting to the system's.
-    public init(locale: Locale = .autoupdatingCurrent) {
-        var units = Duration.UnitsFormatStyle(
-            allowedUnits: [.hours, .minutes],
-            width: .abbreviated,
-            // A whole number of minutes in, a whole number of minutes out. The
-            // default would render 90 minutes as "1.5 hr", which is not how
-            // anybody writes down an estimate.
-            fractionalPart: .hide(rounded: .down)
-        )
-        units.locale = locale
-        self.style = units
-    }
-
-    /// `1 hr 30 min` — a whole-minute estimate, spelled.
-    public func minutes(_ value: UInt32) -> String {
-        style.format(.seconds(Int64(value) * 60))
     }
 }

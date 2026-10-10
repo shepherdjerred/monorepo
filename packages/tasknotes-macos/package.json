@@ -1,6 +1,7 @@
 {
   "name": "tasknotes-macos",
   "private": true,
+  "license": "GPL-3.0-only",
   "description": "Native macOS TaskNotes app (SwiftUI over the shared Rust core); see README.md for the CI/local split and the mac:preflight rationale.",
   "scripts": {
     "lint": "swiftlint lint --strict --quiet && ./ci/no-suppressions.sh",
@@ -20,6 +21,7 @@
     "mac:e2e:ci": "bun run mac:generate && bun scripts/run-ui-tests-ci.ts",
     "mac:run": "bun run mac:app && open .build/xcode/Build/Products/Debug/TaskNotes.app",
     "mac:release": "bun run scripts/release.ts",
+    "mac:store": "bun run scripts/store-release.ts",
     "mac:verify": "bun run mac:generate && bun run mac:build && bun run mac:test && bun run lint && bun run mac:format:check && bun run mac:app && bun run mac:smoke",
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run scripts",
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts",

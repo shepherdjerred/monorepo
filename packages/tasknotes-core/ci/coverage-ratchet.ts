@@ -182,6 +182,10 @@ if (changedExecutable.length > 0) {
 function isRatchetedSource(filename: string): boolean {
   return (
     filename.startsWith(
+      "packages/tasknotes-core/crates/tasknotes-vault/src/",
+    ) ||
+    filename.startsWith("packages/tasknotes-core/crates/obsidian-sync/src/") ||
+    filename.startsWith(
       "packages/tasknotes-core/crates/tasknotes-core/src/net/",
     ) ||
     (filename.startsWith(

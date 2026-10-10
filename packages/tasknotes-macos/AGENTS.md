@@ -1,22 +1,23 @@
-# TaskNotes macOS constraints
+# Facet Apple host constraints
 
-This is the native SwiftUI client over the shared Rust core. `README.md` owns
-the target layout, commands, and release reference. Load `tasknotes-development`
-for cross-package workflow.
+This package supplies the native macOS app and the reusable SwiftUI/Foundation
+host used by iOS. Load `tasknotes-development` for the cross-package workflow.
 
 ## Boundaries
 
-- `TaskNotesUniFFI` is generated binding glue. `TaskNotesKit` is portable and
-  has no SwiftUI/AppKit imports. `TaskNotesMac` owns UI and is MainActor-isolated.
+- `TaskNotesUniFFI` is generated glue. `TaskNotesKit` has no SwiftUI/AppKit imports;
+  `TaskNotesFacetUI` and `TaskNotesMac` own MainActor presentation.
 - Do not edit generated Swift. Build the XCFramework from `tasknotes-core`
   before compiling, and commit every regenerated binding diff.
-- Every `FfiSyncEngine` call goes through `EngineBox`'s serial queue. The Rust
-  engine holds one mutex for a call; never block the main actor on dispatch,
-  snapshot, drain, or dead-letter work.
-- Core HTTP and storage are host traits. App storage uses the sandbox container;
-  vault access needs a user-selected security-scoped bookmark.
-- `WireBridge.swift` is temporary. Do not grow a Swift-owned wire model that
-  duplicates the Rust core.
+- `FacetEngine` serializes synchronous runtime calls away from UI. Rust owns
+  domain/Sync policy and SQLite receipts. Native adapters own Keychain, URLSession
+  effects, security-scoped bookmarks, coordinated files and lifecycle.
+- Validate shared schemas fully. Preserve arbitrary configured values, unknown
+  note properties and Markdown bytes. Never substitute corrupt data.
+- Provider writes require proven confinement and durable displaced-byte capture.
+  Keep backups until the runtime acknowledges its conflict/journal commit.
+- Complete retry identity includes owning profile, timestamp and payload.
+  Credentials never enter vault files, App Groups, diagnostics or artifacts.
 
 ## Swift and UI
 
@@ -39,9 +40,8 @@ bun run mac:verify
 bun run mac:e2e
 ```
 
-Changed TaskNotes paths also have a hard serial macOS CI gate. Preserve
-accessibility assertions; a compile-only result is not app verification.
-
-Releases use the operator-run Developer ID/notarization lane. Do not add an App
-Store path or updater without a separately approved distribution design. Keep
-certificates, team IDs, notarization credentials, and release output untracked.
+Native UI checks require matching artifacts and real standalone vault assertions;
+legacy server-backed tests are separate. The macOS Woodpecker lane is currently
+paused; local native checks are not exact-head CI evidence.
+App Store and Developer ID lanes are distinct products. Keep signing material
+and release artifacts untracked; publication needs explicit owner authorization.

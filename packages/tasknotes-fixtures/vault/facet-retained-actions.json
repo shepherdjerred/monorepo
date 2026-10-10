@@ -1,0 +1,239 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "retained-start_time",
+      "definition": "retainedMutation",
+      "valid": true,
+      "value": {
+        "mutationId": "legacy",
+        "at": "2026-10-03T12:00:00Z",
+        "command": {
+          "kind": "start_time",
+          "path": "Tasks/a.md",
+          "expectedRevision": null
+        }
+      }
+    },
+    {
+      "id": "retained-stop_time",
+      "definition": "retainedMutation",
+      "valid": true,
+      "value": {
+        "mutationId": "legacy",
+        "at": "2026-10-03T12:00:00Z",
+        "command": {
+          "kind": "stop_time",
+          "path": "Tasks/a.md"
+        }
+      }
+    },
+    {
+      "id": "retained-set_time_entries",
+      "definition": "retainedMutation",
+      "valid": true,
+      "value": {
+        "mutationId": "legacy",
+        "at": "2026-10-03T12:00:00Z",
+        "command": {
+          "kind": "set_time_entries",
+          "path": "Tasks/a.md",
+          "entries": [
+            {
+              "startTime": "2026-10-03T11:00:00.987654321Z",
+              "vendor": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "retained-pomodoro",
+      "definition": "retainedMutation",
+      "valid": true,
+      "value": {
+        "mutationId": "legacy",
+        "at": "2026-10-03T12:00:00Z",
+        "command": {
+          "kind": "pomodoro",
+          "deviceId": "phone",
+          "action": "pause",
+          "taskPath": "Tasks/a.md",
+          "durationSeconds": 1500
+        }
+      }
+    },
+    {
+      "id": "retained-batch",
+      "definition": "retainedMutation",
+      "valid": true,
+      "value": {
+        "mutationId": "legacy",
+        "at": "2026-10-03T12:00:00Z",
+        "command": {
+          "kind": "batch",
+          "commands": [
+            {
+              "kind": "stop_time",
+              "path": "Tasks/a.md"
+            },
+            {
+              "kind": "update",
+              "path": "Tasks/a.md",
+              "properties": {
+                "title": "Preserved"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "retained-batch_partial",
+      "definition": "retainedMutation",
+      "valid": true,
+      "value": {
+        "mutationId": "legacy",
+        "at": "2026-10-03T12:00:00Z",
+        "command": {
+          "kind": "batch_partial",
+          "commands": [
+            {
+              "kind": "start_time",
+              "path": "Tasks/a.md"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "retained-invalid-missing-path",
+      "definition": "retainedMutation",
+      "valid": false,
+      "value": {
+        "mutationId": "legacy",
+        "at": "2026-10-03T12:00:00Z",
+        "command": {
+          "kind": "start_time"
+        }
+      }
+    },
+    {
+      "id": "retained-invalid-unknown-property",
+      "definition": "retainedMutation",
+      "valid": false,
+      "value": {
+        "mutationId": "legacy",
+        "at": "2026-10-03T12:00:00Z",
+        "command": {
+          "kind": "stop_time",
+          "path": "Tasks/a.md",
+          "unknown": true
+        }
+      }
+    },
+    {
+      "id": "retained-invalid-missing-start",
+      "definition": "retainedMutation",
+      "valid": false,
+      "value": {
+        "mutationId": "legacy",
+        "at": "2026-10-03T12:00:00Z",
+        "command": {
+          "kind": "set_time_entries",
+          "path": "Tasks/a.md",
+          "entries": [
+            {
+              "endTime": "2026-10-03T12:00:00Z"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "retained-invalid-invalid-action",
+      "definition": "retainedMutation",
+      "valid": false,
+      "value": {
+        "mutationId": "legacy",
+        "at": "2026-10-03T12:00:00Z",
+        "command": {
+          "kind": "pomodoro",
+          "deviceId": "phone",
+          "action": "discard"
+        }
+      }
+    },
+    {
+      "id": "retained-invalid-fractional-duration",
+      "definition": "retainedMutation",
+      "valid": false,
+      "value": {
+        "mutationId": "legacy",
+        "at": "2026-10-03T12:00:00Z",
+        "command": {
+          "kind": "pomodoro",
+          "deviceId": "phone",
+          "action": "start",
+          "durationSeconds": 1.5
+        }
+      }
+    },
+    {
+      "id": "retained-invalid-nested-batch",
+      "definition": "retainedMutation",
+      "valid": false,
+      "value": {
+        "mutationId": "legacy",
+        "at": "2026-10-03T12:00:00Z",
+        "command": {
+          "kind": "batch_partial",
+          "commands": [
+            {
+              "kind": "batch",
+              "commands": [
+                {
+                  "kind": "start_time",
+                  "path": "Tasks/a.md"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "retained-invalid-pomodoro-in-batch",
+      "definition": "retainedMutation",
+      "valid": false,
+      "value": {
+        "mutationId": "legacy",
+        "at": "2026-10-03T12:00:00Z",
+        "command": {
+          "kind": "batch",
+          "commands": [
+            {
+              "kind": "pomodoro",
+              "deviceId": "phone",
+              "action": "stop"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "retained-invalid-clock",
+      "definition": "retainedMutation",
+      "valid": false,
+      "value": {
+        "mutationId": "legacy",
+        "at": "not-a-clock",
+        "command": {
+          "kind": "start_time",
+          "path": "Tasks/a.md",
+          "expectedRevision": null
+        }
+      }
+    }
+  ]
+}

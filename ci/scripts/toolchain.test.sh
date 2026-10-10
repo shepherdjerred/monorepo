@@ -66,6 +66,24 @@ if ! rg -wq 'libxml2' "$CI_IMAGE" ||
   exit 1
 fi
 
+if ! rg -Fq 'COPY ci/scripts/android-sdk.sh' "$CI_IMAGE" ||
+  ! rg -Fq '"${TARGETARCH}" = amd64' "$CI_IMAGE" ||
+  ! rg -Fq 'bash ci/scripts/android-sdk.sh' "$TOOLCHAIN"; then
+  echo "CI Android bootstrap must be shared and scoped to supported x86_64 hosts" >&2
+  exit 1
+fi
+if ! awk '
+  /^  runtime\)/ { scope = "runtime" }
+  /^  postgres\)/ { scope = "postgres" }
+  /^  full\)/ { scope = "full" }
+  /android-sdk.sh/ { if (scope != "full") exit 1; count++ }
+  END { if (count != 1) exit 1 }
+' "$TOOLCHAIN"; then
+  echo "Android SDK bootstrap must preserve runtime/postgres toolchain scopes" >&2
+  exit 1
+fi
+bash "${SCRIPT_DIR}/android-sdk.test.sh"
+
 if rg -q 'apt-get|playwright install|bun x' "$CI_PLAYWRIGHT_IMAGE" ||
   ! rg -Fq 'Bun.file("/ms-playwright/.docker-info").json()' "$CI_PLAYWRIGHT_IMAGE" ||
   ! rg -Fq 'typeof info.driverVersion !== "string"' "$CI_PLAYWRIGHT_IMAGE" ||

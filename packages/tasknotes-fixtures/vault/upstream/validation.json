@@ -1,0 +1,5308 @@
+[
+  {
+    "id": "validation.0001",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "missing_required"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0002",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "missing_required"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0003",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "missing_required"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0004",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "missing_required"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0005",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "missing_required"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0006",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "missing_required"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0007",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "missing_required"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0008",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "done",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "missing_required"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0009",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "cancelled",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "missing_required"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0010",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "done",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ],
+        "completedDate": "2026-03-20"
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "errorCodes": {
+          "$contains": []
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0011",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "cancelled",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ],
+        "completedDate": "2026-03-20T12:30:00Z"
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "errorCodes": {
+          "$contains": []
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0012",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "errorCodes": {
+          "$contains": []
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0013",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "From frontmatter",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/FromPath.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "allCodes": {
+          "$oneOf": [
+            [],
+            {
+              "$contains": []
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0014",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/FromPath.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "allCodes": {
+          "$oneOf": [
+            [],
+            {
+              "$contains": []
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0015",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "   ",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/FromPath.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "allCodes": {
+          "$oneOf": [
+            [],
+            {
+              "$contains": []
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0016",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": ""
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "unresolvable_title"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0017",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "unresolvable_title"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0018",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "not-a-date",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "invalid_date_value"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0019",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-13-10",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "invalid_date_value"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0020",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-02-30",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "invalid_date_value"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0021",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-02-20T25:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "invalid_date_value"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0022",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026/02/20",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "invalid_date_value"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0023",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "not-a-date",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "invalid_date_value"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0024",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-13-10",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "invalid_date_value"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0025",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-02-30",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "invalid_date_value"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0026",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-02-20T25:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "invalid_date_value"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0027",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026/02/20",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "invalid_date_value"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0028",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "not-a-date",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "invalid_date_value"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0029",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-13-10",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "invalid_date_value"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0030",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-02-30",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "invalid_date_value"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0031",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-02-20T25:00:00Z",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "invalid_date_value"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0032",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026/02/20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "invalid_date_value"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0033",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "not-a-date",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "invalid_date_value"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0034",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026-13-10",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "invalid_date_value"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0035",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026-02-30",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "invalid_date_value"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0036",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026-02-20T25:00:00Z",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "invalid_date_value"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0037",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026/02/20",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "invalid_date_value"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0038",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "done",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ],
+        "completedDate": "not-a-date"
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "invalid_date_value"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0039",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "done",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ],
+        "completedDate": "2026-13-10"
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "invalid_date_value"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0040",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "done",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ],
+        "completedDate": "2026-02-30"
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "invalid_date_value"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0041",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "done",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ],
+        "completedDate": "2026-02-20T25:00:00Z"
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "invalid_date_value"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0042",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "done",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ],
+        "completedDate": "2026/02/20"
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "invalid_date_value"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0043",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": 3,
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "invalid_type"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0044",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": 1234,
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "invalid_type"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0045",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": true,
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "invalid_type"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0046",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": "task",
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "invalid_type"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0047",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": {
+          "key": "value"
+        },
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "invalid_type"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0048",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": "projects/core.md"
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "invalid_type"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0049",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "errorCodes": {
+          "$contains": []
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0050",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01",
+        "dateModified": "2026-03-02",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "errorCodes": {
+          "$contains": []
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0051",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T10:00:00Z",
+        "dateModified": "2026-03-01T09:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "date_modified_before_created"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0052",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-10",
+        "dateModified": "2026-03-01",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "date_modified_before_created"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0053",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ],
+        "vendorField": "X-123"
+      },
+      "taskPath": "tasks/Baseline.md",
+      "rejectUnknownFields": false
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "issues": {
+          "$contains": [
+            {
+              "code": "unknown_field",
+              "severity": "info"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0054",
+    "section": "§6",
+    "profile": "core-lite",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ],
+        "vendorField": "X-123"
+      },
+      "taskPath": "tasks/Baseline.md",
+      "rejectUnknownFields": true
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "issues": {
+          "$contains": [
+            {
+              "code": "unknown_field",
+              "severity": "error"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0055",
+    "section": "§6",
+    "profile": "extended",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core",
+      "time-tracking"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ],
+        "timeEntries": [
+          {
+            "startTime": "2026-02-20T09:00:00Z"
+          },
+          {
+            "startTime": "2026-02-20T10:00:00Z"
+          }
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "multiple_active_time_entries"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0056",
+    "section": "§6",
+    "profile": "extended",
+    "operation": "validation.core_evaluate",
+    "assertion": "envelope_equals",
+    "requires": [
+      "validation-core",
+      "time-tracking"
+    ],
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "status": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "doing",
+            "done",
+            "cancelled"
+          ]
+        },
+        "due": {
+          "type": "date",
+          "tn_role": "due"
+        },
+        "scheduled": {
+          "type": "date",
+          "tn_role": "scheduled"
+        },
+        "completedDate": {
+          "type": "date",
+          "tn_role": "completedDate"
+        },
+        "dateCreated": {
+          "type": "datetime",
+          "tn_role": "dateCreated"
+        },
+        "dateModified": {
+          "type": "datetime",
+          "tn_role": "dateModified"
+        },
+        "tags": {
+          "type": "list",
+          "tn_role": "tags"
+        },
+        "contexts": {
+          "type": "list",
+          "tn_role": "contexts"
+        },
+        "projects": {
+          "type": "list",
+          "tn_role": "projects"
+        },
+        "timeEntries": {
+          "type": "list",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "title": "Validation baseline",
+        "status": "open",
+        "due": "2026-03-20",
+        "scheduled": "2026-03-18",
+        "dateCreated": "2026-03-01T09:00:00Z",
+        "dateModified": "2026-03-01T10:00:00Z",
+        "tags": [
+          "task"
+        ],
+        "contexts": [
+          "home"
+        ],
+        "projects": [
+          "[[projects/core]]"
+        ],
+        "timeEntries": [
+          {
+            "endTime": "2026-02-20T10:00:00Z"
+          }
+        ]
+      },
+      "taskPath": "tasks/Baseline.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "hasErrors": true,
+        "errorCodes": {
+          "$contains": [
+            "missing_time_entry_start"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "validation.0057",
+    "section": "§6",
+    "profile": "extended",
+    "operation": "validation.time_entries",
+    "assertion": "envelope_error",
+    "requires": [
+      "time-tracking"
+    ],
+    "input": {
+      "entries": [
+        {
+          "startTime": "2026-02-20T09:00:00Z"
+        },
+        {
+          "startTime": "2026-02-20T10:00:00Z"
+        }
+      ]
+    },
+    "expect": {
+      "error": {
+        "$regex": "multiple_active_time_entries|active"
+      }
+    }
+  },
+  {
+    "id": "validation.0058",
+    "section": "§6",
+    "profile": "extended",
+    "operation": "validation.time_entries",
+    "assertion": "envelope_error",
+    "requires": [
+      "time-tracking"
+    ],
+    "input": {
+      "entries": [
+        {
+          "endTime": "2026-02-20T10:00:00Z"
+        }
+      ]
+    },
+    "expect": {
+      "error": {
+        "$regex": "missing_time_entry_start|startTime"
+      }
+    }
+  },
+  {
+    "id": "validation.0059",
+    "section": "§6",
+    "profile": "extended",
+    "operation": "validation.time_entries",
+    "assertion": "envelope_error",
+    "requires": [
+      "time-tracking"
+    ],
+    "input": {
+      "entries": [
+        {
+          "startTime": "2026-02-20T10:00:00Z",
+          "endTime": "2026-02-20T09:00:00Z"
+        }
+      ]
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid_time_range|endTime"
+      }
+    }
+  },
+  {
+    "id": "validation.0060",
+    "section": "§6",
+    "profile": "extended",
+    "operation": "validation.time_entries",
+    "assertion": "envelope_equals",
+    "requires": [
+      "time-tracking"
+    ],
+    "input": {
+      "entries": [
+        {
+          "startTime": "2026-02-20T09:00:00Z",
+          "endTime": "2026-02-20T10:00:00Z"
+        }
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "valid"
+      }
+    }
+  }
+]

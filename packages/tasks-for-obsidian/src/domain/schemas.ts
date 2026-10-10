@@ -1,12 +1,6 @@
 import { z } from "zod";
 
-import type {
-  HealthStatus,
-  NlpParseResult,
-  PomodoroStatus,
-  Task,
-  TaskStats,
-} from "./types";
+import type { HealthStatus, NlpParseResult, Task, TaskStats } from "./types";
 import { contextName, projectName, tagName, taskId } from "./types";
 import {
   TaskSchema as BaseTaskSchema,
@@ -31,18 +25,6 @@ export const TaskStatsSchema = BaseTaskStatsSchema.transform(
 export const NlpParseResultSchema = BaseNlpParseResultSchema.transform(
   (raw): NlpParseResult => raw,
 );
-
-export const PomodoroStatusSchema = z
-  .object({
-    active: z.boolean(),
-    taskId: z.string().optional(),
-    timeRemaining: z.number().optional(),
-    type: z.enum(["work", "break"]).optional(),
-  })
-  .transform((raw): PomodoroStatus => ({
-    ...raw,
-    taskId: raw.taskId ? taskId(raw.taskId) : undefined,
-  }));
 
 export const HealthStatusSchema = z
   .object({

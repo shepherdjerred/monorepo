@@ -12,3 +12,10 @@ App/Info.plist
 .build/
 .swiftpm/
 DerivedData/
+Resources/ThirdPartyNotices.txt
+Resources/ios/ThirdPartyNotices.txt
+Resources/macos/ThirdPartyNotices.txt
+Resources/ios/FirstPartyLicense.txt
+Resources/macos/FirstPartyLicense.txt
+Resources/ios/native-license-inventory.json
+Resources/macos/native-license-inventory.json

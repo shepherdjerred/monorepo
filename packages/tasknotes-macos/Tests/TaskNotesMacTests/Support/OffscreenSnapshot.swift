@@ -70,6 +70,7 @@ enum OffscreenSnapshot {
     ///   - size: the render size, in points.
     ///   - appearance: light or dark. Set on the window, the hosting view, and
     ///     the SwiftUI environment.
+    ///   - highContrast: use the system high-contrast AppKit appearance.
     /// - Returns: what was written, including the check that it is not blank.
     /// - Throws: ``Failure`` when the bitmap or the PNG encoding is refused, or
     ///   when the file cannot be written.
@@ -77,9 +78,31 @@ enum OffscreenSnapshot {
         _ view: some View,
         named name: String,
         size: CGSize,
+        appearance: SnapshotAppearance,
+        highContrast: Bool = false
+    ) throws -> RenderedSnapshot {
+        let rep = try render(view, size: size, appearance: appearance, highContrast: highContrast)
+        return try save(rep, named: name, size: size, appearance: appearance)
+    }
+
+    /// Actor-backed parser and Undo reads need a real concurrency suspension,
+    /// rather than only synchronous run-loop passes, before native rasterization.
+    static func writeSettled(
+        _ view: some View, named name: String, size: CGSize, appearance: SnapshotAppearance
+    ) async throws -> RenderedSnapshot {
+        let surface = makeSurface(view, size: size, appearance: appearance, highContrast: false)
+        defer { surface.close() }
+        settle(surface.hosting)
+        try await _Concurrency.Task.sleep(for: .milliseconds(350))
+        settle(surface.hosting)
+        let rep = try bitmap(size: size)
+        surface.hosting.cacheDisplay(in: surface.hosting.bounds, to: rep)
+        return try save(rep, named: name, size: size, appearance: appearance)
+    }
+    private static func save(
+        _ rep: NSBitmapImageRep, named name: String, size: CGSize,
         appearance: SnapshotAppearance
     ) throws -> RenderedSnapshot {
-        let rep = try render(view, size: size, appearance: appearance)
         guard let png = rep.representation(using: .png, properties: [:]) else {
             throw Failure.pngEncodingRefused(name)
         }
@@ -101,11 +124,45 @@ enum OffscreenSnapshot {
     private static func render(
         _ view: some View,
         size: CGSize,
-        appearance: SnapshotAppearance
+        appearance: SnapshotAppearance,
+        highContrast: Bool
     ) throws -> NSBitmapImageRep {
+        let surface = makeSurface(
+            view, size: size, appearance: appearance, highContrast: highContrast)
+        defer { surface.close() }
+        settle(surface.hosting)
+        let rep = try bitmap(size: size)
+        surface.hosting.cacheDisplay(in: surface.hosting.bounds, to: rep)
+        return rep
+    }
+    private struct Surface {
+        let hosting: NSView
+        let window: NSWindow
+        let previousAppearance: NSAppearance?
+        func close() {
+            window.contentView = nil
+            window.close()
+            NSApplication.shared.appearance = previousAppearance
+        }
+    }
+    private static func makeSurface(
+        _ view: some View, size: CGSize,
+        appearance: SnapshotAppearance, highContrast: Bool
+    ) -> Surface {
         prepareApplication()
 
-        let nsAppearance = NSAppearance(named: appearance.appearanceName)
+        let appearanceName =
+            highContrast
+            ? (appearance == .dark
+                ? NSAppearance.Name.accessibilityHighContrastDarkAqua
+                : NSAppearance.Name.accessibilityHighContrastAqua)
+            : appearance.appearanceName
+        let nsAppearance = NSAppearance(named: appearanceName)
+        // Bridged sidebar labels use the test application's semantic appearance.
+        // Scope it to this native render; setting only the hosting window leaves
+        // native control text in the process's initial light appearance.
+        let previousAppearance = NSApplication.shared.appearance
+        NSApplication.shared.appearance = nsAppearance
         let hosting = NSHostingView(
             rootView:
                 view
@@ -133,13 +190,7 @@ enum OffscreenSnapshot {
         window.appearance = nsAppearance
         window.contentView = hosting
 
-        settle(hosting)
-
-        let rep = try bitmap(size: size)
-        hosting.cacheDisplay(in: hosting.bounds, to: rep)
-        window.contentView = nil
-        window.close()
-        return rep
+        return Surface(hosting: hosting, window: window, previousAppearance: previousAppearance)
     }
 
     /// Give AppKit and SwiftUI the passes they need before the tree is stable.
@@ -151,7 +202,7 @@ enum OffscreenSnapshot {
     ///
     /// A bounded number of turns rather than a sleep: this yields to the main
     /// run loop and returns as soon as it has nothing left to do.
-    private static func settle(_ hosting: NSHostingView<some View>) {
+    private static func settle(_ hosting: NSView) {
         for _ in 0..<8 {
             hosting.layoutSubtreeIfNeeded()
             hosting.displayIfNeeded()
@@ -219,8 +270,8 @@ enum OffscreenSnapshot {
     /// raw buffer: `bitmapData` is an `UnsafeMutablePointer`, and this package
     /// builds with strict memory safety on.
     private static func distinctColors(in rep: NSBitmapImageRep) -> Int {
-        let strideX = max(1, rep.pixelsWide / 40)
-        let strideY = max(1, rep.pixelsHigh / 40)
+        let strideX = max(1, rep.pixelsWide / 160)
+        let strideY = max(1, rep.pixelsHigh / 160)
         var seen: Set<Int> = []
         for y in stride(from: 0, to: rep.pixelsHigh, by: strideY) {
             for x in stride(from: 0, to: rep.pixelsWide, by: strideX) {

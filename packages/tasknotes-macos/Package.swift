@@ -65,10 +65,11 @@ let package = Package(
     name: "TaskNotesMac",
     // macOS 15 is the deployment target decided in the plan, and matches the
     // `MACOSX_DEPLOYMENT_TARGET` the Rust xtask pins.
-    platforms: [.macOS(.v15)],
+    platforms: [.macOS(.v15), .iOS(.v18)],
     products: [
         .library(name: "TaskNotesKit", targets: ["TaskNotesKit"]),
         .library(name: "TaskNotesMac", targets: ["TaskNotesMac"]),
+        .library(name: "TaskNotesFacetUI", targets: ["TaskNotesFacetUI"]),
     ],
     dependencies: [
         // The committed bindings package. `cargo xtask build-xcframework`
@@ -140,7 +141,28 @@ let package = Package(
         .target(
             name: "TaskNotesKit",
             dependencies: ["TaskNotesUniFFI"],
+            resources: [
+                .copy("Vault/FacetContractSchema.json"),
+                .copy("Presentation/FacetPresentationTokens.json"),
+                .copy("Presentation/FacetPresentationSchema.json"),
+                .copy("Presentation/FacetColorPolicy.json"),
+                .copy("Presentation/FacetFeedbackPolicy.json"),
+                .copy("Presentation/FacetFeedbackSchema.json"),
+            ],
             swiftSettings: authoredSwiftSettings + [.defaultIsolation(nil)]
+        ),
+
+        .target(
+            name: "TaskNotesFacetUI",
+            dependencies: ["TaskNotesKit"],
+            resources: [
+                .copy("Presentation/Sounds/complete.wav"),
+                .copy("Presentation/Sounds/create.wav"),
+                .copy("Presentation/Sounds/delete.wav"),
+                .copy("Presentation/Sounds/reverse.wav"),
+                .copy("Presentation/Sounds/palette.json"),
+            ],
+            swiftSettings: authoredSwiftSettings + [.defaultIsolation(MainActor.self)]
         ),
 
         // ── SwiftUI shell. ────────────────────────────────────────────────
@@ -153,6 +175,7 @@ let package = Package(
             dependencies: [
                 "TaskNotesKit",
                 "TaskNotesUniFFI",
+                "TaskNotesFacetUI",
                 // Only this target. The hotkey library imports Cocoa, so it can
                 // never reach `TaskNotesKit` without breaking the
                 // no-UI-imports rule `ci/no-suppressions.sh` enforces.
@@ -180,12 +203,16 @@ let package = Package(
         .target(
             name: "TaskNotesTestSupport",
             path: "Tests/Support",
+            exclude: ["socket-boundary.mjs"],
             swiftSettings: authoredSwiftSettings + [.defaultIsolation(nil)]
         ),
 
         .testTarget(
             name: "TaskNotesKitTests",
             dependencies: ["TaskNotesKit", "TaskNotesTestSupport", "TaskNotesUniFFI"],
+            resources: [
+                .copy("Fixtures/warning-cases.json")
+            ],
             swiftSettings: authoredSwiftSettings + [.defaultIsolation(nil)]
         ),
 
@@ -206,8 +233,10 @@ let package = Package(
         .testTarget(
             name: "TaskNotesMacTests",
             dependencies: [
-                "TaskNotesMac", "TaskNotesKit", "TaskNotesTestSupport", "TaskNotesUniFFI",
+                "TaskNotesMac", "TaskNotesKit", "TaskNotesFacetUI", "TaskNotesTestSupport",
+                "TaskNotesUniFFI",
             ],
+            resources: [],
             swiftSettings: authoredSwiftSettings + [.defaultIsolation(MainActor.self)]
         ),
     ]

@@ -36,13 +36,11 @@ type Props = {
   readonly availableProjects: readonly string[];
   readonly availableContexts: readonly string[];
   readonly availableTags: readonly string[];
-  readonly validationField: "title" | "recurrence" | "timeEstimate" | null;
+  readonly validationField: "title" | "recurrence" | null;
   readonly validationMessage: string | null;
   readonly isWorking: boolean;
-  readonly isTracking: boolean;
   readonly onChange: (draft: TaskDetailDraft) => void;
   readonly onToggleCompletion: () => void;
-  readonly onToggleTracking: () => void;
   readonly onDelete: () => void;
 };
 
@@ -56,10 +54,8 @@ export function TaskDetailEditor({
   validationField,
   validationMessage,
   isWorking,
-  isTracking,
   onChange,
   onToggleCompletion,
-  onToggleTracking,
   onDelete,
 }: Props) {
   const { colors } = useSettings();
@@ -136,10 +132,8 @@ export function TaskDetailEditor({
 
         <TaskDetailTaskActions
           task={task}
-          isTracking={isTracking}
           isWorking={isWorking}
           onToggleCompletion={onToggleCompletion}
-          onToggleTracking={onToggleTracking}
         />
 
         <SectionTitle>Plan</SectionTitle>
@@ -225,48 +219,8 @@ export function TaskDetailEditor({
           onChange={onChange}
         />
 
-        <SectionTitle>Time & Dependencies</SectionTitle>
+        <SectionTitle>Dependencies</SectionTitle>
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
-          <View style={styles.formRow}>
-            <View style={styles.rowLabelGroup}>
-              <AppIcon name="clock" size={19} color={colors.textSecondary} />
-              <Text style={[typography.body, { color: colors.text }]}>
-                Estimate
-              </Text>
-            </View>
-            <TextInput
-              style={[styles.estimateInput, { color: colors.text }]}
-              value={draft.timeEstimate}
-              onChangeText={(timeEstimate) => {
-                onChange({ ...draft, timeEstimate });
-              }}
-              placeholder="None"
-              placeholderTextColor={colors.textTertiary}
-              keyboardType="decimal-pad"
-              inputMode="decimal"
-              editable={!isWorking}
-              accessibilityLabel="Time estimate in minutes"
-              testID="task-detail-estimate-input"
-            />
-            <Text
-              style={[typography.bodySmall, { color: colors.textSecondary }]}
-            >
-              min
-            </Text>
-          </View>
-          {validationField === "timeEstimate" && validationMessage ? (
-            <Text
-              style={[
-                typography.caption,
-                styles.fieldError,
-                { color: colors.error },
-              ]}
-              accessibilityRole="alert"
-              testID="task-detail-validation"
-            >
-              {validationMessage}
-            </Text>
-          ) : null}
           {task.isBlocked || task.blockedBy.length > 0 ? (
             <>
               <Divider color={colors.borderLight} />

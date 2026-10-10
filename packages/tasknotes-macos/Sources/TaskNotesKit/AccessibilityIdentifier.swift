@@ -310,9 +310,6 @@ public enum AccessibilityIdentifier {
             "\(recurrenceAnchor).\(value)"
         }
 
-        /// The time-estimate field.
-        public static let timeEstimate = "\(namespace).inspector.timeEstimate"
-
         /// The rendered note body.
         public static let details = "\(namespace).inspector.details"
 
@@ -352,47 +349,6 @@ public enum AccessibilityIdentifier {
 
         /// The Settings control that rebinds the global hotkey.
         public static let shortcutRecorder = "\(namespace).quickAdd.shortcut"
-    }
-
-    /// The pomodoro timer and the time report, which are windows of their own.
-    public enum Timing {
-        /// The pomodoro window's root.
-        public static let pomodoro = "\(namespace).pomodoro"
-
-        /// The countdown itself.
-        public static let countdown = "\(namespace).pomodoro.countdown"
-
-        /// The window's primary control.
-        ///
-        /// One identifier rather than one per verb, because it is one button:
-        /// Start, Pause, Resume and Start Break are four states of the same
-        /// control, and a test that had to guess which identifier was present
-        /// would be asserting on the label it can already read.
-        public static let primary = "\(namespace).pomodoro.primary"
-
-        /// The control that abandons the interval.
-        public static let stop = "\(namespace).pomodoro.stop"
-
-        /// The picker naming the task the interval is against.
-        public static let subject = "\(namespace).pomodoro.subject"
-
-        /// The picker choosing between a focus and a rest interval.
-        public static let phase = "\(namespace).pomodoro.phase"
-
-        /// The time-report window's root.
-        public static let report = "\(namespace).timeReport"
-
-        /// The report's grand total.
-        public static let reportTotal = "\(namespace).timeReport.total"
-
-        /// One task's row in the report, keyed by task id for the same reason a
-        /// list row is.
-        public static func reportRow(_ taskId: String) -> String {
-            "\(namespace).timeReport.row.\(taskId)"
-        }
-
-        /// The report's empty state.
-        public static let reportEmpty = "\(namespace).timeReport.empty"
     }
 
     /// The Kanban board.

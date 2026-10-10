@@ -54,12 +54,6 @@ export const ReminderSchema = z.object({
   absoluteTime: z.string().optional(),
 });
 
-export const InlineTimeEntrySchema = z.object({
-  startTime: z.string(),
-  endTime: z.string().optional(),
-  duration: z.number().optional(),
-});
-
 export const TaskSchema = z.object({
   id: z.string(),
   path: z.string().default(""),
@@ -78,12 +72,9 @@ export const TaskSchema = z.object({
   completedDate: z.string().optional(),
   dateCreated: z.string().optional(),
   dateModified: z.string().optional(),
-  timeEstimate: z.number().optional(),
-  timeEntries: z.array(InlineTimeEntrySchema).default([]),
   blockedBy: z.array(BlockedByEntrySchema).default([]),
   reminders: z.array(ReminderSchema).default([]),
   archived: z.boolean().default(false),
-  totalTrackedTime: z.number().default(0),
   isBlocked: z.boolean().default(false),
   isBlocking: z.boolean().default(false),
   googleCalendarEventId: z.string().optional(),
@@ -107,7 +98,6 @@ export const CreateTaskRequestSchema = z.object({
   tags: z.array(z.string()).optional(),
   recurrence: z.string().optional(),
   recurrenceAnchor: RecurrenceAnchorSchema.optional(),
-  timeEstimate: z.number().optional(),
   extraFields: z.record(z.string(), z.unknown()).optional(),
 });
 export type CreateTaskRequest = z.infer<typeof CreateTaskRequestSchema>;
@@ -125,7 +115,6 @@ export const UpdateTaskRequestSchema = z.object({
   tags: z.array(z.string()).optional(),
   recurrence: z.string().nullable().optional(),
   recurrenceAnchor: RecurrenceAnchorSchema.nullable().optional(),
-  timeEstimate: z.number().nullable().optional(),
   extraFields: z.record(z.string(), z.unknown()).optional(),
 });
 export type UpdateTaskRequest = z.infer<typeof UpdateTaskRequestSchema>;
@@ -152,7 +141,6 @@ export const TaskStatsSchema = z.object({
   active: z.number(),
   overdue: z.number(),
   archived: z.number(),
-  withTimeTracking: z.number(),
 });
 export type TaskStats = z.infer<typeof TaskStatsSchema>;
 
@@ -174,16 +162,6 @@ export const NlpParseResultSchema = z.object({
   recurrence: z.string().optional(),
 });
 export type NlpParseResult = z.infer<typeof NlpParseResultSchema>;
-
-// ── Pomodoro ───────────────────────────────────────────────────
-
-export const PomodoroStatusSchema = z.object({
-  active: z.boolean(),
-  taskId: z.string().optional(),
-  timeRemaining: z.number().optional(),
-  type: z.enum(["work", "break"]).optional(),
-});
-export type PomodoroStatus = z.infer<typeof PomodoroStatusSchema>;
 
 // ── Calendar ───────────────────────────────────────────────────
 

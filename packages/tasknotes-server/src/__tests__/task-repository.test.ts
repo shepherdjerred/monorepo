@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, test } from "vitest";
-import { mkdtemp, writeFile, mkdir } from "node:fs/promises";
+import { mkdtemp, readFile, writeFile, mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { resolveModelConfig } from "tasknotes-types/v2";
+import { parseFrontmatter, resolveModelConfig } from "tasknotes-types/v2";
 
 import {
   NotRecurringError,
@@ -53,6 +53,47 @@ beforeEach(async () => {
 });
 
 describe("tolerant read path", () => {
+  test("ordinary edits and completion preserve opaque retired metadata", async () => {
+    const legacy = `---
+title: Legacy task
+status: open
+priority: normal
+tags: [task]
+timeEstimate: vendor-value
+timeEntries:
+  - startTime: "2026-07-03T11:00:00Z"
+    duration: 123.456789
+    vendor: kept
+  - malformed-vendor-entry
+totalTrackedTime: unknown
+pomodoro: {vendor: opaque}
+---
+Keep body.
+`;
+    const file = "TaskNotes/legacy.md";
+    await seed(file, legacy);
+    await repo.scan();
+    expect(repo.skippedFiles()).toEqual([]);
+    const original = parseFrontmatter(legacy);
+    await repo.update(file, { title: "Renamed" });
+    await repo.update(file, { status: "done" });
+    const saved = parseFrontmatter(
+      await readFile(path.join(vault, file), "utf8"),
+    );
+    for (const key of [
+      "timeEstimate",
+      "timeEntries",
+      "totalTrackedTime",
+      "pomodoro",
+    ]) {
+      expect(saved.frontmatter[key]).toEqual(original.frontmatter[key]);
+      expect(Object.hasOwn(repo.get(file)?.task ?? {}, key)).toBe(false);
+    }
+    expect(saved.frontmatter["title"]).toBe("Renamed");
+    expect(saved.frontmatter["status"]).toBe("done");
+    expect(saved.body).toBe(original.body);
+  });
+
   test("a plugin-authored, tag-identified file (no id key) is visible", async () => {
     await seed("TaskNotes/plugin-task.md", PLUGIN_AUTHORED);
     await repo.scan();
@@ -640,33 +681,3 @@ function ymdOf(date: Date): string {
   const day = String(date.getDate()).padStart(2, "0");
   return `${String(date.getFullYear())}-${month}-${day}`;
 }
-
-describe("time tracking mutations", () => {
-  test("start opens a session in frontmatter; double-start is a 400-class error", async () => {
-    await seed("TaskNotes/plugin-task.md", PLUGIN_AUTHORED);
-    await repo.scan();
-    const started = await repo.startTime("TaskNotes/plugin-task.md");
-    expect(started.timeEntries).toHaveLength(1);
-    expect(started.timeEntries?.[0]?.startTime).toBe(NOW.toISOString());
-    expect(started.timeEntries?.[0]?.endTime).toBeUndefined();
-    await expect(repo.startTime("TaskNotes/plugin-task.md")).rejects.toThrow(
-      "already active",
-    );
-    // The session is in the FILE (plugin-visible), not a side-store.
-    const raw = await Bun.file(
-      path.join(vault, "TaskNotes/plugin-task.md"),
-    ).text();
-    expect(raw).toContain("timeEntries");
-  });
-
-  test("stop closes the session; stop without one is a 400-class error", async () => {
-    await seed("TaskNotes/plugin-task.md", PLUGIN_AUTHORED);
-    await repo.scan();
-    await repo.startTime("TaskNotes/plugin-task.md");
-    const stopped = await repo.stopTime("TaskNotes/plugin-task.md");
-    expect(stopped.timeEntries?.[0]?.endTime).toBe(NOW.toISOString());
-    await expect(repo.stopTime("TaskNotes/plugin-task.md")).rejects.toThrow(
-      "No active",
-    );
-  });
-});

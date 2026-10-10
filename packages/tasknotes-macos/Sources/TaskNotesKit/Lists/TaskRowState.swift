@@ -296,7 +296,6 @@ extension UpdateTaskRequest {
             tags: nil,
             recurrence: .unchanged,
             recurrenceAnchor: .unchanged,
-            timeEstimate: .unchanged,
             extraFields: nil
         )
     }
@@ -318,7 +317,6 @@ extension UpdateTaskRequest {
             tags: nil,
             recurrence: .unchanged,
             recurrenceAnchor: .unchanged,
-            timeEstimate: .unchanged,
             extraFields: nil
         )
     }

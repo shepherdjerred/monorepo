@@ -277,9 +277,6 @@ fn iso_millis(millis: i64) -> Option<String> {
 /// during rebase, which is how an offline create used to vanish from the list
 /// the instant anything else recomputed it.
 ///
-/// Note that `timeEstimate` is deliberately **not** carried across, mirroring
-/// the TypeScript `materializeCreate` exactly: the value is still sent to the
-/// server with the create, it simply is not shown optimistically.
 #[must_use]
 pub fn materialize_create(temp_id: &TaskId, created_at: i64, payload: &CreateTaskRequest) -> Task {
     let now = iso_millis(created_at);
@@ -301,12 +298,9 @@ pub fn materialize_create(temp_id: &TaskId, created_at: i64, payload: &CreateTas
         completed_date: None,
         date_created: now.clone(),
         date_modified: now,
-        time_estimate: None,
-        time_entries: Vec::new(),
         blocked_by: Vec::new(),
         reminders: Vec::new(),
         archived: false,
-        total_tracked_time: 0,
         is_blocked: false,
         is_blocking: false,
         extra_fields: payload.extra_fields.clone().unwrap_or_default(),
@@ -350,7 +344,6 @@ fn apply_update(task: &mut Task, payload: &UpdateTaskRequest) {
     task.recurrence_anchor = payload
         .recurrence_anchor
         .apply(task.recurrence_anchor.take());
-    task.time_estimate = payload.time_estimate.apply(task.time_estimate.take());
     if let Some(ref extra_fields) = payload.extra_fields {
         task.extra_fields = extra_fields.clone();
     }

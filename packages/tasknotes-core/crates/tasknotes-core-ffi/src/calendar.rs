@@ -210,7 +210,7 @@ pub fn calendar_month_grid(month: CalendarMonthRef) -> Result<Vec<CalendarWeek>,
                 Ok(CalendarWeek { cells })
             } else {
                 Err(CoreError::Invariant {
-                    message: format!(
+                    detail: format!(
                         "a calendar row must hold {DAYS_PER_WEEK} cells, got {}",
                         cells.len()
                     ),
@@ -313,7 +313,7 @@ mod tests {
         })
         .unwrap_err();
         assert!(
-            matches!(error, CoreError::Invariant { ref message } if message.contains("1..=12")),
+            matches!(error, CoreError::Invariant { detail: ref message } if message.contains("1..=12")),
             "unexpected error: {error:?}"
         );
     }

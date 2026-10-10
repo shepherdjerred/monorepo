@@ -1,3 +1,4 @@
+using System.Text;
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
@@ -12,39 +13,42 @@ using Windows.Graphics;
 namespace TaskNotes.Windows.App
 {
     /// <summary>Hosts every native TaskNotes destination and auxiliary-window command.</summary>
-    public sealed partial class MainWindow : Window
+    public sealed partial class MainWindow : Window, System.IAsyncDisposable
     {
-        private static readonly string[] PriorityOptions = ["none", "low", "normal", "high"];
+        private static readonly string[] ConflictVersions = ["base", "local", "remote"];
         private readonly AsyncManualResetEvent _initialized = new();
         private readonly AppSettingsService _settings;
         private readonly ILogger<MainWindow> _logger;
         private readonly UiOperationQueue _uiOperations;
         private readonly QuickAddViewModel _quickAdd;
+        private readonly QuickAddViewModel _inlineQuickAdd;
         private readonly TaskEditorViewModel _taskEditor;
-        private readonly SettingsViewModel _settingsViewModel;
+        private readonly FacetSettingsViewModel _settingsViewModel;
         private readonly GlobalHotkeyViewModel _globalHotkey;
-        private readonly PomodoroViewModel _pomodoro;
-        private readonly TimeReportViewModel _timeReport;
+        private readonly FacetReminderDelivery _reminders;
         private TaskListQuery _query = TaskListQuery.Today;
-        private PomodoroWindow? _pomodoroWindow;
-        private TimeReportWindow? _timeReportWindow;
         private bool _loaded;
         private string _navigationRoute = "today";
+        private bool _showingSavedView;
+        private string? _savedViewActionId;
+        private string? _savedViewProfile;
+        private string? _submittedViewId;
+        private string _savedViewName = "";
+        private bool _savedViewFavorite;
+        private bool _savedViewNeedsObservation;
         private CancellationTokenSource? SearchCancellation { get; set; }
 
         /// <summary>Initializes the packaged application window and shared store.</summary>
         internal MainWindow(
-            TaskNotesStore store,
+            FacetTaskNotesStore store,
             ShellViewModel viewModel,
             AppSettingsService settings,
             ILogger<MainWindow> logger,
             UiOperationQueue uiOperations,
             QuickAddViewModel quickAdd,
             TaskEditorViewModel taskEditor,
-            SettingsViewModel settingsViewModel,
-            GlobalHotkeyViewModel globalHotkey,
-            PomodoroViewModel pomodoro,
-            TimeReportViewModel timeReport
+            FacetSettingsViewModel settingsViewModel,
+            GlobalHotkeyViewModel globalHotkey
         )
         {
             Store = store ?? throw new ArgumentNullException(nameof(store));
@@ -53,13 +57,16 @@ namespace TaskNotes.Windows.App
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _uiOperations = uiOperations ?? throw new ArgumentNullException(nameof(uiOperations));
             _quickAdd = quickAdd ?? throw new ArgumentNullException(nameof(quickAdd));
+            _inlineQuickAdd = new QuickAddViewModel(store);
             _taskEditor = taskEditor ?? throw new ArgumentNullException(nameof(taskEditor));
             _settingsViewModel =
                 settingsViewModel ?? throw new ArgumentNullException(nameof(settingsViewModel));
             _globalHotkey = globalHotkey ?? throw new ArgumentNullException(nameof(globalHotkey));
-            _pomodoro = pomodoro ?? throw new ArgumentNullException(nameof(pomodoro));
-            _timeReport = timeReport ?? throw new ArgumentNullException(nameof(timeReport));
+            _reminders = new FacetReminderDelivery(Store);
             InitializeComponent();
+            InitializeFeedback();
+            TaskWorkspace.QuickAddViewModel = _inlineQuickAdd;
+            TaskWorkspace.Composer.Initialize(_uiOperations, RunUiOperationAsync);
             BoardDestination.Initialize(_uiOperations, RunUiOperationAsync);
             TaskWorkspace.Editor.Initialize(
                 _uiOperations,
@@ -67,13 +74,16 @@ namespace TaskNotes.Windows.App
                 ConfirmAsync,
                 ShowValidationMessage
             );
-            TaskWorkspace.OpenPomodoroRequested += OpenPomodoro_Click;
-            TaskWorkspace.OpenTimeReportRequested += OpenTimeReport_Click;
             TaskWorkspace.RefreshRequested += Refresh_Click;
             TaskWorkspace.SearchChanged += SearchBox_TextChanged;
             TaskWorkspace.SearchSubmitted += SearchBox_QuerySubmitted;
             TaskWorkspace.SortChanged += SortComboBox_SelectionChanged;
             TaskWorkspace.GroupChanged += GroupComboBox_SelectionChanged;
+            TaskWorkspace.QueryChanged += query =>
+                _uiOperations.Run("change-filter", () => ApplyQueryAsync(query));
+            TaskWorkspace.InlineAddRequested += InlineAdd_Click;
+            TaskWorkspace.InspectorRequested += Inspector_Click;
+            TaskWorkspace.ScheduleTaskRequested += ScheduleTask_Click;
             TaskWorkspace.SaveViewRequested += SaveView_Click;
             TaskWorkspace.NewTaskRequested += NewTask_Click;
             TaskWorkspace.CompleteSelectedRequested += CompleteSelected_Click;
@@ -87,6 +97,16 @@ namespace TaskNotes.Windows.App
             TaskWorkspace.DeleteTaskRequested += DeleteTask_Click;
             TaskWorkspace.MoveStatusRequested += MoveStatus_Click;
             SettingsDestination.SaveRequested += SaveSettings_Click;
+            SettingsDestination.ConnectVaultRequested += ConnectVault_Click;
+            SettingsDestination.SelectProfileRequested += SelectProfile_Click;
+            SettingsDestination.RemoveProfileRequested += RemoveProfile_Click;
+            SettingsDestination.LocalFolderRequested += LocalFolder_Click;
+            SettingsDestination.SignOutRequested += SignOut_Click;
+            SettingsDestination.ReauthorizeRequested += Reauthorize_Click;
+            SettingsDestination.EnableRemindersRequested += EnableReminders_Click;
+            SettingsDestination.DisableRemindersRequested += DisableReminders_Click;
+            SettingsDestination.EnableBackgroundSyncRequested += EnableBackgroundSync_Click;
+            SettingsDestination.DisableBackgroundSyncRequested += DisableBackgroundSync_Click;
             SettingsDestination.ApplyHotkeyRequested += RegisterHotkey_Click;
             SettingsDestination.ClearHotkeyRequested += ClearHotkey_Click;
             SettingsDestination.CreateSavedViewRequested += CreateSavedView_Click;
@@ -96,6 +116,9 @@ namespace TaskNotes.Windows.App
             SettingsDestination.DeleteSavedViewRequested += DeleteSavedView_Click;
             SettingsDestination.RetryParkedRequested += RetryParked_Click;
             SettingsDestination.DiscardParkedRequested += DiscardParked_Click;
+            SettingsDestination.ResumeActionRequested += ResumeAction_Click;
+            SettingsDestination.RetireActionRequested += RetireAction_Click;
+            SettingsDestination.ReviewConflictRequested += ReviewConflict_Click;
 #if TASKNOTES_E2E
             Title = "TaskNotes E2E";
             AppTitleBar.Title = "TaskNotes E2E";
@@ -109,10 +132,50 @@ namespace TaskNotes.Windows.App
         }
 
         /// <summary>Gets the UI-facing serialized Rust engine store.</summary>
-        public TaskNotesStore Store { get; }
+        public FacetTaskNotesStore Store { get; }
 
         /// <summary>Gets the portable shell presentation model.</summary>
         public ShellViewModel ViewModel { get; }
+
+        internal async Task<bool> ConfirmCloseAsync()
+        {
+            if (
+                _quickAdd.IsSubmitting
+                || _inlineQuickAdd.IsSubmitting
+                || _quickAdd.RecoveryActionId is not null
+                || _inlineQuickAdd.RecoveryActionId is not null
+                || _quickAdd.NeedsObservation
+                || _inlineQuickAdd.NeedsObservation
+            )
+            {
+                ShowValidationMessage(
+                    "Finish or review the exact submitted capture in Settings recovery before closing."
+                );
+                return false;
+            }
+            if (!await TaskWorkspace.Editor.ConfirmDiscardAsync())
+                return false;
+            if (!_quickAdd.HasDraft && !_inlineQuickAdd.HasDraft)
+                return true;
+            if (!await ConfirmAsync("Discard unsaved capture drafts and close?"))
+                return false;
+            return _quickAdd.DiscardDraft() && _inlineQuickAdd.DiscardDraft();
+        }
+
+        /// <summary>Fence and drain owned reminder effects before the store and writer lease close.</summary>
+        public async ValueTask DisposeAsync()
+        {
+            await _reminders.DisposeAsync().ConfigureAwait(false);
+            GC.SuppressFinalize(this);
+        }
+
+        internal void DisableInteractions()
+        {
+            Navigation.IsEnabled = false;
+            TaskWorkspace.IsEnabled = false;
+            SettingsDestination.IsEnabled = false;
+            ReleaseResources();
+        }
 
         /// <summary>Navigates an activated application instance to a TaskNotes protocol URI.</summary>
         public async Task ActivateRouteAsync(Uri uri)
@@ -148,18 +211,46 @@ namespace TaskNotes.Windows.App
                 case "quick-add":
                     await ShowQuickAddAsync(activation.Query ?? string.Empty);
                     break;
-                case "pomodoro":
-                    await ShowPomodoroAsync();
-                    break;
-                case "time-report":
-                    await ShowTimeReportAsync();
-                    break;
                 case "tasks":
+                    if (!await TaskWorkspace.Editor.ConfirmDiscardAsync())
+                        return;
+                    string? owningProfile = QueryParameter(routeUri, "profile");
+                    if (owningProfile is not null)
+                    {
+                        if (!Store.Profiles.Any(profile => profile.Id == owningProfile))
+                        {
+                            ShowValidationMessage(
+                                "The reminder's vault is no longer available on this device."
+                            );
+                            return;
+                        }
+                        if (Store.SelectedProfileId != owningProfile)
+                        {
+                            if (
+                                !await RunUiOperationAsync(() =>
+                                    Store.SelectProfileAsync(owningProfile)
+                                )
+                            )
+                                return;
+                            TaskWorkspace.Editor.Clear();
+                        }
+                    }
                     await NavigateAsync("browse");
-                    if (activation.Value is string taskId && FindTask(taskId) is TaskItem task)
+                    TaskItem? activatedTask = owningProfile is null
+                        ? activation.Value is string taskId
+                            ? FindTask(taskId)
+                            : null
+                        : Store.State.AllTasks.SingleOrDefault(task =>
+                            task.VaultPath == activation.Value && task.ProfileId == owningProfile
+                        );
+                    if (activatedTask is TaskItem task)
                     {
                         TaskWorkspace.Editor.Load(task);
                     }
+                    else if (owningProfile is not null)
+                        ShowValidationMessage(
+                            "The reminder's task has moved or is no longer available. Refresh its vault to review it."
+                        );
                     break;
                 case "projects":
                 case "contexts":
@@ -224,7 +315,17 @@ namespace TaskNotes.Windows.App
 
         private async Task InitializeMainWindowAsync()
         {
-            ShellPreferences shell = _settings.LoadShell();
+            ShellPreferences? shell = await LoadShellWithRecoveryAsync();
+            if (shell is null)
+            {
+                _initialized.Set();
+                Close();
+                return;
+            }
+            _taskSounds = shell.TaskSounds;
+            SettingsDestination.SetTaskSounds(_taskSounds);
+            if (_taskSounds)
+                PrepareNativeFeedback();
             AppWindow.Resize(
                 new SizeInt32(
                     checked((int)Math.Clamp(shell.WindowWidth, 800, 3840)),
@@ -234,18 +335,14 @@ namespace TaskNotes.Windows.App
             SettingsDestination.Hotkey = shell.QuickAddHotkey;
             InitializeGlobalHotkey(shell.QuickAddHotkey);
 
-            ServerConfiguration configuration = _settings.Load();
-            SettingsDestination.ServerUrl = configuration.ServerUrl ?? string.Empty;
-            SettingsDestination.Token = configuration.Token ?? string.Empty;
-            bool initialized = await RunUiOperationAsync(() =>
-                Store.InitializeAsync(configuration.ServerUrl, configuration.Token)
-            );
+            bool initialized = await RunUiOperationAsync(() => Store.InitializeAsync(null, null));
             if (!initialized)
             {
                 _initialized.Set();
                 return;
             }
             await NavigateAsync(shell.NavigationRoute);
+            await _settingsViewModel.ReloadAsync();
             TaskWorkspace.InspectorVisible = shell.InspectorVisible;
             _initialized.Set();
         }
@@ -260,15 +357,13 @@ namespace TaskNotes.Windows.App
                     TaskWorkspace.InspectorVisible,
                     SettingsDestination.Hotkey.Trim(),
                     AppWindow.Size.Width,
-                    AppWindow.Size.Height
+                    AppWindow.Size.Height,
+                    _taskSounds
                 )
             );
             ReleaseResources();
             ViewModel.Dispose();
             _settingsViewModel.Dispose();
-            _pomodoroWindow?.Close();
-            _timeReportWindow?.Close();
-            _uiOperations.Run("dispose-main-window", async () => await Store.DisposeAsync());
         }
 
         private void Store_StateChanged(object? sender, EventArgs e)
@@ -293,6 +388,9 @@ namespace TaskNotes.Windows.App
                 state.CanUndoCompletion
             );
             SettingsDestination.ConnectionStatus = statusMessage;
+            TaskWorkspace.SetSavedNotice(ViewModel.SavedNotice, ViewModel.SavedMaintenance);
+            SettingsDestination.SetBackgroundStatus(FacetBackgroundRegistration.Status);
+            SettingsDestination.SetReminderStatus(FacetReminderDelivery.Status);
             UpdateDynamicNavigation(state);
             TaskWorkspace.Editor.Refresh(state);
         }
@@ -305,16 +403,6 @@ namespace TaskNotes.Windows.App
             _ = sender;
             if (args.InvokedItemContainer?.Tag is not string destination)
             {
-                return;
-            }
-            if (destination == "pomodoro")
-            {
-                _uiOperations.Run("open-pomodoro", ShowPomodoroAsync);
-                return;
-            }
-            if (destination == "time-report")
-            {
-                _uiOperations.Run("open-time-report", ShowTimeReportAsync);
                 return;
             }
             _uiOperations.Run("navigate", () => NavigateAsync(destination));
@@ -339,7 +427,7 @@ namespace TaskNotes.Windows.App
             if (ViewModel.Route.Destination == PresentationDestination.Settings)
             {
                 SettingsDestination.Visibility = Visibility.Visible;
-                SettingsDestination.FocusServerUrl();
+                SettingsDestination.FocusAccount();
                 return;
             }
             if (ViewModel.Route.Destination == PresentationDestination.Board)
@@ -360,6 +448,8 @@ namespace TaskNotes.Windows.App
         private async Task ApplyQueryAsync(TaskListQuery query)
         {
             _query = query;
+            if (!_inlineQuickAdd.HasDraft)
+                _inlineQuickAdd.SetContext(query);
             TaskWorkspace.SetQueryControls(query);
             _ = await RunUiOperationAsync(() => ViewModel.ApplyQueryAsync(query));
         }
@@ -419,63 +509,29 @@ namespace TaskNotes.Windows.App
             _uiOperations.Run("open-quick-add", () => ShowQuickAddAsync(string.Empty));
         }
 
-        private async Task ShowQuickAddAsync(string initialText)
-        {
-            _quickAdd.SetContext(_query);
-            _quickAdd.Input = initialText;
-            bool addAnother;
-            do
-            {
-                QuickAddView content = new() { ViewModel = _quickAdd };
-                content.Initialize(_uiOperations, RunUiOperationAsync);
-                ContentDialog dialog = new()
-                {
-                    XamlRoot = RootGrid.XamlRoot,
-                    Title = "Quick Add",
-                    Content = content,
-                    PrimaryButtonText = "Save",
-                    SecondaryButtonText = "Save & Add Another",
-                    CloseButtonText = "Cancel",
-                    DefaultButton = ContentDialogButton.Primary,
-                };
-                AutomationProperties.SetAutomationId(dialog, "TaskNotes.QuickAdd.Dialog");
-                dialog.Opened += (_, _) => content.FocusInput();
-                ContentDialogResult result = await dialog.ShowAsync();
-                addAnother = result == ContentDialogResult.Secondary;
-                if (result is ContentDialogResult.Primary or ContentDialogResult.Secondary)
-                {
-                    bool modelSaved = false;
-                    if (
-                        !await RunUiOperationAsync(async () =>
-                        {
-                            modelSaved = await _quickAdd.SaveAsync(addAnother);
-                        })
-                    )
-                    {
-                        return;
-                    }
-                    if (!modelSaved)
-                    {
-                        ShowValidationMessage(
-                            _quickAdd.ValidationError
-                                ?? "Quick Add validation failed without a message."
-                        );
-                        return;
-                    }
-                }
-            } while (addAnother);
-        }
-
         private void Completion_Click(object sender, RoutedEventArgs e)
         {
             _ = e;
-            if (sender is CheckBox checkbox && checkbox.Tag is string taskId)
+            if (sender is CheckBox checkbox && checkbox.Tag is TaskItem)
             {
+                bool completed = checkbox.IsChecked == true;
+                TaskItem? task = TaskFromElement(checkbox);
+                checkbox.IsChecked = task?.IsCompleted;
                 _uiOperations.Run(
                     "set-completion",
                     () =>
                         RunUiOperationAsync(() =>
-                            Store.SetCompletionAsync(taskId, checkbox.IsChecked == true)
+                            OwnedAction(
+                                task?.ProfileId,
+                                () =>
+                                    Store.SetRowCompletionAsync(
+                                        task
+                                            ?? throw new InvalidOperationException(
+                                                "The completion control has no immutable task row."
+                                            ),
+                                        completed
+                                    )
+                            )
                         )
                 );
             }
@@ -485,12 +541,12 @@ namespace TaskNotes.Windows.App
         {
             _ = sender;
             _ = e;
-            string[] taskIds = SelectedTaskIds();
-            if (taskIds.Length > 0)
+            TaskItem[] rows = TaskWorkspace.SelectedTaskRows();
+            if (rows.Length > 0)
             {
                 _uiOperations.Run(
                     "complete-selected",
-                    () => RunUiOperationAsync(() => Store.CompleteTasksAsync(taskIds))
+                    () => RunUiOperationAsync(() => Store.CompleteRowsAsync(rows))
                 );
             }
         }
@@ -499,19 +555,31 @@ namespace TaskNotes.Windows.App
         {
             _ = sender;
             _ = e;
+            TaskItem[] rows = TaskWorkspace.SelectedTaskRows();
+            string? owner = Store.SelectedProfileId;
             _uiOperations.Run(
                 "schedule-selected",
                 async () =>
                 {
-                    TextBox input = new()
+                    CalendarDatePicker input = new()
                     {
                         Header = "Scheduled date",
-                        PlaceholderText = "YYYY-MM-DD; leave empty to clear",
+                        PlaceholderText = "Choose a date; empty clears it",
                     };
                     if (await ShowInputDialogAsync("Schedule selected tasks", input, "Apply"))
                     {
                         _ = await RunUiOperationAsync(() =>
-                            Store.ScheduleTasksAsync(SelectedTaskIds(), NullIfBlank(input.Text))
+                            OwnedAction(
+                                owner,
+                                () =>
+                                    Store.ScheduleRowsAsync(
+                                        rows,
+                                        input.Date?.ToString(
+                                            "yyyy-MM-dd",
+                                            System.Globalization.CultureInfo.InvariantCulture
+                                        )
+                                    )
+                            )
                         );
                     }
                 }
@@ -522,12 +590,18 @@ namespace TaskNotes.Windows.App
         {
             _ = sender;
             _ = e;
+            TaskItem[] rows = TaskWorkspace.SelectedTaskRows();
+            string? owner = Store.SelectedProfileId;
             _uiOperations.Run(
                 "prioritize-selected",
                 async () =>
                 {
                     ComboBox input = new() { Header = "Priority", SelectedIndex = 2 };
-                    foreach (string priorityOption in PriorityOptions)
+                    foreach (
+                        string priorityOption in Store.State.PriorityChoices.Select(choice =>
+                            choice.Value
+                        )
+                    )
                     {
                         input.Items.Add(priorityOption);
                     }
@@ -538,7 +612,10 @@ namespace TaskNotes.Windows.App
                     )
                     {
                         _ = await RunUiOperationAsync(() =>
-                            Store.PrioritizeTasksAsync(SelectedTaskIds(), selectedPriority)
+                            OwnedAction(
+                                owner,
+                                () => Store.PrioritizeRowsAsync(rows, selectedPriority)
+                            )
                         );
                     }
                 }
@@ -549,20 +626,23 @@ namespace TaskNotes.Windows.App
         {
             _ = sender;
             _ = e;
+            string? owner = Store.SelectedProfileId;
+            TaskItem[] rows = TaskWorkspace.SelectedTaskRows();
             _uiOperations.Run(
                 "delete-selected",
                 async () =>
                 {
-                    string[] ids = SelectedTaskIds();
                     if (
-                        ids.Length > 0
+                        rows.Length > 0
                         && await ConfirmAsync(
                             "Delete tasks?",
-                            $"Delete {ids.Length} selected task(s)? This cannot be undone."
+                            $"Delete {rows.Select(row => row.VaultPath).Distinct(StringComparer.Ordinal).Count()} selected note(s)? You can undo this change while it remains the current Undo receipt."
                         )
                     )
                     {
-                        _ = await RunUiOperationAsync(() => Store.DeleteTasksAsync(ids));
+                        _ = await RunUiOperationAsync(() =>
+                            OwnedAction(owner, () => Store.DeleteRowsAsync(rows))
+                        );
                     }
                 }
             );
@@ -574,7 +654,10 @@ namespace TaskNotes.Windows.App
             _ = e;
             _uiOperations.Run(
                 "undo-completion",
-                () => RunUiOperationAsync(() => Store.UndoCompletionAsync())
+                () =>
+                    RunUiOperationAsync(() =>
+                        Store.UndoCurrentSavedAsync((sender as FrameworkElement)?.Tag as string)
+                    )
             );
         }
 
@@ -608,7 +691,91 @@ namespace TaskNotes.Windows.App
             {
                 return;
             }
-            TaskWorkspace.Editor.Load(task);
+            if (Store.SelectedProfileId != task.ProfileId)
+            {
+                ShowValidationMessage(
+                    "Return to the selected task's original vault before opening its inspector."
+                );
+                return;
+            }
+            TaskItem? latest = Store.State.AllTasks.SingleOrDefault(current =>
+                current.Id == task.Id && current.ProfileId == task.ProfileId
+            );
+            if (latest is not null)
+                TaskWorkspace.Editor.Load(latest with { OccurrenceDate = task.OccurrenceDate });
+        }
+
+        private void InlineAdd_Click(object sender, RoutedEventArgs e)
+        {
+            _ = sender;
+            _ = e;
+            _uiOperations.Run(
+                "inline-add",
+                async () =>
+                {
+                    _ = await RunUiOperationAsync(async () =>
+                    {
+                        TaskWorkspace.Composer.CommitTokens();
+                        if (!await _inlineQuickAdd.SaveAsync(true))
+                            ShowValidationMessage(
+                                _inlineQuickAdd.ValidationError ?? "Enter a task to add it."
+                            );
+                        TaskWorkspace.Composer.FocusInput();
+                    });
+                }
+            );
+        }
+
+        private void Inspector_Click(object sender, RoutedEventArgs e)
+        {
+            _ = sender;
+            _ = e;
+            _uiOperations.Run(
+                "toggle-inspector",
+                async () =>
+                {
+                    if (
+                        !TaskWorkspace.InspectorVisible
+                        || await TaskWorkspace.Editor.ConfirmDiscardAsync()
+                    )
+                        TaskWorkspace.InspectorVisible = !TaskWorkspace.InspectorVisible;
+                }
+            );
+        }
+
+        private void ScheduleTask_Click(object sender, RoutedEventArgs e)
+        {
+            _ = e;
+            if (
+                sender is not FrameworkElement element
+                || TaskFromElement(element) is not TaskItem task
+            )
+                return;
+            _uiOperations.Run(
+                "schedule-task",
+                async () =>
+                {
+                    CalendarDatePicker input = new()
+                    {
+                        Header = "Scheduled date",
+                        PlaceholderText = "Choose a date; empty clears it",
+                    };
+                    if (await ShowInputDialogAsync("Schedule task", input, "Apply"))
+                        _ = await RunUiOperationAsync(() =>
+                            OwnedAction(
+                                task.ProfileId,
+                                () =>
+                                    Store.ScheduleRowsAsync(
+                                        [task],
+                                        input.Date?.ToString(
+                                            "yyyy-MM-dd",
+                                            System.Globalization.CultureInfo.InvariantCulture
+                                        )
+                                    )
+                            )
+                        );
+                }
+            );
         }
 
         private void DeleteTask_Click(object sender, RoutedEventArgs e)
@@ -627,7 +794,9 @@ namespace TaskNotes.Windows.App
                             )
                         )
                         {
-                            _ = await RunUiOperationAsync(() => Store.DeleteTaskAsync(task.Id));
+                            _ = await RunUiOperationAsync(() =>
+                                OwnedAction(task.ProfileId, () => Store.DeleteRowsAsync([task]))
+                            );
                         }
                     }
                 );
@@ -637,15 +806,38 @@ namespace TaskNotes.Windows.App
         private void MoveStatus_Click(object sender, RoutedEventArgs e)
         {
             _ = e;
-            if (
-                sender is FrameworkElement element
-                && element.Tag is string status
-                && TaskFromElement(element) is TaskItem task
-            )
+            if (sender is FrameworkElement element && TaskFromElement(element) is TaskItem task)
             {
                 _uiOperations.Run(
                     "move-status",
-                    () => RunUiOperationAsync(() => Store.SetStatusAsync(task.Id, status))
+                    async () =>
+                    {
+                        ComboBox choices = new()
+                        {
+                            ItemsSource = Store.State.StatusChoices,
+                            DisplayMemberPath = "Label",
+                            SelectedValuePath = "Value",
+                            SelectedValue = task.Status,
+                        };
+                        ContentDialog dialog = new()
+                        {
+                            XamlRoot = RootGrid.XamlRoot,
+                            Title = "Move task to status",
+                            Content = choices,
+                            PrimaryButtonText = "Move",
+                            CloseButtonText = "Cancel",
+                        };
+                        if (
+                            await dialog.ShowAsync() == ContentDialogResult.Primary
+                            && choices.SelectedValue is string status
+                        )
+                            await RunUiOperationAsync(() =>
+                                OwnedAction(
+                                    task.ProfileId,
+                                    () => Store.SetRowStatusAsync(task, status)
+                                )
+                            );
+                    }
                 );
             }
         }
@@ -666,28 +858,114 @@ namespace TaskNotes.Windows.App
 
         private async Task CreateSavedViewFromQueryAsync()
         {
-            TextBox name = new() { Header = "Name", PlaceholderText = "My view" };
-            CheckBox favorite = new() { Content = "Favorite" };
-            StackPanel content = new() { Spacing = 8 };
-            content.Children.Add(name);
-            content.Children.Add(favorite);
-            ContentDialog dialog = Dialog("Save current query", content, "Save");
-            if (
-                await dialog.ShowAsync() == ContentDialogResult.Primary
-                && !string.IsNullOrWhiteSpace(name.Text)
-            )
+            if (_showingSavedView)
+                return;
+            _showingSavedView = true;
+            try
             {
-                _ = await RunUiOperationAsync(async () =>
+                if (_savedViewActionId is not null)
                 {
-                    SavedViewDefinition view = await Store.CreateSavedViewAsync(
-                        name.Text,
-                        "Filter",
-                        "Accent",
-                        favorite.IsChecked == true,
-                        _query
-                    );
-                    await NavigateAsync($"saved:{view.Id}");
-                });
+                    if (
+                        Store.State.FacetPendingActions.Any(action =>
+                            action.Id == _savedViewActionId
+                        )
+                    )
+                    {
+                        ShowValidationMessage(
+                            "This view has an uncertain submitted action. Resume or retire its exact action in Settings recovery before saving another view. Its name is retained."
+                        );
+                        return;
+                    }
+                    if (Store.SelectedProfileId != _savedViewProfile)
+                    {
+                        ShowValidationMessage(
+                            "Return to the view's original vault to observe its saved outcome."
+                        );
+                        return;
+                    }
+                    if (_savedViewNeedsObservation)
+                    {
+                        if (!await RunUiOperationAsync(() => Store.RefreshAsync()))
+                            return;
+                        if (!Store.State.SavedViews.Any(view => view.Id == _submittedViewId))
+                        {
+                            ShowValidationMessage(
+                                "The view was saved. Refresh its owning vault to observe it; the saved action will not be submitted again."
+                            );
+                            return;
+                        }
+                    }
+                    if (Store.State.SavedViews.Any(view => view.Id == _submittedViewId))
+                    {
+                        string route = $"saved:{_submittedViewId}";
+                        _savedViewActionId = null;
+                        _savedViewNeedsObservation = false;
+                        _savedViewName = "";
+                        await NavigateAsync(route);
+                        return;
+                    }
+                    _savedViewActionId = null;
+                }
+                string? profile = Store.SelectedProfileId;
+                if (profile is null)
+                {
+                    ShowValidationMessage("Open a vault before saving a view.");
+                    return;
+                }
+                TaskListQuery query = _query;
+                TextBox name = new()
+                {
+                    Header = "Name",
+                    PlaceholderText = "My view",
+                    Text = _savedViewName,
+                };
+                CheckBox favorite = new() { Content = "Favorite", IsChecked = _savedViewFavorite };
+                StackPanel content = new() { Spacing = 8 };
+                content.Children.Add(name);
+                content.Children.Add(favorite);
+                ContentDialog dialog = Dialog("Save current query", content, "Save");
+                if (
+                    await dialog.ShowAsync() == ContentDialogResult.Primary
+                    && !string.IsNullOrWhiteSpace(name.Text)
+                )
+                {
+                    _savedViewName = name.Text;
+                    _savedViewFavorite = favorite.IsChecked == true;
+                    _savedViewProfile = profile;
+                    string viewId = Guid.NewGuid().ToString("N");
+                    _submittedViewId = viewId;
+                    _ = await RunUiOperationAsync(async () =>
+                    {
+                        SavedViewDefinition view;
+                        try
+                        {
+                            view = await Store.CreateOwnedSavedViewAsync(
+                                profile,
+                                viewId,
+                                name.Text,
+                                "Filter",
+                                "Accent",
+                                favorite.IsChecked == true,
+                                query,
+                                id => _savedViewActionId = id
+                            );
+                        }
+                        catch (FacetSavedObservationException)
+                        {
+                            _savedViewNeedsObservation = true;
+                            throw;
+                        }
+                        _savedViewActionId = null;
+                        _savedViewNeedsObservation = false;
+                        _savedViewName = "";
+                        if (Store.SelectedProfileId == profile)
+                            await NavigateAsync($"saved:{view.Id}");
+                    });
+                }
+            }
+            finally
+            {
+                _showingSavedView = false;
             }
         }
 
@@ -753,7 +1031,7 @@ namespace TaskNotes.Windows.App
                     if (
                         await ConfirmAsync(
                             "Restore default saved views?",
-                            "This replaces device-local saved-view metadata."
+                            "This replaces portable saved-view documents in the selected vault."
                         )
                     )
                     {
@@ -765,39 +1043,232 @@ namespace TaskNotes.Windows.App
 
         private void SaveSettings_Click(object sender, RoutedEventArgs e)
         {
+            FacetBackgroundRegistration.Disable();
+            _reminders.FenceAccountChange();
             _ = sender;
             _ = e;
             _uiOperations.Run(
                 "save-settings",
                 async () =>
                 {
-                    _settingsViewModel.ServerUrl = SettingsDestination.ServerUrl;
-                    _settingsViewModel.Token = SettingsDestination.Token;
-                    bool modelSaved = false;
-                    if (
-                        !await RunUiOperationAsync(async () =>
-                        {
-                            modelSaved = await _settingsViewModel.SaveAndSyncAsync();
-                        })
-                    )
+                    try
                     {
-                        SettingsDestination.ConnectionStatus =
-                            $"Settings were not saved. {ViewModel.StatusMessage}";
-                        return;
-                    }
-                    if (!modelSaved)
-                    {
-                        ShowValidationMessage(
-                            _settingsViewModel.ValidationError
-                                ?? "Settings validation failed without a message."
+                        await RunUiOperationAsync(() =>
+                            _settingsViewModel.SignInAsync(
+                                SettingsDestination.Email,
+                                SettingsDestination.Password,
+                                SettingsDestination.Mfa
+                            )
                         );
+                    }
+                    finally
+                    {
+                        SettingsDestination.ClearAccountSecrets();
+                        _reminders.AccountChangeObserved();
+                    }
+                }
+            );
+        }
+
+        private void ConnectVault_Click(object sender, RoutedEventArgs e)
+        {
+            _uiOperations.Run(
+                "connect-vault",
+                async () =>
+                {
+                    if (SettingsDestination.SelectedVault is not ObsidianVaultChoice vault)
+                    {
+                        ShowValidationMessage("Choose an existing Sync vault.");
                         return;
                     }
-                    SettingsDestination.ConnectionStatus = string.IsNullOrWhiteSpace(
-                        _settingsViewModel.Token
-                    )
-                        ? "Connected. The URL was saved; this server does not use a token."
-                        : "Connected. The URL and Credential Locker token were saved.";
+                    try
+                    {
+                        await RunUiOperationAsync(() =>
+                            _settingsViewModel.AddRemoteAsync(
+                                vault,
+                                SettingsDestination.VaultPassword,
+                                SettingsDestination.ApproveStandard
+                            )
+                        );
+                    }
+                    finally
+                    {
+                        SettingsDestination.ClearVaultPassword();
+                    }
+                }
+            );
+        }
+
+        private void SelectProfile_Click(object sender, RoutedEventArgs e)
+        {
+            if (SettingsDestination.SelectedProfile is FacetProfileRegistration profile)
+                _uiOperations.Run(
+                    "select-profile",
+                    async () =>
+                    {
+                        if (!await TaskWorkspace.Editor.ConfirmDiscardAsync())
+                            return;
+                        if (
+                            await RunUiOperationAsync(() =>
+                                _settingsViewModel.SelectAsync(profile.Id)
+                            )
+                        )
+                            TaskWorkspace.Editor.Clear();
+                    }
+                );
+        }
+
+        private void RemoveProfile_Click(object sender, RoutedEventArgs e)
+        {
+            if (SettingsDestination.SelectedProfile is not FacetProfileRegistration profile)
+                return;
+            _uiOperations.Run(
+                "remove-profile",
+                async () =>
+                {
+                    if (!await TaskWorkspace.Editor.ConfirmDiscardAsync())
+                        return;
+                    var confirm = Dialog(
+                        $"Remove {profile.Name}?",
+                        "Facet stops synchronization and removes this vault's settled app state and access key. Files remain intact. Resolve pending uploads, conflicts and saved actions first.",
+                        "Remove vault"
+                    );
+                    if (await confirm.ShowAsync() != ContentDialogResult.Primary)
+                        return;
+                    FacetBackgroundRegistration.Disable();
+                    _reminders.FenceAccountChange();
+                    try
+                    {
+                        await RunUiOperationAsync(() => _settingsViewModel.RemoveAsync(profile.Id));
+                    }
+                    finally
+                    {
+                        _reminders.AccountChangeObserved();
+                    }
+                }
+            );
+        }
+
+        private void SignOut_Click(object sender, RoutedEventArgs e)
+        {
+            FacetBackgroundRegistration.Disable();
+            _reminders.FenceAccountChange();
+            _uiOperations.Run(
+                "sign-out",
+                async () =>
+                {
+                    try
+                    {
+                        await RunUiOperationAsync(() => _settingsViewModel.SignOutAsync());
+                    }
+                    finally
+                    {
+                        _reminders.AccountChangeObserved();
+                    }
+                }
+            );
+        }
+
+        private void Reauthorize_Click(object sender, RoutedEventArgs e)
+        {
+            FacetBackgroundRegistration.Disable();
+            if (SettingsDestination.SelectedProfile is not FacetProfileRegistration profile)
+                return;
+            _reminders.FenceAccountChange();
+            _uiOperations.Run(
+                "reauthorize-profile",
+                async () =>
+                {
+                    try
+                    {
+                        await RunUiOperationAsync(() =>
+                            _settingsViewModel.ReauthorizeAsync(
+                                profile.Id,
+                                SettingsDestination.VaultPassword
+                            )
+                        );
+                    }
+                    finally
+                    {
+                        SettingsDestination.ClearVaultPassword();
+                        _reminders.AccountChangeObserved();
+                    }
+                }
+            );
+        }
+
+        private void EnableReminders_Click(object sender, RoutedEventArgs args)
+        {
+            _ = sender;
+            _ = args;
+            _uiOperations.Run(
+                "enable-reminders",
+                () =>
+                {
+                    _reminders.Enable();
+                    SettingsDestination.SetReminderStatus(FacetReminderDelivery.Status);
+                    return Task.CompletedTask;
+                }
+            );
+        }
+
+        private void EnableBackgroundSync_Click(object sender, RoutedEventArgs args) =>
+            SetBackgroundSync(true, sender, args);
+
+        private void DisableBackgroundSync_Click(object sender, RoutedEventArgs args) =>
+            SetBackgroundSync(false, sender, args);
+
+        private void SetBackgroundSync(bool enabled, object sender, RoutedEventArgs args)
+        {
+            _ = sender;
+            _ = args;
+            _uiOperations.Run(
+                "background-sync-preference",
+                () =>
+                {
+                    FacetBackgroundRegistration.SetSyncRequested(enabled);
+                    SettingsDestination.SetBackgroundStatus(FacetBackgroundRegistration.Status);
+                    return Task.CompletedTask;
+                }
+            );
+        }
+
+        private void DisableReminders_Click(object sender, RoutedEventArgs args)
+        {
+            _ = sender;
+            _ = args;
+            _uiOperations.Run(
+                "disable-reminders",
+                () =>
+                {
+                    _reminders.Disable();
+                    SettingsDestination.SetReminderStatus(FacetReminderDelivery.Status);
+                    return Task.CompletedTask;
+                }
+            );
+        }
+
+        private void LocalFolder_Click(object sender, RoutedEventArgs e)
+        {
+            _uiOperations.Run(
+                "open-local-folder",
+                async () =>
+                {
+                    global::Windows.Storage.Pickers.FolderPicker picker = new();
+                    picker.FileTypeFilter.Add("*");
+                    WinRT.Interop.InitializeWithWindow.Initialize(
+                        picker,
+                        WinRT.Interop.WindowNative.GetWindowHandle(this)
+                    );
+                    var folder = await picker.PickSingleFolderAsync();
+                    if (folder is not null)
+                        await RunUiOperationAsync(() =>
+                            _settingsViewModel.AddLocalAsync(
+                                folder.Name,
+                                folder.Path,
+                                SettingsDestination.ApproveStandard
+                            )
+                        );
                 }
             );
         }
@@ -809,9 +1280,44 @@ namespace TaskNotes.Windows.App
             {
                 _uiOperations.Run(
                     "retry-parked",
-                    () => RunUiOperationAsync(() => Store.RetryParkedMutationAsync(mutationId))
+                    () => ConfirmConflictAsync(mutationId, "keep_local")
                 );
             }
+        }
+
+        private void ResumeAction_Click(object sender, RoutedEventArgs e)
+        {
+            _ = e;
+            if (sender is Button button && button.Tag is string id)
+                _uiOperations.Run(
+                    "resume-retained-action",
+                    () => RunUiOperationAsync(() => _settingsViewModel.ResumeAsync(id))
+                );
+        }
+
+        private void RetireAction_Click(object sender, RoutedEventArgs e)
+        {
+            _ = e;
+            if (sender is Button button && button.Tag is string id)
+                _uiOperations.Run(
+                    "retire-rejected-action",
+                    async () =>
+                    {
+                        if (
+                            await ConfirmAsync(
+                                "Retire saved action?",
+                                Store
+                                    .State.FacetPendingActions.Single(action => action.Id == id)
+                                    .CanResume
+                                    ? "Rust must confirm this action is absent or parked. Pending/applied actions and preserved conflict versions stay retained."
+                                    : "Facet checks the original saved outcome before clearing this private draft. Pending work remains retained; applied changes and preserved vault versions remain intact."
+                            )
+                        )
+                            await RunUiOperationAsync(() =>
+                                _settingsViewModel.RetireRejectedAsync(id)
+                            );
+                    }
+                );
         }
 
         private void DiscardParked_Click(object sender, RoutedEventArgs e)
@@ -821,47 +1327,76 @@ namespace TaskNotes.Windows.App
             {
                 _uiOperations.Run(
                     "discard-parked",
-                    () => RunUiOperationAsync(() => Store.DiscardParkedMutationAsync(mutationId))
+                    () => ConfirmConflictAsync(mutationId, "keep_remote")
                 );
             }
         }
 
-        private void OpenPomodoro_Click(object sender, RoutedEventArgs e)
+        private async Task ConfirmConflictAsync(string id, string choice)
         {
-            _ = sender;
-            _ = e;
-            _uiOperations.Run("open-pomodoro", ShowPomodoroAsync);
+            var conflict = _settingsViewModel.Conflicts.Single(c => c.Id == id);
+            var version = choice == "keep_local" ? conflict.Local : conflict.Remote;
+            string message = version is null
+                ? $"Keep the deletion of {conflict.Path}?"
+                : $"Keep the {(choice == "keep_local" ? "local" : "remote")} version of {conflict.Path}? Review the retained versions before choosing.";
+            if (await ConfirmAsync("Resolve conflict?", message))
+                _ = await RunUiOperationAsync(() => _settingsViewModel.ResolveAsync(id, choice));
         }
 
-        private async Task ShowPomodoroAsync()
+        private void ReviewConflict_Click(object sender, RoutedEventArgs args)
         {
-            if (_pomodoroWindow is null)
-            {
-                PomodoroWindow window = new(_pomodoro, _uiOperations);
-                window.AppWindow.Closing += (_, _) => _pomodoroWindow = null;
-                _pomodoroWindow = window;
-            }
-            _pomodoroWindow.Activate();
-            await _pomodoroWindow.LoadAsync();
+            _ = args;
+            if (sender is Button button && button.Tag is string id)
+                _uiOperations.Run(
+                    "review-conflict",
+                    async () =>
+                    {
+                        var conflict = _settingsViewModel.Conflicts.Single(c => c.Id == id);
+                        List<string> parts = [];
+                        foreach (string version in ConflictVersions)
+                        {
+                            byte[]? bytes = await Store.ReadConflictPayloadAsync(id, version);
+                            parts.Add(version.ToUpperInvariant() + "\n" + ConflictPreview(bytes));
+                        }
+                        TextBox preview = new()
+                        {
+                            Text = string.Join("\n\n", parts),
+                            IsReadOnly = true,
+                            AcceptsReturn = true,
+                            TextWrapping = TextWrapping.Wrap,
+                            MaxHeight = 480,
+                        };
+                        ContentDialog dialog = Dialog(
+                            conflict.Path,
+                            new ScrollViewer
+                            {
+                                Content = preview,
+                                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                            },
+                            "Close"
+                        );
+                        _ = await dialog.ShowAsync();
+                    }
+                );
         }
 
-        private void OpenTimeReport_Click(object sender, RoutedEventArgs e)
+        private static string ConflictPreview(byte[]? bytes)
         {
-            _ = sender;
-            _ = e;
-            _uiOperations.Run("open-time-report", ShowTimeReportAsync);
-        }
-
-        private async Task ShowTimeReportAsync()
-        {
-            if (_timeReportWindow is null)
-            {
-                TimeReportWindow window = new(_timeReport, _uiOperations);
-                window.AppWindow.Closing += (_, _) => _timeReportWindow = null;
-                _timeReportWindow = window;
-            }
-            _timeReportWindow.Activate();
-            await _timeReportWindow.LoadAsync();
+            if (bytes is null)
+                return "Deleted file";
+            int count = Math.Min(bytes.Length, 65536);
+            for (int omitted = 0; omitted <= 3 && count >= omitted; omitted++)
+                try
+                {
+                    string text = new UTF8Encoding(false, true).GetString(
+                        bytes,
+                        0,
+                        count - omitted
+                    );
+                    return count < bytes.Length ? text + "\n[Preview truncated]" : text;
+                }
+                catch (DecoderFallbackException) { }
+            return "Binary file. Both immutable versions remain retained.";
         }
 
         private void InitializeGlobalHotkey(string binding)
@@ -999,31 +1534,19 @@ namespace TaskNotes.Windows.App
         )
         {
             _ = sender;
+            DependencyObject? focused =
+                FocusManager.GetFocusedElement(RootGrid.XamlRoot) as DependencyObject;
+            while (focused is not null)
+            {
+                if (focused is TextBox or RichEditBox or PasswordBox)
+                    return;
+                focused = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetParent(focused);
+            }
             args.Handled = true;
             _uiOperations.Run(
                 "undo-accelerator",
-                () => RunUiOperationAsync(() => ViewModel.UndoCompletionCommand.ExecuteAsync(null))
+                () => RunUiOperationAsync(() => Store.UndoCurrentSavedAsync())
             );
-        }
-
-        private void PomodoroAccelerator_Invoked(
-            KeyboardAccelerator sender,
-            KeyboardAcceleratorInvokedEventArgs args
-        )
-        {
-            _ = sender;
-            args.Handled = true;
-            _uiOperations.Run("pomodoro-accelerator", ShowPomodoroAsync);
-        }
-
-        private void TimeReportAccelerator_Invoked(
-            KeyboardAccelerator sender,
-            KeyboardAcceleratorInvokedEventArgs args
-        )
-        {
-            _ = sender;
-            args.Handled = true;
-            _uiOperations.Run("time-report-accelerator", ShowTimeReportAsync);
         }
 
         private async Task<bool> RunUiOperationAsync(Func<Task> operation)
@@ -1070,6 +1593,7 @@ namespace TaskNotes.Windows.App
 
         private void ReleaseResources()
         {
+            ReleaseFeedback();
             SearchCancellation?.Cancel();
             SearchCancellation?.Dispose();
             SearchCancellation = null;
@@ -1109,6 +1633,15 @@ namespace TaskNotes.Windows.App
             return await dialog.ShowAsync() == ContentDialogResult.Primary;
         }
 
+        private Task OwnedAction(string? profile, Func<Task> operation)
+        {
+            if (profile != Store.SelectedProfileId)
+                throw new ArgumentException(
+                    "The owning vault changed while this action was open. Select its original vault before trying again."
+                );
+            return operation();
+        }
+
         private TaskItem? FindTask(string taskId)
         {
             return Store.State.AllTasks.SingleOrDefault(task => task.Id == taskId);
@@ -1116,14 +1649,10 @@ namespace TaskNotes.Windows.App
 
         private TaskItem? TaskFromElement(FrameworkElement element)
         {
-            return element.Tag is string taskId
-                ? FindTask(taskId)
-                : element.DataContext as TaskItem;
-        }
-
-        private string[] SelectedTaskIds()
-        {
-            return TaskWorkspace.SelectedTaskIds();
+            return element.DataContext is TaskRowPresentation row ? row.Task
+                : element.DataContext is TaskItem task ? task
+                : element.Tag is TaskItem renderedTask ? renderedTask
+                : null;
         }
 
         private static string? NullIfBlank(string value)

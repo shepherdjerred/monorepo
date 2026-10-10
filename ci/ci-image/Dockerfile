@@ -71,6 +71,15 @@ RUN --mount=type=secret,id=github-download-token,env=GITHUB_TOKEN,required=true 
     && ln -sf "$(mise which gh)" /usr/local/bin/gh \
     && gh --version
 
+# Android build tools and NDK are published for Linux x86_64. Keep the ARM64
+# base image usable for every other workspace; Android actions fail explicitly
+# when invoked on that unsupported host architecture.
+COPY ci/scripts/android-sdk.sh /workspace/ci/scripts/android-sdk.sh
+ENV ANDROID_HOME=/opt/android-sdk \
+    ANDROID_SDK_ROOT=/opt/android-sdk
+RUN if [ "${TARGETARCH}" = amd64 ]; then bash ci/scripts/android-sdk.sh; \
+    else echo "Android NDK provisioning omitted: Linux ARM64 host tools are unsupported"; fi
+
 # uv/uvx for the python checks (ruff via uvx, pyright bootstraps a venv)
 # renovate: datasource=pypi depName=uv
 ARG UV_VERSION=0.13.0

@@ -1,7 +1,5 @@
 import Testing
 
-import struct Foundation.Locale
-
 @testable import TaskNotesKit
 @testable import TaskNotesUniFFI
 
@@ -40,35 +38,6 @@ struct TaskDetailTests {
             calendar: detailCalendar
         )
         #expect(detail.body.isEmpty)
-    }
-
-    /// An estimate reads as a duration, not as a clock.
-    ///
-    /// The core's `elapsedFormat` would render 90 minutes as `1:30:00`, which is
-    /// a video length. Sharing that function would be sharing a spelling rather
-    /// than a meaning, so the shell formats it — the same split the plan already
-    /// applies to dates.
-    @Test("a time estimate is spelled as a duration")
-    func estimateSpelled() throws {
-        let task = detailTask(id: "Tasks/A.md", title: "A", timeEstimate: 90)
-        let detail = try TaskDetail.build(
-            row: try detailRow(task),
-            calendar: detailCalendar,
-            duration: TaskDurationText(locale: Locale(identifier: "en_US"))
-        )
-        let spelled = try #require(detail.timeEstimateText)
-        #expect(spelled.contains("1"))
-        #expect(spelled.contains("30"))
-        #expect(!spelled.contains(":"))
-    }
-
-    @Test("no estimate has no words")
-    func noEstimate() throws {
-        let detail = try TaskDetail.build(
-            row: try detailRow(detailTask(id: "Tasks/A.md", title: "A")),
-            calendar: detailCalendar
-        )
-        #expect(detail.timeEstimateText == nil)
     }
 }
 

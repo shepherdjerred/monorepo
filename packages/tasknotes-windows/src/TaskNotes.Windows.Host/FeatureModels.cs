@@ -125,6 +125,30 @@ namespace TaskNotes.Windows.Host
     /// <summary>A UI-facing task containing domain values supplied by the core.</summary>
     public sealed record TaskItem
     {
+        /// <summary>Exact normalized properties retained for untouched editor fields.</summary>
+        public System.Text.Json.JsonElement? Properties { get; init; }
+
+        /// <summary>Owning standalone vault, frozen with this projection.</summary>
+        public string? ProfileId { get; init; }
+
+        /// <summary>Exact vault path for profile-qualified notification navigation.</summary>
+        public string? VaultPath { get; init; }
+
+        /// <summary>Exact Markdown revision loaded by the editor.</summary>
+        public string? ExpectedRevision { get; init; }
+
+        /// <summary>The authoritative date chosen by the standalone core query.</summary>
+        public string? EffectiveDate { get; init; }
+
+        /// <summary>Distinguishes a core null effective date from a legacy projection.</summary>
+        public bool HasCoreEffectiveDate { get; init; }
+
+        /// <summary>Exact configured workflow color for native decoration.</summary>
+        public string? StatusColor { get; init; }
+
+        /// <summary>Exact configured priority color for native decoration.</summary>
+        public string? PriorityColor { get; init; }
+
         /// <summary>Initializes a projected task.</summary>
         public TaskItem(
             string id,
@@ -141,16 +165,13 @@ namespace TaskNotes.Windows.Host
             IReadOnlyList<string> projects,
             IReadOnlyList<string> contexts,
             IReadOnlyList<string> tags,
-            uint? timeEstimate,
-            uint totalTrackedTime,
             bool isBlocked,
             bool isBlocking,
             bool isCompleted,
             bool isRecurring,
             bool isPending,
             string? occurrenceDate,
-            string groupLabel,
-            bool hasActiveTimeSession
+            string groupLabel
         )
         {
             Id = id;
@@ -167,8 +188,6 @@ namespace TaskNotes.Windows.Host
             Projects = projects;
             Contexts = contexts;
             Tags = tags;
-            TimeEstimate = timeEstimate;
-            TotalTrackedTime = totalTrackedTime;
             IsBlocked = isBlocked;
             IsBlocking = isBlocking;
             IsCompleted = isCompleted;
@@ -176,7 +195,6 @@ namespace TaskNotes.Windows.Host
             IsPending = isPending;
             OccurrenceDate = occurrenceDate;
             GroupLabel = groupLabel;
-            HasActiveTimeSession = hasActiveTimeSession;
         }
 
         /// <summary>Gets the stable task identifier.</summary>
@@ -221,12 +239,6 @@ namespace TaskNotes.Windows.Host
         /// <summary>Gets the tags.</summary>
         public IReadOnlyList<string> Tags { get; }
 
-        /// <summary>Gets the estimate in minutes.</summary>
-        public uint? TimeEstimate { get; }
-
-        /// <summary>Gets the total tracked minutes.</summary>
-        public uint TotalTrackedTime { get; }
-
         /// <summary>Gets whether another task blocks this task.</summary>
         public bool IsBlocked { get; }
 
@@ -243,13 +255,10 @@ namespace TaskNotes.Windows.Host
         public bool IsPending { get; }
 
         /// <summary>Gets the recurring occurrence represented by the row.</summary>
-        public string? OccurrenceDate { get; }
+        public string? OccurrenceDate { get; init; }
 
         /// <summary>Gets the presentation group label.</summary>
         public string GroupLabel { get; }
-
-        /// <summary>Gets whether the synchronized task snapshot contains an open time entry.</summary>
-        public bool HasActiveTimeSession { get; }
 
         /// <summary>Gets the compact synchronization label.</summary>
         public string PendingLabel => IsPending ? "Pending" : string.Empty;
@@ -261,7 +270,10 @@ namespace TaskNotes.Windows.Host
         // The projected occurrence identifies the row the checkbox acts on, so it has to
         // win: a later recurrence shown with its persisted date would complete a
         // different day from the one the user is reading.
-        public string DateLabel => OccurrenceDate ?? Due ?? Scheduled ?? string.Empty;
+        public string DateLabel =>
+            HasCoreEffectiveDate
+                ? EffectiveDate ?? string.Empty
+                : OccurrenceDate ?? Due ?? Scheduled ?? string.Empty;
 
         /// <summary>Gets a compact taxonomy label.</summary>
         public string TaxonomyLabel => string.Join("  ", Projects.Concat(Contexts).Concat(Tags));
@@ -270,6 +282,24 @@ namespace TaskNotes.Windows.Host
     /// <summary>Editable task fields passed to the core as one partial update.</summary>
     public sealed record TaskEditInput
     {
+        /// <summary>Changed normalized fields; null preserves the legacy complete-edit caller contract.</summary>
+        public IReadOnlyDictionary<
+            string,
+            System.Text.Json.JsonElement
+        >? ChangedProperties { get; init; }
+
+        /// <summary>Whether Markdown body changed in a partial editor save.</summary>
+        public bool BodyChanged { get; init; } = true;
+
+        /// <summary>Occurrence selected when the editor was opened.</summary>
+        public string? OccurrenceDate { get; init; }
+
+        /// <summary>Owning standalone profile required by partial saves.</summary>
+        public string? ProfileId { get; init; }
+
+        /// <summary>Revision the user reviewed before editing.</summary>
+        public string? ExpectedRevision { get; init; }
+
         /// <summary>Gets the task identifier.</summary>
         public required string Id { get; init; }
 
@@ -305,9 +335,6 @@ namespace TaskNotes.Windows.Host
 
         /// <summary>Gets the tags.</summary>
         public IReadOnlyList<string> Tags { get; init; } = [];
-
-        /// <summary>Gets the estimate in minutes.</summary>
-        public uint? TimeEstimate { get; init; }
     }
 
     /// <summary>The core's natural-language preview plus contextual defaults.</summary>
@@ -319,7 +346,11 @@ namespace TaskNotes.Windows.Host
         IReadOnlyList<string> Contexts,
         IReadOnlyList<string> Tags,
         string? Recurrence
-    );
+    )
+    {
+        /// <summary>Scheduled value returned by the core's contextual capture preview.</summary>
+        public string? Scheduled { get; init; }
+    }
 
     /// <summary>A device-local saved view whose filter and sort documents are core-owned.</summary>
     public sealed record SavedViewDefinition
@@ -351,21 +382,4 @@ namespace TaskNotes.Windows.Host
         /// <summary>Gets the presentation grouping.</summary>
         public TaskGroupChoice Group { get; init; }
     }
-
-    /// <summary>Tracked-time state for one task.</summary>
-    public sealed record TaskTimeReading(string TaskId, uint TotalMinutes, bool HasActiveSession);
-
-    /// <summary>One row in the aggregate time report.</summary>
-    public sealed record TimeReportRow(string TaskId, string Title, uint Minutes);
-
-    /// <summary>The aggregate time report returned by the server.</summary>
-    public sealed record TimeReportReading(uint TotalMinutes, IReadOnlyList<TimeReportRow> Rows);
-
-    /// <summary>The current server-backed Pomodoro state.</summary>
-    public sealed record PomodoroReading(
-        bool IsActive,
-        string? TaskId,
-        uint? SecondsRemaining,
-        string? Phase
-    );
 }

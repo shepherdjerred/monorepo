@@ -34,11 +34,6 @@
       "count": 1
     }
   },
-  "src/domain/task-presentation.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "src/lib/nlp.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1

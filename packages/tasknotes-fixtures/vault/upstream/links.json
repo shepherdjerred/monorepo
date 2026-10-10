@@ -1,0 +1,1127 @@
+[
+  {
+    "id": "link.0001",
+    "section": "§11.3",
+    "profile": "extended",
+    "operation": "link.parse",
+    "assertion": "envelope_equals",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "[[task-001]]"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "raw": "[[task-001]]",
+        "format": {
+          "$oneOf": [
+            "wikilink",
+            "markdown",
+            "path"
+          ]
+        },
+        "target": {
+          "$regex": ".+"
+        }
+      }
+    }
+  },
+  {
+    "id": "link.0002",
+    "section": "§11.3",
+    "profile": "extended",
+    "operation": "link.parse",
+    "assertion": "envelope_equals",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "[[task-001|My Task]]"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "raw": "[[task-001|My Task]]",
+        "format": {
+          "$oneOf": [
+            "wikilink",
+            "markdown",
+            "path"
+          ]
+        },
+        "target": {
+          "$regex": ".+"
+        }
+      }
+    }
+  },
+  {
+    "id": "link.0003",
+    "section": "§11.3",
+    "profile": "extended",
+    "operation": "link.parse",
+    "assertion": "envelope_equals",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "[[task-001#anchor]]"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "raw": "[[task-001#anchor]]",
+        "format": {
+          "$oneOf": [
+            "wikilink",
+            "markdown",
+            "path"
+          ]
+        },
+        "target": {
+          "$regex": ".+"
+        }
+      }
+    }
+  },
+  {
+    "id": "link.0004",
+    "section": "§11.3",
+    "profile": "extended",
+    "operation": "link.parse",
+    "assertion": "envelope_equals",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "[[task-001#anchor|Alias]]"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "raw": "[[task-001#anchor|Alias]]",
+        "format": {
+          "$oneOf": [
+            "wikilink",
+            "markdown",
+            "path"
+          ]
+        },
+        "target": {
+          "$regex": ".+"
+        }
+      }
+    }
+  },
+  {
+    "id": "link.0005",
+    "section": "§11.3",
+    "profile": "extended",
+    "operation": "link.parse",
+    "assertion": "envelope_equals",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "[[docs/api#auth]]"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "raw": "[[docs/api#auth]]",
+        "format": {
+          "$oneOf": [
+            "wikilink",
+            "markdown",
+            "path"
+          ]
+        },
+        "target": {
+          "$regex": ".+"
+        }
+      }
+    }
+  },
+  {
+    "id": "link.0006",
+    "section": "§11.3",
+    "profile": "extended",
+    "operation": "link.parse",
+    "assertion": "envelope_equals",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "[[./relative/path]]"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "raw": "[[./relative/path]]",
+        "format": {
+          "$oneOf": [
+            "wikilink",
+            "markdown",
+            "path"
+          ]
+        },
+        "target": {
+          "$regex": ".+"
+        }
+      }
+    }
+  },
+  {
+    "id": "link.0007",
+    "section": "§11.3",
+    "profile": "extended",
+    "operation": "link.parse",
+    "assertion": "envelope_equals",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "[[../parent/path]]"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "raw": "[[../parent/path]]",
+        "format": {
+          "$oneOf": [
+            "wikilink",
+            "markdown",
+            "path"
+          ]
+        },
+        "target": {
+          "$regex": ".+"
+        }
+      }
+    }
+  },
+  {
+    "id": "link.0008",
+    "section": "§11.3",
+    "profile": "extended",
+    "operation": "link.parse",
+    "assertion": "envelope_equals",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "[[folder/target]]"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "raw": "[[folder/target]]",
+        "format": {
+          "$oneOf": [
+            "wikilink",
+            "markdown",
+            "path"
+          ]
+        },
+        "target": {
+          "$regex": ".+"
+        }
+      }
+    }
+  },
+  {
+    "id": "link.0009",
+    "section": "§11.3",
+    "profile": "extended",
+    "operation": "link.parse",
+    "assertion": "envelope_equals",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "[[folder/target|Alias]]"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "raw": "[[folder/target|Alias]]",
+        "format": {
+          "$oneOf": [
+            "wikilink",
+            "markdown",
+            "path"
+          ]
+        },
+        "target": {
+          "$regex": ".+"
+        }
+      }
+    }
+  },
+  {
+    "id": "link.0010",
+    "section": "§11.3",
+    "profile": "extended",
+    "operation": "link.parse",
+    "assertion": "envelope_equals",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "[Label](file.md)"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "raw": "[Label](file.md)",
+        "format": {
+          "$oneOf": [
+            "wikilink",
+            "markdown",
+            "path"
+          ]
+        },
+        "target": {
+          "$regex": ".+"
+        }
+      }
+    }
+  },
+  {
+    "id": "link.0011",
+    "section": "§11.3",
+    "profile": "extended",
+    "operation": "link.parse",
+    "assertion": "envelope_equals",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "[Label](./relative.md)"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "raw": "[Label](./relative.md)",
+        "format": {
+          "$oneOf": [
+            "wikilink",
+            "markdown",
+            "path"
+          ]
+        },
+        "target": {
+          "$regex": ".+"
+        }
+      }
+    }
+  },
+  {
+    "id": "link.0012",
+    "section": "§11.3",
+    "profile": "extended",
+    "operation": "link.parse",
+    "assertion": "envelope_equals",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "[Label](../relative.md#heading)"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "raw": "[Label](../relative.md#heading)",
+        "format": {
+          "$oneOf": [
+            "wikilink",
+            "markdown",
+            "path"
+          ]
+        },
+        "target": {
+          "$regex": ".+"
+        }
+      }
+    }
+  },
+  {
+    "id": "link.0013",
+    "section": "§11.3",
+    "profile": "extended",
+    "operation": "link.parse",
+    "assertion": "envelope_equals",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "[Another](folder/child.md)"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "raw": "[Another](folder/child.md)",
+        "format": {
+          "$oneOf": [
+            "wikilink",
+            "markdown",
+            "path"
+          ]
+        },
+        "target": {
+          "$regex": ".+"
+        }
+      }
+    }
+  },
+  {
+    "id": "link.0014",
+    "section": "§11.3",
+    "profile": "extended",
+    "operation": "link.parse",
+    "assertion": "envelope_equals",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "./other.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "raw": "./other.md",
+        "format": {
+          "$oneOf": [
+            "wikilink",
+            "markdown",
+            "path"
+          ]
+        },
+        "target": {
+          "$regex": ".+"
+        }
+      }
+    }
+  },
+  {
+    "id": "link.0015",
+    "section": "§11.3",
+    "profile": "extended",
+    "operation": "link.parse",
+    "assertion": "envelope_equals",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "../parent/task.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "raw": "../parent/task.md",
+        "format": {
+          "$oneOf": [
+            "wikilink",
+            "markdown",
+            "path"
+          ]
+        },
+        "target": {
+          "$regex": ".+"
+        }
+      }
+    }
+  },
+  {
+    "id": "link.0016",
+    "section": "§11.3",
+    "profile": "extended",
+    "operation": "link.parse",
+    "assertion": "envelope_equals",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "/root/task.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "raw": "/root/task.md",
+        "format": {
+          "$oneOf": [
+            "wikilink",
+            "markdown",
+            "path"
+          ]
+        },
+        "target": {
+          "$regex": ".+"
+        }
+      }
+    }
+  },
+  {
+    "id": "link.0017",
+    "section": "§11.3",
+    "profile": "extended",
+    "operation": "link.parse",
+    "assertion": "envelope_equals",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "folder/task.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "raw": "folder/task.md",
+        "format": {
+          "$oneOf": [
+            "wikilink",
+            "markdown",
+            "path"
+          ]
+        },
+        "target": {
+          "$regex": ".+"
+        }
+      }
+    }
+  },
+  {
+    "id": "link.0018",
+    "section": "§11.3",
+    "profile": "extended",
+    "operation": "link.parse",
+    "assertion": "envelope_equals",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "nested/folder/task.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "raw": "nested/folder/task.md",
+        "format": {
+          "$oneOf": [
+            "wikilink",
+            "markdown",
+            "path"
+          ]
+        },
+        "target": {
+          "$regex": ".+"
+        }
+      }
+    }
+  },
+  {
+    "id": "link.0019",
+    "section": "§11.3",
+    "profile": "extended",
+    "operation": "link.parse",
+    "assertion": "envelope_error",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "task-plain"
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid_link_format|link"
+      }
+    }
+  },
+  {
+    "id": "link.0020",
+    "section": "§11.3",
+    "profile": "extended",
+    "operation": "link.parse",
+    "assertion": "envelope_error",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "[broken](missing"
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid_link_format|link"
+      }
+    }
+  },
+  {
+    "id": "link.0021",
+    "section": "§11.3",
+    "profile": "extended",
+    "operation": "link.parse",
+    "assertion": "envelope_error",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "[[broken"
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid_link_format|link"
+      }
+    }
+  },
+  {
+    "id": "link.0022",
+    "section": "§11.3",
+    "profile": "extended",
+    "operation": "link.parse",
+    "assertion": "envelope_error",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "http://example.com"
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid_link_format|link"
+      }
+    }
+  },
+  {
+    "id": "link.0023",
+    "section": "§11.3",
+    "profile": "extended",
+    "operation": "link.parse",
+    "assertion": "envelope_error",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": ""
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid_link_format|link"
+      }
+    }
+  },
+  {
+    "id": "link.0024",
+    "section": "§11.3",
+    "profile": "extended",
+    "operation": "link.parse",
+    "assertion": "envelope_error",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "not a link"
+    },
+    "expect": {
+      "error": {
+        "$regex": "invalid_link_format|link"
+      }
+    }
+  },
+  {
+    "id": "link.0025",
+    "section": "§11",
+    "profile": "extended",
+    "operation": "link.resolve",
+    "assertion": "envelope_equals",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "[[task-001]]",
+      "sourcePath": "tasks/sub/task-002.md",
+      "collectionRoot": "/vault",
+      "candidates": [
+        "tasks/task-001.md"
+      ],
+      "expectedPath": "tasks/task-001.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "path": "tasks/task-001.md"
+      }
+    }
+  },
+  {
+    "id": "link.0026",
+    "section": "§11",
+    "profile": "extended",
+    "operation": "link.resolve",
+    "assertion": "envelope_equals",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "[[../task-001]]",
+      "sourcePath": "tasks/sub/task-002.md",
+      "collectionRoot": "/vault",
+      "candidates": [],
+      "expectedPath": "tasks/task-001.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "path": "tasks/task-001.md"
+      }
+    }
+  },
+  {
+    "id": "link.0027",
+    "section": "§11",
+    "profile": "extended",
+    "operation": "link.resolve",
+    "assertion": "envelope_equals",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "[Doc](../../notes/doc.md)",
+      "sourcePath": "tasks/sub/task-002.md",
+      "collectionRoot": "/vault",
+      "candidates": [],
+      "expectedPath": "notes/doc.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "path": "notes/doc.md"
+      }
+    }
+  },
+  {
+    "id": "link.0028",
+    "section": "§11",
+    "profile": "extended",
+    "operation": "link.resolve",
+    "assertion": "envelope_equals",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "[[ambiguous]]",
+      "sourcePath": "tasks/sub/task-002.md",
+      "collectionRoot": "/vault",
+      "candidates": [
+        "tasks/ambiguous.md",
+        "notes/ambiguous.md"
+      ],
+      "expectedPath": "notes/ambiguous.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "path": "notes/ambiguous.md"
+      }
+    }
+  },
+  {
+    "id": "link.0029",
+    "section": "§11.5",
+    "profile": "extended",
+    "operation": "link.resolve",
+    "assertion": "envelope_error",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "[[../../escape]]",
+      "sourcePath": "tasks/sub/task-002.md",
+      "collectionRoot": "/vault",
+      "candidates": [],
+      "errorRegex": "path_traversal|escape"
+    },
+    "expect": {
+      "error": {
+        "$regex": "path_traversal|escape"
+      }
+    }
+  },
+  {
+    "id": "link.0030",
+    "section": "§11.5",
+    "profile": "extended",
+    "operation": "link.resolve",
+    "assertion": "envelope_error",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "[Doc](../../../escape.md)",
+      "sourcePath": "tasks/sub/task-002.md",
+      "collectionRoot": "/vault",
+      "candidates": [],
+      "errorRegex": "path_traversal|escape"
+    },
+    "expect": {
+      "error": {
+        "$regex": "path_traversal|escape"
+      }
+    }
+  },
+  {
+    "id": "link.0031",
+    "section": "§11.5",
+    "profile": "extended",
+    "operation": "link.resolve",
+    "assertion": "envelope_error",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "../../../escape.md",
+      "sourcePath": "tasks/sub/task-002.md",
+      "collectionRoot": "/vault",
+      "candidates": [],
+      "errorRegex": "path_traversal|escape"
+    },
+    "expect": {
+      "error": {
+        "$regex": "path_traversal|escape"
+      }
+    }
+  },
+  {
+    "id": "link.0032",
+    "section": "§11.5",
+    "profile": "extended",
+    "operation": "link.resolve",
+    "assertion": "envelope_error",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "[[../../../outside/secret]]",
+      "sourcePath": "deep/nested/path/task.md",
+      "collectionRoot": "/vault",
+      "candidates": [],
+      "errorRegex": "path_traversal|escape"
+    },
+    "expect": {
+      "error": {
+        "$regex": "path_traversal|escape"
+      }
+    }
+  },
+  {
+    "id": "link.0033",
+    "section": "§11",
+    "profile": "extended",
+    "operation": "link.resolve",
+    "assertion": "envelope_equals",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "[[meeting-notes]]",
+      "sourcePath": "tasks/sub/task-002.md",
+      "collectionRoot": "/vault",
+      "candidates": [
+        "notes/meeting-notes.markdown",
+        "notes/meeting-notes.md"
+      ],
+      "extensions": [
+        ".md",
+        ".markdown"
+      ],
+      "expectedPath": "notes/meeting-notes.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "path": "notes/meeting-notes.md"
+      }
+    }
+  },
+  {
+    "id": "link.0034",
+    "section": "§11",
+    "profile": "extended",
+    "operation": "link.resolve",
+    "assertion": "envelope_error",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "[[meeting-notes]]",
+      "sourcePath": "tasks/sub/task-002.md",
+      "collectionRoot": "/vault",
+      "candidates": [],
+      "extensions": [
+        ".md",
+        ".markdown"
+      ],
+      "errorRegex": "unresolved|link"
+    },
+    "expect": {
+      "error": {
+        "$regex": "unresolved|link"
+      }
+    }
+  },
+  {
+    "id": "link.0035",
+    "section": "§11",
+    "profile": "extended",
+    "operation": "link.resolve",
+    "assertion": "envelope_equals",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "[[my-task-id]]",
+      "sourcePath": "tasks/task-001.md",
+      "collectionRoot": "/vault",
+      "candidates": [
+        "tasks/task-002.md"
+      ],
+      "idIndex": {
+        "tasks/task-002.md": "my-task-id"
+      },
+      "expectedPath": "tasks/task-002.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "path": "tasks/task-002.md"
+      }
+    }
+  },
+  {
+    "id": "link.0036",
+    "section": "§11",
+    "profile": "extended",
+    "operation": "link.resolve",
+    "assertion": "envelope_error",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "[[shared]]",
+      "sourcePath": "tasks/sub/task-001.md",
+      "collectionRoot": "/vault",
+      "candidates": [
+        "notes/shared.md",
+        "tasks/sub/shared.md"
+      ],
+      "errorRegex": "ambiguous_link"
+    },
+    "expect": {
+      "error": {
+        "$regex": "ambiguous_link"
+      }
+    }
+  },
+  {
+    "id": "link.0037",
+    "section": "§11",
+    "profile": "extended",
+    "operation": "link.resolve",
+    "assertion": "envelope_error",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "[[util]]",
+      "sourcePath": "archive/old/task.md",
+      "collectionRoot": "/vault",
+      "candidates": [
+        "lib/util.md",
+        "lib/nested/extra/util.md"
+      ],
+      "errorRegex": "ambiguous_link"
+    },
+    "expect": {
+      "error": {
+        "$regex": "ambiguous_link"
+      }
+    }
+  },
+  {
+    "id": "link.0038",
+    "section": "§11",
+    "profile": "extended",
+    "operation": "link.resolve",
+    "assertion": "envelope_equals",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "[[notes/meeting]]",
+      "sourcePath": "tasks/sub/task-002.md",
+      "collectionRoot": "/vault",
+      "candidates": [
+        "notes/meeting.md"
+      ],
+      "expectedPath": "notes/meeting.md"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "path": "notes/meeting.md"
+      }
+    }
+  },
+  {
+    "id": "link.0039",
+    "section": "§11.6",
+    "profile": "extended",
+    "operation": "link.update_references_on_rename",
+    "assertion": "envelope_equals",
+    "requires": [
+      "links",
+      "rename"
+    ],
+    "input": {
+      "oldPath": "tasks/task-001.md",
+      "newPath": "tasks/task-001-renamed.md",
+      "references": [
+        "[[task-001]]",
+        "[[task-001|Alias]]",
+        "[Label](../tasks/task-001.md#anchor)"
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "updated": {
+          "$contains": [
+            "[[task-001-renamed]]",
+            "[[task-001-renamed|Alias]]"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "link.0040",
+    "section": "§11.6",
+    "profile": "extended",
+    "operation": "link.update_references_on_rename",
+    "assertion": "envelope_equals",
+    "requires": [
+      "links",
+      "rename"
+    ],
+    "input": {
+      "oldPath": "tasks/task-001.md",
+      "newPath": "tasks/task-001-renamed.md",
+      "references": [
+        "[[task-001]]",
+        "[[task-999]]",
+        "[[other-note]]"
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "updated": {
+          "$contains": [
+            "[[task-001-renamed]]",
+            "[[task-999]]",
+            "[[other-note]]"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "link.0041",
+    "section": "§11.6",
+    "profile": "extended",
+    "operation": "link.update_references_on_rename",
+    "assertion": "envelope_equals",
+    "requires": [
+      "links",
+      "rename"
+    ],
+    "input": {
+      "oldPath": "tasks/task-001.md",
+      "newPath": "tasks/task-001-v2.md",
+      "references": [
+        "[Task](tasks/task-001.md)",
+        "[Task](tasks/task-001.md#details)",
+        "[Task](tasks/task-777.md#other)"
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "updated": {
+          "$contains": [
+            "[Task](tasks/task-001-v2.md)",
+            "[Task](tasks/task-001-v2.md#details)",
+            "[Task](tasks/task-777.md#other)"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "link.0042",
+    "section": "§11.6",
+    "profile": "extended",
+    "operation": "link.update_references_on_rename",
+    "assertion": "envelope_equals",
+    "requires": [
+      "links",
+      "rename"
+    ],
+    "input": {
+      "oldPath": "tasks/task-001.md",
+      "newPath": "tasks/task-001-v3.md",
+      "references": [
+        "[[task-001#anchor|Alias]]",
+        "[[task-001]]",
+        "[[task-abc]]"
+      ]
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "updated": {
+          "$contains": [
+            "[[task-001-v3#anchor|Alias]]",
+            "[[task-001-v3]]",
+            "[[task-abc]]"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "link.0043",
+    "section": "§11.3",
+    "profile": "extended",
+    "operation": "link.parse",
+    "assertion": "envelope_equals",
+    "requires": [
+      "links"
+    ],
+    "input": {
+      "raw": "[[docs/api#auth|API Reference]]"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "raw": "[[docs/api#auth|API Reference]]",
+        "target": "docs/api",
+        "alias": "API Reference",
+        "anchor": "auth",
+        "format": "wikilink",
+        "is_relative": false
+      }
+    }
+  }
+]

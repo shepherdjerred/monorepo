@@ -1,7 +1,7 @@
 [extend]
 useDefault = true
 
-[allowlist]
+[[allowlists]]
 regexTarget = "secret"
 regexes = [
   # PostHog phc_ project tokens are public browser ingestion identifiers.
@@ -68,4 +68,18 @@ paths = [
   # Scout test/runtime logs are gitignored outputs and may be written while the
   # parallel source scan runs. Staged source still goes through `gitleaks protect`.
   '''packages/scout-for-lol/.*/logs/''',
+]
+
+[[allowlists]]
+description = "Public synthetic Obsidian transcript key proofs from key bytes 0 through 31"
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "secret"
+paths = [
+  '''^packages/tasknotes-core/crates/obsidian-sync/tests/reference/protocol\.json$''',
+]
+# Version 0 uses SHA-256; versions 2 and 3 use HKDF with public-synthetic-salt.
+# Both are reproducible public fixture values, not account or vault credentials.
+regexes = [
+  '''^(630dcd2966c4336691125448bbb25b4ff412a49c732db2c8abc1b8581bd710dd|7b607a09a573c6f5ed91659e0ad243621b420539a488c693b643a0571b4f6994)$''',
 ]

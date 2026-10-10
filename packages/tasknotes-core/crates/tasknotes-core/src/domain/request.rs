@@ -162,13 +162,6 @@ pub struct CreateTaskRequest {
         skip_serializing_if = "Option::is_none"
     )]
     pub recurrence_anchor: Option<RecurrenceAnchor>,
-    /// The estimate in whole minutes.
-    #[serde(
-        default,
-        deserialize_with = "present_only",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub time_estimate: Option<u32>,
     /// Extra frontmatter keys to write.
     #[serde(
         default,
@@ -194,7 +187,6 @@ impl CreateTaskRequest {
             tags: None,
             recurrence: None,
             recurrence_anchor: None,
-            time_estimate: None,
             extra_fields: None,
         }
     }
@@ -271,9 +263,6 @@ pub struct UpdateTaskRequest {
     /// What the recurrence is measured from; `null` clears it.
     #[serde(default, skip_serializing_if = "FieldUpdate::is_unchanged")]
     pub recurrence_anchor: RecurrenceAnchorUpdate,
-    /// The estimate in whole minutes; `null` clears it.
-    #[serde(default, skip_serializing_if = "FieldUpdate::is_unchanged")]
-    pub time_estimate: MinutesUpdate,
     /// The full replacement set of extra frontmatter keys.
     #[serde(
         default,
@@ -285,10 +274,6 @@ pub struct UpdateTaskRequest {
 
 /// A clearable string field. Named because UniFFI cannot export a generic.
 pub type TextUpdate = FieldUpdate<String>;
-
-/// A clearable whole-minutes field. Named because UniFFI cannot export a
-/// generic.
-pub type MinutesUpdate = FieldUpdate<u32>;
 
 /// A clearable recurrence anchor. Named because UniFFI cannot export a generic.
 pub type RecurrenceAnchorUpdate = FieldUpdate<RecurrenceAnchor>;
@@ -367,13 +352,11 @@ mod tests {
             "details": null,
             "status": "done",
             "recurrenceAnchor": "completion",
-            "timeEstimate": null,
             "projects": ["[[Areas/Work|Work]]"],
         }))
         .unwrap();
         assert_eq!(request.status, Some(TaskStatus::Done));
         assert_eq!(request.details, FieldUpdate::Clear);
-        assert_eq!(request.time_estimate, FieldUpdate::Clear);
         assert_eq!(
             request.recurrence_anchor,
             FieldUpdate::Set(RecurrenceAnchor::Completion)

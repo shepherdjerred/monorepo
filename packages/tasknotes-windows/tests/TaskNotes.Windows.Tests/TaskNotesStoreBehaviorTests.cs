@@ -32,7 +32,6 @@ namespace TaskNotes.Windows.Tests
                     Projects = ["[[Windows]]", "[[Native]]", "[[Native]]"],
                     Contexts = ["desktop", "desk", "desktop"],
                     Tags = ["quality", "native", "quality"],
-                    TimeEstimate = 45,
                 },
                 TestContext.CancellationToken
             );
@@ -49,7 +48,6 @@ namespace TaskNotes.Windows.Tests
             Assert.AreSequenceEqual(["[[Windows]]", "[[Native]]"], updated.Projects);
             Assert.AreSequenceEqual(["desktop", "desk"], updated.Contexts);
             Assert.AreSequenceEqual(["quality", "native"], updated.Tags);
-            Assert.AreEqual(45u, updated.TimeEstimate);
 
             await store.ScheduleTasksAsync(
                 [updated.Id, updated.Id],
@@ -249,7 +247,6 @@ namespace TaskNotes.Windows.Tests
                     Projects = recurring.Projects,
                     Contexts = recurring.Contexts,
                     Tags = recurring.Tags,
-                    TimeEstimate = recurring.TimeEstimate,
                 },
                 TestContext.CancellationToken
             );
@@ -335,10 +332,6 @@ namespace TaskNotes.Windows.Tests
                     )
             );
             Assert.AreEqual(TaskListKind.Today, store.State.Query.Kind);
-            _ = await Assert.ThrowsExactlyAsync<uniffi.TaskNotesCore.CoreException.Validation>(
-                async () =>
-                    await store.LoadPomodoroAsync(TestContext.CancellationToken)
-            );
             await store.DisposeAsync();
             await store.DisposeAsync();
             _ = await Assert.ThrowsExactlyAsync<ObjectDisposedException>(async () =>
@@ -353,6 +346,12 @@ namespace TaskNotes.Windows.Tests
             using TemporaryDirectory directory = new();
             await using TaskNotesStore store = new(directory.Path);
             await store.InitializeAsync(null, null, TestContext.CancellationToken);
+            List<int> observedCounts = [];
+            store.StateChanged += (_, _) =>
+            {
+                lock (observedCounts)
+                    observedCounts.Add(store.State.AllTasks.Count);
+            };
             Task[] additions =
             [
                 .. Enumerable
@@ -372,6 +371,17 @@ namespace TaskNotes.Windows.Tests
                     .Distinct(StringComparer.Ordinal)
                     .Count()
             );
+            lock (observedCounts)
+            {
+                Assert.IsNotEmpty(observedCounts);
+                Assert.AreEqual(24, observedCounts[^1]);
+                Assert.IsTrue(
+                    observedCounts
+                        .Zip(observedCounts.Skip(1))
+                        .All(pair => pair.First <= pair.Second),
+                    "A published observation must not regress to an earlier worker snapshot."
+                );
+            }
         }
 
         /// <summary>Projects stable labels and automation identifiers without platform dependencies.</summary>
@@ -393,16 +403,13 @@ namespace TaskNotes.Windows.Tests
                 ["Project"],
                 ["context"],
                 ["tag"],
-                null,
-                0,
                 false,
                 false,
                 false,
                 false,
                 true,
                 null,
-                "Today",
-                false
+                "Today"
             );
             Assert.AreEqual("Pending", item.PendingLabel);
             Assert.AreEqual("2026-08-11", item.DateLabel);

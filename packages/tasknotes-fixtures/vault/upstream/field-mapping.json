@@ -1,0 +1,5946 @@
+[
+  {
+    "id": "field.0001",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.default_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "checkRole": "title"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "title": "title"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "title": "title"
+          }
+        },
+        "displayNameKey": "title"
+      }
+    }
+  },
+  {
+    "id": "field.0002",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.default_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "checkRole": "status"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "status": "status"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "status": "status"
+          }
+        },
+        "displayNameKey": "title"
+      }
+    }
+  },
+  {
+    "id": "field.0003",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.default_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "checkRole": "priority"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "priority": "priority"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "priority": "priority"
+          }
+        },
+        "displayNameKey": "title"
+      }
+    }
+  },
+  {
+    "id": "field.0004",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.default_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "checkRole": "due"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "due": "due"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "due": "due"
+          }
+        },
+        "displayNameKey": "title"
+      }
+    }
+  },
+  {
+    "id": "field.0005",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.default_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "checkRole": "scheduled"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "scheduled": "scheduled"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "scheduled": "scheduled"
+          }
+        },
+        "displayNameKey": "title"
+      }
+    }
+  },
+  {
+    "id": "field.0006",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.default_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "checkRole": "completedDate"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "completedDate": "completedDate"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "completedDate": "completedDate"
+          }
+        },
+        "displayNameKey": "title"
+      }
+    }
+  },
+  {
+    "id": "field.0007",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.default_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "checkRole": "tags"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "tags": "tags"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "tags": "tags"
+          }
+        },
+        "displayNameKey": "title"
+      }
+    }
+  },
+  {
+    "id": "field.0008",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.default_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "checkRole": "contexts"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "contexts": "contexts"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "contexts": "contexts"
+          }
+        },
+        "displayNameKey": "title"
+      }
+    }
+  },
+  {
+    "id": "field.0009",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.default_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "checkRole": "projects"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "projects": "projects"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "projects": "projects"
+          }
+        },
+        "displayNameKey": "title"
+      }
+    }
+  },
+  {
+    "id": "field.0010",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.default_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "checkRole": "attachments"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "attachments": "attachments"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "attachments": "attachments"
+          }
+        },
+        "displayNameKey": "title"
+      }
+    }
+  },
+  {
+    "id": "field.0011",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.default_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "checkRole": "timeEstimate"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "timeEstimate": "timeEstimate"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "timeEstimate": "timeEstimate"
+          }
+        },
+        "displayNameKey": "title"
+      }
+    }
+  },
+  {
+    "id": "field.0012",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.default_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "checkRole": "dateCreated"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "dateCreated": "dateCreated"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "dateCreated": "dateCreated"
+          }
+        },
+        "displayNameKey": "title"
+      }
+    }
+  },
+  {
+    "id": "field.0013",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.default_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "checkRole": "dateModified"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "dateModified": "dateModified"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "dateModified": "dateModified"
+          }
+        },
+        "displayNameKey": "title"
+      }
+    }
+  },
+  {
+    "id": "field.0014",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.default_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "checkRole": "recurrence"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "recurrence": "recurrence"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "recurrence": "recurrence"
+          }
+        },
+        "displayNameKey": "title"
+      }
+    }
+  },
+  {
+    "id": "field.0015",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.default_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "checkRole": "recurrenceAnchor"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "recurrenceAnchor": "recurrenceAnchor"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "recurrenceAnchor": "recurrenceAnchor"
+          }
+        },
+        "displayNameKey": "title"
+      }
+    }
+  },
+  {
+    "id": "field.0016",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.default_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "checkRole": "completeInstances"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "completeInstances": "completeInstances"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "completeInstances": "completeInstances"
+          }
+        },
+        "displayNameKey": "title"
+      }
+    }
+  },
+  {
+    "id": "field.0017",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.default_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "checkRole": "skippedInstances"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "skippedInstances": "skippedInstances"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "skippedInstances": "skippedInstances"
+          }
+        },
+        "displayNameKey": "title"
+      }
+    }
+  },
+  {
+    "id": "field.0018",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.default_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "checkRole": "timeEntries"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "timeEntries": "timeEntries"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "timeEntries": "timeEntries"
+          }
+        },
+        "displayNameKey": "title"
+      }
+    }
+  },
+  {
+    "id": "field.0019",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "custom_title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "custom_status": {
+          "type": "string",
+          "tn_role": "status"
+        },
+        "custom_priority": {
+          "type": "string",
+          "tn_role": "priority"
+        },
+        "custom_due": {
+          "type": "string",
+          "tn_role": "due"
+        },
+        "custom_scheduled": {
+          "type": "string",
+          "tn_role": "scheduled"
+        },
+        "custom_completedDate": {
+          "type": "string",
+          "tn_role": "completedDate"
+        },
+        "custom_tags": {
+          "type": "string",
+          "tn_role": "tags"
+        },
+        "custom_contexts": {
+          "type": "string",
+          "tn_role": "contexts"
+        },
+        "custom_projects": {
+          "type": "string",
+          "tn_role": "projects"
+        },
+        "custom_attachments": {
+          "type": "string",
+          "tn_role": "attachments"
+        },
+        "custom_timeEstimate": {
+          "type": "string",
+          "tn_role": "timeEstimate"
+        },
+        "custom_dateCreated": {
+          "type": "string",
+          "tn_role": "dateCreated"
+        },
+        "custom_dateModified": {
+          "type": "string",
+          "tn_role": "dateModified"
+        },
+        "custom_recurrence": {
+          "type": "string",
+          "tn_role": "recurrence"
+        },
+        "custom_recurrenceAnchor": {
+          "type": "string",
+          "tn_role": "recurrenceAnchor"
+        },
+        "custom_completeInstances": {
+          "type": "string",
+          "tn_role": "completeInstances"
+        },
+        "custom_skippedInstances": {
+          "type": "string",
+          "tn_role": "skippedInstances"
+        },
+        "custom_timeEntries": {
+          "type": "string",
+          "tn_role": "timeEntries"
+        }
+      },
+      "displayNameKey": "custom_title",
+      "checkRole": "title"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "title": "custom_title"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "custom_title": "title"
+          }
+        },
+        "displayNameKey": "custom_title"
+      }
+    }
+  },
+  {
+    "id": "field.0020",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "custom_title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "custom_status": {
+          "type": "string",
+          "tn_role": "status"
+        },
+        "custom_priority": {
+          "type": "string",
+          "tn_role": "priority"
+        },
+        "custom_due": {
+          "type": "string",
+          "tn_role": "due"
+        },
+        "custom_scheduled": {
+          "type": "string",
+          "tn_role": "scheduled"
+        },
+        "custom_completedDate": {
+          "type": "string",
+          "tn_role": "completedDate"
+        },
+        "custom_tags": {
+          "type": "string",
+          "tn_role": "tags"
+        },
+        "custom_contexts": {
+          "type": "string",
+          "tn_role": "contexts"
+        },
+        "custom_projects": {
+          "type": "string",
+          "tn_role": "projects"
+        },
+        "custom_attachments": {
+          "type": "string",
+          "tn_role": "attachments"
+        },
+        "custom_timeEstimate": {
+          "type": "string",
+          "tn_role": "timeEstimate"
+        },
+        "custom_dateCreated": {
+          "type": "string",
+          "tn_role": "dateCreated"
+        },
+        "custom_dateModified": {
+          "type": "string",
+          "tn_role": "dateModified"
+        },
+        "custom_recurrence": {
+          "type": "string",
+          "tn_role": "recurrence"
+        },
+        "custom_recurrenceAnchor": {
+          "type": "string",
+          "tn_role": "recurrenceAnchor"
+        },
+        "custom_completeInstances": {
+          "type": "string",
+          "tn_role": "completeInstances"
+        },
+        "custom_skippedInstances": {
+          "type": "string",
+          "tn_role": "skippedInstances"
+        },
+        "custom_timeEntries": {
+          "type": "string",
+          "tn_role": "timeEntries"
+        }
+      },
+      "displayNameKey": "custom_title",
+      "checkRole": "status"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "status": "custom_status"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "custom_status": "status"
+          }
+        },
+        "displayNameKey": "custom_title"
+      }
+    }
+  },
+  {
+    "id": "field.0021",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "custom_title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "custom_status": {
+          "type": "string",
+          "tn_role": "status"
+        },
+        "custom_priority": {
+          "type": "string",
+          "tn_role": "priority"
+        },
+        "custom_due": {
+          "type": "string",
+          "tn_role": "due"
+        },
+        "custom_scheduled": {
+          "type": "string",
+          "tn_role": "scheduled"
+        },
+        "custom_completedDate": {
+          "type": "string",
+          "tn_role": "completedDate"
+        },
+        "custom_tags": {
+          "type": "string",
+          "tn_role": "tags"
+        },
+        "custom_contexts": {
+          "type": "string",
+          "tn_role": "contexts"
+        },
+        "custom_projects": {
+          "type": "string",
+          "tn_role": "projects"
+        },
+        "custom_attachments": {
+          "type": "string",
+          "tn_role": "attachments"
+        },
+        "custom_timeEstimate": {
+          "type": "string",
+          "tn_role": "timeEstimate"
+        },
+        "custom_dateCreated": {
+          "type": "string",
+          "tn_role": "dateCreated"
+        },
+        "custom_dateModified": {
+          "type": "string",
+          "tn_role": "dateModified"
+        },
+        "custom_recurrence": {
+          "type": "string",
+          "tn_role": "recurrence"
+        },
+        "custom_recurrenceAnchor": {
+          "type": "string",
+          "tn_role": "recurrenceAnchor"
+        },
+        "custom_completeInstances": {
+          "type": "string",
+          "tn_role": "completeInstances"
+        },
+        "custom_skippedInstances": {
+          "type": "string",
+          "tn_role": "skippedInstances"
+        },
+        "custom_timeEntries": {
+          "type": "string",
+          "tn_role": "timeEntries"
+        }
+      },
+      "displayNameKey": "custom_title",
+      "checkRole": "priority"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "priority": "custom_priority"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "custom_priority": "priority"
+          }
+        },
+        "displayNameKey": "custom_title"
+      }
+    }
+  },
+  {
+    "id": "field.0022",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "custom_title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "custom_status": {
+          "type": "string",
+          "tn_role": "status"
+        },
+        "custom_priority": {
+          "type": "string",
+          "tn_role": "priority"
+        },
+        "custom_due": {
+          "type": "string",
+          "tn_role": "due"
+        },
+        "custom_scheduled": {
+          "type": "string",
+          "tn_role": "scheduled"
+        },
+        "custom_completedDate": {
+          "type": "string",
+          "tn_role": "completedDate"
+        },
+        "custom_tags": {
+          "type": "string",
+          "tn_role": "tags"
+        },
+        "custom_contexts": {
+          "type": "string",
+          "tn_role": "contexts"
+        },
+        "custom_projects": {
+          "type": "string",
+          "tn_role": "projects"
+        },
+        "custom_attachments": {
+          "type": "string",
+          "tn_role": "attachments"
+        },
+        "custom_timeEstimate": {
+          "type": "string",
+          "tn_role": "timeEstimate"
+        },
+        "custom_dateCreated": {
+          "type": "string",
+          "tn_role": "dateCreated"
+        },
+        "custom_dateModified": {
+          "type": "string",
+          "tn_role": "dateModified"
+        },
+        "custom_recurrence": {
+          "type": "string",
+          "tn_role": "recurrence"
+        },
+        "custom_recurrenceAnchor": {
+          "type": "string",
+          "tn_role": "recurrenceAnchor"
+        },
+        "custom_completeInstances": {
+          "type": "string",
+          "tn_role": "completeInstances"
+        },
+        "custom_skippedInstances": {
+          "type": "string",
+          "tn_role": "skippedInstances"
+        },
+        "custom_timeEntries": {
+          "type": "string",
+          "tn_role": "timeEntries"
+        }
+      },
+      "displayNameKey": "custom_title",
+      "checkRole": "due"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "due": "custom_due"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "custom_due": "due"
+          }
+        },
+        "displayNameKey": "custom_title"
+      }
+    }
+  },
+  {
+    "id": "field.0023",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "custom_title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "custom_status": {
+          "type": "string",
+          "tn_role": "status"
+        },
+        "custom_priority": {
+          "type": "string",
+          "tn_role": "priority"
+        },
+        "custom_due": {
+          "type": "string",
+          "tn_role": "due"
+        },
+        "custom_scheduled": {
+          "type": "string",
+          "tn_role": "scheduled"
+        },
+        "custom_completedDate": {
+          "type": "string",
+          "tn_role": "completedDate"
+        },
+        "custom_tags": {
+          "type": "string",
+          "tn_role": "tags"
+        },
+        "custom_contexts": {
+          "type": "string",
+          "tn_role": "contexts"
+        },
+        "custom_projects": {
+          "type": "string",
+          "tn_role": "projects"
+        },
+        "custom_attachments": {
+          "type": "string",
+          "tn_role": "attachments"
+        },
+        "custom_timeEstimate": {
+          "type": "string",
+          "tn_role": "timeEstimate"
+        },
+        "custom_dateCreated": {
+          "type": "string",
+          "tn_role": "dateCreated"
+        },
+        "custom_dateModified": {
+          "type": "string",
+          "tn_role": "dateModified"
+        },
+        "custom_recurrence": {
+          "type": "string",
+          "tn_role": "recurrence"
+        },
+        "custom_recurrenceAnchor": {
+          "type": "string",
+          "tn_role": "recurrenceAnchor"
+        },
+        "custom_completeInstances": {
+          "type": "string",
+          "tn_role": "completeInstances"
+        },
+        "custom_skippedInstances": {
+          "type": "string",
+          "tn_role": "skippedInstances"
+        },
+        "custom_timeEntries": {
+          "type": "string",
+          "tn_role": "timeEntries"
+        }
+      },
+      "displayNameKey": "custom_title",
+      "checkRole": "scheduled"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "scheduled": "custom_scheduled"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "custom_scheduled": "scheduled"
+          }
+        },
+        "displayNameKey": "custom_title"
+      }
+    }
+  },
+  {
+    "id": "field.0024",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "custom_title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "custom_status": {
+          "type": "string",
+          "tn_role": "status"
+        },
+        "custom_priority": {
+          "type": "string",
+          "tn_role": "priority"
+        },
+        "custom_due": {
+          "type": "string",
+          "tn_role": "due"
+        },
+        "custom_scheduled": {
+          "type": "string",
+          "tn_role": "scheduled"
+        },
+        "custom_completedDate": {
+          "type": "string",
+          "tn_role": "completedDate"
+        },
+        "custom_tags": {
+          "type": "string",
+          "tn_role": "tags"
+        },
+        "custom_contexts": {
+          "type": "string",
+          "tn_role": "contexts"
+        },
+        "custom_projects": {
+          "type": "string",
+          "tn_role": "projects"
+        },
+        "custom_attachments": {
+          "type": "string",
+          "tn_role": "attachments"
+        },
+        "custom_timeEstimate": {
+          "type": "string",
+          "tn_role": "timeEstimate"
+        },
+        "custom_dateCreated": {
+          "type": "string",
+          "tn_role": "dateCreated"
+        },
+        "custom_dateModified": {
+          "type": "string",
+          "tn_role": "dateModified"
+        },
+        "custom_recurrence": {
+          "type": "string",
+          "tn_role": "recurrence"
+        },
+        "custom_recurrenceAnchor": {
+          "type": "string",
+          "tn_role": "recurrenceAnchor"
+        },
+        "custom_completeInstances": {
+          "type": "string",
+          "tn_role": "completeInstances"
+        },
+        "custom_skippedInstances": {
+          "type": "string",
+          "tn_role": "skippedInstances"
+        },
+        "custom_timeEntries": {
+          "type": "string",
+          "tn_role": "timeEntries"
+        }
+      },
+      "displayNameKey": "custom_title",
+      "checkRole": "completedDate"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "completedDate": "custom_completedDate"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "custom_completedDate": "completedDate"
+          }
+        },
+        "displayNameKey": "custom_title"
+      }
+    }
+  },
+  {
+    "id": "field.0025",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "custom_title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "custom_status": {
+          "type": "string",
+          "tn_role": "status"
+        },
+        "custom_priority": {
+          "type": "string",
+          "tn_role": "priority"
+        },
+        "custom_due": {
+          "type": "string",
+          "tn_role": "due"
+        },
+        "custom_scheduled": {
+          "type": "string",
+          "tn_role": "scheduled"
+        },
+        "custom_completedDate": {
+          "type": "string",
+          "tn_role": "completedDate"
+        },
+        "custom_tags": {
+          "type": "string",
+          "tn_role": "tags"
+        },
+        "custom_contexts": {
+          "type": "string",
+          "tn_role": "contexts"
+        },
+        "custom_projects": {
+          "type": "string",
+          "tn_role": "projects"
+        },
+        "custom_attachments": {
+          "type": "string",
+          "tn_role": "attachments"
+        },
+        "custom_timeEstimate": {
+          "type": "string",
+          "tn_role": "timeEstimate"
+        },
+        "custom_dateCreated": {
+          "type": "string",
+          "tn_role": "dateCreated"
+        },
+        "custom_dateModified": {
+          "type": "string",
+          "tn_role": "dateModified"
+        },
+        "custom_recurrence": {
+          "type": "string",
+          "tn_role": "recurrence"
+        },
+        "custom_recurrenceAnchor": {
+          "type": "string",
+          "tn_role": "recurrenceAnchor"
+        },
+        "custom_completeInstances": {
+          "type": "string",
+          "tn_role": "completeInstances"
+        },
+        "custom_skippedInstances": {
+          "type": "string",
+          "tn_role": "skippedInstances"
+        },
+        "custom_timeEntries": {
+          "type": "string",
+          "tn_role": "timeEntries"
+        }
+      },
+      "displayNameKey": "custom_title",
+      "checkRole": "tags"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "tags": "custom_tags"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "custom_tags": "tags"
+          }
+        },
+        "displayNameKey": "custom_title"
+      }
+    }
+  },
+  {
+    "id": "field.0026",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "custom_title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "custom_status": {
+          "type": "string",
+          "tn_role": "status"
+        },
+        "custom_priority": {
+          "type": "string",
+          "tn_role": "priority"
+        },
+        "custom_due": {
+          "type": "string",
+          "tn_role": "due"
+        },
+        "custom_scheduled": {
+          "type": "string",
+          "tn_role": "scheduled"
+        },
+        "custom_completedDate": {
+          "type": "string",
+          "tn_role": "completedDate"
+        },
+        "custom_tags": {
+          "type": "string",
+          "tn_role": "tags"
+        },
+        "custom_contexts": {
+          "type": "string",
+          "tn_role": "contexts"
+        },
+        "custom_projects": {
+          "type": "string",
+          "tn_role": "projects"
+        },
+        "custom_attachments": {
+          "type": "string",
+          "tn_role": "attachments"
+        },
+        "custom_timeEstimate": {
+          "type": "string",
+          "tn_role": "timeEstimate"
+        },
+        "custom_dateCreated": {
+          "type": "string",
+          "tn_role": "dateCreated"
+        },
+        "custom_dateModified": {
+          "type": "string",
+          "tn_role": "dateModified"
+        },
+        "custom_recurrence": {
+          "type": "string",
+          "tn_role": "recurrence"
+        },
+        "custom_recurrenceAnchor": {
+          "type": "string",
+          "tn_role": "recurrenceAnchor"
+        },
+        "custom_completeInstances": {
+          "type": "string",
+          "tn_role": "completeInstances"
+        },
+        "custom_skippedInstances": {
+          "type": "string",
+          "tn_role": "skippedInstances"
+        },
+        "custom_timeEntries": {
+          "type": "string",
+          "tn_role": "timeEntries"
+        }
+      },
+      "displayNameKey": "custom_title",
+      "checkRole": "contexts"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "contexts": "custom_contexts"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "custom_contexts": "contexts"
+          }
+        },
+        "displayNameKey": "custom_title"
+      }
+    }
+  },
+  {
+    "id": "field.0027",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "custom_title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "custom_status": {
+          "type": "string",
+          "tn_role": "status"
+        },
+        "custom_priority": {
+          "type": "string",
+          "tn_role": "priority"
+        },
+        "custom_due": {
+          "type": "string",
+          "tn_role": "due"
+        },
+        "custom_scheduled": {
+          "type": "string",
+          "tn_role": "scheduled"
+        },
+        "custom_completedDate": {
+          "type": "string",
+          "tn_role": "completedDate"
+        },
+        "custom_tags": {
+          "type": "string",
+          "tn_role": "tags"
+        },
+        "custom_contexts": {
+          "type": "string",
+          "tn_role": "contexts"
+        },
+        "custom_projects": {
+          "type": "string",
+          "tn_role": "projects"
+        },
+        "custom_attachments": {
+          "type": "string",
+          "tn_role": "attachments"
+        },
+        "custom_timeEstimate": {
+          "type": "string",
+          "tn_role": "timeEstimate"
+        },
+        "custom_dateCreated": {
+          "type": "string",
+          "tn_role": "dateCreated"
+        },
+        "custom_dateModified": {
+          "type": "string",
+          "tn_role": "dateModified"
+        },
+        "custom_recurrence": {
+          "type": "string",
+          "tn_role": "recurrence"
+        },
+        "custom_recurrenceAnchor": {
+          "type": "string",
+          "tn_role": "recurrenceAnchor"
+        },
+        "custom_completeInstances": {
+          "type": "string",
+          "tn_role": "completeInstances"
+        },
+        "custom_skippedInstances": {
+          "type": "string",
+          "tn_role": "skippedInstances"
+        },
+        "custom_timeEntries": {
+          "type": "string",
+          "tn_role": "timeEntries"
+        }
+      },
+      "displayNameKey": "custom_title",
+      "checkRole": "projects"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "projects": "custom_projects"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "custom_projects": "projects"
+          }
+        },
+        "displayNameKey": "custom_title"
+      }
+    }
+  },
+  {
+    "id": "field.0028",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "custom_title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "custom_status": {
+          "type": "string",
+          "tn_role": "status"
+        },
+        "custom_priority": {
+          "type": "string",
+          "tn_role": "priority"
+        },
+        "custom_due": {
+          "type": "string",
+          "tn_role": "due"
+        },
+        "custom_scheduled": {
+          "type": "string",
+          "tn_role": "scheduled"
+        },
+        "custom_completedDate": {
+          "type": "string",
+          "tn_role": "completedDate"
+        },
+        "custom_tags": {
+          "type": "string",
+          "tn_role": "tags"
+        },
+        "custom_contexts": {
+          "type": "string",
+          "tn_role": "contexts"
+        },
+        "custom_projects": {
+          "type": "string",
+          "tn_role": "projects"
+        },
+        "custom_attachments": {
+          "type": "string",
+          "tn_role": "attachments"
+        },
+        "custom_timeEstimate": {
+          "type": "string",
+          "tn_role": "timeEstimate"
+        },
+        "custom_dateCreated": {
+          "type": "string",
+          "tn_role": "dateCreated"
+        },
+        "custom_dateModified": {
+          "type": "string",
+          "tn_role": "dateModified"
+        },
+        "custom_recurrence": {
+          "type": "string",
+          "tn_role": "recurrence"
+        },
+        "custom_recurrenceAnchor": {
+          "type": "string",
+          "tn_role": "recurrenceAnchor"
+        },
+        "custom_completeInstances": {
+          "type": "string",
+          "tn_role": "completeInstances"
+        },
+        "custom_skippedInstances": {
+          "type": "string",
+          "tn_role": "skippedInstances"
+        },
+        "custom_timeEntries": {
+          "type": "string",
+          "tn_role": "timeEntries"
+        }
+      },
+      "displayNameKey": "custom_title",
+      "checkRole": "attachments"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "attachments": "custom_attachments"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "custom_attachments": "attachments"
+          }
+        },
+        "displayNameKey": "custom_title"
+      }
+    }
+  },
+  {
+    "id": "field.0029",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "custom_title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "custom_status": {
+          "type": "string",
+          "tn_role": "status"
+        },
+        "custom_priority": {
+          "type": "string",
+          "tn_role": "priority"
+        },
+        "custom_due": {
+          "type": "string",
+          "tn_role": "due"
+        },
+        "custom_scheduled": {
+          "type": "string",
+          "tn_role": "scheduled"
+        },
+        "custom_completedDate": {
+          "type": "string",
+          "tn_role": "completedDate"
+        },
+        "custom_tags": {
+          "type": "string",
+          "tn_role": "tags"
+        },
+        "custom_contexts": {
+          "type": "string",
+          "tn_role": "contexts"
+        },
+        "custom_projects": {
+          "type": "string",
+          "tn_role": "projects"
+        },
+        "custom_attachments": {
+          "type": "string",
+          "tn_role": "attachments"
+        },
+        "custom_timeEstimate": {
+          "type": "string",
+          "tn_role": "timeEstimate"
+        },
+        "custom_dateCreated": {
+          "type": "string",
+          "tn_role": "dateCreated"
+        },
+        "custom_dateModified": {
+          "type": "string",
+          "tn_role": "dateModified"
+        },
+        "custom_recurrence": {
+          "type": "string",
+          "tn_role": "recurrence"
+        },
+        "custom_recurrenceAnchor": {
+          "type": "string",
+          "tn_role": "recurrenceAnchor"
+        },
+        "custom_completeInstances": {
+          "type": "string",
+          "tn_role": "completeInstances"
+        },
+        "custom_skippedInstances": {
+          "type": "string",
+          "tn_role": "skippedInstances"
+        },
+        "custom_timeEntries": {
+          "type": "string",
+          "tn_role": "timeEntries"
+        }
+      },
+      "displayNameKey": "custom_title",
+      "checkRole": "timeEstimate"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "timeEstimate": "custom_timeEstimate"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "custom_timeEstimate": "timeEstimate"
+          }
+        },
+        "displayNameKey": "custom_title"
+      }
+    }
+  },
+  {
+    "id": "field.0030",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "custom_title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "custom_status": {
+          "type": "string",
+          "tn_role": "status"
+        },
+        "custom_priority": {
+          "type": "string",
+          "tn_role": "priority"
+        },
+        "custom_due": {
+          "type": "string",
+          "tn_role": "due"
+        },
+        "custom_scheduled": {
+          "type": "string",
+          "tn_role": "scheduled"
+        },
+        "custom_completedDate": {
+          "type": "string",
+          "tn_role": "completedDate"
+        },
+        "custom_tags": {
+          "type": "string",
+          "tn_role": "tags"
+        },
+        "custom_contexts": {
+          "type": "string",
+          "tn_role": "contexts"
+        },
+        "custom_projects": {
+          "type": "string",
+          "tn_role": "projects"
+        },
+        "custom_attachments": {
+          "type": "string",
+          "tn_role": "attachments"
+        },
+        "custom_timeEstimate": {
+          "type": "string",
+          "tn_role": "timeEstimate"
+        },
+        "custom_dateCreated": {
+          "type": "string",
+          "tn_role": "dateCreated"
+        },
+        "custom_dateModified": {
+          "type": "string",
+          "tn_role": "dateModified"
+        },
+        "custom_recurrence": {
+          "type": "string",
+          "tn_role": "recurrence"
+        },
+        "custom_recurrenceAnchor": {
+          "type": "string",
+          "tn_role": "recurrenceAnchor"
+        },
+        "custom_completeInstances": {
+          "type": "string",
+          "tn_role": "completeInstances"
+        },
+        "custom_skippedInstances": {
+          "type": "string",
+          "tn_role": "skippedInstances"
+        },
+        "custom_timeEntries": {
+          "type": "string",
+          "tn_role": "timeEntries"
+        }
+      },
+      "displayNameKey": "custom_title",
+      "checkRole": "dateCreated"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "dateCreated": "custom_dateCreated"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "custom_dateCreated": "dateCreated"
+          }
+        },
+        "displayNameKey": "custom_title"
+      }
+    }
+  },
+  {
+    "id": "field.0031",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "custom_title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "custom_status": {
+          "type": "string",
+          "tn_role": "status"
+        },
+        "custom_priority": {
+          "type": "string",
+          "tn_role": "priority"
+        },
+        "custom_due": {
+          "type": "string",
+          "tn_role": "due"
+        },
+        "custom_scheduled": {
+          "type": "string",
+          "tn_role": "scheduled"
+        },
+        "custom_completedDate": {
+          "type": "string",
+          "tn_role": "completedDate"
+        },
+        "custom_tags": {
+          "type": "string",
+          "tn_role": "tags"
+        },
+        "custom_contexts": {
+          "type": "string",
+          "tn_role": "contexts"
+        },
+        "custom_projects": {
+          "type": "string",
+          "tn_role": "projects"
+        },
+        "custom_attachments": {
+          "type": "string",
+          "tn_role": "attachments"
+        },
+        "custom_timeEstimate": {
+          "type": "string",
+          "tn_role": "timeEstimate"
+        },
+        "custom_dateCreated": {
+          "type": "string",
+          "tn_role": "dateCreated"
+        },
+        "custom_dateModified": {
+          "type": "string",
+          "tn_role": "dateModified"
+        },
+        "custom_recurrence": {
+          "type": "string",
+          "tn_role": "recurrence"
+        },
+        "custom_recurrenceAnchor": {
+          "type": "string",
+          "tn_role": "recurrenceAnchor"
+        },
+        "custom_completeInstances": {
+          "type": "string",
+          "tn_role": "completeInstances"
+        },
+        "custom_skippedInstances": {
+          "type": "string",
+          "tn_role": "skippedInstances"
+        },
+        "custom_timeEntries": {
+          "type": "string",
+          "tn_role": "timeEntries"
+        }
+      },
+      "displayNameKey": "custom_title",
+      "checkRole": "dateModified"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "dateModified": "custom_dateModified"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "custom_dateModified": "dateModified"
+          }
+        },
+        "displayNameKey": "custom_title"
+      }
+    }
+  },
+  {
+    "id": "field.0032",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "custom_title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "custom_status": {
+          "type": "string",
+          "tn_role": "status"
+        },
+        "custom_priority": {
+          "type": "string",
+          "tn_role": "priority"
+        },
+        "custom_due": {
+          "type": "string",
+          "tn_role": "due"
+        },
+        "custom_scheduled": {
+          "type": "string",
+          "tn_role": "scheduled"
+        },
+        "custom_completedDate": {
+          "type": "string",
+          "tn_role": "completedDate"
+        },
+        "custom_tags": {
+          "type": "string",
+          "tn_role": "tags"
+        },
+        "custom_contexts": {
+          "type": "string",
+          "tn_role": "contexts"
+        },
+        "custom_projects": {
+          "type": "string",
+          "tn_role": "projects"
+        },
+        "custom_attachments": {
+          "type": "string",
+          "tn_role": "attachments"
+        },
+        "custom_timeEstimate": {
+          "type": "string",
+          "tn_role": "timeEstimate"
+        },
+        "custom_dateCreated": {
+          "type": "string",
+          "tn_role": "dateCreated"
+        },
+        "custom_dateModified": {
+          "type": "string",
+          "tn_role": "dateModified"
+        },
+        "custom_recurrence": {
+          "type": "string",
+          "tn_role": "recurrence"
+        },
+        "custom_recurrenceAnchor": {
+          "type": "string",
+          "tn_role": "recurrenceAnchor"
+        },
+        "custom_completeInstances": {
+          "type": "string",
+          "tn_role": "completeInstances"
+        },
+        "custom_skippedInstances": {
+          "type": "string",
+          "tn_role": "skippedInstances"
+        },
+        "custom_timeEntries": {
+          "type": "string",
+          "tn_role": "timeEntries"
+        }
+      },
+      "displayNameKey": "custom_title",
+      "checkRole": "recurrence"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "recurrence": "custom_recurrence"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "custom_recurrence": "recurrence"
+          }
+        },
+        "displayNameKey": "custom_title"
+      }
+    }
+  },
+  {
+    "id": "field.0033",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "custom_title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "custom_status": {
+          "type": "string",
+          "tn_role": "status"
+        },
+        "custom_priority": {
+          "type": "string",
+          "tn_role": "priority"
+        },
+        "custom_due": {
+          "type": "string",
+          "tn_role": "due"
+        },
+        "custom_scheduled": {
+          "type": "string",
+          "tn_role": "scheduled"
+        },
+        "custom_completedDate": {
+          "type": "string",
+          "tn_role": "completedDate"
+        },
+        "custom_tags": {
+          "type": "string",
+          "tn_role": "tags"
+        },
+        "custom_contexts": {
+          "type": "string",
+          "tn_role": "contexts"
+        },
+        "custom_projects": {
+          "type": "string",
+          "tn_role": "projects"
+        },
+        "custom_attachments": {
+          "type": "string",
+          "tn_role": "attachments"
+        },
+        "custom_timeEstimate": {
+          "type": "string",
+          "tn_role": "timeEstimate"
+        },
+        "custom_dateCreated": {
+          "type": "string",
+          "tn_role": "dateCreated"
+        },
+        "custom_dateModified": {
+          "type": "string",
+          "tn_role": "dateModified"
+        },
+        "custom_recurrence": {
+          "type": "string",
+          "tn_role": "recurrence"
+        },
+        "custom_recurrenceAnchor": {
+          "type": "string",
+          "tn_role": "recurrenceAnchor"
+        },
+        "custom_completeInstances": {
+          "type": "string",
+          "tn_role": "completeInstances"
+        },
+        "custom_skippedInstances": {
+          "type": "string",
+          "tn_role": "skippedInstances"
+        },
+        "custom_timeEntries": {
+          "type": "string",
+          "tn_role": "timeEntries"
+        }
+      },
+      "displayNameKey": "custom_title",
+      "checkRole": "recurrenceAnchor"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "recurrenceAnchor": "custom_recurrenceAnchor"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "custom_recurrenceAnchor": "recurrenceAnchor"
+          }
+        },
+        "displayNameKey": "custom_title"
+      }
+    }
+  },
+  {
+    "id": "field.0034",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "custom_title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "custom_status": {
+          "type": "string",
+          "tn_role": "status"
+        },
+        "custom_priority": {
+          "type": "string",
+          "tn_role": "priority"
+        },
+        "custom_due": {
+          "type": "string",
+          "tn_role": "due"
+        },
+        "custom_scheduled": {
+          "type": "string",
+          "tn_role": "scheduled"
+        },
+        "custom_completedDate": {
+          "type": "string",
+          "tn_role": "completedDate"
+        },
+        "custom_tags": {
+          "type": "string",
+          "tn_role": "tags"
+        },
+        "custom_contexts": {
+          "type": "string",
+          "tn_role": "contexts"
+        },
+        "custom_projects": {
+          "type": "string",
+          "tn_role": "projects"
+        },
+        "custom_attachments": {
+          "type": "string",
+          "tn_role": "attachments"
+        },
+        "custom_timeEstimate": {
+          "type": "string",
+          "tn_role": "timeEstimate"
+        },
+        "custom_dateCreated": {
+          "type": "string",
+          "tn_role": "dateCreated"
+        },
+        "custom_dateModified": {
+          "type": "string",
+          "tn_role": "dateModified"
+        },
+        "custom_recurrence": {
+          "type": "string",
+          "tn_role": "recurrence"
+        },
+        "custom_recurrenceAnchor": {
+          "type": "string",
+          "tn_role": "recurrenceAnchor"
+        },
+        "custom_completeInstances": {
+          "type": "string",
+          "tn_role": "completeInstances"
+        },
+        "custom_skippedInstances": {
+          "type": "string",
+          "tn_role": "skippedInstances"
+        },
+        "custom_timeEntries": {
+          "type": "string",
+          "tn_role": "timeEntries"
+        }
+      },
+      "displayNameKey": "custom_title",
+      "checkRole": "completeInstances"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "completeInstances": "custom_completeInstances"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "custom_completeInstances": "completeInstances"
+          }
+        },
+        "displayNameKey": "custom_title"
+      }
+    }
+  },
+  {
+    "id": "field.0035",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "custom_title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "custom_status": {
+          "type": "string",
+          "tn_role": "status"
+        },
+        "custom_priority": {
+          "type": "string",
+          "tn_role": "priority"
+        },
+        "custom_due": {
+          "type": "string",
+          "tn_role": "due"
+        },
+        "custom_scheduled": {
+          "type": "string",
+          "tn_role": "scheduled"
+        },
+        "custom_completedDate": {
+          "type": "string",
+          "tn_role": "completedDate"
+        },
+        "custom_tags": {
+          "type": "string",
+          "tn_role": "tags"
+        },
+        "custom_contexts": {
+          "type": "string",
+          "tn_role": "contexts"
+        },
+        "custom_projects": {
+          "type": "string",
+          "tn_role": "projects"
+        },
+        "custom_attachments": {
+          "type": "string",
+          "tn_role": "attachments"
+        },
+        "custom_timeEstimate": {
+          "type": "string",
+          "tn_role": "timeEstimate"
+        },
+        "custom_dateCreated": {
+          "type": "string",
+          "tn_role": "dateCreated"
+        },
+        "custom_dateModified": {
+          "type": "string",
+          "tn_role": "dateModified"
+        },
+        "custom_recurrence": {
+          "type": "string",
+          "tn_role": "recurrence"
+        },
+        "custom_recurrenceAnchor": {
+          "type": "string",
+          "tn_role": "recurrenceAnchor"
+        },
+        "custom_completeInstances": {
+          "type": "string",
+          "tn_role": "completeInstances"
+        },
+        "custom_skippedInstances": {
+          "type": "string",
+          "tn_role": "skippedInstances"
+        },
+        "custom_timeEntries": {
+          "type": "string",
+          "tn_role": "timeEntries"
+        }
+      },
+      "displayNameKey": "custom_title",
+      "checkRole": "skippedInstances"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "skippedInstances": "custom_skippedInstances"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "custom_skippedInstances": "skippedInstances"
+          }
+        },
+        "displayNameKey": "custom_title"
+      }
+    }
+  },
+  {
+    "id": "field.0036",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "custom_title": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "custom_status": {
+          "type": "string",
+          "tn_role": "status"
+        },
+        "custom_priority": {
+          "type": "string",
+          "tn_role": "priority"
+        },
+        "custom_due": {
+          "type": "string",
+          "tn_role": "due"
+        },
+        "custom_scheduled": {
+          "type": "string",
+          "tn_role": "scheduled"
+        },
+        "custom_completedDate": {
+          "type": "string",
+          "tn_role": "completedDate"
+        },
+        "custom_tags": {
+          "type": "string",
+          "tn_role": "tags"
+        },
+        "custom_contexts": {
+          "type": "string",
+          "tn_role": "contexts"
+        },
+        "custom_projects": {
+          "type": "string",
+          "tn_role": "projects"
+        },
+        "custom_attachments": {
+          "type": "string",
+          "tn_role": "attachments"
+        },
+        "custom_timeEstimate": {
+          "type": "string",
+          "tn_role": "timeEstimate"
+        },
+        "custom_dateCreated": {
+          "type": "string",
+          "tn_role": "dateCreated"
+        },
+        "custom_dateModified": {
+          "type": "string",
+          "tn_role": "dateModified"
+        },
+        "custom_recurrence": {
+          "type": "string",
+          "tn_role": "recurrence"
+        },
+        "custom_recurrenceAnchor": {
+          "type": "string",
+          "tn_role": "recurrenceAnchor"
+        },
+        "custom_completeInstances": {
+          "type": "string",
+          "tn_role": "completeInstances"
+        },
+        "custom_skippedInstances": {
+          "type": "string",
+          "tn_role": "skippedInstances"
+        },
+        "custom_timeEntries": {
+          "type": "string",
+          "tn_role": "timeEntries"
+        }
+      },
+      "displayNameKey": "custom_title",
+      "checkRole": "timeEntries"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "timeEntries": "custom_timeEntries"
+          }
+        },
+        "fieldToRole": {
+          "$contains": {
+            "custom_timeEntries": "timeEntries"
+          }
+        },
+        "displayNameKey": "custom_title"
+      }
+    }
+  },
+  {
+    "id": "field.0037",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "values": [
+            "todo",
+            "doing",
+            "finished"
+          ]
+        },
+        "dateCreated": {
+          "type": "datetime"
+        },
+        "random": {
+          "type": "string"
+        }
+      },
+      "checkRole": "title"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "title": "title"
+          }
+        },
+        "completedStatuses": [
+          "done",
+          "cancelled"
+        ]
+      }
+    }
+  },
+  {
+    "id": "field.0038",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "values": [
+            "todo",
+            "doing",
+            "finished"
+          ]
+        },
+        "dateCreated": {
+          "type": "datetime"
+        },
+        "random": {
+          "type": "string"
+        }
+      },
+      "checkRole": "status"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "status": "status"
+          }
+        },
+        "completedStatuses": [
+          "done",
+          "cancelled"
+        ]
+      }
+    }
+  },
+  {
+    "id": "field.0039",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "values": [
+            "todo",
+            "doing",
+            "finished"
+          ]
+        },
+        "dateCreated": {
+          "type": "datetime"
+        },
+        "random": {
+          "type": "string"
+        }
+      },
+      "checkRole": "priority"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "priority": "priority"
+          }
+        },
+        "completedStatuses": [
+          "done",
+          "cancelled"
+        ]
+      }
+    }
+  },
+  {
+    "id": "field.0040",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "values": [
+            "todo",
+            "doing",
+            "finished"
+          ]
+        },
+        "dateCreated": {
+          "type": "datetime"
+        },
+        "random": {
+          "type": "string"
+        }
+      },
+      "checkRole": "due"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "due": "due"
+          }
+        },
+        "completedStatuses": [
+          "done",
+          "cancelled"
+        ]
+      }
+    }
+  },
+  {
+    "id": "field.0041",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "values": [
+            "todo",
+            "doing",
+            "finished"
+          ]
+        },
+        "dateCreated": {
+          "type": "datetime"
+        },
+        "random": {
+          "type": "string"
+        }
+      },
+      "checkRole": "scheduled"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "scheduled": "scheduled"
+          }
+        },
+        "completedStatuses": [
+          "done",
+          "cancelled"
+        ]
+      }
+    }
+  },
+  {
+    "id": "field.0042",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "values": [
+            "todo",
+            "doing",
+            "finished"
+          ]
+        },
+        "dateCreated": {
+          "type": "datetime"
+        },
+        "random": {
+          "type": "string"
+        }
+      },
+      "checkRole": "dateCreated"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "dateCreated": "dateCreated"
+          }
+        },
+        "completedStatuses": [
+          "done",
+          "cancelled"
+        ]
+      }
+    }
+  },
+  {
+    "id": "field.0043",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "taskStatus": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "done",
+            "cancelled"
+          ],
+          "tn_completed_values": [
+            "done",
+            "cancelled"
+          ]
+        }
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "completedStatuses": [
+          "done",
+          "cancelled"
+        ],
+        "roleToField": {
+          "$contains": {
+            "status": "taskStatus"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0044",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "myStatus": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "in-progress",
+            "completed",
+            "cancelled"
+          ]
+        }
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "completedStatuses": [
+          "completed",
+          "cancelled"
+        ]
+      }
+    }
+  },
+  {
+    "id": "field.0045",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "state": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "todo",
+            "doing",
+            "backlog"
+          ]
+        }
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "completedStatuses": [
+          "done",
+          "cancelled"
+        ]
+      }
+    }
+  },
+  {
+    "id": "field.0046",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.is_completed_status",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "taskStatus": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "done",
+            "cancelled"
+          ],
+          "tn_completed_values": [
+            "done",
+            "cancelled"
+          ]
+        }
+      },
+      "status": "done"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": true
+      }
+    }
+  },
+  {
+    "id": "field.0047",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.is_completed_status",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "taskStatus": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "done",
+            "cancelled"
+          ],
+          "tn_completed_values": [
+            "done",
+            "cancelled"
+          ]
+        }
+      },
+      "status": "cancelled"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": true
+      }
+    }
+  },
+  {
+    "id": "field.0048",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.is_completed_status",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "taskStatus": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "done",
+            "cancelled"
+          ],
+          "tn_completed_values": [
+            "done",
+            "cancelled"
+          ]
+        }
+      },
+      "status": "open"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": false
+      }
+    }
+  },
+  {
+    "id": "field.0049",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.is_completed_status",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "myStatus": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "in-progress",
+            "completed",
+            "cancelled"
+          ]
+        }
+      },
+      "status": "completed"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": true
+      }
+    }
+  },
+  {
+    "id": "field.0050",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.is_completed_status",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "myStatus": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "in-progress",
+            "completed",
+            "cancelled"
+          ]
+        }
+      },
+      "status": "cancelled"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": true
+      }
+    }
+  },
+  {
+    "id": "field.0051",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.is_completed_status",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "myStatus": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "in-progress",
+            "completed",
+            "cancelled"
+          ]
+        }
+      },
+      "status": "open"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": false
+      }
+    }
+  },
+  {
+    "id": "field.0052",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.is_completed_status",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "state": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "todo",
+            "doing",
+            "backlog"
+          ]
+        }
+      },
+      "status": "done"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": true
+      }
+    }
+  },
+  {
+    "id": "field.0053",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.is_completed_status",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "state": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "todo",
+            "doing",
+            "backlog"
+          ]
+        }
+      },
+      "status": "cancelled"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": true
+      }
+    }
+  },
+  {
+    "id": "field.0054",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.is_completed_status",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "state": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "todo",
+            "doing",
+            "backlog"
+          ]
+        }
+      },
+      "status": "todo"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": false
+      }
+    }
+  },
+  {
+    "id": "field.0055",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.default_completed_status",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "taskStatus": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "done",
+            "cancelled"
+          ],
+          "tn_completed_values": [
+            "done",
+            "cancelled"
+          ]
+        }
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "done"
+      }
+    }
+  },
+  {
+    "id": "field.0056",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.default_completed_status",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "myStatus": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "open",
+            "in-progress",
+            "completed",
+            "cancelled"
+          ]
+        }
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "completed"
+      }
+    }
+  },
+  {
+    "id": "field.0057",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.default_completed_status",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "state": {
+          "type": "enum",
+          "tn_role": "status",
+          "values": [
+            "todo",
+            "doing",
+            "backlog"
+          ]
+        }
+      }
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "done"
+      }
+    }
+  },
+  {
+    "id": "field.0058",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.normalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "myTitle": {
+          "tn_role": "title"
+        },
+        "myStatus": {
+          "tn_role": "status"
+        },
+        "myDue": {
+          "tn_role": "due"
+        },
+        "myTags": {
+          "tn_role": "tags"
+        },
+        "myContexts": {
+          "tn_role": "contexts"
+        },
+        "myProjects": {
+          "tn_role": "projects"
+        },
+        "myAttachments": {
+          "tn_role": "attachments"
+        },
+        "myCreated": {
+          "tn_role": "dateCreated"
+        },
+        "myModified": {
+          "tn_role": "dateModified"
+        }
+      },
+      "frontmatter": {
+        "myTitle": "Plan workshop",
+        "myStatus": "open",
+        "myDue": "2026-02-20",
+        "myTags": [
+          "work",
+          "planning"
+        ],
+        "myContexts": [
+          "office"
+        ],
+        "myProjects": [
+          "[[projects/demo]]"
+        ],
+        "myAttachments": [
+          "[[Attachments/brief.png]]"
+        ],
+        "myCreated": "2026-02-19T10:00:00Z",
+        "myModified": "2026-02-19T10:05:00Z",
+        "vendorField": "ZX-42",
+        "nested": {
+          "a": 1
+        }
+      },
+      "checkKey": "title"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "normalized": {
+          "$contains": {
+            "title": "Plan workshop"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0059",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.normalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "myTitle": {
+          "tn_role": "title"
+        },
+        "myStatus": {
+          "tn_role": "status"
+        },
+        "myDue": {
+          "tn_role": "due"
+        },
+        "myTags": {
+          "tn_role": "tags"
+        },
+        "myContexts": {
+          "tn_role": "contexts"
+        },
+        "myProjects": {
+          "tn_role": "projects"
+        },
+        "myAttachments": {
+          "tn_role": "attachments"
+        },
+        "myCreated": {
+          "tn_role": "dateCreated"
+        },
+        "myModified": {
+          "tn_role": "dateModified"
+        }
+      },
+      "frontmatter": {
+        "myTitle": "Plan workshop",
+        "myStatus": "open",
+        "myDue": "2026-02-20",
+        "myTags": [
+          "work",
+          "planning"
+        ],
+        "myContexts": [
+          "office"
+        ],
+        "myProjects": [
+          "[[projects/demo]]"
+        ],
+        "myAttachments": [
+          "[[Attachments/brief.png]]"
+        ],
+        "myCreated": "2026-02-19T10:00:00Z",
+        "myModified": "2026-02-19T10:05:00Z",
+        "vendorField": "ZX-42",
+        "nested": {
+          "a": 1
+        }
+      },
+      "checkKey": "status"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "normalized": {
+          "$contains": {
+            "status": "open"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0060",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.normalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "myTitle": {
+          "tn_role": "title"
+        },
+        "myStatus": {
+          "tn_role": "status"
+        },
+        "myDue": {
+          "tn_role": "due"
+        },
+        "myTags": {
+          "tn_role": "tags"
+        },
+        "myContexts": {
+          "tn_role": "contexts"
+        },
+        "myProjects": {
+          "tn_role": "projects"
+        },
+        "myAttachments": {
+          "tn_role": "attachments"
+        },
+        "myCreated": {
+          "tn_role": "dateCreated"
+        },
+        "myModified": {
+          "tn_role": "dateModified"
+        }
+      },
+      "frontmatter": {
+        "myTitle": "Plan workshop",
+        "myStatus": "open",
+        "myDue": "2026-02-20",
+        "myTags": [
+          "work",
+          "planning"
+        ],
+        "myContexts": [
+          "office"
+        ],
+        "myProjects": [
+          "[[projects/demo]]"
+        ],
+        "myAttachments": [
+          "[[Attachments/brief.png]]"
+        ],
+        "myCreated": "2026-02-19T10:00:00Z",
+        "myModified": "2026-02-19T10:05:00Z",
+        "vendorField": "ZX-42",
+        "nested": {
+          "a": 1
+        }
+      },
+      "checkKey": "due"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "normalized": {
+          "$contains": {
+            "due": "2026-02-20"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0061",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.normalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "myTitle": {
+          "tn_role": "title"
+        },
+        "myStatus": {
+          "tn_role": "status"
+        },
+        "myDue": {
+          "tn_role": "due"
+        },
+        "myTags": {
+          "tn_role": "tags"
+        },
+        "myContexts": {
+          "tn_role": "contexts"
+        },
+        "myProjects": {
+          "tn_role": "projects"
+        },
+        "myAttachments": {
+          "tn_role": "attachments"
+        },
+        "myCreated": {
+          "tn_role": "dateCreated"
+        },
+        "myModified": {
+          "tn_role": "dateModified"
+        }
+      },
+      "frontmatter": {
+        "myTitle": "Plan workshop",
+        "myStatus": "open",
+        "myDue": "2026-02-20",
+        "myTags": [
+          "work",
+          "planning"
+        ],
+        "myContexts": [
+          "office"
+        ],
+        "myProjects": [
+          "[[projects/demo]]"
+        ],
+        "myAttachments": [
+          "[[Attachments/brief.png]]"
+        ],
+        "myCreated": "2026-02-19T10:00:00Z",
+        "myModified": "2026-02-19T10:05:00Z",
+        "vendorField": "ZX-42",
+        "nested": {
+          "a": 1
+        }
+      },
+      "checkKey": "dateCreated"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "normalized": {
+          "$contains": {
+            "dateCreated": "2026-02-19T10:00:00Z"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0062",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.normalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "myTitle": {
+          "tn_role": "title"
+        },
+        "myStatus": {
+          "tn_role": "status"
+        },
+        "myDue": {
+          "tn_role": "due"
+        },
+        "myTags": {
+          "tn_role": "tags"
+        },
+        "myContexts": {
+          "tn_role": "contexts"
+        },
+        "myProjects": {
+          "tn_role": "projects"
+        },
+        "myAttachments": {
+          "tn_role": "attachments"
+        },
+        "myCreated": {
+          "tn_role": "dateCreated"
+        },
+        "myModified": {
+          "tn_role": "dateModified"
+        }
+      },
+      "frontmatter": {
+        "myTitle": "Plan workshop",
+        "myStatus": "open",
+        "myDue": "2026-02-20",
+        "myTags": [
+          "work",
+          "planning"
+        ],
+        "myContexts": [
+          "office"
+        ],
+        "myProjects": [
+          "[[projects/demo]]"
+        ],
+        "myAttachments": [
+          "[[Attachments/brief.png]]"
+        ],
+        "myCreated": "2026-02-19T10:00:00Z",
+        "myModified": "2026-02-19T10:05:00Z",
+        "vendorField": "ZX-42",
+        "nested": {
+          "a": 1
+        }
+      },
+      "checkKey": "dateModified"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "normalized": {
+          "$contains": {
+            "dateModified": "2026-02-19T10:05:00Z"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0063",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.normalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "myTitle": {
+          "tn_role": "title"
+        },
+        "myStatus": {
+          "tn_role": "status"
+        },
+        "myDue": {
+          "tn_role": "due"
+        },
+        "myTags": {
+          "tn_role": "tags"
+        },
+        "myContexts": {
+          "tn_role": "contexts"
+        },
+        "myProjects": {
+          "tn_role": "projects"
+        },
+        "myAttachments": {
+          "tn_role": "attachments"
+        },
+        "myCreated": {
+          "tn_role": "dateCreated"
+        },
+        "myModified": {
+          "tn_role": "dateModified"
+        }
+      },
+      "frontmatter": {
+        "myTitle": "Plan workshop",
+        "myStatus": "open",
+        "myDue": "2026-02-20",
+        "myTags": [
+          "work",
+          "planning"
+        ],
+        "myContexts": [
+          "office"
+        ],
+        "myProjects": [
+          "[[projects/demo]]"
+        ],
+        "myAttachments": [
+          "[[Attachments/brief.png]]"
+        ],
+        "myCreated": "2026-02-19T10:00:00Z",
+        "myModified": "2026-02-19T10:05:00Z",
+        "vendorField": "ZX-42",
+        "nested": {
+          "a": 1
+        }
+      },
+      "checkKey": "attachments"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "normalized": {
+          "$contains": {
+            "attachments": [
+              "[[Attachments/brief.png]]"
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0064",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.normalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "myTitle": {
+          "tn_role": "title"
+        },
+        "myStatus": {
+          "tn_role": "status"
+        },
+        "myDue": {
+          "tn_role": "due"
+        },
+        "myTags": {
+          "tn_role": "tags"
+        },
+        "myContexts": {
+          "tn_role": "contexts"
+        },
+        "myProjects": {
+          "tn_role": "projects"
+        },
+        "myAttachments": {
+          "tn_role": "attachments"
+        },
+        "myCreated": {
+          "tn_role": "dateCreated"
+        },
+        "myModified": {
+          "tn_role": "dateModified"
+        }
+      },
+      "frontmatter": {
+        "myTitle": "Plan workshop",
+        "myStatus": "open",
+        "myDue": "2026-02-20",
+        "myTags": [
+          "work",
+          "planning"
+        ],
+        "myContexts": [
+          "office"
+        ],
+        "myProjects": [
+          "[[projects/demo]]"
+        ],
+        "myAttachments": [
+          "[[Attachments/brief.png]]"
+        ],
+        "myCreated": "2026-02-19T10:00:00Z",
+        "myModified": "2026-02-19T10:05:00Z",
+        "vendorField": "ZX-42",
+        "nested": {
+          "a": 1
+        }
+      },
+      "checkKey": "vendorField"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "normalized": {
+          "$contains": {
+            "vendorField": "ZX-42"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0065",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.denormalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "myTitle": {
+          "tn_role": "title"
+        },
+        "myStatus": {
+          "tn_role": "status"
+        },
+        "myDue": {
+          "tn_role": "due"
+        },
+        "myTags": {
+          "tn_role": "tags"
+        },
+        "myContexts": {
+          "tn_role": "contexts"
+        },
+        "myProjects": {
+          "tn_role": "projects"
+        },
+        "myAttachments": {
+          "tn_role": "attachments"
+        },
+        "myCreated": {
+          "tn_role": "dateCreated"
+        },
+        "myModified": {
+          "tn_role": "dateModified"
+        }
+      },
+      "roleData": {
+        "title": "Plan workshop",
+        "status": "open",
+        "due": "2026-02-20",
+        "tags": [
+          "work",
+          "planning"
+        ],
+        "contexts": [
+          "office"
+        ],
+        "projects": [
+          "[[projects/demo]]"
+        ],
+        "attachments": [
+          "[[Attachments/brief.png]]"
+        ],
+        "dateCreated": "2026-02-19T10:00:00Z",
+        "dateModified": "2026-02-19T10:05:00Z",
+        "vendorField": "ZX-42"
+      },
+      "checkKey": "myTitle"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "denormalized": {
+          "$contains": {
+            "myTitle": "Plan workshop"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0066",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.denormalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "myTitle": {
+          "tn_role": "title"
+        },
+        "myStatus": {
+          "tn_role": "status"
+        },
+        "myDue": {
+          "tn_role": "due"
+        },
+        "myTags": {
+          "tn_role": "tags"
+        },
+        "myContexts": {
+          "tn_role": "contexts"
+        },
+        "myProjects": {
+          "tn_role": "projects"
+        },
+        "myAttachments": {
+          "tn_role": "attachments"
+        },
+        "myCreated": {
+          "tn_role": "dateCreated"
+        },
+        "myModified": {
+          "tn_role": "dateModified"
+        }
+      },
+      "roleData": {
+        "title": "Plan workshop",
+        "status": "open",
+        "due": "2026-02-20",
+        "tags": [
+          "work",
+          "planning"
+        ],
+        "contexts": [
+          "office"
+        ],
+        "projects": [
+          "[[projects/demo]]"
+        ],
+        "attachments": [
+          "[[Attachments/brief.png]]"
+        ],
+        "dateCreated": "2026-02-19T10:00:00Z",
+        "dateModified": "2026-02-19T10:05:00Z",
+        "vendorField": "ZX-42"
+      },
+      "checkKey": "myStatus"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "denormalized": {
+          "$contains": {
+            "myStatus": "open"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0067",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.denormalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "myTitle": {
+          "tn_role": "title"
+        },
+        "myStatus": {
+          "tn_role": "status"
+        },
+        "myDue": {
+          "tn_role": "due"
+        },
+        "myTags": {
+          "tn_role": "tags"
+        },
+        "myContexts": {
+          "tn_role": "contexts"
+        },
+        "myProjects": {
+          "tn_role": "projects"
+        },
+        "myAttachments": {
+          "tn_role": "attachments"
+        },
+        "myCreated": {
+          "tn_role": "dateCreated"
+        },
+        "myModified": {
+          "tn_role": "dateModified"
+        }
+      },
+      "roleData": {
+        "title": "Plan workshop",
+        "status": "open",
+        "due": "2026-02-20",
+        "tags": [
+          "work",
+          "planning"
+        ],
+        "contexts": [
+          "office"
+        ],
+        "projects": [
+          "[[projects/demo]]"
+        ],
+        "attachments": [
+          "[[Attachments/brief.png]]"
+        ],
+        "dateCreated": "2026-02-19T10:00:00Z",
+        "dateModified": "2026-02-19T10:05:00Z",
+        "vendorField": "ZX-42"
+      },
+      "checkKey": "myDue"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "denormalized": {
+          "$contains": {
+            "myDue": "2026-02-20"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0068",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.denormalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "myTitle": {
+          "tn_role": "title"
+        },
+        "myStatus": {
+          "tn_role": "status"
+        },
+        "myDue": {
+          "tn_role": "due"
+        },
+        "myTags": {
+          "tn_role": "tags"
+        },
+        "myContexts": {
+          "tn_role": "contexts"
+        },
+        "myProjects": {
+          "tn_role": "projects"
+        },
+        "myAttachments": {
+          "tn_role": "attachments"
+        },
+        "myCreated": {
+          "tn_role": "dateCreated"
+        },
+        "myModified": {
+          "tn_role": "dateModified"
+        }
+      },
+      "roleData": {
+        "title": "Plan workshop",
+        "status": "open",
+        "due": "2026-02-20",
+        "tags": [
+          "work",
+          "planning"
+        ],
+        "contexts": [
+          "office"
+        ],
+        "projects": [
+          "[[projects/demo]]"
+        ],
+        "attachments": [
+          "[[Attachments/brief.png]]"
+        ],
+        "dateCreated": "2026-02-19T10:00:00Z",
+        "dateModified": "2026-02-19T10:05:00Z",
+        "vendorField": "ZX-42"
+      },
+      "checkKey": "myCreated"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "denormalized": {
+          "$contains": {
+            "myCreated": "2026-02-19T10:00:00Z"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0069",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.denormalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "myTitle": {
+          "tn_role": "title"
+        },
+        "myStatus": {
+          "tn_role": "status"
+        },
+        "myDue": {
+          "tn_role": "due"
+        },
+        "myTags": {
+          "tn_role": "tags"
+        },
+        "myContexts": {
+          "tn_role": "contexts"
+        },
+        "myProjects": {
+          "tn_role": "projects"
+        },
+        "myAttachments": {
+          "tn_role": "attachments"
+        },
+        "myCreated": {
+          "tn_role": "dateCreated"
+        },
+        "myModified": {
+          "tn_role": "dateModified"
+        }
+      },
+      "roleData": {
+        "title": "Plan workshop",
+        "status": "open",
+        "due": "2026-02-20",
+        "tags": [
+          "work",
+          "planning"
+        ],
+        "contexts": [
+          "office"
+        ],
+        "projects": [
+          "[[projects/demo]]"
+        ],
+        "attachments": [
+          "[[Attachments/brief.png]]"
+        ],
+        "dateCreated": "2026-02-19T10:00:00Z",
+        "dateModified": "2026-02-19T10:05:00Z",
+        "vendorField": "ZX-42"
+      },
+      "checkKey": "myModified"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "denormalized": {
+          "$contains": {
+            "myModified": "2026-02-19T10:05:00Z"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0070",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.denormalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "myTitle": {
+          "tn_role": "title"
+        },
+        "myStatus": {
+          "tn_role": "status"
+        },
+        "myDue": {
+          "tn_role": "due"
+        },
+        "myTags": {
+          "tn_role": "tags"
+        },
+        "myContexts": {
+          "tn_role": "contexts"
+        },
+        "myProjects": {
+          "tn_role": "projects"
+        },
+        "myAttachments": {
+          "tn_role": "attachments"
+        },
+        "myCreated": {
+          "tn_role": "dateCreated"
+        },
+        "myModified": {
+          "tn_role": "dateModified"
+        }
+      },
+      "roleData": {
+        "title": "Plan workshop",
+        "status": "open",
+        "due": "2026-02-20",
+        "tags": [
+          "work",
+          "planning"
+        ],
+        "contexts": [
+          "office"
+        ],
+        "projects": [
+          "[[projects/demo]]"
+        ],
+        "attachments": [
+          "[[Attachments/brief.png]]"
+        ],
+        "dateCreated": "2026-02-19T10:00:00Z",
+        "dateModified": "2026-02-19T10:05:00Z",
+        "vendorField": "ZX-42"
+      },
+      "checkKey": "vendorField"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "denormalized": {
+          "$contains": {
+            "vendorField": "ZX-42"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0071",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.denormalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "myTitle": {
+          "tn_role": "title"
+        },
+        "myStatus": {
+          "tn_role": "status"
+        },
+        "myDue": {
+          "tn_role": "due"
+        },
+        "myTags": {
+          "tn_role": "tags"
+        },
+        "myContexts": {
+          "tn_role": "contexts"
+        },
+        "myProjects": {
+          "tn_role": "projects"
+        },
+        "myAttachments": {
+          "tn_role": "attachments"
+        },
+        "myCreated": {
+          "tn_role": "dateCreated"
+        },
+        "myModified": {
+          "tn_role": "dateModified"
+        }
+      },
+      "roleData": {
+        "title": "Plan workshop",
+        "status": "open",
+        "due": "2026-02-20",
+        "tags": [
+          "work",
+          "planning"
+        ],
+        "contexts": [
+          "office"
+        ],
+        "projects": [
+          "[[projects/demo]]"
+        ],
+        "attachments": [
+          "[[Attachments/brief.png]]"
+        ],
+        "dateCreated": "2026-02-19T10:00:00Z",
+        "dateModified": "2026-02-19T10:05:00Z",
+        "vendorField": "ZX-42"
+      },
+      "checkKey": "myAttachments"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "denormalized": {
+          "$contains": {
+            "myAttachments": [
+              "[[Attachments/brief.png]]"
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0072",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.resolve_display_title",
+    "assertion": "envelope_equals",
+    "input": {
+      "frontmatter": {
+        "title": "Primary title",
+        "secondaryTitle": "Fallback"
+      },
+      "fields": {
+        "secondaryTitle": {
+          "tn_role": "title"
+        }
+      },
+      "displayNameKey": "secondaryTitle",
+      "taskPath": "tasks/FromPath.md",
+      "expected": "Fallback"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "Fallback"
+      }
+    }
+  },
+  {
+    "id": "field.0073",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.resolve_display_title",
+    "assertion": "envelope_equals",
+    "input": {
+      "frontmatter": {
+        "secondaryTitle": "Display title"
+      },
+      "fields": {
+        "secondaryTitle": {
+          "tn_role": "title"
+        }
+      },
+      "displayNameKey": "secondaryTitle",
+      "taskPath": "tasks/FromPath.md",
+      "expected": "Display title"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "Display title"
+      }
+    }
+  },
+  {
+    "id": "field.0074",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.resolve_display_title",
+    "assertion": "envelope_equals",
+    "input": {
+      "frontmatter": {
+        "title": "Title fallback"
+      },
+      "fields": {
+        "customTitle": {
+          "tn_role": "title"
+        }
+      },
+      "displayNameKey": "customTitle",
+      "taskPath": "tasks/FromPath.md",
+      "expected": "Title fallback"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "Title fallback"
+      }
+    }
+  },
+  {
+    "id": "field.0075",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.resolve_display_title",
+    "assertion": "envelope_equals",
+    "input": {
+      "frontmatter": {},
+      "fields": {
+        "customTitle": {
+          "tn_role": "title"
+        }
+      },
+      "displayNameKey": "customTitle",
+      "taskPath": "tasks/FromPath.md",
+      "expected": "FromPath"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "FromPath"
+      }
+    }
+  },
+  {
+    "id": "field.0076",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.resolve_display_title",
+    "assertion": "envelope_equals",
+    "input": {
+      "frontmatter": {},
+      "fields": {
+        "customTitle": {
+          "tn_role": "title"
+        }
+      },
+      "displayNameKey": "customTitle",
+      "taskPath": "",
+      "expected": null
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": null
+      }
+    }
+  },
+  {
+    "id": "field.0077",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.resolve_display_title",
+    "assertion": "envelope_equals",
+    "input": {
+      "frontmatter": {
+        "title": "  Trim me  "
+      },
+      "fields": {
+        "title": {
+          "type": "string"
+        }
+      },
+      "displayNameKey": "title",
+      "taskPath": "tasks/Name.md",
+      "expected": "  Trim me  "
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "  Trim me  "
+      }
+    }
+  },
+  {
+    "id": "field.0078",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.resolve_display_title",
+    "assertion": "envelope_equals",
+    "input": {
+      "frontmatter": {
+        "title": "",
+        "customTitle": ""
+      },
+      "fields": {
+        "customTitle": {
+          "tn_role": "title"
+        }
+      },
+      "displayNameKey": "customTitle",
+      "taskPath": "tasks/FallbackOnly.md",
+      "expected": "FallbackOnly"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": "FallbackOnly"
+      }
+    }
+  },
+  {
+    "id": "field.0079",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.resolve_display_title",
+    "assertion": "envelope_equals",
+    "input": {
+      "frontmatter": {
+        "title": "",
+        "customTitle": ""
+      },
+      "fields": {
+        "customTitle": {
+          "tn_role": "title"
+        }
+      },
+      "displayNameKey": "customTitle",
+      "expected": null
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": null
+      }
+    }
+  },
+  {
+    "id": "field.0080",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "title": {
+          "type": "string"
+        }
+      },
+      "checkRole": "title"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "title": "title"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0081",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "status": {
+          "type": "string"
+        }
+      },
+      "checkRole": "status"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "status": "status"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0082",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "priority": {
+          "type": "string"
+        }
+      },
+      "checkRole": "priority"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "priority": "priority"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0083",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "due": {
+          "type": "string"
+        }
+      },
+      "checkRole": "due"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "due": "due"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0084",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "scheduled": {
+          "type": "string"
+        }
+      },
+      "checkRole": "scheduled"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "scheduled": "scheduled"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0085",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "completedDate": {
+          "type": "string"
+        }
+      },
+      "checkRole": "completedDate"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "completedDate": "completedDate"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0086",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "tags": {
+          "type": "string"
+        }
+      },
+      "checkRole": "tags"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "tags": "tags"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0087",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "contexts": {
+          "type": "string"
+        }
+      },
+      "checkRole": "contexts"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "contexts": "contexts"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0088",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "projects": {
+          "type": "string"
+        }
+      },
+      "checkRole": "projects"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "projects": "projects"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0089",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "attachments": {
+          "type": "string"
+        }
+      },
+      "checkRole": "attachments"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "attachments": "attachments"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0090",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "timeEstimate": {
+          "type": "string"
+        }
+      },
+      "checkRole": "timeEstimate"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "timeEstimate": "timeEstimate"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0091",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "dateCreated": {
+          "type": "string"
+        }
+      },
+      "checkRole": "dateCreated"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "dateCreated": "dateCreated"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0092",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "dateModified": {
+          "type": "string"
+        }
+      },
+      "checkRole": "dateModified"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "dateModified": "dateModified"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0093",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "recurrence": {
+          "type": "string"
+        }
+      },
+      "checkRole": "recurrence"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "recurrence": "recurrence"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0094",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "recurrenceAnchor": {
+          "type": "string"
+        }
+      },
+      "checkRole": "recurrenceAnchor"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "recurrenceAnchor": "recurrenceAnchor"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0095",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "completeInstances": {
+          "type": "string"
+        }
+      },
+      "checkRole": "completeInstances"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "completeInstances": "completeInstances"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0096",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "skippedInstances": {
+          "type": "string"
+        }
+      },
+      "checkRole": "skippedInstances"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "skippedInstances": "skippedInstances"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0097",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "timeEntries": {
+          "type": "string"
+        }
+      },
+      "checkRole": "timeEntries"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "timeEntries": "timeEntries"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0098",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "firstTitle": {
+          "type": "string",
+          "tn_role": "title"
+        },
+        "secondTitle": {
+          "type": "string",
+          "tn_role": "title"
+        }
+      },
+      "checkRole": "title"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "title": "firstTitle"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0099",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "primaryStatus": {
+          "type": "string",
+          "tn_role": "status"
+        },
+        "secondaryStatus": {
+          "type": "string",
+          "tn_role": "status"
+        }
+      },
+      "checkRole": "status"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "status": "primaryStatus"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0100",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mainDue": {
+          "type": "string",
+          "tn_role": "due"
+        },
+        "fallbackDue": {
+          "type": "string",
+          "tn_role": "due"
+        }
+      },
+      "checkRole": "due"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "due": "mainDue"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0101",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mainScheduled": {
+          "type": "string",
+          "tn_role": "scheduled"
+        },
+        "otherScheduled": {
+          "type": "string",
+          "tn_role": "scheduled"
+        }
+      },
+      "checkRole": "scheduled"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "scheduled": "mainScheduled"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0102",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.build_mapping",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "editedAt": {
+          "type": "string",
+          "tn_role": "dateModified"
+        },
+        "updatedAt": {
+          "type": "string",
+          "tn_role": "dateModified"
+        }
+      },
+      "checkRole": "dateModified"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "roleToField": {
+          "$contains": {
+            "dateModified": "editedAt"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0103",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.normalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_title": {
+          "type": "string",
+          "tn_role": "title"
+        }
+      },
+      "frontmatter": {
+        "mapped_title": "Roadmap sync"
+      },
+      "checkKey": "title"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "normalized": {
+          "$contains": {
+            "title": "Roadmap sync"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0104",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.denormalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_title": {
+          "type": "string",
+          "tn_role": "title"
+        }
+      },
+      "roleData": {
+        "title": "Roadmap sync"
+      },
+      "checkKey": "mapped_title"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "denormalized": {
+          "$contains": {
+            "mapped_title": "Roadmap sync"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0105",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.normalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_status": {
+          "type": "string",
+          "tn_role": "status"
+        }
+      },
+      "frontmatter": {
+        "mapped_status": "open"
+      },
+      "checkKey": "status"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "normalized": {
+          "$contains": {
+            "status": "open"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0106",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.denormalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_status": {
+          "type": "string",
+          "tn_role": "status"
+        }
+      },
+      "roleData": {
+        "status": "open"
+      },
+      "checkKey": "mapped_status"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "denormalized": {
+          "$contains": {
+            "mapped_status": "open"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0107",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.normalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_priority": {
+          "type": "string",
+          "tn_role": "priority"
+        }
+      },
+      "frontmatter": {
+        "mapped_priority": "high"
+      },
+      "checkKey": "priority"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "normalized": {
+          "$contains": {
+            "priority": "high"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0108",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.denormalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_priority": {
+          "type": "string",
+          "tn_role": "priority"
+        }
+      },
+      "roleData": {
+        "priority": "high"
+      },
+      "checkKey": "mapped_priority"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "denormalized": {
+          "$contains": {
+            "mapped_priority": "high"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0109",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.normalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_due": {
+          "type": "string",
+          "tn_role": "due"
+        }
+      },
+      "frontmatter": {
+        "mapped_due": "2026-08-21"
+      },
+      "checkKey": "due"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "normalized": {
+          "$contains": {
+            "due": "2026-08-21"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0110",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.denormalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_due": {
+          "type": "string",
+          "tn_role": "due"
+        }
+      },
+      "roleData": {
+        "due": "2026-08-21"
+      },
+      "checkKey": "mapped_due"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "denormalized": {
+          "$contains": {
+            "mapped_due": "2026-08-21"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0111",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.normalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_scheduled": {
+          "type": "string",
+          "tn_role": "scheduled"
+        }
+      },
+      "frontmatter": {
+        "mapped_scheduled": "2026-08-20"
+      },
+      "checkKey": "scheduled"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "normalized": {
+          "$contains": {
+            "scheduled": "2026-08-20"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0112",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.denormalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_scheduled": {
+          "type": "string",
+          "tn_role": "scheduled"
+        }
+      },
+      "roleData": {
+        "scheduled": "2026-08-20"
+      },
+      "checkKey": "mapped_scheduled"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "denormalized": {
+          "$contains": {
+            "mapped_scheduled": "2026-08-20"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0113",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.normalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_completedDate": {
+          "type": "string",
+          "tn_role": "completedDate"
+        }
+      },
+      "frontmatter": {
+        "mapped_completedDate": "2026-08-22"
+      },
+      "checkKey": "completedDate"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "normalized": {
+          "$contains": {
+            "completedDate": "2026-08-22"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0114",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.denormalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_completedDate": {
+          "type": "string",
+          "tn_role": "completedDate"
+        }
+      },
+      "roleData": {
+        "completedDate": "2026-08-22"
+      },
+      "checkKey": "mapped_completedDate"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "denormalized": {
+          "$contains": {
+            "mapped_completedDate": "2026-08-22"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0115",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.normalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_tags": {
+          "type": "string",
+          "tn_role": "tags"
+        }
+      },
+      "frontmatter": {
+        "mapped_tags": [
+          "planning",
+          "team"
+        ]
+      },
+      "checkKey": "tags"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "normalized": {
+          "$contains": {
+            "tags": [
+              "planning",
+              "team"
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0116",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.denormalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_tags": {
+          "type": "string",
+          "tn_role": "tags"
+        }
+      },
+      "roleData": {
+        "tags": [
+          "planning",
+          "team"
+        ]
+      },
+      "checkKey": "mapped_tags"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "denormalized": {
+          "$contains": {
+            "mapped_tags": [
+              "planning",
+              "team"
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0117",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.normalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_contexts": {
+          "type": "string",
+          "tn_role": "contexts"
+        }
+      },
+      "frontmatter": {
+        "mapped_contexts": [
+          "office"
+        ]
+      },
+      "checkKey": "contexts"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "normalized": {
+          "$contains": {
+            "contexts": [
+              "office"
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0118",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.denormalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_contexts": {
+          "type": "string",
+          "tn_role": "contexts"
+        }
+      },
+      "roleData": {
+        "contexts": [
+          "office"
+        ]
+      },
+      "checkKey": "mapped_contexts"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "denormalized": {
+          "$contains": {
+            "mapped_contexts": [
+              "office"
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0119",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.normalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_projects": {
+          "type": "string",
+          "tn_role": "projects"
+        }
+      },
+      "frontmatter": {
+        "mapped_projects": [
+          "[[projects/ops]]"
+        ]
+      },
+      "checkKey": "projects"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "normalized": {
+          "$contains": {
+            "projects": [
+              "[[projects/ops]]"
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0120",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.denormalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_projects": {
+          "type": "string",
+          "tn_role": "projects"
+        }
+      },
+      "roleData": {
+        "projects": [
+          "[[projects/ops]]"
+        ]
+      },
+      "checkKey": "mapped_projects"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "denormalized": {
+          "$contains": {
+            "mapped_projects": [
+              "[[projects/ops]]"
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0121",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.normalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_attachments": {
+          "type": "string",
+          "tn_role": "attachments"
+        }
+      },
+      "frontmatter": {
+        "mapped_attachments": [
+          "[[Attachments/roadmap.png]]"
+        ]
+      },
+      "checkKey": "attachments"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "normalized": {
+          "$contains": {
+            "attachments": [
+              "[[Attachments/roadmap.png]]"
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0122",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.denormalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_attachments": {
+          "type": "string",
+          "tn_role": "attachments"
+        }
+      },
+      "roleData": {
+        "attachments": [
+          "[[Attachments/roadmap.png]]"
+        ]
+      },
+      "checkKey": "mapped_attachments"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "denormalized": {
+          "$contains": {
+            "mapped_attachments": [
+              "[[Attachments/roadmap.png]]"
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0123",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.normalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_timeEstimate": {
+          "type": "string",
+          "tn_role": "timeEstimate"
+        }
+      },
+      "frontmatter": {
+        "mapped_timeEstimate": "PT45M"
+      },
+      "checkKey": "timeEstimate"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "normalized": {
+          "$contains": {
+            "timeEstimate": "PT45M"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0124",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.denormalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_timeEstimate": {
+          "type": "string",
+          "tn_role": "timeEstimate"
+        }
+      },
+      "roleData": {
+        "timeEstimate": "PT45M"
+      },
+      "checkKey": "mapped_timeEstimate"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "denormalized": {
+          "$contains": {
+            "mapped_timeEstimate": "PT45M"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0125",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.normalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_dateCreated": {
+          "type": "string",
+          "tn_role": "dateCreated"
+        }
+      },
+      "frontmatter": {
+        "mapped_dateCreated": "2026-08-19T10:00:00Z"
+      },
+      "checkKey": "dateCreated"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "normalized": {
+          "$contains": {
+            "dateCreated": "2026-08-19T10:00:00Z"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0126",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.denormalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_dateCreated": {
+          "type": "string",
+          "tn_role": "dateCreated"
+        }
+      },
+      "roleData": {
+        "dateCreated": "2026-08-19T10:00:00Z"
+      },
+      "checkKey": "mapped_dateCreated"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "denormalized": {
+          "$contains": {
+            "mapped_dateCreated": "2026-08-19T10:00:00Z"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0127",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.normalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_dateModified": {
+          "type": "string",
+          "tn_role": "dateModified"
+        }
+      },
+      "frontmatter": {
+        "mapped_dateModified": "2026-08-19T11:00:00Z"
+      },
+      "checkKey": "dateModified"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "normalized": {
+          "$contains": {
+            "dateModified": "2026-08-19T11:00:00Z"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0128",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.denormalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_dateModified": {
+          "type": "string",
+          "tn_role": "dateModified"
+        }
+      },
+      "roleData": {
+        "dateModified": "2026-08-19T11:00:00Z"
+      },
+      "checkKey": "mapped_dateModified"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "denormalized": {
+          "$contains": {
+            "mapped_dateModified": "2026-08-19T11:00:00Z"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0129",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.normalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_recurrence": {
+          "type": "string",
+          "tn_role": "recurrence"
+        }
+      },
+      "frontmatter": {
+        "mapped_recurrence": "FREQ=DAILY"
+      },
+      "checkKey": "recurrence"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "normalized": {
+          "$contains": {
+            "recurrence": "FREQ=DAILY"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0130",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.denormalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_recurrence": {
+          "type": "string",
+          "tn_role": "recurrence"
+        }
+      },
+      "roleData": {
+        "recurrence": "FREQ=DAILY"
+      },
+      "checkKey": "mapped_recurrence"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "denormalized": {
+          "$contains": {
+            "mapped_recurrence": "FREQ=DAILY"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0131",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.normalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_recurrenceAnchor": {
+          "type": "string",
+          "tn_role": "recurrenceAnchor"
+        }
+      },
+      "frontmatter": {
+        "mapped_recurrenceAnchor": "scheduled"
+      },
+      "checkKey": "recurrenceAnchor"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "normalized": {
+          "$contains": {
+            "recurrenceAnchor": "scheduled"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0132",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.denormalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_recurrenceAnchor": {
+          "type": "string",
+          "tn_role": "recurrenceAnchor"
+        }
+      },
+      "roleData": {
+        "recurrenceAnchor": "scheduled"
+      },
+      "checkKey": "mapped_recurrenceAnchor"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "denormalized": {
+          "$contains": {
+            "mapped_recurrenceAnchor": "scheduled"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0133",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.normalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_completeInstances": {
+          "type": "string",
+          "tn_role": "completeInstances"
+        }
+      },
+      "frontmatter": {
+        "mapped_completeInstances": [
+          "2026-08-20"
+        ]
+      },
+      "checkKey": "completeInstances"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "normalized": {
+          "$contains": {
+            "completeInstances": [
+              "2026-08-20"
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0134",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.denormalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_completeInstances": {
+          "type": "string",
+          "tn_role": "completeInstances"
+        }
+      },
+      "roleData": {
+        "completeInstances": [
+          "2026-08-20"
+        ]
+      },
+      "checkKey": "mapped_completeInstances"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "denormalized": {
+          "$contains": {
+            "mapped_completeInstances": [
+              "2026-08-20"
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0135",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.normalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_skippedInstances": {
+          "type": "string",
+          "tn_role": "skippedInstances"
+        }
+      },
+      "frontmatter": {
+        "mapped_skippedInstances": [
+          "2026-08-21"
+        ]
+      },
+      "checkKey": "skippedInstances"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "normalized": {
+          "$contains": {
+            "skippedInstances": [
+              "2026-08-21"
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0136",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.denormalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_skippedInstances": {
+          "type": "string",
+          "tn_role": "skippedInstances"
+        }
+      },
+      "roleData": {
+        "skippedInstances": [
+          "2026-08-21"
+        ]
+      },
+      "checkKey": "mapped_skippedInstances"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "denormalized": {
+          "$contains": {
+            "mapped_skippedInstances": [
+              "2026-08-21"
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0137",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.normalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_timeEntries": {
+          "type": "string",
+          "tn_role": "timeEntries"
+        }
+      },
+      "frontmatter": {
+        "mapped_timeEntries": [
+          {
+            "startTime": "2026-08-19T10:00:00Z",
+            "endTime": "2026-08-19T10:30:00Z"
+          }
+        ]
+      },
+      "checkKey": "timeEntries"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "normalized": {
+          "$contains": {
+            "timeEntries": [
+              {
+                "startTime": "2026-08-19T10:00:00Z",
+                "endTime": "2026-08-19T10:30:00Z"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0138",
+    "section": "§2",
+    "profile": "core-lite",
+    "operation": "field.denormalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "mapped_timeEntries": {
+          "type": "string",
+          "tn_role": "timeEntries"
+        }
+      },
+      "roleData": {
+        "timeEntries": [
+          {
+            "startTime": "2026-08-19T10:00:00Z",
+            "endTime": "2026-08-19T10:30:00Z"
+          }
+        ]
+      },
+      "checkKey": "mapped_timeEntries"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "denormalized": {
+          "$contains": {
+            "mapped_timeEntries": [
+              {
+                "startTime": "2026-08-19T10:00:00Z",
+                "endTime": "2026-08-19T10:30:00Z"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "field.0139",
+    "section": "§5.21",
+    "profile": "core-lite",
+    "operation": "field.normalize",
+    "assertion": "envelope_equals",
+    "input": {
+      "fields": {
+        "files": {
+          "type": "list",
+          "tn_role": "attachments"
+        }
+      },
+      "frontmatter": {
+        "files": [
+          "[[Attachments/receipt.jpg]]",
+          "[[Attachments/photo.png]]"
+        ]
+      },
+      "checkKey": "attachments"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "normalized": {
+          "$contains": {
+            "attachments": [
+              "[[Attachments/receipt.jpg]]",
+              "[[Attachments/photo.png]]"
+            ]
+          }
+        }
+      }
+    }
+  }
+]

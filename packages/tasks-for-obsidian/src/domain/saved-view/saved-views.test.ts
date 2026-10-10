@@ -26,7 +26,7 @@ function completeSavedView(): SavedView {
       priorities: ["highest", "high"],
       text: "launch",
       completed: "all",
-      missingFields: ["deadline", "estimate"],
+      missingFields: ["deadline"],
       scheduled: { startOffsetDays: 0, endOffsetDays: 7 },
       deadline: { endOffsetDays: 14 },
     },

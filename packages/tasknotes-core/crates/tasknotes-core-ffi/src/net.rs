@@ -37,7 +37,6 @@
 
 use std::sync::Arc;
 
-use tasknotes_core::domain::{PomodoroStatus, Task, TaskId, TaskTime, TimeSummary};
 use tasknotes_core::net::{
     HttpClient as CoreHttpClient, HttpHeader, HttpMethod, HttpRequest, HttpResponse,
     TaskNotesClient, TransportError as CoreTransportError, TransportErrorKind,
@@ -126,53 +125,53 @@ pub struct HttpResponse {
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error, uniffi::Error)]
 pub enum TransportError {
     /// The request outlived its timeout.
-    #[error("{message}")]
+    #[error("{detail}")]
     Timeout {
         /// What the platform reported.
-        message: String,
+        detail: String,
     },
 
     /// The host could not reach the network or the server at all.
-    #[error("{message}")]
+    #[error("{detail}")]
     Offline {
         /// What the platform reported.
-        message: String,
+        detail: String,
     },
 
     /// The TLS handshake or certificate validation failed.
-    #[error("{message}")]
+    #[error("{detail}")]
     Tls {
         /// What the platform reported.
-        message: String,
+        detail: String,
     },
 
     /// Anything else the platform's HTTP stack reported.
-    #[error("{message}")]
+    #[error("{detail}")]
     Other {
         /// What the platform reported.
-        message: String,
+        detail: String,
     },
 }
 
 impl From<TransportError> for CoreTransportError {
     fn from(error: TransportError) -> Self {
         match error {
-            TransportError::Timeout { message } => Self::timeout(message),
-            TransportError::Offline { message } => Self::offline(message),
-            TransportError::Tls { message } => Self::tls(message),
-            TransportError::Other { message } => Self::other(message),
+            TransportError::Timeout { detail } => Self::timeout(detail),
+            TransportError::Offline { detail } => Self::offline(detail),
+            TransportError::Tls { detail } => Self::tls(detail),
+            TransportError::Other { detail } => Self::other(detail),
         }
     }
 }
 
 impl From<CoreTransportError> for TransportError {
     fn from(error: CoreTransportError) -> Self {
-        let message = error.message;
+        let detail = error.message;
         match error.kind {
-            TransportErrorKind::Timeout => Self::Timeout { message },
-            TransportErrorKind::Offline => Self::Offline { message },
-            TransportErrorKind::Tls => Self::Tls { message },
-            TransportErrorKind::Other => Self::Other { message },
+            TransportErrorKind::Timeout => Self::Timeout { detail },
+            TransportErrorKind::Offline => Self::Offline { detail },
+            TransportErrorKind::Tls => Self::Tls { detail },
+            TransportErrorKind::Other => Self::Other { detail },
         }
     }
 }
@@ -282,87 +281,6 @@ impl TaskNotesApi {
         self.inner.base_url().to_owned()
     }
 
-    /// Start tracking time against a task through the core-owned wire client.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    pub fn start_time_tracking(&self, task_id: &TaskId) -> Result<Task, CoreError> {
-        self.inner
-            .start_time_tracking(task_id)
-            .map_err(CoreError::from)
-    }
-
-    /// Stop tracking time against a task through the core-owned wire client.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    pub fn stop_time_tracking(&self, task_id: &TaskId) -> Result<Task, CoreError> {
-        self.inner
-            .stop_time_tracking(task_id)
-            .map_err(CoreError::from)
-    }
-
-    /// Read tracked-time totals for one task.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    pub fn task_time(&self, task_id: &TaskId) -> Result<TaskTime, CoreError> {
-        self.inner.task_time(task_id).map_err(CoreError::from)
-    }
-
-    /// Read the aggregate time report for a named server period.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    pub fn time_summary(&self, period: &str) -> Result<TimeSummary, CoreError> {
-        self.inner.time_summary(period).map_err(CoreError::from)
-    }
-
-    /// Start a server-backed focus interval, optionally assigned to a task.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    pub fn start_pomodoro(&self, task_id: Option<TaskId>) -> Result<PomodoroStatus, CoreError> {
-        task_id
-            .map_or_else(
-                || self.inner.start_pomodoro(None),
-                |task_id| self.inner.start_pomodoro(Some(&task_id)),
-            )
-            .map_err(CoreError::from)
-    }
-
-    /// Toggle the current interval between running and paused.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    pub fn pause_pomodoro(&self) -> Result<PomodoroStatus, CoreError> {
-        self.inner.pause_pomodoro().map_err(CoreError::from)
-    }
-
-    /// Stop the current server-backed focus interval.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    pub fn stop_pomodoro(&self) -> Result<PomodoroStatus, CoreError> {
-        self.inner.stop_pomodoro().map_err(CoreError::from)
-    }
-
-    /// Read the current server-backed focus interval.
-    ///
-    /// # Errors
-    ///
-    /// Propagates the core's transport, HTTP, and response-validation failure.
-    pub fn pomodoro_status(&self) -> Result<PomodoroStatus, CoreError> {
-        self.inner.pomodoro_status().map_err(CoreError::from)
-    }
-
     /// Abandon every request currently in flight.
     ///
     /// Takes no engine lock on purpose. The engine's own `shutdown()` has to
@@ -392,7 +310,6 @@ mod tests {
         sync::{Arc, Mutex},
     };
 
-    use tasknotes_core::domain::{PomodoroPhase, TaskId};
     use tasknotes_core::net::{
         HttpHeader, HttpRequest, HttpResponse, TaskApi, TransportError as CoreTransportError,
         TransportErrorKind,
@@ -413,7 +330,7 @@ mod tests {
             self.seen.lock().unwrap().push(request);
             self.answers.lock().unwrap().pop_front().unwrap_or_else(|| {
                 Err(TransportError::Other {
-                    message: "exhausted".to_owned(),
+                    detail: "exhausted".to_owned(),
                 })
             })
         }
@@ -435,14 +352,6 @@ mod tests {
             answers: Mutex::new(answers.into_iter().collect()),
             cancels: Mutex::new(0),
         })
-    }
-
-    fn response(body: &str) -> HttpResponse {
-        HttpResponse {
-            status: 200,
-            headers: Vec::new(),
-            body: body.as_bytes().to_vec(),
-        }
     }
 
     #[test]
@@ -514,11 +423,11 @@ mod tests {
     #[test]
     fn a_bad_base_url_fails_when_the_api_is_built_not_when_a_request_is_sent() {
         let host: Arc<dyn HttpClient> = scripted(Err(TransportError::Offline {
-            message: "n/a".to_owned(),
+            detail: "n/a".to_owned(),
         }));
         let error = TaskNotesApi::new(host, "vault.test:8080", 1_000).unwrap_err();
         assert!(
-            matches!(error, CoreError::Validation { ref message } if message.contains("scheme")),
+            matches!(error, CoreError::Validation { detail: ref message } if message.contains("scheme")),
             "unexpected error: {error:?}"
         );
     }
@@ -526,51 +435,11 @@ mod tests {
     #[test]
     fn cancelling_reaches_the_host_without_touching_the_engine() {
         let transport = scripted(Err(TransportError::Offline {
-            message: "n/a".to_owned(),
+            detail: "n/a".to_owned(),
         }));
         let host: Arc<dyn HttpClient> = Arc::<Scripted>::clone(&transport);
         let api = TaskNotesApi::new(host, "http://vault.test", 1_000).unwrap();
         api.cancel_all();
         assert_eq!(*transport.cancels.lock().unwrap(), 1);
-    }
-
-    #[test]
-    fn timing_and_pomodoro_methods_cross_the_exported_api_wrapper() {
-        let wire_task =
-            r#"{"path":"TaskNotes/a.md","title":"Alpha","status":"open","priority":"normal"}"#;
-        let running =
-            r#"{"active":true,"taskId":"TaskNotes/a.md","timeRemaining":1500,"type":"work"}"#;
-        let transport = scripted_many([
-            Ok(response(wire_task)),
-            Ok(response(wire_task)),
-            Ok(response(
-                r#"{"summary":{"totalMinutes":7,"activeSessions":1}}"#,
-            )),
-            Ok(response(
-                r#"{"period":"all","summary":{"totalMinutes":42},"topTasks":[{"task":"TaskNotes/a.md","title":"Alpha","minutes":42}]}"#,
-            )),
-            Ok(response(running)),
-            Ok(response(running)),
-            Ok(response(running)),
-            Ok(response(r#"{"active":false}"#)),
-            Ok(response(r#"{"active":true,"type":"break"}"#)),
-        ]);
-        let host: Arc<dyn HttpClient> = Arc::<Scripted>::clone(&transport);
-        let api = TaskNotesApi::new(host, "http://vault.test", 1_000).unwrap();
-        let task_id = TaskId::parse("TaskNotes/a.md").unwrap();
-
-        assert_eq!(api.start_time_tracking(&task_id).unwrap().id, task_id);
-        assert_eq!(api.stop_time_tracking(&task_id).unwrap().id, task_id);
-        assert_eq!(api.task_time(&task_id).unwrap().total_time, 7);
-        assert_eq!(api.time_summary("all").unwrap().total_time, 42);
-        assert!(api.start_pomodoro(Some(task_id.clone())).unwrap().active);
-        assert!(api.start_pomodoro(None).unwrap().active);
-        assert!(api.pause_pomodoro().unwrap().active);
-        assert!(!api.stop_pomodoro().unwrap().active);
-        assert_eq!(
-            api.pomodoro_status().unwrap().phase,
-            Some(PomodoroPhase::Break)
-        );
-        assert_eq!(transport.seen.lock().unwrap().len(), 9);
     }
 }

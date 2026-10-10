@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "coordinate": "net.java.dev.jna:jna:5.18.1",
+  "files": [
+    {
+      "file": "LICENSE.txt",
+      "source": "https://raw.githubusercontent.com/java-native-access/jna/5.18.1/LICENSE",
+      "sha256": "07c938b23950ab7d47a24ef35f9f5da3a05ae164278dc959ad6994135ed59ff1"
+    },
+    {
+      "file": "AL2.0.txt",
+      "source": "https://raw.githubusercontent.com/java-native-access/jna/5.18.1/AL2.0",
+      "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+    },
+    {
+      "file": "LGPL2.1.txt",
+      "source": "https://raw.githubusercontent.com/java-native-access/jna/5.18.1/LGPL2.1",
+      "sha256": "eea173a556abac0370461e57e12aab266894ea6be3874c2be05fd87871f75449"
+    },
+    {
+      "file": "native-libffi-LICENSE.txt",
+      "source": "https://raw.githubusercontent.com/java-native-access/jna/5.18.1/native/libffi/LICENSE",
+      "sha256": "2c9c2acb9743e6b007b91350475308aee44691d96aa20eacef8e199988c8c388"
+    }
+  ]
+}

@@ -6,6 +6,36 @@
   // the passthrough `mise where dotnet` resolves against the default
   // ~/.local/share/mise and reports the SDK as not installed.
   "tasks": {
+    "generate": {
+      "dependsOn": ["^generate"],
+      "passThroughEnv": [
+        "MISE_DATA_DIR",
+        "HTTP_PROXY",
+        "HTTPS_PROXY",
+        "NO_PROXY",
+        "APPDATA",
+        "LOCALAPPDATA",
+        "USERPROFILE",
+        "TEMP",
+        "TMP"
+      ],
+      "inputs": [
+        "$TURBO_ROOT$/LICENSE",
+        "$TURBO_ROOT$/packages/tasknotes-core/Cargo.lock",
+        "$TURBO_ROOT$/packages/tasknotes-core/**/Cargo.toml",
+        "$TURBO_ROOT$/packages/tasknotes-macos/scripts/generate-native-notices.ts",
+        "$TURBO_ROOT$/packages/tasknotes-macos/scripts/license-texts/**",
+        "scripts/{generate-notices,prepare-notices,prepared-notice-inputs,generate-nuget-notices,nuget-license-provenance,mise,dotnet}.ts",
+        "scripts/cross-build.sh",
+        "scripts/license-texts/**",
+        "src/**/packages.lock.json",
+        "src/**/*.csproj",
+        "Directory.Build.props",
+        "Directory.Build.targets",
+        "Directory.Packages.props"
+      ],
+      "outputs": ["generated/notices/**"]
+    },
     "build": {
       "passThroughEnv": [
         "APPDATA",
@@ -19,6 +49,12 @@
         "USERPROFILE"
       ],
       "inputs": [
+        "$TURBO_ROOT$/packages/tasknotes-fixtures/schema/facet-engine.schema.json",
+        "$TURBO_ROOT$/packages/tasknotes-fixtures/schema/obsidian-sync.schema.json",
+        "$TURBO_ROOT$/packages/tasknotes-fixtures/presentation/**",
+        "$TURBO_ROOT$/packages/tasknotes-fixtures/vault/facet-contract.json",
+        "$TURBO_ROOT$/packages/tasknotes-fixtures/vault/facet-raw-contract.json",
+        "$TURBO_ROOT$/packages/tasknotes-core/bindings/csharp/**",
         "src/**",
         "tests/**",
         "Directory.Build.props",

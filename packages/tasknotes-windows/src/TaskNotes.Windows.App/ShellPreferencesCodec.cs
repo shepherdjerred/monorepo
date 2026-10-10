@@ -11,6 +11,7 @@ namespace TaskNotes.Windows.App
         private const string HotkeyKey = "quick-add-hotkey";
         private const string WindowWidthKey = "window-width";
         private const string WindowHeightKey = "window-height";
+        private const string TaskSoundsKey = "task-sounds";
 
         internal static ShellPreferences Load(IDictionary<string, object> values)
         {
@@ -26,7 +27,8 @@ namespace TaskNotes.Windows.App
                 ValueOrDefault(values, InspectorKey, true),
                 ValueOrDefault(values, HotkeyKey, "Ctrl+Alt+N"),
                 ValueOrDefault(values, WindowWidthKey, 1240d),
-                ValueOrDefault(values, WindowHeightKey, 820d)
+                ValueOrDefault(values, WindowHeightKey, 820d),
+                ValueOrDefault(values, TaskSoundsKey, true)
             );
             Validate(preferences);
             return preferences;
@@ -43,6 +45,7 @@ namespace TaskNotes.Windows.App
             values[HotkeyKey] = preferences.QuickAddHotkey;
             values[WindowWidthKey] = preferences.WindowWidth;
             values[WindowHeightKey] = preferences.WindowHeight;
+            values[TaskSoundsKey] = preferences.TaskSounds;
         }
 
         private static T ValueOrDefault<T>(

@@ -13,14 +13,13 @@ export type TaskDetailDraft = {
   readonly tags: readonly string[];
   readonly recurrence: string;
   readonly recurrenceAnchor: "scheduled" | "completion";
-  readonly timeEstimate: string;
 };
 
 export type TaskDetailPatchResult =
   | { readonly ok: true; readonly patch: UpdateTaskRequest }
   | {
       readonly ok: false;
-      readonly field: "title" | "recurrence" | "timeEstimate";
+      readonly field: "title" | "recurrence";
       readonly message: string;
     };
 
@@ -36,8 +35,6 @@ export function createTaskDetailDraft(task: Task): TaskDetailDraft {
     tags: task.tags.map(String),
     recurrence: task.recurrence ?? "",
     recurrenceAnchor: task.recurrenceAnchor ?? "scheduled",
-    timeEstimate:
-      task.timeEstimate === undefined ? "" : String(task.timeEstimate),
   };
 }
 
@@ -55,27 +52,12 @@ function optionalText(value: string): string | null {
   return value.length === 0 ? null : value;
 }
 
-function parseTimeEstimate(value: string): number | null | undefined {
-  if (value.trim().length === 0) return null;
-  const parsed = Number(value);
-  return !Number.isFinite(parsed) || parsed < 0 ? undefined : parsed;
-}
-
 export function buildTaskDetailPatch(
   task: Task,
   draft: TaskDetailDraft,
 ): TaskDetailPatchResult {
   if (draft.title.trim().length === 0) {
     return { ok: false, field: "title", message: "Title is required" };
-  }
-
-  const timeEstimate = parseTimeEstimate(draft.timeEstimate);
-  if (timeEstimate === undefined) {
-    return {
-      ok: false,
-      field: "timeEstimate",
-      message: "Estimate must be a non-negative number of minutes",
-    };
   }
 
   const recurrence = optionalText(draft.recurrence);
@@ -95,10 +77,6 @@ export function buildTaskDetailPatch(
   const patch: UpdateTaskRequest = {};
   applyCorePatch(task, draft, patch);
   applyRecurrencePatch(task, draft, patch);
-
-  if (timeEstimate !== (task.timeEstimate ?? null)) {
-    patch.timeEstimate = timeEstimate;
-  }
 
   return { ok: true, patch };
 }
@@ -192,19 +170,5 @@ export function rebaseTaskDetailDraft(
       draft.recurrenceAnchor === base.recurrenceAnchor
         ? updated.recurrenceAnchor
         : draft.recurrenceAnchor,
-    timeEstimate:
-      draft.timeEstimate === base.timeEstimate
-        ? updated.timeEstimate
-        : draft.timeEstimate,
   };
-}
-
-export function formatTaskMinutes(minutes: number): string {
-  if (!Number.isFinite(minutes) || minutes < 0) {
-    throw new Error("Task minutes must be a finite non-negative number");
-  }
-  if (minutes < 60) return `${minutes}m`;
-  const hours = Math.floor(minutes / 60);
-  const remainder = minutes % 60;
-  return remainder === 0 ? `${hours}h` : `${hours}h ${remainder}m`;
 }

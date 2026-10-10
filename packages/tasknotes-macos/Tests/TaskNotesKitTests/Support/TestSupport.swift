@@ -37,7 +37,6 @@ func createRequest(title: String, status: TaskStatus? = nil) -> CreateTaskReques
         tags: nil,
         recurrence: nil,
         recurrenceAnchor: nil,
-        timeEstimate: nil,
         extraFields: nil
     )
 }
@@ -139,12 +138,9 @@ func coreTask(
         completedDate: nil,
         dateCreated: nil,
         dateModified: nil,
-        timeEstimate: nil,
-        timeEntries: [],
         blockedBy: [],
         reminders: [],
         archived: archived,
-        totalTrackedTime: 0,
         isBlocked: false,
         isBlocking: false,
         extraFields: "{}",
@@ -209,7 +205,6 @@ func recurringRequest(
         tags: nil,
         recurrence: recurrence,
         recurrenceAnchor: nil,
-        timeEstimate: nil,
         extraFields: nil
     )
 }

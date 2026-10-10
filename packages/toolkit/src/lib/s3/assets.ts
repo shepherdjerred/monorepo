@@ -27,6 +27,7 @@ const CONTENT_TYPES: Record<string, string> = {
   ".mp4": "video/mp4",
   ".webm": "video/webm",
   ".mov": "video/quicktime",
+  ".wav": "audio/wav",
   ".txt": "text/plain; charset=utf-8",
   ".log": "text/plain; charset=utf-8",
   ".json": "application/json",

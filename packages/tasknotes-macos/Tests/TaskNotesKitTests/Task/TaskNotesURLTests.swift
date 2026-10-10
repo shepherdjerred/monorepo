@@ -176,7 +176,7 @@ struct TaskNotesURLTests {
 
     // ── The command routes ─────────────────────────────────────────────────
     //
-    // `quick-add`, `search`, `settings`, `pomodoro` and `time-report` are the
+    // `quick-add`, `search` and `settings` are the
     // rest of `linking.ts`'s published vocabulary. They were parsed as unknown
     // hosts here until this suite grew the cases below — so a bookmark or a
     // Shortcuts action carrying one opened a window that then did nothing.
@@ -202,8 +202,6 @@ struct TaskNotesURLTests {
             ("tasknotes://quick-add", TaskNotesAction.quickAdd),
             ("tasknotes://search", .search),
             ("tasknotes://settings", .settings),
-            ("tasknotes://pomodoro", .pomodoro),
-            ("tasknotes://time-report", .timeReport),
         ]
     )
     func crossPlatformActionSpelling(raw: String, action: TaskNotesAction) throws {

@@ -14,6 +14,8 @@ node = "24.21.0"
 # temporalio/temporal release layout, which has no Darwin arm64 artifact.
 "aqua:temporalio/cli" = "1.9.1"
 rust = "1.99.0"
+# renovate: datasource=github-releases depName=yonaskolb/XcodeGen
+"aqua:yonaskolb/XcodeGen" = { version = "2.46.0", os = ["macos"] }
 # renovate: datasource=crate depName=cargo-packager
 "cargo:cargo-packager" = "0.11.8"
 # renovate: datasource=dotnet-sdk depName=dotnet-sdk

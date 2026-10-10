@@ -1,8 +1,96 @@
 # TaskNotes for Windows
 
-Native Windows 11 x64 client for TaskNotes. WinUI 3 renders the application,
-while the committed C# UniFFI binding calls the same pure Rust domain and sync
-engine as the macOS client.
+Facet is the standalone Windows 11 x64 client for TaskNotes vaults. WinUI 3
+renders the application; a portable host invokes the shared Rust TaskNotes and
+Obsidian Sync engines through generated C# UniFFI bindings. The application
+stores its index and mutation journal locally and connects directly to an
+authorized Obsidian Sync vault.
+
+Existing duration and time-entry metadata remains untouched in vault notes.
+
+The host validates the complete mutation receipt before presenting its saved
+result. Template and filename notices accompany Saved and belong to the exact
+vault, action and engine request. Expected refresh or cleanup I/O failures keep
+the saved outcome and original action available, with separate maintenance text.
+The editor retains its draft until it can load the authoritative resulting task;
+late results cannot replace a newer draft. Invalid receipts fail the contract.
+
+Local applied receipts drive task-added, completed, deleted, reopened and Undo
+feedback before fallible refresh or cleanup. Feedback has an independent
+engine/profile/mutation identity and an originating-window activation lease;
+searches and other task actions do not invalidate it. Leaving the foreground
+invalidates a pending cue permanently. Startup, remote updates, recovery replay,
+no-ops and ordinary field edits are silent. Bulk completion emits one aggregate
+cue. The native player consumes each eligible effect once and drops overlapping
+attempts using a monotonic duration gate at playback, without queuing audio.
+The four bundled first-party WAVs and shared feedback JSON are strictly validated.
+Task sounds default on; explicit choices persist independently of other settings.
+Malformed sound preferences require an explicit repair choice.
+
+Quick Add opens as a compact native dialog with immediate input focus, Rust-parsed
+removable chips and optional Details for notes, Planned/Due dates, configured
+priority and exact taxonomy tokens. Commas inside names remain part of a token.
+Clearing a parsed chip means a deliberate null or empty-array override. Metadata
+without a core-parsed title is rejected before journal admission. Button deferrals
+retain the dialog during submission and after failure; reopening preserves an
+owned draft. Add & add another resets only after a confirmed receipt, and newer
+typing survives an older result. Uncertain captures retain their exact recovery
+action. The app currently has one main window; protocol and global capture
+activations redirect to that window's dialog, with a separate inline draft.
+Submission uses one opaque, core-produced payload frozen with its original
+engine and profile; relative dates and defaults are not parsed again after
+preview. Once admitted, it can only be reviewed through its exact saved action.
+
+Applied confirmations remain visible for at least six seconds, pause expiration
+while focused or hovered, honor a longer native accessibility message duration,
+and offer Undo only for that exact authoritative current receipt.
+Ctrl+Z remains native text Undo inside text/password editors. Task receipt motion
+uses the shared duration and respects Windows animation settings. Native playback,
+dialog focus, motion, high contrast and MSIX resource installation still require
+an interactive Windows host; portable tests and source checks do not establish
+those runtime behaviors.
+
+Settings provides independent background Sync and Windows reminder preferences.
+The packaged app requests Windows background access for opted-in work when it
+closes. Windows schedules the owned task every 15 minutes when its execution
+policy permits. Sync-only work requires network access; reminder maintenance
+also runs offline for registered local vaults. Reminder-only writers never open
+Sync network sessions. Each activation has a 45-second budget and retains durable
+checkpoints when cancelled. Foreground launch cancels only Facet registrations
+and waits for the previous writer to release its private-vault lease before
+opening SQLite or mutation drafts. Closing the main window confirms dirty edits,
+drains session effects and closes the engine before releasing that lease.
+Settings displays background permission or registration failures. Background
+execution is best effort; COM activation and OS delivery require real Windows
+acceptance separately from cross compilation.
+
+Windows reminder delivery uses the shared Rust `reminder_plan` projection with
+one explicit clock, IANA time zone and 30-day window. The host reads every page
+against the same index version before replacing that vault's OS schedule. Invalid
+stored reminders produce diagnostics; unavailable configuration retains the last
+schedule. Account changes fence in-flight scheduling and cancel private-vault
+notifications before credentials change. Protocol activation selects the reminder's
+owning vault and exact task path, with confirmation before discarding a draft.
+Windows notification permissions and power policy control delivery. Scheduled
+notifications can be missed if the computer remains off for more than five minutes
+after the firing time; OS delivery and COM activation remain separate acceptance
+requirements.
+
+First-party application and Rust core code use GPL-3.0-only. The Windows package
+includes the exact repository license under `Licenses/GPL-3.0.txt`; third-party
+components retain their own licenses and notices.
+
+Normal app builds generate Rust and NuGet notices after locked restore. NuGet
+licenses come from package files, the package's exact declared repository
+commit, or a captured publisher URL bound to its exact package version, locked
+content hash and nuspec hash. Publisher sources retain separately verified raw
+and text assets; publisher notices are preserved. The generated inventory
+records unresolved source gaps and rejects runtime source gaps.
+Cross builds require `bun scripts/prepare-notices.ts` first. Stage
+`generated/notices` with the listed source inputs; MSBuild verifies every source
+and bundled output SHA256 before compilation. Missing or stale notices fail the
+cross lane. The MSIX contains both notice texts and their dependency inventories
+under `Licenses`.
 
 ## One-time Windows setup
 
@@ -92,8 +180,8 @@ $installer = Get-ChildItem .\packages\tasknotes-windows\AppPackages -Recurse -Fi
 `bun run windows:cross-package` builds every Windows project and the unsigned
 MSIX on Linux, in the pinned
 [`windows-cross-compiler-winui`](../windows-cross-compiler/) image, and writes
-the package to `AppPackages/cross/`. Buildkite runs the same build on every
-change as `tasknotes-windows-cross`. The image needs a linux/amd64 container
+the package to `AppPackages/cross/`. The `tasknotes-windows-cross` CI step runs
+the same build. The image needs a linux/amd64 container
 host.
 
 The Rust core cross-compiles for `x86_64-pc-windows-msvc` with cargo-xwin, and
@@ -119,7 +207,7 @@ silently omitted.
 The boundary is strict:
 
 ```text
-WinUI -> Presentation -> TaskNotesStore -> EngineRunner -> generated C# UniFFI -> Rust core
+WinUI -> Presentation -> FacetTaskNotesStore -> EngineRunner -> generated C# UniFFI -> Rust core
 ```
 
 Portable view models own navigation, command state, validation, projections,
@@ -132,19 +220,65 @@ editor, Board, and Settings. Native event adapters stay beside their WinUI
 views, while command state and validation remain in portable view models. This
 keeps generated XAML and UI-thread concerns out of the portable test surface.
 
-`TaskNotesStore` exposes the complete task snapshot, fixed and dynamic query
-projections, vocabulary, saved-view metadata, completion undo, live timing and
-Pomodoro state, pending IDs, sync state, errors, and parked changes. A
+The desktop list follows the retained macOS client's compact composition: a
+source sidebar, grouped rows with aligned metadata/date columns, native query
+menus and Extended Ctrl/Shift selection, inline capture, and a persistent
+inspector. Narrow windows overlay the inspector over the list. Hover actions
+also appear on keyboard focus, and motion honors Windows animation preferences.
+Dimensions, typography, motion durations, and supported configured colors are
+validated against the shared `tasknotes-fixtures/presentation` contracts; native
+semantic colors remain responsible for theme and high-contrast behavior.
+
+Inspector text commits on Return/blur (body on Done/blur), while native controls
+commit their changed field. Commits retain the owning vault, revision and exact
+journal admission; newer text survives receipt observation, and untouched fields
+refresh from the authoritative result. Navigation and close first flush valid
+drafts. Failed drafts stay available for Retry/Discard; admitted uncertain or
+applied-but-unobserved actions must use existing Settings recovery rather than
+submitting a replacement edit. Token suggestions and Quick Add chips use core
+projections. There is one main workspace window today; auxiliary capture windows
+own their drafts without redirecting the main query, selection, or inspector.
+
+Row actions freeze their rendered vault, path, revision, and recurrence
+occurrence before entering the host queue. Bulk completion supports distinct
+notes; selecting multiple occurrences of one note requires completing those
+occurrences separately because the existing core batch contract requires
+distinct files. The rejected bulk action retains selection and creates no
+journal entry. Note-scoped scheduling, priority, and deletion explicitly
+deduplicate occurrences and reject inconsistent reviewed revisions. Named-view
+creation freezes its owning vault/query and retains the exact admitted action
+through uncertain outcomes; an applied view is observed without creating it again.
+
+Portable checks prove coordinator behavior and projections. XAML source checks
+and cross packaging are separate from native Windows interaction, motion,
+accessibility and screenshot acceptance, which require an interactive Windows
+host.
+
+`FacetTaskNotesStore` exposes the complete task snapshot, fixed and dynamic query
+projections, vocabulary, saved-view metadata, completion undo, pending IDs, sync state, errors, and retained conflicts. A
 single-reader channel executes every FFI call away from the UI thread. Its
 bounded coalescing pump owns background drains and is awaited during disposal.
-Host
-callbacks supply atomic app-local files, bearer-authenticated `HttpClient`,
-system time and timezone, cryptographic randomness, cancellation, and
-idempotent retry timers. C# does not implement recurrence, mutation,
-wire-protocol, filtering, sorting, or synchronization policy.
+Host callbacks supply app-private filesystem capabilities, bounded HTTP and
+WebSocket transport, clock and timezone context, cryptographic randomness,
+cancellation and secure credential storage. C# does not implement recurrence,
+mutation, wire-protocol, filtering, sorting or synchronization policy. Host
+JSON input and output are validated against the shared versioned schemas in
+`tasknotes-fixtures`; binary file content uses the native binary boundary.
 
-The server URL is non-secret and lives in local settings. The bearer token
-lives only in Windows Credential Locker.
+Settings signs in to Obsidian, handles MFA, lists accessible vaults and
+authorizes an existing vault. Each connected vault has an app-private replica
+and a durable Rust SQLite index/outbox. All authorized profiles synchronize;
+selection controls the visible profile. The application does not create a
+remote vault. An external folder can be indexed read-only; writes require the
+private replica capability. Revoked filesystem access leaves the last complete
+cached index readable and exposes an actionable error for refresh or mutation.
+
+Credential Locker holds the account token and vault keys qualified by an
+authorization generation, profile and vault. Signing out stops sessions before
+removing credentials. Signing in again requires explicit reauthorization of
+existing profiles, preserving their replicas and pending changes. App-local
+files retain nonsecret profile capabilities, selection and immutable mutation
+envelopes. Shell preferences remain in local settings.
 
 The composition root uses Microsoft.Extensions.Hosting and writes allow-listed
 JSONL diagnostics under app-local storage. Logs contain operation metadata,
@@ -161,8 +295,7 @@ boundary have their own changed-line and non-regression checks.
 ## Native surface
 
 The `NavigationView` contains Inbox, Today, Upcoming, Browse, completed tasks,
-Board, saved views, projects, contexts, tags, Pomodoro, Time Report, and
-Settings. The reusable task workspace supports search, filters, sorting,
+Board, saved views, projects, contexts, tags, and Settings. The reusable task workspace supports search, filters, sorting,
 grouping, multi-selection, bulk mutation, task editing, recurrence completion,
 and LIFO completion undo. The shell also implements `tasknotes://` activation,
 singleton auxiliary windows, keyboard commands, a configurable global Quick
@@ -170,10 +303,46 @@ Add hotkey, persistence, and stable automation identifiers.
 
 Apple-only widgets, Live Activities, Siri/App Intents, haptics, and Apple
 lifecycle behavior are explicit parity exclusions. Windows Widgets,
-notifications, Store publication, ARM64, and production signing remain
-deferred. Windows 11 x64 is the supported target.
+notifications and ARM64 are separate native surfaces. Windows 11 x64 is the
+supported target. Store artifacts require the registered product identity and
+the acceptance layers below.
 
-## Real-server E2E
+## Microsoft Store package
+
+Enroll the publishing account in Microsoft Partner Center and reserve the app
+name. In that product's **Product management → Product identity** page, copy
+the registered **Package/Identity/Name**, **Package/Identity/Publisher** and
+**Package/Properties/PublisherDisplayName** values. Use the exact registered
+values; the checked-in `CN=TaskNotes Development` publisher belongs only to
+local development packages. Microsoft's
+[package identity requirements](https://learn.microsoft.com/en-us/windows/apps/publish/publish-your-app/app-package-requirements?pivots=store-installer-msix)
+describe this correspondence.
+
+Create a nonsecret local JSON file with `schemaVersion: 1`, the three strings
+as `name`, `publisher`, `publisherDisplayName`, your `displayName`, and a
+four-component `version` whose last component is `0`. Do not include
+certificates, passwords or account credentials. From the package directory on
+Windows 11 x64, run:
+
+```powershell
+bun run windows:store-package C:\release\facet-store-identity.json
+```
+
+The command rejects missing or development identity, builds Release with a
+separate generated manifest, disables local signing, and verifies the packaged
+identity, native DLL and absence of a development signature. Artifacts are
+written to a fresh `AppPackages/Store/` directory. It never uploads or submits a
+package. Microsoft signs packages accepted through the Store, as described in
+the [MSIX signing guide](https://learn.microsoft.com/en-us/windows/msix/package/sign-msix-package-guide).
+The existing `windows:package` command still builds the locally signed
+development package.
+
+Enrollment and product reservation are prerequisites for this lane. Source or
+cross compilation does not establish native launch, signing, Store acceptance
+or publication. Use `windows:verify` on an interactive Windows worker before
+release, then complete the product submission in Partner Center.
+
+## Acceptance layers
 
 `@tasknotes/e2e` creates a fresh seeded Markdown vault, starts the real
 `tasknotes-server` on an ephemeral port, and fronts it with a deterministic
@@ -183,9 +352,39 @@ state between serial scenarios, and drives the app with direct Windows UI
 Automation. Failed scenarios retain the redacted server/proxy logs, JUnit XML,
 UIA tree, screenshot, process inventory, and vault under `artifacts/e2e/`.
 
-The Windows UI lane remains local until CI has unlocked interactive
-Windows 11 x64 workers. The exact inactive lane contract is checked in at
-`ci/windows-ci.pipeline.yml`; provisioning is tracked in Linear as
-SJ-134. Until that issue is complete, a PR needs attached local
-`windows:verify` evidence and must not claim packaged Windows tests are
-CI-enforced.
+That harness exercises the retained server implementation; its passing results
+do not prove the standalone account, replica or direct Sync composition.
+Standalone acceptance must exercise local Markdown mutation, immutable retry
+identity, cached restart, remote ingestion, conflicts and the equivalent UI
+assertions through the production host.
+
+The Windows UI lane requires unlocked interactive Windows 11 x64 workers. The
+inactive lane contract is checked in at `ci/windows-ci.pipeline.yml`; native
+worker availability is tracked as AI-148. Portable engine/host tests and Linux
+cross packages are distinct from actual packaged Windows runtime and UIA
+evidence. A release needs attached `windows:verify` evidence and must not claim
+packaged Windows tests are CI-enforced before that worker exists. Native
+filesystem rename and directory-entry power-loss durability also require real
+Windows verification; a portable `Flush(true)` test proves file contents only.
+
+Private JSON receipt commits flush the new file and use Windows
+[`MoveFileExW` with `MOVEFILE_WRITE_THROUGH`](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-movefileexw)
+for its namespace move. The bounded exchange adapter separately flushes actual
+replacement/captured file handles before committing an applied outcome. It
+preserves recovery state for partial
+[`ReplaceFileW`](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-replacefilew)
+failures and checks prepared file identity rather than equal contents. This
+route uses supported file operations without assuming a POSIX directory flush
+on Windows. Provider power-loss acceptance and writable external folders remain
+separate native verification requirements.
+
+Bounded callback migrations preserve earlier retained backup IDs. Capability
+owners merge recorded legacy and current metadata in sorted pages of at most
+128 records and stream preserved bytes into private read snapshots. A
+profile- and engine-qualified acknowledgement receipt commits before legacy
+files are unlinked; interrupted cleanup resumes from that receipt. Missing or
+ambiguous legacy captures remain visible errors requiring review. Sealed
+metadata traversal does not read attachment contents.
+
+Saved warnings belong to one applied action and clear when a newer action is
+admitted, including a rejected edit.
