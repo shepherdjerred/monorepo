@@ -229,8 +229,14 @@ class DatabaseRestoreTest(unittest.TestCase):
         self.assertEqual(before, hashlib.sha256(original.read_bytes()).hexdigest())
         with closing(sqlite3.connect(candidate)) as connection:
             self.assertEqual(connection.execute("SELECT * FROM core_player").fetchall(), [(player, "Alice", 123)])
-            self.assertEqual(connection.execute("SELECT * FROM core_analytics_player").fetchall(), [(player, "prod", 123)])
-            self.assertEqual(connection.execute("SELECT session_id FROM core_analytics_session").fetchall(), [("session",)])
+            self.assertEqual(
+                connection.execute("SELECT * FROM core_analytics_player").fetchall(),
+                [(player, "prod", 123)],
+            )
+            self.assertEqual(
+                connection.execute("SELECT session_id FROM core_analytics_session").fetchall(),
+                [("session",)],
+            )
             self.assertEqual(connection.execute("SELECT event_id FROM core_analytics_outbox").fetchall(), [("event",)])
             for table in economy_tables:
                 self.assertEqual(connection.execute(f'SELECT * FROM "{table}"').fetchall(), [])
