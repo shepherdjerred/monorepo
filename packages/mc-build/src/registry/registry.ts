@@ -1,6 +1,7 @@
 import path from "node:path";
 import { z } from "zod";
 import { formatBlockState, parseBlockState } from "#src/core/block-state.ts";
+import { BlockLightingSchema, type LightingValue } from "./lighting.ts";
 
 /**
  * The committed 26.2 block registry, generated from a live MCBridge
@@ -15,6 +16,7 @@ export const RegistryFileSchema = z.strictObject({
     z.strictObject({
       properties: z.record(z.string(), z.array(z.string())),
       defaults: z.record(z.string(), z.string()),
+      lighting: BlockLightingSchema,
     }),
   ),
 });
@@ -58,6 +60,14 @@ export class BlockRegistry {
 
   properties(id: string): Readonly<Record<string, readonly string[]>> {
     return this.entry(id).properties;
+  }
+
+  /** Paper emission and cell-level transmission for a validated block state. */
+  lighting(raw: string): LightingValue {
+    const canonical = this.resolve(raw);
+    const { id } = parseBlockState(canonical);
+    const table = this.entry(id).lighting;
+    return table.overrides[canonical] ?? table.default;
   }
 
   /**

@@ -2,7 +2,6 @@ import { mkdir, rm } from "node:fs/promises";
 import { z } from "zod";
 import path from "node:path";
 import type { BlockGrid } from "@shepherdjerred/mc-build/core/grid.ts";
-import { gridFromRegionRead } from "@shepherdjerred/mc-build/core/grid.ts";
 import { RegionReadSchema } from "@shepherdjerred/mc-build/core/region-read.ts";
 import { readSchematic } from "@shepherdjerred/mc-build/core/schem.ts";
 import {
@@ -11,7 +10,6 @@ import {
 } from "@shepherdjerred/mc-build/core/site.ts";
 import {
   BlockPosSchema,
-  type BlockPos,
   type Box,
   type RegionReadResponse,
 } from "#protocol/bridge.ts";
@@ -23,9 +21,11 @@ import {
   type BuildManifest,
   type OpLog,
 } from "#protocol/build.ts";
+import { currentRun, lastOf, readLog } from "./build-log.ts";
+import { validateRunIdentity } from "./storage/run-identity.ts";
+import { validateCaptureIdentity } from "./storage/capture-identity.ts";
+import { validateFrozenExpected, type FrozenPart } from "./frozen-expected.ts";
 
-/** A frozen snapshot of a box: one schematic, or tiles each pasted at `at`. */
-export type FrozenPart = { at: BlockPos; bytes: Uint8Array };
 export type FrozenKind = "site" | "expected";
 
 const PartsIndexSchema = z.array(
@@ -56,6 +56,13 @@ export class BuildWorkspace {
   }
 
   async manifest(): Promise<BuildManifest> {
+    const manifest = await this.manifestForCapture();
+    await validateCaptureIdentity(this, manifest);
+    return manifest;
+  }
+
+  /** Explicit recapture can repair an interrupted capture; syntax remains strictly validated. */
+  async manifestForCapture(): Promise<BuildManifest> {
     const file = Bun.file(this.file(BUILD_FILES.manifest));
     if (!(await file.exists())) {
       throw new Error(
@@ -96,6 +103,7 @@ export class BuildWorkspace {
   }
 
   async siteInfo(): Promise<SiteInfo> {
+    await this.manifest();
     return SiteInfoSchema.parse(
       await Bun.file(this.file(BUILD_FILES.siteInfo)).json(),
     );
@@ -140,6 +148,8 @@ export class BuildWorkspace {
 
   /** The frozen box as pasteable parts (tiles when it was snapshotted in tiles). */
   async frozenParts(kind: FrozenKind, box: Box): Promise<FrozenPart[]> {
+    if (kind === "site") await this.manifest();
+    if (kind === "expected") await this.assertExpectedCurrent();
     const files = FROZEN_FILES[kind];
     const indexFile = Bun.file(this.file(path.join(files.parts, "parts.json")));
     if (await indexFile.exists()) {
@@ -165,6 +175,7 @@ export class BuildWorkspace {
   }
 
   async siteGrid(): Promise<BlockGrid> {
+    await this.manifest();
     const bytes = new Uint8Array(
       await Bun.file(this.file(BUILD_FILES.siteSchematic)).arrayBuffer(),
     );
@@ -177,13 +188,29 @@ export class BuildWorkspace {
   }
 
   async expected(): Promise<BlockGrid> {
+    await this.assertExpectedCurrent();
     const file = Bun.file(this.file(BUILD_FILES.expected));
     if (!(await file.exists())) {
       throw new Error(
         `No ${BUILD_FILES.expected} in ${this.dir}; run toolkit mc build run on the canvas first`,
       );
     }
-    return gridFromRegionRead(RegionReadSchema.parse(await file.json()));
+    const box = this.siteBox(await this.manifest());
+    return validateFrozenExpected(
+      box,
+      RegionReadSchema.parse(await file.json()),
+      await this.frozenParts("expected", box),
+    );
+  }
+
+  private async assertExpectedCurrent(): Promise<void> {
+    const journal = await readLog(this.dir);
+    if (lastOf(journal, "capture") !== null && currentRun(journal) === null) {
+      throw new Error(
+        "No expected result for the current capture; run toolkit mc build run first",
+      );
+    }
+    await validateRunIdentity(this, currentRun(journal));
   }
 
   /** WorldEdit session name for this build's edits (history is per session). */

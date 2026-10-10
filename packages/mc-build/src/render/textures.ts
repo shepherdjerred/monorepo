@@ -40,6 +40,13 @@ export class TextureCache {
     return entry;
   }
 
+  async opaque(names: readonly string[]): Promise<boolean> {
+    const textures = await Promise.all(
+      names.map(async (name) => this.get(name)),
+    );
+    return textures.every((texture) => !texture.cutout && !texture.translucent);
+  }
+
   private async load(name: string): Promise<Texture> {
     const file = path.join(
       this.root,

@@ -26,7 +26,7 @@ import {
   type LiveWriteFlags,
   liveWriteHeaders,
 } from "@shepherdjerred/mc-harness/protocol/live.ts";
-import { recordOp, storeSchematic } from "#lib/mc/build.ts";
+import { withRecordedBuild } from "#lib/mc/build.ts";
 import { daemonRequest, daemonSend } from "#lib/mc/client.ts";
 import {
   renderCommand,
@@ -78,45 +78,49 @@ export async function mcCmdCommand(
   options: TargetOptions & RecordOption,
   command: string,
 ): Promise<void> {
-  const result = await postWrite(CommandResponseSchema, options, "command", {
-    command,
-  });
-  print(options.json, result, renderCommand);
-  if (!result.success) {
-    process.exitCode = 1;
-    return;
-  }
-  if (options.record !== undefined) {
-    await recordOp(options.record, {
-      kind: "command",
+  await withRecordedBuild(options.record, async (record) => {
+    const result = await postWrite(CommandResponseSchema, options, "command", {
       command,
-      source: "manual",
     });
-  }
+    print(options.json, result, renderCommand);
+    if (!result.success) {
+      process.exitCode = 1;
+      return;
+    }
+    if (record !== null) {
+      await record.append({
+        kind: "command",
+        command,
+        source: "manual",
+      });
+    }
+  });
 }
 
 export async function mcWeCommand(
   options: TargetOptions & RecordOption & { session: string; world: string },
   op: WeOp,
 ): Promise<void> {
-  const result = await postWrite(WeRunResponseSchema, options, "we", {
-    session: options.session,
-    world: options.world,
-    ops: [op],
-  });
-  print(options.json, result, renderWe);
-  if (result.results.some((entry) => !entry.ok)) {
-    process.exitCode = 1;
-    return;
-  }
-  if (options.record !== undefined) {
-    await recordOp(options.record, {
-      kind: "we",
+  await withRecordedBuild(options.record, async (record) => {
+    const result = await postWrite(WeRunResponseSchema, options, "we", {
+      session: options.session,
       world: options.world,
-      ...op,
-      source: "manual",
+      ops: [op],
     });
-  }
+    print(options.json, result, renderWe);
+    if (result.results.some((entry) => !entry.ok)) {
+      process.exitCode = 1;
+      return;
+    }
+    if (record !== null) {
+      await record.append({
+        kind: "we",
+        world: options.world,
+        ...op,
+        source: "manual",
+      });
+    }
+  });
 }
 
 export async function mcWeUndoCommand(
@@ -145,31 +149,33 @@ export async function mcPasteCommand(
   },
 ): Promise<void> {
   const bytes = await Bun.file(paste.file).arrayBuffer();
-  const result = await postWrite(WePasteResponseSchema, options, "paste", {
-    session: options.session,
-    world: options.world,
-    schematic: Buffer.from(bytes).toString("base64"),
-    at: paste.at,
-    rotate: paste.rotate,
-    ignoreAir: paste.ignoreAir,
-  });
-  print(
-    options.json,
-    result,
-    (value) =>
-      `pasted ${String(value.changed)} block(s) into ${String(value.min.x)},${String(value.min.y)},${String(value.min.z)} → ${String(value.max.x)},${String(value.max.y)},${String(value.max.z)}; history ${String(value.historySize)}`,
-  );
-  if (options.record !== undefined) {
-    await recordOp(options.record, {
-      kind: "paste",
+  await withRecordedBuild(options.record, async (record) => {
+    const result = await postWrite(WePasteResponseSchema, options, "paste", {
+      session: options.session,
       world: options.world,
-      schematic: await storeSchematic(options.record, paste.file),
+      schematic: Buffer.from(bytes).toString("base64"),
       at: paste.at,
       rotate: paste.rotate,
       ignoreAir: paste.ignoreAir,
-      source: "manual",
     });
-  }
+    print(
+      options.json,
+      result,
+      (value) =>
+        `pasted ${String(value.changed)} block(s) into ${String(value.min.x)},${String(value.min.y)},${String(value.min.z)} → ${String(value.max.x)},${String(value.max.y)},${String(value.max.z)}; history ${String(value.historySize)}`,
+    );
+    if (record !== null) {
+      await record.append({
+        kind: "paste",
+        world: options.world,
+        schematic: await record.schematic(new Uint8Array(bytes)),
+        at: paste.at,
+        rotate: paste.rotate,
+        ignoreAir: paste.ignoreAir,
+        source: "manual",
+      });
+    }
+  });
 }
 
 export async function mcRegionReadCommand(

@@ -1,7 +1,7 @@
 import { defineArchitecture } from "@shepherdjerred/architecture";
 
 /**
- * `protocol/` is the zod-only contract the compiled toolkit binary imports.
+ * `protocol/` owns standalone contracts and build-directory coordination used by the compiled toolkit binary.
  * Anything it pulls in ends up in that binary, so it must never reach the
  * daemon, providers or bridge client.
  */

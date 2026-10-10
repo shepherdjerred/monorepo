@@ -8,6 +8,7 @@ import {
   type Op,
 } from "@shepherdjerred/mc-harness/protocol/build.ts";
 import { BUILD_ENTRY } from "@shepherdjerred/mc-harness/protocol/paths.ts";
+import { withPublicationLock } from "@shepherdjerred/mc-harness/protocol/publication-lock.ts";
 import { repoRoot } from "#lib/deployed/git.ts";
 
 /**
@@ -40,19 +41,39 @@ export async function runBuildCli(args: string[]): Promise<number> {
 }
 
 /** Appends a successful op to a build directory's op log; prints where. */
-export async function recordOp(dir: string, op: Op): Promise<void> {
+async function recordOp(dir: string, op: Op): Promise<void> {
   const count = await appendOp(path.resolve(dir), op);
   console.error(
     `recorded op #${count.toString()} in ${path.join(dir, BUILD_FILES.oplog)}`,
   );
 }
 
+type BuildRecorder = {
+  append: (op: Op) => Promise<void>;
+  schematic: (bytes: Uint8Array) => Promise<string>;
+};
+
+/** Exclude render snapshots from the remote mutation through its successful recording. */
+export async function withRecordedBuild<T>(
+  dir: string | undefined,
+  action: (record: BuildRecorder | null) => Promise<T>,
+): Promise<T> {
+  if (dir === undefined) return action(null);
+  const owner = path.resolve(dir);
+  if (!(await Bun.file(path.join(owner, BUILD_FILES.manifest)).exists()))
+    throw new Error(
+      `${owner} is not a build directory (no ${BUILD_FILES.manifest}); run toolkit mc build init first`,
+    );
+  return withPublicationLock(owner, () =>
+    action({
+      append: (op) => recordOp(owner, op),
+      schematic: (bytes) => storeSchematic(owner, bytes),
+    }),
+  );
+}
+
 /** Copies a schematic into the build's schematics/ dir (content-addressed). */
-export async function storeSchematic(
-  dir: string,
-  file: string,
-): Promise<string> {
-  const bytes = new Uint8Array(await Bun.file(file).arrayBuffer());
+async function storeSchematic(dir: string, bytes: Uint8Array): Promise<string> {
   const digest = createHash("sha256").update(bytes).digest("hex").slice(0, 12);
   const relative = path.join(
     BUILD_FILES.schematicsDir,

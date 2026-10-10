@@ -6,6 +6,7 @@
  * non-2xx status. Schemas are strict so plugin/harness skew fails loudly.
  */
 import { z } from "zod";
+import { BlockLightingSchema } from "@shepherdjerred/mc-build/registry/lighting.ts";
 
 export const BRIDGE_API_VERSION = 1;
 
@@ -83,6 +84,7 @@ export const RegistryResponseSchema = z.strictObject({
       id: z.string(),
       defaultState: z.string(),
       properties: z.record(z.string(), z.array(z.string())),
+      lighting: BlockLightingSchema,
     }),
   ),
 });

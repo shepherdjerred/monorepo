@@ -1,8 +1,11 @@
 # Build critique rubric
 
-Score each 0–2 from the contact sheet, fix the lowest first.
+`toolkit mc build critique <dir>` scores these axes 0–5 from the judge sheet
+(0 absent, 3 competent, 5 would pass for a professional build team's work)
+and ranks changes to `build.ts` from the lowest axis. When you score by eye
+instead, use the same scale and the same order, and fix the lowest first.
 
-| Aspect     | 2 looks like                                                                     | Common fix                                               |
+| Aspect     | 5 looks like                                                                     | Common fix                                               |
 | ---------- | -------------------------------------------------------------------------------- | -------------------------------------------------------- |
 | Silhouette | Varied roofline, not a box; reads from every iso angle                           | Dormers, cross gables, a tower, stepped massing          |
 | Depth      | Walls have ≥1 block relief: proud posts/beams, recessed panels, sills, overhangs | `walls` depth 1, sills, eaves, trim bands, jetties       |
@@ -18,26 +21,39 @@ fix them before critiquing looks.
 
 ## Critique protocol
 
-Write each iteration's critique in this shape, from the rendered sheet (not
-from memory of the code):
+Each iteration: render, then `toolkit mc build critique <dir>`. It prints
+the critique in this shape and records it (journal, `judge/`, the render's
+sidecar):
 
 ```text
-iteration 2: silhouette 1, depth 2, palette 2, texture 1, proportion 2,
-detail 0, site fit 1, lighting 2 — total 11/16
-lowest: detail (0) — bare walls at the entrance
-change: chimney on the right wall, flower boxes under the front windows
+iteration 2 (v2): lighting 3, siteFit 2, proportion 3, palette 3, texture 2,
+depth 1, detail 2, silhouette 2 — total 18/40, aesthetic 2/5
+lowest: depth (1)
+  - flat east wall, one tone in NORMAL
+  - no eaves (HERO)
+changes, best first:
+  1. [depth] inset the nave windows by one block and add sills — walls()
+  2. [detail] chimney on the north gable — roof()
 ```
 
-- Change the lowest aspect first; one focused change per iteration beats
-  many small tweaks.
-- Two iterations minimum. Stop at 14/16 or after five iterations.
-- Untouched theme defaults (one box, one gable, no details) cap silhouette and
-  detail at 1. Vary the massing, the roof type, and add a detail.
+Without a model credential, score by eye in the same shape, from the sheet
+(not from memory of the code), and record it with `toolkit mc build critique
+<dir> --scores "lighting=3,…,silhouette=2,aesthetic=2" --note "flat east
+wall"`: it is journalled as a critique (model `by-eye`) and counts toward
+the two critiqued iterations.
+
+- Change the lowest axis first; one focused change per iteration beats
+  many small tweaks. Save the version before and after
+  (`candidate save --name <n>`) and let `candidate knockout` choose.
+- Two critiqued iterations minimum. Stop at 4/5 on every axis or after
+  five iterations.
+- Untouched theme defaults (one box, one gable, no details) cap silhouette
+  and detail at 2. Vary the massing, the roof type, and add a detail.
 - The final report lists the scores and at least one weakness that remains.
 
 ## Procedural tells
 
-Fix these before scoring; each caps the aspect in brackets at 1.
+Fix these before scoring; each caps the aspect in brackets at 2.
 
 - One box with one ridge, square footprint [silhouette]; flat walls with
   flush openings or no eaves [depth]; full `glass` blocks in walls [depth].

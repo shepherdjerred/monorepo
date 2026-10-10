@@ -110,6 +110,7 @@ describe("selectTasks and renderReport", () => {
           artifacts: [],
           notes: [],
           judge: null,
+          trajectory: null,
           lastMessage: "Built it.",
           taskDir: "/r/e1",
         },

@@ -4,6 +4,11 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
+import { BlockGrid } from "@shepherdjerred/mc-build/core/grid.ts";
+import { writeSchematic } from "@shepherdjerred/mc-build/core/schem.ts";
+import { gridHash } from "@shepherdjerred/mc-build/core/site.ts";
+import { loadRegistry } from "@shepherdjerred/mc-build/registry/registry.ts";
+import { BuildWorkspace } from "#build/workspace.ts";
 import {
   absoluteSchema,
   pairPrompt,
@@ -17,15 +22,52 @@ import {
   RUBRICS,
   scoreAbsolute,
   scoreRender,
+  writeJudgeRecord,
   type AskJudge,
   type AskScore,
   type PairVerdict,
   type SheetRenderer,
 } from "#build/judge.ts";
 import { JudgeRecordSchema } from "#protocol/build.ts";
+import { gradeEvidence } from "#evals/grade/evidence.ts";
 
 const A = { data: new Uint8Array([1]), mediaType: "image/png" as const };
 const B = { data: new Uint8Array([2]), mediaType: "image/png" as const };
+
+it("preserves distinct verdicts written at the same timestamp", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "judge-same-time-"));
+  try {
+    const record = {
+      kind: "pair" as const,
+      at: "2026-10-10T00:00:00Z",
+      model: "stub",
+      rubric: "micro" as const,
+      judge: "fixture",
+      a: "a.png",
+      b: "b.png",
+      hashes: {
+        a: createHash("sha256").update(A.data).digest("hex"),
+        b: createHash("sha256").update(B.data).digest("hex"),
+      },
+      winner: "a" as const,
+      confidence: 1,
+      agreed: true,
+      reasons: [],
+    };
+    const other = { ...record, b: "c.png" };
+    const [first, second] = await Promise.all([
+      writeJudgeRecord(dir, record),
+      writeJudgeRecord(dir, other),
+    ]);
+    if (first === undefined || second === undefined)
+      throw new Error("missing records");
+    expect(first).not.toBe(second);
+    expect(await Bun.file(first).json()).toEqual(record);
+    expect(await Bun.file(second).json()).toEqual(other);
+  } finally {
+    await rm(dir, { recursive: true });
+  }
+});
 
 /** A stub judge that always prefers the image whose first byte is `prefer`. */
 function stubJudge(prefer: number | "first"): AskJudge {
@@ -110,6 +152,27 @@ async function frozenBuild(): Promise<string> {
       blockEntities: [],
     }),
   );
+  const workspace = new BuildWorkspace(dir);
+  const grid = new BlockGrid({ x: 2, y: 2, z: 2 }, "minecraft:stone");
+  await workspace.writeManifest({
+    version: 1,
+    name: "judge",
+    world: "world",
+    seed: 1,
+    anchor: { x: 0, y: 0, z: 0 },
+    site: {
+      min: { x: 0, y: 0, z: 0 },
+      max: { x: 1, y: 1, z: 1 },
+      siteHash: gridHash(grid),
+    },
+  });
+  const registry = await loadRegistry();
+  await workspace.writeFrozen("expected", [
+    {
+      at: { x: 0, y: 0, z: 0 },
+      bytes: writeSchematic(grid, registry.dataVersion),
+    },
+  ]);
   return dir;
 }
 
@@ -178,6 +241,44 @@ describe("resolveRender", () => {
 });
 
 describe("persisted verdicts", () => {
+  it.each(["pair-a", "pair-b", "absolute"])(
+    "fails evidence grading when the judged %s pixels change",
+    async (kind) => {
+      const dir = await frozenBuild();
+      try {
+        const other = path.join(dir, "other.png");
+        await writeFile(other, B.data);
+        const verdict =
+          kind === "absolute"
+            ? await scoreRender(dir, {
+                model: "stub",
+                rubric: "micro",
+                ask: stubScorer,
+                sheet: stubSheet,
+              })
+            : await judgeRenders(dir, other, {
+                model: "stub",
+                ask: stubJudge(2),
+                sheet: stubSheet,
+              });
+        const input =
+          "render" in verdict
+            ? verdict.render
+            : verdict.renders[kind === "pair-a" ? "a" : "b"];
+        const ctx = { taskDir: dir };
+        const valid = await gradeEvidence(dir, ctx);
+        expect(valid.check.pass).toBe(true);
+        await writeFile(input, "truncated after judging");
+        const failed = await gradeEvidence(dir, ctx);
+        expect(failed.check).toMatchObject({ pass: false });
+        expect(failed.check.detail).toMatch(/hash does not match/u);
+        expect(failed.artifacts).toEqual([]);
+      } finally {
+        await rm(dir, { recursive: true });
+      }
+    },
+  );
+
   it("writes pair and absolute records under a build directory's judge/", async () => {
     const dir = await frozenBuild();
     const other = path.join(dir, "other.png");
@@ -231,6 +332,8 @@ describe("persisted verdicts", () => {
         expect(record.b).toBe(verdict.renders.b);
         expect(await Bun.file(record.b).bytes()).toEqual(new Uint8Array([2]));
       }
+      if (record.kind === "critique")
+        throw new Error("unexpected critique record in judge test");
       // Each record names the judge that produced it, so a changed prompt
       // never passes for the one that wrote the history.
       expect(record.judge).toBe(
@@ -244,10 +347,20 @@ describe("persisted verdicts", () => {
 
 describe("build CLI loading", () => {
   it("imports the judge lazily so other commands work without the built model catalog", async () => {
-    const source = await Bun.file(
-      path.join(import.meta.dir, "..", "src", "build", "cli.ts"),
+    const dir = path.join(import.meta.dirname, "..", "src", "build");
+    for (const name of [
+      "cli.ts",
+      "studio/judge-commands.ts",
+      "studio/candidate-commands.ts",
+    ]) {
+      const source = await Bun.file(path.join(dir, name)).text();
+      expect(source).not.toMatch(
+        /^import (?!type )[^;]*from "(#build|(?:\.{1,2}\/)*\.{1,2})\/judge\.ts";/mu,
+      );
+    }
+    const commands = await Bun.file(
+      path.join(dir, "studio", "judge-commands.ts"),
     ).text();
-    expect(source).not.toMatch(/^import (?!type )[^;]*from "\.\/judge\.ts";/mu);
-    expect(source).toContain('await import("./judge.ts")');
+    expect(commands).toContain('await import("#build/judge.ts")');
   });
 });
