@@ -34,7 +34,10 @@ export function createMinecraftPublicStatus(chart: Chart): void {
               matchLabels: { app: "storm-forum", component: "web" },
             },
           })),
-          ports: [{ protocol: "UDP", port: IntOrString.fromNumber(25_565) }],
+          ports: ports.map(({ port, protocol }) => ({
+            protocol,
+            port: IntOrString.fromNumber(port),
+          })),
         },
       ],
     },

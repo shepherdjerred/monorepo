@@ -48,7 +48,10 @@ describe("private Minecraft status boundary", () => {
       spec: {
         ingress: [
           {
-            ports: [{ port: 25_565, protocol: "UDP" }],
+            ports: [
+              { port: 25_565, protocol: "UDP" },
+              { port: 19_132, protocol: "UDP" },
+            ],
             from: [
               {
                 namespaceSelector: {

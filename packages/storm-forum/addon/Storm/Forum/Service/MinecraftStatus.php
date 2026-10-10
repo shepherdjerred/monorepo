@@ -6,6 +6,11 @@ final class MinecraftStatus
 {
     private const STATES = ['sleeping', 'starting', 'online', 'unavailable'];
 
+    private static function checkKeys(array $value, array $allowed): void
+    {
+        if (array_diff(array_keys($value), $allowed)) { throw new \RuntimeException('Unknown Minecraft status cache field'); }
+    }
+
     public static function read(string $path = '/var/lib/storm-forum/status.json', ?int $now = null): array
     {
         $now ??= time();
@@ -17,7 +22,17 @@ final class MinecraftStatus
         $data = json_decode(file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
         if (!is_array($data)) { throw new \RuntimeException('Invalid Minecraft status cache'); }
         // Only the known count-only format is migrated, until the next refresh.
-        if (!isset($data['schemaVersion']) && in_array($data['state'] ?? null, self::STATES, true) && is_int($data['checkedAt'] ?? null)) { return $result; }
+        if (!array_key_exists('schemaVersion', $data)) {
+            self::checkKeys($data, ['state', 'checkedAt', 'online', 'maximum']);
+            if (!in_array($data['state'] ?? null, self::STATES, true) || !is_int($data['checkedAt'] ?? null) || $data['checkedAt'] < 0) {
+                throw new \RuntimeException('Invalid legacy Minecraft status cache');
+            }
+            foreach (['online', 'maximum'] as $field) {
+                if (array_key_exists($field, $data) && (!is_int($data[$field]) || $data[$field] < 0)) { throw new \RuntimeException('Invalid legacy Minecraft player count'); }
+            }
+            return $result;
+        }
+        self::checkKeys($data, ['schemaVersion', 'state', 'checkedAt', 'java', 'bedrock', 'players']);
         if (($data['schemaVersion'] ?? null) !== 2 || !in_array($data['state'] ?? null, self::STATES, true)
             || !is_int($data['checkedAt'] ?? null) || $data['checkedAt'] < 0) { throw new \RuntimeException('Invalid Minecraft status cache'); }
         $fresh = $data['checkedAt'] <= $now + 5 && $now - $data['checkedAt'] <= $mc['staleAfterSeconds'];
@@ -26,6 +41,7 @@ final class MinecraftStatus
         foreach (['java', 'bedrock'] as $edition) {
             $value = $data[$edition] ?? null;
             if (!is_array($value) || !in_array($value['state'] ?? null, self::STATES, true)) { throw new \RuntimeException('Invalid Minecraft edition status'); }
+            self::checkKeys($value, ['state', 'version', 'verifiedAt']);
             $result[$edition]['state'] = $fresh ? $value['state'] : 'unavailable';
             $hasVersion = array_key_exists('version', $value);
             $hasVerifiedAt = array_key_exists('verifiedAt', $value);
@@ -45,6 +61,7 @@ final class MinecraftStatus
             if (!is_array($players) || !is_int($players['maximum'] ?? null) || $players['maximum'] < 0 || $players['maximum'] > 100000
                 || !is_array($players['names'] ?? null) || !array_is_list($players['names']) || count($players['names']) > $players['maximum']
                 || count(array_unique($players['names'], SORT_STRING)) !== count($players['names'])) { throw new \RuntimeException('Invalid Minecraft player roster'); }
+            self::checkKeys($players, ['maximum', 'names']);
             foreach ($players['names'] as $name) {
                 if (!is_string($name) || !preg_match('/^[^\p{Cc}<>]{1,64}$/uD', $name)) { throw new \RuntimeException('Invalid Minecraft player name'); }
             }

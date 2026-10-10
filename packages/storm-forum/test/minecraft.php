@@ -28,6 +28,20 @@ try {
     $failed = false;
     try { MinecraftStatus::read($path, 1005); } catch (RuntimeException $error) { $failed = true; }
     $check($failed, 'Explicit null roster did not fail validation');
+    foreach (['top', 'java', 'bedrock', 'players'] as $level) {
+        $invalid = $source;
+        if ($level === 'top') { $invalid['unexpected'] = true; } else { $invalid[$level]['unexpected'] = true; }
+        file_put_contents($path, json_encode($invalid));
+        $failed = false;
+        try { MinecraftStatus::read($path, 1005); } catch (RuntimeException $error) { $failed = true; }
+        $check($failed, 'Unknown field did not fail validation at ' . $level);
+    }
+    foreach ([['schemaVersion'=>null], ['online'=>null], ['maximum'=>-1], ['unexpected'=>true]] as $extra) {
+        file_put_contents($path, json_encode(['state'=>'online', 'checkedAt'=>1000] + $extra));
+        $failed = false;
+        try { MinecraftStatus::read($path, 1005); } catch (RuntimeException $error) { $failed = true; }
+        $check($failed, 'Corrupt legacy cache was accepted');
+    }
     foreach (['java', 'bedrock'] as $edition) {
         foreach (['version', 'verifiedAt'] as $field) {
             $invalid = $source; unset($invalid[$edition][$field]);
