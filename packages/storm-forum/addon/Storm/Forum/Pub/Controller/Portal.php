@@ -24,14 +24,7 @@ final class Portal extends \XF\Pub\Controller\AbstractController
         }
         // Filter permissions before exposing anything to a public portal.
         // Recent activity uses XF's native widget, which applies visitor permissions.
-        $status = null;
-        $statusPath = '/var/lib/storm-forum/status.json';
-        if (is_file($statusPath)) {
-            $status = json_decode(file_get_contents($statusPath), true, 512, JSON_THROW_ON_ERROR);
-            if (time() - $status['checkedAt'] > 180) {
-                $status = null;
-            }
-        }
+        $status = \Storm\Forum\Service\MinecraftStatus::read();
         return $this->view('Storm\Forum:Portal', 'storm_portal', ['news' => $news, 'status' => $status, 'page'=>$page, 'perPage'=>$perPage, 'total'=>$total]);
     }
 }

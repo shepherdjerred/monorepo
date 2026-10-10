@@ -50,9 +50,11 @@ export async function startStormTheme(root: HTMLElement): Promise<void> {
       ?.querySelector("[data-storm-copy-status]");
     try {
       await navigator.clipboard.writeText(address);
-      if (feedback) feedback.textContent = "Server IP copied.";
+      if (feedback)
+        feedback.textContent = `${button.dataset["stormCopyLabel"] ?? "Server IP"} copied.`;
     } catch {
-      if (feedback) feedback.textContent = `Copy this server IP: ${address}`;
+      if (feedback)
+        feedback.textContent = `Copy ${button.dataset["stormCopyLabel"] ?? "server IP"}: ${address}`;
     }
   }
   root.ownerDocument.addEventListener("click", (event) => {

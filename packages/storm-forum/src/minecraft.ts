@@ -1,15 +1,62 @@
-import { createConnection } from "node:net";
+import { createSocket } from "node:dgram";
+import { randomBytes } from "node:crypto";
 import { rename } from "node:fs/promises";
 import { z } from "zod";
 import { forumManifest } from "./config.ts";
-import { statusRequest, parseStatusPacket } from "./minecraft-protocol.ts";
+import {
+  bedrockPing,
+  parseBedrockPong,
+  parseQueryReply,
+  queryFullRequest,
+  queryHandshake,
+  PublicPlayersSchema,
+  type QueryResult,
+} from "./minecraft-query.ts";
 
-export type MinecraftStatus = {
-  state: "sleeping" | "starting" | "online" | "unavailable";
-  checkedAt: number;
-  online?: number;
-  maximum?: number;
-};
+const EditionSchema = z
+  .object({
+    state: z.enum(["sleeping", "starting", "online", "unavailable"]),
+    version: z.string().min(1).max(100).optional(),
+    verifiedAt: z.number().int().nonnegative().optional(),
+  })
+  .strict();
+export const MinecraftStatusSchema = z
+  .object({
+    schemaVersion: z.literal(2),
+    state: z.enum(["sleeping", "starting", "online", "unavailable"]),
+    checkedAt: z.number().int().nonnegative(),
+    java: EditionSchema,
+    bedrock: EditionSchema,
+    players: PublicPlayersSchema.optional(),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if (
+      (value.java.state === "online") !== (value.players !== undefined) ||
+      (value.players !== undefined &&
+        (new Set(value.players.names).size !== value.players.names.length ||
+          value.players.names.length > value.players.maximum))
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "Minecraft cache roster does not match Java health",
+      });
+    }
+    for (const edition of [value.java, value.bedrock]) {
+      if (
+        (edition.version === undefined) !==
+          (edition.verifiedAt === undefined) ||
+        (edition.state === "online" && edition.version === undefined)
+      ) {
+        context.addIssue({
+          code: "custom",
+          message: "Minecraft edition is missing its verified version",
+        });
+      }
+    }
+  });
+export type MinecraftStatus = z.infer<typeof MinecraftStatusSchema>;
+const STATUS_PATH = "/var/lib/storm-forum/status.json";
 const ReplicaSchema = z.object({
   spec: z.object({ replicas: z.number().int().nonnegative() }),
   status: z
@@ -36,11 +83,10 @@ export async function readReplicas(): Promise<{
       signal: AbortSignal.timeout(mc.timeoutMs),
     },
   );
-  if (!response.ok) {
+  if (!response.ok)
     throw new Error(
       `Minecraft workload read failed: HTTP ${String(response.status)}`,
     );
-  }
   const result = ReplicaSchema.parse(await response.json());
   return {
     desired: result.spec.replicas,
@@ -48,76 +94,175 @@ export async function readReplicas(): Promise<{
   };
 }
 
-export function pingMinecraft(): Promise<{ online: number; maximum: number }> {
+// Connected UDP sockets accept replies only from the resolved backend and port.
+function exchange<T>(
+  port: number,
+  request: Buffer,
+  receive: (packet: Buffer) => Buffer | T,
+): Promise<T> {
   const mc = forumManifest.minecraft;
   return new Promise((resolve, reject) => {
-    let received = Buffer.alloc(0);
-    const socket = createConnection({ host: mc.host, port: mc.port });
-    const finish = (
-      error?: Error,
-      result?: { online: number; maximum: number },
-    ) => {
-      socket.destroy();
-      if (error !== undefined) {
-        reject(error);
-      } else if (result !== undefined) {
-        resolve(result);
-      }
+    const socket = createSocket("udp4");
+    let finished = false;
+    const finish = (error: unknown, result?: T) => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timeout);
+      socket.close();
+      if (error !== undefined)
+        reject(
+          error instanceof Error
+            ? error
+            : new Error("Minecraft UDP check failed"),
+        );
+      else if (result !== undefined) resolve(result);
     };
-    socket.setTimeout(mc.timeoutMs, () => {
-      finish(new Error("Minecraft status timed out"));
-    });
+    const timeout = setTimeout(() => {
+      finish(new Error("Minecraft UDP status timed out"));
+    }, mc.timeoutMs);
     socket.on("error", (error) => {
       finish(error);
     });
-    socket.on("end", () => {
-      finish(new Error("Minecraft closed before a complete status response"));
-    });
-    socket.on("connect", () => {
-      socket.write(statusRequest(mc.host, mc.port));
-    });
-    socket.on("data", (chunk: Buffer) => {
-      received = Buffer.concat([received, chunk]);
+    const send = (packet: Buffer) => {
+      socket.send(packet, (error) => {
+        if (error !== null) finish(error);
+      });
+    };
+    socket.on("message", (packet) => {
       try {
-        const result = parseStatusPacket(received);
-        if (result !== undefined) {
-          finish(undefined, result);
-        }
+        const result = receive(packet);
+        if (Buffer.isBuffer(result)) send(result);
+        else finish(undefined, result);
       } catch (error) {
-        finish(
-          error instanceof Error
-            ? error
-            : new Error("Invalid Minecraft response"),
-        );
+        finish(error);
       }
+    });
+    socket.connect(port, mc.host, () => {
+      send(request);
     });
   });
 }
 
-export async function refreshMinecraftStatus(
-  replicas: () => Promise<{ desired: number; ready: number }> = readReplicas,
-  ping: () => Promise<{ online: number; maximum: number }> = pingMinecraft,
-): Promise<MinecraftStatus> {
-  const checkedAt = Math.floor(Date.now() / 1000);
-  try {
-    const state = await replicas();
-    if (state.desired === 0) {
-      return { state: "sleeping", checkedAt };
-    }
-    return state.ready === 0
-      ? { state: "starting", checkedAt }
-      : { state: "online", checkedAt, ...(await ping()) };
-  } catch {
-    // Expected external outage; the cached widget explicitly reports unavailable.
-    return { state: "unavailable", checkedAt };
-  }
+export function queryMinecraft(): Promise<QueryResult> {
+  // GS4 preserves the low nibble of each session byte.
+  const session = Buffer.from(randomBytes(4).map((value) => value & 0x0f));
+  let challenged = false;
+  return exchange(
+    forumManifest.minecraft.queryPort,
+    queryHandshake(session),
+    (packet) => {
+      if (!challenged) {
+        challenged = true;
+        return queryFullRequest(packet, session);
+      }
+      return parseQueryReply(packet, session);
+    },
+  );
 }
 
-export async function writeMinecraftStatus(
-  status: MinecraftStatus,
-): Promise<void> {
-  const path = "/var/lib/storm-forum/status.json";
-  const temporary = `${path}.${crypto.randomUUID()}.tmp`;
+export function pingBedrock(): Promise<{ version: string }> {
+  const timestamp = BigInt(Date.now());
+  return exchange(
+    forumManifest.minecraft.bedrockPort,
+    bedrockPing(timestamp, randomBytes(8)),
+    (packet) => parseBedrockPong(packet, timestamp),
+  );
+}
+
+type Checks = {
+  replicas: typeof readReplicas;
+  java: () => Promise<QueryResult>;
+  bedrock: typeof pingBedrock;
+  report: (check: string, error: unknown) => void;
+};
+const defaults: Checks = {
+  replicas: readReplicas,
+  java: queryMinecraft,
+  bedrock: pingBedrock,
+  report: (check, error) => {
+    console.warn("Minecraft status check failed", {
+      check,
+      reason: error instanceof Error ? error.message : "Unknown failure",
+    });
+  },
+};
+
+export async function refreshMinecraftStatus(
+  checks: Partial<Checks> = {},
+  previous?: MinecraftStatus,
+): Promise<MinecraftStatus> {
+  const run = { ...defaults, ...checks };
+  const checkedAt = Math.floor(Date.now() / 1000);
+  const edition = (
+    state: MinecraftStatus["state"],
+    prior?: MinecraftStatus["java"],
+  ): MinecraftStatus["java"] => ({
+    state,
+    ...(prior?.version === undefined
+      ? {}
+      : { version: prior.version, verifiedAt: prior.verifiedAt }),
+  });
+  const result: MinecraftStatus = {
+    schemaVersion: 2,
+    state: "unavailable",
+    checkedAt,
+    java: edition("unavailable", previous?.java),
+    bedrock: edition("unavailable", previous?.bedrock),
+  };
+  try {
+    const workload = await run.replicas();
+    if (workload.desired === 0 || workload.ready === 0) {
+      result.state = workload.desired === 0 ? "sleeping" : "starting";
+      result.java.state = result.state;
+      result.bedrock.state = result.state;
+      return result;
+    }
+  } catch (error) {
+    run.report("workload", error);
+    return result;
+  }
+  const [java, bedrock] = await Promise.allSettled([run.java(), run.bedrock()]);
+  if (java.status === "fulfilled") {
+    result.java = {
+      state: "online",
+      version: java.value.version,
+      verifiedAt: checkedAt,
+    };
+    result.players = { maximum: java.value.maximum, names: java.value.names };
+    result.state = "online";
+  } else run.report("java-query", java.reason);
+  if (bedrock.status === "fulfilled") {
+    result.bedrock = {
+      state: "online",
+      version: bedrock.value.version,
+      verifiedAt: checkedAt,
+    };
+    result.state = "online";
+  } else run.report("bedrock-ping", bedrock.reason);
+  return MinecraftStatusSchema.parse(result);
+}
+
+export async function readMinecraftStatus(): Promise<
+  MinecraftStatus | undefined
+> {
+  if (!(await Bun.file(STATUS_PATH).exists())) return undefined;
+  const data: unknown = await Bun.file(STATUS_PATH).json();
+  // Explicit migration of the previous count-only cache; a refresh replaces it.
+  const legacy = z
+    .object({
+      state: z.enum(["sleeping", "starting", "online", "unavailable"]),
+      checkedAt: z.number().int().nonnegative(),
+      online: z.number().int().nonnegative().optional(),
+      maximum: z.number().int().nonnegative().optional(),
+    })
+    .strict()
+    .safeParse(data);
+  return legacy.success ? undefined : MinecraftStatusSchema.parse(data);
+}
+
+export async function updateMinecraftStatus(): Promise<void> {
+  const status = await refreshMinecraftStatus({}, await readMinecraftStatus());
+  const temporary = `${STATUS_PATH}.${crypto.randomUUID()}.tmp`;
   await Bun.write(temporary, JSON.stringify(status));
-  await rename(temporary, path);
+  await rename(temporary, STATUS_PATH);
 }

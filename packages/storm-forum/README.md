@@ -138,9 +138,19 @@ only when the effective theme changes. A named operator override also controls
 followers; members' explicit themes remain intact. Existing live manual flag
 values are preserved until deliberately changed. The
 manifest owns native XenForo settings and the direct Minecraft service address.
-The status activity reads only the exact Minecraft StatefulSet and pings its
-backend, preserving server hibernation. Public caches contain counts, never
-player names.
+The status activity reads only the exact Minecraft StatefulSet, then uses private
+UDP Query and Geyser probes while the server is ready. It never contacts the
+wake-on-join router. The Minecraft plugin filters vanished staff and NPCs before
+returning a complete public roster; a shared response identifier prevents the
+forum from accepting an unfiltered server during rollout. Java and Bedrock have
+independent health and reported versions. `/storm-status/` serves only the public
+cache and rendered card, with no game probes. The browser refreshes once a minute
+while visible and hides live counts and names after the configured stale interval.
+
+Java players can use `ts-mc.net` through SRV discovery, or explicitly connect to
+`mc.ts-mc.net:30000`. Bedrock uses `mc.ts-mc.net` with port `30004`; the website
+apex is not its game endpoint. Java can wake a sleeping server; Bedrock can join
+once it is awake. Cached versions remain labelled as last verified during outages.
 
 Production prerequisites can be prepared with
 `scripts/onepassword/with-service-account.sh bun packages/storm-forum/scripts/prepare-production.ts <fresh-upload> <style-exports> <private-output-directory> --apply`.

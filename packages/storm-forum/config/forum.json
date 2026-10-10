@@ -19,8 +19,13 @@
   "minecraft": {
     "namespace": "minecraft-tsmc",
     "statefulSet": "minecraft-tsmc",
-    "host": "minecraft-tsmc.minecraft-tsmc.svc.cluster.local",
-    "port": 25565,
+    "host": "minecraft-tsmc-status.minecraft-tsmc.svc.cluster.local",
+    "queryPort": 25565,
+    "bedrockPort": 19132,
+    "connections": {
+      "java": { "address": "ts-mc.net", "host": "mc.ts-mc.net", "port": 30000 },
+      "bedrock": { "host": "mc.ts-mc.net", "port": 30004 }
+    },
     "timeoutMs": 3000,
     "staleAfterSeconds": 180
   },

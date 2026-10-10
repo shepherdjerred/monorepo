@@ -2,6 +2,9 @@
   "name": "@shepherdjerred/the-storm",
   "private": true,
   "type": "module",
+  "exports": {
+    "./public-status.json": "./public-status.json"
+  },
   "imports": {
     "#e2e/*": "./tests/e2e/*"
   },
