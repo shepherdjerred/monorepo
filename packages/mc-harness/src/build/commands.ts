@@ -19,20 +19,8 @@ import { loadRegistry } from "@shepherdjerred/mc-build/registry/registry.ts";
 import type { BlockPos, Box } from "#protocol/bridge.ts";
 import { BUILD_FILES, type Op } from "#protocol/build.ts";
 import { appendLog } from "./build-log.ts";
-import {
-  checkName,
-  producingProgram,
-  programSnapshot,
-  readRenderProvenance,
-} from "./sidecar.ts";
-import {
-  alignedComparison,
-  cropToBox,
-  gridFor,
-  isPlainLook,
-  regionInSite,
-  type RenderSource,
-} from "./sources.ts";
+import { producingProgram, programSnapshot } from "./sidecar.ts";
+import { gridFor, type RenderSource } from "./sources.ts";
 import { DEFAULT_SANDBOX_TTL_SECONDS } from "#protocol/paths.ts";
 import { resetToSite, runOps } from "./ops.ts";
 import { boxSize, cropGrid, emptyGrid, placeGrid, tileBox } from "./tiles.ts";
@@ -47,14 +35,9 @@ import {
   context,
   canvasOf,
   renderGrid,
-  localCuts,
-  recordRender,
-  relativeFiles,
-  renderHero,
-  renderLooks,
   seededSandbox,
-  type LookOptions,
 } from "./helpers.ts";
+import { renderBuildCommand } from "./render/command.ts";
 
 export async function initBuild(
   dir: string,
@@ -372,115 +355,12 @@ export async function runBuild(
   return { target, ops: ops.length };
 }
 
-export async function renderBuild(
+export function renderBuild(
   env: Env,
   dir: string,
-  options: {
-    target?: string;
-    source?: RenderSource;
-    /** Same as `source: "expected"`; kept for older callers. */
-    expected?: boolean;
-    name?: string;
-    /** A close-up inside the site box (maps: one district at a time). */
-    region?: { min: BlockPos; max: BlockPos };
-    look?: LookOptions;
-    /** Name of an earlier render whose `.schem` sidecar to compare against. */
-    compare?: string;
-  },
-): Promise<{
-  render: string;
-  hero: string | null;
-  files: Record<string, string>;
-  skipped: string[];
-}> {
-  const workspace = new BuildWorkspace(dir);
-  const manifest = await workspace.manifest();
-  const site = workspace.siteBox(manifest);
-  const source: RenderSource =
-    options.source ?? (options.expected === true ? "expected" : "canvas");
-  const box =
-    options.region === undefined ? site : regionInSite(site, options.region);
-  const { grid: whole, skipped } = await gridFor(env, workspace, manifest, {
-    source,
-    box: site,
-    ...(options.target === undefined ? {} : { target: options.target }),
-  });
-  const grid = cropToBox(whole, site, box);
-  if (skipped.length > 0) {
-    throw new Error(
-      `cannot render incomplete compiled evidence: ${skipped.join("; ")}; run the build and render --source expected or --source canvas`,
-    );
-  }
-  const name = checkName(
-    "render",
-    options.name ?? `render-${Date.now().toString(36)}`,
-  );
-  const look: LookOptions = localCuts(
-    { ...options.look },
-    manifest.anchor,
-    box.min,
-  );
-  const covered = { min: box.min, max: box.max };
-  if (options.compare !== undefined) {
-    const earlier = await alignedComparison(
-      workspace,
-      options.compare,
-      covered,
-    );
-    look.compareWith = earlier.grid;
-    look.compareContext = earlier.context;
-  }
-  look.source = source;
-  if (options.target !== undefined) look.target = options.target;
-  look.box = covered;
-  if (options.region !== undefined) {
-    look.regionContext = {
-      grid: whole,
-      origin: {
-        x: box.min.x - site.min.x,
-        y: box.min.y - site.min.y,
-        z: box.min.z - site.min.z,
-      },
-    };
-  }
-  if (isPlainLook(look) && options.region === undefined) {
-    const provenance = await readRenderProvenance(
-      workspace,
-      source,
-      options.target,
-    );
-    const render = await renderGrid(workspace, grid, name, manifest.name);
-    const hero = await renderHero(workspace, grid, name);
-    const files = { sheet: render, ...(hero === null ? {} : { hero }) };
-    await recordRender(workspace, grid, {
-      name,
-      files,
-      source,
-      provenance,
-      box: covered,
-    });
-    await appendLog(dir, {
-      kind: "render",
-      name,
-      source,
-      files: Object.values(relativeFiles(workspace, files)),
-    });
-    return { render, hero, files, skipped };
-  }
-  const files = await renderLooks(workspace, grid, name, look);
-  await appendLog(dir, {
-    kind: "render",
-    name,
-    source,
-    files: Object.values(relativeFiles(workspace, files)),
-  });
-  return {
-    render:
-      files["sheet"] ?? files["elevations"] ?? Object.values(files)[0] ?? "",
-    hero: files["hero"] ?? null,
-    files,
-    skipped,
-  };
+  options: Parameters<typeof renderBuildCommand>[2],
+): ReturnType<typeof renderBuildCommand> {
+  return renderBuildCommand(env, dir, options);
 }
 
 export async function lintBuild(

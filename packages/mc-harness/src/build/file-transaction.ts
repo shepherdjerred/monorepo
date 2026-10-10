@@ -1,4 +1,4 @@
-import { copyFile, lstat, mkdtemp, rename, rm } from "node:fs/promises";
+import { copyFile, lstat, mkdir, mkdtemp, rename, rm } from "node:fs/promises";
 import path from "node:path";
 import type { BuildWorkspace } from "./workspace.ts";
 
@@ -54,6 +54,10 @@ export async function publishFiles(
     for (const file of files) {
       const state = { file, previous: false, installed: false };
       changed.push(state);
+      await mkdir(path.dirname(path.join(staged, `previous-${file}`)), {
+        recursive: true,
+      });
+      await mkdir(path.dirname(workspace.file(file)), { recursive: true });
       if (await exists(workspace.file(file))) {
         // Keep ordinary files readable until their atomic replacement, even on process exit.
         const existing = await lstat(workspace.file(file));

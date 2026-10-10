@@ -25,12 +25,11 @@ import {
 } from "@shepherdjerred/mc-build/render/index.ts";
 import {
   BUILD_FILES,
-  type BuildLogEntry,
   type CodeSuggestion,
   type JudgeRubric,
   type RenderSidecar,
 } from "#protocol/build.ts";
-import { appendLog, readLog } from "#build/build-log.ts";
+import { readLog } from "#build/build-log.ts";
 import {
   judgeRuntime,
   llmScorer,
@@ -38,19 +37,20 @@ import {
   rubricAxisIds,
   RUBRICS,
   scoreAbsolute,
-  writeJudgeRecord,
+  judgeFingerprint,
   type AbsoluteScores,
   type AskScore,
 } from "#build/judge.ts";
 import {
   latestRenderName,
+  buildArtifactPath,
   readProgramText,
   readSidecar,
-  writeSidecar,
 } from "#build/sidecar.ts";
 import { savedRender } from "#build/sources.ts";
 import { BuildWorkspace } from "#build/workspace.ts";
-import { readCritiqueRecord } from "./critique-record.ts";
+import { reuseVisual, type Visual } from "./visual-result.ts";
+import { publishCritique, critiqueRequestKey } from "./critique-publication.ts";
 
 /** What the code stage is given: the visual verdict and the program. */
 export type CodeInput = {
@@ -254,14 +254,6 @@ async function reviewProgram(
   return answer.suggestions;
 }
 
-/** What the critic saw and said: the judge sheet, the scores, and who gave them. */
-type Visual = {
-  sheet: string;
-  sheetHash: string;
-  scores: AbsoluteScores;
-  model: string;
-};
-
 /** Draws the judge sheet of the render and scores it, by model or by eye. */
 async function scoreVisual(
   workspace: BuildWorkspace,
@@ -298,49 +290,6 @@ async function scoreVisual(
   return { sheet, sheetHash, scores, model: options.model };
 }
 
-/**
- * The visual critique a code-only pass builds on: the newest critique of
- * this render, of this exact grid, on this rubric. Nothing is drawn and no
- * vision call is made, so `--stage code` costs one code review and leaves
- * the render's recorded score as it was.
- */
-async function reuseVisual(
-  workspace: BuildWorkspace,
-  journal: readonly BuildLogEntry[],
-  input: { name: string; sidecar: RenderSidecar; rubric: JudgeRubric },
-): Promise<Visual> {
-  for (let index = journal.length - 1; index >= 0; index -= 1) {
-    const entry = journal[index];
-    if (
-      entry?.kind !== "critique" ||
-      entry.render !== input.name ||
-      entry.iteration !== input.sidecar.iteration ||
-      entry.gridHash !== input.sidecar.gridHash ||
-      entry.rubric !== input.rubric
-    ) {
-      continue;
-    }
-    const record = await readCritiqueRecord(workspace, entry);
-    return {
-      sheet: record.sheet,
-      sheetHash: record.sheetHash,
-      scores: {
-        rubric: record.rubric,
-        model: record.visualModel ?? record.model,
-        axes: record.axes,
-        overallAesthetic: record.overallAesthetic,
-        notes: record.notes,
-        total: record.total,
-        max: record.max,
-      },
-      model: record.visualModel ?? record.model,
-    };
-  }
-  throw new Error(
-    `no visual critique of render "${input.name}" on the ${input.rubric} rubric yet; run --stage visual or --stage both first`,
-  );
-}
-
 export async function critiqueBuild(
   dir: string,
   options: CritiqueOptions,
@@ -365,105 +314,117 @@ export async function critiqueBuild(
     );
   }
   const grid = await savedRender(workspace, name);
-  const at = new Date().toISOString();
   const hash = gridHash(grid);
   if (hash !== sidecar.gridHash) {
     throw new Error(
       `render "${name}" schematic hash ${hash} does not match sidecar ${sidecar.gridHash}; render it again before critique`,
     );
   }
-  const stamp = at.replaceAll(/[:.]/gu, "-");
-  const { sheet, sheetHash, scores, model } =
-    stage === "code"
-      ? await reuseVisual(workspace, journal, {
-          name,
-          sidecar,
-          rubric: options.rubric,
-        })
-      : await scoreVisual(workspace, grid, options, stamp);
-  const lowest = lowestAxis(options.rubric, scores.axes);
-
-  const review = stage === "visual" || program === null ? null : program;
-  const suggestions =
-    review === null
-      ? []
-      : await reviewProgram(options, {
-          rubric: options.rubric,
-          scores,
-          lowest,
-          lint: await lintLines(workspace, name),
-          program: review,
-        });
-  const reviewedProgram = review !== null;
-
-  const gridFile = path.join(
-    BUILD_FILES.judgeDir,
-    "grids",
-    `${randomUUID()}.schem`,
-  );
-  const registry = await loadRegistry();
-  await Bun.write(
-    workspace.file(gridFile),
-    writeSchematic(grid, registry.dataVersion),
-  );
-  const recordFile = await writeJudgeRecord(workspace.dir, {
-    kind: "critique",
-    at,
+  const key = critiqueRequestKey({
+    name,
     iteration: sidecar.iteration,
-    model: stage === "code" ? options.model : model,
-    visualModel: model,
+    at: sidecar.at,
+    hash,
+    program,
     rubric: options.rubric,
-    render: name,
-    sheet,
-    sheetHash,
-    grid: gridFile,
-    gridHash: hash,
-    axes: scores.axes,
-    overallAesthetic: scores.overallAesthetic,
-    total: scores.total,
-    max: scores.max,
-    lowest,
-    notes: scores.notes,
-    suggestions,
+    model: options.model,
+    stage,
+    byEye: options.byEye,
+    policy: judgeFingerprint(options.rubric),
+    visual:
+      stage === "code"
+        ? journal.findLast(
+            (entry) =>
+              entry.kind === "critique" &&
+              entry.render === name &&
+              entry.gridHash === hash &&
+              entry.iteration === sidecar.iteration &&
+              entry.rubric === options.rubric,
+          )
+        : undefined,
   });
-  const record = path.relative(workspace.dir, recordFile);
-  // A code-only pass scored nothing new: the sidecar keeps the visual critique it has.
-  if (stage !== "code") {
-    await writeSidecar(workspace, {
-      ...sidecar,
-      scores: {
+  const { record, verdict } = await publishCritique(
+    workspace,
+    { key, sidecar, visual: stage !== "code", rubric: options.rubric },
+    async (pending) => {
+      const at = new Date().toISOString();
+      const stamp = at.replaceAll(/[:.]/gu, "-");
+      const { sheet, sheetHash, scores, model } =
+        stage === "code"
+          ? await reuseVisual(workspace, journal, {
+              name,
+              sidecar,
+              rubric: options.rubric,
+            })
+          : await scoreVisual(pending, grid, options, stamp);
+      if (stage === "code")
+        await Bun.write(
+          pending.file(sheet),
+          await Bun.file(await buildArtifactPath(workspace, sheet)).bytes(),
+        );
+      const lowest = lowestAxis(options.rubric, scores.axes);
+
+      const review = stage === "visual" || program === null ? null : program;
+      const suggestions =
+        review === null
+          ? []
+          : await reviewProgram(options, {
+              rubric: options.rubric,
+              scores,
+              lowest,
+              lint: await lintLines(workspace, name),
+              program: review,
+            });
+
+      const gridFile = path.join(
+        BUILD_FILES.judgeDir,
+        "grids",
+        `${randomUUID()}.schem`,
+      );
+      const registry = await loadRegistry();
+      await Bun.write(
+        pending.file(gridFile),
+        writeSchematic(grid, registry.dataVersion),
+      );
+      return {
+        kind: "critique",
+        at,
+        iteration: sidecar.iteration,
+        model: stage === "code" ? options.model : model,
+        visualModel: model,
         rubric: options.rubric,
-        total: scores.total,
-        max: scores.max,
+        render: name,
+        sheet,
+        sheetHash,
+        grid: gridFile,
+        gridHash: hash,
         axes: scores.axes,
         overallAesthetic: scores.overallAesthetic,
-      },
-    });
-  }
-  // The critique belongs to the render's iteration, not to the latest one.
-  const entry = await appendLog(
-    dir,
-    {
-      kind: "critique",
-      render: name,
-      gridHash: hash,
-      rubric: options.rubric,
-      file: record,
-      total: scores.total,
-      max: scores.max,
-      lowest,
+        total: scores.total,
+        max: scores.max,
+        lowest,
+        notes: scores.notes,
+        suggestions,
+      };
     },
-    { iteration: sidecar.iteration },
   );
   return {
     render: name,
-    iteration: entry.iteration,
-    sheet,
+    iteration: verdict.iteration,
+    sheet: verdict.sheet,
     record,
-    scores,
-    lowest,
-    suggestions,
-    reviewedProgram,
+    scores: {
+      rubric: verdict.rubric,
+      model: verdict.visualModel ?? verdict.model,
+      axes: verdict.axes,
+      overallAesthetic: verdict.overallAesthetic,
+      notes: verdict.notes,
+      total: verdict.total,
+      max: verdict.max,
+    },
+    lowest: verdict.lowest,
+    suggestions: verdict.suggestions,
+    reviewedProgram: stage !== "visual" && program !== null,
   };
 }
 

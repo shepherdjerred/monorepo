@@ -236,7 +236,9 @@ survey`, `--grid n` coordinate lines, `--floor y` and `--section z` cuts
   against an earlier render of the same region, or of a region containing
   it, using the selected mode on all three panels). Every render keeps its grid as `renders/<name>.schem` and a sidecar
   `renders/<name>.json` (source, files, grid hash, the world box it covers,
-  lint summary, critique scores once scored). When one program produced the
+  lint summary, critique scores once scored). The render's files and journal
+  entry are staged together; failed publication
+  restores the preceding evidence even when reusing a render name. When one program produced the
   render, its snapshot is kept too as `renders/<name>.build.ts` (the copy
   `compile` keeps beside its schematic): for `--source compiled` every op in
   the log must come from that one compile, for `expected` it is the program
@@ -296,7 +298,10 @@ survey`, `--grid n` coordinate lines, `--floor y` and `--section z` cuts
   program against those scores and lint and returns up to five ranked
   changes starting from the lowest axis. The result is written as
   `judge/critique-<ts>-<hash>.{png,json}`, logged, and copied into the render's
-  sidecar. Without a model credential, `--scores "axis=n,…,aesthetic=n"
+  sidecar through a transaction. Completed critiques remain in a validated
+  pending bundle until publication succeeds; retrying the same request reuses
+  both visual and code results. Corrupt pending evidence fails before model calls.
+  Without a model credential, `--scores "axis=n,…,aesthetic=n"
 [--note "…"]` records scores given by eye under the model name `by-eye`
   (visual stage only), so the journal still shows the critique.
 - **Candidates** (`candidate <dir> save --name n [--force] | ls | show n |

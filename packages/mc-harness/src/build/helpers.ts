@@ -5,10 +5,6 @@ import {
   type BlockGrid,
   type Vec3,
 } from "@shepherdjerred/mc-build/core/grid.ts";
-import { writeSchematic } from "@shepherdjerred/mc-build/core/schem.ts";
-import { gridHash } from "@shepherdjerred/mc-build/core/site.ts";
-import { lintGrid } from "@shepherdjerred/mc-build/lint/lint.ts";
-import { loadRegistry } from "@shepherdjerred/mc-build/registry/registry.ts";
 import { ensureAssets } from "@shepherdjerred/mc-build/render/assets.ts";
 import {
   cropGrid as cropBox,
@@ -27,22 +23,14 @@ import {
 import type { Image } from "@shepherdjerred/mc-build/render/raster.ts";
 import type { RenderMode } from "@shepherdjerred/mc-build/render/sheet.ts";
 import type { BlockPos } from "#protocol/bridge.ts";
-import {
-  BUILD_FILES,
-  type BuildManifest,
-  type RenderSidecar,
-} from "#protocol/build.ts";
-import { iterationOf } from "./build-log.ts";
-import {
-  readRenderProvenance,
-  writeSidecar,
-  type RenderProvenance,
-} from "./sidecar.ts";
+import { BUILD_FILES, type BuildManifest } from "#protocol/build.ts";
+import { readRenderProvenance, type RenderProvenance } from "./sidecar.ts";
 import type { DaemonClient } from "./daemon-client.ts";
 import type { Journal } from "./journal.ts";
 import { resetToSite, type RunContext } from "./ops.ts";
 import { BuildWorkspace } from "./workspace.ts";
-import { writeRenderContext, type RegionContext } from "./render-context.ts";
+import { recordRender } from "./render/record.ts";
+import type { RegionContext } from "./render-context.ts";
 
 export const PROGRAM_TEMPLATE = `import type { BuildProgram } from "@shepherdjerred/mc-build/dsl/context.ts";
 
@@ -126,6 +114,8 @@ export type LookView = "sheet" | "elevations" | "hero" | "pov" | "survey";
 
 /** Everything `build render` can be asked to look at beyond the default sheet. */
 export type LookOptions = {
+  /** Prevalidated input evidence when rendering into a transaction staging directory. */
+  provenance?: RenderProvenance;
   mode?: RenderMode;
   views?: readonly LookView[];
   /** Coordinate lines every n blocks on plans and elevations. */
@@ -339,11 +329,9 @@ export async function renderLooks(
   options: LookOptions,
 ): Promise<Record<string, string>> {
   const source = options.source ?? "canvas";
-  const provenance = await readRenderProvenance(
-    workspace,
-    source,
-    options.target,
-  );
+  const provenance =
+    options.provenance ??
+    (await readRenderProvenance(workspace, source, options.target));
   const renderer = new Renderer(await ensureAssets());
   await mkdir(workspace.file(BUILD_FILES.rendersDir), { recursive: true });
   const { subject, lightFrom, lightOrigin, cropFrom } = subjectOf(
@@ -406,84 +394,6 @@ export async function renderLooks(
       : { regionContext: options.regionContext }),
   });
   return files;
-}
-
-/**
- * Keeps what a render was of: the grid itself as `renders/<name>.schem` (so
- * a later render can compare against it and a critique can re-render it),
- * the program that produced it as `renders/<name>.build.ts` (the snapshot
- * `compile` kept, chosen for the source by `programBehind`, so a critique
- * reviews the code behind the picture and never a later compile), and
- * the sidecar `renders/<name>.json` with the files, lint summary and grid
- * hash, paths relative to the build directory.
- */
-export async function recordRender(
-  workspace: BuildWorkspace,
-  grid: BlockGrid,
-  input: {
-    name: string;
-    files: Record<string, string>;
-    source: string;
-    provenance: RenderProvenance;
-    box?: { min: BlockPos; max: BlockPos };
-    regionContext?: RegionContext;
-  },
-): Promise<void> {
-  const registry = await loadRegistry();
-  const renderContext = await writeRenderContext(
-    workspace,
-    input.name,
-    input.regionContext,
-    registry.dataVersion,
-  );
-  await mkdir(workspace.file(BUILD_FILES.rendersDir), { recursive: true });
-  await Bun.write(
-    workspace.file(path.join(BUILD_FILES.rendersDir, `${input.name}.schem`)),
-    writeSchematic(grid, registry.dataVersion),
-  );
-  const lint = lintGrid(grid, { registry });
-  const { journal, programText } = input.provenance;
-  const programCopy = path.join(
-    BUILD_FILES.rendersDir,
-    `${input.name}.build.ts`,
-  );
-  if (programText !== null) {
-    await Bun.write(workspace.file(programCopy), programText);
-  }
-  const sidecar: RenderSidecar = {
-    name: input.name,
-    at: new Date().toISOString(),
-    iteration: iterationOf(journal) + 1,
-    source: input.source,
-    files: relativeFiles(workspace, input.files),
-    gridHash: gridHash(grid),
-    size: grid.size,
-    ...(input.box === undefined ? {} : { box: input.box }),
-    ...(renderContext === undefined ? {} : { context: renderContext }),
-    blocks: lint.stats.blocks,
-    program: programText === null ? null : programCopy,
-    lint: {
-      errors: lint.errors,
-      warnings: lint.warnings,
-      codes: [
-        ...new Set(lint.findings.map((finding) => finding.code)),
-      ].toSorted(),
-    },
-  };
-  await writeSidecar(workspace, sidecar);
-}
-
-/** The same file map with paths relative to the build directory. */
-export function relativeFiles(
-  workspace: BuildWorkspace,
-  files: Record<string, string>,
-): Record<string, string> {
-  return Object.fromEntries(
-    Object.entries(files).map(([key, file]) => [
-      key,
-      path.relative(workspace.dir, file),
-    ]),
-  );
 }
 
 /** The large isometric view of a map-scale grid, or null for small builds. */
