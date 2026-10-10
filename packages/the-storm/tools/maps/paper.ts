@@ -8,6 +8,10 @@ import {
 import { startFakeBrain } from "#e2e/harness/fake-brain.ts";
 import { startServer } from "#e2e/harness/server.ts";
 import { RconClient } from "#e2e/harness/rcon.ts";
+import {
+  rwfTestSettings,
+  rwfRecordingSalt,
+} from "#e2e/harness/rwf-settings.ts";
 import { ExportState, type legacyMap } from "./legacy.ts";
 import type { ConversionInputs } from "./inputs.ts";
 
@@ -31,6 +35,51 @@ export async function mapServerConfig(inputs: ConversionInputs) {
     },
     agent: { mode: "shadow" as const, reviewSamplePercent: 100 },
   };
+}
+
+/** Shared ordinary-match runtime for private catalog lifecycle and geometry diagnostics. */
+export async function runtimeMapServerConfig(
+  inputs: ConversionInputs,
+  content: string,
+  brain: { baseUrl: string; token: string },
+) {
+  return {
+    ...(await mapServerConfig(inputs)),
+    ownedConfigDir: content,
+    stormConfig: stormModuleConfig(
+      await Bun.file(path.join(content, "config.yml")).text(),
+      ["economy", "mail", "tracks", "rwf", "rwfbots"],
+    ),
+    rwf: {
+      ...rwfTestSettings,
+      countdown: "PT1S",
+      endLinger: "PT1S",
+      targetCombatants: 8,
+      maxCombatants: 16,
+    },
+    brain,
+    env: {
+      FLIPT_URL: brain.baseUrl,
+      FLIPT_ENVIRONMENT: "prod",
+      RWF_RECORDING_SALT: rwfRecordingSalt,
+    },
+    resources: { cpus: 4, heap: "8G", memoryLimit: "10g" },
+  };
+}
+
+/** Poll the same native owner with a bounded transition deadline and retained observations. */
+export async function waitForMapState(
+  deadline: number,
+  observe: () => Promise<unknown>,
+  check: () => Promise<boolean>,
+  description: string,
+) {
+  const until = Math.min(deadline, Date.now() + 600_000);
+  while (!(await check())) {
+    await observe();
+    if (Date.now() >= until) throw new Error(`Timed out: ${description}`);
+    await Bun.sleep(1000);
+  }
 }
 
 /** Every import gets its own world copy and Paper owner; no production connection. */

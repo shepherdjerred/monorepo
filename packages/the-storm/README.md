@@ -1105,6 +1105,8 @@ bun run maps:import --source "$HOME/Downloads/Search and Destroy" --output .cach
 bun run maps:details --import .cache/rwf-map-import/batch-a --output .cache/rwf-map-details/batch-a
 bun run maps:bake --import .cache/rwf-map-import/batch-a --details .cache/rwf-map-details/batch-a --output .cache/rwf-map-bake/batch-a
 bun run maps:stage --bake .cache/rwf-map-bake/batch-a --details .cache/rwf-map-details/batch-a --output .cache/rwf-map-admission/batch-a
+bun run maps:close-starts --maps .cache/rwf-map-admission/batch-a/maps --output .cache/rwf-close-starts/batch-a
+bun run maps:verify-close-starts --maps .cache/rwf-close-starts/batch-a/maps --output .cache/rwf-close-starts-native/batch-a
 bun run maps:verify-navigation --output .cache/rwf-map-navigation/batch-a
 bun run maps:verify-runtime --maps .cache/rwf-map-admission/batch-a/maps --output .cache/rwf-map-runtime/batch-a --rotations 3
 ```
@@ -1124,6 +1126,28 @@ terrain, navigation and payloads, and writes matching duel scenarios. Use
 `--extra <folder>` for an independently repaired and baked original, and
 `--quarantine <id>` only for an unrepaired map that failed the offline bake.
 Unresolved maps and missing payload exports stop staging.
+
+`maps:close-starts` authors private close-combat candidates from the full original
+terrain. It freshly bakes navigation and deterministically selects two positions
+8–16 blocks apart, facing each other on the same floor height. Each position
+needs a flat 3×3 patch with two blocks of actual air, a supported walking corridor,
+a clear eye-level sightline and short paths in both directions. Both positions
+must be reachable from every original spawn. Exact schematic states exclude
+partial floors and special movement surfaces that coarse navigation shapes could misclassify.
+The output preserves original metadata, terrain, loot, signs and navigation;
+only the private duel scenario changes. Every failure remains in `results.json`
+and makes the catalog command fail. Candidates are not installed or admitted to
+the training registry.
+
+`maps:verify-close-starts` checks those candidates in disposable pinned Paper
+using the production Citizens motor. It checks native floor height, player-sized
+clearance and sightlines, then walks a round trip from each start without editing
+terrain. Ordinary showcases rotate the maps, while the fixture checks the
+two-map cache bound. Repeated `--map <id>` selects a diagnostic subset of at least
+three maps; omit it to request the whole candidate catalog. Retained reports bind
+each result to its terrain hash and exact positions, and include physics samples,
+producer hashes and server logs. Geometry and traversal evidence still require
+separate learning admission and gameplay acceptance.
 
 The schematic contains terrain only. The converter also exports inventories
 through Paper's versioned item API and both sign faces as literal visible text,
