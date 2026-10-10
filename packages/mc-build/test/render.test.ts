@@ -599,6 +599,40 @@ function stonePlane(side: number): BlockGrid {
   return grid;
 }
 
+describe("comparison render modes", () => {
+  test.each([
+    "textured",
+    "value",
+    "normal",
+    "squint",
+    "relief",
+    "light",
+  ] as const)(
+    "applies %s to before, after and change-plan panels",
+    async (mode) => {
+      const renderer = new Renderer(root);
+      const grid = scene();
+      const tile = 64;
+      const sheet = await renderer.compare(grid, grid, { mode, tile });
+      const png = await encodePng(sheet);
+      for (const [index, view] of [
+        "iso-front-right",
+        "iso-front-right",
+        "top",
+      ].entries()) {
+        if (view !== "iso-front-right" && view !== "top")
+          throw new Error("unknown fixture view");
+        const expected = await renderer.view(grid, view, tile, { mode });
+        const actual = await sharp(png)
+          .extract({ left: index * tile, top: 26, width: tile, height: tile })
+          .raw()
+          .toBuffer();
+        expect(pixelHash(actual)).toBe(pixelHash(expected.pixels));
+      }
+    },
+  );
+});
+
 describe("skylight", () => {
   test.each([
     "torch",

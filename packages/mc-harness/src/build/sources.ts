@@ -134,6 +134,11 @@ export async function compiledGrid(
 ): Promise<{ grid: BlockGrid; skipped: string[] }> {
   const site = workspace.siteBox(manifest);
   const grid = await workspace.siteGrid();
+  if (gridHash(grid) !== manifest.site?.siteHash) {
+    throw new Error(
+      "captured site schematic does not match build.json siteHash; capture the site again",
+    );
+  }
   const oplog =
     savedOps === undefined ? await workspace.oplog() : { ops: savedOps };
   const skipped: string[] = [];

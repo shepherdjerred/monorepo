@@ -2,6 +2,7 @@
 import { BlockGrid } from "@shepherdjerred/mc-build/core/grid.ts";
 import { writeSchematic } from "@shepherdjerred/mc-build/core/schem.ts";
 import { loadRegistry } from "@shepherdjerred/mc-build/registry/registry.ts";
+import { gridHash } from "@shepherdjerred/mc-build/core/site.ts";
 import { BuildWorkspace } from "#build/workspace.ts";
 import { BUILD_FILES } from "#protocol/build.ts";
 
@@ -10,6 +11,12 @@ export async function flatSiteBuild(
   name: string,
 ): Promise<BuildWorkspace> {
   const workspace = new BuildWorkspace(dir);
+  const site = new BlockGrid({ x: 10, y: 10, z: 10 });
+  for (let x = 0; x < 10; x += 1) {
+    for (let z = 0; z < 10; z += 1) {
+      site.set(x, 0, z, "minecraft:grass_block[snowy=false]");
+    }
+  }
   await workspace.writeManifest({
     version: 1,
     name,
@@ -19,15 +26,9 @@ export async function flatSiteBuild(
     site: {
       min: { x: 100, y: 64, z: 100 },
       max: { x: 109, y: 73, z: 109 },
-      siteHash: "x",
+      siteHash: gridHash(site),
     },
   });
-  const site = new BlockGrid({ x: 10, y: 10, z: 10 });
-  for (let x = 0; x < 10; x += 1) {
-    for (let z = 0; z < 10; z += 1) {
-      site.set(x, 0, z, "minecraft:grass_block[snowy=false]");
-    }
-  }
   const registry = await loadRegistry();
   await Bun.write(
     workspace.file(BUILD_FILES.siteSchematic),

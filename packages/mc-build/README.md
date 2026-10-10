@@ -90,8 +90,9 @@ the contact sheet: `renderer.elevations(grid, { grid: 8 })` (front, right,
 back, left and top with coordinate lines), `renderer.pov(grid)` (a
 perspective eye-level view from in front of the build, `camera.ts`
 `perspectiveProjector`; default framing ignores empty layers above the build),
-`renderer.compare(before, after)` (side by side
-plus a plan of changed columns, with one shared occupied height for both panels),
+`renderer.compare(before, after, { mode: "light" })` (side by side
+plus a plan of changed columns, with the selected mode on all three panels
+and one shared occupied height for both builds),
 `renderer.survey(grid)` (a map tiled at
 readable scale with an index), `drawGridOverlay`, and `render/cut.ts`
 (`cutGrid` for floor plans and sections, `namedCrop` for fixed close-ups).

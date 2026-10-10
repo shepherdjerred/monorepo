@@ -349,6 +349,7 @@ export async function renderLooks(
     // what the panels show and nothing that was cut away.
     const before = subjectOf(options.compareWith, options);
     const image = await renderer.compare(before.subject, subject, {
+      mode: ctx.mode,
       beforeContext: before,
       afterContext: {
         lightFrom,

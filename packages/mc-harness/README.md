@@ -217,6 +217,9 @@ WorldEdit, paste and console ops, each with explicit coordinates and a
   picks where the blocks come from; `compiled` applies the op log's paste
   ops and the compiler's clear boxes to the captured site offline, so a DSL
   build's `compile → render → lint` loop needs no server. Compiled renders
+  and candidate saves verify the captured schematic against `build.json`'s
+  site hash before applying operations; recapture if the snapshot changed.
+  Compiled renders
   reject unsupported WorldEdit or console ops, rotated pastes, and ops for
   another world before saving evidence; run the build and render its expected
   result or canvas instead. Offline lint still reports skipped operations.
@@ -226,7 +229,7 @@ survey`, `--grid n` coordinate lines, `--floor y` and `--section z` cuts
   (build-local, anchor-relative), `--crop front-door|centre|nw|…` close-ups,
   and `--compare <name>` (before, after, and a plan of changed columns
   against an earlier render of the same region, or of a region containing
-  it). Every render keeps its grid as `renders/<name>.schem` and a sidecar
+  it, using the selected mode on all three panels). Every render keeps its grid as `renders/<name>.schem` and a sidecar
   `renders/<name>.json` (source, files, grid hash, the world box it covers,
   lint summary, critique scores once scored). When one program produced the
   render, its snapshot is kept too as `renders/<name>.build.ts` (the copy

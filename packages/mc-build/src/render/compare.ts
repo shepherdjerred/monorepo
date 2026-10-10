@@ -8,7 +8,7 @@ import { occupiedHeight } from "./cut.ts";
 import { drawText } from "./font.ts";
 import type { Quad, V3 } from "./mesh.ts";
 import { Image } from "./raster.ts";
-import { renderView, viewProjection } from "./sheet.ts";
+import { renderView, viewProjection, type RenderMode } from "./sheet.ts";
 
 const PANEL = [36, 40, 48, 255] as const;
 const INK = [236, 240, 245, 255] as const;
@@ -50,10 +50,11 @@ export function renderCompare(
     before: { quads: readonly Quad[]; grid: BlockGrid };
     after: { quads: readonly Quad[]; grid: BlockGrid };
   },
-  options: { view?: ViewName; tile?: number },
+  options: { view?: ViewName; tile?: number; mode?: RenderMode },
 ): Image {
   const view = options.view ?? "iso-front-right";
   const tile = options.tile ?? 480;
+  const mode = options.mode ?? "textured";
   const sheet = new Image(3 * tile, tile + LABEL, PANEL);
   const height = Math.max(
     occupiedHeight(input.before.grid),
@@ -63,17 +64,22 @@ export function renderCompare(
   sheet.blit(
     renderView(input.before.quads, size(input.before.grid), view, {
       size: tile,
+      mode,
     }),
     0,
     LABEL,
   );
   sheet.blit(
-    renderView(input.after.quads, size(input.after.grid), view, { size: tile }),
+    renderView(input.after.quads, size(input.after.grid), view, {
+      size: tile,
+      mode,
+    }),
     tile,
     LABEL,
   );
   const plan = renderView(input.after.quads, size(input.after.grid), "top", {
     size: tile,
+    mode,
   });
   // The same projection the plan was drawn with, oversampling included, so
   // markers on a map larger than the tile land on the blocks they mark.

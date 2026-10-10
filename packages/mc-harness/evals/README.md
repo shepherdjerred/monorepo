@@ -87,6 +87,10 @@ Before counting current-capture critique entries or publishing their totals,
 grading validates each referenced record against its journal identity and score
 and requires a readable judge image within the build. Missing, mismatched or
 escaped evidence fails the process check and produces no trajectory summary.
+Current-capture accept/reject entries with a verdict file also require a valid
+pair record on the same rubric. The recorded winner (or incumbent on a tie),
+both candidate identities and both content-addressed image inputs must match;
+missing verdicts or altered image bytes fail grading before outcomes are counted.
 
 ## Bench
 

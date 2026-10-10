@@ -91,6 +91,60 @@ async function programBuild(name: string) {
 }
 
 describe("complete compiled render evidence", () => {
+  it.each(["plain", "looks", "candidate"])(
+    "rejects a substituted captured site before %s evidence writes",
+    async (operation) => {
+      const workspace = await flatSiteBuild(
+        path.join(temp, `site-hash-${operation}`),
+        "site-hash",
+      );
+      await workspace.writeOplog({ version: 1, ops: [] });
+      const original = await Bun.file(
+        workspace.file(BUILD_FILES.siteSchematic),
+      ).bytes();
+      const schematic = await readSchematic(original);
+      schematic.grid.set(0, 1, 0, "minecraft:stone");
+      await Bun.write(
+        workspace.file(BUILD_FILES.siteSchematic),
+        writeSchematic(schematic.grid, schematic.dataVersion),
+      );
+      const before = await readLog(workspace.dir);
+      const manifest = await workspace.manifest();
+      const env = {
+        client: new DaemonClient(),
+        journal: new Journal(workspace.file("audit")),
+        log: vi.fn(),
+      };
+      if (operation === "candidate") {
+        await expect(saveCandidate(workspace.dir, "invalid")).rejects.toThrow(
+          /siteHash/u,
+        );
+      } else {
+        await expect(
+          renderBuild(env, workspace.dir, {
+            source: "compiled",
+            name: "invalid",
+            ...(operation === "looks" ? { views: ["sheet" as const] } : {}),
+          }),
+        ).rejects.toThrow(/siteHash/u);
+      }
+      expect(await readLog(workspace.dir)).toEqual(before);
+      expect(await workspace.manifest()).toEqual(manifest);
+      expect(
+        await Bun.file(workspace.file("renders/invalid.json")).exists(),
+      ).toBe(false);
+      expect(
+        await Bun.file(
+          workspace.file("candidates/invalid/candidate.json"),
+        ).exists(),
+      ).toBe(false);
+      await Bun.write(workspace.file(BUILD_FILES.siteSchematic), original);
+      expect(await saveCandidate(workspace.dir, "valid")).toMatchObject({
+        name: "valid",
+      });
+    },
+  );
+
   it.each(
     ["plain", "looks"].flatMap((look) =>
       ["console", "worldedit", "rotation", "world"].map((kind) => ({

@@ -274,16 +274,17 @@ export class Renderer {
       tile?: number;
       beforeContext?: RenderContextOptions;
       afterContext?: RenderContextOptions;
+      mode?: RenderMode;
     } = {},
   ): Promise<Image> {
     const beforeGeometry = await this.quadsFor(
       before,
-      "textured",
+      options.mode,
       options.beforeContext,
     );
     const afterGeometry = await this.quadsFor(
       after,
-      "textured",
+      options.mode,
       options.afterContext,
     );
     return renderCompare(
@@ -298,6 +299,7 @@ export class Renderer {
         },
       },
       {
+        mode: beforeGeometry.viewMode,
         ...(options.view === undefined ? {} : { view: options.view }),
         ...(options.tile === undefined ? {} : { tile: options.tile }),
       },

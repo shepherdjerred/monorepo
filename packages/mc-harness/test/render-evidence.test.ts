@@ -3,6 +3,12 @@ import os from "node:os";
 import path from "node:path";
 import { afterAll, describe, expect, it, vi } from "vitest";
 import { BlockGrid } from "@shepherdjerred/mc-build/core/grid.ts";
+import { gridHash } from "@shepherdjerred/mc-build/core/site.ts";
+import {
+  readSchematic,
+  writeSchematic,
+} from "@shepherdjerred/mc-build/core/schem.ts";
+import { BUILD_FILES } from "#protocol/build.ts";
 import { ensureAssets } from "@shepherdjerred/mc-build/render/assets.ts";
 import {
   Renderer,
@@ -78,9 +84,17 @@ describe("render and candidate evidence", () => {
     await saveCandidate(workspace.dir, "old");
     const manifest = await workspace.manifest();
     if (manifest.site === undefined) throw new Error("missing site");
+    const site = await readSchematic(
+      await Bun.file(workspace.file(BUILD_FILES.siteSchematic)).bytes(),
+    );
+    site.grid.set(0, 1, 0, "minecraft:stone");
+    await Bun.write(
+      workspace.file(BUILD_FILES.siteSchematic),
+      writeSchematic(site.grid, site.dataVersion),
+    );
     await workspace.writeManifest({
       ...manifest,
-      site: { ...manifest.site, siteHash: "new" },
+      site: { ...manifest.site, siteHash: gridHash(site.grid) },
     });
     await saveCandidate(workspace.dir, "current");
     await saveCandidate(workspace.dir, "challenger");
@@ -187,4 +201,46 @@ describe("render and candidate evidence", () => {
     expect(await readLog(workspace.dir)).toEqual(journal);
     expect(await Bun.file(file).json()).toEqual({ ...candidate, name: "bar" });
   });
+});
+
+describe("comparison mode evidence", () => {
+  it.each(["value", "normal", "squint", "relief", "light"] as const)(
+    "preserves requested %s in CLI comparison output",
+    async (mode) => {
+      const workspace = await flatSiteBuild(
+        path.join(temp, `compare-${mode}`),
+        `compare-${mode}`,
+      );
+      await workspace.writeOplog({ version: 1, ops: [] });
+      const grid = new BlockGrid({ x: 5, y: 5, z: 5 }, "minecraft:stone");
+      for (let x = 1; x < 4; x += 1)
+        for (let y = 1; y < 4; y += 1)
+          for (let z = 1; z < 4; z += 1) grid.set(x, y, z, "minecraft:air");
+      const files = await renderLooks(workspace, grid, "look", {
+        source: "compiled",
+        mode,
+        views: [],
+        floor: 2,
+        compareWith: grid,
+      });
+      const file = files["compare"];
+      if (file === undefined) throw new Error("missing comparison");
+      const renderer = new Renderer(await ensureAssets());
+      const section = cutGrid(grid, { belowY: 2 });
+      const context = { lightFrom: grid, lightOrigin: { x: 0, y: 0, z: 0 } };
+      const expected = await renderer.compare(section, section, {
+        mode,
+        beforeContext: context,
+        afterContext: context,
+      });
+      const textured = await renderer.compare(section, section, {
+        beforeContext: context,
+        afterContext: context,
+      });
+      const actual = Buffer.from(await Bun.file(file).bytes());
+      expect(actual.equals(await encodePng(expected))).toBe(true);
+      expect(actual.equals(await encodePng(textured))).toBe(false);
+    },
+    60_000,
+  );
 });
