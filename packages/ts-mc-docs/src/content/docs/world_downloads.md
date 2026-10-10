@@ -32,10 +32,10 @@ The later survival main world.
 Credit: The Storm community.
 
 <div class="archive-previews">
-<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/main-map2-2016-01-10/overview.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/main-map2-2016-01-10/overview.png" width="2048" height="2048" loading="lazy" alt="Main Map 2: around spawn from above" /></a>
+<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/main-map2-2016-01-10/overview.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/main-map2-2016-01-10/overview.png" width="2048" height="2048" loading="lazy" decoding="async" alt="Main Map 2: around spawn from above" /></a>
 <figcaption>Around spawn · 2,048-block selection · north is up</figcaption></figure>
 
-<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/main-map2-2016-01-10/closeup.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/main-map2-2016-01-10/closeup.png" width="1024" height="1024" loading="lazy" alt="Main Map 2: close-up from above" /></a>
+<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/main-map2-2016-01-10/closeup.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/main-map2-2016-01-10/closeup.png" width="1024" height="1024" loading="lazy" decoding="async" alt="Main Map 2: close-up from above" /></a>
 <figcaption>Close-up · 512-block selection · north is up</figcaption></figure>
 
 </div>
@@ -60,10 +60,10 @@ The original first survival main-world snapshot.
 Credit: The Storm community.
 
 <div class="archive-previews">
-<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/main-map1-2015-07-09/overview.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/main-map1-2015-07-09/overview.png" width="2048" height="2048" loading="lazy" alt="Main Map 1: around spawn from above" /></a>
+<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/main-map1-2015-07-09/overview.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/main-map1-2015-07-09/overview.png" width="2048" height="2048" loading="lazy" decoding="async" alt="Main Map 1: around spawn from above" /></a>
 <figcaption>Around spawn · 2,048-block selection · north is up</figcaption></figure>
 
-<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/main-map1-2015-07-09/closeup.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/main-map1-2015-07-09/closeup.png" width="1024" height="1024" loading="lazy" alt="Main Map 1: close-up from above" /></a>
+<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/main-map1-2015-07-09/closeup.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/main-map1-2015-07-09/closeup.png" width="1024" height="1024" loading="lazy" decoding="async" alt="Main Map 1: close-up from above" /></a>
 <figcaption>Close-up · 512-block selection · north is up</figcaption></figure>
 
 </div>
@@ -88,10 +88,10 @@ The later Skylands survival world.
 Credit: The Storm community.
 
 <div class="archive-previews">
-<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/skylands-map2-2016-01-10/overview.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/skylands-map2-2016-01-10/overview.png" width="2048" height="2048" loading="lazy" alt="Skylands Map 2: around spawn from above" /></a>
+<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/skylands-map2-2016-01-10/overview.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/skylands-map2-2016-01-10/overview.png" width="2048" height="2048" loading="lazy" decoding="async" alt="Skylands Map 2: around spawn from above" /></a>
 <figcaption>Around spawn · 2,048-block selection · north is up</figcaption></figure>
 
-<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/skylands-map2-2016-01-10/closeup.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/skylands-map2-2016-01-10/closeup.png" width="1024" height="1024" loading="lazy" alt="Skylands Map 2: close-up from above" /></a>
+<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/skylands-map2-2016-01-10/closeup.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/skylands-map2-2016-01-10/closeup.png" width="1024" height="1024" loading="lazy" decoding="async" alt="Skylands Map 2: close-up from above" /></a>
 <figcaption>Close-up · 512-block selection · north is up</figcaption></figure>
 
 </div>
@@ -116,10 +116,10 @@ The original Skylands snapshot.
 Credit: The Storm community.
 
 <div class="archive-previews">
-<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/skylands-map1-2015-07-09/overview.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/skylands-map1-2015-07-09/overview.png" width="2048" height="2048" loading="lazy" alt="Skylands Map 1: around spawn from above" /></a>
+<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/skylands-map1-2015-07-09/overview.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/skylands-map1-2015-07-09/overview.png" width="2048" height="2048" loading="lazy" decoding="async" alt="Skylands Map 1: around spawn from above" /></a>
 <figcaption>Around spawn · 2,048-block selection · north is up</figcaption></figure>
 
-<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/skylands-map1-2015-07-09/closeup.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/skylands-map1-2015-07-09/closeup.png" width="1024" height="1024" loading="lazy" alt="Skylands Map 1: close-up from above" /></a>
+<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/skylands-map1-2015-07-09/closeup.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/skylands-map1-2015-07-09/closeup.png" width="1024" height="1024" loading="lazy" decoding="async" alt="Skylands Map 1: close-up from above" /></a>
 <figcaption>Close-up · 512-block selection · north is up</figcaption></figure>
 
 </div>
@@ -144,10 +144,10 @@ The creative server's plot world.
 Credit: The Storm community.
 
 <div class="archive-previews">
-<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/creative-2016-01-10/overview.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/creative-2016-01-10/overview.png" width="2048" height="2048" loading="lazy" alt="Creative: around spawn from above" /></a>
+<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/creative-2016-01-10/overview.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/creative-2016-01-10/overview.png" width="2048" height="2048" loading="lazy" decoding="async" alt="Creative: around spawn from above" /></a>
 <figcaption>Around spawn · 2,048-block selection · north is up</figcaption></figure>
 
-<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/creative-2016-01-10/closeup.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/creative-2016-01-10/closeup.png" width="1024" height="1024" loading="lazy" alt="Creative: close-up from above" /></a>
+<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/creative-2016-01-10/closeup.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/creative-2016-01-10/closeup.png" width="1024" height="1024" loading="lazy" decoding="async" alt="Creative: close-up from above" /></a>
 <figcaption>Close-up · 512-block selection · north is up</figcaption></figure>
 
 </div>
@@ -172,10 +172,10 @@ A recovered town export from the survival world.
 Credit: WinterSolstice8 / BlueAsterismSolstice.
 
 <div class="archive-previews">
-<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/asterism-2016-02/overview.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/asterism-2016-02/overview.png" width="960" height="1264" loading="lazy" alt="Asterism: around spawn from above" /></a>
+<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/asterism-2016-02/overview.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/asterism-2016-02/overview.png" width="960" height="1264" loading="lazy" decoding="async" alt="Asterism: around spawn from above" /></a>
 <figcaption>Around spawn · 2,048-block selection · north is up</figcaption></figure>
 
-<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/asterism-2016-02/closeup.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/asterism-2016-02/closeup.png" width="1024" height="1024" loading="lazy" alt="Asterism: close-up from above" /></a>
+<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/asterism-2016-02/closeup.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/asterism-2016-02/closeup.png" width="1024" height="1024" loading="lazy" decoding="async" alt="Asterism: close-up from above" /></a>
 <figcaption>Close-up · 512-block selection · north is up</figcaption></figure>
 
 </div>
@@ -200,10 +200,10 @@ The original city used for The Storm's 2014 harbour spawn, without The Storm's l
 Credit: Madnes64; additional settlements by TheCreeperWorld, Flashy, Seppel1097, Killxzone, Tijn1117 and Mattykingsam.
 
 <div class="archive-previews">
-<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/kargeth-2012-09-11/overview.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/kargeth-2012-09-11/overview.png" width="2048" height="2048" loading="lazy" alt="Kargeth — original third-party world: around spawn from above" /></a>
+<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/kargeth-2012-09-11/overview.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/kargeth-2012-09-11/overview.png" width="2048" height="2048" loading="lazy" decoding="async" alt="Kargeth — original third-party world: around spawn from above" /></a>
 <figcaption>Around spawn · 2,048-block selection · north is up</figcaption></figure>
 
-<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/kargeth-2012-09-11/closeup.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/kargeth-2012-09-11/closeup.png" width="1024" height="1024" loading="lazy" alt="Kargeth — original third-party world: close-up from above" /></a>
+<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/kargeth-2012-09-11/closeup.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/kargeth-2012-09-11/closeup.png" width="1024" height="1024" loading="lazy" decoding="async" alt="Kargeth — original third-party world: close-up from above" /></a>
 <figcaption>Close-up · 512-block selection · north is up</figcaption></figure>
 
 </div>
@@ -228,10 +228,10 @@ A brief single-player test used to choose the revival seed; not a server snapsho
 Credit: The Storm.
 
 <div class="archive-previews">
-<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/new-world-test-2022-11-20/overview.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/new-world-test-2022-11-20/overview.png" width="1088" height="1088" loading="lazy" alt="New World — revival seed test: around spawn from above" /></a>
+<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/new-world-test-2022-11-20/overview.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/new-world-test-2022-11-20/overview.png" width="1088" height="1088" loading="lazy" decoding="async" alt="New World — revival seed test: around spawn from above" /></a>
 <figcaption>Around spawn · 2,048-block selection · north is up</figcaption></figure>
 
-<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/new-world-test-2022-11-20/closeup.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/new-world-test-2022-11-20/closeup.png" width="1024" height="1024" loading="lazy" alt="New World — revival seed test: close-up from above" /></a>
+<figure><a href="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/new-world-test-2022-11-20/closeup.png"><img src="https://docs.ts-mc.net/world-archive/2026-10-04-v1/previews/new-world-test-2022-11-20/closeup.png" width="1024" height="1024" loading="lazy" decoding="async" alt="New World — revival seed test: close-up from above" /></a>
 <figcaption>Close-up · 512-block selection · north is up</figcaption></figure>
 
 </div>

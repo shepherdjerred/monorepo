@@ -83,7 +83,26 @@ mirror_owned_roots() {
   done </bundle/owned.roots
 }
 
+install_livemap() {
+  # Only copy bundled static files. Never prune this webroot: BlueMap owns
+  # settings.json, maps, and live data, and open tabs may still use old assets.
+  # Installing index.html before BlueMap starts also prevents default frontend
+  # extraction from replacing the branded viewer on first boot.
+  local source=$1 target=$2 data_owner=$3 data_group=$4 file destination directory
+  [[ -f $source/index.html ]] || fail "LiveMap frontend is missing from the image"
+  # The stock start script only chowns recursively when /data itself has the
+  # wrong owner. Match its existing owner even when this entrypoint runs as root.
+  install -d -m 2775 -o "$data_owner" -g "$data_group" "$(dirname "$target")" "$target"
+  while IFS= read -r -d '' file; do
+    destination=$target/${file#"$source/"}
+    directory=$(dirname "$destination")
+    install -d -m 2775 -o "$data_owner" -g "$data_group" "$directory"
+    install -m 0664 -o "$data_owner" -g "$data_group" "$file" "$destination"
+  done < <(find "$source" -type f -print0)
+}
+
 require_progression_preparation
 remove_stale_files
 mirror_owned_roots
+install_livemap /opt/the-storm/livemap /data/bluemap/web "$(stat -c '%u' /data)" "$(stat -c '%g' /data)"
 exec /image/scripts/start "$@"
