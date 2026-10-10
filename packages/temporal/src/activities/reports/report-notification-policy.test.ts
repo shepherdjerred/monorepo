@@ -3,24 +3,13 @@ import {
   ReportEnvelopeV1Schema,
   type ReportEnvelopeV1,
 } from "#shared/reports/report.ts";
-import {
-  deliverReportWithDependencies,
-  reportReceiptKey,
-  type ReportDeliveryBackend,
-  type ReportDeliveryReceiptV1,
-  type ReportStateV1,
-} from "./report-delivery.ts";
-import type { ReportSendClaimV1 } from "./report-delivery-lease.ts";
-import type { PostalSendInput } from "#shared/infra/postal.ts";
+import { notificationDeliveryHarness as harness } from "./notification-test-support.ts";
 import {
   deliverDailyNotification,
   notificationCondition,
   usesDailyNotificationPolicy,
   selectNotificationMode,
   type NotificationMode,
-  type NotificationBackend,
-  type NotificationFamily,
-  type SkippedNotification,
 } from "./report-notification-policy.ts";
 
 function report(
@@ -74,105 +63,6 @@ function report(
     actions: [],
     provenance: { workflowId: "audit", runId: `run-${String(day)}` },
   });
-}
-
-function harness() {
-  const observations = new Map<string, ReportEnvelopeV1>();
-  const skips = new Map<string, SkippedNotification>();
-  const families = new Map<
-    string,
-    { value: NotificationFamily; etag: string }
-  >();
-  const receipts = new Map<string, ReportDeliveryReceiptV1>();
-  const states = new Map<string, ReportStateV1>();
-  const claims = new Map<string, { claim: ReportSendClaimV1; etag: string }>();
-  const sent: string[] = [];
-  let version = 0;
-  const faults = { failFamilySettlement: false, failSend: false };
-  const backend: NotificationBackend = {
-    readObservation: async (key) => observations.get(key),
-    writeObservation: async (key, value) => {
-      if (observations.has(key)) return false;
-      observations.set(key, structuredClone(value));
-      return true;
-    },
-    readSkip: async (key) => skips.get(key),
-    writeSkip: async (key, value) => {
-      if (skips.has(key)) return false;
-      skips.set(key, value);
-      return true;
-    },
-    readFamily: async (key) => structuredClone(families.get(key)),
-    writeFamily: async (key, value, expectedEtag) => {
-      if (faults.failFamilySettlement && value.pending === undefined) {
-        faults.failFamilySettlement = false;
-        throw new Error("crash after accepted receipt");
-      }
-      if (families.get(key)?.etag !== expectedEtag) return false;
-      families.set(key, { value, etag: String(++version) });
-      return true;
-    },
-  };
-  const deliveryBackend: ReportDeliveryBackend = {
-    readReceipt: async (key) => receipts.get(key),
-    writeReceipt: async (key, value) => {
-      if (receipts.has(key)) return false;
-      receipts.set(key, value);
-      return true;
-    },
-    readState: async (key) => states.get(key),
-    writeState: async (key, value) => {
-      states.set(key, value);
-    },
-    readSendClaim: async (key) => claims.get(key),
-    writeSendClaim: async (key, claim, expectedEtag) => {
-      if (claims.get(key)?.etag !== expectedEtag) return false;
-      claims.set(key, { claim, etag: String(++version) });
-      return true;
-    },
-  };
-  function deps(now: string, owner = now, namespace = "prod") {
-    const deliveryDeps = {
-      backend: deliveryBackend,
-      now: () => now,
-      owner,
-      attemptStartedAt: now,
-      addresses: {
-        recipient: "recipient@example.com",
-        sender: "sender@example.com",
-      },
-      send: async (input: PostalSendInput) => {
-        if (faults.failSend) throw new Error("Postal unavailable");
-        const reportRunId = input.headers?.["X-Report-Run-ID"];
-        if (reportRunId === undefined)
-          throw new Error("Missing report run header");
-        sent.push(reportRunId);
-        return {
-          messageId: `mail-${String(sent.length)}`,
-          recipientId: 42,
-          subject: input.subject,
-          tag: input.tag,
-        };
-      },
-    };
-    return {
-      backend,
-      namespace,
-      owner,
-      attemptStartedAt: now,
-      now: () => now,
-      accepted: async (candidate: ReportEnvelopeV1) => {
-        const receiptKey = reportReceiptKey(candidate);
-        const value = receipts.get(receiptKey);
-        return value === undefined
-          ? undefined
-          : { ...value, receiptKey, deduplicated: true };
-      },
-      deliver: (candidate: ReportEnvelopeV1) =>
-        deliverReportWithDependencies(candidate, deliveryDeps),
-    };
-  }
-  return { deps, sent, observations, skips, families, faults };
 }
 
 test.each([false, true])(
