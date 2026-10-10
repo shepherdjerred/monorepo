@@ -1,4 +1,4 @@
-import { cp, mkdtemp, readdir, rm, symlink } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readdir, rm, symlink } from "node:fs/promises";
 import type * as FileSystem from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
@@ -30,6 +30,7 @@ import { rubricAxisIds } from "#build/judge.ts";
 import { DaemonClient } from "#build/daemon-client.ts";
 import { Journal } from "#build/journal.ts";
 import { BUILD_FILES, JudgeCritiqueRecordSchema } from "#protocol/build.ts";
+import { publishFiles } from "#build/file-transaction.ts";
 
 const failure = vi.hoisted(() => ({
   kind: "",
@@ -200,6 +201,24 @@ describe("compile evidence publication", () => {
 });
 
 describe("capture evidence publication", () => {
+  it("normalizes reversed corners before snapshot and identity publication", async () => {
+    const { workspace, env, box } = await captureFixture("capture-reversed");
+    const reversed = {
+      world: box.world,
+      min: box.max,
+      max: box.min,
+    };
+    await captureSite(env, workspace.dir, {
+      target: "sbx-000001",
+      box: reversed,
+    });
+    const manifest = await workspace.manifest();
+    expect(workspace.siteBox(manifest)).toEqual(box);
+    expect(await workspace.siteGrid()).toMatchObject({
+      size: { x: 10, y: 10, z: 10 },
+    });
+  });
+
   it.each(["journal", "install"])(
     "restores a same-box recapture on %s failure and invalidates old expected results on success",
     async (mode) => {
@@ -240,6 +259,63 @@ describe("capture evidence publication", () => {
       );
     },
   );
+});
+
+describe("interrupted publication recovery", () => {
+  it("restores the prior compile if the process exits after its journal install", async () => {
+    const { workspace } = await fixture("compile-crash-recovery");
+    await appendLog(workspace.dir, { kind: "note", text: "before compile" });
+    const oldOplog = await Bun.file(workspace.file(BUILD_FILES.oplog)).bytes();
+    const oldJournal = await Bun.file(
+      workspace.file(BUILD_FILES.journal),
+    ).bytes();
+    const staged = workspace.file(".compile-interrupted");
+    await mkdir(staged, { recursive: true });
+    await Bun.write(
+      workspace.file(BUILD_FILES.journal),
+      "new compile journal\n",
+    );
+    await Bun.write(
+      workspace.file("schematics/program-interrupted.schem"),
+      "new schematic",
+    );
+    await Bun.write(
+      path.join(staged, `previous-${BUILD_FILES.journal}`),
+      oldJournal,
+    );
+    await Bun.write(
+      path.join(staged, BUILD_FILES.oplog),
+      "new compile op log\n",
+    );
+    await Bun.write(
+      path.join(staged, ".transaction.json"),
+      `${JSON.stringify({
+        files: [
+          { file: "schematics/program-interrupted.schem", publish: true },
+          { file: BUILD_FILES.journal, publish: true },
+          { file: BUILD_FILES.oplog, publish: true },
+        ],
+      })}\n`,
+    );
+    await publishFiles(workspace, {
+      prefix: ".compile-retry-",
+      stage: async () => [],
+    });
+    expect(await Bun.file(workspace.file(BUILD_FILES.oplog)).bytes()).toEqual(
+      oldOplog,
+    );
+    expect(await Bun.file(workspace.file(BUILD_FILES.journal)).bytes()).toEqual(
+      oldJournal,
+    );
+    expect(
+      await Bun.file(
+        workspace.file("schematics/program-interrupted.schem"),
+      ).exists(),
+    ).toBe(false);
+    expect(
+      await Bun.file(path.join(staged, ".transaction.json")).exists(),
+    ).toBe(false);
+  });
 });
 
 describe("capture interruption identity", () => {

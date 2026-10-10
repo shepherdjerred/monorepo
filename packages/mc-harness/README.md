@@ -396,7 +396,9 @@ pick n | knockout [--among a,b] [--rubric] [--model]`) keep versions of
   installation and rollback. Direct journal appends use the same lock, and bout
   publication reads and stamps its outcomes while holding it. Run journals are
   staged with the frozen artifacts. A competing publisher fails before changing any
-  files; the operating system releases the lock when its process exits.
+  files; the operating system releases the lock when its process exits. A small
+  transaction record lets the next publisher restore the prior files after a
+  process exits mid-install, or finish cleanup after a completed install.
   Run holds that lock from reading its op log and program through resetting,
   replaying, snapshotting and publishing, so a recorded edit cannot slip into a
   frozen result attributed to an earlier program. Canvas creation also holds it.

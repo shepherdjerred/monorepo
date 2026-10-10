@@ -77,6 +77,19 @@ export async function captureSite(
   surface: string[];
 }> {
   const workspace = new BuildWorkspace(dir);
+  const box: Box = {
+    world: options.box.world,
+    min: {
+      x: Math.min(options.box.min.x, options.box.max.x),
+      y: Math.min(options.box.min.y, options.box.max.y),
+      z: Math.min(options.box.min.z, options.box.max.z),
+    },
+    max: {
+      x: Math.max(options.box.min.x, options.box.max.x),
+      y: Math.max(options.box.min.y, options.box.max.y),
+      z: Math.max(options.box.min.z, options.box.max.z),
+    },
+  };
   let result:
     | { siteHash: string; size: Vec3; render: string; surface: string[] }
     | undefined;
@@ -87,10 +100,10 @@ export async function captureSite(
       const parts = await snapshotFrozen(
         env,
         options.target,
-        options.box,
+        box,
         `site:${manifest.name}`,
       );
-      const region = await env.client.regionRead(options.target, options.box);
+      const region = await env.client.regionRead(options.target, box);
       const grid = gridFromRegionRead(region);
       const snapshotted = emptyGrid(grid.size);
       let dataVersion = 0;
@@ -98,9 +111,9 @@ export async function captureSite(
         const schematic = await readSchematic(part.bytes);
         dataVersion = schematic.dataVersion;
         placeGrid(snapshotted, schematic.grid, {
-          x: part.at.x - options.box.min.x,
-          y: part.at.y - options.box.min.y,
-          z: part.at.z - options.box.min.z,
+          x: part.at.x - box.min.x,
+          y: part.at.y - box.min.y,
+          z: part.at.z - box.min.z,
         });
       }
       if (snapshotted.diff(grid).count > 0) {
@@ -136,14 +149,14 @@ export async function captureSite(
       await writeCaptureIdentity(pending, {
         id,
         siteHash: info.siteHash,
-        box: options.box,
+        box,
       });
       await renderGrid(pending, grid, "site", `${manifest.name} site`);
       await stageJournal(workspace, pending, {
         kind: "capture",
         id,
         siteHash: info.siteHash,
-        box: options.box,
+        box,
       });
       result = {
         siteHash: info.siteHash,
