@@ -130,6 +130,7 @@ const expectedHostnames = new Set([
   "pokebot.sjer.red",
   "scout-for-lol.com",
   "beta.scout-for-lol.com",
+  "ts-mc.net",
   "docs.ts-mc.net",
   "ppl.glitter-boys.com",
   "cook.sjer.red",
@@ -142,7 +143,7 @@ if (
   [...expectedHostnames].some((hostname) => !actualHostnames.has(hostname))
 ) {
   throw new Error(
-    "Analytics registry must contain exactly the configured portfolio hosts",
+    "Analytics registry must contain exactly the configured product hosts",
   );
 }
 
