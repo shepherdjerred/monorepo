@@ -1133,6 +1133,10 @@ world remain intact. `maps:details` can re-export this payload from existing
 conversion batches, one disposable Paper owner at a time. Its checksummed
 provenance states the preservation policy. `rwfmap verify-details <folder>`
 checks positions, materials and terrain binding before runtime admission.
+Runtime restoration decodes inventory payloads on the bounded compute pool.
+Main-thread writes apply at most eight details per batch, with a 64 KiB encoded
+inventory budget; a larger permitted inventory receives its own batch. Each
+batch rechecks map ownership before accessing world state.
 Metadata repairs use `maps:import --repairs <file>` with the exact original ZIP
 hash and cannot overwrite valid source metadata.
 
@@ -1388,6 +1392,19 @@ the same invocation. PPO uses four epochs, 64-tick recurrent windows, clipped
 policy and value objectives, and imitation from the human training split.
 It recomputes recurrent prefixes with the current weights for every window.
 Validation and test matches do not enter PPO optimization or checkpoint selection.
+
+PPO freezes every installed map's admitted scenario, terrain hash and scenario
+hash in `training-maps.json`. Installed folders must match the neutral scenario
+registry exactly. Collection pairs red and blue on each map before advancing
+through the sorted catalog, then repeats the catalog. Each successful rollout
+records these identities, and the owner checks them against the fixture's
+original native setup. Map changes require an empty lobby; the old sandbox is
+stopped before a new one opens. All map staging, boot and transitions consume
+the same original seed deadline. A pilot cannot freeze until confirmed actor
+controls from both sides of every admitted map have contributed to completed
+optimizer steps. Diagnostics select Training Yard only.
+The strength evaluator still requires a single-map catalog; its multi-map
+schedule remains a separate prerequisite before evaluating an expanded pilot.
 
 Damage rewards use cumulative Paper damage sampled before any body acts, with
 `(damage dealt - damage received) / 20`, a `0.001` decision cost, and a `+1/-1`

@@ -252,6 +252,7 @@ def update(
     ]
     model.train()
     completed, count = 0, 0
+    optimized_episodes: set[int] = set()
     stopped = False
     maximum_kl = 0.0
     totals = {"policy_loss": 0.0, "value_loss": 0.0, "entropy": 0.0, "imitation_nll": 0.0}
@@ -306,6 +307,8 @@ def update(
             objective.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0, error_if_nonfinite=True)
             optimizer.step()
+            if mask.sum().item() > 0:
+                optimized_episodes.add(index)
             count += 1
             for key, item in zip(totals, (policy, value, entropy_mean, clone), strict=True):
                 totals[key] += float(item.detach().item())
@@ -315,6 +318,7 @@ def update(
     model.eval()
     return {
         "windows_updated": count,
+        "optimized_episodes": sorted(optimized_episodes),
         "epochs_completed": completed,
         "kl_stopped": stopped,
         "max_approximate_kl": maximum_kl,

@@ -2,8 +2,17 @@ import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import protocol from "#learning-wire";
-import { frozenManifest, openPaperDuels, root } from "./sandbox.ts";
+import {
+  frozenManifest,
+  frozenTrainingMaps,
+  openPaperDuels,
+  root,
+} from "./sandbox.ts";
 import { WorkerBudget } from "./worker-process.ts";
+import { PaperMapOwner } from "./maps/owner.ts";
+import { MapBinding, scenarioHash } from "./maps/plan.ts";
+import { scenarioFor } from "./maps/scenario.ts";
+import { isDeepStrictEqual } from "node:util";
 
 const actionFields = String.raw`[a-f0-9-]+ [a-f0-9-]+ \d+ \d+ [0-8] [01] [01] [01] [01]`;
 const WorkerMessage = z.discriminatedUnion("kind", [
@@ -15,7 +24,7 @@ const WorkerMessage = z.discriminatedUnion("kind", [
         .string()
         .regex(
           new RegExp(
-            String.raw`^(?:state|cancel|begin \d+ (?:red|blue) external (?:${protocol.opponents.join("|")})|act ${actionFields}|acts ${actionFields} ${actionFields})$`,
+            String.raw`^(?:state|cancel|map [a-z0-9]+(?:-[a-z0-9]+)*|begin \d+ (?:red|blue) external (?:${protocol.opponents.join("|")})|act ${actionFields}|acts ${actionFields} ${actionFields})$`,
             "u",
           ),
         ),
@@ -74,6 +83,16 @@ export async function runPaperWorker(options: WorkerOptions) {
     Math.min(options.seconds * 1000, deadlineMs - Date.now());
   await mkdir(path.dirname(output), { recursive: true });
   await mkdir(output, { recursive: false });
+  const maps = await frozenTrainingMaps(options.diagnostic);
+  const firstMap = maps.maps[0];
+  if (firstMap === undefined) throw new Error("Training has no admitted maps");
+  // Evaluation stays on its frozen single-map protocol until its map schedule is upgraded.
+  if (options.evaluation !== undefined && maps.maps.length !== 1)
+    throw new Error("Multi-map strength evaluation is not yet implemented");
+  await Bun.write(
+    path.join(output, "training-maps.json"),
+    JSON.stringify(maps, null, 2) + "\n",
+  );
   await Bun.write(
     path.join(output, "manifest.json"),
     JSON.stringify(
@@ -81,6 +100,7 @@ export async function runPaperWorker(options: WorkerOptions) {
         version: 2,
         ...(await frozenManifest()),
         ...options,
+        maps,
         acceptance: "unaccepted",
         startedMs: Date.now(),
       },
@@ -91,7 +111,15 @@ export async function runPaperWorker(options: WorkerOptions) {
   if (Date.now() >= deadlineMs)
     throw new Error("budget exhausted while freezing inputs");
   const child = spawnWorker(options);
-  const session: Session = { completed: false, lastId: 0 };
+  const session: Session = {
+    completed: false,
+    lastId: 0,
+    firstMap: firstMap.map,
+    training: options.evaluation === undefined,
+    maps: new PaperMapOwner(maps, output, (directory, map) =>
+      openPaperDuels(directory, undefined, "duel", map),
+    ),
+  };
   // Imports, uv resolution, device warming and Paper boot are all inside the
   // owner's window. Cleanup may outlive it; optimization cannot.
   const budget = new WorkerBudget(child, monotonicDeadline - performance.now());
@@ -116,7 +144,7 @@ export async function runPaperWorker(options: WorkerOptions) {
       budget.stop();
       await child.exited;
     } finally {
-      await session.owner?.stop();
+      await session.maps.stop();
     }
   }
 }
@@ -134,6 +162,8 @@ function spawnWorker(options: WorkerOptions) {
           options.episodes.toString(),
           "--opponent",
           options.opponent,
+          "--maps",
+          path.join(output, "training-maps.json"),
           ...(options.dataset === undefined
             ? []
             : ["--dataset", options.dataset]),
@@ -183,7 +213,10 @@ function spawnWorker(options: WorkerOptions) {
 
 type Worker = ReturnType<typeof spawnWorker>;
 type Session = {
-  owner?: Awaited<ReturnType<typeof openPaperDuels>>;
+  maps: PaperMapOwner<Awaited<ReturnType<typeof openPaperDuels>>>;
+  ready?: true;
+  firstMap: string;
+  training: boolean;
   completed: boolean;
   lastId: number;
 };
@@ -194,12 +227,15 @@ async function answer(
   id: number,
   command: string,
 ) {
-  if (session.owner === undefined || id !== session.lastId + 1)
+  if (session.ready === undefined || id !== session.lastId + 1)
     throw new Error("worker command before readiness or out of order");
   session.lastId = id;
   let response: { id: number; state?: unknown; error?: string };
   try {
-    response = { id, state: await session.owner.duels.command(command) };
+    const state = command.startsWith("map ")
+      ? await session.maps.select(command.slice(4))
+      : await session.maps.owner.duels.command(command);
+    response = { id, state };
   } catch (error) {
     response = {
       id,
@@ -214,7 +250,7 @@ async function serveRequests(child: Worker, session: Session, output: string) {
   for await (const line of lines(child.stdout)) {
     const raw: unknown = JSON.parse(line);
     const message = WorkerMessage.parse(raw);
-    if (session.owner === undefined && message.kind !== "ready")
+    if (session.ready === undefined && message.kind !== "ready")
       throw new Error("worker report before readiness");
     if (session.completed)
       throw new Error("worker sent messages after completion");
@@ -223,13 +259,69 @@ async function serveRequests(child: Worker, session: Session, output: string) {
       continue;
     }
     console.warn(JSON.stringify(message));
-    if (message.kind === "ready") {
-      if (session.owner !== undefined)
-        throw new Error("duplicate worker readiness");
-      session.owner = await openPaperDuels(output);
-    }
-    if (message.kind === "complete") session.completed = true;
+    await handleReport(session, message, output);
   }
+}
+
+async function handleReport(
+  session: Session,
+  message: Exclude<z.infer<typeof WorkerMessage>, { kind: "command" }>,
+  output: string,
+) {
+  switch (message.kind) {
+    case "ready": {
+      if (session.ready !== undefined)
+        throw new Error("duplicate worker readiness");
+      await session.maps.select(session.firstMap);
+      session.ready = true;
+      break;
+    }
+    case "episode": {
+      if (!session.training) break;
+      const setup = await verifyEpisode(session, message.report);
+      const directory = path.join(output, "native-setups");
+      await mkdir(directory, { recursive: true, mode: 0o700 });
+      await Bun.write(
+        path.join(directory, `${setup.match}.json`),
+        JSON.stringify(setup, null, 2) + "\n",
+      );
+      break;
+    }
+    case "complete":
+      session.completed = true;
+      break;
+    case "update":
+    case "censored":
+      break;
+  }
+}
+
+async function verifyEpisode(
+  session: Session,
+  report: Record<string, unknown>,
+) {
+  if (report["engine"] !== "Paper")
+    throw new Error("PPO rollout must come from Paper");
+  const binding = MapBinding.parse({
+    map: report["map"],
+    blocksSha256: report["blocksSha256"],
+    scenarioSha256: report["scenarioSha256"],
+  });
+  const setup = await session.maps.owner.duels.setup();
+  if (
+    !isDeepStrictEqual(binding, session.maps.binding) ||
+    setup.map !== binding.map ||
+    scenarioHash(setup.scenario) !== binding.scenarioSha256 ||
+    !isDeepStrictEqual(setup.scenario, scenarioFor(binding.map)) ||
+    setup.scenario.mapSha256 !== binding.blocksSha256 ||
+    setup.match !== report["match"] ||
+    setup.seed !== report["seed"] ||
+    setup.side !== report["side"] ||
+    setup.opponent !== report["opponent"] ||
+    setup.mode !== "external"
+  )
+    throw new Error("PPO rollout differs from its actual native map setup");
+  return setup;
 }
 
 async function* lines(stream: ReadableStream<Uint8Array>) {

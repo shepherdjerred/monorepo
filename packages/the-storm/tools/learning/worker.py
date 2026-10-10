@@ -16,8 +16,18 @@ import torch
 
 from curriculum import STAGES, Curriculum, History
 from data import Dataset, Sequence
-from paper import Discontinuity, OwnerConsole, collect
-from policy import FEATURES, device, digest, load_checkpoint, mapping, write_checkpoint
+from map_selection.plan import MapBinding, read_maps, rollout_map
+from paper import Discontinuity, OwnerConsole, collect, wait
+from policy import (
+    FEATURES,
+    array,
+    device,
+    digest,
+    integer,
+    load_checkpoint,
+    mapping,
+    write_checkpoint,
+)
 from ppo import ActorCritic, Settings, sample, update
 from train import BudgetExpired, fit
 from train import Settings as BcSettings
@@ -43,6 +53,7 @@ def main() -> None:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--device", required=True, choices=("cpu", "mps"))
     parser.add_argument("--seed", type=int, required=True)
+    parser.add_argument("--maps", type=Path, required=True)
     parser.add_argument("--max-seconds", type=float, default=3600)
     parser.add_argument("--deadline-ms", type=float, required=True)
     parser.add_argument("--curriculum", action="store_true")
@@ -62,6 +73,7 @@ def main() -> None:
     )
     parser.add_argument("--diagnostic", action="store_true")
     args = parser.parse_args()
+    maps = read_maps(args.maps)
     if (
         not 0 <= args.seed <= 1_000_000_000
         or not 0 < args.max_seconds <= 8 * 3600
@@ -146,6 +158,9 @@ def main() -> None:
     console = OwnerConsole()
     # This handshake waits for the owner's Paper boot before allocating the
     # remaining PPO window. Boot and BC are still charged to the outer budget.
+    selected = rollout_map(maps, 0)
+    if MapBinding.parse(console.command(f"map {selected.map}")) != selected:
+        raise ValueError("Paper selected a different frozen map")
     console.command("state")
     curriculum = Curriculum(time.monotonic(), deadline, args.diagnostic)
     history = History(args.output / "history", data.fingerprint, args.seed)
@@ -153,6 +168,7 @@ def main() -> None:
         history.freeze(model.actor, 0, "bc")
     games: list[dict[str, object]] = []
     updates: list[dict[str, object]] = []
+    optimized_maps: set[tuple[str, str]] = set()
     censored: list[str] = []
     attempts, consecutive_censored = 0, 0
     expired = False
@@ -163,8 +179,21 @@ def main() -> None:
             if args.curriculum and curriculum.stage != previous_stage:
                 history.freeze(model.actor, len(updates), STAGES[previous_stage])
             episodes = []
+            batch_games: list[dict[str, object]] = []
             historical = None
             while len(episodes) < args.episodes:
+                next_map = rollout_map(maps, len(games))
+                if next_map != selected:
+                    wait(
+                        console,
+                        lambda state: state.phase == "LOBBY",
+                        min(deadline, time.monotonic() + 30),
+                    )
+                    if MapBinding.parse(console.command(f"map {next_map.map}")) != next_map:
+                        raise ValueError("Paper selected a different frozen map")
+                    selected = next_map
+                    if time.monotonic() >= deadline:
+                        raise BudgetExpired
                 seed = args.seed + len(games) // 2
                 side = "red" if len(games) % 2 == 0 else "blue"
                 attempts += 1
@@ -184,8 +213,10 @@ def main() -> None:
                         ) from error
                     continue
                 consecutive_censored = 0
+                report.update(selected.report())
                 episodes.append(episode)
                 games.append(report)
+                batch_games.append(report)
                 with (args.output / "rollouts.jsonl").open("a", encoding="utf-8") as stream:
                     stream.write(
                         json.dumps(
@@ -212,6 +243,11 @@ def main() -> None:
                 model.load_state_dict(before_update, strict=True)
                 raise
             updates.append(report)
+            for index in array(report["optimized_episodes"]):
+                game = batch_games[integer(index, 0, len(batch_games) - 1)]
+                map_id, side = game["map"], game["side"]
+                assert isinstance(map_id, str) and isinstance(side, str)
+                optimized_maps.add((map_id, side))
             if args.curriculum:
                 curriculum.completed()
                 if len(updates) % 25 == 0:
@@ -230,6 +266,11 @@ def main() -> None:
         "dataset_sha256": data.fingerprint,
         "initial_bc_weights_sha256": initial_sha,
         "seed": args.seed,
+        "maps": [entry.report() for entry in maps],
+        "map_coverage_complete": all(
+            all((entry.map, side) in optimized_maps for side in ("red", "blue")) for entry in maps
+        ),
+        "optimized_map_sides": sorted(optimized_maps),
         "budget_seconds": args.max_seconds,
         "owner_deadline_ms": args.deadline_ms,
         "elapsed_seconds": time.monotonic() - began,

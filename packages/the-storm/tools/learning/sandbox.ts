@@ -23,9 +23,12 @@ import {
 } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 import { openNativeObserver } from "#learning/native/observer.ts";
 import { stageMap } from "#learning/maps/stage.ts";
+import { trainingMaps } from "#learning/maps/plan.ts";
 
 export const root = path.resolve(import.meta.dirname, "../..");
 const content = path.join(root, "server/owned/plugins/TheStorm");
+export const frozenTrainingMaps = (diagnostic: boolean) =>
+  trainingMaps(content, diagnostic);
 const stormJar = path.join(root, "plugin/dist/build/libs/TheStorm.jar");
 const fixturesJar = path.join(
   root,
@@ -43,6 +46,7 @@ export async function frozenManifest() {
     maps,
     mapSources,
     baker,
+    mapSelection,
   ] = await Promise.all([
     readdir(learning),
     readdir(path.join(learning, "preference")),
@@ -58,6 +62,7 @@ export async function frozenManifest() {
       recursive: true,
       withFileTypes: true,
     }),
+    readdir(path.join(learning, "map_selection")),
   ]);
   const sources = [
     ...listing,
@@ -65,6 +70,7 @@ export async function frozenManifest() {
     ...promotion.map((file) => `promotion/${file}`),
     ...native.map((file) => `native/${file}`),
     ...mapSources.map((file) => `maps/${file}`),
+    ...mapSelection.map((file) => `map_selection/${file}`),
   ]
     .filter((file) => /\.(?:py|ts|toml|lock|json)$/u.test(file))
     .sort();

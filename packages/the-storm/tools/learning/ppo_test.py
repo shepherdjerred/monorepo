@@ -174,6 +174,7 @@ class PpoTest(unittest.TestCase):
         updated = report["windows_updated"]
         assert isinstance(updated, int)
         self.assertGreater(updated, 0)
+        self.assertEqual(report["optimized_episodes"], [0])
         self.assertFalse(torch.equal(original, model.actor.head.weight))
         self.assertEqual(report["imitation_split"], "train")
         self.assertFalse(report["test_used_for_selection"])
@@ -184,6 +185,25 @@ class PpoTest(unittest.TestCase):
             self.assertEqual(manifest["kind"], "rwf-trooper-ppo")
             self.assertEqual(manifest["acceptance"], "unaccepted")
             torch.testing.assert_close(restored.head.weight, model.actor.head.weight)
+
+    def test_map_coverage_excludes_fallback_only_episodes(self) -> None:
+        model = ActorCritic(Policy())
+        confirmed, fallback = make_episode(model), make_episode(model)
+        fallback.controlled.zero_()
+        demonstrations = Dataset(
+            [Sequence(confirmed.observations, confirmed.actions)], [], [], "synthetic"
+        )
+        report = update(
+            model,
+            torch.optim.Adam(model.parameters()),
+            [confirmed, fallback],
+            demonstrations,
+            Settings(epochs=1),
+            random.Random(1),
+            torch.device("cpu"),
+            time.monotonic() + 30,
+        )
+        self.assertEqual(report["optimized_episodes"], [0])
 
     def test_budget_expiry_does_not_run_an_optimizer_step(self) -> None:
         model = ActorCritic(Policy())
