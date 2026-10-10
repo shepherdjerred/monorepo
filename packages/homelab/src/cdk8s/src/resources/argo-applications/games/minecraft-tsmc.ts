@@ -1,5 +1,6 @@
 import type { Chart } from "cdk8s";
 import { createMinecraftProxyTrust } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/proxy-trust.ts";
+import { createMinecraftPublicStatus } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/public-status.ts";
 import { Size } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
@@ -49,6 +50,7 @@ export const THE_STORM_PAPER_VERSION = "26.2";
  */
 export function createMinecraftTsmcApp(chart: Chart) {
   createMinecraftProxyTrust(chart, NAMESPACE, 25_565);
+  createMinecraftPublicStatus(chart);
   // The Storm bridge credentials. Required fields (UPPERCASE_SNAKE labels, matching
   // the env-var ref below): DISCORD_BOT_TOKEN. Channel routing lives in Git.
   new OnePasswordItem(chart, "minecraft-tsmc-discord-1p", {
@@ -209,6 +211,9 @@ export function createMinecraftTsmcApp(chart: Chart) {
       FLIPT_URL: "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
       FLIPT_ENVIRONMENT: "prod",
       CFG_PROXY_PROTOCOL: "true",
+      // Private forum status uses UDP Query, without the PROXY-only game port.
+      ENABLE_QUERY: "true",
+      QUERY_PORT: "25565",
       // Kicks idle players after 60 minutes (server.properties
       // player-idle-timeout, formerly set by the synced server.properties).
       PLAYER_IDLE_TIMEOUT: "60",

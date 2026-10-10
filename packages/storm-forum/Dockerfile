@@ -4,6 +4,7 @@ WORKDIR /app
 COPY --parents package.json bun.lock bunfig.toml patches/ scripts/package.json packages/*/package.json packages/*/packages/*/package.json packages/docs/wiki/package.json packages/homelab/src/cdk8s/package.json packages/homelab/src/helm-types/package.json ./
 RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/storm-forum'
 COPY packages/storm-theme /app/packages/storm-theme
+COPY packages/the-storm/public-status.json /app/packages/the-storm/public-status.json
 RUN bun /app/packages/storm-theme/scripts/generate.ts --check && bun build /app/packages/storm-theme/src/browser.ts --target browser --minify --outdir /app/packages/storm-theme/dist
 
 FROM php:8.5.11-fpm-bookworm@sha256:dd198c828c224e479bdaa184cdcf04a28c73d186bf5a885493bf9cc78d7196ef AS runtime
@@ -23,6 +24,7 @@ COPY packages/feature-flags/src /app/packages/feature-flags/src
 COPY packages/storm-forum /opt/storm-forum
 RUN ln -s /app/packages/storm-forum/node_modules /opt/storm-forum/node_modules \
     && ln -s /app/packages/storm-theme /opt/storm-theme
+RUN bun build /opt/storm-forum/browser/minecraft.ts --target browser --minify --outfile /opt/storm-forum/dist/minecraft.js
 COPY packages/storm-forum/runtime/php.ini /usr/local/etc/php/conf.d/storm.ini
 COPY packages/storm-forum/runtime/fpm.conf /usr/local/etc/php-fpm.conf
 ARG VERSION=dev
