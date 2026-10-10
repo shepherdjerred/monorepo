@@ -9,12 +9,13 @@ import tempfile
 import unittest
 import zipfile
 from pathlib import Path
+from typing import Any
 
 SERVER = Path(__file__).resolve().parent
 
 
 class LiveMapTests(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.scratch = tempfile.TemporaryDirectory()
         self.addCleanup(self.scratch.cleanup)
         self.root = Path(self.scratch.name)
@@ -26,7 +27,7 @@ class LiveMapTests(unittest.TestCase):
             'const filename="bluemap-screenshot.png";'
         )
 
-    def fixture(self, script=None):
+    def fixture(self, script: str | None = None) -> None:
         inner = io.BytesIO()
         with zipfile.ZipFile(inner, "w") as web:
             web.writestr(
@@ -51,13 +52,18 @@ class LiveMapTests(unittest.TestCase):
         with zipfile.ZipFile(self.jar, "w") as jar:
             jar.writestr("de/bluecolored/bluemap/webapp.zip", inner.getvalue())
 
-    def build(self, output=None):
+    def build(self, output: Path | None = None) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
             ["bash", str(SERVER / "build-livemap.sh"), str(self.jar), str(output or self.output)],
             capture_output=True, text=True, timeout=10,
         )
 
-    def install(self, target, volume=None, **identity):
+    def install(
+        self,
+        target: Path,
+        volume: Path | None = None,
+        **identity: Any,
+    ) -> subprocess.CompletedProcess[str]:
         # Load the real entrypoint functions without running its production main.
         definitions = (SERVER / "storm-entrypoint.sh").read_text().split("\nrequire_progression_preparation\n")[0]
         metadata = (volume or self.root).stat()
@@ -80,7 +86,7 @@ class LiveMapTests(unittest.TestCase):
         self.assertEqual(icon.read_bytes(), (SERVER / "livemap/favicon.svg").read_bytes())
         self.assertIn(
             'name="og:image" content="https://raw.githubusercontent.com/shepherdjerred/monorepo/'
-            '9580503bb0cb6d49110e3259d61bb36c0493a632/packages/the-storm/server/livemap/social.png"',
+            '12bedf8fb050116786c395fe6604b81e3de5dcf4/packages/the-storm/server/livemap/social.png"',
             html,
         )
         entry = next((self.output / "assets").glob("livemap-*.js"))
@@ -112,7 +118,7 @@ class LiveMapTests(unittest.TestCase):
         result = self.build(second)
         self.assertEqual(result.returncode, 0, result.stderr)
 
-        def contents(root):
+        def contents(root: Path) -> dict[str, bytes]:
             return {str(p.relative_to(root)): p.read_bytes() for p in root.rglob("*") if p.is_file()}
 
         self.assertEqual(contents(self.output), contents(second))

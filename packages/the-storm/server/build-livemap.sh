@@ -42,7 +42,7 @@ favicon_name=livemap-icon-${favicon_hash:0:16}.svg
 install -m 0644 "$branding/favicon.svg" "$out/assets/$favicon_name"
 # Open Graph crawlers require an absolute URL. Pin this source asset to the
 # PR commit so the URL works before the LiveMap server image is released.
-preview_url="https://raw.githubusercontent.com/shepherdjerred/monorepo/9580503bb0cb6d49110e3259d61bb36c0493a632/packages/the-storm/server/livemap/social.png"
+preview_url="https://raw.githubusercontent.com/shepherdjerred/monorepo/12bedf8fb050116786c395fe6604b81e3de5dcf4/packages/the-storm/server/livemap/social.png"
 
 for locale in "$out"/lang/*.conf; do
   [[ ${locale##*/} == settings.conf ]] && continue
