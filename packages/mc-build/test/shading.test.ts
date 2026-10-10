@@ -37,20 +37,20 @@ describe("glass skylight", () => {
 
 describe("block light through glazed partitions", () => {
   it.each([
-    "glass",
-    "glass_pane",
-    "white_stained_glass",
-    "blue_stained_glass_pane",
-    "tinted_glass",
-    "stone",
-  ])("handles %s without making it passable", (block) => {
+    { block: "glass", expected: 13 },
+    { block: "glass_pane", expected: 13 },
+    { block: "white_stained_glass", expected: 13 },
+    { block: "blue_stained_glass_pane", expected: 13 },
+    { block: "tinted_glass", expected: 0 },
+    { block: "stone", expected: 0 },
+    { block: "light_gray_concrete", expected: 0 },
+    { block: "light_blue_wool", expected: 0 },
+  ])("handles $block without making it passable", ({ block, expected }) => {
     const grid = new BlockGrid({ x: 5, y: 3, z: 3 }, "minecraft:stone");
     grid.set(1, 1, 1, "minecraft:lantern");
     grid.set(2, 1, 1, `minecraft:${block}`);
     grid.set(3, 1, 1, "minecraft:air");
-    expect(blockLightLevels(grid)[grid.index(3, 1, 1)]).toBe(
-      block === "stone" || block === "tinted_glass" ? 0 : 13,
-    );
+    expect(blockLightLevels(grid)[grid.index(3, 1, 1)]).toBe(expected);
     expect(isPassable(`minecraft:${block}`)).toBe(false);
   });
 });

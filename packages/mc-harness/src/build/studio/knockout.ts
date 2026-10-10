@@ -197,6 +197,16 @@ async function bout(
   };
 }
 
+function matchingCheckpoint(
+  checkpoint: BuildManifest["knockout"],
+  fingerprintFor: (participants: readonly string[]) => string,
+): BuildManifest["knockout"] {
+  if (checkpoint === undefined) return undefined;
+  return checkpoint.fingerprint === fingerprintFor(checkpoint.participants)
+    ? checkpoint
+    : undefined;
+}
+
 /**
  * Runs the tournament. `among` limits the challengers; the incumbent is
  * always in the pool. With no incumbent yet, the first candidate starts as
@@ -224,29 +234,37 @@ export async function knockout(
       throw new Error(`no candidate "${name}" saved in ${workspace.dir}`);
     }
   }
-  const fingerprint = createHash("sha256")
-    .update(
-      JSON.stringify({
-        pool,
-        candidates: candidates.map(({ name, gridHash, at, capture }) => ({
-          name,
-          gridHash,
-          at,
-          capture,
-        })),
-        site: manifest.site,
-        world: manifest.world,
-        rubric: options.rubric,
-        model: options.model,
-        judge: judgeFingerprint(options.rubric),
-      }),
-    )
-    .digest("hex");
-  const previous = manifest.knockout;
+  const fingerprintFor = (participants: readonly string[]) =>
+    createHash("sha256")
+      .update(
+        JSON.stringify({
+          pool,
+          candidates: candidates
+            .filter(({ name }) => participants.includes(name))
+            .map(({ name, gridHash, at, capture }) => ({
+              name,
+              gridHash,
+              at,
+              capture,
+            })),
+          site: manifest.site,
+          world: manifest.world,
+          rubric: options.rubric,
+          model: options.model,
+          judge: judgeFingerprint(options.rubric),
+        }),
+      )
+      .digest("hex");
+  const previous = matchingCheckpoint(manifest.knockout, fingerprintFor);
+  const initial = seeding(pool, saved, manifest.best?.candidate);
+  const participants = previous?.participants ?? [
+    ...new Set([initial.incumbent, ...pool]),
+  ];
+  const fingerprint = fingerprintFor(participants);
   const seeds =
-    previous?.fingerprint === fingerprint
-      ? { incumbent: previous.incumbent, challengers: previous.pending }
-      : seeding(pool, saved, manifest.best?.candidate);
+    previous === undefined
+      ? initial
+      : { incumbent: previous.incumbent, challengers: previous.pending };
   const sheets = await sheetsFor(
     dir,
     [seeds.incumbent, ...seeds.challengers],
@@ -258,7 +276,12 @@ export async function knockout(
   if (seeds.challengers.length > 0) {
     manifest = {
       ...manifest,
-      knockout: { fingerprint, incumbent, pending: seeds.challengers },
+      knockout: {
+        fingerprint,
+        participants,
+        incumbent,
+        pending: seeds.challengers,
+      },
     };
     await workspace.writeManifest(manifest);
   }
@@ -273,6 +296,7 @@ export async function knockout(
     // A later model failure must retry from the winner already recorded in the journal.
     const progress = {
       fingerprint,
+      participants,
       incumbent,
       pending: seeds.challengers.slice(index + 1),
     };

@@ -5,7 +5,6 @@
  * sets no next steps — the agent decides those from the record, the way
  * claude-paint's compaction hands a painter its own journal back.
  */
-import { readdir } from "node:fs/promises";
 import {
   BUILD_FILES,
   type BuildLogEntry,
@@ -14,6 +13,7 @@ import {
 } from "#protocol/build.ts";
 import { allOf, lastOf, readLog } from "./build-log.ts";
 import { readSidecar } from "./sidecar.ts";
+import { listCandidates } from "./studio/candidates.ts";
 import { BuildWorkspace } from "./workspace.ts";
 
 export type ResumeState = {
@@ -42,14 +42,8 @@ async function latestSidecar(
 }
 
 async function candidateNames(workspace: BuildWorkspace): Promise<string[]> {
-  try {
-    const names = await readdir(workspace.file(BUILD_FILES.candidatesDir));
-    return names.toSorted();
-  } catch (error) {
-    if (error instanceof Error && "code" in error && error.code === "ENOENT")
-      return [];
-    throw error;
-  }
+  const candidates = await listCandidates(workspace.dir);
+  return candidates.map(({ name }) => name).toSorted();
 }
 
 export async function resumeState(dir: string): Promise<ResumeState> {

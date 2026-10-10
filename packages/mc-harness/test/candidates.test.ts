@@ -1,4 +1,4 @@
-import { cp, mkdtemp, rm, readdir } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, rm, readdir } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterAll, describe, expect, it, vi } from "vitest";
@@ -853,8 +853,21 @@ const prefersWide: AskJudge = (first, second) =>
 const biased: AskJudge = () =>
   Promise.resolve({ winner: "first", confidence: 0.7, reasons: ["position"] });
 
-async function interruptedTournament(name: string): Promise<BuildWorkspace> {
+async function interruptedTournament(
+  name: string,
+  options: { among?: string[]; outsideIncumbent?: boolean } = {},
+): Promise<BuildWorkspace> {
   const workspace = await makeBuild(name);
+  if (options.outsideIncumbent === true) {
+    await pastePart(workspace, 1);
+    await saveCandidate(workspace.dir, "seed");
+    await knockout(workspace.dir, {
+      among: ["seed"],
+      rubric: "micro",
+      model: "stub",
+      ask: prefersWide,
+    });
+  }
   for (const [candidate, width] of [
     ["a", 2],
     ["b", 6],
@@ -870,12 +883,44 @@ async function interruptedTournament(name: string): Promise<BuildWorkspace> {
     return prefersWide(first, second);
   };
   await expect(
-    knockout(workspace.dir, { rubric: "micro", model: "stub", ask }),
+    knockout(workspace.dir, {
+      ...(options.among === undefined ? {} : { among: options.among }),
+      rubric: "micro",
+      model: "stub",
+      ask,
+    }),
   ).rejects.toThrow("model unavailable");
   return workspace;
 }
 
 describe("knockout checkpoint invalidation", () => {
+  it.each([false, true])(
+    "ignores unrelated saves with an outside incumbent of %s",
+    async (outsideIncumbent) => {
+      const among = ["a", "b", "c"];
+      const workspace = await interruptedTournament(
+        `knockout-unrelated-${outsideIncumbent.toString()}`,
+        { among, outsideIncumbent },
+      );
+      const interrupted = await workspace.manifest();
+      const pending = interrupted.knockout?.pending;
+      if (pending === undefined)
+        throw new Error("fixture has no pending tournament");
+      expect(pending).toEqual(outsideIncumbent ? ["b", "c"] : ["c"]);
+      await pastePart(workspace, 7);
+      await saveCandidate(workspace.dir, "d");
+      const ask = vi.fn(prefersWide);
+      const retry = await knockout(workspace.dir, {
+        among,
+        rubric: "micro",
+        model: "stub",
+        ask,
+      });
+      expect(ask).toHaveBeenCalledTimes(pending.length * 2);
+      expect(retry.bouts.map(({ challenger }) => challenger)).toEqual(pending);
+      expect(retry.best).toBe("b");
+    },
+  );
   it.each(["model", "candidate"])(
     "starts a new tournament after the %s changes",
     async (change) => {
@@ -1005,6 +1050,27 @@ describe("offline world boundaries", () => {
 });
 
 describe("candidate capture and judgment evidence", () => {
+  it("rejects a partial candidate before listing, resuming or judging", async () => {
+    const workspace = await makeBuild("partial-candidate");
+    const partial = workspace.file("candidates/partial");
+    await mkdir(partial, { recursive: true });
+    await Bun.write(
+      path.join(partial, BUILD_FILES.program),
+      "// interrupted save\n",
+    );
+    const ask = vi.fn(prefersWide);
+    await expect(listCandidates(workspace.dir)).rejects.toMatchObject({
+      code: "ENOENT",
+    });
+    await expect(resumeState(workspace.dir)).rejects.toMatchObject({
+      code: "ENOENT",
+    });
+    await expect(
+      knockout(workspace.dir, { rubric: "micro", model: "stub", ask }),
+    ).rejects.toMatchObject({ code: "ENOENT" });
+    expect(ask).not.toHaveBeenCalled();
+    expect(await readLog(workspace.dir)).toEqual([]);
+  });
   it("treats an absent candidates directory as empty and propagates other read errors", async () => {
     const workspace = await makeBuild("candidate-directory-errors");
     expect(await listCandidates(workspace.dir)).toEqual([]);

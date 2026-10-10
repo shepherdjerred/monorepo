@@ -217,7 +217,6 @@ export async function listCandidates(
     const info = Bun.file(
       path.join(candidateDir(workspace, name), CANDIDATE_FILES.info),
     );
-    if (!(await info.exists())) continue;
     const candidate = CandidateSchema.parse(await info.json());
     candidates.push({ ...candidate, best: manifest.best?.candidate === name });
   }

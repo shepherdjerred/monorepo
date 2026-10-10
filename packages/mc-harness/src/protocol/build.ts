@@ -343,6 +343,8 @@ export const BuildManifestSchema = z.strictObject({
   knockout: z
     .strictObject({
       fingerprint: z.string().min(1),
+      /** Original pool plus its starting incumbent, retained across winner changes. */
+      participants: z.array(z.string().min(1)),
       incumbent: z.string().min(1),
       pending: z.array(z.string().min(1)),
     })

@@ -271,7 +271,10 @@ pick n | knockout [--among a,b] [--rubric] [--model]`) keep versions of
   restores a candidate as the working version.
   Retrying an interrupted tournament with the same pool, candidate versions,
   rubric and model resumes its remaining challengers without rejudging earlier
-  bouts. Changing those inputs starts a new tournament.
+  bouts. Changing those inputs starts a new tournament. Saving candidates
+  outside an explicit `--among` pool does not reset its checkpoint; the
+  original incumbent remains part of its fingerprint even after defeat.
+  Incomplete candidate directories fail listing, resume and judging.
   Candidates record the captured site's hash, world and bounds; picking or
   judging one against another capture fails. Recapturing clears the incumbent
   and preserves old candidates; use `--among` to select candidates saved for
