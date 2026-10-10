@@ -42,7 +42,11 @@ export async function freezeInputs(root: string, output: string) {
       path.join(producer, "sources/tools/learning/maps"),
       { recursive: true },
     ),
-    ...["rwf-map-scenario.json", "rwf-map-scenarios.json"].map((file) =>
+    ...[
+      "rwf-map-scenario.json",
+      "rwf-map-scenarios.json",
+      "rwf-close-starts.json",
+    ].map((file) =>
       cp(
         path.join(root, "plugin/modules/rwfbots/src/main/resources", file),
         path.join(producer, file),

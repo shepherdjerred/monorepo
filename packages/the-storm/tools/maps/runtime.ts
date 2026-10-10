@@ -3,18 +3,13 @@ import { cp, mkdir, readdir } from "node:fs/promises";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { z } from "zod";
-import { stormModuleConfig } from "@shepherdjerred/mc-harness/sandbox/storm.ts";
 import { serverLogs } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 import { startFakeBrain } from "#e2e/harness/fake-brain.ts";
 import { startServer } from "#e2e/harness/server.ts";
 import { RconClient } from "#e2e/harness/rcon.ts";
-import {
-  rwfTestSettings,
-  rwfRecordingSalt,
-} from "#e2e/harness/rwf-settings.ts";
 import { status } from "#e2e/harness/rwf-match.ts";
 import { freezeInputs } from "./inputs.ts";
-import { root } from "./paper.ts";
+import { root, runtimeMapServerConfig, waitForMapState } from "./paper.ts";
 import { Lifecycle, verifyBounds } from "./lifecycle.ts";
 
 const args = parseArgs({
@@ -92,34 +87,10 @@ try {
     cacheDir: path.join(root, ".cache/e2e/learning"),
     bootTimeoutMs: 180_000,
     warmCache: true,
-    stormJar: inputs.stormJar,
-    fixturesJar: inputs.fixturesJar,
-    ownedConfigDir: content,
-    stormConfig: stormModuleConfig(
-      await Bun.file(path.join(content, "config.yml")).text(),
-      ["economy", "mail", "tracks", "rwf", "rwfbots"],
-    ),
-    rwf: {
-      ...rwfTestSettings,
-      countdown: "PT1S",
-      endLinger: "PT1S",
-      targetCombatants: 8,
-      maxCombatants: 16,
-    },
-    sweep: {
-      intervalMinutes: 1,
-      redriveAfterMinutes: 0,
-      redriveBackoffMinutes: 0,
-      slaAfterMinutes: 10_080,
-    },
-    agent: { mode: "shadow", reviewSamplePercent: 100 },
-    brain: { baseUrl: brainUrl, token },
-    env: {
-      FLIPT_URL: brainUrl,
-      FLIPT_ENVIRONMENT: "prod",
-      RWF_RECORDING_SALT: rwfRecordingSalt,
-    },
-    resources: { cpus: 4, heap: "8G", memoryLimit: "10g" },
+    ...(await runtimeMapServerConfig(inputs, content, {
+      baseUrl: brainUrl,
+      token,
+    })),
   });
   console = await RconClient.connect({
     host: server.info.host,
@@ -141,14 +112,8 @@ try {
     );
     return snapshot;
   }
-  async function wait(check: () => Promise<boolean>, description: string) {
-    const until = Math.min(deadline, Date.now() + 600_000);
-    while (!(await check())) {
-      await observe();
-      if (Date.now() >= until) throw new Error(`Timed out: ${description}`);
-      await Bun.sleep(1000);
-    }
-  }
+  const wait = (check: () => Promise<boolean>, description: string) =>
+    waitForMapState(deadline, observe, check, description);
   async function contents() {
     const snapshot = await observe();
     for (const map of snapshot.maps.filter((candidate) => candidate.ready)) {
