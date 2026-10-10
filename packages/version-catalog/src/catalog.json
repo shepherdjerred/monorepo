@@ -1078,6 +1078,18 @@
       ]
     },
     {
+      "name": "woodpeckerci/plugin-git",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "2.10.1@sha256:550075c844fcec0af41d9d28f9860aa5d8c43e1e9419be4b9266dc02c2f29804"
+    },
+    {
       "name": "ducktors/turborepo-remote-cache",
       "category": "upstream",
       "artifactType": "image",

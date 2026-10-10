@@ -180,6 +180,9 @@ describe("proposeQueueWindowEdits", () => {
   test("known Co-op vs AI queues do not trigger competitive drift or hide unknown IDs", () => {
     const file = makeFile({ urf: [["2026-06-01", "2026-06-15"]] });
     const { edits, warnings, next } = propose(file, {
+      "800": { "2026-07-10": 4 },
+      "810": { "2026-07-10": 2 },
+      "820": { "2026-07-10": 3 },
       "870": { "2026-07-10": 4 },
       "880": { "2026-07-10": 2 },
       "890": { "2026-07-10": 13 },

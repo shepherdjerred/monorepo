@@ -52,7 +52,21 @@ export async function findCrdImportsRefreshBranch(
     filterArgs: ["--limit", "100"],
     matches: isCrdImportsRefreshPr,
   });
-  if (existing === undefined) return "chore/crd-imports-refresh";
+  if (existing === undefined) {
+    const branch = "chore/crd-imports-refresh";
+    const occupied = await findOpenGeneratedPrUrl({
+      repoSlug: REPO_SLUG,
+      token,
+      filterArgs: ["--head", branch],
+      matches: () => true,
+    });
+    if (occupied !== undefined) {
+      throw new Error(
+        `Refusing to reuse ${branch}: open proposal ${occupied} failed the CRD proposal identity check; preserve its content and metadata for operator review`,
+      );
+    }
+    return branch;
+  }
   const revision = await getPrRevisionState({
     repoSlug: REPO_SLUG,
     prUrl: existing,
