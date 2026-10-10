@@ -233,6 +233,14 @@ describe("passthrough subprocess", () => {
     ["account", "generate-token", "-h"],
     ["help"],
     ["help", "app", "rollback"],
+    ["help", "app", "--loglevel", "debug"],
+    ["help", "--", "app"],
+    ["--grpc-web", "--loglevel", "debug", "help", "app"],
+    ["--grpc-web=false", "-H", "example: value", "help", "app"],
+    ["-Hexample:value", "help", "app"],
+    ["--help=true"],
+    ["app", "rollback", "--help=true"],
+    ["app", "rollback", "-h=1"],
   ])(
     "does not forward an ArgoCD token to metadata command %s",
     async (...args) => {

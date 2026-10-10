@@ -165,6 +165,41 @@ function argsBeforeBoundary(args: readonly string[]): readonly string[] {
   return boundary === -1 ? args : args.slice(0, boundary);
 }
 
+// ArgoCD root options without a required value. Other root options consume
+// one value (or use --option=value); -H is its value-taking short option.
+const ARGOCD_BOOLEAN_OPTIONS = new Set([
+  "--core",
+  "--grpc-web",
+  "--insecure",
+  "--plaintext",
+  "--port-forward",
+  "--prompts-enabled",
+]);
+
+function isArgoHelpFlag(argument: string | undefined): boolean {
+  return (
+    argument !== undefined &&
+    /^(?:--help|-h)(?:=(?:[1tT]|true|TRUE|True))?$/u.test(argument)
+  );
+}
+
+function isArgoHelpCommand(args: readonly string[]): boolean {
+  for (let index = 0; index < args.length; index += 1) {
+    const argument = args[index];
+    if (argument === undefined) return false;
+    // Once Cobra selects `help`, its operands and flags are local metadata.
+    if (argument === "--") return args[index + 1] === "help";
+    if (!argument.startsWith("-")) return argument === "help";
+    if (isArgoHelpFlag(argument)) return true;
+    if (argument.includes("=") || ARGOCD_BOOLEAN_OPTIONS.has(argument))
+      continue;
+    if (argument.startsWith("-H") && argument.length > 2) continue;
+    // Do not mistake an option value such as --server help for a command.
+    index += 1;
+  }
+  return false;
+}
+
 /** Exact native metadata invocations that never need brokered credentials. */
 export function isCredentialFreePassthrough(
   command: string,
@@ -173,19 +208,14 @@ export function isCredentialFreePassthrough(
   if (!PASSTHROUGH_REGISTRY.has(command)) {
     return false;
   }
-  // ArgoCD's Cobra help is local at every command depth. Restrict this to
-  // bare command paths so payload values and `--` retain normal credentials.
+  // ArgoCD's help command is local regardless of its operands. Help flags on
+  // bare command paths are also local; operational payloads retain credentials.
   if (command === "argocd") {
-    if (
-      args[0] === "help" &&
-      args.slice(1).every((part) => /^[a-z][a-z0-9-]*$/u.test(part))
-    ) {
-      return true;
-    }
+    if (isArgoHelpCommand(args)) return true;
     const helpFlag = args.at(-1);
     const commandPath = args.slice(0, -1);
     if (
-      (helpFlag === "--help" || helpFlag === "-h") &&
+      isArgoHelpFlag(helpFlag) &&
       commandPath.every((part) => /^[a-z][a-z0-9-]*$/u.test(part))
     ) {
       return true;
