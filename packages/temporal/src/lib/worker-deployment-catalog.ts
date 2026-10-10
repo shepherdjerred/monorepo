@@ -31,6 +31,12 @@ const PinStateSchema = z
           .optional(),
       }),
     ),
+    withdrawnCandidates: z
+      .record(
+        z.string().regex(/\/workflows\/candidate$/u),
+        z.number().int().positive(),
+      )
+      .optional(),
   })
   .strict();
 
@@ -184,9 +190,23 @@ export async function prepareCandidatePinReset(
 export async function prepareCandidatePinStateReset(
   statePath: string,
   candidatePinName: string,
+  candidateValue: string,
 ): Promise<CandidatePinStateReset> {
   const state = await readPinState(statePath);
-  if (!(candidatePinName in state.pins)) {
+  const version = TemporalWorkflowImageValueSchema.parse(candidateValue);
+  const buildNumber = z.coerce
+    .number()
+    .int()
+    .positive()
+    .parse(version.split("@")[0]?.split("-")[1]);
+  const withdrawn = Math.max(
+    state.withdrawnCandidates?.[candidatePinName] ?? 0,
+    buildNumber,
+  );
+  if (
+    !(candidatePinName in state.pins) &&
+    state.withdrawnCandidates?.[candidatePinName] === withdrawn
+  ) {
     return { contents: `${JSON.stringify(state, null, 2)}\n`, changed: false };
   }
   const pins = Object.fromEntries(
@@ -195,7 +215,7 @@ export async function prepareCandidatePinStateReset(
       .sort(([left], [right]) => left.localeCompare(right)),
   );
   return {
-    contents: `${JSON.stringify({ schema: state.schema, pins }, null, 2)}\n`,
+    contents: `${JSON.stringify({ ...state, pins, withdrawnCandidates: { ...state.withdrawnCandidates, [candidatePinName]: withdrawn } }, null, 2)}\n`,
     changed: true,
   };
 }
@@ -223,7 +243,7 @@ export async function prepareStablePinStatePromotion(
     ),
   );
   return {
-    contents: `${JSON.stringify({ schema: state.schema, pins }, null, 2)}\n`,
+    contents: `${JSON.stringify({ ...state, pins }, null, 2)}\n`,
     changed: true,
   };
 }

@@ -19,6 +19,12 @@ export const PinCandidatesStateSchema = z
   .object({
     schema: z.literal("pin-candidates-state/v1"),
     pins: z.record(z.string().min(1), PinSchema),
+    withdrawnCandidates: z
+      .record(
+        z.string().regex(/\/workflows\/candidate$/u),
+        z.number().int().positive(),
+      )
+      .optional(),
   })
   .strict();
 
@@ -43,7 +49,7 @@ export function serializePinCandidatesState(state: PinCandidatesState): string {
       left.localeCompare(right),
     ),
   );
-  return `${JSON.stringify({ schema: state.schema, pins }, null, 2)}\n`;
+  return `${JSON.stringify({ ...state, pins }, null, 2)}\n`;
 }
 
 export function parseVersionCatalogSource(source: string): Map<string, string> {
@@ -115,6 +121,11 @@ export function validateStateAgainstVersions(
   versions: Map<string, string>,
 ): void {
   const allowed = imageKeys(versions);
+  for (const key of Object.keys(state.withdrawnCandidates ?? {})) {
+    if (!allowed.has(key)) {
+      throw new Error(`withdrawn candidate contains unknown image key ${key}`);
+    }
+  }
   for (const [key, pin] of Object.entries(state.pins)) {
     if (!allowed.has(key)) {
       throw new Error(`pin state contains unknown image key ${key}`);
@@ -125,6 +136,10 @@ export function validateStateAgainstVersions(
       throw new Error(
         `pin state drift for ${key}: expected ${expected}, found ${String(actual)}`,
       );
+    }
+    const withdrawn = state.withdrawnCandidates?.[key];
+    if (withdrawn !== undefined && pin.buildNumber <= withdrawn) {
+      throw new Error(`withdrawn candidate remains in pin state: ${key}`);
     }
   }
 }
@@ -149,8 +164,17 @@ export function retainCurrentImagePins(
     .map(([key]) => key);
   return {
     state: {
-      schema: state.schema,
+      ...state,
       pins: Object.fromEntries(retained),
+      ...(state.withdrawnCandidates === undefined
+        ? {}
+        : {
+            withdrawnCandidates: Object.fromEntries(
+              Object.entries(state.withdrawnCandidates).filter(([key]) =>
+                allowed.has(key),
+              ),
+            ),
+          }),
     },
     retiredKeys,
   };
@@ -265,6 +289,14 @@ export function mergePinStates(
   base: PinCandidatesState,
   supersededPendingKeys: ReadonlySet<string> = new Set(),
 ): PinCandidatesState {
+  const withdrawnCandidates: Record<string, number> = {};
+  for (const state of [base, main, pending]) {
+    for (const [key, build] of Object.entries(
+      state.withdrawnCandidates ?? {},
+    )) {
+      withdrawnCandidates[key] = Math.max(withdrawnCandidates[key] ?? 0, build);
+    }
+  }
   const pins = new Map(Object.entries(main.pins));
   const keys = new Set([
     ...Object.keys(base.pins),
@@ -281,11 +313,21 @@ export function mergePinStates(
           pending.pins[key],
           base.pins[key],
         );
-    if (result === undefined) pins.delete(key);
+    if (
+      result === undefined ||
+      result.buildNumber <= (withdrawnCandidates[key] ?? 0)
+    )
+      pins.delete(key);
     else pins.set(key, result);
   }
 
-  return { schema: main.schema, pins: Object.fromEntries(pins) };
+  return {
+    schema: main.schema,
+    pins: Object.fromEntries(pins),
+    ...(Object.keys(withdrawnCandidates).length === 0
+      ? {}
+      : { withdrawnCandidates }),
+  };
 }
 
 export function mergePinCandidates(
@@ -294,6 +336,7 @@ export function mergePinCandidates(
 ): PinCandidatesState {
   const pins = { ...state.pins };
   for (const [key, candidate] of Object.entries(batch.candidates)) {
+    if (batch.buildNumber <= (state.withdrawnCandidates?.[key] ?? 0)) continue;
     const current = pins[key];
     if (current === undefined || batch.buildNumber > current.buildNumber) {
       pins[key] = { buildNumber: batch.buildNumber, ...candidate };
@@ -307,7 +350,7 @@ export function mergePinCandidates(
       ...candidate,
     });
   }
-  return { schema: "pin-candidates-state/v1", pins };
+  return { ...state, pins };
 }
 
 export async function rewriteVersionCatalogSource(

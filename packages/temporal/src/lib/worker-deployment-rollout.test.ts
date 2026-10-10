@@ -762,9 +762,11 @@ describe("Worker Deployment rollback and rejection", () => {
     expect(commands.some((command) => command.includes("--delete"))).toBe(
       false,
     );
-    expect(
-      await Bun.file(rolloutOptions.candidateStatePath).text(),
-    ).not.toContain(rolloutOptions.candidatePinName);
+    expect(await Bun.file(rolloutOptions.candidateStatePath).json()).toEqual({
+      schema: "pin-candidates-state/v1",
+      pins: {},
+      withdrawnCandidates: { [rolloutOptions.candidatePinName]: 2 },
+    });
   });
 
   test("rejects resetting a candidate image built from another commit", async () => {
