@@ -244,6 +244,11 @@ export async function generateDependencySummary(
       },
     };
     const delivery = await deliverActivityReport(report);
+    if (!("acceptedAt" in delivery)) {
+      throw new Error(
+        "Dependency summary checkpoint requires accepted mail delivery",
+      );
+    }
     await advanceDependencySummaryCheckpoint({
       commitSha: collection.headSha,
       reportRunId: delivery.reportRunId,

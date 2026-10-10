@@ -1,11 +1,11 @@
-import {
-  GetObjectCommand,
-  NoSuchKey,
-  PutObjectCommand,
-  S3Client,
-  S3ServiceException,
-} from "@aws-sdk/client-s3";
 import { Context } from "@temporalio/activity";
+import {
+  reportReceiptStore,
+  readJson,
+  writeJson,
+  conditionalWrite,
+  type ReportReceiptStore,
+} from "./report-object-store.ts";
 import { z } from "zod/v4";
 import {
   reportDeliveryTotal,
@@ -38,6 +38,16 @@ import {
 } from "#shared/reports/report.ts";
 import { temporalUiExecutionUrl } from "#shared/alerts/workflow-failure-alert.ts";
 import { parseTemporalNamespace } from "#shared/infra/temporal-namespace.ts";
+import { dailyReportNotificationsConfig } from "#config/report-notifications.ts";
+import { notificationBackend } from "./report-notification-store.ts";
+import {
+  deliverDailyNotification,
+  notificationFamilyPath,
+  NotificationModeSchema,
+  selectNotificationMode,
+  usesDailyNotificationPolicy,
+  type SkippedNotification,
+} from "./report-notification-policy.ts";
 
 export const ReportDeliveryReceiptV1Schema = z.object({
   schemaVersion: z.literal(1),
@@ -121,40 +131,6 @@ export type ActivityReportInput = Omit<
   provenance?: Omit<ReportEnvelopeV1["provenance"], "workflowId" | "runId">;
 };
 
-type ReportReceiptStore = {
-  client: S3Client;
-  bucket: string;
-  prefix: string;
-};
-
-function requiredEnv(name: string): string {
-  const value = Bun.env[name];
-  if (value === undefined || value === "") {
-    throw new Error(`${name} is required for report receipt storage`);
-  }
-  return value;
-}
-
-function reportReceiptStore(): ReportReceiptStore {
-  const accessKeyId = requiredEnv("AWS_ACCESS_KEY_ID");
-  const secretAccessKey = requiredEnv("AWS_SECRET_ACCESS_KEY");
-  const sessionToken = Bun.env["AWS_SESSION_TOKEN"];
-  const credentials =
-    sessionToken === undefined || sessionToken === ""
-      ? { accessKeyId, secretAccessKey }
-      : { accessKeyId, secretAccessKey, sessionToken };
-  return {
-    client: new S3Client({
-      endpoint: requiredEnv("S3_ENDPOINT"),
-      region: Bun.env["S3_REGION"] ?? "us-east-1",
-      forcePathStyle: (Bun.env["S3_FORCE_PATH_STYLE"] ?? "true") === "true",
-      credentials,
-    }),
-    bucket: Bun.env["REPORT_RECEIPT_BUCKET"] ?? "llm-archive",
-    prefix: Bun.env["REPORT_RECEIPT_PREFIX"] ?? "reports/receipts",
-  };
-}
-
 function safeKeyPart(value: string): string {
   return value.replaceAll(/[^\w.=-]+/g, "-");
 }
@@ -182,79 +158,6 @@ export function reportStateKey(
 ): string {
   const schedule = report.scheduleId ?? "manual";
   return `${prefix}/${safeKeyPart(report.reportType)}/${safeKeyPart(schedule)}/${safeKeyPart(report.reportRunId)}.json`;
-}
-
-function isMissingObject(error: unknown): boolean {
-  return (
-    error instanceof NoSuchKey ||
-    (error instanceof S3ServiceException &&
-      error.$metadata.httpStatusCode === 404)
-  );
-}
-
-async function readJson<T>(
-  store: ReportReceiptStore,
-  key: string,
-  schema: z.ZodType<T>,
-): Promise<{ value: T; etag: string } | undefined> {
-  try {
-    const response = await store.client.send(
-      new GetObjectCommand({ Bucket: store.bucket, Key: key }),
-    );
-    if (response.Body === undefined || response.ETag === undefined) {
-      throw new Error(`Report object ${key} has no body or entity tag`);
-    }
-    return {
-      value: schema.parse(JSON.parse(await response.Body.transformToString())),
-      etag: response.ETag,
-    };
-  } catch (error: unknown) {
-    if (isMissingObject(error)) return undefined;
-    throw error;
-  }
-}
-
-async function writeJson(
-  store: ReportReceiptStore,
-  key: string,
-  value: unknown,
-  condition?: { expectedEtag: string | undefined },
-): Promise<void> {
-  await store.client.send(
-    new PutObjectCommand({
-      Bucket: store.bucket,
-      Key: key,
-      Body: JSON.stringify(value, null, 2),
-      ContentType: "application/json; charset=utf-8",
-      ...(condition === undefined
-        ? {}
-        : condition.expectedEtag === undefined
-          ? { IfNoneMatch: "*" }
-          : { IfMatch: condition.expectedEtag }),
-    }),
-  );
-}
-
-/**
- * Runs a conditional put, reporting a lost race rather than throwing. 412 is
- * the conditional-write rejection; 409 is what S3 returns when two conditional
- * writes race. Both mean another attempt won, which is a normal outcome here
- * rather than a storage failure.
- */
-async function conditionalWrite(write: () => Promise<void>): Promise<boolean> {
-  try {
-    await write();
-    return true;
-  } catch (error: unknown) {
-    if (
-      error instanceof S3ServiceException &&
-      (error.$metadata.httpStatusCode === 412 ||
-        error.$metadata.httpStatusCode === 409)
-    ) {
-      return false;
-    }
-    throw error;
-  }
 }
 
 function deliveryBackend(store: ReportReceiptStore): ReportDeliveryBackend {
@@ -536,7 +439,96 @@ export const reportDeliveryActivities = {
   deliverReport,
   async deliverActivityReport(
     input: ActivityReportInput,
-  ): Promise<ReportDeliveryResult> {
-    return deliverReport(createActivityReportEnvelope(input));
+  ): Promise<ReportDeliveryResult | SkippedNotification> {
+    const attemptStartedAt = new Date().toISOString();
+    const report = createActivityReportEnvelope(input);
+    if (!usesDailyNotificationPolicy(report)) return deliverReport(report);
+    const info = Context.current().info;
+    const mode = await dailyNotificationMode(report, info.namespace);
+    return mode === "changed"
+      ? deliverDailyActivityNotification(report, attemptStartedAt)
+      : deliverReport(report);
   },
 };
+
+async function dailyNotificationMode(
+  report: ReportEnvelopeV1,
+  namespace: string,
+) {
+  const store = reportReceiptStore();
+  const backend = deliveryBackend(store);
+  const key = `reports/notifications/modes/${safeKeyPart(namespace)}/${notificationFamilyPath(report)}/${safeKeyPart(report.reportRunId)}.json`;
+  return selectNotificationMode({
+    read: async () => {
+      const stored = await readJson(store, key, NotificationModeSchema);
+      return stored?.value;
+    },
+    write: (value) =>
+      conditionalWrite(() =>
+        writeJson(store, key, value, { expectedEtag: undefined }),
+      ),
+    legacyDeliveryStarted: async () => {
+      const state = await backend.readState(
+        reportStateKey(
+          report,
+          Bun.env["REPORT_STATE_PREFIX"] ?? "reports/state",
+        ),
+      );
+      const receipt = await backend.readReceipt(
+        reportReceiptKey(report, store.prefix),
+      );
+      return state !== undefined || receipt !== undefined;
+    },
+    enabled: async () => {
+      const config = await dailyReportNotificationsConfig(namespace);
+      return config.value;
+    },
+  });
+}
+
+async function deliverDailyActivityNotification(
+  report: ReportEnvelopeV1,
+  attemptStartedAt: string,
+): Promise<ReportDeliveryResult | SkippedNotification> {
+  const store = reportReceiptStore();
+  const backend = deliveryBackend(store);
+  const info = Context.current().info;
+  const execution = info.workflowExecution;
+  if (execution === undefined)
+    throw new Error("Notification requires a workflow execution");
+  const deps: ReportDeliveryDependencies = {
+    backend,
+    addresses: await resolvePostalAddresses(),
+    send: (input) => sendPostalEmail(input),
+    now: () => new Date().toISOString(),
+    owner: `${execution.workflowId}/${execution.runId}/${info.activityId}/${String(info.attempt)}`,
+    attemptStartedAt,
+    receiptPrefix: store.prefix,
+    statePrefix: Bun.env["REPORT_STATE_PREFIX"] ?? "reports/state",
+  };
+  const result = await deliverDailyNotification(report, {
+    ...deps,
+    namespace: info.namespace,
+    backend: notificationBackend(store),
+    accepted: async (candidate) => {
+      const receiptKey = reportReceiptKey(candidate, deps.receiptPrefix);
+      const receipt = await backend.readReceipt(receiptKey);
+      if (receipt !== undefined)
+        return { ...receipt, receiptKey, deduplicated: true };
+      const state = await backend.readState(
+        reportStateKey(candidate, deps.statePrefix),
+      );
+      if (state?.delivery.status !== "accepted") return;
+      // Restore an accepted state's missing receipt through the same core.
+      return deliverReportWithDependencies(candidate, deps);
+    },
+    deliver: (candidate) => deliverReportWithDependencies(candidate, deps),
+  });
+  if ("outcome" in result) {
+    reportDeliveryTotal.inc({
+      ...metricLabels(report),
+      outcome: result.reason,
+    });
+  }
+  return result;
+}

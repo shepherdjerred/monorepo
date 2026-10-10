@@ -310,6 +310,26 @@ Defaults preserve the existing homelab routing during a flag-provider outage.
 Postal credentials stay in 1Password; service endpoints and host routing are
 reviewed homelab bootstrap settings. Workflow histories contain no credentials.
 
+`temporal-daily-report-notifications-enabled` resolves per Activity and defaults
+off in production, with beta targeting declared for acceptance. When enabled,
+only the homelab audit, CI I/O telemetry, and Scout queue-window daily schedules
+use changed-condition mail. Each run keeps its full immutable report under
+`reports/observations/<namespace>/<type>/<schedule>/`; a baseline, changed
+actionable condition, or recovery sends mail. An unchanged actionable condition
+sends a reminder after seven days, while unchanged clear reports stay silent.
+Known finding identities ignore changing observation counts; unknown findings
+retain their text so a new failure cannot be hidden. Suppressed, recovered, and
+observing findings remain in the archive without creating active conditions.
+
+Conditional family claims serialize sends across runs. A takeover settles the
+prior pending report through its existing delivery lease and accepted receipt
+before evaluating the next report. Skips have explicit records and no Postal
+message ID or acceptance time. The freshness monitor counts completed skips
+separately from mail acceptance, using the report's original observation time.
+Manual reports, dependency checkpoints, digests, canaries, and other schedules
+retain their existing delivery behavior. Postal acceptance still does not
+establish inbox delivery.
+
 ## Documentation
 
 - [Temporal overview](../docs/wiki/src/content/docs/explanation/temporal/overview.md)

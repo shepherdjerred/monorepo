@@ -64,11 +64,6 @@
       "count": 1
     }
   },
-  "src/activities/reports/report-freshness.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "src/observability/tracing.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
