@@ -187,6 +187,10 @@ describe("profiles and staging", () => {
       "LuckPerms",
       "Multiverse-Core",
     ]);
+    expect(storm.env).toMatchObject({
+      FLIPT_URL: "http://127.0.0.1:9",
+      FLIPT_ENVIRONMENT: "beta",
+    });
     expect(storm.staged.map((entry) => entry.target)).toEqual([
       "MCBridge.jar",
       "TheStorm.jar",

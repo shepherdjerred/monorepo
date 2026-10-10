@@ -115,6 +115,9 @@ The `storm-dev` profile adds the locally built `TheStorm.jar` (build it with
 `bunx turbo run build --filter=@shepherdjerred/the-storm`), the plugins
 its `paper-plugin.yml` requires (LuckPerms, CoreProtect, Multiverse; Citizens
 is already staged), `TheStormFixtures.jar` to prepare the protected arena worlds,
+and the inert local Flipt bootstrap required during plugin startup
+(`FLIPT_URL=http://127.0.0.1:9`, `FLIPT_ENVIRONMENT=beta`). Rollout checks
+therefore fail closed without requiring credentials or a running Flipt service,
 the repository-owned TheStorm and Citizens config with
 only the economy, mail, chat, tracks, towns and tickets modules on (agent,
 discord and world need external services), and `TheStormMechanicsE2E.jar`, which runs the production
