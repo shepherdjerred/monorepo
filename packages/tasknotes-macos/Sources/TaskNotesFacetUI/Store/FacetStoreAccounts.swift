@@ -19,13 +19,16 @@ extension FacetStore {
             },
             signIn: { try await account.signIn(email: email, password: password, code: code) },
             connections: { await account.connections() }, ownsAccount: { self.account === account },
+            resume: { await self.resumeSync() },
             requestID: requestID)
     }
 
     internal func signInWithOperations(
         prepare: () async -> Void,
         signIn: () async throws -> FacetAccountSignIn,
-        connections: () async -> [FacetVaultConnection], ownsAccount: () -> Bool,
+        connections: () async -> [FacetVaultConnection],
+        ownsAccount: @escaping @MainActor () -> Bool,
+        resume: @escaping @MainActor () async -> Void,
         requestID: UUID = UUID()
     ) async {
         guard !_Concurrency.Task.isCancelled else { return }
@@ -45,7 +48,28 @@ extension FacetStore {
         remoteVaults = []
         requestGeneration += 1
         isLoading = true
-        defer { finishAccountRequest(request) }
+        await performAccountSignIn(
+            request: request, prepare: prepare, signIn: signIn,
+            connections: connections, ownsAccount: ownsAccount)
+        guard accountPresentation.requestID == request else { return }
+        finishAccountRequest(request)
+        // A dismissed challenge still leaves the previous credentials usable.
+        // Drain authentication before reopening only the current foreground owner.
+        let settledGeneration = syncGeneration
+        await _Concurrency.Task { @MainActor in
+            guard self.foreground, !self.accountTransition,
+                self.accountPresentation.requestID == nil,
+                self.syncGeneration == settledGeneration, ownsAccount()
+            else { return }
+            await resume()
+        }.value
+    }
+
+    private func performAccountSignIn(
+        request: UUID, prepare: () async -> Void,
+        signIn: () async throws -> FacetAccountSignIn,
+        connections: () async -> [FacetVaultConnection], ownsAccount: () -> Bool
+    ) async {
         await prepare()
         guard ownsAccountRequest(request), ownsAccount() else { return }
         do {
@@ -263,15 +287,17 @@ extension FacetStore {
         }
         guard !accountTransition else { return }
         guard let account, let engine else { return }
+        let attempt = syncGeneration
         let cleanup = await account.retryDetachedProfileCleanup()
+        guard ownsSyncAttempt(attempt, account: account, engine: engine) else { return }
         if let failure = cleanup.first {
             error = "Private profile cleanup is pending. " + failure.action
         }
-        let attempt = syncGeneration
         for profile in profiles
         where profile.kind == "obsidian_sync" && sessions[profile.id] == nil
             && !removingProfileIDs.contains(profile.id)
         {
+            guard ownsSyncAttempt(attempt, account: account, engine: engine) else { return }
             do {
                 _ = try await FacetObsidianSession.open(
                     engine: engine, account: account, profileID: profile.id,
@@ -288,15 +314,28 @@ extension FacetStore {
                             ?? false
                     })
             } catch {
-                if attempt == syncGeneration {
-                    if isForeground {
-                        syncStates[profile.id] = error.localizedDescription
-                    } else {
-                        reportBackgroundFailure(error)
-                        syncStates[profile.id] = FacetFailureDiagnostic(error).action
-                    }
-                }
+                reportSyncFailure(
+                    error, profileID: profile.id, generation: attempt, isForeground: isForeground)
             }
+        }
+    }
+
+    private func ownsSyncAttempt(
+        _ attempt: UInt64, account: FacetObsidianAccount, engine: FacetEngine
+    ) -> Bool {
+        attempt == syncGeneration && !accountTransition
+            && self.account === account && self.engine === engine
+    }
+
+    private func reportSyncFailure(
+        _ failure: any Error, profileID: String, generation: UInt64, isForeground: Bool
+    ) {
+        guard generation == syncGeneration else { return }
+        if isForeground {
+            syncStates[profileID] = failure.localizedDescription
+        } else {
+            reportBackgroundFailure(failure)
+            syncStates[profileID] = FacetFailureDiagnostic(failure).action
         }
     }
 

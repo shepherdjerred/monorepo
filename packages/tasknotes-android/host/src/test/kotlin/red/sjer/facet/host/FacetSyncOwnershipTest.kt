@@ -15,6 +15,76 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class FacetSyncOwnershipTest {
+    @Test fun verifiedOwnerReplacementCanConnectAndPauseUsingOriginalForegroundLease() {
+        val ownership = FacetSyncOwnership()
+        val foreground = ownership.resumeForeground()
+        val attempt = ownership.suspendAccountTransition()
+        ownership.revokeAccountAuthorization(attempt)
+        ownership.finishAccountTransition(attempt)
+        assertFalse(ownership.pauseForeground(foreground))
+        assertNull(ownership.begin(Job()))
+        // Connecting the replacement account grants authorization without replacing the UI lease.
+        ownership.authorize()
+        assertTrue(ownership.pauseForeground(foreground))
+        assertNotNull(ownership.begin(Job()))
+        try {
+            ownership.revokeAccountAuthorization(attempt)
+            fail("A completed transition cannot revoke the replacement account")
+        } catch (_: IllegalStateException) { }
+    }
+
+    @Test fun rejectedAccountAttemptPreservesExactPauseLeaseAndBackgroundAuthorization() {
+        val ownership = FacetSyncOwnership()
+        val foreground = ownership.resumeForeground()
+        val attempt = ownership.suspendAccountTransition()
+        // Pausing while authentication is pending may schedule work, but cannot start a writer.
+        assertTrue(ownership.pauseForeground(foreground))
+        assertNull(ownership.begin(Job()))
+        ownership.finishAccountTransition(attempt)
+        assertNotNull(ownership.begin(Job()))
+    }
+
+    @Test fun finishingOldAccountAttemptCannotReleaseResumedForegroundOrRestoreSignedOutAuthorization() {
+        val ownership = FacetSyncOwnership()
+        val oldForeground = ownership.resumeForeground()
+        val attempt = ownership.suspendAccountTransition()
+        assertTrue(ownership.pauseForeground(oldForeground))
+        val currentForeground = ownership.resumeForeground()
+        ownership.finishAccountTransition(attempt)
+        assertFalse(ownership.pauseForeground(oldForeground))
+        assertNull(ownership.begin(Job()))
+        assertTrue(ownership.pauseForeground(currentForeground))
+        val next = ownership.suspendAccountTransition()
+        ownership.disable()
+        ownership.finishAccountTransition(next)
+        assertFalse(ownership.pauseForeground())
+        assertNull(ownership.begin(Job()))
+    }
+
+    @Test fun authenticationSuspensionCancelsAndDrainsExactBackgroundWriter() = runBlocking {
+        val ownership = FacetSyncOwnership()
+        val worker = Job()
+        val childFinished = CompletableDeferred<Unit>()
+        val childEntered = CompletableDeferred<Unit>()
+        val child = CoroutineScope(worker + Dispatchers.Default).launch {
+            withContext(NonCancellable) { childEntered.complete(Unit); childFinished.await() }
+        }
+        val workerToken = requireNotNull(ownership.begin(worker))
+        childEntered.await()
+        var stopped = false
+        assertTrue(ownership.retain(workerToken) { stopped = true })
+        val attempt = ownership.suspendAccountTransition()
+        assertTrue(stopped)
+        assertTrue(worker.isCancelled)
+        val drain = async { ownership.awaitDrain() }
+        yield(); assertFalse(drain.isCompleted)
+        ownership.finishAccountTransition(attempt)
+        assertNull(ownership.begin(Job()))
+        childFinished.complete(Unit)
+        withTimeout(5000) { drain.await(); child.join() }
+        assertNotNull(ownership.begin(Job()))
+    }
+
     @Test fun clearedForegroundWriterDrainBlocksAnotherWriterAndLatePauseCannotReleaseNewOwner() = runBlocking {
         val ownership = FacetSyncOwnership()
         val previous = ownership.resumeForeground()
