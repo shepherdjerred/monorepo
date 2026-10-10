@@ -104,5 +104,8 @@
       "digest": "sha256:0411df9bc4fa43d7797e68c1e25bf7116667556c0cd4e02449183f09995e5b1b",
       "buildNumber": 1006485
     }
+  },
+  "withdrawnCandidates": {
+    "shepherdjerred/temporal-worker/workflows/candidate": 1006485
   }
 }

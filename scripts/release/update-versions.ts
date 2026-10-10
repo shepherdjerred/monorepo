@@ -8,16 +8,16 @@ import {
   mergePinCandidates,
   mergePinStates,
   mergeVersionCatalogSources,
-  parsePinCandidatesState,
   parseVersionCatalogSource,
   retainCurrentImagePins,
   rewriteVersionCatalogSource,
   serializePinCandidatesState,
   validateCandidateKeys,
-  validateStateAgainstVersions,
 } from "../lib/pin-candidates.ts";
 import {
   parsePinCandidates,
+  parsePinCandidatesState,
+  validateStateAgainstVersions,
   type PinCandidates,
 } from "../lib/pin-candidates-schema.ts";
 import { run, runAllowExit, tmpBase } from "../lib/run.ts";

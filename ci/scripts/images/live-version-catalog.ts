@@ -5,12 +5,16 @@ import {
   parseVersionCatalogText,
   serializeVersionCatalog,
 } from "../../../packages/version-catalog/src/index.ts";
-import { parsePinCandidates } from "../../../scripts/lib/pin-candidates-schema.ts";
 import {
   ciHandoffConfigFromEnv,
   readRequiredHandoff,
 } from "../../../scripts/lib/ci/ci-handoff.ts";
 import { ensureAncestor } from "../selectors/ensure-ancestor.ts";
+import {
+  parsePinCandidatesState,
+  parsePinCandidates,
+  validateStateAgainstVersions,
+} from "../../../scripts/lib/pin-candidates-schema.ts";
 
 const VERSION_CATALOG_PATH = "packages/version-catalog/src/catalog.json";
 
@@ -37,6 +41,7 @@ export function retainPublishedImagePins(
   currentSource: string,
   previousSource: string,
   candidatesSource: string,
+  withdrawnCandidates: Readonly<Record<string, number>> = {},
 ): string {
   const current = parseVersionCatalogText(currentSource);
   const previous = parseVersionCatalogText(previousSource);
@@ -74,6 +79,10 @@ export function retainPublishedImagePins(
         return entry;
       const currentBuild = releaseNumber(entry.value);
       const publishedBuild = releaseNumber(value);
+      const withdrawn = withdrawnCandidates[entry.name];
+      if (withdrawn !== undefined && publishedBuild <= BigInt(withdrawn)) {
+        return entry;
+      }
       if (currentBuild === publishedBuild && entry.value !== value) {
         throw new Error(
           `Conflicting published image pins for ${entry.name} at release ${currentBuild.toString()}`,
@@ -95,6 +104,7 @@ export async function readPublishedVersionCatalogSource(
       ...ciHandoffConfigFromEnv(),
       pipelineNumber: number,
     }),
+  withdrawnCandidates: Readonly<Record<string, number>> = {},
 ): Promise<string> {
   if (
     !/^[1-9]\d*$/.test(pipelineNumber) ||
@@ -106,7 +116,12 @@ export async function readPublishedVersionCatalogSource(
     readHandoff("version-catalog", pipelineNumber),
     readHandoff("pin-candidates", pipelineNumber),
   ]);
-  return retainPublishedImagePins(currentSource, catalog, candidates);
+  return retainPublishedImagePins(
+    currentSource,
+    catalog,
+    candidates,
+    withdrawnCandidates,
+  );
 }
 
 async function imageReleaseBase(
@@ -156,6 +171,28 @@ export async function resolveImageReleaseCatalog(
   // Fetch first so both catalog selection and ancestry use current origin/main.
   const current = await readLiveVersionCatalogSource(executor);
   const base = await imageReleaseBase(currentCommit, executor, environment);
+  let withdrawnCandidates: Readonly<Record<string, number>> = {};
+  if (base !== undefined) {
+    const state = await executor([
+      "git",
+      "show",
+      "origin/main:scripts/pin-candidates-state.json",
+    ]);
+    if (state.exitCode !== 0) {
+      throw new TransientError("Unable to read live image pin state");
+    }
+    const parsed = parsePinCandidatesState(state.stdout);
+    validateStateAgainstVersions(
+      parsed,
+      new Map(
+        parseVersionCatalogText(current).entries.map((entry) => [
+          entry.name,
+          entry.value,
+        ]),
+      ),
+    );
+    withdrawnCandidates = parsed.withdrawnCandidates ?? {};
+  }
   return {
     baseCommit: base?.commit,
     catalog:
@@ -165,6 +202,7 @@ export async function resolveImageReleaseCatalog(
             current,
             base.pipelineNumber,
             readHandoff,
+            withdrawnCandidates,
           ),
   };
 }

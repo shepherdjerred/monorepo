@@ -188,6 +188,9 @@ ramp. After rollback and candidate-history drain, rerun `rollback` with no
 active ramp to reset the rejected candidate to the stable catalog value, then
 review and commit both the catalog and `scripts/pin-candidates-state.json`
 changes through the normal pull-request flow before the next candidate.
+The reset records the rejected release number in `withdrawnCandidates`.
+Published handoffs and pending pin branches cannot restore that candidate or an
+older one; a newer candidate can still be retained while its commit-back waits.
 If an operator host dies, use `inspect` before removing a stale lease: it is a
 read-only routing and lease query that remains usable when candidate health
 checks or alert windows are failing.

@@ -1,4 +1,3 @@
-import { z } from "zod";
 import { format } from "prettier";
 import {
   parseVersionCatalogText,
@@ -7,35 +6,11 @@ import {
   type VersionCatalogEntry,
 } from "@shepherdjerred/version-catalog";
 import {
-  PinCandidateSchema,
+  imageKeys,
   type PinCandidates,
+  type PinCandidatesState,
 } from "./pin-candidates-schema.ts";
-
-const PinSchema = PinCandidateSchema.extend({
-  buildNumber: z.number().int().positive(),
-});
-
-export const PinCandidatesStateSchema = z
-  .object({
-    schema: z.literal("pin-candidates-state/v1"),
-    pins: z.record(z.string().min(1), PinSchema),
-  })
-  .strict();
-
-export type PinCandidatesState = z.infer<typeof PinCandidatesStateSchema>;
 type PinStatePin = PinCandidatesState["pins"][string];
-
-function parseJson(text: string, description: string): unknown {
-  try {
-    return JSON.parse(text);
-  } catch (error) {
-    throw new Error(`${description} is not valid JSON`, { cause: error });
-  }
-}
-
-export function parsePinCandidatesState(text: string): PinCandidatesState {
-  return PinCandidatesStateSchema.parse(parseJson(text, "pin candidate state"));
-}
 
 export function serializePinCandidatesState(state: PinCandidatesState): string {
   const pins = Object.fromEntries(
@@ -43,7 +18,7 @@ export function serializePinCandidatesState(state: PinCandidatesState): string {
       left.localeCompare(right),
     ),
   );
-  return `${JSON.stringify({ schema: state.schema, pins }, null, 2)}\n`;
+  return `${JSON.stringify({ ...state, pins }, null, 2)}\n`;
 }
 
 export function parseVersionCatalogSource(source: string): Map<string, string> {
@@ -102,33 +77,6 @@ export function mergeVersionCatalogSources(
   return serializeVersionCatalog({ ...main, entries });
 }
 
-function imageKeys(versions: Map<string, string>): Set<string> {
-  return new Set(
-    [...versions.entries()]
-      .filter(([, value]) => value.includes("@sha256:"))
-      .map(([key]) => key),
-  );
-}
-
-export function validateStateAgainstVersions(
-  state: PinCandidatesState,
-  versions: Map<string, string>,
-): void {
-  const allowed = imageKeys(versions);
-  for (const [key, pin] of Object.entries(state.pins)) {
-    if (!allowed.has(key)) {
-      throw new Error(`pin state contains unknown image key ${key}`);
-    }
-    const actual = versions.get(key);
-    const expected = `${pin.version}@${pin.digest}`;
-    if (actual !== expected) {
-      throw new Error(
-        `pin state drift for ${key}: expected ${expected}, found ${String(actual)}`,
-      );
-    }
-  }
-}
-
 /**
  * Keep only pins for images that still exist in the current catalog.
  *
@@ -149,8 +97,17 @@ export function retainCurrentImagePins(
     .map(([key]) => key);
   return {
     state: {
-      schema: state.schema,
+      ...state,
       pins: Object.fromEntries(retained),
+      ...(state.withdrawnCandidates === undefined
+        ? {}
+        : {
+            withdrawnCandidates: Object.fromEntries(
+              Object.entries(state.withdrawnCandidates).filter(([key]) =>
+                allowed.has(key),
+              ),
+            ),
+          }),
     },
     retiredKeys,
   };
@@ -265,6 +222,14 @@ export function mergePinStates(
   base: PinCandidatesState,
   supersededPendingKeys: ReadonlySet<string> = new Set(),
 ): PinCandidatesState {
+  const withdrawnCandidates: Record<string, number> = {};
+  for (const state of [base, main, pending]) {
+    for (const [key, build] of Object.entries(
+      state.withdrawnCandidates ?? {},
+    )) {
+      withdrawnCandidates[key] = Math.max(withdrawnCandidates[key] ?? 0, build);
+    }
+  }
   const pins = new Map(Object.entries(main.pins));
   const keys = new Set([
     ...Object.keys(base.pins),
@@ -281,11 +246,21 @@ export function mergePinStates(
           pending.pins[key],
           base.pins[key],
         );
-    if (result === undefined) pins.delete(key);
+    if (
+      result === undefined ||
+      result.buildNumber <= (withdrawnCandidates[key] ?? 0)
+    )
+      pins.delete(key);
     else pins.set(key, result);
   }
 
-  return { schema: main.schema, pins: Object.fromEntries(pins) };
+  return {
+    schema: main.schema,
+    pins: Object.fromEntries(pins),
+    ...(Object.keys(withdrawnCandidates).length === 0
+      ? {}
+      : { withdrawnCandidates }),
+  };
 }
 
 export function mergePinCandidates(
@@ -294,6 +269,7 @@ export function mergePinCandidates(
 ): PinCandidatesState {
   const pins = { ...state.pins };
   for (const [key, candidate] of Object.entries(batch.candidates)) {
+    if (batch.buildNumber <= (state.withdrawnCandidates?.[key] ?? 0)) continue;
     const current = pins[key];
     if (current === undefined || batch.buildNumber > current.buildNumber) {
       pins[key] = { buildNumber: batch.buildNumber, ...candidate };
@@ -307,7 +283,7 @@ export function mergePinCandidates(
       ...candidate,
     });
   }
-  return { schema: "pin-candidates-state/v1", pins };
+  return { ...state, pins };
 }
 
 export async function rewriteVersionCatalogSource(

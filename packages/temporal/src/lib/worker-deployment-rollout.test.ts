@@ -762,9 +762,49 @@ describe("Worker Deployment rollback and rejection", () => {
     expect(commands.some((command) => command.includes("--delete"))).toBe(
       false,
     );
+    expect(await Bun.file(rolloutOptions.candidateStatePath).json()).toEqual({
+      schema: "pin-candidates-state/v1",
+      pins: {},
+      withdrawnCandidates: { [rolloutOptions.candidatePinName]: 2 },
+    });
+  });
+
+  test.each([
+    { version: "2.0.0-3", buildNumber: 3, digest: CANDIDATE_DIGEST },
+    { version: "2.0.0-2", buildNumber: 3, digest: CANDIDATE_DIGEST },
+    { version: "2.0.0-2", buildNumber: 2, digest: STABLE_DIGEST },
+  ])("rejects resetting drifted candidate state: %j", async (pin) => {
+    const rolloutOptions = await options("rollback");
+    const catalogBefore = await Bun.file(rolloutOptions.catalogPath).text();
+    const stateBefore = JSON.stringify({
+      schema: "pin-candidates-state/v1",
+      pins: {
+        [rolloutOptions.candidatePinName]: {
+          ...pin,
+          digest: `sha256:${pin.digest}`,
+        },
+      },
+    });
+    await Bun.write(rolloutOptions.candidateStatePath, stateBefore);
+    const commands: string[][] = [];
+    await expect(
+      executeWorkerDeploymentRollout(
+        rolloutOptions,
+        fixtureRunner({}, commands),
+      ),
+    ).rejects.toThrow("Candidate pin state differs from catalog");
+    expect(await Bun.file(rolloutOptions.catalogPath).text()).toBe(
+      catalogBefore,
+    );
+    expect(await Bun.file(rolloutOptions.candidateStatePath).text()).toBe(
+      stateBefore,
+    );
+    expect(commands.some((command) => command.includes("--delete"))).toBe(
+      false,
+    );
     expect(
-      await Bun.file(rolloutOptions.candidateStatePath).text(),
-    ).not.toContain(rolloutOptions.candidatePinName);
+      commands.some((command) => command.includes("set-current-version")),
+    ).toBe(false);
   });
 
   test("rejects resetting a candidate image built from another commit", async () => {
