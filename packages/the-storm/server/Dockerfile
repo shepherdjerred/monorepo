@@ -15,6 +15,7 @@
 FROM gradle:9.7.1-jdk25-corretto@sha256:b65cce4c0be158a0ddb99e431d329d40c02f99c567e0fffdad52d3e44815aa16 AS plugin
 WORKDIR /src
 COPY plugin/ plugin/
+COPY public-status.json public-status.json
 # The world module verifies its managed rollout key during compilation.
 # `managed-flags` is a BuildKit named context supplied by docker-bake.hcl.
 # hadolint ignore=DL3022

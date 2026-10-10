@@ -27,7 +27,12 @@ final class MinecraftStatus
             $value = $data[$edition] ?? null;
             if (!is_array($value) || !in_array($value['state'] ?? null, self::STATES, true)) { throw new \RuntimeException('Invalid Minecraft edition status'); }
             $result[$edition]['state'] = $fresh ? $value['state'] : 'unavailable';
-            if (isset($value['version'])) {
+            $hasVersion = array_key_exists('version', $value);
+            $hasVerifiedAt = array_key_exists('verifiedAt', $value);
+            if ($hasVersion !== $hasVerifiedAt || ($value['state'] === 'online' && !$hasVersion)) {
+                throw new \RuntimeException('Minecraft edition is missing its verified version');
+            }
+            if ($hasVersion) {
                 if (!is_string($value['version']) || $value['version'] === '' || strlen($value['version']) > 100
                     || !is_int($value['verifiedAt'] ?? null) || $value['verifiedAt'] < 0) { throw new \RuntimeException('Invalid Minecraft version'); }
                 $result[$edition]['version'] = $value['version'];
@@ -38,7 +43,7 @@ final class MinecraftStatus
             $players = $data['players'];
             if (!is_array($players) || !is_int($players['maximum'] ?? null) || $players['maximum'] < 0 || $players['maximum'] > 100000
                 || !is_array($players['names'] ?? null) || !array_is_list($players['names']) || count($players['names']) > $players['maximum']
-                || count(array_unique($players['names'], SORT_REGULAR)) !== count($players['names'])) { throw new \RuntimeException('Invalid Minecraft player roster'); }
+                || count(array_unique($players['names'], SORT_STRING)) !== count($players['names'])) { throw new \RuntimeException('Invalid Minecraft player roster'); }
             foreach ($players['names'] as $name) {
                 if (!is_string($name) || !preg_match('/^[^\p{Cc}<>]{1,64}$/uD', $name)) { throw new \RuntimeException('Invalid Minecraft player name'); }
             }
