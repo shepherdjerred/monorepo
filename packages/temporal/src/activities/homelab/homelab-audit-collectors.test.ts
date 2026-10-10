@@ -40,6 +40,10 @@ describe("homelab audit collector interpretation", () => {
 
     expect(result.findings[0]?.detail).toContain("automation=disabled");
     expect(result.findings[0]?.detail).not.toContain("automation=enabled");
+    expect(result.findings[0]).toMatchObject({
+      id: "argocd/application/disabled-automation",
+      condition: "sync=OutOfSync;health=Degraded;operationFailed=false",
+    });
   });
 
   test("does not report healthy drift when automation is explicitly disabled", () => {
@@ -98,6 +102,10 @@ describe("homelab audit collector interpretation", () => {
     );
 
     expect(finding.summary).toContain("#9001 failure");
+    expect(finding).toMatchObject({
+      id: "ci-main/pipeline/9001",
+      condition: "failure",
+    });
     expect(finding.detail).toContain("Insufficient memory");
   });
 

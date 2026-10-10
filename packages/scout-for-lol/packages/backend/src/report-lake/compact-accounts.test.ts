@@ -15,7 +15,7 @@ afterEach(async () => {
 });
 
 describe("writeAccountsParquet", () => {
-  test("closes the writer and removes its temp file when canceled", async () => {
+  test("checks cancellation between bounded account pages and removes its temp file", async () => {
     buildDir = await mkdtemp(path.join(tmpdir(), "compact-accounts-"));
     const controller = new AbortController();
     const accounts = Array.from({ length: 500 }, (_, id) => ({
@@ -31,24 +31,53 @@ describe("writeAccountsParquet", () => {
         discordId: null,
       },
     }));
+    const queries: unknown[] = [];
     const prisma = new Proxy(realPrisma, {
       get: (target, property, receiver) =>
         property === "account"
-          ? { findMany: async () => accounts }
+          ? {
+              findMany: async (query: unknown) => {
+                queries.push(query);
+                if (queries.length === 1) return accounts;
+                controller.abort(new Error("attempt canceled"));
+                return [];
+              },
+            }
           : Reflect.get(target, property, receiver),
     });
-    const cancel = setTimeout(
-      () => controller.abort(new Error("attempt canceled")),
-      0,
-    );
 
-    try {
-      await expect(
-        writeAccountsParquet(prisma, buildDir, controller.signal),
-      ).rejects.toThrow("attempt canceled");
-      expect(await readdir(buildDir)).toEqual([]);
-    } finally {
-      clearTimeout(cancel);
-    }
+    await expect(
+      writeAccountsParquet(prisma, buildDir, controller.signal),
+    ).rejects.toThrow("attempt canceled");
+    expect(queries).toEqual([
+      { include: { player: true }, orderBy: { id: "asc" }, take: 500 },
+      {
+        include: { player: true },
+        orderBy: { id: "asc" },
+        take: 500,
+        cursor: { id: 499 },
+        skip: 1,
+      },
+    ]);
+    expect(await readdir(buildDir)).toEqual([]);
+  });
+
+  test("does not query accounts after cancellation", async () => {
+    buildDir = await mkdtemp(path.join(tmpdir(), "compact-accounts-"));
+    const controller = new AbortController();
+    controller.abort(new Error("attempt canceled"));
+    let queries = 0;
+    const prisma = new Proxy(realPrisma, {
+      get: (target, property, receiver) =>
+        property === "account"
+          ? { findMany: async () => (queries += 1) }
+          : Reflect.get(target, property, receiver),
+    });
+
+    await expect(
+      writeAccountsParquet(prisma, buildDir, controller.signal),
+    ).rejects.toThrow("attempt canceled");
+    expect(queries).toBe(0);
+    expect(await readdir(buildDir)).toEqual([]);
   });
 });

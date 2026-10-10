@@ -178,6 +178,43 @@ test("unknown findings keep their detail and partial failures keep error text", 
   ).not.toBe(notificationCondition(partial).fingerprint);
 });
 
+test("stable finding identities ignore changing detail but retain condition changes", () => {
+  const first = report(1);
+  first.findings = [
+    {
+      id: "kubernetes/pod/scout/api-1",
+      condition: JSON.stringify({ phase: "Running", unreadyContainers: [] }),
+      severity: "warning",
+      summary: "Pod is running",
+      detail: "restarts=1",
+      evidenceReceiptIds: ["evidence"],
+    },
+  ];
+  const changedDetails = {
+    ...first,
+    findings: first.findings.map((finding) => ({
+      ...finding,
+      detail: "restarts=99",
+    })),
+  };
+  const changedCondition = {
+    ...first,
+    findings: first.findings.map((finding) => ({
+      ...finding,
+      condition: JSON.stringify({
+        phase: "CrashLoopBackOff",
+        unreadyContainers: [],
+      }),
+    })),
+  };
+  expect(notificationCondition(changedDetails).fingerprint).toBe(
+    notificationCondition(first).fingerprint,
+  );
+  expect(notificationCondition(changedCondition).fingerprint).not.toBe(
+    notificationCondition(first).fingerprint,
+  );
+});
+
 test("two concurrent changed runs cannot both own the family send", async () => {
   const h = harness();
   const r = report(1);

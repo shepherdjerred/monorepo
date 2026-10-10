@@ -208,6 +208,8 @@ export function interpretArgoApplications(
   return {
     summary: `${unhealthy.length.toString()} unhealthy of ${apps.length.toString()} apps`,
     findings: unhealthy.map((app) => ({
+      id: `argocd/application/${app.metadata.name}`,
+      condition: `sync=${app.status.sync.status};health=${app.status.health.status};operationFailed=${String(["Error", "Failed"].includes(app.status.operationState?.phase ?? ""))}`,
       severity: "warning",
       summary: `${app.metadata.name}: sync=${app.status.sync.status}, health=${app.status.health.status}`,
       detail: [

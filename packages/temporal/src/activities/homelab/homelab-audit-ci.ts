@@ -180,6 +180,8 @@ export function ciPipelineFinding(
     .join("\n")
     .slice(0, 2000);
   return {
+    id: `ci-main/pipeline/${pipeline.number.toString()}`,
+    condition: pipeline.status,
     severity: "warning",
     summary: `CI main pipeline #${pipeline.number.toString()} ${pipeline.status}`,
     ...(detail === "" ? {} : { detail }),
@@ -243,6 +245,8 @@ export async function collectCiMainWith(input: {
       pipelines.length === 0
         ? [
             {
+              id: "ci-main/no-pipelines-in-24h",
+              condition: "no-pipelines-in-24h",
               severity: "warning",
               summary: "No CI main pipelines were found in the last 24 hours",
               detail: `Queried pipelines created from ${since.toISOString()} through ${observedAt}`,

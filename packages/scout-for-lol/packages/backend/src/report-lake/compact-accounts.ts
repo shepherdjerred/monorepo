@@ -11,19 +11,39 @@ import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import { PARQUET_COPY_OPTIONS } from "#src/reports/duckdb/writes/parquet.ts";
 
 const COMPACTION_TIMEOUT_MS = 30 * 60 * 1000;
+const ACCOUNT_BATCH_SIZE = 500;
 
 export async function writeAccountsParquet(
   prisma: ExtendedPrismaClient,
   buildDir: string,
   abortSignal?: AbortSignal,
 ): Promise<number> {
-  const accounts = await prisma.account.findMany({ include: { player: true } });
   const tmpPath = path.join(buildDir, "accounts.ndjson.tmp");
   abortSignal?.throwIfAborted();
   const writer = new NdjsonFileWriter(tmpPath, undefined, abortSignal);
+  let count = 0;
   try {
-    for (const account of accounts)
-      await writer.write(accountToLakeRow(account));
+    let cursor: number | undefined;
+    for (;;) {
+      abortSignal?.throwIfAborted();
+      const accounts = await prisma.account.findMany({
+        include: { player: true },
+        orderBy: { id: "asc" },
+        take: ACCOUNT_BATCH_SIZE,
+        ...(cursor === undefined ? {} : { cursor: { id: cursor }, skip: 1 }),
+      });
+      abortSignal?.throwIfAborted();
+      for (const account of accounts) {
+        await writer.write(accountToLakeRow(account));
+        count += 1;
+      }
+      if (accounts.length < ACCOUNT_BATCH_SIZE) break;
+      const last = accounts.at(-1);
+      if (last === undefined) {
+        throw new Error("A full account compaction page must have a cursor");
+      }
+      cursor = last.id;
+    }
     await writer.close();
 
     const accountsDir = path.join(buildDir, "accounts");
@@ -34,7 +54,7 @@ export async function writeAccountsParquet(
     } catch {
       // A fresh build has no previous hardlink to replace.
     }
-    if (accounts.length > 0) {
+    if (count > 0) {
       await withDuckDBConnection(
         async (session) => {
           await session.run(
@@ -55,5 +75,5 @@ export async function writeAccountsParquet(
       await rm(tmpPath, { force: true });
     }
   }
-  return accounts.length;
+  return count;
 }

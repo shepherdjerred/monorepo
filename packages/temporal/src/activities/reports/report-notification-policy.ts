@@ -148,6 +148,9 @@ export function notificationCondition(report: ReportEnvelopeV1): {
         JSON.stringify({
           id: finding.id,
           severity: finding.severity,
+          ...(finding.condition === undefined
+            ? {}
+            : { condition: finding.condition }),
           ...(finding.id === undefined
             ? { summary: finding.summary, detail: finding.detail }
             : {}),

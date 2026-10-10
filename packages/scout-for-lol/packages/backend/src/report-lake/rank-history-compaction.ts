@@ -1,4 +1,4 @@
-import { mkdir, unlink } from "node:fs/promises";
+import { mkdir, rm, unlink } from "node:fs/promises";
 import path from "node:path";
 import configuration from "#src/configuration.ts";
 import { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
@@ -30,26 +30,26 @@ export async function writeCompetitionRankHistoryParquet(options: {
     );
   }
   const tmpPath = path.join(buildDir, "competition-rank-history.ndjson.tmp");
-  const writer = new NdjsonFileWriter(tmpPath);
-  const skipped = await populateCompetitionRankHistoryFromS3({
-    client: createS3Client(),
-    bucket,
-    writer,
-    ...(foldedIds === undefined ? {} : { foldedIds }),
-    ...(foldedSources === undefined ? {} : { foldedSources }),
-    ...(abortSignal === undefined ? {} : { abortSignal }),
-  });
-  await writer.close();
+  const writer = new NdjsonFileWriter(tmpPath, undefined, abortSignal);
+  try {
+    const skipped = await populateCompetitionRankHistoryFromS3({
+      client: createS3Client(),
+      bucket,
+      writer,
+      ...(foldedIds === undefined ? {} : { foldedIds }),
+      ...(foldedSources === undefined ? {} : { foldedSources }),
+      ...(abortSignal === undefined ? {} : { abortSignal }),
+    });
+    await writer.close();
 
-  const outputDir = path.join(buildDir, "competition_rank_history");
-  await mkdir(outputDir, { recursive: true });
-  const parquetPath = path.join(outputDir, "history.parquet");
-  try {
-    await unlink(parquetPath);
-  } catch {
-    // A fresh build has no prior hardlink to replace.
-  }
-  try {
+    const outputDir = path.join(buildDir, "competition_rank_history");
+    await mkdir(outputDir, { recursive: true });
+    const parquetPath = path.join(outputDir, "history.parquet");
+    try {
+      await unlink(parquetPath);
+    } catch {
+      // A fresh build has no previous hardlink to replace.
+    }
     await withDuckDBConnection(
       async (session) => {
         if (writer.rows === 0) {
@@ -68,8 +68,12 @@ export async function writeCompetitionRankHistoryParquet(options: {
         ...(abortSignal === undefined ? {} : { abortSignal }),
       },
     );
+    return { rows: writer.rows, skipped };
   } finally {
-    await unlink(tmpPath);
+    try {
+      await writer.abort();
+    } finally {
+      await rm(tmpPath, { force: true });
+    }
   }
-  return { rows: writer.rows, skipped };
 }
