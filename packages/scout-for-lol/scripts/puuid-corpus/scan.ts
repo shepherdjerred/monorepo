@@ -7,7 +7,8 @@
  * progress reporting and one failure policy.
  */
 
-import { GetObjectCommand, type S3Client } from "@aws-sdk/client-s3";
+import type { S3Client } from "@aws-sdk/client-s3";
+import { fetchObject, type FetchedObject } from "./fetch-object.ts";
 import {
   classifyRawObjectKey,
   enumerateRawObjects,
@@ -76,41 +77,6 @@ export async function listRawObjects(
     });
   }
   return objects;
-}
-
-/** An object's body together with the user metadata stored beside it. */
-export type FetchedObject = {
-  body: string;
-  metadata: Record<string, string>;
-};
-
-/**
- * Read a body AND the metadata stored with it, in one request.
- *
- * The metadata is what lets a re-run tell an object this migration already
- * rewrote from one it has never touched. Without it a re-run cannot repair its
- * own interrupted work: a rewritten object carries no old identifier, so by
- * content it is indistinguishable from one that never needed changing.
- */
-export async function fetchObject(
-  client: S3Client,
-  bucket: string,
-  key: string,
-): Promise<FetchedObject> {
-  const response = await client.send(
-    new GetObjectCommand({ Bucket: bucket, Key: key }),
-  );
-  if (response.Body === undefined) {
-    // A 200 with no body is not an empty object, it is a read that did not
-    // happen. Returning "" would count as a successful read holding no
-    // identities: the inventory's failure count would stay at zero and an
-    // operator would proceed to an irreversible rewrite on a map with a hole in
-    // it. The rewrite would be worse still — a marked object read as empty
-    // would reconcile its observation to the digest of nothing.
-    throw new Error(`S3 returned no body for ${bucket}/${key}`);
-  }
-  const body = await response.Body.transformToString();
-  return { body, metadata: response.Metadata ?? {} };
 }
 
 export type ScanReport = {
