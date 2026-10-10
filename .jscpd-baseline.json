@@ -1308,10 +1308,6 @@
       "clones": 1,
       "tokens": 79
     },
-    "packages/temporal/src/activities/maintenance/tasknotes-canary.ts|packages/temporal/src/activities/reports/report-freshness.ts": {
-      "clones": 1,
-      "tokens": 105
-    },
     "packages/temporal/src/shared/agent/agent-task-output.ts|packages/temporal/src/shared/agent/agent-task-output.ts": {
       "clones": 1,
       "tokens": 141

@@ -1,4 +1,5 @@
 import { ReportEnvelopeV1Schema } from "#shared/reports/report.ts";
+import { recordReportHeartbeat } from "./report-heartbeat-index.ts";
 import {
   conditionalWrite,
   readJson,
@@ -25,12 +26,17 @@ export function notificationBackend(
       ),
     readSkip: async (key) => {
       const stored = await readJson(store, key, SkippedNotificationSchema);
+      if (stored !== undefined)
+        await recordReportHeartbeat(store, key, stored.value.completedAt);
       return stored?.value;
     },
-    writeSkip: (key, result) =>
-      conditionalWrite(() =>
+    writeSkip: async (key, result) => {
+      const recorded = await conditionalWrite(() =>
         writeJson(store, key, result, { expectedEtag: undefined }),
-      ),
+      );
+      if (recorded) await recordReportHeartbeat(store, key, result.completedAt);
+      return recorded;
+    },
     readFamily: (key) => readJson(store, key, NotificationFamilySchema),
     writeFamily: (key, value, expectedEtag) =>
       conditionalWrite(() =>

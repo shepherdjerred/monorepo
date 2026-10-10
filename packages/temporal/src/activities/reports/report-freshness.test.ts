@@ -19,6 +19,38 @@ afterEach(() => {
   reportFreshnessState.reset();
 });
 
+describe("freshness during history migration", () => {
+  test("keeps incomplete historical backfill inconclusive unless freshness is proven", () => {
+    const input = {
+      registration,
+      now: new Date("2026-08-10T12:00:00.000Z"),
+      lastActionTakenAt: "2026-08-10T09:00:00.000Z",
+      scheduleCreatedAt: EXISTING_SCHEDULE_CREATED_AT,
+      deployed: true,
+      paused: false,
+      historyComplete: false,
+    };
+    expect(evaluateFreshness({ ...input, acceptedAt: undefined }).status).toBe(
+      "indexing",
+    );
+    expect(
+      evaluateFreshness({ ...input, acceptedAt: "2026-08-01T12:00:00.000Z" })
+        .status,
+    ).toBe("indexing");
+    expect(
+      evaluateFreshness({ ...input, acceptedAt: "2026-08-10T11:00:00.000Z" })
+        .status,
+    ).toBe("fresh");
+    expect(
+      evaluateFreshness({
+        ...input,
+        acceptedAt: undefined,
+        historyComplete: true,
+      }).status,
+    ).toBe("missing");
+  });
+});
+
 describe("evaluateFreshness", () => {
   test("counts an explicit skip as report freshness without inventing mail acceptance", () => {
     const result = evaluateFreshness({
@@ -212,6 +244,20 @@ describe("evaluateFreshness", () => {
 });
 
 describe("publishReportFreshnessMetrics", () => {
+  test("keeps incomplete history distinct from stale or fresh", async () => {
+    publishReportFreshnessMetrics([
+      {
+        scheduleId: "daily-report",
+        status: "indexing",
+        acceptedAt: undefined,
+        ageHours: undefined,
+        maximumAgeHours: 26,
+      },
+    ]);
+    const metric = await reportFreshnessState.get();
+    expect(metric.values[0]?.value).toBe(2);
+  });
+
   test("publishes pending schedules outside the alerting range", async () => {
     publishReportFreshnessMetrics([
       {
