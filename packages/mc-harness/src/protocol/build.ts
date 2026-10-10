@@ -20,6 +20,7 @@ export const BUILD_FILES = {
   siteDir: "site",
   siteSchematic: path.join("site", "site.schem"),
   siteInfo: path.join("site", "site.json"),
+  siteIdentity: path.join("site", "capture.json"),
   expected: "expected.json",
   expectedRun: "expected.run.json",
   /** Frozen canvas result (bridge snapshot of the site box); promote pastes it. */
@@ -63,6 +64,8 @@ const outcomeFields = {
 export const BuildLogEntrySchema = z.discriminatedUnion("kind", [
   z.strictObject({
     kind: z.literal("capture"),
+    /** Shared identity of journal, installed site directory and manifest; absent only in legacy captures. */
+    id: z.uuid().optional(),
     at: Iso,
     iteration: Iteration,
     siteHash: z.string().min(1),
@@ -358,6 +361,7 @@ export const BuildManifestSchema = z.strictObject({
   /** Captured site box; the canvas, replays and promotions all operate inside it. */
   site: z
     .strictObject({
+      id: z.uuid().optional(),
       min: BlockPosSchema,
       max: BlockPosSchema,
       siteHash: z.string(),

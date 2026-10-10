@@ -80,6 +80,7 @@ describe("candidate save publication", () => {
         ? await Bun.file(journal).text()
         : "";
       expect(after).toBe(before);
+      if (kind === "malformed") await Bun.write(journal, cleanJournal);
       if (old === null) expect(await listCandidates(workspace.dir)).toEqual([]);
       else {
         expect(await readCandidate(workspace.dir, "saved")).toEqual(old);
@@ -87,7 +88,6 @@ describe("candidate save publication", () => {
       }
       const files = await readdir(workspace.dir);
       expect(files.some((file) => file.startsWith(".candidate-"))).toBe(false);
-      if (kind === "malformed") await Bun.write(journal, cleanJournal);
       const saved = await saveCandidate(workspace.dir, "saved", { force });
       expect(saved.gridHash).not.toBe(old?.gridHash);
       const entries = await readLog(workspace.dir);

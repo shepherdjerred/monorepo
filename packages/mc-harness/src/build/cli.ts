@@ -32,7 +32,6 @@ import {
   runBuild,
 } from "./commands.ts";
 import type { Env } from "./helpers.ts";
-import { BUILD_FILES } from "#protocol/build.ts";
 import { appendLog } from "./build-log.ts";
 import {
   CANDIDATE_HANDLERS,
@@ -239,13 +238,6 @@ const HANDLERS: Record<string, Handler> = {
   },
   compile: async (_env, dir, values) => {
     const result = await compileBuild(dir);
-    await appendLog(dir, {
-      kind: "compile",
-      program: BUILD_FILES.program,
-      ops: result.ops,
-      lintErrors: result.lint.errors,
-      lintWarnings: result.lint.warnings,
-    });
     print(
       values.json,
       result,

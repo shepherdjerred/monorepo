@@ -5,6 +5,31 @@ import { loadRegistry } from "@shepherdjerred/mc-build/registry/registry.ts";
 import { gridHash } from "@shepherdjerred/mc-build/core/site.ts";
 import { BuildWorkspace } from "#build/workspace.ts";
 import { BUILD_FILES, type Op } from "#protocol/build.ts";
+import type { BlockPos, RegionReadResponse } from "#protocol/bridge.ts";
+
+const FIXTURE_MIN: BlockPos = { x: 100, y: 64, z: 100 };
+
+/** A region-read response for this fixture world's exact grid. */
+export function regionForGrid(
+  grid: BlockGrid,
+  min: BlockPos = FIXTURE_MIN,
+): RegionReadResponse {
+  const blocks = Buffer.alloc(grid.volume * 4);
+  grid.data.forEach((value, index) => blocks.writeUInt32LE(value, index * 4));
+  return {
+    world: "world",
+    min,
+    max: {
+      x: min.x + grid.size.x - 1,
+      y: min.y + grid.size.y - 1,
+      z: min.z + grid.size.z - 1,
+    },
+    size: grid.size,
+    palette: grid.palette,
+    blocks: blocks.toString("base64"),
+    blockEntities: [],
+  };
+}
 
 /** One reproducible edit of the captured floor for distinct candidate grids. */
 export function clearFloorOp(index: number): Op {

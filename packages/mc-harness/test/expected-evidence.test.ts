@@ -9,14 +9,16 @@ import {
   writeSchematic,
 } from "@shepherdjerred/mc-build/core/schem.ts";
 import { BUILD_FILES } from "#protocol/build.ts";
-import type { RegionReadResponse } from "#protocol/bridge.ts";
 import { runBuild, renderBuild } from "#build/commands.ts";
 import { promoteBuild } from "#build/apply.ts";
 import { validateFrozenExpected } from "#build/frozen-expected.ts";
 import { readLog } from "#build/build-log.ts";
 import { DaemonClient } from "#build/daemon-client.ts";
 import { Journal } from "#build/journal.ts";
-import { flatSiteBuild } from "./fixtures/flat-site.ts";
+import {
+  flatSiteBuild,
+  regionForGrid as regionOf,
+} from "./fixtures/flat-site.ts";
 import { writeRunIdentity } from "#build/storage/run-identity.ts";
 
 const journalFailure = vi.hoisted(() => ({ file: "" }));
@@ -39,26 +41,6 @@ vi.mock("node:fs/promises", async (importOriginal) => {
 
 const root = await mkdtemp(path.join(os.tmpdir(), "mc-expected-evidence-"));
 afterAll(async () => rm(root, { recursive: true }));
-
-const MIN = { x: 100, y: 64, z: 100 };
-
-function regionOf(grid: BlockGrid, min = MIN): RegionReadResponse {
-  const blocks = Buffer.alloc(grid.volume * 4);
-  grid.data.forEach((value, index) => blocks.writeUInt32LE(value, index * 4));
-  return {
-    world: "world",
-    min,
-    max: {
-      x: min.x + grid.size.x - 1,
-      y: min.y + grid.size.y - 1,
-      z: min.z + grid.size.z - 1,
-    },
-    size: grid.size,
-    palette: grid.palette,
-    blocks: blocks.toString("base64"),
-    blockEntities: [],
-  };
-}
 
 async function build(name: string) {
   const workspace = await flatSiteBuild(path.join(root, name), name);

@@ -23,6 +23,7 @@ import {
 } from "#protocol/build.ts";
 import { currentRun, lastOf, readLog } from "./build-log.ts";
 import { validateRunIdentity } from "./storage/run-identity.ts";
+import { validateCaptureIdentity } from "./storage/capture-identity.ts";
 import { validateFrozenExpected, type FrozenPart } from "./frozen-expected.ts";
 
 export type FrozenKind = "site" | "expected";
@@ -55,6 +56,13 @@ export class BuildWorkspace {
   }
 
   async manifest(): Promise<BuildManifest> {
+    const manifest = await this.manifestForCapture();
+    await validateCaptureIdentity(this, manifest);
+    return manifest;
+  }
+
+  /** Explicit recapture can repair an interrupted capture; syntax remains strictly validated. */
+  async manifestForCapture(): Promise<BuildManifest> {
     const file = Bun.file(this.file(BUILD_FILES.manifest));
     if (!(await file.exists())) {
       throw new Error(
@@ -95,6 +103,7 @@ export class BuildWorkspace {
   }
 
   async siteInfo(): Promise<SiteInfo> {
+    await this.manifest();
     return SiteInfoSchema.parse(
       await Bun.file(this.file(BUILD_FILES.siteInfo)).json(),
     );
@@ -139,6 +148,7 @@ export class BuildWorkspace {
 
   /** The frozen box as pasteable parts (tiles when it was snapshotted in tiles). */
   async frozenParts(kind: FrozenKind, box: Box): Promise<FrozenPart[]> {
+    if (kind === "site") await this.manifest();
     if (kind === "expected") await this.assertExpectedCurrent();
     const files = FROZEN_FILES[kind];
     const indexFile = Bun.file(this.file(path.join(files.parts, "parts.json")));
@@ -165,6 +175,7 @@ export class BuildWorkspace {
   }
 
   async siteGrid(): Promise<BlockGrid> {
+    await this.manifest();
     const bytes = new Uint8Array(
       await Bun.file(this.file(BUILD_FILES.siteSchematic)).arrayBuffer(),
     );

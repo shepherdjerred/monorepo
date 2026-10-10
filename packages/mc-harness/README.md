@@ -211,6 +211,10 @@ WorldEdit, paste and console ops, each with explicit coordinates and a
   preview and capture journal boundary together, restoring the preceding capture
   if publication fails. Installing the boundary first invalidates old expected
   results even if the process exits during a recapture.
+  New captures bind the site directory, manifest and journal with a shared UUID
+  and a digest of every captured artifact. Every site reader rejects a missing,
+  changed or interrupted capture, including a same-box, same-block recapture.
+  Run capture explicitly again to repair it.
 - **Canvas** is a void sandbox with the site pasted at its real coordinates;
   **run** resets it to the site, replays every op, and freezes the result as
   `expected.schem` + `expected.json`. Publication stages the JSON and all frozen
@@ -227,6 +231,10 @@ WorldEdit, paste and console ops, each with explicit coordinates and a
   Region reads expose block-entity holders, not NBT types or contents; inventory
   and sign-text equality across the read and snapshot is outside that contract.
   The run identity still binds the complete frozen schematic bytes.
+- **Compile** stages its schematic, program snapshot, checksum record, op log
+  and compile journal entry under one publication lock. Failed staging or
+  installation restores the preceding compile and journal. The op log installs
+  last, after its referenced artifacts and journal entry.
 - **Render** draws a contact sheet of the site, or of a region inside it
   (`render <dir> <x1,y1,z1> <x2,y2,z2>`, from any source) so map-scale builds can be
   reviewed one district at a time. `--source canvas|expected|compiled`
@@ -389,6 +397,9 @@ pick n | knockout [--among a,b] [--rubric] [--model]`) keep versions of
   publication reads and stamps its outcomes while holding it. Run journals are
   staged with the frozen artifacts. A competing publisher fails before changing any
   files; the operating system releases the lock when its process exits.
+  Run holds that lock from reading its op log and program through resetting,
+  replaying, snapshotting and publishing, so a recorded edit cannot slip into a
+  frozen result attributed to an earlier program. Canvas creation also holds it.
   Toolkit's recorded canvas commands use the standalone protocol lock from
   before the server write through op-log recording, so a render cannot attribute
   an intervening manual edit to a program. The thin client imports no build or daemon implementation.

@@ -4,8 +4,19 @@ import path from "node:path";
 import os from "node:os";
 import { afterAll, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
-import { flatSiteBuild, clearFloorOp } from "#test/fixtures/flat-site.ts";
-import { renderBuild, captureSite } from "#build/commands.ts";
+import {
+  flatSiteBuild,
+  clearFloorOp,
+  regionForGrid,
+} from "#test/fixtures/flat-site.ts";
+import {
+  renderBuild,
+  captureSite,
+  compileBuild,
+  runBuild,
+  createCanvas,
+} from "#build/commands.ts";
+import { withPublicationLock } from "#protocol/publication-lock.ts";
 import { promoteBuild } from "#build/apply.ts";
 import { critiqueBuild } from "#build/studio/critique.ts";
 import { saveCandidate, pickCandidate } from "#build/studio/candidates.ts";
@@ -50,6 +61,7 @@ vi.mock("node:fs/promises", async (importOriginal) => {
         failure.install !== "" &&
         (from.includes(".capture-") ||
           from.includes(".pick-") ||
+          from.includes(".compile-") ||
           from.includes(".render-") ||
           from.includes(".critique-publish-")) &&
         from.endsWith(failure.install)
@@ -83,6 +95,36 @@ async function fixture(name: string) {
   return { workspace, env };
 }
 
+async function captureFixture(name: string) {
+  const { workspace, env } = await fixture(name);
+  const box = workspace.siteBox(await workspace.manifest());
+  const original = await workspace.siteGrid();
+  let current = original;
+  const { dataVersion } = await loadRegistry();
+  const region = () => regionForGrid(current, box.min);
+  vi.spyOn(env.client, "snapshotParts").mockResolvedValue({
+    id: "capture",
+    parts: [{ id: "capture", box }],
+  });
+  vi.spyOn(env.client, "snapshotBytes").mockImplementation(() =>
+    Promise.resolve(writeSchematic(current, dataVersion)),
+  );
+  vi.spyOn(env.client, "regionRead").mockImplementation(() =>
+    Promise.resolve(region()),
+  );
+  return {
+    workspace,
+    env,
+    box,
+    original,
+    region,
+    dataVersion,
+    setGrid: (grid: BlockGrid) => {
+      current = grid;
+    },
+  };
+}
+
 async function evidence(dir: string) {
   const files = await readdir(dir, { recursive: true, withFileTypes: true });
   const result: Record<string, Uint8Array> = {};
@@ -96,6 +138,8 @@ async function evidence(dir: string) {
       (relative.startsWith("renders/") ||
         relative.startsWith("judge/") ||
         relative.startsWith("site/") ||
+        relative.startsWith("schematics/") ||
+        relative === BUILD_FILES.oplog ||
         relative === BUILD_FILES.manifest ||
         relative === BUILD_FILES.journal)
     )
@@ -104,43 +148,67 @@ async function evidence(dir: string) {
   return result;
 }
 
+const compileSource = (block: string) =>
+  `export default (ctx) => { ctx.set(1, 1, 1, "minecraft:${block}"); };\n`;
+
+describe("compile evidence publication", () => {
+  it.each(["journal", "journal-install", "oplog", "snapshot", "malformed"])(
+    "preserves the active compile and journal after %s failure",
+    async (mode) => {
+      const { workspace } = await fixture(`compile-${mode}`);
+      await Bun.write(
+        workspace.file(BUILD_FILES.program),
+        compileSource("stone"),
+      );
+      await compileBuild(workspace.dir);
+      const oldLog = await workspace.oplog();
+      const cleanJournal = await Bun.file(
+        workspace.file(BUILD_FILES.journal),
+      ).text();
+      await Bun.write(
+        workspace.file(BUILD_FILES.program),
+        compileSource("oak_planks"),
+      );
+      if (mode === "malformed")
+        await Bun.write(
+          workspace.file(BUILD_FILES.journal),
+          "invalid journal\n",
+        );
+      else if (mode === "journal") failure.kind = "compile";
+      else
+        failure.install =
+          mode === "journal-install"
+            ? BUILD_FILES.journal
+            : mode === "oplog"
+              ? BUILD_FILES.oplog
+              : ".schem";
+      const before = await evidence(workspace.dir);
+      await expect(compileBuild(workspace.dir)).rejects.toThrow();
+      expect(await evidence(workspace.dir)).toEqual(before);
+      const files = await readdir(workspace.dir);
+      expect(files.some((file) => file.startsWith(".compile-"))).toBe(false);
+      if (mode === "malformed")
+        await Bun.write(workspace.file(BUILD_FILES.journal), cleanJournal);
+      await compileBuild(workspace.dir);
+      expect(await workspace.oplog()).not.toEqual(oldLog);
+      const journal = await readLog(workspace.dir);
+      expect(journal.filter((entry) => entry.kind === "compile")).toHaveLength(
+        2,
+      );
+    },
+  );
+});
+
 describe("capture evidence publication", () => {
   it.each(["journal", "install"])(
     "restores a same-box recapture on %s failure and invalidates old expected results on success",
     async (mode) => {
-      const { workspace, env } = await fixture(`recapture-${mode}`);
-      const manifest = await workspace.manifest();
-      const box = workspace.siteBox(manifest);
-      const original = await workspace.siteGrid();
-      let current = original;
-      const registry = await loadRegistry();
-      const region = () => {
-        const blocks = Buffer.alloc(current.volume * 4);
-        current.data.forEach((state, index) =>
-          blocks.writeUInt32LE(state, index * 4),
-        );
-        return {
-          ...box,
-          size: current.size,
-          palette: current.palette,
-          blocks: blocks.toString("base64"),
-          blockEntities: [],
-        };
-      };
-      vi.spyOn(env.client, "snapshotParts").mockResolvedValue({
-        id: "capture",
-        parts: [{ id: "capture", box }],
-      });
-      vi.spyOn(env.client, "snapshotBytes").mockImplementation(() =>
-        Promise.resolve(writeSchematic(current, registry.dataVersion)),
-      );
-      vi.spyOn(env.client, "regionRead").mockImplementation(() =>
-        Promise.resolve(region()),
-      );
+      const { workspace, env, box, original, region, dataVersion, setGrid } =
+        await captureFixture(`recapture-${mode}`);
       await captureSite(env, workspace.dir, { target: "sbx-000001", box });
       await workspace.writeExpected(region());
       await workspace.writeFrozen("expected", [
-        { at: box.min, bytes: writeSchematic(original, registry.dataVersion) },
+        { at: box.min, bytes: writeSchematic(original, dataVersion) },
       ]);
       await appendLog(workspace.dir, {
         kind: "run",
@@ -149,7 +217,7 @@ describe("capture evidence publication", () => {
         program: null,
       });
       const before = await evidence(workspace.dir);
-      current = new BlockGrid(original.size, "minecraft:stone");
+      setGrid(new BlockGrid(original.size, "minecraft:stone"));
       if (mode === "journal") failure.kind = "capture";
       else failure.install = BUILD_FILES.manifest;
       await expect(
@@ -172,6 +240,168 @@ describe("capture evidence publication", () => {
       );
     },
   );
+});
+
+describe("capture interruption identity", () => {
+  it.each(
+    [
+      "journal",
+      "site",
+      "missing",
+      "corrupt",
+      "legacy",
+      "payload",
+      "info",
+      "extra",
+    ].flatMap((phase) => [false, true].map((changed) => ({ phase, changed }))),
+  )(
+    "rejects interrupted $phase capture (changed grid: $changed) and permits explicit recapture",
+    async ({ phase, changed }) => {
+      const { workspace, env, box, original, setGrid } = await captureFixture(
+        `capture-${phase}-${String(changed)}`,
+      );
+      await captureSite(env, workspace.dir, { target: "sbx-000001", box });
+      const oldManifest = await Bun.file(
+        workspace.file(BUILD_FILES.manifest),
+      ).bytes();
+      const backup = path.join(root, `backup-${phase}-${String(changed)}`);
+      await cp(workspace.file(BUILD_FILES.siteDir), backup, {
+        recursive: true,
+      });
+      if (changed) setGrid(new BlockGrid(original.size, "minecraft:stone"));
+      await captureSite(env, workspace.dir, { target: "sbx-000001", box });
+      const complete = await workspace.manifest();
+      if (phase === "journal") {
+        await rm(workspace.file(BUILD_FILES.siteDir), { recursive: true });
+        await cp(backup, workspace.file(BUILD_FILES.siteDir), {
+          recursive: true,
+        });
+      }
+      switch (phase) {
+        case "journal":
+        case "site":
+          await Bun.write(workspace.file(BUILD_FILES.manifest), oldManifest);
+          break;
+        case "missing":
+          await rm(workspace.file(BUILD_FILES.siteIdentity));
+          break;
+        case "corrupt":
+          await Bun.write(
+            workspace.file(BUILD_FILES.siteIdentity),
+            "invalid identity",
+          );
+          break;
+        case "payload":
+          await Bun.write(
+            workspace.file(BUILD_FILES.siteSchematic),
+            "damaged snapshot",
+          );
+          break;
+        case "info":
+          await Bun.write(
+            workspace.file(BUILD_FILES.siteInfo),
+            "damaged metadata",
+          );
+          break;
+        case "extra":
+          await Bun.write(
+            workspace.file("site/extra.schem"),
+            "unexpected tile",
+          );
+          break;
+        default: {
+          const entries = await readLog(workspace.dir);
+          await Bun.write(
+            workspace.file(BUILD_FILES.journal),
+            entries
+              .map((entry) => {
+                if (entry.kind !== "capture") return JSON.stringify(entry);
+                const { id: _id, ...legacy } = entry;
+                return JSON.stringify(legacy);
+              })
+              .join("\n") + "\n",
+          );
+        }
+      }
+      const we = vi.spyOn(env.client, "we");
+      const paste = vi.spyOn(env.client, "paste");
+      for (const read of [
+        () => workspace.manifest(),
+        () => workspace.siteGrid(),
+        () => workspace.siteInfo(),
+        () => workspace.frozenParts("site", box),
+        () => compileBuild(workspace.dir),
+        () =>
+          renderBuild(env, workspace.dir, {
+            source: "compiled",
+            name: "invalid",
+          }),
+        () => runBuild(env, workspace.dir, { target: "sbx-000001" }),
+        () => saveCandidate(workspace.dir, "invalid"),
+        () => promoteBuild(env, workspace.dir, { target: "sbx-000001" }),
+      ])
+        await expect(read()).rejects.toThrow();
+      expect(we).not.toHaveBeenCalled();
+      expect(paste).not.toHaveBeenCalled();
+      expect(
+        await Bun.file(workspace.file("renders/invalid.json")).exists(),
+      ).toBe(false);
+      await captureSite(env, workspace.dir, { target: "sbx-000001", box });
+      const repaired = await workspace.manifest();
+      expect(repaired.site?.id).not.toBe(complete.site?.id);
+      expect(repaired.site?.siteHash).toBe(complete.site?.siteHash);
+      expect(await workspace.siteGrid()).toMatchObject({ size: original.size });
+    },
+  );
+});
+
+describe("run publication lock", () => {
+  it("excludes recorded edits and snapshots throughout replay and releases on success and failure", async () => {
+    const { workspace, env, box, region, original, dataVersion } =
+      await captureFixture("run-locked");
+    const locked = async () => {
+      await expect(
+        withPublicationLock(workspace.dir, () => Promise.resolve()),
+      ).rejects.toThrow(/already running/u);
+      await expect(
+        appendLog(workspace.dir, { kind: "note", text: "concurrent edit" }),
+      ).rejects.toThrow(/already running/u);
+      await expect(createCanvas(env, workspace.dir, {})).rejects.toThrow(
+        /already running/u,
+      );
+    };
+    const we = vi.spyOn(env.client, "we").mockImplementation(async () => {
+      await locked();
+      return { results: [], historySize: 0 };
+    });
+    vi.spyOn(env.client, "paste").mockImplementation(async () => {
+      await locked();
+      return { changed: 0, min: box.min, max: box.max, historySize: 0 };
+    });
+    vi.spyOn(env.client, "snapshotParts").mockImplementation(async () => {
+      await locked();
+      return { id: "run", parts: [{ id: "run", box }] };
+    });
+    vi.spyOn(env.client, "snapshotBytes").mockImplementation(async () => {
+      await locked();
+      return writeSchematic(original, dataVersion);
+    });
+    vi.spyOn(env.client, "regionRead").mockImplementation(async () => {
+      await locked();
+      return region();
+    });
+    await captureSite(env, workspace.dir, { target: "sbx-000001", box });
+    await runBuild(env, workspace.dir, { target: "sbx-000001" });
+    const before = await readLog(workspace.dir);
+    expect(before.filter((entry) => entry.kind === "run")).toHaveLength(1);
+    await withPublicationLock(workspace.dir, () => Promise.resolve());
+    we.mockRejectedValueOnce(new Error("simulated replay failure"));
+    await expect(
+      runBuild(env, workspace.dir, { target: "sbx-000001" }),
+    ).rejects.toThrow(/replay failure/u);
+    expect(await readLog(workspace.dir)).toEqual(before);
+    await withPublicationLock(workspace.dir, () => Promise.resolve());
+  });
 });
 
 describe("candidate selection publication", () => {
@@ -250,8 +480,8 @@ describe("render evidence publication", () => {
           notes: [],
         },
       });
-      const before = await evidence(workspace.dir);
       await workspace.writeOplog({ version: 1, ops: [clearFloorOp(2)] });
+      const before = await evidence(workspace.dir);
       failure.kind = "render";
       await expect(renderBuild(env, workspace.dir, options)).rejects.toThrow(
         /journal failure/u,
