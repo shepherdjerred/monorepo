@@ -272,6 +272,9 @@ survey`, `--grid n` coordinate lines, `--floor y` and `--section z` cuts
   total and maximum, and the first lowest axis in rubric order.
   Critique images carry the checksum of the bytes scored by the visual model;
   code-only reuse, grading and archival reject changed images.
+  Every critique keeps its own schematic under `judge/grids/`; reuse, grading and
+  archival verify its grid hash independently of the journal and record. Reusing
+  a render name cannot replace that earlier evidence.
   A sidecar may reference only its own `renders/<name>.build.ts` program artifact.
   Run journals may reference only `schematics/program-<hex-digest>.build.ts`;
   program reads reject symlinks outside the build. Resume's latest render also
@@ -321,12 +324,14 @@ pick n | knockout [--among a,b] [--rubric] [--model]`) keep versions of
   rubric and model resumes its remaining challengers without rejudging earlier
   bouts. Changing those inputs starts a new tournament. The default iteration
   loop challenges only grids not already eliminated
-  by the same model, rubric and judging policy, regardless of candidate names. Replacing a loser's grid makes
+  by the same model, rubric and judging policy, regardless of candidate names.
+  Default pools contain one name per grid hash and prefer the incumbent's name.
+  Explicit comparisons of identical grids cannot eliminate their shared hash. Replacing a loser's grid makes
   it eligible again; `--among` requests explicit rematches.
   Saving candidates outside an explicit `--among` pool does not reset its checkpoint; the
   original incumbent remains part of its fingerprint even after defeat.
   Legacy scored outcomes without critique identity and critique records without
-  image checksums or render iterations cannot prove their scores; start a new capture and critique
+  image checksums, render iterations or saved grid schematics cannot prove their scores; start a new capture and critique
   before using them as graded evidence. Unbound legacy tournament decisions
   require an explicit `--among` rematch.
   Incomplete candidate directories and metadata names that disagree with their

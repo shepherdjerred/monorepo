@@ -30,7 +30,7 @@ import {
 } from "#build/studio/candidates.ts";
 import { knockout } from "#build/studio/knockout.ts";
 import { resumeState } from "#build/resume.ts";
-import { flatSiteBuild } from "./fixtures/flat-site.ts";
+import { clearFloorOp, flatSiteBuild } from "./fixtures/flat-site.ts";
 vi.mock("@shepherdjerred/mc-build/render/assets.ts", async () => {
   const { renderAssets } = await import("./fixtures/render-assets.ts");
   return { ensureAssets: renderAssets };
@@ -445,6 +445,7 @@ describe("render and candidate evidence", () => {
       site: { ...manifest.site, siteHash: gridHash(site.grid) },
     });
     await saveCandidate(workspace.dir, "current");
+    await workspace.writeOplog({ version: 1, ops: [clearFloorOp(1)] });
     await saveCandidate(workspace.dir, "challenger");
     const ask = vi.fn(() =>
       Promise.resolve({

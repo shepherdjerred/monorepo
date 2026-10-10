@@ -4,6 +4,20 @@ import { judgeFingerprint } from "#build/judge.ts";
 import type { BuildWorkspace } from "#build/workspace.ts";
 import { readPairRecord } from "./pair-record.ts";
 
+function distinctPool(
+  candidates: readonly Candidate[],
+  eliminated: ReadonlySet<string>,
+  incumbent: string | undefined,
+): string[] {
+  const distinct = new Map<string, Candidate>();
+  for (const candidate of candidates) {
+    if (eliminated.has(candidate.gridHash)) continue;
+    if (!distinct.has(candidate.gridHash) || candidate.name === incumbent)
+      distinct.set(candidate.gridHash, candidate);
+  }
+  return [...distinct.values()].map((candidate) => candidate.name);
+}
+
 /** A default iteration judges new grids; explicit pools deliberately rejudge. */
 export async function defaultPool(
   workspace: BuildWorkspace,
@@ -28,10 +42,13 @@ export async function defaultPool(
       throw new Error(
         "legacy knockout outcome lacks grid identity; pass --among to rejudge explicitly",
       );
-    if (entry.kind === "reject") eliminated.add(entry.gridHash);
-    else eliminated.delete(entry.gridHash);
+    if (
+      entry.kind === "accept" ||
+      (record.grids !== undefined && record.grids.a === record.grids.b)
+    )
+      eliminated.delete(entry.gridHash);
+    else eliminated.add(entry.gridHash);
   }
-  return candidates
-    .filter((candidate) => !eliminated.has(candidate.gridHash))
-    .map((candidate) => candidate.name);
+  const manifest = await workspace.manifest();
+  return distinctPool(candidates, eliminated, manifest.best?.candidate);
 }

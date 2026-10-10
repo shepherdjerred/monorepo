@@ -9,11 +9,12 @@
  * the render's sidecar `scores`, so `resume` and `candidate` can read them.
  */
 import path from "node:path";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { generateValidatedObject } from "@shepherdjerred/llm-runtime";
 import { z } from "zod";
 import type { BlockGrid } from "@shepherdjerred/mc-build/core/grid.ts";
 import { gridHash } from "@shepherdjerred/mc-build/core/site.ts";
+import { writeSchematic } from "@shepherdjerred/mc-build/core/schem.ts";
 import { lintGrid } from "@shepherdjerred/mc-build/lint/lint.ts";
 import { ensureAssets } from "@shepherdjerred/mc-build/render/assets.ts";
 import { loadRegistry } from "@shepherdjerred/mc-build/registry/registry.ts";
@@ -395,6 +396,16 @@ export async function critiqueBuild(
         });
   const reviewedProgram = review !== null;
 
+  const gridFile = path.join(
+    BUILD_FILES.judgeDir,
+    "grids",
+    `${randomUUID()}.schem`,
+  );
+  const registry = await loadRegistry();
+  await Bun.write(
+    workspace.file(gridFile),
+    writeSchematic(grid, registry.dataVersion),
+  );
   const recordFile = await writeJudgeRecord(workspace.dir, {
     kind: "critique",
     at,
@@ -405,6 +416,7 @@ export async function critiqueBuild(
     render: name,
     sheet,
     sheetHash,
+    grid: gridFile,
     gridHash: hash,
     axes: scores.axes,
     overallAesthetic: scores.overallAesthetic,

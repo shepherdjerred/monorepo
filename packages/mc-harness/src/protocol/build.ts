@@ -254,6 +254,8 @@ export const JudgeCritiqueRecordSchema = z.strictObject({
   /** The judge sheet the critic saw, relative to the build directory. */
   sheet: z.string().min(1),
   sheetHash: z.string().regex(/^[a-f0-9]{64}$/u),
+  /** Immutable schematic of the grid scored by this critique. */
+  grid: z.string().min(1),
   gridHash: z.string(),
   axes: z.record(z.string(), judgeScore),
   overallAesthetic: judgeScore,

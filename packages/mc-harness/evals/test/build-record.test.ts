@@ -157,7 +157,7 @@ it("keeps generated input paths separate from source filenames through two archi
   }
 });
 
-it.each(["a", "b", "render", "sheet"] as const)(
+it.each(["a", "b", "render", "sheet", "grid"] as const)(
   "rejects external %s judge inputs, including symlinks",
   async (field) => {
     const root = await mkdtemp(path.join(tmpdir(), "mc-record-boundary-"));
@@ -191,7 +191,8 @@ it.each(["a", "b", "render", "sheet"] as const)(
                   kind: "critique",
                   iteration: 1,
                   render: "look",
-                  sheet: file,
+                  sheet: field === "grid" ? own : file,
+                  grid: field === "grid" ? file : own,
                   sheetHash: createHash("sha256")
                     .update("own input")
                     .digest("hex"),

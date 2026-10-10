@@ -76,6 +76,35 @@ async function twoVersions(name: string) {
   return { workspace, first, second };
 }
 
+describe("winning-grid aliases", () => {
+  it("prefers the incumbent alias and requires a bout for a genuinely new grid", async () => {
+    const { workspace } = await twoVersions("winner-alias");
+    const ask = judge();
+    const options = { rubric: "micro" as const, model: "stub", ask };
+    await knockout(workspace.dir, options);
+    await saveVersion(workspace, "alias", 1);
+    const repeated = await knockout(workspace.dir, options);
+    expect(repeated.best).toBe("v1");
+    expect(repeated.bouts).toEqual([]);
+    expect(ask).toHaveBeenCalledTimes(2);
+    await knockout(workspace.dir, {
+      ...options,
+      among: ["v1", "alias"],
+      ask: judge(true),
+    });
+    const preferred = await knockout(workspace.dir, options);
+    expect(preferred.best).toBe("alias");
+    expect(preferred.bouts).toEqual([]);
+    expect(ask).toHaveBeenCalledTimes(2);
+    await saveVersion(workspace, "v3", 3);
+    const changed = await knockout(workspace.dir, options);
+    expect(
+      changed.bouts.map((bout) => [bout.incumbent, bout.challenger]),
+    ).toEqual([["alias", "v3"]]);
+    expect(ask).toHaveBeenCalledTimes(4);
+  });
+});
+
 describe("distinct critiqued builds", () => {
   it("cannot replace the incumbent by deleting its saved directory first", async () => {
     const { workspace } = await twoVersions("missing-incumbent");

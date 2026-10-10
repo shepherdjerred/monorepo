@@ -1,6 +1,8 @@
 import { cp, mkdir, readdir, realpath } from "node:fs/promises";
 import path from "node:path";
 import { createHash } from "node:crypto";
+import { readSchematic } from "@shepherdjerred/mc-build/core/schem.ts";
+import { gridHash } from "@shepherdjerred/mc-build/core/site.ts";
 import { JudgeRecordSchema, type JudgeRecord } from "#protocol/build.ts";
 
 /** Resolve symlinks before accepting any caller-controlled artifact path. */
@@ -31,17 +33,24 @@ async function portableRecord(
   const input = async (
     file: string,
     expectedHash?: string,
+    kind: "png" | "schem" = "png",
   ): Promise<string> => {
     const absolute = await allowedFile(path.resolve(source, file), root);
     const bytes = await Bun.file(absolute).bytes();
     const relative = path.relative(path.resolve(source), absolute);
     const hash = createHash("sha256").update(bytes).digest("hex");
-    if (expectedHash !== undefined && hash !== expectedHash)
+    const schematic = kind === "schem" ? await readSchematic(bytes) : null;
+    const identity = schematic === null ? hash : gridHash(schematic.grid);
+    if (expectedHash !== undefined && identity !== expectedHash)
       throw new Error(`build record input hash does not match: ${file}`);
     const archived =
       path.dirname(relative) === "judge"
         ? relative
-        : path.join("judge", "inputs", `${hash}.png`);
+        : path.join(
+            "judge",
+            kind === "png" ? "inputs" : "grids",
+            `${hash}.${kind}`,
+          );
     const out = path.join(destination, archived);
     await Bun.write(out, bytes);
     kept.add(out);
@@ -53,7 +62,11 @@ async function portableRecord(
     case "absolute":
       return { ...record, render: await input(record.render) };
     case "critique":
-      return { ...record, sheet: await input(record.sheet, record.sheetHash) };
+      return {
+        ...record,
+        sheet: await input(record.sheet, record.sheetHash),
+        grid: await input(record.grid, record.gridHash, "schem"),
+      };
   }
 }
 

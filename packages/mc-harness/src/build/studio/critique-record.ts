@@ -1,4 +1,6 @@
 import { createHash } from "node:crypto";
+import { readSchematic } from "@shepherdjerred/mc-build/core/schem.ts";
+import { gridHash } from "@shepherdjerred/mc-build/core/site.ts";
 import {
   JudgeCritiqueRecordSchema,
   type BuildLogEntry,
@@ -29,6 +31,13 @@ export async function readCritiqueRecord(
       `critique record ${entry.file} does not match its journal entry`,
     );
   }
+  const schematic = await readSchematic(
+    await Bun.file(await buildArtifactPath(workspace, record.grid)).bytes(),
+  );
+  if (gridHash(schematic.grid) !== record.gridHash)
+    throw new Error(
+      `critique record ${entry.file} grid hash does not match its saved schematic`,
+    );
   const ids = rubricAxisIds(record.rubric);
   if (
     Object.keys(record.axes).length !== ids.length ||

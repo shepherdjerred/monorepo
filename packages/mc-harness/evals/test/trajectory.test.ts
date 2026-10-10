@@ -3,6 +3,9 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { afterAll, describe, expect, it } from "vitest";
+import { BlockGrid } from "@shepherdjerred/mc-build/core/grid.ts";
+import { gridHash } from "@shepherdjerred/mc-build/core/site.ts";
+import { writeSchematic } from "@shepherdjerred/mc-build/core/schem.ts";
 import {
   acceptedNonDecreasing,
   critiquedIterations,
@@ -14,6 +17,8 @@ import type { BuildLogEntry, JudgeRubric } from "#protocol/build.ts";
 import { rubricAxisIds } from "#build/judge.ts";
 
 const at = "2026-10-07T00:00:00.000Z";
+const iterationGrid = (iteration: number) =>
+  new BlockGrid({ x: iteration, y: 1, z: 1 });
 const render = (iteration: number): BuildLogEntry => ({
   kind: "render",
   at,
@@ -31,7 +36,7 @@ const critique = (
   at,
   iteration,
   render: `iter-${iteration.toString()}`,
-  gridHash: `grid-${iteration.toString()}`,
+  gridHash: gridHash(iterationGrid(iteration)),
   rubric,
   file: `judge/critique-${iteration.toString()}.json`,
   total,
@@ -51,7 +56,7 @@ const accept = (
   file: null,
   rubric,
   score,
-  gridHash: `grid-${iteration.toString()}`,
+  gridHash: gridHash(iterationGrid(iteration)),
   critique:
     score === null ? null : `judge/critique-${iteration.toString()}.json`,
 });
@@ -92,6 +97,7 @@ async function writeEvidence(dir: string, entry: BuildLogEntry) {
     sheetHash: createHash("sha256")
       .update(new Uint8Array([1, 2, 3]))
       .digest("hex"),
+    grid: `judge/grids/${entry.iteration.toString()}.schem`,
     axes: Object.fromEntries(
       rubricAxisIds(entry.rubric).map((id, index) => [
         id,
@@ -104,6 +110,10 @@ async function writeEvidence(dir: string, entry: BuildLogEntry) {
   };
   await Bun.write(path.join(dir, entry.file), JSON.stringify(record));
   await Bun.write(path.join(dir, sheet), new Uint8Array([1, 2, 3]));
+  await Bun.write(
+    path.join(dir, record.grid),
+    writeSchematic(iterationGrid(entry.iteration), 3955),
+  );
   return record;
 }
 
@@ -390,7 +400,7 @@ describe("trajectory", () => {
       file: null,
       rubric: "micro",
       score: 30,
-      gridHash: "grid-1",
+      gridHash: gridHash(iterationGrid(1)),
       critique: "judge/critique-1.json",
     };
     const entries = [
