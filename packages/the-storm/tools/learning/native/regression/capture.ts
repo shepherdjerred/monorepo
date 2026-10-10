@@ -25,6 +25,21 @@ export type Capture = {
   save: (name: string, value: unknown) => Promise<void>;
 };
 
+export async function waitForPhase(
+  fixture: RegressionClient,
+  phase: RegressionSample["phase"],
+  deadline: number,
+  message: string,
+) {
+  let state = await fixture.command("sample");
+  while (state.phase !== phase) {
+    if (Date.now() >= deadline) throw new Error(message);
+    await Bun.sleep(100);
+    state = await fixture.command("sample");
+  }
+  return state;
+}
+
 /** One owned original case; callers can never reuse a directory or reroll a failed case. */
 export async function captureRegression(
   options: {

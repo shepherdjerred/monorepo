@@ -6,6 +6,7 @@ import { DuelClient } from "#learning/duels.ts";
 import type { RconClient } from "#e2e/harness/rcon.ts";
 import { captureObserver, offlineObserverId } from "./duel-observer.ts";
 import { validateDuelClock } from "./duel-clock.ts";
+import { verifyDuelClockBinding } from "./duel-clock-binding.ts";
 import { validateDuelFrames } from "./duel-video.ts";
 import { request, StatusSchema, waitFor } from "./protocol.ts";
 import type { Session } from "./protocol.ts";
@@ -116,21 +117,7 @@ export async function verifyDuelVideo(
       throw new Error(
         "Native terminal video does not match the original duel outcome",
       );
-    const fullStart = clock.entries[1]?.receivedElapsedNanos;
-    if (fullStart === undefined)
-      throw new Error("Native full clock has no live anchor");
-    frames.duel.clock.entries.forEach((entry, index) => {
-      const full = clock.entries[index];
-      if (
-        full === undefined ||
-        JSON.stringify(entry.marker) !== JSON.stringify(full.marker) ||
-        entry.receivedElapsedNanos - frames.duel.startedElapsedNanos !==
-          full.receivedElapsedNanos - fullStart
-      )
-        throw new Error(
-          "Rendered window differs from the separate original native clock",
-        );
-    });
+    verifyDuelClockBinding(frames, clock);
     if (
       new Set(
         frames.frames

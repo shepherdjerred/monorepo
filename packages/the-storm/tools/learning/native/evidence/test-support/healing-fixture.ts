@@ -45,22 +45,7 @@ export function fixtureRoster() {
 
 export function healingFixture() {
   const { fighters, identity, opponent } = fixtureRoster();
-  const metrics = {
-    submitted: 0,
-    skipped: 0,
-    timely: 0,
-    stale: 0,
-    expired: 0,
-    contextDrops: 0,
-    deadlineMet: 0,
-    deadlineMissed: 0,
-    resets: 0,
-    rejected: 0,
-    hits: 0,
-    misses: 0,
-    maximumNanos: 0,
-    maximumBatch: 0,
-  };
+  const metrics = emptyInference();
   const sample = RegressionSample.parse({
     protocol: 2,
     contract: "rwf-regression-capture-v2",
@@ -321,3 +306,4 @@ function nativeFixture(identity: HealingIdentity, bodies: string[]) {
   get("hurt").response = "Applied 12.0 damage to Healer";
   return { native, get };
 }
+import { emptyInference } from "#learning/native/regression/test-support.ts";

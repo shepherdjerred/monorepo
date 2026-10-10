@@ -1,8 +1,8 @@
 import { readdir } from "node:fs/promises";
 import path from "node:path";
-import { parseArgs } from "node:util";
+import { diagnosticPaths } from "#learning/native/diagnostics/options.ts";
+import { verifyOwned } from "#learning/native/regression/files.ts";
 import { gunzipSync } from "node:zlib";
-import { z } from "zod";
 import type { Bot } from "mineflayer";
 import type { RegressionClient } from "#learning/native/regression-client.ts";
 import { captureRegression } from "./capture.ts";
@@ -10,12 +10,7 @@ import { humanCombat, humanRecording } from "./human-gate.ts";
 import { joinTrooper } from "./player.ts";
 import { digestFile, jsonText, seal } from "#learning/preference/ledger.ts";
 
-const args = parseArgs({
-  options: { model: { type: "string" }, output: { type: "string" } },
-  strict: true,
-});
-const model = path.resolve(z.string().min(1).parse(args.values.model));
-const output = path.resolve(z.string().min(1).parse(args.values.output));
+const { model, output } = diagnosticPaths();
 const ownership = { created: false };
 async function verify() {
   const { measured, inputs } = await captureRegression(
@@ -107,25 +102,7 @@ async function offerUntilHit(fixture: RegressionClient, player: Bot) {
     await Bun.sleep(250);
   }
 }
-try {
-  await verify();
-} catch (error) {
-  if (
-    ownership.created &&
-    !(await Bun.file(path.join(output, "failure.json")).exists())
-  )
-    await seal(
-      path.join(output, "failure.json"),
-      jsonText({
-        schema: 1,
-        acceptance: "unaccepted",
-        diagnostic: true,
-        retries: 0,
-        error: error instanceof Error ? error.message : String(error),
-      }),
-    );
-  throw error;
-}
+await verifyOwned(output, ownership, verify);
 console.warn(
   `Verified native damage to the joined regression player: ${output}`,
 );

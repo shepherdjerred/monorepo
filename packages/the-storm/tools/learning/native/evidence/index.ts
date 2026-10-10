@@ -1,7 +1,6 @@
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
-import { parseArgs } from "node:util";
-import { z } from "zod";
+import { diagnosticPaths } from "#learning/native/diagnostics/options.ts";
 import { root } from "#learning/sandbox.ts";
 import { buildCaptureInputs, captureInputs } from "#learning/native/inputs.ts";
 import {
@@ -14,12 +13,7 @@ import { Inputs, Suite, cases, type Case } from "./wire.ts";
 import { replayCases } from "./verify.ts";
 import { equal } from "./files.ts";
 
-const args = parseArgs({
-  options: { model: { type: "string" }, output: { type: "string" } },
-  strict: true,
-});
-const model = path.resolve(z.string().min(1).parse(args.values.model));
-const output = path.resolve(z.string().min(1).parse(args.values.output));
+const { model, output } = diagnosticPaths();
 await mkdir(path.dirname(output), { recursive: true });
 await mkdir(output, { mode: 0o700, recursive: false });
 const save = (name: string, value: unknown) =>

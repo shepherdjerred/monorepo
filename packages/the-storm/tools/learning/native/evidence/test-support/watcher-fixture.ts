@@ -27,22 +27,7 @@ export function watcherFixture() {
     attacker,
     victim,
   });
-  const metrics = {
-    submitted: 0,
-    skipped: 0,
-    timely: 0,
-    stale: 0,
-    expired: 0,
-    contextDrops: 0,
-    deadlineMet: 0,
-    deadlineMissed: 0,
-    resets: 0,
-    rejected: 0,
-    hits: 0,
-    misses: 0,
-    maximumNanos: 0,
-    maximumBatch: 0,
-  };
+  const metrics = emptyInference();
   const sample = RegressionSample.parse({
     protocol: 2,
     contract: "rwf-regression-capture-v2",
@@ -190,28 +175,10 @@ export function watcherFixture() {
 }
 
 function syntheticActions() {
-  const first: RegressionAction = {
-    sequence: 2,
-    serverTick: 100,
-    botTick: 10,
-    match,
-    body: attacker,
-    life: 0,
-    kit: "TROOPER",
-    decision: "unavailable",
-    heldSlot: 1,
-    usingItem: false,
-    targetId: 2,
-    targetBody: victim,
-    x: 2,
-    y: 65,
-    z: 3,
-    health: 20,
-    absorption: 0,
-    authored: ["Look[yaw=0.0, pitch=0.0]", "Stop[]"],
-    commands: ["Look[yaw=0.0, pitch=0.0]", "Stop[]"],
-    ticket: null,
-  };
+  const first = unavailableAction(match, attacker, victim, [
+    "Look[yaw=0.0, pitch=0.0]",
+    "Stop[]",
+  ]);
   const applied: RegressionAction = {
     ...first,
     sequence: 5,
@@ -296,3 +263,7 @@ function nativeFixture(identity: WatcherIdentity) {
   }
   return { native, get };
 }
+import {
+  emptyInference,
+  unavailableAction,
+} from "#learning/native/regression/test-support.ts";

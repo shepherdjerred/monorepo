@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { botRecording } from "./recording.ts";
 import { type NativeCommand, nativeCommands } from "./console.ts";
 import { MeleeProbe, type MeleeBody } from "./melee-wire.ts";
 import meleeWire from "#learning-melee-wire";
@@ -239,13 +240,7 @@ function originalRecording(
   measured: Journal,
   fighters: Journal["transitions"][number]["fighters"],
 ) {
-  const rows = recording
-    .trim()
-    .split("\n")
-    .map((row) => row.split("\t"));
-  const header = rows[0];
-  const members = rows.filter((row) => row[0] === "R");
-  const endings = rows.filter((row) => row[0] === "X");
+  const { members, endings } = botRecording(recording, measured.match);
   const ended = measured.transitions.find((row) => row.phase === "ENDED");
   const expected = fighters
     .map((row) => `${row.team.toUpperCase()}\t${row.kit}\ttrue`)
@@ -253,14 +248,8 @@ function originalRecording(
   if (
     ended === undefined ||
     endings.length !== 1 ||
-    header?.[0] !== "H" ||
-    header[1] !== "3" ||
-    header[2] !== measured.match ||
-    header[3] !== "training-yard" ||
-    members.length !== 16 ||
     new Set(members.map((row) => row[1])).size !== 16 ||
     members.some((row) => !/^p[a-f0-9]{16}$/u.test(row[1] ?? "")) ||
-    rows.some((row) => row[0] === "N") ||
     JSON.stringify(members.map((row) => row.slice(2).join("\t")).sort()) !==
       JSON.stringify(expected) ||
     endings[0]?.[2] !==
