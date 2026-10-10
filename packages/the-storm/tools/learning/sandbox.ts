@@ -200,10 +200,7 @@ export async function openPaperDuels(
     const steps = [
       async () => observer?.stop(),
       async () => {
-        if (
-          server !== undefined &&
-          (observerStarted || profile.startsWith("regression"))
-        )
+        if (server !== undefined)
           await Bun.write(
             path.join(output, "server.log"),
             await serverLogs(server.info),

@@ -1435,6 +1435,9 @@ and kills the worker's private process group at that deadline, including Python
 children of uv. The running watchdog uses a monotonic timer; SIGINT/SIGTERM
 also cancel that owned group. The worker reserves 15 seconds within
 the window to serialize its final actor; server cleanup may finish afterward.
+Every owned Paper session retains `server.log` in its map output before removing
+the container, including headless diagnostic failures. A failed command stops
+the worker; retained logs are for investigation and do not authorize a retry.
 
 The three-seed pilot initializes BC independently from the same human dataset
 and runs each seed for at most eight hours, sequentially. It freezes the trainer
