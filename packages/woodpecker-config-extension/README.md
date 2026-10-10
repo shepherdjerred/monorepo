@@ -224,20 +224,28 @@ catalog. ArgoCD must reconcile that new pin before Woodpecker generates
 pipelines with changed extension code. The original bootstrap image is not a
 substitute for this release path.
 
-The image baseline includes both a commit and a pipeline number. It requires
-successful `images` and `version-commit-back` workflows; the latter can update
-a pending pin PR before the catalog on main changes. Before selecting image
-targets, the image lane reads that pipeline's required `version-catalog` and
-`pin-candidates` handoffs and retains its published internal image pins in the
-live main catalog. Newer main pins, upstream versions, metadata and retirements
-remain authoritative. Equal release numbers with different digests fail.
+The `image-push` concurrency group serializes image selection and publication.
+Before selecting targets, the image lane reads the latest publication from
+`ci-handoff/published-images/main.json`. A successful push, including a
+no-target run, atomically records its commit, pipeline number and both catalog
+and candidate handoffs there. Queued pipelines therefore see images published
+while they were waiting, even while pin commit-back remains pending.
+
+The publication reader retains those image pins in the live main catalog.
+Newer main pins, upstream versions, metadata, retirements and reviewed candidate
+withdrawals remain authoritative. Equal release numbers with different digests
+fail. An older or conflicting publication cannot overwrite a newer record.
+Recover an already published image pipeline with a new full manual main run;
+do not reuse its release number for different artifacts.
 
 Both the no-target path and a partial image build publish the retained catalog
 for Helm and the next image baseline. Runtime comparison and Temporal candidate
 selection use that same catalog, preserving an active candidate while stable
-and candidate differ. An older extension that supplies only a commit provides
-no addressable baseline, so the image lane builds all targets during migration.
-Once a pipeline number is supplied, a missing handoff is a contract failure.
+and candidate differ. Before the first publication record exists, the lane
+bootstraps from the extension's commit and pipeline baseline, which requires
+successful `images` and `version-commit-back` workflows. A legacy commit without
+a pipeline number provides no addressable baseline and selects all targets.
+Invalid publication records and missing required handoffs fail the build.
 
 When a graph change retires a failing lane, the deployed image can still select
 that lane for the PR carrying its replacement. Changes under this package are
