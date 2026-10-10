@@ -456,7 +456,8 @@ credentials before dispatch. Each credential uses the first available source:
 Native passthroughs invoked with exactly `--help`, `-h`, or `--version`, plus
 the exact invocation `toolkit argocd version --client`, run without credential
 resolution. ArgoCD also supports a bare subcommand path ending in `--help` or
-`-h`, such as `toolkit argocd app rollback --help`. Their arguments, native
+`-h`, such as `toolkit argocd app rollback --help`, and the equivalent
+`toolkit argocd help app rollback` form (including root `argocd help`). Their arguments, native
 output, and exit status are preserved.
 These ArgoCD invocations also remove `ARGOCD_AUTH_TOKEN` from the child
 environment because native help prints its default value. Server commands

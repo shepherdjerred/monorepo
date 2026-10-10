@@ -104,6 +104,14 @@ describe("native metadata credential boundary", () => {
       ["--grpc-web", "version", "--client"],
     ],
     [
+      ["argocd", "help"],
+      ["--grpc-web", "help"],
+    ],
+    [
+      ["argocd", "help", "app", "rollback"],
+      ["--grpc-web", "help", "app", "rollback"],
+    ],
+    [
       ["argocd", "app", "rollback", "--help"],
       ["--grpc-web", "app", "rollback", "--help"],
     ],
@@ -133,6 +141,7 @@ describe("native metadata credential boundary", () => {
     [["argocd", "version", "--client=false"], "ARGOCD_AUTH_TOKEN"],
     [["argocd", "version", "--", "--client"], "ARGOCD_AUTH_TOKEN"],
     [["argocd", "app", "list", "--client"], "ARGOCD_AUTH_TOKEN"],
+    [["argocd", "help", "--", "app"], "ARGOCD_AUTH_TOKEN"],
     [["argocd", "app", "list", "--", "--help"], "ARGOCD_AUTH_TOKEN"],
     [
       ["argocd", "app", "set", "example", "--parameter", "--help"],

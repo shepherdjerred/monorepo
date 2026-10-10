@@ -231,6 +231,8 @@ describe("passthrough subprocess", () => {
     ["app", "--help"],
     ["app", "rollback", "--help"],
     ["account", "generate-token", "-h"],
+    ["help"],
+    ["help", "app", "rollback"],
   ])(
     "does not forward an ArgoCD token to metadata command %s",
     async (...args) => {
