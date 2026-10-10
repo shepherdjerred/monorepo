@@ -283,7 +283,11 @@ export async function knockout(
       )
       .digest("hex");
   const previous = matchingCheckpoint(manifest.knockout, fingerprintFor);
-  const initial = seeding(pool, current, manifest.best?.candidate);
+  const initial = seeding(
+    pool,
+    options.among === undefined ? pool : current,
+    manifest.best?.candidate,
+  );
   const participants = previous?.participants ?? [
     ...new Set([initial.incumbent, ...pool]),
   ];

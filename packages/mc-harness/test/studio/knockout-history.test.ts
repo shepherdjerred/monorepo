@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, readdir, rm } from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
 import { afterAll, describe, expect, it, vi } from "vitest";
@@ -77,6 +77,117 @@ async function twoVersions(name: string) {
 }
 
 describe("distinct critiqued builds", () => {
+  it("cannot replace the incumbent by deleting its saved directory first", async () => {
+    const { workspace } = await twoVersions("missing-incumbent");
+    await knockout(workspace.dir, {
+      rubric: "micro",
+      model: "stub",
+      ask: judge(),
+    });
+    await rm(workspace.file("candidates/v1"), { recursive: true });
+    const before = await readLog(workspace.dir);
+    await expect(
+      saveCandidate(workspace.dir, "v1", { force: true }),
+    ).rejects.toThrow(/incumbent/u);
+    expect(await readLog(workspace.dir)).toEqual(before);
+    expect(
+      await Bun.file(workspace.file("candidates/v1/candidate.json")).exists(),
+    ).toBe(false);
+  });
+
+  it("does not reseed a grid eliminated by this model after another model restores it", async () => {
+    const { workspace } = await twoVersions("policy-incumbent");
+    await knockout(workspace.dir, {
+      rubric: "micro",
+      model: "stub",
+      ask: judge(),
+    });
+    await knockout(workspace.dir, {
+      rubric: "micro",
+      model: "other",
+      ask: judge(true),
+    });
+    const ask = judge();
+    const repeated = await knockout(workspace.dir, {
+      rubric: "micro",
+      model: "stub",
+      ask,
+    });
+    expect(repeated.best).toBe("v1");
+    expect(repeated.bouts).toEqual([]);
+    expect(ask).not.toHaveBeenCalled();
+  });
+
+  it("preserves the first publication when two unforced saves race for a name", async () => {
+    const workspace = await flatSiteBuild(
+      path.join(root, "save-race"),
+      "save-race",
+    );
+    await workspace.writeOplog({ version: 1, ops: [clearFloorOp(1)] });
+    const outcomes = await Promise.allSettled([
+      saveCandidate(workspace.dir, "saved"),
+      saveCandidate(workspace.dir, "saved"),
+    ]);
+    expect(outcomes.filter((item) => item.status === "fulfilled")).toHaveLength(
+      1,
+    );
+    expect(outcomes.filter((item) => item.status === "rejected")).toHaveLength(
+      1,
+    );
+    const entries = await readLog(workspace.dir);
+    expect(entries.filter((entry) => entry.kind === "candidate")).toHaveLength(
+      1,
+    );
+    expect(await readdir(workspace.file("candidates/saved"))).toContain(
+      "candidate.json",
+    );
+  });
+
+  it("retains elimination evidence when a rejected grid is saved under a new name", async () => {
+    const { workspace } = await twoVersions("eliminated-alias");
+    const ask = judge();
+    const options = { rubric: "micro" as const, model: "stub", ask };
+    await knockout(workspace.dir, options);
+    await saveVersion(workspace, "alias", 2);
+    const repeated = await knockout(workspace.dir, options);
+    expect(repeated.bouts).toEqual([]);
+    expect(ask).toHaveBeenCalledTimes(2);
+    const rematch = await knockout(workspace.dir, {
+      ...options,
+      among: ["v1", "alias"],
+    });
+    expect(rematch.bouts).toHaveLength(1);
+    expect(ask).toHaveBeenCalledTimes(4);
+  });
+
+  it.each(["missing", "invalid"])(
+    "preserves candidate artifacts with %s metadata on save and forced save",
+    async (failure) => {
+      const { workspace } = await twoVersions(`damaged-save-${failure}`);
+      const dir = workspace.file("candidates/v2");
+      const info = path.join(dir, "candidate.json");
+      if (failure === "missing") await rm(info);
+      else await Bun.write(info, "{}");
+      const names = await readdir(dir);
+      const bytes = await Promise.all(
+        names.map((name) => Bun.file(path.join(dir, name)).bytes()),
+      );
+      const entries = await readLog(workspace.dir);
+      for (const force of [false, true]) {
+        await expect(
+          saveCandidate(workspace.dir, "v2", { force }),
+        ).rejects.toThrow();
+        expect(await readdir(dir)).toEqual(names);
+        expect(
+          await Promise.all(
+            names.map((name) => Bun.file(path.join(dir, name)).bytes()),
+          ),
+        ).toEqual(bytes);
+        expect(await readLog(workspace.dir)).toEqual(entries);
+      }
+    },
+  );
+
   it("counts changed grids rather than renamed renders of an unchanged build", async () => {
     const workspace = await flatSiteBuild(
       path.join(root, "distinct-grids"),

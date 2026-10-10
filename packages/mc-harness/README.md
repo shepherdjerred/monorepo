@@ -321,7 +321,7 @@ pick n | knockout [--among a,b] [--rubric] [--model]`) keep versions of
   rubric and model resumes its remaining challengers without rejudging earlier
   bouts. Changing those inputs starts a new tournament. The default iteration
   loop challenges only grids not already eliminated
-  by the same model, rubric and judging policy. Replacing a loser's grid makes
+  by the same model, rubric and judging policy, regardless of candidate names. Replacing a loser's grid makes
   it eligible again; `--among` requests explicit rematches.
   Saving candidates outside an explicit `--among` pool does not reset its checkpoint; the
   original incumbent remains part of its fingerprint even after defeat.
@@ -331,6 +331,8 @@ pick n | knockout [--among a,b] [--rubric] [--model]`) keep versions of
   require an explicit `--among` rematch.
   Incomplete candidate directories and metadata names that disagree with their
   directory fail listing, resume and judging.
+  Saving also rejects existing candidate directories with missing or invalid metadata,
+  including with `--force`, and preserves their remaining artifacts.
   Forced saves stage every replacement artifact before switching directories;
   failed staging preserves the complete saved candidate.
   Candidates record the captured site's hash, world and bounds; picking or

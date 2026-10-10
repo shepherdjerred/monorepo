@@ -4,7 +4,15 @@
  * blind judge pick, and restore the winner. `knockout.ts` does the judging;
  * this file only saves, lists and restores.
  */
-import { cp, mkdir, mkdtemp, readdir, rename, rm } from "node:fs/promises";
+import {
+  cp,
+  lstat,
+  mkdir,
+  mkdtemp,
+  readdir,
+  rename,
+  rm,
+} from "node:fs/promises";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
@@ -42,7 +50,15 @@ export function candidateDir(workspace: BuildWorkspace, name: string): string {
 }
 
 /** A failed replacement leaves the complete saved version at its original path. */
-async function replaceCandidate(staged: string, target: string): Promise<void> {
+async function replaceCandidate(
+  staged: string,
+  target: string,
+  replace: boolean,
+): Promise<void> {
+  if (!replace) {
+    await rename(staged, target);
+    return;
+  }
   const backup = `${staged}-previous`;
   let previous = false;
   try {
@@ -137,13 +153,19 @@ export async function saveCandidate(
     throw new Error("candidate save requires a captured site");
   }
   const target = candidateDir(workspace, name);
-  const exists = await Bun.file(
-    path.join(target, CANDIDATE_FILES.info),
-  ).exists();
+  const exists = await lstat(target).then(
+    () => true,
+    (error: unknown) => {
+      if (error instanceof Error && "code" in error && error.code === "ENOENT")
+        return false;
+      throw error;
+    },
+  );
+  if (exists) await candidateMetadata(workspace, name);
   if (exists && !(options.force ?? false)) {
     throw new Error(`candidate "${name}" exists; pass --force to replace it`);
   }
-  if (exists && manifest.best?.candidate === name) {
+  if (manifest.best?.candidate === name) {
     // The incumbent earned its place in a bout; a replacement has to win one too.
     throw new Error(
       `candidate "${name}" is the incumbent (build.json best); save the new version under another name and run knockout`,
@@ -211,7 +233,7 @@ export async function saveCandidate(
       `${JSON.stringify(CandidateSchema.parse(candidate), null, 2)}\n`,
     );
     await mkdir(path.dirname(target), { recursive: true });
-    await replaceCandidate(staged, target);
+    await replaceCandidate(staged, target, exists);
   } finally {
     await rm(staged, { recursive: true, force: true });
   }

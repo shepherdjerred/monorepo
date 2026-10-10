@@ -28,13 +28,10 @@ export async function defaultPool(
       throw new Error(
         "legacy knockout outcome lacks grid identity; pass --among to rejudge explicitly",
       );
-    const candidate = candidates.find((item) => item.name === entry.candidate);
-    if (candidate?.gridHash === entry.gridHash) {
-      if (entry.kind === "reject") eliminated.add(candidate.name);
-      else eliminated.delete(candidate.name);
-    }
+    if (entry.kind === "reject") eliminated.add(entry.gridHash);
+    else eliminated.delete(entry.gridHash);
   }
   return candidates
-    .filter((candidate) => !eliminated.has(candidate.name))
+    .filter((candidate) => !eliminated.has(candidate.gridHash))
     .map((candidate) => candidate.name);
 }
