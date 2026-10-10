@@ -1,0 +1,18 @@
+[package]
+name = "glitter-boys-service"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+glitter-boys-core = { path = "../launcher-core" }
+serde.workspace = true
+serde_json.workspace = true
+reqwest.workspace = true
+tokio.workspace = true
+tiny_http = "0.12.0"
+
+[lints]
+workspace = true

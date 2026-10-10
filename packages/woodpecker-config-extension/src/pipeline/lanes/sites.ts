@@ -68,6 +68,11 @@ const SOURCE_BUILT_SITES = [
   // declared workspace dependency; under Bun's isolated linker the consumer
   // has to be selected so its production closure is installed.
   { lane: "site-glitter", site: "glitter", filter: "glitter" },
+  {
+    lane: "site-glitter-boys",
+    site: "glitter-boys",
+    filter: "'@shepherdjerred/glitter-boys'",
+  },
   { lane: "site-ts-mc", site: "ts-mc", filter: "'@shepherdjerred/ts-mc'" },
   {
     lane: "site-ts-mc-docs",

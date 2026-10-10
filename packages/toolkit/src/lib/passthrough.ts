@@ -282,6 +282,12 @@ export function runPassthrough(
     return Promise.resolve(127);
   }
 
+  // Windows has no execve; inherited console handles deliver console signals
+  // to the child, and the CLI exits with the child's status.
+  if (process.platform === "win32") {
+    return spawnPassthroughInvocation(invocation);
+  }
+
   return process.execve === undefined
     ? Promise.reject(
         new Error(

@@ -200,6 +200,18 @@ const DEPLOY_SITES: readonly DeploySite[] = [
     extraExcludes: ["data/*"],
   },
   {
+    bucket: "glitter-boys",
+    name: "glitter-boys",
+    url: "https://glitter-boys.com",
+    buildDir: "packages/glitter-boys",
+    buildCmd: "bun --no-install run build",
+    distDir: "packages/glitter-boys/dist",
+    target: "s3",
+    immutablePrefixes: ["_astro/"],
+    // Native release publication owns this prefix independently of Astro builds.
+    extraExcludes: ["launcher/*"],
+  },
+  {
     bucket: "glitter-boys-ppl",
     name: "glitter",
     url: "https://ppl.glitter-boys.com",

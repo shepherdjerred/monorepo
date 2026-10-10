@@ -1,0 +1,32 @@
+{
+  "name": "@shepherdjerred/glitter-boys",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro check && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit && astro build",
+    "preview": "astro preview",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
+    "lint": "astro check",
+    "deploy": "bun ../../scripts/release/deploy-site.ts glitter-boys",
+    "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run test",
+    "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@astrojs/sitemap": "^3.7.3",
+    "@astrojs/starlight": "^0.42.0",
+    "astro": "^7.3.3",
+    "sharp": "^0.35.0"
+  },
+  "devDependencies": {
+    "@types/bun": "1.4.2",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "typescript": "^6.0.3",
+    "vitest": "5.0.1",
+    "@vitest/coverage-istanbul": "5.0.1"
+  },
+  "description": "Glitter Boys homepage and game setup guides"
+}

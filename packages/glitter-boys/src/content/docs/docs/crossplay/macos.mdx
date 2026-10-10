@@ -1,0 +1,122 @@
+---
+title: macOS setup (Apple silicon)
+description: Apple silicon Mac setup routes for IW4x and Black Ops crossplay, including experimental Plutonium compatibility.
+---
+
+import Screenshot from "../../../../components/Screenshot.astro";
+import macRelease from "../../../../assets/guides/bo3macfix-download.png";
+
+Use this page on an **Apple silicon Mac**. MW2 and BO3 have upstream Mac
+instructions; BO1/2 through CrossOver remain experimental. None of these routes
+has been tested here in a mixed Mac/Windows game session. Read the
+[compatibility reference](/docs/crossplay/) before installing.
+
+## Modern Warfare 2
+
+Run the **Windows IW4x client** through a Wine wrapper and **Rosetta 2**. Use the
+**Windows Steam MW2 files** inside the wrapper.
+
+Follow [IW4x's upstream Mac instructions](https://docs.iw4x.io/get-started/manual-install/macos-guide/)
+for the game files, wrapper dependencies, and launcher. The guide uses older
+Wineskin installation names. The maintainer's current successor is
+[Sikarugir](https://github.com/Sikarugir-App/Sikarugir), which requires macOS 14.6
+or later and Rosetta on Apple silicon. Follow the wrapper's current installation
+instructions rather than copying the obsolete Homebrew tap from the IW4x guide.
+This successor has not been tested with IW4x here.
+
+Launch `iw4x-launcher.exe` **inside the wrapper** and let its updates finish.
+The executable runs through Wine; double-clicking it directly in Finder does
+not set up the game.
+
+**Checkpoint:** reach the IW4x multiplayer menu. Then use
+[Play together](/docs/crossplay/play-together/#modern-warfare-2) to join the group's server.
+
+## Black Ops I and II
+
+**Experimental:** there is no locally tested Apple silicon installation recipe
+for Plutonium T5/T6 multiplayer and Zombies. Community reports include both
+successes and failures; see the [compatibility evidence](/docs/crossplay/#black-ops-i-and-ii).
+
+The candidate route runs the Windows Plutonium client through **CrossOver**.
+The launcher, its dependencies, and the Windows game installation belong
+together in that bottle. Use **T5** for Black Ops and **T6** for Black Ops II.
+These are compatibility-layer installations rather than native Mac clients.
+
+Before planning a group session, verify that the launcher updates, accepts the
+game folder, and starts the intended game on your Mac. Check MP and Zombies
+independently. A working launcher or solo map does not establish crossplay.
+
+If the local game works, use [Play together](/docs/crossplay/play-together/#black-ops-i-and-ii)
+with a Windows host first. Record the CrossOver version, Mac model, macOS, and
+game/client versions if it fails; current support for both modes is unverified.
+
+## Black Ops III
+
+Use **Steam Mac Black Ops III + BO3MacFix**, with the Mac game running under
+**Rosetta 2**. Wine is used for custom-map conversion; it does not run the base
+game in this setup.
+
+### 1. Install the Mac game
+
+Install **Call of Duty: Black Ops III** through macOS Steam and let all game and
+DLC downloads finish. You need a copy that includes the mode you want; the
+Multiplayer Starter Pack excludes Zombies. Keep Steam signed in.
+
+Choose a base-game map for your initial check. Reserve the space Steam requests
+for the game, DLC, and any Workshop subscriptions.
+
+### 2. Install BO3MacFix
+
+Follow the [BO3MacFix installation guide](https://github.com/InvoxiPlayGames/BO3MacFix/wiki/Installing-BO3MacFix)
+for the current Wine package and installer details.
+
+1. Install Wine using the upstream instructions. Map conversion requires Wine 8.10 or newer.
+2. Download [BO3MacFix's latest release](https://github.com/InvoxiPlayGames/BO3MacFix/releases/latest) and extract it.
+3. In Steam, right-click BO3 and choose **Manage → Browse local files**.
+4. Place the extracted `BO3MacFix` folder there. Open `Install_BO3MacFix` and select its install option.
+5. Launch from Steam and confirm the menu displays the **BO3MacFix version**.
+
+<Screenshot
+  src={macRelease}
+  alt="BO3MacFix's latest GitHub release showing its release heading and installation guide link"
+  caption="Download the latest BO3MacFix release and use its installation guide. This is a website capture, not a tested Mac installation."
+  sourceHref="https://github.com/InvoxiPlayGames/BO3MacFix/releases/latest"
+  sourceName="BO3MacFix release page"
+/>
+
+### 3. Set the group password
+
+In Steam's BO3 **Properties → Launch Options**, enter:
+
+```text
+--password YOUR_GROUP_PASSCODE
+```
+
+Replace the placeholder with the group's exact game-specific passcode and
+restart BO3. Keep this separate from your account passwords.
+
+### 4. Check map loading
+
+Load a base map with the patch installed before trying invitations. An open
+[M4 report](https://github.com/InvoxiPlayGames/BO3MacFix/issues/71) describes
+online login working while maps never load, even without the patch. If that
+happens, record your Mac model, macOS and patch versions, and consult the issue.
+
+If the local map works, continue to
+[Play together](/docs/crossplay/play-together/#black-ops-iii).
+
+### Custom maps and troubleshooting
+
+Subscribe to the agreed Steam Workshop map and mods, and finish downloading
+them before joining. BO3MacFix handles Mac map conversion, but map/mod
+compatibility varies. Report Mac-specific failures to its maintainer.
+
+If base-game files are missing, use Steam's **Properties → Installed Files →
+Verify integrity of game files**. Reinstall BO3MacFix afterwards: verification
+can restore the app files that its installer modifies.
+
+## Sources and screenshots
+
+Routes were checked on **8 October 2026** against the linked upstream projects.
+The screenshot shows the BO3MacFix release website. Installation, map loading,
+MP, and Zombies crossplay have not been tested on a local Mac/Windows pair.

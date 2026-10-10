@@ -79,6 +79,7 @@ group "app" {
     "alert-dashboard",
     "birmel",
     "tasknotes-server",
+    "glitter-boys-launcher",
     "starlight-karma-bot",
     "streambot",
     "temporal-worker",
@@ -257,4 +258,12 @@ target "the-storm-server" {
   tags       = imagetags("the-storm-server")
   cache-from = cachefrom("the-storm-server")
   cache-to   = cacheto("the-storm-server")
+}
+
+target "glitter-boys-launcher" {
+  inherits = ["_app"]
+  dockerfile = "packages/glitter-boys-launcher/Dockerfile"
+  tags = imagetags("glitter-boys-launcher")
+  cache-from = cachefrom("glitter-boys-launcher")
+  cache-to = cacheto("glitter-boys-launcher")
 }

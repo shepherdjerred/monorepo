@@ -141,6 +141,7 @@ export const VersionMapSchema = z
     "shepherdjerred/temporal-worker/workflows/stable": z.string(),
     "shepherdjerred/trmnl-dashboard": z.string(),
     "flipt-io/flipt": z.string(),
+    "shepherdjerred/glitter-boys-launcher": z.string(),
   })
   .catchall(z.string());
 

@@ -1,0 +1,117 @@
+{
+  "version": 1,
+  "games": [
+    {
+      "game": "iw4x",
+      "expanded_bytes": 17032280485,
+      "required_files": [
+        "iw4x.exe",
+        "iw4x-launcher.exe",
+        "zone/english/common_mp.ff"
+      ],
+      "archives": [
+        {
+          "file": "iw4x.zip",
+          "url": "https://files.sjer.red/games/iw4x.zip",
+          "bytes": 16963475400,
+          "sha256": "b49981ff8271ea79a108656e7c5a10ceef7d511ba06cbbbdc370b1b1254a8d4f"
+        }
+      ]
+    },
+    {
+      "game": "t5",
+      "expanded_bytes": 12143612024,
+      "required_files": [
+        "binkw32.dll",
+        "zone/Common/common_mp.ff",
+        "zone/Common/common_zombie.ff"
+      ],
+      "archives": [
+        {
+          "file": "t5.zip",
+          "url": "https://files.sjer.red/games/t5.zip",
+          "bytes": 11126663718,
+          "sha256": "0e154237383bf41cd9761b953e53a56707c8bf0eae81099b5fc5b474ae3ca74f"
+        }
+      ]
+    },
+    {
+      "game": "t6",
+      "expanded_bytes": 14545577443,
+      "required_files": [
+        "binkw32.dll",
+        "zone/all/common_mp.ff",
+        "zone/all/common_zm.ff"
+      ],
+      "archives": [
+        {
+          "file": "t6.zip",
+          "url": "https://files.sjer.red/games/t6.zip",
+          "bytes": 13680411630,
+          "sha256": "2d652358a2ea617fe73679dfc376368aa06cf80f4624853ab1921fcf8bbf2301"
+        }
+      ]
+    },
+    {
+      "game": "t7",
+      "expanded_bytes": 134017430685,
+      "required_files": ["BlackOps3.exe", "boiii.exe", "zone/core_common.ff"],
+      "archives": [
+        {
+          "file": "t7.zip.001",
+          "url": "https://files.sjer.red/games/t7/t7.zip.001",
+          "bytes": 20971520000,
+          "sha256": "cd397a273bd474c72b49e4f872aee6ff8a1920fca2dded0bb2e31b85561445f1"
+        },
+        {
+          "file": "t7.zip.002",
+          "url": "https://files.sjer.red/games/t7/t7.zip.002",
+          "bytes": 20971520000,
+          "sha256": "4a8a4650b6398c52f657693697d089f75f39f65a3296820089b537fdf4f3a7f1"
+        },
+        {
+          "file": "t7.zip.003",
+          "url": "https://files.sjer.red/games/t7/t7.zip.003",
+          "bytes": 20971520000,
+          "sha256": "f0291f7001dcec4525cfa922709762488461088c3d9426cdbe6b214f2ce8f0dc"
+        },
+        {
+          "file": "t7.zip.004",
+          "url": "https://files.sjer.red/games/t7/t7.zip.004",
+          "bytes": 20971520000,
+          "sha256": "ab52e9930db69c7d0452c1d907e918f6bedcb5f24673180f2759581989804970"
+        },
+        {
+          "file": "t7.zip.005",
+          "url": "https://files.sjer.red/games/t7/t7.zip.005",
+          "bytes": 20971520000,
+          "sha256": "bd0bbdad7ec8547a1712033a236464177b700be7dcea66b992b42f1e5fbcd9f8"
+        },
+        {
+          "file": "t7.zip.006",
+          "url": "https://files.sjer.red/games/t7/t7.zip.006",
+          "bytes": 13680484454,
+          "sha256": "675ab91064dfde8dfa09a6b585b04522951d92333ef30c21aaaa30bacf94c779"
+        }
+      ]
+    }
+  ],
+  "plutonium": {
+    "file": "plutonium.exe",
+    "url": "https://cdn.plutonium.pw/updater/plutonium.exe",
+    "bytes": 4863736,
+    "sha256": "85d1d1ca4d5881d9b98928c2006fb0eec9655e2705fe74088e6f974a19703f0f"
+  },
+  "iw4x_launcher": {
+    "file": "iw4x-launcher.zip",
+    "url": "https://github.com/iw4x/launcher/releases/download/v1.1.8-b.24/launcher-1.1.8-b.24-x86_64-windows.zip",
+    "bytes": 12198541,
+    "sha256": "654ae5a3554b35f41a57b92570c835d8a0a20bf762b5a868039bedecbd0214d7"
+  },
+  "boiii": {
+    "file": "boiii.exe",
+    "url": "https://github.com/Ezz-lol/boiii-free/releases/download/v3.0.0/boiii.exe",
+    "bytes": 6157824,
+    "sha256": "e6c49cc3ecb145a05f92bd1051ebcafd9b201cf8c522b26308cce18156491a62"
+  }
+}

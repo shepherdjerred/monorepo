@@ -1,0 +1,91 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "dev": {
+      "cache": false,
+      "persistent": true,
+      "passThroughEnv": ["MISE_DATA_DIR"]
+    },
+    "build": {
+      "inputs": [
+        "**/*.rs",
+        "**/Cargo.toml",
+        "Cargo.lock",
+        "catalog.json",
+        "assets/**",
+        "package.json",
+        "!target/**",
+        "prerequisites.json",
+        "release-profile.json",
+        "scripts/**"
+      ],
+      "outputs": [],
+      "passThroughEnv": ["MISE_DATA_DIR"]
+    },
+    "typecheck": {
+      "inputs": [
+        "**/*.rs",
+        "**/Cargo.toml",
+        "Cargo.lock",
+        "catalog.json",
+        "assets/**",
+        "package.json",
+        "!target/**",
+        "prerequisites.json",
+        "release-profile.json",
+        "scripts/**"
+      ],
+      "outputs": [],
+      "passThroughEnv": ["MISE_DATA_DIR"]
+    },
+    "test": {
+      "inputs": [
+        "**/*.rs",
+        "**/Cargo.toml",
+        "Cargo.lock",
+        "catalog.json",
+        "assets/**",
+        "package.json",
+        "!target/**",
+        "prerequisites.json",
+        "release-profile.json",
+        "scripts/**"
+      ],
+      "outputs": [],
+      "passThroughEnv": ["MISE_DATA_DIR"]
+    },
+    "test:ci": {
+      "inputs": [
+        "**/*.rs",
+        "**/Cargo.toml",
+        "Cargo.lock",
+        "catalog.json",
+        "assets/**",
+        "package.json",
+        "!target/**",
+        "prerequisites.json",
+        "release-profile.json",
+        "scripts/**"
+      ],
+      "outputs": [],
+      "passThroughEnv": ["MISE_DATA_DIR"]
+    },
+    "lint": {
+      "inputs": [
+        "**/*.rs",
+        "**/Cargo.toml",
+        "Cargo.lock",
+        "catalog.json",
+        "assets/**",
+        "package.json",
+        "!target/**",
+        "prerequisites.json",
+        "release-profile.json",
+        "scripts/**"
+      ],
+      "outputs": [],
+      "passThroughEnv": ["MISE_DATA_DIR"]
+    }
+  }
+}

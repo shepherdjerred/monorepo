@@ -9,6 +9,7 @@ hold only scoped invariants that agents must keep in context.
 | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
 | [alert-dashboard](alert-dashboard/)                             | Ops dashboard — snapshot overview, alert ledger, digest email, Grafana previews          |
 | [birmel](birmel/)                                               | Discord bot on an explicit AI SDK agent runtime                                          |
+| [glitter-boys-launcher](glitter-boys-launcher/)                 | Native Rust/egui game installer and launcher for Windows x64                             |
 | [monarch](monarch/)                                             | AI transaction categorization pipeline for Monarch Money                                 |
 | [scout-for-lol](scout-for-lol/)                                 | Discord bot tracking friends' League of Legends matches with rich post-game reports      |
 | [starlight-karma-bot](starlight-karma-bot/)                     | Discord karma bot — points, leaderboards, scheduled recaps                               |
@@ -52,6 +53,7 @@ hold only scoped invariants that agents must keep in context.
 | [resume](resume/)                               | LaTeX resume, built and deployed from CI                       |
 | [stocks-sjer-red](stocks-sjer-red/)             | PC-component investment portfolio tracker (Astro)              |
 | [cooklang-rich-preview](cooklang-rich-preview/) | Marketing site for the Cooklang Rich Preview Obsidian plugin   |
+| [glitter-boys](glitter-boys/)                   | Glitter Boys homepage and game setup guides (Astro/Starlight)  |
 | [glitter](glitter/)                             | Glitter Boys friend-group site                                 |
 | [cross-compilers-site](cross-compilers-site/)   | Marketing site for the macOS and Windows cross-compiler images |
 | [ts-mc](ts-mc/)                                 | The Storm Minecraft server portal (Astro)                      |

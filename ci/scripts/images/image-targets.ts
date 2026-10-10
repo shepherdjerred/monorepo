@@ -9,6 +9,10 @@ type ImageTargetRegistration = {
 export const IMAGE_TARGET_REGISTRY: Readonly<
   Record<string, ImageTargetRegistration>
 > = {
+  "glitter-boys-launcher": {
+    owner: "@shepherdjerred/glitter-boys-launcher",
+    ghcrVisibility: "public",
+  },
   "alert-dashboard": {
     owner: "@shepherdjerred/alert-dashboard",
     ghcrVisibility: "public",

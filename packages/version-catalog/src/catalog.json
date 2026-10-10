@@ -1771,6 +1771,18 @@
         "A bump requires re-capturing packages/feature-flags/src/providers/fixtures/flipt-snapshot.default.json,",
         "because the provider fetches the internal /internal/v1/evaluation/snapshot API."
       ]
+    },
+    {
+      "name": "shepherdjerred/glitter-boys-launcher",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "0.1.0-0@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "notes": [
+        "Unpublished bootstrap marker; CI replaces this with the first verified service image before activation."
+      ]
     }
   ]
 }

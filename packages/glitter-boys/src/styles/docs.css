@@ -1,0 +1,41 @@
+@import "./brand.css";
+
+:root[data-theme="dark"] {
+  --sl-color-accent-low: #482b50;
+  --sl-color-accent: var(--gb-pink);
+  --sl-color-accent-high: #f9d4f2;
+  --sl-color-black: #261a32;
+  --sl-color-gray-6: #30223f;
+  --sl-color-gray-5: #514160;
+}
+:root[data-theme="light"] {
+  --sl-color-accent-low: #f6e1ef;
+  --sl-color-accent: #85316f;
+  --sl-color-accent-high: #542446;
+  --sl-color-white: #2d2038;
+  --sl-color-gray-1: #392c44;
+  --sl-color-gray-2: #51415e;
+  --sl-color-gray-3: #71617e;
+  --sl-color-gray-4: #9c8da8;
+  --sl-color-gray-5: #d5c9df;
+  --sl-color-gray-6: #e9e0f0;
+  --sl-color-gray-7: #f5eff9;
+  --sl-color-black: #fdfbff;
+  --sl-color-bg-sidebar: #f8f4fc;
+  --sl-color-bg-inline-code: #f0e9f6;
+  --sl-color-hairline: var(--sl-color-gray-6);
+  --sl-color-hairline-light: var(--sl-color-gray-5);
+  --sl-color-hairline-shade: var(--sl-color-gray-6);
+}
+
+.sl-markdown-content h1,
+.sl-markdown-content h2,
+.sl-markdown-content h3,
+.content-panel h1 {
+  font-family: var(--gb-font-display);
+  font-weight: 400;
+}
+
+:root[data-theme="dark"] .content-panel h1 {
+  color: var(--gb-pink);
+}

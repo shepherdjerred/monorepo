@@ -1,0 +1,150 @@
+---
+title: Black Ops II
+description: Install Plutonium T6 on Windows amd64 for Black Ops II multiplayer and Zombies.
+---
+
+import Screenshot from "../../../components/Screenshot.astro";
+import login from "../../../assets/guides/plutonium-login.png";
+import settings from "../../../assets/guides/plutonium-game-settings.png";
+import gameFolder from "../../../assets/guides/plutonium-t6-folder.png";
+
+Follow this guide from the download to your first group match. You will use
+**Plutonium T6** to launch **Black Ops II multiplayer and Zombies** on Windows amd64.
+
+Mac players have a separate [Apple silicon setup page](/docs/crossplay/macos/#black-ops-i-and-ii).
+
+## Before you start
+
+- Have at least **35 GB free**. The ZIP is 13.68 GB and its listed extracted files total 14.55 GB, before client updates. Sizes here use decimal GB.
+- Choose a permanent extraction destination, such as `C:\Games\GlitterBoysGuide`.
+- Have a Plutonium forum account, an internet connection, and the same map as your friends.
+- If Black Ops II is already installed through Steam, use that installation and skip downloading the archive.
+
+## 1. Download and extract the game
+
+1. Download [t6.zip](https://files.sjer.red/games/t6.zip). Wait until the browser reports that the download has finished.
+2. In File Explorer, right-click the ZIP and select **Extract All**. Set the destination to `C:\Games\GlitterBoysGuide` (or your preferred permanent directory), then click **Extract**. You can also use [7-Zip](https://7-zip.org/).
+3. Wait for extraction to finish before starting the launcher.
+4. Open the extracted **t6** folder. With the destination above, select `C:\Games\GlitterBoysGuide\t6` in the launcher. The archive itself contains this top-level folder.
+
+Keep this File Explorer window open. You will select the same location for both
+T6 Zombies and T6 Multiplayer. The ZIP includes `plutonium.exe`; use
+the current download in the next step.
+
+**Already installed through Steam?** Open your library, right-click **Black Ops II**,
+and select **Manage → Browse local files**. The folder is commonly named
+`Call of Duty Black Ops II`; its drive and Steam library location can vary.
+
+<Screenshot
+  src={gameFolder}
+  alt="Windows File Explorer showing a Black Ops II game folder with sound, video, zone, and binkw32.dll"
+  caption="A game folder contains the actual game data. This older upstream example is named pluto_t6_full_game; your folder name may be different. Select this folder, rather than its parent."
+  sourceHref="https://plutonium.pw/docs/install/"
+  sourceName="Plutonium installation guide"
+/>
+
+## 2. Install Plutonium and sign in
+
+1. [Create a Plutonium forum account](https://forum.plutonium.pw/register) if you do not have one. Complete any registration prompts before returning to the launcher.
+2. Open the [official installation page](https://plutonium.pw/docs/install/) and download **plutonium.exe**.
+3. Save it somewhere you can find again, such as the game folder or your desktop.
+4. Run it and let the initial update finish. Keep the launcher open while it downloads the client files.
+5. Enter your **forum username and password**, then click **Sign In**.
+
+<Screenshot
+  src={login}
+  alt="Plutonium launcher login screen with Username, Password, and Sign In controls"
+  caption="Sign in with your Plutonium forum account. This screenshot from the official guide shows an older launcher appearance; the account is the same one you use on the forum."
+  sourceHref="https://plutonium.pw/docs/install/"
+  sourceName="Plutonium installation guide"
+/>
+
+**Checkpoint:** you should now see the launcher game list, rather than the login form.
+
+## 3. Select the game folder and launch Zombies
+
+1. Select **T6 Zombies / Black Ops II Zombies** in the launcher.
+2. Click **Setup**. In the folder picker, navigate to the game folder you found in step 1 and select it.
+3. After setup, the button changes to **Play**. Click it and wait for the game to open.
+4. Choose the Zombies entry in the launcher. T6 Multiplayer is a different mode, although both entries use the same game folder.
+
+If the archive already included an old launcher, use the current `plutonium.exe`
+you just downloaded. Open that launcher whenever you play so it can update first.
+
+<Screenshot
+  src={settings}
+  alt="Plutonium launcher Play button with Game Settings highlighted beside it"
+  caption="To correct the selected folder, open Game Settings beside Play. This control is shared across the Plutonium games."
+  sourceHref="https://plutonium.pw/docs/install/"
+  sourceName="Plutonium installation guide"
+/>
+
+**Checkpoint:** reach the Zombies menu and load a solo map once. If that works,
+you are ready to set up the group; if it does not, fix the local installation first.
+
+## 4. Add your friends
+
+1. Sign in to the Plutonium forums and open your friend's profile.
+2. Click the **plus (+)** button to follow them. A heart means you already follow them.
+3. Have your friend follow you too. Repeat for everyone you plan to play with.
+4. Restart the game if a newly followed friend does not appear.
+
+Use each person's **Plutonium username** when finding profiles. Following someone
+in another app does not add them to Plutonium's friends list.
+
+## 5. Start a group match
+
+1. Pick a host. Everyone opens **T6 Zombies** from the launcher.
+2. The host opens a custom Zombies lobby and chooses a map.
+3. Press **P** to open party privacy and allow friends to join.
+4. Press **F** to open the friends list and send invitations.
+5. Guests accept their invitations. Wait until everyone is visible in the lobby before starting.
+
+Confirm the map with the group before pressing Start. A player who does not have
+the selected map's files cannot join that map.
+
+**Checkpoint:** everyone has loaded into the same map with the host. You are ready to play.
+
+## 6. Play multiplayer
+
+1. Select **T6 Multiplayer** in the launcher. Use the same game folder, then click **Play**.
+2. For a public session, agree on one multiplayer server and have everyone join it.
+3. For a private session, the host creates a multiplayer custom-game lobby and sets party privacy with **P**.
+4. Open the friends list with **F**, invite the group, and start once everyone has joined the lobby.
+
+Keep each group in the same mode: MP and Zombies use separate launcher entries.
+Confirm both modes independently.
+
+## Fix common problems
+
+| What you see                       | What to check                                                                                                                                    |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Invalid game path                  | Open **Game Settings** and choose the folder containing the extracted game. Do not select `C:\`, Downloads, the ZIP, or the parent Games folder. |
+| Login keeps failing                | Check the same account on the Plutonium forums, then use its username in the launcher.                                                           |
+| A friend is missing                | Both players must follow each other. Restart the game after following.                                                                           |
+| A map will not load                | Confirm everyone has that map's game files, and let all extraction and updates finish.                                                           |
+| Solo works but friends cannot join | Retry with a different host before changing router settings.                                                                                     |
+
+If another host also fails, follow the **T6** section of
+[Plutonium's connection guide](https://plutonium.pw/docs/custom-games/).
+For private matches, its manual forwarding instructions use **UDP 3074**
+on the host's router. Only the host needs the forwarding rule; guests joining a
+host or public server do not. Apply rules to the host's PC and keep the protocol
+and port range specific to this game.
+
+## Before the next session
+
+- Open `plutonium.exe` and finish any updates.
+- Confirm the map and who is hosting.
+- Use the same selected game folder; you do not need to extract the ZIP again.
+
+## Sources and screenshots
+
+The group ZIP passed a **7-Zip integrity test and fresh extraction on 9 October
+2026**: 528 files, totaling 14,545,577,443 bytes, under the `t6` folder. Client
+instructions checked on the same date against
+[Plutonium installation](https://plutonium.pw/docs/install/) and
+[playing with friends](https://plutonium.pw/docs/custom-games/).
+Screenshots are examples published in the official documentation, with their
+original source credited under each image. Launcher setup, multiplayer, and
+Zombies have not yet been locally verified; these images do not show that testing.

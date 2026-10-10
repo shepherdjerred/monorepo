@@ -53,4 +53,6 @@ ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 ENV EXPECTED_CONTRACT_HASH=${EXPECTED_CONTRACT_HASH}
 ENV HOME=/tmp
 USER 1000:1000
-RUN bun /app/ci/scripts/images/smoke-app-in-image.ts
+RUN if [ "$SMOKE_TARGET" = "glitter-boys-launcher" ]; then \
+      /usr/local/bin/glitter-boys-service --smoke; \
+    else bun /app/ci/scripts/images/smoke-app-in-image.ts; fi

@@ -1,0 +1,42 @@
+[workspace]
+resolver = "3"
+members = ["crates/launcher-core", "crates/launcher-app", "crates/launcher-service"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.98"
+license = "GPL-3.0-only"
+publish = false
+
+[workspace.dependencies]
+directories = "6.0.0"
+eframe = { version = "0.36.2", default-features = false, features = ["accesskit", "default_fonts", "glow", "wayland", "x11"] }
+fs2 = "0.4.3"
+hex = "0.4.3"
+open = "5.3.3"
+reqwest = { version = "0.13.1", default-features = false, features = ["json", "rustls"] }
+rfd = "0.17.2"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+sha2 = "0.11.0"
+sysinfo = "0.39.6"
+tempfile = "3.23.0"
+thiserror = "2.0.21"
+tokio = { version = "1.49.0", features = ["rt", "time", "net"] }
+zip = { version = "9.0.0", default-features = false, features = ["deflate", "deflate64"] }
+
+[workspace.lints.rust]
+unsafe_code = "deny"
+
+[workspace.lints.clippy]
+all = { level = "deny", priority = -1 }
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+debug = 1
+strip = "none"

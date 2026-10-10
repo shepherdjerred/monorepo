@@ -500,6 +500,7 @@ test("the sites lane deploys new sites when their paths change", () => {
       "statically-typed",
       "@shepherdjerred/statically-typed",
     ],
+    ["site-glitter-boys", "glitter-boys", "@shepherdjerred/glitter-boys"],
     ["site-ts-mc", "ts-mc", "@shepherdjerred/ts-mc"],
     ["site-ts-mc-docs", "ts-mc-docs", "@shepherdjerred/ts-mc-docs"],
   ] as const) {

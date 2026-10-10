@@ -1,0 +1,175 @@
+---
+import font from "../assets/fonts/LuckiestGuy-Latin.woff2?url";
+import Wordmark from "../components/Wordmark.astro";
+import "../styles/brand.css";
+
+const glints = Array.from({ length: 32 }, (_, i) => ({
+  x: 4 + ((i * 47) % 92),
+  y: 5 + ((i * 61) % 90),
+  star: i % 5 === 0,
+  size: i % 5 === 0 ? 12 + (i % 3) * 5 : 2,
+  delay: -(i % 11),
+  duration: 7 + (i % 6),
+}));
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Glitter Boys." />
+    <title>Glitter Boys</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href={font} as="font" type="font/woff2" crossorigin />
+  </head>
+  <body>
+    <div class="glitter" aria-hidden="true">
+      {glints.map((glint) => (
+        <span
+          class:list={{ star: glint.star }}
+          style={{
+            left: glint.x + "%",
+            top: glint.y + "%",
+            "--size": glint.size + "px",
+            "--delay": glint.delay + "s",
+            "--duration": glint.duration + "s",
+          }}
+        />
+      ))}
+    </div>
+    <main>
+      <div class="brand">
+        <h1 aria-label="Glitter Boys">
+          <Wordmark />
+        </h1>
+      </div>
+    </main>
+  </body>
+</html>
+
+<style>
+  :global(html) {
+    color-scheme: dark;
+    background: #120726;
+  }
+  :global(body) {
+    margin: 0;
+    min-height: 100vh;
+    min-height: 100svh;
+    display: grid;
+    place-items: center;
+    color: #f8edf5;
+    background: radial-gradient(
+      120% 100% at 50% 0%,
+      #3a1d6e 0%,
+      #241046 45%,
+      #120726 100%
+    );
+  }
+  main {
+    position: relative;
+    max-width: calc(100vw - 8rem);
+    padding: 2rem 0;
+    text-align: center;
+  }
+  h1 {
+    margin: 0;
+    font-size: clamp(2.75rem, 7.8vw, 7rem);
+    font-weight: 400;
+    line-height: 1;
+    transform: rotate(-2deg);
+  }
+  .brand {
+    position: relative;
+  }
+  .site-link {
+    display: block;
+    width: fit-content;
+    margin: 1.75rem auto 0;
+    padding: 0.75rem 1.25rem;
+    border: 1px solid #ff9ed866;
+    border-radius: 999px;
+    color: var(--gb-pink);
+    background: #ff9ed80a;
+    font:
+      500 1rem/1.5 system-ui,
+      sans-serif;
+    text-decoration: none;
+  }
+  .site-link:hover {
+    background: #ff9ed81a;
+    border-color: var(--gb-pink);
+  }
+  .site-link:focus-visible {
+    outline: 2px solid var(--gb-lilac);
+    outline-offset: 4px;
+  }
+  .brand::before,
+  .brand::after {
+    content: "";
+    position: absolute;
+    top: calc(50% - 2px);
+    width: clamp(1.5rem, 4vw, 3.5rem);
+    height: 4px;
+    opacity: 0.6;
+    background: linear-gradient(90deg, transparent, var(--gb-lilac));
+    box-shadow:
+      0 -8px var(--gb-pink),
+      0 8px var(--gb-lilac);
+  }
+  .brand::before {
+    right: calc(100% + 1.5rem);
+  }
+  .brand::after {
+    left: calc(100% + 1.5rem);
+    transform: scaleX(-1);
+  }
+  .glitter {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .glitter span {
+    position: absolute;
+    width: var(--size);
+    height: var(--size);
+    border-radius: 50%;
+    background: #f9edf4;
+    box-shadow: 0 0 7px #edc5e561;
+    opacity: 0.12;
+    animation: twinkle var(--duration) var(--delay) ease-in-out infinite;
+  }
+  .glitter .star {
+    border-radius: 0;
+    clip-path: polygon(
+      50% 0,
+      60% 40%,
+      100% 50%,
+      60% 60%,
+      50% 100%,
+      40% 60%,
+      0 50%,
+      40% 40%
+    );
+    transform: rotate(-12deg);
+    background: white;
+    filter: drop-shadow(0 0 3px #ffffffe6);
+  }
+  @keyframes twinkle {
+    0%,
+    70%,
+    100% {
+      opacity: 0.08;
+    }
+    35% {
+      opacity: 0.55;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .glitter span {
+      animation: none;
+    }
+  }
+</style>

@@ -70,6 +70,14 @@ export const sitePaths = {
     "config/analytics-sites.json",
     ...deployScripts,
   ],
+  "site-glitter-boys": [
+    ...workspacePaths,
+    "packages/glitter-boys",
+    "packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts",
+    "packages/homelab/src/tofu/cloudflare/glitter-boys-com.tf",
+    "packages/homelab/src/tofu/seaweedfs/buckets.tf",
+    ...deployScripts,
+  ],
   "site-glitter": [
     ...workspacePaths,
     "packages/glitter",

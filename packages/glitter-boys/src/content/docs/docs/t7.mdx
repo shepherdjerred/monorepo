@@ -1,0 +1,118 @@
+---
+title: Black Ops III — ZIP setup
+description: Extract the six-part Black Ops III archive and install BOIII on Windows amd64 for multiplayer and Zombies.
+---
+
+import Screenshot from "../../../components/Screenshot.astro";
+import sevenzip from "../../../assets/guides/sevenzip-download.png";
+import release from "../../../assets/guides/boiii-download.png";
+
+This **Windows amd64** walkthrough uses the group's **six-part ZIP and BOIII**
+for Black Ops III multiplayer and Zombies. For the Mac/Windows crossplay group,
+use the separate [Steam + T7Patch walkthrough](/docs/crossplay/windows/bo3/).
+BOIII compatibility with that crossplay route is unverified.
+
+## Before you start
+
+- Have at least **270 GB free** for downloading, extracting, and updating. The archive parts total 118.54 GB; their listed extracted files total 134.02 GB. Sizes here use decimal GB.
+- Install **7-Zip for Windows x64** from [7-zip.org](https://7-zip.org/).
+- Keep **Steam installed**, as required by the current BOIII instructions.
+- Choose a permanent extraction destination such as `C:\Games\GlitterBoysGuide`.
+- Agree on a base-game map before adding custom maps or mods.
+
+<Screenshot
+  src={sevenzip}
+  alt="7-Zip's official download page showing Windows installer architecture choices"
+  caption="Choose the Windows x64 installer. This website capture is a download-page example, not a recording of the local installation."
+  sourceHref="https://7-zip.org/"
+  sourceName="7-Zip download page, captured 7 October 2026"
+/>
+
+## 1. Download all six parts
+
+Save every part in **the same Downloads folder**, preserving these filenames:
+
+- [t7.zip.001](https://files.sjer.red/games/t7/t7.zip.001)
+- [t7.zip.002](https://files.sjer.red/games/t7/t7.zip.002)
+- [t7.zip.003](https://files.sjer.red/games/t7/t7.zip.003)
+- [t7.zip.004](https://files.sjer.red/games/t7/t7.zip.004)
+- [t7.zip.005](https://files.sjer.red/games/t7/t7.zip.005)
+- [t7.zip.006](https://files.sjer.red/games/t7/t7.zip.006)
+
+Wait for **all six downloads** to finish. Parts 001–005 are each 20,971,520,000
+bytes; part 006 is 13,680,484,454 bytes. The smaller final part is expected.
+A browser's unfinished download file is not a usable archive part.
+
+## 2. Extract once, starting with part 001
+
+1. Open **7-Zip File Manager** and browse to the folder containing the six parts.
+2. Select **t7.zip.001**, choose **Test**, and wait for the archive check to finish.
+3. If the test succeeds, select **t7.zip.001** again and choose **Extract**.
+4. Set the destination to `C:\Games\GlitterBoysGuide` and start extraction.
+5. Leave all six parts in place while 7-Zip reads them automatically. Do not extract parts 002–006 separately.
+
+**Checkpoint:** the extracted top-level folder is **t7**. With that destination,
+open `C:\Games\GlitterBoysGuide\t7` and find **BlackOps3.exe**.
+
+The archive contains an older `boiii.exe` and a legacy batch file. The current
+client setup below uses a fresh executable; leave the old batch file unused.
+
+## 3. Install the current BOIII client
+
+1. Open the [latest Ezz BOIII release](https://github.com/Ezz-lol/boiii-free/releases/latest).
+2. Download **boiii.exe**. The release checked on 9 October 2026 is **v3.0.0**.
+3. Copy it into the extracted **t7** folder, beside **BlackOps3.exe**, replacing the archive's older `boiii.exe`.
+4. Launch the new **boiii.exe** from that folder and allow client downloads to finish.
+
+<Screenshot
+  src={release}
+  alt="Ezz BOIII's GitHub release page showing the release heading and executable compatibility notice"
+  caption="Use the current release asset. This website capture illustrates the release page; it does not show a verified local launcher or game session."
+  sourceHref="https://github.com/Ezz-lol/boiii-free/releases/latest"
+  sourceName="Ezz BOIII release page, captured 7 October 2026"
+/>
+
+The v3.0.0 release updates compatibility to the September 2026 **BlackOps3.exe**.
+An older game executable can trigger an update prompt. Follow the current
+client's update flow rather than retaining the old executable indefinitely.
+
+**Checkpoint:** the BOIII menu opens. The archive listing is verified here;
+this launcher/update flow and gameplay still need local verification.
+
+## 4. Play multiplayer
+
+Open **Multiplayer** and the client's server browser. Agree on the full server
+name and map, refresh the list, and join that exact server. Wait until the match
+loads and check the scoreboard before choosing a team.
+
+Finish a match, leave, and join again to confirm the launch and joining steps
+work consistently. Use **boiii.exe** when reopening the game.
+
+## 5. Play Zombies
+
+Open **Zombies** and load a solo base-game map once. If that works, use the
+client's server browser to find a Zombies server with a map everyone has.
+Join the same server and confirm everyone reaches the same map.
+
+Play several rounds and rejoin once. A successful solo map verifies local
+loading; a multiplayer Zombies session requires a separate check. For a private
+server, follow the [BOIII server documentation](https://github.com/Ezz-lol/boiii-free).
+
+## Fix common problems
+
+| What you see                                      | What to check                                                                                                                          |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Archive test or extraction fails                  | Confirm all six parts finished downloading and retain their original names in one folder. Redownload the part identified by the error. |
+| Another t7 folder appears inside your destination | Open the inner folder containing BlackOps3.exe and place the new client there.                                                         |
+| The old client starts                             | Launch the current boiii.exe from the extracted game folder; check any existing shortcut target.                                       |
+| The client requests a game-executable update      | Follow the current release's update flow; v3.0.0 targets the September 2026 executable.                                                |
+| A map fails to load                               | Confirm game files and matching map/mod content. Start with a base-game map.                                                           |
+| A Mac player cannot join                          | Use the separate Steam/T7Patch crossplay route; BOIII interoperability is unverified.                                                  |
+
+## Sources and verification
+
+Archive filenames, lengths, root folder, and listed extracted size checked on
+**9 October 2026**. Client instructions checked against the
+[BOIII project](https://github.com/Ezz-lol/boiii-free) and its latest release.
+The images are captures of upstream websites. Fresh Windows installation,
+MP, and Zombies screenshots and gameplay verification are not complete yet.

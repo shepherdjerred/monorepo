@@ -532,4 +532,6 @@ bun run test:integration
 `src/index.ts` separates platform passthroughs from monorepo workflow routers.
 The typed passthrough registry and subprocess runner live in
 `src/lib/passthrough.ts`; service-specific workflow code lives under
-`src/commands/` and `src/lib/`.
+`src/commands/` and `src/lib/`. Unix passthroughs replace the process with
+`execve`; Windows starts a child with inherited console streams and returns its
+exit code.

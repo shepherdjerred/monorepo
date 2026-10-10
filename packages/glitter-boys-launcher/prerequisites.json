@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "requirements": [
+    {
+      "games": ["iw4x"],
+      "id": "directx-x86",
+      "architecture": "x86",
+      "installer": "Redist/DirectX/DXSETUP.exe",
+      "files": ["d3dx9_43.dll"],
+      "minimum": [9, 29, 952, 3111],
+      "family": "directx"
+    },
+    {
+      "games": ["t5", "t6"],
+      "id": "directx-x86",
+      "architecture": "x86",
+      "installer": "redist/DirectX/DXSETUP.exe",
+      "files": [
+        "d3dx9_43.dll",
+        "D3DCompiler_43.dll",
+        "xinput1_3.dll",
+        "XAudio2_7.dll"
+      ],
+      "minimum": [0, 0, 0, 0],
+      "family": "directx"
+    },
+    {
+      "games": ["t5"],
+      "id": "vc90-x86",
+      "architecture": "x86",
+      "installer": "redist/vcredist_x86.exe",
+      "files": ["msvcr90.dll", "msvcp90.dll"],
+      "minimum": [9, 0, 30729, 17],
+      "family": "vc90"
+    },
+    {
+      "games": ["t6"],
+      "id": "vc100-x86",
+      "architecture": "x86",
+      "installer": "redist/vcredist_x86.exe",
+      "files": ["msvcr100.dll", "msvcp100.dll"],
+      "minimum": [10, 0, 40219, 1],
+      "family": "vc100"
+    },
+    {
+      "games": ["t5", "t6"],
+      "id": "vc140-x86",
+      "architecture": "x86",
+      "installer": "redist/VC_redist.x86.exe",
+      "files": ["vcruntime140.dll", "msvcp140.dll"],
+      "minimum": [14, 27, 29016, 0],
+      "family": "vc140"
+    },
+    {
+      "games": ["t7"],
+      "id": "vc100-x64",
+      "architecture": "x64",
+      "installer": "redist/vcredist_x64.exe",
+      "files": ["msvcr100.dll", "msvcp100.dll"],
+      "minimum": [10, 0, 40219, 325],
+      "family": "vc100"
+    },
+    {
+      "games": ["t7"],
+      "id": "directx-x64",
+      "architecture": "x64",
+      "installer": "redist/DirectX/DXSETUP.exe",
+      "files": ["xinput1_3.dll", "XAudio2_7.dll"],
+      "minimum": [0, 0, 0, 0],
+      "family": "directx"
+    }
+  ]
+}

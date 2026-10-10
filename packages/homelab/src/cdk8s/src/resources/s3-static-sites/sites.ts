@@ -100,6 +100,20 @@ const wikiCsp = [
   "frame-ancestors 'none'",
 ].join("; ");
 
+/** Same-origin homepage and Starlight docs, including Pagefind WASM search. */
+const glitterBoysCsp = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data:",
+  "font-src 'self'",
+  "worker-src 'self' blob:",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+].join("; ");
+
 /**
  * CSP for the Storm docs site. Same shape as `wikiCsp`: Starlight's Pagefind
  * search loads a same-origin WASM module in a web worker, and the only
@@ -275,6 +289,14 @@ export const staticSites: StaticSiteConfig[] = [
       },
     ],
     responseHeaders: { "Content-Security-Policy": tsMcDocsCsp },
+  },
+  {
+    hostname: "glitter-boys.com",
+    bucket: "glitter-boys",
+    probes: [
+      { endpoint: "docs", path: "/docs/", module: "http_200_no_redirect" },
+    ],
+    responseHeaders: { "Content-Security-Policy": glitterBoysCsp },
   },
   { hostname: "ppl.glitter-boys.com", bucket: "glitter-boys-ppl" },
   { hostname: "cook.sjer.red", bucket: "cook" },

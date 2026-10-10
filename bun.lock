@@ -792,6 +792,27 @@
         "vitest": "5.0.3",
       },
     },
+    "packages/glitter-boys": {
+      "name": "@shepherdjerred/glitter-boys",
+      "version": "0.1.0",
+      "dependencies": {
+        "@astrojs/check": "^0.9.10",
+        "@astrojs/sitemap": "^3.7.3",
+        "@astrojs/starlight": "^0.42.0",
+        "astro": "^7.3.3",
+        "sharp": "^0.35.0",
+      },
+      "devDependencies": {
+        "@types/bun": "1.4.2",
+        "@typescript/native": "npm:typescript@7.0.2",
+        "@vitest/coverage-istanbul": "5.0.1",
+        "typescript": "^6.0.3",
+        "vitest": "5.0.1",
+      },
+    },
+    "packages/glitter-boys-launcher": {
+      "name": "@shepherdjerred/glitter-boys-launcher",
+    },
     "packages/glitter-context": {
       "name": "@shepherdjerred/glitter-context",
       "version": "1.0.0",
@@ -4322,6 +4343,10 @@
     "@shepherdjerred/eslint-config": ["@shepherdjerred/eslint-config@workspace:packages/eslint-config"],
 
     "@shepherdjerred/feature-flags": ["@shepherdjerred/feature-flags@workspace:packages/feature-flags"],
+
+    "@shepherdjerred/glitter-boys": ["@shepherdjerred/glitter-boys@workspace:packages/glitter-boys"],
+
+    "@shepherdjerred/glitter-boys-launcher": ["@shepherdjerred/glitter-boys-launcher@workspace:packages/glitter-boys-launcher"],
 
     "@shepherdjerred/glitter-context": ["@shepherdjerred/glitter-context@workspace:packages/glitter-context"],
 

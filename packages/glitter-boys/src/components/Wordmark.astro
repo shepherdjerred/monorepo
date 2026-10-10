@@ -1,0 +1,31 @@
+---
+const words = ["GLITTER", "BOYS"];
+---
+
+<span class="wordmark" aria-hidden="true">
+  {words.map((word) => (
+    <span class="word">{word}</span>
+  ))}
+</span>
+
+<style>
+  .wordmark {
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    column-gap: 0.25em;
+    row-gap: 0.18em;
+    font-family: var(--gb-font-display);
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: 0.025em;
+  }
+  .word {
+    white-space: nowrap;
+    background: var(--gb-gradient);
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    -webkit-text-stroke: 0.0375em var(--gb-ink);
+    paint-order: stroke fill;
+  }
+</style>

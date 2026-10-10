@@ -122,6 +122,10 @@ resource "aws_s3_bucket" "scout_design_system" {
   bucket = "scout-design-system"
 }
 
+resource "aws_s3_bucket" "glitter_boys" {
+  bucket = "glitter-boys"
+}
+
 resource "aws_s3_bucket" "glitter_boys_ppl" {
   bucket = "glitter-boys-ppl"
 }
@@ -178,6 +182,7 @@ locals {
     "better-skill-capped" = ["assets/"]
     "ts-mc"               = ["_astro/"]
     "ts-mc-docs"          = ["_astro/"]
+    "glitter-boys"        = ["_astro/"]
   }
   # OpenTofu's S3 backend intentionally inherits the state-only AWS identity
   # from the process. The AWS CLI provisioners mutate deployment buckets, so
@@ -203,6 +208,7 @@ resource "terraform_data" "static_site_asset_lifecycle" {
     aws_s3_bucket.better_skill_capped,
     aws_s3_bucket.ts_mc,
     aws_s3_bucket.ts_mc_docs,
+    aws_s3_bucket.glitter_boys,
   ]
 
   input = {

@@ -1,0 +1,128 @@
+---
+title: World at War Zombies
+description: A complete Windows walkthrough for installing World at War, setting up Plutonium T4, and playing Zombies with friends.
+---
+
+import Screenshot from "../../../components/Screenshot.astro";
+import login from "../../../assets/guides/plutonium-login.png";
+import settings from "../../../assets/guides/plutonium-game-settings.png";
+
+Follow this guide from the download to your first group match. You will use
+**Plutonium T4** to launch **World at War Zombies** on Windows.
+
+## Before you start
+
+- Have space for both the ZIP and the extracted game. The group download is about **7 GB**; the extracted game needs additional space.
+- Choose a permanent game location, such as `C:\Games\World at War`.
+- Have a Plutonium forum account, an internet connection, and the same map as your friends.
+- If World at War is already installed through Steam, use that installation and skip downloading the archive.
+
+## 1. Download and extract the game
+
+1. Download [t4.zip](https://files.sjer.red/games/t4.zip). Wait until the browser reports that the download has finished.
+2. In File Explorer, right-click the ZIP and select **Extract All**. Choose your game location, then click **Extract**. You can also use [7-Zip](https://7-zip.org/).
+3. Wait for extraction to finish before starting the launcher.
+4. Open the extracted folder. If you see another game folder inside it, open that too: you need the folder containing the game files, rather than a folder that only contains a ZIP or another folder.
+
+Keep this File Explorer window open. You will select the same location in the launcher.
+
+**Already installed through Steam?** Open your library, right-click **World at War**,
+and select **Manage → Browse local files**. The folder is commonly named
+`Call of Duty World at War`; its drive and Steam library location can vary.
+
+## 2. Install Plutonium and sign in
+
+1. [Create a Plutonium forum account](https://forum.plutonium.pw/register) if you do not have one. Complete any registration prompts before returning to the launcher.
+2. Open the [official installation page](https://plutonium.pw/docs/install/) and download **plutonium.exe**.
+3. Save it somewhere you can find again, such as the game folder or your desktop.
+4. Run it and let the initial update finish. Keep the launcher open while it downloads the client files.
+5. Enter your **forum username and password**, then click **Sign In**.
+
+<Screenshot
+  src={login}
+  alt="Plutonium launcher login screen with Username, Password, and Sign In controls"
+  caption="Sign in with your Plutonium forum account. This screenshot from the official guide shows an older launcher appearance; the account is the same one you use on the forum."
+  sourceHref="https://plutonium.pw/docs/install/"
+  sourceName="Plutonium installation guide"
+/>
+
+**Checkpoint:** you should now see the launcher game list, rather than the login form.
+
+## 3. Select the game folder and launch Zombies
+
+1. Select **T4 Co-op / World at War co-op** in the launcher.
+2. Click **Setup**. In the folder picker, navigate to the game folder you found in step 1 and select it.
+3. After setup, the button changes to **Play**. Click it and wait for the game to open.
+4. The co-op entry opens the part of World at War that includes Zombies. Choose Zombies after launch.
+
+If the archive already included an old launcher, use the current `plutonium.exe`
+you just downloaded. Open that launcher whenever you play so it can update first.
+
+<Screenshot
+  src={settings}
+  alt="Plutonium launcher Play button with Game Settings highlighted beside it"
+  caption="To correct the selected folder, open Game Settings beside Play. This control is shared across the Plutonium games."
+  sourceHref="https://plutonium.pw/docs/install/"
+  sourceName="Plutonium installation guide"
+/>
+
+**Checkpoint:** reach the Zombies menu and load a solo map once. If that works,
+you are ready to set up the group; if it does not, fix the local installation first.
+
+## 4. Add your friends
+
+1. Sign in to the Plutonium forums and open your friend's profile.
+2. Click the **plus (+)** button to follow them. A heart means you already follow them.
+3. Have your friend follow you too. Repeat for everyone you plan to play with.
+4. Restart the game if a newly followed friend does not appear.
+
+Use each person's **Plutonium username** when finding profiles. Following someone
+in another app does not add them to Plutonium's friends list.
+
+## 5. Start a group match
+
+1. Pick one person to host. Everyone should be running the same map.
+2. The host opens the Plutonium overlay with **F10** or **Home**. Its **Network** tab shows whether UPnP is working.
+3. The host starts a private Zombies match and waits for the game to load.
+4. The other players open the overlay, go to **Friends List**, and double-click the host's name.
+
+World at War has no pre-game party system. Join the host after the match has loaded.
+If the private-match menu needs another player before it will start, the host can use
+the **Solo** button to start the joinable session, as described in Plutonium's T4 instructions.
+
+To have round one wait for your group, the host can enter `sp_minplayers 2` in
+the console before loading the map. Replace `2` with the number of players.
+See the [console instructions](https://plutonium.pw/docs/opening-console/) if you have not used it before.
+
+**Checkpoint:** everyone has loaded into the same map with the host. You are ready to play.
+
+## Fix common problems
+
+| What you see                       | What to check                                                                                                                                    |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Invalid game path                  | Open **Game Settings** and choose the folder containing the extracted game. Do not select `C:\`, Downloads, the ZIP, or the parent Games folder. |
+| Login keeps failing                | Check the same account on the Plutonium forums, then use its username in the launcher.                                                           |
+| A friend is missing                | Both players must follow each other. Restart the game after following.                                                                           |
+| A map will not load                | Confirm everyone has that map's game files, and let all extraction and updates finish.                                                           |
+| Solo works but friends cannot join | Retry with a different host before changing router settings.                                                                                     |
+
+If another host also fails, follow the **T4** section of
+[Plutonium's connection guide](https://plutonium.pw/docs/custom-games/).
+For private matches, its manual forwarding instructions use **UDP 28960–28961**
+on the host's router. Only the host needs the forwarding rule; guests joining a
+host or public server do not. Apply rules to the host's PC and keep the protocol
+and port range specific to this game.
+
+## Before the next session
+
+- Open `plutonium.exe` and finish any updates.
+- Confirm the map and who is hosting.
+- Use the same selected game folder; you do not need to extract the ZIP again.
+
+## Sources and screenshots
+
+Client steps checked on **7 October 2026** against
+[Plutonium installation](https://plutonium.pw/docs/install/) and
+[playing with friends](https://plutonium.pw/docs/custom-games/).
+Screenshots are examples published in the official documentation, with their
+original source credited under each image. They do not show a locally tested game session.

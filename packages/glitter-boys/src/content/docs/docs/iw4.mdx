@@ -1,0 +1,130 @@
+---
+title: Modern Warfare 2
+description: Install IW4x on Windows amd64 and join Modern Warfare 2 multiplayer servers.
+---
+
+import Screenshot from "../../../components/Screenshot.astro";
+import folder from "../../../assets/guides/iw4x-launcher-folder.png";
+import updating from "../../../assets/guides/iw4x-updating.png";
+
+Use **IW4x** to play the original **Modern Warfare 2 (2009) multiplayer**.
+This **Windows amd64** walkthrough takes you from extracting the group ZIP to
+joining the same server as the group. Mac players have a separate
+[Apple silicon setup page](/docs/crossplay/macos/#modern-warfare-2).
+
+## Before you start
+
+- Use the original 2009 game. The newer Modern Warfare II is a different game.
+- IW4x's supported installation is the current **Steam** version. Its official quickstart says the Microsoft Store version is incompatible.
+- Have at least **40 GB free**. The archive is 16.96 GB and its listed extracted files total 17.03 GB, before client updates. Sizes here use decimal GB.
+- Finish installing or extracting the game before running the launcher.
+
+## 1. Download and extract the ZIP
+
+1. Download [iw4x.zip](https://files.sjer.red/games/iw4x.zip). Wait until the download is complete.
+2. Right-click the ZIP in File Explorer and choose **Extract All**. Set the destination to `C:\Games\GlitterBoysGuide` (or your preferred permanent game directory).
+3. Wait for extraction to finish. The archive contains a top-level folder named **iw4x**.
+
+The archive includes older client files, including `alterware-launcher.exe`.
+Use the current **IW4x launcher** in step 3 for this walkthrough.
+
+## 2. Find the actual game folder
+
+Open the extracted **iw4x** folder. With the destination above, it is:
+
+```text
+C:\Games\GlitterBoysGuide\iw4x
+```
+
+You should see `iw4x.exe` and the game-data folders. Keep that File Explorer
+window open. The parent `GlitterBoysGuide` folder and the unopened ZIP are not
+the game directory.
+
+### Existing Steam installation instead
+
+In Steam, right-click **Modern Warfare 2 (2009) — Multiplayer** and choose
+**Manage → Browse local files**. Verify that entry through **Properties →
+Installed Files → Verify integrity of game files** before installing IW4x.
+Use the folder Steam opens for the remaining steps. Upstream support covers
+the current Steam game files; if the archive has incompatible or missing files,
+use that installation.
+
+## 3. Install the IW4x launcher
+
+1. Open the [IW4x launcher's latest release](https://github.com/iw4x/launcher/releases/latest).
+2. Download the **x86_64-windows.zip** asset and extract it. On 9 October 2026, the latest release is **v1.1.8-b.24**; the quickstart's download button still links to an older build.
+3. Move `iw4x-launcher.exe` from the extracted launcher download into the **iw4x** game folder you found in step 2.
+4. Run `iw4x-launcher.exe` from that folder.
+
+<Screenshot
+  src={folder}
+  alt="IW4x Windows launcher download beside Downloads and the Modern Warfare 2 game directory"
+  caption="Move iw4x-launcher.exe into the game directory. The release number shown in the upstream recording is an example; use today's Windows download."
+  sourceHref="https://docs.iw4x.io/get-started/quickstart/"
+  sourceName="IW4x quickstart recording"
+/>
+
+Keep it alongside the game files. A launcher sitting in Downloads, the parent
+Games folder, or inside the unopened ZIP will not point at the right installation.
+
+## 4. Let the client update and open the game
+
+The launcher opens a console window and downloads the client files. Leave it
+running while progress changes; the initial update can take longer than later launches.
+
+<Screenshot
+  src={updating}
+  alt="IW4x launcher console showing client and raw-file download progress"
+  caption="The console is the normal updater interface. Wait for the downloads to complete and the game to open. Your version and progress totals can differ."
+  sourceHref="https://docs.iw4x.io/get-started/quickstart/"
+  sourceName="IW4x quickstart recording"
+/>
+
+After installation, the folder should include:
+
+```text
+Call of Duty Modern Warfare 2/
+├── iw4x/
+├── iw4x.exe
+├── iw4x-launcher.exe
+└── ...base-game files
+```
+
+**Checkpoint:** reach the IW4x multiplayer menu. Use `iw4x-launcher.exe` each time
+you play so it can check for updates before starting the game.
+
+## 5. Join the same server
+
+1. Open the in-game **server browser**.
+2. Have the group agree on a server name and game mode.
+3. Refresh the list, find that exact server, and join it.
+4. Wait for any server-provided content to finish loading.
+5. Confirm your friends appear in the same match before choosing a team.
+
+This is the multiplayer guide. For co-op Zombies, return to the
+[game guides](/docs/) and choose World at War or a Black Ops game.
+
+## Fix common problems
+
+| What you see                      | What to check                                                                                                   |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| A missing zone or base-game file  | Verify the **Multiplayer** installation in Steam, then run the launcher again.                                  |
+| The launcher cannot find the game | Move it into the actual game folder. Avoid a parent folder or an unopened ZIP.                                  |
+| The console stops with an error   | Read the last error line, check the game location, and consult the [IW4x documentation](https://docs.iw4x.io/). |
+| A different MW2 game opens        | Confirm you installed the original 2009 Multiplayer entry and launched IW4x's launcher.                         |
+| Friends appear on another server  | Compare the complete server name and current match; similarly named servers can be separate instances.          |
+
+## Before the next session
+
+Run the launcher, finish any update, and confirm the server name with the group.
+Keep the installation in the same folder; you do not need to move or extract it again.
+
+## Sources and screenshots
+
+The group ZIP passed a **7-Zip integrity test and fresh extraction on 9 October
+2026**: 516 files, totaling 17,032,280,485 bytes, under the `iw4x` folder. Client
+instructions checked on the same date against the
+[official quickstart](https://docs.iw4x.io/get-started/quickstart/).
+The screenshots are stills from that project's setup recordings, rather than a
+locally tested ZIP installation or game session. The original recordings are available from the
+[IW4x documentation project](https://github.com/iw4x/docs) under GPL-3.0.
