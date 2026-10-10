@@ -1747,6 +1747,15 @@ a complete bundle. These checks protect artifact integrity and enforce the
 fixed gates; genuine human recordings and votes must come from the recording
 and review workflows above.
 
+Java promotion bundles the neutral training-map and strength-evaluation
+contracts from `tools/learning`. It requires version-2 strength evidence and
+the same sorted map identities, terrain hashes and scenario hashes in the
+pilot inputs, every trained checkpoint, the evaluation plan and every duel.
+Every admitted map must fit the paired 200-game schedule; omitted maps and
+changed, repeated or reordered games fail validation. Report fields are checked
+against the neutral inventory before native actor allocation. Java's schedule
+is tested against independently generated Python expectations across 32 maps.
+
 `bots:promote` assembles the original passing evidence into a new local bundle:
 
 ```bash

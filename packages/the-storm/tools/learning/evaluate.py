@@ -27,6 +27,44 @@ if CONTRACT != {
     "opponents": ["authored", "basic"],
     "sides": ["red", "blue"],
     "minimumWins": {"authored": 120, "basic": 160},
+    "reportFields": [
+        "version",
+        "engine",
+        "mode",
+        "acceptance",
+        "actor_seed",
+        "weights_sha256",
+        "manifest_sha256",
+        "maps",
+        "games",
+        "optimized",
+        "retried_duels",
+        "blind_preference_checked",
+        "pilot_acceptance_checked",
+    ],
+    "gameFields": [
+        "map",
+        "blocksSha256",
+        "scenarioSha256",
+        "engine",
+        "opponent",
+        "seed",
+        "side",
+        "match",
+        "result",
+        "frames",
+        "submitted_controls",
+        "confirmed_controls",
+        "applied_controls",
+        "authored_fallbacks",
+        "missed_ticks",
+        "rejected_actions",
+        "memory_resets",
+        "dealt",
+        "received",
+        "seconds",
+        "max_inference_ms",
+    ],
 }:
     raise ValueError("unsupported strength evaluation contract")
 
@@ -170,7 +208,7 @@ def run_duel(
             terminal = raw
         if state.result not in ("win", "loss", "draw", "timeout") or terminal is None:
             raise ValueError("evaluation duel interrupted; do not retry or discard its outcome")
-        return {
+        report = {
             **matchup.map.report(),
             "engine": "Paper",
             "opponent": matchup.opponent,
@@ -191,12 +229,19 @@ def run_duel(
             "seconds": time.monotonic() - started,
             "max_inference_ms": max(inference_ms),
         }
+        validate_fields(report, "gameFields")
+        return report
     finally:
         console.command("cancel")
 
 
 def emit(kind: str, report: dict[str, object]) -> None:
     print(json.dumps({"kind": kind, "report": report}, allow_nan=False), flush=True)
+
+
+def validate_fields(report: dict[str, object], field: str) -> None:
+    if set(report) != set(array(CONTRACT[field])):
+        raise ValueError("strength report fields differ from the neutral contract")
 
 
 def main() -> None:
@@ -282,6 +327,7 @@ def main() -> None:
         "blind_preference_checked": False,
         "pilot_acceptance_checked": False,
     }
+    validate_fields(report, "reportFields")
     (args.output / "report.json").write_text(
         json.dumps(report, indent=2, allow_nan=False) + "\n", encoding="utf-8"
     )

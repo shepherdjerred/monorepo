@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
 final class PromotionBundleTest {
@@ -100,6 +101,45 @@ final class PromotionBundleTest {
     assertThatIllegalArgumentException()
         .isThrownBy(() -> ActorManifest.load(directory, ActorManifest.Acceptance.ACCEPTED))
         .withMessageContaining("recomputed strength wins");
+  }
+
+  @Test
+  void archivedStrengthRejectsOldReportsAndChangedMapOrGameBindings(@TempDir Path directory)
+      throws Exception {
+    var fixture = new PromotionFixture(directory);
+    var seed = (ObjectNode) fixture.proof.path("pilot").path("seeds").get(0);
+    var digest = seed.path("strength_sha256").asString();
+    var original =
+        (ObjectNode)
+            PromotionContract.JSON.readTree(
+                Files.readAllBytes(directory.resolve("evidence/" + digest + ".blob")));
+    var mutations =
+        List.<Consumer<ObjectNode>>of(
+            value -> value.put("version", 1),
+            value -> value.put("extra", true),
+            value -> ((ArrayNode) value.path("maps")).remove(0),
+            value -> ((ObjectNode) value.path("games").get(0)).put("blocksSha256", "f".repeat(64)),
+            value ->
+                ((ObjectNode) value.path("games").get(0)).put("scenarioSha256", "f".repeat(64)),
+            value -> ((ObjectNode) value.path("games").get(0)).put("map", "other-map"),
+            value -> ((ObjectNode) value.path("games").get(0)).put("extra", true),
+            value -> ((ObjectNode) value.path("games").get(0)).put("seed", 500000001),
+            value -> ((ObjectNode) value.path("games").get(0)).put("side", "blue"),
+            value ->
+                ((ObjectNode) value.path("games").get(1))
+                    .set("match", value.path("games").get(0).path("match")));
+    for (var mutation : mutations) {
+      var changed = original.deepCopy();
+      mutation.accept(changed);
+      seed.put("strength_sha256", fixture.blob(changed));
+      fixture.seal();
+      assertThatIllegalArgumentException()
+          .isThrownBy(() -> ActorManifest.load(directory, ActorManifest.Acceptance.ACCEPTED));
+    }
+    seed.put("strength_sha256", digest);
+    fixture.seal();
+    assertThat(ActorManifest.load(directory, ActorManifest.Acceptance.ACCEPTED))
+        .isEqualTo(fixture.actor);
   }
 
   @Test

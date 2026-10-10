@@ -19,6 +19,8 @@ final class PromotionFixture {
   final byte[] actor;
   private final String dataset;
   private final ObjectNode nativeInputs;
+  final ObjectNode mapPlan;
+  final ArrayNode schedule;
 
   PromotionFixture(Path directory) throws IOException {
     this.directory = directory;
@@ -27,6 +29,11 @@ final class PromotionFixture {
         Path.of(
             java.util.Objects.requireNonNull(System.getProperty("thestorm.rwfbots.actorParity")));
     actor = Files.readAllBytes(parity.resolve("onnx/actor.onnx"));
+    var strengthFixture =
+        PromotionContract.JSON.readTree(Files.readAllBytes(parity.resolve("strength.json")));
+    mapPlan =
+        object("schema", 1, "kind", "rwf-training-maps", "maps", strengthFixture.path("maps"));
+    schedule = (ArrayNode) strengthFixture.path("games");
     source =
         (ObjectNode)
             PromotionContract.JSON.readTree(
@@ -119,7 +126,11 @@ final class PromotionFixture {
               "pilot_acceptance_checked",
               false,
               "curriculum",
-              object("complete", true));
+              object("complete", true),
+              "maps",
+              mapPlan.path("maps"),
+              "map_coverage_complete",
+              true);
       var weights = blob("synthetic weights " + index);
       var checkpoint = source.deepCopy();
       for (var extra :
@@ -179,49 +190,54 @@ final class PromotionFixture {
 
   private String strength(int index, String weights, String checkpoint) throws IOException {
     var games = PromotionContract.JSON.createArrayNode();
-    for (int game = 0; game < 400; game++) {
-      var won = game < 200 ? game < 120 : game % 200 < 160;
+    int authored = 0;
+    int basic = 0;
+    for (int game = 0; game < schedule.size(); game++) {
+      var expected = (ObjectNode) schedule.get(game).deepCopy();
+      var won =
+          expected.path("opponent").asString().equals("authored")
+              ? authored++ < 120
+              : basic++ < 160;
       games.add(
-          object(
-              "opponent",
-              game < 200 ? "authored" : "basic",
-              "seed",
-              500_000_000 + game % 200 / 2,
-              "side",
-              game % 2 == 0 ? "red" : "blue",
-              "match",
-              uuid(1000 + index * 400 + game),
-              "result",
-              won ? "win" : "loss",
-              "frames",
-              10,
-              "submitted_controls",
-              10,
-              "confirmed_controls",
-              10,
-              "applied_controls",
-              10,
-              "authored_fallbacks",
-              0,
-              "missed_ticks",
-              0,
-              "rejected_actions",
-              0,
-              "memory_resets",
-              0,
-              "dealt",
-              1,
-              "received",
-              1,
-              "seconds",
-              1,
-              "max_inference_ms",
-              1));
+          expected.setAll(
+              object(
+                  "engine",
+                  "Paper",
+                  "match",
+                  uuid(1000 + index * 400 + game),
+                  "result",
+                  won ? "win" : "loss",
+                  "frames",
+                  10,
+                  "submitted_controls",
+                  10,
+                  "confirmed_controls",
+                  10,
+                  "applied_controls",
+                  10,
+                  "authored_fallbacks",
+                  0,
+                  "missed_ticks",
+                  0,
+                  "rejected_actions",
+                  0,
+                  "memory_resets",
+                  0,
+                  "dealt",
+                  1,
+                  "received",
+                  1,
+                  "seconds",
+                  1,
+                  "max_inference_ms",
+                  1)));
     }
     return blob(
         object(
             "version",
-            1,
+            2,
+            "maps",
+            mapPlan.path("maps"),
             "engine",
             "Paper",
             "mode",
@@ -253,7 +269,7 @@ final class PromotionFixture {
             .add(object("file", "manifest.json", "sha256", dataset));
     for (var entry : splits.properties())
       datasetFiles.add(object("file", entry.getKey(), "sha256", entry.getValue()));
-    var inputs = blob(object("native", nativeInputs, "dataset", datasetFiles));
+    var inputs = blob(object("native", nativeInputs, "maps", mapPlan, "dataset", datasetFiles));
     var actors = PromotionContract.JSON.createArrayNode();
     for (var seed : seeds)
       actors.add(
@@ -267,7 +283,9 @@ final class PromotionFixture {
     var plan =
         object(
             "version",
-            1,
+            2,
+            "maps",
+            mapPlan,
             "mode",
             "pilot",
             "acceptance",
