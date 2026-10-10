@@ -1,4 +1,3 @@
-import { z } from "zod";
 import { format } from "prettier";
 import {
   parseVersionCatalogText,
@@ -7,41 +6,11 @@ import {
   type VersionCatalogEntry,
 } from "@shepherdjerred/version-catalog";
 import {
-  PinCandidateSchema,
+  imageKeys,
   type PinCandidates,
+  type PinCandidatesState,
 } from "./pin-candidates-schema.ts";
-
-const PinSchema = PinCandidateSchema.extend({
-  buildNumber: z.number().int().positive(),
-});
-
-export const PinCandidatesStateSchema = z
-  .object({
-    schema: z.literal("pin-candidates-state/v1"),
-    pins: z.record(z.string().min(1), PinSchema),
-    withdrawnCandidates: z
-      .record(
-        z.string().regex(/\/workflows\/candidate$/u),
-        z.number().int().positive(),
-      )
-      .optional(),
-  })
-  .strict();
-
-export type PinCandidatesState = z.infer<typeof PinCandidatesStateSchema>;
 type PinStatePin = PinCandidatesState["pins"][string];
-
-function parseJson(text: string, description: string): unknown {
-  try {
-    return JSON.parse(text);
-  } catch (error) {
-    throw new Error(`${description} is not valid JSON`, { cause: error });
-  }
-}
-
-export function parsePinCandidatesState(text: string): PinCandidatesState {
-  return PinCandidatesStateSchema.parse(parseJson(text, "pin candidate state"));
-}
 
 export function serializePinCandidatesState(state: PinCandidatesState): string {
   const pins = Object.fromEntries(
@@ -106,42 +75,6 @@ export function mergeVersionCatalogSources(
   }
 
   return serializeVersionCatalog({ ...main, entries });
-}
-
-function imageKeys(versions: Map<string, string>): Set<string> {
-  return new Set(
-    [...versions.entries()]
-      .filter(([, value]) => value.includes("@sha256:"))
-      .map(([key]) => key),
-  );
-}
-
-export function validateStateAgainstVersions(
-  state: PinCandidatesState,
-  versions: Map<string, string>,
-): void {
-  const allowed = imageKeys(versions);
-  for (const key of Object.keys(state.withdrawnCandidates ?? {})) {
-    if (!allowed.has(key)) {
-      throw new Error(`withdrawn candidate contains unknown image key ${key}`);
-    }
-  }
-  for (const [key, pin] of Object.entries(state.pins)) {
-    if (!allowed.has(key)) {
-      throw new Error(`pin state contains unknown image key ${key}`);
-    }
-    const actual = versions.get(key);
-    const expected = `${pin.version}@${pin.digest}`;
-    if (actual !== expected) {
-      throw new Error(
-        `pin state drift for ${key}: expected ${expected}, found ${String(actual)}`,
-      );
-    }
-    const withdrawn = state.withdrawnCandidates?.[key];
-    if (withdrawn !== undefined && pin.buildNumber <= withdrawn) {
-      throw new Error(`withdrawn candidate remains in pin state: ${key}`);
-    }
-  }
 }
 
 /**

@@ -199,6 +199,16 @@ export async function prepareCandidatePinStateReset(
     .int()
     .positive()
     .parse(version.split("@")[0]?.split("-")[1]);
+  const candidate = state.pins[candidatePinName];
+  if (
+    candidate !== undefined &&
+    (`${candidate.version}@${candidate.digest}` !== version ||
+      candidate.buildNumber !== buildNumber)
+  ) {
+    throw new Error(
+      `Candidate pin state differs from catalog: ${candidatePinName}`,
+    );
+  }
   const withdrawn = Math.max(
     state.withdrawnCandidates?.[candidatePinName] ?? 0,
     buildNumber,

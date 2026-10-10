@@ -13,14 +13,16 @@ import {
   mergePinCandidates,
   mergePinStates,
   mergeVersionCatalogSources,
-  parsePinCandidatesState,
   parseVersionCatalogSource,
   retainCurrentImagePins,
   rewriteVersionCatalogSource,
   serializePinCandidatesState,
-  validateStateAgainstVersions,
 } from "../lib/pin-candidates.ts";
-import { parsePinCandidates } from "../lib/pin-candidates-schema.ts";
+import {
+  parsePinCandidates,
+  parsePinCandidatesState,
+  validateStateAgainstVersions,
+} from "../lib/pin-candidates-schema.ts";
 
 const A =
   "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";

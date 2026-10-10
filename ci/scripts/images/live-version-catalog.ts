@@ -5,7 +5,6 @@ import {
   parseVersionCatalogText,
   serializeVersionCatalog,
 } from "../../../packages/version-catalog/src/index.ts";
-import { parsePinCandidates } from "../../../scripts/lib/pin-candidates-schema.ts";
 import {
   ciHandoffConfigFromEnv,
   readRequiredHandoff,
@@ -13,9 +12,9 @@ import {
 import { ensureAncestor } from "../selectors/ensure-ancestor.ts";
 import {
   parsePinCandidatesState,
-  parseVersionCatalogSource,
+  parsePinCandidates,
   validateStateAgainstVersions,
-} from "../../../scripts/lib/pin-candidates.ts";
+} from "../../../scripts/lib/pin-candidates-schema.ts";
 
 const VERSION_CATALOG_PATH = "packages/version-catalog/src/catalog.json";
 
@@ -183,7 +182,15 @@ export async function resolveImageReleaseCatalog(
       throw new TransientError("Unable to read live image pin state");
     }
     const parsed = parsePinCandidatesState(state.stdout);
-    validateStateAgainstVersions(parsed, parseVersionCatalogSource(current));
+    validateStateAgainstVersions(
+      parsed,
+      new Map(
+        parseVersionCatalogText(current).entries.map((entry) => [
+          entry.name,
+          entry.value,
+        ]),
+      ),
+    );
     withdrawnCandidates = parsed.withdrawnCandidates ?? {};
   }
   return {

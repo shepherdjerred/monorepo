@@ -276,6 +276,76 @@ test.each(["missing", "invalid"])(
   },
 );
 
+test.each([
+  ["{", "pin candidate state is not valid JSON"],
+  [
+    JSON.stringify({
+      schema: "pin-candidates-state/v1",
+      pins: {},
+      withdrawnCandidates: { "unknown/workflows/candidate": 200 },
+    }),
+    "withdrawn candidate contains unknown image key",
+  ],
+  ...["unknown", "upstream/chart", "worker"].map((key) => [
+    JSON.stringify({
+      schema: "pin-candidates-state/v1",
+      pins: {
+        [key]: {
+          version: "2.0.0-200",
+          digest: `sha256:${"a".repeat(64)}`,
+          buildNumber: 200,
+        },
+      },
+    }),
+    key === "worker"
+      ? "pin state drift"
+      : "pin state contains unknown image key",
+  ]),
+  [
+    JSON.stringify({
+      schema: "pin-candidates-state/v1",
+      pins: {
+        "worker/workflows/candidate": {
+          version: "2.0.0-100",
+          digest: `sha256:${"a".repeat(64)}`,
+          buildNumber: 100,
+        },
+      },
+      withdrawnCandidates: { "worker/workflows/candidate": 200 },
+    }),
+    "withdrawn candidate remains in pin state",
+  ],
+])(
+  "refuses corrupt live pin state before reading artifacts: %s",
+  async (state, error) => {
+    const main = catalog([
+      ["worker", pin(100)],
+      ["worker/workflows/candidate", pin(100)],
+    ]);
+    const readHandoff = vi.fn(async () => main);
+    await expect(
+      resolveImageReleaseCatalog(
+        "current",
+        async (command) =>
+          commandResult(
+            0,
+            command[2] === "origin/main:scripts/pin-candidates-state.json"
+              ? state
+              : command[1] === "show"
+                ? main
+                : "",
+          ),
+        {
+          CI_LAST_IMAGE_RELEASE_COMMIT: "published-source",
+          CI_LAST_IMAGE_RELEASE_PIPELINE: "300",
+        },
+        readHandoff,
+      ),
+    ).rejects.toThrow(error);
+    expect(readHandoff).not.toHaveBeenCalled();
+  },
+);
+
 test("rejects conflicting digests at the same release rather than choosing one", () => {
   const main = catalog([["worker", pin(200)]]);
   expect(() =>
@@ -345,7 +415,16 @@ test("uses the validated baseline for both target selection and retained pins", 
       if (command[2] === "origin/main:scripts/pin-candidates-state.json") {
         return commandResult(
           0,
-          JSON.stringify({ schema: "pin-candidates-state/v1", pins: {} }),
+          JSON.stringify({
+            schema: "pin-candidates-state/v1",
+            pins: {
+              worker: {
+                version: "2.0.0-100",
+                digest: `sha256:${"a".repeat(64)}`,
+                buildNumber: 100,
+              },
+            },
+          }),
         );
       }
       return commandResult(0, command[1] === "show" ? main : "");

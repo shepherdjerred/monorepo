@@ -2,12 +2,14 @@ import { expect, test } from "vitest";
 import {
   mergePinCandidates,
   mergePinStates,
-  parsePinCandidatesState,
   retainCurrentImagePins,
   serializePinCandidatesState,
+} from "../lib/pin-candidates.ts";
+import {
+  parsePinCandidatesState,
   validateStateAgainstVersions,
   type PinCandidatesState,
-} from "../lib/pin-candidates.ts";
+} from "../lib/pin-candidates-schema.ts";
 
 const key = "shepherdjerred/temporal-worker/workflows/candidate";
 const digest = `sha256:${"a".repeat(64)}`;
