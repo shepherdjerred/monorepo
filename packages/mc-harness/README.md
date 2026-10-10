@@ -267,6 +267,9 @@ pick n | knockout [--among a,b] [--rubric] [--model]`) keep versions of
   logged as an accept and a reject, and the winner becomes `best` after each
   completed bout, even if a later model call fails. `pick`
   restores a candidate as the working version.
+  Retrying an interrupted tournament with the same pool, candidate versions,
+  rubric and model resumes its remaining challengers without rejudging earlier
+  bouts. Changing those inputs starts a new tournament.
   Candidates record the captured site's hash, world and bounds; picking or
   judging one against another capture fails. Recapturing clears the incumbent
   and preserves old candidates; use `--among` to select candidates saved for

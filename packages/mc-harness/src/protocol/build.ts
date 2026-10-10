@@ -339,6 +339,14 @@ export const BuildManifestSchema = z.strictObject({
     .optional(),
   /** Sandbox id of the canvas seeded from the site. */
   canvas: z.string().optional(),
+  /** Remaining bouts of an interrupted tournament, bound to its inputs and judge policy. */
+  knockout: z
+    .strictObject({
+      fingerprint: z.string().min(1),
+      incumbent: z.string().min(1),
+      pending: z.array(z.string().min(1)),
+    })
+    .optional(),
   /** The incumbent: the best candidate so far, kept by `build candidate knockout`. */
   best: z
     .strictObject({

@@ -113,7 +113,7 @@ export async function captureSite(
     `${JSON.stringify(info)}\n`,
   );
   // A new capture starts a new competition; retain old candidates for inspection.
-  const { best: _best, ...capturedManifest } = manifest;
+  const { best: _best, knockout: _knockout, ...capturedManifest } = manifest;
   await workspace.writeManifest({
     ...capturedManifest,
     world: options.box.world,

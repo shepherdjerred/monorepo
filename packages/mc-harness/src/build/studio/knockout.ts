@@ -109,8 +109,12 @@ async function persistBest(
   workspace: BuildWorkspace,
   manifest: BuildManifest,
   incumbent: string,
-  rubric: JudgeRubric,
+  options: {
+    rubric: JudgeRubric;
+    progress?: NonNullable<BuildManifest["knockout"]>;
+  },
 ): Promise<NonNullable<BuildManifest["best"]>> {
+  const { rubric, progress } = options;
   const candidate = await readCandidate(workspace.dir, incumbent);
   const best = {
     candidate: incumbent,
@@ -123,8 +127,13 @@ async function persistBest(
     manifest.best.gridHash === best.gridHash &&
     manifest.best.rubric === best.rubric &&
     manifest.best.score === best.score;
-  if (unchanged && manifest.best !== undefined) return manifest.best;
-  await workspace.writeManifest({ ...manifest, best });
+  if (progress === undefined && unchanged && manifest.best !== undefined)
+    return manifest.best;
+  await workspace.writeManifest({
+    ...manifest,
+    best,
+    ...(progress === undefined ? {} : { knockout: progress }),
+  });
   return best;
 }
 
@@ -215,7 +224,29 @@ export async function knockout(
       throw new Error(`no candidate "${name}" saved in ${workspace.dir}`);
     }
   }
-  const seeds = seeding(pool, saved, manifest.best?.candidate);
+  const fingerprint = createHash("sha256")
+    .update(
+      JSON.stringify({
+        pool,
+        candidates: candidates.map(({ name, gridHash, at, capture }) => ({
+          name,
+          gridHash,
+          at,
+          capture,
+        })),
+        site: manifest.site,
+        world: manifest.world,
+        rubric: options.rubric,
+        model: options.model,
+        judge: judgeFingerprint(options.rubric),
+      }),
+    )
+    .digest("hex");
+  const previous = manifest.knockout;
+  const seeds =
+    previous?.fingerprint === fingerprint
+      ? { incumbent: previous.incumbent, challengers: previous.pending }
+      : seeding(pool, saved, manifest.best?.candidate);
   const sheets = await sheetsFor(
     dir,
     [seeds.incumbent, ...seeds.challengers],
@@ -224,7 +255,14 @@ export async function knockout(
   const ask = options.ask ?? llmJudge(options.model, options.rubric);
   const bouts: Bout[] = [];
   let incumbent = seeds.incumbent;
-  for (const challenger of seeds.challengers) {
+  if (seeds.challengers.length > 0) {
+    manifest = {
+      ...manifest,
+      knockout: { fingerprint, incumbent, pending: seeds.challengers },
+    };
+    await workspace.writeManifest(manifest);
+  }
+  for (const [index, challenger] of seeds.challengers.entries()) {
     const result = await bout(
       dir,
       { incumbent, challenger, sheets },
@@ -233,17 +271,24 @@ export async function knockout(
     bouts.push(result);
     incumbent = result.winner === "challenger" ? challenger : incumbent;
     // A later model failure must retry from the winner already recorded in the journal.
+    const progress = {
+      fingerprint,
+      incumbent,
+      pending: seeds.challengers.slice(index + 1),
+    };
+    const best = await persistBest(workspace, manifest, incumbent, {
+      rubric: options.rubric,
+      progress,
+    });
     manifest = {
       ...manifest,
-      best: await persistBest(workspace, manifest, incumbent, options.rubric),
+      best,
+      knockout: progress,
     };
   }
-  const best = await persistBest(
-    workspace,
-    manifest,
-    incumbent,
-    options.rubric,
-  );
+  const best = await persistBest(workspace, manifest, incumbent, {
+    rubric: options.rubric,
+  });
   if (seeds.challengers.length === 0 && manifest.best !== best) {
     // No bout produces an accept entry when the pool contains only the incumbent.
     await appendLog(dir, {
@@ -254,6 +299,10 @@ export async function knockout(
       rubric: options.rubric,
       score: best.score,
     });
+  }
+  if (manifest.knockout !== undefined) {
+    const { knockout: _knockout, ...completed } = manifest;
+    await workspace.writeManifest({ ...completed, best });
   }
   return { best: incumbent, score: best.score, bouts };
 }

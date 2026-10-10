@@ -207,8 +207,10 @@ export async function listCandidates(
   let names: string[];
   try {
     names = await readdir(workspace.file(BUILD_FILES.candidatesDir));
-  } catch {
-    return [];
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "ENOENT")
+      return [];
+    throw error;
   }
   const candidates = [];
   for (const name of names.toSorted()) {

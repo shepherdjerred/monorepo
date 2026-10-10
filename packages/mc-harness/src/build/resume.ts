@@ -45,8 +45,10 @@ async function candidateNames(workspace: BuildWorkspace): Promise<string[]> {
   try {
     const names = await readdir(workspace.file(BUILD_FILES.candidatesDir));
     return names.toSorted();
-  } catch {
-    return [];
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "ENOENT")
+      return [];
+    throw error;
   }
 }
 

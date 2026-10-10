@@ -732,6 +732,54 @@ const prefersWide: AskJudge = (first, second) =>
 const biased: AskJudge = () =>
   Promise.resolve({ winner: "first", confidence: 0.7, reasons: ["position"] });
 
+async function interruptedTournament(name: string): Promise<BuildWorkspace> {
+  const workspace = await makeBuild(name);
+  for (const [candidate, width] of [
+    ["a", 2],
+    ["b", 6],
+    ["c", 4],
+  ] as const) {
+    await pastePart(workspace, width);
+    await saveCandidate(workspace.dir, candidate);
+  }
+  let calls = 0;
+  const ask: AskJudge = (first, second) => {
+    calls += 1;
+    if (calls > 2) throw new Error("model unavailable");
+    return prefersWide(first, second);
+  };
+  await expect(
+    knockout(workspace.dir, { rubric: "micro", model: "stub", ask }),
+  ).rejects.toThrow("model unavailable");
+  return workspace;
+}
+
+describe("knockout checkpoint invalidation", () => {
+  it.each(["model", "candidate"])(
+    "starts a new tournament after the %s changes",
+    async (change) => {
+      const workspace = await interruptedTournament(
+        `knockout-change-${change}`,
+      );
+      if (change === "candidate") {
+        await pastePart(workspace, 3);
+        await saveCandidate(workspace.dir, "a", { force: true });
+      }
+      const ask = vi.fn(prefersWide);
+      const result = await knockout(workspace.dir, {
+        rubric: "micro",
+        model: change === "model" ? "new-model" : "stub",
+        ask,
+      });
+      expect(ask).toHaveBeenCalledTimes(4);
+      expect(result.bouts.map((bout) => bout.challenger).toSorted()).toEqual([
+        "a",
+        "c",
+      ]);
+    },
+  );
+});
+
 describe("site capture journal", () => {
   it("marks each successful recapture and clears the saved incumbent", async () => {
     const workspace = await makeBuild("capture-journal");
@@ -836,42 +884,45 @@ describe("offline world boundaries", () => {
 });
 
 describe("candidate capture and judgment evidence", () => {
+  it("treats an absent candidates directory as empty and propagates other read errors", async () => {
+    const workspace = await makeBuild("candidate-directory-errors");
+    expect(await listCandidates(workspace.dir)).toEqual([]);
+    await Bun.write(
+      workspace.file(BUILD_FILES.candidatesDir),
+      "not a directory",
+    );
+    await expect(listCandidates(workspace.dir)).rejects.toMatchObject({
+      code: "ENOTDIR",
+    });
+    await expect(resumeState(workspace.dir)).rejects.toMatchObject({
+      code: "ENOTDIR",
+    });
+  });
+
   it("keeps a completed bout's incumbent when a later model call fails", async () => {
-    const workspace = await makeBuild("knockout-interrupted");
-    for (const [name, width] of [
-      ["a", 2],
-      ["b", 6],
-      ["c", 4],
-    ] as const) {
-      await pastePart(workspace, width);
-      await saveCandidate(workspace.dir, name);
-    }
-    let calls = 0;
-    const ask: AskJudge = (first, second) => {
-      calls += 1;
-      if (calls > 2) throw new Error("model unavailable");
-      return prefersWide(first, second);
-    };
-    await expect(
-      knockout(workspace.dir, {
-        rubric: "micro",
-        model: "stub",
-        ask,
-      }),
-    ).rejects.toThrow("model unavailable");
+    const workspace = await interruptedTournament("knockout-interrupted");
     const interrupted = await workspace.manifest();
     expect(interrupted.best?.candidate).toBe("b");
+    expect(interrupted.knockout).toMatchObject({
+      incumbent: "b",
+      pending: ["c"],
+    });
     const journal = await readLog(workspace.dir);
     const accepted = journal.filter((entry) => entry.kind === "accept");
     expect(accepted.map((entry) => entry.candidate)).toEqual(["b"]);
+    const retryAsk = vi.fn(prefersWide);
     const retry = await knockout(workspace.dir, {
-      among: ["c"],
       rubric: "micro",
       model: "stub",
-      ask: prefersWide,
+      ask: retryAsk,
     });
+    expect(retryAsk).toHaveBeenCalledTimes(2);
+    expect(retry.bouts).toHaveLength(1);
+    expect(retry.bouts[0]?.challenger).toBe("c");
     expect(retry.bouts[0]?.incumbent).toBe("b");
     expect(retry.best).toBe("b");
+    const completed = await workspace.manifest();
+    expect(completed.knockout).toBeUndefined();
     const retriedJournal = await readLog(workspace.dir);
     expect(
       retriedJournal
