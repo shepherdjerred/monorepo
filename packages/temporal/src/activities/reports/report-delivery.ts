@@ -40,6 +40,7 @@ import { temporalUiExecutionUrl } from "#shared/alerts/workflow-failure-alert.ts
 import { parseTemporalNamespace } from "#shared/infra/temporal-namespace.ts";
 import { dailyReportNotificationsConfig } from "#config/report-notifications.ts";
 import { notificationBackend } from "./report-notification-store.ts";
+import { recordReportHeartbeat } from "./report-heartbeat-index.ts";
 import {
   deliverDailyNotification,
   notificationFamilyPath,
@@ -164,14 +165,19 @@ function deliveryBackend(store: ReportReceiptStore): ReportDeliveryBackend {
   return {
     readReceipt: async (key) => {
       const stored = await readJson(store, key, ReportDeliveryReceiptV1Schema);
+      if (stored !== undefined)
+        await recordReportHeartbeat(store, key, stored.value.acceptedAt);
       return stored?.value;
     },
-    writeReceipt: (key, receipt) =>
-      conditionalWrite(() =>
+    writeReceipt: async (key, receipt) => {
+      const recorded = await conditionalWrite(() =>
         writeJson(store, key, receipt, {
           expectedEtag: undefined,
         }),
-      ),
+      );
+      if (recorded) await recordReportHeartbeat(store, key, receipt.acceptedAt);
+      return recorded;
+    },
     readState: async (key) => {
       const stored = await readJson(store, key, ReportStateV1Schema);
       return stored?.value;

@@ -1,14 +1,12 @@
-import {
-  GetObjectCommand,
-  ListObjectsV2Command,
-  S3Client,
-} from "@aws-sdk/client-s3";
 import { createTemporalClient } from "#client";
 import { reportFreshnessState } from "#observability/metrics-report.ts";
 import {
   ReportDeliveryReceiptV1Schema,
+  reportReceiptKey,
   reportReceiptPrefix,
 } from "./report-delivery.ts";
+import { readJson, reportReceiptStore } from "./report-object-store.ts";
+import { inspectReportHeartbeat } from "./report-heartbeat-index.ts";
 import {
   REPORT_SCHEDULE_REGISTRY,
   type ReportScheduleRegistration,
@@ -23,6 +21,7 @@ import {
 export type ReportFreshnessStatus =
   | "fresh"
   | "pending"
+  | "indexing"
   | "stale"
   | "missing"
   | "schedule-missing"
@@ -38,6 +37,13 @@ export type ReportFreshnessResult = {
   notificationSkippedAt?: string;
   heartbeatAt?: string | undefined;
 };
+
+function incompleteHistoryStatus(
+  status: "stale" | "missing",
+  historyComplete: boolean | undefined,
+): "stale" | "missing" | "indexing" {
+  return historyComplete === false ? "indexing" : status;
+}
 
 export function freshnessDeploymentState(input: {
   scheduleId: string;
@@ -64,33 +70,6 @@ export function freshnessDeploymentState(input: {
   };
 }
 
-function requiredEnv(name: string): string {
-  const value = Bun.env[name];
-  if (value === undefined || value === "")
-    throw new Error(`${name} is required`);
-  return value;
-}
-
-function store(): { client: S3Client; bucket: string; prefix: string } {
-  const sessionToken = Bun.env["AWS_SESSION_TOKEN"];
-  return {
-    client: new S3Client({
-      endpoint: requiredEnv("S3_ENDPOINT"),
-      region: Bun.env["S3_REGION"] ?? "us-east-1",
-      forcePathStyle: (Bun.env["S3_FORCE_PATH_STYLE"] ?? "true") === "true",
-      credentials: {
-        accessKeyId: requiredEnv("AWS_ACCESS_KEY_ID"),
-        secretAccessKey: requiredEnv("AWS_SECRET_ACCESS_KEY"),
-        ...(sessionToken === undefined || sessionToken === ""
-          ? {}
-          : { sessionToken }),
-      },
-    }),
-    bucket: Bun.env["REPORT_RECEIPT_BUCKET"] ?? "llm-archive",
-    prefix: Bun.env["REPORT_RECEIPT_PREFIX"] ?? "reports/receipts",
-  };
-}
-
 export function evaluateFreshness(input: {
   registration: ReportScheduleRegistration;
   now: Date;
@@ -100,6 +79,7 @@ export function evaluateFreshness(input: {
   scheduleCreatedAt: string | undefined;
   deployed: boolean;
   paused: boolean;
+  historyComplete?: boolean;
 }): ReportFreshnessResult {
   const heartbeatAt = latestReportHeartbeat(input);
   const maximumAgeHours =
@@ -150,7 +130,10 @@ export function evaluateFreshness(input: {
         : lastActionTakenAt + input.registration.graceHours * 3_600_000;
     return {
       scheduleId: input.registration.scheduleId,
-      status: input.now.getTime() <= graceDeadline ? "pending" : "missing",
+      status:
+        input.now.getTime() <= graceDeadline
+          ? "pending"
+          : incompleteHistoryStatus("missing", input.historyComplete),
       acceptedAt: input.acceptedAt,
       ageHours: undefined,
       maximumAgeHours,
@@ -165,7 +148,10 @@ export function evaluateFreshness(input: {
   const ageHours = (input.now.getTime() - Date.parse(heartbeatAt)) / 3_600_000;
   return {
     scheduleId: input.registration.scheduleId,
-    status: ageHours > maximumAgeHours ? "stale" : "fresh",
+    status:
+      ageHours <= maximumAgeHours
+        ? "fresh"
+        : incompleteHistoryStatus("stale", input.historyComplete),
     acceptedAt: input.acceptedAt,
     ageHours,
     maximumAgeHours,
@@ -204,7 +190,7 @@ export function publishReportFreshnessMetrics(
       { temporal_namespace: "prod", schedule_id: result.scheduleId },
       result.status === "fresh"
         ? 1
-        : result.status === "pending"
+        : result.status === "pending" || result.status === "indexing"
           ? 2
           : result.status === "stale" || result.status === "missing"
             ? 0
@@ -213,80 +199,46 @@ export function publishReportFreshnessMetrics(
   }
 }
 
-async function* reportObjectKeys(
-  storage: ReturnType<typeof store>,
-  prefix: string,
-): AsyncGenerator<string> {
-  let continuationToken: string | undefined;
-  do {
-    const listed = await storage.client.send(
-      new ListObjectsV2Command({
-        Bucket: storage.bucket,
-        Prefix: prefix,
-        ...(continuationToken === undefined
-          ? {}
-          : { ContinuationToken: continuationToken }),
-      }),
-    );
-    for (const object of listed.Contents ?? []) {
-      if (object.Key !== undefined) yield object.Key;
-    }
-    continuationToken =
-      listed.IsTruncated === true ? listed.NextContinuationToken : undefined;
-    if (continuationToken === undefined && listed.IsTruncated === true) {
-      throw new Error(
-        `S3 truncated report listing for ${prefix} without a continuation token`,
-      );
-    }
-  } while (continuationToken !== undefined);
-}
-
-async function reportObjectText(
-  storage: ReturnType<typeof store>,
-  key: string,
-): Promise<string> {
-  const object = await storage.client.send(
-    new GetObjectCommand({ Bucket: storage.bucket, Key: key }),
-  );
-  if (object.Body === undefined)
-    throw new Error(`Report object ${key} has no body`);
-  return object.Body.transformToString();
-}
-
 async function latestAcceptedAt(
-  storage: ReturnType<typeof store>,
+  storage: ReturnType<typeof reportReceiptStore>,
   registration: ReportScheduleRegistration,
-): Promise<string | undefined> {
+): Promise<{ timestamp: string | undefined; complete: boolean }> {
   const prefix = reportReceiptPrefix(registration, storage.prefix);
-  let latest: string | undefined;
-  for await (const key of reportObjectKeys(storage, prefix)) {
-    const text = await reportObjectText(storage, key);
-    const receipt = ReportDeliveryReceiptV1Schema.parse(JSON.parse(text));
-    // Restoring an old receipt gives it a new LastModified. Compare its actual
-    // acceptance time so an old retry cannot mask newer accepted mail.
-    latest = latestReportHeartbeat({
-      acceptedAt: latest,
-      notificationSkippedAt: receipt.acceptedAt,
-    });
-  }
-  return latest;
+  return inspectReportHeartbeat(storage, prefix, async (key) => {
+    const stored = await readJson(storage, key, ReportDeliveryReceiptV1Schema);
+    const receipt = stored?.value;
+    if (
+      receipt?.reportType !== registration.reportType ||
+      receipt.scheduleId !== registration.scheduleId ||
+      reportReceiptKey(receipt, storage.prefix) !== key
+    )
+      throw new Error(`Report receipt does not match its family: ${key}`);
+    return receipt.acceptedAt;
+  });
 }
 
 async function latestSkippedAt(
-  storage: ReturnType<typeof store>,
+  storage: ReturnType<typeof reportReceiptStore>,
   registration: ReportScheduleRegistration,
-): Promise<string | undefined> {
-  if (!usesDailyNotificationPolicy(registration)) return undefined;
-  let latestKey: string | undefined;
-  for await (const key of reportObjectKeys(
+): Promise<{ timestamp: string | undefined; complete: boolean }> {
+  if (!usesDailyNotificationPolicy(registration))
+    return { timestamp: undefined, complete: true };
+  return inspectReportHeartbeat(
     storage,
     skippedNotificationPrefix(registration),
-  )) {
-    if (latestKey === undefined || key > latestKey) latestKey = key;
-  }
-  if (latestKey === undefined) return undefined;
-  const text = await reportObjectText(storage, latestKey);
-  return SkippedNotificationSchema.parse(JSON.parse(text)).completedAt;
+    async (key) => {
+      const stored = await readJson(storage, key, SkippedNotificationSchema);
+      const skipped = stored?.value;
+      if (
+        skipped?.reportType !== registration.reportType ||
+        skipped.scheduleId !== registration.scheduleId
+      )
+        throw new Error(
+          `Skipped notification does not match its family: ${key}`,
+        );
+      return skipped.completedAt;
+    },
+  );
 }
 
 export async function inspectReportFreshness(): Promise<
@@ -320,22 +272,23 @@ export async function inspectReportFreshness(): Promise<
       }),
     );
   }
-  const storage = store();
+  const storage = reportReceiptStore();
   const now = new Date();
   const results = await Promise.all(
     REPORT_SCHEDULE_REGISTRY.map(async (registration) => {
       const live = deployed.get(registration.scheduleId);
-      const [acceptedAt, notificationSkippedAt] = await Promise.all([
+      const [accepted, skipped] = await Promise.all([
         latestAcceptedAt(storage, registration),
         latestSkippedAt(storage, registration),
       ]);
       return evaluateFreshness({
         registration,
         now,
-        acceptedAt,
-        ...(notificationSkippedAt === undefined
+        acceptedAt: accepted.timestamp,
+        historyComplete: accepted.complete && skipped.complete,
+        ...(skipped.timestamp === undefined
           ? {}
-          : { notificationSkippedAt }),
+          : { notificationSkippedAt: skipped.timestamp }),
         lastActionTakenAt: live?.lastActionTakenAt,
         scheduleCreatedAt: live?.scheduleCreatedAt,
         deployed: live !== undefined,

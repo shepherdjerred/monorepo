@@ -328,6 +328,14 @@ prior pending report through its existing delivery lease and accepted receipt
 before evaluating the next report. Skips have explicit records and no Postal
 message ID or acceptance time. The freshness monitor counts completed skips
 separately from mail acceptance, using the report's original observation time.
+Each family has a conditional latest-heartbeat index beside its immutable
+receipt or skip prefix. Delivery retries repair a missing index without sending
+again, and older acceptances cannot replace newer ones. The monitor validates
+the indexed original record rather than trusting S3 modification time. Existing
+history migrates in pages of at most 25 records per family per scan; until it
+finishes, an otherwise missing or stale result is `indexing`, while a validated
+recent record can already establish freshness. After migration, each scan reads
+only the index and its original record for each family.
 Manual reports, dependency checkpoints, digests, other canaries, and other schedules
 retain their existing delivery behavior. Postal acceptance still does not
 establish inbox delivery.
