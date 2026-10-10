@@ -104,6 +104,32 @@ final class PromotionBundleTest {
   }
 
   @Test
+  void archivedStrengthNeedsLearnedControlCoverageForEachOpponentAndSide(@TempDir Path directory)
+      throws Exception {
+    var fixture = new PromotionFixture(directory);
+    var seed = (ObjectNode) fixture.proof.path("pilot").path("seeds").get(0);
+    var digest = seed.path("strength_sha256").asString();
+    var report =
+        (ObjectNode)
+            PromotionContract.JSON.readTree(
+                Files.readAllBytes(directory.resolve("evidence/" + digest + ".blob")));
+    for (var game : report.path("games")) {
+      if (game.path("opponent").asString().equals("authored")
+          && game.path("side").asString().equals("red")) {
+        ((ObjectNode) game)
+            .put("submitted_controls", 0)
+            .put("confirmed_controls", 0)
+            .put("applied_controls", 0);
+      }
+    }
+    seed.put("strength_sha256", fixture.blob(report));
+    fixture.seal();
+    assertThatIllegalArgumentException()
+        .isThrownBy(() -> ActorManifest.load(directory, ActorManifest.Acceptance.ACCEPTED))
+        .withMessageContaining("minimum learned control coverage");
+  }
+
+  @Test
   void archivedStrengthRejectsOldReportsAndChangedMapOrGameBindings(@TempDir Path directory)
       throws Exception {
     var fixture = new PromotionFixture(directory);

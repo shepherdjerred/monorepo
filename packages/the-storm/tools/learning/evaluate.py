@@ -27,6 +27,7 @@ if CONTRACT != {
     "opponents": ["authored", "basic"],
     "sides": ["red", "blue"],
     "minimumWins": {"authored": 120, "basic": 160},
+    "minimumControlCoveragePercent": 80,
     "reportFields": [
         "version",
         "engine",

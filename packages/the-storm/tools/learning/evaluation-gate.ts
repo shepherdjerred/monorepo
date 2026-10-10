@@ -11,7 +11,8 @@ if (
   JSON.stringify(contract.opponents) !== '["authored","basic"]' ||
   JSON.stringify(contract.sides) !== '["red","blue"]' ||
   contract.minimumWins.authored !== 120 ||
-  contract.minimumWins.basic !== 160
+  contract.minimumWins.basic !== 160 ||
+  contract.minimumControlCoveragePercent !== 80
 )
   throw new Error("unsupported strength evaluation contract");
 
@@ -44,7 +45,8 @@ export const EvaluationGame = z
   .refine(
     (game) =>
       game.confirmed_controls <= game.submitted_controls &&
-      game.submitted_controls <= game.frames,
+      game.submitted_controls <= game.frames &&
+      game.applied_controls <= game.frames,
   );
 export const EvaluationReport = z
   .object({
@@ -146,6 +148,38 @@ export function strengthResult(
       opponent === "authored"
         ? contract.minimumWins.authored
         : contract.minimumWins.basic;
+    const controlCoverage = contract.sides.map((side) => {
+      const sideGames = games.filter((game) => game.side === side);
+      const frames = sideGames.reduce((sum, game) => sum + game.frames, 0);
+      const submitted = sideGames.reduce(
+        (sum, game) => sum + game.submitted_controls,
+        0,
+      );
+      const confirmed = sideGames.reduce(
+        (sum, game) => sum + game.confirmed_controls,
+        0,
+      );
+      const applied = sideGames.reduce(
+        (sum, game) => sum + game.applied_controls,
+        0,
+      );
+      const coverage = {
+        submitted: (submitted / frames) * 100,
+        confirmed: (confirmed / frames) * 100,
+        applied: (applied / frames) * 100,
+      };
+      return {
+        side,
+        frames,
+        submittedControls: submitted,
+        confirmedControls: confirmed,
+        appliedControls: applied,
+        ...coverage,
+        passed: Object.values(coverage).every(
+          (percent) => percent >= contract.minimumControlCoveragePercent,
+        ),
+      };
+    });
     return {
       opponent,
       games: games.length,
@@ -160,7 +194,12 @@ export function strengthResult(
         (game) => game.side === "blue" && game.result === "win",
       ).length,
       minimumWins,
-      passed: report.mode === "pilot" && wins >= minimumWins,
+      minimumControlCoveragePercent: contract.minimumControlCoveragePercent,
+      controlCoverage,
+      passed:
+        report.mode === "pilot" &&
+        wins >= minimumWins &&
+        controlCoverage.every((coverage) => coverage.passed),
       appliedControls: games.reduce(
         (sum, game) => sum + game.applied_controls,
         0,

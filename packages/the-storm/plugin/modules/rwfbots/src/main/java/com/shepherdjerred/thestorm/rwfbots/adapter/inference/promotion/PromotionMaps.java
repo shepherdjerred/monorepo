@@ -34,6 +34,7 @@ final class PromotionMaps {
     expect(
         EVALUATION.path("minimumWins"), "authored", PromotionContract.VALUES.minimumAuthoredWins());
     expect(EVALUATION.path("minimumWins"), "basic", PromotionContract.VALUES.minimumBasicWins());
+    expect(EVALUATION, "minimumControlCoveragePercent", 80);
   }
 
   private PromotionMaps() {}
@@ -96,6 +97,10 @@ final class PromotionMaps {
 
   static void reportFields(JsonNode value, boolean game) {
     fields(value, EVALUATION.path(game ? "gameFields" : "reportFields"));
+  }
+
+  static int minimumControlCoveragePercent() {
+    return EVALUATION.path("minimumControlCoveragePercent").asInt();
   }
 
   private static void fields(JsonNode value, JsonNode expected) {

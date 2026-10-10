@@ -72,6 +72,38 @@ describe("frozen strength gates", () => {
     ).toBe(false);
   });
 
+  it("requires learned controls on both sides of every opponent", () => {
+    const original = evidence();
+    const games = original.games.map((game) =>
+      game.opponent === "authored" && game.side === "red"
+        ? {
+            ...game,
+            submitted_controls: 0,
+            confirmed_controls: 0,
+            applied_controls: 0,
+          }
+        : game,
+    );
+    const result = strengthResult(
+      { ...original, games },
+      200,
+      500_000_000,
+      unitMaps.maps,
+    );
+
+    expect(result.opponents[0]?.wins).toBe(120);
+    expect(result.opponents[0]?.controlCoverage[0]).toMatchObject({
+      side: "red",
+      submitted: 0,
+      confirmed: 0,
+      applied: 0,
+      passed: false,
+    });
+    expect(result.opponents[0]?.passed).toBe(false);
+    expect(result.opponents[1]?.passed).toBe(true);
+    expect(result.passed).toBe(false);
+  });
+
   it("rejects omitted, duplicated, reordered and wrong-side results", () => {
     const original = evidence();
     const first = original.games[0];
