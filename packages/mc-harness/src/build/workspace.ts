@@ -22,6 +22,7 @@ import {
   type OpLog,
 } from "#protocol/build.ts";
 import { currentRun, lastOf, readLog } from "./build-log.ts";
+import { validateRunIdentity } from "./storage/run-identity.ts";
 import { validateFrozenExpected, type FrozenPart } from "./frozen-expected.ts";
 
 export type FrozenKind = "site" | "expected";
@@ -198,6 +199,7 @@ export class BuildWorkspace {
         "No expected result for the current capture; run toolkit mc build run first",
       );
     }
+    await validateRunIdentity(this, currentRun(journal));
   }
 
   /** WorldEdit session name for this build's edits (history is per session). */

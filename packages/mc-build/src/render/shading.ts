@@ -214,7 +214,9 @@ export function shadeLight(
 ): Quad[] {
   return quads.map((quad) => {
     if (quad.normal === null) return quad;
-    const outside = outsidePoint(quad, quad.normal);
+    const normal = surfaceNormal(quad.corners);
+    if (normal === null) return quad;
+    const outside = outsidePoint(quad, normal);
     const x = Math.floor(outside[0] + origin.x);
     const y = Math.floor(outside[1] + origin.y);
     const z = Math.floor(outside[2] + origin.z);

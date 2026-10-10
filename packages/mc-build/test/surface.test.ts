@@ -1,11 +1,12 @@
 import { describe, expect, test } from "vitest";
 import type { Quad, V3 } from "#src/render/mesh.ts";
 import { surfaceNormal, surfaceTangents } from "#src/render/surface.ts";
-import { shadeRelief } from "#src/render/shading.ts";
+import { shadeRelief, shadeLight } from "#src/render/shading.ts";
+import { BlockGrid } from "#src/core/grid.ts";
 
 const dot = (a: V3, b: V3) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 
-describe("geometric relief normals", () => {
+describe("geometric face normals", () => {
   test.each([-45, -22.5, 22.5, 45])(
     "uses the actual %i degree face plane",
     (degrees) => {
@@ -52,6 +53,18 @@ describe("geometric relief normals", () => {
       };
       const shaded = shadeRelief([quad], { sun: { yaw: 0, pitch: 90 } })[0];
       expect(shaded?.color[0]).toBeCloseTo(0.55 + 0.45 * c);
+      if (degrees === 22.5) {
+        // The true outside is (0,1,1); the snapped up normal chooses dark (0,1,0).
+        const grid = new BlockGrid({ x: 2, y: 3, z: 3 });
+        const block = new Int8Array(grid.volume);
+        block[grid.index(0, 1, 1)] = 15;
+        expect(
+          shadeLight([quad], grid, {
+            block,
+            sky: new Int8Array(grid.volume),
+          })[0]?.color,
+        ).toEqual([1, 1, 1]);
+      }
     },
   );
 });

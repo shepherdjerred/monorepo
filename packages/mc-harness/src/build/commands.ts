@@ -1,4 +1,5 @@
 import { cp, mkdir } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { compileProgram } from "@shepherdjerred/mc-build/compile/runner.ts";
 import {
@@ -39,6 +40,7 @@ import {
 } from "./helpers.ts";
 import { renderBuildCommand } from "./render/command.ts";
 import { stageJournal } from "./storage/evidence-publication.ts";
+import { writeRunIdentity } from "./storage/run-identity.ts";
 
 export async function initBuild(
   dir: string,
@@ -347,13 +349,16 @@ export async function runBuild(
   );
   const region = await env.client.regionRead(target, box);
   await validateFrozenExpected(box, region, frozen);
+  const id = randomUUID();
   await publishFiles(workspace, {
     prefix: ".run-",
     stage: async (staged) => {
       const pending = new BuildWorkspace(staged);
       await pending.writeFrozen("expected", frozen);
       await pending.writeExpected(region);
+      await writeRunIdentity(pending, id);
       return [
+        BUILD_FILES.expectedRun,
         BUILD_FILES.expected,
         BUILD_FILES.expectedSchematic,
         BUILD_FILES.expectedParts,
@@ -362,6 +367,7 @@ export async function runBuild(
     commit: () =>
       appendLog(dir, {
         kind: "run",
+        id,
         target,
         ops: ops.length,
         program,

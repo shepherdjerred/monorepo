@@ -216,6 +216,10 @@ WorldEdit, paste and console ops, each with explicit coordinates and a
   `expected.schem` + `expected.json`. Publication stages the JSON and all frozen
   schematic parts together and rolls them back if installation or journaling
   fails, preserving the preceding successful run and its program provenance.
+  Each new run installs `expected.run.json` before replacing frozen bytes and
+  records the same identity in its journal entry. Expected reads, rendering and
+  promotion validate that identity and the complete file hashes, rejecting mixed
+  generations after interruption. Rerun the build to replace an interrupted run.
   The snapshot and region read must cover identical blocks before a run is
   published. Expected renders and promotion recheck both artifacts, including
   complete tile coverage, before accepting evidence or mutating a target.
@@ -334,7 +338,9 @@ pick n | knockout [--among a,b] [--rubric] [--model]`) keep versions of
   grid hash. Saved programs carry their own checksum, so removing a compile
   snapshot does not prevent restoration and changed program bytes fail.
   Failed staging or installation restores both prior working files;
-  if rollback itself fails, the error identifies retained recovery files.
+  candidate picks stage their journal entry with those files, so malformed or
+  unwritable journals cannot leave an unrecorded selection active.
+  If rollback itself fails, the error identifies retained recovery files.
   Retrying an interrupted tournament with the same pool, candidate versions,
   rubric and model resumes its remaining challengers without rejudging earlier
   bouts. Changing those inputs starts a new tournament. The default iteration

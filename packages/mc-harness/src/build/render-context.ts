@@ -1,3 +1,4 @@
+import { buildArtifactPath } from "#build/storage/artifact-path.ts";
 import path from "node:path";
 import type { BlockGrid, Vec3 } from "@shepherdjerred/mc-build/core/grid.ts";
 import {
@@ -7,7 +8,7 @@ import {
 import { gridHash } from "@shepherdjerred/mc-build/core/site.ts";
 import { cropGrid } from "@shepherdjerred/mc-build/render/cut.ts";
 import { BUILD_FILES, type RenderSidecar } from "#protocol/build.ts";
-import { buildArtifactPath, checkName } from "./sidecar.ts";
+import { checkName } from "./sidecar.ts";
 import type { BuildWorkspace } from "./workspace.ts";
 
 export type RegionContext = { grid: BlockGrid; origin: Vec3 };

@@ -17,6 +17,7 @@ import { readLog } from "#build/build-log.ts";
 import { DaemonClient } from "#build/daemon-client.ts";
 import { Journal } from "#build/journal.ts";
 import { flatSiteBuild } from "./fixtures/flat-site.ts";
+import { writeRunIdentity } from "#build/storage/run-identity.ts";
 
 const journalFailure = vi.hoisted(() => ({ file: "" }));
 vi.mock("node:fs/promises", async (importOriginal) => {
@@ -106,6 +107,11 @@ describe("frozen expected evidence", () => {
           };
         });
         await workspace.writeFrozen("expected", tiles);
+        const entries = await readLog(workspace.dir);
+        const run = entries.findLast((entry) => entry.kind === "run");
+        if (run?.kind !== "run" || run.id === undefined)
+          throw new Error("missing run identity fixture");
+        await writeRunIdentity(workspace, run.id);
       }
       const before = await workspace.expected();
       const partsBefore = await workspace.frozenParts("expected", region);
@@ -135,9 +141,41 @@ describe("frozen expected evidence", () => {
       const retried = await workspace.expected();
       expect(retried.diff(changed).count).toBe(0);
       expect(await readLog(workspace.dir)).toHaveLength(journal.length + 1);
+      const completed = await readLog(workspace.dir);
+      for (const legacy of [false, true]) {
+        const interrupted = journal.map((entry) => {
+          if (legacy && entry.kind === "run") {
+            const { id: _id, ...previous } = entry;
+            return previous;
+          }
+          return entry;
+        });
+        await Bun.write(
+          workspace.file(BUILD_FILES.journal),
+          interrupted.map((entry) => JSON.stringify(entry)).join("\n") + "\n",
+        );
+        await expect(workspace.expected()).rejects.toThrow(/run identity/u);
+        await expect(workspace.frozenParts("expected", region)).rejects.toThrow(
+          /run identity/u,
+        );
+        await expect(
+          renderBuild(env, workspace.dir, { source: "expected" }),
+        ).rejects.toThrow(/run identity/u);
+        await expect(
+          promoteBuild(env, workspace.dir, { target: "sbx-000001" }),
+        ).rejects.toThrow(/run identity/u);
+      }
+      await Bun.write(
+        workspace.file(BUILD_FILES.journal),
+        completed.map((entry) => JSON.stringify(entry)).join("\n") + "\n",
+      );
+      const resumed = await workspace.expected();
+      expect(resumed.diff(changed).count).toBe(0);
     },
   );
+});
 
+describe("frozen expected provenance", () => {
   it.each(["json", "schematic", "world", "placement", "missing"])(
     "rejects mismatched %s before rendering or promotion mutation",
     async (failure) => {

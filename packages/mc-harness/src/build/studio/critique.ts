@@ -1,3 +1,4 @@
+import { buildArtifactPath } from "#build/storage/artifact-path.ts";
 /**
  * `build critique`: a blind look at one render, then (with the program) a
  * code review ranked by the lowest-scoring axes. The critic sees a judge
@@ -43,7 +44,6 @@ import {
 } from "#build/judge.ts";
 import {
   latestRenderName,
-  buildArtifactPath,
   readProgramText,
   readSidecar,
 } from "#build/sidecar.ts";

@@ -1,9 +1,10 @@
+import { buildArtifactPath } from "#build/storage/artifact-path.ts";
 /**
  * `renders/<name>.json` sidecars: what a render was of and what the checks
  * (lint, then a critique) said about it. Written by `build render`, read by
  * `critique`, `candidate` and `resume`.
  */
-import { readdir, realpath, stat } from "node:fs/promises";
+import { readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import {
   BUILD_FILES,
@@ -162,24 +163,6 @@ export function programSnapshot(digest: string): string {
   if (!/^[a-f0-9]+$/u.test(digest))
     throw new Error("program snapshot digest must be lowercase hexadecimal");
   return path.join(BUILD_FILES.schematicsDir, `program-${digest}.build.ts`);
-}
-
-/** Resolve evidence only within its build, including through symlinks. */
-export async function buildArtifactPath(
-  workspace: BuildWorkspace,
-  file: string,
-): Promise<string> {
-  const root = await realpath(workspace.dir);
-  const absolute = await realpath(workspace.file(file));
-  const relative = path.relative(root, absolute);
-  if (
-    relative === ".." ||
-    relative.startsWith(`..${path.sep}`) ||
-    path.isAbsolute(relative)
-  ) {
-    throw new Error(`build artifact is outside its build: ${file}`);
-  }
-  return absolute;
 }
 
 export async function readProgramText(

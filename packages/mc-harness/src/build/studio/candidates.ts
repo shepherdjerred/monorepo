@@ -1,3 +1,4 @@
+import { buildArtifactPath } from "#build/storage/artifact-path.ts";
 /**
  * Candidates: saved versions of a build (its program and op log, plus the
  * grid they compile to) so a session can try two or three variants, have a
@@ -33,11 +34,7 @@ import {
   type JudgeRubric,
 } from "#protocol/build.ts";
 import { appendLog, iterationOf, readLog } from "#build/build-log.ts";
-import {
-  buildArtifactPath,
-  checkName,
-  producingProgram,
-} from "#build/sidecar.ts";
+import { checkName, producingProgram } from "#build/sidecar.ts";
 import { compiledGrid } from "#build/sources.ts";
 import { BuildWorkspace } from "#build/workspace.ts";
 import { critiqueForGrid } from "./critique-record.ts";
@@ -380,7 +377,7 @@ export async function pickCandidate(
   await installWorkingFiles(workspace, {
     program,
     oplog: `${JSON.stringify(oplog, null, 2)}\n`,
+    pick: name,
   });
-  await appendLog(dir, { kind: "candidate", action: "pick", name });
   return candidate;
 }

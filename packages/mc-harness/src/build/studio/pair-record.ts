@@ -1,7 +1,7 @@
+import { buildArtifactPath } from "#build/storage/artifact-path.ts";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { JudgePairRecordSchema, type BuildLogEntry } from "#protocol/build.ts";
-import { buildArtifactPath } from "#build/sidecar.ts";
 import type { BuildWorkspace } from "#build/workspace.ts";
 import { readOutcomeScore } from "./score-evidence.ts";
 

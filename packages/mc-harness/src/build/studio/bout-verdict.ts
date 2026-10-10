@@ -1,3 +1,4 @@
+import { buildArtifactPath } from "#build/storage/artifact-path.ts";
 import { createHash } from "node:crypto";
 import { lstat, open } from "node:fs/promises";
 import { isDeepStrictEqual } from "node:util";
@@ -8,7 +9,6 @@ import {
   type JudgeRecord,
 } from "#protocol/build.ts";
 import type { BuildWorkspace } from "#build/workspace.ts";
-import { buildArtifactPath } from "#build/sidecar.ts";
 import type { judgePair } from "#build/judge.ts";
 
 type Verdict = Pick<

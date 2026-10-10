@@ -1,3 +1,4 @@
+import { buildArtifactPath } from "#build/storage/artifact-path.ts";
 /**
  * Where `build render` and `build lint` get their blocks: the live canvas,
  * the frozen `expected` result, or the captured site with the op log's
@@ -11,7 +12,7 @@ import type { BlockPos, Box } from "#protocol/bridge.ts";
 import { BUILD_FILES, type BuildManifest, type Op } from "#protocol/build.ts";
 import { canvasOf, type Env, type LookOptions } from "./helpers.ts";
 import { readGrid } from "./ops.ts";
-import { buildArtifactPath, readSidecar } from "./sidecar.ts";
+import { readSidecar } from "./sidecar.ts";
 import { cropGrid } from "./tiles.ts";
 import type { BuildWorkspace } from "./workspace.ts";
 import { readRenderContext } from "./render-context.ts";

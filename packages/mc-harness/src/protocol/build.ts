@@ -21,6 +21,7 @@ export const BUILD_FILES = {
   siteSchematic: path.join("site", "site.schem"),
   siteInfo: path.join("site", "site.json"),
   expected: "expected.json",
+  expectedRun: "expected.run.json",
   /** Frozen canvas result (bridge snapshot of the site box); promote pastes it. */
   expectedSchematic: "expected.schem",
   /** Tiled snapshots of map-scale sites: `<dir>/parts.json` + `<n>.schem`. */
@@ -84,6 +85,8 @@ export const BuildLogEntrySchema = z.discriminatedUnion("kind", [
   }),
   z.strictObject({
     kind: z.literal("run"),
+    /** Shared identity of the frozen artifact set; absent only in legacy workspaces. */
+    id: z.uuid().optional(),
     at: Iso,
     iteration: Iteration,
     target: z.string(),

@@ -7,6 +7,7 @@ import { flatSiteBuild, clearFloorOp } from "#test/fixtures/flat-site.ts";
 import { renderBuild, captureSite } from "#build/commands.ts";
 import { promoteBuild } from "#build/apply.ts";
 import { critiqueBuild } from "#build/studio/critique.ts";
+import { saveCandidate, pickCandidate } from "#build/studio/candidates.ts";
 import { readJournal } from "#evals/grade/trajectory.ts";
 import { appendLog, readLog } from "#build/build-log.ts";
 import { BlockGrid } from "@shepherdjerred/mc-build/core/grid.ts";
@@ -39,6 +40,7 @@ vi.mock("node:fs/promises", async (importOriginal) => {
       if (
         failure.install !== "" &&
         (from.includes(".capture-") ||
+          from.includes(".pick-") ||
           from.includes(".render-") ||
           from.includes(".critique-publish-")) &&
         from.endsWith(failure.install)
@@ -162,6 +164,50 @@ describe("capture evidence publication", () => {
       expect(journal.filter((entry) => entry.kind === "capture")).toHaveLength(
         2,
       );
+    },
+  );
+});
+
+describe("candidate selection publication", () => {
+  it.each(["malformed", "journal", "install"])(
+    "preserves the working files on %s journal failure",
+    async (mode) => {
+      const { workspace } = await fixture(`pick-journal-${mode}`);
+      await saveCandidate(workspace.dir, "saved");
+      await workspace.writeOplog({ version: 1, ops: [clearFloorOp(2)] });
+      await Bun.write(
+        workspace.file(BUILD_FILES.program),
+        "// working program\n",
+      );
+      const working = [BUILD_FILES.program, BUILD_FILES.oplog].map((file) =>
+        Bun.file(workspace.file(file)),
+      );
+      const before = await Promise.all(working.map((file) => file.bytes()));
+      const original = await Bun.file(
+        workspace.file(BUILD_FILES.journal),
+      ).text();
+      if (mode === "malformed")
+        await Bun.write(workspace.file(BUILD_FILES.journal), "malformed\n");
+      else if (mode === "journal") failure.kind = "candidate";
+      else failure.install = BUILD_FILES.journal;
+      const journal = await Bun.file(
+        workspace.file(BUILD_FILES.journal),
+      ).text();
+      await expect(pickCandidate(workspace.dir, "saved")).rejects.toThrow();
+      expect(await Promise.all(working.map((file) => file.bytes()))).toEqual(
+        before,
+      );
+      expect(await Bun.file(workspace.file(BUILD_FILES.journal)).text()).toBe(
+        journal,
+      );
+      await Bun.write(workspace.file(BUILD_FILES.journal), original);
+      await pickCandidate(workspace.dir, "saved");
+      const completed = await readLog(workspace.dir);
+      expect(
+        completed.filter(
+          (entry) => entry.kind === "candidate" && entry.action === "pick",
+        ),
+      ).toHaveLength(1);
     },
   );
 });

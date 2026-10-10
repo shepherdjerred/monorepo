@@ -1,3 +1,4 @@
+import { buildArtifactPath } from "#build/storage/artifact-path.ts";
 import { copyFile, lstat, mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { createHash } from "node:crypto";
@@ -11,7 +12,7 @@ import {
 } from "#protocol/build.ts";
 import { BuildWorkspace } from "#build/workspace.ts";
 import { writeJudgeRecord } from "#build/judge.ts";
-import { writeSidecar, buildArtifactPath } from "#build/sidecar.ts";
+import { writeSidecar } from "#build/sidecar.ts";
 import { publishFiles } from "#build/file-transaction.ts";
 import {
   stagedFiles,

@@ -1,3 +1,4 @@
+import { buildArtifactPath } from "#build/storage/artifact-path.ts";
 import { createHash } from "node:crypto";
 import { readSchematic } from "@shepherdjerred/mc-build/core/schem.ts";
 import { gridHash } from "@shepherdjerred/mc-build/core/site.ts";
@@ -5,7 +6,6 @@ import {
   JudgeCritiqueRecordSchema,
   type BuildLogEntry,
 } from "#protocol/build.ts";
-import { buildArtifactPath } from "#build/sidecar.ts";
 import type { BuildWorkspace } from "#build/workspace.ts";
 import { lowestAxis, rubricAxisIds } from "#build/judge.ts";
 import { readLog } from "#build/build-log.ts";
