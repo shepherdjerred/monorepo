@@ -99,7 +99,12 @@ retains existing alarms when a plan cannot be read. Android uses inexact alarms
 for the nearest 64 reminders in a rolling 30-day window and reports entries
 beyond that scheduling budget. Foreground refresh and settled background Sync
 reconcile the plan. Notification routes preserve their owning profile; account
-changes fence and cancel affected reminders before credential removal.
+changes fence and cancel affected reminders before credential removal. Sign-in
+preserves the current account's credentials, reminders and background schedule
+through MFA, rejected codes and network failures. Only verified authentication
+and vault discovery may commit a replacement owner; same-owner sign-in retains
+vault keys. Unproven authentication temporarily blocks new background sessions
+without invalidating the foreground lifecycle lease.
 
 ## Build and verification
 
