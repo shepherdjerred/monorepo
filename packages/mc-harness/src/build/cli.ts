@@ -242,7 +242,7 @@ const HANDLERS: Record<string, Handler> = {
     await appendLog(dir, {
       kind: "compile",
       program: BUILD_FILES.program,
-      ops: result.clears + 1,
+      ops: result.ops,
       lintErrors: result.lint.errors,
       lintWarnings: result.lint.warnings,
     });

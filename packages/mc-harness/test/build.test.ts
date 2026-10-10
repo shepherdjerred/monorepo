@@ -8,6 +8,8 @@ import { loadRegistry } from "@shepherdjerred/mc-build/registry/registry.ts";
 import { compileBuild, initBuild, regionInSite } from "#build/commands.ts";
 import { DaemonClient } from "#build/daemon-client.ts";
 import { compiledGrid } from "#build/sources.ts";
+import { readLog } from "#build/build-log.ts";
+import { resumeState } from "#build/resume.ts";
 import { flatSiteBuild } from "./fixtures/flat-site.ts";
 import { Journal, type JournalEntry } from "#build/journal.ts";
 import { diffGrids, runOps } from "#build/ops.ts";
@@ -184,6 +186,54 @@ describe("runOps pastes", () => {
 });
 
 describe("compileBuild", () => {
+  it("journals every tiled paste and clear through the real CLI", async () => {
+    const dir = path.join(temp, "tiled-journal");
+    await initBuild(dir, {
+      name: "tiled-journal",
+      world: "world",
+      anchor: { x: 0, y: 0, z: 0 },
+      seed: 1,
+    });
+    await Bun.write(
+      path.join(dir, "build.ts"),
+      `export default ((ctx) => {
+      const box = {x: 0, y: 0, z: 0, w: 1001, h: 1, d: 1};
+      ctx.clear({...box, y: 1});
+      ctx.fill(box, "minecraft:stone");
+    });`,
+    );
+    await appendOp(dir, weOp("//set dirt_path"));
+    const proc = Bun.spawn(
+      [
+        process.execPath,
+        path.resolve(import.meta.dirname, "../src/build/cli.ts"),
+        "compile",
+        dir,
+        "--json",
+      ],
+      { stdout: "pipe", stderr: "pipe" },
+    );
+    const [stdout, stderr, exitCode] = await Promise.all([
+      new Response(proc.stdout).text(),
+      new Response(proc.stderr).text(),
+      proc.exited,
+    ]);
+    expect(stderr).toBe("");
+    expect(exitCode).toBe(0);
+    expect(JSON.parse(stdout) as unknown).toMatchObject({ ops: 3, clears: 1 });
+    const log = await readOpLog(dir);
+    const program = log.ops.filter((op) => op.source.startsWith("program:"));
+    expect(program).toHaveLength(3);
+    expect(program.filter((op) => op.kind === "paste")).toHaveLength(2);
+    const journal = await readLog(dir);
+    expect(journal.at(-1)).toMatchObject({
+      kind: "compile",
+      ops: program.length,
+    });
+    const state = await resumeState(dir);
+    expect(state.ops).toEqual({ program: 3, manual: 1, import: 0 });
+  });
+
   it("adds program ops and replaces them on recompile", async () => {
     const dir = path.join(temp, "cottage");
     await initBuild(dir, {

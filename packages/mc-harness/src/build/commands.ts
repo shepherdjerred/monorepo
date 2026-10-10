@@ -200,6 +200,7 @@ export async function compileBuild(dir: string): Promise<{
   size: Vec3;
   blocks: number;
   clears: number;
+  ops: number;
   logs: string[];
   lint: LintReport;
 }> {
@@ -286,6 +287,7 @@ export async function compileBuild(dir: string): Promise<{
     size: compiled.grid.size,
     blocks: compiled.blocks,
     clears: compiled.clears.length,
+    ops: programOps.length,
     logs: compiled.logs,
     lint: lintGrid(compiled.grid, { registry, origin: at }),
   };

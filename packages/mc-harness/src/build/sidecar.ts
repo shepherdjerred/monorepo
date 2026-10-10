@@ -46,7 +46,11 @@ export async function readSidecar(
       `no render named "${name}" in ${workspace.dir} (${BUILD_FILES.rendersDir}/${name}.json); run toolkit mc build render first`,
     );
   }
-  return RenderSidecarSchema.parse(await file.json());
+  const sidecar = RenderSidecarSchema.parse(await file.json());
+  if (sidecar.name !== name) {
+    throw new Error(`render sidecar "${name}" contains name "${sidecar.name}"`);
+  }
+  return sidecar;
 }
 
 export async function writeSidecar(
@@ -78,7 +82,7 @@ export async function allSidecars(
   for (const name of names.filter((entry) => entry.endsWith(".json"))) {
     const file = path.join(dir, name);
     try {
-      sidecars.push(RenderSidecarSchema.parse(await Bun.file(file).json()));
+      sidecars.push(await readSidecar(workspace, path.parse(name).name));
     } catch (error) {
       throw new Error(`invalid render sidecar ${file}`, { cause: error });
     }

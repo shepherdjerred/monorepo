@@ -158,6 +158,43 @@ const reviewer: AskCode = (input) =>
   });
 
 describe("render evidence integrity", () => {
+  it("rejects a different embedded sidecar name before scoring or writing", async () => {
+    const workspace = await makeBuild("sidecar-wrong-name");
+    await pastePart(workspace, 3);
+    const { grid } = await compiledGrid(workspace, await workspace.manifest());
+    await renderLooks(workspace, grid, "foo", { source: "compiled" });
+    await renderLooks(workspace, grid, "bar", { source: "compiled" });
+    const foo = await readSidecar(workspace, "foo");
+    const barFile = Bun.file(workspace.file("renders/bar.json"));
+    const bar = await barFile.bytes();
+    const corrupt = JSON.stringify({ ...foo, name: "bar" });
+    await Bun.write(workspace.file("renders/foo.json"), corrupt);
+    const ask = vi.fn(scorer(4));
+    const askCode = vi.fn(reviewer);
+    await expect(readSidecar(workspace, "foo")).rejects.toThrow(
+      /contains name "bar"/u,
+    );
+    await expect(allSidecars(workspace)).rejects.toThrow(
+      /invalid render sidecar.*foo.json/u,
+    );
+    await expect(
+      critiqueBuild(workspace.dir, {
+        render: "foo",
+        rubric: "micro",
+        model: "stub",
+        ask,
+        askCode,
+      }),
+    ).rejects.toThrow(/contains name "bar"/u);
+    expect(ask).not.toHaveBeenCalled();
+    expect(askCode).not.toHaveBeenCalled();
+    expect(await barFile.bytes()).toEqual(bar);
+    expect(await Bun.file(workspace.file("renders/foo.json")).text()).toBe(
+      corrupt,
+    );
+    expect(await readLog(workspace.dir)).toEqual([]);
+  });
+
   it("refuses changed schematic evidence before scoring or recording", async () => {
     const workspace = await makeBuild("corrupt-evidence");
     await pastePart(workspace, 3);
