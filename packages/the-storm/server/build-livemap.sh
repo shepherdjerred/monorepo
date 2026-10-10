@@ -39,10 +39,7 @@ grep -qF 'bluemap-screenshot.png' "$script" || fail "unexpected screenshot filen
 # installed application's icon. Keep upstream images used by its credit panel.
 favicon_hash=$(sha256sum "$branding/favicon.svg" | cut -d ' ' -f 1)
 favicon_name=livemap-icon-${favicon_hash:0:16}.svg
-preview_hash=$(sha256sum "$branding/social.png" | cut -d ' ' -f 1)
-preview_name=livemap-preview-${preview_hash:0:16}.png
 install -m 0644 "$branding/favicon.svg" "$out/assets/$favicon_name"
-install -m 0644 "$branding/social.png" "$out/assets/$preview_name"
 # Open Graph crawlers require an absolute URL. Pin this source asset to the
 # PR commit so the URL works before the LiveMap server image is released.
 preview_url="https://raw.githubusercontent.com/shepherdjerred/monorepo/9580503bb0cb6d49110e3259d61bb36c0493a632/packages/the-storm/server/livemap/social.png"
