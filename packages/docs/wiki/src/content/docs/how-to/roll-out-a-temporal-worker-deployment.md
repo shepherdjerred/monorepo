@@ -42,11 +42,14 @@ passthrough and never falls back to Kubernetes-only service DNS.
 The SDK replay and canary subprocesses also require `TEMPORAL_API_KEY` at the
 external endpoint. Inject the registered credential with the existing
 1Password wrapper when running the commands below. Replace the placeholders
-with the existing toolkit `TEMPORAL_API_KEY` credential reference. From
-`packages/temporal`:
+with the existing toolkit `TEMPORAL_API_KEY` credential reference. Set
+`TEMPORAL_REPLAY_WORKFLOW_IDS` to comma-separated representative retained
+execution IDs before `start`. For central production, from `packages/temporal`:
 
 ```bash
-TEMPORAL_TLS=true TEMPORAL_API_KEY='op://<vault>/<Temporal external auth item>/api-token' \
+TEMPORAL_NAMESPACE=prod \
+TEMPORAL_TLS=true \
+TEMPORAL_API_KEY='op://<vault>/<Temporal external auth item>/api-token' \
   ../../scripts/onepassword/with-service-account.sh op run -- \
   bun run worker-deployment start --build-id <candidate-image-git-sha>
 ```
