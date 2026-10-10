@@ -4,6 +4,11 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
+import { BlockGrid } from "@shepherdjerred/mc-build/core/grid.ts";
+import { writeSchematic } from "@shepherdjerred/mc-build/core/schem.ts";
+import { gridHash } from "@shepherdjerred/mc-build/core/site.ts";
+import { loadRegistry } from "@shepherdjerred/mc-build/registry/registry.ts";
+import { BuildWorkspace } from "#build/workspace.ts";
 import {
   absoluteSchema,
   pairPrompt,
@@ -110,6 +115,27 @@ async function frozenBuild(): Promise<string> {
       blockEntities: [],
     }),
   );
+  const workspace = new BuildWorkspace(dir);
+  const grid = new BlockGrid({ x: 2, y: 2, z: 2 }, "minecraft:stone");
+  await workspace.writeManifest({
+    version: 1,
+    name: "judge",
+    world: "world",
+    seed: 1,
+    anchor: { x: 0, y: 0, z: 0 },
+    site: {
+      min: { x: 0, y: 0, z: 0 },
+      max: { x: 1, y: 1, z: 1 },
+      siteHash: gridHash(grid),
+    },
+  });
+  const registry = await loadRegistry();
+  await workspace.writeFrozen("expected", [
+    {
+      at: { x: 0, y: 0, z: 0 },
+      bytes: writeSchematic(grid, registry.dataVersion),
+    },
+  ]);
   return dir;
 }
 

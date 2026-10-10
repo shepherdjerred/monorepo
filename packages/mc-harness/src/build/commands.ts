@@ -29,7 +29,8 @@ import {
 import { DEFAULT_SANDBOX_TTL_SECONDS } from "#protocol/paths.ts";
 import { resetToSite, runOps } from "./ops.ts";
 import { boxSize, cropGrid, emptyGrid, placeGrid, tileBox } from "./tiles.ts";
-import { BuildWorkspace, type FrozenPart } from "./workspace.ts";
+import { BuildWorkspace } from "./workspace.ts";
+import { validateFrozenExpected, type FrozenPart } from "./frozen-expected.ts";
 import {
   PROGRAM_TEMPLATE,
   type Env,
@@ -332,11 +333,16 @@ export async function runBuild(
   await runOps(run, ops);
   // Freeze the result: promote pastes exactly this (block entities included),
   // so random WorldEdit patterns cannot drift between canvas and target.
-  await workspace.writeFrozen(
-    "expected",
-    await snapshotFrozen(env, target, box, `expected:${manifest.name}`),
+  const frozen = await snapshotFrozen(
+    env,
+    target,
+    box,
+    `expected:${manifest.name}`,
   );
-  await workspace.writeExpected(await env.client.regionRead(target, box));
+  const region = await env.client.regionRead(target, box);
+  await validateFrozenExpected(box, region, frozen);
+  await workspace.writeFrozen("expected", frozen);
+  await workspace.writeExpected(region);
   await appendLog(dir, {
     kind: "run",
     target,

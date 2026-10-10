@@ -211,6 +211,9 @@ WorldEdit, paste and console ops, each with explicit coordinates and a
 - **Canvas** is a void sandbox with the site pasted at its real coordinates;
   **run** resets it to the site, replays every op, and freezes the result as
   `expected.schem` + `expected.json`.
+  The snapshot and region read must cover identical blocks before a run is
+  published. Expected renders and promotion recheck both artifacts, including
+  complete tile coverage, before accepting evidence or mutating a target.
 - **Render** draws a contact sheet of the site, or of a region inside it
   (`render <dir> <x1,y1,z1> <x2,y2,z2>`, from any source) so map-scale builds can be
   reviewed one district at a time. `--source canvas|expected|compiled`
@@ -289,14 +292,17 @@ pick n | knockout [--among a,b] [--rubric] [--model]`) keep versions of
   build).
   `knockout` is a keep-best tournament: the incumbent (`build.json`
   `best`) meets each challenger on anonymised judge sheets, order-swapped;
-  a tie keeps the incumbent. Every participant's critique evidence is validated
+  a tie keeps the incumbent. Every participant's restore files and offline
+  replay are validated before rendering or model calls. Critique evidence is validated
   before rendering or model calls; accepted and rejected scores use that same
   validated snapshot. Every bout is written under `judge/` and
   logged as an accept and a reject, and the winner becomes `best` after each
   completed bout, even if a later model call fails. `pick`
   validates the saved grid, op log and program before staging the working
   version, including replaying referenced schematics and matching the saved
-  grid hash. Failed staging or installation restores both prior working files;
+  grid hash. Saved programs carry their own checksum, so removing a compile
+  snapshot does not prevent restoration and changed program bytes fail.
+  Failed staging or installation restores both prior working files;
   if rollback itself fails, the error identifies retained recovery files.
   Retrying an interrupted tournament with the same pool, candidate versions,
   rubric and model resumes its remaining challengers without rejudging earlier

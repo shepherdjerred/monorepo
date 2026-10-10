@@ -22,6 +22,7 @@ import {
   candidateScore,
   listCandidates,
   readCandidate,
+  validateCandidate,
 } from "./candidates.ts";
 import {
   judgeFingerprint,
@@ -287,6 +288,7 @@ export async function knockout(
       : { incumbent: previous.incumbent, challengers: previous.pending };
   const scores = new Map<string, number | null>();
   for (const name of participants) {
+    await validateCandidate(dir, name);
     scores.set(name, await candidateScore(dir, name, options.rubric));
   }
   const sheets = await sheetsFor(

@@ -272,6 +272,11 @@ export const CandidateSchema = z.strictObject({
   blocks: z.number().int(),
   /** Whether the candidate carries a build.ts. */
   program: z.boolean(),
+  /** Checksum of the saved program copy, independent of later compile cleanup. */
+  programHash: z
+    .string()
+    .regex(/^[0-9a-f]{64}$/u)
+    .nullable(),
   ops: z.number().int(),
   /** The latest critique of this exact grid at save time, with its rubric, when one exists. */
   score: z

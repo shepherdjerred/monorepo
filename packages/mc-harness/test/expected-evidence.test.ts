@@ -1,0 +1,208 @@
+import { mkdtemp, rm } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { afterAll, describe, expect, it, vi } from "vitest";
+import { BlockGrid } from "@shepherdjerred/mc-build/core/grid.ts";
+import {
+  readSchematic,
+  writeSchematic,
+} from "@shepherdjerred/mc-build/core/schem.ts";
+import { BUILD_FILES } from "#protocol/build.ts";
+import type { RegionReadResponse } from "#protocol/bridge.ts";
+import { runBuild, renderBuild } from "#build/commands.ts";
+import { promoteBuild } from "#build/apply.ts";
+import { validateFrozenExpected } from "#build/frozen-expected.ts";
+import { readLog } from "#build/build-log.ts";
+import { DaemonClient } from "#build/daemon-client.ts";
+import { Journal } from "#build/journal.ts";
+import { flatSiteBuild } from "./fixtures/flat-site.ts";
+
+const root = await mkdtemp(path.join(os.tmpdir(), "mc-expected-evidence-"));
+afterAll(async () => rm(root, { recursive: true }));
+
+const MIN = { x: 100, y: 64, z: 100 };
+
+function regionOf(grid: BlockGrid, min = MIN): RegionReadResponse {
+  const blocks = Buffer.alloc(grid.volume * 4);
+  grid.data.forEach((value, index) => blocks.writeUInt32LE(value, index * 4));
+  return {
+    world: "world",
+    min,
+    max: {
+      x: min.x + grid.size.x - 1,
+      y: min.y + grid.size.y - 1,
+      z: min.z + grid.size.z - 1,
+    },
+    size: grid.size,
+    palette: grid.palette,
+    blocks: blocks.toString("base64"),
+    blockEntities: [],
+  };
+}
+
+async function build(name: string) {
+  const workspace = await flatSiteBuild(path.join(root, name), name);
+  await workspace.writeOplog({ version: 1, ops: [] });
+  const site = await readSchematic(
+    await Bun.file(workspace.file(BUILD_FILES.siteSchematic)).bytes(),
+  );
+  const region = regionOf(site.grid);
+  await workspace.writeExpected(region);
+  await workspace.writeFrozen("expected", [
+    { at: region.min, bytes: writeSchematic(site.grid, site.dataVersion) },
+  ]);
+  return { workspace, site, region };
+}
+
+describe("frozen expected evidence", () => {
+  it.each(["json", "schematic", "world", "placement", "missing"])(
+    "rejects mismatched %s before rendering or promotion mutation",
+    async (failure) => {
+      const { workspace, site, region } = await build(`mismatch-${failure}`);
+      expect(await workspace.expected()).toMatchObject({
+        size: site.grid.size,
+      });
+      switch (failure) {
+        case "json":
+          await workspace.writeExpected({
+            ...region,
+            palette: ["minecraft:stone", ...region.palette.slice(1)],
+          });
+          break;
+        case "schematic":
+          await workspace.writeFrozen("expected", [
+            {
+              at: region.min,
+              bytes: writeSchematic(
+                new BlockGrid(site.grid.size, "minecraft:stone"),
+                site.dataVersion,
+              ),
+            },
+          ]);
+          break;
+        case "world":
+          await workspace.writeExpected({ ...region, world: "another" });
+          break;
+        case "placement":
+          await workspace.writeExpected({
+            ...region,
+            min: { ...region.min, x: region.min.x + 1 },
+            max: { ...region.max, x: region.max.x + 1 },
+          });
+          break;
+        case "missing":
+          await rm(workspace.file(BUILD_FILES.expectedSchematic));
+          break;
+        default:
+          throw new Error("unknown fixture");
+      }
+      const client = new DaemonClient();
+      const reads = vi.spyOn(client, "regionRead");
+      const snapshots = vi.spyOn(client, "snapshotParts");
+      const pastes = vi.spyOn(client, "paste");
+      const env = {
+        client,
+        journal: new Journal(workspace.file("audit")),
+        log: vi.fn(),
+      };
+      const journal = await readLog(workspace.dir);
+      await expect(workspace.expected()).rejects.toThrow();
+      await expect(
+        renderBuild(env, workspace.dir, {
+          source: "expected",
+          name: "invalid",
+        }),
+      ).rejects.toThrow();
+      await expect(
+        promoteBuild(env, workspace.dir, { target: "sbx-000001" }),
+      ).rejects.toThrow();
+      for (const call of [reads, snapshots, pastes])
+        expect(call).not.toHaveBeenCalled();
+      expect(await readLog(workspace.dir)).toEqual(journal);
+      expect(
+        await Bun.file(workspace.file("renders/invalid.json")).exists(),
+      ).toBe(false);
+    },
+  );
+
+  it("rejects a canvas change between snapshot and region read before publishing the run", async () => {
+    const { workspace, site, region } = await build("run-race");
+    const before = await Promise.all(
+      [BUILD_FILES.expected, BUILD_FILES.expectedSchematic].map((file) =>
+        Bun.file(workspace.file(file)).bytes(),
+      ),
+    );
+    const journal = await readLog(workspace.dir);
+    const client = new DaemonClient();
+    vi.spyOn(client, "paste").mockResolvedValue({
+      changed: 0,
+      min: region.min,
+      max: region.max,
+      historySize: 0,
+    });
+    vi.spyOn(client, "snapshotParts").mockResolvedValue({
+      id: "frozen",
+      parts: [{ id: "frozen", box: region }],
+    });
+    const frozen = new BlockGrid(site.grid.size);
+    vi.spyOn(client, "snapshotBytes").mockResolvedValue(
+      writeSchematic(frozen, site.dataVersion),
+    );
+    const read = vi.spyOn(client, "regionRead").mockResolvedValue(region);
+    const env = {
+      client,
+      journal: new Journal(workspace.file("audit")),
+      log: vi.fn(),
+    };
+    await expect(
+      runBuild(env, workspace.dir, { target: "sbx-000001" }),
+    ).rejects.toThrow(/does not match the frozen run/u);
+    expect(await readLog(workspace.dir)).toEqual(journal);
+    expect(
+      await Promise.all(
+        [BUILD_FILES.expected, BUILD_FILES.expectedSchematic].map((file) =>
+          Bun.file(workspace.file(file)).bytes(),
+        ),
+      ),
+    ).toEqual(before);
+    read.mockResolvedValue(regionOf(frozen));
+    await runBuild(env, workspace.dir, { target: "sbx-000001" });
+    const expected = await workspace.expected();
+    expect(expected.get(0, 0, 0)).toBe("minecraft:air");
+    expect(await readLog(workspace.dir)).toHaveLength(journal.length + 1);
+  });
+});
+
+describe("tiled expected evidence", () => {
+  it.each(["valid", "overlap", "gap", "outside", "changed"])(
+    "validates %s tiles with exact full coverage",
+    async (kind) => {
+      const region = regionOf(
+        new BlockGrid({ x: 4, y: 2, z: 2 }, "minecraft:stone"),
+      );
+      const { site } = await build(`tiles-${kind}`);
+      const bytes = writeSchematic(
+        new BlockGrid({ x: 2, y: 2, z: 2 }, "minecraft:stone"),
+        site.dataVersion,
+      );
+      const parts = [
+        { at: region.min, bytes },
+        { at: { ...region.min, x: region.min.x + 2 }, bytes },
+      ];
+      const second = parts[1];
+      if (second === undefined) throw new Error("missing fixture part");
+      if (kind === "overlap") second.at = region.min;
+      if (kind === "outside") second.at = { ...second.at, x: second.at.x + 1 };
+      if (kind === "gap") parts.pop();
+      if (kind === "changed")
+        second.bytes = writeSchematic(
+          new BlockGrid({ x: 2, y: 2, z: 2 }, "minecraft:dirt"),
+          site.dataVersion,
+        );
+      const result = validateFrozenExpected(region, region, parts);
+      if (kind === "valid")
+        expect(await result).toMatchObject({ size: region.size });
+      else await expect(result).rejects.toThrow();
+    },
+  );
+});

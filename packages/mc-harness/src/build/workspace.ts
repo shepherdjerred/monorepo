@@ -2,7 +2,6 @@ import { mkdir, rm } from "node:fs/promises";
 import { z } from "zod";
 import path from "node:path";
 import type { BlockGrid } from "@shepherdjerred/mc-build/core/grid.ts";
-import { gridFromRegionRead } from "@shepherdjerred/mc-build/core/grid.ts";
 import { RegionReadSchema } from "@shepherdjerred/mc-build/core/region-read.ts";
 import { readSchematic } from "@shepherdjerred/mc-build/core/schem.ts";
 import {
@@ -11,7 +10,6 @@ import {
 } from "@shepherdjerred/mc-build/core/site.ts";
 import {
   BlockPosSchema,
-  type BlockPos,
   type Box,
   type RegionReadResponse,
 } from "#protocol/bridge.ts";
@@ -24,9 +22,8 @@ import {
   type OpLog,
 } from "#protocol/build.ts";
 import { currentRun, lastOf, readLog } from "./build-log.ts";
+import { validateFrozenExpected, type FrozenPart } from "./frozen-expected.ts";
 
-/** A frozen snapshot of a box: one schematic, or tiles each pasted at `at`. */
-export type FrozenPart = { at: BlockPos; bytes: Uint8Array };
 export type FrozenKind = "site" | "expected";
 
 const PartsIndexSchema = z.array(
@@ -186,7 +183,12 @@ export class BuildWorkspace {
         `No ${BUILD_FILES.expected} in ${this.dir}; run toolkit mc build run on the canvas first`,
       );
     }
-    return gridFromRegionRead(RegionReadSchema.parse(await file.json()));
+    const box = this.siteBox(await this.manifest());
+    return validateFrozenExpected(
+      box,
+      RegionReadSchema.parse(await file.json()),
+      await this.frozenParts("expected", box),
+    );
   }
 
   private async assertExpectedCurrent(): Promise<void> {

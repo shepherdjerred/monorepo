@@ -87,6 +87,18 @@ async function programBuild(name: string) {
     blocks: Buffer.alloc(4000).toString("base64"),
     blockEntities: [],
   });
+  const site = await readSchematic(
+    await Bun.file(workspace.file(BUILD_FILES.siteSchematic)).bytes(),
+  );
+  await workspace.writeFrozen("expected", [
+    {
+      at: workspace.siteBox(manifest).min,
+      bytes: writeSchematic(
+        new BlockGrid({ x: 10, y: 10, z: 10 }),
+        site.dataVersion,
+      ),
+    },
+  ]);
   return workspace;
 }
 
@@ -385,10 +397,18 @@ describe("capture and run provenance", () => {
       ...previous,
       palette: ["minecraft:stone"],
     });
-    await Bun.write(
-      workspace.file(BUILD_FILES.expectedSchematic),
-      "new frozen snapshot",
+    const site = await readSchematic(
+      await Bun.file(workspace.file(BUILD_FILES.siteSchematic)).bytes(),
     );
+    await workspace.writeFrozen("expected", [
+      {
+        at: previous.min,
+        bytes: writeSchematic(
+          new BlockGrid(previous.size, "minecraft:stone"),
+          site.dataVersion,
+        ),
+      },
+    ]);
     await appendLog(workspace.dir, {
       kind: "run",
       target: "sbx-000002",
@@ -399,9 +419,10 @@ describe("capture and run provenance", () => {
     const rerunGrid = await workspace.expected();
     expect(rerun.programText).not.toBeNull();
     expect(rerunGrid.get(0, 0, 0)).toBe("minecraft:stone");
-    expect(
-      await Bun.file(workspace.file(BUILD_FILES.expectedSchematic)).text(),
-    ).toBe("new frozen snapshot");
+    const frozen = await readSchematic(
+      await Bun.file(workspace.file(BUILD_FILES.expectedSchematic)).bytes(),
+    );
+    expect(frozen.grid.get(0, 0, 0)).toBe("minecraft:stone");
   });
 
   it("rejects missing producer snapshots before any sandbox or expected-state mutation", async () => {
@@ -580,6 +601,104 @@ describe("candidate input validation", () => {
       await pickCandidate(workspace.dir, "saved");
       const restored = await workspace.oplog();
       expect(restored.ops).toEqual(ops);
+    },
+  );
+});
+
+describe("tournament restoration preflight", () => {
+  it.each(
+    ["a", "c"].flatMap((candidate) =>
+      [
+        "missing-oplog",
+        "invalid-oplog",
+        "missing-program",
+        "program-bytes",
+        "input",
+      ].map((failure) => ({ candidate, failure })),
+    ),
+  )(
+    "rejects $candidate with $failure before any bout",
+    async ({ candidate, failure }) => {
+      const workspace = await flatSiteBuild(
+        path.join(temp, `restore-${candidate}-${failure}`),
+        "restore",
+      );
+      const source = "program:abc";
+      await Bun.write(workspace.file(programSnapshot("abc")), "saved program");
+      const site = await readSchematic(
+        await Bun.file(workspace.file(BUILD_FILES.siteSchematic)).bytes(),
+      );
+      await Bun.write(
+        workspace.file("schematics/input.schem"),
+        writeSchematic(
+          new BlockGrid({ x: 1, y: 1, z: 1 }, "minecraft:stone"),
+          site.dataVersion,
+        ),
+      );
+      await workspace.writeOplog({
+        version: 1,
+        ops: [
+          {
+            kind: "paste",
+            schematic: "schematics/input.schem",
+            world: "world",
+            at: { x: 100, y: 65, z: 100 },
+            rotate: 0,
+            ignoreAir: false,
+            source,
+          },
+        ],
+      });
+      for (const name of ["a", "b", "c"])
+        await saveCandidate(workspace.dir, name);
+      await workspace.writeOplog({ version: 1, ops: [] });
+      await Bun.write(workspace.file(BUILD_FILES.program), "working program");
+      const manifest = await workspace.manifest();
+      const journal = await readLog(workspace.dir);
+      const working = await Bun.file(
+        workspace.file(BUILD_FILES.program),
+      ).bytes();
+      const opBytes = await Bun.file(workspace.file(BUILD_FILES.oplog)).bytes();
+      const saved = (file: string) =>
+        workspace.file(`candidates/${candidate}/${file}`);
+      switch (failure) {
+        case "missing-oplog":
+          await rm(saved(BUILD_FILES.oplog));
+          break;
+        case "invalid-oplog":
+          await Bun.write(saved(BUILD_FILES.oplog), "corrupt");
+          break;
+        case "missing-program":
+          await rm(saved(BUILD_FILES.program));
+          break;
+        case "program-bytes":
+          await Bun.write(saved(BUILD_FILES.program), "replaced program");
+          break;
+        case "input":
+          await rm(workspace.file("schematics/input.schem"));
+          break;
+        default:
+          throw new Error("unknown fixture");
+      }
+      const ask = vi.fn(() => Promise.reject(new Error("unexpected judge")));
+      await expect(
+        knockout(workspace.dir, {
+          among: ["a", "b", "c"],
+          rubric: "micro",
+          model: "stub",
+          ask,
+        }),
+      ).rejects.toThrow();
+      expect(ask).not.toHaveBeenCalled();
+      expect(await workspace.manifest()).toEqual(manifest);
+      expect(await readLog(workspace.dir)).toEqual(journal);
+      expect(
+        await Bun.file(workspace.file(BUILD_FILES.program)).bytes(),
+      ).toEqual(working);
+      expect(await Bun.file(workspace.file(BUILD_FILES.oplog)).bytes()).toEqual(
+        opBytes,
+      );
+      expect(await readdir(workspace.dir)).not.toContain("judge");
     },
   );
 });

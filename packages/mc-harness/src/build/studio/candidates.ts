@@ -6,6 +6,7 @@
  */
 import { cp, mkdir, mkdtemp, readdir, rename, rm } from "node:fs/promises";
 import path from "node:path";
+import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { gridHash } from "@shepherdjerred/mc-build/core/site.ts";
 import {
@@ -157,6 +158,10 @@ export async function saveCandidate(
   // live build.ts, which may have been edited since; a log not produced by
   // one compile has no program.
   const program = producer !== null;
+  const programBytes =
+    producer === null
+      ? null
+      : await Bun.file(await buildArtifactPath(workspace, producer)).bytes();
   const hash = gridHash(grid);
   const journal = await readLog(dir);
   let blocks = 0;
@@ -175,16 +180,17 @@ export async function saveCandidate(
     size: grid.size,
     blocks,
     program,
+    programHash:
+      programBytes === null
+        ? null
+        : createHash("sha256").update(programBytes).digest("hex"),
     ops: oplog.ops.length,
     score: await latestCritique(dir, hash),
   };
   const staged = await mkdtemp(workspace.file(`.candidate-${name}-`));
   try {
-    if (producer !== null) {
-      await cp(
-        workspace.file(producer),
-        path.join(staged, BUILD_FILES.program),
-      );
+    if (programBytes !== null) {
+      await Bun.write(path.join(staged, BUILD_FILES.program), programBytes);
     }
     await cp(
       workspace.file(BUILD_FILES.oplog),
@@ -285,11 +291,8 @@ export async function listCandidates(
   return candidates.toSorted((a, b) => a.at.localeCompare(b.at));
 }
 
-/** Restores a candidate's program and op log as the working version. */
-export async function pickCandidate(
-  dir: string,
-  name: string,
-): Promise<Candidate> {
+/** Validate every artifact needed to restore and reproduce a saved candidate. */
+export async function validateCandidate(dir: string, name: string) {
   const workspace = new BuildWorkspace(dir);
   const candidate = await readCandidate(dir, name);
   const artifact = (file: string) =>
@@ -322,6 +325,25 @@ export async function pickCandidate(
   const program = candidate.program
     ? await Bun.file(await artifact(BUILD_FILES.program)).bytes()
     : null;
+  const programHash =
+    program === null
+      ? null
+      : createHash("sha256").update(program).digest("hex");
+  if (programHash !== candidate.programHash) {
+    throw new Error(
+      `candidate "${name}" program does not match its saved hash`,
+    );
+  }
+  return { candidate, program, oplog };
+}
+
+/** Restores a candidate's program and op log as the working version. */
+export async function pickCandidate(
+  dir: string,
+  name: string,
+): Promise<Candidate> {
+  const workspace = new BuildWorkspace(dir);
+  const { candidate, program, oplog } = await validateCandidate(dir, name);
   await installWorkingFiles(workspace, {
     program,
     oplog: `${JSON.stringify(oplog, null, 2)}\n`,
