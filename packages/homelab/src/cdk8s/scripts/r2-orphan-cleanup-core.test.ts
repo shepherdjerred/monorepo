@@ -15,17 +15,17 @@ describe("R2 orphan cleanup manifest", () => {
   test("protects the union of live CRs and backup metadata", () => {
     const objects = [
       {
-        key: "zfspv-incr/backups/live-cr/chunk",
+        key: "zfspv-incr/backups/live-cr/torvalds/zfs/-fixture-pvc-live-cr-live-cr",
         size: 10,
         lastModified: "2026-08-09T00:00:00.000Z",
       },
       {
-        key: "zfspv-incr/backups/metadata-only/chunk",
+        key: "zfspv-incr/backups/metadata-only/torvalds/zfs/-fixture-pvc-metadata-only-metadata-only",
         size: 20,
         lastModified: "2026-08-09T00:00:00.000Z",
       },
       {
-        key: "zfspv-incr/backups/orphan/chunk",
+        key: "zfspv-incr/backups/orphan/torvalds/zfs/-fixture-pvc-orphan-orphan",
         size: 30,
         lastModified: "2026-08-09T00:00:00.000Z",
       },
@@ -34,6 +34,7 @@ describe("R2 orphan cleanup manifest", () => {
       chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
       observedAt,
       storage,
+      zfsBackupNames: [],
       zfsObjects: objects,
       liveBackupNames: ["live-cr"],
       metadataBackupNames: ["metadata-only"],
@@ -51,9 +52,10 @@ describe("R2 orphan cleanup manifest", () => {
       chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
       observedAt,
       storage,
+      zfsBackupNames: [],
       zfsObjects: [
         {
-          key: "zfspv-incr/backups/recent/chunk",
+          key: "zfspv-incr/backups/recent/torvalds/zfs/-fixture-pvc-recent-recent",
           size: 1,
           lastModified: "2026-08-11T00:00:01.000Z",
         },
@@ -72,9 +74,10 @@ describe("R2 orphan cleanup manifest", () => {
         chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
         observedAt,
         storage,
+        zfsBackupNames: [],
         zfsObjects: [
           {
-            key: "zfspv-incr/backups/orphan/chunk",
+            key: "zfspv-incr/backups/orphan/torvalds/zfs/-fixture-pvc-orphan-orphan",
             size: 1,
             lastModified: "2026-08-09T00:00:00.000Z",
           },
@@ -90,6 +93,7 @@ describe("R2 orphan cleanup manifest", () => {
       chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
       observedAt,
       storage,
+      zfsBackupNames: [],
       zfsObjects: [],
       liveBackupNames: [],
       metadataBackupNames: [],
@@ -161,9 +165,10 @@ describe("R2 orphan cleanup manifest", () => {
       chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
       observedAt,
       storage,
+      zfsBackupNames: [],
       zfsObjects: [
         {
-          key: "zfspv-incr/backups/pending-cr/chunk",
+          key: "zfspv-incr/backups/pending-cr/torvalds/zfs/-fixture-pvc-pending-cr-pending-cr",
           size: 1,
           lastModified: "2026-08-09T00:00:00.000Z",
         },
@@ -180,9 +185,10 @@ describe("R2 orphan cleanup manifest", () => {
       chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
       observedAt,
       storage,
+      zfsBackupNames: [],
       zfsObjects: [
         {
-          key: "zfspv-incr/backups/orphan/chunk",
+          key: "zfspv-incr/backups/orphan/torvalds/zfs/-fixture-pvc-orphan-orphan",
           size: 1,
           lastModified: "2026-08-09T00:00:00.000Z",
         },
@@ -194,9 +200,10 @@ describe("R2 orphan cleanup manifest", () => {
       chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
       observedAt,
       storage,
+      zfsBackupNames: [],
       zfsObjects: [
         {
-          key: "zfspv-incr/backups/orphan/chunk",
+          key: "zfspv-incr/backups/orphan/torvalds/zfs/-fixture-pvc-orphan-orphan",
           size: 2,
           lastModified: "2026-08-09T00:00:00.000Z",
         },
@@ -215,9 +222,10 @@ describe("R2 orphan cleanup safety options", () => {
     const input = {
       observedAt,
       storage,
+      zfsBackupNames: [],
       zfsObjects: [
         {
-          key: "zfspv-incr/backups/expired-full/stream",
+          key: "zfspv-incr/backups/expired-full/torvalds/zfs/-fixture-pvc-expired-full-expired-full",
           size: 10,
           lastModified: "2026-08-09T00:00:00.000Z",
           etag: '"original"',
@@ -247,9 +255,10 @@ describe("R2 orphan cleanup safety options", () => {
     const input = {
       observedAt,
       storage,
+      zfsBackupNames: [],
       zfsObjects: [
         {
-          key: "zfspv-incr/backups/orphan/stream",
+          key: "zfspv-incr/backups/orphan/torvalds/zfs/-fixture-pvc-orphan-orphan",
           size: 10,
           lastModified: "2026-08-09T00:00:00.000Z",
           etag: '"original"',
@@ -277,14 +286,15 @@ describe("R2 orphan cleanup safety options", () => {
       chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
       observedAt,
       storage,
+      zfsBackupNames: [],
       zfsObjects: [
         {
-          key: "zfspv-incr/backups/held/chunk",
+          key: "zfspv-incr/backups/held/torvalds/zfs/-fixture-pvc-held-held",
           size: 1,
           lastModified: "2026-08-09T00:00:00.000Z",
         },
         {
-          key: "zfspv-incr/backups/orphan/chunk",
+          key: "zfspv-incr/backups/orphan/torvalds/zfs/-fixture-pvc-orphan-orphan",
           size: 2,
           lastModified: "2026-08-09T00:00:00.000Z",
         },
@@ -307,6 +317,7 @@ describe("R2 orphan cleanup safety options", () => {
         chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
         observedAt,
         storage,
+        zfsBackupNames: [],
         zfsObjects: [],
         liveBackupNames: [],
         metadataBackupNames: [],
@@ -320,14 +331,15 @@ describe("R2 orphan cleanup safety options", () => {
       chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
       observedAt,
       storage,
+      zfsBackupNames: [],
       zfsObjects: [
         {
-          key: "zfspv-incr/backups/selected/chunk",
+          key: "zfspv-incr/backups/selected/torvalds/zfs/-fixture-pvc-selected-selected",
           size: 1,
           lastModified: "2026-08-09T00:00:00.000Z",
         },
         {
-          key: "zfspv-incr/backups/other/chunk",
+          key: "zfspv-incr/backups/other/torvalds/zfs/-fixture-pvc-other-other",
           size: 2,
           lastModified: "2026-08-09T00:00:00.000Z",
         },

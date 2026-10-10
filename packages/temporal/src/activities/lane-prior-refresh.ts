@@ -3,7 +3,8 @@ import { simpleGit } from "simple-git";
 import { z } from "zod/v4";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import {
-  assertRemoteBranchIsOurs,
+  fetchGeneratedRemoteBranch,
+  pushOwnedGeneratedCommit,
   writeGitAskpass,
 } from "./scout/scout-season-refresh-git.ts";
 import {
@@ -257,21 +258,11 @@ export const lanePriorActivities = {
       await runCommand(["git", "config", "user.name", "CI Bot"], {
         cwd: repoDir,
       });
-      const remoteBranch = await runCommand(
-        ["git", "ls-remote", "--heads", "origin", `refs/heads/${branch}`],
-        { cwd: repoDir, env: gitEnv, redactOutput: true },
-      );
-      if (remoteBranch.length > 0) {
-        await runCommand(
-          [
-            "git",
-            "fetch",
-            "origin",
-            `refs/heads/${branch}:refs/remotes/origin/${branch}`,
-          ],
-          { cwd: repoDir, env: gitEnv, redactOutput: true },
-        );
-      }
+      const expectedRemoteSha = await fetchGeneratedRemoteBranch({
+        repoDir,
+        branch,
+        gitEnv,
+      });
       await runCommand(["git", "checkout", "-B", branch], { cwd: repoDir });
       await runCommand(
         [
@@ -285,23 +276,25 @@ export const lanePriorActivities = {
       );
       await disarmGitHooks(repoDir);
       await runCommand(["git", "commit", "-m", title], { cwd: repoDir });
-      if (remoteBranch.length > 0) {
-        await assertRemoteBranchIsOurs({ repoDir, branch });
-      }
-      const commitHash = await runCommand(["git", "rev-parse", "HEAD"], {
-        cwd: repoDir,
+      const commitHash = await pushOwnedGeneratedCommit({
+        repoDir,
+        branch,
+        gitEnv,
+        expectedRemoteSha,
       });
-      await runCommand(
-        ["git", "push", "--force-with-lease", "origin", branch],
-        { cwd: repoDir, env: gitEnv, redactOutput: true },
-      );
       const body = [
-        "Automated Scout lane-prior refresh from Temporal.",
+        "## Why",
+        "Keep Scout lane priors aligned with current match observations.",
+        "",
+        "## What",
         "",
         `Content hash: ${contentHash}`,
         `Changed files: ${String(files.length)}`,
         "",
         ...lanePriorPrBodyLines(config.lanePriors),
+        "",
+        "## Verification",
+        "Ran the lane-prior generator and generated-file preflight. Full CI and automated review must pass before merge. Live report acceptance has not run.",
       ].join("\n");
       const { url: prUrl, recovered } = await createGeneratedPr(
         {

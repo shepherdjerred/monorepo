@@ -1,4 +1,4 @@
-import { mkdir, unlink } from "node:fs/promises";
+import { mkdir, rm, unlink } from "node:fs/promises";
 import path from "node:path";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { accountToLakeRow } from "#src/report-lake/flatten.ts";
@@ -15,22 +15,25 @@ const COMPACTION_TIMEOUT_MS = 30 * 60 * 1000;
 export async function writeAccountsParquet(
   prisma: ExtendedPrismaClient,
   buildDir: string,
+  abortSignal?: AbortSignal,
 ): Promise<number> {
   const accounts = await prisma.account.findMany({ include: { player: true } });
   const tmpPath = path.join(buildDir, "accounts.ndjson.tmp");
-  const writer = new NdjsonFileWriter(tmpPath);
-  for (const account of accounts) await writer.write(accountToLakeRow(account));
-  await writer.close();
+  abortSignal?.throwIfAborted();
+  const writer = new NdjsonFileWriter(tmpPath, undefined, abortSignal);
+  try {
+    for (const account of accounts)
+      await writer.write(accountToLakeRow(account));
+    await writer.close();
 
-  const accountsDir = path.join(buildDir, "accounts");
-  await mkdir(accountsDir, { recursive: true });
-  const parquetPath = path.join(accountsDir, "accounts.parquet");
-  try {
-    await unlink(parquetPath);
-  } catch {
-    // A fresh build has no previous hardlink to replace.
-  }
-  try {
+    const accountsDir = path.join(buildDir, "accounts");
+    await mkdir(accountsDir, { recursive: true });
+    const parquetPath = path.join(accountsDir, "accounts.parquet");
+    try {
+      await unlink(parquetPath);
+    } catch {
+      // A fresh build has no previous hardlink to replace.
+    }
     if (accounts.length > 0) {
       await withDuckDBConnection(
         async (session) => {
@@ -39,11 +42,18 @@ export async function writeAccountsParquet(
             [tmpPath],
           );
         },
-        { timeoutMs: COMPACTION_TIMEOUT_MS },
+        {
+          timeoutMs: COMPACTION_TIMEOUT_MS,
+          ...(abortSignal === undefined ? {} : { abortSignal }),
+        },
       );
     }
   } finally {
-    await unlink(tmpPath);
+    try {
+      await writer.abort();
+    } finally {
+      await rm(tmpPath, { force: true });
+    }
   }
   return accounts.length;
 }

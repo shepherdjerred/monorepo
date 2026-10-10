@@ -1,3 +1,8 @@
+import { rethrowReportDeliveryFailure } from "#workflows/scout/report-delivery.ts";
+import {
+  REPORT_DELIVERY_ACTIVITY_RETRY,
+  REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
+} from "#shared/reports/report-delivery-policy.ts";
 import { proxyActivities } from "@temporalio/workflow";
 import type {
   LanePriorActivities,
@@ -203,8 +208,8 @@ export async function runScoutLanePriorsWeeklyRefresh(
 ): Promise<LanePriorRefreshResult> {
   const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
     taskQueue: reportActivityTaskQueue(reportTaskQueue),
-    startToCloseTimeout: "2 minutes",
-    retry: { maximumAttempts: 3 },
+    startToCloseTimeout: REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
+    retry: REPORT_DELIVERY_ACTIVITY_RETRY,
   });
   const startedAt = new Date().toISOString();
   try {
@@ -212,6 +217,7 @@ export async function runScoutLanePriorsWeeklyRefresh(
     await deliverActivityReport(report(startedAt, result));
     return result;
   } catch (error: unknown) {
+    rethrowReportDeliveryFailure(error);
     await deliverActivityReport(failureReport(startedAt, error));
     throw error;
   }

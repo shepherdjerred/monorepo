@@ -88,8 +88,9 @@ any other namespace raise `TemporalUnexpectedNamespaceStartAttempted`.
 The Bryan Bucks analytics schedule runs in `prod`, where the central Workflow
 executor polls `monorepo-workflows`; its `scout` Activity calls the beta Scout
 data endpoint. The central Scout worker also polls the unchanged `scout` queue
-in `beta` to drain retained executions. All other central queues are `prod`
-only. Schedule registration retires the old beta schedule without cancelling
+in `beta` to drain retained executions. The central Workflow and reports
+workers also poll `beta` for the explicit notification acceptance canary.
+Other central Activity queues are `prod` only. Schedule registration retires the old beta schedule without cancelling
 existing executions.
 
 | Role              | Queue or surface                                                                       |               Activity concurrency |
@@ -276,11 +277,85 @@ Prompts are limited to 4,000 characters. New chats snapshot
 
 ## Report mail configuration
 
+The weekly dependency report resolves first-party deployment aliases to their
+actual GHCR image repository and reads each immutable pinned digest. Internal
+promotion evidence compares the application's baked `GIT_SHA` against GitHub
+source commits, separately from upstream release notes. Images can inherit a
+base-image revision label, so that label alone is insufficient first-party
+build evidence. Missing build identity or upstream notes remains an explicit
+evidence gap; promotion PR prose is not counted as build-change evidence.
+
+The homelab audit preserves informational and suppressed alerts, merges matching
+Prometheus and ledger conditions with both evidence references, and distinguishes
+recovered failures from failures without proven recovery. A long-running Workflow
+needs a stale pending task or repeated Workflow-task failures to become a stall;
+quiet waits and recent Activity heartbeats remain informational.
+
+Ops digest Activity results retain the dashboard's `periodKey`, `status`
+(`sent` or `skipped`), and `duplicate` outcome in Workflow history and results.
+`sent` means the dashboard's mailer accepted the message; it does not establish
+inbox delivery. Histories recorded by older workers contain only `kind` and
+remain replay-compatible; no additional Workflow command is introduced.
+
+The infra worker persists each successful R2 orphan observation in the
+`temporal/velero-r2-orphan-audit-state` ConfigMap before publishing
+its gauges. Startup restores the original observation time and values; other
+roles publish no initialized zero inventory. Conditional writes prevent an
+older concurrent scan from replacing a newer observation. The R2 audit
+credential remains read-only. Missing state or an observation older than
+36 hours is unknown and raises the audit freshness alert.
+
 The reports worker resolves `temporal-email-recipient` and
 `temporal-email-sender` through typed configuration for each delivery activity.
 Defaults preserve the existing homelab routing during a flag-provider outage.
 Postal credentials stay in 1Password; service endpoints and host routing are
 reviewed homelab bootstrap settings. Workflow histories contain no credentials.
+
+`temporal-daily-report-notifications-enabled` resolves per Activity and defaults
+off in production, with beta targeting declared for acceptance. When enabled,
+the homelab audit, CI I/O telemetry, and Scout queue-window daily schedules,
+plus the explicit beta notification canary, use changed-condition mail.
+Each run keeps its full immutable report under
+`reports/observations/<namespace>/<type>/<schedule>/`; a baseline, changed
+actionable condition, or recovery sends mail. An unchanged actionable condition
+sends a reminder after seven days, while unchanged clear reports stay silent.
+Known finding identities ignore changing observation counts; unknown findings
+retain their text so a new failure cannot be hidden. Suppressed, recovered, and
+observing findings remain in the archive without creating active conditions.
+
+Conditional family claims serialize sends and skip decisions across runs.
+A takeover settles the prior pending decision before evaluating the next report;
+pending sends use their existing delivery lease and accepted receipt. The latest
+completed observation also advances on a skip, so a delayed older condition
+cannot replace a newer quiet recovery. Report delivery proxies use the shared
+lease-aware retry policy so an immediate failure cannot exhaust retries
+inside the claim's takeover window. An exhausted delivery fails the Workflow
+without creating a synthetic collection-failure report; actual collector
+failures retain their failure report. A patch marker preserves older recorded
+failure paths during replay. Skips have explicit records and no Postal
+message ID or acceptance time. The freshness monitor counts completed skips
+separately from mail acceptance, using the report's original observation time.
+Each family has a conditional latest-heartbeat index beside its immutable
+receipt or skip prefix. Delivery retries repair a missing index without sending
+again, and older acceptances cannot replace newer ones. The monitor validates
+the indexed original record rather than trusting S3 modification time. Existing
+history migrates in pages of at most 25 records per family per scan; until it
+finishes, an otherwise missing or stale result is `indexing`, while a validated
+recent record can already establish freshness. After migration, each scan reads
+only the index and its original record for each family.
+Manual reports, dependency checkpoints, digests, other canaries, and other schedules
+retain their existing delivery behavior. Postal acceptance still does not
+establish inbox delivery.
+
+`daily-notification-policy-canary` is declared only in `beta` and starts paused.
+After promoting a central Workflow candidate containing `runDailyNotificationCanary`
+and deploying the reports worker with beta polling, trigger the paused schedule
+twice with its declared `attention` input: the first run must have a real Postal
+receipt and the second an explicit unchanged skip. Start the same Workflow in
+`beta` with `condition: "clear"` to verify recovery mail. Inspect the immutable
+reports, family state, skip record, and actual acceptance receipts; a completed
+Workflow alone does not prove delivery. Keep recurring delivery paused during
+this rehearsal. The Workflow rejects every namespace other than `beta`.
 
 ## Documentation
 

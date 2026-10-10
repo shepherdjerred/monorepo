@@ -204,22 +204,55 @@ describe("delivery to the dashboard", () => {
     });
   });
 
-  test("a digest trigger posts to the kind's endpoint", async () => {
-    const urls: string[] = [];
+  test.each([
+    { status: "sent", duplicate: false },
+    { status: "skipped", duplicate: false },
+    { status: "sent", duplicate: true },
+  ])(
+    "a digest trigger preserves $status and duplicate=$duplicate",
+    async (outcome) => {
+      const urls: string[] = [];
+      const result = {
+        kind: "weekly",
+        periodKey: "weekly:2026-09-21",
+        ...outcome,
+      };
+      await expect(
+        triggerDigest({
+          kind: "weekly",
+          dashboardUrl: "http://alert-dashboard:7341",
+          token: "t",
+          post: ({ url, responseType }) => {
+            urls.push(url);
+            expect(responseType).toBe("json");
+            return Promise.resolve(result);
+          },
+        }),
+      ).resolves.toEqual(result);
+      expect(urls).toEqual([
+        "http://alert-dashboard:7341/internal/v1/digests/weekly",
+      ]);
+    },
+  );
+
+  test.each([
+    undefined,
+    { kind: "weekly" },
+    {
+      kind: "daily",
+      periodKey: "daily:2026-09-24",
+      status: "sent",
+      duplicate: false,
+    },
+  ])("rejects an invalid or mismatched digest receipt", async (result) => {
     await expect(
       triggerDigest({
         kind: "weekly",
         dashboardUrl: "http://alert-dashboard:7341",
         token: "t",
-        post: ({ url }) => {
-          urls.push(url);
-          return Promise.resolve();
-        },
+        post: () => Promise.resolve(result),
       }),
-    ).resolves.toEqual({ kind: "weekly" });
-    expect(urls).toEqual([
-      "http://alert-dashboard:7341/internal/v1/digests/weekly",
-    ]);
+    ).rejects.toThrow();
   });
 
   test("a dashboard rejection propagates so the Activity retries", async () => {

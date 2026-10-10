@@ -229,6 +229,7 @@ export type WorkerRoleContract = {
   runsEventBridge: boolean;
   restoresGlitterCorpusMetrics: boolean;
   restoresSeaweedFsBackupMetrics: boolean;
+  restoresVeleroR2AuditMetrics: boolean;
 };
 
 export function getWorkerRoleContract(role: WorkerRole): WorkerRoleContract {
@@ -242,5 +243,6 @@ export function getWorkerRoleContract(role: WorkerRole): WorkerRoleContract {
     restoresGlitterCorpusMetrics:
       role === "all" || role === "glitter" || role === "glitter-corpus",
     restoresSeaweedFsBackupMetrics: role === "all" || role === "backup",
+    restoresVeleroR2AuditMetrics: role === "all" || role === "infra",
   };
 }

@@ -421,6 +421,7 @@ function createLakeActivities(): ScoutTemporalActivityGroups["lake"] {
         const { runReportLakeFold, runReportLakeRebuild } =
           await import("#src/report-lake/compactor.ts");
         const options = {
+          abortSignal: Context.current().cancellationSignal,
           onProgress: (progress: {
             phase: string;
             table?: string;

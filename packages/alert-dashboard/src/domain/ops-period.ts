@@ -1,6 +1,6 @@
 import type { Temporal } from "@js-temporal/polyfill";
 
-import type { DigestKind } from "#shared/ops-schema";
+import type { DigestKind } from "@shepherdjerred/ops-model/digest.ts";
 
 /** Digests are scheduled and keyed in Jerred's local time. */
 export const DIGEST_TIME_ZONE = "America/Los_Angeles";

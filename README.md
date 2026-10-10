@@ -43,5 +43,13 @@ bun run verify                  # exhaustive whole-repo gate — what CI runs
 locally only to reproduce a CI failure or when changing the verification
 machinery itself.
 
+Root dependency overrides include temporary security fixes for upstream exact
+pins: Prisma 7's `deepmerge-ts` (CVE-2026-40345) and `mysql2`
+(GHSA-3f6p-5ww8-9rcr), and Mermaid's Chevrotain dependency on `lodash-es`
+(CVE-2026-4800). Remove each override once its upstream dependency resolves a
+patched version without it. The deepmerge 8 migration changes recursive Map
+merging; repository Prisma configurations use ordinary objects and are verified
+through config loading, schema validation, and client generation.
+
 See [AGENTS.md](AGENTS.md) for always-on repository constraints and
 [`packages/README.md`](packages/README.md) for the current package catalog.

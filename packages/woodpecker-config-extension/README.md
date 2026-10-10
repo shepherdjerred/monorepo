@@ -41,6 +41,14 @@ flag (default off). Branches under `ci-canary/` have beta targeting. The
 configuration service uses the `woodpecker` Flipt namespace; unavailable flags
 keep ordinary checkout active and invalid values fail visibly.
 
+Ordinary Kubernetes checkouts explicitly use the trusted deployed catalog's
+digest-pinned Git plugin with `depth: 0` and `partial: false` for full history;
+the plugin's default partial mode would override the depth. Tag events also
+fetch tags. Clone, command, and service pods all carry the workflow step key,
+commit, and branch/pipeline annotations for I/O attribution, plus their resource
+bounds and tokenless service account. Checkout-free and local workflows retain
+their own startup paths.
+
 When enabled, the deployed digest-pinned service image supplies a trusted
 clone helper. Its preparation and checkout containers alone mount the main or
 approved-PR source PVC, plus the separate coordination PVC. A pinned BusyBox

@@ -63,7 +63,10 @@ export async function writeCompetitionRankHistoryParquet(options: {
           [tmpPath],
         );
       },
-      { timeoutMs: timeoutMs ?? REBUILD_TIMEOUT_MS },
+      {
+        timeoutMs: timeoutMs ?? REBUILD_TIMEOUT_MS,
+        ...(abortSignal === undefined ? {} : { abortSignal }),
+      },
     );
   } finally {
     await unlink(tmpPath);

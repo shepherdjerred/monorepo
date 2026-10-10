@@ -2,13 +2,10 @@ import type {
   ChangeEvent,
   Snapshot,
 } from "@shepherdjerred/ops-model/snapshot.ts";
+import type { DigestKind } from "@shepherdjerred/ops-model/digest.ts";
 
 import type { AlertLedgerChange } from "#domain/ops-changes";
-import type {
-  ChangeView,
-  CursorConsumer,
-  DigestKind,
-} from "#shared/ops-schema";
+import type { ChangeView, CursorConsumer } from "#shared/ops-schema";
 import type {
   AlertDetail,
   AlertDetailInput,

@@ -177,6 +177,28 @@ describe("proposeQueueWindowEdits", () => {
     });
   });
 
+  test("known Co-op vs AI queues do not trigger competitive drift or hide unknown IDs", () => {
+    const file = makeFile({ urf: [["2026-06-01", "2026-06-15"]] });
+    const { edits, warnings, next } = propose(file, {
+      "800": { "2026-07-10": 4 },
+      "810": { "2026-07-10": 2 },
+      "820": { "2026-07-10": 3 },
+      "870": { "2026-07-10": 4 },
+      "880": { "2026-07-10": 2 },
+      "890": { "2026-07-10": 13 },
+      "999999": { "2026-07-10": 1 },
+    });
+    expect(edits).toEqual([]);
+    expect(next).toEqual(file);
+    expect(warnings).toEqual([
+      expect.objectContaining({
+        kind: "unknown-queue-id",
+        queueId: "999999",
+        total: 1,
+      }),
+    ]);
+  });
+
   test("aggregates multiple queue ids for one mode (arena 1700 + 1750)", () => {
     const file = makeFile({ arena: [["2025-06-25", "2025-12-01"]] });
     const { edits } = propose(file, {

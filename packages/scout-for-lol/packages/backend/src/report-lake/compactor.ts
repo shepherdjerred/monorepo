@@ -75,6 +75,7 @@ export async function runReportLakeFold(
   options: CompactionOptions = {},
 ): Promise<CompactionSummary> {
   return await withCompactionLock(async () => {
+    options.abortSignal?.throwIfAborted();
     const startedAt = Date.now();
     const prisma = options.prisma ?? defaultPrisma;
     const lakeDir = options.lakeDir ?? resolveLakeDir();
@@ -84,12 +85,7 @@ export async function runReportLakeFold(
     const currentDir = await readCurrentBuildDir(lakeDir);
     if (currentDir === undefined) {
       logger.info("No published build yet; folding via full rebuild");
-      return await rebuildReportLake(
-        prisma,
-        lakeDir,
-        startedAt,
-        options.onProgress,
-      );
+      return await rebuildReportLake(prisma, lakeDir, startedAt, options);
     }
 
     // A fold hardlinks the published build's parquet and appends fold files
@@ -100,12 +96,7 @@ export async function runReportLakeFold(
       logger.info(
         `Lake column set changed since the published build (${publishedFingerprint ?? "unrecorded"} -> ${lakeSchemaFingerprint()}); folding via full rebuild`,
       );
-      return await rebuildReportLake(
-        prisma,
-        lakeDir,
-        startedAt,
-        options.onProgress,
-      );
+      return await rebuildReportLake(prisma, lakeDir, startedAt, options);
     }
 
     // A fold cannot retranslate history: it hardlinks the published parquet and
@@ -118,12 +109,7 @@ export async function runReportLakeFold(
       logger.info(
         `PUUID remap changed since the published build (${publishedRemap ?? "unrecorded"} -> ${currentRemap}); folding via full rebuild`,
       );
-      return await rebuildReportLake(
-        prisma,
-        lakeDir,
-        startedAt,
-        options.onProgress,
-      );
+      return await rebuildReportLake(prisma, lakeDir, startedAt, options);
     }
 
     const buildId = newBuildId();
@@ -143,17 +129,21 @@ export async function runReportLakeFold(
     const read = async (table: ReportLakeStagingTable) =>
       await readStagingRows(lakeDir, table, {
         onProgress: options.onProgress,
+        ...(options.abortSignal === undefined
+          ? {}
+          : { abortSignal: options.abortSignal }),
         snapshot: validated.snapshot,
         skippedGenerations: validated.skippedByTable.get(table) ?? 0,
       });
     const stagedMatches = await read("matches");
     const stagedRawDocuments = await read("raw_documents");
-    await writeFoldParquet(
+    await writeFoldParquet({
       buildDir,
       buildId,
-      "raw_documents",
-      stagedRawDocuments,
-    );
+      table: "raw_documents",
+      staged: stagedRawDocuments,
+      abortSignal: options.abortSignal,
+    });
     const stagedPrematches = await read("prematch");
     const stagedMatchTeams = await read("match_teams");
     const stagedMatchTeamBans = await read("match_team_bans");
@@ -166,46 +156,74 @@ export async function runReportLakeFold(
       "timeline_participant_frames",
     );
     const stagedTimelineCoverage = await read("timeline_coverage");
-    await writeFoldParquet(buildDir, buildId, "matches", stagedMatches);
-    await writeFoldParquet(buildDir, buildId, "match_teams", stagedMatchTeams);
-    await writeFoldParquet(
+    await writeFoldParquet({
       buildDir,
       buildId,
-      "match_team_bans",
-      stagedMatchTeamBans,
-    );
-    await writeFoldParquet(buildDir, buildId, "prematch", stagedPrematches);
-    await writeFoldParquet(
+      table: "matches",
+      staged: stagedMatches,
+      abortSignal: options.abortSignal,
+    });
+    await writeFoldParquet({
       buildDir,
       buildId,
-      "competition_rank_history",
-      stagedRankHistory,
-    );
-    await writeFoldParquet(
+      table: "match_teams",
+      staged: stagedMatchTeams,
+      abortSignal: options.abortSignal,
+    });
+    await writeFoldParquet({
       buildDir,
       buildId,
-      "timeline_events",
-      stagedTimelineEvents,
-    );
-    await writeFoldParquet(
+      table: "match_team_bans",
+      staged: stagedMatchTeamBans,
+      abortSignal: options.abortSignal,
+    });
+    await writeFoldParquet({
       buildDir,
       buildId,
-      "timeline_event_participants",
-      stagedTimelineEventParticipants,
-    );
-    await writeFoldParquet(
+      table: "prematch",
+      staged: stagedPrematches,
+      abortSignal: options.abortSignal,
+    });
+    await writeFoldParquet({
       buildDir,
       buildId,
-      "timeline_participant_frames",
-      stagedTimelineParticipantFrames,
-    );
-    await writeFoldParquet(
+      table: "competition_rank_history",
+      staged: stagedRankHistory,
+      abortSignal: options.abortSignal,
+    });
+    await writeFoldParquet({
       buildDir,
       buildId,
-      "timeline_coverage",
-      stagedTimelineCoverage,
+      table: "timeline_events",
+      staged: stagedTimelineEvents,
+      abortSignal: options.abortSignal,
+    });
+    await writeFoldParquet({
+      buildDir,
+      buildId,
+      table: "timeline_event_participants",
+      staged: stagedTimelineEventParticipants,
+      abortSignal: options.abortSignal,
+    });
+    await writeFoldParquet({
+      buildDir,
+      buildId,
+      table: "timeline_participant_frames",
+      staged: stagedTimelineParticipantFrames,
+      abortSignal: options.abortSignal,
+    });
+    await writeFoldParquet({
+      buildDir,
+      buildId,
+      table: "timeline_coverage",
+      staged: stagedTimelineCoverage,
+      abortSignal: options.abortSignal,
+    });
+    const accountRows = await writeAccountsParquet(
+      prisma,
+      buildDir,
+      options.abortSignal,
     );
-    const accountRows = await writeAccountsParquet(prisma, buildDir);
     options.onProgress?.({ phase: "publishing", rows: accountRows });
 
     const summary = {
@@ -234,7 +252,7 @@ export async function runReportLakeFold(
     // The fold only reaches here when the published build already matches the
     // current remap, so carrying it forward keeps the manifest truthful.
     await writeCompactionManifest(buildDir, summary, currentRemap);
-    await publishBuild(lakeDir, buildId);
+    await publishBuild(lakeDir, buildId, options.abortSignal);
     publishCompactionMetrics(summary);
     await removeFoldedStagingFiles(lakeDir, "matches", stagedMatches.foldedIds);
     await removeFoldedStagingFiles(
@@ -309,15 +327,11 @@ export async function runReportLakeRebuild(
   options: CompactionOptions = {},
 ): Promise<CompactionSummary> {
   return await withCompactionLock(async () => {
+    options.abortSignal?.throwIfAborted();
     const prisma = options.prisma ?? defaultPrisma;
     const lakeDir = options.lakeDir ?? resolveLakeDir();
     options.onProgress?.({ phase: "scaffolding" });
     await ensureLakeScaffold(lakeDir);
-    return await rebuildReportLake(
-      prisma,
-      lakeDir,
-      Date.now(),
-      options.onProgress,
-    );
+    return await rebuildReportLake(prisma, lakeDir, Date.now(), options);
   });
 }

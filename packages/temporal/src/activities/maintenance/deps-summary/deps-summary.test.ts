@@ -99,6 +99,45 @@ describe("dependency summary collection", () => {
     expect(changes).toHaveLength(1);
     expect(changes[0]?.kind).toBe("internal-promotion");
     expect(changes[0]?.oldVersion).toBe(changes[0]?.newVersion);
+    expect(changes[0]).toMatchObject({
+      datasource: "docker",
+      registryUrl: "https://ghcr.io",
+      packageName: "shepherdjerred/service",
+    });
+  });
+
+  it.each([
+    "shepherdjerred/scout-for-lol/beta",
+    "shepherdjerred/scout-for-lol/prod/workflows/candidate",
+    "shepherdjerred/scout-for-lol/beta/workflows/stable",
+    "shepherdjerred/temporal-worker/workflows/stable",
+  ])("resolves deployment alias %s to its actual image repository", (name) => {
+    const changes = deriveDependencyChanges(
+      [],
+      [
+        {
+          commitSha: "a".repeat(40),
+          commitSubject: "add deployment pin",
+          entries: [internal(name, `1.0.0@sha256:${"b".repeat(64)}`)],
+        },
+      ],
+    );
+    expect(changes[0]?.packageName).toBe(name.split("/").slice(0, 2).join("/"));
+  });
+
+  it("rejects unknown internal image identity instead of querying another repository", () => {
+    expect(() =>
+      deriveDependencyChanges(
+        [],
+        [
+          {
+            commitSha: "a".repeat(40),
+            commitSubject: "invalid pin",
+            entries: [internal("shepherdjerred/service/unknown", "1.0.0")],
+          },
+        ],
+      ),
+    ).toThrow("Unknown internal image catalog identity");
   });
 
   it("regresses the actual July 6-13 missed-update endpoint states", async () => {
@@ -117,6 +156,7 @@ describe("dependency summary collection", () => {
     ]);
     const managedUpgrades = changes.filter(
       (change) =>
+        change.category === "upstream" &&
         change.datasource !== undefined &&
         change.oldValue !== undefined &&
         change.newValue !== undefined &&

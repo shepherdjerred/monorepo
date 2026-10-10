@@ -21,7 +21,7 @@ export function buildHomelabAuditReport(
     startedAt: collection.startedAt,
     execution: complete ? "complete" : "partial",
     verdict:
-      collection.findings.length === 0
+      critical + warnings === 0
         ? complete
           ? "clear"
           : "inconclusive"
@@ -33,7 +33,9 @@ export function buildHomelabAuditReport(
     evidence: collection.evidence,
     findings: collection.findings,
     limitations: collection.limitations,
-    actions: collection.findings.map((finding) => `Review: ${finding.summary}`),
+    actions: collection.findings
+      .filter((finding) => finding.severity !== "info")
+      .map((finding) => `Review: ${finding.summary}`),
     ...(synthesis === undefined ? {} : { synthesis }),
     provenance: {
       source:

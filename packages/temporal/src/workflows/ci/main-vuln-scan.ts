@@ -1,3 +1,7 @@
+import {
+  REPORT_DELIVERY_ACTIVITY_RETRY,
+  REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
+} from "#shared/reports/report-delivery-policy.ts";
 import { proxyActivities } from "@temporalio/workflow";
 import type {
   MainVulnScanActivities,
@@ -34,8 +38,8 @@ const { scanMainForVulnerabilities } = proxyActivities<MainVulnScanActivities>({
 // maintenance pod.
 const deliveryActivities = proxyActivities<ReportDeliveryActivities>({
   taskQueue: TASK_QUEUES.REPORTS,
-  startToCloseTimeout: "2 minutes",
-  retry: RETRY,
+  startToCloseTimeout: REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
+  retry: REPORT_DELIVERY_ACTIVITY_RETRY,
 });
 const alertActivities = proxyActivities<MainVulnScanAlertActivities>({
   taskQueue: TASK_QUEUES.REPORTS,

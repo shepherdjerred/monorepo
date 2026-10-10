@@ -1,3 +1,4 @@
+import { rethrowReportDeliveryFailure } from "#workflows/scout/report-delivery.ts";
 import { patched, proxyActivities } from "@temporalio/workflow";
 import type {
   HomelabAuditActivities,
@@ -12,6 +13,10 @@ import type {
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { reportActivityTaskQueue } from "#workflows/scout/report-activity-queue.ts";
 import { setWorkflowPhase } from "@scout-for-lol/temporal/workflow-ui-interceptor";
+import {
+  REPORT_DELIVERY_ACTIVITY_RETRY,
+  REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
+} from "#shared/reports/report-delivery-policy.ts";
 
 const RETRY = {
   maximumAttempts: 3,
@@ -126,8 +131,8 @@ export async function runHomelabAuditWorkflow(
 ): Promise<void> {
   const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
     taskQueue: reportActivityTaskQueue(reportTaskQueue),
-    startToCloseTimeout: "2 minutes",
-    retry: RETRY,
+    startToCloseTimeout: REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
+    retry: REPORT_DELIVERY_ACTIVITY_RETRY,
   });
   if (!patched("homelab-audit-deterministic-v1")) {
     return runLegacyHomelabAudit(input);
@@ -141,6 +146,7 @@ export async function runHomelabAuditWorkflow(
     setWorkflowPhase("**Phase:** delivering the homelab audit report");
     await deliverActivityReport(buildHomelabAuditReport(collection, synthesis));
   } catch (error) {
+    rethrowReportDeliveryFailure(error);
     await deliverActivityReport(failureReport(startedAt, error));
     throw error;
   }

@@ -4,6 +4,19 @@ import { schedulesInNamespace } from "./schedule-types.ts";
 
 export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
   {
+    namespace: "beta",
+    id: "daily-notification-policy-canary",
+    workflowType: "runDailyNotificationCanary",
+    args: [{ condition: "attention" }],
+    timing: { kind: "interval", every: "24 hours" },
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "15 minutes",
+    initialPauseNote:
+      "Operator-triggered notification acceptance; keep recurring delivery paused",
+    memo: "Explicit beta notification rehearsal; never assesses production health",
+  },
+  {
     id: "llm-billed-cost-hourly",
     workflowType: "runLlmBilledCostReconciliation",
     args: [],

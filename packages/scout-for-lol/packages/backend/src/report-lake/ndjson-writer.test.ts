@@ -22,6 +22,46 @@ async function makeTempDir(): Promise<string> {
 }
 
 describe("NdjsonFileWriter", () => {
+  test("synchronous sinks yield to cancellation between bounded buffers", async () => {
+    const controller = new AbortController();
+    const chunks: string[] = [];
+    const writer = new NdjsonFileWriter(
+      "test.ndjson",
+      recordingSink(chunks),
+      controller.signal,
+    );
+    const cancel = setTimeout(
+      () => controller.abort(new Error("attempt canceled")),
+      0,
+    );
+    try {
+      await expect(
+        (async () => {
+          for (let id = 0; id < 100_000; id += 1) await writer.write({ id });
+        })(),
+      ).rejects.toThrow("attempt canceled");
+      expect(writer.rows).toBeLessThan(100_000);
+      expect(chunks.length).toBeGreaterThan(0);
+      await writer.abort();
+    } finally {
+      clearTimeout(cancel);
+    }
+  });
+
+  test("a canceled producer writes no more rows and discards its buffered tail", async () => {
+    const controller = new AbortController();
+    const chunks: string[] = [];
+    const writer = new NdjsonFileWriter(
+      "test.ndjson",
+      recordingSink(chunks),
+      controller.signal,
+    );
+    await writer.write({ id: 1 });
+    controller.abort(new Error("attempt canceled"));
+    await expect(writer.write({ id: 2 })).rejects.toThrow("attempt canceled");
+    await writer.abort();
+    expect(chunks).toEqual([]);
+  });
   test("buffers rows and writes newline-delimited JSON on close", async () => {
     const dir = await makeTempDir();
     const filePath = path.join(dir, "rows.ndjson");

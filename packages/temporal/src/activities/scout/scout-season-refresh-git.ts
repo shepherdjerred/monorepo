@@ -308,7 +308,7 @@ export async function closeSeasonRefreshPr(
  * adjudication onto an open proposal PR has that work silently destroyed by the
  * next run that lands on the same branch.
  *
- * The test is the remote tip's author AND committer, compared against the pair
+ * The test is every unmerged commit's author AND committer, compared against the pair
  * our own commit just used rather than hardcoded addresses, so `GIT_AUTHOR_EMAIL`
  * overriding the repo config cannot make the bot fail to recognise itself.
  *
@@ -318,18 +318,16 @@ export async function closeSeasonRefreshPr(
  * says "bot". Checking the author alone would wave that straight through, which
  * is the most likely way someone would actually tweak a proposal.
  *
- * Two alternatives do not work here, both for reasons worth recording:
- *   - Comparing the tree we are about to push against the remote tree flags
- *     every legitimate regeneration. A branch derived from workflow args
- *     (`scout-season-refresh`) keeps its name while its content changes, so
- *     "the tree differs" is the normal case, not the dangerous one.
- *   - Counting commits the branch has over main needs history the bot does not
- *     fetch: `scout-season-refresh` clones `--depth 1`.
- * Only the tip commit is guaranteed present, and its author answers the actual
- * question — did anyone other than us write what is on this branch.
+ * Comparing the generated tree against the remote tree flags every legitimate
+ * regeneration. A stable proposal branch keeps its name while its content changes.
+ * Complete main ancestry is fetched before inspecting an existing branch;
+ * historical blobs are filtered out. A later bot-authored tip cannot hide an
+ * earlier human edit in the proposal's unmerged history.
  */
 export async function assertRemoteBranchIsOurs(
-  input: Pick<OpenPrInput, "repoDir" | "branch">,
+  input: Pick<OpenPrInput, "repoDir" | "branch"> & {
+    expectedRemoteSha: string;
+  },
 ): Promise<void> {
   // "<author> / <committer>" — an amend changes only the second.
   const identityOf = async (rev: string): Promise<string> =>
@@ -337,14 +335,124 @@ export async function assertRemoteBranchIsOurs(
       cwd: input.repoDir,
     });
   const ours = await identityOf("HEAD");
-  const theirs = await identityOf(`refs/remotes/origin/${input.branch}`);
-  if (theirs !== ours) {
+  const remoteIdentities = await runCommand(
+    [
+      "git",
+      "log",
+      "--format=%ae / %ce",
+      `refs/remotes/origin/main..${input.expectedRemoteSha}`,
+    ],
+    { cwd: input.repoDir },
+  );
+  const theirs = remoteIdentities
+    .split("\n")
+    .find((identity) => identity.length > 0 && identity !== ours);
+  if (theirs !== undefined) {
     throw new Error(
-      `refusing to force-push ${input.branch}: its tip is authored/committed by ${theirs}, not by this bot (${ours}). ` +
+      `refusing to force-push ${input.branch}: its unmerged history contains a commit authored/committed by ${theirs}, not by this bot (${ours}). ` +
         "Someone has edited this proposal branch; force-pushing would destroy that work. " +
         "Merge or close the open PR, or delete the branch, and the next run will republish.",
     );
   }
+}
+
+/** Observe the exact remote commit, even when no PR was created before a crash. */
+export async function fetchGeneratedRemoteBranch(input: {
+  repoDir: string;
+  branch: string;
+  gitEnv: Record<string, string>;
+}): Promise<string | undefined> {
+  const options = {
+    cwd: input.repoDir,
+    env: input.gitEnv,
+    redactOutput: true as const,
+  };
+  const remote = await runCommand(
+    ["git", "ls-remote", "--heads", "origin", `refs/heads/${input.branch}`],
+    {
+      ...options,
+      operation: "branch-discovery",
+    },
+  );
+  if (remote.length === 0) return undefined;
+  const shallow = await runCommand(
+    ["git", "rev-parse", "--is-shallow-repository"],
+    { cwd: input.repoDir },
+  );
+  if (shallow === "true") {
+    await runCommand(
+      [
+        "git",
+        "fetch",
+        "--unshallow",
+        "--filter=blob:none",
+        "--no-tags",
+        "origin",
+        "+refs/heads/main:refs/remotes/origin/main",
+      ],
+      { ...options, operation: "main-ancestry-fetch" },
+    );
+  }
+  await runCommand(
+    [
+      "git",
+      "fetch",
+      "origin",
+      `+refs/heads/${input.branch}:refs/remotes/origin/${input.branch}`,
+    ],
+    {
+      ...options,
+      operation: "branch-fetch",
+    },
+  );
+  return await runCommand(
+    ["git", "rev-parse", `refs/remotes/origin/${input.branch}`],
+    { cwd: input.repoDir },
+  );
+}
+
+/** An empty expected SHA means create-only. A tracking-ref refresh cannot relax this lease. */
+export async function pushGeneratedBranch(input: {
+  repoDir: string;
+  branch: string;
+  gitEnv: Record<string, string>;
+  expectedRemoteSha: string | undefined;
+}): Promise<void> {
+  await runCommand(
+    [
+      "git",
+      "push",
+      `--force-with-lease=refs/heads/${input.branch}:${input.expectedRemoteSha ?? ""}`,
+      "origin",
+      `HEAD:refs/heads/${input.branch}`,
+    ],
+    {
+      cwd: input.repoDir,
+      env: input.gitEnv,
+      redactOutput: true,
+      operation: "branch-push",
+    },
+  );
+}
+
+/** Inspect the captured remote history, then publish under its exact lease. */
+export async function pushOwnedGeneratedCommit(input: {
+  repoDir: string;
+  branch: string;
+  gitEnv: Record<string, string>;
+  expectedRemoteSha: string | undefined;
+}): Promise<string> {
+  if (input.expectedRemoteSha !== undefined) {
+    await assertRemoteBranchIsOurs({
+      ...input,
+      expectedRemoteSha: input.expectedRemoteSha,
+    });
+  }
+  const commitHash = await runCommand(["git", "rev-parse", "HEAD"], {
+    cwd: input.repoDir,
+  });
+  await pushGeneratedBranch(input);
+  return commitHash;
 }
 
 export async function openSeasonRefreshPr(
@@ -367,31 +475,11 @@ export async function openSeasonRefreshPr(
   // from a shallow main-only clone. Fetch the existing branch first so
   // --force-with-lease has an actual remote-tracking value to protect against
   // overwriting a concurrent update.
-  const remoteBranch = await runCommand(
-    ["git", "ls-remote", "--heads", "origin", input.branch],
-    {
-      cwd: input.repoDir,
-      env: gitEnv,
-      redactOutput: true,
-      operation: "branch-discovery",
-    },
-  );
-  if (remoteBranch.length > 0) {
-    await runCommand(
-      [
-        "git",
-        "fetch",
-        "origin",
-        `refs/heads/${input.branch}:refs/remotes/origin/${input.branch}`,
-      ],
-      {
-        cwd: input.repoDir,
-        env: gitEnv,
-        redactOutput: true,
-        operation: "branch-fetch",
-      },
-    );
-  }
+  const expectedRemoteSha = await fetchGeneratedRemoteBranch({
+    repoDir: input.repoDir,
+    branch: input.branch,
+    gitEnv,
+  });
   await runCommand(["git", "checkout", "-B", input.branch], {
     cwd: input.repoDir,
   });
@@ -405,21 +493,12 @@ export async function openSeasonRefreshPr(
   await runCommand(["git", "commit", "-m", input.title], {
     cwd: input.repoDir,
   });
-  const commitHash = await runCommand(["git", "rev-parse", "HEAD"], {
-    cwd: input.repoDir,
+  const commitHash = await pushOwnedGeneratedCommit({
+    repoDir: input.repoDir,
+    branch: input.branch,
+    gitEnv,
+    expectedRemoteSha,
   });
-  if (remoteBranch.length > 0) {
-    await assertRemoteBranchIsOurs(input);
-  }
-  await runCommand(
-    ["git", "push", "--force-with-lease", "origin", input.branch],
-    {
-      cwd: input.repoDir,
-      env: gitEnv,
-      redactOutput: true,
-      operation: "branch-push",
-    },
-  );
   // Idempotency across activity retries: if a PR for this head branch already
   // exists (a prior attempt created it, then timed out or the worker died
   // before Temporal recorded completion), reuse it instead of creating a

@@ -10,6 +10,14 @@ The Scout for LoL backend service. One Bun image that runs:
 
 One image, but not necessarily one process: see [Runtime roles](#runtime-roles).
 
+Report-lake Activities pass Temporal cancellation into S3 reads, row writers,
+and DuckDB compaction. The rebuild also keeps its 30-minute deadline. Row
+buffers yield to the event loop so heartbeat and cancellation timers can run
+even when file sinks complete synchronously. Publication checks cancellation
+before replacing `CURRENT`; an abandoned rebuild closes its writers and
+removes its unpublished build. Timeline reads use four concurrent objects to
+bound retained documents while flattening.
+
 Application state (subscriptions, competitions, guilds) is PostgreSQL 18
 managed by Prisma (`@prisma/adapter-pg`). Report images are rendered by
 `@scout-for-lol/report`.

@@ -220,8 +220,10 @@ describe("ops snapshot workflow", () => {
       await environment.teardown();
     }
   }, 60_000);
+});
 
-  test("the digest workflow triggers its kind on the isolated ops queue", async () => {
+describe("ops digest workflow", () => {
+  test("preserves the delivery result on the isolated ops queue", async () => {
     const environment = await TestWorkflowEnvironment.createTimeSkipping();
     const kinds: string[] = [];
     try {
@@ -232,7 +234,12 @@ describe("ops snapshot workflow", () => {
           activities: {
             triggerOpsDigest: (kind: string) => {
               kinds.push(kind);
-              return Promise.resolve({ kind });
+              return Promise.resolve({
+                kind,
+                periodKey: "daily:2026-09-24",
+                status: "skipped",
+                duplicate: true,
+              });
             },
           },
           execute: () =>
@@ -242,7 +249,12 @@ describe("ops snapshot workflow", () => {
               workflowId: `test-ops-digest-${crypto.randomUUID()}`,
             }),
         }),
-      ).resolves.toEqual({ kind: "daily" });
+      ).resolves.toEqual({
+        kind: "daily",
+        periodKey: "daily:2026-09-24",
+        status: "skipped",
+        duplicate: true,
+      });
       expect(kinds).toEqual(["daily"]);
     } finally {
       await environment.teardown();
