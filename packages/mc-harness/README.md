@@ -207,7 +207,10 @@ WorldEdit, paste and console ops, each with explicit coordinates and a
 `source` of `manual` or `program:<sha>`), `build.ts`, `site/` and `renders/`.
 
 - **Capture** snapshots the site box (bridge `.schem`) and analyzes it
-  (heightmap, water/vegetation masks, `siteHash`).
+  (heightmap, water/vegetation masks, `siteHash`). It stages the site, manifest,
+  preview and capture journal boundary together, restoring the preceding capture
+  if publication fails. Installing the boundary first invalidates old expected
+  results even if the process exits during a recapture.
 - **Canvas** is a void sandbox with the site pasted at its real coordinates;
   **run** resets it to the site, replays every op, and freezes the result as
   `expected.schem` + `expected.json`. Publication stages the JSON and all frozen

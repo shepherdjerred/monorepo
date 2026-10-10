@@ -38,6 +38,7 @@ import {
   seededSandbox,
 } from "./helpers.ts";
 import { renderBuildCommand } from "./render/command.ts";
+import { stageJournal } from "./storage/evidence-publication.ts";
 
 export async function initBuild(
   dir: string,
@@ -94,16 +95,6 @@ export async function captureSite(
     );
   }
   const info = analyzeSite(grid, options.box.world, region.min);
-  await mkdir(workspace.file(BUILD_FILES.siteDir), { recursive: true });
-  await workspace.writeFrozen(
-    "site",
-    parts,
-    parts.length > 1 ? writeSchematic(grid, dataVersion) : undefined,
-  );
-  await Bun.write(
-    workspace.file(BUILD_FILES.siteInfo),
-    `${JSON.stringify(info)}\n`,
-  );
   // A new capture starts a new competition; retain old candidates for inspection.
   const {
     best: _best,
@@ -111,20 +102,44 @@ export async function captureSite(
     canvas: _canvas,
     ...capturedManifest
   } = manifest;
-  await workspace.writeManifest({
+  const captured = {
     ...capturedManifest,
     world: options.box.world,
     site: { min: region.min, max: region.max, siteHash: info.siteHash },
-  });
-  await appendLog(dir, {
-    kind: "capture",
-    siteHash: info.siteHash,
-    box: options.box,
+  };
+  await publishFiles(workspace, {
+    prefix: ".capture-",
+    stage: async (staged) => {
+      const pending = new BuildWorkspace(staged);
+      await pending.writeFrozen(
+        "site",
+        parts,
+        parts.length > 1 ? writeSchematic(grid, dataVersion) : undefined,
+      );
+      await Bun.write(
+        pending.file(BUILD_FILES.siteInfo),
+        `${JSON.stringify(info)}\n`,
+      );
+      await pending.writeManifest(captured);
+      await renderGrid(pending, grid, "site", `${manifest.name} site`);
+      await stageJournal(workspace, pending, {
+        kind: "capture",
+        siteHash: info.siteHash,
+        box: options.box,
+      });
+      // Install the boundary first: an interrupted capture must invalidate old expected results.
+      return [
+        BUILD_FILES.journal,
+        BUILD_FILES.siteDir,
+        BUILD_FILES.manifest,
+        "renders/site.png",
+      ];
+    },
   });
   return {
     siteHash: info.siteHash,
     size: region.size,
-    render: await renderGrid(workspace, grid, "site", `${manifest.name} site`),
+    render: workspace.file("renders/site.png"),
     surface: info.surface
       .slice(0, 5)
       .map((entry) => `${entry.state} ×${entry.count.toString()}`),

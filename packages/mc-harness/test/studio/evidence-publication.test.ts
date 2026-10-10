@@ -4,10 +4,14 @@ import path from "node:path";
 import os from "node:os";
 import { afterAll, describe, expect, it, vi } from "vitest";
 import { flatSiteBuild, clearFloorOp } from "#test/fixtures/flat-site.ts";
-import { renderBuild } from "#build/commands.ts";
+import { renderBuild, captureSite } from "#build/commands.ts";
+import { promoteBuild } from "#build/apply.ts";
 import { critiqueBuild } from "#build/studio/critique.ts";
 import { readJournal } from "#evals/grade/trajectory.ts";
-import { readLog } from "#build/build-log.ts";
+import { appendLog, readLog } from "#build/build-log.ts";
+import { BlockGrid } from "@shepherdjerred/mc-build/core/grid.ts";
+import { writeSchematic } from "@shepherdjerred/mc-build/core/schem.ts";
+import { loadRegistry } from "@shepherdjerred/mc-build/registry/registry.ts";
 import { programSnapshot } from "#build/sidecar.ts";
 import { rubricAxisIds } from "#build/judge.ts";
 import { DaemonClient } from "#build/daemon-client.ts";
@@ -34,7 +38,9 @@ vi.mock("node:fs/promises", async (importOriginal) => {
       const from = String(args[0]);
       if (
         failure.install !== "" &&
-        (from.includes(".render-") || from.includes(".critique-publish-")) &&
+        (from.includes(".capture-") ||
+          from.includes(".render-") ||
+          from.includes(".critique-publish-")) &&
         from.endsWith(failure.install)
       ) {
         failure.install = "";
@@ -81,12 +87,84 @@ async function evidence(dir: string) {
       entry.isFile() &&
       (relative.startsWith("renders/") ||
         relative.startsWith("judge/") ||
+        relative.startsWith("site/") ||
+        relative === BUILD_FILES.manifest ||
         relative === BUILD_FILES.journal)
     )
       result[relative] = await Bun.file(path.join(dir, relative)).bytes();
   }
   return result;
 }
+
+describe("capture evidence publication", () => {
+  it.each(["journal", "install"])(
+    "restores a same-box recapture on %s failure and invalidates old expected results on success",
+    async (mode) => {
+      const { workspace, env } = await fixture(`recapture-${mode}`);
+      const manifest = await workspace.manifest();
+      const box = workspace.siteBox(manifest);
+      const original = await workspace.siteGrid();
+      let current = original;
+      const registry = await loadRegistry();
+      const region = () => {
+        const blocks = Buffer.alloc(current.volume * 4);
+        current.data.forEach((state, index) =>
+          blocks.writeUInt32LE(state, index * 4),
+        );
+        return {
+          ...box,
+          size: current.size,
+          palette: current.palette,
+          blocks: blocks.toString("base64"),
+          blockEntities: [],
+        };
+      };
+      vi.spyOn(env.client, "snapshotParts").mockResolvedValue({
+        id: "capture",
+        parts: [{ id: "capture", box }],
+      });
+      vi.spyOn(env.client, "snapshotBytes").mockImplementation(() =>
+        Promise.resolve(writeSchematic(current, registry.dataVersion)),
+      );
+      vi.spyOn(env.client, "regionRead").mockImplementation(() =>
+        Promise.resolve(region()),
+      );
+      await captureSite(env, workspace.dir, { target: "sbx-000001", box });
+      await workspace.writeExpected(region());
+      await workspace.writeFrozen("expected", [
+        { at: box.min, bytes: writeSchematic(original, registry.dataVersion) },
+      ]);
+      await appendLog(workspace.dir, {
+        kind: "run",
+        target: "sbx-000001",
+        ops: 0,
+        program: null,
+      });
+      const before = await evidence(workspace.dir);
+      current = new BlockGrid(original.size, "minecraft:stone");
+      if (mode === "journal") failure.kind = "capture";
+      else failure.install = BUILD_FILES.manifest;
+      await expect(
+        captureSite(env, workspace.dir, { target: "sbx-000001", box }),
+      ).rejects.toThrow(/evidence (journal|install) failure/u);
+      expect(await evidence(workspace.dir)).toEqual(before);
+      const restored = await workspace.expected();
+      expect(restored.diff(original).count).toBe(0);
+      await captureSite(env, workspace.dir, { target: "sbx-000001", box });
+      await expect(workspace.expected()).rejects.toThrow(/current capture/u);
+      await expect(
+        renderBuild(env, workspace.dir, { source: "expected" }),
+      ).rejects.toThrow(/current capture/u);
+      await expect(
+        promoteBuild(env, workspace.dir, { target: "sbx-000001" }),
+      ).rejects.toThrow(/current capture/u);
+      const journal = await readLog(workspace.dir);
+      expect(journal.filter((entry) => entry.kind === "capture")).toHaveLength(
+        2,
+      );
+    },
+  );
+});
 
 describe("render evidence publication", () => {
   it.each(["plain", "regional"])(
