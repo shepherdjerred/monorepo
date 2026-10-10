@@ -88,10 +88,16 @@ install_livemap() {
   # settings.json, maps, and live data, and open tabs may still use old assets.
   # Installing index.html before BlueMap starts also prevents default frontend
   # extraction from replacing the branded viewer on first boot.
-  local source=$1 target=$2 data_owner=$3 data_group=$4 file destination directory
+  local source=$1 target=$2 data_owner=$3 data_group=$4 runtime_owner file destination directory
   [[ -f $source/index.html ]] || fail "LiveMap frontend is missing from the image"
-  # The stock start script only chowns recursively when /data itself has the
-  # wrong owner. Match its existing owner even when this entrypoint runs as root.
+  # fsGroup can leave the volume root owned by root even when Minecraft runs
+  # unprivileged. Install as the runtime user and retain the shared volume group.
+  runtime_owner=$(id -u)
+  # Root-started images hand off to itzg, which chowns only when /data has the
+  # wrong owner. Preserve an already-correct volume owner in that case.
+  if [[ $runtime_owner != 0 ]]; then
+    data_owner=$runtime_owner
+  fi
   install -d -m 2775 -o "$data_owner" -g "$data_group" "$(dirname "$target")" "$target"
   while IFS= read -r -d '' file; do
     destination=$target/${file#"$source/"}

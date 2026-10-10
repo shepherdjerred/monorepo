@@ -39,7 +39,6 @@ const DRY_RUN_SITES = [
   "wiki",
   "better-skill-capped",
   "glitter",
-  "ts-mc",
   "ts-mc-docs",
   "scout-design-system",
 ];

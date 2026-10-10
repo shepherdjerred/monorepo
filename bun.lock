@@ -2349,22 +2349,6 @@
         "vitest": "5.0.3",
       },
     },
-    "packages/ts-mc": {
-      "name": "@shepherdjerred/ts-mc",
-      "version": "1.0.0",
-      "dependencies": {
-        "@astrojs/check": "^0.9.8",
-        "@tailwindcss/vite": "^4.2.4",
-        "astro": "^7.3.3",
-        "tailwindcss": "^4.2.4",
-      },
-      "devDependencies": {
-        "@types/bun": "1.4.2",
-        "@typescript/native": "npm:typescript@7.0.2",
-        "typescript": "^6.0.3",
-        "vite": "^8.0.0",
-      },
-    },
     "packages/ts-mc-docs": {
       "name": "@shepherdjerred/ts-mc-docs",
       "version": "1.0.0",
@@ -4394,8 +4378,6 @@
     "@shepherdjerred/toolkit": ["@shepherdjerred/toolkit@workspace:packages/toolkit"],
 
     "@shepherdjerred/trmnl-dashboard": ["@shepherdjerred/trmnl-dashboard@workspace:packages/trmnl-dashboard"],
-
-    "@shepherdjerred/ts-mc": ["@shepherdjerred/ts-mc@workspace:packages/ts-mc"],
 
     "@shepherdjerred/ts-mc-docs": ["@shepherdjerred/ts-mc-docs@workspace:packages/ts-mc-docs"],
 

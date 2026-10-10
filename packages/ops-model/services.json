@@ -182,7 +182,7 @@
         "mc-router",
         "mc-sandbox"
       ],
-      "analyticsSites": ["ts-mc", "ts-mc-docs"]
+      "analyticsSites": ["ts-mc-docs"]
     },
     {
       "id": "storm-forum",

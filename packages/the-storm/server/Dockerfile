@@ -33,8 +33,10 @@ RUN --mount=type=cache,id=the-storm-gradle,target=/home/gradle/.gradle/caches \
 # Keep this digest equal to the version catalog's itzg/minecraft-server pin
 # (minecraft-tsmc.test.ts enforces it; renovate.json groups both into one PR).
 FROM itzg/minecraft-server:2026.9.1-java25@sha256:e8640538dac5d54c2838d57fa9641e735ad0cf2b71fb0e8a68da3b542a315749 AS fetch
-COPY server/plugins.json server/fetch.sh server/build-livemap.sh /build/
+COPY server/plugins.json server/fetch.sh /build/
 RUN bash /build/fetch.sh /build/plugins.json /out
+COPY server/build-livemap.sh /build/
+COPY server/livemap/ /build/livemap/
 # Use the verified jar's matching frontend without changing the plugin artifact.
 RUN bash /build/build-livemap.sh \
   "/out/plugins/$(jq -r '.plugins[] | select(.name == "BlueMap") | .file' /build/plugins.json)" \

@@ -31,12 +31,14 @@ validates those worlds and does not generate them during startup.
 
 Players see the map as **LiveMap**. `build-livemap.sh` extracts its frontend
 from the checksum-verified BlueMap jar and brands titles, metadata, application
-names, error text, and screenshot filenames. It preserves the plugin artifact,
-JavaScript API, and upstream credits. Changed scripts, manifests, and translations
-use content hashes in their URLs so cached default branding cannot leak through.
+names, error text, and screenshot filenames. The owned icon and social image in
+`server/livemap/` match the player docs. It preserves the plugin artifact,
+JavaScript API, and upstream credits. Changed assets and translations use
+content hashes in their URLs so cached default branding cannot leak through.
 The entrypoint copies only these static files into `bluemap/web` on each boot;
-it never prunes that webroot or replaces settings, maps, or live data. Archived
-world viewers are independently published and do not use this bundle.
+it never prunes that webroot or replaces settings, maps, or live data. Non-root
+installs use the runtime UID and volume group, including root-owned PVC mounts.
+Archived world viewers are independently published and do not use this bundle.
 
 `MCBridge.jar` is built from `plugin/bridge` alongside TheStorm.jar. It serves
 the mc-harness agent API on port 25580, which has no Service or ingress and is

@@ -1116,11 +1116,6 @@
       "package": "stocks-sjer-red",
       "directory": "packages/stocks-sjer-red",
       "reason": "Static Astro site; no test files exist."
-    },
-    {
-      "package": "@shepherdjerred/ts-mc",
-      "directory": "packages/ts-mc",
-      "reason": "Static Astro site; no test files exist."
     }
   ],
   "separateTests": [
