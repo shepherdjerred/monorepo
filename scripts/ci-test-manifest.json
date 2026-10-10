@@ -484,7 +484,8 @@
             "scripts/dev/",
             "scripts/discord-smoke/",
             "scripts/puuid-corpus/",
-            "scripts/puuid-migration/"
+            "scripts/puuid-migration/",
+            "src/dev-web.test.ts"
           ]
         }
       ]
