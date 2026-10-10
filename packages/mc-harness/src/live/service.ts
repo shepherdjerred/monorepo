@@ -80,6 +80,7 @@ export type LiveServiceOptions = {
 };
 
 const LOG_EVENT_LIMIT = 2000;
+const LOG_EVENT_PAGE_LIMIT = 500;
 
 export class LiveService {
   private forward: PortForward | null = null;
@@ -200,7 +201,20 @@ export class LiveService {
         // The bridge captures server log lines; the scoped ServiceAccount
         // deliberately has no pods/log on tsmc.
         tail: async (lines) => {
-          const { events } = await bridge.events(0, LOG_EVENT_LIMIT);
+          const events = [];
+          let since = 0;
+          for (
+            let page = 0;
+            page < LOG_EVENT_LIMIT / LOG_EVENT_PAGE_LIMIT;
+            page++
+          ) {
+            const response = await bridge.events(since, LOG_EVENT_PAGE_LIMIT);
+            events.push(...response.events);
+            if (response.events.length < LOG_EVENT_PAGE_LIMIT) {
+              break;
+            }
+            since = response.cursor;
+          }
           return events
             .filter((event) => event.type === "log")
             .slice(-lines)

@@ -20,9 +20,46 @@ const sts = await statefulSetFixture();
 const pod = await liveFixture("pod.json");
 const backups = await liveFixture("backups.json");
 
+function logPage(start: number, count = 500, truncated = false) {
+  return {
+    cursor: start + count - 1,
+    truncated,
+    events: Array.from({ length: count }, (_, index) => ({
+      seq: start + index,
+      ts: "t",
+      type: "log" as const,
+      text: `line ${(start + index).toString()}`,
+    })),
+  };
+}
+
 /** A bridge that records calls; the live service builds it for the forwarded port. */
 class FakeLiveBridge extends BridgeClient {
   calls: string[] = [];
+  eventCalls: { since: number; limit: number }[] = [];
+  eventFailure: Error | undefined;
+  eventFailurePage = 1;
+  eventPages: {
+    cursor: number;
+    truncated: boolean;
+    events: {
+      seq: number;
+      ts: string;
+      type: "log" | "chat";
+      text: string;
+      player?: string;
+    }[];
+  }[] = [
+    {
+      cursor: 3,
+      truncated: false,
+      events: [
+        { seq: 1, ts: "t", type: "log", text: "Done (10s)!" },
+        { seq: 2, ts: "t", type: "chat", player: "Steve", text: "hi" },
+        { seq: 3, ts: "t", type: "log", text: "Steve joined" },
+      ],
+    },
+  ];
   humans: Player[] = [];
   snapshots: { id: string; box: Box }[] = [];
   constructor() {
@@ -72,16 +109,21 @@ class FakeLiveBridge extends BridgeClient {
     this.calls.push(`restore:${id}`);
     return Promise.resolve({ changed: 25 });
   }
-  override events() {
-    return Promise.resolve({
-      cursor: 3,
-      truncated: false,
-      events: [
-        { seq: 1, ts: "t", type: "log" as const, text: "Done (10s)!" },
-        { seq: 2, ts: "t", type: "chat" as const, player: "Steve", text: "hi" },
-        { seq: 3, ts: "t", type: "log" as const, text: "Steve joined" },
-      ],
-    });
+  override events(since: number, limit: number) {
+    this.eventCalls.push({ since, limit });
+    if (
+      this.eventFailure !== undefined &&
+      this.eventCalls.length === this.eventFailurePage
+    ) {
+      return Promise.reject(this.eventFailure);
+    }
+    return Promise.resolve(
+      this.eventPages[this.eventCalls.length - 1] ?? {
+        cursor: since,
+        truncated: false,
+        events: [],
+      },
+    );
   }
 }
 
@@ -234,9 +276,87 @@ describe("live target reads", () => {
   });
 
   it("tails logs from the bridge's captured log events", async () => {
-    const { ctx } = await setup();
+    const { ctx, bridge } = await setup();
     const { json } = await get(ctx, "/targets/live/logs?lines=5");
     expect(json).toEqual({ lines: ["Done (10s)!", "Steve joined"] });
+    expect(bridge.eventCalls).toEqual([{ since: 0, limit: 500 }]);
+  });
+
+  it("paginates a full event window with bounded requests and preserves order", async () => {
+    const { ctx, bridge } = await setup();
+    bridge.eventPages = [
+      logPage(1),
+      logPage(501),
+      logPage(1001),
+      logPage(1501),
+    ];
+
+    const { json } = await get(ctx, "/targets/live/logs?lines=2");
+    expect(json).toEqual({ lines: ["line 1999", "line 2000"] });
+    expect(bridge.eventCalls).toEqual([
+      { since: 0, limit: 500 },
+      { since: 500, limit: 500 },
+      { since: 1000, limit: 500 },
+      { since: 1500, limit: 500 },
+    ]);
+  });
+
+  it("stops pagination at an empty page", async () => {
+    const { ctx, bridge } = await setup();
+    bridge.eventPages = [
+      logPage(1),
+      { cursor: 500, truncated: false, events: [] },
+    ];
+
+    const { json } = await get(ctx, "/targets/live/logs?lines=1");
+    expect(json).toEqual({ lines: ["line 500"] });
+    expect(bridge.eventCalls).toEqual([
+      { since: 0, limit: 500 },
+      { since: 500, limit: 500 },
+    ]);
+  });
+
+  it("uses the bridge cursor when a full page is truncated", async () => {
+    const { ctx, bridge } = await setup();
+    bridge.eventPages = [
+      logPage(101, 500, true),
+      {
+        cursor: 601,
+        truncated: false,
+        events: [{ seq: 601, ts: "t", type: "log" as const, text: "line 601" }],
+      },
+    ];
+
+    const { json } = await get(ctx, "/targets/live/logs?lines=1");
+    expect(json).toEqual({ lines: ["line 601"] });
+    expect(bridge.eventCalls).toEqual([
+      { since: 0, limit: 500 },
+      { since: 600, limit: 500 },
+    ]);
+  });
+
+  it("propagates a page failure instead of returning a partial tail", async () => {
+    const { ctx, bridge } = await setup();
+    bridge.eventFailure = new Error("event page failed");
+
+    await expect(
+      ctx.target("live").then((target) => target.logs.tail(1)),
+    ).rejects.toThrow("event page failed");
+  });
+
+  it("rejects a later page failure after fetching a full page", async () => {
+    const { ctx, bridge } = await setup();
+    bridge.eventPages = [logPage(1)];
+    bridge.eventFailure = new Error("second event page failed");
+    bridge.eventFailurePage = 2;
+
+    await expect(
+      ctx.target("live").then((target) => target.logs.tail(1)),
+    ).rejects.toThrow("second event page failed");
+    expect(bridge.eventCalls).toEqual([
+      { since: 0, limit: 500 },
+      { since: 500, limit: 500 },
+    ]);
   });
 
   it("refuses everything while asleep or held by the mining reset", async () => {
