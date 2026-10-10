@@ -11,6 +11,7 @@ import {
   SCOUT_WORKFLOW_NAMES,
   ScoutQueueCanaryProbeResultSchema,
   ScoutStageSchema,
+  ScoutBackgroundJobInputSchema,
   scoutQueueCanaryWorkflowId,
   scoutTaskQueues,
 } from "@scout-for-lol/temporal";
@@ -96,7 +97,13 @@ try {
     workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
     workflowIdConflictPolicy: WorkflowIdConflictPolicy.USE_EXISTING,
     taskQueue: scoutTaskQueues(options.stage).workflow,
-    args: [{ stage: options.stage, canaryId }],
+    args: [
+      {
+        stage: options.stage,
+        canaryId,
+        backgroundJobKinds: ScoutBackgroundJobInputSchema.shape.kind.options,
+      },
+    ],
     ...(deploymentName === undefined || buildId === undefined
       ? {}
       : {
@@ -118,6 +125,23 @@ try {
     .array(ScoutQueueCanaryProbeResultSchema)
     .length(4)
     .parse(rawResults);
+  const capabilities = z
+    .array(z.object({ backgroundJobKinds: z.array(z.string()) }))
+    .length(4)
+    .parse(rawResults);
+  const expectedKinds = [
+    ...ScoutBackgroundJobInputSchema.shape.kind.options,
+  ].sort();
+  for (const result of capabilities) {
+    if (
+      JSON.stringify([...result.backgroundJobKinds].sort()) !==
+      JSON.stringify(expectedKinds)
+    ) {
+      throw new Error(
+        "Candidate Workflow does not support every declared Scout background job kind",
+      );
+    }
+  }
   console.log(
     JSON.stringify(
       {

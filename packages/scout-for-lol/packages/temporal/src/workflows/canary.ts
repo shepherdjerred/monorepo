@@ -1,5 +1,6 @@
 import {
   ScoutQueueCanaryInputSchema,
+  ScoutBackgroundJobInputSchema,
   ScoutQueueCanaryProbeResultSchema,
   type ScoutQueueCanaryInput,
   type ScoutQueueCanaryProbeResult,
@@ -17,6 +18,9 @@ export async function scoutQueueCanaryWorkflow(
   rawInput: ScoutQueueCanaryInput,
 ): Promise<ScoutQueueCanaryProbeResult[]> {
   const input = ScoutQueueCanaryInputSchema.parse(rawInput);
+  for (const kind of input.backgroundJobKinds ?? []) {
+    ScoutBackgroundJobInputSchema.parse({ stage: input.stage, kind });
+  }
   setWorkflowPhase("**Phase:** probing every Scout Activity queue");
   const expectedQueues = scoutTaskQueues(input.stage);
   const results = await Promise.all([
@@ -45,5 +49,11 @@ export async function scoutQueueCanaryWorkflow(
       );
     }
   }
-  return results;
+  return results.map((result) => ({
+    ...result,
+    backgroundJobKinds:
+      input.backgroundJobKinds === undefined
+        ? undefined
+        : ScoutBackgroundJobInputSchema.shape.kind.options,
+  }));
 }

@@ -196,6 +196,24 @@ groups:
           description: "{{ "{{" }} $value {{ "}}" }} error/panic/fatal log lines in 10m."
 `;
 
+// Version compatibility is independent of unwind capacity and session health.
+const alloyAlertRules = `
+groups:
+  - name: alloy-profiling-coverage
+    rules:
+      - alert: AlloyUnsupportedGoVersion
+        expr: |
+          sum by (namespace, pod) (
+            count_over_time({namespace="alloy", container="alloy"} |= "unsupported Go version" [1h])
+          ) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Alloy cannot profile an unsupported Go executable"
+          description: "The embedded profiler rejected a Go version. Coverage is partial even when sessions succeed. An unwind-table restart does not repair version support; verify a supported upstream profiler release."
+`;
+
 export function createLokiApp(chart: Chart) {
   createIngress(chart, "loki-ingress", {
     namespace: "loki",
@@ -218,6 +236,7 @@ export function createLokiApp(chart: Chart) {
       "kubernetes-events-rules.yaml": kubernetesEventsAlertRules,
       "tasknotes-rules.yaml": tasknotesAlertRules,
       "golink-rules.yaml": golinkAlertRules,
+      "alloy-rules.yaml": alloyAlertRules,
     },
   });
 

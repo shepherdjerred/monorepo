@@ -10,6 +10,7 @@ import {
   readRequiredHandoff,
 } from "../../../scripts/lib/ci/ci-handoff.ts";
 import { ensureAncestor } from "../selectors/ensure-ancestor.ts";
+import { UNPUBLISHED_IMAGE_DIGEST } from "../../../scripts/lib/image-pin-catalog.ts";
 import {
   parsePinCandidatesState,
   parsePinCandidates,
@@ -77,7 +78,12 @@ export function retainPublishedImagePins(
         entry.artifactType !== "image"
       )
         return entry;
-      const currentBuild = releaseNumber(entry.value);
+      // The declared bootstrap marker may be replaced by a verified first
+      // publication. Published values themselves still require a real release.
+      const currentBuild =
+        entry.value === `0.0.0@${UNPUBLISHED_IMAGE_DIGEST}`
+          ? 0n
+          : releaseNumber(entry.value);
       const publishedBuild = releaseNumber(value);
       const withdrawn = withdrawnCandidates[entry.name];
       if (withdrawn !== undefined && publishedBuild <= BigInt(withdrawn)) {

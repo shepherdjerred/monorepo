@@ -358,11 +358,27 @@ export const veleroOrphanR2PrefixesTotal = new Gauge({
   name: "velero_orphan_r2_prefixes_total",
   help: "Orphan R2 backup prefixes under zfspv-incr/backups/ with no live Backup CR or metadata",
   registers: [register],
+  labelNames: ["bucket"] as const,
 });
 
 export const veleroOrphanR2BytesTotal = new Gauge({
   name: "velero_orphan_r2_bytes_total",
   help: "Total bytes in orphan R2 backup prefixes under zfspv-incr/backups/",
+  registers: [register],
+  labelNames: ["bucket"] as const,
+});
+
+export const veleroR2AuditObservationTimestampSeconds = new Gauge({
+  name: "velero_r2_audit_observation_timestamp_seconds",
+  help: "Original observation time of the durably published R2 audit; startup restoration does not refresh it",
+  labelNames: ["bucket"] as const,
+  registers: [register],
+});
+
+export const veleroR2IncompleteChainRoots = new Gauge({
+  name: "velero_r2_incomplete_chain_roots",
+  help: "Retained volume recovery points missing a full base or intermediate stream",
+  labelNames: ["bucket"] as const,
   registers: [register],
 });
 

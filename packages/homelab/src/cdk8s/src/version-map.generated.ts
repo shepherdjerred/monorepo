@@ -131,6 +131,7 @@ export const VersionMapSchema = z
     "bugsink/bugsink": z.string(),
     "arizephoenix/phoenix": z.string(),
     "relay-server": z.string(),
+    "shepherdjerred/velero-plugin": z.string(),
     "shepherdjerred/caddy-s3proxy": z.string(),
     "shepherdjerred/the-storm-server": z.string(),
     "shepherdjerred/the-storm-server/prod": z.string(),

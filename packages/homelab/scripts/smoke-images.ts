@@ -340,6 +340,7 @@ async function main(): Promise<void> {
     { label: "caddy-s3proxy", fn: smokeCaddyS3Proxy },
     { label: "obsidian-headless", fn: smokeObsidianHeadless },
     { label: "redlib", fn: smokeRedlib },
+    { label: "velero-plugin", fn: smokeVeleroPlugin },
   ];
 
   const results: SmokeResult[] = [];
@@ -369,3 +370,24 @@ async function main(): Promise<void> {
 }
 
 await main();
+
+async function smokeVeleroPlugin(): Promise<SmokeResult> {
+  const image = "velero-plugin:dev";
+  // Match Kubernetes' root-owned, fsGroup-writable EmptyDir without retaining storage.
+  const result = await run([
+    "docker",
+    "run",
+    "--rm",
+    "--tmpfs",
+    "/target:uid=0,gid=65532,mode=2775",
+    image,
+  ]);
+  return {
+    image,
+    ok: result.exitCode === 0,
+    detail:
+      result.exitCode === 0
+        ? "plugin installed as non-root into the fsGroup-writable /target volume"
+        : result.stderr,
+  };
+}

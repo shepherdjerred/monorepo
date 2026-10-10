@@ -204,6 +204,7 @@ export type ScoutQueueClass = z.infer<typeof ScoutQueueClassSchema>;
 export const ScoutQueueCanaryInputSchema = z.object({
   stage: ScoutStageSchema,
   canaryId: OpaqueIdentifierSchema,
+  backgroundJobKinds: z.array(z.string()).optional(),
 });
 export type ScoutQueueCanaryInput = z.infer<typeof ScoutQueueCanaryInputSchema>;
 

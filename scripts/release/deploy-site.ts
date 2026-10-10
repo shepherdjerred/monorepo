@@ -418,6 +418,7 @@ async function main(): Promise<void> {
       `${site.distDir}/index.html is missing — refusing to sync (--delete would remove the site's root files from s3://${site.bucket}/)`,
     );
   }
+  await assertRequiredErrorPage(site.name, distDir, dryRun);
 
   console.log(`+++ sync: ${site.distDir} -> s3://${site.bucket}/`);
   await s3SyncStaticSite({
@@ -435,6 +436,23 @@ async function main(): Promise<void> {
   });
 
   console.log(`--- done: ${site.name}`);
+}
+
+async function assertRequiredErrorPage(
+  siteName: string,
+  distDir: string,
+  dryRun: boolean,
+): Promise<void> {
+  if (
+    dryRun ||
+    !["better-skill-capped", "cooklang-rich-preview"].includes(siteName)
+  )
+    return;
+  if (!(await Bun.file(`${distDir}/404.html`).exists())) {
+    throw new Error(
+      `${siteName}: required 404.html is missing; refusing to publish an incomplete site`,
+    );
+  }
 }
 
 await main();

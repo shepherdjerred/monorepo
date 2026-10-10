@@ -9,6 +9,8 @@ import {
   type R2OrphanManifest,
 } from "./r2-orphan-cleanup-core.ts";
 import { listR2Objects, r2Configuration } from "./r2-prefix-inventory.ts";
+import { inspectR2ZfsChains } from "./r2-zfs-chains.ts";
+import { verifyConditionalDelete } from "./r2/conditional-delete.ts";
 
 const KubectlBackupListSchema = z.object({
   items: z.array(z.object({ metadata: z.object({ name: z.string().min(1) }) })),
@@ -162,6 +164,12 @@ async function observe(
     listR2Objects(R2_BACKUP_METADATA_BACKUPS_PREFIX),
     listR2Objects(R2_ZFS_PREFIX),
   ]);
+  const metadataNames = metadataBackupNames(metadataObjects);
+  const chainProtection = await inspectR2ZfsChains(zfsObjects, [
+    ...liveNames,
+    ...metadataNames,
+    ...heldBackupNames,
+  ]);
   return {
     manifest: buildR2OrphanManifest({
       observedAt,
@@ -171,7 +179,8 @@ async function observe(
       },
       zfsObjects,
       liveBackupNames: liveNames,
-      metadataBackupNames: metadataBackupNames(metadataObjects),
+      metadataBackupNames: metadataNames,
+      chainProtection,
       heldBackupNames,
       onlyBackupName,
     }),
@@ -197,26 +206,106 @@ async function readConfirmation(): Promise<string> {
   }
 }
 
-async function removePrefix(prefix: string): Promise<void> {
+async function removePrefix(
+  candidate: R2OrphanManifest["candidates"][number],
+): Promise<void> {
   const config = r2Configuration();
-  await run(
-    [
-      "aws",
-      "s3",
-      "rm",
-      `s3://${config.bucket}/${prefix}`,
-      "--recursive",
-      "--only-show-errors",
+  const env = {
+    AWS_ACCESS_KEY_ID: config.accessKeyId,
+    AWS_SECRET_ACCESS_KEY: config.secretAccessKey,
+  };
+  for (const object of candidate.objectInventory) {
+    if (object.etag === null || !object.key.startsWith(candidate.prefix))
+      throw new Error("Cleanup object lacks reviewed identity");
+    const target = [
+      "--bucket",
+      config.bucket,
+      "--key",
+      object.key,
       "--endpoint-url",
       config.endpoint,
       "--region",
       "auto",
-    ],
-    {
-      AWS_ACCESS_KEY_ID: config.accessKeyId,
-      AWS_SECRET_ACCESS_KEY: config.secretAccessKey,
+    ];
+    const head = z
+      .object({ ETag: z.string(), ContentLength: z.number() })
+      .parse(
+        JSON.parse(
+          await run(
+            [
+              "aws",
+              "s3api",
+              "head-object",
+              ...target,
+              "--if-match",
+              object.etag,
+            ],
+            env,
+          ),
+        ),
+      );
+    if (head.ETag !== object.etag || head.ContentLength !== object.size)
+      throw new Error(`Object changed before deletion: ${object.key}`);
+    // Exact reviewed keys only. Never let recursive prefix deletion consume a
+    // newly uploaded object that was absent from the approved inventory.
+    await run(
+      ["aws", "s3api", "delete-object", ...target, "--if-match", object.etag],
+      env,
+    );
+  }
+}
+
+async function verifyR2DeletePrecondition(): Promise<void> {
+  const config = r2Configuration();
+  const env = {
+    AWS_ACCESS_KEY_ID: config.accessKeyId,
+    AWS_SECRET_ACCESS_KEY: config.secretAccessKey,
+  };
+  const target = [
+    "--bucket",
+    config.bucket,
+    "--endpoint-url",
+    config.endpoint,
+    "--region",
+    "auto",
+  ];
+  await verifyConditionalDelete({
+    create: async (key) =>
+      z
+        .object({ ETag: z.string().min(1) })
+        .parse(
+          JSON.parse(
+            await run(
+              [
+                "aws",
+                "s3api",
+                "put-object",
+                ...target,
+                "--key",
+                key,
+                "--body",
+                "/dev/null",
+              ],
+              env,
+            ),
+          ),
+        ).ETag,
+    remove: async (key, etag) => {
+      await run(
+        [
+          "aws",
+          "s3api",
+          "delete-object",
+          ...target,
+          "--key",
+          key,
+          "--if-match",
+          etag,
+        ],
+        env,
+      );
     },
-  );
+  });
 }
 
 async function inspect(options: Options): Promise<void> {
@@ -272,6 +361,7 @@ async function applyCleanup(options: Options): Promise<void> {
     }
   }
 
+  await verifyR2DeletePrecondition();
   let expected = approved;
   for (const candidate of approved.candidates) {
     const latest = await observe(
@@ -285,7 +375,7 @@ async function applyCleanup(options: Options): Promise<void> {
         `Backup ${candidate.backupName} became protected during cleanup`,
       );
     }
-    await removePrefix(candidate.prefix);
+    await removePrefix(candidate);
     expected = {
       ...expected,
       candidates: expected.candidates.filter(

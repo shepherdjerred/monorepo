@@ -10,6 +10,7 @@ import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import {
   createTemporalWorkerAuditRbac,
+  createVeleroR2AuditState,
   createTemporalWorkerTasknotesCanaryRbac,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/audit-rbac.ts";
 import { createTemporalAgentWorker } from "./agent-worker.ts";
@@ -200,6 +201,7 @@ export function createTemporalWorkerDeployment(
   );
 
   createTemporalWorkerIngressReaderRbac(chart, [infraServiceAccount]);
+  createVeleroR2AuditState(chart, infraServiceAccount);
   createTemporalWorkerMaintenanceRbac(chart, [infraServiceAccount]);
   createTemporalMiningResetRbac(chart, infraServiceAccount);
 

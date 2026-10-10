@@ -79,6 +79,20 @@ test("rebuilds the bundled review policy when its source or library changes", as
   }
 });
 
+test("selects infra for an unpublished maintained plugin", async () => {
+  const catalog = PUBLISHED_VERSION_CATALOG.replace(
+    /("name": "shepherdjerred\/velero-plugin",[\s\S]*?"value": "[^"]*@)sha256:[0-9a-f]{64}/,
+    `$1${UNPUBLISHED_IMAGE_DIGEST}`,
+  );
+  const result = await selectImageTargetsWithReasons(["README.md"], REPO_ROOT, {
+    versionCatalogSource: catalog,
+  });
+  expect(result.targets).toEqual(["infra"]);
+  expect(result.report.targets["infra"]).toContain(
+    "unpublished image pin shepherdjerred/velero-plugin requires its first release",
+  );
+});
+
 describe("selectImageTargets", () => {
   test("selects a standalone application image", async () => {
     expect(await select(["packages/tasknotes-server/src/index.ts"])).toEqual([

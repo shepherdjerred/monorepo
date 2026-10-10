@@ -1,4 +1,12 @@
 import { z } from "zod";
+import {
+  VeleroMetadataSchema,
+  VeleroRestoreSchema,
+  ZfsVolumeSchema,
+  type VeleroRestoreStatus,
+  type DeletingZfsVolume,
+  toVeleroRestoreStatus,
+} from "./kubernetes-storage.ts";
 import { BACKUP_MONITORING_ANNOTATIONS } from "@shepherdjerred/ops-model/backup-policy.ts";
 import {
   bearer,
@@ -249,12 +257,7 @@ function toArgoApplication(
 const PAGE_SIZE = 500;
 
 const VeleroScheduleSchema = z.object({
-  metadata: z.object({
-    name: z.string(),
-    namespace: z.string(),
-    creationTimestamp: z.iso.datetime({ offset: true }),
-    annotations: z.record(z.string(), z.string()).default({}),
-  }),
+  metadata: VeleroMetadataSchema,
   spec: z.object({
     schedule: z.string().min(1),
     paused: z.boolean().default(false),
@@ -463,5 +466,36 @@ export class KubernetesClient {
       completedAt: status?.completionTimestamp ?? undefined,
       phase: status?.phase,
     }));
+  }
+
+  async listVeleroRestores(
+    namespace = "velero",
+  ): Promise<VeleroRestoreStatus[]> {
+    const restores = await this.#list(
+      `/apis/velero.io/v1/namespaces/${encodeURIComponent(namespace)}/restores`,
+      VeleroRestoreSchema,
+    );
+    return restores.map((restore) => toVeleroRestoreStatus(restore));
+  }
+
+  async listDeletingZfsVolumes(
+    namespace = "openebs",
+  ): Promise<DeletingZfsVolume[]> {
+    const volumes = await this.#list(
+      `/apis/zfs.openebs.io/v1/namespaces/${encodeURIComponent(namespace)}/zfsvolumes`,
+      ZfsVolumeSchema,
+    );
+    return volumes.flatMap(({ metadata, spec }) =>
+      metadata.deletionTimestamp === undefined
+        ? []
+        : [
+            {
+              name: metadata.name,
+              node: spec.ownerNodeID,
+              dataset: `${spec.poolName}/${metadata.name}`,
+              deletedAt: metadata.deletionTimestamp,
+            },
+          ],
+    );
   }
 }

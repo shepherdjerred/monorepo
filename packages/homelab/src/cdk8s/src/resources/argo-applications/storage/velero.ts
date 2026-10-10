@@ -1,5 +1,5 @@
 import type { Chart } from "cdk8s";
-import { Size } from "cdk8s";
+import { ApiObject, Size } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { Schedule } from "@shepherdjerred/homelab/cdk8s/generated/imports/velero.io.ts";
@@ -10,6 +10,25 @@ import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepasswor
 import { VELERO_SCHEDULES } from "@shepherdjerred/homelab/cdk8s/src/resources/velero/velero-schedules.ts";
 import { backupMonitoringAnnotations } from "@shepherdjerred/ops-model/backup-policy.ts";
 export function createVeleroApp(chart: Chart) {
+  for (const namespace of [
+    "ops-restore-rehearsal",
+    "ops-restore-rehearsal-incremental",
+  ]) {
+    new Namespace(chart, `${namespace}-namespace`, {
+      metadata: { name: namespace },
+    });
+    new ApiObject(chart, `${namespace}-isolation`, {
+      apiVersion: "networking.k8s.io/v1",
+      kind: "NetworkPolicy",
+      metadata: { name: `${namespace}-isolate`, namespace },
+      spec: {
+        podSelector: {},
+        policyTypes: ["Ingress", "Egress"],
+        ingress: [],
+        egress: [],
+      },
+    });
+  }
   new Namespace(chart, `velero-namespace`, {
     metadata: {
       name: `velero`,
@@ -36,7 +55,29 @@ export function createVeleroApp(chart: Chart) {
 
   // Create all backup schedules from configuration
   for (const scheduleConfig of VELERO_SCHEDULES) {
+    // Preserve historical schedule identities while stopping new broken chains.
     new Schedule(chart, scheduleConfig.id, {
+      metadata: {
+        name: scheduleConfig.legacyName,
+        namespace: "velero",
+        annotations: {
+          "argocd.argoproj.io/sync-options": "Prune=false",
+          ...backupMonitoringAnnotations(scheduleConfig.monitoring),
+        },
+      },
+      spec: {
+        paused: true,
+        schedule: scheduleConfig.cronSchedule,
+        template: {
+          snapshotVolumes: true,
+          labelSelector: { matchLabels: { "velero.io/backup": "enabled" } },
+          storageLocation: "default",
+          ttl: scheduleConfig.ttl,
+          volumeSnapshotLocations: ["zfspv-incr"],
+        },
+      },
+    });
+    new Schedule(chart, `${scheduleConfig.id}-v2`, {
       metadata: {
         name: scheduleConfig.name,
         namespace: "velero",
@@ -59,6 +100,7 @@ export function createVeleroApp(chart: Chart) {
             },
           },
           storageLocation: "default",
+          volumeSnapshotLocations: [scheduleConfig.snapshotLocation],
           ttl: scheduleConfig.ttl,
           metadata: {
             labels: {
@@ -126,6 +168,24 @@ export function createVeleroApp(chart: Chart) {
             multiPartChunkSize: Size.mebibytes(20).asString(),
           },
         },
+        ...VELERO_SCHEDULES.map((schedule) => ({
+          name: schedule.snapshotLocation,
+          provider: "openebs.io/zfspv-blockstore",
+          config: {
+            bucket: "homelab",
+            incrBackupCount: schedule.incrementalCount.toString(),
+            fullBackupPrefix: "zfspv-full",
+            backupPathPrefix: "zfspv-incr",
+            namespace: "openebs",
+            provider: "aws",
+            region: "auto",
+            s3Url:
+              "https://48948ed6cd40d73e34d27f0cc10e595f.r2.cloudflarestorage.com",
+            s3ForcePathStyle: "true",
+            prefix: "torvalds/zfs/",
+            multiPartChunkSize: Size.mebibytes(20).asString(),
+          },
+        })),
       ],
     },
     credentials: {
@@ -139,6 +199,7 @@ export function createVeleroApp(chart: Chart) {
           versions["bitnamilegacy/kubectl"],
       },
     },
+    podSecurityContext: { fsGroup: 65_532 },
     initContainers: [
       {
         name: "velero-plugin-for-aws",
@@ -152,7 +213,14 @@ export function createVeleroApp(chart: Chart) {
       },
       {
         name: "velero-plugin-openebs",
-        image: `openebs/velero-plugin:${versions["openebs/velero-plugin"]}`,
+        image: `ghcr.io/shepherdjerred/velero-plugin:${versions["shepherdjerred/velero-plugin"]}`,
+        securityContext: {
+          runAsNonRoot: true,
+          runAsUser: 65_532,
+          runAsGroup: 65_532,
+          allowPrivilegeEscalation: false,
+          capabilities: { drop: ["ALL"] },
+        },
         volumeMounts: [
           {
             mountPath: "/target",

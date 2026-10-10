@@ -12,6 +12,7 @@ import {
 import type { LiveCatalogExecutor } from "./live-version-catalog.ts";
 import type { BuildxCommandResult } from "./bake-retry.ts";
 import { TransientError } from "../../../scripts/lib/transient-error.ts";
+import { UNPUBLISHED_IMAGE_DIGEST } from "../../../scripts/lib/image-pin-catalog.ts";
 
 function commandResult(exitCode = 0, stdout = ""): BuildxCommandResult {
   return { exitCode, stdout, stderr: "" };
@@ -124,6 +125,26 @@ function candidates(
 function entries(source: string): readonly VersionCatalogEntry[] {
   return parseVersionCatalogText(source).entries;
 }
+
+test("retains a new image's first publication before commit-back", () => {
+  const name = "shepherdjerred/velero-plugin";
+  const bootstrap = catalog([[name, `0.0.0@${UNPUBLISHED_IMAGE_DIGEST}`]]);
+  const published = retainPublishedImagePins(
+    bootstrap,
+    bootstrap,
+    candidates(200, [name]),
+  );
+  const retained = retainPublishedImagePins(
+    bootstrap,
+    published,
+    candidates(201),
+  );
+  expect(entries(published)[0]?.value).toBe(pin(200, "b"));
+  expect(entries(retained)[0]?.value).toBe(pin(200, "b"));
+  expect(() =>
+    retainPublishedImagePins(bootstrap, bootstrap, candidates(200)),
+  ).toThrow("Invalid internal image release pin");
+});
 
 test("retains published pins across partial and consecutive no-target releases", () => {
   const stable = "worker/workflows/stable";
