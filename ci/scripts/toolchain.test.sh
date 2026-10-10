@@ -165,7 +165,9 @@ chmod +x "$TEST_ROOT/profiles/"*
 for profile in automation deployment tofu; do
   profile_log="$TEST_ROOT/$profile.log"
   PATH="$TEST_ROOT/profiles:$PATH" CI_PROFILE_COMMAND_LOG="$profile_log" \
-    MISE_TOOLCHAIN_SCOPE="$profile" bash -c '. "$1"' _ "$TOOLCHAIN"
+    CI_COMMIT_SHA=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
+    MISE_TOOLCHAIN_SCOPE="$profile" bash -c '. "$1"' _ "$TOOLCHAIN" >"$profile_log.stdout"
+  rg -q '^CI_BOOTSTRAP_DIAGNOSTIC \{"schemaVersion":1,"sourceSha":"a{40}","scope":"'"$profile"'","elapsedSeconds":[0-9]+\}$' "$profile_log.stdout"
   case "$profile" in
     automation) expected_tools='install --yes bun gh jq' ;;
     deployment) expected_tools='install --yes bun node gh jq helm argocd awscli' ;;

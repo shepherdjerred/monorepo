@@ -130,14 +130,25 @@ main, maintenance, and other work, then separates attempts and outcomes. Each
 cohort reports successful latency sample counts and nearest-rank p50/p95 values;
 failed or canceled runs do not become successful latency samples. Individual
 step distributions expose checkout, review, verification, publication, and
-deployment costs. They overlap and are not additive. Bootstrap embedded inside
-a command is included in that command until separately instrumented.
+deployment costs. They overlap and are not additive. Structured checkout and
+toolchain measurements are reported separately from native step durations;
+toolchain bootstrap excludes workspace dependency installation. Checkout byte
+counts measure stored Git objects, not network traffic.
 
-The native API exposes only the latest attempt and cannot identify reused review
-verdicts. The report marks review freshness unknown rather than treating short
-reruns as fresh verification. Historical full verification of drafts also has
-its own cohort. At least 30 fresh ready heads are needed to assess the target
-p95; this report alone does not certify that SLO.
+The native API exposes only the latest attempt. The command also reads successful
+clone, review, verification, draft-preflight and maintenance command logs, with
+four concurrent requests and an 8 MiB limit per step. Missing, malformed or
+oversized evidence stays unknown; raw logs are never copied into the report.
+Final structured review signals distinguish exact-head completion during this
+pipeline (`fresh`), completion before it (`reused`), both (`mixed`), and a gate
+passing solely on quota exemptions. Provider details preserve partial quota
+coverage; the existing gate can pass with one completed provider. Rounded
+timestamps at the run boundary remain unknown. Historical full verification of
+drafts also has its own cohort. At least 30 distinct fresh successful ready heads
+are needed to assess the target p95. This sample includes `mixed` gates with a
+proven fresh provider while preserving their separate cohort. Reruns are excluded
+and duplicate heads use the slowest eligible success. Sample sufficiency alone
+does not certify the SLO.
 
 Main is checked automatically. Push runs and full manual main runs contribute
 to its verdict. A manual run must include verification, release admission,

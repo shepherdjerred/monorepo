@@ -12,6 +12,7 @@ import { getMainStatus } from "#lib/ci/main.ts";
 import { pipelineHistory } from "#lib/ci/history.ts";
 import { formatLatency, latencyReport } from "#lib/ci/latency.ts";
 import { ciMaintenance } from "#lib/ci/maintenance.ts";
+import { latencyEvidence } from "#lib/ci/latency-evidence.ts";
 import {
   mainFailure,
   summarizeMain,
@@ -204,7 +205,8 @@ export async function ciCommand(
       const until = Date.now() / 1000;
       const since = until - (options.sinceMs ?? 259_200_000) / 1000;
       const pipelines = await pipelineHistory(config, since, until);
-      const report = latencyReport(pipelines, since, until);
+      const evidence = await latencyEvidence(pipelines, config);
+      const report = latencyReport(pipelines, since, until, evidence);
       console.log(
         sanitizeText(
           options.json

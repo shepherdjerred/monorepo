@@ -76,7 +76,7 @@ export function pipelineTiming(
         name: step.name,
         state: step.state,
         kind:
-          step.name === "clone"
+          step.type === "clone" || step.name === "clone"
             ? "checkout"
             : workflow.name.includes("review")
               ? "review"
