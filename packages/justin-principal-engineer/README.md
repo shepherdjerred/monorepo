@@ -42,10 +42,13 @@ bun run dev
 ```
 
 `dev` first checks native OpenAI model access through the shared LLM runtime and
-that the configured Woodpecker repository ID matches `repository.slug`.
+that the configured Woodpecker repository ID matches `repository.slug`. It also
+checks GitHub App repository and branch protection access using the bot identity.
 Credential failures stop startup before a task is claimed. `doctor` performs
 the same checks, and each coding turn checks OpenAI again before installing or
 building container dependencies.
+Each scheduled or development reconcile checks GitHub access under the local
+lock before selecting or advancing a task, so revoked permissions stop new work.
 
 `dev` runs the real configured Linear queue in the foreground, using the same
 durable task state as the LaunchAgent. It injects credentials through `op run`
@@ -58,9 +61,10 @@ orphan a Docker agent. The terminal shows agent stages, elapsed time, and task
 phases. Idle runs poll every five seconds; use `--interval-seconds 60` to slow
 the loop down. Ctrl-C drains the current turn and exits with state preserved.
 
-Startup builds the host Toolkit from the same checkout and puts that binary
-first on the reconcile's command path. Review parsing and host workflow changes
-therefore use the development tree without replacing the installed Toolkit.
+Startup builds the host Toolkit as an executable Bun source bundle and puts it
+first on the reconcile's command path. This avoids macOS native executable
+signing during iteration. Review parsing and host workflow changes therefore
+use the development tree without replacing the installed Toolkit.
 Restart `dev` after changing Toolkit source to rebuild that binary.
 
 Dev agent containers read Justin's source and package manifest from this

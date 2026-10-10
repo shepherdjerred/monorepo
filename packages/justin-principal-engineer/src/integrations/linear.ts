@@ -8,22 +8,27 @@ import {
 import { requireSuccess, type CommandRunner } from "#src/runtime/process.ts";
 import { AUTONOMOUS_LABEL, BLOCKED_LABEL } from "#src/domain/autonomy.ts";
 
-const QuerySchema = z.object({ nodes: z.array(LinearIssueSchema) });
+// Toolkit flattens connections in its CLI JSON; durable snapshots and raw
+// GraphQL reads retain Linear's connection shape.
+const QuerySchema = z.array(
+  LinearIssueSchema.extend({
+    labels: LinearIssueSchema.shape.labels.shape.nodes,
+  }).transform(({ labels: issueLabels, ...issue }) => ({
+    ...issue,
+    labels: { nodes: issueLabels },
+  })),
+);
 const ViewSchema = z.object({
   description: z.string().nullable(),
-  comments: z.object({
-    nodes: z.array(z.object({ body: z.string() })),
-  }),
+  comments: z.array(z.object({ body: z.string() })),
 });
-const LabelsSchema = z.object({
-  nodes: z.array(z.object({ name: z.string().min(1) })),
-});
+const LabelsSchema = z.array(z.object({ name: z.string().min(1) }));
 const LABEL_READY = "agent:ready";
 const LABEL_NEEDS_HUMAN = "agent:needs-human";
 
-const TeamLabelsSchema = z.object({
-  nodes: z.array(z.object({ id: z.string().min(1), name: z.string().min(1) })),
-});
+const TeamLabelsSchema = z.array(
+  z.object({ id: z.string().min(1), name: z.string().min(1) }),
+);
 
 const MutationResultSchema = z.object({
   data: z.object({
@@ -153,10 +158,10 @@ export class LinearClient {
       "--state",
       "started",
       "--limit",
-      "0",
+      "all",
       "--json",
     ]);
-    const candidates = QuerySchema.parse(JSON.parse(output)).nodes;
+    const candidates = QuerySchema.parse(JSON.parse(output));
     while (candidates.length > 0) {
       const selected = selectIssue(candidates);
       if (selected === null) return null;
@@ -173,7 +178,7 @@ export class LinearClient {
     const view = ViewSchema.parse(
       JSON.parse(await this.command(["issue", "view", identifier, "--json"])),
     );
-    const comments = view.comments.nodes
+    const comments = view.comments
       .map(({ body }) => body.trim())
       .filter((body) => body !== "");
     return comments.length === 0
@@ -190,7 +195,7 @@ export class LinearClient {
       "--json",
     ]);
     return new Set(
-      LabelsSchema.parse(JSON.parse(output)).nodes.map(({ name }) => name),
+      LabelsSchema.parse(JSON.parse(output)).map(({ name }) => name),
     );
   }
 
@@ -236,9 +241,7 @@ export class LinearClient {
       "--json",
     ]);
     const parsed = TeamLabelsSchema.parse(JSON.parse(output));
-    const ids = new Map(
-      parsed.nodes.map(({ id, name }) => [name, id] as const),
-    );
+    const ids = new Map(parsed.map(({ id, name }) => [name, id] as const));
     this.labelIdsCache.set(team, ids);
     return ids;
   }
