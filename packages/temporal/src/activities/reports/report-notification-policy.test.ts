@@ -190,6 +190,77 @@ test("two concurrent changed runs cannot both own the family send", async () => 
   expect(h.sent).toHaveLength(1);
 });
 
+test("a stale skip decision cannot suppress a newer recovery", async () => {
+  const h = harness();
+  const baseline = report(1, null);
+  await deliverDailyNotification(baseline, h.deps(baseline.completedAt));
+  const changed = report(2);
+  const recovery = report(3, null);
+  const deps = h.deps(recovery.completedAt, "recovery");
+  const readFamily = deps.backend.readFamily;
+  let interleave = true;
+  await expect(
+    deliverDailyNotification(recovery, {
+      ...deps,
+      backend: {
+        ...deps.backend,
+        readFamily: async (key) => {
+          const stale = await readFamily(key);
+          if (interleave) {
+            interleave = false;
+            await deliverDailyNotification(
+              changed,
+              h.deps(changed.completedAt, "changed"),
+            );
+          }
+          return stale;
+        },
+      },
+    }),
+  ).rejects.toThrow("family is contended");
+  expect(h.skips.size).toBe(0);
+  await deliverDailyNotification(
+    recovery,
+    h.deps(recovery.completedAt, "recovery-retry"),
+  );
+  expect(h.sent).toEqual([
+    baseline.reportRunId,
+    changed.reportRunId,
+    recovery.reportRunId,
+  ]);
+});
+
+test("a quiet newer observation supersedes a delayed older changed condition", async () => {
+  const h = harness();
+  const baseline = report(1, null);
+  const quiet = report(3, null);
+  await deliverDailyNotification(baseline, h.deps(baseline.completedAt));
+  await deliverDailyNotification(quiet, h.deps(quiet.completedAt));
+  await expect(
+    deliverDailyNotification(report(2), h.deps(quiet.completedAt)),
+  ).resolves.toMatchObject({ reason: "superseded" });
+  const family = [...h.families.values()][0]?.value;
+  expect(family?.lastObserved?.reportRunId).toBe(quiet.reportRunId);
+  expect(family?.lastAccepted?.reportRunId).toBe(baseline.reportRunId);
+  expect(h.sent).toEqual([baseline.reportRunId]);
+});
+
+test("a takeover settles a durable skip before sending a changed report", async () => {
+  const h = harness();
+  const baseline = report(1, null);
+  const quiet = report(2, null);
+  const changed = report(3);
+  await deliverDailyNotification(baseline, h.deps(baseline.completedAt));
+  h.faults.failFamilySettlement = true;
+  await expect(
+    deliverDailyNotification(quiet, h.deps(quiet.completedAt)),
+  ).rejects.toThrow("crash after accepted receipt");
+  await deliverDailyNotification(changed, h.deps(changed.completedAt));
+  expect(h.skips.size).toBe(1);
+  expect(h.sent).toEqual([baseline.reportRunId, changed.reportRunId]);
+  expect([...h.families.values()][0]?.value.pending).toBeUndefined();
+});
+
 test("settles a crash after acceptance before deciding the next report", async () => {
   const h = harness();
   const first = report(1);

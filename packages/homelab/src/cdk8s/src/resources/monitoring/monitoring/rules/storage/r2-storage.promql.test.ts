@@ -5,6 +5,7 @@ import { expect, test } from "vitest";
 import { getR2StorageRuleGroups } from "./r2-storage.ts";
 
 const sample = (value: number, labels = "{}") => [{ labels, value }];
+const bucketLabels = '{bucket="homelab"}';
 
 test("R2 audit alerts evaluate persisted age and the newest owner's inventory", async () => {
   const rules = getR2StorageRuleGroups().find(
@@ -15,7 +16,7 @@ test("R2 audit alerts evaluate persisted age and the newest owner's inventory", 
     rules.map((rule) => [rule.alert, rule.expr.value]),
   );
   const owner =
-    'namespace="temporal",container="temporal-infra-worker",owner="infra"';
+    'namespace="temporal",container="temporal-infra-worker",bucket="homelab"';
   const inventory = (
     pod: string,
     timestamp: number,
@@ -23,7 +24,7 @@ test("R2 audit alerts evaluate persisted age and the newest owner's inventory", 
     bytes: number,
   ) => [
     {
-      series: `velero_r2_orphan_audit_observed_timestamp_seconds{${owner},pod="${pod}"}`,
+      series: `velero_r2_audit_observation_timestamp_seconds{${owner},pod="${pod}"}`,
       values: `${String(timestamp)}+0x48`,
     },
     {
@@ -41,17 +42,17 @@ test("R2 audit alerts evaluate persisted age and the newest owner's inventory", 
       name: "fresh restored orphan inventory",
       at: "24h",
       input: inventory("new", 0, 78, bytes),
-      prefixes: sample(78),
-      bytes: sample(bytes),
+      prefixes: sample(78, bucketLabels),
+      bytes: sample(bytes, bucketLabels),
       stale: [],
     },
     {
       name: "restoration does not renew an expired observation",
       at: "37h",
       input: inventory("new", 0, 78, bytes),
-      prefixes: [],
-      bytes: [],
-      stale: sample(37 * 3600),
+      prefixes: sample(78, bucketLabels),
+      bytes: sample(bytes, bucketLabels),
+      stale: sample(37 * 3600, bucketLabels),
     },
     {
       name: "missing observation remains unknown",
@@ -59,7 +60,7 @@ test("R2 audit alerts evaluate persisted age and the newest owner's inventory", 
       input: [],
       prefixes: [],
       bytes: [],
-      stale: sample(1, `{${owner}}`),
+      stale: sample(1, bucketLabels),
     },
     {
       name: "verified zero remains healthy",
@@ -91,8 +92,8 @@ test("R2 audit alerts evaluate persisted age and the newest owner's inventory", 
           values: "0+0x48",
         },
       ],
-      prefixes: sample(78),
-      bytes: sample(bytes),
+      prefixes: sample(78, bucketLabels),
+      bytes: sample(bytes, bucketLabels),
       stale: [],
     },
   ];

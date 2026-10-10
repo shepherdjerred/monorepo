@@ -297,8 +297,8 @@ Ops digest Activity results retain the dashboard's `periodKey`, `status`
 inbox delivery. Histories recorded by older workers contain only `kind` and
 remain replay-compatible; no additional Workflow command is introduced.
 
-The infra worker persists each successful R2 orphan observation in SeaweedFS
-at `llm-archive/monitoring/velero-r2-orphan-audit/latest.json` before publishing
+The infra worker persists each successful R2 orphan observation in the
+`temporal/velero-r2-orphan-audit-state` ConfigMap before publishing
 its gauges. Startup restores the original observation time and values; other
 roles publish no initialized zero inventory. Conditional writes prevent an
 older concurrent scan from replacing a newer observation. The R2 audit
@@ -323,9 +323,11 @@ Known finding identities ignore changing observation counts; unknown findings
 retain their text so a new failure cannot be hidden. Suppressed, recovered, and
 observing findings remain in the archive without creating active conditions.
 
-Conditional family claims serialize sends across runs. A takeover settles the
-prior pending report through its existing delivery lease and accepted receipt
-before evaluating the next report. Report delivery proxies use the shared
+Conditional family claims serialize sends and skip decisions across runs.
+A takeover settles the prior pending decision before evaluating the next report;
+pending sends use their existing delivery lease and accepted receipt. The latest
+completed observation also advances on a skip, so a delayed older condition
+cannot replace a newer quiet recovery. Report delivery proxies use the shared
 lease-aware retry policy so an immediate failure cannot exhaust retries
 inside the claim's takeover window. Skips have explicit records and no Postal
 message ID or acceptance time. The freshness monitor counts completed skips

@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { restoreProtectedBackupNames } from "./r2-restore-protection.ts";
+import { restoreProtectedBackupNames } from "./restore-protection.ts";
 import {
   buildR2OrphanManifest,
   R2OrphanManifestSchema,
-} from "./r2-orphan-cleanup-core.ts";
+} from "@shepherdjerred/homelab/cdk8s/scripts/r2-orphan-cleanup-core.ts";
 
 const prefix = "zfspv-incr/backups/";
 function key(
@@ -84,11 +84,16 @@ describe("OpenEBS restore history protection", () => {
       liveBackupNames: [],
       metadataBackupNames: ["unrelated"],
       zfsBackupNames: [latest],
+      chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
     });
     expect(manifest.candidates).toEqual([]);
     expect(manifest.restoreProtectedBackupNames).toEqual([ancestor, latest]);
     expect(
       R2OrphanManifestSchema.safeParse({ ...manifest, contractVersion: 2 })
+        .success,
+    ).toBe(false);
+    expect(
+      R2OrphanManifestSchema.safeParse({ ...manifest, contractVersion: 3 })
         .success,
     ).toBe(false);
   });

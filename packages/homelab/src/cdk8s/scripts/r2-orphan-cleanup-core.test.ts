@@ -222,9 +222,10 @@ describe("R2 orphan cleanup safety options", () => {
     const input = {
       observedAt,
       storage,
+      zfsBackupNames: [],
       zfsObjects: [
         {
-          key: "zfspv-incr/backups/expired-full/stream",
+          key: "zfspv-incr/backups/expired-full/torvalds/zfs/-fixture-pvc-expired-full-expired-full",
           size: 10,
           lastModified: "2026-08-09T00:00:00.000Z",
           etag: '"original"',
@@ -254,9 +255,10 @@ describe("R2 orphan cleanup safety options", () => {
     const input = {
       observedAt,
       storage,
+      zfsBackupNames: [],
       zfsObjects: [
         {
-          key: "zfspv-incr/backups/orphan/stream",
+          key: "zfspv-incr/backups/orphan/torvalds/zfs/-fixture-pvc-orphan-orphan",
           size: 10,
           lastModified: "2026-08-09T00:00:00.000Z",
           etag: '"original"',

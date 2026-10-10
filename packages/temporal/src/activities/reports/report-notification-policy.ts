@@ -33,6 +33,12 @@ const AcceptedNotificationSchema = z.object({
 export const NotificationFamilySchema = z.object({
   schemaVersion: z.literal(1),
   lastAccepted: AcceptedNotificationSchema.optional(),
+  lastObserved: z
+    .object({
+      reportRunId: z.string().min(1),
+      completedAt: z.iso.datetime({ offset: true }),
+    })
+    .optional(),
   pending: z
     .object({
       reportRunId: z.string().min(1),
@@ -40,6 +46,7 @@ export const NotificationFamilySchema = z.object({
       fingerprint: z.string().regex(/^[a-f0-9]{64}$/),
       owner: z.string().min(1),
       claimedAt: z.iso.datetime({ offset: true }),
+      skipReason: z.enum(["unchanged", "superseded"]).optional(),
     })
     .optional(),
 });
@@ -165,9 +172,17 @@ export function notificationCondition(report: ReportEnvelopeV1): {
 
 function notificationReason(
   report: ReportEnvelopeV1,
-  previous: NotificationFamily["lastAccepted"],
+  family: NotificationFamily,
   now: string,
 ): "send" | SkippedNotification["reason"] {
+  const previous = family.lastAccepted;
+  const observed = family.lastObserved ?? previous;
+  if (
+    observed !== undefined &&
+    Date.parse(report.completedAt) < Date.parse(observed.completedAt)
+  ) {
+    return "superseded";
+  }
   if (previous === undefined) return "send";
   if (Date.parse(report.completedAt) < Date.parse(previous.completedAt)) {
     return "superseded";
@@ -181,6 +196,26 @@ function notificationReason(
 }
 
 type AcceptedDelivery = { reportRunId: string; acceptedAt: string };
+
+function notificationSkipKey(
+  report: ReportEnvelopeV1,
+  namespace: string,
+): string {
+  return `${skippedNotificationPrefix(report, namespace)}${new Date(report.completedAt).toISOString()}-${safePart(report.reportRunId)}.json`;
+}
+
+function latestObservation(
+  family: NotificationFamily,
+  report: ReportEnvelopeV1,
+): NonNullable<NotificationFamily["lastObserved"]> {
+  const previous = family.lastObserved ?? family.lastAccepted;
+  const newest =
+    previous !== undefined &&
+    Date.parse(previous.completedAt) > Date.parse(report.completedAt)
+      ? previous
+      : report;
+  return { reportRunId: newest.reportRunId, completedAt: newest.completedAt };
+}
 
 type NotificationDependencies<T extends AcceptedDelivery> = {
   backend: NotificationBackend;
@@ -220,7 +255,7 @@ async function archiveNotification(
 }
 
 /**
- * Serialize a family's sends with CAS. A takeover first settles the recorded
+ * Serialize every family decision with CAS. A takeover first settles the recorded
  * pending report through the existing per-run delivery lease/receipt path.
  * This repairs a crash after Postal acceptance without advancing the family
  * optimistically or treating an ambiguous send as an unchanged report.
@@ -237,7 +272,7 @@ export async function deliverDailyNotification<T extends AcceptedDelivery>(
   if (accepted !== undefined) return accepted;
   // Timestamped keys preserve observation order when an old retry writes its
   // skip later than a newer run. LastModified is not report freshness.
-  const skipKey = `${skippedNotificationPrefix(report, deps.namespace)}${new Date(report.completedAt).toISOString()}-${safePart(report.reportRunId)}.json`;
+  const skipKey = notificationSkipKey(report, deps.namespace);
   const skipped = await deps.backend.readSkip(skipKey);
   if (skipped !== undefined) return skipped;
   const familyKey = `reports/notifications/families/${familyPath}.json`;
@@ -254,26 +289,7 @@ export async function deliverDailyNotification<T extends AcceptedDelivery>(
       if (delivery?.reportRunId === report.reportRunId) return delivery;
       continue;
     }
-    const reason = notificationReason(report, family.lastAccepted, deps.now());
-    if (reason !== "send") {
-      // Another attempt may have accepted this very report after the first
-      // receipt read. Preserve its actual result instead of calling it skipped.
-      const settled = await deps.accepted(report);
-      if (settled !== undefined) return settled;
-      const result = SkippedNotificationSchema.parse({
-        outcome: "skipped",
-        reason,
-        reportRunId: report.reportRunId,
-        reportType: report.reportType,
-        scheduleId: report.scheduleId,
-        completedAt: report.completedAt,
-        observationKey,
-      });
-      await deps.backend.writeSkip(skipKey, result);
-      return SkippedNotificationSchema.parse(
-        await deps.backend.readSkip(skipKey),
-      );
-    }
+    const reason = notificationReason(report, family, deps.now());
     const reserved = await deps.backend.writeFamily(
       familyKey,
       {
@@ -284,6 +300,7 @@ export async function deliverDailyNotification<T extends AcceptedDelivery>(
           fingerprint: notificationCondition(report).fingerprint,
           owner: deps.owner,
           claimedAt: deps.attemptStartedAt,
+          ...(reason === "send" ? {} : { skipReason: reason }),
         },
       },
       held?.etag,
@@ -298,7 +315,7 @@ async function settlePendingNotification<T extends AcceptedDelivery>(input: {
   familyKey: string;
   held: { value: NotificationFamily; etag: string } | undefined;
   family: NotificationFamily;
-}): Promise<T | undefined> {
+}): Promise<T | SkippedNotification | undefined> {
   const { deps, familyKey, held, family } = input;
   const pending = family.pending;
   if (pending === undefined || held === undefined) {
@@ -336,21 +353,58 @@ async function settlePendingNotification<T extends AcceptedDelivery>(input: {
   ) {
     throw new Error("Notification pending claim references a different report");
   }
-  const delivery = await deps.deliver(report);
+  // Skip decisions hold the same claim as sends. Their observed family ETag
+  // cannot be bypassed while a concurrent changed report advances acceptance.
+  const delivery =
+    pending.skipReason === undefined
+      ? await deps.deliver(report)
+      : await deps.accepted(report);
+  const result =
+    delivery ?? (await recordSkippedNotification(report, pending, deps));
   const recorded = await deps.backend.writeFamily(
     familyKey,
     {
       schemaVersion: 1,
-      lastAccepted: {
-        reportRunId: report.reportRunId,
-        completedAt: report.completedAt,
-        acceptedAt: delivery.acceptedAt,
-        fingerprint: pending.fingerprint,
-      },
+      lastObserved: latestObservation(family, report),
+      lastAccepted:
+        delivery === undefined
+          ? family.lastAccepted
+          : {
+              reportRunId: report.reportRunId,
+              completedAt: report.completedAt,
+              acceptedAt: delivery.acceptedAt,
+              fingerprint: pending.fingerprint,
+            },
     },
     held.etag,
   );
   if (!recorded)
     throw new Error("Daily report notification lost its family claim");
-  return delivery;
+  return result;
+}
+
+async function recordSkippedNotification(
+  report: ReportEnvelopeV1,
+  pending: NonNullable<NotificationFamily["pending"]>,
+  deps: Pick<
+    NotificationDependencies<AcceptedDelivery>,
+    "backend" | "namespace"
+  >,
+): Promise<SkippedNotification> {
+  if (pending.skipReason === undefined)
+    throw new Error("Notification skip has no reserved reason");
+  const key = notificationSkipKey(report, deps.namespace);
+  await deps.backend.writeSkip(
+    key,
+    SkippedNotificationSchema.parse({
+      outcome: "skipped",
+      reason: pending.skipReason,
+      reportRunId: report.reportRunId,
+      reportType: report.reportType,
+      scheduleId: report.scheduleId,
+      completedAt: report.completedAt,
+      observationKey: pending.observationKey,
+    }),
+  );
+  return SkippedNotificationSchema.parse(await deps.backend.readSkip(key));
 }
