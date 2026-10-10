@@ -620,7 +620,7 @@ def document(state_path: Path, overview_path: Path | None = None) -> None:
             label = "Around spawn" if preview["kind"] == "overview" else "Close-up"
             lines += [
                 f'<figure><a href="{preview["url"]}"><img src="{preview["url"]}" '
-                f'width="{preview["width"]}" height="{preview["height"]}" loading="lazy" '
+                f'width="{preview["width"]}" height="{preview["height"]}" loading="lazy" decoding="async" '
                 f'alt="{world["title"]}: {label.lower()} from above" /></a>',
                 f"<figcaption>{label} · {preview['bounds'][2]:,}-block selection · north is up</figcaption></figure>",
                 "",

@@ -115,9 +115,21 @@ html[data-storm-surface="docs"] {
   background: var(--storm-chrome-bg);
 }
 html[data-storm-surface="docs"] body {
+  background: none;
+  isolation: isolate;
+}
+/* Keep the scenery on one viewport-sized layer instead of repainting the
+   document's fixed background as long galleries scroll. */
+html[data-storm-surface="docs"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  will-change: transform;
   background:
     linear-gradient(#00000059, #00000059),
-    var(--storm-scenery) center top / cover fixed;
+    var(--storm-scenery) center top / cover;
 }
 html[data-storm-surface="docs"] a:hover {
   color: var(--storm-link-hover-color);
@@ -198,9 +210,8 @@ html[data-storm-surface="docs"] .stormDocsHeader {
   font-size: 14px;
 }
 @media (max-width: 800px) {
-  html[data-storm-surface="docs"] body {
+  html[data-storm-surface="docs"] body::before {
     background-image:
       linear-gradient(#00000059, #00000059), var(--storm-scenery-mobile);
-    background-attachment: fixed;
   }
 }

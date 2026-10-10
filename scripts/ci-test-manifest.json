@@ -1037,6 +1037,11 @@
       "directory": "packages/the-storm",
       "steps": [
         {
+          "runner": "command",
+          "name": "livemap",
+          "command": ["bun", "run", "test:server"]
+        },
+        {
           "runner": "gradle",
           "args": ["-p", "plugin", "test"]
         },

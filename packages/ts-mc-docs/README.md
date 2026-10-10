@@ -10,8 +10,7 @@ decommissioned OVH/Netlify-era infrastructure).
 Player-facing pages only: welcome, norms, world downloads, and the
 survival section. Accuracy fixes applied during the port:
 
-- Live map page rewritten for BlueMap at `bluemap.ts-mc.net` (was Dynmap
-  at `livemap.ts-mc.net`, which no longer exists).
+- LiveMap links use `bluemap.ts-mc.net`.
 - World borders corrected against the live ChunkyBorder config
   (`packages/homelab/src/cdk8s/config/minecraft-tsmc/`): Overworld
   20,000, Nether 5,000, End 2,500. The stale Amplified section was
@@ -35,6 +34,11 @@ Production account navigation and preference synchronization activate with the
 production entry in the forum's GitOps release inventory. Before activation,
 docs save appearance locally and publish their own card using the build's
 calendar theme. Development uses the local licensed forum preview.
+
+The scenery is a fixed viewport layer, independent of the scrolling document.
+World preview images load lazily and decode asynchronously so the long downloads
+gallery can retain its theme without synchronous image decoding during scrolling.
+Player pages omit source-edit links.
 
 ## Analytics
 
