@@ -467,6 +467,14 @@ continue to inherit the configured token.
 Other invocations still resolve credentials, including `argocd version` and
 commands carrying metadata flags as arguments or after `--`.
 
+Authenticated ArgoCD commands additionally filter the configured operator token
+from stdout and stderr, including native usage emitted after argument errors.
+Filtering preserves separate streams, bytes outside the token, input, exit codes
+and forwarded signals; output is piped through the filter, so native terminal
+formatting may differ. Possible token prefixes are held across chunks without
+buffering whole responses or ordinary interactive prompts. Other platform
+commands and credential-free metadata retain process replacement.
+
 | Commands                                                                                                | Registered backend        |
 | ------------------------------------------------------------------------------------------------------- | ------------------------- |
 | `woodpecker`, `pr`, `linear`, `posthog`, `cf`, `argocd`, `grafana`, `prom`, `loki`, `tempo`, `temporal` | 1Password service account |

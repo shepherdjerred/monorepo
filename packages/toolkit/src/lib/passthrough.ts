@@ -1,3 +1,5 @@
+import { runRedactedPassthrough } from "./passthrough-redaction.ts";
+
 export const PASSTHROUGH_COMMANDS = [
   "gh",
   "woodpecker",
@@ -189,7 +191,16 @@ function isArgoHelpCommand(args: readonly string[]): boolean {
     if (argument === undefined) return false;
     // Once Cobra selects `help`, its operands and flags are local metadata.
     if (argument === "--") return args[index + 1] === "help";
-    if (!argument.startsWith("-")) return argument === "help";
+    if (!argument.startsWith("-")) {
+      const commandPath = args.slice(index);
+      return (
+        argument === "help" ||
+        (isArgoHelpFlag(commandPath.at(-1)) &&
+          commandPath
+            .slice(0, -1)
+            .every((part) => /^[a-z][a-z0-9-]*$/u.test(part)))
+      );
+    }
     if (isArgoHelpFlag(argument)) return true;
     if (argument.includes("=") || ARGOCD_BOOLEAN_OPTIONS.has(argument))
       continue;
@@ -210,17 +221,7 @@ export function isCredentialFreePassthrough(
   }
   // ArgoCD's help command is local regardless of its operands. Help flags on
   // bare command paths are also local; operational payloads retain credentials.
-  if (command === "argocd") {
-    if (isArgoHelpCommand(args)) return true;
-    const helpFlag = args.at(-1);
-    const commandPath = args.slice(0, -1);
-    if (
-      isArgoHelpFlag(helpFlag) &&
-      commandPath.every((part) => /^[a-z][a-z0-9-]*$/u.test(part))
-    ) {
-      return true;
-    }
-  }
+  if (command === "argocd" && isArgoHelpCommand(args)) return true;
   // Inspect the entire invocation: flags in a command payload or after `--`
   // must not turn an operational command into a credential-free dispatch.
   if (args.length === 1) {
@@ -330,6 +331,10 @@ export function runPassthrough(
     return Promise.resolve(127);
   }
 
+  const token = invocation.env["ARGOCD_AUTH_TOKEN"];
+  if (token !== undefined && token !== "" && invocation.executable === "argocd")
+    return runRedactedPassthrough(invocation, executable, token, true);
+
   return process.execve === undefined
     ? Promise.reject(
         new Error(
@@ -347,7 +352,8 @@ export function runPassthrough(
  * Run a passthrough child in place without replacing this process.
  *
  * Unlike {@link runPassthrough} (execve, for CLI dispatch), this awaits exit
- * so library callers can react to the code. Streams inherit the terminal.
+ * so library callers can react to the code. Authenticated Argo output passes
+ * through the same credential filter as CLI dispatch.
  */
 export async function spawnPassthroughInvocation(
   invocation: PassthroughInvocation,
@@ -358,6 +364,9 @@ export async function spawnPassthroughInvocation(
       `toolkit: required executable not found: ${invocation.executable}`,
     );
   }
+  const token = invocation.env["ARGOCD_AUTH_TOKEN"];
+  if (token !== undefined && token !== "" && invocation.executable === "argocd")
+    return runRedactedPassthrough(invocation, executable, token, false);
   const child = Bun.spawn([executable, ...invocation.args], {
     env: { ...invocation.env },
     stdio: ["inherit", "inherit", "inherit"],
