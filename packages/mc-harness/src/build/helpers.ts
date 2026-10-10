@@ -22,6 +22,7 @@ import {
   Renderer,
   wantsHero,
   withoutSky,
+  type RenderContextOptions,
 } from "@shepherdjerred/mc-build/render/index.ts";
 import type { Image } from "@shepherdjerred/mc-build/render/raster.ts";
 import type { RenderMode } from "@shepherdjerred/mc-build/render/sheet.ts";
@@ -158,32 +159,53 @@ async function writeLook(
 function subjectOf(
   grid: BlockGrid,
   options: LookOptions,
-): { subject: BlockGrid; lightFrom: BlockGrid; lightOrigin: Vec3 } {
-  let subject = grid;
-  // A crop re-bases coordinates to its own corner; the cuts below are given
-  // in the uncropped grid's coordinates, so they move with it.
+): {
+  subject: BlockGrid;
+  lightFrom: BlockGrid;
+  lightOrigin: Vec3;
+  cropFrom?: NonNullable<RenderContextOptions["cropFrom"]>;
+} {
+  // Deliberate sections expose new surfaces; a close-up only crops the geometry.
+  const geometry =
+    options.floor !== undefined || options.section !== undefined
+      ? cutGrid(grid, {
+          ...(options.floor === undefined ? {} : { belowY: options.floor }),
+          ...(options.section === undefined
+            ? {}
+            : { behindZ: options.section }),
+        })
+      : grid;
+  let subject = geometry;
   let origin = { x: 0, y: 0, z: 0 };
   if (options.crop !== undefined) {
-    const box = namedCrop(subject, options.crop);
-    subject = cropBox(subject, box);
-    // cropGrid clamps a window that starts before the grid; the cuts move by the same amount.
+    const box = namedCrop(grid, options.crop);
+    subject = cropBox(geometry, box);
     origin = {
       x: Math.max(0, box.min.x),
       y: Math.max(0, box.min.y),
       z: Math.max(0, box.min.z),
     };
   }
-  if (options.floor !== undefined || options.section !== undefined) {
-    subject = cutGrid(subject, {
-      ...(options.floor === undefined
-        ? {}
-        : { belowY: options.floor - origin.y }),
-      ...(options.section === undefined
-        ? {}
-        : { behindZ: options.section - origin.z }),
-    });
-  }
-  return { subject, lightFrom: grid, lightOrigin: origin };
+  return {
+    subject,
+    lightFrom: grid,
+    lightOrigin: origin,
+    ...(options.crop === undefined
+      ? {}
+      : {
+          cropFrom: {
+            grid: geometry,
+            box: {
+              min: origin,
+              max: {
+                x: origin.x + subject.size.x - 1,
+                y: origin.y + subject.size.y - 1,
+                z: origin.z + subject.size.z - 1,
+              },
+            },
+          },
+        }),
+  };
 }
 
 type LookContext = {
@@ -196,6 +218,7 @@ type LookContext = {
   /** Lighting stays in whole-build coordinates even for cropped/cut subjects. */
   lightFrom: BlockGrid;
   lightOrigin: Vec3;
+  cropFrom: RenderContextOptions["cropFrom"];
 };
 
 type LookRenderer = (ctx: LookContext) => Promise<[string, string, Image][]>;
@@ -213,6 +236,7 @@ const LOOKS: Record<LookView, LookRenderer> = {
         ...(ctx.grid === undefined ? {} : { grid: ctx.grid }),
         lightFrom: ctx.lightFrom,
         lightOrigin: ctx.lightOrigin,
+        ...(ctx.cropFrom === undefined ? {} : { cropFrom: ctx.cropFrom }),
       }),
     ],
   ],
@@ -225,6 +249,7 @@ const LOOKS: Record<LookView, LookRenderer> = {
         grid: ctx.grid ?? 8,
         lightFrom: ctx.lightFrom,
         lightOrigin: ctx.lightOrigin,
+        ...(ctx.cropFrom === undefined ? {} : { cropFrom: ctx.cropFrom }),
       }),
     ],
   ],
@@ -241,6 +266,7 @@ const LOOKS: Record<LookView, LookRenderer> = {
           ...(ctx.grid === undefined ? {} : { grid: ctx.grid }),
           lightFrom: ctx.lightFrom,
           lightOrigin: ctx.lightOrigin,
+          ...(ctx.cropFrom === undefined ? {} : { cropFrom: ctx.cropFrom }),
         },
       ),
     ],
@@ -253,6 +279,7 @@ const LOOKS: Record<LookView, LookRenderer> = {
         mode: ctx.mode,
         lightFrom: ctx.lightFrom,
         lightOrigin: ctx.lightOrigin,
+        ...(ctx.cropFrom === undefined ? {} : { cropFrom: ctx.cropFrom }),
       }),
     ],
   ],
@@ -261,6 +288,7 @@ const LOOKS: Record<LookView, LookRenderer> = {
       mode: ctx.mode,
       lightFrom: ctx.lightFrom,
       lightOrigin: ctx.lightOrigin,
+      ...(ctx.cropFrom === undefined ? {} : { cropFrom: ctx.cropFrom }),
     });
     return [
       ["survey-index", `${ctx.name}-survey-index.png`, survey.index],
@@ -292,7 +320,10 @@ export async function renderLooks(
   );
   const renderer = new Renderer(await ensureAssets());
   await mkdir(workspace.file(BUILD_FILES.rendersDir), { recursive: true });
-  const { subject, lightFrom, lightOrigin } = subjectOf(grid, options);
+  const { subject, lightFrom, lightOrigin, cropFrom } = subjectOf(
+    grid,
+    options,
+  );
   const ctx: LookContext = {
     renderer,
     subject,
@@ -302,6 +333,7 @@ export async function renderLooks(
     grid: options.grid,
     lightFrom,
     lightOrigin,
+    cropFrom,
   };
   const views = options.views ?? [
     "sheet",
@@ -315,10 +347,15 @@ export async function renderLooks(
   if (options.compareWith !== undefined) {
     // The same crop and cuts as the other looks, so the change plan covers
     // what the panels show and nothing that was cut away.
-    const image = await renderer.compare(
-      subjectOf(options.compareWith, options).subject,
-      subject,
-    );
+    const before = subjectOf(options.compareWith, options);
+    const image = await renderer.compare(before.subject, subject, {
+      beforeContext: before,
+      afterContext: {
+        lightFrom,
+        lightOrigin,
+        ...(cropFrom === undefined ? {} : { cropFrom }),
+      },
+    });
     looks.push(["compare", `${name}-compare.png`, image]);
   }
   assertTexturesPresent(renderer, `render ${name}`);

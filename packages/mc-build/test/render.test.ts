@@ -7,7 +7,7 @@ import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { BlockGrid } from "#src/core/grid.ts";
 import { perspectiveProjector, viewProjector } from "#src/render/camera.ts";
 import { changedColumns } from "#src/render/compare.ts";
-import { cropGrid, cutGrid, namedCrop } from "#src/render/cut.ts";
+import { cropGrid, cropQuads, cutGrid, namedCrop } from "#src/render/cut.ts";
 import { encodeJpeg, encodePng, Renderer } from "#src/render/index.ts";
 
 /**
@@ -423,6 +423,40 @@ describe("POV framing", () => {
 });
 
 describe("survey", () => {
+  test.each([
+    "textured",
+    "value",
+    "normal",
+    "squint",
+    "relief",
+    "light",
+  ] as const)(
+    "close-up %s geometry retains whole-grid faces and shading",
+    async (mode) => {
+      const renderer = new Renderer(root);
+      const grid = new BlockGrid({ x: 16, y: 12, z: 8 });
+      for (let x = 0; x < 16; x += 1)
+        for (let z = 0; z < 8; z += 1) grid.set(x, 0, z, "minecraft:stone");
+      for (let y = 1; y <= 10; y += 1)
+        for (let z = 0; z < 8; z += 1) grid.set(7, y, z, "minecraft:stone");
+      const box = { min: { x: 8, y: 0, z: 0 }, max: { x: 15, y: 11, z: 7 } };
+      const cropped = cropGrid(grid, box);
+      const whole = await renderer.quadsFor(grid, mode);
+      const actual = await renderer.quadsFor(cropped, mode, {
+        cropFrom: { grid, box },
+        lightFrom: grid,
+        lightOrigin: box.min,
+      });
+      const remeshed = await renderer.quadsFor(cropped, mode, {
+        lightFrom: grid,
+        lightOrigin: box.min,
+      });
+      expect(actual.quads).toEqual(cropQuads(whole.quads, box));
+      expect(actual.viewMode).toBe(whole.viewMode);
+      expect(actual.quads).not.toEqual(remeshed.quads);
+    },
+  );
+
   test("tiles are shaded by the whole grid, not in isolation", async () => {
     const renderer = new Renderer(root);
     // A stone floor with a tall wall along the east edge of the first tile:

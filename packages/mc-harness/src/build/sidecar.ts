@@ -104,8 +104,14 @@ export async function latestRenderName(
   workspace: BuildWorkspace,
   journal: readonly BuildLogEntry[],
 ): Promise<string> {
-  const last = lastOf(journal, "render");
+  const capture = journal.findLastIndex((entry) => entry.kind === "capture");
+  const last = lastOf(journal.slice(capture + 1), "render");
   if (last?.kind === "render") return last.name;
+  if (capture !== -1) {
+    throw new Error(
+      "current capture has no render; run toolkit mc build render first",
+    );
+  }
   const [newest] = await allSidecars(workspace);
   if (newest !== undefined) return newest.name;
   const dir = workspace.file(BUILD_FILES.rendersDir);

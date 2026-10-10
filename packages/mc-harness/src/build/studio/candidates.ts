@@ -4,7 +4,7 @@
  * blind judge pick, and restore the winner. `knockout.ts` does the judging;
  * this file only saves, lists and restores.
  */
-import { cp, mkdir, readdir, rm } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readdir, rename, rm } from "node:fs/promises";
 import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { gridHash } from "@shepherdjerred/mc-build/core/site.ts";
@@ -31,6 +31,26 @@ export function candidateDir(workspace: BuildWorkspace, name: string): string {
   return workspace.file(
     path.join(BUILD_FILES.candidatesDir, checkName("candidate", name)),
   );
+}
+
+/** A failed replacement leaves the complete saved version at its original path. */
+async function replaceCandidate(staged: string, target: string): Promise<void> {
+  const backup = `${staged}-previous`;
+  let previous = false;
+  try {
+    await rename(target, backup);
+    previous = true;
+  } catch (error) {
+    if (!(error instanceof Error && "code" in error && error.code === "ENOENT"))
+      throw error;
+  }
+  try {
+    await rename(staged, target);
+  } catch (error) {
+    if (previous) await rename(backup, target);
+    throw error;
+  }
+  if (previous) await rm(backup, { recursive: true });
 }
 
 /** Validate identity without rejecting historical candidates from another capture. */
@@ -125,23 +145,10 @@ export async function saveCandidate(
   const registry = await loadRegistry();
   const oplog = await workspace.oplog();
   const producer = await producingProgram(workspace, oplog.ops);
-  await rm(target, { recursive: true, force: true });
-  await mkdir(target, { recursive: true });
   // The candidate's program is the snapshot that compiled its ops, not the
   // live build.ts, which may have been edited since; a log not produced by
   // one compile has no program.
   const program = producer !== null;
-  if (producer !== null) {
-    await cp(workspace.file(producer), path.join(target, BUILD_FILES.program));
-  }
-  await cp(
-    workspace.file(BUILD_FILES.oplog),
-    path.join(target, BUILD_FILES.oplog),
-  );
-  await Bun.write(
-    path.join(target, CANDIDATE_FILES.grid),
-    writeSchematic(grid, registry.dataVersion),
-  );
   const hash = gridHash(grid);
   const journal = await readLog(dir);
   let blocks = 0;
@@ -163,10 +170,31 @@ export async function saveCandidate(
     ops: oplog.ops.length,
     score: await latestCritique(dir, hash),
   };
-  await Bun.write(
-    path.join(target, CANDIDATE_FILES.info),
-    `${JSON.stringify(CandidateSchema.parse(candidate), null, 2)}\n`,
-  );
+  const staged = await mkdtemp(workspace.file(`.candidate-${name}-`));
+  try {
+    if (producer !== null) {
+      await cp(
+        workspace.file(producer),
+        path.join(staged, BUILD_FILES.program),
+      );
+    }
+    await cp(
+      workspace.file(BUILD_FILES.oplog),
+      path.join(staged, BUILD_FILES.oplog),
+    );
+    await Bun.write(
+      path.join(staged, CANDIDATE_FILES.grid),
+      writeSchematic(grid, registry.dataVersion),
+    );
+    await Bun.write(
+      path.join(staged, CANDIDATE_FILES.info),
+      `${JSON.stringify(CandidateSchema.parse(candidate), null, 2)}\n`,
+    );
+    await mkdir(path.dirname(target), { recursive: true });
+    await replaceCandidate(staged, target);
+  } finally {
+    await rm(staged, { recursive: true, force: true });
+  }
   await appendLog(dir, { kind: "candidate", action: "save", name });
   return candidate;
 }

@@ -1,17 +1,35 @@
-import { cp, mkdir, readdir } from "node:fs/promises";
+import { cp, mkdir, readdir, realpath } from "node:fs/promises";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { JudgeRecordSchema, type JudgeRecord } from "#protocol/build.ts";
 
+/** Resolve symlinks before accepting any caller-controlled artifact path. */
+async function allowedFile(file: string, root: string): Promise<string> {
+  const absolute = await realpath(file);
+  const relative = path.relative(root, absolute);
+  if (
+    relative === ".." ||
+    relative.startsWith(`..${path.sep}`) ||
+    path.isAbsolute(relative)
+  ) {
+    throw new Error(`build record input is outside allowed root: ${file}`);
+  }
+  return absolute;
+}
+
 /** Resolve inputs against their owning build, including references into another build. */
 async function portableRecord(
   record: JudgeRecord,
-  source: string,
-  destination: string,
-  kept: Set<string>,
+  options: {
+    source: string;
+    destination: string;
+    kept: Set<string>;
+    root: string;
+  },
 ): Promise<JudgeRecord> {
+  const { source, destination, kept, root } = options;
   const input = async (file: string): Promise<string> => {
-    const absolute = path.resolve(source, file);
+    const absolute = await allowedFile(path.resolve(source, file), root);
     const bytes = await Bun.file(absolute).bytes();
     const relative = path.relative(path.resolve(source), absolute);
     const hash = createHash("sha256").update(bytes).digest("hex");
@@ -38,18 +56,21 @@ async function portableRecord(
 export async function keepBuildRecord(
   source: string,
   destination: string,
+  options: { allowedRoot?: string } = {},
 ): Promise<string[]> {
+  const root = await realpath(options.allowedRoot ?? source);
+  const owner = await allowedFile(source, root);
   const kept = new Set<string>();
-  const journal = path.join(source, "journal.jsonl");
+  const journal = path.join(owner, "journal.jsonl");
   if (await Bun.file(journal).exists()) {
     await mkdir(destination, { recursive: true });
     const out = path.join(destination, "journal.jsonl");
-    await cp(journal, out);
+    await cp(await allowedFile(journal, root), out);
     kept.add(out);
   }
   let names: string[];
   try {
-    names = await readdir(path.join(source, "judge"));
+    names = await readdir(path.join(owner, "judge"));
   } catch (error) {
     if (error instanceof Error && "code" in error && error.code === "ENOENT")
       return [...kept];
@@ -62,10 +83,15 @@ export async function keepBuildRecord(
   await mkdir(path.join(destination, "judge"), { recursive: true });
   for (const name of wanted) {
     const out = path.join(destination, "judge", name);
-    const original = path.join(source, "judge", name);
+    const original = await allowedFile(path.join(owner, "judge", name), root);
     if (name.endsWith(".json")) {
       const record = JudgeRecordSchema.parse(await Bun.file(original).json());
-      const portable = await portableRecord(record, source, destination, kept);
+      const portable = await portableRecord(record, {
+        source: owner,
+        destination,
+        kept,
+        root,
+      });
       await Bun.write(out, `${JSON.stringify(portable)}\n`);
     } else {
       await cp(original, out);

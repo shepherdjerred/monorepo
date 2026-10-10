@@ -243,6 +243,9 @@ survey`, `--grid n` coordinate lines, `--floor y` and `--section z` cuts
   sidecars are written. Cropped light views retain the whole build's light
   field and crop origin, including lamps and openings outside the window.
   Explicit hero views trim empty headroom while keeping that lighting context.
+  Close-ups crop whole-build faces and shading; only deliberate floor/section
+  cuts expose new surfaces. Implicit critique requires a render of the current
+  capture, while named historical renders remain available.
   Invalid sidecars also fail instead of selecting an
   older render, and critique verifies the saved schematic against its hash
   before scoring or updating the journal. Code-only critique also validates
@@ -285,12 +288,17 @@ pick n | knockout [--among a,b] [--rubric] [--model]`) keep versions of
   original incumbent remains part of its fingerprint even after defeat.
   Incomplete candidate directories and metadata names that disagree with their
   directory fail listing, resume and judging.
+  Forced saves stage every replacement artifact before switching directories;
+  failed staging preserves the complete saved candidate.
   Candidates record the captured site's hash, world and bounds; picking or
   judging one against another capture fails. Recapturing clears the incumbent
   and preserves old candidates for inspection. The default tournament selects
   only candidates for the current capture; explicitly naming an old candidate
   still fails. Pair records reference archived, content-addressed judge
   images, so replacing a candidate never changes earlier judgment evidence.
+  Eval archival permits cross-build judge inputs only inside the declared
+  worktree root, resolves symlinks before reads, and defaults subsequent archive
+  copies to their own source directory.
   Each capture also marks the append-only journal; trajectory grading counts
   only renders, critiques and decisions after the latest capture.
 - **Scratch** (`scratch <dir> [--size n]`) makes `<dir>/scratch/`, an

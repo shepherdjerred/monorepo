@@ -389,7 +389,11 @@ export const buildGrader =
     );
     const journal = await readJournal(buildDir);
     checks.push(...trajectoryChecks(journal, options.rubric));
-    artifacts.push(...(await keepBuildRecord(buildDir, ctx.taskDir)));
+    artifacts.push(
+      ...(await keepBuildRecord(buildDir, ctx.taskDir, {
+        allowedRoot: ctx.worktree,
+      })),
+    );
     const trajectory =
       journal !== null && "entries" in journal
         ? trajectoryOf(journal.entries, options.rubric)

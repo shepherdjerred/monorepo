@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, readdir, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterAll, describe, expect, it, vi } from "vitest";
@@ -10,7 +10,12 @@ import { DaemonClient } from "#build/daemon-client.ts";
 import { readRenderProvenance, renderLooks } from "#build/helpers.ts";
 import { Journal } from "#build/journal.ts";
 import { rubricAxisIds } from "#build/judge.ts";
-import { programSnapshot } from "#build/sidecar.ts";
+import { latestRenderName, programSnapshot } from "#build/sidecar.ts";
+import {
+  listCandidates,
+  readCandidate,
+  saveCandidate,
+} from "#build/studio/candidates.ts";
 import { critiqueBuild } from "#build/studio/critique.ts";
 import { BUILD_FILES, JudgeCritiqueRecordSchema } from "#protocol/build.ts";
 import { flatSiteBuild } from "./fixtures/flat-site.ts";
@@ -49,6 +54,88 @@ async function programBuild(name: string) {
 }
 
 describe("capture and run provenance", () => {
+  it("requires a current-capture render before implicit critique", async () => {
+    const workspace = await programBuild("implicit-capture");
+    const grid = new BlockGrid({ x: 2, y: 2, z: 2 }, "minecraft:stone");
+    await renderLooks(workspace, grid, "old", {
+      source: "compiled",
+      views: ["sheet"],
+    });
+    await appendLog(workspace.dir, {
+      kind: "render",
+      name: "old",
+      source: "compiled",
+      files: ["renders/old.png"],
+    });
+    await appendLog(workspace.dir, {
+      kind: "capture",
+      siteHash: "new",
+      box: workspace.siteBox(await workspace.manifest()),
+    });
+    const journal = await readLog(workspace.dir);
+    const ask = vi.fn(() => Promise.reject(new Error("unexpected judge")));
+    await expect(
+      critiqueBuild(workspace.dir, {
+        rubric: "micro",
+        model: "stub",
+        stage: "visual",
+        ask,
+      }),
+    ).rejects.toThrow(/current capture has no render/u);
+    expect(ask).not.toHaveBeenCalled();
+    expect(await readLog(workspace.dir)).toEqual(journal);
+    await renderLooks(workspace, grid, "current", {
+      source: "compiled",
+      views: ["sheet"],
+    });
+    await appendLog(workspace.dir, {
+      kind: "render",
+      name: "current",
+      source: "compiled",
+      files: ["renders/current.png"],
+    });
+    expect(
+      await latestRenderName(workspace, await readLog(workspace.dir)),
+    ).toBe("current");
+    expect(await Bun.file(workspace.file("renders/old.json")).exists()).toBe(
+      true,
+    );
+  }, 60_000);
+
+  it("preserves a forced candidate replacement when writing the staged grid fails", async () => {
+    const workspace = await flatSiteBuild(
+      path.join(temp, "candidate-write-failure"),
+      "candidate-write-failure",
+    );
+    await workspace.writeOplog({ version: 1, ops: [] });
+    const old = await saveCandidate(workspace.dir, "saved");
+    const file = workspace.file("candidates/saved/candidate.schem");
+    const bytes = await Bun.file(file).bytes();
+    const journal = await readLog(workspace.dir);
+    const write = vi
+      .spyOn(Bun, "write")
+      .mockRejectedValueOnce(new Error("simulated disk full"));
+    try {
+      await expect(
+        saveCandidate(workspace.dir, "saved", { force: true }),
+      ).rejects.toThrow(/simulated disk full/u);
+    } finally {
+      write.mockRestore();
+    }
+    expect(await readCandidate(workspace.dir, "saved")).toEqual(old);
+    expect(await Bun.file(file).bytes()).toEqual(bytes);
+    expect(await readLog(workspace.dir)).toEqual(journal);
+    const listed = await listCandidates(workspace.dir);
+    expect(listed.map(({ name }) => name)).toEqual(["saved"]);
+    const names = await readdir(workspace.dir);
+    expect(names.some((name) => name.startsWith(".candidate-"))).toBe(false);
+    await saveCandidate(workspace.dir, "saved", { force: true });
+    expect(await readCandidate(workspace.dir, "saved")).toMatchObject({
+      name: "saved",
+      gridHash: old.gridHash,
+    });
+  });
+
   it("requires a run after recapture for expected data and canvas provenance", async () => {
     const workspace = await programBuild("recapture");
     const before = await readRenderProvenance(workspace, "expected");

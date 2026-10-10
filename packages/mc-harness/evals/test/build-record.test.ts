@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { expect, it } from "vitest";
@@ -89,7 +89,7 @@ it("copies absolute and cross-build judge inputs and rewrites every archive hop"
         notes: [],
       }),
     );
-    await keepBuildRecord(source, task);
+    await keepBuildRecord(source, task, { allowedRoot: root });
     await keepBuildRecord(task, archive);
     await rm(source, { recursive: true });
     await rm(path.join(root, "other-build"), { recursive: true });
@@ -117,3 +117,57 @@ it("copies absolute and cross-build judge inputs and rewrites every archive hop"
     await rm(root, { recursive: true });
   }
 });
+
+it.each(["a", "b", "render", "sheet"] as const)(
+  "rejects external %s judge inputs, including symlinks",
+  async (field) => {
+    const root = await mkdtemp(path.join(tmpdir(), "mc-record-boundary-"));
+    try {
+      const allowed = path.join(root, "worktree");
+      const source = path.join(allowed, "build");
+      const outside = path.join(root, "outside.txt");
+      const own = path.join(source, "judge/own.png");
+      await Bun.write(own, "own input");
+      await Bun.write(outside, "private fixture outside worktree");
+      const link = path.join(source, "escaped.png");
+      await symlink(outside, link);
+      for (const file of [outside, path.relative(source, outside), link]) {
+        const score = {
+          at: "2026-10-10T00:00:00Z",
+          model: "stub",
+          rubric: "micro",
+          axes: {},
+          overallAesthetic: 1,
+          total: 1,
+          max: 40,
+          notes: [],
+        };
+        const record =
+          field === "a" || field === "b"
+            ? { ...pair(own, own), [field]: file }
+            : field === "render"
+              ? { ...score, kind: "absolute", judge: "test", render: file }
+              : {
+                  ...score,
+                  kind: "critique",
+                  render: "look",
+                  sheet: file,
+                  gridHash: "abc",
+                  lowest: "depth",
+                  suggestions: [],
+                };
+        await Bun.write(
+          path.join(source, "judge/record.json"),
+          JSON.stringify(record),
+        );
+        await expect(
+          keepBuildRecord(source, path.join(root, "archive"), {
+            allowedRoot: allowed,
+          }),
+        ).rejects.toThrow(/outside allowed root/u);
+      }
+    } finally {
+      await rm(root, { recursive: true });
+    }
+  },
+);

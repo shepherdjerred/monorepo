@@ -3,6 +3,7 @@ import { BlockGrid, type Vec3 } from "#src/core/grid.ts";
 import { blockLightLevels } from "#src/lint/lint.ts";
 import { perspectiveProjector, type ViewName } from "./camera.ts";
 import { renderCompare } from "./compare.ts";
+import { cropQuads, type GridBox } from "./cut.ts";
 import { renderElevationSheet } from "./elevations.ts";
 import { renderJudgeSheet, type JudgeSheetKind } from "./judge-sheet.ts";
 import { Mesher, type Quad, type V3 } from "./mesh.ts";
@@ -23,6 +24,10 @@ const SKY = [196, 214, 236, 255] as const;
 
 /** Whole-build lighting and the rendered grid's origin within it. */
 export type LightingOptions = { lightFrom?: BlockGrid; lightOrigin?: Vec3 };
+/** Crop already meshed and shaded geometry so neighbouring blocks still affect it. */
+export type RenderContextOptions = LightingOptions & {
+  cropFrom?: { grid: BlockGrid; box: GridBox };
+};
 
 /** The most common first-air y across columns: the level where a player stands. */
 function groundLevel(grid: BlockGrid): number {
@@ -115,14 +120,19 @@ export class Renderer {
       tile?: number;
       mode?: RenderMode;
       grid?: number;
-    } & LightingOptions,
+    } & RenderContextOptions,
   ): Promise<Image> {
     const { quads, viewMode } = await this.quadsFor(
       grid,
       options.mode,
       options,
     );
-    const { lightFrom: _light, lightOrigin: _origin, ...rest } = options;
+    const {
+      lightFrom: _light,
+      lightOrigin: _origin,
+      cropFrom: _crop,
+      ...rest
+    } = options;
     return renderSheet(quads, grid, { ...rest, mode: viewMode });
   }
 
@@ -151,8 +161,13 @@ export class Renderer {
   async quadsFor(
     grid: BlockGrid,
     mode: RenderMode = "textured",
-    options: LightingOptions = {},
+    options: RenderContextOptions = {},
   ): Promise<{ quads: readonly Quad[]; viewMode: RenderMode }> {
+    if (options.cropFrom !== undefined) {
+      const { cropFrom, lightOrigin: _origin, ...wholeOptions } = options;
+      const whole = await this.quadsFor(cropFrom.grid, mode, wholeOptions);
+      return { ...whole, quads: cropQuads(whole.quads, cropFrom.box) };
+    }
     const quads = await this.mesher.quads(grid);
     if (mode === "relief") {
       return { quads: shadeRelief(quads, grid), viewMode: "textured" };
@@ -178,7 +193,7 @@ export class Renderer {
     grid: BlockGrid,
     view: ViewName,
     size = 512,
-    options: { mode?: RenderMode; grid?: number } & LightingOptions = {},
+    options: { mode?: RenderMode; grid?: number } & RenderContextOptions = {},
   ): Promise<Image> {
     const { quads, viewMode } = await this.quadsFor(
       grid,
@@ -199,9 +214,14 @@ export class Renderer {
       tile?: number;
       grid?: number;
       mode?: RenderMode;
-    } & LightingOptions = {},
+    } & RenderContextOptions = {},
   ): Promise<Image> {
-    const { lightFrom: _light, lightOrigin: _origin, ...rest } = options;
+    const {
+      lightFrom: _light,
+      lightOrigin: _origin,
+      cropFrom: _crop,
+      ...rest
+    } = options;
     const { quads, viewMode } = await this.quadsFor(
       grid,
       options.mode,
@@ -222,7 +242,7 @@ export class Renderer {
       size?: number;
       fovDegrees?: number;
       mode?: RenderMode;
-    } & LightingOptions = {},
+    } & RenderContextOptions = {},
   ): Promise<Image> {
     const size = options.size ?? 960;
     const frame = { width: size, height: Math.round(size * 0.625) };
@@ -262,14 +282,38 @@ export class Renderer {
   async compare(
     before: BlockGrid,
     after: BlockGrid,
-    options: { view?: ViewName; tile?: number } = {},
+    options: {
+      view?: ViewName;
+      tile?: number;
+      beforeContext?: RenderContextOptions;
+      afterContext?: RenderContextOptions;
+    } = {},
   ): Promise<Image> {
+    const beforeGeometry = await this.quadsFor(
+      before,
+      "textured",
+      options.beforeContext,
+    );
+    const afterGeometry = await this.quadsFor(
+      after,
+      "textured",
+      options.afterContext,
+    );
     return renderCompare(
       {
-        before: { quads: await this.mesher.quads(before), grid: before },
-        after: { quads: await this.mesher.quads(after), grid: after },
+        before: {
+          quads: beforeGeometry.quads,
+          grid: before,
+        },
+        after: {
+          quads: afterGeometry.quads,
+          grid: after,
+        },
       },
-      options,
+      {
+        ...(options.view === undefined ? {} : { view: options.view }),
+        ...(options.tile === undefined ? {} : { tile: options.tile }),
+      },
     );
   }
 
@@ -281,9 +325,15 @@ export class Renderer {
       blocksPerTile?: number;
       tile?: number;
       mode?: RenderMode;
-    } & LightingOptions = {},
+    } & RenderContextOptions = {},
   ): Promise<{ tiles: SurveyTile[]; index: Image }> {
-    const { mode, lightFrom: _light, lightOrigin: _origin, ...rest } = options;
+    const {
+      mode,
+      lightFrom: _light,
+      lightOrigin: _origin,
+      cropFrom: _crop,
+      ...rest
+    } = options;
     // Shade the whole grid once, then tile: shadows and light cross tile edges.
     const { quads, viewMode } = await this.quadsFor(grid, mode, options);
     return renderSurvey(grid, quads, { ...rest, mode: viewMode });

@@ -75,6 +75,11 @@ and solid blocks obstruct it. The skylight pass is an approximation within
 the captured grid. For cut or cropped light views, pass `lightFrom: whole`
 and `lightOrigin: { x, y, z }` (the cropped grid's origin in `whole`) so
 surrounding roofs, walls, lamps and openings still determine illumination.
+For close-ups in any mode, also pass `cropFrom: { grid: whole, box }`:
+the renderer shades and culls the whole geometry before selecting the box's
+faces. This retains outside relief shadows and avoids invented crop-edge
+faces. Apply deliberate floor or section cuts to that geometry first, and
+retain the uncut grid as `lightFrom`.
 Beyond
 the contact sheet: `renderer.elevations(grid, { grid: 8 })` (front, right,
 back, left and top with coordinate lines), `renderer.pov(grid)` (a

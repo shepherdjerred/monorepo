@@ -137,6 +137,10 @@ describe("render and candidate evidence", () => {
       mode: "light",
       lightFrom: whole,
       lightOrigin: { x: 12, y: 0, z: 12 },
+      cropFrom: {
+        grid: cutGrid(whole, { belowY: 0, behindZ: 20 }),
+        box: { min: { x: 12, y: 0, z: 12 }, max: { x: 23, y: 4, z: 23 } },
+      },
     });
     const wrong = await renderer.sheet(cut, {
       title: "crop",
