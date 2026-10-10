@@ -9,7 +9,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.SplittableRandom;
 import java.util.UUID;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.function.Consumer;
 import org.jspecify.annotations.Nullable;
@@ -17,7 +19,10 @@ import org.jspecify.annotations.Nullable;
 /** Main-thread ordinary-match owner. Pending and unavailable actions preserve the authored step. */
 public final class MatchLearning implements AutoCloseable {
   public record Parts(
-      LearningGate gate, AcceptedInference models, Consumer<LearningGate.Decision> observed) {}
+      LearningGate gate,
+      AcceptedInference models,
+      Consumer<LearningGate.Decision> observed,
+      Consumer<Throwable> failed) {}
 
   public enum State {
     IDLE,
@@ -43,6 +48,7 @@ public final class MatchLearning implements AutoCloseable {
     @Nullable CompletableFuture<LearningGate.Decision> decision;
     @Nullable CompletableFuture<BatchedInference> loading;
     @Nullable BatchedInference model;
+    boolean failed;
 
     Match(LearningGate.Context context, CompletableFuture<LearningGate.Decision> decision) {
       this.context = context;
@@ -87,8 +93,18 @@ public final class MatchLearning implements AutoCloseable {
       idle(tick);
       return;
     }
-    resolveGate(current);
-    resolveModel(current);
+    try {
+      resolveGate(current);
+      resolveModel(current);
+    } catch (CompletionException | CancellationException failure) {
+      // Report asynchronous input/model failures once without breaking the
+      // authored bot ticker on every subsequent tick of this match.
+      current.failed = true;
+      current.decision = null;
+      current.loading = null;
+      var cause = failure.getCause();
+      parts.failed().accept(cause == null ? failure : cause);
+    }
     if (current.decision != null || current.loading != null) pendingTicks++;
     if (current.model == null) idle(tick);
   }
@@ -194,6 +210,7 @@ public final class MatchLearning implements AutoCloseable {
   private State state() {
     var current = match;
     if (current == null) return State.IDLE;
+    if (current.failed) return State.FAILED;
     var decision = current.decision;
     if (decision != null)
       return decision.isCompletedExceptionally() ? State.FAILED : State.PENDING_GATE;

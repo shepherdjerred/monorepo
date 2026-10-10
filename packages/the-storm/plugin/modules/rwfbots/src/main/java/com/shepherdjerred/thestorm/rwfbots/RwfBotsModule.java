@@ -136,7 +136,9 @@ public final class RwfBotsModule implements StormModule {
                     context
                         .logger()
                         .warn("rwfbots: learning flag unavailable; this match stays authored");
-                }));
+                },
+                failure ->
+                    context.logger().error("rwfbots: learning failed for this match", failure)));
     var chatGate =
         config.chat().enabled()
             ? hooks.chatGate().orElseGet(() -> fliptChatGate(context, world))
