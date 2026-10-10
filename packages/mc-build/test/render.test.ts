@@ -6,7 +6,7 @@ import sharp from "sharp";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { BlockGrid } from "#src/core/grid.ts";
 import { viewProjector } from "#src/render/camera.ts";
-import { encodePng, Renderer } from "#src/render/index.ts";
+import { encodeJpeg, encodePng, Renderer } from "#src/render/index.ts";
 
 /**
  * Golden renders against a tiny texture pack authored in this test (our own
@@ -230,16 +230,58 @@ describe("renderer", () => {
     );
     expect(pixelHash(iso.pixels)).toBe(pixelHash(again.pixels));
     const sheet = await renderer.sheet(scene(), { title: "GOLDEN", tile: 120 });
+    const value = await renderer.view(scene(), "iso-front-right", 160, {
+      mode: "value",
+    });
+    const normal = await renderer.view(scene(), "iso-front-right", 160, {
+      mode: "normal",
+    });
     expect(renderer.missingTextures).toEqual([]);
     expect({
       iso: pixelHash(iso.pixels),
       sheet: pixelHash(sheet.pixels),
+      isoValue: pixelHash(value.pixels),
+      isoNormal: pixelHash(normal.pixels),
     }).toMatchInlineSnapshot(`
       {
         "iso": "6fab03b4cc2e18a0d8cf4eebfd1ac4aa3d9fda37a98c0d52ac9ce1c488b38a30",
+        "isoNormal": "2b05f00265818f79b4fc3e1d4dcb3aacba08098e62817d9f91a23898be3eef6b",
+        "isoValue": "b9549d2b673e00d1155d0aa7c11804c5ac8efe5144e9da664f4300a2edf6feac",
         "sheet": "26a5bcff5177bea9a60872dd6302f4f58883b21de3e6eb638dd331caec1f2722",
       }
     `);
+    // Value mode is gray everywhere; normal mode is not textured.
+    const centre = (80 * 160 + 80) * 4;
+    expect(value.pixels[centre]).toBe(value.pixels[centre + 1]);
+    expect(value.pixels[centre]).toBe(value.pixels[centre + 2]);
+    const micro = await renderer.judgeSheet(scene(), {
+      kind: "micro",
+      label: "A",
+      tile: 120,
+    });
+    const map = await renderer.judgeSheet(scene(), {
+      kind: "map",
+      label: "B",
+      tile: 120,
+    });
+    expect({
+      judgeMicro: pixelHash(micro.pixels),
+      judgeMap: pixelHash(map.pixels),
+    }).toMatchInlineSnapshot(`
+      {
+        "judgeMap": "5888ab2781ca8a45c6f92a5b66834f71cf20d2c02e9ee002598187566dee6846",
+        "judgeMicro": "dce453d357a248f553c488ed6b4aa8e83d3cffa0c38890b15408b6a48b2202fe",
+      }
+    `);
+    // A judge sheet at the default tile fits vision-model input without resizing.
+    const full = await renderer.judgeSheet(scene(), {
+      kind: "map",
+      label: "C",
+    });
+    expect(full.width).toBeLessThanOrEqual(2000);
+    expect(full.height).toBeLessThanOrEqual(2000);
+    const jpeg = await encodeJpeg(full);
+    expect([jpeg[0], jpeg[1]]).toEqual([0xff, 0xd8]);
     const png = await encodePng(sheet);
     expect(png.subarray(1, 4).toString()).toBe("PNG");
   });
@@ -263,4 +305,41 @@ describe("renderer", () => {
       grass.pixels[center] ?? 0,
     );
   });
+});
+
+describe("large grids", () => {
+  test("a view keeps the whole grid in frame instead of clipping its corners", async () => {
+    const renderer = new Renderer(root);
+    // A 300-block plane projects to ~424 px isometrically: wider than the tile.
+    const grid = new BlockGrid({ x: 300, y: 2, z: 300 });
+    for (let x = 0; x < 300; x += 1) {
+      for (let z = 0; z < 300; z += 1) {
+        grid.set(x, 0, z, "minecraft:stone");
+      }
+    }
+    const size = 160;
+    const iso = await renderer.view(grid, "iso-front-right", size);
+    expect([iso.width, iso.height]).toEqual([size, size]);
+    const background = [222, 228, 236];
+    const at = (x: number, y: number): number[] => {
+      const index = (y * size + x) * 4;
+      return [...iso.pixels.subarray(index, index + 3)];
+    };
+    // The margin stays clear at every corner and the plane fills the middle.
+    for (const [x, y] of [
+      [2, 2],
+      [size - 3, 2],
+      [2, size - 3],
+      [size - 3, size - 3],
+    ] as const) {
+      expect(at(x, y)).toEqual(background);
+    }
+    expect(at(size / 2, size / 2)).not.toEqual(background);
+    const sheet = await renderer.judgeSheet(grid, {
+      kind: "map",
+      label: "B",
+      tile: 120,
+    });
+    expect(sheet.width).toBeGreaterThan(0);
+  }, 60_000);
 });

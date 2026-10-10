@@ -92,7 +92,8 @@ toolkit mc build — WorldEdit-first build workflow (op log + canvas + promote)
                                         Shared helpers build.ts can import (mc-build components/)
   component propose <dir> <file> --name n --description d [--tag t]…
                                         Copy a build-local helper into components/ for review
-  judge <a> <b> [--model id]            Pairwise vision judge of two renders (PNG or build dir), order-swapped
+  judge <a> <b> [--rubric micro|map] [--model id]   Pairwise vision judge of two renders (PNG or build dir), order-swapped
+  judge --absolute <a> [--rubric micro|map] [--model id]   Score one render 0–5 per rubric axis, aesthetics asked last
 
 Live tsmc: promote/undo with --target live also need --reason "<why>" (journaled), and
 --allow-players when a human is near the box, and --allow-protected inside a protected
@@ -118,6 +119,8 @@ const OPTIONS = {
   "allow-protected": { type: "boolean", default: false },
   "confirm-dangerous": { type: "boolean", default: false },
   model: { type: "string" },
+  rubric: { type: "string" },
+  absolute: { type: "boolean", default: false },
   tag: { type: "string", multiple: true },
   text: { type: "string" },
   description: { type: "string" },
@@ -363,23 +366,42 @@ const HANDLERS: Record<string, Handler> = {
       rest,
     ),
   judge: async (_env, a, values, rest) => {
-    const { DEFAULT_JUDGE_MODEL, judgeRenders, RUBRIC_DIMENSIONS } =
-      await loadJudge();
-    const verdict = await judgeRenders(a, required(rest[0], "<b>"), {
-      model: values.model ?? DEFAULT_JUDGE_MODEL,
+    const judge = await loadJudge();
+    const model = values.model ?? judge.DEFAULT_JUDGE_MODEL;
+    const rubric = judge.parseRubric(values.rubric);
+    if (values.absolute) {
+      const scores = await judge.scoreRender(a, { model, rubric });
+      print(
+        values.json,
+        scores,
+        [
+          `score (${scores.model}, ${scores.rubric}): ${scores.total.toString()}/${scores.max.toString()}, aesthetic ${scores.overallAesthetic.toString()}/5`,
+          `  render = ${scores.render}`,
+          ...judge
+            .rubricAxisIds(rubric)
+            .map(
+              (id) =>
+                `  ${id.padEnd(13)} ${(scores.axes[id] ?? 0).toString()}/5`,
+            ),
+          ...scores.notes.map((line) => `  - ${line}`),
+          ...(scores.record === null ? [] : [`  record = ${scores.record}`]),
+        ].join("\n"),
+      );
+      return 0;
+    }
+    const verdict = await judge.judgeRenders(a, required(rest[0], "<b>"), {
+      model,
+      rubric,
     });
-    const row = (who: "a" | "b") =>
-      `  ${who} ${verdict.totals[who].toString().padStart(2)}/16  ${RUBRIC_DIMENSIONS.map((d) => `${d} ${verdict.scores[who][d].toString()}`).join(", ")}`;
     print(
       values.json,
       verdict,
       [
-        `judge (${verdict.model}): ${verdict.winner === "tie" ? "tie" : `${verdict.winner} wins`} — confidence ${verdict.confidence.toFixed(2)}${verdict.agreed ? "" : " (orderings disagreed)"}`,
+        `judge (${verdict.model}, ${rubric}): ${verdict.winner === "tie" ? "tie" : `${verdict.winner} wins`} — confidence ${verdict.confidence.toFixed(2)}${verdict.agreed ? "" : " (orderings disagreed)"}`,
         `  a = ${verdict.renders.a}`,
         `  b = ${verdict.renders.b}`,
-        row("a"),
-        row("b"),
-        ...verdict.critique.map((line) => `  - ${line}`),
+        ...verdict.reasons.map((line) => `  - ${line}`),
+        ...(verdict.record === null ? [] : [`  record = ${verdict.record}`]),
       ].join("\n"),
     );
     return 0;

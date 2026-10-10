@@ -16,6 +16,18 @@ function score(task: TaskReport): string {
   return `${String(passed)}/${String(task.checks.length)}`;
 }
 
+function judgeCell(task: TaskReport): string {
+  const judge = task.judge;
+  if (judge === null) return "—";
+  const outcome =
+    judge.winner === "tie"
+      ? "tie"
+      : judge.winner === "agent"
+        ? "agent wins"
+        : `${judge.reference} wins`;
+  return `${outcome} (${judge.confidence.toFixed(2)}${judge.agreed ? "" : ", disagreed"})`;
+}
+
 function taskSection(task: TaskReport): string {
   const checks = task.checks.map(
     (check) => `- ${check.pass ? "✅" : "❌"} ${check.name} — ${check.detail}`,
@@ -41,7 +53,7 @@ function taskSection(task: TaskReport): string {
 export function renderReport(report: RunReport): string {
   const rows = report.tasks.map(
     (task) =>
-      `| ${task.id} | ${task.title} | ${task.status} | ${score(task)} | ${String(task.seconds)} s | ${usageCell(task.usage)} |`,
+      `| ${task.id} | ${task.title} | ${task.status} | ${score(task)} | ${judgeCell(task)} | ${String(task.seconds)} s | ${usageCell(task.usage)} |`,
   );
   const passed = report.tasks.filter((task) => task.status === "passed").length;
   return [
@@ -49,8 +61,8 @@ export function renderReport(report: RunReport): string {
     "",
     `Agent **${report.agent}**${report.model === null ? "" : ` (${report.model})`} on \`${report.head.slice(0, 10)}\`, started ${report.startedAt}. **${String(passed)}/${String(report.tasks.length)} passed.**`,
     "",
-    "| Task | What | Status | Checks | Time | Tokens |",
-    "| --- | --- | --- | --- | --- | --- |",
+    "| Task | What | Status | Checks | Judge vs library | Time | Tokens |",
+    "| --- | --- | --- | --- | --- | --- | --- |",
     ...rows,
     "",
     ...report.tasks.map((task) => taskSection(task)),

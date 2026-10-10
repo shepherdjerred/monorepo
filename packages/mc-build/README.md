@@ -59,8 +59,22 @@ texture pack the test authors itself, so CI needs no Mojang assets.
 
 ```bash
 bun run scripts/render.ts test/fixtures/house.build.ts /tmp/house.png
+bun run scripts/render.ts out/site.schem /tmp/sheet.png --judge-sheet /tmp/judge.png --kind micro --label A
 bun run typecheck && bun run test && bun run lint
 ```
+
+Every view can be drawn `textured` (default), in `value` (grays: tonal
+massing and silhouette) or in `normal` (each face coloured by its facing, so
+a flat wall is one flat colour and relief shows as colour changes):
+`renderer.view(grid, "iso-front-right", 512, { mode: "value" })`. The
+**judge sheet** (`src/render/judge-sheet.ts`) is the fixed, anonymised
+layout vision judges see — hero, plan, value and normal views plus close-ups
+at twice the scale, titled only with a letter — in a `micro` (one building)
+or `map` (settlement) arrangement. `src/lint/repetition.ts` measures how much
+of a grid is copy-pasted (hashed 8×8×8 cubes); the harness evals use it.
+Pass `{ baseline: site }` to measure changed cells, including excavations,
+instead of the final blocks. The grids must have identical dimensions;
+`minFilled` then counts edits, and repeated removals count as repetition.
 
 ## Components
 

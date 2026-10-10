@@ -31,6 +31,7 @@ import { selectTasks, type TaskDef } from "#evals/lib/tasks.ts";
 import type {
   CommandResult,
   GradeCheck,
+  JudgeSummary,
   RunReport,
   TaskReport,
   TaskStatus,
@@ -222,6 +223,7 @@ type Graded = {
   checks: GradeCheck[];
   artifacts: string[];
   notes: string[];
+  judge?: JudgeSummary | null;
   error: string | null;
 };
 
@@ -292,6 +294,7 @@ async function runTask(task: TaskDef): Promise<TaskReport> {
       checks: graded.checks,
       artifacts: graded.artifacts,
       notes: graded.notes,
+      judge: graded.judge ?? null,
       lastMessage: agentRun.lastMessage,
       taskDir: prepared.taskDir,
     };
@@ -325,6 +328,7 @@ function setupFailure(task: TaskDef, error: unknown): TaskReport {
     checks: [],
     artifacts: [],
     notes: [`setup error: ${message}`],
+    judge: null,
     lastMessage: "",
     taskDir: path.join(runDir, task.id),
   };

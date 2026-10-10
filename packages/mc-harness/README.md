@@ -230,13 +230,22 @@ n --description d` copies a self-contained build helper into
   `packages/mc-build/components/<name>/`, writes `meta.json`, derives a demo
   from the build program, renders `demo.png` and prints the review checklist
   (it refuses to overwrite).
-- **Judge** (`judge <a> <b> [--model id]`) asks a vision model to compare two
-  renders on the eight rubric aspects, once in each order; when the orderings
-  disagree the verdict is a tie. It defaults to `gpt-6.1-sol` and needs
-  `OPENAI_API_KEY` in the environment (another provider's model needs that
-  provider's key). The E2/E5 eval graders add its verdict against a library
-  reference as a note when a credential is present; it never affects pass or
-  fail.
+- **Judge** (`judge <a> <b> [--rubric micro|map] [--model id]`) asks a vision
+  model which of two judge sheets is the better build, once in each order;
+  when the orderings disagree the verdict is a tie, and no scores come back
+  from a comparison. `judge --absolute <a> [--rubric micro|map]` scores one
+  sheet 0–5 per rubric axis (functional axes first, the overall aesthetic
+  question last and separately, so it cannot halo the rest). Both default to
+  `gpt-6.1-sol` and need `OPENAI_API_KEY` in the environment (another
+  provider's model needs that provider's key). A PNG argument is taken as a
+  judge sheet (`scripts/render.ts --judge-sheet`); a build directory is
+  judged by a judge sheet of the rubric rendered from its frozen canvas
+  result (`expected.json`, from `build run`) and kept under `<dir>/judge/`,
+  where the verdict is written too. Standalone PNGs compared with a build
+  directory are copied there by content hash before judging, so changing or
+  deleting the original cannot alter the recorded evidence. The build graders
+  record the library comparison in the eval report; looks are rated by the
+  bench (`evals/README.md`), never by pass/fail.
 
 The CLI reaches servers only through the daemon socket, so the daemon remains
 the sole owner of sandboxes and bridge tokens.

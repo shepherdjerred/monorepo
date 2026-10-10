@@ -1,0 +1,5 @@
+Build me a small stone chapel with a bell tower in Minecraft, good enough to anchor a village square. In a fresh flat sandbox: a nave around 13×21 with buttresses, arched or tall windows in rhythm, a proper entrance, and a bell tower at least 20 blocks tall with a belfry, a spire or pitched cap and visible bell. Use a palette with real value contrast and weathering (not one flat stone), give the roof a distinct material, light the interior, and set it on a churchyard with a path, a low wall or fence, a tree and some gravestones. Iterate on it using renders until you would be proud to show it.
+
+Do the work through the repository's build workflow so the result is replayable, and put the finished build into a sandbox that you leave running.
+
+Deliverables: copy your best overview render to `OUT/final.png`. `OUT/result.json`: {"sourceSandbox": "<sbx id holding the finished build>", "buildDir": "<path>", "applyId": "<id of the promote that placed it>", "site": {"min": [x, y, z], "max": [x, y, z]}, "iterations": <n>, "lintErrors": <n>, "lintWarnings": <n>, "verifyMismatches": <n>, "selfCritique": "<2-4 sentences, honest, with rubric scores>"}.

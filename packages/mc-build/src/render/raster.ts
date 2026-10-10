@@ -44,6 +44,40 @@ export class Image {
     this.pixels[index + 3] = Math.max(this.pixels[index + 3] ?? 0, rgba[3]);
   }
 
+  /** A copy `factor` times smaller, each pixel the mean of a `factor`×`factor` block. */
+  shrink(factor: number): Image {
+    const out = new Image(
+      Math.floor(this.width / factor),
+      Math.floor(this.height / factor),
+    );
+    for (let y = 0; y < out.height; y += 1) {
+      for (let x = 0; x < out.width; x += 1) {
+        out.pixels.set(
+          this.blockMean(x * factor, y * factor, factor),
+          (y * out.width + x) * 4,
+        );
+      }
+    }
+    return out;
+  }
+
+  /** The mean RGBA of the `factor`×`factor` block whose top-left pixel is (x0, y0). */
+  private blockMean(x0: number, y0: number, factor: number): Uint8Array {
+    const sum = [0, 0, 0, 0];
+    for (let dy = 0; dy < factor; dy += 1) {
+      for (let dx = 0; dx < factor; dx += 1) {
+        const index = ((y0 + dy) * this.width + (x0 + dx)) * 4;
+        for (let channel = 0; channel < 4; channel += 1) {
+          sum[channel] =
+            (sum[channel] ?? 0) + (this.pixels[index + channel] ?? 0);
+        }
+      }
+    }
+    return Uint8Array.from(sum, (value) =>
+      Math.round(value / (factor * factor)),
+    );
+  }
+
   /** Copies another image in at (x, y). */
   blit(source: Image, x: number, y: number): void {
     for (let sy = 0; sy < source.height; sy += 1) {

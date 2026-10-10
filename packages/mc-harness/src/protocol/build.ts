@@ -23,7 +23,52 @@ export const BUILD_FILES = {
   expectedParts: "expected-parts",
   schematicsDir: "schematics",
   rendersDir: "renders",
+  /** Persisted judge verdicts: `judge/pair-<ts>.json`, `judge/absolute-<ts>.json`. */
+  judgeDir: "judge",
 } as const;
+
+export const JudgeRubricSchema = z.enum(["micro", "map"]);
+export type JudgeRubric = z.infer<typeof JudgeRubricSchema>;
+
+const judgeScore = z.number().int().min(0).max(5);
+
+/** One order-swapped pairwise verdict, as written under `judge/`. */
+export const JudgePairRecordSchema = z.strictObject({
+  kind: z.literal("pair"),
+  at: z.string().min(1),
+  model: z.string().min(1),
+  rubric: JudgeRubricSchema,
+  /** `judgeFingerprint(rubric)` when written: the prompt and answer shape asked; a changed prompt is a new judge. */
+  judge: z.string().min(1),
+  a: z.string().min(1),
+  b: z.string().min(1),
+  winner: z.enum(["a", "b", "tie"]),
+  confidence: z.number().min(0).max(1),
+  agreed: z.boolean(),
+  reasons: z.array(z.string()),
+});
+
+/** One absolute rubric score, as written under `judge/`. */
+export const JudgeAbsoluteRecordSchema = z.strictObject({
+  kind: z.literal("absolute"),
+  at: z.string().min(1),
+  model: z.string().min(1),
+  rubric: JudgeRubricSchema,
+  /** `scoreFingerprint(rubric)` when written; a changed prompt or axis set is a new scorer. */
+  judge: z.string().min(1),
+  render: z.string().min(1),
+  axes: z.record(z.string(), judgeScore),
+  overallAesthetic: judgeScore,
+  total: z.number().int().min(0),
+  max: z.number().int().min(0),
+  notes: z.array(z.string()),
+});
+
+export const JudgeRecordSchema = z.discriminatedUnion("kind", [
+  JudgePairRecordSchema,
+  JudgeAbsoluteRecordSchema,
+]);
+export type JudgeRecord = z.infer<typeof JudgeRecordSchema>;
 
 export const WeOpLogSchema = z.strictObject({
   kind: z.literal("we"),

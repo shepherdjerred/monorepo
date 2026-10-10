@@ -35,10 +35,20 @@ export type GradeContext = {
   exec: (argv: readonly string[]) => Promise<CommandResult>;
 };
 
+/** The pairwise judge's verdict on a build task, against a library reference. */
+export type JudgeSummary = {
+  reference: string;
+  winner: "agent" | "reference" | "tie";
+  confidence: number;
+  agreed: boolean;
+  model: string;
+};
+
 export type Grader = (ctx: GradeContext) => Promise<{
   checks: GradeCheck[];
   artifacts: string[];
   notes: string[];
+  judge?: JudgeSummary | null;
 }>;
 
 export type TaskStatus = "passed" | "failed" | "timeout" | "error";
@@ -53,6 +63,7 @@ export type TaskReport = {
   checks: GradeCheck[];
   artifacts: string[];
   notes: string[];
+  judge: JudgeSummary | null;
   lastMessage: string;
   taskDir: string;
 };
