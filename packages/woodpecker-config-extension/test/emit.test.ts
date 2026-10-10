@@ -191,7 +191,7 @@ describe("pod shape", () => {
   });
 });
 
-test.each(["push", "tag"])(
+test.each(["push", "pull_request", "tag"])(
   "ordinary %s checkouts preserve native Git plugin settings",
   (event) => {
     const step = testPipelineSteps()[0];
@@ -203,6 +203,7 @@ test.each(["push", "tag"])(
             image: z.string(),
             settings: z.object({
               depth: z.literal(0),
+              partial: z.literal(false),
               tags: z.literal(true).optional(),
             }),
             commands: z.never().optional(),
