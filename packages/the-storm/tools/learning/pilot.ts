@@ -4,7 +4,9 @@ import { z } from "zod";
 import curriculum from "./curriculum.json";
 import { PilotLedger } from "./pilot-ledger.ts";
 import { runPaperWorker } from "./owner.ts";
-import { frozenManifest } from "./sandbox.ts";
+import { frozenManifest, frozenTrainingMaps } from "./sandbox.ts";
+import { MapBinding } from "./maps/plan.ts";
+import { isDeepStrictEqual } from "node:util";
 
 const args = parseArgs({
   options: {
@@ -41,6 +43,7 @@ async function inputs(dataset: string | null) {
         );
   return {
     native: await frozenManifest(),
+    maps: await frozenTrainingMaps(dataset === null),
     dataset: files,
     bunVersion: Bun.version,
     platform: process.platform,
@@ -118,6 +121,8 @@ const TrainingSchema = z.object({
   dataset_sha256: z.string(),
   pilot_acceptance_checked: z.literal(false),
   test_used_for_selection: z.literal(false),
+  maps: z.array(MapBinding).min(1),
+  map_coverage_complete: z.literal(true),
   curriculum: z
     .object({
       stages: z.array(z.string()),
@@ -168,6 +173,9 @@ for (let index = 0; index < 3; index++) {
     const rawManifest: unknown = JSON.parse(manifestText);
     const manifest = CheckpointSchema.parse(rawManifest);
     const updates = manifest.training.curriculum.updates;
+    const maps = await frozenTrainingMaps(config.mode === "diagnostic");
+    if (!isDeepStrictEqual(manifest.training.maps, maps.maps))
+      throw new Error("Pilot did not train on the frozen admitted map catalog");
     if (
       manifest.training.seed !== claim.seed ||
       updates.length !== curriculum.stages.length ||

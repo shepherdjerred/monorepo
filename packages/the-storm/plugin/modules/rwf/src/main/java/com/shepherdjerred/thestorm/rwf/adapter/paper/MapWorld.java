@@ -181,7 +181,7 @@ final class MapWorld implements MapRotation.Entry {
     var request = generation;
     return DetailsRestorer.restore(
         new DetailsRestorer.Target(
-            context.scheduler(), context.world(), definition().border().min()),
+            context.scheduler(), context.compute(), context.world(), definition().border().min()),
         map().details(),
         () -> request == generation);
   }
