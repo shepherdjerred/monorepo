@@ -163,6 +163,25 @@ beforeAll(async () => {
   await writeJson("models/block/test_chest.json", {
     textures: { particle: "block/test_wood" },
   });
+  await writeJson("models/block/test_torch.json", {
+    textures: { all: "block/test_wood" },
+    elements: cube("#all").elements.map((element) => ({
+      ...element,
+      from: [7, 0, 7],
+      to: [9, 10, 9],
+    })),
+  });
+  for (const [block, model] of [
+    ["torch", "test_torch"],
+    ["lantern", "test_torch"],
+    ["oak_slab", "test_step"],
+    ["short_grass", "test_window"],
+    ["tinted_glass", "test_window"],
+  ] as const) {
+    await writeJson(`blockstates/${block}.json`, {
+      variants: { "": { model: `block/${model}` } },
+    });
+  }
 });
 
 afterAll(async () => {
@@ -323,9 +342,9 @@ describe("renderer", () => {
       {
         "compare": "06bf50be9f5010c0b2a17072a395237832f8a6247cfe1a410434b1e7ea74c84d",
         "elevations": "c0f891b52051ca40ae90b9891b4a91f26d13e32cd60b8855450eae4f69cdd692",
-        "floorLight": "be5ddf70e95a211a4f72dff5171a7055630ee41adaccca5128b233cf922e955d",
+        "floorLight": "6f131fb687f382ce3f6762b7505544a0dc2ad6fd020d865e05f460ff5ca9de9f",
         "frontGrid": "56c282eca91516261b49a4529294e0ef5c6733f974ec41287ff102563ebdb8f1",
-        "light": "b3e38aa34f3d50ae7c924e589a782fba9d8e9cad43b6f407190ddf6ba1503a7d",
+        "light": "6fab03b4cc2e18a0d8cf4eebfd1ac4aa3d9fda37a98c0d52ac9ce1c488b38a30",
         "pov": "7f384178258124426d26b81efe7f57e76c0f1b388995b7261f1d7ee0988e1a4a",
         "relief": "49a0d0e2850c533f15df72f989993c3858c56f4eaeecf2e002a097ecfb670259",
         "squint": "97bfb2635a9a0d5a0b2852ff93931c64e09a993ef1bd51542cebae5a23040fc8",
@@ -581,6 +600,34 @@ function stonePlane(side: number): BlockGrid {
 }
 
 describe("skylight", () => {
+  test.each([
+    "torch",
+    "oak_slab",
+    "short_grass",
+    "glass",
+    "stone",
+    "tinted_glass",
+  ])("classifies %s from model geometry and texture opacity", async (block) => {
+    const renderer = new Renderer(root);
+    const whole = new BlockGrid({ x: 3, y: 6, z: 3 }, "minecraft:stone");
+    for (let y = 1; y < 6; y += 1) whole.set(1, y, 1, "minecraft:air");
+    const section = cutGrid(whole, { belowY: 2 });
+    const open = await renderer.view(section, "top", 64, {
+      mode: "light",
+      lightFrom: whole,
+    });
+    whole.set(1, 5, 1, `minecraft:${block}`);
+    const covered = await renderer.view(section, "top", 64, {
+      mode: "light",
+      lightFrom: whole,
+    });
+    if (block === "stone" || block === "tinted_glass") {
+      expect(pixelHash(covered.pixels)).not.toBe(pixelHash(open.pixels));
+    } else {
+      expect(pixelHash(covered.pixels)).toBe(pixelHash(open.pixels));
+    }
+  });
+
   test("every air variant lets the sky through", async () => {
     const renderer = new Renderer(root);
     const open = new BlockGrid({ x: 3, y: 4, z: 3 });

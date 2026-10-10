@@ -1,6 +1,7 @@
 import { mkdtemp, rm, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { createHash } from "node:crypto";
 import { expect, it } from "vitest";
 import { keepBuildRecord } from "#evals/lib/build-record.ts";
 import { JudgeRecordSchema } from "#protocol/build.ts";
@@ -112,6 +113,44 @@ it("copies absolute and cross-build judge inputs and rewrites every archive hop"
     );
     expect(await Bun.file(path.join(archive, absolute.render)).text()).toBe(
       "other input",
+    );
+  } finally {
+    await rm(root, { recursive: true });
+  }
+});
+
+it("keeps generated input paths separate from source filenames through two archive hops", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "mc-record-collision-"));
+  try {
+    const source = path.join(root, "build");
+    const task = path.join(root, "eval");
+    const archive = path.join(root, "benchmark");
+    const external = path.join(root, "other", "input.png");
+    const externalBytes = "exact external judge input";
+    const hash = createHash("sha256").update(externalBytes).digest("hex");
+    const own = `judge/input-${hash}.png`;
+    await Bun.write(external, externalBytes);
+    await Bun.write(path.join(source, own), "different source image");
+    await Bun.write(
+      path.join(source, "judge/a-pair.json"),
+      JSON.stringify(pair(external, own)),
+    );
+    await keepBuildRecord(source, task, { allowedRoot: root });
+    await keepBuildRecord(task, archive);
+    for (const directory of [source, task, path.join(root, "other")]) {
+      await rm(directory, { recursive: true });
+    }
+    const record = JudgeRecordSchema.parse(
+      await Bun.file(path.join(archive, "judge/a-pair.json")).json(),
+    );
+    if (record.kind !== "pair") throw new Error("wrong verdict kind");
+    expect(record.a).toBe(`judge/inputs/${hash}.png`);
+    expect(record.b).toBe(own);
+    expect(await Bun.file(path.join(archive, record.a)).text()).toBe(
+      externalBytes,
+    );
+    expect(await Bun.file(path.join(archive, record.b)).text()).toBe(
+      "different source image",
     );
   } finally {
     await rm(root, { recursive: true });

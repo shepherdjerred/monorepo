@@ -36,7 +36,7 @@ async function portableRecord(
     const archived =
       path.dirname(relative) === "judge"
         ? relative
-        : path.join("judge", `input-${hash}.png`);
+        : path.join("judge", "inputs", `${hash}.png`);
     const out = path.join(destination, archived);
     await Bun.write(out, bytes);
     kept.add(out);

@@ -163,24 +163,24 @@ export function shadeRelief(
   });
 }
 
-/** Skylight crosses invisible light, ordinary/stained glass and panes. */
-function transmitsSky(state: string): boolean {
-  const id = blockId(state).replace(/^minecraft:/u, "");
-  return (
-    isAir(state) ||
-    id === "light" ||
-    id === "glass" ||
-    id === "glass_pane" ||
-    id.endsWith("_stained_glass") ||
-    id.endsWith("_stained_glass_pane")
-  );
+function transmitsSky(
+  state: string,
+  transmission: ReadonlyMap<string, boolean>,
+): boolean {
+  const result = transmission.get(state);
+  if (result === undefined)
+    throw new Error(`Missing light transmission for ${state}`);
+  return result;
 }
 
 /** Per column, the highest skylight-blocking cell (-1 for an open column). */
-function skyline(grid: BlockGrid): Int32Array {
+function skyline(
+  grid: BlockGrid,
+  transmission: ReadonlyMap<string, boolean>,
+): Int32Array {
   const top = new Int32Array(grid.size.x * grid.size.z).fill(-1);
   grid.forEach((x, y, z) => {
-    if (transmitsSky(grid.get(x, y, z))) return;
+    if (transmitsSky(grid.get(x, y, z), transmission)) return;
     const column = z * grid.size.x + x;
     if (y > (top[column] ?? -1)) top[column] = y;
   });
@@ -188,7 +188,12 @@ function skyline(grid: BlockGrid): Int32Array {
 }
 
 /** Breadth-first spread of a light field through air, one level less per step. */
-function propagate(grid: BlockGrid, levels: Int8Array, queue: number[]): void {
+function propagate(
+  grid: BlockGrid,
+  levels: Int8Array,
+  queue: number[],
+  transmission: ReadonlyMap<string, boolean>,
+): void {
   const { x: sx, z: sz } = grid.size;
   // Iterating while pushing visits newly queued cells too (array for-of is live).
   for (const index of queue) {
@@ -201,7 +206,10 @@ function propagate(grid: BlockGrid, levels: Int8Array, queue: number[]): void {
       const nx = x + dx;
       const ny = y + dy;
       const nz = z + dz;
-      if (!grid.inBounds(nx, ny, nz) || !transmitsSky(grid.get(nx, ny, nz)))
+      if (
+        !grid.inBounds(nx, ny, nz) ||
+        !transmitsSky(grid.get(nx, ny, nz), transmission)
+      )
         continue;
       const next = grid.index(nx, ny, nz);
       if ((levels[next] ?? 0) < level - 1) {
@@ -217,8 +225,11 @@ function propagate(grid: BlockGrid, levels: Int8Array, queue: number[]): void {
  * then one less per step through air, so cells under an eave or just inside
  * a doorway are lit and deep interiors are not.
  */
-export function skyLightLevels(grid: BlockGrid): Int8Array {
-  const top = skyline(grid);
+export function skyLightLevels(
+  grid: BlockGrid,
+  transmission: ReadonlyMap<string, boolean>,
+): Int8Array {
+  const top = skyline(grid, transmission);
   const levels = new Int8Array(grid.volume);
   const queue: number[] = [];
   const { x: sx, y: sy, z: sz } = grid.size;
@@ -232,7 +243,7 @@ export function skyLightLevels(grid: BlockGrid): Int8Array {
       }
     }
   }
-  propagate(grid, levels, queue);
+  propagate(grid, levels, queue, transmission);
   return levels;
 }
 
@@ -243,10 +254,9 @@ export function skyLightLevels(grid: BlockGrid): Int8Array {
 export function shadeLight(
   quads: readonly Quad[],
   grid: BlockGrid,
-  light: Int8Array,
+  light: { block: Int8Array; sky: Int8Array },
   origin: Vec3 = ZERO_ORIGIN,
 ): Quad[] {
-  const sky = skyLightLevels(grid);
   return quads.map((quad) => {
     if (quad.normal === null) return quad;
     const outside = outsidePoint(quad, quad.normal);
@@ -255,8 +265,8 @@ export function shadeLight(
     const z = Math.floor(outside[2] + origin.z);
     const level = grid.inBounds(x, y, z)
       ? Math.max(
-          light[grid.index(x, y, z)] ?? 0,
-          sky[grid.index(x, y, z)] ?? 0,
+          light.block[grid.index(x, y, z)] ?? 0,
+          light.sky[grid.index(x, y, z)] ?? 0,
           0,
         )
       : 15;

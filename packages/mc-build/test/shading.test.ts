@@ -4,6 +4,17 @@ import { blockLightLevels } from "#src/lint/lint.ts";
 import { isPassable } from "#src/lint/physics.ts";
 import { skyLightLevels } from "#src/render/shading.ts";
 
+// Flood-field fixtures supply classifications explicitly; renderer tests cover
+// the production model/texture classification boundary.
+function fixtureTransmission(grid: BlockGrid): ReadonlyMap<string, boolean> {
+  return new Map(
+    grid.palette.map((state) => [
+      state,
+      state !== "minecraft:stone" && state !== "minecraft:tinted_glass",
+    ]),
+  );
+}
+
 describe("glass skylight", () => {
   it.each([
     { block: "glass", expected: 15 },
@@ -24,7 +35,9 @@ describe("glass skylight", () => {
     grid.set(1, 1, 1, "minecraft:air");
     grid.set(1, 2, 1, "minecraft:air");
     grid.set(1, 3, 1, `minecraft:${block}`);
-    expect(skyLightLevels(grid)[grid.index(1, 1, 1)]).toBe(expected);
+    expect(
+      skyLightLevels(grid, fixtureTransmission(grid))[grid.index(1, 1, 1)],
+    ).toBe(expected);
   });
   it.each([
     "glass",
@@ -37,8 +50,14 @@ describe("glass skylight", () => {
     for (let y = 1; y < 5; y += 1) grid.set(0, y, 2, "minecraft:air");
     grid.set(1, 2, 2, `minecraft:${block}`);
     grid.set(2, 2, 2, "minecraft:air");
-    expect(skyLightLevels(grid)[grid.index(2, 2, 2)]).toBe(
-      block === "stone" || block === "tinted_glass" ? 0 : 13,
+    expect(
+      skyLightLevels(grid, fixtureTransmission(grid))[grid.index(2, 2, 2)],
+    ).toBe(block === "stone" || block === "tinted_glass" ? 0 : 13);
+  });
+  it("rejects an incomplete transmission classification", () => {
+    const grid = new BlockGrid({ x: 1, y: 1, z: 1 });
+    expect(() => skyLightLevels(grid, new Map())).toThrow(
+      /Missing light transmission/u,
     );
   });
 });

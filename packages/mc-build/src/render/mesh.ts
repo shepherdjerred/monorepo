@@ -412,13 +412,6 @@ export class Mesher {
     private readonly textures: TextureCache,
   ) {}
 
-  private async opaque(faces: readonly LocalFace[]): Promise<boolean> {
-    const textures = await Promise.all(
-      faces.map(async (face) => this.textures.get(face.texture)),
-    );
-    return textures.every((texture) => !texture.cutout && !texture.translucent);
-  }
-
   private async blockMesh(state: string): Promise<BlockMesh> {
     const id = blockId(state);
     if (INVISIBLE.has(id) || isAir(state)) {
@@ -435,7 +428,9 @@ export class Mesher {
     if (faces.length > 0) {
       return {
         faces,
-        fullOpaque: isFullCube(applied) && (await this.opaque(faces)),
+        fullOpaque:
+          isFullCube(applied) &&
+          (await this.textures.opaque(faces.map((face) => face.texture))),
         fluid: null,
       };
     }
@@ -452,6 +447,19 @@ export class Mesher {
       fullOpaque: false,
       fluid: null,
     };
+  }
+
+  /** Use the same geometry and texture opacity as face culling for skylight. */
+  async lightTransmission(grid: BlockGrid): Promise<Map<string, boolean>> {
+    const entries = await Promise.all(
+      grid.palette.map(async (state): Promise<[string, boolean]> => {
+        const mesh = await this.blockMesh(state);
+        const opaque =
+          blockId(state) === "minecraft:tinted_glass" || mesh.fullOpaque;
+        return [state, !opaque];
+      }),
+    );
+    return new Map(entries);
   }
 
   async quads(grid: BlockGrid): Promise<Quad[]> {

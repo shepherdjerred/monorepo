@@ -9,7 +9,7 @@ import { renderJudgeSheet, type JudgeSheetKind } from "./judge-sheet.ts";
 import { Mesher, type Quad, type V3 } from "./mesh.ts";
 import { ModelResolver } from "./models.ts";
 import { Image, rasterize } from "./raster.ts";
-import { shadeLight, shadeRelief } from "./shading.ts";
+import { shadeLight, shadeRelief, skyLightLevels } from "./shading.ts";
 import {
   renderSheet,
   renderView,
@@ -161,7 +161,13 @@ export class Renderer {
         quads: shadeLight(
           quads,
           source,
-          blockLightLevels(source),
+          {
+            block: blockLightLevels(source),
+            sky: skyLightLevels(
+              source,
+              await this.mesher.lightTransmission(source),
+            ),
+          },
           options.lightOrigin,
         ),
         viewMode: "textured",

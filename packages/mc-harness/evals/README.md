@@ -77,7 +77,9 @@ pass/fail. Process is graded from the build's own journal
 (`evals/grade/trajectory.ts`): the build must keep a `journal.jsonl`, show
 at least two critiqued iterations, and never accept a candidate that was
 not critiqued or whose critique total is below the last accepted one. The journal and the judge
-records (`judge/*.json`) are copied into the task directory, and the report
+records (`judge/*.json`) are copied into the task directory. Cross-build judge
+images use content-addressed paths under `judge/inputs/`, separate from copied
+source filenames, and remain portable through benchmark archives. The report
 prints the trajectory (iterations, critique totals in order, accepted and
 rejected candidates).
 

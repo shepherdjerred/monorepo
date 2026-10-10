@@ -74,8 +74,9 @@ by block light with sky light propagated in; level 0 is red). Invisible
 `minecraft:light` blocks emit their `level` (0–15, default 15) while transmitting
 skylight and casting no relief shadows, for example
 `renderer.view(grid, "iso-front-right", 512, { mode: "relief" })`.
-Ordinary and stained glass, including panes, transmit skylight; tinted glass
-and solid blocks obstruct it. The skylight pass is an approximation within
+Skylight transmission uses model geometry and texture opacity: partial models
+and cutout or translucent textures transmit it, including torches, plants and
+glass. Tinted glass and opaque full cubes obstruct it. The skylight pass is an approximation within
 the captured grid. For cut or cropped light views, pass `lightFrom: whole`
 and `lightOrigin: { x, y, z }` (the cropped grid's origin in `whole`) so
 surrounding roofs, walls, lamps and openings still determine illumination.
