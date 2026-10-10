@@ -50,10 +50,11 @@ uses those counts to choose the next full backup. Rehearse a retained restore
 on isolated storage and verify its data. A Completed Backup is not restore
 proof. If these checks cannot be completed, stop at the read-only inventory.
 
-The version 3 R2 manifest conservatively protects the entire preceding remote
+The version 4 R2 manifest conservatively protects the entire preceding remote
 history for each retained schedule/volume, plus all live ZFSBackup snapshot
-references. Unknown object layouts fail closed. Version 2 manifests are
-rejected; regenerate inspection before applying anything.
+references and actual stream ancestry. Unknown object layouts fail closed.
+Version 2 and 3 manifests are rejected; regenerate inspection before applying
+anything.
 
 ## Step 1: Verify the orphan finding
 

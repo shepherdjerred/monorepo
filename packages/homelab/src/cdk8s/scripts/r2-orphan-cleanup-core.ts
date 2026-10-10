@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { R2Object } from "./r2-prefix-inventory.ts";
-import { restoreProtectedBackupNames } from "./r2-restore-protection.ts";
+import { restoreProtectedBackupNames } from "./r2/restore-protection.ts";
 
 export const R2_ORPHAN_MINIMUM_AGE_HOURS = 24;
 export const R2_ZFS_PREFIX = "zfspv-incr/backups/";
@@ -28,7 +28,7 @@ const CandidateSchema = z.object({
 });
 
 export const R2OrphanManifestSchema = z.object({
-  contractVersion: z.literal(3),
+  contractVersion: z.literal(4),
   observedAt: z.iso.datetime(),
   minimumAgeHours: z.literal(R2_ORPHAN_MINIMUM_AGE_HOURS),
   storage: z.object({
@@ -190,7 +190,7 @@ export function buildR2OrphanManifest(input: {
   }
 
   return R2OrphanManifestSchema.parse({
-    contractVersion: 3,
+    contractVersion: 4,
     observedAt: new Date(observedAt).toISOString(),
     minimumAgeHours: R2_ORPHAN_MINIMUM_AGE_HOURS,
     storage: input.storage,

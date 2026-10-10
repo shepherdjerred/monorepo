@@ -4,7 +4,7 @@
  * group size. Removing even a non-ancestor before that position changes the
  * result. Keep the complete preceding history rather than infer independence
  * from a missing Velero Backup or ZFSBackup CR. This deliberately sacrifices
- * reclamation until the producer supplies independently verifiable chains.
+ * reclamation until the restore path no longer depends on history positions.
  */
 export function restoreProtectedBackupNames(input: {
   objectKeys: readonly string[];

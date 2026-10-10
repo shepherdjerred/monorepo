@@ -102,7 +102,7 @@ velero backup get | grep -v Completed || true
   older than 7 days automatically; for anything younger, wait or investigate
   the uploading backup — do not abort uploads belonging to a running backup.
 
-Approve the exact version-3 manifest only after recovery evidence is available.
+Approve the exact version-4 manifest only after recovery evidence is available.
 It records every candidate key, size, modification time and ETag. Apply
 revalidates the complete ancestry and protection set, then conditionally HEADs
 and DELETEs each reviewed key using its approved ETag. It never recursively
