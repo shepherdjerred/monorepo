@@ -173,7 +173,7 @@ export function getScoutDurableRuleGroup(): PrometheusRuleSpecGroups {
         annotations: {
           summary: "Scout finished live matches without minting their reports",
           message: escapePrometheusTemplate(
-            "Scout {{ $labels.environment }} has {{ $value }} live V2 match(es) observed in the last 6 hours whose processing finished at least 15 minutes ago with a subscribed channel owed a report, but no postmatch intent was minted and no report was rendered. Those reports will never be sent. Check `mintPostmatchNotificationIntentsV2` (renamed `mintPostmatchNotificationIntents`) in recent scoutMatchProcessingV2Workflow (renamed scoutMatchProcessingWorkflow) histories. After fixing the cause, render the missed reports with scoutSilentPostmatchBackfillV2Workflow (renamed scoutSilentPostmatchBackfillWorkflow); the backfill's receipts clear this alert.",
+            "Scout {{ $labels.environment }} has {{ $value }} live V2 match(es) observed in the last 6 hours whose processing finished at least 15 minutes ago with a subscribed channel owed a report, but no postmatch intent was minted and no report was rendered. Those reports will never be sent. Check `mintPostmatchNotificationIntents` (`mintPostmatchNotificationIntentsV2` in histories recorded before the rename) in recent scoutMatchProcessingWorkflow (or scoutMatchProcessingV2Workflow) histories. After fixing the cause, render the missed reports with scoutSilentPostmatchBackfillWorkflow; the backfill's receipts clear this alert.",
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(

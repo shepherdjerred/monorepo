@@ -21,6 +21,7 @@ import {
   scoutWorkflowStartRowToRecord,
 } from "#src/database/durable/workflow-start-row.ts";
 import { dateFromIsoInstant } from "#src/database/durable/row-values.ts";
+import { scoutRenamedWorkflowType } from "@scout-for-lol/temporal/identifiers";
 import { scoutDurableWorkflowStartAcceptances } from "#src/metrics/durable-pipeline.ts";
 
 /**
@@ -33,7 +34,7 @@ import { scoutDurableWorkflowStartAcceptances } from "#src/metrics/durable-pipel
  * of starting a second workflow); a request after the previous one was
  * accepted is recorded as a new request under a fresh key. Adoption compares
  * what identifies the start — type and input payload — not when or by whom
- * it was re-requested.
+ * it was re-requested, and compares a type under its renamed name.
  *
  * The partial unique index over in-flight requests is what makes the
  * read-decide-insert safe without a lock: two simultaneous requests for one
@@ -85,6 +86,59 @@ async function workflowStartContext(
 }
 
 /**
+ * A request as it compares with one made now.
+ *
+ * Rows keep the Workflow type they were requested under, and the pipeline
+ * types were renamed (`SCOUT_PRE_RENAME_WORKFLOW_TYPES`). A row requested
+ * under the old name asked for the same start as a request under the new one,
+ * so the domain compares both under the renamed name; comparing the stored
+ * strings would report every re-request of a Workflow id first requested
+ * before the rename as a different start.
+ */
+function underRenamedType<Request extends ScoutWorkflowStartRequest>(
+  request: Request,
+): Request {
+  const workflowType = scoutRenamedWorkflowType(request.workflowType);
+  return {
+    ...request,
+    workflowType,
+    inputPayload: {
+      ...request.inputPayload,
+      kind: scoutRenamedWorkflowType(request.inputPayload.kind),
+    },
+  };
+}
+
+function comparableContext(
+  context: WorkflowStartRequestContext,
+): WorkflowStartRequestContext {
+  return {
+    inFlight:
+      context.inFlight === null ? null : underRenamedType(context.inFlight),
+    latestAccepted:
+      context.latestAccepted === null
+        ? null
+        : underRenamedType(context.latestAccepted),
+  };
+}
+
+/** The stored row behind a record the domain adopted from a compared context. */
+function storedRecord(
+  context: WorkflowStartRequestContext,
+  adopted: ScoutWorkflowStartRecord,
+): ScoutWorkflowStartRecord {
+  const stored = [context.inFlight, context.latestAccepted].find(
+    (record) => record?.requestId === adopted.requestId,
+  );
+  if (stored === undefined || stored === null) {
+    throw new Error(
+      `Adopted request ${adopted.requestId} is not one the context was read with`,
+    );
+  }
+  return stored;
+}
+
+/**
  * How many times a refused insert is re-read and re-decided before the
  * repository gives up. A lost insert is resolved by the domain from what the
  * re-read shows — the winner in flight, or accepted meanwhile — and only a
@@ -100,14 +154,17 @@ export async function requestWorkflowStart(
 ): Promise<RequestWorkflowStartResult> {
   for (let attempt = 0; attempt < LOST_INSERT_ATTEMPTS; attempt += 1) {
     const context = await workflowStartContext(db, request.requestedWorkflowId);
-    const decision = decideWorkflowStartRequest(context, request);
+    const decision = decideWorkflowStartRequest(
+      comparableContext(context),
+      underRenamedType(request),
+    );
     if (decision.outcome === "conflict") {
       return decision;
     }
     if (decision.outcome === "adopt") {
       return {
         outcome: "adopted",
-        record: decision.record,
+        record: storedRecord(context, decision.record),
         latestAccepted: context.latestAccepted,
       };
     }
@@ -133,9 +190,9 @@ export async function requestWorkflowStart(
     // and the domain adopts whichever the re-read shows.
     const raced = await workflowStartContext(db, request.requestedWorkflowId);
     const resolved = resolveWorkflowStartLostInsert({
-      before: context,
-      after: raced,
-      incoming: request,
+      before: comparableContext(context),
+      after: comparableContext(raced),
+      incoming: underRenamedType(request),
     });
     if (resolved.outcome === "conflict") {
       return resolved;
@@ -143,7 +200,7 @@ export async function requestWorkflowStart(
     if (resolved.outcome === "adopt") {
       return {
         outcome: "adopted",
-        record: resolved.record,
+        record: storedRecord(raced, resolved.record),
         latestAccepted: raced.latestAccepted,
       };
     }

@@ -9,7 +9,11 @@ import {
 } from "./pipeline-contracts.ts";
 import {
   SCOUT_PIPELINE_ACTIVITY_QUEUE_CLASSES,
+  SCOUT_PIPELINE_START_WORKFLOW_TYPES,
   SCOUT_PIPELINE_WORKFLOW_NAMES,
+  SCOUT_PRE_RENAME_WORKFLOW_TYPES,
+  SCOUT_WORKFLOW_NAMES,
+  scoutRenamedWorkflowType,
   scoutChallengeRunRecomputeWorkflowId,
   scoutDuelSeriesWorkflowId,
   scoutHallBaselineWorkflowId,
@@ -172,6 +176,44 @@ describe("Scout V2 workflow identifiers", () => {
     // pipeline may sit in front of one.
     expect(Object.values(SCOUT_PIPELINE_ACTIVITY_QUEUE_CLASSES)).not.toContain(
       "interactive",
+    );
+  });
+});
+
+describe("the generation rename", () => {
+  test("issues every pipeline type under its renamed name", () => {
+    expect(
+      Object.values(SCOUT_WORKFLOW_NAMES).filter((name) =>
+        name.endsWith("V2Workflow"),
+      ),
+    ).toEqual([]);
+    expect(SCOUT_PRE_RENAME_WORKFLOW_TYPES).toMatchObject({
+      scoutMatchProcessingWorkflow: "scoutMatchProcessingV2Workflow",
+      scoutPrematchDiscoveryWorkflow: "scoutPrematchDiscoveryV2Workflow",
+    });
+  });
+
+  test("compares a recorded pre-rename type under the name issued now", () => {
+    for (const [renamed, preRename] of Object.entries(
+      SCOUT_PRE_RENAME_WORKFLOW_TYPES,
+    )) {
+      expect(scoutRenamedWorkflowType(preRename)).toBe(renamed);
+      expect(scoutRenamedWorkflowType(renamed)).toBe(renamed);
+    }
+    expect(scoutRenamedWorkflowType(SCOUT_WORKFLOW_NAMES.reportRun)).toBe(
+      "scoutReportRunWorkflow",
+    );
+  });
+
+  test("filters start rows on both names of every pipeline type", () => {
+    expect(SCOUT_PIPELINE_START_WORKFLOW_TYPES).toHaveLength(
+      SCOUT_PIPELINE_WORKFLOW_NAMES.length * 2,
+    );
+    expect(SCOUT_PIPELINE_START_WORKFLOW_TYPES).toEqual(
+      expect.arrayContaining([
+        "scoutNotificationWorkflow",
+        "scoutNotificationV2Workflow",
+      ]),
     );
   });
 });

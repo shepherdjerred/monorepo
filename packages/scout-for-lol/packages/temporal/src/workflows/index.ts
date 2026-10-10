@@ -219,9 +219,10 @@ export async function scoutSilentPostmatchBackfillWorkflow(
   return await silentPostmatchBackfill(input);
 }
 
-// The pre-rename Workflow types, still the names everything issues in this
-// release (`SCOUT_WORKFLOW_NAMES`). Each is an alias of the renamed function,
-// so the bundle registers both names; see `SCOUT_RENAMED_WORKFLOW_TYPES`.
+// The pre-rename Workflow types. Nothing issues them for a new execution any
+// more, but open executions run under them and a history recorded before the
+// `scout-generation-rename` patch starts children under them, so the bundle
+// still registers both names; see `SCOUT_PRE_RENAME_WORKFLOW_TYPES`.
 export {
   scoutPostMatchDiscoveryWorkflow as scoutPostMatchDiscoveryV2Workflow,
   scoutMatchProcessingWorkflow as scoutMatchProcessingV2Workflow,

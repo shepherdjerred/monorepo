@@ -57,7 +57,7 @@ describe("Scout progression and V2 pipeline reconciliation schedules", () => {
       );
       expect(pipeline).toMatchObject({
         namespace: stage,
-        workflowType: "scoutPipelineReconciliationV2Workflow",
+        workflowType: "scoutPipelineReconciliationWorkflow",
         taskQueue: `scout-${stage}`,
         timing: { kind: "interval", every: "1 minute" },
         overlap: ScheduleOverlapPolicy.SKIP,
