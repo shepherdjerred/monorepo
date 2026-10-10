@@ -1,3 +1,7 @@
+import {
+  REPORT_DELIVERY_ACTIVITY_RETRY,
+  REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
+} from "#shared/reports/report-delivery-policy.ts";
 import { proxyActivities } from "@temporalio/workflow";
 import type { DepsSummaryActivities } from "#activities/maintenance/deps-summary/deps-summary.ts";
 import type { DependencyChange } from "#shared/deps-summary-types.ts";
@@ -102,8 +106,8 @@ export async function generateDependencySummary(
 ): Promise<void> {
   const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
     taskQueue: reportActivityTaskQueue(reportTaskQueue),
-    startToCloseTimeout: "2 minutes",
-    retry: RETRY,
+    startToCloseTimeout: REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
+    retry: REPORT_DELIVERY_ACTIVITY_RETRY,
   });
   const startedAt = new Date().toISOString();
   try {
