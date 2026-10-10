@@ -76,6 +76,24 @@ async function twoVersions(name: string) {
   return { workspace, first, second };
 }
 
+describe("distinct critiqued builds", () => {
+  it("counts changed grids rather than renamed renders of an unchanged build", async () => {
+    const workspace = await flatSiteBuild(
+      path.join(root, "distinct-grids"),
+      "distinct-grids",
+    );
+    await saveVersion(workspace, "v1", 1);
+    await saveVersion(workspace, "v2", 1);
+    const unchanged = await readJournal(workspace.dir);
+    expect(unchanged).toHaveProperty("entries");
+    expect(trajectoryChecks(unchanged, "micro")[1]?.pass).toBe(false);
+    await saveVersion(workspace, "v3", 2);
+    const changed = await readJournal(workspace.dir);
+    expect(changed).toHaveProperty("entries");
+    expect(trajectoryChecks(changed, "micro")[1]?.pass).toBe(true);
+  });
+});
+
 describe("default knockout iteration", () => {
   it("requires a new visual critique when a render name is reused", async () => {
     const workspace = await flatSiteBuild(

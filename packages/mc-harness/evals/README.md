@@ -75,7 +75,7 @@ The grader renders the promoted site's contact sheet, hero and **judge
 sheet** (`promoted-judge.png`); looks are rated by the bench below, never by
 pass/fail. Process is graded from the build's own journal
 (`evals/grade/trajectory.ts`): the build must keep a `journal.jsonl`, show
-at least two critiqued iterations, and never accept a candidate that was
+at least two critiqued iterations with distinct grid hashes, and never accept a candidate that was
 not critiqued or whose critique total is below the last accepted one. The journal and the judge
 records (`judge/*.json`) are copied into the task directory. Cross-build judge
 images use content-addressed paths under `judge/inputs/`, separate from copied

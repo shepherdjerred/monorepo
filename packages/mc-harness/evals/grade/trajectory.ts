@@ -97,13 +97,13 @@ export function acceptedNonDecreasing(
   return true;
 }
 
-/** How many rendered iterations were critiqued on the rubric at least once (a second critique of the same render adds nothing). */
+/** How many distinct rendered grids were critiqued on the rubric (renaming or rescoring an unchanged grid adds nothing). */
 export function critiquedIterations(
   entries: readonly BuildLogEntry[],
   rubric: JudgeRubric,
 ): number {
   const rendered = new Map<string, number>();
-  const critiqued = new Set<number>();
+  const critiqued = new Set<string>();
   for (const entry of currentCapture(entries)) {
     if (entry.kind === "render") rendered.set(entry.name, entry.iteration);
     if (
@@ -111,7 +111,7 @@ export function critiquedIterations(
       entry.rubric === rubric &&
       rendered.get(entry.render) === entry.iteration
     ) {
-      critiqued.add(entry.iteration);
+      critiqued.add(entry.gridHash);
     }
   }
   return critiqued.size;
