@@ -30,25 +30,7 @@ final class OrdinaryLearningTest {
     assertThat(fixture.actor).isNotEmpty();
     try (var harness =
         RwfBotsHarness.start(data, config -> config, h -> h.learningFlag.set(true))) {
-      var human = harness.server.addPlayer("Alice");
-      // Start the target directly ahead in clear sight; seeing it must not depend on wandering.
-      human.teleport(new Location(harness.world, 6.5, 1, 8.5));
-      harness.match.fireJoin(new CombatantId.Human(human.getUniqueId()), human.getName());
-      harness.match.fireMapChosen();
-      var bots = harness.roster().fill(FakeMatch.MATCH_ID, 2);
-      assertThat(bots).hasSize(2);
-      for (var bot : bots) {
-        harness.roster().spawn(bot, new Location(harness.world, 6.5, 1, 6.5));
-        var entity = harness.roster().entity(bot).orElseThrow();
-        harness.match.fireJoin(bot, entity.getName());
-        var kit = bot.equals(bots.getFirst()) ? "trooper" : "longbow";
-        harness.match.fighting(bot.uuid(), TeamColor.RED, kit);
-        entity.setRotation(0, 0);
-        entity.getInventory().setHeldItemSlot(1);
-      }
-      harness.match.fighting(human.getUniqueId(), TeamColor.BLUE, "trooper");
-      harness.match.phase(MatchSnapshot.PhaseKind.LIVE);
-      harness.match.fireTick();
+      beginCombat(harness);
       harness.ticks(60);
       assertThat(harness.paper().learningMetrics().state()).isEqualTo(MatchLearning.State.ON);
       var inference = harness.paper().learningMetrics().inference().orElseThrow();
@@ -77,5 +59,44 @@ final class OrdinaryLearningTest {
           .hasSize(2)
           .allMatch(record -> record.matches() == 1 && record.wins() == 1);
     }
+  }
+
+  @Test
+  void missingAcceptedAssetLeavesLearningFailedWhileTheOrdinaryTickerKeepsDrivingBots(
+      @TempDir Path directory) {
+    try (var harness =
+        RwfBotsHarness.start(directory, config -> config, h -> h.learningFlag.set(true))) {
+      beginCombat(harness);
+      harness.ticks(5);
+      assertThat(harness.paper().learningMetrics().state()).isEqualTo(MatchLearning.State.FAILED);
+      assertThat(harness.paper().learningMetrics().applied()).isZero();
+      harness.bodies.orders();
+      harness.ticks(5);
+      assertThat(harness.bodies.orders()).anyMatch(order -> order.startsWith("look "));
+      assertThat(harness.paper().learningMetrics().state()).isEqualTo(MatchLearning.State.FAILED);
+      assertThat(harness.learningEvaluations).hasValue(1);
+    }
+  }
+
+  private static void beginCombat(RwfBotsHarness harness) {
+    var human = harness.server.addPlayer("Alice");
+    // Start the target directly ahead in clear sight; seeing it must not depend on wandering.
+    human.teleport(new Location(harness.world, 6.5, 1, 8.5));
+    harness.match.fireJoin(new CombatantId.Human(human.getUniqueId()), human.getName());
+    harness.match.fireMapChosen();
+    var bots = harness.roster().fill(FakeMatch.MATCH_ID, 2);
+    assertThat(bots).hasSize(2);
+    for (var bot : bots) {
+      harness.roster().spawn(bot, new Location(harness.world, 6.5, 1, 6.5));
+      var entity = harness.roster().entity(bot).orElseThrow();
+      harness.match.fireJoin(bot, entity.getName());
+      var kit = bot.equals(bots.getFirst()) ? "trooper" : "longbow";
+      harness.match.fighting(bot.uuid(), TeamColor.RED, kit);
+      entity.setRotation(0, 0);
+      entity.getInventory().setHeldItemSlot(1);
+    }
+    harness.match.fighting(human.getUniqueId(), TeamColor.BLUE, "trooper");
+    harness.match.phase(MatchSnapshot.PhaseKind.LIVE);
+    harness.match.fireTick();
   }
 }

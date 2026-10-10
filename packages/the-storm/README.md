@@ -2026,8 +2026,10 @@ difficulty levers, habits, kits, healing, abilities, navigation, objectives,
 governor thinning and personality ratings retain their authored paths. Skipped
 body ticks reset recurrent memory; idle ticks drain retired inference completions.
 Diagnostic attachments remain separate and never evaluate this rollout flag.
-An enabled flag requires the accepted asset; missing or corrupt bundles fail
-loudly. `/rwfbots debug learning` reports match state, action availability,
+An enabled flag requires the accepted asset. Exceptional or cancelled flag/model
+futures report their cause once and leave learning in `FAILED` for that match.
+The failed future is retired so subsequent authored bot ticks continue; the
+match does not retry the load. `/rwfbots debug learning` reports match state, action availability,
 authored-only ticks, pending startup, flag outages, load rejections and inference
 deadline, lifecycle and batch counters. The flag change does not publish or
 install an artifact.

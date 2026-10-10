@@ -4,7 +4,6 @@ import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.BLUE;
 import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.RED;
 import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.combatant;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.shepherdjerred.thestorm.core.compute.ComputePool;
 import com.shepherdjerred.thestorm.rwf.app.ObservationSource;
@@ -30,6 +29,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.SplittableRandom;
 import java.util.UUID;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -39,6 +39,16 @@ final class MatchLearningTest {
   private static final UUID MATCH = new UUID(0, 1);
   private static final UUID NEXT = new UUID(0, 2);
   private static final UUID BODY = new UUID(1, 1);
+
+  private static MatchLearning.Parts parts(LearningGate gate, AcceptedInference models) {
+    return new MatchLearning.Parts(
+        gate,
+        models,
+        answer -> {},
+        failure -> {
+          throw new AssertionError("unexpected learning failure", failure);
+        });
+  }
 
   private static final class Gate implements LearningGate {
     final List<Context> contexts = new ArrayList<>();
@@ -157,13 +167,12 @@ final class MatchLearningTest {
     }
     var learning =
         new MatchLearning(
-            new MatchLearning.Parts(
+            parts(
                 gate,
                 () -> {
                   loads.incrementAndGet();
                   throw new IllegalStateException("disabled matches must not load");
-                },
-                answer -> {}));
+                }));
     for (int index = 0; index < 3; index++) {
       learning.begin(context(new UUID(0, index + 1)));
       learning.startTick(index * 2L + 1);
@@ -191,13 +200,12 @@ final class MatchLearningTest {
     var loads = new AtomicInteger();
     var learning =
         new MatchLearning(
-            new MatchLearning.Parts(
+            parts(
                 gate,
                 () -> {
                   loads.incrementAndGet();
                   return new CompletableFuture<>();
-                },
-                answer -> {}));
+                }));
     learning.begin(context(MATCH));
     learning.startTick(1);
     learning.end();
@@ -220,7 +228,7 @@ final class MatchLearningTest {
         CompletableFuture.completedFuture(
             new LearningGate.Decision(false, LearningGate.Source.FLIPT)));
     var loading = new CompletableFuture<BatchedInference>();
-    var learning = new MatchLearning(new MatchLearning.Parts(gate, () -> loading, answer -> {}));
+    var learning = new MatchLearning(parts(gate, () -> loading));
     learning.begin(context(MATCH));
     learning.startTick(1);
     assertThat(learning.active(MATCH)).isFalse();
@@ -247,10 +255,7 @@ final class MatchLearningTest {
     gate.answers.add(
         CompletableFuture.completedFuture(
             new LearningGate.Decision(true, LearningGate.Source.FLIPT)));
-    var learning =
-        new MatchLearning(
-            new MatchLearning.Parts(
-                gate, () -> CompletableFuture.completedFuture(model), answer -> {}));
+    var learning = new MatchLearning(parts(gate, () -> CompletableFuture.completedFuture(model)));
     learning.begin(context(MATCH));
     learning.startTick(1);
     var first = frame(1, 0, false, Kit.TROOPER);
@@ -291,10 +296,7 @@ final class MatchLearningTest {
     gate.answers.add(
         CompletableFuture.completedFuture(
             new LearningGate.Decision(true, LearningGate.Source.FLIPT)));
-    var learning =
-        new MatchLearning(
-            new MatchLearning.Parts(
-                gate, () -> CompletableFuture.completedFuture(model), answer -> {}));
+    var learning = new MatchLearning(parts(gate, () -> CompletableFuture.completedFuture(model)));
     learning.begin(context(MATCH));
     learning.startTick(1);
     learning.commands(frame(1, 0, false, Kit.TROOPER));
@@ -310,10 +312,13 @@ final class MatchLearningTest {
   }
 
   @Test
-  void corruptFlagAndRequiredModelFailuresRemainLoud() {
+  void corruptFlagAndRequiredModelFailuresAreReportedOnceWithoutFreezingAuthoredTicks() {
     var gate = new Gate();
-    gate.answers.add(
-        CompletableFuture.failedFuture(new IllegalStateException("invalid successful flag")));
+    var failures = new ArrayList<Throwable>();
+    var loads = new AtomicInteger();
+    var flagFailure = new IllegalStateException("invalid successful flag");
+    var modelFailure = new IllegalArgumentException("required accepted asset missing");
+    gate.answers.add(CompletableFuture.failedFuture(flagFailure));
     gate.answers.add(
         CompletableFuture.completedFuture(
             new LearningGate.Decision(true, LearningGate.Source.FLIPT)));
@@ -321,16 +326,59 @@ final class MatchLearningTest {
         new MatchLearning(
             new MatchLearning.Parts(
                 gate,
-                () ->
-                    CompletableFuture.failedFuture(
-                        new IllegalArgumentException("required accepted asset missing")),
-                answer -> {}));
+                () -> {
+                  loads.incrementAndGet();
+                  return CompletableFuture.failedFuture(modelFailure);
+                },
+                answer -> {},
+                failures::add));
     learning.begin(context(MATCH));
-    assertThatThrownBy(() -> learning.startTick(1)).hasCauseInstanceOf(IllegalStateException.class);
+    learning.startTick(1);
+    learning.startTick(2);
+    assertThat(failures).containsExactly(flagFailure);
+    assertThat(learning.metrics().state()).isEqualTo(MatchLearning.State.FAILED);
+    assertThat(loads).hasValue(0);
+    var authored = frame(2, 0, false, Kit.TROOPER);
+    assertThat(learning.commands(authored)).isEqualTo(authored.authored().commands());
+    learning.finishTick(MATCH, 2);
     learning.end();
+    assertThat(learning.metrics().state()).isEqualTo(MatchLearning.State.IDLE);
     learning.begin(context(NEXT));
-    assertThatThrownBy(() -> learning.startTick(2))
-        .hasCauseInstanceOf(IllegalArgumentException.class);
+    learning.startTick(3);
+    learning.startTick(4);
+    assertThat(failures).containsExactly(flagFailure, modelFailure);
+    assertThat(loads).hasValue(1);
+    assertThat(learning.metrics().state()).isEqualTo(MatchLearning.State.FAILED);
+    assertThat(learning.active(NEXT)).isFalse();
+    assertThat(learning.metrics().pendingTicks()).isZero();
+    assertThat(gate.contexts).containsExactly(context(MATCH), context(NEXT));
+    learning.close();
+  }
+
+  @Test
+  void cancelledGateIsReportedOnceAndDoesNotWedgeTheTicker() {
+    var gate = new Gate();
+    var decision = new CompletableFuture<LearningGate.Decision>();
+    gate.answers.add(decision);
+    var failures = new ArrayList<Throwable>();
+    var learning =
+        new MatchLearning(
+            new MatchLearning.Parts(
+                gate,
+                () -> {
+                  throw new AssertionError("cancelled gate must not load a model");
+                },
+                answer -> {},
+                failures::add));
+    learning.begin(context(MATCH));
+    learning.startTick(1);
+    decision.cancel(false);
+    learning.startTick(2);
+    learning.startTick(3);
+    assertThat(failures).singleElement().isInstanceOf(CancellationException.class);
+    assertThat(learning.metrics().state()).isEqualTo(MatchLearning.State.FAILED);
+    assertThat(learning.active(MATCH)).isFalse();
+    assertThat(learning.metrics().pendingTicks()).isEqualTo(1);
     learning.close();
   }
 
@@ -342,12 +390,11 @@ final class MatchLearningTest {
             new LearningGate.Decision(true, LearningGate.Source.FLIPT)));
     var learning =
         new MatchLearning(
-            new MatchLearning.Parts(
+            parts(
                 gate,
                 () -> {
                   throw new java.util.concurrent.RejectedExecutionException("test pool saturation");
-                },
-                answer -> {}));
+                }));
     learning.begin(context(MATCH));
     learning.startTick(1);
     learning.startTick(2);
