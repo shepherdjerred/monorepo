@@ -1,0 +1,8 @@
+[
+  ["sleeping", "sleeping", "sleeping"],
+  ["starting", "starting", "starting"],
+  ["unavailable", "unavailable", "unavailable"],
+  ["online", "online", "online"],
+  ["online", "online", "unavailable"],
+  ["online", "unavailable", "online"]
+]

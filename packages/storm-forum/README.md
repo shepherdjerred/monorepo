@@ -146,6 +146,8 @@ forum from accepting an unfiltered server during rollout. Java and Bedrock have
 independent health and reported versions. `/storm-status/` serves only the public
 cache and rendered card, with no game probes. The browser refreshes once a minute
 while visible and hides live counts and names after the configured stale interval.
+Both cache readers validate aggregate and edition health against the six allowed
+combinations in `config/minecraft-status-states.json`.
 
 Java players can use `ts-mc.net` through SRV discovery, or explicitly connect to
 `mc.ts-mc.net:30000`. Bedrock uses `mc.ts-mc.net` with port `30004`; the website

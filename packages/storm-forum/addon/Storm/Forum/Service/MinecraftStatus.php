@@ -25,11 +25,25 @@ final class MinecraftStatus
             && $value >= 0 && $value <= 9007199254740991;
     }
 
+    private static function stateCombinations(): array
+    {
+        $values = json_decode(file_get_contents('/opt/storm-forum/config/minecraft-status-states.json'), false, 512, JSON_THROW_ON_ERROR);
+        if (!is_array($values) || !array_is_list($values) || !$values) { throw new \RuntimeException('Invalid Minecraft state contract'); }
+        foreach ($values as $row) {
+            if (!is_array($row) || !array_is_list($row) || count($row) !== 3) { throw new \RuntimeException('Invalid Minecraft state combination'); }
+            foreach ($row as $state) {
+                if (!in_array($state, self::STATES, true)) { throw new \RuntimeException('Unknown Minecraft contract state'); }
+            }
+        }
+        return $values;
+    }
+
     public static function read(string $path = '/var/lib/storm-forum/status.json', ?int $now = null): array
     {
         $now ??= time();
         $manifest = json_decode(file_get_contents('/opt/storm-forum/config/forum.json'), true, 512, JSON_THROW_ON_ERROR);
         $mc = $manifest['minecraft'];
+        $stateCombinations = self::stateCombinations();
         $result = ['schemaVersion'=>2, 'state'=>'unavailable', 'checkedAt'=>null, 'staleAfterSeconds'=>$mc['staleAfterSeconds'],
             'connections'=>$mc['connections'], 'java'=>['state'=>'unavailable'], 'bedrock'=>['state'=>'unavailable'], 'players'=>null];
         if (!is_file($path)) { return $result; }
@@ -69,6 +83,9 @@ final class MinecraftStatus
                 $result[$edition]['version'] = $value['version'];
                 $result[$edition]['verifiedAt'] = (int)$value['verifiedAt'];
             }
+        }
+        if (!in_array([$data['state'], $data['java']['state'], $data['bedrock']['state']], $stateCombinations, true)) {
+            throw new \RuntimeException('Minecraft aggregate state does not match edition health');
         }
         $hasPlayers = array_key_exists('players', $data);
         if ($hasPlayers) {

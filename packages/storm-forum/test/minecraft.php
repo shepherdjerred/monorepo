@@ -21,7 +21,7 @@ try {
     $failed = false;
     try { MinecraftStatus::read($path, 1005); } catch (RuntimeException $error) { $failed = true; }
     $check($failed, 'Corrupt names did not fail validation');
-    $offline = $source; $offline['state'] = 'unavailable'; $offline['java']['state'] = 'unavailable'; unset($offline['players']);
+    $offline = $source; $offline['state'] = 'unavailable'; $offline['java']['state'] = 'unavailable'; $offline['bedrock']['state'] = 'unavailable'; unset($offline['players']);
     file_put_contents($path, json_encode($offline));
     $check(MinecraftStatus::read($path, 1005)['players'] === null, 'Absent offline roster was rejected');
     $offline['players'] = null;
@@ -105,6 +105,20 @@ try {
         try { MinecraftStatus::read($path, 1005); } catch (RuntimeException $error) { $failed = true; }
         $check($failed, 'Non-integer timestamp was accepted');
     }
+    $states = ['sleeping', 'starting', 'online', 'unavailable'];
+    foreach ($states as $aggregate) { foreach ($states as $java) { foreach ($states as $bedrock) {
+        $value = $source; $value['state'] = $aggregate; $value['java']['state'] = $java; $value['bedrock']['state'] = $bedrock;
+        if ($java !== 'online') { unset($value['players']); }
+        $expected = match ($aggregate) {
+            'sleeping', 'starting' => $java === $aggregate && $bedrock === $aggregate,
+            'unavailable' => $java === 'unavailable' && $bedrock === 'unavailable',
+            'online' => in_array($java, ['online','unavailable'], true) && in_array($bedrock, ['online','unavailable'], true) && ($java === 'online' || $bedrock === 'online'),
+        };
+        file_put_contents($path, json_encode($value));
+        $accepted = true;
+        try { MinecraftStatus::read($path, 1005); } catch (RuntimeException $error) { $accepted = false; }
+        $check($accepted === $expected, 'Invalid aggregate/Java/Bedrock state validation: ' . implode('/', [$aggregate, $java, $bedrock]));
+    } } }
     unlink($path);
     $check(MinecraftStatus::read($path)['state'] === 'unavailable', 'Missing initial cache was not unavailable');
 } finally { if (is_file($path)) { unlink($path); } }

@@ -3,6 +3,7 @@ import { randomBytes } from "node:crypto";
 import { rename } from "node:fs/promises";
 import { z } from "zod";
 import { forumManifest } from "./config.ts";
+import stateCombinations from "#config/minecraft-status-states.json";
 import {
   bedrockPing,
   parseBedrockPong,
@@ -13,9 +14,14 @@ import {
   type QueryResult,
 } from "./minecraft-query.ts";
 
+const StateSchema = z.enum(["sleeping", "starting", "online", "unavailable"]);
+const CacheStateCombinations = z
+  .array(z.tuple([StateSchema, StateSchema, StateSchema]))
+  .min(1)
+  .parse(stateCombinations);
 const EditionSchema = z
   .object({
-    state: z.enum(["sleeping", "starting", "online", "unavailable"]),
+    state: StateSchema,
     version: z.string().min(1).max(100).optional(),
     verifiedAt: z.number().int().nonnegative().optional(),
   })
@@ -23,7 +29,7 @@ const EditionSchema = z
 export const MinecraftStatusSchema = z
   .object({
     schemaVersion: z.literal(2),
-    state: z.enum(["sleeping", "starting", "online", "unavailable"]),
+    state: StateSchema,
     checkedAt: z.number().int().nonnegative(),
     java: EditionSchema,
     bedrock: EditionSchema,
@@ -31,6 +37,19 @@ export const MinecraftStatusSchema = z
   })
   .strict()
   .superRefine((value, context) => {
+    if (
+      !CacheStateCombinations.some(
+        ([state, java, bedrock]) =>
+          state === value.state &&
+          java === value.java.state &&
+          bedrock === value.bedrock.state,
+      )
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "Minecraft aggregate state does not match edition health",
+      });
+    }
     if (
       (value.java.state === "online") !== (value.players !== undefined) ||
       (value.players !== undefined &&
