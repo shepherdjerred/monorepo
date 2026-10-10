@@ -76,11 +76,13 @@ class LiveMapTests(unittest.TestCase):
         self.assertNotIn("BlueMap", html)
         self.assertNotIn("avatars.githubusercontent.com", html)
         icon = next((self.output / "assets").glob("livemap-icon-*.svg"))
-        preview = next((self.output / "assets").glob("livemap-preview-*.png"))
         self.assertIn(icon.name, html)
-        self.assertIn(preview.name, html)
         self.assertEqual(icon.read_bytes(), (SERVER / "livemap/favicon.svg").read_bytes())
-        self.assertEqual(preview.read_bytes(), (SERVER / "livemap/social.png").read_bytes())
+        self.assertIn(
+            'name="og:image" content="https://raw.githubusercontent.com/shepherdjerred/monorepo/'
+            '9580503bb0cb6d49110e3259d61bb36c0493a632/packages/the-storm/server/livemap/social.png"',
+            html,
+        )
         entry = next((self.output / "assets").glob("livemap-*.js"))
         self.assertIn(entry.name, html)
         self.assertIn("window.BlueMap={}", entry.read_text())
