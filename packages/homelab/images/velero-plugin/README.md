@@ -28,7 +28,8 @@ lineage tests in Linux. A passing build does not prove recovery: complete an
 isolated native restore and check the restored application's integrity before
 retiring old recovery points or approving an R2 cleanup manifest.
 
-The reserved `ops-restore-rehearsal` namespace denies all ingress and egress.
-Its explicitly excluded `pgdata-temporal-postgresql-0` PVC permits a Temporal
-database rehearsal without weakening the PVC classification policy. Restore
-only PV/PVC resources there; do not restore production workloads or services.
+The reserved `ops-restore-rehearsal` and `ops-restore-rehearsal-incremental`
+namespaces deny all ingress and egress. Each explicitly excludes the
+`pgdata-temporal-postgresql-0` PVC, permitting independent full and incremental
+Temporal database rehearsals while preserving both datasets. Restore only
+PV/PVC resources there; do not restore production workloads or services.

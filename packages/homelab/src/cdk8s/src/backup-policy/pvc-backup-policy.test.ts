@@ -77,19 +77,33 @@ afterEach(async () => {
   );
 });
 
+it.each(["ops-restore-rehearsal", "ops-restore-rehearsal-incremental"])(
+  "excludes the %s rehearsal from backup selection",
+  (namespace) => {
+    expect(
+      getPvcBackupLabels(
+        getPvcBackupPolicy(namespace, "pgdata-temporal-postgresql-0"),
+      ),
+    ).toEqual({
+      "velero.io/backup": "disabled",
+      "velero.io/exclude-from-backup": "true",
+    });
+  },
+);
+
 describe("PVC backup policy", () => {
-  it("classifies 53 included and 39 excluded PVCs without duplicates", () => {
+  it("classifies 53 included and 40 excluded PVCs without duplicates", () => {
     const keys = PVC_BACKUP_POLICY.map((entry) =>
       pvcBackupPolicyKey(entry.namespace, entry.name),
     );
-    expect(keys).toHaveLength(92);
-    expect(new Set(keys).size).toBe(92);
+    expect(keys).toHaveLength(93);
+    expect(new Set(keys).size).toBe(93);
     expect(
       PVC_BACKUP_POLICY.filter((entry) => entry.backup === "enabled"),
     ).toHaveLength(53);
     expect(
       PVC_BACKUP_POLICY.filter((entry) => entry.backup === "disabled"),
-    ).toHaveLength(39);
+    ).toHaveLength(40);
     expect(
       getPvcBackupPolicy("minecraft-tsmc-restore", "datadir-minecraft-tsmc-0")
         .backup,

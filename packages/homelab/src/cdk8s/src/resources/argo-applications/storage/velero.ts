@@ -10,20 +10,25 @@ import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepasswor
 import { VELERO_SCHEDULES } from "@shepherdjerred/homelab/cdk8s/src/resources/velero/velero-schedules.ts";
 import { backupMonitoringAnnotations } from "@shepherdjerred/ops-model/backup-policy.ts";
 export function createVeleroApp(chart: Chart) {
-  new Namespace(chart, "ops-restore-rehearsal-namespace", {
-    metadata: { name: "ops-restore-rehearsal" },
-  });
-  new ApiObject(chart, "ops-restore-rehearsal-isolation", {
-    apiVersion: "networking.k8s.io/v1",
-    kind: "NetworkPolicy",
-    metadata: { name: "isolate-restore", namespace: "ops-restore-rehearsal" },
-    spec: {
-      podSelector: {},
-      policyTypes: ["Ingress", "Egress"],
-      ingress: [],
-      egress: [],
-    },
-  });
+  for (const namespace of [
+    "ops-restore-rehearsal",
+    "ops-restore-rehearsal-incremental",
+  ]) {
+    new Namespace(chart, `${namespace}-namespace`, {
+      metadata: { name: namespace },
+    });
+    new ApiObject(chart, `${namespace}-isolation`, {
+      apiVersion: "networking.k8s.io/v1",
+      kind: "NetworkPolicy",
+      metadata: { name: "isolate-restore", namespace },
+      spec: {
+        podSelector: {},
+        policyTypes: ["Ingress", "Egress"],
+        ingress: [],
+        egress: [],
+      },
+    });
+  }
   new Namespace(chart, `velero-namespace`, {
     metadata: {
       name: `velero`,
