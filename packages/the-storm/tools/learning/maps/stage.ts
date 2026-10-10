@@ -16,9 +16,14 @@ export function controlledMap(raw: unknown, scenario: Scenario): MapContent {
   return MapContent.parse({
     ...map,
     teams: scenario.spawns.map((spawn) => {
-      const source = map.teams.find((team) => team.color === spawn.sourceTeam);
-      if (source === undefined) throw new Error("Missing selected source team");
-      return { color: spawn.team.toUpperCase(), spawns: source.spawns };
+      const [x, y, z] = spawn.position;
+      // Map YAML requires [0, 360); the frozen scenario keeps Paper's signed yaw.
+      return {
+        color: spawn.team.toUpperCase(),
+        spawns: [
+          { x, y, z, yaw: ((spawn.yaw % 360) + 360) % 360, pitch: spawn.pitch },
+        ],
+      };
     }),
     bombs: map.bombs.flatMap((bomb) => {
       const side = scenario.spawns.find(
