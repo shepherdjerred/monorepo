@@ -1,3 +1,5 @@
+import { protectArgoTokenDefault } from "./argocd-options.ts";
+
 export const PASSTHROUGH_COMMANDS = [
   "gh",
   "woodpecker",
@@ -322,15 +324,10 @@ function nativeEnvironment(invocation: PassthroughInvocation) {
   const env = { ...invocation.env };
   if (invocation.executable !== "argocd") return env;
   const options = env["ARGOCD_OPTS"] ?? "";
-  if (options.includes("--auth-token")) {
-    throw new Error(
-      "toolkit: ARGOCD_OPTS must not set --auth-token because ArgoCD prints it in help; use ARGOCD_AUTH_TOKEN instead",
-    );
-  }
   // ArgoCD's flag default and API client independently read the token. An
   // empty flag default prevents help/usage disclosure while the API client
   // still reads ARGOCD_AUTH_TOKEN; explicit CLI flags retain precedence.
-  env["ARGOCD_OPTS"] = `--auth-token "" ${options}`.trimEnd();
+  env["ARGOCD_OPTS"] = protectArgoTokenDefault(options);
   return env;
 }
 

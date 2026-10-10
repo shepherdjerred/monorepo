@@ -472,9 +472,11 @@ Every ArgoCD invocation sets an empty native `--auth-token` help default through
 command-line flags retain precedence. Native help and usage therefore cannot
 print the registered environment token. Streams remain inherited, preserving
 terminal detection, confirmation prompts, exit codes and signals.
-`ARGOCD_OPTS` must not contain `--auth-token`: use `ARGOCD_AUTH_TOKEN` for that
+`ARGOCD_OPTS` must not set `--auth-token`: use `ARGOCD_AUTH_TOKEN` for that
 credential instead. Other `ARGOCD_OPTS` settings are preserved. Toolkit rejects
 the unsafe setting without printing its value, including for help commands.
+Option names are checked after ArgoCD-compatible quote and escape parsing;
+header values and root paths containing the same text are preserved.
 
 | Commands                                                                                                | Registered backend        |
 | ------------------------------------------------------------------------------------------------------- | ------------------------- |
