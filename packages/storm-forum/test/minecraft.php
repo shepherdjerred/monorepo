@@ -37,7 +37,7 @@ try {
         try { MinecraftStatus::read($path, 1005); } catch (RuntimeException $error) { $failed = true; }
         $check($failed, 'Unknown field did not fail validation at ' . $level);
     }
-    foreach ([['schemaVersion'=>null], ['online'=>null], ['maximum'=>-1], ['unexpected'=>true]] as $extra) {
+    foreach ([['schemaVersion'=>null], ['online'=>null], ['maximum'=>-1], ['online'=>9007199254740992], ['unexpected'=>true]] as $extra) {
         file_put_contents($path, json_encode(['state'=>'online', 'checkedAt'=>1000] + $extra));
         $failed = false;
         try { MinecraftStatus::read($path, 1005); } catch (RuntimeException $error) { $failed = true; }
@@ -73,6 +73,37 @@ try {
         $failed = false;
         try { MinecraftStatus::read($path, 1005); } catch (RuntimeException $error) { $failed = true; }
         $check($failed, 'Unicode code-point length overflow was accepted for ' . $field);
+    }
+    $empty = $source; $empty['players']['names'] = [];
+    file_put_contents($path, json_encode($empty));
+    $check(MinecraftStatus::read($path, 1005)['players']['names'] === [], 'Empty JSON names array was rejected');
+    foreach ([(object)[], (object)['0'=>'Jerred']] as $names) {
+        $invalid = $source; $invalid['players']['names'] = $names;
+        file_put_contents($path, json_encode($invalid));
+        $failed = false;
+        try { MinecraftStatus::read($path, 1005); } catch (RuntimeException $error) { $failed = true; }
+        $check($failed, 'Object-shaped JSON names were accepted as an array');
+    }
+    $integral = $source; $integral['schemaVersion'] = 2.0; $integral['checkedAt'] = 1000.0;
+    $integral['java']['verifiedAt'] = 1000.0; $integral['bedrock']['verifiedAt'] = 1000.0; $integral['players']['maximum'] = 20.0;
+    file_put_contents($path, json_encode($integral, JSON_PRESERVE_ZERO_FRACTION));
+    $check(MinecraftStatus::read($path, 1005)['players'] === $source['players'], 'Integral JSON numbers were rejected or not normalized');
+    foreach (['checkedAt', 'java', 'bedrock', 'players'] as $field) {
+        $invalid = $source;
+        if ($field === 'checkedAt') { $invalid[$field] = 9007199254740992; }
+        elseif ($field === 'players') { $invalid[$field]['maximum'] = 9007199254740992; }
+        else { $invalid[$field]['verifiedAt'] = 9007199254740992; }
+        file_put_contents($path, json_encode($invalid));
+        $failed = false;
+        try { MinecraftStatus::read($path, 1005); } catch (RuntimeException $error) { $failed = true; }
+        $check($failed, 'Unsafe JSON integer was accepted for ' . $field);
+    }
+    foreach ([1000.5, '1000'] as $value) {
+        $invalid = $source; $invalid['checkedAt'] = $value;
+        file_put_contents($path, json_encode($invalid));
+        $failed = false;
+        try { MinecraftStatus::read($path, 1005); } catch (RuntimeException $error) { $failed = true; }
+        $check($failed, 'Non-integer timestamp was accepted');
     }
     unlink($path);
     $check(MinecraftStatus::read($path)['state'] === 'unavailable', 'Missing initial cache was not unavailable');

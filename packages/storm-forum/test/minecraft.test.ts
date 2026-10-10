@@ -58,6 +58,49 @@ describe("Minecraft public status", () => {
   it("shares a valid cache fixture with the native PHP reader", () => {
     expect(MinecraftStatusSchema.parse(fixture)).toEqual(fixture);
   });
+  it.each([{}, { "0": "Jerred" }])(
+    "rejects object-shaped JSON names: %j",
+    (names) => {
+      expect(
+        MinecraftStatusSchema.safeParse({
+          ...fixture,
+          players: { maximum: 20, names },
+        }).success,
+      ).toBe(false);
+    },
+  );
+  it("accepts an empty JSON names array", () => {
+    expect(
+      MinecraftStatusSchema.parse({
+        ...fixture,
+        players: { maximum: 20, names: [] },
+      }).players?.names,
+    ).toEqual([]);
+  });
+  it.each([
+    { ...fixture, checkedAt: Number.MAX_SAFE_INTEGER + 1 },
+    {
+      ...fixture,
+      java: { ...fixture.java, verifiedAt: Number.MAX_SAFE_INTEGER + 1 },
+    },
+    {
+      ...fixture,
+      bedrock: { ...fixture.bedrock, verifiedAt: Number.MAX_SAFE_INTEGER + 1 },
+    },
+    {
+      ...fixture,
+      players: { ...fixture.players, maximum: Number.MAX_SAFE_INTEGER + 1 },
+    },
+  ])("rejects unsafe cache integers (case %#)", (value) => {
+    expect(MinecraftStatusSchema.safeParse(value).success).toBe(false);
+  });
+  it("accepts integral decimal and exponent JSON numbers", () => {
+    const encoded = JSON.stringify(fixture)
+      .replace('"schemaVersion":2', '"schemaVersion":2.0')
+      .replaceAll(":1000", ":1e3")
+      .replace('"maximum":20', '"maximum":20.0');
+    expect(MinecraftStatusSchema.parse(JSON.parse(encoded))).toEqual(fixture);
+  });
   it.each([
     { character: "😀", count: 32, valid: true },
     { character: "😀", count: 33, valid: true },
