@@ -51,13 +51,14 @@ val fixturesJar = tasks.register<Jar>("fixturesJar") {
 }
 tasks.assemble { dependsOn(fixturesJar) }
 
+val testPython = listOf("uv", "run", "--project", rootProject.file("../tools/learning").absolutePath, "--locked", "python")
 val archiveTest = tasks.register<Exec>("archiveTest") {
   workingDir(rootProject.file("../server"))
-  commandLine("python3", "-m", "unittest", "-v", "test_archive_progression.py")
+  commandLine(testPython + listOf("-m", "unittest", "-v", "test_archive_progression.py"))
 }
 val worldRestoreTest = tasks.register<Exec>("worldRestoreTest") {
   workingDir(rootProject.file("../server"))
-  commandLine("python3", "-m", "unittest", "-v", "test_world_restore.py", "test_database_restore.py", "test_restoration_control.py", "test_restoration_json.py", "test_restoration_files.py", "test_restoration_activation.py", "test_restoration_install.py")
+  commandLine(testPython + listOf("-m", "unittest", "-v", "test_world_restore.py", "test_database_restore.py", "test_restoration_control.py", "test_restoration_json.py", "test_restoration_files.py", "test_restoration_activation.py", "test_restoration_install.py"))
 }
 tasks.test {
   dependsOn(archiveTest, worldRestoreTest)

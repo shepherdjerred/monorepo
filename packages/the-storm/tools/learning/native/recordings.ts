@@ -39,7 +39,12 @@ export async function originalRecordings(output: string, states: DuelState[]) {
           .parse(
             JSON.parse(
               await run([
-                "python3",
+                "uv",
+                "run",
+                "--project",
+                path.join(root, "tools/learning"),
+                "--locked",
+                "python",
                 path.join(
                   root,
                   "scripts/bots/learning/preference_recording.py",

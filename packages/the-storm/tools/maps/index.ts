@@ -98,7 +98,12 @@ for (const [index, archive] of archives.entries()) {
   try {
     const inspect = Bun.spawn(
       [
-        "python3",
+        "uv",
+        "run",
+        "--project",
+        path.join(root, "tools/learning"),
+        "--locked",
+        "python",
         path.join(import.meta.dirname, "extract.py"),
         "--archive",
         path.join(source, archive),

@@ -1,6 +1,10 @@
 import { describe, expect, test } from "vitest";
 import path from "node:path";
-import { namespaceJUnit, TestManifestSchema } from "./ci-reporting.ts";
+import {
+  namespaceJUnit,
+  syntheticJUnit,
+  TestManifestSchema,
+} from "./ci-reporting.ts";
 import {
   gradleJUnitReportPaths,
   mergeJUnitReports,
@@ -40,6 +44,36 @@ function manifestWithStep(step: Record<string, unknown>) {
 }
 
 describe("Gradle JUnit reporting", () => {
+  test("exports Unicode test names as bytes an independent XML consumer can read", () => {
+    const name = "café 雪";
+    const merged = mergeJUnitReports(
+      [
+        {
+          source: "unicode.xml",
+          xml: gradlePassingSuite.replace("loads()", name),
+        },
+      ],
+      "gradle",
+      0,
+    );
+    for (const report of [
+      namespaceJUnit(merged, "java"),
+      syntheticJUnit("java", name, 0, 0),
+    ]) {
+      const consumer = Bun.spawnSync(
+        [
+          "python3",
+          "-c",
+          "import sys, xml.etree.ElementTree as E; root=E.fromstring(sys.stdin.buffer.read()); print(next(root.iter('testcase')).attrib['name'])",
+        ],
+        { stdin: Buffer.from(report, "utf8"), stdout: "pipe", stderr: "pipe" },
+      );
+      expect(consumer.stderr.toString()).toBe("");
+      expect(consumer.exitCode).toBe(0);
+      expect(consumer.stdout.toString()).toBe(`${name}\n`);
+    }
+  });
+
   test("accepts a Gradle step only with arguments", () => {
     expect(
       TestManifestSchema.safeParse(
