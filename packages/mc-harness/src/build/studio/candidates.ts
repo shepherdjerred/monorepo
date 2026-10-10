@@ -5,15 +5,7 @@ import { buildArtifactPath } from "#build/storage/artifact-path.ts";
  * blind judge pick, and restore the winner. `knockout.ts` does the judging;
  * this file only saves, lists and restores.
  */
-import {
-  cp,
-  lstat,
-  mkdir,
-  mkdtemp,
-  readdir,
-  rename,
-  rm,
-} from "node:fs/promises";
+import { cp, lstat, mkdir, readdir } from "node:fs/promises";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
@@ -33,7 +25,9 @@ import {
   type BuildManifest,
   type JudgeRubric,
 } from "#protocol/build.ts";
-import { appendLog, iterationOf, readLog } from "#build/build-log.ts";
+import { iterationOf, readLog } from "#build/build-log.ts";
+import { publishFiles } from "#build/file-transaction.ts";
+import { stageJournal } from "#build/storage/evidence-publication.ts";
 import { checkName, producingProgram } from "#build/sidecar.ts";
 import { compiledGrid } from "#build/sources.ts";
 import { BuildWorkspace } from "#build/workspace.ts";
@@ -44,34 +38,6 @@ export function candidateDir(workspace: BuildWorkspace, name: string): string {
   return workspace.file(
     path.join(BUILD_FILES.candidatesDir, checkName("candidate", name)),
   );
-}
-
-/** A failed replacement leaves the complete saved version at its original path. */
-async function replaceCandidate(
-  staged: string,
-  target: string,
-  replace: boolean,
-): Promise<void> {
-  if (!replace) {
-    await rename(staged, target);
-    return;
-  }
-  const backup = `${staged}-previous`;
-  let previous = false;
-  try {
-    await rename(target, backup);
-    previous = true;
-  } catch (error) {
-    if (!(error instanceof Error && "code" in error && error.code === "ENOENT"))
-      throw error;
-  }
-  try {
-    await rename(staged, target);
-  } catch (error) {
-    if (previous) await rename(backup, target);
-    throw error;
-  }
-  if (previous) await rm(backup, { recursive: true });
 }
 
 /** Validate identity without rejecting historical candidates from another capture. */
@@ -212,29 +178,37 @@ export async function saveCandidate(
     ops: oplog.ops.length,
     score: await latestCritique(dir, hash),
   };
-  const staged = await mkdtemp(workspace.file(`.candidate-${name}-`));
-  try {
-    if (programBytes !== null) {
-      await Bun.write(path.join(staged, BUILD_FILES.program), programBytes);
-    }
-    await cp(
-      workspace.file(BUILD_FILES.oplog),
-      path.join(staged, BUILD_FILES.oplog),
-    );
-    await Bun.write(
-      path.join(staged, CANDIDATE_FILES.grid),
-      writeSchematic(grid, registry.dataVersion),
-    );
-    await Bun.write(
-      path.join(staged, CANDIDATE_FILES.info),
-      `${JSON.stringify(CandidateSchema.parse(candidate), null, 2)}\n`,
-    );
-    await mkdir(path.dirname(target), { recursive: true });
-    await replaceCandidate(staged, target, exists);
-  } finally {
-    await rm(staged, { recursive: true, force: true });
-  }
-  await appendLog(dir, { kind: "candidate", action: "save", name });
+  const relative = path.relative(workspace.dir, target);
+  await publishFiles(workspace, {
+    prefix: `.candidate-${name}-`,
+    exclusive: options.force === true ? [] : [relative],
+    stage: async (pending) => {
+      const staged = path.join(pending, relative);
+      await mkdir(staged, { recursive: true });
+      if (programBytes !== null) {
+        await Bun.write(path.join(staged, BUILD_FILES.program), programBytes);
+      }
+      await cp(
+        workspace.file(BUILD_FILES.oplog),
+        path.join(staged, BUILD_FILES.oplog),
+      );
+      await Bun.write(
+        path.join(staged, CANDIDATE_FILES.grid),
+        writeSchematic(grid, registry.dataVersion),
+      );
+      await Bun.write(
+        path.join(staged, CANDIDATE_FILES.info),
+        `${JSON.stringify(CandidateSchema.parse(candidate), null, 2)}\n`,
+      );
+      await stageJournal(workspace, new BuildWorkspace(pending), {
+        kind: "candidate",
+        action: "save",
+        name,
+      });
+      // A process exit after installing the candidate must already have its save entry.
+      return [BUILD_FILES.journal, relative];
+    },
+  });
   return candidate;
 }
 

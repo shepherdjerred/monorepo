@@ -30,6 +30,10 @@ async function fixture(
     judge: "fixture",
     a: await input("a"),
     b: await input("b"),
+    hashes: {
+      a: createHash("sha256").update("immutable a input").digest("hex"),
+      b: createHash("sha256").update("immutable b input").digest("hex"),
+    },
     winner,
     confidence: 1,
     agreed: true,

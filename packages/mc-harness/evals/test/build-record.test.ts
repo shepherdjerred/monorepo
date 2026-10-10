@@ -6,7 +6,14 @@ import { expect, it } from "vitest";
 import { keepBuildRecord } from "#evals/lib/build-record.ts";
 import { JudgeRecordSchema } from "#protocol/build.ts";
 
-const pair = (a: string, b: string) => ({
+const inputHash = (bytes: string | Uint8Array) =>
+  createHash("sha256").update(bytes).digest("hex");
+const pair = (
+  a: string,
+  b: string,
+  aBytes: string | Uint8Array,
+  bBytes: string | Uint8Array,
+) => ({
   kind: "pair",
   at: "2026-10-10T00:00:00Z",
   model: "stub",
@@ -14,6 +21,7 @@ const pair = (a: string, b: string) => ({
   judge: "test-judge",
   a,
   b,
+  hashes: { a: inputHash(aBytes), b: inputHash(bBytes) },
   winner: "a",
   confidence: 0.9,
   agreed: true,
@@ -28,7 +36,7 @@ it("keeps portable verdict inputs through eval and benchmark copies", async () =
     const archive = path.join(root, "benchmark");
     const input = "judge/candidate-original-abc.png";
     const bytes = new Uint8Array([137, 80, 78, 71, 13, 10]);
-    const record = pair(input, input);
+    const record = pair(input, input, bytes, bytes);
     await Bun.write(path.join(source, input), bytes);
     await Bun.write(
       path.join(source, "judge/pair.json"),
@@ -72,7 +80,7 @@ it("copies absolute and cross-build judge inputs and rewrites every archive hop"
     await Bun.write(other, "other input");
     await Bun.write(
       path.join(source, "judge/pair.json"),
-      JSON.stringify(pair(own, other)),
+      JSON.stringify(pair(own, other, "own input", "other input")),
     );
     await Bun.write(
       path.join(source, "judge/absolute.json"),
@@ -83,6 +91,7 @@ it("copies absolute and cross-build judge inputs and rewrites every archive hop"
         rubric: "micro",
         judge: "test-scorer",
         render: other,
+        renderHash: inputHash("other input"),
         axes: {},
         overallAesthetic: 1,
         total: 1,
@@ -133,7 +142,9 @@ it("keeps generated input paths separate from source filenames through two archi
     await Bun.write(path.join(source, own), "different source image");
     await Bun.write(
       path.join(source, "judge/a-pair.json"),
-      JSON.stringify(pair(external, own)),
+      JSON.stringify(
+        pair(external, own, externalBytes, "different source image"),
+      ),
     );
     await keepBuildRecord(source, task, { allowedRoot: root });
     await keepBuildRecord(task, archive);
@@ -183,9 +194,15 @@ it.each(["a", "b", "render", "sheet", "grid"] as const)(
         };
         const record =
           field === "a" || field === "b"
-            ? { ...pair(own, own), [field]: file }
+            ? { ...pair(own, own, "own input", "own input"), [field]: file }
             : field === "render"
-              ? { ...score, kind: "absolute", judge: "test", render: file }
+              ? {
+                  ...score,
+                  kind: "absolute",
+                  judge: "test",
+                  render: file,
+                  renderHash: inputHash("own input"),
+                }
               : {
                   ...score,
                   kind: "critique",

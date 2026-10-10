@@ -211,6 +211,10 @@ export const JudgePairRecordSchema = z.strictObject({
   judge: z.string().min(1),
   a: z.string().min(1),
   b: z.string().min(1),
+  hashes: z.strictObject({
+    a: z.string().regex(/^[a-f0-9]{64}$/u),
+    b: z.string().regex(/^[a-f0-9]{64}$/u),
+  }),
   grids: z.strictObject({ a: z.string(), b: z.string() }).optional(),
   winner: z.enum(["a", "b", "tie"]),
   confidence: z.number().min(0).max(1),
@@ -227,6 +231,7 @@ export const JudgeAbsoluteRecordSchema = z.strictObject({
   /** `scoreFingerprint(rubric)` when written; a changed prompt or axis set is a new scorer. */
   judge: z.string().min(1),
   render: z.string().min(1),
+  renderHash: z.string().regex(/^[a-f0-9]{64}$/u),
   axes: z.record(z.string(), judgeScore),
   overallAesthetic: judgeScore,
   total: z.number().int().min(0),

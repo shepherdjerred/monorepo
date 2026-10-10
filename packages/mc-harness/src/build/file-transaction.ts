@@ -1,6 +1,14 @@
 import { copyFile, lstat, mkdir, mkdtemp, rename, rm } from "node:fs/promises";
 import path from "node:path";
 import type { BuildWorkspace } from "./workspace.ts";
+import { withPublicationLock } from "./storage/publication-lock.ts";
+
+type PublicationOptions = {
+  prefix: string;
+  stage: (dir: string) => Promise<readonly string[]>;
+  exclusive?: readonly string[];
+  commit?: () => Promise<unknown>;
+};
 
 type ChangedFile = { file: string; previous: boolean; installed: boolean };
 
@@ -37,14 +45,37 @@ async function rollback(
   return failures;
 }
 
+/** Preserve a replacement's original path until its staged bytes are ready. */
+async function preservePrevious(
+  workspace: BuildWorkspace,
+  staged: string,
+  file: string,
+  exclusive: readonly string[],
+): Promise<boolean> {
+  if (!(await exists(workspace.file(file)))) return false;
+  if (exclusive.includes(file))
+    throw new Error(`file already exists: ${workspace.file(file)}`);
+  // Keep ordinary files readable until their atomic replacement, even on process exit.
+  const existing = await lstat(workspace.file(file));
+  const replacing = await exists(path.join(staged, file));
+  const preserve = replacing && existing.isFile() ? copyFile : rename;
+  await preserve(workspace.file(file), path.join(staged, `previous-${file}`));
+  return true;
+}
+
 /** Publish exactly the staged paths, rolling them back if publication or commit fails. */
 export async function publishFiles(
   workspace: BuildWorkspace,
-  options: {
-    prefix: string;
-    stage: (dir: string) => Promise<readonly string[]>;
-    commit?: () => Promise<unknown>;
-  },
+  options: PublicationOptions,
+): Promise<void> {
+  await withPublicationLock(workspace.dir, () =>
+    publishStaged(workspace, options),
+  );
+}
+
+async function publishStaged(
+  workspace: BuildWorkspace,
+  options: PublicationOptions,
 ): Promise<void> {
   const staged = await mkdtemp(workspace.file(options.prefix));
   const changed: ChangedFile[] = [];
@@ -58,17 +89,12 @@ export async function publishFiles(
         recursive: true,
       });
       await mkdir(path.dirname(workspace.file(file)), { recursive: true });
-      if (await exists(workspace.file(file))) {
-        // Keep ordinary files readable until their atomic replacement, even on process exit.
-        const existing = await lstat(workspace.file(file));
-        const replacing = await exists(path.join(staged, file));
-        const preserve = replacing && existing.isFile() ? copyFile : rename;
-        await preserve(
-          workspace.file(file),
-          path.join(staged, `previous-${file}`),
-        );
-        state.previous = true;
-      }
+      state.previous = await preservePrevious(
+        workspace,
+        staged,
+        file,
+        options.exclusive ?? [],
+      );
       if (await exists(path.join(staged, file))) {
         await rename(path.join(staged, file), workspace.file(file));
         state.installed = true;

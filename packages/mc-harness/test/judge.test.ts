@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
@@ -29,6 +29,7 @@ import {
   type SheetRenderer,
 } from "#build/judge.ts";
 import { JudgeRecordSchema } from "#protocol/build.ts";
+import { gradeEvidence } from "#evals/grade/evidence.ts";
 
 const A = { data: new Uint8Array([1]), mediaType: "image/png" as const };
 const B = { data: new Uint8Array([2]), mediaType: "image/png" as const };
@@ -44,6 +45,10 @@ it("preserves distinct verdicts written at the same timestamp", async () => {
       judge: "fixture",
       a: "a.png",
       b: "b.png",
+      hashes: {
+        a: createHash("sha256").update(A.data).digest("hex"),
+        b: createHash("sha256").update(B.data).digest("hex"),
+      },
       winner: "a" as const,
       confidence: 1,
       agreed: true,
@@ -236,6 +241,46 @@ describe("resolveRender", () => {
 });
 
 describe("persisted verdicts", () => {
+  it.each(["pair-a", "pair-b", "absolute"])(
+    "fails evidence grading when the judged %s pixels change",
+    async (kind) => {
+      const dir = await frozenBuild();
+      try {
+        const other = path.join(dir, "other.png");
+        await writeFile(other, B.data);
+        const verdict =
+          kind === "absolute"
+            ? await scoreRender(dir, {
+                model: "stub",
+                rubric: "micro",
+                ask: stubScorer,
+                sheet: stubSheet,
+              })
+            : await judgeRenders(dir, other, {
+                model: "stub",
+                ask: stubJudge(2),
+                sheet: stubSheet,
+              });
+        const input =
+          "render" in verdict
+            ? verdict.render
+            : verdict.renders[kind === "pair-a" ? "a" : "b"];
+        const taskDir = path.join(dir, "task");
+        await mkdir(taskDir);
+        const ctx = { taskDir, worktree: dir };
+        const valid = await gradeEvidence(dir, ctx);
+        expect(valid.check.pass).toBe(true);
+        await writeFile(input, "truncated after judging");
+        const failed = await gradeEvidence(dir, ctx);
+        expect(failed.check).toMatchObject({ pass: false });
+        expect(failed.check.detail).toMatch(/hash does not match/u);
+        expect(failed.artifacts).toEqual([]);
+      } finally {
+        await rm(dir, { recursive: true });
+      }
+    },
+  );
+
   it("writes pair and absolute records under a build directory's judge/", async () => {
     const dir = await frozenBuild();
     const other = path.join(dir, "other.png");

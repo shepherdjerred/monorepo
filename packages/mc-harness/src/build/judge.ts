@@ -509,6 +509,10 @@ export async function judgeRenders(
         judge: judgeFingerprint(rubric),
         a: renders.a,
         b: renders.b,
+        hashes: {
+          a: createHash("sha256").update(images.a.data).digest("hex"),
+          b: createHash("sha256").update(images.b.data).digest("hex"),
+        },
         winner: verdict.winner,
         confidence: verdict.confidence,
         agreed: verdict.agreed,
@@ -536,7 +540,8 @@ export async function scoreRender(
     ...(options.sheet === undefined ? {} : { sheet: options.sheet }),
   });
   const ask = options.ask ?? llmScorer(options.model, options.rubric);
-  const scores = await scoreAbsolute(await pngInput(render), ask, options);
+  const image = await pngInput(render);
+  const scores = await scoreAbsolute(image, ask, options);
   const record = (await isBuildDir(target))
     ? await writeJudgeRecord(target, {
         kind: "absolute",
@@ -545,6 +550,7 @@ export async function scoreRender(
         rubric: options.rubric,
         judge: scoreFingerprint(options.rubric),
         render,
+        renderHash: createHash("sha256").update(image.data).digest("hex"),
         axes: scores.axes,
         overallAesthetic: scores.overallAesthetic,
         total: scores.total,

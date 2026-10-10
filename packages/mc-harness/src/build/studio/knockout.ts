@@ -48,7 +48,12 @@ export type KnockoutResult = {
   bouts: Bout[];
 };
 
-type Sheet = { data: Uint8Array; mediaType: "image/png"; file: string };
+type Sheet = {
+  data: Uint8Array;
+  mediaType: "image/png";
+  file: string;
+  hash: string;
+};
 type ScoreEvidence = Awaited<ReturnType<typeof candidateEvidence>>;
 type Scores = ReadonlyMap<string, ScoreEvidence>;
 
@@ -86,6 +91,7 @@ async function sheetsFor(
       data,
       mediaType: "image/png",
       file,
+      hash,
     });
   }
   return sheets;
@@ -188,6 +194,10 @@ async function bout(
         grids: {
           a: scoreOf(options.scores, incumbent).gridHash,
           b: scoreOf(options.scores, challenger).gridHash,
+        },
+        hashes: {
+          a: sheetOf(pair.sheets, incumbent).hash,
+          b: sheetOf(pair.sheets, challenger).hash,
         },
       },
     },

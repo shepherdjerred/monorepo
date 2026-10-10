@@ -10,12 +10,16 @@ async function validateInput(
   workspace: BuildWorkspace,
   file: string,
   candidate: string,
+  expectedHash: string,
 ) {
   const bytes = await Bun.file(
     await buildArtifactPath(workspace, file),
   ).bytes();
   const hash = createHash("sha256").update(bytes).digest("hex");
-  if (path.basename(file) !== `candidate-${candidate}-${hash}.png`) {
+  if (
+    hash !== expectedHash ||
+    path.basename(file) !== `candidate-${candidate}-${hash}.png`
+  ) {
     throw new Error(`pair image ${file} does not match candidate ${candidate}`);
   }
 }
@@ -43,24 +47,23 @@ export async function readPairRecord(
     );
   }
   // A tie keeps the first (incumbent), matching the tournament writer.
-  const kept = record.winner === "b" ? record.b : record.a;
-  const dropped = record.winner === "b" ? record.a : record.b;
-  const keptHash = record.winner === "b" ? record.grids?.b : record.grids?.a;
-  const droppedHash = record.winner === "b" ? record.grids?.a : record.grids?.b;
-  if (
-    entry.gridHash !== undefined &&
-    entry.gridHash !== (entry.kind === "accept" ? keptHash : droppedHash)
-  )
+  const kept = record.winner === "b" ? "b" : "a";
+  const dropped = record.winner === "b" ? "a" : "b";
+  const self = entry.kind === "accept" ? kept : dropped;
+  const other = entry.kind === "accept" ? dropped : kept;
+  if (entry.gridHash !== undefined && entry.gridHash !== record.grids?.[self])
     throw new Error("pair grid does not match outcome score evidence");
   await validateInput(
     workspace,
-    entry.kind === "accept" ? kept : dropped,
+    record[self],
     entry.candidate,
+    record.hashes[self],
   );
   await validateInput(
     workspace,
-    entry.kind === "accept" ? dropped : kept,
+    record[other],
     entry.versus,
+    record.hashes[other],
   );
   return record;
 }

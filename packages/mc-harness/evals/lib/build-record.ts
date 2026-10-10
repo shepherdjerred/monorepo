@@ -58,9 +58,16 @@ async function portableRecord(
   };
   switch (record.kind) {
     case "pair":
-      return { ...record, a: await input(record.a), b: await input(record.b) };
+      return {
+        ...record,
+        a: await input(record.a, record.hashes.a),
+        b: await input(record.b, record.hashes.b),
+      };
     case "absolute":
-      return { ...record, render: await input(record.render) };
+      return {
+        ...record,
+        render: await input(record.render, record.renderHash),
+      };
     case "critique":
       return {
         ...record,

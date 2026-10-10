@@ -359,8 +359,14 @@ pick n | knockout [--among a,b] [--rubric] [--model]`) keep versions of
   directory fail listing, resume and judging.
   Saving also rejects existing candidate directories with missing or invalid metadata,
   including with `--force`, and preserves their remaining artifacts.
-  Forced saves stage every replacement artifact before switching directories;
-  failed staging preserves the complete saved candidate.
+  Saves stage every artifact and the save journal entry before publication;
+  failed staging or installation preserves the preceding candidate and journal.
+  The journal publishes first so an installed candidate already has its save entry.
+  Publication holds a workspace-wide SQLite exclusive lock across staging,
+  installation and rollback. A competing publisher fails before changing any
+  files; the operating system releases the lock when its process exits.
+  The persistent `.publication-lock.sqlite` file must stay in place, including
+  while idle, so every publisher locks the same inode.
   Candidates record the captured site's hash, world and bounds; picking or
   judging one against another capture fails. Recapturing clears the incumbent
   and preserves old candidates for inspection. The default tournament selects
@@ -370,6 +376,11 @@ pick n | knockout [--among a,b] [--rubric] [--model]`) keep versions of
   Eval archival permits cross-build judge inputs only inside the declared
   worktree root, resolves symlinks before reads, and defaults subsequent archive
   copies to their own source directory.
+  Standalone pair and absolute records carry the SHA-256 of every image sent
+  to the model, as tournament and critique records do. Every archive copy
+  verifies these bytes; records without checksums cannot serve as evidence.
+  Invalid current or historical judge evidence fails grading with a reason
+  and is never published as a partial benchmark archive.
   Each capture also marks the append-only journal; trajectory grading counts
   only renders, critiques and decisions after the latest capture.
 - **Scratch** (`scratch <dir> [--size n]`) makes `<dir>/scratch/`, an
