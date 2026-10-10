@@ -61,6 +61,7 @@ const GLOBAL_IMAGE_INPUTS = [
   // The image lane writes the digest handoff every downstream release step
   // reads, so a change to the producer must rebuild every target once.
   "scripts/lib/ci/ci-handoff.ts",
+  "scripts/lib/ci/published-image-release.ts",
   "ci/scripts/images/ghcr-public-access.ts",
   "ci/scripts/images/image-targets.ts",
   "ci/scripts/migration-core.ts",

@@ -30,10 +30,11 @@ import type { PushOptions, PushOutcome } from "./bake-image-push-types.ts";
 import { productionBakeEnvironment } from "./production-bake-environment.ts";
 import { runMain } from "../../../scripts/lib/transient.ts";
 import { pinCandidatesForDigests } from "./pin-candidate-images.ts";
+import { lastSuccessfulImageReleaseCommit } from "./live-version-catalog.ts";
 import {
-  lastSuccessfulImageReleaseCommit,
-  resolveImageReleaseCatalog,
-} from "./live-version-catalog.ts";
+  recordPublishedImageRelease,
+  resolvePublishedImageCatalog,
+} from "../../../scripts/lib/ci/published-image-release.ts";
 import { TransientError } from "../../../scripts/lib/transient-error.ts";
 import {
   writeFallbackReport,
@@ -421,7 +422,7 @@ async function main(): Promise<void> {
   // path, and derives Temporal Workflow candidate pins from it. Fetch it first
   // so the same bounded fetch also exposes the image-release base to selection.
   const release = options.push
-    ? await resolveImageReleaseCatalog(commit, execute)
+    ? await resolvePublishedImageCatalog(commit, execute)
     : undefined;
   const liveVersionCatalog = release?.catalog;
   const selection = await selectedTargets(options, commit, execute, () =>
@@ -443,6 +444,7 @@ async function main(): Promise<void> {
         liveVersionCatalog,
       );
       await Bun.write(pushOutcomes, "[]\n");
+      await recordPublishedImageRelease(commit, buildNumber);
     }
     return;
   }
@@ -482,6 +484,7 @@ async function main(): Promise<void> {
   if (!(await Bun.file(selectionReport).exists())) {
     await writeFallbackReport(selection.targets, selection.fallbackReason);
   }
+  if (options.push) await recordPublishedImageRelease(commit, buildNumber);
   const annotationArguments = ["--report", selectionReport];
   if (await Bun.file(pushOutcomes).exists()) {
     annotationArguments.push("--outcomes", pushOutcomes);

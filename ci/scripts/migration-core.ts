@@ -141,6 +141,7 @@ export const globalPaths = [
   "ci/scripts/selectors/ensure-ancestor.ts",
   "ci/scripts/migration-core.ts",
   "scripts/lib/ci/ci-handoff.ts",
+  "scripts/lib/ci/published-image-release.ts",
   "scripts/lib/ci/ci-artifact.ts",
   "scripts/lib/ci/ci-environment.ts",
   "scripts/lib/json.ts",
