@@ -1,9 +1,10 @@
-import { cp, readdir, rm } from "node:fs/promises";
+import { cp, rm } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import { type Box, RegionReadResponseSchema } from "#protocol/bridge.ts";
 import { BuildManifestSchema, type JudgeRubric } from "#protocol/build.ts";
 import type { GradeCheck, Grader, JudgeSummary } from "#evals/lib/types.ts";
+import { keepBuildRecord } from "#evals/lib/build-record.ts";
 import { deliveredChecks, type DeliveredSpec } from "#evals/grade/delivered.ts";
 import { judgeNote } from "#evals/grade/judge-note.ts";
 import { sandboxFrom } from "#evals/grade/tower.ts";
@@ -188,32 +189,6 @@ function resultHandles(
     typeof applyId !== "string"
     ? null
     : { sandbox, buildDir: path.resolve(ctx.worktree, buildDirValue), applyId };
-}
-
-/** Copies the build's journal and judge records (JSON only) into the task directory. */
-async function keepRecord(
-  buildDir: string,
-  taskDir: string,
-): Promise<string[]> {
-  const kept: string[] = [];
-  const journal = path.join(buildDir, "journal.jsonl");
-  if (await Bun.file(journal).exists()) {
-    const out = path.join(taskDir, "journal.jsonl");
-    await cp(journal, out);
-    kept.push(out);
-  }
-  let records: string[];
-  try {
-    records = await readdir(path.join(buildDir, "judge"));
-  } catch {
-    return kept;
-  }
-  for (const name of records.filter((entry) => entry.endsWith(".json"))) {
-    const out = path.join(taskDir, "judge", name);
-    await cp(path.join(buildDir, "judge", name), out);
-    kept.push(out);
-  }
-  return kept;
 }
 
 /**
@@ -414,7 +389,7 @@ export const buildGrader =
     );
     const journal = await readJournal(buildDir);
     checks.push(...trajectoryChecks(journal, options.rubric));
-    artifacts.push(...(await keepRecord(buildDir, ctx.taskDir)));
+    artifacts.push(...(await keepBuildRecord(buildDir, ctx.taskDir)));
     const trajectory =
       journal !== null && "entries" in journal
         ? trajectoryOf(journal.entries, options.rubric)

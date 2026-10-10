@@ -11,7 +11,7 @@
  * `judge` spends model calls only on pairs and entries it has not judged
  * before (cached by sheet hash). `report` is offline.
  */
-import { cp, mkdir, readdir, rename } from "node:fs/promises";
+import { mkdir, rename } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { parseArgs } from "node:util";
@@ -60,6 +60,7 @@ import {
 import { runTournament, type Contestant } from "#evals/bench/lib/tournament.ts";
 import { BENCH_TASKS, benchTask } from "#evals/bench/tasks.ts";
 import { UsageSchema } from "#evals/bench/lib/entries.ts";
+import { keepBuildRecord } from "#evals/lib/build-record.ts";
 
 const { positionals, values } = parseArgs({
   args: Bun.argv.slice(2),
@@ -116,28 +117,6 @@ const RunReportSchema = z.object({
   ),
 });
 
-/** Copies the task's journal and judge records (kept there by the grader) into the entry. */
-async function keepRecord(taskDir: string, entryDir: string): Promise<void> {
-  const journal = path.join(taskDir, "journal.jsonl");
-  if (await Bun.file(journal).exists()) {
-    await cp(journal, path.join(entryDir, "journal.jsonl"));
-  }
-  let records: string[];
-  try {
-    records = await readdir(path.join(taskDir, "judge"));
-  } catch {
-    return;
-  }
-  const wanted = records.filter((entry) => entry.endsWith(".json"));
-  if (wanted.length === 0) return;
-  await mkdir(path.join(entryDir, "judge"), { recursive: true });
-  for (const name of wanted) {
-    await cp(
-      path.join(taskDir, "judge", name),
-      path.join(entryDir, "judge", name),
-    );
-  }
-}
 async function collect(): Promise<void> {
   const run = values.run ?? usage();
   const runDir = (await Bun.file(path.join(run, "report.json")).exists())
@@ -203,7 +182,10 @@ async function collect(): Promise<void> {
           : { trajectory: result.trajectory }),
       },
     });
-    await keepRecord(result.taskDir, path.join(taskHistoryDir(task.id), id));
+    await keepBuildRecord(
+      result.taskDir,
+      path.join(taskHistoryDir(task.id), id),
+    );
     collected += 1;
     log(
       `${task.id}: ${id} — ${meta.blocks.toString()} blocks, lint ${meta.lint.errors.toString()}/${meta.lint.warnings.toString()}, repetition ${meta.repetition.toString()}`,

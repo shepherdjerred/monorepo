@@ -801,9 +801,9 @@ describe("candidate capture and judgment evidence", () => {
     await saveCandidate(workspace.dir, "narrow", { force: true });
     for (const [index, file] of [record.a, record.b].entries()) {
       expect(file).toMatch(/candidate-.*-[a-f0-9]{64}\.png$/u);
-      expect(new Uint8Array(await Bun.file(file).arrayBuffer())).toEqual(
-        inputs[index],
-      );
+      expect(
+        new Uint8Array(await Bun.file(workspace.file(file)).arrayBuffer()),
+      ).toEqual(inputs[index]);
     }
   });
 });
