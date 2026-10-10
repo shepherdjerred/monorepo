@@ -357,6 +357,8 @@ pick n | knockout [--among a,b] [--rubric] [--model]`) keep versions of
   before publishing the paired outcomes and checkpoint together. Failed
   publication rolls both files back; retry reuses that verdict without another
   model call and deduplicates outcomes if a process exit left a lagging checkpoint.
+  One process-wide tournament lock spans snapshotting, judging and publication,
+  so a second invocation fails before it can make duplicate model calls.
   A damaged saved verdict fails before judging. The pair record
   records both candidate grid hashes. Each scored outcome references its exact
   grid and critique record; grading revalidates those references and totals.
@@ -407,6 +409,8 @@ pick n | knockout [--among a,b] [--rubric] [--model]`) keep versions of
   an intervening manual edit to a program. The thin client imports no build or daemon implementation.
   The persistent `.publication-lock.sqlite` file must stay in place, including
   while idle, so every publisher locks the same inode.
+  `.knockout-lock.sqlite` likewise stays in place while a tournament is active
+  and serializes the full model-call sequence independently of short publishes.
   Candidates record the captured site's hash, world and bounds; picking or
   judging one against another capture fails. Recapturing clears the incumbent
   and preserves old candidates for inspection. The default tournament selects

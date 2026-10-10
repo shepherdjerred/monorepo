@@ -424,6 +424,42 @@ describe("distinct critiqued builds", () => {
 });
 
 describe("default knockout iteration", () => {
+  it("excludes a concurrent tournament before either command can judge", async () => {
+    const { workspace } = await twoVersions("concurrent-tournaments");
+    let startJudging!: () => void;
+    let releaseJudge!: () => void;
+    const judging = new Promise<void>((resolve) => {
+      startJudging = resolve;
+    });
+    const waiting = new Promise<void>((resolve) => {
+      releaseJudge = resolve;
+    });
+    const ask = vi.fn(async () => {
+      startJudging();
+      await waiting;
+      return { winner: "first" as const, confidence: 1, reasons: ["fixture"] };
+    });
+    const options = { rubric: "micro" as const, model: "stub", ask };
+    const active = knockout(workspace.dir, options);
+    await judging;
+    const competingAsk = vi.fn(() =>
+      Promise.resolve({
+        winner: "first" as const,
+        confidence: 1,
+        reasons: ["fixture"],
+      }),
+    );
+    await expect(
+      knockout(workspace.dir, { ...options, ask: competingAsk }),
+    ).rejects.toThrow(/knockout already running/u);
+    expect(competingAsk).not.toHaveBeenCalled();
+    releaseJudge();
+    await active;
+    await expect(knockout(workspace.dir, options)).resolves.toMatchObject({
+      bouts: [],
+    });
+  });
+
   it("requires a new visual critique when a render name is reused", async () => {
     const workspace = await flatSiteBuild(
       path.join(root, "render-reused"),

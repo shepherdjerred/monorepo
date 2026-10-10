@@ -16,6 +16,7 @@ import {
 } from "@shepherdjerred/mc-build/render/index.ts";
 import type { BuildManifest, Candidate, JudgeRubric } from "#protocol/build.ts";
 import { withPublicationLock } from "#protocol/publication-lock.ts";
+import { withKnockoutLock } from "./knockout-lock.ts";
 import {
   candidateGrid,
   candidateMatchesCapture,
@@ -353,6 +354,13 @@ async function knockoutSnapshot(
 }
 
 export async function knockout(
+  dir: string,
+  options: KnockoutOptions,
+): Promise<KnockoutResult> {
+  return withKnockoutLock(dir, () => runKnockout(dir, options));
+}
+
+async function runKnockout(
   dir: string,
   options: KnockoutOptions,
 ): Promise<KnockoutResult> {

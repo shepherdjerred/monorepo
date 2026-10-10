@@ -316,6 +316,42 @@ describe("interrupted publication recovery", () => {
       await Bun.file(path.join(staged, ".transaction.json")).exists(),
     ).toBe(false);
   });
+
+  it.each([".candidate-interrupted", ".build-record-interrupted"])(
+    "discovers incomplete %s publications",
+    async (prefix) => {
+      const name = prefix.startsWith(".candidate-")
+        ? "recovery-candidate"
+        : "recovery-build-record";
+      const { workspace } = await fixture(name);
+      const staged = workspace.file(prefix);
+      await mkdir(staged, { recursive: true });
+      await Bun.write(
+        workspace.file("candidates/interrupted/candidate.json"),
+        "new",
+      );
+      await Bun.write(
+        path.join(staged, ".transaction.json"),
+        `${JSON.stringify({
+          files: [
+            { file: "candidates/interrupted/candidate.json", publish: true },
+          ],
+        })}\n`,
+      );
+      await publishFiles(workspace, {
+        prefix: ".compile-retry-",
+        stage: async () => [],
+      });
+      expect(
+        await Bun.file(
+          workspace.file("candidates/interrupted/candidate.json"),
+        ).exists(),
+      ).toBe(false);
+      expect(
+        await Bun.file(path.join(staged, ".transaction.json")).exists(),
+      ).toBe(false);
+    },
+  );
 });
 
 describe("capture interruption identity", () => {

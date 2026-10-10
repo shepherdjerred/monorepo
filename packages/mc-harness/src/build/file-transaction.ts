@@ -32,7 +32,7 @@ const TRANSACTION_FILE = ".transaction.json";
 const COMMITTED_FILE = ".committed";
 const RECOVERED_FILE = ".recovered";
 const TRANSACTION_DIR =
-  /^\.(?:capture|compile|run|pick|render|critique-publish|bout)-/u;
+  /^\.(?:capture|compile|run|pick|render|critique-publish|bout|candidate|build-record)-/u;
 
 function transactionPath(root: string, file: string): string {
   if (
