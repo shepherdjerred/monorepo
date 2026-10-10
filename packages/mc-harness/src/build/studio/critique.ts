@@ -322,14 +322,14 @@ async function reuseVisual(
       sheet: record.sheet,
       scores: {
         rubric: record.rubric,
-        model: record.model,
+        model: record.visualModel ?? record.model,
         axes: record.axes,
         overallAesthetic: record.overallAesthetic,
         notes: record.notes,
         total: record.total,
         max: record.max,
       },
-      model: record.model,
+      model: record.visualModel ?? record.model,
     };
   }
   throw new Error(
@@ -395,7 +395,8 @@ export async function critiqueBuild(
   const recordFile = await writeJudgeRecord(workspace.dir, {
     kind: "critique",
     at,
-    model,
+    model: stage === "code" ? options.model : model,
+    visualModel: model,
     rubric: options.rubric,
     render: name,
     sheet,

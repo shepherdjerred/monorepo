@@ -69,6 +69,65 @@ afterAll(async () => {
 });
 
 describe("trajectory", () => {
+  it("grades only evidence after the latest site capture", () => {
+    const capture: BuildLogEntry = {
+      kind: "capture",
+      at,
+      iteration: 2,
+      siteHash: "new-site",
+      box: {
+        world: "world",
+        min: { x: 0, y: 0, z: 0 },
+        max: { x: 9, y: 9, z: 9 },
+      },
+    };
+    const previous = [
+      render(1),
+      critique(1, 20),
+      accept(1, 20),
+      render(2),
+      critique(2, 30),
+      accept(2, 30),
+    ];
+    expect(checksOf(previous)[1]?.pass).toBe(true);
+    const recaptured = [
+      ...previous,
+      capture,
+      render(3),
+      critique(3, 10),
+      accept(3, 10),
+    ];
+    expect(trajectoryOf(recaptured, "micro")).toEqual({
+      iterations: 1,
+      critiques: [10],
+      accepted: 1,
+      rejected: 0,
+    });
+    expect(checksOf(recaptured).map((check) => check.pass)).toEqual([
+      true,
+      false,
+      true,
+    ]);
+    expect(
+      critiquedIterations([...previous, capture, critique(1, 40)], "micro"),
+    ).toBe(0);
+    const current = [...recaptured, render(4), critique(4, 12), accept(4, 12)];
+    expect(checksOf(current).map((check) => check.pass)).toEqual([
+      true,
+      true,
+      true,
+    ]);
+    expect(acceptedNonDecreasing([...current, accept(4, 9)], "micro")).toBe(
+      false,
+    );
+    expect(trajectoryOf([...current, capture], "micro")).toEqual({
+      iterations: 0,
+      critiques: [],
+      accepted: 0,
+      rejected: 0,
+    });
+  });
+
   it("counts iterations, critiques and knockout outcomes", () => {
     const entries = [
       render(1),

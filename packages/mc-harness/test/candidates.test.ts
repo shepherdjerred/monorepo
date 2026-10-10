@@ -6,7 +6,7 @@ import { BlockGrid } from "@shepherdjerred/mc-build/core/grid.ts";
 import { writeSchematic } from "@shepherdjerred/mc-build/core/schem.ts";
 import { loadRegistry } from "@shepherdjerred/mc-build/registry/registry.ts";
 import { appendLog, readLog } from "#build/build-log.ts";
-import { renderBuild } from "#build/commands.ts";
+import { captureSite, renderBuild } from "#build/commands.ts";
 import { DaemonClient } from "#build/daemon-client.ts";
 import { Journal } from "#build/journal.ts";
 import {
@@ -732,7 +732,154 @@ const prefersWide: AskJudge = (first, second) =>
 const biased: AskJudge = () =>
   Promise.resolve({ winner: "first", confidence: 0.7, reasons: ["position"] });
 
+describe("site capture journal", () => {
+  it("marks each successful recapture and clears the saved incumbent", async () => {
+    const workspace = await makeBuild("capture-journal");
+    const manifest = await workspace.manifest();
+    await workspace.writeManifest({
+      ...manifest,
+      best: {
+        candidate: "old",
+        gridHash: "old-grid",
+        rubric: "micro",
+        score: 20,
+      },
+    });
+    await appendLog(workspace.dir, { kind: "note", text: "earlier site" });
+    const box = {
+      world: "world",
+      min: { x: 5, y: 64, z: 5 },
+      max: { x: 5, y: 64, z: 5 },
+    };
+    const grid = new BlockGrid({ x: 1, y: 1, z: 1 });
+    grid.set(0, 0, 0, "minecraft:stone");
+    const registry = await loadRegistry();
+    const client = new DaemonClient();
+    vi.spyOn(client, "snapshotParts").mockResolvedValue({
+      id: "snapshot",
+      parts: [{ box, id: "snapshot" }],
+    });
+    vi.spyOn(client, "snapshotBytes").mockResolvedValue(
+      writeSchematic(grid, registry.dataVersion),
+    );
+    vi.spyOn(client, "regionRead").mockResolvedValue({
+      ...box,
+      size: grid.size,
+      palette: ["minecraft:stone"],
+      blocks: Buffer.alloc(4).toString("base64"),
+      blockEntities: [],
+    });
+    const env = {
+      client,
+      journal: new Journal(workspace.file("audit")),
+      log: vi.fn(),
+    };
+    const captured = await captureSite(env, workspace.dir, {
+      target: "sandbox",
+      box,
+    });
+    const entries = await readLog(workspace.dir);
+    expect(entries[0]?.kind).toBe("note");
+    expect(entries[1]).toMatchObject({
+      kind: "capture",
+      siteHash: captured.siteHash,
+      box,
+    });
+    const recaptured = await workspace.manifest();
+    expect(recaptured.best).toBeUndefined();
+    await captureSite(env, workspace.dir, { target: "sandbox", box });
+    const after = await readLog(workspace.dir);
+    expect(after.filter((entry) => entry.kind === "capture")).toHaveLength(2);
+  });
+});
+
+describe("offline world boundaries", () => {
+  it.each(["paste", "clear"])(
+    "skips a %s targeting another world and refuses to save it",
+    async (kind) => {
+      const workspace = await makeBuild(`foreign-world-${kind}`);
+      await pastePart(workspace, 2);
+      const { ops } = await workspace.oplog();
+      const first = ops[0];
+      if (first?.kind !== "paste") throw new Error("missing paste fixture");
+      const foreign: Op =
+        kind === "paste"
+          ? { ...first, world: "other-world" }
+          : {
+              kind: "we",
+              world: "other-world",
+              command: "//set air",
+              pos1: { x: 100, y: 64, z: 100 },
+              pos2: { x: 109, y: 73, z: 109 },
+              source: "manual",
+            };
+      await workspace.writeOplog({ version: 1, ops: [foreign] });
+      const compiled = await compiledGrid(
+        workspace,
+        await workspace.manifest(),
+      );
+      expect(compiled.skipped).toHaveLength(1);
+      expect(compiled.skipped[0]).toContain(
+        'targets world "other-world", not captured world "world"',
+      );
+      expect(compiled.grid.diff(await workspace.siteGrid()).count).toBe(0);
+      await expect(saveCandidate(workspace.dir, "invalid")).rejects.toThrow(
+        /no offline result/u,
+      );
+      expect(
+        await Bun.file(
+          workspace.file("candidates/invalid/candidate.json"),
+        ).exists(),
+      ).toBe(false);
+    },
+  );
+});
+
 describe("candidate capture and judgment evidence", () => {
+  it("keeps a completed bout's incumbent when a later model call fails", async () => {
+    const workspace = await makeBuild("knockout-interrupted");
+    for (const [name, width] of [
+      ["a", 2],
+      ["b", 6],
+      ["c", 4],
+    ] as const) {
+      await pastePart(workspace, width);
+      await saveCandidate(workspace.dir, name);
+    }
+    let calls = 0;
+    const ask: AskJudge = (first, second) => {
+      calls += 1;
+      if (calls > 2) throw new Error("model unavailable");
+      return prefersWide(first, second);
+    };
+    await expect(
+      knockout(workspace.dir, {
+        rubric: "micro",
+        model: "stub",
+        ask,
+      }),
+    ).rejects.toThrow("model unavailable");
+    const interrupted = await workspace.manifest();
+    expect(interrupted.best?.candidate).toBe("b");
+    const journal = await readLog(workspace.dir);
+    const accepted = journal.filter((entry) => entry.kind === "accept");
+    expect(accepted.map((entry) => entry.candidate)).toEqual(["b"]);
+    const retry = await knockout(workspace.dir, {
+      among: ["c"],
+      rubric: "micro",
+      model: "stub",
+      ask: prefersWide,
+    });
+    expect(retry.bouts[0]?.incumbent).toBe("b");
+    expect(retry.best).toBe("b");
+    const retriedJournal = await readLog(workspace.dir);
+    expect(
+      retriedJournal
+        .filter((entry) => entry.kind === "accept")
+        .map((entry) => entry.candidate),
+    ).toEqual(["b", "b"]);
+  });
+
   it.each(["contents", "placement", "world"])(
     "rejects a candidate after capture %s changes before side effects",
     async (change) => {
@@ -1038,7 +1185,7 @@ describe("code-only critique", () => {
     ).rejects.toThrow(/no visual critique of render "look"/u);
     const visual = await critiqueBuild(workspace.dir, {
       rubric: "micro",
-      model: "stub",
+      model: "visual-model",
       stage: "visual",
       ask: scorer(4),
     });
@@ -1047,7 +1194,7 @@ describe("code-only critique", () => {
     // render keeps the scores it had.
     const codeOnly = await critiqueBuild(workspace.dir, {
       rubric: "micro",
-      model: "stub",
+      model: "code-model",
       stage: "code",
       ask: () => Promise.reject(new Error("must not score the sheet again")),
       askCode: reviewer,
@@ -1057,12 +1204,35 @@ describe("code-only critique", () => {
     expect(codeOnly.sheet).toBe(visual.sheet);
     expect(codeOnly.lowest).toBe(visual.lowest);
     expect(codeOnly.suggestions[0]?.axis).toBe(visual.lowest);
+    const codeRecord = JudgeRecordSchema.parse(
+      await Bun.file(workspace.file(codeOnly.record)).json(),
+    );
+    expect(codeRecord).toMatchObject({
+      kind: "critique",
+      model: "code-model",
+      visualModel: "visual-model",
+    });
+    expect(codeOnly.scores.model).toBe("visual-model");
     const kept = await readSidecar(workspace, "look");
     expect(kept.scores?.total).toBe(3 * 7 + 4);
     const journal = await readLog(workspace.dir);
     expect(
       journal.filter((entry) => entry.kind === "critique").map((e) => e.total),
     ).toEqual([3 * 7 + 4, 3 * 7 + 4]);
+    const repeated = await critiqueBuild(workspace.dir, {
+      rubric: "micro",
+      model: "another-code-model",
+      stage: "code",
+      askCode: reviewer,
+    });
+    const repeatedRecord = JudgeRecordSchema.parse(
+      await Bun.file(workspace.file(repeated.record)).json(),
+    );
+    expect(repeatedRecord).toMatchObject({
+      model: "another-code-model",
+      visualModel: "visual-model",
+    });
+    expect(repeated.scores.model).toBe("visual-model");
     // A critique on the other rubric does not feed a micro code pass.
     await expect(
       critiqueBuild(workspace.dir, {

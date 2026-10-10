@@ -49,6 +49,13 @@ export type JudgeRubric = z.infer<typeof JudgeRubricSchema>;
 /** One line of `journal.jsonl`: what happened, when, in which iteration. */
 export const BuildLogEntrySchema = z.discriminatedUnion("kind", [
   z.strictObject({
+    kind: z.literal("capture"),
+    at: Iso,
+    iteration: Iteration,
+    siteHash: z.string().min(1),
+    box: BoxSchema,
+  }),
+  z.strictObject({
     kind: z.literal("note"),
     at: Iso,
     iteration: Iteration,
@@ -229,6 +236,8 @@ export const JudgeCritiqueRecordSchema = z.strictObject({
   kind: z.literal("critique"),
   at: z.string().min(1),
   model: z.string().min(1),
+  /** Visual scorer when the code-review model differs; absent in older records. */
+  visualModel: z.string().min(1).optional(),
   rubric: JudgeRubricSchema,
   /** The render's name (`renders/<name>`), not a file. */
   render: z.string().min(1),

@@ -78,6 +78,8 @@ function entryLine(entry: BuildLogEntry): string {
   const when = entry.at.slice(11, 19);
   const head = `${when} [${entry.iteration.toString()}] ${entry.kind}`;
   switch (entry.kind) {
+    case "capture":
+      return `${head}: ${entry.siteHash} in ${entry.box.world}`;
     case "note":
       return `${head}: ${entry.text}`;
     case "compile":

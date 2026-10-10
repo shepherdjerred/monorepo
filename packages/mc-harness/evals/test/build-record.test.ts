@@ -3,6 +3,21 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { expect, it } from "vitest";
 import { keepBuildRecord } from "#evals/lib/build-record.ts";
+import { JudgeRecordSchema } from "#protocol/build.ts";
+
+const pair = (a: string, b: string) => ({
+  kind: "pair",
+  at: "2026-10-10T00:00:00Z",
+  model: "stub",
+  rubric: "micro",
+  judge: "test-judge",
+  a,
+  b,
+  winner: "a",
+  confidence: 0.9,
+  agreed: true,
+  reasons: ["test"],
+});
 
 it("keeps portable verdict inputs through eval and benchmark copies", async () => {
   const root = await mkdtemp(path.join(tmpdir(), "mc-build-record-"));
@@ -12,9 +27,12 @@ it("keeps portable verdict inputs through eval and benchmark copies", async () =
     const archive = path.join(root, "benchmark");
     const input = "judge/candidate-original-abc.png";
     const bytes = new Uint8Array([137, 80, 78, 71, 13, 10]);
-    const record = JSON.stringify({ a: input, b: input });
+    const record = pair(input, input);
     await Bun.write(path.join(source, input), bytes);
-    await Bun.write(path.join(source, "judge/pair.json"), record);
+    await Bun.write(
+      path.join(source, "judge/pair.json"),
+      JSON.stringify(record),
+    );
     await Bun.write(path.join(source, "journal.jsonl"), "original journal\n");
     await Bun.write(
       path.join(source, "judge/unrelated.txt"),
@@ -24,9 +42,9 @@ it("keeps portable verdict inputs through eval and benchmark copies", async () =
     expect(await keepBuildRecord(task, archive)).toHaveLength(3);
     await rm(source, { recursive: true });
     await rm(task, { recursive: true });
-    expect(await Bun.file(path.join(archive, "judge/pair.json")).text()).toBe(
-      record,
-    );
+    expect(
+      await Bun.file(path.join(archive, "judge/pair.json")).json(),
+    ).toEqual(record);
     expect(
       new Uint8Array(await Bun.file(path.join(archive, input)).arrayBuffer()),
     ).toEqual(bytes);
@@ -36,6 +54,65 @@ it("keeps portable verdict inputs through eval and benchmark copies", async () =
     expect(
       await Bun.file(path.join(archive, "judge/unrelated.txt")).exists(),
     ).toBe(false);
+  } finally {
+    await rm(root, { recursive: true });
+  }
+});
+
+it("copies absolute and cross-build judge inputs and rewrites every archive hop", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "mc-build-record-external-"));
+  try {
+    const source = path.join(root, "build");
+    const other = path.join(root, "other-build", "judge", "same-name.png");
+    const own = path.join(source, "judge", "same-name.png");
+    const task = path.join(root, "eval");
+    const archive = path.join(root, "benchmark");
+    await Bun.write(own, "own input");
+    await Bun.write(other, "other input");
+    await Bun.write(
+      path.join(source, "judge/pair.json"),
+      JSON.stringify(pair(own, other)),
+    );
+    await Bun.write(
+      path.join(source, "judge/absolute.json"),
+      JSON.stringify({
+        kind: "absolute",
+        at: "2026-10-10T00:00:00Z",
+        model: "stub",
+        rubric: "micro",
+        judge: "test-scorer",
+        render: other,
+        axes: {},
+        overallAesthetic: 1,
+        total: 1,
+        max: 40,
+        notes: [],
+      }),
+    );
+    await keepBuildRecord(source, task);
+    await keepBuildRecord(task, archive);
+    await rm(source, { recursive: true });
+    await rm(path.join(root, "other-build"), { recursive: true });
+    await rm(task, { recursive: true });
+    const keptPair = JudgeRecordSchema.parse(
+      await Bun.file(path.join(archive, "judge/pair.json")).json(),
+    );
+    const absolute = JudgeRecordSchema.parse(
+      await Bun.file(path.join(archive, "judge/absolute.json")).json(),
+    );
+    if (keptPair.kind !== "pair" || absolute.kind !== "absolute")
+      throw new Error("wrong verdict kind");
+    expect(path.isAbsolute(keptPair.a)).toBe(false);
+    expect(path.isAbsolute(keptPair.b)).toBe(false);
+    expect(await Bun.file(path.join(archive, keptPair.a)).text()).toBe(
+      "own input",
+    );
+    expect(await Bun.file(path.join(archive, keptPair.b)).text()).toBe(
+      "other input",
+    );
+    expect(await Bun.file(path.join(archive, absolute.render)).text()).toBe(
+      "other input",
+    );
   } finally {
     await rm(root, { recursive: true });
   }

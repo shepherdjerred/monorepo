@@ -119,6 +119,11 @@ export async function captureSite(
     world: options.box.world,
     site: { min: region.min, max: region.max, siteHash: info.siteHash },
   });
+  await appendLog(dir, {
+    kind: "capture",
+    siteHash: info.siteHash,
+    box: options.box,
+  });
   return {
     siteHash: info.siteHash,
     size: region.size,

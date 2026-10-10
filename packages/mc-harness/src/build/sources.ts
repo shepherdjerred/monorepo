@@ -82,9 +82,13 @@ function clearBox(
 async function applyOffline(
   workspace: BuildWorkspace,
   grid: BlockGrid,
-  siteMin: BlockPos,
+  site: Box,
   op: Op,
 ): Promise<string | null> {
+  if (op.kind !== "command" && op.world !== site.world) {
+    return `targets world "${op.world}", not captured world "${site.world}"`;
+  }
+  const siteMin = site.min;
   if (op.kind === "we") {
     if (
       CLEAR_COMMANDS.has(op.command) &&
@@ -129,7 +133,7 @@ export async function compiledGrid(
   const oplog = await workspace.oplog();
   const skipped: string[] = [];
   for (const [index, op] of oplog.ops.entries()) {
-    const reason = await applyOffline(workspace, grid, site.min, op);
+    const reason = await applyOffline(workspace, grid, site, op);
     if (reason !== null) {
       skipped.push(
         `op ${(index + 1).toString()} (${op.kind}, ${op.source}): ${reason}`,

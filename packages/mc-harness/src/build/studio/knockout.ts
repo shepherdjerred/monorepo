@@ -14,7 +14,7 @@ import {
   encodePng,
   Renderer,
 } from "@shepherdjerred/mc-build/render/index.ts";
-import type { JudgeRubric } from "#protocol/build.ts";
+import type { BuildManifest, JudgeRubric } from "#protocol/build.ts";
 import { appendLog } from "#build/build-log.ts";
 import {
   candidateGrid,
@@ -105,6 +105,29 @@ function seeding(
   };
 }
 
+async function persistBest(
+  workspace: BuildWorkspace,
+  manifest: BuildManifest,
+  incumbent: string,
+  rubric: JudgeRubric,
+): Promise<NonNullable<BuildManifest["best"]>> {
+  const candidate = await readCandidate(workspace.dir, incumbent);
+  const best = {
+    candidate: incumbent,
+    gridHash: candidate.gridHash,
+    rubric,
+    score: await candidateScore(workspace.dir, incumbent, rubric),
+  };
+  const unchanged =
+    manifest.best?.candidate === best.candidate &&
+    manifest.best.gridHash === best.gridHash &&
+    manifest.best.rubric === best.rubric &&
+    manifest.best.score === best.score;
+  if (unchanged && manifest.best !== undefined) return manifest.best;
+  await workspace.writeManifest({ ...manifest, best });
+  return best;
+}
+
 async function bout(
   dir: string,
   pair: { incumbent: string; challenger: string; sheets: Map<string, Sheet> },
@@ -180,7 +203,7 @@ export async function knockout(
   },
 ): Promise<KnockoutResult> {
   const workspace = new BuildWorkspace(dir);
-  const manifest = await workspace.manifest();
+  let manifest = await workspace.manifest();
   const candidates = await listCandidates(dir);
   const saved = candidates.map((candidate) => candidate.name);
   const pool = options.among ?? saved;
@@ -209,38 +232,28 @@ export async function knockout(
     );
     bouts.push(result);
     incumbent = result.winner === "challenger" ? challenger : incumbent;
-  }
-  const best = {
-    ...(await readCandidate(dir, incumbent)),
-    score: await candidateScore(dir, incumbent, options.rubric),
-  };
-  // Same incumbent, same grid, same score: nothing to write. A critique since
-  // the last knockout changes the score and is written back.
-  const unchanged =
-    manifest.best?.candidate === incumbent &&
-    manifest.best.gridHash === best.gridHash &&
-    manifest.best.rubric === options.rubric &&
-    manifest.best.score === best.score;
-  if (!unchanged) {
-    await workspace.writeManifest({
+    // A later model failure must retry from the winner already recorded in the journal.
+    manifest = {
       ...manifest,
-      best: {
-        candidate: incumbent,
-        gridHash: best.gridHash,
-        rubric: options.rubric,
-        score: best.score,
-      },
+      best: await persistBest(workspace, manifest, incumbent, options.rubric),
+    };
+  }
+  const best = await persistBest(
+    workspace,
+    manifest,
+    incumbent,
+    options.rubric,
+  );
+  if (seeds.challengers.length === 0 && manifest.best !== best) {
+    // No bout produces an accept entry when the pool contains only the incumbent.
+    await appendLog(dir, {
+      kind: "accept",
+      candidate: incumbent,
+      versus: null,
+      file: null,
+      rubric: options.rubric,
+      score: best.score,
     });
-    if (seeds.challengers.length === 0) {
-      await appendLog(dir, {
-        kind: "accept",
-        candidate: incumbent,
-        versus: null,
-        file: null,
-        rubric: options.rubric,
-        score: best.score,
-      });
-    }
   }
   return { best: incumbent, score: best.score, bouts };
 }

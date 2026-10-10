@@ -33,6 +33,14 @@ export async function readJournal(buildDir: string): Promise<JournalRead> {
   }
 }
 
+/** Recapturing starts a new trajectory while retaining the earlier evidence. */
+function currentCapture(
+  entries: readonly BuildLogEntry[],
+): readonly BuildLogEntry[] {
+  const index = entries.findLastIndex((entry) => entry.kind === "capture");
+  return index === -1 ? entries : entries.slice(index + 1);
+}
+
 export function trajectoryOf(
   entries: readonly BuildLogEntry[],
   rubric: JudgeRubric,
@@ -41,7 +49,7 @@ export function trajectoryOf(
   let iterations = 0;
   let accepted = 0;
   let rejected = 0;
-  for (const entry of entries) {
+  for (const entry of currentCapture(entries)) {
     if (entry.kind === "render") iterations += 1;
     if (entry.kind === "critique" && entry.rubric === rubric) {
       critiques.push(entry.total);
@@ -64,7 +72,7 @@ export function acceptedNonDecreasing(
   rubric: JudgeRubric,
 ): boolean {
   let last: number | null = null;
-  for (const entry of entries) {
+  for (const entry of currentCapture(entries)) {
     if (entry.kind !== "accept" || entry.rubric !== rubric) continue;
     if (entry.score === null) return false;
     if (last !== null && entry.score < last) return false;
@@ -80,7 +88,7 @@ export function critiquedIterations(
 ): number {
   const rendered = new Set<number>();
   const critiqued = new Set<number>();
-  for (const entry of entries) {
+  for (const entry of currentCapture(entries)) {
     if (entry.kind === "render") rendered.add(entry.iteration);
     if (
       entry.kind === "critique" &&
