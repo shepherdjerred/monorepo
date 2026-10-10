@@ -25,7 +25,12 @@ vi.mock("node:fs/promises", async (importOriginal) => {
   return {
     ...original,
     appendFile: async (...args: Parameters<typeof original.appendFile>) => {
-      if (args[0] === journalFailure.file)
+      if (
+        journalFailure.file !== "" &&
+        typeof args[0] === "string" &&
+        args[0].startsWith(path.dirname(journalFailure.file) + path.sep) &&
+        args[0].endsWith(path.sep + BUILD_FILES.journal)
+      )
         throw new Error("simulated journal append failure");
       return original.appendFile(...args);
     },

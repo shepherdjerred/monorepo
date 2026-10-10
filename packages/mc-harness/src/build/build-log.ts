@@ -6,6 +6,7 @@
  */
 import { appendFile, mkdir } from "node:fs/promises";
 import path from "node:path";
+import { withPublicationLock } from "./storage/publication-lock.ts";
 import {
   BUILD_FILES,
   BuildLogEntrySchema,
@@ -41,22 +42,24 @@ export async function appendLog<K extends BuildLogEntry["kind"]>(
   },
   options: { iteration?: number } = {},
 ): Promise<BuildLogEntry> {
-  const entries = await readLog(dir);
-  // A render starts the next iteration; everything else belongs to the current one.
-  const iteration =
-    options.iteration ??
-    iterationOf(entries) + (entry.kind === "render" ? 1 : 0);
-  const full = BuildLogEntrySchema.parse({
-    ...entry,
-    at: new Date().toISOString(),
-    iteration,
-  });
   await mkdir(dir, { recursive: true });
-  await appendFile(
-    path.join(dir, BUILD_FILES.journal),
-    `${JSON.stringify(full)}\n`,
-  );
-  return full;
+  return withPublicationLock(dir, async () => {
+    const entries = await readLog(dir);
+    // A render starts the next iteration; everything else belongs to the current one.
+    const iteration =
+      options.iteration ??
+      iterationOf(entries) + (entry.kind === "render" ? 1 : 0);
+    const full = BuildLogEntrySchema.parse({
+      ...entry,
+      at: new Date().toISOString(),
+      iteration,
+    });
+    await appendFile(
+      path.join(dir, BUILD_FILES.journal),
+      `${JSON.stringify(full)}\n`,
+    );
+    return full;
+  });
 }
 
 /** The last entry of a kind, or null; narrow on `kind` at the call site. */

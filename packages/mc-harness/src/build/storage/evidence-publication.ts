@@ -13,7 +13,9 @@ import type { BuildWorkspace } from "#build/workspace.ts";
 export async function stagedFiles(dir: string): Promise<string[]> {
   const entries = await readdir(dir, { recursive: true, withFileTypes: true });
   return entries
-    .filter((entry) => entry.isFile())
+    .filter(
+      (entry) => entry.isFile() && entry.name !== ".publication-lock.sqlite",
+    )
     .map((entry) =>
       path.relative(dir, path.join(entry.parentPath, entry.name)),
     );

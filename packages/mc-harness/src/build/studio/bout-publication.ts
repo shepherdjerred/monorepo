@@ -21,40 +21,40 @@ export async function publishBoutState(
     outcomes: readonly OutcomeInput[];
   },
 ): Promise<void> {
-  const entries = await readLog(workspace.dir);
-  for (const outcome of input.outcomes) {
-    const previous = entries.filter(
-      (entry) =>
-        entry.kind === outcome.kind &&
-        "file" in entry &&
-        entry.file === outcome.file &&
-        (outcome.file !== null ||
-          (entry.candidate === outcome.candidate &&
-            entry.gridHash === outcome.gridHash &&
-            entry.rubric === outcome.rubric &&
-            entry.critique === outcome.critique &&
-            entry.score === outcome.score &&
-            entry.iteration === iterationOf(entries))),
-    );
-    if (previous.length > 1)
-      throw new Error("duplicate persisted bout outcome");
-    const existing = previous[0];
-    const full = BuildLogEntrySchema.parse({
-      ...outcome,
-      at: existing?.at ?? new Date().toISOString(),
-      iteration: existing?.iteration ?? iterationOf(entries),
-    });
-    if (existing === undefined) entries.push(full);
-    else {
-      if (!isDeepStrictEqual(existing, full))
-        throw new Error(
-          "persisted bout outcome does not match validated verdict",
-        );
-    }
-  }
   await publishFiles(workspace, {
     prefix: ".bout-",
     stage: async (staged) => {
+      const entries = await readLog(workspace.dir);
+      for (const outcome of input.outcomes) {
+        const previous = entries.filter(
+          (entry) =>
+            entry.kind === outcome.kind &&
+            "file" in entry &&
+            entry.file === outcome.file &&
+            (outcome.file !== null ||
+              (entry.candidate === outcome.candidate &&
+                entry.gridHash === outcome.gridHash &&
+                entry.rubric === outcome.rubric &&
+                entry.critique === outcome.critique &&
+                entry.score === outcome.score &&
+                entry.iteration === iterationOf(entries))),
+        );
+        if (previous.length > 1)
+          throw new Error("duplicate persisted bout outcome");
+        const existing = previous[0];
+        const full = BuildLogEntrySchema.parse({
+          ...outcome,
+          at: existing?.at ?? new Date().toISOString(),
+          iteration: existing?.iteration ?? iterationOf(entries),
+        });
+        if (existing === undefined) entries.push(full);
+        else {
+          if (!isDeepStrictEqual(existing, full))
+            throw new Error(
+              "persisted bout outcome does not match validated verdict",
+            );
+        }
+      }
       await new BuildWorkspace(staged).writeManifest(input.manifest);
       const files: string[] = [];
       if (input.outcomes.length > 0) {

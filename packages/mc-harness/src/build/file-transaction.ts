@@ -7,7 +7,6 @@ type PublicationOptions = {
   prefix: string;
   stage: (dir: string) => Promise<readonly string[]>;
   exclusive?: readonly string[];
-  commit?: () => Promise<unknown>;
 };
 
 type ChangedFile = { file: string; previous: boolean; installed: boolean };
@@ -63,7 +62,7 @@ async function preservePrevious(
   return true;
 }
 
-/** Publish exactly the staged paths, rolling them back if publication or commit fails. */
+/** Publish exactly the staged paths, rolling them back if installation fails. */
 export async function publishFiles(
   workspace: BuildWorkspace,
   options: PublicationOptions,
@@ -100,7 +99,6 @@ async function publishStaged(
         state.installed = true;
       }
     }
-    await options.commit?.();
   } catch (error) {
     const failures = await rollback(workspace, staged, changed);
     if (failures.length > 0) {

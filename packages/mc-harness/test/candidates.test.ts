@@ -1,4 +1,4 @@
-import { cp, mkdir, mkdtemp, rm, readdir } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, readdir } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterAll, describe, expect, it, vi } from "vitest";
@@ -38,9 +38,10 @@ import {
   allSidecars,
   latestRenderName,
   producingProgram,
-  programSnapshot,
   readSidecar,
 } from "#build/sidecar.ts";
+import { programSnapshot } from "#build/storage/program-evidence.ts";
+import { writeProgramFixture } from "./fixtures/program-evidence.ts";
 import { alignedRender, compiledGrid, cropToBox } from "#build/sources.ts";
 import { BuildWorkspace } from "#build/workspace.ts";
 import { flatSiteBuild } from "./fixtures/flat-site.ts";
@@ -102,10 +103,7 @@ async function pastePart(
     ],
   });
   // What `compile` keeps beside its output: the program text that produced it.
-  await cp(
-    workspace.file(BUILD_FILES.program),
-    workspace.file(programSnapshot(digest)),
-  );
+  await writeProgramFixture(workspace, digest);
 }
 
 async function opsOf(workspace: BuildWorkspace): Promise<readonly Op[]> {

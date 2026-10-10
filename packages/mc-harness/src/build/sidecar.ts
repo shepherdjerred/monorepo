@@ -15,6 +15,10 @@ import {
 } from "#protocol/build.ts";
 import { currentRun, lastOf, readLog } from "./build-log.ts";
 import type { BuildWorkspace } from "./workspace.ts";
+import {
+  programSnapshot,
+  readProgramSnapshot,
+} from "./storage/program-evidence.ts";
 
 const NAME = /^[a-z0-9][a-z0-9-]{0,31}$/u;
 
@@ -158,18 +162,13 @@ export async function latestRenderName(
   );
 }
 
-/** `schematics/program-<digest>.build.ts`: the program text as it was when `compile` produced that digest. */
-export function programSnapshot(digest: string): string {
-  if (!/^[a-f0-9]+$/u.test(digest))
-    throw new Error("program snapshot digest must be lowercase hexadecimal");
-  return path.join(BUILD_FILES.schematicsDir, `program-${digest}.build.ts`);
-}
-
 export async function readProgramText(
   workspace: BuildWorkspace,
   file: string,
 ): Promise<string> {
-  return Bun.file(await buildArtifactPath(workspace, file)).text();
+  return path.dirname(file) === BUILD_FILES.schematicsDir
+    ? new TextDecoder().decode(await readProgramSnapshot(workspace, file))
+    : Bun.file(await buildArtifactPath(workspace, file)).text();
 }
 
 async function checkedSnapshot(

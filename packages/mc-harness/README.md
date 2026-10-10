@@ -220,9 +220,13 @@ WorldEdit, paste and console ops, each with explicit coordinates and a
   records the same identity in its journal entry. Expected reads, rendering and
   promotion validate that identity and the complete file hashes, rejecting mixed
   generations after interruption. Rerun the build to replace an interrupted run.
-  The snapshot and region read must cover identical blocks before a run is
-  published. Expected renders and promotion recheck both artifacts, including
+  The snapshot and region read must cover identical blocks and block-entity
+  positions/holder blocks before a run is published. Expected renders and
+  promotion recheck both artifacts, including
   complete tile coverage, before accepting evidence or mutating a target.
+  Region reads expose block-entity holders, not NBT types or contents; inventory
+  and sign-text equality across the read and snapshot is outside that contract.
+  The run identity still binds the complete frozen schematic bytes.
 - **Render** draws a contact sheet of the site, or of a region inside it
   (`render <dir> <x1,y1,z1> <x2,y2,z2>`, from any source) so map-scale builds can be
   reviewed one district at a time. `--source canvas|expected|compiled`
@@ -257,7 +261,10 @@ survey`, `--grid n` coordinate lines, `--floor y` and `--section z` cuts
   canvas and blocks old expected snapshots until a new run completes; archived
   renders remain available. `run` validates its program snapshot before changing
   the sandbox or expected files.
-  A missing referenced compile snapshot is an error; it is never treated as
+  Each compile stores original SHA-256 checksums for its program, whole schematic,
+  and paste tiles. Reusing its program verifies those artifacts before copying
+  or reviewing the saved text. A changed or missing referenced compile snapshot
+  is an error; it is never treated as
   a programless render or candidate. Missing textures fail before images or
   sidecars are written. Cropped light views retain the whole build's light
   field and crop origin, including lamps and openings outside the window.
@@ -363,7 +370,9 @@ pick n | knockout [--among a,b] [--rubric] [--model]`) keep versions of
   failed staging or installation preserves the preceding candidate and journal.
   The journal publishes first so an installed candidate already has its save entry.
   Publication holds a workspace-wide SQLite exclusive lock across staging,
-  installation and rollback. A competing publisher fails before changing any
+  installation and rollback. Direct journal appends use the same lock, and bout
+  publication reads and stamps its outcomes while holding it. Run journals are
+  staged with the frozen artifacts. A competing publisher fails before changing any
   files; the operating system releases the lock when its process exits.
   The persistent `.publication-lock.sqlite` file must stay in place, including
   while idle, so every publisher locks the same inode.

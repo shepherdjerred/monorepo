@@ -10,7 +10,7 @@ import { knockout } from "#build/studio/knockout.ts";
 import { renderBuild } from "#build/commands.ts";
 import { DaemonClient } from "#build/daemon-client.ts";
 import { Journal } from "#build/journal.ts";
-import { programSnapshot } from "#build/sidecar.ts";
+import { writeProgramFixture } from "#test/fixtures/program-evidence.ts";
 import { rubricAxisIds } from "#build/judge.ts";
 import { readLog } from "#build/build-log.ts";
 import { BUILD_FILES, type BuildLogEntry } from "#protocol/build.ts";
@@ -395,10 +395,7 @@ describe("default knockout iteration", () => {
       version: 1,
       ops: [{ ...clearFloorOp(1), source: "program:abcd" }],
     });
-    await Bun.write(
-      workspace.file(programSnapshot("abcd")),
-      "// fixture program\n",
-    );
+    await writeProgramFixture(workspace, "abcd", "// fixture program\n");
     const env = {
       client: new DaemonClient(),
       journal: new Journal(workspace.file("audit")),

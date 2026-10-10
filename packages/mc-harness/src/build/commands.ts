@@ -1,4 +1,4 @@
-import { cp, mkdir } from "node:fs/promises";
+import { mkdir } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { compileProgram } from "@shepherdjerred/mc-build/compile/runner.ts";
@@ -20,7 +20,11 @@ import { loadRegistry } from "@shepherdjerred/mc-build/registry/registry.ts";
 import type { BlockPos, Box } from "#protocol/bridge.ts";
 import { BUILD_FILES, type Op } from "#protocol/build.ts";
 import { appendLog } from "./build-log.ts";
-import { producingProgram, programSnapshot } from "./sidecar.ts";
+import { producingProgram } from "./sidecar.ts";
+import {
+  programSnapshot,
+  recordProgramEvidence,
+} from "./storage/program-evidence.ts";
 import { gridFor, type RenderSource } from "./sources.ts";
 import { DEFAULT_SANDBOX_TTL_SECONDS } from "#protocol/paths.ts";
 import { resetToSite, runOps } from "./ops.ts";
@@ -221,6 +225,9 @@ export async function compileBuild(dir: string): Promise<{
   const workspace = new BuildWorkspace(dir);
   const manifest = await workspace.manifest();
   const hasSite = await Bun.file(workspace.file(BUILD_FILES.siteInfo)).exists();
+  const programBytes = await Bun.file(
+    workspace.file(BUILD_FILES.program),
+  ).bytes();
   const compiled = await compileProgram({
     program: workspace.file(BUILD_FILES.program),
     seed: manifest.seed,
@@ -237,9 +244,13 @@ export async function compileBuild(dir: string): Promise<{
   // Keyed by the program text as well as its output: two texts that compile
   // to the same blocks keep separate snapshots, so `program-<digest>.build.ts`
   // is always the text that produced that digest, never a later edit.
-  const programBytes = await Bun.file(
+  const afterCompile = await Bun.file(
     workspace.file(BUILD_FILES.program),
   ).bytes();
+  if (sha(programBytes, 64) !== sha(afterCompile, 64))
+    throw new Error(
+      "program changed during compilation; compile the build again",
+    );
   const digest = sha(`${sha(programBytes)}\n${sha(bytes)}`, 12);
   const schematic = path.join(
     BUILD_FILES.schematicsDir,
@@ -249,10 +260,7 @@ export async function compileBuild(dir: string): Promise<{
   await Bun.write(workspace.file(schematic), bytes);
   // The program as compiled, kept with its output so a render can say
   // which text produced the blocks even after build.ts is edited again.
-  await cp(
-    workspace.file(BUILD_FILES.program),
-    workspace.file(programSnapshot(digest)),
-  );
+  await Bun.write(workspace.file(programSnapshot(digest)), programBytes);
   const source = `program:${digest}`;
   const at = plus(manifest.anchor, compiled.min);
   const pastes = await programPastes(workspace, compiled.grid, {
@@ -262,6 +270,11 @@ export async function compileBuild(dir: string): Promise<{
     world: manifest.world,
     dataVersion: registry.dataVersion,
   });
+  await recordProgramEvidence(
+    workspace,
+    digest,
+    pastes.map((paste) => paste.schematic),
+  );
   const programOps: Op[] = [
     ...compiled.clears.map((box): Op => ({
       kind: "we",
@@ -357,21 +370,21 @@ export async function runBuild(
       await pending.writeFrozen("expected", frozen);
       await pending.writeExpected(region);
       await writeRunIdentity(pending, id);
-      return [
-        BUILD_FILES.expectedRun,
-        BUILD_FILES.expected,
-        BUILD_FILES.expectedSchematic,
-        BUILD_FILES.expectedParts,
-      ];
-    },
-    commit: () =>
-      appendLog(dir, {
+      await stageJournal(workspace, pending, {
         kind: "run",
         id,
         target,
         ops: ops.length,
         program,
-      }),
+      });
+      return [
+        BUILD_FILES.expectedRun,
+        BUILD_FILES.expected,
+        BUILD_FILES.expectedSchematic,
+        BUILD_FILES.expectedParts,
+        BUILD_FILES.journal,
+      ];
+    },
   });
   return { target, ops: ops.length };
 }

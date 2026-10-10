@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, expect, it } from "vitest";
 import { withPublicationLock } from "#build/storage/publication-lock.ts";
+import { appendLog, readLog } from "#build/build-log.ts";
 
 const root = await mkdtemp(path.join(tmpdir(), "mc-publication-lock-"));
 afterAll(async () => rm(root, { recursive: true }));
@@ -46,6 +47,10 @@ it.each(["finish", "kill"])(
         /already running/u,
       );
       expect(called).toBe(false);
+      await expect(
+        appendLog(alias, { kind: "note", text: "concurrent note" }),
+      ).rejects.toThrow(/already running/u);
+      expect(await readLog(dir)).toEqual([]);
       if (ending === "kill") child.kill("SIGKILL");
       else await child.stdin.end();
       const [code, stderr] = await Promise.all([
@@ -56,6 +61,10 @@ it.each(["finish", "kill"])(
       if (ending === "finish") expect(code).toBe(0);
       await withPublicationLock(alias, publish);
       expect(called).toBe(true);
+      await appendLog(alias, { kind: "note", text: "after publication" });
+      expect(await readLog(dir)).toMatchObject([
+        { kind: "note", text: "after publication" },
+      ]);
     } finally {
       child.kill("SIGKILL");
       await child.exited;

@@ -1,5 +1,6 @@
 import { isDeepStrictEqual } from "node:util";
 import { gridFromRegionRead } from "@shepherdjerred/mc-build/core/grid.ts";
+import { blockId } from "@shepherdjerred/mc-build/core/block-state.ts";
 import { readSchematic } from "@shepherdjerred/mc-build/core/schem.ts";
 import type { BlockPos, Box, RegionReadResponse } from "#protocol/bridge.ts";
 import { boxSize } from "./tiles.ts";
@@ -24,6 +25,18 @@ export async function validateFrozenExpected(
   }
   const grid = gridFromRegionRead(region);
   const seen = new Uint8Array(grid.volume);
+  const entities = new Map<number, string>();
+  for (const entity of grid.blockEntities) {
+    const { x, y, z } = entity.pos;
+    const index = grid.index(x, y, z);
+    if (
+      !grid.inBounds(x, y, z) ||
+      entities.has(index) ||
+      entity.id !== blockId(grid.get(x, y, z))
+    )
+      throw new Error("expected JSON has invalid block-entity evidence");
+    entities.set(index, entity.id);
+  }
   let covered = 0;
   for (const part of parts) {
     const schematic = await readSchematic(part.bytes);
@@ -45,8 +58,25 @@ export async function validateFrozenExpected(
       seen[index] = 1;
       covered += 1;
     });
+    for (const entity of schematic.grid.blockEntities) {
+      const { x, y, z } = entity.pos;
+      const cx = x + part.at.x - box.min.x;
+      const cy = y + part.at.y - box.min.y;
+      const cz = z + part.at.z - box.min.z;
+      const index = grid.index(cx, cy, cz);
+      // RegionReader exposes the holder id, while Sponge stores the NBT type.
+      // Compare the shared identity: one entity at this position and holder.
+      if (
+        !schematic.grid.inBounds(x, y, z) ||
+        entities.get(index) !== blockId(schematic.grid.get(x, y, z))
+      )
+        throw new Error("expected JSON does not match frozen block entities");
+      entities.delete(index);
+    }
   }
   if (covered !== grid.volume)
     throw new Error("frozen expected tiles do not cover the captured box");
+  if (entities.size > 0)
+    throw new Error("expected JSON does not match frozen block entities");
   return grid;
 }

@@ -15,11 +15,9 @@ import { DaemonClient } from "#build/daemon-client.ts";
 import { renderLooks } from "#build/helpers.ts";
 import { Journal } from "#build/journal.ts";
 import { rubricAxisIds } from "#build/judge.ts";
-import {
-  latestRenderName,
-  programSnapshot,
-  readRenderProvenance,
-} from "#build/sidecar.ts";
+import { latestRenderName, readRenderProvenance } from "#build/sidecar.ts";
+import { programSnapshot } from "#build/storage/program-evidence.ts";
+import { writeProgramFixture } from "./fixtures/program-evidence.ts";
 import {
   listCandidates,
   pickCandidate,
@@ -120,8 +118,9 @@ async function programBuild(name: string) {
     version: 1,
     ops: [{ kind: "command", command: "say fixture", source: "program:abc" }],
   });
-  await Bun.write(
-    workspace.file(programSnapshot("abc")),
+  await writeProgramFixture(
+    workspace,
+    "abc",
     "export default (()=>{}) satisfies unknown;\n",
   );
   await appendLog(workspace.dir, {
@@ -549,11 +548,7 @@ describe("candidate restore transactions", () => {
           },
         ],
       });
-      if (program)
-        await Bun.write(
-          workspace.file(programSnapshot("abc")),
-          "saved program",
-        );
+      if (program) await writeProgramFixture(workspace, "abc", "saved program");
       await saveCandidate(workspace.dir, "saved");
       await Bun.write(workspace.file(BUILD_FILES.program), "working program");
       await workspace.writeOplog({ version: 1, ops: [] });
@@ -674,7 +669,7 @@ describe("tournament restoration preflight", () => {
         "restore",
       );
       const source = "program:abc";
-      await Bun.write(workspace.file(programSnapshot("abc")), "saved program");
+      await writeProgramFixture(workspace, "abc", "saved program");
       const site = await readSchematic(
         await Bun.file(workspace.file(BUILD_FILES.siteSchematic)).bytes(),
       );

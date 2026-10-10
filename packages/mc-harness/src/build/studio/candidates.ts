@@ -33,6 +33,7 @@ import { compiledGrid } from "#build/sources.ts";
 import { BuildWorkspace } from "#build/workspace.ts";
 import { critiqueForGrid } from "./critique-record.ts";
 import { installWorkingFiles } from "./working-files.ts";
+import { readProgramSnapshot } from "#build/storage/program-evidence.ts";
 
 export function candidateDir(workspace: BuildWorkspace, name: string): string {
   return workspace.file(
@@ -150,9 +151,7 @@ export async function saveCandidate(
   // one compile has no program.
   const program = producer !== null;
   const programBytes =
-    producer === null
-      ? null
-      : await Bun.file(await buildArtifactPath(workspace, producer)).bytes();
+    producer === null ? null : await readProgramSnapshot(workspace, producer);
   const hash = gridHash(grid);
   const journal = await readLog(dir);
   let blocks = 0;

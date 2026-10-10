@@ -13,7 +13,7 @@ import { appendLog, readLog } from "#build/build-log.ts";
 import { BlockGrid } from "@shepherdjerred/mc-build/core/grid.ts";
 import { writeSchematic } from "@shepherdjerred/mc-build/core/schem.ts";
 import { loadRegistry } from "@shepherdjerred/mc-build/registry/registry.ts";
-import { programSnapshot } from "#build/sidecar.ts";
+import { writeProgramFixture } from "#test/fixtures/program-evidence.ts";
 import { rubricAxisIds } from "#build/judge.ts";
 import { DaemonClient } from "#build/daemon-client.ts";
 import { Journal } from "#build/journal.ts";
@@ -65,10 +65,7 @@ async function fixture(name: string) {
     version: 1,
     ops: [{ ...clearFloorOp(1), source: "program:abcd" }],
   });
-  await Bun.write(
-    workspace.file(programSnapshot("abcd")),
-    "// producing program\n",
-  );
+  await writeProgramFixture(workspace, "abcd", "// producing program\n");
   const env = {
     client: new DaemonClient(),
     journal: new Journal(workspace.file("audit")),
