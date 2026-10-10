@@ -82,7 +82,8 @@ public class NpcsTestPlugin extends JavaPlugin {
             data,
             InstantSource.system(),
             RandomGenerator.getDefault(),
-            getComponentLogger());
+            getComponentLogger(),
+            com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
     var catalog = new NpcCatalog(load(data));
     var trainer =
         new Trainer(

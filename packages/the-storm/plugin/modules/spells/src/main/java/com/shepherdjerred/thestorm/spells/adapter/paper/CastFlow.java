@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.spells.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.analytics.ProductAnalytics;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.spells.adapter.paper.spell.CastProblem;
 import com.shepherdjerred.thestorm.spells.adapter.paper.spell.Effect;
@@ -43,12 +44,15 @@ final class CastFlow {
   private final Map<SpellKind, Spell> spells;
   private final Spellbook book;
   private final Toolbox tools;
+  private final ProductAnalytics analytics;
   private final Set<CooldownKey> pending = new HashSet<>();
 
-  CastFlow(Map<SpellKind, Spell> spells, Spellbook book, Toolbox tools) {
+  CastFlow(
+      Map<SpellKind, Spell> spells, Spellbook book, Toolbox tools, ProductAnalytics analytics) {
     this.spells = new EnumMap<>(spells);
     this.book = book;
     this.tools = tools;
+    this.analytics = analytics;
   }
 
   /**
@@ -174,6 +178,7 @@ final class CastFlow {
     tools.state().cooldowns().start(cooldownKey, terms.cooldown(), tools.time().instant());
     caster.setCooldown(item, (int) (terms.cooldown().toMillis() / MILLIS_PER_TICK));
     cast.effect().apply();
+    analytics.interaction(caster.getUniqueId(), ProductAnalytics.Action.SPELL_CAST);
   }
 
   private CasterState state(Player caster, SpellKind kind, SpellTerms terms) {

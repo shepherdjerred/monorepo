@@ -27,6 +27,7 @@ public final class ManagedGameplay implements AutoCloseable {
   public static final String IDENTITY = "the-storm-identity-enabled";
   public static final String LETTERS = "the-storm-letters-enabled";
   public static final String IP = "the-storm-ip-enforcement-enabled";
+  public static final String ANALYTICS = "the-storm-analytics-enabled";
   private final BiFunction<String, UUID, CompletableFuture<Boolean>> reader;
   private final Runnable stop;
   private final boolean ipEnforcementDefault;

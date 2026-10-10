@@ -126,7 +126,8 @@ public class TownsTestPlugin extends JavaPlugin {
             directory,
             InstantSource.system(),
             RandomGenerator.getDefault(),
-            getComponentLogger());
+            getComponentLogger(),
+            com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
     new com.shepherdjerred.thestorm.mail.MailModule().enable(context);
     new TownsModule().enable(context);
   }

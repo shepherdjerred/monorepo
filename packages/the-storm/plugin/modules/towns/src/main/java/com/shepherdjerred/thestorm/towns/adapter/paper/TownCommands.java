@@ -11,6 +11,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
+import com.shepherdjerred.thestorm.core.analytics.ProductAnalytics;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.core.schedule.Scheduler;
 import com.shepherdjerred.thestorm.towns.app.Change;
@@ -63,7 +64,16 @@ final class TownCommands {
    * @param scheduler completes saves back onto the main thread
    * @param logger records failed saves
    */
-  record Services(Scheduler scheduler, ComponentLogger logger) {
+  record Services(Scheduler scheduler, ComponentLogger logger, ProductAnalytics analytics) {
+
+    void measured(Player player, CompletableFuture<Void> saved, ProductAnalytics.Action action) {
+      var _ =
+          saved.whenCompleteAsync(
+              (done, failure) -> {
+                if (failure == null) analytics.interaction(player.getUniqueId(), action);
+              },
+              scheduler.mainThread());
+    }
 
     /** Tells {@code player} {@code success} once {@code saved} completes, or that it was undone. */
     void whenSaved(Player player, CompletableFuture<Void> saved, Component success) {
@@ -309,12 +319,15 @@ final class TownCommands {
       return;
     }
     var level = parts.levels().of(player);
+    var result = towns.found(player.getUniqueId(), name, level);
     onTown(
         player,
-        towns.found(player.getUniqueId(), name, level),
+        result,
         town ->
             Notices.success(
                 "Founded " + town.name() + ". Stand in a chunk and type /claim to claim it."));
+    if (result instanceof Result.Ok<Change<Town>, List<TownProblem>>(var change))
+      parts.runtime().measured(player, change.saved(), ProductAnalytics.Action.TOWN_CREATED);
   }
 
   /** Deletes the player's town, then pays its durably queued treasury to them. */
@@ -377,12 +390,15 @@ final class TownCommands {
 
   private void claimHere(Player player) {
     var chunk = chunkOf(player);
+    var result = towns.claim(player.getUniqueId(), chunk);
     onClaim(
         player,
-        towns.claim(player.getUniqueId(), chunk),
+        result,
         claim ->
             Notices.success(
                 "Claimed chunk " + chunk.x() + ", " + chunk.z() + " for " + nameOf(claim) + "."));
+    if (result instanceof Result.Ok<Change<Claim>, List<ClaimProblem>>(var change))
+      parts.runtime().measured(player, change.saved(), ProductAnalytics.Action.LAND_CLAIMED);
   }
 
   private void unclaimHere(Player player) {

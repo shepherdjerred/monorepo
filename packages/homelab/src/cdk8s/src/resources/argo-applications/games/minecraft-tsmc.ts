@@ -1,4 +1,5 @@
 import type { Chart } from "cdk8s";
+import { siteAnalyticsConfiguration } from "@shepherdjerred/homelab/cdk8s/src/misc/analytics.ts";
 import { createMinecraftProxyTrust } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/proxy-trust.ts";
 import { Size } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
@@ -23,6 +24,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/resources/minecraft-restoration-guard.ts";
 
 const NAMESPACE = "minecraft-tsmc";
+const analytics = siteAnalyticsConfiguration("ts-mc");
 const SECRET_NAME = "minecraft-tsmc-discord";
 const RCON_SECRET_NAME = "minecraft-tsmc-brain";
 const BRAIN_SECRET_NAME = "minecraft-tsmc-storm-brain";
@@ -208,6 +210,8 @@ export function createMinecraftTsmcApp(chart: Chart) {
     extraEnv: {
       FLIPT_URL: "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
       FLIPT_ENVIRONMENT: "prod",
+      POSTHOG_API_HOST: analytics.apiHost,
+      POSTHOG_PROJECT_TOKEN: analytics.projectToken,
       CFG_PROXY_PROTOCOL: "true",
       // Kicks idle players after 60 minutes (server.properties
       // player-idle-timeout, formerly set by the synced server.properties).

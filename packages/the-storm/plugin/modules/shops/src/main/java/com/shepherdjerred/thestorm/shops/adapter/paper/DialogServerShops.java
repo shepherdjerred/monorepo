@@ -1,10 +1,12 @@
 package com.shepherdjerred.thestorm.shops.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.analytics.ProductAnalytics;
 import com.shepherdjerred.thestorm.core.schedule.Scheduler;
 import com.shepherdjerred.thestorm.shops.app.CatalogTrades;
 import com.shepherdjerred.thestorm.shops.app.Customer;
 import com.shepherdjerred.thestorm.shops.app.ServerShops;
 import com.shepherdjerred.thestorm.shops.app.ShopTexts;
+import com.shepherdjerred.thestorm.shops.app.TradeOutcome;
 import com.shepherdjerred.thestorm.shops.domain.catalog.Catalog;
 import com.shepherdjerred.thestorm.shops.domain.catalog.CatalogEntry;
 import com.shepherdjerred.thestorm.shops.domain.sign.ItemNames;
@@ -56,14 +58,18 @@ final class DialogServerShops implements ServerShops {
   private final Replies replies;
   private final Scheduler scheduler;
   private final int maxDistance;
+  private final ProductAnalytics analytics;
+
+  record Controls(Scheduler scheduler, ProductAnalytics analytics) {}
 
   /**
    * @param maxDistance how far, in blocks, a player may be from where the shop was opened
    */
-  DialogServerShops(CatalogTrades trades, Replies replies, Scheduler scheduler, int maxDistance) {
+  DialogServerShops(CatalogTrades trades, Replies replies, Controls controls, int maxDistance) {
     this.trades = trades;
     this.replies = replies;
-    this.scheduler = scheduler;
+    this.scheduler = controls.scheduler();
+    this.analytics = controls.analytics();
     this.maxDistance = maxDistance;
   }
 
@@ -87,6 +93,7 @@ final class DialogServerShops implements ServerShops {
             .catalog(catalogId)
             .orElseThrow(() -> new IllegalArgumentException("No shop catalog " + catalogId));
     player.showDialog(menu(new Visit(catalog, shopkeeper.clone())));
+    analytics.interaction(player.getUniqueId(), ProductAnalytics.Action.SHOP_OPENED);
   }
 
   @Override
@@ -274,6 +281,12 @@ final class DialogServerShops implements ServerShops {
               outcome,
               itemName,
               paid -> replies.texts().completed(direction, goods, paid, catalog.name()));
+          if (outcome instanceof TradeOutcome.Completed)
+            analytics.interaction(
+                player.getUniqueId(),
+                direction == Direction.BUY
+                    ? ProductAnalytics.Action.SHOP_BOUGHT
+                    : ProductAnalytics.Action.SHOP_SOLD);
           if (player.isOnline() && near(player, pick.visit())) {
             showEntry(player, pick.visit(), entry);
           }

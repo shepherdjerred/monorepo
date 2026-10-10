@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.core.module;
 
+import com.shepherdjerred.thestorm.core.analytics.ProductAnalytics;
 import com.shepherdjerred.thestorm.core.compute.ComputePool;
 import com.shepherdjerred.thestorm.core.config.ConfigFiles;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
@@ -26,6 +27,7 @@ import org.bukkit.plugin.Plugin;
  * @param time the current instant (no time zone: modules format times for display themselves)
  * @param random randomness for drops, chances and rotations
  * @param logger the module logger
+ * @param analytics typed, non-blocking product instrumentation
  */
 public record ModuleContext(
     Plugin plugin,
@@ -37,7 +39,8 @@ public record ModuleContext(
     Path dataDirectory,
     InstantSource time,
     RandomGenerator random,
-    ComponentLogger logger) {
+    ComponentLogger logger,
+    ProductAnalytics analytics) {
 
   /** Loads {@code plugins/TheStorm/<fileName>}, which the repository owns. */
   public <T> T loadConfig(String fileName, Class<T> type) {

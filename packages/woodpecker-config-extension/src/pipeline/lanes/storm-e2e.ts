@@ -99,6 +99,8 @@ function stormSmokeStep(images: CiImages): CiStep {
           // the fake brain's Flipt endpoint.
           FLIPT_URL: `http://${BRAIN_HOST}:${BRAIN_PORT}`,
           FLIPT_ENVIRONMENT: "prod",
+          POSTHOG_API_HOST: `http://${BRAIN_HOST}:${BRAIN_PORT}`,
+          POSTHOG_PROJECT_TOKEN: "phc_test",
           RWF_RECORDING_SALT,
           EXTRA_ARGS: `--plugins ${SHARED_PLUGINS}`,
           COPY_CONFIG_SRC: `${dataDir}/config`,

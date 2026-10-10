@@ -10,6 +10,7 @@ import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
+import com.shepherdjerred.thestorm.core.analytics.ProductAnalytics;
 import com.shepherdjerred.thestorm.core.players.PlayerDirectory;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
@@ -61,7 +62,8 @@ final class EconomyCommands {
    * @param server the server, for online players
    * @param replies messages and main-thread completion
    */
-  record Paper(Server server, Replies replies, PlayerDirectory players) {}
+  record Paper(
+      Server server, Replies replies, PlayerDirectory players, ProductAnalytics analytics) {}
 
   EconomyCommands(LedgerWallets wallets, CrystalFormat format, int baltopSize, Paper paper) {
     this.wallets = wallets;
@@ -160,7 +162,12 @@ final class EconomyCommands {
         .whenDone(
             wallets.balance(new AccountId.Player(player.getUniqueId())),
             sender,
-            balance -> sender.sendMessage(Replies.info("Balance: " + format.words(balance))));
+            balance -> {
+              sender.sendMessage(Replies.info("Balance: " + format.words(balance)));
+              paper
+                  .analytics()
+                  .interaction(player.getUniqueId(), ProductAnalytics.Action.BALANCE_VIEWED);
+            });
     return Command.SINGLE_SUCCESS;
   }
 
@@ -174,9 +181,15 @@ final class EconomyCommands {
                 .whenDone(
                     wallets.balance(target.account()),
                     sender,
-                    balance ->
-                        sender.sendMessage(
-                            Replies.info(target.name() + " has " + format.words(balance) + "."))));
+                    balance -> {
+                      sender.sendMessage(
+                          Replies.info(target.name() + " has " + format.words(balance) + "."));
+                      if (sender instanceof Player player)
+                        paper
+                            .analytics()
+                            .interaction(
+                                player.getUniqueId(), ProductAnalytics.Action.BALANCE_VIEWED);
+                    }));
     return Command.SINGLE_SUCCESS;
   }
 
@@ -199,6 +212,9 @@ final class EconomyCommands {
                   sender.sendMessage(
                       Replies.success("You paid " + target.name() + " " + words + "."));
                   tell(target, Replies.success(payerName + " paid you " + words + "."));
+                  paper
+                      .analytics()
+                      .interaction(payer.getUniqueId(), ProductAnalytics.Action.MONEY_TRANSFERRED);
                 }));
     return Command.SINGLE_SUCCESS;
   }

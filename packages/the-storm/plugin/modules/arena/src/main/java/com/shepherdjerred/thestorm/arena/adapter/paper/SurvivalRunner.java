@@ -394,6 +394,7 @@ final class SurvivalRunner implements ArenaRunner {
       leave(id);
       return;
     }
+    context().activity().joined(id);
     if (spectators.contains(id)) {
       PlayerStates.wipe(player, GameMode.SPECTATOR);
       player.teleport(Places.location(world.world(), world.definition().spectator()));
@@ -615,7 +616,10 @@ final class SurvivalRunner implements ArenaRunner {
   }
 
   private void beginRound(Collection<Survivor> before) {
-    if (before.stream().anyMatch(p -> p.status() == Survivor.Status.LOBBY)) announcements.started();
+    if (before.stream().anyMatch(p -> p.status() == Survivor.Status.LOBBY)) {
+      announcements.started();
+      context().activity().started(game.participants().stream().map(Survivor::id).toList());
+    }
     map.state().nextRound();
     var spawnIndex = 0;
     prepareDebug(before);
@@ -845,6 +849,7 @@ final class SurvivalRunner implements ArenaRunner {
   }
 
   private void leave(UUID id) {
+    context().activity().left(id);
     tridents.leave(id);
     boons.leave(id);
     wards.leave(id);
@@ -875,7 +880,10 @@ final class SurvivalRunner implements ArenaRunner {
   }
 
   private void stop() {
-    if (game.running()) announcements.ended();
+    if (game.running()) {
+      announcements.ended();
+      context().activity().completed(game.players().stream().map(Survivor::id).toList());
+    }
     cancelStartup();
     if (!startup.isDone()) {
       startup.completeExceptionally(new IllegalStateException("Survival stopped during startup"));

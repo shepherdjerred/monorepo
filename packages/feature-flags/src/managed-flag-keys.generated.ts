@@ -372,6 +372,7 @@ export type AlertDashboardVariantFlagKey =
   (typeof ALERT_DASHBOARD_VARIANT_FLAG_KEYS)[number];
 
 export const THE_STORM_FLAG_KEYS = [
+  "the-storm-analytics-enabled",
   "the-storm-staff-tools-enabled",
   "the-storm-identity-enabled",
   "the-storm-letters-enabled",
@@ -388,6 +389,7 @@ export const THE_STORM_FLAG_KEYS = [
 export type TheStormFlagKey = (typeof THE_STORM_FLAG_KEYS)[number];
 
 export const THE_STORM_BOOLEAN_FLAG_KEYS = [
+  "the-storm-analytics-enabled",
   "the-storm-staff-tools-enabled",
   "the-storm-identity-enabled",
   "the-storm-letters-enabled",

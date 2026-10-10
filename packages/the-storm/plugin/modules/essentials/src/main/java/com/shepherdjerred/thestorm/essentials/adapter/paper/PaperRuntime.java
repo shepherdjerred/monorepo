@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.essentials.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.analytics.ProductAnalytics;
 import com.shepherdjerred.thestorm.core.schedule.Scheduler;
 import java.time.InstantSource;
 import java.util.concurrent.CompletableFuture;
@@ -19,7 +20,11 @@ import org.bukkit.entity.Player;
  * @param logger the module logger
  */
 public record PaperRuntime(
-    Server server, Scheduler scheduler, InstantSource time, ComponentLogger logger) {
+    Server server,
+    Scheduler scheduler,
+    InstantSource time,
+    ComponentLogger logger,
+    ProductAnalytics analytics) {
 
   /**
    * Runs {@code then} on the main thread with the result of {@code future}. If the future fails, or

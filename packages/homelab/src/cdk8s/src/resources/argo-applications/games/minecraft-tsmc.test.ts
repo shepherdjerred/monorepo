@@ -8,6 +8,7 @@ import {
   createMinecraftTsmcApp,
 } from "./minecraft-tsmc.ts";
 import { createMinecraftShuxinApp } from "./minecraft-shuxin.ts";
+import { siteAnalyticsConfiguration } from "@shepherdjerred/homelab/cdk8s/src/misc/analytics.ts";
 
 // minecraft-tsmc runs ghcr.io/shepherdjerred/the-storm-server, built from
 // packages/the-storm/server. These tests keep the chart values and that image
@@ -58,6 +59,14 @@ function tsmcHelm() {
 function tsmcValues(): Record<string, unknown> {
   return tsmcHelm().valuesObject;
 }
+
+test("Storm analytics uses the shared direct capture bootstrap and production stage", () => {
+  const env = z.record(z.string(), z.unknown()).parse(tsmcValues()["extraEnv"]);
+  const analytics = siteAnalyticsConfiguration("ts-mc");
+  expect(env["POSTHOG_API_HOST"]).toBe(analytics.apiHost);
+  expect(env["POSTHOG_PROJECT_TOKEN"] === analytics.projectToken).toBe(true);
+  expect(env["FLIPT_ENVIRONMENT"]).toBe("prod");
+});
 
 function shuxinValues(): Record<string, unknown> {
   const application = createMinecraftShuxinApp(Testing.chart()).toJson();

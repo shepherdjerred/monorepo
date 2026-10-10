@@ -89,7 +89,8 @@ public final class MechanicsE2EPlugin extends JavaPlugin implements Listener {
             getDataPath(),
             InstantSource.system(),
             RandomGenerator.getDefault(),
-            getComponentLogger());
+            getComponentLogger(),
+            com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
     new MechanicsModule().enable(context);
     var world = getServer().getWorld("world");
     if (world == null) {

@@ -1938,6 +1938,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "the-storm-analytics-enabled",
+      "owner": "the-storm",
+      "namespace": "the-storm",
+      "source": "the-storm-core",
+      "purpose": "Collect named player product metrics; evaluated once on server boot, beta first.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "the-storm-staff-tools-enabled",
       "owner": "the-storm",
       "namespace": "the-storm",
@@ -2169,6 +2181,14 @@
     {
       "key": "beta",
       "overrides": [
+        {
+          "key": "the-storm-analytics-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
         {
           "key": "birmel-image-generation-enabled",
           "type": "boolean",

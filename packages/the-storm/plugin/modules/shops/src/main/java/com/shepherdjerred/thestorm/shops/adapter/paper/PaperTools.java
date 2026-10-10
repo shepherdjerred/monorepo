@@ -1,5 +1,7 @@
 package com.shepherdjerred.thestorm.shops.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.analytics.ProductAnalytics;
+
 /**
  * The Paper helpers several listeners share.
  *
@@ -7,4 +9,5 @@ package com.shepherdjerred.thestorm.shops.adapter.paper;
  * @param templates item fingerprints
  * @param replies messages and main-thread completion
  */
-record PaperTools(ShopBlocks blocks, ItemTemplates templates, Replies replies) {}
+record PaperTools(
+    ShopBlocks blocks, ItemTemplates templates, Replies replies, ProductAnalytics analytics) {}

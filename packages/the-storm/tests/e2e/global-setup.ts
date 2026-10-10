@@ -116,6 +116,8 @@ export default async function setup(project: TestProject) {
       // suite) evaluate against the fake brain's Flipt double.
       FLIPT_URL: brainBaseUrl,
       FLIPT_ENVIRONMENT: "prod",
+      POSTHOG_API_HOST: brainBaseUrl,
+      POSTHOG_PROJECT_TOKEN: "phc_test",
       RWF_RECORDING_SALT: rwfRecordingSalt,
       // The load test reads spark's tick percentiles and the long bot
       // overview from the console, which RCON cannot return.
