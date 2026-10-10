@@ -259,6 +259,7 @@ test("other lanes retain global CI inputs", () => {
   for (const globalInput of [
     "packages/woodpecker-config-extension/src",
     "scripts/lib/ci/ci-handoff.ts",
+    "scripts/lib/ci/published-image-release.ts",
     "scripts/lib/ci/ci-artifact.ts",
     "scripts/lib/ci/ci-environment.ts",
   ]) {
