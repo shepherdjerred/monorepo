@@ -276,6 +276,14 @@ Prompts are limited to 4,000 characters. New chats snapshot
 
 ## Report mail configuration
 
+The weekly dependency report resolves first-party deployment aliases to their
+actual GHCR image repository and reads each immutable pinned digest. Internal
+promotion evidence compares the application's baked `GIT_SHA` against GitHub
+source commits, separately from upstream release notes. Images can inherit a
+base-image revision label, so that label alone is insufficient first-party
+build evidence. Missing build identity or upstream notes remains an explicit
+evidence gap; promotion PR prose is not counted as build-change evidence.
+
 The homelab audit preserves informational and suppressed alerts, merges matching
 Prometheus and ledger conditions with both evidence references, and distinguishes
 recovered failures from failures without proven recovery. A long-running Workflow

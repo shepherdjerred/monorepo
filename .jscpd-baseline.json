@@ -1285,8 +1285,8 @@
       "tokens": 72
     },
     "packages/temporal/src/activities/dpp-pokeemerald-data-refresh.ts|packages/temporal/src/activities/homelab/homelab-crd-imports-refresh.ts": {
-      "clones": 2,
-      "tokens": 161
+      "clones": 1,
+      "tokens": 73
     },
     "packages/temporal/src/activities/dpp-pokeemerald-data-refresh.ts|packages/temporal/src/activities/scout/scout-showcase-refresh.ts": {
       "clones": 1,
@@ -1299,10 +1299,6 @@
     "packages/temporal/src/activities/homelab/homelab-audit.test.ts|packages/toolkit/test/bugsink/client.test.ts": {
       "clones": 1,
       "tokens": 122
-    },
-    "packages/temporal/src/activities/homelab/homelab-crd-imports-refresh.ts|packages/temporal/src/activities/scout/scout-showcase-refresh.ts": {
-      "clones": 1,
-      "tokens": 95
     },
     "packages/temporal/src/activities/maintenance/check-pr-merge-conflicts-git.ts|packages/temporal/src/activities/scout/scout-season-refresh-git.ts": {
       "clones": 1,
@@ -1326,7 +1322,7 @@
     },
     "packages/temporal/src/workflows/ops-snapshot.ts|packages/temporal/src/workflows/replay-fixtures/ops-before-ops-queue.ts": {
       "clones": 3,
-      "tokens": 394
+      "tokens": 381
     },
     "packages/temporal/src/workflows/replay-fixtures/ops-before-ops-queue.ts|packages/temporal/src/workflows/replay-fixtures/ops-before-temporal.ts": {
       "clones": 1,

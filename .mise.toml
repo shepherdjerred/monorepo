@@ -75,5 +75,8 @@ tflint = "0.64.0"
 # check:kubeconform). Fetches upstream JSON schemas at validation time.
 # renovate: datasource=github-releases depName=yannh/kubeconform
 kubeconform = "0.8.0"
+# Execute monitoring-rule regression cases with Prometheus's real evaluator.
+# renovate: datasource=github-releases depName=prometheus/prometheus
+"aqua:prometheus/prometheus" = "3.15.0"
 argocd = "3"
 awscli = "2"
