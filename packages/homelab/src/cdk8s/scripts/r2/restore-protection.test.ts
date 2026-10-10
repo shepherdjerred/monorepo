@@ -57,6 +57,24 @@ describe("OpenEBS restore history protection", () => {
     ).toEqual(["daily-backup-20260801000000", "daily-backup-20260802000000"]);
   });
 
+  test("accepts chain markers alongside streams and preserves marker-only history", () => {
+    const ancestor = "daily-backup-20260801000000";
+    const latest = "daily-backup-20260802000000";
+    const stream = key(latest).replace(/\.zfsvol$/, "");
+    expect(
+      restoreProtectedBackupNames({
+        objectKeys: [
+          `${key(ancestor).replace(/\.zfsvol$/, "")}.chain.json`,
+          stream,
+          `${stream}.zfsvol`,
+          `${stream}.chain.json`,
+        ],
+        protectedBackupNames: [latest],
+        zfsPrefix: prefix,
+      }),
+    ).toEqual([ancestor, latest]);
+  });
+
   test("refuses unknown storage layouts", () => {
     expect(() =>
       restoreProtectedBackupNames({

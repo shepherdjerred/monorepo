@@ -19,7 +19,9 @@ export function restoreProtectedBackupNames(input: {
     const relative = key.slice(input.zfsPrefix.length);
     const slash = relative.indexOf("/");
     const name = relative.slice(0, slash);
-    const file = relative.slice(slash + 1).replace(/\.zfsvol$/, "");
+    const file = relative
+      .slice(slash + 1)
+      .replace(/\.(?:zfsvol|chain\.json)$/, "");
     const suffix = `-${name}`;
     if (slash < 1 || !file.endsWith(suffix) || file.length <= suffix.length) {
       throw new Error(
