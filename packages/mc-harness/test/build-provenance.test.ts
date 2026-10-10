@@ -31,6 +31,7 @@ import {
   type Op,
 } from "#protocol/build.ts";
 import { flatSiteBuild } from "./fixtures/flat-site.ts";
+import { readJournal } from "#evals/grade/trajectory.ts";
 
 vi.mock("@shepherdjerred/mc-build/render/assets.ts", async () => {
   const { renderAssets } = await import("./fixtures/render-assets.ts");
@@ -38,6 +39,51 @@ vi.mock("@shepherdjerred/mc-build/render/assets.ts", async () => {
 });
 
 const temp = await mkdtemp(path.join(os.tmpdir(), "mc-build-provenance-"));
+async function corruptCritiqueScores(
+  workspace: Awaited<ReturnType<typeof flatSiteBuild>>,
+  file: string,
+  failure: string,
+) {
+  const content = JudgeCritiqueRecordSchema.parse(await Bun.file(file).json());
+  switch (failure) {
+    case "total":
+      content.total = 40;
+      break;
+    case "max":
+      content.max = 50;
+      break;
+    case "lowest":
+      content.lowest = "depth";
+      break;
+    case "missing-axis":
+      delete content.axes["lighting"];
+      break;
+    case "extra-axis":
+      content.axes["invented"] = 3;
+      break;
+    default:
+      throw new Error("unknown corruption");
+  }
+  await Bun.write(file, JSON.stringify(content));
+  const entries = await readLog(workspace.dir);
+  await Bun.write(
+    workspace.file(BUILD_FILES.journal),
+    entries
+      .map((entry) =>
+        JSON.stringify(
+          entry.kind === "critique"
+            ? {
+                ...entry,
+                total: content.total,
+                max: content.max,
+                lowest: content.lowest,
+              }
+            : entry,
+        ),
+      )
+      .join("\n") + "\n",
+  );
+}
 const restoreFailure = vi.hoisted(() => ({ enabled: false }));
 vi.mock("node:fs/promises", async (importOriginal) => {
   const original = await importOriginal<typeof FileSystem>();
@@ -706,7 +752,16 @@ describe("tournament restoration preflight", () => {
 describe("tournament score preflight", () => {
   it.each(
     ["a", "c"].flatMap((candidate) =>
-      ["record", "image", "corrupt"].map((failure) => ({ candidate, failure })),
+      [
+        "record",
+        "image",
+        "corrupt",
+        "total",
+        "max",
+        "lowest",
+        "missing-axis",
+        "extra-axis",
+      ].map((failure) => ({ candidate, failure })),
     ),
   )(
     "rejects $failure evidence for $candidate before any bout",
@@ -769,6 +824,13 @@ describe("tournament score preflight", () => {
           JSON.stringify({ ...content, total: content.total + 1 }),
         );
       }
+      if (
+        ["total", "max", "lowest", "missing-axis", "extra-axis"].includes(
+          failure,
+        )
+      ) {
+        await corruptCritiqueScores(workspace, record, failure);
+      }
       const journal = await readLog(workspace.dir);
       const manifest = await Bun.file(
         workspace.file(BUILD_FILES.manifest),
@@ -793,6 +855,7 @@ describe("tournament score preflight", () => {
       expect(await readdir(workspace.file(BUILD_FILES.judgeDir))).toEqual(
         files,
       );
+      expect(await readJournal(workspace.dir)).toHaveProperty("error");
     },
   );
 });

@@ -257,6 +257,19 @@ ${axes.map((axis) => `- ${axis.id}: ${axis.text}`).join("\n")}
 Only after all axes are scored, answer overallAesthetic 0–5: would a player screenshot this? Then list up to five short notes naming the most costly defect first, each with the panel that shows it.`;
 }
 
+/** The lowest-scoring axis, first in rubric order on a tie. */
+export function lowestAxis(
+  rubric: JudgeRubric,
+  axes: Record<string, number>,
+): string {
+  const [first, ...others] = rubricAxisIds(rubric);
+  if (first === undefined) throw new Error(`rubric ${rubric} has no axes`);
+  return others.reduce(
+    (lowest, id) => ((axes[id] ?? 0) < (axes[lowest] ?? 0) ? id : lowest),
+    first,
+  );
+}
+
 export async function scoreAbsolute(
   image: LlmImageInput,
   ask: AskScore,

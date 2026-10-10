@@ -17,6 +17,10 @@ import {
 } from "@shepherdjerred/mc-build/render/index.ts";
 import { cropGrid, cutGrid } from "@shepherdjerred/mc-build/render/cut.ts";
 import { renderLooks } from "#build/helpers.ts";
+import { renderBuild } from "#build/commands.ts";
+import { DaemonClient } from "#build/daemon-client.ts";
+import { Journal } from "#build/journal.ts";
+import { readSidecar } from "#build/sidecar.ts";
 import { readLog } from "#build/build-log.ts";
 import {
   readCandidate,
@@ -34,7 +38,127 @@ const temp = await mkdtemp(path.join(os.tmpdir(), "mc-render-evidence-"));
 afterAll(async () => {
   await rm(temp, { recursive: true, force: true });
 });
+describe("positional region evidence", () => {
+  it.each(
+    (["compiled", "expected", "canvas"] as const).flatMap((source) =>
+      (["light", "relief", "textured"] as const).map((mode) => ({
+        source,
+        mode,
+      })),
+    ),
+  )(
+    "keeps whole-site context for positional $source $mode regions",
+    async ({ source, mode }) => {
+      const workspace = await flatSiteBuild(
+        path.join(temp, `region-${source}-${mode}`),
+        "region",
+      );
+      const whole = new BlockGrid({ x: 10, y: 10, z: 10 }, "minecraft:stone");
+      for (let x = 1; x < 9; x += 1)
+        for (let y = 1; y < 6; y += 1)
+          for (let z = 1; z < 9; z += 1) whole.set(x, y, z, "minecraft:air");
+      whole.set(3, 1, 5, "minecraft:lantern");
+      const manifest = await workspace.manifest();
+      if (manifest.site === undefined) throw new Error("missing site");
+      await workspace.writeManifest({
+        ...manifest,
+        site: { ...manifest.site, siteHash: gridHash(whole) },
+      });
+      const bytes = writeSchematic(whole, 3955);
+      await Bun.write(workspace.file(BUILD_FILES.siteSchematic), bytes);
+      const blocks = Buffer.alloc(whole.volume * 4);
+      whole.data.forEach((value, index) =>
+        blocks.writeUInt32LE(value, index * 4),
+      );
+      const captured = {
+        world: "world",
+        min: manifest.site.min,
+        max: manifest.site.max,
+        size: whole.size,
+        palette: whole.palette,
+        blocks: blocks.toString("base64"),
+        blockEntities: [],
+      };
+      await workspace.writeExpected(captured);
+      await workspace.writeFrozen("expected", [
+        { at: manifest.site.min, bytes },
+      ]);
+      await workspace.writeOplog({ version: 1, ops: [] });
+      const origin = { x: 4, y: 0, z: 4 };
+      const localBox = { min: origin, max: { x: 6, y: 3, z: 6 } };
+      const region = {
+        min: { x: 104, y: 64, z: 104 },
+        max: { x: 106, y: 67, z: 106 },
+      };
+      const grid = cropGrid(whole, localBox);
+      const client = new DaemonClient();
+      const read = vi.spyOn(client, "regionRead").mockResolvedValue(captured);
+      const result = await renderBuild(
+        {
+          client,
+          journal: new Journal(workspace.file("audit")),
+          log: vi.fn(),
+        },
+        workspace.dir,
+        {
+          source,
+          target: "sbx-000001",
+          name: "region",
+          region,
+          ...(mode === "textured" ? {} : { look: { mode, views: ["sheet"] } }),
+        },
+      );
+      const renderer = new Renderer(await ensureAssets());
+      const expected = await renderer.sheet(grid, {
+        title: "region",
+        subtitle: mode === "textured" ? "region" : `region - ${mode}`,
+        mode,
+        lightFrom: whole,
+        lightOrigin: origin,
+        cropFrom: { grid: whole, box: localBox },
+      });
+      const wrong = await renderer.sheet(grid, {
+        title: "region",
+        subtitle: mode === "textured" ? "region" : `region - ${mode}`,
+        mode,
+      });
+      const actual = Buffer.from(await Bun.file(result.render).bytes());
+      expect(actual.equals(await encodePng(expected))).toBe(true);
+      expect(actual.equals(await encodePng(wrong))).toBe(false);
+      expect(await readSidecar(workspace, "region")).toMatchObject({
+        box: region,
+        gridHash: gridHash(grid),
+      });
+      const saved = await readSchematic(
+        await Bun.file(workspace.file("renders/region.schem")).bytes(),
+      );
+      expect(saved.grid.size).toEqual(grid.size);
+      if (source === "canvas")
+        expect(read).toHaveBeenCalledWith("sbx-000001", {
+          world: "world",
+          min: manifest.site.min,
+          max: manifest.site.max,
+        });
+    },
+    60_000,
+  );
+});
+
 describe("render and candidate evidence", () => {
+  it("ignores ordinary files while retaining candidate directory validation", async () => {
+    const workspace = await flatSiteBuild(
+      path.join(temp, "stray-candidate-files"),
+      "stray",
+    );
+    await workspace.writeOplog({ version: 1, ops: [] });
+    await saveCandidate(workspace.dir, "valid");
+    await Bun.write(workspace.file("candidates/.DS_Store"), "finder metadata");
+    await Bun.write(workspace.file("candidates/notes.txt"), "notes");
+    const candidates = await listCandidates(workspace.dir);
+    expect(candidates.map(({ name }) => name)).toEqual(["valid"]);
+    await Bun.write(workspace.file("candidates/broken/oplog.json"), "{}");
+    await expect(listCandidates(workspace.dir)).rejects.toThrow();
+  });
   it.each(["value", "relief", "light"] as const)(
     "frames explicitly requested %s hero views without empty headroom",
     async (mode) => {

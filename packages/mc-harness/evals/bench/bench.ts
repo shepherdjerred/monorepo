@@ -151,6 +151,10 @@ async function collect(): Promise<void> {
       continue;
     }
     renderSheet ??= await assetSheetRenderer();
+    await keepBuildRecord(
+      result.taskDir,
+      path.join(taskHistoryDir(task.id), id),
+    );
     const meta = await collectEntry({
       schematic: new Uint8Array(await Bun.file(schematicFile).arrayBuffer()),
       site: new Uint8Array(await siteFile.arrayBuffer()),
@@ -182,10 +186,6 @@ async function collect(): Promise<void> {
           : { trajectory: result.trajectory }),
       },
     });
-    await keepBuildRecord(
-      result.taskDir,
-      path.join(taskHistoryDir(task.id), id),
-    );
     collected += 1;
     log(
       `${task.id}: ${id} — ${meta.blocks.toString()} blocks, lint ${meta.lint.errors.toString()}/${meta.lint.warnings.toString()}, repetition ${meta.repetition.toString()}`,

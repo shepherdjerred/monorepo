@@ -139,6 +139,8 @@ export type LookOptions = {
   target?: string;
   /** World box the grid covers, recorded in the sidecar so a later `--compare` can align to it. */
   box?: { min: BlockPos; max: BlockPos };
+  /** Whole-site geometry and the requested region's origin within it. */
+  regionContext?: { grid: BlockGrid; origin: Vec3 };
 };
 
 async function writeLook(
@@ -149,6 +151,17 @@ async function writeLook(
   const out = workspace.file(path.join(BUILD_FILES.rendersDir, file));
   await Bun.write(out, await encodePng(image));
   return out;
+}
+
+/** Convert build-local floor and section coordinates to the selected grid. */
+export function localCuts(
+  look: LookOptions,
+  anchor: BlockPos,
+  min: BlockPos,
+): LookOptions {
+  if (look.floor !== undefined) look.floor += anchor.y - min.y;
+  if (look.section !== undefined) look.section += anchor.z - min.z;
+  return look;
 }
 
 /**
@@ -166,45 +179,53 @@ function subjectOf(
   cropFrom?: NonNullable<RenderContextOptions["cropFrom"]>;
 } {
   // Deliberate sections expose new surfaces; a close-up only crops the geometry.
+  const whole = options.regionContext?.grid ?? grid;
+  const offset = options.regionContext?.origin ?? { x: 0, y: 0, z: 0 };
   const geometry =
     options.floor !== undefined || options.section !== undefined
-      ? cutGrid(grid, {
-          ...(options.floor === undefined ? {} : { belowY: options.floor }),
+      ? cutGrid(whole, {
+          ...(options.floor === undefined
+            ? {}
+            : { belowY: options.floor + offset.y }),
           ...(options.section === undefined
             ? {}
-            : { behindZ: options.section }),
+            : { behindZ: options.section + offset.z }),
         })
-      : grid;
-  let subject = geometry;
-  let origin = { x: 0, y: 0, z: 0 };
+      : whole;
+  let origin = offset;
+  let size = grid.size;
   if (options.crop !== undefined) {
     const box = namedCrop(grid, options.crop);
-    subject = cropBox(geometry, box);
     origin = {
-      x: Math.max(0, box.min.x),
-      y: Math.max(0, box.min.y),
-      z: Math.max(0, box.min.z),
+      x: offset.x + Math.max(0, box.min.x),
+      y: offset.y + Math.max(0, box.min.y),
+      z: offset.z + Math.max(0, box.min.z),
     };
+    size = cropBox(grid, box).size;
   }
+  const box = {
+    min: origin,
+    max: {
+      x: origin.x + size.x - 1,
+      y: origin.y + size.y - 1,
+      z: origin.z + size.z - 1,
+    },
+  };
+  const cropped =
+    options.crop !== undefined || options.regionContext !== undefined;
+  const subject = cropped ? cropBox(geometry, box) : geometry;
   return {
     subject,
-    lightFrom: grid,
+    lightFrom: whole,
     lightOrigin: origin,
-    ...(options.crop === undefined
-      ? {}
-      : {
+    ...(cropped
+      ? {
           cropFrom: {
             grid: geometry,
-            box: {
-              min: origin,
-              max: {
-                x: origin.x + subject.size.x - 1,
-                y: origin.y + subject.size.y - 1,
-                z: origin.z + subject.size.z - 1,
-              },
-            },
+            box,
           },
-        }),
+        }
+      : {}),
   };
 }
 
@@ -347,7 +368,8 @@ export async function renderLooks(
   if (options.compareWith !== undefined) {
     // The same crop and cuts as the other looks, so the change plan covers
     // what the panels show and nothing that was cut away.
-    const before = subjectOf(options.compareWith, options);
+    const { regionContext: _regionContext, ...beforeOptions } = options;
+    const before = subjectOf(options.compareWith, beforeOptions);
     const image = await renderer.compare(before.subject, subject, {
       mode: ctx.mode,
       beforeContext: before,

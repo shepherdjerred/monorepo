@@ -19,13 +19,17 @@ import {
 import {
   BY_EYE,
   critiqueBuild,
-  lowestAxis,
   parseByEye,
   renderCritique,
   type AskCode,
 } from "#build/studio/critique.ts";
 import { renderLooks, renderGrid } from "#build/helpers.ts";
-import { rubricAxisIds, type AskJudge, type AskScore } from "#build/judge.ts";
+import {
+  lowestAxis,
+  rubricAxisIds,
+  type AskJudge,
+  type AskScore,
+} from "#build/judge.ts";
 import { knockout } from "#build/studio/knockout.ts";
 import { renderResume, resumeState } from "#build/resume.ts";
 import { createScratch } from "#build/scratch.ts";

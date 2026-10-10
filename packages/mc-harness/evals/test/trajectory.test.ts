@@ -35,7 +35,7 @@ const critique = (
   file: `judge/critique-${iteration.toString()}.json`,
   total,
   max: 40,
-  lowest: "depth",
+  lowest: rubricAxisIds(rubric)[0] ?? "",
 });
 const accept = (
   iteration: number,

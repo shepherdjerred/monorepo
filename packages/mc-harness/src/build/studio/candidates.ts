@@ -277,7 +277,12 @@ export async function listCandidates(
   const manifest = await workspace.manifest();
   let names: string[];
   try {
-    names = await readdir(workspace.file(BUILD_FILES.candidatesDir));
+    const entries = await readdir(workspace.file(BUILD_FILES.candidatesDir), {
+      withFileTypes: true,
+    });
+    names = entries
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name);
   } catch (error) {
     if (error instanceof Error && "code" in error && error.code === "ENOENT")
       return [];

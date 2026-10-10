@@ -253,7 +253,8 @@ survey`, `--grid n` coordinate lines, `--floor y` and `--section z` cuts
   Explicit hero views trim empty headroom while keeping that lighting context.
   Rendering unit tests use an authored asset pack and the real renderer; full
   Mojang-asset acceptance runs separately from CI.
-  Close-ups crop whole-build faces and shading; only deliberate floor/section
+  Named close-ups and positional region boxes crop whole-site faces and shading;
+  region sidecars still contain only the selected world box. Only deliberate floor/section
   cuts expose new surfaces. Implicit critique requires a render of the current
   capture, while named historical renders remain available. Expected render
   provenance validates the program of the frozen run independently of later
@@ -262,6 +263,8 @@ survey`, `--grid n` coordinate lines, `--floor y` and `--section z` cuts
   older render, and critique verifies the saved schematic against its hash
   before scoring or updating the journal. Code-only critique also validates
   the reused record's render, grid, rubric and score against its journal entry.
+  Saved critique evidence must contain exactly the rubric's axes, their summed
+  total and maximum, and the first lowest axis in rubric order.
   A sidecar may reference only its own `renders/<name>.build.ts` program artifact.
   Run journals may reference only `schematics/program-<hex-digest>.build.ts`;
   program reads reject symlinks outside the build. Resume's latest render also

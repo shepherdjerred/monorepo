@@ -22,6 +22,7 @@ import { appendLog } from "./build-log.ts";
 import { checkName, producingProgram, programSnapshot } from "./sidecar.ts";
 import {
   alignedRender,
+  cropToBox,
   gridFor,
   isPlainLook,
   type RenderSource,
@@ -39,6 +40,7 @@ import {
   context,
   canvasOf,
   renderGrid,
+  localCuts,
   readRenderProvenance,
   recordRender,
   relativeFiles,
@@ -381,20 +383,6 @@ function fmtPos(pos: BlockPos): string {
   return `${pos.x.toString()},${pos.y.toString()},${pos.z.toString()}`;
 }
 
-/**
- * `--floor` and `--section` are given in build-local coordinates (relative
- * to the anchor, as in build.ts); the cut itself runs on the site grid.
- */
-function localCuts(
-  look: LookOptions,
-  anchor: BlockPos,
-  min: BlockPos,
-): LookOptions {
-  if (look.floor !== undefined) look.floor += anchor.y - min.y;
-  if (look.section !== undefined) look.section += anchor.z - min.z;
-  return look;
-}
-
 export async function renderBuild(
   env: Env,
   dir: string,
@@ -423,11 +411,12 @@ export async function renderBuild(
     options.source ?? (options.expected === true ? "expected" : "canvas");
   const box =
     options.region === undefined ? site : regionInSite(site, options.region);
-  const { grid, skipped } = await gridFor(env, workspace, manifest, {
+  const { grid: whole, skipped } = await gridFor(env, workspace, manifest, {
     source,
-    box,
+    box: site,
     ...(options.target === undefined ? {} : { target: options.target }),
   });
+  const grid = cropToBox(whole, site, box);
   if (skipped.length > 0) {
     throw new Error(
       `cannot render incomplete compiled evidence: ${skipped.join("; ")}; run the build and render --source expected or --source canvas`,
@@ -449,7 +438,17 @@ export async function renderBuild(
   look.source = source;
   if (options.target !== undefined) look.target = options.target;
   look.box = covered;
-  if (isPlainLook(look)) {
+  if (options.region !== undefined) {
+    look.regionContext = {
+      grid: whole,
+      origin: {
+        x: box.min.x - site.min.x,
+        y: box.min.y - site.min.y,
+        z: box.min.z - site.min.z,
+      },
+    };
+  }
+  if (isPlainLook(look) && options.region === undefined) {
     const provenance = await readRenderProvenance(
       workspace,
       source,

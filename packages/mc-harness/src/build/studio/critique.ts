@@ -32,6 +32,7 @@ import { appendLog, readLog } from "#build/build-log.ts";
 import {
   judgeRuntime,
   llmScorer,
+  lowestAxis,
   rubricAxisIds,
   RUBRICS,
   scoreAbsolute,
@@ -157,20 +158,6 @@ export type CritiqueResult = {
 
 /** Up to this much of build.ts goes to the code stage. */
 export const PROGRAM_LIMIT = 24 * 1024;
-
-/** The lowest-scoring axis, first in rubric order on a tie. */
-export function lowestAxis(
-  rubric: JudgeRubric,
-  axes: Record<string, number>,
-): string {
-  let lowest: string | null = null;
-  for (const id of rubricAxisIds(rubric)) {
-    const score = axes[id] ?? 0;
-    if (lowest === null || score < (axes[lowest] ?? 0)) lowest = id;
-  }
-  if (lowest === null) throw new Error(`rubric ${rubric} has no axes`);
-  return lowest;
-}
 
 function codeSchema(rubric: JudgeRubric) {
   const [first, ...others] = rubricAxisIds(rubric);
