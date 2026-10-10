@@ -14,6 +14,11 @@ import {
   type ReportScheduleRegistration,
 } from "#shared/reports/report-registry.ts";
 import { isDynamicAgentTaskSchedule } from "#schedules/orphan-detection.ts";
+import {
+  SkippedNotificationSchema,
+  skippedNotificationPrefix,
+  usesDailyNotificationPolicy,
+} from "./report-notification-policy.ts";
 
 export type ReportFreshnessStatus =
   | "fresh"
@@ -30,6 +35,8 @@ export type ReportFreshnessResult = {
   acceptedAt: string | undefined;
   ageHours: number | undefined;
   maximumAgeHours: number | undefined;
+  notificationSkippedAt?: string;
+  heartbeatAt?: string | undefined;
 };
 
 export function freshnessDeploymentState(input: {
@@ -88,11 +95,13 @@ export function evaluateFreshness(input: {
   registration: ReportScheduleRegistration;
   now: Date;
   acceptedAt: string | undefined;
+  notificationSkippedAt?: string;
   lastActionTakenAt: string | undefined;
   scheduleCreatedAt: string | undefined;
   deployed: boolean;
   paused: boolean;
 }): ReportFreshnessResult {
+  const heartbeatAt = latestReportHeartbeat(input);
   const maximumAgeHours =
     input.registration.cadenceHours + input.registration.graceHours;
   if (!input.deployed)
@@ -129,8 +138,8 @@ export function evaluateFreshness(input: {
       ? undefined
       : Date.parse(input.lastActionTakenAt);
   if (
-    input.acceptedAt === undefined ||
-    Date.parse(input.acceptedAt) < effectiveActivation
+    heartbeatAt === undefined ||
+    Date.parse(heartbeatAt) < effectiveActivation
   ) {
     // A schedule that never runs after activation would otherwise sit at
     // `pending` forever, which the alert deliberately does not page on. Bound
@@ -145,17 +154,42 @@ export function evaluateFreshness(input: {
       acceptedAt: input.acceptedAt,
       ageHours: undefined,
       maximumAgeHours,
+      ...(input.notificationSkippedAt === undefined
+        ? {}
+        : {
+            notificationSkippedAt: input.notificationSkippedAt,
+            heartbeatAt,
+          }),
     };
   }
-  const ageHours =
-    (input.now.getTime() - Date.parse(input.acceptedAt)) / 3_600_000;
+  const ageHours = (input.now.getTime() - Date.parse(heartbeatAt)) / 3_600_000;
   return {
     scheduleId: input.registration.scheduleId,
     status: ageHours > maximumAgeHours ? "stale" : "fresh",
     acceptedAt: input.acceptedAt,
     ageHours,
     maximumAgeHours,
+    ...(input.notificationSkippedAt === undefined
+      ? {}
+      : {
+          notificationSkippedAt: input.notificationSkippedAt,
+          heartbeatAt,
+        }),
   };
+}
+
+function latestReportHeartbeat(input: {
+  acceptedAt: string | undefined;
+  notificationSkippedAt?: string;
+}): string | undefined {
+  const times = [input.acceptedAt, input.notificationSkippedAt].flatMap(
+    (value) => (value === undefined ? [] : [value]),
+  );
+  for (const time of times) {
+    if (!Number.isFinite(Date.parse(time)))
+      throw new TypeError("Invalid report heartbeat timestamp");
+  }
+  return times.sort((a, b) => Date.parse(b) - Date.parse(a))[0];
 }
 
 export function publishReportFreshnessMetrics(
@@ -179,20 +213,11 @@ export function publishReportFreshnessMetrics(
   }
 }
 
-async function latestAcceptedAt(
+async function* reportObjectKeys(
   storage: ReturnType<typeof store>,
-  registration: ReportScheduleRegistration,
-): Promise<string | undefined> {
-  const prefix = reportReceiptPrefix(
-    {
-      reportType: registration.reportType,
-      scheduleId: registration.scheduleId,
-    },
-    storage.prefix,
-  );
+  prefix: string,
+): AsyncGenerator<string> {
   let continuationToken: string | undefined;
-  let latest:
-    { Key?: string | undefined; LastModified?: Date | undefined } | undefined;
   do {
     const listed = await storage.client.send(
       new ListObjectsV2Command({
@@ -204,32 +229,64 @@ async function latestAcceptedAt(
       }),
     );
     for (const object of listed.Contents ?? []) {
-      if (
-        (latest === undefined ||
-          (object.LastModified?.getTime() ?? 0) >
-            (latest.LastModified?.getTime() ?? 0)) &&
-        object.Key !== undefined
-      ) {
-        latest = object;
-      }
+      if (object.Key !== undefined) yield object.Key;
     }
     continuationToken =
       listed.IsTruncated === true ? listed.NextContinuationToken : undefined;
     if (continuationToken === undefined && listed.IsTruncated === true) {
       throw new Error(
-        `S3 truncated receipt listing for ${prefix} without a continuation token`,
+        `S3 truncated report listing for ${prefix} without a continuation token`,
       );
     }
   } while (continuationToken !== undefined);
-  if (latest?.Key === undefined) return undefined;
+}
+
+async function reportObjectText(
+  storage: ReturnType<typeof store>,
+  key: string,
+): Promise<string> {
   const object = await storage.client.send(
-    new GetObjectCommand({ Bucket: storage.bucket, Key: latest.Key }),
+    new GetObjectCommand({ Bucket: storage.bucket, Key: key }),
   );
   if (object.Body === undefined)
-    throw new Error(`Report receipt ${latest.Key} has no body`);
-  return ReportDeliveryReceiptV1Schema.parse(
-    JSON.parse(await object.Body.transformToString()),
-  ).acceptedAt;
+    throw new Error(`Report object ${key} has no body`);
+  return object.Body.transformToString();
+}
+
+async function latestAcceptedAt(
+  storage: ReturnType<typeof store>,
+  registration: ReportScheduleRegistration,
+): Promise<string | undefined> {
+  const prefix = reportReceiptPrefix(registration, storage.prefix);
+  let latest: string | undefined;
+  for await (const key of reportObjectKeys(storage, prefix)) {
+    const text = await reportObjectText(storage, key);
+    const receipt = ReportDeliveryReceiptV1Schema.parse(JSON.parse(text));
+    // Restoring an old receipt gives it a new LastModified. Compare its actual
+    // acceptance time so an old retry cannot mask newer accepted mail.
+    latest = latestReportHeartbeat({
+      acceptedAt: latest,
+      notificationSkippedAt: receipt.acceptedAt,
+    });
+  }
+  return latest;
+}
+
+async function latestSkippedAt(
+  storage: ReturnType<typeof store>,
+  registration: ReportScheduleRegistration,
+): Promise<string | undefined> {
+  if (!usesDailyNotificationPolicy(registration)) return undefined;
+  let latestKey: string | undefined;
+  for await (const key of reportObjectKeys(
+    storage,
+    skippedNotificationPrefix(registration),
+  )) {
+    if (latestKey === undefined || key > latestKey) latestKey = key;
+  }
+  if (latestKey === undefined) return undefined;
+  const text = await reportObjectText(storage, latestKey);
+  return SkippedNotificationSchema.parse(JSON.parse(text)).completedAt;
 }
 
 export async function inspectReportFreshness(): Promise<
@@ -268,10 +325,17 @@ export async function inspectReportFreshness(): Promise<
   const results = await Promise.all(
     REPORT_SCHEDULE_REGISTRY.map(async (registration) => {
       const live = deployed.get(registration.scheduleId);
+      const [acceptedAt, notificationSkippedAt] = await Promise.all([
+        latestAcceptedAt(storage, registration),
+        latestSkippedAt(storage, registration),
+      ]);
       return evaluateFreshness({
         registration,
         now,
-        acceptedAt: await latestAcceptedAt(storage, registration),
+        acceptedAt,
+        ...(notificationSkippedAt === undefined
+          ? {}
+          : { notificationSkippedAt }),
         lastActionTakenAt: live?.lastActionTakenAt,
         scheduleCreatedAt: live?.scheduleCreatedAt,
         deployed: live !== undefined,

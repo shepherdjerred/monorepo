@@ -226,6 +226,8 @@ export function scoutQueueWindowsReport(
         evidenceReceiptIds: ["queue-window-result"],
       })),
       ...result.warningSummaries.map((summary) => ({
+        id: `queue-warning:${summary}`,
+        state: "active" as const,
         severity: "warning" as const,
         summary,
         detail: `fingerprint=${result.warningFingerprint ?? "unavailable"}; consecutiveRuns=${result.warningConsecutiveRuns.toString()}`,

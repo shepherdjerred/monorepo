@@ -20,6 +20,25 @@ afterEach(() => {
 });
 
 describe("evaluateFreshness", () => {
+  test("counts an explicit skip as report freshness without inventing mail acceptance", () => {
+    const result = evaluateFreshness({
+      registration,
+      now: new Date("2026-08-10T12:00:00.000Z"),
+      acceptedAt: "2026-08-01T12:00:00.000Z",
+      notificationSkippedAt: "2026-08-10T11:00:00.000Z",
+      lastActionTakenAt: "2026-08-10T10:59:00.000Z",
+      scheduleCreatedAt: EXISTING_SCHEDULE_CREATED_AT,
+      deployed: true,
+      paused: false,
+    });
+    expect(result).toMatchObject({
+      status: "fresh",
+      ageHours: 1,
+      acceptedAt: "2026-08-01T12:00:00.000Z",
+      heartbeatAt: "2026-08-10T11:00:00.000Z",
+    });
+  });
+
   test("uses cadence plus the daily grace period", () => {
     const now = new Date("2026-08-10T12:00:00.000Z");
     expect(

@@ -94,6 +94,8 @@ export function ciIoTelemetryReport(
     checks: results.map((result) => checkFor(result)),
     evidence: results.map((result) => evidenceFor(result, observedAt)),
     findings: failed.map((result) => ({
+      id: `ci-io:${result.id}`,
+      state: "active" as const,
       severity: "warning" as const,
       summary: `CI I/O telemetry check ${result.id} failed`,
       detail: `Query returned ${result.series.toString()} series with values ${JSON.stringify(result.values)}.`,
