@@ -23,6 +23,7 @@ import {
   type BuildManifest,
   type OpLog,
 } from "#protocol/build.ts";
+import { currentRun, lastOf, readLog } from "./build-log.ts";
 
 /** A frozen snapshot of a box: one schematic, or tiles each pasted at `at`. */
 export type FrozenPart = { at: BlockPos; bytes: Uint8Array };
@@ -140,6 +141,7 @@ export class BuildWorkspace {
 
   /** The frozen box as pasteable parts (tiles when it was snapshotted in tiles). */
   async frozenParts(kind: FrozenKind, box: Box): Promise<FrozenPart[]> {
+    if (kind === "expected") await this.assertExpectedCurrent();
     const files = FROZEN_FILES[kind];
     const indexFile = Bun.file(this.file(path.join(files.parts, "parts.json")));
     if (await indexFile.exists()) {
@@ -177,6 +179,7 @@ export class BuildWorkspace {
   }
 
   async expected(): Promise<BlockGrid> {
+    await this.assertExpectedCurrent();
     const file = Bun.file(this.file(BUILD_FILES.expected));
     if (!(await file.exists())) {
       throw new Error(
@@ -184,6 +187,15 @@ export class BuildWorkspace {
       );
     }
     return gridFromRegionRead(RegionReadSchema.parse(await file.json()));
+  }
+
+  private async assertExpectedCurrent(): Promise<void> {
+    const journal = await readLog(this.dir);
+    if (lastOf(journal, "capture") !== null && currentRun(journal) === null) {
+      throw new Error(
+        "No expected result for the current capture; run toolkit mc build run first",
+      );
+    }
   }
 
   /** WorldEdit session name for this build's edits (history is per session). */

@@ -318,6 +318,17 @@ async function reuseVisual(
     const record = JudgeCritiqueRecordSchema.parse(
       await Bun.file(workspace.file(entry.file)).json(),
     );
+    if (
+      record.render !== entry.render ||
+      record.gridHash !== entry.gridHash ||
+      record.rubric !== entry.rubric ||
+      record.total !== entry.total ||
+      record.max !== entry.max
+    ) {
+      throw new Error(
+        `critique record ${entry.file} does not match its journal entry`,
+      );
+    }
     return {
       sheet: record.sheet,
       scores: {

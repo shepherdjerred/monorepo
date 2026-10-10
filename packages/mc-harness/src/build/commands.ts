@@ -113,7 +113,12 @@ export async function captureSite(
     `${JSON.stringify(info)}\n`,
   );
   // A new capture starts a new competition; retain old candidates for inspection.
-  const { best: _best, knockout: _knockout, ...capturedManifest } = manifest;
+  const {
+    best: _best,
+    knockout: _knockout,
+    canvas: _canvas,
+    ...capturedManifest
+  } = manifest;
   await workspace.writeManifest({
     ...capturedManifest,
     world: options.box.world,
@@ -321,8 +326,9 @@ export async function runBuild(
   const target = canvasOf(manifest, options.target);
   const run = context(env, workspace, manifest, target);
   const box = workspace.siteBox(manifest);
-  await resetToSite(run, box);
   const { ops } = await workspace.oplog();
+  const program = await producingProgram(workspace, ops);
+  await resetToSite(run, box);
   await runOps(run, ops);
   // Freeze the result: promote pastes exactly this (block entities included),
   // so random WorldEdit patterns cannot drift between canvas and target.
@@ -335,7 +341,7 @@ export async function runBuild(
     kind: "run",
     target,
     ops: ops.length,
-    program: await producingProgram(workspace, ops),
+    program,
   });
   return { target, ops: ops.length };
 }

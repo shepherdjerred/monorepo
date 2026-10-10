@@ -234,13 +234,18 @@ survey`, `--grid n` coordinate lines, `--floor y` and `--section z` cuts
   target the exact sandbox being rendered. A replacement canvas needs a new
   run before its renders can carry program provenance. A log with manual
   or imported ops has no single program, so those renders keep none.
+  Run provenance belongs to the current capture. Recapturing clears the default
+  canvas and blocks old expected snapshots until a new run completes; archived
+  renders remain available. `run` validates its program snapshot before changing
+  the sandbox or expected files.
   A missing referenced compile snapshot is an error; it is never treated as
   a programless render or candidate. Missing textures fail before images or
   sidecars are written. Cropped light views retain the whole build's light
   field and crop origin, including lamps and openings outside the window.
   Invalid sidecars also fail instead of selecting an
   older render, and critique verifies the saved schematic against its hash
-  before scoring or updating the journal.
+  before scoring or updating the journal. Code-only critique also validates
+  the reused record's render, grid, rubric and score against its journal entry.
 - **Journal.** Every command that changes or looks at the build appends a
   line to `journal.jsonl` (compile, run, render, lint, critique, candidate,
   accept/reject, promote, resume) with the iteration it belongs to (one per

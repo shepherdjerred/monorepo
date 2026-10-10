@@ -952,6 +952,7 @@ describe("site capture journal", () => {
     const manifest = await workspace.manifest();
     await workspace.writeManifest({
       ...manifest,
+      canvas: "sbx-000001",
       best: {
         candidate: "old",
         gridHash: "old-grid",
@@ -1001,6 +1002,7 @@ describe("site capture journal", () => {
     });
     const recaptured = await workspace.manifest();
     expect(recaptured.best).toBeUndefined();
+    expect(recaptured.canvas).toBeUndefined();
     await captureSite(env, workspace.dir, { target: "sandbox", box });
     const after = await readLog(workspace.dir);
     expect(after.filter((entry) => entry.kind === "capture")).toHaveLength(2);

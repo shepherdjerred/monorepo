@@ -12,7 +12,7 @@ import {
   type Op,
   type RenderSidecar,
 } from "#protocol/build.ts";
-import { lastOf } from "./build-log.ts";
+import { currentRun, lastOf } from "./build-log.ts";
 import type { BuildWorkspace } from "./workspace.ts";
 
 const NAME = /^[a-z0-9][a-z0-9-]{0,31}$/u;
@@ -163,7 +163,7 @@ export async function programBehind(
 ): Promise<string | null> {
   const compiled = await producingProgram(workspace, input.ops);
   if (input.source === "compiled") return compiled;
-  const run = lastOf(input.journal, "run");
+  const run = currentRun(input.journal);
   const ran = run?.kind === "run" ? run.program : null;
   if (input.source === "expected") return ran;
   if (input.source === "canvas") {

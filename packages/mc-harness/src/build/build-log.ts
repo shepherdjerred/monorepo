@@ -73,6 +73,18 @@ export function lastOf(
   return null;
 }
 
+/** The newest run belonging to this capture; earlier runs remain historical evidence. */
+export function currentRun(
+  entries: readonly BuildLogEntry[],
+): Extract<BuildLogEntry, { kind: "run" }> | null {
+  for (let index = entries.length - 1; index >= 0; index -= 1) {
+    const entry = entries[index];
+    if (entry?.kind === "run") return entry;
+    if (entry?.kind === "capture") return null;
+  }
+  return null;
+}
+
 /** Every entry of a kind, in order. */
 export function allOf(
   entries: readonly BuildLogEntry[],
