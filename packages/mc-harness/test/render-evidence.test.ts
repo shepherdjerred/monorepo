@@ -20,6 +20,10 @@ import {
 import { knockout } from "#build/studio/knockout.ts";
 import { resumeState } from "#build/resume.ts";
 import { flatSiteBuild } from "./fixtures/flat-site.ts";
+vi.mock("@shepherdjerred/mc-build/render/assets.ts", async () => {
+  const { renderAssets } = await import("./fixtures/render-assets.ts");
+  return { ensureAssets: renderAssets };
+});
 const temp = await mkdtemp(path.join(os.tmpdir(), "mc-render-evidence-"));
 afterAll(async () => {
   await rm(temp, { recursive: true, force: true });

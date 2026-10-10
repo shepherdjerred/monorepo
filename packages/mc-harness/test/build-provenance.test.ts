@@ -20,6 +20,11 @@ import { critiqueBuild } from "#build/studio/critique.ts";
 import { BUILD_FILES, JudgeCritiqueRecordSchema } from "#protocol/build.ts";
 import { flatSiteBuild } from "./fixtures/flat-site.ts";
 
+vi.mock("@shepherdjerred/mc-build/render/assets.ts", async () => {
+  const { renderAssets } = await import("./fixtures/render-assets.ts");
+  return { ensureAssets: renderAssets };
+});
+
 const temp = await mkdtemp(path.join(os.tmpdir(), "mc-build-provenance-"));
 afterAll(async () => {
   await rm(temp, { recursive: true, force: true });

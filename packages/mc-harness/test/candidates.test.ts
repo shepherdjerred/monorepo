@@ -42,6 +42,11 @@ import { BuildWorkspace } from "#build/workspace.ts";
 import { flatSiteBuild } from "./fixtures/flat-site.ts";
 import { BUILD_FILES, JudgeRecordSchema, type Op } from "#protocol/build.ts";
 
+vi.mock("@shepherdjerred/mc-build/render/assets.ts", async () => {
+  const { renderAssets } = await import("./fixtures/render-assets.ts");
+  return { ensureAssets: renderAssets };
+});
+
 const temp = await mkdtemp(path.join(os.tmpdir(), "mc-harness-candidates-"));
 afterAll(async () => {
   await rm(temp, { recursive: true, force: true });

@@ -243,6 +243,8 @@ survey`, `--grid n` coordinate lines, `--floor y` and `--section z` cuts
   sidecars are written. Cropped light views retain the whole build's light
   field and crop origin, including lamps and openings outside the window.
   Explicit hero views trim empty headroom while keeping that lighting context.
+  Rendering unit tests use an authored asset pack and the real renderer; full
+  Mojang-asset acceptance runs separately from CI.
   Close-ups crop whole-build faces and shading; only deliberate floor/section
   cuts expose new surfaces. Implicit critique requires a render of the current
   capture, while named historical renders remain available.

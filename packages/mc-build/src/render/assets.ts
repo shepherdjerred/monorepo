@@ -1,9 +1,9 @@
 import { createHash } from "node:crypto";
-import { mkdir, rename, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { unzipSync } from "fflate";
 import { z } from "zod";
+import { installAssetFiles } from "./asset-cache.ts";
 
 /**
  * Block models and textures come from Mojang's client jar, fetched on first
@@ -90,20 +90,7 @@ export async function ensureAssets(
   const files = unzipSync(jar, {
     filter: (file) => EXTRACT.some((prefix) => file.name.startsWith(prefix)),
   });
-  const staging = `${root}.partial`;
-  await rm(staging, { recursive: true, force: true });
-  for (const [name, bytes] of Object.entries(files)) {
-    if (name.endsWith("/")) {
-      continue;
-    }
-    const target = path.join(staging, name);
-    await mkdir(path.dirname(target), { recursive: true });
-    await Bun.write(target, bytes);
-  }
-  await Bun.write(path.join(staging, ".complete"), `${client.sha1}\n`);
-  await rm(root, { recursive: true, force: true });
-  await mkdir(path.dirname(root), { recursive: true });
-  await rename(staging, root);
+  await installAssetFiles(root, files, client.sha1);
   log?.(
     `cached ${Object.keys(files).length.toString()} asset files in ${root}`,
   );
