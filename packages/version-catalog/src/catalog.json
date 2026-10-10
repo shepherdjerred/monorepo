@@ -794,7 +794,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1007972@sha256:c6d3fcbbad81d4f660da46c9c86b877793f35ae46c9fd12ad457ac9c1d31ea8b",
+      "value": "2.0.0-1008059@sha256:dfb3cc5fabe04243eb590b5fb95a2f47cb226553dcfde96187937ec5b3a79447",
       "notes": [
         "Candidate Scout beta Workflow Worker image - updated by version commit-back",
         "not managed by renovate"
