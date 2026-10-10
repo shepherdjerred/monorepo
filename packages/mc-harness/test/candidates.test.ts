@@ -1150,7 +1150,12 @@ describe("candidate capture and judgment evidence", () => {
       );
       const ask = vi.fn(prefersWide);
       await expect(
-        knockout(workspace.dir, { rubric: "micro", model: "stub", ask }),
+        knockout(workspace.dir, {
+          among: ["old"],
+          rubric: "micro",
+          model: "stub",
+          ask,
+        }),
       ).rejects.toThrow(/different capture/u);
       expect(ask).not.toHaveBeenCalled();
       expect(await readLog(workspace.dir)).toEqual(before);

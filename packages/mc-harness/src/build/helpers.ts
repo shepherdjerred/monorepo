@@ -21,6 +21,7 @@ import {
   encodePng,
   Renderer,
   wantsHero,
+  withoutSky,
 } from "@shepherdjerred/mc-build/render/index.ts";
 import type { Image } from "@shepherdjerred/mc-build/render/raster.ts";
 import type { RenderMode } from "@shepherdjerred/mc-build/render/sheet.ts";
@@ -231,12 +232,17 @@ const LOOKS: Record<LookView, LookRenderer> = {
     [
       "hero",
       `${ctx.name}-hero.png`,
-      await ctx.renderer.view(ctx.subject, "iso-front-right", 1400, {
-        mode: ctx.mode,
-        ...(ctx.grid === undefined ? {} : { grid: ctx.grid }),
-        lightFrom: ctx.lightFrom,
-        lightOrigin: ctx.lightOrigin,
-      }),
+      await ctx.renderer.view(
+        withoutSky(ctx.subject),
+        "iso-front-right",
+        1400,
+        {
+          mode: ctx.mode,
+          ...(ctx.grid === undefined ? {} : { grid: ctx.grid }),
+          lightFrom: ctx.lightFrom,
+          lightOrigin: ctx.lightOrigin,
+        },
+      ),
     ],
   ],
   pov: async (ctx) => [

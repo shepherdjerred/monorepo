@@ -50,6 +50,12 @@ export async function readSidecar(
   if (sidecar.name !== name) {
     throw new Error(`render sidecar "${name}" contains name "${sidecar.name}"`);
   }
+  const program = path.join(BUILD_FILES.rendersDir, `${name}.build.ts`);
+  if (sidecar.program !== null && sidecar.program !== program) {
+    throw new Error(
+      `render sidecar "${name}" must reference program "${program}"`,
+    );
+  }
   return sidecar;
 }
 

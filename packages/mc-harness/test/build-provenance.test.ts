@@ -148,6 +148,52 @@ describe("capture and run provenance", () => {
 });
 
 describe("reused critique identity", () => {
+  it.each(["../../outside.ts", "/tmp/outside.ts", "renders/other.build.ts"])(
+    "rejects program path %s before reading or reviewing it",
+    async (program) => {
+      const workspace = await programBuild(
+        `path-${program.startsWith("/") ? "absolute" : program.startsWith("..") ? "parent" : "other"}`,
+      );
+      await renderLooks(
+        workspace,
+        new BlockGrid({ x: 2, y: 2, z: 2 }, "minecraft:stone"),
+        "look",
+        {
+          source: "compiled",
+          views: ["sheet"],
+        },
+      );
+      const file = workspace.file("renders/look.json");
+      const sidecar: unknown = await Bun.file(file).json();
+      if (typeof sidecar !== "object" || sidecar === null)
+        throw new Error("invalid fixture");
+      const corrupt = JSON.stringify({ ...sidecar, program });
+      await Bun.write(file, corrupt);
+      const journal = await readLog(workspace.dir);
+      const ask = vi.fn(() =>
+        Promise.reject(new Error("unexpected visual call")),
+      );
+      const askCode = vi.fn(() => Promise.resolve({ suggestions: [] }));
+      for (const stage of ["code", "both"] as const) {
+        await expect(
+          critiqueBuild(workspace.dir, {
+            render: "look",
+            rubric: "micro",
+            model: "stub",
+            stage,
+            ask,
+            askCode,
+          }),
+        ).rejects.toThrow(/must reference program/u);
+      }
+      expect(ask).not.toHaveBeenCalled();
+      expect(askCode).not.toHaveBeenCalled();
+      expect(await readLog(workspace.dir)).toEqual(journal);
+      expect(await Bun.file(file).text()).toBe(corrupt);
+    },
+    60_000,
+  );
+
   it.each(["render", "gridHash", "rubric", "total", "max"] as const)(
     "rejects a mismatched %s before code review",
     async (field) => {

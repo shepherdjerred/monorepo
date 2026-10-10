@@ -4,7 +4,11 @@ import path from "node:path";
 import { afterAll, describe, expect, it, vi } from "vitest";
 import { BlockGrid } from "@shepherdjerred/mc-build/core/grid.ts";
 import { ensureAssets } from "@shepherdjerred/mc-build/render/assets.ts";
-import { Renderer, encodePng } from "@shepherdjerred/mc-build/render/index.ts";
+import {
+  Renderer,
+  encodePng,
+  withoutSky,
+} from "@shepherdjerred/mc-build/render/index.ts";
 import { cropGrid, cutGrid } from "@shepherdjerred/mc-build/render/cut.ts";
 import { renderLooks } from "#build/helpers.ts";
 import { readLog } from "#build/build-log.ts";
@@ -21,6 +25,87 @@ afterAll(async () => {
   await rm(temp, { recursive: true, force: true });
 });
 describe("render and candidate evidence", () => {
+  it.each(["value", "relief", "light"] as const)(
+    "frames explicitly requested %s hero views without empty headroom",
+    async (mode) => {
+      const workspace = await flatSiteBuild(
+        path.join(temp, `hero-${mode}`),
+        `hero-${mode}`,
+      );
+      await workspace.writeOplog({ version: 1, ops: [] });
+      const whole = new BlockGrid({ x: 10, y: 128, z: 10 });
+      for (let x = 0; x < 10; x += 1)
+        for (let z = 0; z < 10; z += 1) {
+          whole.set(x, 0, z, "minecraft:stone");
+          whole.set(x, 4, z, "minecraft:oak_planks");
+        }
+      whole.set(5, 1, 5, "minecraft:lantern[hanging=false,waterlogged=false]");
+      const result = await renderLooks(workspace, whole, "hero", {
+        source: "compiled",
+        mode,
+        views: ["hero"],
+      });
+      const renderer = new Renderer(await ensureAssets());
+      const expected = await renderer.view(
+        withoutSky(whole),
+        "iso-front-right",
+        1400,
+        { mode, lightFrom: whole },
+      );
+      const wrong = await renderer.view(whole, "iso-front-right", 1400, {
+        mode,
+        lightFrom: whole,
+      });
+      const file = result["hero"];
+      if (file === undefined) throw new Error("missing hero");
+      const actual = Buffer.from(await Bun.file(file).arrayBuffer());
+      expect(actual.equals(await encodePng(expected))).toBe(true);
+      expect(actual.equals(await encodePng(wrong))).toBe(false);
+    },
+    60_000,
+  );
+
+  it("defaults knockout to the current capture while retaining historical candidates", async () => {
+    const workspace = await flatSiteBuild(
+      path.join(temp, "knockout-current"),
+      "knockout-current",
+    );
+    await workspace.writeOplog({ version: 1, ops: [] });
+    await saveCandidate(workspace.dir, "old");
+    const manifest = await workspace.manifest();
+    if (manifest.site === undefined) throw new Error("missing site");
+    await workspace.writeManifest({
+      ...manifest,
+      site: { ...manifest.site, siteHash: "new" },
+    });
+    await saveCandidate(workspace.dir, "current");
+    await saveCandidate(workspace.dir, "challenger");
+    const ask = vi.fn(() =>
+      Promise.resolve({
+        winner: "first" as const,
+        confidence: 1,
+        reasons: ["equal fixture"],
+      }),
+    );
+    const result = await knockout(workspace.dir, {
+      rubric: "micro",
+      model: "stub",
+      ask,
+    });
+    expect(result.bouts).toHaveLength(1);
+    const [bout] = result.bouts;
+    if (bout === undefined) throw new Error("missing bout");
+    expect(
+      [bout.incumbent, bout.challenger].toSorted((a, b) => a.localeCompare(b)),
+    ).toEqual(["challenger", "current"]);
+    expect(ask).toHaveBeenCalledTimes(2);
+    const listed = await listCandidates(workspace.dir);
+    expect(listed.map(({ name }) => name)).toContain("old");
+    await expect(readCandidate(workspace.dir, "old")).rejects.toThrow(
+      /different capture/u,
+    );
+  }, 60_000);
+
   it("keeps an outside lamp when cropping and cutting a light view", async () => {
     const workspace = await flatSiteBuild(
       path.join(temp, "crop-whole-light"),

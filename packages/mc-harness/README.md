@@ -242,10 +242,12 @@ survey`, `--grid n` coordinate lines, `--floor y` and `--section z` cuts
   a programless render or candidate. Missing textures fail before images or
   sidecars are written. Cropped light views retain the whole build's light
   field and crop origin, including lamps and openings outside the window.
+  Explicit hero views trim empty headroom while keeping that lighting context.
   Invalid sidecars also fail instead of selecting an
   older render, and critique verifies the saved schematic against its hash
   before scoring or updating the journal. Code-only critique also validates
   the reused record's render, grid, rubric and score against its journal entry.
+  A sidecar may reference only its own `renders/<name>.build.ts` program artifact.
 - **Journal.** Every command that changes or looks at the build appends a
   line to `journal.jsonl` (compile, run, render, lint, critique, candidate,
   accept/reject, promote, resume) with the iteration it belongs to (one per
@@ -285,8 +287,9 @@ pick n | knockout [--among a,b] [--rubric] [--model]`) keep versions of
   directory fail listing, resume and judging.
   Candidates record the captured site's hash, world and bounds; picking or
   judging one against another capture fails. Recapturing clears the incumbent
-  and preserves old candidates; use `--among` to select candidates saved for
-  the new capture. Pair records reference archived, content-addressed judge
+  and preserves old candidates for inspection. The default tournament selects
+  only candidates for the current capture; explicitly naming an old candidate
+  still fails. Pair records reference archived, content-addressed judge
   images, so replacing a candidate never changes earlier judgment evidence.
   Each capture also marks the append-only journal; trajectory grading counts
   only renders, critiques and decisions after the latest capture.

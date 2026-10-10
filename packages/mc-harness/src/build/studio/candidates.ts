@@ -19,6 +19,7 @@ import {
   CANDIDATE_FILES,
   CandidateSchema,
   type Candidate,
+  type BuildManifest,
   type JudgeRubric,
 } from "#protocol/build.ts";
 import { appendLog, iterationOf, readLog } from "#build/build-log.ts";
@@ -170,6 +171,20 @@ export async function saveCandidate(
   return candidate;
 }
 
+export function candidateMatchesCapture(
+  candidate: Candidate,
+  workspace: BuildWorkspace,
+  manifest: BuildManifest,
+): boolean {
+  return (
+    manifest.site !== undefined &&
+    isDeepStrictEqual(candidate.capture, {
+      siteHash: manifest.site.siteHash,
+      box: workspace.siteBox(manifest),
+    })
+  );
+}
+
 export async function readCandidate(
   dir: string,
   name: string,
@@ -185,13 +200,7 @@ export async function readCandidate(
   }
   const candidate = await candidateMetadata(workspace, name);
   const manifest = await workspace.manifest();
-  if (
-    manifest.site === undefined ||
-    !isDeepStrictEqual(candidate.capture, {
-      siteHash: manifest.site.siteHash,
-      box: workspace.siteBox(manifest),
-    })
-  ) {
+  if (!candidateMatchesCapture(candidate, workspace, manifest)) {
     throw new Error(
       `candidate "${name}" belongs to a different capture; save a candidate for the current site before picking or judging it`,
     );

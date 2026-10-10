@@ -18,6 +18,7 @@ import type { BuildManifest, JudgeRubric } from "#protocol/build.ts";
 import { appendLog } from "#build/build-log.ts";
 import {
   candidateGrid,
+  candidateMatchesCapture,
   candidateScore,
   listCandidates,
   readCandidate,
@@ -224,13 +225,18 @@ export async function knockout(
   const workspace = new BuildWorkspace(dir);
   let manifest = await workspace.manifest();
   const candidates = await listCandidates(dir);
-  const saved = candidates.map((candidate) => candidate.name);
-  const pool = options.among ?? saved;
+  const saved = new Set(candidates.map((candidate) => candidate.name));
+  const current = candidates
+    .filter((candidate) =>
+      candidateMatchesCapture(candidate, workspace, manifest),
+    )
+    .map((candidate) => candidate.name);
+  const pool = options.among ?? current;
   if (new Set(pool).size !== pool.length) {
     throw new Error("knockout candidate names must be unique");
   }
   for (const name of pool) {
-    if (!saved.includes(name)) {
+    if (!saved.has(name)) {
       throw new Error(`no candidate "${name}" saved in ${workspace.dir}`);
     }
   }
@@ -256,7 +262,7 @@ export async function knockout(
       )
       .digest("hex");
   const previous = matchingCheckpoint(manifest.knockout, fingerprintFor);
-  const initial = seeding(pool, saved, manifest.best?.candidate);
+  const initial = seeding(pool, current, manifest.best?.candidate);
   const participants = previous?.participants ?? [
     ...new Set([initial.incumbent, ...pool]),
   ];
