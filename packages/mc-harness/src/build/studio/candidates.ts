@@ -32,7 +32,7 @@ import {
 } from "#build/sidecar.ts";
 import { compiledGrid } from "#build/sources.ts";
 import { BuildWorkspace } from "#build/workspace.ts";
-import { readCritiqueRecord } from "./critique-record.ts";
+import { critiqueForGrid } from "./critique-record.ts";
 import { installWorkingFiles } from "./working-files.ts";
 
 export function candidateDir(workspace: BuildWorkspace, name: string): string {
@@ -90,19 +90,8 @@ async function latestCritique(
   hash: string,
   rubric?: JudgeRubric,
 ): Promise<Candidate["score"]> {
-  const journal = await readLog(dir);
-  for (let index = journal.length - 1; index >= 0; index -= 1) {
-    const entry = journal[index];
-    if (
-      entry?.kind === "critique" &&
-      entry.gridHash === hash &&
-      (rubric === undefined || entry.rubric === rubric)
-    ) {
-      await readCritiqueRecord(new BuildWorkspace(dir), entry);
-      return { rubric: entry.rubric, total: entry.total };
-    }
-  }
-  return null;
+  const entry = await critiqueForGrid(new BuildWorkspace(dir), hash, rubric);
+  return entry === null ? null : { rubric: entry.rubric, total: entry.total };
 }
 
 /**
@@ -114,9 +103,26 @@ export async function candidateScore(
   name: string,
   rubric: JudgeRubric,
 ): Promise<number | null> {
+  const evidence = await candidateEvidence(dir, name, rubric);
+  return evidence.score;
+}
+
+export async function candidateEvidence(
+  dir: string,
+  name: string,
+  rubric: JudgeRubric,
+) {
   const candidate = await readCandidate(dir, name);
-  const latest = await latestCritique(dir, candidate.gridHash, rubric);
-  return latest === null ? null : latest.total;
+  const critique = await critiqueForGrid(
+    new BuildWorkspace(dir),
+    candidate.gridHash,
+    rubric,
+  );
+  return {
+    gridHash: candidate.gridHash,
+    critique: critique?.file ?? null,
+    score: critique?.total ?? null,
+  };
 }
 
 /** Saves the current program and op log, compiled offline, as `candidates/<name>/`. */

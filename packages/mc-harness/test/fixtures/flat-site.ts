@@ -4,7 +4,19 @@ import { writeSchematic } from "@shepherdjerred/mc-build/core/schem.ts";
 import { loadRegistry } from "@shepherdjerred/mc-build/registry/registry.ts";
 import { gridHash } from "@shepherdjerred/mc-build/core/site.ts";
 import { BuildWorkspace } from "#build/workspace.ts";
-import { BUILD_FILES } from "#protocol/build.ts";
+import { BUILD_FILES, type Op } from "#protocol/build.ts";
+
+/** One reproducible edit of the captured floor for distinct candidate grids. */
+export function clearFloorOp(index: number): Op {
+  return {
+    kind: "we",
+    command: "//set air",
+    world: "world",
+    pos1: { x: 100 + index, y: 64, z: 100 },
+    pos2: { x: 100 + index, y: 64, z: 100 },
+    source: "manual",
+  };
+}
 
 export async function flatSiteBuild(
   dir: string,

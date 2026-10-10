@@ -1,6 +1,7 @@
 import { mkdtemp, rm, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { createHash } from "node:crypto";
 import { afterAll, describe, expect, it } from "vitest";
 import {
   acceptedNonDecreasing,
@@ -50,6 +51,9 @@ const accept = (
   file: null,
   rubric,
   score,
+  gridHash: `grid-${iteration.toString()}`,
+  critique:
+    score === null ? null : `judge/critique-${iteration.toString()}.json`,
 });
 const reject = (iteration: number): BuildLogEntry => ({
   kind: "reject",
@@ -84,6 +88,9 @@ async function writeEvidence(dir: string, entry: BuildLogEntry) {
     max: entry.max,
     lowest: entry.lowest,
     sheet,
+    sheetHash: createHash("sha256")
+      .update(new Uint8Array([1, 2, 3]))
+      .digest("hex"),
     axes: Object.fromEntries(
       rubricAxisIds(entry.rubric).map((id, index) => [
         id,
@@ -109,6 +116,9 @@ describe("trajectory record validation", () => {
     "max",
     "lowest",
     "sheet",
+    "sheet-bytes",
+    "sheet-empty",
+    "sheet-hash",
     "escape",
   ])(
     "rejects %s critique evidence before grading or publishing totals",
@@ -134,6 +144,18 @@ describe("trajectory record validation", () => {
           break;
         case "sheet":
           await rm(path.join(dir, record.sheet));
+          break;
+        case "sheet-bytes":
+          await Bun.write(path.join(dir, record.sheet), "changed bytes");
+          break;
+        case "sheet-empty":
+          await Bun.write(path.join(dir, record.sheet), new Uint8Array());
+          break;
+        case "sheet-hash":
+          await Bun.write(
+            file,
+            JSON.stringify({ ...record, sheetHash: "0".repeat(64) }),
+          );
           break;
         case "escape": {
           const outside = await mkdtemp(
@@ -348,6 +370,8 @@ describe("trajectory", () => {
       file: null,
       rubric: "micro",
       score: 30,
+      gridHash: "grid-1",
+      critique: "judge/critique-1.json",
     };
     const entries = [
       render(1),

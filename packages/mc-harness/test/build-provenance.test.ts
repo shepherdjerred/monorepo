@@ -34,7 +34,7 @@ import {
   JudgeCritiqueRecordSchema,
   type Op,
 } from "#protocol/build.ts";
-import { flatSiteBuild } from "./fixtures/flat-site.ts";
+import { clearFloorOp, flatSiteBuild } from "./fixtures/flat-site.ts";
 import { readJournal } from "#evals/grade/trajectory.ts";
 
 vi.mock("@shepherdjerred/mc-build/render/assets.ts", async () => {
@@ -784,16 +784,7 @@ describe("tournament score preflight", () => {
       for (const [index, name] of ["a", "b", "c"].entries()) {
         await workspace.writeOplog({
           version: 1,
-          ops: [
-            {
-              kind: "we",
-              command: "//set air",
-              world: "world",
-              pos1: { x: 100 + index, y: 64, z: 100 },
-              pos2: { x: 100 + index, y: 64, z: 100 },
-              source: "manual",
-            },
-          ],
+          ops: [clearFloorOp(index)],
         });
         await saveCandidate(workspace.dir, name);
         if (name === candidate) {

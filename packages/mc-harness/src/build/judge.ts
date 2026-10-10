@@ -454,8 +454,10 @@ export async function writeJudgeRecord(
   const judgeDir = path.join(dir, BUILD_FILES.judgeDir);
   await mkdir(judgeDir, { recursive: true });
   const stamp = record.at.replaceAll(/[:.]/gu, "-");
-  const file = path.join(judgeDir, `${record.kind}-${stamp}.json`);
-  await Bun.write(file, `${JSON.stringify(record, null, 2)}\n`);
+  const content = `${JSON.stringify(record, null, 2)}\n`;
+  const hash = createHash("sha256").update(content).digest("hex");
+  const file = path.join(judgeDir, `${record.kind}-${stamp}-${hash}.json`);
+  await Bun.write(file, content);
   return file;
 }
 

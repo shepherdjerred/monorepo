@@ -191,6 +191,9 @@ it.each(["a", "b", "render", "sheet"] as const)(
                   kind: "critique",
                   render: "look",
                   sheet: file,
+                  sheetHash: createHash("sha256")
+                    .update("own input")
+                    .digest("hex"),
                   gridHash: "abc",
                   lowest: "depth",
                   suggestions: [],

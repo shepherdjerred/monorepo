@@ -45,7 +45,7 @@ async function fixture(
     versus: kind === "accept" ? dropped : kept,
     file: "judge/pair.json",
     rubric: "micro",
-    score: 20,
+    score: null,
   };
   await Bun.write(path.join(dir, "judge/pair.json"), JSON.stringify(record));
   await Bun.write(path.join(dir, "journal.jsonl"), JSON.stringify(entry));

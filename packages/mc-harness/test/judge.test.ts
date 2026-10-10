@@ -22,6 +22,7 @@ import {
   RUBRICS,
   scoreAbsolute,
   scoreRender,
+  writeJudgeRecord,
   type AskJudge,
   type AskScore,
   type PairVerdict,
@@ -31,6 +32,37 @@ import { JudgeRecordSchema } from "#protocol/build.ts";
 
 const A = { data: new Uint8Array([1]), mediaType: "image/png" as const };
 const B = { data: new Uint8Array([2]), mediaType: "image/png" as const };
+
+it("preserves distinct verdicts written at the same timestamp", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "judge-same-time-"));
+  try {
+    const record = {
+      kind: "pair" as const,
+      at: "2026-10-10T00:00:00Z",
+      model: "stub",
+      rubric: "micro" as const,
+      judge: "fixture",
+      a: "a.png",
+      b: "b.png",
+      winner: "a" as const,
+      confidence: 1,
+      agreed: true,
+      reasons: [],
+    };
+    const other = { ...record, b: "c.png" };
+    const [first, second] = await Promise.all([
+      writeJudgeRecord(dir, record),
+      writeJudgeRecord(dir, other),
+    ]);
+    if (first === undefined || second === undefined)
+      throw new Error("missing records");
+    expect(first).not.toBe(second);
+    expect(await Bun.file(first).json()).toEqual(record);
+    expect(await Bun.file(second).json()).toEqual(other);
+  } finally {
+    await rm(dir, { recursive: true });
+  }
+});
 
 /** A stub judge that always prefers the image whose first byte is `prefer`. */
 function stubJudge(prefer: number | "first"): AskJudge {

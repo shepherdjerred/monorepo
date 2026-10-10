@@ -19,7 +19,7 @@ import { appendLog } from "#build/build-log.ts";
 import {
   candidateGrid,
   candidateMatchesCapture,
-  candidateScore,
+  candidateEvidence,
   listCandidates,
   readCandidate,
   validateCandidate,
@@ -32,6 +32,7 @@ import {
   type AskJudge,
 } from "#build/judge.ts";
 import { BuildWorkspace } from "#build/workspace.ts";
+import { defaultPool } from "./default-pool.ts";
 
 export type Bout = {
   incumbent: string;
@@ -48,9 +49,10 @@ export type KnockoutResult = {
 };
 
 type Sheet = { data: Uint8Array; mediaType: "image/png"; file: string };
-type Scores = ReadonlyMap<string, number | null>;
+type ScoreEvidence = Awaited<ReturnType<typeof candidateEvidence>>;
+type Scores = ReadonlyMap<string, ScoreEvidence>;
 
-function scoreOf(scores: Scores, name: string): number | null {
+function scoreOf(scores: Scores, name: string): ScoreEvidence {
   const score = scores.get(name);
   if (score === undefined)
     throw new Error(`candidate score was not validated: ${name}`);
@@ -173,6 +175,10 @@ async function bout(
     judge: judgeFingerprint(options.rubric),
     a: path.relative(path.resolve(dir), sheetOf(pair.sheets, incumbent).file),
     b: path.relative(path.resolve(dir), sheetOf(pair.sheets, challenger).file),
+    grids: {
+      a: scoreOf(options.scores, incumbent).gridHash,
+      b: scoreOf(options.scores, challenger).gridHash,
+    },
     winner: verdict.winner,
     confidence: verdict.confidence,
     agreed: verdict.agreed,
@@ -189,7 +195,7 @@ async function bout(
     versus: dropped,
     file,
     rubric: options.rubric,
-    score: scoreOf(options.scores, kept),
+    ...scoreOf(options.scores, kept),
   });
   await appendLog(dir, {
     kind: "reject",
@@ -197,7 +203,7 @@ async function bout(
     versus: kept,
     file,
     rubric: options.rubric,
-    score: scoreOf(options.scores, dropped),
+    ...scoreOf(options.scores, dropped),
   });
   return {
     incumbent,
@@ -241,12 +247,12 @@ export async function knockout(
   let manifest = await workspace.manifest();
   const candidates = await listCandidates(dir);
   const saved = new Set(candidates.map((candidate) => candidate.name));
-  const current = candidates
-    .filter((candidate) =>
-      candidateMatchesCapture(candidate, workspace, manifest),
-    )
-    .map((candidate) => candidate.name);
-  const pool = options.among ?? current;
+  const currentCandidates = candidates.filter((candidate) =>
+    candidateMatchesCapture(candidate, workspace, manifest),
+  );
+  const current = currentCandidates.map((candidate) => candidate.name);
+  const pool =
+    options.among ?? (await defaultPool(workspace, currentCandidates, options));
   if (new Set(pool).size !== pool.length) {
     throw new Error("knockout candidate names must be unique");
   }
@@ -286,17 +292,17 @@ export async function knockout(
     previous === undefined
       ? initial
       : { incumbent: previous.incumbent, challengers: previous.pending };
-  const scores = new Map<string, number | null>();
+  const scores = new Map<string, ScoreEvidence>();
   for (const name of participants) {
     await validateCandidate(dir, name);
-    scores.set(name, await candidateScore(dir, name, options.rubric));
+    scores.set(name, await candidateEvidence(dir, name, options.rubric));
   }
   const sheets = await sheetsFor(
     dir,
     [seeds.incumbent, ...seeds.challengers],
     options.rubric,
   );
-  const ask = options.ask ?? llmJudge(options.model, options.rubric);
+  let ask = options.ask;
   const bouts: Bout[] = [];
   let incumbent = seeds.incumbent;
   if (seeds.challengers.length > 0) {
@@ -312,6 +318,7 @@ export async function knockout(
     await workspace.writeManifest(manifest);
   }
   for (const [index, challenger] of seeds.challengers.entries()) {
+    ask ??= llmJudge(options.model, options.rubric);
     const result = await bout(
       dir,
       { incumbent, challenger, sheets },
@@ -328,7 +335,7 @@ export async function knockout(
     };
     const best = await persistBest(workspace, manifest, incumbent, {
       rubric: options.rubric,
-      score: scoreOf(scores, incumbent),
+      score: scoreOf(scores, incumbent).score,
       progress,
     });
     manifest = {
@@ -339,7 +346,7 @@ export async function knockout(
   }
   const best = await persistBest(workspace, manifest, incumbent, {
     rubric: options.rubric,
-    score: scoreOf(scores, incumbent),
+    score: scoreOf(scores, incumbent).score,
   });
   if (seeds.challengers.length === 0 && manifest.best !== best) {
     // No bout produces an accept entry when the pool contains only the incumbent.
@@ -349,7 +356,7 @@ export async function knockout(
       versus: null,
       file: null,
       rubric: options.rubric,
-      score: best.score,
+      ...scoreOf(scores, incumbent),
     });
   }
   if (manifest.knockout !== undefined) {

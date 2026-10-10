@@ -10,6 +10,7 @@ import { readLog } from "#build/build-log.ts";
 import { BuildWorkspace } from "#build/workspace.ts";
 import { readCritiqueRecord } from "#build/studio/critique-record.ts";
 import { readPairRecord } from "#build/studio/pair-record.ts";
+import { outcomeCritique } from "#build/studio/score-evidence.ts";
 import {
   BUILD_FILES,
   type BuildLogEntry,
@@ -85,6 +86,11 @@ export function acceptedNonDecreasing(
   for (const entry of currentCapture(entries)) {
     if (entry.kind !== "accept" || entry.rubric !== rubric) continue;
     if (entry.score === null) return false;
+    try {
+      outcomeCritique(entries, entry);
+    } catch {
+      return false;
+    }
     if (last !== null && entry.score < last) return false;
     last = entry.score;
   }

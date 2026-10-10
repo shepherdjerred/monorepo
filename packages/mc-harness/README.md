@@ -269,6 +269,8 @@ survey`, `--grid n` coordinate lines, `--floor y` and `--section z` cuts
   the reused record's render, grid, rubric and score against its journal entry.
   Saved critique evidence must contain exactly the rubric's axes, their summed
   total and maximum, and the first lowest axis in rubric order.
+  Critique images carry the checksum of the bytes scored by the visual model;
+  code-only reuse, grading and archival reject changed images.
   A sidecar may reference only its own `renders/<name>.build.ts` program artifact.
   Run journals may reference only `schematics/program-<hex-digest>.build.ts`;
   program reads reject symlinks outside the build. Resume's latest render also
@@ -287,7 +289,7 @@ survey`, `--grid n` coordinate lines, `--floor y` and `--section z` cuts
   up to five notes, then (with `build.ts`) a second call reviews the
   program against those scores and lint and returns up to five ranked
   changes starting from the lowest axis. The result is written as
-  `judge/critique-<ts>.{png,json}`, logged, and copied into the render's
+  `judge/critique-<ts>-<hash>.{png,json}`, logged, and copied into the render's
   sidecar. Without a model credential, `--scores "axis=n,…,aesthetic=n"
 [--note "…"]` records scores given by eye under the model name `by-eye`
   (visual stage only), so the journal still shows the critique.
@@ -304,7 +306,10 @@ pick n | knockout [--among a,b] [--rubric] [--model]`) keep versions of
   before rendering or model calls; accepted and rejected scores use that same
   validated snapshot. Every bout is written under `judge/` and
   logged as an accept and a reject, and the winner becomes `best` after each
-  completed bout, even if a later model call fails. `pick`
+  completed bout, even if a later model call fails. The pair record
+  records both candidate grid hashes. Each scored outcome references its exact
+  grid and critique record; grading revalidates those references and totals.
+  `pick`
   validates the saved grid, op log and program before staging the working
   version, including replaying referenced schematics and matching the saved
   grid hash. Saved programs carry their own checksum, so removing a compile
@@ -313,9 +318,16 @@ pick n | knockout [--among a,b] [--rubric] [--model]`) keep versions of
   if rollback itself fails, the error identifies retained recovery files.
   Retrying an interrupted tournament with the same pool, candidate versions,
   rubric and model resumes its remaining challengers without rejudging earlier
-  bouts. Changing those inputs starts a new tournament. Saving candidates
-  outside an explicit `--among` pool does not reset its checkpoint; the
+  bouts. Changing those inputs starts a new tournament. The default iteration
+  loop challenges only grids not already eliminated
+  by the same model, rubric and judging policy. Replacing a loser's grid makes
+  it eligible again; `--among` requests explicit rematches.
+  Saving candidates outside an explicit `--among` pool does not reset its checkpoint; the
   original incumbent remains part of its fingerprint even after defeat.
+  Legacy scored outcomes without critique identity and critique records without
+  image checksums cannot prove their scores; start a new capture and critique
+  before using them as graded evidence. Unbound legacy tournament decisions
+  require an explicit `--among` rematch.
   Incomplete candidate directories and metadata names that disagree with their
   directory fail listing, resume and judging.
   Forced saves stage every replacement artifact before switching directories;

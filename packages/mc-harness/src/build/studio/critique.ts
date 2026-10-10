@@ -5,10 +5,11 @@
  * stage is a second call that gets the scores, lint and `build.ts`, so what
  * the picture showed decides what the program review looks for.
  *
- * Everything persists: `judge/critique-<ts>.{png,json}`, the journal, and
+ * Everything persists: `judge/critique-<ts>-<hash>.{png,json}`, the journal, and
  * the render's sidecar `scores`, so `resume` and `candidate` can read them.
  */
 import path from "node:path";
+import { createHash } from "node:crypto";
 import { generateValidatedObject } from "@shepherdjerred/llm-runtime";
 import { z } from "zod";
 import type { BlockGrid } from "@shepherdjerred/mc-build/core/grid.ts";
@@ -253,7 +254,12 @@ async function reviewProgram(
 }
 
 /** What the critic saw and said: the judge sheet, the scores, and who gave them. */
-type Visual = { sheet: string; scores: AbsoluteScores; model: string };
+type Visual = {
+  sheet: string;
+  sheetHash: string;
+  scores: AbsoluteScores;
+  model: string;
+};
 
 /** Draws the judge sheet of the render and scores it, by model or by eye. */
 async function scoreVisual(
@@ -269,11 +275,16 @@ async function scoreVisual(
   });
   assertTexturesPresent(renderer, `critique sheet (${options.rubric})`);
   const image = await encodePng(judgeSheet);
-  const sheet = path.join(BUILD_FILES.judgeDir, `critique-${stamp}.png`);
+  const sheetHash = createHash("sha256").update(image).digest("hex");
+  const sheet = path.join(
+    BUILD_FILES.judgeDir,
+    `critique-${stamp}-${sheetHash}.png`,
+  );
   await Bun.write(workspace.file(sheet), image);
   if (options.byEye !== undefined) {
     return {
       sheet,
+      sheetHash,
       scores: byEyeScores(options.rubric, options.byEye),
       model: BY_EYE,
     };
@@ -283,7 +294,7 @@ async function scoreVisual(
     options.ask ?? llmScorer(options.model, options.rubric),
     { rubric: options.rubric, model: options.model },
   );
-  return { sheet, scores, model: options.model };
+  return { sheet, sheetHash, scores, model: options.model };
 }
 
 /**
@@ -310,6 +321,7 @@ async function reuseVisual(
     const record = await readCritiqueRecord(workspace, entry);
     return {
       sheet: record.sheet,
+      sheetHash: record.sheetHash,
       scores: {
         rubric: record.rubric,
         model: record.visualModel ?? record.model,
@@ -359,7 +371,7 @@ export async function critiqueBuild(
     );
   }
   const stamp = at.replaceAll(/[:.]/gu, "-");
-  const { sheet, scores, model } =
+  const { sheet, sheetHash, scores, model } =
     stage === "code"
       ? await reuseVisual(workspace, journal, {
           name,
@@ -390,6 +402,7 @@ export async function critiqueBuild(
     rubric: options.rubric,
     render: name,
     sheet,
+    sheetHash,
     gridHash: hash,
     axes: scores.axes,
     overallAesthetic: scores.overallAesthetic,

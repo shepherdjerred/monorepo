@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { JudgePairRecordSchema, type BuildLogEntry } from "#protocol/build.ts";
 import { buildArtifactPath } from "#build/sidecar.ts";
 import type { BuildWorkspace } from "#build/workspace.ts";
+import { readOutcomeScore } from "./score-evidence.ts";
 
 /** Bind an immutable tournament image to its candidate and exact bytes. */
 async function validateInput(
@@ -24,6 +25,7 @@ export async function readPairRecord(
   workspace: BuildWorkspace,
   entry: Extract<BuildLogEntry, { kind: "accept" | "reject" }>,
 ) {
+  await readOutcomeScore(workspace, entry);
   if (entry.file === null) return null;
   const record = JudgePairRecordSchema.parse(
     await Bun.file(await buildArtifactPath(workspace, entry.file)).json(),
@@ -40,6 +42,13 @@ export async function readPairRecord(
   // A tie keeps the first (incumbent), matching the tournament writer.
   const kept = record.winner === "b" ? record.b : record.a;
   const dropped = record.winner === "b" ? record.a : record.b;
+  const keptHash = record.winner === "b" ? record.grids?.b : record.grids?.a;
+  const droppedHash = record.winner === "b" ? record.grids?.a : record.grids?.b;
+  if (
+    entry.gridHash !== undefined &&
+    entry.gridHash !== (entry.kind === "accept" ? keptHash : droppedHash)
+  )
+    throw new Error("pair grid does not match outcome score evidence");
   await validateInput(
     workspace,
     entry.kind === "accept" ? kept : dropped,

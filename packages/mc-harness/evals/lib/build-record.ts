@@ -28,11 +28,16 @@ async function portableRecord(
   },
 ): Promise<JudgeRecord> {
   const { source, destination, kept, root } = options;
-  const input = async (file: string): Promise<string> => {
+  const input = async (
+    file: string,
+    expectedHash?: string,
+  ): Promise<string> => {
     const absolute = await allowedFile(path.resolve(source, file), root);
     const bytes = await Bun.file(absolute).bytes();
     const relative = path.relative(path.resolve(source), absolute);
     const hash = createHash("sha256").update(bytes).digest("hex");
+    if (expectedHash !== undefined && hash !== expectedHash)
+      throw new Error(`build record input hash does not match: ${file}`);
     const archived =
       path.dirname(relative) === "judge"
         ? relative
@@ -48,7 +53,7 @@ async function portableRecord(
     case "absolute":
       return { ...record, render: await input(record.render) };
     case "critique":
-      return { ...record, sheet: await input(record.sheet) };
+      return { ...record, sheet: await input(record.sheet, record.sheetHash) };
   }
 }
 

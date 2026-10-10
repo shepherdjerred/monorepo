@@ -28,7 +28,7 @@ export const BUILD_FILES = {
   expectedParts: "expected-parts",
   schematicsDir: "schematics",
   rendersDir: "renders",
-  /** Persisted judge verdicts: `judge/pair-<ts>.json`, `judge/absolute-<ts>.json`. */
+  /** Persisted judge verdicts: `judge/<kind>-<ts>-<hash>.json`. */
   judgeDir: "judge",
   /** Append-only record of what happened to the build, one JSON entry per line. */
   journal: "journal.jsonl",
@@ -45,6 +45,18 @@ const Iteration = z.number().int().min(0);
 
 export const JudgeRubricSchema = z.enum(["micro", "map"]);
 export type JudgeRubric = z.infer<typeof JudgeRubricSchema>;
+
+const outcomeFields = {
+  at: Iso,
+  iteration: Iteration,
+  candidate: z.string(),
+  file: z.string().nullable(),
+  rubric: JudgeRubricSchema,
+  /** Total from the referenced critique of the exact grid, or null when unscored. */
+  score: z.number().int().nullable(),
+  gridHash: z.string().optional(),
+  critique: z.string().nullable().optional(),
+};
 
 /** One line of `journal.jsonl`: what happened, when, in which iteration. */
 export const BuildLogEntrySchema = z.discriminatedUnion("kind", [
@@ -125,26 +137,14 @@ export const BuildLogEntrySchema = z.discriminatedUnion("kind", [
     name: z.string(),
   }),
   z.strictObject({
+    ...outcomeFields,
     kind: z.literal("accept"),
-    at: Iso,
-    iteration: Iteration,
-    candidate: z.string(),
     versus: z.string().nullable(),
-    file: z.string().nullable(),
-    /** The rubric the knockout ran on; `score` is a total on it. */
-    rubric: JudgeRubricSchema,
-    /** The accepted candidate's latest critique total on `rubric`, when its grid was critiqued on it. */
-    score: z.number().int().nullable(),
   }),
   z.strictObject({
+    ...outcomeFields,
     kind: z.literal("reject"),
-    at: Iso,
-    iteration: Iteration,
-    candidate: z.string(),
     versus: z.string(),
-    file: z.string().nullable(),
-    rubric: JudgeRubricSchema,
-    score: z.number().int().nullable(),
   }),
   z.strictObject({
     kind: z.literal("promote"),
@@ -208,6 +208,7 @@ export const JudgePairRecordSchema = z.strictObject({
   judge: z.string().min(1),
   a: z.string().min(1),
   b: z.string().min(1),
+  grids: z.strictObject({ a: z.string(), b: z.string() }).optional(),
   winner: z.enum(["a", "b", "tie"]),
   confidence: z.number().min(0).max(1),
   agreed: z.boolean(),
@@ -250,6 +251,7 @@ export const JudgeCritiqueRecordSchema = z.strictObject({
   render: z.string().min(1),
   /** The judge sheet the critic saw, relative to the build directory. */
   sheet: z.string().min(1),
+  sheetHash: z.string().regex(/^[a-f0-9]{64}$/u),
   gridHash: z.string(),
   axes: z.record(z.string(), judgeScore),
   overallAesthetic: judgeScore,
