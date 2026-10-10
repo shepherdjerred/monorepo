@@ -56,11 +56,12 @@ async function recoverTransaction(
   workspace: BuildWorkspace,
   staged: string,
 ): Promise<void> {
-  if (
-    (await exists(path.join(staged, COMMITTED_FILE))) ||
-    (await exists(path.join(staged, RECOVERED_FILE)))
-  ) {
-    await rm(staged, { recursive: true, force: true });
+  if (await exists(path.join(staged, COMMITTED_FILE))) {
+    await cleanupMarked(staged, COMMITTED_FILE);
+    return;
+  }
+  if (await exists(path.join(staged, RECOVERED_FILE))) {
+    await cleanupMarked(staged, RECOVERED_FILE);
     return;
   }
   const marker = Bun.file(path.join(staged, TRANSACTION_FILE));
@@ -83,6 +84,14 @@ async function recoverTransaction(
     path.join(staged, `${RECOVERED_FILE}.pending`),
     path.join(staged, RECOVERED_FILE),
   );
+  await cleanupMarked(staged, RECOVERED_FILE);
+}
+
+async function cleanupMarked(staged: string, marker: string): Promise<void> {
+  for (const entry of await readdir(staged, { withFileTypes: true }))
+    if (entry.name !== marker)
+      await rm(path.join(staged, entry.name), { recursive: true, force: true });
+  await rm(path.join(staged, marker), { force: true });
   await rm(staged, { recursive: true, force: true });
 }
 
@@ -227,6 +236,10 @@ async function publishStaged(
     }
     throw error;
   } finally {
-    if (cleanup) await rm(staged, { recursive: true, force: true });
+    if (cleanup) {
+      if (await exists(path.join(staged, COMMITTED_FILE)))
+        await cleanupMarked(staged, COMMITTED_FILE);
+      else await rm(staged, { recursive: true, force: true });
+    }
   }
 }
