@@ -422,6 +422,11 @@ export async function renderBuild(
     box,
     ...(options.target === undefined ? {} : { target: options.target }),
   });
+  if (skipped.length > 0) {
+    throw new Error(
+      `cannot render incomplete compiled evidence: ${skipped.join("; ")}; run the build and render --source expected or --source canvas`,
+    );
+  }
   const name = checkName(
     "render",
     options.name ?? `render-${Date.now().toString(36)}`,

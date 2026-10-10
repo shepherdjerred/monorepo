@@ -216,9 +216,11 @@ WorldEdit, paste and console ops, each with explicit coordinates and a
   reviewed one district at a time. `--source canvas|expected|compiled`
   picks where the blocks come from; `compiled` applies the op log's paste
   ops and the compiler's clear boxes to the captured site offline, so a DSL
-  build's `compile → render → lint` loop needs no server (other WorldEdit
-  and console ops, and rotated pastes, are listed as "not in this
-  picture"). Looks beyond the default sheet: `--mode
+  build's `compile → render → lint` loop needs no server. Compiled renders
+  reject unsupported WorldEdit or console ops, rotated pastes, and ops for
+  another world before saving evidence; run the build and render its expected
+  result or canvas instead. Offline lint still reports skipped operations.
+  Looks beyond the default sheet: `--mode
 value|normal|squint|relief|light`, `--views sheet,elevations,hero,pov,
 survey`, `--grid n` coordinate lines, `--floor y` and `--section z` cuts
   (build-local, anchor-relative), `--crop front-door|centre|nw|…` close-ups,

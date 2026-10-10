@@ -5,7 +5,7 @@ import { afterAll, describe, expect, it, vi } from "vitest";
 import { BlockGrid } from "@shepherdjerred/mc-build/core/grid.ts";
 import { RegionReadSchema } from "@shepherdjerred/mc-build/core/region-read.ts";
 import { appendLog, readLog } from "#build/build-log.ts";
-import { runBuild } from "#build/commands.ts";
+import { renderBuild, runBuild } from "#build/commands.ts";
 import { DaemonClient } from "#build/daemon-client.ts";
 import { readRenderProvenance, renderLooks } from "#build/helpers.ts";
 import { Journal } from "#build/journal.ts";
@@ -18,7 +18,11 @@ import {
 } from "#build/studio/candidates.ts";
 import { critiqueBuild } from "#build/studio/critique.ts";
 import { resumeState } from "#build/resume.ts";
-import { BUILD_FILES, JudgeCritiqueRecordSchema } from "#protocol/build.ts";
+import {
+  BUILD_FILES,
+  JudgeCritiqueRecordSchema,
+  type Op,
+} from "#protocol/build.ts";
 import { flatSiteBuild } from "./fixtures/flat-site.ts";
 
 vi.mock("@shepherdjerred/mc-build/render/assets.ts", async () => {
@@ -58,6 +62,94 @@ async function programBuild(name: string) {
   });
   return workspace;
 }
+
+describe("complete compiled render evidence", () => {
+  it.each(
+    ["plain", "looks"].flatMap((look) =>
+      ["console", "worldedit", "rotation", "world"].map((kind) => ({
+        look,
+        kind,
+      })),
+    ),
+  )(
+    "rejects incomplete $kind evidence in $look renders",
+    async ({ look, kind }) => {
+      const workspace = await flatSiteBuild(
+        path.join(temp, `partial-${kind}-${look}`),
+        `partial-${kind}-${look}`,
+      );
+      await workspace.writeOplog({ version: 1, ops: [] });
+      const env = {
+        client: new DaemonClient(),
+        journal: new Journal(workspace.file("audit")),
+        log: vi.fn(),
+      };
+      await renderBuild(env, workspace.dir, {
+        source: "compiled",
+        name: "kept",
+      });
+      const files = ["png", "schem", "json"].map((suffix) =>
+        Bun.file(workspace.file(`renders/kept.${suffix}`)),
+      );
+      const before = await Promise.all(files.map((file) => file.bytes()));
+      const journal = await readLog(workspace.dir);
+      const paste: Op = {
+        kind: "paste",
+        schematic: BUILD_FILES.siteSchematic,
+        world: kind === "world" ? "another-world" : "world",
+        at: { x: 100, y: 64, z: 100 },
+        rotate: kind === "rotation" ? 90 : 0,
+        ignoreAir: false,
+        source: "manual",
+      };
+      const op: Op =
+        kind === "console"
+          ? { kind: "command", command: "say omitted", source: "manual" }
+          : kind === "worldedit"
+            ? {
+                kind: "we",
+                world: "world",
+                command: "//set stone",
+                source: "manual",
+              }
+            : paste;
+      await workspace.writeOplog({ version: 1, ops: [op] });
+      for (const name of ["kept", "new"]) {
+        await expect(
+          renderBuild(env, workspace.dir, {
+            source: "compiled",
+            name,
+            ...(look === "looks"
+              ? { look: { views: ["sheet" as const] } }
+              : {}),
+          }),
+        ).rejects.toThrow(/cannot render incomplete compiled evidence/u);
+      }
+      expect(await Promise.all(files.map((file) => file.bytes()))).toEqual(
+        before,
+      );
+      expect(await Bun.file(workspace.file("renders/new.json")).exists()).toBe(
+        false,
+      );
+      expect(await Bun.file(workspace.file("renders/new.png")).exists()).toBe(
+        false,
+      );
+      expect(await readLog(workspace.dir)).toEqual(journal);
+      const ask = vi.fn(() => Promise.reject(new Error("unexpected judge")));
+      await expect(
+        critiqueBuild(workspace.dir, {
+          render: "new",
+          rubric: "micro",
+          model: "stub",
+          stage: "visual",
+          ask,
+        }),
+      ).rejects.toThrow();
+      expect(ask).not.toHaveBeenCalled();
+      expect(await readLog(workspace.dir)).toEqual(journal);
+    },
+  );
+});
 
 describe("capture and run provenance", () => {
   it("requires a current-capture render before implicit critique", async () => {
