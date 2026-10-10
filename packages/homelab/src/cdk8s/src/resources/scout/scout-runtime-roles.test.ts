@@ -642,7 +642,7 @@ describe("Hosted Scout roles", () => {
         );
         expect(
           z.object({ replicas: z.number() }).parse(resource.spec).replicas,
-        ).toBe(1);
+        ).toBe(stage === "prod" ? 0 : 1);
         expect(resource.metadata["annotations"]).toEqual(
           expect.objectContaining({ "argocd.argoproj.io/sync-wave": "1" }),
         );
@@ -654,39 +654,54 @@ describe("Hosted Scout roles", () => {
       ).toBe(false);
     },
   );
-  test("Beta resumes all five application roles without changing the database or Prod", () => {
-    const beta = scoutResources("beta");
-    const deployments = beta.filter(
+  test("Prod maintenance fences all five writers without stopping PostgreSQL or Beta", () => {
+    const prod = scoutResources("prod");
+    const deployments = prod.filter(
       (resource) => resource.kind === "Deployment",
     );
     expect(
       deployments.map((resource) => resource.metadata.name).sort(),
     ).toEqual([
+      "scout-prod-scout-activity-worker",
+      "scout-prod-scout-backend",
+      "scout-prod-scout-gateway",
+      "scout-prod-scout-workflow-worker-candidate",
+      "scout-prod-scout-workflow-worker-stable",
+    ]);
+    for (const resource of deployments) {
+      expect(
+        z.object({ replicas: z.number() }).parse(resource.spec).replicas,
+      ).toBe(0);
+    }
+    const database = findResource(prod, "postgresql", "scout-prod-postgresql");
+    expect(
+      z.object({ numberOfInstances: z.number() }).parse(database.spec)
+        .numberOfInstances,
+    ).toBe(1);
+    const beta = scoutResources("beta").filter(
+      (resource) => resource.kind === "Deployment",
+    );
+    expect(beta.map((resource) => resource.metadata.name).sort()).toEqual([
       "scout-beta-scout-activity-worker",
       "scout-beta-scout-backend",
       "scout-beta-scout-gateway",
       "scout-beta-scout-workflow-worker-candidate",
       "scout-beta-scout-workflow-worker-stable",
     ]);
-    for (const resource of deployments) {
+    for (const resource of beta) {
       expect(
         z.object({ replicas: z.number() }).parse(resource.spec).replicas,
       ).toBe(1);
     }
-    const database = findResource(beta, "postgresql", "scout-beta-postgresql");
+    const betaDatabase = findResource(
+      scoutResources("beta"),
+      "postgresql",
+      "scout-beta-postgresql",
+    );
     expect(
-      z.object({ numberOfInstances: z.number() }).parse(database.spec)
+      z.object({ numberOfInstances: z.number() }).parse(betaDatabase.spec)
         .numberOfInstances,
     ).toBe(1);
-    const prod = scoutResources("prod").filter(
-      (resource) => resource.kind === "Deployment",
-    );
-    expect(prod).toHaveLength(5);
-    for (const resource of prod) {
-      expect(
-        z.object({ replicas: z.number() }).parse(resource.spec).replicas,
-      ).toBe(1);
-    }
   });
   test("monitoring names the deployed gateway owner", () => {
     expect(SCOUT_GATEWAY_OWNER_BY_STAGE).toEqual(
