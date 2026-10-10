@@ -30,6 +30,7 @@ import {
   scoutClientMatchDispatchInputCodec,
   type ScoutClientMatchDispatchItem,
 } from "#src/workflow-contracts.ts";
+import { issuedWorkflowType } from "./generation-rename.ts";
 
 export const ScoutDispatchableDiscoveredMatchesSchema =
   ScoutDiscoveredMatchSchema.extend({
@@ -61,21 +62,24 @@ export function installMatchDispatchCompletionHandler(): Map<
 async function ensureClientMatchDispatcher(stage: ScoutStage): Promise<string> {
   const workflowId = scoutClientMatchDispatchWorkflowId(stage);
   try {
-    await startChild(SCOUT_WORKFLOW_NAMES.clientMatchDispatch, {
-      workflowId,
-      workflowIdReusePolicy:
-        SCOUT_REUSE_POLICIES[SCOUT_WORKFLOW_NAMES.clientMatchDispatch],
-      taskQueue: scoutTaskQueues(stage).workflow,
-      parentClosePolicy: "ABANDON",
-      args: [
-        scoutClientMatchDispatchInputCodec.serialize({
-          stage,
-          pending: [],
-          lateArrivals: [],
-          orderingWatermark: null,
-        }),
-      ],
-    });
+    await startChild(
+      issuedWorkflowType(SCOUT_WORKFLOW_NAMES.clientMatchDispatch),
+      {
+        workflowId,
+        workflowIdReusePolicy:
+          SCOUT_REUSE_POLICIES[SCOUT_WORKFLOW_NAMES.clientMatchDispatch],
+        taskQueue: scoutTaskQueues(stage).workflow,
+        parentClosePolicy: "ABANDON",
+        args: [
+          scoutClientMatchDispatchInputCodec.serialize({
+            stage,
+            pending: [],
+            lateArrivals: [],
+            orderingWatermark: null,
+          }),
+        ],
+      },
+    );
   } catch (error) {
     if (!(error instanceof WorkflowExecutionAlreadyStartedError)) throw error;
   }

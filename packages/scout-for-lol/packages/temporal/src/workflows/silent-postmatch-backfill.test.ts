@@ -222,7 +222,7 @@ describe("the silent post-match backfill", () => {
     // Nothing that could announce it: no minter, no send, no child.
     expect(store.forbiddenCalls).toEqual([]);
     expect(new Set(run.scheduledActivities)).toEqual(
-      new Set(["backfillSilentPostmatchArtifactV2"]),
+      new Set(["backfillSilentPostmatchArtifact"]),
     );
     expect(run.childrenStarted).toBe(0);
   }, 60_000);

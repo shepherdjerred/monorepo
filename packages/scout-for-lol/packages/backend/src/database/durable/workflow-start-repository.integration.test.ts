@@ -170,6 +170,71 @@ describe("requestWorkflowStart", () => {
     expect(await rowsFor("wf-req-4b")).toHaveLength(1);
   });
 
+  test("a request under the renamed type adopts one in flight under the pre-rename type", async () => {
+    const preRename = recorded(
+      await requestWorkflowStart(
+        prisma,
+        request("wf-req-rename-1", {
+          workflowType: "scoutNotificationV2Workflow",
+        }),
+      ),
+    );
+
+    const renamed = await requestWorkflowStart(
+      prisma,
+      request("wf-req-rename-1", { workflowType: "scoutNotificationWorkflow" }),
+    );
+    expect(renamed.outcome).toBe("adopted");
+    // The row answers as it was stored; only the comparison renames.
+    expect(recorded(renamed)).toEqual(preRename);
+    expect(await rowsFor("wf-req-rename-1")).toHaveLength(1);
+  });
+
+  test("a request under the renamed type follows one accepted under the pre-rename type", async () => {
+    const preRename = recorded(
+      await requestWorkflowStart(
+        prisma,
+        request("wf-req-rename-2", {
+          workflowType: "scoutPipelineReconciliationV2Workflow",
+        }),
+      ),
+    );
+    await accept(preRename);
+
+    const renamed = await requestWorkflowStart(
+      prisma,
+      request("wf-req-rename-2", {
+        workflowType: "scoutPipelineReconciliationWorkflow",
+      }),
+    );
+    expect(renamed.outcome).toBe("applied");
+    expect(recorded(renamed).workflowType).toBe(
+      "scoutPipelineReconciliationWorkflow",
+    );
+    expect(renamed.outcome === "applied" && renamed.latestAccepted).toEqual({
+      ...preRename,
+      acceptance: { acceptedAt: ACCEPTED_AT, runId: RUN_ID },
+    });
+    expect(await rowsFor("wf-req-rename-2")).toHaveLength(2);
+  });
+
+  test("a different pipeline type under the same id still conflicts across the rename", async () => {
+    await requestWorkflowStart(
+      prisma,
+      request("wf-req-rename-3", {
+        workflowType: "scoutNotificationV2Workflow",
+      }),
+    );
+    expect(
+      await requestWorkflowStart(
+        prisma,
+        request("wf-req-rename-3", {
+          workflowType: "scoutLakeProjectionWorkflow",
+        }),
+      ),
+    ).toEqual({ outcome: "conflict", reason: "request-differs" });
+  });
+
   test("two simultaneous requests after an accepted one yield exactly one new request", async () => {
     const first = recorded(
       await requestWorkflowStart(prisma, request("wf-req-5")),

@@ -15,7 +15,7 @@ import {
 import type { ScoutStage } from "#src/contracts.ts";
 import { DETACHED_WORK_MAX_ATTEMPTS } from "#src/contracts.ts";
 import { scoutTaskQueues } from "#src/identifiers.ts";
-import { preRenameActivities } from "./generation-rename.ts";
+import { renamedPipelineActivities } from "./generation-rename.ts";
 
 const NON_RETRYABLE_FAILURES = [
   "InvalidSavedQuery",
@@ -124,21 +124,21 @@ export function lakeActivities(stage: ScoutStage) {
 // ───────────────────────────────────────────────────────────────────────────
 
 export function realtimePipelineActivities(stage: ScoutStage) {
-  return preRenameActivities<ScoutPipelineActivities>({
+  return renamedPipelineActivities<ScoutPipelineActivities>({
     taskQueue: scoutTaskQueues(stage).realtime,
     ...REALTIME_ACTIVITY_OPTIONS,
   });
 }
 
 export function backgroundPipelineActivities(stage: ScoutStage) {
-  return preRenameActivities<ScoutPipelineActivities>({
+  return renamedPipelineActivities<ScoutPipelineActivities>({
     taskQueue: scoutTaskQueues(stage).background,
     ...BACKGROUND_ACTIVITY_OPTIONS,
   });
 }
 
 export function lakePipelineActivities(stage: ScoutStage) {
-  return preRenameActivities<ScoutPipelineActivities>({
+  return renamedPipelineActivities<ScoutPipelineActivities>({
     taskQueue: scoutTaskQueues(stage).lake,
     ...LAKE_ACTIVITY_OPTIONS,
   });
@@ -154,7 +154,7 @@ export function lakePipelineActivities(stage: ScoutStage) {
  * render, and the render must never sit in front of a live match.
  */
 export function silentPostmatchBackfillActivities(stage: ScoutStage) {
-  return preRenameActivities<
+  return renamedPipelineActivities<
     Pick<ScoutPipelineActivities, "backfillSilentPostmatchArtifact">
   >({
     taskQueue: scoutTaskQueues(stage).background,
@@ -200,7 +200,7 @@ export const NOTIFICATION_DELIVERY_ACTIVITY_OPTIONS = {
 } satisfies QueueActivityOptions;
 
 export function notificationDeliveryActivities(stage: ScoutStage) {
-  return preRenameActivities<
+  return renamedPipelineActivities<
     Pick<ScoutPipelineActivities, "deliverNotification">
   >({
     taskQueue: scoutTaskQueues(stage).realtime,

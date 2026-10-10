@@ -22,7 +22,7 @@ describe("Scout prematch poll schedule", () => {
         taskQueue: `scout-${stage}`,
         timing: { kind: "interval", every: "30 seconds" },
       });
-      expect(schedule.workflowType).toBe("scoutPrematchDiscoveryV2Workflow");
+      expect(schedule.workflowType).toBe("scoutPrematchDiscoveryWorkflow");
       expect(schedule.args).toEqual([
         scoutPrematchDiscoveryInputCodec.serialize({ stage }),
       ]);

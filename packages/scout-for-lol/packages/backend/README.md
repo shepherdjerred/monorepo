@@ -509,15 +509,23 @@ prod's embedded poller, the central worker that owns the Schedules — so a
 name must be registered everywhere before anything issues it. The rename
 therefore lands in steps.
 
-This release registers both names and issues only the old ones:
+The first step registered both names and kept issuing the old ones. This one
+issues the new names everywhere a new command is made, and still registers
+both:
 
-- `SCOUT_WORKFLOW_NAMES` still holds the `*V2Workflow` types, so Schedules,
-  client starts and child starts issue them. The Workflow bundle exports each
-  Workflow under its renamed function name and keeps the old name as an alias;
-  `SCOUT_RENAMED_WORKFLOW_TYPES` maps one to the other.
-- Pipeline Activities are scheduled under their old names
-  (`preRenameActivities` in the Scout Temporal package's
-  `workflows/generation-rename.ts`), and Activity workers register both names
+- `SCOUT_WORKFLOW_NAMES` holds the renamed types, so Schedules and client
+  starts issue them. The Workflow bundle still exports each Workflow under its
+  old `*V2Workflow` name as an alias, so executions already running under it
+  keep running; `SCOUT_PRE_RENAME_WORKFLOW_TYPES` maps one to the other.
+- Inside a Workflow, child starts, Activity schedules and Continue-As-New go
+  through `workflows/generation-rename.ts` in the Scout Temporal package and
+  issue the renamed types behind the `scout-generation-rename` patch. Replay
+  checks child and Activity types against the history, so a history recorded
+  before the patch keeps issuing the old names, and an open execution switches
+  at its first live Workflow Task after the deploy. Long-lived Workflows —
+  the client-match dispatcher singleton, recovery batches, reconciliation
+  sweeps — continue as new under the renamed type, which is how they leave
+  the old one. Activity workers register both names
   (`withPreRenameActivityNames`, composed in `registeredActivities` in
   `src/temporal/connected-runtime.ts`).
 - The realtime worker also keeps the Activities a still-routed pre-rename
@@ -527,17 +535,27 @@ This release registers both names and issues only the old ones:
   `routed-bundle-activities.test.ts` checks every Activity the oldest routed
   build declares against this registration, and the central package's
   `scout-schedule-workflow-types.test.ts` checks every Scout Schedule type
-  against this bundle and the routed one.
+  against this bundle and the oldest bundle that may still be routed.
 - `ScoutWorkflowStart` rows keep the type they were written with, so the
   reconciliation sweep, the operator listing and the backlog gauge filter on
-  both names (`SCOUT_PIPELINE_START_WORKFLOW_TYPES`).
+  both names (`SCOUT_PIPELINE_START_WORKFLOW_TYPES`), and a new request is
+  compared with a recorded one under the renamed name
+  (`scoutRenamedWorkflowType`), so re-requesting a Workflow id first requested
+  before the rename adopts or follows that request rather than conflicting.
+
+Every bundle that can run Scout Workflows must register the renamed names
+before this step deploys: beta's routed Worker Deployment version and the prod
+backend image must both include the release that registered them. Rolling a
+routed version back to a bundle without the patch wedges the executions this
+one recorded, because their histories carry the patch marker and the renamed
+types.
 
 `generation-rename-replay.test.ts` replays a dispatcher and a match run
-recorded mid-flight under the old names, and shows a run recorded now issues
-the same names. The next step switches issuance to the new names — Schedules,
-`SCOUT_WORKFLOW_NAMES`, and child and Activity types behind a patch so open
-histories keep replaying — once every routed bundle and the prod backend image
-register them. A later step drops the aliases and the retired Activities.
+recorded mid-flight under the old names, records a run with the patch withheld
+(what the previous bundle issued) and replays it, swaps the bundle under an
+open execution mid-run, and shows a run started under the old type continuing
+as new under the renamed one. A later step drops the aliases, the retired
+Activities and the dual registration, then `deprecatePatch` retires the gate.
 Workflow IDs, signal names, codec kinds and Schedule IDs that contain `v2` are
 identities and stay as they are, and so does `readLegacyMatchCompletionV2`,
 which open histories recorded.
@@ -709,8 +727,7 @@ this path writes already answer exactly the question it asks.
 
 ### Prematch detection and maintenance
 
-The `prematch-poll` Schedule starts `scoutPrematchDiscoveryWorkflow` (under its
-pre-rename type, `scoutPrematchDiscoveryV2Workflow`) every
+The `prematch-poll` Schedule starts `scoutPrematchDiscoveryWorkflow` every
 30 seconds in every stage, with a `SKIP` overlap policy and a one-minute
 catch-up window: a poll that outlives its interval drops the tick behind it,
 and a tick the server missed by more than a minute is not replayed. Each poll

@@ -88,8 +88,8 @@ export function useScoutWorkflowHarness(): ScoutWorkflowHarness {
         await Worker.create({
           connection: live.nativeConnection,
           taskQueue: "scout-dev-realtime",
-          // As the production Activity worker does: the bundle schedules the
-          // pre-rename names in this release.
+          // As the production Activity worker does: both names, because a
+          // history recorded before the rename patch schedules the old ones.
           activities: withPreRenameActivityNames(activities),
           maxConcurrentActivityTaskExecutions: 4,
         }),

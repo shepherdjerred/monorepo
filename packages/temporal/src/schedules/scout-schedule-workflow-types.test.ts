@@ -11,12 +11,25 @@ import { SCHEDULES } from "./schedule-definitions.ts";
  * embedded poller runs the prod backend image until it is promoted. A type
  * that any of those bundles does not export stops the Schedule in that
  * namespace. `ROUTED_BUNDLE_WORKFLOW_TYPES` is the export list of the oldest
- * still-routed build (56f22c5); replace it whenever routing moves.
+ * build that may still be routed (f06aafe, the v1 deletion that first
+ * registered the renamed pipeline types); replace it whenever routing moves.
+ *
+ * That build is a deploy precondition rather than a fact this test can check:
+ * the Schedules issue the renamed types, and an older build routed in either
+ * namespace would not resolve them — or, for `scoutPostMatchDiscoveryWorkflow`,
+ * would resolve the retired v1 Workflow of that name.
  */
 const ROUTED_BUNDLE_WORKFLOW_TYPES: ReadonlySet<string> = new Set([
-  "scoutRealtimePollWorkflow",
-  "scoutMatchIngestionWorkflow",
   "scoutPostMatchDiscoveryWorkflow",
+  "scoutMatchProcessingWorkflow",
+  "scoutClientMatchDispatchWorkflow",
+  "scoutPrematchDiscoveryWorkflow",
+  "scoutPrematchGameWorkflow",
+  "scoutNotificationWorkflow",
+  "scoutLakeProjectionWorkflow",
+  "scoutRecoveryBatchWorkflow",
+  "scoutPipelineReconciliationWorkflow",
+  "scoutSilentPostmatchBackfillWorkflow",
   "scoutInitialHistoryWorkflow",
   "scoutExploreHistoryWorkflow",
   "scoutExploreTimelineWorkflow",
@@ -62,4 +75,25 @@ describe("Scout Schedule Workflow types", () => {
       );
     },
   );
+
+  test("issue the renamed pipeline types, never the pre-rename ones", () => {
+    expect(
+      scoutSchedules
+        .map((schedule) => schedule.workflowType)
+        .filter((workflowType) => workflowType.endsWith("V2Workflow")),
+    ).toEqual([]);
+    expect(
+      new Set(scoutSchedules.map((schedule) => schedule.workflowType)),
+    ).toEqual(
+      new Set([
+        "scoutPrematchDiscoveryWorkflow",
+        "scoutPostMatchDiscoveryWorkflow",
+        "scoutPipelineReconciliationWorkflow",
+        "scoutIngestionReconciliationWorkflow",
+        "scoutBackgroundJobWorkflow",
+        "scoutReportScheduleReconcilerWorkflow",
+        "scoutReportLakeWorkflow",
+      ]),
+    );
+  });
 });
