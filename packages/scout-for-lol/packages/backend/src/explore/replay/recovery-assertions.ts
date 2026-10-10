@@ -47,7 +47,7 @@ function streakAssertions(
     ),
   ].map((match) => Number(match[1]));
   for (const match of answer.matchAll(
-    /win streak (?:is|was)[^\d\n]{0,10}(\d+) games?\b/g,
+    /win streak[^.!?\n\d]{1,80}\b(?:is|was)[^\d\n]{0,10}(\d+) games?\b/g,
   ))
     claims.push(Number(match[1]));
   if (

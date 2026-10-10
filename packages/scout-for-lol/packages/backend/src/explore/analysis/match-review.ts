@@ -46,6 +46,29 @@ function roster(match: RawMatch) {
   }));
 }
 
+function matchFacts(
+  match: RawMatch,
+  target: RawMatch["info"]["participants"][number],
+  offset: number,
+) {
+  if (offset !== 0) return {};
+  return {
+    game: {
+      durationSeconds: match.info.gameDuration,
+      createdAtMs: match.info.gameCreation,
+      queueId: match.info.queueId,
+      patch: match.info.gameVersion,
+    },
+    participants: roster(match),
+    player: {
+      champion: target.championName,
+      teamId: target.teamId,
+      turretDamage: target.damageDealtToTurrets,
+      timeSpentDeadSeconds: target.totalTimeSpentDead,
+    },
+  };
+}
+
 function participant(match: RawMatch, id: number | undefined) {
   if (id === undefined || id === 0) return null;
   const found = match.info.participants.find((p) => p.participantId === id);
@@ -237,19 +260,8 @@ export function summarizeRecordedMatch(
     ok: true as const,
     matchId,
     participantId,
-    game: {
-      durationSeconds: match.info.gameDuration,
-      createdAtMs: match.info.gameCreation,
-      queueId: match.info.queueId,
-      patch: match.info.gameVersion,
-    },
-    participants: roster(match),
-    player: {
-      champion: target.championName,
-      teamId: target.teamId,
-      turretDamage: target.damageDealtToTurrets,
-      timeSpentDeadSeconds: target.totalTimeSpentDead,
-    },
+    matchFactsIncluded: offset === 0,
+    ...matchFacts(match, target, offset),
     coverage: {
       prematch: documents.some((d) => d.kind === "prematch"),
       timeline: coverage.state,
@@ -271,7 +283,7 @@ export function summarizeRecordedMatch(
               ),
     },
     message:
-      "Facts are observed records. Use the provided gameTime labels verbatim. Gold snapshots precede events and do not establish causation. Shutdown claims require positive shutdownBounty; null is unknown. Event pages include this player's deaths plus objectives; follow nextOffset for the complete sequence. Preserve champion names exactly. Missing prematch data does not imply missing timeline data.",
+      "Match stats and roster are supplied only at offset 0; continuation pages omit those already-returned facts. Facts are observed records. Use the provided gameTime labels verbatim. Gold snapshots precede events and do not establish causation. Shutdown claims require positive shutdownBounty; null is unknown. Event pages include this player's deaths plus objectives; follow nextOffset for the complete sequence. Preserve champion names exactly. Missing prematch data does not imply missing timeline data.",
   };
   while (
     new TextEncoder().encode(JSON.stringify(result)).byteLength >

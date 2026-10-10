@@ -104,6 +104,16 @@ bun run compact:report-lake  # Manually fold/rebuild the DuckDB report lake
 
 ### Explore recovery evaluation
 
+Explore's per-call output allowance includes hidden reasoning as well as the
+visible structured answer. It is 8,000 tokens so high-reasoning models can
+finish the answer; the spend ledger still reserves every call against the
+configured per-question and monthly limits. Replays must check the final answer,
+not merely successful provider calls.
+
+Match-summary pages include the roster and game/player facts at offset zero.
+Continuation pages return new events and coverage without duplicating those
+facts in the model context; `matchFactsIncluded` identifies the first page.
+
 Replay pins and bundles use schema version 2. Capture records the resolved model
 and analysis capability as well as guild policies. `test:explore:replay` uses
 those values by default; `--analysis on|off` and `--model <id>` explicitly select

@@ -103,6 +103,17 @@ test("joins unfamiliar killers by participant ID after roster reordering and pag
     selectedEvents: { nextOffset: 10 },
   });
   expect(pages[2]).toMatchObject({ selectedEvents: { nextOffset: null } });
+  expect(pages[0]).toMatchObject({ matchFactsIncluded: true });
+  expect(pages[0]).toHaveProperty("participants");
+  for (const page of pages.slice(1)) {
+    expect(page).toMatchObject({
+      matchFactsIncluded: false,
+      coverage: { timeline: "complete", participants: 10 },
+    });
+    expect(page).not.toHaveProperty("participants");
+    expect(page).not.toHaveProperty("game");
+    expect(page).not.toHaveProperty("player");
+  }
 });
 
 test("missing timeline keeps postmatch facts and absent coverage counts", async () => {

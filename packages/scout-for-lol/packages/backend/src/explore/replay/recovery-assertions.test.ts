@@ -92,6 +92,25 @@ test("recognises an explicit win-streak claim stated in games", () => {
   ).toContain("incorrect_or_missing_streak_length");
 });
 
+test("recognises a scoped streak claim without accepting a wrong length", () => {
+  const answer =
+    "The longest recorded win streak in the Jama Pyxi group is 4 games, tied by Alice and Bob.";
+  expect(
+    recoveryAssertions("conv:3c004891:0", { ...candidate, answer }, oracle),
+  ).toEqual([]);
+  for (const wrong of [
+    answer.replace("4 games", "5 games"),
+    answer.replace("4 games", "3 games") + " Alice has 4 wins overall.",
+  ])
+    expect(
+      recoveryAssertions(
+        "conv:3c004891:0",
+        { ...candidate, answer: wrong },
+        oracle,
+      ),
+    ).toContain("incorrect_or_missing_streak_length");
+});
+
 test("rejects the observed friendly champion substitution despite a successful card", () => {
   const game = {
     answer:

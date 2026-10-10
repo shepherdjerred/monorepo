@@ -114,7 +114,7 @@ export function createAnalysisTools(
   return {
     summarize_match_timeline: tool({
       description:
-        "Extract deterministic facts for one player from a named raw-documents dataset: match stats and roster, complete/partial/missing timeline coverage, named deaths and objective events, gameTime labels, bounty data, and preceding team-gold snapshots. Use this first for a game review instead of writing JavaScript. Query participant_id to identify the reviewed player. Events page at most 10 at a time within 8 KiB; follow nextOffset. No Riot acquisition or model-generated calculations.",
+        "Extract deterministic facts for one player from a named raw-documents dataset: match stats and roster on the first page (offset 0), complete/partial/missing timeline coverage, named deaths and objective events, gameTime labels, bounty data, and preceding team-gold snapshots. Continuation pages contain only new events and coverage, without repeating match stats or roster. Use this first for a game review instead of writing JavaScript. Query participant_id to identify the reviewed player. Events page at most 10 at a time within 8 KiB; follow nextOffset. No Riot acquisition or model-generated calculations.",
       inputSchema: z.strictObject({
         dataset: NameSchema,
         matchId: RiotMatchIdSchema,
