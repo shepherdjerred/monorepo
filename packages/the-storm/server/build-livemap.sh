@@ -43,6 +43,9 @@ preview_hash=$(sha256sum "$branding/social.png" | cut -d ' ' -f 1)
 preview_name=livemap-preview-${preview_hash:0:16}.png
 install -m 0644 "$branding/favicon.svg" "$out/assets/$favicon_name"
 install -m 0644 "$branding/social.png" "$out/assets/$preview_name"
+# Open Graph crawlers require an absolute URL. Pin this source asset to the
+# PR commit so the URL works before the LiveMap server image is released.
+preview_url="https://raw.githubusercontent.com/shepherdjerred/monorepo/9580503bb0cb6d49110e3259d61bb36c0493a632/packages/the-storm/server/livemap/social.png"
 
 for locale in "$out"/lang/*.conf; do
   [[ ${locale##*/} == settings.conf ]] && continue
@@ -76,7 +79,7 @@ rm -- "$manifest"
 
 sed -e 's/BlueMap/LiveMap/g' -e 's/bluemap, map/livemap, map/g' \
   -e "s|assets/favicon-[[:alnum:]_-]*\.png|assets/$favicon_name|g" \
-  -e "s|\(name=\"og:image\" content=\"\)[^\"]*|\1./assets/$preview_name|g" \
+  -e "s|\(name=\"og:image\" content=\"\)[^\"]*|\1$preview_url|g" \
   -e "s|assets/index-[[:alnum:]_-]*\.js|assets/$script_name|g" \
   -e "s|assets/manifest-[[:alnum:]_-]*\.webmanifest|assets/$manifest_name|g" \
   "$out/index.html" >"$out/index.html.branded"
