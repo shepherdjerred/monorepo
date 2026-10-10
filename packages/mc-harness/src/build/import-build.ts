@@ -25,6 +25,7 @@ import type { BlockPos, Rotation } from "#protocol/bridge.ts";
 import { BUILD_FILES, type Op } from "#protocol/build.ts";
 import { BuildWorkspace } from "./workspace.ts";
 import { renderGrid, sha } from "./helpers.ts";
+import { withPublicationLock } from "./storage/publication-lock.ts";
 
 export type ImportOptions = {
   at?: BlockPos;
@@ -98,48 +99,50 @@ export async function importBuild(
   lint: LintReport;
 }> {
   const workspace = new BuildWorkspace(dir);
-  const manifest = await workspace.manifest();
-  const { grid, description } = await loadImport(file, options);
-  const registry = await loadRegistry();
-  const bytes = writeSchematic(grid, registry.dataVersion);
-  const digest = sha(bytes, 12);
-  const schematic = path.join(
-    BUILD_FILES.schematicsDir,
-    `import-${digest}.schem`,
-  );
-  await mkdir(workspace.file(BUILD_FILES.schematicsDir), { recursive: true });
-  await Bun.write(workspace.file(schematic), bytes);
-  const at = options.at ?? manifest.anchor;
-  const log = await workspace.oplog();
-  const op: Op = {
-    kind: "paste",
-    world: manifest.world,
-    schematic,
-    at,
-    rotate: options.rotate,
-    ignoreAir: true,
-    source: `import:${digest}`,
-  };
-  await workspace.writeOplog({ version: 1, ops: [...log.ops, op] });
-  const blocks = grid
-    .histogram()
-    .filter((entry) => !isAir(entry.state))
-    .reduce((sum, entry) => sum + entry.count, 0);
-  const render = await renderGrid(
-    workspace,
-    grid,
-    `import-${digest}`,
-    `${manifest.name} import`,
-  );
-  return {
-    schematic,
-    at,
-    size: grid.size,
-    blocks,
-    description,
-    render,
-    lint: lintGrid(grid, { registry, origin: at }),
-  };
+  return withPublicationLock(workspace.dir, async () => {
+    const manifest = await workspace.manifest();
+    const { grid, description } = await loadImport(file, options);
+    const registry = await loadRegistry();
+    const bytes = writeSchematic(grid, registry.dataVersion);
+    const digest = sha(bytes, 12);
+    const schematic = path.join(
+      BUILD_FILES.schematicsDir,
+      `import-${digest}.schem`,
+    );
+    await mkdir(workspace.file(BUILD_FILES.schematicsDir), { recursive: true });
+    await Bun.write(workspace.file(schematic), bytes);
+    const at = options.at ?? manifest.anchor;
+    const log = await workspace.oplog();
+    const op: Op = {
+      kind: "paste",
+      world: manifest.world,
+      schematic,
+      at,
+      rotate: options.rotate,
+      ignoreAir: true,
+      source: `import:${digest}`,
+    };
+    await workspace.writeOplog({ version: 1, ops: [...log.ops, op] });
+    const blocks = grid
+      .histogram()
+      .filter((entry) => !isAir(entry.state))
+      .reduce((sum, entry) => sum + entry.count, 0);
+    const render = await renderGrid(
+      workspace,
+      grid,
+      `import-${digest}`,
+      `${manifest.name} import`,
+    );
+    return {
+      schematic,
+      at,
+      size: grid.size,
+      blocks,
+      description,
+      render,
+      lint: lintGrid(grid, { registry, origin: at }),
+    };
+  });
 }
 
 /** Resets the canvas to the site, replays every op, and records the result as expected. */

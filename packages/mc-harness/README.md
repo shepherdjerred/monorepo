@@ -251,7 +251,8 @@ survey`, `--grid n` coordinate lines, `--floor y` and `--section z` cuts
   entry are staged together; failed publication
   restores the preceding evidence even when reusing a render name. Render inputs,
   program provenance and iteration stamping are read under the same publication
-  lock, keeping sidecars and journal iterations consistent. When one program produced the
+  lock; compilation and imports hold that lock while changing their artifacts
+  and op log, keeping grids, sidecars and journal iterations consistent. When one program produced the
   render, its snapshot is kept too as `renders/<name>.build.ts` (the copy
   `compile` keeps beside its schematic): for `--source compiled` every op in
   the log must come from that one compile, for `expected` it is the program
@@ -320,6 +321,10 @@ survey`, `--grid n` coordinate lines, `--floor y` and `--section z` cuts
   the content-addressed verdict, sheet, grid and rubric before rebuilding it.
   Preparation markers publish by atomic rename. Incomplete, ambiguous or corrupt
   pending evidence fails before model calls.
+  Critique snapshots its inputs under the publication lock and revalidates the
+  render identity and schematic before publishing. Replacing the same render name
+  during model calls rejects the stale critique, preserves the newer render and
+  retains the completed pending result; critique the current render again.
   Without a model credential, `--scores "axis=n,…,aesthetic=n"
 [--note "…"]` records scores given by eye under the model name `by-eye`
   (visual stage only), so the journal still shows the critique.

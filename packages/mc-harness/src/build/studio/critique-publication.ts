@@ -14,6 +14,9 @@ import { BuildWorkspace } from "#build/workspace.ts";
 import { writeJudgeRecord } from "#build/judge.ts";
 import { publishFiles } from "#build/file-transaction.ts";
 import { stageJournal } from "#build/storage/evidence-publication.ts";
+import { readSidecar } from "#build/sidecar.ts";
+import { savedRender } from "#build/sources.ts";
+import { gridHash } from "@shepherdjerred/mc-build/core/site.ts";
 import { readCritiqueRecord } from "./critique-record.ts";
 import {
   PreparedCritique,
@@ -108,6 +111,18 @@ export async function publishCritique(
   await publishFiles(workspace, {
     prefix: ".critique-publish-",
     stage: async (staged) => {
+      const current = await readSidecar(workspace, input.sidecar.name);
+      if (
+        !isDeepStrictEqual(
+          { ...current, scores: undefined },
+          { ...input.sidecar, scores: undefined },
+        ) ||
+        gridHash(await savedRender(workspace, current.name)) !==
+          verdict.gridHash
+      )
+        throw new Error(
+          `render "${current.name}" changed during critique; critique the current render again`,
+        );
       const target = new BuildWorkspace(staged);
       for (const file of Object.keys(prepared.files)) {
         await mkdir(path.dirname(target.file(file)), { recursive: true });

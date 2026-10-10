@@ -4,6 +4,8 @@ import path from "node:path";
 import { afterAll, expect, it } from "vitest";
 import { withPublicationLock } from "#build/storage/publication-lock.ts";
 import { appendLog, readLog } from "#build/build-log.ts";
+import { compileBuild } from "#build/commands.ts";
+import { importBuild } from "#build/import-build.ts";
 
 const root = await mkdtemp(path.join(tmpdir(), "mc-publication-lock-"));
 afterAll(async () => rm(root, { recursive: true }));
@@ -51,6 +53,14 @@ it.each(["finish", "kill"])(
         appendLog(alias, { kind: "note", text: "concurrent note" }),
       ).rejects.toThrow(/already running/u);
       expect(await readLog(dir)).toEqual([]);
+      await expect(compileBuild(alias)).rejects.toThrow(/already running/u);
+      await expect(
+        importBuild(alias, "absent.schem", {
+          rotate: 0,
+          solid: false,
+          palette: "default",
+        }),
+      ).rejects.toThrow(/already running/u);
       if (ending === "kill") child.kill("SIGKILL");
       else await child.stdin.end();
       const [code, stderr] = await Promise.all([

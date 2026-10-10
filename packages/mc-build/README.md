@@ -106,7 +106,8 @@ Beyond
 the contact sheet: `renderer.elevations(grid, { grid: 8 })` (front, right,
 back, left and top with coordinate lines), `renderer.pov(grid)` (a
 perspective eye-level view from in front of the build, `camera.ts`
-`perspectiveProjector`; default framing ignores empty layers above the build),
+`perspectiveProjector`; reciprocal-depth interpolation preserves textures and
+depth ordering on slanted faces, and default framing ignores empty layers above the build),
 `renderer.compare(before, after, { mode: "light" })` (side by side
 plus a plan of changed columns, with the selected mode on all three panels
 and one shared occupied height for both builds),

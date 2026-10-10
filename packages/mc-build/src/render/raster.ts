@@ -99,6 +99,8 @@ export type Projected = {
   x: number;
   y: number;
   depth: number;
+  /** Perspective interpolation weight; orthographic vertices omit it. */
+  reciprocalDepth?: number;
   /** Behind a perspective camera's near plane; the quad is dropped. */
   clip?: boolean;
 };
@@ -226,15 +228,19 @@ class Rasterizer {
     if (l0 < 0 || l1 < 0 || l2 < 0) {
       return;
     }
-    const z = l0 * a.depth + l1 * b.depth + l2 * c.depth;
+    const w0 = l0 * (a.reciprocalDepth ?? 1);
+    const w1 = l1 * (b.reciprocalDepth ?? 1);
+    const w2 = l2 * (c.reciprocalDepth ?? 1);
+    const weight = a.reciprocalDepth === undefined ? 1 : w0 + w1 + w2;
+    const z = (w0 * a.depth + w1 * b.depth + w2 * c.depth) / weight;
     const pixel = py * this.image.width + px;
     if (z >= (this.depth[pixel] ?? Infinity) - 1e-6) {
       return;
     }
     const [uvA, uvB, uvC] = triangle.uvs;
     const uv: [number, number] = [
-      l0 * uvA[0] + l1 * uvB[0] + l2 * uvC[0],
-      l0 * uvA[1] + l1 * uvB[1] + l2 * uvC[1],
+      (w0 * uvA[0] + w1 * uvB[0] + w2 * uvC[0]) / weight,
+      (w0 * uvA[1] + w1 * uvB[1] + w2 * uvC[1]) / weight,
     ];
     const drawn = this.shade(quad, pixel, uv);
     if (writeDepth && drawn) {
@@ -244,7 +250,7 @@ class Rasterizer {
 }
 
 /**
- * Z-buffered triangle rasterizer for orthographic views. Solid and cutout
+ * Z-buffered triangle rasterizer for orthographic and perspective views. Solid and cutout
  * quads write depth; translucent quads are drawn afterwards back to front,
  * depth-tested but not depth-writing.
  */

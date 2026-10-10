@@ -49,6 +49,7 @@ import {
 } from "#build/sidecar.ts";
 import { savedRender } from "#build/sources.ts";
 import { BuildWorkspace } from "#build/workspace.ts";
+import { withPublicationLock } from "#build/storage/publication-lock.ts";
 import { reuseVisual, type Visual } from "./visual-result.ts";
 import { publishCritique, critiqueRequestKey } from "./critique-publication.ts";
 
@@ -231,12 +232,8 @@ async function programFor(
     : text;
 }
 
-async function lintLines(
-  workspace: BuildWorkspace,
-  name: string,
-): Promise<string[]> {
+async function lintLines(grid: BlockGrid): Promise<string[]> {
   const registry = await loadRegistry();
-  const grid = await savedRender(workspace, name);
   const report = lintGrid(grid, { registry });
   return report.findings
     .slice(0, 20)
@@ -295,11 +292,24 @@ export async function critiqueBuild(
   options: CritiqueOptions,
 ): Promise<CritiqueResult> {
   const workspace = new BuildWorkspace(dir);
-  const journal = await readLog(dir);
-  const name = options.render ?? (await latestRenderName(workspace, journal));
-  const sidecar = await readSidecar(workspace, name);
-  // Settle the stage before any sheet is drawn or a model is paid for.
-  const program = await programFor(workspace, sidecar);
+  const { journal, name, sidecar, program, grid } = await withPublicationLock(
+    workspace.dir,
+    async () => {
+      const entries = await readLog(dir);
+      const renderName =
+        options.render ?? (await latestRenderName(workspace, entries));
+      const renderSidecar = await readSidecar(workspace, renderName);
+      // Settle the stage before any sheet is drawn or a model is paid for.
+      const programText = await programFor(workspace, renderSidecar);
+      return {
+        journal: entries,
+        name: renderName,
+        sidecar: renderSidecar,
+        program: programText,
+        grid: await savedRender(workspace, renderName),
+      };
+    },
+  );
   if (options.byEye !== undefined && (options.stage ?? "visual") !== "visual") {
     throw new Error(
       "a by-eye critique (--scores) has no code stage; drop --stage or use --stage visual",
@@ -313,7 +323,6 @@ export async function critiqueBuild(
       `render "${name}" was made without a ${BUILD_FILES.program}, so there is no program to review; use --stage visual`,
     );
   }
-  const grid = await savedRender(workspace, name);
   const hash = gridHash(grid);
   if (hash !== sidecar.gridHash) {
     throw new Error(
@@ -372,7 +381,7 @@ export async function critiqueBuild(
               rubric: options.rubric,
               scores,
               lowest,
-              lint: await lintLines(workspace, name),
+              lint: await lintLines(grid),
               program: review,
             });
 

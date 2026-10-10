@@ -380,6 +380,65 @@ describe("markerless critique preparation", () => {
 });
 
 describe("critique evidence publication", () => {
+  it.each([
+    ["visual", false],
+    ["visual", true],
+    ["both", false],
+    ["both", true],
+  ] as const)(
+    "preserves a newer same-name render during %s critique (changed grid: %s)",
+    async (stage, changed) => {
+      const { workspace, env } = await fixture(
+        `stale-${stage}-${String(changed)}`,
+      );
+      await renderBuild(env, workspace.dir, {
+        name: "inspect",
+        source: "compiled",
+      });
+      let current: Awaited<ReturnType<typeof evidence>> | undefined;
+      const ask = vi.fn(async () => {
+        if (changed)
+          await workspace.writeOplog({ version: 1, ops: [clearFloorOp(2)] });
+        await renderBuild(env, workspace.dir, {
+          name: "inspect",
+          source: "compiled",
+        });
+        current = await evidence(workspace.dir);
+        return {
+          axes: Object.fromEntries(
+            rubricAxisIds("micro").map((axis) => [axis, 4]),
+          ),
+          overallAesthetic: 4,
+          notes: [],
+        };
+      });
+      const askCode = vi.fn(() => Promise.resolve({ suggestions: [] }));
+      await expect(
+        critiqueBuild(workspace.dir, {
+          render: "inspect",
+          rubric: "micro",
+          model: "stub",
+          stage,
+          ask,
+          askCode,
+        }),
+      ).rejects.toThrow(/changed during critique/u);
+      expect(current).toBeDefined();
+      expect(await evidence(workspace.dir)).toEqual(current);
+      const journal = await readLog(workspace.dir);
+      expect(journal.filter((entry) => entry.kind === "critique")).toEqual([]);
+      expect(journal.filter((entry) => entry.kind === "render")).toHaveLength(
+        2,
+      );
+      expect(ask).toHaveBeenCalledTimes(1);
+      expect(askCode).toHaveBeenCalledTimes(stage === "both" ? 1 : 0);
+      const pendingDirs = await readdir(workspace.dir);
+      expect(
+        pendingDirs.filter((name) => /^\.critique-[a-f0-9]{64}$/u.test(name)),
+      ).toHaveLength(1);
+    },
+  );
+
   it.each(["journal", "install"])(
     "reuses both paid results after %s publication failure",
     async (mode) => {

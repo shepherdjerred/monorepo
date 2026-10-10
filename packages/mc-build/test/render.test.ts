@@ -363,7 +363,7 @@ describe("renderer", () => {
         "floorLight": "6f131fb687f382ce3f6762b7505544a0dc2ad6fd020d865e05f460ff5ca9de9f",
         "frontGrid": "56c282eca91516261b49a4529294e0ef5c6733f974ec41287ff102563ebdb8f1",
         "light": "6fab03b4cc2e18a0d8cf4eebfd1ac4aa3d9fda37a98c0d52ac9ce1c488b38a30",
-        "pov": "7f384178258124426d26b81efe7f57e76c0f1b388995b7261f1d7ee0988e1a4a",
+        "pov": "4913abd5f4f018c003812ea93b251b2c331aa43f588f41ab01e9497b0ab52a23",
         "relief": "6a88576c1cf33ea8dc918a706d888e434c13c366f7a5ef3fbce34a2d411c3eea",
         "squint": "97bfb2635a9a0d5a0b2852ff93931c64e09a993ef1bd51542cebae5a23040fc8",
       }

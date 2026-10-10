@@ -45,6 +45,7 @@ import {
 import { renderBuildCommand } from "./render/command.ts";
 import { stageJournal } from "./storage/evidence-publication.ts";
 import { writeRunIdentity } from "./storage/run-identity.ts";
+import { withPublicationLock } from "./storage/publication-lock.ts";
 
 export async function initBuild(
   dir: string,
@@ -223,101 +224,105 @@ export async function compileBuild(dir: string): Promise<{
   lint: LintReport;
 }> {
   const workspace = new BuildWorkspace(dir);
-  const manifest = await workspace.manifest();
-  const hasSite = await Bun.file(workspace.file(BUILD_FILES.siteInfo)).exists();
-  const programBytes = await Bun.file(
-    workspace.file(BUILD_FILES.program),
-  ).bytes();
-  const compiled = await compileProgram({
-    program: workspace.file(BUILD_FILES.program),
-    seed: manifest.seed,
-    anchor: manifest.anchor,
-    site: hasSite
-      ? {
-          info: workspace.file(BUILD_FILES.siteInfo),
-          schematic: workspace.file(BUILD_FILES.siteSchematic),
-        }
-      : null,
-  });
-  const registry = await loadRegistry();
-  const bytes = writeSchematic(compiled.grid, registry.dataVersion);
-  // Keyed by the program text as well as its output: two texts that compile
-  // to the same blocks keep separate snapshots, so `program-<digest>.build.ts`
-  // is always the text that produced that digest, never a later edit.
-  const afterCompile = await Bun.file(
-    workspace.file(BUILD_FILES.program),
-  ).bytes();
-  if (sha(programBytes, 64) !== sha(afterCompile, 64))
-    throw new Error(
-      "program changed during compilation; compile the build again",
+  return withPublicationLock(workspace.dir, async () => {
+    const manifest = await workspace.manifest();
+    const hasSite = await Bun.file(
+      workspace.file(BUILD_FILES.siteInfo),
+    ).exists();
+    const programBytes = await Bun.file(
+      workspace.file(BUILD_FILES.program),
+    ).bytes();
+    const compiled = await compileProgram({
+      program: workspace.file(BUILD_FILES.program),
+      seed: manifest.seed,
+      anchor: manifest.anchor,
+      site: hasSite
+        ? {
+            info: workspace.file(BUILD_FILES.siteInfo),
+            schematic: workspace.file(BUILD_FILES.siteSchematic),
+          }
+        : null,
+    });
+    const registry = await loadRegistry();
+    const bytes = writeSchematic(compiled.grid, registry.dataVersion);
+    // Keyed by the program text as well as its output: two texts that compile
+    // to the same blocks keep separate snapshots, so `program-<digest>.build.ts`
+    // is always the text that produced that digest, never a later edit.
+    const afterCompile = await Bun.file(
+      workspace.file(BUILD_FILES.program),
+    ).bytes();
+    if (sha(programBytes, 64) !== sha(afterCompile, 64))
+      throw new Error(
+        "program changed during compilation; compile the build again",
+      );
+    const digest = sha(`${sha(programBytes)}\n${sha(bytes)}`, 12);
+    const schematic = path.join(
+      BUILD_FILES.schematicsDir,
+      `program-${digest}.schem`,
     );
-  const digest = sha(`${sha(programBytes)}\n${sha(bytes)}`, 12);
-  const schematic = path.join(
-    BUILD_FILES.schematicsDir,
-    `program-${digest}.schem`,
-  );
-  await mkdir(workspace.file(BUILD_FILES.schematicsDir), { recursive: true });
-  await Bun.write(workspace.file(schematic), bytes);
-  // The program as compiled, kept with its output so a render can say
-  // which text produced the blocks even after build.ts is edited again.
-  await Bun.write(workspace.file(programSnapshot(digest)), programBytes);
-  const source = `program:${digest}`;
-  const at = plus(manifest.anchor, compiled.min);
-  const pastes = await programPastes(workspace, compiled.grid, {
-    digest,
-    whole: schematic,
-    at,
-    world: manifest.world,
-    dataVersion: registry.dataVersion,
-  });
-  await recordProgramEvidence(
-    workspace,
-    digest,
-    pastes.map((paste) => paste.schematic),
-  );
-  const programOps: Op[] = [
-    ...compiled.clears.map((box): Op => ({
-      kind: "we",
+    await mkdir(workspace.file(BUILD_FILES.schematicsDir), { recursive: true });
+    await Bun.write(workspace.file(schematic), bytes);
+    // The program as compiled, kept with its output so a render can say
+    // which text produced the blocks even after build.ts is edited again.
+    await Bun.write(workspace.file(programSnapshot(digest)), programBytes);
+    const source = `program:${digest}`;
+    const at = plus(manifest.anchor, compiled.min);
+    const pastes = await programPastes(workspace, compiled.grid, {
+      digest,
+      whole: schematic,
+      at,
       world: manifest.world,
-      command: "//set air",
-      pos1: plus(manifest.anchor, box),
-      pos2: plus(manifest.anchor, {
-        x: box.x + box.w - 1,
-        y: box.y + box.h - 1,
-        z: box.z + box.d - 1,
-      }),
-      source,
-    })),
-    ...pastes.map((paste): Op => ({
-      kind: "paste",
-      world: manifest.world,
-      schematic: paste.schematic,
-      at: paste.at,
-      rotate: 0,
-      ignoreAir: true,
-      source,
-    })),
-  ];
-  const log = await workspace.oplog();
-  const firstProgram = log.ops.findIndex((op) =>
-    op.source.startsWith("program:"),
-  );
-  const kept = log.ops.filter((op) => !op.source.startsWith("program:"));
-  const insertAt = firstProgram === -1 ? kept.length : firstProgram;
-  await workspace.writeOplog({
-    version: 1,
-    ops: [...kept.slice(0, insertAt), ...programOps, ...kept.slice(insertAt)],
+      dataVersion: registry.dataVersion,
+    });
+    await recordProgramEvidence(
+      workspace,
+      digest,
+      pastes.map((paste) => paste.schematic),
+    );
+    const programOps: Op[] = [
+      ...compiled.clears.map((box): Op => ({
+        kind: "we",
+        world: manifest.world,
+        command: "//set air",
+        pos1: plus(manifest.anchor, box),
+        pos2: plus(manifest.anchor, {
+          x: box.x + box.w - 1,
+          y: box.y + box.h - 1,
+          z: box.z + box.d - 1,
+        }),
+        source,
+      })),
+      ...pastes.map((paste): Op => ({
+        kind: "paste",
+        world: manifest.world,
+        schematic: paste.schematic,
+        at: paste.at,
+        rotate: 0,
+        ignoreAir: true,
+        source,
+      })),
+    ];
+    const log = await workspace.oplog();
+    const firstProgram = log.ops.findIndex((op) =>
+      op.source.startsWith("program:"),
+    );
+    const kept = log.ops.filter((op) => !op.source.startsWith("program:"));
+    const insertAt = firstProgram === -1 ? kept.length : firstProgram;
+    await workspace.writeOplog({
+      version: 1,
+      ops: [...kept.slice(0, insertAt), ...programOps, ...kept.slice(insertAt)],
+    });
+    return {
+      schematic,
+      at,
+      size: compiled.grid.size,
+      blocks: compiled.blocks,
+      clears: compiled.clears.length,
+      ops: programOps.length,
+      logs: compiled.logs,
+      lint: lintGrid(compiled.grid, { registry, origin: at }),
+    };
   });
-  return {
-    schematic,
-    at,
-    size: compiled.grid.size,
-    blocks: compiled.blocks,
-    clears: compiled.clears.length,
-    ops: programOps.length,
-    logs: compiled.logs,
-    lint: lintGrid(compiled.grid, { registry, origin: at }),
-  };
 }
 
 /** Snapshots `box` (in tiles when it exceeds the bridge limit) as pasteable parts. */

@@ -116,6 +116,7 @@ export function perspectiveProjector(options: {
       x: frame.width / 2 + (focal * dot(d, right)) / safe,
       y: frame.height / 2 - (focal * dot(d, up)) / safe,
       depth,
+      reciprocalDepth: 1 / safe,
       clip: depth < near,
     };
   };
