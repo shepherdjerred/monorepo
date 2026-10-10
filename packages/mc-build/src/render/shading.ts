@@ -48,7 +48,9 @@ function solid(grid: BlockGrid, x: number, y: number, z: number): boolean {
   const cx = Math.floor(x);
   const cy = Math.floor(y);
   const cz = Math.floor(z);
-  return grid.inBounds(cx, cy, cz) && !grid.isAirAt(cx, cy, cz);
+  if (!grid.inBounds(cx, cy, cz)) return false;
+  const state = grid.get(cx, cy, cz);
+  return !isAir(state) && blockId(state) !== "minecraft:light";
 }
 
 /** True when a ray from `from` toward the sun hits a block within the march. */

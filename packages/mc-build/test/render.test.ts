@@ -404,24 +404,34 @@ describe("renderer", () => {
 });
 
 describe("POV framing", () => {
-  test("invisible light blocks preserve daylight at every emitted level", async () => {
-    const renderer = new Renderer(root);
-    const grid = new BlockGrid({ x: 5, y: 4, z: 5 });
-    for (let x = 0; x < 5; x += 1)
-      for (let z = 0; z < 5; z += 1) grid.set(x, 0, z, "minecraft:stone");
-    const air = await renderer.view(grid, "iso-front-right", 160, {
-      mode: "light",
-    });
-    for (let level = 0; level <= 15; level += 1) {
-      grid.set(2, 2, 2, `minecraft:light[level=${level.toString()}]`);
-      const lit = await renderer.view(grid, "iso-front-right", 160, {
-        mode: "light",
+  test.each([
+    "textured",
+    "value",
+    "normal",
+    "squint",
+    "relief",
+    "light",
+  ] as const)(
+    "invisible light blocks preserve outdoor %s views at every emitted level",
+    async (mode) => {
+      const renderer = new Renderer(root);
+      const grid = new BlockGrid({ x: 5, y: 4, z: 5 });
+      for (let x = 0; x < 5; x += 1)
+        for (let z = 0; z < 5; z += 1) grid.set(x, 0, z, "minecraft:stone");
+      const air = await renderer.view(grid, "iso-front-right", 160, {
+        mode,
       });
-      expect(pixelHash(lit.pixels), `level ${level.toString()}`).toBe(
-        pixelHash(air.pixels),
-      );
-    }
-  });
+      for (let level = 0; level <= 15; level += 1) {
+        grid.set(2, 2, 2, `minecraft:light[level=${level.toString()}]`);
+        const lit = await renderer.view(grid, "iso-front-right", 160, {
+          mode,
+        });
+        expect(pixelHash(lit.pixels), `level ${level.toString()}`).toBe(
+          pixelHash(air.pixels),
+        );
+      }
+    },
+  );
   test("light views distinguish invisible light levels without drawing the source", async () => {
     const renderer = new Renderer(root);
     const hashes: string[] = [];
