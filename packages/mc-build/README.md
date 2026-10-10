@@ -54,6 +54,8 @@ bun run --cwd packages/mc-harness gen-registry /tmp/registry.json
 Block models and textures come from Mojang's 26.2 client jar, downloaded from
 piston-meta on first render, sha1-verified, and cached in
 `~/.cache/toolkit/mc/assets/26.2`. They are never committed.
+An existing cache without a valid completion marker fails before any download,
+with its exact directory path; explicitly remove that damaged cache to rebuild it.
 Concurrent first renders use separate staging directories and atomically publish
 a complete pack; they never remove a cache another renderer is using.
 `bun run scripts/fetch-assets.ts` warms the cache. Golden tests use a tiny

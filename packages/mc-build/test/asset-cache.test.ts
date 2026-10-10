@@ -1,8 +1,34 @@
-import { mkdtemp, readdir, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { expect, test } from "vitest";
-import { installAssetFiles } from "#src/render/asset-cache.ts";
+import { assetCacheReady, installAssetFiles } from "#src/render/asset-cache.ts";
+
+test("cache preflight distinguishes missing, complete and corrupt caches without changing bytes", async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "mc-cache-preflight-"));
+  const root = path.join(dir, "assets");
+  try {
+    expect(await assetCacheReady(root)).toBe(false);
+    await mkdir(root);
+    const file = path.join(root, "partial-model.json");
+    await Bun.write(file, "original partial model");
+    await expect(assetCacheReady(root)).rejects.toThrow(
+      `incomplete Minecraft asset cache at ${root}`,
+    );
+    await Bun.write(path.join(root, ".complete"), "invalid digest\n");
+    await expect(assetCacheReady(root)).rejects.toThrow(
+      /incomplete Minecraft asset cache/u,
+    );
+    expect(await Bun.file(file).text()).toBe("original partial model");
+    expect(await Bun.file(path.join(root, ".complete")).text()).toBe(
+      "invalid digest\n",
+    );
+    await Bun.write(path.join(root, ".complete"), `${"a".repeat(40)}\n`);
+    expect(await assetCacheReady(root)).toBe(true);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
 
 test("parallel initializers publish only complete packs and preserve active readers", async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), "mc-cache-race-"));

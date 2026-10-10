@@ -1,5 +1,25 @@
-import { mkdir, mkdtemp, rename, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, rename, rm, stat } from "node:fs/promises";
 import path from "node:path";
+
+/** A missing cache can be built; an existing corrupt cache requires explicit repair. */
+export async function assetCacheReady(root: string): Promise<boolean> {
+  const info = await stat(root).catch((error: unknown) => {
+    if (error instanceof Error && "code" in error && error.code === "ENOENT")
+      return null;
+    throw error;
+  });
+  if (info === null) return false;
+  const marker = Bun.file(path.join(root, ".complete"));
+  if (
+    !info.isDirectory() ||
+    !(await marker.exists()) ||
+    !/^[a-f0-9]{40}\n$/u.test(await marker.text())
+  )
+    throw new Error(
+      `incomplete Minecraft asset cache at ${root}; remove this exact cache directory before retrying`,
+    );
+  return true;
+}
 
 /** Publish a complete pack without replacing a cache another renderer is reading. */
 export async function installAssetFiles(

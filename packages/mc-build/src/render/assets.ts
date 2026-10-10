@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { unzipSync } from "fflate";
 import { z } from "zod";
-import { installAssetFiles } from "./asset-cache.ts";
+import { assetCacheReady, installAssetFiles } from "./asset-cache.ts";
 
 /**
  * Block models and textures come from Mojang's client jar, fetched on first
@@ -64,8 +64,7 @@ export async function ensureAssets(
   log?: (message: string) => void,
 ): Promise<string> {
   const root = assetsCacheDir(version);
-  const marker = path.join(root, ".complete");
-  if (await Bun.file(marker).exists()) {
+  if (await assetCacheReady(root)) {
     return root;
   }
   log?.(
