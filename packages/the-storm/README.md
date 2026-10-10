@@ -1281,6 +1281,11 @@ train or enable a learned controller.
 The Trooper behavior-cloning tools live in `tools/learning`, with dependencies
 pinned by `uv.lock`. Run these commands from this package:
 
+Package Python commands, Gradle's archive/restore tests, map import and recording
+validation all use this locked environment explicitly. They require `uv` and do
+not depend on the host's `python3` selection. Server runtime scripts use the
+Python supplied by the server image.
+
 ```bash
 uv sync --project tools/learning --locked
 uv run --project tools/learning --locked python tools/learning/train.py .cache/rwf-dataset --output .cache/rwf-models/seed-17 --device mps --seed 17 --max-seconds 3600
