@@ -4,6 +4,7 @@ import static com.shepherdjerred.thestorm.rwfbots.adapter.inference.promotion.Pr
 import static com.shepherdjerred.thestorm.rwfbots.adapter.inference.promotion.PromotionGates.require;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -52,7 +53,26 @@ final class PromotionStrength {
       require(
           authored == seed.authored_wins() && basic == seed.basic_wins(),
           "recomputed strength wins");
+      validateControlCoverage(games);
     }
+  }
+
+  private static void validateControlCoverage(JsonNode games) {
+    var controls = new HashMap<String, ControlCoverage>();
+    for (var game : games) {
+      controls
+          .computeIfAbsent(
+              game.path("opponent").asString() + ":" + game.path("side").asString(),
+              ignored -> new ControlCoverage())
+          .add(game);
+    }
+    for (var opponent : List.of("authored", "basic"))
+      for (var side : List.of("red", "blue"))
+        require(
+            controls
+                .get(opponent + ":" + side)
+                .meets(PromotionMaps.minimumControlCoveragePercent()),
+            "minimum learned control coverage");
   }
 
   private static void game(JsonNode game, PromotionMaps.Matchup expected, Set<String> matches) {
@@ -90,8 +110,30 @@ final class PromotionStrength {
     require(
         game.path("frames").asLong() > 0
             && game.path("confirmed_controls").asLong() <= game.path("submitted_controls").asLong()
-            && game.path("submitted_controls").asLong() <= game.path("frames").asLong(),
+            && game.path("submitted_controls").asLong() <= game.path("frames").asLong()
+            && game.path("applied_controls").asLong() <= game.path("frames").asLong(),
         "strength action accounting");
+  }
+
+  private static final class ControlCoverage {
+    private long frames;
+    private long submitted;
+    private long confirmed;
+    private long applied;
+
+    void add(JsonNode game) {
+      frames = Math.addExact(frames, game.path("frames").asLong());
+      submitted = Math.addExact(submitted, game.path("submitted_controls").asLong());
+      confirmed = Math.addExact(confirmed, game.path("confirmed_controls").asLong());
+      applied = Math.addExact(applied, game.path("applied_controls").asLong());
+    }
+
+    boolean meets(int percent) {
+      require(frames > 0, "nonempty learned control coverage");
+      return submitted / (double) frames >= percent / 100.0
+          && confirmed / (double) frames >= percent / 100.0
+          && applied / (double) frames >= percent / 100.0;
+    }
   }
 
   private static void count(JsonNode game, String name) {
