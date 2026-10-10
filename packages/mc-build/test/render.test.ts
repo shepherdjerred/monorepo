@@ -145,6 +145,13 @@ beforeAll(async () => {
   await writeJson("blockstates/stone.json", {
     variants: { "": { model: "minecraft:block/test_checker" } },
   });
+  await writeJson("models/block/test_wood.json", {
+    parent: "block/test_parent",
+    textures: { all: "block/test_wood" },
+  });
+  await writeJson("blockstates/oak_planks.json", {
+    variants: { "": { model: "block/test_wood" } },
+  });
   await writeJson("blockstates/glass.json", {
     variants: { "": { model: "block/test_window" } },
   });

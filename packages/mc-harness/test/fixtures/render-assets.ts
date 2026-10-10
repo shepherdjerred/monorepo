@@ -50,6 +50,14 @@ async function createPack(): Promise<string> {
       ],
     });
   }
+  // A complete model whose texture is deliberately absent exercises texture errors.
+  await write("blockstates/nonexistent_texture_test.json", {
+    variants: { "": { model: "block/missing_texture_test" } },
+  });
+  await write("models/block/missing_texture_test.json", {
+    parent: "builtin/entity",
+    textures: { particle: "block/nonexistent_texture_test" },
+  });
   return root;
 }
 export function renderAssets(): Promise<string> {

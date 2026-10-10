@@ -210,7 +210,7 @@ export class ModelResolver {
     let model = this.models.get(key);
     if (model === undefined) {
       const file = Bun.file(this.file("models", `${key}.json`));
-      model = (await file.exists()) ? ModelSchema.parse(await file.json()) : {};
+      model = ModelSchema.parse(await file.json());
       this.models.set(key, model);
     }
     return model;
@@ -295,12 +295,10 @@ export class ModelResolver {
     const file = Bun.file(
       this.file("blockstates", `${stripNamespace(parsed.id)}.json`),
     );
-    const chosen = (await file.exists())
-      ? chooseModels(
-          BlockstateSchema.parse(await file.json()),
-          parsed.properties,
-        )
-      : [];
+    const chosen = chooseModels(
+      BlockstateSchema.parse(await file.json()),
+      parsed.properties,
+    );
     const applied: AppliedModel[] = [];
     for (const apply of chosen) {
       applied.push({
