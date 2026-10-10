@@ -508,6 +508,35 @@ describe("section cut", () => {
 });
 
 describe("survey light", () => {
+  test.each(["dark", "lamp", "opening"] as const)(
+    "samples cropped light from the whole %s room",
+    async (kind) => {
+      const whole = new BlockGrid({ x: 21, y: 5, z: 21 }, "minecraft:stone");
+      for (let x = 1; x < 20; x += 1)
+        for (let y = 2; y < 4; y += 1)
+          for (let z = 1; z < 20; z += 1) whole.set(x, y, z, "minecraft:air");
+      if (kind === "lamp") whole.set(4, 2, 10, "minecraft:lantern");
+      if (kind === "opening") whole.set(4, 4, 10, "minecraft:air");
+      const renderer = new Renderer(root);
+      const local = new BlockGrid({ x: 1, y: 1, z: 1 }, "minecraft:stone");
+      const ordinary = await renderer.quadsFor(local);
+      const lit = await renderer.quadsFor(local, "light", {
+        lightFrom: whole,
+        lightOrigin: { x: 5, y: 1, z: 10 },
+      });
+      const top = ordinary.quads.find(({ normal }) => normal?.[1] === 1);
+      const litTop = lit.quads.find(({ normal }) => normal?.[1] === 1);
+      if (top === undefined || litTop === undefined)
+        throw new Error("missing top face");
+      const factors = kind === "dark" ? [0.9, 0.25, 0.25] : [0.95, 0.95, 0.95];
+      top.color.forEach((channel, index) =>
+        expect(litTop.color[index]).toBeCloseTo(
+          channel * (factors[index] ?? 0),
+        ),
+      );
+    },
+  );
+
   test("a cut survey is lit by the whole build when asked", async () => {
     const renderer = new Renderer(root);
     // A roofed stone room: cut below the roof, its floor is dark only when

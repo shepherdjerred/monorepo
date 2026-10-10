@@ -32,6 +32,23 @@ export function candidateDir(workspace: BuildWorkspace, name: string): string {
   );
 }
 
+/** Validate identity without rejecting historical candidates from another capture. */
+async function candidateMetadata(
+  workspace: BuildWorkspace,
+  name: string,
+): Promise<Candidate> {
+  const file = Bun.file(
+    path.join(candidateDir(workspace, name), CANDIDATE_FILES.info),
+  );
+  const candidate = CandidateSchema.parse(await file.json());
+  if (candidate.name !== name) {
+    throw new Error(
+      `candidate metadata "${name}" contains name "${candidate.name}"`,
+    );
+  }
+  return candidate;
+}
+
 /**
  * The most recent critique of this exact grid, whichever render of it was
  * critiqued: the journal's critique entries are in time order and each
@@ -166,7 +183,7 @@ export async function readCandidate(
       `no candidate "${name}" in ${workspace.dir}; toolkit mc build candidate ${dir} ls`,
     );
   }
-  const candidate = CandidateSchema.parse(await file.json());
+  const candidate = await candidateMetadata(workspace, name);
   const manifest = await workspace.manifest();
   if (
     manifest.site === undefined ||
@@ -214,10 +231,7 @@ export async function listCandidates(
   }
   const candidates = [];
   for (const name of names.toSorted()) {
-    const info = Bun.file(
-      path.join(candidateDir(workspace, name), CANDIDATE_FILES.info),
-    );
-    const candidate = CandidateSchema.parse(await info.json());
+    const candidate = await candidateMetadata(workspace, name);
     candidates.push({ ...candidate, best: manifest.best?.candidate === name });
   }
   return candidates.toSorted((a, b) => a.at.localeCompare(b.at));

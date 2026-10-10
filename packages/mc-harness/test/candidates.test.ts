@@ -534,7 +534,7 @@ describe("critique", () => {
       compareWith: before,
       floor: 0,
     });
-    // A crop with a cut in light mode is lit by the crop before the cut.
+    // A crop with a cut in light mode retains the whole build's lighting.
     const litCrop = await renderLooks(workspace, grid, "lit-crop", {
       source: "compiled",
       views: ["sheet"],

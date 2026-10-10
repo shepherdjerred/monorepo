@@ -236,7 +236,9 @@ survey`, `--grid n` coordinate lines, `--floor y` and `--section z` cuts
   or imported ops has no single program, so those renders keep none.
   A missing referenced compile snapshot is an error; it is never treated as
   a programless render or candidate. Missing textures fail before images or
-  sidecars are written. Invalid sidecars also fail instead of selecting an
+  sidecars are written. Cropped light views retain the whole build's light
+  field and crop origin, including lamps and openings outside the window.
+  Invalid sidecars also fail instead of selecting an
   older render, and critique verifies the saved schematic against its hash
   before scoring or updating the journal.
 - **Journal.** Every command that changes or looks at the build appends a
@@ -274,7 +276,8 @@ pick n | knockout [--among a,b] [--rubric] [--model]`) keep versions of
   bouts. Changing those inputs starts a new tournament. Saving candidates
   outside an explicit `--among` pool does not reset its checkpoint; the
   original incumbent remains part of its fingerprint even after defeat.
-  Incomplete candidate directories fail listing, resume and judging.
+  Incomplete candidate directories and metadata names that disagree with their
+  directory fail listing, resume and judging.
   Candidates record the captured site's hash, world and bounds; picking or
   judging one against another capture fails. Recapturing clears the incumbent
   and preserves old candidates; use `--among` to select candidates saved for

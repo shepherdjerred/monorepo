@@ -72,7 +72,10 @@ by block light with sky light propagated in; level 0 is red), for example
 `renderer.view(grid, "iso-front-right", 512, { mode: "relief" })`.
 Ordinary and stained glass, including panes, transmit skylight; tinted glass
 and solid blocks obstruct it. The skylight pass is an approximation within
-the captured grid. Beyond
+the captured grid. For cut or cropped light views, pass `lightFrom: whole`
+and `lightOrigin: { x, y, z }` (the cropped grid's origin in `whole`) so
+surrounding roofs, walls, lamps and openings still determine illumination.
+Beyond
 the contact sheet: `renderer.elevations(grid, { grid: 8 })` (front, right,
 back, left and top with coordinate lines), `renderer.pov(grid)` (a
 perspective eye-level view from in front of the build, `camera.ts`

@@ -151,24 +151,27 @@ async function writeLook(
 
 /**
  * The grid a look is drawn from, cropped and cut as asked, and the grid it
- * is lit by: the crop before any cut, so a floor plan or section inside a
- * close-up is still lit by the roof and walls the cut removed.
+ * is lit by: the whole build, with the crop's origin retained so every
+ * floor or section samples the original roof, walls, openings and lamps.
  */
 function subjectOf(
   grid: BlockGrid,
   options: LookOptions,
-): { subject: BlockGrid; lightFrom: BlockGrid } {
+): { subject: BlockGrid; lightFrom: BlockGrid; lightOrigin: Vec3 } {
   let subject = grid;
   // A crop re-bases coordinates to its own corner; the cuts below are given
   // in the uncropped grid's coordinates, so they move with it.
-  let origin = { y: 0, z: 0 };
+  let origin = { x: 0, y: 0, z: 0 };
   if (options.crop !== undefined) {
     const box = namedCrop(subject, options.crop);
     subject = cropBox(subject, box);
     // cropGrid clamps a window that starts before the grid; the cuts move by the same amount.
-    origin = { y: Math.max(0, box.min.y), z: Math.max(0, box.min.z) };
+    origin = {
+      x: Math.max(0, box.min.x),
+      y: Math.max(0, box.min.y),
+      z: Math.max(0, box.min.z),
+    };
   }
-  const lightFrom = subject;
   if (options.floor !== undefined || options.section !== undefined) {
     subject = cutGrid(subject, {
       ...(options.floor === undefined
@@ -179,7 +182,7 @@ function subjectOf(
         : { behindZ: options.section - origin.z }),
     });
   }
-  return { subject, lightFrom };
+  return { subject, lightFrom: grid, lightOrigin: origin };
 }
 
 type LookContext = {
@@ -189,9 +192,9 @@ type LookContext = {
   name: string;
   mode: RenderMode;
   grid: number | undefined;
-  /** The whole build lights a cut subject; a crop is lit by itself. */
-  /** What the subject is lit by in light mode: the crop before any cut, else the whole build. */
+  /** Lighting stays in whole-build coordinates even for cropped/cut subjects. */
   lightFrom: BlockGrid;
+  lightOrigin: Vec3;
 };
 
 type LookRenderer = (ctx: LookContext) => Promise<[string, string, Image][]>;
@@ -208,6 +211,7 @@ const LOOKS: Record<LookView, LookRenderer> = {
         mode: ctx.mode,
         ...(ctx.grid === undefined ? {} : { grid: ctx.grid }),
         lightFrom: ctx.lightFrom,
+        lightOrigin: ctx.lightOrigin,
       }),
     ],
   ],
@@ -219,6 +223,7 @@ const LOOKS: Record<LookView, LookRenderer> = {
         mode: ctx.mode,
         grid: ctx.grid ?? 8,
         lightFrom: ctx.lightFrom,
+        lightOrigin: ctx.lightOrigin,
       }),
     ],
   ],
@@ -230,6 +235,7 @@ const LOOKS: Record<LookView, LookRenderer> = {
         mode: ctx.mode,
         ...(ctx.grid === undefined ? {} : { grid: ctx.grid }),
         lightFrom: ctx.lightFrom,
+        lightOrigin: ctx.lightOrigin,
       }),
     ],
   ],
@@ -240,6 +246,7 @@ const LOOKS: Record<LookView, LookRenderer> = {
       await ctx.renderer.pov(ctx.subject, {
         mode: ctx.mode,
         lightFrom: ctx.lightFrom,
+        lightOrigin: ctx.lightOrigin,
       }),
     ],
   ],
@@ -247,6 +254,7 @@ const LOOKS: Record<LookView, LookRenderer> = {
     const survey = await ctx.renderer.survey(ctx.subject, {
       mode: ctx.mode,
       lightFrom: ctx.lightFrom,
+      lightOrigin: ctx.lightOrigin,
     });
     return [
       ["survey-index", `${ctx.name}-survey-index.png`, survey.index],
@@ -278,7 +286,7 @@ export async function renderLooks(
   );
   const renderer = new Renderer(await ensureAssets());
   await mkdir(workspace.file(BUILD_FILES.rendersDir), { recursive: true });
-  const { subject, lightFrom } = subjectOf(grid, options);
+  const { subject, lightFrom, lightOrigin } = subjectOf(grid, options);
   const ctx: LookContext = {
     renderer,
     subject,
@@ -287,6 +295,7 @@ export async function renderLooks(
     mode: options.mode ?? "textured",
     grid: options.grid,
     lightFrom,
+    lightOrigin,
   };
   const views = options.views ?? [
     "sheet",

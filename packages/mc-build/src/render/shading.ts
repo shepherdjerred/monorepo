@@ -4,7 +4,7 @@
  * depth show) and `light` (faces coloured by the light outside them, so dark
  * corners and unlit doors show).
  */
-import type { BlockGrid } from "#src/core/grid.ts";
+import type { BlockGrid, Vec3 } from "#src/core/grid.ts";
 import { blockId, isAir } from "#src/core/block-state.ts";
 import type { Quad, V3 } from "./mesh.ts";
 
@@ -12,6 +12,7 @@ import type { Quad, V3 } from "./mesh.ts";
 export const RELIEF_SUN = { yaw: 300, pitch: 25 } as const;
 const SHADOW = 0.45;
 const MARCH_STEPS = 64;
+const ZERO_ORIGIN: Vec3 = { x: 0, y: 0, z: 0 };
 /** Above this many quads the sun march is skipped unless asked for explicitly. */
 export const RELIEF_MAX_QUADS = 2_000_000;
 
@@ -240,14 +241,15 @@ export function shadeLight(
   quads: readonly Quad[],
   grid: BlockGrid,
   light: Int8Array,
+  origin: Vec3 = ZERO_ORIGIN,
 ): Quad[] {
   const sky = skyLightLevels(grid);
   return quads.map((quad) => {
     if (quad.normal === null) return quad;
     const outside = outsidePoint(quad, quad.normal);
-    const x = Math.floor(outside[0]);
-    const y = Math.floor(outside[1]);
-    const z = Math.floor(outside[2]);
+    const x = Math.floor(outside[0] + origin.x);
+    const y = Math.floor(outside[1] + origin.y);
+    const z = Math.floor(outside[2] + origin.z);
     const level = grid.inBounds(x, y, z)
       ? Math.max(
           light[grid.index(x, y, z)] ?? 0,
