@@ -10,7 +10,10 @@ const OciManifestSchema = z.object({
 });
 const OciConfigSchema = z.object({
   config: z
-    .object({ Labels: z.record(z.string(), z.string()).optional() })
+    .object({
+      Labels: z.record(z.string(), z.string()).optional(),
+      Env: z.array(z.string()).optional(),
+    })
     .optional(),
 });
 const RegistryTokenSchema = z
@@ -108,9 +111,36 @@ const MANIFEST_ACCEPT = [
 type OciMetadata = {
   description: string | undefined;
   source: string | undefined;
+  revision: string | undefined;
 };
 
-async function ociMetadata(
+function configMetadata(
+  config: z.infer<typeof OciConfigSchema>["config"],
+  manifest: OciMetadata,
+): OciMetadata {
+  const labels = config?.Labels;
+  const source = labels?.["org.opencontainers.image.source"] ?? manifest.source;
+  const buildRevisions = (config?.Env ?? [])
+    .filter((value) => value.startsWith("GIT_SHA="))
+    .map((value) => value.slice(8));
+  if (new Set(buildRevisions).size > 1) {
+    throw new Error("OCI build revision declarations disagree");
+  }
+  return {
+    description:
+      labels?.["org.opencontainers.image.description"] ?? manifest.description,
+    source,
+    // First-party images can inherit the base image's revision LABEL while
+    // replacing its source LABEL. Only the application's baked build identity
+    // proves its source revision; an inherited label is not that evidence.
+    revision:
+      source === "https://github.com/shepherdjerred/monorepo"
+        ? buildRevisions[0]
+        : (manifest.revision ?? labels?.["org.opencontainers.image.revision"]),
+  };
+}
+
+export async function ociMetadata(
   registryOrigin: string,
   repository: string,
   reference: string,
@@ -126,15 +156,28 @@ async function ociMetadata(
     manifest.annotations?.["org.opencontainers.image.description"];
   const manifestSource =
     manifest.annotations?.["org.opencontainers.image.source"];
-  if (manifestDescription !== undefined) {
-    return { description: manifestDescription, source: manifestSource };
-  }
+  const manifestRevision =
+    manifest.annotations?.["org.opencontainers.image.revision"];
   const child = manifest.manifests?.[0];
   if (followIndex && child !== undefined && manifest.config === undefined) {
-    return ociMetadata(registryOrigin, repository, child.digest, false);
+    const metadata = await ociMetadata(
+      registryOrigin,
+      repository,
+      child.digest,
+      false,
+    );
+    return {
+      description: metadata.description ?? manifestDescription,
+      source: metadata.source ?? manifestSource,
+      revision: metadata.revision ?? manifestRevision,
+    };
   }
   if (manifest.config === undefined) {
-    return { description: undefined, source: manifestSource };
+    return {
+      description: manifestDescription,
+      source: manifestSource,
+      revision: manifestRevision,
+    };
   }
   const configUrl = `${registryOrigin}/v2/${repository}/blobs/${manifest.config.digest}`;
   const configResponse = await registryFetch(
@@ -146,11 +189,36 @@ async function ociMetadata(
       `Registry config blob returned HTTP ${String(configResponse.status)}`,
     );
   }
-  const labels = OciConfigSchema.parse(await configResponse.json()).config
-    ?.Labels;
+  const config = OciConfigSchema.parse(await configResponse.json()).config;
+  return configMetadata(config, {
+    description: manifestDescription,
+    source: manifestSource,
+    revision: manifestRevision,
+  });
+}
+
+export function ociImageLocation(
+  change: DependencyChange,
+  value: string | undefined,
+): {
+  registryOrigin: string;
+  repository: string;
+  reference: string;
+} {
+  if (value === undefined || change.registryUrl === undefined) {
+    throw new Error("Registry URL or image value is missing");
+  }
+  const parsed = new URL(change.registryUrl);
+  const prefix = parsed.pathname.replace(/^\//, "").replace(/\/$/, "");
+  const packagePath = change.packageName ?? change.name;
+  const repository = prefix === "" ? packagePath : `${prefix}/${packagePath}`;
+  const digest = /@(sha256:[a-f0-9]{64})$/.exec(value)?.[1];
   return {
-    description: labels?.["org.opencontainers.image.description"],
-    source: labels?.["org.opencontainers.image.source"] ?? manifestSource,
+    registryOrigin: ["docker.io", "index.docker.io"].includes(parsed.host)
+      ? "https://registry-1.docker.io"
+      : parsed.origin,
+    repository,
+    reference: digest ?? value,
   };
 }
 
@@ -170,19 +238,16 @@ export async function ociManifestAttempt(
       note: undefined,
     };
   }
-  const parsed = new URL(registryUrl);
-  const prefix = parsed.pathname.replace(/^\//, "").replace(/\/$/, "");
-  const packagePath = change.packageName ?? change.name;
-  const repository = prefix === "" ? packagePath : `${prefix}/${packagePath}`;
-  const registryOrigin = ["docker.io", "index.docker.io"].includes(parsed.host)
-    ? "https://registry-1.docker.io"
-    : `${parsed.protocol}//${parsed.host}`;
-  const url = `${registryOrigin}/v2/${repository}/manifests/${encodeURIComponent(version)}`;
+  const { registryOrigin, repository, reference } = ociImageLocation(
+    change,
+    change.newValue ?? version,
+  );
+  const url = `${registryOrigin}/v2/${repository}/manifests/${encodeURIComponent(reference)}`;
   try {
     const metadata = await ociMetadata(
       registryOrigin,
       repository,
-      version,
+      reference,
       true,
     );
     const description = dependencyNoteText(metadata.description);

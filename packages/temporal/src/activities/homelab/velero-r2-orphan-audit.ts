@@ -25,9 +25,9 @@ import {
 // under zfspv-incr/backups/ whose backup name appears in neither the live
 // `velero.io/v1/Backup` CR set nor the R2 backup metadata, and whose newest
 // object predates the 24h safety fence. The orphan definition intentionally
-// mirrors the operator cleanup tool
-// (packages/homelab/src/cdk8s/scripts/r2-orphan-cleanup-core.ts) so the gauge
-// and a manual `bun run r2:orphans -- inspect` agree. Detection only: deletion
+// identifies unreferenced prefixes, not safely reclaimable bytes. The operator
+// cleanup tool additionally protects OpenEBS restore history and ZFSBackup
+// references, so its candidate set can be smaller. Detection only: deletion
 // stays a reviewed manual operation (see runbooks/r2-capacity-remediation.md).
 
 const R2_ZFS_PREFIX = "zfspv-incr/backups/";

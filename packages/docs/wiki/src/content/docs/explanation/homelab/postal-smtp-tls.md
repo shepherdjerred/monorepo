@@ -37,11 +37,11 @@ flowchart LR
   AM -->|PLAIN over STARTTLS| POSTAL
 ```
 
-[`cert-manager.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/cert-manager.ts)
+[`cert-manager.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/platform/cert-manager.ts)
 owns the CA and ClusterIssuer.
 [`postal.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/mail/postal.ts)
 presents the rotating SMTP leaf.
-[`prometheus.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/prometheus.ts)
+[`prometheus.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/observability/prometheus.ts)
 points Alertmanager at `ca.crt` and sets `smtp_require_tls: true`.
 
 This CA is cluster-scoped on purpose. Temporal's PostgreSQL CA stays a

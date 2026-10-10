@@ -1,7 +1,7 @@
 # R2 Capacity Remediation Runbook
 
-Procedure for when the `homelab` R2 bucket approaches or exceeds its 1.5 TB
-budget threshold (`R2StorageNearingLimit` / `R2StorageExceedingLimit`), or when the R2
+Procedure for when the `homelab` R2 bucket approaches or exceeds its 1536 GiB
+capacity budget (`R2StorageNearingLimit` / `R2StorageExceedingLimit`), or when the R2
 orphan alerts fire (`VeleroR2OrphanPrefixes` /
 `VeleroR2OrphanBytesExcessive`). Triage first: the inventory distinguishes
 accumulated orphans (the usual cause — TTL-expired backups whose

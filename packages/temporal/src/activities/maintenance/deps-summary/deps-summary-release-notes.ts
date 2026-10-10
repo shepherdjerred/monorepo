@@ -1,8 +1,13 @@
 import { Context } from "@temporalio/activity";
 import { z } from "zod/v4";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
-import type { DependencyChange } from "#shared/deps-summary-types.ts";
+import type {
+  DependencyChange,
+  ReleaseNote,
+  ReleaseNoteAttempt,
+} from "#shared/deps-summary-types.ts";
 import { ociManifestAttempt } from "./deps-summary-oci.ts";
+import { internalBuildAttempt } from "./deps-summary-internal-build.ts";
 import { dependencyNoteText } from "./deps-summary-text.ts";
 import { generateBoundedSynthesis } from "#activities/agent/synthesis-runtime.ts";
 
@@ -40,26 +45,6 @@ const GithubReleaseSchema = z.object({
   body: z.string().nullable().optional(),
   html_url: z.url().optional(),
 });
-export type ReleaseNoteAttempt = {
-  source:
-    | "merged-pr"
-    | "github-release"
-    | "helm-index"
-    | "oci-manifest"
-    | "catalog-override";
-  url: string | undefined;
-  outcome: "found" | "unavailable" | "failed";
-  detail: string;
-};
-
-export type ReleaseNote = {
-  dependency: string;
-  version: string;
-  notes: string;
-  url: string | undefined;
-  source: ReleaseNoteAttempt["source"];
-};
-
 export type MissingReleaseNote = {
   dependency: string;
   commitSha: string;
@@ -333,10 +318,17 @@ export async function fetchDependencyReleaseNotes(
   for (const [index, change] of changes.entries()) {
     safeHeartbeat({ phase: "release-notes", dependency: change.name, index });
     const attempts: ReleaseNoteAttempt[] = [];
-    const pr = await mergedPrAttempt(change, headers);
+    const pr =
+      change.category === "internal-image" && change.newValue !== undefined
+        ? await internalBuildAttempt(change, headers)
+        : await mergedPrAttempt(change, headers);
     attempts.push(pr.attempt);
     let note = pr.note;
-    if (note === undefined && change.newValue !== undefined) {
+    if (
+      note === undefined &&
+      change.newValue !== undefined &&
+      change.category !== "internal-image"
+    ) {
       const datasourceResult =
         change.datasource === "github-releases"
           ? await githubReleaseAttempt(change, headers)

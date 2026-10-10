@@ -54,11 +54,6 @@
       "count": 1
     }
   },
-  "src/activities/maintenance/deps-summary/deps-summary.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "src/activities/maintenance/tasknotes-canary.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
