@@ -88,8 +88,9 @@ any other namespace raise `TemporalUnexpectedNamespaceStartAttempted`.
 The Bryan Bucks analytics schedule runs in `prod`, where the central Workflow
 executor polls `monorepo-workflows`; its `scout` Activity calls the beta Scout
 data endpoint. The central Scout worker also polls the unchanged `scout` queue
-in `beta` to drain retained executions. All other central queues are `prod`
-only. Schedule registration retires the old beta schedule without cancelling
+in `beta` to drain retained executions. The central Workflow and reports
+workers also poll `beta` for the explicit notification acceptance canary.
+Other central Activity queues are `prod` only. Schedule registration retires the old beta schedule without cancelling
 existing executions.
 
 | Role              | Queue or surface                                                                       |               Activity concurrency |
@@ -312,8 +313,9 @@ reviewed homelab bootstrap settings. Workflow histories contain no credentials.
 
 `temporal-daily-report-notifications-enabled` resolves per Activity and defaults
 off in production, with beta targeting declared for acceptance. When enabled,
-only the homelab audit, CI I/O telemetry, and Scout queue-window daily schedules
-use changed-condition mail. Each run keeps its full immutable report under
+the homelab audit, CI I/O telemetry, and Scout queue-window daily schedules,
+plus the explicit beta notification canary, use changed-condition mail.
+Each run keeps its full immutable report under
 `reports/observations/<namespace>/<type>/<schedule>/`; a baseline, changed
 actionable condition, or recovery sends mail. An unchanged actionable condition
 sends a reminder after seven days, while unchanged clear reports stay silent.
@@ -326,9 +328,19 @@ prior pending report through its existing delivery lease and accepted receipt
 before evaluating the next report. Skips have explicit records and no Postal
 message ID or acceptance time. The freshness monitor counts completed skips
 separately from mail acceptance, using the report's original observation time.
-Manual reports, dependency checkpoints, digests, canaries, and other schedules
+Manual reports, dependency checkpoints, digests, other canaries, and other schedules
 retain their existing delivery behavior. Postal acceptance still does not
 establish inbox delivery.
+
+`daily-notification-policy-canary` is declared only in `beta` and starts paused.
+After promoting a central Workflow candidate containing `runDailyNotificationCanary`
+and deploying the reports worker with beta polling, trigger the paused schedule
+twice with its declared `attention` input: the first run must have a real Postal
+receipt and the second an explicit unchanged skip. Start the same Workflow in
+`beta` with `condition: "clear"` to verify recovery mail. Inspect the immutable
+reports, family state, skip record, and actual acceptance receipts; a completed
+Workflow alone does not prove delivery. Keep recurring delivery paused during
+this rehearsal. The Workflow rejects every namespace other than `beta`.
 
 ## Documentation
 

@@ -7,6 +7,7 @@ import {
   runCommand,
   fetchGeneratedRemoteBranch,
   pushGeneratedBranch,
+  pushOwnedGeneratedCommit,
 } from "./scout-season-refresh-git.ts";
 
 async function observedRemote(repoDir: string, branch: string) {
@@ -167,7 +168,12 @@ async function assertConcurrentUpdateIsPreserved(
     });
     await fetchGeneratedRemoteBranch({ repoDir, branch, gitEnv: {} });
     await expect(
-      pushGeneratedBranch({ repoDir, branch, gitEnv: {}, expectedRemoteSha }),
+      pushOwnedGeneratedCommit({
+        repoDir,
+        branch,
+        gitEnv: {},
+        expectedRemoteSha,
+      }),
     ).rejects.toThrow(/remote-lease-rejected/);
     expect(
       await runCommand(["git", "show", `origin/${branch}:catalog.json`], {

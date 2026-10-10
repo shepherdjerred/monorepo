@@ -435,6 +435,26 @@ export async function pushGeneratedBranch(input: {
   );
 }
 
+/** Inspect the captured remote history, then publish under its exact lease. */
+export async function pushOwnedGeneratedCommit(input: {
+  repoDir: string;
+  branch: string;
+  gitEnv: Record<string, string>;
+  expectedRemoteSha: string | undefined;
+}): Promise<string> {
+  if (input.expectedRemoteSha !== undefined) {
+    await assertRemoteBranchIsOurs({
+      ...input,
+      expectedRemoteSha: input.expectedRemoteSha,
+    });
+  }
+  const commitHash = await runCommand(["git", "rev-parse", "HEAD"], {
+    cwd: input.repoDir,
+  });
+  await pushGeneratedBranch(input);
+  return commitHash;
+}
+
 export async function openSeasonRefreshPr(
   input: OpenPrInput,
 ): Promise<OpenPrResult> {
@@ -473,13 +493,7 @@ export async function openSeasonRefreshPr(
   await runCommand(["git", "commit", "-m", input.title], {
     cwd: input.repoDir,
   });
-  const commitHash = await runCommand(["git", "rev-parse", "HEAD"], {
-    cwd: input.repoDir,
-  });
-  if (expectedRemoteSha !== undefined) {
-    await assertRemoteBranchIsOurs({ ...input, expectedRemoteSha });
-  }
-  await pushGeneratedBranch({
+  const commitHash = await pushOwnedGeneratedCommit({
     repoDir: input.repoDir,
     branch: input.branch,
     gitEnv,

@@ -32,6 +32,10 @@ worldedit = "7.4.5"
 citizens = "2.0.44-b4256"
 coreprotect = "24.1"
 log4j = "2.26.1"
+security-jackson2 = "2.22.3"
+security-plexus-utils = "3.6.1"
+security-netty = "4.2.17.Final"
+security-lz4 = "1.11.4"
 
 [libraries]
 errorprone-annotations = { module = "com.google.errorprone:error_prone_annotations", version.ref = "errorprone" }
@@ -70,6 +74,9 @@ citizens = { module = "net.citizensnpcs:citizens-main", version.ref = "citizens"
 coreprotect = { module = "net.coreprotect:coreprotect", version.ref = "coreprotect" }
 worldedit-core = { module = "com.sk89q.worldedit:worldedit-core", version.ref = "worldedit" }
 log4j-core = { module = "org.apache.logging.log4j:log4j-core", version.ref = "log4j" }
+security-jackson2-core = { module = "com.fasterxml.jackson.core:jackson-core", version.ref = "security-jackson2" }
+security-jackson2-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "security-jackson2" }
+security-plexus-utils = { module = "org.codehaus.plexus:plexus-utils", version.ref = "security-plexus-utils" }
 
 [plugins]
 fabric-loom = { id = "net.fabricmc.fabric-loom", version.ref = "fabric-loom" }

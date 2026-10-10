@@ -9,6 +9,9 @@ bun = "1.4.2"
 # Temporal's real workflow-worker tests need Node runtime primitives that Bun
 # 1.4 does not implement. Keep the sole exception on the current LTS line.
 node = "24.21.0"
+# The Storm's archive and restore tests require modern Python syntax. Resolve
+# this interpreter through mise inside Gradle rather than the system Python.
+python = "3.15.0"
 # renovate: datasource=github-releases depName=temporalio/cli
 # The short `temporal` registry alias still targets the archived
 # temporalio/temporal release layout, which has no Darwin arm64 artifact.

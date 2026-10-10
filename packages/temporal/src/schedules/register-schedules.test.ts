@@ -588,6 +588,8 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // workflow-level sleeps; the activity carries its own startToCloseTimeout
   // and heartbeat budget.
   "runScheduleRehearsalWorkflow",
+  // One bounded report-delivery Activity; no Workflow-level sleeps.
+  "runDailyNotificationCanary",
 ]);
 
 const SLACK_MS = 5 * ONE_MINUTE;

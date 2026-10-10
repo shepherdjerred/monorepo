@@ -259,12 +259,22 @@ export async function deliverReport(
   const attemptStartedAt = new Date().toISOString();
   const report = ReportEnvelopeV1Schema.parse(rawReport);
   const store = reportReceiptStore();
+  return deliverReportWithDependencies(
+    report,
+    await activityDeliveryDependencies(store, attemptStartedAt),
+  );
+}
+
+async function activityDeliveryDependencies(
+  store: ReportReceiptStore,
+  attemptStartedAt: string,
+): Promise<ReportDeliveryDependencies> {
   const info = Context.current().info;
   const execution = info.workflowExecution;
   if (execution === undefined) {
     throw new Error("Report delivery requires a Temporal workflow execution");
   }
-  return deliverReportWithDependencies(report, {
+  return {
     backend: deliveryBackend(store),
     addresses: await resolvePostalAddresses(),
     send: (input) => sendPostalEmail(input),
@@ -275,7 +285,7 @@ export async function deliverReport(
     attemptStartedAt,
     receiptPrefix: store.prefix,
     statePrefix: Bun.env["REPORT_STATE_PREFIX"] ?? "reports/state",
-  });
+  };
 }
 
 export async function deliverReportWithDependencies(
@@ -491,21 +501,9 @@ async function deliverDailyActivityNotification(
   attemptStartedAt: string,
 ): Promise<ReportDeliveryResult | SkippedNotification> {
   const store = reportReceiptStore();
-  const backend = deliveryBackend(store);
   const info = Context.current().info;
-  const execution = info.workflowExecution;
-  if (execution === undefined)
-    throw new Error("Notification requires a workflow execution");
-  const deps: ReportDeliveryDependencies = {
-    backend,
-    addresses: await resolvePostalAddresses(),
-    send: (input) => sendPostalEmail(input),
-    now: () => new Date().toISOString(),
-    owner: `${execution.workflowId}/${execution.runId}/${info.activityId}/${String(info.attempt)}`,
-    attemptStartedAt,
-    receiptPrefix: store.prefix,
-    statePrefix: Bun.env["REPORT_STATE_PREFIX"] ?? "reports/state",
-  };
+  const deps = await activityDeliveryDependencies(store, attemptStartedAt);
+  const backend = deps.backend;
   const result = await deliverDailyNotification(report, {
     ...deps,
     namespace: info.namespace,
