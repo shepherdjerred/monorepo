@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.essentials.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.analytics.ProductAnalytics;
 import com.shepherdjerred.thestorm.core.protection.Decision;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.protection.Protection;
@@ -517,6 +518,7 @@ final class TeleportFlow implements TeleportTravel {
             return;
           }
           services.back().record(mover.getUniqueId(), left, BackEntry.Cause.TELEPORT);
+          recordInteraction(ticket);
           runtime.onMain(
               services.payments().confirm(ticket.payer().getUniqueId(), payment),
               "recording teleport usage",
@@ -669,6 +671,26 @@ final class TeleportFlow implements TeleportTravel {
 
   private void release(Ticket ticket) {
     release(ticket, false);
+  }
+
+  private void recordInteraction(Ticket ticket) {
+    switch (ticket.kind()) {
+      case HOME ->
+          runtime
+              .analytics()
+              .interaction(ticket.mover().getUniqueId(), ProductAnalytics.Action.HOME_USED);
+      case WARP ->
+          runtime
+              .analytics()
+              .interaction(ticket.mover().getUniqueId(), ProductAnalytics.Action.WARP_USED);
+      case RTP ->
+          runtime
+              .analytics()
+              .interaction(ticket.mover().getUniqueId(), ProductAnalytics.Action.RANDOM_TELEPORT);
+      case SPAWN, TPA, BACK -> {
+        /* Outside the first feature inventory. */
+      }
+    }
   }
 
   private void release(Ticket ticket, boolean arrived) {

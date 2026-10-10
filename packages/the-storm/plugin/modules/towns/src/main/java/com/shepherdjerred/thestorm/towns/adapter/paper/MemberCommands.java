@@ -9,6 +9,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+import com.shepherdjerred.thestorm.core.analytics.ProductAnalytics;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.towns.app.Change;
 import com.shepherdjerred.thestorm.towns.app.MembershipService;
@@ -144,6 +145,7 @@ final class MemberCommands {
     var result = members.accept(player.getUniqueId(), townName);
     runtime.report(player, result, town -> Notices.success("You joined " + town.name() + "."));
     if (result instanceof Result.Ok<Change<Town>, List<TownProblem>>(var change)) {
+      runtime.measured(player, change.saved(), ProductAnalytics.Action.TOWN_JOINED);
       afterSaved(
           change,
           () ->
@@ -279,6 +281,9 @@ final class MemberCommands {
                     return;
                   }
                   player.sendMessage(Notices.info(town.name() + ": " + ranks(town, known)));
+                  runtime
+                      .analytics()
+                      .interaction(player.getUniqueId(), ProductAnalytics.Action.TOWN_VIEWED);
                   player.sendMessage(
                       Notices.info(
                           "Land: "

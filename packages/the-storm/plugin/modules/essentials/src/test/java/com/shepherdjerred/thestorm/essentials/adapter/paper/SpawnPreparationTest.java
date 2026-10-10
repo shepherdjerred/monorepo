@@ -61,7 +61,8 @@ final class SpawnPreparationTest {
             directory,
             InstantSource.system(),
             RandomGenerator.getDefault(),
-            plugin.getComponentLogger());
+            plugin.getComponentLogger(),
+            com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
     config =
         ConfigFiles.load(
             Path.of("../../../server/owned/plugins/TheStorm/essentials.yml"),

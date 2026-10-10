@@ -67,7 +67,8 @@ final class SkillListenerTest {
             directory,
             InstantSource.system(),
             RandomGenerator.getDefault(),
-            plugin.getComponentLogger());
+            plugin.getComponentLogger(),
+            com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
     listener = new SkillListener(context, levels, new SkillsConfig(10, 60), sealed);
   }
 

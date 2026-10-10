@@ -72,7 +72,8 @@ public class TracksTestPlugin extends JavaPlugin {
             directory,
             InstantSource.system(),
             RandomGenerator.getDefault(),
-            getComponentLogger());
+            getComponentLogger(),
+            com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
     var store = new JooqTrackStore(database);
     var sync = new FakePermissionSync(store);
     permissions = sync;

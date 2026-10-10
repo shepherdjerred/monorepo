@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.essentials.app;
 
+import com.shepherdjerred.thestorm.core.analytics.ProductAnalytics;
 import com.shepherdjerred.thestorm.essentials.domain.afk.AfkState;
 import java.time.Duration;
 import java.time.InstantSource;
@@ -18,11 +19,13 @@ public final class AfkTracker implements AfkStatus {
 
   private final InstantSource time;
   private final Duration timeout;
+  private final ProductAnalytics analytics;
   private final Map<UUID, AfkState> states = new ConcurrentHashMap<>();
 
-  public AfkTracker(InstantSource time, Duration timeout) {
+  public AfkTracker(InstantSource time, Duration timeout, ProductAnalytics analytics) {
     this.time = time;
     this.timeout = timeout;
+    this.analytics = analytics;
   }
 
   /** A player joined: active and not away. */
@@ -42,6 +45,7 @@ public final class AfkTracker implements AfkStatus {
         player,
         (id, state) -> {
           wasAway.set(state.afk());
+          if (state.afk()) analytics.afk(player, false);
           return state.active(time.instant());
         });
     return wasAway.get();
@@ -52,7 +56,12 @@ public final class AfkTracker implements AfkStatus {
     var now = time.instant();
     var next =
         states.compute(
-            player, (id, state) -> (state == null ? AfkState.joined(now) : state).toggle(now));
+            player,
+            (id, state) -> {
+              var toggled = (state == null ? AfkState.joined(now) : state).toggle(now);
+              analytics.afk(id, toggled.afk());
+              return toggled;
+            });
     return next.afk();
   }
 
@@ -64,6 +73,7 @@ public final class AfkTracker implements AfkStatus {
         (id, state) -> {
           var next = state.idleCheck(timeout, now);
           if (next.afk() && !state.afk()) {
+            analytics.afk(id, true);
             newlyAway.add(id);
           }
           return next;

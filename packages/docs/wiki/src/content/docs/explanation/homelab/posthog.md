@@ -125,6 +125,56 @@ deliveries. Prometheus continues to answer operational questions. PostHog
 answers whether an anonymous installation reaches and keeps receiving product
 value.
 
+## The Storm gameplay
+
+The Minecraft server measures human gameplay in the same US project, using a
+separate identity from website visitors. Its
+[server implementation](https://github.com/shepherdjerred/monorepo/tree/main/packages/the-storm)
+and private dashboard declaration belong to the repository. The server sends
+directly to ingestion because the browser proxy serves a different transport
+boundary. Collection is decided at boot, with beta acceptance preceding
+production activation. The server README owns bootstrap and flag details.
+
+Gameplay identity is explicitly named: `the-storm:<stage>:player:<Minecraft UUID>`
+with Minecraft UUID and current name on the person profile. This is separate
+from the website's browser identity. Only human connections create sessions;
+Citizens NPCs and RWF bots are excluded. Captures contain bounded feature and
+action names, mode, timestamps and durations, never chat, conversation text,
+command arguments, coordinates, IP addresses or replay. GeoIP enrichment is
+disabled. The player-facing disclosure lives in the Storm docs' Transparency
+page.
+
+The core analytics port receives successful gameplay actions and Essentials AFK
+transitions. Connected time includes AFK; active time excludes it. Accepted game
+membership, including lobby and spectating, attributes time to arenas or Search
+and Destroy; other time is survival. Intervals split at Pacific midnight, so
+daily sums remain correct across long connections and daylight-saving changes.
+
+SQLite commits each session checkpoint and its outgoing events together.
+A restart ends interrupted sessions at their last checkpoint;
+offline downtime is never counted. Up to one minute can be lost on a hard crash.
+HTTP delivery runs asynchronously in bounded batches. Failures retain
+the original event IDs and payloads for retry on the next heartbeat or boot.
+Shutdown does not wait for the network; its queued events can send at next boot.
+Beta and production identities, first-seen dates and queues remain separate.
+The reviewed world-restoration policy retains all three analytics tables:
+world replacement does not erase first-seen dates or queued event identities.
+
+OpenTofu owns the private **The Storm — Product Metrics** dashboard in
+`packages/homelab/src/tofu/posthog/storm-product-metrics.tf`. It filters production
+Minecraft events and deduplicates stable `event_id` values before summing time
+or counting interactions. It includes unique players over 1/7/30 days, daily
+new/returning players, connected/active hours, mode totals, average completed
+sessions, feature usage and following-week new-player retention. New means
+first observed by this collector, not first-ever server visit. Completion
+includes forced game stops. Retention excludes cohorts whose next week is still
+in progress. Do not change this dashboard through the UI or publish it publicly.
+
+Acceptance requires stored beta events, named person identity and rendered
+insights that agree with a controlled gameplay timeline. Source tests and an
+accepted capture request cannot establish those runtime claims. Both the
+server and dashboard follow the normal GitOps release path.
+
 ## Source verification
 
 Run `bun scripts/checks/check-analytics-sites.ts`, then build each affected site. The

@@ -25,6 +25,7 @@ final class PaperContext {
   private final InstantSource time;
   private final RandomGenerator random;
   private final BlockChanges blocks;
+  private final com.shepherdjerred.thestorm.core.analytics.GameActivity activity;
   private @Nullable ArenaPresence presence;
 
   PaperContext(ModuleContext module) {
@@ -34,6 +35,10 @@ final class PaperContext {
     this.time = module.time();
     this.random = module.random();
     this.blocks = module.services().require(BlockChanges.class);
+    this.activity =
+        new com.shepherdjerred.thestorm.core.analytics.GameActivity(
+            module.analytics(),
+            com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.Mode.ARENA);
   }
 
   Plugin plugin() {
@@ -66,6 +71,10 @@ final class PaperContext {
 
   BlockChanges blocks() {
     return blocks;
+  }
+
+  com.shepherdjerred.thestorm.core.analytics.GameActivity activity() {
+    return activity;
   }
 
   ComponentLogger logger() {

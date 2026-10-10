@@ -5,6 +5,7 @@ import static io.papermc.paper.command.brigadier.Commands.argument;
 import static io.papermc.paper.command.brigadier.Commands.literal;
 
 import com.mojang.brigadier.suggestion.SuggestionProvider;
+import com.shepherdjerred.thestorm.core.analytics.ProductAnalytics;
 import com.shepherdjerred.thestorm.core.protection.Decision;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.protection.Protection;
@@ -244,11 +245,15 @@ final class TeleportCommands {
         player,
         result -> {
           switch (result) {
-            case Result.Ok<HomeRules.Change, HomeError>(var change) ->
-                Say.success(
-                    player,
-                    Say.HOMES,
-                    (change == HomeRules.Change.CREATED ? "Home " : "Moved home ") + name + ".");
+            case Result.Ok<HomeRules.Change, HomeError>(var change) -> {
+              Say.success(
+                  player,
+                  Say.HOMES,
+                  (change == HomeRules.Change.CREATED ? "Home " : "Moved home ") + name + ".");
+              runtime
+                  .analytics()
+                  .interaction(player.getUniqueId(), ProductAnalytics.Action.HOME_SET);
+            }
             case Result.Err<HomeRules.Change, HomeError>(var error) ->
                 Say.error(player, Say.HOMES, describe(error));
           }

@@ -95,7 +95,8 @@ public final class CompanionsE2EPlugin extends JavaPlugin implements BasicComman
                 Duration.between(
                     InstantSource.system().instant(), Instant.parse("2026-10-03T22:00:00Z"))),
             RandomGenerator.of("L64X128MixRandom"),
-            getComponentLogger());
+            getComponentLogger(),
+            com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
     var config =
         new CompanionsConfig(
             3,

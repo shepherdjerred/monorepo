@@ -53,7 +53,11 @@ final class TeleportFlowArrivalTest {
     var plugin = harness.server.getPluginManager().getPlugin("TheStorm");
     var runtime =
         new PaperRuntime(
-            harness.server, new PaperScheduler(plugin), harness.clock, plugin.getComponentLogger());
+            harness.server,
+            new PaperScheduler(plugin),
+            harness.clock,
+            plugin.getComponentLogger(),
+            com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
     var price = new TeleportPrice(25, Duration.ZERO, 1);
     var pricing =
         new TeleportPricing(

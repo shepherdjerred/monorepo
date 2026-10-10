@@ -97,7 +97,8 @@ public final class PaperHarness implements AutoCloseable {
                         directory,
                         harness.clock,
                         RandomGenerator.getDefault(),
-                        plugin.getComponentLogger()));
+                        plugin.getComponentLogger(),
+                        com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled()));
     try {
       MockBukkit.loadWith(
           HarnessPlugin.class,

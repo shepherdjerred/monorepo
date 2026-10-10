@@ -108,7 +108,8 @@ public final class QuestsModule implements StormModule {
                 context.scheduler().mainThread(),
                 context.time(),
                 context.random(),
-                context.logger()),
+                context.logger(),
+                context.analytics()),
             ink);
     services.provide(QuestHooks.class, service);
     services.provide(QuestProgress.class, service);

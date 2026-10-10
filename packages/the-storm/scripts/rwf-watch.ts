@@ -70,6 +70,8 @@ const server = await startServer({
     // The fake brain's Flipt double admits /rwf join and /rwf spectate.
     FLIPT_URL: brainBaseUrl,
     FLIPT_ENVIRONMENT: "prod",
+    POSTHOG_API_HOST: brainBaseUrl,
+    POSTHOG_PROJECT_TOKEN: "phc_test",
     RWF_RECORDING_SALT: rwfRecordingSalt,
     // The discord module needs a token; this malformed one never logs in.
     DISCORD_BOT_TOKEN: "invalid-storm-fixture-token",

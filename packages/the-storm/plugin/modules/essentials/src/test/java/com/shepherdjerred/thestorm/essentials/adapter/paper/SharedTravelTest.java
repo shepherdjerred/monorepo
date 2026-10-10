@@ -55,7 +55,11 @@ final class SharedTravelTest {
     var plugin = harness.server.getPluginManager().getPlugin("TheStorm");
     runtime =
         new PaperRuntime(
-            harness.server, new PaperScheduler(plugin), harness.clock, plugin.getComponentLogger());
+            harness.server,
+            new PaperScheduler(plugin),
+            harness.clock,
+            plugin.getComponentLogger(),
+            com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
     var path = Path.of("../../../server/owned/plugins/TheStorm/essentials.yml");
     var config =
         StrictYaml.parse(path.toString(), Files.readString(path), EssentialsConfig.class)
