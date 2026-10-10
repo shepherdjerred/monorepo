@@ -325,8 +325,8 @@ observing findings remain in the archive without creating active conditions.
 
 Conditional family claims serialize sends across runs. A takeover settles the
 prior pending report through its existing delivery lease and accepted receipt
-before evaluating the next report. All three daily report Workflows use the
-shared lease-aware retry policy so an immediate failure cannot exhaust retries
+before evaluating the next report. Report delivery proxies use the shared
+lease-aware retry policy so an immediate failure cannot exhaust retries
 inside the claim's takeover window. Skips have explicit records and no Postal
 message ID or acceptance time. The freshness monitor counts completed skips
 separately from mail acceptance, using the report's original observation time.
