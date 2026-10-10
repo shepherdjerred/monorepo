@@ -155,7 +155,66 @@ test("reads revision metadata even when the manifest includes a description", as
     "https://ghcr.io",
     "shepherdjerred/temporal-worker",
     `sha256:${"a".repeat(64)}`,
-    true,
+    { followIndex: true },
   );
   expect(metadata.revision).toBe(revision);
+});
+
+test.each([true, false])(
+  "skips attestations and preserves index source identity (baked revision=%s)",
+  async (bakedRevision) => {
+    const requested: string[] = [];
+    vi.stubGlobal("fetch", async (input: string) => {
+      requested.push(input);
+      if (input.endsWith("/manifests/index"))
+        return Response.json({
+          annotations: {
+            "org.opencontainers.image.source": source,
+            "org.opencontainers.image.revision": "4".repeat(40),
+          },
+          manifests: [
+            {
+              digest: "sha256:attestation",
+              platform: { os: "unknown", architecture: "unknown" },
+            },
+            {
+              digest: "sha256:image",
+              platform: { os: "linux", architecture: "amd64" },
+            },
+          ],
+        });
+      if (input.endsWith("/manifests/sha256%3Aimage"))
+        return Response.json({ config: { digest: "sha256:config" } });
+      if (input.endsWith("/blobs/sha256:config"))
+        return Response.json({
+          config: {
+            Labels: { "org.opencontainers.image.revision": "5".repeat(40) },
+            Env: bakedRevision ? [`GIT_SHA=${revision}`] : [],
+          },
+        });
+      throw new Error(`Unexpected registry request: ${input}`);
+    });
+    const metadata = await ociMetadata("https://ghcr.io", "app", "index", {
+      followIndex: true,
+    });
+    expect(metadata.source).toBe(source);
+    expect(metadata.revision).toBe(bakedRevision ? revision : undefined);
+    expect(requested.some((url) => url.includes("attestation"))).toBe(false);
+  },
+);
+
+test("fails an index containing only attestation metadata", async () => {
+  vi.stubGlobal("fetch", async () =>
+    Response.json({
+      manifests: [
+        {
+          digest: "sha256:attestation",
+          platform: { os: "unknown", architecture: "unknown" },
+        },
+      ],
+    }),
+  );
+  await expect(
+    ociMetadata("https://ghcr.io", "app", "index", { followIndex: true }),
+  ).rejects.toThrow("no concrete image platform");
 });

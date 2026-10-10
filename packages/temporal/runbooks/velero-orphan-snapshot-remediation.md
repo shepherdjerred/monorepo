@@ -265,7 +265,7 @@ kubectl -n openebs exec -i $NODE_POD -c openebs-zfs-plugin -- sh -c '
   echo "done"
 ' -- "$LIVE"
 
-# R2: a fresh inspection should contain zero candidates
+# R2: verify reviewed deletions are absent and protected histories remain
 cd packages/homelab/src/cdk8s
 op run -- bun run r2:orphans -- inspect --manifest /tmp/r2-postcheck.json
 ```

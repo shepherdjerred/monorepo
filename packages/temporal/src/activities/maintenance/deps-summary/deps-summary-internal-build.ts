@@ -33,7 +33,7 @@ async function imageRevision(
     image.registryOrigin,
     image.repository,
     image.reference,
-    true,
+    { followIndex: true },
   );
   if (
     metadata.source !== SOURCE ||

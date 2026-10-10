@@ -23,7 +23,9 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 // Riot's queues.json identifies these as Co-op vs. AI, outside the competitive
 // availability model. Keep this explicit so a genuinely new ID still warns.
-const COOP_VS_AI_QUEUE_IDS = new Set([830, 840, 850, 870, 880, 890]);
+const COOP_VS_AI_QUEUE_IDS = new Set([
+  800, 810, 820, 830, 840, 850, 870, 880, 890,
+]);
 
 /** Distinct-days + total-match thresholds that trigger opening a window. */
 const OPEN_MIN_DISTINCT_DAYS = 2;

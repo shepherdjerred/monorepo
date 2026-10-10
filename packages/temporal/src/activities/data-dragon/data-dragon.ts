@@ -435,7 +435,7 @@ export const dataDragonActivities = {
       await disarmGitHooks(repoDir);
       await runCommand(["git", "commit", "-m", title], { cwd: repoDir });
       if (expectedRemoteSha !== undefined) {
-        await assertRemoteBranchIsOurs({ repoDir, branch });
+        await assertRemoteBranchIsOurs({ repoDir, branch, expectedRemoteSha });
       }
       const commitHash = await runCommand(["git", "rev-parse", "HEAD"], {
         cwd: repoDir,

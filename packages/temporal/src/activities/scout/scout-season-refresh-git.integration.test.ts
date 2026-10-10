@@ -9,6 +9,17 @@ import {
   pushGeneratedBranch,
 } from "./scout-season-refresh-git.ts";
 
+async function observedRemote(repoDir: string, branch: string) {
+  return {
+    repoDir,
+    branch,
+    expectedRemoteSha: await runCommand(
+      ["git", "rev-parse", `refs/remotes/origin/${branch}`],
+      { cwd: repoDir },
+    ),
+  };
+}
+
 // These tests drive `changedFilesInPaths` against a REAL git repository rather
 // than feeding a hand-written string to the parser.
 //
@@ -199,7 +210,22 @@ async function publishOperatorChangeAndExpectRefusal({
   );
   await commitAs(repoDir, bot, "catalog.json", "bot proposal");
 
-  await expect(assertRemoteBranchIsOurs({ repoDir, branch })).rejects.toThrow(
+  const observed = await observedRemote(repoDir, branch);
+  await expect(assertRemoteBranchIsOurs(observed)).rejects.toThrow(
+    /jerred@sjer\.red/,
+  );
+  // A background fetch must not hide the human edit from the ownership scan
+  // while the push still protects the previously observed commit.
+  await runCommand(
+    [
+      "git",
+      "update-ref",
+      `refs/remotes/origin/${branch}`,
+      "refs/remotes/origin/main",
+    ],
+    { cwd: repoDir },
+  );
+  await expect(assertRemoteBranchIsOurs(observed)).rejects.toThrow(
     /jerred@sjer\.red/,
   );
 }
@@ -271,7 +297,7 @@ describe("assertRemoteBranchIsOurs (real remote)", () => {
     // content each time.
     await commitAs(repoDir, BOT, "catalog.json", "regenerated, different");
 
-    await assertRemoteBranchIsOurs({ repoDir, branch: BRANCH });
+    await assertRemoteBranchIsOurs(await observedRemote(repoDir, BRANCH));
   });
 
   test("discovers a branch without a PR and protects the observed SHA after a tracking-ref refresh", async () => {
@@ -298,7 +324,7 @@ describe("assertRemoteBranchIsOurs (real remote)", () => {
   test("permits an unchanged regeneration", async () => {
     await commitAs(repoDir, BOT, "catalog.json", "bot proposal");
 
-    await assertRemoteBranchIsOurs({ repoDir, branch: BRANCH });
+    await assertRemoteBranchIsOurs(await observedRemote(repoDir, BRANCH));
   });
 
   test("refuses when an operator has committed to the branch", async () => {
@@ -451,6 +477,6 @@ describe("assertRemoteBranchIsOurs (real remote)", () => {
       "this run, same identity",
     );
 
-    await assertRemoteBranchIsOurs({ repoDir, branch: BRANCH });
+    await assertRemoteBranchIsOurs(await observedRemote(repoDir, BRANCH));
   });
 });

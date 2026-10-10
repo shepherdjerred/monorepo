@@ -5,6 +5,7 @@ import {
   SOURCE_CACHE_CONTROL,
   SOURCE_CACHE_CONTROL_PATH,
   SOURCE_CACHE_PREPARATION_IMAGE,
+  ORDINARY_CLONE_IMAGE,
 } from "#src/pipeline/source-cache.ts";
 import { LIGHT_TIER } from "#src/pipeline/tiers.ts";
 import type {
@@ -91,6 +92,7 @@ export type PipelineIdentity = {
   readonly branch: string;
   /** Forge URL for the commit this pipeline is building. */
   readonly linkUrl: string;
+  readonly event: string;
 };
 
 /**
@@ -177,7 +179,7 @@ function resources(tier: ResourceTier): Record<string, unknown> {
 }
 
 /**
- * Pod shape shared by a step and its services.
+ * Pod shape shared by a clone, step and its services.
  *
  * Services are separate pods, and Woodpecker gives them nothing a step
  * declares: without their own requests they would be invisible to Kueue and
@@ -256,6 +258,30 @@ function emitCommand(
   };
 }
 
+function ordinaryCloneConfiguration(
+  step: CiStep,
+  identity: PipelineIdentity,
+): Record<string, unknown> {
+  if (step.skipClone === true || step.backend === "local") return {};
+  return {
+    // Match Woodpecker's native Git plugin settings while declaring the pod
+    // metadata that its implicit clone cannot inherit.
+    clone: [
+      {
+        name: "clone",
+        image: ORDINARY_CLONE_IMAGE,
+        settings: {
+          depth: 0,
+          ...(identity.event === "tag" ? { tags: true } : {}),
+        },
+        backend_options: {
+          kubernetes: podOptions(step, identity, LIGHT_TIER),
+        },
+      },
+    ],
+  };
+}
+
 /**
  * Render a selected workflow, optionally with sequential command containers
  * sharing one checkout. No container receives another container's grants.
@@ -316,7 +342,7 @@ export function emitWorkflow(step: CiStep, identity: PipelineIdentity): string {
       : { depends_on: [...step.dependsOn] }),
     ...(step.skipClone === true ? { skip_clone: true } : {}),
     ...(step.sourceCache === undefined
-      ? {}
+      ? ordinaryCloneConfiguration(step, identity)
       : {
           clone: [
             {

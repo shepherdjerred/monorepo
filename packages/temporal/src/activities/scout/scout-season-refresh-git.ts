@@ -325,7 +325,9 @@ export async function closeSeasonRefreshPr(
  * earlier human edit in the proposal's unmerged history.
  */
 export async function assertRemoteBranchIsOurs(
-  input: Pick<OpenPrInput, "repoDir" | "branch">,
+  input: Pick<OpenPrInput, "repoDir" | "branch"> & {
+    expectedRemoteSha: string;
+  },
 ): Promise<void> {
   // "<author> / <committer>" — an amend changes only the second.
   const identityOf = async (rev: string): Promise<string> =>
@@ -338,7 +340,7 @@ export async function assertRemoteBranchIsOurs(
       "git",
       "log",
       "--format=%ae / %ce",
-      `refs/remotes/origin/main..refs/remotes/origin/${input.branch}`,
+      `refs/remotes/origin/main..${input.expectedRemoteSha}`,
     ],
     { cwd: input.repoDir },
   );
@@ -475,7 +477,7 @@ export async function openSeasonRefreshPr(
     cwd: input.repoDir,
   });
   if (expectedRemoteSha !== undefined) {
-    await assertRemoteBranchIsOurs(input);
+    await assertRemoteBranchIsOurs({ ...input, expectedRemoteSha });
   }
   await pushGeneratedBranch({
     repoDir: input.repoDir,
