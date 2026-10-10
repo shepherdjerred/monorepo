@@ -400,7 +400,7 @@ setInterval(() => {}, 1000);
   );
 });
 
-test("redacts native Argo usage on both streams while preserving stdin and exit", async () => {
+test("hides the native token default while preserving authentication, options, streams and exit", async () => {
   const directory = await fakePath();
   await writeExecutable(
     directory,
@@ -409,8 +409,8 @@ test("redacts native Argo usage on both streams while preserving stdin and exit"
 const token = process.env.ARGOCD_AUTH_TOKEN;
 if (!token) throw new Error("Authentication was lost");
 const input = await Bun.stdin.text();
-await Bun.stdout.write("stdout:" + token + ":" + input);
-console.error("stderr:" + token + ":replacement-token");
+await Bun.stdout.write("stdout:" + process.env.ARGOCD_OPTS + ":" + input);
+console.error("stderr:preserved");
 process.exit(23);
 `,
   );
@@ -418,18 +418,23 @@ process.exit(23);
     directory,
     ["argocd", "app", "get", "--invalid"],
     "input\n",
-    { extraEnv: { ARGOCD_AUTH_TOKEN: "synthetic-operator-token" } },
+    {
+      extraEnv: {
+        ARGOCD_AUTH_TOKEN: "synthetic-operator-token",
+        ARGOCD_OPTS: "--loglevel debug",
+      },
+    },
   );
   expect(result.code).toBe(23);
-  expect(result.stdout).toBe("stdout:[REDACTED]:input\n");
-  expect(result.stderr).toBe("stderr:[REDACTED]:replacement-token\n");
+  expect(result.stdout).toBe('stdout:--auth-token "" --loglevel debug:input\n');
+  expect(result.stderr).toBe("stderr:preserved\n");
 });
-test("library Argo passthrough redacts output and returns a signal exit without terminating its caller", async () => {
+test("library Argo passthrough protects help defaults and returns a signal exit without terminating its caller", async () => {
   const directory = await fakePath();
   await writeExecutable(
     directory,
     "argocd",
-    '#!/bin/sh\nprintf "%s" "$ARGOCD_AUTH_TOKEN"\nkill -TERM $$\n',
+    '#!/bin/sh\nprintf "%s" "$ARGOCD_OPTS"\nkill -TERM $$\n',
   );
   const runner = path.join(directory, "library.ts");
   const module = path.resolve(import.meta.dir, "../../src/lib/passthrough.ts");
@@ -455,8 +460,93 @@ console.log("library returned:" + code);
     child.exited,
   ]);
   expect(code).toBe(0);
-  expect(stdout).toBe("[REDACTED]library returned:143\n");
+  expect(stdout).toBe('--auth-token ""library returned:143\n');
   expect(stderr).toBe("");
+});
+
+test.each(["--auth-token synthetic-secret", "--auth-token=synthetic-secret"])(
+  "rejects token defaults in ARGOCD_OPTS without echoing credentials: %s",
+  async (options) => {
+    const directory = await fakePath();
+    await writeExecutable(
+      directory,
+      "argocd",
+      "#!/bin/sh\nprintf 'must not run'\n",
+    );
+    const result = await runToolkit(
+      directory,
+      ["argocd", "app", "get", "--help"],
+      "",
+      {
+        extraEnv: {
+          ARGOCD_AUTH_TOKEN: "synthetic-operator-token",
+          ARGOCD_OPTS: options,
+        },
+      },
+    );
+    expect(result.code).toBe(1);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toContain("use ARGOCD_AUTH_TOKEN instead");
+    expect(result.stderr).not.toContain("synthetic-secret");
+  },
+);
+
+test("authenticated Argo keeps terminal detection and waits for a negative confirmation", async () => {
+  const directory = await fakePath();
+  await writeExecutable(
+    directory,
+    "argocd",
+    `#!${process.execPath}
+if (!process.stdin.isTTY || !process.stdout.isTTY || !process.stderr.isTTY)
+  throw new Error("Lost native terminal");
+if (!process.env.ARGOCD_AUTH_TOKEN) throw new Error("Lost authentication");
+process.stdout.write("Proceed? ");
+process.stdin.once("data", (input) => {
+  console.log(input.toString().trim() === "n" ? "declined" : "unexpected answer");
+  process.exit(0);
+});
+`,
+  );
+  let output = "";
+  let answered = false;
+  const terminal = new Bun.Terminal({
+    cols: 80,
+    rows: 24,
+    data(term, bytes) {
+      output += Buffer.from(bytes).toString();
+      if (!answered && output.includes("Proceed? ")) {
+        answered = true;
+        term.write("n\n");
+      }
+    },
+  });
+  const child = Bun.spawn(
+    [
+      process.execPath,
+      path.resolve(import.meta.dir, "../../src/index.ts"),
+      "argocd",
+      "app",
+      "delete",
+      "synthetic-app",
+    ],
+    {
+      env: {
+        ...Bun.env,
+        PATH: `${directory}:/usr/bin:/bin`,
+        ARGOCD_AUTH_TOKEN: "synthetic-operator-token",
+        ARGOCD_OPTS: "",
+      },
+      terminal,
+      timeout: 5000,
+    },
+  );
+  try {
+    expect(await child.exited).toBe(0);
+    expect(answered).toBe(true);
+    expect(output).toContain("declined");
+  } finally {
+    terminal.close();
+  }
 });
 
 describe("unsupported commands", () => {

@@ -1,5 +1,3 @@
-import { runRedactedPassthrough } from "./passthrough-redaction.ts";
-
 export const PASSTHROUGH_COMMANDS = [
   "gh",
   "woodpecker",
@@ -320,6 +318,22 @@ function resolveExecutable(invocation: PassthroughInvocation): string | null {
   return lookupExecutable(invocation.executable, invocation.env["PATH"]);
 }
 
+function nativeEnvironment(invocation: PassthroughInvocation) {
+  const env = { ...invocation.env };
+  if (invocation.executable !== "argocd") return env;
+  const options = env["ARGOCD_OPTS"] ?? "";
+  if (options.includes("--auth-token")) {
+    throw new Error(
+      "toolkit: ARGOCD_OPTS must not set --auth-token because ArgoCD prints it in help; use ARGOCD_AUTH_TOKEN instead",
+    );
+  }
+  // ArgoCD's flag default and API client independently read the token. An
+  // empty flag default prevents help/usage disclosure while the API client
+  // still reads ARGOCD_AUTH_TOKEN; explicit CLI flags retain precedence.
+  env["ARGOCD_OPTS"] = `--auth-token "" ${options}`.trimEnd();
+  return env;
+}
+
 export function runPassthrough(
   invocation: PassthroughInvocation,
 ): Promise<number> {
@@ -331,10 +345,6 @@ export function runPassthrough(
     return Promise.resolve(127);
   }
 
-  const token = invocation.env["ARGOCD_AUTH_TOKEN"];
-  if (token !== undefined && token !== "" && invocation.executable === "argocd")
-    return runRedactedPassthrough(invocation, executable, token, true);
-
   return process.execve === undefined
     ? Promise.reject(
         new Error(
@@ -344,7 +354,7 @@ export function runPassthrough(
     : process.execve(
         executable,
         [invocation.executable, ...invocation.args],
-        invocation.env,
+        nativeEnvironment(invocation),
       );
 }
 
@@ -352,8 +362,8 @@ export function runPassthrough(
  * Run a passthrough child in place without replacing this process.
  *
  * Unlike {@link runPassthrough} (execve, for CLI dispatch), this awaits exit
- * so library callers can react to the code. Authenticated Argo output passes
- * through the same credential filter as CLI dispatch.
+ * so library callers can react to the code. Both paths keep ArgoCD's token
+ * out of its help defaults while preserving native streams.
  */
 export async function spawnPassthroughInvocation(
   invocation: PassthroughInvocation,
@@ -364,11 +374,8 @@ export async function spawnPassthroughInvocation(
       `toolkit: required executable not found: ${invocation.executable}`,
     );
   }
-  const token = invocation.env["ARGOCD_AUTH_TOKEN"];
-  if (token !== undefined && token !== "" && invocation.executable === "argocd")
-    return runRedactedPassthrough(invocation, executable, token, false);
   const child = Bun.spawn([executable, ...invocation.args], {
-    env: { ...invocation.env },
+    env: nativeEnvironment(invocation),
     stdio: ["inherit", "inherit", "inherit"],
   });
   return child.exited;

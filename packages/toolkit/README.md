@@ -467,13 +467,14 @@ continue to inherit the configured token.
 Other invocations still resolve credentials, including `argocd version` and
 commands carrying metadata flags as arguments or after `--`.
 
-Authenticated ArgoCD commands additionally filter the configured operator token
-from stdout and stderr, including native usage emitted after argument errors.
-Filtering preserves separate streams, bytes outside the token, input, exit codes
-and forwarded signals; output is piped through the filter, so native terminal
-formatting may differ. Possible token prefixes are held across chunks without
-buffering whole responses or ordinary interactive prompts. Other platform
-commands and credential-free metadata retain process replacement.
+Every ArgoCD invocation sets an empty native `--auth-token` help default through
+`ARGOCD_OPTS`. The API client still reads `ARGOCD_AUTH_TOKEN`, and explicit
+command-line flags retain precedence. Native help and usage therefore cannot
+print the registered environment token. Streams remain inherited, preserving
+terminal detection, confirmation prompts, exit codes and signals.
+`ARGOCD_OPTS` must not contain `--auth-token`: use `ARGOCD_AUTH_TOKEN` for that
+credential instead. Other `ARGOCD_OPTS` settings are preserved. Toolkit rejects
+the unsafe setting without printing its value, including for help commands.
 
 | Commands                                                                                                | Registered backend        |
 | ------------------------------------------------------------------------------------------------------- | ------------------------- |
