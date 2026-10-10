@@ -1,7 +1,7 @@
 import { copyFile, lstat, mkdir, mkdtemp, rename, rm } from "node:fs/promises";
 import path from "node:path";
 import type { BuildWorkspace } from "./workspace.ts";
-import { withPublicationLock } from "./storage/publication-lock.ts";
+import { withPublicationLock } from "#protocol/publication-lock.ts";
 
 type PublicationOptions = {
   prefix: string;

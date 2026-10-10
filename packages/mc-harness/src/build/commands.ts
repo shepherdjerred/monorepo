@@ -45,7 +45,7 @@ import {
 import { renderBuildCommand } from "./render/command.ts";
 import { stageJournal } from "./storage/evidence-publication.ts";
 import { writeRunIdentity } from "./storage/run-identity.ts";
-import { withPublicationLock } from "./storage/publication-lock.ts";
+import { withPublicationLock } from "#protocol/publication-lock.ts";
 
 export async function initBuild(
   dir: string,

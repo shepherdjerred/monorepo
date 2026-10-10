@@ -287,7 +287,10 @@ affected" message counts attempted sets and can be higher.
 
 Every command accepts `--json`. The daemon logs requests (never secrets) to
 `~/.toolkit/mc/logs/`. `cmd`, `we` and `paste` accept `--record <buildDir>` to
-append the op to a build's op log once it succeeds.
+append the op to a build's op log once it succeeds. Recorded writes hold the
+build's publication lock from the server mutation through recording, excluding
+render snapshots; a busy or missing build fails before the server write.
+Recorded pastes retain the exact schematic bytes sent to the server.
 
 #### Minecraft builds
 

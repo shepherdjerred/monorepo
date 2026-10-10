@@ -5,10 +5,12 @@ import {
   BuildLogEntrySchema,
   type BuildLogEntry,
   type BuildManifest,
+  type Candidate,
 } from "#protocol/build.ts";
 import { iterationOf, readLog } from "#build/build-log.ts";
 import { publishFiles } from "#build/file-transaction.ts";
 import { BuildWorkspace } from "#build/workspace.ts";
+import { validateCandidate } from "./candidates.ts";
 
 type Outcome = Extract<BuildLogEntry, { kind: "accept" | "reject" }>;
 export type OutcomeInput = Omit<Outcome, "at" | "iteration">;
@@ -19,11 +21,22 @@ export async function publishBoutState(
   input: {
     manifest: BuildManifest;
     outcomes: readonly OutcomeInput[];
+    candidates: readonly Candidate[];
   },
 ): Promise<void> {
   await publishFiles(workspace, {
     prefix: ".bout-",
     stage: async (staged) => {
+      for (const expected of input.candidates) {
+        const { candidate } = await validateCandidate(
+          workspace.dir,
+          expected.name,
+        );
+        if (!isDeepStrictEqual(candidate, expected))
+          throw new Error(
+            `candidate "${expected.name}" changed during knockout; run knockout again`,
+          );
+      }
       const entries = await readLog(workspace.dir);
       for (const outcome of input.outcomes) {
         const previous = entries.filter(

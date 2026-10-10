@@ -49,7 +49,7 @@ import {
 } from "#build/sidecar.ts";
 import { savedRender } from "#build/sources.ts";
 import { BuildWorkspace } from "#build/workspace.ts";
-import { withPublicationLock } from "#build/storage/publication-lock.ts";
+import { withPublicationLock } from "#protocol/publication-lock.ts";
 import { reuseVisual, type Visual } from "./visual-result.ts";
 import { publishCritique, critiqueRequestKey } from "./critique-publication.ts";
 

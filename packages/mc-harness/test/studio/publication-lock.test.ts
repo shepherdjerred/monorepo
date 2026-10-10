@@ -2,7 +2,7 @@ import { mkdtemp, rm, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, expect, it } from "vitest";
-import { withPublicationLock } from "#build/storage/publication-lock.ts";
+import { withPublicationLock } from "#protocol/publication-lock.ts";
 import { appendLog, readLog } from "#build/build-log.ts";
 import { compileBuild } from "#build/commands.ts";
 import { importBuild } from "#build/import-build.ts";
@@ -18,7 +18,7 @@ it.each(["finish", "kill"])(
     await symlink(dir, alias, "dir");
     const module = path.resolve(
       import.meta.dirname,
-      "../../src/build/storage/publication-lock.ts",
+      "../../src/protocol/publication-lock.ts",
     );
     const script = [
       `import { withPublicationLock } from ${JSON.stringify(module)};`,

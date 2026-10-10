@@ -5,7 +5,7 @@ import { buildArtifactPath } from "#build/storage/artifact-path.ts";
  * blind judge pick, and restore the winner. `knockout.ts` does the judging;
  * this file only saves, lists and restores.
  */
-import { cp, lstat, mkdir, readdir } from "node:fs/promises";
+import { lstat, mkdir, readdir } from "node:fs/promises";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
@@ -112,84 +112,97 @@ export async function saveCandidate(
   options: { force?: boolean } = {},
 ): Promise<Candidate> {
   const workspace = new BuildWorkspace(dir);
-  const manifest = await workspace.manifest();
-  if (manifest.site === undefined) {
-    throw new Error("candidate save requires a captured site");
-  }
   const target = candidateDir(workspace, name);
-  const exists = await lstat(target).then(
-    () => true,
-    (error: unknown) => {
-      if (error instanceof Error && "code" in error && error.code === "ENOENT")
-        return false;
-      throw error;
-    },
-  );
-  if (exists) await candidateMetadata(workspace, name);
-  if (exists && !(options.force ?? false)) {
-    throw new Error(`candidate "${name}" exists; pass --force to replace it`);
-  }
-  if (manifest.best?.candidate === name) {
-    // The incumbent earned its place in a bout; a replacement has to win one too.
-    throw new Error(
-      `candidate "${name}" is the incumbent (build.json best); save the new version under another name and run knockout`,
-    );
-  }
-  const { grid, skipped } = await compiledGrid(workspace, manifest);
-  if (skipped.length > 0) {
-    // A candidate is judged from its compiled grid; ops with no offline
-    // result would make that grid a different build from the canvas.
-    throw new Error(
-      `candidate "${name}" cannot be saved: ${skipped.length.toString()} op(s) in the log have no offline result and the compiled grid would not be the build (${skipped.join("; ")}); keep to paste and //set air ops`,
-    );
-  }
-  const registry = await loadRegistry();
-  const oplog = await workspace.oplog();
-  const producer = await producingProgram(workspace, oplog.ops);
-  // The candidate's program is the snapshot that compiled its ops, not the
-  // live build.ts, which may have been edited since; a log not produced by
-  // one compile has no program.
-  const program = producer !== null;
-  const programBytes =
-    producer === null ? null : await readProgramSnapshot(workspace, producer);
-  const hash = gridHash(grid);
-  const journal = await readLog(dir);
-  let blocks = 0;
-  grid.forEach((x, y, z) => {
-    if (!grid.isAirAt(x, y, z)) blocks += 1;
-  });
-  const candidate: Candidate = {
-    name,
-    at: new Date().toISOString(),
-    iteration: iterationOf(journal),
-    gridHash: hash,
-    capture: {
-      siteHash: manifest.site.siteHash,
-      box: workspace.siteBox(manifest),
-    },
-    size: grid.size,
-    blocks,
-    program,
-    programHash:
-      programBytes === null
-        ? null
-        : createHash("sha256").update(programBytes).digest("hex"),
-    ops: oplog.ops.length,
-    score: await latestCritique(dir, hash),
-  };
   const relative = path.relative(workspace.dir, target);
+  let savedCandidate: Candidate | undefined;
   await publishFiles(workspace, {
     prefix: `.candidate-${name}-`,
     exclusive: options.force === true ? [] : [relative],
     stage: async (pending) => {
+      const manifest = await workspace.manifest();
+      if (manifest.site === undefined) {
+        throw new Error("candidate save requires a captured site");
+      }
+      const exists = await lstat(target).then(
+        () => true,
+        (error: unknown) => {
+          if (
+            error instanceof Error &&
+            "code" in error &&
+            error.code === "ENOENT"
+          )
+            return false;
+          throw error;
+        },
+      );
+      if (exists) await candidateMetadata(workspace, name);
+      if (exists && !(options.force ?? false)) {
+        throw new Error(
+          `candidate "${name}" exists; pass --force to replace it`,
+        );
+      }
+      if (manifest.best?.candidate === name) {
+        // The incumbent earned its place in a bout; a replacement has to win one too.
+        throw new Error(
+          `candidate "${name}" is the incumbent (build.json best); save the new version under another name and run knockout`,
+        );
+      }
+      const oplog = await workspace.oplog();
+      const { grid, skipped } = await compiledGrid(
+        workspace,
+        manifest,
+        oplog.ops,
+      );
+      if (skipped.length > 0) {
+        // A candidate is judged from its compiled grid; ops with no offline
+        // result would make that grid a different build from the canvas.
+        throw new Error(
+          `candidate "${name}" cannot be saved: ${skipped.length.toString()} op(s) in the log have no offline result and the compiled grid would not be the build (${skipped.join("; ")}); keep to paste and //set air ops`,
+        );
+      }
+      const registry = await loadRegistry();
+      const producer = await producingProgram(workspace, oplog.ops);
+      // The candidate's program is the snapshot that compiled its ops, not the
+      // live build.ts, which may have been edited since; a log not produced by
+      // one compile has no program.
+      const program = producer !== null;
+      const programBytes =
+        producer === null
+          ? null
+          : await readProgramSnapshot(workspace, producer);
+      const hash = gridHash(grid);
+      const journal = await readLog(dir);
+      let blocks = 0;
+      grid.forEach((x, y, z) => {
+        if (!grid.isAirAt(x, y, z)) blocks += 1;
+      });
+      const candidate: Candidate = {
+        name,
+        at: new Date().toISOString(),
+        iteration: iterationOf(journal),
+        gridHash: hash,
+        capture: {
+          siteHash: manifest.site.siteHash,
+          box: workspace.siteBox(manifest),
+        },
+        size: grid.size,
+        blocks,
+        program,
+        programHash:
+          programBytes === null
+            ? null
+            : createHash("sha256").update(programBytes).digest("hex"),
+        ops: oplog.ops.length,
+        score: await latestCritique(dir, hash),
+      };
       const staged = path.join(pending, relative);
       await mkdir(staged, { recursive: true });
       if (programBytes !== null) {
         await Bun.write(path.join(staged, BUILD_FILES.program), programBytes);
       }
-      await cp(
-        workspace.file(BUILD_FILES.oplog),
+      await Bun.write(
         path.join(staged, BUILD_FILES.oplog),
+        `${JSON.stringify(oplog, null, 2)}\n`,
       );
       await Bun.write(
         path.join(staged, CANDIDATE_FILES.grid),
@@ -205,10 +218,13 @@ export async function saveCandidate(
         name,
       });
       // A process exit after installing the candidate must already have its save entry.
+      savedCandidate = candidate;
       return [BUILD_FILES.journal, relative];
     },
   });
-  return candidate;
+  if (savedCandidate === undefined)
+    throw new Error("candidate publication did not produce metadata");
+  return savedCandidate;
 }
 
 export function candidateMatchesCapture(

@@ -339,7 +339,10 @@ pick n | knockout [--among a,b] [--rubric] [--model]`) keep versions of
   a tie keeps the incumbent. Every participant's restore files and offline
   replay are validated before rendering or model calls. Critique evidence is validated
   before rendering or model calls; accepted and rejected scores use that same
-  validated snapshot. Every bout is written under `judge/` and
+  validated snapshot. Participant metadata, scores and judge sheets are captured
+  under the publication lock. Each checkpoint and winner publication revalidates
+  those exact candidate versions under the lock; a force-save during judging
+  rejects the stale result before publishing best or outcomes. Every bout is written under `judge/` and
   logged as an accept and a reject, and the winner becomes `best` after each
   completed bout, even if a later model call fails. Each tournament attempt
   checkpoints its identity before judging and persists the validated verdict
@@ -376,6 +379,8 @@ pick n | knockout [--among a,b] [--rubric] [--model]`) keep versions of
   directory fail listing, resume and judging.
   Saving also rejects existing candidate directories with missing or invalid metadata,
   including with `--force`, and preserves their remaining artifacts.
+  Saves read all working evidence under the publication lock and serialize the
+  same op-log snapshot used for the candidate's grid, program and metadata.
   Saves stage every artifact and the save journal entry before publication;
   failed staging or installation preserves the preceding candidate and journal.
   The journal publishes first so an installed candidate already has its save entry.
@@ -384,6 +389,9 @@ pick n | knockout [--among a,b] [--rubric] [--model]`) keep versions of
   publication reads and stamps its outcomes while holding it. Run journals are
   staged with the frozen artifacts. A competing publisher fails before changing any
   files; the operating system releases the lock when its process exits.
+  Toolkit's recorded canvas commands use the standalone protocol lock from
+  before the server write through op-log recording, so a render cannot attribute
+  an intervening manual edit to a program. The thin client imports no build or daemon implementation.
   The persistent `.publication-lock.sqlite` file must stay in place, including
   while idle, so every publisher locks the same inode.
   Candidates record the captured site's hash, world and bounds; picking or

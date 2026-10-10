@@ -6,7 +6,7 @@
  */
 import { appendFile, mkdir } from "node:fs/promises";
 import path from "node:path";
-import { withPublicationLock } from "./storage/publication-lock.ts";
+import { withPublicationLock } from "#protocol/publication-lock.ts";
 import {
   BUILD_FILES,
   BuildLogEntrySchema,

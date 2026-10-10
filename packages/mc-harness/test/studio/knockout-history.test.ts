@@ -104,6 +104,44 @@ async function twoVersions(name: string) {
 }
 
 describe("recoverable bout publication", () => {
+  it.each(["v1", "v2"])(
+    "rejects a force-saved %s during judging before publishing best or outcomes",
+    async (name) => {
+      const { workspace } = await twoVersions(`replaced-${name}`);
+      const score = judge(true);
+      let replaced = false;
+      const ask = vi.fn(async () => {
+        if (!replaced) {
+          replaced = true;
+          await workspace.writeOplog({ version: 1, ops: [clearFloorOp(3)] });
+          await saveCandidate(workspace.dir, name, { force: true });
+        }
+        return score();
+      });
+      await expect(
+        knockout(workspace.dir, { rubric: "micro", model: "stub", ask }),
+      ).rejects.toThrow(/changed during knockout/u);
+      const manifest = await workspace.manifest();
+      expect(manifest.best).toBeUndefined();
+      const journal = await readLog(workspace.dir);
+      expect(
+        journal.filter(
+          (entry) => entry.kind === "accept" || entry.kind === "reject",
+        ),
+      ).toEqual([]);
+      expect(ask).toHaveBeenCalledTimes(2);
+      const retried = await knockout(workspace.dir, {
+        rubric: "micro",
+        model: "stub",
+        ask,
+      });
+      expect(retried.bouts).toHaveLength(1);
+      const completed = await workspace.manifest();
+      expect(completed.best?.candidate).toBe(retried.best);
+      expect(ask).toHaveBeenCalledTimes(4);
+    },
+  );
+
   it("keeps verdict references portable through a symlinked build directory", async () => {
     const { workspace } = await twoVersions("bout-portable");
     const alias = path.join(root, "bout-portable-alias");

@@ -25,7 +25,7 @@ import type { BlockPos, Rotation } from "#protocol/bridge.ts";
 import { BUILD_FILES, type Op } from "#protocol/build.ts";
 import { BuildWorkspace } from "./workspace.ts";
 import { renderGrid, sha } from "./helpers.ts";
-import { withPublicationLock } from "./storage/publication-lock.ts";
+import { withPublicationLock } from "#protocol/publication-lock.ts";
 
 export type ImportOptions = {
   at?: BlockPos;

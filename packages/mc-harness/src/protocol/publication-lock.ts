@@ -2,7 +2,7 @@ import { Database } from "bun:sqlite";
 import { realpath } from "node:fs/promises";
 import path from "node:path";
 
-/** SQLite's OS lock excludes other processes and releases automatically on process exit. */
+/** Shared build-directory coordination for the harness and thin toolkit client. */
 export async function withPublicationLock<T>(
   dir: string,
   action: () => Promise<T>,

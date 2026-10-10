@@ -16,6 +16,9 @@ import {
   type OutcomeInput,
 } from "#build/studio/bout-publication.ts";
 import { flatSiteBuild, clearFloorOp } from "#test/fixtures/flat-site.ts";
+import { saveCandidate, validateCandidate } from "#build/studio/candidates.ts";
+import { knockout } from "#build/studio/knockout.ts";
+import { compiledGrid } from "#build/sources.ts";
 
 const beforeLock = vi.hoisted(() => {
   const state: { action: (() => Promise<void>) | null } = { action: null };
@@ -40,6 +43,53 @@ vi.mock("@shepherdjerred/mc-build/render/assets.ts", async () => {
 const root = await mkdtemp(path.join(tmpdir(), "mc-bout-journal-"));
 afterAll(async () => rm(root, { recursive: true }));
 
+it("captures an intervening op log and journal as one reproducible candidate", async () => {
+  const workspace = await flatSiteBuild(path.join(root, "save"), "save");
+  await workspace.writeOplog({ version: 1, ops: [clearFloorOp(1)] });
+  beforeLock.action = async () => {
+    await workspace.writeOplog({ version: 1, ops: [clearFloorOp(2)] });
+    await appendLog(workspace.dir, {
+      kind: "render",
+      name: "intervening",
+      source: "compiled",
+      files: [],
+    });
+  };
+  const saved = await saveCandidate(workspace.dir, "saved");
+  const validated = await validateCandidate(workspace.dir, "saved");
+  const current = await compiledGrid(workspace, await workspace.manifest());
+  expect(saved).toEqual(validated.candidate);
+  expect(saved.iteration).toBe(1);
+  expect(validated.oplog).toEqual(await workspace.oplog());
+  expect(current.skipped).toEqual([]);
+});
+
+it("rejects an initial singleton replaced before best publication", async () => {
+  const workspace = await flatSiteBuild(
+    path.join(root, "singleton"),
+    "singleton",
+  );
+  await workspace.writeOplog({ version: 1, ops: [clearFloorOp(1)] });
+  const original = await saveCandidate(workspace.dir, "saved");
+  beforeLock.action = async () => {
+    await workspace.writeOplog({ version: 1, ops: [clearFloorOp(2)] });
+    await saveCandidate(workspace.dir, "saved", { force: true });
+  };
+  const ask = vi.fn();
+  await expect(
+    knockout(workspace.dir, { rubric: "micro", model: "stub", ask }),
+  ).rejects.toThrow(/changed during knockout/u);
+  const manifest = await workspace.manifest();
+  expect(manifest.best).toBeUndefined();
+  const journal = await readLog(workspace.dir);
+  expect(
+    journal.some((entry) => entry.kind === "accept" || entry.kind === "reject"),
+  ).toBe(false);
+  const validated = await validateCandidate(workspace.dir, "saved");
+  expect(validated.candidate.gridHash).not.toBe(original.gridHash);
+  expect(ask).not.toHaveBeenCalled();
+});
+
 it("retains an intervening render and stamps the bout from the locked journal", async () => {
   const workspace = await flatSiteBuild(path.join(root, "bout"), "bout");
   const manifest = await workspace.manifest();
@@ -61,13 +111,21 @@ it("retains an intervening render and stamps the bout from the locked journal", 
       files: [],
     });
   };
-  await publishBoutState(workspace, { manifest, outcomes: [outcome] });
+  await publishBoutState(workspace, {
+    manifest,
+    outcomes: [outcome],
+    candidates: [],
+  });
   expect(await readLog(workspace.dir)).toMatchObject([
     { kind: "render", name: "intervening", iteration: 1 },
     { kind: "accept", candidate: "one", iteration: 1 },
   ]);
   const journal = await readLog(workspace.dir);
-  await publishBoutState(workspace, { manifest, outcomes: [outcome] });
+  await publishBoutState(workspace, {
+    manifest,
+    outcomes: [outcome],
+    candidates: [],
+  });
   expect(await readLog(workspace.dir)).toEqual(journal);
 });
 

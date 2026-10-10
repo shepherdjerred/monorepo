@@ -14,13 +14,13 @@ import {
   encodePng,
   Renderer,
 } from "@shepherdjerred/mc-build/render/index.ts";
-import type { BuildManifest, JudgeRubric } from "#protocol/build.ts";
+import type { BuildManifest, Candidate, JudgeRubric } from "#protocol/build.ts";
+import { withPublicationLock } from "#protocol/publication-lock.ts";
 import {
   candidateGrid,
   candidateMatchesCapture,
   candidateEvidence,
   listCandidates,
-  readCandidate,
   validateCandidate,
 } from "./candidates.ts";
 import {
@@ -129,26 +129,25 @@ async function persistBest(
   incumbent: string,
   options: {
     rubric: JudgeRubric;
-    score: number | null;
+    evidence: ScoreEvidence;
+    candidates: readonly Candidate[];
     progress?: NonNullable<BuildManifest["knockout"]>;
     outcomes?: readonly OutcomeInput[];
   },
 ): Promise<NonNullable<BuildManifest["best"]>> {
   const { rubric, progress } = options;
-  const candidate = await readCandidate(workspace.dir, incumbent);
   const best = {
     candidate: incumbent,
-    gridHash: candidate.gridHash,
+    gridHash: options.evidence.gridHash,
     rubric,
-    score: options.score,
+    score: options.evidence.score,
   };
   const unchanged =
+    progress === undefined &&
     manifest.best?.candidate === best.candidate &&
     manifest.best.gridHash === best.gridHash &&
     manifest.best.rubric === best.rubric &&
     manifest.best.score === best.score;
-  if (progress === undefined && unchanged && manifest.best !== undefined)
-    return manifest.best;
   const next = {
     ...manifest,
     best,
@@ -156,7 +155,8 @@ async function persistBest(
   };
   await publishBoutState(workspace, {
     manifest: next,
-    outcomes: options.outcomes ?? [],
+    outcomes: unchanged ? [] : (options.outcomes ?? []),
+    candidates: options.candidates,
   });
   return best;
 }
@@ -263,17 +263,19 @@ function matchingCheckpoint(
  * always in the pool. With no incumbent yet, the first candidate starts as
  * one and meets the rest.
  */
-export async function knockout(
-  dir: string,
-  options: {
-    among?: string[];
-    rubric: JudgeRubric;
-    model: string;
-    ask?: AskJudge;
-  },
-): Promise<KnockoutResult> {
-  const workspace = new BuildWorkspace(dir);
-  let manifest = await workspace.manifest();
+type KnockoutOptions = {
+  among?: string[];
+  rubric: JudgeRubric;
+  model: string;
+  ask?: AskJudge;
+};
+
+async function knockoutSnapshot(
+  workspace: BuildWorkspace,
+  options: KnockoutOptions,
+) {
+  const dir = workspace.dir;
+  const manifest = await workspace.manifest();
   const candidates = await listCandidates(dir);
   const saved = new Set(candidates.map((candidate) => candidate.name));
   const currentCandidates = candidates.filter((candidate) =>
@@ -336,6 +338,38 @@ export async function knockout(
     [seeds.incumbent, ...seeds.challengers],
     options.rubric,
   );
+  return {
+    manifest,
+    candidates: candidates
+      .filter(({ name }) => participants.includes(name))
+      .map(({ best: _best, ...candidate }) => candidate),
+    scores,
+    sheets,
+    seeds,
+    attempt,
+    fingerprint,
+    participants,
+  };
+}
+
+export async function knockout(
+  dir: string,
+  options: KnockoutOptions,
+): Promise<KnockoutResult> {
+  const workspace = new BuildWorkspace(dir);
+  const snapshot = await withPublicationLock(workspace.dir, () =>
+    knockoutSnapshot(workspace, options),
+  );
+  let { manifest } = snapshot;
+  const {
+    candidates,
+    scores,
+    sheets,
+    seeds,
+    attempt,
+    fingerprint,
+    participants,
+  } = snapshot;
   const bouts: Bout[] = [];
   let incumbent = seeds.incumbent;
   if (seeds.challengers.length > 0) {
@@ -349,7 +383,7 @@ export async function knockout(
         pending: seeds.challengers,
       },
     };
-    await publishBoutState(workspace, { manifest, outcomes: [] });
+    await publishBoutState(workspace, { manifest, outcomes: [], candidates });
   }
   for (const [index, challenger] of seeds.challengers.entries()) {
     const { result, outcomes } = await bout(
@@ -369,7 +403,8 @@ export async function knockout(
     };
     const best = await persistBest(workspace, manifest, incumbent, {
       rubric: options.rubric,
-      score: scoreOf(scores, incumbent).score,
+      evidence: scoreOf(scores, incumbent),
+      candidates,
       progress,
       outcomes,
     });
@@ -381,7 +416,8 @@ export async function knockout(
   }
   const best = await persistBest(workspace, manifest, incumbent, {
     rubric: options.rubric,
-    score: scoreOf(scores, incumbent).score,
+    evidence: scoreOf(scores, incumbent),
+    candidates,
     outcomes:
       seeds.challengers.length === 0
         ? [
@@ -401,6 +437,7 @@ export async function knockout(
     await publishBoutState(workspace, {
       manifest: { ...completed, best },
       outcomes: [],
+      candidates,
     });
   }
   return { best: incumbent, score: best.score, bouts };
