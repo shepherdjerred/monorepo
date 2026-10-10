@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { setImmediate } from "node:timers/promises";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("report-lake-ndjson");
@@ -27,11 +28,13 @@ export class NdjsonFileWriter {
   private readonly writer: NdjsonSink;
   private buffered: string[] = [];
   private bufferedBytes = 0;
+  private closed = false;
   rows = 0;
 
   constructor(
     readonly filePath: string,
     writer?: NdjsonSink,
+    private readonly abortSignal?: AbortSignal,
   ) {
     try {
       this.writer =
@@ -43,6 +46,7 @@ export class NdjsonFileWriter {
   }
 
   async write(row: object): Promise<void> {
+    this.abortSignal?.throwIfAborted();
     const data = JSON.stringify(row);
     const bytes = Buffer.byteLength(data, "utf8") + 1;
     if (this.bufferedBytes + bytes > MAX_BUFFERED_BYTES) {
@@ -83,12 +87,30 @@ export class NdjsonFileWriter {
     } catch (error) {
       throw this.describeWriteError(error);
     }
+    // Awaiting synchronous FileSink writes only queues microtasks. Yield after
+    // each bounded buffer so Activity heartbeat/cancellation timers can run.
+    await setImmediate();
+    this.abortSignal?.throwIfAborted();
   }
 
   async close(): Promise<void> {
     await this.flush();
     try {
       await this.writer.end();
+      this.closed = true;
+    } catch (error) {
+      throw this.describeWriteError(error);
+    }
+  }
+
+  /** Close an abandoned build without serializing its remaining buffered rows. */
+  async abort(): Promise<void> {
+    if (this.closed) return;
+    this.buffered = [];
+    this.bufferedBytes = 0;
+    try {
+      await this.writer.end();
+      this.closed = true;
     } catch (error) {
       throw this.describeWriteError(error);
     }

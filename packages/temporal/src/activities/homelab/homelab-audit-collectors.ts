@@ -17,6 +17,21 @@ import {
   KubernetesWorkloadListSchema,
 } from "./homelab-audit-kubernetes.ts";
 import { sha256 } from "./homelab-audit-digest.ts";
+import {
+  temporalFailureRecovery,
+  temporalStallReasons,
+  type AuditTemporalExecution,
+} from "./audit/temporal-state.ts";
+import {
+  inspectScheduleHealth,
+  scheduleHealthReader,
+} from "#activities/ops/temporal-schedules-client.ts";
+import {
+  AuditAlertOccurrenceSchema,
+  deduplicateAuditFindings,
+  interpretAlertOccurrences,
+  interpretPrometheusAlerts,
+} from "./audit/alerts.ts";
 
 export const PrometheusResultSchema = z.object({
   status: z.literal("success"),
@@ -24,15 +39,6 @@ export const PrometheusResultSchema = z.object({
     resultType: z.string(),
     result: z.array(z.unknown()),
   }),
-});
-const AlertOccurrenceSchema = z.object({
-  id: z.string(),
-  alertname: z.string(),
-  namespace: z.string().nullable(),
-  severity: z.string(),
-  summary: z.string(),
-  lifecycleState: z.literal("open"),
-  suppressionState: z.string(),
 });
 const ArgoApplicationsSchema = z.array(
   z.object({
@@ -239,17 +245,10 @@ export function temporalHealthQueries(now: Date): {
   };
 }
 
-type TemporalExecutionSummary = {
-  namespace: TemporalNamespace;
-  workflowId: string;
-  runId: string;
-  startedAt: string;
-};
-
 type TemporalNamespaceHealth = {
   namespace: TemporalNamespace;
-  failed: TemporalExecutionSummary[];
-  stalled: TemporalExecutionSummary[];
+  failed: AuditTemporalExecution[];
+  stalled: AuditTemporalExecution[];
   scheduleCount: number;
 };
 
@@ -258,47 +257,94 @@ async function collectTemporalNamespace(
   queries: ReturnType<typeof temporalHealthQueries>,
 ): Promise<TemporalNamespaceHealth> {
   const client = await createTemporalReadClient(namespace);
-  const failed: TemporalExecutionSummary[] = [];
-  const stalled: TemporalExecutionSummary[] = [];
+  const failed: AuditTemporalExecution[] = [];
+  const stalled: AuditTemporalExecution[] = [];
   const collectExecutions = async (
     query: string,
-    destination: TemporalExecutionSummary[],
+    destination: AuditTemporalExecution[],
   ): Promise<void> => {
     for await (const workflow of client.workflow.list({ query })) {
       destination.push({
         namespace,
         workflowId: workflow.workflowId,
         runId: workflow.runId,
+        ...(workflow.raw.firstRunId !== undefined &&
+        workflow.raw.firstRunId !== null &&
+        workflow.raw.firstRunId !== ""
+          ? { firstRunId: workflow.raw.firstRunId }
+          : {}),
+        workflowType: workflow.type,
         startedAt: workflow.startTime.toISOString(),
       });
     }
   };
-  let scheduleCount = 0;
-  await Promise.all([
+  const now = new Date();
+  const [schedules] = await Promise.all([
+    inspectScheduleHealth(scheduleHealthReader(client), namespace, now),
     collectExecutions(queries.failed, failed),
     collectExecutions(queries.stalled, stalled),
-    (async () => {
-      for await (const _schedule of client.schedule.list()) scheduleCount += 1;
-    })(),
   ]);
-  return { namespace, failed, stalled, scheduleCount };
+  const executions = [...failed, ...stalled];
+  for (let offset = 0; offset < executions.length; offset += 4) {
+    await Promise.all(
+      executions.slice(offset, offset + 4).map(async (workflow) => {
+        const latest = await client.workflow
+          .getHandle(workflow.workflowId)
+          .describe();
+        if (failed.includes(workflow)) {
+          const recoveredBy = temporalFailureRecovery(
+            workflow,
+            latest,
+            schedules,
+            now,
+          );
+          if (recoveredBy !== undefined) workflow.recoveredBy = recoveredBy;
+        } else {
+          const exact =
+            latest.runId === workflow.runId
+              ? latest
+              : await client.workflow
+                  .getHandle(workflow.workflowId, workflow.runId)
+                  .describe();
+          workflow.stallReasons = temporalStallReasons(exact, now);
+        }
+      }),
+    );
+  }
+  return { namespace, failed, stalled, scheduleCount: schedules.length };
 }
 
-function temporalFindings(
+export function temporalFindings(
   namespaceHealth: readonly TemporalNamespaceHealth[],
   evidenceId: string,
 ): Finding[] {
   return namespaceHealth.flatMap((health) => [
     ...health.failed.map((workflow) => ({
-      severity: "warning" as const,
-      summary: `Temporal ${workflow.namespace} failure: ${workflow.workflowId}`,
-      detail: `namespace=${workflow.namespace}; run=${workflow.runId}; started=${workflow.startedAt}`,
+      id: `temporal:${workflow.namespace}:${workflow.workflowId}:failure`,
+      state:
+        workflow.recoveredBy === undefined
+          ? ("active" as const)
+          : ("recovered" as const),
+      severity:
+        workflow.recoveredBy === undefined
+          ? ("warning" as const)
+          : ("info" as const),
+      summary: `Temporal ${workflow.namespace} ${workflow.recoveredBy === undefined ? "unrecovered failure" : "recovered failure"}: ${workflow.workflowId}`,
+      detail: `namespace=${workflow.namespace}; type=${workflow.workflowType}; run=${workflow.runId}; started=${workflow.startedAt}${workflow.recoveredBy === undefined ? "" : `; recovered by ${workflow.recoveredBy}`}`,
       evidenceReceiptIds: [evidenceId],
     })),
     ...health.stalled.map((workflow) => ({
-      severity: "warning" as const,
-      summary: `Temporal ${workflow.namespace} workflow running over six hours: ${workflow.workflowId}`,
-      detail: `namespace=${workflow.namespace}; run=${workflow.runId}; started=${workflow.startedAt}`,
+      id: `temporal:${workflow.namespace}:${workflow.workflowId}:progress`,
+      state:
+        (workflow.stallReasons?.length ?? 0) > 0
+          ? ("active" as const)
+          : ("observing" as const),
+      severity:
+        (workflow.stallReasons?.length ?? 0) > 0
+          ? ("warning" as const)
+          : ("info" as const),
+      summary: `Temporal ${workflow.namespace} ${(workflow.stallReasons?.length ?? 0) > 0 ? "stalled task" : "long-running workflow; no stalled task observed"}: ${workflow.workflowId}`,
+      detail: `namespace=${workflow.namespace}; type=${workflow.workflowType}; run=${workflow.runId}; started=${workflow.startedAt}; ${(workflow.stallReasons ?? []).join("; ") || "Age alone does not establish a stall; waiting workflows and recent heartbeats remain informational."}`,
       evidenceReceiptIds: [evidenceId],
     })),
   ]);
@@ -336,7 +382,7 @@ async function collectTemporal(): Promise<CollectorResult> {
         label: "Temporal failures and stalls",
         required: true,
         status: "passed",
-        summary: `${failed.length.toString()} failures in 24h; ${stalled.length.toString()} workflows over 6h; ${scheduleCount.toString()} schedules across ${namespaces.join(", ")}`,
+        summary: `${failed.filter((workflow) => workflow.recoveredBy === undefined).length.toString()} unrecovered and ${failed.filter((workflow) => workflow.recoveredBy !== undefined).length.toString()} recovered failures in 24h; ${stalled.filter((workflow) => (workflow.stallReasons?.length ?? 0) > 0).length.toString()} stalled tasks among ${stalled.length.toString()} workflows over 6h; ${scheduleCount.toString()} schedules across ${namespaces.join(", ")}`,
         evidenceReceiptIds: [evidenceId],
       },
       evidence: {
@@ -393,37 +439,14 @@ export async function collectHomelabAuditEvidence(): Promise<HomelabAuditCollect
       ],
       schema: PrometheusResultSchema,
       prepare: ensureGcxContext,
-      interpret: (value) => {
-        const count = prometheusCount(value);
-        return {
-          summary: `${count.toString()} firing series`,
-          findings:
-            count === 0
-              ? []
-              : [
-                  {
-                    severity: "warning",
-                    summary: `${count.toString()} Prometheus alert series are firing`,
-                    evidenceReceiptIds: [],
-                  },
-                ],
-        };
-      },
+      interpret: (value) => interpretPrometheusAlerts(value.data.result),
     }),
     commandCollector({
       id: "alerts-occurrences",
       label: "Open durable alert occurrences",
       args: ["toolkit", "alerts", "list", "--state", "open", "--json"],
-      schema: z.array(AlertOccurrenceSchema),
-      interpret: (alerts) => ({
-        summary: `${alerts.length.toString()} open occurrences`,
-        findings: alerts.map((alert) => ({
-          severity: alert.severity === "critical" ? "critical" : "warning",
-          summary: `${alert.alertname}: ${alert.summary}`,
-          detail: `id=${alert.id}; namespace=${alert.namespace ?? "none"}; suppression=${alert.suppressionState}`,
-          evidenceReceiptIds: [],
-        })),
-      }),
+      schema: z.array(AuditAlertOccurrenceSchema),
+      interpret: interpretAlertOccurrences,
     }),
     collectTemporal(),
     commandCollector({
@@ -454,7 +477,9 @@ export async function collectHomelabAuditEvidence(): Promise<HomelabAuditCollect
     completedAt: new Date().toISOString(),
     checks: results.map((result) => result.check),
     evidence: results.map((result) => result.evidence),
-    findings: results.flatMap((result) => result.findings),
+    findings: deduplicateAuditFindings(
+      results.flatMap((result) => result.findings),
+    ),
     limitations: results.flatMap((result) =>
       result.limitation === undefined ? [] : [result.limitation],
     ),

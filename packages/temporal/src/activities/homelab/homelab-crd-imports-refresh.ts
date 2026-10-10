@@ -1,6 +1,14 @@
 import { Context } from "@temporalio/activity";
 import { simpleGit } from "simple-git";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
+import {
+  findOpenGeneratedPrUrl,
+  getPrRevisionState,
+} from "#activities/data-dragon/data-dragon-pr.ts";
+import {
+  isDataDragonPrAuthor,
+  type OpenPrCandidate,
+} from "#shared/data-dragon-util.ts";
 import { runCommand } from "#activities/data-dragon/data-dragon-shell.ts";
 import { rootInstallWithoutHooks } from "#activities/bot-clone.ts";
 import { discardFormattingOnlyChanges } from "#activities/scout/scout-generated-preflight.ts";
@@ -18,6 +26,40 @@ const CDK8S_ROOT = "packages/homelab/src/cdk8s";
 // repo PR touches the generator), which is why this is a schedule and not a
 // CI gate — CI can't see the cluster change.
 const GENERATED_PATH = `${CDK8S_ROOT}/generated/imports`;
+const TITLE = "chore(homelab): refresh generated cdk8s CRD imports";
+
+export function isCrdImportsRefreshPr(
+  pr: OpenPrCandidate,
+  appSlug: string,
+): boolean {
+  return (
+    pr.title === TITLE &&
+    pr.baseRefName === MAIN_BRANCH &&
+    !pr.isCrossRepository &&
+    isDataDragonPrAuthor(pr.author, appSlug) &&
+    /^chore\/crd-imports-refresh(?:-[0-9a-f]{8})?$/.test(pr.headRefName)
+  );
+}
+
+export async function findCrdImportsRefreshBranch(
+  token: string,
+): Promise<string> {
+  // Reuse the newest authenticated legacy proposal during migration, then use
+  // one stable branch. UUIDs isolate clone attempts, never proposal identity.
+  const existing = await findOpenGeneratedPrUrl({
+    repoSlug: REPO_SLUG,
+    token,
+    filterArgs: ["--limit", "100"],
+    matches: isCrdImportsRefreshPr,
+  });
+  if (existing === undefined) return "chore/crd-imports-refresh";
+  const revision = await getPrRevisionState({
+    repoSlug: REPO_SLUG,
+    prUrl: existing,
+    token,
+  });
+  return revision.headRefName;
+}
 
 export type HomelabCrdImportsRefreshResult = {
   changedFiles: string[];
@@ -58,6 +100,7 @@ export const homelabCrdImportsRefreshActivities = {
 
     try {
       const { token: githubToken } = await createGitHubAppInstallationToken();
+      const branch = await findCrdImportsRefreshBranch(githubToken);
       await runCommand(["mkdir", "-p", tempDir], { cwd: "/tmp" });
       await simpleGit().clone(REPO_URL, repoDir, [
         "--branch",
@@ -91,12 +134,12 @@ export const homelabCrdImportsRefreshActivities = {
         };
       }
 
-      const branch = `chore/crd-imports-refresh-${id.slice(0, 8)}`;
-      const title = "chore(homelab): refresh generated cdk8s CRD imports";
+      const title = TITLE;
       const body = [
-        "Automated cdk8s CRD-import refresh from Temporal",
-        "(`homelab-crd-imports-daily`).",
+        "## Why",
+        "Keep cdk8s bindings aligned with CRDs deployed in the homelab.",
         "",
+        "## What",
         "Regenerated `packages/homelab/src/cdk8s/generated/imports` from the",
         "live cluster's CRDs and cdk8s-cli's pinned k8s schema. The committed",
         "imports had drifted (usually an operator chart bump that ArgoCD",
@@ -106,9 +149,10 @@ export const homelabCrdImportsRefreshActivities = {
         "",
         ...files.slice(0, 30).map((f) => `- ${f}`),
         files.length > 30 ? `- …and ${String(files.length - 30)} more` : "",
-      ]
-        .filter((line) => line !== "")
-        .join("\n");
+        "",
+        "## Verification",
+        "Ran the pinned import generator against the live cluster and discarded formatting-only changes. Full verification and automated review must pass before merge. No cluster resources are changed by this PR.",
+      ].join("\n");
 
       const { commitHash, prUrl } = await openSeasonRefreshPr({
         repoDir,

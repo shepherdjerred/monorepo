@@ -44,6 +44,9 @@ export const ReportCheckV1Schema = z.object({
 });
 
 export const ReportFindingV1Schema = z.object({
+  // Optional so retained report and Activity payloads remain readable.
+  id: z.string().min(1).optional(),
+  state: z.enum(["active", "recovered", "suppressed", "observing"]).optional(),
   section: z.string().min(1).optional(),
   severity: z.enum(["info", "warning", "critical"]),
   summary: z.string().min(1),
