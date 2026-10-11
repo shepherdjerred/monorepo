@@ -303,6 +303,7 @@ describe("minecraft-tsmc image configuration", () => {
     const extraEnv = z
       .record(z.string(), z.unknown())
       .parse(tsmcValues()["extraEnv"]);
+    expect(extraEnv["OPS"]).toBe("");
     expect(extraEnv["EXISTING_OPS_FILE"]).toBe("SYNCHRONIZE");
     expect(tsmcValues()["minecraftServer"]).toMatchObject({ ops: "" });
   });

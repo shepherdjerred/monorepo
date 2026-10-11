@@ -221,6 +221,8 @@ export function createMinecraftTsmcApp(chart: Chart) {
     },
 
     extraEnv: {
+      // Ensure the empty list reaches itzg's OPS_FILE synchronization logic.
+      OPS: "",
       // Empty OPS must clear persisted ops.json entries, not merge with them.
       EXISTING_OPS_FILE: "SYNCHRONIZE",
       FLIPT_URL: "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
