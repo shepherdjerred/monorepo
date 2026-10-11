@@ -1722,7 +1722,8 @@ Development and tests use the PostgreSQL 18 binaries selected by the root Mise
 configuration. The harness initializes a checksummed cluster under
 `$XDG_DATA_HOME/scout-for-lol/postgres/18/pgdata`, or
 `$HOME/.local/share/scout-for-lol/postgres/18/pgdata` when XDG is unset.
-Root-hosted CI uses `/tmp/scout-for-lol/postgres/18/pgdata`.
+Root-hosted CI uses `$TMPDIR/scout-for-lol/postgres/18/pgdata` (the OS
+temporary directory; Woodpecker points `TMPDIR` at the workflow's volume).
 
 The harness reuses a server only when its major version and data directory
 match. An older server on port 5471 causes an explicit error; its files and
