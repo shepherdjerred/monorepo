@@ -470,12 +470,6 @@
     "yoga-wasm-web",
     "zod"
   ],
-  "ignoreFiles": [
-    "packages/discord-plays-mario-kart/packages/frontend/src/model/connection.ts",
-    "packages/discord-plays-mario-kart/packages/frontend/src/util.ts",
-    "packages/discord-plays-pokemon/packages/frontend/src/util.ts",
-    "packages/monarch/src/lib/costco/receipt-parser.ts"
-  ],
   "ignoreIssues": {
     "packages/better-skill-capped/src/components/ui/card.tsx": ["exports"],
     "packages/discord-plays-mario-kart/packages/backend/src/util.ts": [

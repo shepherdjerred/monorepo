@@ -60,22 +60,6 @@
       "clones": 1,
       "tokens": 73
     },
-    "packages/birmel/src/agent-tools/tools/discord/automod.ts|packages/birmel/src/agent-tools/tools/discord/channels.ts": {
-      "clones": 1,
-      "tokens": 77
-    },
-    "packages/birmel/src/agent-tools/tools/discord/automod.ts|packages/birmel/src/agent-tools/tools/discord/emojis.ts": {
-      "clones": 2,
-      "tokens": 146
-    },
-    "packages/birmel/src/agent-tools/tools/discord/emojis.ts|packages/birmel/src/agent-tools/tools/discord/emojis.ts": {
-      "clones": 1,
-      "tokens": 93
-    },
-    "packages/birmel/src/agent-tools/tools/discord/emojis.ts|packages/birmel/src/agent-tools/tools/discord/events.ts": {
-      "clones": 1,
-      "tokens": 72
-    },
     "packages/birmel/src/agent-tools/tools/elections/candidate-stats.ts|packages/birmel/src/agent-tools/tools/elections/election-actions.ts": {
       "clones": 1,
       "tokens": 83
@@ -235,30 +219,6 @@
     "packages/discord-plays-mario-kart/packages/frontend/src/main.tsx|packages/discord-plays-pokemon/packages/frontend/src/main.tsx": {
       "clones": 2,
       "tokens": 207
-    },
-    "packages/discord-plays-mario-kart/packages/frontend/src/model/connection.ts|packages/discord-plays-pokemon/packages/frontend/src/model/connection.ts": {
-      "clones": 1,
-      "tokens": 88
-    },
-    "packages/discord-plays-mario-kart/packages/frontend/src/model/notification.ts|packages/discord-plays-pokemon/packages/frontend/src/model/notification.ts": {
-      "clones": 1,
-      "tokens": 90
-    },
-    "packages/discord-plays-mario-kart/packages/frontend/src/stories/button.tsx|packages/discord-plays-pokemon/packages/frontend/src/stories/button.tsx": {
-      "clones": 1,
-      "tokens": 72
-    },
-    "packages/discord-plays-mario-kart/packages/frontend/src/stories/notification.tsx|packages/discord-plays-pokemon/packages/frontend/src/stories/notification.tsx": {
-      "clones": 1,
-      "tokens": 373
-    },
-    "packages/discord-plays-mario-kart/packages/frontend/src/stories/notifications.tsx|packages/discord-plays-pokemon/packages/frontend/src/stories/notifications.tsx": {
-      "clones": 1,
-      "tokens": 151
-    },
-    "packages/discord-plays-mario-kart/packages/frontend/src/util.ts|packages/discord-plays-pokemon/packages/frontend/src/util.ts": {
-      "clones": 1,
-      "tokens": 148
     },
     "packages/discord-plays-pokemon/packages/backend/scripts/audio-e2e.ts|packages/discord-plays-pokemon/packages/backend/src/emulator/audio/audio-fingerprint.test.ts": {
       "clones": 1,
@@ -475,14 +435,6 @@
     "packages/homelab/src/cdk8s/grafana/streambot/streambot-dashboard.ts|packages/homelab/src/cdk8s/grafana/streambot/streambot-dashboard.ts": {
       "clones": 1,
       "tokens": 72
-    },
-    "packages/homelab/src/cdk8s/src/apps/1password.ts|packages/homelab/src/cdk8s/src/resources/argo-applications/platform/1password.ts": {
-      "clones": 2,
-      "tokens": 157
-    },
-    "packages/homelab/src/cdk8s/src/apps/argocd.ts|packages/homelab/src/cdk8s/src/resources/argo-applications/platform/argocd.ts": {
-      "clones": 1,
-      "tokens": 71
     },
     "packages/homelab/src/cdk8s/src/argocd-application-readiness.ts|packages/homelab/src/cdk8s/src/argocd-application-readiness.ts": {
       "clones": 1,
