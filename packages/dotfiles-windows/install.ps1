@@ -37,6 +37,7 @@ if ((Get-ItemProperty $devMode -ErrorAction SilentlyContinue).AllowDevelopmentWi
 }
 
 Invoke-Native { chezmoi init --apply --source $source }
+Invoke-Native { mise install }
 
 Invoke-Native { & "$msys\usr\bin\fish.exe" -lc 'type -q fisher; or begin; curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source; end; fisher update' }
 

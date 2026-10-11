@@ -19,12 +19,14 @@ set -gx POSTHOG_CLI_PROJECT_ID '549883'
 abbr grep rg
 abbr gs git-spice
 # Coding agents use their subscription auth, so direct provider API keys are
-# removed, and they run without permission prompts or a sandbox.
-abbr claude "env -u (string join \"\" ANTHROPIC _API_KEY) -u (string join \"\" OPENAI _API_KEY) -u (string join \"\" CODEX _API_KEY) claude --dangerously-skip-permissions"
+# removed along with the 1Password vault token, and they run without permission
+# prompts or a sandbox.
+abbr claude "env -u OP_SERVICE_ACCOUNT_TOKEN -u (string join \"\" ANTHROPIC _API_KEY) -u (string join \"\" OPENAI _API_KEY) -u (string join \"\" CODEX _API_KEY) claude --dangerously-skip-permissions"
 
 if status is-interactive
   function codex --wraps codex -d "Run Codex without API keys, approvals, or sandbox"
-      env -u (string join "" OPENAI _API_KEY) \
+      env -u OP_SERVICE_ACCOUNT_TOKEN \
+          -u (string join "" OPENAI _API_KEY) \
           -u (string join "" CODEX _API_KEY) \
           -u (string join "" ANTHROPIC _API_KEY) \
           (command -s codex) --dangerously-bypass-approvals-and-sandbox $argv

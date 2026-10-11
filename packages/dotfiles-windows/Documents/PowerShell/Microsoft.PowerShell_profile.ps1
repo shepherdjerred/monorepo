@@ -1,5 +1,5 @@
-# Coding agents use their subscription auth, so direct provider API keys are
-# removed for the duration of the call, and they run without permission
+# Coding agents use their subscription auth, so direct provider API keys and the
+# 1Password vault token are removed for the duration of the call, and they run without permission
 # prompts or a sandbox. Mirrors the fish wrappers in config.fish.tmpl.
 function Invoke-AgentCli {
     param(
@@ -11,7 +11,8 @@ function Invoke-AgentCli {
     $keyNames = @(
         ('ANTHROPIC', '_API_KEY' -join ''),
         ('OPENAI', '_API_KEY' -join ''),
-        ('CODEX', '_API_KEY' -join '')
+        ('CODEX', '_API_KEY' -join ''),
+        'OP_SERVICE_ACCOUNT_TOKEN'
     )
     $saved = @{}
     foreach ($keyName in $keyNames) {
