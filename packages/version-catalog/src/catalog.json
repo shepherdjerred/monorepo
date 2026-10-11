@@ -1805,7 +1805,7 @@
       },
       "value": "0.1.0-0@sha256:0000000000000000000000000000000000000000000000000000000000000000",
       "notes": [
-        "Unpublished bootstrap marker; CI replaces this with the first verified service image before activation."
+        "Unpublished bootstrap marker; publish a locally verified service image and commit its immutable digest before activation."
       ]
     }
   ]

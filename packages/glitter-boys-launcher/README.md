@@ -11,7 +11,7 @@ From the repository root:
 
 ```sh
 bun run --cwd packages/glitter-boys-launcher dev
-bunx turbo run build typecheck test lint --filter=@shepherdjerred/glitter-boys-launcher
+bunx turbo run build:local typecheck test:local lint --filter=@shepherdjerred/glitter-boys-launcher
 ```
 
 `crates/launcher-app` owns the native UI. The core scheduler owns the install queue. `crates/launcher-core`
@@ -193,8 +193,18 @@ operations and sanitized panic events forward to Bugsink using its bootstrap
 `SENTRY_DSN`. Native crash dumps and symbolicated stacks are not implemented.
 Edge/proxy access logs have their own retention outside this event contract.
 
-Its Docker target and Woodpecker image registry belong to this package. The
-homelab chart owns the tunnel, secret reference, private ServiceMonitor, alerts,
+Its Dockerfile belongs to this package; build, smoke-test, and publish the image
+manually from the repository root. Use a unique release tag:
+
+```sh
+docker build --target smoke -f packages/glitter-boys-launcher/Dockerfile .
+docker build --target image -f packages/glitter-boys-launcher/Dockerfile -t ghcr.io/shepherdjerred/glitter-boys-launcher:<release-tag> .
+docker push ghcr.io/shepherdjerred/glitter-boys-launcher:<release-tag>
+```
+
+Verify the published image is publicly pullable and record its immutable digest
+in the version catalog before activation. Shared CI does not build or publish it.
+The homelab chart owns the tunnel, secret reference, private ServiceMonitor, alerts,
 and Grafana dashboard. Its checked-in release stage is `prepared`, which renders
 no workload. Activation requires a real published image digest and a granted
 `glitter-boys-launcher-credentials` 1Password item. Change those through the
@@ -226,15 +236,16 @@ and the verified Microsoft Artifact Signing Client 1.0.146 under
 `%LOCALAPPDATA%/Microsoft/ArtifactSigning/`. Public account/profile metadata lives
 in `scripts/artifact-signing.json`; no certificate private key is exported.
 The Ed25519 private key is read from the 1Password Private vault item
-`Glitter Boys launcher release`, field `update-signing-key`. CI can supply the
+`Glitter Boys launcher release`, field `update-signing-key`. The release terminal can receive the
 credential `GLITTER_BOYS_UPDATE_SIGNING_KEY` as PEM. Never log it. The key
 provisioning script refuses to overwrite an existing public trust configuration.
 
 ### One-time Windows setup
 
-Use a normal Windows x64 PowerShell 7 terminal. Release signing is performed on
-your PC; Woodpecker builds the hosted site and telemetry service, not this Windows
-installer. There is no unattended Windows signing runner.
+Use a normal Windows x64 PowerShell 7 terminal. Glitter Boys builds, tests,
+signing, site deployment, and telemetry image publication are manual operations.
+The site and launcher packages are excluded from shared CI. There is no unattended
+Windows signing runner. Homelab infrastructure still follows its GitOps release path.
 
 1. Install Git, mise, Azure CLI, 1Password CLI with desktop integration, PowerShell
    7, and the Windows SDK **Signing Tools for Desktop Apps** component.
@@ -280,7 +291,7 @@ installer. There is no unattended Windows signing runner.
    must be deployed before publication can pass public verification.
 
 Never run `op read` for these fields directly in a terminal: that prints the
-secret. Release commands capture credentials in memory. CI may inject the two
+secret. Release commands capture credentials in memory. The release terminal may receive the two
 publication credentials directly; both must be provided together.
 `GLITTER_BOYS_UPDATE_SIGNING_KEY` accepts a secret-manager-injected signing key;
 otherwise the owner reads the Private-vault key through desktop integration.
@@ -292,7 +303,7 @@ Run these commands from the repository root:
 
 ```powershell
 bun run --cwd packages/glitter-boys-launcher release:preflight
-bunx turbo run build typecheck test lint --filter=@shepherdjerred/glitter-boys-launcher --filter=@shepherdjerred/glitter-boys
+bunx turbo run build build:local typecheck test:local lint --filter=@shepherdjerred/glitter-boys-launcher --filter=@shepherdjerred/glitter-boys
 ```
 
 Update `[workspace.package].version` in `Cargo.toml`, then run `cargo check` from
@@ -373,9 +384,9 @@ points to the exact release. Do not add a docs link to the site homepage.
 6. Open **Settings → Share error and performance reports** and test opt-out.
    Check local logs/support export and the live dashboard with reporting on.
    A service outage must not prevent installing or playing.
-7. Record exact commands and observations in the PR. Source checks, exact-head
-   Woodpecker CI, signed artifacts, public availability, ArgoCD health and real
-   game behavior are separate acceptance layers.
+7. Record exact local commands and observations in the PR. Source checks, signed
+   artifacts, public availability, ArgoCD health and real game behavior are
+   separate acceptance layers. Shared CI does not verify Glitter Boys artifacts.
 
 ### Renew an update manifest
 
@@ -487,5 +498,5 @@ library. Source tests do not substitute for those signed native acceptance check
 The UI embeds Luckiest Guy and Atkinson Hyperlegible. Their license files are
 included under `assets/`; no font downloads are needed at runtime.
 
-Hosted downloads belong to the repo-owned homelab release path. Source checks,
-CI, artifact signing/publication, and live user acceptance are separate gates.
+Hosted downloads belong to the repo-owned homelab release path. Local source
+checks, artifact signing/publication, and live user acceptance are separate gates.

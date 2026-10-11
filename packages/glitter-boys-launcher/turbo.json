@@ -7,7 +7,7 @@
       "persistent": true,
       "passThroughEnv": ["MISE_DATA_DIR"]
     },
-    "build": {
+    "build:local": {
       "inputs": [
         "**/*.rs",
         "**/Cargo.toml",
@@ -45,26 +45,7 @@
       "outputs": [],
       "passThroughEnv": ["MISE_DATA_DIR"]
     },
-    "test": {
-      "inputs": [
-        "**/*.rs",
-        "**/Cargo.toml",
-        "Cargo.lock",
-        "catalog.json",
-        "assets/**",
-        "package.json",
-        "!target/**",
-        "prerequisites.json",
-        "release-profile.json",
-        "scripts/**",
-        "$TURBO_ROOT$/scripts/release/publish-launcher.ts",
-        "$TURBO_ROOT$/scripts/lib/seaweedfs.ts",
-        "$TURBO_ROOT$/packages/s3-signed-request/src/**"
-      ],
-      "outputs": [],
-      "passThroughEnv": ["MISE_DATA_DIR"]
-    },
-    "test:ci": {
+    "test:local": {
       "inputs": [
         "**/*.rs",
         "**/Cargo.toml",

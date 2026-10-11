@@ -255,28 +255,6 @@
       ]
     },
     {
-      "package": "@shepherdjerred/glitter-boys-launcher",
-      "directory": "packages/glitter-boys-launcher",
-      "steps": [
-        { "runner": "cargo", "args": ["--workspace", "--locked"] },
-        {
-          "runner": "command",
-          "name": "release-profile",
-          "command": ["bun", "test", "scripts"]
-        }
-      ]
-    },
-    {
-      "package": "@shepherdjerred/glitter-boys",
-      "directory": "packages/glitter-boys",
-      "steps": [
-        {
-          "runner": "vitest",
-          "args": ["test"]
-        }
-      ]
-    },
-    {
       "package": "@shepherdjerred/glitter-context",
       "directory": "packages/glitter-context",
       "steps": [
@@ -1165,6 +1143,16 @@
     }
   ],
   "separateTests": [
+    {
+      "package": "@shepherdjerred/glitter-boys",
+      "directory": "packages/glitter-boys",
+      "reason": "Owner-requested local-only verification and manual deployment. Run test:local before release; shared CI does not build, test, or publish this site."
+    },
+    {
+      "package": "@shepherdjerred/glitter-boys-launcher",
+      "directory": "packages/glitter-boys-launcher",
+      "reason": "Owner-requested local-only verification and manual releases for the launcher and telemetry image. Run test:local before release; shared CI does not build, test, sign, or publish these artifacts."
+    },
     {
       "package": "@shepherdjerred/macos-cross-compiler",
       "directory": "packages/macos-cross-compiler",

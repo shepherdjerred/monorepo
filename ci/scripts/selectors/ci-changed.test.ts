@@ -288,15 +288,6 @@ test("release lanes include their complete imported helper closure", () => {
   }
 });
 
-test("launcher publication alone selects the Glitter Boys site release", () => {
-  const paths = selectorPathsForLane("site-glitter-boys");
-  for (const input of [
-    "packages/glitter-boys-launcher/published-release.json",
-    "packages/glitter-boys-launcher/package.json",
-    "packages/glitter-boys-launcher/scripts/public-release.ts",
-    "packages/glitter-boys-launcher/scripts/release-manifest.ts",
-  ]) {
-    expect(paths).toContain(input);
-  }
-  expect(paths).not.toContain("packages/glitter-boys-launcher");
+test("Glitter Boys has no automatic site release selector", () => {
+  expect(selectorPathsForLane("site-glitter-boys")).toBeUndefined();
 });

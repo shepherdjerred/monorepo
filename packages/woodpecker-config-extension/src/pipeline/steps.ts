@@ -89,7 +89,7 @@ function verifyCommands(options: {
     options.remoteCache
       ? 'export TURBO_CACHE="remote:rw"'
       : 'export TURBO_CACHE="local:r"',
-    "bun --no-install run verify -- --filter='!sjer.red' --filter='!@shepherdjerred/resume' --output-logs=errors-only --summarize",
+    "bun --no-install run verify -- --filter='!sjer.red' --filter='!@shepherdjerred/resume' --filter='!@shepherdjerred/glitter-boys' --filter='!@shepherdjerred/glitter-boys-launcher' --output-logs=errors-only --summarize",
     "bun --no-install packages/homelab/src/cdk8s/scripts/generate-caddyfile.ts caddyfile.generated",
     // The image lane smoke-tests Caddy against this. It travels as a JSON
     // string because each Woodpecker workflow gets its own workspace.

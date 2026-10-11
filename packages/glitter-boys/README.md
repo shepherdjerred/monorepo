@@ -11,7 +11,7 @@ From the repository root:
 
 ```sh
 bun run --cwd packages/glitter-boys dev
-bunx turbo run build typecheck test lint --filter=@shepherdjerred/glitter-boys
+bunx turbo run build typecheck test:local lint --filter=@shepherdjerred/glitter-boys
 bun run --cwd packages/glitter-boys preview
 ```
 
@@ -53,7 +53,8 @@ game acceptance test, and label older UI layouts in their captions.
 
 ## Hosting
 
-Woodpecker builds this package and publishes `dist/` to the `glitter-boys`
+Build, test, and deploy this package manually; it is excluded from shared CI.
+The deployment command publishes the locally built `dist/` to the `glitter-boys`
 SeaweedFS bucket. The existing homelab static-site service serves it through
 Cloudflare Tunnel and Caddy. DNS and bucket lifecycle are owned by OpenTofu;
 the host binding and HTTP probes are owned by CDK8s.
