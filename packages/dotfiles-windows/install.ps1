@@ -12,7 +12,8 @@ function Invoke-Native([scriptblock]$Command) {
 $source = if ($env:DOTFILES_LOCAL_PATH) { $env:DOTFILES_LOCAL_PATH } else { Join-Path $HOME 'Git\monorepo\packages\dotfiles-windows' }
 $msys = 'C:\msys64'
 
-foreach ($id in 'Git.Git', 'twpayne.chezmoi', 'AgileBits.1Password', 'AgileBits.1Password.CLI', 'MSYS2.MSYS2', 'AmanThanvi.winghostty') {
+# pwsh runs this source's .ps1 scripts (see .chezmoi.toml.tmpl), so it must exist before the apply.
+foreach ($id in 'Git.Git', 'Microsoft.PowerShell', 'twpayne.chezmoi', 'MSYS2.MSYS2', 'AmanThanvi.winghostty') {
     winget install --id $id --exact --no-upgrade --accept-package-agreements --accept-source-agreements
     # 0x8A150061: already installed.
     if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne -1978335135) { throw "winget install $id failed with exit code $LASTEXITCODE" }
@@ -35,7 +36,6 @@ if ((Get-ItemProperty $devMode -ErrorAction SilentlyContinue).AllowDevelopmentWi
     if ($p.ExitCode -ne 0) { throw "Enabling Developer Mode failed with exit code $($p.ExitCode)" }
 }
 
-Write-Host 'Sign in to 1Password and enable its CLI integration before applying.'
 Invoke-Native { chezmoi init --apply --source $source }
 
 Invoke-Native { & "$msys\usr\bin\fish.exe" -lc 'type -q fisher; or begin; curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source; end; fisher update' }

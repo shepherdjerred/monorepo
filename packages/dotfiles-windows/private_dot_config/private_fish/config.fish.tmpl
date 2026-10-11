@@ -1,7 +1,8 @@
 # MSYS2 fish on Windows. MSYS2_PATH_TYPE=inherit passes the Windows PATH
 # through, so native tools (claude, codex, op, mise) resolve directly; PATH
 # additions live in conf.d/00-path.fish so they precede plugin conf.d files.
-# Credential exports mirror packages/dotfiles/private_dot_config/private_fish/config.fish.tmpl.
+# Public URLs mirror packages/dotfiles/private_dot_config/private_fish/config.fish.tmpl; credentials
+# are deliberately not rendered into this file (secrets stay in 1Password).
 
 set -gx SHELL /usr/bin/fish
 set -gx EDITOR "subl -w"
@@ -14,10 +15,6 @@ set -gx HASS_BASE_URL 'https://homeassistant.sjer.red'
 set -gx LOKI_ADDR 'https://loki.tailnet-1a49.ts.net'
 set -gx PROMETHEUS_URL 'https://prometheus.tailnet-1a49.ts.net'
 set -gx POSTHOG_CLI_PROJECT_ID '549883'
-{{ if lookPath "op" -}}
-set -gx HASS_TOKEN '{{ onepasswordRead "op://yx6je6mgj2oiss6z5bm42h3cxy/y4c2gno3yrxcdcudaofbirmi4u/password" }}'
-set -gx POSTHOG_TOFU_STATE_PASSPHRASE '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/yh3xvqemmr4ic2up5zluo2rkcq/msdtltp4yy72ntrkanowlq7k24" }}'
-{{ end -}}
 
 abbr grep rg
 abbr gs git-spice
@@ -26,10 +23,6 @@ abbr gs git-spice
 abbr claude "env -u (string join \"\" ANTHROPIC _API_KEY) -u (string join \"\" OPENAI _API_KEY) -u (string join \"\" CODEX _API_KEY) claude --dangerously-skip-permissions"
 
 if status is-interactive
-  {{ if lookPath "op" -}}
-  set -gx (string join "" OPENAI _API_KEY) '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/v2kd6fap7kzaaoqcbqqgz64y7m/credential" }}'
-  set -gx (string join "" ANTHROPIC _API_KEY) '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/sksz6g6ds4ypujxkoqfvm26jsu/credential" }}'
-  {{ end -}}
   function codex --wraps codex -d "Run Codex without API keys, approvals, or sandbox"
       env -u (string join "" OPENAI _API_KEY) \
           -u (string join "" CODEX _API_KEY) \
