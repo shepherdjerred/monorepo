@@ -1,5 +1,10 @@
 import { z } from "zod";
 import { isProviderAuthor, PROVIDERS } from "@shepherdjerred/code-review";
+import {
+  ConditionalCache,
+  githubGet,
+  throwIfRateLimited,
+} from "@shepherdjerred/code-review/github-request";
 import { captureJson } from "./process.ts";
 import { PullRequestSchema } from "#lib/github/schemas.ts";
 
@@ -116,25 +121,29 @@ const CheckRunSchema = z.object({
 });
 
 export class GitHubClient {
+  /**
+   * ETags for this process's reads. `ci wait` re-reads the same PR, checks,
+   * and reviews every poll; a revalidated 304 is not charged to the shared
+   * REST quota.
+   */
+  readonly cache = new ConditionalCache();
+
   constructor(
     readonly token: string,
     readonly repo: string = REPOSITORY,
   ) {}
 
-  async response(path: string, signal?: AbortSignal): Promise<Response> {
-    const response = await fetch(new URL(path, API), {
-      headers: {
-        authorization: `Bearer ${this.token}`,
-        accept: "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28",
-      },
+  /** GET a REST path; throws `GitHubRateLimitError` when GitHub refuses on quota. */
+  response(path: string, signal?: AbortSignal): Promise<Response> {
+    return githubGet(new URL(path, API), {
+      token: this.token,
+      cache: this.cache,
       redirect: "error",
       signal:
         signal === undefined
           ? AbortSignal.timeout(30_000)
           : AbortSignal.any([signal, AbortSignal.timeout(30_000)]),
     });
-    return response;
   }
 
   async read<T>(
@@ -195,8 +204,10 @@ export class GitHubClient {
         variables: { owner, name, number },
       }),
     });
-    if (!response.ok)
+    if (!response.ok) {
+      throwIfRateLimited(response, await response.text(), "/graphql");
       throw new Error(`GitHub GraphQL failed (${String(response.status)})`);
+    }
     const result = z
       .object({
         errors: z.array(z.unknown()).optional(),

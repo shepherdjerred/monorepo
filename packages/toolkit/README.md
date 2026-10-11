@@ -89,7 +89,9 @@ custom server URLs or repository IDs require an explicit token.
 
 `wait` pins the initial PR head (or asserts `--head <full SHA>`), subscribes to
 Woodpecker events before reading status, and refreshes GitHub metadata every
-30 seconds. It returns as soon as a blocking check fails, merge conflicts
+30 seconds. Repeated REST reads send the previous `ETag`; GitHub does not
+charge an unchanged `304` against the shared 5,000/hr REST quota, so a
+steady-state poll is nearly free. It returns as soon as a blocking check fails, merge conflicts
 appear, human intervention is needed, or all merge requirements pass. A ready
 candidate gets a fresh check of head, base, pipeline attempt, rules, and main.
 `--until settled` waits for the remaining blocking results after a CI failure;
@@ -111,7 +113,10 @@ to be current.
 Long queues and builds are normal. Keep awaiting the same foreground process;
 do not restart polls or diagnose an outage from elapsed time alone. A sparse
 heartbeat appears every five minutes. Disconnects reconnect with backoff and a
-fresh snapshot. `load` reports each unavailable telemetry source explicitly.
+fresh snapshot. When GitHub refuses a read because a rate limit is exhausted,
+the wait prints the limit and reset time to stderr, sleeps until the reset
+(plus a few seconds of jitter), and resumes polling; a reset past `--timeout`
+ends with the timeout outcome. `load` reports each unavailable telemetry source explicitly.
 
 `explain` and wait reports include pipeline elapsed time, workflow start delays,
 time without any active workflow, and per-step API phase timings in JSON. The
@@ -177,7 +182,11 @@ Secrets and terminal control sequences are removed before truncation.
 `ready: false`. SIGINT and SIGTERM cancel the foreground wait with exits 130
 and 143. The command does not merge or mutate the PR.
 
-GitHub credentials come from `GH_TOKEN` or `gh auth token`.
+GitHub credentials come from `GH_TOKEN` or `gh auth token`. One-shot commands
+(`ci explain`, `ci main`, `pr health`, `pr review`) still exit 2 on a GitHub
+rate limit, with the resource, used/limit, and retry time in the message.
+`gh api rate_limit` is not authoritative for the shared bucket; read the
+`x-ratelimit-*` headers of a real request instead.
 The default Woodpecker connection resolves `WOODPECKER_TOKEN` through the
 registered credential broker, preserving environment and credential-locator
 config overrides. The broker uses `OP_SERVICE_ACCOUNT_TOKEN` or the enrolled
@@ -193,7 +202,7 @@ uses the configured `kubectl` context and `gcx --context homelab`.
   head;
 - the Woodpecker pipeline for that exact head SHA, including authoritative job
   state and `toolkit woodpecker pipeline log show <repo> <pipeline>` investigation commands;
-- GitHub PR/check/review metadata from `gh`.
+- GitHub PR/check/review metadata from `gh` and the GitHub REST API.
 
 GitHub’s status can lag or describe a different state. The exact-head
 Woodpecker pipeline wins when they disagree. Healthy and pending reports exit 0;

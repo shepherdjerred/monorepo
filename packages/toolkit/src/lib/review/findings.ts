@@ -20,6 +20,10 @@ import {
   resolveReviewState,
   type ReviewStateResult,
 } from "@shepherdjerred/code-review/github";
+import {
+  githubGet,
+  throwIfRateLimited,
+} from "@shepherdjerred/code-review/github-request";
 import { fetchHeadPushedAt } from "@shepherdjerred/code-review/head-pushed-at";
 import { markQodoFindingResolved } from "@shepherdjerred/code-review/qodo";
 import { z } from "zod";
@@ -325,7 +329,7 @@ function headers(token: string): Record<string, string> {
 }
 
 async function getJson(url: string, token: string): Promise<unknown> {
-  const response = await fetch(url, { headers: headers(token) });
+  const response = await githubGet(url, { token });
   if (!response.ok) {
     throw new Error(
       `GET ${url} failed: ${String(response.status)} ${response.statusText}`,
@@ -346,6 +350,7 @@ async function sendJson(
     body: JSON.stringify(body),
   });
   if (!response.ok) {
+    throwIfRateLimited(response, await response.text(), new URL(url).pathname);
     throw new Error(
       `${method} ${url} failed: ${String(response.status)} ${response.statusText}`,
     );
