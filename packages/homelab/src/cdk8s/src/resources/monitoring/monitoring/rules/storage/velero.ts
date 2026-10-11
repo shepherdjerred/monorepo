@@ -258,8 +258,13 @@ and on(schedule) (max(velero_backup_success_total{schedule!="",schedule=~"${sche
               "Velero backup {{ $labels.schedule }} has exceeded 30 minutes duration. This may indicate large volumes are being backed up that should be excluded.",
             ),
           },
+          // Velero exports the duration only as a histogram; the mean of the
+          // backups that finished in the last day is the recent duration.
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "max(velero_backup_duration_seconds) by (schedule) > 1800",
+            `max by (schedule) (
+  increase(velero_backup_duration_seconds_sum[1d])
+  / increase(velero_backup_duration_seconds_count[1d])
+) > 1800`,
           ),
           for: "5m",
           labels: {

@@ -61,7 +61,9 @@ export function createPostalChart(app: App) {
         dnsEgressRule(),
         // Allow MariaDB within namespace
         {
-          to: [{ podSelector: { matchLabels: { app: "postal-mariadb" } } }],
+          to: [
+            { podSelector: { matchLabels: { ...postalMariadb.podLabels } } },
+          ],
           ports: [{ port: IntOrString.fromNumber(3306), protocol: "TCP" }],
         },
         // Allow external SMTP relay to Fastmail
@@ -121,7 +123,9 @@ export function createPostalChart(app: App) {
         dnsEgressRule(),
         // Allow MariaDB within namespace
         {
-          to: [{ podSelector: { matchLabels: { app: "postal-mariadb" } } }],
+          to: [
+            { podSelector: { matchLabels: { ...postalMariadb.podLabels } } },
+          ],
           ports: [{ port: IntOrString.fromNumber(3306), protocol: "TCP" }],
         },
       ],
@@ -139,7 +143,9 @@ export function createPostalChart(app: App) {
         dnsEgressRule(),
         // Allow MariaDB within namespace
         {
-          to: [{ podSelector: { matchLabels: { app: "postal-mariadb" } } }],
+          to: [
+            { podSelector: { matchLabels: { ...postalMariadb.podLabels } } },
+          ],
           ports: [{ port: IntOrString.fromNumber(3306), protocol: "TCP" }],
         },
         // Allow external SMTP relay to Fastmail (via postfix sidecar)
@@ -155,7 +161,7 @@ export function createPostalChart(app: App) {
   new KubeNetworkPolicy(chart, "postal-mariadb-netpol", {
     metadata: { name: "postal-mariadb-netpol" },
     spec: {
-      podSelector: { matchLabels: { app: "postal-mariadb" } },
+      podSelector: { matchLabels: { ...postalMariadb.podLabels } },
       policyTypes: ["Ingress"],
       ingress: [
         {
