@@ -21,7 +21,8 @@ import TaskNotesKit
         private(set) var haptics = false
     #endif
     private(set) var error: String?
-    @ObservationIgnored private var players: [String: AVAudioPlayer] = [:]
+    @ObservationIgnored private let audio = FacetNativeAudioPlayer()
+    @ObservationIgnored private let audioPermission = FacetAudioPermission()
     @ObservationIgnored private var consumed: Set<ReceiptKey> = []
     @ObservationIgnored private var scenes: [UUID: UUID] = [:]
     @ObservationIgnored private let sink: ((FacetFeedbackEvent) -> Void)?
@@ -94,6 +95,7 @@ import TaskNotesKit
         } else {
             scenes[origin.id] = nil
         }
+        audioPermission.setScene(origin.id, activation: scenes[origin.id])
         if scenes.isEmpty {
             stopAudio()
             if let interruption { NotificationCenter.default.removeObserver(interruption) }
@@ -135,22 +137,25 @@ import TaskNotesKit
             scenes[owner.id] == activationID, !event.noOp
         else { return false }
         sink?(event)
-        if sink == nil { deliver(event.action) }
+        if sink == nil { deliver(event) }
         return true
     }
     func preview() {
         guard sounds else { return }
-        play("complete")
+        let generation = audioPermission.generation
+        _Concurrency.Task {
+            guard sounds, audioPermission.allows(generation) else { return }
+            _ = await play("complete")
+        }
     }
-    private func deliver(_ action: FacetFeedbackAction) {
+    private func deliver(_ event: FacetFeedbackEvent) {
         // Rapid outcomes remain visible individually; overlapping sensory cues are consumed quietly.
-        guard !players.values.contains(where: \.isPlaying) else { return }
-        guard let effect = FacetFeedbackPolicy.shared.events[action.rawValue] else {
-            preconditionFailure("The feedback policy has no event: \(action.rawValue)")
+        guard let effect = FacetFeedbackPolicy.shared.events[event.action.rawValue] else {
+            preconditionFailure("The feedback policy has no event: \(event.action.rawValue)")
         }
         guard let sound = effect.sound, let cue = Self.palette.cues[sound] else {
             if effect.sound == nil, effect.haptic == "none" { return }
-            preconditionFailure("The feedback palette is missing its cue: \(action.rawValue)")
+            preconditionFailure("The feedback palette is missing its cue: \(event.action.rawValue)")
         }
         #if os(iOS)
             let physicalEnabled = sounds || haptics
@@ -160,12 +165,24 @@ import TaskNotesKit
         guard physicalEnabled, attemptGate.claim(duration: .milliseconds(cue.milliseconds)) else {
             return
         }
-        #if os(iOS)
-            if haptics {
-                deliverHaptic(effect.haptic)
-            }
-        #endif
-        if sounds { play(sound) }
+        guard let origin = event.origin, let activation = event.activationID else { return }
+        let owner = FacetAudioPermission.Owner(id: origin.id, activation: activation)
+        let generation = audioPermission.generation
+        let soundEnabled = sounds
+        let hapticEnabled = haptics
+        _Concurrency.Task {
+            await FacetSensoryDelivery.deliver(
+                soundEnabled: soundEnabled,
+                audio: { await self.play(sound, owner: owner) },
+                current: { self.audioPermission.allows(generation, owner: owner) },
+                haptic: {
+                    #if os(iOS)
+                        if hapticEnabled { self.deliverHaptic(effect.haptic) }
+                    #else
+                        _ = hapticEnabled
+                    #endif
+                })
+        }
     }
     #if os(iOS)
         private func deliverHaptic(_ haptic: String) {
@@ -178,7 +195,9 @@ import TaskNotesKit
             }
         }
     #endif
+}
 
+extension FacetNativeFeedback {
     static func soundURL(for sound: String) -> URL {
         guard let url = Bundle.module.url(forResource: sound, withExtension: "wav") else {
             preconditionFailure("The required feedback sound is missing: \(sound)")
@@ -186,41 +205,40 @@ import TaskNotesKit
         return url
     }
 
-    private func play(_ sound: String) {
-        guard !players.values.contains(where: \.isPlaying) else { return }
+    private func play(_ sound: String, owner: FacetAudioPermission.Owner? = nil) async -> Bool {
+        let generation = audioPermission.generation
+        let url = Self.soundURL(for: sound)
         do {
-            #if os(iOS)
-                try AVAudioSession.sharedInstance().setCategory(
-                    .ambient, mode: .default, options: [.mixWithOthers])
-            #endif
-            let player: AVAudioPlayer
-            if let existing = players[sound] {
-                player = existing
-            } else {
-                player = try AVAudioPlayer(contentsOf: Self.soundURL(for: sound))
-                player.prepareToPlay()
-                players[sound] = player
-            }
-            player.currentTime = 0
-            guard player.play() else { throw FacetContractError.unsupportedResponse }
-            error = nil
+            let played = try await audio.play(
+                sound, url: url, generation: generation, permission: audioPermission, owner: owner)
+            if played, audioPermission.allows(generation, owner: owner) { error = nil }
+            return played
         } catch {
+            guard audioPermission.allows(generation, owner: owner) else { return false }
             self.error =
                 "The task was saved, but its sound could not play. Check the device audio settings."
+            return false
         }
     }
     private func preload() {
         guard sounds else { return }
-        do {
-            for sound in ["create", "complete", "delete", "reverse"] where players[sound] == nil {
-                let player = try AVAudioPlayer(contentsOf: Self.soundURL(for: sound))
-                player.prepareToPlay()
-                players[sound] = player
+        let generation = audioPermission.generation
+        let urls = Dictionary(
+            uniqueKeysWithValues: ["create", "complete", "delete", "reverse"].map {
+                ($0, Self.soundURL(for: $0))
+            })
+        _Concurrency.Task {
+            do {
+                try await audio.preload(urls, generation: generation, permission: audioPermission)
+            } catch {
+                guard audioPermission.allows(generation) else { return }
+                self.error = "Task sounds could not be prepared. Check the device audio settings."
             }
-        } catch { self.error = "Task sounds could not be prepared: \(error.localizedDescription)" }
+        }
     }
     private func stopAudio() {
-        for player in players.values { player.stop() }
-        players.removeAll()
+        audioPermission.invalidate()
+        let generation = audioPermission.generation
+        _Concurrency.Task { await audio.stop(before: generation) }
     }
 }

@@ -1,5 +1,18 @@
 import { describe, expect, test } from "vitest";
-import { excludeBaseline, parsePids } from "./verify-launch.ts";
+import {
+  excludeBaseline,
+  parsePids,
+  requireStartupMarker,
+} from "./verify-launch.ts";
+
+describe("Release startup attribution", () => {
+  test("requires the exact run UUID and a valid owned process", () => {
+    expect(() => requireStartupMarker("run-a", 123, "run-a\n")).not.toThrow();
+    expect(() => requireStartupMarker("run-a", 123, "run-b\n")).toThrow();
+    expect(() => requireStartupMarker("run-a", 123, "run-a")).toThrow();
+    expect(() => requireStartupMarker("run-a", 0, "run-a\n")).toThrow();
+  });
+});
 
 describe("pgrep output parsing", () => {
   test("parses one pid per line", () => {

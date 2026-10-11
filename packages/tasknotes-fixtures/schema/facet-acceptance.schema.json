@@ -1,0 +1,239 @@
+{
+  "title": "Facet Debug Apple acceptance control",
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "pattern": "^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$"
+    },
+    "identity": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+    },
+    "count": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "classification": {
+      "enum": [
+        "network",
+        "storage",
+        "provider",
+        "configuration",
+        "account",
+        "cancelled",
+        "internal_contract",
+        "host_contract",
+        "busy",
+        "retained_action",
+        "unexpected",
+        "validation",
+        "conflict",
+        "missing_profile_or_note",
+        "closed_engine",
+        "sync_boundary"
+      ]
+    },
+    "descriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "runID", "stateDirectory"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "runID": { "$ref": "#/$defs/uuid" },
+        "stateDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096,
+          "pattern": "^/[^\\u0000]+$"
+        },
+        "allowedRemoteVaultID": {
+          "anyOf": [{ "$ref": "#/$defs/identity" }, { "type": "null" }]
+        }
+      }
+    },
+    "command": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "runID", "commandID", "kind"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "runID": { "$ref": "#/$defs/uuid" },
+        "commandID": { "$ref": "#/$defs/uuid" },
+        "kind": { "enum": ["refresh", "interrupt", "resume"] },
+        "profileID": { "$ref": "#/$defs/identity" }
+      },
+      "oneOf": [
+        { "properties": { "kind": { "const": "refresh" } } },
+        {
+          "properties": { "kind": { "enum": ["interrupt", "resume"] } },
+          "required": ["profileID"]
+        }
+      ]
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "runID",
+        "commandID",
+        "outcome",
+        "classification"
+      ],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "runID": { "$ref": "#/$defs/uuid" },
+        "commandID": { "$ref": "#/$defs/uuid" },
+        "outcome": { "enum": ["applied", "rejected"] },
+        "classification": {
+          "anyOf": [{ "$ref": "#/$defs/classification" }, { "type": "null" }]
+        }
+      }
+    },
+    "interruption": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "runID", "profileIDs"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "runID": { "$ref": "#/$defs/uuid" },
+        "profileIDs": {
+          "type": "array",
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/identity" }
+        }
+      }
+    },
+    "ledger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "runID", "commandIDs"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "runID": { "$ref": "#/$defs/uuid" },
+        "commandIDs": {
+          "type": "array",
+          "maxItems": 10000,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/uuid" }
+        }
+      }
+    },
+    "durable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "profileId",
+        "profileKind",
+        "version",
+        "initialSyncComplete",
+        "pendingRemoteCount",
+        "pendingUploadCount",
+        "conflictCount",
+        "pendingMutationCount"
+      ],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "profileId": { "$ref": "#/$defs/identity" },
+        "profileKind": { "enum": ["local_folder", "obsidian_sync"] },
+        "version": { "$ref": "#/$defs/count" },
+        "initialSyncComplete": { "type": "boolean" },
+        "pendingRemoteCount": { "$ref": "#/$defs/count" },
+        "pendingUploadCount": { "$ref": "#/$defs/count" },
+        "conflictCount": { "$ref": "#/$defs/count" },
+        "pendingMutationCount": { "$ref": "#/$defs/count" }
+      }
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profileID",
+        "profileKind",
+        "remoteVaultID",
+        "phase",
+        "transport",
+        "durable",
+        "hostWorkPending"
+      ],
+      "properties": {
+        "profileID": { "$ref": "#/$defs/identity" },
+        "profileKind": { "enum": ["local_folder", "obsidian_sync"] },
+        "remoteVaultID": {
+          "anyOf": [{ "$ref": "#/$defs/identity" }, { "type": "null" }]
+        },
+        "phase": {
+          "enum": [
+            "connecting",
+            "syncing",
+            "synced",
+            "offline",
+            "reconnectRequired",
+            "conflict",
+            "failed",
+            "stopped"
+          ]
+        },
+        "transport": {
+          "enum": [
+            "connecting",
+            "connected",
+            "offline",
+            "reconnectRequired",
+            "failed",
+            "stopped"
+          ]
+        },
+        "durable": {
+          "anyOf": [{ "$ref": "#/$defs/durable" }, { "type": "null" }]
+        },
+        "hostWorkPending": { "type": "boolean" }
+      }
+    },
+    "accountExchange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stage", "statusCode", "failureClassification"],
+      "properties": {
+        "stage": { "enum": ["preflight", "post"] },
+        "statusCode": {
+          "type": ["integer", "null"],
+          "minimum": 100,
+          "maximum": 599
+        },
+        "failureClassification": {
+          "anyOf": [{ "$ref": "#/$defs/classification" }, { "type": "null" }]
+        }
+      }
+    },
+    "status": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "runID",
+        "capturedAt",
+        "profiles",
+        "accountStage",
+        "accountBusy",
+        "accountExchange"
+      ],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "runID": { "$ref": "#/$defs/uuid" },
+        "capturedAt": { "type": "string", "format": "date-time" },
+        "profiles": {
+          "type": "array",
+          "maxItems": 256,
+          "items": { "$ref": "#/$defs/profile" }
+        },
+        "accountStage": { "enum": ["credentials", "verification", "vaults"] },
+        "accountBusy": { "type": "boolean" },
+        "accountExchange": {
+          "anyOf": [{ "$ref": "#/$defs/accountExchange" }, { "type": "null" }]
+        }
+      }
+    }
+  }
+}

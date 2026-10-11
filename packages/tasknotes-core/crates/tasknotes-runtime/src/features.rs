@@ -14,6 +14,7 @@ use tasknotes_vault::config::TaskNotesConfiguration;
     deny_unknown_fields
 )]
 pub(crate) enum Request {
+    SyncStatus {},
     Conformance {},
     UndoAvailable {},
     NormalizationPreview {

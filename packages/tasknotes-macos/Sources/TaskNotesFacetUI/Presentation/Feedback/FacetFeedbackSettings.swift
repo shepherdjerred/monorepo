@@ -3,6 +3,7 @@ public import SwiftUI
 public struct FacetFeedbackSettings: View {
     private let feedback: FacetNativeFeedback
     public init() { feedback = .shared }
+    public init(store: FacetStore) { feedback = store.feedback }
     internal init(feedback: FacetNativeFeedback) { self.feedback = feedback }
     public var body: some View {
         VStack(alignment: .leading, spacing: 12) {

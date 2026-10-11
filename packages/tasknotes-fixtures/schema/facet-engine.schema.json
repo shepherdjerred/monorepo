@@ -1502,7 +1502,8 @@
               "enum": [
                 "discovery",
                 "undo_available",
-                "conformance"
+                "conformance",
+                "sync_status"
               ]
             }
           },
@@ -1797,6 +1798,23 @@
           "additionalProperties": false
         }
       ]
+    },
+    "syncStatus": {
+      "$comment": "Durable content-free progress. version is the vault/index sequence, not a Sync change cursor. Local folders are initially ready but do not imply cloud Sync. Uploads include conflict-blocked rows; mutations count uncommitted journals plus partial-batch parent records.",
+      "type": "object",
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "profileId": {"type": "string", "minLength": 1, "maxLength": 256},
+        "profileKind": {"enum": ["local_folder", "obsidian_sync"]},
+        "version": {"type": "integer", "minimum": 0, "maximum": 18446744073709551615},
+        "initialSyncComplete": {"type": "boolean"},
+        "pendingRemoteCount": {"type": "integer", "minimum": 0, "maximum": 18446744073709551615},
+        "pendingUploadCount": {"type": "integer", "minimum": 0, "maximum": 18446744073709551615},
+        "conflictCount": {"type": "integer", "minimum": 0, "maximum": 18446744073709551615},
+        "pendingMutationCount": {"type": "integer", "minimum": 0, "maximum": 18446744073709551615}
+      },
+      "required": ["schemaVersion", "profileId", "profileKind", "version", "initialSyncComplete", "pendingRemoteCount", "pendingUploadCount", "conflictCount", "pendingMutationCount"],
+      "additionalProperties": false
     },
     "undoAvailable": {
       "type": "object",

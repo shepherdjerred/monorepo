@@ -81,7 +81,10 @@ struct FacetAccountForm: View {
                                                 existingProfileID: profile.id, requestID: requestID)
                                         }
                                     }.disabled(
-                                        busy || (!vault.managed && vaultPassword.isEmpty))
+                                        busy || (!vault.managed && vaultPassword.isEmpty)
+                                    )
+                                    .accessibilityIdentifier(
+                                        "facet.account.reconnect.\(profile.id)")
                                 }
                                 Button(vault.name) {
                                     let submittedPassword = vault.managed ? nil : vaultPassword

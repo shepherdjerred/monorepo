@@ -38,6 +38,7 @@ mod remote_images;
 mod resolution_images;
 mod retired_timing;
 mod staged;
+mod sync_status;
 mod title_lineage;
 mod undo;
 mod uploads;
@@ -887,6 +888,7 @@ impl Engine {
         let profile = self.profile(id)?;
         let request = crate::features::parse_request(json)?;
         let value = match request {
+            crate::features::Request::SyncStatus {} => self.sync_status(&profile)?,
             crate::features::Request::Conformance {} => self.conformance(id)?,
             crate::features::Request::UndoAvailable {} => self.undo_available(id)?,
             crate::features::Request::ReminderPlan {

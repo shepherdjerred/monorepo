@@ -1018,6 +1018,8 @@ pub(crate) mod tests {
                 "receipt" => decode::<tasknotes_runtime::types::Receipt>(&json).is_ok(),
                 "payloadInfo" => decode::<tasknotes_runtime::types::PayloadInfo>(&json)
                     .is_ok_and(|info| info.validate_contract().is_ok()),
+                "syncStatus" => serde_json::from_str::<tasknotes_runtime::types::SyncStatus>(&json)
+                    .is_ok_and(|status| status.validate_contract().is_ok()),
                 "engineError" => decode::<FacetEngineError>(&json).is_ok(),
                 "profiles" => decode::<Profiles>(&json)
                     .map(|value| value.profiles.len())
@@ -1031,7 +1033,7 @@ pub(crate) mod tests {
                 case["id"]
             );
         }
-        assert_eq!(cases.len(), 130);
+        assert_eq!(cases.len(), 141);
         let registered:Value=serde_json::from_str(&engine.register_profile(r#"{"schemaVersion":1.0,"id":"a","name":"Example","kind":"local_folder","approveStandard":true}"#)?)?;
         assert_eq!(registered["schemaVersion"], 1);
         let profiles: Value = serde_json::from_str(&engine.profiles_json()?)?;

@@ -16,6 +16,7 @@ internal struct FacetReminderEditorSelection: Identifiable {
 
 extension FacetStore {
     public func installNotificationRouting() async {
+        guard !isIsolatedLaunch else { return }
         await reminders.installRouting { [weak self] profile, path in
             await self?.receiveNotification(profileID: profile, path: path)
         }

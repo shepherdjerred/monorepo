@@ -186,18 +186,13 @@ extension FacetStore {
         isLoading = true
         defer { finishAccountRequest(request) }
         do {
+            try requireAcceptanceRemoteVault(vault.id)
             await stopSessions()
             guard ownsAccountRequest(request), self.account === account, self.engine === engine
             else { return }
-            let profile: FacetProfile
-            if let existingProfileID {
-                profile = try await account.reauthorize(
-                    profileID: existingProfileID, vaultID: vault.id, password: password,
-                    engine: engine)
-            } else {
-                profile = try await account.connect(
-                    vaultID: vault.id, password: password, engine: engine)
-            }
+            let profile = try await connectedProfile(
+                account: account, engine: engine, vaultID: vault.id,
+                password: password, existingProfileID: existingProfileID)
             let connectedProfiles = try await engine.profiles()
             if self.engine === engine { profiles = connectedProfiles }
             guard ownsAccountRequest(request), self.account === account, self.engine === engine
@@ -228,6 +223,23 @@ extension FacetStore {
         accountPresentation = FacetAccountPresentation()
         accountNeedsCode = false
         showsAccount = false
+    }
+
+    private func requireAcceptanceRemoteVault(_ vaultID: String) throws {
+        #if DEBUG
+            try acceptanceConfiguration?.requireRemoteVault(vaultID)
+        #endif
+    }
+
+    private func connectedProfile(
+        account: FacetObsidianAccount, engine: FacetEngine, vaultID: String,
+        password: String?, existingProfileID: String?
+    ) async throws -> FacetProfile {
+        if let existingProfileID {
+            return try await account.reauthorize(
+                profileID: existingProfileID, vaultID: vaultID, password: password, engine: engine)
+        }
+        return try await account.connect(vaultID: vaultID, password: password, engine: engine)
     }
 
     internal func settleAccountConnectionFailure(
@@ -277,6 +289,11 @@ extension FacetStore {
         accountNeedsCode = false
         accountPresentation = FacetAccountPresentation()
         do { try await account.signOut() } catch { self.error = error.localizedDescription }
+        for profile in profiles where profile.kind == "obsidian_sync" {
+            let state = FacetSyncStatus(transport: .reconnectRequired)
+            syncStatuses[profile.id] = state
+            syncStates[profile.id] = state.message
+        }
     }
 
     public func resumeSync(isForeground: Bool = true) async {
@@ -303,10 +320,11 @@ extension FacetStore {
                     engine: engine, account: account, profileID: profile.id,
                     changed: { [weak self] in
                         guard let self else { return }
-                        if await self.selectedProfileID == profile.id { await self.refresh() }
+                        await self.refreshSyncOwner(profileID: profile.id, generation: attempt)
                     },
-                    status: { [weak self] text in
-                        await self?.updateSyncState(profileID: profile.id, text: text)
+                    status: { [weak self] state in
+                        await self?.updateSyncState(
+                            profileID: profile.id, state: state, generation: attempt)
                     },
                     retain: { [weak self] session in
                         await self?.retainSession(
@@ -337,6 +355,7 @@ extension FacetStore {
             reportBackgroundFailure(failure)
             syncStates[profileID] = FacetFailureDiagnostic(failure).action
         }
+        syncStatuses[profileID] = FacetSyncStatus(transport: .reconnectRequired)
     }
 
     public func pauseSync() async {
@@ -348,6 +367,12 @@ extension FacetStore {
         syncGeneration += 1
         let running = sessions
         sessions = [:]
+        syncSessionGenerations = [:]
+        for id in running.keys {
+            let state = FacetSyncStatus(transport: .stopped)
+            syncStatuses[id] = state
+            syncStates[id] = state.message
+        }
         for session in running.values { await session.stop() }
     }
     internal func canRetainSession(profileID: String, generation: UInt64) -> Bool {
@@ -358,10 +383,37 @@ extension FacetStore {
 
     private func retainSession(
         _ session: FacetObsidianSession, profileID: String, generation: UInt64
-    ) -> Bool {
+    ) async -> Bool {
         guard canRetainSession(profileID: profileID, generation: generation) else { return false }
+        #if DEBUG
+            do {
+                try await prepareAcceptanceInterruption(session, profileID: profileID)
+            } catch { return false }
+            guard canRetainSession(profileID: profileID, generation: generation) else {
+                return false
+            }
+        #endif
         sessions[profileID] = session
+        syncSessionGenerations[profileID] = generation
         return true
     }
-    private func updateSyncState(profileID: String, text: String) { syncStates[profileID] = text }
+
+    internal func ownsSyncCallback(profileID: String, generation: UInt64) -> Bool {
+        !accountTransition && sessions[profileID] != nil
+            && syncSessionGenerations[profileID] == generation
+            && !removingProfileIDs.contains(profileID)
+    }
+
+    internal func updateSyncState(profileID: String, state: FacetSyncStatus, generation: UInt64) {
+        guard ownsSyncCallback(profileID: profileID, generation: generation) else { return }
+        syncStatuses[profileID] = state
+        syncStates[profileID] = state.message
+    }
+
+    private func refreshSyncOwner(profileID: String, generation: UInt64) async {
+        guard ownsSyncCallback(profileID: profileID, generation: generation),
+            selectedProfileID == profileID
+        else { return }
+        await refresh()
+    }
 }

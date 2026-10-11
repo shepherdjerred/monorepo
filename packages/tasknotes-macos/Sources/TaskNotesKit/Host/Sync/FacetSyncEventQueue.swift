@@ -4,10 +4,17 @@ internal actor FacetSyncEventQueue<Element: Sendable> {
     private var consumer: CheckedContinuation<Element?, Never>?
     private var closed = false
     private let capacity: Int
+    private var revision: UInt64 = 0
     init(capacity: Int) { self.capacity = capacity }
+
+    func pendingCount() -> Int { buffered.count + producers.count }
+    func observation() -> (count: Int, revision: UInt64) {
+        (buffered.count + producers.count, revision)
+    }
 
     func send(_ value: Element) async -> Bool {
         guard !closed else { return false }
+        revision += 1
         if let waiting = consumer {
             consumer = nil
             waiting.resume(returning: value)
@@ -22,6 +29,7 @@ internal actor FacetSyncEventQueue<Element: Sendable> {
 
     func next() async -> Element? {
         if !buffered.isEmpty {
+            revision += 1
             let value = buffered.removeFirst()
             if !producers.isEmpty {
                 let producer = producers.removeFirst()
@@ -36,6 +44,7 @@ internal actor FacetSyncEventQueue<Element: Sendable> {
 
     func close() {
         closed = true
+        revision += 1
         buffered.removeAll()
         consumer?.resume(returning: nil)
         consumer = nil

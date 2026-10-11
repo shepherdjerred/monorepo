@@ -429,6 +429,49 @@ pub enum ProfileKind {
     ObsidianSync,
 }
 
+/// Content-free durable progress; transport liveness remains a host concern.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SyncStatus {
+    /// JSON envelope version, independent of the durable index sequence.
+    pub schema_version: u32,
+    /// Host-assigned portable profile identity.
+    pub profile_id: String,
+    /// Local folders do not imply any cloud synchronization capability.
+    pub profile_kind: ProfileKind,
+    /// Existing durable vault/index sequence; checkpoint writes do not advance it.
+    pub version: u64,
+    /// Ready barrier and incoming queue settled; local folders are already ready.
+    pub initial_sync_complete: bool,
+    /// Persisted remote notices not yet durably applied or parked.
+    pub pending_remote_count: u64,
+    /// All immutable outbox rows, including those blocked by a conflict.
+    pub pending_upload_count: u64,
+    /// Unresolved preserved conflict records.
+    pub conflict_count: u64,
+    /// Uncommitted file journals plus partial-batch parents, not user actions.
+    pub pending_mutation_count: u64,
+}
+
+impl SyncStatus {
+    /// Validate the shared output contract when reading an untrusted projection.
+    ///
+    /// # Errors
+    /// Rejects unsupported envelopes and invalid profile identities.
+    pub fn validate_contract(&self) -> Result<()> {
+        if self.schema_version != 1
+            || self.profile_id.trim().is_empty()
+            || self.profile_id.len() > 256
+            || self.profile_id.chars().any(char::is_control)
+        {
+            return Err(crate::RuntimeError::Validation(
+                "invalid Sync status".into(),
+            ));
+        }
+        Ok(())
+    }
+}
+
 /// Portable profile metadata, excluding credentials and device paths.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

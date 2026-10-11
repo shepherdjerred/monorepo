@@ -11,6 +11,10 @@ final class StandaloneTaskTests: XCTestCase {
             environment["FACET_E2E_SIMULATOR"],
             "Run ios:native:e2e to create and seed a disposable simulator.")
         XCTAssertEqual(environment["FACET_E2E_SIMULATOR"], environment["SIMULATOR_UDID"])
+        addUIInterruptionMonitor(withDescription: "Unexpected Facet error") { _ in
+            XCTFail("The disposable local journey was interrupted. No alert was accepted.")
+            return false
+        }
     }
 
     func testCaptureEditCompleteAndRelaunchUseTheLocalVault() {
@@ -94,6 +98,9 @@ final class StandaloneTaskTests: XCTestCase {
 
     private func launch(accessibilitySize: Bool = false) -> XCUIApplication {
         let app = XCUIApplication()
+        app.launchEnvironment["FACET_E2E_SIMULATOR"] =
+            ProcessInfo.processInfo.environment[
+                "FACET_E2E_SIMULATOR"]
         app.launchArguments = ["--facet-native-acceptance"]
         if accessibilitySize { app.launchArguments.append("--facet-accessibility-size") }
         app.launch()

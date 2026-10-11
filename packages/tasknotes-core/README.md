@@ -271,6 +271,22 @@ runtime requirements are incomplete; pure fixture coverage does not grant a
 profile claim. The full pinned corpus remains a strict failing gate for those
 requirements and the recorded upstream link contradictions.
 
+`featuresJson` request `{ "kind": "sync_status" }` returns a coherent, read-only
+snapshot for one registered profile: `schemaVersion`, `profileId`, `profileKind`,
+`version`, `initialSyncComplete`, `pendingRemoteCount`, `pendingUploadCount`,
+`conflictCount`, and `pendingMutationCount`. The language-neutral contract is
+`facet-engine.schema.json`'s `syncStatus` definition. Counts reflect persisted
+checkpoint notices, upload rows (including conflict-blocked rows), conflicts,
+and uncommitted journal/partial-batch work units. `version` is the vault/index
+sequence, not a Sync status cursor. A cloud profile without a valid checkpoint
+cannot report initial synchronization complete. Local folders report local
+readiness explicitly through `profileKind: "local_folder"`.
+
+This projection performs no provider I/O and contains no file paths, payloads,
+or secrets. A drained durable snapshot alone does not prove cloud convergence:
+hosts must also check the current transport, lifecycle phase, and pending host
+work, then verify expected replica contents for live acceptance.
+
 `featuresJson` request `reminder_plan` returns the `reminderPlan` contract from
 cached SQLite configuration and task metadata, with no provider I/O. Callers
 supply RFC3339 `at`, `from`, `to`, an IANA `timezone`, and optional `limit`

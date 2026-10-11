@@ -33,7 +33,7 @@ extension FacetStore {
     public func selectProfile(_ id: String) async {
         _ = await FacetDraftCoordinator.shared.transition(owner: self) {
             self.selectProfilePresentation(id)
-            UserDefaults.standard.set(id, forKey: "Facet.selectedProfile")
+            preferences.set(id, forKey: "Facet.selectedProfile")
             await self.refresh()
         }
     }

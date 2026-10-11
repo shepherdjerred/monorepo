@@ -117,11 +117,21 @@ extension FacetObsidianSession {
 
     internal func uploadPendingOwned() async throws {
         guard pendingDownloads.isEmpty, pendingMetadata.isEmpty else { return }
-        for upload in try await engine.uploads(profileID: profileID) {
-            guard !stopped, await account.allows(access) else { throw FacetSyncError.cancelled }
+        if uploadAdmissions.pendingCount > 0 {
+            let revision = uploadAdmissions.revision
+            let durable = try await engine.syncStatus(profileID: profileID)
+            uploadAdmissions.retireIfEmpty(
+                observedRevision: revision, pendingUploadCount: durable.pendingUploadCount)
+        }
+        let uploads = try await engine.uploads(profileID: profileID)
+        let ids = try uploads.map { upload in
             guard let id = upload.object?.fields["mutationId"]?.text else {
                 throw FacetContractError.unsupportedResponse
             }
+            return id
+        }
+        for id in ids {
+            guard !stopped, await account.allows(access) else { throw FacetSyncError.cancelled }
             if queued.contains(id) { continue }
             let outcome = try uploadAdmissions.attempt(
                 id: id, at: Self.now(),

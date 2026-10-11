@@ -62,6 +62,10 @@ struct FacetIntentQueueTests {
         let capture = try queue.enqueue(title: "From an App Intent")
         try await engine.applyIntentCapture(capture)
         // Core receipt and host observation exist; AppGroup acknowledgment was lost.
+        await #expect(throws: POSIXError(.EWOULDBLOCK)) {
+            _ = try await FacetEngine.open(directory: engineDirectory)
+        }
+        try await engine.close()
         let reopened = try await FacetEngine.open(directory: engineDirectory)
         let stillQueued = try #require(queue.pending().first)
         try await reopened.applyIntentCapture(stillQueued)
@@ -70,5 +74,6 @@ struct FacetIntentQueueTests {
         #expect(snapshot.tasks.count == 1)
         #expect(snapshot.tasks.first?.title == "From an App Intent")
         #expect(try queue.pending().isEmpty)
+        try await reopened.close()
     }
 }

@@ -345,7 +345,7 @@ fn equivalent_instant_update_is_noop_and_unrelated_write_preserves_untouched_tem
     );
     request.at = "2026-10-10T20:00:00+04:00".into();
     let receipt = engine.execute("a", &request)?;
-    assert!(receipt.paths.is_empty());
+    assert_eq!(receipt.paths, Vec::<String>::new());
     assert_eq!(files.get("a", "Tasks/a.md")?, original);
     assert_eq!(exchanges(&files)?, count);
     let original = b"---\ntitle: Temporal\nstatus: open\ntags: [task]\ndateCreated: 2026-10-01T13:00:00.125+01:00\ndateModified: 2026-10-02T12:00:00Z\ndue: 2026-10-04T01:30:00.222+02:00 # preserve\nscheduled: 2026-10-04\n---\nBody\n";

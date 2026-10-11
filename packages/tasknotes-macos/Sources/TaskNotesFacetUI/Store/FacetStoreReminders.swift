@@ -3,10 +3,11 @@ import TaskNotesKit
 
 extension FacetStore {
     public var remindersEnabled: Bool {
-        UserDefaults.standard.bool(forKey: "Facet.reminders.enabled")
+        preferences.bool(forKey: "Facet.reminders.enabled")
     }
 
     public func enableReminders() async {
+        guard !isIsolatedLaunch else { return }
         do {
             guard try await reminders.requestEnable() else {
                 throw FacetReminderError.permission
@@ -16,11 +17,13 @@ extension FacetStore {
     }
 
     public func disableReminders() async {
+        guard !isIsolatedLaunch else { return }
         await reminders.disable()
         reminderStatus = "Task reminders are off on this device."
     }
 
     public func refreshReminders() async {
+        guard !isIsolatedLaunch else { return }
         guard let engine, remindersEnabled else { return }
         let local = Set(profiles.filter { $0.kind == "local_folder" }.map(\.id))
         do {

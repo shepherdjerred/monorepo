@@ -155,6 +155,61 @@ Tests: `Tests/TaskNotesKitTests` (Swift Testing, headless),
 `Tests/TaskNotesMacTests` (image snapshots; the only test target that sees
 SwiftUI), `UITests/` (XCUITest, run via `mac:e2e`).
 
+### Isolated native acceptance
+
+Debug acceptance uses the `TaskNotesAcceptance` Xcode scheme and the separate
+`red.sjer.tasknotes.mac.acceptance` sandbox identity. It never claims production
+URL schemes or registers the global quick-add shortcut. Launch it with
+`--facet-acceptance-descriptor /absolute/path.json`; a missing or invalid
+descriptor fails startup without opening the normal application state. The
+descriptor must reside inside the acceptance app container and contain
+`schemaVersion: 1`, `runID` as a UUID, `stateDirectory` as the exact app-private
+Application Support path `FacetAcceptance/<lowercase-run-UUID>`, and optionally
+`allowedRemoteVaultID`. Omitting it permits local testing and account metadata
+discovery while forbidding every remote-vault authorization.
+Symlink redirection, unknown descriptor fields, and other remote-vault IDs are
+rejected. The descriptor is nonsecret; credentials remain in per-run account and
+staging Keychain services. Selected profile, reminders and feedback preferences
+use the run's defaults suite. Notifications belong to the dedicated app identity.
+
+The iOS descriptor uses the same fields inside an owned disposable simulator.
+The launching process must supply `FACET_E2E_SIMULATOR` equal to `SIMULATOR_UDID`.
+For Xcode test installs, use the exact launch token
+`--facet-acceptance-descriptor @documents/acceptance.json` and the exact virtual
+state path `/Library/Application Support/FacetAcceptance/<lowercase-run-UUID>`.
+This iOS-only form resolves against the app's current private container, so an
+Xcode reinstall cannot leave stale absolute paths. Other relative paths and
+UUIDs are rejected; macOS continues to require absolute paths.
+The existing `ios:native:e2e` local journey supplies that ownership marker and
+continues using its seeded `Documents/Native acceptance` vault. Acceptance
+widgets and intent captures write beneath the private run directory, and no
+production App Group or background scheduling is used. The native harness must
+preserve the run directory on failure and clean up only resources it created.
+
+Before a live run is bound, signing in may list owned vault metadata. Inspect
+only the intended synthetic vault's accessibility identifier
+`facet.account.vault.<remote-ID>`, bind that exact ID into both descriptors,
+then relaunch and sign in again. Discovery cannot authorize or reconnect any
+vault. Do not inspect account tokens, browser storage, or Obsidian secret files
+to obtain the ID, and do not capture the account-entry screen.
+
+`bun run mac:acceptance:e2e` runs the local standalone capture/edit/relaunch
+journey with a new descriptor, synthetic Markdown, and no live account. Both
+the default local and CI E2E launchers run this acceptance suite before the
+separate legacy server-backed suite; individual legacy selectors remain scoped
+to those tests. The legacy suite still requires its own migration and is not
+evidence of standalone isolation. The live test selector
+`LiveSyncVaultUITests/testCaptureEditCompleteUncompleteAndColdRelaunch` requires
+an already authenticated bound run and the harness's run ID, vault ID and round
+number. It creates a unique task per platform and round, waits for durable
+Sync to settle between changes, and records post-authentication states only.
+The separate live selector
+`LiveSyncVaultUITests/testOfflineCaptureEditAndColdRelaunchRetainPendingChanges`
+requires that run's real transport to have been interrupted through its private
+control file. It captures and edits offline, then proves the task survives cold
+relaunch without resuming the connection. The live harness resumes transport
+and verifies the retained upload converges across the three replicas.
+
 ## Building and testing
 
 Requires a macOS host with Xcode, plus the Rust toolchain for the core.
@@ -184,6 +239,18 @@ bun run mac:verify        # generate + build + test + lint + format + app + smok
 bun run mac:release       # operator-run release lane (scripts/release.ts)
 bun run mac:store -- --dry-run # unsigned Mac App Store archive for inspection
 ```
+
+`mac:smoke` launches the actual production Release bundle and signing using
+`--facet-release-smoke <UUID>`. The app computes its private
+`Application Support/FacetReleaseSmoke/<UUID>` directory and distinct account,
+staging-Keychain and preferences namespaces; remote vault authorization,
+global hotkeys and notification outputs are disabled. Debug acceptance
+descriptors and controls remain unavailable in Release. The runner requires
+successful engine/account startup through an exact `started.<PID>` marker,
+then the same process must survive, preserve focus and exit on SIGTERM.
+The marker contains the lowercase UUID followed by newline. Per-run executable
+fingerprints and provenance live in `.build/release-smoke/<UUID>`.
+This proves Release startup behavior; it is not live Sync acceptance.
 
 Native presentation renders instantiate the actual shared workspace, inspector
 and forms with isolated synthetic state. `FacetNativeCheckpointTests` renders

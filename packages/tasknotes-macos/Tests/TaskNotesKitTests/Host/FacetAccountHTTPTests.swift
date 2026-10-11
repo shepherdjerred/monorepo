@@ -111,6 +111,41 @@ struct FacetAccountHTTPTests {
         #expect(bytes == Data("synthetic result".utf8))
     }
 
+    @Test func diagnosticsDistinguishPreflightAndPostRejectionWithoutContents() async throws {
+        var observed: [FacetAccountExchangeDiagnostic] = []
+        let response = try await FacetAccountHTTP.perform(
+            request(), ownsAttempt: { true },
+            send: { request in
+                (request.httpMethod == "OPTIONS" ? 403 : 401, Data("private body".utf8))
+            },
+            diagnostic: { observed.append($0) })
+        #expect(response.0 == 401)
+        #expect(observed.map(\.stage) == [.preflight, .preflight, .post, .post])
+        #expect(observed.map(\.statusCode) == [nil, 403, nil, 401])
+        let encoded = try JSONEncoder().encode(observed)
+        let json = try #require(String(data: encoded, encoding: .utf8))
+        #expect(!json.contains("private"))
+        #expect(!json.contains("obsidian.md"))
+        #expect(!json.contains("synthetic"))
+    }
+
+    @Test func diagnosticsBoundTransportFailureAndDoNotSendPost() async {
+        var observed: [FacetAccountExchangeDiagnostic] = []
+        var methods: [String] = []
+        await #expect(throws: URLError.self) {
+            try await FacetAccountHTTP.perform(
+                request(), ownsAttempt: { true },
+                send: {
+                    methods.append($0.httpMethod ?? "")
+                    throw URLError(.timedOut)
+                }, diagnostic: { observed.append($0) })
+        }
+        #expect(methods == ["OPTIONS"])
+        #expect(observed.last?.stage == .preflight)
+        #expect(observed.last?.failureClassification == "network")
+        #expect(observed.last?.statusCode == nil)
+    }
+
     private func request() -> ObsidianHttpRequest {
         ObsidianHttpRequest(
             requestId: 1, url: "https://api.obsidian.md/user/signin", preflight: true,

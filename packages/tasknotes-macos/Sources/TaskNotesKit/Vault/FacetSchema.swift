@@ -29,6 +29,10 @@ public struct FacetSchema: Sendable {
 
     public func validate(json: String, definition: String) throws {
         let data = Data(json.utf8)
+        try validate(data: data, definition: definition)
+    }
+
+    public func validate(data: Data, definition: String) throws {
         try validate(FacetJSON.parse(data), definition: definition)
     }
 
@@ -271,3 +275,15 @@ public struct FacetSchema: Sendable {
         }
     }
 }
+
+#if DEBUG
+    extension FacetSchema {
+        public static func acceptance() throws -> FacetSchema {
+            guard
+                let url = Bundle.module.url(
+                    forResource: "FacetAcceptanceSchema", withExtension: "json")
+            else { throw FacetContractError.unsupportedResponse }
+            return try FacetSchema(data: Data(contentsOf: url))
+        }
+    }
+#endif

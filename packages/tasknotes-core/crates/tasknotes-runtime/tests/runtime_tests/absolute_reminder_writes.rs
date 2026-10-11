@@ -212,11 +212,9 @@ fn mapped_update_and_editor_canonicalize_explicit_reminders_and_keep_exact_noops
         assert_eq!(document(&files)?.body(), "Caller body\n");
         let original = files.get("a", PATH)?;
         let count = exchanges(&files)?;
-        assert!(
-            engine
-                .execute("a", &mutation("noop", command))?
-                .paths
-                .is_empty()
+        assert_eq!(
+            engine.execute("a", &mutation("noop", command))?.paths,
+            Vec::<String>::new()
         );
         assert_eq!(files.get("a", PATH)?, original);
         assert_eq!(exchanges(&files)?, count);
@@ -420,11 +418,9 @@ fn normalize_rewrites_only_absolute_instants_even_when_alias_preview_is_unchange
     );
     let canonical = files.get("a", PATH)?;
     let count = exchanges(&files)?;
-    assert!(
-        engine
-            .execute("a", &mutation("noop", command))?
-            .paths
-            .is_empty()
+    assert_eq!(
+        engine.execute("a", &mutation("noop", command))?.paths,
+        Vec::<String>::new()
     );
     assert_eq!(files.get("a", PATH)?, canonical);
     assert_eq!(exchanges(&files)?, count);

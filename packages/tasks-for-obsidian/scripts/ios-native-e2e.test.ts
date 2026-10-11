@@ -2,7 +2,23 @@ import { cp, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { verifyVault } from "./ios-native-e2e.ts";
+import { requireStableSources, verifyVault } from "./ios-native-e2e.ts";
+
+it("source provenance rejects changed, added or removed build inputs", () => {
+  expect(() =>
+    requireStableSources({ "a.swift": "sha-a" }, { "a.swift": "sha-a" }),
+  ).not.toThrow();
+  expect(() =>
+    requireStableSources({ "a.swift": "sha-a" }, { "a.swift": "sha-b" }),
+  ).toThrow();
+  expect(() =>
+    requireStableSources(
+      { "a.swift": "sha-a" },
+      { "a.swift": "sha-a", "b.swift": "sha-b" },
+    ),
+  ).toThrow();
+  expect(() => requireStableSources({ "a.swift": "sha-a" }, {})).toThrow();
+});
 
 const fixture = path.resolve(
   import.meta.dir,
