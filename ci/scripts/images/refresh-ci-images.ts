@@ -10,6 +10,7 @@ import {
   ciImageSourceFingerprint,
 } from "./build-ci-image-core.ts";
 import { parseCiImagePinState } from "./update-ci-image-pin-core.ts";
+import { deferReadyPromotion } from "./update-ci-image-pin-github.ts";
 
 const root = new URL("../../..", import.meta.url).pathname;
 const auth = await setupGitAuth(root);
@@ -18,7 +19,7 @@ try {
   for (const name of ["ci-base", "ci-playwright"]) {
     const definition = ciImageDefinition(name);
     const pr = await readMaintenancePr(definition.branch, auth.env);
-    if (pr?.isDraft === false) {
+    if (await deferReadyPromotion(pr, auth.env)) {
       deferred = true;
       continue;
     }
