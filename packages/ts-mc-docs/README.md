@@ -109,6 +109,9 @@ capped at 2,048 pixels per side. These are selected areas, not full-world maps.
 Rerun with the same scratch directory to skip certified worlds and downloads;
 the publisher checks their S3 sizes and hash metadata before trusting a
 checkpoint. Missing or changed objects stop the run for storage inspection.
+For release `2026-10-04-v1`, both publishers migrate existing scratch certificates
+by dropping only `new-world-test-2022-11-20` and `main-map1-upgraded-2023-06-18`.
+This preserves retained checkpoints and never deletes remote objects or source ZIPs.
 `--only <id>` publishes one world's previews. Download checkpoints are saved
 before rendering, so a failed preview never requires reuploading a certified
 ZIP. An unfinished world requires inspecting its logs and removing that exact

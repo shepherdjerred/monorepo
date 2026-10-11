@@ -75,6 +75,44 @@ def publication() -> OverviewPublication:
 
 
 class OverviewTests(unittest.TestCase):
+    def test_resume_migrates_retired_worlds_and_preserves_certified_overviews(self):
+        catalog = load_catalog()
+        expected = publication()
+        state = json.loads(json.dumps(expected))
+        for identifier in ("new-world-test-2022-11-20", "main-map1-upgraded-2023-06-18"):
+            state["worlds"][identifier] = {"retired": True}
+        hashes = {world["file"]: expected["worlds"][world["id"]]["sourceSha256"] for world in catalog["worlds"]}
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve()
+            source, scratch = root / "source", root / "scratch"
+            source.mkdir()
+            scratch.mkdir()
+            (scratch / ".overview-scratch-owner").write_text(
+                json.dumps({"source": str(source), "archiveRelease": catalog["release"], "tools": tool_config()})
+            )
+            (scratch / "overviews.json").write_text(json.dumps(state))
+            for name in hashes:
+                (source / name).write_bytes(b"fixture")
+            args = Namespace(
+                source=source, scratch=scratch, dry_run=False, only=None, profile="test", workers=1, render_workers=1
+            )
+            with (
+                patch("world_overviews.require_space"),
+                patch("world_overviews.aws"),
+                patch("world_overviews.subprocess.check_output", return_value="java"),
+                patch("world_overviews.subprocess.run"),
+                patch("world_overviews.fetch_tool", return_value=root / "tool.jar"),
+                patch("world_overviews.build_viewer"),
+                patch("world_overviews.verify") as verify,
+                patch(
+                    "world_overviews.sha256",
+                    side_effect=lambda path: hashes[path.name] if path.name in hashes else sha256(path),
+                ),
+            ):
+                run(args)
+            self.assertEqual(json.loads((scratch / "overviews.json").read_text()), expected)
+            self.assertEqual(verify.call_count, 7)
+
     def test_offline_converter_requires_completion_and_rejects_server_startup(self):
         with tempfile.TemporaryDirectory() as temporary:
             work = Path(temporary)

@@ -404,6 +404,16 @@ def write_json(path: Path, value: object) -> None:
     temporary.replace(path)
 
 
+def retire_world_checkpoints[Entry](release: str, worlds: dict[str, Entry]) -> bool:
+    """Migrate the two explicitly retired worlds without deleting remote data."""
+    if release != "2026-10-04-v1":
+        return False
+    retired = {"new-world-test-2022-11-20", "main-map1-upgraded-2023-06-18"}.intersection(worlds)
+    for identifier in retired:
+        del worlds[identifier]
+    return bool(retired)
+
+
 def verify_checkpoint(profile: str, url: str, size: int, digest: str) -> None:
     prefix = f"{ORIGIN}/"
     if not url.startswith(prefix):
@@ -454,6 +464,10 @@ def run(args: argparse.Namespace) -> None:
     )
     if state["release"] != catalog["release"] or "downloads" not in state:
         raise ValueError("Publication checkpoint is from a different pipeline/release")
+    retired_downloads = retire_world_checkpoints(state["release"], state["downloads"])
+    retired_worlds = retire_world_checkpoints(state["release"], state["worlds"])
+    if retired_downloads or retired_worlds:
+        write_json(state_path, state)
     prefix = f"world-archive/{catalog['release']}"
     for world in sorted(worlds, key=lambda w: (source / w["file"]).stat().st_size):
         download = state["downloads"].get(world["id"])
