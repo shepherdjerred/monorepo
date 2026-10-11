@@ -1,5 +1,19 @@
 import { z } from "zod";
 
+export const initialConfigurationJourneys = [
+  { client: "ios", label: "initial-configuration-ios" },
+  { client: "macos", label: "initial-configuration-macos" },
+] as const;
+
+export function assertDistinctNativeEvidenceLabels(
+  journeys: readonly { label: string }[],
+): void {
+  if (new Set(journeys.map(({ label }) => label)).size !== journeys.length)
+    throw new Error(
+      "Native journeys must retain distinct evidence directories",
+    );
+}
+
 const SummarySchema = z.object({
   result: z.string(),
   totalTestCount: z.number().int().nonnegative(),

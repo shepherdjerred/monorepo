@@ -1,4 +1,5 @@
 import Foundation
+import TaskNotesUniFFI
 import Testing
 
 @testable import TaskNotesFacetUI
@@ -112,6 +113,23 @@ import Testing
         #expect(store.accountPresentation.error?.contains("account response") == true)
         #expect(store.accountPresentation.error?.contains("credentials") == false)
         #expect(store.error == nil && !store.isLoading)
+    }
+
+    @Test func accountRejectionAndProtocolFailureHaveDistinctFixedGuidance() async {
+        let store = FacetStore()
+        await attempt(store) {
+            throw ObsidianBoundaryError.Boundary(
+                code: "account_rejected", detail: "private server response")
+        }
+        #expect(store.accountPresentation.error?.contains("Obsidian rejected") == true)
+        #expect(store.accountPresentation.error?.contains("password") == true)
+        #expect(store.accountPresentation.error?.contains("private") == false)
+        await attempt(store) {
+            throw ObsidianBoundaryError.Boundary(code: "protocol", detail: "private token")
+        }
+        #expect(store.accountPresentation.error?.contains("account response") == true)
+        #expect(store.accountPresentation.error?.contains("password") == false)
+        #expect(store.accountPresentation.error?.contains("private") == false)
     }
 }
 

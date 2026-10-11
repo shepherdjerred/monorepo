@@ -6,6 +6,8 @@ import TaskNotesUniFFI
 public struct FacetFailureDiagnostic: Sendable, Equatable {
     public let classification: String
     public let chain: String
+    /// Only fixed engine categories cross this boundary; arbitrary error text never does.
+    public let boundaryCode: String?
     public var action: String {
         let actions = [
             "network": "Check your connection and retry Sync.",
@@ -13,6 +15,7 @@ public struct FacetFailureDiagnostic: Sendable, Equatable {
             "provider": "Restore folder access before retrying your saved action.",
             "configuration": "Review this vault's TaskNotes configuration before retrying.",
             "account": "Unlock this device and reconnect your Obsidian account.",
+            "account_rejected": "Review your Obsidian account credentials and retry sign-in.",
             "cancelled": "This background attempt was cancelled.",
             "internal_contract": "Install a matching app build before retrying your saved action.",
             "host_contract":
@@ -26,6 +29,7 @@ public struct FacetFailureDiagnostic: Sendable, Equatable {
 
     public init(_ failure: any Error) {
         classification = Self.classify(failure)
+        boundaryCode = Self.safeBoundaryCode(failure)
         var pending: [(String, any Error)] = [("first", failure)]
         var visited = Set<ObjectIdentifier>()
         var entries: [String] = []
@@ -85,10 +89,25 @@ public struct FacetFailureDiagnostic: Sendable, Equatable {
 
     private static func boundaryClassification(_ error: ObsidianBoundaryError) -> String {
         switch error {
-        case .Busy: "busy"
-        case .Lock, .Request: "internal_contract"
-        case .Boundary: "sync_boundary"
+        case .Busy: return "busy"
+        case .Lock, .Request: return "internal_contract"
+        case .Boundary(let code, _):
+            if code == "account_rejected" { return "account_rejected" }
+            if code == "protocol" { return "internal_contract" }
+            return "sync_boundary"
         }
+    }
+
+    private static func safeBoundaryCode(_ failure: any Error) -> String? {
+        guard let error = failure as? ObsidianBoundaryError,
+            case .Boundary(let code, _) = error
+        else { return nil }
+        let known: Set<String> = [
+            "unsupported_encryption", "key", "authentication", "text", "protocol", "http",
+            "account_rejected", "host", "path", "file_too_large", "session_state",
+            "remote_rejected", "timeout", "queue_full",
+        ]
+        return known.contains(code) ? code : nil
     }
 
     private static func hostClassification(_ error: FacetHostError) -> String {

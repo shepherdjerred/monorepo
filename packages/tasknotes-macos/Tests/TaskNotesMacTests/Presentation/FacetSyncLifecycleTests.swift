@@ -50,6 +50,21 @@ import Testing
             let exchange = try check(diagnostic, definition: "accountExchange")
             #expect(exchange.object?.fields["statusCode"] == .null)
             #expect(exchange.object?.fields["failureClassification"] == .null)
+            #expect(exchange.object?.fields["boundaryCode"] == .null)
+            #expect(exchange.object?.fields["requestID"]?.text == diagnostic.requestID.uuidString)
+            #expect(exchange.object?.fields["capturedAt"]?.text == diagnostic.capturedAt)
+            let rejection = try check(
+                FacetAccountExchangeDiagnostic(
+                    stage: .post, statusCode: 200, failureClassification: "account_rejected",
+                    boundaryCode: "account_rejected", requestID: diagnostic.requestID),
+                definition: "accountExchange")
+            #expect(rejection.object?.fields["boundaryCode"]?.text == "account_rejected")
+            let hostile = FacetAccountExchangeDiagnostic(
+                stage: .post, statusCode: 200, failureClassification: "account_rejected",
+                boundaryCode: "private peer error")
+            #expect(throws: FacetContractError.self) {
+                try check(hostile, definition: "accountExchange")
+            }
         #endif
     }
 

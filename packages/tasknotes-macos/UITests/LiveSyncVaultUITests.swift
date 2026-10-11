@@ -15,6 +15,41 @@ final class LiveSyncVaultUITests: XCTestCase {
         }
     }
 
+    func testInitialDownloadUsesTaskNotesConfiguration() throws {
+        let title = try XCTUnwrap(
+            ProcessInfo.processInfo.environment["FACET_E2E_INITIAL_TASK_TITLE"])
+        guard !title.isEmpty, title.utf8.count <= 512,
+            !title.unicodeScalars.contains(where: CharacterSet.controlCharacters.contains)
+        else { throw LiveLaunchError.invalidOwnership }
+        let (app, _) = try launchJourney(prefix: "Initial")
+        waitUntilSynced(app)
+        #if os(iOS)
+            activate(app.tabBars.buttons["Inbox"])
+        #else
+            activate(app.buttons["Inbox"])
+        #endif
+        XCTAssertTrue(task(title, app).waitForExistence(timeout: 30))
+        #if os(macOS)
+            let tasks = app.staticTexts.matching(NSPredicate(format: "label == %@", title))
+        #else
+            let tasks = app.buttons.matching(NSPredicate(format: "label == %@", title))
+        #endif
+        XCTAssertEqual(tasks.count, 1, "The configured initial task must appear exactly once.")
+        let capture = app.buttons["facet.capture.open"]
+        XCTAssertTrue(capture.waitForExistence(timeout: 10))
+        XCTAssertTrue(capture.isEnabled, "The configured vault must make native capture available.")
+        XCTAssertFalse(app.buttons["Use standard configuration"].exists)
+        let setupWarnings = app.staticTexts.matching(
+            NSPredicate(
+                format: "label CONTAINS[c] %@ OR label CONTAINS[c] %@ OR label BEGINSWITH %@",
+                "TaskNotes settings", ".obsidian/plugins/tasknotes/data.json:", "tasknotes.yaml:"))
+        XCTAssertEqual(
+            setupWarnings.count, 0,
+            "Initial Sync must produce usable TaskNotes configuration without warnings or defaults consent."
+        )
+        attach(app, "Initial download displays the configured existing task")
+    }
+
     func testCaptureEditCompleteUncompleteAndColdRelaunch() throws {
         let (app, title) = try launchJourney(prefix: "Live")
         waitUntilSynced(app)

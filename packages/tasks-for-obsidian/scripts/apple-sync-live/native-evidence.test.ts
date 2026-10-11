@@ -1,5 +1,25 @@
 import { describe, expect, test } from "vitest";
-import { assertExactNativeJourney } from "./native-evidence";
+import {
+  assertExactNativeJourney,
+  assertDistinctNativeEvidenceLabels,
+  initialConfigurationJourneys,
+} from "./native-evidence";
+
+test("initial configuration retains separate iOS and macOS result bundles", () => {
+  expect(initialConfigurationJourneys.map(({ client }) => client)).toEqual([
+    "ios",
+    "macos",
+  ]);
+  expect(() =>
+    assertDistinctNativeEvidenceLabels(initialConfigurationJourneys),
+  ).not.toThrow();
+  expect(() =>
+    assertDistinctNativeEvidenceLabels([
+      { label: "initial-configuration" },
+      { label: "initial-configuration" },
+    ]),
+  ).toThrow("distinct evidence directories");
+});
 
 const target = "TaskNotesAcceptanceUITests";
 const selector =

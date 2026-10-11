@@ -16,6 +16,9 @@ extension FacetStore {
         requestGeneration += 1
         let current = presentationOwner(profileID: profileID, ownsEngine: operations.ownsEngine)
         guard current() else { return }
+        // Only a successful discovery of absent settings permits defaults.
+        // A stale consent must not survive an unreadable or malformed file.
+        needsStandardConsent = false
         displayedQuery = nil
         do {
             let cached = try await operations.cached()

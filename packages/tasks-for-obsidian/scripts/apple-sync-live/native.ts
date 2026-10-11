@@ -23,16 +23,25 @@ import {
   statuses,
   launch,
 } from "./platform";
-import { assertExactNativeJourney } from "./native-evidence";
+import {
+  assertExactNativeJourney,
+  assertDistinctNativeEvidenceLabels,
+  initialConfigurationJourneys,
+} from "./native-evidence";
 
 export async function runNativeTest(
   manifest: Manifest,
   client: Client,
   selector: string,
-  options: { label: string; extra?: Record<string, string> },
+  options: {
+    label: string;
+    extra?: Record<string, string>;
+    timeoutMS?: number;
+  },
 ) {
-  const { label, extra = {} } = options;
-  const deadline = Date.now() + 600_000;
+  const { label, extra = {}, timeoutMS = 600_000 } = options;
+  z.number().int().positive().max(600_000).parse(timeoutMS);
+  const deadline = Date.now() + timeoutMS;
   const runCommand = (argv: string[], logFile?: string) =>
     command(
       argv,
@@ -394,62 +403,73 @@ export async function verify(manifest: Manifest) {
     throw new Error(
       "Run seal-reference after installing and enabling official TaskNotes 4.13.8",
     );
-  await launch(manifest);
   const directory = runDirectory(manifest.runID);
   const deadline =
     Date.now() +
     (manifest.round === 1 && manifest.cases["initial-download"] !== "pass"
       ? 180_000
       : 120_000);
-  let lastFailure = "No acceptance status";
-  while (Date.now() < deadline) {
-    try {
-      const current = await statuses(manifest);
-      for (const { client, value } of current) {
-        const profile = settledProfile(
-          value,
-          manifest.runID,
-          manifest.allowedRemoteVaultID,
-          Date.now(),
-        );
-        await verifyReplica(
-          path.join(
-            manifest.clients[client].stateDirectory,
-            "replicas",
-            profile.profileID,
-          ),
-          manifest.reference,
-        );
-      }
-      await verifyReplica(
-        path.join(directory, "reference-vault"),
-        manifest.reference,
-      );
-      manifest.cases["initial-download"] = "pass";
-      manifest.stage = "initial-verified";
-      await save(manifest);
-      // Retain only schema-checked, content-free projections after credential entry.
-      await atomicJSON(path.join(directory, "initial-download.json"), {
-        schemaVersion: 1,
-        runID: manifest.runID,
-        round: manifest.round,
-        capturedAt: new Date().toISOString(),
-        clients: current,
+  const remainingMS = () => {
+    const remaining = deadline - Date.now();
+    if (remaining <= 0)
+      throw new Error("Initial acceptance exceeded its deadline");
+    return remaining;
+  };
+  try {
+    await launch(manifest, false, undefined, remainingMS());
+    await waitForConvergence(manifest, manifest.reference, remainingMS());
+    const note = await Bun.file(
+      path.join(directory, "reference-vault/Tasks/Existing.md"),
+    ).text();
+    const frontmatter = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/u.exec(
+      note,
+    )?.[1];
+    if (frontmatter === undefined)
+      throw new Error("Initial reference task has no frontmatter");
+    const expectedTask = z
+      .object({ title: z.string().trim().min(1) })
+      .parse(Bun.YAML.parse(frontmatter));
+    const selector =
+      "LiveSyncVaultUITests/testInitialDownloadUsesTaskNotesConfiguration";
+    // Byte convergence alone does not prove that the app can load its provider.
+    // Each selected native test must execute once and prove visible usable tasks.
+    assertDistinctNativeEvidenceLabels(initialConfigurationJourneys);
+    for (const { client, label } of initialConfigurationJourneys) {
+      await runNativeTest(manifest, client, selector, {
+        label,
+        timeoutMS: remainingMS(),
+        extra: {
+          FACET_E2E_ROUND: String(manifest.round),
+          FACET_E2E_INITIAL_TASK_TITLE: expectedTask.title,
+        },
       });
-      console.log(
-        "Initial convergence passed: both real replicas and the official reference folder match exact synthetic file hashes and paths. Other acceptance cases remain pending.",
-      );
-      return;
-    } catch (error) {
-      lastFailure =
-        error instanceof Error ? error.message : "Unknown acceptance failure";
+      await launch(manifest, false, client, remainingMS());
     }
-    await Bun.sleep(500);
+    const current = await waitForConvergence(
+      manifest,
+      manifest.reference,
+      remainingMS(),
+    );
+    remainingMS();
+    // Retain only schema-checked projections and explicit selected-test proof.
+    await atomicJSON(path.join(directory, "initial-download.json"), {
+      schemaVersion: 1,
+      runID: manifest.runID,
+      round: manifest.round,
+      capturedAt: new Date().toISOString(),
+      clients: current,
+      usability: { selector, clients: ["ios", "macos"] },
+    });
+    manifest.cases["initial-download"] = "pass";
+    manifest.stage = "initial-verified";
+    await save(manifest);
+    console.log(
+      "Initial acceptance passed: both native apps load the TaskNotes configuration and show the expected task; both replicas and the official reference match exact file hashes. Other cases remain pending.",
+    );
+  } catch (error) {
+    manifest.cases["initial-download"] = "failed";
+    manifest.stage = "failed";
+    await save(manifest);
+    throw error;
   }
-  manifest.cases["initial-download"] = "failed";
-  manifest.stage = "failed";
-  await save(manifest);
-  throw new Error(
-    `Live acceptance deadline exceeded: ${lastFailure}. Run retained; no automatic retry.`,
-  );
 }

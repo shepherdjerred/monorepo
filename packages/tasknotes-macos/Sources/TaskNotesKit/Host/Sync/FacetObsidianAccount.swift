@@ -41,16 +41,6 @@ internal struct FacetSyncAccess: Sendable {
     let generation: UInt64
 }
 
-private final class FacetAccountRedirectPolicy: NSObject, URLSessionTaskDelegate {
-    func urlSession(
-        _ session: URLSession, task: URLSessionTask,
-        willPerformHTTPRedirection response: HTTPURLResponse, newRequest request: URLRequest,
-        completionHandler: @escaping @Sendable (URLRequest?) -> Void
-    ) {
-        completionHandler(nil)
-    }
-}
-
 /// Account HTTP and secure ownership are independent of presentation selection.
 public actor FacetObsidianAccount {
     public private(set) var lastExchangeDiagnostic: FacetAccountExchangeDiagnostic?
@@ -306,16 +296,26 @@ extension FacetObsidianAccount {
         -> ObsidianAccountResponse
     {
         do {
+            var exchange: FacetAccountExchangeDiagnostic?
             let (status, bytes) = try await FacetAccountHTTP.perform(
                 request, ownsAttempt: { self.accessEpoch.withLock { $0 == attempt } },
                 send: { try await self.response($0) },
-                diagnostic: { self.lastExchangeDiagnostic = $0 })
+                diagnostic: {
+                    exchange = $0
+                    self.lastExchangeDiagnostic = $0
+                })
             try _Concurrency.Task.checkCancellation()
             guard attempt == generation else { throw FacetSyncError.cancelled }
-            guard let body = String(data: bytes, encoding: .utf8) else {
-                throw FacetSyncError.transport
-            }
-            return try account.response(requestId: request.requestId, status: status, body: body)
+            guard let exchange else { throw FacetContractError.unsupportedResponse }
+            return try FacetAccountHTTP.decoded(
+                (status, bytes), diagnostic: exchange,
+                decode: {
+                    try self.account.response(requestId: request.requestId, status: $0, body: $1)
+                },
+                publish: {
+                    guard self.accessEpoch.withLock({ $0 == attempt }) else { return }
+                    self.lastExchangeDiagnostic = $0
+                })
         } catch {
             // Request disposal is idempotent, including after a decode consumed it.
             try account.cancelRequest(requestId: request.requestId)

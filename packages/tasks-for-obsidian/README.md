@@ -88,12 +88,15 @@ a synthetic reference seed for the encrypted Sync vault under
 `.build/live-sync/<runID>/reference-vault`
 and records source, app, fixture and attachment hashes. The live seed omits
 `tasknotes.yaml` so portable configuration cannot mask official plugin settings.
+It uses complete status definitions pinned to official TaskNotes 4.13.8; partial
+status entries from the immutable mapping corpus are not valid plugin settings.
 Existing app identities, vaults and simulators are outside this runner's ownership.
 
 Open the printed reference folder in official Obsidian, install and enable
 TaskNotes **4.13.8**, and create a new encrypted remote vault with the printed
 unique name. Enable all other attachment types and vault configuration/plugin
-data in Sync, restart Obsidian, and wait for synchronization. Store the separate
+data in Sync, including **Installed community plugins** (which also synchronizes
+plugin settings), restart Obsidian, and wait for synchronization. Store the separate
 vault password in 1Password. Account entry and MFA are manual, with recording off.
 
 ```bash
@@ -123,7 +126,11 @@ Sealing checks the installed plugin version, enabled state, normalized supported
 settings and unchanged seed notes/attachments. Initial verification requires
 fresh status from both real clients, matching remote vault identity, drained
 durable queues, no conflicts or pending host work, and identical synthetic file
-paths and hashes in all three folders. Initial download has a 180-second deadline;
+paths and hashes in all three folders. Both native apps must also execute the
+initial configuration UI test, display the current reference task exactly once,
+and enable capture without configuration warnings or a defaults prompt. The
+runner rechecks convergence after those cold launches before recording a pass.
+Initial download has a 180-second deadline;
 later convergence has 120 seconds. Failures retain the run without automatic retries.
 
 Sealing and every completed round verify the exact official plugin manifest,

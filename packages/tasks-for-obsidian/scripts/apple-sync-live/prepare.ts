@@ -41,10 +41,37 @@ export async function seed(directory: string) {
   const input = z
     .object({ data: z.record(z.string(), z.unknown()) })
     .parse(fixture.input);
+  const officialStatuses = z
+    .object({
+      version: z.literal("4.13.8"),
+      statuses: z
+        .array(
+          z.strictObject({
+            id: z.string().min(1),
+            value: z.string().min(1),
+            label: z.string().min(1),
+            color: z.string().min(1),
+            isCompleted: z.boolean(),
+            excludeFromCycle: z.boolean(),
+            order: z.number(),
+            autoArchive: z.boolean(),
+            autoArchiveDelay: z.number(),
+          }),
+        )
+        .min(1),
+    })
+    .parse(
+      await Bun.file(
+        path.join(fixtures, "vault/tasknotes-4.13.8-statuses.json"),
+      ).json(),
+    );
   await atomicJSON(
     path.join(directory, ".obsidian/plugins/tasknotes/data.json"),
     {
       ...input.data,
+      // The mapping oracle deliberately contains partial status entries. Real
+      // plugin settings require the complete pinned official definitions.
+      customStatuses: officialStatuses.statuses,
       storeTitleInFilename: false,
       taskCreationDefaults: { useBodyTemplate: false },
     },
@@ -253,7 +280,7 @@ export async function prepare() {
     manifest.stage = "owner-setup";
     await save(manifest);
     console.log(
-      `Reference vault: ${path.join(directory, "reference-vault")}\nOpen that folder in official Obsidian, install/enable TaskNotes 4.13.8, create a NEW encrypted remote vault named Facet Sync Acceptance ${runID}. Enable Sync all other types and vault configuration/plugin data, restart and let Sync finish. Store its separate vault password in 1Password. No recordings during credential entry.\nThen run in order:\nbun run apple:sync:live seal-reference ${runID}\nbun run apple:sync:live discover ${runID}\nSign in manually with recording off and identify only the exact synthetic vault.\nbun run apple:sync:live bind-vault ${runID} <nonsecret-remote-vault-id>\nbun run apple:sync:live resume ${runID}`,
+      `Reference vault: ${path.join(directory, "reference-vault")}\nOpen that folder in official Obsidian, install/enable TaskNotes 4.13.8, create a NEW encrypted remote vault named Facet Sync Acceptance ${runID}. Enable Sync all other types and vault configuration, including Installed community plugins (which includes plugin settings), restart and let Sync finish. Store its separate vault password in 1Password. No recordings during credential entry.\nThen run in order:\nbun run apple:sync:live seal-reference ${runID}\nbun run apple:sync:live discover ${runID}\nSign in manually with recording off and identify only the exact synthetic vault.\nbun run apple:sync:live bind-vault ${runID} <nonsecret-remote-vault-id>\nbun run apple:sync:live resume ${runID}`,
     );
   } catch (error) {
     manifest.stage = "failed";

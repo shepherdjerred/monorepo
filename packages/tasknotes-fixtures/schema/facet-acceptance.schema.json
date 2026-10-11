@@ -19,6 +19,7 @@
         "provider",
         "configuration",
         "account",
+        "account_rejected",
         "cancelled",
         "internal_contract",
         "host_contract",
@@ -194,8 +195,36 @@
     "accountExchange": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["stage", "statusCode", "failureClassification"],
+      "required": [
+        "stage",
+        "statusCode",
+        "failureClassification",
+        "boundaryCode",
+        "requestID",
+        "capturedAt"
+      ],
       "properties": {
+        "requestID": { "$ref": "#/$defs/uuid" },
+        "capturedAt": { "type": "string", "format": "date-time" },
+        "boundaryCode": {
+          "enum": [
+            null,
+            "unsupported_encryption",
+            "key",
+            "authentication",
+            "text",
+            "protocol",
+            "http",
+            "account_rejected",
+            "host",
+            "path",
+            "file_too_large",
+            "session_state",
+            "remote_rejected",
+            "timeout",
+            "queue_full"
+          ]
+        },
         "stage": { "enum": ["preflight", "post"] },
         "statusCode": {
           "type": ["integer", "null"],

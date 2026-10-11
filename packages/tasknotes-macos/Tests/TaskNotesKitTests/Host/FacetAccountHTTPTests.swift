@@ -80,6 +80,7 @@ struct FacetAccountHTTPTests {
     @Test func fencedPostResponseCannotBeAccepted() async {
         var owns = true
         var methods: [String] = []
+        var observed: [FacetAccountExchangeDiagnostic] = []
         await #expect(throws: FacetSyncError.self) {
             try await FacetAccountHTTP.perform(
                 request(), ownsAttempt: { owns },
@@ -87,9 +88,11 @@ struct FacetAccountHTTPTests {
                     methods.append($0.httpMethod ?? "")
                     if $0.httpMethod == "POST" { owns = false }
                     return (200, Data("synthetic result".utf8))
-                })
+                }, diagnostic: { observed.append($0) })
         }
         #expect(methods == ["OPTIONS", "POST"])
+        #expect(observed.map(\.statusCode) == [nil, 200, nil])
+        #expect(observed.last?.stage == .post)
     }
 
     @Test func normalExchangePreservesCoreBodyHeadersAndResponse() async throws {
@@ -109,6 +112,30 @@ struct FacetAccountHTTPTests {
         #expect(calls[1].value(forHTTPHeaderField: "Content-Type") == "application/json")
         #expect(status == 200)
         #expect(bytes == Data("synthetic result".utf8))
+    }
+
+    @Test func aLateOldPostCannotReplaceTheNewRequestsDiagnostic() async throws {
+        let pause = AccountHTTPPause()
+        var ownsOld = true
+        var latest: FacetAccountExchangeDiagnostic?
+        let old = _Concurrency.Task {
+            try await FacetAccountHTTP.perform(
+                request(), ownsAttempt: { ownsOld },
+                send: { request in
+                    if request.httpMethod == "POST" { await pause.stop() }
+                    return (401, Data("private old response".utf8))
+                }, diagnostic: { latest = $0 })
+        }
+        await pause.waitForEntry()
+        ownsOld = false
+        _ = try await FacetAccountHTTP.perform(
+            request(), ownsAttempt: { true }, send: { _ in (200, Data()) },
+            diagnostic: { latest = $0 })
+        let current = try #require(latest)
+        await pause.resume()
+        await #expect(throws: FacetSyncError.self) { try await old.value }
+        #expect(latest == current)
+        #expect(latest?.stage == .post && latest?.statusCode == 200)
     }
 
     @Test func diagnosticsDistinguishPreflightAndPostRejectionWithoutContents() async throws {
