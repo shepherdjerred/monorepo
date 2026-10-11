@@ -33,6 +33,8 @@ export type DriverFeedCallbacks = {
    * draw synchronously and do not retain it.
    */
   readonly paint: (frame: VideoFrame) => void;
+  /** The decoder was reset and the picture will blank until the next keyframe. */
+  readonly onDecoderReset?: () => void;
 };
 
 const RECONNECT_BASE_MS = 500;
@@ -224,6 +226,7 @@ export function connectDriverFeed(
     if (decision.reset) {
       active.reset();
       active.configure(config);
+      callbacks.onDecoderReset?.();
       callbacks.onStatus({ kind: "waiting" });
     }
     const wasStarted = started;

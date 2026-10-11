@@ -3,6 +3,7 @@ import { useInterval } from "react-use";
 import { Container } from "./stories/container.tsx";
 import { GameView } from "./game-view.tsx";
 import { socket } from "./socket.ts";
+import { feedTelemetry } from "./feed-telemetry.ts";
 import {
   type InputRequest,
   type LatencyReportRequest,
@@ -91,14 +92,24 @@ export function App() {
 
   useInterval(() => {
     const start = Date.now();
-    socket.emit("ping", () => {
-      const rtt = Date.now() - start;
+    socket.emit("ping", (serverNowMs: unknown) => {
+      const receivedAt = Date.now();
+      const rtt = receivedAt - start;
       setLatency(rtt);
-      // Report the measurement so the server can export it as a metric
-      // (client-side timing avoids any clock-skew question).
+      if (typeof serverNowMs === "number") {
+        feedTelemetry.recordPing(start, receivedAt, serverNowMs);
+      }
+      // Report the measurements so the server can export them as metrics. The
+      // RTT is timed client-side, so it has no clock-skew question; glass
+      // samples are offset-corrected by feedTelemetry.
+      const feed = feedTelemetry.drain();
       const report: LatencyReportRequest = {
         kind: "latency-report",
         rttMs: rtt,
+        ...(feed.glassMs.length > 0 ? { glassMs: feed.glassMs } : {}),
+        ...(feed.decoderResets > 0
+          ? { decoderResets: feed.decoderResets }
+          : {}),
       };
       socket.emit("request", report);
     });

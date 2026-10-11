@@ -45,8 +45,10 @@ export function createSocket({
         const identifier = lodash.uniqueId();
         logger.info("a new socket has connected", identifier);
 
-        socket.on("ping", (callback: () => void) => {
-          callback();
+        // The ack carries the server's wall clock so the page can estimate its
+        // clock offset and correct the HUD-clock glass measurement.
+        socket.on("ping", (callback: (serverNowMs: number) => void) => {
+          callback(Date.now());
         });
 
         socket.on("disconnect", () => {

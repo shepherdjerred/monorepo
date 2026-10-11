@@ -8,7 +8,11 @@ import { encodeScreenshotPng } from "#src/emulator/screenshot.ts";
 import type { SeatManager } from "#src/input/seat-manager.ts";
 import type { LeaderboardStore } from "#src/leaderboard/store.ts";
 import { logger } from "#src/logger.ts";
-import { controllerRttMs } from "#src/observability/metrics.ts";
+import {
+  controllerRttMs,
+  driverFeedClientDecoderResetsTotal,
+  driverFeedGlassMs,
+} from "#src/observability/metrics.ts";
 import { applyStreamOverlays } from "#src/overlay/composite.ts";
 import type { StreamOverlayContextProvider } from "#src/overlay/composite.ts";
 import type {
@@ -157,6 +161,12 @@ export function handleRequest(
     })
     .with({ request: { kind: "latency-report" } }, (e) => {
       controllerRttMs.observe(e.request.rttMs);
+      for (const glassMs of e.request.glassMs ?? []) {
+        driverFeedGlassMs.observe(glassMs);
+      }
+      if (e.request.decoderResets !== undefined) {
+        driverFeedClientDecoderResetsTotal.inc(e.request.decoderResets);
+      }
     })
     .with({ request: { kind: "login" } }, (e) => {
       // Identity is cosmetic; seats gate control. Real auth is tracked in Linear.

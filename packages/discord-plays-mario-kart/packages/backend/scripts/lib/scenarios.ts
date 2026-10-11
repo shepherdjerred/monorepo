@@ -6,6 +6,8 @@
 // GAME SELECT screen, press RIGHT (seats-1) times to move P1 from the 1P column
 // to the N-player column, then mirror A onto ALL seats — character select
 // blocks until every player confirms — through course select into racing.
+// Frame numbers count emitted video frames (two VIs each since each tick became
+// one VI); multiplayer timings re-validated against that on 2026-10-10.
 import { EMPTY_BUTTONS } from "@discord-plays-mario-kart/common";
 import type {
   ButtonState,
@@ -57,11 +59,19 @@ const START_TAPS: Press[] = [
   { from: 560, to: 575, keys: { start: true }, seats: "p1" },
 ];
 
-// One RIGHT tap moves P1 one column right (1P → 2P → 3P → 4P).
+// The last START tap is the one that lands on GAME SELECT and confirms the
+// highlighted (1P) column. Multiplayer scenarios stop one tap short and move the
+// column first.
+const TAPS_TO_GAME_SELECT = START_TAPS.slice(0, -1);
+/** GAME SELECT is interactive after the transition that follows the 4th tap. */
+const GAME_SELECT_READY_FRAME = 600;
+
+// One RIGHT tap moves P1 one column right (1P → 2P → 3P → 4P). The A mash
+// below then confirms the column.
 function rightTaps(count: number): Press[] {
   const taps: Press[] = [];
   for (let i = 0; i < count; i++) {
-    const from = 850 + i * 60;
+    const from = GAME_SELECT_READY_FRAME + i * 60;
     taps.push({ from, to: from + 15, keys: { right: true }, seats: "p1" });
   }
   return taps;
@@ -83,11 +93,10 @@ function raceScenario(
   seats: number,
   screenMode: Scenario["screenMode"],
 ): Scenario {
-  const presses: Press[] = [
-    ...START_TAPS,
-    ...rightTaps(seats - 1),
-    ...confirmTaps(),
-  ];
+  const presses: Press[] =
+    seats === 1
+      ? [...START_TAPS, ...confirmTaps()]
+      : [...TAPS_TO_GAME_SELECT, ...rightTaps(seats - 1), ...confirmTaps()];
   return {
     description: `Drive ${String(seats)} player(s) into a race (${screenMode})`,
     seats,

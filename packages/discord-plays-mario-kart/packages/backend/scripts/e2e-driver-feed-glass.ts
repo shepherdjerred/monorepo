@@ -226,7 +226,7 @@ await emulator.stop();
 requestSubscription.unsubscribe();
 await rm(savesDir, { recursive: true, force: true });
 server.close();
-await pinchtabCli(["tab", "close", "--tab", tabId]);
+await pinchtabCli(["tab", "close", tabId]);
 
 const payload = z
   .object({

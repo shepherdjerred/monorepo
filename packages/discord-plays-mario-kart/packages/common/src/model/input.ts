@@ -67,13 +67,20 @@ export const SeatReleaseRequestSchema = z.strictObject({
   kind: z.literal("seat-release"),
 });
 
-// Client-measured socket round-trip time, reported periodically so the server
-// can export it as a metric. Client-side measurement avoids clock skew — the
-// browser times its own ping/ack round trip.
+// Client-measured latency, reported periodically so the server can export it as
+// metrics. The RTT is the browser timing its own ping/ack round trip, so it has
+// no clock-skew question. Driver-feed fields are present only while the page is
+// painting the in-browser feed.
 export type LatencyReportRequest = z.infer<typeof LatencyReportRequestSchema>;
 export const LatencyReportRequestSchema = z.strictObject({
   kind: z.literal("latency-report"),
   rttMs: z.number().min(0).max(60_000),
+  // HUD-clock capture-to-paint samples since the last report, corrected by the
+  // page's ping-derived clock-offset estimate. Small negatives are estimate
+  // error, not corruption, so they are accepted as-is.
+  glassMs: z.array(z.number().min(-60_000).max(60_000)).max(64).optional(),
+  // Browser decoder resets since the last report.
+  decoderResets: z.number().int().min(0).max(10_000).optional(),
 });
 
 // ---- responses (server -> client) ----
