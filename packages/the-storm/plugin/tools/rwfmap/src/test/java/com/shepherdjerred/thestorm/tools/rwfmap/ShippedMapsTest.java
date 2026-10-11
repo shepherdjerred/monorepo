@@ -3,8 +3,9 @@ package com.shepherdjerred.thestorm.tools.rwfmap;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavCodec;
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -39,12 +40,13 @@ final class ShippedMapsTest {
   void hasAValidCommittedNavigationArtifact(Path folder) throws IOException {
     var map = MapFolder.load(folder);
     var navSize = Files.size(map.navFile());
-    try (var nav = new DataInputStream(Files.newInputStream(map.navFile()))) {
-      assertThat(nav.readInt()).isEqualTo(NavCodec.MAGIC);
-      assertThat(nav.readInt()).isEqualTo(NavCodec.FORMAT_VERSION);
-      assertThat(nav.readInt()).isPositive();
-      assertThat(nav.readInt()).isEqualTo(navSize - 16);
-    }
+    var decoded = NavCodec.decode(Files.readAllBytes(map.navFile()));
+    assertThat(decoded).isInstanceOf(Result.Ok.class);
+    var artifact = ((Result.Ok<NavArtifact, NavCodec.CodecError>) decoded).value();
+    assertThat(artifact.mapId()).isEqualTo(map.id());
+    assertThat(artifact.blocksSha256()).isEqualTo(map.schematic().sha256());
+    assertThat(artifact.sites()).isEqualTo(Sites.of(map.definition()));
+    assertThat(artifact.validate()).isEmpty();
 
     var summary = Files.readString(map.summaryFile(), UTF_8);
     assertThat(summary)
