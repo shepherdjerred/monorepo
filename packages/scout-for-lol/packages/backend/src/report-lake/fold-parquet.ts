@@ -1,4 +1,4 @@
-import { mkdir, unlink } from "node:fs/promises";
+import { mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { RAW_DOCUMENT_LAKE_COLUMNS } from "@scout-for-lol/data/model/reports/raw-document-lake-columns.ts";
 import { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
@@ -51,21 +51,29 @@ function columnsForTable(table: ReportLakeStagingTable) {
   }
 }
 
-export async function writeFoldParquet(
-  buildDir: string,
-  buildId: string,
-  table: ReportLakeStagingTable,
-  staged: StagingParseResult,
-): Promise<void> {
+export async function writeFoldParquet({
+  buildDir,
+  buildId,
+  table,
+  staged,
+  abortSignal,
+}: {
+  buildDir: string;
+  buildId: string;
+  table: ReportLakeStagingTable;
+  staged: StagingParseResult;
+  abortSignal?: AbortSignal | undefined;
+}): Promise<void> {
+  abortSignal?.throwIfAborted();
   const columns = columnsForTable(table);
   for (const [month, rows] of staged.rowsByMonth) {
     const monthDir = path.join(buildDir, table, `month=${month}`);
     await mkdir(monthDir, { recursive: true });
     const tmpPath = path.join(buildDir, `${table}-${month}-fold.ndjson.tmp`);
-    const writer = new NdjsonFileWriter(tmpPath);
-    for (const row of rows) await writer.write(row);
-    await writer.close();
+    const writer = new NdjsonFileWriter(tmpPath, undefined, abortSignal);
     try {
+      for (const row of rows) await writer.write(row);
+      await writer.close();
       await withDuckDBConnection(
         async (session) => {
           await copyNdjsonToParquet(session, {
@@ -76,10 +84,14 @@ export async function writeFoldParquet(
             fileNamePrefix: `fold-${buildId}`,
           });
         },
-        { timeoutMs: COMPACTION_TIMEOUT_MS },
+        {
+          timeoutMs: COMPACTION_TIMEOUT_MS,
+          ...(abortSignal === undefined ? {} : { abortSignal }),
+        },
       );
     } finally {
-      await unlink(tmpPath);
+      await writer.abort();
+      await rm(tmpPath, { force: true });
     }
   }
 }

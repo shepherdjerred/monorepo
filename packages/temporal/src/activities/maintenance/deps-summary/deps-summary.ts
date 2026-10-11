@@ -184,6 +184,33 @@ function dependencyChangeKind(
     : "upstream-upgrade";
 }
 
+function dependencyLocation(
+  entry: CatalogEntry,
+): Pick<DependencyChange, "datasource" | "registryUrl" | "packageName"> {
+  if (entry.category === "internal-image") {
+    // Catalog names can identify deployment channels and workflow roles. These
+    // aliases all pin the same first-party GHCR repository, not nested images.
+    const packageName =
+      /^(shepherdjerred\/[^/]+)(?:\/(?:beta|prod))?(?:\/workflows\/(?:stable|candidate))?$/.exec(
+        entry.name,
+      )?.[1];
+    if (packageName === undefined || entry.artifactType !== "image") {
+      throw new Error(`Unknown internal image catalog identity: ${entry.name}`);
+    }
+    return {
+      datasource: "docker",
+      registryUrl: "https://ghcr.io",
+      packageName,
+    };
+  }
+  const management = entry.management;
+  return {
+    datasource: management.managed ? management.datasource : undefined,
+    registryUrl: management.managed ? management.registryUrl : undefined,
+    packageName: management.managed ? management.packageName : undefined,
+  };
+}
+
 export function deriveDependencyChanges(
   baseEntries: CatalogEntry[],
   commits: {
@@ -209,14 +236,11 @@ export function deriveDependencyChanges(
         entry,
         isRevert,
       );
-      const management = entry.management;
       changes.push({
         name: entry.name,
         category: entry.category,
         artifactType: entry.artifactType,
-        datasource: management.managed ? management.datasource : undefined,
-        registryUrl: management.managed ? management.registryUrl : undefined,
-        packageName: management.managed ? management.packageName : undefined,
+        ...dependencyLocation(entry),
         oldValue: pair.before?.value,
         newValue: pair.after?.value,
         oldVersion: bareVersion(pair.before?.value),

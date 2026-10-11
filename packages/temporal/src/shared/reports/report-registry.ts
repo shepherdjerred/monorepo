@@ -31,6 +31,13 @@ export function defaultReportGraceHours(cadenceHours: number): number {
 
 export const REPORT_SCHEDULE_REGISTRY: readonly ReportScheduleRegistration[] = [
   {
+    scheduleId: "ci-io-telemetry-daily",
+    reportType: "ci-io-telemetry",
+    cadenceHours: 24,
+    graceHours: defaultReportGraceHours(24),
+    receiptRequiredAfter: REPORT_RECEIPT_ACTIVATION,
+  },
+  {
     scheduleId: "homelab-audit-daily",
     reportType: "homelab-audit",
     cadenceHours: 24,

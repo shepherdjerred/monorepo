@@ -36,6 +36,7 @@ function observation(
     observedAt: now.toISOString(),
     running: actions.some((entry) => entry.status === "RUNNING"),
     actions,
+    completedActions: [],
     ...overrides,
   };
 }

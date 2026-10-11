@@ -5,6 +5,7 @@ import {
 } from "@tanstack/react-query";
 import type { z } from "zod";
 import { SnapshotResponseSchema } from "@shepherdjerred/ops-model/snapshot.ts";
+import type { DigestKind } from "@shepherdjerred/ops-model/digest.ts";
 
 import {
   CursorResponseSchema,
@@ -13,7 +14,6 @@ import {
   SeriesResponseSchema,
   ServiceDetailSchema,
   type CursorResponse,
-  type DigestKind,
   type OpsError,
   type SeriesPresetId,
   type SeriesRange,

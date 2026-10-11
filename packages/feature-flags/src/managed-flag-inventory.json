@@ -1064,6 +1064,33 @@
       "thresholdRollouts": []
     },
     {
+      "key": "temporal-daily-report-notifications-enabled",
+      "owner": "temporal",
+      "namespace": "temporal",
+      "source": "temporal",
+      "purpose": "Archive daily audit reports and email changed findings, recoveries, or seven-day actionable reminders; enable prod after acceptance.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "temporal-daily-report-notifications-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "stage",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "trmnl-ha-presence-entities",
       "owner": "trmnl-dashboard",
       "namespace": "trmnl-dashboard",

@@ -43,7 +43,7 @@ import {
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import { writeAccountsParquet } from "#src/report-lake/compact-accounts.ts";
 import { rebuildTimelineParquet } from "#src/report-lake/timeline-compaction.ts";
-import type { ReportLakeProgress } from "#src/report-lake/compaction-types.ts";
+import type { CompactionOptions } from "#src/report-lake/compaction-types.ts";
 
 const logger = createLogger("report-lake-rebuild");
 const GC_KEEP_BUILDS = 2;
@@ -53,19 +53,15 @@ export async function rebuildReportLake(
   prisma: ExtendedPrismaClient,
   lakeDir: string,
   startedAt: number,
-  onProgress?: (progress: ReportLakeProgress) => void,
+  options: Pick<CompactionOptions, "onProgress" | "abortSignal"> = {},
 ): Promise<CompactionSummary> {
-  return await rebuildLocked(prisma, lakeDir, startedAt, onProgress);
-}
-
-async function rebuildLocked(
-  prisma: ExtendedPrismaClient,
-  lakeDir: string,
-  startedAt: number,
-  onProgress?: (progress: ReportLakeProgress) => void,
-): Promise<CompactionSummary> {
+  const { onProgress, abortSignal } = options;
   const deadlineAt = Date.now() + COMPACTION_TIMEOUT_MS;
-  const deadline = AbortSignal.timeout(COMPACTION_TIMEOUT_MS);
+  const deadline = AbortSignal.any([
+    AbortSignal.timeout(COMPACTION_TIMEOUT_MS),
+    ...(abortSignal === undefined ? [] : [abortSignal]),
+  ]);
+  deadline.throwIfAborted();
   const remainingTimeoutMs = (): number => Math.max(1, deadlineAt - Date.now());
   const buildId = newBuildId();
   const buildDir = buildDirPath(lakeDir, buildId);
@@ -73,20 +69,26 @@ async function rebuildLocked(
   await reclaimAbandonedPendingGenerations(lakeDir);
   const stagingSnapshot = await snapshotStagingGenerations(lakeDir);
   const rebuiltSources = new Set<string>();
+  const writers: NdjsonFileWriter[] = [];
+  const createWriter = (file: string) => {
+    const writer = new NdjsonFileWriter(file, undefined, deadline);
+    writers.push(writer);
+    return writer;
+  };
   let published = false;
 
   try {
     const matchesTmp = path.join(buildDir, "matches.ndjson.tmp");
-    const matchWriter = new NdjsonFileWriter(matchesTmp);
+    const matchWriter = createWriter(matchesTmp);
     const rawTmp = path.join(buildDir, "raw-documents.ndjson.tmp");
-    const rawWriter = new NdjsonFileWriter(rawTmp);
+    const rawWriter = createWriter(rawTmp);
     const matchTeamsTmp = path.join(buildDir, "match-teams.ndjson.tmp");
-    const matchTeamWriter = new NdjsonFileWriter(matchTeamsTmp);
+    const matchTeamWriter = createWriter(matchTeamsTmp);
     const matchTeamBansTmp = path.join(buildDir, "match-team-bans.ndjson.tmp");
-    const matchTeamBanWriter = new NdjsonFileWriter(matchTeamBansTmp);
+    const matchTeamBanWriter = createWriter(matchTeamBansTmp);
     const foldedMatchIds = new Set<string>();
     const prematchTmp = path.join(buildDir, "prematch.ndjson.tmp");
-    const prematchWriter = new NdjsonFileWriter(prematchTmp);
+    const prematchWriter = createWriter(prematchTmp);
     const foldedPrematchIds = new Set<string>();
     const foldedRankHistoryIds = new Set<string>();
 
@@ -98,6 +100,7 @@ async function rebuildLocked(
     }
     const client = createS3Client();
     const puuidRemap = await loadPuuidRemap(prisma);
+    deadline.throwIfAborted();
     const skippedMatches = await populateMatchesFromS3({
       client,
       bucket,
@@ -113,6 +116,7 @@ async function rebuildLocked(
         onProgress?.({ phase: "reading-s3", table: "matches", ...progress });
       },
     });
+    deadline.throwIfAborted();
     const skippedPrematches = await populatePrematchFromS3({
       client,
       bucket,
@@ -126,6 +130,7 @@ async function rebuildLocked(
         onProgress?.({ phase: "reading-s3", table: "prematch", ...progress });
       },
     });
+    deadline.throwIfAborted();
     const timelines = await rebuildTimelineParquet({
       client,
       bucket,
@@ -200,7 +205,7 @@ async function rebuildLocked(
             });
           }
         },
-        { timeoutMs: remainingTimeoutMs() },
+        { timeoutMs: remainingTimeoutMs(), abortSignal: deadline },
       );
     } finally {
       await unlink(matchesTmp);
@@ -211,7 +216,7 @@ async function rebuildLocked(
     }
 
     deadline.throwIfAborted();
-    const accountRows = await writeAccountsParquet(prisma, buildDir);
+    const accountRows = await writeAccountsParquet(prisma, buildDir, deadline);
     onProgress?.({ phase: "writing-accounts", rows: accountRows });
     deadline.throwIfAborted();
     const rankHistory = await writeCompetitionRankHistoryParquet({
@@ -254,7 +259,7 @@ async function rebuildLocked(
       summary,
       puuidRemapFingerprint(puuidRemap),
     );
-    await publishBuild(lakeDir, buildId);
+    await publishBuild(lakeDir, buildId, deadline);
     published = true;
     publishCompactionMetrics(summary);
     await removeFoldedStagingFiles(lakeDir, "matches", foldedMatchIds);
@@ -284,6 +289,7 @@ async function rebuildLocked(
     return { ...summary, durationMs };
   } finally {
     if (!published) {
+      await Promise.all(writers.map(async (writer) => writer.abort()));
       await rm(buildDir, { recursive: true, force: true });
     }
   }

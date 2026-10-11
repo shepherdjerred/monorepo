@@ -8,6 +8,11 @@ import {
 import { METRIC_IDS } from "@shepherdjerred/ops-model/metric-ids.ts";
 import type { Signal, Snapshot } from "@shepherdjerred/ops-model/snapshot.ts";
 import { Temporal } from "@js-temporal/polyfill";
+import {
+  DigestRunResponseSchema,
+  type DigestKind,
+  type DigestRunResponse,
+} from "@shepherdjerred/ops-model/digest.ts";
 
 import type {
   DigestGatePort,
@@ -32,10 +37,7 @@ import {
 import { REVIEW_QUERIES } from "#domain/ops-series";
 import {
   DigestReportSchema,
-  DigestRunResponseSchema,
-  type DigestKind,
   type DigestReport,
-  type DigestRunResponse,
   type IncidentStats,
   type Trend,
 } from "#shared/ops-schema";

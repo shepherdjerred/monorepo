@@ -141,6 +141,7 @@ export async function readStagingRows(
     onProgress?: ((progress: ReportLakeProgress) => void) | undefined;
     snapshot?: StagingGenerationSnapshot;
     skippedGenerations?: number;
+    abortSignal?: AbortSignal;
   } = {},
 ): Promise<StagingParseResult> {
   const schema = schemaForTable(table);
@@ -154,6 +155,7 @@ export async function readStagingRows(
     table,
     options.snapshot,
   )) {
+    options.abortSignal?.throwIfAborted();
     const parsed = await parseStagingFile(file, schema);
     if (parsed.kind === "invalid") {
       if (generation !== undefined) {

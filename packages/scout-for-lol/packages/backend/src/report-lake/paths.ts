@@ -151,10 +151,17 @@ export async function readCurrentBuildDir(
 export async function publishBuild(
   lakeDir: string,
   buildId: string,
+  abortSignal?: AbortSignal,
 ): Promise<void> {
-  const tmpPath = path.join(lakeDir, `${CURRENT_POINTER}.tmp`);
-  await Bun.write(tmpPath, `${buildId}\n`);
-  await rename(tmpPath, path.join(lakeDir, CURRENT_POINTER));
+  abortSignal?.throwIfAborted();
+  const tmpPath = path.join(lakeDir, `${CURRENT_POINTER}.${buildId}.tmp`);
+  try {
+    await Bun.write(tmpPath, `${buildId}\n`);
+    abortSignal?.throwIfAborted();
+    await rename(tmpPath, path.join(lakeDir, CURRENT_POINTER));
+  } finally {
+    await rm(tmpPath, { force: true });
+  }
 }
 
 /**

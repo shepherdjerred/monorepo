@@ -215,6 +215,7 @@ async function withDuckDBConnectionSlot<T>(
 
   const timeoutState = { timedOut: false, aborted: false };
   const hasTimedOut = () => timeoutState.timedOut;
+  const hasAborted = () => timeoutState.aborted;
   const abort = () => {
     timeoutState.aborted = true;
     connection.interrupt();
@@ -235,6 +236,9 @@ async function withDuckDBConnectionSlot<T>(
 
   const session: DuckDBSession = {
     run: async (sql, params) => {
+      if (hasAborted()) {
+        throw new DOMException("DuckDB query aborted.", "AbortError");
+      }
       if (hasTimedOut()) {
         throw new ReportQueryTimeoutError(timeoutMs);
       }
@@ -242,7 +246,7 @@ async function withDuckDBConnectionSlot<T>(
         const reader = await connection.runAndReadAll(sql, params);
         return reader.getRowObjects();
       } catch (error) {
-        if (timeoutState.aborted) {
+        if (hasAborted()) {
           throw new DOMException("DuckDB query aborted.", "AbortError");
         }
         if (hasTimedOut()) {

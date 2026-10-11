@@ -7,10 +7,10 @@ import {
 import type { OpsActivities } from "#activities/ops/ops-activities.ts";
 import type {
   OpsCollectorOutcome,
-  OpsDigestKind,
   OpsPublishSummary,
 } from "#activities/ops/ops-publish.ts";
 import type { SourceId } from "@shepherdjerred/ops-model/snapshot.ts";
+import type { DigestKind as OpsDigestKind } from "@shepherdjerred/ops-model/digest.ts";
 import { TASK_QUEUES, type TaskQueue } from "#shared/task-queues.ts";
 
 type CollectorName = {
@@ -135,9 +135,7 @@ export async function runOpsSnapshot(): Promise<OpsPublishSummary> {
   return await assembleAndPublishOpsSnapshot({ outcomes });
 }
 
-export async function runOpsDigest(input: {
-  kind: OpsDigestKind;
-}): Promise<{ kind: OpsDigestKind }> {
+export async function runOpsDigest(input: { kind: OpsDigestKind }) {
   const { triggerOpsDigest } = activitiesForRun();
   return await triggerOpsDigest(input.kind);
 }

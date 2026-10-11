@@ -229,6 +229,7 @@ async function pipelineEmitter(
     commit: pipeline.commit,
     branch: pipeline.branch,
     linkUrl: pipeline.forge_url,
+    event: pipeline.event,
   };
   return (steps: readonly CiStep[]) =>
     emitWorkflows(

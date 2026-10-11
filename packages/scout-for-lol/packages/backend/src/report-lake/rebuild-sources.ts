@@ -2,6 +2,7 @@ import { spectatorGameMatchId } from "#src/durable/match/match-identity.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { S3Client } from "@aws-sdk/client-s3";
 import { createHash } from "node:crypto";
+import { setImmediate } from "node:timers/promises";
 import { rawDocumentRow } from "#src/report-lake/staging/raw-documents.ts";
 import { populateCompetitionRankHistoryFromS3 as populateRankHistory } from "#src/report-lake/rebuild/rank-history.ts";
 
@@ -40,6 +41,7 @@ const logger = createLogger("report-lake-rebuild-sources");
 // Bounded in-flight S3 GETs during a rebuild. Fetch+parse+flatten runs
 // concurrently; writes are funnelled serially into the single NDJSON writer.
 const REBUILD_S3_CONCURRENCY = 16;
+const TIMELINE_S3_CONCURRENCY = 4;
 
 function sourceKey(key: string, rawText: string): string {
   return s3StagingSourceKey(
@@ -107,6 +109,9 @@ export async function populateMatchesFromS3(
     const parsedMatches = await Promise.all(
       batch.map(async ({ key, observedAt }) => {
         const rawText = await readRawObjectText(client, bucket, key, options);
+        options.abortSignal?.throwIfAborted();
+        await setImmediate();
+        options.abortSignal?.throwIfAborted();
         const rawParsed: unknown = remapRawJson(
           JSON.parse(rawText),
           options.puuidRemap,
@@ -134,6 +139,7 @@ export async function populateMatchesFromS3(
     );
     batch.length = 0;
     for (const result of parsedMatches) {
+      options.abortSignal?.throwIfAborted();
       if (result === null) {
         skipped += 1;
         reportLakeCompactionSkippedTotal.inc({ table: "matches" });
@@ -322,6 +328,8 @@ export async function populateTimelinesFromS3(options: {
           item.key,
           options,
         );
+        await setImmediate();
+        options.abortSignal?.throwIfAborted();
         const rawParsed: unknown = remapRawJson(
           JSON.parse(rawText),
           options.puuidRemap,
@@ -351,6 +359,7 @@ export async function populateTimelinesFromS3(options: {
     );
     batch.length = 0;
     for (const result of timelines) {
+      options.abortSignal?.throwIfAborted();
       if (result === null) {
         skipped += 1;
         reportLakeCompactionSkippedTotal.inc({ table: "timeline_coverage" });
@@ -404,7 +413,7 @@ export async function populateTimelinesFromS3(options: {
 
   for (const candidate of dedupeTimelineCandidates(candidates)) {
     batch.push(candidate);
-    if (batch.length >= REBUILD_S3_CONCURRENCY) await flush();
+    if (batch.length >= TIMELINE_S3_CONCURRENCY) await flush();
   }
   if (batch.length > 0) await flush();
   return skipped;
@@ -427,6 +436,8 @@ export async function populatePrematchFromS3(
           item.key,
           options,
         );
+        await setImmediate();
+        options.abortSignal?.throwIfAborted();
         const rawParsed: unknown = remapRawJson(
           JSON.parse(rawText),
           options.puuidRemap,
@@ -456,6 +467,7 @@ export async function populatePrematchFromS3(
     );
     batch.length = 0;
     for (const result of parsedPrematches) {
+      options.abortSignal?.throwIfAborted();
       if (result === null) {
         skipped += 1;
         reportLakeCompactionSkippedTotal.inc({ table: "prematch" });

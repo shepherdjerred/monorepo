@@ -309,6 +309,7 @@ export const TEMPORAL_FLAG_KEYS = [
   "ci-maintenance-dispatch-enabled",
   "temporal-email-recipient",
   "temporal-email-sender",
+  "temporal-daily-report-notifications-enabled",
   "temporal-agent-chat-discord-claude-default-model",
   "temporal-agent-chat-discord-codex-default-model",
   "temporal-agent-chat-imessage-claude-model",
@@ -324,6 +325,7 @@ export type TemporalFlagKey = (typeof TEMPORAL_FLAG_KEYS)[number];
 
 export const TEMPORAL_BOOLEAN_FLAG_KEYS = [
   "ci-maintenance-dispatch-enabled",
+  "temporal-daily-report-notifications-enabled",
   "temporal-agent-chat-photon-enabled",
   "temporal-call-graph-tracing",
   "woodpecker-log-retention-enabled",

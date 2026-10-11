@@ -34,6 +34,22 @@ dependencies {
   testRuntimeOnly(lib("junit-platform-launcher"))
 }
 
+// Include custom source sets such as dist's e2e configuration, which does not
+// inherit implementation. Constraints add no new libraries; remove each once
+// the upstream dependency graph carries its patched minimum.
+sourceSets.configureEach {
+  val targetConfiguration = implementationConfigurationName
+  dependencies.constraints {
+    add(targetConfiguration, lib("security-plexus-utils")) { because("CVE-2025-67030") }
+    add(targetConfiguration, lib("security-jackson2-core")) {
+      because("CVE-2026-89407 and CVE-2026-89425")
+    }
+    add(targetConfiguration, lib("security-jackson2-databind")) {
+      because("CVE-2026-91776 and CVE-2026-91777")
+    }
+  }
+}
+
 tasks.withType<JavaCompile>().configureEach {
   options.release = 25
   options.encoding = "UTF-8"

@@ -156,6 +156,38 @@ describe("parseLycheeReport", () => {
     ]);
   });
 
+  test("delegates Storm root-relative links to its checked build but keeps HTTP failures", () => {
+    const source =
+      "packages/ts-mc-docs/src/content/docs/survival/transparency.md";
+    const parsed = parseLycheeReport(
+      JSON.stringify({
+        total: 2,
+        successful: 0,
+        errors: 2,
+        timeouts: 0,
+        excludes: 0,
+        error_map: {
+          [source]: [
+            {
+              url: "error:",
+              status: {
+                text: "Cannot resolve root-relative link '/world_downloads/'",
+              },
+            },
+            {
+              url: "https://docs.ts-mc.net/missing/",
+              status: { text: "404 Not Found", code: 404 },
+            },
+          ],
+        },
+        timeout_map: {},
+      }),
+    );
+    expect(parsed.ignoredRootRelativeLinks).toBe(1);
+    expect(parsed.deadLinks).toHaveLength(1);
+    expect(parsed.deadLinks[0]?.statusCode).toBe(404);
+  });
+
   test("rejects non-JSON output instead of returning empty", () => {
     expect(() => parseLycheeReport("lychee panicked")).toThrow();
   });

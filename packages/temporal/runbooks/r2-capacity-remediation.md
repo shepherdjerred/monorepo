@@ -1,7 +1,7 @@
 # R2 Capacity Remediation Runbook
 
-Procedure for when the `homelab` R2 bucket approaches or exceeds its 1.5 TB
-budget threshold (`R2StorageNearingLimit` / `R2StorageExceedingLimit`), or when the R2
+Procedure for when the `homelab` R2 bucket approaches or exceeds its 1536 GiB
+capacity budget (`R2StorageNearingLimit` / `R2StorageExceedingLimit`), or when the R2
 orphan alerts fire (`VeleroR2OrphanPrefixes` /
 `VeleroR2OrphanBytesExcessive`). Triage first: the inventory distinguishes
 accumulated orphans (the usual cause — TTL-expired backups whose
@@ -58,8 +58,8 @@ kubectl get backups.velero.io -n velero -o json | jq -r '.items | "total: \(leng
 Inventory the bucket top level, then per-backup under the zfs data prefix:
 
 ```bash
-scripts/onepassword/with-service-account.sh op run -- bun --cwd packages/homelab/src/cdk8s run r2:inventory
-R2_PREFIX='zfspv-incr/backups/' R2_PREFIX_DEPTH='1' scripts/onepassword/with-service-account.sh op run -- bun --cwd packages/homelab/src/cdk8s run r2:inventory
+scripts/onepassword/with-service-account.sh op run -- bun run --cwd packages/homelab/src/cdk8s r2:inventory
+R2_PREFIX='zfspv-incr/backups/' R2_PREFIX_DEPTH='1' scripts/onepassword/with-service-account.sh op run -- bun run --cwd packages/homelab/src/cdk8s r2:inventory
 ```
 
 Quantify the guarded orphan set without deleting anything. The inspection
@@ -68,7 +68,7 @@ still required by retained recovery points. An absent Backup CR or metadata
 alone does not make a stream disposable:
 
 ```bash
-scripts/onepassword/with-service-account.sh op run -- bun --cwd packages/homelab/src/cdk8s run r2:orphans -- inspect --manifest /tmp/r2-orphans.json
+scripts/onepassword/with-service-account.sh op run -- bun run --cwd packages/homelab/src/cdk8s r2:orphans -- inspect --manifest /tmp/r2-orphans.json
 jq -r '"candidates=\(.candidates | length) gib=\(([.candidates[].bytes] | add) / 1024 / 1024 / 1024) protected=\(.protectedBackupNames | length)"' /tmp/r2-orphans.json
 ```
 
@@ -102,7 +102,7 @@ velero backup get | grep -v Completed || true
   older than 7 days automatically; for anything younger, wait or investigate
   the uploading backup — do not abort uploads belonging to a running backup.
 
-Approve the exact version-3 manifest only after recovery evidence is available.
+Approve the exact version-4 manifest only after recovery evidence is available.
 It records every candidate key, size, modification time and ETag. Apply
 revalidates the complete ancestry and protection set, then conditionally HEADs
 and DELETEs each reviewed key using its approved ETag. It never recursively
@@ -116,8 +116,8 @@ it is outside backup data. Keep backup names immutable.
 ## Step 3: Verify post-remediation state
 
 ```bash
-scripts/onepassword/with-service-account.sh op run -- bun --cwd packages/homelab/src/cdk8s run r2:orphans -- inspect --manifest /tmp/r2-postcheck.json
-scripts/onepassword/with-service-account.sh op run -- bun --cwd packages/homelab/src/cdk8s run r2:inventory
+scripts/onepassword/with-service-account.sh op run -- bun run --cwd packages/homelab/src/cdk8s r2:orphans -- inspect --manifest /tmp/r2-postcheck.json
+scripts/onepassword/with-service-account.sh op run -- bun run --cwd packages/homelab/src/cdk8s r2:inventory
 ```
 
 The fresh inspection must show that the approved keys are gone and retained

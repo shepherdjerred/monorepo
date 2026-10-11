@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { SnapshotResponseSchema } from "@shepherdjerred/ops-model/snapshot.ts";
+import { DigestRunResponseSchema } from "@shepherdjerred/ops-model/digest.ts";
 
 import { AlertService } from "#application/alert-service";
 import { createApp } from "#server/app";
@@ -9,7 +10,6 @@ import {
   ChangeListResponseSchema,
   CursorResponseSchema,
   DigestReportSchema,
-  DigestRunResponseSchema,
   OpsErrorSchema,
   SeriesResponseSchema,
   ServiceDetailSchema,

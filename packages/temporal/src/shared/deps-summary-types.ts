@@ -26,3 +26,24 @@ export type DependencyChange = {
   releaseNotesOverride:
     { url?: string | undefined; summary: string } | undefined;
 };
+
+export type ReleaseNoteAttempt = {
+  source:
+    | "merged-pr"
+    | "github-release"
+    | "helm-index"
+    | "oci-manifest"
+    | "internal-build"
+    | "catalog-override";
+  url: string | undefined;
+  outcome: "found" | "unavailable" | "failed";
+  detail: string;
+};
+
+export type ReleaseNote = {
+  dependency: string;
+  version: string;
+  notes: string;
+  url: string | undefined;
+  source: ReleaseNoteAttempt["source"];
+};

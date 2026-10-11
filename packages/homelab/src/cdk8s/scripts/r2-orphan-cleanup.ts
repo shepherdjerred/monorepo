@@ -16,6 +16,17 @@ const KubectlBackupListSchema = z.object({
   items: z.array(z.object({ metadata: z.object({ name: z.string().min(1) }) })),
 });
 
+const ZfsBackupListSchema = z.object({
+  items: z.array(
+    z.object({
+      spec: z.object({
+        snapName: z.string().min(1),
+        prevSnapName: z.string().optional(),
+      }),
+    }),
+  ),
+});
+
 type Options = {
   command: "inspect" | "apply";
   manifestPath: string;
@@ -150,6 +161,27 @@ async function liveBackupNames(): Promise<string[]> {
     .toSorted();
 }
 
+async function zfsBackupNames(): Promise<string[]> {
+  const output = await run([
+    "kubectl",
+    "get",
+    "zfsbackups.zfs.openebs.io",
+    "--namespace",
+    "openebs",
+    "--output",
+    "json",
+  ]);
+  return [
+    ...new Set(
+      ZfsBackupListSchema.parse(JSON.parse(output)).items.flatMap(({ spec }) =>
+        spec.prevSnapName === undefined || spec.prevSnapName === ""
+          ? [spec.snapName]
+          : [spec.snapName, spec.prevSnapName],
+      ),
+    ),
+  ].toSorted();
+}
+
 async function observe(
   observedAt: string,
   heldBackupNames: readonly string[],
@@ -159,14 +191,16 @@ async function observe(
   zfsObjects: Awaited<ReturnType<typeof listR2Objects>>;
 }> {
   const config = r2Configuration();
-  const [liveNames, metadataObjects, zfsObjects] = await Promise.all([
+  const [liveNames, zfsNames, metadataObjects, zfsObjects] = await Promise.all([
     liveBackupNames(),
+    zfsBackupNames(),
     listR2Objects(R2_BACKUP_METADATA_BACKUPS_PREFIX),
     listR2Objects(R2_ZFS_PREFIX),
   ]);
   const metadataNames = metadataBackupNames(metadataObjects);
   const chainProtection = await inspectR2ZfsChains(zfsObjects, [
     ...liveNames,
+    ...zfsNames,
     ...metadataNames,
     ...heldBackupNames,
   ]);
@@ -181,6 +215,7 @@ async function observe(
       liveBackupNames: liveNames,
       metadataBackupNames: metadataNames,
       chainProtection,
+      zfsBackupNames: zfsNames,
       heldBackupNames,
       onlyBackupName,
     }),

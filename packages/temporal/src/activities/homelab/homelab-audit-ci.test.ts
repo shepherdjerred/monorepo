@@ -310,5 +310,9 @@ describe("CI homelab collector", () => {
 
     expect(result.check.status).toBe("passed");
     expect(result.findings[0]?.summary).toContain("No CI main pipelines");
+    expect(result.findings[0]).toMatchObject({
+      id: "ci-main/no-pipelines-in-24h",
+      condition: "no-pipelines-in-24h",
+    });
   });
 });

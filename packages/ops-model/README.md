@@ -12,6 +12,7 @@ stores it. The web UI, the TRMNL screen, the email digest, and
 | `assemble.ts`                  | `assembleSnapshot` (section rollup: a failed source makes its section `unknown`), `applyFreshness` (a stale snapshot is never green), and query helpers. |
 | `policy.ts`                    | `OPS_POLICY` thresholds and budgets shared by the collector and renderers.                                                                               |
 | `backup-policy.ts`             | Owner-published Velero monitoring annotation keys and SeaweedFS backup freshness windows.                                                                |
+| `digest.ts`                    | Shared daily/weekly digest trigger response: period, sent/skipped status, and duplicate handling.                                                        |
 | `metric-ids.ts`                | Headline metric ids that producers emit and renderers read.                                                                                              |
 | `catalog.ts` + `services.json` | The service catalog. It joins namespaces, ArgoCD apps, Bugsink projects, analytics sites, Grafana dashboards, and deploy variants under one service id.  |
 

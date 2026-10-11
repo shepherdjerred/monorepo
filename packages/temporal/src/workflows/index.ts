@@ -1,4 +1,6 @@
 // Declare explicit workflow wrappers, deriving their contracts from delegates.
+import * as canary from "./notification-canary.ts";
+export const runDailyNotificationCanary = canary.runDailyNotificationCanary;
 import * as stormForum from "./homelab/storm-forum.ts";
 import * as seaweedBackup from "./homelab/seaweedfs-backup.ts";
 import type { ForumStage } from "@shepherdjerred/storm-forum/contracts";
@@ -203,9 +205,8 @@ export async function fetchSkillCappedManifest(): Promise<void> {
 export async function runKometaWorkflow(): Promise<void> {
   return runKometaWorkflowImplementation();
 }
-export async function runMainVulnScanWorkflow(): Promise<void> {
-  return runMainVulnScanWorkflowImplementation();
-}
+export const runMainVulnScanWorkflow = () =>
+  runMainVulnScanWorkflowImplementation();
 export async function runCiIoTelemetry(): Promise<void> {
   return _runCiIoTelemetry();
 }

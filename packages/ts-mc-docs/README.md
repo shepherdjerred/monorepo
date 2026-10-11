@@ -25,6 +25,9 @@ survival section. Accuracy fixes applied during the port:
 The `world_downloads.md` filename is intentionally underscore-delimited:
 it preserves the old MkDocs URL (`/world_downloads/`).
 
+The build verifies site-root-relative page and asset links against its output.
+The repository-wide link scan delegates those links to this owning-site check.
+
 ## Brand
 
 Flexile chrome, calendar palettes, holiday logos, scenery, and effects come from

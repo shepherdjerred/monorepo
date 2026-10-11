@@ -15,6 +15,7 @@ import { discardFormattingOnlyChanges } from "./scout-generated-preflight.ts";
 import {
   BUCKET,
   QueueWindowsReportSchema,
+  queueWarningFinding,
   type QueueWindowsReport,
 } from "./scout-queue-windows-report.ts";
 import { buildPrBody, canAutoMerge } from "./scout-queue-windows-pr-body.ts";
@@ -59,6 +60,8 @@ export type ScoutQueueWindowsResult = {
   editCount: number;
   warningCount: number;
   warningSummaries: string[];
+  /** Absent in retained Activity results from before stable identities. */
+  warningFindings?: { id?: string; summary: string }[];
   warningFingerprint: string | undefined;
   warningConsecutiveRuns: number;
   editSummaries: string[];
@@ -139,7 +142,10 @@ async function warningFingerprint(
 ): Promise<string | undefined> {
   if (warnings.length === 0) return undefined;
   const canonical = warnings
-    .map((warning) => `${warning.kind}\0${warning.message}`)
+    .map((warning) => {
+      const finding = queueWarningFinding(warning);
+      return finding.id ?? finding.summary;
+    })
     .sort()
     .join("\n");
   const digest = await crypto.subtle.digest(
@@ -188,6 +194,7 @@ function resultDetails(
   | "editCount"
   | "warningCount"
   | "warningSummaries"
+  | "warningFindings"
   | "warningFingerprint"
   | "warningConsecutiveRuns"
   | "editSummaries"
@@ -197,6 +204,9 @@ function resultDetails(
     warningCount: report.warnings.length,
     warningSummaries: report.warnings.map(
       (warning) => `${warning.kind}: ${warning.message}`,
+    ),
+    warningFindings: report.warnings.map((warning) =>
+      queueWarningFinding(warning),
     ),
     warningFingerprint: warningState.fingerprint,
     warningConsecutiveRuns: warningState.consecutiveRuns,

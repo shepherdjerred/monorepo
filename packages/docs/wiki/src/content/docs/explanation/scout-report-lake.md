@@ -425,7 +425,7 @@ queries keep serving the previous build until the pointer swap below.
 A committed generation with an invalid relation is skipped as a whole and left
 for rebuild. Legacy flat files are still validated individually. Skips count in
 `report_lake_compaction_skipped_total`
-([report-lake.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/metrics/report-lake.ts)).
+([report-lake.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/metrics/reports/report-lake.ts)).
 Growth in that counter is the early warning that Riot's payloads drifted from
 the Zod schemas.
 
