@@ -36,7 +36,6 @@ packages:
     - Anthropic.Claude
     - Google.Antigravity
     - Google.AntigravityIDE
-    - Paseo.Paseo
     # Apps
     - Google.Chrome
     - Discord.Discord
@@ -89,6 +88,8 @@ packages:
       note: "Self-updating native installer: irm bun.sh/install.ps1 | iex (winget only has a portable zip)"
     - name: Grok CLI
       note: "Self-updating native installer: irm https://x.ai/cli/install.ps1 | iex (winget xAI.GrokBuild is a portable copy)"
+    - name: Paseo
+      note: Paseo.Paseo installers crash in their NSIS System.dll plugin here (0xC0000005); extract $PLUGINSDIR/app-64.7z from the installer to %LOCALAPPDATA%/Programs/Paseo
     - name: herdr
       note: Standalone release under ~/.herdr/packages
     - name: .NET SDK and Windows SDK
