@@ -19,6 +19,11 @@ import { GitWorkspace } from "#src/host/git-workspace.ts";
 import { GitHubClient, type PullRequest } from "#src/integrations/github.ts";
 import { DockerAgentRunner } from "#src/host/docker.ts";
 import { LinearClient } from "#src/integrations/linear.ts";
+import { checkGitHubAccess } from "#src/integrations/github-access.ts";
+
+vi.mock("#src/integrations/github-access.ts", () => ({
+  checkGitHubAccess: vi.fn(() => Promise.resolve()),
+}));
 
 vi.mock("#src/integrations/github-app.ts", () => ({
   createGitHubAuth: async () => ({
@@ -63,6 +68,27 @@ async function fixture() {
 }
 
 describe("reconcile lock reporting", () => {
+  test("denied GitHub access prevents selecting or claiming a ticket", async () => {
+    const { paths, config, cleanup } = await fixture();
+    const calls: string[][] = [];
+    vi.mocked(checkGitHubAccess).mockRejectedValueOnce(
+      new Error("GitHub App branch protection access failed (HTTP 403)"),
+    );
+    try {
+      await expect(
+        new Reconciler(config, paths, fakeLinearRunner(calls)).reconcile(),
+      ).rejects.toThrow("HTTP 403");
+      expect(calls).toEqual([]);
+      expect(await new StateStore(paths).list()).toEqual([]);
+      // The failed preflight releases the lock, so corrected permissions
+      // permit the next scheduled reconcile without manual recovery.
+      await new Reconciler(config, paths, fakeLinearRunner(calls)).reconcile();
+      expect(calls.some((args) => args[3] === "query")).toBe(true);
+    } finally {
+      await cleanup();
+    }
+  });
+
   test("a quiet successful reconcile does not report lock contention", async () => {
     const { paths, config, messages, cleanup } = await fixture();
     try {
