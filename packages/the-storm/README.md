@@ -1273,8 +1273,11 @@ For local human demonstrations, run `bun run client preview --rwf-duel` from
 this package. It starts a disposable Paper server with one Trooper bot and a
 six-second countdown. Join with `/rwf join`, select `/rwf kit trooper` before
 the start, and play using the real keyboard and mouse. The regular preview
-command keeps the full team setup for other-kit or team recordings. The server's
-owned configuration stays unchanged. Add `--rwf-map <id>` to select a map
+command keeps the full team setup for other-kit or team recordings. In the
+one-human duel preview, the first match is still started manually; after a
+completed match resets, the preview rejoins the human and selects Trooper for
+the next game. It automates lobby commands only, never gameplay controls. The
+server's owned configuration stays unchanged. Add `--rwf-map <id>` to select a map
 installed in owned content. Its `scenario.json` must match the neutral
 `rwf-map-scenarios.json` registry and bind the schematic hash, full region and
 source-team mapping and starts. A disposable duel gives Red/Blue exactly the
