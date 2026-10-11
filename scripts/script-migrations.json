@@ -771,6 +771,11 @@
       "source": "packages/tasknotes-windows/scripts/cross-build.sh",
       "disposition": "retain",
       "reason": "Runs inside the windows-cross-compiler-winui image, which ships no Bun; it only sequences locked dotnet restores and builds"
+    },
+    {
+      "source": "packages/the-storm/server/build-livemap.sh",
+      "disposition": "retain",
+      "reason": "Runs during the server image build with Bash and image-native archive tools; Bun is unavailable in this stage"
     }
   ]
 }

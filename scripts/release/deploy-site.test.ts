@@ -15,7 +15,7 @@ test("Storm docs deleting sync preserves the independently published archive", a
       [
         process.execPath,
         "scripts/release/deploy-site.ts",
-        "ts-mc-docs",
+        "ts-mc",
         "--dry-run",
       ],
       {
@@ -38,6 +38,9 @@ test("Storm docs deleting sync preserves the independently published archive", a
       child.exited,
     ]);
     expect(status, stderr).toBe(0);
+    expect(stdout).toContain(
+      "--- Deploy ts-mc-docs -> ts-mc-docs (https://docs.ts-mc.net)",
+    );
     expect(stdout).toContain("--exclude\nworld-archive/*\n");
     expect(stdout).toContain("--delete\n--dryrun");
     expect(stdout).toContain("s3://ts-mc-docs/");

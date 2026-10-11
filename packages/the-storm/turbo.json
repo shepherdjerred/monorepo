@@ -38,6 +38,8 @@
     "test": {
       "dependsOn": ["lint"],
       "inputs": [
+        "server/**",
+        "package.json",
         "plugin/**/*.java",
         "plugin/**/*.kts",
         "plugin/**/*.kt",
@@ -63,6 +65,9 @@
     "test:ci": {
       "dependsOn": ["lint"],
       "inputs": [
+        "server/**",
+        "package.json",
+        "$TURBO_ROOT$/scripts/ci-test-manifest.json",
         "plugin/**/*.java",
         "plugin/**/*.kts",
         "plugin/**/*.kt",

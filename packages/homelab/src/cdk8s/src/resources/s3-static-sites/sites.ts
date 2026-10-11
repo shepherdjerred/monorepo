@@ -1,5 +1,4 @@
 import type { StaticSiteConfig } from "@shepherdjerred/homelab/cdk8s/src/misc/s3-static-site.ts";
-import { forumReleases } from "@shepherdjerred/homelab/cdk8s/src/resources/storm-forum/releases.ts";
 
 /**
  * CSP for the Scout release bucket (`/`, `/app/`, and `/docs/`).
@@ -250,10 +249,6 @@ export const staticSites: StaticSiteConfig[] = [
   // applied after ArgoCD, so removing the binding here first would create a
   // window where the old CNAME reaches a tunnel with no route.
   { hostname: "clauderon.com", bucket: "clauderon" },
-  // Retain the homepage until an accepted production forum release owns the apex.
-  ...(forumReleases.some((release) => release.stage === "prod")
-    ? []
-    : [{ hostname: "ts-mc.net", bucket: "ts-mc" }]),
   {
     hostname: "docs.ts-mc.net",
     bucket: "ts-mc-docs",
