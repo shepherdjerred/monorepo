@@ -509,6 +509,10 @@ test("the sites lane deploys active sites when their paths change", () => {
     );
     expect(dryRun.commands.join("\n")).toContain(site);
   }
+  const loop = /for site in ([^\n]+); do/u.exec(
+    dryRun.commands.join("\n"),
+  )?.[1];
+  expect(loop?.split(" ")).not.toContain("ts-mc");
 });
 
 test("the sites lane selects every declared per-site change filter", async () => {

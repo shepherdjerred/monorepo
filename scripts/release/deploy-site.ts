@@ -220,6 +220,10 @@ const DEPLOY_SITES: readonly DeploySite[] = [
   {
     bucket: "ts-mc-docs",
     name: "ts-mc-docs",
+    // The currently deployed Woodpecker config extension still has one PR
+    // dry-run using the former portal ID; resolve it to the surviving docs
+    // site until that pinned extension is rebuilt and deployed.
+    aliases: ["ts-mc"],
     url: "https://docs.ts-mc.net",
     buildDir: "packages/ts-mc-docs",
     buildCmd: "bun --no-install run astro build",
