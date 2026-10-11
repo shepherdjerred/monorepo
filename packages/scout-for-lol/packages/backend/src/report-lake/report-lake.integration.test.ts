@@ -1040,54 +1040,73 @@ describe("compactor idempotency and schema transitions", () => {
     }
   });
 
-  // A fold hardlinks the published build's parquet and appends fold files at
-  // the current column set. Reads select an explicit column list across all of
-  // them, so a mixed build does not degrade — it raises a DuckDB Binder Error
-  // and takes down every report. The fold must notice and rebuild instead.
-  test("fold rebuilds instead of hardlinking when the column set changed", async () => {
+  test("an unrecognized schema cannot bypass the bridge gate through fold or rebuild", async () => {
     const match = await loadMatchFixture();
     const lakeDir = await makeLakeDir();
     try {
       const seeded = await runReportLakeRebuild({ prisma, lakeDir });
       expect(seeded?.tier).toBe("rebuild");
       await rewritePublishedFingerprint(lakeDir, "stale-fingerprint");
+      const old = await readCurrentBuildDir(lakeDir);
+      const buildsBefore = await readdir(path.join(lakeDir, "builds"));
+      s3Mock.resetHistory();
 
       expect(await writeMatchStagingFile(lakeDir, match)).toBe(true);
-      const fold = await runReportLakeFold({ prisma, lakeDir });
-      expect(fold?.tier).toBe("rebuild");
-
-      // And the rebuilt build is recorded at the current schema, so the next
-      // fold proceeds normally rather than rebuilding forever.
-      await expectCurrentSchemaFingerprint(lakeDir);
-    } finally {
-      await rm(lakeDir, { recursive: true, force: true });
-    }
-  });
-
-  // Every build published before the fingerprint existed carries no such field.
-  // That is the state of the lake on the first deploy of this change, and it
-  // must self-heal into a rebuild rather than publishing a mixed build.
-  test("fold rebuilds when the published manifest predates the fingerprint", async () => {
-    const lakeDir = await makeLakeDir();
-    try {
-      await runReportLakeRebuild({ prisma, lakeDir });
-      const buildDir = await readCurrentBuildDir(lakeDir);
-      if (buildDir === undefined) {
-        throw new Error("no build dir");
-      }
-      const manifestPath = path.join(buildDir, "manifest.json");
-      const existing = ManifestFingerprintSchema.parse(
-        await Bun.file(manifestPath).json(),
+      await expect(runReportLakeFold({ prisma, lakeDir })).rejects.toThrow(
+        "unknown schema",
       );
-      const { schemaFingerprint: _dropped, ...withoutFingerprint } = existing;
-      await Bun.write(manifestPath, JSON.stringify(withoutFingerprint));
-
-      const fold = await runReportLakeFold({ prisma, lakeDir });
-      expect(fold?.tier).toBe("rebuild");
+      await expect(runReportLakeRebuild({ prisma, lakeDir })).rejects.toThrow(
+        "unknown schema",
+      );
+      expect(await readCurrentBuildDir(lakeDir)).toBe(old);
+      expect(await readdir(path.join(lakeDir, "builds"))).toEqual(buildsBefore);
+      expect(await listStagingFiles(lakeDir, "matches")).toHaveLength(1);
+      expect(s3Mock.calls()).toHaveLength(0);
     } finally {
       await rm(lakeDir, { recursive: true, force: true });
     }
   });
+
+  test.each(["missing", "malformed", "without-fingerprint"])(
+    "a %s legacy manifest leaves CURRENT and staging untouched",
+    async (manifestState) => {
+      const lakeDir = await makeLakeDir();
+      try {
+        const match = await loadMatchFixture();
+        const buildDir = await seedLegacyLake(lakeDir, match);
+        const manifestPath = path.join(buildDir, "manifest.json");
+        if (manifestState === "missing") {
+          await rm(manifestPath);
+        } else {
+          await Bun.write(
+            manifestPath,
+            manifestState === "malformed" ? "{" : "{}",
+          );
+        }
+        const buildsBefore = await readdir(path.join(lakeDir, "builds"));
+        expect(await writeMatchStagingFile(lakeDir, match)).toBe(true);
+        s3Mock.resetHistory();
+        const upgrade = vi
+          .spyOn(schemaUpgrade, "reportLakeSchemaUpgradeEnabled")
+          .mockResolvedValue(false);
+        await expect(runReportLakeFold({ prisma, lakeDir })).rejects.toThrow(
+          "unknown schema",
+        );
+        await expect(runReportLakeRebuild({ prisma, lakeDir })).rejects.toThrow(
+          "unknown schema",
+        );
+        expect(await readCurrentBuildDir(lakeDir)).toBe(buildDir);
+        expect(await readdir(path.join(lakeDir, "builds"))).toEqual(
+          buildsBefore,
+        );
+        expect(await listStagingFiles(lakeDir, "matches")).toHaveLength(1);
+        expect(upgrade).not.toHaveBeenCalled();
+        expect(s3Mock.calls()).toHaveLength(0);
+      } finally {
+        await rm(lakeDir, { recursive: true, force: true });
+      }
+    },
+  );
 
   test("fold materializes only staged rank history without replaying S3", async () => {
     const competitionId = CompetitionIdSchema.parse(77);

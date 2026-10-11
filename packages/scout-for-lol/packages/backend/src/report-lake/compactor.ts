@@ -84,14 +84,13 @@ export async function runReportLakeFold(
 
     // A fold hardlinks the published build's parquet and appends fold files
     // written at the same physical column set. The bridge recognizes exactly
-    // two layouts; any other schema still requires a full rebuild.
+    // two layouts; an unknown existing schema must not bypass the upgrade gate.
     const publishedFingerprint = await readBuildFingerprint(currentDir);
     const layout = reportLakeLayout(publishedFingerprint);
     if (layout === undefined) {
-      logger.info(
-        `Lake column set is unknown (${publishedFingerprint ?? "unrecorded"}); folding via full rebuild`,
+      throw new Error(
+        `Published report lake has an unknown schema (${publishedFingerprint ?? "unrecorded"}); refusing to fold before its physical layout is established`,
       );
-      return await rebuildReportLake(prisma, lakeDir, startedAt, options);
     }
 
     const buildId = newBuildId();

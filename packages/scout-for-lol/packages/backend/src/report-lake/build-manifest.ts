@@ -21,10 +21,10 @@ const BuildManifestSchema = z.looseObject({
  * Undefined is a real answer rather than an error being swallowed. Builds
  * published before the fingerprint existed carry no such field, and `Bun.write`
  * is not atomic, so a crash mid-write can leave a truncated file. Both mean the
- * same thing — we cannot prove the published parquet matches the current schema
- * — and the caller's response is a full rebuild, which is the safe and
- * self-correcting direction. Reporting a fingerprint we did not actually read
- * would be the dangerous failure.
+ * same thing — we cannot prove the published parquet's physical layout. During
+ * the schema bridge, callers must refuse to fold or rebuild an existing unknown
+ * layout rather than bypassing the default-off upgrade gate. Reporting a
+ * fingerprint we did not actually read would be the dangerous failure.
  */
 export async function readBuildFingerprint(
   buildDir: string,

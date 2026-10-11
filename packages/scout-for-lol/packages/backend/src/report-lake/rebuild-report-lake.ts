@@ -17,6 +17,7 @@ import { readBuildFingerprint } from "#src/report-lake/build-manifest.ts";
 import {
   rawDocumentColumns,
   reportLakeLayout,
+  type ReportLakeLayout,
 } from "#src/report-lake/schema-upgrade/layout.ts";
 import {
   populateMatchesFromS3,
@@ -53,6 +54,29 @@ const logger = createLogger("report-lake-rebuild");
 const GC_KEEP_BUILDS = 2;
 const COMPACTION_TIMEOUT_MS = 30 * 60 * 1000;
 
+async function rebuildLayout(currentDir: string | undefined): Promise<{
+  previousLayout: ReportLakeLayout | undefined;
+  layout: ReportLakeLayout;
+}> {
+  const previousLayout =
+    currentDir === undefined
+      ? undefined
+      : reportLakeLayout(await readBuildFingerprint(currentDir));
+  if (currentDir !== undefined && previousLayout === undefined) {
+    throw new Error(
+      "Published report lake has an unknown schema; refusing to rebuild before its physical layout is established",
+    );
+  }
+  // Do not cold-upgrade during bridge deployment. Once published, the current
+  // layout never depends on the temporary rollout control again.
+  const layout =
+    previousLayout === "legacy-identity-map" &&
+    !(await reportLakeSchemaUpgradeEnabled())
+      ? "legacy-identity-map"
+      : "current";
+  return { previousLayout, layout };
+}
+
 export async function rebuildReportLake(
   prisma: ExtendedPrismaClient,
   lakeDir: string,
@@ -61,17 +85,7 @@ export async function rebuildReportLake(
 ): Promise<CompactionSummary> {
   const { onProgress, abortSignal } = options;
   const currentDir = await readCurrentBuildDir(lakeDir);
-  const previousLayout =
-    currentDir === undefined
-      ? undefined
-      : reportLakeLayout(await readBuildFingerprint(currentDir));
-  // Do not cold-upgrade during bridge deployment. Once published, the current
-  // layout never depends on the temporary rollout control again.
-  const layout =
-    previousLayout === "legacy-identity-map" &&
-    !(await reportLakeSchemaUpgradeEnabled())
-      ? "legacy-identity-map"
-      : "current";
+  const { previousLayout, layout } = await rebuildLayout(currentDir);
   const deadlineAt = Date.now() + COMPACTION_TIMEOUT_MS;
   const deadline = AbortSignal.any([
     AbortSignal.timeout(COMPACTION_TIMEOUT_MS),
