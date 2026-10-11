@@ -199,6 +199,9 @@ bun run e2e:native-latency --seats 4 --fps 30   # lockstep game response + paced
 # Driver feed on the native engine: real encode + HUD decode, or a real browser.
 bun run e2e:driver-feed --engine spaghettikart --live --fps 60
 bun run e2e:driver-feed:glass --engine spaghettikart
+# Key press to painted frame in a real browser, per engine (hop on a parked kart).
+bun run e2e:press-to-paint --engine n64wasm
+bun run e2e:press-to-paint --engine spaghettikart --fps 60
 
 # Lower-level scripts:
 bun run e2e:input:check ~/syncthing/Sync/roms/mariokart64.z64

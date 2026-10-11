@@ -40,7 +40,8 @@
     "docker:build": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/discord-plays-mario-kart:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t discord-plays-mario-kart:dev -f ../../Dockerfile ../../../..",
     "smoke": "bun scripts/smoke.ts",
     "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts",
-    "e2e:driver-feed:glass": "bun run --cwd ../common build && bun run --cwd ../frontend build && bun run scripts/e2e-driver-feed-glass.ts"
+    "e2e:driver-feed:glass": "bun run --cwd ../common build && bun run --cwd ../frontend build && bun run scripts/e2e-driver-feed-glass.ts",
+    "e2e:press-to-paint": "bun run --cwd ../common build && bun run --cwd ../frontend build && bun run scripts/e2e-press-to-paint.ts"
   },
   "dependencies": {
     "@discord-plays-mario-kart/common": "workspace:*",
