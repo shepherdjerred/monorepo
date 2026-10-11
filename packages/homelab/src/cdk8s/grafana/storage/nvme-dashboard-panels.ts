@@ -10,6 +10,12 @@ function withNvmeIdentity(metric: string): string {
   return `(${metric}) * on(device, instance) group_left(serial, model) ${NVME_INFO}`;
 }
 
+// Range queries over days must follow the physical drive across reboots that
+// swap device names, so aggregate the identity-joined series by serial first.
+function bySerial(metric: string): string {
+  return `max by (instance, serial, model) (${withNvmeIdentity(metric)})`;
+}
+
 const DATA_UNIT_BYTES = 512_000;
 
 export function addNvmePanels(builder: dashboard.DashboardBuilder): void {
@@ -128,11 +134,47 @@ export function addNvmePanels(builder: dashboard.DashboardBuilder): void {
       description: "The NVMe SMART critical-warning bitmap; zero is healthy.",
       query: withNvmeIdentity("nvme_critical_warning"),
       legend: "{{model}} · {{serial}}",
-      gridPos: { x: 0, y: 86, w: 24, h: 4 },
+      gridPos: { x: 0, y: 86, w: 8, h: 4 },
       instant: true,
       thresholds: [
         { value: 0, color: "green" },
         { value: 1, color: "red" },
+      ],
+    }),
+  );
+
+  builder.withPanel(
+    createStatPanel({
+      title: "NVMe Drive Writes per Day (7d)",
+      description:
+        "Average full-drive writes per day over 7 days. Samsung 990 PRO endurance is about 0.33 per day (600 TBW per TB over 5 years).",
+      query: `increase(${bySerial("nvme_data_units_written_total")}[7d:1h]) * ${String(DATA_UNIT_BYTES)} / 7 / ${bySerial("nvme_physical_size_bytes")}`,
+      legend: "{{model}} · {{serial}}",
+      gridPos: { x: 8, y: 86, w: 8, h: 4 },
+      unit: "none",
+      instant: true,
+      thresholds: [
+        { value: 0, color: "green" },
+        { value: 0.33, color: "orange" },
+        { value: 0.5, color: "red" },
+      ],
+    }),
+  );
+
+  builder.withPanel(
+    createStatPanel({
+      title: "NVMe Projected Days to Rated Wear-Out",
+      description:
+        "Days until SMART percentage_used reaches 100% at the last 14 days' wear rate. Empty or infinite means no recent wear.",
+      query: `(1 - ${bySerial("nvme_percentage_used_ratio")}) / (delta(${bySerial("nvme_percentage_used_ratio")}[14d:1h]) / 14)`,
+      legend: "{{model}} · {{serial}}",
+      gridPos: { x: 16, y: 86, w: 8, h: 4 },
+      unit: "d",
+      instant: true,
+      thresholds: [
+        { value: 0, color: "red" },
+        { value: 180, color: "orange" },
+        { value: 365, color: "green" },
       ],
     }),
   );
