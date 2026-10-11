@@ -53,4 +53,33 @@ describe("Pyroscope Argo CD application", () => {
       "Replace=true",
     );
   });
+
+  it("overrides the chart's debug log level", () => {
+    const app = new App();
+    const chart = new Chart(app, "test");
+    createPyroscopeApp(chart);
+    const values = parseAllDocuments(app.synthYaml())
+      .map((document) =>
+        z
+          .object({
+            kind: z.literal("Application"),
+            spec: z.object({
+              source: z.object({
+                helm: z.object({
+                  valuesObject: z.object({
+                    pyroscope: z.object({
+                      extraArgs: z.record(z.string(), z.string()),
+                    }),
+                  }),
+                }),
+              }),
+            }),
+          })
+          .safeParse(document.toJS()),
+      )
+      .find((result) => result.success);
+    expect(
+      values?.data?.spec.source.helm.valuesObject.pyroscope.extraArgs,
+    ).toEqual({ "log.level": "info" });
+  });
 });

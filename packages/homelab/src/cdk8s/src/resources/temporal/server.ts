@@ -17,6 +17,7 @@ import {
   setRevisionHistoryLimit,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { authenticatedGatewayContainerDefaults } from "@shepherdjerred/homelab/cdk8s/src/misc/authenticated-gateway-container.ts";
+import { ServiceMonitorSpecEndpointsMetricRelabelingsAction } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { TEMPORAL_POSTGRES_TLS_SECRET } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/temporal-db-tls.ts";
@@ -32,6 +33,14 @@ import {
   TEMPORAL_EXTERNAL_GATEWAY_PORT,
   TEMPORAL_GRPC_GATEWAY_CONFIG,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/external-auth.ts";
+
+/**
+ * Matching-service histograms bucketed per task queue: about a quarter of the
+ * server's ~88k series. No dashboard or rule reads them; the schedule-to-start
+ * and service-error metrics that alerts use are kept.
+ */
+export const TEMPORAL_SERVER_DROPPED_METRICS =
+  "(pri_)?(poll_latency|task_write_latency)_(bucket|sum|count)|(task_dispatch_latency|syncmatch_latency)_(bucket|sum|count)";
 
 export type CreateTemporalServerDeploymentProps = {
   dynamicConfigMap: ConfigMap;
@@ -131,6 +140,10 @@ export function createTemporalServerDeployment(
         TEMPORAL_SERVER_CONFIG_FILE_PATH: EnvValue.fromValue(
           TEMPORAL_SERVER_CONFIG_PATH,
         ),
+        // Go's GC otherwise ignores the container limit: the server sat at
+        // 3.9 GiB of its 4 GiB for days before an OOM kill. A soft limit at
+        // 80% makes the runtime collect harder instead of crossing the limit.
+        GOMEMLIMIT: EnvValue.fromValue("3200MiB"),
       },
       securityContext: {
         user: UID,
@@ -250,6 +263,13 @@ export function createTemporalServerDeployment(
   createServiceMonitor(chart, {
     name: "temporal-server-metrics",
     matchLabels: { app: "temporal-server-metrics" },
+    metricRelabelings: [
+      {
+        sourceLabels: ["__name__"],
+        regex: TEMPORAL_SERVER_DROPPED_METRICS,
+        action: ServiceMonitorSpecEndpointsMetricRelabelingsAction.DROP,
+      },
+    ],
   });
 
   new TailscaleIngress(chart, "temporal-tailscale-ingress", {
