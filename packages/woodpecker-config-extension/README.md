@@ -81,6 +81,14 @@ only supplies a shared path when its declared volume is mounted. Bun's download
 cache and its maintenance-lock volume must be mounted together. Installed
 dependencies remain private to each workflow workspace.
 
+Nothing a step writes should land on the container's writable layer, which is
+the CI node's OS disk. Shared Bun installs extract into `bun-cache/tmp`, beside
+the data directory, so extraction is a rename on the cache volume rather than a
+copy from `~/.bun`; the cache collector clears it under its exclusive lock.
+`ci/scripts/toolchain.sh` points `TMPDIR` at `/woodpecker/tmp` on the workflow
+volume, and the root `turbo.json` passes `TMPDIR` and `UV_CACHE_DIR` through
+strict env mode so tasks inherit both.
+
 ## OpenTofu PR checks
 
 Selection retains the existing per-stack path guards. Selected PR plans and
