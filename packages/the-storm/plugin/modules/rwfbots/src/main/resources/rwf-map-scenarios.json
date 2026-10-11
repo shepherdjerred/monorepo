@@ -1255,6 +1255,44 @@
           "pitch": 0
         }
       ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "wonderland-trooper-duel-v1",
+      "map": "wonderland",
+      "mapSha256": "1a3439362a72d36e168b6b2af278e37bf4b29cb79f5d5bb274962c81c58ea272",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 3072,
+          "y": 11,
+          "z": 6144
+        },
+        "max": {
+          "x": 3131,
+          "y": 81,
+          "z": 6435
+        }
+      },
+      "sourceTeams": ["BLUE", "RED"],
+      "spawnPolicy": "source",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [3101.5, 31, 6192.5],
+          "yaw": 359.7061767578125,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [3101.5, 31, 6384.5],
+          "yaw": 180.3031463623047,
+          "pitch": 0
+        }
+      ]
     }
   ]
 }
