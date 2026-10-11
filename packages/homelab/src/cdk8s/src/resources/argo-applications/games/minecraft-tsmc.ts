@@ -250,7 +250,8 @@ export function createMinecraftTsmcApp(chart: Chart) {
           secretKeyRef: { name: SECRET_NAME, key: "DISCORD_BOT_TOKEN" },
         },
       },
-      DISCORD_CHANNEL_ID: "1043751242649829439",
+      // #server in The Storm Discord guild.
+      DISCORD_CHANNEL_ID: "1558666120507162634",
     },
     // mc-health ignores positional arguments. Call mc-monitor directly so
     // Paper receives the required HAProxy PROXY header before the status ping.

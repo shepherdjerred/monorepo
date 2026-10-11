@@ -51,7 +51,7 @@ final class JdaListener extends ListenerAdapter {
     if ("list".equals(name)) {
       event.deferReply().queue();
       relay.listPlayers(
-          reply -> JdaBridge.withoutMentions(event.getHook().sendMessage(reply)).queue());
+          reply -> JdaBridge.quietMessage(event.getHook().sendMessage(reply)).queue());
       return;
     }
     if (!"baltop".equals(name) && !"towns".equals(name)) {

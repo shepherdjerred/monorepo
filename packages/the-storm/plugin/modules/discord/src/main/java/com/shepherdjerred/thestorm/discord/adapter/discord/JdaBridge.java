@@ -20,7 +20,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
-import net.dv8tion.jda.api.utils.messages.MessageRequest;
+import net.dv8tion.jda.api.utils.messages.MessageCreateRequest;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -120,7 +120,7 @@ public final class JdaBridge implements DiscordGateway {
       logger.debug("Discord is not connected; dropped a post");
       return;
     }
-    withoutMentions(target.sendMessage(text))
+    quietMessage(target.sendMessage(text))
         .queue(sent -> {}, error -> logger.warn("Posting to Discord failed", error));
   }
 
@@ -144,7 +144,7 @@ public final class JdaBridge implements DiscordGateway {
   private void disconnect(@Nullable TextChannel target, @Nullable JDA client, String goodbye) {
     if (target != null) {
       try {
-        withoutMentions(target.sendMessage(goodbye))
+        quietMessage(target.sendMessage(goodbye))
             .submit()
             .get(GOODBYE_WAIT.toMillis(), TimeUnit.MILLISECONDS);
       } catch (ExecutionException | TimeoutException e) {
@@ -167,8 +167,11 @@ public final class JdaBridge implements DiscordGateway {
     }
   }
 
-  static <R extends MessageRequest<R>> R withoutMentions(R request) {
-    return request.setAllowedMentions(EnumSet.noneOf(Message.MentionType.class));
+  /** Keeps feed posts visible without mentions or push/desktop notifications. */
+  static <R extends MessageCreateRequest<R>> R quietMessage(R request) {
+    return request
+        .setAllowedMentions(EnumSet.noneOf(Message.MentionType.class))
+        .setSuppressedNotifications(true);
   }
 
   /** Edits an ephemeral slash-command reply without resolving mentions. */

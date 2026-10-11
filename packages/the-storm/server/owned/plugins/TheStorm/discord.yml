@@ -19,7 +19,8 @@ source: D
 maxInboundLength: 200
 
 # What the bot posts, in Discord markdown. {placeholders} are filled with
-# escaped text; mentions are always disabled.
+# escaped text; mentions and push/desktop notifications are always disabled.
+# Discord still shows unread activity; mute the linked channel to hide that too.
 messages:
   chat: "**{player}**: {message}"
   join: "**{player}** joined the server"
