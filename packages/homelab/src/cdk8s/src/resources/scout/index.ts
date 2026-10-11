@@ -175,10 +175,10 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
   const localPathVolume = new ZfsNvmeVolume(chart, "scout-storage-claim", {
     // A full report-lake rebuild writes large timeline NDJSON intermediates
     // and Parquet output beside retained builds before garbage collection.
-    // The 48Gi prod claim filled during its first schema-change rebuild;
-    // reserve enough space there without expanding the independently sized
-    // beta claim.
-    storage: Size.gibibytes(stage === "prod" ? 128 : 48),
+    // The snapshot-inclusive quota on the 128Gi prod claim left only 26Gi
+    // available during a rebuild, causing EDQUOT. Expand prod to 256Gi while
+    // keeping the independently sized beta claim unchanged.
+    storage: Size.gibibytes(stage === "prod" ? 256 : 48),
   });
   const dataVolumeMount = {
     path: "/data",
