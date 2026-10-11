@@ -24,6 +24,12 @@ export function createPostalChart(app: App) {
     mariadb: postalMariadb,
   });
 
+  // Every Postal component reaches MariaDB within the namespace.
+  const mariadbEgress = {
+    to: [{ podSelector: { matchLabels: { ...postalMariadb.podLabels } } }],
+    ports: [{ port: IntOrString.fromNumber(3306), protocol: "TCP" }],
+  };
+
   // DNS records (rp.sjer.red, MX, SPF) are managed by OpenTofu (src/tofu/cloudflare/)
 
   // NetworkPolicy for Postal SMTP - allow inbound from other namespaces
@@ -59,13 +65,7 @@ export function createPostalChart(app: App) {
       egress: [
         // Allow DNS
         dnsEgressRule(),
-        // Allow MariaDB within namespace
-        {
-          to: [
-            { podSelector: { matchLabels: { ...postalMariadb.podLabels } } },
-          ],
-          ports: [{ port: IntOrString.fromNumber(3306), protocol: "TCP" }],
-        },
+        mariadbEgress,
         // Allow external SMTP relay to Fastmail
         {
           to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
@@ -121,13 +121,7 @@ export function createPostalChart(app: App) {
       egress: [
         // Allow DNS
         dnsEgressRule(),
-        // Allow MariaDB within namespace
-        {
-          to: [
-            { podSelector: { matchLabels: { ...postalMariadb.podLabels } } },
-          ],
-          ports: [{ port: IntOrString.fromNumber(3306), protocol: "TCP" }],
-        },
+        mariadbEgress,
       ],
     },
   });
@@ -141,13 +135,7 @@ export function createPostalChart(app: App) {
       egress: [
         // Allow DNS
         dnsEgressRule(),
-        // Allow MariaDB within namespace
-        {
-          to: [
-            { podSelector: { matchLabels: { ...postalMariadb.podLabels } } },
-          ],
-          ports: [{ port: IntOrString.fromNumber(3306), protocol: "TCP" }],
-        },
+        mariadbEgress,
         // Allow external SMTP relay to Fastmail (via postfix sidecar)
         {
           to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
