@@ -18,6 +18,11 @@ Boys Launcher 0.1.7 on Windows, taken October 10, 2026. It shows all four local
 installations ready to play after an installer upgrade. It does not establish
 successful multiplayer gameplay.
 
+`plutonium-updater-complete.png` is an original October 10, 2026 capture of
+Plutonium Updater 1.0.221 after the BO1 launch update completed. Closing this
+completed updater normally allowed the selected game to open. This capture
+contains no account information and does not establish multiplayer gameplay.
+
 `launcher-installed.jpg` is an original October 9, 2026 capture of the compact
 Windows preview with all four local installations ready. All controls fit in its
 900 by 640 logical-pixel client area. This proves visible local installation

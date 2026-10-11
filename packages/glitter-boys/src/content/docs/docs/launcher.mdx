@@ -5,6 +5,7 @@ description: Install a game and get ready to play with the Glitter Boys.
 
 import Screenshot from "../../../components/Screenshot.astro";
 import launcherInstalled from "../../../assets/guides/launcher-library.png";
+import plutoniumUpdated from "../../../assets/guides/plutonium-updater-complete.png";
 import LauncherDownload from "../../../components/LauncherDownload.astro";
 
 The Glitter Boys launcher handles downloading, unpacking, and client setup for
@@ -81,6 +82,13 @@ finish that in its launcher.
 
 If Plutonium shows **Game is up to date**, close that updater window to continue
 opening your game.
+
+<Screenshot
+  src={plutoniumUpdated}
+  alt="Plutonium updater showing Game is up to date with a close button in the upper-right corner."
+  caption="Close this completed updater window with the X in the upper-right corner. Your selected game opens next."
+  sourceName="Our Windows setup, captured October 10, 2026"
+/>
 
 Play checks the game’s required Microsoft components. Only missing or outdated
 components open an installer; installed components are skipped. It may also need a
