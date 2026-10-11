@@ -73,6 +73,10 @@ export const sitePaths = {
   "site-glitter-boys": [
     ...workspacePaths,
     "packages/glitter-boys",
+    "packages/glitter-boys-launcher/package.json",
+    "packages/glitter-boys-launcher/published-release.json",
+    "packages/glitter-boys-launcher/scripts/public-release.ts",
+    "packages/glitter-boys-launcher/scripts/release-manifest.ts",
     "packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts",
     "packages/homelab/src/tofu/cloudflare/glitter-boys-com.tf",
     "packages/homelab/src/tofu/seaweedfs/buckets.tf",
