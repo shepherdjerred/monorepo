@@ -21,27 +21,22 @@ packages:
     - jdx.mise
     - BurntSushi.ripgrep.MSVC
     - ImageMagick.ImageMagick
-    - Oracle.JDK.21
     - Docker.DockerDesktop
-    - Oracle.VirtualBox
     - Kubernetes.kubectl
     - Microsoft.AzureCLI
     - SumbitLabs.Aptakube
     - Microsoft.VisualStudio.Community
     - Microsoft.VisualStudioCode
     - Anysphere.Cursor
-    - ZedIndustries.Zed
     - SublimeHQ.SublimeText.4
     # AI
     - Anthropic.Claude
-    - Google.Antigravity
-    - Google.AntigravityIDE
     # Apps
     - Google.Chrome
     - Discord.Discord
+    - Mozilla.Thunderbird
     - Obsidian.Obsidian
     - SumatraPDF.SumatraPDF
-    - OBSProject.OBSStudio
     - VideoLAN.VLC
     - Tailscale.Tailscale
     - BillStewart.SyncthingWindowsSetup
@@ -62,7 +57,6 @@ packages:
     - FAForever.FAFClient
     - Beyond-All-Reason.Beyond-All-Reason
     - RiotGames.LeagueOfLegends.NA
-    - RiotGames.LeagueOfLegends.PBE
     # Hardware
     - Logitech.GHUB
     - CPUID.CPU-Z
@@ -101,6 +95,8 @@ packages:
     - name: Armoury Crate
     - name: Thunderbolt Control Center
     - name: Silicon Labs CP210x serial driver
+    - name: Samsung Magician
+      note: Installed from samsung.com; the Store build (msstore XPDDT99J9GKB5C) would install a second copy
     - name: Minecraft Launcher
       note: Microsoft Store via the Xbox app; winget only has the legacy Win32 launcher
     - name: Riot Vanguard
