@@ -10,6 +10,9 @@ import java.util.Set;
 /** Explicitly allowed map payloads. Positions are relative to the schematic's minimum corner. */
 public record MapDetails(
     int version, String blocksSha256, List<Container> containers, List<Sign> signs) {
+  public static final long MAX_FILE_BYTES = 32L * 1024 * 1024;
+  private static final long MAX_TOTAL_INVENTORY_BYTES = 16L * 1024 * 1024;
+
   private static final Set<String> COLORS =
       Set.of(
           "WHITE",
@@ -36,6 +39,12 @@ public record MapDetails(
     signs = List.copyOf(signs);
     if (containers.size() + signs.size() > 16_384)
       throw new IllegalArgumentException("too many map details");
+    long inventoryBytes = 0;
+    for (var container : containers) {
+      inventoryBytes += decodedSize(container.items());
+      if (inventoryBytes > MAX_TOTAL_INVENTORY_BYTES)
+        throw new IllegalArgumentException("map inventories exceed aggregate size limit");
+    }
     var positions = new HashSet<BlockPos>();
     for (var container : containers) unique(positions, container.at());
     for (var sign : signs) unique(positions, sign.at());
@@ -44,6 +53,13 @@ public record MapDetails(
   private static void unique(HashSet<BlockPos> positions, BlockPos at) {
     if (!positions.add(at))
       throw new IllegalArgumentException("duplicate map detail position " + at);
+  }
+
+  private static long decodedSize(String encoded) {
+    long size = (long) encoded.length() * 3 / 4;
+    if (encoded.endsWith("==")) return size - 2;
+    if (encoded.endsWith("=")) return size - 1;
+    return size;
   }
 
   public static MapDetails empty(String hash) {

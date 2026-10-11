@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.rwf.adapter.content;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.shepherdjerred.thestorm.rwf.adapter.content.details.MapDetails;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -96,6 +97,16 @@ final class ContentFilesTest {
     assertThatThrownBy(() -> ContentFiles.catalog(directory, PARSER))
         .hasMessageContaining("details.json")
         .hasMessageContaining("is missing");
+  }
+
+  @Test
+  void oversizedDetailsAreRejectedBeforeParsing() throws IOException {
+    shippedCopy();
+    var details = directory.resolve("rwf/maps/training-yard/details.json");
+    Files.write(details, new byte[(int) MapDetails.MAX_FILE_BYTES + 1]);
+
+    assertThatThrownBy(() -> ContentFiles.map(directory.resolve("rwf/maps/training-yard"), PARSER))
+        .hasMessageContaining("details file exceeds size limit");
   }
 
   @Test

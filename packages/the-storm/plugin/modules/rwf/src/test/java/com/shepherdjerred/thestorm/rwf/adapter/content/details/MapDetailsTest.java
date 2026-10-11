@@ -6,6 +6,8 @@ import com.shepherdjerred.thestorm.rwf.adapter.content.MapBlocks;
 import com.shepherdjerred.thestorm.rwf.adapter.content.Schematic;
 import com.shepherdjerred.thestorm.rwf.domain.geometry.BlockPos;
 import com.shepherdjerred.thestorm.rwf.domain.geometry.Cuboid;
+import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import org.bukkit.Bukkit;
 import org.junit.jupiter.api.AfterAll;
@@ -78,5 +80,17 @@ final class MapDetailsTest {
         .hasMessageContaining("four");
     assertThatThrownBy(() -> new MapDetails.Face(List.of("", "", "", ""), "UNKNOWN", false))
         .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void aggregateInventoryPayloadIsBounded() {
+    var payload = Base64.getEncoder().encodeToString(new byte[1_000_000]);
+    var containers = new ArrayList<MapDetails.Container>();
+    for (int index = 0; index < 17; index++)
+      containers.add(
+          new MapDetails.Container(new BlockPos(index, 0, 0), "minecraft:chest", payload));
+
+    assertThatThrownBy(() -> new MapDetails(1, "a".repeat(64), containers, List.of()))
+        .hasMessageContaining("aggregate size limit");
   }
 }

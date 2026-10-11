@@ -431,7 +431,7 @@ describe("Red Warfare Search and Destroy rollout", () => {
     verifyRwfEnabledEnvironments(key);
   });
 
-  test("enables accepted Trooper control in beta while keeping production and fallback off", () => {
+  test("keeps learned Trooper control off until its accepted bundle is shipped", () => {
     const key = "the-storm-rwfbots-learning-enabled";
     expect(
       managedFlagInventory.flags.find((flag) => flag.key === key),
@@ -448,7 +448,7 @@ describe("Red Warfare Search and Destroy rollout", () => {
         environment,
         "the-storm",
       ).find((candidate) => candidate.key === key);
-      expect(flag?.default).toBe(environment === "beta");
+      expect(flag?.default).toBe(false);
       expect(flag?.rollouts).toEqual([]);
     }
   });

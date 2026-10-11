@@ -106,9 +106,17 @@ public final class ContentFiles {
     var definition = file.toDefinition();
     var schematic = schematic(folder.resolve(BLOCKS_FILE));
     try {
+      var details = folder.resolve(DETAILS_FILE);
+      long detailsBytes;
+      try {
+        detailsBytes = Files.size(details);
+      } catch (IOException e) {
+        throw new UncheckedIOException("Required file " + details + " could not be read", e);
+      }
+      if (detailsBytes > MapDetails.MAX_FILE_BYTES)
+        throw new IllegalArgumentException("map details file exceeds size limit");
       var blocks = MapBlocks.resolve(schematic, definition.border(), blockData);
-      return new LoadedMap(
-          definition, blocks, ConfigFiles.load(folder.resolve(DETAILS_FILE), MapDetails.class));
+      return new LoadedMap(definition, blocks, ConfigFiles.load(details, MapDetails.class));
     } catch (IllegalArgumentException e) {
       throw new IllegalStateException("Invalid " + folder + ": " + e.getMessage(), e);
     }

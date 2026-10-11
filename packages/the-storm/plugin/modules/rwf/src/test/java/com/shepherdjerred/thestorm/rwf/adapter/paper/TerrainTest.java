@@ -49,7 +49,8 @@ final class TerrainTest {
                 InstantSource.fixed(Instant.EPOCH),
                 RandomGenerator.of("L64X128MixRandom"),
                 world,
-                new AuditedBlockChanges(_ -> {})));
+                new AuditedBlockChanges(_ -> {}),
+                com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled()));
     var terrain =
         new Terrain(
             context, new Terrain.Source("test", blocks, schematic.sha256()), new CountingChunks());
