@@ -207,6 +207,54 @@ fn read_active(root: &Path) -> Result<Active> {
     }
     Ok(state)
 }
+
+#[derive(Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+struct FailedUpdate {
+    schema: u8,
+    version: String,
+}
+fn failed_update(root: &Path) -> Result<Option<FailedUpdate>> {
+    match std::fs::read(root.join("failed-update.json")) {
+        Ok(bytes) => {
+            let failed: FailedUpdate = serde_json::from_slice(&bytes)?;
+            version(&failed.version)?;
+            if failed.schema != 1 {
+                return Err(Error::Invalid("Invalid failed update record".into()));
+            }
+            Ok(Some(failed))
+        }
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(None),
+        Err(error) => Err(error.into()),
+    }
+}
+fn update_allowed(root: &Path, candidate: &str) -> Result<bool> {
+    let candidate = version(candidate)?;
+    Ok(match failed_update(root)? {
+        Some(failed) => candidate > version(&failed.version)?,
+        None => true,
+    })
+}
+fn recover_startup(root: &Path) -> Result<Active> {
+    let mut active = read_active(root)?;
+    if active.pending && active.attempted {
+        // Persist before rollback, so interruption cannot forget the failed release.
+        // A separate file keeps current.json compatible with older bootstrap binaries.
+        if update_allowed(root, &active.version)? {
+            state::write_json(
+                &root.join("failed-update.json"),
+                &FailedUpdate {
+                    schema: 1,
+                    version: active.version.clone(),
+                },
+            )?;
+        }
+    }
+    if recover(&mut active)? {
+        state::write_json(&root.join("current.json"), &active)?;
+    }
+    Ok(active)
+}
 /// The installer places a stable bootstrap binary next to current.json.
 pub fn bootstrap() -> Result<bool> {
     if std::env::var_os("GLITTER_BOYS_INSTALL_ROOT").is_some() {
@@ -221,10 +269,7 @@ pub fn bootstrap() -> Result<bool> {
         return Ok(false);
     }
     let _lock = state::exclusive_lock(&root.join("activation.lock"))?;
-    let mut active = read_active(root)?;
-    if recover(&mut active)? {
-        state::write_json(&root.join("current.json"), &active)?;
-    }
+    let mut active = recover_startup(root)?;
     let path = root
         .join("versions")
         .join(&active.version)
@@ -383,6 +428,11 @@ pub struct Updater {
     state: Arc<Mutex<UpdateState>>,
     root: Option<PathBuf>,
 }
+enum UpdateCheckResult {
+    Current,
+    Ready(String),
+    FailedRelease,
+}
 impl Updater {
     pub fn new() -> Result<Self> {
         let root = managed_root()?;
@@ -418,10 +468,10 @@ impl Updater {
         let spawned = std::thread::Builder::new()
             .name("launcher-update".into())
             .spawn(move || {
-                let result = (|| -> Result<Option<String>> {
+                let result = (|| -> Result<UpdateCheckResult> {
                     let profile = profile()?;
                     let Some(root) = root else {
-                        return Ok(None);
+                        return Ok(UpdateCheckResult::Current);
                     };
                     if profile.public_keys.is_empty() || profile.publisher.is_none() {
                         return Err(Error::Invalid(
@@ -460,7 +510,10 @@ impl Updater {
                         .as_secs();
                     let release = verify(&envelope, &profile, "0.0.0", now)?;
                     if version(&release.version)? <= version(env!("CARGO_PKG_VERSION"))? {
-                        return Ok(None);
+                        return Ok(UpdateCheckResult::Current);
+                    }
+                    if !update_allowed(&root, &release.version)? {
+                        return Ok(UpdateCheckResult::FailedRelease);
                     }
                     let destination = root.join("versions").join(&release.version);
                     let _staging_lock = state::exclusive_lock(&root.join("update.lock"))?;
@@ -476,7 +529,7 @@ impl Updater {
                         )?;
                         state::write_json(&destination.join("verified-release.json"), &envelope)?;
                         prune_completed_download(&root, &release.artifact)?;
-                        return Ok(Some(release.version));
+                        return Ok(UpdateCheckResult::Ready(release.version));
                     }
                     if install_space(&root)?
                         < release
@@ -521,7 +574,7 @@ impl Updater {
                     std::fs::create_dir_all(root.join("versions"))?;
                     std::fs::rename(staging.path(), &destination)?;
                     prune_completed_download(&root, &release.artifact)?;
-                    Ok(Some(release.version))
+                    Ok(UpdateCheckResult::Ready(release.version))
                 })();
                 diagnostics::record(
                     None,
@@ -538,11 +591,12 @@ impl Updater {
                 if let Ok(mut s) = state.lock() {
                     s.checking = false;
                     match result {
-                        Ok(Some(version)) => {
+                        Ok(UpdateCheckResult::Ready(version)) => {
                             s.message = format!("Version {version} is ready. It installs when you close Glitter Boys.");
                             s.ready = Some(version);
                         }
-                        Ok(None) => s.message = "You're up to date.".into(),
+                        Ok(UpdateCheckResult::Current) => s.message = "You're up to date.".into(),
+                        Ok(UpdateCheckResult::FailedRelease) => s.message = "The last update couldn't start. You're using your previous version until a newer update is available.".into(),
                         Err(e) => { s.message = "Couldn't check for updates. Try again later.".into(); s.error = Some(e.to_string()); },
                     }
                 }
@@ -574,6 +628,11 @@ impl Updater {
             .map_err(|_| Error::Invalid("Windows clock is invalid".into()))?
             .as_secs();
         let release = verify(&envelope, &profile()?, &current.version, now)?;
+        if !update_allowed(root, &release.version)? {
+            return Err(Error::Invalid(
+                "This launcher update previously failed to start".into(),
+            ));
+        }
         if release.version != version {
             return Err(Error::Invalid("Staged update version mismatch".into()));
         }
@@ -672,6 +731,52 @@ mod tests {
         state.pending = false;
         assert!(!recover(&mut state)?);
         assert_eq!(state.version, "1.2.3");
+        Ok(())
+    }
+    #[test]
+    fn rollback_persists_rejection_until_the_signed_channel_advances() -> Result<()> {
+        let root = tempfile::tempdir()?;
+        let (envelope, profile) = fixture();
+        let failed_release = verify(&envelope, &profile, "1.0.0", 1000)?;
+        let failed_directory = root.path().join("versions").join(&failed_release.version);
+        std::fs::create_dir_all(&failed_directory)?;
+        let active = Active {
+            schema: 1,
+            version: failed_release.version.clone(),
+            previous: Some("1.0.0".into()),
+            pending: true,
+            attempted: true,
+        };
+        state::write_json(&root.path().join("current.json"), &active)?;
+        let recovered = recover_startup(root.path())?;
+        assert_eq!(recovered.version, "1.0.0");
+        assert!(!recovered.pending);
+        assert!(failed_directory.is_dir());
+        // Every subsequent check of the unchanged, authentic channel remains suppressed,
+        // even though the failed payload still exists and the process has restarted.
+        for _ in 0..3 {
+            assert!(!update_allowed(root.path(), &failed_release.version)?);
+            assert_eq!(recover_startup(root.path())?.version, "1.0.0");
+        }
+        assert!(!update_allowed(root.path(), "1.2.2")?);
+        assert!(update_allowed(root.path(), "1.2.4")?);
+        // A crash between recording rejection and writing rollback is safe to retry.
+        state::write_json(&root.path().join("current.json"), &active)?;
+        assert_eq!(recover_startup(root.path())?.version, "1.0.0");
+        assert!(!update_allowed(root.path(), &failed_release.version)?);
+        // Recovering an earlier attempted version must not forget the newer failure.
+        let earlier = Active {
+            version: "1.1.0".into(),
+            ..active
+        };
+        state::write_json(&root.path().join("current.json"), &earlier)?;
+        recover_startup(root.path())?;
+        assert_eq!(
+            failed_update(root.path())?.map(|failed| failed.version),
+            Some("1.2.3".into())
+        );
+        std::fs::write(root.path().join("failed-update.json"), b"invalid")?;
+        assert!(update_allowed(root.path(), "1.2.4").is_err());
         Ok(())
     }
     #[test]

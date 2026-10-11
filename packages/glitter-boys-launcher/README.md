@@ -459,7 +459,10 @@ size/hash, extracted executable hash, and Windows publisher. Interrupted staging
 can reuse a revalidated payload. It switches the active pointer only on exit once
 game tasks have stopped. Startup marks the new version attempted before launch
 and healthy after the library and GUI initialize. A failed startup rolls back on
-the next start. The previous version and newer staged updates are kept. Older signed payload
+the next start and records the failed version separately from activation state.
+The updater waits for a release newer than that failed version instead of
+offering it again. Install 0.1.8 or later once to establish this rollback-aware
+bootstrap baseline. The previous version and newer staged updates are kept. Older signed payload
 folders are checked against their manifests before cleanup; unrecognized folders
 and history signed with retired keys are preserved. Current update signatures
 remain mandatory. Verified updater ZIPs are removed after staging succeeds;
