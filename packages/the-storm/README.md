@@ -2373,7 +2373,8 @@ chat, arguments, locations and credentials. Minecraft UUID and player name are
 the intentionally named identity.
 
 Collection is boot-scoped behind the default-off managed flag
-`the-storm-analytics-enabled` (`the-storm` namespace, beta override enabled).
+`the-storm-analytics-enabled` (`the-storm` namespace, beta and production
+overrides enabled).
 Bootstrap uses `POSTHOG_API_HOST`, `POSTHOG_PROJECT_TOKEN` and
 `FLIPT_ENVIRONMENT`, supplied from the analytics registry by homelab CDK8s.
 Missing or invalid bootstrap and failed flag evaluation leave collection off.
