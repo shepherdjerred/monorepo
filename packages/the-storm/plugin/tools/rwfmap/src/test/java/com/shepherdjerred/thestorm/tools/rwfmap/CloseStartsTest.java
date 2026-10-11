@@ -91,16 +91,36 @@ final class CloseStartsTest {
     assertThat(terrain(indices).corridor(from, to)).isFalse();
   }
 
+  @Test
+  void diagonalCorridorChecksEveryCornerOfTheNativeBody() {
+    var width = 20;
+    var length = 20;
+    var indices = new int[width * 4 * length];
+    Arrays.fill(indices, 0, width * length, 1);
+    var from = new Vec3(2.5, 1, 2.5);
+    var to = new Vec3(14.5, 1, 13.5);
+    assertThat(terrain(indices, width, length).corridor(from, to)).isTrue();
+
+    // This block touches a bounding-box corner during traversal but not either old
+    // cross-section sample along the two perpendicular points.
+    indices[(1 * length + 7) * width + 6] = 1;
+    assertThat(terrain(indices, width, length).corridor(from, to)).isFalse();
+  }
+
   private static StartTerrain terrain(int[] indices) {
+    return terrain(indices, 20, 5);
+  }
+
+  private static StartTerrain terrain(int[] indices, int width, int length) {
     var schematic =
         new Schematic(
-            new Schematic.Dimensions(20, 4, 5),
+            new Schematic.Dimensions(width, 4, length),
             List.of("minecraft:air", "minecraft:stone"),
             indices);
     var region =
         new Cuboid(
             new com.shepherdjerred.thestorm.rwf.domain.geometry.BlockPos(0, 0, 0),
-            new com.shepherdjerred.thestorm.rwf.domain.geometry.BlockPos(19, 3, 4));
+            new com.shepherdjerred.thestorm.rwf.domain.geometry.BlockPos(width - 1, 3, length - 1));
     return new StartTerrain(SchematicClassification.of("geometry-unit", schematic, region));
   }
 }
