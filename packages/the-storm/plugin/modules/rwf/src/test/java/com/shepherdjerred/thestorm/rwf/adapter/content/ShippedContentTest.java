@@ -65,7 +65,7 @@ final class ShippedContentTest {
 
   @Test
   void theTrainingYardIsATwoTeamMapWithANuke() {
-    assertThat(content.maps()).hasSize(32);
+    assertThat(content.maps()).hasSize(33);
     assertThat(content.maps()).extracting(MapSource::id).contains("training-yard");
     assertThat(trainingYard.definition().teamColors())
         .containsExactly(TeamColor.RED, TeamColor.BLUE);

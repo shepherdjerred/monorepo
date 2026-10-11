@@ -37,5 +37,6 @@ packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/hemispheres/nav.rwfnav
 packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/modified-tropicals/nav.rwfnav
 packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/rival-castles/nav.rwfnav
 packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/rotated-hemispheres/nav.rwfnav
+packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/saigon/nav.rwfnav
 packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/tropical-resort/nav.rwfnav
 packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/warlords-castles/nav.rwfnav
