@@ -37,7 +37,8 @@ guarantee a dependency-closed set, which the emitter then relies on.
 ## Dependency caches
 
 Source caching is controlled by the typed `woodpecker-source-cache-enabled`
-flag (default off). Branches under `ci-canary/` have beta targeting. The
+flag. The production inventory enables it; the runtime fallback remains off.
+Branches under `ci-canary/` have beta targeting. The
 configuration service uses the `woodpecker` Flipt namespace; unavailable flags
 keep ordinary checkout active and invalid values fail visibly.
 
@@ -300,7 +301,7 @@ read it back after changing it through the repository API.
 
 ## Maintenance lanes
 
-`woodpecker-maintenance-lanes-enabled` defaults off. When enabled, main still
+The production inventory enables `woodpecker-maintenance-lanes-enabled`. Main still
 waits for exhaustive verification, GitHub releases, npm publication, application
 images, charts, and deployment. Release-note refinement and CI image refreshes
 move to explicit manual workflows. Their failures cannot satisfy or replace
@@ -313,12 +314,11 @@ a different commit during submission, the extension emits a no-work receipt.
 Maintenance runs in the PR pool at draft priority, sharing one concurrency
 group across both kinds. It leaves the main and ready-PR reservations intact.
 
-The separate `ci-maintenance-dispatch-enabled` Temporal flag defaults off.
-The extension flag's beta segment permits explicit signed maintenance canaries while ordinary
-main pipelines retain the combined graph. Reconcile the new extension image,
-run both manual kinds, then enable the extension flag for production and
-enable dispatch and unpause `ci-maintenance-dispatch` after the matching
-Temporal Worker Deployment is promoted. The schedule is initially paused so
+The production inventory also enables the separate
+`ci-maintenance-dispatch-enabled` Temporal flag. Both runtime fallbacks remain
+off. For a new installation, reconcile the extension image, run both manual
+kinds, then unpause `ci-maintenance-dispatch` after the matching Temporal Worker
+Deployment is promoted. The schedule is initially paused so
 older stable workers cannot receive its new Workflow type. Disable
 dispatch first when stopping new work; disable the extension flag to restore
 the combined main graph. Already generated pipelines retain their own graph.
