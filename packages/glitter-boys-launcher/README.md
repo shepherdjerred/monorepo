@@ -126,7 +126,9 @@ selected library before deleting anything.
 - **Plutonium:** sets only `t5Path` or `t6Path` while its client is closed,
   preserves unrelated configuration, runs the official updater with
   `-update-only`, and opens the fixed `plutonium://play/` link for the selected
-  game and mode. Login remains in the official launcher. The application never
+  game and mode after the updater exits. The current updater can remain on its
+  **Game is up to date** screen; close that window to continue. Login remains in
+  the official launcher. The application never
   extracts or replays account tokens, and diagnostics exclude that configuration.
 - **BOIII:** installs the pinned official client and uses its normal `-launch`
   entry point, retaining upstream update and compatibility checks. MP/Zombies
