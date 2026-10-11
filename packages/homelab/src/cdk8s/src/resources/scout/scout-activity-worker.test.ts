@@ -160,6 +160,16 @@ describe("Scout activity worker topology", () => {
             ],
             ports: [{ port: 3000, protocol: "TCP" }],
           },
+          {
+            from: [
+              {
+                namespaceSelector: {
+                  matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+                },
+              },
+            ],
+            ports: [{ port: 9464, protocol: "TCP" }],
+          },
         ],
         egress: expect.arrayContaining([
           expect.objectContaining({
