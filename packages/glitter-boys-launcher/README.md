@@ -461,7 +461,10 @@ game tasks have stopped. Startup marks the new version attempted before launch
 and healthy after the library and GUI initialize. A failed startup rolls back on
 the next start. The previous version and newer staged updates are kept. Older signed payload
 folders are checked against their manifests before cleanup; unrecognized folders
-are preserved. Portable builds cannot apply updates.
+and history signed with retired keys are preserved. Current update signatures
+remain mandatory. Verified updater ZIPs are removed after staging succeeds;
+interrupted downloads remain available for a retry. Portable builds cannot apply
+updates.
 
 Before distribution, verify the signed installer on a clean Windows x64 account,
 upgrade from the previous signed release, exit during active work, interrupt

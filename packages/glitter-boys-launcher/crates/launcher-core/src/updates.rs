@@ -87,7 +87,7 @@ pub fn version(value: &str) -> Result<[u64; 3]> {
         .try_into()
         .map_err(|_| Error::Invalid("Release version must have three components".into()))
 }
-pub fn verify(envelope: &Envelope, profile: &Profile, current: &str, now: u64) -> Result<Release> {
+fn signature_trusted(envelope: &Envelope, profile: &Profile) -> Result<bool> {
     if envelope.payload.len() > 16 * 1024 {
         return Err(Error::Invalid("Release manifest exceeds size limit".into()));
     }
@@ -108,7 +108,10 @@ pub fn verify(envelope: &Envelope, profile: &Profile, current: &str, now: u64) -
             trusted = true;
         }
     }
-    if !trusted {
+    Ok(trusted)
+}
+pub fn verify(envelope: &Envelope, profile: &Profile, current: &str, now: u64) -> Result<Release> {
+    if !signature_trusted(envelope, profile)? {
         return Err(Error::Invalid(
             "Update signature could not be verified".into(),
         ));
@@ -320,6 +323,11 @@ fn prune_older_versions(root: &Path, active: &Active, profile: &Profile) -> Resu
             continue;
         }
         let envelope: Envelope = serde_json::from_slice(&std::fs::read(metadata)?)?;
+        // A retired key or a changed signature cannot establish cleanup ownership.
+        // Preserve the directory without trusting its payload or blocking startup.
+        if !signature_trusted(&envelope, profile)? {
+            continue;
+        }
         // Historical signatures establish ownership even after their release expires.
         let release = verify(&envelope, profile, "0.0.0", 0)?;
         if release.version != name {
@@ -327,6 +335,39 @@ fn prune_older_versions(root: &Path, active: &Active, profile: &Profile) -> Resu
         }
         validate_payload(&directory, &release)?;
         std::fs::remove_dir_all(directory)?;
+    }
+    Ok(())
+}
+
+/// Called only after the staged executable has been verified and promoted, under update.lock.
+fn prune_completed_download(root: &Path, artifact: &Artifact) -> Result<()> {
+    artifact.validate()?;
+    let directory = root.join("update-cache").join(&artifact.sha256);
+    if !directory.try_exists()? {
+        return Ok(());
+    }
+    crate::install::ensure_plain_directory(&directory)?;
+    let archive = directory.join(&artifact.file);
+    match std::fs::symlink_metadata(&archive) {
+        Ok(metadata) => {
+            if !metadata.is_file()
+                || crate::storage::redirected(&metadata)
+                || metadata.len() != artifact.bytes
+                || download::digest(&archive, &Cancellation::default(), &mut |_| {})?
+                    != artifact.sha256.to_ascii_lowercase()
+            {
+                return Err(Error::Invalid(
+                    "Unexpected completed update download".into(),
+                ));
+            }
+            std::fs::remove_file(archive)?;
+        }
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+        Err(error) => return Err(error.into()),
+    }
+    // Never recursively delete cache contents: partial and unrelated entries survive.
+    if std::fs::read_dir(&directory)?.next().transpose()?.is_none() {
+        std::fs::remove_dir(directory)?;
     }
     Ok(())
 }
@@ -434,6 +475,7 @@ impl Updater {
                             })?,
                         )?;
                         state::write_json(&destination.join("verified-release.json"), &envelope)?;
+                        prune_completed_download(&root, &release.artifact)?;
                         return Ok(Some(release.version));
                     }
                     if install_space(&root)?
@@ -458,7 +500,7 @@ impl Updater {
                         .prefix(".update-")
                         .tempdir_in(&root)?;
                     archive::extract_with_workers(
-                        &[package],
+                        std::slice::from_ref(&package),
                         staging.path(),
                         release.expanded_bytes,
                         None,
@@ -478,6 +520,7 @@ impl Updater {
                     state::write_json(&staging.path().join("verified-release.json"), &envelope)?;
                     std::fs::create_dir_all(root.join("versions"))?;
                     std::fs::rename(staging.path(), &destination)?;
+                    prune_completed_download(&root, &release.artifact)?;
                     Ok(Some(release.version))
                 })();
                 diagnostics::record(
@@ -678,6 +721,107 @@ mod tests {
         assert!(!root.path().join(".update-fixture").exists());
         assert!(root.path().join("versions").is_dir());
         assert!(root.path().join("update-cache").is_dir());
+        Ok(())
+    }
+    #[test]
+    fn retention_survives_retired_keys_without_trusting_tampered_history() -> Result<()> {
+        let root = tempfile::tempdir()?;
+        let old = root.path().join("versions/1.2.3");
+        std::fs::create_dir_all(&old)?;
+        let executable = old.join("glitter-boys.exe");
+        std::fs::write(&executable, b"old executable")?;
+        let (mut envelope, mut profile) = fixture();
+        let mut payload: serde_json::Value = serde_json::from_str(&envelope.payload)?;
+        payload["executable_sha256"] =
+            download::digest(&executable, &Cancellation::default(), &mut |_| {})?.into();
+        envelope.payload = payload.to_string();
+        envelope.signature = hex::encode(
+            SigningKey::from_bytes(&[7; 32])
+                .sign(format!("glitter-boys-release-v1\n{}", envelope.payload).as_bytes())
+                .to_bytes(),
+        );
+        let release = verify(&envelope, &profile, "0.0.0", 0)?;
+        validate_payload(&old, &release)?;
+        state::write_json(&old.join("verified-release.json"), &envelope)?;
+        let active = Active {
+            schema: 1,
+            version: "1.4.0".into(),
+            previous: Some("1.3.0".into()),
+            pending: false,
+            attempted: false,
+        };
+        profile.public_keys = vec![hex::encode(
+            SigningKey::from_bytes(&[8; 32]).verifying_key().to_bytes(),
+        )];
+        prune_older_versions(root.path(), &active, &profile)?;
+        assert!(old.is_dir());
+        assert!(verify(&envelope, &profile, "0.0.0", 0).is_err());
+        // A changed signature is indistinguishable from a retired key: keep, never execute/delete.
+        let (_, original_profile) = fixture();
+        envelope.payload = envelope.payload.replace("2000", "3000");
+        state::write_json(&old.join("verified-release.json"), &envelope)?;
+        prune_older_versions(root.path(), &active, &original_profile)?;
+        assert!(old.is_dir());
+        assert!(verify(&envelope, &original_profile, "0.0.0", 0).is_err());
+        // Malformed local metadata remains an explicit error rather than being suppressed.
+        envelope.signature = "malformed".into();
+        state::write_json(&old.join("verified-release.json"), &envelope)?;
+        assert!(prune_older_versions(root.path(), &active, &original_profile).is_err());
+        Ok(())
+    }
+    #[test]
+    fn completed_update_cache_cleanup_removes_only_verified_archives() -> Result<()> {
+        use sha2::{Digest, Sha256};
+        let root = tempfile::tempdir()?;
+        let (envelope, profile) = fixture();
+        let mut artifact = verify(&envelope, &profile, "0.0.0", 0)?.artifact;
+        let contents = b"completed update archive";
+        artifact.bytes = contents.len() as u64;
+        artifact.sha256 = hex::encode(Sha256::digest(contents));
+        let directory = root.path().join("update-cache").join(&artifact.sha256);
+        std::fs::create_dir_all(&directory)?;
+        let archive = directory.join(&artifact.file);
+        let partial = directory.join(format!("{}.partial", artifact.file));
+        std::fs::write(&partial, b"interrupted download")?;
+        prune_completed_download(root.path(), &artifact)?;
+        assert!(partial.is_file());
+        std::fs::write(&archive, contents)?;
+        std::fs::write(directory.join("unrelated"), b"keep")?;
+        prune_completed_download(root.path(), &artifact)?;
+        assert!(!archive.exists());
+        assert!(partial.is_file());
+        assert!(directory.join("unrelated").is_file());
+        std::fs::write(&archive, b"corrupt archive")?;
+        assert!(prune_completed_download(root.path(), &artifact).is_err());
+        assert!(archive.is_file());
+        std::fs::write(&archive, contents)?;
+        std::fs::remove_file(partial)?;
+        std::fs::remove_file(directory.join("unrelated"))?;
+        prune_completed_download(root.path(), &artifact)?;
+        assert!(!directory.exists());
+        assert!(root.path().join("update-cache").is_dir());
+        Ok(())
+    }
+    #[cfg(windows)]
+    #[test]
+    fn update_cache_cleanup_rejects_junctions_without_touching_the_target() -> Result<()> {
+        let root = tempfile::tempdir()?;
+        let outside = tempfile::tempdir()?;
+        let (envelope, profile) = fixture();
+        let artifact = verify(&envelope, &profile, "0.0.0", 0)?.artifact;
+        let cache = root.path().join("update-cache");
+        std::fs::create_dir(&cache)?;
+        std::fs::write(outside.path().join(&artifact.file), b"keep")?;
+        let junction = cache.join(&artifact.sha256);
+        let output = std::process::Command::new("cmd")
+            .args(["/C", "mklink", "/J"])
+            .arg(&junction)
+            .arg(outside.path())
+            .output()?;
+        assert!(output.status.success(), "junction fixture failed");
+        assert!(prune_completed_download(root.path(), &artifact).is_err());
+        assert_eq!(std::fs::read(outside.path().join(&artifact.file))?, b"keep");
+        std::fs::remove_dir(junction)?;
         Ok(())
     }
 }

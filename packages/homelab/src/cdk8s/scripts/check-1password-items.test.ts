@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   collectConsumption,
+  collectDesiredStateTargets,
   snapshotStalenessWarning,
   validateDesiredStateTargets,
 } from "./check-1password-items.ts";
@@ -13,6 +14,12 @@ import {
 } from "./onepassword-lib.ts";
 
 const NOW = new Date("2026-08-16T00:00:00Z");
+
+test("loads committed desired-state targets through native filesystem paths", async () => {
+  const targets = await collectDesiredStateTargets();
+  expect(targets.length).toBeGreaterThan(0);
+  expect(targets.some(({ platform }) => platform === "openai")).toBe(true);
+});
 
 describe("desired-state handoff selectors", () => {
   const item: OpItem = {

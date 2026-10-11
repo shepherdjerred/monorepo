@@ -41,12 +41,22 @@ fn process_running(names: &[&str]) -> bool {
     })
 }
 
-pub fn game_running(game: Game) -> bool {
+const PLUTONIUM_PROCESSES: &[&str] = &[
+    "plutonium-launcher-win32.exe",
+    "plutonium.exe",
+    "plutonium-bootstrapper-win32.exe",
+];
+
+fn game_processes(game: Game) -> &'static [&'static str] {
     match game {
-        Game::Iw4x => process_running(&["iw4x.exe", "iw4x-launcher.exe"]),
-        Game::T5 | Game::T6 => process_running(&["plutonium-bootstrapper-win32.exe"]),
-        Game::T7 => process_running(&["boiii.exe", "BlackOps3.exe"]),
+        Game::Iw4x => &["iw4x.exe", "iw4x-launcher.exe"],
+        Game::T5 | Game::T6 => PLUTONIUM_PROCESSES,
+        Game::T7 => &["boiii.exe", "BlackOps3.exe"],
     }
+}
+
+pub fn game_running(game: Game) -> bool {
+    process_running(game_processes(game))
 }
 
 fn wait_for_game(
@@ -97,11 +107,7 @@ pub fn configure_plutonium(game: Game, game_path: &Path) -> Result<()> {
     if config.get(key).and_then(serde_json::Value::as_str) == Some(path) {
         return Ok(());
     }
-    if process_running(&[
-        "plutonium-launcher-win32.exe",
-        "plutonium.exe",
-        "plutonium-bootstrapper-win32.exe",
-    ]) {
+    if process_running(PLUTONIUM_PROCESSES) {
         return Err(Error::ActionRequired {
             title: "Close Plutonium to finish setup",
             next_step: "Close Plutonium and its games, then choose Try again. Your game folder only needs to be set up once.",
@@ -208,6 +214,18 @@ pub fn play(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn both_plutonium_games_guard_the_updater_launcher_and_game() {
+        for game in [Game::T5, Game::T6] {
+            for process in [
+                "plutonium.exe",
+                "plutonium-launcher-win32.exe",
+                "plutonium-bootstrapper-win32.exe",
+            ] {
+                assert!(game_processes(game).contains(&process));
+            }
+        }
+    }
     #[test]
     fn launch_waits_for_a_game_and_reports_timeout_or_cancellation() -> Result<()> {
         let mut probes = 0;

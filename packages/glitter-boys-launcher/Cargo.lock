@@ -1421,7 +1421,7 @@ dependencies = [
 
 [[package]]
 name = "glitter-boys-app"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "eframe",
  "glitter-boys-core",
@@ -1434,7 +1434,7 @@ dependencies = [
 
 [[package]]
 name = "glitter-boys-core"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "directories",
  "ed25519-dalek",
@@ -1454,7 +1454,7 @@ dependencies = [
 
 [[package]]
 name = "glitter-boys-service"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "glitter-boys-core",
  "reqwest",
