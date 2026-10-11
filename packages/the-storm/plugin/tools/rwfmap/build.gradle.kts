@@ -1,8 +1,8 @@
 // rwfmap: the offline map analysis for Search and Destroy bots. It bakes every
 // rwf map (map.yml + blocks.schem) into the nav.rwfnav artifact rwfbots loads
-// and verifies the committed artifacts byte for byte, so CI catches a stale or
-// non-deterministic bake. It also writes the generated lobby (rwf/lobby) and
-// bakes and verifies it the same way. It is a tool, not a gameplay module: dist never
+// and verifies the committed artifacts byte for byte when verifyRwfMaps is run.
+// It also writes the generated lobby (rwf/lobby) and verifies it the same way.
+// It is a tool, not a gameplay module: dist never
 // shades it and the architecture project never puts it on its classpath.
 plugins {
   id("storm.java-conventions")
