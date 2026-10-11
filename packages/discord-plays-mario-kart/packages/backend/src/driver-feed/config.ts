@@ -2,10 +2,9 @@
 //
 // The live config.toml is a 1Password item, so anything an operator might need
 // to change during an incident must be reachable from the Deployment instead.
-// Three things qualify: the master switch, the bandwidth knobs — the homelab's
-// upstream capacity is undocumented and unmeasured — and the per-client backlog
-// ceiling, which trades a driver's on-screen delay against resync freezes. These
-// values are declared in GitOps rather than buried in the vault. Change the Deployment source and let
+// Two things qualify: the master switch, and the bandwidth knobs — the homelab's
+// upstream capacity is undocumented and unmeasured, so these values are declared
+// in GitOps rather than buried in the vault. Change the Deployment source and let
 // ArgoCD reconcile it; never mutate the live Deployment during an incident.
 //
 // Mirrors how the Go-Live path already takes STREAM_HARDWARE_ACCELERATION and
@@ -86,15 +85,6 @@ export function resolveDriverFeedConfig(
       env["DRIVER_FEED_MAX_CLIENTS"],
       fileConfig.max_clients,
       z.number().int().min(1).max(32),
-    ),
-    max_client_buffer_bytes: overrideNumber(
-      "DRIVER_FEED_MAX_CLIENT_BUFFER_BYTES",
-      env["DRIVER_FEED_MAX_CLIENT_BUFFER_BYTES"],
-      fileConfig.max_client_buffer_bytes,
-      z
-        .number()
-        .int()
-        .min(64 * 1024),
     ),
   };
 }

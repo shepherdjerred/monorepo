@@ -46,25 +46,6 @@ describe("resolveDriverFeedConfig", () => {
     expect(resolved.max_clients).toBe(2);
   });
 
-  it("overrides a vault-pinned backlog ceiling from the Deployment", () => {
-    const pinnedInFile = {
-      ...fileDefaults(),
-      max_client_buffer_bytes: 2 * 1024 * 1024,
-    };
-    const resolved = resolveDriverFeedConfig(pinnedInFile, {
-      DRIVER_FEED_MAX_CLIENT_BUFFER_BYTES: "131072",
-    });
-    expect(resolved.max_client_buffer_bytes).toBe(131_072);
-  });
-
-  it("rejects a backlog ceiling too small to hold a keyframe", () => {
-    expect(() =>
-      resolveDriverFeedConfig(fileDefaults(), {
-        DRIVER_FEED_MAX_CLIENT_BUFFER_BYTES: "1024",
-      }),
-    ).toThrow(/DRIVER_FEED_MAX_CLIENT_BUFFER_BYTES/);
-  });
-
   it("throws on an unparseable number instead of silently keeping the old value", () => {
     // Silently ignoring a typo'd bitrate would be discovered by watching the
     // uplink saturate — the exact thing the override exists to prevent.
