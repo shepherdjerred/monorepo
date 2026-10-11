@@ -88,6 +88,14 @@ function epochNowMs(): number {
   return performance.timeOrigin + performance.now();
 }
 
+async function closeExitedHost(host: BridgeHost): Promise<void> {
+  try {
+    await host.stop();
+  } catch (error) {
+    logger.error("closing the exited SpaghettiKart host failed", error);
+  }
+}
+
 /** BGRA → RGBA copy with opaque alpha, for screenshots. */
 export function bgraToRgba(bgra: Buffer): Buffer {
   const rgba = Buffer.allocUnsafe(bgra.length);
@@ -421,13 +429,23 @@ export class SpaghettiEngine implements GameEngine {
     });
   }
 
+  /**
+   * The game died mid-session. Detach and close its host so input, restarts
+   * and screenshots fail fast instead of queueing for a process that is gone;
+   * the stream freezes until the session is stopped, as it does when the wasm
+   * engine's Worker crashes.
+   */
   private handleExit(error: Error): void {
     logger.error("SpaghettiKart exited unexpectedly", {
       error: error.message,
     });
     Sentry.captureException(error);
+    const host = this.host;
+    this.host = undefined;
     this.running = false;
+    this.pendingInputs = [];
     this.failScreenshots(error);
+    if (host !== undefined) void closeExitedHost(host);
   }
 
   private failScreenshots(error: Error): void {

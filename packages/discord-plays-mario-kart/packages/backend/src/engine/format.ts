@@ -36,13 +36,19 @@ export type FrameFormat = {
   readonly audioSampleRate: number;
 };
 
-export const N64WASM_FORMAT: FrameFormat = {
-  width: WIDTH,
-  height: HEIGHT,
-  rowScale: 1,
-  fps: N64_FPS,
-  audioSampleRate: AUDIO_SAMPLE_RATE,
-};
+/** The wasm engine delivers frames at [emulator] fps. */
+export function n64wasmFormat(fps: number): FrameFormat {
+  return {
+    width: WIDTH,
+    height: HEIGHT,
+    rowScale: 1,
+    fps,
+    audioSampleRate: AUDIO_SAMPLE_RATE,
+  };
+}
+
+/** The wasm engine at its default (and production) 30 fps. */
+export const N64WASM_FORMAT: FrameFormat = n64wasmFormat(N64_FPS);
 
 export function spaghettiFormat(fps: number): FrameFormat {
   return {
@@ -58,7 +64,7 @@ export function spaghettiFormat(fps: number): FrameFormat {
 export function engineFormat(config: Config): FrameFormat {
   switch (config.emulator.engine) {
     case "n64wasm":
-      return N64WASM_FORMAT;
+      return n64wasmFormat(config.emulator.fps);
     case "spaghettikart":
       return spaghettiFormat(config.spaghettikart.output_fps);
   }

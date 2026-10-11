@@ -268,6 +268,20 @@ describe("SpaghettiEngine screenshots", () => {
     host.callbacks.onUnexpectedExit(new Error("segfault"));
     await expect(shot).rejects.toThrow("segfault");
   });
+
+  it("stops talking to a game that died", async () => {
+    const { engine, host } = await bootEngine();
+    engine.start();
+    host.callbacks.onUnexpectedExit(new Error("segfault"));
+    expect(host.stopped).toBe(true);
+    engine.setPlayerInput(0, { ...EMPTY_INPUT, analogX: 1 });
+    expect(host.inputs).toHaveLength(0);
+    await expect(engine.renderFrame()).rejects.toThrow(/not running/);
+    expect(() => {
+      engine.restartFromStartMenu("stream_session_ended");
+    }).toThrow(/not running/);
+    await engine.stop();
+  });
 });
 
 describe("SpaghettiEngine audio and state", () => {

@@ -131,7 +131,8 @@ describe("ensureGameArchive", () => {
   it("extracts once and reuses the archive for the same ROM and pin", async () => {
     const { install, rom, cache } = await setup();
     const archive = await ensureGameArchive(install, rom, cache);
-    expect(archive).toBe(path.join(cache, "mk64.o2r"));
+    expect(archive).toBe(path.resolve(cache, "mk64.o2r"));
+    expect(path.isAbsolute(archive)).toBe(true);
     expect(await Bun.file(archive).text()).toBe("archive");
     expect(await ensureGameArchive(install, rom, cache)).toBe(archive);
     expect(await torchRuns()).toBe(1);

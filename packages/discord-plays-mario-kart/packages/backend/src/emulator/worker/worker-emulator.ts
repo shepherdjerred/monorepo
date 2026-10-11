@@ -8,7 +8,7 @@ import * as Sentry from "@sentry/bun";
 import type { PlayerInputState } from "@discord-plays-mario-kart/common";
 import type { Mk64Snapshot } from "#src/emulator/mk64-memory.ts";
 import { HEIGHT } from "#src/emulator/constants.ts";
-import { N64WASM_FORMAT } from "#src/engine/format.ts";
+import { n64wasmFormat, type FrameFormat } from "#src/engine/format.ts";
 import type {
   EngineFrame,
   EngineRestartReason,
@@ -37,7 +37,7 @@ function bufferView(u8: Uint8Array): Buffer {
 const MAX_INPUT_IN_FLIGHT = 4;
 
 export class WorkerEmulator implements GameEngine {
-  readonly format = N64WASM_FORMAT;
+  readonly format: FrameFormat;
   private readonly opts: WorkerInitOpts;
   private worker: Worker | undefined;
   private nextId = 1;
@@ -62,6 +62,7 @@ export class WorkerEmulator implements GameEngine {
 
   constructor(opts: WorkerInitOpts) {
     this.opts = opts;
+    this.format = n64wasmFormat(opts.fps);
   }
 
   /** Frame height from the most recent frame message (HEIGHT before any). */

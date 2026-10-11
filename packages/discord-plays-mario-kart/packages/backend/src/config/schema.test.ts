@@ -88,12 +88,21 @@ describe("engine config", () => {
       install_dir: "packages/backend/assets/spaghettikart",
       output_fps: 30,
     });
-    expect(engineFormat(parsed)).toBe(N64WASM_FORMAT);
+    expect(engineFormat(parsed)).toEqual(N64WASM_FORMAT);
     expect(N64WASM_FORMAT).toMatchObject({
       width: 640,
       height: 240,
       rowScale: 1,
     });
+  });
+
+  it("delivers wasm frames at the configured emulator fps", () => {
+    const parsed = ConfigSchema.parse({
+      ...minimalConfig(),
+      emulator: { enabled: true, rom_path: "rom.z64", fps: 24 },
+    });
+
+    expect(engineFormat(parsed).fps).toBe(24);
   });
 
   it("gives the native engine square 640x480 frames at its own rates", () => {

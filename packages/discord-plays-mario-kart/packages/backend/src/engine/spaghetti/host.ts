@@ -101,7 +101,12 @@ export class SpaghettiHost {
   }
 
   get stderrLog(): string {
-    return path.join(this.opts.homeDir, "stderr.log");
+    return path.join(path.resolve(this.opts.homeDir), "stderr.log");
+  }
+
+  /** Messages waiting for the socket; stays 0 once the game has died. */
+  get queuedMessages(): number {
+    return this.outbox.length;
   }
 
   /** Spawn the game and wait for its HELLO. */
@@ -109,10 +114,20 @@ export class SpaghettiHost {
     if (this.child !== undefined) {
       throw new Error("SpaghettiHost.start called twice");
     }
-    const { build, homeDir } = this.opts;
+    const { build } = this.opts;
+    // Configured paths are relative to the app's working directory, but the
+    // game runs in its home: a relative SHIP_HOME or link target would resolve
+    // from there instead.
+    const homeDir = path.resolve(this.opts.homeDir);
     await mkdir(homeDir, { recursive: true });
-    await replaceLink(build.gameArchive, path.join(homeDir, "mk64.o2r"));
-    await replaceLink(build.engineArchive, path.join(homeDir, "spaghetti.o2r"));
+    await replaceLink(
+      path.resolve(build.gameArchive),
+      path.join(homeDir, "mk64.o2r"),
+    );
+    await replaceLink(
+      path.resolve(build.engineArchive),
+      path.join(homeDir, "spaghetti.o2r"),
+    );
     // Unix socket paths are capped near 104 bytes, so keep the socket out of
     // the (deep) home directory.
     this.socketDir = await mkdtemp(path.join(tmpdir(), "sk-"));
@@ -152,7 +167,7 @@ export class SpaghettiHost {
     });
 
     const args = [
-      build.binary,
+      path.resolve(build.binary),
       "--host-socket",
       socketPath,
       "--output-fps",
@@ -227,10 +242,12 @@ export class SpaghettiHost {
 
   /** Ask the game to quit, kill it if it does not, and close the socket. */
   async stop(): Promise<void> {
-    this.stopping = true;
     const child = this.child;
-    if (child?.exitCode === null) {
-      this.send(encodeSignal(MSG.quit));
+    const running = child?.exitCode === null;
+    // QUIT is the last message; everything after it is dropped.
+    if (running) this.send(encodeSignal(MSG.quit));
+    this.stopping = true;
+    if (child !== undefined && running) {
       const exited = await Promise.race([
         resolvesTrue(child.exited),
         resolvesFalseAfter(QUIT_TIMEOUT_MS),
@@ -249,6 +266,8 @@ export class SpaghettiHost {
   }
 
   private send(message: Buffer): void {
+    // A dead or stopping game has no reader; queueing would grow without bound.
+    if (this.stopping || this.exitError !== undefined) return;
     this.outbox.push(message);
     this.flush();
   }

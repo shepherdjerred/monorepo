@@ -143,7 +143,8 @@ export async function ensureGameArchive(
   }
   assertSupportedRom(sha1Hex(await rom.bytes()), install.romSha1);
 
-  const output = path.join(cacheDir, "mk64.o2r");
+  // Absolute: the game's home links to it from a different directory.
+  const output = path.resolve(cacheDir, "mk64.o2r");
   const stamp = path.join(cacheDir, "stamp.json");
   const wanted = archiveStamp(install);
   if (
