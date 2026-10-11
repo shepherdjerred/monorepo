@@ -92,7 +92,7 @@ export class CommandFleetEnvironment implements FleetEnvironment {
   // consolidating loose refs into `packed-refs`. Either way a ref reads back
   // missing and the tick aborts. Every PR's whole git critical section is
   // therefore run atomically through this promise-mutex, while the network
-  // evidence calls (`gh`, `bk`) stay fully parallel across the fan-out.
+  // evidence calls (`gh`) stay fully parallel across the fan-out.
   #gitQueue: Promise<unknown> = Promise.resolve();
 
   #withGitLock<T>(operation: () => Promise<T>): Promise<T> {

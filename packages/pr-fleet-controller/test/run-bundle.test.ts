@@ -61,7 +61,7 @@ async function runCliWithImplicitCheckout(): Promise<{
     `#!/bin/sh\nif [ "$1" = "rev-parse" ] && [ "$2" = "--show-toplevel" ]; then\n  printf '%s\\n' "$PR_FLEET_TEST_CHECKOUT"\n  exit 0\nfi\nexit 9\n`,
   );
   await chmod(gitPath, 0o700);
-  for (const executable of ["bk", "bun", "gh", "git-spice", "mise", "rg"]) {
+  for (const executable of ["bun", "gh", "git-spice", "mise", "rg"]) {
     const executablePath = path.join(binDirectory, executable);
     await writeFile(executablePath, "#!/bin/sh\nexit 0\n");
     await chmod(executablePath, 0o700);
@@ -126,7 +126,7 @@ async function runCliInterruptedDuringCheckout(): Promise<{
     `#!/bin/sh\nif [ "$1" = "rev-parse" ] && [ "$2" = "--show-toplevel" ]; then\n  printf 'ready\\n' > "$PR_FLEET_READY_FIFO"\n  IFS= read -r release < "$PR_FLEET_RELEASE_FIFO"\n  printf '%s\\n' "$PR_FLEET_TEST_CHECKOUT"\n  exit 0\nfi\nexit 9\n`,
   );
   await chmod(gitPath, 0o700);
-  for (const executable of ["bk", "bun", "gh", "git-spice", "mise", "rg"]) {
+  for (const executable of ["bun", "gh", "git-spice", "mise", "rg"]) {
     const executablePath = path.join(binDirectory, executable);
     await writeFile(executablePath, "#!/bin/sh\nexit 0\n");
     await chmod(executablePath, 0o700);
@@ -577,7 +577,7 @@ describe("local run bundle integrity", () => {
       new Response(subprocess.stderr).text(),
     ]);
     expect(exitCode).not.toBe(0);
-    expect(stderr).toContain("Required executable is missing: bk");
+    expect(stderr).toContain("Required executable is missing: bun");
 
     const runs = await readdir(stateDirectory);
     expect(runs).toHaveLength(1);
