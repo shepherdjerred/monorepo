@@ -466,7 +466,9 @@ The updater validates the signed manifest, version/channel/expiry/target, ZIP
 size/hash, extracted executable hash, and Windows publisher. Interrupted staging
 can reuse a revalidated payload. It switches the active pointer only on exit once
 game tasks have stopped. Startup marks the new version attempted before launch
-and healthy after the library and GUI initialize. A failed startup rolls back on
+and healthy after the library and GUI initialize. The bootstrap keeps activation
+locked while the child initializes, even when startup takes longer than 30 seconds;
+it releases the lock when startup is healthy or the child exits. A failed startup rolls back on
 the next start and records the failed version separately from activation state.
 The updater waits for a release newer than that failed version instead of
 offering it again. Install 0.1.8 or later once to establish this rollback-aware

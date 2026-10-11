@@ -268,7 +268,7 @@ pub fn bootstrap() -> Result<bool> {
     if !root.join("current.json").exists() {
         return Ok(false);
     }
-    let _lock = state::exclusive_lock(&root.join("activation.lock"))?;
+    let activation_lock = state::exclusive_lock(&root.join("activation.lock"))?;
     let mut active = recover_startup(root)?;
     let path = root
         .join("versions")
@@ -292,19 +292,37 @@ pub fn bootstrap() -> Result<bool> {
     .env("GLITTER_BOYS_INSTALL_ROOT", root)
     .args(std::env::args_os().skip(1))
     .spawn()?;
-    // Keep the activation lock until the new process commits startup health or exits.
-    // A killed bootstrap leaves attempted=true, causing recovery on the next start.
-    for _ in 0..300 {
+    observe_startup(
+        root,
+        &active_version,
+        activation_lock,
+        || Ok(child.try_wait()?.is_some()),
+        || {
+            std::thread::sleep(Duration::from_millis(100));
+            Ok(())
+        },
+    )?;
+    Ok(true)
+}
+// Own the activation lock until health is committed or the child actually exits.
+// Slow initialization is not failure; elapsed time must never enable rollback.
+fn observe_startup(
+    root: &Path,
+    active_version: &str,
+    _activation_lock: std::fs::File,
+    mut child_exited: impl FnMut() -> Result<bool>,
+    mut pause: impl FnMut() -> Result<()>,
+) -> Result<()> {
+    loop {
         let current = read_active(root)?;
         if !current.pending || current.version != active_version {
-            return Ok(true);
+            return Ok(());
         }
-        if child.try_wait()?.is_some() {
-            return Ok(true);
+        if child_exited()? {
+            return Ok(());
         }
-        std::thread::sleep(Duration::from_millis(100));
+        pause()?;
     }
-    Ok(true)
 }
 pub fn managed_root() -> Result<Option<PathBuf>> {
     let Some(root) = std::env::var_os("GLITTER_BOYS_INSTALL_ROOT") else {
@@ -710,6 +728,71 @@ mod tests {
         validate_payload(folder.path(), &release)?;
         std::fs::write(&executable, b"changed executable")?;
         assert!(validate_payload(folder.path(), &release).is_err());
+        Ok(())
+    }
+    #[test]
+    fn slow_startup_keeps_activation_locked_until_health_is_committed() -> Result<()> {
+        let root = tempfile::tempdir()?;
+        let lock_path = root.path().join("activation.lock");
+        let mut active = Active {
+            schema: 1,
+            version: "1.2.3".into(),
+            previous: Some("1.0.0".into()),
+            pending: true,
+            attempted: true,
+        };
+        state::write_json(&root.path().join("current.json"), &active)?;
+        let lock = state::exclusive_lock(&lock_path)?;
+        let mut intervals = 0;
+        observe_startup(
+            root.path(),
+            "1.2.3",
+            lock,
+            || Ok(false),
+            || {
+                // Model 35 seconds of initialization without delaying the test clock.
+                assert!(state::exclusive_lock(&lock_path).is_err());
+                assert_eq!(read_active(root.path())?.version, "1.2.3");
+                assert!(failed_update(root.path())?.is_none());
+                intervals += 1;
+                if intervals == 350 {
+                    active.pending = false;
+                    active.attempted = false;
+                    state::write_json(&root.path().join("current.json"), &active)?;
+                }
+                Ok(())
+            },
+        )?;
+        assert_eq!(intervals, 350);
+        let _lock = state::exclusive_lock(&lock_path)?;
+        assert_eq!(recover_startup(root.path())?.version, "1.2.3");
+        assert!(failed_update(root.path())?.is_none());
+        Ok(())
+    }
+    #[test]
+    fn exited_startup_child_releases_activation_for_recovery() -> Result<()> {
+        let root = tempfile::tempdir()?;
+        let lock_path = root.path().join("activation.lock");
+        state::write_json(
+            &root.path().join("current.json"),
+            &Active {
+                schema: 1,
+                version: "1.2.3".into(),
+                previous: Some("1.0.0".into()),
+                pending: true,
+                attempted: true,
+            },
+        )?;
+        observe_startup(
+            root.path(),
+            "1.2.3",
+            state::exclusive_lock(&lock_path)?,
+            || Ok(true),
+            || Err(Error::Invalid("An exited child must not wait".into())),
+        )?;
+        let _lock = state::exclusive_lock(&lock_path)?;
+        assert_eq!(recover_startup(root.path())?.version, "1.0.0");
+        assert!(!update_allowed(root.path(), "1.2.3")?);
         Ok(())
     }
     #[test]
