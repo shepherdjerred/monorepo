@@ -35,17 +35,21 @@ Before you start, you need:
    The first four must print `yes` and the last `no`: the harness can never
    change replicas or annotations.
 
-2. Start the daemon with the bridge token. The token stays in the daemon's
-   environment; the harness never prints, logs or journals it.
+2. Start the daemon with the bridge token from the repository root. The token
+   stays in the daemon's environment; the harness never prints, logs or
+   journals it.
 
    ```bash
    toolkit mc daemon stop
-   MC_BRIDGE_TOKEN=$(op read 'op://v64ocnykdqju4ui6j6pua56xw4/mpv7cti3fpwrfobgr6ydnemydy/MC_BRIDGE_TOKEN') \
-     toolkit mc daemon start
+   scripts/onepassword/with-service-account.sh sh -c \
+     'MC_BRIDGE_TOKEN="$(op read "op://v64ocnykdqju4ui6j6pua56xw4/mpv7cti3fpwrfobgr6ydnemydy/MC_BRIDGE_TOKEN")" && export MC_BRIDGE_TOKEN && unset OP_SERVICE_ACCOUNT_TOKEN && exec toolkit mc daemon start'
    ```
 
-   The reference uses the vault and item ids because `op://` rejects the
-   parentheses in the vault name.
+   The [service-account wrapper](https://github.com/shepherdjerred/monorepo/blob/main/scripts/onepassword/with-service-account.sh)
+   reads the Keychain-enrolled 1Password service account, so no desktop
+   approval is needed. The command unsets that token before the daemon starts,
+   so the daemon holds only the bridge token. The reference uses the vault and
+   item ids because `op://` rejects the parentheses in the vault name.
 
 3. Check the server:
 
@@ -122,7 +126,7 @@ write. `mcLiveWorlds`, `mcLiveMaxRegionVolume`, `mcLiveBackupMaxAgeHours`,
 
 ## If a live call fails
 
-- **412 with an `op read` hint:** the daemon started without `MC_BRIDGE_TOKEN`.
+- **412 with a start hint:** the daemon started without `MC_BRIDGE_TOKEN`.
   Restart it as in step 2.
 - **409 asleep:** ask the user to join so the router wakes the server.
 - **409 mining reset:** await the reset operator. See

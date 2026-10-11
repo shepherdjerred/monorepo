@@ -84,6 +84,10 @@ Never print, paste, or persist secrets. Use existing 1Password-backed commands.
 Use toolkit for its supported platform commands; it resolves registered
 credentials automatically. Run the command directly before fetching tokens by
 hand. Credential backends and setup belong in `packages/toolkit/README.md`.
+Outside toolkit, wrap `op run`/`op read` for homelab-vault references with
+`scripts/onepassword/with-service-account.sh`; it uses the Keychain service
+account, so commands need no 1Password desktop approval. Start long-lived
+children with `env -u OP_SERVICE_ACCOUNT_TOKEN` so they never hold vault access.
 On macOS, `op whoami` may be false while Desktop-authorized operations work;
 probe with the exact read or `op vault list`. An empty `cf auth list` is normal
 for environment-token authentication; use `cf auth whoami` or a read-only API

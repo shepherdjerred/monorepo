@@ -506,6 +506,12 @@ repository's existing setup from its root:
 swift scripts/onepassword/enroll-service-account.swift
 ```
 
+Commands outside toolkit reuse the same Keychain credential by wrapping
+`op run` or `op read` with `scripts/onepassword/with-service-account.sh`, so
+homelab-vault references never wait for 1Password desktop approval. Packages
+can also call `resolveCredentials` from `@shepherdjerred/toolkit/lib/credentials.ts`
+before spawning subprocesses, as the Temporal Worker Deployment rollout does.
+
 Outside macOS, supply `OP_SERVICE_ACCOUNT_TOKEN` through the existing secret
 manager integration. For Bugsink and Discord, a missing credential error names
 the exact workstation-secret enrollment command. Never paste tokens into chat,

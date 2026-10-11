@@ -5,7 +5,9 @@
  * Ported from the old CI's `deploySiteHelper` + `s3SyncStaticSite`
  * (.dagger/src/release.ts) and the `DEPLOY_SITES` catalog (scripts/ci). Runs
  * locally as a plain Bun script; credentials come from the environment — the
- * operator is expected to wrap invocations with `op run`.
+ * operator wraps invocations with
+ * `scripts/onepassword/with-service-account.sh op run`, which reads the
+ * Keychain service account instead of waiting for 1Password desktop approval.
  *
  * Usage:
  *   bun scripts/release/deploy-site.ts <site-name> [--dry-run]

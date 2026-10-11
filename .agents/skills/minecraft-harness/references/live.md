@@ -13,8 +13,9 @@ toolkit mc live undo <journal-id> --reason "<why>"
 
 - Asleep: ask the user to join ts-mc.net. Never scale the StatefulSet, edit
   mc-router annotations, or touch the mining-reset lock.
-- No token (HTTP 412): the user restarts the daemon with the printed
-  `MC_BRIDGE_TOKEN=$(op read …)` hint. Never print the token.
+- No token (HTTP 412): restart the daemon from the repository root with the
+  printed `scripts/onepassword/with-service-account.sh` hint. It reads the
+  token through the Keychain service account; never print the token.
 - Tier 1 (WorldEdit, paste, restore, actor block actions) is snapshotted first
   and undoable. Tier 2 (huge regions, `stop`, `kill`, `co rollback`, `//regen`)
   needs `toolkit mc live backup --wait --reason …`; dangerous commands also need

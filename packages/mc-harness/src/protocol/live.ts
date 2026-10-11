@@ -18,7 +18,13 @@ const HOMELAB_VAULT_ID = "v64ocnykdqju4ui6j6pua56xw4";
 const STORM_BRAIN_ITEM_ID = "mpv7cti3fpwrfobgr6ydnemydy";
 /** 1Password reference for the bridge token (a pointer, not the token). */
 export const LIVE_TOKEN_OP_REF = `op://${HOMELAB_VAULT_ID}/${STORM_BRAIN_ITEM_ID}/${LIVE_TOKEN_ENV}`;
-export const LIVE_DAEMON_START_HINT = `${LIVE_TOKEN_ENV}=$(op read '${LIVE_TOKEN_OP_REF}') toolkit mc daemon start`;
+/**
+ * Run from the repository root. The wrapper reads the Keychain-enrolled
+ * 1Password service account, so starting the daemon needs no desktop approval.
+ * The service account token is unset before `exec`, so the long-lived daemon
+ * holds only the bridge token, never vault access.
+ */
+export const LIVE_DAEMON_START_HINT = `scripts/onepassword/with-service-account.sh sh -c '${LIVE_TOKEN_ENV}="$(op read "${LIVE_TOKEN_OP_REF}")" && export ${LIVE_TOKEN_ENV} && unset OP_SERVICE_ACCOUNT_TOKEN && exec toolkit mc daemon start'`;
 
 /** Write flags, sent as headers on guarded `/targets/live/...` writes. */
 export const LIVE_HEADERS = {

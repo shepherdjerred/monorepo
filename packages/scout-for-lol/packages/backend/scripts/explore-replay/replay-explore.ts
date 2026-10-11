@@ -92,7 +92,7 @@ async function main(): Promise<void> {
         `  DATABASE_URL=${pin.database.url} \\`,
         `  REPORT_LAKE_DIR=${pin.lake.dir} \\`,
         "  FEATURE_FLAGS_MODE=disabled \\",
-        "  op run --env-file=./dev-web.env.tpl -- bun run test:explore:replay -- …",
+        "  ../../scripts/onepassword/with-service-account.sh op run --env-file=./dev-web.env.tpl -- env -u OP_SERVICE_ACCOUNT_TOKEN bun run test:explore:replay -- …",
       ].join("\n"),
     );
   }

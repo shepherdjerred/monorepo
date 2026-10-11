@@ -149,7 +149,8 @@ export function requireEnv(name: string): string {
   if (value === undefined || value === "") {
     throw new Error(
       `Missing required environment variable ${name}. ` +
-        `Provide it via the environment (operators wrap these scripts with \`op run\`).`,
+        `Provide it via the environment (operators wrap these scripts with ` +
+        `\`scripts/onepassword/with-service-account.sh op run\`).`,
     );
   }
   return value;

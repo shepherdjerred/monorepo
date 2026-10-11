@@ -392,7 +392,11 @@ describe("live target reads", () => {
     const { ctx } = await setup({ token: "" });
     const { status, json } = await get(ctx, "/targets/live/info");
     expect(status).toBe(412);
-    expect(String(json["error"])).toContain("op read 'op://");
+    expect(String(json["error"])).toContain(
+      "scripts/onepassword/with-service-account.sh",
+    );
+    expect(String(json["error"])).toContain('op read "op://');
+    expect(String(json["error"])).toContain("unset OP_SERVICE_ACCOUNT_TOKEN");
   });
 
   it("rechecks restoration leases before file reads despite cached ready status", async () => {

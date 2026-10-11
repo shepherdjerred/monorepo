@@ -119,7 +119,7 @@ if (import.meta.main) {
       const missing = unresolvedSecrets(Bun.env);
       if (missing.length > 0) {
         throw new Error(
-          `${missing.join(", ")} not resolved. Run with op run --env-file=${root}/dev-web.env.tpl -- bun ${import.meta.path}`,
+          `${missing.join(", ")} not resolved. Run with ${root}/../../scripts/onepassword/with-service-account.sh op run --env-file=${root}/dev-web.env.tpl -- env -u OP_SERVICE_ACCOUNT_TOKEN bun ${import.meta.path}`,
         );
       }
     }

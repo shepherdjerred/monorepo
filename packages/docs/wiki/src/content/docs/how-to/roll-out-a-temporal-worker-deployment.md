@@ -40,24 +40,24 @@ the operator shell. The package command uses the existing `toolkit temporal`
 passthrough and never falls back to Kubernetes-only service DNS.
 
 The SDK replay and canary subprocesses also require `TEMPORAL_API_KEY` at the
-external endpoint. Inject the registered credential with the existing
-1Password wrapper when running the commands below. Replace the placeholders
-with the existing toolkit `TEMPORAL_API_KEY` credential reference. Set
+external endpoint. When it is unset and `TEMPORAL_TLS=true`, the command
+resolves it once through toolkit's
+[credential broker](https://github.com/shepherdjerred/monorepo/blob/main/packages/toolkit/src/lib/credentials.ts),
+which reads the Keychain-enrolled 1Password service account, and passes it to
+its subprocesses. No `op run` wrapper or desktop approval is needed. Set
 `TEMPORAL_REPLAY_WORKFLOW_IDS` to comma-separated representative retained
 execution IDs before `start`. For central production, from `packages/temporal`:
 
 ```bash
 TEMPORAL_NAMESPACE=prod \
 TEMPORAL_TLS=true \
-TEMPORAL_API_KEY='op://<vault>/<Temporal external auth item>/api-token' \
-  ../../scripts/onepassword/with-service-account.sh op run -- \
   bun run worker-deployment start --build-id <candidate-image-git-sha>
 ```
 
-The value above is a credential reference. The wrapper resolves it only for
-the command and its subprocesses. SDK commands reject empty credentials and
-credentials supplied without `TEMPORAL_TLS=true`. In-cluster workers continue
-to use their private endpoint without this external credential.
+An explicit `TEMPORAL_API_KEY` still wins. SDK commands reject empty
+credentials and credentials supplied without `TEMPORAL_TLS=true`. In-cluster
+workers continue to use their private endpoint without this external
+credential.
 
 During Scout bootstrap, verify that stable and candidate are both capable,
 distinct images and both exact versions have registered pollers. Pass the
