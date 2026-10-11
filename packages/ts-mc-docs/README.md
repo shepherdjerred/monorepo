@@ -174,10 +174,9 @@ bun run build
 ```
 
 The catalogue's original archive hashes must match the certified downloads.
-Extraction copies only terrain and required metadata. The seven listed older worlds
+Extraction copies only terrain and required metadata. The seven archived worlds
 are converted to vanilla 1.17.1 in a disposable, network-isolated Java 17
-container using the catalogue's pinned image. The 1.19.2 save renders directly
-from a copy. Conversion checks
+container using the catalogue's pinned image. Conversion checks
 every original chunk and exits before server startup, so spawn loading cannot
 regenerate saved terrain whose old generation flags are incomplete.
 Original ZIPs, downloads and preview
@@ -236,8 +235,6 @@ exclude the entire `world-archive/` prefix.
 The catalogue's optional `listed` field defaults to `true`. A `false` value
 omits a world from the downloads page and overview rendering without removing
 its original archive, stored downloads, previews or publication certificates.
-The 2023 upgraded copy of Main Map 1 is unlisted because the original snapshot
-is already available.
 
 `document` requires certified overviews for every listed catalogue world, records
 `archive/overviews.json`, and regenerates the downloads page with Explore map

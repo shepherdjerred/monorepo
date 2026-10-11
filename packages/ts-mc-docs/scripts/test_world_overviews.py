@@ -358,12 +358,14 @@ class OverviewTests(unittest.TestCase):
                 document(PACKAGE / "archive/published.json")
             page = (package / "src/content/docs/world_downloads.md").read_text()
             self.assertEqual(page, explicit)
-            self.assertEqual(page.count("[Explore map]"), 8)
-            self.assertEqual(page.count("[Download ZIP]"), 8)
+            self.assertEqual(page.count("[Explore map]"), 7)
+            self.assertEqual(page.count("[Download ZIP]"), 7)
             self.assertNotIn("Main Map 1 — upgraded copy", page)
+            self.assertNotIn("New World — revival seed test", page)
             retained = json.loads((package / "archive/published.json").read_text())
             self.assertEqual(retained, archive)
-            self.assertIn("main-map1-upgraded-2023-06-18", retained["worlds"])
+            self.assertNotIn("main-map1-upgraded-2023-06-18", retained["worlds"])
+            self.assertNotIn("new-world-test-2022-11-20", retained["worlds"])
             for identifier, world in state["worlds"].items():
                 self.assertIn(
                     f"[Download ZIP]({archive['worlds'][identifier]['download']}) · [Explore map]({world['url']})", page

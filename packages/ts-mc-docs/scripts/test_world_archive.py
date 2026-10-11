@@ -11,10 +11,26 @@ from world_archive import CATALOG, listed_worlds, load_catalog, prepare, retaine
 
 
 class ArchiveTests(unittest.TestCase):
+    def test_catalog_preserves_the_seven_historical_worlds(self):
+        catalog = load_catalog()
+        expected = {
+            "main-map2-2016-01-10",
+            "main-map1-2015-07-09",
+            "skylands-map2-2016-01-10",
+            "skylands-map1-2015-07-09",
+            "creative-2016-01-10",
+            "asterism-2016-02",
+            "kargeth-2012-09-11",
+        }
+        self.assertEqual({world["id"] for world in catalog["worlds"]}, expected)
+        self.assertEqual({world["id"] for world in listed_worlds(catalog)}, expected)
+
     def test_listing_defaults_to_visible_and_rejects_non_boolean_metadata(self):
         catalog = json.loads(CATALOG.read_text())
-        self.assertEqual(len(listed_worlds(catalog)), 8)
-        self.assertEqual(len(catalog["worlds"]), 9)
+        catalog["worlds"] = catalog["worlds"][:3]
+        catalog["worlds"][1]["listed"] = False
+        catalog["worlds"][2]["listed"] = True
+        self.assertEqual(listed_worlds(catalog), [catalog["worlds"][0], catalog["worlds"][2]])
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "catalog.json"
             for value in ("false", 0, None):
