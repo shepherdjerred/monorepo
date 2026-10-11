@@ -1,0 +1,40 @@
+# MSYS2 fish on Windows. MSYS2_PATH_TYPE=inherit passes the Windows PATH
+# through, so native tools (claude, codex, op, mise) resolve directly; PATH
+# additions live in conf.d/00-path.fish so they precede plugin conf.d files.
+# Credential exports mirror packages/dotfiles/private_dot_config/private_fish/config.fish.tmpl.
+
+set -gx SHELL /usr/bin/fish
+set -gx EDITOR "subl -w"
+set -gx LANG en_US.UTF-8
+set -gx CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS "1"
+
+set -gx GRAFANA_URL 'https://grafana.tailnet-1a49.ts.net'
+set -gx BUGSINK_URL 'https://bugsink.sjer.red'
+set -gx HASS_BASE_URL 'https://homeassistant.sjer.red'
+set -gx LOKI_ADDR 'https://loki.tailnet-1a49.ts.net'
+set -gx PROMETHEUS_URL 'https://prometheus.tailnet-1a49.ts.net'
+set -gx POSTHOG_CLI_PROJECT_ID '549883'
+{{ if lookPath "op" -}}
+set -gx HASS_TOKEN '{{ onepasswordRead "op://yx6je6mgj2oiss6z5bm42h3cxy/y4c2gno3yrxcdcudaofbirmi4u/password" }}'
+set -gx POSTHOG_TOFU_STATE_PASSPHRASE '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/yh3xvqemmr4ic2up5zluo2rkcq/msdtltp4yy72ntrkanowlq7k24" }}'
+{{ end -}}
+
+abbr grep rg
+abbr gs git-spice
+# Coding agents use their subscription auth, so direct provider API keys are
+# removed, and they run without permission prompts or a sandbox.
+abbr claude "env -u (string join \"\" ANTHROPIC _API_KEY) -u (string join \"\" OPENAI _API_KEY) -u (string join \"\" CODEX _API_KEY) claude --dangerously-skip-permissions"
+
+if status is-interactive
+  {{ if lookPath "op" -}}
+  set -gx (string join "" OPENAI _API_KEY) '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/v2kd6fap7kzaaoqcbqqgz64y7m/credential" }}'
+  set -gx (string join "" ANTHROPIC _API_KEY) '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/sksz6g6ds4ypujxkoqfvm26jsu/credential" }}'
+  {{ end -}}
+  function codex --wraps codex -d "Run Codex without API keys, approvals, or sandbox"
+      env -u (string join "" OPENAI _API_KEY) \
+          -u (string join "" CODEX _API_KEY) \
+          -u (string join "" ANTHROPIC _API_KEY) \
+          (command -s codex) --dangerously-bypass-approvals-and-sandbox $argv
+  end
+  fish_vi_key_bindings
+end

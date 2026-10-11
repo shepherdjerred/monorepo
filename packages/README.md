@@ -98,6 +98,7 @@ hold only scoped invariants that agents must keep in context.
 | [justin-principal-engineer](justin-principal-engineer/)   | Local Linear-to-PR queue with Docker coding turns and owner approval           |
 | [release-tools](release-tools/)                           | release-please wrapper for the release lane                                    |
 | [dotfiles](dotfiles/)                                     | Dotfiles & shell config (chezmoi source)                                       |
+| [dotfiles-windows](dotfiles-windows/)                     | Windows PC chezmoi source: shell, configs, winget software record              |
 | [fonts](fonts/)                                           | Berkeley Mono Nerd Fonts patcher                                               |
 
 ## Learning & reference

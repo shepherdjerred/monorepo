@@ -1,0 +1,11 @@
+{{- if ne .chezmoi.os "windows" -}}
+{{-   fail "packages/dotfiles-windows is the Windows source; use packages/dotfiles on macOS and Linux" -}}
+{{- end -}}
+{{- $source := joinPath .chezmoi.homeDir "Git/monorepo/packages/dotfiles-windows" -}}
+{{- if stat $source }}
+sourceDir = {{ $source | quote }}
+{{- end }}
+
+[interpreters.ps1]
+command = "pwsh"
+args = ["-NoLogo", "-NoProfile"]

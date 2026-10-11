@@ -1,0 +1,29 @@
+Host cs6035-binexp
+    HostName 192.168.56.101
+    Port 2222
+    User binexp
+    IdentityFile ~/.ssh/cs6035_binexp_ed25519
+    IdentitiesOnly yes
+    HostKeyAlias cs6035-binexp
+    StrictHostKeyChecking yes
+    UserKnownHostsFile ~/.ssh/cs6035_binexp_known_hosts
+    ServerAliveInterval 30
+    ServerAliveCountMax 3
+
+# --- START CODER VSCODE coder.tailnet-1a49.ts.net ---
+Host coder-vscode.coder.tailnet-1a49.ts.net--*
+  ConnectTimeout 0
+  LogLevel ERROR
+  ProxyCommand "c:\Users\Jerred\AppData\Roaming\Cursor\User\globalStorage\coder.coder-remote\coder.tailnet-1a49.ts.net\bin\coder-windows-amd64.exe" --global-config "c:\Users\Jerred\AppData\Roaming\Cursor\User\globalStorage\coder.coder-remote\coder.tailnet-1a49.ts.net" ssh --disable-autostart --stdio --usage-app=vscode --network-info-dir "c:\Users\Jerred\AppData\Roaming\Cursor\User\globalStorage\coder.coder-remote\net" --ssh-host-prefix coder-vscode.coder.tailnet-1a49.ts.net-- %h
+  SetEnv  CODER_SSH_SESSION_TYPE=vscode
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+# --- END CODER VSCODE coder.tailnet-1a49.ts.net ---
+
+Host macbook
+    HostName macbook.tailnet-1a49.ts.net
+    User jerred
+    IdentityFile ~/.ssh/macbook.pub
+    IdentitiesOnly yes
+    ServerAliveInterval 30
+    ServerAliveCountMax 3
