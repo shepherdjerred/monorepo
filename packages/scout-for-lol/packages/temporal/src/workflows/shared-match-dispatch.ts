@@ -2,6 +2,7 @@ import {
   ApplicationFailure,
   condition,
   getExternalWorkflowHandle,
+  patched,
   setHandler,
   startChild,
   workflowInfo,
@@ -31,6 +32,11 @@ import {
   type ScoutClientMatchDispatchItem,
 } from "#src/workflow-contracts.ts";
 import { issuedWorkflowType } from "./generation-rename.ts";
+
+/** Preserve the single signal recorded by discovery runs before chunking. */
+export const SCOUT_DISCOVERY_BATCHED_DISPATCH_PATCH =
+  "scout-discovery-batched-dispatch";
+const DISCOVERY_DISPATCH_BATCH_SIZE = 100;
 
 export const ScoutDispatchableDiscoveredMatchesSchema =
   ScoutDiscoveredMatchSchema.extend({
@@ -114,10 +120,28 @@ export async function processDiscoveredMatchesThroughDispatcher(
     completionTargets: [{ workflowId: info.workflowId, runId: info.runId }],
   }));
   const dispatcherId = await ensureClientMatchDispatcher(stage);
-  await getExternalWorkflowHandle(dispatcherId).signal(
-    dispatchScoutClientMatchesSignal,
-    dispatches,
-  );
+  const dispatcher = getExternalWorkflowHandle(dispatcherId);
+  if (patched(SCOUT_DISCOVERY_BATCHED_DISPATCH_PATCH)) {
+    // The receiver can start processing before the next signal arrives. Put
+    // earlier matches in earlier chunks so splitting cannot reorder a poll.
+    const ordered = dispatches.toSorted(
+      (left, right) =>
+        left.gameEndTimestamp - right.gameEndTimestamp ||
+        left.riotMatchId.localeCompare(right.riotMatchId),
+    );
+    for (
+      let offset = 0;
+      offset < ordered.length;
+      offset += DISCOVERY_DISPATCH_BATCH_SIZE
+    ) {
+      await dispatcher.signal(
+        dispatchScoutClientMatchesSignal,
+        ordered.slice(offset, offset + DISCOVERY_DISPATCH_BATCH_SIZE),
+      );
+    }
+  } else {
+    await dispatcher.signal(dispatchScoutClientMatchesSignal, dispatches);
+  }
   await condition(() =>
     matches.every((match) => results.has(match.riotMatchId)),
   );
