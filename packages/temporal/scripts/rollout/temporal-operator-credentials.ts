@@ -45,7 +45,7 @@ export async function resolveOperatorTemporalApiKey(
   try {
     await resolve(["TEMPORAL_API_KEY"]);
   } finally {
-    if (ambientServiceAccount === undefined) {
+    if (ambientServiceAccount === undefined || ambientServiceAccount === "") {
       Reflect.deleteProperty(Bun.env, "OP_SERVICE_ACCOUNT_TOKEN");
     }
   }

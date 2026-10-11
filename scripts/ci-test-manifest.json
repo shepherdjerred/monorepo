@@ -858,7 +858,8 @@
             "src/config/woodpecker-retention.test.ts",
             "src/worker-config.test.ts",
             "scripts/check-workflow-tracing-safety.test.ts",
-            "scripts/cli-arguments.test.ts"
+            "scripts/cli-arguments.test.ts",
+            "scripts/rollout/temporal-operator-credentials.test.ts"
           ]
         },
         {

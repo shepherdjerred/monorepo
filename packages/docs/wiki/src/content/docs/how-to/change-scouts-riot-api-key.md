@@ -220,7 +220,9 @@ Take the key from 1Password with `op run` so it never lands on disk or in the
 plist. Wrap it in
 [`with-service-account.sh`](https://github.com/shepherdjerred/monorepo/blob/main/scripts/onepassword/with-service-account.sh)
 so the unattended agent reads the Keychain service account instead of waiting
-for 1Password desktop approval.
+for 1Password desktop approval. Start the migration after `--` with
+`env -u OP_SERVICE_ACCOUNT_TOKEN`, so the multi-day process keeps only the Riot
+key and never holds vault access.
 
 Gate on three things: zero collisions, zero unresolved, and every new identifier
 differing from its old one. The script enforces all three

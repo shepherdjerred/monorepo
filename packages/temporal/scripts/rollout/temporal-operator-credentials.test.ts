@@ -93,6 +93,18 @@ describe("resolveOperatorTemporalApiKey", () => {
     expect(Bun.env["TEMPORAL_API_KEY"]).toBe("resolved");
   });
 
+  test("treats an empty ambient service account token as absent", async () => {
+    Bun.env["TEMPORAL_ADDRESS"] = EXTERNAL;
+    Bun.env["TEMPORAL_TLS"] = "true";
+    Bun.env["OP_SERVICE_ACCOUNT_TOKEN"] = "";
+    await resolveOperatorTemporalApiKey(() => {
+      Bun.env["OP_SERVICE_ACCOUNT_TOKEN"] = "brokered";
+      Bun.env["TEMPORAL_API_KEY"] = "resolved";
+      return Promise.resolve();
+    });
+    expect(Bun.env["OP_SERVICE_ACCOUNT_TOKEN"]).toBeUndefined();
+  });
+
   test("keeps a service account token the operator supplied", async () => {
     Bun.env["TEMPORAL_ADDRESS"] = EXTERNAL;
     Bun.env["TEMPORAL_TLS"] = "true";
