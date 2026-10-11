@@ -8,6 +8,13 @@ produce identical results.
 The package holds data only — no code, no dependencies — so the Rust crate can
 consume it without the React Native app package existing.
 
+`e2e/local-vault/` is a synthetic Markdown vault for native app smoke journeys.
+It includes explicit title/detection settings, an existing task with opaque
+custom/historical metadata, and a plain reference note. Launchers copy it into
+disposable platform storage and verify those original bytes after task capture,
+editing, completion and application relaunch. It is separate from the unchanged
+upstream conformance corpus and historical server-backed sync scenarios.
+
 The standalone engine contract is `schema/facet-engine.schema.json`, with shared
 positive/negative boundary cases in `vault/facet-contract.json`. Direct Sync
 checkpoint/metadata schemas are in `schema/obsidian-sync.schema.json`.

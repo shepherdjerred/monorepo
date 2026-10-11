@@ -84,12 +84,30 @@ task_detection:
 bun run check:ios-native-deps       # shared bootstrap and product contract
 bun run lint:swift                 # preserved extensions and the native app
 bun run format:swift:check         # native Swift layout from the shared Apple policy
-# Native interaction tests: ios/FacetUITests, TasksForObsidian scheme.
+bun run ios:native:e2e             # disposable simulator, real local vault and XCUITest
 # Apple host/schema tests: tasknotes-macos/Tests/TaskNotesKitTests.
 ```
 
-The native acceptance flow uses real Markdown capture/edit/relaunch and
-inspects normal and accessibility text sizes. Shared schema positive, negative,
+`ios:native:e2e` requires the matching macOS and iOS simulator Rust slices and
+the pinned Xcode/XcodeGen tools already installed. After a Rust toolchain update,
+install its `aarch64-apple-ios-sim` and `x86_64-apple-ios` targets with `rustup target add`.
+Provision the localized native tools with
+`ios/ci_scripts/mise-native.sh install --yes bun rust aqua:yonaskolb/XcodeGen`;
+the launcher disables implicit installation of unrelated tools.
+It creates and seeds a fresh
+iPhone simulator from `tasknotes-fixtures/e2e/local-vault`, builds the normally
+signed app/widget and drives capture, edit, completion and two application
+relaunches. A second journey checks capture and draft discard at accessibility
+text size. The runner refuses to launch outside the simulator identified by the
+harness. The launcher verifies the final title, completion metadata and exact
+preservation of the original task, reference note and configuration. It deletes
+only its newly created simulator, retaining the synthetic vault, xcresult bundle,
+screenshots, XCTest screen recordings and source/build fingerprints in `.build/native-e2e/<run-id>/`.
+Existing simulators and their accounts are not used. This suite exercises local
+vault operations; live Sync, account onboarding, reminders, interruption/recovery
+and other platforms require their own acceptance evidence.
+
+Shared schema positive, negative,
 and raw numeric fixtures run at both Apple and Android boundaries. Retain
 matched XCFramework/source fingerprints and xcresult/rendered artifacts.
 Legacy `src`, `contract-tests`, and Maestro scenarios verify the former client;
