@@ -188,7 +188,7 @@ describe("Scout gateway report-lake sharing", () => {
   test("only prod expands its lake claim for the schema-change rebuild", () => {
     for (const [stage, storage] of [
       ["beta", "48Gi"],
-      ["prod", "128Gi"],
+      ["prod", "256Gi"],
     ] as const) {
       const claim = findResource(
         scoutResources(stage),
