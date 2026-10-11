@@ -15,6 +15,8 @@ import {
 } from "../../packages/s3-signed-request/src/index.ts";
 import { readProfile } from "../../packages/glitter-boys-launcher/scripts/release-profile.ts";
 import { SEAWEEDFS_ENDPOINT } from "../lib/seaweedfs.ts";
+import { requireEnv } from "../lib/run.ts";
+import { parsePublicationRecord } from "../../packages/glitter-boys-launcher/scripts/public-release.ts";
 import {
   powershell,
   run,
@@ -23,22 +25,6 @@ const repository = fileURLToPath(new URL("../..", import.meta.url));
 const root = path.join(repository, "packages", "glitter-boys-launcher");
 const hash = (bytes: Uint8Array) =>
   createHash("sha256").update(bytes).digest("hex");
-async function credential(field: string): Promise<string> {
-  const child = Bun.spawn(
-    [
-      "op",
-      "read",
-      `op://v64ocnykdqju4ui6j6pua56xw4/Woodpecker SeaweedFS Credentials/${field}`,
-    ],
-    { stdout: "pipe", stderr: "pipe", timeout: 60_000 },
-  );
-  const value = await new Response(child.stdout).text();
-  if ((await child.exited) !== 0 || !value.trim())
-    throw new Error(
-      "1Password couldn't load the static-site credentials. Check vault access and field names.",
-    );
-  return value.trim();
-}
 export async function publicationPreflight(version: string) {
   const profile = await readProfile(root);
   const config: SignedS3RequestConfig = {
@@ -46,19 +32,30 @@ export async function publicationPreflight(version: string) {
     bucket: "glitter-boys",
     region: "us-east-1",
     forcePathStyle: true,
-    accessKeyId: await credential("SEAWEEDFS_SITES_ACCESS_KEY_ID"),
-    secretAccessKey: await credential("SEAWEEDFS_SITES_SECRET_ACCESS_KEY"),
+    accessKeyId: requireEnv("SEAWEEDFS_SITES_ACCESS_KEY_ID"),
+    secretAccessKey: requireEnv("SEAWEEDFS_SITES_SECRET_ACCESS_KEY"),
   };
   const response = await fetch(
+    createSignedS3Request(config, {
+      method: "HEAD",
+      key: "",
+      signal: AbortSignal.timeout(30_000),
+    }),
+  );
+  if (response.status !== 200)
+    throw new Error(
+      `Could not access publication bucket: HTTP ${String(response.status)}`,
+    );
+  const currentResponse = await fetch(
     createSignedS3Request(config, {
       method: "GET",
       key: `launcher/${profile.channel}.json`,
       signal: AbortSignal.timeout(30_000),
     }),
   );
-  if (response.ok) {
+  if (currentResponse.ok) {
     const current = verifyPublication(
-      await response.json(),
+      await currentResponse.json(),
       profile.public_keys,
       profile.channel,
       true,
@@ -67,9 +64,9 @@ export async function publicationPreflight(version: string) {
       throw new Error(
         `Version ${version} is already published or older. Bump the Cargo workspace version.`,
       );
-  } else if (response.status !== 404)
+  } else if (currentResponse.status !== 404)
     throw new Error(
-      `Could not inspect update channel: HTTP ${String(response.status)}`,
+      `Could not inspect update channel: HTTP ${String(currentResponse.status)}`,
     );
   for (const name of [
     "launcher.zip",
@@ -271,8 +268,8 @@ export async function publishLauncher(dryRun: boolean) {
     bucket: "glitter-boys",
     region: "us-east-1",
     forcePathStyle: true,
-    accessKeyId: await credential("SEAWEEDFS_SITES_ACCESS_KEY_ID"),
-    secretAccessKey: await credential("SEAWEEDFS_SITES_SECRET_ACCESS_KEY"),
+    accessKeyId: requireEnv("SEAWEEDFS_SITES_ACCESS_KEY_ID"),
+    secretAccessKey: requireEnv("SEAWEEDFS_SITES_SECRET_ACCESS_KEY"),
   };
   // Never downgrade the channel, even if an old release directory is selected.
   const currentResponse = await fetch(
@@ -326,7 +323,26 @@ export async function publishLauncher(dryRun: boolean) {
       : null,
   });
   await publicReadback(profile.manifest_url, manifest);
+  const published = parsePublicationRecord({
+    schema: 1,
+    release: {
+      version: release.version,
+      expires: release.expires,
+      installer: {
+        url: `https://glitter-boys.com/${prefix}/${installerName}`,
+        bytes: installer.length,
+        sha256: hash(installer),
+      },
+    },
+  });
+  await Bun.write(
+    path.join(root, "published-release.json"),
+    JSON.stringify(published, null, 2) + "\n",
+  );
   console.log(`Published and publicly verified launcher ${release.version}.`);
+  console.log(
+    "Review and commit published-release.json before deploying the download page.",
+  );
 }
 async function removeScratch(scratch: string) {
   const tempRoot = await realpath(os.tmpdir());

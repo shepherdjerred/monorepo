@@ -23,6 +23,11 @@ Plutonium Updater 1.0.221 after the BO1 launch update completed. Closing this
 completed updater normally allowed the selected game to open. This capture
 contains no account information and does not establish multiplayer gameplay.
 
+`boiii-compatible-version.png` is an original October 11, 2026 capture of the
+BOIII Patch Installer reached through Play in the installed Glitter Boys 0.1.7.
+It shows the client's offer to install a compatible game executable. The capture
+proves the prompt appeared, not that the update or game startup completed.
+
 `launcher-installed.jpg` is an original October 9, 2026 capture of the compact
 Windows preview with all four local installations ready. All controls fit in its
 900 by 640 logical-pixel client area. This proves visible local installation

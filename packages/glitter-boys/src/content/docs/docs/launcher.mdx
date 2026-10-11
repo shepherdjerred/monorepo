@@ -6,6 +6,7 @@ description: Install a game and get ready to play with the Glitter Boys.
 import Screenshot from "../../../components/Screenshot.astro";
 import launcherInstalled from "../../../assets/guides/launcher-library.png";
 import plutoniumUpdated from "../../../assets/guides/plutonium-updater-complete.png";
+import boiiiCompatible from "../../../assets/guides/boiii-compatible-version.png";
 import LauncherDownload from "../../../components/LauncherDownload.astro";
 
 The Glitter Boys launcher handles downloading, unpacking, and client setup for
@@ -15,7 +16,7 @@ The Glitter Boys launcher handles downloading, unpacking, and client setup for
 
 ## 1. Install Glitter Boys
 
-Download and open the installer above, then follow its steps. Open **Glitter Boys**
+Open the Windows installer and follow its steps. Open **Glitter Boys**
 from your Start menu or desktop shortcut. If you used an older preview, run this
 installer once; your games and saved downloads are kept.
 
@@ -94,6 +95,16 @@ Play checks the game’s required Microsoft components. Only missing or outdated
 components open an installer; installed components are skipped. It may also need a
 client update, a Windows restart, or a Plutonium login. Sign in through the
 official Plutonium window; Glitter Boys never asks for your password.
+
+If BO3 shows **BOIII Patch Installer**, choose **OK** to let BOIII install its
+compatible game version. Leave its updater open until it finishes.
+
+<Screenshot
+  src={boiiiCompatible}
+  alt="BOIII Patch Installer offering to download the compatible game version, with OK and Cancel buttons."
+  caption="Choose OK when BOIII offers this compatibility update."
+  sourceName="Our Windows setup, captured October 11, 2026"
+/>
 
 If Plutonium is already open and the launcher asks you to close it, close it and
 choose **Try again** so it can set the game folder. Keep using **Play** for

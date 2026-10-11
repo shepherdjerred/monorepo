@@ -1,20 +1,23 @@
 ---
-import cargo from "../../../glitter-boys-launcher/Cargo.toml?raw";
-const version = /^version = "(\d+\.\d+\.\d+)"/m.exec(cargo)?.[1];
-if (!version) throw new Error("Missing launcher workspace version");
-const name = `glitter-boys_${version}_x64-setup.exe`;
-const href = `/launcher/releases/${version}/${name}`;
+import publication from "@shepherdjerred/glitter-boys-launcher/published-release.json";
+import { parsePublicationRecord } from "@shepherdjerred/glitter-boys-launcher/publication";
+const { release } = parsePublicationRecord(publication);
 ---
 
-<p>
-  <a class="download" href={href} download>
-    Download for Windows
-  </a>
-  <br />
-  <small>
-    Version {version} · Windows 10/11, 64-bit · Publisher: Jerred Shepherd
-  </small>
-</p>
+{release ? (
+  <p>
+    <a class="download" href={release.installer.url} download>
+      Download for Windows
+    </a>
+    <br />
+    <small>
+      Version {release.version} · Windows 10/11, 64-bit · Publisher: Jerred
+      Shepherd
+    </small>
+  </p>
+) : (
+  <p>Ask Jerred for the Windows installer.</p>
+)}
 <style>
   .download {
     display: inline-block;

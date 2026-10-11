@@ -264,14 +264,22 @@ installer. There is no unattended Windows signing runner.
    configured release profile.
 8. Publication reads **Woodpecker SeaweedFS Credentials** in the Homelab vault,
    fields `SEAWEEDFS_SITES_ACCESS_KEY_ID` and `SEAWEEDFS_SITES_SECRET_ACCESS_KEY`.
+   The release commands resolve `publication.env` through the repository's
+   `with-service-account.sh` wrapper. On Windows, inject
+   `OP_SERVICE_ACCOUNT_TOKEN` into the invoking terminal through the existing
+   secret-manager integration; see [toolkit credential setup](../toolkit/README.md#credentials).
+   Git for Windows supplies the native Bash wrapper. The build, signer and
+   publisher receive only the two resolved site credentials, never vault access.
    The identity needs the existing site-bucket grants described in the
    [site README](../glitter-boys/README.md#hosting). The serving route and DNS
    must be deployed before publication can pass public verification.
 
 Never run `op read` for these fields directly in a terminal: that prints the
-secret. Release commands capture credentials in memory. The only credential
-environment override is `GLITTER_BOYS_UPDATE_SIGNING_KEY`, intended for an
-existing secret-manager injection; never paste its value into a command or file.
+secret. Release commands capture credentials in memory. CI may inject the two
+publication credentials directly; both must be provided together.
+`GLITTER_BOYS_UPDATE_SIGNING_KEY` accepts a secret-manager-injected signing key;
+otherwise the owner reads the Private-vault key through desktop integration.
+Never paste credential values into commands or files.
 
 ### Publish a new version
 
@@ -286,7 +294,10 @@ Update `[workspace.package].version` in `Cargo.toml`, then run `cargo check` fro
 the launcher directory to update its `Cargo.lock`. Use a version higher than
 the published channel; never reuse a version after publishing any artifact.
 Keep the same preview channel, publisher and verification keys for normal
-releases. The docs download component derives its version from this Cargo file.
+releases. The docs download component reads `published-release.json`, which the
+publisher writes only after public artifact and manifest verification. A Cargo
+version bump alone never changes the public download. The publication record also
+stores the authenticated manifest expiry for the homelab's renewal alerts.
 
 ```powershell
 bun run --cwd packages/glitter-boys-launcher release
@@ -315,7 +326,7 @@ Inspect the result, then run the validation and retryable publication commands:
 
 ```powershell
 bun scripts/release/publish-launcher.ts --dry-run
-bun scripts/release/publish-launcher.ts
+bun run --cwd packages/glitter-boys-launcher release:publish
 ```
 
 Dry-run verifies the manifest, archive, executable hash, exact Windows publisher,
@@ -325,7 +336,9 @@ hashes, and updates the channel manifest last using a concurrency token. A parti
 publication is safe to retry with the **same prepared bytes**. Do not rerun the
 build/sign step, because timestamped signatures change bytes.
 
-After artifacts are publicly verified, publish the docs through their registered
+After artifacts are publicly verified, review and commit the generated
+`published-release.json`. Until a verified release is recorded, the page shows
+download availability without an active download link. Publish the docs through their registered
 site command and normal GitOps route. Confirm the `/docs/launcher/` download
 points to the exact release. Do not add a docs link to the site homepage.
 
@@ -371,10 +384,19 @@ This downloads and authenticates the published manifest and archive, checks the
 signed installer and executable, retains the version and artifact bytes, signs a
 new 90-day expiry, then uses the same safe publisher. It can renew an expired
 manifest if its signing key is still trusted. Add `--prepare-only` to the script
-invocation (`bun packages/glitter-boys-launcher/scripts/refresh-manifest.ts
+invocation (`bun run --cwd packages/glitter-boys-launcher release:refresh-manifest
 --prepare-only`) to validate without uploading. If a newer release wins the
-publication race, rerun renewal from the newly published channel. Renewal is a
-manual maintenance step, not an automatically scheduled signing job.
+publication race, rerun renewal from the newly published channel.
+
+After either publication or renewal, review and commit `published-release.json`
+and deliver it through the normal homelab GitOps release. Prometheus evaluates
+that verified deadline independently of the telemetry service: it warns within
+14 days and raises a critical alert within three days, including after expiry.
+The alert includes the renewal command. Committing and deploying the refreshed
+record moves the deadline and resolves the earlier alert. Before the first
+verified publication there is no expiry alert. Confirm the rule is loaded and
+notification routing works when activating the release. Signing remains a
+manual operation on the Windows PC; no server receives the private signing key.
 
 ### Recovery and credential maintenance
 
@@ -421,8 +443,9 @@ allow-listed event through an isolated release-profile run and inspect both.
 Telemetry cannot identify unique users; delivery retries may double-count events.
 Native crash dumps and symbolicated stacks are not collected.
 
-The publisher loads the existing Woodpecker SeaweedFS site credentials through
-1Password, verifies the signed manifest and installer, and refuses to replace
+The release wrapper injects the existing Woodpecker SeaweedFS site credentials
+through the approved service account. The publisher verifies the signed manifest
+and installer and refuses to replace
 different bytes at an existing version. It uploads immutable
 `launcher/releases/<version>/` artifacts to the repo-owned static-site bucket,
 then verifies their public HTTP 200 responses and hashes before publishing the

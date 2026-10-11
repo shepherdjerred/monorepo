@@ -1,5 +1,6 @@
 import { readFile, stat } from "node:fs/promises";
 import { expect, test } from "vitest";
+import { parsePublicationRecord } from "../../glitter-boys-launcher/scripts/public-release.ts";
 
 const packageRoot = new URL("../", import.meta.url);
 const output = new URL("dist/", packageRoot);
@@ -21,22 +22,28 @@ test("the homepage stays separate from the docs", async () => {
   expect(html).toContain('aria-hidden="true"');
 });
 
-test("the Windows guide links the installer matching the launcher version", async () => {
-  const cargo = await readFile(
-    new URL("../glitter-boys-launcher/Cargo.toml", packageRoot),
-    "utf8",
+test("the Windows guide offers only a publicly verified release", async () => {
+  const { release } = parsePublicationRecord(
+    JSON.parse(
+      await readFile(
+        new URL("../glitter-boys-launcher/published-release.json", packageRoot),
+        "utf8",
+      ),
+    ),
   );
-  const version = /^version = "(\d+\.\d+\.\d+)"/m.exec(cargo)?.[1];
-  expect(version).toBeDefined();
   const html = await readFile(
     new URL("docs/launcher/index.html", output),
     "utf8",
   );
-  expect(html).toContain(
-    `/launcher/releases/${version}/glitter-boys_${version}_x64-setup.exe`,
-  );
-  expect(html).toContain("Download for Windows");
-  expect(html).not.toContain("Public downloads are not");
+  if (release) {
+    expect(html).toContain(release.installer.url);
+    expect(html).toContain("Download for Windows");
+    expect(html).toContain(`Version ${release.version}`);
+  } else {
+    expect(html).not.toContain('class="download"');
+    expect(html).not.toContain("/launcher/releases/");
+    expect(html).toContain("Ask Jerred for the Windows installer.");
+  }
   const index = await readFile(new URL("docs/index.html", output), "utf8");
   expect(index).not.toContain("unsigned preview");
 });

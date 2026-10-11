@@ -6,6 +6,7 @@ description: Extract the six-part Black Ops III archive and install BOIII on Win
 import Screenshot from "../../../components/Screenshot.astro";
 import sevenzip from "../../../assets/guides/sevenzip-download.png";
 import release from "../../../assets/guides/boiii-download.png";
+import compatible from "../../../assets/guides/boiii-compatible-version.png";
 
 This **Windows amd64** walkthrough uses the group's **six-part ZIP and BOIII**
 for Black Ops III multiplayer and Zombies. For the Mac/Windows crossplay group,
@@ -76,8 +77,19 @@ The v3.0.0 release updates compatibility to the September 2026 **BlackOps3.exe**
 An older game executable can trigger an update prompt. Follow the current
 client's update flow rather than retaining the old executable indefinitely.
 
-**Checkpoint:** the BOIII menu opens. The archive listing is verified here;
-this launcher/update flow and gameplay still need local verification.
+If **BOIII Patch Installer** appears, choose **OK** to download the compatible
+game executable. Keep its updater open while it finishes.
+
+<Screenshot
+  src={compatible}
+  alt="BOIII asking to install a compatible BlackOps3.exe with OK and Cancel buttons."
+  caption="This compatibility prompt appeared during our local Windows launch. Choose OK to let BOIII update the game file."
+  sourceName="Our Windows setup, captured October 11, 2026"
+/>
+
+**Checkpoint:** the BOIII menu opens. We verified the compatibility update and
+game-window startup locally on October 11, 2026. Menu loading and multiplayer
+gameplay still need separate verification.
 
 ## 4. Play multiplayer
 

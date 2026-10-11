@@ -4,7 +4,9 @@
     "build": {
       "inputs": [
         "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/packages/glitter-boys-launcher/Cargo.toml"
+        "$TURBO_ROOT$/packages/glitter-boys-launcher/published-release.json",
+        "$TURBO_ROOT$/packages/glitter-boys-launcher/scripts/public-release.ts",
+        "$TURBO_ROOT$/packages/glitter-boys-launcher/scripts/release-manifest.ts"
       ]
     },
     "typecheck": { "dependsOn": ["build"] },

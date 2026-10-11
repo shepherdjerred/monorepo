@@ -743,6 +743,35 @@ mod tests {
         Ok(())
     }
     #[test]
+    fn interrupted_save_moves_resume_without_replacing_saved_data() -> Result<()> {
+        let root = tempfile::tempdir()?;
+        let tomb = root.path().join(".gb-remove-t7-partial");
+        let saves = root.path().join(".saves/t7");
+        fs::create_dir_all(tomb.join("boiii_players"))?;
+        fs::create_dir_all(&saves)?;
+        fs::write(tomb.join("boiii_players/config.cfg"), b"settings")?;
+        fs::write(tomb.join("profile.ini"), b"profile")?;
+        fs::write(tomb.join("game.dat"), b"game")?;
+        state::write_json(
+            &tomb.join(REMOVAL),
+            &Removal {
+                version: 1,
+                game: Game::T7,
+                keep_saves: true,
+            },
+        )?;
+        // Simulate process loss after one atomic save rename but before the next.
+        fs::rename(tomb.join("boiii_players"), saves.join("boiii_players"))?;
+        cleanup(&Catalog::bundled()?, root.path(), &[])?;
+        assert!(!tomb.exists());
+        assert_eq!(
+            fs::read(saves.join("boiii_players/config.cfg"))?,
+            b"settings"
+        );
+        assert_eq!(fs::read(saves.join("profile.ini"))?, b"profile");
+        Ok(())
+    }
+    #[test]
     fn cleanup_protects_queued_artifacts_and_personal_files() -> Result<()> {
         let root = tempfile::tempdir()?;
         let catalog = Catalog::bundled()?;
