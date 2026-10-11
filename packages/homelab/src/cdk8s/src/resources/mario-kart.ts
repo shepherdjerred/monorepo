@@ -129,11 +129,16 @@ export function createMarioKartDeployment(chart: Chart) {
         //
         // Capped at the four seats deliberately: the feed exists for the people
         // driving, and each viewer costs a full copy of the stream on an uplink
-        // whose capacity is undocumented (see the plan's Risks table). 4 x 2500
-        // kbps ~= 10 Mbps worst case. Measure before raising either.
+        // whose capacity is undocumented. 4 x 2500 kbps ~= 10 Mbps worst case.
+        // Measure before raising either.
         DRIVER_FEED_ENABLED: EnvValue.fromValue("true"),
         DRIVER_FEED_BITRATE_KBPS: EnvValue.fromValue("2500"),
         DRIVER_FEED_MAX_CLIENTS: EnvValue.fromValue("4"),
+        // Per-client socket backlog before the hub drops deltas and resyncs at
+        // the next keyframe. Every queued byte is delay on a driver's screen:
+        // 128 KiB is ~0.4 s at 2500 kbps and still fits a keyframe. Declared here
+        // because the vault config.toml may still pin the old 2 MiB (~6.7 s).
+        DRIVER_FEED_MAX_CLIENT_BUFFER_BYTES: EnvValue.fromValue("131072"),
         // OTLP traces → Tempo; frame metrics are scraped from /metrics.
         TELEMETRY_ENABLED: EnvValue.fromValue("true"),
         TELEMETRY_SERVICE_NAME: EnvValue.fromValue("discord-plays-mario-kart"),

@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { DRIVER_FEED_KEYFRAME_FLAG } from "@discord-plays-mario-kart/common";
-import { decideDriverFeedDecode, retainDriverFeedEntryPoint } from "./video.ts";
+import {
+  decideDriverFeedDecode,
+  retainDriverFeedEntryPoint,
+  shouldPaintDriverFeedOutput,
+} from "./video.ts";
 
 function encodedUnit(flags: number): ArrayBuffer {
   return Uint8Array.from([flags, 1]).buffer;
@@ -32,17 +36,18 @@ describe("decideDriverFeedDecode", () => {
       decideDriverFeedDecode({
         started: true,
         isKeyframe: false,
-        decodeQueueSize: 2,
+        decodeQueueSize: 6,
       }),
     ).toEqual({ reset: true, decode: false, nextStarted: false });
   });
 
-  it("accepts one more delta while the decoder remains below its bound", () => {
+  it("decodes through a short burst instead of blanking until a keyframe", () => {
+    // Three units released at once by a TCP stall must not cost a ~1 s freeze.
     expect(
       decideDriverFeedDecode({
         started: true,
         isKeyframe: false,
-        decodeQueueSize: 1,
+        decodeQueueSize: 3,
       }),
     ).toEqual({ reset: false, decode: true, nextStarted: true });
   });
@@ -52,9 +57,20 @@ describe("decideDriverFeedDecode", () => {
       decideDriverFeedDecode({
         started: true,
         isKeyframe: true,
-        decodeQueueSize: 2,
+        decodeQueueSize: 6,
       }),
     ).toEqual({ reset: true, decode: true, nextStarted: true });
+  });
+});
+
+describe("shouldPaintDriverFeedOutput", () => {
+  it("paints a frame with nothing newer behind it", () => {
+    expect(shouldPaintDriverFeedOutput(0)).toBe(true);
+    expect(shouldPaintDriverFeedOutput(1)).toBe(true);
+  });
+
+  it("skips frames a draining burst is about to overwrite", () => {
+    expect(shouldPaintDriverFeedOutput(2)).toBe(false);
   });
 });
 

@@ -45,7 +45,13 @@ export function GameView({ driverSocketId }: { driverSocketId: string }) {
             canvas.height = frame.displayHeight;
             context = null;
           }
-          context ??= canvas.getContext("2d", { willReadFrequently: true });
+          // A GPU-backed, opaque, low-latency canvas. `willReadFrequently` would
+          // move it to the CPU and read every decoded frame back from the GPU
+          // just so the HUD clock can be sampled four times a second.
+          context ??= canvas.getContext("2d", {
+            alpha: false,
+            desynchronized: true,
+          });
           if (context === null) return;
           context.drawImage(frame, 0, 0);
 
