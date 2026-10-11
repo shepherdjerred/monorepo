@@ -114,4 +114,22 @@ describe("alert domain", () => {
     expect(alert.generatorURL).toBeUndefined();
     expect(normalizeGeneratorUrl(alert.generatorURL)).toBeNull();
   });
+
+  test("keeps alerts with relative generator URLs and omits the unusable link", () => {
+    const alert = AlertmanagerSnapshotAlertSchema.parse({
+      annotations: {},
+      endsAt: "2026-08-08T13:00:00Z",
+      fingerprint: "relative-generator-url",
+      generatorURL: "/explore?left=%7B%22queries%22%3A%5B%5D%7D",
+      labels: { alertname: "AlloyUnsupportedGoVersion" },
+      startsAt: "2026-08-08T12:00:00Z",
+      status: {
+        inhibitedBy: [],
+        silencedBy: [],
+        state: "active",
+      },
+    });
+
+    expect(normalizeGeneratorUrl(alert.generatorURL)).toBeNull();
+  });
 });

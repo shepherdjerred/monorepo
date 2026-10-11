@@ -104,9 +104,9 @@ export function summaryFromMetadata(
 export function normalizeGeneratorUrl(
   value: string | undefined,
 ): string | null {
-  return value === undefined || value.length === 0
-    ? null
-    : z.url().parse(value);
+  if (value === undefined || value.length === 0) return null;
+  const parsed = z.url().safeParse(value);
+  return parsed.success ? parsed.data : null;
 }
 
 export function openingEmail(

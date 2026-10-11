@@ -47,7 +47,7 @@ export const AlertmanagerWebhookAlertSchema = z.object({
   annotations: LabelMapSchema,
   startsAt: InstantTextSchema,
   endsAt: InstantTextSchema,
-  generatorURL: z.url().or(z.literal("")),
+  generatorURL: z.string(),
   fingerprint: AlertFingerprintSchema,
 });
 
@@ -71,7 +71,7 @@ export const AlertmanagerSnapshotAlertSchema = z.object({
   fingerprint: AlertFingerprintSchema,
   startsAt: InstantTextSchema,
   updatedAt: InstantTextSchema.optional(),
-  generatorURL: z.url().or(z.literal("")).optional(),
+  generatorURL: z.string().optional(),
   labels: LabelMapSchema,
   status: z.object({
     inhibitedBy: z.array(z.string()),
