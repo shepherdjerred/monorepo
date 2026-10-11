@@ -2,6 +2,7 @@ import {
   ApplicationFailure,
   condition,
   getExternalWorkflowHandle,
+  patched,
   setHandler,
   startChild,
   workflowInfo,
@@ -39,6 +40,9 @@ export const ScoutDispatchableDiscoveredMatchesSchema =
   })
     .array()
     .readonly();
+
+export const SCOUT_CLIENT_MATCH_DISPATCH_BATCH_PATCH =
+  "scout-client-match-dispatch-batches";
 
 type DispatchableDiscoveredMatch = z.infer<
   typeof ScoutDispatchableDiscoveredMatchesSchema
@@ -116,18 +120,22 @@ export async function processDiscoveredMatchesThroughDispatcher(
   }));
   const dispatcherId = await ensureClientMatchDispatcher(stage);
   const dispatcher = getExternalWorkflowHandle(dispatcherId);
-  for (
-    let offset = 0;
-    offset < dispatches.length;
-    offset += SCOUT_CLIENT_MATCH_DISPATCH_BATCH_LIMIT
-  ) {
-    await dispatcher.signal(
-      dispatchScoutClientMatchesSignal,
-      dispatches.slice(
-        offset,
-        offset + SCOUT_CLIENT_MATCH_DISPATCH_BATCH_LIMIT,
-      ),
-    );
+  if (patched(SCOUT_CLIENT_MATCH_DISPATCH_BATCH_PATCH)) {
+    for (
+      let offset = 0;
+      offset < dispatches.length;
+      offset += SCOUT_CLIENT_MATCH_DISPATCH_BATCH_LIMIT
+    ) {
+      await dispatcher.signal(
+        dispatchScoutClientMatchesSignal,
+        dispatches.slice(
+          offset,
+          offset + SCOUT_CLIENT_MATCH_DISPATCH_BATCH_LIMIT,
+        ),
+      );
+    }
+  } else {
+    await dispatcher.signal(dispatchScoutClientMatchesSignal, dispatches);
   }
   await condition(() =>
     matches.every((match) => results.has(match.riotMatchId)),
