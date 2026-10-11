@@ -15,8 +15,9 @@ for cross-package workflow.
   snapshot, drain, or dead-letter work.
 - Core HTTP and storage are host traits. App storage uses the sandbox container;
   vault access needs a user-selected security-scoped bookmark.
-- `WireBridge.swift` is temporary. Do not grow a Swift-owned wire model that
-  duplicates the Rust core.
+- `URLSessionTransport.swift` is the whole network surface: method, URL,
+  headers and bytes. Do not grow a Swift-owned wire model that duplicates the
+  Rust core.
 
 ## Swift and UI
 
