@@ -702,7 +702,7 @@
     },
     "packages/pr-fleet-controller/test/run-bundle.test.ts|packages/pr-fleet-controller/test/run-bundle.test.ts": {
       "clones": 3,
-      "tokens": 283
+      "tokens": 281
     },
     "packages/pr-fleet-controller/test/worktree.test.ts|packages/pr-fleet-controller/test/worktree.test.ts": {
       "clones": 2,
