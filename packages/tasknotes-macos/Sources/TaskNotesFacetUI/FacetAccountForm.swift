@@ -123,6 +123,7 @@ struct FacetAccountForm: View {
                     }
                 }
             }
+            .formStyle(.grouped)
             .navigationTitle("Obsidian Sync")
             .toolbar {
                 Button(busy ? "Cancel" : "Done") {

@@ -1,5 +1,15 @@
-import Foundation
+public import Foundation
 import TaskNotesUniFFI
+
+internal final class FacetAccountRedirectPolicy: NSObject, URLSessionTaskDelegate {
+    func urlSession(
+        _ session: URLSession, task: URLSessionTask,
+        willPerformHTTPRedirection response: HTTPURLResponse, newRequest request: URLRequest,
+        completionHandler: @escaping @Sendable (URLRequest?) -> Void
+    ) {
+        completionHandler(nil)
+    }
+}
 
 /// Content-free evidence distinguishing the official preflight and POST.
 public struct FacetAccountExchangeDiagnostic: Codable, Equatable, Sendable {
@@ -7,12 +17,33 @@ public struct FacetAccountExchangeDiagnostic: Codable, Equatable, Sendable {
     public let stage: Stage
     public let statusCode: UInt16?
     public let failureClassification: String?
-    enum CodingKeys: String, CodingKey { case stage, statusCode, failureClassification }
+    public let boundaryCode: String?
+    public let requestID: UUID
+    public let capturedAt: String
+    internal init(
+        stage: Stage, statusCode: UInt16?, failureClassification: String?,
+        boundaryCode: String? = nil, requestID: UUID = UUID()
+    ) {
+        self.stage = stage
+        self.statusCode = statusCode
+        self.failureClassification = failureClassification
+        self.boundaryCode = boundaryCode
+        self.requestID = requestID
+        capturedAt = Date().formatted(
+            .iso8601.year().month().day().time(includingFractionalSeconds: true).timeZone(
+                separator: .omitted))
+    }
+    enum CodingKeys: String, CodingKey {
+        case stage, statusCode, failureClassification, boundaryCode, requestID, capturedAt
+    }
     public func encode(to encoder: any Encoder) throws {
         var fields = encoder.container(keyedBy: CodingKeys.self)
         try fields.encode(stage, forKey: .stage)
         try fields.encode(statusCode, forKey: .statusCode)
         try fields.encode(failureClassification, forKey: .failureClassification)
+        try fields.encode(boundaryCode, forKey: .boundaryCode)
+        try fields.encode(requestID, forKey: .requestID)
+        try fields.encode(capturedAt, forKey: .capturedAt)
     }
 }
 
@@ -26,6 +57,7 @@ internal enum FacetAccountHTTP {
         diagnostic: (FacetAccountExchangeDiagnostic) -> Void = { _ in }
     ) async throws -> (UInt16, Data) {
         try check(ownsAttempt)
+        let requestID = UUID()
         guard let url = URL(string: request.url), url.scheme == "https" else {
             throw FacetSyncError.transport
         }
@@ -36,7 +68,9 @@ internal enum FacetAccountHTTP {
                 preflight.setValue(header.value, forHTTPHeaderField: header.name)
             }
             try check(ownsAttempt)
-            _ = try await exchange(preflight, stage: .preflight, send: send, diagnostic: diagnostic)
+            _ = try await exchange(
+                preflight, context: (.preflight, requestID), send: send,
+                diagnostic: { if ownsAttempt() { diagnostic($0) } })
             try check(ownsAttempt)
         }
         var native = URLRequest(url: url)
@@ -46,30 +80,59 @@ internal enum FacetAccountHTTP {
             native.setValue(header.value, forHTTPHeaderField: header.name)
         }
         try check(ownsAttempt)
-        let response = try await exchange(native, stage: .post, send: send, diagnostic: diagnostic)
+        let response = try await exchange(
+            native, context: (.post, requestID), send: send,
+            diagnostic: { if ownsAttempt() { diagnostic($0) } })
         try check(ownsAttempt)
         return response
     }
 
     private static func exchange(
-        _ request: URLRequest, stage: FacetAccountExchangeDiagnostic.Stage,
+        _ request: URLRequest, context: (FacetAccountExchangeDiagnostic.Stage, UUID),
         send: (URLRequest) async throws -> (UInt16, Data),
         diagnostic: (FacetAccountExchangeDiagnostic) -> Void
     ) async throws -> (UInt16, Data) {
         diagnostic(
             FacetAccountExchangeDiagnostic(
-                stage: stage, statusCode: nil, failureClassification: nil))
+                stage: context.0, statusCode: nil, failureClassification: nil, requestID: context.1)
+        )
         do {
             let response = try await send(request)
             diagnostic(
                 FacetAccountExchangeDiagnostic(
-                    stage: stage, statusCode: response.0, failureClassification: nil))
+                    stage: context.0, statusCode: response.0, failureClassification: nil,
+                    requestID: context.1))
             return response
         } catch {
+            let failure = FacetFailureDiagnostic(error)
             diagnostic(
                 FacetAccountExchangeDiagnostic(
-                    stage: stage, statusCode: nil,
-                    failureClassification: FacetFailureDiagnostic(error).classification))
+                    stage: context.0, statusCode: nil,
+                    failureClassification: failure.classification,
+                    boundaryCode: failure.boundaryCode,
+                    requestID: context.1))
+            throw error
+        }
+    }
+
+    static func decoded<Response>(
+        _ response: (UInt16, Data), diagnostic: FacetAccountExchangeDiagnostic,
+        decode: (UInt16, String) throws -> Response,
+        publish: (FacetAccountExchangeDiagnostic) -> Void
+    ) throws -> Response {
+        do {
+            guard let body = String(data: response.1, encoding: .utf8) else {
+                throw FacetContractError.unsupportedResponse
+            }
+            return try decode(response.0, body)
+        } catch {
+            let failure = FacetFailureDiagnostic(error)
+            publish(
+                FacetAccountExchangeDiagnostic(
+                    stage: diagnostic.stage, statusCode: response.0,
+                    failureClassification: failure.classification,
+                    boundaryCode: failure.boundaryCode,
+                    requestID: diagnostic.requestID))
             throw error
         }
     }

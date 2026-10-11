@@ -257,7 +257,20 @@ export async function launch(
   manifest: Manifest,
   discovery = false,
   onlyClient?: Client,
+  timeoutMS = 120_000,
 ) {
+  z.number().int().positive().max(900_000).parse(timeoutMS);
+  const launchDeadline = Date.now() + timeoutMS;
+  const remainingMS = () => {
+    const remaining = launchDeadline - Date.now();
+    if (remaining <= 0)
+      throw new Error("Acceptance launch exceeded its deadline");
+    return remaining;
+  };
+  const runCommand = (
+    argv: string[],
+    environment: Record<string, string> = {},
+  ) => command(argv, packageRoot, environment, { timeoutMS: remainingMS() });
   if (
     manifest.clients === null ||
     manifest.simulator === null ||
@@ -267,10 +280,12 @@ export async function launch(
   assertOwnedSimulator(
     manifest.runID,
     manifest.simulator,
-    JSON.parse(await command(["xcrun", "simctl", "list", "devices", "--json"])),
+    JSON.parse(
+      await runCommand(["xcrun", "simctl", "list", "devices", "--json"]),
+    ),
   );
   if (onlyClient !== "macos")
-    await command(
+    await runCommand(
       [
         "xcrun",
         "simctl",
@@ -281,7 +296,6 @@ export async function launch(
         "--facet-acceptance-descriptor",
         "@documents/acceptance.json",
       ],
-      packageRoot,
       { SIMCTL_CHILD_FACET_E2E_SIMULATOR: manifest.simulator.id },
     );
   const app = path.join(
@@ -292,17 +306,18 @@ export async function launch(
     const executable = path.join(app, "Contents/MacOS/FacetAcceptance");
     const owned = await ownedMacProcesses(executable);
     for (const pid of owned) {
-      await command(["kill", "-TERM", pid]);
+      await runCommand(["kill", "-TERM", pid]);
     }
     const deadline = Date.now() + 15_000;
     let remaining = await ownedMacProcesses(executable);
     while (remaining.length > 0) {
+      remainingMS();
       if (Date.now() >= deadline)
         throw new Error("Owned acceptance app did not finish shutting down");
       await Bun.sleep(100);
       remaining = await ownedMacProcesses(executable);
     }
-    await command([
+    await runCommand([
       "open",
       "-n",
       app,
