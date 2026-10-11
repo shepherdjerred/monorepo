@@ -4,14 +4,6 @@
 
 export type ColorVariant =
   "green" | "blue" | "purple" | "indigo" | "yellow" | "red" | "gray";
-
-export type ColorClasses = {
-  bg: string;
-  border: string;
-  text: string;
-  title?: string;
-};
-
 /**
  * Icon/badge background colors with dark mode support
  */

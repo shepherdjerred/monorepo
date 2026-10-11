@@ -62,6 +62,3 @@ export const command = [
   ...start,
 ] as const;
 export type Command = Left | Right | Up | Down | A | B | Select | Start;
-export function isCommand(input: string): boolean {
-  return includesValue(command, input.toLowerCase());
-}

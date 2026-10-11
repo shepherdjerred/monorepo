@@ -162,14 +162,6 @@ export function initializeTracing(
   return tracingRuntime;
 }
 
-export function getTracingRuntime(): TracingRuntime | undefined {
-  return tracingRuntime;
-}
-
-export function getTracer(): Tracer | undefined {
-  return tracer;
-}
-
 export async function shutdownTracing(): Promise<void> {
   if (batchProcessor !== undefined) {
     try {

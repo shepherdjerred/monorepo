@@ -28,4 +28,3 @@ if (enabled && dsn !== undefined && dsn !== "") {
 
 // Re-export Sentry as an initialized module.
 // Consumers import from here to guarantee Sentry.init() has executed.
-export const Sentry = Object.assign({}, SentryLib);

@@ -136,8 +136,6 @@ export const AgentChatOriginSchema = z.discriminatedUnion("kind", [
     scheduleId: z.string().min(1).max(512),
   }),
 ]);
-export type AgentChatOrigin = z.infer<typeof AgentChatOriginSchema>;
-
 export const MAX_AGENT_CHAT_SOURCE_SEQUENCE = "9223372036854775806";
 
 function isRecoverableSourceSequence(value: string | number): boolean {
@@ -406,9 +404,6 @@ export const AgentChatCatalogBindingOperationSchema =
     // original result while a changed retry is still a conflict.
     requestedChatId: AgentChatIdSchema.optional(),
   });
-export type AgentChatCatalogBindingOperation = z.infer<
-  typeof AgentChatCatalogBindingOperationSchema
->;
 
 export class AgentChatBindingConflictError extends Error {
   public constructor(message: string) {

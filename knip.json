@@ -132,7 +132,14 @@
       "project": ["src/**/*.ts", "test/**/*.ts"]
     },
     "packages/glitter-context": {
-      "entry": ["src/index.ts", "test/**/*.ts", "scripts/**/*.ts"],
+      "entry": [
+        "src/index.ts",
+        // Published as the "./schema" subpath, which consumers resolve through
+        // dist/. Knip cannot map that back to source, so declare it here.
+        "src/schema.ts",
+        "test/**/*.ts",
+        "scripts/**/*.ts"
+      ],
       "project": ["src/**/*.ts", "test/**/*.ts", "scripts/**/*.ts"]
     },
     "packages/llm-observability": {
@@ -389,10 +396,10 @@
     "optionalPeerDependencies": "error",
     "catalog": "error",
     "duplicates": "off",
-    "types": "off",
+    "types": "error",
     "nsExports": "off",
     "nsTypes": "off",
-    "enumMembers": "off",
+    "enumMembers": "error",
     "namespaceMembers": "off",
     "unresolved": "error",
     "unlisted": "error",
@@ -470,40 +477,6 @@
     "yoga-wasm-web",
     "zod"
   ],
-  "ignoreIssues": {
-    "packages/better-skill-capped/src/components/ui/card.tsx": ["exports"],
-    "packages/discord-plays-mario-kart/packages/backend/src/util.ts": [
-      "exports"
-    ],
-    "packages/discord-plays-mario-kart/packages/frontend/src/controller-ui.tsx": [
-      "exports"
-    ],
-    "packages/discord-plays-pokemon/packages/backend/src/emulator/audio/wav.ts": [
-      "exports"
-    ],
-    "packages/discord-plays-pokemon/packages/backend/src/game/events/pokemon-struct.ts": [
-      "exports"
-    ],
-    "packages/discord-plays-pokemon/packages/backend/src/discord/message-handler.ts": [
-      "exports"
-    ],
-    "packages/discord-plays-pokemon/packages/backend/src/emulator/constants.ts": [
-      "exports"
-    ],
-    "packages/discord-plays-pokemon/packages/backend/src/game/command/command.ts": [
-      "exports"
-    ],
-    "packages/home-assistant/src/codegen/introspect.ts": ["exports"],
-    "packages/monarch/src/lib/conservice/client.ts": ["exports"],
-    "packages/monarch/src/lib/enrichment.ts": ["exports"],
-    "packages/monarch/src/lib/monarch/api.ts": ["exports"],
-    "packages/scout-for-lol/packages/frontend/src/lib/review-tool/reset-defaults.ts": [
-      "exports"
-    ],
-    "packages/tasknotes-server/src/sentry.ts": ["exports"],
-    "packages/temporal/src/observability/tracing.ts": ["exports"],
-    "packages/temporal/src/workflows/ha/util.ts": ["exports"]
-  },
   "ignoreBinaries": [
     "argocd",
     "ffmpeg",

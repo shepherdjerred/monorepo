@@ -5,7 +5,6 @@ export const IsoTimestampSchema = z.iso.datetime({ offset: true });
 export const Sha256Schema = z.string().regex(/^[0-9a-f]{64}$/);
 
 export const CorpusSourceSchema = z.enum(["seed", "discord-rest"]);
-export type CorpusSource = z.infer<typeof CorpusSourceSchema>;
 export const DiscordAttachmentSchema = z
   .object({
     id: DiscordSnowflakeSchema,
@@ -31,7 +30,6 @@ export const DiscordAuthorSchema = z
     avatar: z.string().nullable(),
   })
   .strict();
-export type DiscordAuthor = z.infer<typeof DiscordAuthorSchema>;
 export const CorpusObservationSchema = z
   .object({
     schemaVersion: z.literal(1),
@@ -79,7 +77,6 @@ export const DiscordChannelTypeSchema = z.union([
   z.literal(15),
   z.literal(16),
 ]);
-export type DiscordChannelType = z.infer<typeof DiscordChannelTypeSchema>;
 export const CorpusScopeDecisionSchema = z.enum([
   "include",
   "exclude-denylist",
@@ -87,7 +84,6 @@ export const CorpusScopeDecisionSchema = z.enum([
   "exclude-non-message-channel",
   "exclude-no-history-permission",
 ]);
-export type CorpusScopeDecision = z.infer<typeof CorpusScopeDecisionSchema>;
 export const ChannelInventoryEntrySchema = z
   .object({
     guildId: DiscordSnowflakeSchema,
@@ -120,7 +116,6 @@ export const TraversalDirectionSchema = z.enum([
   "forward",
   "daily-overlap",
 ]);
-export type TraversalDirection = z.infer<typeof TraversalDirectionSchema>;
 export const DiscordRateLimitSchema = z
   .object({
     limit: z.number().int().nonnegative().nullable(),
@@ -221,7 +216,6 @@ export const TraversalProofSchema = z
       });
     }
   });
-export type TraversalProof = z.infer<typeof TraversalProofSchema>;
 
 function validateProjectionBounds(
   value: {
@@ -297,9 +291,6 @@ export const ChannelCompletenessManifestSchema = ChannelStateBaseSchema.extend({
       });
     }
   });
-export type ChannelCompletenessManifest = z.infer<
-  typeof ChannelCompletenessManifestSchema
->;
 export const ChannelOverlapManifestSchema = ChannelStateBaseSchema.extend({
   baselineManifestKey: z.string().min(1),
   overlapPageManifestKeys: z.array(z.string().min(1)).min(1),
@@ -342,9 +333,6 @@ export const ChannelOverlapManifestSchema = ChannelStateBaseSchema.extend({
       });
     }
   });
-export type ChannelOverlapManifest = z.infer<
-  typeof ChannelOverlapManifestSchema
->;
 export const ChannelStateManifestSchema = z.union([
   ChannelCompletenessManifestSchema,
   ChannelOverlapManifestSchema,

@@ -16,8 +16,6 @@ export const TaskPhaseSchema = z.enum([
   "blocked",
   "done",
 ]);
-export type TaskPhase = z.infer<typeof TaskPhaseSchema>;
-
 export const LinearIssueSchema = z.object({
   id: z.string().min(1),
   identifier: z.string().min(1),
@@ -100,15 +98,11 @@ export const AgentOutputWireSchema = z.object({
     }),
   ),
 });
-export type AgentOutputWire = z.infer<typeof AgentOutputWireSchema>;
-
 export const AgentTurnInputSchema = z.object({
   provider: ProviderSchema,
   model: z.string().min(1),
   prompt: z.string().min(1),
 });
-export type AgentTurnInput = z.infer<typeof AgentTurnInputSchema>;
-
 const OpReferenceSchema = z.string().startsWith("op://");
 
 export const ConfigSchema = z.object({

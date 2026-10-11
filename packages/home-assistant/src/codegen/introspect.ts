@@ -14,28 +14,6 @@ export const EntityStateSnapshot = z
   })
   .loose();
 export type EntityStateSnapshot = z.infer<typeof EntityStateSnapshot>;
-
-export const ServiceFieldSelectorEntity = z
-  .object({
-    entity: z
-      .union([
-        z
-          .object({
-            domain: z.union([z.string(), z.array(z.string())]).optional(),
-          })
-          .loose(),
-        z.array(
-          z
-            .object({
-              domain: z.union([z.string(), z.array(z.string())]).optional(),
-            })
-            .loose(),
-        ),
-      ])
-      .optional(),
-  })
-  .loose();
-
 export const ServiceFieldSelector = z
   .object({
     number: z.unknown().optional(),
