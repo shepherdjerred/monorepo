@@ -5,7 +5,7 @@
   "scripts": {
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run scripts",
     "test:coverage": "bun --no-install --bun vitest --config ../../vitest.config.ts run --coverage.reporter=text --coverage.reporter=lcovonly --coverage.reportsDirectory=coverage --coverage scripts/git-cleanup.test.ts --coverage.thresholds.lines=90 --coverage.thresholds.functions=90 --coverage.thresholds.statements=90",
-    "lint": "eslint bin/executable_git_cleanup.ts bin/git_cleanup_core.ts scripts/*.ts",
+    "lint": "eslint bin/executable_git_cleanup.ts bin/git_cleanup_core.ts bin/executable_restart_codex_panes.ts bin/codex_theme_restart_*.ts scripts/*.ts",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts"
   },

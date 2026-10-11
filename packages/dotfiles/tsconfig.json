@@ -8,6 +8,10 @@
     "bin/executable_git_cleanup.ts",
     "bin/executable_update.ts",
     "bin/git_cleanup_core.ts",
+    "bin/executable_restart_codex_panes.ts",
+    "bin/codex_theme_restart_core.ts",
+    "bin/codex_theme_restart_options.ts",
+    "bin/codex_theme_restart_launch.ts",
     "scripts/*.ts"
   ]
 }

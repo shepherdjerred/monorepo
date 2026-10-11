@@ -74,3 +74,8 @@ cat > ~/.gitconfig-theme <<EOF
 EOF
 
 # Claude Code uses theme = "auto" natively — no sync needed.
+
+# The detached worker deduplicates appearance events. Its first invocation only
+# records the current mode, so installing/reloading the watcher does not restart
+# panes. Ordinary applies in the same mode are also harmless.
+"$HOME/bin/restart-codex-panes" --on-change
