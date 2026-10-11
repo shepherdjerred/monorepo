@@ -21,7 +21,7 @@ import {
   scoutClientMatchDispatchCompletedSignal,
 } from "#src/signals.ts";
 import {
-  ScoutClientMatchDispatchBatchSchema,
+  ScoutClientMatchDispatchSignalBatchSchema,
   ScoutClientMatchDispatchResultSchema,
   scoutClientMatchDispatchInputCodec,
   type ScoutClientMatchDispatchItem,
@@ -454,7 +454,7 @@ function mergeSignaledClientDispatchBatch(
   lateArrivals: Map<RiotMatchId, ScoutClientMatchDispatchItem>,
   orderingWatermark: ScoutClientMatchDispatchOrderKey | null,
 ): void {
-  const batch = ScoutClientMatchDispatchBatchSchema.parse(rawBatch);
+  const batch = ScoutClientMatchDispatchSignalBatchSchema.parse(rawBatch);
   for (const match of batch) {
     mergeSignaledClientDispatchItem(
       pending,

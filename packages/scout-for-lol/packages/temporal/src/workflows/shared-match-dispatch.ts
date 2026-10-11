@@ -2,6 +2,7 @@ import {
   ApplicationFailure,
   condition,
   getExternalWorkflowHandle,
+  patched,
   setHandler,
   startChild,
   workflowInfo,
@@ -87,6 +88,29 @@ async function ensureClientMatchDispatcher(stage: ScoutStage): Promise<string> {
 }
 
 /**
+ * Discovery splits its hand-off into ingress-sized signals. Histories recorded
+ * before this patch sent one signal of any size and must replay unchanged.
+ */
+export const SCOUT_DISPATCH_SIGNAL_BATCHES_PATCH =
+  "scout-dispatch-signal-batches";
+
+const DISPATCH_SIGNAL_BATCH_SIZE = 100;
+
+function dispatchSignalBatches(
+  dispatches: readonly ScoutClientMatchDispatchItem[],
+): ScoutClientMatchDispatchItem[][] {
+  const batches: ScoutClientMatchDispatchItem[][] = [];
+  for (
+    let start = 0;
+    start < dispatches.length;
+    start += DISPATCH_SIGNAL_BATCH_SIZE
+  ) {
+    batches.push(dispatches.slice(start, start + DISPATCH_SIGNAL_BATCH_SIZE));
+  }
+  return batches;
+}
+
+/**
  * Hand Riot discoveries to the same environment-wide serializer native
  * observations use, then wait for exact-run acknowledgements before allowing
  * poll maintenance to settle deadlines.
@@ -114,10 +138,14 @@ export async function processDiscoveredMatchesThroughDispatcher(
     completionTargets: [{ workflowId: info.workflowId, runId: info.runId }],
   }));
   const dispatcherId = await ensureClientMatchDispatcher(stage);
-  await getExternalWorkflowHandle(dispatcherId).signal(
-    dispatchScoutClientMatchesSignal,
-    dispatches,
-  );
+  const dispatcher = getExternalWorkflowHandle(dispatcherId);
+  if (patched(SCOUT_DISPATCH_SIGNAL_BATCHES_PATCH)) {
+    for (const batch of dispatchSignalBatches(dispatches)) {
+      await dispatcher.signal(dispatchScoutClientMatchesSignal, batch);
+    }
+  } else {
+    await dispatcher.signal(dispatchScoutClientMatchesSignal, dispatches);
+  }
   await condition(() =>
     matches.every((match) => results.has(match.riotMatchId)),
   );

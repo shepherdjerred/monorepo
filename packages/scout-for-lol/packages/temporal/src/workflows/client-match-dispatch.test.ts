@@ -918,3 +918,89 @@ test("processes a queued client late arrival once Riot discovers it too", async 
   expect(olderStore.calls).toContain("commitMatchObservation");
   expect(log).not.toContain(`${MATCH_ID}:terminal-receipt`);
 }, 90_000);
+
+/** More matches than one ingress-sized dispatch signal may carry. */
+function legacyFinishedMatchIds(count: number): (typeof MATCH_ID)[] {
+  return Array.from({ length: count }, (_, index) =>
+    RiotMatchIdSchema.parse(`NA1_${String(9100 + index)}`),
+  );
+}
+
+function legacyFinishedActivities() {
+  const legacyStore = createScoutMatchStore();
+  legacyStore.observed = true;
+  legacyStore.owner = { kind: "legacy-v1" };
+  return routedMatchActivities(legacyStore, legacyStore, {
+    legacyCompleted: () => true,
+  });
+}
+
+test("the shared dispatcher accepts a signal larger than one ingress batch", async () => {
+  // The prod shape: a discovery recorded before signal batching handed over
+  // 108 matches in one signal. The signal stays in history, so a receiver
+  // stricter than its pending bound fails every replay of the singleton.
+  const matchIds = legacyFinishedMatchIds(101);
+  const settled = Promise.withResolvers<true>();
+  let reads = 0;
+  await harness.startWorkers({
+    ...legacyFinishedActivities(),
+    readLegacyMatchCompletionV2: () => {
+      reads += 1;
+      if (reads === matchIds.length) settled.resolve(true);
+      return { completed: true };
+    },
+  });
+  const workflowId = "client-match-dispatch-oversized-signal";
+  const dispatcher = await startDispatcher(workflowId);
+
+  await dispatcher.signal(
+    dispatchScoutClientMatchesSignal,
+    matchIds.map((riotMatchId, index) => dispatchItem(riotMatchId, index + 1)),
+  );
+  await settled.promise;
+  const history = await dispatcher.fetchHistory();
+  await terminateDispatcher(workflowId, "test observed every match settle");
+
+  expect(
+    history.events?.filter((event) => event.workflowTaskFailedEventAttributes),
+  ).toEqual([]);
+}, 90_000);
+
+test("discovery hands more than one ingress batch to the dispatcher in bounded signals", async () => {
+  const matches = legacyFinishedMatchIds(101).map((riotMatchId, index) =>
+    discoveredMatch(riotMatchId, index + 1),
+  );
+  let maintenance = 0;
+  await harness.startWorkers({
+    ...legacyFinishedActivities(),
+    discoverPostMatchIds: pagedDiscovery([matches]).discoverPostMatchIds,
+    runPostMatchMaintenance: () => {
+      maintenance += 1;
+    },
+  });
+
+  const result = scoutPostMatchDiscoveryResultCodec.parse(
+    await runDiscovery("discovery-oversized-hand-off"),
+  );
+  const history = await harness
+    .client()
+    .workflow.getHandle("discovery-oversized-hand-off")
+    .fetchHistory();
+  await terminateDispatcher(
+    scoutClientMatchDispatchWorkflowId(stage),
+    "test observed the oversized discovery complete",
+  );
+
+  expect(result).toMatchObject({
+    status: "completed",
+    discovered: matches.length,
+  });
+  expect(maintenance).toBe(1);
+  expect(
+    history.events?.filter(
+      (event) =>
+        event.signalExternalWorkflowExecutionInitiatedEventAttributes
+          ?.signalName === "dispatchScoutClientMatchesV2",
+    ),
+  ).toHaveLength(2);
+}, 90_000);

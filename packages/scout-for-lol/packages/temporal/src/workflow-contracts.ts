@@ -121,6 +121,18 @@ export type ScoutClientMatchDispatchBatch = z.infer<
 >;
 
 /**
+ * The dispatcher accepts any signal its pending bound can hold. Senders still
+ * split work into ingress-sized batches, but a rejected signal stays in
+ * history and fails every replay of the singleton, so the receiver must not
+ * be stricter than the state it carries across Continue-As-New.
+ */
+export const ScoutClientMatchDispatchSignalBatchSchema = z
+  .array(ScoutClientMatchDispatchItemSchema)
+  .min(1)
+  .max(5000)
+  .readonly();
+
+/**
  * Pending work crosses Continue-As-New so an accepted signal is never lost.
  * The larger bound permits a short burst from several clients while keeping
  * the Workflow payload well below Temporal's service limit.
