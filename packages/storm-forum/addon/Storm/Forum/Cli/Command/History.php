@@ -230,16 +230,12 @@ final class History extends \XF\Cli\Command\AbstractCommand
                 } catch (\Throwable $error) { $db->rollback(); throw $error; }
                 $app->em()->clearEntityCache();
             }
-            $ratings = []; $polls = [];
+            $polls = [];
             foreach ($history['threads'] as $record) {
                 $entry = $map[self::key($record)];
                 if (isset($record['poll'])) { $polls[$entry['threadId']] = $record['poll']; }
-                foreach ($record['posts'] as $post) {
-                    if (isset($post['ratings'])) { $ratings[$entry['posts'][$post['key']]] = $post['ratings']; }
-                }
             }
-            // Snapshot totals are evidence, never native votes, voters or reputation.
-            $app->registry()->set('stormHistoryRatings', $ratings);
+            $app->registry()->delete('stormHistoryRatings');
             $app->registry()->set('stormHistoryPolls', $polls);
             foreach ($users as $item) {
                 $db->query('UPDATE xf_user SET message_count = (SELECT COUNT(*) FROM xf_post p INNER JOIN xf_thread t ON t.thread_id = p.thread_id INNER JOIN xf_forum f ON f.node_id = t.node_id WHERE p.user_id = ? AND p.message_state = ? AND t.discussion_state = ? AND f.count_messages = 1) WHERE user_id = ?', [$item['userId'], 'visible', 'visible', $item['userId']]);
