@@ -730,6 +730,14 @@ the device retries; a `REJECTED` upload is final.
 
 ### When a client payload becomes the match
 
+Native observations and Riot discovery share one post-game dispatcher. New
+Riot discoveries signal at most 100 matches at a time in game-end order and
+wait for every match's acknowledgement before closing the poll. The internal
+signal validates each item independently of the native HTTP batch limit, so
+older recorded discovery signals containing more than 100 matches can replay
+and drain. A replay patch preserves the original single signal for discovery
+histories recorded before chunking.
+
 Riot gets two minutes of first refusal: ingress dispatches a client post-game
 with `readyAt` two minutes out, and `resolveLocalCanonicalMatch` selects only
 observations that old. A game Riot withholds — any custom, live Clash among
