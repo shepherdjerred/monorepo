@@ -108,6 +108,17 @@ export function createMinecraftTsmcApp(chart: Chart) {
     disableProbe: true,
   });
 
+  createCloudflareTunnelBinding(chart, "minecraft-tsmc-livemap-cf-tunnel", {
+    serviceName: "minecraft-tsmc-bluemap",
+    fqdn: "livemap.ts-mc.net",
+    namespace: "minecraft-tsmc",
+    disableDnsUpdates: true,
+    port: 8100,
+    // Hibernates at 0 replicas (see above); the public probe additionally made
+    // cloudflared log an unreachable-origin error every minute.
+    disableProbe: true,
+  });
+
   const minecraftValues: HelmValuesForChart<"minecraft"> = {
     replicaCount: 0,
     // Deploy as StatefulSet for mc-router auto-scaling support
