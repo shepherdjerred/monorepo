@@ -89,6 +89,30 @@ function synthTsmc(): unknown[] {
 }
 
 describe("minecraft-tsmc runs The Storm's image", () => {
+  test("keeps the existing map route while staging the LiveMap hostname", () => {
+    const bindings = synthTsmc()
+      .map((manifest) =>
+        z
+          .object({
+            kind: z.literal("TunnelBinding"),
+            subjects: z.array(
+              z
+                .object({
+                  spec: z.object({ fqdn: z.string() }).loose(),
+                })
+                .loose(),
+            ),
+          })
+          .loose()
+          .safeParse(manifest),
+      )
+      .filter((result) => result.success)
+      .flatMap((result) => result.data.subjects.map(({ spec }) => spec.fqdn));
+
+    expect(bindings).toContain("bluemap.ts-mc.net");
+    expect(bindings).toContain("livemap.ts-mc.net");
+  });
+
   test("projects the brain bearer token into the game namespace", () => {
     const manifests = synthTsmc();
     const item = manifests
