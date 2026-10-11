@@ -83,6 +83,7 @@ struct FacetApp: App {
     }
 
     private func publishWidget() async {
+        await store.start()
         do {
             let queue = try intentQueue()
             try queue.selectProfile(store.selectedProfileID)
@@ -107,6 +108,7 @@ struct FacetApp: App {
     }
 
     private func processIntents() async {
+        await store.start()
         do {
             await store.processIntentCaptures(try intentQueue())
             await FacetWidgetPublisher.publish(store: store)
