@@ -81,7 +81,12 @@ export async function writeFoldParquet({
     const tmpPath = path.join(buildDir, `${table}-${month}-fold.ndjson.tmp`);
     const writer = new NdjsonFileWriter(tmpPath, undefined, abortSignal);
     try {
-      for (const row of rows) await writer.write(row);
+      for (const row of rows)
+        await writer.write(
+          table === "raw_documents" && layout === "legacy-identity-map"
+            ? { ...row, identity_map_json: "{}" }
+            : row,
+        );
       await writer.close();
       await withDuckDBConnection(
         async (session) => {

@@ -208,6 +208,20 @@ async function countParquetRows(glob: string): Promise<number> {
   });
 }
 
+async function expectEmptyLegacyMaps(glob: string): Promise<void> {
+  const rows = await withDuckDBConnection(async (session) => {
+    return await session.run("SELECT identity_map_json FROM read_parquet(?)", [
+      glob,
+    ]);
+  });
+  expect(rows.length).toBeGreaterThan(0);
+  for (const row of rows) {
+    expect(z.object({ identity_map_json: z.string() }).parse(row)).toEqual({
+      identity_map_json: "{}",
+    });
+  }
+}
+
 async function countSourceRows(source: SqlFragment): Promise<number> {
   return await withDuckDBConnection(async (session) => {
     const rows = await session.run(
@@ -272,12 +286,23 @@ describe("online raw-document schema handoff", () => {
         .mockRejectedValue(new Error("retired map read"));
       s3Mock.resetHistory();
       expect(await writeMatchStagingFile(lakeDir, match)).toBe(true);
+      for (const file of await listStagingFiles(lakeDir, "raw_documents")) {
+        const text = await Bun.file(file).text();
+        const wire = z
+          .object({ identity_map_json: z.string(), document_json: z.string() })
+          .parse(JSON.parse(text.trim()));
+        expect(JSON.parse(wire.identity_map_json)).toEqual({});
+        expect(JSON.parse(wire.document_json)).toEqual(match);
+      }
       const summary = await runReportLakeFold({ prisma, lakeDir });
       expect(summary?.tier).toBe("fold");
       expect(s3Mock.calls()).toHaveLength(0);
       expect(map).not.toHaveBeenCalled();
       const current = await readCurrentBuildDir(lakeDir);
       if (current === undefined) throw new Error("missing folded build");
+      await expectEmptyLegacyMaps(
+        path.join(current, "raw_documents/**/fold-*.parquet"),
+      );
       expect(
         ManifestFingerprintSchema.parse(
           await Bun.file(path.join(current, "manifest.json")).json(),
@@ -309,6 +334,9 @@ describe("online raw-document schema handoff", () => {
       await runReportLakeRebuild({ prisma, lakeDir });
       const current = await readCurrentBuildDir(lakeDir);
       if (current === undefined) throw new Error("missing rebuilt build");
+      await expectEmptyLegacyMaps(
+        path.join(current, "raw_documents/**/*.parquet"),
+      );
       expect(
         ManifestFingerprintSchema.parse(
           await Bun.file(path.join(current, "manifest.json")).json(),
@@ -377,6 +405,15 @@ describe("online raw-document schema handoff", () => {
       expect(await countSourceRows(source)).toBe(
         match.info.participants.length * 2,
       );
+      // Post-handoff writers omit the bridge field; the final release can
+      // require the canonical staging contract once the older tail drains.
+      expect(await writeMatchStagingFile(lakeDir, late)).toBe(true);
+      for (const file of await listStagingFiles(lakeDir, "raw_documents")) {
+        const text = await Bun.file(file).text();
+        expect(JSON.parse(text.trim())).not.toHaveProperty("identity_map_json");
+      }
+      await runReportLakeFold({ prisma, lakeDir });
+      expect(await listStagingFiles(lakeDir, "raw_documents")).toHaveLength(0);
       // A bridge rollback after publication no longer depends on the flag.
       const retiredFlag = vi
         .spyOn(schemaUpgrade, "reportLakeSchemaUpgradeEnabled")
@@ -1046,12 +1083,12 @@ describe("compactor idempotency and schema transitions", () => {
     try {
       const seeded = await runReportLakeRebuild({ prisma, lakeDir });
       expect(seeded?.tier).toBe("rebuild");
+      expect(await writeMatchStagingFile(lakeDir, match)).toBe(true);
       await rewritePublishedFingerprint(lakeDir, "stale-fingerprint");
       const old = await readCurrentBuildDir(lakeDir);
       const buildsBefore = await readdir(path.join(lakeDir, "builds"));
       s3Mock.resetHistory();
 
-      expect(await writeMatchStagingFile(lakeDir, match)).toBe(true);
       await expect(runReportLakeFold({ prisma, lakeDir })).rejects.toThrow(
         "unknown schema",
       );
@@ -1074,6 +1111,7 @@ describe("compactor idempotency and schema transitions", () => {
       try {
         const match = await loadMatchFixture();
         const buildDir = await seedLegacyLake(lakeDir, match);
+        expect(await writeMatchStagingFile(lakeDir, match)).toBe(true);
         const manifestPath = path.join(buildDir, "manifest.json");
         if (manifestState === "missing") {
           await rm(manifestPath);
@@ -1084,7 +1122,6 @@ describe("compactor idempotency and schema transitions", () => {
           );
         }
         const buildsBefore = await readdir(path.join(lakeDir, "builds"));
-        expect(await writeMatchStagingFile(lakeDir, match)).toBe(true);
         s3Mock.resetHistory();
         const upgrade = vi
           .spyOn(schemaUpgrade, "reportLakeSchemaUpgradeEnabled")

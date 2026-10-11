@@ -281,6 +281,22 @@ describe("receipted match staging", () => {
 });
 
 describe("receipted timeline staging", () => {
+  test("reports a lake-layout read failure without recording a staging receipt", async () => {
+    const timeline = rawTimelineFixture(
+      RiotMatchIdSchema.parse("NA1_5370969615"),
+    );
+    await Bun.write(path.join(lakeDir, "CURRENT"), "missing-build");
+    await expect(
+      stageTimelineReceipted(
+        lakeDir,
+        timeline,
+        new Date("2026-09-12T00:00:00.000Z"),
+        { source: artifactDescriptorFixture("timeline") },
+      ),
+    ).rejects.toBeInstanceOf(ReceiptedStagingError);
+    expect(mocks.recordReceipt).not.toHaveBeenCalled();
+  });
+
   test("counts the full raw timeline and all four projection tables", async () => {
     const timeline = rawTimelineFixture(
       RiotMatchIdSchema.parse("NA1_5370969615"),

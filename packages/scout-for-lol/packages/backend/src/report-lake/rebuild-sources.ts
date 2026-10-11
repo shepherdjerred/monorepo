@@ -4,6 +4,7 @@ import type { S3Client } from "@aws-sdk/client-s3";
 import { createHash } from "node:crypto";
 import { setImmediate } from "node:timers/promises";
 import { rawDocumentRow } from "#src/report-lake/staging/raw-documents.ts";
+import { bridgeRawDocumentRow } from "#src/report-lake/schema-upgrade/layout.ts";
 import { populateCompetitionRankHistoryFromS3 as populateRankHistory } from "#src/report-lake/rebuild/rank-history.ts";
 
 import {
@@ -56,17 +57,19 @@ function s3RawDocumentRow(input: {
   rawText: string;
   capturedAt: Date;
 }) {
-  return rawDocumentRow({
-    kind: input.kind,
-    matchId: input.matchId,
-    document: JSON.parse(input.rawText),
-    capturedAt: input.capturedAt,
-    source: {
-      kind: "s3",
-      key: input.key,
-      digest: createHash("sha256").update(input.rawText).digest("hex"),
-    },
-  });
+  return bridgeRawDocumentRow(
+    rawDocumentRow({
+      kind: input.kind,
+      matchId: input.matchId,
+      document: JSON.parse(input.rawText),
+      capturedAt: input.capturedAt,
+      source: {
+        kind: "s3",
+        key: input.key,
+        digest: createHash("sha256").update(input.rawText).digest("hex"),
+      },
+    }),
+  );
 }
 
 // --- Rebuild source: S3 (canonical) ---

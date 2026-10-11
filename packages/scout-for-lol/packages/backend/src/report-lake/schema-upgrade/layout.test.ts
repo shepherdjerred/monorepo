@@ -5,6 +5,7 @@ import {
   layoutFingerprint,
   reportLakeLayout,
   rawDocumentColumns,
+  bridgeRawDocumentRow,
 } from "#src/report-lake/schema-upgrade/layout.ts";
 import { rawDocumentRow } from "#src/report-lake/staging/raw-documents.ts";
 import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
@@ -14,6 +15,13 @@ const row = rawDocumentRow({
   matchId: RiotMatchIdSchema.parse("NA1_42"),
   capturedAt: new Date("2026-10-08T00:00:00Z"),
   document: { puuid: "canonical" },
+});
+
+test("emits an empty legacy wire map without changing canonical JSON", () => {
+  const wire = bridgeRawDocumentRow(row);
+  expect(wire.identity_map_json).toBe("{}");
+  expect(wire.document_json).toBe(row.document_json);
+  expect(BridgeRawDocumentLakeRowSchema.parse(wire)).toEqual(row);
 });
 
 test("recognizes only the two exact physical contracts", () => {

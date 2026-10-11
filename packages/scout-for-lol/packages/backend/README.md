@@ -325,6 +325,13 @@ the staging read view until a later fold. A failed candidate leaves the publishe
 build and staging untouched. After publication, rollback uses the bridge image
 with the new lake, not a pre-bridge image or a stale lake copy.
 
+An unknown existing layout fails before fold or rebuild work; establish its
+physical schema rather than bypassing the upgrade gate. While the published
+layout is legacy, staging and new legacy Parquet rows carry an empty wire-only
+`identity_map_json` so pre-bridge readers survive mixed deployment waves. After
+the atomic handoff, staging writers stop emitting that field. Drain the older
+staging tail with a normal fold before removing the temporary parser bridge.
+
 ### Model choice and spending
 
 `scout-explore-model-picker-enabled` offers GPT-6 Luna and GPT-6.1 Sol with

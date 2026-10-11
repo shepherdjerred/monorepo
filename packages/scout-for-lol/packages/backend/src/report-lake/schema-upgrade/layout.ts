@@ -2,8 +2,11 @@ import { z } from "zod";
 import {
   RAW_DOCUMENT_LAKE_COLUMNS,
   RawDocumentLakeRowSchema,
+  type RawDocumentLakeRow,
 } from "@scout-for-lol/data/model/reports/raw-document-lake-columns.ts";
 import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
+import { readCurrentBuildDir } from "#src/report-lake/paths.ts";
+import { readBuildFingerprint } from "#src/report-lake/build-manifest.ts";
 
 /** Temporary compatibility until both hosted lakes drop the retired column. */
 const LEGACY_RAW_DOCUMENT_COLUMNS = {
@@ -12,6 +15,26 @@ const LEGACY_RAW_DOCUMENT_COLUMNS = {
 } as const;
 
 export type ReportLakeLayout = "current" | "legacy-identity-map";
+
+/** Temporary wire compatibility for pre-bridge readers during mixed waves. */
+export function bridgeRawDocumentRow(row: RawDocumentLakeRow) {
+  return { ...row, identity_map_json: "{}" };
+}
+
+/** Stop emitting the wire bridge once the atomic schema handoff completes. */
+export async function bridgeRawDocumentStagingRow(
+  lakeDir: string,
+  row: RawDocumentLakeRow,
+): Promise<RawDocumentLakeRow> {
+  const current = await readCurrentBuildDir(lakeDir);
+  if (current === undefined) return bridgeRawDocumentRow(row);
+  const layout = reportLakeLayout(await readBuildFingerprint(current));
+  if (layout === undefined)
+    throw new Error(
+      "Cannot stage raw documents against an unknown lake schema",
+    );
+  return layout === "current" ? row : bridgeRawDocumentRow(row);
+}
 
 export function rawDocumentColumns(layout: ReportLakeLayout) {
   return layout === "current"

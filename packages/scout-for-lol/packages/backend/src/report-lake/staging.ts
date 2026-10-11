@@ -8,6 +8,7 @@ import {
 } from "#src/report-lake/staging/files.ts";
 import path from "node:path";
 import { rawDocumentRow } from "#src/report-lake/staging/raw-documents.ts";
+import { bridgeRawDocumentStagingRow } from "#src/report-lake/schema-upgrade/layout.ts";
 import type {
   CachedLeaderboard,
   RawCurrentGameInfo,
@@ -165,13 +166,16 @@ export async function stageMatchGeneration(
         {
           table: "raw_documents",
           content: toNdjson([
-            rawDocumentRow({
-              kind: "match",
-              matchId,
-              document: match,
-              capturedAt: new Date(),
-              ...options,
-            }),
+            await bridgeRawDocumentStagingRow(
+              lakeDir,
+              rawDocumentRow({
+                kind: "match",
+                matchId,
+                document: match,
+                capturedAt: new Date(),
+                ...options,
+              }),
+            ),
           ]),
         },
         { table: "matches", content: toNdjson(rows) },
@@ -238,13 +242,16 @@ export async function stagePrematchGeneration(
         {
           table: "raw_documents",
           content: toNdjson([
-            rawDocumentRow({
-              kind: "prematch",
-              matchId: spectatorGameMatchId(gameInfo),
-              document: gameInfo,
-              capturedAt: observedAt,
-              ...options,
-            }),
+            await bridgeRawDocumentStagingRow(
+              lakeDir,
+              rawDocumentRow({
+                kind: "prematch",
+                matchId: spectatorGameMatchId(gameInfo),
+                document: gameInfo,
+                capturedAt: observedAt,
+                ...options,
+              }),
+            ),
           ]),
         },
       ],
@@ -281,32 +288,35 @@ export async function stageTimelineGeneration(
   observedAt: Date,
   options: StagingWriteOptions = {},
 ): Promise<StagingWriteResult> {
-  const flattened = flattenTimeline(timeline, observedAt);
-  const tables = [
-    { table: "timeline_events" as const, rows: flattened.events },
-    {
-      table: "timeline_event_participants" as const,
-      rows: flattened.eventParticipants,
-    },
-    {
-      table: "timeline_participant_frames" as const,
-      rows: flattened.participantFrames,
-    },
-    { table: "timeline_coverage" as const, rows: flattened.coverage },
-    {
-      table: "raw_documents" as const,
-      rows: [
-        rawDocumentRow({
-          kind: "timeline",
-          matchId: timeline.metadata.matchId,
-          document: timeline,
-          capturedAt: observedAt,
-          ...options,
-        }),
-      ],
-    },
-  ];
   try {
+    const flattened = flattenTimeline(timeline, observedAt);
+    const tables = [
+      { table: "timeline_events" as const, rows: flattened.events },
+      {
+        table: "timeline_event_participants" as const,
+        rows: flattened.eventParticipants,
+      },
+      {
+        table: "timeline_participant_frames" as const,
+        rows: flattened.participantFrames,
+      },
+      { table: "timeline_coverage" as const, rows: flattened.coverage },
+      {
+        table: "raw_documents" as const,
+        rows: [
+          await bridgeRawDocumentStagingRow(
+            lakeDir,
+            rawDocumentRow({
+              kind: "timeline",
+              matchId: timeline.metadata.matchId,
+              document: timeline,
+              capturedAt: observedAt,
+              ...options,
+            }),
+          ),
+        ],
+      },
+    ];
     await ensureLakeScaffold(lakeDir);
     const generation = await commitStagingGeneration({
       lakeDir,
