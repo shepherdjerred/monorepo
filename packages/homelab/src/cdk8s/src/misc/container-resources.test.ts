@@ -417,14 +417,14 @@ describe("Container resource requests backstop", () => {
       [
         "temporal-temporal-glitter-context-worker/temporal-glitter-context-worker",
         {
-          requests: { cpu: "750m", memory: "512Mi" },
+          requests: { cpu: "250m", memory: "512Mi" },
           limits: { cpu: "2", memory: "6144Mi" },
         },
       ],
       [
         "temporal-temporal-agent-worker/temporal-agent-worker",
         {
-          requests: { cpu: "500m", memory: "768Mi" },
+          requests: { cpu: "250m", memory: "768Mi" },
           limits: { cpu: "1500m", memory: "1024Mi" },
         },
       ],
@@ -632,7 +632,7 @@ describe("Burst-memory sharing policy", () => {
     expect(tempo).toBeDefined();
     expect(tempo?.spec.source.helm.valuesObject["tempo"]).toMatchObject({
       resources: {
-        requests: { cpu: "1", memory: "1Gi" },
+        requests: { cpu: "250m", memory: "1Gi" },
         limits: { memory: "4Gi" },
       },
     });
