@@ -127,10 +127,6 @@ packages/eslint-config/local.d.ts.map
 packages/streambot/scratch/
 .turbo
 
-# moon
-.moon/cache
-.moon/docker
-
 # transient bun-publish auth indirection (scripts/release/publish-npm.ts writes + removes it)
 .npmrc
 **/.eslintcache-ci-scripts

@@ -1,18 +1,22 @@
 import { z } from "zod";
 import { commandScopes } from "./ci-env-command.ts";
-import type { PipelineStep, SecretKeyRef } from "./ci-env-pipeline.ts";
+
+export type SecretKeyRef = { secretName: string; key: string };
+
+export type PipelineStep = {
+  key: string;
+  providedNames: Set<string>;
+  explicitSecretRefs?: ReadonlyMap<string, SecretKeyRef>;
+  scripts: string[];
+};
 
 /**
  * Read the CI graph from the generator rather than from committed YAML.
  *
- * The credential contract used to be checked against `.buildkite/pipeline.yml`
- * plus a `secret-grants.json` manifest that restated every grant. The graph is
- * generated now, so the grants in the step model ARE the manifest -- there is
- * no second copy to drift from, and the comparison that used to guard against
- * that drift is gone with it.
- *
- * What the checker still proves is the part that matters: every environment
- * variable a step's scripts require is actually granted to that step.
+ * The grants in the step model ARE the credential manifest, so there is no
+ * second copy to drift from. The checker proves the part that matters: every
+ * environment variable a step's scripts require is actually granted to that
+ * step.
  */
 
 const GeneratedStepSchema = z.object({

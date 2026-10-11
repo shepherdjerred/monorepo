@@ -15,12 +15,6 @@ import {
  * because one lane covers many sites (or two publish groups) and each has its
  * own answer. Selection decides whether the LANE runs; the step decides which
  * targets within it do.
- *
- * The Buildkite `sites` lane also contained a block that re-ran every per-site
- * check on the early-exit path purely so the build-summary annotation could
- * show "skipped" rather than "not recorded" for each row. That annotation is
- * gone, and so is the block -- it did no work and produced no output anyone
- * reads.
  */
 
 const SITE_DEPLOY_GROUP = { limit: 1, group: "site-deploys" } as const;

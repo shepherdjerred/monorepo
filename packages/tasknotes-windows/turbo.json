@@ -100,21 +100,6 @@
       ],
       "outputs": []
     },
-    "test:report": {
-      "dependsOn": ["lint", "^build", "generate"],
-      "passThroughEnv": [
-        "APPDATA",
-        "HTTP_PROXY",
-        "HTTPS_PROXY",
-        "LOCALAPPDATA",
-        "MISE_DATA_DIR",
-        "NO_PROXY",
-        "TEMP",
-        "TMP",
-        "USERPROFILE"
-      ],
-      "outputs": []
-    },
     // Check the two fresh instrumented reports produced by test:ci. Keep the
     // Git diff and baseline comparison uncached as the target branch moves.
     "coverage:portable:check": {

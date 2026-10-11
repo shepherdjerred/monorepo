@@ -118,7 +118,7 @@ Woodpecker runs the same validation without secrets on pull requests. On main,
 the path-selected `trmnl` lane validates all three projects before publishing
 any of them, then pushes plugin `303046`, `303047`, and `464652` in that order.
 The publisher uses the dedicated account-level `TRMNL_API_KEY` from
-`buildkite-trmnl-credentials`; this is intentionally separate from the
+`ci-trmnl-credentials`; this is intentionally separate from the
 dashboard service's polling key.
 
 For an intentional remote-to-repository refresh, provide the account key

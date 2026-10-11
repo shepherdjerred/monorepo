@@ -1,9 +1,4 @@
 {
-  "checks/deps/check-react-version-sync.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "checks/check-suppressions.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
@@ -24,7 +19,7 @@
       "count": 3
     }
   },
-  "ci/ci-reporting.test.ts": {
+  "checks/deps/check-react-version-sync.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
@@ -34,22 +29,7 @@
       "count": 1
     }
   },
-  "ci/coverage-cobertura.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "ci/coverage-reporting.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "lib/ci/ci-env-command.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "lib/ci/ci-env-pipeline.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }

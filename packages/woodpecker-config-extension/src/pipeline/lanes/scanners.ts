@@ -7,8 +7,8 @@ import { GLOBAL_SELECTOR_INPUTS } from "#src/pipeline/inputs.ts";
  * Optional security scanners.
  *
  * Both lanes are advisory: FINDINGS must not block a merge, but a scanner that
- * fails to RUN must. Buildkite expressed that with `soft_fail` on one exact
- * exit status (7 for Trivy, 1 for Semgrep), so a crash still failed the build.
+ * fails to RUN must: a findings exit status (7 for Trivy, 1 for Semgrep) is
+ * advisory, while a crash still fails the build.
  *
  * Woodpecker's `failure: ignore` is all-or-nothing and would swallow crashes
  * too, so the distinction moves into the command: findings exit 0 with a clear

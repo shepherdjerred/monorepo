@@ -1,12 +1,10 @@
 import { describe, expect, test } from "vitest";
-import { parse } from "yaml";
 
 import {
   collectErrors,
   type RequiredEnv,
   type SecretFields,
 } from "./check-ci-env.ts";
-import { collectSteps } from "../../lib/ci/ci-env-pipeline.ts";
 import {
   assignedEnvNames,
   commandScopes,
@@ -121,7 +119,7 @@ describe("structuralParens", () => {
   test("keeps subshell parens and drops substitution parens", () => {
     expect(structuralParens("( export A=1 )")).toBe("()");
     expect(structuralParens('X="$(cmd (nested))"')).toBe("");
-    expect(structuralParens('( X="$$(cmd)" )')).toBe("()");
+    expect(structuralParens('( X="$(cmd)" )')).toBe("()");
   });
 });
 
@@ -163,86 +161,6 @@ describe("scriptPathsInCommand", () => {
     expect(scriptPathsInCommand("bun scripts/verify.ts")).toEqual([
       "scripts/verify.ts",
     ]);
-  });
-});
-
-describe("collectSteps", () => {
-  const pipeline = parse(
-    `
-env:
-  TURBO_TEAM: monorepo
-steps:
-  - key: with-env
-    command: bun scripts/release/release.ts
-    plugins:
-      - kubernetes:
-          podSpecPatch:
-            containers:
-              - name: container-0
-                env:
-                  - name: BUILDKITE_SHELL
-                    value: /bin/bash -e -c
-  - key: no-secret
-    command: bun scripts/release/publish-npm.ts
-    plugins:
-      - kubernetes:
-          podSpecPatch:
-            containers:
-              - name: container-0
-`,
-    { merge: true },
-  );
-
-  test("does not count an env key explicitly set to an empty value", () => {
-    // requireEnv rejects "" as missing, so an empty value satisfies nothing.
-    // Counting it would pass the check on a step whose script fails at runtime.
-    const withBlank = parse(
-      `
-steps:
-  - key: blank-env
-    command: bun scripts/release/release.ts
-    env:
-      SET_BUT_EMPTY: ""
-      REAL: value
-    plugins:
-      - kubernetes:
-          podSpecPatch:
-            containers:
-              - name: container-0
-                env:
-                  - name: CONTAINER_EMPTY
-                    value: ""
-                  - name: FROM_FIELD_REF
-                    valueFrom: { fieldRef: { fieldPath: metadata.name } }
-                  - name: FROM_POSTHOG_SECRET
-                    valueFrom:
-                      secretKeyRef:
-                        name: posthog-tofu-credentials
-                        key: POSTHOG_API_KEY
-`,
-      { merge: true },
-    );
-    const step = collectSteps(withBlank, [])[0];
-    expect(step?.providedNames.has("REAL")).toBe(true);
-    expect(step?.providedNames.has("SET_BUT_EMPTY")).toBe(false);
-    expect(step?.providedNames.has("CONTAINER_EMPTY")).toBe(false);
-    // An absent `value` means valueFrom, which does provide one.
-    expect(step?.providedNames.has("FROM_FIELD_REF")).toBe(true);
-    // A secretKeyRef needs vault-snapshot validation; treating it as a literal
-    // value would let a typo or blank 1Password field pass CI.
-    expect(step?.providedNames.has("FROM_POSTHOG_SECRET")).toBe(false);
-    expect(step?.explicitSecretRefs?.get("FROM_POSTHOG_SECRET")).toEqual({
-      secretName: "posthog-tofu-credentials",
-      key: "POSTHOG_API_KEY",
-    });
-  });
-
-  test("records container env and global env per step", () => {
-    const steps = collectSteps(pipeline, ["TURBO_TEAM"]);
-    const withEnv = steps.find((step) => step.key === "with-env");
-    expect(withEnv?.providedNames.has("BUILDKITE_SHELL")).toBe(true);
-    expect(withEnv?.providedNames.has("TURBO_TEAM")).toBe(true);
-    expect(withEnv?.scripts).toEqual(["scripts/release/release.ts"]);
   });
 });
 
@@ -359,17 +277,6 @@ describe("collectErrors", () => {
         required({ CI_COMMIT_SHA: "scripts/release/release.ts:5" }),
     });
     expect(errors).toEqual([]);
-  });
-
-  // Nothing injects these any more, so a script still reading one is reading
-  // a variable no step provides.
-  test("reports a leftover Buildkite variable as unprovided", () => {
-    const errors = collectErrors({
-      steps: [step],
-      requiredFor: () =>
-        required({ BUILDKITE_COMMIT: "scripts/release/release.ts:5" }),
-    });
-    expect(errors.join("\n")).toContain("BUILDKITE_COMMIT");
   });
 
   test("reports a requireEnv whose argument is not a literal", () => {

@@ -1009,7 +1009,6 @@
     {
       "package": "@shepherdjerred/root-scripts",
       "directory": "scripts",
-      "coverageSourceDirectories": ["scripts", "ci/scripts"],
       "steps": [
         {
           "runner": "vitest",

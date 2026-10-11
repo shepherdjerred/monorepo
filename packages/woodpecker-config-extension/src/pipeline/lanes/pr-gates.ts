@@ -18,7 +18,7 @@ import {
  */
 
 /**
- * Stand-in for Buildkite's build UUID, which Woodpecker has no equivalent of.
+ * Per-build request UUID, which Woodpecker does not provide.
  *
  * ArgoCD's release-root wants a UUID-shaped request id to attribute an
  * operation to one build. The pipeline number is unique per build, so it is

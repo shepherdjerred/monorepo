@@ -17,9 +17,8 @@ import type {
 /**
  * Node the CI step pods run on, and the taint they must tolerate to get there.
  *
- * Mirrors the Buildkite agent stack: CI never falls back onto the production
- * node. If the CI node is down, steps stay pending rather than displacing
- * production workloads.
+ * CI never falls back onto the production node. If the CI node is down,
+ * steps stay pending rather than displacing production workloads.
  */
 const CI_NODE_SELECTOR = { "kubernetes.io/hostname": "liskov" } as const;
 const CI_TOLERATION = {
@@ -58,9 +57,7 @@ function agentLabels(step: CiStep): Record<string, string> {
  * Pod metadata the CI I/O telemetry attributes cgroup counters through.
  *
  * Woodpecker names step pods `wp-<ulid>`, which carries no information about
- * WHICH step ran. Buildkite's agent stack stamped a job UUID
- * and build/job URLs; nothing equivalent exists here, so the pipeline stamps
- * its own identity instead.
+ * WHICH step ran, so the pipeline stamps its own identity instead.
  *
  * Commit plus step key, rather than a pipeline number: the configuration
  * extension generates this YAML while the pipeline record is still being

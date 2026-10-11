@@ -13,8 +13,7 @@ import {
 /**
  * Browser end-to-end suites.
  *
- * Buildkite ran this as `playwright-e2e-pr` and `playwright-e2e-main` with the
- * same command; the pair collapses for the same reason the resume lane's did.
+ * One step covers pull requests and the default branch.
  *
  * The step runs a selector of its own (`run-playwright.ts`) that decides which
  * suites to execute from the changed set. That is deliberate and stays: the

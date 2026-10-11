@@ -96,7 +96,7 @@ describe("affected verification filters", () => {
     "packages/feature-flags/src/managed-flag-drift.ts",
     "packages/feature-flags/src/flipt-resource-payloads.ts",
     "packages/feature-flags/src/flipt-boolean-rollouts.ts",
-    "packages/feature-flags/managed-flag-inventory.json",
+    "packages/feature-flags/src/managed-flag-inventory.json",
   ])("selects root scripts for Renovate fixture %s", async (path) => {
     expect(
       await affectedVerifyFilters(

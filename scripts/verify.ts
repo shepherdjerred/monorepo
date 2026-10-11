@@ -93,7 +93,7 @@ const ROOT_SCRIPTS_EXTERNAL_INPUTS = [
   "packages/feature-flags/src/managed-flag-drift.ts",
   "packages/feature-flags/src/flipt-resource-payloads.ts",
   "packages/feature-flags/src/flipt-boolean-rollouts.ts",
-  "packages/feature-flags/managed-flag-inventory.json",
+  "packages/feature-flags/src/managed-flag-inventory.json",
 ] as const;
 
 const IMAGE_PIN_STATE_INPUTS = new Set([

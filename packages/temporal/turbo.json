@@ -11,9 +11,6 @@
     "test:ci": {
       "passThroughEnv": ["MISE_DATA_DIR"]
     },
-    "test:report": {
-      "passThroughEnv": ["MISE_DATA_DIR"]
-    },
     // Rehearse the scheduled PR-creating workflows' environment prep against a
     // copy of the repo tree. Drives the SAME bot-clone.ts helpers the weekly
     // activities run.

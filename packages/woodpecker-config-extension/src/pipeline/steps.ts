@@ -29,9 +29,9 @@ import {
 /**
  * The CI graph, as data.
  *
- * Ported from the Buildkite pipeline one lane at a time. Each step keeps its
- * original key so the generated workflow names, the `ci.sjer.red/step-key`
- * pod label, and any existing triage muscle memory all still line up.
+ * Step keys are stable: the generated workflow names, the
+ * `ci.sjer.red/step-key` pod label, required checks and triage all key off
+ * them, so renaming one is a deliberate migration.
  *
  * The macOS and Windows compiler image builds remain paused. Their sources
  * stay in the repository so a separate reliability decision can restore them.

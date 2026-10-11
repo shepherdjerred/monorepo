@@ -71,10 +71,6 @@ export const TestManifestSchema = z
         .object({
           package: z.string().min(1),
           directory: z.string().min(1),
-          coverageSourceDirectories: z
-            .array(z.string().min(1))
-            .min(1)
-            .optional(),
           defaultEnv: z.record(z.string(), z.string()).optional(),
           coverageAlways: z.boolean().optional(),
           steps: z.array(StepSchema).min(1),

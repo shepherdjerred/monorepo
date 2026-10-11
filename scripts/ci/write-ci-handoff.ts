@@ -3,7 +3,6 @@
 /**
  * Publish one build-scoped handoff value, read from stdin.
  *
- * Replaces the `buildkite-agent meta-data set` and `artifact upload` pair.
  * Reading from stdin rather than taking the value as an argument keeps large
  * payloads (the version catalog, image digest maps) off the process
  * command line, and matches how the producing steps already pipe `jq` output.

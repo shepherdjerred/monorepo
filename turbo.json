@@ -9,7 +9,6 @@
     "patches/**",
     "scripts/ci/ci-reporting.ts",
     "scripts/ci/mstest-configuration.ts",
-    "scripts/ci/coverage-cobertura.ts",
     "scripts/ci/gradle-junit.ts",
     "scripts/ci-test-manifest.json",
     "scripts/ci/run-ci-test.ts",
@@ -44,9 +43,6 @@
     "@shepherdjerred/statically-typed#test:ci": {
       "dependsOn": ["build"]
     },
-    "@shepherdjerred/statically-typed#test:report": {
-      "dependsOn": ["build"]
-    },
     "@scout-for-lol/temporal#build": {
       "dependsOn": ["^build"],
       "outputs": []
@@ -74,14 +70,6 @@
       "env": ["NODE_ENV"],
       "passThroughEnv": ["MISE_DATA_DIR"],
       "dependsOn": ["^build", "generate"]
-    },
-    // The scheduled reporting pipeline must execute every test and produce a
-    // complete fresh coverage set, so this task intentionally bypasses Turbo.
-    "test:report": {
-      "cache": false,
-      "env": ["NODE_ENV"],
-      "passThroughEnv": ["MISE_DATA_DIR"],
-      "dependsOn": ["generate", "^build"]
     },
     "lint": {
       // "generate" for the same reason typecheck/test have it: type-aware
@@ -272,8 +260,6 @@
         "scripts/**/*.test.ts",
         "vitest.config.ts",
         "ci/scripts/**/*.ts",
-        "ci/main-bootstrap.yml",
-        "ci/pipeline.yml",
         "packages/version-catalog/src/catalog.json",
         "packages/discord-plays-mario-kart/scripts/**/*.ts",
         "packages/discord-plays-mario-kart/Dockerfile",
@@ -299,7 +285,6 @@
         "bun.lock",
         "package.json",
         ".gitignore",
-        ".editorconfig",
         ".prettierrc.json",
         ".prettierignore",
         "scripts/ci/repo-shards.ts",
@@ -321,7 +306,6 @@
         "bun.lock",
         "package.json",
         ".gitignore",
-        ".editorconfig",
         ".prettierrc.json",
         ".prettierignore",
         "scripts/ci/repo-shards.ts",
@@ -343,7 +327,6 @@
         "bun.lock",
         "package.json",
         ".gitignore",
-        ".editorconfig",
         ".prettierrc.json",
         ".prettierignore",
         "scripts/ci/repo-shards.ts",
@@ -367,7 +350,6 @@
         "bun.lock",
         "package.json",
         ".gitignore",
-        ".editorconfig",
         ".prettierrc.json",
         ".prettierignore",
         "scripts/ci/repo-shards.ts",

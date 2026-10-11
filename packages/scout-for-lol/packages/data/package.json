@@ -20,8 +20,7 @@
     "format": "bun x prettier --check src",
     "format:write": "bun x prettier --write src",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
-    "update-data-dragon": "bun run scripts/update-data-dragon.ts",
-    "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/ci/run-ci-test.ts"
+    "update-data-dragon": "bun run scripts/update-data-dragon.ts"
   },
   "dependencies": {
     "@scout-for-lol/domain": "workspace:*",

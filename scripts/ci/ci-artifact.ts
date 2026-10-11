@@ -3,8 +3,7 @@
 /**
  * Publish or restore a build-scoped binary artifact.
  *
- * Replaces `buildkite-agent artifact upload` / `download` for the payloads
- * that are directory trees rather than JSON documents.
+ * Used for payloads that are directory trees rather than JSON documents.
  *
  * Usage:
  *   bun scripts/ci/ci-artifact.ts put <key>
