@@ -141,7 +141,10 @@ export async function appendBundleLine(
 
 export const ReplayManifestSchema = z
   .object({
-    schemaVersion: z.literal(2),
+    schemaVersion: z.literal(3, {
+      error:
+        "Replay bundle format changed; capture a fresh v3 pin and rerun the baseline.",
+    }),
     analysisEnabled: z.boolean(),
     capturedAnalysisEnabled: z.boolean(),
     runId: z.string().min(1),
@@ -163,7 +166,7 @@ export const ReplayManifestSchema = z
     lake: z
       .object({
         buildId: z.string().min(1),
-        puuidRemapFingerprint: z.string().min(1),
+        schemaFingerprint: z.string().min(1),
       })
       .strict(),
     database: z

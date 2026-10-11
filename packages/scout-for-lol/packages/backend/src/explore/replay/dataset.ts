@@ -13,10 +13,8 @@ import { CapturedGuildConfigSchema } from "#src/explore/replay/profiles.ts";
  * every answer computed on top reads as a model regression that never
  * happened.
  *
- * The compactor already refuses to fold across that boundary, comparing the
- * build manifest's PUUID-remap fingerprint against the database's. This module
- * reuses the same comparison as an entry condition for the eval, because an
- * eval that cannot trust its own dataset is worse than no eval.
+ * Schema, snapshot contents, account counts and sampled identity coverage are
+ * entry conditions: an eval must trust its dataset before making model calls.
  */
 
 /**
@@ -42,7 +40,10 @@ export type ReplayStage = z.infer<typeof ReplayStageSchema>;
 
 export const StageDatasetPinSchema = z
   .object({
-    schemaVersion: z.literal(2),
+    schemaVersion: z.literal(3, {
+      error:
+        "Replay dataset format changed; re-capture a fresh v3 pin and baseline.",
+    }),
     runtime: z.strictObject({
       analysisEnabled: z.boolean(),
       model: z.string().min(1),
@@ -54,8 +55,6 @@ export const StageDatasetPinSchema = z
         dir: z.string().min(1),
         buildId: z.string().min(1),
         schemaFingerprint: z.string().min(1),
-        /** Recorded at pull time; re-checked before every run. */
-        puuidRemapFingerprint: z.string().min(1),
         pulledAt: z.iso.datetime(),
         sourcePod: z.string().min(1),
       })
@@ -158,9 +157,6 @@ export type DatasetCoherenceFacts = {
   /** What the writable tables hold now, and held when the pin was captured. */
   readonly writableRows: Readonly<Record<string, string>>;
   readonly pinnedWritableRows: Readonly<Record<string, string>>;
-  /** `undefined` when the build predates the fingerprint, or its manifest is unreadable. */
-  readonly lakeFingerprint: string | undefined;
-  readonly databaseFingerprint: string;
   readonly accountRows: {
     readonly parquet: number;
     readonly database: number;
@@ -211,20 +207,6 @@ export function datasetCoherenceIssues(
   if (facts.snapshotId !== facts.pinnedSnapshotId) {
     issues.push(
       `the database has been restored since this pin was captured (snapshot ${facts.snapshotId}, pin ${facts.pinnedSnapshotId}); re-capture the pin`,
-    );
-  }
-
-  if (facts.lakeFingerprint === undefined) {
-    // Not the same as a mismatch, and worth saying differently: the build is
-    // older than the fingerprint or its manifest did not survive the copy.
-    // Either way coherence cannot be proven, and an unprovable dataset is
-    // treated exactly like a wrong one.
-    issues.push(
-      "the lake build records no PUUID remap fingerprint, so its identity domain cannot be proven",
-    );
-  } else if (facts.lakeFingerprint !== facts.databaseFingerprint) {
-    issues.push(
-      `PUUID remap fingerprint differs: lake ${facts.lakeFingerprint}, database ${facts.databaseFingerprint}`,
     );
   }
 

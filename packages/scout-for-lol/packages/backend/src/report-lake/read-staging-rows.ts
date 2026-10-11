@@ -9,7 +9,7 @@ import {
   TimelineEventParticipantLakeRowSchema,
   TimelineParticipantFrameLakeRowSchema,
 } from "@scout-for-lol/data";
-import { RawDocumentLakeRowSchema } from "@scout-for-lol/data/model/reports/raw-document-lake-columns.ts";
+import { BridgeRawDocumentLakeRowSchema } from "#src/report-lake/schema-upgrade/layout.ts";
 import { createLogger } from "#src/logger.ts";
 import { reportLakeCompactionSkippedTotal } from "#src/metrics/reports/report-lake.ts";
 import type { ReportLakeProgress } from "#src/report-lake/compaction-types.ts";
@@ -28,7 +28,7 @@ const logger = createLogger("report-lake-staging-reader");
 function schemaForTable(table: ReportLakeStagingTable) {
   switch (table) {
     case "raw_documents":
-      return RawDocumentLakeRowSchema;
+      return BridgeRawDocumentLakeRowSchema;
     case "matches":
       return MatchLakeRowSchema;
     case "match_teams":

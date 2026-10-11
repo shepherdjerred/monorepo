@@ -1295,6 +1295,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "scout-report-lake-schema-upgrade-enabled",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-report-lake",
+      "purpose": "Permit the online raw-document schema upgrade after all stage readers and writers support both layouts.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "scout-temporal-call-graph-tracing",
       "owner": "scout",
       "namespace": "scout",
@@ -2220,6 +2232,14 @@
     {
       "key": "beta",
       "overrides": [
+        {
+          "key": "scout-report-lake-schema-upgrade-enabled",
+          "type": "boolean",
+          "default": false,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
         {
           "key": "the-storm-analytics-enabled",
           "type": "boolean",

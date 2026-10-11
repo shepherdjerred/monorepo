@@ -22,39 +22,6 @@ detail below; the rest of the directory is indexed here.
 `*.test.ts` files are the tests for these scripts (`bun run test ./scripts` from
 the Scout package root).
 
-## PUUID migration column contracts
-
-`puuid-migration/support.ts` registers identity-bearing JSON columns that
-cannot be found by their names, including champion-mastery entries, notification
-and settlement payloads, and workflow-start input envelopes. Discovery and the
-completeness audit must agree; an unregistered data column still fails the audit.
-
-Each discovered column also needs a collection role. Mastery cache keys/entries
-and completed settlement presentation payloads are archives: existing mappings
-rewrite them, but they do not independently register watched players. Unaccepted
-workflow-start envelopes and nonterminal notification intents are dated tracked
-sources. Accepted starts and terminal intents remain historical payloads.
-
-`ExploreToolPayload.payload` stores JSON inspection captures and query datasets
-for on-demand reads, not instructions replayed into model history. Register it
-for discovery and as an archive: translate identities already in the map,
-preserve the rows and unrelated values, and never collect arbitrary query
-participants as watched players.
-
-Inspection prompts and query text can embed a mapped PUUID inside a longer
-string. `EMBEDDED_PUUID_ARCHIVE_COLUMNS` explicitly limits whole-token
-substitution to `ExploreMessage.trace`, `ScoutInteractiveRun.trace`, and
-`ExploreToolPayload.payload`. Actionable contracts and workflow-start payloads
-retain structural whole-value rewriting; embedded durable business keys must
-not change. Unmapped tokens and longer lookalikes remain untouched.
-
-`ScoutTemporalWork.id` and `ScoutWorkflowStart.requestedWorkflowId` are preserved
-durable business keys, not player references. They can embed the identity used
-when work was created, but accepted Temporal executions retain those exact keys.
-Do not rename them during a retrofit. Actual PUUID values inside their payloads
-are rewritten normally. Inspect open executions and pending work separately
-before asserting that raw-archive recovery is quiescent.
-
 ## Selective Test Running
 
 `find-dependent-tests.ts` and `run-relevant-tests.ts` run only the tests

@@ -122,7 +122,9 @@ Match-summary pages include the roster and game/player facts at offset zero.
 Continuation pages return new events and coverage without duplicating those
 facts in the model context; `matchFactsIncluded` identifies the first page.
 
-Replay pins and bundles use schema version 2. Capture records the resolved model
+Replay pins and bundles use schema version 3. Older pins and bundles are rejected;
+pull a fresh stage dataset and capture a new pin and baseline rather than adapting
+retired PUUID-map metadata. Capture records the resolved model
 and analysis capability as well as guild policies. `test:explore:replay` uses
 those values by default; `--analysis on|off` and `--model <id>` explicitly select
 a candidate and are recorded in its manifest. Capture and replay reject a lake
@@ -282,7 +284,7 @@ Two invariants worth knowing before editing a skill:
 canonical grouping keys and separate `__group_labels` display names;
 `materialize_raw_documents` reads captured match, prematch and timeline JSON
 for those match IDs. Raw documents preserve unknown fields, nested arrays,
-nulls and original identities with a separate remap. Spectator credentials
+nulls and canonical identities without a runtime PUUID translation. Spectator credentials
 are excluded. Source key, digest and capture time identify each capture;
 missing documents are reported explicitly, without acquiring new Riot data.
 
@@ -312,6 +314,16 @@ storage before enabling analysis against an older build. Rebuild and compaction
 publish raw documents together with the existing projections. Version 2 staging
 receipts attest this larger projection; existing version 1 receipts keep their
 original meaning.
+
+The temporary raw-document schema bridge reads the exact legacy physical layout
+and the column-free layout. Ordinary folds and default-off rebuilds preserve the
+published layout. `scout-report-lake-schema-upgrade-enabled` permits an online
+rebuild into the column-free layout only after all stage readers and writers
+support it. Publication validates the candidate and committed staging before
+atomically switching `CURRENT`; writes committed during the rebuild remain in
+the staging read view until a later fold. A failed candidate leaves the published
+build and staging untouched. After publication, rollback uses the bridge image
+with the new lake, not a pre-bridge image or a stale lake copy.
 
 ### Model choice and spending
 

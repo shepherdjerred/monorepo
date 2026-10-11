@@ -20,7 +20,6 @@ import {
   flattenPrematch,
 } from "#src/report-lake/flatten.ts";
 import { flattenTimeline } from "#src/report-lake/flatten-timeline.ts";
-import { remapRawJson } from "#src/report-lake/puuid-remap.ts";
 import type { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
 import {
   stagingIdForMatch,
@@ -56,7 +55,6 @@ function s3RawDocumentRow(input: {
   key: string;
   rawText: string;
   capturedAt: Date;
-  identityMap: ReadonlyMap<string, string>;
 }) {
   return rawDocumentRow({
     kind: input.kind,
@@ -68,7 +66,6 @@ function s3RawDocumentRow(input: {
       key: input.key,
       digest: createHash("sha256").update(input.rawText).digest("hex"),
     },
-    identityMap: input.identityMap,
   });
 }
 
@@ -81,11 +78,6 @@ type RebuildSourceOptions = {
   rawWriter?: NdjsonFileWriter;
   foldedIds: Set<string>;
   foldedSources?: Set<string>;
-  /**
-   * Old→new PUUIDs for payloads captured under a previous API key. Applied
-   * before validation, so flattening never sees an old-domain identifier.
-   */
-  puuidRemap: ReadonlyMap<string, string>;
   abortSignal?: AbortSignal;
   onProgress?: (progress: {
     files: number;
@@ -112,10 +104,7 @@ export async function populateMatchesFromS3(
         options.abortSignal?.throwIfAborted();
         await setImmediate();
         options.abortSignal?.throwIfAborted();
-        const rawParsed: unknown = remapRawJson(
-          JSON.parse(rawText),
-          options.puuidRemap,
-        );
+        const rawParsed: unknown = JSON.parse(rawText);
         const parsed = RawMatchSchema.safeParse(rawParsed);
         if (!parsed.success) {
           logger.warn(`Skipping S3 match ${key}: rawJson failed validation`, {
@@ -132,7 +121,6 @@ export async function populateMatchesFromS3(
             key,
             rawText,
             capturedAt: observedAt,
-            identityMap: options.puuidRemap,
           }),
         };
       }),
@@ -307,8 +295,6 @@ export async function populateTimelinesFromS3(options: {
   writers: TimelineRebuildWriters;
   foldedIds: Set<string>;
   foldedSources?: Set<string>;
-  /** Old→new PUUIDs for payloads captured under a previous API key. */
-  puuidRemap: ReadonlyMap<string, string>;
   abortSignal?: AbortSignal;
   onProgress?: (progress: {
     files: number;
@@ -330,10 +316,7 @@ export async function populateTimelinesFromS3(options: {
         );
         await setImmediate();
         options.abortSignal?.throwIfAborted();
-        const rawParsed: unknown = remapRawJson(
-          JSON.parse(rawText),
-          options.puuidRemap,
-        );
+        const rawParsed: unknown = JSON.parse(rawText);
         const parsed = RawTimelineSchema.safeParse(rawParsed);
         if (!parsed.success) {
           logger.warn(
@@ -352,7 +335,6 @@ export async function populateTimelinesFromS3(options: {
             key: item.key,
             rawText,
             capturedAt: item.observedAt,
-            identityMap: options.puuidRemap,
           }),
         };
       }),
@@ -438,10 +420,7 @@ export async function populatePrematchFromS3(
         );
         await setImmediate();
         options.abortSignal?.throwIfAborted();
-        const rawParsed: unknown = remapRawJson(
-          JSON.parse(rawText),
-          options.puuidRemap,
-        );
+        const rawParsed: unknown = JSON.parse(rawText);
         const parsed = RawCurrentGameInfoSchema.safeParse(rawParsed);
         if (!parsed.success) {
           logger.warn(
@@ -460,7 +439,6 @@ export async function populatePrematchFromS3(
             key: item.key,
             rawText,
             capturedAt: item.observedAt,
-            identityMap: options.puuidRemap,
           }),
         };
       }),

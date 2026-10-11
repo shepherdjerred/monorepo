@@ -1,10 +1,7 @@
 import { mkdir, unlink } from "node:fs/promises";
 import path from "node:path";
 import { prisma as defaultPrisma } from "#src/database/index.ts";
-import {
-  readBuildFingerprint,
-  readBuildPuuidRemapFingerprint,
-} from "#src/report-lake/build-manifest.ts";
+import { readBuildFingerprint } from "#src/report-lake/build-manifest.ts";
 import { createLogger } from "#src/logger.ts";
 import {
   publishCompactionMetrics,
@@ -12,10 +9,7 @@ import {
   type CompactionSummary as PublishedCompactionSummary,
 } from "#src/report-lake/compaction-publish.ts";
 type CompactionSummary = PublishedCompactionSummary;
-import {
-  loadPuuidRemap,
-  puuidRemapFingerprint,
-} from "#src/report-lake/puuid-remap.ts";
+import { reportLakeLayout } from "#src/report-lake/schema-upgrade/layout.ts";
 import {
   buildDirPath,
   ensureLakeScaffold,
@@ -25,7 +19,6 @@ import {
   readCurrentBuildDir,
   resolveLakeDir,
 } from "#src/report-lake/paths.ts";
-import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
 import {
   removeFoldedStagingFiles,
   type ReportLakeStagingTable,
@@ -90,25 +83,13 @@ export async function runReportLakeFold(
     }
 
     // A fold hardlinks the published build's parquet and appends fold files
-    // written at the CURRENT column set. If those disagree, the resulting build
-    // does not read at all (see lakeSchemaFingerprint), so rebuild instead.
+    // written at the same physical column set. The bridge recognizes exactly
+    // two layouts; any other schema still requires a full rebuild.
     const publishedFingerprint = await readBuildFingerprint(currentDir);
-    if (publishedFingerprint !== lakeSchemaFingerprint()) {
+    const layout = reportLakeLayout(publishedFingerprint);
+    if (layout === undefined) {
       logger.info(
-        `Lake column set changed since the published build (${publishedFingerprint ?? "unrecorded"} -> ${lakeSchemaFingerprint()}); folding via full rebuild`,
-      );
-      return await rebuildReportLake(prisma, lakeDir, startedAt, options);
-    }
-
-    // A fold cannot retranslate history: it hardlinks the published parquet and
-    // only appends. If the PUUID domain moved since that build, match rows would
-    // keep old identifiers while accounts — read from the re-domained database —
-    // moved on, hiding historical results. Rebuild instead.
-    const publishedRemap = await readBuildPuuidRemapFingerprint(currentDir);
-    const currentRemap = puuidRemapFingerprint(await loadPuuidRemap(prisma));
-    if (publishedRemap !== currentRemap) {
-      logger.info(
-        `PUUID remap changed since the published build (${publishedRemap ?? "unrecorded"} -> ${currentRemap}); folding via full rebuild`,
+        `Lake column set is unknown (${publishedFingerprint ?? "unrecorded"}); folding via full rebuild`,
       );
       return await rebuildReportLake(prisma, lakeDir, startedAt, options);
     }
@@ -146,6 +127,7 @@ export async function runReportLakeFold(
           buildId,
           table: "raw_documents",
           staged: stagedRawDocuments,
+          layout,
           abortSignal: options.abortSignal,
         });
         const stagedPrematches = await read("prematch");
@@ -253,9 +235,7 @@ export async function runReportLakeFold(
             stagedTimelineParticipantFrames.skipped +
             stagedTimelineCoverage.skipped,
         };
-        // The fold only reaches here when the published build already matches the
-        // current remap, so carrying it forward keeps the manifest truthful.
-        await writeCompactionManifest(buildDir, summary, currentRemap);
+        await writeCompactionManifest(buildDir, summary, layout);
         await publishBuild(lakeDir, buildId, options.abortSignal);
         markPublished();
         publishCompactionMetrics(summary);

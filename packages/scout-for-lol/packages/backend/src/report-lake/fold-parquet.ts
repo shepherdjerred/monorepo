@@ -1,6 +1,10 @@
 import { mkdir, rm } from "node:fs/promises";
 import path from "node:path";
-import { RAW_DOCUMENT_LAKE_COLUMNS } from "@scout-for-lol/data/model/reports/raw-document-lake-columns.ts";
+import type { DuckDbColumnType } from "@scout-for-lol/data";
+import {
+  rawDocumentColumns,
+  type ReportLakeLayout,
+} from "#src/report-lake/schema-upgrade/layout.ts";
 import { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
 import { copyNdjsonToParquet } from "#src/report-lake/parquet/copy-ndjson.ts";
 import {
@@ -26,10 +30,13 @@ export type StagingParseResult = {
   skipped: number;
 };
 
-function columnsForTable(table: ReportLakeStagingTable) {
+export function columnsForTable(
+  table: ReportLakeStagingTable,
+  layout: ReportLakeLayout,
+): Record<string, DuckDbColumnType> {
   switch (table) {
     case "raw_documents":
-      return RAW_DOCUMENT_LAKE_COLUMNS;
+      return rawDocumentColumns(layout);
     case "matches":
       return MATCH_LAKE_COLUMNS;
     case "match_teams":
@@ -57,15 +64,17 @@ export async function writeFoldParquet({
   table,
   staged,
   abortSignal,
+  layout = "current",
 }: {
   buildDir: string;
   buildId: string;
   table: ReportLakeStagingTable;
   staged: StagingParseResult;
   abortSignal?: AbortSignal | undefined;
+  layout?: ReportLakeLayout;
 }): Promise<void> {
   abortSignal?.throwIfAborted();
-  const columns = columnsForTable(table);
+  const columns = columnsForTable(table, layout);
   for (const [month, rows] of staged.rowsByMonth) {
     const monthDir = path.join(buildDir, table, `month=${month}`);
     await mkdir(monthDir, { recursive: true });

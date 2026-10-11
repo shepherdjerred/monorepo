@@ -83,8 +83,6 @@ export async function rebuildTimelineParquet(options: {
   foldedSources?: Set<string>;
   abortSignal: AbortSignal;
   timeoutMs: number;
-  /** Old→new PUUIDs for timelines captured under a previous API key. */
-  puuidRemap: ReadonlyMap<string, string>;
   onProgress?: (progress: {
     files: number;
     rows: number;
@@ -108,7 +106,6 @@ export async function rebuildTimelineParquet(options: {
       ...(options.foldedSources === undefined
         ? {}
         : { foldedSources: options.foldedSources }),
-      puuidRemap: options.puuidRemap,
       abortSignal: options.abortSignal,
       ...(options.onProgress === undefined
         ? {}

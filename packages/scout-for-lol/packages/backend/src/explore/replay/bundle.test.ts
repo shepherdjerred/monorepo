@@ -369,7 +369,7 @@ describe("bundlePaths", () => {
 describe("ReplayManifestSchema", () => {
   test("rejects unknown fields", () => {
     const manifest = {
-      schemaVersion: 2,
+      schemaVersion: 3,
       analysisEnabled: false,
       capturedAnalysisEnabled: false,
       runId: "run-1",
@@ -378,7 +378,7 @@ describe("ReplayManifestSchema", () => {
       profile: "full",
       guildId: "1337623164146155593",
       expectedCapabilities: { bucks: true },
-      lake: { buildId: "b1", puuidRemapFingerprint: "none" },
+      lake: { buildId: "b1", schemaFingerprint: "current-schema" },
       database: { name: "scout_beta_snapshot", snapshotId: "1326601" },
       model: "gpt-5.6-luna",
       chipCatalogSha256: "a".repeat(64),
@@ -393,6 +393,10 @@ describe("ReplayManifestSchema", () => {
       baselineRunId: null,
     };
     expect(() => ReplayManifestSchema.parse(manifest)).not.toThrow();
+    for (const schemaVersion of [1, 2])
+      expect(() =>
+        ReplayManifestSchema.parse({ ...manifest, schemaVersion }),
+      ).toThrow("fresh v3 pin");
     expect(() =>
       ReplayManifestSchema.parse({ ...manifest, extra: 1 }),
     ).toThrow();
