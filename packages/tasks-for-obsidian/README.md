@@ -126,6 +126,13 @@ durable queues, no conflicts or pending host work, and identical synthetic file
 paths and hashes in all three folders. Initial download has a 180-second deadline;
 later convergence has 120 seconds. Failures retain the run without automatic retries.
 
+Sealing and every completed round verify the exact official plugin manifest,
+JavaScript and stylesheet hashes against the pinned release. Native configuration
+captures require successful reference changes and matching settings evidence from
+the current round. Before offline recovery resumes transport, it verifies the
+bound disconnected profile, persisted edited task bytes, and a nonempty durable
+outbox whose operation digest and count remain unchanged during the check.
+
 Reference changes exercise file writes through official Obsidian's Sync transport;
 they do not constitute official TaskNotes UI interaction. Native journeys capture,
 edit, complete, uncomplete and cold-relaunch on both clients in the active round.

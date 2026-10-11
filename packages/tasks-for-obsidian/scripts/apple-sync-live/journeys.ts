@@ -7,9 +7,22 @@ import {
   digest,
   runDirectory,
   atomicJSON,
+  verifyReplica,
 } from "./model";
 import { save, launch, statuses } from "./platform";
-import { runNativeTest, waitForConvergence, control } from "./native";
+import {
+  runNativeTest,
+  waitForConvergence,
+  control,
+  ownedProfile,
+  replicaDirectory,
+} from "./native";
+import { assertCurrentConfigurationProof } from "./configuration";
+import { outboxSnapshot } from "./outbox";
+import {
+  assertOfflinePending,
+  assertUnchangedOfflineOutbox,
+} from "./offline-proof";
 
 export async function augmentFromOfficial(
   manifest: Manifest,
@@ -88,13 +101,12 @@ export async function waitForNativeTasks(
 }
 
 export async function journeys(manifest: Manifest) {
-  if (
-    manifest.cases["initial-download"] !== "pass" ||
-    !(await Bun.file(
+  assertCurrentConfigurationProof(
+    manifest,
+    await Bun.file(
       path.join(runDirectory(manifest.runID), "settings-changed.json"),
-    ).exists())
-  )
-    throw new Error("Run verify and reference-changes before native journeys");
+    ).json(),
+  );
   await waitForConvergence(manifest, manifest.reference);
   const round = manifest.round;
   for (const client of ["ios", "macos"] as const) {
@@ -160,6 +172,9 @@ export async function referenceChange(
   await atomicJSON(path.join(runDirectory(manifest.runID), `${label}.json`), {
     schemaVersion: 1,
     runID: manifest.runID,
+    round: manifest.round,
+    changedPath: relative,
+    expectedFingerprint: expected[relative] ?? null,
     clients: evidence,
   });
 }
@@ -279,12 +294,61 @@ export async function offline(manifest: Manifest) {
       },
     );
     await launch(manifest, false, client);
-    await control(manifest, client, "resume", profile.profileID);
     const title = `Offline ${client === "ios" ? "iOS" : "macOS"} ${manifest.runID}-${String(manifest.round)} edited`;
+    const deadline = Date.now() + 120_000;
+    const before = await ownedProfile(manifest, client, false);
+    const outbox = assertOfflinePending(
+      before,
+      profile.profileID,
+      manifest.allowedRemoteVaultID,
+      await outboxSnapshot(manifest, client, profile.profileID),
+    );
+    const replica = replicaDirectory(manifest, client, profile.profileID);
+    const retained = await augmentFromOfficial(
+      manifest,
+      [title],
+      false,
+      replica,
+    );
+    await verifyReplica(replica, retained);
+    const after = await ownedProfile(
+      manifest,
+      client,
+      false,
+      Math.max(1, deadline - Date.now()),
+    );
+    assertUnchangedOfflineOutbox(
+      outbox,
+      assertOfflinePending(
+        after,
+        profile.profileID,
+        manifest.allowedRemoteVaultID,
+        await outboxSnapshot(manifest, client, profile.profileID),
+      ),
+    );
+    if (Date.now() >= deadline)
+      throw new Error("Offline proof deadline exceeded");
+    await atomicJSON(
+      path.join(runDirectory(manifest.runID), `offline-${client}-pending.json`),
+      {
+        schemaVersion: 1,
+        runID: manifest.runID,
+        round: manifest.round,
+        profileID: profile.profileID,
+        outbox,
+        expected: retained,
+      },
+    );
+    await control(manifest, client, "resume", profile.profileID);
     const evidence = await waitForNativeTasks(manifest, [title]);
     await atomicJSON(
       path.join(runDirectory(manifest.runID), `offline-${client}.json`),
-      { schemaVersion: 1, runID: manifest.runID, clients: evidence },
+      {
+        schemaVersion: 1,
+        runID: manifest.runID,
+        round: manifest.round,
+        clients: evidence,
+      },
     );
   }
   manifest.cases["offline-recovery"] = "pass";
