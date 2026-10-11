@@ -180,11 +180,6 @@ class GitHubClient:
         response.raise_for_status()
         return response.json()
 
-    def disable_discussions(self, owner: str, repo: str) -> None:
-        """Disable discussions for a repository (requires GraphQL)."""
-        # Note: This requires the GraphQL API, skipping for now
-        pass
-
 
 def normalize_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Normalize rules for comparison by sorting and removing metadata."""
