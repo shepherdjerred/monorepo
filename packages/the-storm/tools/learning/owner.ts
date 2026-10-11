@@ -11,7 +11,7 @@ import {
 import { WorkerBudget } from "./worker-process.ts";
 import { PaperMapOwner } from "./maps/owner.ts";
 import { MapBinding, scenarioHash } from "./maps/plan.ts";
-import { scenarioFor } from "./maps/scenario.ts";
+import { trainingScenarioFor } from "./maps/training-scenarios.ts";
 import { isDeepStrictEqual } from "node:util";
 
 const actionFields = String.raw`[a-f0-9-]+ [a-f0-9-]+ \d+ \d+ [0-8] [01] [01] [01] [01]`;
@@ -306,7 +306,7 @@ async function verifyEpisode(
     !isDeepStrictEqual(binding, session.maps.binding) ||
     setup.map !== binding.map ||
     scenarioHash(setup.scenario) !== binding.scenarioSha256 ||
-    !isDeepStrictEqual(setup.scenario, scenarioFor(binding.map)) ||
+    !isDeepStrictEqual(setup.scenario, trainingScenarioFor(binding.map)) ||
     setup.scenario.mapSha256 !== binding.blocksSha256 ||
     setup.match !== report["match"] ||
     setup.seed !== report["seed"] ||

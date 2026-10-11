@@ -251,6 +251,8 @@ try {
       const s = await status(console);
       return s.ready && s.phase === "Live";
     }, "ordinary showcase start");
+    // Let the first off-thread bot decision finish before fixture teardown.
+    await Bun.sleep(2000);
     await console.command("storm-fixture-map-lifecycle stop");
     await wait(async () => {
       const s = await status(console);
