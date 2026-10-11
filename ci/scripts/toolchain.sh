@@ -12,7 +12,12 @@ set -eu
 case "${BASH_VERSION:-}" in "") ;; *) set -o pipefail ;; esac
 CI_TOOLCHAIN_STARTED=$(date +%s)
 
-command -v mise >/dev/null || curl -fsSL https://mise.run | sh
+# Stale images without mise (the Playwright image) bootstrap the same release
+# ci-base pins, so both read mise.lock's format identically.
+# renovate: datasource=github-releases depName=jdx/mise
+MISE_BOOTSTRAP_VERSION="v2026.10.6"
+command -v mise >/dev/null ||
+  curl -fsSL https://mise.run | MISE_VERSION="$MISE_BOOTSTRAP_VERSION" sh
 if [ "$(id -u)" -eq 0 ]; then
   # Root-hosted tests drop Postgres server processes to nobody. Keep the
   # mise shims and installed binaries outside /root so that user can execute
@@ -20,10 +25,15 @@ if [ "$(id -u)" -eq 0 ]; then
   export MISE_DATA_DIR=/opt/mise
 fi
 export PATH="/opt/mise/shims:$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"
-# mise resolves tool versions via api.github.com; unauthenticated calls share
-# the cluster egress IP's 60/hr limit, which CI exhausts immediately. Scope the
-# download-only identity to mise itself instead of exporting a general GitHub
-# token to every command the step runs.
+# Install exactly the URLs and checksums mise.lock records instead of asking
+# api.github.com to resolve versions and release assets: those lookups draw on
+# the same 5,000/hr bucket as every other CI and agent GitHub read. Locked mode
+# fails on a tool the lockfile does not cover rather than resolving it.
+export MISE_LOCKED=1
+# Downloads and provenance checks can still reach GitHub; unauthenticated calls
+# share the cluster egress IP's 60/hr limit, which CI exhausts immediately.
+# Scope the download-only identity to mise itself instead of exporting a
+# general GitHub token to every command the step runs.
 mise_ci() {
   if [ -n "${GITHUB_DOWNLOAD_TOKEN:-}" ]; then
     GITHUB_TOKEN="$GITHUB_DOWNLOAD_TOKEN" mise "$@"
@@ -43,8 +53,8 @@ expose_postgres_tools() {
       chmod a+rX "${MISE_DATA_DIR}/installs"
     fi
     chmod -R a+rX "${MISE_DATA_DIR}/shims"
-    if [ -d "${MISE_DATA_DIR}/installs/ubi-theseus-rs-postgresql-binaries" ]; then
-      chmod -R a+rX "${MISE_DATA_DIR}/installs/ubi-theseus-rs-postgresql-binaries"
+    if [ -d "${MISE_DATA_DIR}/installs/github-theseus-rs-postgresql-binaries" ]; then
+      chmod -R a+rX "${MISE_DATA_DIR}/installs/github-theseus-rs-postgresql-binaries"
     fi
   fi
 }
@@ -96,7 +106,7 @@ case "${MISE_TOOLCHAIN_SCOPE:-full}" in
     # audit boots the real backend via scripts/dev/dev-web.ts, which spawns
     # `temporal server start-dev` unconditionally (dev-web-temporal.ts) and
     # has no way to run without it.
-    mise_ci install --yes bun node 'ubi:theseus-rs/postgresql-binaries' 'aqua:temporalio/cli'
+    mise_ci install --yes bun node 'github:theseus-rs/postgresql-binaries' 'aqua:temporalio/cli'
     mise_ci reshim
     expose_postgres_tools
     ;;

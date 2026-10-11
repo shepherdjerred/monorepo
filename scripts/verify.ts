@@ -39,6 +39,7 @@ const turboTasks = [
   "line-endings-root",
   "react-version-sync",
   "toolchain-version-sync",
+  "mise-lock-sync",
   "large-files-scout",
   "large-files-homelab",
   "large-files-packages",

@@ -47,6 +47,7 @@ const ALL_TARGET_INPUTS = [
   "ci/scripts/selectors/select-image-targets-workspaces.ts",
   "ci/scripts/toolchain.sh",
   ".mise.toml",
+  "mise.lock",
   "bun.lock",
   "bunfig.toml",
   "package.json",

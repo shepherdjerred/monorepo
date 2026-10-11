@@ -28,6 +28,7 @@ See [packages/README.md](packages/README.md) for the complete package list.
 
 ```bash
 mise install                    # install pinned toolchain (bun, node, tofu, …)
+mise lock --platform linux-x64,macos-arm64  # after editing .mise.toml; CI installs --locked
 bun install --frozen-lockfile   # one workspace-wide install
 bunx turbo run generate         # codegen: Prisma clients, etc.
 bunx lefthook install           # arm git hooks

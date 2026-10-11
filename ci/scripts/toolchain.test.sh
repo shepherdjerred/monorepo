@@ -151,6 +151,7 @@ mkdir -p "$TEST_ROOT/profiles"
 cat >"$TEST_ROOT/profiles/mise" <<'EOF'
 #!/usr/bin/env bash
 printf '%s\n' "$*" >>"$CI_PROFILE_COMMAND_LOG"
+printf 'locked=%s\n' "${MISE_LOCKED:-}" >>"$CI_PROFILE_COMMAND_LOG"
 if [ "$1" = which ]; then printf '/test/tools/gh\n'; fi
 EOF
 cat >"$TEST_ROOT/profiles/id" <<'EOF'
@@ -179,6 +180,10 @@ for profile in automation deployment tofu; do
     exit 1
   fi
   rg -Fxq reshim "$profile_log"
+  if rg -q '^locked=$' "$profile_log"; then
+    echo "$profile ran mise without locked mode" >&2
+    exit 1
+  fi
 done
 rg -Fxq 'ln -sf /test/tools/gh /usr/local/bin/gh' "$TEST_ROOT/automation.log"
 

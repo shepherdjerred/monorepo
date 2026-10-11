@@ -6,6 +6,7 @@ const nativeInfrastructurePaths = [
   "ci/scripts/macos/macos-native-selection.ts",
   "ci/scripts/toolchain.test.sh",
   ".mise.toml",
+  "mise.lock",
   ".xcode-version",
   "packages/homelab/mac-ci",
 ] as const;
