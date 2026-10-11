@@ -164,8 +164,8 @@ final class PaperCombatantActions implements CombatantActions {
       return Optional.of(ActionRefusal.SAME_TEAM);
     }
     var eye = attackerEntity.getEyeLocation();
-    if (eye.distance(targetEntity.getBoundingBox().getCenter().toLocation(targetEntity.getWorld()))
-        > MELEE_REACH) {
+    if (targetEntity.getBoundingBox().rayTrace(eye.toVector(), eye.getDirection(), MELEE_REACH)
+        == null) {
       return Optional.of(ActionRefusal.OUT_OF_REACH);
     }
     if (!hooks.lineOfSight().test(attackerEntity, targetEntity)) {

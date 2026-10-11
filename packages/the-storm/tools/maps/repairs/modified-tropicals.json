@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "maps": [
+    {
+      "id": "modified-tropicals",
+      "archiveSha256": "f71dcb0a50243eed661c670defac67baf36428e8f42f256e1608b9caa233b1e3",
+      "reason": "Restore three bombs per team from the original map's six existing TNT blocks, as described by its source metadata.",
+      "bombs": {
+        "RED": [
+          [-73, 109, -1922],
+          [-63, 108, -1909],
+          [-30, 107, -1927]
+        ],
+        "BLUE": [
+          [166, 107, -1982],
+          [199, 108, -1999],
+          [209, 109, -1986]
+        ]
+      }
+    }
+  ]
+}

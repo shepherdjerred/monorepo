@@ -19,10 +19,16 @@ final class ClientActions {
   private final Session session;
   private final InputLease inputs = new InputLease();
   private final Captures captures;
+  private final VideoCapture videos;
+  private final DuelCapture duels;
+  private final RecordedControls recording = new RecordedControls();
+  private int automationTicks;
 
   ClientActions(Session session) {
     this.session = session;
     captures = new Captures(session.artifacts());
+    videos = new VideoCapture(session.artifacts());
+    duels = new DuelCapture(session.artifacts(), videos::marker);
   }
 
   CompletableFuture<Object> submit(Minecraft client, UUID peer, Protocol.Request request) {
@@ -46,9 +52,13 @@ final class ClientActions {
       release(client);
       return CompletableFuture.completedFuture("Inputs released");
     }
+    if (request.action().startsWith("video-")) return video(client, request);
+    if (request.action().startsWith("duel-")) return duel(client, request);
     requireWorld(client);
+    if (videos.active()) throw new IllegalStateException("Rendered capture owns the camera");
     if (request.action().equals("capture")) return captures.capture(client, args);
     if (request.action().equals("input")) return input(client, peer, args);
+    automationTicks = 2;
     var result =
         switch (request.action()) {
           case "look" -> look(client, args);
@@ -63,7 +73,67 @@ final class ClientActions {
     return CompletableFuture.completedFuture(result);
   }
 
+  private CompletableFuture<Object> video(Minecraft client, Protocol.Request request) {
+    var args = request.arguments();
+    if (request.action().equals("video-arm") || request.action().equals("video-duel-arm")) {
+      requireWorld(client);
+      if (inputs.active()) throw new IllegalStateException("Release inputs before recording");
+      return videos.arm(client, args, request.action().equals("video-duel-arm"));
+    }
+    Protocol.keys(args, Set.of());
+    var result =
+        switch (request.action()) {
+          case "video-ready" -> {
+            requireWorld(client);
+            yield VideoCapture.cameraReady(client);
+          }
+          case "video-status" -> videos.status();
+          case "video-cancel" -> {
+            videos.cancel(client);
+            yield videos.status();
+          }
+          case "video-start" -> {
+            requireWorld(client);
+            yield videos.start();
+          }
+          default ->
+              throw new IllegalArgumentException("Unknown video action: " + request.action());
+        };
+    return CompletableFuture.completedFuture(result);
+  }
+
+  private CompletableFuture<Object> duel(Minecraft client, Protocol.Request request) {
+    var args = request.arguments();
+    if (request.action().equals("duel-arm")) {
+      requireWorld(client);
+      if (!java.util.Objects.requireNonNull(client.player).isSpectator())
+        throw new IllegalStateException("Native duel clock requires a spectator observer");
+      return CompletableFuture.completedFuture(duels.arm(args));
+    }
+    Protocol.keys(args, Set.of());
+    return switch (request.action()) {
+      case "duel-status" -> CompletableFuture.completedFuture(duels.status());
+      case "duel-seal" -> duels.seal();
+      case "duel-cancel" -> {
+        duels.cancel();
+        yield CompletableFuture.completedFuture(duels.status());
+      }
+      default -> throw new IllegalArgumentException("Unknown duel clock action");
+    };
+  }
+
   void tick(Minecraft client) {
+    var server = client.getCurrentServer();
+    duels.tick(
+        client.player != null
+            && client.level != null
+            && client.player.isSpectator()
+            && server != null
+            && server.ip.equals(session.server()));
+    recording.tick(client, inputs.active() || automationTicks > 0 || videos.active());
+    videos.tick(client);
+    automationTicks = Math.max(0, automationTicks - 1);
+    if (!inputs.active()) return;
     if (client.player == null || client.player.isDeadOrDying() || client.gui.screen() != null) {
       release(client);
     } else {
@@ -73,13 +143,28 @@ final class ClientActions {
   }
 
   void disconnect(Minecraft client, UUID peer) {
+    if (!inputs.active()) return;
     inputs.disconnect(peer);
     apply(client);
   }
 
   void release(Minecraft client) {
+    videos.cancel(client);
+    duels.cancel();
+    if (!inputs.active()) return;
     inputs.release();
     apply(client);
+  }
+
+  void startCaptures() {
+    RenderCapture.install(videos);
+  }
+
+  void closeCaptures(Minecraft client) {
+    videos.cancel(client);
+    RenderCapture.remove(videos);
+    videos.close();
+    duels.close();
   }
 
   private void requireWorld(Minecraft client) {

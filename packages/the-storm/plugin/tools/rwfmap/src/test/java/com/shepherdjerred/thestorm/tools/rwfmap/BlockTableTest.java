@@ -39,7 +39,17 @@ final class BlockTableTest {
     "minecraft:iron_bars[east=false;north=false;south=false;waterlogged=false;west=false], PANE,"
         + " false",
     "minecraft:water[level=0], LIQUID, false",
-    "minecraft:lava[level=0], LIQUID, false",
+    "minecraft:cactus[age=0], SOLID_HAZARD, true",
+    "minecraft:magma_block, SOLID_HAZARD, true",
+    "minecraft:beacon, FULL, false",
+    "minecraft:chest[facing=south;type=single;waterlogged=false], FULL, true",
+    "minecraft:nether_portal[axis=x], PASSABLE, false",
+    "minecraft:potted_poppy, FULL, true",
+    "minecraft:sticky_piston[extended=false;facing=north], FULL, true",
+    "minecraft:red_bed[facing=west;occupied=false;part=head], FULL, true",
+    "minecraft:water_cauldron[level=3], FULL, true",
+    "minecraft:lava[level=0], HAZARD, false",
+    "minecraft:fire[age=15;east=false;north=false;south=false;up=false;west=false], HAZARD, false",
     "minecraft:ladder[facing=north;waterlogged=false], LADDER, false",
     "minecraft:vine[east=false;north=true;south=false;up=false;west=false], LADDER, false",
     "minecraft:scaffolding[bottom=false;distance=0;waterlogged=false], LADDER, false",
@@ -55,7 +65,9 @@ final class BlockTableTest {
     "minecraft:red_banner[rotation=0], PASSABLE, false",
     "minecraft:red_wall_banner[facing=north], PASSABLE, false",
     "minecraft:stone_button[face=wall;facing=north;powered=false], PASSABLE, false",
-    "minecraft:oak_door[facing=north;half=lower;hinge=left;open=false;powered=false], FULL, true",
+    "minecraft:oak_door[facing=north;half=lower;hinge=left;open=false;powered=false], DOOR, true",
+    "minecraft:iron_door[facing=north;half=lower;hinge=left;open=false;powered=false], FULL, true",
+    "minecraft:dragon_egg, FULL, true",
     "minecraft:oak_door[facing=north;half=lower;hinge=left;open=true;powered=false], PASSABLE,"
         + " false",
     "minecraft:oak_trapdoor[facing=north;half=bottom;open=false;powered=false;waterlogged=false],"
@@ -87,7 +99,10 @@ final class BlockTableTest {
                 "minecraft:iron_bars[east=false,north=false,south=false,waterlogged=false,west=false]",
                 "minecraft:water[level=0]",
                 "minecraft:ladder[facing=north,waterlogged=false]",
-                "minecraft:air")
+                "minecraft:air",
+                "minecraft:oak_door[facing=north,half=lower,hinge=left,open=false,powered=false]",
+                "minecraft:cactus[age=0]",
+                "minecraft:fire[age=15,east=false,north=false,south=false,up=false,west=false]")
             .map(BlockTable::classify)
             .map(BlockTable.Classified::shape)
             .toList();

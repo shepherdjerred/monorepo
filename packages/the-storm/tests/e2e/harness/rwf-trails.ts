@@ -118,7 +118,10 @@ export function readTrails(lines: string[]): Trails {
         break;
       }
       case "X":
-      case "P": {
+      case "P":
+      case "N":
+      case "O": {
+        // Controls and fair observations carry no trajectory coordinates.
         break;
       }
       case undefined:

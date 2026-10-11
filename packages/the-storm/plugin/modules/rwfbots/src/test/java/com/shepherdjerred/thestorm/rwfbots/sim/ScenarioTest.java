@@ -139,7 +139,11 @@ final class ScenarioTest {
 
     world.scriptedHit(3, 2);
     world.run(300, w -> w.body(1).attacksOn(new CombatantId(3)) > 0);
-    assertThat(bot.attacksOn(spy.id)).as("attacked the spy by tick %d", world.tick).isPositive();
+    assertThat(bot.attacksOn(spy.id))
+        .as(
+            "attacked the spy by tick %d, position %s, decision %s, commands %s",
+            world.tick, bot.pos, bot.decision, bot.lastCommands)
+        .isPositive();
     assertThat(bot.perception.suspicion().isRevealed(spy.id)).isTrue();
   }
 

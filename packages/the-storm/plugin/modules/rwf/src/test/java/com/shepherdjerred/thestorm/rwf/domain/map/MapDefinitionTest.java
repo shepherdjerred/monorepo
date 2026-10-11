@@ -150,6 +150,20 @@ final class MapDefinitionTest {
       assertThat(Samples.red().meetsBuilderSpawnMinimum()).isFalse();
       assertThat(MapTeam.BUILDER_MIN_SPAWNS).isEqualTo(12);
       assertThat(MapTeam.BUILDER_MAX_SPAWNS).isEqualTo(120);
+      assertThat(
+              new MapTeam(
+                      TeamColor.RED,
+                      java.util.Collections.nCopies(163, Samples.red().spawns().getFirst()))
+                  .spawns())
+          .hasSize(163);
+      assertThatThrownBy(
+              () ->
+                  new MapTeam(
+                      TeamColor.RED,
+                      java.util.Collections.nCopies(
+                          MapTeam.MAX_SAVED_SPAWNS + 1, Samples.red().spawns().getFirst())))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("too many spawn points");
     }
 
     @Test

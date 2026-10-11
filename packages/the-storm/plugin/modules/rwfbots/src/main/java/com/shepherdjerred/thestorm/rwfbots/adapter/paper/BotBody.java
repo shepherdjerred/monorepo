@@ -7,6 +7,7 @@ import com.shepherdjerred.thestorm.rwfbots.app.Loadouts;
 import com.shepherdjerred.thestorm.rwfbots.app.PersonalityStats;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Facing;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.Loadout;
+import com.shepherdjerred.thestorm.rwfbots.domain.reflex.MotionRecovery;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.ReflexState;
 import java.util.Optional;
 import java.util.SplittableRandom;
@@ -24,6 +25,7 @@ public final class BotBody {
   private final Loadout loadout;
   private @Nullable BotProfile profile;
   private ReflexState reflex = ReflexState.initial(Facing.SOUTH);
+  private MotionRecovery.State motion = MotionRecovery.State.INITIAL;
   private SplittableRandom random = new SplittableRandom(0);
   private PersonalityStats.Tally tally = PersonalityStats.Tally.NONE;
   private long drawStart = -1;
@@ -31,6 +33,7 @@ public final class BotBody {
   private int refusals;
   private String planLabel = "-";
   private long decisionAge;
+  private boolean recoveryRequested;
 
   BotBody(UUID uuid, Director.Drafted drafted) {
     this.uuid = uuid;
@@ -67,6 +70,8 @@ public final class BotBody {
     profile = assigned;
     random = new SplittableRandom(seed);
     reflex = ReflexState.initial(Facing.SOUTH);
+    motion = MotionRecovery.State.INITIAL;
+    recoveryRequested = false;
     tally = PersonalityStats.Tally.NONE;
     drawStart = -1;
   }
@@ -83,6 +88,24 @@ public final class BotBody {
     reflex = next;
   }
 
+  MotionRecovery.State motion() {
+    return motion;
+  }
+
+  void motion(MotionRecovery.State next) {
+    motion = next;
+  }
+
+  void requestRecovery() {
+    recoveryRequested = true;
+  }
+
+  boolean takeRecoveryRequest() {
+    var requested = recoveryRequested;
+    recoveryRequested = false;
+    return requested;
+  }
+
   /** The reflex layer's random source, deterministic per life. */
   SplittableRandom random() {
     return random;
@@ -91,6 +114,8 @@ public final class BotBody {
   /** A new life: the reflex starts over looking along {@code facing}. */
   void newLife(Facing facing) {
     reflex = ReflexState.initial(facing);
+    motion = MotionRecovery.State.INITIAL;
+    recoveryRequested = false;
     drawStart = -1;
   }
 

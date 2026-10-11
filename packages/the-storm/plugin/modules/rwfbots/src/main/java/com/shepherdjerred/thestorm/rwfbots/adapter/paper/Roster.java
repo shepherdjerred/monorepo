@@ -42,6 +42,12 @@ public final class Roster implements BotBodies {
   private final Parts parts;
   private final Map<UUID, BotBody> bots = new LinkedHashMap<>();
   private @Nullable MatchSession session;
+  private final com.shepherdjerred.thestorm.rwfbots.app.CombatHarness harness =
+      new com.shepherdjerred.thestorm.rwfbots.app.CombatHarness();
+
+  public com.shepherdjerred.thestorm.rwfbots.app.CombatHarness harness() {
+    return harness;
+  }
 
   /**
    * What the roster works from.
@@ -107,16 +113,22 @@ public final class Roster implements BotBodies {
             onlineNames(),
             parts.config().draft().availableKits(),
             Math.max(2, state.orElseThrow().teams().size()));
-    var pick = Director.pick(request, parts.random());
+    var pick =
+        harness
+            .draft(matchId, slots, parts.personalities())
+            .map(bots -> new Director.Pick(bots, 0))
+            .orElseGet(() -> Director.pick(request, parts.random()));
     var handles = new ArrayList<BotHandle>();
     // rwf walks bots into the lobby in this order: the ones always late come last.
     var order =
-        pick.bots().stream()
-            .sorted(
-                Comparator.comparing(
-                    (Director.Drafted drafted) ->
-                        drafted.personality().quirks().contains(Quirk.LATE_TO_EVERYTHING)))
-            .toList();
+        harness.controlled(matchId)
+            ? pick.bots()
+            : pick.bots().stream()
+                .sorted(
+                    Comparator.comparing(
+                        (Director.Drafted drafted) ->
+                            drafted.personality().quirks().contains(Quirk.LATE_TO_EVERYTHING)))
+                .toList();
     for (var drafted : order) {
       var uuid = parts.bodies().create(drafted.personality());
       bots.put(uuid, new BotBody(uuid, drafted));

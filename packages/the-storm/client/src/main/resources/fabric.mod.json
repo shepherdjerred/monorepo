@@ -4,6 +4,7 @@
   "version": "${version}",
   "name": "The Storm Preview Client",
   "environment": "client",
+  "mixins": ["storm-client.mixins.json"],
   "entrypoints": {
     "client": ["com.shepherdjerred.thestorm.client.PreviewClient"]
   },

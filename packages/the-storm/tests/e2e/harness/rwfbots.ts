@@ -323,7 +323,7 @@ function countWithin(ticks: number[], from: number, to: number): number {
  * half as many frames as a human (10 Hz against 20 Hz).
  */
 export function expectSampleCadence(recording: Recording): void {
-  expect(recording.version).toBe(2);
+  expect(recording.version).toBe(3);
   const humans = [...recording.roster]
     .filter(([, entry]) => !entry.bot)
     .map(([pseudonym]) => pseudonym);

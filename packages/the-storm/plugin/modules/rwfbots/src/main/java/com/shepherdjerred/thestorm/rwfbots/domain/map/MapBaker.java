@@ -15,7 +15,7 @@ import java.util.HexFormat;
 public final class MapBaker {
 
   /** Bump when the analysis changes so stale artifacts are rebaked. */
-  public static final int GENERATOR_VERSION = 1;
+  public static final int GENERATOR_VERSION = 2;
 
   private MapBaker() {}
 
@@ -23,9 +23,10 @@ public final class MapBaker {
   public static NavArtifact bake(String mapId, BlockClassification blocks, NavSites sites) {
     var grid = VoxelGrid.from(blocks);
     var graph = NavGraphBuilder.build(blocks);
-    var regions = Regions.build(graph, grid);
+    var regions = Regions.build(graph, grid.potentialSight());
     var cover = CoverPoints.build(graph, grid);
-    var routes = ApproachRoutes.build(graph, sites);
+    var approaches = ApproachNodes.bake(graph, grid, sites);
+    var routes = ApproachRoutes.build(graph, sites, approaches);
     var chokepoints = Chokepoints.build(graph, grid, routes);
     var fields = new HashMap<String, DistanceField>();
     for (var site : sites.spawns()) {
@@ -34,9 +35,8 @@ public final class MapBaker {
           .ifPresent(node -> fields.put(site.name(), FlowField.toward(graph, node).distance()));
     }
     for (var site : sites.bombs()) {
-      graph
-          .nearestNode(site.cell().feet())
-          .ifPresent(node -> fields.put(site.name(), FlowField.toward(graph, node).distance()));
+      var node = approaches.get(site.name());
+      if (node != null) fields.put(site.name(), FlowField.toward(graph, node).distance());
     }
     return new NavArtifact(
         NavCodec.FORMAT_VERSION,

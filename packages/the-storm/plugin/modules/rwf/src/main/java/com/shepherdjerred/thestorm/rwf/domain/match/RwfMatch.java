@@ -102,6 +102,19 @@ public record RwfMatch(
     return Flow.night(seed);
   }
 
+  /** Fixed world time at the start, also used to settle a seeded showcase before combat. */
+  public long startingWorldTime() {
+    return Flow.startingWorldTime(seed);
+  }
+
+  /** Reconfigures only an empty lobby, preserving its identity, map and rules. */
+  public RwfMatch reseedEmptyLobby(long nextSeed) {
+    if (!(phase instanceof Phase.Lobby) || !members.isEmpty()) {
+      throw new IllegalStateException("Only an empty lobby can be reseeded.");
+    }
+    return new RwfMatch(settings, matchId, nextSeed, phase, map, members, departed, bombs);
+  }
+
   /**
    * A transition's outcome.
    *

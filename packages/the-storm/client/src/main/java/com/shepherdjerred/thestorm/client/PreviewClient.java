@@ -20,6 +20,7 @@ public final class PreviewClient implements ClientModInitializer {
     if (file == null) return;
     var session = readSession(file);
     var actions = new ClientActions(session);
+    actions.startCaptures();
     var bridge = new LocalBridge(session, actions);
     ClientTickEvents.END_CLIENT_TICK.register(actions::tick);
     ClientLifecycleEvents.CLIENT_STARTED.register(
@@ -44,6 +45,7 @@ public final class PreviewClient implements ClientModInitializer {
     ClientLifecycleEvents.CLIENT_STOPPING.register(
         client -> {
           actions.release(client);
+          actions.closeCaptures(client);
           bridge.close();
         });
   }

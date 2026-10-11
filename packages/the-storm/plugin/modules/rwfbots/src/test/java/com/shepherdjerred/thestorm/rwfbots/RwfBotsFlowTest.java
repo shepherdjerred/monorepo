@@ -12,12 +12,24 @@ import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
 import com.shepherdjerred.thestorm.rwf.domain.match.Outcome;
 import com.shepherdjerred.thestorm.rwfbots.adapter.db.JooqPersonalityStatsStore;
 import com.shepherdjerred.thestorm.rwfbots.adapter.paper.BotBody;
+import com.shepherdjerred.thestorm.rwfbots.adapter.paper.MatchSession;
+import com.shepherdjerred.thestorm.rwfbots.app.CombatHarness;
 import com.shepherdjerred.thestorm.rwfbots.app.PersonalityStats;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
+import com.shepherdjerred.thestorm.rwfbots.domain.personality.Archetype;
+import com.shepherdjerred.thestorm.rwfbots.domain.reflex.ReflexInput;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.BodyCommand;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -107,6 +119,123 @@ final class RwfBotsFlowTest {
                 List.of("trooper", "longbow", "shortbow", "rewind")
                     .contains(action.substring(action.lastIndexOf(' ') + 1)));
     assertThat(harness.paper().roster().live()).extracting(BotBody::name).doesNotContain("Alice");
+  }
+
+  @Test
+  void authoredControllerKeepsOrdinaryKitsDifficultySeedAndSettlement() {
+    running =
+        RwfBotsHarness.start(
+            directory,
+            text -> text.replace("kits: [trooper, longbow, shortbow, rewind]", "kits: [shortbow]"),
+            harness -> {});
+    var harness = harness();
+    var attachment = harness.paper().roster().harness();
+    var controller = new AuthoredController();
+    attachment.attachAuthored(4, controller);
+    var alice = harness.server.addPlayer("Alice");
+    var bots = lobby(alice, 4);
+    assertThat(attachment.active(FakeMatch.MATCH_ID)).isTrue();
+    assertThat(attachment.controlled(FakeMatch.MATCH_ID)).isFalse();
+    assertThat(harness.match.actions()).allMatch(action -> action.endsWith("shortbow"));
+    assertThat(harness.paper().roster().live())
+        .extracting(body -> body.drafted().kit())
+        .containsOnly(Kit.SHORTBOW);
+    assertThat(harness.paper().roster().live())
+        .anyMatch(body -> body.drafted().levers().technique() < 1);
+    goLive(alice, bots);
+    var session = harness.paper().roster().session().orElseThrow();
+    assertThat(session.seed()).isEqualTo(MatchSession.seedOf(FakeMatch.MATCH_ID));
+    harness.ticks(5);
+    assertThat(controller.frames).isNotEmpty();
+    assertThat(controller.frames).allMatch(frame -> frame.matchId().equals(FakeMatch.MATCH_ID));
+    assertThat(controller.frames).allMatch(frame -> frame.input().self().kit() == Kit.SHORTBOW);
+    assertThat(controller.frames).allMatch(frame -> frame.observation().isPresent());
+
+    harness.match.phase(MatchSnapshot.PhaseKind.ENDED);
+    harness.match.outcome(new Outcome.Winner(TeamColor.RED));
+    harness.match.fireTick();
+    assertThat(new JooqPersonalityStatsStore(harness.database).loadAll().join())
+        .hasSize(4)
+        .allMatch(stats -> stats.matches() == 1);
+    var delivered = controller.frames.size();
+    harness.ticks(5);
+    assertThat(controller.frames).hasSize(delivered);
+  }
+
+  @Test
+  void authoredControllerRespectsGovernorThinningForIsolatedBots() {
+    var harness = start();
+    var controller = new AuthoredController();
+    harness.paper().roster().harness().attachAuthored(4, controller);
+    var alice = harness.server.addPlayer("Alice");
+    var bots = lobby(alice, 4);
+    goLive(alice, bots);
+    alice.teleport(new Location(harness.world, 200.5, 1, 200.5));
+    harness.tickTimes = new long[] {45_000_000};
+    harness.ticks(50);
+    controller.frames.clear();
+    harness.ticks(2);
+    assertThat(controller.frames).hasSize(4);
+    assertThat(controller.frames).extracting(CombatHarness.Frame::body).doesNotHaveDuplicates();
+  }
+
+  @Test
+  void authoredControllerKeepsTheTurtlesEarlierHealingThreshold() {
+    running =
+        RwfBotsHarness.start(
+            directory,
+            text -> text.replace("kits: [trooper, longbow, shortbow, rewind]", "kits: [trooper]"),
+            harness -> turtlePersonalities());
+    var harness = harness();
+    var controller = new AuthoredController();
+    harness.paper().roster().harness().attachAuthored(1, controller);
+    var alice = harness.server.addPlayer("Alice");
+    var bots = lobby(alice, 1);
+    goLive(alice, bots);
+    assertThat(harness.paper().loop().profiles())
+        .extracting(profile -> profile.archetype())
+        .containsExactly(Archetype.TURTLE);
+    alice.teleport(new Location(harness.world, 200.5, 1, 200.5));
+    var player = harness.roster().entity(bots.getFirst()).orElseThrow();
+    player.getInventory().setItem(2, new ItemStack(Material.GOLDEN_APPLE, 3));
+    player.setHealth(13);
+    harness.bodies.orders();
+    harness.tick();
+    assertThat(harness.bodies.orders())
+        .anyMatch(order -> order.startsWith("use ") && order.endsWith("GOLDEN_APPLE"));
+    assertThat(controller.frames)
+        .anyMatch(frame -> frame.authored().commands().contains(new BodyCommand.StartUse()));
+  }
+
+  private void turtlePersonalities() {
+    // Only the harness's temporary content is changed; the shipped personalities are untouched.
+    try (var files = Files.list(directory.resolve("rwfbots/personalities"))) {
+      for (var file : files.toList()) {
+        var text = Files.readString(file);
+        assertThat(text).containsPattern("(?m)^archetype: [a-z_]+$");
+        Files.writeString(file, text.replaceAll("(?m)^archetype: [a-z_]+$", "archetype: turtle"));
+      }
+    } catch (IOException failure) {
+      throw new UncheckedIOException(failure);
+    }
+  }
+
+  private static final class AuthoredController implements CombatHarness.Controller {
+    private final List<CombatHarness.Frame> frames = new ArrayList<>();
+
+    @Override
+    public void captureTick(long tick) {}
+
+    @Override
+    public ReflexInput input(ReflexInput authored, NavArtifact nav) {
+      throw new IllegalStateException("an authored attachment cannot replace reflex inputs");
+    }
+
+    @Override
+    public List<BodyCommand> commands(CombatHarness.Frame frame) {
+      frames.add(frame);
+      return frame.authored().commands();
+    }
   }
 
   @Test
@@ -201,6 +330,40 @@ final class RwfBotsFlowTest {
   private static boolean ordersBy(String order, String name) {
     var named = order.substring(order.indexOf(' ') + 1);
     return named.equals(name) || named.startsWith(name + " ");
+  }
+
+  @Test
+  void aBotKilledByAnEarlierOrderCannotActFromTheOldSnapshot() {
+    var harness = start();
+    var alice = harness.server.addPlayer("Alice");
+    var bots = lobby(alice, 4);
+    goLive(alice, bots);
+    harness.ticks(30);
+    harness.bodies.orders();
+    var victimBody = harness.paper().roster().live().getLast();
+    var victim =
+        bots.stream().filter(bot -> bot.uuid().equals(victimBody.uuid())).findFirst().orElseThrow();
+    harness.bodies.afterNextOrder(
+        () -> {
+          harness.match.kill(victim.uuid());
+          harness.match.fire(
+              new MatchEvent.Died(
+                  victim,
+                  Optional.of(new CombatantId.Human(alice.getUniqueId())),
+                  AttackType.MELEE,
+                  FakeMatch.T0),
+              List.of(new MatchEffect.Spectate(victim, harness.match.map().spectatorPoint())));
+        });
+    harness.tick();
+
+    assertThat(harness.paper().loop().inMatch()).isTrue();
+    assertThat(victimBody.tally().deaths()).isEqualTo(1);
+    var orders = harness.bodies.orders();
+    assertThat(orders).isNotEmpty().noneMatch(order -> ordersBy(order, victimBody.name()));
+    assertThat(
+            harness.paper().roster().live().stream()
+                .filter(bot -> orders.stream().anyMatch(order -> ordersBy(order, bot.name()))))
+        .hasSize(3);
   }
 
   @Test

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "stages": [
+    {
+      "name": "stationary",
+      "endFraction": 0.1,
+      "minUpdates": 1,
+      "opponents": ["stationary"]
+    },
+    {
+      "name": "chase-strafe",
+      "endFraction": 0.25,
+      "minUpdates": 2,
+      "opponents": ["chase", "basic"]
+    },
+    {
+      "name": "authored-styles",
+      "endFraction": 0.6,
+      "minUpdates": 3,
+      "opponents": ["authored", "authored-pressure", "authored-patient"]
+    },
+    {
+      "name": "historical",
+      "endFraction": 1.0,
+      "minUpdates": 1,
+      "opponents": ["historical"]
+    }
+  ]
+}

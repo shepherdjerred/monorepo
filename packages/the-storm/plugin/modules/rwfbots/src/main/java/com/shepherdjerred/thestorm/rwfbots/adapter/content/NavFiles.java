@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.rwfbots.adapter.content;
 
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.rwfbots.domain.lobby.LobbyNav;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.MapBaker;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavCodec;
 import java.io.IOException;
@@ -72,6 +73,8 @@ public final class NavFiles {
               throw new IllegalStateException(file + " does not decode: " + error.message());
         };
     var problems = LobbyNav.problems(artifact);
+    if (artifact.generatorVersion() != MapBaker.GENERATOR_VERSION)
+      throw new IllegalStateException(file + " uses an obsolete generator; rebake the lobby");
     if (!problems.isEmpty()) {
       throw new IllegalStateException(file + " is unusable: " + String.join("; ", problems));
     }
@@ -129,6 +132,8 @@ public final class NavFiles {
     if (!artifact.mapId().equals(mapId)) {
       return Result.err(FILE_NAME + " was baked for map " + artifact.mapId() + ", not " + mapId);
     }
+    if (artifact.generatorVersion() != MapBaker.GENERATOR_VERSION)
+      return Result.err(FILE_NAME + " uses an obsolete generator; rebake the map");
     var problems = artifact.validate();
     if (!problems.isEmpty()) {
       return Result.err(

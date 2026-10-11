@@ -41,6 +41,10 @@ final class Flow {
     return new SplittableRandom(seed).nextInt(NIGHT_ODDS) == 0;
   }
 
+  static long startingWorldTime(long seed) {
+    return night(seed) ? NIGHT_TICKS : 0;
+  }
+
   static void tick(Draft draft, MatchEvent.Tick tick) {
     switch (draft.phase) {
       case Phase.Lobby lobby -> lobbyTick(draft, lobby, tick.now());
@@ -139,7 +143,7 @@ final class Flow {
       draft.tell(member.id(), Notice.of(NoticeKind.YOU_ARE_IN_TEAM, "team", team.displayName()));
     }
     draft.setBombs(map.bombs().stream().map(Bomb::at).toList());
-    draft.effect(new MatchEffect.SetTime(night(draft.seed) ? NIGHT_TICKS : 0));
+    draft.effect(new MatchEffect.SetTime(startingWorldTime(draft.seed)));
     draft.announce(Notice.of(NoticeKind.GAME_BEGUN));
     draft.sound(draft.ids(), SoundCue.GAME_START);
     for (var team : map.teamColors()) {

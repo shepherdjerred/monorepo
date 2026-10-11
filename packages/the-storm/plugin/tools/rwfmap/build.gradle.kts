@@ -73,8 +73,18 @@ mapFolders.forEach { folder ->
         inputs.dir(folder)
         mustRunAfter(bake)
       }
+  val verifyDetails =
+      tasks.register<JavaExec>("verifyRwfMapDetails$suffix") {
+        group = "rwf"
+        description = "Verifies the inventory/sign payload of the ${folder.name} map."
+        classpath = sourceSets.main.get().runtimeClasspath
+        mainClass = mainClassName
+        args("verify-details", folder.absolutePath)
+        inputs.files(folder.resolve("map.yml"), folder.resolve("blocks.schem"), folder.resolve("details.json"))
+      }
   bakeRwfMaps { dependsOn(bake) }
-  verifyRwfMaps { dependsOn(verify) }
+  verifyRwfMaps { dependsOn(verify, verifyDetails) }
+  tasks.test { mustRunAfter(bake) }
 }
 
 val bakeRwfLobby =
@@ -104,12 +114,19 @@ val verifyRwfLobby =
 
 bakeRwfMaps { dependsOn(bakeRwfLobby) }
 
+// These suites declare the shipped terrain/navigation as inputs. When an operator explicitly
+// requests a rebake and tests in one invocation, finish generation before reading those inputs.
+listOf(":rwf", ":rwfbots").forEach { consumer ->
+  rootProject.project(consumer).tasks.named("test") { mustRunAfter(bakeRwfMaps) }
+}
+
 verifyRwfMaps { dependsOn(verifyRwfLobby) }
 
 tasks.check { dependsOn(verifyRwfMaps) }
 
 // The end-to-end tests bake the shipped maps and compare them with the committed artifacts.
 tasks.test {
+  mustRunAfter(bakeRwfLobby)
   inputs.dir(mapsRoot).withPropertyName("shippedMaps").withPathSensitivity(PathSensitivity.RELATIVE)
   inputs
       .dir(lobbyFolder)

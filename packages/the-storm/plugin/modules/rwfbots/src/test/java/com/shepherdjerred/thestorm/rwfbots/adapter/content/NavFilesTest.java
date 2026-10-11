@@ -58,6 +58,29 @@ final class NavFilesTest {
   }
 
   @Test
+  void anObsoleteGeneratorCannotReleaseUnsafeNavigation() throws IOException {
+    var old =
+        new NavArtifact(
+            SYNTHETIC.formatVersion(),
+            1,
+            SYNTHETIC.mapId(),
+            SYNTHETIC.blocksSha256(),
+            SYNTHETIC.sites(),
+            SYNTHETIC.grid(),
+            SYNTHETIC.graph(),
+            SYNTHETIC.regions(),
+            SYNTHETIC.cover(),
+            SYNTHETIC.chokepoints(),
+            SYNTHETIC.routes(),
+            SYNTHETIC.distanceFields());
+    Files.write(mapFolder("synthetic").resolve(NavFiles.FILE_NAME), NavCodec.encode(old));
+    var loaded = NavFiles.load(directory);
+    assertThat(loaded.artifacts()).isEmpty();
+    assertThat(loaded.problems())
+        .containsEntry("synthetic", "nav.rwfnav uses an obsolete generator; rebake the map");
+  }
+
+  @Test
   void aMissingMapsFolderIsADeploymentError() {
     assertThatThrownBy(() -> NavFiles.load(directory))
         .isInstanceOf(IllegalStateException.class)
@@ -80,5 +103,16 @@ final class NavFilesTest {
     assertThat(catalog.confirm("unknown", "0".repeat(64)))
         .hasValueSatisfying(reason -> assertThat(reason).contains("no nav artifact"));
     assertThat(catalog.problems()).containsOnlyKeys("harbour", "unknown");
+  }
+
+  @Test
+  void releasingInactiveNavigationDropsBothDecodedAndConfirmedReferences() {
+    var catalog = new NavCatalog();
+    catalog.add(SYNTHETIC);
+    assertThat(catalog.confirm("synthetic", SYNTHETIC.blocksSha256())).isEmpty();
+    catalog.evict("synthetic");
+    assertThat(catalog.decoded()).isEmpty();
+    assertThat(catalog.forMap("synthetic")).isEmpty();
+    assertThat(catalog.problems()).isEmpty();
   }
 }
