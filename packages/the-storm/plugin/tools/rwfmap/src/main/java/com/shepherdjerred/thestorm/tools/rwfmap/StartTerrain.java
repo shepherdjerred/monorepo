@@ -105,11 +105,13 @@ final class StartTerrain {
     var delta = to.minus(from);
     var length = from.horizontalDistance(to);
     var steps = (int) Math.ceil(length * 4);
-    var sideways = new Vec3(-delta.z() / length * 0.3, 0, delta.x() / length * 0.3);
     for (var step = 0; step <= steps; step++) {
       var middle = from.plus(delta.scale((double) step / steps));
-      if (!standing(BlockPos.of(middle.plus(sideways)))
-          || !standing(BlockPos.of(middle.minus(sideways)))) return false;
+      for (var dx : List.of(-0.3, 0.3)) {
+        for (var dz : List.of(-0.3, 0.3)) {
+          if (!standing(BlockPos.of(middle.plus(dx, 0, dz)))) return false;
+        }
+      }
     }
     return true;
   }
