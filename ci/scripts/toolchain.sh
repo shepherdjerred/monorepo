@@ -48,6 +48,16 @@ mise_ci() {
 }
 mise trust .mise.toml
 
+# Recursive `chmod a+rX` limited to the entries that lack those bits. GNU chmod
+# issues the syscall even when the mode already matches, and on an image layer
+# every such call copies the file up into the container's writable layer -- the
+# CI node's OS disk. A current image already carries the bits, so this touches
+# nothing; a stale image's runtime installs still get exposed.
+expose_tree() {
+  find "$1" \( \( -type d ! -perm -0555 \) -o \( -type f ! -perm -0444 \) \
+    -o \( -type f -perm /0111 ! -perm -0555 \) \) -exec chmod a+rX {} +
+}
+
 expose_postgres_tools() {
   if [ "$(id -u)" -eq 0 ] && [ -d "${MISE_DATA_DIR:-}/shims" ]; then
     # Root-hosted tests run the Postgres server as nobody. Runtime mise
@@ -57,9 +67,9 @@ expose_postgres_tools() {
     if [ -d "${MISE_DATA_DIR}/installs" ]; then
       chmod a+rX "${MISE_DATA_DIR}/installs"
     fi
-    chmod -R a+rX "${MISE_DATA_DIR}/shims"
+    expose_tree "${MISE_DATA_DIR}/shims"
     if [ -d "${MISE_DATA_DIR}/installs/ubi-theseus-rs-postgresql-binaries" ]; then
-      chmod -R a+rX "${MISE_DATA_DIR}/installs/ubi-theseus-rs-postgresql-binaries"
+      expose_tree "${MISE_DATA_DIR}/installs/ubi-theseus-rs-postgresql-binaries"
     fi
   fi
 }

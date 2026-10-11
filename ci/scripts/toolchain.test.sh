@@ -91,6 +91,14 @@ if ! rg -Fq 'export TMPDIR=/woodpecker/tmp' "$TOOLCHAIN" ||
   exit 1
 fi
 
+# A recursive chmod copies every image-layer file it visits into the
+# container's writable layer, even when the mode already matches.
+if rg -q 'chmod -R' "$TOOLCHAIN" ||
+  ! rg -Fq 'expose_tree "${MISE_DATA_DIR}/installs/ubi-theseus-rs-postgresql-binaries"' "$TOOLCHAIN"; then
+  echo "toolchain.sh must expose Postgres tools without a recursive chmod" >&2
+  exit 1
+fi
+
 if ! rg -Fq 'flock --shared 9' "$BUN_INSTALL_WRAPPER" ||
   ! rg -Fq 'bun install "$@"' "$BUN_INSTALL_WRAPPER" ||
   ! rg -Fq ') 9>"$CACHE_LOCK_FILE"' "$BUN_INSTALL_WRAPPER"; then
