@@ -297,6 +297,15 @@ extension FacetStore {
     }
 
     public func resumeSync(isForeground: Bool = true) async {
+        await resumeSync(isForeground: isForeground) { [weak self] profileID, generation in
+            await self?.openSyncSession(
+                profileID: profileID, generation: generation, isForeground: isForeground)
+        }
+    }
+
+    internal func resumeSync(
+        isForeground: Bool, openSession: (String, UInt64) async -> Void
+    ) async {
         if isForeground {
             foreground = true
             backgroundLease = nil
@@ -310,39 +319,39 @@ extension FacetStore {
         if let failure = cleanup.first {
             error = "Private profile cleanup is pending. " + failure.action
         }
+        if isForeground {
+            await retireDisconnectedSessions(
+                generation: attempt, account: account, engine: engine)
+        }
         for profile in profiles
         where profile.kind == "obsidian_sync" && sessions[profile.id] == nil
             && !removingProfileIDs.contains(profile.id)
         {
             guard ownsSyncAttempt(attempt, account: account, engine: engine) else { return }
-            do {
-                _ = try await FacetObsidianSession.open(
-                    engine: engine, account: account, profileID: profile.id,
-                    changed: { [weak self] in
-                        guard let self else { return }
-                        await self.refreshSyncOwner(profileID: profile.id, generation: attempt)
-                    },
-                    status: { [weak self] state in
-                        await self?.updateSyncState(
-                            profileID: profile.id, state: state, generation: attempt)
-                    },
-                    retain: { [weak self] session in
-                        await self?.retainSession(
-                            session, profileID: profile.id, generation: attempt)
-                            ?? false
-                    })
-            } catch {
-                reportSyncFailure(
-                    error, profileID: profile.id, generation: attempt, isForeground: isForeground)
-            }
+            await openSession(profile.id, attempt)
         }
     }
 
-    private func ownsSyncAttempt(
-        _ attempt: UInt64, account: FacetObsidianAccount, engine: FacetEngine
-    ) -> Bool {
-        attempt == syncGeneration && !accountTransition
-            && self.account === account && self.engine === engine
+    private func openSyncSession(profileID: String, generation: UInt64, isForeground: Bool) async {
+        guard let engine, let account else { return }
+        do {
+            _ = try await FacetObsidianSession.open(
+                engine: engine, account: account, profileID: profileID,
+                changed: { [weak self] in
+                    await self?.refreshSyncOwner(profileID: profileID, generation: generation)
+                },
+                status: { [weak self] state in
+                    await self?.updateSyncState(
+                        profileID: profileID, state: state, generation: generation)
+                },
+                retain: { [weak self] session in
+                    await self?.retainSession(
+                        session, profileID: profileID, generation: generation) ?? false
+                })
+        } catch {
+            reportSyncFailure(
+                error, profileID: profileID, generation: generation, isForeground: isForeground)
+        }
     }
 
     private func reportSyncFailure(

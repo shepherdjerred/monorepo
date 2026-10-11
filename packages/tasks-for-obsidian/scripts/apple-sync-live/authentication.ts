@@ -64,10 +64,41 @@ export async function authenticationFixtures(manifest: Manifest) {
   });
 }
 
+function swiftTestingCount(lines: string[]): number {
+  let running = false;
+  let count = 0;
+  for (const line of lines) {
+    if (line === "◇ Test run started.") {
+      if (running)
+        throw new Error("Authentication fixture target did not finish");
+      running = true;
+    } else if (/^(?:[✔✘◇] )?Test run with /u.test(line)) {
+      const summary =
+        /^✔ Test run with ([1-9]\d*) tests?(?: in [1-9]\d* suites?)? passed after \d+(?:\.\d+)? seconds?\.$/u.exec(
+          line,
+        );
+      const targetCount = Number(summary?.[1]);
+      if (!running || !Number.isSafeInteger(targetCount) || targetCount < 1)
+        throw new Error(
+          "Selected authentication fixture suites did not execute passing tests",
+        );
+      count += targetCount;
+      if (!Number.isSafeInteger(count))
+        throw new TypeError(
+          "Authentication fixture test count exceeds safe bounds",
+        );
+      running = false;
+    }
+  }
+  if (running || count === 0)
+    throw new Error(
+      "Authentication fixture targets did not finish passing tests",
+    );
+  return count;
+}
+
 export function assertAuthenticationFixtureOutput(output: string): number {
-  const summary = /Test run with ([1-9]\d*) tests?[\s\S]{0,200}passed/u.exec(
-    output,
-  );
+  const lines = output.split(/\r?\n/u);
   const selected = [
     "diagnosticsDistinguishPreflightAndPostRejectionWithoutContents",
     "verificationChallengeIsVisibleAndCredentialEditInvalidatesIt",
@@ -75,11 +106,23 @@ export function assertAuthenticationFixtureOutput(output: string): number {
     "oldProfileCredentialsCannotResumeUnderAnotherActiveAccount",
   ];
   if (
-    summary?.[1] === undefined ||
-    selected.some((name) => !output.includes(name))
+    lines.some((line) =>
+      /^(?:[✔✘◇↷] )?(?:Test|Suite)\b.+\b(?:failed|skipped|ignored|issues?)\b/u.test(
+        line,
+      ),
+    ) ||
+    selected.some(
+      (name) =>
+        !lines.some((line) =>
+          new RegExp(
+            String.raw`^✔ Test ${name}\([^\r\n]*\) passed after \d+(?:\.\d+)? seconds?\.$`,
+            "u",
+          ).test(line),
+        ),
+    )
   )
     throw new Error(
       "Selected authentication fixture suites did not execute passing tests",
     );
-  return Number(summary[1]);
+  return swiftTestingCount(lines);
 }
