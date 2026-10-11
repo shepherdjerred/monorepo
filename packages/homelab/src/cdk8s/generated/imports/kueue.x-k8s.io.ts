@@ -1779,6 +1779,12 @@ export interface ClusterQueueV1Beta2Spec {
    * Additionally after the admission, Workloads can still try to pursue capacity on the more preferable flavors while running.
    * It enables them to migrate to more preferable, whenever capacity appears.
    *
+   * When set, resourceGroups must contain exactly one group with at most
+   * 32 flavors, and queueingStrategy must be BestEffortFIFO. Kueue creates
+   * a Variant Workload for each flavor, even if unsuitable, multiplying the
+   * number of Workloads that the scheduler and controllers process.
+   * This field is immutable.
+   *
    * @schema ClusterQueueV1Beta2Spec#concurrentAdmissionPolicy
    */
   readonly concurrentAdmissionPolicy?: ClusterQueueV1Beta2SpecConcurrentAdmissionPolicy;
@@ -1841,6 +1847,12 @@ export interface ClusterQueueV1Beta2Spec {
    * that provide quotas for these resources.
    * Each resource and each flavor can only form part of one resource group.
    * resourceGroups can be up to 16, with a max of 256 total flavors across all groups.
+   *
+   * Many flavors can increase admission latency, especially with many
+   * ClusterQueues or frequent workload submissions. Depending on
+   * flavorFungibility, the scheduler may try every flavor and simulate
+   * preemption for each. Configure only necessary flavors and evaluate
+   * performance under representative peak load.
    *
    * @schema ClusterQueueV1Beta2Spec#resourceGroups
    */
@@ -1986,6 +1998,12 @@ export function toJson_ClusterQueueV1Beta2SpecAdmissionScope(
  * Its main capability is to allow Workloads pursuing multiple flavors at the same time, and starting on the first flavor that led to admission.
  * Additionally after the admission, Workloads can still try to pursue capacity on the more preferable flavors while running.
  * It enables them to migrate to more preferable, whenever capacity appears.
+ *
+ * When set, resourceGroups must contain exactly one group with at most
+ * 32 flavors, and queueingStrategy must be BestEffortFIFO. Kueue creates
+ * a Variant Workload for each flavor, even if unsuitable, multiplying the
+ * number of Workloads that the scheduler and controllers process.
+ * This field is immutable.
  *
  * @schema ClusterQueueV1Beta2SpecConcurrentAdmissionPolicy
  */
@@ -7841,6 +7859,27 @@ export interface WorkloadSpecPodSetsTemplateSpec {
   readonly ephemeralContainers?: WorkloadSpecPodSetsTemplateSpecEphemeralContainers[];
 
   /**
+   * evictionResponders reference responders that react to Evictions based on EvictionRequests.
+   * Responders should observe and communicate through the Eviction Resource API to help with
+   * the graceful termination of a pod. The responders are selected sequentially, according to
+   * their specified priority.
+   *
+   * Responders should periodically report on an eviction progress by updating the
+   * .status.responders[].heartbeatTime field of the Eviction object. If this field is not updated
+   * within the heartbeat deadline defined by the Eviction API (currently 20 minutes), the eviction
+   * is passed over to the next responder with a lower priority. If there is no other responder,
+   * the last default imperative-eviction.k8s.io/evictor responder with a priority of 100 will
+   * evict the pod using the imperative Eviction API (pods/<name>/eviction subresource).
+   *
+   * The maximum length of the responders list is 10.
+   * Responders are not supported when the pod is part of a PodGroup (.spec.schedulingGroup is set).
+   * This field can only be set on creation and is immutable afterwards.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpec#evictionResponders
+   */
+  readonly evictionResponders?: WorkloadSpecPodSetsTemplateSpecEvictionResponders[];
+
+  /**
    * HostAliases is an optional list of hosts and IPs that will be injected into the pod's hosts
    * file if specified.
    *
@@ -7911,7 +7950,6 @@ export interface WorkloadSpecPodSetsTemplateSpec {
    * - `hostNetwork` must be set to false.
    *
    * This field must be a valid DNS subdomain as defined in RFC 1123 and contain at most 64 characters.
-   * Requires the HostnameOverride feature gate to be enabled.
    *
    * @schema WorkloadSpecPodSetsTemplateSpec#hostnameOverride
    */
@@ -8021,6 +8059,8 @@ export interface WorkloadSpecPodSetsTemplateSpec {
   /**
    * PreemptionPolicy is the Policy for preempting pods with lower priority.
    * One of Never, PreemptLowerPriority.
+   * When Priority Admission Controller is enabled, it prevents users from setting
+   * this field. The admission controller populates this field from PriorityClassName.
    * Defaults to PreemptLowerPriority if unset.
    *
    * @default PreemptLowerPriority if unset.
@@ -8269,6 +8309,9 @@ export function toJson_WorkloadSpecPodSetsTemplateSpec(
     enableServiceLinks: obj.enableServiceLinks,
     ephemeralContainers: obj.ephemeralContainers?.map((y) =>
       toJson_WorkloadSpecPodSetsTemplateSpecEphemeralContainers(y),
+    ),
+    evictionResponders: obj.evictionResponders?.map((y) =>
+      toJson_WorkloadSpecPodSetsTemplateSpecEvictionResponders(y),
     ),
     hostAliases: obj.hostAliases?.map((y) =>
       toJson_WorkloadSpecPodSetsTemplateSpecHostAliases(y),
@@ -9166,6 +9209,67 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecEphemeralContainers(
       toJson_WorkloadSpecPodSetsTemplateSpecEphemeralContainersVolumeMounts(y),
     ),
     workingDir: obj.workingDir,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * EvictionResponder allows you to specify the responder reacting to an Eviction.
+ * Responders should observe and communicate through the Eviction Resource API to help with
+ * the graceful eviction of a target (e.g. termination of a pod).
+ *
+ * @schema WorkloadSpecPodSetsTemplateSpecEvictionResponders
+ */
+export interface WorkloadSpecPodSetsTemplateSpecEvictionResponders {
+  /**
+   * name allows you to identify the responder responding to the Eviction.
+   *
+   * It must be a valid domain-prefixed key (such as "acme.io/foo").
+   * Domain names *.k8s.io and *.kubernetes.io are reserved.
+   * This field must be unique for each responder.
+   * This field is required.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecEvictionResponders#name
+   */
+  readonly name: string;
+
+  /**
+   * priority for this responder. Higher priorities are selected first by the evictionrequest-controller.
+   * If there are responders with the same priority, the responder whose domain name comes first in the
+   * alphabetical higher domain order, will be picked. This means that the top domain labels are compared
+   * alphabetically first, followed by the lower domain labels. The key is compared last.
+   *
+   * The responder that is the managing controller of the pod should set the value of
+   * this field to 10000 to allow both for preemption or fallback registration by other
+   * responders.
+   *
+   * The minimum value is 0 and the maximum value is 100000.
+   * The interval 0-999 is reserved for responders with *.k8s.io suffix.
+   * This field is required.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecEvictionResponders#priority
+   */
+  readonly priority: number;
+}
+
+/**
+ * Converts an object of type 'WorkloadSpecPodSetsTemplateSpecEvictionResponders' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_WorkloadSpecPodSetsTemplateSpecEvictionResponders(
+  obj: WorkloadSpecPodSetsTemplateSpecEvictionResponders | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    priority: obj.priority,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -10105,11 +10209,8 @@ export interface WorkloadSpecPodSetsTemplateSpecSecurityContext {
    * Eligible volumes are in-tree FibreChannel and iSCSI volumes, and all CSI volumes
    * whose CSI driver announces SELinux support by setting spec.seLinuxMount: true in their
    * CSIDriver instance. Other volumes are always re-labelled recursively.
-   * "MountOption" value is allowed only when SELinuxMount feature gate is enabled.
    *
-   * If not specified and SELinuxMount feature gate is enabled, "MountOption" is used.
-   * If not specified and SELinuxMount feature gate is disabled, "MountOption" is used for ReadWriteOncePod volumes
-   * and "Recursive" for all other volumes.
+   * If not specified, "MountOption" is used.
    *
    * This field affects only Pods that have SELinux label set, either in PodSecurityContext or in SecurityContext of all containers.
    *
@@ -12173,8 +12274,19 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecContainersVolumeDevices(
  */
 export interface WorkloadSpecPodSetsTemplateSpecContainersVolumeMounts {
   /**
-   * Path within the container at which the volume should be mounted.  Must
-   * not contain ':'.
+   * bindMountOptions is the list of additional bind mount options to apply when
+   * mounting this volume into the container. Allowed values are noexec,
+   * nodev, and nosuid. These are Linux mount options and have no effect on
+   * Windows nodes.
+   * This field is not supported with image volumes.
+   * This is an alpha field and requires enabling the VolumeBindMountOptions feature gate.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecContainersVolumeMounts#bindMountOptions
+   */
+  readonly bindMountOptions?: string[];
+
+  /**
+   * Path within the container at which the volume should be mounted.
    *
    * @schema WorkloadSpecPodSetsTemplateSpecContainersVolumeMounts#mountPath
    */
@@ -12262,6 +12374,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecContainersVolumeMounts(
     return undefined;
   }
   const result = {
+    bindMountOptions: obj.bindMountOptions?.map((y) => y),
     mountPath: obj.mountPath,
     mountPropagation: obj.mountPropagation,
     name: obj.name,
@@ -13420,8 +13533,19 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecEphemeralContainersVolumeD
  */
 export interface WorkloadSpecPodSetsTemplateSpecEphemeralContainersVolumeMounts {
   /**
-   * Path within the container at which the volume should be mounted.  Must
-   * not contain ':'.
+   * bindMountOptions is the list of additional bind mount options to apply when
+   * mounting this volume into the container. Allowed values are noexec,
+   * nodev, and nosuid. These are Linux mount options and have no effect on
+   * Windows nodes.
+   * This field is not supported with image volumes.
+   * This is an alpha field and requires enabling the VolumeBindMountOptions feature gate.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecEphemeralContainersVolumeMounts#bindMountOptions
+   */
+  readonly bindMountOptions?: string[];
+
+  /**
+   * Path within the container at which the volume should be mounted.
    *
    * @schema WorkloadSpecPodSetsTemplateSpecEphemeralContainersVolumeMounts#mountPath
    */
@@ -13510,6 +13634,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecEphemeralContainersVolumeM
     return undefined;
   }
   const result = {
+    bindMountOptions: obj.bindMountOptions?.map((y) => y),
     mountPath: obj.mountPath,
     mountPropagation: obj.mountPropagation,
     name: obj.name,
@@ -14625,8 +14750,19 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecInitContainersVolumeDevice
  */
 export interface WorkloadSpecPodSetsTemplateSpecInitContainersVolumeMounts {
   /**
-   * Path within the container at which the volume should be mounted.  Must
-   * not contain ':'.
+   * bindMountOptions is the list of additional bind mount options to apply when
+   * mounting this volume into the container. Allowed values are noexec,
+   * nodev, and nosuid. These are Linux mount options and have no effect on
+   * Windows nodes.
+   * This field is not supported with image volumes.
+   * This is an alpha field and requires enabling the VolumeBindMountOptions feature gate.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecInitContainersVolumeMounts#bindMountOptions
+   */
+  readonly bindMountOptions?: string[];
+
+  /**
+   * Path within the container at which the volume should be mounted.
    *
    * @schema WorkloadSpecPodSetsTemplateSpecInitContainersVolumeMounts#mountPath
    */
@@ -14714,6 +14850,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecInitContainersVolumeMounts
     return undefined;
   }
   const result = {
+    bindMountOptions: obj.bindMountOptions?.map((y) => y),
     mountPath: obj.mountPath,
     mountPropagation: obj.mountPropagation,
     name: obj.name,
@@ -15535,6 +15672,15 @@ export interface WorkloadSpecPodSetsTemplateSpecVolumesConfigMap {
   readonly defaultMode?: number;
 
   /**
+   * defaultUser is Optional: The owner UID of the created files by default.
+   * The defaultUser field is only used as a fallback when the item-level user field is unset.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecVolumesConfigMap#defaultUser
+   */
+  readonly defaultUser?: number;
+
+  /**
    * items if unspecified, each key-value pair in the Data field of the referenced
    * ConfigMap will be projected into the volume as a file whose name is the
    * key and content is the value. If specified, the listed keys will be
@@ -15578,6 +15724,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecVolumesConfigMap(
   }
   const result = {
     defaultMode: obj.defaultMode,
+    defaultUser: obj.defaultUser,
     items: obj.items?.map((y) =>
       toJson_WorkloadSpecPodSetsTemplateSpecVolumesConfigMapItems(y),
     ),
@@ -15700,6 +15847,15 @@ export interface WorkloadSpecPodSetsTemplateSpecVolumesDownwardApi {
   readonly defaultMode?: number;
 
   /**
+   * defaultUser is Optional: The owner UID of the created files by default.
+   * The defaultUser field is only used as a fallback when the item-level user field is unset.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecVolumesDownwardApi#defaultUser
+   */
+  readonly defaultUser?: number;
+
+  /**
    * Items is a list of downward API volume file
    *
    * @schema WorkloadSpecPodSetsTemplateSpecVolumesDownwardApi#items
@@ -15719,6 +15875,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecVolumesDownwardApi(
   }
   const result = {
     defaultMode: obj.defaultMode,
+    defaultUser: obj.defaultUser,
     items: obj.items?.map((y) =>
       toJson_WorkloadSpecPodSetsTemplateSpecVolumesDownwardApiItems(y),
     ),
@@ -15749,6 +15906,20 @@ export interface WorkloadSpecPodSetsTemplateSpecVolumesEmptyDir {
   readonly medium?: string;
 
   /**
+   * mode specifies the permission bits for the emptyDir directory, in numeric
+   * notation (e.g., 0755, 01777). Must be a value between 0000 and 01777.
+   * If not specified, defaults to 0777.
+   * This might be in conflict with other options that affect the file
+   * mode, like fsGroup. If fsGroup is specified, the fsGroup permissions
+   * will override the mode specified here.
+   * This field has no effect on Windows.
+   * This field is alpha and requires EmptyDirVolumeMode featuregate to be enabled.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecVolumesEmptyDir#mode
+   */
+  readonly mode?: number;
+
+  /**
    * sizeLimit is the total amount of local storage required for this EmptyDir volume.
    * The size limit is also applicable for memory medium.
    * The maximum usage on memory medium EmptyDir would be the minimum value between
@@ -15773,6 +15944,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecVolumesEmptyDir(
   }
   const result = {
     medium: obj.medium,
+    mode: obj.mode,
     sizeLimit: obj.sizeLimit?.value,
   };
   // filter undefined values
@@ -16725,6 +16897,15 @@ export interface WorkloadSpecPodSetsTemplateSpecVolumesProjected {
   readonly defaultMode?: number;
 
   /**
+   * defaultUser is Optional: The owner UID of the created files by default.
+   * The defaultUser field is only used as a fallback when the item-level user field is unset.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecVolumesProjected#defaultUser
+   */
+  readonly defaultUser?: number;
+
+  /**
    * sources is the list of volume projections. Each entry in this list
    * handles one source.
    *
@@ -16745,6 +16926,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecVolumesProjected(
   }
   const result = {
     defaultMode: obj.defaultMode,
+    defaultUser: obj.defaultUser,
     sources: obj.sources?.map((y) =>
       toJson_WorkloadSpecPodSetsTemplateSpecVolumesProjectedSources(y),
     ),
@@ -17099,6 +17281,15 @@ export interface WorkloadSpecPodSetsTemplateSpecVolumesSecret {
   readonly defaultMode?: number;
 
   /**
+   * defaultUser is Optional: The owner UID of the created files by default.
+   * The defaultUser field is only used as a fallback when the item-level user field is unset.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecVolumesSecret#defaultUser
+   */
+  readonly defaultUser?: number;
+
+  /**
    * items If unspecified, each key-value pair in the Data field of the referenced
    * Secret will be projected into the volume as a file whose name is the
    * key and content is the value. If specified, the listed keys will be
@@ -17139,6 +17330,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecVolumesSecret(
   }
   const result = {
     defaultMode: obj.defaultMode,
+    defaultUser: obj.defaultUser,
     items: obj.items?.map((y) =>
       toJson_WorkloadSpecPodSetsTemplateSpecVolumesSecretItems(y),
     ),
@@ -18096,6 +18288,16 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecContainersLivenessProbeExe
  */
 export interface WorkloadSpecPodSetsTemplateSpecContainersLivenessProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecContainersLivenessProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema WorkloadSpecPodSetsTemplateSpecContainersLivenessProbeGrpc#port
@@ -18124,6 +18326,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecContainersLivenessProbeGrp
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -18173,6 +18376,14 @@ export interface WorkloadSpecPodSetsTemplateSpecContainersLivenessProbeHttpGet {
   readonly port: WorkloadSpecPodSetsTemplateSpecContainersLivenessProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecContainersLivenessProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -18202,6 +18413,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecContainersLivenessProbeHtt
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -18304,6 +18516,16 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecContainersReadinessProbeEx
  */
 export interface WorkloadSpecPodSetsTemplateSpecContainersReadinessProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecContainersReadinessProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema WorkloadSpecPodSetsTemplateSpecContainersReadinessProbeGrpc#port
@@ -18332,6 +18554,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecContainersReadinessProbeGr
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -18381,6 +18604,14 @@ export interface WorkloadSpecPodSetsTemplateSpecContainersReadinessProbeHttpGet 
   readonly port: WorkloadSpecPodSetsTemplateSpecContainersReadinessProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecContainersReadinessProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -18410,6 +18641,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecContainersReadinessProbeHt
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -18945,6 +19177,16 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecContainersStartupProbeExec
  */
 export interface WorkloadSpecPodSetsTemplateSpecContainersStartupProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecContainersStartupProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema WorkloadSpecPodSetsTemplateSpecContainersStartupProbeGrpc#port
@@ -18973,6 +19215,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecContainersStartupProbeGrpc
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -19022,6 +19265,14 @@ export interface WorkloadSpecPodSetsTemplateSpecContainersStartupProbeHttpGet {
   readonly port: WorkloadSpecPodSetsTemplateSpecContainersStartupProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecContainersStartupProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -19050,6 +19301,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecContainersStartupProbeHttp
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -19497,6 +19749,16 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecEphemeralContainersLivenes
  */
 export interface WorkloadSpecPodSetsTemplateSpecEphemeralContainersLivenessProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecEphemeralContainersLivenessProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema WorkloadSpecPodSetsTemplateSpecEphemeralContainersLivenessProbeGrpc#port
@@ -19527,6 +19789,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecEphemeralContainersLivenes
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -19576,6 +19839,14 @@ export interface WorkloadSpecPodSetsTemplateSpecEphemeralContainersLivenessProbe
   readonly port: WorkloadSpecPodSetsTemplateSpecEphemeralContainersLivenessProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecEphemeralContainersLivenessProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -19606,6 +19877,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecEphemeralContainersLivenes
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -19711,6 +19983,16 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecEphemeralContainersReadine
  */
 export interface WorkloadSpecPodSetsTemplateSpecEphemeralContainersReadinessProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecEphemeralContainersReadinessProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema WorkloadSpecPodSetsTemplateSpecEphemeralContainersReadinessProbeGrpc#port
@@ -19741,6 +20023,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecEphemeralContainersReadine
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -19790,6 +20073,14 @@ export interface WorkloadSpecPodSetsTemplateSpecEphemeralContainersReadinessProb
   readonly port: WorkloadSpecPodSetsTemplateSpecEphemeralContainersReadinessProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecEphemeralContainersReadinessProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -19820,6 +20111,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecEphemeralContainersReadine
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -20363,6 +20655,16 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecEphemeralContainersStartup
  */
 export interface WorkloadSpecPodSetsTemplateSpecEphemeralContainersStartupProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecEphemeralContainersStartupProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema WorkloadSpecPodSetsTemplateSpecEphemeralContainersStartupProbeGrpc#port
@@ -20393,6 +20695,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecEphemeralContainersStartup
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -20442,6 +20745,14 @@ export interface WorkloadSpecPodSetsTemplateSpecEphemeralContainersStartupProbeH
   readonly port: WorkloadSpecPodSetsTemplateSpecEphemeralContainersStartupProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecEphemeralContainersStartupProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -20472,6 +20783,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecEphemeralContainersStartup
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -20915,6 +21227,16 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecInitContainersLivenessProb
  */
 export interface WorkloadSpecPodSetsTemplateSpecInitContainersLivenessProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecInitContainersLivenessProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema WorkloadSpecPodSetsTemplateSpecInitContainersLivenessProbeGrpc#port
@@ -20944,6 +21266,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecInitContainersLivenessProb
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -20993,6 +21316,14 @@ export interface WorkloadSpecPodSetsTemplateSpecInitContainersLivenessProbeHttpG
   readonly port: WorkloadSpecPodSetsTemplateSpecInitContainersLivenessProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecInitContainersLivenessProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -21023,6 +21354,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecInitContainersLivenessProb
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -21127,6 +21459,16 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecInitContainersReadinessPro
  */
 export interface WorkloadSpecPodSetsTemplateSpecInitContainersReadinessProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecInitContainersReadinessProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema WorkloadSpecPodSetsTemplateSpecInitContainersReadinessProbeGrpc#port
@@ -21156,6 +21498,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecInitContainersReadinessPro
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -21205,6 +21548,14 @@ export interface WorkloadSpecPodSetsTemplateSpecInitContainersReadinessProbeHttp
   readonly port: WorkloadSpecPodSetsTemplateSpecInitContainersReadinessProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecInitContainersReadinessProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -21235,6 +21586,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecInitContainersReadinessPro
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -21775,6 +22127,16 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecInitContainersStartupProbe
  */
 export interface WorkloadSpecPodSetsTemplateSpecInitContainersStartupProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecInitContainersStartupProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema WorkloadSpecPodSetsTemplateSpecInitContainersStartupProbeGrpc#port
@@ -21804,6 +22166,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecInitContainersStartupProbe
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -21853,6 +22216,14 @@ export interface WorkloadSpecPodSetsTemplateSpecInitContainersStartupProbeHttpGe
   readonly port: WorkloadSpecPodSetsTemplateSpecInitContainersStartupProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecInitContainersStartupProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -21883,6 +22254,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecInitContainersStartupProbe
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -22112,6 +22484,15 @@ export interface WorkloadSpecPodSetsTemplateSpecVolumesConfigMapItems {
    * @schema WorkloadSpecPodSetsTemplateSpecVolumesConfigMapItems#path
    */
   readonly path: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecVolumesConfigMapItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -22128,6 +22509,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecVolumesConfigMapItems(
     key: obj.key,
     mode: obj.mode,
     path: obj.path,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -22220,6 +22602,15 @@ export interface WorkloadSpecPodSetsTemplateSpecVolumesDownwardApiItems {
    * @schema WorkloadSpecPodSetsTemplateSpecVolumesDownwardApiItems#resourceFieldRef
    */
   readonly resourceFieldRef?: WorkloadSpecPodSetsTemplateSpecVolumesDownwardApiItemsResourceFieldRef;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecVolumesDownwardApiItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -22243,6 +22634,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecVolumesDownwardApiItems(
       toJson_WorkloadSpecPodSetsTemplateSpecVolumesDownwardApiItemsResourceFieldRef(
         obj.resourceFieldRef,
       ),
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -22688,6 +23080,15 @@ export interface WorkloadSpecPodSetsTemplateSpecVolumesSecretItems {
    * @schema WorkloadSpecPodSetsTemplateSpecVolumesSecretItems#path
    */
   readonly path: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecVolumesSecretItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -22704,6 +23105,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecVolumesSecretItems(
     key: obj.key,
     mode: obj.mode,
     path: obj.path,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -23324,7 +23726,8 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecAffinityPodAntiAffinityReq
  */
 export interface WorkloadSpecPodSetsTemplateSpecContainersEnvValueFromConfigMapKeyRef {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema WorkloadSpecPodSetsTemplateSpecContainersEnvValueFromConfigMapKeyRef#key
    */
@@ -23678,6 +24081,14 @@ export interface WorkloadSpecPodSetsTemplateSpecContainersLifecyclePostStartHttp
   readonly port: WorkloadSpecPodSetsTemplateSpecContainersLifecyclePostStartHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecContainersLifecyclePostStartHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -23708,6 +24119,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecContainersLifecyclePostSta
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -23882,6 +24294,14 @@ export interface WorkloadSpecPodSetsTemplateSpecContainersLifecyclePreStopHttpGe
   readonly port: WorkloadSpecPodSetsTemplateSpecContainersLifecyclePreStopHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecContainersLifecyclePreStopHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -23912,6 +24332,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecContainersLifecyclePreStop
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -24302,7 +24723,8 @@ export class WorkloadSpecPodSetsTemplateSpecContainersStartupProbeTcpSocketPort 
  */
 export interface WorkloadSpecPodSetsTemplateSpecEphemeralContainersEnvValueFromConfigMapKeyRef {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema WorkloadSpecPodSetsTemplateSpecEphemeralContainersEnvValueFromConfigMapKeyRef#key
    */
@@ -24659,6 +25081,14 @@ export interface WorkloadSpecPodSetsTemplateSpecEphemeralContainersLifecyclePost
   readonly port: WorkloadSpecPodSetsTemplateSpecEphemeralContainersLifecyclePostStartHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecEphemeralContainersLifecyclePostStartHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -24689,6 +25119,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecEphemeralContainersLifecyc
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -24864,6 +25295,14 @@ export interface WorkloadSpecPodSetsTemplateSpecEphemeralContainersLifecyclePreS
   readonly port: WorkloadSpecPodSetsTemplateSpecEphemeralContainersLifecyclePreStopHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecEphemeralContainersLifecyclePreStopHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -24894,6 +25333,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecEphemeralContainersLifecyc
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -25285,7 +25725,8 @@ export class WorkloadSpecPodSetsTemplateSpecEphemeralContainersStartupProbeTcpSo
  */
 export interface WorkloadSpecPodSetsTemplateSpecInitContainersEnvValueFromConfigMapKeyRef {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema WorkloadSpecPodSetsTemplateSpecInitContainersEnvValueFromConfigMapKeyRef#key
    */
@@ -25642,6 +26083,14 @@ export interface WorkloadSpecPodSetsTemplateSpecInitContainersLifecyclePostStart
   readonly port: WorkloadSpecPodSetsTemplateSpecInitContainersLifecyclePostStartHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecInitContainersLifecyclePostStartHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -25672,6 +26121,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecInitContainersLifecyclePos
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -25847,6 +26297,14 @@ export interface WorkloadSpecPodSetsTemplateSpecInitContainersLifecyclePreStopHt
   readonly port: WorkloadSpecPodSetsTemplateSpecInitContainersLifecyclePreStopHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecInitContainersLifecyclePreStopHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -25877,6 +26335,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecInitContainersLifecyclePre
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -26455,8 +26914,8 @@ export interface WorkloadSpecPodSetsTemplateSpecVolumesEphemeralVolumeClaimTempl
    * * An existing PVC (PersistentVolumeClaim)
    * If the provisioner or an external controller can support the specified data source,
    * it will create a new volume based on the contents of the specified data source.
-   * When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
-   * and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+   * dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be
+   * copied to dataSource when dataSourceRef.namespace is not specified.
    * If the namespace is specified, then dataSourceRef will not be copied to dataSource.
    *
    * @schema WorkloadSpecPodSetsTemplateSpecVolumesEphemeralVolumeClaimTemplateSpec#dataSource
@@ -26485,7 +26944,6 @@ export interface WorkloadSpecPodSetsTemplateSpecVolumesEphemeralVolumeClaimTempl
    * specified.
    * * While dataSource only allows local objects, dataSourceRef allows objects
    * in any namespaces.
-   * (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
    * (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
    *
    * @schema WorkloadSpecPodSetsTemplateSpecVolumesEphemeralVolumeClaimTemplateSpec#dataSourceRef
@@ -26655,6 +27113,15 @@ export interface WorkloadSpecPodSetsTemplateSpecVolumesProjectedSourcesClusterTr
    * @schema WorkloadSpecPodSetsTemplateSpecVolumesProjectedSourcesClusterTrustBundle#signerName
    */
   readonly signerName?: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecVolumesProjectedSourcesClusterTrustBundle#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -26678,6 +27145,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecVolumesProjectedSourcesClu
     optional: obj.optional,
     path: obj.path,
     signerName: obj.signerName,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -26915,6 +27383,15 @@ export interface WorkloadSpecPodSetsTemplateSpecVolumesProjectedSourcesPodCertif
   readonly signerName: string;
 
   /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecVolumesProjectedSourcesPodCertificate#user
+   */
+  readonly user?: number;
+
+  /**
    * userAnnotations allow pod authors to pass additional information to
    * the signer implementation.  Kubernetes does not restrict or validate this
    * metadata in any way.
@@ -26953,6 +27430,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecVolumesProjectedSourcesPod
     keyType: obj.keyType,
     maxExpirationSeconds: obj.maxExpirationSeconds,
     signerName: obj.signerName,
+    user: obj.user,
     userAnnotations:
       obj.userAnnotations === undefined
         ? undefined
@@ -27070,6 +27548,15 @@ export interface WorkloadSpecPodSetsTemplateSpecVolumesProjectedSourcesServiceAc
    * @schema WorkloadSpecPodSetsTemplateSpecVolumesProjectedSourcesServiceAccountToken#path
    */
   readonly path: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecVolumesProjectedSourcesServiceAccountToken#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -27088,6 +27575,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecVolumesProjectedSourcesSer
     audience: obj.audience,
     expirationSeconds: obj.expirationSeconds,
     path: obj.path,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -28477,8 +28965,8 @@ export class WorkloadSpecPodSetsTemplateSpecVolumesDownwardApiItemsResourceField
  * * An existing PVC (PersistentVolumeClaim)
  * If the provisioner or an external controller can support the specified data source,
  * it will create a new volume based on the contents of the specified data source.
- * When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
- * and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+ * dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be
+ * copied to dataSource when dataSourceRef.namespace is not specified.
  * If the namespace is specified, then dataSourceRef will not be copied to dataSource.
  *
  * @schema WorkloadSpecPodSetsTemplateSpecVolumesEphemeralVolumeClaimTemplateSpecDataSource
@@ -28555,7 +29043,6 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecVolumesEphemeralVolumeClai
  * specified.
  * * While dataSource only allows local objects, dataSourceRef allows objects
  * in any namespaces.
- * (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
  * (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
  *
  * @schema WorkloadSpecPodSetsTemplateSpecVolumesEphemeralVolumeClaimTemplateSpecDataSourceRef
@@ -28844,6 +29331,15 @@ export interface WorkloadSpecPodSetsTemplateSpecVolumesProjectedSourcesConfigMap
    * @schema WorkloadSpecPodSetsTemplateSpecVolumesProjectedSourcesConfigMapItems#path
    */
   readonly path: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecVolumesProjectedSourcesConfigMapItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -28862,6 +29358,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecVolumesProjectedSourcesCon
     key: obj.key,
     mode: obj.mode,
     path: obj.path,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -28910,6 +29407,15 @@ export interface WorkloadSpecPodSetsTemplateSpecVolumesProjectedSourcesDownwardA
    * @schema WorkloadSpecPodSetsTemplateSpecVolumesProjectedSourcesDownwardApiItems#resourceFieldRef
    */
   readonly resourceFieldRef?: WorkloadSpecPodSetsTemplateSpecVolumesProjectedSourcesDownwardApiItemsResourceFieldRef;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecVolumesProjectedSourcesDownwardApiItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -28935,6 +29441,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecVolumesProjectedSourcesDow
       toJson_WorkloadSpecPodSetsTemplateSpecVolumesProjectedSourcesDownwardApiItemsResourceFieldRef(
         obj.resourceFieldRef,
       ),
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -28978,6 +29485,15 @@ export interface WorkloadSpecPodSetsTemplateSpecVolumesProjectedSourcesSecretIte
    * @schema WorkloadSpecPodSetsTemplateSpecVolumesProjectedSourcesSecretItems#path
    */
   readonly path: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema WorkloadSpecPodSetsTemplateSpecVolumesProjectedSourcesSecretItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -28996,6 +29512,7 @@ export function toJson_WorkloadSpecPodSetsTemplateSpecVolumesProjectedSourcesSec
     key: obj.key,
     mode: obj.mode,
     path: obj.path,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -30280,6 +30797,27 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpec {
   readonly ephemeralContainers?: WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainers[];
 
   /**
+   * evictionResponders reference responders that react to Evictions based on EvictionRequests.
+   * Responders should observe and communicate through the Eviction Resource API to help with
+   * the graceful termination of a pod. The responders are selected sequentially, according to
+   * their specified priority.
+   *
+   * Responders should periodically report on an eviction progress by updating the
+   * .status.responders[].heartbeatTime field of the Eviction object. If this field is not updated
+   * within the heartbeat deadline defined by the Eviction API (currently 20 minutes), the eviction
+   * is passed over to the next responder with a lower priority. If there is no other responder,
+   * the last default imperative-eviction.k8s.io/evictor responder with a priority of 100 will
+   * evict the pod using the imperative Eviction API (pods/<name>/eviction subresource).
+   *
+   * The maximum length of the responders list is 10.
+   * Responders are not supported when the pod is part of a PodGroup (.spec.schedulingGroup is set).
+   * This field can only be set on creation and is immutable afterwards.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpec#evictionResponders
+   */
+  readonly evictionResponders?: WorkloadV1Beta2SpecPodSetsTemplateSpecEvictionResponders[];
+
+  /**
    * HostAliases is an optional list of hosts and IPs that will be injected into the pod's hosts
    * file if specified.
    *
@@ -30350,7 +30888,6 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpec {
    * - `hostNetwork` must be set to false.
    *
    * This field must be a valid DNS subdomain as defined in RFC 1123 and contain at most 64 characters.
-   * Requires the HostnameOverride feature gate to be enabled.
    *
    * @schema WorkloadV1Beta2SpecPodSetsTemplateSpec#hostnameOverride
    */
@@ -30460,6 +30997,8 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpec {
   /**
    * PreemptionPolicy is the Policy for preempting pods with lower priority.
    * One of Never, PreemptLowerPriority.
+   * When Priority Admission Controller is enabled, it prevents users from setting
+   * this field. The admission controller populates this field from PriorityClassName.
    * Defaults to PreemptLowerPriority if unset.
    *
    * @default PreemptLowerPriority if unset.
@@ -30712,6 +31251,9 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpec(
     enableServiceLinks: obj.enableServiceLinks,
     ephemeralContainers: obj.ephemeralContainers?.map((y) =>
       toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainers(y),
+    ),
+    evictionResponders: obj.evictionResponders?.map((y) =>
+      toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecEvictionResponders(y),
     ),
     hostAliases: obj.hostAliases?.map((y) =>
       toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecHostAliases(y),
@@ -31681,6 +32223,67 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainers
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * EvictionResponder allows you to specify the responder reacting to an Eviction.
+ * Responders should observe and communicate through the Eviction Resource API to help with
+ * the graceful eviction of a target (e.g. termination of a pod).
+ *
+ * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecEvictionResponders
+ */
+export interface WorkloadV1Beta2SpecPodSetsTemplateSpecEvictionResponders {
+  /**
+   * name allows you to identify the responder responding to the Eviction.
+   *
+   * It must be a valid domain-prefixed key (such as "acme.io/foo").
+   * Domain names *.k8s.io and *.kubernetes.io are reserved.
+   * This field must be unique for each responder.
+   * This field is required.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecEvictionResponders#name
+   */
+  readonly name: string;
+
+  /**
+   * priority for this responder. Higher priorities are selected first by the evictionrequest-controller.
+   * If there are responders with the same priority, the responder whose domain name comes first in the
+   * alphabetical higher domain order, will be picked. This means that the top domain labels are compared
+   * alphabetically first, followed by the lower domain labels. The key is compared last.
+   *
+   * The responder that is the managing controller of the pod should set the value of
+   * this field to 10000 to allow both for preemption or fallback registration by other
+   * responders.
+   *
+   * The minimum value is 0 and the maximum value is 100000.
+   * The interval 0-999 is reserved for responders with *.k8s.io suffix.
+   * This field is required.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecEvictionResponders#priority
+   */
+  readonly priority: number;
+}
+
+/**
+ * Converts an object of type 'WorkloadV1Beta2SpecPodSetsTemplateSpecEvictionResponders' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecEvictionResponders(
+  obj: WorkloadV1Beta2SpecPodSetsTemplateSpecEvictionResponders | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    priority: obj.priority,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
  * HostAlias holds the mapping between IP and hostnames that will be injected as an entry in the
  * pod's hosts file.
  *
@@ -32620,11 +33223,8 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecSecurityContext {
    * Eligible volumes are in-tree FibreChannel and iSCSI volumes, and all CSI volumes
    * whose CSI driver announces SELinux support by setting spec.seLinuxMount: true in their
    * CSIDriver instance. Other volumes are always re-labelled recursively.
-   * "MountOption" value is allowed only when SELinuxMount feature gate is enabled.
    *
-   * If not specified and SELinuxMount feature gate is enabled, "MountOption" is used.
-   * If not specified and SELinuxMount feature gate is disabled, "MountOption" is used for ReadWriteOncePod volumes
-   * and "Recursive" for all other volumes.
+   * If not specified, "MountOption" is used.
    *
    * This field affects only Pods that have SELinux label set, either in PodSecurityContext or in SecurityContext of all containers.
    *
@@ -34720,8 +35320,19 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecContainersVolumeDev
  */
 export interface WorkloadV1Beta2SpecPodSetsTemplateSpecContainersVolumeMounts {
   /**
-   * Path within the container at which the volume should be mounted.  Must
-   * not contain ':'.
+   * bindMountOptions is the list of additional bind mount options to apply when
+   * mounting this volume into the container. Allowed values are noexec,
+   * nodev, and nosuid. These are Linux mount options and have no effect on
+   * Windows nodes.
+   * This field is not supported with image volumes.
+   * This is an alpha field and requires enabling the VolumeBindMountOptions feature gate.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecContainersVolumeMounts#bindMountOptions
+   */
+  readonly bindMountOptions?: string[];
+
+  /**
+   * Path within the container at which the volume should be mounted.
    *
    * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecContainersVolumeMounts#mountPath
    */
@@ -34809,6 +35420,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecContainersVolumeMou
     return undefined;
   }
   const result = {
+    bindMountOptions: obj.bindMountOptions?.map((y) => y),
     mountPath: obj.mountPath,
     mountPropagation: obj.mountPropagation,
     name: obj.name,
@@ -35978,8 +36590,19 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainers
  */
 export interface WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersVolumeMounts {
   /**
-   * Path within the container at which the volume should be mounted.  Must
-   * not contain ':'.
+   * bindMountOptions is the list of additional bind mount options to apply when
+   * mounting this volume into the container. Allowed values are noexec,
+   * nodev, and nosuid. These are Linux mount options and have no effect on
+   * Windows nodes.
+   * This field is not supported with image volumes.
+   * This is an alpha field and requires enabling the VolumeBindMountOptions feature gate.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersVolumeMounts#bindMountOptions
+   */
+  readonly bindMountOptions?: string[];
+
+  /**
+   * Path within the container at which the volume should be mounted.
    *
    * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersVolumeMounts#mountPath
    */
@@ -36069,6 +36692,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainers
     return undefined;
   }
   const result = {
+    bindMountOptions: obj.bindMountOptions?.map((y) => y),
     mountPath: obj.mountPath,
     mountPropagation: obj.mountPropagation,
     name: obj.name,
@@ -37204,8 +37828,19 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersVolum
  */
 export interface WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersVolumeMounts {
   /**
-   * Path within the container at which the volume should be mounted.  Must
-   * not contain ':'.
+   * bindMountOptions is the list of additional bind mount options to apply when
+   * mounting this volume into the container. Allowed values are noexec,
+   * nodev, and nosuid. These are Linux mount options and have no effect on
+   * Windows nodes.
+   * This field is not supported with image volumes.
+   * This is an alpha field and requires enabling the VolumeBindMountOptions feature gate.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersVolumeMounts#bindMountOptions
+   */
+  readonly bindMountOptions?: string[];
+
+  /**
+   * Path within the container at which the volume should be mounted.
    *
    * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersVolumeMounts#mountPath
    */
@@ -37295,6 +37930,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersVolum
     return undefined;
   }
   const result = {
+    bindMountOptions: obj.bindMountOptions?.map((y) => y),
     mountPath: obj.mountPath,
     mountPropagation: obj.mountPropagation,
     name: obj.name,
@@ -38127,6 +38763,15 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesConfigMap {
   readonly defaultMode?: number;
 
   /**
+   * defaultUser is Optional: The owner UID of the created files by default.
+   * The defaultUser field is only used as a fallback when the item-level user field is unset.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesConfigMap#defaultUser
+   */
+  readonly defaultUser?: number;
+
+  /**
    * items if unspecified, each key-value pair in the Data field of the referenced
    * ConfigMap will be projected into the volume as a file whose name is the
    * key and content is the value. If specified, the listed keys will be
@@ -38170,6 +38815,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesConfigMap(
   }
   const result = {
     defaultMode: obj.defaultMode,
+    defaultUser: obj.defaultUser,
     items: obj.items?.map((y) =>
       toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesConfigMapItems(y),
     ),
@@ -38292,6 +38938,15 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesDownwardApi {
   readonly defaultMode?: number;
 
   /**
+   * defaultUser is Optional: The owner UID of the created files by default.
+   * The defaultUser field is only used as a fallback when the item-level user field is unset.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesDownwardApi#defaultUser
+   */
+  readonly defaultUser?: number;
+
+  /**
    * Items is a list of downward API volume file
    *
    * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesDownwardApi#items
@@ -38311,6 +38966,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesDownwardApi(
   }
   const result = {
     defaultMode: obj.defaultMode,
+    defaultUser: obj.defaultUser,
     items: obj.items?.map((y) =>
       toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesDownwardApiItems(y),
     ),
@@ -38341,6 +38997,20 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesEmptyDir {
   readonly medium?: string;
 
   /**
+   * mode specifies the permission bits for the emptyDir directory, in numeric
+   * notation (e.g., 0755, 01777). Must be a value between 0000 and 01777.
+   * If not specified, defaults to 0777.
+   * This might be in conflict with other options that affect the file
+   * mode, like fsGroup. If fsGroup is specified, the fsGroup permissions
+   * will override the mode specified here.
+   * This field has no effect on Windows.
+   * This field is alpha and requires EmptyDirVolumeMode featuregate to be enabled.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesEmptyDir#mode
+   */
+  readonly mode?: number;
+
+  /**
    * sizeLimit is the total amount of local storage required for this EmptyDir volume.
    * The size limit is also applicable for memory medium.
    * The maximum usage on memory medium EmptyDir would be the minimum value between
@@ -38365,6 +39035,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesEmptyDir(
   }
   const result = {
     medium: obj.medium,
+    mode: obj.mode,
     sizeLimit: obj.sizeLimit?.value,
   };
   // filter undefined values
@@ -39324,6 +39995,15 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesProjected {
   readonly defaultMode?: number;
 
   /**
+   * defaultUser is Optional: The owner UID of the created files by default.
+   * The defaultUser field is only used as a fallback when the item-level user field is unset.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesProjected#defaultUser
+   */
+  readonly defaultUser?: number;
+
+  /**
    * sources is the list of volume projections. Each entry in this list
    * handles one source.
    *
@@ -39344,6 +40024,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesProjected(
   }
   const result = {
     defaultMode: obj.defaultMode,
+    defaultUser: obj.defaultUser,
     sources: obj.sources?.map((y) =>
       toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesProjectedSources(y),
     ),
@@ -39699,6 +40380,15 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesSecret {
   readonly defaultMode?: number;
 
   /**
+   * defaultUser is Optional: The owner UID of the created files by default.
+   * The defaultUser field is only used as a fallback when the item-level user field is unset.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesSecret#defaultUser
+   */
+  readonly defaultUser?: number;
+
+  /**
    * items If unspecified, each key-value pair in the Data field of the referenced
    * Secret will be projected into the volume as a file whose name is the
    * key and content is the value. If specified, the listed keys will be
@@ -39739,6 +40429,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesSecret(
   }
   const result = {
     defaultMode: obj.defaultMode,
+    defaultUser: obj.defaultUser,
     items: obj.items?.map((y) =>
       toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesSecretItems(y),
     ),
@@ -40707,6 +41398,16 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecContainersLivenessP
  */
 export interface WorkloadV1Beta2SpecPodSetsTemplateSpecContainersLivenessProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecContainersLivenessProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecContainersLivenessProbeGrpc#port
@@ -40737,6 +41438,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecContainersLivenessP
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -40786,6 +41488,14 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecContainersLivenessProbeHt
   readonly port: WorkloadV1Beta2SpecPodSetsTemplateSpecContainersLivenessProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecContainersLivenessProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -40816,6 +41526,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecContainersLivenessP
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -40921,6 +41632,16 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecContainersReadiness
  */
 export interface WorkloadV1Beta2SpecPodSetsTemplateSpecContainersReadinessProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecContainersReadinessProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecContainersReadinessProbeGrpc#port
@@ -40951,6 +41672,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecContainersReadiness
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -41000,6 +41722,14 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecContainersReadinessProbeH
   readonly port: WorkloadV1Beta2SpecPodSetsTemplateSpecContainersReadinessProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecContainersReadinessProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -41030,6 +41760,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecContainersReadiness
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -41572,6 +42303,16 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecContainersStartupPr
  */
 export interface WorkloadV1Beta2SpecPodSetsTemplateSpecContainersStartupProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecContainersStartupProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecContainersStartupProbeGrpc#port
@@ -41602,6 +42343,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecContainersStartupPr
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -41651,6 +42393,14 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecContainersStartupProbeHtt
   readonly port: WorkloadV1Beta2SpecPodSetsTemplateSpecContainersStartupProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecContainersStartupProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -41681,6 +42431,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecContainersStartupPr
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -42130,6 +42881,16 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainers
  */
 export interface WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersLivenessProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersLivenessProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersLivenessProbeGrpc#port
@@ -42160,6 +42921,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainers
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -42209,6 +42971,14 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersLivene
   readonly port: WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersLivenessProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersLivenessProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -42239,6 +43009,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainers
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -42344,6 +43115,16 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainers
  */
 export interface WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersReadinessProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersReadinessProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersReadinessProbeGrpc#port
@@ -42374,6 +43155,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainers
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -42423,6 +43205,14 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersReadin
   readonly port: WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersReadinessProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersReadinessProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -42453,6 +43243,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainers
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -42996,6 +43787,16 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainers
  */
 export interface WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersStartupProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersStartupProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersStartupProbeGrpc#port
@@ -43026,6 +43827,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainers
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -43075,6 +43877,14 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersStartu
   readonly port: WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersStartupProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersStartupProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -43105,6 +43915,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainers
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -43554,6 +44365,16 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersLiven
  */
 export interface WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersLivenessProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersLivenessProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersLivenessProbeGrpc#port
@@ -43584,6 +44405,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersLiven
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -43633,6 +44455,14 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersLivenessPro
   readonly port: WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersLivenessProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersLivenessProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -43663,6 +44493,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersLiven
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -43768,6 +44599,16 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersReadi
  */
 export interface WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersReadinessProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersReadinessProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersReadinessProbeGrpc#port
@@ -43798,6 +44639,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersReadi
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -43847,6 +44689,14 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersReadinessPr
   readonly port: WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersReadinessProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersReadinessProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -43877,6 +44727,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersReadi
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -44420,6 +45271,16 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersStart
  */
 export interface WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersStartupProbeGrpc {
   /**
+   * mode specifies the connection mode for the gRPC health probe.
+   * Set to "TLS" to use TLS without certificate verification.
+   * Set to "Plaintext" to use a plaintext (insecure) connection explicitly.
+   * If not specified, the probe uses a plaintext (insecure) connection.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersStartupProbeGrpc#mode
+   */
+  readonly mode?: string;
+
+  /**
    * Port number of the gRPC service. Number must be in the range 1 to 65535.
    *
    * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersStartupProbeGrpc#port
@@ -44450,6 +45311,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersStart
     return undefined;
   }
   const result = {
+    mode: obj.mode,
     port: obj.port,
     service: obj.service,
   };
@@ -44499,6 +45361,14 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersStartupProb
   readonly port: WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersStartupProbeHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersStartupProbeHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -44529,6 +45399,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersStart
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -44758,6 +45629,15 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesConfigMapItems {
    * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesConfigMapItems#path
    */
   readonly path: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesConfigMapItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -44774,6 +45654,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesConfigMapIte
     key: obj.key,
     mode: obj.mode,
     path: obj.path,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -44867,6 +45748,15 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesDownwardApiItems {
    * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesDownwardApiItems#resourceFieldRef
    */
   readonly resourceFieldRef?: WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesDownwardApiItemsResourceFieldRef;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesDownwardApiItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -44891,6 +45781,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesDownwardApiI
       toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesDownwardApiItemsResourceFieldRef(
         obj.resourceFieldRef,
       ),
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -45345,6 +46236,15 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesSecretItems {
    * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesSecretItems#path
    */
   readonly path: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesSecretItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -45361,6 +46261,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesSecretItems(
     key: obj.key,
     mode: obj.mode,
     path: obj.path,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -45982,7 +46883,8 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecAffinityPodAntiAffi
  */
 export interface WorkloadV1Beta2SpecPodSetsTemplateSpecContainersEnvValueFromConfigMapKeyRef {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecContainersEnvValueFromConfigMapKeyRef#key
    */
@@ -46339,6 +47241,14 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecContainersLifecyclePostSt
   readonly port: WorkloadV1Beta2SpecPodSetsTemplateSpecContainersLifecyclePostStartHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecContainersLifecyclePostStartHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -46369,6 +47279,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecContainersLifecycle
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -46544,6 +47455,14 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecContainersLifecyclePreSto
   readonly port: WorkloadV1Beta2SpecPodSetsTemplateSpecContainersLifecyclePreStopHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecContainersLifecyclePreStopHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -46574,6 +47493,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecContainersLifecycle
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -46965,7 +47885,8 @@ export class WorkloadV1Beta2SpecPodSetsTemplateSpecContainersStartupProbeTcpSock
  */
 export interface WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersEnvValueFromConfigMapKeyRef {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersEnvValueFromConfigMapKeyRef#key
    */
@@ -47322,6 +48243,14 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersLifecy
   readonly port: WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersLifecyclePostStartHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersLifecyclePostStartHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -47352,6 +48281,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainers
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -47527,6 +48457,14 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersLifecy
   readonly port: WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersLifecyclePreStopHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersLifecyclePreStopHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -47557,6 +48495,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainers
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -47948,7 +48887,8 @@ export class WorkloadV1Beta2SpecPodSetsTemplateSpecEphemeralContainersStartupPro
  */
 export interface WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersEnvValueFromConfigMapKeyRef {
   /**
-   * The key to select.
+   * The key to select from the ConfigMap's Data field.
+   * Keys in the BinaryData field are not currently propagated to container env vars.
    *
    * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersEnvValueFromConfigMapKeyRef#key
    */
@@ -48305,6 +49245,14 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersLifecyclePo
   readonly port: WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersLifecyclePostStartHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersLifecyclePostStartHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -48335,6 +49283,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersLifec
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -48510,6 +49459,14 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersLifecyclePr
   readonly port: WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersLifecyclePreStopHttpGetPort;
 
   /**
+   * Protocol selects the wire protocol for the probe connection.
+   * Nil defaults to HTTP/1.1.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersLifecyclePreStopHttpGet#protocol
+   */
+  readonly protocol?: string;
+
+  /**
    * Scheme to use for connecting to the host.
    * Defaults to HTTP.
    *
@@ -48540,6 +49497,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecInitContainersLifec
     ),
     path: obj.path,
     port: obj.port?.value,
+    protocol: obj.protocol,
     scheme: obj.scheme,
   };
   // filter undefined values
@@ -49119,8 +50077,8 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesEphemeralVolumeCla
    * * An existing PVC (PersistentVolumeClaim)
    * If the provisioner or an external controller can support the specified data source,
    * it will create a new volume based on the contents of the specified data source.
-   * When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
-   * and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+   * dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be
+   * copied to dataSource when dataSourceRef.namespace is not specified.
    * If the namespace is specified, then dataSourceRef will not be copied to dataSource.
    *
    * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesEphemeralVolumeClaimTemplateSpec#dataSource
@@ -49149,7 +50107,6 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesEphemeralVolumeCla
    * specified.
    * * While dataSource only allows local objects, dataSourceRef allows objects
    * in any namespaces.
-   * (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
    * (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
    *
    * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesEphemeralVolumeClaimTemplateSpec#dataSourceRef
@@ -49319,6 +50276,15 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesProjectedSourcesCl
    * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesProjectedSourcesClusterTrustBundle#signerName
    */
   readonly signerName?: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesProjectedSourcesClusterTrustBundle#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -49342,6 +50308,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesProjectedSou
     optional: obj.optional,
     path: obj.path,
     signerName: obj.signerName,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -49580,6 +50547,15 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesProjectedSourcesPo
   readonly signerName: string;
 
   /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesProjectedSourcesPodCertificate#user
+   */
+  readonly user?: number;
+
+  /**
    * userAnnotations allow pod authors to pass additional information to
    * the signer implementation.  Kubernetes does not restrict or validate this
    * metadata in any way.
@@ -49618,6 +50594,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesProjectedSou
     keyType: obj.keyType,
     maxExpirationSeconds: obj.maxExpirationSeconds,
     signerName: obj.signerName,
+    user: obj.user,
     userAnnotations:
       obj.userAnnotations === undefined
         ? undefined
@@ -49737,6 +50714,15 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesProjectedSourcesSe
    * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesProjectedSourcesServiceAccountToken#path
    */
   readonly path: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesProjectedSourcesServiceAccountToken#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -49755,6 +50741,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesProjectedSou
     audience: obj.audience,
     expirationSeconds: obj.expirationSeconds,
     path: obj.path,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -51144,8 +52131,8 @@ export class WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesDownwardApiItemsResour
  * * An existing PVC (PersistentVolumeClaim)
  * If the provisioner or an external controller can support the specified data source,
  * it will create a new volume based on the contents of the specified data source.
- * When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
- * and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+ * dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be
+ * copied to dataSource when dataSourceRef.namespace is not specified.
  * If the namespace is specified, then dataSourceRef will not be copied to dataSource.
  *
  * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesEphemeralVolumeClaimTemplateSpecDataSource
@@ -51222,7 +52209,6 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesEphemeralVol
  * specified.
  * * While dataSource only allows local objects, dataSourceRef allows objects
  * in any namespaces.
- * (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
  * (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
  *
  * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesEphemeralVolumeClaimTemplateSpecDataSourceRef
@@ -51511,6 +52497,15 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesProjectedSourcesCo
    * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesProjectedSourcesConfigMapItems#path
    */
   readonly path: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesProjectedSourcesConfigMapItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -51529,6 +52524,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesProjectedSou
     key: obj.key,
     mode: obj.mode,
     path: obj.path,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -51577,6 +52573,15 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesProjectedSourcesDo
    * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesProjectedSourcesDownwardApiItems#resourceFieldRef
    */
   readonly resourceFieldRef?: WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesProjectedSourcesDownwardApiItemsResourceFieldRef;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesProjectedSourcesDownwardApiItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -51602,6 +52607,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesProjectedSou
       toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesProjectedSourcesDownwardApiItemsResourceFieldRef(
         obj.resourceFieldRef,
       ),
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -51645,6 +52651,15 @@ export interface WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesProjectedSourcesSe
    * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesProjectedSourcesSecretItems#path
    */
   readonly path: string;
+
+  /**
+   * user is Optional: The owner UID of the created file.
+   * If specified, the item-level user field takes precedence over defaultUser.
+   * (Alpha) This field requires the AtomicWriteVolumeUserFields feature gate to be enabled.
+   *
+   * @schema WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesProjectedSourcesSecretItems#user
+   */
+  readonly user?: number;
 }
 
 /**
@@ -51663,6 +52678,7 @@ export function toJson_WorkloadV1Beta2SpecPodSetsTemplateSpecVolumesProjectedSou
     key: obj.key,
     mode: obj.mode,
     path: obj.path,
+    user: obj.user,
   };
   // filter undefined values
   return Object.entries(result).reduce(
