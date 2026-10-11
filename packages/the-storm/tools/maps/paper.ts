@@ -18,7 +18,11 @@ import type { ConversionInputs } from "./inputs.ts";
 export const root = path.resolve(import.meta.dirname, "../..");
 
 /** Shared module and agent configuration for disposable map fixture servers. */
-export async function mapServerConfig(inputs: ConversionInputs) {
+export async function mapServerConfig(
+  inputs: ConversionInputs,
+  brain: { baseUrl: string; token: string },
+  env: Record<string, string> = {},
+) {
   return {
     stormJar: inputs.stormJar,
     fixturesJar: inputs.fixturesJar,
@@ -34,6 +38,13 @@ export async function mapServerConfig(inputs: ConversionInputs) {
       slaAfterMinutes: 10_080,
     },
     agent: { mode: "shadow" as const, reviewSamplePercent: 100 },
+    brain,
+    env: {
+      FLIPT_URL: brain.baseUrl,
+      FLIPT_ENVIRONMENT: "prod",
+      RWF_RECORDING_SALT: rwfRecordingSalt,
+      ...env,
+    },
   };
 }
 
@@ -44,7 +55,7 @@ export async function runtimeMapServerConfig(
   brain: { baseUrl: string; token: string },
 ) {
   return {
-    ...(await mapServerConfig(inputs)),
+    ...(await mapServerConfig(inputs, brain)),
     ownedConfigDir: content,
     stormConfig: stormModuleConfig(
       await Bun.file(path.join(content, "config.yml")).text(),
@@ -56,12 +67,6 @@ export async function runtimeMapServerConfig(
       endLinger: "PT1S",
       targetCombatants: 8,
       maxCombatants: 16,
-    },
-    brain,
-    env: {
-      FLIPT_URL: brain.baseUrl,
-      FLIPT_ENVIRONMENT: "prod",
-      RWF_RECORDING_SALT: rwfRecordingSalt,
     },
     resources: { cpus: 4, heap: "8G", memoryLimit: "10g" },
   };
@@ -117,7 +122,11 @@ export async function exportTerrain(
       },
       agent: { mode: "shadow", reviewSamplePercent: 100 },
       brain: { baseUrl: brainUrl, token },
-      env: {},
+      env: {
+        FLIPT_URL: brainUrl,
+        FLIPT_ENVIRONMENT: "prod",
+        RWF_RECORDING_SALT: rwfRecordingSalt,
+      },
       resources: { cpus: 4, heap: "8G", memoryLimit: "10g" },
     });
     if (server.info.kind !== "container")

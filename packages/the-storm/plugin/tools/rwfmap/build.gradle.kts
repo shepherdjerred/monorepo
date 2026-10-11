@@ -1,8 +1,8 @@
 // rwfmap: the offline map analysis for Search and Destroy bots. It bakes every
 // rwf map (map.yml + blocks.schem) into the nav.rwfnav artifact rwfbots loads
-// and verifies the committed artifacts byte for byte, so CI catches a stale or
-// non-deterministic bake. It also writes the generated lobby (rwf/lobby) and
-// bakes and verifies it the same way. It is a tool, not a gameplay module: dist never
+// and verifies the committed artifacts byte for byte when verifyRwfMaps is run.
+// It also writes the generated lobby (rwf/lobby) and verifies it the same way.
+// It is a tool, not a gameplay module: dist never
 // shades it and the architecture project never puts it on its classpath.
 plugins {
   id("storm.java-conventions")
@@ -124,8 +124,11 @@ verifyRwfMaps { dependsOn(verifyRwfLobby) }
 
 tasks.check { dependsOn(verifyRwfMaps) }
 
-// The end-to-end tests bake the shipped maps and compare them with the committed artifacts.
+// CI decodes every committed artifact and checks it against shipped map metadata. Full deterministic
+// rebakes stay in verifyRwfMaps, which is available to the operator and local extended suites.
 tasks.test {
+  // The largest committed navigation artifact expands to over 200 MiB before its graph is decoded.
+  maxHeapSize = "2g"
   mustRunAfter(bakeRwfLobby)
   inputs.dir(mapsRoot).withPropertyName("shippedMaps").withPathSensitivity(PathSensitivity.RELATIVE)
   inputs

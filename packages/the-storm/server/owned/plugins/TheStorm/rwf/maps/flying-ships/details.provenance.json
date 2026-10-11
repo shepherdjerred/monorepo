@@ -1,0 +1,1586 @@
+{
+  "schema": 1,
+  "id": "flying-ships",
+  "blocksSha256": "54e6353a02662007d315775c5187bdfa9a43433f19a5ea145158ad7fe5bff131",
+  "detailsSha256": "6ae0f5d315c8f3cf31cdbeeacde1f46b3577836ae4cfa3a74de97e380a152f76",
+  "policy": "preserve-inventories-and-literal-sign-text-strip-other-payloads",
+  "producer": [
+    {
+      "file": "TheStorm.jar",
+      "sha256": "db9d5d0b7c947e5b25ea017c31d7dbd817bd0a5c9e911dd2be1c7c3a33b12553"
+    },
+    {
+      "file": "TheStormFixtures.jar",
+      "sha256": "c936e2f715046fd80f0b7edfe0eeed860d246912046783269ddf683a9331ee25"
+    },
+    {
+      "file": "plugins/Citizens/config.yml",
+      "sha256": "971eecae3cec29e80752d82cefff097f65e7b2ff22c9d448a0f20371bf700fd1"
+    },
+    {
+      "file": "plugins/TheStorm/agent.yml",
+      "sha256": "c5e39f1f6bdc7a0f23c71dbfa5ad9a2660bc10ba92b975a1ae5c5085261ae728"
+    },
+    {
+      "file": "plugins/TheStorm/arena.yml",
+      "sha256": "a10dcd43e52411eb1fd4dd04d4e034c1fc3a75ea990dc4dcfd03a90dca8ae6f7"
+    },
+    {
+      "file": "plugins/TheStorm/arena/arenas/colosseum.yml",
+      "sha256": "e1e09329ea5bb555678535e8437e68ce1ae56e9515deddd5475d0005fb0adab3"
+    },
+    {
+      "file": "plugins/TheStorm/arena/classes.yml",
+      "sha256": "6b813604727136f2f73d4bd98e674c4ec13e3420e77af0de9cb3d862aac3f5fc"
+    },
+    {
+      "file": "plugins/TheStorm/arena/rustworks.yml",
+      "sha256": "7c82a297dd35d70c09ccbeda2f42a2517e24e4a6e2c8b04b882c9ec6ce32f28b"
+    },
+    {
+      "file": "plugins/TheStorm/arena/survival.yml",
+      "sha256": "6bae0afba093be9a69d8073b6feb17f37bf3ed7f80c1dc5f4b6a44e8f0aa7881"
+    },
+    {
+      "file": "plugins/TheStorm/arena/waves.yml",
+      "sha256": "4f8c6071085a05297369c0597c61c623e4e7259890558f826c582ea751a7dac1"
+    },
+    {
+      "file": "plugins/TheStorm/chat.yml",
+      "sha256": "33f88a85d1e63fa16bbf0179d081b8318019b7ed61b9318265fc3c1ef275fc22"
+    },
+    {
+      "file": "plugins/TheStorm/collections.yml",
+      "sha256": "91682d80f688ae8190de31d0de21f2b0dbac3d5c7a2e916cd8124ac2f68d06a3"
+    },
+    {
+      "file": "plugins/TheStorm/companions.yml",
+      "sha256": "969e031a8bd22c4832b0f2dbe035eccbc1624a563699ac130255e3c2e3e32b9b"
+    },
+    {
+      "file": "plugins/TheStorm/config.yml",
+      "sha256": "dc297511fb5e007b520f63f9cda7b819248ac50ffbb9df6dff66a6693df642ea"
+    },
+    {
+      "file": "plugins/TheStorm/discord.yml",
+      "sha256": "20678a2eb52c511a86bd46fbef48c6d64ba96e6c234488304968a50d5a7e14d1"
+    },
+    {
+      "file": "plugins/TheStorm/economy.yml",
+      "sha256": "72c15b13116e0228be2414cc441bde56cd8527f8b03eeab0be0e4ef3a51e1f1a"
+    },
+    {
+      "file": "plugins/TheStorm/essentials.yml",
+      "sha256": "49dbb3a5d052ff3a8da83397ed39e1a12780920c621dad4ac44bb45150601f29"
+    },
+    {
+      "file": "plugins/TheStorm/mechanics.yml",
+      "sha256": "0c0fb472f0de3f15e5e53e1a2b85a5c78d55b2c985c5ae9ac1694c117f5d4aaf"
+    },
+    {
+      "file": "plugins/TheStorm/messages.yml",
+      "sha256": "7565d313729d0b16e100efc1dc765a2962bb11a634cc22b553d5d3b41aa976f2"
+    },
+    {
+      "file": "plugins/TheStorm/mobs.yml",
+      "sha256": "5436600d335b56bacee53ccd7825d1df15e40aaf7e5514ae301bde862453bbce"
+    },
+    {
+      "file": "plugins/TheStorm/npcs.yml",
+      "sha256": "d18f2af7441fe18d1946d35a0889ac4f84c2e89ea099d970d996ec1394819c2b"
+    },
+    {
+      "file": "plugins/TheStorm/npcs/quest-givers.yml",
+      "sha256": "8f4d81e141e206e0a0d0cfcf84cfaad00c9ea42f7f4045cba900f1225430bddd"
+    },
+    {
+      "file": "plugins/TheStorm/npcs/spawn.yml",
+      "sha256": "c5d8dab472caa38af748c03d4ded37d3ca14f52536cde3f629ca5f8ff45ae307"
+    },
+    {
+      "file": "plugins/TheStorm/npcs/watch.yml",
+      "sha256": "ab2d4507d2d904f1b53deb968824292e5cc9be8fc9f051aa63c7aca6f18c3880"
+    },
+    {
+      "file": "plugins/TheStorm/parcels.yml",
+      "sha256": "fbca2adcf0b54498287e0ede8fe1fff450265cf703dd504ceeaa6dc4062ef950"
+    },
+    {
+      "file": "plugins/TheStorm/plot-reconcile.json",
+      "sha256": "1b4fbebabf3d0f026dba7868fa20f3b8a7e9c38075b6ec9d50efcd94b81c83fb"
+    },
+    {
+      "file": "plugins/TheStorm/qol.yml",
+      "sha256": "2a2b0b38986a85d23b96e9bedbaeab26d2d4bd277a9e7140ddbffb425a669bb6"
+    },
+    {
+      "file": "plugins/TheStorm/quests.yml",
+      "sha256": "a7f28f70830e8633007f4244e9ef398af6e95e8ba33fa56cdd200025cc3e08c9"
+    },
+    {
+      "file": "plugins/TheStorm/quests/board.yml",
+      "sha256": "c61c8706e83ab7de745f4cb3abefc50e6c5199740ecb6ba5939b27f84201c248"
+    },
+    {
+      "file": "plugins/TheStorm/quests/daily.yml",
+      "sha256": "579d275096dfe1f0b8bf04e8b59e5d90920e1f0c9cb2cac0b0b76d165e2aabbe"
+    },
+    {
+      "file": "plugins/TheStorm/quests/dialogue/blacksmith.ink",
+      "sha256": "2e1cd85f2763c3d176a88769d7385238a78077b4544f315b93666dde5504aacb"
+    },
+    {
+      "file": "plugins/TheStorm/quests/expeditions.yml",
+      "sha256": "01999e850342540915a847715585e0f7b21ed10f55d313839a056b34c766c198"
+    },
+    {
+      "file": "plugins/TheStorm/quests/gate-ledger.yml",
+      "sha256": "2e7c2cd108db0d9108dc5572a875e574af1519487bce1ddd9bc4433c3303aa9b"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/caravan-road-chapter-eight.yml",
+      "sha256": "ec3a991cd2ca6d621da99a6fb2ee6d811359ae4b8956f4f3753102644c57272c"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/caravan-road-chapter-five.yml",
+      "sha256": "5cebbf03542aa56e17aeb012785ad0d0c888e101952f6bb37940d02146f9c9fd"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/caravan-road-chapter-four.yml",
+      "sha256": "7c829e2a695f3ae9f8d36962f440782880bf03eaa09b0fd2b096650dc5fe97b2"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/caravan-road-chapter-seven.yml",
+      "sha256": "4acf7d2c04bf475c401c37be0a2125828c9b9c0dd2f73e287bd68984b57c2a6c"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/caravan-road-chapter-six.yml",
+      "sha256": "5cb357515cc783755903018cc7ca6b2736bb22198e9528f4ccf71ff026200229"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/caravan-road-chapter-three.yml",
+      "sha256": "324fe457707ae7124a6b854bc759278aef886d2778f39e539113aeca845413cf"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/caravan-road-continuation.yml",
+      "sha256": "7b2bf90694a95f701c22d4857a9fc4fb3ec3e4bc82f6ab0077218ba429509e9e"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/caravan-road.yml",
+      "sha256": "b60d2a1d6582b9aa29f233fe333a79103bc9b69ef98a3f42961275114aada31c"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/frost-falls-chapter-eight.yml",
+      "sha256": "2c3ec81691af779f9b6760a8d7dd12f47c483a0d16d82058c843f28b60e91f7a"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/frost-falls-chapter-five.yml",
+      "sha256": "fb29292a38733376a582a63864f53339ab151589848f8c3654952ad538795bc6"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/frost-falls-chapter-four.yml",
+      "sha256": "4fa0828eaac148b6daf5af69dc500250977ca7b098f21ed91dfba9201af97d96"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/frost-falls-chapter-seven.yml",
+      "sha256": "bdae1018832816deb4fc2013315a1338386b64dc1066bd23100b3eb366755ca9"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/frost-falls-chapter-six.yml",
+      "sha256": "1ef52c05d03996928e507f33cb425e02b8a68237bb8f6b0294b711e7f6ee59c1"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/frost-falls-chapter-three.yml",
+      "sha256": "da18bafd8405f06dddde452f5eb517e5898359cc363083a1de4a8ac0a9a41a20"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/frost-falls-continuation.yml",
+      "sha256": "abc82054f979a7cf9cba4d8911cf47eab686b9a5f4acf6ea7d59b818b07d58fe"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/frost-falls.yml",
+      "sha256": "d40717e641f00fe597900f735b525d5d4481f767d870a45ef4777a86153b79e8"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/library-chapter-eight.yml",
+      "sha256": "23c17dc7f386dbd1078c82815d8d7270a6f2dd5c34ec71be3549783552fc65de"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/library-chapter-five.yml",
+      "sha256": "8f8df66c26f79f04af603c2a957e403f2e6728dfc4ebdfa90be0c2d8ee9abe3a"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/library-chapter-four.yml",
+      "sha256": "63e127ad9f7810b60837645e1a9362172ee440d62d680db8f7ea4f49e27066ba"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/library-chapter-seven.yml",
+      "sha256": "3ade631bbda354222030bf2e9577e2b62fe23346350d5b2ec6bba60bd433dece"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/library-chapter-six.yml",
+      "sha256": "cdb90dfd8ee2fe7f7b9da9cc1924dfd83167982a89530a7eaf6a6e19f7e411a8"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/library-chapter-three.yml",
+      "sha256": "95cd91afa9ec0b97b14fc0ab645e8225f9925d355299c8d53de334ada96c02e8"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/library-continuation.yml",
+      "sha256": "f42c4a71a0ac5913e39552e0a380a0fafc9146fe46256a8759d53061ddbac820"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/library.yml",
+      "sha256": "732aee4d9e6c74ae5411bd8e369de4d6b4ded8f8fd892fa7046f8ffb2b222667"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/old-harbour-chapter-eight.yml",
+      "sha256": "d03ac6746ca7e8bde56a23ffd240265a4243846b042fb9f0e93c98d25b0a9727"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/old-harbour-chapter-five.yml",
+      "sha256": "dbd982ed1377c09a31b394ea41a08d3b5dfecbb32b17bd80fb7142092dc425c6"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/old-harbour-chapter-four.yml",
+      "sha256": "b309e8b331604be8eec9109b1886d45368dbc3d25dd9565f75f2ca82e35b7289"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/old-harbour-chapter-seven.yml",
+      "sha256": "b9d36a075e08a8c49eb90aa5fcb230fd8316a7ac67ea75a0354326913cfbb461"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/old-harbour-chapter-six.yml",
+      "sha256": "e8b15e95a35ce6256cf2dac124d15d372481aaee91fdf0059cd1435811d107ff"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/old-harbour-chapter-three.yml",
+      "sha256": "32fe48d06f1059a0fd39240dda0650861ae302e3669f88d0dd5576a7988cb52d"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/old-harbour-continuation.yml",
+      "sha256": "c946509aaf1f5de7158fadf3d1ff0ddfd66e7d13d27caff8fffa3b1ce90dd394"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/old-harbour.yml",
+      "sha256": "7fc1ca3ebbe409aeec76a9902c541cdd6e4ca362525edf5ecd55ce931b129d52"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/sewers-chapter-eight.yml",
+      "sha256": "ab47c7005247abee6a57a5daaf3331a5fa3cea7e6b764540ed45e630d8235105"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/sewers-chapter-five.yml",
+      "sha256": "a6cd51e091ec390d2cfc14ffad1da6cb76520b13afabba63a63cae97305b25bc"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/sewers-chapter-four.yml",
+      "sha256": "de928de916602de6eb8eab1663a716b6d8e319ea7bcf39f8d6e63816bd0e88bb"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/sewers-chapter-seven.yml",
+      "sha256": "803d67d13ab874609d8ecef4d47eea26f3673cb9b2cfa5c2bef4f1035cdba486"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/sewers-chapter-six.yml",
+      "sha256": "83bbbb5d2a862904761d8159abecd4c6e912c04d0f1f883c28714d03faae8c57"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/sewers-chapter-three.yml",
+      "sha256": "f2c7c61241a3a95c26e87ac498ad32610c4879aca6a03a1f2bc8ca51f3ea4d82"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/sewers-continuation.yml",
+      "sha256": "34b9830429ecc2871cd9ac2d6afa87b217ccffff02344a29ea9247fd26796531"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/sewers.yml",
+      "sha256": "3cae6699c895428fb749a85bc6a6dc1d60a8f573eef29c9cf18fae5dd558f2f1"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/south-mines-chapter-eight.yml",
+      "sha256": "72fbb33d15d98b62c17fdbeaf8ebbc45d1857bb19133d7abfd4b4d581014b077"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/south-mines-chapter-five.yml",
+      "sha256": "38fa5c73a1bc9368b993a2530b6f06d951949268adc85d8b6baaa5ebbe6996b0"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/south-mines-chapter-four.yml",
+      "sha256": "70f727d8ad73228f68472923b3ca184c9d3acd356bb9b92552e24b6f18a7d66e"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/south-mines-chapter-seven.yml",
+      "sha256": "37f4e39688715bd864483fbcf2466483de63d5e7e4c57526e593a16b470f21ba"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/south-mines-chapter-six.yml",
+      "sha256": "0b51046f3aef50cfce34654c45ebadea4a8f52282494fac88d8088ab05e16b12"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/south-mines-chapter-three.yml",
+      "sha256": "5ea985f786b9a219dc3a2c1107c42f21ad6d67e041b41eaf5aae0a917fdc254b"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/south-mines-continuation.yml",
+      "sha256": "654e1415e9cc85a1b1ed2190d00a5add99cd265a34522f67917c66f8180b53ed"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/south-mines.yml",
+      "sha256": "9842520c25a51ed04daf23002a40bf2458b3d55cb7cbbaf5834a59d10ef4ea97"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/spawn-town-chapter-eight.yml",
+      "sha256": "2d909f7d61531799b82ca80ab10b39e8a332e65705c3f913a90d977aa94769c7"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/spawn-town-chapter-five.yml",
+      "sha256": "48b206fae4a9a16633d8d553bb890eafd8e3db4a28ba0abe7effe3cdf934ede4"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/spawn-town-chapter-four.yml",
+      "sha256": "50ec052dc032e6cf759819bb190af3414565d7b14658d85b294093e30dc0c533"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/spawn-town-chapter-seven.yml",
+      "sha256": "1e9540e7ea893e7acf8d88c908286aac1c4192a894c6e1cf153ae037a20c95b8"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/spawn-town-chapter-six.yml",
+      "sha256": "cb824c10ab3f39d60be7528d4db707a045fe3f314354c96b5da6b21ede5178cb"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/spawn-town-chapter-three.yml",
+      "sha256": "4dfe136e605753d3f5d02534820dfdb585b704190cedc41fbf4ef58ffe3f3569"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/spawn-town-continuation.yml",
+      "sha256": "af53382b73a13cdbf51c64d504d7df25ce9c3c9ab870dd5acfc6f337394034f2"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/spawn-town.yml",
+      "sha256": "465bd42cbbc3ac6b95902b5daf11046c0df60ea94ef4be1d95f32741adf1cd39"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/wilds-fringe-chapter-eight.yml",
+      "sha256": "a80406aa8eb2b810e43883550b9e757aabd6d7fa1d980717900b8498c5027abc"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/wilds-fringe-chapter-five.yml",
+      "sha256": "58d1ee445b5740d150876cf3fb2f176717b48665efd79386037c79314e03c38b"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/wilds-fringe-chapter-four.yml",
+      "sha256": "986e2fa9a289169a1e5702e583b69cc77b37af57b3b5ceb0245e4f269fb8d029"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/wilds-fringe-chapter-seven.yml",
+      "sha256": "c7a92f021bbdab3d45c8473f3d267b1c44904fc979203d2eaace818290913634"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/wilds-fringe-chapter-six.yml",
+      "sha256": "8c650fbdac186a982f23fc3303612a7bc8b9adbd4ce89b1ec4553b67d3f130af"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/wilds-fringe-chapter-three.yml",
+      "sha256": "6185789e0e85fe460ecfa75cca01983116657e11d00969e1ad795678ab0829ba"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/wilds-fringe-continuation.yml",
+      "sha256": "defab07cbacfde33a5b6fb36ff071aa303ad1b3e812168e12d92f02f845aa766"
+    },
+    {
+      "file": "plugins/TheStorm/quests/regions/wilds-fringe.yml",
+      "sha256": "bd24251876b87eeceeb5b017300b8c6f2acc5afaf9325860b406a6c69525d1b2"
+    },
+    {
+      "file": "plugins/TheStorm/quests/spawn-town.yml",
+      "sha256": "305e66d2e97edb3c3d791be90b4c219b9ecc033301aa95649170f8fe17dfb9a9"
+    },
+    {
+      "file": "plugins/TheStorm/quests/storm-watch.yml",
+      "sha256": "106fd76d79ac08dedce738d6610760b6d51765e5da9d6939f1a95ba9a394b8de"
+    },
+    {
+      "file": "plugins/TheStorm/quests/world.yml",
+      "sha256": "79f5cd3b20d294c8f1272804c6e85d05057ca952735337aebb1d859ebe70c2c4"
+    },
+    {
+      "file": "plugins/TheStorm/rtp.yml",
+      "sha256": "fb10556ab98b243169f5589e78f1dd945b6ca35874a0949719c1ff896a61dd1e"
+    },
+    {
+      "file": "plugins/TheStorm/rwf.yml",
+      "sha256": "407a018b0be58dc64f4e2959432fd2ed9f81bd5f258a4e985573d8a8dc3658e9"
+    },
+    {
+      "file": "plugins/TheStorm/rwf/kits.yml",
+      "sha256": "db321ab80090a93fec763fd62c7f171c6d3677d6d2d66dd731ad5d8c3b8b347a"
+    },
+    {
+      "file": "plugins/TheStorm/rwf/lobby/blocks.schem",
+      "sha256": "783ed7a8213e9c9079040f637490c2f90f5f4bfe4df9c538f9e6696a47a2d5c4"
+    },
+    {
+      "file": "plugins/TheStorm/rwf/lobby/lobby.yml",
+      "sha256": "030dd178cd3b7901bc06c29fefe45bbb8c881f09e3b1a4b3ecbcf501244a2682"
+    },
+    {
+      "file": "plugins/TheStorm/rwf/lobby/nav.rwfnav",
+      "sha256": "c519dfcba209334137df6da7886e1562d8b9e75e56253c4c50ad2dfefd99690a"
+    },
+    {
+      "file": "plugins/TheStorm/rwf/lobby/nav.summary.json",
+      "sha256": "c84bb246cd776c8a2fe7c2ad94e38f306851ba51fed01f8ea362125f4ae3df05"
+    },
+    {
+      "file": "plugins/TheStorm/rwf/maps/training-yard/blocks.schem",
+      "sha256": "924dd440403078aa957abeb8f27f35a7ba944d01496256f377d2d0694fe5e399"
+    },
+    {
+      "file": "plugins/TheStorm/rwf/maps/training-yard/details.json",
+      "sha256": "4af85b6d6c5e8045d607d93d1e7eff8b2cff85196d52e0d2b38037a5fea219ee"
+    },
+    {
+      "file": "plugins/TheStorm/rwf/maps/training-yard/map.yml",
+      "sha256": "10774e87788b1f0345b5eae9cec0aa9f7ec3049850b87247f2bbec4f3c8eaacf"
+    },
+    {
+      "file": "plugins/TheStorm/rwf/maps/training-yard/nav.rwfnav",
+      "sha256": "89bc5daaf4845751b2ffcdf6cf689fe4607a1c9f0248a3e07e2c4cdbd0447460"
+    },
+    {
+      "file": "plugins/TheStorm/rwf/maps/training-yard/nav.summary.json",
+      "sha256": "09b23a41120c1d49f32ec19062ea63e849a521218d09214dc77a8af82eef925b"
+    },
+    {
+      "file": "plugins/TheStorm/rwf/maps/training-yard/scenario.json",
+      "sha256": "6e738c579077338349291644f60b68331e9b19452f73c8fae5425e756bd024e4"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots.yml",
+      "sha256": "31a742f43d9cb0222971a5c49b7125d950232f49a94bcc2e585338c64622775d"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/README.md",
+      "sha256": "a751cc736d2adaef135d48fa8769883a84dc116920a4703573de80cad7d50914"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/arrowblaze1.yml",
+      "sha256": "1a431fe30a9f8565ff833b7d244665f398e5b92c28514ed8df04fe9bfe14a737"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/badgercomet5.yml",
+      "sha256": "fcef034fb1067c878892b602bf18c37c267b5b9b5fdf4f461da2d6d626e85138"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/braethvio-07.yml",
+      "sha256": "0987454dada3d40c57fa4e144e3dfd7a5f691c1a7c6437c2ab4e9a82d459c4fd"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/braishbryzak-80.yml",
+      "sha256": "833b368c08161c0d0bbd6aafb1895a22fd466a9a5d0c99593dcc74b272f50082"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/bralmor-39.yml",
+      "sha256": "0a433e601f37b3e27e56e94825deff253bb5fdec63ad8a572e4e23c36f133de6"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/breshgrazvim-31.yml",
+      "sha256": "31e6ae2d116be48783bb7df4741617c92d89210c6a71a716b2c6ac3334a5f830"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/broukxaimpvp.yml",
+      "sha256": "328f1cc1b1ef60d4264c26c03094c0fa1bc3caf111982f1bedab54be6fd11fdd"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/cobalt-arrow.yml",
+      "sha256": "0f5e32e8b035507eab24d09798fa116917ba78362f6588e9f4ae69d77c8f78ab"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/cobaltmoth75.yml",
+      "sha256": "bc74163d42b16d8dd871329ed7147d6642e4f7a02f1f8b5d7d03d0577087f40f"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/cometotter0.yml",
+      "sha256": "64d65e4c607da19fa7326e6810f5cf45020953a4e2f74d13fd7833a5a6d95786"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/crimson-miner.yml",
+      "sha256": "ee5340a423ab1eed1d2bbd9050300bc32db041cf96f7329500b2b7ebfbaed3a8"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/daxgraixbandit.yml",
+      "sha256": "76c27ba1e02c8f01fe2c83479e10347e18af1b8a6734bb9bfe41e5ddc120d9c6"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/dethpoumnoodle.yml",
+      "sha256": "110a656cd925ea0cb37ada68b1884766c379bb166925bdcb1f01345fe9991190"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/dizzyblaze58.yml",
+      "sha256": "5b13488e3aed13c7019154cb56242e5cf591505ffa3c05d5bfc379aca37435b2"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/dizzygrykketh.yml",
+      "sha256": "28741b69b693e9a02bf09341bcec2284c0c2e6834b0b75882348158351e2a796"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/dizzyriotux.yml",
+      "sha256": "78f1d6a91ca28025cbacfb35eb5df884b70e78a6160a10a9da693c7e75abe103"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/dizzyzynthun.yml",
+      "sha256": "b33274cff58195bb9f51de5d90dc32d9125922a4d94878d5bbb7ac7d96a96dac"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/dorjaekblaze.yml",
+      "sha256": "ec3fcea733c5ecebbd60bee0690758d7e444e377d5bfd6d980d65f6256931ad2"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/drnoshzax.yml",
+      "sha256": "28e3f752a2e23681f974c3fed1244537cfad2dd3f76386458b9a14900f7e58bb"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/drpemgrukkek.yml",
+      "sha256": "45afe3327eba785317d1a3d6ab3a023eb02ddd5259f20818b9060f3337dfca84"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/drskizarlae.yml",
+      "sha256": "4252486415f0b8cccfe320540eea1cc1ff5ee4c6d23ef690a4cae9b91d4a1efe"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/dukthurblaze.yml",
+      "sha256": "0644183bf3f07bc8989df62606ab91135fae3b56a885308f7e0a07e8ad060752"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/dunjelarrow.yml",
+      "sha256": "19a4830f5e69355974c66a35d25e57bdda200bd34fdd937922edd8899bdc7bde"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/dustyfalcon48.yml",
+      "sha256": "fb2ae72369483f79a16af7ead3810c77004a2899af0e7c69039e72b36f8b9627"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/dustykrirthesh.yml",
+      "sha256": "eef01e6ed68f1e99a89302ef73b58ed76273d14ee75d8e8ee20540548d168846"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/dustyninja34.yml",
+      "sha256": "8afe68fc09208447eacd1590946c7e0c34d3c9241f0466b724a9a43b696ca8bf"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/dustyotter63.yml",
+      "sha256": "51be312a96a389d32c10f5c40a29b05c3f6f1128592114f726f87a27dddd4765"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/ember-waffle.yml",
+      "sha256": "717bf023b15dffa97955a0d93ad37de8ac81e223d28fd8ad847d23a78548756c"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/epic-golem.yml",
+      "sha256": "671c71faa8145adb68e38a49e47282b139f42725c2a20eb8c518eeb22148736f"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/epicbrailpist.yml",
+      "sha256": "2c9bc1dbe005e123277f853eb05e89929408d0b301bb48dd183d7631064611da"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/epickrainvio.yml",
+      "sha256": "18a10ecf59b2b5351f54a5627d57a1644e629d863c2bfe313bbbf0cb1152d344"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/epicnustskur.yml",
+      "sha256": "65976847691ed1982e8626d40469d120d9045689c9a1f521a909a800a530be64"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/frost-creeper.yml",
+      "sha256": "4990c313d93d83e57d88752df1e46ce9232bc0122c0a0e2948e93e24ccc958ef"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/frost-potato.yml",
+      "sha256": "fc2445ead594a5b716f8e44b9c60b14c45d1a5925276a05ee678e32116d96b57"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/frostlelaistnaim.yml",
+      "sha256": "646d785e5718caa6e1dfa43a1ef07e837d1e333781b9dfef88493790913c97d5"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/grenourgaming.yml",
+      "sha256": "842330e674c7a15d80745055d6d61101e70b4c61416308013d44d6fa1f5ea0f3"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/grim-otter.yml",
+      "sha256": "3c4320aa1bea31d96556cbdcff44351eebcb6fe8773aec01af574d69b4e78f9c"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/grimgriskio.yml",
+      "sha256": "55006f4400df6e8eccc9f661af92ba2f3bcb4016584facf1c12542541cf0eb27"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/grimkaelthex.yml",
+      "sha256": "afdbe044358735a298ecb5af6c0f18fc47bbc3dc15eacb57163cec87aa61284b"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/grimskiolzu.yml",
+      "sha256": "f048c86e2fabea717802ef5bf504e4955056e71103ce37a0fb206aca0e7e02fb"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/grumlothfuse.yml",
+      "sha256": "b529e7136e139d998e50ac0f8fdf6dfab4e9f0756881e6c1eef904a918062afe"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/huntersniper8.yml",
+      "sha256": "97e08ba0ee932b0eaccdc8e49bda23833233ac4d534116a41c8a9f99d67a6e56"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/hunterstorm5.yml",
+      "sha256": "1b0b420ee824d91401f29917860d637b3db3ef2f42410d36ff90c0711adcf2f4"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/hyper-arrow.yml",
+      "sha256": "ffcb62fc7bed10fa5e45a81bc2b6386065b0a3ce7cbd3cbe06d70a5f43a86bc6"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/hyperkoustthethy.yml",
+      "sha256": "86969775640a3d374b7e3db5cb566c9c78848267fdf79e43030c909e7089dc4b"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/hyperraven89.yml",
+      "sha256": "ecdb53705a5a7ed9d432e72cceea38f2e98d690c705c5df3a008578903e6b72a"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/hyperrixdair.yml",
+      "sha256": "8e0bba25c781bfc23d5c8dfdb043ba08fb11e9c5f851fbdf1226dad9d225e355"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/itslinthur.yml",
+      "sha256": "e0adc5cf878360b52328ded50c82bc377af0f6d9375672e2e9e161b1db1bc510"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/itstoumkrex.yml",
+      "sha256": "9e3180d042fd8936a9c6e78f11ab51403fee782cfe827e2ff4388cb197538dbe"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/jathkrempickaxe.yml",
+      "sha256": "0efc9b8c574937ea37b85072a8d0d24ca27bdd11f4183bef5f39b7da3847c728"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/jeshrustminer.yml",
+      "sha256": "42652aecf8f1f72490003e438cc7af8c046dd5be81c856368dccc239bc5930a5"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/jixmel-54.yml",
+      "sha256": "51c20eec8b3316a09b106cd3034ba03fa3fcf336574f453fe4e9ae13f5e73d26"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/jolly-golem.yml",
+      "sha256": "b772d56fd39ce641a27244f1fe3b7060c49ff3b03c342321e9925341a2f3d3ef"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/jollybadger05.yml",
+      "sha256": "012fbfd66c28f738b7c51d73798e6b9a0d39432988254f7a47901e210694137a"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/jollyshathkrai.yml",
+      "sha256": "ac902c4730b03dbc9b84a4ebd5280f69d33e4660cb666248bbce53d33abda7e5"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/jollywaffle61.yml",
+      "sha256": "5d86b24f0d4504f5c62af01f25de727ca4772ae6b188ca0ef0fa823bf3c922a4"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/jonshyth-94.yml",
+      "sha256": "dac579df1badc0d04148e62e54733ce9c1b1e6000c1816a2678eb6ca2536cb5f"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/joustshonslime.yml",
+      "sha256": "c86e8c51672c523dd1fcfaea45d51913212454d9a18418185208973de43e133f"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/juzvonxircomet.yml",
+      "sha256": "ae5341a03900a387d1441459e93b125425972b8b6d968b1e115cc7b97940b577"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/kaigrokpvp.yml",
+      "sha256": "bee09860a314779bdcb3d82836c90355d24ddfe29e3a088ce4a73ac35e27019e"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/kainskoushiyt.yml",
+      "sha256": "4bb4b2c7d905fe9eeab67350e709cd3d7b105b446358884a93248235ad041cf7"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/kajuxlomdaedel.yml",
+      "sha256": "30ed24577e2575d518c4361fc1cd4a82df5b2f5fcb85fafc19f867f2ec89e9f5"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/kothnoustpvp.yml",
+      "sha256": "8ca94226805ce4c5ce714407ef3906549b420fdad9059d9f196454e020aabfa9"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/kranpioshraim-91.yml",
+      "sha256": "44dfb9bbf79cce156e4c8b64156aa93cd7b3de5015b6e92e6ffb881884ed0a4c"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/krojykrouzhd.yml",
+      "sha256": "8e1edcd078136af811c329da6e05d2539d6296c1a24b36ffedaadc88dff5b2b5"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/kryxshy-80.yml",
+      "sha256": "ed1d8f5fb7d0bb018c10e419f8ba9f153aabf593123e7365c9bc44fc313722be"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/kureltolmc.yml",
+      "sha256": "32342985f166d392d15aad9161386c254a8f18c71be75153532ca16ba848ed75"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/kynjour-07.yml",
+      "sha256": "a14e1743ad6913a235e98ac9ef67085f0dc2306001b674615b65e95b0ca419c1"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/kythmoukpvp.yml",
+      "sha256": "9772446af9654cd242b5fcdc5a257009d9569a7626d19b0484ea8da12d10f3c7"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/laelshaidaik-87.yml",
+      "sha256": "9fc041a379bca99897d0f5679a0bf96482c451e8df218febeff7ad966d425b63"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/laimzoxyt.yml",
+      "sha256": "40fb900e08b5d6afadce4cb6be6021f5a38a10a4a962fda4f76a3224ff336b2a"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/lanmixmc.yml",
+      "sha256": "fe7e26cceef02725a2cb8c4c3a484f141142abebc8299c3c98a1d59129e36b0f"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/lerkuthblaze.yml",
+      "sha256": "80480df771974516af197254dc9a8200dd42a0a1cf017a5348578259a3ddfc76"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/lilnairioshnoul.yml",
+      "sha256": "59d43b4d4c4567f813311e032ed5d6809e2cc8780199b6fcfc6d7b82ac4a3c93"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/liltainshypok.yml",
+      "sha256": "44e27e3cd23bbcee3dbd61057c0ad833248d721f546128523f0e43502fb3b2e4"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/lirzaek-39.yml",
+      "sha256": "ec16b8d7314352753e074805f0a01267adfcbb546180a6d0f0f5c60cd818a0dc"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/luckymaikrak.yml",
+      "sha256": "8caaed2f5718cd2b17f00ba0a58fa59591f70e65eb616737eed3daf1a04eafbd"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/luckypotato84.yml",
+      "sha256": "c30a415f40077a78d0b7080a028d172c359ee9c11628a540f4cce6b9a8eb5d0a"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/luckypotato95.yml",
+      "sha256": "b988bf32bc99ec990061c4b4c1f122a367e2a6db3dda514d0c52b55678de7994"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/luckypumpkin92.yml",
+      "sha256": "882fd404f6bffcbd2a6de6a760d028ea9b8e29a28368c5a7c75206bef52e4bad"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/lunarfuse83.yml",
+      "sha256": "a689306e568448ebb4e74622b1717a45f1d3f50badc17fc3626e524519bf4fc7"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/lunarkromlyx.yml",
+      "sha256": "d5e14ae14d8ee36b9d3a686e6846c5b1f841aebee2887e169dda7552c1a7491e"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/lunarmoth52.yml",
+      "sha256": "bd7f9e8bbc1070e4387e1b3fb4bd889a04088833a0744420d1f368af68f602ed"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/lunarthyjaest.yml",
+      "sha256": "88622c84cc0c97b20b01e7ef243d5b9312a06b65cf0d7bf11daf0435c4131e8f"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/lunartulthek.yml",
+      "sha256": "909b1f097431d74c376b3c3aec021db5404882e6c220be3f31ba797d74216756"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/lynxotter0.yml",
+      "sha256": "f5ef513258ed94b4e4b636a2a5e33bcd5fdcdb1e1d9bf68fb03cb08ded006ea5"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/lynxpumpkin8.yml",
+      "sha256": "2f895451185ef989c405cc5b53876f9d84e39b5fecc8462ca41c1f061737dcb9"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/lystshomdethtu.yml",
+      "sha256": "aef6c9469f447f07e5209aa72e41eea3164e708dd5b82eb7cf5e2d1fe5cbdd32"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/maijy-52.yml",
+      "sha256": "950a700447011e67d6a52cb6ee02cfb67492a73a44a3953b4c017589cad52d31"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/mainmaiz-97.yml",
+      "sha256": "8fb5dfeedf6f940e1d67feb7209c27146d507e01a87766378366bb5a58716dd3"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/mamlezmekmc.yml",
+      "sha256": "abbee03be8c9bd1de8cdb191e67a347f064d5743bcf4a6e67bb99557705c94a7"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/manifest.json",
+      "sha256": "e83fe6e0f70dc658412ff5411bbae5cb46c60d45c9ae2778a4e431c1851cb7d2"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/meklaishloumzaek.yml",
+      "sha256": "3aeca7b0bb8b7360ade148c0607a8f89f8e4fc9cabf151c0ddaa118c55b37a7f"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/mothblaze0.yml",
+      "sha256": "51b577043439d524fd3ae1df548944a1b99cb05cedc96370902580940d4f9142"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/mothlynx8.yml",
+      "sha256": "f5fc615e87a91c44fb6eee27d0357774c9cdafc9eaf7af312d80a2e38247824c"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/mrnestzaiz.yml",
+      "sha256": "20ab8659c0be507e8232a85df02cb539c22e6c718c3810cc890bca03a1aca36b"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/mrnothleshjast.yml",
+      "sha256": "9b85377ba3e1b7aeb1cdd7df313772801da143cd29530ced8cb956c7e476aa12"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/mylgriorpro.yml",
+      "sha256": "f4fbeeb15aec9338f24f14f001ee3bad9ba88eef7088e6c500cf2f3b9726ae33"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/naithnim-13.yml",
+      "sha256": "8dee477924a5ee352c2bcf0ac8f7a5a4fe9a16717b416f0211f62d34932c4a21"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/namrainthevez.yml",
+      "sha256": "5cf01d33eea61286da12be594dbeaa977b99806598fde474383b340f8fe7f4c8"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/nastvioxmioktain.yml",
+      "sha256": "694b158cbce948bfe968b4724ea974bef90e3b9b55d2af442b272c83c3c604c3"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/neonskaenjuz.yml",
+      "sha256": "5c03b0731d93ebef6a60615cbfe078b6a41bd63a104d2ac840f0f8f0c32e2e05"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/ninjapickaxe7.yml",
+      "sha256": "74c20f6447457401cb3d191405481d27f242d8afc3d52d3bf9b17538439722c5"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/niokadae-83.yml",
+      "sha256": "6ff5fdc9243ea9816af612108a6be44f51cfa52b0b4d95b90b11b1183bf0e0eb"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/nirkathluxninja.yml",
+      "sha256": "07c7c807789e6cd971a2336959fe5ecc155aa49a673fd9791e7c73b5318d4974"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/noodlecomet0.yml",
+      "sha256": "e42725ccbab6ef884e8e1ee043b15a792071b85f03732ed8e19364daa2d9ed7e"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/noodlewolf7.yml",
+      "sha256": "ea34b4561d7180a3e775a45a829b5807b312be59ae52b2411b2ee9566e10cd43"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/nyshxaix-38.yml",
+      "sha256": "2026a185c6b0343b6883ac899bbb30acb8e9ce8a5d18b42663dfe3f684470d44"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/otterbadger3.yml",
+      "sha256": "f994612aa665bb671e3e95146ceff7380632d0b475376275f29d665efd673161"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/otterwaffle4.yml",
+      "sha256": "144ef1adee9b26f170877fca313edf7a5993ac50bf83c0082c58e5c8beba6097"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/paimshaez-73.yml",
+      "sha256": "e7e3375c7dd4ec8304a41ab6e8a461aaa8bde1a517703e8581c1e774947dbc49"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/pastkroxpro.yml",
+      "sha256": "c9e70d641cb92fb111e715c1b0319d0403bf826d94538984afdee93225bb6581"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/phantomsniper7.yml",
+      "sha256": "785728fb411fd078751852d9f43e231a1729f1e82877c7644723b0606fd3118d"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/pickaxenoodle4.yml",
+      "sha256": "fd2350ceab4ce069ef2a17f284626d3bc6d5754760a74accc82f2bed83e18c9e"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/pickaxeviper9.yml",
+      "sha256": "05de651078997e118566b7f8eaaf9af0b47fe9d3088e5f74a7dc00df58620d0a"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/piozliost-40.yml",
+      "sha256": "95f1d323aab13685aed5f9086e5ea3636f169b58043e249eed4d35fd23ccdb0f"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/piozpith-58.yml",
+      "sha256": "8c4e7a5685180697d7924fd22b3aa80cfb6e948eb761d133f0ed4c9e2bd090bb"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/pixelnazvoulon.yml",
+      "sha256": "09235f99ea0be06f0f7ea3b63383c161b4768f3a226a254e6af9b0361f030e58"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/potatofalcon8.yml",
+      "sha256": "29d145254f5c797f6155549bcba8a9f4c833aa4721176eeecfe5e8e7720393a6"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/potatootter0.yml",
+      "sha256": "aac5dcb45cfcdc33e3cf952e2e57c63eea3ad03fc63e9693c7261fbb07330d7a"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/puznyk-42.yml",
+      "sha256": "da7f4721c34edb84c370042890d74e54d9b0a1d01f8e64008df76c8cd234fc27"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/quiet-wolf.yml",
+      "sha256": "3d364017178ce8413d9c11eb7066eb9e306d471d1b10542b2be071e65fa78776"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/quietbandit77.yml",
+      "sha256": "dd865a1bba4ad9b8903f49e008944b5d1f80d194e16000f82963cc0040462859"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/quiethunter22.yml",
+      "sha256": "00f769faa75d66099882edf372ab7948f7a036cc787dd5b64fe9df6a9ecdcf8b"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/raekradyzdoum.yml",
+      "sha256": "b0ea21643e7f3681ce4e17f2447ef174eda1c551328b014e8c6a641d0d7d1f37"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/ravenotter9.yml",
+      "sha256": "380b174faa7ca1a6e094fb7eabfa45df7a0879a60e2ed5d633b846a88a5a21f9"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/rionaesttaimmel.yml",
+      "sha256": "881ec87c3935a0ecb5cae5c6355d5c886c3236a2a6ff033a135ef3600ac49c2a"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/roguethimkrist.yml",
+      "sha256": "05a7d63b18bd167418edb6ef1fd0fdc1f563ba990adaf0c2352a830d904e7fe6"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/roguewolf00.yml",
+      "sha256": "e64d1dd693c845d3f9e633aa227ef111492520b6d83e9966b5b860315f31f384"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/roumgraistgolem.yml",
+      "sha256": "7a8b73ef6d611ce4c10a0dc898a41be8151542c14dac12e3a99cf0b88f9dc0fc"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/royal-falcon.yml",
+      "sha256": "ead35ee44460844ac2e1d1e7960fc6252d00adaa68820654ad4544b785b5cf6a"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/shemshiothpro.yml",
+      "sha256": "886ce3efdc3d0cc29ec795ad62618213cd513c58202bfc17f3b8fb559a80346c"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/silentbandit65.yml",
+      "sha256": "c98fa0e33d0c5de938f818640c837a78b1e488a2722ceb1f234549f24c41f827"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/sirkioththy.yml",
+      "sha256": "d5c0902e60858a8a0ed7d7f9a9e5febc6d27f7b069c7ba39d5c95f30662df852"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/sirlanskoumpesh.yml",
+      "sha256": "595283c67161e6ff5805f93419177a0e9bf5d5acde7d803be7a00c4648a957b3"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/sirromxon.yml",
+      "sha256": "38ea9b74d31de7f0e6d55f2af666e6190b35160ef0de1a092fe35f28d0960a4b"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/sirronnem.yml",
+      "sha256": "f84975f9589b5327788796c186bb70fff2fb248b35f351d81f54be2b15b15550"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/skastnairpro.yml",
+      "sha256": "c0252179c704af2965aff4a487f14063abb5960831ae9611cbdeb811a93772e7"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/skekrek-36.yml",
+      "sha256": "ddab750aa562ab7fd994783f2a80a65d7d1e84abb0e0ee0e5ddc3c6f6098dab8"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/skiothjik-27.yml",
+      "sha256": "2fa88edea6a3c8e96c4054a49e7122816100d947fb269b51ccbfd6155a305c8d"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/skyzpiokvain-41.yml",
+      "sha256": "9bbd17b3c257117daf8dd869546eb33ab520b0fa683bc854c1d807721352ce62"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/solar-fuse.yml",
+      "sha256": "526b195a57bf11d30f3f0b445e54bb421c7390f2a022514c94f771918bb4a11a"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/staticraven26.yml",
+      "sha256": "bc450bcbf6ed4cddebd8364f5300f45676519f1a0a59d5b6c2db415af0cc2e5c"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/swift-falcon.yml",
+      "sha256": "4fee352a8bd2aa137a25c8d074d3a18bdbd9ecc7f9d0fb0b6b0c98be3297fcb3"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/swiftkikran.yml",
+      "sha256": "b2208f59f71ca577308b6acad3a23a830e606ddea2bebfc02b6458cb94d9fd2e"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/swiftkrashtim.yml",
+      "sha256": "c512a628dac729adaf123f1c9310aaca455d8104c3d0c53a38b82ba59edf347b"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/swiftnerzash.yml",
+      "sha256": "da1859d1c670417c616e1e8b60ab45d6dec2e558b83d19569fae555919d60730"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/taistluzhd.yml",
+      "sha256": "3c863ec5460a44362024ef1c415afe345207433d3a77deafd1dd38be489a29fd"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/tankrekroumpro.yml",
+      "sha256": "309246b01a2661efc578e5b7a14d376e36c96f161da121bbf049b41212227768"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/themostkraish.yml",
+      "sha256": "09a1422f4901f0d5a8c83988648a5867a822cbac94190dc535913e3edee36e81"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/theneztar.yml",
+      "sha256": "409bd088f7fc8c435d2910a1ad4742c3a58d5bbbee80b7520535fa00d23a8194"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/tionki-82.yml",
+      "sha256": "2114d125bc4ae64d13999337fe278c253873ec8c52c7854a7222d674ac8968c3"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/tishshaiz-39.yml",
+      "sha256": "2768a8b0c62e39a3b041141eedf79492a4e948a85a2d4a53ee3fc3324403b576"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/tizvurmestbandit.yml",
+      "sha256": "e9baf437a40a2d520fce1056d5d9b81029881abfcac9c246fcc490790ff4a36d"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/tomvaenkriozmc.yml",
+      "sha256": "ffe2f495d59b376fd74372fd846058e07ca7aa1759e8af4c91e332cd6830f936"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/tothmiokgaming.yml",
+      "sha256": "55fee757140e4a070760a6cac17ad79923d7645ccbde383f18cb18592d162f67"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/toulxestwaffle.yml",
+      "sha256": "2299cc7fde8ed9d9abfe05055e3975bd1634041a240bdc8d121a8e77c8eb0e0a"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/toxicxenjax.yml",
+      "sha256": "a351c9f85a9a1cc51ef51d296450b577b448013b044bfd10b4bba6397972d907"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/turbostorm60.yml",
+      "sha256": "5e85f7ce49ad4495e18c6c495fad05bed38fa4e4d2ac01bb4018e12548af6524"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/vipergolem6.yml",
+      "sha256": "cd387a6eadbe8d1fc03590eeaddca2d7fe5b6276838354b1fef09cd5e7df5c91"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/vividbadger76.yml",
+      "sha256": "659e58397d32406285e42c521ff5d94f0dabee8c191b5186f4663817e341a7b3"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/vividmioxjoukpo.yml",
+      "sha256": "fc308a9d260f27743050ecf405e21c0d257c0b123a886b967c28747263428afd"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/vukrak-05.yml",
+      "sha256": "7ca1b704a355fe2a27651c07d9ed2e0fd1035e728759614e8c2bde051384bfe6"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/vustskemzionkouk.yml",
+      "sha256": "a27a307a806fed70c2ce291ebe1349c7ac0a88758a5d6d54f043c4ca978f02c4"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/vykzithninja.yml",
+      "sha256": "7c866c752fd0473b0cba5f6c881101d736cc281fefd6460e82c21a94f4ff5b10"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/xiskaikzithskouk.yml",
+      "sha256": "6cb011760d2043dfe1bf2b5de0ea01c041d97a48048c016b16b74afaf9f9a8a4"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/xoljithblaze.yml",
+      "sha256": "1d9d357eae8aca5a3be8e97c05908ddf82266c3824bba50b0e0f8bb29082ee9f"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/xoxvaiznex-10.yml",
+      "sha256": "6de16c443d46679dd3239de2e30efce27c9777ea28779c3e4797b368a39d9d55"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/xxbadgerstormxx.yml",
+      "sha256": "53be026f4ef5489a32d11db49a0a49e08604edae3ba6f9166ba71455fc7caa2c"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/xxblazeslimexx.yml",
+      "sha256": "43f541e811877b4e391bfd4d9c6087c7446f60f402e4e33a971570339a40dacf"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/xxbrydaen.yml",
+      "sha256": "b2a53d257a3631d727af3b3db54917c9bb1356d7d0df10db2d4f22af0b53503c"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/xxcometgolemxx.yml",
+      "sha256": "3cbcfb747ed9f09c976eddf4a845122a5c6788a884f14da44b24aab03a73c439"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/xxcometriderxx.yml",
+      "sha256": "d45f2c7afbc635260c4267170de355a530209fc668800bd8a13277fd30e889be"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/xxfalconcometxx.yml",
+      "sha256": "422bbb3c84cef6a61a72c14c85301f4a0863bd4ea4e1b3e05b4ee57933c56840"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/xxfuseravenxx.yml",
+      "sha256": "6b83aba8e25adc7185387d80929691a23cb2a05baf948d4370a998ed9aed705f"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/xxgolemhunterxx.yml",
+      "sha256": "5904dbd6ea101a7180271054a9c8fcbb92f1c33f8b302daa6001b52278f5e853"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/xxkronbrai.yml",
+      "sha256": "ba1f3501567296e25fb7915c2735993ef4280a1b8ed9c4c064cb514425983fd2"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/xxlaimmamthaist.yml",
+      "sha256": "f078b628c5504fb7bdf70009ddeeeffa421c73a7e977eb6e3a834a7b47a64ba3"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/xxmaelpak.yml",
+      "sha256": "bbe2a0fc5300cce3963833e134b2a4d39cf6842cd1c56791443053a3234bc628"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/xxminerphantomxx.yml",
+      "sha256": "195e74e52a9802c0d683cc6db570bd2c339aec6f76194e02a59f3bb12992162c"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/xxminerpickaxexx.yml",
+      "sha256": "79b330d94837c8a09fc4e5d82ae648c8d9d943b730affbc8ebe40f8d083bee7b"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/xxninjariderxx.yml",
+      "sha256": "1d090f3e1af0fcc8d8681ba78aab3e307e80b44a7cc8b836cf8a43d07e873c3a"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/xxotterbanditxx.yml",
+      "sha256": "c3698ed9bfc60a0c5dc8f35bb3cde0c49f7475aad2b53df59f930059dcc056b4"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/xxpickaxestormxx.yml",
+      "sha256": "432aeea30a5f0c135e5cc7dfd4976fcf966b4ccc389e6f56cbc1b0c7cd41f918"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/xxpotatobadgerxx.yml",
+      "sha256": "6e958362e499679cbe631a3c9aad04be3651453fb3782faf0d3817a8b1b769f6"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/xxpumpkinravenxx.yml",
+      "sha256": "de5d1222d74009c9565cceef0bcabe18b803c90546a65341f4747dd7258267dc"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/xxpumpkinwolfxx.yml",
+      "sha256": "580ca0d455fc47e7f65b76cb62296dc3d2d01318e04852538e7e3fcd6bf9b4b5"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/xxslimepotatoxx.yml",
+      "sha256": "0bd09e7e6a2c790c3b9a9deb7c6db1e309b89a20b6bf7f194327b2e13267694e"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/xxslimeravenxx.yml",
+      "sha256": "3fbcd2fb28ad890ce46d93d980f08be80f7a7ebab5e801c31110d06791de583c"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/xxsniperslimexx.yml",
+      "sha256": "c080e4b9ab8b09ff8f02d70409c92856b6aef2b6056b318bf83af72635b32c85"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/xxstormfoxxx.yml",
+      "sha256": "24505ed89772a135bc79dbc28a2ca95a164df01e0cfb5b44c04ca806228fe3e3"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/xxvipergolemxx.yml",
+      "sha256": "63c223ea4d927665cde73eb24b3fff06270a90a41ff71e3dcf8e508235b811cb"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/xxviperslimexx.yml",
+      "sha256": "6339d77dce2a73bff4d956b8024f817ce2f63c33b058b57ea5c06702c8cb21ff"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/zaezlyxyt.yml",
+      "sha256": "1abf803fe4fea5166a9a369b63fd132bcf92511ccac9810e358b5e88ac05567c"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/zathnounpunpro.yml",
+      "sha256": "5a92af98488168d59e84714daf200f3f480200f3aec48c85f979bf44ef24c4f5"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/zertaxpro.yml",
+      "sha256": "a9d9db039aaa94c7be2e5ad8936e5d87591413771aa5b8faf661544d4f1fcc77"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/ziokraithpvp.yml",
+      "sha256": "d692c4084862d432ab6425c9edb891c9923de0a217c9c2f0dd75f2bda542f135"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/ziolkrukgaming.yml",
+      "sha256": "6ec2b90d56894cb0e491ce2a150c5a49d8d74161769d6052cd208989808a3373"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/zistdytuthrou.yml",
+      "sha256": "98c2efc8a743e57a1967030360c0e2d368eddb74e6fc1e39264789ba3f7eacea"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/zoukxeshrekbrae.yml",
+      "sha256": "803ac024177a1dcd73d21e1a8e65b884750cc0bd7cace5eee005239f6ad011a4"
+    },
+    {
+      "file": "plugins/TheStorm/rwfbots/personalities/zukti-20.yml",
+      "sha256": "cb85f77149e35a267b2e1cddf9972a521d44a5a24451a72a94a5465667920cd0"
+    },
+    {
+      "file": "plugins/TheStorm/seasonal.yml",
+      "sha256": "585d3e4afe4213d0bbdd6af511ad927207d7978d7399fbb35b1d82ce0ab964f6"
+    },
+    {
+      "file": "plugins/TheStorm/shards.yml",
+      "sha256": "4e0d4367c2c371f5bb67c36df92a80e33ee2a56911b97047996b5ece18059754"
+    },
+    {
+      "file": "plugins/TheStorm/shops.yml",
+      "sha256": "9339c037da58802249f48e596bc49f7e0e26d4eba98bd478302b64597604bf4a"
+    },
+    {
+      "file": "plugins/TheStorm/shops/baker.yml",
+      "sha256": "09469b76a92d26bacbe1ab94552b2ea99aba2b89459f711c0d6f8a3973e36838"
+    },
+    {
+      "file": "plugins/TheStorm/shops/blacksmith.yml",
+      "sha256": "9f539813e6d9c74859cdb243dfeab66ef86772606c3060d93e3d7cc0d549c221"
+    },
+    {
+      "file": "plugins/TheStorm/shops/braxtons-exchange.yml",
+      "sha256": "e9fe36e8f70d6d913212b9642f3543ba037430852c03bb8296c6079dca672cde"
+    },
+    {
+      "file": "plugins/TheStorm/shops/florist.yml",
+      "sha256": "1fa4c4ac308656c019c5f7ad05886951b443ec90bc268023872eb1dc80966850"
+    },
+    {
+      "file": "plugins/TheStorm/shops/justys-supplies.yml",
+      "sha256": "d6c1ed92c48eae73f6be2ff2845d1cfbec6b18219f613bb17260abc4132f5ab4"
+    },
+    {
+      "file": "plugins/TheStorm/shops/reynolds-supplies.yml",
+      "sha256": "5f534a4c1f40adbee659ba7d97925c3b7902c14da94f7db0c1dbff1ca71b626b"
+    },
+    {
+      "file": "plugins/TheStorm/skills.yml",
+      "sha256": "e2ba5cf8c998a6e1b06c47184ed9487632c1678bf4eaee47deb2899cc7f61a06"
+    },
+    {
+      "file": "plugins/TheStorm/spells.yml",
+      "sha256": "fa4a09a99a86c5e114d1d6d4656d3679b61f634f22e839dd292f2f7b18404eb7"
+    },
+    {
+      "file": "plugins/TheStorm/tickets.yml",
+      "sha256": "bcf6bfb3a46d6fe10f250d8a878b1943cdb8180f8ec5723c0ec93afe770edcbf"
+    },
+    {
+      "file": "plugins/TheStorm/towns.yml",
+      "sha256": "8bf98f9cd210797056252f59981f269205b01ec2ff550f7767c252afd225e885"
+    },
+    {
+      "file": "plugins/TheStorm/tracks.yml",
+      "sha256": "5d7425710daeab4a27e046046a3eec3532ff77a38f20a18701f3432d9e294e04"
+    },
+    {
+      "file": "plugins/TheStorm/world.yml",
+      "sha256": "cc28a6216e9c97e659d668a69d776fe97a9cf84704405f9afdba72a72b49e616"
+    },
+    {
+      "file": "rwf-map-scenario.json",
+      "sha256": "cdf777d8a56f482f388486b7979a6236ee50f81fc16fc456bccad80ea676d5eb"
+    },
+    {
+      "file": "rwf-map-scenarios.json",
+      "sha256": "7c00f5b91b24dbad7d2b9cf388d863305fb93d2cd0d031ac1685781604da3aa4"
+    },
+    {
+      "file": "rwfmap/bin/rwfmap",
+      "sha256": "c6e187dd09b80c26516d7bc57b831d9b10a593d7d8a8afe8f8c69cf46f8f9c25"
+    },
+    {
+      "file": "rwfmap/bin/rwfmap.bat",
+      "sha256": "fc2188cf3825e90f140ecffad11192cc16075e53f7f0713b962ea0aba023bc6c"
+    },
+    {
+      "file": "rwfmap/lib/HikariCP-7.1.0.jar",
+      "sha256": "2be45c641b841e81df87292e181f2c203500c5f0e9a1676f135927387f3cf40b"
+    },
+    {
+      "file": "rwfmap/lib/core-0.1.0.jar",
+      "sha256": "abd34db3cf4fa5d78f243e8a0084e7082a789f0ed8106133b8070b3b15a62c1e"
+    },
+    {
+      "file": "rwfmap/lib/economy-0.1.0.jar",
+      "sha256": "09307564a3e557a235bc4f2663ea4a31eda44777b9d2ee7c7c3a4831ead34b70"
+    },
+    {
+      "file": "rwfmap/lib/flyway-core-13.8.0.jar",
+      "sha256": "e583e617982ce57d9d20fc4c149aa86d6e622b716fcceb04c090ee7e0181ac81"
+    },
+    {
+      "file": "rwfmap/lib/jackson-annotations-2.22.jar",
+      "sha256": "21ddb598807d3a51a876704eb979d9296e1c6a6f47ab1826ff88c6d6a127a2d0"
+    },
+    {
+      "file": "rwfmap/lib/jackson-core-3.2.3.jar",
+      "sha256": "a0c17e7e665a5e95c82f5fb45c0fec2ae3dc556c80f0016452c9c84cd23f3817"
+    },
+    {
+      "file": "rwfmap/lib/jackson-databind-3.2.3.jar",
+      "sha256": "235b72436af983857e44efa42449f4f0a2c571e69d6c5d9dd1253ae7d192dcf2"
+    },
+    {
+      "file": "rwfmap/lib/jackson-dataformat-yaml-3.2.3.jar",
+      "sha256": "260dd15f1a044dc00cbefd6f01198403fe45ff4ae5fc37895a7842cab6c583d0"
+    },
+    {
+      "file": "rwfmap/lib/jooq-3.21.8.jar",
+      "sha256": "e1c7728d54b869a1ad16dfe0ec8f4fad29408bcac434924f9bc3f7037728ad08"
+    },
+    {
+      "file": "rwfmap/lib/onnxruntime-1.30.0.jar",
+      "sha256": "57d8cedf6f0c8fd6d50ed65c17bf9939f55a4512f4a1f3e732023d258f262ac6"
+    },
+    {
+      "file": "rwfmap/lib/r2dbc-spi-1.0.0.RELEASE.jar",
+      "sha256": "a5846c59fea336431a4ae72ca14edbf5299b78486fa308eafb383f4ae0ea74e5"
+    },
+    {
+      "file": "rwfmap/lib/reactive-streams-1.0.3.jar",
+      "sha256": "1dee0481072d19c929b623e155e14d2f6085dc011529a0a0dbefc84cf571d865"
+    },
+    {
+      "file": "rwfmap/lib/rwf-0.1.0.jar",
+      "sha256": "07e9dd7a59f3595a20dcf4a73ce4c277062fe38e5fd95be00029a2374d7f467f"
+    },
+    {
+      "file": "rwfmap/lib/rwfbots-0.1.0.jar",
+      "sha256": "2b33ab86a0f37db44c1cd706deec8613a7d7f4a2fbb2e47efa4670843c61fec1"
+    },
+    {
+      "file": "rwfmap/lib/rwfmap-0.1.0.jar",
+      "sha256": "6aac86299dac6b4a28265a16fdcd5fb460474d1518b1e031572de9d5a84ba8b3"
+    },
+    {
+      "file": "rwfmap/lib/slf4j-api-2.0.17.jar",
+      "sha256": "7b751d952061954d5abfed7181c1f645d336091b679891591d63329c622eb832"
+    },
+    {
+      "file": "rwfmap/lib/snakeyaml-engine-3.0.1.jar",
+      "sha256": "0b638c8806112215e02e58e95cbd9e9a69d4bd540991f47553d053919994cc94"
+    },
+    {
+      "file": "rwfmap/lib/sqlite-jdbc-3.53.4.0.jar",
+      "sha256": "bcb1f51e36f940867e83342f9efbf5968ac44a6bef4d397bb4af7b17b45cd2fb"
+    },
+    {
+      "file": "sources/tests/e2e/harness/bot.ts",
+      "sha256": "983b8d670d6932df3a228a7cf140a7ea58489745f4e0a3f48c9d0321c50cbc30"
+    },
+    {
+      "file": "sources/tests/e2e/harness/companions-e2e.ts",
+      "sha256": "741ca21b2238a8c1a66967b5299cbefe2ba2fb60aea1456fa4a8e16edff586b5"
+    },
+    {
+      "file": "sources/tests/e2e/harness/config-overlays.ts",
+      "sha256": "2ac5856ee7184c6a6d90aa6f706c9acc1c9575f0bd70a9900825f1f195222bf5"
+    },
+    {
+      "file": "sources/tests/e2e/harness/decisions.ts",
+      "sha256": "7b5c02408e8b000187e906b0d4a961d36863e981f0bec64ecc07b78f4bb25274"
+    },
+    {
+      "file": "sources/tests/e2e/harness/fake-brain.ts",
+      "sha256": "0c1b5289ca60c549f32f801bafb4bad4f9aca4dab90a3407eb145cb895bd6e80"
+    },
+    {
+      "file": "sources/tests/e2e/harness/paths.ts",
+      "sha256": "28f2d4b40d1c90ec048222553c576dac64c4826c0cac739ae94abcf572376631"
+    },
+    {
+      "file": "sources/tests/e2e/harness/pins.ts",
+      "sha256": "dbba9ec13d2f481341f6c50c08643738438fba76f37a25bebc91d7c6c598aab4"
+    },
+    {
+      "file": "sources/tests/e2e/harness/rcon-output.ts",
+      "sha256": "48732a1f774b7c694d8cb388ff75bf5c704e56935ba5ccc5cd2a137908e020a1"
+    },
+    {
+      "file": "sources/tests/e2e/harness/rcon.ts",
+      "sha256": "ca989f6587ad2654e919a06a842943cb0c617fca4dd1ceaa98fa2cc50d21766f"
+    },
+    {
+      "file": "sources/tests/e2e/harness/rwf-match.ts",
+      "sha256": "988545ce9623d576637f971a14dc0f3e4af375503216d3411ea719e70161af42"
+    },
+    {
+      "file": "sources/tests/e2e/harness/rwf-settings.ts",
+      "sha256": "634b680dbc4231632bf60c24fdbcb3ad8d6d5b524b6f0c567053af2d9b6877b1"
+    },
+    {
+      "file": "sources/tests/e2e/harness/rwf-trails.ts",
+      "sha256": "e43a5986be537a17fff3d6fb3f31a265120787d8ead96074abb705eddd4fa895"
+    },
+    {
+      "file": "sources/tests/e2e/harness/rwfbots.ts",
+      "sha256": "eaf6354cb49b360cefcb81f38a3a4a8d166937f99775d4277c0aea4fc446dbf5"
+    },
+    {
+      "file": "sources/tests/e2e/harness/server.ts",
+      "sha256": "a586fce8a74bd7dfd0d2a011b556647d6cb5e8f1877e87308141ebcd328b85c1"
+    },
+    {
+      "file": "sources/tests/e2e/harness/settlement.ts",
+      "sha256": "4cc84be1810fe68177cc81df5d723c706c17886b81fb71b96c094e62520c1790"
+    },
+    {
+      "file": "sources/tests/e2e/harness/storm-data.ts",
+      "sha256": "cfc155ff3d3e07b53ab0ed54fd817b8d10675dc6877bcfd0a6e2e412925aedf6"
+    },
+    {
+      "file": "sources/tests/e2e/harness/tickets.ts",
+      "sha256": "3d4fb47c305a4f9a7aaba19aebbfe3b8516764f60bf91cbaf09316dd4df62011"
+    },
+    {
+      "file": "sources/tests/e2e/harness/world-copy.ts",
+      "sha256": "51c8ddfd5b495e2e73656a152355aa4a78b288641396681a614774ab3fd3d9a8"
+    },
+    {
+      "file": "sources/tools/learning/maps/scenario.test.ts",
+      "sha256": "109b3c3dade7afbf1ce7c930f5d358ec64ee2d378a4e5c801d2551d05c43d058"
+    },
+    {
+      "file": "sources/tools/learning/maps/scenario.ts",
+      "sha256": "9829907dd0f0e7b56a45934c14ca64bc86fc212c04d244ddbb01167055bd6649"
+    },
+    {
+      "file": "sources/tools/learning/maps/stage.ts",
+      "sha256": "f90c18748fd13e754513746d79a4cb70b6184612bfc7f368158ed00fd614d877"
+    },
+    {
+      "file": "sources/tools/maps/__pycache__/extract.cpython-314.pyc",
+      "sha256": "68de3521e6812a686d9f53880a768c6b832b4a7d3a634d7e49f29d967894afd9"
+    },
+    {
+      "file": "sources/tools/maps/__pycache__/extract_test.cpython-314.pyc",
+      "sha256": "55d8cc19b227741c7689b7492cc90ebb41150aa038b379690076a9cbb4843e4d"
+    },
+    {
+      "file": "sources/tools/maps/bake.ts",
+      "sha256": "a706168b3294b6f3e9dd130de73101a4edc82503df55a3680985fdfb2c8363be"
+    },
+    {
+      "file": "sources/tools/maps/details-paper.ts",
+      "sha256": "212b87770a7df8ca4fc640c5cd0f35c1a46151fef66a9caf56fe155723af38c6"
+    },
+    {
+      "file": "sources/tools/maps/details.ts",
+      "sha256": "34cdd5fcca172714521b87f9e99b11a07dcb9f5fd8b9a2e4e4c1a49302f68c1c"
+    },
+    {
+      "file": "sources/tools/maps/extract.py",
+      "sha256": "89547451224c6c6033949204bf8b18a7f1f9fa8bd107807ecd30a86e208bd2b4"
+    },
+    {
+      "file": "sources/tools/maps/extract_test.py",
+      "sha256": "3f6fd579770bceafab63c79ad1adb845c24c833997749cb930bf586967a80193"
+    },
+    {
+      "file": "sources/tools/maps/index.ts",
+      "sha256": "59468e4afa23c289ef97a1290e8457f0af59e0792226cdbc5ebdcd9760049269"
+    },
+    {
+      "file": "sources/tools/maps/inputs.ts",
+      "sha256": "6d04c40bcb83e230dde2002bf74cdae465d57649e235fb1017a2a32409708fac"
+    },
+    {
+      "file": "sources/tools/maps/legacy.test.ts",
+      "sha256": "0ea3a75f695a69f02788527075c73e9fea603896704ddf2fe1890375ba91c620"
+    },
+    {
+      "file": "sources/tools/maps/legacy.ts",
+      "sha256": "41737fd6c71209984c4558cb1ed29f04f1533343bd6774e79cd57516facf15db"
+    },
+    {
+      "file": "sources/tools/maps/lifecycle.test.ts",
+      "sha256": "0b564719ad278d6c4e8dfaf49300f61ba7bbb67005dde9137daefa705259a76d"
+    },
+    {
+      "file": "sources/tools/maps/lifecycle.ts",
+      "sha256": "650af8e7f361279a77360b0df8fd50fc46402f7df2f27cf4f581ef83c46c8217"
+    },
+    {
+      "file": "sources/tools/maps/navigation.ts",
+      "sha256": "9d50b0d9d6019f9e7dd24c3582c913539aa5dd390c46d1ccddafb212248f4a4b"
+    },
+    {
+      "file": "sources/tools/maps/paper.ts",
+      "sha256": "09cf1de23f9a971a214cfeb99a85e99373559dd407f8cf902992d7e5b6313c0a"
+    },
+    {
+      "file": "sources/tools/maps/repairs.test.ts",
+      "sha256": "759e3b49a6ec9db8cc0c548f398f3dde828abc355def0d4de635c05e47717225"
+    },
+    {
+      "file": "sources/tools/maps/repairs.ts",
+      "sha256": "25b151ba18c72754d3187bf56f356f04b104ccfd47c84187ea69d47f644b5e1d"
+    },
+    {
+      "file": "sources/tools/maps/repairs/modified-tropicals.json",
+      "sha256": "79f06714a05311e1e44d43c36e15af738e9b2691c8584d0f4e4e789af7efc515"
+    },
+    {
+      "file": "sources/tools/maps/runtime.ts",
+      "sha256": "270ab4d20a4894a1ee668cd61e1b746e63b183c0c46738f626102b22f4b8d36b"
+    }
+  ],
+  "result": {
+    "state": "complete",
+    "containers": 12,
+    "signs": 14
+  }
+}

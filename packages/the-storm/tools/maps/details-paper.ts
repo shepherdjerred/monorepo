@@ -42,9 +42,13 @@ export async function exportDetails(
       warmCache: true,
       worldDir: path.join(source, "converted-world"),
       mapSourceChunks: path.join(source, "source-chunks.json"),
-      ...(await mapServerConfig(inputs)),
-      brain: { baseUrl: brainUrl, token },
-      env: { ENABLE_COMMAND_BLOCK: "FALSE" },
+      ...(await mapServerConfig(
+        inputs,
+        { baseUrl: brainUrl, token },
+        {
+          ENABLE_COMMAND_BLOCK: "FALSE",
+        },
+      )),
       resources: { cpus: 4, heap: "8G", memoryLimit: "10g" },
     });
     if (server.info.kind !== "container")

@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "flying-ships-trooper-duel-v1",
+  "map": "flying-ships",
+  "mapSha256": "54e6353a02662007d315775c5187bdfa9a43433f19a5ea145158ad7fe5bff131",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 5120,
+      "y": 22,
+      "z": 2048
+    },
+    "max": {
+      "x": 5318,
+      "y": 73,
+      "z": 2112
+    }
+  },
+  "sourceTeams": ["RED", "BLUE"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [5140.5, 32, 2070.5],
+      "yaw": 277.2142639160156,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [5292.5, 32, 2070.5],
+      "yaw": 82.19981384277344,
+      "pitch": 0
+    }
+  ]
+}

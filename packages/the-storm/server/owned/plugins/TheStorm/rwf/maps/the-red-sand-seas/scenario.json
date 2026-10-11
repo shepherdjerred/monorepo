@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "the-red-sand-seas-trooper-duel-v1",
+  "map": "the-red-sand-seas",
+  "mapSha256": "bc17708264a6fca8d9eb7c2a2d7351ee0da40eda89b0855576e04ff9627b800d",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 1024,
+      "y": 0,
+      "z": 5120
+    },
+    "max": {
+      "x": 1157,
+      "y": 51,
+      "z": 5206
+    }
+  },
+  "sourceTeams": ["BLUE", "RED"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [1136.5, 18, 5169.5],
+      "yaw": 97.51214599609375,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [1043.5, 14, 5137.5],
+      "yaw": 298.6949157714844,
+      "pitch": 0
+    }
+  ]
+}

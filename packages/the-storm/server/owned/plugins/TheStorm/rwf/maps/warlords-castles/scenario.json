@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "warlords-castles-trooper-duel-v1",
+  "map": "warlords-castles",
+  "mapSha256": "dbf2499bf25527672bc0dc5f6a6c595821186486795293245006845f8c2ee036",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 6144,
+      "y": 0,
+      "z": 5120
+    },
+    "max": {
+      "x": 6520,
+      "y": 96,
+      "z": 5496
+    }
+  },
+  "sourceTeams": ["BLUE", "PURPLE", "RED", "GREEN"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [6439.5, 62, 5306.5],
+      "yaw": 88.9291763305664,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [6218.5, 62, 5305.5],
+      "yaw": 271.5074462890625,
+      "pitch": 0
+    }
+  ]
+}

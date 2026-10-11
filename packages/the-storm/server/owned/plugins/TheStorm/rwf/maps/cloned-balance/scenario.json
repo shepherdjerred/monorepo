@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "cloned-balance-trooper-duel-v1",
+  "map": "cloned-balance",
+  "mapSha256": "285b7b2ea1e50573bc464e4f805253b0b4c4dd61520dd9a2570f5f7b796a90e9",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 4096,
+      "y": 23,
+      "z": 1024
+    },
+    "max": {
+      "x": 4236,
+      "y": 55,
+      "z": 1170
+    }
+  },
+  "sourceTeams": ["RED", "PURPLE", "BLUE", "GREEN"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [4215.5, 27, 1097.5],
+      "yaw": 90,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [4111.5, 27, 1097.5],
+      "yaw": 270,
+      "pitch": 0
+    }
+  ]
+}

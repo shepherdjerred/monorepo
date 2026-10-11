@@ -22,12 +22,19 @@ final class ShippedContentTest {
   /** {@code plugins/TheStorm} as the repository owns it, relative to this module. */
   static final Path SHIPPED = Path.of("../../../server/owned/plugins/TheStorm");
 
-  private static RwfContent content;
+  private static RwfCatalog content;
+  private static LoadedMap trainingYard;
 
   @BeforeAll
   static void load() {
     MockBukkit.mock();
-    content = ContentFiles.load(SHIPPED, Bukkit::createBlockData);
+    content = ContentFiles.catalog(SHIPPED, Bukkit::createBlockData);
+    trainingYard =
+        content.maps().stream()
+            .filter(map -> map.id().equals("training-yard"))
+            .findFirst()
+            .orElseThrow(() -> new IllegalStateException("Training Yard is missing"))
+            .load();
   }
 
   @AfterAll
@@ -58,19 +65,20 @@ final class ShippedContentTest {
 
   @Test
   void theTrainingYardIsATwoTeamMapWithANuke() {
-    assertThat(content.maps()).hasSize(1);
-    var map = content.maps().getFirst();
-    assertThat(map.id()).isEqualTo("training-yard");
-    assertThat(map.definition().teamColors()).containsExactly(TeamColor.RED, TeamColor.BLUE);
-    assertThat(map.definition().hasNuke()).isTrue();
-    assertThat(map.definition().bombs()).hasSize(3);
-    assertThat(map.blocks().schematic().size()).isEqualTo(new Schematic.Dimensions(64, 16, 64));
+    assertThat(content.maps()).hasSize(32);
+    assertThat(content.maps()).extracting(MapSource::id).contains("training-yard");
+    assertThat(trainingYard.definition().teamColors())
+        .containsExactly(TeamColor.RED, TeamColor.BLUE);
+    assertThat(trainingYard.definition().hasNuke()).isTrue();
+    assertThat(trainingYard.definition().bombs()).hasSize(3);
+    assertThat(trainingYard.blocks().schematic().size())
+        .isEqualTo(new Schematic.Dimensions(64, 16, 64));
   }
 
   @Test
   void theShippedSchematicIsExactlyWhatTheGeneratorProduces() {
     var generated = TrainingYard.generate();
-    var shipped = content.maps().getFirst().blocks().schematic();
+    var shipped = trainingYard.blocks().schematic();
 
     assertThat(shipped.sha256()).isEqualTo(generated.sha256());
     assertThat(shipped.palette()).isEqualTo(generated.palette());
@@ -99,8 +107,7 @@ final class ShippedContentTest {
 
     assertThat(lobby.blocks().at(feet.plus(0, -1, 0)).getAsString())
         .isEqualTo("minecraft:gold_block");
-    assertThat(
-            lobby.layout().region().contains(content.maps().getFirst().definition().border().min()))
+    assertThat(lobby.layout().region().contains(trainingYard.definition().border().min()))
         .isFalse();
   }
 

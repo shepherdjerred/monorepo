@@ -121,6 +121,9 @@ packages/webring/README.md
 **/__tests__/fixtures/**
 **/e2e/fixtures/**
 
+# Versioned map payloads are byte-hash-bound by details.provenance.json.
+packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/**/details.json
+
 # Explore agent skill bodies are model instructions, not prose to reflow:
 # prettier's markdown printer restructures them (it indents lines following a
 # list as list continuations), which silently changes what the model is told.

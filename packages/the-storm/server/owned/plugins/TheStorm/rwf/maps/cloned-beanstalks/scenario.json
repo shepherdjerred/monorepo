@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "cloned-beanstalks-trooper-duel-v1",
+  "map": "cloned-beanstalks",
+  "mapSha256": "df935f0283bea60b25010afdb0bcb61e2e5d480548bfb93f1008e3484026dde5",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 5120,
+      "y": 2,
+      "z": 1024
+    },
+    "max": {
+      "x": 5248,
+      "y": 156,
+      "z": 1148
+    }
+  },
+  "sourceTeams": ["RED", "GREEN", "BLUE", "PURPLE"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [5182.5, 4, 1040.5],
+      "yaw": 357.51043701171875,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [5182.5, 4, 1125.5],
+      "yaw": 182.9356689453125,
+      "pitch": 0
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "rival-castles-trooper-duel-v1",
+  "map": "rival-castles",
+  "mapSha256": "6a03d2d3199886f778cb1570c783808b27703eb181e0dd32f96ebbe42f7fca23",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 3072,
+      "y": 0,
+      "z": 4096
+    },
+    "max": {
+      "x": 3424,
+      "y": 96,
+      "z": 4478
+    }
+  },
+  "sourceTeams": ["RED", "BLUE"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [3246.5, 62, 4398.5],
+      "yaw": 181.03224182128906,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [3246.5, 64, 4168.5],
+      "yaw": 359.0371398925781,
+      "pitch": 0
+    }
+  ]
+}

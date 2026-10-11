@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "hemispheres-trooper-duel-v1",
+  "map": "hemispheres",
+  "mapSha256": "0e754b80a8c828de3e92053d7177b1769bfca351338231aedd568c14a7712e6d",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 2048,
+      "y": 1,
+      "z": 3072
+    },
+    "max": {
+      "x": 2166,
+      "y": 73,
+      "z": 3281
+    }
+  },
+  "sourceTeams": ["BLUE", "RED"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [2100.5, 41, 3248.5],
+      "yaw": 185.591552734375,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [2100.5, 41, 3089.5],
+      "yaw": 355.42608642578125,
+      "pitch": 0
+    }
+  ]
+}

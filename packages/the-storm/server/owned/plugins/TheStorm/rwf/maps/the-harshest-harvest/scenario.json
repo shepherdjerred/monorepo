@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "the-harshest-harvest-trooper-duel-v1",
+  "map": "the-harshest-harvest",
+  "mapSha256": "83be36752e818a81f6e7ec06b17aa7ab3342e8200beddd5193fd9f4d3814804b",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 6144,
+      "y": 0,
+      "z": 4096
+    },
+    "max": {
+      "x": 6234,
+      "y": 43,
+      "z": 4238
+    }
+  },
+  "sourceTeams": ["RED", "BLUE"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [6172.5, 10, 4116.5],
+      "yaw": 341.5650634765625,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [6165.5, 10, 4218.5],
+      "yaw": 205.2011260986328,
+      "pitch": 0
+    }
+  ]
+}

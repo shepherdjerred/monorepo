@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "cors-path-trooper-duel-v1",
+  "map": "cors-path",
+  "mapSha256": "310af07a8bc3791f5986e2ffb850449cd9f27f003a2785347f3a36a76eed0283",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 6144,
+      "y": 0,
+      "z": 1024
+    },
+    "max": {
+      "x": 6270,
+      "y": 20,
+      "z": 1150
+    }
+  },
+  "sourceTeams": ["PURPLE", "RED", "GREEN", "BLUE"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [6148.5, 16, 1028.5],
+      "yaw": 315,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [6148.5, 16, 1142.5],
+      "yaw": 227.00955200195312,
+      "pitch": 0
+    }
+  ]
+}

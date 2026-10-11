@@ -1,5 +1,7 @@
 package com.shepherdjerred.thestorm.rwfbots.adapter.citizens;
 
+import static java.util.Objects.requireNonNull;
+
 import com.shepherdjerred.thestorm.rwfbots.adapter.paper.Bodies;
 import com.shepherdjerred.thestorm.rwfbots.adapter.paper.SnapshotCapture;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
@@ -49,6 +51,9 @@ public final class CitizensBodies implements Bodies, Listener {
 
   /** Vanilla's jump velocity. */
   static final double JUMP_VELOCITY = 0.42;
+
+  /** Upward stroke while steering through water toward a higher waypoint. */
+  private static final double SWIM_UPWARD_VELOCITY = 0.16;
 
   private final NPCRegistry registry;
   private final Map<UUID, NPC> npcs = new HashMap<>();
@@ -162,6 +167,12 @@ public final class CitizensBodies implements Bodies, Listener {
               var heading = target.toVector().subtract(body.getLocation().toVector());
               DoorUse.ahead(player, heading);
               steer(player, new Vec3(heading.getX(), 0, heading.getZ()), sprint);
+              var location = requireNonNull(player.getLocation());
+              if (target.getY() > location.getY() + 0.1 && inWater(player)) {
+                var velocity = player.getVelocity();
+                velocity.setY(Math.max(velocity.getY(), SWIM_UPWARD_VELOCITY));
+                player.setVelocity(velocity);
+              }
               if (heading.getY() > 0.1 && player.isClimbing()) {
                 player.setVelocity(player.getVelocity().setY(0.2));
               }
@@ -187,6 +198,19 @@ public final class CitizensBodies implements Bodies, Listener {
             new Vec3(velocity.getX(), velocity.getY(), velocity.getZ()),
             new MovementMotor.Control(heading, sprint, SnapshotCapture.onGround(player), slowdown));
     player.setVelocity(new org.bukkit.util.Vector(next.x(), next.y(), next.z()));
+  }
+
+  /**
+   * Citizens AI is disabled for these bodies, so explicitly stroke upward when water is in the
+   * entity's occupied blocks and its waypoint is higher. Checking blocks also covers the player NPC
+   * case where Paper's {@code isInWater()} does not report the fluid collision.
+   */
+  private static boolean inWater(Player player) {
+    var feet = requireNonNull(player.getLocation());
+    var eyes = requireNonNull(player.getEyeLocation());
+    return feet.getBlock().isLiquid()
+        || feet.clone().subtract(0, 0.1, 0).getBlock().isLiquid()
+        || eyes.getBlock().isLiquid();
   }
 
   @Override
