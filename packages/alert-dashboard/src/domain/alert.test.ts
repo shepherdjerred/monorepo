@@ -132,4 +132,23 @@ describe("alert domain", () => {
 
     expect(normalizeGeneratorUrl(alert.generatorURL)).toBeNull();
   });
+
+  test("rejects malformed nonempty generator URLs", () => {
+    expect(() =>
+      AlertmanagerSnapshotAlertSchema.parse({
+        annotations: {},
+        endsAt: "2026-08-08T13:00:00Z",
+        fingerprint: "malformed-generator-url",
+        generatorURL: "not a URL",
+        labels: { alertname: "MalformedGeneratorUrl" },
+        startsAt: "2026-08-08T12:00:00Z",
+        status: {
+          inhibitedBy: [],
+          silencedBy: [],
+          state: "active",
+        },
+      }),
+    ).toThrow();
+    expect(() => normalizeGeneratorUrl("not a URL")).toThrow();
+  });
 });
