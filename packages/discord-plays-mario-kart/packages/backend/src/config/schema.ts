@@ -182,11 +182,13 @@ export const ConfigSchema = z.strictObject({
       // resyncs that client at the next keyframe instead of queueing without
       // bound — the failure mode that reached 3.47 GB against a 4 GiB pod limit on
       // the Go-Live path (archive/completed/2026-06-19_mk64-stream-backpressure.md).
+      // Every queued byte is also latency on a driver's screen: 128 KiB is ~0.4 s
+      // at 2500 kbps and still fits a keyframe, where 2 MiB allowed ~6.7 s.
       max_client_buffer_bytes: z
         .number()
         .int()
         .min(64 * 1024)
-        .default(2 * 1024 * 1024),
+        .default(128 * 1024),
       // Concurrent viewers. Each one costs a full copy of the stream on the
       // uplink, so this is a bandwidth guard, not a memory one.
       max_clients: z.number().int().min(1).max(32).default(8),

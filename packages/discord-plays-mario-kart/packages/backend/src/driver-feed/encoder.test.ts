@@ -51,13 +51,18 @@ describe("buildDriverFeedArgs", () => {
     expect(valueOf(args, "-i")).toBe("pipe:0");
   });
 
-  it("emits an Annex-B elementary stream with AUD framing on stdout", () => {
+  it("emits size-framed FLV on stdout so frames ship without waiting", () => {
     const args = buildDriverFeedArgs(BASE);
-    // The splitter keys entirely on AUDs, so losing this filter silently breaks
-    // access-unit boundaries rather than failing loudly.
-    expect(valueOf(args, "-bsf:v")).toBe("h264_metadata=aud=insert");
     // Output muxer is the last `-f`; the leading one selects the rawvideo input.
-    expect(args.slice(-3)).toEqual(["-f", "h264", "pipe:1"]);
+    // A raw H.264 stream here would hold every frame until the next arrived.
+    expect(args.slice(-5)).toEqual([
+      "-f",
+      "flv",
+      "-flvflags",
+      "no_duration_filesize+no_metadata",
+      "pipe:1",
+    ]);
+    expect(args).not.toContain("-bsf:v");
   });
 
   it("pins the profile and level that H264_CODEC_STRING advertises", () => {

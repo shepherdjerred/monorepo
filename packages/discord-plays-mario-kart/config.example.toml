@@ -85,5 +85,5 @@ height = 480                        # square-pixel output height (4:3 -> 640x480
 bitrate_kbps = 2500
 bitrate_max_kbps = 4000
 keyframe_interval_frames = 30       # ~1s at 30fps; also the client resync cadence
-max_client_buffer_bytes = 2097152   # per-client socket backlog before deltas are dropped
+max_client_buffer_bytes = 131072    # per-client socket backlog before deltas are dropped (~0.4 s at 2500 kbps)
 max_clients = 8

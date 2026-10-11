@@ -1,4 +1,4 @@
-// The driver feed's own ffmpeg process: raw BGRA frames in, Annex-B H.264 out.
+// The driver feed's own ffmpeg process: raw BGRA frames in, H.264 in FLV out.
 //
 // This deliberately does NOT go through discord-video-stream's `prepareStream`.
 // That is the library's only spawn entry point and it muxes to NUT for Discord's
@@ -26,15 +26,21 @@ import {
   driverFeedSinkFrames,
 } from "#src/observability/metrics.ts";
 import { logger } from "#src/logger.ts";
-import { AnnexBSplitter, type AccessUnit } from "./annex-b.ts";
+import type { AccessUnit } from "./annex-b.ts";
+import { FlvAccessUnitReader } from "./flv.ts";
 import {
   DriverFeedLatencyTracker,
   type DriverFeedFrameTiming,
 } from "./latency-tracker.ts";
 
 const FRAME_BYTES = WIDTH * HEIGHT * 4;
-/** Same bound as the Go-Live sink: evict the oldest rather than stall the emulator. */
-const MAX_BUFFERED_FRAMES = 3;
+/**
+ * The sink's minimum: one frame in the pipe's read buffer and one queued. Any
+ * deeper and a briefly slow ffmpeg leaves a standing queue of stale frames
+ * (33 ms each) in front of every new one; drivers want the newest frame, so
+ * the oldest is evicted instead.
+ */
+const MAX_BUFFERED_FRAMES = 2;
 
 // Profile and level are forced so the codec string handed to the browser's
 // VideoDecoder is exact rather than inferred. main (profile_idc 77 = 0x4D), no
@@ -177,14 +183,17 @@ export function buildDriverFeedArgs(
     String(options.keyframeIntervalFrames),
     "-keyint_min",
     String(options.keyframeIntervalFrames),
-    // Guarantees every access unit opens with an AUD, which is the boundary the
-    // splitter keys on. Without it a raw H.264 pipe is undelimited.
-    "-bsf:v",
-    "h264_metadata=aud=insert",
     "-flush_packets",
     "1",
+    // FLV, not raw H.264: each tag states its size, so the reader can hand a
+    // frame on the moment its last byte arrives. A raw elementary stream has no
+    // boundaries, and closing an access unit there means waiting for the next
+    // one — a full frame interval. The flags stop the muxer seeking back to
+    // patch duration/size into a pipe and skip the metadata tag nobody reads.
     "-f",
-    "h264",
+    "flv",
+    "-flvflags",
+    "no_duration_filesize+no_metadata",
     "pipe:1",
   ];
 }
@@ -215,7 +224,7 @@ export class DriverFeedEncoder {
   private readonly options: DriverFeedEncoderOptions;
   private readonly callbacks: DriverFeedEncoderCallbacks;
   private readonly processFactory: DriverFeedProcessFactory;
-  private readonly splitter = new AnnexBSplitter();
+  private readonly reader = new FlvAccessUnitReader();
   private readonly latency = new DriverFeedLatencyTracker({
     frameToUnit: (ms) => {
       driverFeedFrameToUnitMs.observe(ms);
@@ -230,7 +239,7 @@ export class DriverFeedEncoder {
   private sink: LatestFrameSink<DriverFeedFrameTiming> | undefined;
   private child: ChildProcessWithoutNullStreams | undefined;
   private stopping = false;
-  /** Single-use: the splitter carries stream state that must not span processes. */
+  /** Single-use: the reader carries stream state that must not span processes. */
   private started = false;
   private warnedSizeMismatch = false;
 
@@ -293,7 +302,18 @@ export class DriverFeedEncoder {
       if (!Buffer.isBuffer(chunk)) {
         throw new TypeError("ffmpeg stdout emitted a non-Buffer chunk");
       }
-      for (const unit of this.splitter.push(chunk)) {
+      let units: AccessUnit[];
+      try {
+        units = this.reader.push(chunk);
+      } catch (error) {
+        // FLV has no resync point, so a framing error ends this encoder. The
+        // Go-Live stream is unaffected; the feed is down until the next session.
+        logger.error("driver feed output is not valid FLV", error);
+        Sentry.captureException(error);
+        this.stop();
+        return;
+      }
+      for (const unit of units) {
         this.latency.unitReady();
         driverFeedAccessUnitBytes.observe(unit.bytes.length);
         this.callbacks.onAccessUnit(unit);

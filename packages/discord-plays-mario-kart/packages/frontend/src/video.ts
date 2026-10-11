@@ -39,7 +39,17 @@ export type DriverFeedCallbacks = {
 
 const RECONNECT_BASE_MS = 500;
 const RECONNECT_MAX_MS = 5000;
-const MAX_DECODE_QUEUE_SIZE = 2;
+/**
+ * Decode backlog, in frames, past which the decoder is reset to resync at the
+ * next keyframe. H.264 deltas each reference the previous frame, so none can be
+ * skipped; a short burst (a TCP stall releasing several frames at once) instead
+ * drains through the decoder in milliseconds while only the newest is painted.
+ * A reset blanks the picture for up to a keyframe interval (~1 s), so it is
+ * reserved for a backlog that is already ~200 ms behind.
+ */
+const MAX_DECODE_QUEUE_SIZE = 6;
+/** Frames still queued behind an output that make painting it pointless. */
+const STALE_OUTPUT_QUEUE_SIZE = 2;
 
 export type DriverFeedDecodeState = {
   readonly started: boolean;
@@ -52,6 +62,15 @@ export type DriverFeedDecodeDecision = {
   readonly decode: boolean;
   readonly nextStarted: boolean;
 };
+
+/**
+ * Whether a decoded frame is worth painting. While a burst drains, frames that
+ * already have newer ones queued behind them would be overwritten within a
+ * millisecond; skipping them shows the newest picture sooner.
+ */
+export function shouldPaintDriverFeedOutput(decodeQueueSize: number): boolean {
+  return decodeQueueSize < STALE_OUTPUT_QUEUE_SIZE;
+}
 
 /** Keep queued decode work bounded; a reset must wait for a fresh entry point. */
 export function decideDriverFeedDecode(
@@ -156,7 +175,9 @@ export function connectDriverFeed(
       output: (frame) => {
         attempt = 0;
         try {
-          callbacks.paint(frame);
+          if (shouldPaintDriverFeedOutput(created.decodeQueueSize)) {
+            callbacks.paint(frame);
+          }
         } finally {
           frame.close();
         }
