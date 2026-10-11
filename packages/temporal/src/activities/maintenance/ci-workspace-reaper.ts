@@ -184,6 +184,11 @@ export type CiWorkspaceReapResult = {
  * uses it. Every delete carries the listed UID as a precondition, so a run
  * never deletes an object that replaced the one it inspected, and a repeat of
  * an interrupted run is harmless: an object already gone is skipped.
+ *
+ * The claim plan assumed the selected pods would go away. Pods are listed
+ * again after their deletes, and a planned claim still mounted by any pod this
+ * run did not delete -- a pod that replaced one under the same name, or one
+ * created since the first listing -- is kept for a later run.
  */
 export async function reapCiWorkspaces(
   client: CiWorkspaceReaperClient,
@@ -203,12 +208,14 @@ export async function reapCiWorkspaces(
     skipped: [],
     deferredPods: plan.deferredPods,
     deferredClaims: plan.deferredClaims,
-    mountedClaims: plan.mountedClaims,
+    mountedClaims: [...plan.mountedClaims],
   };
 
+  const deletedPodUids = new Set<string>();
   for (const pod of plan.pods) {
     const outcome = await client.deletePod(pod.name, pod.uid);
     if (outcome === "deleted") {
+      deletedPodUids.add(pod.uid);
       result.deletedPods.push(pod.name);
       ciWorkspaceReaperDeletionsTotal.inc({ resource: "pod" });
     } else {
@@ -216,7 +223,18 @@ export async function reapCiWorkspaces(
     }
     heartbeat({ resource: "pod", name: pod.name, outcome });
   }
+
+  const podsAfterDeletes = await client.listPods();
+  const stillMounted = new Set(
+    podsAfterDeletes
+      .filter((pod) => !deletedPodUids.has(pod.uid))
+      .flatMap((pod) => pod.claimNames),
+  );
   for (const claim of plan.claims) {
+    if (stillMounted.has(claim.name)) {
+      result.mountedClaims.push(claim.name);
+      continue;
+    }
     const outcome = await client.deleteClaim(claim.name, claim.uid);
     if (outcome === "deleted") {
       result.deletedClaims.push(claim.name);

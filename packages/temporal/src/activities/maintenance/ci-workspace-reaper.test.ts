@@ -225,4 +225,35 @@ describe("reapCiWorkspaces", () => {
     };
     await expect(reapCiWorkspaces(client, NOW)).rejects.toThrow("forbidden");
   });
+
+  it("keeps a claim a replacement pod mounts after a lost UID race", async () => {
+    const original = pod({
+      name: "wp-step",
+      claimNames: ["wp-step-0-default"],
+    });
+    const replacement = pod({
+      name: "wp-step",
+      uid: "uid-replacement",
+      phase: "Running",
+      createdAt: YOUNG,
+      claimNames: ["wp-step-0-default"],
+    });
+    const listings = [[original], [replacement]];
+    const deletedClaims: string[] = [];
+    const client: CiWorkspaceReaperClient = {
+      listPods: () => Promise.resolve(listings.shift() ?? []),
+      listClaims: () => Promise.resolve([claim({ name: "wp-step-0-default" })]),
+      deletePod: () => Promise.resolve("changed"),
+      deleteClaim: (name) => {
+        deletedClaims.push(name);
+        return Promise.resolve("deleted");
+      },
+    };
+
+    const result = await reapCiWorkspaces(client, NOW);
+
+    expect(deletedClaims).toEqual([]);
+    expect(result.skipped).toEqual(["pod/wp-step (changed)"]);
+    expect(result.mountedClaims).toEqual(["wp-step-0-default"]);
+  });
 });
