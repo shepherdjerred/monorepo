@@ -142,7 +142,15 @@ async fn fetch_async(
         if offset > 0 {
             request = request.header(RANGE, format!("bytes={offset}-"));
         }
-        let mut response = request.send().await?.error_for_status()?;
+        let response = request.send();
+        tokio::pin!(response);
+        let mut response = loop {
+            cancel.check()?;
+            match tokio::time::timeout(Duration::from_millis(50), &mut response).await {
+                Ok(result) => break result?.error_for_status()?,
+                Err(_) => continue,
+            }
+        };
         let append = if response.status() == StatusCode::PARTIAL_CONTENT {
             let range = response
                 .headers()
@@ -177,7 +185,16 @@ async fn fetch_async(
             .open(&partial_path)?;
         loop {
             cancel.check()?;
-            let Some(buffer) = response.chunk().await? else {
+            let chunk = response.chunk();
+            tokio::pin!(chunk);
+            let buffer = loop {
+                cancel.check()?;
+                match tokio::time::timeout(Duration::from_millis(50), &mut chunk).await {
+                    Ok(result) => break result?,
+                    Err(_) => continue,
+                }
+            };
+            let Some(buffer) = buffer else {
                 break;
             };
             let read = buffer.len();

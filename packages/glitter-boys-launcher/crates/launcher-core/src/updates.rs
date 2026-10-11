@@ -332,6 +332,7 @@ fn prune_older_versions(root: &Path, active: &Active, profile: &Profile) -> Resu
 }
 #[derive(Clone, Default)]
 pub struct UpdateState {
+    pub error: Option<String>,
     pub supported: bool,
     pub checking: bool,
     pub message: String,
@@ -368,6 +369,7 @@ impl Updater {
                 return;
             }
             s.checking = true;
+            s.error = None;
             s.message = "Checking for updates…".into();
         }
         let root = self.root.clone();
@@ -494,11 +496,11 @@ impl Updater {
                     s.checking = false;
                     match result {
                         Ok(Some(version)) => {
-                            s.message = format!("Update {version} installs on exit");
+                            s.message = format!("Version {version} is ready. It installs when you close Glitter Boys.");
                             s.ready = Some(version);
                         }
-                        Ok(None) => s.message = "No launcher update available".into(),
-                        Err(e) => s.message = e.to_string(),
+                        Ok(None) => s.message = "You're up to date.".into(),
+                        Err(e) => { s.message = "Couldn't check for updates. Try again later.".into(); s.error = Some(e.to_string()); },
                     }
                 }
             });
@@ -506,7 +508,8 @@ impl Updater {
             && let Ok(mut s) = self.state.lock()
         {
             s.checking = false;
-            s.message = e.to_string();
+            s.message = "Couldn't check for updates. Try again later.".into();
+            s.error = Some(e.to_string());
         }
     }
     pub fn apply_on_exit(&self) -> Result<()> {
@@ -655,7 +658,8 @@ mod tests {
             pending: false,
             attempted: false,
         };
-        prune_older_versions(root.path(), &active, &profile)?;
+        // Installed startup passes a canonical root, which uses a verbatim disk prefix on Windows.
+        prune_older_versions(&root.path().canonicalize()?, &active, &profile)?;
         assert!(!old.exists());
         for name in ["1.3.0", "1.4.0", "1.5.0", "0.9.0"] {
             assert!(root.path().join("versions").join(name).is_dir());

@@ -2,6 +2,192 @@ use super::*;
 use std::io::Write;
 
 #[test]
+fn uninstall_of_an_idle_game_preserves_other_active_downloads() -> Result<()> {
+    let (_temp, mut engine) = fixture()?;
+    installed_fixture(&mut engine, Game::Iw4x)?;
+    engine.settings.queue = vec![Game::T7];
+    engine.enabled[3] = true;
+    let cancel = Cancellation::default();
+    engine.running.insert(
+        100,
+        Running {
+            key: Key::Download(engine.catalog.package(Game::T7)?.archives[0].sha256.clone()),
+            cancel: cancel.clone(),
+            started: Instant::now(),
+            bytes: 0,
+            meter: Arc::new(Mutex::new(Meter::default())),
+        },
+    );
+    engine.command(Command::Storage(storage::Action::Uninstall(
+        Game::Iw4x,
+        true,
+    )))?;
+    assert!(
+        engine
+            .running
+            .values()
+            .any(|r| matches!(r.key, Key::Storage(_)))
+    );
+    // Starting new writes is serialized with removal, while the existing download continues.
+    engine.drive()?;
+    assert_eq!(engine.running.len(), 2);
+    let deadline = Instant::now() + Duration::from_secs(10);
+    while engine
+        .running
+        .values()
+        .any(|r| matches!(r.key, Key::Storage(_)))
+    {
+        engine.receive();
+        assert!(Instant::now() < deadline, "Uninstall did not complete");
+        std::thread::sleep(Duration::from_millis(5));
+    }
+    assert!(!engine.settings.library.join("iw4x").exists());
+    assert!(engine.running.contains_key(&100));
+    assert!(engine.enabled[3]);
+    assert!(cancel.check().is_ok());
+    assert!(
+        engine
+            .shared
+            .lock()
+            .map_err(|_| Error::Invalid("test lock".into()))?
+            .error
+            .is_none()
+    );
+    Ok(())
+}
+
+#[test]
+fn analysis_does_not_block_launch_and_uninstall_cannot_race_a_pending_launch() -> Result<()> {
+    let (_temp, mut engine) = fixture()?;
+    installed_fixture(&mut engine, Game::Iw4x)?;
+    engine.running.insert(
+        100,
+        Running {
+            key: Key::Storage(storage::Action::Analyze),
+            cancel: Cancellation::default(),
+            started: Instant::now(),
+            bytes: 0,
+            meter: Arc::new(Mutex::new(Meter::default())),
+        },
+    );
+    engine.command(Command::Play(Game::Iw4x, Mode::Multiplayer))?;
+    assert!(engine.pending_play.is_some());
+    engine.running.clear();
+    engine.command(Command::Storage(storage::Action::Uninstall(
+        Game::Iw4x,
+        true,
+    )))?;
+    assert!(engine.running.is_empty());
+    assert!(engine.settings.library.join("iw4x").is_dir());
+    Ok(())
+}
+
+fn installed_fixture(engine: &mut Engine, game: Game) -> Result<()> {
+    let directory = engine.settings.library.join(game.id());
+    std::fs::create_dir_all(&directory)?;
+    for path in &engine.catalog.package(game)?.required_files {
+        let path = directory.join(path);
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        std::fs::write(path, b"fixture")?;
+    }
+    state::write_json(
+        &directory.join(".glitter-boys-install.json"),
+        &state::Receipt {
+            version: 1,
+            catalog_version: engine.catalog.version,
+            game,
+            prerequisites_complete: true,
+        },
+    )?;
+    engine.status(game, Phase::Ready, None);
+    Ok(())
+}
+
+#[test]
+fn installed_games_can_launch_during_downloads_and_pause_all_keeps_launching() -> Result<()> {
+    let (_temp, mut engine) = fixture()?;
+    installed_fixture(&mut engine, Game::Iw4x)?;
+    engine.enabled[index(Game::T7)] = true;
+    let download_cancel = Cancellation::default();
+    engine.running.insert(
+        1,
+        Running {
+            key: Key::Download(engine.catalog.package(Game::T7)?.archives[0].sha256.clone()),
+            cancel: download_cancel.clone(),
+            started: Instant::now(),
+            bytes: 0,
+            meter: Arc::new(Mutex::new(Meter::default())),
+        },
+    );
+    engine.command(Command::Play(Game::Iw4x, Mode::Multiplayer))?;
+    assert_eq!(engine.pending_play, Some((Game::Iw4x, Mode::Multiplayer)));
+    assert!(download_cancel.check().is_ok());
+    assert!(engine.enabled[index(Game::T7)]);
+    assert_eq!(
+        engine
+            .shared
+            .lock()
+            .map_err(|_| Error::Invalid("Test snapshot poisoned".into()))?
+            .games[0]
+            .phase,
+        Phase::Launching
+    );
+    // Repeated clicks cannot enqueue a second launch or replace the selected mode.
+    engine.command(Command::Play(Game::T5, Mode::Zombies))?;
+    assert_eq!(engine.pending_play, Some((Game::Iw4x, Mode::Multiplayer)));
+    engine.command(Command::PauseAll)?;
+    assert!(matches!(download_cancel.check(), Err(Error::Paused)));
+    assert!(engine.pending_play.is_some());
+    let play_cancel = Cancellation::default();
+    engine.pending_play = None;
+    engine.running.insert(
+        2,
+        Running {
+            key: Key::Play(Game::Iw4x),
+            cancel: play_cancel.clone(),
+            started: Instant::now(),
+            bytes: 0,
+            meter: Arc::new(Mutex::new(Meter::default())),
+        },
+    );
+    engine.command(Command::PauseAll)?;
+    assert!(play_cancel.check().is_ok());
+    engine.command(Command::Shutdown)?;
+    assert!(matches!(play_cancel.check(), Err(Error::Paused)));
+    Ok(())
+}
+
+#[test]
+fn plutonium_launch_waits_for_shared_client_finalization() -> Result<()> {
+    let (_temp, mut engine) = fixture()?;
+    installed_fixture(&mut engine, Game::T5)?;
+    engine.running.insert(
+        1,
+        Running {
+            key: Key::Finish(Game::T6),
+            cancel: Cancellation::default(),
+            started: Instant::now(),
+            bytes: 0,
+            meter: Arc::new(Mutex::new(Meter::default())),
+        },
+    );
+    engine.command(Command::Play(Game::T5, Mode::Multiplayer))?;
+    engine.drive()?;
+    assert_eq!(engine.pending_play, Some((Game::T5, Mode::Multiplayer)));
+    assert!(
+        !engine
+            .running
+            .values()
+            .any(|job| matches!(job.key, Key::Play(_)))
+    );
+    engine.command(Command::Shutdown)?;
+    assert!(engine.pending_play.is_none());
+    Ok(())
+}
+
+#[test]
 fn restart_and_clear_distinguish_saved_installations_from_new_games() -> Result<()> {
     let (_temp, mut engine) = fixture()?;
     let scheduler = Scheduler::start(
@@ -247,6 +433,7 @@ fn fixture() -> Result<(tempfile::TempDir, Engine)> {
         queue: vec![Game::T5, Game::T6],
     };
     let shared = Arc::new(Mutex::new(Snapshot {
+        storage: storage::Status::default(),
         games: Game::ALL.map(|game| GameStatus {
             game,
             phase: Phase::Paused,
@@ -269,6 +456,56 @@ fn fixture() -> Result<(tempfile::TempDir, Engine)> {
         temp,
         Engine::new(Catalog::bundled()?, data, settings, shared),
     ))
+}
+
+#[test]
+fn shared_client_download_does_not_block_or_replace_launch_progress() -> Result<()> {
+    let (_temp, mut engine) = fixture()?;
+    installed_fixture(&mut engine, Game::T5)?;
+    engine.enabled[index(Game::T6)] = true;
+    let mut meter = Meter::default();
+    meter.update(
+        Progress {
+            phase: "Downloading",
+            completed: 200,
+            total: 400,
+        },
+        Instant::now(),
+    );
+    let download_cancel = Cancellation::default();
+    engine.running.insert(
+        1,
+        Running {
+            key: Key::Download(engine.catalog.plutonium.sha256.clone()),
+            cancel: download_cancel.clone(),
+            started: Instant::now(),
+            bytes: 0,
+            meter: Arc::new(Mutex::new(meter)),
+        },
+    );
+    engine.command(Command::Play(Game::T5, Mode::Zombies))?;
+    assert_eq!(engine.pending_play, Some((Game::T5, Mode::Zombies)));
+    engine.refresh_progress(Instant::now())?;
+    {
+        let snapshot = engine
+            .shared
+            .lock()
+            .map_err(|_| Error::Invalid("Test snapshot poisoned".into()))?;
+        assert_eq!(snapshot.games[index(Game::T5)].phase, Phase::Launching);
+        assert_eq!(snapshot.games[index(Game::T5)].progress.total, 0);
+    }
+    download_cancel.pause();
+    engine.refresh_progress(Instant::now())?;
+    assert!(
+        !engine
+            .shared
+            .lock()
+            .map_err(|_| Error::Invalid("Test snapshot poisoned".into()))?
+            .games[index(Game::T5)]
+        .pausing
+    );
+    engine.command(Command::Shutdown)?;
+    Ok(())
 }
 #[test]
 fn one_failure_cancels_its_siblings_but_not_another_game() -> Result<()> {
@@ -329,6 +566,41 @@ fn pause_keeps_shared_download_needed_by_another_game() -> Result<()> {
     assert!(cancel.check().is_ok());
     engine.command(Command::Pause(Game::T6))?;
     assert!(cancel.check().is_err());
+    Ok(())
+}
+
+#[test]
+fn storage_work_does_not_prevent_pausing_other_downloads() -> Result<()> {
+    let (_temp, mut engine) = fixture()?;
+    engine.enabled[index(Game::T6)] = true;
+    let cancel = Cancellation::default();
+    for (id, key, signal) in [
+        (
+            1,
+            Key::Storage(storage::Action::Cancel(Game::T5)),
+            Cancellation::default(),
+        ),
+        (
+            2,
+            Key::Download(engine.catalog.plutonium.sha256.clone()),
+            cancel.clone(),
+        ),
+    ] {
+        engine.running.insert(
+            id,
+            Running {
+                key,
+                cancel: signal,
+                started: Instant::now(),
+                bytes: 0,
+                meter: Arc::new(Mutex::new(Meter::default())),
+            },
+        );
+    }
+    engine.command(Command::PauseAll)?;
+    assert!(cancel.check().is_err());
+    assert!(!engine.enabled.iter().any(|v| *v));
+    assert!(engine.running[&1].cancel.check().is_ok());
     Ok(())
 }
 #[test]

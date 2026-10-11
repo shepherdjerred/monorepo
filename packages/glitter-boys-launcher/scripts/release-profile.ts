@@ -19,29 +19,30 @@ export function parseProfile(value: unknown): ReleaseProfile {
   ];
   if (
     Object.keys(p).some((k) => !fields.includes(k)) ||
-    p.schema !== 1 ||
-    (p.channel !== "stable" && p.channel !== "preview") ||
-    p.manifest_url !== `https://glitter-boys.com/launcher/${p.channel}.json` ||
-    !Array.isArray(p.public_keys) ||
-    !p.public_keys.every(
+    p["schema"] !== 1 ||
+    (p["channel"] !== "stable" && p["channel"] !== "preview") ||
+    p["manifest_url"] !==
+      `https://glitter-boys.com/launcher/${p["channel"]}.json` ||
+    !Array.isArray(p["public_keys"]) ||
+    !p["public_keys"].every(
       (k: unknown): k is string =>
         typeof k === "string" && /^[a-f0-9]{64}$/.test(k),
     ) ||
-    (p.publisher !== null &&
-      (typeof p.publisher !== "string" || p.publisher.length === 0))
+    (p["publisher"] !== null &&
+      (typeof p["publisher"] !== "string" || p["publisher"].length === 0))
   )
     throw new Error("Invalid release profile");
   if (
-    (p.publisher === null) !== (p.public_keys.length === 0) ||
-    (p.channel === "stable" && p.publisher === null)
+    (p["publisher"] === null) !== (p["public_keys"].length === 0) ||
+    (p["channel"] === "stable" && p["publisher"] === null)
   )
     throw new Error("A signed channel requires both publisher and public keys");
   return {
     schema: 1,
-    channel: p.channel,
-    manifest_url: p.manifest_url,
-    public_keys: p.public_keys,
-    publisher: p.publisher,
+    channel: p["channel"],
+    manifest_url: p["manifest_url"],
+    public_keys: p["public_keys"],
+    publisher: p["publisher"],
   };
 }
 

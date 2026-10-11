@@ -22,7 +22,8 @@ walkthroughs cover Windows amd64; platform instructions stay on their own pages.
 The Windows entry point is `/docs/launcher/`, with original captures of the
 Rust/egui preview in the sibling `glitter-boys-launcher` package. Manual Windows
 walkthroughs appear under Advanced. Keep release availability and signing claims
-aligned with published artifacts; the current guide describes a private preview.
+aligned with published artifacts. The download component derives its version from
+the launcher's Cargo workspace; publish that release before deploying its docs.
 The custom homepage is an Astro page; Starlight supplies the
 404 page. The homepage and docs share a pastel palette and the self-hosted
 Luckiest Guy display font. Its Apache 2.0 license is included beside the font

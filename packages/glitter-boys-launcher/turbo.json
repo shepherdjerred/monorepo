@@ -18,7 +18,10 @@
         "!target/**",
         "prerequisites.json",
         "release-profile.json",
-        "scripts/**"
+        "scripts/**",
+        "$TURBO_ROOT$/scripts/release/publish-launcher.ts",
+        "$TURBO_ROOT$/scripts/lib/seaweedfs.ts",
+        "$TURBO_ROOT$/packages/s3-signed-request/src/**"
       ],
       "outputs": [],
       "passThroughEnv": ["MISE_DATA_DIR"]
@@ -34,7 +37,10 @@
         "!target/**",
         "prerequisites.json",
         "release-profile.json",
-        "scripts/**"
+        "scripts/**",
+        "$TURBO_ROOT$/scripts/release/publish-launcher.ts",
+        "$TURBO_ROOT$/scripts/lib/seaweedfs.ts",
+        "$TURBO_ROOT$/packages/s3-signed-request/src/**"
       ],
       "outputs": [],
       "passThroughEnv": ["MISE_DATA_DIR"]
@@ -50,7 +56,10 @@
         "!target/**",
         "prerequisites.json",
         "release-profile.json",
-        "scripts/**"
+        "scripts/**",
+        "$TURBO_ROOT$/scripts/release/publish-launcher.ts",
+        "$TURBO_ROOT$/scripts/lib/seaweedfs.ts",
+        "$TURBO_ROOT$/packages/s3-signed-request/src/**"
       ],
       "outputs": [],
       "passThroughEnv": ["MISE_DATA_DIR"]
@@ -66,7 +75,10 @@
         "!target/**",
         "prerequisites.json",
         "release-profile.json",
-        "scripts/**"
+        "scripts/**",
+        "$TURBO_ROOT$/scripts/release/publish-launcher.ts",
+        "$TURBO_ROOT$/scripts/lib/seaweedfs.ts",
+        "$TURBO_ROOT$/packages/s3-signed-request/src/**"
       ],
       "outputs": [],
       "passThroughEnv": ["MISE_DATA_DIR"]
@@ -82,7 +94,10 @@
         "!target/**",
         "prerequisites.json",
         "release-profile.json",
-        "scripts/**"
+        "scripts/**",
+        "$TURBO_ROOT$/scripts/release/publish-launcher.ts",
+        "$TURBO_ROOT$/scripts/lib/seaweedfs.ts",
+        "$TURBO_ROOT$/packages/s3-signed-request/src/**"
       ],
       "outputs": [],
       "passThroughEnv": ["MISE_DATA_DIR"]

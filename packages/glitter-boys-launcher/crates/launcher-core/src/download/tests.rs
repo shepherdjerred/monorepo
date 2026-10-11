@@ -9,6 +9,47 @@ use std::{
 
 type TestResult = std::result::Result<(), Box<dyn std::error::Error>>;
 
+#[test]
+fn pause_interrupts_stalled_headers_and_bodies_without_losing_partial_bytes() -> TestResult {
+    for body in [false, true] {
+        let listener = TcpListener::bind("127.0.0.1:0")?;
+        let mut artifact = fixture(format!("http://{}/archive.zip", listener.local_addr()?));
+        let cache = tempfile::tempdir()?;
+        let partial = seed(cache.path(), &artifact, b"abc")?;
+        artifact.url = format!("http://{}/archive.zip", listener.local_addr()?);
+        let cancel = Cancellation::default();
+        let signal = cancel.clone();
+        let server = thread::spawn(move || -> std::io::Result<()> {
+            let (mut stream, _) = listener.accept()?;
+            stream.set_read_timeout(Some(Duration::from_secs(2)))?;
+            let mut byte = [0];
+            let mut request = Vec::new();
+            while !request.ends_with(b"\r\n\r\n") {
+                stream.read_exact(&mut byte)?;
+                request.push(byte[0]);
+            }
+            if body {
+                stream.write_all(b"HTTP/1.1 206 Partial Content\r\nContent-Length: 3\r\nContent-Range: bytes 3-5/6\r\n\r\n")?;
+            }
+            thread::sleep(Duration::from_millis(150));
+            signal.pause();
+            let _ = stream.read(&mut byte);
+            Ok(())
+        });
+        let started = Instant::now();
+        assert!(matches!(
+            request(&artifact, cache.path(), &cancel, &mut |_| {}),
+            Err(Error::Paused)
+        ));
+        assert!(started.elapsed() < Duration::from_secs(2));
+        assert_eq!(std::fs::read(partial)?, b"abc");
+        server
+            .join()
+            .map_err(|_| std::io::Error::other("Test server panicked"))??;
+    }
+    Ok(())
+}
+
 fn serve(
     response: &'static [u8],
 ) -> std::io::Result<(String, JoinHandle<std::io::Result<String>>)> {

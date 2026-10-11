@@ -38,6 +38,7 @@ fn main() -> eframe::Result {
         viewport: eframe::egui::ViewportBuilder::default()
             .with_app_id("com.glitter-boys.launcher")
             .with_title("Glitter Boys")
+            .with_icon(ui::icons::app_icon())
             .with_inner_size([900.0, 640.0])
             .with_min_inner_size([760.0, 560.0]),
         ..Default::default()
@@ -50,7 +51,7 @@ fn main() -> eframe::Result {
                 context,
                 diagnostics_error,
                 startup,
-            )))
+            )?))
         }),
     )
 }

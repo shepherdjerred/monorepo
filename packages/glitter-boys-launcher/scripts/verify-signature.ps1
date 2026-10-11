@@ -4,6 +4,6 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $signature = Get-AuthenticodeSignature -LiteralPath $Path
-if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -cne $Publisher) {
+if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -cne $Publisher -or $null -eq $signature.TimeStamperCertificate) {
     throw 'The executable signature does not match the configured publisher.'
 }

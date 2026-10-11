@@ -13,9 +13,10 @@ captures and preserve the displayed controls and results.
 
 ## Launcher captures
 
-`launcher-library.png` is an original capture of Glitter Boys Launcher 0.1.0 on
-Windows, taken October 9, 2026. It shows the real preview interface, not a mockup.
-It does not establish successful installation or multiplayer gameplay.
+`launcher-library.png` is an original capture of the installed, signed Glitter
+Boys Launcher 0.1.7 on Windows, taken October 10, 2026. It shows all four local
+installations ready to play after an installer upgrade. It does not establish
+successful multiplayer gameplay.
 
 `launcher-installed.jpg` is an original October 9, 2026 capture of the compact
 Windows preview with all four local installations ready. All controls fit in its

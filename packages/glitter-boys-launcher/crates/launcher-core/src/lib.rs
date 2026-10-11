@@ -10,6 +10,7 @@ pub mod prerequisites;
 pub mod problem;
 pub mod scheduler;
 pub mod state;
+pub mod storage;
 pub mod updates;
 
 #[cfg(windows)]

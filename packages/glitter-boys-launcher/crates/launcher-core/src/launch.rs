@@ -7,8 +7,10 @@ use crate::{
 use std::{
     path::{Path, PathBuf},
     process::{Child, Command, Stdio},
-    time::Duration,
+    time::{Duration, Instant},
 };
+#[cfg(windows)]
+mod windows;
 
 pub fn plutonium_link(game: Game, mode: Mode) -> Result<&'static str> {
     match (game, mode) {
@@ -44,6 +46,27 @@ pub fn game_running(game: Game) -> bool {
         Game::Iw4x => process_running(&["iw4x.exe", "iw4x-launcher.exe"]),
         Game::T5 | Game::T6 => process_running(&["plutonium-bootstrapper-win32.exe"]),
         Game::T7 => process_running(&["boiii.exe", "BlackOps3.exe"]),
+    }
+}
+
+fn wait_for_game(
+    cancel: &Cancellation,
+    timeout: Duration,
+    mut started: impl FnMut() -> Result<bool>,
+) -> Result<()> {
+    let deadline = Instant::now() + timeout;
+    loop {
+        cancel.check()?;
+        if started()? {
+            return Ok(());
+        }
+        if Instant::now() >= deadline {
+            return Err(Error::ActionRequired {
+                title: "Your game hasn't opened yet",
+                next_step: "Check the game launcher for a sign-in, update, or error. Finish there, then try Play again if needed.",
+            });
+        }
+        std::thread::sleep(Duration::from_millis(250));
     }
 }
 
@@ -139,7 +162,7 @@ pub fn play(
     }
     let directory = library.join(game.id());
     crate::install::finish_prerequisites(game, &directory)?;
-    match game {
+    let mut child = match game {
         Game::T5 | Game::T6 => {
             configure_plutonium(game, &directory)?;
             let updater = clients.join("plutonium.exe");
@@ -148,27 +171,63 @@ pub fn play(
             let root = plutonium_directory()?;
             command(&root.join("bin/plutonium-launcher-win32.exe"), &root)
                 .arg(plutonium_link(game, mode)?)
-                .spawn()?;
+                .spawn()?
         }
         Game::Iw4x => {
             if mode != Mode::Multiplayer {
                 return Err(Error::Invalid("MW2 uses Multiplayer".into()));
             }
-            command(&directory.join("iw4x-launcher.exe"), &directory).spawn()?;
+            command(&directory.join("iw4x-launcher.exe"), &directory).spawn()?
         }
         Game::T7 => {
             // BOIII's normal -launch path still performs its updater and game compatibility checks.
             command(&directory.join("boiii.exe"), &directory)
                 .arg("-launch")
-                .spawn()?;
+                .spawn()?
         }
-    }
-    Ok(())
+    };
+    wait_for_game(cancel, Duration::from_secs(300), || {
+        #[cfg(windows)]
+        if windows::game_window_open(game)? {
+            return Ok(true);
+        }
+        if let Some(status) = child.try_wait()?
+            && !status.success()
+        {
+            return Err(Error::ActionRequired {
+                title: "Your game couldn't start",
+                next_step: "Check the game launcher for an error, then try Play again.",
+            });
+        }
+        // A successful launcher exit can hand off to another process. Keep waiting
+        // for its game window instead of treating that handoff as a finished launch.
+        Ok(false)
+    })
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn launch_waits_for_a_game_and_reports_timeout_or_cancellation() -> Result<()> {
+        let mut probes = 0;
+        wait_for_game(&Cancellation::default(), Duration::from_secs(2), || {
+            probes += 1;
+            Ok(probes == 2)
+        })?;
+        assert_eq!(probes, 2);
+        assert!(matches!(
+            wait_for_game(&Cancellation::default(), Duration::ZERO, || Ok(false)),
+            Err(Error::ActionRequired { .. })
+        ));
+        let cancel = Cancellation::default();
+        cancel.pause();
+        assert!(matches!(
+            wait_for_game(&cancel, Duration::from_secs(2), || Ok(true)),
+            Err(Error::Paused)
+        ));
+        Ok(())
+    }
     #[test]
     fn maps_all_supported_modes_without_a_token_or_lan_bypass() -> Result<()> {
         assert_eq!(

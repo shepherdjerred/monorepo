@@ -1,15 +1,7 @@
-//! The small FFI boundary for Windows' normal signed-installer elevation prompt.
+//! Windows' normal signed-installer elevation prompt.
 
 use crate::{Error, Result};
-use std::{os::windows::ffi::OsStrExt, path::Path};
-use windows_sys::Win32::{
-    Foundation::{CloseHandle, WAIT_OBJECT_0},
-    System::Threading::{GetExitCodeProcess, INFINITE, WaitForSingleObject},
-    UI::{
-        Shell::{SEE_MASK_NOASYNC, SEE_MASK_NOCLOSEPROCESS, SHELLEXECUTEINFOW, ShellExecuteExW},
-        WindowsAndMessaging::SW_SHOWNORMAL,
-    },
-};
+use std::{os::windows::process::CommandExt, path::Path};
 
 /// Windows verifies the full Authenticode chain before we offer an elevation prompt.
 pub fn verify_microsoft(path: &Path) -> Result<()> {
@@ -38,7 +30,7 @@ pub fn verify_microsoft(path: &Path) -> Result<()> {
 pub fn verify_publisher(path: &Path, publisher: &str) -> Result<()> {
     use std::os::windows::process::CommandExt;
     let script = format!(
-        "$s=Get-AuthenticodeSignature -LiteralPath '{}'; if ($s.Status -eq 'Valid' -and $s.SignerCertificate.Subject -eq '{}') {{ exit 0 }} else {{ exit 1 }}",
+        "$s=Get-AuthenticodeSignature -LiteralPath '{}'; if ($s.Status -eq 'Valid' -and $s.SignerCertificate.Subject -ceq '{}' -and $null -ne $s.TimeStamperCertificate) {{ exit 0 }} else {{ exit 1 }}",
         path.to_string_lossy().replace('\'', "''"),
         publisher.replace('\'', "''")
     );
@@ -48,6 +40,7 @@ pub fn verify_publisher(path: &Path, publisher: &str) -> Result<()> {
         Path::new(&windows).join("System32/WindowsPowerShell/v1.0/powershell.exe"),
     )
     .args(["-NoProfile", "-NonInteractive", "-Command", &script])
+    .env_remove("PSModulePath")
     .creation_flags(0x0800_0000)
     .stdin(std::process::Stdio::null())
     .stdout(std::process::Stdio::null())
@@ -61,43 +54,48 @@ pub fn verify_publisher(path: &Path, publisher: &str) -> Result<()> {
     Ok(())
 }
 
-// SAFETY: Windows requires raw FFI for ShellExecuteExW. All input buffers remain
-// alive until it returns. Only its returned process handle is waited/closed, once.
-#[allow(
-    unsafe_code,
-    reason = "Isolated Windows FFI for the normal UAC installer flow"
-)]
 pub fn run(path: &Path, parameters: &str) -> Result<u32> {
-    let file: Vec<u16> = path.as_os_str().encode_wide().chain(Some(0)).collect();
-    let verb: Vec<u16> = "runas".encode_utf16().chain(Some(0)).collect();
-    let arguments: Vec<u16> = parameters.encode_utf16().chain(Some(0)).collect();
-    let mut info: SHELLEXECUTEINFOW = unsafe { std::mem::zeroed() };
-    info.cbSize = std::mem::size_of::<SHELLEXECUTEINFOW>() as u32;
-    info.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NOASYNC;
-    info.lpFile = file.as_ptr();
-    info.lpVerb = verb.as_ptr();
-    info.lpParameters = arguments.as_ptr();
-    info.nShow = SW_SHOWNORMAL;
-    if unsafe { ShellExecuteExW(&mut info) } == 0 {
-        return Err(std::io::Error::last_os_error().into());
+    let windows = std::env::var_os("SystemRoot")
+        .ok_or_else(|| Error::Invalid("Windows system directory is unavailable".into()))?;
+    let script = elevation_script(path, parameters);
+    let output = std::process::Command::new(
+        Path::new(&windows).join("System32/WindowsPowerShell/v1.0/powershell.exe"),
+    )
+    .args(["-NoProfile", "-NonInteractive", "-Command", &script])
+    .env_remove("PSModulePath")
+    .creation_flags(0x0800_0000)
+    .stdin(std::process::Stdio::null())
+    .output()?;
+    if !output.status.success() {
+        return Err(Error::Invalid(format!(
+            "Windows could not start component setup: {}",
+            String::from_utf8_lossy(&output.stderr).trim()
+        )));
     }
-    if info.hProcess.is_null() {
-        return Err(Error::Invalid(
-            "Windows did not return a component installer process".into(),
-        ));
+    String::from_utf8_lossy(&output.stdout)
+        .trim()
+        .parse()
+        .map_err(|_| {
+            Error::Invalid("Windows did not return a component installer exit code".into())
+        })
+}
+fn elevation_script(path: &Path, parameters: &str) -> String {
+    format!(
+        "$ErrorActionPreference='Stop'; try {{ $p=Start-Process -FilePath '{}' -ArgumentList '{}' -Verb RunAs -Wait -PassThru; [Console]::WriteLine($p.ExitCode) }} catch {{ if ($_.Exception.NativeErrorCode -eq 1223) {{ [Console]::WriteLine(1602) }} else {{ [Console]::Error.WriteLine($_.Exception.Message); exit 1 }} }}",
+        path.to_string_lossy().replace('\'', "''"),
+        parameters.replace('\'', "''")
+    )
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn elevation_quotes_paths_and_waits_for_the_installer_exit_code() {
+        let script = elevation_script(Path::new("C:/a'b/setup.exe"), "/passive /norestart");
+        assert!(script.contains("-FilePath 'C:/a''b/setup.exe'"));
+        assert!(script.contains("-ArgumentList '/passive /norestart'"));
+        assert!(script.contains("-Verb RunAs -Wait -PassThru"));
+        assert!(script.contains("[Console]::WriteLine($p.ExitCode)"));
+        assert!(script.contains("NativeErrorCode -eq 1223"));
     }
-    let result = if unsafe { WaitForSingleObject(info.hProcess, INFINITE) } == WAIT_OBJECT_0 {
-        let mut exit_code = 0;
-        if unsafe { GetExitCodeProcess(info.hProcess, &mut exit_code) } == 0 {
-            Err(std::io::Error::last_os_error().into())
-        } else {
-            Ok(exit_code)
-        }
-    } else {
-        Err(std::io::Error::last_os_error().into())
-    };
-    unsafe {
-        CloseHandle(info.hProcess);
-    }
-    result
 }

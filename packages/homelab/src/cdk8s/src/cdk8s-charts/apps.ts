@@ -1,4 +1,4 @@
-import { createGlitterBoysLauncherApp } from "../resources/argo-applications/apps/glitter-boys-launcher.ts";
+import { createGlitterBoysLauncherApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/glitter-boys-launcher.ts";
 import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
 import { createOnePasswordApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/1password.ts";

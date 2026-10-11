@@ -1,0 +1,35 @@
+---
+import cargo from "../../../glitter-boys-launcher/Cargo.toml?raw";
+const version = /^version = "(\d+\.\d+\.\d+)"/m.exec(cargo)?.[1];
+if (!version) throw new Error("Missing launcher workspace version");
+const name = `glitter-boys_${version}_x64-setup.exe`;
+const href = `/launcher/releases/${version}/${name}`;
+---
+
+<p>
+  <a class="download" href={href} download>
+    Download for Windows
+  </a>
+  <br />
+  <small>
+    Version {version} · Windows 10/11, 64-bit · Publisher: Jerred Shepherd
+  </small>
+</p>
+<style>
+  .download {
+    display: inline-block;
+    padding: 0.65rem 1rem;
+    border-radius: 0.4rem;
+    background: var(--sl-color-text-accent);
+    color: var(--sl-color-bg);
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .download:focus-visible {
+    outline: 3px solid var(--sl-color-text);
+    outline-offset: 3px;
+  }
+  small {
+    color: var(--sl-color-gray-2);
+  }
+</style>

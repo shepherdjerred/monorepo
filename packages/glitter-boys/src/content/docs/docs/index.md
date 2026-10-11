@@ -5,8 +5,8 @@ description: Get the Windows launcher, or follow the separate Apple silicon Mac 
 
 On **Windows x64**, start with the [Glitter Boys launcher guide](/docs/launcher/).
 The launcher installs MW2, Black Ops, Black Ops II, and Black Ops III, then opens
-the right client when you choose Play. It is currently an unsigned preview
-available directly from Jerred; a public signed release is not available yet.
+the right client when you choose Play. Download the signed Windows installer
+from that guide.
 
 ## Mac + Windows crossplay
 

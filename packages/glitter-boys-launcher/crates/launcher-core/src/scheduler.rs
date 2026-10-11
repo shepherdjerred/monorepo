@@ -8,6 +8,7 @@ use crate::{
     download, install, launch,
     problem::{Activity, Problem},
     state::{self, Settings},
+    storage,
 };
 use std::{
     collections::HashMap,
@@ -46,12 +47,15 @@ pub struct GameStatus {
 }
 #[derive(Clone)]
 pub struct Snapshot {
+    pub storage: storage::Status,
     pub games: [GameStatus; 4],
     pub busy: bool,
     pub queued: usize,
     pub error: Option<Problem>,
 }
 pub enum Command {
+    DismissStorageMessage,
+    Storage(storage::Action),
     Install(Game),
     Pause(Game),
     PauseAll,
@@ -89,6 +93,7 @@ impl Scheduler {
             .try_into()
             .map_err(|_| Error::Invalid("Incomplete game state".into()))?;
         let snapshot = Arc::new(Mutex::new(Snapshot {
+            storage: storage::Status::default(),
             games,
             busy: false,
             queued: settings.queue.len(),
@@ -121,7 +126,7 @@ impl Scheduler {
     pub fn send(&self, command: Command) -> Result<()> {
         if matches!(
             command,
-            Command::Install(_) | Command::ResumeAll | Command::Play(_, _)
+            Command::Install(_) | Command::ResumeAll | Command::Play(_, _) | Command::Storage(_)
         ) && let Ok(mut state) = self.snapshot.lock()
         {
             state.busy = true;
@@ -154,18 +159,21 @@ fn index(game: Game) -> usize {
     }
 }
 enum Work {
+    Storage(storage::Action, Vec<Game>),
     Fetch(Artifact),
     Extract(Game, Vec<PathBuf>),
     Finish(Game, tempfile::TempDir, PathBuf),
     Play(Game, Mode),
 }
 enum Output {
+    Storage(Option<storage::Report>, String),
     Download(PathBuf),
     Extraction(tempfile::TempDir),
     Finished,
 }
 #[derive(Clone)]
 enum Key {
+    Storage(storage::Action),
     Download(String),
     Extract(Game),
     Finish(Game),
@@ -197,6 +205,7 @@ struct Engine {
     rx: Receiver<Completion>,
     lock: Option<File>,
     stopping: bool,
+    pending_play: Option<(Game, Mode)>,
     clocks: [Clock; 4],
 }
 impl Engine {
@@ -222,6 +231,7 @@ impl Engine {
             rx,
             lock: None,
             stopping: false,
+            pending_play: None,
             clocks: std::array::from_fn(|_| Clock::default()),
         }
     }
@@ -244,7 +254,7 @@ impl Engine {
         );
         if let Ok(mut s) = self.shared.lock() {
             let g = &mut s.games[index(game)];
-            if phase != g.phase {
+            if phase != g.phase && phase != Phase::Paused {
                 g.progress = Progress {
                     phase: match phase {
                         Phase::Downloading => "Connecting",
@@ -266,12 +276,33 @@ impl Engine {
         }
     }
     fn stop_all(&mut self) {
-        self.enabled = [false; 4];
-        for clock in &mut self.clocks {
-            clock.set_running(false, Instant::now());
+        self.pause_installations();
+        if let Some((game, _)) = self.pending_play.take() {
+            self.status(game, Phase::Ready, None);
         }
         for job in self.running.values() {
-            job.cancel.pause();
+            if matches!(job.key, Key::Play(_)) {
+                job.cancel.pause();
+            }
+        }
+    }
+    fn pause_installations(&mut self) {
+        self.enabled = [false; 4];
+        for game in Game::ALL {
+            if self.pending_play.is_some_and(|(g, _)| g == game)
+                || self
+                    .running
+                    .values()
+                    .any(|job| matches!(job.key, Key::Play(g) if g == game))
+            {
+                continue;
+            }
+            self.clocks[index(game)].set_running(false, Instant::now());
+        }
+        for job in self.running.values() {
+            if !matches!(job.key, Key::Storage(_) | Key::Play(_)) {
+                job.cancel.pause();
+            }
         }
     }
     fn artifacts(&self, game: Game) -> Result<Vec<Artifact>> {
@@ -284,7 +315,17 @@ impl Engine {
             .is_ok_and(|values| values.iter().any(|a| a.sha256 == hash))
     }
     fn belongs(&self, key: &Key, game: Game) -> bool {
+        // Shared client downloads for another installation are not launch work.
+        if self.pending_play.is_some_and(|(g, _)| g == game)
+            || self
+                .running
+                .values()
+                .any(|job| matches!(job.key, Key::Play(g) if g == game))
+        {
+            return matches!(key, Key::Play(g) if *g == game);
+        }
         match key {
+            Key::Storage(action) => action.game() == Some(game),
             Key::Download(hash) => self.uses(game, hash),
             Key::Extract(g) | Key::Finish(g) | Key::Play(g) => *g == game,
         }
@@ -312,7 +353,9 @@ impl Engine {
                 self.drive()?;
             }
             self.refresh_progress(Instant::now())?;
-            let busy = !self.running.is_empty() || self.enabled.iter().any(|v| *v);
+            let busy = self.pending_play.is_some()
+                || !self.running.is_empty()
+                || self.enabled.iter().any(|v| *v);
             if let Ok(mut s) = self.shared.lock() {
                 s.busy = busy;
                 s.queued = self.settings.queue.len();
@@ -326,7 +369,78 @@ impl Engine {
         }
     }
     fn command(&mut self, command: Command) -> Result<()> {
+        if self
+            .running
+            .values()
+            .any(|job| matches!(job.key, Key::Storage(action) if !matches!(action, storage::Action::Analyze)))
+            && !matches!(
+                command,
+                Command::Shutdown
+                    | Command::Pause(_)
+                    | Command::PauseAll
+                    | Command::DismissStorageMessage
+            )
+        {
+            return Ok(());
+        }
         match command {
+            Command::DismissStorageMessage => {
+                if let Ok(mut s) = self.shared.lock() {
+                    s.storage.message = None;
+                }
+            }
+            Command::Storage(action) => {
+                if self
+                    .running
+                    .values()
+                    .any(|job| matches!(job.key, Key::Storage(_)))
+                {
+                    return Ok(());
+                }
+                let paused_cancel = matches!(action, storage::Action::Cancel(game) if !self.enabled[index(game)] && !self.stopping_game(game) && !self.running.values().any(|job| matches!(job.key, Key::Extract(g) | Key::Finish(g) | Key::Play(g) if g == game)));
+                let idle_uninstall = matches!(action, storage::Action::Uninstall(game, _)
+                    if !self.enabled[index(game)] && !self.stopping_game(game)
+                    && !self.pending_play.is_some_and(|(g, _)| g == game)
+                    && !self.running.values().any(|job| matches!(job.key, Key::Extract(g) | Key::Finish(g) | Key::Play(g) if g == game)));
+                if !matches!(action, storage::Action::Analyze)
+                    && !paused_cancel
+                    && !idle_uninstall
+                    && (!self.running.is_empty()
+                        || self.enabled.iter().any(|v| *v)
+                        || self.pending_play.is_some())
+                {
+                    return Ok(());
+                }
+                if let storage::Action::Uninstall(game, _) = action
+                    && !state::installed(&self.settings.library, game, &self.catalog)?
+                {
+                    return Ok(());
+                }
+                self.ensure_lock()?;
+                if let storage::Action::Cancel(game) = action {
+                    if !self.settings.queue.contains(&game) {
+                        return Ok(());
+                    }
+                    self.settings.queue.retain(|g| *g != game);
+                    self.admitted[index(game)] = false;
+                    self.staged[index(game)] = None;
+                    self.save()?;
+                }
+                if let Ok(mut s) = self.shared.lock() {
+                    s.storage.busy = true;
+                    s.storage.message = Some(
+                        match action {
+                            storage::Action::Analyze => "Checking storage…",
+                            storage::Action::Cleanup | storage::Action::Cancel(_) => {
+                                "Freeing up space…"
+                            }
+                            storage::Action::Uninstall(_, _) => "Uninstalling…",
+                        }
+                        .into(),
+                    );
+                }
+                self.spawn(Work::Storage(action, self.settings.queue.clone()))?;
+            }
             Command::Install(game) => {
                 if self.stopping_game(game) {
                     return Ok(());
@@ -350,7 +464,7 @@ impl Engine {
                 }
             }
             Command::PauseAll => {
-                self.stop_all();
+                self.pause_installations();
                 for game in self.settings.queue.clone() {
                     self.staged[index(game)] = None;
                     self.status(game, Phase::Paused, None);
@@ -378,11 +492,20 @@ impl Engine {
             }
             Command::Clear => {}
             Command::Play(game, mode)
-                if self.running.is_empty() && !self.enabled.iter().any(|v| *v) =>
+                if self.pending_play.is_none()
+                    && !self
+                        .running
+                        .values()
+                        .any(|job| matches!(job.key, Key::Play(_)))
+                    && !self.enabled[index(game)]
+                    && !self.running.values().any(
+                        |job| matches!(job.key, Key::Extract(g) | Key::Finish(g) if g == game),
+                    )
+                    && state::installed(&self.settings.library, game, &self.catalog)? =>
             {
                 self.ensure_lock()?;
                 self.status(game, Phase::Launching, None);
-                self.spawn(Work::Play(game, mode))?;
+                self.pending_play = Some((game, mode));
             }
             Command::Play(_, _) => {}
             Command::Shutdown => {
@@ -392,6 +515,7 @@ impl Engine {
         }
         for job in self.running.values() {
             let needed = match &job.key {
+                Key::Storage(_) => true,
                 Key::Download(hash) => Game::ALL
                     .iter()
                     .any(|g| self.enabled[index(*g)] && self.uses(*g, hash)),
@@ -448,6 +572,22 @@ impl Engine {
         Ok(required)
     }
     fn drive(&mut self) -> Result<()> {
+        // Existing unrelated downloads continue; do not start new writers during a mutation.
+        if self.running.values().any(|job| matches!(job.key, Key::Storage(action) if !matches!(action, storage::Action::Analyze))) {
+            return Ok(());
+        }
+        if let Some((game, mode)) = self.pending_play {
+            // Plutonium's shared updater cannot be replaced while it is opening a game.
+            let client_busy = matches!(game, Game::T5 | Game::T6)
+                && self
+                    .running
+                    .values()
+                    .any(|job| matches!(job.key, Key::Finish(Game::T5 | Game::T6)));
+            if !client_busy {
+                self.spawn(Work::Play(game, mode))?;
+                self.pending_play = None;
+            }
+        }
         for game in Game::ALL {
             if !self.enabled[index(game)]
                 && !self.running.values().any(|r| self.belongs(&r.key, game))
@@ -538,6 +678,11 @@ impl Engine {
                     .running
                     .values()
                     .any(|r| matches!(r.key, Key::Finish(_)))
+                    || (matches!(game, Game::T5 | Game::T6)
+                        && self
+                            .running
+                            .values()
+                            .any(|r| matches!(r.key, Key::Play(Game::T5 | Game::T6))))
                     || (game == Game::Iw4x
                         && self
                             .running
@@ -602,6 +747,12 @@ impl Engine {
             g.queued = self.settings.queue.contains(&g.game);
             g.pausing = self.stopping_game(g.game);
             g.timing.elapsed = self.clocks[index(g.game)].elapsed(now);
+            g.timing.stage_elapsed = self
+                .running
+                .values()
+                .filter(|job| self.belongs(&job.key, g.game))
+                .map(|job| now.saturating_duration_since(job.started))
+                .max();
             g.timing.bytes_per_second = None;
             g.timing.remaining = None;
             if matches!(g.phase, Phase::Paused | Phase::Ready | Phase::Failed) {
@@ -699,6 +850,7 @@ impl Engine {
     }
     fn spawn(&mut self, work: Work) -> Result<()> {
         let key = match &work {
+            Work::Storage(action, _) => Key::Storage(*action),
             Work::Fetch(a) => Key::Download(a.sha256.clone()),
             Work::Extract(g, _) => Key::Extract(*g),
             Work::Finish(g, _, _) => Key::Finish(*g),
@@ -725,6 +877,38 @@ impl Engine {
                 let result =
                     std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| -> Result<Output> {
                         match work {
+                            Work::Storage(action, queue) => {
+                                let message = match action {
+                                    storage::Action::Analyze => String::new(),
+                                    storage::Action::Cleanup => {
+                                        let bytes = storage::cleanup(&catalog, &root, &queue)?;
+                                        format!("Freed {:.2} GB.", bytes as f64 / 1e9)
+                                    }
+                                    storage::Action::Cancel(game) => {
+                                        // Only this game's unshared archives are eligible for cancellation cleanup.
+                                        storage::cancel_downloads(&catalog, &root, game, &queue)?;
+                                        format!("{} installation cancelled.", game.title())
+                                    }
+                                    storage::Action::Uninstall(game, keep) => {
+                                        storage::uninstall(&catalog, &root, game, keep)?;
+                                        format!(
+                                            "{} uninstalled{}.",
+                                            game.title(),
+                                            if keep {
+                                                "; saves and settings kept"
+                                            } else {
+                                                ""
+                                            }
+                                        )
+                                    }
+                                };
+                                let report = if matches!(action, storage::Action::Cancel(_)) {
+                                    None
+                                } else {
+                                    Some(storage::analyze_app(&catalog, &root, &data, &queue)?)
+                                };
+                                Ok(Output::Storage(report, message))
+                            }
                             Work::Fetch(a) => download::fetch(
                                 &download::client()?,
                                 &a,
@@ -841,6 +1025,19 @@ impl Engine {
                 },
             );
             match completion.result {
+                Ok(Output::Storage(report, message)) => {
+                    self.verified.retain(|_, path| path.exists());
+                    if let Key::Storage(action) = job.key
+                        && let Some(game) = action.game()
+                    {
+                        self.status(game, Phase::Paused, None);
+                    }
+                    if let Ok(mut s) = self.shared.lock() {
+                        s.storage.busy = false;
+                        s.storage.report = report;
+                        s.storage.message = (!message.is_empty()).then_some(message);
+                    }
+                }
                 Ok(Output::Download(path)) => {
                     if let Key::Download(hash) = job.key {
                         self.verified.insert(hash, path);
@@ -857,6 +1054,15 @@ impl Engine {
                 }
                 Ok(Output::Finished) => match job.key {
                     Key::Finish(game) => {
+                        if let Err(e) = storage::saves_restored(&self.settings.library, game)
+                            && let Ok(mut s) = self.shared.lock()
+                        {
+                            s.error = Some(Problem::new(
+                                "Your game is installed",
+                                "You can play. Use Free up space in Settings to review leftover files.",
+                                e.to_string(),
+                            ));
+                        }
                         self.enabled[index(game)] = false;
                         self.admitted[index(game)] = false;
                         self.settings.queue.retain(|g| *g != game);
@@ -893,6 +1099,30 @@ impl Engine {
                     _ => {}
                 },
                 Err(error) => {
+                    if matches!(job.key, Key::Storage(_)) {
+                        if let Ok(mut s) = self.shared.lock() {
+                            s.storage.busy = false;
+                            s.storage.report = None;
+                            s.storage.message =
+                                Some("Couldn't finish. Open error details for help.".into());
+                            s.error = Some(Problem::new(
+                                "Storage needs attention",
+                                "Close the game and its launcher, then try again. Your saved files are kept.",
+                                error.to_string(),
+                            ));
+                            if let Key::Storage(action) = job.key
+                                && let Some(game) = action.game()
+                            {
+                                s.games[index(game)].phase =
+                                    if self.settings.library.join(game.id()).exists() {
+                                        Phase::Ready
+                                    } else {
+                                        Phase::Paused
+                                    };
+                            }
+                        }
+                        continue;
+                    }
                     let games: Vec<Game> = match &job.key {
                         Key::Download(hash) => self
                             .settings
@@ -902,6 +1132,7 @@ impl Engine {
                             .filter(|g| self.enabled[index(*g)] && self.uses(*g, hash))
                             .collect(),
                         Key::Extract(g) | Key::Finish(g) | Key::Play(g) => vec![*g],
+                        Key::Storage(_) => vec![],
                     };
                     for game in games {
                         self.enabled[index(game)] = false;
@@ -945,6 +1176,7 @@ impl Engine {
 impl Key {
     fn game(&self) -> Option<Game> {
         match self {
+            Self::Storage(action) => action.game(),
             Self::Download(_) => None,
             Self::Extract(g) | Self::Finish(g) | Self::Play(g) => Some(*g),
         }
@@ -952,6 +1184,7 @@ impl Key {
     fn operation(&self) -> crate::diagnostics::Operation {
         use crate::diagnostics::Operation;
         match self {
+            Self::Storage(_) => Operation::Storage,
             Self::Download(_) => Operation::Download,
             Self::Extract(_) => Operation::Extract,
             Self::Finish(_) => Operation::Prepare,

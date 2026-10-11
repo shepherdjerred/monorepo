@@ -1,6 +1,9 @@
 //! A simple game library with supporting information in focused dialogs.
 mod dialogs;
+mod game_art;
+pub(crate) mod icons;
 mod presentation;
+mod rows;
 #[cfg(test)]
 mod tests;
 mod theme;
@@ -12,12 +15,17 @@ use glitter_boys_core::{
     problem::{Activity, Problem},
     scheduler::{Command, Phase, Scheduler, Snapshot},
     state::{self, Settings},
+    storage,
 };
-use presentation::{card_copy, time_left};
+use icons::{Icon, button};
+use presentation::card_copy;
 use std::{fs::File, path::PathBuf, time::Duration};
-const INK: Color32 = Color32::from_rgb(22, 10, 44);
-const LILAC: Color32 = Color32::from_rgb(195, 155, 255);
-const PINK: Color32 = Color32::from_rgb(255, 158, 216);
+const INK: Color32 = Color32::from_rgb(18, 18, 25);
+const SURFACE: Color32 = Color32::from_rgb(27, 26, 35);
+const LINE: Color32 = Color32::from_rgb(46, 43, 58);
+const MUTED: Color32 = Color32::from_rgb(155, 151, 169);
+const LILAC: Color32 = Color32::from_rgb(185, 162, 239);
+const PINK: Color32 = Color32::from_rgb(237, 153, 176);
 struct Library {
     data: PathBuf,
     settings: Settings,
@@ -50,8 +58,19 @@ enum Dialog {
     Help,
     Details(usize),
     Problem,
+    Cancel(usize),
+    Uninstall(usize),
+    Cleanup,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
+enum SettingsTab {
+    #[default]
+    General,
+    Storage,
+    Updates,
 }
 pub struct Launcher {
+    game_icons: [egui::TextureHandle; 4],
     library: Result<Library>,
     message: Option<String>,
     problem: Option<Problem>,
@@ -60,15 +79,18 @@ pub struct Launcher {
     closing: bool,
     updater: Result<glitter_boys_core::updates::Updater>,
     healthy: bool,
+    settings_tab: SettingsTab,
+    keep_saves: bool,
 }
 impl Launcher {
     pub fn new(
         context: &eframe::CreationContext<'_>,
         message: Option<String>,
         startup: crate::startup::Startup,
-    ) -> Self {
+    ) -> Result<Self> {
         Self::configure(&context.egui_ctx);
-        Self {
+        Ok(Self {
+            game_icons: game_art::load(&context.egui_ctx)?,
             library: Library::load(startup.data, startup.resume),
             message,
             problem: None,
@@ -77,7 +99,9 @@ impl Launcher {
             closing: false,
             updater: glitter_boys_core::updates::Updater::new(),
             healthy: false,
-        }
+            settings_tab: SettingsTab::General,
+            keep_saves: true,
+        })
     }
     fn report(&mut self, error: &glitter_boys_core::Error) {
         self.problem = Some(Problem::from_error(error, Activity::Launcher));
@@ -100,100 +124,6 @@ impl Launcher {
             Ok(library) => library.scheduler.snapshot(),
             Err(e) => Err(glitter_boys_core::Error::Invalid(e.to_string())),
         }
-    }
-    fn card(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot, index: usize, height: f32) {
-        let g = &snapshot.games[index];
-        let copy = card_copy(g, snapshot.busy);
-        egui::Frame::new()
-            .fill(Color32::from_rgb(35, 21, 56))
-            .corner_radius(12)
-            .inner_margin(14)
-            .show(ui, |ui| {
-                ui.set_min_height(height - 28.0);
-                ui.set_width(ui.available_width());
-                ui.label(RichText::new(g.game.title()).strong().size(20.0));
-                ui.allocate_ui(egui::vec2(ui.available_width(), 28.0), |ui| {
-                    ui.label(
-                        RichText::new(if g.game == Game::Iw4x {
-                            "Multiplayer · 2009"
-                        } else {
-                            "Multiplayer + Zombies"
-                        })
-                        .small()
-                        .weak(),
-                    );
-                });
-                ui.add_space(5.0);
-                ui.add(
-                    egui::Label::new(RichText::new(copy.status).color(if g.error.is_some() {
-                        PINK
-                    } else {
-                        LILAC
-                    }))
-                    .truncate(),
-                );
-                let active = matches!(
-                    g.phase,
-                    Phase::Downloading | Phase::Extracting | Phase::Preparing | Phase::Launching
-                );
-                if active && !g.pausing {
-                    let fraction = if g.progress.total > 0 {
-                        (g.progress.completed as f64 / g.progress.total as f64).clamp(0.0, 1.0)
-                            as f32
-                    } else {
-                        0.0
-                    };
-                    ui.add(
-                        egui::ProgressBar::new(fraction)
-                            .desired_height(12.0)
-                            .animate(g.progress.total == 0),
-                    );
-                } else {
-                    ui.allocate_space(egui::vec2(0.0, 12.0));
-                }
-                let helper = time_left(g).unwrap_or_else(|| copy.helper.to_string());
-                ui.add(egui::Label::new(RichText::new(&helper).small()).truncate())
-                    .on_hover_text(&helper);
-                ui.add_space(5.0);
-                ui.horizontal(|ui| {
-                    let enabled = !self.closing
-                        && !g.pausing
-                        && g.phase != Phase::Launching
-                        && !(g.phase == Phase::Ready && snapshot.busy);
-                    if g.phase == Phase::Ready {
-                        if let Some(mode) = play_buttons(ui, g.game, enabled) {
-                            self.send(Command::Play(g.game, mode));
-                        }
-                    } else if ui
-                        .add_enabled(
-                            enabled,
-                            egui::Button::new(RichText::new(copy.action).color(INK))
-                                .fill(LILAC)
-                                .min_size(egui::vec2(100.0, 32.0)),
-                        )
-                        .clicked()
-                    {
-                        self.send(match g.phase {
-                            Phase::Waiting
-                            | Phase::Downloading
-                            | Phase::Extracting
-                            | Phase::Preparing => Command::Pause(g.game),
-                            _ => Command::Install(g.game),
-                        });
-                    }
-                    if (g.phase != Phase::Ready || g.error.is_some())
-                        && ui
-                            .button(if g.error.is_some() {
-                                "Get help"
-                            } else {
-                                "Details"
-                            })
-                            .clicked()
-                    {
-                        self.dialog = Some(Dialog::Details(index));
-                    }
-                });
-            });
     }
     fn footer(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
         ui.horizontal(|ui| {
@@ -226,46 +156,45 @@ impl Launcher {
                     });
                 }
             }
-            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                if ui.button("Help").clicked() {
-                    self.dialog = Some(Dialog::Help);
-                }
-                if ui.button("Settings").clicked() {
-                    self.dialog = Some(Dialog::Settings);
-                }
-            });
         });
     }
     fn render(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) -> egui::Rect {
         let rect = egui::CentralPanel::default()
-            .frame(egui::Frame::new().fill(INK).inner_margin(16))
+            .frame(egui::Frame::new().fill(INK).inner_margin(20))
             .show(ui, |ui| {
                 ui.horizontal(|ui| {
                     ui.label(
                         RichText::new("GLITTER BOYS")
                             .font(egui::FontId::new(
-                                30.0,
+                                27.0,
                                 egui::FontFamily::Name("Brand".into()),
                             ))
                             .color(LILAC),
                     );
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        if button(ui, Icon::Help, "Help", false).clicked() { self.dialog = Some(Dialog::Help); }
+                        if button(ui, Icon::Gear, "Settings", false).clicked() { self.dialog = Some(Dialog::Settings); }
+                    });
+                });
+                ui.add_space(16.0);
+                ui.horizontal(|ui| {
+                    ui.label(RichText::new("Your games").size(20.0).strong());
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        ui.label(RichText::new("4 games").size(12.0).color(MUTED));
+                    });
                 });
                 ui.add_space(8.0);
-                let height = ((ui.available_height() - 90.0) / 2.0).max(176.0);
-                ui.columns(2, |c| {
-                    self.card(&mut c[0], snapshot, 0, height);
-                    self.card(&mut c[1], snapshot, 1, height);
-                });
-                ui.add_space(10.0);
-                ui.columns(2, |c| {
-                    self.card(&mut c[0], snapshot, 2, height);
-                    self.card(&mut c[1], snapshot, 3, height);
-                });
-                ui.add_space(8.0);
+                let height = ((ui.available_height() - 90.0) / 4.0 - 6.0).clamp(82.0, 112.0);
+                for index in 0..4 {
+                    self.card(ui, snapshot, index, height);
+                    if index < 3 { ui.add_space(2.0); }
+                }
+                ui.add_space(6.0);
+                ui.separator();
                 let problem = self.problem.as_ref().or(snapshot.error.as_ref());
                 if self.closing {
                     ui.label(
-                        RichText::new("Saving your progress before closing…")
+                        RichText::new(presentation::closing_text(snapshot))
                             .small()
                             .color(LILAC),
                     );
@@ -302,10 +231,13 @@ impl Launcher {
                             );
                             return;
                         }
-                        if update_ready {
+                        if let Some(message) = &snapshot.storage.message {
+                            ui.add(egui::Label::new(RichText::new(message).small()).truncate()).on_hover_text(message);
+                            if !snapshot.storage.busy && ui.small_button("Dismiss").clicked() { self.send(Command::DismissStorageMessage); }
+                        } else if update_ready {
                             ui.label(RichText::new("An update is ready. It will install when you close Glitter Boys.").small());
                         } else {
-                            ui.allocate_space(egui::vec2(0.0, 18.0));
+                            ui.allocate_space(egui::Vec2::ZERO);
                         }
                     });
                 }
@@ -327,14 +259,15 @@ fn play_buttons(ui: &mut egui::Ui, game: Game, enabled: bool) -> Option<Mode> {
         Game::T7 => &[("Play", Mode::Zombies)],
     };
     let mut selected = None;
-    for &(label, mode) in choices {
+    for index in 0..choices.len() {
+        let (label, mode) = choices[if ui.layout().main_dir == egui::Direction::RightToLeft {
+            choices.len() - 1 - index
+        } else {
+            index
+        }];
         if ui
-            .add_enabled(
-                enabled,
-                egui::Button::new(RichText::new(label).color(INK))
-                    .fill(LILAC)
-                    .min_size(egui::vec2(100.0, 32.0)),
-            )
+            .add_enabled_ui(enabled, |ui| button(ui, Icon::Play, label, true))
+            .inner
             .clicked()
         {
             selected = Some(mode);

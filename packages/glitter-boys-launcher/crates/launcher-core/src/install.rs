@@ -8,6 +8,10 @@ use crate::{
 use std::path::Path;
 
 const HEADROOM: u64 = 2 * 1024 * 1024 * 1024;
+pub fn library_folder(library: &Path) -> Result<std::path::PathBuf> {
+    ensure_plain_directory(library)?;
+    Ok(library.canonicalize()?)
+}
 
 pub struct InstallOutcome {
     pub cache_cleanup_pending: bool,
@@ -18,12 +22,17 @@ pub(crate) fn ensure_plain_directory(path: &Path) -> Result<()> {
         return Err(Error::Invalid("Choose an absolute game folder path".into()));
     }
     // Refuse network locations and redirected folders for managed installs.
-    if path.to_string_lossy().starts_with("\\\\") {
+    #[cfg(windows)]
+    let local = matches!(path.components().next(), Some(std::path::Component::Prefix(prefix))
+        if matches!(prefix.kind(), std::path::Prefix::Disk(_) | std::path::Prefix::VerbatimDisk(_)));
+    #[cfg(not(windows))]
+    let local = !path.to_string_lossy().starts_with("\\\\");
+    if !local {
         return Err(Error::Invalid("Choose a folder on a local drive".into()));
     }
     for ancestor in path.ancestors() {
         match std::fs::symlink_metadata(ancestor) {
-            Ok(metadata) if metadata.file_type().is_symlink() => {
+            Ok(metadata) if crate::storage::redirected(&metadata) => {
                 return Err(Error::Invalid(
                     "Choose a game folder without symbolic links or junctions".into(),
                 ));
@@ -35,6 +44,41 @@ pub(crate) fn ensure_plain_directory(path: &Path) -> Result<()> {
     }
     std::fs::create_dir_all(path)?;
     Ok(())
+}
+
+#[cfg(all(test, windows))]
+mod directory_tests {
+    use super::*;
+
+    #[test]
+    fn canonical_local_directories_are_accepted() -> Result<()> {
+        let root = tempfile::tempdir()?;
+        ensure_plain_directory(root.path())?;
+        let canonical = root.path().canonicalize()?;
+        assert!(
+            matches!(canonical.components().next(), Some(std::path::Component::Prefix(prefix))
+            if matches!(prefix.kind(), std::path::Prefix::VerbatimDisk(_)))
+        );
+        let versions = canonical.join("versions");
+        ensure_plain_directory(&versions)?;
+        assert!(versions.is_dir());
+        Ok(())
+    }
+
+    #[test]
+    fn network_and_device_paths_are_rejected_before_access() {
+        for value in [
+            r"\\example.invalid\share\games",
+            r"\\?\UNC\example.invalid\share\games",
+            r"\\.\C:\games",
+            r"\\?\GLOBALROOT\Device\HarddiskVolume1\games",
+        ] {
+            assert!(
+                matches!(ensure_plain_directory(Path::new(value)), Err(Error::Invalid(message))
+                if message == "Choose a folder on a local drive")
+            );
+        }
+    }
 }
 
 pub fn available_bytes(library: &Path) -> Result<u64> {
@@ -217,6 +261,7 @@ pub(crate) fn finalize(
                 completed: 0,
                 total: 0,
             });
+            cancel.check()?;
             let mut updater = launch::command(&staged_game.join("iw4x-launcher.exe"), &staged_game)
                 .arg("--skip-launch")
                 .spawn()?;
@@ -236,6 +281,12 @@ pub(crate) fn finalize(
         }
     }
     cancel.check()?;
+    progress(Progress {
+        phase: "Finishing installation",
+        completed: 0,
+        total: 0,
+    });
+    crate::storage::restore_saves(library, game, &staged_game)?;
     state::write_json(
         &staged_game.join(".glitter-boys-install.json"),
         &state::Receipt {

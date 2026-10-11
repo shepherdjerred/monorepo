@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { App, Chart, Testing } from "cdk8s";
 import { z } from "zod";
@@ -16,7 +17,9 @@ import { siteAnalyticsConfiguration } from "@shepherdjerred/homelab/cdk8s/src/mi
 // itzg base must be the same pin the catalog tracks.
 
 // Repo root: this file lives at packages/homelab/src/cdk8s/src/resources/argo-applications/games/.
-const repoRoot = new URL("../../../../../../../../", import.meta.url).pathname;
+const repoRoot = fileURLToPath(
+  new URL("../../../../../../../../", import.meta.url),
+);
 const serverDir = `${repoRoot}packages/the-storm/server`;
 
 const ManifestSchema = z.object({

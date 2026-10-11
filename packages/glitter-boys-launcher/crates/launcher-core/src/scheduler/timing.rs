@@ -9,6 +9,8 @@ use std::{
 pub struct Timing {
     /// Time enabled in this launcher session, including task-slot waits, excluding pauses.
     pub elapsed: Option<Duration>,
+    /// Time spent in the currently running task, including a pending stop.
+    pub stage_elapsed: Option<Duration>,
     pub bytes_per_second: Option<f64>,
     /// Current stage only; later setup and extraction are not predicted.
     pub remaining: Option<Duration>,

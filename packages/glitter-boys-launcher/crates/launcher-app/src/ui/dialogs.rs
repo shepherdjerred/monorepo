@@ -15,13 +15,18 @@ impl Launcher {
                 Dialog::Help => self.help_dialog(ui),
                 Dialog::Details(index) => {
                     let g = &snapshot.games[index];
-                    ui.heading(g.game.title());
+                    ui.heading(format!("{} details", g.game.title()));
+                    ui.label(RichText::new(format!("Released {}", g.game.release_year())).small().color(MUTED));
                     if let Some(problem) = &g.error {
                         self.problem_contents(ui, problem);
                     } else if g.phase == Phase::Ready {
                         ui.label("Ready to play");
+                        if ui.add_enabled_ui(can_uninstall(snapshot, index), |ui| button(ui, Icon::Trash, "Uninstall", false)).inner.on_disabled_hover_text("Wait for the storage check or current removal to finish.").clicked() {
+                            self.keep_saves = true;
+                            self.dialog = Some(Dialog::Uninstall(index));
+                        }
                     } else {
-                        ui.label(card_copy(g, snapshot.busy).status);
+                        ui.label(card_copy(g).status);
                         if g.progress.total > 0 {
                             ui.label(format!(
                                 "{:.2} of {:.2} GB in this step",
@@ -34,7 +39,7 @@ impl Launcher {
                                 .on_hover_text("Excludes pauses.");
                         }
                         if let Some(rate) = g.timing.bytes_per_second {
-                            ui.label(format!("Speed: {:.1} MB/s", rate / 1e6));
+                            ui.label(format!("{}: {}", if g.progress.phase == "Checking download" { "Checking speed" } else if g.phase == Phase::Extracting { "Unpacking speed" } else { "Download speed" }, presentation::speed_text(rate)));
                         }
                         if let Some(remaining) = g.timing.remaining {
                             ui.label(format!(
@@ -42,7 +47,56 @@ impl Launcher {
                                 duration_text(remaining)
                             ));
                         }
-                        ui.label("Pausing saves downloads. Unpacking starts over when resumed.");
+                    }
+                    ui.separator();
+                    if let Some(report) = &snapshot.storage.report {
+                        let usage = &report.games[index];
+                        ui.label(RichText::new(format!("{} on disk", storage_size(usage.total()))).strong());
+                        egui::Grid::new("game-storage").num_columns(2).spacing([32.0, 4.0]).show(ui, |ui| {
+                            storage_row(ui, "Game files", usage.files);
+                            storage_row(ui, "Downloads", usage.downloads);
+                            storage_row(ui, "Temporary files", usage.temporary);
+                            storage_row(ui, "Saves, settings & mods", usage.saves);
+                        });
+                        if matches!(g.game, Game::T5 | Game::T6) {
+                            ui.label(RichText::new("Shared launcher files are listed in Settings → Storage.").small().color(MUTED));
+                        }
+                    } else {
+                        ui.label(if snapshot.storage.busy { "Checking storage…" } else { "Storage hasn't been checked yet." });
+                    }
+                    if snapshot.storage.busy && snapshot.storage.report.is_some() {
+                        ui.label(RichText::new("Updating storage sizes…").small().color(MUTED));
+                    }
+                }
+                Dialog::Cancel(index) => {
+                    ui.heading("Cancel installation?");
+                    ui.label(format!("{} will be removed from the installation list. Its unneeded downloads will be deleted.", snapshot.games[index].game.title()));
+                    ui.label("Downloads shared with another game are kept.");
+                    if ui.add_enabled_ui(!snapshot.storage.busy && !snapshot.games[index].pausing, |ui| button(ui, Icon::Cancel, "Cancel installation", false)).inner.clicked() {
+                        self.send(Command::Storage(storage::Action::Cancel(snapshot.games[index].game)));
+                        self.dialog = None;
+                    }
+                }
+                Dialog::Uninstall(index) => {
+                    let game = snapshot.games[index].game;
+                    ui.heading(format!("Uninstall {}?", game.title()));
+                    if let Some(report) = &snapshot.storage.report { ui.label(format!("Game files and local data: {}", storage_size(report.games[index].files + report.games[index].saves))); }
+                    ui.checkbox(&mut self.keep_saves, "Keep local saves and settings");
+                    ui.label("Kept files return when you reinstall here. Shared account data is kept.");
+                    if ui.add_enabled_ui(can_uninstall(snapshot, index), |ui| button(ui, Icon::Trash, "Uninstall game", false)).inner.clicked() {
+                        self.send(Command::Storage(storage::Action::Uninstall(game, self.keep_saves)));
+                        self.dialog = None;
+                        self.settings_tab = SettingsTab::Storage;
+                        self.dialog = Some(Dialog::Settings);
+                    }
+                }
+                Dialog::Cleanup => {
+                    ui.heading("Free up space?");
+                    if let Some(report) = &snapshot.storage.report { ui.label(format!("Remove {:.2} GB of unused downloads and temporary files.", report.reclaimable as f64 / 1e9)); }
+                    ui.label("Installed games, saves, and paused downloads are kept.");
+                    if ui.add_enabled_ui(!snapshot.busy, |ui| button(ui, Icon::Trash, "Free up space", false)).inner.clicked() {
+                        self.send(Command::Storage(storage::Action::Cleanup));
+                        self.dialog = Some(Dialog::Settings);
                     }
                 }
                 Dialog::Problem => {
@@ -54,7 +108,7 @@ impl Launcher {
                 }
             }
             ui.separator();
-            close = ui.button("Close").clicked();
+            close = ui.button(if matches!(dialog, Dialog::Cancel(_) | Dialog::Uninstall(_) | Dialog::Cleanup) { "Go back" } else { "Close" }).clicked();
         });
         if close || response.should_close() {
             self.dialog = None;
@@ -79,57 +133,160 @@ impl Launcher {
     }
     fn settings_dialog(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
         ui.heading("Settings");
-        ui.label(RichText::new("Game folder").strong());
-        if let Ok(library) = &self.library {
-            let path = library.settings.library.display().to_string();
-            ui.add(egui::Label::new(&path).truncate())
-                .on_hover_text(&path);
-            let space = install::available_bytes(&library.settings.library)
-                .map(|bytes| format!("{:.0} GB available", bytes as f64 / 1e9))
-                .unwrap_or_else(|_| {
-                    "Couldn't check free space. Make sure this drive is connected.".into()
-                });
-            ui.label(space);
+        ui.horizontal(|ui| {
+            ui.selectable_value(&mut self.settings_tab, SettingsTab::General, "General");
+            if ui
+                .selectable_value(&mut self.settings_tab, SettingsTab::Storage, "Storage")
+                .clicked()
+                && !snapshot.storage.busy
+            {
+                self.send(Command::Storage(storage::Action::Analyze));
+            }
+            ui.selectable_value(&mut self.settings_tab, SettingsTab::Updates, "Updates");
+        });
+        ui.separator();
+        if self.settings_tab == SettingsTab::Storage {
+            if let Some(report) = &snapshot.storage.report {
+                ui.label(
+                    RichText::new(format!("{} used", storage_size(report.total())))
+                        .strong()
+                        .size(20.0),
+                );
+                egui::Grid::new("storage-breakdown")
+                    .num_columns(2)
+                    .spacing([32.0, 4.0])
+                    .show(ui, |ui| {
+                        for (i, game) in Game::ALL.iter().enumerate() {
+                            storage_row(ui, game.title(), report.games[i].total());
+                        }
+                        storage_row(ui, "Shared game launchers", report.shared);
+                        storage_row(ui, "Glitter Boys & logs", report.launcher);
+                        if report.other > 0 {
+                            storage_row(ui, "Other files", report.other);
+                        }
+                    });
+                ui.label(
+                    RichText::new(
+                        "Game totals include downloads, temporary files, and saved data.",
+                    )
+                    .small()
+                    .color(MUTED),
+                );
+                ui.separator();
+                ui.label(format!(
+                    "{} of unused files can be removed",
+                    storage_size(report.reclaimable)
+                ));
+            } else if !snapshot.storage.busy {
+                ui.label("Check storage to see how much space your games use.");
+            }
+            if let Some(message) = &snapshot.storage.message {
+                bounded_text(ui, message, 2);
+            }
+            ui.horizontal(|ui| {
+                if ui
+                    .add_enabled_ui(!snapshot.storage.busy, |ui| {
+                        button(ui, Icon::Refresh, "Refresh", false)
+                    })
+                    .inner
+                    .clicked()
+                {
+                    self.send(Command::Storage(storage::Action::Analyze));
+                }
+                if ui
+                    .add_enabled_ui(
+                        !snapshot.busy
+                            && snapshot
+                                .storage
+                                .report
+                                .as_ref()
+                                .is_some_and(|r| r.reclaimable > 0),
+                        |ui| button(ui, Icon::Trash, "Free up space", false),
+                    )
+                    .inner
+                    .clicked()
+                {
+                    self.dialog = Some(Dialog::Cleanup);
+                }
+            });
+            ui.label(
+                RichText::new(
+                    "Paused downloads are kept. Cancel an installation to remove its downloads.",
+                )
+                .small(),
+            );
+            if snapshot.busy && !snapshot.storage.busy {
+                ui.label(
+                    RichText::new("Pause installations to free up space.")
+                        .small()
+                        .color(MUTED),
+                );
+            }
+            return;
         }
-        if ui
-            .add_enabled(
-                !snapshot.busy && snapshot.queued == 0,
-                egui::Button::new("Change game folder"),
-            )
-            .clicked()
-        {
-            self.change_folder();
-        }
-        if snapshot.busy || snapshot.queued > 0 {
-            ui.label(RichText::new("Pause installations and remove them from the list below before changing folders. Existing games won't be moved.").small());
-        } else {
-            ui.label(RichText::new("A GlitterBoys folder is created inside your selection. Existing games won't be moved.").small());
-        }
-        if snapshot.queued > 0 {
+        if self.settings_tab == SettingsTab::General {
+            ui.label(RichText::new("Game folder").strong());
+            if let Ok(library) = &self.library {
+                let path = library.settings.library.display().to_string();
+                ui.add(egui::Label::new(&path).truncate())
+                    .on_hover_text(&path);
+                let space = install::available_bytes(&library.settings.library)
+                    .map(|bytes| format!("{:.0} GB available", bytes as f64 / 1e9))
+                    .unwrap_or_else(|_| {
+                        "Couldn't check free space. Make sure this drive is connected.".into()
+                    });
+                ui.label(space);
+            }
+            if button(ui, Icon::Folder, "Open game folder", false).clicked()
+                && let Ok(library) = &self.library
+            {
+                let result = install::library_folder(&library.settings.library)
+                    .and_then(|path| open::that(path).map_err(Into::into));
+                if let Err(e) = result {
+                    self.report(&e);
+                }
+            }
             if ui
                 .add_enabled(
-                    !snapshot.busy,
-                    egui::Button::new("Remove paused installations from the list"),
+                    !snapshot.busy && snapshot.queued == 0,
+                    egui::Button::new("Change game folder"),
                 )
                 .clicked()
             {
-                self.send(Command::Clear);
+                self.change_folder();
             }
-            ui.label(RichText::new("Saved downloads stay in their original folder. Install again there to reuse them.").small());
+            if snapshot.busy || snapshot.queued > 0 {
+                ui.label(RichText::new("Pause installations and remove them from the list below before changing folders. Existing games won't be moved.").small());
+            } else {
+                ui.label(RichText::new("A GlitterBoys folder is created inside your selection. Existing games won't be moved.").small());
+            }
+            if snapshot.queued > 0 {
+                if ui
+                    .add_enabled(
+                        !snapshot.busy,
+                        egui::Button::new("Remove paused installations from the list"),
+                    )
+                    .clicked()
+                {
+                    self.send(Command::Clear);
+                }
+                ui.label(RichText::new("Saved downloads stay in their original folder. Install again there to reuse them.").small());
+            }
+            ui.separator();
+            let mut enabled = glitter_boys_core::diagnostics::enabled();
+            if ui
+                .checkbox(&mut enabled, "Share error and performance reports")
+                .changed()
+                && let Err(e) = glitter_boys_core::diagnostics::set_enabled(enabled)
+            {
+                self.report(&e);
+            }
+            ui.label(
+                RichText::new("Reports exclude passwords, account details, file paths, and chat.")
+                    .small(),
+            );
+            return;
         }
-        ui.separator();
-        let mut enabled = glitter_boys_core::diagnostics::enabled();
-        if ui
-            .checkbox(&mut enabled, "Share error and performance reports")
-            .changed()
-            && let Err(e) = glitter_boys_core::diagnostics::set_enabled(enabled)
-        {
-            self.report(&e);
-        }
-        ui.label(
-            RichText::new("Reports exclude passwords, account details, file paths, and chat.")
-                .small(),
-        );
         ui.separator();
         ui.label(format!("Glitter Boys · {}", env!("CARGO_PKG_VERSION")));
         let update = self
@@ -140,6 +297,11 @@ impl Launcher {
         match update {
             Ok(update) => {
                 bounded_text(ui, &update.message, 2);
+                if let Some(error) = update.error
+                    && ui.small_button("Copy update error").clicked()
+                {
+                    ui.ctx().copy_text(error);
+                }
                 if ui
                     .add_enabled(
                         update.supported && !update.checking && update.ready.is_none(),
@@ -252,4 +414,29 @@ fn bounded_text(ui: &mut egui::Ui, text: &str, rows: usize) {
     );
     job.wrap.max_rows = rows;
     ui.add(egui::Label::new(job).wrap());
+}
+
+pub(super) fn can_uninstall(snapshot: &Snapshot, index: usize) -> bool {
+    let game = &snapshot.games[index];
+    game.phase == Phase::Ready && !game.pausing && !snapshot.storage.busy
+}
+
+fn storage_size(bytes: u64) -> String {
+    if bytes >= 1_000_000_000 {
+        format!("{:.2} GB", bytes as f64 / 1e9)
+    } else if bytes >= 1_000_000 {
+        format!("{:.1} MB", bytes as f64 / 1e6)
+    } else if bytes >= 1_000 {
+        format!("{:.1} KB", bytes as f64 / 1e3)
+    } else {
+        format!("{bytes} B")
+    }
+}
+
+fn storage_row(ui: &mut egui::Ui, label: &str, bytes: u64) {
+    ui.label(label);
+    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+        ui.label(storage_size(bytes));
+    });
+    ui.end_row();
 }

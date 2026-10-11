@@ -183,7 +183,7 @@ export function createGlitterBoysLauncherChart(
                 summary: "Launcher telemetry ingestion is unavailable",
               },
               expr: Expr.fromString(
-                'up{namespace="glitter-boys-launcher"} == 0',
+                'up{namespace="glitter-boys-launcher"} == 0 or absent(up{namespace="glitter-boys-launcher"})',
               ),
             },
             {

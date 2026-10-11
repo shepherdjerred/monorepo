@@ -190,13 +190,14 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         };
         for event in receiver {
             let body = serde_json::json!({"platform":"other","level":"error","logger":"glitter-boys","release":event.release,"message":format!("{:?}: {:?}",event.operation,event.failure),"tags":{"game":event.game.map(|g|g.id()).unwrap_or("launcher"),"operation":event.operation,"failure":event.failure}});
-            let response = runtime.block_on(
+            let response = runtime.block_on(async {
                 client
                     .post(target.clone())
                     .header("X-Sentry-Auth", &auth)
                     .json(&body)
-                    .send(),
-            );
+                    .send()
+                    .await
+            });
             if !response.is_ok_and(|r| r.status().is_success())
                 && let Ok(mut m) = reporting.lock()
             {

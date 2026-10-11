@@ -1,6 +1,12 @@
 {
   "extends": ["//"],
   "tasks": {
+    "build": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/packages/glitter-boys-launcher/Cargo.toml"
+      ]
+    },
     "typecheck": { "dependsOn": ["build"] },
     "lint": { "dependsOn": ["build"] },
     "test": { "dependsOn": ["build"] },

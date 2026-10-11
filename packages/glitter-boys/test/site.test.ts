@@ -21,6 +21,26 @@ test("the homepage stays separate from the docs", async () => {
   expect(html).toContain('aria-hidden="true"');
 });
 
+test("the Windows guide links the installer matching the launcher version", async () => {
+  const cargo = await readFile(
+    new URL("../glitter-boys-launcher/Cargo.toml", packageRoot),
+    "utf8",
+  );
+  const version = /^version = "(\d+\.\d+\.\d+)"/m.exec(cargo)?.[1];
+  expect(version).toBeDefined();
+  const html = await readFile(
+    new URL("docs/launcher/index.html", output),
+    "utf8",
+  );
+  expect(html).toContain(
+    `/launcher/releases/${version}/glitter-boys_${version}_x64-setup.exe`,
+  );
+  expect(html).toContain("Download for Windows");
+  expect(html).not.toContain("Public downloads are not");
+  const index = await readFile(new URL("docs/index.html", output), "utf8");
+  expect(index).not.toContain("unsigned preview");
+});
+
 test("every guide builds as its own document with working docs navigation", async () => {
   for (const route of routes) {
     const html = await readFile(new URL(route + "/index.html", output), "utf8");

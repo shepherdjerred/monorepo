@@ -51,5 +51,8 @@ describe("launcher service release", () => {
     expect(JSON.stringify(tunnels)).not.toContain("9091");
     expect(json).toContain('"SENTRY_DSN"');
     expect(json).toContain('"homelab_grafana_dashboard":"1"');
+    expect(json).toContain(
+      String.raw`absent(up{namespace=\"glitter-boys-launcher\"})`,
+    );
   });
 });

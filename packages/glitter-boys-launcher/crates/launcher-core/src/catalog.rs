@@ -37,6 +37,15 @@ impl Game {
             Self::T7 => "BOIII",
         }
     }
+    /// Original release year, rather than later client or storefront updates.
+    pub fn release_year(self) -> u16 {
+        match self {
+            Self::Iw4x => 2009,
+            Self::T5 => 2010,
+            Self::T6 => 2012,
+            Self::T7 => 2015,
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]

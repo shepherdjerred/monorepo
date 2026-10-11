@@ -10,6 +10,11 @@
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
     "lint": "mise exec rust -- cargo fmt --all -- --check && mise exec rust -- cargo clippy --workspace --all-targets --locked -- -D warnings",
     "package": "mise exec rust cargo:cargo-packager -- cargo packager --release --packages glitter-boys-app",
-    "release": "mise exec rust cargo:cargo-packager bun -- bun scripts/release.ts"
+    "release": "mise exec rust cargo:cargo-packager bun -- bun scripts/release.ts",
+    "release:prepare": "mise exec rust cargo:cargo-packager bun -- bun scripts/release.ts --prepare-only",
+    "release:preflight": "mise exec rust cargo:cargo-packager bun -- bun scripts/release-preflight.ts",
+    "release:refresh-manifest": "bun scripts/refresh-manifest.ts",
+    "release:publish": "bun ../../scripts/release/publish-launcher.ts",
+    "release:provision-key": "bun scripts/provision-update-key.ts"
   }
 }

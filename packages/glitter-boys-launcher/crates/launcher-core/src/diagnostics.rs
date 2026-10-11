@@ -23,6 +23,7 @@ pub enum Operation {
     Download,
     Extract,
     Prepare,
+    Storage,
     Prerequisite,
     Launch,
     UpdateCheck,
@@ -140,11 +141,11 @@ pub fn initialize(data: &Path) -> Result<()> {
                 if !reporter.enabled.load(Ordering::Acquire) {
                     continue;
                 }
-                let response = runtime.block_on(
-                    client
-                        .post("https://launcher.glitter-boys.com/v1/events")
-                        .json(&serde_json::json!({"schema":1,"events":events}))
-                        .send(),
+                let response = upload_batch(
+                    &runtime,
+                    &client,
+                    "https://launcher.glitter-boys.com/v1/events",
+                    &events,
                 );
                 if response.is_ok_and(|r| r.status().is_success()) {
                     if let Ok(_guard) = reporter.disk.lock() {
@@ -172,6 +173,21 @@ pub fn initialize(data: &Path) -> Result<()> {
     }));
     record(None, Operation::Startup, Outcome::Succeeded, None, 0, 0);
     Ok(())
+}
+fn upload_batch(
+    runtime: &tokio::runtime::Runtime,
+    client: &reqwest::Client,
+    endpoint: &str,
+    events: &[&Event],
+) -> reqwest::Result<reqwest::Response> {
+    // Request timeouts are created by send(), so construct the future inside the runtime.
+    runtime.block_on(async {
+        client
+            .post(endpoint)
+            .json(&serde_json::json!({"schema":1,"events":events}))
+            .send()
+            .await
+    })
 }
 pub fn enabled() -> bool {
     REPORTER
@@ -363,6 +379,20 @@ impl Reporter {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn unresponsive_collector_times_out_without_panicking() -> Result<()> {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0")?;
+        let endpoint = format!("http://{}/v1/events", listener.local_addr()?);
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()?;
+        let client = reqwest::Client::builder()
+            .no_proxy()
+            .timeout(Duration::from_millis(50))
+            .build()?;
+        assert!(upload_batch(&runtime, &client, &endpoint, &[]).is_err_and(|e| e.is_timeout()));
+        Ok(())
+    }
     #[test]
     fn records_have_no_free_text_or_identity_fields() -> Result<()> {
         let e = Event {

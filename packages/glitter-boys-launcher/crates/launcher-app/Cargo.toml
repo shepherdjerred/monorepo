@@ -17,6 +17,7 @@ identifier = "com.glitter-boys.launcher"
 before-packaging-command = "bun ../../scripts/prepare-package.ts"
 out-dir = "../../dist"
 formats = ["nsis"]
+icons = ["../../assets/icon.ico"]
 publisher = "Glitter Boys"
 resources = [
   { src = "../../target/package-layout/current.json", target = "current.json" },
@@ -26,7 +27,11 @@ resources = [
 ]
 
 [package.metadata.packager.nsis]
-installer-mode = "currentUser"
+installMode = "currentUser"
+installer-icon = "../../assets/icon.ico"
+
+[build-dependencies]
+winresource = "0.1.23"
 
 [dependencies]
 eframe.workspace = true

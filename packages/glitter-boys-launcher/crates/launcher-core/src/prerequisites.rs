@@ -139,91 +139,43 @@ pub fn ensure(game: Game, directory: &Path) -> Result<()> {
 #[cfg(windows)]
 mod windows {
     use super::*;
-    use std::{ffi::c_void, os::windows::ffi::OsStrExt, path::PathBuf};
-    use windows_sys::Win32::{
-        Storage::FileSystem::{
-            GetFileVersionInfoSizeW, GetFileVersionInfoW, VS_FIXEDFILEINFO, VerQueryValueW,
-        },
-        System::Registry::{
-            HKEY_LOCAL_MACHINE, RRF_RT_REG_DWORD, RRF_SUBKEY_WOW6432KEY, RegGetValueW,
-        },
-    };
-    #[allow(
-        unsafe_code,
-        reason = "Bounded Windows version-resource and read-only registry calls"
-    )]
+    use std::path::PathBuf;
+    use winsafe::{self as w, co};
     pub fn version(path: &Path) -> Result<Option<[u16; 4]>> {
         match std::fs::metadata(path) {
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(None),
             Err(e) => return Err(e.into()),
             Ok(_) => {}
         }
-        let name: Vec<u16> = path.as_os_str().encode_wide().chain(Some(0)).collect();
-        let size = unsafe { GetFileVersionInfoSizeW(name.as_ptr(), std::ptr::null_mut()) };
-        if size == 0 {
-            return Err(std::io::Error::last_os_error().into());
-        }
-        let mut data = vec![0u8; size as usize];
-        if unsafe { GetFileVersionInfoW(name.as_ptr(), 0, size, data.as_mut_ptr().cast()) } == 0 {
-            return Err(std::io::Error::last_os_error().into());
-        }
-        let root = [92u16, 0];
-        let mut pointer: *mut c_void = std::ptr::null_mut();
-        let mut length = 0;
-        if unsafe {
-            VerQueryValueW(
-                data.as_ptr().cast(),
-                root.as_ptr(),
-                &mut pointer,
-                &mut length,
-            )
-        } == 0
-            || pointer.is_null()
-            || length < std::mem::size_of::<VS_FIXEDFILEINFO>() as u32
-        {
-            return Err(Error::Invalid("Invalid runtime version resource".into()));
-        }
-        let info = unsafe { std::ptr::read_unaligned(pointer.cast::<VS_FIXEDFILEINFO>()) };
-        Ok(Some([
-            (info.dwFileVersionMS >> 16) as u16,
-            info.dwFileVersionMS as u16,
-            (info.dwFileVersionLS >> 16) as u16,
-            info.dwFileVersionLS as u16,
-        ]))
+        let name = path
+            .to_str()
+            .ok_or_else(|| Error::Invalid("Runtime path is not valid Unicode".into()))?;
+        let data = w::HVERSIONINFO::GetFileVersionInfo(name)
+            .map_err(|error| std::io::Error::from_raw_os_error(error.raw() as i32))?;
+        let info = data
+            .version_info()
+            .map_err(|error| std::io::Error::from_raw_os_error(error.raw() as i32))?;
+        Ok(Some(info.dwFileVersion()))
     }
-    #[allow(
-        unsafe_code,
-        reason = "Read-only architecture-specific Microsoft runtime registration"
-    )]
     fn registered(architecture: Architecture) -> Result<bool> {
         let arch = if architecture == Architecture::X86 {
             "x86"
         } else {
             "x64"
         };
-        let key: Vec<u16> =
-            format!("SOFTWARE\\Microsoft\\VisualStudio\\14.0\\VC\\Runtimes\\{arch}")
-                .encode_utf16()
-                .chain(Some(0))
-                .collect();
-        let name: Vec<u16> = "Installed".encode_utf16().chain(Some(0)).collect();
-        let mut value = 0u32;
-        let mut size = 4;
-        let result = unsafe {
-            RegGetValueW(
-                HKEY_LOCAL_MACHINE,
-                key.as_ptr(),
-                name.as_ptr(),
-                RRF_RT_REG_DWORD | RRF_SUBKEY_WOW6432KEY,
-                std::ptr::null_mut(),
-                (&mut value as *mut u32).cast(),
-                &mut size,
-            )
-        };
+        let key = format!("SOFTWARE\\Microsoft\\VisualStudio\\14.0\\VC\\Runtimes\\{arch}");
+        let result = w::HKEY::LOCAL_MACHINE.RegGetValue(
+            Some(&key),
+            Some("Installed"),
+            co::RRF::RT_REG_DWORD | co::RRF::SUBKEY_WOW6432KEY,
+        );
         match result {
-            0 => Ok(value == 1),
-            2 | 3 => Ok(false),
-            n => Err(std::io::Error::from_raw_os_error(n as i32).into()),
+            Ok(w::RegistryValue::Dword(value)) => Ok(value == 1),
+            Ok(_) => Err(Error::Invalid(
+                "Invalid Microsoft runtime registration".into(),
+            )),
+            Err(co::ERROR::FILE_NOT_FOUND | co::ERROR::PATH_NOT_FOUND) => Ok(false),
+            Err(error) => Err(std::io::Error::from_raw_os_error(error.raw() as i32).into()),
         }
     }
     fn files_present(root: &Path, requirement: &Requirement) -> Result<bool> {

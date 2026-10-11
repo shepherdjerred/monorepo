@@ -1,45 +1,20 @@
-import { readProfile } from "./release-profile.ts";
-// Run with the repository's explicit 1Password grants; never print private keys.
+import { packageSigned } from "./package-signed.ts";
+import { powershell } from "./windows-tools.ts";
+import { releasePreflight } from "./release-preflight.ts";
 import {
-  createHash,
-  createPrivateKey,
-  createPublicKey,
-  sign,
-} from "node:crypto";
+  publicationPreflight,
+  publishLauncher,
+} from "../../../scripts/release/publish-launcher.ts";
+// Run with the repository's explicit 1Password grants; never print private keys.
+import { createHash } from "node:crypto";
+import { signRelease, type Release } from "./release-manifest.ts";
 import { readdir, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
-const profile = await readProfile(root);
-const version = (await Bun.file(path.join(root, "Cargo.toml")).text()).match(
-  /^version = "([0-9]+\.[0-9]+\.[0-9]+)"/m,
-)?.[1];
-if (
-  !version ||
-  profile.schema !== 1 ||
-  !["stable", "preview"].includes(profile.channel) ||
-  !profile.publisher ||
-  !profile.public_keys?.length
-)
-  throw new Error(
-    "Configure the release publisher and pinned public keys before publishing",
-  );
-const privatePem = process.env["GLITTER_BOYS_UPDATE_SIGNING_KEY"];
-const thumbprint = process.env["WINDOWS_SIGNING_CERTIFICATE_THUMBPRINT"];
-if (!privatePem || !thumbprint || !/^[a-f0-9]{40}$/i.test(thumbprint))
-  throw new Error("Release signing credentials are unavailable");
-const key = createPrivateKey(privatePem);
-if (key.asymmetricKeyType !== "ed25519")
-  throw new Error("Update signing requires an Ed25519 key");
-const publicKey = createPublicKey(key)
-  .export({ format: "der", type: "spki" })
-  .subarray(-32)
-  .toString("hex");
-if (!profile.public_keys.includes(publicKey))
-  throw new Error(
-    "Update signing key does not match the pinned release profile",
-  );
+const { profile, version, key } = await releasePreflight(root);
+await publicationPreflight(version);
 async function run(args: string[]) {
   const child = Bun.spawn(args, {
     cwd: root,
@@ -48,37 +23,20 @@ async function run(args: string[]) {
   });
   if ((await child.exited) !== 0) throw new Error(`${args[0]} failed`);
 }
-await run(["cargo", "packager", "--release", "--packages", "glitter-boys-app"]);
-const installer = path.join(
-  root,
-  "dist",
-  `glitter-boys_${version}_x64-setup.exe`,
-);
+await run(["cargo", "fmt", "--all", "--", "--check"]);
+await run(["cargo", "test", "--workspace", "--locked"]);
 await run([
-  "signtool.exe",
-  "sign",
-  "/sha1",
-  thumbprint,
-  "/fd",
-  "SHA256",
-  "/tr",
-  "http://timestamp.digicert.com",
-  "/td",
-  "SHA256",
-  installer,
+  "cargo",
+  "clippy",
+  "--workspace",
+  "--all-targets",
+  "--locked",
+  "--",
+  "-D",
+  "warnings",
 ]);
-await run(["signtool.exe", "verify", "/pa", "/all", installer]);
-await run([
-  "powershell.exe",
-  "-NoProfile",
-  "-NonInteractive",
-  "-File",
-  path.join(root, "scripts", "verify-signature.ps1"),
-  "-Path",
-  installer,
-  "-Publisher",
-  profile.publisher,
-]);
+await run([process.execPath, "test", "scripts"]);
+const installer = await packageSigned(root, version);
 const binary = path.join(
   root,
   "target",
@@ -95,7 +53,7 @@ function psLiteral(value: string) {
   return `'${value.replaceAll("'", "''")}'`;
 }
 await run([
-  "powershell.exe",
+  await powershell(),
   "-NoProfile",
   "-NonInteractive",
   "-Command",
@@ -103,7 +61,7 @@ await run([
 ]);
 const archiveBytes = await Bun.file(zip).arrayBuffer();
 const expanded = Bun.file(binary).size;
-const manifest = JSON.stringify({
+const manifest: Release = {
   schema: 1,
   version,
   channel: profile.channel,
@@ -122,17 +80,10 @@ const manifest = JSON.stringify({
       .update(new Uint8Array(archiveBytes))
       .digest("hex"),
   },
-});
+};
 await Bun.write(
   path.join(root, "dist", "release", `${profile.channel}.json`),
-  JSON.stringify({
-    payload: manifest,
-    signature: sign(
-      null,
-      Buffer.from(`glitter-boys-release-v1\n${manifest}`),
-      key,
-    ).toString("hex"),
-  }),
+  JSON.stringify(signRelease(manifest, key)),
 );
 await Bun.write(
   path.join(output, path.basename(installer)),
@@ -151,3 +102,5 @@ for (const name of await readdir(symbols))
 console.log(
   `Signed release ${version} is ready in dist/release. Publish versioned artifacts before the channel manifest; retain PDBs privately.`,
 );
+await publishLauncher(true);
+if (!process.argv.includes("--prepare-only")) await publishLauncher(false);
