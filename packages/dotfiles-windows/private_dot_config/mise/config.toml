@@ -1,5 +1,6 @@
 [tools]
 "aqua:buildkite/cli" = "3.57.0"
+"aqua:abhinav/git-spice" = "latest"
 node = "lts"
 python = "latest"
 uv = "latest"
