@@ -82,6 +82,7 @@ internal struct FacetNativeWorkspace: View {
                         .toolbar {
                             ToolbarItem(placement: .confirmationAction) {
                                 Button("Done") { settings = false }
+                                    .accessibilityIdentifier("facet.settings.done")
                             }
                         }
                 }
@@ -181,6 +182,7 @@ internal struct FacetNativeWorkspace: View {
             ToolbarItemGroup(placement: .topBarTrailing) {
                 Button("Search", systemImage: "magnifyingglass") { searching = true }
                 Button("Settings", systemImage: "gearshape") { settings = true }
+                    .accessibilityIdentifier("facet.settings.open")
             }
         #else
             ToolbarItemGroup {
@@ -206,9 +208,10 @@ internal struct FacetNativeWorkspace: View {
                         }
                     }
                     Button("Sign out of Obsidian") { _Concurrency.Task { await store.signOut() } }
+                        .accessibilityIdentifier("facet.account.signout")
                 } label: {
                     Label("Vaults and settings", systemImage: "gearshape")
-                }
+                }.accessibilityIdentifier("facet.settings.open")
                 Button {
                     window.board.toggle()
                 } label: {

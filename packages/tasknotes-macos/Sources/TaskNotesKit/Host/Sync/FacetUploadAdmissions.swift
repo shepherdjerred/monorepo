@@ -13,6 +13,17 @@ internal struct FacetUploadAdmissions {
         case accepted([ObsidianSessionEffect])
     }
     private var retained: [String: Request] = [:]
+    private(set) var revision: UInt64 = 0
+
+    var pendingCount: Int { retained.count }
+
+    /// The upload head omits blocked and later receipts, so only the complete
+    /// durable outbox count can prove that these unadmitted requests are gone.
+    mutating func retireIfEmpty(observedRevision: UInt64, pendingUploadCount: UInt64) {
+        guard revision == observedRevision, pendingUploadCount == 0 else { return }
+        retained.removeAll()
+        revision += 1
+    }
 
     mutating func attempt(
         id: String, at: UInt64, random: () -> Data,
@@ -20,6 +31,7 @@ internal struct FacetUploadAdmissions {
     ) throws -> Outcome {
         let request = retained[id] ?? Request(nonce: random(), nowMs: at)
         guard request.nonce.count == 12 else { throw FacetContractError.unsupportedResponse }
+        revision += 1
         retained[id] = request
         do {
             let effects = try queue(request)

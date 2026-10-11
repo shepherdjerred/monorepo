@@ -15,11 +15,18 @@ public struct FacetReminderDelivery: Sendable {
 
 /// Native opt-in and bounded OS delivery. Every resolved firing comes from Rust.
 public actor FacetReminders {
+    private let defaults: UserDefaults
     private var center: UNUserNotificationCenter { UNUserNotificationCenter.current() }
     private var generation: UInt64 = 0
     private var scheduling = false
     private var router: FacetNotificationRouter?
-    public init() {}
+    public init() { defaults = .standard }
+    public init(defaultsSuiteName: String) throws {
+        guard let isolatedDefaults = UserDefaults(suiteName: defaultsSuiteName) else {
+            throw FacetAcceptanceError.invalidDescriptor
+        }
+        defaults = isolatedDefaults
+    }
 
     public func installRouting(opened: @escaping @Sendable (String, String) async -> Void) {
         let delegate = FacetNotificationRouter(opened: opened)
@@ -32,14 +39,14 @@ public actor FacetReminders {
         let attempt = generation
         let granted = try await center.requestAuthorization(options: [.alert, .sound, .badge])
         guard generation == attempt else { throw FacetSyncError.cancelled }
-        UserDefaults.standard.set(granted, forKey: "Facet.reminders.enabled")
+        defaults.set(granted, forKey: "Facet.reminders.enabled")
         return granted
     }
 
     public func disable() async {
         generation += 1
         let attempt = generation
-        UserDefaults.standard.set(false, forKey: "Facet.reminders.enabled")
+        defaults.set(false, forKey: "Facet.reminders.enabled")
         let requests = await ownedRequests()
         guard generation == attempt else { return }
         let owned = requests.filter {
@@ -70,7 +77,7 @@ public actor FacetReminders {
         guard !scheduling else { throw FacetSyncError.cancelled }
         scheduling = true
         defer { scheduling = false }
-        guard UserDefaults.standard.bool(forKey: "Facet.reminders.enabled") else {
+        guard defaults.bool(forKey: "Facet.reminders.enabled") else {
             return FacetReminderDelivery(scheduled: 0, beyondBudget: 0, problemCount: 0)
         }
         generation += 1

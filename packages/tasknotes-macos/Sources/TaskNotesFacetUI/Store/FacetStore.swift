@@ -21,7 +21,7 @@ public final class FacetStore {
     internal var appliedFeedback: FacetAppliedFeedback?
     @ObservationIgnored internal var feedbackSessionID = UUID()
     @ObservationIgnored internal var feedbackOrigin: FacetFeedbackOrigin?
-    @ObservationIgnored internal var feedback = FacetNativeFeedback.shared
+    @ObservationIgnored internal var feedback: FacetNativeFeedback
     public internal(set) var isLoading = false
     public internal(set) var conflicts: [FacetConflict] = []
     public internal(set) var conflictCursor: String?
@@ -63,13 +63,14 @@ public final class FacetStore {
     public internal(set) var remoteVaults: [FacetRemoteVault] = []
     public internal(set) var vaultConnections: [FacetVaultConnection] = []
     public internal(set) var syncStates: [String: String] = [:]
+    public internal(set) var syncStatuses: [String: FacetSyncStatus] = [:]
     public internal(set) var needsStandardConsent = false
     public internal(set) var capturePreview: FacetValue?
     public internal(set) var featureResult: FacetValue?
     public internal(set) var reminderStatus: String?
     internal var notificationRoute: FacetNotificationRoute?
     internal var reminderEditor: FacetReminderEditorSelection?
-    @ObservationIgnored internal let reminders = FacetReminders()
+    @ObservationIgnored internal var reminders = FacetReminders()
     @ObservationIgnored internal var engine: FacetEngine? {
         didSet {
             if engine !== oldValue {
@@ -83,6 +84,28 @@ public final class FacetStore {
     @ObservationIgnored internal var sessions: [String: FacetObsidianSession] = [:]
     @ObservationIgnored internal var syncGeneration: UInt64 = 0 {
         didSet { if syncGeneration != oldValue { clearSavedNotice() } }
+    }
+    @ObservationIgnored internal var syncSessionGenerations: [String: UInt64] = [:]
+    @ObservationIgnored internal var preferences: UserDefaults
+    @ObservationIgnored internal var startupTask: _Concurrency.Task<Void, Never>?
+    #if os(macOS)
+        @ObservationIgnored internal var releaseSmokeConfiguration: FacetReleaseSmokeConfiguration?
+    #endif
+    #if DEBUG
+        public internal(set) var acceptanceConfiguration: FacetAcceptanceConfiguration?
+        @ObservationIgnored internal var acceptanceControl: FacetAcceptanceControl?
+    #endif
+    public var acceptanceDirectory: URL? {
+        #if DEBUG
+            acceptanceConfiguration?.stateDirectory
+        #else
+            nil
+        #endif
+    }
+    public var isAcceptanceLaunch: Bool {
+        Bundle.main.bundleIdentifier == "red.sjer.tasknotes.mac.acceptance"
+            || CommandLine.arguments.contains("--facet-acceptance-descriptor")
+            || CommandLine.arguments.contains("--facet-native-acceptance")
     }
     @ObservationIgnored internal var accountTransition = false
     @ObservationIgnored internal var foreground = true
@@ -113,7 +136,18 @@ public final class FacetStore {
         didSet { if isSaving, !oldValue { clearSavedNotice() } }
     }
 
-    public init(clock: SystemClock = SystemClock()) { self.clock = clock }
+    public init(clock: SystemClock = SystemClock()) {
+        self.clock = clock
+        if Self.requiresIsolation {
+            guard let bootstrap = UserDefaults(suiteName: "red.sjer.facet.bootstrap.\(UUID())")
+            else { preconditionFailure("Private startup preferences could not be created.") }
+            preferences = bootstrap
+            feedback = FacetNativeFeedback(defaults: bootstrap)
+        } else {
+            preferences = .standard
+            feedback = .shared
+        }
+    }
 
     public func widgetEnvelope() async -> Data? {
         guard let engine, let profileID = selectedProfileID, snapshot != nil else { return nil }
@@ -159,42 +193,6 @@ public final class FacetStore {
             approveStandard = false
         }
     #endif
-
-    public func start() async {
-        await start {
-            let support = try FileManager.default.url(
-                for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil,
-                create: true)
-            return try await FacetStartupState.open(
-                directory: support.appendingPathComponent("Facet"))
-        }
-    }
-
-    internal func start(prepare: () async throws -> FacetStartupState) async {
-        guard engine == nil, !isLoading else { return }
-        isLoading = true
-        defer { isLoading = false }
-        do {
-            let ready = try await prepare()
-            error = nil
-            engine = ready.engine
-            importer = ready.importer
-            account = ready.account
-            pendingImports = ready.pendingImports
-            profiles = ready.profiles
-            pendingActions = ready.pendingActions
-            let saved = UserDefaults.standard.string(forKey: "Facet.selectedProfile")
-            selectedProfileID = profiles.first(where: { $0.id == saved })?.id ?? profiles.first?.id
-            await refresh()
-            if foreground { await resumeSync() }
-        } catch {
-            if foreground {
-                self.error = error.localizedDescription
-            } else {
-                reportBackgroundFailure(error)
-            }
-        }
-    }
 
     public func openLocal(_ directory: URL) async {
         guard let engine else { return }
@@ -262,6 +260,16 @@ public final class FacetStore {
                 reload: { try await engine.profiles() },
                 ownsEngine: { self.engine === engine },
                 reconcile: { if self.foreground { await self.resumeSync() } }))
+    }
+}
+
+extension FacetStore {
+    public var isIsolatedLaunch: Bool { Self.requiresIsolation }
+    private static var requiresIsolation: Bool {
+        Bundle.main.bundleIdentifier == "red.sjer.tasknotes.mac.acceptance"
+            || CommandLine.arguments.contains("--facet-acceptance-descriptor")
+            || CommandLine.arguments.contains("--facet-native-acceptance")
+            || CommandLine.arguments.contains("--facet-release-smoke")
     }
 }
 

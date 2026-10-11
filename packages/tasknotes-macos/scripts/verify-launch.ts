@@ -66,7 +66,8 @@
 // launched and then exits, so a canceled job stops leaking one idle GUI app
 // per cancellation onto the persistent CI host.
 
-import { readdir } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
+import { lstat, mkdir, readdir } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 
@@ -76,6 +77,23 @@ const appPath = join(
   ".build/xcode/Build/Products/Release/TaskNotes.app",
 );
 const crashReports = join(homedir(), "Library/Logs/DiagnosticReports");
+const smokeRunID = randomUUID();
+const stateDirectory = join(
+  homedir(),
+  "Library/Containers/red.sjer.tasknotes.mac/Data/Library/Application Support/FacetReleaseSmoke",
+  smokeRunID,
+);
+
+/** A live PID and successful engine/account startup must belong to this UUID. */
+export function requireStartupMarker(
+  runID: string,
+  pid: number,
+  contents: string,
+): void {
+  if (!Number.isSafeInteger(pid) || pid <= 0 || contents !== `${runID}\n`) {
+    throw new Error("Release startup marker does not belong to this run/PID");
+  }
+}
 
 /** How long the app must survive. Two probes, so a slow crash is still caught. */
 const earlyProbeMs = 3_000;
@@ -138,10 +156,13 @@ export function excludeBaseline(
 async function runningPids(
   executablePath = `${appPath}/Contents/MacOS/TaskNotes`,
 ): Promise<readonly number[]> {
-  const child = Bun.spawn(["pgrep", "-f", executablePath], {
-    stdout: "pipe",
-    stderr: "ignore",
-  });
+  const child = Bun.spawn(
+    ["pgrep", "-f", `${executablePath}.*--facet-release-smoke ${smokeRunID}`],
+    {
+      stdout: "pipe",
+      stderr: "ignore",
+    },
+  );
   const stdout = await new Response(child.stdout).text();
   await child.exited;
   return parsePids(stdout);
@@ -197,6 +218,15 @@ async function reapOursAndExit(signal: "SIGTERM" | "SIGINT"): Promise<never> {
 }
 
 async function main(): Promise<void> {
+  // The app computes this private path independently from the UUID. No launch
+  // path override, normal profile read, or production Keychain service is used.
+  try {
+    await lstat(stateDirectory);
+    fail(`refusing an existing Release smoke run directory: ${stateDirectory}`);
+  } catch (error) {
+    if (!(error instanceof Error && "code" in error && error.code === "ENOENT"))
+      throw error;
+  }
   const beforeCrashes = await crashReportNames();
   const frontBefore = await frontmostBundleId();
 
@@ -216,7 +246,16 @@ async function main(): Promise<void> {
   console.log(`verify-launch: launching ${appPath} in the background`);
   // `-g` does not bring it to the foreground, `-j` launches it hidden, `-n`
   // opens a new instance rather than activating an existing one.
-  await run(["open", "-g", "-j", "-n", appPath]);
+  await run([
+    "open",
+    "-g",
+    "-j",
+    "-n",
+    appPath,
+    "--args",
+    "--facet-release-smoke",
+    smokeRunID,
+  ]);
 
   await sleep(earlyProbeMs);
   let pids = excludeBaseline(await runningPids(), baselinePids);
@@ -244,6 +283,42 @@ async function main(): Promise<void> {
     );
   }
 
+  if (pids.length !== 1)
+    fail("expected exactly one owned Release smoke process");
+  const pid = pids[0];
+  if (pid === undefined) fail("missing owned Release smoke process");
+  const markerPath = join(stateDirectory, `started.${pid.toString()}`);
+  const marker = Bun.file(markerPath);
+  if (!(await marker.exists()))
+    fail(`startup did not complete: missing ${markerPath}`);
+  requireStartupMarker(smokeRunID, pid, await marker.text());
+  const evidenceDirectory = join(
+    packageRoot,
+    ".build/release-smoke",
+    smokeRunID,
+  );
+  await mkdir(evidenceDirectory, { recursive: true });
+  await Bun.write(
+    join(evidenceDirectory, "provenance.json"),
+    `${JSON.stringify(
+      {
+        runID: smokeRunID,
+        processID: pid,
+        appPath,
+        stateDirectory,
+        markerPath,
+        executableSHA256: new Bun.CryptoHasher("sha256")
+          .update(
+            await Bun.file(`${appPath}/Contents/MacOS/TaskNotes`).arrayBuffer(),
+          )
+          .digest("hex"),
+        liveSyncAcceptance: false,
+      },
+      null,
+      2,
+    )}\n`,
+  );
+
   await sleep(lateProbeMs - earlyProbeMs);
   pids = excludeBaseline(await runningPids(), baselinePids);
   if (pids.length === 0) {
@@ -251,6 +326,8 @@ async function main(): Promise<void> {
       `the app died between ${earlyProbeMs / 1000}s and ${lateProbeMs / 1000}s`,
     );
   }
+  if (pids.length !== 1 || pids[0] !== pid)
+    fail("the owned Release smoke process changed");
 
   const frontAfter = await frontmostBundleId();
   if (frontAfter !== frontBefore) {
@@ -270,7 +347,7 @@ async function main(): Promise<void> {
     if (excludeBaseline(await runningPids(), baselinePids).length === 0) {
       console.log(
         `verify-launch: Release bundle launched, survived ${lateProbeMs / 1000}s, ` +
-          "never took focus, and exited on SIGTERM",
+          `completed isolated startup (${smokeRunID}), never took focus, and exited on SIGTERM`,
       );
       process.exit(0);
     }

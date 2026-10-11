@@ -1,6 +1,17 @@
 {
   "schemaVersion": 1,
   "cases": [
+    {"id":"sync-status-request","definition":"featureRequest","valid":true,"value":{"kind":"sync_status"}},
+    {"id":"sync-status-request-versioned","definition":"featureRequest","valid":true,"value":{"schemaVersion":1,"kind":"sync_status"}},
+    {"id":"sync-status-request-no-private-data","definition":"featureRequest","valid":false,"value":{"kind":"sync_status","path":"private.md"}},
+    {"id":"sync-status-cloud-pending","definition":"syncStatus","valid":true,"value":{"schemaVersion":1,"profileId":"a","profileKind":"obsidian_sync","version":42,"initialSyncComplete":false,"pendingRemoteCount":2,"pendingUploadCount":3,"conflictCount":1,"pendingMutationCount":1}},
+    {"id":"sync-status-local-ready","definition":"syncStatus","valid":true,"value":{"schemaVersion":1,"profileId":"a","profileKind":"local_folder","version":0,"initialSyncComplete":true,"pendingRemoteCount":0,"pendingUploadCount":0,"conflictCount":0,"pendingMutationCount":0}},
+    {"id":"sync-status-wrong-version","definition":"syncStatus","valid":false,"value":{"schemaVersion":2,"profileId":"a","profileKind":"obsidian_sync","version":0,"initialSyncComplete":true,"pendingRemoteCount":0,"pendingUploadCount":0,"conflictCount":0,"pendingMutationCount":0}},
+    {"id":"sync-status-negative-remote","definition":"syncStatus","valid":false,"value":{"schemaVersion":1,"profileId":"a","profileKind":"obsidian_sync","version":0,"initialSyncComplete":false,"pendingRemoteCount":-1,"pendingUploadCount":0,"conflictCount":0,"pendingMutationCount":0}},
+    {"id":"sync-status-fractional-upload","definition":"syncStatus","valid":false,"value":{"schemaVersion":1,"profileId":"a","profileKind":"obsidian_sync","version":0,"initialSyncComplete":true,"pendingRemoteCount":0,"pendingUploadCount":0.5,"conflictCount":0,"pendingMutationCount":0}},
+    {"id":"sync-status-mutations-required","definition":"syncStatus","valid":false,"value":{"schemaVersion":1,"profileId":"a","profileKind":"obsidian_sync","version":0,"initialSyncComplete":true,"pendingRemoteCount":0,"pendingUploadCount":0,"conflictCount":0}},
+    {"id":"sync-status-kind-required","definition":"syncStatus","valid":false,"value":{"schemaVersion":1,"profileId":"a","version":0,"initialSyncComplete":true,"pendingRemoteCount":0,"pendingUploadCount":0,"conflictCount":0,"pendingMutationCount":0}},
+    {"id":"sync-status-private-payload-forbidden","definition":"syncStatus","valid":false,"value":{"schemaVersion":1,"profileId":"a","profileKind":"obsidian_sync","version":0,"initialSyncComplete":true,"pendingRemoteCount":0,"pendingUploadCount":0,"conflictCount":0,"pendingMutationCount":0,"path":"private.md"}},
     {"id":"datetime-set_completion-offset","definition":"mutation","valid":true,"value":{"mutationId":"datetime","at":"2026-10-03T12:00:00Z","command":{"kind":"set_completion","path":"Tasks/a.md","completed":true,"occurrenceDate":"2027-01-01T01:00:00+02:00"}}},
     {"id":"datetime-set_completion-nanoseconds","definition":"mutation","valid":true,"value":{"mutationId":"datetime","at":"2026-10-03T12:00:00Z","command":{"kind":"set_completion","path":"Tasks/a.md","completed":true,"occurrenceDate":"2026-10-03T00:15:00.999999999Z"}}},
     {"id":"datetime-set_completion-date","definition":"mutation","valid":true,"value":{"mutationId":"datetime","at":"2026-10-03T12:00:00Z","command":{"kind":"set_completion","path":"Tasks/a.md","completed":true,"occurrenceDate":"2026-10-02"}}},

@@ -34,6 +34,9 @@ public actor FacetObsidianSession {
         case binary(UInt64, Data)
         case lost(UInt64)
         case tick
+        #if DEBUG
+            case interruption(Bool)
+        #endif
     }
     internal let engine: FacetEngine
     internal let account: FacetObsidianAccount
@@ -43,7 +46,13 @@ public actor FacetObsidianSession {
     internal let limits: ObsidianTransportLimits
     internal let events = FacetSyncEventQueue<Event>(capacity: 8)
     private let changed: @Sendable () async -> Void
-    internal let status: @Sendable (String) async -> Void
+    internal let status: @Sendable (FacetSyncStatus) async -> Void
+    internal var transportPhase: FacetSyncTransportPhase = .connecting
+    internal var processing = false
+    internal var activityRevision: UInt64 = 0
+    #if DEBUG
+        internal var acceptanceTransportInterrupted = false
+    #endif
     internal let transport = URLSession(configuration: .ephemeral)
     internal var delegate: FacetSocketDelegate?
     internal var socket: URLSessionWebSocketTask?
@@ -56,15 +65,15 @@ public actor FacetObsidianSession {
     internal var ready = false
     internal var dirty = false
     internal var stopped = false
-    private var closed = false
-    private var worker: _Concurrency.Task<Void, Never>?
+    internal var closed = false
+    internal var worker: _Concurrency.Task<Void, Never>?
     private var ticker: _Concurrency.Task<Void, Never>?
     internal var reader: _Concurrency.Task<Void, Never>?
 
     private init(
         engine: FacetEngine, account: FacetObsidianAccount, profileID: String,
         access: FacetSyncAccess, checkpoint: String, changed: @escaping @Sendable () async -> Void,
-        status: @escaping @Sendable (String) async -> Void
+        status: @escaping @Sendable (FacetSyncStatus) async -> Void
     ) throws {
         self.engine = engine
         self.account = account
@@ -84,7 +93,7 @@ public actor FacetObsidianSession {
     public static func open(
         engine: FacetEngine, account: FacetObsidianAccount, profileID: String,
         changed: @escaping @Sendable () async -> Void,
-        status: @escaping @Sendable (String) async -> Void,
+        status: @escaping @Sendable (FacetSyncStatus) async -> Void,
         retain: @escaping @Sendable (FacetObsidianSession) async -> Bool = { _ in true }
     ) async throws -> FacetObsidianSession {
         let authorized = try await account.access(profileID: profileID)
@@ -122,13 +131,16 @@ public actor FacetObsidianSession {
                     guard await events.send(.tick) else { return }
                 }
             } catch is CancellationError {} catch {
-                await status("Sync timing could not continue.")
+                transportPhase = .failed
+                await publishStatusWithoutDurableRead()
             }
         }
     }
 
     public func stop() async {
         stopped = true
+        activityRevision += 1
+        transportPhase = .stopped
         socket?.cancel(with: .goingAway, reason: nil)
         reader?.cancel()
         worker?.cancel()
@@ -136,17 +148,33 @@ public actor FacetObsidianSession {
         await worker?.value
         if worker == nil { await close() }
     }
+}
 
-    public func isIdle() -> Bool { ready && !stopped && metadata.isEmpty && queued.isEmpty }
+extension FacetObsidianSession {
+    public func isIdle() async -> Bool {
+        do { return try await currentStatus().phase == .synced } catch {
+            transportPhase = .failed
+            await publishStatusWithoutDurableRead()
+            return false
+        }
+    }
 
     private func run() async {
         do {
             let beganAt = Self.now()
+            processing = true
+            activityRevision += 1
             try await process(admit { try core.begin(nowMs: beganAt) })
+            processing = false
+            activityRevision += 1
+            try await publishStatus()
             while let event = await events.next() {
                 guard await account.allows(access) else {
+                    transportPhase = .reconnectRequired
                     break
                 }
+                processing = true
+                activityRevision += 1
                 let admittedAt = Self.now()
                 try await process(admit { try effects(for: event, nowMs: admittedAt) })
                 if case .tick = event {
@@ -158,9 +186,17 @@ public actor FacetObsidianSession {
                     await changed()
                 }
                 if ready { try await uploadPendingOwned() }
+                processing = false
+                activityRevision += 1
+                try await publishStatus()
             }
-        } catch is CancellationError {} catch { await status(Self.failureMessage(error)) }
+        } catch is CancellationError {} catch {
+            transportPhase = .failed
+        }
+        processing = false
+        activityRevision += 1
         await close()
+        await publishStatusWithoutDurableRead()
     }
 
     private func effects(for event: Event, nowMs: UInt64) throws -> [ObsidianSessionEffect] {
@@ -176,15 +212,31 @@ public actor FacetObsidianSession {
             let effects = try core.disconnected(nowMs: nowMs)
             epoch += 1
             ready = false
+            transportPhase = .offline
             return effects
         case .tick: return try core.tick(nowMs: nowMs)
+        #if DEBUG
+            case .interruption(let interrupted):
+                acceptanceTransportInterrupted = interrupted
+                epoch += 1
+                ready = false
+                reader?.cancel()
+                socket?.cancel(with: .goingAway, reason: nil)
+                socket = nil
+                transportPhase = interrupted ? .offline : .connecting
+                return try core.disconnected(nowMs: nowMs)
+        #endif
         }
     }
 
     private func close() async {
         guard !closed else { return }
         closed = true
+        activityRevision += 1
         ready = false
+        if transportPhase == .connected || transportPhase == .connecting {
+            transportPhase = stopped ? .stopped : .reconnectRequired
+        }
         ticker?.cancel()
         reader?.cancel()
         socket?.cancel(with: .goingAway, reason: nil)
@@ -195,10 +247,10 @@ public actor FacetObsidianSession {
         // boundary. An ordinary socket close preserves these receipts.
         let retiredAt = Self.now()
         do { try await retire { _ = try core.cancel(nowMs: retiredAt) } } catch {
-            await status(Self.failureMessage(error))
+            transportPhase = .failed
         }
         do { try await retire { _ = try core.unbindRuntime(nowMs: retiredAt) } } catch {
-            await status(Self.failureMessage(error))
+            transportPhase = .failed
         }
         pendingDownloads.removeAll()
         pendingMetadata.removeAll()
@@ -259,14 +311,5 @@ public actor FacetObsidianSession {
         try _Concurrency.Task.checkCancellation()
         guard !stopped, await account.allows(access) else { throw FacetSyncError.cancelled }
         try await _Concurrency.Task.sleep(for: .milliseconds(100))
-    }
-
-    private static func failureMessage(_ error: any Error) -> String {
-        if let failure = error as? FacetSyncError { return failure.localizedDescription }
-        if let failure = error as? ObsidianBoundaryError, case .Boundary(_, let detail) = failure {
-            return detail
-        }
-        return
-            "Facet could not continue Sync. Reconnect this vault after checking network and storage access."
     }
 }

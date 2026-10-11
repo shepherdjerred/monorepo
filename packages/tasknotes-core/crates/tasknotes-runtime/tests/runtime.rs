@@ -45,6 +45,8 @@ mod retired_features;
 mod retired_metadata_strict;
 #[path = "runtime_tests/strict_tasks.rs"]
 mod strict_tasks;
+#[path = "runtime_tests/sync_status.rs"]
+mod sync_status;
 #[path = "runtime_tests/temporal_writes.rs"]
 mod temporal_writes;
 #[path = "runtime_tests/uploads.rs"]

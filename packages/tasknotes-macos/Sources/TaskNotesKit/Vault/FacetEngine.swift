@@ -143,6 +143,7 @@ public actor FacetEngine {
             "undo_available": "undoAvailable",
             "conformance": "conformance",
             "reminder_plan": "reminderPlan",
+            "sync_status": "syncStatus",
         ]
         guard let kind = request.object?.fields["kind"]?.text, let definition = definitions[kind]
         else {

@@ -39,7 +39,7 @@ internal struct FacetNativeSettings: View {
                         }))
             }
             Section("Feedback") {
-                FacetFeedbackSettings()
+                FacetFeedbackSettings(store: store)
             }
             Section("Sync and recovery") {
                 Button("Refresh vault", systemImage: "arrow.clockwise") {
@@ -63,7 +63,7 @@ internal struct FacetNativeSettings: View {
                 }
                 Button("Sign out of Obsidian", role: .destructive) {
                     _Concurrency.Task { await store.signOut() }
-                }
+                }.accessibilityIdentifier("facet.account.signout")
             }
         }.navigationTitle("Settings")
     }

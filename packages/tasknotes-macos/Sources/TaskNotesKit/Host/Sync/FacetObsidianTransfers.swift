@@ -3,7 +3,10 @@ import TaskNotesUniFFI
 
 extension FacetObsidianSession {
     internal func beginReading(_ socket: URLSessionWebSocketTask, epoch current: UInt64) async {
-        guard current == epoch, await events.send(.opened(current)) else { return }
+        activityRevision += 1
+        guard current == epoch, await events.send(.opened(current)), current == epoch, !stopped
+        else { return }
+        activityRevision += 1
         let queue = events
         let limits = self.limits
         reader = _Concurrency.Task {
