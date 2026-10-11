@@ -30,6 +30,9 @@ unset($record);
 $GLOBALS['stormFixtureHistory'] = $baseline;
 $run();
 $baselineMap = $app->registry()->get('stormForumHistory');
+$baselineEntry = reset($baselineMap);
+$baselinePostId = reset($baselineEntry['posts']);
+$app->registry()->set('stormHistoryRatings', [$baselinePostId => ['counts'=>['like'=>99]]]);
 $baselinePostCount = $app->db()->fetchOne('SELECT COUNT(*) FROM xf_post');
 unset($GLOBALS['stormFixtureHistory']);
 try {
@@ -54,7 +57,8 @@ $identities = $app->registry()->get('stormForumHistoricalUsers');
 $check(count($identities) === 79, 'Historical aliases were not scoped by era/member ID');
 $check($identities['revival2016:1']['userId'] === $identities[1]['userId'] && $identities['revival2022:1']['userId'] === $identities[1]['userId'], 'Explicit owner mapping duplicated the owner across eras');
 $check(isset($map['revival2022:1']) && !isset($map[1]), 'A revival thread ID leaked into original-era redirect mappings');
-$check(count($app->registry()->get('stormHistoryRatings')) === 248 && count($app->registry()->get('stormHistoryPolls')) === 8, 'Captured historical totals missing');
+$check(!$app->registry()->get('stormHistoryRatings'), 'Legacy rating summaries were not retired');
+$check(count($app->registry()->get('stormHistoryPolls')) === 8, 'Captured closed polls missing');
 $check($app->db()->fetchOne('SELECT COUNT(*) FROM xf_reaction_content') == 0 && $app->db()->fetchOne('SELECT COUNT(*) FROM xf_poll_vote') == 0, 'Snapshot totals created fictional native voters');
 $afterUsers = $app->db()->fetchOne('SELECT COUNT(*) FROM xf_user');
 $run();
@@ -251,6 +255,10 @@ foreach (['like','agree','disagree','funny','winner','informative','useful','opt
     $app->em()->clearEntityCache();
     $freshPost = $app->em()->find('XF:Post', $reactionPost->post_id);
     $check(array_sum($freshPost->reactions) === 1 && $freshPost->reaction_score === ($type === 'disagree' ? 0 : 1), 'Native reaction count/score differs for ' . $type);
+    $run();
+    $app->em()->clearEntityCache();
+    $freshPost = $app->em()->find('XF:Post', $reactionPost->post_id);
+    $check(array_sum($freshPost->reactions) === 1 && $app->db()->fetchOne('SELECT COUNT(*) FROM xf_reaction_content WHERE content_type = ? AND content_id = ? AND reaction_user_id = ?', ['post', $reactionPost->post_id, $reactor->user_id]) == 1, 'History import altered a native member reaction');
     $reactionRepository->reactToContent($reactionId, 'post', $reactionPost->post_id, $reactor, false);
     $app->em()->clearEntityCache();
 }
@@ -293,4 +301,4 @@ try {
     if ($reply) { $reply->delete(); }
     $post = $app->em()->find('XF:Post', $thread->first_post_id); $post->message = $original; $post->save();
 }
-echo "79 era-scoped identities, 77 native profiles, 17 checkpointed avatars, 131 public discussions, 1,164 posts, eight captured polls, 248 ratings summaries, ten native reactions, migration/removal guards, replies, and edit preservation passed.\n";
+echo "79 era-scoped identities, 77 native profiles, 17 checkpointed avatars, 131 public discussions, 1,164 posts, eight captured polls, retired rating summaries, ten native reactions preserved across imports, migration/removal guards, replies, and edit preservation passed.\n";

@@ -65,7 +65,8 @@ Like, Agree, Disagree, Funny, Winner, Informative, Useful, Optimistic, Friendly,
 and Creative. Like keeps native ID 1; additional types retain registry-backed IDs.
 Disagree is neutral. Stock extras are disabled without deleting existing votes;
 independently customized reactions remain untouched. Captured aggregate ratings
-are not imported as individual votes because the voters are not recoverable.
+remain in the recovery corpus; they are neither displayed nor imported as votes
+because the voters are not recoverable. Posts display only native reactions.
 The public `/admin.php` uses XenForo authentication and required administrator
 TFA; installer, source, internal data and CLI paths remain blocked by nginx.
 
@@ -92,8 +93,9 @@ image bytes retain original source links; recovered public imagery is served loc
 `scripts/recover-captures.ts <archive directory> <repo-local recovery directory>`
 adds corroborated 2016/2022 captures and historical ratings/poll summaries. Original
 registry keys remain unchanged; revival keys use an era prefix. Only the explicitly
-identified owner shares a profile across eras. Snapshot totals are displayed with
-their capture sources and do not create native votes or change reputation. The
+identified owner shares a profile across eras. Rating totals stay in the recovery
+corpus; captured closed poll results retain their sources. The importer does not
+create voters or change reputation. The
 release applies its reviewed corpus with `--migrate`, including earlier first posts
 while retaining previous native posts and later replies.
 
