@@ -15,7 +15,7 @@ test("Storm docs deleting sync preserves the independently published archive", a
       [
         process.execPath,
         "scripts/release/deploy-site.ts",
-        "ts-mc-docs",
+        "ts-mc",
         "--dry-run",
       ],
       {
@@ -38,32 +38,13 @@ test("Storm docs deleting sync preserves the independently published archive", a
       child.exited,
     ]);
     expect(status, stderr).toBe(0);
+    expect(stdout).toContain(
+      "--- Deploy ts-mc-docs -> ts-mc-docs (https://docs.ts-mc.net)",
+    );
     expect(stdout).toContain("--exclude\nworld-archive/*\n");
     expect(stdout).toContain("--delete\n--dryrun");
     expect(stdout).toContain("s3://ts-mc-docs/");
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
-});
-
-test("the retired portal deploy ID resolves to the surviving docs site", async () => {
-  const child = Bun.spawn(
-    [process.execPath, "scripts/release/deploy-site.ts", "ts-mc", "--dry-run"],
-    {
-      cwd: new URL("../..", import.meta.url).pathname,
-      env: Bun.env,
-      stdout: "pipe",
-      stderr: "pipe",
-    },
-  );
-  const [stdout, stderr, status] = await Promise.all([
-    new Response(child.stdout).text(),
-    new Response(child.stderr).text(),
-    child.exited,
-  ]);
-  expect(status, stderr).toBe(0);
-  expect(stdout).toContain(
-    "--- Deploy ts-mc-docs -> ts-mc-docs (https://docs.ts-mc.net)",
-  );
-  expect(stdout).toContain("s3://ts-mc-docs/");
 });
