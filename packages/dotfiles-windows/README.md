@@ -14,7 +14,8 @@ Clone the monorepo to `~/Git/monorepo`, then from PowerShell:
 ```
 
 It installs Git, chezmoi, 1Password, MSYS2 and noctty with winget, installs
-fish into MSYS2, applies this source, installs the Fisher plugins, and installs
+fish into MSYS2, turns on Developer Mode (one admin prompt; chezmoi needs it to
+create symlinks), applies this source, installs the Fisher plugins, and installs
 the Ubuntu WSL distro. Re-running it is safe.
 
 ## Shell

@@ -27,6 +27,14 @@ $nsswitch = "$msys\etc\nsswitch.conf"
 [Environment]::SetEnvironmentVariable('MSYS2_PATH_TYPE', 'inherit', 'User')
 $env:MSYS2_PATH_TYPE = 'inherit'
 
+# chezmoi creates symlinks (~/.claude/CLAUDE.md, ~/.codex/AGENTS.md), which
+# non-elevated processes may only do with Developer Mode on.
+$devMode = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock'
+if ((Get-ItemProperty $devMode -ErrorAction SilentlyContinue).AllowDevelopmentWithoutDevLicense -ne 1) {
+    $p = Start-Process reg.exe -Verb RunAs -Wait -PassThru -ArgumentList 'add', 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock', '/v', 'AllowDevelopmentWithoutDevLicense', '/t', 'REG_DWORD', '/d', '1', '/f'
+    if ($p.ExitCode -ne 0) { throw "Enabling Developer Mode failed with exit code $($p.ExitCode)" }
+}
+
 Write-Host 'Sign in to 1Password and enable its CLI integration before applying.'
 Invoke-Native { chezmoi init --apply --source $source }
 
