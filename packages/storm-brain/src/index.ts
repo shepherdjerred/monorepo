@@ -2,11 +2,7 @@ import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-sou
 import { createBrainApp, createBrainLogger } from "./app.ts";
 import { createBrain } from "./brain.ts";
 import { loadBrainConfig } from "./config.ts";
-import {
-  createFlowFlags,
-  initBrainFlags,
-  shutdownBrainFlags,
-} from "./flags.ts";
+import { initBrainFlags, shutdownBrainFlags } from "./flags.ts";
 import { createBrainMetrics, createMetricsHandler } from "./metrics.ts";
 import { isEnabled } from "@shepherdjerred/feature-flags";
 import { ConversationBudget } from "./conversation-budget.ts";
@@ -35,7 +31,6 @@ if (budgetPath === undefined || budgetPath.trim() === "")
 const conversationBudget = new ConversationBudget(budgetPath);
 const app = createBrainApp(config, {
   brain,
-  flags: createFlowFlags(),
   logger,
   metrics,
   conversation: {

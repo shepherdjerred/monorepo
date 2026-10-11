@@ -11,8 +11,6 @@ import {
 } from "@shepherdjerred/feature-flags/observability.ts";
 import { z } from "zod";
 
-import type { DigestGatePort } from "#application/ports";
-
 const TARGETING_KEY = "alert-dashboard";
 
 const DEFINITION = {
@@ -34,12 +32,6 @@ const DEFINITION = {
     default: "dependencies@sjer.red",
     names: { flag: "alert-dashboard-email-to" },
   },
-  opsDigestEmailEnabled: {
-    schema: z.boolean(),
-    sources: ["flag", "default"],
-    default: false,
-    names: { flag: "ops-digest-email-enabled" },
-  },
 } as const;
 
 function createResolver() {
@@ -49,7 +41,6 @@ function createResolver() {
       flag: createFlagConfigSource({
         targetingKey: TARGETING_KEY,
         kinds: {
-          opsDigestEmailEnabled: "boolean",
           alertEmailEnabled: "boolean",
           alertEmailFrom: "string",
           alertEmailTo: "string",
@@ -120,14 +111,14 @@ export function flagMetricsRecorder(sink: FlagMetricSink): FlagMetricsRecorder {
 }
 
 /**
- * Initialize the process-wide flag client (one per process) and return the
- * digest gate. `FEATURE_FLAGS_MODE`, `FLIPT_URL`, `FLIPT_NAMESPACE`, and
+ * Initialize the process-wide flag client (one per process).
+ * `FEATURE_FLAGS_MODE`, `FLIPT_URL`, `FLIPT_NAMESPACE`, and
  * `FLIPT_ENVIRONMENT` are bootstrap variables read by the flags package.
  */
-export async function createDigestGate(options: {
+export async function initFeatureFlagClient(options: {
   environment: InitFeatureFlagsOptions["environment"];
   metrics: FlagMetricsRecorder;
-}): Promise<DigestGatePort & { shutdown: () => Promise<void> }> {
+}): Promise<{ shutdown: () => Promise<void> }> {
   await initFeatureFlags({
     ...(options.environment === undefined
       ? {}
@@ -143,10 +134,5 @@ export async function createDigestGate(options: {
       );
     },
   });
-  const resolver = createResolver();
-  return {
-    digestEmailEnabled: () =>
-      resolver.value("opsDigestEmailEnabled", { targetingKey: TARGETING_KEY }),
-    shutdown: () => shutdownFeatureFlags(),
-  };
+  return { shutdown: () => shutdownFeatureFlags() };
 }

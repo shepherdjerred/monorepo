@@ -30,12 +30,6 @@ const DEFINITION = {
       "climate.bedroom:Bedroom,climate.living_room:Living Room,climate.master_bathroom:Master Bathroom,climate.guest_bathroom:Guest Bathroom,climate.office:Office,climate.guest_room:Guest Room",
     names: { flag: "trmnl-ha-climate-entities" },
   },
-  petDashboardEnabled: {
-    schema: z.boolean(),
-    sources: ["flag", "default"],
-    default: false,
-    names: { flag: "pet-dashboard-enabled" },
-  },
 } as const;
 
 let resolver: ReturnType<typeof createResolver> | undefined;
@@ -47,7 +41,6 @@ function createResolver() {
       flag: createFlagConfigSource({
         targetingKey: "trmnl-dashboard",
         kinds: {
-          petDashboardEnabled: "boolean",
           presenceEntities: "string",
           securityEntities: "string",
           climateEntities: "string",
@@ -79,17 +72,6 @@ export async function initializeDynamicConfig(
     },
   });
   resolver = createResolver();
-}
-
-export async function petDashboardEnabled(): Promise<boolean> {
-  if (resolver === undefined) {
-    throw new Error(
-      "dynamic config read before initializeDynamicConfig(); call it during startup",
-    );
-  }
-  return resolver.value("petDashboardEnabled", {
-    targetingKey: "trmnl-dashboard",
-  });
 }
 
 /** Resolve entity selection for each home payload, using the existing client. */

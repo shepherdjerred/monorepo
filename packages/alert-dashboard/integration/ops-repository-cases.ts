@@ -105,15 +105,6 @@ export function registerOpsRepositoryCases(): void {
         outcome: "done",
         status: "sent",
       });
-      expect(await opsRepository.recordDigestSkip(DAILY, 700n)).toEqual({
-        created: false,
-        status: "sent",
-      });
-      const weekly = { ...DAILY, kind: "weekly" as const, messageId: "<w@x>" };
-      expect(await opsRepository.recordDigestSkip(weekly, 700n)).toEqual({
-        created: true,
-        status: "skipped",
-      });
     });
 
     it("derives alert changes and incident stats from the ledger", async () => {

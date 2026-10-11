@@ -52,14 +52,6 @@ export const generateImageTool = createTool({
     try {
       signal.throwIfAborted();
       const config = getConfig();
-
-      if (!config.imageGeneration.enabled) {
-        return {
-          success: false,
-          message: "Image generation is disabled in configuration",
-        };
-      }
-
       const runtime = getLlmRuntime();
       const imageModel = config.llm.imageModel;
       const requestContext = getRequestContext();

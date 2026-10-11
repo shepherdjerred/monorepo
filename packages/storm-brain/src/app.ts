@@ -7,7 +7,6 @@ import {
   type BrainDependencies,
 } from "./brain.ts";
 import type { BrainConfig } from "./config.ts";
-import type { FlowFlags } from "./flags.ts";
 import type { BrainMetrics } from "./metrics.ts";
 import { ClassifyRequestSchema, TriageRequestSchema } from "./schemas.ts";
 import type { AggregateLlmUsage } from "@shepherdjerred/llm-runtime";
@@ -23,7 +22,6 @@ export type BrainLogger = {
 
 export type BrainAppDependencies = {
   brain: BrainDependencies;
-  flags: FlowFlags;
   logger: BrainLogger;
   metrics: BrainMetrics;
   conversation: { enabled: () => Promise<boolean>; decide: Conversation };
@@ -150,7 +148,6 @@ export function createBrainApp(
   app.post(
     "/v1/classify",
     flowRoute("classify", ClassifyRequestSchema, {
-      enabled: dependencies.flags.classifyEnabled,
       decide: dependencies.brain.classify,
       config,
       dependencies,
@@ -159,7 +156,6 @@ export function createBrainApp(
   app.post(
     "/v1/triage",
     flowRoute("triage", TriageRequestSchema, {
-      enabled: dependencies.flags.triageEnabled,
       decide: dependencies.brain.triage,
       config,
       dependencies,
@@ -179,7 +175,8 @@ export function createBrainApp(
 }
 
 type FlowRouteOptions<Request, Body> = {
-  enabled: () => Promise<boolean>;
+  /** Only the conversation flow is still gated by a rollout flag. */
+  enabled?: () => Promise<boolean>;
   decide: (request: Request) => Promise<BrainDecision<Body>>;
   config: BrainConfig;
   dependencies: BrainAppDependencies;
@@ -317,7 +314,7 @@ async function decide<Request, Body>(
   const { request, options, stopTimer, outcome } = args;
   const { dependencies } = options;
   try {
-    if (!(await options.enabled())) {
+    if (options.enabled !== undefined && !(await options.enabled())) {
       stopTimer();
       outcome("disabled");
       dependencies.logger.info("Flow is disabled by flag", { flow });

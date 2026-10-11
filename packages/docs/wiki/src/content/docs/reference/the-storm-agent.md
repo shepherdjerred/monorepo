@@ -55,14 +55,12 @@ it.
 
 ## Flipt flags
 
-Namespace `storm`, environment `prod`. Both default off; flipping needs no
-plugin restart.
+Namespace `storm`, environment `prod`. Classification and triage are always
+on; the brain gates only conversation (`storm-brain-conversation-enabled`).
 
-| Flag                           | Effect                                                     |
-| ------------------------------ | ---------------------------------------------------------- |
-| `storm-brain-classify-enabled` | `POST /v1/classify` answers; else 503                      |
-| `storm-brain-triage-enabled`   | `POST /v1/triage` answers; else 503                        |
-| `storm-brain-model`            | Selects the model on brain startup; restart brain to apply |
+| Flag                | Effect                                                     |
+| ------------------- | ---------------------------------------------------------- |
+| `storm-brain-model` | Selects the model on brain startup; restart brain to apply |
 
 A 503 completes the plugin flow silently and records nothing.
 
