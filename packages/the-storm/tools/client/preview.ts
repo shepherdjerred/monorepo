@@ -20,6 +20,8 @@ import { verifyDuelClock } from "./verify-duel-clock.ts";
 import { verifyDuelVideo } from "./verify-duel-video.ts";
 import { startClient } from "./process.ts";
 import { stageMap } from "#learning/maps/stage.ts";
+import { status as readRwfMatchStatus } from "#e2e/harness/rwf-match.ts";
+import { watchRwfDuels } from "./rwf-duel-rejoin.ts";
 
 const packageRoot = path.resolve(import.meta.dirname, "../..");
 
@@ -286,6 +288,29 @@ async function run(
     path.join(runState.artifacts, "session.json"),
     JSON.stringify(session, null, 2),
   );
+  if (options.rwfDuel) {
+    const rejoinController = new AbortController();
+    const rejoinTask = watchRwfDuels({
+      readStatus: () => readRwfMatchStatus(rcon),
+      sendCommand: (text) => request(session, "command", { text }),
+      shouldStop: () => rejoinController.signal.aborted,
+      onRejoined: () => {
+        console.warn("RWF preview: rejoined the next duel as Trooper");
+      },
+      onError: (error) => {
+        console.warn(
+          `RWF preview auto-rejoin failed: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      },
+    });
+    runState.cleanup.push(async () => {
+      rejoinController.abort();
+      await rejoinTask;
+    });
+    console.warn(
+      "RWF duel preview: after your first completed match, the preview will rejoin you as Trooper automatically",
+    );
+  }
   console.warn(
     `Preview ready. Session: ${path.join(runState.artifacts, "session.json")}`,
   );
