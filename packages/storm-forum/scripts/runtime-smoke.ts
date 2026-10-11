@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import { NativeConnection } from "@temporalio/worker";
 import { createForumConfig } from "#src/config.ts";
+import { MinecraftStatusSchema } from "#src/minecraft.ts";
+import { publicQueryContract } from "#src/minecraft-query.ts";
+assert.equal(publicQueryContract.schemaVersion, 1);
+MinecraftStatusSchema.parse(
+  await Bun.file("/opt/storm-forum/test/fixtures/minecraft-status.json").json(),
+);
 assert.equal(typeof NativeConnection.connect, "function");
 assert.equal(await createForumConfig().value("registrationEnabled"), false);
 assert.equal(

@@ -40,7 +40,25 @@ export const ManifestSchema = z
         namespace: z.string(),
         statefulSet: z.string(),
         host: z.string(),
-        port: z.number().int().positive(),
+        queryPort: z.number().int().min(1).max(65_535),
+        bedrockPort: z.number().int().min(1).max(65_535),
+        connections: z
+          .object({
+            java: z
+              .object({
+                address: z.string().min(1),
+                host: z.string().min(1),
+                port: z.number().int().min(1).max(65_535),
+              })
+              .strict(),
+            bedrock: z
+              .object({
+                host: z.string().min(1),
+                port: z.number().int().min(1).max(65_535),
+              })
+              .strict(),
+          })
+          .strict(),
         timeoutMs: z.number().positive(),
         staleAfterSeconds: z.number().positive(),
       })

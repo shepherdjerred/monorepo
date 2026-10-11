@@ -2,6 +2,10 @@
   "name": "@shepherdjerred/the-storm",
   "private": true,
   "type": "module",
+  "exports": {
+    "./public-status.json": "./public-status.json",
+    "./server/owned/plugins/TheStorm/plot-reconcile.json": "./server/owned/plugins/TheStorm/plot-reconcile.json"
+  },
   "imports": {
     "#e2e/*": "./tests/e2e/*"
   },

@@ -84,6 +84,22 @@ try {
     await run([
       "run",
       "--rm",
+      "-v",
+      `${path.resolve(import.meta.dirname, "..", "addon")}:/opt/storm-forum/addon:ro`,
+      "-v",
+      `${path.resolve(import.meta.dirname, "..", "config")}:/opt/storm-forum/config:ro`,
+      "-v",
+      `${path.resolve(import.meta.dirname, "..", "test")}:/opt/storm-forum/test:ro`,
+      "--entrypoint",
+      "php",
+      "storm-forum:dev",
+      "/opt/storm-forum/test/minecraft.php",
+    ]),
+  );
+  process.stdout.write(
+    await run([
+      "run",
+      "--rm",
       "--read-only",
       "--tmpfs",
       "/app/forum:uid=1000,gid=1000",
@@ -286,6 +302,16 @@ try {
       "/app/forum",
       app,
       "php",
+      "/opt/storm-forum/test/minecraft-endpoint.php",
+    ]),
+  );
+  process.stdout.write(
+    await run([
+      "exec",
+      "-w",
+      "/app/forum",
+      app,
+      "php",
       "/opt/storm-forum/test/history.php",
     ]),
   );
@@ -387,6 +413,11 @@ try {
       "/opt/storm-forum/test/preview.php",
     ]);
     await run(["exec", app, "mkdir", "-p", "/app/forum/styles/storm"]);
+    await run([
+      "cp",
+      path.resolve(import.meta.dirname, "../dist/minecraft.js"),
+      `${app}:/app/forum/styles/storm/minecraft.js`,
+    ]);
     await run([
       "cp",
       `${path.resolve(import.meta.dirname, "../../storm-theme/assets")}/.`,

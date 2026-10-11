@@ -266,6 +266,7 @@ function serverEnv(server: {
   return {
     ...basePaperEnv(server.warmCache ? "seeded" : "download"),
     ENABLE_RCON: "true",
+    ENABLE_QUERY: "true",
     RCON_PASSWORD: server.rconPassword,
     STORM_BRAIN_BEARER_TOKEN: server.brainToken,
     ...server.extra,
@@ -339,6 +340,8 @@ export async function startServer(
     `127.0.0.1:${options.gamePort?.toString() ?? ""}:25565`,
     "-p",
     "127.0.0.1::25575",
+    "-p",
+    "127.0.0.1::25565/udp",
     "-v",
     `${pluginsDir}:/plugins:ro`,
     ...(options.warmCache ? warmMountArgs(cacheDir) : []),
