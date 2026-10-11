@@ -1,3 +1,6 @@
+import { protectArgoTokenDefault } from "./argocd-options.ts";
+import { isArgoHelpCommand } from "./argocd-metadata.ts";
+
 export const PASSTHROUGH_COMMANDS = [
   "gh",
   "woodpecker",
@@ -173,6 +176,9 @@ export function isCredentialFreePassthrough(
   if (!PASSTHROUGH_REGISTRY.has(command)) {
     return false;
   }
+  // ArgoCD's help command is local regardless of its operands. Help flags on
+  // bare command paths are also local; operational payloads retain credentials.
+  if (command === "argocd" && isArgoHelpCommand(args)) return true;
   // Inspect the entire invocation: flags in a command payload or after `--`
   // must not turn an operational command into a credential-free dispatch.
   if (args.length === 1) {
@@ -271,6 +277,17 @@ function resolveExecutable(invocation: PassthroughInvocation): string | null {
   return lookupExecutable(invocation.executable, invocation.env["PATH"]);
 }
 
+function nativeEnvironment(invocation: PassthroughInvocation) {
+  const env = { ...invocation.env };
+  if (invocation.executable !== "argocd") return env;
+  const options = env["ARGOCD_OPTS"] ?? "";
+  // ArgoCD's flag default and API client independently read the token. An
+  // empty flag default prevents help/usage disclosure while the API client
+  // still reads ARGOCD_AUTH_TOKEN; explicit CLI flags retain precedence.
+  env["ARGOCD_OPTS"] = protectArgoTokenDefault(options);
+  return env;
+}
+
 export function runPassthrough(
   invocation: PassthroughInvocation,
 ): Promise<number> {
@@ -291,7 +308,7 @@ export function runPassthrough(
     : process.execve(
         executable,
         [invocation.executable, ...invocation.args],
-        invocation.env,
+        nativeEnvironment(invocation),
       );
 }
 
@@ -299,7 +316,8 @@ export function runPassthrough(
  * Run a passthrough child in place without replacing this process.
  *
  * Unlike {@link runPassthrough} (execve, for CLI dispatch), this awaits exit
- * so library callers can react to the code. Streams inherit the terminal.
+ * so library callers can react to the code. Both paths keep ArgoCD's token
+ * out of its help defaults while preserving native streams.
  */
 export async function spawnPassthroughInvocation(
   invocation: PassthroughInvocation,
@@ -311,7 +329,7 @@ export async function spawnPassthroughInvocation(
     );
   }
   const child = Bun.spawn([executable, ...invocation.args], {
-    env: { ...invocation.env },
+    env: nativeEnvironment(invocation),
     stdio: ["inherit", "inherit", "inherit"],
   });
   return child.exited;

@@ -223,7 +223,26 @@ async function runToolkit(
 }
 
 describe("passthrough subprocess", () => {
-  test.each([["--help"], ["-h"], ["--version"], ["version", "--client"]])(
+  test.each([
+    ["--help"],
+    ["-h"],
+    ["--version"],
+    ["version", "--client"],
+    ["app", "--help"],
+    ["app", "rollback", "--help"],
+    ["account", "generate-token", "-h"],
+    ["help"],
+    ["help", "app", "rollback"],
+    ["help", "app", "--loglevel", "debug"],
+    ["help", "--", "app"],
+    ["--grpc-web", "--loglevel", "debug", "help", "app"],
+    ["--grpc-web=false", "-H", "example: value", "help", "app"],
+    ["-Hexample:value", "help", "app"],
+    ["--help=true"],
+    ["app", "rollback", "--help=true"],
+    ["app", "rollback", "-h=1"],
+    ["--loglevel", "debug", "app", "rollback", "--help"],
+  ])(
     "does not forward an ArgoCD token to metadata command %s",
     async (...args) => {
       const directory = await fakePath();
@@ -306,20 +325,27 @@ exit "$FAKE_EXIT_CODE"
     expect(result.stderr).toBe("toolkit: required executable not found: cf\n");
   });
 
-  test("mirrors child signal termination", async () => {
-    const directory = await fakePath();
-    await writeExecutable(directory, "tailscale", "#!/bin/sh\nkill -TERM $$\n");
-    const result = await runToolkit(directory, ["tailscale"], "");
-    expect(result.code).toBe(143);
-    expect(result.signalCode).toBe("SIGTERM");
-  });
+  test.each(["tailscale", "argocd"])(
+    "%s mirrors child signal termination",
+    async (command) => {
+      const directory = await fakePath();
+      await writeExecutable(directory, command, "#!/bin/sh\nkill -TERM $$\n");
+      const result = await runToolkit(directory, [command], "", {
+        extraEnv: { ARGOCD_AUTH_TOKEN: "synthetic-operator-token" },
+      });
+      expect(result.code).toBe(143);
+      expect(result.signalCode).toBe("SIGTERM");
+    },
+  );
 
-  test("process replacement preserves application-specific signal handling", async () => {
-    const directory = await fakePath();
-    await writeExecutable(
-      directory,
-      "tailscale",
-      `#!${process.execPath}
+  test.each(["tailscale", "argocd"])(
+    "%s preserves application-specific signal handling",
+    async (command) => {
+      const directory = await fakePath();
+      await writeExecutable(
+        directory,
+        command,
+        `#!${process.execPath}
 process.on("SIGQUIT", () => {
   console.log("received");
   process.exit(0);
@@ -327,44 +353,203 @@ process.on("SIGQUIT", () => {
 console.log("ready");
 setInterval(() => {}, 1000);
 `,
-    );
-    const entrypoint = path.resolve(import.meta.dir, "../../src/index.ts");
-    const child = Bun.spawn([process.execPath, entrypoint, "tailscale"], {
-      env: { ...Bun.env, PATH: `${directory}:/usr/bin:/bin` },
-      stdin: "ignore",
-      stdout: "pipe",
-      stderr: "pipe",
-    });
-    const reader = child.stdout.getReader();
-    const decoder = new TextDecoder();
-    let stdout = "";
-    while (!stdout.includes("ready\n")) {
-      const read = await Promise.race([
-        reader.read(),
-        Bun.sleep(5000).then(() => {
-          throw new Error("Timed out waiting for the passthrough child");
-        }),
-      ]);
-      if (read.done) {
-        throw new Error("Passthrough child exited before announcing readiness");
+      );
+      const entrypoint = path.resolve(import.meta.dir, "../../src/index.ts");
+      const child = Bun.spawn([process.execPath, entrypoint, command], {
+        env: {
+          ...Bun.env,
+          PATH: `${directory}:/usr/bin:/bin`,
+          ARGOCD_AUTH_TOKEN: "synthetic-operator-token",
+        },
+        stdin: "ignore",
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      const reader = child.stdout.getReader();
+      const decoder = new TextDecoder();
+      let stdout = "";
+      while (!stdout.includes("ready\n")) {
+        const read = await Promise.race([
+          reader.read(),
+          Bun.sleep(5000).then(() => {
+            throw new Error("Timed out waiting for the passthrough child");
+          }),
+        ]);
+        if (read.done) {
+          throw new Error(
+            "Passthrough child exited before announcing readiness",
+          );
+        }
+        stdout += decoder.decode(read.value, { stream: true });
       }
-      stdout += decoder.decode(read.value, { stream: true });
-    }
-    child.kill("SIGQUIT");
-    while (true) {
-      const read = await reader.read();
-      if (read.done) {
-        break;
+      child.kill("SIGQUIT");
+      while (true) {
+        const read = await reader.read();
+        if (read.done) {
+          break;
+        }
+        stdout += decoder.decode(read.value, { stream: true });
       }
-      stdout += decoder.decode(read.value, { stream: true });
-    }
-    stdout += decoder.decode();
-    const exitCode = await child.exited;
-    expect(stdout).toContain("ready");
-    expect(stdout).toContain("received");
-    expect(exitCode).toBe(0);
-    expect(child.signalCode).toBeNull();
+      stdout += decoder.decode();
+      const exitCode = await child.exited;
+      expect(stdout).toContain("ready");
+      expect(stdout).toContain("received");
+      expect(exitCode).toBe(0);
+      expect(child.signalCode).toBeNull();
+    },
+  );
+});
+
+test("hides the native token default while preserving authentication, options, streams and exit", async () => {
+  const directory = await fakePath();
+  await writeExecutable(
+    directory,
+    "argocd",
+    `#!${process.execPath}
+const token = process.env.ARGOCD_AUTH_TOKEN;
+if (!token) throw new Error("Authentication was lost");
+const input = await Bun.stdin.text();
+await Bun.stdout.write("stdout:" + process.env.ARGOCD_OPTS + ":" + input);
+console.error("stderr:preserved");
+process.exit(23);
+`,
+  );
+  const result = await runToolkit(
+    directory,
+    ["argocd", "app", "get", "--invalid"],
+    "input\n",
+    {
+      extraEnv: {
+        ARGOCD_AUTH_TOKEN: "synthetic-operator-token",
+        ARGOCD_OPTS: "--loglevel debug",
+      },
+    },
+  );
+  expect(result.code).toBe(23);
+  expect(result.stdout).toBe('stdout:--auth-token "" --loglevel debug:input\n');
+  expect(result.stderr).toBe("stderr:preserved\n");
+});
+test("library Argo passthrough protects help defaults and returns a signal exit without terminating its caller", async () => {
+  const directory = await fakePath();
+  await writeExecutable(
+    directory,
+    "argocd",
+    '#!/bin/sh\nprintf "%s" "$ARGOCD_OPTS"\nkill -TERM $$\n',
+  );
+  const runner = path.join(directory, "library.ts");
+  const module = path.resolve(import.meta.dir, "../../src/lib/passthrough.ts");
+  await Bun.write(
+    runner,
+    `import { spawnPassthroughInvocation } from ${JSON.stringify(module)};
+const code = await spawnPassthroughInvocation({executable:"argocd",args:["app","list"],env:Bun.env});
+console.log("library returned:" + code);
+`,
+  );
+  const child = Bun.spawn([process.execPath, runner], {
+    env: {
+      ...Bun.env,
+      PATH: `${directory}:/usr/bin:/bin`,
+      ARGOCD_AUTH_TOKEN: "synthetic-operator-token",
+    },
+    stdout: "pipe",
+    stderr: "pipe",
   });
+  const [stdout, stderr, code] = await Promise.all([
+    new Response(child.stdout).text(),
+    new Response(child.stderr).text(),
+    child.exited,
+  ]);
+  expect(code).toBe(0);
+  expect(stdout).toBe('--auth-token ""library returned:143\n');
+  expect(stderr).toBe("");
+});
+
+test.each(["--auth-token synthetic-secret", "--auth-token=synthetic-secret"])(
+  "rejects token defaults in ARGOCD_OPTS without echoing credentials: %s",
+  async (options) => {
+    const directory = await fakePath();
+    await writeExecutable(
+      directory,
+      "argocd",
+      "#!/bin/sh\nprintf 'must not run'\n",
+    );
+    const result = await runToolkit(
+      directory,
+      ["argocd", "app", "get", "--help"],
+      "",
+      {
+        extraEnv: {
+          ARGOCD_AUTH_TOKEN: "synthetic-operator-token",
+          ARGOCD_OPTS: options,
+        },
+      },
+    );
+    expect(result.code).toBe(1);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toContain("use ARGOCD_AUTH_TOKEN instead");
+    expect(result.stderr).not.toContain("synthetic-secret");
+  },
+);
+
+test("authenticated Argo keeps terminal detection and waits for a negative confirmation", async () => {
+  const directory = await fakePath();
+  await writeExecutable(
+    directory,
+    "argocd",
+    `#!${process.execPath}
+if (!process.stdin.isTTY || !process.stdout.isTTY || !process.stderr.isTTY)
+  throw new Error("Lost native terminal");
+if (!process.env.ARGOCD_AUTH_TOKEN) throw new Error("Lost authentication");
+process.stdout.write("Proceed? ");
+process.stdin.once("data", (input) => {
+  console.log(input.toString().trim() === "n" ? "declined" : "unexpected answer");
+  process.exit(0);
+});
+`,
+  );
+  let output = "";
+  let answered = false;
+  const terminal = new Bun.Terminal({
+    cols: 80,
+    rows: 24,
+    data(term, bytes) {
+      output += Buffer.from(bytes).toString();
+      if (!answered && output.includes("Proceed? ")) {
+        answered = true;
+        term.write("n\n");
+      }
+    },
+  });
+  const child = Bun.spawn(
+    [
+      process.execPath,
+      path.resolve(import.meta.dir, "../../src/index.ts"),
+      "argocd",
+      "app",
+      "delete",
+      "synthetic-app",
+    ],
+    {
+      env: {
+        ...Bun.env,
+        PATH: `${directory}:/usr/bin:/bin`,
+        ARGOCD_AUTH_TOKEN: "synthetic-operator-token",
+        ARGOCD_OPTS: "",
+      },
+      terminal,
+      timeout: 5000,
+    },
+  );
+  try {
+    expect(await child.exited).toBe(0);
+    expect(answered).toBe(true);
+    expect(output).toContain("declined");
+  } finally {
+    terminal.close();
+  }
+});
+
+describe("unsupported commands", () => {
   for (const args of [["gf"], ["pr", "logs"], ["pr", "detect"]]) {
     test(`rejects removed command ${args.join(" ")}`, async () => {
       const directory = await fakePath();
