@@ -10,7 +10,7 @@ import {
 } from "./dataset.ts";
 
 const PIN: StageDatasetPin = StageDatasetPinSchema.parse({
-  schemaVersion: 2,
+  schemaVersion: 3,
   runtime: { analysisEnabled: false, model: "gpt-5.6-luna" },
   stage: "beta",
   createdAt: "2026-09-19T00:00:00.000Z",
@@ -18,7 +18,6 @@ const PIN: StageDatasetPin = StageDatasetPinSchema.parse({
     dir: "/data/stage-dataset/beta/report-lake",
     buildId: "build-123",
     schemaFingerprint: "schema-1",
-    puuidRemapFingerprint: "abc123",
     pulledAt: "2026-09-19T00:00:00.000Z",
     sourcePod: "scout-beta-0",
   },
@@ -62,11 +61,6 @@ function facts(
     pinnedWritableRows: overrides.pinnedWritableRows ?? {
       ConfirmationIntent: "d41d8cd9",
     },
-    // `in` rather than `??`: an explicitly-undefined fingerprint is the case
-    // under test, and a nullish fallback would quietly restore the default.
-    lakeFingerprint:
-      "lakeFingerprint" in overrides ? overrides.lakeFingerprint : "abc123",
-    databaseFingerprint: overrides.databaseFingerprint ?? "abc123",
     accountRows: overrides.accountRows ?? { parquet: 100, database: 120 },
     sampledPuuids: overrides.sampledPuuids ?? {
       checked: 25,
@@ -86,6 +80,14 @@ function environment(
 }
 
 describe("StageDatasetPinSchema", () => {
+  test.each([1, 2])(
+    "rejects retired version %s with a recapture instruction",
+    (schemaVersion) => {
+      expect(() =>
+        StageDatasetPinSchema.parse({ ...PIN, schemaVersion }),
+      ).toThrow("re-capture a fresh v3 pin");
+    },
+  );
   test("rejects unknown fields rather than ignoring them", () => {
     expect(() =>
       StageDatasetPinSchema.parse({ ...PIN, somethingElse: true }),
@@ -141,22 +143,6 @@ describe("datasetCoherenceIssues", () => {
     ]);
   });
 
-  test("rejects a fingerprint mismatch — the silent identity-split case", () => {
-    const issues = datasetCoherenceIssues(
-      facts({ databaseFingerprint: "different" }),
-    );
-    expect(issues).toHaveLength(1);
-    expect(issues[0]).toContain("PUUID remap fingerprint differs");
-  });
-
-  test("rejects a build that records no fingerprint at all", () => {
-    const issues = datasetCoherenceIssues(
-      facts({ lakeFingerprint: undefined }),
-    );
-    expect(issues).toHaveLength(1);
-    expect(issues[0]).toContain("cannot be proven");
-  });
-
   test("allows the database to hold more accounts than the lake", () => {
     // The lake is pulled first, so the database is the later of the two.
     expect(
@@ -186,7 +172,7 @@ describe("datasetCoherenceIssues", () => {
     expect(
       datasetCoherenceIssues(
         facts({
-          databaseFingerprint: "different",
+          snapshotId: "different",
           accountRows: { parquet: 200, database: 100 },
           sampledPuuids: { checked: 25, missingFromDatabase: 3 },
         }),

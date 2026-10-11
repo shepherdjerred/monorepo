@@ -1,6 +1,5 @@
 import { mkdir, rm, unlink } from "node:fs/promises";
 import path from "node:path";
-import { RAW_DOCUMENT_LAKE_COLUMNS } from "@scout-for-lol/data/model/reports/raw-document-lake-columns.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import configuration from "#src/configuration.ts";
 import { createLogger } from "#src/logger.ts";
@@ -13,10 +12,13 @@ type CompactionSummary = PublishedCompactionSummary;
 import { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
 import { copyNdjsonToParquet } from "#src/report-lake/parquet/copy-ndjson.ts";
 import { createS3Client } from "#src/storage/s3-client.ts";
+import { reportLakeSchemaUpgradeEnabled } from "#src/config/report-lake-schema-upgrade.ts";
+import { readBuildFingerprint } from "#src/report-lake/build-manifest.ts";
 import {
-  loadPuuidRemap,
-  puuidRemapFingerprint,
-} from "#src/report-lake/puuid-remap.ts";
+  rawDocumentColumns,
+  reportLakeLayout,
+  type ReportLakeLayout,
+} from "#src/report-lake/schema-upgrade/layout.ts";
 import {
   populateMatchesFromS3,
   populatePrematchFromS3,
@@ -27,6 +29,7 @@ import {
   gcOldBuilds,
   newBuildId,
   publishBuild,
+  readCurrentBuildDir,
 } from "#src/report-lake/paths.ts";
 import {
   MATCH_LAKE_COLUMNS,
@@ -44,10 +47,35 @@ import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import { writeAccountsParquet } from "#src/report-lake/compact-accounts.ts";
 import { rebuildTimelineParquet } from "#src/report-lake/timeline-compaction.ts";
 import type { CompactionOptions } from "#src/report-lake/compaction-types.ts";
+import { validateStagingSnapshot } from "#src/report-lake/read-staging-rows.ts";
+import { validatePreparedBuild } from "#src/report-lake/schema-upgrade/validate-build.ts";
 
 const logger = createLogger("report-lake-rebuild");
 const GC_KEEP_BUILDS = 2;
 const COMPACTION_TIMEOUT_MS = 30 * 60 * 1000;
+
+async function rebuildLayout(currentDir: string | undefined): Promise<{
+  previousLayout: ReportLakeLayout | undefined;
+  layout: ReportLakeLayout;
+}> {
+  const previousLayout =
+    currentDir === undefined
+      ? undefined
+      : reportLakeLayout(await readBuildFingerprint(currentDir));
+  if (currentDir !== undefined && previousLayout === undefined) {
+    throw new Error(
+      "Published report lake has an unknown schema; refusing to rebuild before its physical layout is established",
+    );
+  }
+  // Do not cold-upgrade during bridge deployment. Once published, the current
+  // layout never depends on the temporary rollout control again.
+  const layout =
+    previousLayout === "legacy-identity-map" &&
+    !(await reportLakeSchemaUpgradeEnabled())
+      ? "legacy-identity-map"
+      : "current";
+  return { previousLayout, layout };
+}
 
 export async function rebuildReportLake(
   prisma: ExtendedPrismaClient,
@@ -56,6 +84,8 @@ export async function rebuildReportLake(
   options: Pick<CompactionOptions, "onProgress" | "abortSignal"> = {},
 ): Promise<CompactionSummary> {
   const { onProgress, abortSignal } = options;
+  const currentDir = await readCurrentBuildDir(lakeDir);
+  const { previousLayout, layout } = await rebuildLayout(currentDir);
   const deadlineAt = Date.now() + COMPACTION_TIMEOUT_MS;
   const deadline = AbortSignal.any([
     AbortSignal.timeout(COMPACTION_TIMEOUT_MS),
@@ -99,7 +129,6 @@ export async function rebuildReportLake(
       );
     }
     const client = createS3Client();
-    const puuidRemap = await loadPuuidRemap(prisma);
     deadline.throwIfAborted();
     const skippedMatches = await populateMatchesFromS3({
       client,
@@ -110,7 +139,6 @@ export async function rebuildReportLake(
       teamBanWriter: matchTeamBanWriter,
       foldedIds: foldedMatchIds,
       foldedSources: rebuiltSources,
-      puuidRemap,
       abortSignal: deadline,
       onProgress: (progress) => {
         onProgress?.({ phase: "reading-s3", table: "matches", ...progress });
@@ -124,7 +152,6 @@ export async function rebuildReportLake(
       rawWriter,
       foldedIds: foldedPrematchIds,
       foldedSources: rebuiltSources,
-      puuidRemap,
       abortSignal: deadline,
       onProgress: (progress) => {
         onProgress?.({ phase: "reading-s3", table: "prematch", ...progress });
@@ -137,7 +164,6 @@ export async function rebuildReportLake(
       buildDir,
       rawWriter,
       foldedSources: rebuiltSources,
-      puuidRemap,
       abortSignal: deadline,
       timeoutMs: remainingTimeoutMs(),
       onProgress: (progress) => {
@@ -168,7 +194,7 @@ export async function rebuildReportLake(
             await copyNdjsonToParquet(session, {
               sourcePath: rawTmp,
               outputDirectory: path.join(buildDir, "raw_documents"),
-              columns: RAW_DOCUMENT_LAKE_COLUMNS,
+              columns: rawDocumentColumns(layout),
               partitionByMonth: true,
             });
           }
@@ -216,7 +242,7 @@ export async function rebuildReportLake(
     }
 
     deadline.throwIfAborted();
-    const accountRows = await writeAccountsParquet(prisma, buildDir, deadline);
+    let accountRows = await writeAccountsParquet(prisma, buildDir, deadline);
     onProgress?.({ phase: "writing-accounts", rows: accountRows });
     deadline.throwIfAborted();
     const rankHistory = await writeCompetitionRankHistoryParquet({
@@ -234,6 +260,39 @@ export async function rebuildReportLake(
       skipped: rankHistory.skipped,
     });
     deadline.throwIfAborted();
+
+    if (previousLayout === "legacy-identity-map" && layout === "current") {
+      onProgress?.({ phase: "validating-prepared-build" });
+      if (
+        skippedMatches +
+          skippedPrematches +
+          rankHistory.skipped +
+          timelines.skipped >
+        0
+      )
+        throw new Error(
+          "Schema upgrade refuses a rebuild with skipped canonical sources",
+        );
+      const tail = await validateStagingSnapshot(
+        await snapshotStagingGenerations(lakeDir),
+      );
+      if (tail.skippedByTable.size > 0)
+        throw new Error(
+          "Schema upgrade refuses invalid committed staging projections",
+        );
+      if (currentDir === undefined)
+        throw new Error("Schema upgrade lost its published baseline");
+      accountRows = await writeAccountsParquet(prisma, buildDir, deadline);
+      await validatePreparedBuild({
+        lakeDir,
+        previousDir: currentDir,
+        buildDir,
+        layout,
+        staging: tail.snapshot,
+        abortSignal: deadline,
+        timeoutMs: remainingTimeoutMs(),
+      });
+    }
 
     const summary = {
       rawDocumentRows: rawWriter.rows,
@@ -254,11 +313,7 @@ export async function rebuildReportLake(
       skippedCompetitionRankHistory: rankHistory.skipped,
       skippedTimelines: timelines.skipped,
     };
-    await writeCompactionManifest(
-      buildDir,
-      summary,
-      puuidRemapFingerprint(puuidRemap),
-    );
+    await writeCompactionManifest(buildDir, summary, layout);
     await publishBuild(lakeDir, buildId, deadline);
     published = true;
     publishCompactionMetrics(summary);

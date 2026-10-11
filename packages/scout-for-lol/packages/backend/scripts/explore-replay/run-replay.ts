@@ -32,11 +32,6 @@ import { buildTranscript } from "#src/explore/store-mappers.ts";
 import { exploreModel } from "#src/config/dynamic.ts";
 import { streamExploreAgent } from "#src/explore/agent.ts";
 import { buildDirPath } from "#src/report-lake/paths.ts";
-import { readBuildPuuidRemapFingerprint } from "#src/report-lake/build-manifest.ts";
-import {
-  loadPuuidRemap,
-  puuidRemapFingerprint,
-} from "#src/report-lake/puuid-remap.ts";
 import {
   closeDuckDB,
   withDuckDBConnection,
@@ -153,9 +148,7 @@ async function lakeAccountFacts(pin: StageDatasetPin): Promise<{
 /**
  * Refuse to run on a lake and a database that do not describe the same world.
  *
- * The fingerprint comparison is the same one the compactor performs before
- * folding. A mismatch does not surface as an error at query time — it splits
- * one player into two identities — so it has to be an entry condition.
+ * Check the physical schema and the pinned relational contents before replay.
  */
 
 async function verifyDataset(pin: StageDatasetPin): Promise<void> {
@@ -166,25 +159,18 @@ async function verifyDataset(pin: StageDatasetPin): Promise<void> {
     current: lakeSchemaFingerprint(),
   });
   if (schemaIssues.length > 0) throw new Error(schemaIssues.join("\n"));
-  const [
-    lakeFingerprint,
-    remap,
-    databaseRows,
-    lakeFacts,
-    snapshotId,
-    writableRows,
-  ] = await Promise.all([
-    readBuildPuuidRemapFingerprint(buildDir),
-    loadPuuidRemap(prisma),
-    prisma.account.count(),
-    lakeAccountFacts(pin),
-    // What this snapshot contains. Checked so a pin reused against a later
-    // pull is refused rather than silently describing data it never saw —
-    // while restoring the same dump, which the writable-row check demands
-    // between sweeps, reproduces it exactly.
-    databaseSnapshotId(),
-    writableRowCounts(),
-  ]);
+  const [databaseRows, lakeFacts, snapshotId, writableRows] = await Promise.all(
+    [
+      prisma.account.count(),
+      lakeAccountFacts(pin),
+      // What this snapshot contains. Checked so a pin reused against a later
+      // pull is refused rather than silently describing data it never saw —
+      // while restoring the same dump, which the writable-row check demands
+      // between sweeps, reproduces it exactly.
+      databaseSnapshotId(),
+      writableRowCounts(),
+    ],
+  );
 
   const present = await prisma.account.findMany({
     where: { puuid: { in: [...lakeFacts.sampledPuuids] } },
@@ -197,8 +183,6 @@ async function verifyDataset(pin: StageDatasetPin): Promise<void> {
     pinnedSnapshotId: pin.database.snapshotId,
     writableRows,
     pinnedWritableRows: pin.database.writableRows,
-    lakeFingerprint,
-    databaseFingerprint: puuidRemapFingerprint(remap),
     accountRows: { parquet: lakeFacts.rows, database: databaseRows },
     sampledPuuids: {
       checked: lakeFacts.sampledPuuids.length,
@@ -298,9 +282,9 @@ function manifestDifferences(
   compare("guild", existing.guildId, current.guildId);
   compare("lake build", existing.lake.buildId, current.lake.buildId);
   compare(
-    "PUUID remap fingerprint",
-    existing.lake.puuidRemapFingerprint,
-    current.lake.puuidRemapFingerprint,
+    "lake schema fingerprint",
+    existing.lake.schemaFingerprint,
+    current.lake.schemaFingerprint,
   );
   compare("database", existing.database.name, current.database.name);
   compare(
@@ -485,9 +469,9 @@ async function loadBaseline(
       `lake build ${manifest.lake.buildId}, not ${against.lake.buildId}`,
     );
   }
-  if (manifest.lake.puuidRemapFingerprint !== against.lake.fingerprint) {
+  if (manifest.lake.schemaFingerprint !== against.lake.fingerprint) {
     conflicts.push(
-      `PUUID remap ${manifest.lake.puuidRemapFingerprint}, not ${against.lake.fingerprint}`,
+      `lake schema ${manifest.lake.schemaFingerprint}, not ${against.lake.fingerprint}`,
     );
   }
   if (manifest.database.snapshotId !== against.snapshotId) {
@@ -870,7 +854,7 @@ async function runGuild(input: {
 
     const model = exploreModel();
     const manifest = ReplayManifestSchema.parse({
-      schemaVersion: 2,
+      schemaVersion: 3,
       analysisEnabled: exploreAnalysisEnabled(),
       capturedAnalysisEnabled: pin.runtime.analysisEnabled,
       runId,
@@ -881,7 +865,7 @@ async function runGuild(input: {
       expectedCapabilities: config.capabilities,
       lake: {
         buildId: pin.lake.buildId,
-        puuidRemapFingerprint: pin.lake.puuidRemapFingerprint,
+        schemaFingerprint: pin.lake.schemaFingerprint,
       },
       database: {
         name: pin.database.name,
@@ -977,7 +961,7 @@ async function runGuild(input: {
         corpus: conversations.corpus,
         lake: {
           buildId: pin.lake.buildId,
-          fingerprint: pin.lake.puuidRemapFingerprint,
+          fingerprint: pin.lake.schemaFingerprint,
         },
         snapshotId: pin.database.snapshotId,
         analysisEnabled: exploreAnalysisEnabled(),

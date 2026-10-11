@@ -4,7 +4,7 @@ import {
 } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { RAW_DOCUMENT_LAKE_COLUMNS } from "@scout-for-lol/data/model/reports/raw-document-lake-columns.ts";
-import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
+import { reportLakeLayout } from "#src/report-lake/schema-upgrade/layout.ts";
 import { readBuildFingerprint } from "#src/report-lake/build-manifest.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import { listStagingFiles } from "#src/report-lake/staging.ts";
@@ -19,7 +19,6 @@ const RowSchema = z.looseObject({
   source_digest: z.string(),
   captured_at: z.string(),
   document_json: z.string(),
-  identity_map_json: z.string(),
 });
 
 export async function readRawDocuments(input: {
@@ -62,7 +61,7 @@ async function readCapturedDocuments(
   const { buildDir, staging } = captured;
   if (
     buildDir === undefined ||
-    (await readBuildFingerprint(buildDir)) !== lakeSchemaFingerprint()
+    reportLakeLayout(await readBuildFingerprint(buildDir)) === undefined
   ) {
     throw new Error(
       "Raw-document analysis requires the report lake to be rebuilt at the current schema.",
@@ -105,7 +104,7 @@ async function readCapturedDocuments(
       if (size.bytes > 64 * 1024 * 1024)
         throw new Error("Raw documents exceed 64 MiB. Select fewer matches.");
       const rows = await session.run(
-        `SELECT match_id, kind, source_key, source_digest, CAST(captured_at AS VARCHAR) AS captured_at, document_json, identity_map_json FROM (${source.sql}) ORDER BY match_id, kind`,
+        `SELECT match_id, kind, source_key, source_digest, CAST(captured_at AS VARCHAR) AS captured_at, document_json FROM (${source.sql}) ORDER BY match_id, kind`,
         params,
       );
       return rows.map((row) => {
@@ -126,9 +125,6 @@ async function readCapturedDocuments(
           digest: parsed.source_digest,
           capturedAt: parsed.captured_at,
           document,
-          identityMap: z
-            .record(z.string(), z.string())
-            .parse(JSON.parse(parsed.identity_map_json)),
         };
       });
     },

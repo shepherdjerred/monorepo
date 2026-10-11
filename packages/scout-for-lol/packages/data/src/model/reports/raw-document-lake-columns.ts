@@ -9,7 +9,6 @@ export const RawDocumentLakeRowSchema = z.strictObject({
   source_key: z.string().nullable(),
   source_digest: z.string(),
   document_json: z.string(),
-  identity_map_json: z.string(),
   month: z.string(),
 });
 export type RawDocumentLakeRow = z.infer<typeof RawDocumentLakeRowSchema>;
@@ -21,6 +20,5 @@ export const RAW_DOCUMENT_LAKE_COLUMNS = {
   source_key: "VARCHAR",
   source_digest: "VARCHAR",
   document_json: "VARCHAR",
-  identity_map_json: "VARCHAR",
   month: "VARCHAR",
 } as const satisfies Record<keyof RawDocumentLakeRow, DuckDbColumnType>;

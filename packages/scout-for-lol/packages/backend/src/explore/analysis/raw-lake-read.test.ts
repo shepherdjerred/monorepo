@@ -23,7 +23,7 @@ afterEach(async () => {
   );
 });
 
-test("returns complete raw JSON and identity provenance beyond flattened timeline columns", async () => {
+test("returns complete canonical JSON and provenance beyond flattened timeline columns", async () => {
   const lakeDir = await mkdtemp(path.join(os.tmpdir(), "scout-raw-parity-"));
   dirs.push(lakeDir);
   await ensureLakeScaffold(lakeDir);
@@ -63,10 +63,6 @@ test("returns complete raw JSON and identity provenance beyond flattened timelin
     matchId: RiotMatchIdSchema.parse("NA1_42"),
     document,
     capturedAt: new Date("2026-10-03T00:00:00Z"),
-    identityMap: new Map([
-      ["original", "normalized"],
-      ["unrelated", "hidden"],
-    ]),
     source: {
       kind: "s3",
       key: "timeline/NA1_42.json",
@@ -100,7 +96,6 @@ test("returns complete raw JSON and identity provenance beyond flattened timelin
   expect(result.documents).toHaveLength(1);
   expect(result.documents[0]).toMatchObject({
     document,
-    identityMap: { original: "normalized" },
     digest: "original-digest",
     sourceKey: "timeline/NA1_42.json",
   });

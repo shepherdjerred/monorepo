@@ -23,6 +23,15 @@ describe("explore skill loader", () => {
     expect(names).toEqual([...names].toSorted((a, b) => a.localeCompare(b)));
   });
 
+  test("analysis instructions use canonical raw identities without translation maps", async () => {
+    const skills = await loadExploreSkillFiles();
+    const analysis = skills.find((skill) => skill.name === "data-analysis");
+    expect(analysis?.body).toContain("Join canonical PUUIDs directly");
+    expect(analysis?.body).toContain("no identity translation map is returned");
+    expect(analysis?.body).not.toContain("use the mapping");
+    expect(analysis?.body).not.toContain("identity mapping supports");
+  });
+
   test("rejects a file without frontmatter", () => {
     expect(() => parseExploreSkillFile("bad.md", "just a body")).toThrow(
       /frontmatter/,

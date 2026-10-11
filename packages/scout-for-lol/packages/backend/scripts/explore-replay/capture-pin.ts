@@ -16,10 +16,7 @@ import { ME, MY_SERVER } from "#src/configuration/flags.ts";
 import { useStageFlagSemantics } from "./stage-flag-semantics.ts";
 import { replayDynamicConfigSeed } from "./config-seed.ts";
 import { buildDirPath } from "#src/report-lake/paths.ts";
-import {
-  readBuildPuuidRemapFingerprint,
-  readBuildFingerprint,
-} from "#src/report-lake/build-manifest.ts";
+import { readBuildFingerprint } from "#src/report-lake/build-manifest.ts";
 import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
 import {
   closeDuckDB,
@@ -214,15 +211,6 @@ export async function capturePinForStage(input: {
       "The pulled lake schema differs from this checkout; rebuild it before capturing the pin.",
     );
   }
-  const fingerprint = await readBuildPuuidRemapFingerprint(
-    buildDirPath(input.lakeDir, buildId),
-  );
-  if (fingerprint === undefined) {
-    throw new Error(
-      `Build ${buildId} records no PUUID remap fingerprint; its identity domain cannot be proven.`,
-    );
-  }
-
   const [parquetRows, databaseRows, guilds] = await Promise.all([
     parquetAccountRows(input.lakeDir, buildId),
     prisma.account.count(),
@@ -258,7 +246,7 @@ export async function capturePinForStage(input: {
 
   const now = new Date().toISOString();
   const pin = StageDatasetPinSchema.parse({
-    schemaVersion: 2,
+    schemaVersion: 3,
     runtime: {
       analysisEnabled: exploreAnalysisEnabled(),
       model: resolveExploreModel(),
@@ -269,7 +257,6 @@ export async function capturePinForStage(input: {
       dir: input.lakeDir,
       buildId,
       schemaFingerprint,
-      puuidRemapFingerprint: fingerprint,
       pulledAt: now,
       sourcePod: "dev:lake-pull",
     },

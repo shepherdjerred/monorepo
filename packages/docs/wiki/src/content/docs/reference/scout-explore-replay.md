@@ -27,15 +27,19 @@ Source: [`src/explore/replay/`](https://github.com/shepherdjerred/monorepo/tree/
 
 `$XDG_DATA_HOME/scout-for-lol/stage-dataset/<stage>/dataset.json`, mode `0600`.
 
-| Field                                        | Meaning                                                                                                                                                                                                                       |
-| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `lake.buildId`, `lake.puuidRemapFingerprint` | The published build this dataset reads                                                                                                                                                                                        |
-| `database.name`, `database.url`              | The restored snapshot                                                                                                                                                                                                         |
-| `accountRows`                                | Parquet and database account counts                                                                                                                                                                                           |
-| `database.snapshotId`                        | Hash of the rows a replay never writes; survives restoring the same dump ([source](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/scripts/explore-replay/snapshot-identity.ts)) |
-| `database.writableRows`                      | Per-table hash of what a replay can write ([source](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/scripts/explore-replay/writable-rows.ts))                                    |
-| `flagSource`                                 | `provider` when Flipt was consulted, else `static`                                                                                                                                                                            |
-| `guilds`                                     | Per-guild captured capabilities and requester                                                                                                                                                                                 |
+Pins and bundle manifests use version 3. Versions 1 and 2 are rejected with an
+instruction to capture a fresh pin and baseline; there is no old-format adapter.
+The lake's ordinary schema fingerprint remains part of dataset coherence.
+
+| Field                                    | Meaning                                                                                                                                                                                                                       |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lake.buildId`, `lake.schemaFingerprint` | The published build and physical schema this dataset reads                                                                                                                                                                    |
+| `database.name`, `database.url`          | The restored snapshot                                                                                                                                                                                                         |
+| `accountRows`                            | Parquet and database account counts                                                                                                                                                                                           |
+| `database.snapshotId`                    | Hash of the rows a replay never writes; survives restoring the same dump ([source](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/scripts/explore-replay/snapshot-identity.ts)) |
+| `database.writableRows`                  | Per-table hash of what a replay can write ([source](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/scripts/explore-replay/writable-rows.ts))                                    |
+| `flagSource`                             | `provider` when Flipt was consulted, else `static`                                                                                                                                                                            |
+| `guilds`                                 | Per-guild captured capabilities and requester                                                                                                                                                                                 |
 
 A run refuses to start unless `DATABASE_URL` names the pinned database on
 loopback and on the pinned port, `REPORT_LAKE_DIR` resolves to the pinned lake,

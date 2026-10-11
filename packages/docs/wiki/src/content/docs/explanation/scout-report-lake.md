@@ -62,9 +62,11 @@ participants, timeline participant frames, and timeline coverage — laid out pe
 It is derived data. Losing the volume costs one nightly rebuild, not any
 history.
 
-This split is why schema changes are cheap. Adding a lake column needs no
-migration and no backfill: the nightly rebuild re-derives every row from the
-raw JSON, so the new column simply appears the next morning.
+This split makes schema changes reconstructible rather than permanent database
+migrations. Rebuilds derive columns from the retained JSON into an unpublished
+immutable build. A schema change still needs compatible readers and writers:
+publication switches the `CURRENT` pointer only after the candidate is ready,
+while readers continue to union the published build with committed staging.
 
 ### Why the record was rewritten rather than translated
 
@@ -72,46 +74,42 @@ Riot encrypts PUUIDs per API-key holder, so the same player has a different
 PUUID under each key. Moving Scout to the production key left every identifier
 already written into S3 in the old domain.
 
-The first answer was to leave the archive alone and translate on the way past, on
-the principle that the raw objects are the record of what Riot returned and
-rewriting them destroys that evidence. It was the wrong call, and the number that
-settles it is this: of 174,573 distinct participant PUUIDs in prod's archive,
-167 were mapped. Translation only ever covered the players Scout already
-watched, so the corpus stayed 99.9 percent old-domain by identity.
+A read-time map only covers identities resolved before a query. An untracked
+player's older appearances can therefore remain invisible after they subscribe.
+Rewriting the canonical corpus and database together gives historical and new
+facts the same identity domain without carrying translation into every reader.
+Riot IDs are useful cross-checks, not durable identity authorities: a name can
+change owners after a game was captured.
 
-That has a cost a read-time map cannot pay. When a player becomes tracked, their
-appearances in games archived earlier carry an identifier nothing will ever match
-to their new one — so their history before subscription is invisible, and stays
-invisible. Fidelity to what Riot returned is worth less than a corpus whose
-identifiers still mean something.
+### Canonical identity is a storage contract
 
-Rewriting is affordable because the archive is self-describing: every match
-participant carries `riotIdGameName`/`riotIdTagline` and every spectator
-participant a `riotId`. That is a cross-check rather than an answer — the handle
-is a snapshot from game time, and sampling found 4 of 25 identities had renamed
-since, where resolving the stale handle would land on whoever holds it now. The
-old key stays the authority for who an identifier belongs to.
+Canonical S3 payloads and database player references use the current PUUID
+domain. Rebuilds, competition standings, pairing stats, and pending-earning
+recovery read those identities directly. Raw-document analysis preserves the
+canonical JSON rather than applying a second map. Its contract contains source
+key, digest, and capture time, but no identity-map metadata.
 
-### The translation that remains
+The archived [database migration](https://github.com/shepherdjerred/monorepo/pull/2860)
+and [S3 corpus rewrite](https://github.com/shepherdjerred/monorepo/pull/2868)
+record the identity-domain cutover. Current direct-read paths include
+[`rebuild-sources.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-lake/rebuild-sources.ts),
+[`leaderboard.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/league/competition/leaderboard.ts),
+and
+[`earnings-retry.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/betting/accounts/earnings-retry.ts).
 
-[puuid-remap.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-lake/puuid-remap.ts)
-still applies a map where a raw payload is parsed, before validation, and to the
-direct S3 readers — the leaderboard, pairing stats, pending-earning recovery —
-which compare stored participants against database identifiers
-([s3-query.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/storage/s3-query.ts)).
+The completed cutover's mapping tables, receipts, and approved unresolved
+exceptions are archival evidence, not runtime dependencies. Removing translation
+does not invent identities for unresolved records. A backup from before the
+cutover is not automatically safe to restore into this runtime: it must first
+be reconciled to the canonical storage contract.
 
-Once the archive is re-domained it does nothing, and it is kept anyway. It is
-still the correct answer for identities Riot can no longer resolve, and for any
-restore from a backup predating the rewrite — 30 daily, 8 weekly and 12 monthly
-snapshots hold old-domain payloads.
-
-Getting a build wrong is silent. An untranslated one splits a player into two
-identities at the cutover date: no error, just wrong aggregates. So a build
-records the map it was derived under, and one whose fingerprint no longer matches
-falls back to a full rebuild — the same path an added column takes.
-
-The map outlives the migration that produced it. Only the retired key could have
-built it, so it is a managed model rather than a scratch table.
+Ordinary physical schema fingerprints still bind readers and replay datasets to
+their lake layout. The temporary two-layout bridge permits an online rebuild
+without forcing every application deployment to cold-rebuild the lake. A
+candidate must preserve published projection keys through its files or the
+retained committed staging view before `CURRENT` changes. Writes arriving during
+the rebuild stay queryable in staging and are consumed by a later fold; cleanup
+only removes captured generations covered by the exact rebuilt source.
 
 ## Writes: live ingest can recover staging; initial import cannot
 

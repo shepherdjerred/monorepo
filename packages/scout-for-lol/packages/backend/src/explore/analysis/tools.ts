@@ -308,13 +308,7 @@ export function createAnalysisTools(
               preview: {
                 documents: raw.documents
                   .slice(0, 10)
-                  .map(
-                    ({
-                      document: _document,
-                      identityMap: _identityMap,
-                      ...metadata
-                    }) => metadata,
-                  ),
+                  .map(({ document: _document, ...metadata }) => metadata),
                 missing: missing.slice(0, 10),
                 missingCount: missing.length,
               },
