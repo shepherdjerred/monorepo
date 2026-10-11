@@ -788,8 +788,9 @@ export async function getMetrics(): Promise<string> {
   updateUptimeMetric();
   if (databaseMetricSweepsEnabled()) {
     // Dynamic import to avoid circular dependency issues
-    const { runDatabaseMetricSweeps } = await import("#src/metrics/sweeps.ts");
-    await runDatabaseMetricSweeps();
+    const { sweepDatabaseMetricsWhenStale } =
+      await import("#src/metrics/sweeps.ts");
+    await sweepDatabaseMetricsWhenStale();
   }
   return await registry.metrics();
 }

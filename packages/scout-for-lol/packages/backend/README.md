@@ -474,7 +474,9 @@ is swept by `report-lake/`, and the mint gap by
 vocabularies live there and `architecture.config.ts` forbids `metrics/` from
 importing those layers; each registers through `metrics/sweep-registry.ts`,
 which exists for exactly that inversion. `metrics/sweeps.ts` is the list of everything a
-sweep-owning scrape runs.
+sweep-owning scrape runs. Swept values may be up to a minute old: the first
+scrape waits for a sweep, and later scrapes serve the last result while a stale
+one refreshes in the background, so a slow sweep never times a scrape out.
 
 Every metric also carries a `role` default label, from the runtime-role enum.
 That is what lets an alert say which pods it is asking about — most sharply for
