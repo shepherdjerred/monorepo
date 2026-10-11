@@ -116,6 +116,12 @@ const STORM_IMAGE_CONFIGS: Readonly<
     moduleKeys: STORM_IMAGE_MODULE_KEYS,
     enabledModules: STORM_IMAGE_ENABLED_MODULES,
   },
+  // Pipeline 8277's exact published /plugins/TheStorm/config.yml was verified
+  // from image 1028545e50886f8fe33e70dd217ade17e3f50a1890e2ddc7ea58e38a42d97d53.
+  "1028545e50886f8fe33e70dd217ade17e3f50a1890e2ddc7ea58e38a42d97d53": {
+    moduleKeys: STORM_IMAGE_MODULE_KEYS,
+    enabledModules: STORM_IMAGE_ENABLED_MODULES,
+  },
 };
 
 export function stormImageConfig(image: string): {
