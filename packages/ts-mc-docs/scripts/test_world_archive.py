@@ -55,6 +55,7 @@ class ArchiveTests(unittest.TestCase):
                 patch("world_archive.renderer"),
                 patch("world_archive.aws"),
                 patch("world_archive.verify_checkpoint"),
+                patch("world_archive.verify_url"),
                 patch("world_archive.sha256", side_effect=lambda path: hashes[path.name]),
             ):
                 run(args)
