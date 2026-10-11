@@ -168,7 +168,7 @@ export function createMinecraftTsmcApp(chart: Chart) {
       // admin regions, and vanilla protection would stop non-ops using the
       // windmill Storm Shards altar.
       spawnProtection: 0,
-      ops: "XiguaJerred",
+      ops: "",
       // TYPE and VERSION repeat the image's own env: the chart always renders
       // TYPE (default VANILLA), and VERSION selects the baked Paper defaults.
       version: THE_STORM_PAPER_VERSION,
