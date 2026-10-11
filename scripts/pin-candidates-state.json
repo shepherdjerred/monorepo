@@ -89,6 +89,12 @@
       "gitSha": "380474c6584ebc943d8d301cf4245c7e3849023f",
       "buildNumber": 1007695
     },
+    "shepherdjerred/temporal-worker/workflows/candidate": {
+      "version": "2.0.0-1007695",
+      "digest": "sha256:b6337d09a0f45df85aaad6e7fd712a55886a51e461715f0c2bc868b0e7bdf2f0",
+      "buildNumber": 1007695,
+      "gitSha": "380474c6584ebc943d8d301cf4245c7e3849023f"
+    },
     "shepherdjerred/temporal-worker/workflows/stable": {
       "version": "2.0.0-1005566",
       "digest": "sha256:49e6b12c31de035699be83c0b1a1dd0c57960284e267f8bae3bea23d9903c912",
