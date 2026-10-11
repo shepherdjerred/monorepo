@@ -221,6 +221,8 @@ export function createMinecraftTsmcApp(chart: Chart) {
     },
 
     extraEnv: {
+      // Empty OPS must clear persisted ops.json entries, not merge with them.
+      EXISTING_OPS_FILE: "SYNCHRONIZE",
       FLIPT_URL: "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
       FLIPT_ENVIRONMENT: "prod",
       POSTHOG_API_HOST: analytics.apiHost,
