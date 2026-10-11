@@ -98,12 +98,12 @@
       "rangeByRank": [1600, 1600, 1600],
       "dataValues": {
         "DrowsyDuration": [1.5, 1.5, 1.5],
-        "SleepDuration": [2.5, 2.5, 2.5],
+        "SleepDuration": [2.5, 2.75, 3],
         "ImpactDamage": [25, 25, 25],
         "BreakDamageBase": [100, 150, 200],
         "InitialSlow": [-0.1, -0.1, -0.1]
       },
-      "resolvedDescription": "Lillia causes all enemy champions with Dream Dust to become Drowsy for 1.5 seconds. Afterward, they fall Asleep for 2.5 seconds. When awakened by damage, they take an additional 100/150/200 (+40% AP) magic damage.",
+      "resolvedDescription": "Lillia causes all enemy champions with Dream Dust to become Drowsy for 1.5 seconds. Afterward, they fall Asleep for 2.5/2.75/3 seconds. When awakened by damage, they take an additional 100/150/200 (+40% AP) magic damage.",
       "unresolved": []
     }
   }

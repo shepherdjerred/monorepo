@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.19.1",
+  "version": "16.20.1",
   "data": {
     "Lillia": {
       "id": "Lillia",
@@ -606,10 +606,11 @@
           "description": "Lillia causes all enemies with Dream Dust on them to become Drowsy before falling asleep. Those enemies will take extra damage on being forcibly woken up.",
           "tooltip": "Lillia causes all enemy champions with <keywordMajor>Dream Dust</keywordMajor> to become <status>Drowsy</status> for {{ drowsyduration }} seconds. Afterward, they fall <status>Asleep</status> for {{ sleepduration }} seconds.<br /><br />When awakened by damage, they take an additional <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Break Damage"],
+            "label": ["Cooldown", "Break Damage", "Duration"],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
-              "{{ breakdamagebase }} -> {{ breakdamagebaseNL }}"
+              "{{ breakdamagebase }} -> {{ breakdamagebaseNL }}",
+              "{{ sleepduration }} -> {{ sleepdurationNL }}"
             ]
           },
           "maxrank": 3,
