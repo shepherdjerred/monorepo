@@ -48,7 +48,8 @@ export function playwrightSteps(images: CiImages, changedBase = ""): CiStep[] {
         "  export CI_CHANGED_BASE",
         "fi",
         'if [ -n "$CI_CHANGED_BASE" ]; then export TURBO_SCM_BASE="$CI_CHANGED_BASE"; fi',
-        'export TURBO_CACHE="local:rw,remote:rw"',
+        // One Turbo run in a fresh workspace never reads a local cache back.
+        'export TURBO_CACHE="remote:rw"',
         // Playwright configs use CI=true to enable JUnit reporters and bounded
         // workers; Woodpecker supplies CI=woodpecker by default.
         "export CI=true",
