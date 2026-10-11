@@ -168,10 +168,6 @@
       "clones": 1,
       "tokens": 107
     },
-    "packages/discord-plays-mario-kart/packages/backend/scripts/e2e-press-to-glass.ts|packages/discord-plays-mario-kart/packages/backend/scripts/e2e-viewer-stats.ts": {
-      "clones": 1,
-      "tokens": 78
-    },
     "packages/discord-plays-mario-kart/packages/backend/scripts/smoke.ts|packages/discord-plays-pokemon/packages/backend/scripts/smoke.ts": {
       "clones": 2,
       "tokens": 401
@@ -403,10 +399,6 @@
     "packages/home-assistant/src/codegen/introspect.ts|packages/home-assistant/src/codegen/introspect.ts": {
       "clones": 1,
       "tokens": 118
-    },
-    "packages/homelab/scripts/check-suppressions.ts|packages/scout-for-lol/scripts/check-suppressions.ts": {
-      "clones": 1,
-      "tokens": 101
     },
     "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts": {
       "clones": 3,
