@@ -181,7 +181,6 @@ describe("queryMatchesByDateRange - single day", () => {
       new Date("2025-01-15T00:00:00Z"),
       new Date("2025-01-15T23:59:59Z"),
       [LeaguePuuidSchema.parse(puuid)],
-      new Map(),
     );
 
     expect(results.map((m) => m.metadata.matchId).toSorted()).toEqual([
@@ -226,7 +225,6 @@ describe("queryMatchesByDateRange - single day", () => {
       new Date("2025-01-15T00:00:00Z"),
       new Date("2025-01-15T23:59:59Z"),
       [LeaguePuuidSchema.parse(puuid)],
-      new Map(),
     );
 
     expect(results.map((m) => m.metadata.matchId)).toEqual(["NA1_9100000060"]);
@@ -307,12 +305,9 @@ describe("queryMatchesByDateRange - single day", () => {
       Contents: [],
     });
 
-    const results = await queryMatchesByDateRange(
-      date,
-      date,
-      [LeaguePuuidSchema.parse(puuid)],
-      new Map(),
-    );
+    const results = await queryMatchesByDateRange(date, date, [
+      LeaguePuuidSchema.parse(puuid),
+    ]);
 
     expect(results).toEqual([]);
   });
@@ -333,7 +328,7 @@ async function expectRangeMatchIds(
   puuids: string[],
   expected: string[],
 ): Promise<void> {
-  const results = await queryMatchesByDateRange(from, to, puuids, new Map());
+  const results = await queryMatchesByDateRange(from, to, puuids);
   expect(results.map((m) => m.metadata.matchId).toSorted()).toEqual(expected);
 }
 
@@ -460,7 +455,7 @@ describe("queryMatchesByDateRange - edge cases", () => {
   test("returns empty array when PUUIDs array is empty", async () => {
     const date = new Date("2025-01-15T12:00:00Z");
 
-    const results = await queryMatchesByDateRange(date, date, [], new Map());
+    const results = await queryMatchesByDateRange(date, date, []);
 
     expect(results).toEqual([]);
   });
@@ -500,12 +495,9 @@ describe("queryMatchesByDateRange - edge cases", () => {
       .callsFake(() => createMockGetObjectResponse("{ invalid json content"));
 
     // Query should skip invalid JSON and return valid match
-    const results = await queryMatchesByDateRange(
-      date,
-      date,
-      [LeaguePuuidSchema.parse(puuid)],
-      new Map(),
-    );
+    const results = await queryMatchesByDateRange(date, date, [
+      LeaguePuuidSchema.parse(puuid),
+    ]);
 
     expect(results.length).toBe(1);
     expect(results[0]?.metadata.matchId).toBe("NA1_9100000160");
@@ -613,12 +605,9 @@ describe("queryMatchesByDateRange - edge cases", () => {
       .rejects(new Error("S3 GetObject failed"));
 
     // Query should handle error and return valid match
-    const results = await queryMatchesByDateRange(
-      date,
-      date,
-      [LeaguePuuidSchema.parse(puuid)],
-      new Map(),
-    );
+    const results = await queryMatchesByDateRange(date, date, [
+      LeaguePuuidSchema.parse(puuid),
+    ]);
 
     expect(results.length).toBe(1);
     expect(results[0]?.metadata.matchId).toBe("NA1_9100000210");
@@ -630,7 +619,7 @@ describe("queryMatchesByDateRange - S3 configuration", () => {
     // This tests the early return for empty PUUIDs
     const date = new Date("2025-01-15T12:00:00Z");
 
-    const results = await queryMatchesByDateRange(date, date, [], new Map());
+    const results = await queryMatchesByDateRange(date, date, []);
 
     expect(results).toEqual([]);
   });
@@ -659,12 +648,9 @@ describe("queryMatchesByDateRange - data verification", () => {
       })
       .callsFake(() => createMockGetObjectResponse(JSON.stringify(match)));
 
-    const results = await queryMatchesByDateRange(
-      date,
-      date,
-      [LeaguePuuidSchema.parse(puuid)],
-      new Map(),
-    );
+    const results = await queryMatchesByDateRange(date, date, [
+      LeaguePuuidSchema.parse(puuid),
+    ]);
 
     expect(results.length).toBe(1);
     const retrieved = results[0];

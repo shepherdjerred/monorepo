@@ -89,6 +89,14 @@ recovery read those identities directly. Raw-document analysis preserves the
 canonical JSON rather than applying a second map. Its contract contains source
 key, digest, and capture time, but no identity-map metadata.
 
+The archived [database migration](https://github.com/shepherdjerred/monorepo/pull/2860)
+and [S3 corpus rewrite](https://github.com/shepherdjerred/monorepo/pull/2868)
+record the identity-domain cutover. Current direct-read paths include
+[`rebuild-sources.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-lake/rebuild-sources.ts),
+[`leaderboard.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/league/competition/leaderboard.ts),
+and
+[`earnings-retry.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/betting/accounts/earnings-retry.ts).
+
 The completed cutover's mapping tables, receipts, and approved unresolved
 exceptions are archival evidence, not runtime dependencies. Removing translation
 does not invent identities for unresolved records. A backup from before the
