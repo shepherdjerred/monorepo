@@ -51,9 +51,21 @@ impl Settings {
 
     /// Recover a crash after directory promotion but before the queue was saved.
     pub fn reconcile_queue(&mut self, catalog: &Catalog) -> Result<()> {
+        // Cleanup mutates the game library, so serialize it with installation
+        // and uninstall operations even when another profile uses this library.
+        let _lock = if self.queue.is_empty() || !self.library.try_exists()? {
+            None
+        } else {
+            crate::install::ensure_plain_directory(&self.library)?;
+            Some(exclusive_lock(&self.library.join(".install.lock"))?)
+        };
         let mut pending = Vec::new();
         for game in &self.queue {
-            if !installed(&self.library, *game, catalog)? && !pending.contains(game) {
+            if installed(&self.library, *game, catalog)? {
+                // Promotion proves restore_saves completed. Finish duplicate cleanup
+                // before dropping the durable queue entry, including after a crash.
+                crate::storage::saves_restored(&self.library, *game)?;
+            } else if !pending.contains(game) {
                 pending.push(*game);
             }
         }
@@ -211,12 +223,69 @@ mod tests {
                 prerequisites_complete: false,
             },
         )?;
+        let other_operation = exclusive_lock(&settings.library.join(".install.lock"))?;
+        assert!(settings.reconcile_queue(&catalog).is_err());
+        assert_eq!(settings.queue, vec![Game::T5, Game::T6, Game::T6]);
+        drop(other_operation);
         settings.reconcile_queue(&catalog)?;
         assert_eq!(settings.queue, vec![Game::T6]);
         // A damaged receipt is surfaced, not silently treated as a fresh install.
         std::fs::write(directory.join(".glitter-boys-install.json"), b"broken")?;
         settings.queue = vec![Game::T5];
         assert!(settings.reconcile_queue(&catalog).is_err());
+        Ok(())
+    }
+
+    #[test]
+    fn restart_finishes_save_cleanup_before_dropping_a_promoted_install() -> Result<()> {
+        let data = tempfile::tempdir()?;
+        let catalog = Catalog::bundled()?;
+        let game = Game::T7;
+        let mut settings = Settings::load(data.path())?;
+        settings.queue = vec![game, Game::T6];
+        settings.save(data.path())?;
+        let staged = settings.library.join(".gb-stage-fixture").join(game.id());
+        for required in &catalog.package(game)?.required_files {
+            let path = staged.join(required);
+            std::fs::create_dir_all(
+                path.parent()
+                    .ok_or_else(|| Error::Invalid("Missing fixture parent".into()))?,
+            )?;
+            std::fs::write(path, b"fixture")?;
+        }
+        let saves = settings.library.join(".saves").join(game.id());
+        std::fs::create_dir_all(saves.join("boiii_players"))?;
+        std::fs::write(saves.join("boiii_players/config.cfg"), b"saved settings")?;
+        crate::storage::restore_saves(&settings.library, game, &staged)?;
+        write_json(
+            &staged.join(".glitter-boys-install.json"),
+            &Receipt {
+                version: 1,
+                catalog_version: catalog.version,
+                game,
+                prerequisites_complete: false,
+            },
+        )?;
+        let installed = settings.library.join(game.id());
+        std::fs::rename(staged, &installed)?;
+        // Simulate termination immediately after promotion, before scheduler cleanup.
+        assert!(saves.is_dir());
+        let mut restarted = Settings::load(data.path())?;
+        restarted.reconcile_queue(&catalog)?;
+        restarted.save(data.path())?;
+        assert_eq!(restarted.queue, vec![Game::T6]);
+        assert!(!saves.exists());
+        assert_eq!(
+            std::fs::read(installed.join("boiii_players/config.cfg"))?,
+            b"saved settings"
+        );
+        restarted.reconcile_queue(&catalog)?;
+        // The next keep-saves uninstall can use the save destinations again.
+        crate::storage::uninstall(&catalog, &restarted.library, game, true)?;
+        assert_eq!(
+            std::fs::read(saves.join("boiii_players/config.cfg"))?,
+            b"saved settings"
+        );
         Ok(())
     }
 }

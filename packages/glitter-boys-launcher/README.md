@@ -57,6 +57,11 @@ Existing destination directories are refused; Steam installations and saves are
 not imported or overwritten. Only the exact verified cache files owned by a
 successful installation are removed.
 
+Reinstalling restores launcher-preserved saves before promoting the verified game
+directory. If the process stops after promotion, startup verifies the completed
+installation and removes its duplicate preserved saves before dropping the queued
+job. A later keep-saves uninstall can then reuse those save destinations.
+
 Play reads the typed `prerequisites.json` contract and checks runtime family,
 architecture, registration where applicable, and DLL versions. It runs an included
 installer only for a missing or outdated requirement, checks its Microsoft
