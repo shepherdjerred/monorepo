@@ -110,15 +110,30 @@ export type ScoutClientMatchDispatchItem = z.infer<
   typeof ScoutClientMatchDispatchItemSchema
 >;
 
-/** A signal is bounded by the native ingress batch limit. */
+/** Native ingress limits the batches it sends to the shared dispatcher. */
+export const SCOUT_CLIENT_MATCH_DISPATCH_BATCH_LIMIT = 100;
+export const SCOUT_CLIENT_MATCH_DISPATCH_QUEUE_LIMIT = 5000;
+
 export const ScoutClientMatchDispatchBatchSchema = z
   .array(ScoutClientMatchDispatchItemSchema)
   .min(1)
-  .max(100)
+  .max(SCOUT_CLIENT_MATCH_DISPATCH_BATCH_LIMIT)
   .readonly();
 export type ScoutClientMatchDispatchBatch = z.infer<
   typeof ScoutClientMatchDispatchBatchSchema
 >;
+
+/**
+ * Accept older histories where one Riot discovery scan signalled more than
+ * the native-ingress batch size. New discovery signals are split into bounded
+ * batches, but Workflow handlers must continue replaying those recorded
+ * signals. The queue bound also keeps the historical payload finite.
+ */
+export const ScoutClientMatchDispatchSignalSchema = z
+  .array(ScoutClientMatchDispatchItemSchema)
+  .min(1)
+  .max(SCOUT_CLIENT_MATCH_DISPATCH_QUEUE_LIMIT)
+  .readonly();
 
 /**
  * Pending work crosses Continue-As-New so an accepted signal is never lost.
@@ -127,7 +142,10 @@ export type ScoutClientMatchDispatchBatch = z.infer<
  */
 const ScoutClientMatchDispatchV1InputSchema = z.strictObject({
   stage: ScoutStageSchema,
-  pending: z.array(ScoutClientMatchDispatchItemSchema).max(5000).readonly(),
+  pending: z
+    .array(ScoutClientMatchDispatchItemSchema)
+    .max(SCOUT_CLIENT_MATCH_DISPATCH_QUEUE_LIMIT)
+    .readonly(),
 });
 
 export const ScoutClientMatchDispatchOrderKeySchema = z.strictObject({
@@ -148,15 +166,22 @@ export type ScoutClientMatchDispatchOrderKey = z.infer<
 export const ScoutClientMatchDispatchInputSchema = z
   .strictObject({
     stage: ScoutStageSchema,
-    pending: z.array(ScoutClientMatchDispatchItemSchema).max(5000).readonly(),
+    pending: z
+      .array(ScoutClientMatchDispatchItemSchema)
+      .max(SCOUT_CLIENT_MATCH_DISPATCH_QUEUE_LIMIT)
+      .readonly(),
     lateArrivals: z
       .array(ScoutClientMatchDispatchItemSchema)
-      .max(5000)
+      .max(SCOUT_CLIENT_MATCH_DISPATCH_QUEUE_LIMIT)
       .readonly(),
     orderingWatermark: ScoutClientMatchDispatchOrderKeySchema.nullable(),
   })
   .superRefine((input, context) => {
-    if (input.pending.length + input.lateArrivals.length <= 5000) return;
+    if (
+      input.pending.length + input.lateArrivals.length <=
+      SCOUT_CLIENT_MATCH_DISPATCH_QUEUE_LIMIT
+    )
+      return;
     context.addIssue({
       code: "custom",
       message: "combined dispatcher queue exceeds 5000 matches",

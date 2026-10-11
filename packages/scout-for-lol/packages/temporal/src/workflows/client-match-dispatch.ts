@@ -21,7 +21,7 @@ import {
   scoutClientMatchDispatchCompletedSignal,
 } from "#src/signals.ts";
 import {
-  ScoutClientMatchDispatchBatchSchema,
+  ScoutClientMatchDispatchSignalSchema,
   ScoutClientMatchDispatchResultSchema,
   scoutClientMatchDispatchInputCodec,
   type ScoutClientMatchDispatchItem,
@@ -454,7 +454,9 @@ function mergeSignaledClientDispatchBatch(
   lateArrivals: Map<RiotMatchId, ScoutClientMatchDispatchItem>,
   orderingWatermark: ScoutClientMatchDispatchOrderKey | null,
 ): void {
-  const batch = ScoutClientMatchDispatchBatchSchema.parse(rawBatch);
+  // Histories may contain discovery scans larger than the ingress batch
+  // limit. New discovery signals are chunked at their producer.
+  const batch = ScoutClientMatchDispatchSignalSchema.parse(rawBatch);
   for (const match of batch) {
     mergeSignaledClientDispatchItem(
       pending,

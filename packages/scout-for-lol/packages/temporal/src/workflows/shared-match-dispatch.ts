@@ -27,6 +27,7 @@ import {
 import {
   ScoutClientMatchDispatchItemSchema,
   ScoutClientMatchDispatchResultSchema,
+  SCOUT_CLIENT_MATCH_DISPATCH_BATCH_LIMIT,
   scoutClientMatchDispatchInputCodec,
   type ScoutClientMatchDispatchItem,
 } from "#src/workflow-contracts.ts";
@@ -114,10 +115,20 @@ export async function processDiscoveredMatchesThroughDispatcher(
     completionTargets: [{ workflowId: info.workflowId, runId: info.runId }],
   }));
   const dispatcherId = await ensureClientMatchDispatcher(stage);
-  await getExternalWorkflowHandle(dispatcherId).signal(
-    dispatchScoutClientMatchesSignal,
-    dispatches,
-  );
+  const dispatcher = getExternalWorkflowHandle(dispatcherId);
+  for (
+    let offset = 0;
+    offset < dispatches.length;
+    offset += SCOUT_CLIENT_MATCH_DISPATCH_BATCH_LIMIT
+  ) {
+    await dispatcher.signal(
+      dispatchScoutClientMatchesSignal,
+      dispatches.slice(
+        offset,
+        offset + SCOUT_CLIENT_MATCH_DISPATCH_BATCH_LIMIT,
+      ),
+    );
+  }
   await condition(() =>
     matches.every((match) => results.has(match.riotMatchId)),
   );

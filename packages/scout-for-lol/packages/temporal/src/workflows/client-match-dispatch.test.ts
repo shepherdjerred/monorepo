@@ -16,6 +16,8 @@ import type {
 import { scoutClientMatchDispatchWorkflowId } from "#src/identifiers.ts";
 import { dispatchScoutClientMatchesSignal } from "#src/signals.ts";
 import {
+  ScoutClientMatchDispatchBatchSchema,
+  ScoutClientMatchDispatchSignalSchema,
   scoutClientMatchDispatchInputCodec,
   scoutPostMatchDiscoveryInputCodec,
   scoutPostMatchDiscoveryResultCodec,
@@ -188,6 +190,22 @@ async function terminateDispatcher(workflowId: string, reason: string) {
 }
 
 describe("the shared V2 match dispatcher", () => {
+  test("replays discovery signals larger than the native ingress batch", () => {
+    const legacyDiscoverySignal = Array.from({ length: 108 }, (_, index) => ({
+      ...dispatchItem(MATCH_ID, index),
+      riotMatchId: RiotMatchIdSchema.parse(
+        `EUW1_${String(8_000_000_000 + index)}`,
+      ),
+    }));
+
+    expect(() =>
+      ScoutClientMatchDispatchBatchSchema.parse(legacyDiscoverySignal),
+    ).toThrow();
+    expect(
+      ScoutClientMatchDispatchSignalSchema.parse(legacyDiscoverySignal),
+    ).toHaveLength(108);
+  });
+
   test("processes signaled matches serially in completion order", async () => {
     const log: string[] = [];
     const completed = Promise.withResolvers<true>();
