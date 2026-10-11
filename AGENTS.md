@@ -84,6 +84,9 @@ Never print, paste, or persist secrets. Use existing 1Password-backed commands.
 Use toolkit for its supported platform commands; it resolves registered
 credentials automatically. Run the command directly before fetching tokens by
 hand. Credential backends and setup belong in `packages/toolkit/README.md`.
+Outside toolkit, wrap `op run`/`op read` for homelab-vault references with
+`scripts/onepassword/with-service-account.sh`; it uses the Keychain service
+account, so commands need no 1Password desktop approval.
 On macOS, `op whoami` may be false while Desktop-authorized operations work;
 probe with the exact read or `op vault list`. An empty `cf auth list` is normal
 for environment-token authentication; use `cf auth whoami` or a read-only API
@@ -171,3 +174,14 @@ homelab, Scout, Temporal, TaskNotes, Minecraft harness and building, docs,
 Linear, PostHog, Discord, or report rendering work. Package-local runtime
 skills remain application assets and do not replace repository workflow
 guidance.
+
+<!-- BEGIN:turborepo-agent-rules -->
+
+# This is NOT the Turborepo you know
+
+Turborepo configuration, task behavior, and CLI commands can vary between installed versions and may differ from your training data. Resolve the `turbo` package from this file's directory or relevant workspace; in monorepos, it may not be visible from the repository root. For example, run `node -p "require.resolve('turbo/package.json')"` from a workspace that depends on `turbo`.
+
+Read `docs/README.md` inside that installed package first, then read the relevant pages from its `docs/` directory before changing Turborepo configuration or commands. Heed deprecation notices. These bundled docs match the installed package version and are available without network access.
+
+This block is written and re-added by `turbo` before repository-scoped commands when an AI agent is detected. In the Turborepo source repository, its template is defined in `crates/turborepo-cli/src/cli/agent_guidance.rs`. Removing the managed block while updates are enabled means a later qualifying invocation will add it again. Set `"agentGuidance": false` in the root `turbo.json` or `turbo.jsonc` to opt out; this does not remove an existing block. Keep the block committed with your work to avoid an uncommitted change on the next agent invocation.
+<!-- END:turborepo-agent-rules -->

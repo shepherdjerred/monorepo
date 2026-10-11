@@ -217,7 +217,10 @@ That is what makes `KeepAlive` safe: a crash loop cannot become a burst. Pass
 `--no-wait-window` only for short interactive runs.
 
 Take the key from 1Password with `op run` so it never lands on disk or in the
-plist.
+plist. Wrap it in
+[`with-service-account.sh`](https://github.com/shepherdjerred/monorepo/blob/main/scripts/onepassword/with-service-account.sh)
+so the unattended agent reads the Keychain service account instead of waiting
+for 1Password desktop approval.
 
 Gate on three things: zero collisions, zero unresolved, and every new identifier
 differing from its old one. The script enforces all three

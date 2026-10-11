@@ -38,7 +38,9 @@ bun run --filter='./packages/scout-for-lol' dev:web    # backend :3000, SPA http
 bun run --filter='./packages/scout-for-lol' dev:login  # prints a signed session URL
 ```
 
-- `dev:web` runs under `op run --env-file=dev-web.env.tpl`, ensures the local
+- `dev:web` runs under `op run --env-file=dev-web.env.tpl` through
+  `scripts/onepassword/with-service-account.sh` (no 1Password desktop
+  approval), ensures the local
   dev Postgres, applies migrations, and serves the SPA. It defaults to
   `SCOUT_DEV_AUTH_MODE=dev-login`, so no real Discord login is needed; open the
   `dev:login` URL with PinchTab.

@@ -34,7 +34,8 @@ try {
   const live = new LiveService({
     kubectl: new Kubectl(liveKubeTarget(context)),
     velero: new Kubectl(liveKubeTarget(context, VELERO_NAMESPACE)),
-    // Supplied once at daemon start (`op read`); never logged or returned.
+    // Supplied once at daemon start (`op read` through the service-account
+    // wrapper); never logged or returned.
     token: () => Bun.env[LIVE_TOKEN_ENV],
     config: () => liveGuardConfig(config),
     log: logLine,
