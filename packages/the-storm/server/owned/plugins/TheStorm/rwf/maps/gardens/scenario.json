@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "gardens-trooper-duel-v1",
+  "map": "gardens",
+  "mapSha256": "8ae724071164ac04878f479b718aa732c39cb89544ad499746c1cc6d0a3e5c8f",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 6144,
+      "y": 9,
+      "z": 2048
+    },
+    "max": {
+      "x": 6202,
+      "y": 23,
+      "z": 2183
+    }
+  },
+  "sourceTeams": ["BLUE", "RED"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [6171.5, 11, 2172.5],
+      "yaw": 182.02732849121094,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [6171.5, 11, 2056.5],
+      "yaw": 358.0748291015625,
+      "pitch": 0
+    }
+  ]
+}

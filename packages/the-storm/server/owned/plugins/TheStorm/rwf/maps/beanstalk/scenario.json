@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "beanstalk-trooper-duel-v1",
+  "map": "beanstalk",
+  "mapSha256": "dc646e9e99b80a7d821dfa13c94e7f6f0e7ae3ff4d1ebe9c1db337b6a54cb0fc",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 3072,
+      "y": 2,
+      "z": 1024
+    },
+    "max": {
+      "x": 3152,
+      "y": 156,
+      "z": 1174
+    }
+  },
+  "sourceTeams": ["BLUE", "RED"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [3111.5, 4, 1054.5],
+      "yaw": 358.7269592285156,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [3111.5, 4, 1137.5],
+      "yaw": 181.50743103027344,
+      "pitch": 0
+    }
+  ]
+}

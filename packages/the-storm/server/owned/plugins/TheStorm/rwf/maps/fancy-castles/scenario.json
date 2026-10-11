@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "fancy-castles-trooper-duel-v1",
+  "map": "fancy-castles",
+  "mapSha256": "bc5e294bec0480d895fc8e84b42241732fb7201847a64e5535be9d7fae7aa6a5",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 2048,
+      "y": 0,
+      "z": 2048
+    },
+    "max": {
+      "x": 2149,
+      "y": 133,
+      "z": 2261
+    }
+  },
+  "sourceTeams": ["RED", "BLUE"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [2083.5, 64, 2224.5],
+      "yaw": 192.57244873046875,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [2094.5, 64, 2053.5],
+      "yaw": 357.4614562988281,
+      "pitch": 0
+    }
+  ]
+}

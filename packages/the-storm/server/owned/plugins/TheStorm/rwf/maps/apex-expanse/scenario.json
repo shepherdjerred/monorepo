@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "apex-expanse-trooper-duel-v1",
+  "map": "apex-expanse",
+  "mapSha256": "57743aaebc82047c15a592ba1ffd8271c10c5549c0df72e51a09cb1a3152e430",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 1024,
+      "y": 0,
+      "z": 1024
+    },
+    "max": {
+      "x": 1344,
+      "y": 118,
+      "z": 1256
+    }
+  },
+  "sourceTeams": ["RED", "BLUE"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [1089.5, 49, 1175.5],
+      "yaw": 249.775146484375,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [1265.5, 50, 1144.5],
+      "yaw": 92.8271255493164,
+      "pitch": 0
+    }
+  ]
+}

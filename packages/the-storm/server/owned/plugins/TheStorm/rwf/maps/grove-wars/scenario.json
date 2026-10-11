@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "grove-wars-trooper-duel-v1",
+  "map": "grove-wars",
+  "mapSha256": "f3d6307d548f2d38c2da90f1714acefe3e51cf94b07737c5e58d2273c272b0bf",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 1024,
+      "y": 0,
+      "z": 3072
+    },
+    "max": {
+      "x": 1222,
+      "y": 111,
+      "z": 3186
+    }
+  },
+  "sourceTeams": ["RED", "BLUE"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [1069.5, 64, 3147.5],
+      "yaw": 251.56504821777344,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [1173.5, 72, 3147.5],
+      "yaw": 109.79887390136719,
+      "pitch": 0
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "village-skirmish-trooper-duel-v1",
+  "map": "village-skirmish",
+  "mapSha256": "e50b259ec58662f8830a10bd65ad00b3281f5ae8b6ee9ce23d2e01d07fb65950",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 5120,
+      "y": 129,
+      "z": 5120
+    },
+    "max": {
+      "x": 5226,
+      "y": 188,
+      "z": 5331
+    }
+  },
+  "sourceTeams": ["RED", "BLUE"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [5167.5, 147, 5305.5],
+      "yaw": 184.31602478027344,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [5167.5, 147, 5146.5],
+      "yaw": 355.6839599609375,
+      "pitch": 0
+    }
+  ]
+}

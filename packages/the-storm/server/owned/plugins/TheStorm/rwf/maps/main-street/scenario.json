@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "main-street-trooper-duel-v1",
+  "map": "main-street",
+  "mapSha256": "32bb5bc2f66d963c946c59f3e9b3e866b26ef79e58e8d8da6ca11f83672ec60a",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 3072,
+      "y": 1,
+      "z": 3072
+    },
+    "max": {
+      "x": 3125,
+      "y": 47,
+      "z": 3276
+    }
+  },
+  "sourceTeams": ["RED", "BLUE"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [3095.5, 20, 3079.5],
+      "yaw": 357.8900451660156,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [3095.5, 20, 3263.5],
+      "yaw": 182.25204467773438,
+      "pitch": 0
+    }
+  ]
+}

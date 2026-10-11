@@ -65,6 +65,7 @@ async function waitForTraversal(console: RconClient, mode: string) {
 }
 const token = randomBytes(24).toString("hex");
 const brain = startFakeBrain(token);
+const brainUrl = `http://host.docker.internal:${brain.port.toString()}`;
 let server: Awaited<ReturnType<typeof startServer>> | undefined;
 let rcon: RconClient | undefined;
 try {
@@ -72,12 +73,7 @@ try {
     cacheDir: path.join(root, ".cache/e2e/map-navigation"),
     bootTimeoutMs: 600_000,
     warmCache: true,
-    ...(await mapServerConfig(inputs)),
-    brain: {
-      baseUrl: `http://host.docker.internal:${brain.port.toString()}`,
-      token,
-    },
-    env: {},
+    ...(await mapServerConfig(inputs, { baseUrl: brainUrl, token })),
     resources: { cpus: 4, heap: "4G", memoryLimit: "6g" },
   });
   if (server.info.kind !== "container")

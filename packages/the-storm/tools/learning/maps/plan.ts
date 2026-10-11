@@ -46,6 +46,16 @@ if (
 )
   throw new Error("Training map validators differ from their neutral contract");
 
+export function validateCatalogIds(
+  installed: readonly string[],
+  registered: readonly string[],
+) {
+  if (!isDeepStrictEqual(installed, registered))
+    throw new Error(
+      "Installed training maps differ from the admitted scenario registry",
+    );
+}
+
 export function scenarioHash(scenario: z.infer<typeof MapScenario>): string {
   return new Bun.CryptoHasher("sha256")
     .update(JSON.stringify(scenario))
@@ -64,10 +74,7 @@ export async function trainingMaps(
     .map((entry) => entry.name)
     .sort();
   const registered = mapScenarios.map((scenario) => scenario.map).sort();
-  if (!isDeepStrictEqual(ids, registered))
-    throw new Error(
-      "Installed training maps differ from the admitted scenario registry",
-    );
+  validateCatalogIds(ids, registered);
   const maps: MapBinding[] = [];
   for (const id of ids) {
     const directory = path.join(folder, id);

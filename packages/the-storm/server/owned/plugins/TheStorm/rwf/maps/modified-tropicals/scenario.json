@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "modified-tropicals-trooper-duel-v1",
+  "map": "modified-tropicals",
+  "mapSha256": "fa19015ad0e22739301df29f81c9d3198a92660d95cf8142286e11f91f9ddfc6",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 5120,
+      "y": 0,
+      "z": 3072
+    },
+    "max": {
+      "x": 5497,
+      "y": 129,
+      "z": 3259
+    }
+  },
+  "sourceTeams": ["RED", "BLUE"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [5189.5, 106, 3179.5],
+      "yaw": 263.5545959472656,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [5427.5, 107, 3146.5],
+      "yaw": 80.65532684326172,
+      "pitch": 0
+    }
+  ]
+}

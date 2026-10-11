@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "fjords-trooper-duel-v1",
+  "map": "fjords",
+  "mapSha256": "fb861c2db949ff3d44276b157f62f94794d7dc272c8be298e96b34e9c6dd4ccf",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 3072,
+      "y": 0,
+      "z": 2048
+    },
+    "max": {
+      "x": 3316,
+      "y": 87,
+      "z": 2209
+    }
+  },
+  "sourceTeams": ["RED", "BLUE"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [3151.5, 56, 2127.5],
+      "yaw": 271.9978942871094,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [3246.5, 55, 2098.5],
+      "yaw": 59.60673904418945,
+      "pitch": 0
+    }
+  ]
+}

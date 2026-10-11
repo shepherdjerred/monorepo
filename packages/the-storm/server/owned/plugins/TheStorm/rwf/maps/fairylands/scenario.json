@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "fairylands-trooper-duel-v1",
+  "map": "fairylands",
+  "mapSha256": "f620e3ecda7f712b5c2cdcf3d9f58bf90a22d2cfde05f631d6be7f1f2c2455e3",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 1024,
+      "y": 0,
+      "z": 2048
+    },
+    "max": {
+      "x": 1145,
+      "y": 99,
+      "z": 2199
+    }
+  },
+  "sourceTeams": ["RED", "BLUE"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [1084.5, 55, 2170.5],
+      "yaw": 180.61605834960938,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [1084.5, 55, 2073.5],
+      "yaw": 359.4327392578125,
+      "pitch": 0
+    }
+  ]
+}
