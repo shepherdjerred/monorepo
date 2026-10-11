@@ -29,7 +29,11 @@ extension FacetObsidianSession {
         work.dirty = dirty
         let phase: FacetSyncTransportPhase
         if stopped || closed {
-            phase = transportPhase == .failed ? .failed : .stopped
+            if transportPhase == .failed {
+                phase = .failed
+            } else {
+                phase = restartableTransportFailure && !stopped ? .offline : .stopped
+            }
         } else if !authorized {
             phase = .reconnectRequired
         } else {

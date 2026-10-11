@@ -44,6 +44,8 @@ public actor FacetObsidianSession {
     internal let access: FacetSyncAccess
     internal let core: FfiObsidianSession
     internal let limits: ObsidianTransportLimits
+    internal let sendMessage:
+        @Sendable (URLSessionWebSocketTask, URLSessionWebSocketTask.Message) async throws -> Void
     internal let events = FacetSyncEventQueue<Event>(capacity: 8)
     private let changed: @Sendable () async -> Void
     internal let status: @Sendable (FacetSyncStatus) async -> Void
@@ -66,14 +68,20 @@ public actor FacetObsidianSession {
     internal var dirty = false
     internal var stopped = false
     internal var closed = false
+    internal var restartableTransportFailure = false
+    internal var retirementCompleted = false
     internal var worker: _Concurrency.Task<Void, Never>?
     private var ticker: _Concurrency.Task<Void, Never>?
     internal var reader: _Concurrency.Task<Void, Never>?
 
-    private init(
+    internal init(
         engine: FacetEngine, account: FacetObsidianAccount, profileID: String,
         access: FacetSyncAccess, checkpoint: String, changed: @escaping @Sendable () async -> Void,
-        status: @escaping @Sendable (FacetSyncStatus) async -> Void
+        status: @escaping @Sendable (FacetSyncStatus) async -> Void,
+        sendMessage:
+            @escaping @Sendable (
+                URLSessionWebSocketTask, URLSessionWebSocketTask.Message
+            ) async throws -> Void = { socket, message in try await socket.send(message) }
     ) throws {
         self.engine = engine
         self.account = account
@@ -81,6 +89,7 @@ public actor FacetObsidianSession {
         self.access = access
         self.changed = changed
         self.status = status
+        self.sendMessage = sendMessage
         limits = try obsidianTransportLimits()
         let vault = access.identity.vault
         core = try FfiObsidianSession(
@@ -191,7 +200,7 @@ extension FacetObsidianSession {
                 try await publishStatus()
             }
         } catch is CancellationError {} catch {
-            transportPhase = .failed
+            recordWorkerFailure(error)
         }
         processing = false
         activityRevision += 1
@@ -229,7 +238,7 @@ extension FacetObsidianSession {
         }
     }
 
-    private func close() async {
+    internal func close(beforeRetirement: (@Sendable () async -> Void)? = nil) async {
         guard !closed else { return }
         closed = true
         activityRevision += 1
@@ -243,20 +252,24 @@ extension FacetObsidianSession {
         socket = nil
         transport.invalidateAndCancel()
         await events.close()
+        await beforeRetirement?()
         // Cancellation and unbinding are the owned-transfer invalidation
         // boundary. An ordinary socket close preserves these receipts.
         let retiredAt = Self.now()
         do { try await retire { _ = try core.cancel(nowMs: retiredAt) } } catch {
             transportPhase = .failed
+            restartableTransportFailure = false
         }
         do { try await retire { _ = try core.unbindRuntime(nowMs: retiredAt) } } catch {
             transportPhase = .failed
+            restartableTransportFailure = false
         }
         pendingDownloads.removeAll()
         pendingMetadata.removeAll()
         uploadAdmissions = FacetUploadAdmissions()
         metadata.removeAll()
         queued.removeAll()
+        retirementCompleted = transportPhase != .failed
     }
 
     /// Shutdown must finish even when its worker was cancelled. Busy retains

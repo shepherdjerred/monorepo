@@ -20,6 +20,7 @@ import {
   atomicJSON,
 } from "./model";
 import { command, save, writeDescriptors } from "./platform";
+import { inspectOfficialPlugin } from "./official-plugin";
 
 export async function seed(directory: string) {
   await cp(path.join(fixtures, "e2e/local-vault"), directory, {
@@ -266,6 +267,9 @@ export async function sealReference(manifest: Manifest) {
     throw new Error("Seal the official reference before binding live clients");
   const directory = path.join(runDirectory(manifest.runID), "reference-vault");
   const settingsPath = ".obsidian/plugins/tasknotes/data.json";
+  const pluginEvidence = await inspectOfficialPlugin(
+    path.join(directory, ".obsidian/plugins/tasknotes"),
+  );
   const originalSettings = manifest.reference[settingsPath];
   if (originalSettings === undefined)
     throw new Error("Missing seeded plugin settings");
@@ -324,6 +328,7 @@ export async function sealReference(manifest: Manifest) {
       capturedAt: new Date().toISOString(),
       officialVersion,
       taskNotesVersion: plugin.version,
+      pluginEvidence,
       pluginManifestSHA256: digest(
         await readFile(
           path.join(directory, ".obsidian/plugins/tasknotes/manifest.json"),

@@ -15,6 +15,10 @@ import {
 import { command, save } from "./platform";
 import { waitForConvergence } from "./native";
 import { fingerprintApp } from "./prepare";
+import {
+  assertSealedOfficialPlugin,
+  inspectOfficialPlugin,
+} from "./official-plugin";
 
 export function assertRoundComplete(manifest: Manifest): void {
   if (manifest.failures.length > 0 || manifest.stage === "failed")
@@ -167,6 +171,7 @@ async function assertPriorEvidence(manifest: Manifest) {
       runID: z.literal(manifest.runID),
       officialVersion: z.string(),
       pluginManifestSHA256: sha256,
+      pluginEvidence: z.unknown(),
     })
     .parse(
       await Bun.file(path.join(directory, "official-reference.json")).json(),
@@ -179,6 +184,12 @@ async function assertPriorEvidence(manifest: Manifest) {
   );
   if (digest(pluginManifest) !== reference.pluginManifestSHA256)
     throw new Error("Installed official plugin changed during acceptance");
+  assertSealedOfficialPlugin(
+    reference.pluginEvidence,
+    await inspectOfficialPlugin(
+      path.join(directory, "reference-vault/.obsidian/plugins/tasknotes"),
+    ),
+  );
   const version = await command([
     "plutil",
     "-extract",

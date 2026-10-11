@@ -146,6 +146,9 @@ redacted errors. A successful account with no Sync vaults has an explicit empty
 state. Dismissal cancels only that sheet's request and fences late replies;
 credentials remain transient and clear after success or dismissal. Startup
 publishes the engine and account together, so failed initialization can retry.
+An outbound connection failure retains pending uploads and retires its worker.
+Returning to the foreground starts a new authorized transport after the previous
+worker has unbound; authentication and contract failures require their own recovery.
 
 The Xcode application target (`project.yml`, XcodeGen — the `.xcodeproj` is
 generated and gitignored) links `TaskNotesMac` and supplies only the `@main`

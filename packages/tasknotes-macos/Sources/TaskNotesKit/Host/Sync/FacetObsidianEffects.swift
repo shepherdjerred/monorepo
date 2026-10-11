@@ -24,10 +24,10 @@ extension FacetObsidianSession {
         case .connect(let address): try await connectSocket(address)
         case .sendText(let text):
             guard let socket else { throw FacetSyncError.transport }
-            try await socket.send(.string(text))
+            try await FacetSyncSend.perform { try await sendMessage(socket, .string(text)) }
         case .sendBinary(let bytes):
             guard let socket else { throw FacetSyncError.transport }
-            try await socket.send(.data(bytes))
+            try await FacetSyncSend.perform { try await sendMessage(socket, .data(bytes)) }
         case .close:
             epoch += 1
             ready = false
