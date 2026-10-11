@@ -26,6 +26,7 @@
     "e2e:perf:browser": "bun run scripts/e2e-perf-browser.ts",
     "e2e:race": "bun run scripts/e2e-race.ts",
     "e2e:scenario": "bun run scripts/e2e-scenario.ts",
+    "e2e:game-latency": "bun run scripts/e2e-game-latency.ts",
     "e2e:audio": "bun run scripts/e2e-audio.ts",
     "e2e:stream-latency": "bun run scripts/e2e-stream-latency.ts",
     "e2e:driver-feed": "bun run scripts/e2e-driver-feed.ts",

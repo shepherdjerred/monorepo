@@ -443,6 +443,18 @@ export class N64Emulator {
     this.timer = undefined;
   }
 
+  /**
+   * Run exactly one VI tick synchronously, firing the same frame and audio
+   * callbacks the paced loop would. For harnesses that need VI-granular control;
+   * the paced loop must be stopped.
+   */
+  step(): void {
+    if (this.running) {
+      throw new Error("cannot step the emulator while its paced loop runs");
+    }
+    this.tick();
+  }
+
   restartFromStartMenu(reason: EmulatorRestartReason): void {
     const rt = this.rt;
     if (rt === undefined) {

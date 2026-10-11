@@ -19,10 +19,18 @@ import { LatestFrameSink } from "#src/stream/latest-frame-sink.ts";
 import {
   driverFeedAccessUnitBytes,
   driverFeedEncoderRunning,
+  driverFeedFrameToUnitMs,
   driverFeedFramesEvictedTotal,
+  driverFeedInputToUnitMs,
+  driverFeedLatencyCorrelationFailuresTotal,
+  driverFeedSinkFrames,
 } from "#src/observability/metrics.ts";
 import { logger } from "#src/logger.ts";
 import { AnnexBSplitter, type AccessUnit } from "./annex-b.ts";
+import {
+  DriverFeedLatencyTracker,
+  type DriverFeedFrameTiming,
+} from "./latency-tracker.ts";
 
 const FRAME_BYTES = WIDTH * HEIGHT * 4;
 /** Same bound as the Go-Live sink: evict the oldest rather than stall the emulator. */
@@ -208,7 +216,18 @@ export class DriverFeedEncoder {
   private readonly callbacks: DriverFeedEncoderCallbacks;
   private readonly processFactory: DriverFeedProcessFactory;
   private readonly splitter = new AnnexBSplitter();
-  private sink: LatestFrameSink | undefined;
+  private readonly latency = new DriverFeedLatencyTracker({
+    frameToUnit: (ms) => {
+      driverFeedFrameToUnitMs.observe(ms);
+    },
+    inputToUnit: (ms) => {
+      driverFeedInputToUnitMs.observe(ms);
+    },
+    correlationFailure: () => {
+      driverFeedLatencyCorrelationFailuresTotal.inc();
+    },
+  });
+  private sink: LatestFrameSink<DriverFeedFrameTiming> | undefined;
   private child: ChildProcessWithoutNullStreams | undefined;
   private stopping = false;
   /** Single-use: the splitter carries stream state that must not span processes. */
@@ -252,15 +271,16 @@ export class DriverFeedEncoder {
     this.child = child;
     driverFeedEncoderRunning.set(1);
 
-    const sink = new LatestFrameSink({
+    const sink = new LatestFrameSink<DriverFeedFrameTiming>({
       frameBytes: FRAME_BYTES,
       maxBufferedFrames: MAX_BUFFERED_FRAMES,
       onFrameEvicted: () => {
         driverFeedFramesEvictedTotal.inc();
       },
-      onFrameDelivered: () => {
-        // Delivery is the uninteresting case; the eviction counter carries the
-        // health signal and a per-frame no-op keeps this off the hot path.
+      onFrameDelivered: (timing) => {
+        // Only frames that reach ffmpeg can become access units, so this is
+        // where the frame-to-unit pairing starts.
+        if (timing !== undefined) this.latency.frameDelivered(timing);
       },
     });
     this.sink = sink;
@@ -274,6 +294,7 @@ export class DriverFeedEncoder {
         throw new TypeError("ffmpeg stdout emitted a non-Buffer chunk");
       }
       for (const unit of this.splitter.push(chunk)) {
+        this.latency.unitReady();
         driverFeedAccessUnitBytes.observe(unit.bytes.length);
         this.callbacks.onAccessUnit(unit);
       }
@@ -311,8 +332,12 @@ export class DriverFeedEncoder {
     });
   }
 
-  /** Feed one overlay-composited BGRA frame. No-op when the encoder is down. */
-  pushFrame(frame: Buffer): void {
+  /**
+   * Feed one overlay-composited BGRA frame. No-op when the encoder is down.
+   * `inputReceivedAtMs` is the receipt time of the earliest input this frame is
+   * the first to reflect, on the InputLatencyTracker clock.
+   */
+  pushFrame(frame: Buffer, inputReceivedAtMs?: number): void {
     const sink = this.sink;
     if (sink === undefined || !this.running) return;
     if (frame.length !== FRAME_BYTES) {
@@ -330,7 +355,11 @@ export class DriverFeedEncoder {
       driverFeedFramesEvictedTotal.inc();
       return;
     }
-    sink.writeFrame(frame);
+    sink.writeFrame(frame, {
+      pushedAtMs: performance.timeOrigin + performance.now(),
+      ...(inputReceivedAtMs === undefined ? {} : { inputReceivedAtMs }),
+    });
+    driverFeedSinkFrames.set(sink.bufferedBytes / FRAME_BYTES);
   }
 
   stop(): void {

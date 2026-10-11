@@ -5,6 +5,7 @@ import {
 } from "@discord-plays-mario-kart/common";
 import { connectDriverFeed, type DriverFeedStatus } from "#src/video.ts";
 import { hudClockRegion, samplerForImageData } from "#src/hud-clock.ts";
+import { feedTelemetry } from "#src/feed-telemetry.ts";
 
 /** How often to read the HUD clock back off the canvas. */
 const LATENCY_SAMPLE_INTERVAL_MS = 250;
@@ -76,7 +77,15 @@ export function GameView({ driverSocketId }: { driverSocketId: string }) {
             return;
           }
           consecutiveFailures = 0;
-          setLatencyMs(latencyMsFromClock(captured, now));
+          const glassMs = latencyMsFromClock(
+            captured,
+            feedTelemetry.serverNow(now),
+          );
+          feedTelemetry.recordGlass(glassMs);
+          setLatencyMs(Math.round(glassMs));
+        },
+        onDecoderReset: () => {
+          feedTelemetry.recordDecoderReset();
         },
       },
       driverSocketId,
@@ -92,7 +101,7 @@ export function GameView({ driverSocketId }: { driverSocketId: string }) {
         {latencyMs !== undefined && (
           <span
             className="font-mono"
-            title="Capture-to-paint, read off the clock burned into each frame. Assumes your clock and the server's are both NTP-synced; excludes your display's own latency."
+            title="Capture-to-paint, read off the clock burned into each frame and corrected for the offset between your clock and the server's. Excludes your display's own latency."
           >
             {latencyMs}ms to glass
           </span>

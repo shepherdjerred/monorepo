@@ -213,6 +213,49 @@ export const driverFeedUnitsDroppedTotal = new Counter({
   registers: [registry],
 });
 
+const DRIVER_FEED_LATENCY_BUCKETS = [
+  1, 2, 4, 8, 16, 25, 33, 50, 66, 100, 150, 250, 500, 1000,
+];
+
+export const driverFeedFrameToUnitMs = new Histogram({
+  name: "driver_feed_frame_to_unit_ms",
+  help: "Time from a composited frame being handed to the driver feed to its encoded access unit being ready for the hub, in ms. Covers the sink queue, the stdin pipe, ffmpeg, and stdout framing",
+  buckets: DRIVER_FEED_LATENCY_BUCKETS,
+  registers: [registry],
+});
+
+export const driverFeedInputToUnitMs = new Histogram({
+  name: "driver_feed_input_to_unit_ms",
+  help: "Time from a controller input arriving at the backend to the first driver-feed access unit reflecting it being ready for the hub, in ms. The driver-feed counterpart of stream_input_to_packet_ready_ms",
+  buckets: DRIVER_FEED_LATENCY_BUCKETS,
+  registers: [registry],
+});
+
+export const driverFeedSinkFrames = new Gauge({
+  name: "driver_feed_sink_frames",
+  help: "Raw frames queued in the driver-feed sink ahead of ffmpeg, sampled on every push. A standing value above 1 is latency added before encoding",
+  registers: [registry],
+});
+
+export const driverFeedLatencyCorrelationFailuresTotal = new Counter({
+  name: "driver_feed_latency_correlation_failures_total",
+  help: "Times the frame-to-access-unit pairing queue outgrew any honest encoder backlog and was reset. Non-zero means driver_feed_*_to_unit_ms samples around it are unreliable",
+  registers: [registry],
+});
+
+export const driverFeedGlassMs = new Histogram({
+  name: "driver_feed_glass_ms",
+  help: "Browser-measured time from the HUD clock burned into a frame to that frame being painted on the driver's canvas, clock-offset corrected against the server, in ms. Excludes the player's display",
+  buckets: DRIVER_FEED_LATENCY_BUCKETS,
+  registers: [registry],
+});
+
+export const driverFeedClientDecoderResetsTotal = new Counter({
+  name: "driver_feed_client_decoder_resets_total",
+  help: "Browser decoder resets reported by driver-feed clients. Each one blanks the picture until the next keyframe",
+  registers: [registry],
+});
+
 export const driverFeedClientBufferBytes = new Gauge({
   name: "driver_feed_client_buffer_bytes",
   help: "Largest unflushed WebSocket backlog across driver-feed clients, in bytes. The early-warning signal for a slow viewer, the same role sinkBufferBytes plays on the Go-Live path",

@@ -51,7 +51,8 @@ const NAV_FPS = 1000;
 // ---- acceptance thresholds (per scenario) ----
 const THRESHOLDS = {
   fpsMin: 29.5,
-  emulateP95Max: 33, // wasm core fits in the 33ms (30fps) budget
+  // One tick is one VI (60 Hz), so the wasm core must fit in 1000/60 ms.
+  emulateP95Max: 1000 / 60,
   lateP95Max: 10, // scheduler stays close to schedule
   resyncDeltaMax: 0, // no catastrophic loop resyncs
   applyP95Max: 50, // input → emulator-apply latency
@@ -416,7 +417,7 @@ function evaluateThresholds(r: ChildResult): {
   }
   if (r.emulateP95 > THRESHOLDS.emulateP95Max) {
     failures.push(
-      `emulate_p95=${fmtNum(r.emulateP95)} > ${String(THRESHOLDS.emulateP95Max)}`,
+      `emulate_p95=${fmtNum(r.emulateP95)} > ${fmtNum(THRESHOLDS.emulateP95Max)}`,
     );
   }
   if (r.lateP95 > THRESHOLDS.lateP95Max) {

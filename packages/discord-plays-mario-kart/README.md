@@ -20,13 +20,14 @@ Fully headless — no browser, no emulator UI, no GPU, no desktop:
   of
   [`@dank074/discord-video-stream`](https://github.com/dank074/Discord-video-stream))
   using a self-bot, so viewers watch in the voice channel.
-- **Driver feed** — the people driving don't have to watch Discord. The same
-  frames are encoded a second time and pushed over a WebSocket straight into the
-  controller page, where the browser decodes them with WebCodecs onto a canvas.
-  That skips Discord's voice pipeline and its client-side de-jitter buffer, which
-  is the single largest chunk of the input-to-picture delay. Spectators keep
-  watching the Go-Live stream, which is unaffected. Off by default; enable
-  `[driver_feed]` in `config.toml`.
+- **Driver feed** — how the people driving watch the game. The same frames are
+  encoded a second time and pushed over a WebSocket straight into the controller
+  page, where the browser decodes them with WebCodecs onto a canvas. That skips
+  Discord's voice pipeline and its client-side de-jitter buffer, which was the
+  single largest chunk of the input-to-picture delay. The Go-Live stream is for
+  spectators and does not depend on the feed. Production enables the feed in its
+  GitOps-managed environment; the code default is off, so enable `[driver_feed]`
+  in `config.toml` for other deployments.
 - **Input** — the web UI exposes up to **four virtual controllers** (seats
   P1–P4). Players claim a seat and drive with WASD/arrows in real time; inputs
   are sent over Socket.IO and applied per-player each frame. Players navigate the
@@ -127,6 +128,9 @@ bun run e2e:scenario 4p --shot /tmp/4p.png # 4-player race; names burned into ea
 bun run e2e:scenario 2p --watch            # log state transitions (menu → staging → racing)
 bun run e2e:scenario 1p --names Me,Bot     # override the burned-in names
 
+# Game-side input latency, in VIs, from replays of one heap snapshot.
+bun run e2e:game-latency --seats 4         # also: swap phase, game fps, emulate time
+
 # Lower-level scripts:
 bun run e2e:input:check ~/syncthing/Sync/roms/mariokart64.z64
                                # baseline vs START, asserts the frame changes
@@ -163,6 +167,20 @@ media availability to encoded packet readiness and RTP completion;
 controller receipt to the first correlated video packet; and
 `stream_av_content_offset_ms` measures signed source-content skew. Correlation
 failures are explicit in `stream_latency_correlation_failures_total`.
+
+The driver feed has its own boundaries. `driver_feed_frame_to_unit_ms` measures
+a composited frame entering the feed to its access unit being ready, and
+`driver_feed_input_to_unit_ms` measures controller receipt to the first access
+unit reflecting it. `driver_feed_glass_ms` is the browser's own HUD-clock
+capture-to-paint reading, corrected by a clock offset estimated from the
+controller's ping. `driver_feed_client_decoder_resets_total` counts browser
+decoder resets, each of which blanks the picture until the next keyframe.
+
+`e2e:game-latency` measures the part no transport change can touch: how many VIs
+MK64 takes to show an input. It snapshots the whole wasm heap once in a race and
+replays it per trial, so every trial starts from an identical state. The core's
+VI filter adds low-amplitude noise to most pixels on every VI, so the harness
+counts a new picture only when many pixels move well beyond that noise.
 
 ## Deployment
 

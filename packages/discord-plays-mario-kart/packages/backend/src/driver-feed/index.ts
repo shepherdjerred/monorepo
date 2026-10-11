@@ -133,8 +133,8 @@ export class DriverFeedService {
   }
 
   /** Feed one overlay-composited BGRA frame from the emulator tee. */
-  pushFrame(frame: Buffer): void {
-    this.encoder?.pushFrame(frame);
+  pushFrame(frame: Buffer, inputReceivedAtMs?: number): void {
+    this.encoder?.pushFrame(frame, inputReceivedAtMs);
   }
 
   /**

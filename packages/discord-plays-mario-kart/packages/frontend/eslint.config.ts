@@ -7,6 +7,7 @@ const config = [
     projectService: {
       allowDefaultProject: [
         "eslint.config.ts",
+        "src/feed-telemetry.test.ts",
         "src/input-map.test.ts",
         "src/video.test.ts",
       ],
