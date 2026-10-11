@@ -8,7 +8,8 @@ function Invoke-Native([scriptblock]$Command) {
     if ($LASTEXITCODE -ne 0) { throw "Command failed with exit code ${LASTEXITCODE}: $Command" }
 }
 
-$source = $env:DOTFILES_LOCAL_PATH ?? (Join-Path $HOME 'Git\monorepo\packages\dotfiles-windows')
+# Keep this script Windows PowerShell 5.1 compatible: a fresh install has no pwsh yet.
+$source = if ($env:DOTFILES_LOCAL_PATH) { $env:DOTFILES_LOCAL_PATH } else { Join-Path $HOME 'Git\monorepo\packages\dotfiles-windows' }
 $msys = 'C:\msys64'
 
 foreach ($id in 'Git.Git', 'twpayne.chezmoi', 'AgileBits.1Password', 'AgileBits.1Password.CLI', 'MSYS2.MSYS2', 'AmanThanvi.winghostty') {
