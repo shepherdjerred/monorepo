@@ -255,16 +255,17 @@ and on(schedule) (max(velero_backup_success_total{schedule!="",schedule=~"${sche
           annotations: {
             summary: "Velero backup taking too long",
             message: escapePrometheusTemplate(
-              "Velero backup {{ $labels.schedule }} has exceeded 30 minutes duration. This may indicate large volumes are being backed up that should be excluded.",
+              "{{ $value }} Velero {{ $labels.schedule }} backup(s) in the last day took longer than 30 minutes. This may indicate large volumes are being backed up that should be excluded.",
             ),
           },
-          // Velero exports the duration only as a histogram; the mean of the
-          // backups that finished in the last day is the recent duration.
+          // Velero exports the duration only as a histogram. Backups that
+          // finished but not within the 1800s bucket each took over 30
+          // minutes; a mean would hide one slow run among fast ones. The 0.5
+          // threshold absorbs increase() extrapolation.
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            `max by (schedule) (
-  increase(velero_backup_duration_seconds_sum[1d])
-  / increase(velero_backup_duration_seconds_count[1d])
-) > 1800`,
+            `sum by (schedule) (increase(velero_backup_duration_seconds_count[1d]))
+- sum by (schedule) (increase(velero_backup_duration_seconds_bucket{le="1800.0"}[1d]))
+> 0.5`,
           ),
           for: "5m",
           labels: {
