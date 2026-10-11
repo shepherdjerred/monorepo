@@ -1,12 +1,13 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { createServer, type Server as HttpServer } from "node:http";
-import { Server as SocketIoServer } from "socket.io";
+import type { Server as SocketIoServer } from "socket.io";
 import { io as ioClient, type Socket } from "socket.io-client";
 import WebSocket from "ws";
 import {
   DRIVER_FEED_PATH,
   DriverFeedInitSchema,
 } from "@discord-plays-mario-kart/common";
+import { createSocket } from "#src/webserver/socket.ts";
 import { DriverFeedService } from "./index.ts";
 
 // The load-bearing claim this file exists to prove: a `ws` server mounted on
@@ -25,7 +26,8 @@ const started: Harness[] = [];
 
 async function startHarness(): Promise<Harness> {
   const server = createServer();
-  const io = new SocketIoServer(server);
+  // The production Socket.IO setup, so its upgrade policy is what is tested.
+  const { io } = createSocket({ server, isCorsEnabled: false });
   const service = new DriverFeedService({
     config: {
       enabled: true,
@@ -122,6 +124,26 @@ function clientConnected(client: Socket): Promise<void> {
 }
 
 describe("driver feed HTTP attachment", () => {
+  it("keeps a feed client connected past engine.io's upgrade timeout", async () => {
+    // engine.io ends any upgrade it does not own after `destroyUpgradeTimeout`
+    // (1 s) unless the socket reports bytes written. Under Bun the upgraded
+    // socket reports none, so before createSocket opted out, every driver's
+    // feed dropped and resynced once a second.
+    const { port } = await startHarness();
+    const feed = openFeed(port);
+    await acknowledgeReady(feed);
+    const outcome = await Promise.race([
+      new Promise<string>((resolve) => {
+        feed.once("close", (code: number) => {
+          resolve(`closed with ${String(code)}`);
+        });
+      }),
+      Bun.sleep(1500).then(() => "open"),
+    ]);
+    expect(outcome).toBe("open");
+    feed.close();
+  });
+
   it("serves the handshake on /video", async () => {
     const { port } = await startHarness();
     const socket = openFeed(port);
@@ -224,7 +246,7 @@ describe("driver feed HTTP attachment", () => {
     const { port } = await startHarness();
     const stray = new WebSocket(`ws://127.0.0.1:${String(port)}/not-the-feed`);
     stray.on("error", () => {
-      // Expected: engine.io ends this socket. Swallow so it is not unhandled.
+      // Expected: the server ends this socket. Swallow so it is not unhandled.
     });
     const outcome = await new Promise<string>((resolve) => {
       stray.once("open", () => {
@@ -235,9 +257,8 @@ describe("driver feed HTTP attachment", () => {
       });
     });
 
-    // Engine.io owns unmatched upgrades and ends them ~1s later. The assertion
-    // that matters is that the feed did NOT hand back a handshake for a path it
-    // does not serve.
+    // createSocket ends upgrades nobody serves. The assertion that matters is
+    // that the feed did NOT hand back a handshake for a path it does not serve.
     expect(outcome).toBe("closed");
   });
 });
