@@ -80,6 +80,85 @@ task_detection:
 
 ## Testing
 
+### Live Apple Sync acceptance
+
+`bun run apple:sync:live prepare` builds the current Debug iOS app on a new
+disposable simulator and the separate `TaskNotesAcceptance` macOS app. It creates
+a synthetic reference seed for the encrypted Sync vault under
+`.build/live-sync/<runID>/reference-vault`
+and records source, app, fixture and attachment hashes. The live seed omits
+`tasknotes.yaml` so portable configuration cannot mask official plugin settings.
+Existing app identities, vaults and simulators are outside this runner's ownership.
+
+Open the printed reference folder in official Obsidian, install and enable
+TaskNotes **4.13.8**, and create a new encrypted remote vault with the printed
+unique name. Enable all other attachment types and vault configuration/plugin
+data in Sync, restart Obsidian, and wait for synchronization. Store the separate
+vault password in 1Password. Account entry and MFA are manual, with recording off.
+
+```bash
+bun run apple:sync:live seal-reference <runID>
+bun run apple:sync:live discover <runID>
+# Sign in manually; identify only the exact synthetic vault. Discovery cannot authorize a vault.
+bun run apple:sync:live bind-vault <runID> <nonsecret-remote-vault-id>
+bun run apple:sync:live resume <runID>
+# Authenticate both isolated apps and connect only the bound synthetic vault.
+bun run apple:sync:live verify <runID>
+bun run apple:sync:live reference-changes <runID>
+bun run apple:sync:live journeys <runID>
+bun run apple:sync:live offline <runID>
+bun run apple:sync:live conflicts <runID>
+bun run apple:sync:live lifecycle-begin <runID> ios
+# Manually sign in and reconnect the existing profile, with recording off.
+bun run apple:sync:live lifecycle-finish <runID> ios
+# Repeat lifecycle-begin / lifecycle-finish for macos.
+bun run apple:sync:live authentication-fixtures <runID>
+bun run apple:sync:live official-ui-instructions <runID>
+# Follow the four owner UI actions and run official-ui <runID> <step> after each.
+bun run apple:sync:live complete-round <runID>
+bun run apple:sync:live status <runID>
+```
+
+Sealing checks the installed plugin version, enabled state, normalized supported
+settings and unchanged seed notes/attachments. Initial verification requires
+fresh status from both real clients, matching remote vault identity, drained
+durable queues, no conflicts or pending host work, and identical synthetic file
+paths and hashes in all three folders. Initial download has a 180-second deadline;
+later convergence has 120 seconds. Failures retain the run without automatic retries.
+
+Reference changes exercise file writes through official Obsidian's Sync transport;
+they do not constitute official TaskNotes UI interaction. Native journeys capture,
+edit, complete, uncomplete and cold-relaunch on both clients in the active round.
+They also check that a changed plugin default produces high-priority native tasks.
+Offline journeys retain local edits across relaunch and verify convergence after
+reconnection. Authentication fixture evidence is distinct from live account/MFA
+acceptance. Conflict journeys preview both divergent versions, keep both and
+verify their exact bytes across all replicas. Session journeys preserve the
+original profile and pending uploads through sign-out, cold launch and manual
+reauthorization. Official TaskNotes UI actions remain owner-attested. For each
+create, edit, complete and uncomplete action, save a real PNG screenshot beneath
+`.build/live-sync/<runID>/official-ui/round-<round>/<step>.png`, showing only the
+synthetic vault and task. Create this private directory before saving the first
+image. Missing images leave that checkpoint pending; account entry, credentials,
+and unrelated vaults must stay outside captures. The runner validates bounded PNG
+integrity, records the exact image hash, and verifies task state and three-replica
+file convergence. A reviewer must inspect every retained image before claiming
+visual acceptance; image hashes alone do not establish what was shown.
+
+`complete-round` requires every scenario, unchanged source/artifacts and final
+convergence. It archives evidence before advancing to the next unique round
+namespace. Repeat the complete matrix for rounds two and three; only then may
+the three-consecutive-runs case pass. Stage failures persist and block replay
+in that run. Fix the cause and prepare a new owned run; retained failure evidence
+is never replaced by a passing retry. Manual reauthentication checkpoints remain
+pending until their measured follow-up succeeds.
+
+Post-authentication XCTest evidence is retained under each run's `journeys` folder.
+Raw result bundles and account diagnostics stay private; publish only selected
+synthetic screenshots/recordings and bounded provenance. `cleanup <runID>` removes
+only the exactly owned simulator after every required case passes. It never deletes
+the remote vault, macOS state or failed-run evidence.
+
 ```bash
 bun run check:ios-native-deps       # shared bootstrap and product contract
 bun run lint:swift                 # preserved extensions and the native app

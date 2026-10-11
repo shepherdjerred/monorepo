@@ -116,7 +116,66 @@ async function isolatedTestRun(device: string): Promise<string> {
   return testRun;
 }
 
-async function writeProvenance(device: string, app: string): Promise<void> {
+type SourceFingerprints = Record<string, string>;
+
+export function requireStableSources(
+  before: SourceFingerprints,
+  after: SourceFingerprints,
+): void {
+  if (JSON.stringify(before) !== JSON.stringify(after)) {
+    throw new Error(
+      "Apple/core/fixture inputs changed while building native E2E artifacts",
+    );
+  }
+}
+
+async function sourceFingerprints(): Promise<SourceFingerprints> {
+  const workspace = path.resolve(packageRoot, "../..");
+  const output = await command(
+    [
+      "git",
+      "ls-files",
+      "-z",
+      "--cached",
+      "--others",
+      "--exclude-standard",
+      "--",
+      "packages/tasks-for-obsidian/ios",
+      "packages/tasks-for-obsidian/scripts",
+      "packages/tasknotes-macos",
+      "packages/tasknotes-core",
+      "packages/tasknotes-fixtures",
+      "bun.lock",
+      "package.json",
+      ".mise.toml",
+    ],
+    true,
+    workspace,
+  );
+  const files = [...new Set(output.split("\0").filter(Boolean))].sort();
+  if (files.length === 0 || files.length > 20_000) {
+    throw new Error("Unexpected native source input inventory");
+  }
+  const fingerprints: SourceFingerprints = {};
+  for (const file of files) {
+    if (path.isAbsolute(file) || file.split("/").includes("..")) {
+      throw new Error("Native source input escaped the workspace");
+    }
+    const source = Bun.file(path.join(workspace, file));
+    fingerprints[file] = (await source.exists())
+      ? new Bun.CryptoHasher("sha256")
+          .update(await source.bytes())
+          .digest("hex")
+      : "deleted";
+  }
+  return fingerprints;
+}
+
+async function writeProvenance(
+  device: string,
+  app: string,
+  fingerprints: SourceFingerprints,
+): Promise<void> {
   const sourceHead = await command(["git", "rev-parse", "HEAD"], true);
   const sourceDiff = await command(
     [
@@ -141,19 +200,6 @@ async function writeProvenance(device: string, app: string): Promise<void> {
       .update(await Bun.file(path.join(app, file)).bytes())
       .digest("hex");
   }
-  const sourceFiles = [
-    "scripts/ios-native-e2e.ts",
-    "ios/FacetUITests/StandaloneTaskTests.swift",
-    "../tasknotes-fixtures/e2e/local-vault/tasknotes.yaml",
-    "../tasknotes-fixtures/e2e/local-vault/Tasks/Existing.md",
-    "../tasknotes-fixtures/e2e/local-vault/Reference.md",
-  ];
-  const fingerprints: Record<string, string> = {};
-  for (const file of sourceFiles) {
-    fingerprints[file] = new Bun.CryptoHasher("sha256")
-      .update(await Bun.file(path.resolve(packageRoot, file)).bytes())
-      .digest("hex");
-  }
   await Bun.write(
     path.join(evidence, "provenance.json"),
     JSON.stringify(
@@ -168,6 +214,8 @@ async function writeProvenance(device: string, app: string): Promise<void> {
           .digest("hex"),
         artifactFiles,
         fingerprints,
+        sourceInventory:
+          "git cached + untracked nonignored Apple/core/fixtures, verified stable across build",
       },
       null,
       2,
@@ -311,7 +359,9 @@ async function main(): Promise<void> {
     console.log(`Disposable simulator: ${device}. Evidence: ${evidence}`);
     await command(["xcrun", "simctl", "boot", device]);
     await command(["xcrun", "simctl", "bootstatus", device, "-b"]);
+    const fingerprints = await sourceFingerprints();
     await command(["xcodebuild", "build-for-testing", ...xcode]);
+    requireStableSources(fingerprints, await sourceFingerprints());
     const app = path.join(
       derived,
       "Build/Products/Debug-iphonesimulator/TasksForObsidian.app",
@@ -324,7 +374,7 @@ async function main(): Promise<void> {
     });
     seeded = true;
     const testRun = await isolatedTestRun(device);
-    await writeProvenance(device, app);
+    await writeProvenance(device, app, fingerprints);
     await runJourney(device, testRun);
     await verifyVault(await installedVault(device));
   } catch (error) {

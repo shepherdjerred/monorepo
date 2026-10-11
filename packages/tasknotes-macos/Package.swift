@@ -143,6 +143,7 @@ let package = Package(
             dependencies: ["TaskNotesUniFFI"],
             resources: [
                 .copy("Vault/FacetContractSchema.json"),
+                .copy("Host/FacetAcceptanceSchema.json"),
                 .copy("Presentation/FacetPresentationTokens.json"),
                 .copy("Presentation/FacetPresentationSchema.json"),
                 .copy("Presentation/FacetColorPolicy.json"),

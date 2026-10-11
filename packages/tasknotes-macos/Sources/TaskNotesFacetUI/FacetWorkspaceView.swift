@@ -48,10 +48,13 @@ internal struct FacetWorkspaceView: View {
                             .padding(.horizontal)
                         }
                     }
-                    if let profileID = store.selectedProfileID,
-                        let state = store.syncStates[profileID]
-                    {
-                        Text(state).font(.caption).foregroundStyle(.secondary).padding(.horizontal)
+                    if let profileID = store.selectedProfileID {
+                        if let state = store.syncStatuses[profileID] {
+                            FacetSyncNotice(state: state).padding(.horizontal)
+                        } else if let text = store.syncStates[profileID] {
+                            Text(text).font(.caption).foregroundStyle(.secondary).padding(
+                                .horizontal)
+                        }
                     }
                     if let route = store.notificationRoute {
                         let owner =

@@ -199,9 +199,13 @@ internal struct FacetNativeNotices: View {
     let store: FacetStore
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            if let profileID = store.selectedProfileID, let state = store.syncStates[profileID] {
-                Label(state, systemImage: "arrow.triangle.2.circlepath").font(.caption)
-                    .foregroundStyle(.secondary).accessibilityIdentifier("facet.sync.status")
+            if let profileID = store.selectedProfileID {
+                if let state = store.syncStatuses[profileID] {
+                    FacetSyncNotice(state: state)
+                } else if let text = store.syncStates[profileID] {
+                    Label(text, systemImage: "arrow.triangle.2.circlepath").font(.caption)
+                        .foregroundStyle(.secondary).accessibilityIdentifier("facet.sync.status")
+                }
             }
             if store.needsStandardConsent {
                 Text(

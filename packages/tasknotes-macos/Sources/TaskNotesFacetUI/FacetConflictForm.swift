@@ -48,6 +48,7 @@ internal struct FacetConflictForm: View {
                         VStack(alignment: .leading) {
                             Text("Destination path, including extension").font(.caption)
                             TextField("Notes/Other version.md", text: $newPath).labelsHidden()
+                                .accessibilityIdentifier("facet.conflict.destination")
                                 .textFieldStyle(.roundedBorder)
                                 .frame(maxWidth: .infinity)
                         }
@@ -67,6 +68,7 @@ internal struct FacetConflictForm: View {
                     Button(decision == nil ? "Save resolution" : "Retry original resolution") {
                         _Concurrency.Task { await submit() }
                     }.disabled(submitting || store.isSaving || (!editingText && newPath.isEmpty))
+                        .accessibilityIdentifier("facet.conflict.save")
                     Button("Close") { showsClose = true }.disabled(submitting)
                 }
             }

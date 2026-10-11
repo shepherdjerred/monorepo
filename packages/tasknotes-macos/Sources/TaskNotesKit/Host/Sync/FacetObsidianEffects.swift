@@ -41,6 +41,12 @@ extension FacetObsidianSession {
     }
 
     private func connectSocket(_ address: String) async throws {
+        #if DEBUG
+            if acceptanceTransportInterrupted {
+                transportPhase = .offline
+                return
+            }
+        #endif
         guard let url = URL(string: address), url.scheme == "wss" else {
             throw FacetSyncError.transport
         }
@@ -58,7 +64,8 @@ extension FacetObsidianSession {
         connection.delegate = connectionDelegate
         socket = connection
         connection.resume()
-        await status("Connecting to Obsidian Sync…")
+        transportPhase = .connecting
+        await publishStatusWithoutDurableRead()
     }
 
     private func checkpointEffect(_ effect: ObsidianSessionEffect, nowMs: UInt64) async throws
@@ -100,13 +107,14 @@ extension FacetObsidianSession {
             queued.remove(id)
             dirty = true
         case .cancelled(let id): queued.remove(id)
-        case .failed(_, let message, _, let operationID):
+        case .failed(_, _, let retryable, let operationID):
             if let operationID { queued.remove(operationID) }
-            await status(message)
+            ready = false
+            transportPhase = retryable ? .offline : .reconnectRequired
         case .ready:
             ready = true
             dirty = true
-            await status("Downloading pending changes…")
+            transportPhase = .connected
         case .connect, .sendText, .sendBinary, .close, .persistCheckpoint, .persistCheckpointDelta,
             .remoteChange, .downloadedPayload:
             throw FacetContractError.unsupportedResponse

@@ -22,6 +22,9 @@ struct FacetApp: App {
                         afterStart: {
                             if CommandLine.arguments.contains("--facet-native-acceptance") {
                                 do {
+                                    guard store.acceptanceDirectory != nil else {
+                                        throw FacetAcceptanceError.invalidDescriptor
+                                    }
                                     let directory = try await _Concurrency.Task.detached {
                                         let directory = try FileManager.default.url(
                                             for: .documentDirectory, in: .userDomainMask,
@@ -56,6 +59,7 @@ struct FacetApp: App {
             .onChange(of: scenePhase) {
                 if scenePhase == .active { _Concurrency.Task { await processIntents() } }
                 if scenePhase == .background,
+                    !store.isAcceptanceLaunch,
                     store.profiles.contains(where: { $0.kind == "obsidian_sync" })
                 {
                     do { try FacetBackgroundTasks.schedule() } catch {
@@ -90,6 +94,11 @@ struct FacetApp: App {
     @State private var intentFailure: String?
 
     private func intentQueue() throws -> FacetIntentQueue {
+        if let acceptance = store.acceptanceDirectory {
+            return try FacetIntentQueue(
+                directory: acceptance.appendingPathComponent("intent-actions"))
+        }
+        guard !store.isAcceptanceLaunch else { throw FacetAcceptanceError.invalidDescriptor }
         guard
             let group = FileManager.default.containerURL(
                 forSecurityApplicationGroupIdentifier: "group.com.tasksforobsidian")

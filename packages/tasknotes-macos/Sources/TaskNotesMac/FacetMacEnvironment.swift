@@ -13,10 +13,11 @@ public final class FacetMacEnvironment {
     fileprivate var focusRequest = 0
 
     public init() {
-        KeyboardShortcuts.onKeyDown(for: .quickAdd) { [weak self] in
-            MainActor.assumeIsolated { self?.toggleQuickAdd() }
+        if !store.isIsolatedLaunch {
+            KeyboardShortcuts.onKeyDown(for: .quickAdd) { [weak self] in
+                MainActor.assumeIsolated { self?.toggleQuickAdd() }
+            }
         }
-        _Concurrency.Task { await store.start() }
     }
 
     public func toggleQuickAdd() {
@@ -58,12 +59,11 @@ public struct FacetMacRootView: View {
                 afterStart: {
                     if CommandLine.arguments.contains("--facet-native-acceptance") {
                         do {
+                            guard let root = environment.store.acceptanceDirectory else {
+                                throw FacetAcceptanceError.invalidDescriptor
+                            }
                             let directory = try await _Concurrency.Task.detached {
-                                let root = try FileManager.default.url(
-                                    for: .applicationSupportDirectory, in: .userDomainMask,
-                                    appropriateFor: nil, create: true)
-                                let directory = root.appendingPathComponent(
-                                    "Facet Native Acceptance")
+                                let directory = root.appendingPathComponent("Native acceptance")
                                 try FileManager.default.createDirectory(
                                     at: directory, withIntermediateDirectories: true)
                                 return directory
@@ -137,6 +137,7 @@ public struct FacetMacSettingsView: View {
     public init(environment: FacetMacEnvironment) { self.environment = environment }
     public var body: some View {
         FacetMacSettingsContent(store: environment.store)
+            .task { await environment.store.start() }
     }
 }
 
@@ -146,7 +147,7 @@ internal struct FacetMacSettingsContent: View {
     var body: some View {
         VStack {
             QuickAddSettingsView()
-            GroupBox("Feedback") { FacetFeedbackSettings().padding(8) }
+            GroupBox("Feedback") { FacetFeedbackSettings(store: store).padding(8) }
             Button("Connect Obsidian Sync…") { store.showsAccount = true }
             Button("Sign out of Obsidian") {
                 _Concurrency.Task { await store.signOut() }
@@ -165,6 +166,7 @@ private struct FacetMacQuickCapture: View {
             expandedChanged: environment.resizeQuickAdd
         )
         .onExitCommand { environment.dismissQuickAdd() }
+        .task { await store.start() }
         .modifier(
             FacetFeedbackScene(store: store, origin: FacetFeedbackOrigin(surface: .quickAdd))
         )

@@ -24,8 +24,8 @@ public struct FacetRootView: View {
     public var body: some View {
         FacetWorkspaceView(store: store, importsFolder: $importsFolder, board: $board)
             .task {
-                await store.installNotificationRouting()
                 await store.start()
+                await store.installNotificationRouting()
                 await afterStart?()
             }
             .task(

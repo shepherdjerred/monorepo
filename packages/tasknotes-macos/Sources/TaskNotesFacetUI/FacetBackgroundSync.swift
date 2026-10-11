@@ -45,11 +45,7 @@ extension FacetStore {
         guard !synced.isEmpty else { return true }
         for profile in synced {
             guard let session = sessions[profile.id], await session.isIdle() else { return false }
-            let discovery = try await engine.features(
-                profileID: profile.id, request: .object(["kind": .string("discovery")]))
-            guard discovery.object?.fields["initialSyncComplete"] == .bool(true),
-                try await !engine.hasPendingUploads(profileID: profile.id)
-            else { return false }
+            guard try await engine.syncStatus(profileID: profile.id).isSettled else { return false }
         }
         return true
     }

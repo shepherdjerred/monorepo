@@ -13,6 +13,7 @@ enum FacetBackgroundTasks {
 
     static func install(store: FacetStore) {
         self.store = store
+        guard !store.isAcceptanceLaunch else { return }
         guard !registered else { return }
         registered = BGTaskScheduler.shared.register(
             forTaskWithIdentifier: identifier, using: .main
@@ -51,6 +52,19 @@ enum FacetBackgroundTasks {
 @MainActor
 enum FacetWidgetPublisher {
     static func publish(store: FacetStore) async {
+        if let acceptance = store.acceptanceDirectory {
+            guard let data = await store.widgetEnvelope(), !_Concurrency.Task.isCancelled else {
+                return
+            }
+            do {
+                let directory = acceptance.appendingPathComponent("widget-output")
+                try FileManager.default.createDirectory(
+                    at: directory, withIntermediateDirectories: true)
+                try FacetWidgetSnapshotStore(directory: directory).write(data)
+            } catch { store.reportNativeFailure(error) }
+            return
+        }
+        guard !store.isAcceptanceLaunch else { return }
         guard let data = await store.widgetEnvelope(), !_Concurrency.Task.isCancelled,
             let group = FileManager.default.containerURL(
                 forSecurityApplicationGroupIdentifier: "group.com.tasksforobsidian")

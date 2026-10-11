@@ -343,7 +343,7 @@ fn completed_local_day_is_noop_for_equivalent_or_different_explicit_instants() -
         "2026-10-03T01:00:00Z",
     ] {
         let receipt = engine.execute("a", &request(target, target, true))?;
-        assert!(receipt.paths.is_empty());
+        assert_eq!(receipt.paths, Vec::<String>::new());
         assert_eq!(files.get("a", PATH)?, saved);
         assert_eq!(exchanges(&files)?, count);
     }

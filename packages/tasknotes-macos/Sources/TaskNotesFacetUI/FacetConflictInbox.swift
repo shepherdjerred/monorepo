@@ -46,9 +46,13 @@ struct FacetConflictInbox: View {
                     ScrollView {
                         Text(previewText ?? "").font(.system(.caption, design: .monospaced))
                             .textSelection(.enabled).padding()
+                            .accessibilityIdentifier("facet.conflict.preview.text")
                     }
                     .navigationTitle("Retained version")
-                    .toolbar { Button("Done") { previewPresented = false } }
+                    .toolbar {
+                        Button("Done") { previewPresented = false }
+                            .accessibilityIdentifier("facet.conflict.preview.done")
+                    }
                 }.frame(minWidth: 340, minHeight: 380)
             }
             .sheet(item: $form) { selection in
@@ -96,6 +100,7 @@ struct FacetConflictInbox: View {
         metadata: FacetVersionMetadata?
     ) -> some View {
         Button("Preview") { showPreview(conflict, version: version) }
+            .accessibilityIdentifier("facet.conflict.preview.\(version.rawValue)")
         Button("Edit text…") { editText(conflict, version: version) }
             .disabled(metadata == nil || (metadata?.size ?? 0) > FacetRetainedText.maximumBytes)
         Button("Export exact version") { export(conflict, version: version, key: key) }
@@ -114,6 +119,7 @@ struct FacetConflictInbox: View {
         Button("Keep mine") { resolve(conflict, kind: "keep_local") }
         Button("Keep other") { resolve(conflict, kind: "keep_remote") }
         Button("Keep both…") { form = FormSelection(conflict: conflict, initialText: nil) }
+            .accessibilityIdentifier("facet.conflict.keepBoth")
     }
 
     private func editText(_ conflict: FacetConflict, version: FacetConflictVersion) {

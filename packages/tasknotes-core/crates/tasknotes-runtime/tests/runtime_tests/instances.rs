@@ -126,7 +126,7 @@ fn skip_unskip_preserve_anchors_status_body_and_exact_noop_bytes() -> Result<()>
     repeated.at = "2026-10-04T01:00:00Z".into();
     let noop = engine.execute("a", &repeated)?;
     assert!(noop.applied);
-    assert!(noop.paths.is_empty());
+    assert_eq!(noop.paths, Vec::<String>::new());
     assert_eq!(exchanges(&files)?, count);
     assert_eq!(files.get("a", PATH)?, changed_bytes);
     assert_eq!(
@@ -150,14 +150,14 @@ fn skip_unskip_preserve_anchors_status_body_and_exact_noop_bytes() -> Result<()>
         Some(&json!(["2026-10-04"]))
     );
     let before_noop = files.get("a", PATH)?;
-    assert!(
+    assert_eq!(
         engine
             .execute(
                 "a",
                 &mutation("unskip-noop", skip("2026-10-01", false, None))
             )?
-            .paths
-            .is_empty()
+            .paths,
+        Vec::<String>::new()
     );
     assert_eq!(files.get("a", PATH)?, before_noop);
     // Instance membership is independent of the generated rule window.
@@ -643,7 +643,7 @@ fn unknown_legacy_physical_alias_is_preserved_and_normalization_is_not_a_repair_
             },
         ),
     )?;
-    assert!(normalized.paths.is_empty());
+    assert_eq!(normalized.paths, Vec::<String>::new());
     assert_eq!(files.get("a", PATH)?, Some(original));
     engine.execute(
         "a",
@@ -727,7 +727,10 @@ fn configured_permissive_policy_remains_distinct_from_typed_instance_safety() ->
     let command = Command::Create { path: Some(PATH.into()), properties: json!({"title":"Permissive","recurrence":"DTSTART:20261001;FREQ=DAILY","completeInstances":["2026-02-30"]}).as_object().cloned().ok_or(RuntimeError::NotFound)?, body: None };
     let receipt = engine.execute("a", &mutation("permissive-create", command))?;
     assert!(receipt.applied);
-    assert!(receipt.diagnostics.is_empty());
+    assert_eq!(
+        receipt.diagnostics,
+        Vec::<tasknotes_runtime::types::Diagnostic>::new()
+    );
     assert_eq!(
         doc(&files)?.frontmatter().get("completeInstances"),
         Some(&json!(["2026-02-30"]))
@@ -757,7 +760,10 @@ fn configured_permissive_policy_remains_distinct_from_typed_instance_safety() ->
         ),
     )?;
     assert!(receipt.applied);
-    assert!(receipt.diagnostics.is_empty());
+    assert_eq!(
+        receipt.diagnostics,
+        Vec::<tasknotes_runtime::types::Diagnostic>::new()
+    );
     assert_eq!(
         doc(&files)?.frontmatter().get("completeInstances"),
         Some(&json!(["2026-02-30"]))

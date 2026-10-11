@@ -53,8 +53,10 @@ private final class FacetAccountRedirectPolicy: NSObject, URLSessionTaskDelegate
 
 /// Account HTTP and secure ownership are independent of presentation selection.
 public actor FacetObsidianAccount {
+    public private(set) var lastExchangeDiagnostic: FacetAccountExchangeDiagnostic?
     private let account = FfiObsidianAccount()
     private let secrets: any FacetSecureStore
+    private let remoteVaultAccess: FacetRemoteVaultAccess
     private let metadataURL: URL
     private let transport: URLSession
     private var identities: [String: FacetSyncIdentity]
@@ -64,8 +66,12 @@ public actor FacetObsidianAccount {
     private var generation: UInt64 { accessEpoch.withLock { $0 } }
     private var choices: [FacetRemoteVault] = []
 
-    public init(directory: URL, secrets: any FacetSecureStore = FacetKeychainStore()) throws {
+    public init(
+        directory: URL, secrets: any FacetSecureStore = FacetKeychainStore(),
+        remoteVaultAccess: FacetRemoteVaultAccess = .unrestricted
+    ) throws {
         self.secrets = secrets
+        self.remoteVaultAccess = remoteVaultAccess
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         metadataURL = directory.appendingPathComponent("sync-identities.json")
         do {
@@ -74,6 +80,9 @@ public actor FacetObsidianAccount {
             let metadata = try JSONDecoder().decode(FacetAccountMetadata.self, from: bytes)
             guard metadata.schemaVersion == 1 else { throw FacetContractError.unsupportedResponse }
             identities = metadata.identities
+            for identity in identities.values {
+                try remoteVaultAccess.requireRemoteVault(identity.vault.id)
+            }
             activeOwner = metadata.activeOwner
             pendingKeyRemoval = metadata.pendingKeyRemoval
             guard pendingKeyRemoval.isDisjoint(with: identities.keys),
@@ -94,9 +103,15 @@ public actor FacetObsidianAccount {
         )
     }
 
-    public static func open(directory: URL) async throws -> FacetObsidianAccount {
-        try await _Concurrency.Task.detached { try FacetObsidianAccount(directory: directory) }
-            .value
+    public static func open(
+        directory: URL, secrets: any FacetSecureStore = FacetKeychainStore(),
+        remoteVaultAccess: FacetRemoteVaultAccess = .unrestricted
+    ) async throws -> FacetObsidianAccount {
+        try await _Concurrency.Task.detached {
+            try FacetObsidianAccount(
+                directory: directory, secrets: secrets, remoteVaultAccess: remoteVaultAccess)
+        }
+        .value
     }
 
     /// Account intent immediately revokes existing access leases. Credentials
@@ -156,7 +171,9 @@ public actor FacetObsidianAccount {
             guard case .vaults(let vaults) = listed else {
                 throw FacetContractError.unsupportedResponse
             }
-            choices = vaults.map(FacetRemoteVault.init)
+            choices = vaults.map(FacetRemoteVault.init).filter {
+                remoteVaultAccess.displays($0.id)
+            }
             return .vaults(choices)
         case .signedOut, .userInfo, .vaults, .accessGranted:
             throw FacetContractError.unsupportedResponse
@@ -195,6 +212,9 @@ public actor FacetObsidianAccount {
     }
 
     internal func access(profileID: String) throws -> FacetSyncAccess {
+        if let identity = identities[profileID] {
+            try remoteVaultAccess.requireRemoteVault(identity.vault.id)
+        }
         guard let identity = identities[profileID],
             identity.owner == activeOwner,
             let tokenBytes = try secrets.read("account.\(identity.owner).token"),
@@ -279,14 +299,17 @@ public actor FacetObsidianAccount {
         let files = try VaultDirectory(url: metadataURL.deletingLastPathComponent())
         try files.replaceMetadata(metadataURL.lastPathComponent, bytes: bytes)
     }
+}
 
+extension FacetObsidianAccount {
     private func perform(_ request: ObsidianHttpRequest, generation attempt: UInt64) async throws
         -> ObsidianAccountResponse
     {
         do {
             let (status, bytes) = try await FacetAccountHTTP.perform(
                 request, ownsAttempt: { self.accessEpoch.withLock { $0 == attempt } },
-                send: { try await self.response($0) })
+                send: { try await self.response($0) },
+                diagnostic: { self.lastExchangeDiagnostic = $0 })
             try _Concurrency.Task.checkCancellation()
             guard attempt == generation else { throw FacetSyncError.cancelled }
             guard let body = String(data: bytes, encoding: .utf8) else {
@@ -347,6 +370,7 @@ extension FacetObsidianAccount {
         }
         var eligible: Set<String> = []
         for (profileID, identity) in identities where identity.owner == owner {
+            try remoteVaultAccess.requireRemoteVault(identity.vault.id)
             guard var key = try secrets.read("vault.\(profileID).key") else { continue }
             defer { key.resetBytes(in: 0..<key.count) }
             guard key.count == 32 else { throw FacetContractError.unsupportedResponse }
@@ -358,6 +382,7 @@ extension FacetObsidianAccount {
     public func reauthorize(
         profileID: String, vaultID: String, password: String?, engine: FacetEngine
     ) async throws -> FacetProfile {
+        try remoteVaultAccess.requireRemoteVault(vaultID)
         guard let previous = identities[profileID], previous.vault.id == vaultID,
             let profile = try await engine.profiles().first(where: {
                 $0.id == profileID && $0.kind == "obsidian_sync"
@@ -394,6 +419,7 @@ extension FacetObsidianAccount {
     private func authorizeVault(vaultID: String, password: String?) async throws
         -> AuthorizedVault
     {
+        try remoteVaultAccess.requireRemoteVault(vaultID)
         guard let owner = activeOwner, choices.contains(where: { $0.id == vaultID }),
             let bytes = try secrets.read("account.\(owner).token"),
             let token = String(data: bytes, encoding: .utf8)

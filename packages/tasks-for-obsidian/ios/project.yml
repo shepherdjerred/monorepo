@@ -104,6 +104,9 @@ targets:
     platform: iOS
     sources:
       - path: FacetUITests
+      - path: ../../tasknotes-macos/UITests/LiveSyncVaultUITests.swift
+      - path: ../../tasknotes-macos/UITests/LiveSyncConflictUITests.swift
+      - path: ../../tasknotes-macos/UITests/LiveSyncLifecycleUITests.swift
     dependencies:
       - target: TasksForObsidian
     settings:
