@@ -309,7 +309,10 @@ bun run --cwd packages/glitter-boys-launcher release
 ```
 
 The command verifies Windows tools, Azure profile status, update-key trust,
-publication access, and that the version is unused **before signing**. It runs
+publication access, and that the version is unused **before signing**. Deploy
+the docs first: both native Help destinations (`/docs/launcher/` and `/docs/`)
+must return HTTP 200 without redirects. The publisher checks these routes again
+before uploading prepared artifacts, including retries. It runs
 Rust formatting checks, tests, Clippy, and release-script tests; builds and
 timestamp-signs the application and bootstrap; signs the NSIS installer and its
 embedded uninstaller; creates a ZIP; signs the update manifest; then verifies

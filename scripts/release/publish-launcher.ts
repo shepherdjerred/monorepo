@@ -25,6 +25,21 @@ const repository = fileURLToPath(new URL("../..", import.meta.url));
 const root = path.join(repository, "packages", "glitter-boys-launcher");
 const hash = (bytes: Uint8Array) =>
   createHash("sha256").update(bytes).digest("hex");
+export async function verifyHelpGuides() {
+  for (const route of ["/docs/launcher/", "/docs/"]) {
+    const url = `https://glitter-boys.com${route}`;
+    const response = await fetch(url, {
+      method: "GET",
+      redirect: "error",
+      signal: AbortSignal.timeout(30_000),
+    });
+    await response.body?.cancel();
+    if (response.status !== 200)
+      throw new Error(
+        `Deploy the launcher Help guide before release: ${url} returned HTTP ${String(response.status)}`,
+      );
+  }
+}
 export async function publicationPreflight(version: string) {
   const profile = await readProfile(root);
   const config: SignedS3RequestConfig = {
@@ -46,6 +61,7 @@ export async function publicationPreflight(version: string) {
     throw new Error(
       `Could not access publication bucket: HTTP ${String(response.status)}`,
     );
+  await verifyHelpGuides();
   const currentResponse = await fetch(
     createSignedS3Request(config, {
       method: "GET",
@@ -263,6 +279,8 @@ export async function publishLauncher(dryRun: boolean) {
     );
     return;
   }
+  // Recheck retryable publication too: prepared artifacts may outlive the site.
+  await verifyHelpGuides();
   const config: SignedS3RequestConfig = {
     endpoint: SEAWEEDFS_ENDPOINT,
     bucket: "glitter-boys",
