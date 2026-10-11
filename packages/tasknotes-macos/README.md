@@ -31,6 +31,10 @@ belong to Rust. The native host supplies files, transport, lifecycle, and secure
 storage. Generic cloud/document provider write support requires provider-specific
 acceptance; selecting a URL alone does not establish safe write capability.
 
+Default-settings consent appears only after discovery confirms that configuration
+is absent. Invalid or unreadable settings retain visible failures without an
+earlier missing-settings prompt offering defaults.
+
 The standalone desktop uses `FacetNativeWorkspace`: a native split-view sidebar,
 task list or board, inline capture, and a persistent inspector. The iOS shell
 uses Inbox, Today, Upcoming and Browse tabs, with native navigation stacks and
@@ -142,7 +146,9 @@ failures use bounded diagnostic classifications that exclude vault contents and
 account responses.
 
 The Obsidian account sheet owns visible progress, verification guidance and
-redacted errors. A successful account with no Sync vaults has an explicit empty
+redacted errors. Account diagnostics correlate HTTP status and response-decoding
+failures by a native request UUID and timestamp, retaining only fixed engine
+categories. A successful account with no Sync vaults has an explicit empty
 state. Dismissal cancels only that sheet's request and fences late replies;
 credentials remain transient and clear after success or dismissal. Startup
 publishes the engine and account together, so failed initialization can retry.
@@ -202,6 +208,12 @@ the default local and CI E2E launchers run this acceptance suite before the
 separate legacy server-backed suite; individual legacy selectors remain scoped
 to those tests. The legacy suite still requires its own migration and is not
 evidence of standalone isolation. The live test selector
+`LiveSyncVaultUITests/testInitialDownloadUsesTaskNotesConfiguration` requires
+the harness's authoritative `FACET_E2E_INITIAL_TASK_TITLE`. It verifies that
+the existing task appears exactly once, native capture is enabled, and no
+configuration warning or standard-settings consent appears. Initial live
+acceptance runs this check on both clients before marking download complete.
+The live test selector
 `LiveSyncVaultUITests/testCaptureEditCompleteUncompleteAndColdRelaunch` requires
 an already authenticated bound run and the harness's run ID, vault ID and round
 number. It creates a unique task per platform and round, waits for durable
