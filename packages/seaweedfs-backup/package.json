@@ -20,7 +20,6 @@
     "#policy-schema": "./policy.schema.json"
   },
   "scripts": {
-    "build": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "lint": "bunx --no-install eslint --cache .",
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run",
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts",

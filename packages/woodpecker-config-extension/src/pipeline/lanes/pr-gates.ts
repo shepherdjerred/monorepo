@@ -84,7 +84,9 @@ export function prGateSteps(
         'bun --no-install scripts/release/update-versions.ts --commit-back --candidates "$pin_candidates" --dry-run',
         "bun --no-install scripts/release/release.ts --dry-run",
       ],
-      dependsOn: ["verify"],
+      // No dependsOn: the dry run installs and builds its own filtered
+      // subset and reads no verify handoff, so it runs alongside verify
+      // instead of adding its own admission wait and runtime after it.
       timeoutMinutes: 30,
       resources: PR_DRY_RUN_TIER,
       events: ["pull_request"],

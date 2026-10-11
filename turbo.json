@@ -7,11 +7,6 @@
     "global.json",
     "bunfig.toml",
     "patches/**",
-    "scripts/ci/ci-reporting.ts",
-    "scripts/ci/mstest-configuration.ts",
-    "scripts/ci/gradle-junit.ts",
-    "scripts/ci-test-manifest.json",
-    "scripts/ci/run-ci-test.ts",
     "packages/homelab/tsconfig.base.json",
     "packages/scout-for-lol/tsconfig.base.json",
     "packages/scout-for-lol/eslint.config.ts",
@@ -43,10 +38,6 @@
     "@shepherdjerred/statically-typed#test:ci": {
       "dependsOn": ["build"]
     },
-    "@scout-for-lol/temporal#build": {
-      "dependsOn": ["^build"],
-      "outputs": []
-    },
     // Local codegen only (Prisma: birmel, scout backend, dpmk backend).
     // Live-credential codegen lives in generate:live and is NEVER in a
     // default chain (temporal → live Home Assistant, helm-types → chart repos).
@@ -65,11 +56,22 @@
     },
     // CI uses the same cache semantics as `test`, but packages emit JUnit on
     // cache misses. Reports are deliberately not outputs: a cache hit must not
-    // restore a stale report from another build.
+    // restore a stale report from another build. The shared runner and its
+    // manifest are inputs here rather than global dependencies, so editing
+    // them reruns test:ci without invalidating every build, lint and
+    // typecheck. A package that overrides test:ci inputs must keep them.
     "test:ci": {
       "env": ["NODE_ENV"],
       "passThroughEnv": ["MISE_DATA_DIR"],
-      "dependsOn": ["^build", "generate"]
+      "dependsOn": ["^build", "generate"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/scripts/ci/ci-reporting.ts",
+        "$TURBO_ROOT$/scripts/ci/mstest-configuration.ts",
+        "$TURBO_ROOT$/scripts/ci/gradle-junit.ts",
+        "$TURBO_ROOT$/scripts/ci-test-manifest.json",
+        "$TURBO_ROOT$/scripts/ci/run-ci-test.ts"
+      ]
     },
     "lint": {
       // "generate" for the same reason typecheck/test have it: type-aware

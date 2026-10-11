@@ -483,18 +483,10 @@ describe("CI reporting manifest", () => {
     }
   });
 
-  test("hashes shared runner inputs and serializes CDK8s test reports after build", async () => {
+  test("keeps script coverage cached and serializes CDK8s test reports after build", async () => {
     const rootTurbo = await Bun.file(
       path.join(repositoryRoot, "turbo.json"),
     ).text();
-    for (const reportingInput of [
-      "scripts/ci/ci-reporting.ts",
-      "scripts/ci-test-manifest.json",
-      "scripts/ci/run-ci-test.ts",
-      "scripts/ci/gradle-junit.ts",
-    ]) {
-      expect(rootTurbo).toContain(`"${reportingInput}"`);
-    }
     expect(rootTurbo).toContain(
       '"//#script-coverage": {\n      "dependsOn": ["//#check-script-migrations"],\n      "inputs": [',
     );
@@ -514,7 +506,7 @@ describe("CI reporting manifest", () => {
     for (const [turboPath, expectedTask] of [
       [
         "packages/birmel/turbo.json",
-        '"test:ci": {\n      "env": ["NODE_ENV"],\n      "inputs": ["$TURBO_DEFAULT$", ".env.test"]\n    }',
+        '"test:ci": {\n      "env": ["NODE_ENV"],\n      "inputs": ["$TURBO_EXTENDS$", ".env.test"]\n    }',
       ],
       [
         "packages/scout-for-lol/packages/backend/turbo.json",
@@ -523,6 +515,63 @@ describe("CI reporting manifest", () => {
     ] satisfies readonly (readonly [string, string])[]) {
       const turbo = await Bun.file(path.join(repositoryRoot, turboPath)).text();
       expect(turbo).toContain(expectedTask);
+    }
+  });
+});
+
+describe("test:ci runner inputs", () => {
+  test("hashes the shared runner into test:ci rather than every task", async () => {
+    const rootTurbo = await Bun.file(
+      path.join(repositoryRoot, "turbo.json"),
+    ).text();
+    const runnerInputs = [
+      "$TURBO_ROOT$/scripts/ci/ci-reporting.ts",
+      "$TURBO_ROOT$/scripts/ci-test-manifest.json",
+      "$TURBO_ROOT$/scripts/ci/run-ci-test.ts",
+      "$TURBO_ROOT$/scripts/ci/gradle-junit.ts",
+      "$TURBO_ROOT$/scripts/ci/mstest-configuration.ts",
+    ];
+    const RootTurboSchema = z.object({
+      globalDependencies: z.array(z.string()),
+      tasks: z.record(
+        z.string(),
+        z.object({ inputs: z.array(z.string()).optional() }).loose(),
+      ),
+    });
+    const root = RootTurboSchema.parse(Bun.JSONC.parse(rootTurbo));
+    expect(root.tasks["test:ci"]?.inputs).toEqual(
+      expect.arrayContaining(["$TURBO_DEFAULT$", ...runnerInputs]),
+    );
+    for (const input of runnerInputs) {
+      expect(root.globalDependencies).not.toContain(
+        input.replace("$TURBO_ROOT$/", ""),
+      );
+    }
+    // A package override replaces the root inputs unless it extends them.
+    const PackageTurboSchema = z.object({
+      tasks: z
+        .record(
+          z.string(),
+          z.object({ inputs: z.array(z.string()).optional() }).loose(),
+        )
+        .optional(),
+    });
+    const manifest = TestManifestSchema.parse(
+      await Bun.file(
+        path.join(repositoryRoot, "scripts/ci-test-manifest.json"),
+      ).json(),
+    );
+    for (const { directory } of manifest.workspaces) {
+      const turboFile = Bun.file(
+        path.join(repositoryRoot, directory, "turbo.json"),
+      );
+      if (!(await turboFile.exists())) continue;
+      const config = PackageTurboSchema.parse(
+        Bun.JSONC.parse(await turboFile.text()),
+      );
+      const inputs = config.tasks?.["test:ci"]?.inputs;
+      if (inputs === undefined || inputs[0] === "$TURBO_EXTENDS$") continue;
+      expect(inputs, directory).toEqual(expect.arrayContaining(runnerInputs));
     }
   });
 });
