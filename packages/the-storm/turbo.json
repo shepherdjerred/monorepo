@@ -2,7 +2,7 @@
   "$schema": "https://turborepo.dev/schema.json",
   "extends": ["//"],
   "tasks": {
-    // Gradle keeps its own build cache in plugin/**/build and ~/.gradle. Turbo
+    // Gradle keeps its own build cache in plugin/**/build and GRADLE_USER_HOME. Turbo
     // restores the assembled jar on build cache hits. MISE_DATA_DIR and JAVA_HOME
     // must pass through or strict env mode hides the mise-managed JDK/Gradle.
     //

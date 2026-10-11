@@ -85,9 +85,10 @@ Nothing a step writes should land on the container's writable layer, which is
 the CI node's OS disk. Shared Bun installs extract into `bun-cache/tmp`, beside
 the data directory, so extraction is a rename on the cache volume rather than a
 copy from `~/.bun`; the cache collector clears it under its exclusive lock.
-`ci/scripts/toolchain.sh` points `TMPDIR` at `/woodpecker/tmp` on the workflow
-volume, and the root `turbo.json` passes `TMPDIR` and `UV_CACHE_DIR` through
-strict env mode so tasks inherit both.
+`ci/scripts/toolchain.sh` points `TMPDIR` at `/woodpecker/tmp` and
+`GRADLE_USER_HOME` at `/woodpecker/gradle` on the workflow volume. The root
+`turbo.json` passes these and `UV_CACHE_DIR` through strict env mode so tasks
+inherit them.
 
 ## OpenTofu PR checks
 

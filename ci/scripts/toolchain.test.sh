@@ -85,8 +85,9 @@ if ! rg -Fq 'ARG MISE_MINISIGN_PUBLIC_KEY=' "$CI_IMAGE" ||
 fi
 
 if ! rg -Fq 'export TMPDIR=/woodpecker/tmp' "$TOOLCHAIN" ||
-  ! rg -Fq 'chmod 1777 "$TMPDIR"' "$TOOLCHAIN"; then
-  echo "Woodpecker steps must keep temporary files on the workflow volume" >&2
+  ! rg -Fq 'chmod 1777 "$TMPDIR"' "$TOOLCHAIN" ||
+  ! rg -Fq 'export GRADLE_USER_HOME=/woodpecker/gradle' "$TOOLCHAIN"; then
+  echo "Woodpecker steps must keep temporary files and tool homes on the workflow volume" >&2
   exit 1
 fi
 

@@ -14,14 +14,16 @@ CI_TOOLCHAIN_STARTED=$(date +%s)
 
 # Step scratch belongs on the workflow's ZFS volume, not the container's
 # writable layer: that layer is the CI node's OS disk (Talos /var), and
-# per-run test scratch such as Scout's Postgres cluster was wearing it out.
-# Sticky and world-writable like /tmp, because root-hosted tests run the
-# Postgres server as nobody.
+# per-run test scratch such as Scout's Postgres cluster and Gradle's
+# dependency downloads was wearing it out. TMPDIR is sticky and
+# world-writable like /tmp, because root-hosted tests run the Postgres server
+# as nobody.
 case "${CI_WORKSPACE:-}" in
   /woodpecker/*)
     export TMPDIR=/woodpecker/tmp
     mkdir -p "$TMPDIR"
     chmod 1777 "$TMPDIR"
+    export GRADLE_USER_HOME=/woodpecker/gradle
     ;;
 esac
 
