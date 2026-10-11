@@ -2,15 +2,24 @@
 // the same per-instance input, advances exactly one 30 Hz game frame, and waits
 // for that frame's draws and state record. Two instances driven identically are
 // the native harness's replacement for the wasm heap-snapshot replay.
+import { mkdir, rm } from "node:fs/promises";
 import path from "node:path";
+import type { Mk64RawState } from "#src/emulator/mk64-memory.ts";
+import { SpaghettiHost } from "#src/engine/spaghetti/host.ts";
+import type { SpaghettiBuild } from "#src/engine/spaghetti/install.ts";
 import {
   N64_BUTTON,
   NEUTRAL_PAD,
-  SpaghettiHost,
-  type GameState,
   type Pad,
-  type SpaghettiBuild,
-} from "./spaghetti-host.ts";
+  type StateMessage,
+} from "#src/engine/spaghetti/protocol.ts";
+
+/** A bridge STATE record, flattened. */
+export type GameState = { gameFrame: number } & Mk64RawState;
+
+export function toGameState(message: StateMessage): GameState {
+  return { gameFrame: message.gameFrame, ...message.raw };
+}
 
 export type Draw = {
   drawSeq: number;
@@ -31,10 +40,13 @@ class Instance {
     { frame: number; resolve: (s: GameState) => void } | undefined;
   stepsSent = 0;
 
-  constructor(build: SpaghettiBuild, runDir: string, outputFps: 30 | 60) {
+  private readonly homeDir: string;
+
+  constructor(build: SpaghettiBuild, homeDir: string, outputFps: 30 | 60) {
+    this.homeDir = homeDir;
     this.host = new SpaghettiHost({
       build,
-      runDir,
+      homeDir,
       lockstep: true,
       outputFps,
       onFrame: (f) => {
@@ -47,7 +59,8 @@ class Instance {
           bgra: Buffer.from(f.bgra),
         });
       },
-      onState: (s) => {
+      onState: (message) => {
+        const s = toGameState(message);
         this.latest = s;
         if (this.waiter && s.gameFrame >= this.waiter.frame) {
           const { resolve } = this.waiter;
@@ -59,6 +72,9 @@ class Instance {
   }
 
   async start(): Promise<void> {
+    // A fresh home per run: a leftover default.sav would change the menus.
+    await rm(this.homeDir, { recursive: true, force: true });
+    await mkdir(this.homeDir, { recursive: true });
     await this.host.start();
     // The boot path latches input once before the loop starts and emits no
     // state for it; consume that step so every later step yields one record.
@@ -157,7 +173,7 @@ export function isRacing(state: GameState): boolean {
   return (
     state.gamestate === GAMESTATE_RACING &&
     state.menuSelection === MENU.racing &&
-    state.raceState === RACE_STATE_RACING
+    state.racePhase === RACE_STATE_RACING
   );
 }
 

@@ -83,11 +83,13 @@ the core into `packages/backend/assets/n64wasm/` using the pinned
 > `ENVIRONMENT_IS_NODE` only; if it also detects a web environment its FS path
 > null-traps `fseek`. See `packages/backend/src/emulator/wasm-host.ts`.
 
-## Native engine (SpaghettiKart, evaluation)
+## Native engine (SpaghettiKart, opt-in)
 
 [SpaghettiKart](https://github.com/HarbourMasters/SpaghettiKart) is a native PC
-port of the Mario Kart 64 decompilation. We are evaluating it as a replacement for
-the wasm core. Production still runs N64Wasm; nothing in `src/` uses the port yet.
+port of the Mario Kart 64 decompilation. It is the alternative to the wasm core,
+selected per deployment with `[emulator] engine = "spaghettikart"`. The default
+stays `"n64wasm"`. Measured locally, the port shows a steer in the frame that
+latched it, where the wasm core takes 5–14 VIs.
 
 Only the upstream pin ([`spaghetti-src/upstream.json`](./spaghetti-src/upstream.json))
 and our patch series ([`spaghetti-src/patches/`](./spaghetti-src/patches)) are
@@ -97,14 +99,53 @@ pixels), the mixed audio (s16 stereo, 26 800 Hz), and a per-frame game-state
 record that replaces the RDRAM reads. [`spaghetti-src/PATCHES.md`](./spaghetti-src/PATCHES.md)
 documents the protocol and how to regenerate the patches.
 
-```bash
-bun run build:spaghetti        # clone the pin, patch, build, extract mk64.o2r from the ROM
+### How a session runs it
+
+`packages/backend/src/engine/` holds the `GameEngine` interface both engines
+implement. Each engine declares its `FrameFormat` (frame size, frame rate, audio
+rate); the Go-Live stream, the driver feed, and the overlays size themselves
+from it. The HUD clock and name labels keep one layout across engines: the
+native frame draws them with every row doubled, so the browser's HUD decoder
+reads both the same way.
+
+- **Process.** `SpaghettiEngine` spawns the game per session with a hidden
+  window. On Linux it uses SDL's `offscreen` driver: an EGL context with no
+  window system, on the iGPU's render node when the pod has one, otherwise
+  llvmpipe. Bridge parsing runs on the main thread. Rendering, audio mixing, and
+  game logic stay in the game's process.
+- **Saves.** The game's home (`SHIP_HOME`) is `saves/<guildId>/spaghettikart/`.
+  It writes its EEPROM save (`default.sav`), config, and logs there itself, so
+  saves stay per guild like the wasm core's.
+- **Assets.** `mk64.o2r` is the port's asset archive, extracted from the ROM.
+  It follows the ROM's rules: never committed, logged, or baked into an image.
+  At startup the backend checks the ROM's SHA-1 against the pin, then extracts
+  the archive with the install's Torch into `saves/spaghettikart-assets/`. A
+  stamp keyed on the ROM and the pin means later boots reuse it. An unsupported
+  ROM or a missing install fails startup, not `/play`.
+- **Install.** `[spaghettikart] install_dir` points at the build output, which
+  `install.json` describes. The image ships it at the default
+  `packages/backend/assets/spaghettikart`, built by the Dockerfile's
+  `spaghetti-builder` stage from the same pin and patches.
+
+```toml
+[emulator]
+engine = "spaghettikart"
+
+[spaghettikart]
+install_dir = "packages/backend/assets/spaghettikart" # image default
+output_fps = 30                                       # 30 or 60 (interpolated)
 ```
 
-`mk64.o2r` is the port's asset archive, extracted from the ROM. Treat it exactly
-like the ROM: it stays in the gitignored `.cache/spaghetti/`, and is never
-committed, logged, or copied into an image. On macOS, dependencies come from
-vcpkg as in upstream CI. On Linux, they come from system packages.
+### Building locally
+
+```bash
+bun run build:spaghetti        # clone the pin, patch, build; writes .cache/spaghetti/dist/install.json
+```
+
+Point `install_dir` at `.cache/spaghetti/dist` to run the backend against a
+local build. The ROM-gated harnesses extract `mk64.o2r` into the gitignored
+`.cache/spaghetti/assets/`. On macOS, dependencies come from vcpkg as in
+upstream CI. On Linux, they come from system packages.
 
 ## Testing
 
@@ -155,6 +196,9 @@ bun run e2e:scenario 1p --names Me,Bot     # override the burned-in names
 bun run e2e:game-latency --seats 4         # also: swap phase, game fps, emulate time
 # The same question for the native port (needs `bun run build:spaghetti`):
 bun run e2e:native-latency --seats 4 --fps 30   # lockstep game response + paced wall clock
+# Driver feed on the native engine: real encode + HUD decode, or a real browser.
+bun run e2e:driver-feed --engine spaghettikart --live --fps 60
+bun run e2e:driver-feed:glass --engine spaghettikart
 
 # Lower-level scripts:
 bun run e2e:input:check ~/syncthing/Sync/roms/mariokart64.z64
@@ -223,8 +267,9 @@ is a mounted `config.toml` — see
 `mariokart.sjer.red` (and via Tailscale as `mariokart`); the Go-Live stream is
 outbound-only.
 
-Software rendering is CPU-heavy and there is no GPU on the node, so the pod
-requests 3 CPUs (limit 8) and 2Gi memory (limit 4Gi).
+The pod requests the node's Intel iGPU for VAAPI encoding, which the native
+engine's OpenGL rendering can also use. The wasm core renders in software, which
+is CPU-heavy, so the pod has a high CPU limit.
 
 ### One-time provisioning
 

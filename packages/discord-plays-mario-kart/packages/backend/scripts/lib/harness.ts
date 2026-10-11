@@ -149,6 +149,7 @@ export async function captureScreenshot(
   if (opts.names !== undefined && opts.screenMode !== undefined) {
     const renderer = createLabelRenderer(
       Bun.env["WASM_DIR"] ?? "assets/n64wasm",
+      1,
     );
     const rects = viewportRects(
       opts.screenMode,

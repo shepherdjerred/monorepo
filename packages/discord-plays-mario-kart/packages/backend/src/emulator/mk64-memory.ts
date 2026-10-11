@@ -243,24 +243,90 @@ function normalizeRaceState(
 }
 
 /**
+ * The raw MK64 globals a snapshot is decoded from. The wasm engine reads them
+ * out of emulated RDRAM ({@link readRawState}); the native engine receives the
+ * same fields in its bridge STATE message (engine/spaghetti/protocol.ts).
+ */
+export type Mk64RawState = {
+  gamestate: number;
+  racePhase: number;
+  menuSelection: number;
+  activeScreenMode: number;
+  playerCountSelection: number;
+  modeSelection: number;
+  courseId: number;
+  /** gPlayers[0..3]: type bitflags, 0-based rank, character id. */
+  players: readonly Mk64RawPlayer[];
+  /** playerHUD[0..3]: race clock in centiseconds, race-complete flag. */
+  hud: readonly Mk64RawHud[];
+};
+
+export type Mk64RawPlayer = {
+  type: number;
+  currentRank: number;
+  characterId: number;
+};
+
+export type Mk64RawHud = { timerCs: number; raceComplete: number };
+
+/** Read the snapshot's source globals out of emulated RDRAM. */
+export function readRawState(mem: RdramView): Mk64RawState {
+  const players: Mk64RawPlayer[] = [];
+  const hud: Mk64RawHud[] = [];
+  for (let slot = 0; slot < 4; slot++) {
+    const playerAddr = MK64_ADDR.playerBase + slot * MK64_ADDR.playerStride;
+    const hudAddr = MK64_ADDR.hudBase + slot * MK64_ADDR.hudStride;
+    players.push({
+      type: readU16(mem, playerAddr + MK64_ADDR.playerOffsets.type),
+      currentRank: readS16(
+        mem,
+        playerAddr + MK64_ADDR.playerOffsets.currentRank,
+      ),
+      characterId: readU16(
+        mem,
+        playerAddr + MK64_ADDR.playerOffsets.characterId,
+      ),
+    });
+    hud.push({
+      timerCs: readU32(mem, hudAddr + MK64_ADDR.hudOffsets.someTimer),
+      raceComplete: readS8(
+        mem,
+        hudAddr + MK64_ADDR.hudOffsets.raceCompleteBool,
+      ),
+    });
+  }
+  return {
+    gamestate: readS32(mem, MK64_ADDR.gGamestate),
+    racePhase: readS32(mem, MK64_ADDR.racePhase),
+    menuSelection: readS32(mem, MK64_ADDR.gMenuSelection),
+    activeScreenMode: readS32(mem, MK64_ADDR.gActiveScreenMode),
+    playerCountSelection: readS32(mem, MK64_ADDR.gPlayerCountSelection1),
+    modeSelection: readS32(mem, MK64_ADDR.gModeSelection),
+    courseId: readS16(mem, MK64_ADDR.gCurrentCourseId),
+    players,
+    hud,
+  };
+}
+
+/**
  * Read one coherent view of the race state. Values are range-checked; if the
  * core globals look like garbage (mid-load), the snapshot degrades to
  * raceState "menu" so consumers simply see "not in a race".
  */
 export function readSnapshot(mem: RdramView): Mk64Snapshot {
-  const gamestate = readS32(mem, MK64_ADDR.gGamestate);
-  const phase = readS32(mem, MK64_ADDR.racePhase);
-  const menuSelection = readS32(mem, MK64_ADDR.gMenuSelection);
-  const screenModeRaw = readS32(mem, MK64_ADDR.gActiveScreenMode);
-  const humanCountRaw = readS32(mem, MK64_ADDR.gPlayerCountSelection1);
-  const modeRaw = readS32(mem, MK64_ADDR.gModeSelection);
-  const courseId = readS16(mem, MK64_ADDR.gCurrentCourseId);
+  return snapshotFromRawState(readRawState(mem));
+}
+
+/** Normalize raw MK64 globals into a snapshot (see {@link readSnapshot}). */
+export function snapshotFromRawState(raw: Mk64RawState): Mk64Snapshot {
+  const { courseId } = raw;
+  const humanCountRaw = raw.playerCountSelection;
 
   // Range-check the raw enum indices numerically, then look them up. Both
   // lookups are provably defined once the range check passes (screenModeRaw and
   // modeRaw are within the table lengths), so the undefined branch is dead.
-  const screenMode: ScreenMode | undefined = SCREEN_MODES[screenModeRaw];
-  const gameMode: GameMode | undefined = GAME_MODES[modeRaw];
+  const screenMode: ScreenMode | undefined = SCREEN_MODES[raw.activeScreenMode];
+  const gameMode: GameMode | undefined = GAME_MODES[raw.modeSelection];
   const valid =
     screenMode !== undefined &&
     gameMode !== undefined &&
@@ -282,31 +348,29 @@ export function readSnapshot(mem: RdramView): Mk64Snapshot {
 
   const players: Mk64PlayerSnapshot[] = [];
   for (let slot = 0; slot < 4; slot++) {
-    const playerAddr = MK64_ADDR.playerBase + slot * MK64_ADDR.playerStride;
-    const hudAddr = MK64_ADDR.hudBase + slot * MK64_ADDR.hudStride;
-    const type = readU16(mem, playerAddr + MK64_ADDR.playerOffsets.type);
-    const rank0 = readS16(
-      mem,
-      playerAddr + MK64_ADDR.playerOffsets.currentRank,
-    );
-    const timerCs = readU32(mem, hudAddr + MK64_ADDR.hudOffsets.someTimer);
+    const player = raw.players[slot];
+    const hud = raw.hud[slot];
+    if (player === undefined || hud === undefined) {
+      throw new RangeError(`raw MK64 state is missing slot ${String(slot)}`);
+    }
+    const rank0 = player.currentRank;
     players.push({
-      present: (type & PLAYER_FLAG_EXISTS) !== 0,
-      human: (type & PLAYER_FLAG_HUMAN) !== 0,
+      present: (player.type & PLAYER_FLAG_EXISTS) !== 0,
+      human: (player.type & PLAYER_FLAG_HUMAN) !== 0,
       rank: rank0 >= 0 && rank0 <= 7 ? rank0 + 1 : 0,
-      characterId: readU16(
-        mem,
-        playerAddr + MK64_ADDR.playerOffsets.characterId,
-      ),
-      finished:
-        readS8(mem, hudAddr + MK64_ADDR.hudOffsets.raceCompleteBool) === 1,
+      characterId: player.characterId,
+      finished: hud.raceComplete === 1,
       // Cap at 24h: an unlatched/garbage timer must not overflow the DB column.
-      raceTimeMs: Math.min(timerCs * 10, 86_400_000),
+      raceTimeMs: Math.min(hud.timerCs * 10, 86_400_000),
     });
   }
 
   return {
-    raceState: normalizeRaceState(gamestate, phase, menuSelection),
+    raceState: normalizeRaceState(
+      raw.gamestate,
+      raw.racePhase,
+      raw.menuSelection,
+    ),
     screenMode,
     gameMode,
     humanCount: humanCountRaw,

@@ -1,6 +1,7 @@
 import { logger } from "#src/logger.ts";
 import { MAX_SEATS, WIDTH } from "#src/emulator/constants.ts";
 import type { ScreenMode } from "#src/emulator/mk64-memory.ts";
+import type { FrameSize } from "./composite.ts";
 import { blitBgra } from "./blit.ts";
 import type { Label } from "./blit.ts";
 import { labelPosition, viewportRects } from "./layout.ts";
@@ -16,6 +17,7 @@ type Slot = {
 
 // Cap labels at the narrowest viewport (a quad cell = half width) so a label
 // rendered once fits every screen mode without re-rendering on mode changes.
+// Both engines' frames are 640 wide.
 const MAX_LABEL_FRAME_WIDTH = Math.floor(WIDTH / 2);
 
 /**
@@ -75,15 +77,10 @@ export class NameOverlay {
    * Blit the cached labels onto the frame for the given screen mode. `seats` is
    * the configured human seat count, used to resolve the 3p-vs-4p quad case.
    */
-  apply(
-    frame: Buffer,
-    frameHeight: number,
-    mode: ScreenMode,
-    seats: number,
-  ): void {
+  apply(frame: Buffer, size: FrameSize, mode: ScreenMode, seats: number): void {
     try {
-      const rects = viewportRects(mode, seats, WIDTH, frameHeight);
-      const view = { data: frame, width: WIDTH, height: frameHeight };
+      const rects = viewportRects(mode, seats, size.width, size.height);
+      const view = { data: frame, width: size.width, height: size.height };
       for (const [seat, rect] of rects.entries()) {
         const label = this.slots[seat]?.label;
         if (label === undefined) continue;

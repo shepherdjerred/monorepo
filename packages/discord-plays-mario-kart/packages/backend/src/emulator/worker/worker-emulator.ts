@@ -7,20 +7,18 @@
 import * as Sentry from "@sentry/bun";
 import type { PlayerInputState } from "@discord-plays-mario-kart/common";
 import type { Mk64Snapshot } from "#src/emulator/mk64-memory.ts";
-import type { EmulatorRestartReason } from "#src/emulator/n64-emulator.ts";
 import { HEIGHT } from "#src/emulator/constants.ts";
+import { N64WASM_FORMAT } from "#src/engine/format.ts";
+import type {
+  EngineFrame,
+  EngineRestartReason,
+  EngineScreenshot,
+  GameEngine,
+} from "#src/engine/game-engine.ts";
 import { logger } from "#src/logger.ts";
 import { replayMetricBatch } from "./metric-replay.ts";
 import { parseWorkerMessage } from "./protocol.ts";
 import type { MainToWorker, WorkerInitOpts, WorkerToMain } from "./protocol.ts";
-
-export type EmulatorFrame = {
-  rgba: Buffer;
-  height: number;
-  seatActivity: boolean[];
-  contentTimeMs: number;
-  inputReceivedAtMs?: number;
-};
 
 type PendingRequest = {
   resolve: (msg: WorkerToMain) => void;
@@ -38,7 +36,8 @@ function bufferView(u8: Uint8Array): Buffer {
 // when a client posts faster than the worker (busy 12–30ms/tick) drains.
 const MAX_INPUT_IN_FLIGHT = 4;
 
-export class WorkerEmulator {
+export class WorkerEmulator implements GameEngine {
+  readonly format = N64WASM_FORMAT;
   private readonly opts: WorkerInitOpts;
   private worker: Worker | undefined;
   private nextId = 1;
@@ -46,7 +45,7 @@ export class WorkerEmulator {
   private readyResolve: (() => void) | undefined;
   private readyReject: ((error: Error) => void) | undefined;
   private stoppedResolve: (() => void) | undefined;
-  private onFrameCb: ((frame: EmulatorFrame) => void) | undefined;
+  private onFrameCb: ((frame: EngineFrame) => void) | undefined;
   private onAudioCb: ((pcm: Buffer, contentEndMs: number) => void) | undefined;
   private onSnapshotCb: ((snapshot: Mk64Snapshot) => void) | undefined;
   private lastHeight = HEIGHT;
@@ -136,7 +135,7 @@ export class WorkerEmulator {
     this.failPending(new Error("emulator worker stopped"));
   }
 
-  restartFromStartMenu(reason: EmulatorRestartReason): void {
+  restartFromStartMenu(reason: EngineRestartReason): void {
     this.post({ kind: "restartFromStartMenu", reason });
   }
 
@@ -186,28 +185,26 @@ export class WorkerEmulator {
   }
 
   /** Current frame as RGBA (screenshot path). Rejects if the worker is gone. */
-  renderFrame(): Promise<{ rgba: Buffer; width: number; height: number }> {
+  renderFrame(): Promise<EngineScreenshot> {
     const id = this.nextId++;
-    const result = new Promise<{ rgba: Buffer; width: number; height: number }>(
-      (resolve, reject) => {
-        this.pending.set(id, {
-          resolve: (msg) => {
-            if (msg.kind !== "renderFrameResult") {
-              reject(
-                new Error(`unexpected response for renderFrame: ${msg.kind}`),
-              );
-              return;
-            }
-            resolve({
-              rgba: bufferView(msg.rgba),
-              width: msg.width,
-              height: msg.height,
-            });
-          },
-          reject,
-        });
-      },
-    );
+    const result = new Promise<EngineScreenshot>((resolve, reject) => {
+      this.pending.set(id, {
+        resolve: (msg) => {
+          if (msg.kind !== "renderFrameResult") {
+            reject(
+              new Error(`unexpected response for renderFrame: ${msg.kind}`),
+            );
+            return;
+          }
+          resolve({
+            rgba: bufferView(msg.rgba),
+            width: msg.width,
+            height: msg.height,
+          });
+        },
+        reject,
+      });
+    });
     this.postForPending(id, { kind: "renderFrame", id });
     return result;
   }
@@ -237,7 +234,7 @@ export class WorkerEmulator {
     return result;
   }
 
-  onFrame(cb: (frame: EmulatorFrame) => void): void {
+  onFrame(cb: (frame: EngineFrame) => void): void {
     this.onFrameCb = cb;
   }
 
@@ -408,7 +405,7 @@ export class WorkerEmulator {
     // below drops or throws. Skip if the worker was already torn down (error
     // path) while a frame was still queued.
     if (this.worker !== undefined) this.post({ kind: "frameAck" });
-    const frame: EmulatorFrame = {
+    const frame: EngineFrame = {
       rgba: bufferView(msg.rgba),
       height: msg.height,
       seatActivity: msg.seatActivity,

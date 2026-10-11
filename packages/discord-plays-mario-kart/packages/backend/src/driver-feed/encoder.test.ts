@@ -9,10 +9,11 @@ import {
   type DriverFeedEncoderOptions,
   type DriverFeedProcessFactory,
 } from "./encoder.ts";
+import { N64WASM_FORMAT, spaghettiFormat } from "#src/engine/format.ts";
 
 const BASE: DriverFeedEncoderOptions = {
+  source: N64WASM_FORMAT,
   outputHeight: 480,
-  frameRate: 30,
   bitrateKbps: 2500,
   bitrateMaxKbps: 4000,
   keyframeIntervalFrames: 30,
@@ -49,6 +50,15 @@ describe("buildDriverFeedArgs", () => {
     expect(valueOf(args, "-pix_fmt")).toBe("bgra");
     expect(valueOf(args, "-video_size")).toBe("640x240");
     expect(valueOf(args, "-i")).toBe("pipe:0");
+  });
+
+  it("describes the native engine's square-pixel frames and rate", () => {
+    const args = buildDriverFeedArgs({ ...BASE, source: spaghettiFormat(60) });
+    expect(valueOf(args, "-video_size")).toBe("640x480");
+    expect(valueOf(args, "-framerate")).toBe("60");
+    // Every native frame is encoded: the output rate matches the input.
+    expect(valueOf(args, "-r")).toBe("60");
+    expect(valueOf(args, "-vf")).toBe("scale=640:480,format=yuv420p");
   });
 
   it("emits size-framed FLV on stdout so frames ship without waiting", () => {

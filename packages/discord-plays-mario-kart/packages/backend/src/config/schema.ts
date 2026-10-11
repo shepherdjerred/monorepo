@@ -107,9 +107,14 @@ export const ConfigSchema = z.strictObject({
         .default(100),
     }),
   }),
-  // Headless N64Wasm (parallel-n64 + angrylion software RDP) host.
+  // The game runtime. Each session boots one engine.
   emulator: z.strictObject({
     enabled: z.boolean(),
+    // n64wasm: the headless N64Wasm emulator (parallel-n64 + angrylion software
+    // RDP) on a Worker thread. spaghettikart: the native PC port, driven as a
+    // child process over spaghetti-src's host bridge (see [spaghettikart]).
+    // The two produce different frame and audio formats; see engine/format.ts.
+    engine: z.enum(["n64wasm", "spaghettikart"]).default("n64wasm"),
     // Directory containing the built n64wasm.js/.wasm + staged FS assets
     // (shaders/fonts). Defaults to the bundled assets/n64wasm in the image.
     wasm_dir: z.string().min(1).default("packages/backend/assets/n64wasm"),
@@ -124,6 +129,22 @@ export const ConfigSchema = z.strictObject({
     // Number of web-controller seats to expose (MK64 supports up to 4).
     seats: z.number().int().min(1).max(4).default(4),
   }),
+  // The native SpaghettiKart engine. Read only when emulator.engine is
+  // "spaghettikart"; defaulted so existing config.toml files keep validating.
+  spaghettikart: z
+    .strictObject({
+      // Build output: the game binary, spaghetti.o2r, Torch, and Torch's
+      // extraction inputs, described by install.json. The image ships it at
+      // the default path; `bun run build:spaghetti` writes .cache/spaghetti/dist.
+      install_dir: z
+        .string()
+        .min(1)
+        .default("packages/backend/assets/spaghettikart"),
+      // Frames per second sent to the stream and driver feed. Game logic stays
+      // at 30 Hz; 60 adds the port's interpolated frames between logic frames.
+      output_fps: z.union([z.literal(30), z.literal(60)]).default(30),
+    })
+    .prefault({}),
   web: z.strictObject({
     enabled: z.boolean(),
     cors: z.boolean(),

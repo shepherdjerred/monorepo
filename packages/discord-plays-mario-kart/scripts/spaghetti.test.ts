@@ -1,10 +1,8 @@
 import { expect, test } from "vitest";
 import {
-  assertSupportedRom,
   cmakeConfigureArgs,
+  devInstallManifest,
   parseSpaghettiUpstream,
-  romCandidates,
-  sha1,
   spaghettiBinaryPath,
 } from "./spaghetti.ts";
 
@@ -35,22 +33,20 @@ test("uses vcpkg dependencies only on macOS", () => {
   );
 });
 
-test("resolves the ROM from the flag, then MK64_ROM, then Syncthing", () => {
-  expect(romCandidates("/flag.z64", "/env.z64", "/home/u")).toEqual([
-    "/flag.z64",
-    "/env.z64",
-    "/home/u/syncthing/Sync/roms/mariokart64.z64",
-    "/home/u/Sync/Sync/roms/mariokart64.z64",
-  ]);
-  expect(romCandidates(undefined, "", "/h")).toHaveLength(2);
-});
-
-test("rejects any ROM other than the supported US image", () => {
-  const digest = sha1(new TextEncoder().encode("not a rom"));
-  expect(() => {
-    assertSupportedRom(digest, "579c48e211ae952530ffc8738709f078d5dd215e");
-  }).toThrow("not the supported Mario Kart 64");
-  expect(() => {
-    assertSupportedRom(digest, digest);
-  }).not.toThrow();
+test("describes a local build as an install the backend can load", () => {
+  const upstream = {
+    repository: "https://example.com/r.git",
+    branch: "main",
+    commit: "a".repeat(40),
+    submodules: ["libultraship"],
+    romSha1: "b".repeat(40),
+  };
+  expect(devInstallManifest(upstream, "/s", "/s/build", "linux")).toEqual({
+    binary: "/s/build/Spaghettify",
+    engineArchive: "/s/build/spaghetti.o2r",
+    torch: "/s/build/TorchExternal/src/TorchExternal-build/torch",
+    torchInputs: "/s",
+    commit: "a".repeat(40),
+    romSha1: "b".repeat(40),
+  });
 });

@@ -6,9 +6,11 @@
 // the BGRA frame copy (overlays write greyscale — channel order is irrelevant,
 // so this is safe on the screenshot's RGBX buffer too).
 //
-// The framebuffer is a horizontally-doubled 320x240 (see constants.ts), so
-// glyphs are drawn twice as wide as tall (GLYPH_SCALE_X = 2 * GLYPH_SCALE_Y)
-// to come out square once the 640x240 frame is displayed at 4:3.
+// The geometry is laid out in the wasm core's 640x240 space, a horizontally
+// doubled 320x240, so glyphs are drawn twice as wide as tall (GLYPH_SCALE_X =
+// 2 * GLYPH_SCALE_Y) to come out square once displayed at 4:3. A taller
+// framebuffer (the native engine's 640x480) multiplies every vertical measure
+// by its `rowScale`, which lands the badge on the same displayed pixels.
 //
 // The font and geometry live in `@discord-plays-mario-kart/common` because the
 // driver-feed client reads this HUD back off its own canvas to measure
@@ -51,6 +53,12 @@ function writePixel(frame: Buffer, offset: number, value: number): void {
   frame[offset + 3] = 0xff;
 }
 
+/** Pixel width and rows per HUD row of the frame an overlay draws into. */
+export type OverlayTarget = {
+  readonly width: number;
+  readonly rowScale: number;
+};
+
 /**
  * Draws `text` as white-on-black at the frame's top-left. Mutates `frame`
  * (BGRA, `width` pixels per row; height derived from the buffer length).
@@ -59,23 +67,24 @@ function writePixel(frame: Buffer, offset: number, value: number): void {
  */
 export function drawTextOverlay(
   frame: Buffer,
-  width: number,
+  { width, rowScale }: OverlayTarget,
   text: string,
 ): void {
   const frameHeight = Math.floor(frame.length / (width * BYTES_PER_PIXEL));
   const boxWidth = 2 * PAD_X + text.length * CELL_COLS * GLYPH_SCALE_X;
-  const boxHeight = 2 * PAD_Y + GLYPH_ROWS * GLYPH_SCALE_Y;
+  const boxHeight = (2 * PAD_Y + GLYPH_ROWS * GLYPH_SCALE_Y) * rowScale;
+  const top = MARGIN_Y * rowScale;
   const xEnd = Math.min(MARGIN_X + boxWidth, width);
-  const yEnd = Math.min(MARGIN_Y + boxHeight, frameHeight);
+  const yEnd = Math.min(top + boxHeight, frameHeight);
 
-  for (let y = MARGIN_Y; y < yEnd; y++) {
+  for (let y = top; y < yEnd; y++) {
     const rowBase = y * width * BYTES_PER_PIXEL;
     for (let x = MARGIN_X; x < xEnd; x++) {
       writePixel(frame, rowBase + x * BYTES_PER_PIXEL, 0x00);
     }
   }
 
-  const target: FrameTarget = { frame, width, height: frameHeight };
+  const target: FrameTarget = { frame, width, height: frameHeight, rowScale };
   let i = 0;
   for (const ch of text) {
     const glyph = GLYPHS.get(ch) ?? SPACE_GLYPH;
@@ -89,6 +98,7 @@ type FrameTarget = {
   frame: Buffer;
   width: number;
   height: number;
+  rowScale: number;
 };
 
 function drawGlyph(
@@ -103,15 +113,15 @@ function drawGlyph(
       drawDot(
         target,
         cellLeft + col * GLYPH_SCALE_X,
-        MARGIN_Y + PAD_Y + row * GLYPH_SCALE_Y,
+        (MARGIN_Y + PAD_Y + row * GLYPH_SCALE_Y) * target.rowScale,
       );
     }
   }
 }
 
-// One font pixel, scaled to a GLYPH_SCALE_X x GLYPH_SCALE_Y block.
+// One font pixel, scaled to a GLYPH_SCALE_X x (GLYPH_SCALE_Y * rowScale) block.
 function drawDot(target: FrameTarget, left: number, top: number): void {
-  for (let sy = 0; sy < GLYPH_SCALE_Y; sy++) {
+  for (let sy = 0; sy < GLYPH_SCALE_Y * target.rowScale; sy++) {
     const y = top + sy;
     if (y >= target.height) continue;
     const rowBase = y * target.width * BYTES_PER_PIXEL;
@@ -126,10 +136,10 @@ function drawDot(target: FrameTarget, left: number, top: number): void {
 /** Stamps the capture-time UTC wall clock onto a stream frame. */
 export function drawTimestampOverlay(
   frame: Buffer,
-  width: number,
+  target: OverlayTarget,
   epochMs: number,
 ): void {
-  drawTextOverlay(frame, width, formatUtcTimestamp(epochMs));
+  drawTextOverlay(frame, target, formatUtcTimestamp(epochMs));
 }
 
 /**
@@ -145,13 +155,13 @@ export function formatSeatFlags(held: readonly boolean[]): string {
 /** The full stream HUD: capture-time UTC clock + per-seat input echo. */
 export function drawHudOverlay(
   frame: Buffer,
-  width: number,
+  target: OverlayTarget,
   epochMs: number,
   held: readonly boolean[],
 ): void {
   drawTextOverlay(
     frame,
-    width,
+    target,
     `${formatUtcTimestamp(epochMs)} ${formatSeatFlags(held)}`,
   );
 }

@@ -1,4 +1,3 @@
-import path from "node:path";
 import * as Sentry from "@sentry/bun";
 import type { Client as BotClient } from "discord.js";
 import type { GameDriver } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-driver.ts";
@@ -7,8 +6,9 @@ import type {
   SessionStopReason,
 } from "@shepherdjerred/discord-stream-lifecycle/session/session.ts";
 import type { SelfbotPooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/selfbot-client.ts";
-import { WorkerEmulator } from "#src/emulator/worker/worker-emulator.ts";
 import type { ScreenMode } from "#src/emulator/mk64-memory.ts";
+import { createGameEngine, type PreparedEngine } from "#src/engine/index.ts";
+import type { GameEngine } from "#src/engine/game-engine.ts";
 import { GameStreamer } from "#src/stream/game-streamer.ts";
 import { applyStreamOverlays } from "#src/overlay/composite.ts";
 import type { StreamOverlayContextProvider } from "#src/overlay/composite.ts";
@@ -28,7 +28,7 @@ import type { LeaderboardResponse } from "@discord-plays-mario-kart/common";
 
 export type ActiveSessionRuntime = {
   readonly session: Session<SelfbotPooledUserbot>;
-  readonly emulator: WorkerEmulator;
+  readonly emulator: GameEngine;
   readonly streamer: GameStreamer;
   readonly seatManager: SeatManager;
   readonly leaderboardStore: LeaderboardStore;
@@ -47,6 +47,30 @@ function fallbackScreenMode(seats: number): ScreenMode {
 }
 
 /**
+ * Run a session-start step; if it fails, stop the already-booted engine before
+ * rethrowing. The session was never published, so onSessionStop cannot reach
+ * it, and the native engine's game process would otherwise outlive the failure.
+ */
+async function startOrStopEngine(
+  engine: GameEngine,
+  step: () => Promise<void>,
+): Promise<void> {
+  try {
+    await step();
+  } catch (error) {
+    try {
+      await engine.stop();
+    } catch (stopError) {
+      logger.error(
+        "engine stop after a failed session start failed",
+        stopError,
+      );
+    }
+    throw error;
+  }
+}
+
+/**
  * Per-MK64-session runtime — owns the emulator, streamer, seat manager, leaderboard
  * store, race tracker, and overlay for ONE active game. Creates everything on `/play`,
  * tears it down on `/stop`/auto-leave/idle.
@@ -58,6 +82,7 @@ function fallbackScreenMode(seats: number): ScreenMode {
 export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
   readonly name = "Mario Kart 64";
   private readonly config: Config;
+  private readonly engine: PreparedEngine;
   /** Undefined when [driver_feed] is disabled; every call site is optional-chained. */
   private readonly driverFeed: DriverFeedService | undefined;
   private botClient: BotClient | null = null;
@@ -65,9 +90,11 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
 
   constructor(params: {
     config: Config;
+    engine: PreparedEngine;
     driverFeed?: DriverFeedService | undefined;
   }) {
     this.config = params.config;
+    this.engine = params.engine;
     this.driverFeed = params.driverFeed;
   }
 
@@ -94,24 +121,12 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
     const seats = config.emulator.seats;
     const seatManager = new SeatManager(seats);
 
-    // Per-guild emulator save isolation: the emulator snapshots MEMFS into
-    // savesDir on stop and rehydrates from it on init. Server A's mempak/EEPROM
-    // can never leak into server B's because each lives under its own
-    // saves/<guildId>/emulator/ tree.
-    //
-    // WorkerEmulator runs the N64Emulator on a Worker thread so the synchronous
-    // ~12–30ms-per-frame wasm stepping stays OFF this (main) event loop, leaving
-    // it free for ffmpeg stdin/stdout, demux, and the Discord RTP send. That is
-    // what restores full-rate streaming (see plans/2026-07-26_mk64-emulator-worker-thread.md).
-    const savesDir = path.join(session.sessionDir, "emulator");
-    const emulator = new WorkerEmulator({
-      wasmDir: config.emulator.wasm_dir,
-      romPath: config.emulator.rom_path,
-      fps: config.emulator.fps,
-      software: config.emulator.software_render,
+    // Per-guild save isolation: each engine keeps its saves under
+    // saves/<guildId>/, so server A's progress never leaks into server B's.
+    // See engine/index.ts for what each engine stores there.
+    const emulator = createGameEngine(config, this.engine, {
+      sessionDir: session.sessionDir,
       seats,
-      savesDir,
-      snapshotEveryNFrames: config.leaderboard.poll_every_n_frames,
     });
     await emulator.init();
 
@@ -121,14 +136,18 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
       session.guildId,
     );
 
+    const { format } = emulator;
     const nameOverlay = config.leaderboard.overlay_enabled
-      ? new NameOverlay(createLabelRenderer(config.emulator.wasm_dir))
+      ? new NameOverlay(
+          createLabelRenderer(config.emulator.wasm_dir, format.rowScale),
+        )
       : undefined;
 
     const streamer = new GameStreamer({
       selfbotClient: session.userbotEntry.userbot.client,
       guildId: session.guildId,
       channelId: session.voiceChannelId,
+      format,
       canvasHeight: config.stream.video.canvas_height,
       frameRate: config.stream.video.frame_rate,
       bitrateKbps: config.stream.video.bitrate_kbps,
@@ -157,7 +176,7 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
         }
       },
     });
-    await streamer.login();
+    await startOrStopEngine(emulator, () => streamer.login());
 
     // Broadcast hook is wired later (when the web server attaches); use a swap-able
     // closure so the RaceTracker can pick up the real broadcast once it's set.
@@ -169,7 +188,8 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
         void broadcast();
       },
     });
-    // Race snapshots are decoded in the Worker (RDRAM lives there) and posted
+    // Each engine decodes race snapshots where the game state lives (the wasm
+    // Worker's RDRAM, or the native bridge's state record) and delivers one
     // every snapshotEveryNFrames frames; feed each to the tracker.
     emulator.onSnapshot((snap) => {
       raceTracker.updateFromSnapshot(snap);
@@ -182,6 +202,7 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
       seatActivity: emulator.latestSeatActivity,
       mode: raceTracker.latestScreenMode() ?? fallbackScreenMode(seats),
       seats,
+      rowScale: format.rowScale,
       nameOverlay,
     });
 
@@ -192,13 +213,18 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
     // Go-Live stream — including the burned-in HUD clock, which lets the browser
     // measure its own glass-to-glass latency off its own canvas.
     //
-    // The frame is a dedicated Buffer transferred zero-copy out of the emulator
-    // Worker and nothing mutates it after applyStreamOverlays returns, so both
-    // sinks can hold the same reference. Go-Live is pushed first: it is the path
+    // The frame is a dedicated Buffer (transferred zero-copy out of the wasm
+    // Worker, or the native bridge message's own buffer) and nothing mutates it
+    // after applyStreamOverlays returns, so both sinks can hold the same
+    // reference. Go-Live is pushed first: it is the path
     // spectators depend on, and it stays ahead of any fault in the newer one
     // (the shared onFrame callback is wrapped in the Worker facade's safeInvoke).
     emulator.onFrame((frame) => {
-      applyStreamOverlays(frame.rgba, frame.height, overlayContext());
+      applyStreamOverlays(
+        frame.rgba,
+        { width: format.width, height: frame.height },
+        overlayContext(),
+      );
       streamer.pushFrame(frame.rgba, {
         contentTimeMs: frame.contentTimeMs,
         ...(frame.inputReceivedAtMs === undefined
@@ -211,7 +237,7 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
       streamer.pushAudio(pcm, contentEndMs);
     });
 
-    await streamer.start();
+    await startOrStopEngine(emulator, () => streamer.start());
 
     this.active = {
       session,
@@ -262,8 +288,8 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
     } catch (error) {
       logger.error("streamer destroy failed", error);
     }
-    // Snapshot MEMFS → host BEFORE stopping the emulator: once stop() tears the
-    // wasm down the FS facade is unreachable. A failure here is logged but
+    // Flush saves BEFORE stopping the engine: once stop() tears the wasm down
+    // its MEMFS is unreachable. (The native port writes its own as it goes.) A failure here is logged but
     // shouldn't block the userbot release; the leaderboard (in Prisma) is
     // already durable.
     try {

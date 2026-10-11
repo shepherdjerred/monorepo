@@ -22,6 +22,8 @@ import {
 } from "./constants.ts";
 import { createPromMetricSink, type MetricSink } from "./metric-sink.ts";
 import { InputLatencyTracker } from "#src/input/input-latency-tracker.ts";
+import { seatActivity } from "#src/input/seat-activity.ts";
+import type { EngineRestartReason } from "#src/engine/game-engine.ts";
 import type {
   ButtonState,
   PlayerInputState,
@@ -56,8 +58,6 @@ type Runtime = {
 
 // A reusable empty PCM result so an idle tick (no new audio) allocates nothing.
 const EMPTY_PCM = Buffer.alloc(0);
-
-export type EmulatorRestartReason = "stream_session_ended";
 
 export type N64EmulatorOptions = {
   wasmDir: string; // dir with n64wasm.js/.wasm + staged FS assets
@@ -405,29 +405,9 @@ export class N64Emulator {
     await persistMemfsToHost(fs, dir);
   }
 
-  /** Per-seat "any control held" flags (buttons or analog deflection), for the
-   *  stream HUD's input-echo indicators. Runs once per emulated frame on the hot
-   *  loop, so it avoids the per-seat `slice()`/`Object.values()` allocations and
-   *  scans `BUTTON_ORDER` in place instead. */
+  /** Per-seat "any control held" flags; see {@link seatActivity}. */
   seatActivity(): boolean[] {
-    const active: boolean[] = [];
-    for (let i = 0; i < this.opts.seats; i++) {
-      const s = this.inputs[i];
-      if (s === undefined) {
-        throw new Error(`missing input state for seat ${String(i)}`);
-      }
-      let held = Math.abs(s.analogX) > 0.25 || Math.abs(s.analogY) > 0.25;
-      if (!held) {
-        for (const name of BUTTON_ORDER) {
-          if (s.buttons[name]) {
-            held = true;
-            break;
-          }
-        }
-      }
-      active.push(held);
-    }
-    return active;
+    return seatActivity(this.inputs, this.opts.seats);
   }
 
   start(): void {
@@ -455,7 +435,7 @@ export class N64Emulator {
     this.tick();
   }
 
-  restartFromStartMenu(reason: EmulatorRestartReason): void {
+  restartFromStartMenu(reason: EngineRestartReason): void {
     const rt = this.rt;
     if (rt === undefined) {
       throw new Error("cannot restart emulator before runtime initialization");

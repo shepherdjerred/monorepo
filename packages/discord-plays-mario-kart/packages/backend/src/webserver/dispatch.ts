@@ -98,7 +98,7 @@ async function emitScreenshot(
     if (frame.height === 0) return;
     const ctx = overlayContext?.();
     if (ctx !== undefined) {
-      applyStreamOverlays(frame.rgba, frame.height, ctx);
+      applyStreamOverlays(frame.rgba, frame, ctx);
     }
     const png = encodeScreenshotPng(frame);
     const response: ScreenshotResponse = {

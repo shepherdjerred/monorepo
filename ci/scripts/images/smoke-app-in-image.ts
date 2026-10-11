@@ -409,6 +409,7 @@ const commands: Record<
       "set -eu",
       "cd /app/packages/discord-plays-mario-kart/packages/backend",
       "bun run smoke:wasm-host",
+      "bun run smoke:spaghetti-install",
       "cd /app/packages/discord-plays-mario-kart",
       "set +e",
       'output="$(timeout 60s sh -c "cd packages/backend && bun x --no-install prisma db push && cd /app/packages/discord-plays-mario-kart && exec bun packages/backend/src/index.ts" 2>&1)"',

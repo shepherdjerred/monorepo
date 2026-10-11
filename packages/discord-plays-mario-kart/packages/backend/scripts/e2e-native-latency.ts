@@ -21,25 +21,26 @@
 //
 // Needs `bun run --cwd ../.. build:spaghetti` (and therefore the ROM), so it is
 // never a CI test.
-import { mkdir } from "node:fs/promises";
+import { mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { encodePng } from "#src/emulator/png.ts";
+import { bgraToRgba } from "#src/engine/spaghetti/engine.ts";
+import { SpaghettiHost } from "#src/engine/spaghetti/host.ts";
+import {
+  N64_BUTTON,
+  NEUTRAL_PAD,
+  type Pad,
+} from "#src/engine/spaghetti/protocol.ts";
 import {
   LockstepGroup,
   createMenuPolicy,
   isRacing,
+  toGameState,
   type Draw,
-} from "./lib/native-driver.ts";
-import {
-  N64_BUTTON,
-  NEUTRAL_PAD,
-  SpaghettiHost,
-  bgraToRgba,
-  loadSpaghettiBuild,
   type GameState,
-  type Pad,
-} from "./lib/spaghetti-host.ts";
+} from "./lib/native-driver.ts";
+import { loadDevSpaghettiBuild } from "./lib/spaghetti-dev.ts";
 
 const { values } = parseArgs({
   options: {
@@ -49,6 +50,7 @@ const { values } = parseArgs({
     "paced-seconds": { type: "string", default: "10" },
     out: { type: "string" },
     json: { type: "string" },
+    rom: { type: "string" },
   },
 });
 
@@ -66,7 +68,7 @@ const outDir = path.resolve(
   values.out ?? `.cache/native-latency/${String(seats)}p-${String(fps)}fps`,
 );
 await mkdir(outDir, { recursive: true });
-const build = await loadSpaghettiBuild();
+const build = await loadDevSpaghettiBuild(values.rom);
 
 /** Frames of held throttle after "GO" before measuring, plus per-trial offset. */
 const SETTLE_FRAMES = 90;
@@ -297,15 +299,17 @@ let latestSeqSeen = 0;
 let racing = false;
 let latestState: GameState | undefined;
 
+await rm(pacedRun, { recursive: true, force: true });
 const paced = new SpaghettiHost({
   build,
-  runDir: pacedRun,
+  homeDir: pacedRun,
   lockstep: true,
   outputFps: fps,
   onFrame: (frame) => {
+    const receivedAtMs = performance.now();
     if (!racing) return;
     if (lastDrawAt !== undefined) {
-      const gap = frame.receivedAtMs - lastDrawAt;
+      const gap = receivedAtMs - lastDrawAt;
       drawIntervals.push(gap);
       if (gap > STALL_MS) {
         stalls.push({
@@ -317,7 +321,7 @@ const paced = new SpaghettiHost({
         });
       }
     }
-    lastDrawAt = frame.receivedAtMs;
+    lastDrawAt = receivedAtMs;
     // Later draws of the same game frame include the pacing sleep between
     // draws; only the first draw measures latch -> render -> readback.
     if (frame.gameFrame !== lastDrawGameFrame)
@@ -329,15 +333,15 @@ const paced = new SpaghettiHost({
         // Only the newest input in a frame is "seen"; older ones it superseded
         // were never latched on their own and are dropped from the sample.
         if (sentAt !== undefined && seq === frame.latchedInputSeq) {
-          sendToFrameMs.push(frame.receivedAtMs - sentAt);
+          sendToFrameMs.push(receivedAtMs - sentAt);
         }
         sendTimes.delete(seq);
       }
       latestSeqSeen = frame.latchedInputSeq;
     }
   },
-  onState: (state) => {
-    latestState = state;
+  onState: (message) => {
+    latestState = toGameState(message);
   },
 });
 

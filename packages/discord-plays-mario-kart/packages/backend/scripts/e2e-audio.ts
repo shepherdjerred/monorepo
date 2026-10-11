@@ -97,7 +97,7 @@ function rms(pcm: Buffer): number {
  * return the muxed NUT path. Mirrors GameStreamer.buildEncoder's options.
  */
 async function renderBroadcast(pcm: Buffer): Promise<string> {
-  const transport = await createAudioTransport();
+  const transport = await createAudioTransport(AUDIO_SAMPLE_RATE);
   const video = new PassThrough();
 
   const { output, promise } = prepareStream(video, {

@@ -4,6 +4,8 @@ import { MarioKartGameDriver } from "./lifecycle/mario-kart-driver.ts";
 import { SeatManager } from "./input/seat-manager.ts";
 import { createWebServer } from "./webserver/index.ts";
 import { DriverFeedService } from "./driver-feed/index.ts";
+import { engineFormat } from "./engine/format.ts";
+import { prepareEngine } from "./engine/index.ts";
 import { resolveDriverFeedConfig } from "./driver-feed/config.ts";
 import { handleRequest, type LeaderboardDeps } from "./webserver/dispatch.ts";
 import { logger } from "./logger.ts";
@@ -24,6 +26,12 @@ startEventLoopLagSampler((lagMs) => {
 
 const config = getConfig();
 
+// Engine preparation runs before anything connects: for the native port it
+// extracts the ROM-derived game archive (cached on the saves volume), and a
+// missing install or an unsupported ROM fails startup instead of `/play`.
+const engine = await prepareEngine(config);
+logger.info("game engine prepared", { engine: engine.name });
+
 // Low-latency in-browser video for seated players, alongside (never instead of)
 // the Go-Live stream spectators watch. Constructed before the driver so sessions
 // can drive it, but its WebSocket route is mounted once the HTTP server exists.
@@ -41,14 +49,14 @@ const driverFeed = driverFeedConfig.enabled
           Bun.env["VAAPI_DEVICE"] ?? config.stream.video.vaapi_device,
         encoder_async_depth: config.stream.video.encoder_async_depth,
       },
-      frameRate: config.stream.video.frame_rate,
+      format: engineFormat(config),
     })
   : undefined;
 
 // One userbot, one emulator, one game at a time. The "pool" in the shared lib is
 // general-purpose (Streambot uses it for many concurrent streams); for this single-slot
 // game-bot we just feed it the single configured userbot token.
-const driver = new MarioKartGameDriver({ config, driverFeed });
+const driver = new MarioKartGameDriver({ config, engine, driverFeed });
 driverFeed?.setDriverAdmission((socketId) => {
   const active = driver.getActiveRuntime();
   return active !== null && active.seatManager.seatOf(socketId) !== null;

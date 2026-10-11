@@ -7,9 +7,10 @@ import type { Label } from "./blit.ts";
 // container (sharp's `fontfile` bypasses fontconfig lookup).
 const FONT_NAME = "Arial";
 const FONT_POINTS = 12;
-// The framebuffer is a horizontally-doubled 320x240 (see constants.ts), so a
-// label must be drawn twice as wide as tall to read square once the 640x240
-// frame is displayed at 4:3 (matches the HUD's GLYPH_SCALE_X = 2 * SCALE_Y).
+// Labels are laid out in the wasm core's 640x240 space, a horizontally doubled
+// 320x240, so a label is drawn twice as wide as tall to read square once
+// displayed at 4:3 (matches the HUD's GLYPH_SCALE_X = 2 * SCALE_Y). A taller
+// framebuffer repeats each row `rowScale` times (see engine/format.ts).
 const HSCALE = 2;
 const PAD_X = 3;
 const PAD_Y = 1;
@@ -44,13 +45,17 @@ async function rasterizeText(
 
 /**
  * Render a name into a premultiplied BGRA pill label, pre-stretched 2x
- * horizontally for the anamorphic framebuffer. Truncates with an ellipsis if
- * the (stretched) label would exceed `maxFrameWidth` framebuffer pixels.
+ * horizontally and `rowScale`x vertically for the engine's framebuffer.
+ * Truncates with an ellipsis if the (stretched) label would exceed
+ * `maxFrameWidth` framebuffer pixels.
  *
  * Called once per name change (off the frame loop); the result is cached by
  * NameOverlay, so cost here is irrelevant to frame pacing.
  */
-export function createLabelRenderer(wasmDir: string): LabelRenderer {
+export function createLabelRenderer(
+  wasmDir: string,
+  rowScale: number,
+): LabelRenderer {
   const fontfile = fontFile(wasmDir);
 
   return async function renderLabel(
@@ -76,7 +81,7 @@ export function createLabelRenderer(wasmDir: string): LabelRenderer {
     const pillW = tw + PAD_X * 2;
     const pillH = th + PAD_Y * 2;
     const outW = pillW * HSCALE;
-    const outH = pillH;
+    const outH = pillH * rowScale;
     const out = Buffer.alloc(outW * outH * 4);
 
     for (let oy = 0; oy < outH; oy++) {
@@ -84,7 +89,7 @@ export function createLabelRenderer(wasmDir: string): LabelRenderer {
         const px = ox >> 1; // 2x horizontal: sample one pill column per pair
         // Text coverage at this pill pixel (0 outside the text box).
         const tx = px - PAD_X;
-        const ty = oy - PAD_Y;
+        const ty = Math.floor(oy / rowScale) - PAD_Y;
         const cover =
           tx >= 0 && tx < tw && ty >= 0 && ty < th
             ? (raster.data[(ty * tw + tx) * 4 + 3] ?? 0)

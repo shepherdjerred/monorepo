@@ -12,20 +12,26 @@
 // player on the internet sees. Add real network RTT for that.
 //
 //   bun run e2e:driver-feed:glass [--seconds 30] [--rom <path>] [--port 8099]
+//     [--engine n64wasm|spaghettikart] [--fps 30|60] [--pinchtab <server url>]
+//
+// --engine spaghettikart needs `bun run --cwd ../.. build:spaghetti` first;
+// --fps sets its output rate (the wasm engine always delivers 30).
 
 import { parseArgs } from "node:util";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { z } from "zod";
-import { N64_FPS } from "#src/emulator/constants.ts";
-import { WorkerEmulator } from "#src/emulator/worker/worker-emulator.ts";
 import { SeatManager } from "#src/input/seat-manager.ts";
 import { applyStreamOverlays } from "#src/overlay/composite.ts";
 import { DriverFeedService } from "#src/driver-feed/index.ts";
 import { handleRequest } from "#src/webserver/dispatch.ts";
 import { createWebServer } from "#src/webserver/index.ts";
-import { resolveRom } from "./lib/harness.ts";
+import {
+  createHarnessEngine,
+  parseEngineName,
+  parseOutputFps,
+} from "./lib/engines.ts";
 
 const { values } = parseArgs({
   args: Bun.argv.slice(2),
@@ -35,8 +41,11 @@ const { values } = parseArgs({
     port: { type: "string", default: "8099" },
     pinchtab: { type: "string", default: "http://localhost:9867" },
     screenshot: { type: "string" },
+    engine: { type: "string", default: "n64wasm" },
+    fps: { type: "string", default: "30" },
   },
 });
+const engineName = parseEngineName(values.engine);
 
 const seconds = Number(values.seconds);
 const port = Number(values.port);
@@ -45,7 +54,6 @@ if (!Number.isFinite(seconds) || seconds <= 0) {
 }
 
 const PACKAGE_ROOT = path.join(import.meta.dir, "..", "..", "..");
-const WASM_DIR = path.join(import.meta.dir, "..", "assets", "n64wasm");
 const WEB_ASSETS = path.join(PACKAGE_ROOT, "packages", "frontend", "dist");
 
 /**
@@ -54,7 +62,7 @@ const WEB_ASSETS = path.join(PACKAGE_ROOT, "packages", "frontend", "dist");
  * and tab routing.
  */
 async function pinchtabCli(args: readonly string[]): Promise<string> {
-  const proc = Bun.spawn(["pinchtab", ...args], {
+  const proc = Bun.spawn(["pinchtab", "--server", values.pinchtab, ...args], {
     stdout: "pipe",
     stderr: "pipe",
   });
@@ -78,8 +86,14 @@ async function evalInTab(tabId: string, script: string): Promise<unknown> {
 
 // ---- boot the server + feed ----
 
-const romPath = await resolveRom(values.rom);
 const savesDir = await mkdtemp(path.join(tmpdir(), "mk64-glass-"));
+const emulator = await createHarnessEngine({
+  engine: engineName,
+  rom: values.rom,
+  sessionDir: savesDir,
+  fps: parseOutputFps(values.fps),
+});
+const { format } = emulator;
 
 const driverFeed = new DriverFeedService({
   config: {
@@ -96,18 +110,9 @@ const driverFeed = new DriverFeedService({
     vaapi_device: "/dev/dri/renderD128",
     encoder_async_depth: 1,
   },
-  frameRate: N64_FPS,
+  format,
 });
 
-const emulator = new WorkerEmulator({
-  wasmDir: WASM_DIR,
-  romPath,
-  fps: N64_FPS,
-  software: true,
-  seats: 4,
-  savesDir,
-  snapshotEveryNFrames: 10,
-});
 await emulator.init();
 
 const { server, socket } = createWebServer({
@@ -133,20 +138,25 @@ driverFeed.setDriverAdmission(
 driverFeed.attach(server);
 
 emulator.onFrame((frame) => {
-  applyStreamOverlays(frame.rgba, frame.height, {
-    epochMs: Date.now(),
-    seatActivity: frame.seatActivity,
-    mode: "1p",
-    seats: 4,
-    nameOverlay: undefined,
-  });
-  driverFeed.pushFrame(frame.rgba);
+  applyStreamOverlays(
+    frame.rgba,
+    { width: format.width, height: frame.height },
+    {
+      epochMs: Date.now(),
+      seatActivity: frame.seatActivity,
+      mode: "1p",
+      seats: 4,
+      rowScale: format.rowScale,
+      nameOverlay: undefined,
+    },
+  );
+  driverFeed.pushFrame(frame.rgba, frame.inputReceivedAtMs);
 });
 driverFeed.startSession();
 emulator.start();
 
 process.stdout.write(
-  `serving the driver feed on http://localhost:${String(port)} (rom: ${romPath})\n`,
+  `serving the ${engineName} driver feed (${String(format.width)}x${String(format.height)} at ${String(format.fps)} fps) on http://localhost:${String(port)}\n`,
 );
 // Let MK64 get past its boot logos so the canvas has real content.
 await Bun.sleep(20_000);

@@ -28,7 +28,11 @@ import {
   parseUtcTimestampMs,
 } from "./hud-font.ts";
 
-/** The framebuffer the overlay is drawn against, before the encoder scales it. */
+/**
+ * The space the overlay is laid out in, before the encoder scales it: the wasm
+ * core's 640x240 framebuffer. The native engine's 640x480 frame draws the same
+ * layout with every row doubled, so this mapping holds for both.
+ */
 export const HUD_SOURCE_WIDTH = 640;
 export const HUD_SOURCE_HEIGHT = 240;
 

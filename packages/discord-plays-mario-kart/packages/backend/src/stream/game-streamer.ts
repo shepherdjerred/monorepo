@@ -8,12 +8,8 @@ import {
 } from "@shepherdjerred/discord-video-stream";
 import type { EncoderHandles } from "@shepherdjerred/discord-stream-lifecycle/types.ts";
 import { GameStreamerBase } from "@shepherdjerred/discord-plays-core/stream/game-streamer-base.ts";
-import {
-  WIDTH,
-  HEIGHT,
-  N64_FPS,
-  DISPLAY_ASPECT,
-} from "#src/emulator/constants.ts";
+import { DISPLAY_ASPECT } from "#src/emulator/constants.ts";
+import { frameBytes, type FrameFormat } from "#src/engine/format.ts";
 import { createAudioTransport } from "#src/stream/audio-transport.ts";
 import { LatestFrameSink } from "#src/stream/latest-frame-sink.ts";
 import { sinkBufferBytes } from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
@@ -48,6 +44,8 @@ export type GameStreamerOptions = {
   selfbotClient: Client;
   guildId: string;
   channelId: string;
+  /** The engine's frames and audio; sizes the raw inputs handed to ffmpeg. */
+  format: FrameFormat;
   // Height of the 16:9 output canvas; the 4:3 game is pillarboxed onto it.
   canvasHeight: number;
   frameRate: number;
@@ -76,11 +74,6 @@ export async function notifyStreamSessionEnded(
   }
 }
 
-// rawvideo input framerate handed to ffmpeg — it assigns presentation
-// timestamps from this value, so it must match the emulator's actual tick rate.
-const SRC_FPS = N64_FPS;
-
-const FRAME_BYTES = WIDTH * HEIGHT * 4;
 export const MAX_BUFFERED_FRAMES = 3;
 
 export type StreamFrameTiming = {
@@ -159,7 +152,8 @@ export class GameStreamer extends GameStreamerBase {
     // Audio transport creation is the only awaited preparation step. Do it
     // before publishing session state so a STOP that cancels this invoke cannot
     // resume later, start the emulator, or notify a session-end callback.
-    const audioTransport = await createAudioTransport();
+    const { format } = this.options;
+    const audioTransport = await createAudioTransport(format.audioSampleRate);
     if (signal.aborted) {
       audioTransport.close();
       throw new DOMException("encoder preparation aborted", "AbortError");
@@ -167,10 +161,11 @@ export class GameStreamer extends GameStreamerBase {
 
     const latencyTracker = new StreamLatencyTracker(
       prometheusLatencyObservations,
+      format.audioSampleRate,
     );
     this.latencyTracker = latencyTracker;
     const bgra = new LatestFrameSink<VideoSourceTiming>({
-      frameBytes: FRAME_BYTES,
+      frameBytes: frameBytes(format),
       maxBufferedFrames: MAX_BUFFERED_FRAMES,
       onFrameEvicted: (timing) => {
         streamFramesDroppedTotal.inc();
@@ -224,16 +219,19 @@ export class GameStreamer extends GameStreamerBase {
       customInputOptions: [
         "-f",
         "rawvideo",
-        // Frames pushed to the stream arrive BGRA (see wasm-src/PATCHES.md —
-        // get_video_buffer's non-idempotent b<->r swap nets BGRA on the tick
-        // path). Declaring rgba here swaps red/blue in the broadcast; ffmpeg
-        // drops the X byte converting to yuv420p.
+        // Frames pushed to the stream arrive BGRA from both engines (see
+        // wasm-src/PATCHES.md — get_video_buffer's non-idempotent b<->r swap
+        // nets BGRA on the tick path; the native port reads back BGRA).
+        // Declaring rgba here swaps red/blue in the broadcast; ffmpeg drops
+        // the X byte converting to yuv420p.
         "-pix_fmt",
         "bgra",
         "-video_size",
-        `${String(WIDTH)}x${String(HEIGHT)}`,
+        `${String(format.width)}x${String(format.height)}`,
+        // ffmpeg assigns presentation timestamps from this rate, so it must
+        // match the rate the engine delivers frames at.
         "-framerate",
-        String(SRC_FPS),
+        String(format.fps),
         // Raw BGRA is fully described above; the minimum legal probe size
         // prevents ffmpeg waiting on a live pipe before it begins encoding.
         "-probesize",

@@ -4,7 +4,12 @@ import { once } from "node:events";
 import { PassThrough } from "node:stream";
 import { prepareStream, Encoders } from "@shepherdjerred/discord-video-stream";
 import { createAudioTransport } from "#src/stream/audio-transport.ts";
-import { HEIGHT, N64_FPS, WIDTH } from "#src/emulator/constants.ts";
+import {
+  AUDIO_SAMPLE_RATE,
+  HEIGHT,
+  N64_FPS,
+  WIDTH,
+} from "#src/emulator/constants.ts";
 import {
   analyzeCalibrationNut,
   generateCalibrationPcm,
@@ -113,7 +118,7 @@ export async function waitForCalibrationVideoDrain(
 }
 
 async function renderCalibration(opts: Options): Promise<void> {
-  const transport = await createAudioTransport();
+  const transport = await createAudioTransport(AUDIO_SAMPLE_RATE);
   const video = new PassThrough();
   const { output, promise } = prepareStream(video, {
     width: WIDTH,

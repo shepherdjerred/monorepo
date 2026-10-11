@@ -2,19 +2,20 @@ import {
   createAudioTransport as coreCreateAudioTransport,
   type AudioTransport,
 } from "@shepherdjerred/discord-plays-core/stream/audio-transport.ts";
-import { AUDIO_SAMPLE_RATE, AUDIO_CHANNELS } from "#src/emulator/constants.ts";
+import { AUDIO_CHANNELS } from "#src/emulator/constants.ts";
 
-// The emulator emits resampled PCM (signed 16-bit LE, stereo, 44.1 kHz). ffmpeg
-// reads it raw over a loopback socket, so the format must be declared explicitly.
-// The transport plumbing lives in discord-plays-core; only these format constants
-// differ per game.
-const AUDIO_OPTIONS = {
-  format: "s16le",
-  sampleRate: AUDIO_SAMPLE_RATE,
-  channels: AUDIO_CHANNELS,
-} as const;
+// Both engines emit signed 16-bit LE stereo PCM, at the engine's own rate
+// (FrameFormat.audioSampleRate). ffmpeg reads it raw over a loopback socket, so
+// the format must be declared explicitly; it resamples for Opus itself. The
+// transport plumbing lives in discord-plays-core; only the format differs per game.
 
-/** Write resampled PCM (s16le/44.1 kHz/stereo) to the returned transport's `sink`. */
-export function createAudioTransport(): Promise<AudioTransport> {
-  return coreCreateAudioTransport(AUDIO_OPTIONS);
+/** Write s16le stereo PCM at `sampleRate` to the returned transport's `sink`. */
+export function createAudioTransport(
+  sampleRate: number,
+): Promise<AudioTransport> {
+  return coreCreateAudioTransport({
+    format: "s16le",
+    sampleRate,
+    channels: AUDIO_CHANNELS,
+  });
 }

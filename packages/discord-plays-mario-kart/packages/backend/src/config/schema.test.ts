@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { engineFormat, N64WASM_FORMAT } from "#src/engine/format.ts";
 import { ConfigSchema } from "./schema.ts";
 
 /** The smallest config that satisfies every required field. */
@@ -73,6 +74,56 @@ describe("driver_feed config", () => {
   it("rejects an output height outside the encodable range", () => {
     expect(() =>
       ConfigSchema.parse({ ...minimalConfig(), driver_feed: { height: 4320 } }),
+    ).toThrow();
+  });
+});
+
+describe("engine config", () => {
+  it("keeps the wasm engine and its 640x240 frame when [spaghettikart] is absent", () => {
+    // Same reason as [driver_feed]: the live config.toml lives in 1Password.
+    const parsed = ConfigSchema.parse(minimalConfig());
+
+    expect(parsed.emulator.engine).toBe("n64wasm");
+    expect(parsed.spaghettikart).toEqual({
+      install_dir: "packages/backend/assets/spaghettikart",
+      output_fps: 30,
+    });
+    expect(engineFormat(parsed)).toBe(N64WASM_FORMAT);
+    expect(N64WASM_FORMAT).toMatchObject({
+      width: 640,
+      height: 240,
+      rowScale: 1,
+    });
+  });
+
+  it("gives the native engine square 640x480 frames at its own rates", () => {
+    const parsed = ConfigSchema.parse({
+      ...minimalConfig(),
+      emulator: { enabled: true, rom_path: "rom.z64", engine: "spaghettikart" },
+      spaghettikart: { output_fps: 60 },
+    });
+
+    expect(engineFormat(parsed)).toEqual({
+      width: 640,
+      height: 480,
+      rowScale: 2,
+      fps: 60,
+      audioSampleRate: 26_800,
+    });
+  });
+
+  it("rejects an engine or output rate the bridge does not support", () => {
+    expect(() =>
+      ConfigSchema.parse({
+        ...minimalConfig(),
+        emulator: { enabled: true, rom_path: "rom.z64", engine: "mupen" },
+      }),
+    ).toThrow();
+    expect(() =>
+      ConfigSchema.parse({
+        ...minimalConfig(),
+        spaghettikart: { output_fps: 45 },
+      }),
     ).toThrow();
   });
 });

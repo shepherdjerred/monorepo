@@ -2,31 +2,44 @@
 // splitter -> hub fan-out -> re-decode.
 //
 // Two modes. By default it feeds a generated gradient at the real cadence, so it
-// needs no ROM and no GPU and can run anywhere ffmpeg is on PATH. With `--rom`
-// it drives the actual N64Wasm emulator through the same overlay pipeline the
+// needs no ROM and no GPU and can run anywhere ffmpeg is on PATH. With `--live`
+// (or `--rom`) it drives the real engine through the same overlay pipeline the
 // Go-Live stream uses, which additionally proves the HUD clock the driver feed's
 // latency readout depends on survives a real encode and decode.
 //
-//   bun run e2e:driver-feed [--seconds 3] [--hardware] [--rom <path>]
+// `--engine spaghettikart` uses the native port's 640x480 frame format (and,
+// live, the locally built port); `--fps` sets its rate.
+//
+//   bun run e2e:driver-feed [--seconds 3] [--hardware] [--live] [--rom <path>]
+//     [--engine n64wasm|spaghettikart] [--fps 30|60]
 
 import { parseArgs } from "node:util";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import {
+  HUD_SOURCE_HEIGHT,
+  HUD_SOURCE_WIDTH,
   decodeHudClock,
   type HudSampler,
 } from "@discord-plays-mario-kart/common";
-import { WIDTH, HEIGHT, N64_FPS } from "#src/emulator/constants.ts";
+import {
+  N64WASM_FORMAT,
+  frameBytes as frameBytesOf,
+  spaghettiFormat,
+} from "#src/engine/format.ts";
 import {
   DriverFeedEncoder,
   driverFeedOutputSize,
 } from "#src/driver-feed/encoder.ts";
 import { DriverFeedHub, type FeedClient } from "#src/driver-feed/hub.ts";
 import type { AccessUnit } from "#src/driver-feed/annex-b.ts";
-import { WorkerEmulator } from "#src/emulator/worker/worker-emulator.ts";
 import { applyStreamOverlays } from "#src/overlay/composite.ts";
-import { resolveRom } from "./lib/harness.ts";
+import {
+  createHarnessEngine,
+  parseEngineName,
+  parseOutputFps,
+} from "./lib/engines.ts";
 
 const { values } = parseArgs({
   args: Bun.argv.slice(2),
@@ -34,6 +47,9 @@ const { values } = parseArgs({
     seconds: { type: "string", default: "3" },
     hardware: { type: "boolean", default: false },
     rom: { type: "string" },
+    live: { type: "boolean", default: false },
+    engine: { type: "string", default: "n64wasm" },
+    fps: { type: "string", default: "30" },
     "dump-frame": { type: "string" },
     // Encode at the Go-Live path's output size/bitrate instead, to isolate how
     // much of the encode leg is this feed's smaller frame rather than the box.
@@ -46,10 +62,17 @@ if (!Number.isFinite(seconds) || seconds <= 0) {
   throw new Error(`--seconds must be a positive number, got ${values.seconds}`);
 }
 
+const engineName = parseEngineName(values.engine);
+const outputFps = parseOutputFps(values.fps);
+const format =
+  engineName === "spaghettikart" ? spaghettiFormat(outputFps) : N64WASM_FORMAT;
+const { width: WIDTH, height: HEIGHT } = format;
+const live = values.live || values.rom !== undefined;
+
 const KEYFRAME_INTERVAL = 30;
 const outputHeightPx = values["golive-profile"] ? 720 : 480;
-const frameCount = Math.round(seconds * N64_FPS);
-const frameBytes = WIDTH * HEIGHT * 4;
+const frameCount = Math.round(seconds * format.fps);
+const frameBytes = frameBytesOf(format);
 
 /** A moving gradient — real motion, so deltas are not degenerate. */
 function syntheticFrame(index: number): Buffer {
@@ -80,13 +103,18 @@ function stampOverlay(
   seatActivity: readonly boolean[],
 ): void {
   const epochMs = Date.now();
-  applyStreamOverlays(frame, height, {
-    epochMs,
-    seatActivity,
-    mode: "1p",
-    seats: 4,
-    nameOverlay: undefined,
-  });
+  applyStreamOverlays(
+    frame,
+    { width: WIDTH, height },
+    {
+      epochMs,
+      seatActivity,
+      mode: "1p",
+      seats: 4,
+      rowScale: format.rowScale,
+      nameOverlay: undefined,
+    },
+  );
   stampedMsOfDay.add(epochMs % MS_PER_DAY);
 }
 
@@ -109,8 +137,8 @@ hub.add(client);
 
 const encoder = new DriverFeedEncoder(
   {
+    source: format,
     outputHeight: values["golive-profile"] ? 720 : 480,
-    frameRate: N64_FPS,
     bitrateKbps: values["golive-profile"] ? 5000 : 2500,
     bitrateMaxKbps: values["golive-profile"] ? 8000 : 4000,
     keyframeIntervalFrames: KEYFRAME_INTERVAL,
@@ -131,46 +159,41 @@ const encoder = new DriverFeedEncoder(
 
 const encoderLabel = values.hardware ? "vaapi" : "libx264";
 
-if (values.rom === undefined) {
-  process.stdout.write(
-    `feeding ${String(frameCount)} synthetic ${String(WIDTH)}x${String(HEIGHT)} frames ` +
-      `at ${String(N64_FPS)}fps (${encoderLabel})\n`,
-  );
-  encoder.start();
-  const frameIntervalMs = 1000 / N64_FPS;
-  for (let index = 0; index < frameCount; index++) {
-    const frame = syntheticFrame(index);
-    stampOverlay(frame, HEIGHT, [false, false, false, false]);
-    encoder.pushFrame(frame);
-    await Bun.sleep(frameIntervalMs);
-  }
-} else {
-  const romPath = await resolveRom(values.rom);
-  const wasmDir = path.join(import.meta.dir, "..", "assets", "n64wasm");
+if (live) {
   const savesDir = await mkdtemp(path.join(tmpdir(), "mk64-driver-feed-"));
   process.stdout.write(
-    `running the emulator for ${String(seconds)}s off ${romPath} (${encoderLabel})\n`,
+    `running ${engineName} for ${String(seconds)}s (${encoderLabel})\n`,
   );
-  const emulator = new WorkerEmulator({
-    wasmDir,
-    romPath,
-    fps: N64_FPS,
-    software: true,
-    seats: 4,
-    savesDir,
-    snapshotEveryNFrames: 10,
+  const emulator = await createHarnessEngine({
+    engine: engineName,
+    rom: values.rom,
+    sessionDir: savesDir,
+    fps: outputFps,
   });
   await emulator.init();
   // Same per-frame pipeline as MarioKartGameDriver: overlay, then tee.
   emulator.onFrame((frame) => {
     stampOverlay(frame.rgba, frame.height, frame.seatActivity);
-    encoder.pushFrame(frame.rgba);
+    encoder.pushFrame(frame.rgba, frame.inputReceivedAtMs);
   });
   encoder.start();
   emulator.start();
   await Bun.sleep(seconds * 1000);
   await emulator.stop();
   await rm(savesDir, { recursive: true, force: true });
+} else {
+  process.stdout.write(
+    `feeding ${String(frameCount)} synthetic ${String(WIDTH)}x${String(HEIGHT)} frames ` +
+      `at ${String(format.fps)}fps (${encoderLabel})\n`,
+  );
+  encoder.start();
+  const frameIntervalMs = 1000 / format.fps;
+  for (let index = 0; index < frameCount; index++) {
+    const frame = syntheticFrame(index);
+    stampOverlay(frame, HEIGHT, [false, false, false, false]);
+    encoder.pushFrame(frame);
+    await Bun.sleep(frameIntervalMs);
+  }
 }
 // Let the encode pipeline drain before tearing the process down.
 await Bun.sleep(500);
@@ -341,8 +364,10 @@ const encodeLatenciesMs: number[] = [];
 for (const [frameIndex, luma] of lumaFrames.entries()) {
   const sampler: HudSampler = {
     lumaAt: (sourceX, sourceY) => {
-      const x = Math.floor((sourceX * outputSize.width) / WIDTH);
-      const y = Math.floor((sourceY * outputSize.height) / HEIGHT);
+      // The decoder works in the HUD's fixed 640x240 layout space, whatever
+      // the engine's frame size; map it onto the output exactly as the page does.
+      const x = Math.floor((sourceX * outputSize.width) / HUD_SOURCE_WIDTH);
+      const y = Math.floor((sourceY * outputSize.height) / HUD_SOURCE_HEIGHT);
       return x < 0 || y < 0 || x >= outputSize.width || y >= outputSize.height
         ? 0
         : (luma[y * outputSize.width + x] ?? 0);

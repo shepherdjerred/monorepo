@@ -16,6 +16,7 @@ import {
   DriverFeedReadySchema,
 } from "@discord-plays-mario-kart/common";
 import type { Config } from "#src/config/schema.ts";
+import type { FrameFormat } from "#src/engine/format.ts";
 import { logger } from "#src/logger.ts";
 import {
   driverFeedClientBufferBytes,
@@ -39,7 +40,8 @@ export type DriverFeedServiceOptions = {
     StreamVideoConfig,
     "hardware_acceleration" | "vaapi_device" | "encoder_async_depth"
   >;
-  readonly frameRate: number;
+  /** The configured engine's frames; the feed encodes every one of them. */
+  readonly format: FrameFormat;
 };
 
 export class DriverFeedService {
@@ -112,8 +114,8 @@ export class DriverFeedService {
     }
     const encoder = new DriverFeedEncoder(
       {
+        source: this.options.format,
         outputHeight: this.options.config.height,
-        frameRate: this.options.frameRate,
         bitrateKbps: this.options.config.bitrate_kbps,
         bitrateMaxKbps: this.options.config.bitrate_max_kbps,
         keyframeIntervalFrames: this.options.config.keyframe_interval_frames,
@@ -173,7 +175,7 @@ export class DriverFeedService {
       codec: H264_CODEC_STRING,
       width: out.width,
       height: out.height,
-      frameRate: this.options.frameRate,
+      frameRate: this.options.format.fps,
     };
     ws.send(JSON.stringify(init));
 

@@ -14,7 +14,7 @@ import { PlayerInputStateSchema } from "@discord-plays-mario-kart/common";
 import type { Mk64Snapshot } from "#src/emulator/mk64-memory.ts";
 import type { MetricBatch } from "./metric-bridge.ts";
 
-// Mirrors EmulatorRestartReason (n64-emulator.ts). Adding a reason there without
+// Mirrors EngineRestartReason (engine/game-engine.ts). Adding a reason there without
 // mirroring it here fails the build where WorkerEmulator.restartFromStartMenu
 // posts the wider reason into this narrower MainToWorker union.
 const RestartReasonSchema = z.enum(["stream_session_ended"]);

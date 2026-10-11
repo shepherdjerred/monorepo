@@ -14,7 +14,8 @@
 
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import * as Sentry from "@sentry/bun";
-import { WIDTH, HEIGHT, DISPLAY_ASPECT } from "#src/emulator/constants.ts";
+import { DISPLAY_ASPECT } from "#src/emulator/constants.ts";
+import { frameBytes, type FrameFormat } from "#src/engine/format.ts";
 import { LatestFrameSink } from "#src/stream/latest-frame-sink.ts";
 import {
   driverFeedAccessUnitBytes,
@@ -33,7 +34,6 @@ import {
   type DriverFeedFrameTiming,
 } from "./latency-tracker.ts";
 
-const FRAME_BYTES = WIDTH * HEIGHT * 4;
 /**
  * The sink's minimum: one frame in the pipe's read buffer and one queued. Any
  * deeper and a briefly slow ffmpeg leaves a standing queue of stale frames
@@ -55,9 +55,10 @@ const H264_LEVEL = "40";
 export const H264_CODEC_STRING = "avc1.4D4028";
 
 export type DriverFeedEncoderOptions = {
+  /** What the engine delivers: frame size and rate. Every frame is encoded. */
+  readonly source: FrameFormat;
   /** Square-pixel output height; width is derived from the 4:3 display aspect. */
   readonly outputHeight: number;
-  readonly frameRate: number;
   readonly bitrateKbps: number;
   readonly bitrateMaxKbps: number;
   readonly keyframeIntervalFrames: number;
@@ -72,8 +73,9 @@ export type DriverFeedOutputSize = {
 };
 
 /**
- * Aspect-correct the anamorphic 640x240 framebuffer to square pixels at
- * `height`, rounding width to an even number (H.264 4:2:0 requires it).
+ * Size the 4:3 picture in square pixels at `height`, rounding width to an even
+ * number (H.264 4:2:0 requires it). This aspect-corrects the wasm core's
+ * anamorphic 640x240 frame; the native 640x480 frame is already square.
  *
  * Unlike the Go-Live path there is no pillarbox: the browser lays the canvas out
  * with CSS, so sending black bars would just waste bitrate.
@@ -94,8 +96,9 @@ export function buildDriverFeedArgs(
   const scaleFilter = `scale=${String(out.width)}:${String(out.height)}`;
   // One frame of slack. A small bufsize keeps the VBR rate controller from
   // smoothing bitrate across many frames, which would show up as latency.
+  const frameRate = options.source.fps;
   const bufsizeKbits = Math.max(
-    Math.round(options.bitrateKbps / options.frameRate) * 2,
+    Math.round(options.bitrateKbps / frameRate) * 2,
     32,
   );
 
@@ -139,8 +142,9 @@ export function buildDriverFeedArgs(
     "-loglevel",
     "error",
     ...globalOptions,
-    // Input: raw frames on stdin. BGRA, not RGBA — get_video_buffer's
-    // non-idempotent b<->r swap nets BGRA on the tick path (wasm-src/PATCHES.md).
+    // Input: raw frames on stdin. BGRA, not RGBA: the wasm core's
+    // get_video_buffer nets BGRA on the tick path (wasm-src/PATCHES.md), and
+    // the native port reads its framebuffer back as BGRA.
     "-fflags",
     "nobuffer",
     "-analyzeduration",
@@ -150,9 +154,9 @@ export function buildDriverFeedArgs(
     "-pix_fmt",
     "bgra",
     "-video_size",
-    `${String(WIDTH)}x${String(HEIGHT)}`,
+    `${String(options.source.width)}x${String(options.source.height)}`,
     "-framerate",
-    String(options.frameRate),
+    String(frameRate),
     // Raw BGRA is fully described above; the minimum legal probe size stops
     // ffmpeg waiting on a live pipe before it starts encoding.
     "-probesize",
@@ -163,7 +167,7 @@ export function buildDriverFeedArgs(
     "-vf",
     videoFilters.join(","),
     "-r",
-    String(options.frameRate),
+    String(frameRate),
     ...codecOptions,
     "-profile:v",
     H264_PROFILE,
@@ -242,6 +246,7 @@ export class DriverFeedEncoder {
   /** Single-use: the reader carries stream state that must not span processes. */
   private started = false;
   private warnedSizeMismatch = false;
+  private readonly frameBytes: number;
 
   constructor(
     options: DriverFeedEncoderOptions,
@@ -251,6 +256,7 @@ export class DriverFeedEncoder {
     this.options = options;
     this.callbacks = callbacks;
     this.processFactory = processFactory;
+    this.frameBytes = frameBytes(options.source);
   }
 
   get running(): boolean {
@@ -281,7 +287,7 @@ export class DriverFeedEncoder {
     driverFeedEncoderRunning.set(1);
 
     const sink = new LatestFrameSink<DriverFeedFrameTiming>({
-      frameBytes: FRAME_BYTES,
+      frameBytes: this.frameBytes,
       maxBufferedFrames: MAX_BUFFERED_FRAMES,
       onFrameEvicted: () => {
         driverFeedFramesEvictedTotal.inc();
@@ -360,15 +366,16 @@ export class DriverFeedEncoder {
   pushFrame(frame: Buffer, inputReceivedAtMs?: number): void {
     const sink = this.sink;
     if (sink === undefined || !this.running) return;
-    if (frame.length !== FRAME_BYTES) {
+    if (frame.length !== this.frameBytes) {
       // ffmpeg was told a fixed -video_size, so a VI mode change would desync
       // the whole raw stream rather than produce one bad frame. Drop it. The
-      // Go-Live path is sized the same way and MK64 never leaves 640x240, so
-      // this firing at all means an assumption both encoders share has broken.
+      // Go-Live path is sized the same way and each engine keeps one frame
+      // size, so this firing at all means an assumption both encoders share
+      // has broken.
       if (!this.warnedSizeMismatch) {
         this.warnedSizeMismatch = true;
         logger.warn("driver feed dropping frames of unexpected size", {
-          expected: FRAME_BYTES,
+          expected: this.frameBytes,
           received: frame.length,
         });
       }
@@ -379,7 +386,7 @@ export class DriverFeedEncoder {
       pushedAtMs: performance.timeOrigin + performance.now(),
       ...(inputReceivedAtMs === undefined ? {} : { inputReceivedAtMs }),
     });
-    driverFeedSinkFrames.set(sink.bufferedBytes / FRAME_BYTES);
+    driverFeedSinkFrames.set(sink.bufferedBytes / this.frameBytes);
   }
 
   stop(): void {

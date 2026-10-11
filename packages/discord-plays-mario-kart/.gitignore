@@ -13,6 +13,8 @@ error.png
 # glue/assets.
 *.wasm
 packages/backend/assets/n64wasm/
+# The image stages the SpaghettiKart build here; locally it lives in .cache/.
+packages/backend/assets/spaghettikart/
 logs
 saves
 data

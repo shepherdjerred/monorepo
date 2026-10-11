@@ -23,11 +23,12 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { peerUserbotIds } from "@shepherdjerred/homelab/cdk8s/src/resources/userbot-ids.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 
-// Headless Discord Plays Mario Kart 64: a patched N64Wasm core (parallel-n64 +
-// angrylion software RDP) runs in Bun, renders frames in software, and streams
-// to a Discord voice channel (Go-Live) via a selfbot. Up to four players drive
-// karts through a thin web UI (virtual controllers). No GPU, desktop, or
-// browser. The app runs from the inner-monorepo root
+// Headless Discord Plays Mario Kart 64: the game runs on one of two engines
+// (config.toml `[emulator] engine`): a patched N64Wasm core (parallel-n64 +
+// angrylion software RDP) in Bun, or the native SpaghettiKart port as a child
+// process rendering through Mesa. Frames stream to a Discord voice channel
+// (Go-Live) via a selfbot. Up to four players drive karts through a thin web UI
+// (virtual controllers). No desktop or browser. The app runs from the inner-monorepo root
 // (/app/packages/discord-plays-mario-kart — the image WORKDIR since the #1517
 // Dockerfile rewrite), so config.toml / the n64wasm assets / saves / roms
 // resolve relative to that CWD. APP_ROOT must match the Dockerfile's final
@@ -54,7 +55,8 @@ export function createMarioKartDeployment(chart: Chart) {
     },
   });
 
-  // Persists in-game saves (mempak/eeprom/flash written under saves/).
+  // Persists in-game saves (mempak/eeprom/flash written under saves/) and the
+  // native engine's ROM-derived asset archive (saves/spaghettikart-assets/).
   const saveVolume = new ZfsNvmeVolume(chart, "mario-kart-volume", {
     storage: Size.gibibytes(8),
   });
@@ -151,8 +153,8 @@ export function createMarioKartDeployment(chart: Chart) {
         privileged: false,
         allowPrivilegeEscalation: false,
       },
-      // Software RDP is CPU-heavy and there's no GPU on the node — give it burst room
-      // via the limit. The 30d working-set peak is ~1.36GiB, so a 1.75GiB
+      // The wasm core's software RDP is CPU-heavy — give it burst room via the
+      // limit. The 30d working-set peak is ~1.36GiB, so a 1.75GiB
       // request keeps 25% memory headroom without reserving the full 2GiB.
       resources: {
         cpu: {
@@ -228,8 +230,9 @@ export function createMarioKartDeployment(chart: Chart) {
   setRevisionHistoryLimit(deployment);
 
   // Request the Intel iGPU so ffmpeg can VAAPI hardware-encode (frees CPU the
-  // angrylion software RDP needs). The intel-device-plugin mounts /dev/dri into
-  // the pod; non-root UID 1000 works. cdk8s has no GPU field, so patch it in.
+  // angrylion software RDP needs); the native engine's OpenGL renders on the
+  // same render node. The intel-device-plugin mounts /dev/dri into the pod;
+  // non-root UID 1000 works. cdk8s has no GPU field, so patch it in.
   ApiObject.of(deployment).addJsonPatch(
     JsonPatch.add(
       "/spec/template/spec/containers/0/resources/limits/gpu.intel.com~1i915",

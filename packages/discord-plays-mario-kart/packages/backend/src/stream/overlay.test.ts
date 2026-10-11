@@ -10,6 +10,7 @@ import {
 const WIDTH = 640;
 const HEIGHT = 240;
 const BYTES_PER_PIXEL = 4;
+const WASM_TARGET = { width: WIDTH, rowScale: 1 };
 
 // Sentinel-filled frame so untouched bytes are detectable.
 function makeFrame(width = WIDTH, height = HEIGHT): Buffer {
@@ -39,7 +40,7 @@ describe("formatUtcTimestamp", () => {
 describe("drawTextOverlay", () => {
   it("writes only pure black and pure white inside the box", () => {
     const frame = makeFrame();
-    drawTextOverlay(frame, WIDTH, "UTC 12:34:56.789");
+    drawTextOverlay(frame, WASM_TARGET, "UTC 12:34:56.789");
 
     let white = 0;
     let black = 0;
@@ -65,7 +66,7 @@ describe("drawTextOverlay", () => {
 
   it("leaves pixels outside the overlay box untouched", () => {
     const frame = makeFrame();
-    drawTextOverlay(frame, WIDTH, "UTC 12:34:56.789");
+    drawTextOverlay(frame, WASM_TARGET, "UTC 12:34:56.789");
 
     // Bottom half of the frame and the right edge are far outside the box.
     expect(pixelAt(frame, WIDTH, WIDTH - 1, HEIGHT - 1)).toEqual(
@@ -83,23 +84,23 @@ describe("drawTextOverlay", () => {
   it("renders different text to different pixels", () => {
     const a = makeFrame();
     const b = makeFrame();
-    drawTextOverlay(a, WIDTH, "UTC 11:11:11.111");
-    drawTextOverlay(b, WIDTH, "UTC 22:22:22.222");
+    drawTextOverlay(a, WASM_TARGET, "UTC 11:11:11.111");
+    drawTextOverlay(b, WASM_TARGET, "UTC 22:22:22.222");
     expect(a.equals(b)).toBe(false);
   });
 
   it("is deterministic for the same text", () => {
     const a = makeFrame();
     const b = makeFrame();
-    drawTextOverlay(a, WIDTH, "UTC 12:34:56.789");
-    drawTextOverlay(b, WIDTH, "UTC 12:34:56.789");
+    drawTextOverlay(a, WASM_TARGET, "UTC 12:34:56.789");
+    drawTextOverlay(b, WASM_TARGET, "UTC 12:34:56.789");
     expect(a.equals(b)).toBe(true);
   });
 
   it("clips instead of throwing on a frame shorter than the overlay box", () => {
     const tiny = Buffer.alloc(WIDTH * 3 * BYTES_PER_PIXEL, 0xab);
     expect(() => {
-      drawTextOverlay(tiny, WIDTH, "UTC 12:34:56.789");
+      drawTextOverlay(tiny, WASM_TARGET, "UTC 12:34:56.789");
     }).not.toThrow();
     expect(tiny.length).toBe(WIDTH * 3 * BYTES_PER_PIXEL);
   });
@@ -117,6 +118,27 @@ describe("formatSeatFlags", () => {
   });
 });
 
+describe("drawTextOverlay row scale", () => {
+  it("draws each HUD row twice into a frame with twice the rows", () => {
+    const single = makeFrame();
+    const double = makeFrame(WIDTH, HEIGHT * 2);
+    drawTextOverlay(single, WASM_TARGET, "UTC 12:34:56.789");
+    drawTextOverlay(double, { width: WIDTH, rowScale: 2 }, "UTC 12:34:56.789");
+
+    const rowBytes = WIDTH * BYTES_PER_PIXEL;
+    for (let y = 0; y < HEIGHT; y++) {
+      const source = single.subarray(y * rowBytes, (y + 1) * rowBytes);
+      for (const doubledRow of [2 * y, 2 * y + 1]) {
+        const row = double.subarray(
+          doubledRow * rowBytes,
+          (doubledRow + 1) * rowBytes,
+        );
+        expect(row.equals(source)).toBe(true);
+      }
+    }
+  });
+});
+
 describe("drawHudOverlay", () => {
   const epochMs = Date.UTC(2026, 5, 12, 7, 8, 9, 45);
 
@@ -125,18 +147,18 @@ describe("drawHudOverlay", () => {
     const viaHud = makeFrame();
     drawTextOverlay(
       direct,
-      WIDTH,
+      WASM_TARGET,
       `${formatUtcTimestamp(epochMs)} ${formatSeatFlags([true, false, false, false])}`,
     );
-    drawHudOverlay(viaHud, WIDTH, epochMs, [true, false, false, false]);
+    drawHudOverlay(viaHud, WASM_TARGET, epochMs, [true, false, false, false]);
     expect(viaHud.equals(direct)).toBe(true);
   });
 
   it("a held seat changes pixels relative to all-idle", () => {
     const idle = makeFrame();
     const held = makeFrame();
-    drawHudOverlay(idle, WIDTH, epochMs, [false, false, false, false]);
-    drawHudOverlay(held, WIDTH, epochMs, [false, false, true, false]);
+    drawHudOverlay(idle, WASM_TARGET, epochMs, [false, false, false, false]);
+    drawHudOverlay(held, WASM_TARGET, epochMs, [false, false, true, false]);
     expect(held.equals(idle)).toBe(false);
   });
 
@@ -144,7 +166,7 @@ describe("drawHudOverlay", () => {
     // If the HUD ever outgrows the frame, the box clips at the right edge and
     // the trailing flags become unreadable — catch that here.
     const frame = makeFrame();
-    drawHudOverlay(frame, WIDTH, epochMs, [true, true, true, true]);
+    drawHudOverlay(frame, WASM_TARGET, epochMs, [true, true, true, true]);
     // The rightmost column must be untouched (box ends before the edge).
     expect(pixelAt(frame, WIDTH, WIDTH - 1, 10)).toEqual(
       Buffer.from([0xab, 0xab, 0xab, 0xab]),
@@ -157,8 +179,8 @@ describe("drawTimestampOverlay", () => {
     const direct = makeFrame();
     const viaTimestamp = makeFrame();
     const epochMs = Date.UTC(2026, 5, 12, 7, 8, 9, 45);
-    drawTextOverlay(direct, WIDTH, formatUtcTimestamp(epochMs));
-    drawTimestampOverlay(viaTimestamp, WIDTH, epochMs);
+    drawTextOverlay(direct, WASM_TARGET, formatUtcTimestamp(epochMs));
+    drawTimestampOverlay(viaTimestamp, WASM_TARGET, epochMs);
     expect(viaTimestamp.equals(direct)).toBe(true);
   });
 });

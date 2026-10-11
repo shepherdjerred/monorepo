@@ -7,6 +7,7 @@ import {
   DRIVER_FEED_PATH,
   DriverFeedInitSchema,
 } from "@discord-plays-mario-kart/common";
+import { N64WASM_FORMAT } from "#src/engine/format.ts";
 import { DriverFeedService } from "./index.ts";
 
 // The load-bearing claim this file exists to prove: a `ws` server mounted on
@@ -41,7 +42,7 @@ async function startHarness(): Promise<Harness> {
       vaapi_device: "/dev/dri/renderD128",
       encoder_async_depth: 1,
     },
-    frameRate: 30,
+    format: N64WASM_FORMAT,
   });
   service.setDriverAdmission((socketId) => socketId === "active-driver");
   service.attach(server);

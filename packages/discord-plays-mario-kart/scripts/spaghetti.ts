@@ -1,7 +1,5 @@
 // Pure helpers for the SpaghettiKart (native MK64 port) build: upstream
-// manifest parsing, platform paths, ROM resolution, and ROM identity.
-import { createHash } from "node:crypto";
-import os from "node:os";
+// manifest parsing, platform paths, and the install manifest.
 import path from "node:path";
 import { z } from "zod";
 
@@ -47,36 +45,31 @@ export function cmakeConfigureArgs(
 }
 
 /**
- * The canonical ROM homes, matching the backend harness: explicit path, then
- * MK64_ROM, then the Syncthing folders.
+ * The install.json the backend loads (engine/spaghetti/install.ts), pointing
+ * into a local build. Torch's inputs are files of the source checkout itself.
+ * The image's spaghetti-builder stage writes the same shape with relative paths.
  */
-export function romCandidates(
-  explicit: string | undefined,
-  env: string | undefined,
-  home = os.homedir(),
-): string[] {
-  const candidates: string[] = [];
-  for (const candidate of [explicit, env]) {
-    if (candidate !== undefined && candidate.length > 0)
-      candidates.push(candidate);
-  }
-  candidates.push(
-    `${home}/syncthing/Sync/roms/mariokart64.z64`,
-    `${home}/Sync/Sync/roms/mariokart64.z64`,
-  );
-  return candidates;
-}
+export type DevInstallManifest = {
+  binary: string;
+  engineArchive: string;
+  torch: string;
+  torchInputs: string;
+  commit: string;
+  romSha1: string;
+};
 
-export function sha1(bytes: Uint8Array): string {
-  return createHash("sha1").update(bytes).digest("hex");
-}
-
-/** SpaghettiKart's asset extractor only understands the US cart in .z64 order. */
-export function assertSupportedRom(actualSha1: string, expected: string): void {
-  if (actualSha1 !== expected) {
-    throw new Error(
-      `ROM is not the supported Mario Kart 64 (US, .z64 byte order) image: ` +
-        `SHA-1 ${actualSha1}, expected ${expected}`,
-    );
-  }
+export function devInstallManifest(
+  upstream: SpaghettiUpstream,
+  sourceDir: string,
+  buildDir: string,
+  platform: NodeJS.Platform,
+): DevInstallManifest {
+  return {
+    binary: spaghettiBinaryPath(buildDir, platform),
+    engineArchive: path.join(buildDir, "spaghetti.o2r"),
+    torch: path.join(buildDir, "TorchExternal/src/TorchExternal-build/torch"),
+    torchInputs: sourceDir,
+    commit: upstream.commit,
+    romSha1: upstream.romSha1,
+  };
 }

@@ -460,6 +460,7 @@ describe("screenshot overlays", () => {
       seatActivity: [false, false, false, false],
       mode: "1p",
       seats: 1,
+      rowScale: 1,
       nameOverlay: undefined,
     };
     const overlayed = await captureScreenshot();

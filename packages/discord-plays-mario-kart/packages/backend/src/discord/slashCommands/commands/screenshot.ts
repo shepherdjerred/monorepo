@@ -61,7 +61,7 @@ export function makeScreenshot(driver: MarioKartGameDriver, botClient: Client) {
       return;
     }
     const ctx = runtime.overlayContext();
-    applyStreamOverlays(frame.rgba, frame.height, ctx);
+    applyStreamOverlays(frame.rgba, frame, ctx);
     const buffer = encodeScreenshotPng(frame);
     const date = new Date();
     const attachment = new AttachmentBuilder(buffer, {

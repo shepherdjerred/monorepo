@@ -9,8 +9,13 @@ reference.
   into an image. Local harnesses resolve only the explicit path/environment and
   documented Syncthing locations. Production uses the existing private PVC.
 - SpaghettiKart's `mk64.o2r` is extracted from the ROM and follows the ROM's
-  rules. Only the upstream pin and patch series under `spaghetti-src/` are
+  rules: the backend extracts it at startup into the saves volume, never into
+  the image. Only the upstream pin and patch series under `spaghetti-src/` are
   committed, never the upstream source or build output.
+- Both engines implement `GameEngine` (`packages/backend/src/engine/`). Size
+  stream, driver-feed, and overlay code from the engine's `FrameFormat`, never
+  from one engine's constants. The wasm engine stays the default until
+  production numbers justify switching.
 - Go-Live and driver-feed video are independent. Drivers watch the in-browser
   driver feed, which production enables (the code default is off); Go-Live is
   the spectator view. Do not couple a driver-feed failure to spectator playback.
