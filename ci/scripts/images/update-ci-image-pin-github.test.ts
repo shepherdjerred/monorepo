@@ -48,8 +48,8 @@ test("a moved draft head rejects a stale update before push", async () => {
   );
   expect(execute).toHaveBeenCalledTimes(1);
 });
-test("new promotion PRs are drafts without auto-merge", async () => {
-  const outputs = ["[]", "", "", "", "12"];
+test("new promotion PRs are ready with squash auto-merge", async () => {
+  const outputs = ["[]", "", "", "", "12", ""];
   execute.mockImplementation(() =>
     Promise.resolve({
       exitCode: 0,
@@ -59,10 +59,19 @@ test("new promotion PRs are drafts without auto-merge", async () => {
   );
   await openOrUpdatePullRequest(options);
   const commands = execute.mock.calls.map((call) => call[0]);
-  expect(commands.find((command) => command.includes("create"))).toContain(
+  expect(commands.find((command) => command.includes("create"))).not.toContain(
     "--draft",
   );
-  expect(commands.some((command) => command.includes("--auto"))).toBe(false);
+  expect(commands.at(-1)).toEqual([
+    "gh",
+    "pr",
+    "merge",
+    "--repo",
+    "shepherdjerred/monorepo",
+    "12",
+    "--auto",
+    "--squash",
+  ]);
   expect(commands.find((command) => command.includes("push"))).toContain(
     `--force-with-lease=refs/heads/${options.definition.branch}:${sha}`,
   );

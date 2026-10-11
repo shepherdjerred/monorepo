@@ -58,7 +58,6 @@ export async function openOrUpdatePullRequest(options: {
         "gh",
         "pr",
         "create",
-        "--draft",
         "--repo",
         MONOREPO_REPO,
         "--base",
@@ -71,7 +70,7 @@ export async function openOrUpdatePullRequest(options: {
         [
           `Promotes ${definition.name} build ${state.buildNumber.toString()} by immutable digest.`,
           "",
-          "Mark this draft ready to run full CI and review the candidate digest. Maintenance preserves a ready PR head until it is merged or closed.",
+          "Full PR CI exercises this candidate digest before auto-merge. Maintenance defers newer candidates until this PR merges or closes.",
         ].join("\n"),
       ],
       { env },
@@ -96,6 +95,23 @@ export async function openOrUpdatePullRequest(options: {
   if (!/^\d+$/.test(prNumber)) {
     throw new Error("CI image pin PR number is invalid");
   }
+  // A stale toolchain image makes every CI step install the missing tools at
+  // runtime, onto the CI node's OS disk, until the promotion lands. Required
+  // checks still gate the merge; a red promotion stays open and defers later
+  // candidates until it is fixed or closed.
+  await run(
+    [
+      "gh",
+      "pr",
+      "merge",
+      "--repo",
+      MONOREPO_REPO,
+      prNumber,
+      "--auto",
+      "--squash",
+    ],
+    { env },
+  );
 }
 
 /**
