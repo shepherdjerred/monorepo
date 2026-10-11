@@ -144,7 +144,6 @@ export const BIRMEL_BOOLEAN_FLAG_KEYS = [
   "birmel-birthdays-enabled",
   "birmel-daily-posts-enabled",
   "birmel-elections-enabled",
-  "birmel-image-generation-enabled",
   "birmel-persona-enabled",
   "birmel-responder-enabled",
 ] as const;
@@ -236,9 +235,7 @@ export const STARLIGHT_KARMA_BOT_FLAG_KEYS = [
 export type StarlightKarmaBotFlagKey =
   (typeof STARLIGHT_KARMA_BOT_FLAG_KEYS)[number];
 
-export const TRMNL_DASHBOARD_BOOLEAN_FLAG_KEYS = [
-  "pet-dashboard-enabled",
-] as const;
+export const TRMNL_DASHBOARD_BOOLEAN_FLAG_KEYS = [] as const;
 
 export type TrmnlDashboardBooleanFlagKey =
   (typeof TRMNL_DASHBOARD_BOOLEAN_FLAG_KEYS)[number];
@@ -295,7 +292,6 @@ export type TemporalFlagKey = (typeof TEMPORAL_FLAG_KEYS)[number];
 
 export const ALERT_DASHBOARD_BOOLEAN_FLAG_KEYS = [
   "alert-dashboard-email-enabled",
-  "ops-digest-email-enabled",
 ] as const;
 
 export type AlertDashboardBooleanFlagKey =
@@ -359,9 +355,7 @@ export type TheStormFlagKey = (typeof THE_STORM_FLAG_KEYS)[number];
 export const STORM_BOOLEAN_FLAG_KEYS = [
   "storm-forum-registration-enabled",
   "storm-forum-calendar-enabled",
-  "storm-brain-classify-enabled",
   "storm-brain-conversation-enabled",
-  "storm-brain-triage-enabled",
 ] as const;
 
 export type StormBooleanFlagKey = (typeof STORM_BOOLEAN_FLAG_KEYS)[number];

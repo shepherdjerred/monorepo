@@ -745,18 +745,6 @@
       "thresholdRollouts": []
     },
     {
-      "key": "birmel-image-generation-enabled",
-      "owner": "birmel",
-      "namespace": "birmel",
-      "source": "birmel-dynamic",
-      "purpose": "Enable Birmel image generation and editing.",
-      "type": "boolean",
-      "default": false,
-      "rollouts": [],
-      "rules": [],
-      "thresholdRollouts": []
-    },
-    {
       "key": "birmel-llm-classifier-model",
       "owner": "birmel",
       "namespace": "birmel",
@@ -1414,30 +1402,6 @@
       "thresholdRollouts": []
     },
     {
-      "key": "ops-digest-email-enabled",
-      "owner": "alert-dashboard",
-      "namespace": "alert-dashboard",
-      "source": "alert-dashboard",
-      "purpose": "Send the daily and weekly ops digest email through Postal after deployment verification.",
-      "type": "boolean",
-      "default": false,
-      "rollouts": [],
-      "rules": [],
-      "thresholdRollouts": []
-    },
-    {
-      "key": "pet-dashboard-enabled",
-      "owner": "trmnl-dashboard",
-      "namespace": "trmnl-dashboard",
-      "source": "trmnl-dashboard",
-      "purpose": "Expose the authenticated pet-care TRMNL dashboard payload after deployment verification.",
-      "type": "boolean",
-      "default": false,
-      "rollouts": [],
-      "rules": [],
-      "thresholdRollouts": []
-    },
-    {
       "key": "player-card-enabled",
       "owner": "streambot",
       "namespace": "streambot",
@@ -1606,18 +1570,6 @@
       "thresholdRollouts": []
     },
     {
-      "key": "storm-brain-classify-enabled",
-      "owner": "storm",
-      "namespace": "storm",
-      "source": "storm-brain",
-      "purpose": "Enable the Storm brain chat classification flow.",
-      "type": "boolean",
-      "default": false,
-      "rollouts": [],
-      "rules": [],
-      "thresholdRollouts": []
-    },
-    {
       "key": "storm-brain-conversation-enabled",
       "owner": "storm",
       "namespace": "storm",
@@ -1649,18 +1601,6 @@
       "purpose": "Select the Storm brain LLM model.",
       "type": "variant",
       "default": "gpt-5.6-luna",
-      "rollouts": [],
-      "rules": [],
-      "thresholdRollouts": []
-    },
-    {
-      "key": "storm-brain-triage-enabled",
-      "owner": "storm",
-      "namespace": "storm",
-      "source": "storm-brain",
-      "purpose": "Enable the Storm brain ticket triage flow.",
-      "type": "boolean",
-      "default": false,
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
@@ -2624,14 +2564,6 @@
           "thresholdRollouts": []
         },
         {
-          "key": "birmel-image-generation-enabled",
-          "type": "boolean",
-          "default": true,
-          "rollouts": [],
-          "rules": [],
-          "thresholdRollouts": []
-        },
-        {
           "key": "scout_support_conversations_enabled",
           "type": "boolean",
           "default": true,
@@ -3134,20 +3066,6 @@
           "thresholdRollouts": []
         },
         {
-          "key": "birmel-image-generation-enabled",
-          "type": "boolean",
-          "default": false,
-          "rollouts": [],
-          "rules": [],
-          "thresholdRollouts": [
-            {
-              "rank": 1,
-              "percentage": 100,
-              "result": true
-            }
-          ]
-        },
-        {
           "key": "bucks_dares_enabled",
           "type": "boolean",
           "default": false,
@@ -3228,22 +3146,6 @@
           "thresholdRollouts": []
         },
         {
-          "key": "ops-digest-email-enabled",
-          "type": "boolean",
-          "default": true,
-          "rollouts": [],
-          "rules": [],
-          "thresholdRollouts": []
-        },
-        {
-          "key": "pet-dashboard-enabled",
-          "type": "boolean",
-          "default": true,
-          "rollouts": [],
-          "rules": [],
-          "thresholdRollouts": []
-        },
-        {
           "key": "scout_client_ingestion",
           "type": "boolean",
           "default": false,
@@ -3256,22 +3158,6 @@
               "result": true
             }
           ]
-        },
-        {
-          "key": "storm-brain-classify-enabled",
-          "type": "boolean",
-          "default": true,
-          "rollouts": [],
-          "rules": [],
-          "thresholdRollouts": []
-        },
-        {
-          "key": "storm-brain-triage-enabled",
-          "type": "boolean",
-          "default": true,
-          "rollouts": [],
-          "rules": [],
-          "thresholdRollouts": []
         },
         {
           "key": "streambot-numbered-channels-enabled",

@@ -185,34 +185,6 @@ describe("ManagedFlagInventorySchema", () => {
       });
     }
   });
-
-  test("keeps Birmel image generation off by default, on in beta, and ramped in prod", () => {
-    const declared = managedFlagInventory.flags.find(
-      (flag) => flag.key === "birmel-image-generation-enabled",
-    );
-    expect(declared?.default).toBe(false);
-
-    const betaFlag = materializeManagedNamespaceEnvironment(
-      managedFlagInventory,
-      "beta",
-      "birmel",
-    ).find((candidate) => candidate.key === "birmel-image-generation-enabled");
-    expect(betaFlag?.default).toBe(true);
-
-    const prodFlag = materializeManagedNamespaceEnvironment(
-      managedFlagInventory,
-      "prod",
-      "birmel",
-    ).find((candidate) => candidate.key === "birmel-image-generation-enabled");
-    expect(prodFlag?.default).toBe(false);
-    expect(prodFlag?.thresholdRollouts).toEqual([
-      {
-        rank: 1,
-        percentage: 100,
-        result: true,
-      },
-    ]);
-  });
 });
 
 describe("Managed flag inventory validation", () => {
@@ -348,7 +320,6 @@ describe("Managed flag inventory validation", () => {
 describe("The Storm companion pilot rollout", () => {
   test("activates production gameplay and brain features with safe global defaults", () => {
     for (const [namespace, keys] of [
-      ["storm", ["storm-brain-classify-enabled", "storm-brain-triage-enabled"]],
       ["the-storm", ["the-storm-crier-enabled", "the-storm-merchant-enabled"]],
     ] as const) {
       const flags = materializeManagedNamespaceEnvironment(
@@ -474,64 +445,5 @@ describe("durable iMessage ingress rollout", () => {
 
     expect(betaFlag?.default).toBe(true);
     expect(prodFlag?.default).toBe(false);
-  });
-});
-
-describe("pet dashboard rollout", () => {
-  test("keeps the pet dashboard off by default and in beta while prod stays rolled out", () => {
-    const declared = managedFlagInventory.flags.find(
-      (flag) => flag.key === "pet-dashboard-enabled",
-    );
-    expect(declared?.default).toBe(false);
-
-    const betaFlag = materializeManagedNamespaceEnvironment(
-      managedFlagInventory,
-      "beta",
-      "trmnl-dashboard",
-    ).find((candidate) => candidate.key === "pet-dashboard-enabled");
-    expect(betaFlag).toMatchObject({
-      default: false,
-      rollouts: [],
-      rules: [],
-      thresholdRollouts: [],
-    });
-
-    const prodFlag = materializeManagedNamespaceEnvironment(
-      managedFlagInventory,
-      "prod",
-      "trmnl-dashboard",
-    ).find((candidate) => candidate.key === "pet-dashboard-enabled");
-    expect(prodFlag).toMatchObject({
-      default: true,
-      rollouts: [],
-      rules: [],
-      thresholdRollouts: [],
-    });
-  });
-});
-
-describe("ops digest email rollout", () => {
-  test("sends the ops digest only in prod", () => {
-    const declared = managedFlagInventory.flags.find(
-      (flag) => flag.key === "ops-digest-email-enabled",
-    );
-    expect(declared?.default).toBe(false);
-
-    for (const [environment, enabled] of [
-      ["beta", false],
-      ["prod", true],
-    ] as const) {
-      const flag = materializeManagedNamespaceEnvironment(
-        managedFlagInventory,
-        environment,
-        "alert-dashboard",
-      ).find((candidate) => candidate.key === "ops-digest-email-enabled");
-      expect(flag).toMatchObject({
-        default: enabled,
-        rollouts: [],
-        rules: [],
-        thresholdRollouts: [],
-      });
-    }
   });
 });
